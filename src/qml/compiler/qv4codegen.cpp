@@ -670,9 +670,6 @@ Codegen::Reference Codegen::unop(IR::AluOp op, const Reference &expr, const Sour
     if (hasError)
         return _expr.result;
 
-    Q_ASSERT(op != IR::OpIncrement);
-    Q_ASSERT(op != IR::OpDecrement);
-
 #ifndef V4_BOOTSTRAP
     if (expr.type == Reference::Const) {
         auto v = Value::fromReturnedValue(expr.constant);
@@ -699,10 +696,46 @@ Codegen::Reference Codegen::unop(IR::AluOp op, const Reference &expr, const Sour
 
     auto dest = Reference::fromTemp(this, _block->newTemp());
 
-    QV4::Moth::Instruction::UMinus uminus;
-    uminus.source = expr.asRValue();
-    uminus.result = dest.asLValue();
-    bytecodeGenerator->addInstruction(uminus);
+    switch (op) {
+    case IR::OpUMinus: {
+        QV4::Moth::Instruction::UMinus uminus;
+        uminus.source = expr.asRValue();
+        uminus.result = dest.asLValue();
+        bytecodeGenerator->addInstruction(uminus);
+    } break;
+    case IR::OpUPlus: {
+        QV4::Moth::Instruction::UPlus uplus;
+        uplus.source = expr.asRValue();
+        uplus.result = dest.asLValue();
+        bytecodeGenerator->addInstruction(uplus);
+    } break;
+    case IR::OpNot: {
+        QV4::Moth::Instruction::UNot unot;
+        unot.source = expr.asRValue();
+        unot.result = dest.asLValue();
+        bytecodeGenerator->addInstruction(unot);
+    } break;
+    case IR::OpCompl: {
+        QV4::Moth::Instruction::UCompl ucompl;
+        ucompl.source = expr.asRValue();
+        ucompl.result = dest.asLValue();
+        bytecodeGenerator->addInstruction(ucompl);
+    } break;
+    case IR::OpIncrement: {
+        QV4::Moth::Instruction::Increment inc;
+        inc.source = expr.asRValue();
+        inc.result = dest.asLValue();
+        bytecodeGenerator->addInstruction(inc);
+    } break;
+    case IR::OpDecrement: {
+        QV4::Moth::Instruction::Decrement dec;
+        dec.source = expr.asRValue();
+        dec.result = dest.asLValue();
+        bytecodeGenerator->addInstruction(dec);
+    } break;
+    default:
+        Q_UNIMPLEMENTED();
+    }
 
     return dest;
 }
@@ -948,6 +981,7 @@ void Codegen::sourceElements(SourceElements *ast)
 
 void Codegen::variableDeclaration(VariableDeclaration *ast)
 {
+    TempScope scope(_function);
 
     if (!ast->expression)
         return;
@@ -2117,56 +2151,65 @@ bool Codegen::visit(PostIncrementExpression *ast)
 }
 
 bool Codegen::visit(PreDecrementExpression *ast)
-{
-//    if (hasError)
-//        return false;
+{    if (hasError)
+        return false;
 
-//    Result expr = expression(ast->expression);
-//    if (hasError)
-//        return false;
-//    if (!expr->isLValue()) {
-//        throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix ++ operator applied to value that is not a reference."));
-//        return false;
-//    }
+    Reference expr = expression(ast->expression);
+    if (hasError)
+        return false;
+    if (!expr.isLValue()) {
+        throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix ++ operator applied to value that is not a reference."));
+        return false;
+    }
 
-//    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
+    //### TODO
+//    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
 //        return false;
-//    IR::Expr *op = binop(IR::OpSub, *expr, _block->CONST(IR::NumberType, 1), ast->decrementToken);
-//    if (_expr.accept(nx)) {
-//        setLocation(move(*expr, op), ast->decrementToken);
-//    } else {
-//        const unsigned t = _block->newTemp();
-//        setLocation(move(_block->TEMP(t), op), ast->decrementToken);
-//        setLocation(move(*expr, _block->TEMP(t)), ast->decrementToken);
-//        _expr.code = _block->TEMP(t);
-//    }
+    auto tmp = unop(IR::OpDecrement, expr, ast->decrementToken);
+    if (_expr.accept(nx)) {
+//        setLocation(move(*expr, op), ast->incrementToken);
+        expr.store(tmp);
+    } else {
+        if (!tmp.isTempLocalArg()) {
+            auto tmp2 = Reference::fromTemp(this, _block->newTemp());
+            tmp2.store(tmp);
+            tmp = tmp2;
+        }
+        expr.store(tmp);
+        _expr.result = tmp;
+    }
     return false;
 }
 
 bool Codegen::visit(PreIncrementExpression *ast)
 {
-//    if (hasError)
-//        return false;
+    if (hasError)
+        return false;
 
-//    Result expr = expression(ast->expression);
-//    if (hasError)
-//        return false;
-//    if (!expr->isLValue()) {
-//        throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix ++ operator applied to value that is not a reference."));
-//        return false;
-//    }
+    Reference expr = expression(ast->expression);
+    if (hasError)
+        return false;
+    if (!expr.isLValue()) {
+        throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix ++ operator applied to value that is not a reference."));
+        return false;
+    }
 
+    //### TODO
 //    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
 //        return false;
-//    IR::Expr *op = binop(IR::OpAdd, unop(IR::OpUPlus, *expr, ast->incrementToken), _block->CONST(IR::NumberType, 1), ast->incrementToken);
-//    if (_expr.accept(nx)) {
+    auto tmp = unop(IR::OpIncrement, expr, ast->incrementToken);
+    if (_expr.accept(nx)) {
 //        setLocation(move(*expr, op), ast->incrementToken);
-//    } else {
-//        const unsigned t = _block->newTemp();
-//        setLocation(move(_block->TEMP(t), op), ast->incrementToken);
-//        setLocation(move(*expr, _block->TEMP(t)), ast->incrementToken);
-//        _expr.code = _block->TEMP(t);
-//    }
+        expr.store(tmp);
+    } else {
+        if (!tmp.isTempLocalArg()) {
+            auto tmp2 = Reference::fromTemp(this, _block->newTemp());
+            tmp2.store(tmp);
+            tmp = tmp2;
+        }
+        expr.store(tmp);
+        _expr.result = tmp;
+    }
     return false;
 }
 
