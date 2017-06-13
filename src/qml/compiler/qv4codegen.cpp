@@ -641,20 +641,6 @@ void Codegen::leaveLoop()
     delete current;
 }
 
-IR::Expr *Codegen::member(IR::Expr *base, const QString *name)
-{
-    if (hasError)
-        return 0;
-
-    if (base->asTemp() || base->asArgLocal())
-        return _block->MEMBER(base, name);
-    else {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), base);
-        return _block->MEMBER(_block->TEMP(t), name);
-    }
-}
-
 IR::Expr *Codegen::argument(IR::Expr *expr)
 {
     if (expr && !expr->asTemp()) {
@@ -877,16 +863,16 @@ void Codegen::statement(ExpressionNode *ast)
         if (hasError)
             return;
         qSwap(_expr, r);
-        if (r.format == ex) {
-            if (r->asCall()) {
-                _block->EXP(*r); // the nest nx representation for calls is EXP(CALL(c..))
-            } else if (r->asTemp() || r->asArgLocal()) {
-                // there is nothing to do
-            } else {
-                unsigned t = _block->newTemp();
-                move(_block->TEMP(t), *r);
-            }
-        }
+//        if (r.format == ex) {
+//            if (r->asCall()) {
+//                _block->EXP(*r); // the nest nx representation for calls is EXP(CALL(c..))
+//            } else if (r->asTemp() || r->asArgLocal()) {
+//                // there is nothing to do
+//            } else {
+//                unsigned t = _block->newTemp();
+//                move(_block->TEMP(t), *r);
+//            }
+//        }
 
         if (r.result.isValid() && !r.result.isTempLocalArg())
             r.result.asRValue(); // triggers side effects
@@ -1226,28 +1212,14 @@ bool Codegen::visit(ArrayLiteral *ast)
 
 bool Codegen::visit(ArrayMemberExpression *ast)
 {
-//    if (hasError)
-//        return false;
+    if (hasError)
+        return false;
 
-//    Reference base = expression(ast->base);
-//    if (hasError)
-//        return false;
-//    if (!isSimpleExpr(base)) {
-//        const unsigned t = _block->newTemp();
-//        move(_block->TEMP(t), base);
-//        base = _block->TEMP(t);
-//    }
-
-//    IR::Expr *index = *expression(ast->expression);
-//    if (hasError)
-//        return false;
-//    if (!isSimpleExpr(index)) {
-//        const unsigned t = _block->newTemp();
-//        move(_block->TEMP(t), index);
-//        index = _block->TEMP(t);
-//    }
-
-//    _expr.code = _block->SUBSCRIPT(base, index);
+    Reference base = expression(ast->base);
+    if (hasError)
+        return false;
+    Reference index = expression(ast->expression);
+    _expr.result = Reference::fromSubscript(base, index);
     return false;
 }
 
@@ -1715,9 +1687,11 @@ bool Codegen::visit(FieldMemberExpression *ast)
     if (hasError)
         return false;
 
-    Result base = expression(ast->base);
-    if (!hasError)
-        _expr.code = member(*base, _function->newString(ast->name.toString()));
+    Reference base = expression(ast->base);
+    if (hasError)
+        return false;
+//    _function->newString(ast->name.toString());
+    Reference::fromMember(base, -1); //### TODO
     return false;
 }
 
@@ -1802,7 +1776,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
 
     // global context or with. Lookup by name
   loadByName:
-    return Reference::fromName(this, -1); //### TODO
+    return Reference::fromName(this, -1);
 }
 
 IR::Expr *Codegen::fallbackNameLookup(const QString &name, int line, int col)
@@ -2432,6 +2406,11 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         // make sure we convert this to an object
         _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_convert_this_to_object,
                 ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
+    }
+
+    { // reserve space for outgoing call arguments
+        _function->tempCount += _variableEnvironment->maxNumberOfArguments;
+        _function->currentTemp = _function->tempCount;
     }
 
     beginFunctionBodyHook();

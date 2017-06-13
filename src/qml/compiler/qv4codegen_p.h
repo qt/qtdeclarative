@@ -438,7 +438,6 @@ protected:
         _exceptionHandlers.pop();
     }
 
-    QV4::IR::Expr *member(QV4::IR::Expr *base, const QString *name);
     QV4::IR::Expr *argument(QV4::IR::Expr *expr);
     QV4::IR::Expr *reference(QV4::IR::Expr *expr);
     Reference unop(QV4::IR::AluOp op, const Reference &expr, const AST::SourceLocation &loc = AST::SourceLocation());
