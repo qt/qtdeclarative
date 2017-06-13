@@ -59,6 +59,16 @@ QByteArray alignedNumber(int n) {
     return number;
 }
 
+QString toString(QV4::ReturnedValue v)
+{
+#ifdef V4_BOOTSTRAP
+    return QStringLiteral("string-const(%1)").arg(v);
+#else // !V4_BOOTSTRAP
+    Value val = Value::fromReturnedValue(v);
+    return QLatin1String("const(") + val.toQStringNoThrow() + QLatin1String(")");
+#endif // V4_BOOTSTRAP
+}
+
 #define MOTH_BEGIN_INSTR(I) \
     case Instr::I: {\
     const InstrMeta<(int)Instr::I>::DataType &instr = InstrMeta<(int)Instr::I>::data(*genericInstr); \
@@ -104,7 +114,7 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(Move)
 
         MOTH_BEGIN_INSTR(MoveConst)
-            d << instr.result << ", " << instr.source;
+            d << instr.result << ", " << toString(instr.source).toUtf8().constData();
         MOTH_END_INSTR(MoveConst)
 
         MOTH_BEGIN_INSTR(SwapTemps)
@@ -349,11 +359,11 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(Jump)
 
         MOTH_BEGIN_INSTR(JumpEq)
-            d << instr.offset;
+            d << instr.condition << "  " << instr.offset;
         MOTH_END_INSTR(JumpEq)
 
         MOTH_BEGIN_INSTR(JumpNe)
-            d << instr.offset;
+            d << instr.condition << "  " << instr.offset;
         MOTH_END_INSTR(JumpNe)
 
         MOTH_BEGIN_INSTR(UNot)

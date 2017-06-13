@@ -1638,32 +1638,26 @@ bool Codegen::visit(ConditionalExpression *ast)
     if (hasError)
         return true;
 
-    IR::BasicBlock *iftrue = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *endif = _function->newBasicBlock(exceptionHandler());
-
     const unsigned t = _block->newTemp();
+    _expr = Reference::fromTemp(this, t);
+
     TempScope scope(_function);
 
-    condition(ast->expression, iftrue, iffalse);
+    Reference r = expression(ast->expression);
 
-    _block = iftrue;
-    Result ok = expression(ast->ok);
-    if (hasError)
-        return false;
-    move(_block->TEMP(t), *ok);
-    _block->JUMP(endif);
+    // ### handle const Reference
 
-    _block = iffalse;
-    Result ko = expression(ast->ko);
-    if (hasError)
-        return false;
-    move(_block->TEMP(t), *ko);
-    _block->JUMP(endif);
+    Moth::BytecodeGenerator::Jump jump_else = bytecodeGenerator->jumpNe(r.asRValue());
 
-    _block = endif;
+    _expr.result.store(expression(ast->ok));
 
-    _expr.code = _block->TEMP(t);
+    Moth::BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
+
+    jump_else.link();
+
+    _expr.result.store(expression(ast->ko));
+
+    jump_endif.link();
 
     return false;
 }
@@ -1723,11 +1717,7 @@ bool Codegen::visit(FalseLiteral *)
     if (hasError)
         return false;
 
-    if (_expr.accept(cx)) {
-        _block->JUMP(_expr.iffalse);
-    } else {
-        _expr.result = Reference::fromConst(this, QV4::Encode(false));
-    }
+    _expr.result = Reference::fromConst(this, QV4::Encode(false));
     return false;
 }
 
@@ -2264,11 +2254,7 @@ bool Codegen::visit(TrueLiteral *)
     if (hasError)
         return false;
 
-    if (_expr.accept(cx)) {
-        _block->JUMP(_expr.iftrue);
-    } else {
-        _expr.result = Reference::fromConst(this, QV4::Encode(false));
-    }
+    _expr.result = Reference::fromConst(this, QV4::Encode(true));
     return false;
 }
 

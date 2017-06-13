@@ -92,25 +92,32 @@ public:
         addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr);
     }
 
-    Q_REQUIRED_RESULT Jump addInstruction(const Instruction::Jump &data)
+    Q_REQUIRED_RESULT Jump jump()
     {
+        Instruction::Jump data;
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump addInstruction(const Instruction::SetExceptionHandler &data)
+    Q_REQUIRED_RESULT Jump jumpEq(const QV4::Moth::Param &cond)
     {
+        Instruction::JumpEq data;
+        data.condition = cond;
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump addInstruction(const Instruction::JumpEq &data)
+    Q_REQUIRED_RESULT Jump jumpNe(const QV4::Moth::Param &cond)
     {
+        Instruction::JumpNe data;
+        data.condition = cond;
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump addInstruction(const Instruction::JumpNe &data)
+    Q_REQUIRED_RESULT Jump setExceptionHandler()
     {
+        Instruction::SetExceptionHandler data;
         return addJumpInstruction(data);
     }
+
 
     unsigned newTemp();
 
