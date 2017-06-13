@@ -106,41 +106,6 @@ public:
                              QV4::IR::Module *module);
 
 protected:
-    enum Format { ex, cx, nx };
-    struct Result {
-        QV4::IR::Expr *code;
-        QV4::IR::BasicBlock *iftrue;
-        QV4::IR::BasicBlock *iffalse;
-        Format format;
-        Format requested;
-
-        explicit Result(Format requested = ex)
-            : code(0)
-            , iftrue(0)
-            , iffalse(0)
-            , format(ex)
-            , requested(requested) {}
-
-        explicit Result(QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse)
-            : code(0)
-            , iftrue(iftrue)
-            , iffalse(iffalse)
-            , format(ex)
-            , requested(cx) {}
-
-        inline QV4::IR::Expr *operator*() const { Q_ASSERT(format == ex); return code; }
-        inline QV4::IR::Expr *operator->() const { Q_ASSERT(format == ex); return code; }
-
-        bool accept(Format f)
-        {
-            if (requested == f) {
-                format = f;
-                return true;
-            }
-            return false;
-        }
-    };
-
     struct Reference {
         enum Type {
             Invalid,
@@ -157,6 +122,15 @@ protected:
         bool isLValue() const { return type <= LastLValue; }
 
         Reference(Codegen *cg, Type type = Invalid) : type(type), codegen(cg) {}
+        Reference()
+            : type(Invalid)
+            , codegen(nullptr)
+        {}
+
+        bool isValid() const { return type != Invalid; }
+        bool isTempLocalArg() const { return isValid() && type < Argument; }
+        bool isConst() const { return type == Const; }
+
         static Reference fromTemp(Codegen *cg, uint tempIndex) {
             Reference r(cg, Temp);
             r.base = QV4::Moth::Param::createTemp(tempIndex);
@@ -207,8 +181,20 @@ protected:
             return r;
         }
 
+        bool isSimple() const {
+            switch (type) {
+            case Temp:
+            case Local:
+            case Argument:
+            case Const:
+                return true;
+            default:
+                return false;
+            }
+        }
+
         QV4::Moth::Param load() const;
-        void store(QV4::Moth::Param &p) const;
+        void store(const QV4::Moth::Param &p) const;
 
         QV4::Moth::Param base;
         union {
@@ -218,6 +204,53 @@ protected:
         };
         mutable int tempIndex;
         Codegen *codegen;
+    };
+
+    enum Format { ex, cx, nx };
+    struct Result {
+        Reference result;
+
+        QV4::IR::Expr *code;
+        QV4::IR::BasicBlock *iftrue;
+        QV4::IR::BasicBlock *iffalse;
+        Format format;
+        Format requested;
+
+        Result(const Reference &lrvalue)
+            : result(lrvalue)
+            , code(nullptr)
+            , iftrue(nullptr)
+            , iffalse(nullptr)
+            , format(ex)
+            , requested(ex)
+        {
+        }
+
+        explicit Result(Format requested = ex)
+            : code(0)
+            , iftrue(0)
+            , iffalse(0)
+            , format(ex)
+            , requested(requested) {}
+
+        explicit Result(QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse)
+            : code(0)
+            , iftrue(iftrue)
+            , iffalse(iffalse)
+            , format(ex)
+            , requested(cx) {}
+
+        inline QV4::IR::Expr *operator*() const { Q_ASSERT(format == ex); return code; }
+        inline QV4::IR::Expr *operator->() const { Q_ASSERT(format == ex); return code; }
+
+        bool accept(Format f)
+        {
+            if (requested == f) {
+                format = f;
+                return true;
+            }
+            return false;
+        }
     };
 
     struct Environment {
@@ -412,7 +445,7 @@ protected:
     QV4::IR::Expr *member(QV4::IR::Expr *base, const QString *name);
     QV4::IR::Expr *argument(QV4::IR::Expr *expr);
     QV4::IR::Expr *reference(QV4::IR::Expr *expr);
-    QV4::IR::Expr *unop(QV4::IR::AluOp op, QV4::IR::Expr *expr, const AST::SourceLocation &loc = AST::SourceLocation());
+    Reference unop(QV4::IR::AluOp op, const Reference &expr, const AST::SourceLocation &loc = AST::SourceLocation());
     QV4::IR::Expr *binop(QV4::IR::AluOp op, QV4::IR::Expr *left, QV4::IR::Expr *right, const AST::SourceLocation &loc = AST::SourceLocation());
     QV4::IR::Expr *call(QV4::IR::Expr *base, QV4::IR::ExprList *args);
     QV4::IR::Stmt *move(QV4::IR::Expr *target, QV4::IR::Expr *source, QV4::IR::AluOp op = QV4::IR::OpInvalid);
@@ -429,7 +462,7 @@ protected:
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
     void condition(AST::ExpressionNode *ast, QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse);
-    Result expression(AST::ExpressionNode *ast);
+    Reference expression(AST::ExpressionNode *ast);
     Result sourceElement(AST::SourceElement *ast);
     UiMember uiObjectMember(AST::UiObjectMember *ast);
 
@@ -441,14 +474,12 @@ protected:
     void variableDeclaration(AST::VariableDeclaration *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
-    QV4::IR::Expr *identifier(const QString &name, int line = 0, int col = 0);
-
     QV4::Moth::Param paramForNull();
     QV4::Moth::Param paramForUndefined();
     QV4::Moth::Param paramForBool(bool b);
     QV4::Moth::Param paramForNumber(double d);
     QV4::Moth::Param paramForConst(QV4::ReturnedValue v);
-    QV4::Moth::Param paramForName(const QString &name, bool isLhs = false);
+    Reference referenceForName(const QString &name, bool lhs);
 
     // Hook provided to implement QML lookup semantics
     virtual QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
@@ -562,6 +593,9 @@ public:
 #ifndef V4_BOOTSTRAP
     QList<QQmlError> qmlErrors() const;
 #endif
+
+    QV4::Moth::Param binopHelper(QV4::IR::AluOp oper, const QV4::Moth::Param &left,
+                                 const QV4::Moth::Param &right, const QV4::Moth::Param &dest);
 
 protected:
     Result _expr;
