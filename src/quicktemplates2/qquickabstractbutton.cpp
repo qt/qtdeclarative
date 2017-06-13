@@ -39,9 +39,12 @@
 #include "qquickbuttongroup_p.h"
 #include "qquickaction_p.h"
 #include "qquickaction_p_p.h"
+#include "qquickshortcutcontext_p_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/private/qshortcutmap_p.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQml/qqmllist.h>
 
@@ -176,6 +179,9 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
       holdTimer(0),
       delayTimer(0),
       repeatTimer(0),
+#if QT_CONFIG(shortcut)
+      shortcutId(0),
+#endif
       pressButtons(Qt::NoButton),
       indicator(nullptr),
       group(nullptr),
@@ -303,6 +309,30 @@ void QQuickAbstractButtonPrivate::stopPressRepeat()
     }
 }
 
+#if QT_CONFIG(shortcut)
+void QQuickAbstractButtonPrivate::grabShortcut()
+{
+    Q_Q(QQuickAbstractButton);
+    if (shortcut.isEmpty())
+        return;
+
+    shortcutId = QGuiApplicationPrivate::instance()->shortcutMap.addShortcut(q, shortcut, Qt::WindowShortcut, QQuickShortcutContext::matcher);
+
+    if (!q->isEnabled())
+        QGuiApplicationPrivate::instance()->shortcutMap.setShortcutEnabled(false, shortcutId, q);
+}
+
+void QQuickAbstractButtonPrivate::ungrabShortcut()
+{
+    Q_Q(QQuickAbstractButton);
+    if (!shortcutId)
+        return;
+
+    QGuiApplicationPrivate::instance()->shortcutMap.removeShortcut(shortcutId, q);
+    shortcutId = 0;
+}
+#endif
+
 void QQuickAbstractButtonPrivate::click()
 {
     Q_Q(QQuickAbstractButton);
@@ -424,8 +454,12 @@ void QQuickAbstractButton::setText(const QString &text)
     if (d->text == text)
         return;
 
-    d->text = text;
-    setAccessibleName(text);
+#if QT_CONFIG(shortcut)
+    setShortcut(QKeySequence::mnemonic(text));
+#endif
+
+    d->text = QPlatformTheme::removeMnemonics(text); // ### TODO: visualize mnemonics
+    setAccessibleName(d->text);
     buttonChange(ButtonTextChange);
     emit textChanged();
 }
@@ -775,6 +809,25 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
     emit actionChanged();
 }
 
+#if QT_CONFIG(shortcut)
+QKeySequence QQuickAbstractButton::shortcut() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->shortcut;
+}
+
+void QQuickAbstractButton::setShortcut(const QKeySequence &shortcut)
+{
+    Q_D(QQuickAbstractButton);
+    if (d->shortcut == shortcut)
+        return;
+
+    d->ungrabShortcut();
+    d->shortcut = shortcut;
+    d->grabShortcut();
+}
+#endif
+
 /*!
     \qmlmethod void QtQuick.Controls::AbstractButton::toggle()
 
@@ -784,6 +837,21 @@ void QQuickAbstractButton::toggle()
 {
     Q_D(QQuickAbstractButton);
     setChecked(!d->checked);
+}
+
+bool QQuickAbstractButton::event(QEvent *event)
+{
+    Q_D(QQuickAbstractButton);
+#if QT_CONFIG(shortcut)
+    if (event->type() == QEvent::Shortcut) {
+        QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
+        if (se->shortcutId() == d->shortcutId) {
+            d->click();
+            return true;
+        }
+    }
+#endif
+    return QQuickControl::event(event);
 }
 
 void QQuickAbstractButton::focusOutEvent(QFocusEvent *event)
@@ -855,6 +923,20 @@ void QQuickAbstractButton::timerEvent(QTimerEvent *event)
         d->trigger();
         emit pressed();
     }
+}
+
+void QQuickAbstractButton::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    Q_D(QQuickAbstractButton);
+    QQuickControl::itemChange(change, value);
+#if QT_CONFIG(shortcut)
+    if (change == ItemVisibleHasChanged) {
+        if (value.boolValue)
+            d->grabShortcut();
+        else
+            d->ungrabShortcut();
+    }
+#endif
 }
 
 void QQuickAbstractButton::buttonChange(ButtonChange change)

@@ -289,4 +289,38 @@ TestCase {
         compare(buttonSpy.count, data.clicked ? 1 : 0)
         compare(actionSpy.count, data.triggered ? 1 : 0)
     }
+
+    function test_mnemonic() {
+        if (Qt.platform.os === "osx" || Qt.platform.os === "macos")
+            skip("Mnemonics are not used on macOS")
+
+        var control = createTemporaryObject(button, testCase)
+        verify(control)
+
+        control.text = "&Hello"
+        compare(control.text, "Hello") // ### TODO: visualize mnemonics
+
+        var clickSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
+        verify(clickSpy.valid)
+
+        keyClick(Qt.Key_H, Qt.AltModifier)
+        compare(clickSpy.count, 1)
+
+        control.visible = false
+        keyClick(Qt.Key_H, Qt.AltModifier)
+        compare(clickSpy.count, 1)
+
+        control.visible = true
+        keyClick(Qt.Key_H, Qt.AltModifier)
+        compare(clickSpy.count, 2)
+
+        control.text = "Te&st"
+        compare(control.text, "Test") // ### TODO: visualize mnemonics
+
+        keyClick(Qt.Key_H, Qt.AltModifier)
+        compare(clickSpy.count, 2)
+
+        keyClick(Qt.Key_S, Qt.AltModifier)
+        compare(clickSpy.count, 3)
+    }
 }

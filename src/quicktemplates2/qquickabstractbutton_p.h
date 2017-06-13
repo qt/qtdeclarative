@@ -116,6 +116,11 @@ public:
     QQuickAction *action() const;
     void setAction(QQuickAction *action);
 
+#if QT_CONFIG(shortcut)
+    QKeySequence shortcut() const;
+    void setShortcut(const QKeySequence &shortcut);
+#endif
+
 public Q_SLOTS:
     void toggle();
 
@@ -141,12 +146,15 @@ Q_SIGNALS:
 protected:
     QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);
 
+    bool event(QEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void timerEvent(QTimerEvent *event) override;
+
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
     enum ButtonChange {
         ButtonAutoRepeatChange,

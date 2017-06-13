@@ -50,6 +50,7 @@
 
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
+#include <QtGui/qkeysequence.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -81,6 +82,11 @@ public:
     void startPressRepeat();
     void stopPressRepeat();
 
+#if QT_CONFIG(shortcut)
+    void grabShortcut();
+    void ungrabShortcut();
+#endif
+
     QQuickAbstractButton *findCheckedButton() const;
     QList<QQuickAbstractButton *> findExclusiveButtons() const;
 
@@ -101,6 +107,10 @@ public:
     int holdTimer;
     int delayTimer;
     int repeatTimer;
+#if QT_CONFIG(shortcut)
+    int shortcutId;
+    QKeySequence shortcut;
+#endif
     QQuickIcon icon;
     QPointF pressPoint;
     Qt::MouseButtons pressButtons;
