@@ -2735,23 +2735,16 @@ bool Codegen::visit(IfStatement *ast)
 
     TempScope scope(_function);
 
-    IR::BasicBlock *iftrue = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *iffalse = ast->ko ? _function->newBasicBlock(exceptionHandler()) : 0;
-    IR::BasicBlock *endif = _function->newBasicBlock(exceptionHandler());
+    Reference r = expression(ast->expression);
 
-    condition(ast->expression, iftrue, ast->ko ? iffalse : endif);
+    // ### handle const Reference
 
-    _block = iftrue;
+    Moth::BytecodeGenerator::Jump jump_else = bytecodeGenerator->jumpNe(r.asRValue());
     statement(ast->ok);
-    setJumpOutLocation(_block->JUMP(endif), ast->ok, ast->ifToken);
-
-    if (ast->ko) {
-        _block = iffalse;
-        statement(ast->ko);
-        setJumpOutLocation(_block->JUMP(endif), ast->ko, ast->elseToken);
-    }
-
-    _block = endif;
+    Moth::BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
+    jump_else.link();
+    statement(ast->ko);
+    jump_endif.link();
 
     return false;
 }
