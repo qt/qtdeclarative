@@ -1683,51 +1683,57 @@ bool Codegen::visit(ConditionalExpression *ast)
 
 bool Codegen::visit(DeleteExpression *ast)
 {
-//    if (hasError)
-//        return false;
+    if (hasError)
+        return false;
 
-//    IR::Expr* expr = *expression(ast->expression);
-//    if (hasError)
-//        return false;
-//    // Temporaries cannot be deleted
-//    IR::ArgLocal *al = expr->asArgLocal();
-//    if (al && al->index < static_cast<unsigned>(_variableEnvironment->members.size())) {
-//        // Trying to delete a function argument might throw.
-//        if (_function->isStrict) {
-//            throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
-//            return false;
-//        }
-//        _expr.code = _block->CONST(IR::BoolType, 0);
-//        return false;
-//    }
-//    if (_function->isStrict && expr->asName()) {
-//        throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
-//        return false;
-//    }
+    Reference expr = expression(ast->expression);
+    if (hasError)
+        return false;
+    // Temporaries cannot be deleted
+    if (expr.type == Reference::Local || expr.type == Reference::Argument) {
+        // Trying to delete a function argument might throw.
+        if (_function->isStrict) {
+            throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
+            return false;
+        }
+        _expr.result = Reference::fromConst(this, QV4::Encode(false));
+        return false;
+    }
+    // [[11.4.1]] Return true if it's not a reference
+    if (expr.isSimple()) {
+        _expr.result = Reference::fromConst(this, QV4::Encode(true));
+        return false;
+    }
 
-//    // [[11.4.1]] Return true if it's not a reference
-//    if (expr->asConst() || expr->asString()) {
-//        _expr.code = _block->CONST(IR::BoolType, 1);
-//        return false;
-//    }
+    Reference r = Reference::fromTemp(this, bytecodeGenerator->newTemp());
 
-//    // Return values from calls are also not a reference, but we have to
-//    // perform the call to allow for side effects.
-//    if (expr->asCall()) {
-//        _block->EXP(expr);
-//        _expr.code = _block->CONST(IR::BoolType, 1);
-//        return false;
-//    }
-//    if (expr->asTemp() ||
-//            (expr->asArgLocal() &&
-//             expr->asArgLocal()->index >= static_cast<unsigned>(_variableEnvironment->members.size()))) {
-//        _expr.code = _block->CONST(IR::BoolType, 1);
-//        return false;
-//    }
+    if (expr.type == Reference::Name) {
+        if (_function->isStrict) {
+            throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
+            return false;
+        }
+        Moth::Instruction::CallBuiltinDeleteName del;
+        del.name = expr.nameIndex;
+        del.result = r.asLValue();
+        bytecodeGenerator->addInstruction(del);
+    } else if (expr.type == Reference::Member) {
+        Moth::Instruction::CallBuiltinDeleteMember del;
+        del.base = expr.base;
+        del.member = expr.nameIndex;
+        del.result = r.asLValue();
+        bytecodeGenerator->addInstruction(del);
+    } else if (expr.type == Reference::Subscript) {
+        Moth::Instruction::CallBuiltinDeleteSubscript del;
+        del.base = expr.base;
+        del.index = expr.subscript;
+        del.result = r.asLValue();
+        bytecodeGenerator->addInstruction(del);
+    } else {
+        Q_UNREACHABLE();
+        Q_ASSERT(false);
+    }
 
-//    IR::ExprList *args = _function->New<IR::ExprList>();
-//    args->init(reference(expr));
-//    _expr.code = call(_block->NAME(IR::Name::builtin_delete, ast->deleteToken.startLine, ast->deleteToken.startColumn), args);
+    _expr.result = r;
     return false;
 }
 
