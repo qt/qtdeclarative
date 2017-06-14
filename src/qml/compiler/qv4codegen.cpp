@@ -2641,27 +2641,20 @@ bool Codegen::visit(DoWhileStatement *ast)
 
     TempScope scope(_function);
 
-#if 0
+    Moth::BytecodeGenerator::Label body = bytecodeGenerator->label();
+    Moth::BytecodeGenerator::Label cond = bytecodeGenerator->newLabel();
+    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-    IR::BasicBlock *loopbody = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *loopcond = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *loopend = _function->newBasicBlock(exceptionHandler());
+    enterLoop(ast, &end, &cond);
 
-    enterLoop(ast, loopend, loopcond);
-
-    _block->JUMP(loopbody);
-
-    _block = loopbody;
     statement(ast->statement);
-    setJumpOutLocation(_block->JUMP(loopcond), ast->statement, ast->semicolonToken);
 
-    _block = loopcond;
-    condition(ast->expression, loopbody, loopend);
-
-    _block = loopend;
+    cond.link();
+    Reference r = expression(ast->expression);
+    bytecodeGenerator->jumpEq(r.asRValue()).link(body);
+    end.link();
 
     leaveLoop();
-#endif
 
     return false;
 }
