@@ -588,7 +588,7 @@ protected:
     QV4::IR::Module *_module;
     QV4::IR::Function *_function;
     QV4::IR::BasicBlock *_block;
-    QV4::IR::BasicBlock *_exitBlock;
+    QV4::Moth::BytecodeGenerator::Label _exitBlock;
     unsigned _returnAddress;
     Environment *_variableEnvironment;
     QV4::Loop *_loop;

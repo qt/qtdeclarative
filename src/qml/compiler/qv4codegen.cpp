@@ -592,7 +592,6 @@ Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     : _module(0)
     , _function(0)
     , _block(0)
-    , _exitBlock(0)
     , _returnAddress(0)
     , _variableEnvironment(0)
     , _loop(0)
@@ -2381,7 +2380,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     int functionIndex = _module->functions.count() - 1;
 
     IR::BasicBlock *entryBlock = function->newBasicBlock(0);
-    IR::BasicBlock *exitBlock = function->newBasicBlock(0, IR::Function::DontInsertBlock);
     function->hasDirectEval = _variableEnvironment->hasDirectEval || _variableEnvironment->compilationMode == EvalCode
             || _module->debugMode; // Conditional breakpoints are like eval in the function
     function->usesArgumentsObject = _variableEnvironment->parent && (_variableEnvironment->usesArgumentsObject == Environment::ArgumentsObjectUsed);
@@ -2399,7 +2397,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     QV4::Moth::BytecodeGenerator *savedBytecodeGenerator;
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
-
 
     if (function->usesArgumentsObject)
         _variableEnvironment->enter(QStringLiteral("arguments"), Environment::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
@@ -2452,6 +2449,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     }
 
     unsigned returnAddress = entryBlock->newTemp();
+    auto exitBlock = bytecodeGenerator->newLabel();
 
 //###    setLocation(exitBlock->RET(exitBlock->TEMP(returnAddress)), ast->lastSourceLocation());
 
@@ -2496,9 +2494,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     sourceElements(body);
 
-    _function->addBasicBlock(_exitBlock);
-
-    _block->JUMP(_exitBlock);
+    _exitBlock.link();
 
     {
         QV4::Moth::Instruction::Ret ret;
@@ -2914,13 +2910,14 @@ bool Codegen::visit(ReturnStatement *ast)
 
     // Since we're leaving, don't let any finally statements we emit as part of the unwinding
     // jump to exception handlers at run-time if they throw.
+    //### TODO:
     IR::BasicBlock *unwindBlock = _function->newBasicBlock(/*no exception handler*/Q_NULLPTR);
     _block->JUMP(unwindBlock);
     _block = unwindBlock;
 
     unwindException(0);
 
-    _block->JUMP(_exitBlock);
+    bytecodeGenerator->jump().link(_exitBlock);
     return false;
 }
 
