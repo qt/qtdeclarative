@@ -1230,57 +1230,38 @@ bool Codegen::visit(ArrayLiteral *ast)
     if (hasError)
         return false;
 
-    const unsigned t = _block->newTemp();
-
+    auto result = Reference::fromTemp(this, _block->newTemp());
     TempScope scope(_function);
+
+    int argc = 0;
+    auto undefined = [this](){ return Reference::fromConst(this, Encode::undefined()); };
+    auto push = [this, &argc](const Reference &arg) {
+        Reference::fromTemp(this, argc).store(arg);
+        argc += 1;
+    };
 
     IR::ExprList *args = 0;
     IR::ExprList *current = 0;
     for (ElementList *it = ast->elements; it; it = it->next) {
-        for (Elision *elision = it->elision; elision; elision = elision->next) {
-            IR::ExprList *arg = _function->New<IR::ExprList>();
-            if (!current) {
-                args = arg;
-            } else {
-                current->next = arg;
-            }
-            current = arg;
-            current->expr = _block->CONST(IR::MissingType, 0);
-        }
-        Result expr = expression(it->expression);
+        for (Elision *elision = it->elision; elision; elision = elision->next)
+            push(undefined());
+
+        Reference expr = expression(it->expression);
         if (hasError)
             return false;
 
-        IR::ExprList *arg = _function->New<IR::ExprList>();
-        if (!current) {
-            args = arg;
-        } else {
-            current->next = arg;
-        }
-        current = arg;
-
-        IR::Expr *exp = *expr;
-        if (exp->asTemp() || expr->asArgLocal() || exp->asConst()) {
-            current->expr = exp;
-        } else {
-            unsigned value = _block->newTemp();
-            move(_block->TEMP(value), exp);
-            current->expr = _block->TEMP(value);
-        }
+        push(expr);
     }
-    for (Elision *elision = ast->elision; elision; elision = elision->next) {
-        IR::ExprList *arg = _function->New<IR::ExprList>();
-        if (!current) {
-            args = arg;
-        } else {
-            current->next = arg;
-        }
-        current = arg;
-        current->expr = _block->CONST(IR::MissingType, 0);
-    }
+    for (Elision *elision = ast->elision; elision; elision = elision->next)
+        push(undefined());
 
-    move(_block->TEMP(t), _block->CALL(_block->NAME(IR::Name::builtin_define_array, 0, 0), args));
-    _expr.code = _block->TEMP(t);
+    Moth::Instruction::CallBuiltinDefineArray call;
+    call.argc = argc;
+    call.args = 0;
+    call.result = result.asLValue();
+    bytecodeGenerator->addInstruction(call);
+    _expr.result = result;
+
     return false;
 }
 
