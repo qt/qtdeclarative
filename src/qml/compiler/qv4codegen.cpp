@@ -1378,6 +1378,7 @@ bool Codegen::visit(BinaryExpression *ast)
     switch (ast->op) {
     case QSOperator::Or:
     case QSOperator::And:
+        Q_UNREACHABLE(); // handled separately above
         break;
 
     case QSOperator::Assign: {
@@ -1435,26 +1436,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::Le:
     case QSOperator::Lt:
     case QSOperator::StrictEqual:
-    case QSOperator::StrictNotEqual: {
-        TempScope scope(_function);
-//        if (!left->asTemp() && !left->asArgLocal() && !left->asConst()) {
-//            const unsigned t = _block->newTemp();
-//            setLocation(move(_block->TEMP(t), left), ast->operatorToken);
-//            left = _block->TEMP(t);
-//        }
-
-//        Result right = expression(ast->right);
-//        if (hasError)
-//            return false;
-
-//        if (_expr.accept(cx)) {
-//            setLocation(cjump(binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken), _expr.iftrue, _expr.iffalse), ast->operatorToken);
-//        } else {
-//            _expr.code = binop(IR::binaryOperator(ast->op), left, *right, ast->operatorToken);
-//        }
-        break;
-    }
-
+    case QSOperator::StrictNotEqual:
     case QSOperator::Add:
     case QSOperator::BitAnd:
     case QSOperator::BitOr:
