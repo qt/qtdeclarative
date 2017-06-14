@@ -2652,8 +2652,7 @@ bool Codegen::visit(DoWhileStatement *ast)
     statement(ast->statement);
 
     cond.link();
-    Reference r = expression(ast->expression);
-    bytecodeGenerator->jumpEq(r.asRValue()).link(body);
+    condition(ast->expression, &body, &end, false);
     end.link();
 
     leaveLoop();
@@ -2742,18 +2741,18 @@ bool Codegen::visit(ForStatement *ast)
     statement(ast->initialiser);
 
     Moth::BytecodeGenerator::Label cond = bytecodeGenerator->label();
+    Moth::BytecodeGenerator::Label body = bytecodeGenerator->newLabel();
     Moth::BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
     Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     enterLoop(ast, &end, &step);
 
-    Reference r = expression(ast->condition);
-    bytecodeGenerator->jumpNe(r.asRValue()).link(end);
+    condition(ast->condition, &body, &end, true);
 
+    body.link();
     statement(ast->statement);
 
     step.link();
-
     statement(ast->expression);
     bytecodeGenerator->jump().link(cond);
     end.link();
@@ -2881,18 +2880,18 @@ bool Codegen::visit(LocalForStatement *ast)
     variableDeclarationList(ast->declarations);
 
     Moth::BytecodeGenerator::Label cond = bytecodeGenerator->label();
+    Moth::BytecodeGenerator::Label body = bytecodeGenerator->newLabel();
     Moth::BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
     Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     enterLoop(ast, &end, &step);
 
-    Reference r = expression(ast->condition);
-    bytecodeGenerator->jumpNe(r.asRValue()).link(end);
+    condition(ast->condition, &body, &end, true);
 
+    body.link();
     statement(ast->statement);
 
     step.link();
-
     statement(ast->expression);
     bytecodeGenerator->jump().link(cond);
     end.link();
@@ -3164,20 +3163,19 @@ bool Codegen::visit(WhileStatement *ast)
     if (hasError)
         return true;
 
+    Moth::BytecodeGenerator::Label start = bytecodeGenerator->newLabel();
     Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
-
     Moth::BytecodeGenerator::Label cond = bytecodeGenerator->label();
     enterLoop(ast, &end, &cond);
 
-    Reference r = expression(ast->expression);
-    Moth::BytecodeGenerator::Jump jump_end = bytecodeGenerator->jumpNe(r.asRValue());
+    condition(ast->expression, &start, &end, true);
 
+    start.link();
     statement(ast->statement);
     bytecodeGenerator->jump().link(cond);
 
     leaveLoop();
     end.link();
-    jump_end.link();
 
     return false;
 }
