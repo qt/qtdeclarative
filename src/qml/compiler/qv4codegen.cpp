@@ -1639,14 +1639,12 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError)
         return false;
 
-    Q_ASSERT(base.type == Reference::Name); //### TODO: support more calls
-
     auto argc = pushArgs(ast->arguments);
     if (hasError)
         return false;
 
-    QV4::Moth::Instruction::CallActivationProperty call;
-    call.name = base.nameIndex;
+    QV4::Moth::Instruction::CallValue call;
+    call.dest = base.asRValue();
     call.argc = argc;
     call.callData = 0;
     call.result = Moth::Param::createTemp(0); bytecodeGenerator->addInstruction(call);
@@ -1888,14 +1886,12 @@ bool Codegen::visit(NewExpression *ast)
     if (hasError)
         return false;
 
-    Q_ASSERT(base.type == Reference::Name); //### TODO: support more calls
-
-    QV4::Moth::Instruction::CreateActivationProperty construct;
-    construct.name = base.nameIndex;
-    construct.argc = 0;
-    construct.callData = 0;
-    construct.result = Moth::Param::createTemp(0);
-    bytecodeGenerator->addInstruction(construct);
+    QV4::Moth::Instruction::CreateValue create;
+    create.func = base.asRValue();
+    create.argc = 0;
+    create.callData = 0;
+    create.result = Moth::Param::createTemp(0);
+    bytecodeGenerator->addInstruction(create);
     _expr.result = Reference::fromTemp(this, 0);
     return false;
 }
@@ -1911,18 +1907,16 @@ bool Codegen::visit(NewMemberExpression *ast)
     if (hasError)
         return false;
 
-    Q_ASSERT(base.type == Reference::Name); //### TODO: support more calls
-
     auto argc = pushArgs(ast->arguments);
     if (hasError)
         return false;
 
-    QV4::Moth::Instruction::CreateActivationProperty construct;
-    construct.name = base.nameIndex;
-    construct.argc = argc;
-    construct.callData = 0;
-    construct.result = Moth::Param::createTemp(0);
-    bytecodeGenerator->addInstruction(construct);
+    QV4::Moth::Instruction::CreateValue create;
+    create.func = base.asRValue();
+    create.argc = argc;
+    create.callData = 0;
+    create.result = Moth::Param::createTemp(0);
+    bytecodeGenerator->addInstruction(create);
     _expr.result = Reference::fromTemp(this, 0);
     return false;
 }
