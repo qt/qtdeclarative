@@ -8,6 +8,7 @@ HEADERS += \
     $$PWD/qquickiconimage_p_p.h \
     $$PWD/qquickiconlabel_p.h \
     $$PWD/qquickiconlabel_p_p.h \
+    $$PWD/qquickmnemoniclabel_p.h \
     $$PWD/qquickpaddedrectangle_p.h \
     $$PWD/qquickplaceholdertext_p.h \
     $$PWD/qquickproxytheme_p.h \
@@ -26,6 +27,7 @@ SOURCES += \
     $$PWD/qquickcolorimage.cpp \
     $$PWD/qquickiconimage.cpp \
     $$PWD/qquickiconlabel.cpp \
+    $$PWD/qquickmnemoniclabel.cpp \
     $$PWD/qquickpaddedrectangle.cpp \
     $$PWD/qquickplaceholdertext.cpp \
     $$PWD/qquickproxytheme.cpp \

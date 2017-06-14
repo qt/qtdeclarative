@@ -409,7 +409,7 @@ void QQuickAbstractButton::setText(const QString &text)
     setShortcut(QKeySequence::mnemonic(text));
 #endif
 
-    d->text = QPlatformTheme::removeMnemonics(text); // ### TODO: visualize mnemonics
+    d->text = text;
     setAccessibleName(d->text);
     buttonChange(ButtonTextChange);
     emit textChanged();

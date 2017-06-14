@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKICONLABEL_P_P_H
-#define QQUICKICONLABEL_P_P_H
+#ifndef QQUICKMNEMONICLABEL_P_H
+#define QQUICKMNEMONICLABEL_P_H
 
 //
 //  W A R N I N G
@@ -48,66 +48,35 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquicktext_p.h>
 #include <QtQuickControls2/private/qtquickcontrols2global_p.h>
-#include <QtQuickControls2/private/qquickiconlabel_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickIconImage;
-class QQuickMnemonicLabel;
-
-class QQuickIconLabelPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickMnemonicLabel : public QQuickText
 {
-    Q_DECLARE_PUBLIC(QQuickIconLabel)
+    Q_OBJECT
+    Q_PROPERTY(QString text READ text WRITE setText FINAL)
+    Q_PROPERTY(bool mnemonicVisible READ isMnemonicVisible WRITE setMnemonicVisible FINAL)
 
 public:
-    explicit QQuickIconLabelPrivate();
+    explicit QQuickMnemonicLabel(QQuickItem *parent = nullptr);
 
-    bool hasIcon() const;
-    bool hasText() const;
+    QString text() const;
+    void setText(const QString &text);
 
-    bool createImage();
-    bool destroyImage();
-    bool updateImage();
-    void syncImage();
-    void updateOrSyncImage();
+    bool isMnemonicVisible() const;
+    void setMnemonicVisible(bool visible);
 
-    bool createLabel();
-    bool destroyLabel();
-    bool updateLabel();
-    void syncLabel();
-    void updateOrSyncLabel();
+private:
+    void updateMnemonic();
 
-    void updateImplicitSize();
-    void layout();
-
-    void watchChanges(QQuickItem *item);
-    void unwatchChanges(QQuickItem *item);
-    void setPositioningDirty();
-
-    bool isLeftToRight() const;
-
-    void itemImplicitWidthChanged(QQuickItem *) override;
-    void itemImplicitHeightChanged(QQuickItem *) override;
-    void itemDestroyed(QQuickItem *item) override;
-
-    bool mirrored;
-    QQuickIconLabel::Display display;
-    Qt::Alignment alignment;
-    qreal spacing;
-    qreal topPadding;
-    qreal leftPadding;
-    qreal rightPadding;
-    qreal bottomPadding;
-    QFont font;
-    QColor color;
-    QString text;
-    QQuickIcon icon;
-    QQuickIconImage *image;
-    QQuickMnemonicLabel *label;
+    bool m_mnemonicVisible;
+    QString m_fullText;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKICONLABEL_P_P_H
+QML_DECLARE_TYPE(QQuickMnemonicLabel)
+
+#endif // QQUICKMNEMONICLABEL_P_H
