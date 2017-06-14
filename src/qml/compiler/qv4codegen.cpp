@@ -2906,98 +2906,75 @@ bool Codegen::visit(ReturnStatement *ast)
 
 bool Codegen::visit(SwitchStatement *ast)
 {
-//    if (hasError)
-//        return true;
+    if (hasError)
+        return true;
 
-//    TempScope scope(_function);
+    TempScope scope(_function);
 
-//    IR::BasicBlock *switchend = _function->newBasicBlock(exceptionHandler());
+    if (ast->block) {
+        Moth::BytecodeGenerator::Label switchEnd = bytecodeGenerator->newLabel();
 
-//    if (ast->block) {
-//        int lhs = _block->newTemp();
-//        move(_block->TEMP(lhs), *expression(ast->expression));
-//        IR::BasicBlock *switchcond = _function->newBasicBlock(exceptionHandler());
-//        _block->JUMP(switchcond);
-//        IR::BasicBlock *previousBlock = 0;
+        Reference lhs = expression(ast->expression);
 
-//        QHash<Node *, IR::BasicBlock *> blockMap;
+        // set up labels for all clauses
+        QHash<Node *, Moth::BytecodeGenerator::Label> blockMap;
+        for (CaseClauses *it = ast->block->clauses; it; it = it->next)
+            blockMap[it->clause] = bytecodeGenerator->newLabel();
+        if (ast->block->defaultClause)
+            blockMap[ast->block->defaultClause] = bytecodeGenerator->newLabel();
+        for (CaseClauses *it = ast->block->moreClauses; it; it = it->next)
+            blockMap[it->clause] = bytecodeGenerator->newLabel();
 
-//        enterLoop(ast, switchend, 0);
+        // do the switch conditions
+        for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
+            CaseClause *clause = it->clause;
+            Reference rhs = expression(clause->expression);
+            bytecodeGenerator->jumpStrictEqual(lhs.asRValue(), rhs.asRValue()).link(blockMap.value(clause));
+        }
 
-//        for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
-//            CaseClause *clause = it->clause;
+        for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
+            CaseClause *clause = it->clause;
+            Reference rhs = expression(clause->expression);
+            bytecodeGenerator->jumpStrictEqual(lhs.asRValue(), rhs.asRValue()).link(blockMap.value(clause));
+        }
 
-//            _block = _function->newBasicBlock(exceptionHandler());
-//            blockMap[clause] = _block;
+        if (DefaultClause *defaultClause = ast->block->defaultClause)
+            bytecodeGenerator->jump().link(blockMap.value(ast->block->defaultClause));
+        else
+            bytecodeGenerator->jump().link(switchEnd);
 
-//            if (previousBlock && !previousBlock->isTerminated())
-//                previousBlock->JUMP(_block);
+        enterLoop(ast, &switchEnd, 0);
 
-//            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
-//                statement(it2->statement);
+        for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
+            CaseClause *clause = it->clause;
+            blockMap[clause].link();
 
-//            previousBlock = _block;
-//        }
+            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
+                statement(it2->statement);
+        }
 
-//        if (ast->block->defaultClause) {
-//            _block = _function->newBasicBlock(exceptionHandler());
-//            blockMap[ast->block->defaultClause] = _block;
+        if (ast->block->defaultClause) {
+            DefaultClause *clause = ast->block->defaultClause;
+            blockMap[clause].link();
 
-//            if (previousBlock && !previousBlock->isTerminated())
-//                previousBlock->JUMP(_block);
+            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
+                statement(it2->statement);
+        }
 
-//            for (StatementList *it2 = ast->block->defaultClause->statements; it2; it2 = it2->next)
-//                statement(it2->statement);
+        for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
+            CaseClause *clause = it->clause;
+            blockMap[clause].link();
 
-//            previousBlock = _block;
-//        }
+            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
+                statement(it2->statement);
+        }
 
-//        for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
-//            CaseClause *clause = it->clause;
+        leaveLoop();
 
-//            _block = _function->newBasicBlock(exceptionHandler());
-//            blockMap[clause] = _block;
+        switchEnd.link();
 
-//            if (previousBlock && !previousBlock->isTerminated())
-//                previousBlock->JUMP(_block);
+    }
 
-//            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
-//                statement(it2->statement);
-
-//            previousBlock = _block;
-//        }
-
-//        leaveLoop();
-
-//        _block->JUMP(switchend);
-
-//        _block = switchcond;
-//        for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
-//            CaseClause *clause = it->clause;
-//            Result rhs = expression(clause->expression);
-//            IR::BasicBlock *iftrue = blockMap[clause];
-//            IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-//            setLocation(cjump(binop(IR::OpStrictEqual, _block->TEMP(lhs), *rhs), iftrue, iffalse), clause->caseToken);
-//            _block = iffalse;
-//        }
-
-//        for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
-//            CaseClause *clause = it->clause;
-//            Result rhs = expression(clause->expression);
-//            IR::BasicBlock *iftrue = blockMap[clause];
-//            IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-//            setLocation(cjump(binop(IR::OpStrictEqual, _block->TEMP(lhs), *rhs), iftrue, iffalse), clause->caseToken);
-//            _block = iffalse;
-//        }
-
-//        if (DefaultClause *defaultClause = ast->block->defaultClause) {
-//            setLocation(_block->JUMP(blockMap[ast->block->defaultClause]), defaultClause->defaultToken);
-//        }
-//    }
-
-//    _block->JUMP(switchend);
-
-//    _block = switchend;
     return false;
 }
 
