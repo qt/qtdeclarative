@@ -2795,14 +2795,11 @@ bool Codegen::visit(LabelledStatement *ast)
             AST::cast<AST::LocalForEachStatement *>(ast->statement)) {
         statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
     } else {
-#if 0
-        IR::BasicBlock *breakBlock = _function->newBasicBlock(exceptionHandler());
-        enterLoop(ast->statement, breakBlock, /*continueBlock*/ 0);
+        Moth::BytecodeGenerator::Label breakLabel = bytecodeGenerator->newLabel();
+        enterLoop(ast->statement, &breakLabel, /*continueBlock*/ 0);
         statement(ast->statement);
-        _block->JUMP(breakBlock);
-        _block = breakBlock;
+        breakLabel.link();
         leaveLoop();
-#endif
     }
 
     return false;
