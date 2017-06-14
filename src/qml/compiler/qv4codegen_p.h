@@ -217,10 +217,11 @@ protected:
         Reference result;
 
         QV4::IR::Expr *code;
-        QV4::IR::BasicBlock *iftrue;
-        QV4::IR::BasicBlock *iffalse;
+        const QV4::Moth::BytecodeGenerator::Label *iftrue;
+        const QV4::Moth::BytecodeGenerator::Label *iffalse;
         Format format;
         Format requested;
+        bool trueBlockFollowsCondition = false;
 
         Result(const Reference &lrvalue)
             : result(lrvalue)
@@ -239,12 +240,16 @@ protected:
             , format(ex)
             , requested(requested) {}
 
-        explicit Result(QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse)
+        explicit Result(const QV4::Moth::BytecodeGenerator::Label *iftrue,
+                        const QV4::Moth::BytecodeGenerator::Label *iffalse,
+                        bool trueBlockFollowsCondition)
             : code(0)
             , iftrue(iftrue)
             , iffalse(iffalse)
             , format(ex)
-            , requested(cx) {}
+            , requested(cx)
+            , trueBlockFollowsCondition(trueBlockFollowsCondition)
+        {}
 
         inline QV4::IR::Expr *operator*() const { Q_ASSERT(format == ex); return code; }
         inline QV4::IR::Expr *operator->() const { Q_ASSERT(format == ex); return code; }
@@ -437,7 +442,9 @@ protected:
 
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
-    void condition(AST::ExpressionNode *ast, QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse);
+    void condition(AST::ExpressionNode *ast, const QV4::Moth::BytecodeGenerator::Label *iftrue,
+                   const QV4::Moth::BytecodeGenerator::Label *iffalse,
+                   bool trueBlockFollowsCondition);
     Reference expression(AST::ExpressionNode *ast);
     Result sourceElement(AST::SourceElement *ast);
     UiMember uiObjectMember(AST::UiObjectMember *ast);

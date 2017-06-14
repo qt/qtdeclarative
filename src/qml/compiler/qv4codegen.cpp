@@ -946,15 +946,22 @@ void Codegen::statement(ExpressionNode *ast)
     }
 }
 
-void Codegen::condition(ExpressionNode *ast, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
+void Codegen::condition(ExpressionNode *ast, const Moth::BytecodeGenerator::Label *iftrue,
+                        const Moth::BytecodeGenerator::Label *iffalse, bool trueBlockFollowsCondition)
 {
     if (ast) {
-        Result r(iftrue, iffalse);
+        Result r(iftrue, iffalse, trueBlockFollowsCondition);
         qSwap(_expr, r);
         accept(ast);
         qSwap(_expr, r);
         if (r.format == ex) {
-            setLocation(cjump(*r, r.iftrue, r.iffalse), ast->firstSourceLocation());
+            //### TODO:
+//            setLocation(cjump(*r, r.iftrue, r.iffalse), ast->firstSourceLocation());
+            auto cond = r.result.asRValue();
+            if (r.trueBlockFollowsCondition)
+                bytecodeGenerator->jumpNe(cond).link(*r.iffalse);
+            else
+                bytecodeGenerator->jumpEq(cond).link(*r.iftrue);
         }
     }
 }
@@ -1316,57 +1323,68 @@ bool Codegen::visit(BinaryExpression *ast)
 
     if (ast->op == QSOperator::And) {
         if (_expr.accept(cx)) {
-            IR::BasicBlock *iftrue = _function->newBasicBlock(exceptionHandler());
-            condition(ast->left, iftrue, _expr.iffalse);
-            _block = iftrue;
-            condition(ast->right, _expr.iftrue, _expr.iffalse);
+            auto iftrue = bytecodeGenerator->newLabel();
+            condition(ast->left, &iftrue, _expr.iffalse, true);
+            iftrue.link();
+            condition(ast->right, _expr.iftrue, _expr.iffalse, _expr.trueBlockFollowsCondition);
         } else {
-            IR::BasicBlock *iftrue = _function->newBasicBlock(exceptionHandler());
-            IR::BasicBlock *endif = _function->newBasicBlock(exceptionHandler());
+            auto iftrue = bytecodeGenerator->newLabel();
+            auto endif = bytecodeGenerator->newLabel();
 
-            const unsigned r = _block->newTemp();
+            auto r = Reference::fromTemp(this, _block->newTemp());
 
-            Result lhs = expression(ast->left);
+            Reference lhs = expression(ast->left);
             if (hasError)
                 return false;
-            move(_block->TEMP(r), *lhs);
-            setLocation(cjump(_block->TEMP(r), iftrue, endif), ast->operatorToken);
-            _block = iftrue;
-            Result rhs = expression(ast->right);
+
+            r.store(lhs);
+
+            //### TODO:
+//            setLocation(cjump(_block->TEMP(r), iftrue, endif), ast->operatorToken);
+            bytecodeGenerator->jumpNe(r.asRValue()).link(endif);
+            iftrue.link();
+
+            Reference rhs = expression(ast->right);
             if (hasError)
                 return false;
-            move(_block->TEMP(r), *rhs);
-            _block->JUMP(endif);
 
-            _expr.code = _block->TEMP(r);
-            _block = endif;
+            r.store(rhs);
+            endif.link();
+
+            _expr.result = r;
         }
         return false;
     } else if (ast->op == QSOperator::Or) {
         if (_expr.accept(cx)) {
-            IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-            condition(ast->left, _expr.iftrue, iffalse);
-            _block = iffalse;
-            condition(ast->right, _expr.iftrue, _expr.iffalse);
+            auto iffalse = bytecodeGenerator->newLabel();
+            condition(ast->left, _expr.iftrue, &iffalse, false);
+            iffalse.link();
+            condition(ast->right, _expr.iftrue, _expr.iffalse, _expr.trueBlockFollowsCondition);
         } else {
-            IR::BasicBlock *iffalse = _function->newBasicBlock(exceptionHandler());
-            IR::BasicBlock *endif = _function->newBasicBlock(exceptionHandler());
+            auto iffalse = bytecodeGenerator->newLabel();
+            auto endif = bytecodeGenerator->newLabel();
 
-            const unsigned r = _block->newTemp();
-            Result lhs = expression(ast->left);
+            auto r = Reference::fromTemp(this, _block->newTemp());
+
+            Reference lhs = expression(ast->left);
             if (hasError)
                 return false;
-            move(_block->TEMP(r), *lhs);
-            setLocation(cjump(_block->TEMP(r), endif, iffalse), ast->operatorToken);
-            _block = iffalse;
-            Result rhs = expression(ast->right);
+
+            r.store(lhs);
+
+            //### TODO:
+//            setLocation(cjump(_block->TEMP(r), endif, iffalse), ast->operatorToken);
+            bytecodeGenerator->jumpEq(r.asRValue()).link(endif);
+            iffalse.link();
+
+            Reference rhs = expression(ast->right);
             if (hasError)
                 return false;
-            move(_block->TEMP(r), *rhs);
-            _block->JUMP(endif);
 
-            _block = endif;
-            _expr.code = _block->TEMP(r);
+            r.store(rhs);
+            endif.link();
+
+            _expr.result = r;
         }
         return false;
     }
@@ -1928,8 +1946,10 @@ bool Codegen::visit(NullExpression *)
     if (hasError)
         return false;
 
-    if (_expr.accept(cx)) _block->JUMP(_expr.iffalse);
-    else _expr.code = _block->CONST(IR::NullType, 0);
+    if (_expr.accept(cx))
+        bytecodeGenerator->jump().link(*_expr.iffalse);
+    else
+        _expr.result = Reference::fromConst(this, Encode::null());
 
     return false;
 }
@@ -2746,19 +2766,19 @@ bool Codegen::visit(IfStatement *ast)
 
     TempScope scope(_function);
 
-    Reference r = expression(ast->expression);
+    Moth::BytecodeGenerator::Label trueLabel = bytecodeGenerator->newLabel();
+    Moth::BytecodeGenerator::Label falseLabel = bytecodeGenerator->newLabel();
+    condition(ast->expression, &trueLabel, &falseLabel, true);
 
-    // ### handle const Reference
-
-    Moth::BytecodeGenerator::Jump jump_else = bytecodeGenerator->jumpNe(r.asRValue());
+    trueLabel.link();
     statement(ast->ok);
     if (ast->ko) {
         Moth::BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
-        jump_else.link();
+        falseLabel.link();
         statement(ast->ko);
         jump_endif.link();
     } else {
-        jump_else.link();
+        falseLabel.link();
     }
 
     return false;
