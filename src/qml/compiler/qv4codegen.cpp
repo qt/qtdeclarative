@@ -2440,11 +2440,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_returnAddress, returnAddress);
     qSwap(_scopeAndFinally, scopeAndFinally);
 
-    {
-        auto retTemp = Reference::fromTemp(this, _returnAddress);
-        retTemp.store(Reference::fromConst(this, Encode::undefined()));
-    }
-
     for (FormalParameterList *it = formals; it; it = it->next) {
         _function->RECEIVE(it->name.toString());
     }
