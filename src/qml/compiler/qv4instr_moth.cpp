@@ -69,6 +69,12 @@ QString toString(QV4::ReturnedValue v)
 #endif // V4_BOOTSTRAP
 }
 
+template<typename T>
+int absoluteInstructionOffset(const char *codeStart, const T &instr)
+{
+    return reinterpret_cast<const char *>(&instr) - codeStart + offsetof(T, offset) + instr.offset;
+}
+
 #define MOTH_BEGIN_INSTR(I) \
     case Instr::I: {\
     const InstrMeta<(int)Instr::I>::DataType &instr = InstrMeta<(int)Instr::I>::data(*genericInstr); \
@@ -250,7 +256,7 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallGlobalLookup)
 
         MOTH_BEGIN_INSTR(SetExceptionHandler)
-            d << instr.offset;
+            d << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(SetExceptionHandler)
 
         MOTH_BEGIN_INSTR(CallBuiltinThrow)
@@ -355,15 +361,15 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(ConstructGlobalLookup)
 
         MOTH_BEGIN_INSTR(Jump)
-            d << instr.offset;
+            d << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(Jump)
 
         MOTH_BEGIN_INSTR(JumpEq)
-            d << instr.condition << "  " << instr.offset;
+            d << instr.condition << "  " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(JumpEq)
 
         MOTH_BEGIN_INSTR(JumpNe)
-            d << instr.condition << "  " << instr.offset;
+            d << instr.condition << "  " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(JumpNe)
 
         MOTH_BEGIN_INSTR(UNot)
