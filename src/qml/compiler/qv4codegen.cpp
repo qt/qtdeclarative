@@ -2669,46 +2669,50 @@ bool Codegen::visit(ForEachStatement *ast)
 
     TempScope scope(_function);
 
-#if 0
-    IR::BasicBlock *foreachin = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *foreachbody = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *foreachend = _function->newBasicBlock(exceptionHandler());
-
-    int objectToIterateOn = _block->newTemp();
-    Result expr = expression(ast->expression);
+    Reference obj = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    Reference expr = expression(ast->expression);
     if (hasError)
-        return false;
-    move(_block->TEMP(objectToIterateOn), *expr);
-    IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(_block->TEMP(objectToIterateOn));
+        return true;
 
-    int iterator = _block->newTemp();
-    move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
+    Moth::Instruction::CallBuiltinForeachIteratorObject iteratorObjInstr;
+    iteratorObjInstr.result = obj.asLValue();
+    iteratorObjInstr.arg = expr.asRValue();
+    bytecodeGenerator->addInstruction(iteratorObjInstr);
 
-    enterLoop(ast, foreachend, foreachin);
-    _block->JUMP(foreachin);
+    Moth::BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
+    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-    _block = foreachbody;
-    int temp = _block->newTemp();
-    Result init = expression(ast->initialiser);
-    if (hasError)
-        return false;
-    move(*init, _block->TEMP(temp));
+    bytecodeGenerator->jump().link(in);
+    enterLoop(ast, &end, &in);
+
+    Moth::BytecodeGenerator::Label body = bytecodeGenerator->label();
+
+    Reference it = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+
+    Reference init = expression(ast->initialiser);
+    init.store(it);
     statement(ast->statement);
-    setJumpOutLocation(_block->JUMP(foreachin), ast->statement, ast->forToken);
 
-    _block = foreachin;
+    in.link();
 
-    args = _function->New<IR::ExprList>();
-    args->init(_block->TEMP(iterator));
-    move(_block->TEMP(temp), _block->CALL(_block->NAME(IR::Name::builtin_foreach_next_property_name, 0, 0), args));
-    int null = _block->newTemp();
-    move(_block->TEMP(null), _block->CONST(IR::NullType, 0));
-    setLocation(cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend), ast->forToken);
-    _block = foreachend;
+    Moth::Instruction::CallBuiltinForeachNextPropertyName nextPropInstr;
+    nextPropInstr.result = it.asLValue();
+    nextPropInstr.arg = obj.asRValue();
+    bytecodeGenerator->addInstruction(nextPropInstr);
 
-    leaveLoop();
-#endif
+    Reference null = Reference::fromConst(this, QV4::Encode::null());
+    Reference result = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+
+    Moth::Instruction::Binop isStrictEqualInstr;
+    isStrictEqualInstr.alu = QV4::Runtime::strictEqual;
+    isStrictEqualInstr.lhs = it.asRValue();
+    isStrictEqualInstr.rhs = null.asRValue();
+    isStrictEqualInstr.result = result.asLValue();
+    bytecodeGenerator->addInstruction(isStrictEqualInstr);
+    bytecodeGenerator->jumpNe(result.asRValue()).link(body);
+
+    end.link();
+
     return false;
 }
 
@@ -2808,43 +2812,54 @@ bool Codegen::visit(LabelledStatement *ast)
 
 bool Codegen::visit(LocalForEachStatement *ast)
 {
-//    if (hasError)
-//        return true;
+    if (hasError)
+        return true;
 
-//    TempScope scope(_function);
+    TempScope scope(_function);
 
-//    IR::BasicBlock *foreachin = _function->newBasicBlock(exceptionHandler());
-//    IR::BasicBlock *foreachbody = _function->newBasicBlock(exceptionHandler());
-//    IR::BasicBlock *foreachend = _function->newBasicBlock(exceptionHandler());
+    Reference obj = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    Reference expr = expression(ast->expression);
+    if (hasError)
+        return true;
 
-//    variableDeclaration(ast->declaration);
+    variableDeclaration(ast->declaration);
 
-//    int iterator = _block->newTemp();
-//    move(_block->TEMP(iterator), *expression(ast->expression));
-//    IR::ExprList *args = _function->New<IR::ExprList>();
-//    args->init(_block->TEMP(iterator));
-//    move(_block->TEMP(iterator), _block->CALL(_block->NAME(IR::Name::builtin_foreach_iterator_object, 0, 0), args));
+    Moth::Instruction::CallBuiltinForeachIteratorObject iteratorObjInstr;
+    iteratorObjInstr.result = obj.asLValue();
+    iteratorObjInstr.arg = expr.asRValue();
+    bytecodeGenerator->addInstruction(iteratorObjInstr);
 
-//    _block->JUMP(foreachin);
-//    enterLoop(ast, foreachend, foreachin);
+    Moth::BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
+    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-//    _block = foreachbody;
-//    int temp = _block->newTemp();
-//    move(identifier(ast->declaration->name.toString()), _block->TEMP(temp));
-//    statement(ast->statement);
-//    setJumpOutLocation(_block->JUMP(foreachin), ast->statement, ast->forToken);
+    bytecodeGenerator->jump().link(in);
+    enterLoop(ast, &end, &in);
 
-//    _block = foreachin;
+    Moth::BytecodeGenerator::Label body = bytecodeGenerator->label();
 
-//    args = _function->New<IR::ExprList>();
-//    args->init(_block->TEMP(iterator));
-//    move(_block->TEMP(temp), _block->CALL(_block->NAME(IR::Name::builtin_foreach_next_property_name, 0, 0), args));
-//    int null = _block->newTemp();
-//    move(_block->TEMP(null), _block->CONST(IR::NullType, 0));
-//    setLocation(cjump(_block->BINOP(IR::OpStrictNotEqual, _block->TEMP(temp), _block->TEMP(null)), foreachbody, foreachend), ast->forToken);
-//    _block = foreachend;
+    Reference it = Reference::fromName(this, ast->declaration->name.toString());
+    statement(ast->statement);
 
-//    leaveLoop();
+    in.link();
+
+    Moth::Instruction::CallBuiltinForeachNextPropertyName nextPropInstr;
+    nextPropInstr.result = it.asLValue();
+    nextPropInstr.arg = obj.asRValue();
+    bytecodeGenerator->addInstruction(nextPropInstr);
+
+    Reference null = Reference::fromConst(this, QV4::Encode::null());
+    Reference result = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+
+    Moth::Instruction::Binop isStrictEqualInstr;
+    isStrictEqualInstr.alu = QV4::Runtime::strictEqual;
+    isStrictEqualInstr.lhs = it.asRValue();
+    isStrictEqualInstr.rhs = null.asRValue();
+    isStrictEqualInstr.result = result.asLValue();
+    bytecodeGenerator->addInstruction(isStrictEqualInstr);
+    bytecodeGenerator->jumpNe(result.asRValue()).link(body);
+
+    end.link();
+
     return false;
 }
 
