@@ -1410,20 +1410,21 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceXor: {
 //        if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
 //            return false;
-//        Result right = expression(ast->right);
-//        if (hasError)
-//            return false;
-//        if (!left->isLValue()) {
-//            throwSyntaxError(ast->operatorToken, QStringLiteral("left-hand side of inplace operator is not an lvalue"));
-//            return false;
-//        }
 
-//        TempScope scope(_function);
-//        const unsigned t = _block->newTemp();
-//        move(_block->TEMP(t), *right);
-//        move(left, _block->TEMP(t), baseOp(ast->op));
-//        if (!_expr.accept(nx))
-//            _expr.code = left;
+        if (!left.isLValue()) {
+            throwSyntaxError(ast->operatorToken, QStringLiteral("left-hand side of inplace operator is not an lvalue"));
+            return false;
+        }
+
+        Reference right = expression(ast->right);
+
+        if (hasError)
+            return false;
+
+        _expr.result = Reference::fromTemp(this, _block->newTemp());
+        binopHelper(baseOp(ast->op), left.asRValue(), right.asRValue(), _expr.result.base);
+        left.store(_expr.result);
+
         break;
     }
 
