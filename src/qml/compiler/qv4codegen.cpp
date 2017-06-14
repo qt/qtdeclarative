@@ -1774,7 +1774,7 @@ bool Codegen::visit(FunctionExpression *ast)
     TempScope scope(_function);
 
     int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
-    _expr.code = _block->CLOSURE(function);
+    _expr.result = Reference::fromClosure(this, function);
     return false;
 }
 
