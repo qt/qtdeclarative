@@ -2701,15 +2701,7 @@ bool Codegen::visit(ForEachStatement *ast)
     bytecodeGenerator->addInstruction(nextPropInstr);
 
     Reference null = Reference::fromConst(this, QV4::Encode::null());
-    Reference result = Reference::fromTemp(this, bytecodeGenerator->newTemp());
-
-    Moth::Instruction::Binop isStrictEqualInstr;
-    isStrictEqualInstr.alu = QV4::Runtime::strictEqual;
-    isStrictEqualInstr.lhs = it.asRValue();
-    isStrictEqualInstr.rhs = null.asRValue();
-    isStrictEqualInstr.result = result.asLValue();
-    bytecodeGenerator->addInstruction(isStrictEqualInstr);
-    bytecodeGenerator->jumpNe(result.asRValue()).link(body);
+    bytecodeGenerator->jumpStrictNotEqual(it.asRValue(), null.asRValue()).link(body);
 
     end.link();
 
@@ -2848,15 +2840,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     bytecodeGenerator->addInstruction(nextPropInstr);
 
     Reference null = Reference::fromConst(this, QV4::Encode::null());
-    Reference result = Reference::fromTemp(this, bytecodeGenerator->newTemp());
-
-    Moth::Instruction::Binop isStrictEqualInstr;
-    isStrictEqualInstr.alu = QV4::Runtime::strictEqual;
-    isStrictEqualInstr.lhs = it.asRValue();
-    isStrictEqualInstr.rhs = null.asRValue();
-    isStrictEqualInstr.result = result.asLValue();
-    bytecodeGenerator->addInstruction(isStrictEqualInstr);
-    bytecodeGenerator->jumpNe(result.asRValue()).link(body);
+    bytecodeGenerator->jumpStrictNotEqual(it.asRValue(), null.asRValue()).link(body);
 
     end.link();
 
