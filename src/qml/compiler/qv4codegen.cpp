@@ -2741,35 +2741,26 @@ bool Codegen::visit(ForStatement *ast)
 
     TempScope scope(_function);
 
-#if 0
-    IR::BasicBlock *forcond = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forbody = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forstep = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forend = _function->newBasicBlock(exceptionHandler());
-
     statement(ast->initialiser);
-    _block->JUMP(forcond);
 
-    enterLoop(ast, forend, forstep);
+    Moth::BytecodeGenerator::Label cond = bytecodeGenerator->label();
+    Moth::BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
+    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-    _block = forcond;
-    if (ast->condition)
-        condition(ast->condition, forbody, forend);
-    else
-        _block->JUMP(forbody);
+    enterLoop(ast, &end, &step);
 
-    _block = forbody;
+    Reference r = expression(ast->condition);
+    bytecodeGenerator->jumpNe(r.asRValue()).link(end);
+
     statement(ast->statement);
-    setJumpOutLocation(_block->JUMP(forstep), ast->statement, ast->forToken);
 
-    _block = forstep;
+    step.link();
+
     statement(ast->expression);
-    _block->JUMP(forcond);
-
-    _block = forend;
+    bytecodeGenerator->jump().link(cond);
+    end.link();
 
     leaveLoop();
-#endif
 
     return false;
 }
@@ -2889,36 +2880,26 @@ bool Codegen::visit(LocalForStatement *ast)
 
     TempScope scope(_function);
 
-#if 0
-    IR::BasicBlock *forcond = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forbody = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forstep = _function->newBasicBlock(exceptionHandler());
-    IR::BasicBlock *forend = _function->newBasicBlock(exceptionHandler());
-
     variableDeclarationList(ast->declarations);
 
-    _block->JUMP(forcond);
+    Moth::BytecodeGenerator::Label cond = bytecodeGenerator->label();
+    Moth::BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
+    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-    enterLoop(ast, forend, forstep);
+    enterLoop(ast, &end, &step);
 
-    _block = forcond;
-    if (ast->condition)
-        condition(ast->condition, forbody, forend);
-    else
-        _block->JUMP(forbody);
+    Reference r = expression(ast->condition);
+    bytecodeGenerator->jumpNe(r.asRValue()).link(end);
 
-    _block = forbody;
     statement(ast->statement);
-    setJumpOutLocation(_block->JUMP(forstep), ast->statement, ast->forToken);
 
-    _block = forstep;
+    step.link();
+
     statement(ast->expression);
-    _block->JUMP(forcond);
-
-    _block = forend;
+    bytecodeGenerator->jump().link(cond);
+    end.link();
 
     leaveLoop();
-#endif
 
     return false;
 }
