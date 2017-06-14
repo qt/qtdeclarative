@@ -61,8 +61,7 @@ T.Menu {
         // TODO: improve this?
         interactive: ApplicationWindow.window ? contentHeight > ApplicationWindow.window.height : false
         clip: true
-        keyNavigationWraps: false
-        currentIndex: -1
+        currentIndex: control.currentIndex
 
         ScrollIndicator.vertical: ScrollIndicator {}
     }

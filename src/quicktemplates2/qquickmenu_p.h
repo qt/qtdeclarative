@@ -69,6 +69,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenu : public QQuickPopup
     Q_PROPERTY(bool cascade READ cascade WRITE setCascade NOTIFY cascadeChanged FINAL REVISION 3)
     Q_PROPERTY(qreal overlap READ overlap WRITE setOverlap NOTIFY overlapChanged FINAL REVISION 3)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL REVISION 3)
+    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL REVISION 3)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -107,6 +108,9 @@ public:
     QQmlComponent *delegate() const;
     void setDelegate(QQmlComponent *delegate);
 
+    int currentIndex() const;
+    void setCurrentIndex(int index);
+
     Q_REVISION(3) Q_INVOKABLE void popup(QQmlV4Function *args);
 
 protected:
@@ -120,6 +124,7 @@ Q_SIGNALS:
     Q_REVISION(3) void cascadeChanged();
     Q_REVISION(3) void overlapChanged();
     Q_REVISION(3) void delegateChanged();
+    Q_REVISION(3) void currentIndexChanged();
 
 protected:
     void timerEvent(QTimerEvent *event) override;

@@ -187,6 +187,7 @@ static bool shouldCascade()
 QQuickMenuPrivate::QQuickMenuPrivate()
     : cascade(shouldCascade()),
       hoverTimer(0),
+      currentIndex(-1),
       overlap(0),
       contentItem(nullptr),
       contentModel(nullptr),
@@ -372,7 +373,7 @@ void QQuickMenuPrivate::onItemHovered()
 
     int index = contentModel->indexOf(button, nullptr);
     if (index != -1) {
-        setCurrentIndex(index);
+        setCurrentIndex(index, Qt::OtherFocusReason);
         if (oldCurrentItem != currentItem) {
             if (oldCurrentItem)
                 closeSubMenu(oldCurrentItem->subMenu());
@@ -412,7 +413,8 @@ void QQuickMenuPrivate::onItemActiveFocusChanged()
         return;
 
     int indexOfItem = contentModel->indexOf(item, nullptr);
-    setCurrentIndex(indexOfItem);
+    QQuickControl *control = qobject_cast<QQuickControl *>(item);
+    setCurrentIndex(indexOfItem, control ? control->focusReason() : Qt::OtherFocusReason);
 }
 
 void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
@@ -444,7 +446,7 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
     p->allowHorizontalFlip = cascade;
     p->parentMenu = q;
     if (activate)
-        p->setCurrentIndex(0);
+        p->setCurrentIndex(0, Qt::PopupFocusReason);
     subMenu->setCascade(cascade);
     subMenu->open();
 
@@ -494,51 +496,55 @@ void QQuickMenuPrivate::stopHoverTimer()
     hoverTimer = 0;
 }
 
-int QQuickMenuPrivate::currentIndex() const
+void QQuickMenuPrivate::setCurrentIndex(int index, Qt::FocusReason reason)
 {
-    QVariant index = contentItem->property("currentIndex");
-    if (!index.isValid())
-        return -1;
-    return index.toInt();
-}
+    Q_Q(QQuickMenu);
+    if (currentIndex == index)
+        return;
 
-void QQuickMenuPrivate::setCurrentIndex(int index)
-{
-    contentItem->setProperty("currentIndex", index);
-
-    QQuickMenuItem *newCurrentItem = contentItem->property("currentItem").value<QQuickMenuItem *>();
-
+    QQuickMenuItem *newCurrentItem = qobject_cast<QQuickMenuItem *>(itemAt(index));
     if (currentItem != newCurrentItem) {
         stopHoverTimer();
-        if (currentItem)
+        if (currentItem) {
             currentItem->setHighlighted(false);
-        if (newCurrentItem)
+            if (!newCurrentItem && window) {
+                QQuickItem *focusItem = QQuickItemPrivate::get(contentItem)->subFocusItem;
+                if (focusItem)
+                    QQuickWindowPrivate::get(window)->clearFocusInScope(contentItem, focusItem, Qt::OtherFocusReason);
+            }
+        }
+        if (newCurrentItem) {
             newCurrentItem->setHighlighted(true);
+            newCurrentItem->forceActiveFocus(reason);
+        }
         currentItem = newCurrentItem;
     }
+
+    currentIndex = index;
+    emit q->currentIndexChanged();
 }
 
 void QQuickMenuPrivate::activateNextItem()
 {
-    int index = currentIndex();
+    int index = currentIndex;
     int count = contentModel->count();
     while (++index < count) {
         QQuickItem *item = itemAt(index);
         if (!item || !item->activeFocusOnTab())
             continue;
-        item->forceActiveFocus(Qt::TabFocusReason);
+        setCurrentIndex(index, Qt::TabFocusReason);
         break;
     }
 }
 
 void QQuickMenuPrivate::activatePreviousItem()
 {
-    int index = currentIndex();
+    int index = currentIndex;
     while (--index >= 0) {
         QQuickItem *item = itemAt(index);
         if (!item || !item->activeFocusOnTab())
             continue;
-        item->forceActiveFocus(Qt::BacktabFocusReason);
+        setCurrentIndex(index, Qt::BacktabFocusReason);
         break;
     }
 }
@@ -1036,6 +1042,28 @@ void QQuickMenu::setDelegate(QQmlComponent *delegate)
 
 /*!
     \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty int QtQuick.Controls::Menu::currentIndex
+
+    This property holds the index of the currently highlighted item.
+
+    Menu items can be highlighted by mouse hover or keyboard navigation.
+
+    \sa MenuItem::highlighted
+*/
+int QQuickMenu::currentIndex() const
+{
+    Q_D(const QQuickMenu);
+    return d->currentIndex;
+}
+
+void QQuickMenu::setCurrentIndex(int index)
+{
+    Q_D(QQuickMenu);
+    d->setCurrentIndex(index, Qt::OtherFocusReason);
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Menu::popup(MenuItem item = null)
 
     Opens the menu at the mouse cursor on desktop platforms that have a mouse cursor
@@ -1128,7 +1156,7 @@ void QQuickMenu::popup(QQmlV4Function *args)
         setPosition(pos);
 
     if (menuItem)
-        d->setCurrentIndex(d->contentModel->indexOf(menuItem, nullptr));
+        d->setCurrentIndex(d->contentModel->indexOf(menuItem, nullptr), Qt::PopupFocusReason);
 
     open();
 }
@@ -1162,13 +1190,7 @@ void QQuickMenu::itemChange(QQuickItem::ItemChange change, const QQuickItem::Ite
         if (!data.boolValue && d->cascade) {
             // Ensure that when the menu isn't visible, there's no current item
             // the next time it's opened.
-            QQuickItem *focusItem = QQuickItemPrivate::get(d->contentItem)->subFocusItem;
-            if (focusItem) {
-                QQuickWindow *window = QQuickPopup::window();
-                if (window)
-                    QQuickWindowPrivate::get(window)->clearFocusInScope(d->contentItem, focusItem, Qt::OtherFocusReason);
-            }
-            d->setCurrentIndex(-1);
+            d->setCurrentIndex(-1, Qt::OtherFocusReason);
         }
     }
 }

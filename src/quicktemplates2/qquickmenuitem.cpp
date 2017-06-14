@@ -144,6 +144,8 @@ QQuickMenuItem::QQuickMenuItem(QQuickItem *parent)
     A menu item can be highlighted by mouse hover or keyboard navigation.
 
     The default value is \c false.
+
+    \sa Menu::currentIndex
 */
 bool QQuickMenuItem::isHighlighted() const
 {

@@ -105,9 +105,7 @@ public:
     void startHoverTimer();
     void stopHoverTimer();
 
-    int currentIndex() const;
-    void setCurrentIndex(int index);
-
+    void setCurrentIndex(int index, Qt::FocusReason reason);
     void activateNextItem();
     void activatePreviousItem();
 
@@ -118,6 +116,7 @@ public:
 
     bool cascade;
     int hoverTimer;
+    int currentIndex;
     qreal overlap;
     QPointer<QQuickMenu> parentMenu;
     QPointer<QQuickMenuItem> currentItem;

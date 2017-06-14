@@ -89,6 +89,7 @@ void tst_menu::defaults()
 
     QQuickMenu *emptyMenu = helper.appWindow->property("emptyMenu").value<QQuickMenu*>();
     QCOMPARE(emptyMenu->isVisible(), false);
+    QCOMPARE(emptyMenu->currentIndex(), -1);
     QCOMPARE(emptyMenu->contentItem()->property("currentIndex"), QVariant(-1));
 }
 
@@ -115,6 +116,7 @@ void tst_menu::mouse()
     // so that the highlight acts as a way of illustrating press state.
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(firstItem->width() / 2, firstItem->height() / 2));
     QVERIFY(firstItem->hasActiveFocus());
+    QCOMPARE(menu->currentIndex(), 0);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(0));
     QVERIFY(menu->isVisible());
 
@@ -124,6 +126,7 @@ void tst_menu::mouse()
     QCOMPARE(visibleSpy.count(), 1);
     QVERIFY(!menu->isVisible());
     QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
+    QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
@@ -192,6 +195,7 @@ void tst_menu::contextMenuKeyboard()
     moveMouseAway(window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     QQuickMenuItem *firstItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
@@ -205,6 +209,7 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->property("highlighted").toBool());
+    QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     QTest::keyClick(window, Qt::Key_Tab);
@@ -212,6 +217,7 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(firstItem->hasVisualFocus());
     QVERIFY(firstItem->isHighlighted());
     QCOMPARE(firstItem->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(menu->currentIndex(), 0);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(0));
 
     QQuickMenuItem *secondItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(1));
@@ -224,6 +230,7 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(secondItem->hasVisualFocus());
     QVERIFY(secondItem->isHighlighted());
     QCOMPARE(secondItem->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(menu->currentIndex(), 1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(1));
 
     QSignalSpy secondTriggeredSpy(secondItem, SIGNAL(triggered()));
@@ -238,6 +245,7 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(!secondItem->hasActiveFocus());
     QVERIFY(!secondItem->hasVisualFocus());
     QVERIFY(!secondItem->isHighlighted());
+    QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
@@ -250,6 +258,7 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(!secondItem->hasActiveFocus());
     QVERIFY(!secondItem->hasVisualFocus());
     QVERIFY(!secondItem->isHighlighted());
+    QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     QTest::keyClick(window, Qt::Key_Down);
@@ -532,18 +541,21 @@ void tst_menu::popup()
     QTRY_COMPARE(QCursor::pos(), cursorPos);
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtCursor"));
+    QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
     QTRY_COMPARE(menu->property("x").toInt(), 11);
     QTRY_COMPARE(menu->property("y").toInt(), 22);
     menu->close();
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtPos", Q_ARG(QVariant, QPointF(33, 44))));
+    QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
     QTRY_COMPARE(menu->property("x").toInt(), 33);
     QTRY_COMPARE(menu->property("y").toInt(), 44);
     menu->close();
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtCoord", Q_ARG(QVariant, 55), Q_ARG(QVariant, 66)));
+    QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
     QTRY_COMPARE(menu->property("x").toInt(), 55);
     QTRY_COMPARE(menu->property("y").toInt(), 66);
@@ -556,18 +568,21 @@ void tst_menu::popup()
     const QList<QQuickMenuItem *> menuItems = QList<QQuickMenuItem *>() << menuItem1 << menuItem2 << menuItem3;
     for (QQuickMenuItem *menuItem : menuItems) {
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtCursor", Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
         QTRY_COMPARE(menu->property("x").toInt(), 12);
         QTRY_COMPARE(menu->property("y").toInt(), window->height() / 2 + menu->topPadding() - menuItem->y());
         menu->close();
 
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtPos", Q_ARG(QVariant, QPointF(33, window->height() / 3)), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
         QTRY_COMPARE(menu->property("x").toInt(), 33);
         QTRY_COMPARE(menu->property("y").toInt(), window->height() / 3 + menu->topPadding() - menuItem->y());
         menu->close();
 
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtCoord", Q_ARG(QVariant, 55), Q_ARG(QVariant, window->height() / 3 * 2), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
         QTRY_COMPARE(menu->property("x").toInt(), 55);
         QTRY_COMPARE(menu->property("y").toInt(), window->height() / 3 * 2 + menu->topPadding() - menuItem->y());
