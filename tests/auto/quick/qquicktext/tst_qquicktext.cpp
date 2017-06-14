@@ -723,6 +723,61 @@ void tst_qquicktext::textFormat()
         QCOMPARE(text->textFormat(), QQuickText::AutoText);
         QCOMPARE(spy.count(), 2);
     }
+
+    {
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.0\n Text { text: \"<b>Hello</b>\" }", QUrl());
+        QScopedPointer<QObject> object(component.create());
+        QQuickText *text = qobject_cast<QQuickText *>(object.data());
+        QVERIFY(text);
+        QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(text);
+        QVERIFY(textPrivate);
+
+        QCOMPARE(text->textFormat(), QQuickText::AutoText);
+        QVERIFY(!textPrivate->layout.formats().isEmpty());
+
+        text->setTextFormat(QQuickText::StyledText);
+        QVERIFY(!textPrivate->layout.formats().isEmpty());
+
+        text->setTextFormat(QQuickText::PlainText);
+        QVERIFY(textPrivate->layout.formats().isEmpty());
+
+        text->setTextFormat(QQuickText::AutoText);
+        QVERIFY(!textPrivate->layout.formats().isEmpty());
+    }
+
+    {
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.0\nText { text: \"Hello\"; elide: Text.ElideRight }", QUrl::fromLocalFile(""));
+        QScopedPointer<QObject> object(component.create());
+        QQuickText *text = qobject_cast<QQuickText *>(object.data());
+        QVERIFY(text);
+        QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(text);
+        QVERIFY(textPrivate);
+
+        // underline a mnemonic
+        QVector<QTextLayout::FormatRange> formats;
+        QTextLayout::FormatRange range;
+        range.start = 0;
+        range.length = 1;
+        range.format.setFontUnderline(true);
+        formats << range;
+
+        // the mnemonic format should be retained
+        textPrivate->layout.setFormats(formats);
+        text->forceLayout();
+        QCOMPARE(textPrivate->layout.formats(), formats);
+
+        // and carried over to the elide layout
+        text->setWidth(text->implicitWidth() - 1);
+        QVERIFY(textPrivate->elideLayout);
+        QCOMPARE(textPrivate->elideLayout->formats(), formats);
+
+        // but cleared when the text changes
+        text->setText("Changed");
+        QVERIFY(textPrivate->elideLayout);
+        QVERIFY(textPrivate->layout.formats().isEmpty());
+    }
 }
 
 //the alignment tests may be trivial o.oa

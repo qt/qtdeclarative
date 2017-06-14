@@ -269,9 +269,6 @@ void QQuickTextPrivate::updateLayout()
                 formatModifiesFontSize = fontSizeModified;
                 multilengthEos = -1;
             } else {
-                layout.clearFormats();
-                if (elideLayout)
-                    elideLayout->clearFormats();
                 QString tmp = text;
                 multilengthEos = tmp.indexOf(QLatin1Char('\x9c'));
                 if (multilengthEos != -1)
@@ -630,6 +627,13 @@ QString QQuickTextPrivate::elidedText(qreal lineWidth, const QTextLine &line, QT
         }
         return elideText;
     }
+}
+
+void QQuickTextPrivate::clearFormats()
+{
+    layout.clearFormats();
+    if (elideLayout)
+        elideLayout->clearFormats();
 }
 
 /*!
@@ -1060,7 +1064,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             elideLayout = new QTextLayout;
             elideLayout->setCacheEnabled(true);
         }
-        if (styledText) {
+        QTextEngine *engine = layout.engine();
+        if (engine && engine->hasFormats()) {
             QVector<QTextLayout::FormatRange> formats;
             switch (elideMode) {
             case QQuickText::ElideRight:
@@ -1612,6 +1617,7 @@ void QQuickText::setText(const QString &n)
             d->extra->doc->setText(n);
             d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
+            d->clearFormats();
             d->rightToLeftText = d->text.isRightToLeft();
         }
         d->determineHorizontalAlignment();
@@ -2102,6 +2108,7 @@ void QQuickText::setTextFormat(TextFormat format)
             d->extra->doc->setText(d->text);
             d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
+            d->clearFormats();
             d->rightToLeftText = d->text.isRightToLeft();
             d->textHasChanged = true;
         }
