@@ -1635,6 +1635,10 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError)
         return false;
 
+    Reference r = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+
+    TempScope scope(_function);
+
     Reference base = expression(ast->base);
     if (hasError)
         return false;
@@ -1647,8 +1651,9 @@ bool Codegen::visit(CallExpression *ast)
     call.dest = base.asRValue();
     call.argc = argc;
     call.callData = 0;
-    call.result = Moth::Param::createTemp(0); bytecodeGenerator->addInstruction(call);
-    _expr.result = Reference::fromTemp(this, 0);
+    call.result = r.asLValue();
+    bytecodeGenerator->addInstruction(call);
+    _expr.result = r;
     return false;
 }
 
@@ -1880,6 +1885,8 @@ bool Codegen::visit(NewExpression *ast)
 {
     if (hasError)
         return false;
+
+    Reference r = Reference::fromTemp(this, bytecodeGenerator->newTemp());
     TempScope scope(_function);
 
     Reference base = expression(ast->expression);
@@ -1890,9 +1897,9 @@ bool Codegen::visit(NewExpression *ast)
     create.func = base.asRValue();
     create.argc = 0;
     create.callData = 0;
-    create.result = Moth::Param::createTemp(0);
+    create.result = r.asLValue();
     bytecodeGenerator->addInstruction(create);
-    _expr.result = Reference::fromTemp(this, 0);
+    _expr.result = r;
     return false;
 }
 
@@ -1901,6 +1908,7 @@ bool Codegen::visit(NewMemberExpression *ast)
     if (hasError)
         return false;
 
+    Reference r = Reference::fromTemp(this, bytecodeGenerator->newTemp());
     TempScope scope(_function);
 
     Reference base = expression(ast->base);
@@ -1915,9 +1923,9 @@ bool Codegen::visit(NewMemberExpression *ast)
     create.func = base.asRValue();
     create.argc = argc;
     create.callData = 0;
-    create.result = Moth::Param::createTemp(0);
+    create.result = r.asRValue();
     bytecodeGenerator->addInstruction(create);
-    _expr.result = Reference::fromTemp(this, 0);
+    _expr.result = r;
     return false;
 }
 
