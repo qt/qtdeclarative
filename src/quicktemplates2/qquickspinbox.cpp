@@ -123,7 +123,9 @@ public:
 
     int boundValue(int value) const;
     void updateValue();
-    bool setValue(int value);
+    bool setValue(int value, bool modified);
+    void increase(bool modified);
+    void decrease(bool modified);
 
     int effectiveStepSize() const;
 
@@ -173,16 +175,13 @@ void QQuickSpinBoxPrivate::updateValue()
                 QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
                 QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
                 QJSValue val = q->valueFromText().call(QJSValueList() << text.toString() << loc);
-                const int oldValue = value;
-                q->setValue(val.toInt());
-                if (oldValue != value)
-                    emit q->valueModified();
+                setValue(val.toInt(), true);
             }
         }
     }
 }
 
-bool QQuickSpinBoxPrivate::setValue(int newValue)
+bool QQuickSpinBoxPrivate::setValue(int newValue, bool modified)
 {
     Q_Q(QQuickSpinBox);
     if (q->isComponentComplete())
@@ -197,7 +196,19 @@ bool QQuickSpinBoxPrivate::setValue(int newValue)
     updateDownEnabled();
 
     emit q->valueChanged();
+    if (modified)
+        emit q->valueModified();
     return true;
+}
+
+void QQuickSpinBoxPrivate::increase(bool modified)
+{
+    setValue(value + effectiveStepSize(), modified);
+}
+
+void QQuickSpinBoxPrivate::decrease(bool modified)
+{
+    setValue(value - effectiveStepSize(), modified);
 }
 
 int QQuickSpinBoxPrivate::effectiveStepSize() const
@@ -373,7 +384,7 @@ void QQuickSpinBox::setFrom(int from)
     d->from = from;
     emit fromChanged();
     if (isComponentComplete()) {
-        if (!d->setValue(d->value)) {
+        if (!d->setValue(d->value, false)) {
             d->updateUpEnabled();
             d->updateDownEnabled();
         }
@@ -402,7 +413,7 @@ void QQuickSpinBox::setTo(int to)
     d->to = to;
     emit toChanged();
     if (isComponentComplete()) {
-        if (!d->setValue(d->value)) {
+        if (!d->setValue(d->value, false)) {
             d->updateUpEnabled();
             d->updateDownEnabled();
         }
@@ -423,7 +434,7 @@ int QQuickSpinBox::value() const
 void QQuickSpinBox::setValue(int value)
 {
     Q_D(QQuickSpinBox);
-    d->setValue(value);
+    d->setValue(value, false);
 }
 
 /*!
@@ -704,7 +715,7 @@ bool QQuickSpinBox::isInputMethodComposing() const
 void QQuickSpinBox::increase()
 {
     Q_D(QQuickSpinBox);
-    setValue(d->value + d->effectiveStepSize());
+    d->increase(false);
 }
 
 /*!
@@ -717,7 +728,7 @@ void QQuickSpinBox::increase()
 void QQuickSpinBox::decrease()
 {
     Q_D(QQuickSpinBox);
-    setValue(d->value - d->effectiveStepSize());
+    d->decrease(false);
 }
 
 void QQuickSpinBox::focusInEvent(QFocusEvent *event)
@@ -757,11 +768,10 @@ void QQuickSpinBox::keyPressEvent(QKeyEvent *event)
     Q_D(QQuickSpinBox);
     QQuickControl::keyPressEvent(event);
 
-    const int oldValue = d->value;
     switch (event->key()) {
     case Qt::Key_Up:
         if (d->upEnabled()) {
-            increase();
+            d->increase(true);
             d->up->setPressed(true);
             event->accept();
         }
@@ -769,7 +779,7 @@ void QQuickSpinBox::keyPressEvent(QKeyEvent *event)
 
     case Qt::Key_Down:
         if (d->downEnabled()) {
-            decrease();
+            d->decrease(true);
             d->down->setPressed(true);
             event->accept();
         }
@@ -778,8 +788,6 @@ void QQuickSpinBox::keyPressEvent(QKeyEvent *event)
     default:
         break;
     }
-    if (d->value != oldValue)
-        emit valueModified();
 
     setAccessibleProperty("pressed", d->up->isPressed() || d->down->isPressed());
 }
@@ -805,9 +813,9 @@ void QQuickSpinBox::timerEvent(QTimerEvent *event)
         d->startPressRepeat();
     } else if (event->timerId() == d->repeatTimer) {
         if (d->up->isPressed())
-            increase();
+            d->increase(true);
         else if (d->down->isPressed())
-            decrease();
+            d->decrease(true);
     }
 }
 
@@ -817,13 +825,10 @@ void QQuickSpinBox::wheelEvent(QWheelEvent *event)
     Q_D(QQuickSpinBox);
     QQuickControl::wheelEvent(event);
     if (d->wheelEnabled) {
-        const int oldValue = d->value;
         const QPointF angle = event->angleDelta();
         const qreal delta = (qFuzzyIsNull(angle.y()) ? angle.x() : angle.y()) / QWheelEvent::DefaultDeltasPerStep;
-        setValue(oldValue + qRound(d->effectiveStepSize() * delta));
-        if (d->value != oldValue)
-            emit valueModified();
-        event->setAccepted(d->value != oldValue);
+        if (!d->setValue(d->value + qRound(d->effectiveStepSize() * delta), true))
+           event->ignore();
     }
 }
 #endif
