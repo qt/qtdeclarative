@@ -136,6 +136,8 @@ QT_BEGIN_NAMESPACE
     F(Jump, jump) \
     F(JumpEq, jumpEq) \
     F(JumpNe, jumpNe) \
+    F(JumpStrictEqual, jumpStrictEqual) \
+    F(JumpStrictNotEqual, jumpStrictNotEqual) \
     F(UNot, unot) \
     F(UNotBool, unotBool) \
     F(UPlus, uplus) \
@@ -649,6 +651,18 @@ union Instr
         ptrdiff_t offset;
         Param condition;
     };
+    struct instr_jumpStrictEqual {
+        MOTH_INSTR_HEADER
+        ptrdiff_t offset;
+        Param lhs;
+        Param rhs;
+    };
+    struct instr_jumpStrictNotEqual {
+        MOTH_INSTR_HEADER
+        ptrdiff_t offset;
+        Param lhs;
+        Param rhs;
+    };
     struct instr_unot {
         MOTH_INSTR_HEADER
         Param source;
@@ -867,6 +881,8 @@ union Instr
     instr_jump jump;
     instr_jumpEq jumpEq;
     instr_jumpNe jumpNe;
+    instr_jumpStrictEqual jumpStrictEqual;
+    instr_jumpStrictNotEqual jumpStrictNotEqual;
     instr_unot unot;
     instr_unotBool unotBool;
     instr_uplus uplus;

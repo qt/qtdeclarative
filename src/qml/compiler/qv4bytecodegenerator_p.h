@@ -126,6 +126,22 @@ public:
         return addJumpInstruction(data);
     }
 
+    Q_REQUIRED_RESULT Jump jumpStrictEqual(const QV4::Moth::Param &lhs, const QV4::Moth::Param &rhs)
+    {
+        Instruction::JumpStrictEqual data;
+        data.lhs = lhs;
+        data.rhs = rhs;
+        return addJumpInstruction(data);
+    }
+
+    Q_REQUIRED_RESULT Jump jumpStrictNotEqual(const QV4::Moth::Param &lhs, const QV4::Moth::Param &rhs)
+    {
+        Instruction::JumpStrictNotEqual data;
+        data.lhs = lhs;
+        data.rhs = rhs;
+        return addJumpInstruction(data);
+    }
+
     Q_REQUIRED_RESULT Jump setExceptionHandler()
     {
         Instruction::SetExceptionHandler data;

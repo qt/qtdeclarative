@@ -808,6 +808,20 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
             code = ((const uchar *)&instr.offset) + instr.offset;
     MOTH_END_INSTR(JumpNe)
 
+    MOTH_BEGIN_INSTR(JumpStrictEqual)
+        bool cond = RuntimeHelpers::strictEqual(VALUE(instr.lhs), VALUE(instr.rhs));
+        TRACE(condition, "%s", cond ? "TRUE" : "FALSE");
+        if (cond)
+            code = ((const uchar *)&instr.offset) + instr.offset;
+    MOTH_END_INSTR(JumpStrictEqual)
+
+    MOTH_BEGIN_INSTR(JumpStrictNotEqual)
+        bool cond = RuntimeHelpers::strictEqual(VALUE(instr.lhs), VALUE(instr.rhs));
+        TRACE(condition, "%s", cond ? "TRUE" : "FALSE");
+        if (!cond)
+            code = ((const uchar *)&instr.offset) + instr.offset;
+    MOTH_END_INSTR(JumpStrictNotEqual)
+
     MOTH_BEGIN_INSTR(UNot)
         STOREVALUE(instr.result, Runtime::method_uNot(VALUE(instr.source)));
     MOTH_END_INSTR(UNot)
