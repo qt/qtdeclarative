@@ -1884,16 +1884,19 @@ bool Codegen::visit(NewExpression *ast)
         return false;
     TempScope scope(_function);
 
-    Result base = expression(ast->expression);
+    Reference base = expression(ast->expression);
     if (hasError)
         return false;
-    IR::Expr *expr = *base;
-    if (expr && !expr->asTemp() && !expr->asArgLocal() && !expr->asName() && !expr->asMember()) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), expr);
-        expr = _block->TEMP(t);
-    }
-    _expr.code = _block->NEW(expr, 0);
+
+    Q_ASSERT(base.type == Reference::Name); //### TODO: support more calls
+
+    QV4::Moth::Instruction::CreateActivationProperty construct;
+    construct.name = base.nameIndex;
+    construct.argc = 0;
+    construct.callData = 0;
+    construct.result = Moth::Param::createTemp(0);
+    bytecodeGenerator->addInstruction(construct);
+    _expr.result = Reference::fromTemp(this, 0);
     return false;
 }
 
@@ -1902,32 +1905,25 @@ bool Codegen::visit(NewMemberExpression *ast)
     if (hasError)
         return false;
 
-    const unsigned t = _block->newTemp();
-
     TempScope scope(_function);
 
-    Result base = expression(ast->base);
+    Reference base = expression(ast->base);
     if (hasError)
         return false;
-    IR::Expr *expr = *base;
-    if (expr && !expr->asTemp() && !expr->asArgLocal() && !expr->asName() && !expr->asMember()) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), expr);
-        expr = _block->TEMP(t);
-    }
 
-    IR::ExprList *args = 0, **args_it = &args;
-    for (ArgumentList *it = ast->arguments; it; it = it->next) {
-        Result arg = expression(it->expression);
-        if (hasError)
-            return false;
-        IR::Expr *actual = argument(*arg);
-        *args_it = _function->New<IR::ExprList>();
-        (*args_it)->init(actual);
-        args_it = &(*args_it)->next;
-    }
-    move(_block->TEMP(t), _block->NEW(expr, args));
-    _expr.code = _block->TEMP(t);
+    Q_ASSERT(base.type == Reference::Name); //### TODO: support more calls
+
+    auto argc = pushArgs(ast->arguments);
+    if (hasError)
+        return false;
+
+    QV4::Moth::Instruction::CreateActivationProperty construct;
+    construct.name = base.nameIndex;
+    construct.argc = argc;
+    construct.callData = 0;
+    construct.result = Moth::Param::createTemp(0);
+    bytecodeGenerator->addInstruction(construct);
+    _expr.result = Reference::fromTemp(this, 0);
     return false;
 }
 
