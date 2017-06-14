@@ -2306,14 +2306,26 @@ bool Codegen::visit(TypeOfExpression *ast)
     if (hasError)
         return false;
 
+    _expr.result = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+
     TempScope scope(_function);
 
-    Result expr = expression(ast->expression);
+    Reference expr = expression(ast->expression);
     if (hasError)
         return false;
-    IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(reference(*expr));
-    _expr.code = call(_block->NAME(IR::Name::builtin_typeof, ast->typeofToken.startLine, ast->typeofToken.startColumn), args);
+
+    if (expr.type == Reference::Name) {
+        // special handling as typeof doesn't throw here
+        Moth::Instruction::CallBuiltinTypeofName instr;
+        instr.name = expr.nameIndex;
+        instr.result = _expr.result.asLValue();
+        bytecodeGenerator->addInstruction(instr);
+    } else {
+        Moth::Instruction::CallBuiltinTypeofValue instr;
+        instr.value = expr.asRValue();
+        instr.result = _expr.result.asLValue();
+        bytecodeGenerator->addInstruction(instr);
+    }
     return false;
 }
 
