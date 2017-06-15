@@ -3,7 +3,7 @@
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the documentation of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -37,44 +37,10 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-#ifndef OPENGLRENDERER_H
-#define OPENGLRENDERER_H
-
-#include <qsgrendernode.h>
-
-#if QT_CONFIG(opengl)
-
-QT_BEGIN_NAMESPACE
-
-class QQuickItem;
-class QOpenGLShaderProgram;
-class QOpenGLBuffer;
-
-QT_END_NAMESPACE
-
-class OpenGLRenderNode : public QSGRenderNode
-{
-public:
-    OpenGLRenderNode(QQuickItem *item);
-    ~OpenGLRenderNode();
-
-    void render(const RenderState *state) override;
-    void releaseResources() override;
-    StateFlags changedStates() const override;
-    RenderingFlags flags() const override;
-    QRectF rect() const override;
-
-private:
-    void init();
-
-    QQuickItem *m_item;
-    QOpenGLShaderProgram *m_program = nullptr;
-    int m_matrixUniform;
-    int m_opacityUniform;
-    QOpenGLBuffer *m_vbo = nullptr;
-};
-
-#endif // opengl
-
-#endif
+import QtQuick 2.0
+//![0]
+TextInput {
+    id: hexNumber
+    validator: RegExpValidator { regExp: /[0-9A-F]+/ }
+}
+//![0]

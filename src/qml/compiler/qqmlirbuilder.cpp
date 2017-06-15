@@ -1985,7 +1985,8 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
         QQmlTypeNameCache::Result r = imports->query(name);
         if (r.isValid()) {
             if (r.scriptIndex != -1) {
-                return subscript(_block->TEMP(_importedScriptsTemp), _block->CONST(QV4::IR::SInt32Type, r.scriptIndex));
+                return _block->SUBSCRIPT(_block->TEMP(_importedScriptsTemp),
+                                         _block->CONST(QV4::IR::SInt32Type, r.scriptIndex));
             } else if (r.type) {
                 QV4::IR::Name *typeName = _block->NAME(name, line, col);
                 // Make sure the run-time loads this through the more efficient singleton getter.

@@ -232,8 +232,8 @@ void QSGSoftwareRenderableNode::update()
             m_boundingRectMin = QRect();
             m_boundingRectMax = QRect();
         } else {
-            m_boundingRectMin = m_boundingRectMin.intersected(m_clipRegion.rects().first());
-            m_boundingRectMax = m_boundingRectMax.intersected(m_clipRegion.rects().first());
+            m_boundingRectMin = m_boundingRectMin.intersected(m_clipRegion.rects().constFirst());
+            m_boundingRectMax = m_boundingRectMax.intersected(m_clipRegion.rects().constFirst());
         }
     }
 

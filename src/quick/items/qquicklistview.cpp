@@ -660,9 +660,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         int newModelIdx = qBound(0, modelIndex + count, model->count());
         count = newModelIdx - modelIndex;
         if (count) {
-            for (FxViewItem *item : qAsConst(visibleItems))
-                releaseItem(item);
-            visibleItems.clear();
+            releaseVisibleItems();
             modelIndex = newModelIdx;
             visibleIndex = modelIndex;
             visiblePos = itemEnd + count * (averageSize + spacing);

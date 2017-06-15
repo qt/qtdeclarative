@@ -3,7 +3,7 @@
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,43 +38,25 @@
 **
 ****************************************************************************/
 
-#ifndef OPENGLRENDERER_H
-#define OPENGLRENDERER_H
+import QtQuick 2.2
+import QtTest 1.1
 
-#include <qsgrendernode.h>
+Item {
+    TestCase {
+        name: "URL"
+        property url path1: "path1"
+        property url path2: "path2"
 
-#if QT_CONFIG(opengl)
-
-QT_BEGIN_NAMESPACE
-
-class QQuickItem;
-class QOpenGLShaderProgram;
-class QOpenGLBuffer;
-
-QT_END_NAMESPACE
-
-class OpenGLRenderNode : public QSGRenderNode
-{
-public:
-    OpenGLRenderNode(QQuickItem *item);
-    ~OpenGLRenderNode();
-
-    void render(const RenderState *state) override;
-    void releaseResources() override;
-    StateFlags changedStates() const override;
-    RenderingFlags flags() const override;
-    QRectF rect() const override;
-
-private:
-    void init();
-
-    QQuickItem *m_item;
-    QOpenGLShaderProgram *m_program = nullptr;
-    int m_matrixUniform;
-    int m_opacityUniform;
-    QOpenGLBuffer *m_vbo = nullptr;
-};
-
-#endif // opengl
-
-#endif
+        function test_url_compare() {
+            expectFail("", "compare() should fail here; if it passes we have QTBUG-61297")
+            compare(path1, path2)
+        }
+        function test_url_compare_string() {
+            expectFail("", "compare() should fail here")
+            compare(path1.toString(), path2.toString())
+        }
+        function test_url_verify() {
+            verify(path1 != path2)
+        }
+    }
+}

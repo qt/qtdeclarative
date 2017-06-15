@@ -82,7 +82,7 @@ static QString cacheFilePath(const QUrl &url)
 {
     const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
     const QString localCachePath = localSourcePath + QLatin1Char('c');
-    if (QFileInfo(QFileInfo(localSourcePath).dir().absolutePath()).isWritable())
+    if (QFile::exists(localCachePath) || QFileInfo(QFileInfo(localSourcePath).dir().absolutePath()).isWritable())
         return localCachePath;
     QCryptographicHash fileNameHash(QCryptographicHash::Sha1);
     fileNameHash.addData(localSourcePath.toUtf8());

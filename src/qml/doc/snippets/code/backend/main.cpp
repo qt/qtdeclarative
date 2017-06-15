@@ -1,12 +1,22 @@
 /****************************************************************************
 **
 ** Copyright (C) 2017 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -38,43 +48,19 @@
 **
 ****************************************************************************/
 
-#ifndef OPENGLRENDERER_H
-#define OPENGLRENDERER_H
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
-#include <qsgrendernode.h>
+#include "backend.h"
 
-#if QT_CONFIG(opengl)
-
-QT_BEGIN_NAMESPACE
-
-class QQuickItem;
-class QOpenGLShaderProgram;
-class QOpenGLBuffer;
-
-QT_END_NAMESPACE
-
-class OpenGLRenderNode : public QSGRenderNode
+int main(int argc, char *argv[])
 {
-public:
-    OpenGLRenderNode(QQuickItem *item);
-    ~OpenGLRenderNode();
+    QGuiApplication app(argc, argv);
 
-    void render(const RenderState *state) override;
-    void releaseResources() override;
-    StateFlags changedStates() const override;
-    RenderingFlags flags() const override;
-    QRectF rect() const override;
+    qmlRegisterType<BackEnd>("io.qt.examples.backend", 1, 0, "BackEnd");
 
-private:
-    void init();
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 
-    QQuickItem *m_item;
-    QOpenGLShaderProgram *m_program = nullptr;
-    int m_matrixUniform;
-    int m_opacityUniform;
-    QOpenGLBuffer *m_vbo = nullptr;
-};
-
-#endif // opengl
-
-#endif
+    return app.exec();
+}

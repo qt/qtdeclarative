@@ -249,6 +249,17 @@ protected:
         }
     };
 
+    struct TempScope {
+        TempScope(QV4::IR::Function *f)
+            : function(f),
+              tempCountForScope(f->currentTemp) {}
+        ~TempScope() {
+            function->currentTemp = tempCountForScope;
+        }
+        QV4::IR::Function *function;
+        int tempCountForScope;
+    };
+
     Environment *newEnvironment(AST::Node *node, Environment *parent, CompilationMode compilationMode)
     {
         Environment *env = new Environment(parent, compilationMode);
@@ -311,7 +322,6 @@ protected:
     }
 
     QV4::IR::Expr *member(QV4::IR::Expr *base, const QString *name);
-    QV4::IR::Expr *subscript(QV4::IR::Expr *base, QV4::IR::Expr *index);
     QV4::IR::Expr *argument(QV4::IR::Expr *expr);
     QV4::IR::Expr *reference(QV4::IR::Expr *expr);
     QV4::IR::Expr *unop(QV4::IR::AluOp op, QV4::IR::Expr *expr, const AST::SourceLocation &loc = AST::SourceLocation());

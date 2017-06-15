@@ -1,12 +1,22 @@
 /****************************************************************************
 **
 ** Copyright (C) 2017 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -38,43 +48,28 @@
 **
 ****************************************************************************/
 
-#ifndef OPENGLRENDERER_H
-#define OPENGLRENDERER_H
+#ifndef BACKEND_H
+#define BACKEND_H
 
-#include <qsgrendernode.h>
+#include <QObject>
+#include <QString>
 
-#if QT_CONFIG(opengl)
-
-QT_BEGIN_NAMESPACE
-
-class QQuickItem;
-class QOpenGLShaderProgram;
-class QOpenGLBuffer;
-
-QT_END_NAMESPACE
-
-class OpenGLRenderNode : public QSGRenderNode
+class BackEnd : public QObject
 {
-public:
-    OpenGLRenderNode(QQuickItem *item);
-    ~OpenGLRenderNode();
+    Q_OBJECT
+    Q_PROPERTY(QString userName READ userName WRITE setUserName NOTIFY userNameChanged)
 
-    void render(const RenderState *state) override;
-    void releaseResources() override;
-    StateFlags changedStates() const override;
-    RenderingFlags flags() const override;
-    QRectF rect() const override;
+public:
+    explicit BackEnd(QObject *parent = nullptr);
+
+    QString userName();
+    void setUserName(const QString &userName);
+
+signals:
+    void userNameChanged();
 
 private:
-    void init();
-
-    QQuickItem *m_item;
-    QOpenGLShaderProgram *m_program = nullptr;
-    int m_matrixUniform;
-    int m_opacityUniform;
-    QOpenGLBuffer *m_vbo = nullptr;
+    QString m_userName;
 };
 
-#endif // opengl
-
-#endif
+#endif // BACKEND_H
