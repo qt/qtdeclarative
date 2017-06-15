@@ -88,8 +88,8 @@ struct MemberData : Managed
 
     const Value &operator[] (uint idx) const { return d()->values[idx]; }
     const Value *data() const { return d()->values.data(); }
-    void set(ExecutionEngine *e, uint index, Value v) { d()->values.set(e, index, v); }
-    void set(ExecutionEngine *e, uint index, Heap::Base *b) { d()->values.set(e, index, b); }
+    void set(EngineBase *e, uint index, Value v) { d()->values.set(e, index, v); }
+    void set(EngineBase *e, uint index, Heap::Base *b) { d()->values.set(e, index, b); }
 
     inline uint size() const { return d()->values.size; }
 

@@ -123,7 +123,7 @@ struct Pointer {
         return base;
     }
 
-    void set(ExecutionEngine *e, T newVal) {
+    void set(EngineBase *e, T newVal) {
         WriteBarrier::write(e, base(), reinterpret_cast<Heap::Base **>(&ptr), reinterpret_cast<Heap::Base *>(newVal));
     }
 
@@ -146,10 +146,10 @@ struct HeapValue : Value {
         return base;
     }
 
-    void set(ExecutionEngine *e, const Value &newVal) {
+    void set(EngineBase *e, const Value &newVal) {
         WriteBarrier::write(e, base(), this, newVal);
     }
-    void set(ExecutionEngine *e, Heap::Base *b) {
+    void set(EngineBase *e, Heap::Base *b) {
         WriteBarrier::write(e, base(), this, b);
     }
 };
@@ -166,10 +166,10 @@ struct ValueArray {
         return base;
     }
 
-    void set(ExecutionEngine *e, uint index, Value v) {
+    void set(EngineBase *e, uint index, Value v) {
         WriteBarrier::write(e, base(), values + index, v);
     }
-    void set(ExecutionEngine *e, uint index, Heap::Base *b) {
+    void set(EngineBase *e, uint index, Heap::Base *b) {
         WriteBarrier::write(e, base(), values + index, b);
     }
     inline const Value &operator[] (uint index) const {
@@ -180,13 +180,13 @@ struct ValueArray {
         return values;
     }
 
-    void insertData(ExecutionEngine *e, uint index, Value v) {
+    void insertData(EngineBase *e, uint index, Value v) {
         for (uint i = size - 1; i > index; --i) {
             values[i] = values[i - 1];
         }
         set(e, index, v);
     }
-    void removeData(ExecutionEngine *e, uint index, int n = 1) {
+    void removeData(EngineBase *e, uint index, int n = 1) {
         Q_UNUSED(e);
         for (uint i = index; i < size - n; ++i) {
             values[i] = values[i + n];
