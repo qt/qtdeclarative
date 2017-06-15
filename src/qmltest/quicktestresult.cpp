@@ -518,6 +518,12 @@ void QuickTestResult::stringify(QQmlV4Function *args)
                 result = QString::fromLatin1("Qt.url(%1)").arg(url.toString());
                 break;
             }
+            case QVariant::DateTime:
+            {
+                QDateTime dt = v.value<QDateTime>();
+                result = dt.toString(Qt::ISODateWithMs);
+                break;
+            }
             default:
                 result = v.toString();
             }
