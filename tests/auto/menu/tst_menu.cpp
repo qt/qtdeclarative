@@ -194,7 +194,8 @@ void tst_menu::contextMenuKeyboard()
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
-    QQuickItem *firstItem = menu->itemAt(0);
+    QQuickMenuItem *firstItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
+    QVERIFY(firstItem);
     QSignalSpy visibleSpy(menu, SIGNAL(visibleChanged()));
 
     menu->setFocus(true);
@@ -208,15 +209,21 @@ void tst_menu::contextMenuKeyboard()
 
     QTest::keyClick(window, Qt::Key_Tab);
     QVERIFY(firstItem->hasActiveFocus());
-    QVERIFY(firstItem->property("highlighted").toBool());
+    QVERIFY(firstItem->hasVisualFocus());
+    QVERIFY(firstItem->isHighlighted());
+    QCOMPARE(firstItem->focusReason(), Qt::TabFocusReason);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(0));
 
-    QQuickItem *secondItem = menu->itemAt(1);
+    QQuickMenuItem *secondItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(1));
+    QVERIFY(secondItem);
     QTest::keyClick(window, Qt::Key_Tab);
     QVERIFY(!firstItem->hasActiveFocus());
-    QVERIFY(!firstItem->property("highlighted").toBool());
+    QVERIFY(!firstItem->hasVisualFocus());
+    QVERIFY(!firstItem->isHighlighted());
     QVERIFY(secondItem->hasActiveFocus());
-    QVERIFY(secondItem->property("highlighted").toBool());
+    QVERIFY(secondItem->hasVisualFocus());
+    QVERIFY(secondItem->isHighlighted());
+    QCOMPARE(secondItem->focusReason(), Qt::TabFocusReason);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(1));
 
     QSignalSpy secondTriggeredSpy(secondItem, SIGNAL(triggered()));
@@ -226,9 +233,11 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(!menu->isVisible());
     QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
-    QVERIFY(!firstItem->property("highlighted").toBool());
+    QVERIFY(!firstItem->hasVisualFocus());
+    QVERIFY(!firstItem->isHighlighted());
     QVERIFY(!secondItem->hasActiveFocus());
-    QVERIFY(!secondItem->property("highlighted").toBool());
+    QVERIFY(!secondItem->hasVisualFocus());
+    QVERIFY(!secondItem->isHighlighted());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
@@ -236,36 +245,75 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
-    QVERIFY(!firstItem->property("highlighted").toBool());
+    QVERIFY(!firstItem->hasVisualFocus());
+    QVERIFY(!firstItem->isHighlighted());
     QVERIFY(!secondItem->hasActiveFocus());
-    QVERIFY(!secondItem->property("highlighted").toBool());
+    QVERIFY(!secondItem->hasVisualFocus());
+    QVERIFY(!secondItem->isHighlighted());
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     QTest::keyClick(window, Qt::Key_Down);
     QVERIFY(firstItem->hasActiveFocus());
-    QVERIFY(firstItem->property("highlighted").toBool());
+    QVERIFY(firstItem->hasVisualFocus());
+    QVERIFY(firstItem->isHighlighted());
+    QCOMPARE(firstItem->focusReason(), Qt::TabFocusReason);
 
     QTest::keyClick(window, Qt::Key_Down);
     QVERIFY(secondItem->hasActiveFocus());
-    QVERIFY(secondItem->property("highlighted").toBool());
+    QVERIFY(secondItem->hasVisualFocus());
+    QVERIFY(secondItem->isHighlighted());
+    QCOMPARE(secondItem->focusReason(), Qt::TabFocusReason);
 
     QTest::keyClick(window, Qt::Key_Down);
-    QQuickItem *thirdItem = menu->itemAt(2);
+    QQuickMenuItem *thirdItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(2));
+    QVERIFY(thirdItem);
     QVERIFY(!firstItem->hasActiveFocus());
-    QVERIFY(!firstItem->property("highlighted").toBool());
+    QVERIFY(!firstItem->hasVisualFocus());
+    QVERIFY(!firstItem->isHighlighted());
     QVERIFY(!secondItem->hasActiveFocus());
-    QVERIFY(!secondItem->property("highlighted").toBool());
+    QVERIFY(!secondItem->hasVisualFocus());
+    QVERIFY(!secondItem->isHighlighted());
     QVERIFY(thirdItem->hasActiveFocus());
-    QVERIFY(thirdItem->property("highlighted").toBool());
+    QVERIFY(thirdItem->hasVisualFocus());
+    QVERIFY(thirdItem->isHighlighted());
+    QCOMPARE(thirdItem->focusReason(), Qt::TabFocusReason);
 
     // Key navigation shouldn't wrap by default.
     QTest::keyClick(window, Qt::Key_Down);
     QVERIFY(!firstItem->hasActiveFocus());
-    QVERIFY(!firstItem->property("highlighted").toBool());
+    QVERIFY(!firstItem->hasVisualFocus());
+    QVERIFY(!firstItem->isHighlighted());
     QVERIFY(!secondItem->hasActiveFocus());
-    QVERIFY(!secondItem->property("highlighted").toBool());
+    QVERIFY(!secondItem->hasVisualFocus());
+    QVERIFY(!secondItem->isHighlighted());
     QVERIFY(thirdItem->hasActiveFocus());
-    QVERIFY(thirdItem->property("highlighted").toBool());
+    QVERIFY(thirdItem->hasVisualFocus());
+    QVERIFY(thirdItem->isHighlighted());
+    QCOMPARE(thirdItem->focusReason(), Qt::TabFocusReason);
+
+    QTest::keyClick(window, Qt::Key_Up);
+    QVERIFY(!firstItem->hasActiveFocus());
+    QVERIFY(!firstItem->hasVisualFocus());
+    QVERIFY(!firstItem->isHighlighted());
+    QVERIFY(secondItem->hasActiveFocus());
+    QVERIFY(secondItem->hasVisualFocus());
+    QVERIFY(secondItem->isHighlighted());
+    QCOMPARE(secondItem->focusReason(), Qt::BacktabFocusReason);
+    QVERIFY(!thirdItem->hasActiveFocus());
+    QVERIFY(!thirdItem->hasVisualFocus());
+    QVERIFY(!thirdItem->isHighlighted());
+
+    QTest::keyClick(window, Qt::Key_Backtab);
+    QVERIFY(firstItem->hasActiveFocus());
+    QVERIFY(firstItem->hasVisualFocus());
+    QVERIFY(firstItem->isHighlighted());
+    QCOMPARE(firstItem->focusReason(), Qt::BacktabFocusReason);
+    QVERIFY(!secondItem->hasActiveFocus());
+    QVERIFY(!secondItem->hasVisualFocus());
+    QVERIFY(!secondItem->isHighlighted());
+    QVERIFY(!thirdItem->hasActiveFocus());
+    QVERIFY(!thirdItem->hasVisualFocus());
+    QVERIFY(!thirdItem->isHighlighted());
 
     QTest::keyClick(window, Qt::Key_Escape);
     QCOMPARE(visibleSpy.count(), 4);
@@ -362,6 +410,35 @@ void tst_menu::menuSeparator()
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
         saveMenuItem->mapToScene(QPointF(saveMenuItem->width() / 2, saveMenuItem->height() / 2)).toPoint());
     QTRY_VERIFY(!menu->isVisible());
+
+    menu->open();
+    QVERIFY(menu->isVisible());
+
+    // Key navigation skips separators
+    QTest::keyClick(window, Qt::Key_Down);
+    QVERIFY(newMenuItem->hasActiveFocus());
+    QVERIFY(newMenuItem->hasVisualFocus());
+    QCOMPARE(newMenuItem->focusReason(), Qt::TabFocusReason);
+
+    QTest::keyClick(window, Qt::Key_Down);
+    QVERIFY(saveMenuItem->hasActiveFocus());
+    QVERIFY(saveMenuItem->hasVisualFocus());
+    QCOMPARE(saveMenuItem->focusReason(), Qt::TabFocusReason);
+
+    QTest::keyClick(window, Qt::Key_Down);
+    QVERIFY(saveMenuItem->hasActiveFocus());
+    QVERIFY(saveMenuItem->hasVisualFocus());
+    QCOMPARE(saveMenuItem->focusReason(), Qt::TabFocusReason);
+
+    QTest::keyClick(window, Qt::Key_Up);
+    QVERIFY(newMenuItem->hasActiveFocus());
+    QVERIFY(newMenuItem->hasVisualFocus());
+    QCOMPARE(newMenuItem->focusReason(), Qt::BacktabFocusReason);
+
+    QTest::keyClick(window, Qt::Key_Up);
+    QVERIFY(newMenuItem->hasActiveFocus());
+    QVERIFY(newMenuItem->hasVisualFocus());
+    QCOMPARE(newMenuItem->focusReason(), Qt::BacktabFocusReason);
 }
 
 void tst_menu::repeater()
