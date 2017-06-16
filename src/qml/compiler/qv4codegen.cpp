@@ -367,12 +367,6 @@ struct ControlFlowFinally : public ControlFlowUnwind
 } // QV4 namespace
 QT_END_NAMESPACE
 
-static inline void setLocation(IR::Stmt *s, const SourceLocation &loc)
-{
-    if (s && loc.isValid())
-        s->location = loc;
-}
-
 static inline QV4::Runtime::RuntimeMethods aluOpFunction(IR::AluOp op)
 {
     switch (op) {
@@ -983,7 +977,7 @@ void Codegen::statement(Statement *ast)
 {
     TempScope scope(_function);
 
-    _block->nextLocation = ast->firstSourceLocation();
+    bytecodeGenerator->setLocation(ast->firstSourceLocation());
     accept(ast);
 }
 
@@ -1025,8 +1019,7 @@ void Codegen::condition(ExpressionNode *ast, const BytecodeGenerator::Label *ift
         accept(ast);
         qSwap(_expr, r);
         if (r.format == ex) {
-            //### TODO:
-//            setLocation(cjump(*r, r.iftrue, r.iffalse), ast->firstSourceLocation());
+            bytecodeGenerator->setLocation(ast->firstSourceLocation());
             auto cond = r.result.asRValue();
             if (r.trueBlockFollowsCondition)
                 bytecodeGenerator->jumpNe(cond).link(*r.iffalse);
@@ -1388,8 +1381,7 @@ bool Codegen::visit(BinaryExpression *ast)
 
             r.store(lhs);
 
-            //### TODO:
-//            setLocation(cjump(_block->TEMP(r), iftrue, endif), ast->operatorToken);
+            bytecodeGenerator->setLocation(ast->operatorToken);
             bytecodeGenerator->jumpNe(r.asRValue()).link(endif);
             iftrue.link();
 
@@ -1421,8 +1413,7 @@ bool Codegen::visit(BinaryExpression *ast)
 
             r.store(lhs);
 
-            //### TODO:
-//            setLocation(cjump(_block->TEMP(r), endif, iffalse), ast->operatorToken);
+            bytecodeGenerator->setLocation(ast->operatorToken);
             bytecodeGenerator->jumpEq(r.asRValue()).link(endif);
             iffalse.link();
 
@@ -2180,7 +2171,7 @@ bool Codegen::visit(PreDecrementExpression *ast)
         return false;
     auto tmp = unop(IR::OpDecrement, expr, ast->decrementToken);
     if (_expr.accept(nx)) {
-//        setLocation(move(*expr, op), ast->incrementToken);
+        bytecodeGenerator->setLocation(ast->decrementToken);
         expr.store(tmp);
     } else {
         if (!tmp.isTempLocalArg()) {
@@ -2211,7 +2202,7 @@ bool Codegen::visit(PreIncrementExpression *ast)
         return false;
     auto tmp = unop(IR::OpIncrement, expr, ast->incrementToken);
     if (_expr.accept(nx)) {
-//        setLocation(move(*expr, op), ast->incrementToken);
+        bytecodeGenerator->setLocation(ast->incrementToken);
         expr.store(tmp);
     } else {
         if (!tmp.isTempLocalArg()) {
@@ -2437,8 +2428,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     unsigned returnAddress = bytecodeGenerator->newTemp();
     auto exitBlock = bytecodeGenerator->newLabel();
 
-//###    setLocation(exitBlock->RET(exitBlock->TEMP(returnAddress)), ast->lastSourceLocation());
-
     qSwap(_function, function);
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
@@ -2479,6 +2468,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     sourceElements(body);
 
     _exitBlock.link();
+    bytecodeGenerator->setLocation(ast->lastSourceLocation());
 
     {
         Instruction::Ret ret;

@@ -39,10 +39,21 @@
 
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4jsir_p.h>
+#include <private/qqmljsastfwd_p.h>
 
 QT_USE_NAMESPACE
 using namespace QV4;
 using namespace Moth;
+
+void BytecodeGenerator::setLocation(const QQmlJS::AST::SourceLocation &loc)
+{
+    if (static_cast<int>(loc.startLine) == currentLine)
+        return;
+    currentLine = static_cast<int>(loc.startLine);
+    Instruction::Line line;
+    line.lineNumber = currentLine;
+    addInstruction(line);
+}
 
 unsigned BytecodeGenerator::newTemp()
 {

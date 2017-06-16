@@ -44,6 +44,12 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QQmlJS {
+namespace AST {
+class SourceLocation;
+}
+}
+
 namespace QV4 {
 namespace IR {
 struct Function;
@@ -180,6 +186,8 @@ public:
             addJumpInstruction(data).link(*handler);
     }
 
+    void setLocation(const QQmlJS::AST::SourceLocation &loc);
+
     ExceptionHandler *exceptionHandler() const {
         return currentExceptionHandler;
     }
@@ -225,6 +233,7 @@ private:
     QVector<JumpData> jumps;
     IR::Function *function; // ### remove me at some point
     ExceptionHandler *currentExceptionHandler;
+    int currentLine = -1;
 };
 
 }
