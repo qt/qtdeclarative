@@ -124,7 +124,7 @@ QT_BEGIN_NAMESPACE
         \li PathSvg
         \li Yes
         \li Yes
-        \li Yes, with limitations
+        \li Yes
         \li Yes
     \row
         \li PathAttribute
@@ -1124,13 +1124,6 @@ void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
     \ingroup qtquick-animation-paths
     \brief Moves the Path's position
 
-    While not relevant with PathView, for Path elements used with Shape it
-    is important to distinguish between the operations of drawing a straight
-    line and moving the path position without drawing anything.
-
-    \note PathMove should not be used in a Path associated with a PathView. Use
-    PathLine instead.
-
     The example below creates a path consisting of two horizontal lines with
     some empty space between them. All three segments have a width of 100:
 
@@ -1142,6 +1135,11 @@ void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
         PathLine { relativeX: 100; y: 100 }
     }
     \endqml
+
+    \note PathMove should not be used in a Path associated with a PathView. Use
+    PathLine instead. For ShapePath however it is important to distinguish
+    between the operations of drawing a straight line and moving the path
+    position without drawing anything.
 
     \sa Path, PathQuad, PathCubic, PathArc, PathCurve, PathSvg, PathLine
 */
@@ -1930,10 +1928,10 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
     \endqml
     \endtable
 
-    \note Mixing PathSvg with other type of elements is not always supported,
-    therefore it is strongly recommended to avoid this. For example, when
-    \l Shape is backed by \c{GL_NV_path_rendering}, a Path can contain one or
-    more PathSvg elements, or one or more other type of elements, but not both.
+    \note Mixing PathSvg with other type of elements is not always supported.
+    For example, when \l Shape is backed by \c{GL_NV_path_rendering}, a
+    ShapePath can contain one or more PathSvg elements, or one or more other
+    type of elements, but not both.
 
     \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathCurve
 */
