@@ -72,33 +72,206 @@ using namespace AST;
 QT_BEGIN_NAMESPACE
 namespace QV4 {
 
-struct ScopeAndFinally {
-    enum ScopeType {
-        WithScope,
-        TryScope,
-        CatchScope
+struct ControlFlow {
+    enum Type {
+        Loop,
+        With
     };
 
-    ScopeAndFinally *parent;
-    AST::Finally *finally;
-    ScopeType type;
+    enum HandlerType {
+        Invalid,
+        Break,
+        Continue,
+        Return,
+        Throw
+    };
 
-    ScopeAndFinally(ScopeAndFinally *parent, ScopeType t = WithScope) : parent(parent), finally(0), type(t) {}
-    ScopeAndFinally(ScopeAndFinally *parent, AST::Finally *finally)
-    : parent(parent), finally(finally), type(TryScope)
-    {}
+    struct Handler {
+        HandlerType type;
+        QString label;
+        Moth::BytecodeGenerator::Label linkLabel;
+        int tempIndex;
+        int value;
+    };
+
+    Codegen *cg;
+    ControlFlow *parent;
+    Type type;
+
+    ControlFlow(Codegen *cg, Type type)
+        : cg(cg), parent(cg->_controlFlow), type(type)
+    {
+        cg->_controlFlow = this;
+    }
+
+    virtual ~ControlFlow() {
+        cg->_controlFlow = parent;
+    }
+
+    void jumpToHandler(const Handler &h) {
+        if (h.tempIndex >= 0) {
+            Codegen::Reference val = Codegen::Reference::fromConst(cg, QV4::Encode(h.value));
+            Codegen::Reference temp = Codegen::Reference::fromTemp(cg, h.tempIndex);
+            temp.store(val);
+        }
+        cg->bytecodeGenerator->jump().link(h.linkLabel);
+    }
+
+    virtual QString label() const { return QString(); }
+
+    bool isSimple() const {
+        return type == Loop;
+    }
+
+    Handler getParentHandler(HandlerType type, const QString &label = QString()) {
+        if (parent)
+            return parent->getHandler(type, label);
+        switch (type) {
+        case Break:
+        case Continue:
+            return { Invalid, QString(), {}, -1, 0 };
+        case Return:
+        case Throw:
+            return { type, QString(), cg->_exitBlock, -1, 0 };
+        case Invalid:
+            Q_ASSERT(false);
+            Q_UNREACHABLE();
+        }
+    }
+
+    virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
+        return getParentHandler(type, label);
+    }
+
+protected:
+    QString loopLabel() const {
+        QString label;
+        if (cg->_labelledStatement) {
+            label = cg->_labelledStatement->label.toString();
+            cg->_labelledStatement = 0;
+        }
+        return label;
+    }
+    Moth::BytecodeGenerator *generator() const {
+        return cg->bytecodeGenerator;
+    }
 };
 
-struct Loop {
-    AST::LabelledStatement *labelledStatement;
-    AST::Statement *node;
-    Moth::BytecodeGenerator::Label *breakLabel;
-    Moth::BytecodeGenerator::Label *continueLabel;
-    Loop *parent;
-    ScopeAndFinally *scopeAndFinally;
+struct ControlFlowLoop : public ControlFlow
+{
+    QString loopLabel;
+    Moth::BytecodeGenerator::Label *breakLabel = 0;
+    Moth::BytecodeGenerator::Label *continueLabel = 0;
 
-    Loop(AST::Statement *node, Moth::BytecodeGenerator::Label *breakLabel, Moth::BytecodeGenerator::Label *continueLabel, Loop *parent)
-        : labelledStatement(0), node(node), breakLabel(breakLabel), continueLabel(continueLabel), parent(parent) {}
+    ControlFlowLoop(Codegen *cg, Moth::BytecodeGenerator::Label *breakLabel, Moth::BytecodeGenerator::Label *continueLabel = 0)
+        : ControlFlow(cg, Loop), loopLabel(ControlFlow::loopLabel()), breakLabel(breakLabel), continueLabel(continueLabel)
+    {
+    }
+
+    virtual QString label() const { return loopLabel; }
+
+    virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
+        switch (type) {
+        case Break:
+            if (breakLabel && (label.isEmpty() || label == loopLabel))
+                return { type, loopLabel, *breakLabel, -1, 0 };
+            break;
+        case Continue:
+            if (continueLabel && (label.isEmpty() || label == loopLabel))
+                return { type, loopLabel, *continueLabel, -1, 0 };
+            break;
+        case Return:
+        case Throw:
+            break;
+        case Invalid:
+            Q_ASSERT(false);
+            Q_UNREACHABLE();
+        }
+        return ControlFlow::getHandler(type, label);
+    }
+
+};
+
+struct ControlFlowUnwind : public ControlFlow
+{
+    Moth::BytecodeGenerator::Label unwindLabel;
+    int controlFlowTemp;
+    QVector<Handler> handlers;
+
+    ControlFlowUnwind(Codegen *cg, Type type)
+        : ControlFlow(cg, type)
+    {
+        Q_ASSERT(type != Loop);
+        controlFlowTemp = static_cast<int>(generator()->newTemp());
+        Codegen::Reference::fromTemp(cg, controlFlowTemp).store(Codegen::Reference::fromConst(cg, QV4::Encode::undefined()));
+        unwindLabel = generator()->newLabel();
+        // we'll need at least a handler for throw
+        getHandler(Throw);
+    }
+
+    void emitUnwindHandler()
+    {
+        Q_ASSERT(!isSimple());
+
+        Codegen::Reference temp = Codegen::Reference::fromTemp(cg, controlFlowTemp);
+        for (const auto &h : qAsConst(handlers)) {
+            Codegen::TempScope tempScope(cg);
+            Handler parentHandler = getParentHandler(h.type, h.label);
+            if (parentHandler.tempIndex >= 0) {
+                Moth::BytecodeGenerator::Label skip = generator()->newLabel();
+                generator()->jumpStrictNotEqual(temp.asRValue(), Codegen::Reference::fromConst(cg, QV4::Encode(h.value)).asRValue())
+                        .link(skip);
+                Codegen::Reference parentTemp = Codegen::Reference::fromTemp(cg, parentHandler.tempIndex);
+                parentTemp.store(Codegen::Reference::fromConst(cg, QV4::Encode(parentHandler.value)));
+                generator()->jump().link(parentHandler.linkLabel);
+                skip.link();
+            } else {
+                generator()->jumpStrictEqual(temp.asRValue(), Codegen::Reference::fromConst(cg, QV4::Encode(h.value)).asRValue())
+                        .link(parentHandler.linkLabel);
+            }
+        }
+    }
+
+    virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
+        for (const auto &h : qAsConst(handlers)) {
+            if (h.type == type && h.label == label)
+                return h;
+        }
+        Handler h = {
+            type,
+            label,
+            unwindLabel,
+            controlFlowTemp,
+            handlers.size()
+        };
+        handlers.append(h);
+        return h;
+    }
+
+};
+
+struct ControlFlowWith : public ControlFlowUnwind
+{
+    ControlFlowWith(Codegen *cg)
+        : ControlFlowUnwind(cg, With)
+    {
+    }
+
+    virtual ~ControlFlowWith() {
+        // emit code for unwinding
+        unwindLabel.link();
+
+        Moth::Instruction::CallBuiltinPopScope pop;
+        generator()->addInstruction(pop);
+
+        emitUnwindHandler();
+    }
+};
+
+struct ControlFlowCatch : public ControlFlow
+{
+    // ####
+    AST::Finally *finally = 0;
 };
 } // QV4 namespace
 QT_END_NAMESPACE
@@ -594,9 +767,8 @@ Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     , _block(0)
     , _returnAddress(0)
     , _variableEnvironment(0)
-    , _loop(0)
+    , _controlFlow(0)
     , _labelledStatement(0)
-    , _scopeAndFinally(0)
     , jsUnitGenerator(jsUnitGenerator)
     , _strictMode(strict)
     , _fileNameIsUrl(false)
@@ -658,21 +830,6 @@ void Codegen::leaveEnvironment()
 {
     Q_ASSERT(_variableEnvironment);
     _variableEnvironment = _variableEnvironment->parent;
-}
-
-void Codegen::enterLoop(Statement *node, QV4::Moth::BytecodeGenerator::Label *breakLabel, QV4::Moth::BytecodeGenerator::Label *continueLabel)
-{
-    _loop = new Loop(node, breakLabel, continueLabel, _loop);
-    _loop->labelledStatement = _labelledStatement; // consume the enclosing labelled statement
-    _loop->scopeAndFinally = _scopeAndFinally;
-    _labelledStatement = 0;
-}
-
-void Codegen::leaveLoop()
-{
-    Loop *current = _loop;
-    _loop = _loop->parent;
-    delete current;
 }
 
 IR::Expr *Codegen::argument(IR::Expr *expr)
@@ -2365,12 +2522,10 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
                             AST::SourceElements *body,
                             const QStringList &inheritedLocals)
 {
-    Loop *loop = 0;
-    qSwap(_loop, loop);
+    ControlFlow *loop = 0;
+    qSwap(_controlFlow, loop);
     QStack<IR::BasicBlock *> exceptionHandlers;
     qSwap(_exceptionHandlers, exceptionHandlers);
-
-    ScopeAndFinally *scopeAndFinally = 0;
 
     enterEnvironment(ast);
     IR::Function *function = _module->newFunction(name, _function);
@@ -2454,7 +2609,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
-    qSwap(_scopeAndFinally, scopeAndFinally);
 
     for (FormalParameterList *it = formals; it; it = it->next) {
         _function->RECEIVE(it->name.toString());
@@ -2511,9 +2665,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
-    qSwap(_scopeAndFinally, scopeAndFinally);
     qSwap(_exceptionHandlers, exceptionHandlers);
-    qSwap(_loop, loop);
+    qSwap(_controlFlow, loop);
 
     leaveEnvironment();
 
@@ -2558,27 +2711,21 @@ bool Codegen::visit(BreakStatement *ast)
     if (hasError)
         return false;
 
-    TempScope scope(_function);
-
-    if (!_loop) {
+    if (!_controlFlow) {
         throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
         return false;
     }
-    Loop *loop = 0;
-    if (ast->label.isEmpty())
-        loop = _loop;
-    else {
-        for (loop = _loop; loop; loop = loop->parent) {
-            if (loop->labelledStatement && loop->labelledStatement->label == ast->label)
-                break;
-        }
-        if (!loop) {
+
+    ControlFlow::Handler h = _controlFlow->getHandler(ControlFlow::Break, ast->label.toString());
+    if (h.type == ControlFlow::Invalid) {
+        if (ast->label.isEmpty())
+            throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
+        else
             throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Undefined label '%1'").arg(ast->label.toString()));
-            return false;
-        }
+        return false;
     }
-    unwindException(loop->scopeAndFinally);
-    bytecodeGenerator->jump().link(*loop->breakLabel);
+
+    _controlFlow->jumpToHandler(h);
 
     return false;
 }
@@ -2590,31 +2737,21 @@ bool Codegen::visit(ContinueStatement *ast)
 
     TempScope scope(_function);
 
-    Loop *loop = 0;
-    if (ast->label.isEmpty()) {
-        for (loop = _loop; loop; loop = loop->parent) {
-            if (loop->continueLabel)
-                break;
-        }
-    } else {
-        for (loop = _loop; loop; loop = loop->parent) {
-            if (loop->labelledStatement && loop->labelledStatement->label == ast->label) {
-                if (!loop->continueLabel)
-                    loop = 0;
-                break;
-            }
-        }
-        if (!loop) {
-            throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Undefined label '%1'").arg(ast->label.toString()));
-            return false;
-        }
-    }
-    if (!loop) {
-        throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("continue outside of loop"));
+    if (!_controlFlow) {
+        throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Continue outside of loop"));
         return false;
     }
-    unwindException(loop->scopeAndFinally);
-    bytecodeGenerator->jump().link(*loop->continueLabel);
+
+    ControlFlow::Handler h = _controlFlow->getHandler(ControlFlow::Continue, ast->label.toString());
+    if (h.type == ControlFlow::Invalid) {
+        if (ast->label.isEmpty())
+            throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Undefined label '%1'").arg(ast->label.toString()));
+        else
+            throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("continue outside of loop"));
+        return false;
+    }
+
+    _controlFlow->jumpToHandler(h);
 
     return false;
 }
@@ -2636,15 +2773,14 @@ bool Codegen::visit(DoWhileStatement *ast)
     Moth::BytecodeGenerator::Label cond = bytecodeGenerator->newLabel();
     Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-    enterLoop(ast, &end, &cond);
+    ControlFlowLoop flow(this, &end, &cond);
 
     statement(ast->statement);
 
     cond.link();
     condition(ast->expression, &body, &end, false);
-    end.link();
 
-    leaveLoop();
+    end.link();
 
     return false;
 }
@@ -2695,7 +2831,8 @@ bool Codegen::visit(ForEachStatement *ast)
     Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     bytecodeGenerator->jump().link(in);
-    enterLoop(ast, &end, &in);
+
+    ControlFlowLoop flow(this, &end, &in);
 
     Moth::BytecodeGenerator::Label body = bytecodeGenerator->label();
 
@@ -2734,7 +2871,7 @@ bool Codegen::visit(ForStatement *ast)
     Moth::BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
     Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-    enterLoop(ast, &end, &step);
+    ControlFlowLoop flow(this, &end, &step);
 
     condition(ast->condition, &body, &end, true);
 
@@ -2744,9 +2881,8 @@ bool Codegen::visit(ForStatement *ast)
     step.link();
     statement(ast->expression);
     bytecodeGenerator->jump().link(cond);
-    end.link();
 
-    leaveLoop();
+    end.link();
 
     return false;
 }
@@ -2784,9 +2920,9 @@ bool Codegen::visit(LabelledStatement *ast)
     TempScope scope(_function);
 
     // check that no outer loop contains the label
-    Loop *l = _loop;
+    ControlFlow *l = _controlFlow;
     while (l) {
-        if (l->labelledStatement && l->labelledStatement->label == ast->label) {
+        if (l->label() == ast->label) {
             QString error = QString(QStringLiteral("Label '%1' has already been declared")).arg(ast->label.toString());
             throwSyntaxError(ast->firstSourceLocation(), error);
             return false;
@@ -2805,10 +2941,9 @@ bool Codegen::visit(LabelledStatement *ast)
         statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
     } else {
         Moth::BytecodeGenerator::Label breakLabel = bytecodeGenerator->newLabel();
-        enterLoop(ast->statement, &breakLabel, /*continueBlock*/ 0);
+        ControlFlowLoop flow(this, &breakLabel);
         statement(ast->statement);
         breakLabel.link();
-        leaveLoop();
     }
 
     return false;
@@ -2837,7 +2972,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     bytecodeGenerator->jump().link(in);
-    enterLoop(ast, &end, &in);
+    ControlFlowLoop flow(this, &end, &in);
 
     Moth::BytecodeGenerator::Label body = bytecodeGenerator->label();
 
@@ -2873,7 +3008,7 @@ bool Codegen::visit(LocalForStatement *ast)
     Moth::BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
     Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
-    enterLoop(ast, &end, &step);
+    ControlFlowLoop flow(this, &end, &step);
 
     condition(ast->condition, &body, &end, true);
 
@@ -2884,8 +3019,6 @@ bool Codegen::visit(LocalForStatement *ast)
     statement(ast->expression);
     bytecodeGenerator->jump().link(cond);
     end.link();
-
-    leaveLoop();
 
     return false;
 }
@@ -2904,16 +3037,12 @@ bool Codegen::visit(ReturnStatement *ast)
         Reference::fromTemp(this, _returnAddress).storeConsume(expr);
     }
 
-    // Since we're leaving, don't let any finally statements we emit as part of the unwinding
-    // jump to exception handlers at run-time if they throw.
-    //### TODO:
-    IR::BasicBlock *unwindBlock = _function->newBasicBlock(/*no exception handler*/Q_NULLPTR);
-    _block->JUMP(unwindBlock);
-    _block = unwindBlock;
-
-    unwindException(0);
-
-    bytecodeGenerator->jump().link(_exitBlock);
+    if (_controlFlow) {
+        ControlFlow::Handler h = _controlFlow->getHandler(ControlFlow::Return);
+        _controlFlow->jumpToHandler(h);
+    } else {
+        bytecodeGenerator->jump().link(_exitBlock);
+    }
     return false;
 }
 
@@ -2956,7 +3085,7 @@ bool Codegen::visit(SwitchStatement *ast)
         else
             bytecodeGenerator->jump().link(switchEnd);
 
-        enterLoop(ast, &switchEnd, 0);
+        ControlFlowLoop flow(this, &switchEnd);
 
         for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
             CaseClause *clause = it->clause;
@@ -2981,8 +3110,6 @@ bool Codegen::visit(SwitchStatement *ast)
             for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
                 statement(it2->statement);
         }
-
-        leaveLoop();
 
         switchEnd.link();
 
@@ -3021,6 +3148,7 @@ bool Codegen::visit(TryStatement *ast)
         return false;
     }
 
+#if 0
     IR::BasicBlock *surroundingExceptionHandler = exceptionHandler();
 
     // We always need a finally body to clean up the exception handler
@@ -3107,35 +3235,9 @@ bool Codegen::visit(TryStatement *ast)
 
     _function->addBasicBlock(end);
     _block = end;
+#endif
 
     return false;
-}
-
-void Codegen::unwindException(QV4::ScopeAndFinally *outest)
-{
-    int savedDepthForWidthOrCatch = _function->insideWithOrCatch;
-    ScopeAndFinally *scopeAndFinally = _scopeAndFinally;
-    qSwap(_scopeAndFinally, scopeAndFinally);
-    while (_scopeAndFinally != outest) {
-        switch (_scopeAndFinally->type) {
-        case ScopeAndFinally::WithScope:
-            // fall through
-        case ScopeAndFinally::CatchScope:
-            _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0)));
-            _scopeAndFinally = _scopeAndFinally->parent;
-            --_function->insideWithOrCatch;
-            break;
-        case ScopeAndFinally::TryScope: {
-            ScopeAndFinally *tc = _scopeAndFinally;
-            _scopeAndFinally = tc->parent;
-            if (tc->finally && tc->finally->statement)
-                statement(tc->finally->statement);
-            break;
-        }
-        }
-    }
-    qSwap(_scopeAndFinally, scopeAndFinally);
-    _function->insideWithOrCatch = savedDepthForWidthOrCatch;
 }
 
 bool Codegen::visit(VariableStatement *ast)
@@ -3155,7 +3257,7 @@ bool Codegen::visit(WhileStatement *ast)
     Moth::BytecodeGenerator::Label start = bytecodeGenerator->newLabel();
     Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
     Moth::BytecodeGenerator::Label cond = bytecodeGenerator->label();
-    enterLoop(ast, &end, &cond);
+    ControlFlowLoop flow(this, &end, &cond);
 
     condition(ast->expression, &start, &end, true);
 
@@ -3163,7 +3265,6 @@ bool Codegen::visit(WhileStatement *ast)
     statement(ast->statement);
     bytecodeGenerator->jump().link(cond);
 
-    leaveLoop();
     end.link();
 
     return false;
@@ -3178,44 +3279,21 @@ bool Codegen::visit(WithStatement *ast)
 
     _function->hasWith = true;
 
-    const int withObject = _block->newTemp();
-    Result src = expression(ast->expression);
+    Reference src = expression(ast->expression);
     if (hasError)
         return false;
-    _block->MOVE(_block->TEMP(withObject), *src);
 
-    // need an exception handler for with to cleanup the with scope
-    IR::BasicBlock *withExceptionHandler = _function->newBasicBlock(exceptionHandler());
-    withExceptionHandler->EXP(withExceptionHandler->CALL(withExceptionHandler->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
-    if (!exceptionHandler())
-        withExceptionHandler->EXP(withExceptionHandler->CALL(withExceptionHandler->NAME(IR::Name::builtin_rethrow, 0, 0), 0));
-    else
-        withExceptionHandler->JUMP(exceptionHandler());
-
-    pushExceptionHandler(withExceptionHandler);
-
-    IR::BasicBlock *withBlock = _function->newBasicBlock(exceptionHandler());
-
-    _block->JUMP(withBlock);
-    _block = withBlock;
-    IR::ExprList *args = _function->New<IR::ExprList>();
-    args->init(_block->TEMP(withObject));
-    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_with_scope, 0, 0), args));
-
+    ControlFlowWith flow(this);
     ++_function->insideWithOrCatch;
-    {
-        ScopeAndFinally scope(_scopeAndFinally);
-        _scopeAndFinally = &scope;
-        statement(ast->statement);
-        _scopeAndFinally = scope.parent;
-    }
-    --_function->insideWithOrCatch;
-    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
-    popExceptionHandler();
 
-    IR::BasicBlock *next = _function->newBasicBlock(exceptionHandler());
-    _block->JUMP(next);
-    _block = next;
+    Moth::Instruction::CallBuiltinPushScope pushScope;
+    pushScope.arg = src.asRValue();
+    bytecodeGenerator->addInstruction(pushScope);
+
+    bytecodeGenerator->setExceptionHandler().link(flow.unwindLabel);
+
+    statement(ast->statement);
+    --_function->insideWithOrCatch;
 
     return false;
 }

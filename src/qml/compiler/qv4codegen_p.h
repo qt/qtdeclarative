@@ -67,8 +67,7 @@
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-struct Loop;
-struct ScopeAndFinally;
+struct ControlFlow;
 
 namespace Compiler {
 struct JSUnitGenerator;
@@ -106,7 +105,7 @@ public:
                              AST::FunctionExpression *ast,
                              QV4::IR::Module *module);
 
-protected:
+public:
     struct Reference {
         enum Type {
             Invalid,
@@ -211,6 +210,22 @@ protected:
         Codegen *codegen;
 
     };
+
+    struct TempScope {
+        TempScope(Codegen *cg)
+            : function(cg->_function),
+              tempCountForScope(function->currentTemp) {}
+        TempScope(QV4::IR::Function *f)
+            : function(f),
+              tempCountForScope(f->currentTemp) {}
+        ~TempScope() {
+            function->currentTemp = tempCountForScope;
+        }
+        QV4::IR::Function *function;
+        int tempCountForScope;
+    };
+
+protected:
 
     enum Format { ex, cx, nx };
     struct Result {
@@ -381,17 +396,6 @@ protected:
         }
     };
 
-    struct TempScope {
-        TempScope(QV4::IR::Function *f)
-            : function(f),
-              tempCountForScope(f->currentTemp) {}
-        ~TempScope() {
-            function->currentTemp = tempCountForScope;
-        }
-        QV4::IR::Function *function;
-        int tempCountForScope;
-    };
-
     Environment *newEnvironment(AST::Node *node, Environment *parent, CompilationMode compilationMode)
     {
         Environment *env = new Environment(parent, compilationMode);
@@ -405,7 +409,6 @@ protected:
     void enterEnvironment(AST::Node *node);
     void leaveEnvironment();
 
-    void enterLoop(AST::Statement *node, QV4::Moth::BytecodeGenerator::Label *breakLabel, QV4::Moth::BytecodeGenerator::Label *continueLabel);
     void leaveLoop();
     QV4::IR::BasicBlock *exceptionHandler() const
     {
@@ -437,8 +440,6 @@ protected:
                        AST::FormalParameterList *formals,
                        AST::SourceElements *body,
                        const QStringList &inheritedLocals = QStringList());
-
-    void unwindException(QV4::ScopeAndFinally *outest);
 
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
@@ -582,6 +583,7 @@ public:
     int pushArgs(AST::ArgumentList *args);
 
 protected:
+    friend struct QV4::ControlFlow;
     Result _expr;
     QString _property;
     UiMember _uiMember;
@@ -591,9 +593,8 @@ protected:
     QV4::Moth::BytecodeGenerator::Label _exitBlock;
     unsigned _returnAddress;
     Environment *_variableEnvironment;
-    QV4::Loop *_loop;
+    QV4::ControlFlow *_controlFlow;
     AST::LabelledStatement *_labelledStatement;
-    QV4::ScopeAndFinally *_scopeAndFinally;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
     QStack<QV4::IR::BasicBlock *> _exceptionHandlers;

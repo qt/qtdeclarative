@@ -56,10 +56,11 @@ public:
         : function(function) {}
 
     struct Label {
-        BytecodeGenerator *generator;
-        int index;
+        BytecodeGenerator *generator = 0;
+        int index = -1;
 
         void link() {
+            Q_ASSERT(index >= 0);
             Q_ASSERT(generator->labels[index] == -1);
             generator->labels[index] = generator->instructions.size();
         }
@@ -80,6 +81,7 @@ public:
             link(generator->label());
         }
         void link(Label l) {
+            Q_ASSERT(l.index >= 0);
             Q_ASSERT(generator->jumps[index].linkedLabel == -1);
             generator->jumps[index].linkedLabel = l.index;
         }
