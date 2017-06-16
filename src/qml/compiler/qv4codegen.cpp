@@ -1445,8 +1445,8 @@ bool Codegen::visit(BinaryExpression *ast)
         break;
 
     case QSOperator::Assign: {
-//        if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
-//            return false;
+        if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
+            return false;
         Reference right = expression(ast->right);
         if (hasError)
             return false;
@@ -1471,8 +1471,8 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceRightShift:
     case QSOperator::InplaceURightShift:
     case QSOperator::InplaceXor: {
-//        if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
-//            return false;
+        if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
+            return false;
 
         if (!left.isLValue()) {
             throwSyntaxError(ast->operatorToken, QStringLiteral("left-hand side of inplace operator is not an lvalue"));
@@ -1849,8 +1849,8 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
         Q_ASSERT (index < e->members.size());
         if (index != -1) {
             if (isLhs && f->isStrict && (name == QLatin1String("arguments") || name == QLatin1String("eval"))) {
-                // ### check that this converts correctly
-                // throwSyntaxError(loc, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
+                // ### add correct source location
+                throwSyntaxError(SourceLocation(), QStringLiteral("Variable name may not be eval or arguments in strict mode"));
             }
             return Reference::fromLocal(this, index, scope);
         }
@@ -2120,8 +2120,8 @@ bool Codegen::visit(PostDecrementExpression *ast)
         throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
         return false;
     }
-//    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
-//        return false;
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
+        return false;
 
     Reference oldValue = unop(IR::OpUPlus, expr, ast->decrementToken);
 
@@ -2146,8 +2146,8 @@ bool Codegen::visit(PostIncrementExpression *ast)
         throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
         return false;
     }
-//    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
-//        return false;
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
+        return false;
 
     Reference oldValue = unop(IR::OpUPlus, expr, ast->incrementToken);
 
@@ -2172,9 +2172,8 @@ bool Codegen::visit(PreDecrementExpression *ast)
         return false;
     }
 
-    //### TODO
-//    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
-//        return false;
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
+        return false;
     auto tmp = unop(IR::OpDecrement, expr, ast->decrementToken);
     if (_expr.accept(nx)) {
 //        setLocation(move(*expr, op), ast->incrementToken);
@@ -2204,9 +2203,8 @@ bool Codegen::visit(PreIncrementExpression *ast)
         return false;
     }
 
-    //### TODO
-//    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
-//        return false;
+    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
+        return false;
     auto tmp = unop(IR::OpIncrement, expr, ast->incrementToken);
     if (_expr.accept(nx)) {
 //        setLocation(move(*expr, op), ast->incrementToken);
@@ -3114,21 +3112,18 @@ bool Codegen::visit(UiSourceElement *)
     return false;
 }
 
-bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(IR::Expr *expr, const SourceLocation& loc)
+bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r, const SourceLocation& loc)
 {
     if (!_variableEnvironment->isStrict)
         return false;
-    if (IR::Name *n = expr->asName()) {
-        if (*n->id != QLatin1String("eval") && *n->id != QLatin1String("arguments"))
-            return false;
-    } else if (IR::ArgLocal *al = expr->asArgLocal()) {
-        if (!al->isArgumentsOrEval)
-            return false;
-    } else {
-        return false;
+    if (r.type == Reference::Name) {
+        QString str = jsUnitGenerator->stringForIndex(r.nameIndex);
+        if (str == QLatin1String("eval") || str == QLatin1String("arguments")) {
+            throwSyntaxError(loc, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
+            return true;
+        }
     }
-    throwSyntaxError(loc, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
-    return true;
+    return false;
 }
 
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
