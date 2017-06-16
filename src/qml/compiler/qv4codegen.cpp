@@ -1688,12 +1688,30 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError)
         return false;
 
-    Instruction::CallValue call;
-    call.dest = base.asRValue();
-    call.argc = argc;
-    call.callData = 0;
-    call.result = r.asLValue();
-    bytecodeGenerator->addInstruction(call);
+    if (base.type == Reference::Member) {
+        Instruction::CallProperty call;
+        call.base = base.base;
+        call.name = base.nameIndex;
+        call.argc = argc;
+        call.callData = 0;
+        call.result = r.asLValue();
+        bytecodeGenerator->addInstruction(call);
+    } else if (base.type == Reference::Subscript) {
+        Instruction::CallElement call;
+        call.base = base.base;
+        call.index = base.subscript;
+        call.argc = argc;
+        call.callData = 0;
+        call.result = r.asLValue();
+        bytecodeGenerator->addInstruction(call);
+    } else {
+        Instruction::CallValue call;
+        call.dest = base.asRValue();
+        call.argc = argc;
+        call.callData = 0;
+        call.result = r.asLValue();
+        bytecodeGenerator->addInstruction(call);
+    }
     _expr.result = r;
     return false;
 }
