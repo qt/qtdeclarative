@@ -335,29 +335,29 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::IR::Function *i
     function->codeSize = 0;
 
     // write formals
-    quint32 *formals = (quint32 *)(f + function->formalsOffset);
+    CompiledData::LEUInt32 *formals = (CompiledData::LEUInt32 *)(f + function->formalsOffset);
     for (int i = 0; i < irFunction->formals.size(); ++i)
         formals[i] = getStringId(*irFunction->formals.at(i));
 
     // write locals
-    quint32 *locals = (quint32 *)(f + function->localsOffset);
+    CompiledData::LEUInt32 *locals = (CompiledData::LEUInt32 *)(f + function->localsOffset);
     for (int i = 0; i < irFunction->locals.size(); ++i)
         locals[i] = getStringId(*irFunction->locals.at(i));
 
     // write QML dependencies
-    quint32 *writtenDeps = (quint32 *)(f + function->dependingIdObjectsOffset);
+    CompiledData::LEUInt32 *writtenDeps = (CompiledData::LEUInt32 *)(f + function->dependingIdObjectsOffset);
     for (int id : irFunction->idObjectDependencies) {
         Q_ASSERT(id >= 0);
         *writtenDeps++ = static_cast<quint32>(id);
     }
 
-    writtenDeps = (quint32 *)(f + function->dependingContextPropertiesOffset);
+    writtenDeps = (CompiledData::LEUInt32 *)(f + function->dependingContextPropertiesOffset);
     for (auto property : irFunction->contextObjectPropertyDependencies) {
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
     }
 
-    writtenDeps = (quint32 *)(f + function->dependingScopePropertiesOffset);
+    writtenDeps = (CompiledData::LEUInt32 *)(f + function->dependingScopePropertiesOffset);
     for (auto property : irFunction->scopeObjectPropertyDependencies) {
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
