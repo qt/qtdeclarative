@@ -68,6 +68,8 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 struct ControlFlow;
+struct ControlFlowCatch;
+struct ControlFlowFinally;
 
 namespace Compiler {
 struct JSUnitGenerator;
@@ -425,22 +427,6 @@ protected:
     void leaveEnvironment();
 
     void leaveLoop();
-    QV4::IR::BasicBlock *exceptionHandler() const
-    {
-        if (_exceptionHandlers.isEmpty())
-            return 0;
-        return _exceptionHandlers.top();
-    }
-    void pushExceptionHandler(QV4::IR::BasicBlock *handler)
-    {
-        handler->setExceptionHandler(true);
-        _exceptionHandlers.push(handler);
-    }
-    void popExceptionHandler()
-    {
-        Q_ASSERT(!_exceptionHandlers.isEmpty());
-        _exceptionHandlers.pop();
-    }
 
     QV4::IR::Expr *argument(QV4::IR::Expr *expr);
     QV4::IR::Expr *reference(QV4::IR::Expr *expr);
@@ -597,8 +583,12 @@ public:
                                  const QV4::Moth::Param &right, const QV4::Moth::Param &dest);
     int pushArgs(AST::ArgumentList *args);
 
+    void handleTryCatch(AST::TryStatement *ast);
+    void handleTryFinally(AST::TryStatement *ast);
 protected:
     friend struct QV4::ControlFlow;
+    friend struct QV4::ControlFlowCatch;
+    friend struct QV4::ControlFlowFinally;
     Result _expr;
     QString _property;
     UiMember _uiMember;
@@ -612,7 +602,6 @@ protected:
     AST::LabelledStatement *_labelledStatement;
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
-    QStack<QV4::IR::BasicBlock *> _exceptionHandlers;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
     QV4::Moth::BytecodeGenerator *bytecodeGenerator = 0;
     bool _strictMode;

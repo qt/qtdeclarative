@@ -75,7 +75,9 @@ namespace QV4 {
 struct ControlFlow {
     enum Type {
         Loop,
-        With
+        With,
+        Finally,
+        Catch
     };
 
     enum HandlerType {
@@ -143,6 +145,13 @@ struct ControlFlow {
         return getParentHandler(type, label);
     }
 
+    virtual Moth::BytecodeGenerator::ExceptionHandler *exceptionHandler() {
+        return parent ? parent->exceptionHandler() : 0;
+    }
+    Moth::BytecodeGenerator::ExceptionHandler *parentExceptionHandler() {
+        return parent ? parent->exceptionHandler() : 0;
+    }
+
 protected:
     QString loopLabel() const {
         QString label;
@@ -194,19 +203,19 @@ struct ControlFlowLoop : public ControlFlow
 
 struct ControlFlowUnwind : public ControlFlow
 {
-    Moth::BytecodeGenerator::Label unwindLabel;
+    Moth::BytecodeGenerator::ExceptionHandler unwindLabel;
     int controlFlowTemp;
     QVector<Handler> handlers;
 
     ControlFlowUnwind(Codegen *cg, Type type)
-        : ControlFlow(cg, type)
+        : ControlFlow(cg, type), unwindLabel(generator()->newExceptionHandler())
     {
         Q_ASSERT(type != Loop);
         controlFlowTemp = static_cast<int>(generator()->newTemp());
         Codegen::Reference::fromTemp(cg, controlFlowTemp).store(Codegen::Reference::fromConst(cg, QV4::Encode::undefined()));
-        unwindLabel = generator()->newLabel();
         // we'll need at least a handler for throw
         getHandler(Throw);
+        generator()->setExceptionHandler(&unwindLabel);
     }
 
     void emitUnwindHandler()
@@ -217,10 +226,14 @@ struct ControlFlowUnwind : public ControlFlow
         for (const auto &h : qAsConst(handlers)) {
             Codegen::TempScope tempScope(cg);
             Handler parentHandler = getParentHandler(h.type, h.label);
-            if (parentHandler.tempIndex >= 0) {
+
+
+            if (h.type == Throw || parentHandler.tempIndex >= 0) {
                 Moth::BytecodeGenerator::Label skip = generator()->newLabel();
                 generator()->jumpStrictNotEqual(temp.asRValue(), Codegen::Reference::fromConst(cg, QV4::Encode(h.value)).asRValue())
                         .link(skip);
+                if (h.type == Throw)
+                    emitForThrowHandling();
                 Codegen::Reference parentTemp = Codegen::Reference::fromTemp(cg, parentHandler.tempIndex);
                 parentTemp.store(Codegen::Reference::fromConst(cg, QV4::Encode(parentHandler.value)));
                 generator()->jump().link(parentHandler.linkLabel);
@@ -248,6 +261,11 @@ struct ControlFlowUnwind : public ControlFlow
         return h;
     }
 
+    virtual Moth::BytecodeGenerator::ExceptionHandler *exceptionHandler() {
+        return &unwindLabel;
+    }
+
+    virtual void emitForThrowHandling() { }
 };
 
 struct ControlFlowWith : public ControlFlowUnwind
@@ -261,6 +279,7 @@ struct ControlFlowWith : public ControlFlowUnwind
         // emit code for unwinding
         unwindLabel.link();
 
+        generator()->setExceptionHandler(parentExceptionHandler());
         Moth::Instruction::CallBuiltinPopScope pop;
         generator()->addInstruction(pop);
 
@@ -268,11 +287,78 @@ struct ControlFlowWith : public ControlFlowUnwind
     }
 };
 
-struct ControlFlowCatch : public ControlFlow
+struct ControlFlowCatch : public ControlFlowUnwind
 {
-    // ####
-    AST::Finally *finally = 0;
+    AST::Catch *catchExpression;
+
+    ControlFlowCatch(Codegen *cg, AST::Catch *catchExpression)
+        : ControlFlowUnwind(cg, Catch), catchExpression(catchExpression)
+    {
+    }
+
+    virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
+        // if it's no throw, ignore the catch handler and go directly to the parent
+        // handler
+        if (type == Throw)
+            return ControlFlowUnwind::getHandler(type, label);
+        return ControlFlow::getHandler(type, label);
+    }
+
+    ~ControlFlowCatch() {
+        // emit code for unwinding
+        unwindLabel.link();
+
+        ++cg->_function->insideWithOrCatch;
+        Codegen::Reference name = Codegen::Reference::fromName(cg, catchExpression->name.toString());
+        Moth::Instruction::CallBuiltinPushCatchScope pushCatchScope;
+        pushCatchScope.name = name.nameIndex;
+        generator()->addInstruction(pushCatchScope);
+        generator()->setExceptionHandler(parentExceptionHandler());
+
+        cg->statement(catchExpression->statement);
+        --cg->_function->insideWithOrCatch;
+
+        Moth::Instruction::CallBuiltinPopScope pop;
+        generator()->addInstruction(pop);
+
+        emitUnwindHandler();
+    }
 };
+
+struct ControlFlowFinally : public ControlFlowUnwind
+{
+    AST::Finally *finally;
+
+    ControlFlowFinally(Codegen *cg, AST::Finally *finally)
+        : ControlFlowUnwind(cg, Finally), finally(finally)
+    {
+        Q_ASSERT(finally != 0);
+    }
+
+    ~ControlFlowFinally() {
+        // emit code for unwinding
+        unwindLabel.link();
+
+        Codegen::TempScope scope(cg);
+
+        Codegen::Reference hasException = Codegen::Reference::fromTemp(cg, generator()->newTemp());
+        Moth::Instruction::HasException instr;
+        instr.result = hasException.asLValue();
+        generator()->addInstruction(instr);
+
+        generator()->setExceptionHandler(parentExceptionHandler());
+        cg->statement(finally->statement);
+
+        emitUnwindHandler();
+    }
+
+    virtual void emitForThrowHandling() {
+        // reset the exception flag, that got cleared before executing the statements in finally
+        Moth::Instruction::SetExceptionFlag setFlag;
+        generator()->addInstruction(setFlag);
+    }
+};
+
 } // QV4 namespace
 QT_END_NAMESPACE
 
@@ -2484,8 +2570,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 {
     ControlFlow *loop = 0;
     qSwap(_controlFlow, loop);
-    QStack<IR::BasicBlock *> exceptionHandlers;
-    qSwap(_exceptionHandlers, exceptionHandlers);
 
     enterEnvironment(ast);
     IR::Function *function = _module->newFunction(name, _function);
@@ -2625,7 +2709,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
-    qSwap(_exceptionHandlers, exceptionHandlers);
     qSwap(_controlFlow, loop);
 
     leaveEnvironment();
@@ -3085,12 +3168,45 @@ bool Codegen::visit(ThrowStatement *ast)
 
     TempScope scope(_function);
 
-    Result expr = expression(ast->expression);
-    move(_block->TEMP(_returnAddress), *expr);
-    IR::ExprList *throwArgs = _function->New<IR::ExprList>();
-    throwArgs->expr = _block->TEMP(_returnAddress);
-    _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), throwArgs));
+    Reference expr = expression(ast->expression);
+
+    Moth::Instruction::CallBuiltinThrow instr;
+    instr.arg = expr.asRValue();
+    bytecodeGenerator->addInstruction(instr);
     return false;
+}
+
+void Codegen::handleTryCatch(TryStatement *ast)
+{
+    Q_ASSERT(ast);
+    if (_function->isStrict &&
+        (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments"))) {
+        throwSyntaxError(ast->catchExpression->identifierToken, QStringLiteral("Catch variable name may not be eval or arguments in strict mode"));
+        return;
+    }
+
+    TempScope scope(this);
+    Moth::BytecodeGenerator::Label noException = bytecodeGenerator->newLabel();
+    {
+        ControlFlowCatch catchFlow(this, ast->catchExpression);
+        TempScope scope(this);
+        statement(ast->statement);
+        bytecodeGenerator->jump().link(noException);
+    }
+    noException.link();
+}
+
+void Codegen::handleTryFinally(TryStatement *ast)
+{
+    TempScope scope(this);
+    ControlFlowFinally finally(this, ast->finallyExpression);
+
+    if (ast->catchExpression) {
+        handleTryCatch(ast);
+    } else {
+        TempScope scope(this);
+        statement(ast->statement);
+    }
 }
 
 bool Codegen::visit(TryStatement *ast)
@@ -3102,100 +3218,11 @@ bool Codegen::visit(TryStatement *ast)
 
     _function->hasTry = true;
 
-    if (_function->isStrict && ast->catchExpression &&
-            (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments"))) {
-        throwSyntaxError(ast->catchExpression->identifierToken, QStringLiteral("Catch variable name may not be eval or arguments in strict mode"));
-        return false;
-    }
-
-#if 0
-    IR::BasicBlock *surroundingExceptionHandler = exceptionHandler();
-
-    // We always need a finally body to clean up the exception handler
-    // exceptions thrown in finally get caught by the surrounding catch block
-    IR::BasicBlock *finallyBody = 0;
-    IR::BasicBlock *catchBody = 0;
-    IR::BasicBlock *catchExceptionHandler = 0;
-    IR::BasicBlock *end = _function->newBasicBlock(surroundingExceptionHandler, IR::Function::DontInsertBlock);
-
-    if (ast->finallyExpression)
-        finallyBody = _function->newBasicBlock(surroundingExceptionHandler, IR::Function::DontInsertBlock);
-
-    if (ast->catchExpression) {
-        // exception handler for the catch body
-        catchExceptionHandler = _function->newBasicBlock(0, IR::Function::DontInsertBlock);
-        pushExceptionHandler(catchExceptionHandler);
-        catchBody =  _function->newBasicBlock(catchExceptionHandler, IR::Function::DontInsertBlock);
-        popExceptionHandler();
-        pushExceptionHandler(catchBody);
+    if (ast->finallyExpression && ast->finallyExpression->statement) {
+        handleTryFinally(ast);
     } else {
-        Q_ASSERT(finallyBody);
-        pushExceptionHandler(finallyBody);
+        handleTryCatch(ast);
     }
-
-    IR::BasicBlock *tryBody = _function->newBasicBlock(exceptionHandler());
-    _block->JUMP(tryBody);
-
-    ScopeAndFinally tcf(_scopeAndFinally, ast->finallyExpression);
-    _scopeAndFinally = &tcf;
-
-    _block = tryBody;
-    statement(ast->statement);
-    _block->JUMP(finallyBody ? finallyBody : end);
-
-    popExceptionHandler();
-
-    if (ast->catchExpression) {
-        pushExceptionHandler(catchExceptionHandler);
-        _function->addBasicBlock(catchBody);
-        _block = catchBody;
-
-        ++_function->insideWithOrCatch;
-        IR::ExprList *catchArgs = _function->New<IR::ExprList>();
-        catchArgs->init(_block->STRING(_function->newString(ast->catchExpression->name.toString())));
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_push_catch_scope, 0, 0), catchArgs));
-        {
-            ScopeAndFinally scope(_scopeAndFinally, ScopeAndFinally::CatchScope);
-            _scopeAndFinally = &scope;
-            statement(ast->catchExpression->statement);
-            _scopeAndFinally = scope.parent;
-        }
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
-        --_function->insideWithOrCatch;
-        _block->JUMP(finallyBody ? finallyBody : end);
-        popExceptionHandler();
-
-        _function->addBasicBlock(catchExceptionHandler);
-        catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(IR::Name::builtin_pop_scope, 0, 0), 0));
-        if (finallyBody || surroundingExceptionHandler)
-            catchExceptionHandler->JUMP(finallyBody ? finallyBody : surroundingExceptionHandler);
-        else
-            catchExceptionHandler->EXP(catchExceptionHandler->CALL(catchExceptionHandler->NAME(IR::Name::builtin_rethrow, 0, 0), 0));
-    }
-
-    _scopeAndFinally = tcf.parent;
-
-    if (finallyBody) {
-        _function->addBasicBlock(finallyBody);
-        _block = finallyBody;
-
-        TempScope scope(_function);
-
-        int hasException = _block->newTemp();
-        move(_block->TEMP(hasException), _block->CALL(_block->NAME(IR::Name::builtin_unwind_exception, /*line*/0, /*column*/0), 0));
-
-        if (ast->finallyExpression && ast->finallyExpression->statement)
-            statement(ast->finallyExpression->statement);
-
-        IR::ExprList *arg = _function->New<IR::ExprList>();
-        arg->expr = _block->TEMP(hasException);
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_throw, /*line*/0, /*column*/0), arg));
-        _block->JUMP(end);
-    }
-
-    _function->addBasicBlock(end);
-    _block = end;
-#endif
 
     return false;
 }
@@ -3249,8 +3276,6 @@ bool Codegen::visit(WithStatement *ast)
     Moth::Instruction::CallBuiltinPushScope pushScope;
     pushScope.arg = src.asRValue();
     bytecodeGenerator->addInstruction(pushScope);
-
-    bytecodeGenerator->setExceptionHandler().link(flow.unwindLabel);
 
     statement(ast->statement);
     --_function->insideWithOrCatch;

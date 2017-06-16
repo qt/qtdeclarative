@@ -56,23 +56,37 @@ public:
         : function(function) {}
 
     struct Label {
-        BytecodeGenerator *generator = 0;
-        int index = -1;
+        enum LinkMode {
+            LinkNow,
+            LinkLater
+        };
+        Label() = default;
+        Label(BytecodeGenerator *generator, LinkMode mode = LinkNow)
+            : generator(generator),
+              index(generator->labels.size()) {
+            generator->labels.append(mode == LinkNow ? generator->instructions.size() : -1);
+        }
 
         void link() {
             Q_ASSERT(index >= 0);
             Q_ASSERT(generator->labels[index] == -1);
             generator->labels[index] = generator->instructions.size();
         }
+
+        BytecodeGenerator *generator = 0;
+        int index = -1;
     };
 
     struct Jump {
         Jump(BytecodeGenerator *generator, int instruction, int offset)
             : generator(generator),
-              index(generator->jumps.size())
-        {
+              index(generator->jumps.size()) {
             generator->jumps.append({ instruction, offset, -1 });
         }
+        ~Jump() {
+            Q_ASSERT(generator->jumps[index].linkedLabel != -1);
+        }
+
 
         BytecodeGenerator *generator;
         int index;
@@ -87,16 +101,27 @@ public:
         }
     };
 
+    struct ExceptionHandler : public Label {
+        ExceptionHandler(BytecodeGenerator *generator)
+            : Label(generator, LinkLater)
+        {
+        }
+        ~ExceptionHandler()
+        {
+            Q_ASSERT(generator->currentExceptionHandler != this);
+        }
+    };
+
     Label label() {
-        Label l = { this, labels.size() };
-        labels.append(instructions.size());
-        return l;
+        return Label(this, Label::LinkNow);
     }
 
     Label newLabel() {
-        Label l = { this, labels.size() };
-        labels.append(-1);
-        return l;
+        return Label(this, Label::LinkLater);
+    }
+
+    ExceptionHandler newExceptionHandler() {
+        return ExceptionHandler(this);
     }
 
     template<int InstrT>
@@ -144,12 +169,20 @@ public:
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump setExceptionHandler()
+    void setExceptionHandler(ExceptionHandler *handler)
     {
+        currentExceptionHandler = handler;
         Instruction::SetExceptionHandler data;
-        return addJumpInstruction(data);
+        data.offset = 0;
+        if (!handler)
+            addInstruction(data);
+        else
+            addJumpInstruction(data).link(*handler);
     }
 
+    ExceptionHandler *exceptionHandler() const {
+        return currentExceptionHandler;
+    }
 
     unsigned newTemp();
 
@@ -158,6 +191,8 @@ public:
 
 private:
     friend struct Jump;
+    friend struct Label;
+    friend struct ExceptionHandler;
 
     template<int InstrT>
     Jump addJumpInstruction(const InstrData<InstrT> &data)
@@ -189,6 +224,7 @@ private:
     QVector<int> labels;
     QVector<JumpData> jumps;
     IR::Function *function; // ### remove me at some point
+    ExceptionHandler *currentExceptionHandler;
 };
 
 }
