@@ -2229,58 +2229,52 @@ bool Codegen::visit(ObjectLiteral *ast)
 
 bool Codegen::visit(PostDecrementExpression *ast)
 {
-//    if (hasError)
-//        return false;
+    if (hasError)
+        return false;
 
-//    Result expr = expression(ast->base);
-//    if (hasError)
-//        return false;
-//    if (!expr->isLValue()) {
-//        throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
-//        return false;
-//    }
+    Reference expr = expression(ast->base);
+    if (hasError)
+        return false;
+    if (!expr.isLValue()) {
+        throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
+        return false;
+    }
 //    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
 //        return false;
 
-//    const unsigned oldValue = _block->newTemp();
-//    setLocation(move(_block->TEMP(oldValue), unop(IR::OpUPlus, *expr, ast->decrementToken)), ast->decrementToken);
+    Reference oldValue = unop(IR::OpUPlus, expr, ast->decrementToken);
 
-//    TempScope scope(_function);
-//    const unsigned  newValue = _block->newTemp();
-//    setLocation(move(_block->TEMP(newValue), binop(IR::OpSub, _block->TEMP(oldValue), _block->CONST(IR::NumberType, 1), ast->decrementToken)), ast->decrementToken);
-//    setLocation(move(*expr, _block->TEMP(newValue)), ast->decrementToken);
+    TempScope scope(_function);
+    Reference newValue = unop(IR::OpDecrement, oldValue, ast->decrementToken);
+    expr.store(newValue);
 
-//    if (!_expr.accept(nx))
-//        _expr.code = _block->TEMP(oldValue);
+    _expr.result = oldValue;
 
     return false;
 }
 
 bool Codegen::visit(PostIncrementExpression *ast)
 {
-//    if (hasError)
+    if (hasError)
+        return false;
+
+    Reference expr = expression(ast->base);
+    if (hasError)
+        return false;
+    if (!expr.isLValue()) {
+        throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
+        return false;
+    }
+//    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->decrementToken))
 //        return false;
 
-//    Result expr = expression(ast->base);
-//    if (hasError)
-//        return false;
-//    if (!expr->isLValue()) {
-//        throwReferenceError(ast->base->lastSourceLocation(), QStringLiteral("Invalid left-hand side expression in postfix operation"));
-//        return false;
-//    }
-//    if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(*expr, ast->incrementToken))
-//        return false;
+    Reference oldValue = unop(IR::OpUPlus, expr, ast->incrementToken);
 
-//    const unsigned oldValue = _block->newTemp();
-//    setLocation(move(_block->TEMP(oldValue), unop(IR::OpUPlus, *expr, ast->incrementToken)), ast->incrementToken);
+    TempScope scope(_function);
+    Reference newValue = unop(IR::OpIncrement, oldValue, ast->incrementToken);
+    expr.store(newValue);
 
-//    TempScope scope(_function);
-//    const unsigned  newValue = _block->newTemp();
-//    setLocation(move(_block->TEMP(newValue), binop(IR::OpAdd, _block->TEMP(oldValue), _block->CONST(IR::NumberType, 1), ast->incrementToken)), ast->incrementToken);
-//    setLocation(move(*expr, _block->TEMP(newValue)), ast->incrementToken);
-
-//    if (!_expr.accept(nx))
-//        _expr.code = _block->TEMP(oldValue);
+    _expr.result = oldValue;
 
     return false;
 }
