@@ -6,7 +6,7 @@ Item {
     height: 150
 
     Shape {
-        enableVendorExtensions: false
+        vendorExtensionsEnabled: false
         objectName: "pathItem"
         anchors.fill: parent
 

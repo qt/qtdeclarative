@@ -225,7 +225,7 @@ class QQuickShape : public QQuickItem
     Q_OBJECT
     Q_PROPERTY(RendererType renderer READ rendererType NOTIFY rendererChanged)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
-    Q_PROPERTY(bool enableVendorExtensions READ enableVendorExtensions WRITE setEnableVendorExtensions NOTIFY enableVendorExtensionsChanged)
+    Q_PROPERTY(bool vendorExtensionsEnabled READ vendorExtensionsEnabled WRITE setVendorExtensionsEnabled NOTIFY vendorExtensionsEnabledChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QQmlListProperty<QObject> data READ data)
     Q_CLASSINFO("DefaultProperty", "data")
@@ -254,8 +254,8 @@ public:
     bool asynchronous() const;
     void setAsynchronous(bool async);
 
-    bool enableVendorExtensions() const;
-    void setEnableVendorExtensions(bool enable);
+    bool vendorExtensionsEnabled() const;
+    void setVendorExtensionsEnabled(bool enable);
 
     Status status() const;
 
@@ -271,7 +271,7 @@ protected:
 Q_SIGNALS:
     void rendererChanged();
     void asynchronousChanged();
-    void enableVendorExtensionsChanged();
+    void vendorExtensionsEnabledChanged();
     void statusChanged();
 
 private:

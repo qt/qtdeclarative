@@ -623,7 +623,7 @@ void QQuickShapePath::resetFillGradient()
     \c{GL_NV_path_rendering} methods are available. The choice is made at
     runtime, depending on the graphics driver's capabilities. When this is not
     desired, applications can force using the generic method by setting the
-    Shape.enableVendorExtensions property to \c false.
+    Shape.vendorExtensionsEnabled property to \c false.
 
     \li The \c software backend is fully supported. The path is rendered via
     QPainter::strokePath() and QPainter::fillPath() in this case.
@@ -745,7 +745,7 @@ void QQuickShape::setAsynchronous(bool async)
 }
 
 /*!
-    \qmlproperty bool QtQuick.Shapes::Shape::enableVendorExtensions
+    \qmlproperty bool QtQuick.Shapes::Shape::vendorExtensionsEnabled
 
     This property controls the usage of non-standard OpenGL extensions like
     GL_NV_path_rendering. To disable Shape.NvprRenderer and force a uniform
@@ -755,18 +755,18 @@ void QQuickShape::setAsynchronous(bool async)
     The default value is \c true.
  */
 
-bool QQuickShape::enableVendorExtensions() const
+bool QQuickShape::vendorExtensionsEnabled() const
 {
     Q_D(const QQuickShape);
     return d->enableVendorExts;
 }
 
-void QQuickShape::setEnableVendorExtensions(bool enable)
+void QQuickShape::setVendorExtensionsEnabled(bool enable)
 {
     Q_D(QQuickShape);
     if (d->enableVendorExts != enable) {
         d->enableVendorExts = enable;
-        emit enableVendorExtensionsChanged();
+        emit vendorExtensionsEnabledChanged();
     }
 }
 
