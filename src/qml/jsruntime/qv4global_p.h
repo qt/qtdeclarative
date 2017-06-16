@@ -118,6 +118,9 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #endif
 #endif
 
+// ### for now we only work with the interpreter
+#undef V4_ENABLE_JIT
+
 // For debug purposes: add CONFIG+=force-compile-jit to qmake's command-line to always compile the JIT.
 #if defined(V4_FORCE_COMPILE_JIT) && !defined(V4_ENABLE_JIT)
 #  define V4_ENABLE_JIT
