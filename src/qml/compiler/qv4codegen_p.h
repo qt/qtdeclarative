@@ -459,11 +459,6 @@ protected:
     void variableDeclaration(AST::VariableDeclaration *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
-    QV4::Moth::Param paramForNull();
-    QV4::Moth::Param paramForUndefined();
-    QV4::Moth::Param paramForBool(bool b);
-    QV4::Moth::Param paramForNumber(double d);
-    QV4::Moth::Param paramForConst(QV4::ReturnedValue v);
     Reference referenceForName(const QString &name, bool lhs);
 
     // Hook provided to implement QML lookup semantics

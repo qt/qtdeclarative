@@ -2013,33 +2013,6 @@ bool Codegen::visit(FunctionExpression *ast)
     return false;
 }
 
-Moth::Param Codegen::paramForNull()
-{
-    return paramForConst(QV4::Encode::null());
-}
-
-Moth::Param Codegen::paramForUndefined()
-{
-    return paramForConst(QV4::Encode::undefined());
-}
-
-Moth::Param Codegen::paramForBool(bool b)
-{
-    return paramForConst(QV4::Encode(b));
-}
-
-Moth::Param Codegen::paramForNumber(double d)
-{
-    // ### specialize for integers
-    return paramForConst(QV4::Encode(d));
-}
-
-Moth::Param Codegen::paramForConst(QV4::ReturnedValue v)
-{
-    int idx = jsUnitGenerator->registerConstant(v);
-    return Moth::Param::createConstant(idx);
-}
-
 Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
 {
     uint scope = 0;
