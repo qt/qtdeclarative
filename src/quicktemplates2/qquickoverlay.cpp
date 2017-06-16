@@ -47,103 +47,6 @@
 
 QT_BEGIN_NAMESPACE
 
-void QQuickOverlayPrivate::popupAboutToShow()
-{
-    Q_Q(QQuickOverlay);
-    QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
-    if (!popup || !popup->dim())
-        return;
-
-    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
-    QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
-    if (p->dimmer)
-        QQmlProperty::write(p->dimmer, QStringLiteral("opacity"), 1.0);
-}
-
-void QQuickOverlayPrivate::popupAboutToHide()
-{
-    Q_Q(QQuickOverlay);
-    QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
-    if (!popup || !popup->dim())
-        return;
-
-    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
-    QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
-    if (p->dimmer)
-        QQmlProperty::write(p->dimmer, QStringLiteral("opacity"), 0.0);
-}
-
-static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQuickItem *parent)
-{
-    QQuickItem *item = nullptr;
-    if (component) {
-        QQmlContext *creationContext = component->creationContext();
-        if (!creationContext)
-            creationContext = qmlContext(parent);
-        QQmlContext *context = new QQmlContext(creationContext, parent);
-        context->setContextObject(popup);
-        item = qobject_cast<QQuickItem*>(component->beginCreate(context));
-    }
-
-    // when there is no overlay component available (with plain QQuickWindow),
-    // use a plain QQuickItem as a fallback to block hover events
-    if (!item && popup->isModal())
-        item = new QQuickItem;
-
-    if (item) {
-        item->setOpacity(popup->isVisible() ? 1.0 : 0.0);
-        item->setParentItem(parent);
-        item->stackBefore(popup->popupItem());
-        item->setZ(popup->z());
-        if (popup->isModal()) {
-            item->setAcceptedMouseButtons(Qt::AllButtons);
-#if QT_CONFIG(cursor)
-            item->setCursor(Qt::ArrowCursor);
-#endif
-#if QT_CONFIG(quicktemplates2_hover)
-            // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
-            item->setAcceptHoverEvents(true);
-            // item->setAcceptHoverEvents(QGuiApplication::styleHints()->useHoverEffects());
-            // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, item, &QQuickItem::setAcceptHoverEvents);
-#endif
-        }
-        if (component)
-            component->completeCreate();
-    }
-    return item;
-}
-
-void QQuickOverlayPrivate::createOverlay(QQuickPopup *popup)
-{
-    Q_Q(QQuickOverlay);
-    QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
-    if (!p->dimmer)
-        p->dimmer = createDimmer(popup->isModal() ? modal : modeless, popup, q);
-    p->resizeOverlay();
-}
-
-void QQuickOverlayPrivate::destroyOverlay(QQuickPopup *popup)
-{
-    QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
-    if (p->dimmer) {
-        p->dimmer->setParentItem(nullptr);
-        p->dimmer->deleteLater();
-        p->dimmer = nullptr;
-    }
-}
-
-void QQuickOverlayPrivate::toggleOverlay()
-{
-    Q_Q(QQuickOverlay);
-    QQuickPopup *popup = qobject_cast<QQuickPopup *>(q->sender());
-    if (!popup)
-        return;
-
-    destroyOverlay(popup);
-    if (popup->dim())
-        createOverlay(popup);
-}
-
 QVector<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
 {
     const QList<QQuickItem *> children = paintOrderChildItems();
@@ -423,32 +326,8 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
     Q_D(QQuickOverlay);
     QQuickItem::itemChange(change, data);
 
-    QQuickPopup *popup = nullptr;
-    if (change == ItemChildAddedChange || change == ItemChildRemovedChange) {
-        popup = qobject_cast<QQuickPopup *>(data.item->parent());
+    if (change == ItemChildAddedChange || change == ItemChildRemovedChange)
         setVisible(!d->allDrawers.isEmpty() || !childItems().isEmpty());
-    }
-    if (!popup)
-        return;
-
-    if (change == ItemChildAddedChange) {
-        if (popup->dim())
-            d->createOverlay(popup);
-        QObjectPrivate::connect(popup, &QQuickPopup::dimChanged, d, &QQuickOverlayPrivate::toggleOverlay);
-        QObjectPrivate::connect(popup, &QQuickPopup::modalChanged, d, &QQuickOverlayPrivate::toggleOverlay);
-        if (!qobject_cast<QQuickDrawer *>(popup)) {
-            QObjectPrivate::connect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
-            QObjectPrivate::connect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
-        }
-    } else if (change == ItemChildRemovedChange) {
-        d->destroyOverlay(popup);
-        QObjectPrivate::disconnect(popup, &QQuickPopup::dimChanged, d, &QQuickOverlayPrivate::toggleOverlay);
-        QObjectPrivate::disconnect(popup, &QQuickPopup::modalChanged, d, &QQuickOverlayPrivate::toggleOverlay);
-        if (!qobject_cast<QQuickDrawer *>(popup)) {
-            QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToShow, d, &QQuickOverlayPrivate::popupAboutToShow);
-            QObjectPrivate::disconnect(popup, &QQuickPopup::aboutToHide, d, &QQuickOverlayPrivate::popupAboutToHide);
-        }
-    }
 }
 
 void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

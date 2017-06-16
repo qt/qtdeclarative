@@ -70,6 +70,8 @@ public:
     qreal positionAt(const QPointF &point) const;
 
     void reposition() override;
+    void showOverlay() override;
+    void hideOverlay() override;
     void resizeOverlay() override;
 
     bool startDrag(QEvent *event);

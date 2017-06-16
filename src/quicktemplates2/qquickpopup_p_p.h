@@ -115,6 +115,12 @@ public:
 #endif
 
     virtual void reposition();
+
+    void createOverlay();
+    void destroyOverlay();
+    void toggleOverlay();
+    virtual void showOverlay();
+    virtual void hideOverlay();
     virtual void resizeOverlay();
 
     virtual bool prepareEnterTransition();

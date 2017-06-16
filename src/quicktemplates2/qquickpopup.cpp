@@ -437,6 +437,9 @@ bool QQuickPopupPrivate::prepareEnterTransition()
 
     if (transitionState != EnterTransition) {
         popupItem->setParentItem(QQuickOverlay::overlay(window));
+        if (dim)
+            createOverlay();
+        showOverlay();
         emit q->aboutToShow();
         visible = true;
         transitionState = EnterTransition;
@@ -461,6 +464,7 @@ bool QQuickPopupPrivate::prepareExitTransition()
             popupItem->setFocus(false);
         }
         transitionState = ExitTransition;
+        hideOverlay();
         emit q->aboutToHide();
         emit q->openedChanged();
     }
@@ -483,6 +487,7 @@ void QQuickPopupPrivate::finalizeExitTransition()
     positioner->setParentItem(nullptr);
     popupItem->setParentItem(nullptr);
     popupItem->setVisible(false);
+    destroyOverlay();
 
     if (hadActiveFocusBeforeExitTransition && window) {
         if (!qobject_cast<QQuickPopupItem *>(window->activeFocusItem())) {
@@ -601,6 +606,88 @@ void QQuickPopupPrivate::itemDestroyed(QQuickItem *item)
 void QQuickPopupPrivate::reposition()
 {
     positioner->reposition();
+}
+
+static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQuickItem *parent)
+{
+    QQuickItem *item = nullptr;
+    if (component) {
+        QQmlContext *creationContext = component->creationContext();
+        if (!creationContext)
+            creationContext = qmlContext(parent);
+        QQmlContext *context = new QQmlContext(creationContext, parent);
+        context->setContextObject(popup);
+        item = qobject_cast<QQuickItem*>(component->beginCreate(context));
+    }
+
+    // when there is no overlay component available (with plain QQuickWindow),
+    // use a plain QQuickItem as a fallback to block hover events
+    if (!item && popup->isModal())
+        item = new QQuickItem;
+
+    if (item) {
+        item->setOpacity(popup->isVisible() ? 1.0 : 0.0);
+        item->setParentItem(parent);
+        item->stackBefore(popup->popupItem());
+        item->setZ(popup->z());
+        if (popup->isModal()) {
+            item->setAcceptedMouseButtons(Qt::AllButtons);
+#if QT_CONFIG(cursor)
+            item->setCursor(Qt::ArrowCursor);
+#endif
+#if QT_CONFIG(quicktemplates2_hover)
+            // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
+            item->setAcceptHoverEvents(true);
+            // item->setAcceptHoverEvents(QGuiApplication::styleHints()->useHoverEffects());
+            // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, item, &QQuickItem::setAcceptHoverEvents);
+#endif
+        }
+        if (component)
+            component->completeCreate();
+    }
+    return item;
+}
+
+void QQuickPopupPrivate::createOverlay()
+{
+    Q_Q(QQuickPopup);
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    if (!overlay)
+        return;
+
+    if (!dimmer)
+        dimmer = createDimmer(modal ? overlay->modal() : overlay->modeless(), q, overlay);
+    resizeOverlay();
+}
+
+void QQuickPopupPrivate::destroyOverlay()
+{
+    if (dimmer) {
+        dimmer->setParentItem(nullptr);
+        dimmer->deleteLater();
+        dimmer = nullptr;
+    }
+}
+
+void QQuickPopupPrivate::toggleOverlay()
+{
+    destroyOverlay();
+    if (dim)
+        createOverlay();
+}
+
+void QQuickPopupPrivate::showOverlay()
+{
+    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
+    if (dim && dimmer)
+        QQmlProperty::write(dimmer, QStringLiteral("opacity"), 1.0);
+}
+
+void QQuickPopupPrivate::hideOverlay()
+{
+    // use QQmlProperty instead of QQuickItem::setOpacity() to trigger QML Behaviors
+    if (dim && dimmer)
+        QQmlProperty::write(dimmer, QStringLiteral("opacity"), 0.0);
 }
 
 void QQuickPopupPrivate::resizeOverlay()
@@ -1660,6 +1747,8 @@ void QQuickPopup::setModal(bool modal)
     if (d->modal == modal)
         return;
     d->modal = modal;
+    if (d->complete && d->visible)
+        d->toggleOverlay();
     emit modalChanged();
 
     if (!d->hasDim) {
@@ -1693,6 +1782,8 @@ void QQuickPopup::setDim(bool dim)
         return;
 
     d->dim = dim;
+    if (d->complete && d->visible)
+        d->toggleOverlay();
     emit dimChanged();
 }
 

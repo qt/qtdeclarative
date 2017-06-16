@@ -84,13 +84,6 @@ public:
     void removePopup(QQuickPopup *popup);
     void setMouseGrabberPopup(QQuickPopup *popup);
 
-    void popupAboutToShow();
-    void popupAboutToHide();
-
-    void createOverlay(QQuickPopup *popup);
-    void destroyOverlay(QQuickPopup *popup);
-    void toggleOverlay();
-
     QVector<QQuickPopup *> stackingOrderPopups() const;
     QVector<QQuickDrawer *> stackingOrderDrawers() const;
 
