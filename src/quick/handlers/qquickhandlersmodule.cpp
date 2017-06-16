@@ -82,6 +82,7 @@ static void qt_quickhandlers_defineModule(const char *uri, int major, int minor)
         QQuickDragHandler::tr("DragAxis is only available as a grouped property of DragHandler"));
     qmlRegisterType<QQuickPinchHandler>(uri,major,minor,"PinchHandler");
     qmlRegisterType<QQuickTapHandler>(uri,major,minor,"TapHandler");
+    qRegisterMetaType<QQuickHandlerPoint>();
 }
 
 void QQuickHandlersModule::defineModule()

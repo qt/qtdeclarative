@@ -240,6 +240,4 @@ void QQuickHandlerPoint::reset()
     m_pressedButtons = Qt::NoButton;
 }
 
-int g_metaTypeId = qRegisterMetaType<QQuickHandlerPoint>();
-
 QT_END_NAMESPACE

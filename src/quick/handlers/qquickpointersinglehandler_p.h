@@ -58,6 +58,7 @@ QT_BEGIN_NAMESPACE
 class QQuickPointerSingleHandler;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickHandlerPoint {
+    Q_GADGET
     Q_PROPERTY(int id READ id)
     Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId)
     Q_PROPERTY(QPointF position READ position)
@@ -70,7 +71,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickHandlerPoint {
     Q_PROPERTY(qreal rotation READ rotation)
     Q_PROPERTY(qreal pressure READ pressure)
     Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters)
-    Q_GADGET
 
 public:
     QQuickHandlerPoint();
