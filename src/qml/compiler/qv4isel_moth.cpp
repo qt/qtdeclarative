@@ -1219,15 +1219,16 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int 
 {
     int argLocation = outgoingArgumentTempStart();
 
-    const int classId = registerJSClass(keyValuePairCount, keyValuePairs);
+    QVector<Compiler::JSUnitGenerator::MemberInfo> members;
 
     // Process key/value pairs first
     IR::ExprList *it = keyValuePairs;
     for (int i = 0; i < keyValuePairCount; ++i, it = it->next) {
-        // Skip name
+        QString key = *it->expr->asName()->id;
         it = it->next;
 
         bool isData = it->expr->asConst()->value;
+        members.append({ key, !isData });
         it = it->next;
 
         if (IR::Const *c = it->expr->asConst()) {
@@ -1253,6 +1254,8 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int 
             ++argLocation;
         }
     }
+
+    const int classId = registerJSClass(members);
 
     // Process array values
     uint arrayValueCount = 0;

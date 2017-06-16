@@ -339,15 +339,16 @@ void InstructionSelection<JITAssembler>::callBuiltinDefineObjectLiteral(IR::Expr
 {
     Q_ASSERT(result);
 
+    QVector<Compiler::JSUnitGenerator::MemberInfo> members;
     int argc = 0;
-
-    const int classId = registerJSClass(keyValuePairCount, keyValuePairs);
 
     IR::ExprList *it = keyValuePairs;
     for (int i = 0; i < keyValuePairCount; ++i, it = it->next) {
+        QString key = *it->expr->asName()->id;
         it = it->next;
 
         bool isData = it->expr->asConst()->value;
+        members.append({ key, !isData });
         it = it->next;
 
         _as->copyValue(_as->stackLayout().argumentAddressForCall(argc++), it->expr, WriteBarrier::NoBarrier);
@@ -357,6 +358,8 @@ void InstructionSelection<JITAssembler>::callBuiltinDefineObjectLiteral(IR::Expr
             _as->copyValue(_as->stackLayout().argumentAddressForCall(argc++), it->expr, WriteBarrier::NoBarrier);
         }
     }
+
+    const int classId = registerJSClass(members);
 
     it = arrayEntries;
     uint arrayValueCount = 0;

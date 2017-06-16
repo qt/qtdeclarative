@@ -201,33 +201,24 @@ QV4::ReturnedValue QV4::Compiler::JSUnitGenerator::constant(int idx)
     return constants.at(idx);
 }
 
-int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, IR::ExprList *args)
+int QV4::Compiler::JSUnitGenerator::registerJSClass(const QVector<MemberInfo> &members)
 {
     // ### re-use existing class definitions.
 
-    const int size = CompiledData::JSClass::calculateSize(count);
+    const int size = CompiledData::JSClass::calculateSize(members.size());
     jsClassOffsets.append(jsClassData.size());
     const int oldSize = jsClassData.size();
     jsClassData.resize(jsClassData.size() + size);
     memset(jsClassData.data() + oldSize, 0, size);
 
     CompiledData::JSClass *jsClass = reinterpret_cast<CompiledData::JSClass*>(jsClassData.data() + oldSize);
-    jsClass->nMembers = count;
+    jsClass->nMembers = members.size();
     CompiledData::JSClassMember *member = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + 1);
 
-    IR::ExprList *it = args;
-    for (int i = 0; i < count; ++i, it = it->next, ++member) {
-        QV4::IR::Name *name = it->expr->asName();
-        it = it->next;
-
-        const bool isData = it->expr->asConst()->value;
-        it = it->next;
-
-        member->nameOffset = registerString(*name->id);
-        member->isAccessor = !isData;
-
-        if (!isData)
-            it = it->next;
+    for (const MemberInfo &memberInfo : members) {
+        member->nameOffset = registerString(memberInfo.name);
+        member->isAccessor = memberInfo.isAccessor;
+        ++member;
     }
 
     return jsClassOffsets.size() - 1;

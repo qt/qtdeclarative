@@ -2104,21 +2104,6 @@ bool Codegen::visit(NumericLiteral *ast)
     return false;
 }
 
-struct ObjectPropertyValue {
-    ObjectPropertyValue()
-        : value(0)
-        , getter(-1)
-        , setter(-1)
-    {}
-
-    IR::Expr *value;
-    int getter; // index in _module->functions or -1 if not set
-    int setter;
-
-    bool hasGetter() const { return getter >= 0; }
-    bool hasSetter() const { return setter >= 0; }
-};
-
 bool Codegen::visit(ObjectLiteral *ast)
 {
     if (hasError)
@@ -2126,33 +2111,28 @@ bool Codegen::visit(ObjectLiteral *ast)
 
     QMap<QString, ObjectPropertyValue> valueMap;
 
-    const unsigned t = _block->newTemp();
+    auto result = Reference::fromTemp(this, _block->newTemp());
     TempScope scope(_function);
 
     for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
         QString name = it->assignment->name->asString();
         if (PropertyNameAndValue *nv = AST::cast<AST::PropertyNameAndValue *>(it->assignment)) {
-            Result value = expression(nv->value);
+            Reference value = expression(nv->value);
             if (hasError)
                 return false;
+
             ObjectPropertyValue &v = valueMap[name];
-            if (v.hasGetter() || v.hasSetter() || (_function->isStrict && v.value)) {
+            if (v.hasGetter() || v.hasSetter() || (_function->isStrict && v.rvalue.isValid())) {
                 throwSyntaxError(nv->lastSourceLocation(),
                                  QStringLiteral("Illegal duplicate key '%1' in object literal").arg(name));
                 return false;
             }
 
-            if (IR::Const *c = (*value)->asConst()) {
-                valueMap[name].value = c;
-            } else {
-                unsigned t = _block->newTemp();
-                move(_block->TEMP(t), *value);
-                valueMap[name].value = _block->TEMP(t);
-            }
+            v.rvalue = value;
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
             const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
             ObjectPropertyValue &v = valueMap[name];
-            if (v.value ||
+            if (v.rvalue.isValid() ||
                 (gs->type == PropertyGetterSetter::Getter && v.hasGetter()) ||
                 (gs->type == PropertyGetterSetter::Setter && v.hasSetter())) {
                 throwSyntaxError(gs->lastSourceLocation(),
@@ -2168,96 +2148,82 @@ bool Codegen::visit(ObjectLiteral *ast)
         }
     }
 
-    // The linked-list arguments to builtin_define_object_literal
-    // begin with a CONST counting the number of key/value pairs, followed by the
-    // key value pairs, followed by the array entries.
-    IR::ExprList *args = _function->New<IR::ExprList>();
+    QVector<QString> nonArrayKey, arrayKeyWithValue, arrayKeyWithGetterSetter;
+    bool needSparseArray = false; // set to true if any array index is bigger than 16
 
-    IR::Const *entryCountParam = _function->New<IR::Const>();
-    entryCountParam->init(IR::SInt32Type, 0);
-    args->expr = entryCountParam;
-    args->next = 0;
-
-    IR::ExprList *keyValueEntries = 0;
-    IR::ExprList *currentKeyValueEntry = 0;
-    int keyValueEntryCount = 0;
-    IR::ExprList *arrayEntries = 0;
-
-    IR::ExprList *currentArrayEntry = 0;
-
-    for (QMap<QString, ObjectPropertyValue>::iterator it = valueMap.begin(); it != valueMap.end(); ) {
-        IR::ExprList **currentPtr = 0;
-        uint keyAsIndex = QV4::String::toArrayIndex(it.key());
-        if (keyAsIndex != UINT_MAX) {
-            if (!arrayEntries) {
-                arrayEntries = _function->New<IR::ExprList>();
-                currentArrayEntry = arrayEntries;
-            } else {
-                currentArrayEntry->next = _function->New<IR::ExprList>();
-                currentArrayEntry = currentArrayEntry->next;
-            }
-            currentPtr = &currentArrayEntry;
-            IR::Const *idx = _function->New<IR::Const>();
-            idx->init(IR::UInt32Type, keyAsIndex);
-            (*currentPtr)->expr = idx;
+    for (QMap<QString, ObjectPropertyValue>::iterator it = valueMap.begin(), eit = valueMap.end();
+            it != eit; ++it) {
+        QString name = it.key();
+        uint keyAsIndex = QV4::String::toArrayIndex(name);
+        if (keyAsIndex != std::numeric_limits<uint>::max()) {
+            it->keyAsIndex = keyAsIndex;
+            if (keyAsIndex > 16)
+                needSparseArray = true;
+            if (it->hasSetter() || it->hasGetter())
+                arrayKeyWithGetterSetter.append(name);
+            else
+                arrayKeyWithValue.append(name);
         } else {
-            if (!keyValueEntries) {
-                keyValueEntries = _function->New<IR::ExprList>();
-                currentKeyValueEntry = keyValueEntries;
-            } else {
-                currentKeyValueEntry->next = _function->New<IR::ExprList>();
-                currentKeyValueEntry = currentKeyValueEntry->next;
-            }
-            currentPtr = &currentKeyValueEntry;
-            (*currentPtr)->expr = _block->NAME(it.key(), 0, 0);
-            keyValueEntryCount++;
+            nonArrayKey.append(name);
         }
-
-        IR::ExprList *&current = *currentPtr;
-        if (it->value) {
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->CONST(IR::BoolType, true);
-
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = it->value;
-        } else {
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->CONST(IR::BoolType, false);
-
-            unsigned getter = _block->newTemp();
-            unsigned setter = _block->newTemp();
-            move(_block->TEMP(getter), it->hasGetter() ? _block->CLOSURE(it->getter) : _block->CONST(IR::UndefinedType, 0));
-            move(_block->TEMP(setter), it->hasSetter() ? _block->CLOSURE(it->setter) : _block->CONST(IR::UndefinedType, 0));
-
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->TEMP(getter);
-            current->next = _function->New<IR::ExprList>();
-            current = current->next;
-            current->expr = _block->TEMP(setter);
-        }
-
-        it = valueMap.erase(it);
     }
 
-    entryCountParam->value = keyValueEntryCount;
+    int argc = 0;
+    auto push = [this, &argc](const Reference &arg) {
+        Reference::fromTemp(this, argc).store(arg);
+        argc += 1;
+    };
 
-    if (keyValueEntries)
-        args->next = keyValueEntries;
-    if (arrayEntries) {
-        if (currentKeyValueEntry)
-            currentKeyValueEntry->next = arrayEntries;
-        else
-            args->next = arrayEntries;
+    auto undefined = [this](){ return Reference::fromConst(this, Encode::undefined()); };
+    QVector<QV4::Compiler::JSUnitGenerator::MemberInfo> members;
+
+    // generate the key/value pairs
+    for (const QString &key : qAsConst(nonArrayKey)) {
+        const ObjectPropertyValue &prop = valueMap[key];
+
+        if (prop.hasGetter() || prop.hasSetter()) {
+            Q_ASSERT(!prop.rvalue.isValid());
+            push(prop.hasGetter() ? Reference::fromClosure(this, prop.getter) : undefined());
+            push(prop.hasSetter() ? Reference::fromClosure(this, prop.setter) : undefined());
+            members.append({ key, true });
+        } else {
+            Q_ASSERT(prop.rvalue.isValid());
+            push(prop.rvalue);
+            members.append({ key, false });
+        }
     }
 
-    move(_block->TEMP(t), _block->CALL(_block->NAME(IR::Name::builtin_define_object_literal,
-         ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), args));
+    // generate array entries with values
+    for (const QString &key : qAsConst(arrayKeyWithValue)) {
+        const ObjectPropertyValue &prop = valueMap[key];
+        Q_ASSERT(!prop.hasGetter() && !prop.hasSetter());
+        push(Reference::fromConst(this, Encode(prop.keyAsIndex)));
+        push(prop.rvalue);
+    }
 
-    _expr.code = _block->TEMP(t);
+    // generate array entries with both a value and a setter
+    for (const QString &key : qAsConst(arrayKeyWithGetterSetter)) {
+        const ObjectPropertyValue &prop = valueMap[key];
+        Q_ASSERT(!prop.rvalue.isValid());
+        push(Reference::fromConst(this, Encode(prop.keyAsIndex)));
+        push(prop.hasGetter() ? Reference::fromClosure(this, prop.getter) : undefined());
+        push(prop.hasSetter() ? Reference::fromClosure(this, prop.setter) : undefined());
+    }
+
+    int classId = jsUnitGenerator->registerJSClass(members);
+
+    uint arrayGetterSetterCountAndFlags = arrayKeyWithGetterSetter.size();
+    arrayGetterSetterCountAndFlags |= needSparseArray << 30;
+
+    QV4::Moth::Instruction::CallBuiltinDefineObjectLiteral call;
+    call.internalClassId = classId;
+    call.arrayValueCount = arrayKeyWithValue.size();
+    call.arrayGetterSetterCountAndFlags = arrayGetterSetterCountAndFlags;
+    call.args = 0;
+    call.result = result.asLValue();
+    bytecodeGenerator->addInstruction(call);
+
+    _expr.result = result;
     return false;
 }
 

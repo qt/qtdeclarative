@@ -90,6 +90,11 @@ private:
 };
 
 struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
+    struct MemberInfo {
+        QString name;
+        bool isAccessor;
+    };
+
     JSUnitGenerator(IR::Module *module);
 
     int registerString(const QString &str) { return stringTable.registerString(str); }
@@ -108,7 +113,7 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     int registerConstant(ReturnedValue v);
     ReturnedValue constant(int idx);
 
-    int registerJSClass(int count, IR::ExprList *args);
+    int registerJSClass(const QVector<MemberInfo> &members);
     int registerJSClass(int count, CompiledData::JSClassMember *members);
 
     enum GeneratorOption {

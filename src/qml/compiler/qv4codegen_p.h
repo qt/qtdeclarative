@@ -225,6 +225,21 @@ public:
         int tempCountForScope;
     };
 
+    struct ObjectPropertyValue {
+        ObjectPropertyValue()
+            : getter(-1)
+            , setter(-1)
+            , keyAsIndex(UINT_MAX)
+        {}
+
+        Reference rvalue;
+        int getter; // index in _module->functions or -1 if not set
+        int setter;
+        uint keyAsIndex;
+
+        bool hasGetter() const { return getter >= 0; }
+        bool hasSetter() const { return setter >= 0; }
+    };
 protected:
 
     enum Format { ex, cx, nx };

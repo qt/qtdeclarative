@@ -87,7 +87,9 @@ public:
     uint registerSetterLookup(const QString &name) { return jsGenerator->registerSetterLookup(name); }
     uint registerGlobalGetterLookup(const QString &name) { return jsGenerator->registerGlobalGetterLookup(name); }
     int registerRegExp(IR::RegExp *regexp) { return jsGenerator->registerRegExp(regexp); }
-    int registerJSClass(int count, IR::ExprList *args) { return jsGenerator->registerJSClass(count, args); }
+    int registerJSClass(const QVector<Compiler::JSUnitGenerator::MemberInfo> &members) {
+        return jsGenerator->registerJSClass(members);
+    }
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator() const { return jsGenerator; }
 
 protected:
