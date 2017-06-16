@@ -441,6 +441,7 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
     }
 
     QQuickMenuPrivate *p = QQuickMenuPrivate::get(subMenu);
+    p->allowHorizontalFlip = cascade;
     p->parentMenu = q;
     if (activate)
         p->setCurrentIndex(0);

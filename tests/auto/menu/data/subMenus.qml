@@ -52,7 +52,7 @@ import QtQuick 2.9
 import QtQuick.Controls 2.3
 
 ApplicationWindow {
-    width: 400
+    width: 600
     height: 400
 
     property alias mainMenu: mainMenu
@@ -62,19 +62,16 @@ ApplicationWindow {
 
     Menu {
         id: mainMenu
-        width: 100
         MenuItem { id: mainMenuItem1; text: "Main 1" }
 
         Menu {
             id: subMenu1
-            width: 100
             title: "Sub Menu 1"
             MenuItem { id: subMenuItem1; text: "Sub 1" }
             MenuItem { id: subMenuItem2; text: "Sub 2" }
 
             Menu {
                 id: subSubMenu1
-                width: 100
                 title: "Sub Sub Menu 1"
                 MenuItem { id: subSubMenuItem1; text: "Sub Sub 1" }
                 MenuItem { id: subSubMenuItem2; text: "Sub Sub 2" }
@@ -85,7 +82,6 @@ ApplicationWindow {
 
         Menu {
             id: subMenu2
-            width: 100
             title: "Sub Menu 2"
             MenuItem { id: subMenuItem3; text: "Sub 3" }
             MenuItem { id: subMenuItem4; text: "Sub 4" }

@@ -913,24 +913,37 @@ void tst_menu::subMenuKeyboard()
 void tst_menu::subMenuPosition_data()
 {
     QTest::addColumn<bool>("cascade");
+    QTest::addColumn<bool>("flip");
     QTest::addColumn<bool>("mirrored");
     QTest::addColumn<qreal>("overlap");
 
-    QTest::newRow("cascading") << true << false << 0.0;
-    QTest::newRow("cascading,overlap") << true << false << 10.0;
-    QTest::newRow("cascading,mirrored") << true << true << 0.0;
-    QTest::newRow("cascading,mirrored,overlap") << true << true << 10.0;
-    QTest::newRow("non-cascading") << false << false << 0.0;
+    QTest::newRow("cascading") << true << false << false << 0.0;
+    QTest::newRow("cascading,flip") << true << true << false << 0.0;
+    QTest::newRow("cascading,overlap") << true << false << false << 10.0;
+    QTest::newRow("cascading,flip,overlap") << true << true << false << 10.0;
+    QTest::newRow("cascading,mirrored") << true << false << true << 0.0;
+    QTest::newRow("cascading,mirrored,flip") << true << true << true << 0.0;
+    QTest::newRow("cascading,mirrored,overlap") << true << false << true << 10.0;
+    QTest::newRow("cascading,mirrored,flip,overlap") << true << true << true << 10.0;
+    QTest::newRow("non-cascading") << false << false << false << 0.0;
 }
 
 void tst_menu::subMenuPosition()
 {
     QFETCH(bool, cascade);
+    QFETCH(bool, flip);
     QFETCH(bool, mirrored);
     QFETCH(qreal, overlap);
 
     QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
+
+    // the default size of the window fits three menus side by side.
+    // when testing flipping, we resize the window so that the first
+    // sub-menu fits, but the second doesn't
+    if (flip)
+        window->setWidth(window->width() - 200);
+
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
     moveMouseAway(window);
@@ -966,10 +979,10 @@ void tst_menu::subMenuPosition()
     subSubMenu1->setOverlap(overlap);
     QCOMPARE(subSubMenu1->overlap(), overlap);
 
+    // choose the main menu position so that there's room for the
+    // sub-menus to cascade to the left when mirrored
     if (mirrored)
-        mainMenu->setPosition(QPointF(290, 10));
-    else
-        mainMenu->setPosition(QPointF(10, 10));
+        mainMenu->setX(window->width() - 200);
 
     mainMenu->open();
     QVERIFY(mainMenu->isVisible());
@@ -977,7 +990,7 @@ void tst_menu::subMenuPosition()
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
 
-    // open the sub-menu
+    // open the sub-menu (never flips)
     QQuickMenuItem *subMenu1Item = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(1));
     QVERIFY(subMenu1Item);
     QCOMPARE(subMenu1Item->subMenu(), subMenu1);
@@ -1002,7 +1015,7 @@ void tst_menu::subMenuPosition()
         QCOMPARE(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + (mainMenu->height() - subMenu1->height()) / 2);
     }
 
-    // open the sub-sub-menu
+    // open the sub-sub-menu (can flip)
     QQuickMenuItem *subSubMenu1Item = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(2));
     QVERIFY(subSubMenu1Item);
     QCOMPARE(subSubMenu1Item->subMenu(), subSubMenu1);
@@ -1016,7 +1029,7 @@ void tst_menu::subMenuPosition()
         QCOMPARE(subSubMenu1->parentItem(), subSubMenu1Item);
         // vertically aligned to the parent menu item
         QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + subSubMenu1Item->y() - subSubMenu1->topPadding());
-        if (mirrored)
+        if (mirrored != flip)
             QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() - subSubMenu1->width() + overlap); // on the left of the parent menu
         else
             QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + subMenu1->width() - overlap); // on the right of the parent menu
