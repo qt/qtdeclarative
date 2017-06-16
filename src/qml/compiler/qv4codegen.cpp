@@ -2397,11 +2397,12 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_variableEnvironment->compilationMode == FunctionCode || _variableEnvironment->compilationMode == QmlBinding) {
         unsigned t = 0;
+        Reference undef = Reference::fromConst(this, QV4::Encode::undefined());
         for (Environment::MemberMap::iterator it = _variableEnvironment->members.begin(), end = _variableEnvironment->members.end(); it != end; ++it) {
             const QString &local = it.key();
             function->LOCAL(local);
             (*it).index = t;
-            entryBlock->MOVE(entryBlock->LOCAL(t, 0), entryBlock->CONST(IR::UndefinedType, 0));
+            Reference::fromLocal(this, t, 0).store(undef);
             ++t;
         }
     } else {
@@ -2416,21 +2417,13 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             }
         }
 
-        IR::ExprList *args = 0;
         for (Environment::MemberMap::const_iterator it = _variableEnvironment->members.constBegin(), cend = _variableEnvironment->members.constEnd(); it != cend; ++it) {
             const QString &local = it.key();
-            IR::ExprList *next = function->New<IR::ExprList>();
-            next->expr = entryBlock->NAME(local, 0, 0);
-            next->next = args;
-            args = next;
-        }
-        if (args) {
-            IR::ExprList *next = function->New<IR::ExprList>();
-            next->expr = entryBlock->CONST(IR::BoolType, false); // ### Investigate removal of bool deletable
-            next->next = args;
-            args = next;
 
-            entryBlock->EXP(entryBlock->CALL(entryBlock->NAME(IR::Name::builtin_declare_vars, 0, 0), args));
+            Instruction::CallBuiltinDeclareVar declareVar;
+            declareVar.isDeletable = false;
+            declareVar.varName = jsUnitGenerator->registerString(local);
+            bytecodeGenerator->addInstruction(declareVar);
         }
     }
 
@@ -2471,15 +2464,14 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     }
     if (_function->usesArgumentsObject) {
-        //### TODO
-//        move(identifier(QStringLiteral("arguments"), ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn),
-//             _block->CALL(_block->NAME(IR::Name::builtin_setup_argument_object,
-//                     ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
+        Instruction::CallBuiltinSetupArgumentsObject setup;
+        setup.result = Reference::fromName(this, QStringLiteral("arguments")).asLValue();
+        bytecodeGenerator->addInstruction(setup);
     }
     if (_function->usesThis && !_function->isStrict) {
         // make sure we convert this to an object
-        _block->EXP(_block->CALL(_block->NAME(IR::Name::builtin_convert_this_to_object,
-                ast->firstSourceLocation().startLine, ast->firstSourceLocation().startColumn), 0));
+        Instruction::CallBuiltinConvertThisToObject convert;
+        bytecodeGenerator->addInstruction(convert);
     }
 
     beginFunctionBodyHook();
