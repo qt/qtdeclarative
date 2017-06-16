@@ -74,6 +74,9 @@ struct ControlFlowFinally;
 namespace Compiler {
 struct JSUnitGenerator;
 }
+namespace Moth {
+struct Instruction;
+}
 }
 
 namespace QQmlJS {
@@ -83,6 +86,8 @@ class UiParameterList;
 
 class Q_QML_PRIVATE_EXPORT Codegen: protected AST::Visitor
 {
+    using BytecodeGenerator = QV4::Moth::BytecodeGenerator;
+    using Instruction = QV4::Moth::Instruction;
 public:
     Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict);
 
@@ -137,8 +142,10 @@ public:
         bool isTempLocalArg() const { return isValid() && type < Argument; }
         bool isConst() const { return type == Const; }
 
-        static Reference fromTemp(Codegen *cg, uint tempIndex) {
+        static Reference fromTemp(Codegen *cg, int tempIndex = -1) {
             Reference r(cg, Temp);
+            if (tempIndex == -1)
+                tempIndex = cg->bytecodeGenerator->newTemp();
             r.base = QV4::Moth::Param::createTemp(tempIndex);
             return r;
         }
@@ -249,8 +256,8 @@ protected:
         Reference result;
 
         QV4::IR::Expr *code;
-        const QV4::Moth::BytecodeGenerator::Label *iftrue;
-        const QV4::Moth::BytecodeGenerator::Label *iffalse;
+        const BytecodeGenerator::Label *iftrue;
+        const BytecodeGenerator::Label *iffalse;
         Format format;
         Format requested;
         bool trueBlockFollowsCondition = false;
@@ -272,8 +279,8 @@ protected:
             , format(ex)
             , requested(requested) {}
 
-        explicit Result(const QV4::Moth::BytecodeGenerator::Label *iftrue,
-                        const QV4::Moth::BytecodeGenerator::Label *iffalse,
+        explicit Result(const BytecodeGenerator::Label *iftrue,
+                        const BytecodeGenerator::Label *iffalse,
                         bool trueBlockFollowsCondition)
             : code(0)
             , iftrue(iftrue)
@@ -439,8 +446,8 @@ protected:
 
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
-    void condition(AST::ExpressionNode *ast, const QV4::Moth::BytecodeGenerator::Label *iftrue,
-                   const QV4::Moth::BytecodeGenerator::Label *iffalse,
+    void condition(AST::ExpressionNode *ast, const BytecodeGenerator::Label *iftrue,
+                   const BytecodeGenerator::Label *iffalse,
                    bool trueBlockFollowsCondition);
     Reference expression(AST::ExpressionNode *ast);
     Result sourceElement(AST::SourceElement *ast);
@@ -585,7 +592,7 @@ protected:
     QV4::IR::Module *_module;
     QV4::IR::Function *_function;
     QV4::IR::BasicBlock *_block;
-    QV4::Moth::BytecodeGenerator::Label _exitBlock;
+    BytecodeGenerator::Label _exitBlock;
     unsigned _returnAddress;
     Environment *_variableEnvironment;
     QV4::ControlFlow *_controlFlow;
@@ -593,7 +600,7 @@ protected:
     QHash<AST::Node *, Environment *> _envMap;
     QHash<AST::FunctionExpression *, int> _functionMap;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
-    QV4::Moth::BytecodeGenerator *bytecodeGenerator = 0;
+    BytecodeGenerator *bytecodeGenerator = 0;
     bool _strictMode;
 
     bool _fileNameIsUrl;

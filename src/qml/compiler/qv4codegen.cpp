@@ -73,6 +73,10 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct ControlFlow {
+    using Reference = Codegen::Reference;
+    using BytecodeGenerator = Moth::BytecodeGenerator;
+    using Instruction = Moth::Instruction;
+
     enum Type {
         Loop,
         With,
@@ -91,7 +95,7 @@ struct ControlFlow {
     struct Handler {
         HandlerType type;
         QString label;
-        Moth::BytecodeGenerator::Label linkLabel;
+        BytecodeGenerator::Label linkLabel;
         int tempIndex;
         int value;
     };
@@ -112,8 +116,8 @@ struct ControlFlow {
 
     void jumpToHandler(const Handler &h) {
         if (h.tempIndex >= 0) {
-            Codegen::Reference val = Codegen::Reference::fromConst(cg, QV4::Encode(h.value));
-            Codegen::Reference temp = Codegen::Reference::fromTemp(cg, h.tempIndex);
+            Reference val = Reference::fromConst(cg, QV4::Encode(h.value));
+            Reference temp = Reference::fromTemp(cg, h.tempIndex);
             temp.store(val);
         }
         cg->bytecodeGenerator->jump().link(h.linkLabel);
@@ -146,10 +150,10 @@ struct ControlFlow {
         return getParentHandler(type, label);
     }
 
-    virtual Moth::BytecodeGenerator::ExceptionHandler *exceptionHandler() {
+    virtual BytecodeGenerator::ExceptionHandler *exceptionHandler() {
         return parent ? parent->exceptionHandler() : 0;
     }
-    Moth::BytecodeGenerator::ExceptionHandler *parentExceptionHandler() {
+    BytecodeGenerator::ExceptionHandler *parentExceptionHandler() {
         return parent ? parent->exceptionHandler() : 0;
     }
 
@@ -162,7 +166,7 @@ protected:
         }
         return label;
     }
-    Moth::BytecodeGenerator *generator() const {
+    BytecodeGenerator *generator() const {
         return cg->bytecodeGenerator;
     }
 };
@@ -170,10 +174,10 @@ protected:
 struct ControlFlowLoop : public ControlFlow
 {
     QString loopLabel;
-    Moth::BytecodeGenerator::Label *breakLabel = 0;
-    Moth::BytecodeGenerator::Label *continueLabel = 0;
+    BytecodeGenerator::Label *breakLabel = 0;
+    BytecodeGenerator::Label *continueLabel = 0;
 
-    ControlFlowLoop(Codegen *cg, Moth::BytecodeGenerator::Label *breakLabel, Moth::BytecodeGenerator::Label *continueLabel = 0)
+    ControlFlowLoop(Codegen *cg, BytecodeGenerator::Label *breakLabel, BytecodeGenerator::Label *continueLabel = 0)
         : ControlFlow(cg, Loop), loopLabel(ControlFlow::loopLabel()), breakLabel(breakLabel), continueLabel(continueLabel)
     {
     }
@@ -204,7 +208,7 @@ struct ControlFlowLoop : public ControlFlow
 
 struct ControlFlowUnwind : public ControlFlow
 {
-    Moth::BytecodeGenerator::ExceptionHandler unwindLabel;
+    BytecodeGenerator::ExceptionHandler unwindLabel;
     int controlFlowTemp;
     QVector<Handler> handlers;
 
@@ -213,7 +217,7 @@ struct ControlFlowUnwind : public ControlFlow
     {
         Q_ASSERT(type != Loop);
         controlFlowTemp = static_cast<int>(generator()->newTemp());
-        Codegen::Reference::fromTemp(cg, controlFlowTemp).store(Codegen::Reference::fromConst(cg, QV4::Encode::undefined()));
+        Reference::fromTemp(cg, controlFlowTemp).store(Reference::fromConst(cg, QV4::Encode::undefined()));
         // we'll need at least a handler for throw
         getHandler(Throw);
         generator()->setExceptionHandler(&unwindLabel);
@@ -223,24 +227,24 @@ struct ControlFlowUnwind : public ControlFlow
     {
         Q_ASSERT(!isSimple());
 
-        Codegen::Reference temp = Codegen::Reference::fromTemp(cg, controlFlowTemp);
+        Reference temp = Reference::fromTemp(cg, controlFlowTemp);
         for (const auto &h : qAsConst(handlers)) {
             Codegen::TempScope tempScope(cg);
             Handler parentHandler = getParentHandler(h.type, h.label);
 
 
             if (h.type == Throw || parentHandler.tempIndex >= 0) {
-                Moth::BytecodeGenerator::Label skip = generator()->newLabel();
-                generator()->jumpStrictNotEqual(temp.asRValue(), Codegen::Reference::fromConst(cg, QV4::Encode(h.value)).asRValue())
+                BytecodeGenerator::Label skip = generator()->newLabel();
+                generator()->jumpStrictNotEqual(temp.asRValue(), Reference::fromConst(cg, QV4::Encode(h.value)).asRValue())
                         .link(skip);
                 if (h.type == Throw)
                     emitForThrowHandling();
-                Codegen::Reference parentTemp = Codegen::Reference::fromTemp(cg, parentHandler.tempIndex);
-                parentTemp.store(Codegen::Reference::fromConst(cg, QV4::Encode(parentHandler.value)));
+                Reference parentTemp = Reference::fromTemp(cg, parentHandler.tempIndex);
+                parentTemp.store(Reference::fromConst(cg, QV4::Encode(parentHandler.value)));
                 generator()->jump().link(parentHandler.linkLabel);
                 skip.link();
             } else {
-                generator()->jumpStrictEqual(temp.asRValue(), Codegen::Reference::fromConst(cg, QV4::Encode(h.value)).asRValue())
+                generator()->jumpStrictEqual(temp.asRValue(), Reference::fromConst(cg, QV4::Encode(h.value)).asRValue())
                         .link(parentHandler.linkLabel);
             }
         }
@@ -262,7 +266,7 @@ struct ControlFlowUnwind : public ControlFlow
         return h;
     }
 
-    virtual Moth::BytecodeGenerator::ExceptionHandler *exceptionHandler() {
+    virtual BytecodeGenerator::ExceptionHandler *exceptionHandler() {
         return &unwindLabel;
     }
 
@@ -281,7 +285,7 @@ struct ControlFlowWith : public ControlFlowUnwind
         unwindLabel.link();
 
         generator()->setExceptionHandler(parentExceptionHandler());
-        Moth::Instruction::CallBuiltinPopScope pop;
+        Instruction::CallBuiltinPopScope pop;
         generator()->addInstruction(pop);
 
         emitUnwindHandler();
@@ -310,8 +314,8 @@ struct ControlFlowCatch : public ControlFlowUnwind
         unwindLabel.link();
 
         ++cg->_function->insideWithOrCatch;
-        Codegen::Reference name = Codegen::Reference::fromName(cg, catchExpression->name.toString());
-        Moth::Instruction::CallBuiltinPushCatchScope pushCatchScope;
+        Reference name = Reference::fromName(cg, catchExpression->name.toString());
+        Instruction::CallBuiltinPushCatchScope pushCatchScope;
         pushCatchScope.name = name.nameIndex;
         generator()->addInstruction(pushCatchScope);
         generator()->setExceptionHandler(parentExceptionHandler());
@@ -319,7 +323,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
         cg->statement(catchExpression->statement);
         --cg->_function->insideWithOrCatch;
 
-        Moth::Instruction::CallBuiltinPopScope pop;
+        Instruction::CallBuiltinPopScope pop;
         generator()->addInstruction(pop);
 
         emitUnwindHandler();
@@ -342,8 +346,8 @@ struct ControlFlowFinally : public ControlFlowUnwind
 
         Codegen::TempScope scope(cg);
 
-        Codegen::Reference hasException = Codegen::Reference::fromTemp(cg, generator()->newTemp());
-        Moth::Instruction::HasException instr;
+        Reference hasException = Reference::fromTemp(cg);
+        Instruction::HasException instr;
         instr.result = hasException.asLValue();
         generator()->addInstruction(instr);
 
@@ -355,7 +359,7 @@ struct ControlFlowFinally : public ControlFlowUnwind
 
     virtual void emitForThrowHandling() {
         // reset the exception flag, that got cleared before executing the statements in finally
-        Moth::Instruction::SetExceptionFlag setFlag;
+        Instruction::SetExceptionFlag setFlag;
         generator()->addInstruction(setFlag);
     }
 };
@@ -897,41 +901,41 @@ Codegen::Reference Codegen::unop(IR::AluOp op, const Reference &expr, const Sour
     }
 #endif // V4_BOOTSTRAP
 
-    auto dest = Reference::fromTemp(this, _block->newTemp());
+    auto dest = Reference::fromTemp(this);
 
     switch (op) {
     case IR::OpUMinus: {
-        QV4::Moth::Instruction::UMinus uminus;
+        Instruction::UMinus uminus;
         uminus.source = expr.asRValue();
         uminus.result = dest.asLValue();
         bytecodeGenerator->addInstruction(uminus);
     } break;
     case IR::OpUPlus: {
-        QV4::Moth::Instruction::UPlus uplus;
+        Instruction::UPlus uplus;
         uplus.source = expr.asRValue();
         uplus.result = dest.asLValue();
         bytecodeGenerator->addInstruction(uplus);
     } break;
     case IR::OpNot: {
-        QV4::Moth::Instruction::UNot unot;
+        Instruction::UNot unot;
         unot.source = expr.asRValue();
         unot.result = dest.asLValue();
         bytecodeGenerator->addInstruction(unot);
     } break;
     case IR::OpCompl: {
-        QV4::Moth::Instruction::UCompl ucompl;
+        Instruction::UCompl ucompl;
         ucompl.source = expr.asRValue();
         ucompl.result = dest.asLValue();
         bytecodeGenerator->addInstruction(ucompl);
     } break;
     case IR::OpIncrement: {
-        QV4::Moth::Instruction::Increment inc;
+        Instruction::Increment inc;
         inc.source = expr.asRValue();
         inc.result = dest.asLValue();
         bytecodeGenerator->addInstruction(inc);
     } break;
     case IR::OpDecrement: {
-        QV4::Moth::Instruction::Decrement dec;
+        Instruction::Decrement dec;
         dec.source = expr.asRValue();
         dec.result = dest.asLValue();
         bytecodeGenerator->addInstruction(dec);
@@ -953,12 +957,12 @@ IR::Stmt *Codegen::move(IR::Expr *target, IR::Expr *source)
     TempScope scope(_function);
 
     if (!source->asTemp() && !source->asConst() && !target->asTemp() && !source->asArgLocal() && !target->asArgLocal()) {
-        unsigned t = _block->newTemp();
+        unsigned t = bytecodeGenerator->newTemp();
         _block->MOVE(_block->TEMP(t), source);
         source = _block->TEMP(t);
     }
     if (source->asConst() && !target->asTemp() && !target->asArgLocal()) {
-        unsigned t = _block->newTemp();
+        unsigned t = bytecodeGenerator->newTemp();
         _block->MOVE(_block->TEMP(t), source);
         source = _block->TEMP(t);
     }
@@ -1002,7 +1006,7 @@ void Codegen::statement(ExpressionNode *ast)
 //            } else if (r->asTemp() || r->asArgLocal()) {
 //                // there is nothing to do
 //            } else {
-//                unsigned t = _block->newTemp();
+//                unsigned t = bytecodeGenerator->newTemp();
 //                move(_block->TEMP(t), *r);
 //            }
 //        }
@@ -1012,8 +1016,8 @@ void Codegen::statement(ExpressionNode *ast)
     }
 }
 
-void Codegen::condition(ExpressionNode *ast, const Moth::BytecodeGenerator::Label *iftrue,
-                        const Moth::BytecodeGenerator::Label *iffalse, bool trueBlockFollowsCondition)
+void Codegen::condition(ExpressionNode *ast, const BytecodeGenerator::Label *iftrue,
+                        const BytecodeGenerator::Label *iffalse, bool trueBlockFollowsCondition)
 {
     if (ast) {
         Result r(iftrue, iffalse, trueBlockFollowsCondition);
@@ -1297,7 +1301,7 @@ bool Codegen::visit(ArrayLiteral *ast)
     if (hasError)
         return false;
 
-    auto result = Reference::fromTemp(this, _block->newTemp());
+    auto result = Reference::fromTemp(this);
     TempScope scope(_function);
 
     int argc = 0;
@@ -1320,7 +1324,7 @@ bool Codegen::visit(ArrayLiteral *ast)
     for (Elision *elision = ast->elision; elision; elision = elision->next)
         push(undefined());
 
-    Moth::Instruction::CallBuiltinDefineArray call;
+    Instruction::CallBuiltinDefineArray call;
     call.argc = argc;
     call.args = 0;
     call.result = result.asLValue();
@@ -1376,7 +1380,7 @@ bool Codegen::visit(BinaryExpression *ast)
             auto iftrue = bytecodeGenerator->newLabel();
             auto endif = bytecodeGenerator->newLabel();
 
-            auto r = Reference::fromTemp(this, _block->newTemp());
+            auto r = Reference::fromTemp(this);
 
             Reference lhs = expression(ast->left);
             if (hasError)
@@ -1409,7 +1413,7 @@ bool Codegen::visit(BinaryExpression *ast)
             auto iffalse = bytecodeGenerator->newLabel();
             auto endif = bytecodeGenerator->newLabel();
 
-            auto r = Reference::fromTemp(this, _block->newTemp());
+            auto r = Reference::fromTemp(this);
 
             Reference lhs = expression(ast->left);
             if (hasError)
@@ -1484,7 +1488,7 @@ bool Codegen::visit(BinaryExpression *ast)
         if (hasError)
             return false;
 
-        _expr.result = Reference::fromTemp(this, _block->newTemp());
+        _expr.result = Reference::fromTemp(this);
         binopHelper(baseOp(ast->op), left.asRValue(), right.asRValue(), _expr.result.base);
         left.store(_expr.result);
 
@@ -1522,7 +1526,7 @@ bool Codegen::visit(BinaryExpression *ast)
         if (hasError)
             return false;
 
-        _expr.result = Reference::fromTemp(this, _block->newTemp());
+        _expr.result = Reference::fromTemp(this);
         binopHelper(IR::binaryOperator(ast->op), leftParam, right.asRValue(), _expr.result.base);
 
         break;
@@ -1537,7 +1541,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
                                       const QV4::Moth::Param &right, const QV4::Moth::Param &dest)
 {
     if (oper == IR::OpAdd) {
-        QV4::Moth::Instruction::Add add;
+        Instruction::Add add;
         add.lhs = left;
         add.rhs = right;
         add.result = dest;
@@ -1545,7 +1549,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         return add.result;
     }
     if (oper == IR::OpSub) {
-        QV4::Moth::Instruction::Sub sub;
+        Instruction::Sub sub;
         sub.lhs = left;
         sub.rhs = right;
         sub.result = dest;
@@ -1553,7 +1557,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         return sub.result;
     }
     if (oper == IR::OpMul) {
-        QV4::Moth::Instruction::Mul mul;
+        Instruction::Mul mul;
         mul.lhs = left;
         mul.rhs = right;
         mul.result = dest;
@@ -1564,14 +1568,14 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
 //        if (left.isConstant())
 //            std::swap(left, right);
 //        if (right.isConstant()) {
-//            QV4::Moth::Instruction::BitAndConst bitAnd;
+//            Instruction::BitAndConst bitAnd;
 //            bitAnd.lhs = left;
 //            bitAnd.rhs = Primitive::fromReturnedValue(jsUnitGenerator->constant(right.index)).toInteger();
 //            bitAnd.result = dest;
 //            bytecodeGenerator->addInstruction(bitAnd);
 //            return bitAnd.result;
 //        }
-        QV4::Moth::Instruction::BitAnd bitAnd;
+        Instruction::BitAnd bitAnd;
         bitAnd.lhs = left;
         bitAnd.rhs = right;
         bitAnd.result = dest;
@@ -1582,14 +1586,14 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
 //        if (left.isConstant())
 //            std::swap(left, right);
 //        if (right.isConstant()) {
-//            QV4::Moth::Instruction::BitOrConst bitOr;
+//            Instruction::BitOrConst bitOr;
 //            bitOr.lhs = left;
 //            bitOr.rhs = Primitive::fromReturnedValue(jsUnitGenerator->constant(right.index)).toInteger();
 //            bitOr.result = dest;
 //            bytecodeGenerator->addInstruction(bitOr);
 //            return bitOr.result;
 //        }
-        QV4::Moth::Instruction::BitOr bitOr;
+        Instruction::BitOr bitOr;
         bitOr.lhs = left;
         bitOr.rhs = right;
         bitOr.result = dest;
@@ -1600,14 +1604,14 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
 //        if (leftSource->asConst())
 //            qSwap(leftSource, rightSource);
 //        if (IR::Const *c = rightSource->asConst()) {
-//            QV4::Moth::Instruction::BitXorConst bitXor;
+//            Instruction::BitXorConst bitXor;
 //            bitXor.lhs = left;
 //            bitXor.rhs = convertToValue(c).Value::toInt32();
 //            bitXor.result = dest;
 //            bytecodeGenerator->addInstruction(bitXor);
 //            return bitXor.result;
 //        }
-        QV4::Moth::Instruction::BitXor bitXor;
+        Instruction::BitXor bitXor;
         bitXor.lhs = left;
         bitXor.rhs = right;
         bitXor.result = dest;
@@ -1616,14 +1620,14 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
     }
     if (oper == IR::OpRShift) {
 //        if (IR::Const *c = rightSource->asConst()) {
-//            QV4::Moth::Instruction::ShrConst shr;
+//            Instruction::ShrConst shr;
 //            shr.lhs = left;
 //            shr.rhs = convertToValue(c).Value::toInt32() & 0x1f;
 //            shr.result = dest;
 //            bytecodeGenerator->addInstruction(shr);
 //            return shr.result;
 //        }
-        QV4::Moth::Instruction::Shr shr;
+        Instruction::Shr shr;
         shr.lhs = left;
         shr.rhs = right;
         shr.result = dest;
@@ -1632,14 +1636,14 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
     }
     if (oper == IR::OpLShift) {
 //        if (IR::Const *c = rightSource->asConst()) {
-//            QV4::Moth::Instruction::ShlConst shl;
+//            Instruction::ShlConst shl;
 //            shl.lhs = left;
 //            shl.rhs = convertToValue(c).Value::toInt32() & 0x1f;
 //            shl.result = dest;
 //            bytecodeGenerator->addInstruction(shl);
 //            return shl.result;
 //        }
-        QV4::Moth::Instruction::Shl shl;
+        Instruction::Shl shl;
         shl.lhs = left;
         shl.rhs = right;
         shl.result = dest;
@@ -1648,7 +1652,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
     }
 
     if (oper == IR::OpInstanceof || oper == IR::OpIn || oper == IR::OpAdd) {
-        QV4::Moth::Instruction::BinopContext binop;
+        Instruction::BinopContext binop;
         if (oper == IR::OpInstanceof)
             binop.alu = QV4::Runtime::instanceof;
         else if (oper == IR::OpIn)
@@ -1664,7 +1668,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
     } else {
         auto binopFunc = aluOpFunction(oper);
         Q_ASSERT(binopFunc != QV4::Runtime::InvalidRuntimeMethod);
-        QV4::Moth::Instruction::Binop binop;
+        Instruction::Binop binop;
         binop.alu = binopFunc;
         binop.lhs = left;
         binop.rhs = right;
@@ -1681,7 +1685,7 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError)
         return false;
 
-    Reference r = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    Reference r = Reference::fromTemp(this);
 
     TempScope scope(_function);
 
@@ -1693,7 +1697,7 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError)
         return false;
 
-    QV4::Moth::Instruction::CallValue call;
+    Instruction::CallValue call;
     call.dest = base.asRValue();
     call.argc = argc;
     call.callData = 0;
@@ -1722,7 +1726,7 @@ bool Codegen::visit(ConditionalExpression *ast)
     if (hasError)
         return true;
 
-    const unsigned t = _block->newTemp();
+    const unsigned t = bytecodeGenerator->newTemp();
     _expr = Reference::fromTemp(this, t);
 
     TempScope scope(_function);
@@ -1731,11 +1735,11 @@ bool Codegen::visit(ConditionalExpression *ast)
 
     // ### handle const Reference
 
-    Moth::BytecodeGenerator::Jump jump_else = bytecodeGenerator->jumpNe(r.asRValue());
+    BytecodeGenerator::Jump jump_else = bytecodeGenerator->jumpNe(r.asRValue());
 
     _expr.result.store(expression(ast->ok));
 
-    Moth::BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
+    BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
 
     jump_else.link();
 
@@ -1770,25 +1774,25 @@ bool Codegen::visit(DeleteExpression *ast)
         return false;
     }
 
-    Reference r = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    Reference r = Reference::fromTemp(this);
 
     if (expr.type == Reference::Name) {
         if (_function->isStrict) {
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
-        Moth::Instruction::CallBuiltinDeleteName del;
+        Instruction::CallBuiltinDeleteName del;
         del.name = expr.nameIndex;
         del.result = r.asLValue();
         bytecodeGenerator->addInstruction(del);
     } else if (expr.type == Reference::Member) {
-        Moth::Instruction::CallBuiltinDeleteMember del;
+        Instruction::CallBuiltinDeleteMember del;
         del.base = expr.base;
         del.member = expr.nameIndex;
         del.result = r.asLValue();
         bytecodeGenerator->addInstruction(del);
     } else if (expr.type == Reference::Subscript) {
-        Moth::Instruction::CallBuiltinDeleteSubscript del;
+        Instruction::CallBuiltinDeleteSubscript del;
         del.base = expr.base;
         del.index = expr.subscript;
         del.result = r.asLValue();
@@ -1911,14 +1915,14 @@ bool Codegen::visit(NewExpression *ast)
     if (hasError)
         return false;
 
-    Reference r = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    Reference r = Reference::fromTemp(this);
     TempScope scope(_function);
 
     Reference base = expression(ast->expression);
     if (hasError)
         return false;
 
-    QV4::Moth::Instruction::CreateValue create;
+    Instruction::CreateValue create;
     create.func = base.asRValue();
     create.argc = 0;
     create.callData = 0;
@@ -1933,7 +1937,7 @@ bool Codegen::visit(NewMemberExpression *ast)
     if (hasError)
         return false;
 
-    Reference r = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    Reference r = Reference::fromTemp(this);
     TempScope scope(_function);
 
     Reference base = expression(ast->base);
@@ -1944,7 +1948,7 @@ bool Codegen::visit(NewMemberExpression *ast)
     if (hasError)
         return false;
 
-    QV4::Moth::Instruction::CreateValue create;
+    Instruction::CreateValue create;
     create.func = base.asRValue();
     create.argc = argc;
     create.callData = 0;
@@ -1992,7 +1996,7 @@ bool Codegen::visit(ObjectLiteral *ast)
 
     QMap<QString, ObjectPropertyValue> valueMap;
 
-    auto result = Reference::fromTemp(this, _block->newTemp());
+    auto result = Reference::fromTemp(this);
     TempScope scope(_function);
 
     for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
@@ -2096,7 +2100,7 @@ bool Codegen::visit(ObjectLiteral *ast)
     uint arrayGetterSetterCountAndFlags = arrayKeyWithGetterSetter.size();
     arrayGetterSetterCountAndFlags |= needSparseArray << 30;
 
-    QV4::Moth::Instruction::CallBuiltinDefineObjectLiteral call;
+    Instruction::CallBuiltinDefineObjectLiteral call;
     call.internalClassId = classId;
     call.arrayValueCount = arrayKeyWithValue.size();
     call.arrayGetterSetterCountAndFlags = arrayGetterSetterCountAndFlags;
@@ -2180,7 +2184,7 @@ bool Codegen::visit(PreDecrementExpression *ast)
         expr.store(tmp);
     } else {
         if (!tmp.isTempLocalArg()) {
-            auto tmp2 = Reference::fromTemp(this, _block->newTemp());
+            auto tmp2 = Reference::fromTemp(this);
             tmp2.store(tmp);
             tmp = tmp2;
         }
@@ -2211,7 +2215,7 @@ bool Codegen::visit(PreIncrementExpression *ast)
         expr.store(tmp);
     } else {
         if (!tmp.isTempLocalArg()) {
-            auto tmp2 = Reference::fromTemp(this, _block->newTemp());
+            auto tmp2 = Reference::fromTemp(this);
             tmp2.store(tmp);
             tmp = tmp2;
         }
@@ -2226,9 +2230,9 @@ bool Codegen::visit(RegExpLiteral *ast)
     if (hasError)
         return false;
 
-    _expr.result = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    _expr.result = Reference::fromTemp(this);
 
-    Moth::Instruction::LoadRegExp instr;
+    Instruction::LoadRegExp instr;
     instr.result = _expr.result.asLValue();
     instr.regExpId = jsUnitGenerator->registerRegExp(ast);
     bytecodeGenerator->addInstruction(instr);
@@ -2240,9 +2244,9 @@ bool Codegen::visit(StringLiteral *ast)
     if (hasError)
         return false;
 
-    _expr.result = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    _expr.result = Reference::fromTemp(this);
 
-    Moth::Instruction::LoadRuntimeString instr;
+    Instruction::LoadRuntimeString instr;
     instr.result = _expr.result.asLValue();
     instr.stringId = jsUnitGenerator->registerString(ast->value.toString());
     bytecodeGenerator->addInstruction(instr);
@@ -2254,9 +2258,9 @@ bool Codegen::visit(ThisExpression *)
     if (hasError)
         return false;
 
-    Reference r = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    Reference r = Reference::fromTemp(this);
 
-    Moth::Instruction::LoadThis loadThis;
+    Instruction::LoadThis loadThis;
     loadThis.result = r.asLValue();
     bytecodeGenerator->addInstruction(loadThis);
 
@@ -2287,7 +2291,7 @@ bool Codegen::visit(TypeOfExpression *ast)
     if (hasError)
         return false;
 
-    _expr.result = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    _expr.result = Reference::fromTemp(this);
 
     TempScope scope(_function);
 
@@ -2297,12 +2301,12 @@ bool Codegen::visit(TypeOfExpression *ast)
 
     if (expr.type == Reference::Name) {
         // special handling as typeof doesn't throw here
-        Moth::Instruction::CallBuiltinTypeofName instr;
+        Instruction::CallBuiltinTypeofName instr;
         instr.name = expr.nameIndex;
         instr.result = _expr.result.asLValue();
         bytecodeGenerator->addInstruction(instr);
     } else {
-        Moth::Instruction::CallBuiltinTypeofValue instr;
+        Instruction::CallBuiltinTypeofValue instr;
         instr.value = expr.asRValue();
         instr.result = _expr.result.asLValue();
         bytecodeGenerator->addInstruction(instr);
@@ -2382,8 +2386,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->line = loc.startLine;
     function->column = loc.startColumn;
 
-    QV4::Moth::BytecodeGenerator bytecode(function);
-    QV4::Moth::BytecodeGenerator *savedBytecodeGenerator;
+    BytecodeGenerator bytecode(function);
+    BytecodeGenerator *savedBytecodeGenerator;
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
 
@@ -2404,7 +2408,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         if (!_variableEnvironment->isStrict) {
             for (const QString &inheritedLocal : qAsConst(inheritedLocals)) {
                 function->LOCAL(inheritedLocal);
-                unsigned tempIndex = entryBlock->newTemp();
+                unsigned tempIndex = bytecodeGenerator->newTemp();
                 Environment::Member member = { Environment::UndefinedMember,
                                                static_cast<int>(tempIndex), 0,
                                                AST::VariableDeclaration::VariableScope::FunctionScope };
@@ -2437,7 +2441,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         function->currentTemp = function->tempCount;
     }
 
-    unsigned returnAddress = entryBlock->newTemp();
+    unsigned returnAddress = bytecodeGenerator->newTemp();
     auto exitBlock = bytecodeGenerator->newLabel();
 
 //###    setLocation(exitBlock->RET(exitBlock->TEMP(returnAddress)), ast->lastSourceLocation());
@@ -2485,7 +2489,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     _exitBlock.link();
 
     {
-        QV4::Moth::Instruction::Ret ret;
+        Instruction::Ret ret;
         ret.result = Reference::fromTemp(this, _returnAddress).base;
         bytecodeGenerator->addInstruction(ret);
     }
@@ -2605,9 +2609,9 @@ bool Codegen::visit(DoWhileStatement *ast)
 
     TempScope scope(_function);
 
-    Moth::BytecodeGenerator::Label body = bytecodeGenerator->label();
-    Moth::BytecodeGenerator::Label cond = bytecodeGenerator->newLabel();
-    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label body = bytecodeGenerator->label();
+    BytecodeGenerator::Label cond = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     ControlFlowLoop flow(this, &end, &cond);
 
@@ -2653,26 +2657,26 @@ bool Codegen::visit(ForEachStatement *ast)
 
     TempScope scope(_function);
 
-    Reference obj = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    Reference obj = Reference::fromTemp(this);
     Reference expr = expression(ast->expression);
     if (hasError)
         return true;
 
-    Moth::Instruction::CallBuiltinForeachIteratorObject iteratorObjInstr;
+    Instruction::CallBuiltinForeachIteratorObject iteratorObjInstr;
     iteratorObjInstr.result = obj.asLValue();
     iteratorObjInstr.arg = expr.asRValue();
     bytecodeGenerator->addInstruction(iteratorObjInstr);
 
-    Moth::BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
-    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     bytecodeGenerator->jump().link(in);
 
     ControlFlowLoop flow(this, &end, &in);
 
-    Moth::BytecodeGenerator::Label body = bytecodeGenerator->label();
+    BytecodeGenerator::Label body = bytecodeGenerator->label();
 
-    Reference it = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    Reference it = Reference::fromTemp(this);
 
     Reference init = expression(ast->initialiser);
     init.store(it);
@@ -2680,7 +2684,7 @@ bool Codegen::visit(ForEachStatement *ast)
 
     in.link();
 
-    Moth::Instruction::CallBuiltinForeachNextPropertyName nextPropInstr;
+    Instruction::CallBuiltinForeachNextPropertyName nextPropInstr;
     nextPropInstr.result = it.asLValue();
     nextPropInstr.arg = obj.asRValue();
     bytecodeGenerator->addInstruction(nextPropInstr);
@@ -2702,10 +2706,10 @@ bool Codegen::visit(ForStatement *ast)
 
     statement(ast->initialiser);
 
-    Moth::BytecodeGenerator::Label cond = bytecodeGenerator->label();
-    Moth::BytecodeGenerator::Label body = bytecodeGenerator->newLabel();
-    Moth::BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
-    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label cond = bytecodeGenerator->label();
+    BytecodeGenerator::Label body = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     ControlFlowLoop flow(this, &end, &step);
 
@@ -2730,14 +2734,14 @@ bool Codegen::visit(IfStatement *ast)
 
     TempScope scope(_function);
 
-    Moth::BytecodeGenerator::Label trueLabel = bytecodeGenerator->newLabel();
-    Moth::BytecodeGenerator::Label falseLabel = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label trueLabel = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label falseLabel = bytecodeGenerator->newLabel();
     condition(ast->expression, &trueLabel, &falseLabel, true);
 
     trueLabel.link();
     statement(ast->ok);
     if (ast->ko) {
-        Moth::BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
+        BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
         falseLabel.link();
         statement(ast->ko);
         jump_endif.link();
@@ -2776,7 +2780,7 @@ bool Codegen::visit(LabelledStatement *ast)
             AST::cast<AST::LocalForEachStatement *>(ast->statement)) {
         statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
     } else {
-        Moth::BytecodeGenerator::Label breakLabel = bytecodeGenerator->newLabel();
+        BytecodeGenerator::Label breakLabel = bytecodeGenerator->newLabel();
         ControlFlowLoop flow(this, &breakLabel);
         statement(ast->statement);
         breakLabel.link();
@@ -2792,32 +2796,32 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
     TempScope scope(_function);
 
-    Reference obj = Reference::fromTemp(this, bytecodeGenerator->newTemp());
+    Reference obj = Reference::fromTemp(this);
     Reference expr = expression(ast->expression);
     if (hasError)
         return true;
 
     variableDeclaration(ast->declaration);
 
-    Moth::Instruction::CallBuiltinForeachIteratorObject iteratorObjInstr;
+    Instruction::CallBuiltinForeachIteratorObject iteratorObjInstr;
     iteratorObjInstr.result = obj.asLValue();
     iteratorObjInstr.arg = expr.asRValue();
     bytecodeGenerator->addInstruction(iteratorObjInstr);
 
-    Moth::BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
-    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     bytecodeGenerator->jump().link(in);
     ControlFlowLoop flow(this, &end, &in);
 
-    Moth::BytecodeGenerator::Label body = bytecodeGenerator->label();
+    BytecodeGenerator::Label body = bytecodeGenerator->label();
 
     Reference it = Reference::fromName(this, ast->declaration->name.toString());
     statement(ast->statement);
 
     in.link();
 
-    Moth::Instruction::CallBuiltinForeachNextPropertyName nextPropInstr;
+    Instruction::CallBuiltinForeachNextPropertyName nextPropInstr;
     nextPropInstr.result = it.asLValue();
     nextPropInstr.arg = obj.asRValue();
     bytecodeGenerator->addInstruction(nextPropInstr);
@@ -2839,10 +2843,10 @@ bool Codegen::visit(LocalForStatement *ast)
 
     variableDeclarationList(ast->declarations);
 
-    Moth::BytecodeGenerator::Label cond = bytecodeGenerator->label();
-    Moth::BytecodeGenerator::Label body = bytecodeGenerator->newLabel();
-    Moth::BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
-    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label cond = bytecodeGenerator->label();
+    BytecodeGenerator::Label body = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     ControlFlowLoop flow(this, &end, &step);
 
@@ -2890,12 +2894,12 @@ bool Codegen::visit(SwitchStatement *ast)
     TempScope scope(_function);
 
     if (ast->block) {
-        Moth::BytecodeGenerator::Label switchEnd = bytecodeGenerator->newLabel();
+        BytecodeGenerator::Label switchEnd = bytecodeGenerator->newLabel();
 
         Reference lhs = expression(ast->expression);
 
         // set up labels for all clauses
-        QHash<Node *, Moth::BytecodeGenerator::Label> blockMap;
+        QHash<Node *, BytecodeGenerator::Label> blockMap;
         for (CaseClauses *it = ast->block->clauses; it; it = it->next)
             blockMap[it->clause] = bytecodeGenerator->newLabel();
         if (ast->block->defaultClause)
@@ -2963,7 +2967,7 @@ bool Codegen::visit(ThrowStatement *ast)
 
     Reference expr = expression(ast->expression);
 
-    Moth::Instruction::CallBuiltinThrow instr;
+    Instruction::CallBuiltinThrow instr;
     instr.arg = expr.asRValue();
     bytecodeGenerator->addInstruction(instr);
     return false;
@@ -2979,7 +2983,7 @@ void Codegen::handleTryCatch(TryStatement *ast)
     }
 
     TempScope scope(this);
-    Moth::BytecodeGenerator::Label noException = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label noException = bytecodeGenerator->newLabel();
     {
         ControlFlowCatch catchFlow(this, ast->catchExpression);
         TempScope scope(this);
@@ -3034,9 +3038,9 @@ bool Codegen::visit(WhileStatement *ast)
     if (hasError)
         return true;
 
-    Moth::BytecodeGenerator::Label start = bytecodeGenerator->newLabel();
-    Moth::BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
-    Moth::BytecodeGenerator::Label cond = bytecodeGenerator->label();
+    BytecodeGenerator::Label start = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label cond = bytecodeGenerator->label();
     ControlFlowLoop flow(this, &end, &cond);
 
     condition(ast->expression, &start, &end, true);
@@ -3066,7 +3070,7 @@ bool Codegen::visit(WithStatement *ast)
     ControlFlowWith flow(this);
     ++_function->insideWithOrCatch;
 
-    Moth::Instruction::CallBuiltinPushScope pushScope;
+    Instruction::CallBuiltinPushScope pushScope;
     pushScope.arg = src.asRValue();
     bytecodeGenerator->addInstruction(pushScope);
 
@@ -3233,8 +3237,6 @@ void Codegen::Reference::storeConsume(Reference &r) const
     if (*this == r)
         return;
 
-    writeBack();
-
     if (!isSimple() && !r.isSimple()) {
         r.asRValue(); // trigger load
 
@@ -3273,7 +3275,7 @@ void Codegen::Reference::store(const Reference &r) const
     }
 
     if (r.type == Const) {
-        QV4::Moth::Instruction::MoveConst move;
+        Instruction::MoveConst move;
         move.source = r.constant;
         move.result = b;
         codegen->bytecodeGenerator->addInstruction(move);
@@ -3281,7 +3283,7 @@ void Codegen::Reference::store(const Reference &r) const
     }
     Moth::Param x = r.asRValue();
     Q_ASSERT(base != x);
-    QV4::Moth::Instruction::Move move;
+    Instruction::Move move;
     move.source = x;
     move.result = b;
     codegen->bytecodeGenerator->addInstruction(move);
@@ -3300,12 +3302,12 @@ Moth::Param Codegen::Reference::asRValue() const
         tempIndex = codegen->bytecodeGenerator->newTemp();
     Moth::Param temp = Moth::Param::createTemp(tempIndex);
     if (type == Const) {
-        QV4::Moth::Instruction::MoveConst move;
+        Instruction::MoveConst move;
         move.source = constant;
         move.result = temp;
         codegen->bytecodeGenerator->addInstruction(move);
     } else if (type == Name) {
-        QV4::Moth::Instruction::LoadName load;
+        Instruction::LoadName load;
         load.name = nameIndex;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
@@ -3318,19 +3320,19 @@ Moth::Param Codegen::Reference::asRValue() const
 //            addInstruction(load);
 //            return;
 //        }
-        QV4::Moth::Instruction::LoadProperty load;
+        Instruction::LoadProperty load;
         load.base = base;
         load.name = nameIndex;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
     } else if (type == Subscript) {
-        QV4::Moth::Instruction::LoadElement load;
+        Instruction::LoadElement load;
         load.base = base;
         load.index = subscript;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
     } else if (type == Closure) {
-        QV4::Moth::Instruction::LoadClosure load;
+        Instruction::LoadClosure load;
         load.value = closureId;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
@@ -3365,7 +3367,7 @@ void Codegen::Reference::writeBack() const
 
     Moth::Param temp = Moth::Param::createTemp(tempIndex);
     if (type == Name) {
-        QV4::Moth::Instruction::StoreName store;
+        Instruction::StoreName store;
         store.source = temp;
         store.name = nameIndex;
         codegen->bytecodeGenerator->addInstruction(store);
@@ -3378,13 +3380,13 @@ void Codegen::Reference::writeBack() const
 //            addInstruction(store);
 //            return;
 //        }
-        QV4::Moth::Instruction::StoreProperty store;
+        Instruction::StoreProperty store;
         store.base = base;
         store.name = nameIndex;
         store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
     } else if (type == Subscript) {
-        QV4::Moth::Instruction::StoreElement store;
+        Instruction::StoreElement store;
         store.base = base;
         store.index = subscript;
         store.source = temp;
