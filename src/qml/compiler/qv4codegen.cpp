@@ -136,9 +136,10 @@ struct ControlFlow {
         case Throw:
             return { type, QString(), cg->_exitBlock, -1, 0 };
         case Invalid:
-            Q_ASSERT(false);
-            Q_UNREACHABLE();
+            break;
         }
+        Q_ASSERT(false);
+        Q_UNREACHABLE();
     }
 
     virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
@@ -366,58 +367,6 @@ static inline void setLocation(IR::Stmt *s, const SourceLocation &loc)
 {
     if (s && loc.isValid())
         s->location = loc;
-}
-
-static bool cjumpCanHandle(IR::AluOp op)
-{
-    switch (op) {
-    case IR::OpIn:
-    case IR::OpInstanceof:
-    case IR::OpEqual:
-    case IR::OpNotEqual:
-    case IR::OpGe:
-    case IR::OpGt:
-    case IR::OpLe:
-    case IR::OpLt:
-    case IR::OpStrictEqual:
-    case IR::OpStrictNotEqual:
-        return true;
-    default:
-        return false;
-    }
-}
-
-static inline void setJumpOutLocation(IR::Stmt *s, const Statement *body,
-                                      const SourceLocation &fallback)
-{
-    switch (body->kind) {
-    // Statements where we might never execute the last line.
-    // Use the fallback.
-    case Statement::Kind_ConditionalExpression:
-    case Statement::Kind_ForEachStatement:
-    case Statement::Kind_ForStatement:
-    case Statement::Kind_IfStatement:
-    case Statement::Kind_LocalForEachStatement:
-    case Statement::Kind_LocalForStatement:
-    case Statement::Kind_WhileStatement:
-        setLocation(s, fallback);
-        break;
-    default:
-        setLocation(s, body->lastSourceLocation());
-        break;
-    }
-}
-
-static inline bool isSimpleExpr(IR::Expr *e)
-{
-    switch (e->exprKind) {
-    case IR::Expr::TempExpr:
-    case IR::Expr::ArgLocalExpr:
-    case IR::Expr::ConstExpr:
-        return true;
-    default:
-        return false;
-    }
 }
 
 static inline QV4::Runtime::RuntimeMethods aluOpFunction(IR::AluOp op)
@@ -918,32 +867,9 @@ void Codegen::leaveEnvironment()
     _variableEnvironment = _variableEnvironment->parent;
 }
 
-IR::Expr *Codegen::argument(IR::Expr *expr)
-{
-    if (expr && !expr->asTemp()) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), expr);
-        expr = _block->TEMP(t);
-    }
-    return expr;
-}
-
-// keeps references alive, converts other expressions to temps
-IR::Expr *Codegen::reference(IR::Expr *expr)
-{
-    if (hasError)
-        return 0;
-
-    if (expr && !expr->asTemp() && !expr->asArgLocal() && !expr->asName() && !expr->asMember() && !expr->asSubscript()) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), expr);
-        expr = _block->TEMP(t);
-    }
-    return expr;
-}
-
 Codegen::Reference Codegen::unop(IR::AluOp op, const Reference &expr, const SourceLocation &loc)
 {
+    Q_UNUSED(loc);
     if (hasError)
         return _expr.result;
 
@@ -1017,99 +943,12 @@ Codegen::Reference Codegen::unop(IR::AluOp op, const Reference &expr, const Sour
     return dest;
 }
 
-IR::Expr *Codegen::binop(IR::AluOp op, IR::Expr *left, IR::Expr *right, const AST::SourceLocation &loc)
-{
-    if (hasError)
-        return 0;
-
-    TempScope scope(_function);
-
-    if (IR::Const *c1 = left->asConst()) {
-        if (IR::Const *c2 = right->asConst()) {
-            if ((c1->type & IR::NumberType) && (c2->type & IR::NumberType)) {
-                switch (op) {
-                case IR::OpAdd: return _block->CONST(IR::NumberType, c1->value + c2->value);
-                case IR::OpAnd: return _block->CONST(IR::BoolType, c1->value ? c2->value : 0);
-                case IR::OpBitAnd: return _block->CONST(IR::NumberType, int(c1->value) & int(c2->value));
-                case IR::OpBitOr: return _block->CONST(IR::NumberType, int(c1->value) | int(c2->value));
-                case IR::OpBitXor: return _block->CONST(IR::NumberType, int(c1->value) ^ int(c2->value));
-                case IR::OpDiv: return _block->CONST(IR::NumberType, c1->value / c2->value);
-                case IR::OpEqual: return _block->CONST(IR::BoolType, c1->value == c2->value);
-                case IR::OpNotEqual: return _block->CONST(IR::BoolType, c1->value != c2->value);
-                case IR::OpStrictEqual: return _block->CONST(IR::BoolType, c1->value == c2->value);
-                case IR::OpStrictNotEqual: return _block->CONST(IR::BoolType, c1->value != c2->value);
-                case IR::OpGe: return _block->CONST(IR::BoolType, c1->value >= c2->value);
-                case IR::OpGt: return _block->CONST(IR::BoolType, c1->value > c2->value);
-                case IR::OpLe: return _block->CONST(IR::BoolType, c1->value <= c2->value);
-                case IR::OpLt: return _block->CONST(IR::BoolType, c1->value < c2->value);
-                case IR::OpLShift: return _block->CONST(IR::NumberType, QV4::Primitive::toInt32(c1->value) << (QV4::Primitive::toUInt32(c2->value) & 0x1f));
-                case IR::OpMod: return _block->CONST(IR::NumberType, std::fmod(c1->value, c2->value));
-                case IR::OpMul: return _block->CONST(IR::NumberType, c1->value * c2->value);
-                case IR::OpOr: return _block->CONST(IR::NumberType, c1->value ? c1->value : c2->value);
-                case IR::OpRShift: return _block->CONST(IR::NumberType, QV4::Primitive::toInt32(c1->value) >> (QV4::Primitive::toUInt32(c2->value) & 0x1f));
-                case IR::OpSub: return _block->CONST(IR::NumberType, c1->value - c2->value);
-                case IR::OpURShift: return _block->CONST(IR::NumberType,QV4::Primitive::toUInt32(c1->value) >> (QV4::Primitive::toUInt32(c2->value) & 0x1f));
-
-                case IR::OpInstanceof:
-                case IR::OpIn:
-                    break;
-
-                case IR::OpIfTrue: // unary ops
-                case IR::OpNot:
-                case IR::OpUMinus:
-                case IR::OpUPlus:
-                case IR::OpCompl:
-                case IR::OpIncrement:
-                case IR::OpDecrement:
-                case IR::OpInvalid:
-                    break;
-                }
-            }
-        }
-    } else if (op == IR::OpAdd) {
-        if (IR::String *s1 = left->asString()) {
-            if (IR::String *s2 = right->asString()) {
-                return _block->STRING(_function->newString(*s1->value + *s2->value));
-            }
-        }
-    }
-
-    if (!left->asTemp() && !left->asArgLocal() && !left->asConst()) {
-        const unsigned t = _block->newTemp();
-        setLocation(move(_block->TEMP(t), left), loc);
-        left = _block->TEMP(t);
-    }
-
-    if (!right->asTemp() && !right->asArgLocal() && !right->asConst()) {
-        const unsigned t = _block->newTemp();
-        setLocation(move(_block->TEMP(t), right), loc);
-        right = _block->TEMP(t);
-    }
-
-    Q_ASSERT(left->asTemp() || left->asArgLocal() || left->asConst());
-    Q_ASSERT(right->asTemp() || right->asArgLocal() || right->asConst());
-
-    return _block->BINOP(op, left, right);
-}
-
-IR::Expr *Codegen::call(IR::Expr *base, IR::ExprList *args)
-{
-    if (hasError)
-        return 0;
-    base = reference(base);
-    return _block->CALL(base, args);
-}
-
-IR::Stmt *Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
+IR::Stmt *Codegen::move(IR::Expr *target, IR::Expr *source)
 {
     if (hasError)
         return 0;
 
     Q_ASSERT(target->isLValue());
-
-    if (op != IR::OpInvalid) {
-        return move(target, binop(op, target, source));
-    }
 
     TempScope scope(_function);
 
@@ -1125,21 +964,6 @@ IR::Stmt *Codegen::move(IR::Expr *target, IR::Expr *source, IR::AluOp op)
     }
 
     return _block->MOVE(target, source);
-}
-
-IR::Stmt *Codegen::cjump(IR::Expr *cond, IR::BasicBlock *iftrue, IR::BasicBlock *iffalse)
-{
-    if (hasError)
-        return 0;
-
-    TempScope scope(_function);
-
-    if (! (cond->asTemp() || (cond->asBinop() && cjumpCanHandle(cond->asBinop()->op)) )) {
-        const unsigned t = _block->newTemp();
-        move(_block->TEMP(t), cond);
-        cond = _block->TEMP(t);
-    }
-    return _block->CJUMP(cond, iftrue, iffalse);
 }
 
 void Codegen::accept(Node *node)
@@ -1483,8 +1307,6 @@ bool Codegen::visit(ArrayLiteral *ast)
         argc += 1;
     };
 
-    IR::ExprList *args = 0;
-    IR::ExprList *current = 0;
     for (ElementList *it = ast->elements; it; it = it->next) {
         for (Elision *elision = it->elision; elision; elision = elision->next)
             push(undefined());
@@ -2429,7 +2251,7 @@ bool Codegen::visit(StringLiteral *ast)
     return false;
 }
 
-bool Codegen::visit(ThisExpression *ast)
+bool Codegen::visit(ThisExpression *)
 {
     if (hasError)
         return false;
@@ -3097,7 +2919,7 @@ bool Codegen::visit(SwitchStatement *ast)
         }
 
         if (DefaultClause *defaultClause = ast->block->defaultClause)
-            bytecodeGenerator->jump().link(blockMap.value(ast->block->defaultClause));
+            bytecodeGenerator->jump().link(blockMap.value(defaultClause));
         else
             bytecodeGenerator->jump().link(switchEnd);
 
@@ -3392,7 +3214,7 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         return false;
     switch (type) {
     case Invalid:
-        return true;
+        break;
     case Temp:
     case Local:
     case Argument:
@@ -3405,7 +3227,10 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         return base == other.base && subscript == other.subscript;
     case Const:
         return constant == other.constant;
+    case Closure:
+        return closureId == other.closureId;
     }
+    return true;
 }
 
 void Codegen::Reference::storeConsume(Reference &r) const

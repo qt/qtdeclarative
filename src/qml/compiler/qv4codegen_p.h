@@ -428,13 +428,8 @@ protected:
 
     void leaveLoop();
 
-    QV4::IR::Expr *argument(QV4::IR::Expr *expr);
-    QV4::IR::Expr *reference(QV4::IR::Expr *expr);
     Reference unop(QV4::IR::AluOp op, const Reference &expr, const AST::SourceLocation &loc = AST::SourceLocation());
-    QV4::IR::Expr *binop(QV4::IR::AluOp op, QV4::IR::Expr *left, QV4::IR::Expr *right, const AST::SourceLocation &loc = AST::SourceLocation());
-    QV4::IR::Expr *call(QV4::IR::Expr *base, QV4::IR::ExprList *args);
-    QV4::IR::Stmt *move(QV4::IR::Expr *target, QV4::IR::Expr *source, QV4::IR::AluOp op = QV4::IR::OpInvalid);
-    QV4::IR::Stmt *cjump(QV4::IR::Expr *cond, QV4::IR::BasicBlock *iftrue, QV4::IR::BasicBlock *iffalse);
+    QV4::IR::Stmt *move(QV4::IR::Expr *target, QV4::IR::Expr *source);
 
     // Returns index in _module->functions
     int defineFunction(const QString &name, AST::Node *ast,
