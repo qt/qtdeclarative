@@ -12,21 +12,19 @@ Item {
                 width: 200
                 height: 100
 
-                PathItem {
+                Shape {
                     anchors.fill: parent
-                    enableVendorExtensions: false
+                    vendorExtensionsEnabled: false
 
-                    VisualPath {
+                    ShapePath {
                         strokeWidth: (model.index + 2) * 2
                         strokeColor: "black"
                         fillColor: "lightBlue"
 
-                        Path {
-                            startX: 50; startY: 100
-                            PathQuad {
-                                x: 150; y: 100
-                                controlX: model.index * 10; controlY: model.index * 5
-                            }
+                        startX: 50; startY: 100
+                        PathQuad {
+                            x: 150; y: 100
+                            controlX: model.index * 10; controlY: model.index * 5
                         }
                     }
                 }
