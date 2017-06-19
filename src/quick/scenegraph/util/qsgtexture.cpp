@@ -256,13 +256,15 @@ static void qt_debug_remove_texture(QSGTexture* texture)
 
     Specifies how the texture should treat texture coordinates.
 
-    \note Texture wrapping needs to be handled explicitly for atlas textures.
-
-    \value Repeat Only the factional part of the texture coordiante is
+    \value Repeat Only the fractional part of the texture coordinate is
     used, causing values above 1 and below 0 to repeat.
 
     \value ClampToEdge Values above 1 are clamped to 1 and values
     below 0 are clamped to 0.
+
+    \value MirroredRepeat When the texture coordinate is even, only the
+    fractional part is used. When odd, the texture coordinate is set to
+    \c{1 - fractional part}. This value has been introduced in Qt 5.10.
  */
 
 /*!
@@ -607,7 +609,9 @@ void QSGTexture::updateBindOptions(bool force)
 
     if (force || d->wrapChanged) {
 #ifndef QT_NO_DEBUG
-        if (d->horizontalWrap == Repeat || d->verticalWrap == Repeat) {
+        if (d->horizontalWrap == Repeat || d->verticalWrap == Repeat
+            || d->horizontalWrap == MirroredRepeat || d->verticalWrap == MirroredRepeat)
+        {
             bool npotSupported = QOpenGLFunctions(QOpenGLContext::currentContext()).hasOpenGLFeature(QOpenGLFunctions::NPOTTextures);
             QSize size = textureSize();
             bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
@@ -615,8 +619,18 @@ void QSGTexture::updateBindOptions(bool force)
                 qWarning("Scene Graph: This system does not support the REPEAT wrap mode for non-power-of-two textures.");
         }
 #endif
-        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, d->horizontalWrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, d->verticalWrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+        GLenum wrapS = GL_CLAMP_TO_EDGE;
+        if (d->horizontalWrap == Repeat)
+            wrapS = GL_REPEAT;
+        else if (d->horizontalWrap == MirroredRepeat)
+            wrapS = GL_MIRRORED_REPEAT;
+        GLenum wrapT = GL_CLAMP_TO_EDGE;
+        if (d->verticalWrap == Repeat)
+            wrapT = GL_REPEAT;
+        else if (d->verticalWrap == MirroredRepeat)
+            wrapT = GL_MIRRORED_REPEAT;
+        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
+        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
         d->wrapChanged = false;
     }
 #else

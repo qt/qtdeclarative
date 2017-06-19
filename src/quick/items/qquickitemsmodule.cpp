@@ -376,6 +376,12 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickFlickable, 9>(uri, 2, 9, "Flickable");
     qmlRegisterType<QQuickMouseArea, 9>(uri, 2, 9, "MouseArea");
+
+#if QT_CONFIG(quick_path)
+    qmlRegisterType<QQuickPathArc, 2>(uri, 2, 9, "PathArc");
+    qmlRegisterType<QQuickPathMove>(uri, 2, 9, "PathMove");
+#endif
+
     qmlRegisterType<QQuickText, 9>(uri, 2, 9, "Text");
     qmlRegisterType<QQuickTextInput, 9>(uri, 2, 9, "TextInput");
     qmlRegisterType<QQuickTouchPoint>(uri, 2, 9, "TouchPoint");
