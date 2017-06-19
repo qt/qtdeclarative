@@ -134,7 +134,10 @@ public:
             : type(Invalid)
             , codegen(nullptr)
         {}
+        Reference(const Reference &other);
         ~Reference();
+
+        Reference &operator =(const Reference &other);
 
         bool operator==(const Reference &other) const;
 
@@ -206,6 +209,7 @@ public:
         QV4::Moth::Param asLValue() const;
 
         void writeBack() const;
+        void load(uint temp) const;
 
         QV4::Moth::Param base;
         union {

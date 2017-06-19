@@ -2320,6 +2320,7 @@ bool Codegen::visit(TypeOfExpression *ast)
         instr.result = _expr.result.asLValue();
         bytecodeGenerator->addInstruction(instr);
     }
+
     return false;
 }
 
@@ -3202,6 +3203,47 @@ void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const Q
 
 #endif // V4_BOOTSTRAP
 
+Codegen::Reference::Reference(const Codegen::Reference &other)
+{
+    *this = other;
+}
+
+Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
+{
+    other.writeBack();
+
+    type = other.type;
+    base = other.base;
+
+    switch (type) {
+    case Invalid:
+        break;
+    case Temp:
+    case Local:
+    case Argument:
+        break;
+    case Name:
+    case Member:
+        nameIndex = other.nameIndex;
+        break;
+    case Subscript:
+        subscript = other.subscript;
+        break;
+    case Const:
+        constant = other.constant;
+        break;
+    case Closure:
+        closureId = other.closureId;
+        break;
+    }
+
+    // keep loaded reference
+    tempIndex = other.tempIndex;
+    needsWriteBack = false;
+    codegen = other.codegen;
+    return *this;
+}
+
 Codegen::Reference::~Reference()
 {
     writeBack();
@@ -3253,20 +3295,17 @@ void Codegen::Reference::storeConsume(Reference &r) const
 void Codegen::Reference::store(const Reference &r) const
 {
     Q_ASSERT(type != Const);
+    Q_ASSERT(!needsWriteBack);
 
     if (*this == r)
         return;
-
-    writeBack();
 
     Moth::Param b = base;
     if (!isSimple()) {
         if (tempIndex < 0)
             tempIndex = codegen->bytecodeGenerator->newTemp();
         if (!r.isSimple() && r.tempIndex == -1) {
-            r.tempIndex = tempIndex;
-            r.asRValue(); // trigger load
-            r.tempIndex = -1;
+            r.load(tempIndex);
             needsWriteBack = true;
             return;
         }
@@ -3291,56 +3330,18 @@ void Codegen::Reference::store(const Reference &r) const
 
 Moth::Param Codegen::Reference::asRValue() const
 {
-    writeBack(); // because of possible side effects
+    Q_ASSERT(!needsWriteBack);
 
     Q_ASSERT(type != Invalid);
     if (type <= Argument)
         return base;
 
     // need a temp to hold the value
-    if (tempIndex < 0)
-        tempIndex = codegen->bytecodeGenerator->newTemp();
-    Moth::Param temp = Moth::Param::createTemp(tempIndex);
-    if (type == Const) {
-        Instruction::MoveConst move;
-        move.source = constant;
-        move.result = temp;
-        codegen->bytecodeGenerator->addInstruction(move);
-    } else if (type == Name) {
-        Instruction::LoadName load;
-        load.name = nameIndex;
-        load.result = temp;
-        codegen->bytecodeGenerator->addInstruction(load);
-    } else if (type == Member) {
-//        if (useFastLookups) {
-//            Instruction::GetLookup load;
-//            load.base = getParam(base);
-//            load.index = registerGetterLookup(name);
-//            load.result = getResultParam(target);
-//            addInstruction(load);
-//            return;
-//        }
-        Instruction::LoadProperty load;
-        load.base = base;
-        load.name = nameIndex;
-        load.result = temp;
-        codegen->bytecodeGenerator->addInstruction(load);
-    } else if (type == Subscript) {
-        Instruction::LoadElement load;
-        load.base = base;
-        load.index = subscript;
-        load.result = temp;
-        codegen->bytecodeGenerator->addInstruction(load);
-    } else if (type == Closure) {
-        Instruction::LoadClosure load;
-        load.value = closureId;
-        load.result = temp;
-        codegen->bytecodeGenerator->addInstruction(load);
-    } else {
-        Q_ASSERT(false);
-        Q_UNREACHABLE();
-    }
-    return temp;
+    if (tempIndex >= 0)
+        return Moth::Param::createTemp(tempIndex);
+    tempIndex = codegen->bytecodeGenerator->newTemp();
+    load(tempIndex);
+    return Moth::Param::createTemp(tempIndex);
 }
 
 Moth::Param Codegen::Reference::asLValue() const
@@ -3391,6 +3392,50 @@ void Codegen::Reference::writeBack() const
         store.index = subscript;
         store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
+    } else {
+        Q_ASSERT(false);
+        Q_UNREACHABLE();
+    }
+}
+
+void Codegen::Reference::load(uint tmp) const
+{
+    Moth::Param temp = Moth::Param::createTemp(tmp);
+    if (type == Const) {
+        Instruction::MoveConst move;
+        move.source = constant;
+        move.result = temp;
+        codegen->bytecodeGenerator->addInstruction(move);
+    } else if (type == Name) {
+        Instruction::LoadName load;
+        load.name = nameIndex;
+        load.result = temp;
+        codegen->bytecodeGenerator->addInstruction(load);
+    } else if (type == Member) {
+//        if (useFastLookups) {
+//            Instruction::GetLookup load;
+//            load.base = getParam(base);
+//            load.index = registerGetterLookup(name);
+//            load.result = getResultParam(target);
+//            addInstruction(load);
+//            return;
+//        }
+        Instruction::LoadProperty load;
+        load.base = base;
+        load.name = nameIndex;
+        load.result = temp;
+        codegen->bytecodeGenerator->addInstruction(load);
+    } else if (type == Subscript) {
+        Instruction::LoadElement load;
+        load.base = base;
+        load.index = subscript;
+        load.result = temp;
+        codegen->bytecodeGenerator->addInstruction(load);
+    } else if (type == Closure) {
+        Instruction::LoadClosure load;
+        load.value = closureId;
+        load.result = temp;
+        codegen->bytecodeGenerator->addInstruction(load);
     } else {
         Q_ASSERT(false);
         Q_UNREACHABLE();
