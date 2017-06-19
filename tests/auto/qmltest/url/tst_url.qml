@@ -1,22 +1,12 @@
 /****************************************************************************
 **
 ** Copyright (C) 2017 The Qt Company Ltd.
-** Contact: https://www.qt.io/licensing/
+** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** Commercial License Usage
-** Licensees holding valid commercial Qt licenses may use this file in
-** accordance with the commercial license agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see https://www.qt.io/terms-conditions. For further
-** information use the contact form at https://www.qt.io/contact-us.
-**
-** BSD License Usage
-** Alternatively, you may use this file under the terms of the BSD license
-** as follows:
+** You may use this file under the terms of the BSD license as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -47,25 +37,26 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-//! [backend_cpp]
-#include "backend.h"
 
-BackEnd::BackEnd(QObject *parent) :
-    QObject(parent)
-{
+import QtQuick 2.2
+import QtTest 1.1
+
+Item {
+    TestCase {
+        name: "URL"
+        property url path1: "path1"
+        property url path2: "path2"
+
+        function test_url_compare() {
+            expectFail("", "compare() should fail here; if it passes we have QTBUG-61297")
+            compare(path1, path2)
+        }
+        function test_url_compare_string() {
+            expectFail("", "compare() should fail here")
+            compare(path1.toString(), path2.toString())
+        }
+        function test_url_verify() {
+            verify(path1 != path2)
+        }
+    }
 }
-
-QString BackEnd::userName()
-{
-    return m_userName;
-}
-
-void BackEnd::setUserName(const QString &userName)
-{
-    if (userName == m_userName)
-        return;
-
-    m_userName = userName;
-    emit userNameChanged();
-}
-//! [backend_cpp]

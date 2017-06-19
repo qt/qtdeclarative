@@ -254,6 +254,7 @@ private slots:
     void keyNavigationEnabled();
     void QTBUG_50097_stickyHeader_positionViewAtIndex();
     void itemFiltered();
+    void releaseItems();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -8506,6 +8507,18 @@ void tst_QQuickListView::itemFiltered()
 
     // this should not crash
     model.setData(model.index(2), QStringLiteral("modified three"), Qt::DisplayRole);
+}
+
+void tst_QQuickListView::releaseItems()
+{
+    QScopedPointer<QQuickView> view(createView());
+    view->setSource(testFileUrl("releaseItems.qml"));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(view->rootObject());
+    QVERIFY(listview);
+
+    // don't crash (QTBUG-61294)
+    listview->setModel(123);
 }
 
 QTEST_MAIN(tst_QQuickListView)

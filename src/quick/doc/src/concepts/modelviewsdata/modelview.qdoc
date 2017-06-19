@@ -87,6 +87,7 @@ To visualize data, bind the view's \c model property to a model and the
     The club may decorate the members list by binding visual objects to the \c
     header and \c footer properties. The visual object may be defined inline, in
     another file, or in a \l {Component} type.
+
     \snippet qml/listview-decorations.qml decorations
     \image listview-decorations.png
 
@@ -101,7 +102,6 @@ To visualize data, bind the view's \c model property to a model and the
     currentIndex will be affected by dragging/flicking the view, since the view
     will always ensure that the \c currentIndex is within the highlight range
     specified.
-
 
     \section2 ListView Sections
 
@@ -195,7 +195,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     Positioning of items from a model can be achieved using a \l{Repeater}.
 
-    \section2 ListModel
+    \section2 List Model
 
     ListModel is a simple hierarchy of types specified in QML.  The
     available roles are specified by the \l ListElement properties.
@@ -222,7 +222,7 @@ To visualize data, bind the view's \c model property to a model and the
     using the model. To reset the roles available in the model, call ListModel::clear().
 
 
-    \section2 XmlListModel
+    \section2 XML Model
 
     XmlListModel allows construction of a model from an XML data source. The roles
     are specified via the \l XmlRole type. The type needs to be imported.
@@ -244,23 +244,44 @@ To visualize data, bind the view's \c model property to a model and the
     }
     \endqml
 
+    The \c query property specifies that the XmlListModel generates a model item
+    for each \c <item> in the XML document.
+
     The \l{Qt Quick Demo - RSS News}{RSS News demo} shows how XmlListModel can
     be used to display an RSS feed.
 
 
-    \section2 VisualItemModel
+    \section2 Object Model
 
-    VisualItemModel allows QML items to be provided as a model.
+    ObjectModel contains the visual items to be used in a view. When an ObjectModel
+    is used in a view, the view does not require a delegate because the ObjectModel
+    already contains the visual delegate (items).
 
-    This model contains both the data and delegate; the child items of a
-    VisualItemModel provide the contents of the delegate. The model
-    does not provide any roles.
+    The example below places three colored rectangles in a ListView.
 
-    \snippet qml/models/visual-model-and-view.qml visual model and view
+    \code
+    import QtQuick 2.0
+    import QtQml.Models 2.1
 
-    Note that in the above example there is no delegate required.
-    The items of the model itself provide the visual types that
-    will be positioned by the view.
+    Rectangle {
+        ObjectModel {
+            id: itemModel
+            Rectangle { height: 30; width: 80; color: "red" }
+            Rectangle { height: 30; width: 80; color: "green" }
+            Rectangle { height: 30; width: 80; color: "blue" }
+        }
+
+        ListView {
+            anchors.fill: parent
+            model: itemModel
+        }
+    }
+    \endcode
+
+    \note VisualItemModel can also be used, but it is only provided for compatibility
+    reasons.  VisualItemModel allows a QML item to be provided as a model. This model
+    contains both the data and delegate; the child items of a VisualItemModel
+    provide the contents of the delegate. The model does not provide any roles.
 
     \section2 Integers as Models
 
@@ -357,8 +378,18 @@ rectangles for the Grid item to position in a 5 by 5 arrangement.
 The number of items created by a Repeater is held by its \l{Repeater::}{count}
 property. It is not possible to set this property to determine the number of
 items to be created. Instead, as in the above example, we use an integer as
-the model. This is explained in the \l{qtquick-modelviewsdata-modelview.html#integers-as-models}{QML Data Models}
-document.
+the model.
+
+For more details, see the \l{qtquick-modelviewsdata-modelview.html#integers-as-models}{QML Data Models} document.
+
+If the model is a string list, the delegate is also exposed to a read-only
+\c modelData property that holds the string. For example:
+
+\table
+   \row
+   \li \snippet qml/repeaters/repeater.qml modeldata
+   \li \image repeater-modeldata.png
+\endtable
 
 It is also possible to use a delegate as the template for the items created
 by a Repeater. This is specified using the \l{Repeater::}{delegate} property.

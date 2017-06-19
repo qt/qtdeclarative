@@ -284,6 +284,7 @@ bool QQuickRenderControl::sync()
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
     cd->syncSceneGraph();
+    d->rc->endSync();
 
     // TODO: find out if the sync actually caused a scenegraph update.
     return true;
@@ -383,6 +384,7 @@ QImage QQuickRenderControl::grab()
         QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
         cd->polishItems();
         cd->syncSceneGraph();
+        d->rc->endSync();
         render();
         grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
         if (QQuickRenderControl::renderWindowFor(d->window)) {
@@ -402,6 +404,7 @@ QImage QQuickRenderControl::grab()
             softwareRenderer->markDirty();
             cd->polishItems();
             cd->syncSceneGraph();
+            d->rc->endSync();
             render();
             softwareRenderer->setCurrentPaintDevice(prevDev);
         }

@@ -47,7 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
+//! [backend_header]
 #ifndef BACKEND_H
 #define BACKEND_H
 
@@ -73,3 +73,4 @@ private:
 };
 
 #endif // BACKEND_H
+//! [backend_header]

@@ -753,6 +753,10 @@ Item {
             bProperties.push(i); // collect exp's properties
         }
 
+        if (aProperties.length == 0 && bProperties.length == 0) { // at least a special case for QUrl
+            return eq && (JSON.stringify(act) == JSON.stringify(exp));
+        }
+
         // Ensures identical properties name
         return eq && qtest_compareInternal(aProperties.sort(), bProperties.sort());
 

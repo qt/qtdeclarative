@@ -209,6 +209,7 @@ private slots:
     void QTBUG_48870_fastModelUpdates();
 
     void keyNavigationEnabled();
+    void releaseItems();
 
 private:
     QList<int> toIntList(const QVariantList &list);
@@ -6664,6 +6665,18 @@ void tst_QQuickGridView::QTBUG_48870_fastModelUpdates()
                 flick(window.data(), QPoint(100, 200), QPoint(100, 400), 100);
         }
     }
+}
+
+void tst_QQuickGridView::releaseItems()
+{
+    QScopedPointer<QQuickView> view(createView());
+    view->setSource(testFileUrl("releaseItems.qml"));
+
+    QQuickGridView *gridview = qobject_cast<QQuickGridView *>(view->rootObject());
+    QVERIFY(gridview);
+
+    // don't crash (QTBUG-61294)
+    gridview->setModel(123);
 }
 
 QTEST_MAIN(tst_QQuickGridView)

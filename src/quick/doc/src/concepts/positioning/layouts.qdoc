@@ -133,6 +133,5 @@ control of spacing between items and between lines of items.
 There are several other ways to position items in a user interface. In addition
 to the basic technique of specifying their coordinates directly, they can be
 positioned relative to other items with \l{anchor-layout}{anchors}, or used
-with \l{QML Data Models} such as
-\l{QML Data Models#VisualItemModel}{VisualItemModel}.
+with \l{QML Data Models} such as \l{QML Data Models#Object Model}{Object Model}.
 */
