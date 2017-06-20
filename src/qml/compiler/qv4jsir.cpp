@@ -90,8 +90,10 @@ const char *opname(AluOp op)
     case OpUMinus: return "neg";
     case OpUPlus: return "plus";
     case OpCompl: return "invert";
-    case OpIncrement: return "incr";
-    case OpDecrement: return "decr";
+    case OpPreIncrement: return "pre-incr";
+    case OpPreDecrement: return "pre-decr";
+    case OpPostIncrement: return "post-incr";
+    case OpPostDecrement: return "post-decr";
 
     case OpBitAnd: return "bitand";
     case OpBitOr: return "bitor";

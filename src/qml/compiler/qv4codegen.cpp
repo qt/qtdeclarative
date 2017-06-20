@@ -924,10 +924,8 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
                 return expr;
             case Compl:
                 return Reference::fromConst(this, Runtime::method_complement(v));
-            case Increment:
-                return Reference::fromConst(this, Runtime::method_increment(v));
-            case Decrement:
-                return Reference::fromConst(this, Runtime::method_decrement(v));
+            default:
+                break;
             }
         }
     }
@@ -960,17 +958,35 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         ucompl.result = dest.asLValue();
         bytecodeGenerator->addInstruction(ucompl);
     } break;
-    case Increment: {
-        Instruction::Increment inc;
+    case PreIncrement: {
+        Instruction::PreIncrement inc;
         inc.source = expr.asRValue();
         inc.result = dest.asLValue();
         bytecodeGenerator->addInstruction(inc);
+        expr.store(dest);
     } break;
-    case Decrement: {
-        Instruction::Decrement dec;
+    case PreDecrement: {
+        Instruction::PreDecrement dec;
         dec.source = expr.asRValue();
         dec.result = dest.asLValue();
         bytecodeGenerator->addInstruction(dec);
+        expr.store(dest);
+    } break;
+    case PostIncrement: {
+        Instruction::PostIncrement inc;
+        inc.source = expr.asRValue();
+        inc.result = dest.asLValue();
+        bytecodeGenerator->addInstruction(inc);
+        expr.asLValue(); // mark expr as needsWriteBack
+        expr.writeBack();
+    } break;
+    case PostDecrement: {
+        Instruction::PostDecrement dec;
+        dec.source = expr.asRValue();
+        dec.result = dest.asLValue();
+        bytecodeGenerator->addInstruction(dec);
+        expr.asLValue(); // mark expr as needsWriteBack
+        expr.writeBack();
     } break;
     }
 
@@ -2175,13 +2191,7 @@ bool Codegen::visit(PostDecrementExpression *ast)
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
         return false;
 
-    Reference oldValue = unop(UPlus, expr);
-
-    TempScope scope(this);
-    Reference newValue = unop(Decrement, oldValue);
-    expr.store(newValue);
-
-    _expr.result = oldValue;
+    _expr.result = unop(PostDecrement, expr);
 
     return false;
 }
@@ -2201,14 +2211,7 @@ bool Codegen::visit(PostIncrementExpression *ast)
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
         return false;
 
-    Reference oldValue = unop(UPlus, expr);
-
-    TempScope scope(this);
-    Reference newValue = unop(Increment, oldValue);
-    expr.store(newValue);
-
-    _expr.result = oldValue;
-
+    _expr.result = unop(PostIncrement, expr);
     return false;
 }
 
@@ -2226,19 +2229,7 @@ bool Codegen::visit(PreDecrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
         return false;
-    auto tmp = unop(Decrement, expr);
-    if (_expr.accept(nx)) {
-        bytecodeGenerator->setLocation(ast->decrementToken);
-        expr.store(tmp);
-    } else {
-        if (!tmp.isTempLocalArg()) {
-            auto tmp2 = Reference::fromTemp(this);
-            tmp2.store(tmp);
-            tmp = tmp2;
-        }
-        expr.store(tmp);
-        _expr.result = tmp;
-    }
+    _expr.result = unop(PreDecrement, expr);
     return false;
 }
 
@@ -2257,19 +2248,7 @@ bool Codegen::visit(PreIncrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
         return false;
-    auto tmp = unop(Increment, expr);
-    if (_expr.accept(nx)) {
-        bytecodeGenerator->setLocation(ast->incrementToken);
-        expr.store(tmp);
-    } else {
-        if (!tmp.isTempLocalArg()) {
-            auto tmp2 = Reference::fromTemp(this);
-            tmp2.store(tmp);
-            tmp = tmp2;
-        }
-        expr.store(tmp);
-        _expr.result = tmp;
-    }
+    _expr.result = unop(PreIncrement, expr);
     return false;
 }
 

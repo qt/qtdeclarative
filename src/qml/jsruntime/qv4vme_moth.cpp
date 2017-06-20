@@ -857,13 +857,23 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
         VALUE(instr.result) = QV4::Encode((int)~VALUE(instr.source).integerValue());
     MOTH_END_INSTR(UComplInt)
 
-    MOTH_BEGIN_INSTR(Increment)
-        STOREVALUE(instr.result, Runtime::method_increment(VALUE(instr.source)));
-    MOTH_END_INSTR(Increment)
+    MOTH_BEGIN_INSTR(PreIncrement)
+        STOREVALUE(instr.result, Runtime::method_preIncrement(VALUE(instr.source)));
+    MOTH_END_INSTR(PreIncrement)
 
-    MOTH_BEGIN_INSTR(Decrement)
-        STOREVALUE(instr.result, Runtime::method_decrement(VALUE(instr.source)));
-    MOTH_END_INSTR(Decrement)
+    MOTH_BEGIN_INSTR(PreDecrement)
+        STOREVALUE(instr.result, Runtime::method_preDecrement(VALUE(instr.source)));
+    MOTH_END_INSTR(PreDecrement)
+
+    MOTH_BEGIN_INSTR(PostIncrement)
+        //### we probably need a write-barrier for instr.source, because it will be written to
+        STOREVALUE(instr.result, Runtime::method_postIncrement(VALUEPTR(instr.source)));
+    MOTH_END_INSTR(PreIncrement)
+
+    MOTH_BEGIN_INSTR(PostDecrement)
+        //### we probably need a write-barrier for instr.source, because it will be written to
+        STOREVALUE(instr.result, Runtime::method_postDecrement(VALUEPTR(instr.source)));
+    MOTH_END_INSTR(PreDecrement)
 
     MOTH_BEGIN_INSTR(Binop)
         QV4::Runtime::BinaryOperation op = *reinterpret_cast<QV4::Runtime::BinaryOperation *>(reinterpret_cast<char *>(&engine->runtime.runtimeMethods[instr.alu]));

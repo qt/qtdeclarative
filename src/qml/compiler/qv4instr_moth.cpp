@@ -412,13 +412,21 @@ void dumpBytecode(const char *code, int len)
                 d << instr.result << ", " << instr.source;
         MOTH_END_INSTR(UComplInt)
 
-        MOTH_BEGIN_INSTR(Increment)
+        MOTH_BEGIN_INSTR(PreIncrement)
                 d << instr.result << ", " << instr.source;
-        MOTH_END_INSTR(Increment)
+        MOTH_END_INSTR(PreIncrement)
 
-        MOTH_BEGIN_INSTR(Decrement)
+        MOTH_BEGIN_INSTR(PreDecrement)
                 d << instr.result << ", " << instr.source;
-        MOTH_END_INSTR(Decrement)
+        MOTH_END_INSTR(PreDecrement)
+
+        MOTH_BEGIN_INSTR(PostIncrement)
+                d << instr.result << ", " << instr.source;
+        MOTH_END_INSTR(PostIncrement)
+
+        MOTH_BEGIN_INSTR(PostDecrement)
+                d << instr.result << ", " << instr.source;
+        MOTH_END_INSTR(PostDecrement)
 
         MOTH_BEGIN_INSTR(Binop)
                 d << instr.alu << ", " << instr.result << ", " << instr.lhs << ", " << instr.rhs;

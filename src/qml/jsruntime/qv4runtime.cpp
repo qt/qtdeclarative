@@ -1414,7 +1414,7 @@ QV4::ReturnedValue Runtime::method_setupArgumentsObject(ExecutionEngine *engine)
 
 #endif // V4_BOOTSTRAP
 
-QV4::ReturnedValue Runtime::method_increment(const Value &value)
+QV4::ReturnedValue Runtime::method_preIncrement(const Value &value)
 {
     TRACE1(value);
 
@@ -1426,7 +1426,7 @@ QV4::ReturnedValue Runtime::method_increment(const Value &value)
     }
 }
 
-QV4::ReturnedValue Runtime::method_decrement(const Value &value)
+QV4::ReturnedValue Runtime::method_preDecrement(const Value &value)
 {
     TRACE1(value);
 
@@ -1436,6 +1436,46 @@ QV4::ReturnedValue Runtime::method_decrement(const Value &value)
         double d = value.toNumber();
         return Encode(d - 1.);
     }
+}
+
+QV4::ReturnedValue Runtime::method_postIncrement(Value *value)
+{
+    TRACE1(value);
+
+    if (value->isNumber()) {
+        Value old = *value;
+        if (value->isInteger() && value->integerValue() < INT_MAX) {
+            *value = Primitive::fromInt32(value->integerValue() + 1);
+        } else {
+            *value = Primitive::fromDouble(value->doubleValue() + 1.0);
+        }
+        return old.asReturnedValue();
+    }
+
+    // ToNumber conversion needed:
+    double d = value->toNumberImpl();
+    *value = Primitive::fromDouble(d + 1.);
+    return Encode(d);
+}
+
+QV4::ReturnedValue Runtime::method_postDecrement(Value *value)
+{
+    TRACE1(value);
+
+    if (value->isNumber()) {
+        Value old = *value;
+        if (value->isInteger() && value->integerValue() > INT_MIN) {
+            *value = Primitive::fromInt32(value->integerValue() - 1);
+        } else {
+            *value = Primitive::fromDouble(value->doubleValue() - 1.0);
+        }
+        return old.asReturnedValue();
+    }
+
+    // ToNumber conversion needed:
+    double d = value->toNumber();
+    *value = Primitive::fromDouble(d - 1.);
+    return Encode(d);
 }
 
 ReturnedValue Runtime::method_toDouble(const Value &value)

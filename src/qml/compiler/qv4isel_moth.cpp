@@ -754,15 +754,15 @@ void InstructionSelection::unop(IR::AluOp oper, IR::Expr *source, IR::Expr *targ
         addInstruction(ucompl);
         return;
     }
-    case IR::OpIncrement: {
-        Instruction::Increment inc;
+    case IR::OpPreIncrement: {
+        Instruction::PreIncrement inc;
         inc.source = getParam(source);
         inc.result = getResultParam(target);
         addInstruction(inc);
         return;
     }
-    case IR::OpDecrement: {
-        Instruction::Decrement dec;
+    case IR::OpPreDecrement: {
+        Instruction::PreDecrement dec;
         dec.source = getParam(source);
         dec.result = getResultParam(target);
         addInstruction(dec);

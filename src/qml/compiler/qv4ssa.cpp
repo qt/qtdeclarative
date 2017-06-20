@@ -1993,8 +1993,8 @@ private:
         case OpUPlus:
         case OpUMinus:
         case OpNot:
-        case OpIncrement:
-        case OpDecrement:
+        case OpPreIncrement:
+        case OpPreDecrement:
             if (e->expr->type == VarType || e->expr->type == StringType || e->expr->type == QObjectType)
                 markAsSideEffect();
             break;
@@ -2342,8 +2342,8 @@ private:
         case OpCompl: _ty.type = SInt32Type; return;
         case OpNot: _ty.type = BoolType; return;
 
-        case OpIncrement:
-        case OpDecrement:
+        case OpPreIncrement:
+        case OpPreDecrement:
             Q_ASSERT(!"Inplace operators should have been removed!");
             Q_UNREACHABLE();
         default:
@@ -4178,11 +4178,11 @@ void optimizeSSA(StatementWorklist &W, DefUses &defUses, DominatorTree &df)
                                 constOperand->type = SInt32Type;
                                 doneSomething = true;
                                 break;
-                            case OpIncrement:
+                            case OpPreIncrement:
                                 constOperand->value = constOperand->value + 1;
                                 doneSomething = true;
                                 break;
-                            case OpDecrement:
+                            case OpPreDecrement:
                                 constOperand->value = constOperand->value - 1;
                                 doneSomething = true;
                                 break;

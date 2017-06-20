@@ -463,8 +463,10 @@ protected:
     enum UnaryOperation {
         UPlus,
         UMinus,
-        Increment,
-        Decrement,
+        PreIncrement,
+        PreDecrement,
+        PostIncrement,
+        PostDecrement,
         Not,
         Compl
     };

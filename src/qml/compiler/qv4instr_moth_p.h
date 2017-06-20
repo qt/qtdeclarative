@@ -146,8 +146,10 @@ QT_BEGIN_NAMESPACE
     F(UMinus, uminus) \
     F(UCompl, ucompl) \
     F(UComplInt, ucomplInt) \
-    F(Increment, increment) \
-    F(Decrement, decrement) \
+    F(PreIncrement, preIncrement) \
+    F(PreDecrement, preDecrement) \
+    F(PostIncrement, postIncrement) \
+    F(PostDecrement, postDecrement) \
     F(Binop, binop) \
     F(Add, add) \
     F(BitAnd, bitAnd) \
@@ -703,12 +705,22 @@ union Instr
         Param source;
         Param result;
     };
-    struct instr_increment {
+    struct instr_preIncrement {
         MOTH_INSTR_HEADER
         Param source;
         Param result;
     };
-    struct instr_decrement {
+    struct instr_preDecrement {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_postIncrement {
+        MOTH_INSTR_HEADER
+        Param source;
+        Param result;
+    };
+    struct instr_postDecrement {
         MOTH_INSTR_HEADER
         Param source;
         Param result;
@@ -901,8 +913,10 @@ union Instr
     instr_uminus uminus;
     instr_ucompl ucompl;
     instr_ucomplInt ucomplInt;
-    instr_increment increment;
-    instr_decrement decrement;
+    instr_preIncrement preIncrement;
+    instr_preDecrement preDecrement;
+    instr_postIncrement postIncrement;
+    instr_postDecrement postDecrement;
     instr_binop binop;
     instr_add add;
     instr_bitAnd bitAnd;
