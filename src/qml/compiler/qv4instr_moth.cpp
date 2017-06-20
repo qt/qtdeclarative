@@ -263,11 +263,12 @@ void dumpBytecode(const char *code, int len)
             d << instr.arg;
         MOTH_END_INSTR(CallBuiltinThrow)
 
-        MOTH_BEGIN_INSTR(HasException)
+        MOTH_BEGIN_INSTR(GetException)
             d << instr.result;
         MOTH_END_INSTR(HasException)
 
-        MOTH_BEGIN_INSTR(SetExceptionFlag)
+        MOTH_BEGIN_INSTR(SetException)
+                d << instr.exception;
         MOTH_END_INSTR(SetExceptionFlag)
 
         MOTH_BEGIN_INSTR(CallBuiltinUnwindException)

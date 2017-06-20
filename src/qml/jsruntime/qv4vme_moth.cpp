@@ -660,14 +660,15 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinThrow)
 
-    MOTH_BEGIN_INSTR(HasException)
-        *VALUEPTR(instr.result) = QV4::Encode(engine->hasException);
+    MOTH_BEGIN_INSTR(GetException)
+        *VALUEPTR(instr.result) = engine->hasException ? *engine->exceptionValue : Primitive::emptyValue();
         engine->hasException = false;
     MOTH_END_INSTR(HasException)
 
-    MOTH_BEGIN_INSTR(SetExceptionFlag)
+    MOTH_BEGIN_INSTR(SetException)
+        *engine->exceptionValue = VALUE(instr.exception);
         engine->hasException = true;
-    MOTH_END_INSTR(SetExceptionFlag)
+    MOTH_END_INSTR(SetException)
 
     MOTH_BEGIN_INSTR(CallBuiltinUnwindException)
         STOREVALUE(instr.result, Runtime::method_unwindException(engine));

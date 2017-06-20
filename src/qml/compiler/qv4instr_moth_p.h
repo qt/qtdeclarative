@@ -108,8 +108,8 @@ QT_BEGIN_NAMESPACE
     F(CallGlobalLookup, callGlobalLookup) \
     F(SetExceptionHandler, setExceptionHandler) \
     F(CallBuiltinThrow, callBuiltinThrow) \
-    F(HasException, hasException) \
-    F(SetExceptionFlag, setExceptionFlag) \
+    F(GetException, getException) \
+    F(SetException, setException) \
     F(CallBuiltinUnwindException, callBuiltinUnwindException) \
     F(CallBuiltinPushCatchScope, callBuiltinPushCatchScope) \
     F(CallBuiltinPushScope, callBuiltinPushScope) \
@@ -500,12 +500,13 @@ union Instr
         MOTH_INSTR_HEADER
         Param arg;
     };
-    struct instr_hasException {
+    struct instr_getException {
         MOTH_INSTR_HEADER
         Param result;
     };
-    struct instr_setExceptionFlag {
+    struct instr_setException {
         MOTH_INSTR_HEADER
+        Param exception;
     };
     struct instr_callBuiltinUnwindException {
         MOTH_INSTR_HEADER
@@ -861,8 +862,8 @@ union Instr
     instr_callActivationProperty callActivationProperty;
     instr_callGlobalLookup callGlobalLookup;
     instr_callBuiltinThrow callBuiltinThrow;
-    instr_hasException hasException;
-    instr_setExceptionFlag setExceptionFlag;
+    instr_getException getException;
+    instr_setException setException;
     instr_setExceptionHandler setExceptionHandler;
     instr_callBuiltinUnwindException callBuiltinUnwindException;
     instr_callBuiltinPushCatchScope callBuiltinPushCatchScope;

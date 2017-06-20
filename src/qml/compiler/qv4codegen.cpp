@@ -157,6 +157,18 @@ struct ControlFlow {
         return parent ? parent->exceptionHandler() : 0;
     }
 
+    virtual void handleThrow(const Reference &expr) {
+        Handler h = getHandler(ControlFlow::Throw);
+        if (h.tempIndex >= 0) {
+            Reference val = Reference::fromConst(cg, QV4::Encode(h.value));
+            Reference temp = Reference::fromTemp(cg, h.tempIndex);
+            temp.store(val);
+        }
+        Instruction::CallBuiltinThrow instr;
+        instr.arg = expr.asRValue();
+        generator()->addInstruction(instr);
+    }
+
 protected:
     QString loopLabel() const {
         QString label;
@@ -220,7 +232,6 @@ struct ControlFlowUnwind : public ControlFlow
         Reference::fromTemp(cg, controlFlowTemp).store(Reference::fromConst(cg, QV4::Encode::undefined()));
         // we'll need at least a handler for throw
         getHandler(Throw);
-        generator()->setExceptionHandler(&unwindLabel);
     }
 
     void emitUnwindHandler()
@@ -278,6 +289,7 @@ struct ControlFlowWith : public ControlFlowUnwind
     ControlFlowWith(Codegen *cg)
         : ControlFlowUnwind(cg, With)
     {
+        generator()->setExceptionHandler(&unwindLabel);
     }
 
     virtual ~ControlFlowWith() {
@@ -295,36 +307,64 @@ struct ControlFlowWith : public ControlFlowUnwind
 struct ControlFlowCatch : public ControlFlowUnwind
 {
     AST::Catch *catchExpression;
+    bool insideCatch = false;
+    BytecodeGenerator::ExceptionHandler exceptionLabel;
+    BytecodeGenerator::ExceptionHandler catchUnwindLabel;
 
     ControlFlowCatch(Codegen *cg, AST::Catch *catchExpression)
-        : ControlFlowUnwind(cg, Catch), catchExpression(catchExpression)
+        : ControlFlowUnwind(cg, Catch), catchExpression(catchExpression),
+          exceptionLabel(generator()->newExceptionHandler()),
+          catchUnwindLabel(generator()->newExceptionHandler())
     {
+        generator()->setExceptionHandler(&exceptionLabel);
     }
 
     virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
-        // if it's no throw, ignore the catch handler and go directly to the parent
-        // handler
-        if (type == Throw)
-            return ControlFlowUnwind::getHandler(type, label);
-        return ControlFlow::getHandler(type, label);
+        Handler h = ControlFlowUnwind::getHandler(type, label);
+        if (insideCatch)
+            // if we're inside the catch block, we need to jump to the pop scope
+            // instruction at the end of the catch block, not the unwind handler
+            h.linkLabel = catchUnwindLabel;
+        else if (type == Throw)
+            // if we're inside the try block, we need to jump to the catch block,
+            // not the unwind handler
+            h.linkLabel = exceptionLabel;
+        return h;
+    }
+
+    virtual BytecodeGenerator::ExceptionHandler *exceptionHandler() {
+        return insideCatch ? &catchUnwindLabel : &exceptionLabel;
     }
 
     ~ControlFlowCatch() {
         // emit code for unwinding
-        unwindLabel.link();
 
         ++cg->_function->insideWithOrCatch;
+        insideCatch = true;
+
+        // exceptions inside the try block go here
+        exceptionLabel.link();
         Reference name = Reference::fromName(cg, catchExpression->name.toString());
         Instruction::CallBuiltinPushCatchScope pushCatchScope;
         pushCatchScope.name = name.nameIndex;
         generator()->addInstruction(pushCatchScope);
-        generator()->setExceptionHandler(parentExceptionHandler());
+        // clear the unwind temp for exceptions, we want to resume normal code flow afterwards
+        Reference::fromTemp(cg, controlFlowTemp).store(Reference::fromConst(cg, QV4::Encode::undefined()));
+        generator()->setExceptionHandler(&catchUnwindLabel);
 
         cg->statement(catchExpression->statement);
-        --cg->_function->insideWithOrCatch;
 
+        --cg->_function->insideWithOrCatch;
+        insideCatch = false;
+
+        // exceptions inside catch and break/return statements go here
+        catchUnwindLabel.link();
         Instruction::CallBuiltinPopScope pop;
         generator()->addInstruction(pop);
+
+        // break/continue/return statements in try go here
+        unwindLabel.link();
+        generator()->setExceptionHandler(parentExceptionHandler());
 
         emitUnwindHandler();
     }
@@ -333,11 +373,26 @@ struct ControlFlowCatch : public ControlFlowUnwind
 struct ControlFlowFinally : public ControlFlowUnwind
 {
     AST::Finally *finally;
+    bool insideFinally = false;
+    int exceptionTemp = -1;
 
     ControlFlowFinally(Codegen *cg, AST::Finally *finally)
         : ControlFlowUnwind(cg, Finally), finally(finally)
     {
         Q_ASSERT(finally != 0);
+        generator()->setExceptionHandler(&unwindLabel);
+    }
+
+    virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
+        // if we're inside the finally block, any exceptions etc. should
+        // go directly to the parent handler
+        if (insideFinally)
+            return ControlFlow::getHandler(type, label);
+        return ControlFlowUnwind::getHandler(type, label);
+    }
+
+    virtual BytecodeGenerator::ExceptionHandler *exceptionHandler() {
+        return insideFinally ? parentExceptionHandler() : ControlFlowUnwind::exceptionHandler();
     }
 
     ~ControlFlowFinally() {
@@ -346,21 +401,26 @@ struct ControlFlowFinally : public ControlFlowUnwind
 
         Codegen::TempScope scope(cg);
 
-        Reference hasException = Reference::fromTemp(cg);
-        Instruction::HasException instr;
-        instr.result = hasException.asLValue();
+        insideFinally = true;
+        exceptionTemp = generator()->newTemp();
+        Reference exception = Reference::fromTemp(cg, exceptionTemp);
+        Instruction::GetException instr;
+        instr.result = exception.asLValue();
         generator()->addInstruction(instr);
 
         generator()->setExceptionHandler(parentExceptionHandler());
         cg->statement(finally->statement);
+        insideFinally = false;
 
         emitUnwindHandler();
     }
 
     virtual void emitForThrowHandling() {
         // reset the exception flag, that got cleared before executing the statements in finally
-        Instruction::SetExceptionFlag setFlag;
-        generator()->addInstruction(setFlag);
+        Instruction::SetException setException;
+        Q_ASSERT(exceptionTemp != -1);
+        setException.exception = Reference::fromTemp(cg, exceptionTemp).asRValue();
+        generator()->addInstruction(setException);
     }
 };
 
@@ -2932,9 +2992,13 @@ bool Codegen::visit(ThrowStatement *ast)
 
     Reference expr = expression(ast->expression);
 
-    Instruction::CallBuiltinThrow instr;
-    instr.arg = expr.asRValue();
-    bytecodeGenerator->addInstruction(instr);
+    if (_controlFlow) {
+        _controlFlow->handleThrow(expr);
+    } else {
+        Instruction::CallBuiltinThrow instr;
+        instr.arg = expr.asRValue();
+        bytecodeGenerator->addInstruction(instr);
+    }
     return false;
 }
 
