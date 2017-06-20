@@ -49,6 +49,7 @@
 //
 
 #include <QtQuick/qquickitem.h>
+#include <QtGui/qcolor.h>
 
 QT_BEGIN_NAMESPACE
 
