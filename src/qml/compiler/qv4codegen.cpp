@@ -1750,13 +1750,22 @@ int Codegen::pushArgs(ArgumentList *args)
 {
     int minNrOfStackEntries = offsetof(QV4::CallData, args)/sizeof(QV4::Value);
     int argc = 0;
+    Reference _rargs[16];
+    Reference *rargs = _rargs;
+    if (_variableEnvironment->maxNumberOfArguments > 16)
+        rargs = new Reference[_variableEnvironment->maxNumberOfArguments];
     for (ArgumentList *it = args; it; it = it->next) {
-        Reference arg = expression(it->expression);
+        rargs[argc] = expression(it->expression);
         if (hasError)
             return -1;
-        Reference::fromTemp(this, minNrOfStackEntries + argc).store(arg);
         argc += 1;
     }
+
+    for (int i = 0; i < argc; ++i)
+        Reference::fromTemp(this, minNrOfStackEntries + i).store(rargs[i]);
+
+    if (rargs != _rargs)
+        delete [] rargs;
     return argc;
 }
 
