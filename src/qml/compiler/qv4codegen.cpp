@@ -779,7 +779,6 @@ void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, Forma
 Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     : _module(0)
     , _function(0)
-    , _block(0)
     , _returnAddress(0)
     , _variableEnvironment(0)
     , _controlFlow(0)
@@ -916,29 +915,6 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
     }
 
     return dest;
-}
-
-IR::Stmt *Codegen::move(IR::Expr *target, IR::Expr *source)
-{
-    if (hasError)
-        return 0;
-
-    Q_ASSERT(target->isLValue());
-
-    TempScope scope(this);
-
-    if (!source->asTemp() && !source->asConst() && !target->asTemp() && !source->asArgLocal() && !target->asArgLocal()) {
-        unsigned t = bytecodeGenerator->newTemp();
-        _block->MOVE(_block->TEMP(t), source);
-        source = _block->TEMP(t);
-    }
-    if (source->asConst() && !target->asTemp() && !target->asArgLocal()) {
-        unsigned t = bytecodeGenerator->newTemp();
-        _block->MOVE(_block->TEMP(t), source);
-        source = _block->TEMP(t);
-    }
-
-    return _block->MOVE(target, source);
 }
 
 void Codegen::accept(Node *node)
@@ -2359,7 +2335,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     IR::Function *function = _module->newFunction(name, _function);
     int functionIndex = _module->functions.count() - 1;
 
-    IR::BasicBlock *entryBlock = function->newBasicBlock(0);
     function->hasDirectEval = _variableEnvironment->hasDirectEval || _variableEnvironment->compilationMode == EvalCode
             || _module->debugMode; // Conditional breakpoints are like eval in the function
     function->usesArgumentsObject = _variableEnvironment->parent && (_variableEnvironment->usesArgumentsObject == Environment::ArgumentsObjectUsed);
@@ -2424,7 +2399,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     auto exitBlock = bytecodeGenerator->newLabel();
 
     qSwap(_function, function);
-    qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
 
@@ -2480,7 +2454,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     }
 
     qSwap(_function, function);
-    qSwap(_block, entryBlock);
     qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
     qSwap(_controlFlow, loop);

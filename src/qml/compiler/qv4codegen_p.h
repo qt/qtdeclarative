@@ -465,7 +465,6 @@ protected:
     };
 
     Reference unop(UnaryOperation op, const Reference &expr);
-    QV4::IR::Stmt *move(QV4::IR::Expr *target, QV4::IR::Expr *source);
 
     int registerString(const QString &name) {
         return jsUnitGenerator->registerString(name);
