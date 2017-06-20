@@ -925,7 +925,7 @@ IR::Stmt *Codegen::move(IR::Expr *target, IR::Expr *source)
 
     Q_ASSERT(target->isLValue());
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     if (!source->asTemp() && !source->asConst() && !target->asTemp() && !source->asArgLocal() && !target->asArgLocal()) {
         unsigned t = bytecodeGenerator->newTemp();
@@ -952,7 +952,7 @@ void Codegen::accept(Node *node)
 
 void Codegen::statement(Statement *ast)
 {
-    TempScope scope(_function);
+    TempScope scope(this);
 
     bytecodeGenerator->setLocation(ast->firstSourceLocation());
     accept(ast);
@@ -960,7 +960,7 @@ void Codegen::statement(Statement *ast)
 
 void Codegen::statement(ExpressionNode *ast)
 {
-    TempScope scope(_function);
+    TempScope scope(this);
 
     if (! ast) {
         return;
@@ -1063,7 +1063,7 @@ void Codegen::sourceElements(SourceElements *ast)
 
 void Codegen::variableDeclaration(VariableDeclaration *ast)
 {
-    TempScope scope(_function);
+    TempScope scope(this);
 
     if (!ast->expression)
         return;
@@ -1272,7 +1272,7 @@ bool Codegen::visit(ArrayLiteral *ast)
         return false;
 
     auto result = Reference::fromTemp(this);
-    TempScope scope(_function);
+    TempScope scope(this);
 
     int argc = 0;
     auto undefined = [this](){ return Reference::fromConst(this, Encode::undefined()); };
@@ -1655,7 +1655,7 @@ bool Codegen::visit(CallExpression *ast)
 
     Reference r = Reference::fromTemp(this);
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     Reference base = expression(ast->base);
     if (hasError)
@@ -1715,7 +1715,7 @@ bool Codegen::visit(ConditionalExpression *ast)
     const unsigned t = bytecodeGenerator->newTemp();
     _expr = Reference::fromTemp(this, t);
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     Reference r = expression(ast->expression);
 
@@ -1747,7 +1747,7 @@ bool Codegen::visit(DeleteExpression *ast)
     // Temporaries cannot be deleted
     if (expr.type == Reference::Local || expr.type == Reference::Argument) {
         // Trying to delete a function argument might throw.
-        if (_function->isStrict) {
+        if (_variableEnvironment->isStrict) {
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
@@ -1763,7 +1763,7 @@ bool Codegen::visit(DeleteExpression *ast)
     Reference r = Reference::fromTemp(this);
 
     if (expr.type == Reference::Name) {
-        if (_function->isStrict) {
+        if (_variableEnvironment->isStrict) {
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
@@ -1818,7 +1818,7 @@ bool Codegen::visit(FunctionExpression *ast)
     if (hasError)
         return false;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
     _expr.result = Reference::fromClosure(this, function);
@@ -1902,7 +1902,7 @@ bool Codegen::visit(NewExpression *ast)
         return false;
 
     Reference r = Reference::fromTemp(this);
-    TempScope scope(_function);
+    TempScope scope(this);
 
     Reference base = expression(ast->expression);
     if (hasError)
@@ -1924,7 +1924,7 @@ bool Codegen::visit(NewMemberExpression *ast)
         return false;
 
     Reference r = Reference::fromTemp(this);
-    TempScope scope(_function);
+    TempScope scope(this);
 
     Reference base = expression(ast->base);
     if (hasError)
@@ -1983,7 +1983,7 @@ bool Codegen::visit(ObjectLiteral *ast)
     QMap<QString, ObjectPropertyValue> valueMap;
 
     auto result = Reference::fromTemp(this);
-    TempScope scope(_function);
+    TempScope scope(this);
 
     for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
         QString name = it->assignment->name->asString();
@@ -1993,7 +1993,7 @@ bool Codegen::visit(ObjectLiteral *ast)
                 return false;
 
             ObjectPropertyValue &v = valueMap[name];
-            if (v.hasGetter() || v.hasSetter() || (_function->isStrict && v.rvalue.isValid())) {
+            if (v.hasGetter() || v.hasSetter() || (_variableEnvironment->isStrict && v.rvalue.isValid())) {
                 throwSyntaxError(nv->lastSourceLocation(),
                                  QStringLiteral("Illegal duplicate key '%1' in object literal").arg(name));
                 return false;
@@ -2115,7 +2115,7 @@ bool Codegen::visit(PostDecrementExpression *ast)
 
     Reference oldValue = unop(UPlus, expr);
 
-    TempScope scope(_function);
+    TempScope scope(this);
     Reference newValue = unop(Decrement, oldValue);
     expr.store(newValue);
 
@@ -2141,7 +2141,7 @@ bool Codegen::visit(PostIncrementExpression *ast)
 
     Reference oldValue = unop(UPlus, expr);
 
-    TempScope scope(_function);
+    TempScope scope(this);
     Reference newValue = unop(Increment, oldValue);
     expr.store(newValue);
 
@@ -2279,7 +2279,7 @@ bool Codegen::visit(TypeOfExpression *ast)
 
     _expr.result = Reference::fromTemp(this);
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     Reference expr = expression(ast->expression);
     if (hasError)
@@ -2324,7 +2324,7 @@ bool Codegen::visit(VoidExpression *ast)
     if (hasError)
         return false;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     statement(ast->expression);
     _expr.result = Reference::fromConst(this, Encode::undefined());
@@ -2336,7 +2336,7 @@ bool Codegen::visit(FunctionDeclaration * ast)
     if (hasError)
         return false;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     if (_variableEnvironment->compilationMode == QmlBinding) {
         Reference source = Reference::fromName(this, ast->name.toString());
@@ -2452,7 +2452,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         setup.result = Reference::fromName(this, QStringLiteral("arguments")).asLValue();
         bytecodeGenerator->addInstruction(setup);
     }
-    if (_function->usesThis && !_function->isStrict) {
+    if (_function->usesThis && !_variableEnvironment->isStrict) {
         // make sure we convert this to an object
         Instruction::CallBuiltinConvertThisToObject convert;
         bytecodeGenerator->addInstruction(convert);
@@ -2515,7 +2515,7 @@ bool Codegen::visit(Block *ast)
     if (hasError)
         return false;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     for (StatementList *it = ast->statements; it; it = it->next) {
         statement(it->statement);
@@ -2552,7 +2552,7 @@ bool Codegen::visit(ContinueStatement *ast)
     if (hasError)
         return false;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     if (!_controlFlow) {
         throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Continue outside of loop"));
@@ -2584,7 +2584,7 @@ bool Codegen::visit(DoWhileStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     BytecodeGenerator::Label body = bytecodeGenerator->label();
     BytecodeGenerator::Label cond = bytecodeGenerator->newLabel();
@@ -2615,7 +2615,7 @@ bool Codegen::visit(ExpressionStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     if (_variableEnvironment->compilationMode == EvalCode || _variableEnvironment->compilationMode == QmlBinding) {
         Reference e = expression(ast->expression);
@@ -2632,7 +2632,7 @@ bool Codegen::visit(ForEachStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     Reference obj = Reference::fromTemp(this);
     Reference expr = expression(ast->expression);
@@ -2679,7 +2679,7 @@ bool Codegen::visit(ForStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     statement(ast->initialiser);
 
@@ -2709,7 +2709,7 @@ bool Codegen::visit(IfStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     BytecodeGenerator::Label trueLabel = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label falseLabel = bytecodeGenerator->newLabel();
@@ -2734,7 +2734,7 @@ bool Codegen::visit(LabelledStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     // check that no outer loop contains the label
     ControlFlow *l = _controlFlow;
@@ -2771,7 +2771,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     Reference obj = Reference::fromTemp(this);
     Reference expr = expression(ast->expression);
@@ -2816,7 +2816,7 @@ bool Codegen::visit(LocalForStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     variableDeclarationList(ast->declarations);
 
@@ -2868,7 +2868,7 @@ bool Codegen::visit(SwitchStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     if (ast->block) {
         BytecodeGenerator::Label switchEnd = bytecodeGenerator->newLabel();
@@ -2940,7 +2940,7 @@ bool Codegen::visit(ThrowStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     Reference expr = expression(ast->expression);
 
@@ -2953,7 +2953,7 @@ bool Codegen::visit(ThrowStatement *ast)
 void Codegen::handleTryCatch(TryStatement *ast)
 {
     Q_ASSERT(ast);
-    if (_function->isStrict &&
+    if (_variableEnvironment->isStrict &&
         (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments"))) {
         throwSyntaxError(ast->catchExpression->identifierToken, QStringLiteral("Catch variable name may not be eval or arguments in strict mode"));
         return;
@@ -2988,7 +2988,7 @@ bool Codegen::visit(TryStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     _function->hasTry = true;
 
@@ -3036,7 +3036,7 @@ bool Codegen::visit(WithStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(_function);
+    TempScope scope(this);
 
     _function->hasWith = true;
 
