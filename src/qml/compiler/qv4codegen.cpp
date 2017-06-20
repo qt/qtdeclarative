@@ -2417,7 +2417,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     }
     if (_function->usesArgumentsObject) {
         Instruction::CallBuiltinSetupArgumentsObject setup;
-        setup.result = Reference::fromName(this, QStringLiteral("arguments")).asLValue();
+        setup.result = referenceForName(QStringLiteral("arguments"), false).asLValue();
         bytecodeGenerator->addInstruction(setup);
     }
     if (_function->usesThis && !_variableEnvironment->isStrict) {
