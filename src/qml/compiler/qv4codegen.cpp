@@ -1657,6 +1657,23 @@ bool Codegen::visit(CallExpression *ast)
         call.callData = 0;
         call.result = r.asLValue();
         bytecodeGenerator->addInstruction(call);
+    } else if (base.type == Reference::Name) {
+        //### fix for fast lookups:
+//        if (useFastLookups && func->global) {
+//            Instruction::CallGlobalLookup call;
+//            call.index = registerGlobalGetterLookup(*func->id);
+//            prepareCallArgs(args, call.argc);
+//            call.callData = callDataStart();
+//            call.result = getResultParam(result);
+//            addInstruction(call);
+//            return;
+//        }
+        Instruction::CallActivationProperty call;
+        call.name = base.nameIndex;
+        call.argc = argc;
+        call.callData = 0;
+        call.result = r.asLValue();
+        bytecodeGenerator->addInstruction(call);
     } else {
         Instruction::CallValue call;
         call.dest = base.asRValue();
