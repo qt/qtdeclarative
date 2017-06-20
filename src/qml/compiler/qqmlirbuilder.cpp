@@ -1654,30 +1654,18 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
 }
 
 #ifndef V4_BOOTSTRAP
-QQmlPropertyData *JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup)
+int JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name)
 {
-    if (propertyExistsButForceNameLookup)
-        *propertyExistsButForceNameLookup = false;
     QQmlPropertyData *pd = cache->property(name, /*object*/0, /*context*/0);
 
     // Q_INVOKABLEs can't be FINAL, so we have to look them up at run-time
-    if (pd && pd->isFunction()) {
-        if (propertyExistsButForceNameLookup)
-            *propertyExistsButForceNameLookup = true;
-        pd = 0;
-    }
+    if (!pd || pd->isFunction())
+        return -1;
 
-    if (pd && !cache->isAllowedInRevision(pd))
-        pd = 0;
+    if (!cache->isAllowedInRevision(pd))
+        return -1;
 
-    // Return a copy allocated from our memory pool. Property data pointers can change
-    // otherwise when the QQmlPropertyCache changes later in the QML type compilation process.
-    if (pd) {
-        QQmlPropertyData *copy = pd;
-        pd = _function->New<QQmlPropertyData>();
-        *pd = *copy;
-    }
-    return pd;
+    return pd->coreIndex();
 }
 
 enum MetaObjectResolverFlags {
@@ -2034,37 +2022,31 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
     }
 
     if (_scopeObject) {
-        bool propertyExistsButForceNameLookup = false;
-        QQmlPropertyData *pd = lookupQmlCompliantProperty(_scopeObject, name, &propertyExistsButForceNameLookup);
-        if (propertyExistsButForceNameLookup)
+        int qmlIndex = lookupQmlCompliantProperty(_scopeObject, name);
+        if (qmlIndex < 0)
             return Reference::fromName(this, name);
-        if (pd) {
 #if 0
-            QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
-            base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
-            base->memberResolver->owner = _function;
-            initMetaObjectResolver(base->memberResolver, _scopeObject);
+        QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
+        base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+        base->memberResolver->owner = _function;
+        initMetaObjectResolver(base->memberResolver, _scopeObject);
 #endif
-            Reference base = Reference::fromTemp(this, _qmlContextTemp);
-            return Reference::fromQmlScopeObject(base, pd->coreIndex());
-        }
+        Reference base = Reference::fromTemp(this, _qmlContextTemp);
+        return Reference::fromQmlScopeObject(base, qmlIndex);
     }
 
     if (_contextObject) {
-        bool propertyExistsButForceNameLookup = false;
-        QQmlPropertyData *pd = lookupQmlCompliantProperty(_contextObject, name, &propertyExistsButForceNameLookup);
-        if (propertyExistsButForceNameLookup)
+        int qmlIndex = lookupQmlCompliantProperty(_contextObject, name);
+        if (qmlIndex < 0)
             return Reference::fromName(this, name);
-        if (pd) {
 #if 0
-            QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
-            base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
-            base->memberResolver->owner = _function;
-            initMetaObjectResolver(base->memberResolver, _contextObject);
+        QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
+        base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
+        base->memberResolver->owner = _function;
+        initMetaObjectResolver(base->memberResolver, _contextObject);
 #endif
-            Reference base = Reference::fromTemp(this, _qmlContextTemp);
-            return Reference::fromQmlContextObject(base, pd->coreIndex());
-        }
+        Reference base = Reference::fromTemp(this, _qmlContextTemp);
+        return Reference::fromQmlContextObject(base, qmlIndex);
     }
 #else
     Q_UNUSED(name)
