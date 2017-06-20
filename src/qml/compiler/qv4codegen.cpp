@@ -2766,7 +2766,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
     BytecodeGenerator::Label body = bytecodeGenerator->label();
 
-    Reference it = Reference::fromName(this, ast->declaration->name.toString());
+    Reference it = referenceForName(ast->declaration->name.toString(), true);
     statement(ast->statement);
 
     in.link();
@@ -2775,6 +2775,8 @@ bool Codegen::visit(LocalForEachStatement *ast)
     nextPropInstr.result = it.asLValue();
     nextPropInstr.arg = obj.asRValue();
     bytecodeGenerator->addInstruction(nextPropInstr);
+
+    it.writeBack();
 
     Reference null = Reference::fromConst(this, QV4::Encode::null());
     bytecodeGenerator->jumpStrictNotEqual(it.asRValue(), null.asRValue()).link(body);
