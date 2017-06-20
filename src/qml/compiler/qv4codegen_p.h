@@ -439,7 +439,16 @@ protected:
 
     void leaveLoop();
 
-    Reference unop(QV4::IR::AluOp op, const Reference &expr, const AST::SourceLocation &loc = AST::SourceLocation());
+    enum UnaryOperation {
+        UPlus,
+        UMinus,
+        Increment,
+        Decrement,
+        Not,
+        Compl
+    };
+
+    Reference unop(UnaryOperation op, const Reference &expr);
     QV4::IR::Stmt *move(QV4::IR::Expr *target, QV4::IR::Expr *source);
 
     // Returns index in _module->functions
@@ -580,7 +589,7 @@ public:
     QList<QQmlError> qmlErrors() const;
 #endif
 
-    QV4::Moth::Param binopHelper(QV4::IR::AluOp oper, const QV4::Moth::Param &left,
+    QV4::Moth::Param binopHelper(QSOperator::Op oper, const QV4::Moth::Param &left,
                                  const QV4::Moth::Param &right, const QV4::Moth::Param &dest);
     int pushArgs(AST::ArgumentList *args);
 

@@ -367,67 +367,49 @@ struct ControlFlowFinally : public ControlFlowUnwind
 } // QV4 namespace
 QT_END_NAMESPACE
 
-static inline QV4::Runtime::RuntimeMethods aluOpFunction(IR::AluOp op)
+static inline QV4::Runtime::RuntimeMethods aluOpFunction(QSOperator::Op op)
 {
     switch (op) {
-    case IR::OpInvalid:
+    case QSOperator::Invalid:
         return QV4::Runtime::InvalidRuntimeMethod;
-    case IR::OpIfTrue:
-        return QV4::Runtime::InvalidRuntimeMethod;
-    case IR::OpNot:
-        return QV4::Runtime::InvalidRuntimeMethod;
-    case IR::OpUMinus:
-        return QV4::Runtime::InvalidRuntimeMethod;
-    case IR::OpUPlus:
-        return QV4::Runtime::InvalidRuntimeMethod;
-    case IR::OpCompl:
-        return QV4::Runtime::InvalidRuntimeMethod;
-    case IR::OpBitAnd:
+    case QSOperator::BitAnd:
         return QV4::Runtime::bitAnd;
-    case IR::OpBitOr:
+    case QSOperator::BitOr:
         return QV4::Runtime::bitOr;
-    case IR::OpBitXor:
+    case QSOperator::BitXor:
         return QV4::Runtime::bitXor;
-    case IR::OpAdd:
+    case QSOperator::Add:
         return QV4::Runtime::InvalidRuntimeMethod;
-    case IR::OpSub:
+    case QSOperator::Sub:
         return QV4::Runtime::sub;
-    case IR::OpMul:
+    case QSOperator::Mul:
         return QV4::Runtime::mul;
-    case IR::OpDiv:
+    case QSOperator::Div:
         return QV4::Runtime::div;
-    case IR::OpMod:
+    case QSOperator::Mod:
         return QV4::Runtime::mod;
-    case IR::OpLShift:
+    case QSOperator::LShift:
         return QV4::Runtime::shl;
-    case IR::OpRShift:
+    case QSOperator::RShift:
         return QV4::Runtime::shr;
-    case IR::OpURShift:
+    case QSOperator::URShift:
         return QV4::Runtime::ushr;
-    case IR::OpGt:
+    case QSOperator::Gt:
         return QV4::Runtime::greaterThan;
-    case IR::OpLt:
+    case QSOperator::Lt:
         return QV4::Runtime::lessThan;
-    case IR::OpGe:
+    case QSOperator::Ge:
         return QV4::Runtime::greaterEqual;
-    case IR::OpLe:
+    case QSOperator::Le:
         return QV4::Runtime::lessEqual;
-    case IR::OpEqual:
+    case QSOperator::Equal:
         return QV4::Runtime::equal;
-    case IR::OpNotEqual:
+    case QSOperator::NotEqual:
         return QV4::Runtime::notEqual;
-    case IR::OpStrictEqual:
+    case QSOperator::StrictEqual:
         return QV4::Runtime::strictEqual;
-    case IR::OpStrictNotEqual:
+    case QSOperator::StrictNotEqual:
         return QV4::Runtime::strictNotEqual;
-    case IR::OpInstanceof:
-        return QV4::Runtime::InvalidRuntimeMethod;
-    case IR::OpIn:
-        return QV4::Runtime::InvalidRuntimeMethod;
-    case IR::OpAnd:
-        return QV4::Runtime::InvalidRuntimeMethod;
-    case IR::OpOr:
-        return QV4::Runtime::InvalidRuntimeMethod;
     default:
         Q_ASSERT(!"Unknown AluOp");
         return QV4::Runtime::InvalidRuntimeMethod;
@@ -865,9 +847,8 @@ void Codegen::leaveEnvironment()
     _variableEnvironment = _variableEnvironment->parent;
 }
 
-Codegen::Reference Codegen::unop(IR::AluOp op, const Reference &expr, const SourceLocation &loc)
+Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
 {
-    Q_UNUSED(loc);
     if (hasError)
         return _expr.result;
 
@@ -876,20 +857,18 @@ Codegen::Reference Codegen::unop(IR::AluOp op, const Reference &expr, const Sour
         auto v = Value::fromReturnedValue(expr.constant);
         if (v.isNumber()) {
             switch (op) {
-            case IR::OpNot:
+            case Not:
                 return Reference::fromConst(this, Runtime::method_uNot(v));
-            case IR::OpUMinus:
+            case UMinus:
                 return Reference::fromConst(this, Runtime::method_uMinus(v));
-            case IR::OpUPlus:
+            case UPlus:
                 return expr;
-            case IR::OpCompl:
+            case Compl:
                 return Reference::fromConst(this, Runtime::method_complement(v));
-            case IR::OpIncrement:
+            case Increment:
                 return Reference::fromConst(this, Runtime::method_increment(v));
-            case IR::OpDecrement:
+            case Decrement:
                 return Reference::fromConst(this, Runtime::method_decrement(v));
-            default:
-                break;
             }
         }
     }
@@ -898,44 +877,42 @@ Codegen::Reference Codegen::unop(IR::AluOp op, const Reference &expr, const Sour
     auto dest = Reference::fromTemp(this);
 
     switch (op) {
-    case IR::OpUMinus: {
+    case UMinus: {
         Instruction::UMinus uminus;
         uminus.source = expr.asRValue();
         uminus.result = dest.asLValue();
         bytecodeGenerator->addInstruction(uminus);
     } break;
-    case IR::OpUPlus: {
+    case UPlus: {
         Instruction::UPlus uplus;
         uplus.source = expr.asRValue();
         uplus.result = dest.asLValue();
         bytecodeGenerator->addInstruction(uplus);
     } break;
-    case IR::OpNot: {
+    case Not: {
         Instruction::UNot unot;
         unot.source = expr.asRValue();
         unot.result = dest.asLValue();
         bytecodeGenerator->addInstruction(unot);
     } break;
-    case IR::OpCompl: {
+    case Compl: {
         Instruction::UCompl ucompl;
         ucompl.source = expr.asRValue();
         ucompl.result = dest.asLValue();
         bytecodeGenerator->addInstruction(ucompl);
     } break;
-    case IR::OpIncrement: {
+    case Increment: {
         Instruction::Increment inc;
         inc.source = expr.asRValue();
         inc.result = dest.asLValue();
         bytecodeGenerator->addInstruction(inc);
     } break;
-    case IR::OpDecrement: {
+    case Decrement: {
         Instruction::Decrement dec;
         dec.source = expr.asRValue();
         dec.result = dest.asLValue();
         bytecodeGenerator->addInstruction(dec);
     } break;
-    default:
-        Q_UNIMPLEMENTED();
     }
 
     return dest;
@@ -1340,21 +1317,21 @@ bool Codegen::visit(ArrayMemberExpression *ast)
     return false;
 }
 
-static IR::AluOp baseOp(int op)
+static QSOperator::Op baseOp(int op)
 {
     switch ((QSOperator::Op) op) {
-    case QSOperator::InplaceAnd: return IR::OpBitAnd;
-    case QSOperator::InplaceSub: return IR::OpSub;
-    case QSOperator::InplaceDiv: return IR::OpDiv;
-    case QSOperator::InplaceAdd: return IR::OpAdd;
-    case QSOperator::InplaceLeftShift: return IR::OpLShift;
-    case QSOperator::InplaceMod: return IR::OpMod;
-    case QSOperator::InplaceMul: return IR::OpMul;
-    case QSOperator::InplaceOr: return IR::OpBitOr;
-    case QSOperator::InplaceRightShift: return IR::OpRShift;
-    case QSOperator::InplaceURightShift: return IR::OpURShift;
-    case QSOperator::InplaceXor: return IR::OpBitXor;
-    default: return IR::OpInvalid;
+    case QSOperator::InplaceAnd: return QSOperator::BitAnd;
+    case QSOperator::InplaceSub: return QSOperator::Sub;
+    case QSOperator::InplaceDiv: return QSOperator::Div;
+    case QSOperator::InplaceAdd: return QSOperator::Add;
+    case QSOperator::InplaceLeftShift: return QSOperator::LShift;
+    case QSOperator::InplaceMod: return QSOperator::Mod;
+    case QSOperator::InplaceMul: return QSOperator::Mul;
+    case QSOperator::InplaceOr: return QSOperator::BitOr;
+    case QSOperator::InplaceRightShift: return QSOperator::RShift;
+    case QSOperator::InplaceURightShift: return QSOperator::URShift;
+    case QSOperator::InplaceXor: return QSOperator::BitXor;
+    default: return QSOperator::Invalid;
     }
 }
 
@@ -1518,7 +1495,7 @@ bool Codegen::visit(BinaryExpression *ast)
             return false;
 
         _expr.result = Reference::fromTemp(this);
-        binopHelper(IR::binaryOperator(ast->op), leftParam, right.asRValue(), _expr.result.base);
+        binopHelper(static_cast<QSOperator::Op>(ast->op), leftParam, right.asRValue(), _expr.result.base);
 
         break;
     }
@@ -1528,10 +1505,10 @@ bool Codegen::visit(BinaryExpression *ast)
     return false;
 }
 
-QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &left,
+QV4::Moth::Param Codegen::binopHelper(QSOperator::Op oper, const QV4::Moth::Param &left,
                                       const QV4::Moth::Param &right, const QV4::Moth::Param &dest)
 {
-    if (oper == IR::OpAdd) {
+    if (oper == QSOperator::Add) {
         Instruction::Add add;
         add.lhs = left;
         add.rhs = right;
@@ -1539,7 +1516,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         bytecodeGenerator->addInstruction(add);
         return add.result;
     }
-    if (oper == IR::OpSub) {
+    if (oper == QSOperator::Sub) {
         Instruction::Sub sub;
         sub.lhs = left;
         sub.rhs = right;
@@ -1547,7 +1524,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         bytecodeGenerator->addInstruction(sub);
         return sub.result;
     }
-    if (oper == IR::OpMul) {
+    if (oper == QSOperator::Mul) {
         Instruction::Mul mul;
         mul.lhs = left;
         mul.rhs = right;
@@ -1555,7 +1532,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         bytecodeGenerator->addInstruction(mul);
         return mul.result;
     }
-    if (oper == IR::OpBitAnd) {
+    if (oper == QSOperator::BitAnd) {
 //        if (left.isConstant())
 //            std::swap(left, right);
 //        if (right.isConstant()) {
@@ -1573,7 +1550,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         bytecodeGenerator->addInstruction(bitAnd);
         return bitAnd.result;
     }
-    if (oper == IR::OpBitOr) {
+    if (oper == QSOperator::BitOr) {
 //        if (left.isConstant())
 //            std::swap(left, right);
 //        if (right.isConstant()) {
@@ -1591,7 +1568,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         bytecodeGenerator->addInstruction(bitOr);
         return bitOr.result;
     }
-    if (oper == IR::OpBitXor) {
+    if (oper == QSOperator::BitXor) {
 //        if (leftSource->asConst())
 //            qSwap(leftSource, rightSource);
 //        if (IR::Const *c = rightSource->asConst()) {
@@ -1609,7 +1586,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         bytecodeGenerator->addInstruction(bitXor);
         return bitXor.result;
     }
-    if (oper == IR::OpRShift) {
+    if (oper == QSOperator::RShift) {
 //        if (IR::Const *c = rightSource->asConst()) {
 //            Instruction::ShrConst shr;
 //            shr.lhs = left;
@@ -1625,7 +1602,7 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         bytecodeGenerator->addInstruction(shr);
         return shr.result;
     }
-    if (oper == IR::OpLShift) {
+    if (oper == QSOperator::LShift) {
 //        if (IR::Const *c = rightSource->asConst()) {
 //            Instruction::ShlConst shl;
 //            shl.lhs = left;
@@ -1642,11 +1619,11 @@ QV4::Moth::Param Codegen::binopHelper(IR::AluOp oper, const QV4::Moth::Param &le
         return shl.result;
     }
 
-    if (oper == IR::OpInstanceof || oper == IR::OpIn || oper == IR::OpAdd) {
+    if (oper == QSOperator::InstanceOf || oper == QSOperator::In || oper == QSOperator::Add) {
         Instruction::BinopContext binop;
-        if (oper == IR::OpInstanceof)
+        if (oper == QSOperator::InstanceOf)
             binop.alu = QV4::Runtime::instanceof;
-        else if (oper == IR::OpIn)
+        else if (oper == QSOperator::In)
             binop.alu = QV4::Runtime::in;
         else
             binop.alu = QV4::Runtime::add;
@@ -1972,7 +1949,7 @@ bool Codegen::visit(NotExpression *ast)
     if (hasError)
         return false;
 
-    _expr.result = unop(IR::OpNot, expression(ast->expression), ast->notToken);
+    _expr.result = unop(Not, expression(ast->expression));
     return false;
 }
 
@@ -2136,10 +2113,10 @@ bool Codegen::visit(PostDecrementExpression *ast)
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
         return false;
 
-    Reference oldValue = unop(IR::OpUPlus, expr, ast->decrementToken);
+    Reference oldValue = unop(UPlus, expr);
 
     TempScope scope(_function);
-    Reference newValue = unop(IR::OpDecrement, oldValue, ast->decrementToken);
+    Reference newValue = unop(Decrement, oldValue);
     expr.store(newValue);
 
     _expr.result = oldValue;
@@ -2162,10 +2139,10 @@ bool Codegen::visit(PostIncrementExpression *ast)
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
         return false;
 
-    Reference oldValue = unop(IR::OpUPlus, expr, ast->incrementToken);
+    Reference oldValue = unop(UPlus, expr);
 
     TempScope scope(_function);
-    Reference newValue = unop(IR::OpIncrement, oldValue, ast->incrementToken);
+    Reference newValue = unop(Increment, oldValue);
     expr.store(newValue);
 
     _expr.result = oldValue;
@@ -2187,7 +2164,7 @@ bool Codegen::visit(PreDecrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
         return false;
-    auto tmp = unop(IR::OpDecrement, expr, ast->decrementToken);
+    auto tmp = unop(Decrement, expr);
     if (_expr.accept(nx)) {
         bytecodeGenerator->setLocation(ast->decrementToken);
         expr.store(tmp);
@@ -2218,7 +2195,7 @@ bool Codegen::visit(PreIncrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
         return false;
-    auto tmp = unop(IR::OpIncrement, expr, ast->incrementToken);
+    auto tmp = unop(Increment, expr);
     if (_expr.accept(nx)) {
         bytecodeGenerator->setLocation(ast->incrementToken);
         expr.store(tmp);
@@ -2282,7 +2259,7 @@ bool Codegen::visit(TildeExpression *ast)
     if (hasError)
         return false;
 
-    _expr.result = unop(IR::OpCompl, expression(ast->expression), ast->tildeToken);
+    _expr.result = unop(Compl, expression(ast->expression));
     return false;
 }
 
@@ -2329,7 +2306,7 @@ bool Codegen::visit(UnaryMinusExpression *ast)
     if (hasError)
         return false;
 
-    _expr.result = unop(IR::OpUMinus, expression(ast->expression), ast->minusToken);
+    _expr.result = unop(UMinus, expression(ast->expression));
     return false;
 }
 
@@ -2338,7 +2315,7 @@ bool Codegen::visit(UnaryPlusExpression *ast)
     if (hasError)
         return false;
 
-    _expr.result = unop(IR::OpUPlus, expression(ast->expression), ast->plusToken);
+    _expr.result = unop(UPlus, expression(ast->expression));
     return false;
 }
 

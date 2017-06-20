@@ -100,7 +100,8 @@ enum Op {
     Sub,
     URShift,
     InplaceURightShift,
-    InplaceXor
+    InplaceXor,
+    Invalid
 };
 
 } // namespace QSOperator
