@@ -3202,6 +3202,8 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     case QmlContextObject:
         closureId = other.qmlIndex;
         break;
+    case This:
+        break;
     }
 
     // keep loaded reference
@@ -3240,6 +3242,8 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     case QmlScopeObject:
     case QmlContextObject:
         return qmlIndex == other.qmlIndex;
+    case This:
+        return true;
     }
     return true;
 }
