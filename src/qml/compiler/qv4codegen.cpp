@@ -1856,10 +1856,12 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
         f = f->outer;
     }
 
-    // This hook allows implementing QML lookup semantics
-// ####
-//    if (IR::Expr *fallback = fallbackNameLookup(name, line, col))
-//        return fallback;
+    {
+        // This hook allows implementing QML lookup semantics
+        Reference fallback = fallbackNameLookup(name);
+        if (fallback.type != Reference::Invalid)
+            return fallback;
+    }
 
 // ###
 //    if (!e->parent && (!f || !f->insideWithOrCatch) && _variableEnvironment->compilationMode != EvalCode && e->compilationMode != QmlBinding)
@@ -1870,12 +1872,10 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
     return Reference::fromName(this, name);
 }
 
-IR::Expr *Codegen::fallbackNameLookup(const QString &name, int line, int col)
+Codegen::Reference Codegen::fallbackNameLookup(const QString &name)
 {
     Q_UNUSED(name)
-    Q_UNUSED(line)
-    Q_UNUSED(col)
-    return 0;
+    return Reference();
 }
 
 bool Codegen::visit(IdentifierExpression *ast)
@@ -2234,7 +2234,7 @@ bool Codegen::visit(StringLiteral *ast)
 
     Instruction::LoadRuntimeString instr;
     instr.result = _expr.result.asLValue();
-    instr.stringId = jsUnitGenerator->registerString(ast->value.toString());
+    instr.stringId = registerString(ast->value.toString());
     bytecodeGenerator->addInstruction(instr);
     return false;
 }
@@ -2408,7 +2408,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
             Instruction::CallBuiltinDeclareVar declareVar;
             declareVar.isDeletable = false;
-            declareVar.varName = jsUnitGenerator->registerString(local);
+            declareVar.varName = registerString(local);
             bytecodeGenerator->addInstruction(declareVar);
         }
     }
@@ -3210,6 +3210,9 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         break;
     case Closure:
         closureId = other.closureId;
+    case QmlScopeObject:
+    case QmlContextObject:
+        closureId = other.qmlIndex;
         break;
     }
 
@@ -3246,6 +3249,9 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         return constant == other.constant;
     case Closure:
         return closureId == other.closureId;
+    case QmlScopeObject:
+    case QmlContextObject:
+        return qmlIndex == other.qmlIndex;
     }
     return true;
 }
@@ -3368,6 +3374,18 @@ void Codegen::Reference::writeBack() const
         store.index = subscript;
         store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
+    } else if (type == QmlScopeObject) {
+        Instruction::StoreScopeObjectProperty store;
+        store.base = base;
+        store.propertyIndex = qmlIndex;
+        store.source = temp;
+        codegen->bytecodeGenerator->addInstruction(store);
+    } else if (type == QmlContextObject) {
+        Instruction::StoreContextObjectProperty store;
+        store.base = base;
+        store.propertyIndex = qmlIndex;
+        store.source = temp;
+        codegen->bytecodeGenerator->addInstruction(store);
     } else {
         Q_ASSERT(false);
         Q_UNREACHABLE();
@@ -3410,6 +3428,20 @@ void Codegen::Reference::load(uint tmp) const
     } else if (type == Closure) {
         Instruction::LoadClosure load;
         load.value = closureId;
+        load.result = temp;
+        codegen->bytecodeGenerator->addInstruction(load);
+    } else if (type == QmlScopeObject) {
+        Instruction::LoadScopeObjectProperty load;
+        load.base = base;
+        load.propertyIndex = qmlIndex;
+        load.captureRequired = true; // ### captureRequired;
+        load.result = temp;
+        codegen->bytecodeGenerator->addInstruction(load);
+    } else if (type == QmlContextObject) {
+        Instruction::LoadContextObjectProperty load;
+        load.base = base;
+        load.propertyIndex = qmlIndex;
+        load.captureRequired = true; // ### captureRequired;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
     } else {

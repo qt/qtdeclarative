@@ -603,7 +603,7 @@ struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QQmlJS::Codegen
 
 protected:
     void beginFunctionBodyHook() override;
-    QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col) override;
+    Reference fallbackNameLookup(const QString &name) override;
 
 private:
     QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup = 0);

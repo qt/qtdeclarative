@@ -86,6 +86,7 @@ class UiParameterList;
 
 class Q_QML_PRIVATE_EXPORT Codegen: protected AST::Visitor
 {
+protected:
     using BytecodeGenerator = QV4::Moth::BytecodeGenerator;
     using Instruction = QV4::Moth::Instruction;
 public:
@@ -123,7 +124,9 @@ public:
             Member,
             Subscript,
             Closure,
-            LastLValue = Closure,
+            QmlScopeObject,
+            QmlContextObject,
+            LastLValue = QmlContextObject,
             Const
         } type = Invalid;
 
@@ -164,13 +167,13 @@ public:
         }
         static Reference fromName(Codegen *cg, const QString &name) {
             Reference r(cg, Name);
-            r.nameIndex = cg->jsUnitGenerator->registerString(name);
+            r.nameIndex = cg->registerString(name);
             return r;
         }
         static Reference fromMember(const Reference &baseRef, const QString &name) {
             Reference r(baseRef.codegen, Member);
             r.base = baseRef.asRValue();
-            r.nameIndex = r.codegen->jsUnitGenerator->registerString(name);
+            r.nameIndex = r.codegen->registerString(name);
             return r;
         }
         static Reference fromSubscript(const Reference &baseRef, const Reference &subscript) {
@@ -187,6 +190,18 @@ public:
         static Reference fromClosure(Codegen *cg, int functionId) {
             Reference r(cg, Closure);
             r.closureId = functionId;
+            return r;
+        }
+        static Reference fromQmlScopeObject(const Reference &base, int index) {
+            Reference r(base.codegen, QmlScopeObject);
+            r.base = base.asRValue();
+            r.qmlIndex = index;
+            return r;
+        }
+        static Reference fromQmlContextObject(const Reference &base, int index) {
+            Reference r(base.codegen, QmlContextObject);
+            r.base = base.asRValue();
+            r.qmlIndex = index;
             return r;
         }
 
@@ -217,6 +232,7 @@ public:
             QV4::Moth::Param subscript;
             QV4::ReturnedValue constant;
             int closureId;
+            int qmlIndex;
         };
         mutable int tempIndex = -1;
         mutable bool needsWriteBack = false;
@@ -451,6 +467,10 @@ protected:
     Reference unop(UnaryOperation op, const Reference &expr);
     QV4::IR::Stmt *move(QV4::IR::Expr *target, QV4::IR::Expr *source);
 
+    int registerString(const QString &name) {
+        return jsUnitGenerator->registerString(name);
+    }
+
     // Returns index in _module->functions
     int defineFunction(const QString &name, AST::Node *ast,
                        AST::FormalParameterList *formals,
@@ -477,7 +497,7 @@ protected:
     Reference referenceForName(const QString &name, bool lhs);
 
     // Hook provided to implement QML lookup semantics
-    virtual QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col);
+    virtual Reference fallbackNameLookup(const QString &name);
     virtual void beginFunctionBodyHook() {}
 
     // nodes

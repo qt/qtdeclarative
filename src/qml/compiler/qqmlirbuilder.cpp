@@ -1927,29 +1927,34 @@ static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, 
 
 void JSCodeGen::beginFunctionBodyHook()
 {
-    _qmlContextTemp = _block->newTemp();
-    _importedScriptsTemp = _block->newTemp();
+    _qmlContextTemp = bytecodeGenerator->newTemp();
+    _importedScriptsTemp = bytecodeGenerator->newTemp();
 
 #ifndef V4_BOOTSTRAP
-    QV4::IR::Temp *temp = _block->TEMP(_qmlContextTemp);
+    Instruction::LoadQmlContext load;
+    load.result = Reference::fromTemp(this, _qmlContextTemp).asLValue();
+    bytecodeGenerator->addInstruction(load);
+
+#if 0
     temp->type = QV4::IR::QObjectType;
     temp->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
     initMetaObjectResolver(temp->memberResolver, _scopeObject);
     auto name = _block->NAME(QV4::IR::Name::builtin_qml_context, 0, 0);
     name->type = temp->type;
-    move(temp, name);
+#endif
 
-    move(_block->TEMP(_importedScriptsTemp), _block->NAME(QV4::IR::Name::builtin_qml_imported_scripts_object, 0, 0));
+    Instruction::LoadQmlImportedScripts loadScripts;
+    loadScripts.result = Reference::fromTemp(this, _importedScriptsTemp).asLValue();
+    bytecodeGenerator->addInstruction(loadScripts);
 #endif
 }
 
-QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int col)
+QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
 {
-    Q_UNUSED(line)
-    Q_UNUSED(col)
 #ifndef V4_BOOTSTRAP
     if (_disableAcceleratedLookups)
-        return 0;
+        return Reference();
+
     // Implement QML lookup semantics in the current file context.
     //
     // Note: We do not check if properties of the qml scope object or context object
@@ -1967,10 +1972,14 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
             if (_function->isQmlBinding)
                 _function->idObjectDependencies.insert(mapping.idIndex);
 
-            QV4::IR::Expr *s = _block->MEMBER(_block->TEMP(_qmlContextTemp), _function->newString(name), 0, QV4::IR::Member::MemberOfIdObjectsArray, mapping.idIndex);
-            QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
-            _block->MOVE(result, s);
-            result = _block->TEMP(result->index);
+            Reference result = Reference::fromTemp(this);
+            Instruction::LoadIdObject load;
+            load.base = Reference::fromTemp(this, _qmlContextTemp).asRValue();
+            load.index = registerString(name);
+            load.result = result.asLValue();
+            bytecodeGenerator->addInstruction(load);
+
+#if 0
             if (mapping.type) {
                 result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
                 result->memberResolver->owner = _function;
@@ -1978,6 +1987,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
                 result->memberResolver->flags |= AllPropertiesAreFinal;
             }
             result->isReadOnly = true; // don't allow use as lvalue
+#endif
             return result;
         }
     }
@@ -1986,32 +1996,39 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
         QQmlTypeNameCache::Result r = imports->query(name);
         if (r.isValid()) {
             if (r.scriptIndex != -1) {
-                return _block->SUBSCRIPT(_block->TEMP(_importedScriptsTemp),
-                                         _block->CONST(QV4::IR::SInt32Type, r.scriptIndex));
+                Reference imports = Reference::fromTemp(this, _importedScriptsTemp);
+                return Reference::fromSubscript(imports, Reference::fromConst(this, QV4::Encode(r.scriptIndex)));
             } else if (r.type) {
-                QV4::IR::Name *typeName = _block->NAME(name, line, col);
-                // Make sure the run-time loads this through the more efficient singleton getter.
-                typeName->qmlSingleton = r.type->isCompositeSingleton();
+#if 0
                 typeName->freeOfSideEffects = true;
-                QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
-                _block->MOVE(result, typeName);
-
                 result = _block->TEMP(result->index);
                 result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
                 result->memberResolver->owner = _function;
                 initQmlTypeResolver(result->memberResolver, r.type);
+#endif
+                if (r.type->isCompositeSingleton()) {
+                    Reference result = Reference::fromTemp(this);
+                    Instruction::LoadQmlSingleton load;
+                    load.result = result.asRValue();
+                    load.name = registerString(name);
+                    bytecodeGenerator->addInstruction(load);
+                    return result;
+                }
+                Reference result = Reference::fromName(this, name);
                 return result;
             } else {
                 Q_ASSERT(r.importNamespace);
+                Reference result = Reference::fromName(this, name);
+#if 0
                 QV4::IR::Name *namespaceName = _block->NAME(name, line, col);
                 namespaceName->freeOfSideEffects = true;
                 QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
                 result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
                 result->memberResolver->owner = _function;
                 initImportNamespaceResolver(result->memberResolver, imports, r.importNamespace);
-
                 _block->MOVE(result, namespaceName);
-                return _block->TEMP(result->index);
+#endif
+                return result;
             }
         }
     }
@@ -2020,13 +2037,16 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
         bool propertyExistsButForceNameLookup = false;
         QQmlPropertyData *pd = lookupQmlCompliantProperty(_scopeObject, name, &propertyExistsButForceNameLookup);
         if (propertyExistsButForceNameLookup)
-            return 0;
+            return Reference::fromName(this, name);
         if (pd) {
+#if 0
             QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
             base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
             base->memberResolver->owner = _function;
             initMetaObjectResolver(base->memberResolver, _scopeObject);
-            return _block->MEMBER(base, _function->newString(name), pd, QV4::IR::Member::MemberOfQmlScopeObject);
+#endif
+            Reference base = Reference::fromTemp(this, _qmlContextTemp);
+            return Reference::fromQmlScopeObject(base, pd->coreIndex());
         }
     }
 
@@ -2034,21 +2054,23 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
         bool propertyExistsButForceNameLookup = false;
         QQmlPropertyData *pd = lookupQmlCompliantProperty(_contextObject, name, &propertyExistsButForceNameLookup);
         if (propertyExistsButForceNameLookup)
-            return 0;
+            return Reference::fromName(this, name);
         if (pd) {
+#if 0
             QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
             base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
             base->memberResolver->owner = _function;
             initMetaObjectResolver(base->memberResolver, _contextObject);
-            return _block->MEMBER(base, _function->newString(name), pd, QV4::IR::Member::MemberOfQmlContextObject);
+#endif
+            Reference base = Reference::fromTemp(this, _qmlContextTemp);
+            return Reference::fromQmlContextObject(base, pd->coreIndex());
         }
     }
-
 #else
     Q_UNUSED(name)
 #endif // V4_BOOTSTRAP
     // fall back to name lookup at run-time.
-    return 0;
+    return Reference();
 }
 
 #ifndef V4_BOOTSTRAP
