@@ -127,7 +127,8 @@ public:
             QmlScopeObject,
             QmlContextObject,
             LastLValue = QmlContextObject,
-            Const
+            Const,
+            This
         } type = Invalid;
 
         bool isLValue() const { return type <= LastLValue; }
@@ -202,6 +203,10 @@ public:
             Reference r(base.codegen, QmlContextObject);
             r.base = base.asRValue();
             r.qmlIndex = index;
+            return r;
+        }
+        static Reference fromThis(Codegen *cg) {
+            Reference r(cg, This);
             return r;
         }
 

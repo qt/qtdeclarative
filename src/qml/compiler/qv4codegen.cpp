@@ -2220,13 +2220,7 @@ bool Codegen::visit(ThisExpression *)
     if (hasError)
         return false;
 
-    Reference r = Reference::fromTemp(this);
-
-    Instruction::LoadThis loadThis;
-    loadThis.result = r.asLValue();
-    bytecodeGenerator->addInstruction(loadThis);
-
-    _expr.result = r;
+    _expr.result = Reference::fromThis(this);
     return false;
 }
 
@@ -2592,6 +2586,8 @@ bool Codegen::visit(ExpressionStatement *ast)
 
     if (_variableEnvironment->compilationMode == EvalCode || _variableEnvironment->compilationMode == QmlBinding) {
         Reference e = expression(ast->expression);
+        if (hasError)
+            return false;
         Reference retVal = Reference::fromTemp(this, _returnAddress);
         retVal.store(e);
     } else {
@@ -3417,6 +3413,10 @@ void Codegen::Reference::load(uint tmp) const
         load.base = base;
         load.propertyIndex = qmlIndex;
         load.captureRequired = true; // ### captureRequired;
+        load.result = temp;
+        codegen->bytecodeGenerator->addInstruction(load);
+    } else if (type == This) {
+        Instruction::LoadThis load;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
     } else {
