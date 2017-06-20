@@ -346,8 +346,8 @@ demonstrates a usage of extension objects.
 
 \section1 Defining QML-Specific Types and Attributes
 
-
-\section2 Providing Attached Objects for Data Annotations
+\section2 Providing Attached Properties
+\keyword Integrating QML and C++ - Attached Properties
 
 In the QML language syntax, there is a notion of \l{Attached properties and
 attached signal handlers}{\e {attached properties} and \e {attached signal

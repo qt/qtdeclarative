@@ -354,7 +354,7 @@
     Returns 0 if type \e T is not a valid attaching type, or if \a create is false and no
     attachment object instance has previously been created for \a attachee.
 
-    \sa {Providing Attached Objects for Data Annotations}
+    \sa {Providing Attached Properties}
 
 */
 
