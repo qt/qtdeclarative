@@ -336,7 +336,7 @@ void tst_qquicktext::width()
             metricWidth = layout.boundingRect().width();
         } else {
             QFontMetricsF fm(f);
-            metricWidth = fm.size(Qt::TextExpandTabs && Qt::TextShowMnemonic, standard.at(i)).width();
+            metricWidth = fm.size(Qt::TextExpandTabs | Qt::TextShowMnemonic, standard.at(i)).width();
         }
 
         QString componentStr = "import QtQuick 2.0\nText { text: \"" + standard.at(i) + "\" }";
