@@ -2412,7 +2412,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             const QString &local = it.key();
             function->LOCAL(local);
             (*it).index = t;
-            Reference::fromLocal(this, t, 0).store(undef);
             ++t;
         }
     } else {
