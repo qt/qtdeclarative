@@ -2364,6 +2364,14 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
 
+    { // reserve space for outgoing call arguments
+        Q_ASSERT(function->tempCount == 0);
+        int minNrOfStackEntries = offsetof(QV4::CallData, args)/sizeof(QV4::Value);
+        function->tempCount = minNrOfStackEntries + _variableEnvironment->maxNumberOfArguments;
+        function->currentTemp = function->tempCount;
+    }
+
+    unsigned returnAddress = bytecodeGenerator->newTemp();
     if (function->usesArgumentsObject)
         _variableEnvironment->enter(QStringLiteral("arguments"), Environment::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
 
@@ -2399,14 +2407,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     }
 
-    { // reserve space for outgoing call arguments
-        Q_ASSERT(function->tempCount == 0);
-        int minNrOfStackEntries = offsetof(QV4::CallData, args)/sizeof(QV4::Value);
-        function->tempCount = minNrOfStackEntries + _variableEnvironment->maxNumberOfArguments;
-        function->currentTemp = function->tempCount;
-    }
-
-    unsigned returnAddress = bytecodeGenerator->newTemp();
     auto exitBlock = bytecodeGenerator->newLabel();
 
     qSwap(_function, function);
