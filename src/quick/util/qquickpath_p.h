@@ -159,6 +159,15 @@ public:
     void addToPath(QPainterPath &path, const QQuickPathData &) override;
 };
 
+class Q_QUICK_PRIVATE_EXPORT QQuickPathMove : public QQuickCurve
+{
+    Q_OBJECT
+public:
+    QQuickPathMove(QObject *parent=0) : QQuickCurve(parent) {}
+
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
+};
+
 class Q_QUICK_PRIVATE_EXPORT QQuickPathQuad : public QQuickCurve
 {
     Q_OBJECT
@@ -281,10 +290,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathArc : public QQuickCurve
     Q_PROPERTY(qreal radiusY READ radiusY WRITE setRadiusY NOTIFY radiusYChanged)
     Q_PROPERTY(bool useLargeArc READ useLargeArc WRITE setUseLargeArc NOTIFY useLargeArcChanged)
     Q_PROPERTY(ArcDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
+    Q_PROPERTY(qreal xAxisRotation READ xAxisRotation WRITE setXAxisRotation NOTIFY xAxisRotationChanged REVISION 2)
 
 public:
     QQuickPathArc(QObject *parent=0)
-        : QQuickCurve(parent), _radiusX(0), _radiusY(0), _useLargeArc(false), _direction(Clockwise) {}
+        : QQuickCurve(parent), _radiusX(0), _radiusY(0), _useLargeArc(false), _direction(Clockwise), _xAxisRotation(0) {}
 
     enum ArcDirection { Clockwise, Counterclockwise };
     Q_ENUM(ArcDirection)
@@ -301,6 +311,9 @@ public:
     ArcDirection direction() const;
     void setDirection(ArcDirection direction);
 
+    qreal xAxisRotation() const;
+    void setXAxisRotation(qreal rotation);
+
     void addToPath(QPainterPath &path, const QQuickPathData &) override;
 
 Q_SIGNALS:
@@ -308,12 +321,14 @@ Q_SIGNALS:
     void radiusYChanged();
     void useLargeArcChanged();
     void directionChanged();
+    Q_REVISION(2) void xAxisRotationChanged();
 
 private:
     qreal _radiusX;
     qreal _radiusY;
     bool _useLargeArc;
     ArcDirection _direction;
+    qreal _xAxisRotation;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPathSvg : public QQuickCurve
@@ -404,6 +419,7 @@ Q_SIGNALS:
     void startYChanged();
 
 protected:
+    QQuickPath(QQuickPathPrivate &dd, QObject *parent = nullptr);
     void componentComplete() override;
     void classBegin() override;
     void disconnectPathElements();
@@ -458,6 +474,7 @@ QML_DECLARE_TYPE(QQuickPathElement)
 QML_DECLARE_TYPE(QQuickPathAttribute)
 QML_DECLARE_TYPE(QQuickCurve)
 QML_DECLARE_TYPE(QQuickPathLine)
+QML_DECLARE_TYPE(QQuickPathMove)
 QML_DECLARE_TYPE(QQuickPathQuad)
 QML_DECLARE_TYPE(QQuickPathCubic)
 QML_DECLARE_TYPE(QQuickPathCatmullRomCurve)

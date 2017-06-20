@@ -56,6 +56,11 @@
         f.setVersion(4, 4);\
         view.setFormat(f);\
     }\
+    if (qgetenv("QT_QUICK_MULTISAMPLE").toInt()) {\
+        QSurfaceFormat f = view.format();\
+        f.setSamples(4);\
+        view.setFormat(f);\
+    }\
     view.connect(view.engine(), &QQmlEngine::quit, &app, &QCoreApplication::quit);\
     new QQmlFileSelector(view.engine(), &view);\
     view.setSource(QUrl("qrc:///" #NAME ".qml")); \

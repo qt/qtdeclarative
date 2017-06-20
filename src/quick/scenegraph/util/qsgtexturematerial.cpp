@@ -280,7 +280,7 @@ void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
 
      Returns this material's horizontal wrap mode.
 
-     The default horizontal wrap mode is \c QSGTexutre::ClampToEdge.
+     The default horizontal wrap mode is \c QSGTexture::ClampToEdge.
   */
 
 
@@ -301,7 +301,7 @@ void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
 
      Returns this material's vertical wrap mode.
 
-     The default vertical wrap mode is \c QSGTexutre::ClampToEdge.
+     The default vertical wrap mode is \c QSGTexture::ClampToEdge.
   */
 
 

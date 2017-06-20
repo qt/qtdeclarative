@@ -259,7 +259,7 @@ void QSGDefaultRenderContext::compileShader(QSGMaterialShader *shader, QSGMateri
     if (vertexCode || fragmentCode) {
         Q_ASSERT_X((material->flags() & QSGMaterial::CustomCompileStep) == 0,
                    "QSGRenderContext::compile()",
-                   "materials with custom compile step cannot have custom vertex/fragment code");
+                   "materials with custom compile step cannot have modified vertex or fragment code");
         QOpenGLShaderProgram *p = shader->program();
         p->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, vertexCode ? vertexCode : shader->vertexShader());
         p->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, fragmentCode ? fragmentCode : shader->fragmentShader());

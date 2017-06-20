@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
 #include <QtCore/qstring.h>
 #include <QtGui/qpainterpath.h>
 
@@ -59,9 +60,9 @@ QT_BEGIN_NAMESPACE
 namespace QQuickSvgParser
 {
     bool parsePathDataFast(const QString &dataStr, QPainterPath &path);
-    void pathArc(QPainterPath &path, qreal rx, qreal ry, qreal x_axis_rotation,
-                 int large_arc_flag, int sweep_flag, qreal x, qreal y, qreal curx,
-                 qreal cury);
+    Q_QUICK_PRIVATE_EXPORT void pathArc(QPainterPath &path, qreal rx, qreal ry, qreal x_axis_rotation,
+                                        int large_arc_flag, int sweep_flag, qreal x, qreal y, qreal curx,
+                                        qreal cury);
 }
 
 QT_END_NAMESPACE

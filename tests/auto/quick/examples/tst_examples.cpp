@@ -86,6 +86,8 @@ tst_examples::tst_examples()
     excludedDirs << "snippets/qml/visualdatamodel_rootindex";
     excludedDirs << "snippets/qml/qtbinding";
     excludedDirs << "snippets/qml/imports";
+    excludedFiles << "examples/quick/shapes/content/pathitem.qml"; // relies on resources
+    excludedFiles << "examples/quick/shapes/content/pathiteminteract.qml"; // relies on resources
 
 #ifdef QT_NO_XMLPATTERNS
     excludedDirs << "demos/twitter";
