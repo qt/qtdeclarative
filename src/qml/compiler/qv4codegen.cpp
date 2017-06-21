@@ -2708,21 +2708,21 @@ bool Codegen::visit(ForEachStatement *ast)
 
     BytecodeGenerator::Label body = bytecodeGenerator->label();
 
-    Reference it = Reference::fromTemp(this);
-
-    Reference init = expression(ast->initialiser);
-    init.store(it);
     statement(ast->statement);
 
     in.link();
 
+    Reference lhs = expression(ast->initialiser);
+
     Instruction::CallBuiltinForeachNextPropertyName nextPropInstr;
-    nextPropInstr.result = it.asLValue();
+    nextPropInstr.result = lhs.asLValue();
     nextPropInstr.arg = obj.asRValue();
     bytecodeGenerator->addInstruction(nextPropInstr);
 
+    lhs.writeBack();
+
     Reference null = Reference::fromConst(this, QV4::Encode::null());
-    bytecodeGenerator->jumpStrictNotEqual(it.asRValue(), null.asRValue()).link(body);
+    bytecodeGenerator->jumpStrictNotEqual(lhs.asRValue(), null.asRValue()).link(body);
 
     end.link();
 
