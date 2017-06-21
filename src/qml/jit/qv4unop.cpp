@@ -69,8 +69,8 @@ void Unop<JITAssembler>::generate(IR::Expr *source, IR::Expr *target)
     case IR::OpCompl:
         generateCompl(source, target);
         return;
-    case IR::OpIncrement: setOp(preIncrement); break;
-    case IR::OpDecrement: setOp(preDecrement); break;
+    case IR::OpPreIncrement: setOp(preIncrement); break;
+    case IR::OpPreDecrement: setOp(preDecrement); break;
     default:
         Q_UNREACHABLE();
     } // switch
