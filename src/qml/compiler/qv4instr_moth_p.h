@@ -96,7 +96,7 @@ QT_BEGIN_NAMESPACE
     F(LoadIdObject, loadIdObject) \
     F(LoadAttachedQObjectProperty, loadAttachedQObjectProperty) \
     F(LoadSingletonQObjectProperty, loadQObjectProperty) \
-    F(Push, push) \
+    F(InitStackFrame, initStackFrame) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
     F(CallPropertyLookup, callPropertyLookup) \
@@ -424,7 +424,7 @@ union Instr
         Param index;
         Param source;
     };
-    struct instr_push {
+    struct instr_initStackFrame {
         MOTH_INSTR_HEADER
         quint32 value;
     };
@@ -858,7 +858,7 @@ union Instr
     instr_storeScopeObjectProperty storeScopeObjectProperty;
     instr_storeContextObjectProperty storeContextObjectProperty;
     instr_storeQObjectProperty storeQObjectProperty;
-    instr_push push;
+    instr_initStackFrame initStackFrame;
     instr_callValue callValue;
     instr_callProperty callProperty;
     instr_callPropertyLookup callPropertyLookup;

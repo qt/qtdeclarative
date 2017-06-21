@@ -555,12 +555,12 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
         STOREVALUE(instr.result, Runtime::method_getQmlSingletonQObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, instr.captureRequired));
     MOTH_END_INSTR(LoadSingletonQObjectProperty)
 
-    MOTH_BEGIN_INSTR(Push)
+    MOTH_BEGIN_INSTR(InitStackFrame)
         TRACE(inline, "stack size: %u", instr.value);
         stackSize = instr.value;
         stack = scope.alloc(stackSize);
         scopes[1].values = stack;
-    MOTH_END_INSTR(Push)
+    MOTH_END_INSTR(InitStackFrame)
 
     MOTH_BEGIN_INSTR(CallValue)
 #if 0 //def DO_TRACE_INSTR

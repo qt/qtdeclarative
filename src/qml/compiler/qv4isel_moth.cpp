@@ -223,9 +223,9 @@ void InstructionSelection::run(int functionIndex)
 
     IR::BasicBlock *exceptionHandler = 0;
 
-    Instruction::Push push;
-    push.value = quint32(locals);
-    addInstruction(push);
+    Instruction::InitStackFrame init;
+    init.value = quint32(locals);
+    addInstruction(init);
 
     currentLine = 0;
     const QVector<IR::BasicBlock *> &basicBlocks = _function->basicBlocks();

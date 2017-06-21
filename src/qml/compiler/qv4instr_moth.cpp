@@ -233,9 +233,9 @@ void dumpBytecode(const char *code, int len)
             d << instr.result << ", " << instr.base << "[" << instr.propertyIndex << "]";
         MOTH_END_INSTR(LoadSingletonQObjectProperty)
 
-        MOTH_BEGIN_INSTR(Push)
+        MOTH_BEGIN_INSTR(InitStackFrame)
             d << instr.value;
-        MOTH_END_INSTR(Push)
+        MOTH_END_INSTR(InitStackFrame)
 
         MOTH_BEGIN_INSTR(CallValue)
             d << instr.result << ", " << instr.dest << "(" << instr.callData << ")";

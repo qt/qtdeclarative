@@ -67,10 +67,10 @@ QByteArray BytecodeGenerator::finalize()
 {
     QByteArray code;
 
-    Instruction::Push push;
-    push.instructionType = Instr::Push;
-    push.value = quint32(function->tempCount);
-    code.append(reinterpret_cast<const char *>(&push), InstrMeta<Instr::Push>::Size);
+    Instruction::InitStackFrame init;
+    init.instructionType = Instr::InitStackFrame;
+    init.value = quint32(function->tempCount);
+    code.append(reinterpret_cast<const char *>(&init), InstrMeta<Instr::InitStackFrame>::Size);
 
     // content
     QVector<int> instructionOffsets;
