@@ -237,16 +237,14 @@ bool ExecutionContext::deleteProperty(String *name)
                 return global->deleteProperty(name);
             break;
         }
-        case Heap::ExecutionContext::Type_CallContext: {
-            Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
+        case Heap::ExecutionContext::Type_CallContext:
+            Q_FALLTHROUGH();
+        case Heap::ExecutionContext::Type_SimpleCallContext: {
+            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
             uint index = c->v4Function->internalClass->find(id);
             if (index < UINT_MAX)
                 // ### throw in strict mode?
                 return false;
-            Q_FALLTHROUGH();
-        }
-        case Heap::ExecutionContext::Type_SimpleCallContext: {
-            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
             ScopedObject qml(scope, c->activation);
             if (qml && qml->hasProperty(name))
                 return qml->deleteProperty(name);
@@ -418,32 +416,33 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                 return v->asReturnedValue();
             break;
         }
-        case Heap::ExecutionContext::Type_CallContext: {
-            Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
+        case Heap::ExecutionContext::Type_CallContext:
+            Q_FALLTHROUGH();
+        case Heap::ExecutionContext::Type_SimpleCallContext: {
+            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
+
             name->makeIdentifier();
             Identifier *id = name->identifier();
-
             uint index = c->v4Function->internalClass->find(id);
             if (index < UINT_MAX) {
                 if (index < c->v4Function->nFormals)
                     return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();
-                Q_ASSERT(c->type == Heap::ExecutionContext::Type_CallContext);
-                return c->locals[index - c->v4Function->nFormals].asReturnedValue();
+                if (c->type == Heap::ExecutionContext::Type_CallContext)
+                    return static_cast<Heap::CallContext *>(c)->locals[index - c->v4Function->nFormals].asReturnedValue();
             }
-            if (c->v4Function->isNamedExpression()) {
-                if (c->function && name->equals(ScopedString(scope, c->v4Function->name())))
-                    return c->function->asReturnedValue();
-            }
-            Q_FALLTHROUGH();
-        }
-        case Heap::ExecutionContext::Type_SimpleCallContext: {
-            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
+
             ScopedObject activation(scope, c->activation);
             if (activation) {
                 bool hasProperty = false;
                 v = activation->get(name, &hasProperty);
                 if (hasProperty)
                     return v->asReturnedValue();
+            }
+
+            if (c->v4Function->isNamedExpression() && c->type == Heap::ExecutionContext::Type_CallContext) {
+                if (name->equals(ScopedString(scope, c->v4Function->name())))
+                    if (auto func = static_cast<Heap::CallContext *>(c)->function)
+                        return func->asReturnedValue();
             }
             break;
         }
@@ -498,31 +497,33 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
                 return v->asReturnedValue();
             break;
         }
-        case Heap::ExecutionContext::Type_CallContext: {
-            Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
+        case Heap::ExecutionContext::Type_CallContext:
+            Q_FALLTHROUGH();
+        case Heap::ExecutionContext::Type_SimpleCallContext: {
+            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
+
             name->makeIdentifier();
             Identifier *id = name->identifier();
-
             uint index = c->v4Function->internalClass->find(id);
             if (index < UINT_MAX) {
                 if (index < c->v4Function->nFormals)
                     return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();
-                return c->locals[index - c->v4Function->nFormals].asReturnedValue();
+                if (c->type == Heap::ExecutionContext::Type_CallContext)
+                    return static_cast<Heap::CallContext *>(c)->locals[index - c->v4Function->nFormals].asReturnedValue();
             }
-            if (c->v4Function->isNamedExpression()) {
-                if (c->function && name->equals(ScopedString(scope, c->v4Function->name())))
-                    return c->function->asReturnedValue();
-            }
-            Q_FALLTHROUGH();
-        }
-        case Heap::ExecutionContext::Type_SimpleCallContext: {
-            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
+
             ScopedObject activation(scope, c->activation);
             if (activation) {
                 bool hasProperty = false;
                 v = activation->get(name, &hasProperty);
                 if (hasProperty)
                     return v->asReturnedValue();
+            }
+
+            if (c->v4Function->isNamedExpression() && c->type == Heap::ExecutionContext::Type_CallContext) {
+                if (name->equals(ScopedString(scope, c->v4Function->name())))
+                    if (auto func = static_cast<Heap::CallContext *>(c)->function)
+                        return func->asReturnedValue();
             }
             break;
         }

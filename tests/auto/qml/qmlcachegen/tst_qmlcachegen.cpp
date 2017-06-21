@@ -43,6 +43,7 @@ private slots:
 
     void loadGeneratedFile();
     void translationExpressionSupport();
+    void signalHandlerParameters();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -156,6 +157,41 @@ void tst_qmlcachegen::translationExpressionSupport()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QCOMPARE(obj->property("text").toString(), QString("All Ok"));
+}
+
+void tst_qmlcachegen::signalHandlerParameters()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const auto writeTempFile = [&tempDir](const QString &fileName, const char *contents) {
+        QFile f(tempDir.path() + '/' + fileName);
+        const bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        Q_ASSERT(ok);
+        f.write(contents);
+        return f.fileName();
+    };
+
+    const QString testFilePath = writeTempFile("test.qml", "import QtQml 2.0\n"
+                                                           "QtObject {\n"
+                                                           "    property real result: 0\n"
+                                                           "    signal testMe(real value);\n"
+                                                           "    onTestMe: result = value;\n"
+                                                           "    function runTest() { testMe(42); }\n"
+                                                           "}");
+
+    QVERIFY(generateCache(testFilePath));
+
+    const QString cacheFilePath = testFilePath + QLatin1Char('c');
+    QVERIFY(QFile::exists(cacheFilePath));
+    QVERIFY(QFile::remove(testFilePath));
+
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QMetaObject::invokeMethod(obj.data(), "runTest");
+    QCOMPARE(obj->property("result").toInt(), 42);
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)
