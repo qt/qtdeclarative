@@ -79,6 +79,7 @@ private slots:
     void cursorShape();
     void componentComplete();
     void closeOnEscapeWithNestedPopups();
+    void enabled();
 };
 
 void tst_popup::initTestCase()
@@ -904,6 +905,26 @@ void tst_popup::closeOnEscapeWithNestedPopups()
     // Remove one by pressing the Escape key (the Shortcut should be activated).
     QTest::keyClick(window, Qt::Key_Escape);
     QCOMPARE(stackView->depth(), 1);
+}
+
+void tst_popup::enabled()
+{
+    QQuickPopup popup;
+    QVERIFY(popup.isEnabled());
+    QVERIFY(popup.popupItem()->isEnabled());
+
+    QSignalSpy enabledSpy(&popup, &QQuickPopup::enabledChanged);
+    QVERIFY(enabledSpy.isValid());
+
+    popup.setEnabled(false);
+    QVERIFY(!popup.isEnabled());
+    QVERIFY(!popup.popupItem()->isEnabled());
+    QCOMPARE(enabledSpy.count(), 1);
+
+    popup.popupItem()->setEnabled(true);
+    QVERIFY(popup.isEnabled());
+    QVERIFY(popup.popupItem()->isEnabled());
+    QCOMPARE(enabledSpy.count(), 2);
 }
 
 QTEST_MAIN(tst_popup)

@@ -110,6 +110,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged FINAL)
     Q_PROPERTY(bool dim READ dim WRITE setDim RESET resetDim NOTIFY dimChanged FINAL)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL REVISION 3)
     Q_PROPERTY(bool opened READ isOpened NOTIFY openedChanged FINAL REVISION 3)
     Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity NOTIFY opacityChanged FINAL)
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged FINAL)
@@ -247,6 +248,9 @@ public:
     bool isVisible() const;
     virtual void setVisible(bool visible);
 
+    bool isEnabled() const;
+    void setEnabled(bool enabled);
+
     bool isOpened() const;
 
     qreal opacity() const;
@@ -331,6 +335,7 @@ Q_SIGNALS:
     void modalChanged();
     void dimChanged();
     void visibleChanged();
+    Q_REVISION(3) void enabledChanged();
     Q_REVISION(3) void openedChanged();
     void opacityChanged();
     void scaleChanged();

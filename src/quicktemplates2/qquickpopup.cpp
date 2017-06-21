@@ -260,6 +260,7 @@ void QQuickPopupPrivate::init()
     popupItem = new QQuickPopupItem(q);
     popupItem->setVisible(false);
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
+    QObject::connect(popupItem, &QQuickItem::enabledChanged, q, &QQuickPopup::enabledChanged);
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
     positioner = new QQuickPopupPositioner(q);
 }
@@ -1732,6 +1733,26 @@ void QQuickPopup::setVisible(bool visible)
     } else {
         d->visible = visible;
     }
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty bool QtQuick.Controls::Popup::enabled
+
+    This property holds whether the popup is enabled. The default value is \c true.
+
+    \sa visible, Item::enabled
+*/
+bool QQuickPopup::isEnabled() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->isEnabled();
+}
+
+void QQuickPopup::setEnabled(bool enabled)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setEnabled(enabled);
 }
 
 /*!
