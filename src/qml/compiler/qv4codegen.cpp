@@ -3370,7 +3370,7 @@ void Codegen::Reference::store(const Reference &r) const
         return;
     }
     Moth::Param x = r.asRValue();
-    Q_ASSERT(base != x);
+    Q_ASSERT(b != x);
     Instruction::Move move;
     move.source = x;
     move.result = b;
