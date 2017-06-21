@@ -330,10 +330,14 @@ void QQuickMenuPrivate::itemSiblingOrderChanged(QQuickItem *)
     // reorder the restacked items (eg. by a Repeater)
     Q_Q(QQuickMenu);
     QList<QQuickItem *> siblings = contentItem->childItems();
+
+    int to = 0;
     for (int i = 0; i < siblings.count(); ++i) {
         QQuickItem* sibling = siblings.at(i);
+        if (QQuickItemPrivate::get(sibling)->isTransparentForPositioner())
+            continue;
         int index = contentModel->indexOf(sibling, nullptr);
-        q->moveItem(index, i);
+        q->moveItem(index, to++);
     }
 }
 
@@ -510,6 +514,31 @@ void QQuickMenuPrivate::setCurrentIndex(int index)
         if (newCurrentItem)
             newCurrentItem->setHighlighted(true);
         currentItem = newCurrentItem;
+    }
+}
+
+void QQuickMenuPrivate::activateNextItem()
+{
+    int index = currentIndex();
+    int count = contentModel->count();
+    while (++index < count) {
+        QQuickItem *item = itemAt(index);
+        if (!item || !item->activeFocusOnTab())
+            continue;
+        item->forceActiveFocus(Qt::TabFocusReason);
+        break;
+    }
+}
+
+void QQuickMenuPrivate::activatePreviousItem()
+{
+    int index = currentIndex();
+    while (--index >= 0) {
+        QQuickItem *item = itemAt(index);
+        if (!item || !item->activeFocusOnTab())
+            continue;
+        item->forceActiveFocus(Qt::BacktabFocusReason);
+        break;
     }
 }
 
@@ -1158,13 +1187,11 @@ void QQuickMenu::keyReleaseEvent(QKeyEvent *event)
     // shown at once.
     switch (event->key()) {
     case Qt::Key_Up:
-        if (d->contentItem->metaObject()->indexOfMethod("decrementCurrentIndex()") != -1)
-            QMetaObject::invokeMethod(d->contentItem, "decrementCurrentIndex");
+        d->activatePreviousItem();
         break;
 
     case Qt::Key_Down:
-        if (d->contentItem->metaObject()->indexOfMethod("incrementCurrentIndex()") != -1)
-            QMetaObject::invokeMethod(d->contentItem, "incrementCurrentIndex");
+        d->activateNextItem();
         break;
 
     case Qt::Key_Left:
@@ -1180,11 +1207,6 @@ void QQuickMenu::keyReleaseEvent(QKeyEvent *event)
     default:
         break;
     }
-
-    int index = d->currentIndex();
-    QQuickItem *item = itemAt(index);
-    if (item)
-        item->forceActiveFocus();
 }
 
 void QQuickMenu::timerEvent(QTimerEvent *event)

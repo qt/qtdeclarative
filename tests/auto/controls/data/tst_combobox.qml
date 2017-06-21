@@ -156,6 +156,31 @@ TestCase {
         compare(control.currentText, "")
     }
 
+    function test_qobjects() {
+        var control = createTemporaryObject(emptyBox, testCase, {textRole: "text"})
+        verify(control)
+
+        var obj1 = Qt.createQmlObject("import QtQml 2.0; QtObject { property string text: 'one' }", control)
+        var obj2 = Qt.createQmlObject("import QtQml 2.0; QtObject { property string text: 'two' }", control)
+        var obj3 = Qt.createQmlObject("import QtQml 2.0; QtObject { property string text: 'three' }", control)
+
+        control.model = [obj1, obj2, obj3]
+
+        compare(control.count, 3)
+        compare(control.currentIndex, 0)
+        compare(control.currentText, "one")
+
+        control.currentIndex = 2
+        compare(control.currentIndex, 2)
+        compare(control.currentText, "three")
+
+        control.model = null
+        compare(control.model, null)
+        compare(control.count, 0)
+        compare(control.currentIndex, -1)
+        compare(control.currentText, "")
+    }
+
     function test_number() {
         var control = createTemporaryObject(comboBox, testCase)
         verify(control)

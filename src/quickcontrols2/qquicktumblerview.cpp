@@ -170,7 +170,7 @@ void QQuickTumblerView::createView()
     }
 }
 
-// Called whever the size or visibleItemCount changes.
+// Called whenever the size or visibleItemCount changes.
 void QQuickTumblerView::updateView()
 {
     QQuickItem *theView = view();
