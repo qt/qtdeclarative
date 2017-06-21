@@ -1331,16 +1331,17 @@ bool Codegen::visit(ArrayLiteral *ast)
     Reference *args = _args;
     if (_variableEnvironment->maxNumberOfArguments > 16)
         args = new Reference[_variableEnvironment->maxNumberOfArguments];
-    auto undefined = [this](){ return Reference::fromConst(this, Encode::undefined()); };
+    auto empty = [this](){ return Reference::fromConst(this, Primitive::emptyValue().asReturnedValue()); };
     auto push = [this, &argc, args](const Reference &arg) {
         args[argc] = arg;
-        args[argc].asRValue();
+        if (arg.type != Reference::Const)
+            args[argc].asRValue();
         argc += 1;
     };
 
     for (ElementList *it = ast->elements; it; it = it->next) {
         for (Elision *elision = it->elision; elision; elision = elision->next)
-            push(undefined());
+            push(empty());
 
         Reference expr = expression(it->expression);
         if (hasError)
@@ -1349,7 +1350,7 @@ bool Codegen::visit(ArrayLiteral *ast)
         push(expr);
     }
     for (Elision *elision = ast->elision; elision; elision = elision->next)
-        push(undefined());
+        push(empty());
 
     for (int i = 0; i < argc; ++i)
         Reference::fromTemp(this, i).store(args[i]);

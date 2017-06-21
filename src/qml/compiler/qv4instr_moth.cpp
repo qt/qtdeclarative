@@ -65,7 +65,7 @@ QString toString(QV4::ReturnedValue v)
     return QStringLiteral("string-const(%1)").arg(v);
 #else // !V4_BOOTSTRAP
     Value val = Value::fromReturnedValue(v);
-    return QLatin1String("const(") + val.toQStringNoThrow() + QLatin1String(")");
+    return QLatin1String("const(") + (val.isEmpty() ? QStringLiteral("empty") : val.toQStringNoThrow()) + QLatin1String(")");
 #endif // V4_BOOTSTRAP
 }
 
@@ -101,9 +101,9 @@ QDebug operator<<(QDebug dbg, const Param &p)
     else if (p.scope == 3) // local
         dbg << "@" << p.index;
     else if (p.scope & 1) // scoped local
-        dbg << "@" << p.index << "(" << ((p.scope - 3)/2);
+        dbg << "@" << p.index << "(" << ((p.scope - 3)/2) << ")";
     else // scoped arg
-        dbg << "$" << p.index << "(" << ((p.scope - 2)/2);
+        dbg << "$" << p.index << "(" << ((p.scope - 2)/2) << ")";
     return dbg;
 }
 
@@ -228,7 +228,8 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallValue)
 
         MOTH_BEGIN_INSTR(CallProperty)
-            d << instr.result << ", " << instr.name << "(" << instr.callData << ")";
+            d << instr.result << ", " << instr.base<<"."<<instr.name << "(" << instr.callData
+              << ", " << instr.argc << ")";
         MOTH_END_INSTR(CallProperty)
 
         MOTH_BEGIN_INSTR(CallPropertyLookup)
@@ -248,7 +249,7 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallElement)
 
         MOTH_BEGIN_INSTR(CallActivationProperty)
-            d << instr.result << ", " << instr.name << "(" << instr.callData << ")";
+            d << instr.result << ", " << instr.name << "(" << instr.callData << ", " << instr.argc << ")";
         MOTH_END_INSTR(CallActivationProperty)
 
         MOTH_BEGIN_INSTR(CallGlobalLookup)
@@ -335,7 +336,7 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallBuiltinDeclareVar)
 
         MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
-            d << instr.result << ", " << instr.args << instr.argc;
+            d << instr.result << ", " << instr.args << ", " << instr.argc;
         MOTH_END_INSTR(CallBuiltinDefineArray)
 
         MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
