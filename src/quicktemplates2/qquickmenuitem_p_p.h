@@ -70,6 +70,8 @@ public:
     void setMenu(QQuickMenu *menu);
     void setSubMenu(QQuickMenu *subMenu);
 
+    void updateEnabled();
+
     bool highlighted;
     QQuickItem *arrow;
     QQuickMenu *menu;
