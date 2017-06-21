@@ -621,8 +621,8 @@ public:
     QList<QQmlError> qmlErrors() const;
 #endif
 
-    QV4::Moth::Param binopHelper(QSOperator::Op oper, const QV4::Moth::Param &left,
-                                 const QV4::Moth::Param &right, const QV4::Moth::Param &dest);
+    QV4::Moth::Param binopHelper(QSOperator::Op oper, Reference &left,
+                                 Reference &right, Reference &dest);
     int pushArgs(AST::ArgumentList *args);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }

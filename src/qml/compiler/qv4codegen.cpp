@@ -1520,7 +1520,7 @@ bool Codegen::visit(BinaryExpression *ast)
             return false;
 
         _expr.result = Reference::fromTemp(this);
-        binopHelper(baseOp(ast->op), left.asRValue(), right.asRValue(), _expr.result.base);
+        binopHelper(baseOp(ast->op), left, right, _expr.result);
         left.store(_expr.result);
 
         break;
@@ -1551,14 +1551,12 @@ bool Codegen::visit(BinaryExpression *ast)
             //### TODO: try constant folding?
         }
 
-        auto leftParam = left.asRValue();
-
         Reference right = expression(ast->right);
         if (hasError)
             return false;
 
         _expr.result = Reference::fromTemp(this);
-        binopHelper(static_cast<QSOperator::Op>(ast->op), leftParam, right.asRValue(), _expr.result.base);
+        binopHelper(static_cast<QSOperator::Op>(ast->op), left, right, _expr.result);
 
         break;
     }
@@ -1568,116 +1566,122 @@ bool Codegen::visit(BinaryExpression *ast)
     return false;
 }
 
-QV4::Moth::Param Codegen::binopHelper(QSOperator::Op oper, const QV4::Moth::Param &left,
-                                      const QV4::Moth::Param &right, const QV4::Moth::Param &dest)
+QV4::Moth::Param Codegen::binopHelper(QSOperator::Op oper, Reference &left,
+                                      Reference &right, Reference &dest)
 {
     if (oper == QSOperator::Add) {
         Instruction::Add add;
-        add.lhs = left;
-        add.rhs = right;
-        add.result = dest;
+        add.lhs = left.asRValue();
+        add.rhs = right.asRValue();
+        add.result = dest.asLValue();
         bytecodeGenerator->addInstruction(add);
         return add.result;
     }
     if (oper == QSOperator::Sub) {
         Instruction::Sub sub;
-        sub.lhs = left;
-        sub.rhs = right;
-        sub.result = dest;
+        sub.lhs = left.asRValue();
+        sub.rhs = right.asRValue();
+        sub.result = dest.asLValue();
         bytecodeGenerator->addInstruction(sub);
         return sub.result;
     }
     if (oper == QSOperator::Mul) {
         Instruction::Mul mul;
-        mul.lhs = left;
-        mul.rhs = right;
-        mul.result = dest;
+        mul.lhs = left.asRValue();
+        mul.rhs = right.asRValue();
+        mul.result = dest.asLValue();
         bytecodeGenerator->addInstruction(mul);
         return mul.result;
     }
     if (oper == QSOperator::BitAnd) {
-//        if (left.isConstant())
-//            std::swap(left, right);
-//        if (right.isConstant()) {
-//            Instruction::BitAndConst bitAnd;
-//            bitAnd.lhs = left;
-//            bitAnd.rhs = Primitive::fromReturnedValue(jsUnitGenerator->constant(right.index)).toInteger();
-//            bitAnd.result = dest;
-//            bytecodeGenerator->addInstruction(bitAnd);
-//            return bitAnd.result;
-//        }
+        Reference *l = &left;
+        Reference *r = &right;
+        if (l->type == Reference::Const)
+            std::swap(l, r);
+        if (r->type == Reference::Const) {
+            Instruction::BitAndConst bitAnd;
+            bitAnd.lhs = l->asRValue();
+            bitAnd.rhs = Primitive::fromReturnedValue(r->constant).toInt32();
+            bitAnd.result = dest.asLValue();
+            bytecodeGenerator->addInstruction(bitAnd);
+            return bitAnd.result;
+        }
         Instruction::BitAnd bitAnd;
-        bitAnd.lhs = left;
-        bitAnd.rhs = right;
-        bitAnd.result = dest;
+        bitAnd.lhs = left.asRValue();
+        bitAnd.rhs = right.asRValue();
+        bitAnd.result = dest.asLValue();
         bytecodeGenerator->addInstruction(bitAnd);
         return bitAnd.result;
     }
     if (oper == QSOperator::BitOr) {
-//        if (left.isConstant())
-//            std::swap(left, right);
-//        if (right.isConstant()) {
-//            Instruction::BitOrConst bitOr;
-//            bitOr.lhs = left;
-//            bitOr.rhs = Primitive::fromReturnedValue(jsUnitGenerator->constant(right.index)).toInteger();
-//            bitOr.result = dest;
-//            bytecodeGenerator->addInstruction(bitOr);
-//            return bitOr.result;
-//        }
+        Reference *l = &left;
+        Reference *r = &right;
+        if (l->type == Reference::Const)
+            std::swap(l, r);
+        if (r->type == Reference::Const) {
+            Instruction::BitOrConst bitOr;
+            bitOr.lhs = l->asRValue();
+            bitOr.rhs = Primitive::fromReturnedValue(r->constant).toInt32();
+            bitOr.result = dest.asLValue();
+            bytecodeGenerator->addInstruction(bitOr);
+            return bitOr.result;
+        }
         Instruction::BitOr bitOr;
-        bitOr.lhs = left;
-        bitOr.rhs = right;
-        bitOr.result = dest;
+        bitOr.lhs = left.asRValue();
+        bitOr.rhs = right.asRValue();
+        bitOr.result = dest.asLValue();
         bytecodeGenerator->addInstruction(bitOr);
         return bitOr.result;
     }
     if (oper == QSOperator::BitXor) {
-//        if (leftSource->asConst())
-//            qSwap(leftSource, rightSource);
-//        if (IR::Const *c = rightSource->asConst()) {
-//            Instruction::BitXorConst bitXor;
-//            bitXor.lhs = left;
-//            bitXor.rhs = convertToValue(c).Value::toInt32();
-//            bitXor.result = dest;
-//            bytecodeGenerator->addInstruction(bitXor);
-//            return bitXor.result;
-//        }
+        Reference *l = &left;
+        Reference *r = &right;
+        if (l->type == Reference::Const)
+            std::swap(l, r);
+        if (r->type == Reference::Const) {
+            Instruction::BitXorConst bitXor;
+            bitXor.lhs = l->asRValue();
+            bitXor.rhs = Primitive::fromReturnedValue(r->constant).toInt32();
+            bitXor.result = dest.asLValue();
+            bytecodeGenerator->addInstruction(bitXor);
+            return bitXor.result;
+        }
         Instruction::BitXor bitXor;
-        bitXor.lhs = left;
-        bitXor.rhs = right;
-        bitXor.result = dest;
+        bitXor.lhs = left.asRValue();
+        bitXor.rhs = right.asRValue();
+        bitXor.result = dest.asLValue();
         bytecodeGenerator->addInstruction(bitXor);
         return bitXor.result;
     }
     if (oper == QSOperator::RShift) {
-//        if (IR::Const *c = rightSource->asConst()) {
-//            Instruction::ShrConst shr;
-//            shr.lhs = left;
-//            shr.rhs = convertToValue(c).Value::toInt32() & 0x1f;
-//            shr.result = dest;
-//            bytecodeGenerator->addInstruction(shr);
-//            return shr.result;
-//        }
+        if (right.type == Reference::Const) {
+            Instruction::ShrConst shr;
+            shr.lhs = left.asRValue();
+            shr.rhs = Primitive::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            shr.result = dest.asLValue();
+            bytecodeGenerator->addInstruction(shr);
+            return shr.result;
+        }
         Instruction::Shr shr;
-        shr.lhs = left;
-        shr.rhs = right;
-        shr.result = dest;
+        shr.lhs = left.asRValue();
+        shr.rhs = right.asRValue();
+        shr.result = dest.asLValue();
         bytecodeGenerator->addInstruction(shr);
         return shr.result;
     }
     if (oper == QSOperator::LShift) {
-//        if (IR::Const *c = rightSource->asConst()) {
-//            Instruction::ShlConst shl;
-//            shl.lhs = left;
-//            shl.rhs = convertToValue(c).Value::toInt32() & 0x1f;
-//            shl.result = dest;
-//            bytecodeGenerator->addInstruction(shl);
-//            return shl.result;
-//        }
+        if (right.type == Reference::Const) {
+            Instruction::ShlConst shl;
+            shl.lhs = left.asRValue();
+            shl.rhs = Primitive::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            shl.result = dest.asLValue();
+            bytecodeGenerator->addInstruction(shl);
+            return shl.result;
+        }
         Instruction::Shl shl;
-        shl.lhs = left;
-        shl.rhs = right;
-        shl.result = dest;
+        shl.lhs = left.asRValue();
+        shl.rhs = right.asRValue();
+        shl.result = dest.asLValue();
         bytecodeGenerator->addInstruction(shl);
         return shl.result;
     }
@@ -1690,9 +1694,9 @@ QV4::Moth::Param Codegen::binopHelper(QSOperator::Op oper, const QV4::Moth::Para
             binop.alu = QV4::Runtime::in;
         else
             binop.alu = QV4::Runtime::add;
-        binop.lhs = left;
-        binop.rhs = right;
-        binop.result = dest;
+        binop.lhs = left.asRValue();
+        binop.rhs = right.asRValue();
+        binop.result = dest.asLValue();
         Q_ASSERT(binop.alu != QV4::Runtime::InvalidRuntimeMethod);
         bytecodeGenerator->addInstruction(binop);
         return binop.result;
@@ -1701,9 +1705,9 @@ QV4::Moth::Param Codegen::binopHelper(QSOperator::Op oper, const QV4::Moth::Para
         Q_ASSERT(binopFunc != QV4::Runtime::InvalidRuntimeMethod);
         Instruction::Binop binop;
         binop.alu = binopFunc;
-        binop.lhs = left;
-        binop.rhs = right;
-        binop.result = dest;
+        binop.lhs = left.asRValue();
+        binop.rhs = right.asRValue();
+        binop.result = dest.asLValue();
         bytecodeGenerator->addInstruction(binop);
         return binop.result;
     }
