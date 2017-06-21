@@ -1334,6 +1334,7 @@ bool Codegen::visit(ArrayLiteral *ast)
     auto undefined = [this](){ return Reference::fromConst(this, Encode::undefined()); };
     auto push = [this, &argc, args](const Reference &arg) {
         args[argc] = arg;
+        args[argc].asRValue();
         argc += 1;
     };
 
@@ -1781,6 +1782,7 @@ int Codegen::pushArgs(ArgumentList *args)
         rargs = new Reference[_variableEnvironment->maxNumberOfArguments];
     for (ArgumentList *it = args; it; it = it->next) {
         rargs[argc] = expression(it->expression);
+        rargs[argc].asRValue();
         if (hasError)
             return -1;
         argc += 1;
@@ -2090,6 +2092,7 @@ bool Codegen::visit(ObjectLiteral *ast)
             }
 
             v.rvalue = value;
+            v.rvalue.asRValue();
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
             const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
             ObjectPropertyValue &v = valueMap[name];
