@@ -83,7 +83,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
         internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
 
-    canUseSimpleCall = false;//compiledFunction->flags & CompiledData::Function::CanUseSimpleCall;
+    canUseSimpleCall = compiledFunction->flags & CompiledData::Function::CanUseSimpleCall;
 }
 
 Function::~Function()
