@@ -73,21 +73,23 @@ T.MenuItem {
         color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
     }
 
-    indicator: Image {
+    indicator: ColorImage {
         x: control.mirrored ? control.width - width - control.rightPadding : control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2
 
         visible: control.checked
         source: control.checkable ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png" : ""
+        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
     }
 
-    arrow: Image {
+    arrow: ColorImage {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
 
         visible: control.subMenu
         mirror: control.mirrored
         source: control.subMenu ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/arrow-indicator.png" : ""
+        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
     }
 
     background: Item {
