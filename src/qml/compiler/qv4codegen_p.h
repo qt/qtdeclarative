@@ -241,6 +241,7 @@ public:
         };
         mutable int tempIndex = -1;
         mutable bool needsWriteBack = false;
+        mutable bool isArgOrEval = false;
         Codegen *codegen;
 
     };

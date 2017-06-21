@@ -1916,11 +1916,14 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
         int index = e->findMember(name);
         Q_ASSERT (index < e->members.size());
         if (index != -1) {
-            if (isLhs && f->isStrict && (name == QLatin1String("arguments") || name == QLatin1String("eval"))) {
-                // ### add correct source location
-                throwSyntaxError(SourceLocation(), QStringLiteral("Variable name may not be eval or arguments in strict mode"));
+            Reference r = Reference::fromLocal(this, index, scope);
+            if (name == QLatin1String("arguments") || name == QLatin1String("eval")) {
+                r.isArgOrEval = true;
+                if (isLhs && f->isStrict)
+                    // ### add correct source location
+                    throwSyntaxError(SourceLocation(), QStringLiteral("Variable name may not be eval or arguments in strict mode"));
             }
-            return Reference::fromLocal(this, index, scope);
+            return r;
         }
         const int argIdx = f->indexOfArgument(QStringRef(&name));
         if (argIdx != -1)
@@ -3137,14 +3140,18 @@ bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r, 
 {
     if (!_variableEnvironment->isStrict)
         return false;
+    bool isArgOrEval = false;
     if (r.type == Reference::Name) {
         QString str = jsUnitGenerator->stringForIndex(r.nameIndex);
         if (str == QLatin1String("eval") || str == QLatin1String("arguments")) {
-            throwSyntaxError(loc, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
-            return true;
+            isArgOrEval = true;
         }
+    } else if (r.type == Reference::Local) {
+        isArgOrEval = r.isArgOrEval;
     }
-    return false;
+    if (isArgOrEval)
+        throwSyntaxError(loc, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
+    return isArgOrEval;
 }
 
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
@@ -3261,6 +3268,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     // keep loaded reference
     tempIndex = other.tempIndex;
     needsWriteBack = false;
+    isArgOrEval = other.isArgOrEval;
     codegen = other.codegen;
     return *this;
 }

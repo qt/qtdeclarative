@@ -343,6 +343,7 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 
         MOTH_BEGIN_INSTR(CallBuiltinSetupArgumentsObject)
+            d << instr.result;
         MOTH_END_INSTR(CallBuiltinSetupArgumentsObject)
 
         MOTH_BEGIN_INSTR(CallBuiltinConvertThisToObject)
