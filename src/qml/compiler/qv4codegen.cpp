@@ -1327,9 +1327,13 @@ bool Codegen::visit(ArrayLiteral *ast)
     TempScope scope(this);
 
     int argc = 0;
+    Reference _args[16];
+    Reference *args = _args;
+    if (_variableEnvironment->maxNumberOfArguments > 16)
+        args = new Reference[_variableEnvironment->maxNumberOfArguments];
     auto undefined = [this](){ return Reference::fromConst(this, Encode::undefined()); };
-    auto push = [this, &argc](const Reference &arg) {
-        Reference::fromTemp(this, argc).store(arg);
+    auto push = [this, &argc, args](const Reference &arg) {
+        args[argc] = arg;
         argc += 1;
     };
 
@@ -1346,6 +1350,9 @@ bool Codegen::visit(ArrayLiteral *ast)
     for (Elision *elision = ast->elision; elision; elision = elision->next)
         push(undefined());
 
+    for (int i = 0; i < argc; ++i)
+        Reference::fromTemp(this, i).store(args[i]);
+
     Instruction::CallBuiltinDefineArray call;
     call.argc = argc;
     call.args = 0;
@@ -1353,6 +1360,8 @@ bool Codegen::visit(ArrayLiteral *ast)
     bytecodeGenerator->addInstruction(call);
     _expr.result = result;
 
+    if (args != _args)
+        delete [] args;
     return false;
 }
 
