@@ -1822,8 +1822,10 @@ bool Codegen::visit(DeleteExpression *ast)
     Reference expr = expression(ast->expression);
     if (hasError)
         return false;
-    // Temporaries cannot be deleted
-    if (expr.type == Reference::Local || expr.type == Reference::Argument) {
+
+    switch (expr.type) {
+    case Reference::Local:
+    case Reference::Argument:
         // Trying to delete a function argument might throw.
         if (_variableEnvironment->isStrict) {
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
@@ -1831,43 +1833,41 @@ bool Codegen::visit(DeleteExpression *ast)
         }
         _expr.result = Reference::fromConst(this, QV4::Encode(false));
         return false;
-    }
-    // [[11.4.1]] Return true if it's not a reference
-    if (expr.isSimple()) {
-        _expr.result = Reference::fromConst(this, QV4::Encode(true));
-        return false;
-    }
-
-    Reference r = Reference::fromTemp(this);
-
-    if (expr.type == Reference::Name) {
+    case Reference::Name: {
         if (_variableEnvironment->isStrict) {
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
+        _expr.result = Reference::fromTemp(this);
         Instruction::CallBuiltinDeleteName del;
         del.name = expr.nameIndex;
-        del.result = r.asLValue();
+        del.result = _expr.result.asLValue();
         bytecodeGenerator->addInstruction(del);
-    } else if (expr.type == Reference::Member) {
+        return false;
+    }
+    case Reference::Member: {
+        _expr.result = Reference::fromTemp(this);
         Instruction::CallBuiltinDeleteMember del;
         del.base = expr.base;
         del.member = expr.nameIndex;
-        del.result = r.asLValue();
+        del.result = _expr.result.asLValue();
         bytecodeGenerator->addInstruction(del);
-    } else if (expr.type == Reference::Subscript) {
+        return false;
+    }
+    case Reference::Subscript: {
+        _expr.result = Reference::fromTemp(this);
         Instruction::CallBuiltinDeleteSubscript del;
         del.base = expr.base;
         del.index = expr.subscript;
-        del.result = r.asLValue();
+        del.result = _expr.result.asLValue();
         bytecodeGenerator->addInstruction(del);
-    } else {
-        Q_UNREACHABLE();
-        Q_ASSERT(false);
+        return false;
     }
-
-    _expr.result = r;
-    return false;
+    default:
+        // [[11.4.1]] Return true if it's not a reference
+        _expr.result = Reference::fromConst(this, QV4::Encode(true));
+        return false;
+    }
 }
 
 bool Codegen::visit(FalseLiteral *)
