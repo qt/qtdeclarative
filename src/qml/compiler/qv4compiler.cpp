@@ -127,9 +127,14 @@ uint QV4::Compiler::JSUnitGenerator::registerIndexedSetterLookup()
 
 uint QV4::Compiler::JSUnitGenerator::registerGetterLookup(const QString &name)
 {
+    return registerGetterLookup(registerString(name));
+}
+
+uint QV4::Compiler::JSUnitGenerator::registerGetterLookup(int nameIndex)
+{
     CompiledData::Lookup l;
     l.type_and_flags = CompiledData::Lookup::Type_Getter;
-    l.nameIndex = registerString(name);
+    l.nameIndex = nameIndex;
     lookups << l;
     return lookups.size() - 1;
 }
@@ -137,18 +142,28 @@ uint QV4::Compiler::JSUnitGenerator::registerGetterLookup(const QString &name)
 
 uint QV4::Compiler::JSUnitGenerator::registerSetterLookup(const QString &name)
 {
+    return registerSetterLookup(registerString(name));
+}
+
+uint QV4::Compiler::JSUnitGenerator::registerSetterLookup(int nameIndex)
+{
     CompiledData::Lookup l;
     l.type_and_flags = CompiledData::Lookup::Type_Setter;
-    l.nameIndex = registerString(name);
+    l.nameIndex = nameIndex;
     lookups << l;
     return lookups.size() - 1;
 }
 
 uint QV4::Compiler::JSUnitGenerator::registerGlobalGetterLookup(const QString &name)
 {
+    return registerGlobalGetterLookup(registerString(name));
+}
+
+uint QV4::Compiler::JSUnitGenerator::registerGlobalGetterLookup(int nameIndex)
+{
     CompiledData::Lookup l;
     l.type_and_flags = CompiledData::Lookup::Type_GlobalGetter;
-    l.nameIndex = registerString(name);
+    l.nameIndex = nameIndex;
     lookups << l;
     return lookups.size() - 1;
 }

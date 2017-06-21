@@ -128,6 +128,8 @@ void Script::parse()
 
         QV4::Compiler::JSUnitGenerator jsGenerator(&module);
         RuntimeCodegen cg(v4, &jsGenerator, strictMode);
+        if (inheritContext)
+            cg.setUseFastLookups(false);
         cg.generateFromProgram(sourceFile, sourceCode, program, &module, QQmlJS::Codegen::EvalCode, inheritedLocals);
         if (v4->hasException)
             return;
@@ -231,6 +233,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module
     }
 
     QQmlJS::Codegen cg(unitGenerator, /*strict mode*/false);
+    cg.setUseFastLookups(false);
     cg.generateFromProgram(url.toString(), source, program, module, QQmlJS::Codegen::EvalCode);
     errors = cg.qmlErrors();
     if (!errors.isEmpty()) {

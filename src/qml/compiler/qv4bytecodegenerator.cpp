@@ -52,7 +52,7 @@ void BytecodeGenerator::setLocation(const QQmlJS::AST::SourceLocation &loc)
     currentLine = static_cast<int>(loc.startLine);
     Instruction::Line line;
     line.lineNumber = currentLine;
-    addInstruction(line);
+//    addInstruction(line);
 }
 
 unsigned BytecodeGenerator::newTemp()

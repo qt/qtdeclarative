@@ -243,6 +243,7 @@ public:
         mutable bool needsWriteBack = false;
         mutable bool isArgOrEval = false;
         bool isLiteral = false;
+        bool global = false;
         Codegen *codegen;
 
     };
@@ -478,6 +479,9 @@ protected:
     int registerString(const QString &name) {
         return jsUnitGenerator->registerString(name);
     }
+    uint registerGetterLookup(int nameIndex) { return jsUnitGenerator->registerGetterLookup(nameIndex); }
+    uint registerSetterLookup(int nameIndex) { return jsUnitGenerator->registerSetterLookup(nameIndex); }
+    uint registerGlobalGetterLookup(int nameIndex) { return jsUnitGenerator->registerGlobalGetterLookup(nameIndex); }
 
     // Returns index in _module->functions
     int defineFunction(const QString &name, AST::Node *ast,
@@ -621,6 +625,8 @@ public:
                                  const QV4::Moth::Param &right, const QV4::Moth::Param &dest);
     int pushArgs(AST::ArgumentList *args);
 
+    void setUseFastLookups(bool b) { useFastLookups = b; }
+
     void handleTryCatch(AST::TryStatement *ast);
     void handleTryFinally(AST::TryStatement *ast);
 protected:
@@ -643,6 +649,7 @@ protected:
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
     BytecodeGenerator *bytecodeGenerator = 0;
     bool _strictMode;
+    bool useFastLookups = true;
 
     bool _fileNameIsUrl;
     bool hasError;

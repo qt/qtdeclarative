@@ -102,8 +102,11 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     QString stringForIndex(int index) const { return stringTable.stringForIndex(index); }
 
     uint registerGetterLookup(const QString &name);
+    uint registerGetterLookup(int nameIndex);
     uint registerSetterLookup(const QString &name);
+    uint registerSetterLookup(int nameIndex);
     uint registerGlobalGetterLookup(const QString &name);
+    uint registerGlobalGetterLookup(int nameIndex);
     uint registerIndexedGetterLookup();
     uint registerIndexedSetterLookup();
 

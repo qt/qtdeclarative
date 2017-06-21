@@ -141,6 +141,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
         }
 
         QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsGenerator, &document->jsModule, &document->jsParserEngine, document->program, typeNameCache, &document->jsGenerator.stringTable);
+        v4CodeGenerator.setUseFastLookups(false);
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
             return nullptr;

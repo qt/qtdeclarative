@@ -1745,22 +1745,21 @@ bool Codegen::visit(CallExpression *ast)
         call.result = r.asLValue();
         bytecodeGenerator->addInstruction(call);
     } else if (base.type == Reference::Name) {
-        //### fix for fast lookups:
-//        if (useFastLookups && func->global) {
-//            Instruction::CallGlobalLookup call;
-//            call.index = registerGlobalGetterLookup(*func->id);
-//            prepareCallArgs(args, call.argc);
-//            call.callData = callDataStart();
-//            call.result = getResultParam(result);
-//            addInstruction(call);
-//            return;
-//        }
-        Instruction::CallActivationProperty call;
-        call.name = base.nameIndex;
-        call.argc = argc;
-        call.callData = 0;
-        call.result = r.asLValue();
-        bytecodeGenerator->addInstruction(call);
+        if (useFastLookups && base.global) {
+            Instruction::CallGlobalLookup call;
+            call.index = registerGlobalGetterLookup(base.nameIndex);
+            call.argc = argc;
+            call.callData = 0;
+            call.result = r.asLValue();
+            bytecodeGenerator->addInstruction(call);
+        } else {
+            Instruction::CallActivationProperty call;
+            call.name = base.nameIndex;
+            call.argc = argc;
+            call.callData = 0;
+            call.result = r.asLValue();
+            bytecodeGenerator->addInstruction(call);
+        }
     } else {
         Instruction::CallValue call;
         call.dest = base.asRValue();
@@ -1956,9 +1955,12 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
             return fallback;
     }
 
-// ###
-//    if (!e->parent && (!f || !f->insideWithOrCatch) && _variableEnvironment->compilationMode != EvalCode && e->compilationMode != QmlBinding)
-//        return _block->GLOBALNAME(name, line, col);
+    if (!e->parent && (!f || !f->insideWithOrCatch) &&
+        _variableEnvironment->compilationMode != EvalCode && e->compilationMode != QmlBinding) {
+        Reference r = Reference::fromName(this, name);
+        r.global = true;
+        return r;
+    }
 
     // global context or with. Lookup by name
   loadByName:
@@ -3287,6 +3289,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     isArgOrEval = other.isArgOrEval;
     codegen = other.codegen;
     isLiteral = other.isLiteral;
+    global = other.global;
     return *this;
 }
 
@@ -3424,19 +3427,19 @@ void Codegen::Reference::writeBack() const
         store.name = nameIndex;
         codegen->bytecodeGenerator->addInstruction(store);
     } else if (type == Member) {
-//        if (useFastLookups) {
-//            Instruction::SetLookup store;
-//            store.base = getParam(targetBase);
-//            store.index = registerSetterLookup(targetName);
-//            store.source = getParam(source);
-//            addInstruction(store);
-//            return;
-//        }
-        Instruction::StoreProperty store;
-        store.base = base;
-        store.name = nameIndex;
-        store.source = temp;
-        codegen->bytecodeGenerator->addInstruction(store);
+        if (codegen->useFastLookups) {
+            Instruction::SetLookup store;
+            store.base = base;
+            store.index = codegen->registerSetterLookup(nameIndex);
+            store.source = temp;
+            codegen->bytecodeGenerator->addInstruction(store);
+        } else {
+            Instruction::StoreProperty store;
+            store.base = base;
+            store.name = nameIndex;
+            store.source = temp;
+            codegen->bytecodeGenerator->addInstruction(store);
+        }
     } else if (type == Subscript) {
         Instruction::StoreElement store;
         store.base = base;
@@ -3470,24 +3473,31 @@ void Codegen::Reference::load(uint tmp) const
         move.result = temp;
         codegen->bytecodeGenerator->addInstruction(move);
     } else if (type == Name) {
-        Instruction::LoadName load;
-        load.name = nameIndex;
-        load.result = temp;
-        codegen->bytecodeGenerator->addInstruction(load);
+        if (codegen->useFastLookups && global) {
+            Instruction::GetGlobalLookup load;
+            load.index = codegen->registerGlobalGetterLookup(nameIndex);
+            load.result = temp;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else {
+            Instruction::LoadName load;
+            load.name = nameIndex;
+            load.result = temp;
+            codegen->bytecodeGenerator->addInstruction(load);
+        }
     } else if (type == Member) {
-//        if (useFastLookups) {
-//            Instruction::GetLookup load;
-//            load.base = getParam(base);
-//            load.index = registerGetterLookup(name);
-//            load.result = getResultParam(target);
-//            addInstruction(load);
-//            return;
-//        }
-        Instruction::LoadProperty load;
-        load.base = base;
-        load.name = nameIndex;
-        load.result = temp;
-        codegen->bytecodeGenerator->addInstruction(load);
+        if (codegen->useFastLookups) {
+            Instruction::GetLookup load;
+            load.base = base;
+            load.index = codegen->registerGetterLookup(nameIndex);
+            load.result = temp;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else {
+            Instruction::LoadProperty load;
+            load.base = base;
+            load.name = nameIndex;
+            load.result = temp;
+            codegen->bytecodeGenerator->addInstruction(load);
+        }
     } else if (type == Subscript) {
         Instruction::LoadElement load;
         load.base = base;
