@@ -2270,6 +2270,7 @@ bool Codegen::visit(RegExpLiteral *ast)
         return false;
 
     _expr.result = Reference::fromTemp(this);
+    _expr.result.isLiteral = true;
 
     Instruction::LoadRegExp instr;
     instr.result = _expr.result.asLValue();
@@ -2284,6 +2285,7 @@ bool Codegen::visit(StringLiteral *ast)
         return false;
 
     _expr.result = Reference::fromTemp(this);
+    _expr.result.isLiteral = true;
 
     Instruction::LoadRuntimeString instr;
     instr.result = _expr.result.asLValue();
@@ -3279,6 +3281,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     needsWriteBack = false;
     isArgOrEval = other.isArgOrEval;
     codegen = other.codegen;
+    isLiteral = other.isLiteral;
     return *this;
 }
 

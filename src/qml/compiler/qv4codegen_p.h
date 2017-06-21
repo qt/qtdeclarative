@@ -131,7 +131,7 @@ public:
             This
         } type = Invalid;
 
-        bool isLValue() const { return type <= LastLValue; }
+        bool isLValue() const { return type <= LastLValue && !isLiteral; }
 
         Reference(Codegen *cg, Type type = Invalid) : type(type), codegen(cg) {}
         Reference()
@@ -242,6 +242,7 @@ public:
         mutable int tempIndex = -1;
         mutable bool needsWriteBack = false;
         mutable bool isArgOrEval = false;
+        bool isLiteral = false;
         Codegen *codegen;
 
     };
