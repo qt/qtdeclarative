@@ -105,15 +105,15 @@ QDebug operator<<(QDebug dbg, const Param &p)
     if (p.scope == 0) // const
         dbg << "C" << p.index;
     else if (p.scope == 1) // temp
-        dbg << "#" << p.index;
+        dbg << "%" << p.index;
     else if (p.scope == 2) // arg
-        dbg << "$" << p.index;
+        dbg << "#" << p.index;
     else if (p.scope == 3) // local
-        dbg << "@" << p.index;
+        dbg << "$" << p.index;
     else if (p.scope & 1) // scoped local
-        dbg << "@" << p.index << "(" << ((p.scope - 3)/2) << ")";
+        dbg << "$" << p.index << "@" << ((p.scope - 3)/2);
     else // scoped arg
-        dbg << "$" << p.index << "(" << ((p.scope - 2)/2) << ")";
+        dbg << "#" << p.index << "@" << ((p.scope - 2)/2);
     return dbg;
 }
 
@@ -350,7 +350,10 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallBuiltinDefineArray)
 
         MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
-            d << instr.result << ", " << instr.args << instr.internalClassId << instr.arrayValueCount << instr.arrayGetterSetterCountAndFlags;
+            d << instr.result << ", " << instr.args
+              << ", " << instr.internalClassId
+              << ", " << instr.arrayValueCount
+              << ", " << instr.arrayGetterSetterCountAndFlags;
         MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 
         MOTH_BEGIN_INSTR(CallBuiltinSetupArgumentsObject)
