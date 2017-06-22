@@ -30,8 +30,6 @@
 
 #include <private/qv4compileddata_p.h>
 #include <private/qv4compiler_p.h>
-#include <private/qv4jsir_p.h>
-#include <private/qv4isel_p.h>
 #include <private/qv8engine_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4codegen_p.h>

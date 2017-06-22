@@ -33,7 +33,6 @@
 #include "private/qv4globalobject_p.h"
 #include "private/qv4codegen_p.h"
 #include "private/qv4objectproto_p.h"
-#include "private/qv4isel_p.h"
 #include "private/qv4mm_p.h"
 #include "private/qv4context_p.h"
 #include "private/qv4script_p.h"

@@ -7,11 +7,8 @@ HEADERS += \
     $$PWD/qv4compiler_p.h \
     $$PWD/qv4compilationunit_moth_p.h \
     $$PWD/qv4codegen_p.h \
-    $$PWD/qv4jsir_p.h \
-    $$PWD/qv4isel_util_p.h \
     $$PWD/qqmlirbuilder_p.h \
-    $$PWD/qqmltypecompiler_p.h \
-    $$PWD/qv4jssimplifier_p.h
+    $$PWD/qqmltypecompiler_p.h
 
 SOURCES += \
     $$PWD/qv4bytecodegenerator.cpp \
@@ -19,9 +16,7 @@ SOURCES += \
     $$PWD/qv4compiler.cpp \
     $$PWD/qv4compilationunit_moth.cpp \
     $$PWD/qv4codegen.cpp \
-    $$PWD/qv4jsir.cpp \
-    $$PWD/qqmlirbuilder.cpp \
-    $$PWD/qv4jssimplifier.cpp
+    $$PWD/qqmlirbuilder.cpp
 
 !qmldevtools_build {
 

@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qv4compileddata_p.h"
-#include "qv4jsir_p.h"
 #include <private/qv4value_p.h>
 #ifndef V4_BOOTSTRAP
 #include <private/qv4engine_p.h>
@@ -133,14 +132,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     memset(runtimeRegularExpressions, 0, data->regexpTableSize * sizeof(QV4::Value));
     for (uint i = 0; i < data->regexpTableSize; ++i) {
         const CompiledData::RegExp *re = data->regexpAt(i);
-        int flags = 0;
-        if (re->flags & CompiledData::RegExp::RegExp_Global)
-            flags |= IR::RegExp::RegExp_Global;
-        if (re->flags & CompiledData::RegExp::RegExp_IgnoreCase)
-            flags |= IR::RegExp::RegExp_IgnoreCase;
-        if (re->flags & CompiledData::RegExp::RegExp_Multiline)
-            flags |= IR::RegExp::RegExp_Multiline;
-        QV4::Heap::RegExpObject *ro = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
+        QV4::Heap::RegExpObject *ro = engine->newRegExpObject(data->stringAt(re->stringIndex), re->flags);
         runtimeRegularExpressions[i] = ro;
     }
 

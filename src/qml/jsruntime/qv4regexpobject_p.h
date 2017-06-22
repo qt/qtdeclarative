@@ -105,7 +105,7 @@ struct RegExpObject: Object {
     V4_INTERNALCLASS(RegExpObject)
     V4_PROTOTYPE(regExpPrototype)
 
-    // needs to be compatible with the flags in qv4jsir_p.h
+    // needs to be compatible with the flags in qv4compileddata_p.h
     enum Flags {
         RegExp_Global     = 0x01,
         RegExp_IgnoreCase = 0x02,

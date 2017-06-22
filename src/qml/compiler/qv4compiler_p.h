@@ -51,8 +51,12 @@
 //
 
 #include <QtCore/qstring.h>
-#include "qv4jsir_p.h"
+#include <QtCore/qhash.h>
+#include <QtCore/qstringlist.h>
 #include <private/qjson_p.h>
+#include <private/qv4global_p.h>
+#include <private/qqmljsastfwd_p.h>
+#include <private/qv4compileddata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -110,7 +114,6 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     uint registerIndexedGetterLookup();
     uint registerIndexedSetterLookup();
 
-    int registerRegExp(IR::RegExp *regexp);
     int registerRegExp(QQmlJS::AST::RegExpLiteral *regexp);
 
     int registerConstant(ReturnedValue v);

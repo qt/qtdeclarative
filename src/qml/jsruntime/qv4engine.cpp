@@ -666,12 +666,12 @@ Heap::DateObject *ExecutionEngine::newDateObjectFromTime(const QTime &t)
 
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
-    bool global = (flags & IR::RegExp::RegExp_Global);
+    bool global = (flags & QV4::CompiledData::RegExp::RegExp_Global);
     bool ignoreCase = false;
     bool multiline = false;
-    if (flags & IR::RegExp::RegExp_IgnoreCase)
+    if (flags & QV4::CompiledData::RegExp::RegExp_IgnoreCase)
         ignoreCase = true;
-    if (flags & IR::RegExp::RegExp_Multiline)
+    if (flags & QV4::CompiledData::RegExp::RegExp_Multiline)
         multiline = true;
 
     Scope scope(this);

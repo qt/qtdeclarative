@@ -51,7 +51,6 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
-#include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
 
 #ifndef Q_OS_WIN

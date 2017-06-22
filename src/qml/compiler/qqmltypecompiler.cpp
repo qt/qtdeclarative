@@ -46,7 +46,7 @@
 #include <private/qqmlcomponent_p.h>
 
 #include "qqmlpropertycachecreator_p.h"
-#include "qv4jssimplifier_p.h"
+//#include "qv4jssimplifier_p.h"
 
 #define COMPILE_EXCEPTION(token, desc) \
     { \

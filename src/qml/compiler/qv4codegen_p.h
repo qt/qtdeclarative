@@ -51,7 +51,6 @@
 //
 
 #include "private/qv4global_p.h"
-#include "qv4jsir_p.h"
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsengine_p.h>
@@ -59,6 +58,7 @@
 #include <private/qv4compiler_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <QtCore/QStringList>
+#include <QtCore/QDateTime>
 #include <QStack>
 #ifndef V4_BOOTSTRAP
 #include <qqmlerror.h>
@@ -507,7 +507,6 @@ protected:
     struct Result {
         Reference result;
 
-        QV4::IR::Expr *code;
         const BytecodeGenerator::Label *iftrue;
         const BytecodeGenerator::Label *iffalse;
         Format format;
@@ -516,7 +515,6 @@ protected:
 
         Result(const Reference &lrvalue)
             : result(lrvalue)
-            , code(nullptr)
             , iftrue(nullptr)
             , iffalse(nullptr)
             , format(ex)
@@ -525,8 +523,7 @@ protected:
         }
 
         explicit Result(Format requested = ex)
-            : code(0)
-            , iftrue(0)
+            : iftrue(0)
             , iffalse(0)
             , format(ex)
             , requested(requested) {}
@@ -534,16 +531,12 @@ protected:
         explicit Result(const BytecodeGenerator::Label *iftrue,
                         const BytecodeGenerator::Label *iffalse,
                         bool trueBlockFollowsCondition)
-            : code(0)
-            , iftrue(iftrue)
+            : iftrue(iftrue)
             , iffalse(iffalse)
             , format(ex)
             , requested(cx)
             , trueBlockFollowsCondition(trueBlockFollowsCondition)
         {}
-
-        inline QV4::IR::Expr *operator*() const { Q_ASSERT(format == ex); return code; }
-        inline QV4::IR::Expr *operator->() const { Q_ASSERT(format == ex); return code; }
 
         bool accept(Format f)
         {

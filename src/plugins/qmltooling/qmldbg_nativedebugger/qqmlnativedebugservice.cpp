@@ -50,7 +50,6 @@
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4identifier_p.h>
 #include <private/qv4runtime_p.h>
-#include <private/qv4isel_moth_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 
 #include <QtQml/qjsengine.h>

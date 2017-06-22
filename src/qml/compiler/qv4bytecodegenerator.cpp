@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include <private/qv4bytecodegenerator_p.h>
-#include <private/qv4jsir_p.h>
 #include <private/qqmljsastfwd_p.h>
 
 QT_USE_NAMESPACE

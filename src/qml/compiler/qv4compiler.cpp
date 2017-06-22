@@ -168,23 +168,6 @@ uint QV4::Compiler::JSUnitGenerator::registerGlobalGetterLookup(int nameIndex)
     return lookups.size() - 1;
 }
 
-int QV4::Compiler::JSUnitGenerator::registerRegExp(QV4::IR::RegExp *regexp)
-{
-    CompiledData::RegExp re;
-    re.stringIndex = registerString(*regexp->value);
-
-    re.flags = 0;
-    if (regexp->flags & QV4::IR::RegExp::RegExp_Global)
-        re.flags |= CompiledData::RegExp::RegExp_Global;
-    if (regexp->flags & QV4::IR::RegExp::RegExp_IgnoreCase)
-        re.flags |= CompiledData::RegExp::RegExp_IgnoreCase;
-    if (regexp->flags & QV4::IR::RegExp::RegExp_Multiline)
-        re.flags |= CompiledData::RegExp::RegExp_Multiline;
-
-    regexps.append(re);
-    return regexps.size() - 1;
-}
-
 int QV4::Compiler::JSUnitGenerator::registerRegExp(QQmlJS::AST::RegExpLiteral *regexp)
 {
     CompiledData::RegExp re;

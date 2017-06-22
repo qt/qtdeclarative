@@ -60,7 +60,7 @@ QT_USE_NAMESPACE
 
 static const quint32 emptyStringIndex = 0;
 
-#ifndef V4_BOOTSTRAP
+#if 0 //ndef V4_BOOTSTRAP
 DEFINE_BOOL_CONFIG_OPTION(lookupHints, QML_LOOKUP_HINTS);
 #endif // V4_BOOTSTRAP
 
@@ -1671,8 +1671,9 @@ enum MetaObjectResolverFlags {
     ResolveTypeInformationOnly = 0x8
 };
 
-static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
 #if 0
+static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
+
 static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlType *qmlType, int index);
 
 static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
@@ -1788,7 +1789,6 @@ static void initImportNamespaceResolver(QV4::IR::MemberExpressionResolver *resol
     resolver->extraData = imports;
     resolver->flags = 0;
 }
-#endif
 
 static QV4::IR::DiscoveredType resolveMetaObjectProperty(
         QQmlEnginePrivate *qmlEngine, const QV4::IR::MemberExpressionResolver *resolver,
@@ -1881,7 +1881,6 @@ static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, 
     resolver->flags = 0;
 }
 
-#if 0
 static QV4::IR::DiscoveredType resolveScopedEnum(QQmlEnginePrivate *qmlEngine,
                                               const QV4::IR::MemberExpressionResolver *resolver,
                                               QV4::IR::Member *member)

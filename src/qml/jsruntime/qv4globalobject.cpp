@@ -52,7 +52,6 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
-#include <qv4jsir_p.h>
 #include <qv4codegen_p.h>
 #include "private/qlocale_tools_p.h"
 #include "private/qtools_p.h"
