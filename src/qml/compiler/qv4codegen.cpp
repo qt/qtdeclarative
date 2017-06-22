@@ -1552,6 +1552,8 @@ bool Codegen::visit(BinaryExpression *ast)
             //### TODO: try constant folding?
         }
 
+        left.asRValue(); // force any loads of the lhs, so the rhs won't clobber it
+
         Reference right = expression(ast->right);
         if (hasError)
             return false;
