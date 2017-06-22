@@ -18,4 +18,14 @@ include(../qml/compiler/compiler.pri)
 include(../qml/memory/memory.pri)
 include(../qml/jit/jit.pri)
 
+HEADERS += \
+    $$PWD/../qml/compiler/qv4isel_p.h \
+    $$PWD/../qml/compiler/qv4isel_moth_p.h \
+    $$PWD/../qml/compiler/qv4ssa_p.h
+
+SOURCES += \
+    $$PWD/../qml/compiler/qv4isel_p.cpp \
+    $$PWD/../qml/compiler/qv4isel_moth.cpp \
+    $$PWD/../qml/compiler/qv4ssa.cpp
+
 load(qt_module)

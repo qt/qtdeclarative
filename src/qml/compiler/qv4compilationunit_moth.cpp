@@ -37,8 +37,10 @@
 **
 ****************************************************************************/
 #include "qv4compilationunit_moth_p.h"
+#ifndef V4_BOOTSTRAP
 #include <private/qv4function_p.h>
 #include <private/qv4vme_moth_p.h>
+#endif
 #include <wtf/StdLibExtras.h>
 
 using namespace QV4::Moth;

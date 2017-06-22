@@ -1655,6 +1655,7 @@ template class Q_QML_EXPORT ISelFactory<>;
 
 Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &architecture)
 {
+    Q_UNUSED(architecture)
 #if ENABLE(ASSEMBLER)
     using ARMv7CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>;
     using ARM64CrossAssembler = QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>>;

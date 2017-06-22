@@ -706,7 +706,6 @@ void QV4DebugServiceImpl::engineAdded(QJSEngine *engine)
         QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
         if (QQmlDebugConnector *server = QQmlDebugConnector::instance()) {
             if (ee) {
-                ee->iselFactory.reset(new QV4::Moth::ISelFactory);
                 QV4Debugger *debugger = new QV4Debugger(ee);
                 if (state() == Enabled)
                     ee->setDebugger(debugger);

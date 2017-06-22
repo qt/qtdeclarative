@@ -1435,3 +1435,10 @@ Param InstructionSelection::getParam(IR::Expr *e) {
         return Param();
     }
 }
+
+QQmlRefPointer<CompiledData::CompilationUnit> ISelFactory::createUnitForLoading()
+{
+    QQmlRefPointer<CompiledData::CompilationUnit> result;
+    result.adopt(new Moth::CompilationUnit);
+    return result;
+}

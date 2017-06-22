@@ -220,7 +220,7 @@ private:
     struct JumpData {
         int instructionIndex;
         int offset;
-        int linkedLabel = -1;
+        int linkedLabel;
     };
 
     struct I {

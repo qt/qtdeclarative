@@ -731,7 +731,6 @@ void QQmlNativeDebugServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
         TRACE_PROTOCOL("Adding execution engine" << ee);
         if (ee) {
             NativeDebugger *debugger = new NativeDebugger(this, ee);
-            ee->iselFactory.reset(new QV4::Moth::ISelFactory);
             if (state() == Enabled)
                 ee->setDebugger(debugger);
             m_debuggers.append(QPointer<NativeDebugger>(debugger));
