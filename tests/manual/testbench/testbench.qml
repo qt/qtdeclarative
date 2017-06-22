@@ -657,6 +657,13 @@ ApplicationWindow {
                         BusyIndicator {
                             anchors.centerIn: parent
                         }
+
+                        PageIndicator {
+                            count: 5
+                            interactive: true
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
                     }
                     GroupBox {
                         enabled: false
@@ -667,6 +674,12 @@ ApplicationWindow {
 
                         BusyIndicator {
                             anchors.centerIn: parent
+                        }
+
+                        PageIndicator {
+                            count: 5
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
                         }
                     }
                     GroupBox {
@@ -679,7 +692,6 @@ ApplicationWindow {
 
                         PageIndicator {
                             count: 5
-                            enabled: false
                             anchors.bottom: parent.bottom
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
