@@ -197,91 +197,44 @@ TestCase {
         compare(control.down.indicator.enabled, true)
     }
 
-    function test_mouse() {
-        var control = createTemporaryObject(spinBox, testCase, {stepSize: 50})
+    function test_mouse_data() {
+        return [
+            { tag: "up", button: "up", value: 50, enabled: true, hold: false, modified: 1, expected: 51 },
+            { tag: "down", button: "down", value: 50, enabled: true, hold: false, modified: 1, expected: 49 },
+            { tag: "up:disabled", button: "up", value: 99, enabled: false, hold: false, modified: 0, expected: 99 },
+            { tag: "down:disabled", button: "down", value: 0, enabled: false, hold: false, modified: 0, expected: 0 },
+            { tag: "up:hold", button: "up", value: 95, enabled: true, hold: true, modified: 4, expected: 99 },
+            { tag: "down:hold", button: "down", value: 5, enabled: true, hold: true, modified: 5, expected: 0 }
+        ]
+    }
+
+    function test_mouse(data) {
+        var control = createTemporaryObject(spinBox, testCase, {value: data.value})
         verify(control)
 
-        var upPressedSpy = signalSpy.createObject(control, {target: control.up, signalName: "pressedChanged"})
-        verify(upPressedSpy.valid)
+        var button = control[data.button]
+        verify(button)
 
-        var downPressedSpy = signalSpy.createObject(control, {target: control.down, signalName: "pressedChanged"})
-        verify(downPressedSpy.valid)
+        var pressedSpy = signalSpy.createObject(control, {target: button, signalName: "pressedChanged"})
+        verify(pressedSpy.valid)
 
         var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
         verify(valueModifiedSpy.valid)
 
-        mousePress(control.up.indicator)
-        compare(upPressedSpy.count, 1)
-        compare(control.up.pressed, true)
-        compare(downPressedSpy.count, 0)
-        compare(control.down.pressed, false)
-        compare(control.value, 0)
+        mousePress(button.indicator)
+        compare(pressedSpy.count, data.enabled ? 1 : 0)
+        compare(button.pressed, data.enabled)
+        compare(control.value, data.value)
         compare(valueModifiedSpy.count, 0)
 
-        mouseRelease(control.up.indicator)
-        compare(upPressedSpy.count, 2)
-        compare(control.up.pressed, false)
-        compare(downPressedSpy.count, 0)
-        compare(control.down.pressed, false)
-        compare(control.value, 50)
-        compare(valueModifiedSpy.count, 1)
+        if (data.hold)
+            tryCompare(control, "value", data.expected)
 
-        // Disable the up button and try again.
-        control.value = control.to
-        compare(control.up.indicator.enabled, false)
-
-        mousePress(control.up.indicator)
-        compare(upPressedSpy.count, 2)
-        compare(control.up.pressed, false)
-        compare(downPressedSpy.count, 0)
-        compare(control.down.pressed, false)
-        compare(control.value, control.to)
-        compare(valueModifiedSpy.count, 1)
-
-        mouseRelease(control.up.indicator)
-        compare(upPressedSpy.count, 2)
-        compare(control.up.pressed, false)
-        compare(downPressedSpy.count, 0)
-        compare(control.down.pressed, false)
-        compare(control.value, control.to)
-        compare(valueModifiedSpy.count, 1)
-
-        control.value = 50;
-        mousePress(control.down.indicator)
-        compare(downPressedSpy.count, 1)
-        compare(control.down.pressed, true)
-        compare(upPressedSpy.count, 2)
-        compare(control.up.pressed, false)
-        compare(control.value, 50)
-        compare(valueModifiedSpy.count, 1)
-
-        mouseRelease(control.down.indicator)
-        compare(downPressedSpy.count, 2)
-        compare(control.down.pressed, false)
-        compare(upPressedSpy.count, 2)
-        compare(control.up.pressed, false)
-        compare(control.value, 0)
-        compare(valueModifiedSpy.count, 2)
-
-        // Disable the down button and try again.
-        control.value = control.from
-        compare(control.down.indicator.enabled, false)
-
-        mousePress(control.down.indicator)
-        compare(downPressedSpy.count, 2)
-        compare(control.down.pressed, false)
-        compare(upPressedSpy.count, 2)
-        compare(control.up.pressed, false)
-        compare(control.value, control.from)
-        compare(valueModifiedSpy.count, 2)
-
-        mouseRelease(control.down.indicator)
-        compare(downPressedSpy.count, 2)
-        compare(control.down.pressed, false)
-        compare(upPressedSpy.count, 2)
-        compare(control.up.pressed, false)
-        compare(control.value, control.from)
-        compare(valueModifiedSpy.count, 2)
+        mouseRelease(button.indicator)
+        compare(pressedSpy.count, data.enabled ? 2 : 0)
+        compare(button.pressed, false)
+        compare(control.value, data.expected)
+        compare(valueModifiedSpy.count, data.modified)
     }
 
     function test_keys_data() {

@@ -83,6 +83,7 @@ T.ScrollBar {
         Transition {
             from: "active"
             SequentialAnimation {
+                PropertyAction{ targets: [contentItem, background]; property: "opacity"; value: 1.0 }
                 PauseAnimation { duration: 3000 }
                 NumberAnimation { targets: [contentItem, background]; property: "opacity"; to: 0.0 }
             }
