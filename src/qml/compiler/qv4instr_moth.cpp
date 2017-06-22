@@ -129,10 +129,6 @@ void dumpBytecode(const char *code, int len)
             d << instr.result << ", " << instr.source;
         MOTH_END_INSTR(Move)
 
-        MOTH_BEGIN_INSTR(MoveConst)
-            d << instr.result << ", " << toString(instr.source).toUtf8().constData();
-        MOTH_END_INSTR(MoveConst)
-
         MOTH_BEGIN_INSTR(SwapTemps)
             d << instr.left << ", " << instr.right;
         MOTH_END_INSTR(MoveTemp)

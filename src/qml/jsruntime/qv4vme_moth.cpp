@@ -442,10 +442,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
         VALUE(instr.result) = VALUE(instr.source);
     MOTH_END_INSTR(Move)
 
-    MOTH_BEGIN_INSTR(MoveConst)
-        VALUE(instr.result) = instr.source;
-    MOTH_END_INSTR(MoveConst)
-
     MOTH_BEGIN_INSTR(SwapTemps)
         qSwap(VALUE(instr.left),  VALUE(instr.right));
     MOTH_END_INSTR(MoveTemp)

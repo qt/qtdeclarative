@@ -234,7 +234,7 @@ public:
         void writeBack() const;
         void load(uint temp) const;
 
-        QV4::Moth::Param base;
+        mutable QV4::Moth::Param base;
         union {
             uint nameIndex;
             QV4::Moth::Param subscript;
@@ -482,6 +482,7 @@ protected:
     int registerString(const QString &name) {
         return jsUnitGenerator->registerString(name);
     }
+    int registerConstant(QV4::ReturnedValue v) { return jsUnitGenerator->registerConstant(v); }
     uint registerGetterLookup(int nameIndex) { return jsUnitGenerator->registerGetterLookup(nameIndex); }
     uint registerSetterLookup(int nameIndex) { return jsUnitGenerator->registerSetterLookup(nameIndex); }
     uint registerGlobalGetterLookup(int nameIndex) { return jsUnitGenerator->registerGlobalGetterLookup(nameIndex); }

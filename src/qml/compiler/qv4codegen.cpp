@@ -3399,8 +3399,8 @@ void Codegen::Reference::store(const Reference &r) const
     }
 
     if (r.type == Const) {
-        Instruction::MoveConst move;
-        move.source = r.constant;
+        Instruction::Move move;
+        move.source = r.asRValue();
         move.result = b;
         codegen->bytecodeGenerator->addInstruction(move);
         return;
@@ -3418,8 +3418,11 @@ Moth::Param Codegen::Reference::asRValue() const
     Q_ASSERT(!needsWriteBack);
 
     Q_ASSERT(type != Invalid);
-    if (type <= Argument)
+    if (type <= Argument || type == Const) {
+        if (type == Const)
+            base = QV4::Moth::Param::createConstant(codegen->registerConstant(constant));
         return base;
+    }
 
     // need a temp to hold the value
     if (tempIndex >= 0)
@@ -3498,12 +3501,7 @@ void Codegen::Reference::writeBack() const
 void Codegen::Reference::load(uint tmp) const
 {
     Moth::Param temp = Moth::Param::createTemp(tmp);
-    if (type == Const) {
-        Instruction::MoveConst move;
-        move.source = constant;
-        move.result = temp;
-        codegen->bytecodeGenerator->addInstruction(move);
-    } else if (type == Name) {
+    if (type == Name) {
         if (codegen->useFastLookups && global) {
             Instruction::GetGlobalLookup load;
             load.index = codegen->registerGlobalGetterLookup(nameIndex);

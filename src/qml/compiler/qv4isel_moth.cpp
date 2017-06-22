@@ -471,12 +471,14 @@ void InstructionSelection::loadQmlSingleton(const QString &name, IR::Expr *e)
 
 void InstructionSelection::loadConst(IR::Const *sourceConst, IR::Expr *e)
 {
-    Q_ASSERT(sourceConst);
+    Q_UNUSED(sourceConst);
+    Q_UNUSED(e);
+//    Q_ASSERT(sourceConst);
 
-    Instruction::MoveConst move;
-    move.source = convertToValue(sourceConst).asReturnedValue();
-    move.result = getResultParam(e);
-    addInstruction(move);
+//    Instruction::MoveConst move;
+//    move.source = convertToValue(sourceConst).asReturnedValue();
+//    move.result = getResultParam(e);
+//    addInstruction(move);
 }
 
 void InstructionSelection::loadString(const QString &str, IR::Expr *target)
@@ -930,10 +932,11 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
         Q_ASSERT(argLocation >= 0);
         while (e) {
             if (IR::Const *c = e->expr->asConst()) {
-                Instruction::MoveConst move;
-                move.source = convertToValue(c).asReturnedValue();
-                move.result = Param::createTemp(argLocation);
-                addInstruction(move);
+                Q_UNUSED(c);
+//                Instruction::MoveConst move;
+//                move.source = convertToValue(c).asReturnedValue();
+//                move.result = Param::createTemp(argLocation);
+//                addInstruction(move);
             } else {
                 Instruction::Move move;
                 move.source = getParam(e->expr);
@@ -1122,10 +1125,11 @@ void InstructionSelection::callBuiltinDeleteName(const QString &name, IR::Expr *
 
 void InstructionSelection::callBuiltinDeleteValue(IR::Expr *result)
 {
-    Instruction::MoveConst move;
-    move.source = QV4::Encode(false);
-    move.result = getResultParam(result);
-    addInstruction(move);
+    Q_UNUSED(result);
+//    Instruction::MoveConst move;
+//    move.source = QV4::Encode(false);
+//    move.result = getResultParam(result);
+//    addInstruction(move);
 }
 
 void InstructionSelection::callBuiltinThrow(IR::Expr *arg)
@@ -1232,10 +1236,11 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int 
         it = it->next;
 
         if (IR::Const *c = it->expr->asConst()) {
-            Instruction::MoveConst move;
-            move.source = convertToValue(c).asReturnedValue();
-            move.result = Param::createTemp(argLocation);
-            addInstruction(move);
+            Q_UNUSED(c);
+//            Instruction::MoveConst move;
+//            move.source = convertToValue(c).asReturnedValue();
+//            move.result = Param::createTemp(argLocation);
+//            addInstruction(move);
         } else {
             Instruction::Move move;
             move.source = getParam(it->expr);
@@ -1262,6 +1267,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int 
     it = arrayEntries;
     while (it) {
         IR::Const *index = it->expr->asConst();
+        Q_UNUSED(index);
         it = it->next;
 
         bool isData = it->expr->asConst()->value;
@@ -1275,10 +1281,10 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int 
 
         ++arrayValueCount;
 
-        Instruction::MoveConst indexMove;
-        indexMove.source = convertToValue(index).asReturnedValue();
-        indexMove.result = Param::createTemp(argLocation);
-        addInstruction(indexMove);
+//        Instruction::MoveConst indexMove;
+//        indexMove.source = convertToValue(index).asReturnedValue();
+//        indexMove.result = Param::createTemp(argLocation);
+//        addInstruction(indexMove);
         ++argLocation;
 
         Instruction::Move move;
@@ -1294,6 +1300,7 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int 
     it = arrayEntries;
     while (it) {
         IR::Const *index = it->expr->asConst();
+        Q_UNUSED(index);
         it = it->next;
 
         bool isData = it->expr->asConst()->value;
@@ -1306,10 +1313,10 @@ void InstructionSelection::callBuiltinDefineObjectLiteral(IR::Expr *result, int 
 
         ++arrayGetterSetterCount;
 
-        Instruction::MoveConst indexMove;
-        indexMove.source = convertToValue(index).asReturnedValue();
-        indexMove.result = Param::createTemp(argLocation);
-        addInstruction(indexMove);
+//        Instruction::MoveConst indexMove;
+//        indexMove.source = convertToValue(index).asReturnedValue();
+//        indexMove.result = Param::createTemp(argLocation);
+//        addInstruction(indexMove);
         ++argLocation;
 
         // getter
