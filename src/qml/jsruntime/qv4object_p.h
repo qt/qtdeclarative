@@ -57,6 +57,7 @@
 #include "qv4scopedvalue_p.h"
 #include "qv4value_p.h"
 #include "qv4internalclass_p.h"
+#include "qv4string_p.h"
 
 QT_BEGIN_NAMESPACE
 

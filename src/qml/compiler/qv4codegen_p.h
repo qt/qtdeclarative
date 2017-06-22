@@ -56,6 +56,8 @@
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsengine_p.h>
 #include <private/qv4instr_moth_p.h>
+#include <private/qv4compiler_p.h>
+#include <private/qqmlrefcount_p.h>
 #include <QtCore/QStringList>
 #include <QStack>
 #ifndef V4_BOOTSTRAP
@@ -71,11 +73,12 @@ struct ControlFlow;
 struct ControlFlowCatch;
 struct ControlFlowFinally;
 
-namespace Compiler {
-struct JSUnitGenerator;
-}
 namespace Moth {
 struct Instruction;
+}
+
+namespace CompiledData {
+struct CompilationUnit;
 }
 }
 
@@ -629,6 +632,10 @@ public:
 
     void handleTryCatch(AST::TryStatement *ast);
     void handleTryFinally(AST::TryStatement *ast);
+
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> generateCompilationUnit(bool generateUnitData = true);
+    static QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading();
+
 protected:
     friend struct QV4::ControlFlow;
     friend struct QV4::ControlFlowCatch;

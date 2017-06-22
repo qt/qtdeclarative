@@ -901,7 +901,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
 
     void destroy() Q_DECL_OVERRIDE;
 
-    bool loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, EvalISelFactory *iselFactory, QString *errorString);
+    bool loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString);
 
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;

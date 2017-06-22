@@ -51,7 +51,6 @@
 //
 
 #include "qv4global_p.h"
-#include "private/qv4isel_p.h"
 #include "qv4managed_p.h"
 #include "qv4context_p.h"
 #include <private/qintrusivelist_p.h>
@@ -99,7 +98,6 @@ private:
 public:
     ExecutableAllocator *executableAllocator;
     ExecutableAllocator *regExpAllocator;
-    QScopedPointer<EvalISelFactory> iselFactory;
 
     WTF::BumpPointerAllocator *bumperPointerAllocator; // Used by Yarr Regex engine.
 
@@ -339,7 +337,7 @@ public:
     // bookkeeping.
     MultiplyWrappedQObjectMap *m_multiplyWrappedQObjects;
 
-    ExecutionEngine(EvalISelFactory *iselFactory = 0);
+    ExecutionEngine();
     ~ExecutionEngine();
 
 #ifdef QT_NO_QML_DEBUGGER

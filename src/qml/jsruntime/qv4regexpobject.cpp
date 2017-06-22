@@ -38,8 +38,6 @@
 ****************************************************************************/
 
 #include "qv4regexpobject_p.h"
-#include "qv4jsir_p.h"
-#include "qv4isel_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4regexp_p.h"
 #include "qv4stringobject_p.h"

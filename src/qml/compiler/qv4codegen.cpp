@@ -52,6 +52,7 @@
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4bytecodegenerator_p.h>
+#include <private/qv4isel_moth_p.h>
 
 #ifndef V4_BOOTSTRAP
 #include <qv4context_p.h>
@@ -3204,6 +3205,30 @@ QList<QQmlJS::DiagnosticMessage> Codegen::errors() const
 {
     return _errors;
 }
+
+QQmlRefPointer<CompiledData::CompilationUnit> Codegen::generateCompilationUnit(bool generateUnitData)
+{
+    Moth::CompilationUnit *compilationUnit = new Moth::CompilationUnit;
+    compilationUnit->codeRefs.resize(_module->functions.size());
+    int i = 0;
+    for (IR::Function *irFunction : qAsConst(_module->functions))
+        compilationUnit->codeRefs[i++] = irFunction->code;
+
+    if (generateUnitData)
+        compilationUnit->data = jsUnitGenerator->generateUnit();
+
+    QQmlRefPointer<CompiledData::CompilationUnit> unit;
+    unit.adopt(compilationUnit);
+    return unit;
+}
+
+QQmlRefPointer<CompiledData::CompilationUnit> Codegen::createUnitForLoading()
+{
+    QQmlRefPointer<CompiledData::CompilationUnit> result;
+    result.adopt(new Moth::CompilationUnit);
+    return result;
+}
+
 
 #ifndef V4_BOOTSTRAP
 

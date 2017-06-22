@@ -134,10 +134,7 @@ void Script::parse()
         if (v4->hasException)
             return;
 
-        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
-        if (inheritContext)
-            isel->setUseFastLookups(false);
-        compilationUnit = isel->compile();
+        compilationUnit = cg.generateCompilationUnit();
         vmFunction = compilationUnit->linkToEngine(v4);
     }
 
@@ -188,7 +185,9 @@ Function *Script::function()
     return vmFunction;
 }
 
-QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors, QQmlJS::Directives *directivesCollector)
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator,
+                                                                      const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors,
+                                                                      QQmlJS::Directives *directivesCollector)
 {
     using namespace QQmlJS;
     using namespace QQmlJS::AST;
@@ -242,9 +241,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module
         return 0;
     }
 
-    QScopedPointer<EvalInstructionSelection> isel(engine->iselFactory->create(QQmlEnginePrivate::get(engine), engine->executableAllocator, module, unitGenerator));
-    isel->setUseFastLookups(false);
-    return isel->compile(/*generate unit data*/false);
+    return cg.generateCompilationUnit(/*generate unit data*/false);
 }
 
 QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext)

@@ -184,7 +184,16 @@ namespace Heap {
     template <typename T, size_t> struct Pointer;
 }
 
+namespace IR {
+struct Function;
+struct Module;
+}
+namespace Compiler {
+struct JSUnitGenerator;
+}
+
 class MemoryManager;
+class ExecutableAllocator;
 struct String;
 struct Object;
 struct ObjectPrototype;

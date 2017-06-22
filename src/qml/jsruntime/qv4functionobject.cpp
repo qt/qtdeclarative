@@ -38,8 +38,6 @@
 ****************************************************************************/
 
 #include "qv4object_p.h"
-#include "qv4jsir_p.h"
-#include "qv4isel_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4function_p.h"
@@ -225,8 +223,7 @@ void FunctionCtor::construct(const Managed *that, Scope &scope, CallData *callDa
     QQmlJS::RuntimeCodegen cg(scope.engine, &jsGenerator, f->strictMode());
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
-    QScopedPointer<EvalInstructionSelection> isel(scope.engine->iselFactory->create(QQmlEnginePrivate::get(scope.engine), scope.engine->executableAllocator, &module, &jsGenerator));
-    QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = isel->compile();
+    QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = cg.generateCompilationUnit();
     Function *vmf = compilationUnit->linkToEngine(scope.engine);
 
     ExecutionContext *global = scope.engine->rootContext();

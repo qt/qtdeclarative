@@ -81,14 +81,6 @@
 #include <QtCore/QTextStream>
 #include <QDateTime>
 
-#ifdef V4_ENABLE_JIT
-#include "qv4isel_masm_p.h"
-#endif // V4_ENABLE_JIT
-
-#if QT_CONFIG(qml_interpreter)
-#include "qv4isel_moth_p.h"
-#endif
-
 #if USE(PTHREADS)
 #  include <pthread.h>
 #if !defined(Q_OS_INTEGRITY)
@@ -129,7 +121,7 @@ QQmlEngine *ExecutionEngine::qmlEngine() const
 
 qint32 ExecutionEngine::maxCallDepth = -1;
 
-ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
+ExecutionEngine::ExecutionEngine()
     : executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
@@ -157,34 +149,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
         }
     }
     Q_ASSERT(maxCallDepth > 0);
-
-    if (!factory) {
-#if QT_CONFIG(qml_interpreter)
-        bool jitDisabled = true;
-
-#ifdef V4_ENABLE_JIT
-        static const bool forceMoth = !qEnvironmentVariableIsEmpty("QV4_FORCE_INTERPRETER") ||
-                                      !OSAllocator::canAllocateExecutableMemory();
-        if (forceMoth) {
-            factory = new Moth::ISelFactory;
-        } else {
-            factory = new JIT::ISelFactory<>;
-            jitDisabled = false;
-        }
-#else // !V4_ENABLE_JIT
-        factory = new Moth::ISelFactory;
-#endif // V4_ENABLE_JIT
-
-        if (jitDisabled) {
-            qWarning("JIT is disabled for QML. Property bindings and animations will be "
-                     "very slow. Visit https://wiki.qt.io/V4 to learn about possible "
-                     "solutions for your platform.");
-        }
-#else
-        factory = new JIT::ISelFactory<>;
-#endif
-    }
-    iselFactory.reset(factory);
 
     // reserve space for the JS stack
     // we allow it to grow to a bit more than JSStackLimit, as we can overshoot due to ScopedValues

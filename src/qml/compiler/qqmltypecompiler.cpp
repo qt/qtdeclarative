@@ -142,6 +142,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
 
         QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsGenerator, &document->jsModule, &document->jsParserEngine, document->program, typeNameCache, &document->jsGenerator.stringTable);
         v4CodeGenerator.setUseFastLookups(false);
+        // ###        v4CodeGenerator.setUseTypeInference(true);
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
             return nullptr;
@@ -149,11 +150,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
         QQmlJavaScriptBindingExpressionSimplificationPass pass(document->objects, &document->jsModule, &document->jsGenerator);
         pass.reduceTranslationBindings();
 
-        QV4::ExecutionEngine *v4 = engine->v4engine();
-        QScopedPointer<QV4::EvalInstructionSelection> isel(v4->iselFactory->create(engine, v4->executableAllocator, &document->jsModule, &document->jsGenerator));
-        isel->setUseFastLookups(false);
-        isel->setUseTypeInference(true);
-        document->javaScriptCompilationUnit = isel->compile(/*generated unit data*/false);
+        document->javaScriptCompilationUnit = v4CodeGenerator.generateCompilationUnit(/*generated unit data*/false);
     }
 
     // Generate QML compiled type data structures
