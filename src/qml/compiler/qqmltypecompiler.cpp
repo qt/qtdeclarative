@@ -44,7 +44,6 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlcomponent_p.h>
-#include <private/qv4ssa_p.h>
 
 #include "qqmlpropertycachecreator_p.h"
 #include "qv4jssimplifier_p.h"

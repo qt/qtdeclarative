@@ -52,7 +52,7 @@
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4bytecodegenerator_p.h>
-#include <private/qv4isel_moth_p.h>
+#include <private/qv4compilationunit_moth_p.h>
 
 #ifndef V4_BOOTSTRAP
 #include <qv4context_p.h>

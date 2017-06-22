@@ -44,7 +44,6 @@ include(memory/memory.pri)
 include(parser/parser.pri)
 include(compiler/compiler.pri)
 include(jsapi/jsapi.pri)
-include(jit/jit.pri)
 include(jsruntime/jsruntime.pri)
 include(qml/qml.pri)
 include(debugger/debugger.pri)
@@ -52,6 +51,8 @@ qtConfig(animation) {
     include(animations/animations.pri)
 }
 include(types/types.pri)
+include(../3rdparty/masm/masm-defs.pri)
+include(../3rdparty/masm/masm.pri)
 
 MODULE_PLUGIN_TYPES = \
     qmltooling
