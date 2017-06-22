@@ -127,7 +127,14 @@ void tst_palette::inheritance_data()
     QTest::addColumn<QString>("testFile");
 
     QTest::newRow("Control") << "inheritance-control.qml";
+    QTest::newRow("Child Control") << "inheritance-childcontrol.qml";
+    QTest::newRow("Dynamic Control") << "inheritance-dynamiccontrol.qml";
+    QTest::newRow("Dynamic Child Control") << "inheritance-dynamicchildcontrol.qml";
+
     QTest::newRow("Popup") << "inheritance-popup.qml";
+    QTest::newRow("Child Popup") << "inheritance-childpopup.qml";
+    QTest::newRow("Dynamic Popup") << "inheritance-dynamicpopup.qml";
+    QTest::newRow("Dynamic Child Popup") << "inheritance-dynamicchildpopup.qml";
 }
 
 void tst_palette::inheritance()

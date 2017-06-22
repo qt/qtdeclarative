@@ -290,11 +290,9 @@ void QQuickApplicationWindowPrivate::updatePalette(const QPalette &p)
     const bool changed = palette != p;
     palette = p;
 
-    QQuickItem *rootItem = q->QQuickWindow::contentItem();
-    QQuickControlPrivate::updatePaletteRecur(rootItem, p);
+    QQuickControlPrivate::updatePaletteRecur(q->QQuickWindow::contentItem(), p);
 
-    // TODO: internal QQuickPopupManager that provides reliable access to all QQuickPopup instances
-    const QList<QQuickPopup *> popups = rootItem->findChildren<QQuickPopup *>();
+    const QList<QQuickPopup *> popups = q->findChildren<QQuickPopup *>();
     for (QQuickPopup *popup : popups)
         QQuickControlPrivate::get(static_cast<QQuickControl *>(popup->popupItem()))->inheritPalette(p);
 
