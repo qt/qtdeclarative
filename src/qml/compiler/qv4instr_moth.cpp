@@ -70,12 +70,11 @@ static QString toString(QV4::ReturnedValue v)
         result = QLatin1String("int ");
     else if (val.isDouble())
         result = QLatin1String("double ");
-    result += QLatin1String("const(");
     if (val.isEmpty())
         result += QLatin1String("empty");
     else
         result += val.toQStringNoThrow();
-    return result + QLatin1String(")");
+    return result;
 #endif // V4_BOOTSTRAP
 }
 
@@ -115,6 +114,15 @@ QDebug operator<<(QDebug dbg, const Param &p)
     else // scoped arg
         dbg << "#" << p.index << "@" << ((p.scope - 2)/2);
     return dbg;
+}
+
+void dumpConstantTable(const Value *constants, uint count)
+{
+    QDebug d = qDebug();
+    d.nospace();
+    for (uint i = 0; i < count; ++i)
+        d << alignedNumber(i).constData() << ":    "
+          << toString(constants[i].asReturnedValue()).toUtf8().constData() << "\n";
 }
 
 void dumpBytecode(const char *code, int len)

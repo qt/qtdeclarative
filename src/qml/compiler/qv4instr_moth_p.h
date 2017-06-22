@@ -251,6 +251,7 @@ struct Param {
     { return !(*this == other); }
 };
 
+void dumpConstantTable(const Value *constants, uint count);
 void dumpBytecode(const char *bytecode, int len);
 inline void dumpBytecode(const QByteArray &bytecode) {
     dumpBytecode(bytecode.constData(), bytecode.length());

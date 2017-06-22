@@ -194,6 +194,12 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     constants = reinterpret_cast<const Value*>(data->constants());
 #endif
 
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
+    if (showCode) {
+        qDebug() << "=== Constant table";
+        Moth::dumpConstantTable(constants, data->constantTableSize);
+    }
+
     linkBackendToEngine(engine);
 
     if (data->indexOfRootFunction != -1)
