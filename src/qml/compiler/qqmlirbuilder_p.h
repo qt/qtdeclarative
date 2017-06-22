@@ -606,8 +606,8 @@ protected:
     Reference fallbackNameLookup(const QString &name) override;
 
 private:
-    // returns -1 if lookup needs to happen by name
-    int lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name);
+    // returns nullptr if lookup needs to happen by name
+    QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name);
 
     QString sourceCode;
     QQmlJS::Engine *jsEngine; // needed for memory pool

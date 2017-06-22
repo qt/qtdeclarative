@@ -146,8 +146,10 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
         if (!jsCodeGen.generateCodeForComponents())
             return nullptr;
 
+#if 0 // ###
         QQmlJavaScriptBindingExpressionSimplificationPass pass(document->objects, &document->jsModule, &document->jsGenerator);
         pass.reduceTranslationBindings();
+#endif
 
         document->javaScriptCompilationUnit = v4CodeGenerator.generateCompilationUnit(/*generated unit data*/false);
     }

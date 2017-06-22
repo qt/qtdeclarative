@@ -1654,18 +1654,18 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
 }
 
 #ifndef V4_BOOTSTRAP
-int JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name)
+QQmlPropertyData *JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name)
 {
     QQmlPropertyData *pd = cache->property(name, /*object*/0, /*context*/0);
 
     // Q_INVOKABLEs can't be FINAL, so we have to look them up at run-time
     if (!pd || pd->isFunction())
-        return -1;
+        return 0;
 
     if (!cache->isAllowedInRevision(pd))
-        return -1;
+        return 0;
 
-    return pd->coreIndex();
+    return pd;
 }
 
 enum MetaObjectResolverFlags {
@@ -1967,7 +1967,7 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
             Reference result = Reference::fromTemp(this);
             Instruction::LoadIdObject load;
             load.base = Reference::fromTemp(this, _qmlContextTemp).asRValue();
-            load.index = registerString(name);
+            load.index = mapping.idIndex;
             load.result = result.asLValue();
             bytecodeGenerator->addInstruction(load);
 
@@ -2026,8 +2026,8 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
     }
 
     if (_scopeObject) {
-        int qmlIndex = lookupQmlCompliantProperty(_scopeObject, name);
-        if (qmlIndex < 0)
+        QQmlPropertyData *data = lookupQmlCompliantProperty(_scopeObject, name);
+        if (!data)
             return Reference::fromName(this, name);
 #if 0
         QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
@@ -2035,13 +2035,14 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
         base->memberResolver->owner = _function;
         initMetaObjectResolver(base->memberResolver, _scopeObject);
 #endif
+        _function->scopeObjectPropertyDependencies.insert(data->coreIndex(), data->notifyIndex());
         Reference base = Reference::fromTemp(this, _qmlContextTemp);
-        return Reference::fromQmlScopeObject(base, qmlIndex);
+        return Reference::fromQmlScopeObject(base, data->coreIndex());
     }
 
     if (_contextObject) {
-        int qmlIndex = lookupQmlCompliantProperty(_contextObject, name);
-        if (qmlIndex < 0)
+        QQmlPropertyData *data = lookupQmlCompliantProperty(_contextObject, name);
+        if (!data)
             return Reference::fromName(this, name);
 #if 0
         QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
@@ -2049,8 +2050,9 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
         base->memberResolver->owner = _function;
         initMetaObjectResolver(base->memberResolver, _contextObject);
 #endif
+        _function->contextObjectPropertyDependencies.insert(data->coreIndex(), data->notifyIndex());
         Reference base = Reference::fromTemp(this, _qmlContextTemp);
-        return Reference::fromQmlContextObject(base, qmlIndex);
+        return Reference::fromQmlContextObject(base, data->coreIndex());
     }
 #else
     Q_UNUSED(name)
