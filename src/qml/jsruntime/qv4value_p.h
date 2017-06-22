@@ -51,6 +51,7 @@
 //
 
 #include <limits.h>
+#include <cmath>
 
 #include <QtCore/QString>
 #include "qv4global_p.h"
@@ -685,6 +686,13 @@ struct Encode {
     Encode(Heap::Base *o) {
         Q_ASSERT(o);
         val = Value::fromHeapObject(o).asReturnedValue();
+    }
+
+    static ReturnedValue smallestNumber(double d) {
+        if (static_cast<int>(d) == d && !(d == 0. && std::signbit(d)))
+            return Encode(static_cast<int>(d));
+        else
+            return Encode(d);
     }
 
     operator ReturnedValue() const {

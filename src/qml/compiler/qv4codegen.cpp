@@ -2071,7 +2071,7 @@ bool Codegen::visit(NumericLiteral *ast)
     if (hasError)
         return false;
 
-    _expr.result = Reference::fromConst(this, QV4::Encode(ast->value));
+    _expr.result = Reference::fromConst(this, QV4::Encode::smallestNumber(ast->value));
     return false;
 }
 

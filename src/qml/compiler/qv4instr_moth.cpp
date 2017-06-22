@@ -52,20 +52,30 @@ int Instr::size(Type type)
 #undef MOTH_RETURN_INSTR_SIZE
 }
 
-QByteArray alignedNumber(int n) {
+static QByteArray alignedNumber(int n) {
     QByteArray number = QByteArray::number(n);
     while (number.size() < 12)
         number.prepend(' ');
     return number;
 }
 
-QString toString(QV4::ReturnedValue v)
+static QString toString(QV4::ReturnedValue v)
 {
 #ifdef V4_BOOTSTRAP
     return QStringLiteral("string-const(%1)").arg(v);
 #else // !V4_BOOTSTRAP
     Value val = Value::fromReturnedValue(v);
-    return QLatin1String("const(") + (val.isEmpty() ? QStringLiteral("empty") : val.toQStringNoThrow()) + QLatin1String(")");
+    QString result;
+    if (val.isInt32())
+        result = QLatin1String("int ");
+    else if (val.isDouble())
+        result = QLatin1String("double ");
+    result += QLatin1String("const(");
+    if (val.isEmpty())
+        result += QLatin1String("empty");
+    else
+        result += val.toQStringNoThrow();
+    return result + QLatin1String(")");
 #endif // V4_BOOTSTRAP
 }
 
