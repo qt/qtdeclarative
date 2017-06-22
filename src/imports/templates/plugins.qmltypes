@@ -568,8 +568,18 @@ Module {
         Property { name: "contentModel"; type: "QVariant"; isReadonly: true }
         Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "title"; type: "string" }
+        Property { name: "cascade"; revision: 3; type: "bool" }
+        Property { name: "overlap"; revision: 3; type: "double" }
         Property { name: "delegate"; revision: 3; type: "QQmlComponent"; isPointer: true }
+        Property { name: "currentIndex"; revision: 3; type: "int" }
+        Signal {
+            name: "titleChanged"
+            Parameter { name: "title"; type: "string" }
+        }
+        Signal { name: "cascadeChanged"; revision: 3 }
+        Signal { name: "overlapChanged"; revision: 3 }
         Signal { name: "delegateChanged"; revision: 3 }
+        Signal { name: "currentIndexChanged"; revision: 3 }
         Method {
             name: "itemAt"
             type: "QQuickItem*"
@@ -600,6 +610,50 @@ Module {
             Parameter { name: "index"; type: "int" }
         }
         Method {
+            name: "addMenu"
+            revision: 3
+            Parameter { name: "menu"; type: "QQuickMenu"; isPointer: true }
+        }
+        Method {
+            name: "insertMenu"
+            revision: 3
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "menu"; type: "QQuickMenu"; isPointer: true }
+        }
+        Method {
+            name: "removeMenu"
+            revision: 3
+            Parameter { name: "menu"; type: "QQuickMenu"; isPointer: true }
+        }
+        Method {
+            name: "takeMenu"
+            revision: 3
+            type: "QQuickMenu*"
+            Parameter { name: "index"; type: "int" }
+        }
+        Method {
+            name: "addAction"
+            revision: 3
+            Parameter { name: "action"; type: "QQuickAction"; isPointer: true }
+        }
+        Method {
+            name: "insertAction"
+            revision: 3
+            Parameter { name: "index"; type: "int" }
+            Parameter { name: "action"; type: "QQuickAction"; isPointer: true }
+        }
+        Method {
+            name: "removeAction"
+            revision: 3
+            Parameter { name: "action"; type: "QQuickAction"; isPointer: true }
+        }
+        Method {
+            name: "takeAction"
+            revision: 3
+            type: "QQuickAction*"
+            Parameter { name: "index"; type: "int" }
+        }
+        Method {
             name: "popup"
             revision: 3
             Parameter { name: "args"; type: "QQmlV4Function"; isPointer: true }
@@ -615,9 +669,13 @@ Module {
         ]
         exportMetaObjectRevisions: [0, 3]
         Property { name: "highlighted"; type: "bool" }
+        Property { name: "arrow"; revision: 3; type: "QQuickItem"; isPointer: true }
         Property { name: "menu"; revision: 3; type: "QQuickMenu"; isReadonly: true; isPointer: true }
+        Property { name: "subMenu"; revision: 3; type: "QQuickMenu"; isReadonly: true; isPointer: true }
         Signal { name: "triggered" }
+        Signal { name: "arrowChanged"; revision: 3 }
         Signal { name: "menuChanged"; revision: 3 }
+        Signal { name: "subMenuChanged"; revision: 3 }
     }
     Component {
         name: "QQuickMenuSeparator"
@@ -744,6 +802,7 @@ Module {
         Property { name: "modal"; type: "bool" }
         Property { name: "dim"; type: "bool" }
         Property { name: "visible"; type: "bool" }
+        Property { name: "enabled"; revision: 3; type: "bool" }
         Property { name: "opened"; revision: 3; type: "bool"; isReadonly: true }
         Property { name: "opacity"; type: "double" }
         Property { name: "scale"; type: "double" }
@@ -753,6 +812,7 @@ Module {
         Property { name: "exit"; type: "QQuickTransition"; isPointer: true }
         Signal { name: "spacingChanged"; revision: 1 }
         Signal { name: "paletteChanged"; revision: 3 }
+        Signal { name: "enabledChanged"; revision: 3 }
         Signal { name: "openedChanged"; revision: 3 }
         Signal {
             name: "windowChanged"
