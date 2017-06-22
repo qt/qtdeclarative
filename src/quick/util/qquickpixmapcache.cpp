@@ -245,6 +245,9 @@ public:
       providerOptions(po), appliedTransform(QQuickImageProviderOptions::UsePluginDefaultTransform),
       textureFactory(nullptr), reply(nullptr), prevUnreferenced(nullptr),
       prevUnreferencedPtr(nullptr), nextUnreferenced(nullptr)
+#ifdef Q_OS_WEBOS
+    , storeToCache(true)
+#endif
     {
         declarativePixmaps.insert(pixmap);
     }
@@ -256,6 +259,9 @@ public:
       providerOptions(po), appliedTransform(aTransform),
       textureFactory(nullptr), reply(nullptr), prevUnreferenced(nullptr), prevUnreferencedPtr(nullptr),
       nextUnreferenced(nullptr)
+#ifdef Q_OS_WEBOS
+    , storeToCache(true)
+#endif
     {
         declarativePixmaps.insert(pixmap);
     }
@@ -268,6 +274,9 @@ public:
       providerOptions(po), appliedTransform(aTransform),
       textureFactory(texture), reply(nullptr), prevUnreferenced(nullptr),
       prevUnreferencedPtr(nullptr), nextUnreferenced(nullptr)
+#ifdef Q_OS_WEBOS
+    , storeToCache(true)
+#endif
     {
         declarativePixmaps.insert(pixmap);
     }
@@ -277,6 +286,9 @@ public:
       appliedTransform(QQuickImageProviderOptions::UsePluginDefaultTransform),
       textureFactory(texture), reply(nullptr), prevUnreferenced(nullptr),
       prevUnreferencedPtr(nullptr), nextUnreferenced(nullptr)
+#ifdef Q_OS_WEBOS
+    , storeToCache(true)
+#endif
     {
         if (texture)
             requestSize = implicitSize = texture->textureSize();
@@ -323,6 +335,10 @@ public:
     QQuickPixmapData *prevUnreferenced;
     QQuickPixmapData**prevUnreferencedPtr;
     QQuickPixmapData *nextUnreferenced;
+
+#ifdef Q_OS_WEBOS
+    bool storeToCache;
+#endif
 };
 
 int QQuickPixmapReply::finishedIndex = -1;
@@ -1278,7 +1294,11 @@ void QQuickPixmapData::release()
             QQuickPixmapReader::readerMutex.unlock();
         }
 
-        if (pixmapStatus == QQuickPixmap::Ready) {
+        if (pixmapStatus == QQuickPixmap::Ready
+#ifdef Q_OS_WEBOS
+                && storeToCache
+#endif
+                ) {
             if (inCache)
                 pixmapStore()->unreferencePixmap(this);
             else
@@ -1634,6 +1654,13 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &reques
 
     QHash<QQuickPixmapKey, QQuickPixmapData *>::Iterator iter = store->m_cache.end();
 
+#ifdef Q_OS_WEBOS
+    QQuickPixmap::Options orgOptions = options;
+    // In webOS, we suppose that cache is always enabled to share image instances along its source.
+    // So, original option(orgOptions) for cache only decides whether to store the instances when it's unreferenced.
+    options |= QQuickPixmap::Cache;
+#endif
+
     // If Cache is disabled, the pixmap will always be loaded, even if there is an existing
     // cached version. Unless it's an itemgrabber url, since the cache is used to pass
     // the result between QQuickItemGrabResult and QQuickImage.
@@ -1669,6 +1696,9 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &reques
                 PIXMAP_PROFILE(pixmapLoadingFinished(url, QSize(width(), height())));
                 if (options & QQuickPixmap::Cache)
                     d->addToCache();
+#ifdef Q_OS_WEBOS
+                d->storeToCache = orgOptions & QQuickPixmap::Cache;
+#endif
                 return;
             }
             if (d) { // loadable, but encountered error while loading
@@ -1685,6 +1715,9 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &reques
                                  QQuickImageProviderOptions::UsePluginDefaultTransform, frame, frameCount);
         if (options & QQuickPixmap::Cache)
             d->addToCache();
+#ifdef Q_OS_WEBOS
+        d->storeToCache = orgOptions & QQuickPixmap::Cache;
+#endif
 
         QQuickPixmapReader::readerMutex.lock();
         d->reply = QQuickPixmapReader::instance(engine)->getImage(d);
