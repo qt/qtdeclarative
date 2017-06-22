@@ -58,6 +58,7 @@
 #include <private/qv4jsir_p.h>
 #include <private/qv4value_p.h>
 #include "qv4instr_moth_p.h"
+#include <private/qv4compilationunit_moth_p.h>
 
 #if !defined(V4_BOOTSTRAP)
 QT_REQUIRE_CONFIG(qml_interpreter);
@@ -67,20 +68,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 namespace Moth {
-
-struct CompilationUnit : public QV4::CompiledData::CompilationUnit
-{
-    virtual ~CompilationUnit();
-#if !defined(V4_BOOTSTRAP)
-    void linkBackendToEngine(QV4::ExecutionEngine *engine) Q_DECL_OVERRIDE;
-    bool memoryMapCode(QString *errorString) Q_DECL_OVERRIDE;
-#endif
-    void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit) Q_DECL_OVERRIDE;
-    bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString) Q_DECL_OVERRIDE;
-
-    QVector<QByteArray> codeRefs;
-
-};
 
 class Q_QML_EXPORT InstructionSelection:
         public IR::IRDecoder,

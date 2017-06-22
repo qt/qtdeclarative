@@ -5,6 +5,7 @@ HEADERS += \
     $$PWD/qv4bytecodegenerator_p.h \
     $$PWD/qv4compileddata_p.h \
     $$PWD/qv4compiler_p.h \
+    $$PWD/qv4compilationunit_moth_p.h \
     $$PWD/qv4codegen_p.h \
     $$PWD/qv4isel_p.h \
     $$PWD/qv4jsir_p.h \
@@ -18,6 +19,7 @@ SOURCES += \
     $$PWD/qv4bytecodegenerator.cpp \
     $$PWD/qv4compileddata.cpp \
     $$PWD/qv4compiler.cpp \
+    $$PWD/qv4compilationunit_moth.cpp \
     $$PWD/qv4codegen.cpp \
     $$PWD/qv4isel_p.cpp \
     $$PWD/qv4jsir.cpp \
