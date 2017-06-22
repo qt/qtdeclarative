@@ -175,7 +175,7 @@ QT_BEGIN_NAMESPACE
 
 #define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
 
-#define MOTH_INSTR_HEADER union { quint32 instructionType; quint64 _dummy; };
+#define MOTH_INSTR_HEADER union { Instr::Type instructionType; quint64 _dummy; };
 
 #define MOTH_INSTR_ENUM(I, FMT)  I,
 #define MOTH_INSTR_SIZE(I, FMT) ((sizeof(QV4::Moth::Instr::instr_##FMT) + MOTH_INSTR_ALIGN_MASK) & ~MOTH_INSTR_ALIGN_MASK)
