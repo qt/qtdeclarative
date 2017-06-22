@@ -2093,7 +2093,8 @@ bool Codegen::visit(ObjectLiteral *ast)
             }
 
             v.rvalue = value;
-            v.rvalue.asRValue();
+            if (v.rvalue.type != Reference::Const)
+                v.rvalue.asRValue();
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
             const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
             ObjectPropertyValue &v = valueMap[name];
