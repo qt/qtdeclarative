@@ -68,6 +68,13 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    In order to perform an action when the value for a particular handle changes,
+    use the following syntax:
+
+    \code
+    first.onValueChanged: console.log("first.value changed to " + first.value)
+    \endcode
+
     The \l {first.position} and \l {second.position} properties are expressed as
     fractions of the control's size, in the range \c {0.0 - 1.0}.
     The \l {first.visualPosition} and \l {second.visualPosition} properties are
