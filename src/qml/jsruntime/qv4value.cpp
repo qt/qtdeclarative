@@ -236,9 +236,9 @@ bool Value::sameValue(Value other) const {
     if (s && os)
         return s->isEqualTo(os);
     if (isInteger() && other.isDouble())
-        return int_32() ? (double(int_32()) == other.doubleValue()) : (other._val == 0);
+        return int_32() ? (double(int_32()) == other.doubleValue()) : !std::signbit(other.doubleValue());
     if (isDouble() && other.isInteger())
-        return other.int_32() ? (doubleValue() == double(other.int_32())) : (_val == 0);
+        return other.int_32() ? (doubleValue() == double(other.int_32())) : !std::signbit(doubleValue());
     return false;
 }
 
