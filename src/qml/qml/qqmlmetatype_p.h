@@ -141,6 +141,7 @@ public:
     QQmlType();
     QQmlType(const QQmlType &other);
     QQmlType &operator =(const QQmlType &other);
+    explicit QQmlType(QQmlTypePrivate *priv);
     ~QQmlType();
 
     bool isValid() const { return d != 0; }
@@ -223,6 +224,10 @@ public:
     int enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &, bool *ok) const;
     int enumValue(QQmlEnginePrivate *engine, const QHashedCStringRef &, bool *ok) const;
     int enumValue(QQmlEnginePrivate *engine, const QV4::String *, bool *ok) const;
+
+    QQmlTypePrivate *handle() const { return d; }
+    static void refHandle(QQmlTypePrivate *priv);
+    static void derefHandle(QQmlTypePrivate *priv);
 private:
     QQmlType *superType() const;
     QQmlType *resolveCompositeBaseType(QQmlEnginePrivate *engine) const;

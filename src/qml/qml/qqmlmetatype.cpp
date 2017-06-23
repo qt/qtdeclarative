@@ -463,6 +463,13 @@ QQmlType &QQmlType::operator =(const QQmlType &other)
     return *this;
 }
 
+QQmlType::QQmlType(QQmlTypePrivate *priv)
+    : d(priv)
+{
+    if (d)
+        d->refCount.ref();
+}
+
 QQmlType::~QQmlType()
 {
     if (d && !d->refCount.deref())
@@ -1071,6 +1078,18 @@ int QQmlType::enumValue(QQmlEnginePrivate *engine, const QV4::String *name, bool
 
     *ok = false;
     return -1;
+}
+
+void QQmlType::refHandle(QQmlTypePrivate *priv)
+{
+    if (priv)
+        priv->refCount.ref();
+}
+
+void QQmlType::derefHandle(QQmlTypePrivate *priv)
+{
+    if (priv && !priv->refCount.deref())
+        delete priv;
 }
 
 QQmlTypeModule::QQmlTypeModule()

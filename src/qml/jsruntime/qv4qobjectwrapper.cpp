@@ -251,7 +251,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
                         return QV4::Encode::undefined();
                     } else if (r.type) {
                         return QmlTypeWrapper::create(v4, d()->object(),
-                                                      r.type, Heap::QmlTypeWrapper::ExcludeEnums);
+                                                      *r.type, Heap::QmlTypeWrapper::ExcludeEnums);
                     } else if (r.importNamespace) {
                         return QmlTypeWrapper::create(v4, d()->object(),
                                                       qmlContext->imports, r.importNamespace, Heap::QmlTypeWrapper::ExcludeEnums);
