@@ -25,35 +25,26 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QQuickItem>
-#include <QQuickWindow>
-#include "inputinspector.h"
+import QtQuick 2.0
 
-int main(int argc, char *argv[])
-{
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QGuiApplication app(argc, argv);
-    qmlRegisterType<InputInspector>("org.qtproject.Test", 1, 0, "InputInspector");
+Rectangle {
+    id: r1
+    radius: 10
+    border.color: "black"
+    border.width: 4
+    property string label
+    implicitHeight: txt.implicitHeight + 12
+    implicitWidth: txt.implicitWidth+ 12
+    color: "#c0c0c0"
 
-    QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    if (engine.rootObjects().isEmpty())
-        return -1;
-    if (!app.arguments().isEmpty()) {
-        QQuickWindow * win = static_cast<QQuickWindow *>(engine.rootObjects().first());
-        auto lastArg = app.arguments().last();
-        if (lastArg.endsWith(QLatin1String(".qml"))) {
-            auto root = win->findChild<QQuickItem *>("LauncherList");
-            int showExampleIdx = -1;
-            for (int i = root->metaObject()->methodCount(); showExampleIdx < 0 && i >= 0; --i)
-                if (root->metaObject()->method(i).name() == QByteArray("showExample"))
-                    showExampleIdx = i;
-            QMetaMethod showExampleFn = root->metaObject()->method(showExampleIdx);
-            showExampleFn.invoke(root, Q_ARG(QVariant, QVariant(QLatin1String("../../") + lastArg)));
-        }
+    function queryColor(pressed) {
+        return pressed ? "#ff4040" : "#c0c0c0"
     }
 
-    return app.exec();
+    Text {
+        id: txt
+        y: 6
+        anchors.horizontalCenter: parent.horizontalCenter
+        text: parent.label
+    }
 }

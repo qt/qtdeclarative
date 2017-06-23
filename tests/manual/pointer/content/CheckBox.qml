@@ -25,35 +25,20 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QQuickItem>
-#include <QQuickWindow>
-#include "inputinspector.h"
+import QtQuick 2.0
+import Qt.labs.handlers 1.0
 
-int main(int argc, char *argv[])
-{
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QGuiApplication app(argc, argv);
-    qmlRegisterType<InputInspector>("org.qtproject.Test", 1, 0, "InputInspector");
-
-    QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    if (engine.rootObjects().isEmpty())
-        return -1;
-    if (!app.arguments().isEmpty()) {
-        QQuickWindow * win = static_cast<QQuickWindow *>(engine.rootObjects().first());
-        auto lastArg = app.arguments().last();
-        if (lastArg.endsWith(QLatin1String(".qml"))) {
-            auto root = win->findChild<QQuickItem *>("LauncherList");
-            int showExampleIdx = -1;
-            for (int i = root->metaObject()->methodCount(); showExampleIdx < 0 && i >= 0; --i)
-                if (root->metaObject()->method(i).name() == QByteArray("showExample"))
-                    showExampleIdx = i;
-            QMetaMethod showExampleFn = root->metaObject()->method(showExampleIdx);
-            showExampleFn.invoke(root, Q_ARG(QVariant, QVariant(QLatin1String("../../") + lastArg)));
+Row {
+    id: root
+    property bool checked : false
+    property string label : "CheckBox"
+    Rectangle {
+        width: 10; height: 10
+        color: root.checked ? "#202020" : "transparent"
+        border.color: "black"
+        TapHandler {
+            onTapped: root.checked = !root.checked
         }
     }
-
-    return app.exec();
+    Text { text: root.label }
 }
