@@ -91,6 +91,7 @@ public:
     static QQmlType qmlTypeFromIndex(int);
 
     static QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
+    static QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
 
     static QMetaProperty defaultProperty(const QMetaObject *);
     static QMetaProperty defaultProperty(QObject *);

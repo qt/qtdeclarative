@@ -452,6 +452,7 @@ private:
     template <typename T> friend class QQmlPropertyCacheAliasCreator;
     friend class QQmlComponentAndAliasResolver;
     friend class QQmlMetaObject;
+    friend struct QQmlMetaTypeData;
 
     inline QQmlPropertyCache *copy(int reserve);
 

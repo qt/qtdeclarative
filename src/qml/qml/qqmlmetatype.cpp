@@ -113,6 +113,7 @@ struct QQmlMetaTypeData
 
     QHash<const QMetaObject *, QQmlPropertyCache *> propertyCaches;
     QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
+    QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
 };
 
 class QQmlTypeModulePrivate
@@ -226,6 +227,17 @@ public:
     mutable QStringHash<int> enums;
 
     static QHash<const QMetaObject *, int> attachedPropertyIds;
+
+    struct PropertyCacheByMinorVersion
+    {
+        PropertyCacheByMinorVersion() : cache(nullptr), minorVersion(-1) {}
+        explicit PropertyCacheByMinorVersion(QQmlPropertyCache *pc, int ver) : cache(pc), minorVersion(ver) {}
+        QQmlPropertyCachePtr cache;
+        int minorVersion;
+    };
+    QVector<PropertyCacheByMinorVersion> propertyCaches;
+    QQmlPropertyCache *propertyCacheForMinorVersion(int minorVersion) const;
+    void setPropertyCacheForMinorVersion(int minorVersion, QQmlPropertyCache *cache);
 };
 
 void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
@@ -778,6 +790,25 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
         for (int jj = 0; jj < e.keyCount(); ++jj)
             enums.insert(QString::fromUtf8(e.key(jj)), e.value(jj));
     }
+}
+
+QQmlPropertyCache *QQmlTypePrivate::propertyCacheForMinorVersion(int minorVersion) const
+{
+    for (int i = 0; i < propertyCaches.count(); ++i)
+        if (propertyCaches.at(i).minorVersion == minorVersion)
+            return propertyCaches.at(i).cache;
+    return nullptr;
+}
+
+void QQmlTypePrivate::setPropertyCacheForMinorVersion(int minorVersion, QQmlPropertyCache *cache)
+{
+    for (int i = 0; i < propertyCaches.count(); ++i) {
+        if (propertyCaches.at(i).minorVersion == minorVersion) {
+            propertyCaches[i].cache = cache;
+            return;
+        }
+    }
+    propertyCaches.append(PropertyCacheByMinorVersion(cache, minorVersion));
 }
 
 QByteArray QQmlType::typeName() const
@@ -2008,6 +2039,118 @@ QQmlPropertyCache *QQmlMetaType::propertyCache(const QMetaObject *metaObject)
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
     return data->propertyCache(metaObject);
+}
+
+QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int minorVersion)
+{
+    Q_ASSERT(type.isValid());
+
+    if (QQmlPropertyCache *pc = type.key()->propertyCacheForMinorVersion(minorVersion))
+        return pc;
+
+    QVector<QQmlType> types;
+
+    int maxMinorVersion = 0;
+
+    const QMetaObject *metaObject = type.metaObject();
+
+    while (metaObject) {
+        QQmlType t = QQmlMetaType::qmlType(metaObject, type.module(), type.majorVersion(), minorVersion);
+        if (t.isValid()) {
+            maxMinorVersion = qMax(maxMinorVersion, t.minorVersion());
+            types << t;
+        } else {
+            types << 0;
+        }
+
+        metaObject = metaObject->superClass();
+    }
+
+    if (QQmlPropertyCache *pc = type.key()->propertyCacheForMinorVersion(maxMinorVersion)) {
+        const_cast<QQmlTypePrivate*>(type.key())->setPropertyCacheForMinorVersion(minorVersion, pc);
+        return pc;
+    }
+
+    QQmlPropertyCache *raw = propertyCache(type.metaObject());
+
+    bool hasCopied = false;
+
+    for (int ii = 0; ii < types.count(); ++ii) {
+        QQmlType currentType = types.at(ii);
+        if (!currentType.isValid())
+            continue;
+
+        int rev = currentType.metaObjectRevision();
+        int moIndex = types.count() - 1 - ii;
+
+        if (raw->allowedRevisionCache[moIndex] != rev) {
+            if (!hasCopied) {
+                raw = raw->copy();
+                hasCopied = true;
+            }
+            raw->allowedRevisionCache[moIndex] = rev;
+        }
+    }
+
+    // Test revision compatibility - the basic rule is:
+    //    * Anything that is excluded, cannot overload something that is not excluded *
+
+    // Signals override:
+    //    * other signals and methods of the same name.
+    //    * properties named on<Signal Name>
+    //    * automatic <property name>Changed notify signals
+
+    // Methods override:
+    //    * other methods of the same name
+
+    // Properties override:
+    //    * other elements of the same name
+
+#if 0
+    bool overloadError = false;
+    QString overloadName;
+
+    for (QQmlPropertyCache::StringCache::ConstIterator iter = raw->stringCache.begin();
+         !overloadError && iter != raw->stringCache.end();
+         ++iter) {
+
+        QQmlPropertyData *d = *iter;
+        if (raw->isAllowedInRevision(d))
+            continue; // Not excluded - no problems
+
+        // check that a regular "name" overload isn't happening
+        QQmlPropertyData *current = d;
+        while (!overloadError && current) {
+            current = d->overrideData(current);
+            if (current && raw->isAllowedInRevision(current))
+                overloadError = true;
+        }
+    }
+
+    if (overloadError) {
+        if (hasCopied) raw->release();
+
+        error.setDescription(QLatin1String("Type ") + type.qmlTypeName() + QLatin1Char(' ') + QString::number(type.majorVersion()) + QLatin1Char('.') + QString::number(minorVersion) + QLatin1String(" contains an illegal property \"") + overloadName + QLatin1String("\".  This is an error in the type's implementation."));
+        return 0;
+    }
+#endif
+
+    const_cast<QQmlTypePrivate*>(type.key())->setPropertyCacheForMinorVersion(minorVersion, raw);
+
+    if (hasCopied)
+        raw->release();
+
+    if (minorVersion != maxMinorVersion)
+        const_cast<QQmlTypePrivate*>(type.key())->setPropertyCacheForMinorVersion(maxMinorVersion, raw);
+
+    return raw;
+}
+
+QQmlPropertyCache *QQmlMetaType::propertyCache(const QQmlType &type, int minorVersion)
+{
+    QMutexLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+    return data->propertyCache(type, minorVersion);
 }
 
 /*!

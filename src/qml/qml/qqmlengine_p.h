@@ -259,12 +259,8 @@ public:
     mutable QMutex networkAccessManagerMutex;
 
 private:
-    // Must be called locked
-    QQmlPropertyCache *createCache(const QQmlType &, int);
-
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
-    QHash<QPair<QQmlType, int>, QQmlPropertyCache *> typePropertyCache;
     QHash<int, int> m_qmlLists;
     QHash<int, QV4::CompiledData::CompilationUnit *> m_compositeTypes;
     static bool s_designerMode;
@@ -383,9 +379,7 @@ QQmlPropertyCache *QQmlEnginePrivate::cache(const QQmlType &type, int minorVersi
         return cache(type.metaObject());
 
     Locker locker(this);
-    QQmlPropertyCache *rv = typePropertyCache.value(qMakePair(type, minorVersion));
-    if (!rv) rv = createCache(type, minorVersion);
-    return rv;
+    return QQmlMetaType::propertyCache(type, minorVersion);
 }
 
 QV8Engine *QQmlEnginePrivate::getV8Engine(QQmlEngine *e)
