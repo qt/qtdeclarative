@@ -597,6 +597,7 @@ void tst_qqmlxmlhttprequest::send_withdata_data()
     QTest::newRow("Incorrect content-type - out of order") << "send_data.4.expect" << "send_data.5.qml";
     QTest::newRow("PUT") << "send_data.6.expect" << "send_data.6.qml";
     QTest::newRow("Correct content-type - no charset") << "send_data.1.expect" << "send_data.7.qml";
+    QTest::newRow("ArrayBuffer") << "send_data.11.expect" << "send_data.11.qml";
 }
 
 void tst_qqmlxmlhttprequest::send_options()
