@@ -628,19 +628,17 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
         bool isValueSource = false;
         bool isPropertyInterceptor = false;
 
-        QQmlType *qmlType = 0;
         const QV4::CompiledData::Object *targetObject = qmlUnit->objectAt(binding->value.objectIndex);
         if (auto *typeRef = resolvedTypes.value(targetObject->inheritedTypeNameIndex)) {
             QQmlPropertyCache *cache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
             const QMetaObject *mo = cache->firstCppMetaObject();
+            QQmlType *qmlType = 0;
             while (mo && !qmlType) {
                 qmlType = QQmlMetaType::qmlType(mo);
                 mo = mo->superClass();
             }
             Q_ASSERT(qmlType);
-        }
 
-        if (qmlType) {
             isValueSource = qmlType->propertyValueSourceCast() != -1;
             isPropertyInterceptor = qmlType->propertyValueInterceptorCast() != -1;
         }
