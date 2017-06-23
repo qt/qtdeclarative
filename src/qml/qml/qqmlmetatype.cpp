@@ -110,6 +110,9 @@ struct QQmlMetaTypeData
 
     QString typeRegistrationNamespace;
     QStringList typeRegistrationFailures;
+
+    QHash<const QMetaObject *, QQmlPropertyCache *> propertyCaches;
+    QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
 };
 
 class QQmlTypeModulePrivate
@@ -151,6 +154,9 @@ QQmlMetaTypeData::~QQmlMetaTypeData()
 
     for (TypeModules::const_iterator i = uriToModule.constBegin(), cend = uriToModule.constEnd(); i != cend; ++i)
         delete *i;
+    for (QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator it = propertyCaches.begin(), end = propertyCaches.end();
+         it != end; ++it)
+        (*it)->release();
 }
 
 class QQmlTypePrivate
@@ -1979,6 +1985,29 @@ QQmlType QQmlMetaType::qmlTypeFromIndex(int idx)
     if (idx < 0 || idx >= data->types.count())
             return 0;
     return data->types.at(idx);
+}
+
+QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject)
+{
+    if (QQmlPropertyCache *rv = propertyCaches.value(metaObject))
+        return rv;
+
+    if (!metaObject->superClass()) {
+        QQmlPropertyCache *rv = new QQmlPropertyCache(metaObject);
+        propertyCaches.insert(metaObject, rv);
+        return rv;
+    }
+    QQmlPropertyCache *super = propertyCache(metaObject->superClass());
+    QQmlPropertyCache *rv = super->copyAndAppend(metaObject);
+    propertyCaches.insert(metaObject, rv);
+    return rv;
+}
+
+QQmlPropertyCache *QQmlMetaType::propertyCache(const QMetaObject *metaObject)
+{
+    QMutexLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+    return data->propertyCache(metaObject);
 }
 
 /*!

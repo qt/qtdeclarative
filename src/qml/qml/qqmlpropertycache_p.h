@@ -511,6 +511,8 @@ private:
     QByteArray _checksum;
 };
 
+typedef QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCachePtr;
+
 // QQmlMetaObject serves as a wrapper around either QMetaObject or QQmlPropertyCache.
 // This is necessary as we delay creation of QMetaObject for synthesized QObjects, but
 // we don't want to needlessly generate QQmlPropertyCaches every time we encounter a

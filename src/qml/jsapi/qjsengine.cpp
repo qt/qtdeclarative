@@ -730,10 +730,7 @@ QJSEnginePrivate *QJSEnginePrivate::get(QV4::ExecutionEngine *e)
 
 QJSEnginePrivate::~QJSEnginePrivate()
 {
-    typedef QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator PropertyCacheIt;
-
-    for (PropertyCacheIt iter = propertyCache.begin(), end = propertyCache.end(); iter != end; ++iter)
-        (*iter)->release();
+    // ### FIXME: sweep unused QQmlType instances
 }
 
 void QJSEnginePrivate::addToDebugServer(QJSEngine *q)
@@ -754,20 +751,6 @@ void QJSEnginePrivate::removeFromDebugServer(QJSEngine *q)
     QQmlDebugConnector *server = QQmlDebugConnector::instance();
     if (server && server->hasEngine(q))
         server->removeEngine(q);
-}
-
-QQmlPropertyCache *QJSEnginePrivate::createCache(const QMetaObject *mo)
-{
-    if (!mo->superClass()) {
-        QQmlPropertyCache *rv = new QQmlPropertyCache(mo);
-        propertyCache.insert(mo, rv);
-        return rv;
-    } else {
-        QQmlPropertyCache *super = cache(mo->superClass());
-        QQmlPropertyCache *rv = super->copyAndAppend(mo);
-        propertyCache.insert(mo, rv);
-        return rv;
-    }
 }
 
 /*!

@@ -70,6 +70,7 @@ class QQmlTypeModule;
 class QHashedString;
 class QHashedStringRef;
 class QMutex;
+class QQmlPropertyCache;
 
 namespace QV4 { struct String; }
 
@@ -88,6 +89,8 @@ public:
     static QQmlType qmlType(int);
     static QQmlType qmlType(const QUrl &url, bool includeNonFileImports = false);
     static QQmlType qmlTypeFromIndex(int);
+
+    static QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
 
     static QMetaProperty defaultProperty(const QMetaObject *);
     static QMetaProperty defaultProperty(QObject *);
