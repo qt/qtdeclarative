@@ -155,6 +155,7 @@ QQmlMetaTypeData::~QQmlMetaTypeData()
 
 class QQmlTypePrivate
 {
+    Q_DISABLE_COPY(QQmlTypePrivate)
 public:
     QQmlTypePrivate(QQmlType::RegistrationType type);
     ~QQmlTypePrivate();
@@ -163,6 +164,7 @@ public:
     void initEnums() const;
     void insertEnums(const QMetaObject *metaObject) const;
 
+    QAtomicInt refCount;
     QQmlType::RegistrationType regType;
 
     struct QQmlCppTypeData
@@ -278,7 +280,7 @@ QJSValue QQmlType::SingletonInstanceInfo::scriptApi(QQmlEngine *e) const
 QHash<const QMetaObject *, int> QQmlTypePrivate::attachedPropertyIds;
 
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
-: regType(type), iid(0), typeId(0), listId(0), revision(0),
+: refCount(1), regType(type), iid(0), typeId(0), listId(0), revision(0),
     containsRevisionedAttributes(false), superType(0), baseMetaObject(0),
     index(-1), isSetup(false), isEnumSetup(false), haveSuperType(false)
 {
@@ -332,7 +334,7 @@ QQmlTypePrivate::~QQmlTypePrivate()
 }
 
 QQmlType::QQmlType(int index, const QQmlPrivate::RegisterInterface &interface)
-: d(new QQmlTypePrivate(InterfaceType))
+    : d(new QQmlTypePrivate(InterfaceType))
 {
     d->iid = interface.iid;
     d->typeId = interface.typeId;
@@ -344,7 +346,7 @@ QQmlType::QQmlType(int index, const QQmlPrivate::RegisterInterface &interface)
 }
 
 QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::RegisterSingletonType &type)
-: d(new QQmlTypePrivate(SingletonType))
+    : d(new QQmlTypePrivate(SingletonType))
 {
     d->elementName = elementName;
     d->module = QString::fromUtf8(type.uri);
@@ -372,7 +374,7 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
 }
 
 QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::RegisterCompositeSingletonType &type)
-  : d(new QQmlTypePrivate(CompositeSingletonType))
+    : d(new QQmlTypePrivate(CompositeSingletonType))
 {
     d->elementName = elementName;
     d->module = QString::fromUtf8(type.uri);
@@ -388,7 +390,7 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
 }
 
 QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::RegisterType &type)
-: d(new QQmlTypePrivate(CppType))
+    : d(new QQmlTypePrivate(CppType))
 {
     d->elementName = elementName;
     d->module = QString::fromUtf8(type.uri);
@@ -425,7 +427,7 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
 }
 
 QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::RegisterCompositeType &type)
-: d(new QQmlTypePrivate(CompositeType))
+    : d(new QQmlTypePrivate(CompositeType))
 {
     d->index = index;
     d->elementName = elementName;
@@ -437,41 +439,78 @@ QQmlType::QQmlType(int index, const QString &elementName, const QQmlPrivate::Reg
     d->extraData.fd->url = type.url;
 }
 
-QQmlType::~QQmlType()
+QQmlType::QQmlType()
+    : d(0)
 {
-    delete d;
 }
 
-const QHashedString &QQmlType::module() const
+QQmlType::QQmlType(const QQmlType &other)
+    : d(other.d)
 {
+    if (d)
+        d->refCount.ref();
+}
+
+QQmlType &QQmlType::operator =(const QQmlType &other)
+{
+    if (d != other.d) {
+        if (d && !d->refCount.deref())
+            delete d;
+        d = other.d;
+        if (d)
+            d->refCount.ref();
+    }
+    return *this;
+}
+
+QQmlType::~QQmlType()
+{
+    if (d && !d->refCount.deref())
+        delete d;
+}
+
+QHashedString QQmlType::module() const
+{
+    if (!d)
+        return QHashedString();
     return d->module;
 }
 
 int QQmlType::majorVersion() const
 {
+    if (!d)
+        return -1;
     return d->version_maj;
 }
 
 int QQmlType::minorVersion() const
 {
+    if (!d)
+        return -1;
     return d->version_min;
 }
 
 bool QQmlType::availableInVersion(int vmajor, int vminor) const
 {
     Q_ASSERT(vmajor >= 0 && vminor >= 0);
+    if (!d)
+        return false;
     return vmajor == d->version_maj && vminor >= d->version_min;
 }
 
 bool QQmlType::availableInVersion(const QHashedStringRef &module, int vmajor, int vminor) const
 {
     Q_ASSERT(vmajor >= 0 && vminor >= 0);
+    if (!d)
+        return false;
     return module == d->module && vmajor == d->version_maj && vminor >= d->version_min;
 }
 
 // returns the nearest _registered_ super class
 QQmlType *QQmlType::superType() const
 {
+    if (!d)
+        return 0;
     if (!d->haveSuperType && d->baseMetaObject) {
         const QMetaObject *mo = d->baseMetaObject->superClass();
         while (mo && !d->superType) {
@@ -487,7 +526,7 @@ QQmlType *QQmlType::superType() const
 QQmlType *QQmlType::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
 {
     Q_ASSERT(isComposite());
-    if (!engine)
+    if (!engine || !d)
         return 0;
     QQmlRefPointer<QQmlTypeData> td(engine->typeLoader.getType(sourceUrl()), QQmlRefPointer<QQmlTypeData>::Adopt);
     if (td.isNull() || !td->isComplete())
@@ -500,6 +539,8 @@ QQmlType *QQmlType::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
 int QQmlType::resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const
 {
     Q_ASSERT(isComposite());
+    if (!d)
+        return -1;
     *ok = false;
     QQmlType *type = resolveCompositeBaseType(engine);
     if (!type)
@@ -709,21 +750,26 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
 
 QByteArray QQmlType::typeName() const
 {
-    if (d->regType == SingletonType || d->regType == CompositeSingletonType)
-        return d->extraData.sd->singletonInstanceInfo->typeName.toUtf8();
-    else if (d->baseMetaObject)
-        return d->baseMetaObject->className();
-    else
-        return QByteArray();
+    if (d) {
+        if (d->regType == SingletonType || d->regType == CompositeSingletonType)
+            return d->extraData.sd->singletonInstanceInfo->typeName.toUtf8();
+        else if (d->baseMetaObject)
+            return d->baseMetaObject->className();
+    }
+    return QByteArray();
 }
 
-const QString &QQmlType::elementName() const
+QString QQmlType::elementName() const
 {
+    if (!d)
+        return QString();
     return d->elementName;
 }
 
-const QString &QQmlType::qmlTypeName() const
+QString QQmlType::qmlTypeName() const
 {
+    if (!d)
+        return QString();
     if (d->name.isEmpty()) {
         if (!d->module.isEmpty())
             d->name = static_cast<QString>(d->module) + QLatin1Char('/') + d->elementName;
@@ -736,7 +782,7 @@ const QString &QQmlType::qmlTypeName() const
 
 QObject *QQmlType::create() const
 {
-    if (!isCreatable())
+    if (!d || !isCreatable())
         return 0;
 
     d->init();
@@ -752,7 +798,7 @@ QObject *QQmlType::create() const
 
 void QQmlType::create(QObject **out, void **memory, size_t additionalMemory) const
 {
-    if (!isCreatable())
+    if (!d || !isCreatable())
         return;
 
     d->init();
@@ -769,6 +815,8 @@ void QQmlType::create(QObject **out, void **memory, size_t additionalMemory) con
 
 QQmlType::SingletonInstanceInfo *QQmlType::singletonInstanceInfo() const
 {
+    if (!d)
+        return 0;
     if (d->regType != SingletonType && d->regType != CompositeSingletonType)
         return 0;
     return d->extraData.sd->singletonInstanceInfo;
@@ -776,6 +824,8 @@ QQmlType::SingletonInstanceInfo *QQmlType::singletonInstanceInfo() const
 
 QQmlCustomParser *QQmlType::customParser() const
 {
+    if (!d)
+        return 0;
     if (d->regType != CppType)
         return 0;
     return d->extraData.cd->customParser;
@@ -783,32 +833,34 @@ QQmlCustomParser *QQmlType::customParser() const
 
 QQmlType::CreateFunc QQmlType::createFunction() const
 {
-    if (d->regType != CppType)
+    if (!d || d->regType != CppType)
         return 0;
     return d->extraData.cd->newFunc;
 }
 
 QString QQmlType::noCreationReason() const
 {
-    if (d->regType != CppType)
+    if (!d || d->regType != CppType)
         return QString();
     return d->extraData.cd->noCreationReason;
 }
 
 int QQmlType::createSize() const
 {
-    if (d->regType != CppType)
+    if (!d || d->regType != CppType)
         return 0;
     return d->extraData.cd->allocationSize;
 }
 
 bool QQmlType::isCreatable() const
 {
-    return d->regType == CppType && d->extraData.cd->newFunc;
+    return d && d->regType == CppType && d->extraData.cd->newFunc;
 }
 
 bool QQmlType::isExtendedType() const
 {
+    if (!d)
+        return false;
     d->init();
 
     return !d->metaObjects.isEmpty();
@@ -816,36 +868,38 @@ bool QQmlType::isExtendedType() const
 
 bool QQmlType::isSingleton() const
 {
-    return d->regType == SingletonType || d->regType == CompositeSingletonType;
+    return d && (d->regType == SingletonType || d->regType == CompositeSingletonType);
 }
 
 bool QQmlType::isInterface() const
 {
-    return d->regType == InterfaceType;
+    return d && d->regType == InterfaceType;
 }
 
 bool QQmlType::isComposite() const
 {
-    return d->regType == CompositeType || d->regType == CompositeSingletonType;
+    return d && (d->regType == CompositeType || d->regType == CompositeSingletonType);
 }
 
 bool QQmlType::isCompositeSingleton() const
 {
-    return d->regType == CompositeSingletonType;
+    return d && d->regType == CompositeSingletonType;
 }
 
 int QQmlType::typeId() const
 {
-    return d->typeId;
+    return d ? d->typeId : -1;
 }
 
 int QQmlType::qListTypeId() const
 {
-    return d->listId;
+    return d ? d->listId : -1;
 }
 
 const QMetaObject *QQmlType::metaObject() const
 {
+    if (!d)
+        return 0;
     d->init();
 
     if (d->metaObjects.isEmpty())
@@ -857,11 +911,13 @@ const QMetaObject *QQmlType::metaObject() const
 
 const QMetaObject *QQmlType::baseMetaObject() const
 {
-    return d->baseMetaObject;
+    return d ? d->baseMetaObject : 0;
 }
 
 bool QQmlType::containsRevisionedAttributes() const
 {
+    if (!d)
+        return false;
     d->init();
 
     return d->containsRevisionedAttributes;
@@ -869,11 +925,13 @@ bool QQmlType::containsRevisionedAttributes() const
 
 int QQmlType::metaObjectRevision() const
 {
-    return d->revision;
+    return d ? d->revision : -1;
 }
 
 QQmlAttachedPropertiesFunc QQmlType::attachedPropertiesFunction(QQmlEnginePrivate *engine) const
 {
+    if (!d)
+        return 0;
     if (d->regType == CppType)
         return d->extraData.cd->attachedPropertiesFunc;
 
@@ -885,6 +943,8 @@ QQmlAttachedPropertiesFunc QQmlType::attachedPropertiesFunction(QQmlEnginePrivat
 
 const QMetaObject *QQmlType::attachedPropertiesType(QQmlEnginePrivate *engine) const
 {
+    if (!d)
+        return 0;
     if (d->regType == CppType)
         return d->extraData.cd->attachedPropertiesType;
 
@@ -901,6 +961,8 @@ Qt 4.7 and QtQuick 1.0).
 */
 int QQmlType::attachedPropertiesId(QQmlEnginePrivate *engine) const
 {
+    if (!d)
+        return -1;
     if (d->regType == CppType)
         return d->extraData.cd->attachedPropertiesId;
 
@@ -912,59 +974,62 @@ int QQmlType::attachedPropertiesId(QQmlEnginePrivate *engine) const
 
 int QQmlType::parserStatusCast() const
 {
-    if (d->regType != CppType)
+    if (!d || d->regType != CppType)
         return -1;
     return d->extraData.cd->parserStatusCast;
 }
 
 int QQmlType::propertyValueSourceCast() const
 {
-    if (d->regType != CppType)
+    if (!d || d->regType != CppType)
         return -1;
     return d->extraData.cd->propertyValueSourceCast;
 }
 
 int QQmlType::propertyValueInterceptorCast() const
 {
-    if (d->regType != CppType)
+    if (!d || d->regType != CppType)
         return -1;
     return d->extraData.cd->propertyValueInterceptorCast;
 }
 
 const char *QQmlType::interfaceIId() const
 {
-    if (d->regType != InterfaceType)
+    if (!d || d->regType != InterfaceType)
         return 0;
     return d->iid;
 }
 
 int QQmlType::index() const
 {
-    return d->index;
+    return d ? d->index : -1;
 }
 
 QUrl QQmlType::sourceUrl() const
 {
-    if (d->regType == CompositeType)
-        return d->extraData.fd->url;
-    else if (d->regType == CompositeSingletonType)
-        return d->extraData.sd->singletonInstanceInfo->url;
-    else
-        return QUrl();
+    if (d) {
+        if (d->regType == CompositeType)
+            return d->extraData.fd->url;
+        else if (d->regType == CompositeSingletonType)
+            return d->extraData.sd->singletonInstanceInfo->url;
+    }
+    return QUrl();
 }
 
 int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &name, bool *ok) const
 {
     Q_ASSERT(ok);
-    if (isComposite())
-        return resolveCompositeEnumValue(engine, name.toString(), ok);
-    *ok = true;
+    if (d) {
+        if (isComposite())
+            return resolveCompositeEnumValue(engine, name.toString(), ok);
+        *ok = true;
 
-    d->initEnums();
+        d->initEnums();
 
-    int *rv = d->enums.value(name);
-    if (rv)
-        return *rv;
+        int *rv = d->enums.value(name);
+        if (rv)
+            return *rv;
+    }
 
     *ok = false;
     return -1;
@@ -973,15 +1038,17 @@ int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &name,
 int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedCStringRef &name, bool *ok) const
 {
     Q_ASSERT(ok);
-    if (isComposite())
-        return resolveCompositeEnumValue(engine, name.toUtf16(), ok);
-    *ok = true;
+    if (d) {
+        if (isComposite())
+            return resolveCompositeEnumValue(engine, name.toUtf16(), ok);
+        *ok = true;
 
-    d->initEnums();
+        d->initEnums();
 
-    int *rv = d->enums.value(name);
-    if (rv)
-        return *rv;
+        int *rv = d->enums.value(name);
+        if (rv)
+            return *rv;
+    }
 
     *ok = false;
     return -1;
@@ -990,15 +1057,17 @@ int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedCStringRef &name
 int QQmlType::enumValue(QQmlEnginePrivate *engine, const QV4::String *name, bool *ok) const
 {
     Q_ASSERT(ok);
-    if (isComposite())
-        return resolveCompositeEnumValue(engine, name->toQString(), ok);
-    *ok = true;
+    if (d) {
+        if (isComposite())
+            return resolveCompositeEnumValue(engine, name->toQString(), ok);
+        *ok = true;
 
-    d->initEnums();
+        d->initEnums();
 
-    int *rv = d->enums.value(name);
-    if (rv)
-        return *rv;
+        int *rv = d->enums.value(name);
+        if (rv)
+            return *rv;
+    }
 
     *ok = false;
     return -1;

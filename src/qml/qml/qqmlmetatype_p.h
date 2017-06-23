@@ -138,11 +138,18 @@ class QHashedCStringRef;
 class Q_QML_PRIVATE_EXPORT QQmlType
 {
 public:
-    QByteArray typeName() const;
-    const QString &qmlTypeName() const;
-    const QString &elementName() const;
+    QQmlType();
+    QQmlType(const QQmlType &other);
+    QQmlType &operator =(const QQmlType &other);
+    ~QQmlType();
 
-    const QHashedString &module() const;
+    bool isValid() const { return d != 0; }
+
+    QByteArray typeName() const;
+    QString qmlTypeName() const;
+    QString elementName() const;
+
+    QHashedString module() const;
     int majorVersion() const;
     int minorVersion() const;
 
@@ -244,7 +251,6 @@ private:
     QQmlType(int, const QString &, const QQmlPrivate::RegisterType &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterCompositeType &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterCompositeSingletonType &);
-    ~QQmlType();
 
     QQmlTypePrivate *d;
 };
