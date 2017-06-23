@@ -54,6 +54,9 @@
 #include <private/qqmljsmemorypool_p.h>
 #include <private/qqmljsastfwd_p.h>
 #include <private/qflagpointer_p.h>
+#ifndef V4_BOOTSTRAP
+#include <private/qqmlmetatype_p.h>
+#endif
 
 #include <QtCore/private/qnumeric_p.h>
 #include <QtCore/QVector>
@@ -254,7 +257,10 @@ struct MemberExpressionResolver
     void clear() { *this = MemberExpressionResolver(); }
 
     ResolveFunction resolveMember;
-    void *data; // Could be pointer to meta object, importNameSpace, etc. - depends on resolveMember implementation
+#ifndef V4_BOOTSTRAP
+    QQmlType qmlType;
+#endif
+    void *data; // Could be pointer to meta object or importNameSpace
     void *extraData; // Could be QQmlTypeNameCache
     Function *owner;
     unsigned int flags;
