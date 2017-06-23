@@ -249,9 +249,9 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
                 if (r.isValid()) {
                     if (r.scriptIndex != -1) {
                         return QV4::Encode::undefined();
-                    } else if (r.type) {
+                    } else if (r.type.isValid()) {
                         return QmlTypeWrapper::create(v4, d()->object(),
-                                                      *r.type, Heap::QmlTypeWrapper::ExcludeEnums);
+                                                      r.type, Heap::QmlTypeWrapper::ExcludeEnums);
                     } else if (r.importNamespace) {
                         return QmlTypeWrapper::create(v4, d()->object(),
                                                       qmlContext->imports, r.importNamespace, Heap::QmlTypeWrapper::ExcludeEnums);

@@ -77,17 +77,17 @@ class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
 public:
     static QList<QString> qmlTypeNames();
-    static QList<QQmlType*> qmlTypes();
-    static QList<QQmlType*> qmlSingletonTypes();
-    static QList<QQmlType*> qmlAllTypes();
+    static QList<QQmlType *> qmlTypes();
+    static QList<QQmlType> qmlSingletonTypes();
+    static QList<QQmlType *> qmlAllTypes();
 
-    static QQmlType *qmlType(const QString &qualifiedName, int, int);
-    static QQmlType *qmlType(const QHashedStringRef &name, const QHashedStringRef &module, int, int);
-    static QQmlType *qmlType(const QMetaObject *);
-    static QQmlType *qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor);
-    static QQmlType *qmlType(int);
-    static QQmlType *qmlType(const QUrl &url, bool includeNonFileImports = false);
-    static QQmlType *qmlTypeFromIndex(int);
+    static QQmlType qmlType(const QString &qualifiedName, int, int);
+    static QQmlType qmlType(const QHashedStringRef &name, const QHashedStringRef &module, int, int);
+    static QQmlType qmlType(const QMetaObject *);
+    static QQmlType qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor);
+    static QQmlType qmlType(int);
+    static QQmlType qmlType(const QUrl &url, bool includeNonFileImports = false);
+    static QQmlType qmlTypeFromIndex(int);
 
     static QMetaProperty defaultProperty(const QMetaObject *);
     static QMetaProperty defaultProperty(QObject *);
@@ -144,7 +144,16 @@ public:
     explicit QQmlType(QQmlTypePrivate *priv);
     ~QQmlType();
 
+    // ### get rid of these two again
+    QQmlType(QQmlType *otherPointer);
+    QQmlType &operator =(QQmlType *otherPointer);
+
+    bool operator ==(const QQmlType &other) const {
+        return d == other.d;
+    }
+
     bool isValid() const { return d != 0; }
+    const QQmlTypePrivate *key() const { return d; }
 
     QByteArray typeName() const;
     QString qmlTypeName() const;
@@ -229,8 +238,8 @@ public:
     static void refHandle(QQmlTypePrivate *priv);
     static void derefHandle(QQmlTypePrivate *priv);
 private:
-    QQmlType *superType() const;
-    QQmlType *resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
+    QQmlType superType() const;
+    QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
     int resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
     friend class QQmlTypePrivate;
     friend struct QQmlMetaTypeData;
@@ -250,6 +259,7 @@ private:
     friend int registerCompositeType(const QQmlPrivate::RegisterCompositeType &);
     friend int registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &);
     friend int registerQmlUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &);
+    friend uint qHash(const QQmlType &t, uint seed);
     friend Q_QML_EXPORT void qmlClearTypeRegistrations();
     QQmlType(int, const QQmlPrivate::RegisterInterface &);
     QQmlType(int, const QString &, const QQmlPrivate::RegisterSingletonType &);
@@ -259,6 +269,12 @@ private:
 
     QQmlTypePrivate *d;
 };
+
+Q_DECLARE_TYPEINFO(QQmlMetaType, Q_MOVABLE_TYPE);
+
+
+inline uint qHash(const QQmlType &t, uint seed = 0) { return qHash(reinterpret_cast<quintptr>(t.d), seed); }
+
 
 class QQmlTypeModulePrivate;
 class QQmlTypeModule
@@ -270,10 +286,8 @@ public:
     int minimumMinorVersion() const;
     int maximumMinorVersion() const;
 
-    QQmlType *type(const QHashedStringRef &, int) const;
-    QQmlType *type(const QV4::String *, int) const;
-
-    QList<QQmlType*> singletonTypes(int) const;
+    QQmlType type(const QHashedStringRef &, int) const;
+    QQmlType type(const QV4::String *, int) const;
 
 private:
     //Used by register functions and creates the QQmlTypeModule for them
@@ -299,8 +313,8 @@ public:
     QQmlTypeModule *module() const;
     int minorVersion() const;
 
-    QQmlType *type(const QHashedStringRef &) const;
-    QQmlType *type(const QV4::String *) const;
+    QQmlType type(const QHashedStringRef &) const;
+    QQmlType type(const QV4::String *) const;
 
 private:
     QQmlTypeModule *m_module;

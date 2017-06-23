@@ -148,14 +148,14 @@ void tst_qqmlmetatype::initTestCase()
 
 void tst_qqmlmetatype::qmlParserStatusCast()
 {
-    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int));
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()) != 0);
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>())->parserStatusCast(), -1);
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()) != 0);
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>())->parserStatusCast(), -1);
+    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int).isValid());
+    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).parserStatusCast(), -1);
+    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()).parserStatusCast(), -1);
 
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()) != 0);
-    int cast = QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>())->parserStatusCast();
+    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).isValid());
+    int cast = QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).parserStatusCast();
     QVERIFY(cast != -1);
     QVERIFY(cast != 0);
 
@@ -168,14 +168,14 @@ void tst_qqmlmetatype::qmlParserStatusCast()
 
 void tst_qqmlmetatype::qmlPropertyValueSourceCast()
 {
-    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int));
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()) != 0);
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>())->propertyValueSourceCast(), -1);
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()) != 0);
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>())->propertyValueSourceCast(), -1);
+    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int).isValid());
+    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).propertyValueSourceCast(), -1);
+    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).propertyValueSourceCast(), -1);
 
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()) != 0);
-    int cast = QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>())->propertyValueSourceCast();
+    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()).isValid());
+    int cast = QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()).propertyValueSourceCast();
     QVERIFY(cast != -1);
     QVERIFY(cast != 0);
 
@@ -188,14 +188,14 @@ void tst_qqmlmetatype::qmlPropertyValueSourceCast()
 
 void tst_qqmlmetatype::qmlPropertyValueInterceptorCast()
 {
-    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int));
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()) != 0);
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>())->propertyValueInterceptorCast(), -1);
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()) != 0);
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>())->propertyValueInterceptorCast(), -1);
+    QVERIFY(!QQmlMetaType::qmlType(QVariant::Int).isValid());
+    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).propertyValueInterceptorCast(), -1);
+    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).propertyValueInterceptorCast(), -1);
 
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ValueInterceptorTestType *>()) != 0);
-    int cast = QQmlMetaType::qmlType(qMetaTypeId<ValueInterceptorTestType *>())->propertyValueInterceptorCast();
+    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ValueInterceptorTestType *>()).isValid());
+    int cast = QQmlMetaType::qmlType(qMetaTypeId<ValueInterceptorTestType *>()).propertyValueInterceptorCast();
     QVERIFY(cast != -1);
     QVERIFY(cast != 0);
 
@@ -208,17 +208,17 @@ void tst_qqmlmetatype::qmlPropertyValueInterceptorCast()
 
 void tst_qqmlmetatype::qmlType()
 {
-    QQmlType *type = QQmlMetaType::qmlType(QString("ParserStatusTestType"), QString("Test"), 1, 0);
-    QVERIFY(type);
-    QVERIFY(type->module() == QLatin1String("Test"));
-    QVERIFY(type->elementName() == QLatin1String("ParserStatusTestType"));
-    QCOMPARE(type->qmlTypeName(), QLatin1String("Test/ParserStatusTestType"));
+    QQmlType type = QQmlMetaType::qmlType(QString("ParserStatusTestType"), QString("Test"), 1, 0);
+    QVERIFY(type.isValid());
+    QVERIFY(type.module() == QLatin1String("Test"));
+    QVERIFY(type.elementName() == QLatin1String("ParserStatusTestType"));
+    QCOMPARE(type.qmlTypeName(), QLatin1String("Test/ParserStatusTestType"));
 
     type = QQmlMetaType::qmlType("Test/ParserStatusTestType", 1, 0);
-    QVERIFY(type);
-    QVERIFY(type->module() == QLatin1String("Test"));
-    QVERIFY(type->elementName() == QLatin1String("ParserStatusTestType"));
-    QCOMPARE(type->qmlTypeName(), QLatin1String("Test/ParserStatusTestType"));
+    QVERIFY(type.isValid());
+    QVERIFY(type.module() == QLatin1String("Test"));
+    QVERIFY(type.elementName() == QLatin1String("ParserStatusTestType"));
+    QCOMPARE(type.qmlTypeName(), QLatin1String("Test/ParserStatusTestType"));
 }
 
 void tst_qqmlmetatype::invalidQmlTypeName()
@@ -277,23 +277,23 @@ void tst_qqmlmetatype::defaultObject()
 
 void tst_qqmlmetatype::registrationType()
 {
-    QQmlType *type = QQmlMetaType::qmlType(QString("TestType"), QString("Test"), 1, 0);
-    QVERIFY(type);
-    QVERIFY(!type->isInterface());
-    QVERIFY(!type->isSingleton());
-    QVERIFY(!type->isComposite());
+    QQmlType type = QQmlMetaType::qmlType(QString("TestType"), QString("Test"), 1, 0);
+    QVERIFY(type.isValid());
+    QVERIFY(!type.isInterface());
+    QVERIFY(!type.isSingleton());
+    QVERIFY(!type.isComposite());
 
     type = QQmlMetaType::qmlType(QString("TestTypeSingleton"), QString("Test"), 1, 0);
-    QVERIFY(type);
-    QVERIFY(!type->isInterface());
-    QVERIFY(type->isSingleton());
-    QVERIFY(!type->isComposite());
+    QVERIFY(type.isValid());
+    QVERIFY(!type.isInterface());
+    QVERIFY(type.isSingleton());
+    QVERIFY(!type.isComposite());
 
     type = QQmlMetaType::qmlType(QString("TestTypeComposite"), QString("Test"), 1, 0);
-    QVERIFY(type);
-    QVERIFY(!type->isInterface());
-    QVERIFY(!type->isSingleton());
-    QVERIFY(type->isComposite());
+    QVERIFY(type.isValid());
+    QVERIFY(!type.isInterface());
+    QVERIFY(!type.isSingleton());
+    QVERIFY(type.isComposite());
 }
 
 void tst_qqmlmetatype::compositeType()
@@ -305,12 +305,12 @@ void tst_qqmlmetatype::compositeType()
     QObject* obj = c.create();
     QVERIFY(obj);
 
-    QQmlType *type = QQmlMetaType::qmlType(QString("ImplicitType"), QString(""), 1, 0);
-    QVERIFY(type);
-    QVERIFY(type->module().isEmpty());
-    QCOMPARE(type->elementName(), QLatin1String("ImplicitType"));
-    QCOMPARE(type->qmlTypeName(), QLatin1String("ImplicitType"));
-    QCOMPARE(type->sourceUrl(), testFileUrl("ImplicitType.qml"));
+    QQmlType type = QQmlMetaType::qmlType(QString("ImplicitType"), QString(""), 1, 0);
+    QVERIFY(type.isValid());
+    QVERIFY(type.module().isEmpty());
+    QCOMPARE(type.elementName(), QLatin1String("ImplicitType"));
+    QCOMPARE(type.qmlTypeName(), QLatin1String("ImplicitType"));
+    QCOMPARE(type.sourceUrl(), testFileUrl("ImplicitType.qml"));
 }
 
 void tst_qqmlmetatype::externalEnums()

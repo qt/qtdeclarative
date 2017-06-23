@@ -144,11 +144,11 @@ void collectReachableMetaObjects(QObject *object, QSet<const QMetaObject *> *met
     }
 }
 
-void collectReachableMetaObjects(QQmlEnginePrivate *engine, const QQmlType *ty, QSet<const QMetaObject *> *metas)
+void collectReachableMetaObjects(QQmlEnginePrivate *engine, const QQmlType &ty, QSet<const QMetaObject *> *metas)
 {
-    collectReachableMetaObjects(ty->metaObject(), metas, ty->isExtendedType());
-    if (ty->attachedPropertiesType(engine))
-        collectReachableMetaObjects(ty->attachedPropertiesType(engine), metas);
+    collectReachableMetaObjects(ty.metaObject(), metas, ty.isExtendedType());
+    if (ty.attachedPropertiesType(engine))
+        collectReachableMetaObjects(ty.attachedPropertiesType(engine), metas);
 }
 
 /* We want to add the MetaObject for 'Qt' to the list, this is a
@@ -216,7 +216,7 @@ void collectReachableMetaObjectsWithoutQmlName(QQmlEnginePrivate *engine, QSet<c
     for (const QQmlType *ty : qmlAllTypes) {
         if ( ! metas.contains(ty->metaObject()) ) {
             if (!ty->isComposite()) {
-                collectReachableMetaObjects(engine, ty, &metas);
+                collectReachableMetaObjects(engine, *ty, &metas);
             } else {
                 qmlTypesByCompositeName[ty->elementName()].insert(ty);
             }
@@ -243,7 +243,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
             qmlTypesByCppName[ty->metaObject()->className()].insert(ty);
             if (ty->isExtendedType())
                 extensions[ty->typeName()].insert(ty->metaObject()->className());
-            collectReachableMetaObjects(QQmlEnginePrivate::get(engine), ty, &metas);
+            collectReachableMetaObjects(QQmlEnginePrivate::get(engine), *ty, &metas);
         } else {
             qmlTypesByCompositeName[ty->elementName()].insert(ty);
         }
@@ -1226,16 +1226,16 @@ int main(int argc, char *argv[])
     } else {
         // find a valid QtQuick import
         QByteArray importCode;
-        QQmlType *qtObjectType = QQmlMetaType::qmlType(&QObject::staticMetaObject);
-        if (!qtObjectType) {
+        QQmlType qtObjectType = QQmlMetaType::qmlType(&QObject::staticMetaObject);
+        if (!qtObjectType.isValid()) {
             std::cerr << "Could not find QtObject type" << std::endl;
             importCode = qtQmlImportString.toUtf8();
         } else {
-            QString module = qtObjectType->qmlTypeName();
+            QString module = qtObjectType.qmlTypeName();
             module = module.mid(0, module.lastIndexOf(QLatin1Char('/')));
             importCode = QString("import %1 %2.%3").arg(module,
-                                                        QString::number(qtObjectType->majorVersion()),
-                                                        QString::number(qtObjectType->minorVersion())).toUtf8();
+                                                        QString::number(qtObjectType.majorVersion()),
+                                                        QString::number(qtObjectType.minorVersion())).toUtf8();
         }
         // avoid importing dependencies?
         for (const QString &moduleToImport : qAsConst(dependencies)) {

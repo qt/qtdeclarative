@@ -247,8 +247,8 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
         QQmlTypeNameCache::Result r = w->d()->typeNamespace->query(name, w->d()->importNamespace);
 
         if (r.isValid()) {
-            if (r.type) {
-                return create(scope.engine, object, *r.type, w->d()->mode);
+            if (r.type.isValid()) {
+                return create(scope.engine, object, r.type, w->d()->mode);
             } else if (r.scriptIndex != -1) {
                 QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
                 return scripts->getIndexed(r.scriptIndex);
@@ -301,7 +301,7 @@ void QmlTypeWrapper::put(Managed *m, String *name, const Value &value)
         QObject *ao = qmlAttachedPropertiesObjectById(type.attachedPropertiesId(QQmlEnginePrivate::get(e)), object);
         if (ao)
             QV4::QObjectWrapper::setQmlProperty(v4, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
-    } else if (type.isValid() && type.isSingleton()) {
+    } else if (type.isSingleton()) {
         QQmlEngine *e = scope.engine->qmlEngine();
         QQmlType::SingletonInstanceInfo *siinfo = type.singletonInstanceInfo();
         siinfo->init(e);

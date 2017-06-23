@@ -295,8 +295,8 @@ void CompilationUnit::finalize(QQmlEnginePrivate *engine)
             metaTypeId = typeRef->compilationUnit->metaTypeId;
             listMetaTypeId = typeRef->compilationUnit->listMetaTypeId;
         } else {
-            metaTypeId = typeRef->type->typeId();
-            listMetaTypeId = typeRef->type->qListTypeId();
+            metaTypeId = typeRef->type.typeId();
+            listMetaTypeId = typeRef->type.qListTypeId();
         }
     }
 
@@ -308,8 +308,8 @@ void CompilationUnit::finalize(QQmlEnginePrivate *engine)
         const QV4::CompiledData::Object *obj = data->objectAt(i);
         bindingCount += obj->nBindings;
         if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
-            if (QQmlType *qmlType = typeRef->type) {
-                if (qmlType->parserStatusCast() != -1)
+            if (typeRef->type.isValid()) {
+                if (typeRef->type.parserStatusCast() != -1)
                     ++parserStatusCount;
             }
             ++objectCount;
@@ -673,7 +673,7 @@ Returns the property cache, if one alread exists.  The cache is not referenced.
 */
 QQmlPropertyCache *ResolvedTypeReference::propertyCache() const
 {
-    if (type)
+    if (type.isValid())
         return typePropertyCache;
     else
         return compilationUnit->rootPropertyCache();
@@ -686,8 +686,8 @@ QQmlPropertyCache *ResolvedTypeReference::createPropertyCache(QQmlEngine *engine
 {
     if (typePropertyCache) {
         return typePropertyCache;
-    } else if (type) {
-        typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type->metaObject());
+    } else if (type.isValid()) {
+        typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type.metaObject());
         return typePropertyCache;
     } else {
         return compilationUnit->rootPropertyCache();
@@ -696,7 +696,7 @@ QQmlPropertyCache *ResolvedTypeReference::createPropertyCache(QQmlEngine *engine
 
 bool ResolvedTypeReference::addToHash(QCryptographicHash *hash, QQmlEngine *engine)
 {
-    if (type) {
+    if (type.isValid()) {
         bool ok = false;
         hash->addData(createPropertyCache(engine)->checksum(&ok));
         return ok;
@@ -720,8 +720,8 @@ void ResolvedTypeReference::doDynamicTypeCheck()
     const QMetaObject *mo = 0;
     if (typePropertyCache)
         mo = typePropertyCache->firstCppMetaObject();
-    else if (type)
-        mo = type->metaObject();
+    else if (type.isValid())
+        mo = type.metaObject();
     else if (compilationUnit)
         mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);

@@ -923,13 +923,12 @@ protected:
 struct ResolvedTypeReference
 {
     ResolvedTypeReference()
-        : type(0)
-        , majorVersion(0)
+        : majorVersion(0)
         , minorVersion(0)
         , isFullyDynamicType(false)
     {}
 
-    QQmlType *type;
+    QQmlType type;
     QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
 

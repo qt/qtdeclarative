@@ -148,7 +148,7 @@ QQmlListReference::QQmlListReference(QObject *object, const char *property, QQml
 
     d = new QQmlListReferencePrivate;
     d->object = object;
-    d->elementType = p?p->rawMetaObjectForType(listType):QQmlMetaType::qmlType(listType)->baseMetaObject();
+    d->elementType = p ? p->rawMetaObjectForType(listType) : QQmlMetaType::qmlType(listType).baseMetaObject();
     d->propertyType = data->propType();
 
     void *args[] = { &d->property, 0 };

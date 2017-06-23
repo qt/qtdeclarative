@@ -677,7 +677,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 
 QQmlEnginePrivate::~QQmlEnginePrivate()
 {
-    typedef QHash<QPair<QQmlType *, int>, QQmlPropertyCache *>::const_iterator TypePropertyCacheIt;
+    typedef QHash<QPair<QQmlType, int>, QQmlPropertyCache *>::const_iterator TypePropertyCacheIt;
 
     if (inProgressCreations)
         qWarning() << QQmlEngine::tr("There are still \"%1\" items in the process of being created at engine destruction.").arg(inProgressCreations);
@@ -1022,9 +1022,9 @@ QQmlEngine::~QQmlEngine()
     // we do this here and not in the private dtor since otherwise a crash can
     // occur (if we are the QObject parent of the QObject singleton instance)
     // XXX TODO: performance -- store list of singleton types separately?
-    const QList<QQmlType*> singletonTypes = QQmlMetaType::qmlSingletonTypes();
-    for (QQmlType *currType : singletonTypes)
-        currType->singletonInstanceInfo()->destroy(this);
+    QList<QQmlType> singletonTypes = QQmlMetaType::qmlSingletonTypes();
+    for (const QQmlType &currType : singletonTypes)
+        currType.singletonInstanceInfo()->destroy(this);
 
     delete d->rootContext;
     d->rootContext = 0;
@@ -2194,19 +2194,18 @@ QString QQmlEnginePrivate::offlineStorageDatabaseDirectory() const
     return q->offlineStoragePath() + QDir::separator() + QLatin1String("Databases") + QDir::separator();
 }
 
-QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersion)
+QQmlPropertyCache *QQmlEnginePrivate::createCache(const QQmlType &type, int minorVersion)
 {
-    QList<QQmlType *> types;
+    QVector<QQmlType> types;
 
     int maxMinorVersion = 0;
 
-    const QMetaObject *metaObject = type->metaObject();
+    const QMetaObject *metaObject = type.metaObject();
 
     while (metaObject) {
-        QQmlType *t = QQmlMetaType::qmlType(metaObject, type->module(),
-                                                            type->majorVersion(), minorVersion);
-        if (t) {
-            maxMinorVersion = qMax(maxMinorVersion, t->minorVersion());
+        QQmlType t = QQmlMetaType::qmlType(metaObject, type.module(), type.majorVersion(), minorVersion);
+        if (t.isValid()) {
+            maxMinorVersion = qMax(maxMinorVersion, t.minorVersion());
             types << t;
         } else {
             types << 0;
@@ -2221,16 +2220,16 @@ QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersi
         return c;
     }
 
-    QQmlPropertyCache *raw = cache(type->metaObject());
+    QQmlPropertyCache *raw = cache(type.metaObject());
 
     bool hasCopied = false;
 
     for (int ii = 0; ii < types.count(); ++ii) {
-        QQmlType *currentType = types.at(ii);
-        if (!currentType)
+        QQmlType currentType = types.at(ii);
+        if (!currentType.isValid())
             continue;
 
-        int rev = currentType->metaObjectRevision();
+        int rev = currentType.metaObjectRevision();
         int moIndex = types.count() - 1 - ii;
 
         if (raw->allowedRevisionCache[moIndex] != rev) {
@@ -2280,7 +2279,7 @@ QQmlPropertyCache *QQmlEnginePrivate::createCache(QQmlType *type, int minorVersi
     if (overloadError) {
         if (hasCopied) raw->release();
 
-        error.setDescription(QLatin1String("Type ") + type->qmlTypeName() + QLatin1Char(' ') + QString::number(type->majorVersion()) + QLatin1Char('.') + QString::number(minorVersion) + QLatin1String(" contains an illegal property \"") + overloadName + QLatin1String("\".  This is an error in the type's implementation."));
+        error.setDescription(QLatin1String("Type ") + type.qmlTypeName() + QLatin1Char(' ') + QString::number(type.majorVersion()) + QLatin1Char('.') + QString::number(minorVersion) + QLatin1String(" contains an illegal property \"") + overloadName + QLatin1String("\".  This is an error in the type's implementation."));
         return 0;
     }
 #endif
@@ -2348,8 +2347,8 @@ QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
     if (iter != m_compositeTypes.cend()) {
         return QQmlMetaObject((*iter)->rootPropertyCache());
     } else {
-        QQmlType *type = QQmlMetaType::qmlType(t);
-        return QQmlMetaObject(type?type->baseMetaObject():0);
+        QQmlType type = QQmlMetaType::qmlType(t);
+        return QQmlMetaObject(type.baseMetaObject());
     }
 }
 
@@ -2360,8 +2359,8 @@ QQmlMetaObject QQmlEnginePrivate::metaObjectForType(int t) const
     if (iter != m_compositeTypes.cend()) {
         return QQmlMetaObject((*iter)->rootPropertyCache());
     } else {
-        QQmlType *type = QQmlMetaType::qmlType(t);
-        return QQmlMetaObject(type?type->metaObject():0);
+        QQmlType type = QQmlMetaType::qmlType(t);
+        return QQmlMetaObject(type.metaObject());
     }
 }
 
@@ -2372,9 +2371,9 @@ QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
     if (iter != m_compositeTypes.cend()) {
         return (*iter)->rootPropertyCache();
     } else {
-        QQmlType *type = QQmlMetaType::qmlType(t);
+        QQmlType type = QQmlMetaType::qmlType(t);
         locker.unlock();
-        return type?cache(type->metaObject()):0;
+        return type.isValid() ? cache(type.metaObject()) : 0;
     }
 }
 
@@ -2385,9 +2384,9 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
     if (iter != m_compositeTypes.cend()) {
         return (*iter)->rootPropertyCache();
     } else {
-        QQmlType *type = QQmlMetaType::qmlType(t);
+        QQmlType type = QQmlMetaType::qmlType(t);
         locker.unlock();
-        return type?cache(type->baseMetaObject()):0;
+        return type.isValid() ? cache(type.baseMetaObject()) : 0;
     }
 }
 

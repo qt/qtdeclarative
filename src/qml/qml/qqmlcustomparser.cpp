@@ -132,7 +132,7 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
     if (scope != QLatin1String("Qt")) {
         if (imports.isNull())
             return -1;
-        QQmlType *type = 0;
+        QQmlType type;
 
         if (imports.isT1()) {
             imports.asT1()->resolveType(scope, &type, 0, 0, 0);
@@ -142,7 +142,7 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
                 type = result.type;
         }
 
-        return type ? type->enumValue(engine, QHashedCStringRef(enumValue.constData(), enumValue.length()), ok) : -1;
+        return type.enumValue(engine, QHashedCStringRef(enumValue.constData(), enumValue.length()), ok);
     }
 
     const QMetaObject *mo = StaticQtMetaObject::get();
@@ -163,12 +163,10 @@ const QMetaObject *QQmlCustomParser::resolveType(const QString& name) const
 {
     if (!imports.isT1())
         return nullptr;
-    QQmlType *qmltype = 0;
+    QQmlType qmltype;
     if (!imports.asT1()->resolveType(name, &qmltype, 0, 0, 0))
         return nullptr;
-    if (!qmltype)
-        return nullptr;
-    return qmltype->metaObject();
+    return qmltype.metaObject();
 }
 
 QT_END_NAMESPACE

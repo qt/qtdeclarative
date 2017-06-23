@@ -2013,7 +2013,7 @@ QString QQmlTypeData::TypeReference::qualifiedName() const
     if (!prefix.isEmpty()) {
         result = prefix + QLatin1Char('.');
     }
-    result.append(type->qmlTypeName());
+    result.append(type.qmlTypeName());
     return result;
 }
 
@@ -2168,8 +2168,8 @@ static bool addTypeReferenceChecksumsToHash(const QList<QQmlTypeData::TypeRefere
         if (typeRef.typeData) {
             const auto unit = typeRef.typeData->compilationUnit();
             hash->addData(unit->data->md5Checksum, sizeof(unit->data->md5Checksum));
-        } else if (typeRef.type) {
-            const auto propertyCache = QQmlEnginePrivate::get(engine)->cache(typeRef.type->metaObject());
+        } else if (typeRef.type.isValid()) {
+            const auto propertyCache = QQmlEnginePrivate::get(engine)->cache(typeRef.type.metaObject());
             bool ok = false;
             hash->addData(propertyCache->checksum(&ok));
             if (!ok)
@@ -2233,7 +2233,7 @@ void QQmlTypeData::done()
         const TypeReference &type = m_compositeSingletons.at(ii);
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError());
         if (type.typeData && type.typeData->isError()) {
-            QString typeName = type.type->qmlTypeName();
+            QString typeName = type.type.qmlTypeName();
 
             QList<QQmlError> errors = type.typeData->errors();
             QQmlError error;
@@ -2300,24 +2300,24 @@ void QQmlTypeData::done()
     }
 
     {
-        QQmlType *type = QQmlMetaType::qmlType(finalUrl(), true);
+        QQmlType type = QQmlMetaType::qmlType(finalUrl(), true);
         if (m_compiledData && m_compiledData->data->flags & QV4::CompiledData::Unit::IsSingleton) {
-            if (!type) {
+            if (!type.isValid()) {
                 QQmlError error;
                 error.setDescription(QQmlTypeLoader::tr("No matching type found, pragma Singleton files cannot be used by QQmlComponent."));
                 setError(error);
                 return;
-            } else if (!type->isCompositeSingleton()) {
+            } else if (!type.isCompositeSingleton()) {
                 QQmlError error;
-                error.setDescription(QQmlTypeLoader::tr("pragma Singleton used with a non composite singleton type %1").arg(type->qmlTypeName()));
+                error.setDescription(QQmlTypeLoader::tr("pragma Singleton used with a non composite singleton type %1").arg(type.qmlTypeName()));
                 setError(error);
                 return;
             }
         } else {
             // If the type is CompositeSingleton but there was no pragma Singleton in the
             // QML file, lets report an error.
-            if (type && type->isCompositeSingleton()) {
-                QString typeName = type->qmlTypeName();
+            if (type.isValid() && type.isCompositeSingleton()) {
+                QString typeName = type.qmlTypeName();
                 setError(QQmlTypeLoader::tr("qmldir defines type as singleton, but no pragma Singleton found in type %1.").arg(typeName));
                 return;
             }
@@ -2609,8 +2609,8 @@ void QQmlTypeData::resolveTypes()
         if (!resolveType(typeName, majorVersion, minorVersion, ref))
             return;
 
-        if (ref.type->isCompositeSingleton()) {
-            ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
+        if (ref.type.isCompositeSingleton()) {
+            ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
             addDependency(ref.typeData);
             ref.prefix = csRef.prefix;
 
@@ -2637,8 +2637,8 @@ void QQmlTypeData::resolveTypes()
         if (!resolveType(name, majorVersion, minorVersion, ref, unresolvedRef->location.line, unresolvedRef->location.column, reportErrors) && reportErrors)
             return;
 
-        if (ref.type && ref.type->isComposite()) {
-            ref.typeData = typeLoader()->getType(ref.type->sourceUrl());
+        if (ref.type.isComposite()) {
+            ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
             addDependency(ref.typeData);
         }
         ref.majorVersion = majorVersion;
@@ -2665,7 +2665,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
 
     // Add any Composite Singletons that were used to the import cache
     for (const QQmlTypeData::TypeReference &singleton: m_compositeSingletons)
-        (*typeNameCache)->add(singleton.type->qmlTypeName(), singleton.type->sourceUrl(), singleton.prefix);
+        (*typeNameCache)->add(singleton.type.qmlTypeName(), singleton.type.sourceUrl(), singleton.prefix);
 
     m_importCache.populateCache(*typeNameCache);
 
@@ -2673,24 +2673,24 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
 
     for (auto resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd(); resolvedType != end; ++resolvedType) {
         QScopedPointer<QV4::CompiledData::ResolvedTypeReference> ref(new QV4::CompiledData::ResolvedTypeReference);
-        QQmlType *qmlType = resolvedType->type;
+        QQmlType qmlType = resolvedType->type;
         if (resolvedType->typeData) {
-            if (resolvedType->needsCreation && qmlType->isCompositeSingleton()) {
-                return QQmlCompileError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType->qmlTypeName()));
+            if (resolvedType->needsCreation && qmlType.isCompositeSingleton()) {
+                return QQmlCompileError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType.qmlTypeName()));
             }
             ref->compilationUnit = resolvedType->typeData->compilationUnit();
-        } else if (qmlType) {
+        } else if (qmlType.isValid()) {
             ref->type = qmlType;
-            Q_ASSERT(ref->type);
+            Q_ASSERT(ref->type.isValid());
 
-            if (resolvedType->needsCreation && !ref->type->isCreatable()) {
-                QString reason = ref->type->noCreationReason();
+            if (resolvedType->needsCreation && !ref->type.isCreatable()) {
+                QString reason = ref->type.noCreationReason();
                 if (reason.isEmpty())
                     reason = tr("Element is not creatable.");
                 return QQmlCompileError(resolvedType->location, reason);
             }
 
-            if (ref->type->containsRevisionedAttributes()) {
+            if (ref->type.containsRevisionedAttributes()) {
                 ref->typePropertyCache = engine->cache(ref->type,
                                                        resolvedType->minorVersion);
             }

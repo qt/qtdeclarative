@@ -393,10 +393,10 @@ class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 public:
     struct TypeReference
     {
-        TypeReference() : type(0), majorVersion(0), minorVersion(0), typeData(0), needsCreation(true) {}
+        TypeReference() : majorVersion(0), minorVersion(0), typeData(0), needsCreation(true) {}
 
         QV4::CompiledData::Location location;
-        QQmlType *type;
+        QQmlType type;
         int majorVersion;
         int minorVersion;
         QQmlTypeData *typeData;

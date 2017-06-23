@@ -1767,14 +1767,14 @@ static QV4::IR::DiscoveredType resolveImportNamespace(
         if (r.scriptIndex != -1) {
             // TODO: remember the index and replace with subscript later.
             result = QV4::IR::VarType;
-        } else if (r.type) {
+        } else if (r.type.isValid()) {
             // TODO: Propagate singleton information, so that it is loaded
             // through the singleton getter in the run-time. Until then we
             // can't accelerate access :(
-            if (!r.type->isSingleton()) {
+            if (!r.type.isSingleton()) {
                 auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
                 newResolver->owner = resolver->owner;
-                initQmlTypeResolver(newResolver, *r.type);
+                initQmlTypeResolver(newResolver, r.type);
                 return QV4::IR::DiscoveredType(newResolver);
             }
         } else {
@@ -1950,10 +1950,10 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
             if (r.scriptIndex != -1) {
                 return _block->SUBSCRIPT(_block->TEMP(_importedScriptsTemp),
                                          _block->CONST(QV4::IR::SInt32Type, r.scriptIndex));
-            } else if (r.type) {
+            } else if (r.type.isValid()) {
                 QV4::IR::Name *typeName = _block->NAME(name, line, col);
                 // Make sure the run-time loads this through the more efficient singleton getter.
-                typeName->qmlSingleton = r.type->isCompositeSingleton();
+                typeName->qmlSingleton = r.type.isCompositeSingleton();
                 typeName->freeOfSideEffects = true;
                 QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
                 _block->MOVE(result, typeName);
@@ -1961,7 +1961,7 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
                 result = _block->TEMP(result->index);
                 result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
                 result->memberResolver->owner = _function;
-                initQmlTypeResolver(result->memberResolver, *r.type);
+                initQmlTypeResolver(result->memberResolver, r.type);
                 return result;
             } else {
                 Q_ASSERT(r.importNamespace);

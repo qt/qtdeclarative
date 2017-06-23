@@ -785,10 +785,10 @@ ReturnedValue ExecutionEngine::qmlSingletonWrapper(String *name)
     QQmlTypeNameCache::Result r = ctx->imports->query(name);
 
     Q_ASSERT(r.isValid());
-    Q_ASSERT(r.type);
-    Q_ASSERT(r.type->isSingleton());
+    Q_ASSERT(r.type.isValid());
+    Q_ASSERT(r.type.isSingleton());
 
-    QQmlType::SingletonInstanceInfo *siinfo = r.type->singletonInstanceInfo();
+    QQmlType::SingletonInstanceInfo *siinfo = r.type.singletonInstanceInfo();
     QQmlEngine *e = qmlEngine();
     siinfo->init(e);
 

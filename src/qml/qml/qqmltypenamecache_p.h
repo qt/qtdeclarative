@@ -78,13 +78,13 @@ public:
     struct Result {
         inline Result();
         inline Result(const void *importNamespace);
-        inline Result(QQmlType *type);
+        inline Result(const QQmlType &type);
         inline Result(int scriptIndex);
         inline Result(const Result &);
 
         inline bool isValid() const;
 
-        QQmlType *type;
+        QQmlType type;
         const void *importNamespace;
         int scriptIndex;
     };
@@ -132,9 +132,8 @@ private:
     {
         QUrl *url = urls.value(key);
         if (url) {
-            QQmlType *type = QQmlMetaType::qmlType(*url);
-            if (type)
-                return Result(type);
+            QQmlType type = QQmlMetaType::qmlType(*url);
+            return Result(type);
         }
 
         return Result();
@@ -145,7 +144,8 @@ private:
     {
         QVector<QQmlTypeModuleVersion>::const_iterator end = modules.constEnd();
         for (QVector<QQmlTypeModuleVersion>::const_iterator it = modules.constBegin(); it != end; ++it) {
-            if (QQmlType *type = it->type(key))
+            QQmlType type = it->type(key);
+            if (type.isValid())
                 return Result(type);
         }
 
@@ -160,22 +160,22 @@ private:
 };
 
 QQmlTypeNameCache::Result::Result()
-: type(0), importNamespace(0), scriptIndex(-1)
+: importNamespace(0), scriptIndex(-1)
 {
 }
 
 QQmlTypeNameCache::Result::Result(const void *importNamespace)
-: type(0), importNamespace(importNamespace), scriptIndex(-1)
+: importNamespace(importNamespace), scriptIndex(-1)
 {
 }
 
-QQmlTypeNameCache::Result::Result(QQmlType *type)
+QQmlTypeNameCache::Result::Result(const QQmlType &type)
 : type(type), importNamespace(0), scriptIndex(-1)
 {
 }
 
 QQmlTypeNameCache::Result::Result(int scriptIndex)
-: type(0), importNamespace(0), scriptIndex(scriptIndex)
+: importNamespace(0), scriptIndex(scriptIndex)
 {
 }
 
@@ -186,7 +186,7 @@ QQmlTypeNameCache::Result::Result(const Result &o)
 
 bool QQmlTypeNameCache::Result::isValid() const
 {
-    return type || importNamespace || scriptIndex != -1;
+    return type.isValid() || importNamespace || scriptIndex != -1;
 }
 
 QQmlTypeNameCache::Import::Import()

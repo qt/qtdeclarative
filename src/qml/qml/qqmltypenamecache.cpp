@@ -100,7 +100,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name)
         // Look up anonymous types from the imports of this document
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
-        QQmlType *t = 0;
+        QQmlType t;
         bool typeFound = m_imports.resolveType(name, &t, 0, 0, &typeNamespace, &errors);
         if (typeFound) {
             return Result(t);
@@ -130,7 +130,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name,
         QString qualifiedTypeName = i->m_qualifier + QLatin1Char('.') + name.toString();
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
-        QQmlType *t = 0;
+        QQmlType t;
         bool typeFound = m_imports.resolveType(qualifiedTypeName, &t, 0, 0, &typeNamespace, &errors);
         if (typeFound) {
             return Result(t);
@@ -155,7 +155,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name) cons
         QString typeName = name->toQStringNoThrow();
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
-        QQmlType *t = 0;
+        QQmlType t;
         bool typeFound = m_imports.resolveType(typeName, &t, 0, 0, &typeNamespace, &errors);
         if (typeFound) {
             return Result(t);
@@ -191,7 +191,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, cons
         QString qualifiedTypeName = i->m_qualifier + QLatin1Char('.') + name->toQStringNoThrow();
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
-        QQmlType *t = 0;
+        QQmlType t;
         bool typeFound = m_imports.resolveType(qualifiedTypeName, &t, 0, 0, &typeNamespace, &errors);
         if (typeFound) {
             return Result(t);
