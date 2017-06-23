@@ -1325,7 +1325,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     if (propertyCaches->needsVMEMetaObject(_compiledObjectIndex)) {
         Q_ASSERT(!cache.isNull());
         // install on _object
-        vmeMetaObject = new QQmlVMEMetaObject(_qobject, cache, compilationUnit, _compiledObjectIndex);
+        vmeMetaObject = new QQmlVMEMetaObject(v4, _qobject, cache, compilationUnit, _compiledObjectIndex);
         if (_ddata->propertyCache)
             _ddata->propertyCache->release();
         _ddata->propertyCache = cache;

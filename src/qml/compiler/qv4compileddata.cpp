@@ -211,7 +211,7 @@ void CompilationUnit::unlink()
 
     if (isRegisteredWithEngine) {
         Q_ASSERT(data && quint32(propertyCaches.count()) > data->indexOfRootObject && propertyCaches.at(data->indexOfRootObject));
-        QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(propertyCaches.at(data->indexOfRootObject)->engine);
+        QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(engine);
         qmlEngine->unregisterInternalCompositeType(this);
         isRegisteredWithEngine = false;
     }

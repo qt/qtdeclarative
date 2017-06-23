@@ -288,8 +288,8 @@ public:
 
     inline bool operator==(const QQmlPropertyRawData &);
 
-    static Flags flagsForProperty(const QMetaProperty &, QQmlEngine *engine = 0);
-    void load(const QMetaProperty &, QQmlEngine *engine = 0);
+    static Flags flagsForProperty(const QMetaProperty &);
+    void load(const QMetaProperty &);
     void load(const QMetaMethod &);
     QString name(QObject *) const;
     QString name(const QMetaObject *) const;
@@ -350,11 +350,11 @@ private:
 };
 
 class QQmlPropertyCacheMethodArguments;
-class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount, public QQmlCleanup
+class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
 {
 public:
-    QQmlPropertyCache(QV4::ExecutionEngine *);
-    QQmlPropertyCache(QV4::ExecutionEngine *, const QMetaObject *);
+    QQmlPropertyCache();
+    QQmlPropertyCache(const QMetaObject *);
     virtual ~QQmlPropertyCache();
 
     void update(const QMetaObject *);
@@ -445,11 +445,6 @@ public:
     static bool addToHash(QCryptographicHash &hash, const QMetaObject &mo);
 
     QByteArray checksum(bool *ok);
-
-protected:
-    void destroy() override;
-    void clear() override;
-
 private:
     friend class QQmlEnginePrivate;
     friend class QQmlCompiler;
@@ -492,9 +487,6 @@ private:
         stringCache.insert(key, qMakePair(index, data));
         _hasPropertyOverrides |= isOverride;
     }
-
-public:
-    QV4::ExecutionEngine *engine;
 
 private:
     QQmlPropertyCache *_parent;

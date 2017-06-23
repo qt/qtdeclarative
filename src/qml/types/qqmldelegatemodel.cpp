@@ -941,7 +941,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
     QQmlDelegateModelItem *cacheItem = it->inCache() ? m_cache.at(it.cacheIndex) : 0;
 
     if (!cacheItem) {
-        cacheItem = m_adaptorModel.createItem(m_cacheMetaType, m_context->engine(), it.modelIndex());
+        cacheItem = m_adaptorModel.createItem(m_cacheMetaType, it.modelIndex());
         if (!cacheItem)
             return 0;
 
@@ -1621,7 +1621,7 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
     if (!m_context || !m_context->isValid())
         return false;
 
-    QQmlDelegateModelItem *cacheItem = m_adaptorModel.createItem(m_cacheMetaType, m_context->engine(), -1);
+    QQmlDelegateModelItem *cacheItem = m_adaptorModel.createItem(m_cacheMetaType, -1);
     if (!cacheItem)
         return false;
     if (!object.isObject())
@@ -2472,7 +2472,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
 
     if (!cacheItem) {
         cacheItem = model->m_adaptorModel.createItem(
-                model->m_cacheMetaType, model->m_context->engine(), it.modelIndex());
+                model->m_cacheMetaType, it.modelIndex());
         if (!cacheItem)
             return QQmlV4Handle(QV4::Encode::undefined());
         cacheItem->groups = it->flags;

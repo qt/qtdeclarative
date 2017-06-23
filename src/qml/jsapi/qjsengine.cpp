@@ -759,7 +759,7 @@ void QJSEnginePrivate::removeFromDebugServer(QJSEngine *q)
 QQmlPropertyCache *QJSEnginePrivate::createCache(const QMetaObject *mo)
 {
     if (!mo->superClass()) {
-        QQmlPropertyCache *rv = new QQmlPropertyCache(QV8Engine::getV4(q_func()), mo);
+        QQmlPropertyCache *rv = new QQmlPropertyCache(mo);
         propertyCache.insert(mo, rv);
         return rv;
     } else {
