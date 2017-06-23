@@ -3208,6 +3208,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
 
     qreal tempPos = isContentFlowReversed() ? -position()-size() : position();
     int index = visibleItems.count() ? mapFromModel(modelIndex) : 0;
+    qreal lastVisiblePos = buffer + displayMarginEnd + tempPos + size();
 
     if (index < 0) {
         int i = visibleItems.count() - 1;
@@ -3217,7 +3218,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             // there are no visible items except items marked for removal
             index = visibleItems.count();
         } else if (visibleItems.at(i)->index + 1 == modelIndex
-            && visibleItems.at(i)->endPosition() <= buffer+displayMarginEnd+tempPos+size()) {
+            && visibleItems.at(i)->endPosition() <= lastVisiblePos) {
             // Special case of appending an item to the model.
             index = visibleItems.count();
         } else {
@@ -3305,11 +3306,8 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         }
 
     } else {
-        qreal to = buffer + displayMarginEnd + tempPos + size();
-
-        visibleAffected = count > 0 && pos < to;
-
-        for (int i = 0; i < count && pos <= to; ++i) {
+        for (int i = 0; i < count && pos <= lastVisiblePos; ++i) {
+            visibleAffected = true;
             FxViewItem *item = 0;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                 item->index = modelIndex + i;
