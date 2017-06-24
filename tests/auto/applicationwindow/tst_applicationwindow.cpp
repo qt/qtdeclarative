@@ -410,7 +410,7 @@ void tst_applicationwindow::attachedProperties()
     QCOMPARE(childControl->window(), childAppWindow);
     QCOMPARE(childControl->property("attached_window").value<QQuickApplicationWindow *>(), childAppWindow);
     QCOMPARE(childControl->property("attached_contentItem").value<QQuickItem *>(), childAppWindow->contentItem());
-    QCOMPARE(childControl->property("attached_activeFocusControl").value<QQuickItem *>(), childAppWindow->activeFocusControl());
+    QCOMPARE(childControl->property("attached_activeFocusControl").value<QQuickItem *>(), childAppWindowControl);
     QCOMPARE(childControl->property("attached_header").value<QQuickItem *>(), childAppWindow->header());
     QCOMPARE(childControl->property("attached_footer").value<QQuickItem *>(), childAppWindow->footer());
     QCOMPARE(childControl->property("attached_overlay").value<QQuickItem *>(), childAppWindow->overlay());
@@ -419,7 +419,7 @@ void tst_applicationwindow::attachedProperties()
     QCOMPARE(childItem->window(), childAppWindow);
     QCOMPARE(childItem->property("attached_window").value<QQuickApplicationWindow *>(), childAppWindow);
     QCOMPARE(childItem->property("attached_contentItem").value<QQuickItem *>(), childAppWindow->contentItem());
-    QCOMPARE(childItem->property("attached_activeFocusControl").value<QQuickItem *>(), childAppWindow->activeFocusControl());
+    QCOMPARE(childItem->property("attached_activeFocusControl").value<QQuickItem *>(), childAppWindowControl);
     QCOMPARE(childItem->property("attached_header").value<QQuickItem *>(), childAppWindow->header());
     QCOMPARE(childItem->property("attached_footer").value<QQuickItem *>(), childAppWindow->footer());
     QCOMPARE(childItem->property("attached_overlay").value<QQuickItem *>(), childAppWindow->overlay());
@@ -441,6 +441,54 @@ void tst_applicationwindow::attachedProperties()
     QVERIFY(!childItem->property("attached_header").value<QQuickItem *>());
     QVERIFY(!childItem->property("attached_footer").value<QQuickItem *>());
     QVERIFY(!childItem->property("attached_overlay").value<QQuickItem *>());
+    childAppWindow->hide();
+
+    childWindow->show();
+    childWindow->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(childWindow));
+
+    QVERIFY(!childWindowControl->hasActiveFocus());
+    childWindowControl->forceActiveFocus();
+    QTRY_VERIFY(childWindowControl->hasActiveFocus());
+    QCOMPARE(childWindow->activeFocusItem(), childWindowControl);
+    QCOMPARE(childWindowControl->property("attached_activeFocusControl").value<QQuickItem *>(), childWindowControl);
+
+    childControl->setParentItem(childWindow->contentItem());
+    QCOMPARE(childControl->window(), childWindow);
+    QVERIFY(!childControl->property("attached_window").value<QQuickWindow *>());
+    QCOMPARE(childControl->property("attached_activeFocusControl").value<QQuickItem *>(), childWindowControl);
+    QVERIFY(!childControl->property("attached_contentItem").value<QQuickItem *>());
+    QVERIFY(!childControl->property("attached_header").value<QQuickItem *>());
+    QVERIFY(!childControl->property("attached_footer").value<QQuickItem *>());
+    QCOMPARE(childControl->property("attached_overlay").value<QQuickItem *>(), QQuickOverlay::overlay(childWindow));
+
+    childItem->setParentItem(childWindow->contentItem());
+    QCOMPARE(childItem->window(), childWindow);
+    QVERIFY(!childControl->property("attached_window").value<QQuickWindow *>());
+    QCOMPARE(childControl->property("attached_activeFocusControl").value<QQuickItem *>(), childWindowControl);
+    QVERIFY(!childControl->property("attached_contentItem").value<QQuickItem *>());
+    QVERIFY(!childControl->property("attached_header").value<QQuickItem *>());
+    QVERIFY(!childControl->property("attached_footer").value<QQuickItem *>());
+    QCOMPARE(childControl->property("attached_overlay").value<QQuickItem *>(), QQuickOverlay::overlay(childWindow));
+
+    childControl->setParentItem(nullptr);
+    QVERIFY(!childControl->window());
+    QVERIFY(!childControl->property("attached_window").value<QQuickWindow *>());
+    QVERIFY(!childControl->property("attached_contentItem").value<QQuickItem *>());
+    QVERIFY(!childControl->property("attached_activeFocusControl").value<QQuickItem *>());
+    QVERIFY(!childControl->property("attached_header").value<QQuickItem *>());
+    QVERIFY(!childControl->property("attached_footer").value<QQuickItem *>());
+    QVERIFY(!childControl->property("attached_overlay").value<QQuickItem *>());
+
+    childItem->setParentItem(nullptr);
+    QVERIFY(!childItem->window());
+    QVERIFY(!childItem->property("attached_window").value<QQuickWindow *>());
+    QVERIFY(!childItem->property("attached_contentItem").value<QQuickItem *>());
+    QVERIFY(!childItem->property("attached_activeFocusControl").value<QQuickItem *>());
+    QVERIFY(!childItem->property("attached_header").value<QQuickItem *>());
+    QVERIFY(!childItem->property("attached_footer").value<QQuickItem *>());
+    QVERIFY(!childItem->property("attached_overlay").value<QQuickItem *>());
+    childWindow->hide();
 
     // ### A temporary workaround to unblock the CI until the crash caused
     // by https://codereview.qt-project.org/#/c/108517/ has been fixed...

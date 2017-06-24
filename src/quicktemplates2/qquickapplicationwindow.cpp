@@ -306,28 +306,21 @@ void QQuickApplicationWindowPrivate::resolvePalette()
     setPalette_helper(resolvedPalette);
 }
 
+static QQuickItem *findActiveFocusControl(QQuickWindow *window)
+{
+    QQuickItem *item = window->activeFocusItem();
+    while (item) {
+        if (qobject_cast<QQuickControl *>(item) || qobject_cast<QQuickTextField *>(item) || qobject_cast<QQuickTextArea *>(item))
+            return item;
+        item = item->parentItem();
+    }
+    return item;
+}
+
 void QQuickApplicationWindowPrivate::_q_updateActiveFocus()
 {
     Q_Q(QQuickApplicationWindow);
-    QQuickItem *item = q->activeFocusItem();
-    while (item) {
-        QQuickControl *control = qobject_cast<QQuickControl *>(item);
-        if (control) {
-            setActiveFocusControl(control);
-            break;
-        }
-        QQuickTextField *textField = qobject_cast<QQuickTextField *>(item);
-        if (textField) {
-            setActiveFocusControl(textField);
-            break;
-        }
-        QQuickTextArea *textArea = qobject_cast<QQuickTextArea *>(item);
-        if (textArea) {
-            setActiveFocusControl(textArea);
-            break;
-        }
-        item = item->parentItem();
-    }
+    setActiveFocusControl(findActiveFocusControl(q));
 }
 
 void QQuickApplicationWindowPrivate::setActiveFocusControl(QQuickItem *control)
@@ -800,11 +793,17 @@ class QQuickApplicationWindowAttachedPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickApplicationWindowAttached)
 
 public:
-    QQuickApplicationWindowAttachedPrivate() : window(nullptr) { }
+    QQuickApplicationWindowAttachedPrivate()
+        : window(nullptr),
+          activeFocusControl(nullptr)
+    {
+    }
 
     void windowChange(QQuickWindow *wnd);
+    void activeFocusChange();
 
     QQuickWindow *window;
+    QQuickItem *activeFocusControl;
 };
 
 void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
@@ -818,22 +817,28 @@ void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
         oldWindow = nullptr; // being deleted (QTBUG-52731)
 
     if (oldWindow) {
-        QObject::disconnect(oldWindow, &QQuickApplicationWindow::activeFocusControlChanged,
-                            q, &QQuickApplicationWindowAttached::activeFocusControlChanged);
+        disconnect(oldWindow, &QQuickApplicationWindow::activeFocusControlChanged,
+                   this, &QQuickApplicationWindowAttachedPrivate::activeFocusChange);
         QObject::disconnect(oldWindow, &QQuickApplicationWindow::headerChanged,
                             q, &QQuickApplicationWindowAttached::headerChanged);
         QObject::disconnect(oldWindow, &QQuickApplicationWindow::footerChanged,
                             q, &QQuickApplicationWindowAttached::footerChanged);
+    } else if (window) {
+        disconnect(window, &QQuickWindow::activeFocusItemChanged,
+                   this, &QQuickApplicationWindowAttachedPrivate::activeFocusChange);
     }
 
     QQuickApplicationWindow *newWindow = qobject_cast<QQuickApplicationWindow *>(wnd);
     if (newWindow) {
-        QObject::connect(newWindow, &QQuickApplicationWindow::activeFocusControlChanged,
-                         q, &QQuickApplicationWindowAttached::activeFocusControlChanged);
+        connect(newWindow, &QQuickApplicationWindow::activeFocusControlChanged,
+                this, &QQuickApplicationWindowAttachedPrivate::activeFocusChange);
         QObject::connect(newWindow, &QQuickApplicationWindow::headerChanged,
                          q, &QQuickApplicationWindowAttached::headerChanged);
         QObject::connect(newWindow, &QQuickApplicationWindow::footerChanged,
                          q, &QQuickApplicationWindowAttached::footerChanged);
+    } else if (wnd) {
+        connect(wnd, &QQuickWindow::activeFocusItemChanged,
+                this, &QQuickApplicationWindowAttachedPrivate::activeFocusChange);
     }
 
     window = wnd;
@@ -841,12 +846,26 @@ void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
     emit q->contentItemChanged();
     emit q->overlayChanged();
 
-    if ((oldWindow && oldWindow->activeFocusControl()) || (newWindow && newWindow->activeFocusControl()))
-        emit q->activeFocusControlChanged();
+    activeFocusChange();
     if ((oldWindow && oldWindow->header()) || (newWindow && newWindow->header()))
         emit q->headerChanged();
     if ((oldWindow && oldWindow->footer()) || (newWindow && newWindow->footer()))
         emit q->footerChanged();
+}
+
+void QQuickApplicationWindowAttachedPrivate::activeFocusChange()
+{
+    Q_Q(QQuickApplicationWindowAttached);
+    QQuickItem *control = nullptr;
+    if (QQuickApplicationWindow *appWindow = qobject_cast<QQuickApplicationWindow *>(window))
+        control = appWindow->activeFocusControl();
+    else if (window)
+        control = findActiveFocusControl(window);
+    if (activeFocusControl == control)
+        return;
+
+    activeFocusControl = control;
+    emit q->activeFocusControlChanged();
 }
 
 QQuickApplicationWindowAttached::QQuickApplicationWindowAttached(QObject *parent)
@@ -910,17 +929,14 @@ QQuickItem *QQuickApplicationWindowAttached::contentItem() const
 
     This attached property holds the control that currently has active focus, or \c null
     if there is no control with active focus. The property can be attached to any item.
-    The value is \c null if the item is not in an ApplicationWindow, or the window has
-    no active focus.
+    The value is \c null if the item is not in a window, or the window has no active focus.
 
     \sa Window::activeFocusItem, {Attached ApplicationWindow Properties}
 */
 QQuickItem *QQuickApplicationWindowAttached::activeFocusControl() const
 {
     Q_D(const QQuickApplicationWindowAttached);
-    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(d->window))
-        return window->activeFocusControl();
-    return nullptr;
+    return d->activeFocusControl;
 }
 
 /*!
