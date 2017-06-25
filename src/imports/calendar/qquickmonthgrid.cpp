@@ -106,11 +106,16 @@ public:
 
     void resizeItems();
 
-    QQuickItem *cellAt(const QPoint &pos) const;
+    QQuickItem *cellAt(const QPointF &pos) const;
     QDate dateOf(QQuickItem *cell) const;
 
-    void updatePress(const QPoint &pos);
+    void updatePress(const QPointF &pos);
     void clearPress(bool clicked);
+
+    void handlePress(const QPointF &point) override;
+    void handleMove(const QPointF &point) override;
+    void handleRelease(const QPointF &point) override;
+    void handleUngrab() override;
 
     static void setContextProperty(QQuickItem *item, const QString &name, const QVariant &value);
 
@@ -133,11 +138,13 @@ void QQuickMonthGridPrivate::resizeItems()
     itemSize.setHeight((contentItem->height() - 5 * spacing) / 6);
 
     const auto childItems = contentItem->childItems();
-    for (QQuickItem *item : childItems)
-        item->setSize(itemSize);
+    for (QQuickItem *item : childItems) {
+        if (!QQuickItemPrivate::get(item)->isTransparentForPositioner())
+            item->setSize(itemSize);
+    }
 }
 
-QQuickItem *QQuickMonthGridPrivate::cellAt(const QPoint &pos) const
+QQuickItem *QQuickMonthGridPrivate::cellAt(const QPointF &pos) const
 {
     Q_Q(const QQuickMonthGrid);
     if (contentItem) {
@@ -154,7 +161,7 @@ QDate QQuickMonthGridPrivate::dateOf(QQuickItem *cell) const
     return QDate();
 }
 
-void QQuickMonthGridPrivate::updatePress(const QPoint &pos)
+void QQuickMonthGridPrivate::updatePress(const QPointF &pos)
 {
     Q_Q(QQuickMonthGrid);
     clearPress(false);
@@ -176,6 +183,33 @@ void QQuickMonthGridPrivate::clearPress(bool clicked)
     }
     pressedDate = QDate();
     pressedItem = nullptr;
+}
+
+void QQuickMonthGridPrivate::handlePress(const QPointF &point)
+{
+    Q_Q(QQuickMonthGrid);
+    QQuickControlPrivate::handlePress(point);
+    updatePress(point);
+    if (pressedDate.isValid())
+        pressTimer = q->startTimer(qGuiApp->styleHints()->mousePressAndHoldInterval());
+}
+
+void QQuickMonthGridPrivate::handleMove(const QPointF &point)
+{
+    QQuickControlPrivate::handleMove(point);
+    updatePress(point);
+}
+
+void QQuickMonthGridPrivate::handleRelease(const QPointF &point)
+{
+    QQuickControlPrivate::handleRelease(point);
+    clearPress(true);
+}
+
+void QQuickMonthGridPrivate::handleUngrab()
+{
+    QQuickControlPrivate::handleUngrab();
+    clearPress(false);
 }
 
 void QQuickMonthGridPrivate::setContextProperty(QQuickItem *item, const QString &name, const QVariant &value)
@@ -400,35 +434,6 @@ void QQuickMonthGrid::updatePolish()
     Q_D(QQuickMonthGrid);
     QQuickControl::updatePolish();
     d->resizeItems();
-}
-
-void QQuickMonthGrid::mousePressEvent(QMouseEvent *event)
-{
-    Q_D(QQuickMonthGrid);
-    d->updatePress(event->pos());
-    if (d->pressedDate.isValid())
-        d->pressTimer = startTimer(qGuiApp->styleHints()->mousePressAndHoldInterval());
-    event->accept();
-}
-
-void QQuickMonthGrid::mouseMoveEvent(QMouseEvent *event)
-{
-    Q_D(QQuickMonthGrid);
-    d->updatePress(event->pos());
-    event->accept();
-}
-
-void QQuickMonthGrid::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_D(QQuickMonthGrid);
-    d->clearPress(true);
-    event->accept();
-}
-
-void QQuickMonthGrid::mouseUngrabEvent()
-{
-    Q_D(QQuickMonthGrid);
-    d->clearPress(false);
 }
 
 void QQuickMonthGrid::timerEvent(QTimerEvent *event)
