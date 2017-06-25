@@ -153,7 +153,7 @@ public:
     void releaseResources();
 
 private:
-    QQuickNvprFunctions *m_nvpr;
+    QQuickNvprFunctions *m_nvpr = nullptr;
     MaterialDesc m_materials[NMaterials];
 };
 
