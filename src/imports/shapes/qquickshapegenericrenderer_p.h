@@ -259,10 +259,10 @@ public:
     static QSGMaterialType type;
 
 private:
-    int m_opacityLoc;
-    int m_matrixLoc;
-    int m_gradStartLoc;
-    int m_gradEndLoc;
+    int m_opacityLoc = -1;
+    int m_matrixLoc = -1;
+    int m_gradStartLoc = -1;
+    int m_gradEndLoc = -1;
 };
 
 class QQuickShapeLinearGradientMaterial : public QSGMaterial
