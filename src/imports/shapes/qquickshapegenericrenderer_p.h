@@ -81,7 +81,8 @@ public:
           m_api(QSGRendererInterface::Unknown),
           m_rootNode(nullptr),
           m_accDirty(0),
-          m_asyncCallback(nullptr)
+          m_asyncCallback(nullptr),
+          m_asyncCallbackData(nullptr)
     { }
     ~QQuickShapeGenericRenderer();
 
