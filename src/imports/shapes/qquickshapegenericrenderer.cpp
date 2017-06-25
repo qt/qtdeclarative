@@ -499,6 +499,7 @@ void QQuickShapeGenericRenderer::updateNode()
 
     for (ShapePathData &d : m_sp) {
         if (!*nodePtr) {
+            Q_ASSERT(prevNode);
             *nodePtr = new QQuickShapeGenericNode;
             prevNode->m_next = *nodePtr;
             prevNode->appendChildNode(*nodePtr);
