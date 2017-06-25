@@ -170,8 +170,8 @@ public:
 private:
     QOpenGLShaderProgram *m_program = nullptr;
     QOpenGLBuffer *m_buffer = nullptr;
-    int m_matrixLoc;
-    int m_opacityLoc;
+    int m_matrixLoc = -1;
+    int m_opacityLoc = -1;
     QSize m_prevSize;
 };
 
