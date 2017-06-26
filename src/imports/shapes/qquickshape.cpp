@@ -921,7 +921,7 @@ void QQuickShapePrivate::createRenderer()
         return;
 
     switch (ri->graphicsApi()) {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     case QSGRendererInterface::OpenGL:
         if (enableVendorExts && QQuickShapeNvprRenderNode::isSupported()) {
             rendererType = QQuickShape::NvprRenderer;
@@ -954,7 +954,7 @@ QSGNode *QQuickShapePrivate::createNode()
         return node;
 
     switch (ri->graphicsApi()) {
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     case QSGRendererInterface::OpenGL:
         if (enableVendorExts && QQuickShapeNvprRenderNode::isSupported()) {
             node = new QQuickShapeNvprRenderNode;
@@ -1199,7 +1199,7 @@ void QQuickShapeLinearGradient::setY2(qreal v)
     }
 }
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 
 // contexts sharing with each other get the same cache instance
 class QQuickShapeGradientCacheWrapper
@@ -1324,7 +1324,7 @@ QSGTexture *QQuickShapeGradientCache::get(const GradientDesc &grad)
     return tx;
 }
 
-#endif // QT_NO_OPENGL
+#endif // QT_CONFIG(opengl)
 
 QT_END_NAMESPACE
 

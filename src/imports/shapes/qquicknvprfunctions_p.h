@@ -54,7 +54,7 @@
 #include <qopengl.h>
 #include <QtGui/qsurfaceformat.h>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 
 QT_BEGIN_NAMESPACE
 
@@ -395,6 +395,6 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QT_NO_OPENGL
+#endif // QT_CONFIG(opengl)
 
 #endif // QQUICKNVPRFUNCTIONS_P_H

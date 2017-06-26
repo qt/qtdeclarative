@@ -234,7 +234,7 @@ private:
     QV4::PersistentValue m_v4value;
 };
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 
 class QQuickShapeGradientCache : public QOpenGLSharedResource
 {
@@ -274,7 +274,7 @@ inline uint qHash(const QQuickShapeGradientCache::GradientDesc &v, uint seed = 0
     return h;
 }
 
-#endif // QT_NO_OPENGL
+#endif // QT_CONFIG(opengl)
 
 QT_END_NAMESPACE
 

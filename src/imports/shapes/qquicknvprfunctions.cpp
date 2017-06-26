@@ -39,7 +39,7 @@
 
 #include "qquicknvprfunctions_p.h"
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 
 #include <QOpenGLContext>
 #include <QOffscreenSurface>
@@ -274,4 +274,4 @@ bool QQuickNvprFunctionsPrivate::resolve()
 
 QT_END_NAMESPACE
 
-#endif // QT_NO_OPENGL
+#endif // QT_CONFIG(opengl)

@@ -133,7 +133,9 @@ private:
         Qt::FillRule fillRule;
         QPainterPath path;
         bool fillGradientActive;
+#if QT_CONFIG(opengl)
         QQuickShapeGradientCache::GradientDesc fillGradient;
+#endif
         VertexContainerType fillVertices;
         IndexContainerType fillIndices;
         QSGGeometry::Type indexType;
@@ -218,7 +220,9 @@ public:
     QQuickWindow *window() const { return m_window; }
 
     // shadow data for custom materials
+#if QT_CONFIG(opengl)
     QQuickShapeGradientCache::GradientDesc m_fillGradient;
+#endif
 
 private:
     QSGGeometry *m_geometry;
@@ -245,7 +249,7 @@ public:
     static QSGMaterial *createLinearGradient(QQuickWindow *window, QQuickShapeGenericStrokeFillNode *node);
 };
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 
 class QQuickShapeLinearGradientShader : public QSGMaterialShader
 {
@@ -297,7 +301,7 @@ private:
     QQuickShapeGenericStrokeFillNode *m_node;
 };
 
-#endif // QT_NO_OPENGL
+#endif // QT_CONFIG(opengl)
 
 QT_END_NAMESPACE
 

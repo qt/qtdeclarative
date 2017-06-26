@@ -42,7 +42,7 @@
 #include <QtGui/private/qtriangulatingstroker_p.h>
 #include <QThreadPool>
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 #include <QSGVertexColorMaterial>
 #include <QOpenGLContext>
 #include <QOffscreenSurface>
@@ -118,7 +118,7 @@ void QQuickShapeGenericStrokeFillNode::activateMaterial(Material m)
 static bool q_supportsElementIndexUint(QSGRendererInterface::GraphicsApi api)
 {
     static bool elementIndexUint = true;
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (api == QSGRendererInterface::OpenGL) {
         static bool elementIndexUintChecked = false;
         if (!elementIndexUintChecked) {
@@ -246,6 +246,7 @@ void QQuickShapeGenericRenderer::setFillGradient(int index, QQuickShapeGradient 
 {
     ShapePathData &d(m_sp[index]);
     d.fillGradientActive = gradient != nullptr;
+#if QT_CONFIG(opengl)
     if (gradient) {
         d.fillGradient.stops = gradient->gradientStops(); // sorted
         d.fillGradient.spread = gradient->spread();
@@ -256,6 +257,7 @@ void QQuickShapeGenericRenderer::setFillGradient(int index, QQuickShapeGradient 
             Q_UNREACHABLE();
         }
     }
+#endif
     d.syncDirty |= DirtyFillGradient;
 }
 
@@ -559,8 +561,12 @@ void QQuickShapeGenericRenderer::updateNode()
 void QQuickShapeGenericRenderer::updateShadowDataInNode(ShapePathData *d, QQuickShapeGenericStrokeFillNode *n)
 {
     if (d->fillGradientActive) {
+#if QT_CONFIG(opengl)
         if (d->effectiveDirty & DirtyFillGradient)
             n->m_fillGradient = d->fillGradient;
+#else
+        Q_UNUSED(n);
+#endif
     }
 }
 
@@ -665,7 +671,7 @@ QSGMaterial *QQuickShapeGenericMaterialFactory::createVertexColor(QQuickWindow *
 {
     QSGRendererInterface::GraphicsApi api = window->rendererInterface()->graphicsApi();
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (api == QSGRendererInterface::OpenGL) // ### so much for "generic"...
         return new QSGVertexColorMaterial;
 #endif
@@ -679,16 +685,18 @@ QSGMaterial *QQuickShapeGenericMaterialFactory::createLinearGradient(QQuickWindo
 {
     QSGRendererInterface::GraphicsApi api = window->rendererInterface()->graphicsApi();
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
     if (api == QSGRendererInterface::OpenGL) // ### so much for "generic"...
         return new QQuickShapeLinearGradientMaterial(node);
+#else
+        Q_UNUSED(node);
 #endif
 
     qWarning("Linear gradient material: Unsupported graphics API %d", api);
     return nullptr;
 }
 
-#ifndef QT_NO_OPENGL
+#if QT_CONFIG(opengl)
 
 QSGMaterialType QQuickShapeLinearGradientShader::type;
 
@@ -771,6 +779,6 @@ int QQuickShapeLinearGradientMaterial::compare(const QSGMaterial *other) const
     return 0;
 }
 
-#endif // QT_NO_OPENGL
+#endif // QT_CONFIG(opengl)
 
 QT_END_NAMESPACE
