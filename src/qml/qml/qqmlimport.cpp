@@ -420,13 +420,14 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
         const QQmlImportNamespace &set = *ns;
 
         // positioning is important; we must create the namespace even if there is no module.
-        QQmlTypeNameCache::Import &typeimport = cache->m_namedImports[set.prefix];
+        QQmlImportRef &typeimport = cache->m_namedImports[set.prefix];
         typeimport.m_qualifier = set.prefix;
 
         for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
             const QQmlImportInstance *import = set.imports.at(ii);
             QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->majversion);
             if (module) {
+                QQmlImportRef &typeimport = cache->m_namedImports[set.prefix];
                 typeimport.modules.append(QQmlTypeModuleVersion(module, import->minversion));
             }
         }

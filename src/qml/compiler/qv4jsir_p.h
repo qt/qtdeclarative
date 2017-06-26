@@ -80,6 +80,8 @@ class QQmlType;
 class QQmlPropertyData;
 class QQmlPropertyCache;
 class QQmlEnginePrivate;
+struct QQmlImportRef;
+class QQmlTypeNameCache;
 
 namespace QV4 {
 
@@ -251,7 +253,7 @@ struct MemberExpressionResolver
                                               Member *member);
 
     MemberExpressionResolver()
-        : resolveMember(0), data(0), extraData(0), owner(nullptr), flags(0) {}
+        : resolveMember(0), import(nullptr), propertyCache(nullptr), typenameCache(nullptr), owner(nullptr), flags(0) {}
 
     bool isValid() const { return !!resolveMember; }
     void clear() { *this = MemberExpressionResolver(); }
@@ -260,8 +262,9 @@ struct MemberExpressionResolver
 #ifndef V4_BOOTSTRAP
     QQmlType qmlType;
 #endif
-    void *data; // Could be pointer to meta object or importNameSpace
-    void *extraData; // Could be QQmlTypeNameCache
+    const QQmlImportRef *import;
+    QQmlPropertyCache *propertyCache;
+    QQmlTypeNameCache *typenameCache;
     Function *owner;
     unsigned int flags;
 };

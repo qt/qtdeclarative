@@ -119,7 +119,7 @@ ReturnedValue QmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, c
 
 // Returns a type wrapper for importNamespace (of t) on o.  This allows nested resolution of a type in a
 // namespace.
-ReturnedValue QmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, QQmlTypeNameCache *t, const void *importNamespace,
+ReturnedValue QmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, QQmlTypeNameCache *t, const QQmlImportRef *importNamespace,
                                      Heap::QmlTypeWrapper::TypeNameMode mode)
 {
     Q_ASSERT(t);
