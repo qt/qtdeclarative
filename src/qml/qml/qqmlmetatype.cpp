@@ -133,7 +133,6 @@ public:
     void add(QQmlTypePrivate *);
 
     QStringHash<QList<QQmlTypePrivate *> > typeHash;
-    QList<QQmlTypePrivate *> types;
 };
 
 Q_GLOBAL_STATIC(QQmlMetaTypeData, metaTypeData)
