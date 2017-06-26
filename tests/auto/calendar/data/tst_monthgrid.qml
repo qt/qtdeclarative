@@ -107,13 +107,13 @@ TestCase {
 
         for (var i = 0; i < 42; ++i) {
             var cellDate = new Date(en_GB[i])
-            compare(control.contentItem.children[i].date.getFullYear(), cellDate.getFullYear())
-            compare(control.contentItem.children[i].date.getMonth(), cellDate.getMonth())
-            compare(control.contentItem.children[i].date.getDate(), cellDate.getDate())
-            compare(control.contentItem.children[i].day, cellDate.getDate())
+            compare(control.contentItem.children[i].date.getFullYear(), cellDate.getUTCFullYear())
+            compare(control.contentItem.children[i].date.getMonth(), cellDate.getUTCMonth())
+            compare(control.contentItem.children[i].date.getDate(), cellDate.getUTCDate())
+            compare(control.contentItem.children[i].day, cellDate.getUTCDate())
             compare(control.contentItem.children[i].today, cellDate === new Date())
-            compare(control.contentItem.children[i].month, cellDate.getMonth())
-            compare(control.contentItem.children[i].year, cellDate.getFullYear())
+            compare(control.contentItem.children[i].month, cellDate.getUTCMonth())
+            compare(control.contentItem.children[i].year, cellDate.getUTCFullYear())
         }
 
         // en_US
@@ -130,13 +130,13 @@ TestCase {
 
         for (var j = 0; j < 42; ++j) {
             cellDate = new Date(en_US[j])
-            compare(control.contentItem.children[j].date.getFullYear(), cellDate.getFullYear())
-            compare(control.contentItem.children[j].date.getMonth(), cellDate.getMonth())
-            compare(control.contentItem.children[j].date.getDate(), cellDate.getDate())
-            compare(control.contentItem.children[j].day, cellDate.getDate())
+            compare(control.contentItem.children[j].date.getFullYear(), cellDate.getUTCFullYear())
+            compare(control.contentItem.children[j].date.getMonth(), cellDate.getUTCMonth())
+            compare(control.contentItem.children[j].date.getDate(), cellDate.getUTCDate())
+            compare(control.contentItem.children[j].day, cellDate.getUTCDate())
             compare(control.contentItem.children[j].today, cellDate === new Date())
-            compare(control.contentItem.children[j].month, cellDate.getMonth())
-            compare(control.contentItem.children[j].year, cellDate.getFullYear())
+            compare(control.contentItem.children[j].month, cellDate.getUTCMonth())
+            compare(control.contentItem.children[j].year, cellDate.getUTCFullYear())
         }
 
         control.destroy()
