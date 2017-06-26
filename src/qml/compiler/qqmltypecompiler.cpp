@@ -344,7 +344,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             const QmlIR::Object *attachedObj = qmlObjects.at(binding->value.objectIndex);
             auto *typeRef = resolvedTypes.value(binding->propertyNameIndex);
-            QQmlType type = typeRef ? typeRef->type : nullptr;
+            QQmlType type = typeRef ? typeRef->type : QQmlType();
             if (!type.isValid()) {
                 if (imports->resolveType(propertyName, &type, 0, 0, 0)) {
                     if (type.isComposite()) {

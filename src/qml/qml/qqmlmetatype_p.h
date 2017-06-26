@@ -78,9 +78,9 @@ class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
 public:
     static QList<QString> qmlTypeNames();
-    static QList<QQmlType *> qmlTypes();
+    static QList<QQmlType> qmlTypes();
     static QList<QQmlType> qmlSingletonTypes();
-    static QList<QQmlType *> qmlAllTypes();
+    static QList<QQmlType> qmlAllTypes();
 
     static QQmlType qmlType(const QString &qualifiedName, int, int);
     static QQmlType qmlType(const QHashedStringRef &name, const QHashedStringRef &module, int, int);
@@ -147,10 +147,6 @@ public:
     QQmlType &operator =(const QQmlType &other);
     explicit QQmlType(QQmlTypePrivate *priv);
     ~QQmlType();
-
-    // ### get rid of these two again
-    QQmlType(QQmlType *otherPointer);
-    QQmlType &operator =(QQmlType *otherPointer);
 
     bool operator ==(const QQmlType &other) const {
         return d == other.d;
@@ -238,7 +234,7 @@ public:
     int enumValue(QQmlEnginePrivate *engine, const QHashedCStringRef &, bool *ok) const;
     int enumValue(QQmlEnginePrivate *engine, const QV4::String *, bool *ok) const;
 
-    QQmlTypePrivate *handle() const { return d; }
+    QQmlTypePrivate *priv() const { return d; }
     static void refHandle(QQmlTypePrivate *priv);
     static void derefHandle(QQmlTypePrivate *priv);
 private:
@@ -246,7 +242,6 @@ private:
     QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
     int resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
     friend class QQmlTypePrivate;
-    friend struct QQmlMetaTypeData;
 
     enum RegistrationType {
         CppType = 0,
@@ -296,7 +291,7 @@ public:
 private:
     //Used by register functions and creates the QQmlTypeModule for them
     friend QQmlTypeModule *getTypeModule(const QHashedString &uri, int majorVersion, QQmlMetaTypeData *data);
-    friend void addTypeToData(QQmlType* type, QQmlMetaTypeData *data);
+    friend void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data);
     friend struct QQmlMetaTypeData;
     friend Q_QML_EXPORT void qmlClearTypeRegistrations();
     friend class QQmlTypeModulePrivate;

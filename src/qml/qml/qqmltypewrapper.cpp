@@ -112,7 +112,7 @@ ReturnedValue QmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, c
 
     Scoped<QmlTypeWrapper> w(scope, engine->memoryManager->allocObject<QmlTypeWrapper>());
     w->d()->mode = mode; w->d()->object = o;
-    w->d()->typePrivate = t.handle();
+    w->d()->typePrivate = t.priv();
     QQmlType::refHandle(w->d()->typePrivate);
     return w.asReturnedValue();
 }
