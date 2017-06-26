@@ -77,6 +77,9 @@ namespace QV4 { struct String; }
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
 public:
+    static QQmlType registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type);
+    static QQmlType registerCompositeType(const QQmlPrivate::RegisterCompositeType &type);
+
     static QList<QString> qmlTypeNames();
     static QList<QQmlType> qmlTypes();
     static QList<QQmlType> qmlSingletonTypes();
@@ -88,10 +91,11 @@ public:
     static QQmlType qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor);
     static QQmlType qmlType(int);
     static QQmlType qmlType(const QUrl &url, bool includeNonFileImports = false);
-    static QQmlType qmlTypeFromIndex(int);
 
     static QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
     static QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
+
+    static void freeUnusedTypesAndCaches();
 
     static QMetaProperty defaultProperty(const QMetaObject *);
     static QMetaProperty defaultProperty(QObject *);
@@ -237,11 +241,6 @@ public:
     QQmlTypePrivate *priv() const { return d; }
     static void refHandle(QQmlTypePrivate *priv);
     static void derefHandle(QQmlTypePrivate *priv);
-private:
-    QQmlType superType() const;
-    QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
-    int resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
-    friend class QQmlTypePrivate;
 
     enum RegistrationType {
         CppType = 0,
@@ -250,21 +249,28 @@ private:
         CompositeType = 3,
         CompositeSingletonType = 4
     };
+
+private:
+    QQmlType superType() const;
+    QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
+    int resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
+    friend class QQmlTypePrivate;
+
     friend QString registrationTypeString(RegistrationType);
     friend bool checkRegistration(RegistrationType, QQmlMetaTypeData *, const char *, const QString &, int);
-    friend int registerType(const QQmlPrivate::RegisterType &);
-    friend int registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
-    friend int registerInterface(const QQmlPrivate::RegisterInterface &);
-    friend int registerCompositeType(const QQmlPrivate::RegisterCompositeType &);
-    friend int registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &);
+    friend QQmlType registerType(const QQmlPrivate::RegisterType &);
+    friend QQmlType registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
+    friend QQmlType registerInterface(const QQmlPrivate::RegisterInterface &);
     friend int registerQmlUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &);
     friend uint qHash(const QQmlType &t, uint seed);
     friend Q_QML_EXPORT void qmlClearTypeRegistrations();
-    QQmlType(int, const QQmlPrivate::RegisterInterface &);
-    QQmlType(int, const QString &, const QQmlPrivate::RegisterSingletonType &);
-    QQmlType(int, const QString &, const QQmlPrivate::RegisterType &);
-    QQmlType(int, const QString &, const QQmlPrivate::RegisterCompositeType &);
-    QQmlType(int, const QString &, const QQmlPrivate::RegisterCompositeSingletonType &);
+    friend class QQmlMetaType;
+
+    QQmlType(QQmlMetaTypeData *data, const QQmlPrivate::RegisterInterface &);
+    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterSingletonType &);
+    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterType &);
+    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterCompositeType &);
+    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterCompositeSingletonType &);
 
     QQmlTypePrivate *d;
 };
@@ -288,6 +294,7 @@ public:
     QQmlType type(const QHashedStringRef &, int) const;
     QQmlType type(const QV4::String *, int) const;
 
+    QQmlTypeModulePrivate *priv() { return d; }
 private:
     //Used by register functions and creates the QQmlTypeModule for them
     friend QQmlTypeModule *getTypeModule(const QHashedString &uri, int majorVersion, QQmlMetaTypeData *data);

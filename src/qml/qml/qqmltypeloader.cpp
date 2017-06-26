@@ -1947,6 +1947,7 @@ void QQmlTypeLoader::clearCache()
     m_qmldirCache.clear();
     m_importDirCache.clear();
     m_importQmlDirCache.clear();
+    QQmlMetaType::freeUnusedTypesAndCaches();
 }
 
 void QQmlTypeLoader::updateTypeCacheTrimThreshold()
@@ -1987,6 +1988,8 @@ void QQmlTypeLoader::trimCache()
     }
 
     updateTypeCacheTrimThreshold();
+
+    QQmlMetaType::freeUnusedTypesAndCaches();
 
     // TODO: release any scripts which are no longer referenced by any types
 }

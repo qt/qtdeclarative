@@ -183,7 +183,7 @@ QQmlType fetchOrCreateTypeForUrl(const QString &urlString, const QHashedStringRe
             minorVersion,
             buf.constData()
         };
-        ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeSingletonRegistration, &reg));
+        ret = QQmlMetaType::registerCompositeSingletonType(reg);
     } else {
         QQmlPrivate::RegisterCompositeType reg = {
             url,
@@ -192,7 +192,7 @@ QQmlType fetchOrCreateTypeForUrl(const QString &urlString, const QHashedStringRe
             minorVersion,
             buf.constData()
         };
-        ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &reg));
+        ret = QQmlMetaType::registerCompositeType(reg);
     }
 
     // This means that the type couldn't be found by URL, but could not be

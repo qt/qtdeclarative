@@ -730,7 +730,7 @@ QJSEnginePrivate *QJSEnginePrivate::get(QV4::ExecutionEngine *e)
 
 QJSEnginePrivate::~QJSEnginePrivate()
 {
-    // ### FIXME: sweep unused QQmlType instances
+    QQmlMetaType::freeUnusedTypesAndCaches();
 }
 
 void QJSEnginePrivate::addToDebugServer(QJSEngine *q)
