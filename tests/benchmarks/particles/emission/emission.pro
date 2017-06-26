@@ -1,4 +1,5 @@
-CONFIG += benchmark
+# This benchmark is broken, see QTBUG-60621
+#CONFIG += benchmark
 TARGET = tst_emission
 SOURCES += tst_emission.cpp
 macx:CONFIG -= app_bundle

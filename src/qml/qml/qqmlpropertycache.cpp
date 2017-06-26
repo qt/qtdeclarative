@@ -970,8 +970,11 @@ int QQmlPropertyCache::originalClone(QObject *object, int index)
     QQmlData *data = QQmlData::get(object, false);
     if (data && data->propertyCache) {
         QQmlPropertyCache *cache = data->propertyCache;
-        while (cache->signal(index)->isCloned())
+        QQmlPropertyData *sig = cache->signal(index);
+        while (sig && sig->isCloned()) {
             --index;
+            sig = cache->signal(index);
+        }
     } else {
         while (QMetaObjectPrivate::signal(object->metaObject(), index).attributes() & QMetaMethod::Cloned)
             --index;

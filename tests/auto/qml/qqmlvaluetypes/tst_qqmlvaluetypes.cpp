@@ -1486,7 +1486,7 @@ void tst_qqmlvaluetypes::groupedInterceptors()
 
     QQmlComponent component(&engine, testFileUrl(qmlfile));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY2(object != nullptr, qPrintable(component.errorString()));
 
     QColor initialColor = object->property("color").value<QColor>();
     QVERIFY(fuzzyCompare(initialColor.redF(), expectedInitialColor.redF()));

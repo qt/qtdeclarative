@@ -186,7 +186,7 @@ struct Chunk {
         return usedSlots;
     }
 
-    void sweep(ClassDestroyStatsCallback classCountPtr);
+    bool sweep(ClassDestroyStatsCallback classCountPtr);
     void freeAll();
     void resetBlackBits();
     void collectGrayItems(QV4::MarkStack *markStack);
@@ -269,7 +269,7 @@ Q_STATIC_ASSERT(sizeof(HeapItem) == Chunk::SlotSize);
 Q_STATIC_ASSERT(QT_POINTER_SIZE*8 == Chunk::Bits);
 Q_STATIC_ASSERT((1 << Chunk::BitShift) == Chunk::Bits);
 
-struct MarkStack {\
+struct MarkStack {
     MarkStack(ExecutionEngine *engine);
     Heap::Base **top = 0;
     Heap::Base **base = 0;
@@ -286,35 +286,6 @@ struct MarkStack {\
     void drain();
 
 };
-
-// Base class for the execution engine
-
-#if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
-#pragma pack(push, 1)
-#endif
-struct EngineBase {
-    Heap::ExecutionContext *current = 0;
-
-    Value *jsStackTop = 0;
-    quint8 hasException = false;
-    quint8 writeBarrierActive = false;
-    quint16 unused = 0;
-#if QT_POINTER_SIZE == 8
-    quint8 padding[4];
-#endif
-    MemoryManager *memoryManager = 0;
-    Runtime runtime;
-};
-#if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
-#pragma pack(pop)
-#endif
-
-Q_STATIC_ASSERT(std::is_standard_layout<EngineBase>::value);
-Q_STATIC_ASSERT(offsetof(EngineBase, current) == 0);
-Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, current) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(EngineBase, hasException) == offsetof(EngineBase, jsStackTop) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(EngineBase, runtime) == offsetof(EngineBase, memoryManager) + QT_POINTER_SIZE);
 
 // Some helper classes and macros to automate the generation of our
 // tables used for marking objects

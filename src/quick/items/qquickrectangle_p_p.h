@@ -76,6 +76,7 @@ public:
     QQuickGradient *gradient;
     QQuickPen *pen;
     qreal radius;
+    static int doUpdateSlotIdx;
 };
 
 QT_END_NAMESPACE

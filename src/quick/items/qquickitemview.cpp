@@ -380,9 +380,7 @@ void QQuickItemView::setDelegate(QQmlComponent *delegate)
         int oldCount = dataModel->count();
         dataModel->setDelegate(delegate);
         if (isComponentComplete()) {
-            for (FxViewItem *item : qAsConst(d->visibleItems))
-                d->releaseItem(item);
-            d->visibleItems.clear();
+            d->releaseVisibleItems();
             d->releaseItem(d->currentItem);
             d->currentItem = 0;
             d->updateSectionCriteria();
@@ -1743,9 +1741,7 @@ void QQuickItemViewPrivate::clear()
     currentChanges.reset();
     timeline.clear();
 
-    for (FxViewItem *item : qAsConst(visibleItems))
-        releaseItem(item);
-    visibleItems.clear();
+    releaseVisibleItems();
     visibleIndex = 0;
 
     for (FxViewItem *item : qAsConst(releasePendingTransition)) {

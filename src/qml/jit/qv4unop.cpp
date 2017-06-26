@@ -83,6 +83,15 @@ template <typename JITAssembler>
 void Unop<JITAssembler>::generateUMinus(IR::Expr *source, IR::Expr *target)
 {
     IR::Temp *targetTemp = target->asTemp();
+
+    if (IR::Const *c = source->asConst()) {
+        if (c->value == 0 && source->type == IR::SInt32Type) {
+            // special case: minus integer 0 is 0, which is not what JS expects it to be, so always
+            // do a runtime call
+            generateRuntimeCall(_as, target, uMinus, PointerToValue(source));
+            return;
+        }
+    }
     if (source->type == IR::SInt32Type) {
         typename JITAssembler::RegisterID tReg = JITAssembler::ScratchRegister;
         if (targetTemp && targetTemp->kind == IR::Temp::PhysicalRegister)

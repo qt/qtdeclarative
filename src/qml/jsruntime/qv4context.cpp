@@ -65,13 +65,14 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
     uint localsAndFormals = function->compiledFunction->nLocals + sizeof(CallData)/sizeof(Value) - 1 + qMax(static_cast<uint>(callData->argc), function->nFormals);
     size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * (localsAndFormals);
 
-    Heap::CallContext *c = d()->engine->memoryManager->allocManaged<CallContext>(requiredMemory);
-    c->init(d()->engine, Heap::ExecutionContext::Type_CallContext);
+    ExecutionEngine *v4 = engine();
+    Heap::CallContext *c = v4->memoryManager->allocManaged<CallContext>(requiredMemory);
+    c->init(Heap::ExecutionContext::Type_CallContext);
 
     c->v4Function = function;
 
     c->strictMode = function->isStrict();
-    c->outer.set(d()->engine, this->d());
+    c->outer.set(v4, this->d());
 
     c->compilationUnit = function->compilationUnit;
     c->lookups = function->compilationUnit->runtimeLookups;
@@ -99,14 +100,14 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
 
 Heap::WithContext *ExecutionContext::newWithContext(Heap::Object *with)
 {
-    return d()->engine->memoryManager->alloc<WithContext>(d(), with);
+    return engine()->memoryManager->alloc<WithContext>(d(), with);
 }
 
 Heap::CatchContext *ExecutionContext::newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue)
 {
     Scope scope(this);
     ScopedValue e(scope, exceptionValue);
-    return d()->engine->memoryManager->alloc<CatchContext>(d(), exceptionVarName, e);
+    return engine()->memoryManager->alloc<CatchContext>(d(), exceptionVarName, e);
 }
 
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
@@ -156,35 +157,35 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 
 void Heap::GlobalContext::init(ExecutionEngine *eng)
 {
-    Heap::ExecutionContext::init(eng, Heap::ExecutionContext::Type_GlobalContext);
+    Heap::ExecutionContext::init(Heap::ExecutionContext::Type_GlobalContext);
     global.set(eng, eng->globalObject->d());
 }
 
 void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionVarName,
                               const Value &exceptionValue)
 {
-    Heap::ExecutionContext::init(outerContext->engine, Heap::ExecutionContext::Type_CatchContext);
-    outer.set(engine, outerContext);
+    Heap::ExecutionContext::init(Heap::ExecutionContext::Type_CatchContext);
+    outer.set(internalClass->engine, outerContext);
     strictMode = outer->strictMode;
     callData = outer->callData;
     lookups = outer->lookups;
     constantTable = outer->constantTable;
     compilationUnit = outer->compilationUnit;
 
-    this->exceptionVarName.set(engine, exceptionVarName);
-    this->exceptionValue.set(engine, exceptionValue);
+    this->exceptionVarName.set(internalClass->engine, exceptionVarName);
+    this->exceptionValue.set(internalClass->engine, exceptionValue);
 }
 
 void Heap::WithContext::init(ExecutionContext *outerContext, Object *with)
 {
-    Heap::ExecutionContext::init(outerContext->engine, Heap::ExecutionContext::Type_WithContext);
-    outer.set(engine, outerContext);
+    Heap::ExecutionContext::init(Heap::ExecutionContext::Type_WithContext);
+    outer.set(internalClass->engine, outerContext);
     callData = outer->callData;
     lookups = outer->lookups;
     constantTable = outer->constantTable;
     compilationUnit = outer->compilationUnit;
 
-    withObject.set(engine, with);
+    withObject.set(internalClass->engine, with);
 }
 
 Identifier * const *SimpleCallContext::formals() const
@@ -211,6 +212,9 @@ unsigned int SimpleCallContext::variableCount() const
 
 bool ExecutionContext::deleteProperty(String *name)
 {
+    name->makeIdentifier();
+    Identifier *id = name->identifier();
+
     Scope scope(this);
     ScopedContext ctx(scope, this);
     for (; ctx; ctx = ctx->d()->outer) {
@@ -233,16 +237,14 @@ bool ExecutionContext::deleteProperty(String *name)
                 return global->deleteProperty(name);
             break;
         }
-        case Heap::ExecutionContext::Type_CallContext: {
-            Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
-            uint index = c->v4Function->internalClass->find(name);
+        case Heap::ExecutionContext::Type_CallContext:
+            Q_FALLTHROUGH();
+        case Heap::ExecutionContext::Type_SimpleCallContext: {
+            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
+            uint index = c->v4Function->internalClass->find(id);
             if (index < UINT_MAX)
                 // ### throw in strict mode?
                 return false;
-            Q_FALLTHROUGH();
-        }
-        case Heap::ExecutionContext::Type_SimpleCallContext: {
-            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
             ScopedObject qml(scope, c->activation);
             if (qml && qml->hasProperty(name))
                 return qml->deleteProperty(name);
@@ -282,7 +284,7 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
 
     ExecutionContextSaver ctxSaver(scope);
 
-    SimpleCallContext::Data *ctx = scope.engine->memoryManager->allocSimpleCallContext(scope.engine);
+    SimpleCallContext::Data *ctx = scope.engine->memoryManager->allocSimpleCallContext();
 
     ctx->strictMode = function->isStrict();
     ctx->callData = callData;
@@ -306,6 +308,9 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
 
 void ExecutionContext::setProperty(String *name, const Value &value)
 {
+    name->makeIdentifier();
+    Identifier *id = name->identifier();
+
     Scope scope(this);
     ScopedContext ctx(scope, this);
     ScopedObject activation(scope);
@@ -337,7 +342,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         case Heap::ExecutionContext::Type_SimpleCallContext: {
             Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
             if (c->v4Function) {
-                uint index = c->v4Function->internalClass->find(name);
+                uint index = c->v4Function->internalClass->find(id);
                 if (index < UINT_MAX) {
                     if (index < c->v4Function->nFormals) {
                         c->callData->args[c->v4Function->nFormals - index - 1] = value;
@@ -360,7 +365,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         }
 
         if (activation) {
-            uint member = activation->internalClass()->find(name);
+            uint member = activation->internalClass()->find(id);
             if (member < UINT_MAX) {
                 activation->putValue(member, value);
                 return;
@@ -368,21 +373,21 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         }
     }
 
-    if (d()->strictMode || name->equals(d()->engine->id_this())) {
+    if (d()->strictMode || name->equals(engine()->id_this())) {
         ScopedValue n(scope, name->asReturnedValue());
         engine()->throwReferenceError(n);
         return;
     }
-    d()->engine->globalObject->put(name, value);
+    engine()->globalObject->put(name, value);
 }
 
 ReturnedValue ExecutionContext::getProperty(String *name)
 {
     Scope scope(this);
     ScopedValue v(scope);
-    name->makeIdentifier(scope.engine);
+    name->makeIdentifier();
 
-    if (name->equals(d()->engine->id_this()))
+    if (name->equals(engine()->id_this()))
         return thisObject().asReturnedValue();
 
     ScopedContext ctx(scope, this);
@@ -411,29 +416,33 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                 return v->asReturnedValue();
             break;
         }
-        case Heap::ExecutionContext::Type_CallContext: {
-            Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
-            uint index = c->v4Function->internalClass->find(name);
+        case Heap::ExecutionContext::Type_CallContext:
+            Q_FALLTHROUGH();
+        case Heap::ExecutionContext::Type_SimpleCallContext: {
+            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
+
+            name->makeIdentifier();
+            Identifier *id = name->identifier();
+            uint index = c->v4Function->internalClass->find(id);
             if (index < UINT_MAX) {
                 if (index < c->v4Function->nFormals)
                     return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();
-                Q_ASSERT(c->type == Heap::ExecutionContext::Type_CallContext);
-                return c->locals[index - c->v4Function->nFormals].asReturnedValue();
+                if (c->type == Heap::ExecutionContext::Type_CallContext)
+                    return static_cast<Heap::CallContext *>(c)->locals[index - c->v4Function->nFormals].asReturnedValue();
             }
-            if (c->v4Function->isNamedExpression()) {
-                if (c->function && name->equals(ScopedString(scope, c->v4Function->name())))
-                    return c->function->asReturnedValue();
-            }
-            Q_FALLTHROUGH();
-        }
-        case Heap::ExecutionContext::Type_SimpleCallContext: {
-            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
+
             ScopedObject activation(scope, c->activation);
             if (activation) {
                 bool hasProperty = false;
                 v = activation->get(name, &hasProperty);
                 if (hasProperty)
                     return v->asReturnedValue();
+            }
+
+            if (c->v4Function->isNamedExpression() && c->type == Heap::ExecutionContext::Type_CallContext) {
+                if (name->equals(ScopedString(scope, c->v4Function->name())))
+                    if (auto func = static_cast<Heap::CallContext *>(c)->function)
+                        return func->asReturnedValue();
             }
             break;
         }
@@ -456,9 +465,9 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
     Scope scope(this);
     ScopedValue v(scope);
     base->setM(0);
-    name->makeIdentifier(scope.engine);
+    name->makeIdentifier();
 
-    if (name->equals(d()->engine->id_this()))
+    if (name->equals(engine()->id_this()))
         return thisObject().asReturnedValue();
 
     ScopedContext ctx(scope, this);
@@ -488,28 +497,33 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
                 return v->asReturnedValue();
             break;
         }
-        case Heap::ExecutionContext::Type_CallContext: {
-            Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
-            uint index = c->v4Function->internalClass->find(name);
+        case Heap::ExecutionContext::Type_CallContext:
+            Q_FALLTHROUGH();
+        case Heap::ExecutionContext::Type_SimpleCallContext: {
+            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
+
+            name->makeIdentifier();
+            Identifier *id = name->identifier();
+            uint index = c->v4Function->internalClass->find(id);
             if (index < UINT_MAX) {
                 if (index < c->v4Function->nFormals)
                     return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();
-                return c->locals[index - c->v4Function->nFormals].asReturnedValue();
+                if (c->type == Heap::ExecutionContext::Type_CallContext)
+                    return static_cast<Heap::CallContext *>(c)->locals[index - c->v4Function->nFormals].asReturnedValue();
             }
-            if (c->v4Function->isNamedExpression()) {
-                if (c->function && name->equals(ScopedString(scope, c->v4Function->name())))
-                    return c->function->asReturnedValue();
-            }
-            Q_FALLTHROUGH();
-        }
-        case Heap::ExecutionContext::Type_SimpleCallContext: {
-            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
+
             ScopedObject activation(scope, c->activation);
             if (activation) {
                 bool hasProperty = false;
                 v = activation->get(name, &hasProperty);
                 if (hasProperty)
                     return v->asReturnedValue();
+            }
+
+            if (c->v4Function->isNamedExpression() && c->type == Heap::ExecutionContext::Type_CallContext) {
+                if (name->equals(ScopedString(scope, c->v4Function->name())))
+                    if (auto func = static_cast<Heap::CallContext *>(c)->function)
+                        return func->asReturnedValue();
             }
             break;
         }
@@ -531,7 +545,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
 
 Function *ExecutionContext::getFunction() const
 {
-    Scope scope(d()->engine);
+    Scope scope(engine());
     ScopedContext it(scope, this->d());
     for (; it; it = it->d()->outer) {
         if (const SimpleCallContext *callCtx = it->asSimpleCallContext())

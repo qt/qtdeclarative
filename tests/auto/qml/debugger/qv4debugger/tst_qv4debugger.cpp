@@ -46,7 +46,7 @@
 using namespace QV4;
 using namespace QV4::Debugging;
 
-typedef QV4::ReturnedValue (*InjectedFunction)(QV4::CallContext*);
+typedef void (*InjectedFunction)(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
 Q_DECLARE_METATYPE(InjectedFunction)
 
 static bool waitForSignal(QObject* obj, const char* signal, int timeout = 10000)
@@ -438,11 +438,11 @@ void tst_qv4debugger::addBreakPointWhilePaused()
     QCOMPARE(state.lineNumber, 2);
 }
 
-static QV4::ReturnedValue someCall(QV4::CallContext *ctx)
+static void someCall(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *)
 {
-    static_cast<QV4Debugger *>(ctx->d()->engine->debugger())
+    static_cast<QV4Debugger *>(scope.engine->debugger())
             ->removeBreakPoint("removeBreakPointForNextInstruction", 2);
-    return QV4::Encode::undefined();
+    RETURN_UNDEFINED();
 }
 
 void tst_qv4debugger::removeBreakPointForNextInstruction()

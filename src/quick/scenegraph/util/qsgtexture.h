@@ -58,7 +58,8 @@ public:
 
     enum WrapMode {
         Repeat,
-        ClampToEdge
+        ClampToEdge,
+        MirroredRepeat
     };
 
     enum Filtering {

@@ -1113,7 +1113,11 @@ public:
         return false;
     }
 
-    unsigned newTemp();
+    enum TempForWhom {
+        NewTempForCodegen,
+        NewTempForOptimizer
+    };
+    unsigned newTemp(TempForWhom tfw = NewTempForCodegen);
 
     Temp *TEMP(unsigned kind);
     ArgLocal *ARG(unsigned index, unsigned scope);
@@ -1278,6 +1282,7 @@ struct Function {
     Module *module;
     QQmlJS::MemoryPool *pool;
     const QString *name;
+    int currentTemp = 0;
     int tempCount;
     int maxNumberOfArguments;
     QSet<QString> strings;
@@ -1511,10 +1516,17 @@ protected:
     BasicBlock *currentBB;
 };
 
-inline unsigned BasicBlock::newTemp()
+inline unsigned BasicBlock::newTemp(TempForWhom tfw)
 {
     Q_ASSERT(!isRemoved());
-    return function->tempCount++;
+
+    if (tfw == NewTempForOptimizer)
+        return function->tempCount++;
+
+    int t = function->currentTemp++;
+    if (function->tempCount < function->currentTemp)
+        function->tempCount = function->currentTemp;
+    return t;
 }
 
 inline Temp *BasicBlock::TEMP(unsigned index)

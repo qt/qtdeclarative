@@ -172,7 +172,7 @@ static QV4::Function *qt_v4ExtractFunction(QV4::ExecutionContext *context)
     if (QV4::Function *function = context->getFunction())
         return function;
     else
-        return context->d()->engine->globalCode;
+        return context->engine()->globalCode;
 }
 
 static void qt_v4TriggerBreakpoint(const Breakpoint &bp, QV4::Function *function)
@@ -304,7 +304,7 @@ using namespace QV4::Moth;
 
 #  define MOTH_END_INSTR(I) } \
     genericInstr = reinterpret_cast<const Instr *>(code); \
-    goto *genericInstr->common.code; \
+    goto *jumpTable[genericInstr->common.instructionType]; \
 
 #else
 
@@ -362,11 +362,7 @@ Param traceParam(const Param &param)
     if (engine->hasException) \
         goto catchException
 
-QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
-#ifdef MOTH_THREADED_INTERPRETER
-        , void ***storeJumpTable
-#endif
-        )
+QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
 {
 #ifdef DO_TRACE_INSTR
     qDebug("Starting VME with context=%p and code=%p", context, code);
@@ -375,15 +371,11 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     qt_v4ResolvePendingBreakpointsHook();
 
 #ifdef MOTH_THREADED_INTERPRETER
-    if (storeJumpTable) {
 #define MOTH_INSTR_ADDR(I, FMT) &&op_##I,
-        static void *jumpTable[] = {
-            FOR_EACH_MOTH_INSTR(MOTH_INSTR_ADDR)
-        };
+    static void *jumpTable[] = {
+        FOR_EACH_MOTH_INSTR(MOTH_INSTR_ADDR)
+    };
 #undef MOTH_INSTR_ADDR
-        *storeJumpTable = jumpTable;
-        return QV4::Primitive::undefinedValue().asReturnedValue();
-    }
 #endif
 
     QV4::Value *stack = 0;
@@ -392,7 +384,6 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     const uchar *exceptionHandler = 0;
 
     QV4::Scope scope(engine);
-    QV4::ExecutionContext *context = engine->currentContext;
     engine->current->lineNumber = -1;
 
 #ifdef DO_TRACE_INSTR
@@ -402,7 +393,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     // setup lookup scopes
     int scopeDepth = 0;
     {
-        QV4::Heap::ExecutionContext *scope = context->d();
+        QV4::Heap::ExecutionContext *scope = engine->current;
         while (scope) {
             ++scopeDepth;
             scope = scope->outer;
@@ -415,10 +406,10 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     };
     Q_ALLOCA_VAR(Scopes, scopes, sizeof(Scopes)*(2 + 2*scopeDepth));
     {
-        scopes[0] = { const_cast<QV4::Value *>(static_cast<CompiledData::CompilationUnit*>(context->d()->compilationUnit)->constants), 0 };
+        scopes[0] = { const_cast<QV4::Value *>(static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->constants), 0 };
         // stack gets setup in push instruction
         scopes[1] = { 0, 0 };
-        QV4::Heap::ExecutionContext *scope = context->d();
+        QV4::Heap::ExecutionContext *scope = engine->current;
         int i = 0;
         while (scope) {
             if (scope->type == QV4::Heap::ExecutionContext::Type_SimpleCallContext) {
@@ -442,7 +433,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     for (;;) {
         const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
 #ifdef MOTH_THREADED_INTERPRETER
-        goto *genericInstr->common.code;
+        goto *jumpTable[genericInstr->common.instructionType];
 #else
         switch (genericInstr->common.instructionType) {
 #endif
@@ -461,12 +452,12 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     MOTH_BEGIN_INSTR(LoadRuntimeString)
 //        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
-        VALUE(instr.result) = context->d()->compilationUnit->runtimeStrings[instr.stringId];
+        VALUE(instr.result) = engine->current->compilationUnit->runtimeStrings[instr.stringId];
     MOTH_END_INSTR(LoadRuntimeString)
 
     MOTH_BEGIN_INSTR(LoadRegExp)
 //        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
-        VALUE(instr.result) = static_cast<CompiledData::CompilationUnit*>(context->d()->compilationUnit)->runtimeRegularExpressions[instr.regExpId];
+        VALUE(instr.result) = static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeRegularExpressions[instr.regExpId];
     MOTH_END_INSTR(LoadRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)
@@ -479,7 +470,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(GetGlobalLookup)
-        QV4::Lookup *l = context->d()->lookups + instr.index;
+        QV4::Lookup *l = engine->current->lookups + instr.index;
         STOREVALUE(instr.result, l->globalGetter(l, engine));
     MOTH_END_INSTR(GetGlobalLookup)
 
@@ -494,7 +485,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(LoadElement)
 
     MOTH_BEGIN_INSTR(LoadElementLookup)
-        QV4::Lookup *l = context->d()->lookups + instr.lookup;
+        QV4::Lookup *l = engine->current->lookups + instr.lookup;
         STOREVALUE(instr.result, l->indexedGetter(l, engine, VALUE(instr.base), VALUE(instr.index)));
     MOTH_END_INSTR(LoadElementLookup)
 
@@ -504,7 +495,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(StoreElement)
 
     MOTH_BEGIN_INSTR(StoreElementLookup)
-        QV4::Lookup *l = context->d()->lookups + instr.lookup;
+        QV4::Lookup *l = engine->current->lookups + instr.lookup;
         l->indexedSetter(l, engine, VALUE(instr.base), VALUE(instr.index), VALUE(instr.source));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreElementLookup)
@@ -514,7 +505,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(LoadProperty)
 
     MOTH_BEGIN_INSTR(GetLookup)
-        QV4::Lookup *l = context->d()->lookups + instr.index;
+        QV4::Lookup *l = engine->current->lookups + instr.index;
         STOREVALUE(instr.result, l->getter(l, engine, VALUE(instr.base)));
     MOTH_END_INSTR(GetLookup)
 
@@ -524,7 +515,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(StoreProperty)
 
     MOTH_BEGIN_INSTR(SetLookup)
-        QV4::Lookup *l = context->d()->lookups + instr.index;
+        QV4::Lookup *l = engine->current->lookups + instr.index;
         l->setter(l, engine, VALUE(instr.base), VALUE(instr.source));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(SetLookup)
@@ -595,7 +586,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
-        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
+        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(engine)->toQString().toUtf8().constData());
         Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = quint32(Value::ValueTypeInternal::Integer);
@@ -614,7 +605,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(CallPropertyLookup)
 
     MOTH_BEGIN_INSTR(CallScopeObjectProperty)
-        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
+        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(engine)->toQString().toUtf8().constData());
         Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = quint32(Value::ValueTypeInternal::Integer);
@@ -624,7 +615,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
     MOTH_END_INSTR(CallScopeObjectProperty)
 
     MOTH_BEGIN_INSTR(CallContextObjectProperty)
-        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(context)->toQString().toUtf8().constData());
+        TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(engine)->toQString().toUtf8().constData());
         Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->tag = quint32(Value::ValueTypeInternal::Integer);
@@ -675,18 +666,15 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
     MOTH_BEGIN_INSTR(CallBuiltinPushCatchScope)
         Runtime::method_pushCatchScope(static_cast<QV4::NoThrowEngine*>(engine), instr.name);
-        context = engine->currentContext;
     MOTH_END_INSTR(CallBuiltinPushCatchScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPushScope)
         Runtime::method_pushWithScope(VALUE(instr.arg), static_cast<QV4::NoThrowEngine*>(engine));
-        context = engine->currentContext;
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinPushScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinPopScope)
         Runtime::method_popScope(static_cast<QV4::NoThrowEngine*>(engine));
-        context = engine->currentContext;
     MOTH_END_INSTR(CallBuiltinPopScope)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)
@@ -926,22 +914,22 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 #ifndef QT_NO_QML_DEBUGGER
     MOTH_BEGIN_INSTR(Debug)
         engine->current->lineNumber = instr.lineNumber;
-        QV4::Debugging::Debugger *debugger = context->engine()->debugger();
+        QV4::Debugging::Debugger *debugger = engine->debugger();
         if (debugger && debugger->pauseAtNextOpportunity())
             debugger->maybeBreakAtInstruction();
         if (qt_v4IsDebugging)
-            qt_v4CheckForBreak(context);
+            qt_v4CheckForBreak(engine->currentContext);
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(Line)
         engine->current->lineNumber = instr.lineNumber;
         if (qt_v4IsDebugging)
-            qt_v4CheckForBreak(context);
+            qt_v4CheckForBreak(engine->currentContext);
     MOTH_END_INSTR(Line)
 #endif // QT_NO_QML_DEBUGGER
 
     MOTH_BEGIN_INSTR(LoadThis)
-        VALUE(instr.result) = context->thisObject();
+        VALUE(instr.result) = engine->currentContext->thisObject();
     MOTH_END_INSTR(LoadThis)
 
     MOTH_BEGIN_INSTR(LoadQmlContext)
@@ -967,24 +955,12 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code
 
         Q_ASSERT(false);
     catchException:
-        Q_ASSERT(context->engine()->hasException);
+        Q_ASSERT(engine->hasException);
         if (!exceptionHandler)
             return QV4::Encode::undefined();
         code = exceptionHandler;
     }
 }
-
-#ifdef MOTH_THREADED_INTERPRETER
-void **VME::instructionJumpTable()
-{
-    static void **jumpTable = 0;
-    if (!jumpTable) {
-        const uchar *code = 0;
-        VME().run(0, code, &jumpTable);
-    }
-    return jumpTable;
-}
-#endif
 
 QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
 {

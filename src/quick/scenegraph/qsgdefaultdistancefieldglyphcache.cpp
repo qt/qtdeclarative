@@ -71,12 +71,15 @@ QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QOpenGLCont
     , m_coreFuncs(0)
 #endif
 {
-    m_blitBuffer.create();
-    m_blitBuffer.bind();
-    static GLfloat buffer[16] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f,
-                                 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
-    m_blitBuffer.allocate(buffer, sizeof(buffer));
-    m_blitBuffer.release();
+    if (Q_LIKELY(m_blitBuffer.create())) {
+        m_blitBuffer.bind();
+        static const GLfloat buffer[16] = {-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f,
+                                           0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
+        m_blitBuffer.allocate(buffer, sizeof(buffer));
+        m_blitBuffer.release();
+    } else {
+        qWarning("Buffer creation failed");
+    }
 
     m_areaAllocator = new QSGAreaAllocator(QSize(maxTextureSize(), m_maxTextureCount * maxTextureSize()));
 }

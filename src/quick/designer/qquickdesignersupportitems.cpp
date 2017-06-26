@@ -47,6 +47,7 @@
 #include <private/qquicktextinput_p.h>
 #include <private/qquicktextedit_p.h>
 #include <private/qquicktransition_p.h>
+#include <private/qquickloader_p.h>
 
 #include <private/qquickanimation_p.h>
 #include <private/qqmlmetatype_p.h>
@@ -77,6 +78,12 @@ static void stopAnimation(QObject *object)
     } else if (timer) {
         timer->blockSignals(true);
     }
+}
+
+static void makeLoaderSynchronous(QObject *object)
+{
+    if (QQuickLoader *loader = qobject_cast<QQuickLoader*>(object))
+        loader->setAsynchronous(false);
 }
 
 static void allSubObjects(QObject *object, QObjectList &objectList)
@@ -137,6 +144,7 @@ void QQuickDesignerSupportItems::tweakObjects(QObject *object)
     allSubObjects(object, objectList);
     for (QObject* childObject : qAsConst(objectList)) {
         stopAnimation(childObject);
+        makeLoaderSynchronous(childObject);
         if (fixResourcePathsForObjectCallBack)
             fixResourcePathsForObjectCallBack(childObject);
     }

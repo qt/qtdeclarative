@@ -68,7 +68,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPath
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Defines a path for use by \l PathView
+    \brief Defines a path for use by \l PathView and \l Shape
 
     A Path is composed of one or more path segments - PathLine, PathQuad,
     PathCubic, PathArc, PathCurve, PathSvg.
@@ -79,10 +79,82 @@ QT_BEGIN_NAMESPACE
     PathAttribute allows named attributes with values to be defined
     along the path.
 
-    \sa PathView, PathAttribute, PathPercent, PathLine, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
+    Path and the other types for specifying path elements are shared between
+    \l PathView and \l Shape. The following table provides an overview of the
+    applicability of the various path elements:
+
+    \table
+    \header
+        \li Element
+        \li PathView
+        \li Shape
+        \li Shape, GL_NV_path_rendering
+        \li Shape, software
+    \row
+        \li PathMove
+        \li N/A
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
+        \li PathLine
+        \li Yes
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
+        \li PathQuad
+        \li Yes
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
+        \li PathCubic
+        \li Yes
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
+        \li PathArc
+        \li Yes
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
+        \li PathSvg
+        \li Yes
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
+        \li PathAttribute
+        \li Yes
+        \li N/A
+        \li N/A
+        \li N/A
+    \row
+        \li PathPercent
+        \li Yes
+        \li N/A
+        \li N/A
+        \li N/A
+    \row
+        \li PathCurve
+        \li Yes
+        \li No
+        \li No
+        \li No
+    \endtable
+
+    \sa PathView, Shape, PathAttribute, PathPercent, PathLine, PathMove, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
 */
 QQuickPath::QQuickPath(QObject *parent)
  : QObject(*(new QQuickPathPrivate), parent)
+{
+}
+
+QQuickPath::QQuickPath(QQuickPathPrivate &dd, QObject *parent)
+    : QObject(dd, parent)
 {
 }
 
@@ -1003,7 +1075,7 @@ void QQuickPathAttribute::setValue(qreal value)
     }
     \endqml
 
-    \sa Path, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
+    \sa Path, PathQuad, PathCubic, PathArc, PathCurve, PathSvg, PathMove
 */
 
 /*!
@@ -1041,6 +1113,64 @@ inline QPointF positionForCurve(const QQuickPathData &data, const QPointF &prevP
 void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
 {
     path.lineTo(positionForCurve(data, path.currentPosition()));
+}
+
+/****************************************************************************/
+
+/*!
+    \qmltype PathMove
+    \instantiates QQuickPathMove
+    \inqmlmodule QtQuick
+    \ingroup qtquick-animation-paths
+    \brief Moves the Path's position
+
+    The example below creates a path consisting of two horizontal lines with
+    some empty space between them. All three segments have a width of 100:
+
+    \qml
+    Path {
+        startX: 0; startY: 100
+        PathLine { relativeX: 100; y: 100 }
+        PathMove { relativeX: 100; y: 100 }
+        PathLine { relativeX: 100; y: 100 }
+    }
+    \endqml
+
+    \note PathMove should not be used in a Path associated with a PathView. Use
+    PathLine instead. For ShapePath however it is important to distinguish
+    between the operations of drawing a straight line and moving the path
+    position without drawing anything.
+
+    \sa Path, PathQuad, PathCubic, PathArc, PathCurve, PathSvg, PathLine
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathMove::x
+    \qmlproperty real QtQuick::PathMove::y
+
+    Defines the position to move to.
+
+    \sa relativeX, relativeY
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathMove::relativeX
+    \qmlproperty real QtQuick::PathMove::relativeY
+
+    Defines the position to move to relative to its start.
+
+    If both a relative and absolute end position are specified for a single axis, the relative
+    position will be used.
+
+    Relative and absolute positions can be mixed, for example it is valid to set a relative x
+    and an absolute y.
+
+    \sa x, y
+*/
+
+void QQuickPathMove::addToPath(QPainterPath &path, const QQuickPathData &data)
+{
+    path.moveTo(positionForCurve(data, path.currentPosition()));
 }
 
 /****************************************************************************/
@@ -1641,6 +1771,7 @@ void QQuickPathArc::setRadiusX(qreal radius)
 
     _radiusX = radius;
     emit radiusXChanged();
+    emit changed();
 }
 
 qreal QQuickPathArc::radiusY() const
@@ -1655,6 +1786,7 @@ void QQuickPathArc::setRadiusY(qreal radius)
 
     _radiusY = radius;
     emit radiusYChanged();
+    emit changed();
 }
 
 /*!
@@ -1688,6 +1820,7 @@ void QQuickPathArc::setUseLargeArc(bool largeArc)
 
     _useLargeArc = largeArc;
     emit useLargeArcChanged();
+    emit changed();
 }
 
 /*!
@@ -1719,6 +1852,43 @@ void QQuickPathArc::setDirection(ArcDirection direction)
 
     _direction = direction;
     emit directionChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty real QtQuick::PathArc::xAxisRotation
+
+    Defines the rotation of the arc, in degrees. The default value is 0.
+
+    An arc is a section of circles or ellipses. Given the radius and the start
+    and end points, there are two ellipses that connect the points. This
+    property defines the rotation of the X axis of these ellipses.
+
+    \note The value is only useful when the x and y radius differ, meaning the
+    arc is a section of ellipses.
+
+    The following QML demonstrates how different radius values can be used to change
+    the shape of the arc:
+    \table
+    \row
+    \li \image declarative-arcrotation.png
+    \li \snippet qml/path/arcrotation.qml 0
+    \endtable
+*/
+
+qreal QQuickPathArc::xAxisRotation() const
+{
+    return _xAxisRotation;
+}
+
+void QQuickPathArc::setXAxisRotation(qreal rotation)
+{
+    if (_xAxisRotation == rotation)
+        return;
+
+    _xAxisRotation = rotation;
+    emit xAxisRotationChanged();
+    emit changed();
 }
 
 void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
@@ -1728,7 +1898,7 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
     QQuickSvgParser::pathArc(path,
             _radiusX,
             _radiusY,
-            0,  //xAxisRotation
+            _xAxisRotation,
             _useLargeArc,
             _direction == Clockwise ? 1 : 0,
             endPoint.x(),
@@ -1758,6 +1928,11 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
     \endqml
     \endtable
 
+    \note Mixing PathSvg with other type of elements is not always supported.
+    For example, when \l Shape is backed by \c{GL_NV_path_rendering}, a
+    ShapePath can contain one or more PathSvg elements, or one or more other
+    type of elements, but not both.
+
     \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathCurve
 */
 
@@ -1782,6 +1957,7 @@ void QQuickPathSvg::setPath(const QString &path)
 
     _path = path;
     emit pathChanged();
+    emit changed();
 }
 
 void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)

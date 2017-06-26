@@ -296,123 +296,112 @@ public:
     QV4::PersistentValue proto;
 };
 
-static QV4::ReturnedValue particleData_discard(QV4::CallContext *ctx)
+static void particleData_discard(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
-    QV4::Scope scope(ctx);
-    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject());
+    QV4::Scoped<QV4ParticleData> r(scope, callData->thisObject);
 
     if (!r || !r->d()->datum)
-        return ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));
+        RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object")));
 
     r->d()->datum->lifeSpan = 0; //Don't kill(), because it could still be in the middle of being created
-    return QV4::Encode::undefined();
+    RETURN_RESULT(QV4::Encode::undefined());
 }
 
-static QV4::ReturnedValue particleData_lifeLeft(QV4::CallContext *ctx)
+static void particleData_lifeLeft(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
-    QV4::Scope scope(ctx);
-    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject());
+    QV4::Scoped<QV4ParticleData> r(scope, callData->thisObject);
 
     if (!r || !r->d()->datum)
-        return ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));
+        RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object")));
 
-    return QV4::Encode(r->d()->datum->lifeLeft(r->d()->particleSystem));
+    RETURN_RESULT(QV4::Encode(r->d()->datum->lifeLeft(r->d()->particleSystem)));
 }
 
-static QV4::ReturnedValue particleData_curSize(QV4::CallContext *ctx)
+static void particleData_curSize(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
 {
-    QV4::Scope scope(ctx);
-    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject());
+    QV4::Scoped<QV4ParticleData> r(scope, callData->thisObject);
 
     if (!r || !r->d()->datum)
-        return ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));
+        RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object")));
 
-    return QV4::Encode(r->d()->datum->curSize(r->d()->particleSystem));
+    RETURN_RESULT(QV4::Encode(r->d()->datum->curSize(r->d()->particleSystem)));
 }
-#define COLOR_GETTER_AND_SETTER(VAR, NAME) static QV4::ReturnedValue particleData_get_ ## NAME (QV4::CallContext *ctx) \
+#define COLOR_GETTER_AND_SETTER(VAR, NAME) static void particleData_get_ ## NAME (const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData) \
 { \
-    QV4::Scope scope(ctx); \
-    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject()); \
+    QV4::Scoped<QV4ParticleData> r(scope, callData->thisObject); \
     if (!r || !r->d()->datum) \
-        ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object")); \
+        RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object"))); \
 \
-    return QV4::Encode((r->d()->datum->color. VAR )/255.0);\
+    RETURN_RESULT(QV4::Encode((r->d()->datum->color. VAR )/255.0));\
 }\
 \
-static QV4::ReturnedValue particleData_set_ ## NAME (QV4::CallContext *ctx)\
+static void particleData_set_ ## NAME (const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)\
 {\
-    QV4::Scope scope(ctx); \
-    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject()); \
+    QV4::Scoped<QV4ParticleData> r(scope, callData->thisObject); \
     if (!r || !r->d()->datum)\
-        ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));\
+        RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object")));\
 \
-    double d = ctx->argc() ? ctx->args()[0].toNumber() : 0; \
+    double d = callData->argc ? callData->args[0].toNumber() : 0; \
     r->d()->datum->color. VAR = qMin(255, qMax(0, (int)::floor(d * 255.0)));\
-    return QV4::Encode::undefined(); \
+    RETURN_UNDEFINED(); \
 }
 
 
-#define SEMIBOOL_GETTER_AND_SETTER(VARIABLE) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::CallContext *ctx) \
+#define SEMIBOOL_GETTER_AND_SETTER(VARIABLE) static void particleData_get_ ## VARIABLE (const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData) \
 { \
-    QV4::Scope scope(ctx); \
-    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject()); \
+    QV4::Scoped<QV4ParticleData> r(scope, callData->thisObject); \
     if (!r || !r->d()->datum) \
-        ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object")); \
+        RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object"))); \
 \
-    return QV4::Encode(r->d()->datum-> VARIABLE);\
+    RETURN_RESULT(QV4::Encode(r->d()->datum-> VARIABLE));\
 }\
 \
-static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
+static void particleData_set_ ## VARIABLE (const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)\
 {\
-    QV4::Scope scope(ctx); \
-    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject()); \
+    QV4::Scoped<QV4ParticleData> r(scope, callData->thisObject); \
     if (!r || !r->d()->datum)\
-        ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));\
+        RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object")));\
 \
-    r->d()->datum-> VARIABLE = (ctx->argc() && ctx->args()[0].toBoolean()) ? 1.0 : 0.0;\
-    return QV4::Encode::undefined(); \
+    r->d()->datum-> VARIABLE = (callData->argc && callData->args[0].toBoolean()) ? 1.0 : 0.0;\
+    RETURN_UNDEFINED(); \
 }
 
-#define FLOAT_GETTER_AND_SETTER(VARIABLE) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::CallContext *ctx) \
+#define FLOAT_GETTER_AND_SETTER(VARIABLE) static void particleData_get_ ## VARIABLE (const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData) \
 { \
-    QV4::Scope scope(ctx); \
-    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject()); \
+    QV4::Scoped<QV4ParticleData> r(scope, callData->thisObject); \
     if (!r || !r->d()->datum) \
-        ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object")); \
+        RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object"))); \
 \
-    return QV4::Encode(r->d()->datum-> VARIABLE);\
+    RETURN_RESULT(QV4::Encode(r->d()->datum-> VARIABLE));\
 }\
 \
-static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
+static void particleData_set_ ## VARIABLE (const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)\
 {\
-    QV4::Scope scope(ctx); \
-    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject()); \
+    QV4::Scoped<QV4ParticleData> r(scope, callData->thisObject); \
     if (!r || !r->d()->datum)\
-        ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));\
+        RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object")));\
 \
-    r->d()->datum-> VARIABLE = ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan();\
-    return QV4::Encode::undefined(); \
+    r->d()->datum-> VARIABLE = callData->argc ? callData->args[0].toNumber() : qt_qnan();\
+    RETURN_UNDEFINED(); \
 }
 
-#define FAKE_FLOAT_GETTER_AND_SETTER(VARIABLE, GETTER, SETTER) static QV4::ReturnedValue particleData_get_ ## VARIABLE (QV4::CallContext *ctx) \
+#define FAKE_FLOAT_GETTER_AND_SETTER(VARIABLE, GETTER, SETTER) static void particleData_get_ ## VARIABLE (const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData) \
 { \
-    QV4::Scope scope(ctx); \
-    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject()); \
+    QV4::Scoped<QV4ParticleData> r(scope, callData->thisObject); \
     if (!r || !r->d()->datum) \
-        ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object")); \
+        RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object"))); \
 \
-    return QV4::Encode(r->d()->datum-> GETTER (r->d()->particleSystem));\
+    RETURN_RESULT(QV4::Encode(r->d()->datum-> GETTER (r->d()->particleSystem)));\
 }\
 \
-static QV4::ReturnedValue particleData_set_ ## VARIABLE (QV4::CallContext *ctx)\
+static void particleData_set_ ## VARIABLE (const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)\
 {\
-    QV4::Scope scope(ctx); \
-    QV4::Scoped<QV4ParticleData> r(scope, ctx->thisObject()); \
+    QV4::Scoped<QV4ParticleData> r(scope, callData->thisObject); \
     if (!r || !r->d()->datum)\
-        ctx->engine()->throwError(QStringLiteral("Not a valid ParticleData object"));\
+        RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object")));\
 \
-    r->d()->datum-> SETTER (ctx->argc() ? ctx->args()[0].toNumber() : qt_qnan(), r->d()->particleSystem);\
-    return QV4::Encode::undefined(); \
+    r->d()->datum-> SETTER (callData->argc ? callData->args[0].toNumber() : qt_qnan(), r->d()->particleSystem);\
+    RETURN_UNDEFINED(); \
 }
 
 #define REGISTER_ACCESSOR(PROTO, ENGINE, VARIABLE, NAME) \

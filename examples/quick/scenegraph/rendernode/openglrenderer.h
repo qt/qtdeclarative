@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -51,6 +51,8 @@ class QQuickItem;
 class QOpenGLShaderProgram;
 class QOpenGLBuffer;
 
+QT_END_NAMESPACE
+
 class OpenGLRenderNode : public QSGRenderNode
 {
 public:
@@ -72,8 +74,6 @@ private:
     int m_opacityUniform;
     QOpenGLBuffer *m_vbo = nullptr;
 };
-
-QT_END_NAMESPACE
 
 #endif // opengl
 

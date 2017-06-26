@@ -200,6 +200,7 @@ void QQuickWindowModule::defineModule()
     qmlRegisterUncreatableType<QQuickScreen>(uri, 2, 0, "Screen", QStringLiteral("Screen can only be used via the attached property."));
     qmlRegisterUncreatableType<QQuickScreen,1>(uri, 2, 3, "Screen", QStringLiteral("Screen can only be used via the attached property."));
     qmlRegisterUncreatableType<QQuickScreenInfo,2>(uri, 2, 3, "ScreenInfo", QStringLiteral("ScreenInfo can only be used via the attached property."));
+    qmlRegisterUncreatableType<QQuickScreenInfo,10>(uri, 2, 10, "ScreenInfo", QStringLiteral("ScreenInfo can only be used via the attached property."));
 }
 
 QT_END_NAMESPACE

@@ -23,6 +23,8 @@ qtHaveModule(quick) {
     qtConfig(systemsemaphore): SUBDIRS += sharedimage
     qtConfig(quick-particles): \
         SUBDIRS += particles
+
+    SUBDIRS += shapes
 }
 
 qtHaveModule(xmlpatterns) : SUBDIRS += xmllistmodel

@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 import QtQuick 2.3
-import QtQuick.Window 2.1
+import QtQuick.Window 2.10
 import "../shared" as Shared
 
 Item {
@@ -76,6 +76,15 @@ Item {
             font.bold: true
         }
         Item { width: 1; height: 1 } // spacer
+
+        Shared.Label { text: "manufacturer" }
+        Shared.Label { text: Screen.manufacturer ? Screen.manufacturer : "unknown" }
+
+        Shared.Label { text: "model" }
+        Shared.Label { text: Screen.model ? Screen.model : "unknown" }
+
+        Shared.Label { text: "serial number" }
+        Shared.Label { text: Screen.serialNumber ? Screen.serialNumber : "unknown" }
 
         Shared.Label { text: "dimensions" }
         Shared.Label { text: Screen.width + "x" + Screen.height }

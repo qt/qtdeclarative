@@ -314,7 +314,11 @@ void QQuickRepeater::setDelegate(QQmlComponent *delegate)
 /*!
     \qmlproperty int QtQuick::Repeater::count
 
-    This property holds the number of items in the repeater.
+    This property holds the number of items in the model.
+
+    \note The number of items in the model as reported by count may differ from
+    the number of created delegates if the Repeater is in the process of
+    instantiating delegates or is incorrectly set up.
 */
 int QQuickRepeater::count() const
 {

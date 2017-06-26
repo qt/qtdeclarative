@@ -85,7 +85,7 @@ void BooleanPrototype::method_toString(const BuiltinFunction *, Scope &scope, Ca
         result = thisObject->value();
     }
 
-    scope.result = scope.engine->newString(QLatin1String(result ? "true" : "false"));
+    scope.result = result ? scope.engine->id_true() : scope.engine->id_false();
 }
 
 void BooleanPrototype::method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData)

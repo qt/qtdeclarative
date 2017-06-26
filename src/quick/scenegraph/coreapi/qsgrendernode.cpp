@@ -267,6 +267,10 @@ QSGRenderNode::RenderingFlags QSGRenderNode::flags() const
     For rendernodes covering the entire area of a corresponding QQuickItem the
     return value will be (0, 0, item->width(), item->height()).
 
+    \note Nodes are also free to render outside the boundaries specified by the
+    item's width and height, since the scenegraph nodes are not bounded by the
+    QQuickItem geometry, as long as this is reported correctly from this function.
+
     \sa flags()
 */
 QRectF QSGRenderNode::rect() const
@@ -359,7 +363,10 @@ QSGRenderNode::RenderState::~RenderState()
     of the render state is not in use. However, the clip region that can be set
     on the QPainter still has to be communicated since reconstructing this
     manually in render() is not reasonable. It can therefore be queried via
-    this function.
+    this function. The region is in world coordinates and can be passed
+    to QPainter::setClipRegion() with Qt::ReplaceClip. This must be done before
+    calling QPainter::setTransform() since the clip region is already mapped to
+    the transform provided in QSGRenderNode::matrix().
  */
 
 /*!

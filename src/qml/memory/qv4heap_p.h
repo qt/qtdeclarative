@@ -53,6 +53,7 @@
 #include <QtCore/QString>
 #include <private/qv4global_p.h>
 #include <private/qv4mmdefs_p.h>
+#include <private/qv4internalclass_p.h>
 #include <QSharedPointer>
 
 // To check if Heap::Base::init is called (meaning, all subclasses did their init and called their
@@ -69,10 +70,14 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct InternalClass;
+
 struct VTable
 {
     const VTable * const parent;
     const quint64 markTable;
+    uint inlinePropertyOffset : 16;
+    uint nInlineProperties : 16;
     uint isExecutionContext : 1;
     uint isString : 1;
     uint isObject : 1;
@@ -94,13 +99,12 @@ struct Q_QML_EXPORT Base {
 
     static Q_CONSTEXPR quint64 markTable = 0;
 
-    const VTable *vt;
+    InternalClass *internalClass;
 
     inline ReturnedValue asReturnedValue() const;
     inline void mark(QV4::MarkStack *markStack);
 
-    void setVtable(const VTable *v) { vt = v; }
-    const VTable *vtable() const { return vt; }
+    const VTable *vtable() const { return internalClass->vtable; }
     inline bool isMarked() const {
         const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
         Chunk *c = h->chunk();
@@ -175,7 +179,7 @@ V4_ASSERT_IS_TRIVIAL(Base)
 // for a size/offset translation when cross-compiling between 32- and
 // 64-bit.
 Q_STATIC_ASSERT(std::is_standard_layout<Base>::value);
-Q_STATIC_ASSERT(offsetof(Base, vt) == 0);
+Q_STATIC_ASSERT(offsetof(Base, internalClass) == 0);
 Q_STATIC_ASSERT(sizeof(Base) == QT_POINTER_SIZE);
 
 }

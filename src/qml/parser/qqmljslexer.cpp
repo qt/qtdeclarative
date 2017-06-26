@@ -724,6 +724,11 @@ again:
                 return multilineStringLiteral ? T_MULTILINE_STRING_LITERAL : T_STRING_LITERAL;
             } else if (_char == QLatin1Char('\\')) {
                 scanChar();
+                if (_codePtr > _endPtr) {
+                    _errorCode = IllegalEscapeSequence;
+                    _errorMessage = QCoreApplication::translate("QQmlParser", "End of file reached at escape sequence");
+                    return T_ERROR;
+                }
 
                 QChar u;
 

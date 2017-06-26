@@ -44,7 +44,7 @@ void tst_EcmaScriptTests::runTests_data()
     QTest::addColumn<QString>("qmljsParameter");
 
     QTest::newRow("jit") << QStringLiteral("--jit");
-    // Not passing yet: QTest::newRow("interpreter") << QStringLiteral("--interpret");
+    QTest::newRow("interpreter") << QStringLiteral("--interpret");
 }
 
 void tst_EcmaScriptTests::runTests()

@@ -99,7 +99,7 @@ void QSGBindableFboId::bind() const
 #endif
 /*!
     \class QSGRenderer
-    \brief The renderer class is the abstract baseclass use for rendering the
+    \brief The renderer class is the abstract baseclass used for rendering the
     QML scene graph.
 
     The renderer is not tied to any particular surface. It expects a context to
@@ -295,7 +295,7 @@ void QSGRenderer::preprocess()
 
     // We need to take a copy here, in case any of the preprocess calls deletes a node that
     // is in the preprocess list and thus, changes the m_nodes_to_preprocess behind our backs
-    // For the default case, when this does not happen, the cost is neglishible.
+    // For the default case, when this does not happen, the cost is negligible.
     QSet<QSGNode *> items = m_nodes_to_preprocess;
 
     for (QSet<QSGNode *>::const_iterator it = items.constBegin();

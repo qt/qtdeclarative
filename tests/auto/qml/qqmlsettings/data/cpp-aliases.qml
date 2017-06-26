@@ -40,8 +40,10 @@ CppObject {
         property alias doubleProperty: obj.doubleProperty
         property alias stringProperty: obj.stringProperty
         property alias urlProperty: obj.urlProperty
+        property alias objectProperty: obj.objectProperty
         property alias intListProperty: obj.intListProperty
         property alias stringListProperty: obj.stringListProperty
+        property alias objectListProperty: obj.objectListProperty
         property alias dateProperty: obj.dateProperty
         // QTBUG-32295: Expected property type
         //property alias timeProperty: obj.timeProperty

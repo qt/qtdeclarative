@@ -129,6 +129,9 @@ public:
 
     QGradientStops gradientStops() const;
 
+Q_SIGNALS:
+    void updated();
+
 private:
     void doUpdate();
 
@@ -168,6 +171,9 @@ Q_SIGNALS:
 
 protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+
+private Q_SLOTS:
+    void doUpdate();
 
 private:
     Q_DISABLE_COPY(QQuickRectangle)

@@ -386,9 +386,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerEvent : public QObject
     Q_PROPERTY(Qt::MouseButtons buttons READ buttons)
 
 public:
-    QQuickPointerEvent(QObject *parent = nullptr)
+    QQuickPointerEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
       : QObject(parent)
-      , m_device(nullptr)
+      , m_device(device)
       , m_event(nullptr)
       , m_button(Qt::NoButton)
       , m_pressedButtons(Qt::NoButton)
@@ -446,8 +446,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerMouseEvent : public QQuickPointerEvent
 {
     Q_OBJECT
 public:
-    QQuickPointerMouseEvent(QObject *parent = nullptr)
-        : QQuickPointerEvent(parent), m_mousePoint(new QQuickEventPoint(this)) { }
+    QQuickPointerMouseEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
+        : QQuickPointerEvent(parent, device), m_mousePoint(new QQuickEventPoint(this)) { }
 
     QQuickPointerEvent *reset(QEvent *) override;
     void localize(QQuickItem *target) override;
@@ -479,8 +479,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerTouchEvent : public QQuickPointerEvent
 {
     Q_OBJECT
 public:
-    QQuickPointerTouchEvent(QObject *parent = nullptr)
-        : QQuickPointerEvent(parent)
+    QQuickPointerTouchEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
+        : QQuickPointerEvent(parent, device)
         , m_pointCount(0)
         , m_synthMouseEvent(QEvent::MouseMove, QPointF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier)
     { }
@@ -579,7 +579,6 @@ public:
     int buttonCount() const { return m_buttonCount; }
     QString name() const { return m_name; }
     QPointingDeviceUniqueId uniqueId() const { return m_uniqueId; }
-    QQuickPointerEvent *pointerEvent() const { return m_event; }
 
     static QQuickPointerDevice *touchDevice(QTouchDevice *d);
     static QList<QQuickPointerDevice *> touchDevices();
@@ -592,17 +591,10 @@ private:
     QQuickPointerDevice(DeviceType devType, PointerType pType, Capabilities caps, int maxPoints, int buttonCount, const QString &name, qint64 uniqueId = 0)
       : m_deviceType(devType), m_pointerType(pType), m_capabilities(caps)
       , m_maximumTouchPoints(maxPoints), m_buttonCount(buttonCount), m_name(name)
-      , m_uniqueId(QPointingDeviceUniqueId::fromNumericId(uniqueId)), m_event(nullptr)
+      , m_uniqueId(QPointingDeviceUniqueId::fromNumericId(uniqueId))
     {
-        if (m_deviceType == Mouse) {
-            m_event = new QQuickPointerMouseEvent;
-        } else if (m_deviceType == TouchScreen || m_deviceType == TouchPad) {
-            m_event = new QQuickPointerTouchEvent;
-        } else {
-            Q_ASSERT(false);
-        }
     }
-    ~QQuickPointerDevice() { delete m_event; }
+    ~QQuickPointerDevice() { }
 
 private:
     DeviceType m_deviceType;
@@ -612,8 +604,6 @@ private:
     int m_buttonCount;
     QString m_name;
     QPointingDeviceUniqueId m_uniqueId;
-    // the device-specific event instance which is reused during event delivery
-    QQuickPointerEvent *m_event;
     QVector<QQuickPointerHandler *> m_eventDeliveryTargets; // during delivery, handlers which have already seen the event
 
     Q_DISABLE_COPY(QQuickPointerDevice)

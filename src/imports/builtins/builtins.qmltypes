@@ -426,7 +426,8 @@ Module {
                 "WA_X11DoNotAcceptFocus": 126,
                 "WA_MacNoShadow": 127,
                 "WA_AlwaysStackOnTop": 128,
-                "WA_AttributeCount": 129
+                "WA_TabletTracking": 129,
+                "WA_AttributeCount": 130
             }
         }
         Enum {

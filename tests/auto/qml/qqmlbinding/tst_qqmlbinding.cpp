@@ -50,6 +50,7 @@ private slots:
     void disabledOnUnknownProperty();
     void disabledOnReadonlyProperty();
     void delayed();
+    void bindingOverwriting();
 
 private:
     QQmlEngine engine;
@@ -301,6 +302,21 @@ void tst_qqmlbinding::delayed()
     QCOMPARE(item->property("changeCount").toInt(), 2);
 
     delete item;
+}
+
+void tst_qqmlbinding::bindingOverwriting()
+{
+    QQmlTestMessageHandler messageHandler;
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.qml.binding.removal.info=true"));
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("bindingOverwriting.qml"));
+    QQuickItem *item = qobject_cast<QQuickItem*>(c.create());
+    QVERIFY(item);
+    delete item;
+
+    QLoggingCategory::setFilterRules(QString());
+    QCOMPARE(messageHandler.messages().count(), 2);
 }
 
 QTEST_MAIN(tst_qqmlbinding)

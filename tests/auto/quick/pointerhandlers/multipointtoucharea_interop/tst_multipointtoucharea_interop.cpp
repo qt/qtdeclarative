@@ -109,7 +109,7 @@ void tst_MptaInterop::touchDrag()
     QPoint p1 = mpta->mapToScene(QPointF(20, 20)).toPoint();
     touch.press(1, p1).commit();
     QQuickTouchUtils::flush(window);
-    auto pointerEvent = touchPointerDevice->pointerEvent();
+    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(touchPointerDevice);
     QCOMPARE(tp.at(0)->property("pressed").toBool(), false);
 //    QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), mpta);
 
@@ -151,9 +151,7 @@ void tst_MptaInterop::touchesThenPinch()
     QSignalSpy mptaPressedSpy(mpta, SIGNAL(pressed(QList<QObject*>)));
     QSignalSpy mptaReleasedSpy(mpta, SIGNAL(released(QList<QObject*>)));
     QTest::QTouchEventSequence touch = QTest::touchEvent(window, touchDevice);
-    auto pointerEvent = touchPointerDevice->pointerEvent();
-    // TODO after merge of e0c30279ec1fad88346ed3fb483bc3c672fdd01b
-//    auto pointerEvent = QQuickWindowPrivate::pointerEventInstance(touchPointerDevice);
+    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(touchPointerDevice);
 
     // Press one touchpoint:
     // DragHandler gets a passive grab

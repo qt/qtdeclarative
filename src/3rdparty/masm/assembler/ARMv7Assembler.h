@@ -2531,12 +2531,18 @@ private:
         return (instruction[0] == OP_NOP_T2a) && (instruction[1] == OP_NOP_T2b);
     }
 
+    static int32_t makeRelative(const void *target, const void *source)
+    {
+        intptr_t difference = reinterpret_cast<intptr_t>(target) - reinterpret_cast<intptr_t>(source);
+        return static_cast<int32_t>(difference);
+    }
+
     static bool canBeJumpT1(const uint16_t* instruction, const void* target)
     {
         ASSERT(!(reinterpret_cast<intptr_t>(instruction) & 1));
         ASSERT(!(reinterpret_cast<intptr_t>(target) & 1));
         
-        intptr_t relative = reinterpret_cast<intptr_t>(target) - (reinterpret_cast<intptr_t>(instruction));
+        auto relative = makeRelative(target, instruction);
         // It does not appear to be documented in the ARM ARM (big surprise), but
         // for OP_B_T1 the branch displacement encoded in the instruction is 2 
         // less than the actual displacement.
@@ -2549,7 +2555,7 @@ private:
         ASSERT(!(reinterpret_cast<intptr_t>(instruction) & 1));
         ASSERT(!(reinterpret_cast<intptr_t>(target) & 1));
         
-        intptr_t relative = reinterpret_cast<intptr_t>(target) - (reinterpret_cast<intptr_t>(instruction));
+        auto relative = makeRelative(target, instruction);
         // It does not appear to be documented in the ARM ARM (big surprise), but
         // for OP_B_T2 the branch displacement encoded in the instruction is 2 
         // less than the actual displacement.
@@ -2562,7 +2568,7 @@ private:
         ASSERT(!(reinterpret_cast<intptr_t>(instruction) & 1));
         ASSERT(!(reinterpret_cast<intptr_t>(target) & 1));
         
-        intptr_t relative = reinterpret_cast<intptr_t>(target) - (reinterpret_cast<intptr_t>(instruction));
+        auto relative = makeRelative(target, instruction);
         return ((relative << 11) >> 11) == relative;
     }
     
@@ -2571,7 +2577,7 @@ private:
         ASSERT(!(reinterpret_cast<intptr_t>(instruction) & 1));
         ASSERT(!(reinterpret_cast<intptr_t>(target) & 1));
         
-        intptr_t relative = reinterpret_cast<intptr_t>(target) - (reinterpret_cast<intptr_t>(instruction));
+        auto relative = makeRelative(target, instruction);
         return ((relative << 7) >> 7) == relative;
     }
     
@@ -2582,7 +2588,7 @@ private:
         ASSERT(!(reinterpret_cast<intptr_t>(target) & 1));
         ASSERT(canBeJumpT1(instruction, target));
         
-        intptr_t relative = reinterpret_cast<intptr_t>(target) - (reinterpret_cast<intptr_t>(instruction));
+        auto relative = makeRelative(target, instruction);
         // It does not appear to be documented in the ARM ARM (big surprise), but
         // for OP_B_T1 the branch displacement encoded in the instruction is 2 
         // less than the actual displacement.
@@ -2600,7 +2606,7 @@ private:
         ASSERT(!(reinterpret_cast<intptr_t>(target) & 1));
         ASSERT(canBeJumpT2(instruction, target));
         
-        intptr_t relative = reinterpret_cast<intptr_t>(target) - (reinterpret_cast<intptr_t>(instruction));
+        auto relative = makeRelative(target, instruction);
         // It does not appear to be documented in the ARM ARM (big surprise), but
         // for OP_B_T2 the branch displacement encoded in the instruction is 2 
         // less than the actual displacement.
@@ -2618,7 +2624,7 @@ private:
         ASSERT(!(reinterpret_cast<intptr_t>(target) & 1));
         ASSERT(canBeJumpT3(instruction, target));
         
-        intptr_t relative = reinterpret_cast<intptr_t>(target) - (reinterpret_cast<intptr_t>(instruction));
+        auto relative = makeRelative(target, instruction);
         
         // All branch offsets should be an even distance.
         ASSERT(!(relative & 1));
@@ -2633,7 +2639,7 @@ private:
         ASSERT(!(reinterpret_cast<intptr_t>(target) & 1));
         ASSERT(canBeJumpT4(instruction, target));
         
-        intptr_t relative = reinterpret_cast<intptr_t>(target) - (reinterpret_cast<intptr_t>(instruction));
+        auto relative = makeRelative(target, instruction);
         // ARM encoding for the top two bits below the sign bit is 'peculiar'.
         if (relative >= 0)
             relative ^= 0xC00000;

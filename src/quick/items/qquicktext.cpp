@@ -384,6 +384,7 @@ void QQuickTextPrivate::updateSize()
         updateBaseline(fm.ascent(), q->height() - fontHeight - vPadding);
         q->setImplicitSize(hPadding, fontHeight + vPadding);
         layedOutTextRect = QRectF(0, 0, 0, fontHeight);
+        advance = QSizeF();
         emit q->contentSizeChanged();
         updateType = UpdatePaintNode;
         q->update();
@@ -457,7 +458,25 @@ void QQuickTextPrivate::updateSize()
 
         if (iWidth == -1)
             q->setImplicitHeight(size.height() + vPadding);
+
+        QTextBlock firstBlock = extra->doc->firstBlock();
+        while (firstBlock.layout()->lineCount() == 0)
+            firstBlock = firstBlock.next();
+
+        QTextBlock lastBlock = extra->doc->lastBlock();
+        while (lastBlock.layout()->lineCount() == 0)
+            lastBlock = lastBlock.previous();
+
+        if (firstBlock.lineCount() > 0 && lastBlock.lineCount() > 0) {
+            QTextLine firstLine = firstBlock.layout()->lineAt(0);
+            QTextLine lastLine = lastBlock.layout()->lineAt(lastBlock.layout()->lineCount() - 1);
+            advance = QSizeF(lastLine.horizontalAdvance(),
+                             (lastLine.y() + lastBlock.layout()->position().y()) - (firstLine.y() + firstBlock.layout()->position().y()));
+        } else {
+            advance = QSizeF();
+        }
     }
+
 
     if (layedOutTextRect.size() != previousSize)
         emit q->contentSizeChanged();
@@ -967,6 +986,16 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         }
 
         br.moveTop(0);
+
+        // Find the advance of the text layout
+        if (layout.lineCount() > 0) {
+            QTextLine firstLine = layout.lineAt(0);
+            QTextLine lastLine = layout.lineAt(layout.lineCount() - 1);
+            advance = QSizeF(lastLine.horizontalAdvance(),
+                             lastLine.y() - firstLine.y());
+        } else {
+            advance = QSizeF();
+        }
 
         if (!horizontalFit && !verticalFit)
             break;
@@ -3053,6 +3082,24 @@ QJSValue QQuickText::fontInfo() const
     value.setProperty(QStringLiteral("pointSize"), d->fontInfo.pointSizeF());
     value.setProperty(QStringLiteral("pixelSize"), d->fontInfo.pixelSize());
     return value;
+}
+
+/*!
+    \qmlproperty size QtQuick::Text::advance
+    \since 5.10
+
+    The distance, in pixels, from the baseline origin of the first
+    character of the text item, to the baseline origin of the first
+    character in a text item occurring directly after this one
+    in a text flow.
+
+    Note that the advance can be negative if the text flows from
+    the right to the left.
+*/
+QSizeF QQuickText::advance() const
+{
+    Q_D(const QQuickText);
+    return d->advance;
 }
 
 QT_END_NAMESPACE

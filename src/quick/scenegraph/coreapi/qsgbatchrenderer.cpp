@@ -2966,7 +2966,11 @@ void Renderer::visualizeBatch(Batch *b)
         for (int ds=0; ds<b->drawSets.size(); ++ds) {
             const DrawSet &set = b->drawSets.at(ds);
             glVertexAttribPointer(a.position, 2, a.type, false, g->sizeOfVertex(), (void *) (qintptr) (set.vertices));
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+            glDrawElements(g->drawingMode(), set.indexCount, GL_UNSIGNED_SHORT, (void *) (qintptr) (b->ibo.data + set.indices));
+#else
             glDrawElements(g->drawingMode(), set.indexCount, GL_UNSIGNED_SHORT, (void *) (qintptr) (b->vbo.data + set.indices));
+#endif
         }
     } else {
         Element *e = b->first;

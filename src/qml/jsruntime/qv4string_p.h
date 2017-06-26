@@ -53,6 +53,7 @@
 #include <QtCore/qstring.h>
 #include "qv4managed_p.h"
 #include <QtCore/private/qnumeric_p.h>
+#include "qv4enginebase_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -71,8 +72,8 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     };
 
 #ifndef V4_BOOTSTRAP
-    void init(MemoryManager *mm, const QString &text);
-    void init(MemoryManager *mm, String *l, String *n);
+    void init(const QString &text);
+    void init(String *l, String *n);
     void destroy();
     void simplifyString() const;
     int length() const {
@@ -125,7 +126,6 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     mutable uint stringHash;
     mutable uint largestSubLength;
     uint len;
-    MemoryManager *mm;
 private:
     static void append(const String *data, QChar *ch);
 #endif
@@ -138,6 +138,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 #ifndef V4_BOOTSTRAP
     V4_MANAGED(String, Managed)
     Q_MANAGED_TYPE(String)
+    V4_INTERNALCLASS(String)
     V4_NEEDS_DESTROY
     enum {
         IsString = true
@@ -174,13 +175,13 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     }
     uint toUInt(bool *ok) const;
 
-    void makeIdentifier(ExecutionEngine *e) const {
+    void makeIdentifier() const {
         if (d()->identifier)
             return;
-        makeIdentifierImpl(e);
+        makeIdentifierImpl();
     }
 
-    void makeIdentifierImpl(ExecutionEngine *e) const;
+    void makeIdentifierImpl() const;
 
     static uint createHashValue(const QChar *ch, int length, uint *subtype)
     {

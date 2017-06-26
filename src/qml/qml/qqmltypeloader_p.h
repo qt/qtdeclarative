@@ -572,11 +572,11 @@ private:
 public:
     const QString &content() const;
 
-    const QV4::CompiledData::Import *import() const;
-    void setImport(const QV4::CompiledData::Import *);
+    const QV4::CompiledData::Import *import(QQmlTypeLoader::Blob *) const;
+    void setImport(QQmlTypeLoader::Blob *, const QV4::CompiledData::Import *);
 
-    int priority() const;
-    void setPriority(int);
+    int priority(QQmlTypeLoader::Blob *) const;
+    void setPriority(QQmlTypeLoader::Blob *, int);
 
 protected:
     void dataReceived(const SourceCodeData &) override;
@@ -584,8 +584,8 @@ protected:
 
 private:
     QString m_content;
-    const QV4::CompiledData::Import *m_import;
-    int m_priority;
+    QHash<QQmlTypeLoader::Blob *, const QV4::CompiledData::Import *> m_imports;
+    QHash<QQmlTypeLoader::Blob *, int> m_priorities;
 };
 
 

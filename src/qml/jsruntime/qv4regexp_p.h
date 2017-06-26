@@ -100,6 +100,7 @@ struct RegExp : public Managed
     V4_MANAGED(RegExp, Managed)
     Q_MANAGED_TYPE(RegExp)
     V4_NEEDS_DESTROY
+    V4_INTERNALCLASS(RegExp)
 
     QString pattern() const { return *d()->pattern; }
     JSC::Yarr::BytecodePattern *byteCode() { return d()->byteCode; }

@@ -356,7 +356,7 @@ void RegExpPrototype::method_exec(const BuiltinFunction *, Scope &scope, CallDat
     }
 
     // fill in result data
-    ScopedArrayObject array(scope, scope.engine->newArrayObject(scope.engine->regExpExecArrayClass, scope.engine->arrayPrototype()));
+    ScopedArrayObject array(scope, scope.engine->newArrayObject(scope.engine->internalClasses[EngineBase::Class_RegExpExecArray], scope.engine->arrayPrototype()));
     int len = r->value()->captureCount();
     array->arrayReserve(len);
     ScopedValue v(scope);

@@ -1076,6 +1076,7 @@ void ListElement::sync(ListElement *src, ListLayout *srcLayout, ListElement *tar
                     QVariant v = src->getProperty(srcRole, 0, 0);
                     target->setVariantProperty(targetRole, v);
                 }
+                break;
             case ListLayout::Role::VariantMap:
                 {
                     QVariantMap *map = src->getVariantMapProperty(srcRole);
@@ -1992,12 +1993,12 @@ void QQmlListModel::setDynamicRoles(bool enableDynamicRoles)
     if (m_mainThread && m_agent == 0) {
         if (enableDynamicRoles) {
             if (m_layout->roleCount())
-                qmlWarning(this) << tr("unable to enable dynamic roles as this model is not empty!");
+                qmlWarning(this) << tr("unable to enable dynamic roles as this model is not empty");
             else
                 m_dynamicRoles = true;
         } else {
             if (m_roles.count()) {
-                qmlWarning(this) << tr("unable to enable static roles as this model is not empty!");
+                qmlWarning(this) << tr("unable to enable static roles as this model is not empty");
             } else {
                 m_dynamicRoles = false;
             }

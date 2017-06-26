@@ -45,7 +45,7 @@ uniform lowp vec4 color;
 varying highp vec2 vTexCoord;
 varying lowp vec2 vShadeCoord;
 
-#define PI 3.14159265359
+#define PI 3.14159265358979323846
 
 void main()
 {

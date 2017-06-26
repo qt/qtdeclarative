@@ -52,6 +52,7 @@ private slots:
     void rewriteErrors();
     void singletonTypeTarget();
     void enableDisable_QTBUG_36350();
+    void disabledAtStart();
     void clearImplicitTarget();
     void onWithoutASignal();
 
@@ -352,6 +353,23 @@ void tst_qqmlconnections::enableDisable_QTBUG_36350()
     QCOMPARE(item->property("tested").toBool(), true); //Should have received signal to change property
 
     delete item;
+}
+
+void tst_qqmlconnections::disabledAtStart()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("disabled-at-start.qml"));
+    QObject * const object = c.create();
+
+    QVERIFY(object != 0);
+
+    QCOMPARE(object->property("tested").toBool(), false);
+    const int index = object->metaObject()->indexOfSignal("testMe()");
+    const QMetaMethod method = object->metaObject()->method(index);
+    method.invoke(object, Qt::DirectConnection);
+    QCOMPARE(object->property("tested").toBool(), false);
+
+    delete object;
 }
 
 //QTBUG-56499

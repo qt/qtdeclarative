@@ -318,7 +318,7 @@ void tst_PointerHandlers::touchEventDelivery()
     QCOMPARE(eventItem1->eventList.size(), 2);
     QCOMPARE_EVENT(0, Event::HandlerDestination, QEvent::Pointer, Qt::TouchPointPressed, NoGrab);
     QCOMPARE_EVENT(1, Event::TouchDestination, QEvent::TouchBegin, Qt::TouchPointPressed, QQuickEventPoint::GrabExclusive);
-    auto pointerEvent = QQuickPointerDevice::touchDevices().at(0)->pointerEvent();
+    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
     QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), eventItem1);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, touchDevice).move(0, p1, window);

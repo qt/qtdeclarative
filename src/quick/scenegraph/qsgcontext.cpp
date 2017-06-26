@@ -228,14 +228,6 @@ public:
     int m_good;
 };
 
-class QSGTextureCleanupEvent : public QEvent
-{
-public:
-    QSGTextureCleanupEvent(QSGTexture *t) : QEvent(QEvent::User), texture(t) { }
-    ~QSGTextureCleanupEvent() { delete texture; }
-    QSGTexture *texture;
-};
-
 /*!
     \class QSGContext
 

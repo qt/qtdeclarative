@@ -170,11 +170,7 @@ QT_BEGIN_NAMESPACE
 
 #define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
 
-#ifdef MOTH_THREADED_INTERPRETER
-#  define MOTH_INSTR_HEADER union { quint32 instructionType; void *code; };
-#else
-#  define MOTH_INSTR_HEADER quint32 instructionType;
-#endif
+#define MOTH_INSTR_HEADER quint32 instructionType;
 
 #define MOTH_INSTR_ENUM(I, FMT)  I,
 #define MOTH_INSTR_SIZE(I, FMT) ((sizeof(QV4::Moth::Instr::instr_##FMT) + MOTH_INSTR_ALIGN_MASK) & ~MOTH_INSTR_ALIGN_MASK)
@@ -194,8 +190,8 @@ struct Param {
     // Arg(outer): 4
     // Local(outer): 5
     // ...
-    unsigned scope;
-    unsigned index;
+    unsigned scope : 12;
+    unsigned index : 20;
 
     bool isConstant() const { return !scope; }
     bool isArgument() const { return scope >= 2 && !(scope &1); }
@@ -901,6 +897,8 @@ template<int N>
 struct InstrMeta {
 };
 
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Wuninitialized")
 #define MOTH_INSTR_META_TEMPLATE(I, FMT) \
     template<> struct InstrMeta<(int)Instr::I> { \
         enum { Size = MOTH_INSTR_SIZE(I, FMT) }; \
@@ -914,6 +912,7 @@ struct InstrMeta {
     };
 FOR_EACH_MOTH_INSTR(MOTH_INSTR_META_TEMPLATE);
 #undef MOTH_INSTR_META_TEMPLATE
+QT_WARNING_POP
 
 template<int InstrType>
 class InstrData : public InstrMeta<InstrType>::DataType

@@ -64,11 +64,12 @@ void SoftwareRenderNode::render(const RenderState *renderState)
     QPainter *p = static_cast<QPainter *>(rif->getResource(m_item->window(), QSGRendererInterface::PainterResource));
     Q_ASSERT(p);
 
-    p->setTransform(matrix()->toTransform());
-    p->setOpacity(inheritedOpacity());
     const QRegion *clipRegion = renderState->clipRegion();
     if (clipRegion && !clipRegion->isEmpty())
-        p->setClipRegion(*clipRegion, Qt::IntersectClip);
+        p->setClipRegion(*clipRegion, Qt::ReplaceClip); // must be done before setTransform
+
+    p->setTransform(matrix()->toTransform());
+    p->setOpacity(inheritedOpacity());
 
     const QPointF p0(m_item->width() - 1, m_item->height() - 1);
     const QPointF p1(0, 0);

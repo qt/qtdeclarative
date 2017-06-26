@@ -1293,8 +1293,8 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
             }
             parent = parent->parentItem();
         }
-        bool filterRelevant = isFiltering && grabberIsChild;
 
+        bool filterRelevant = isFiltering && grabberIsChild;
         if (!(isGrabber || (isInside && (!hasAnotherGrabber || isFiltering)) || filterRelevant))
             continue;
         if ((p->state() == QQuickEventPoint::Pressed || p->state() == QQuickEventPoint::Released) && isInside)

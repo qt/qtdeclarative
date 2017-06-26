@@ -85,6 +85,7 @@ struct NumberCtor: FunctionObject
 
 struct NumberPrototype: NumberObject
 {
+    V4_PROTOTYPE(objectPrototype)
     void init(ExecutionEngine *engine, Object *ctor);
 
     static void method_isFinite(const BuiltinFunction *, Scope &scope, CallData *callData);
