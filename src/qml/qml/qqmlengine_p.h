@@ -261,7 +261,6 @@ public:
 private:
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
-    QHash<int, int> m_qmlLists;
     QHash<int, QV4::CompiledData::CompilationUnit *> m_compositeTypes;
     static bool s_designerMode;
 

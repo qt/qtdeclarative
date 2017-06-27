@@ -113,6 +113,8 @@ struct QQmlMetaTypeData
     QString typeRegistrationNamespace;
     QStringList typeRegistrationFailures;
 
+    QHash<int, int> qmlLists;
+
     QHash<const QMetaObject *, QQmlPropertyCache *> propertyCaches;
     QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
     QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
@@ -1552,6 +1554,47 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     return dtype;
 }
 
+void QQmlMetaType::registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
+{
+    QByteArray name = compilationUnit->rootPropertyCache()->className();
+
+    QByteArray ptr = name + '*';
+    QByteArray lst = "QQmlListProperty<" + name + '>';
+
+    int ptr_type = QMetaType::registerNormalizedType(ptr,
+                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Destruct,
+                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Construct,
+                                                     sizeof(QObject*),
+                                                     static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QObject*>::Flags),
+                                                     0);
+    int lst_type = QMetaType::registerNormalizedType(lst,
+                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QQmlListProperty<QObject> >::Destruct,
+                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QQmlListProperty<QObject> >::Construct,
+                                                     sizeof(QQmlListProperty<QObject>),
+                                                     static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QQmlListProperty<QObject> >::Flags),
+                                                     static_cast<QMetaObject*>(0));
+
+    compilationUnit->metaTypeId = ptr_type;
+    compilationUnit->listMetaTypeId = lst_type;
+
+    QMutexLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *d = metaTypeData();
+    d->qmlLists.insert(lst_type, ptr_type);
+}
+
+void QQmlMetaType::unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
+{
+    int ptr_type = compilationUnit->metaTypeId;
+    int lst_type = compilationUnit->listMetaTypeId;
+
+    QMutexLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *d = metaTypeData();
+    d->qmlLists.remove(lst_type);
+
+    QMetaType::unregisterType(ptr_type);
+    QMetaType::unregisterType(lst_type);
+}
+
 int registerQmlUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &hookRegistration)
 {
     if (hookRegistration.version > 0)
@@ -1764,6 +1807,9 @@ int QQmlMetaType::listType(int id)
 {
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
+    QHash<int, int>::ConstIterator iter = data->qmlLists.constFind(id);
+    if (iter != data->qmlLists.cend())
+        return *iter;
     QQmlTypePrivate *type = data->idToType.value(id);
     if (type && type->listId == id)
         return type->typeId;
@@ -1853,7 +1899,9 @@ QQmlMetaType::TypeCategory QQmlMetaType::typeCategory(int userType)
 
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
-    if (userType < data->objects.size() && data->objects.testBit(userType))
+    if (data->qmlLists.contains(userType))
+        return List;
+    else if (userType < data->objects.size() && data->objects.testBit(userType))
         return Object;
     else if (userType < data->lists.size() && data->lists.testBit(userType))
         return List;
@@ -1884,6 +1932,8 @@ bool QQmlMetaType::isList(int userType)
 {
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
+    if (data->qmlLists.contains(userType))
+        return true;
     return userType >= 0 && userType < data->lists.size() && data->lists.testBit(userType);
 }
 

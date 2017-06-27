@@ -211,8 +211,9 @@ void CompilationUnit::unlink()
 
     if (isRegisteredWithEngine) {
         Q_ASSERT(data && quint32(propertyCaches.count()) > data->indexOfRootObject && propertyCaches.at(data->indexOfRootObject));
-        QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(engine);
-        qmlEngine->unregisterInternalCompositeType(this);
+        if (engine)
+            QQmlEnginePrivate::get(engine)->unregisterInternalCompositeType(this);
+        QQmlMetaType::unregisterInternalCompositeType(this);
         isRegisteredWithEngine = false;
     }
 
@@ -285,9 +286,10 @@ IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjec
 void CompilationUnit::finalize(QQmlEnginePrivate *engine)
 {
     // Add to type registry of composites
-    if (propertyCaches.needsVMEMetaObject(data->indexOfRootObject))
+    if (propertyCaches.needsVMEMetaObject(data->indexOfRootObject)) {
+        QQmlMetaType::registerInternalCompositeType(this);
         engine->registerInternalCompositeType(this);
-    else {
+    } else {
         const QV4::CompiledData::Object *obj = objectAt(data->indexOfRootObject);
         auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);

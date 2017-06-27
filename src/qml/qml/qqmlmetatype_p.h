@@ -71,6 +71,7 @@ class QHashedString;
 class QHashedStringRef;
 class QMutex;
 class QQmlPropertyCache;
+class QQmlCompiledData;
 
 namespace QV4 { struct String; }
 
@@ -79,6 +80,9 @@ class Q_QML_PRIVATE_EXPORT QQmlMetaType
 public:
     static QQmlType registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type);
     static QQmlType registerCompositeType(const QQmlPrivate::RegisterCompositeType &type);
+
+    static void registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
+    static void unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
 
     static QList<QString> qmlTypeNames();
     static QList<QQmlType> qmlTypes();

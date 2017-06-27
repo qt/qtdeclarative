@@ -2215,26 +2215,17 @@ QQmlMetaType::TypeCategory QQmlEnginePrivate::typeCategory(int t) const
     Locker locker(this);
     if (m_compositeTypes.contains(t))
         return QQmlMetaType::Object;
-    else if (m_qmlLists.contains(t))
-        return QQmlMetaType::List;
-    else
-        return QQmlMetaType::typeCategory(t);
+    return QQmlMetaType::typeCategory(t);
 }
 
 bool QQmlEnginePrivate::isList(int t) const
 {
-    Locker locker(this);
-    return m_qmlLists.contains(t) || QQmlMetaType::isList(t);
+    return QQmlMetaType::isList(t);
 }
 
 int QQmlEnginePrivate::listType(int t) const
 {
-    Locker locker(this);
-    QHash<int, int>::ConstIterator iter = m_qmlLists.constFind(t);
-    if (iter != m_qmlLists.cend())
-        return *iter;
-    else
-        return QQmlMetaType::listType(t);
+    return QQmlMetaType::listType(t);
 }
 
 QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
@@ -2289,46 +2280,20 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
 
 void QQmlEnginePrivate::registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
 {
-    QByteArray name = compilationUnit->rootPropertyCache()->className();
-
-    QByteArray ptr = name + '*';
-    QByteArray lst = "QQmlListProperty<" + name + '>';
-
-    int ptr_type = QMetaType::registerNormalizedType(ptr,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Destruct,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QObject*>::Construct,
-                                                     sizeof(QObject*),
-                                                     static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QObject*>::Flags),
-                                                     0);
-    int lst_type = QMetaType::registerNormalizedType(lst,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QQmlListProperty<QObject> >::Destruct,
-                                                     QtMetaTypePrivate::QMetaTypeFunctionHelper<QQmlListProperty<QObject> >::Construct,
-                                                     sizeof(QQmlListProperty<QObject>),
-                                                     static_cast<QFlags<QMetaType::TypeFlag> >(QtPrivate::QMetaTypeTypeFlags<QQmlListProperty<QObject> >::Flags),
-                                                     static_cast<QMetaObject*>(0));
-
-    compilationUnit->metaTypeId = ptr_type;
-    compilationUnit->listMetaTypeId = lst_type;
     compilationUnit->isRegisteredWithEngine = true;
 
     Locker locker(this);
-    m_qmlLists.insert(lst_type, ptr_type);
     // The QQmlCompiledData is not referenced here, but it is removed from this
     // hash in the QQmlCompiledData destructor
-    m_compositeTypes.insert(ptr_type, compilationUnit);
+    m_compositeTypes.insert(compilationUnit->metaTypeId, compilationUnit);
 }
 
 void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
 {
-    int ptr_type = compilationUnit->metaTypeId;
-    int lst_type = compilationUnit->listMetaTypeId;
+    compilationUnit->isRegisteredWithEngine = false;
 
     Locker locker(this);
-    m_qmlLists.remove(lst_type);
-    m_compositeTypes.remove(ptr_type);
-
-    QMetaType::unregisterType(ptr_type);
-    QMetaType::unregisterType(lst_type);
+    m_compositeTypes.remove(compilationUnit->metaTypeId);
 }
 
 bool QQmlEnginePrivate::isTypeLoaded(const QUrl &url) const
