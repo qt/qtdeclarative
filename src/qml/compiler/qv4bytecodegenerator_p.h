@@ -193,7 +193,7 @@ public:
     }
 
     unsigned newTemp();
-
+    unsigned newTempArray(int n);
 
     QByteArray finalize();
 

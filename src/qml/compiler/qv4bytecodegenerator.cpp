@@ -63,6 +63,15 @@ unsigned BytecodeGenerator::newTemp()
     return t;
 }
 
+unsigned BytecodeGenerator::newTempArray(int n)
+{
+    int t = function->currentTemp;
+    function->currentTemp += n;
+    if (function->tempCount < function->currentTemp)
+        function->tempCount = function->currentTemp;
+    return t;
+}
+
 QByteArray BytecodeGenerator::finalize()
 {
     QByteArray code;

@@ -430,7 +430,6 @@ union Instr
     };
     struct instr_callValue {
         MOTH_INSTR_HEADER
-        quint32 argc;
         quint32 callData;
         Param dest;
         Param result;
@@ -438,7 +437,6 @@ union Instr
     struct instr_callProperty {
         MOTH_INSTR_HEADER
         int name;
-        quint32 argc;
         quint32 callData;
         Param base;
         Param result;
@@ -471,21 +469,18 @@ union Instr
         MOTH_INSTR_HEADER
         Param base;
         Param index;
-        quint32 argc;
         quint32 callData;
         Param result;
     };
     struct instr_callActivationProperty {
         MOTH_INSTR_HEADER
         int name;
-        quint32 argc;
         quint32 callData;
         Param result;
     };
     struct instr_callGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
-        quint32 argc;
         quint32 callData;
         Param result;
     };
@@ -609,7 +604,6 @@ union Instr
     };
     struct instr_createValue {
         MOTH_INSTR_HEADER
-        quint32 argc;
         quint32 callData;
         Param func;
         Param result;

@@ -242,8 +242,7 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallValue)
 
         MOTH_BEGIN_INSTR(CallProperty)
-            d << instr.result << ", " << instr.base<<"."<<instr.name << "(" << instr.callData
-              << ", " << instr.argc << ")";
+            d << instr.result << ", " << instr.base<<"."<<instr.name << "(" << instr.callData << ")";
         MOTH_END_INSTR(CallProperty)
 
         MOTH_BEGIN_INSTR(CallPropertyLookup)
@@ -263,7 +262,7 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallElement)
 
         MOTH_BEGIN_INSTR(CallActivationProperty)
-            d << instr.result << ", " << instr.name << "(" << instr.callData << ", " << instr.argc << ")";
+            d << instr.result << ", " << instr.name << "(" << instr.callData << ")";
         MOTH_END_INSTR(CallActivationProperty)
 
         MOTH_BEGIN_INSTR(CallGlobalLookup)
@@ -368,7 +367,7 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallBuiltinConvertThisToObject)
 
         MOTH_BEGIN_INSTR(CreateValue)
-            d << instr.result << ", new" << instr.func << "(" << instr.callData << instr.argc << ")";
+            d << instr.result << ", new" << instr.func << "(" << instr.callData << ")";
         MOTH_END_INSTR(CreateValue)
 
         MOTH_BEGIN_INSTR(CreateProperty)
@@ -535,8 +534,10 @@ void dumpBytecode(const char *code, int len)
         MOTH_BEGIN_INSTR(LoadQmlSingleton)
                 d << instr.result << instr.name;
         MOTH_END_INSTR(LoadQmlSingleton)
-        }
 
+        default:
+            Q_UNREACHABLE();
+        }
     }
 }
 

@@ -563,32 +563,17 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(InitStackFrame)
 
     MOTH_BEGIN_INSTR(CallValue)
-#if 0 //def DO_TRACE_INSTR
-        if (Debugging::Debugger *debugger = context->engine()->debugger) {
-            if (QV4::FunctionObject *o = (VALUE(instr.dest)).asFunctionObject()) {
-                if (Debugging::FunctionDebugInfo *info = debugger->debugInfo(o)) {
-                    QString n = debugger->name(o);
-                    std::cerr << "*** Call to \"" << (n.isNull() ? "<no name>" : qPrintable(n)) << "\" defined @" << info->startLine << ":" << info->startColumn << std::endl;
-                }
-            }
-        }
-#endif // DO_TRACE_INSTR
-        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = quint32(Value::ValueTypeInternal::Integer);
-        callData->argc = instr.argc;
-        callData->thisObject = QV4::Primitive::undefinedValue();
         STOREVALUE(instr.result, Runtime::method_callValue(engine, VALUE(instr.dest), callData));
+        //### write barrier?
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
         TRACE(property name, "%s, args=%u, argc=%u, this=%s", qPrintable(runtimeStrings[instr.name]->toQString()), instr.callData, instr.argc, (VALUE(instr.base)).toString(engine)->toQString().toUtf8().constData());
-        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = quint32(Value::ValueTypeInternal::Integer);
-        callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
         STOREVALUE(instr.result, Runtime::method_callProperty(engine, instr.name, callData));
+        //### write barrier?
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallPropertyLookup)
@@ -621,30 +606,22 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(CallContextObjectProperty)
 
     MOTH_BEGIN_INSTR(CallElement)
-        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = quint32(Value::ValueTypeInternal::Integer);
-        callData->argc = instr.argc;
         callData->thisObject = VALUE(instr.base);
         STOREVALUE(instr.result, Runtime::method_callElement(engine, VALUE(instr.index), callData));
+        //### write barrier?
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallActivationProperty)
-        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = quint32(Value::ValueTypeInternal::Integer);
-        callData->argc = instr.argc;
-        callData->thisObject = QV4::Primitive::undefinedValue();
         STOREVALUE(instr.result, Runtime::method_callActivationProperty(engine, instr.name, callData));
+        //### write barrier?
     MOTH_END_INSTR(CallActivationProperty)
 
     MOTH_BEGIN_INSTR(CallGlobalLookup)
-        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = quint32(Value::ValueTypeInternal::Integer);
-        callData->argc = instr.argc;
-        callData->thisObject = QV4::Primitive::undefinedValue();
         STOREVALUE(instr.result, Runtime::method_callGlobalLookup(engine, instr.index, callData));
+        //### write barrier?
     MOTH_END_INSTR(CallGlobalLookup)
 
     MOTH_BEGIN_INSTR(SetExceptionHandler)
@@ -752,12 +729,9 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(CallBuiltinConvertThisToObject)
 
     MOTH_BEGIN_INSTR(CreateValue)
-        Q_ASSERT(instr.callData + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
-        callData->tag = quint32(Value::ValueTypeInternal::Integer);
-        callData->argc = instr.argc;
-        callData->thisObject = QV4::Primitive::undefinedValue();
         STOREVALUE(instr.result, Runtime::method_constructValue(engine, VALUE(instr.func), callData));
+        //### write barrier?
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)

@@ -1328,43 +1328,44 @@ bool Codegen::visit(ArrayLiteral *ast)
     TempScope scope(this);
 
     int argc = 0;
-    Reference _args[16];
-    Reference *args = _args;
-    if (_variableEnvironment->maxNumberOfArguments > 16)
-        args = new Reference[_variableEnvironment->maxNumberOfArguments];
-    auto empty = [this](){ return Reference::fromConst(this, Primitive::emptyValue().asReturnedValue()); };
-    auto push = [this, &argc, args](const Reference &arg) {
-        args[argc] = arg;
-        if (arg.type != Reference::Const)
-            args[argc].asRValue();
-        argc += 1;
+    int args = -1;
+    auto push = [this, &argc, &args](AST::ExpressionNode *arg) {
+        int temp = bytecodeGenerator->newTemp();
+        if (args == -1)
+            args = temp;
+        if (!arg) {
+            Reference::fromTemp(this, temp).store(Reference::fromConst(this, Primitive::emptyValue().asReturnedValue()));
+        } else {
+            TempScope scope(this);
+            Reference::fromTemp(this, temp).store(expression(arg));
+        }
+        ++argc;
     };
 
     for (ElementList *it = ast->elements; it; it = it->next) {
-        for (Elision *elision = it->elision; elision; elision = elision->next)
-            push(empty());
 
-        Reference expr = expression(it->expression);
+        for (Elision *elision = it->elision; elision; elision = elision->next)
+            push(0);
+
+        push(it->expression);
         if (hasError)
             return false;
-
-        push(expr);
     }
     for (Elision *elision = ast->elision; elision; elision = elision->next)
-        push(empty());
+        push(0);
 
-    for (int i = 0; i < argc; ++i)
-        Reference::fromTemp(this, i).store(args[i]);
+    if (args == -1) {
+        Q_ASSERT(argc == 0);
+        args = 0;
+    }
 
     Instruction::CallBuiltinDefineArray call;
     call.argc = argc;
-    call.args = 0;
+    call.args = args;
     call.result = result.asLValue();
     bytecodeGenerator->addInstruction(call);
     _expr.result = result;
 
-    if (args != _args)
-        delete [] args;
     return false;
 }
 
@@ -1731,7 +1732,7 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError)
         return false;
 
-    auto argc = pushArgs(ast->arguments);
+    auto calldata = pushArgs(ast->arguments);
     if (hasError)
         return false;
 
@@ -1739,39 +1740,34 @@ bool Codegen::visit(CallExpression *ast)
         Instruction::CallProperty call;
         call.base = base.base;
         call.name = base.nameIndex;
-        call.argc = argc;
-        call.callData = 0;
+        call.callData = calldata;
         call.result = r.asLValue();
         bytecodeGenerator->addInstruction(call);
     } else if (base.type == Reference::Subscript) {
         Instruction::CallElement call;
         call.base = base.base;
         call.index = base.subscript;
-        call.argc = argc;
-        call.callData = 0;
+        call.callData = calldata;
         call.result = r.asLValue();
         bytecodeGenerator->addInstruction(call);
     } else if (base.type == Reference::Name) {
         if (useFastLookups && base.global) {
             Instruction::CallGlobalLookup call;
             call.index = registerGlobalGetterLookup(base.nameIndex);
-            call.argc = argc;
-            call.callData = 0;
+            call.callData = calldata;
             call.result = r.asLValue();
             bytecodeGenerator->addInstruction(call);
         } else {
             Instruction::CallActivationProperty call;
             call.name = base.nameIndex;
-            call.argc = argc;
-            call.callData = 0;
+            call.callData = calldata;
             call.result = r.asLValue();
             bytecodeGenerator->addInstruction(call);
         }
     } else {
         Instruction::CallValue call;
         call.dest = base.asRValue();
-        call.argc = argc;
-        call.callData = 0;
+        call.callData = calldata;
         call.result = r.asLValue();
         bytecodeGenerator->addInstruction(call);
     }
@@ -1781,26 +1777,22 @@ bool Codegen::visit(CallExpression *ast)
 
 int Codegen::pushArgs(ArgumentList *args)
 {
-    int minNrOfStackEntries = offsetof(QV4::CallData, args)/sizeof(QV4::Value);
     int argc = 0;
-    Reference _rargs[16];
-    Reference *rargs = _rargs;
-    if (_variableEnvironment->maxNumberOfArguments > 16)
-        rargs = new Reference[_variableEnvironment->maxNumberOfArguments];
+    for (ArgumentList *it = args; it; it = it->next)
+        ++argc;
+    int calldata = bytecodeGenerator->newTempArray(argc + 2); // 2 additional values for CallData
+
+    Reference::fromTemp(this, calldata).store(Reference::fromConst(this, QV4::Encode(argc)));
+    Reference::fromTemp(this, calldata + 1).store(Reference::fromConst(this, QV4::Encode::undefined()));
+
+    argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
-        rargs[argc] = expression(it->expression);
-        rargs[argc].asRValue();
-        if (hasError)
-            return -1;
-        argc += 1;
+        TempScope scope(this);
+        Reference::fromTemp(this, calldata + 2 + argc).store(expression(it->expression));
+        ++argc;
     }
 
-    for (int i = 0; i < argc; ++i)
-        Reference::fromTemp(this, minNrOfStackEntries + i).store(rargs[i]);
-
-    if (rargs != _rargs)
-        delete [] rargs;
-    return argc;
+    return calldata;
 }
 
 bool Codegen::visit(ConditionalExpression *ast)
@@ -2012,7 +2004,6 @@ bool Codegen::visit(NewExpression *ast)
 
     Instruction::CreateValue create;
     create.func = base.asRValue();
-    create.argc = 0;
     create.callData = 0;
     create.result = r.asLValue();
     bytecodeGenerator->addInstruction(create);
@@ -2032,14 +2023,13 @@ bool Codegen::visit(NewMemberExpression *ast)
     if (hasError)
         return false;
 
-    auto argc = pushArgs(ast->arguments);
+    auto calldata = pushArgs(ast->arguments);
     if (hasError)
         return false;
 
     Instruction::CreateValue create;
     create.func = base.asRValue();
-    create.argc = argc;
-    create.callData = 0;
+    create.callData = calldata;
     create.result = r.asRValue();
     bytecodeGenerator->addInstruction(create);
     _expr.result = r;
@@ -2143,10 +2133,12 @@ bool Codegen::visit(ObjectLiteral *ast)
         }
     }
 
-    int argc = 0;
-    auto push = [this, &argc](const Reference &arg) {
-        Reference::fromTemp(this, argc).store(arg);
-        argc += 1;
+    int args = -1;
+    auto push = [this, &args](const Reference &arg) {
+        int temp = bytecodeGenerator->newTemp();
+        if (args == -1)
+            args = temp;
+        Reference::fromTemp(this, temp).store(arg);
     };
 
     auto undefined = [this](){ return Reference::fromConst(this, Encode::undefined()); };
@@ -2190,11 +2182,14 @@ bool Codegen::visit(ObjectLiteral *ast)
     uint arrayGetterSetterCountAndFlags = arrayKeyWithGetterSetter.size();
     arrayGetterSetterCountAndFlags |= needSparseArray << 30;
 
+    if (args == -1)
+        args = 0;
+
     Instruction::CallBuiltinDefineObjectLiteral call;
     call.internalClassId = classId;
     call.arrayValueCount = arrayKeyWithValue.size();
     call.arrayGetterSetterCountAndFlags = arrayGetterSetterCountAndFlags;
-    call.args = 0;
+    call.args = args;
     call.result = result.asLValue();
     bytecodeGenerator->addInstruction(call);
 
@@ -2439,13 +2434,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     BytecodeGenerator *savedBytecodeGenerator;
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
-
-    { // reserve space for outgoing call arguments
-        Q_ASSERT(function->tempCount == 0);
-        int minNrOfStackEntries = offsetof(QV4::CallData, args)/sizeof(QV4::Value);
-        function->tempCount = minNrOfStackEntries + _variableEnvironment->maxNumberOfArguments;
-        function->currentTemp = function->tempCount;
-    }
 
     unsigned returnAddress = bytecodeGenerator->newTemp();
     if (function->usesArgumentsObject)
@@ -3403,6 +3391,13 @@ void Codegen::Reference::store(const Reference &r) const
         move.source = r.asRValue();
         move.result = b;
         codegen->bytecodeGenerator->addInstruction(move);
+        return;
+    }
+    if (r.type == Closure) {
+        Instruction::LoadClosure load;
+        load.value = r.closureId;
+        load.result = b;
+        codegen->bytecodeGenerator->addInstruction(load);
         return;
     }
     Moth::Param x = r.asRValue();

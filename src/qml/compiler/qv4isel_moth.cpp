@@ -314,7 +314,7 @@ void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Ex
 {
     Instruction::CallValue call;
     prepareCallArgs(args, call.argc);
-    call.callData = callDataStart();
+//    call.callData = callDataStart();
     call.dest = getParam(value);
     call.result = getResultParam(result);
     addInstruction(call);
@@ -360,7 +360,7 @@ void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR:
         call.base = getParam(base);
         call.name = registerString(name);
         prepareCallArgs(args, call.argc);
-        call.callData = callDataStart();
+//        call.callData = callDataStart();
         call.result = getResultParam(result);
         addInstruction(call);
     }
@@ -374,7 +374,7 @@ void InstructionSelection::callSubscript(IR::Expr *base, IR::Expr *index, IR::Ex
     call.base = getParam(base);
     call.index = getParam(index);
     prepareCallArgs(args, call.argc);
-    call.callData = callDataStart();
+//    call.callData = callDataStart();
     call.result = getResultParam(result);
     addInstruction(call);
 }
@@ -434,7 +434,7 @@ void InstructionSelection::constructValue(IR::Expr *value, IR::ExprList *args, I
 {
     Instruction::CreateValue create;
     create.func = getParam(value);
-    prepareCallArgs(args, create.argc);
+//    prepareCallArgs(args, create.argc);
     create.callData = callDataStart();
     create.result = getResultParam(target);
     addInstruction(create);
@@ -1028,7 +1028,7 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
         Instruction::CallGlobalLookup call;
         call.index = registerGlobalGetterLookup(*func->id);
         prepareCallArgs(args, call.argc);
-        call.callData = callDataStart();
+//        call.callData = callDataStart();
         call.result = getResultParam(result);
         addInstruction(call);
         return;
@@ -1036,7 +1036,7 @@ void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args
     Instruction::CallActivationProperty call;
     call.name = registerString(*func->id);
     prepareCallArgs(args, call.argc);
-    call.callData = callDataStart();
+//    call.callData = callDataStart();
     call.result = getResultParam(result);
     addInstruction(call);
 }
