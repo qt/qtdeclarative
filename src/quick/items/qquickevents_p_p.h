@@ -306,6 +306,7 @@ public:
     void setExclusiveGrabber(QObject *exclusiveGrabber);
 
     QQuickItem *grabberItem() const;
+    Q_DECL_DEPRECATED QQuickItem *grabber() const { return grabberItem(); }
     void setGrabberItem(QQuickItem *exclusiveGrabber);
 
     QQuickPointerHandler *grabberPointerHandler() const;
