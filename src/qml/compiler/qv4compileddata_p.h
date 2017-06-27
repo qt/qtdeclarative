@@ -129,11 +129,12 @@ struct TableIterator
 struct Location
 {
     union {
+        quint32 _dummy;
         QJsonPrivate::qle_bitfield<0, 20> line;
         QJsonPrivate::qle_bitfield<20, 12> column;
     };
 
-    Location() { line.val = 0; column.val = 0; }
+    Location() : _dummy(0) { }
 
     inline bool operator<(const Location &other) const {
         return line < other.line ||
@@ -149,11 +150,12 @@ struct RegExp
         RegExp_Multiline  = 0x04
     };
     union {
+        quint32 _dummy;
         QJsonPrivate::qle_bitfield<0, 4> flags;
         QJsonPrivate::qle_bitfield<4, 28> stringIndex;
     };
 
-    RegExp() { flags.val = 0; stringIndex.val = 0; }
+    RegExp() : _dummy(0) { }
 };
 
 struct Lookup
@@ -167,21 +169,23 @@ struct Lookup
     };
 
     union {
+        quint32 _dummy;
         QJsonPrivate::qle_bitfield<0, 4> type_and_flags;
         QJsonPrivate::qle_bitfield<4, 28> nameIndex;
     };
 
-    Lookup() { type_and_flags.val = 0; nameIndex.val = 0; }
+    Lookup() : _dummy(0) { }
 };
 
 struct JSClassMember
 {
     union {
+        quint32 _dummy;
         QJsonPrivate::qle_bitfield<0, 31> nameOffset;
         QJsonPrivate::qle_bitfield<31, 1> isAccessor;
     };
 
-    JSClassMember() { nameOffset = 0; isAccessor = 0; }
+    JSClassMember() : _dummy(0) { }
 };
 
 struct JSClass
