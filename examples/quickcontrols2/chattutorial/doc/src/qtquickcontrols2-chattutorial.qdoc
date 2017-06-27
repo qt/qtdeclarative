@@ -40,11 +40,22 @@ application.
 When setting up a new project, it's easiest to use
 \l {Qt Creator Manual}{Qt Creator}. For this project, we chose the
 \l {Qt Creator: Creating Qt Quick Projects}{Qt Quick application} template, which creates a
-basic "Hello World" application with all of the necessary files.
+basic "Hello World" application with the following files:
+
+\list
+\li \c MainForm.ui.qml - Defines the default UI
+\li \c main.qml - Embeds the default UI in a Window
+\li \c qml.qrc - Lists the \c .qml files that are built into the binary
+\li \c main.cpp - Loads \c main.qml
+\li \c chattutorial.pro - Provides the qmake configuration
+\endlist
+
+\note Delete the \c MainForm.ui.qml from the project as we will
+not use it in this tutorial.
 
 \section2 main.cpp
 
-As we created a Qt Quick application, our \c main.cpp has two includes:
+The default code in \c main.cpp has two includes:
 
 \quotefromfile chattutorial/chapter1-settingup/main.cpp
 \skipto include
@@ -65,8 +76,9 @@ Within \c main(), we set up the application object and QML engine:
 \skipto main
 \printuntil }
 
-To enable Qt's support for \l {High DPI Displays}{high DPI scaling}, it
-is necessary to set an attribute before the application object is constructed.
+It begins with enabling \l {High DPI Displays}{high DPI scaling}, which is not
+part of the default code. It is necessary to do so before the application
+object is constructed.
 
 After that's done, we construct the application object, passing any application
 arguments provided by the user.
@@ -80,22 +92,26 @@ Once we've set up things in C++, we can move on to the user interface in QML.
 
 \section2 main.qml
 
+Let's modify the default QML code to suit our needs.
+
 \quotefromfile chattutorial/chapter1-settingup/main.qml
 \skipto import
 \printuntil import QtQuick.Controls 2.1
 
-First, we import the \l {Qt Quick} module. This gives us
+First, import the \l {Qt Quick} module. This gives us
 access to graphical primitives such as \l Item, \l Rectangle, \l Text, and so
 on.
 For the full list of types, see the \l {Qt Quick QML Types} documentation.
 
-Next, we import the Qt Quick Controls 2 module. Amongst other things, this
-makes \l ApplicationWindow available:
+Next, import the Qt Quick Controls 2 module. Amongst other things, this
+provides access to \l ApplicationWindow, which will replace the existing
+root type, \c Window:
 
 \skipto ApplicationWindow
 \printuntil visible: true
-\printuntil }
-\printuntil }
+\dots
+\skipto }
+\skipuntil }
 \printuntil }
 
 ApplicationWindow is a \l Window with some added convenience for creating a
@@ -109,6 +125,8 @@ ApplicationWindow: \l {Window::}{width}, \l {Window::}{height}, and
 Once we've set these, we have a properly sized, empty window ready to be
 filled with content.
 
+\note The \c title property from the default code is removed.
+
 The first \e "screen" in our application will be a list of contacts. It would
 be nice to have some text at the top of each screen that describes its purpose.
 The header and footer properties of ApplicationWindow could work in
@@ -121,25 +139,34 @@ items that should be displayed on every screen of an application:
 \endlist
 
 However, when the contents of the header and footer varies depending on
-which screen the user is viewing, it can be much easier to use \l Page.
+which screen the user is viewing, it is much easier to use \l Page.
 For now, we'll just add one page, but in the next chapter, we'll demonstrate
 how to navigate between several pages.
 
-Now that we have a Page, we can assign a \l Label to its \l {Page::}{header}
-property. Label extends the primitive \l Text item from the Qt Quick module by
-adding \l {Styling Qt Quick Controls 2}{styling} and \l {Control::}{font}
-inheritance. This means that a Label can look different depending on which
-style is in use, and can also propagate its pixel size to its children.
+\quotefromfile chattutorial/chapter1-settingup/main.qml
+\skipto Page
+\printuntil }
+\printuntil }
+
+We replace the default \c{MainForm {...}} code block with a Page, which is
+sized to occupy all the space on the window using the \l{anchors.fill}
+property.
+
+Then, we assign a \l Label to its \l {Page::}{header} property. Label extends
+the primitive \l Text item from the Qt Quick module by adding
+\l{Styling Qt Quick Controls 2}{styling} and \l {Control::}{font} inheritance.
+This means that a Label can look different depending on which style is in use,
+and can also propagate its pixel size to its children.
 
 We want some distance between the top of the application window and the text,
-so we set the \l {Text::padding}{padding} property. This will allocate extra
-space on each side of the label (within its bounds). We could have also set the
-\l {Text::}{topPadding} and \l {Text::}{bottomPadding} properties explicitly.
+so we set the \l {Text::padding}{padding} property. This allocates extra
+space on each side of the label (within its bounds). We can also explicitly set
+the \l {Text::}{topPadding} and \l {Text::}{bottomPadding} properties instead.
 
 We set the text of the label using the \c qsTr() function, which ensures that
 the text can be translated by \l {Writing Source Code for Translation}{Qt's
-translation system}. It's a good idea to do this for text that will
-be visible to the end users of your application.
+translation system}. It's a good practice to follow for text that is visible to
+the end users of your application.
 
 By default, text is vertically aligned to the top of its bounds, while the
 horizontal alignment depends on the natural direction of the text; for example,
@@ -182,8 +209,8 @@ executable.
 
 \printline target.path
 
-This line determines where the example will be copied to when running
-\c {make install}.
+This line replaces deployment settings that come with the default project file.
+It determines where the example is copied, on running "\c{make install}".
 
 Now we can build and run the application:
 
