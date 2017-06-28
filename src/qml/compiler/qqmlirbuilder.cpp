@@ -1425,7 +1425,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
     }
 
     // write objects
-    QV4::CompiledData::LEUInt32 *objectTable = reinterpret_cast<QV4::CompiledData::LEUInt32*>(data + qmlUnit->offsetToObjects);
+    quint32_le *objectTable = reinterpret_cast<quint32_le*>(data + qmlUnit->offsetToObjects);
     char *objectPtr = data + qmlUnit->offsetToObjects + objectOffsetTableSize;
     for (int i = 0; i < output.objects.count(); ++i) {
         const Object *o = output.objects.at(i);
@@ -1467,7 +1467,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         objectToWrite->offsetToNamedObjectsInComponent = nextOffset;
         nextOffset += objectToWrite->nNamedObjectsInComponent * sizeof(quint32);
 
-        QV4::CompiledData::LEUInt32 *functionsTable = reinterpret_cast<QV4::CompiledData::LEUInt32*>(objectPtr + objectToWrite->offsetToFunctions);
+        quint32_le *functionsTable = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToFunctions);
         for (const Function *f = o->firstFunction(); f; f = f->next)
             *functionsTable++ = o->runtimeFunctionIndices.at(f->index);
 
@@ -1493,7 +1493,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isValueBindingToAlias);
         Q_ASSERT((bindingPtr - objectToWrite->offsetToBindings - objectPtr) / sizeof(QV4::CompiledData::Binding) == unsigned(o->bindingCount()));
 
-        QV4::CompiledData::LEUInt32 *signalOffsetTable = reinterpret_cast<QV4::CompiledData::LEUInt32*>(objectPtr + objectToWrite->offsetToSignals);
+        quint32_le *signalOffsetTable = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToSignals);
         quint32 signalTableSize = 0;
         char *signalPtr = objectPtr + nextOffset;
         for (const Signal *s = o->firstSignal(); s; s = s->next) {
@@ -1513,7 +1513,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
             signalPtr += size;
         }
 
-        QV4::CompiledData::LEUInt32 *namedObjectInComponentPtr = reinterpret_cast<QV4::CompiledData::LEUInt32*>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
+        quint32_le *namedObjectInComponentPtr = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
         for (int i = 0; i < o->namedObjectsInComponent.count; ++i) {
             *namedObjectInComponentPtr++ = o->namedObjectsInComponent.at(i);
         }
@@ -2225,7 +2225,7 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
 
     QQmlJS::Engine *jsParserEngine = &output->jsParserEngine;
 
-    const QV4::CompiledData::LEUInt32 *functionIdx = serializedObject->functionOffsetTable();
+    const quint32_le *functionIdx = serializedObject->functionOffsetTable();
     for (uint i = 0; i < serializedObject->nFunctions; ++i, ++functionIdx) {
         QmlIR::Function *f = pool->New<QmlIR::Function>();
         const QV4::CompiledData::Function *compiledFunction = unit->functionAt(*functionIdx);
@@ -2236,7 +2236,7 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
         f->nameIndex = compiledFunction->nameIndex;
 
         QQmlJS::AST::FormalParameterList *paramList = 0;
-        const QV4::CompiledData::LEUInt32 *formalNameIdx = compiledFunction->formalsTable();
+        const quint32_le *formalNameIdx = compiledFunction->formalsTable();
         for (uint i = 0; i < compiledFunction->nFormals; ++i, ++formalNameIdx) {
             const QString formal = unit->stringAt(*formalNameIdx);
             QStringRef paramNameRef = jsParserEngine->newStringRef(formal);

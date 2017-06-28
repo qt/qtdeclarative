@@ -350,7 +350,7 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
     QV4::Scoped<QV4::QmlContext> context(scope, engine->qmlContext());
     QQmlContextData *qmlContext = context->qmlContext();
 
-    const QV4::CompiledData::LEUInt32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
+    const quint32_le *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
     const int idObjectDependencyCount = compiledFunction->nDependingIdObjects;
     for (int i = 0; i < idObjectDependencyCount; ++i, ++idObjectDependency) {
         Q_ASSERT(int(*idObjectDependency) < qmlContext->idValueCount);
@@ -359,7 +359,7 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
     }
 
     Q_ASSERT(qmlContext->contextObject);
-    const QV4::CompiledData::LEUInt32 *contextPropertyDependency = compiledFunction->qmlContextPropertiesDependencyTable();
+    const quint32_le *contextPropertyDependency = compiledFunction->qmlContextPropertiesDependencyTable();
     const int contextPropertyDependencyCount = compiledFunction->nDependingContextProperties;
     for (int i = 0; i < contextPropertyDependencyCount; ++i) {
         const int propertyIndex = *contextPropertyDependency++;
@@ -369,7 +369,7 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::CompiledData::Funct
     }
 
     QObject *scopeObject = context->qmlScope();
-    const QV4::CompiledData::LEUInt32 *scopePropertyDependency = compiledFunction->qmlScopePropertiesDependencyTable();
+    const quint32_le *scopePropertyDependency = compiledFunction->qmlScopePropertiesDependencyTable();
     const int scopePropertyDependencyCount = compiledFunction->nDependingScopeProperties;
     for (int i = 0; i < scopePropertyDependencyCount; ++i) {
         const int propertyIndex = *scopePropertyDependency++;

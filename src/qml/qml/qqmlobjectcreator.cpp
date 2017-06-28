@@ -996,7 +996,7 @@ void QQmlObjectCreator::setupFunctions()
     QV4::ScopedValue function(scope);
     QV4::ScopedContext qmlContext(scope, currentQmlContext());
 
-    const QV4::CompiledData::LEUInt32 *functionIdx = _compiledObject->functionOffsetTable();
+    const quint32_le *functionIdx = _compiledObject->functionOffsetTable();
     for (quint32 i = 0; i < _compiledObject->nFunctions; ++i, ++functionIdx) {
         QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[*functionIdx];
         const QString name = runtimeFunction->name()->toQString();
