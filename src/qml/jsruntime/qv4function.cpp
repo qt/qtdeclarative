@@ -44,6 +44,7 @@
 #include "qv4engine_p.h"
 #include "qv4lookup_p.h"
 #include <private/qv4mm_p.h>
+#include <private/qv4identifiertable_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -57,8 +58,6 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
         , codeData(0)
         , hasQmlDependencies(function->hasQmlDependencies())
 {
-    Q_UNUSED(engine);
-
     internalClass = engine->internalClasses[EngineBase::Class_Empty];
     const CompiledData::LEUInt32 *formalsIndices = compiledFunction->formalsTable();
     // iterate backwards, so we get the right ordering for duplicate names
@@ -81,7 +80,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
 
     const CompiledData::LEUInt32 *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
-        internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
+        internalClass = internalClass->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
     activationRequired = compiledFunction->nInnerFunctions > 0 || (compiledFunction->flags & (CompiledData::Function::HasDirectEval | CompiledData::Function::UsesArgumentsObject));
 
@@ -116,7 +115,7 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
 
     const CompiledData::LEUInt32 *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
-        internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
+        internalClass = internalClass->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
     activationRequired = true;
 }
