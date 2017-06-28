@@ -39,6 +39,7 @@
 
 #include "quicktestevent_p.h"
 #include <QtTest/qtestkeyboard.h>
+#include <QtTest/qtestmouse.h>
 #include <QtQml/qqml.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
@@ -125,8 +126,6 @@ namespace QtQuickTest
 {
     enum MouseAction { MousePress, MouseRelease, MouseClick, MouseDoubleClick, MouseMove, MouseDoubleClickSequence };
 
-    int lastMouseTimestamp = 0;
-
     static void mouseEvent(MouseAction action, QWindow *window,
                            QObject *item, Qt::MouseButton button,
                            Qt::KeyboardModifiers stateKey, const QPointF &_pos, int delay=-1)
@@ -138,7 +137,7 @@ namespace QtQuickTest
             delay = QTest::defaultMouseDelay();
         if (delay > 0) {
             QTest::qWait(delay);
-            lastMouseTimestamp += delay;
+            QTest::lastMouseTimestamp += delay;
         }
 
         if (action == MouseClick) {
@@ -165,36 +164,31 @@ namespace QtQuickTest
 
         stateKey &= static_cast<unsigned int>(Qt::KeyboardModifierMask);
 
-        QMouseEvent me(QEvent::User, QPoint(), Qt::LeftButton, button, stateKey);
+        if (action == MouseDoubleClick) {
+            // the QWindow variant of QTest::mouseEvent doesn't have MouseDoubleClick as event
+            // its MouseDClick is actually like the MouseDoubleClickSequence here
+            QMouseEvent me(QEvent::MouseButtonDblClick, pos, window->mapToGlobal(pos), button, button, stateKey);
+            me.setTimestamp(++QTest::lastMouseTimestamp);
+            QSpontaneKeyEvent::setSpontaneous(&me);
+            if (!qApp->notify(window, &me)) {
+                QWARN("Mouse event \"MouseDoubleClick\" not accepted by receiving window");
+            }
+            return;
+        }
+
         switch (action)
         {
             case MousePress:
-                me = QMouseEvent(QEvent::MouseButtonPress, pos, window->mapToGlobal(pos), button, button, stateKey);
-                me.setTimestamp(++lastMouseTimestamp);
+                QTest::mousePress(window, button, stateKey, pos, /*delay*/ 0);
                 break;
             case MouseRelease:
-                me = QMouseEvent(QEvent::MouseButtonRelease, pos, window->mapToGlobal(pos), button, 0, stateKey);
-                me.setTimestamp(++lastMouseTimestamp);
-                lastMouseTimestamp += 500; // avoid double clicks being generated
-                break;
-            case MouseDoubleClick:
-                me = QMouseEvent(QEvent::MouseButtonDblClick, pos, window->mapToGlobal(pos), button, button, stateKey);
-                me.setTimestamp(++lastMouseTimestamp);
+                QTest::mouseRelease(window, button, stateKey, pos, /*delay*/ 0);
                 break;
             case MouseMove:
-                // with move event the button is NoButton, but 'buttons' holds the currently pressed buttons
-                me = QMouseEvent(QEvent::MouseMove, pos, window->mapToGlobal(pos), Qt::NoButton, button, stateKey);
-                me.setTimestamp(++lastMouseTimestamp);
+                QTest::mouseMove(window, pos, /*delay*/ 0);
                 break;
             default:
                 QTEST_ASSERT(false);
-        }
-        QSpontaneKeyEvent::setSpontaneous(&me);
-        if (!qApp->notify(window, &me)) {
-            static const char *mouseActionNames[] =
-                { "MousePress", "MouseRelease", "MouseClick", "MouseDoubleClick", "MouseMove", "MouseDoubleClickSequence" };
-            QString warning = QString::fromLatin1("Mouse event \"%1\" not accepted by receiving window");
-            QWARN(warning.arg(QString::fromLatin1(mouseActionNames[static_cast<int>(action)])).toLatin1().data());
         }
     }
 
