@@ -322,5 +322,21 @@ TestCase {
 
         keyClick(Qt.Key_S, Qt.AltModifier)
         compare(clickSpy.count, 3)
+
+        control.visible = false
+        control.text = "&Hidden"
+        keyClick(Qt.Key_H, Qt.AltModifier)
+        compare(clickSpy.count, 3)
+
+        control.visible = true
+        keyClick(Qt.Key_H, Qt.AltModifier)
+        compare(clickSpy.count, 4)
+
+        // ungrab on destruction (don't crash)
+        control.Component.onDestruction.connect(function() { control = null })
+        control.destroy()
+        wait(0)
+        verify(!control)
+        keyClick(Qt.Key_H, Qt.AltModifier)
     }
 }

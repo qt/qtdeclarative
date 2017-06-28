@@ -430,6 +430,7 @@ QQuickAbstractButton::~QQuickAbstractButton()
     Q_D(QQuickAbstractButton);
     if (d->group)
         d->group->removeButton(this);
+    d->ungrabShortcut();
 }
 
 /*!
@@ -824,7 +825,8 @@ void QQuickAbstractButton::setShortcut(const QKeySequence &shortcut)
 
     d->ungrabShortcut();
     d->shortcut = shortcut;
-    d->grabShortcut();
+    if (isVisible())
+        d->grabShortcut();
 }
 #endif
 
