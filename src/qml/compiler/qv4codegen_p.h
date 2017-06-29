@@ -83,9 +83,134 @@ struct CompilationUnit;
 }
 
 namespace QQmlJS {
-namespace AST {
-class UiParameterList;
-}
+
+enum CompilationMode {
+    GlobalCode,
+    EvalCode,
+    FunctionCode,
+    QmlBinding // This is almost the same as EvalCode, except:
+               //  * function declarations are moved to the return address when encountered
+               //  * return statements are allowed everywhere (like in FunctionCode)
+               //  * variable declarations are treated as true locals (like in FunctionCode)
+};
+
+struct Context {
+    Context *parent;
+
+    enum MemberType {
+        UndefinedMember,
+        VariableDefinition,
+        VariableDeclaration,
+        FunctionDefinition
+    };
+
+    struct Member {
+        MemberType type;
+        int index;
+        AST::FunctionExpression *function;
+        AST::VariableDeclaration::VariableScope scope;
+
+        bool isLexicallyScoped() const { return this->scope != AST::VariableDeclaration::FunctionScope; }
+    };
+    typedef QMap<QString, Member> MemberMap;
+
+    MemberMap members;
+    AST::FormalParameterList *formals;
+    int maxNumberOfArguments;
+    bool hasDirectEval;
+    bool hasNestedFunctions;
+    bool isStrict;
+    bool isNamedFunctionExpression;
+    bool usesThis;
+    enum UsesArgumentsObject {
+        ArgumentsObjectUnknown,
+        ArgumentsObjectNotUsed,
+        ArgumentsObjectUsed
+    };
+
+    UsesArgumentsObject usesArgumentsObject;
+
+    CompilationMode compilationMode;
+
+    Context(Context *parent, CompilationMode mode)
+        : parent(parent)
+        , formals(0)
+        , maxNumberOfArguments(0)
+        , hasDirectEval(false)
+        , hasNestedFunctions(false)
+        , isStrict(false)
+        , isNamedFunctionExpression(false)
+        , usesThis(false)
+        , usesArgumentsObject(ArgumentsObjectUnknown)
+        , compilationMode(mode)
+    {
+        if (parent && parent->isStrict)
+            isStrict = true;
+    }
+
+    int findMember(const QString &name) const
+    {
+        MemberMap::const_iterator it = members.find(name);
+        if (it == members.end())
+            return -1;
+        Q_ASSERT((*it).index != -1 || !parent);
+        return (*it).index;
+    }
+
+    bool memberInfo(const QString &name, const Member **m) const
+    {
+        Q_ASSERT(m);
+        MemberMap::const_iterator it = members.find(name);
+        if (it == members.end()) {
+            *m = 0;
+            return false;
+        }
+        *m = &(*it);
+        return true;
+    }
+
+    bool lookupMember(const QString &name, Context **scope, int *index, int *distance)
+    {
+        Context *it = this;
+        *distance = 0;
+        for (; it; it = it->parent, ++(*distance)) {
+            int idx = it->findMember(name);
+            if (idx != -1) {
+                *scope = it;
+                *index = idx;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void enter(const QString &name, MemberType type, AST::VariableDeclaration::VariableScope scope, AST::FunctionExpression *function = 0)
+    {
+        if (! name.isEmpty()) {
+            if (type != FunctionDefinition) {
+                for (AST::FormalParameterList *it = formals; it; it = it->next)
+                    if (it->name == name)
+                        return;
+            }
+            MemberMap::iterator it = members.find(name);
+            if (it == members.end()) {
+                Member m;
+                m.index = -1;
+                m.type = type;
+                m.function = function;
+                m.scope = scope;
+                members.insert(name, m);
+            } else {
+                Q_ASSERT(scope == (*it).scope);
+                if ((*it).type <= type) {
+                    (*it).type = type;
+                    (*it).function = function;
+                }
+            }
+        }
+    }
+};
+
 
 class Q_QML_PRIVATE_EXPORT Codegen: protected AST::Visitor
 {
@@ -95,15 +220,6 @@ protected:
 public:
     Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict);
 
-    enum CompilationMode {
-        GlobalCode,
-        EvalCode,
-        FunctionCode,
-        QmlBinding // This is almost the same as EvalCode, except:
-                   //  * function declarations are moved to the return address when encountered
-                   //  * return statements are allowed everywhere (like in FunctionCode)
-                   //  * variable declarations are treated as true locals (like in FunctionCode)
-    };
 
     void generateFromProgram(const QString &fileName,
                              const QString &sourceCode,
@@ -340,132 +456,16 @@ protected:
         }
     };
 
-    struct Environment {
-        Environment *parent;
 
-        enum MemberType {
-            UndefinedMember,
-            VariableDefinition,
-            VariableDeclaration,
-            FunctionDefinition
-        };
-
-        struct Member {
-            MemberType type;
-            int index;
-            AST::FunctionExpression *function;
-            AST::VariableDeclaration::VariableScope scope;
-
-            bool isLexicallyScoped() const { return this->scope != AST::VariableDeclaration::FunctionScope; }
-        };
-        typedef QMap<QString, Member> MemberMap;
-
-        MemberMap members;
-        AST::FormalParameterList *formals;
-        int maxNumberOfArguments;
-        bool hasDirectEval;
-        bool hasNestedFunctions;
-        bool isStrict;
-        bool isNamedFunctionExpression;
-        bool usesThis;
-        enum UsesArgumentsObject {
-            ArgumentsObjectUnknown,
-            ArgumentsObjectNotUsed,
-            ArgumentsObjectUsed
-        };
-
-        UsesArgumentsObject usesArgumentsObject;
-
-        CompilationMode compilationMode;
-
-        Environment(Environment *parent, CompilationMode mode)
-            : parent(parent)
-            , formals(0)
-            , maxNumberOfArguments(0)
-            , hasDirectEval(false)
-            , hasNestedFunctions(false)
-            , isStrict(false)
-            , isNamedFunctionExpression(false)
-            , usesThis(false)
-            , usesArgumentsObject(ArgumentsObjectUnknown)
-            , compilationMode(mode)
-        {
-            if (parent && parent->isStrict)
-                isStrict = true;
-        }
-
-        int findMember(const QString &name) const
-        {
-            MemberMap::const_iterator it = members.find(name);
-            if (it == members.end())
-                return -1;
-            Q_ASSERT((*it).index != -1 || !parent);
-            return (*it).index;
-        }
-
-        bool memberInfo(const QString &name, const Member **m) const
-        {
-            Q_ASSERT(m);
-            MemberMap::const_iterator it = members.find(name);
-            if (it == members.end()) {
-                *m = 0;
-                return false;
-            }
-            *m = &(*it);
-            return true;
-        }
-
-        bool lookupMember(const QString &name, Environment **scope, int *index, int *distance)
-        {
-            Environment *it = this;
-            *distance = 0;
-            for (; it; it = it->parent, ++(*distance)) {
-                int idx = it->findMember(name);
-                if (idx != -1) {
-                    *scope = it;
-                    *index = idx;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        void enter(const QString &name, MemberType type, AST::VariableDeclaration::VariableScope scope, AST::FunctionExpression *function = 0)
-        {
-            if (! name.isEmpty()) {
-                if (type != FunctionDefinition) {
-                    for (AST::FormalParameterList *it = formals; it; it = it->next)
-                        if (it->name == name)
-                            return;
-                }
-                MemberMap::iterator it = members.find(name);
-                if (it == members.end()) {
-                    Member m;
-                    m.index = -1;
-                    m.type = type;
-                    m.function = function;
-                    m.scope = scope;
-                    members.insert(name, m);
-                } else {
-                    Q_ASSERT(scope == (*it).scope);
-                    if ((*it).type <= type) {
-                        (*it).type = type;
-                        (*it).function = function;
-                    }
-                }
-            }
-        }
-    };
-
-    Environment *newEnvironment(AST::Node *node, Environment *parent, CompilationMode compilationMode)
+    Context *newEnvironment(AST::Node *node, Context *parent, CompilationMode compilationMode)
     {
-        Environment *env = new Environment(parent, compilationMode);
-        _envMap.insert(node, env);
+        Context *env = new Context(parent, compilationMode);
+        _contextMap.insert(node, env);
         return env;
     }
 
-    void enterEnvironment(AST::Node *node);
-    void leaveEnvironment();
+    void enterContext(AST::Node *node);
+    void leaveContext();
 
     void leaveLoop();
 
@@ -647,10 +647,10 @@ protected:
     QV4::IR::Function *_function;
     BytecodeGenerator::Label _exitBlock;
     unsigned _returnAddress;
-    Environment *_variableEnvironment;
+    Context *_context;
     QV4::ControlFlow *_controlFlow;
     AST::LabelledStatement *_labelledStatement;
-    QHash<AST::Node *, Environment *> _envMap;
+    QHash<AST::Node *, Context *> _contextMap;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
     BytecodeGenerator *bytecodeGenerator = 0;
     bool _strictMode;
@@ -726,8 +726,8 @@ protected:
     // fields:
         Codegen *_cg;
         const QString _sourceCode;
-        Environment *_variableEnvironment;
-        QStack<Environment *> _envStack;
+        Context *_variableEnvironment;
+        QStack<Context *> _envStack;
 
         bool _allowFuncDecls;
         CompilationMode defaultProgramMode;

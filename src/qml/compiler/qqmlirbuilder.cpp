@@ -1587,8 +1587,8 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
 {
     QVector<int> runtimeFunctionIndices(functions.size());
 
-    ScanFunctions scan(this, sourceCode, GlobalCode);
-    scan.enterEnvironment(0, QmlBinding);
+    ScanFunctions scan(this, sourceCode, QQmlJS::GlobalCode);
+    scan.enterEnvironment(0, QQmlJS::QmlBinding);
     scan.enterQmlScope(qmlRoot, QStringLiteral("context scope"));
     for (const CompiledFunctionOrExpression &f : functions) {
         Q_ASSERT(f.node != qmlRoot);
@@ -1597,7 +1597,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         if (function)
             scan.enterQmlFunction(function);
         else
-            scan.enterEnvironment(f.node, QmlBinding);
+            scan.enterEnvironment(f.node, QQmlJS::QmlBinding);
 
         scan(function ? function->body : f.node);
         scan.leaveEnvironment();
@@ -1605,7 +1605,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     scan.leaveEnvironment();
     scan.leaveEnvironment();
 
-    _variableEnvironment = 0;
+    _context = 0;
     _function = _module->functions.at(defineFunction(QStringLiteral("context scope"), qmlRoot, 0, 0));
 
     for (int i = 0; i < functions.count(); ++i) {
@@ -1648,8 +1648,8 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         runtimeFunctionIndices[i] = idx;
     }
 
-    qDeleteAll(_envMap);
-    _envMap.clear();
+    qDeleteAll(_contextMap);
+    _contextMap.clear();
     return runtimeFunctionIndices;
 }
 

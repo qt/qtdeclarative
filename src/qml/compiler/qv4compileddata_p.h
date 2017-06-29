@@ -86,9 +86,6 @@ struct Document;
 }
 
 namespace QV4 {
-namespace IR {
-struct Function;
-}
 
 struct Function;
 class EvalISelFactory;
