@@ -71,6 +71,11 @@ TestCase {
     }
 
     Component {
+        id: action
+        Action { }
+    }
+
+    Component {
         id: signalSpy
         SignalSpy { }
     }
@@ -331,6 +336,15 @@ TestCase {
         control.visible = true
         keyClick(Qt.Key_H, Qt.AltModifier)
         compare(clickSpy.count, 4)
+
+        control.action = action.createObject(control, {text: "&Action"})
+
+        var actionSpy = signalSpy.createObject(control, {target: control.action, signalName: "triggered"})
+        verify(actionSpy.valid)
+
+        keyClick(Qt.Key_A, Qt.AltModifier)
+        compare(actionSpy.count, 1)
+        compare(clickSpy.count, 5)
 
         // ungrab on destruction (don't crash)
         control.Component.onDestruction.connect(function() { control = null })

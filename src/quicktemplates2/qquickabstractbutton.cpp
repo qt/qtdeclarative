@@ -848,7 +848,7 @@ bool QQuickAbstractButton::event(QEvent *event)
     if (event->type() == QEvent::Shortcut) {
         QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
         if (se->shortcutId() == d->shortcutId) {
-            d->click();
+            d->trigger();
             return true;
         }
     }
