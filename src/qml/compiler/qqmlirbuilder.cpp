@@ -2030,30 +2030,16 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
         QQmlPropertyData *data = lookupQmlCompliantProperty(_scopeObject, name);
         if (!data)
             return Reference::fromName(this, name);
-#if 0
-        QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
-        base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
-        base->memberResolver->owner = _function;
-        initMetaObjectResolver(base->memberResolver, _scopeObject);
-#endif
-        _function->scopeObjectPropertyDependencies.insert(data->coreIndex(), data->notifyIndex());
         Reference base = Reference::fromTemp(this, _qmlContextTemp);
-        return Reference::fromQmlScopeObject(base, data->coreIndex());
+        return Reference::fromQmlScopeObject(base, data->coreIndex(), data->notifyIndex());
     }
 
     if (_contextObject) {
         QQmlPropertyData *data = lookupQmlCompliantProperty(_contextObject, name);
         if (!data)
             return Reference::fromName(this, name);
-#if 0
-        QV4::IR::Temp *base = _block->TEMP(_qmlContextTemp);
-        base->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
-        base->memberResolver->owner = _function;
-        initMetaObjectResolver(base->memberResolver, _contextObject);
-#endif
-        _function->contextObjectPropertyDependencies.insert(data->coreIndex(), data->notifyIndex());
         Reference base = Reference::fromTemp(this, _qmlContextTemp);
-        return Reference::fromQmlContextObject(base, data->coreIndex());
+        return Reference::fromQmlContextObject(base, data->coreIndex(), data->notifyIndex());
     }
 #else
     Q_UNUSED(name)

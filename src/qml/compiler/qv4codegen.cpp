@@ -3295,9 +3295,11 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         break;
     case Closure:
         closureId = other.closureId;
+        break;
     case QmlScopeObject:
     case QmlContextObject:
-        closureId = other.qmlIndex;
+        qmlCoreIndex = other.qmlCoreIndex;
+        qmlNotifyIndex = other.qmlNotifyIndex;
         break;
     case This:
         break;
@@ -3341,7 +3343,7 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         return closureId == other.closureId;
     case QmlScopeObject:
     case QmlContextObject:
-        return qmlIndex == other.qmlIndex;
+        return qmlCoreIndex == other.qmlCoreIndex && qmlNotifyIndex == other.qmlNotifyIndex;
     case This:
         return true;
     }
@@ -3479,13 +3481,13 @@ void Codegen::Reference::writeBack() const
     } else if (type == QmlScopeObject) {
         Instruction::StoreScopeObjectProperty store;
         store.base = base;
-        store.propertyIndex = qmlIndex;
+        store.propertyIndex = qmlCoreIndex;
         store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
     } else if (type == QmlContextObject) {
         Instruction::StoreContextObjectProperty store;
         store.base = base;
-        store.propertyIndex = qmlIndex;
+        store.propertyIndex = qmlCoreIndex;
         store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
     } else {
@@ -3537,17 +3539,19 @@ void Codegen::Reference::load(uint tmp) const
     } else if (type == QmlScopeObject) {
         Instruction::LoadScopeObjectProperty load;
         load.base = base;
-        load.propertyIndex = qmlIndex;
+        load.propertyIndex = qmlCoreIndex;
         load.captureRequired = true; // ### captureRequired;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
+        codegen->_function->scopeObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } else if (type == QmlContextObject) {
         Instruction::LoadContextObjectProperty load;
         load.base = base;
-        load.propertyIndex = qmlIndex;
+        load.propertyIndex = qmlCoreIndex;
         load.captureRequired = true; // ### captureRequired;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
+        codegen->_function->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } else if (type == This) {
         Instruction::LoadThis load;
         load.result = temp;
