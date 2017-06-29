@@ -406,6 +406,7 @@ void tst_menu::menuSeparator()
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
+    moveMouseAway(window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
     QVERIFY(menu);
@@ -543,6 +544,7 @@ void tst_menu::popup()
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
+    moveMouseAway(window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
     QVERIFY(menu);
