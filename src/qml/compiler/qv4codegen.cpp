@@ -3099,6 +3099,7 @@ bool Codegen::visit(WithStatement *ast)
     Reference src = expression(ast->expression);
     if (hasError)
         return false;
+    src.asRValue(); // trigger load before we setup the exception handler, so exceptions here go to the right place
 
     ControlFlowWith flow(this);
     ++_function->insideWithOrCatch;
