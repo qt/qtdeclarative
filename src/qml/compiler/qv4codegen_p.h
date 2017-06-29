@@ -464,9 +464,6 @@ protected:
         return env;
     }
 
-    struct UiMember {
-    };
-
     void enterEnvironment(AST::Node *node);
     void leaveEnvironment();
 
@@ -505,7 +502,6 @@ protected:
                    bool trueBlockFollowsCondition);
     Reference expression(AST::ExpressionNode *ast);
     Result sourceElement(AST::SourceElement *ast);
-    UiMember uiObjectMember(AST::UiObjectMember *ast);
 
     void accept(AST::Node *node);
 
@@ -647,18 +643,14 @@ protected:
     friend struct QV4::ControlFlowCatch;
     friend struct QV4::ControlFlowFinally;
     Result _expr;
-    QString _property;
-    UiMember _uiMember;
     QV4::IR::Module *_module;
     QV4::IR::Function *_function;
-    QV4::IR::BasicBlock *_block;
     BytecodeGenerator::Label _exitBlock;
     unsigned _returnAddress;
     Environment *_variableEnvironment;
     QV4::ControlFlow *_controlFlow;
     AST::LabelledStatement *_labelledStatement;
     QHash<AST::Node *, Environment *> _envMap;
-    QHash<AST::FunctionExpression *, int> _functionMap;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
     BytecodeGenerator *bytecodeGenerator = 0;
     bool _strictMode;

@@ -1080,17 +1080,6 @@ Codegen::Result Codegen::sourceElement(SourceElement *ast)
     return r;
 }
 
-Codegen::UiMember Codegen::uiObjectMember(UiObjectMember *ast)
-{
-    UiMember m;
-    if (ast) {
-        qSwap(_uiMember, m);
-        accept(ast);
-        qSwap(_uiMember, m);
-    }
-    return m;
-}
-
 void Codegen::functionBody(FunctionBody *ast)
 {
     if (ast)
