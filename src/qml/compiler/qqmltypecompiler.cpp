@@ -139,7 +139,8 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
             sss.scan();
         }
 
-        QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsGenerator, &document->jsModule, &document->jsParserEngine, document->program, typeNameCache, &document->jsGenerator.stringTable);
+        document->jsModule.setFileName(typeData->finalUrlString());
+        QmlIR::JSCodeGen v4CodeGenerator(document->code, &document->jsGenerator, &document->jsModule, &document->jsParserEngine, document->program, typeNameCache, &document->jsGenerator.stringTable);
         v4CodeGenerator.setUseFastLookups(false);
         // ###        v4CodeGenerator.setUseTypeInference(true);
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);

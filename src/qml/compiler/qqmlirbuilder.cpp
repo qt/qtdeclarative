@@ -1551,7 +1551,7 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, Binding
     return bindingPtr;
 }
 
-JSCodeGen::JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
+JSCodeGen::JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
                      QV4::IR::Module *jsModule, QQmlJS::Engine *jsEngine,
                      QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports, const QV4::Compiler::StringTableGenerator *stringPool)
     : QQmlJS::Codegen(jsUnitGenerator, /*strict mode*/false)
@@ -1567,7 +1567,6 @@ JSCodeGen::JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::Co
     , _importedScriptsTemp(-1)
 {
     _module = jsModule;
-    _module->setFileName(fileName);
     _fileNameIsUrl = true;
 }
 
