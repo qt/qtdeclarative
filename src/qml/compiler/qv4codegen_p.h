@@ -134,7 +134,7 @@ public:
             This
         } type = Invalid;
 
-        bool isLValue() const { return type <= LastLValue && !isLiteral; }
+        bool isLValue() const { return !isReadonly; }
 
         Reference(Codegen *cg, Type type = Invalid) : type(type), codegen(cg) {}
         Reference()
@@ -189,6 +189,7 @@ public:
         static Reference fromConst(Codegen *cg, QV4::ReturnedValue constant) {
             Reference r(cg, Const);
             r.constant = constant;
+            r.isReadonly = true;
             return r;
         }
         static Reference fromClosure(Codegen *cg, int functionId) {
@@ -210,6 +211,7 @@ public:
         }
         static Reference fromThis(Codegen *cg) {
             Reference r(cg, This);
+            r.isReadonly = true;
             return r;
         }
 
@@ -245,7 +247,7 @@ public:
         mutable int tempIndex = -1;
         mutable bool needsWriteBack = false;
         mutable bool isArgOrEval = false;
-        bool isLiteral = false;
+        bool isReadonly = false;
         bool global = false;
         Codegen *codegen;
 

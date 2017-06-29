@@ -1970,6 +1970,7 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
             load.index = mapping.idIndex;
             load.result = result.asLValue();
             bytecodeGenerator->addInstruction(load);
+            result.isReadonly = true;
 
 #if 0
             if (mapping.type) {
