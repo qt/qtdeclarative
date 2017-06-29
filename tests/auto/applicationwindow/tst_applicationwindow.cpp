@@ -441,7 +441,8 @@ void tst_applicationwindow::attachedProperties()
     QVERIFY(!childItem->property("attached_header").value<QQuickItem *>());
     QVERIFY(!childItem->property("attached_footer").value<QQuickItem *>());
     QVERIFY(!childItem->property("attached_overlay").value<QQuickItem *>());
-    childAppWindow->hide();
+    childAppWindow->close();
+    qApp->processEvents();
 
     childWindow->show();
     childWindow->requestActivate();
@@ -488,7 +489,7 @@ void tst_applicationwindow::attachedProperties()
     QVERIFY(!childItem->property("attached_header").value<QQuickItem *>());
     QVERIFY(!childItem->property("attached_footer").value<QQuickItem *>());
     QVERIFY(!childItem->property("attached_overlay").value<QQuickItem *>());
-    childWindow->hide();
+    childWindow->close();
 
     // ### A temporary workaround to unblock the CI until the crash caused
     // by https://codereview.qt-project.org/#/c/108517/ has been fixed...
