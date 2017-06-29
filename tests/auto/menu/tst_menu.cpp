@@ -67,6 +67,7 @@ private slots:
     void mouse();
     void pressAndHold();
     void contextMenuKeyboard();
+    void mnemonics();
     void menuButton();
     void addItem();
     void menuSeparator();
@@ -349,6 +350,54 @@ void tst_menu::contextMenuKeyboard()
     QTest::keyClick(window, Qt::Key_Escape);
     QCOMPARE(visibleSpy.count(), 4);
     QVERIFY(!menu->isVisible());
+}
+
+void tst_menu::mnemonics()
+{
+#ifdef Q_OS_MACOS
+    QSKIP("Mnemonics are not used on macOS");
+#endif
+
+    QQuickApplicationHelper helper(this, QLatin1String("mnemonics.qml"));
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QQuickAction *action = window->property("action").value<QQuickAction *>();
+    QQuickMenuItem *menuItem = window->property("menuItem").value<QQuickMenuItem *>();
+    QQuickMenu *subMenu = window->property("subMenu").value<QQuickMenu *>();
+    QQuickMenuItem *subMenuItem = window->property("subMenuItem").value<QQuickMenuItem *>();
+    QVERIFY(menu && action && menuItem && subMenu && subMenuItem);
+
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+
+    QSignalSpy actionSpy(action, &QQuickAction::triggered);
+    QVERIFY(actionSpy.isValid());
+    QTest::keyClick(window, Qt::Key_A, Qt::AltModifier); // "&Action"
+    QCOMPARE(actionSpy.count(), 1);
+
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+
+    QSignalSpy menuItemSpy(menuItem, &QQuickMenuItem::triggered);
+    QVERIFY(menuItemSpy.isValid());
+    QTest::keyClick(window, Qt::Key_I, Qt::AltModifier); // "Menu &Item"
+    QCOMPARE(menuItemSpy.count(), 1);
+
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+
+    QTest::keyClick(window, Qt::Key_M, Qt::AltModifier); // "Sub &Menu"
+    QTRY_VERIFY(subMenu->isOpened());
+
+    QSignalSpy subMenuItemSpy(subMenuItem, &QQuickMenuItem::triggered);
+    QVERIFY(subMenuItemSpy.isValid());
+    QTest::keyClick(window, Qt::Key_S, Qt::AltModifier); // "&Sub Menu Item"
+    QCOMPARE(subMenuItemSpy.count(), 1);
 }
 
 void tst_menu::menuButton()

@@ -260,6 +260,8 @@ QQuickItem *QQuickMenuPrivate::beginCreateItem()
     if (!item)
         delete object;
 
+    QQml_setParent_noEvent(item, q);
+
     return item;
 }
 
