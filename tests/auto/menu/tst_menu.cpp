@@ -63,6 +63,7 @@ public:
 private slots:
     void defaults();
     void mouse();
+    void pressAndHold();
     void contextMenuKeyboard();
     void menuButton();
     void addItem();
@@ -147,6 +148,27 @@ void tst_menu::mouse()
 //    QVERIFY(!menu->isVisible());
 //    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
 //    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
+}
+
+void tst_menu::pressAndHold()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("pressAndHold.qml"));
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QTRY_VERIFY(menu->isVisible());
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QVERIFY(menu->isVisible());
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QTRY_VERIFY(!menu->isVisible());
 }
 
 void tst_menu::contextMenuKeyboard()
