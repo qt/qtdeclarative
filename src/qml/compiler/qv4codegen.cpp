@@ -2002,9 +2002,11 @@ bool Codegen::visit(NewExpression *ast)
     if (hasError)
         return false;
 
+    auto calldata = pushArgs(0);
+
     Instruction::CreateValue create;
     create.func = base.asRValue();
-    create.callData = 0;
+    create.callData = calldata;
     create.result = r.asLValue();
     bytecodeGenerator->addInstruction(create);
     _expr.result = r;
