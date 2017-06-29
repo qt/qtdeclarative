@@ -145,7 +145,12 @@ ExecutionEngine::ExecutionEngine()
         bool ok = false;
         maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
         if (!ok || maxCallDepth <= 0) {
+#ifdef QT_NO_DEBUG
             maxCallDepth = 1234;
+#else
+            // no (tail call) optimization is done, so there'll be a lot mare stack frames active
+            maxCallDepth = 200;
+#endif
         }
     }
     Q_ASSERT(maxCallDepth > 0);

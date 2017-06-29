@@ -362,7 +362,7 @@ Param traceParam(const Param &param)
     if (engine->hasException) \
         goto catchException
 
-QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
+QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
 {
 #ifdef DO_TRACE_INSTR
     qDebug("Starting VME with context=%p and code=%p", context, code);
@@ -378,6 +378,7 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
 #undef MOTH_INSTR_ADDR
 #endif
 
+    QV4::ReturnedValue returnValue = Encode::undefined();
     QV4::Value *stack = 0;
     unsigned stackSize = 0;
 
@@ -429,6 +430,8 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
         }
     }
 
+    if (QV4::Debugging::Debugger *debugger = engine->debugger())
+        debugger->enteringFunction();
 
     for (;;) {
         const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
@@ -912,7 +915,8 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
 
     MOTH_BEGIN_INSTR(Ret)
 //        TRACE(Ret, "returning value %s", result.toString(context)->toQString().toUtf8().constData());
-        return VALUE(instr.result).asReturnedValue();
+        returnValue = VALUE(instr.result).asReturnedValue();
+        goto functionExit;
     MOTH_END_INSTR(Ret)
 
 #ifndef QT_NO_QML_DEBUGGER
@@ -960,20 +964,15 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
         Q_ASSERT(false);
     catchException:
         Q_ASSERT(engine->hasException);
-        if (!exceptionHandler)
-            return QV4::Encode::undefined();
+        if (!exceptionHandler) {
+            returnValue = QV4::Encode::undefined();
+            goto functionExit;
+        }
         code = exceptionHandler;
     }
-}
 
-QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
-{
-    VME vme;
-    QV4::Debugging::Debugger *debugger = engine->debugger();
-    if (debugger)
-        debugger->enteringFunction();
-    QV4::ReturnedValue retVal = vme.run(engine, code);
-    if (debugger)
-        debugger->leavingFunction(retVal);
-    return retVal;
+functionExit:
+    if (QV4::Debugging::Debugger *debugger = engine->debugger())
+        debugger->leavingFunction(returnValue);
+    return returnValue;
 }
