@@ -1778,23 +1778,21 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
 #endif
 
     int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-    QStringRef dirPath(&path, 0, lastSlash);
+    QString dirPath(path.left(lastSlash));
 
-    StringSet **fileSet = m_importDirCache.value(QHashedStringRef(dirPath.constData(), dirPath.length()));
-    if (!fileSet) {
-        QHashedString dirPathString(dirPath.toString());
-        bool exists = QDir(dirPathString).exists();
-        QStringHash<bool> *files = exists ? new QStringHash<bool> : 0;
-        m_importDirCache.insert(dirPathString, files);
-        fileSet = m_importDirCache.value(dirPathString);
+    if (!m_importDirCache.contains(dirPath)) {
+        bool exists = QDir(dirPath).exists();
+        QCache<QString, bool> *entry = exists ? new QCache<QString, bool> : 0;
+        m_importDirCache.insert(dirPath, entry);
     }
-    if (!(*fileSet))
+    QCache<QString, bool> *fileSet = m_importDirCache.object(dirPath);
+    if (!fileSet)
         return QString();
 
     QString absoluteFilePath;
-    QHashedStringRef fileName(path.constData()+lastSlash+1, path.length()-lastSlash-1);
+    QString fileName(path.mid(lastSlash+1, path.length()-lastSlash-1));
 
-    bool *value = (*fileSet)->value(fileName);
+    bool *value = fileSet->object(fileName);
     if (value) {
         if (*value)
             absoluteFilePath = path;
@@ -1808,7 +1806,7 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
 #else
         exists = QFile::exists(path);
 #endif
-        (*fileSet)->insert(fileName.toString(), exists);
+        fileSet->insert(fileName, new bool(exists));
         if (exists)
             absoluteFilePath = path;
     }
@@ -1843,18 +1841,16 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
     int length = path.length();
     if (path.endsWith(QLatin1Char('/')))
         --length;
-    QStringRef dirPath(&path, 0, length);
+    QString dirPath(path.left(length));
 
-    StringSet **fileSet = m_importDirCache.value(QHashedStringRef(dirPath.constData(), dirPath.length()));
-    if (!fileSet) {
-        QHashedString dirPathString(dirPath.toString());
-        bool exists = QDir(dirPathString).exists();
-        QStringHash<bool> *files = exists ? new QStringHash<bool> : 0;
-        m_importDirCache.insert(dirPathString, files);
-        fileSet = m_importDirCache.value(dirPathString);
+    if (!m_importDirCache.contains(dirPath)) {
+        bool exists = QDir(dirPath).exists();
+        QCache<QString, bool> *files = exists ? new QCache<QString, bool> : 0;
+        m_importDirCache.insert(dirPath, files);
     }
 
-    return (*fileSet);
+    QCache<QString, bool> *fileSet = m_importDirCache.object(dirPath);
+    return fileSet != 0;
 }
 
 
@@ -1938,7 +1934,7 @@ void QQmlTypeLoader::clearCache()
         (*iter)->release();
     for (QmldirCache::Iterator iter = m_qmldirCache.begin(), end = m_qmldirCache.end(); iter != end; ++iter)
         (*iter)->release();
-    qDeleteAll(m_importDirCache);
+
     qDeleteAll(m_importQmlDirCache);
 
     m_typeCache.clear();
