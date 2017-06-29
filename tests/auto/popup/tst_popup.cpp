@@ -285,6 +285,40 @@ void tst_popup::overlay()
 
     QVERIFY(!popup->isVisible());
     QCOMPARE(overlay->isVisible(), popup->isVisible());
+
+    // multi-touch
+    popup->open();
+    QVERIFY(popup->isVisible());
+    QVERIFY(overlay->isVisible());
+    QVERIFY(!button->isPressed());
+
+    QTest::touchEvent(window, device.data()).press(0, button->mapToScene(QPointF(1, 1)).toPoint());
+    QVERIFY(popup->isVisible());
+    QVERIFY(overlay->isVisible());
+    QCOMPARE(button->isPressed(), !modal);
+    QCOMPARE(overlayPressedSignal.count(), ++overlayPressCount);
+    QCOMPARE(overlayReleasedSignal.count(), overlayReleaseCount);
+
+    QTest::touchEvent(window, device.data()).stationary(0).press(1, button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint());
+    QVERIFY(popup->isVisible());
+    QVERIFY(overlay->isVisible());
+    QCOMPARE(button->isPressed(), !modal);
+    QCOMPARE(overlayPressedSignal.count(), ++overlayPressCount);
+    QCOMPARE(overlayReleasedSignal.count(), overlayReleaseCount);
+
+    QTest::touchEvent(window, device.data()).release(0, button->mapToScene(QPointF(1, 1)).toPoint()).stationary(1);
+    QVERIFY(!popup->isVisible());
+    QVERIFY(!overlay->isVisible());
+    QVERIFY(!button->isPressed());
+    QCOMPARE(overlayPressedSignal.count(), overlayPressCount);
+    QCOMPARE(overlayReleasedSignal.count(), ++overlayReleaseCount);
+
+    QTest::touchEvent(window, device.data()).release(1, button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint());
+    QVERIFY(!popup->isVisible());
+    QVERIFY(!overlay->isVisible());
+    QVERIFY(!button->isPressed());
+    QCOMPARE(overlayPressedSignal.count(), overlayPressCount);
+    QCOMPARE(overlayReleasedSignal.count(), overlayReleaseCount);
 }
 
 void tst_popup::zOrder_data()

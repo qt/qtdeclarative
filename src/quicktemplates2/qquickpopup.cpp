@@ -381,14 +381,14 @@ bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
     switch (event->type()) {
     case QEvent::TouchBegin:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (acceptTouch(point))
+            if (acceptTouch(point) || blockInput(item, point.pos()))
                 return handlePress(item, item->mapToScene(point.pos()), event->timestamp());
         }
         break;
 
     case QEvent::TouchUpdate:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (!acceptTouch(point))
+            if (!acceptTouch(point) && !blockInput(item, point.pos()))
                 continue;
 
             switch (point.state()) {
@@ -406,7 +406,7 @@ bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
 
     case QEvent::TouchEnd:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (acceptTouch(point))
+            if (acceptTouch(point) || blockInput(item, point.pos()))
                 return handleRelease(item, item->mapToScene(point.pos()), event->timestamp());
         }
         break;
