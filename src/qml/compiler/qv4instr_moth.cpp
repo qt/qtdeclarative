@@ -270,7 +270,10 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallGlobalLookup)
 
         MOTH_BEGIN_INSTR(SetExceptionHandler)
-            d << absoluteInstructionOffset(start, instr);
+            if (instr.offset)
+                d << absoluteInstructionOffset(start, instr);
+            else
+                d << "<null>";
         MOTH_END_INSTR(SetExceptionHandler)
 
         MOTH_BEGIN_INSTR(CallBuiltinThrow)
