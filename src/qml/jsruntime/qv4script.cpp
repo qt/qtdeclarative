@@ -117,20 +117,11 @@ void Script::parse()
             return;
         }
 
-        QStringList inheritedLocals;
-        if (inheritContext) {
-            Scoped<CallContext> ctx(valueScope, scope);
-            if (ctx) {
-                for (Identifier * const *i = ctx->variables(), * const *ei = i + ctx->variableCount(); i < ei; ++i)
-                    inheritedLocals.append(*i ? (*i)->string : QString());
-            }
-        }
-
         QV4::Compiler::JSUnitGenerator jsGenerator(&module);
         RuntimeCodegen cg(v4, &jsGenerator, strictMode);
         if (inheritContext)
             cg.setUseFastLookups(false);
-        cg.generateFromProgram(sourceFile, sourceCode, program, &module, QQmlJS::Codegen::EvalCode, inheritedLocals);
+        cg.generateFromProgram(sourceFile, sourceCode, program, &module, QQmlJS::Codegen::EvalCode);
         if (v4->hasException)
             return;
 

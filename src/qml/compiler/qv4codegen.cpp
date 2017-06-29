@@ -855,8 +855,7 @@ void Codegen::generateFromProgram(const QString &fileName,
                                   const QString &sourceCode,
                                   Program *node,
                                   QV4::IR::Module *module,
-                                  CompilationMode mode,
-                                  const QStringList &inheritedLocals)
+                                  CompilationMode mode)
 {
     Q_ASSERT(node);
 
@@ -868,7 +867,7 @@ void Codegen::generateFromProgram(const QString &fileName,
     ScanFunctions scan(this, sourceCode, mode);
     scan(node);
 
-    defineFunction(QStringLiteral("%entry"), node, 0, node->elements, inheritedLocals);
+    defineFunction(QStringLiteral("%entry"), node, 0, node->elements);
     qDeleteAll(_envMap);
     _envMap.clear();
 }
@@ -2409,8 +2408,7 @@ bool Codegen::visit(FunctionDeclaration * ast)
 
 int Codegen::defineFunction(const QString &name, AST::Node *ast,
                             AST::FormalParameterList *formals,
-                            AST::SourceElements *body,
-                            const QStringList &inheritedLocals)
+                            AST::SourceElements *body)
 {
     ControlFlow *loop = 0;
     qSwap(_controlFlow, loop);
@@ -2444,7 +2442,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_variableEnvironment->compilationMode == FunctionCode || _variableEnvironment->compilationMode == QmlBinding) {
         unsigned t = 0;
-        Reference undef = Reference::fromConst(this, QV4::Encode::undefined());
         for (Environment::MemberMap::iterator it = _variableEnvironment->members.begin(), end = _variableEnvironment->members.end(); it != end; ++it) {
             const QString &local = it.key();
             function->LOCAL(local);
@@ -2452,17 +2449,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             ++t;
         }
     } else {
-        if (!_variableEnvironment->isStrict) {
-            for (const QString &inheritedLocal : qAsConst(inheritedLocals)) {
-                function->LOCAL(inheritedLocal);
-                unsigned tempIndex = bytecodeGenerator->newTemp();
-                Environment::Member member = { Environment::UndefinedMember,
-                                               static_cast<int>(tempIndex), 0,
-                                               AST::VariableDeclaration::VariableScope::FunctionScope };
-                _variableEnvironment->members.insert(inheritedLocal, member);
-            }
-        }
-
         for (Environment::MemberMap::const_iterator it = _variableEnvironment->members.constBegin(), cend = _variableEnvironment->members.constEnd(); it != cend; ++it) {
             const QString &local = it.key();
 

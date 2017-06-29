@@ -109,8 +109,7 @@ public:
                              const QString &sourceCode,
                              AST::Program *ast,
                              QV4::IR::Module *module,
-                             CompilationMode mode = GlobalCode,
-                             const QStringList &inheritedLocals = QStringList());
+                             CompilationMode mode = GlobalCode);
     void generateFromFunctionExpression(const QString &fileName,
                              const QString &sourceCode,
                              AST::FunctionExpression *ast,
@@ -497,8 +496,7 @@ protected:
     // Returns index in _module->functions
     int defineFunction(const QString &name, AST::Node *ast,
                        AST::FormalParameterList *formals,
-                       AST::SourceElements *body,
-                       const QStringList &inheritedLocals = QStringList());
+                       AST::SourceElements *body);
 
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
