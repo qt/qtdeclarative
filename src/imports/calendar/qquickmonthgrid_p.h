@@ -101,10 +101,6 @@ protected:
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
     void updatePolish() override;
 
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-    void mouseUngrabEvent() override;
     void timerEvent(QTimerEvent *event) override;
 
 private:

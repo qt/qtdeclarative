@@ -79,6 +79,11 @@ TestCase {
         }
     }
 
+    Component {
+        id: signalSpy
+        SignalSpy { }
+    }
+
     function test_locale() {
         var control = delegateGrid.createObject(testCase, {month: 0, year: 2013})
 
@@ -102,13 +107,13 @@ TestCase {
 
         for (var i = 0; i < 42; ++i) {
             var cellDate = new Date(en_GB[i])
-            compare(control.contentItem.children[i].date.getFullYear(), cellDate.getFullYear())
-            compare(control.contentItem.children[i].date.getMonth(), cellDate.getMonth())
-            compare(control.contentItem.children[i].date.getDate(), cellDate.getDate())
-            compare(control.contentItem.children[i].day, cellDate.getDate())
+            compare(control.contentItem.children[i].date.getFullYear(), cellDate.getUTCFullYear())
+            compare(control.contentItem.children[i].date.getMonth(), cellDate.getUTCMonth())
+            compare(control.contentItem.children[i].date.getDate(), cellDate.getUTCDate())
+            compare(control.contentItem.children[i].day, cellDate.getUTCDate())
             compare(control.contentItem.children[i].today, cellDate === new Date())
-            compare(control.contentItem.children[i].month, cellDate.getMonth())
-            compare(control.contentItem.children[i].year, cellDate.getFullYear())
+            compare(control.contentItem.children[i].month, cellDate.getUTCMonth())
+            compare(control.contentItem.children[i].year, cellDate.getUTCFullYear())
         }
 
         // en_US
@@ -125,13 +130,13 @@ TestCase {
 
         for (var j = 0; j < 42; ++j) {
             cellDate = new Date(en_US[j])
-            compare(control.contentItem.children[j].date.getFullYear(), cellDate.getFullYear())
-            compare(control.contentItem.children[j].date.getMonth(), cellDate.getMonth())
-            compare(control.contentItem.children[j].date.getDate(), cellDate.getDate())
-            compare(control.contentItem.children[j].day, cellDate.getDate())
+            compare(control.contentItem.children[j].date.getFullYear(), cellDate.getUTCFullYear())
+            compare(control.contentItem.children[j].date.getMonth(), cellDate.getUTCMonth())
+            compare(control.contentItem.children[j].date.getDate(), cellDate.getUTCDate())
+            compare(control.contentItem.children[j].day, cellDate.getUTCDate())
             compare(control.contentItem.children[j].today, cellDate === new Date())
-            compare(control.contentItem.children[j].month, cellDate.getMonth())
-            compare(control.contentItem.children[j].year, cellDate.getFullYear())
+            compare(control.contentItem.children[j].month, cellDate.getUTCMonth())
+            compare(control.contentItem.children[j].year, cellDate.getUTCFullYear())
         }
 
         control.destroy()
@@ -226,5 +231,53 @@ TestCase {
         compare(control.contentItem.children[0].font.pixelSize, 123)
 
         control.destroy()
+    }
+
+    function test_clicked_data() {
+        return [
+            { tag: "mouse", touch: false },
+            { tag: "touch", touch: true }
+        ]
+    }
+
+    function test_clicked(data) {
+        var control = createTemporaryObject(defaultGrid, testCase)
+        verify(control)
+
+        compare(control.contentItem.children.length, 6 * 7 + 1)
+
+        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressed"})
+        verify(pressedSpy.valid)
+
+        var releasedSpy = signalSpy.createObject(control, {target: control, signalName: "released"})
+        verify(releasedSpy.valid)
+
+        var clickedSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
+        verify(clickedSpy.valid)
+
+        var touch = touchEvent(control)
+
+        for (var i = 0; i < 42; ++i) {
+            var cell = control.contentItem.children[i]
+            verify(cell)
+
+            if (data.touch)
+                touch.press(0, cell).commit()
+            else
+                mousePress(cell)
+
+            compare(pressedSpy.count, i + 1)
+            compare(releasedSpy.count, i)
+            compare(clickedSpy.count, i)
+
+            if (data.touch)
+                touch.release(0, cell).commit()
+            else
+                mouseRelease(cell)
+
+            compare(pressedSpy.count, i + 1)
+            compare(releasedSpy.count, i + 1)
+            compare(clickedSpy.count, i + 1)
+        }
     }
 }

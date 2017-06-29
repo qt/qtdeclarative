@@ -68,7 +68,7 @@ ApplicationWindow {
         property Item attached_overlay: ApplicationWindow.overlay
     }
 
-    Control {
+    Item {
         id: childItem
 
         property ApplicationWindow attached_window: ApplicationWindow.window
@@ -116,7 +116,7 @@ ApplicationWindow {
             property Item attached_overlay: ApplicationWindow.overlay
         }
 
-        Control {
+        Item {
             id: childWindowItem
 
             property ApplicationWindow attached_window: ApplicationWindow.window
@@ -165,7 +165,7 @@ ApplicationWindow {
             property Item attached_overlay: ApplicationWindow.overlay
         }
 
-        Control {
+        Item {
             id: childAppWindowItem
 
             property ApplicationWindow attached_window: ApplicationWindow.window

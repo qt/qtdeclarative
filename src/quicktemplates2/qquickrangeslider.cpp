@@ -632,7 +632,7 @@ void QQuickRangeSlider::setTo(qreal to)
         \li This property holds the value of the first handle in the range
             \c from - \c to.
 
-            If \l to is greater than \l from, the value of the first handle
+            If \l from is greater than \l to, the value of the first handle
             must be greater than the second, and vice versa.
 
             The default value is \c 0.0.
@@ -689,7 +689,7 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
         \li This property holds the value of the second handle in the range
             \c from - \c to.
 
-            If \l to is greater than \l from, the value of the first handle
+            If \l from is greater than \l to, the value of the first handle
             must be greater than the second, and vice versa.
 
             The default value is \c 0.0.

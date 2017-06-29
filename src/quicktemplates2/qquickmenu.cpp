@@ -170,10 +170,8 @@ static const int SUBMENU_DELAY = 225;
     \sa {Customizing Menu}, {Menu Controls}, {Popup Controls}
 */
 
-static const QQuickPopup::ClosePolicy defaultMenuClosePolicy =
-        QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseOnReleaseOutside;
-static const QQuickPopup::ClosePolicy cascadingSubMenuClosePolicy =
-        QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent | QQuickPopup::CloseOnReleaseOutsideParent;
+static const QQuickPopup::ClosePolicy defaultMenuClosePolicy = QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside;
+static const QQuickPopup::ClosePolicy cascadingSubMenuClosePolicy = QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent;
 
 static bool shouldCascade()
 {
@@ -596,7 +594,6 @@ QQuickMenu::QQuickMenu(QObject *parent)
     : QQuickPopup(*(new QQuickMenuPrivate), parent)
 {
     setFocus(true);
-    setClosePolicy(defaultMenuClosePolicy);
 }
 
 /*!
