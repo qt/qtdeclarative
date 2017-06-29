@@ -83,7 +83,7 @@ ApplicationWindow {
 
                 Image {
                     id: avatar
-                    source: "qrc:/" + modelData + ".png"
+                    source: "qrc:/" + modelData.replace(" ", "_") + ".png"
                 }
             }
         }
