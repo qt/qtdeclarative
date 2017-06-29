@@ -94,6 +94,20 @@ enum CompilationMode {
                //  * variable declarations are treated as true locals (like in FunctionCode)
 };
 
+struct Context;
+
+struct Module {
+    Module() {}
+    ~Module() {
+        qDeleteAll(contextMap);
+    }
+
+    Context *newContext(AST::Node *node, Context *parent, CompilationMode compilationMode);
+
+    QHash<AST::Node *, Context *> contextMap;
+};
+
+
 struct Context {
     Context *parent;
 
@@ -457,13 +471,6 @@ protected:
     };
 
 
-    Context *newEnvironment(AST::Node *node, Context *parent, CompilationMode compilationMode)
-    {
-        Context *env = new Context(parent, compilationMode);
-        _contextMap.insert(node, env);
-        return env;
-    }
-
     void enterContext(AST::Node *node);
     void leaveContext();
 
@@ -649,8 +656,8 @@ protected:
     unsigned _returnAddress;
     Context *_context;
     QV4::ControlFlow *_controlFlow;
+    Module cgModule;
     AST::LabelledStatement *_labelledStatement;
-    QHash<AST::Node *, Context *> _contextMap;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
     BytecodeGenerator *bytecodeGenerator = 0;
     bool _strictMode;

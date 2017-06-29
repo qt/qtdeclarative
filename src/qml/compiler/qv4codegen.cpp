@@ -495,7 +495,7 @@ void Codegen::ScanFunctions::operator()(Node *node)
 
 void Codegen::ScanFunctions::enterEnvironment(Node *node, CompilationMode compilationMode)
 {
-    Context *e = _cg->newEnvironment(node, _variableEnvironment, compilationMode);
+    Context *e = _cg->cgModule.newContext(node, _variableEnvironment, compilationMode);
     if (!e->isStrict)
         e->isStrict = _cg->_strictMode;
     _envStack.append(e);
@@ -868,8 +868,7 @@ void Codegen::generateFromProgram(const QString &fileName,
     scan(node);
 
     defineFunction(QStringLiteral("%entry"), node, 0, node->elements);
-    qDeleteAll(_contextMap);
-    _contextMap.clear();
+    cgModule = QQmlJS::Module();
 }
 
 void Codegen::generateFromFunctionExpression(const QString &fileName,
@@ -889,14 +888,13 @@ void Codegen::generateFromFunctionExpression(const QString &fileName,
 
     defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
 
-    qDeleteAll(_contextMap);
-    _contextMap.clear();
+    cgModule = QQmlJS::Module();
 }
 
 
 void Codegen::enterContext(Node *node)
 {
-    _context = _contextMap.value(node);
+    _context = cgModule.contextMap.value(node);
     Q_ASSERT(_context);
 }
 
@@ -3537,4 +3535,11 @@ void Codegen::Reference::load(uint tmp) const
         Q_ASSERT(false);
         Q_UNREACHABLE();
     }
+}
+
+Context *Module::newContext(Node *node, Context *parent, CompilationMode compilationMode)
+{
+    Context *c = new Context(parent, compilationMode);
+    contextMap.insert(node, c);
+    return c;
 }

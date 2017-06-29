@@ -1648,8 +1648,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         runtimeFunctionIndices[i] = idx;
     }
 
-    qDeleteAll(_contextMap);
-    _contextMap.clear();
+    cgModule = QQmlJS::Module();
     return runtimeFunctionIndices;
 }
 
