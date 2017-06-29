@@ -51,15 +51,10 @@ class SourceLocation;
 }
 
 namespace QV4 {
-namespace IR {
-struct Function;
-}
 namespace Moth {
 
 class BytecodeGenerator {
 public:
-    BytecodeGenerator(IR::Function *function)
-        : function(function) {}
 
     struct Label {
         enum LinkMode {
@@ -231,8 +226,11 @@ private:
     QVector<I> instructions;
     QVector<int> labels;
     QVector<JumpData> jumps;
-    IR::Function *function; // ### remove me at some point
     ExceptionHandler *currentExceptionHandler;
+    unsigned tempCount = 0;
+public:
+    unsigned currentTemp = 0;
+private:
     int currentLine = -1;
 };
 

@@ -57,18 +57,18 @@ void BytecodeGenerator::setLocation(const QQmlJS::AST::SourceLocation &loc)
 
 unsigned BytecodeGenerator::newTemp()
 {
-    int t = function->currentTemp++;
-    if (function->tempCount < function->currentTemp)
-        function->tempCount = function->currentTemp;
+    int t = currentTemp++;
+    if (tempCount < currentTemp)
+        tempCount = currentTemp;
     return t;
 }
 
 unsigned BytecodeGenerator::newTempArray(int n)
 {
-    int t = function->currentTemp;
-    function->currentTemp += n;
-    if (function->tempCount < function->currentTemp)
-        function->tempCount = function->currentTemp;
+    int t = currentTemp;
+    currentTemp += n;
+    if (tempCount < currentTemp)
+        tempCount = currentTemp;
     return t;
 }
 
@@ -78,7 +78,7 @@ QByteArray BytecodeGenerator::finalize()
 
     Instruction::InitStackFrame init;
     init.instructionType = Instr::InitStackFrame;
-    init.value = quint32(function->tempCount);
+    init.value = quint32(tempCount);
     code.append(reinterpret_cast<const char *>(&init), InstrMeta<Instr::InitStackFrame>::Size);
 
     // content

@@ -389,15 +389,12 @@ public:
 
     struct TempScope {
         TempScope(Codegen *cg)
-            : function(cg->_function),
-              tempCountForScope(function->currentTemp) {}
-        TempScope(QV4::IR::Function *f)
-            : function(f),
-              tempCountForScope(f->currentTemp) {}
+            : generator(cg->bytecodeGenerator),
+              tempCountForScope(generator->currentTemp) {}
         ~TempScope() {
-            function->currentTemp = tempCountForScope;
+            generator->currentTemp = tempCountForScope;
         }
-        QV4::IR::Function *function;
+        BytecodeGenerator *generator;
         int tempCountForScope;
     };
 

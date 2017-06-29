@@ -2417,7 +2417,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     function->line = loc.startLine;
     function->column = loc.startColumn;
 
-    BytecodeGenerator bytecode(function);
+    BytecodeGenerator bytecode;
     BytecodeGenerator *savedBytecodeGenerator;
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
