@@ -170,6 +170,7 @@ available when you import \c QtQuick.
     \li \l enumeration \c font.capitalization
     \li \l real \c font.letterSpacing
     \li \l real \c font.wordSpacing
+    \li \l enumeration \c font.hintingPreference
     \endlist
 
     Example:
@@ -235,6 +236,19 @@ available when you import \c QtQuick.
         \li \c Font.Capitalize
         \li Alters the text to be rendered with the first character of each word as an uppercase character.
     \endtable
+
+    Setting the hinting preference only has an effect when using the "NativeRendering" render type.
+    The property supports the following values:
+
+    \list
+    \value Font.PreferDefaultHinting - Use the default hinting level for the target platform.
+    \value Font.PreferNoHinting - If possible, render text without hinting the outlines
+           of the glyphs.
+    \value Font.PreferVerticalHinting - If possible, render text with no horizontal hinting,
+           but align glyphs to the pixel grid in the vertical direction.
+    \value Font.PreferFullHinting - If possible, render text with hinting in both horizontal and
+           vertical directions.
+    \endlist
 
     \sa {QML Basic Types}
 */
