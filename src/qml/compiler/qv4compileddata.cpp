@@ -194,13 +194,20 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     constants = reinterpret_cast<const Value*>(data->constants());
 #endif
 
+    linkBackendToEngine(engine);
+
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
         qDebug() << "=== Constant table";
         Moth::dumpConstantTable(constants, data->constantTableSize);
+        qDebug() << "=== String table";
+        for (uint i = 0; i < data->stringTableSize; ++i)
+            qDebug() << "    " << i << ":" << runtimeStrings[i]->toQString();
+        qDebug() << "=== Closure table";
+        for (uint i = 0; i < data->functionTableSize; ++i)
+            qDebug() << "    " << i << ":" << runtimeFunctions[i]->name()->toQString();
+        qDebug() << "root function at index " << (data->indexOfRootFunction != -1 ? data->indexOfRootFunction : 0);
     }
-
-    linkBackendToEngine(engine);
 
     if (data->indexOfRootFunction != -1)
         return runtimeFunctions[data->indexOfRootFunction];
