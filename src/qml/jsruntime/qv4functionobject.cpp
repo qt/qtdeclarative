@@ -210,17 +210,16 @@ void FunctionCtor::construct(const Managed *that, Scope &scope, CallData *callDa
         return;
     }
 
-    using namespace QQmlJS::AST;
-    FunctionExpression *fe = QQmlJS::AST::cast<FunctionExpression *>(parser.rootNode());
+    QQmlJS::AST::FunctionExpression *fe = QQmlJS::AST::cast<QQmlJS::AST::FunctionExpression *>(parser.rootNode());
     if (!fe) {
         scope.result = scope.engine->throwSyntaxError(QLatin1String("Parse error"));
         return;
     }
 
-    QQmlJS::Module module(scope.engine->debugger() != 0);
+    Compiler::Module module(scope.engine->debugger() != 0);
 
     Compiler::JSUnitGenerator jsGenerator(&module);
-    QQmlJS::RuntimeCodegen cg(scope.engine, &jsGenerator, f->strictMode());
+    Compiler::RuntimeCodegen cg(scope.engine, &jsGenerator, f->strictMode());
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
     QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = cg.generateCompilationUnit();

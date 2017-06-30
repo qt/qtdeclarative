@@ -147,12 +147,14 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #endif
 
 QT_BEGIN_NAMESPACE
-namespace QQmlJS {
-    struct Module;
-    struct Context;
-}
 
 namespace QV4 {
+
+namespace Compiler {
+    struct Module;
+    struct Context;
+    struct JSUnitGenerator;
+}
 
 namespace Heap {
     struct Base;
@@ -186,14 +188,6 @@ namespace Heap {
     struct TypedArray;
 
     template <typename T, size_t> struct Pointer;
-}
-
-namespace IR {
-struct Function;
-struct Module;
-}
-namespace Compiler {
-struct JSUnitGenerator;
 }
 
 class MemoryManager;

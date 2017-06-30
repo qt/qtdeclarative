@@ -172,7 +172,7 @@ struct TestCompiler
 
     bool verify()
     {
-        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QQmlJS::Codegen::createUnitForLoading();
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
         return unit->loadFromDisk(QUrl::fromLocalFile(testFilePath), QFileInfo(testFilePath).lastModified(), &lastErrorString);
     }
 

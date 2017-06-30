@@ -100,7 +100,7 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
     }
 }
 
-QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QQmlJS::Module *module)
+QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::Compiler::Module *module)
     : module(module)
 {
     // Make sure the empty string always gets index 0
@@ -241,7 +241,7 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, CompiledData::JSC
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorOption option)
 {
     registerString(module->fileName);
-    for (QQmlJS::Context *f : qAsConst(module->functions)) {
+    for (Context *f : qAsConst(module->functions)) {
         registerString(f->name);
         for (int i = 0; i < f->arguments.size(); ++i)
             registerString(f->arguments.at(i));
@@ -265,7 +265,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     memcpy(dataPtr + unit->offsetToFunctionTable, functionOffsets, unit->functionTableSize * sizeof(CompiledData::LEUInt32));
 
     for (int i = 0; i < module->functions.size(); ++i) {
-        QQmlJS::Context *function = module->functions.at(i);
+        Context *function = module->functions.at(i);
         if (function == module->rootContext)
             unit->indexOfRootFunction = i;
 
@@ -306,7 +306,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     return unit;
 }
 
-void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QQmlJS::Context *irFunction) const
+void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Context *irFunction) const
 {
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
 
@@ -438,7 +438,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     nextOffset += jsClassData.size();
 
     for (int i = 0; i < module->functions.size(); ++i) {
-        QQmlJS::Context *f = module->functions.at(i);
+        Context *f = module->functions.at(i);
         functionOffsets[i] = nextOffset;
 
         const int qmlIdDepsCount = f->idObjectDependencies.count();

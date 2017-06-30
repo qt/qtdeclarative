@@ -6,6 +6,8 @@ HEADERS += \
     $$PWD/qv4compileddata_p.h \
     $$PWD/qv4compiler_p.h \
     $$PWD/qv4compilationunit_moth_p.h \
+    $$PWD/qv4compilercontext_p.h \
+    $$PWD/qv4compilercontrolflow_p.h \
     $$PWD/qv4codegen_p.h \
     $$PWD/qqmlirbuilder_p.h \
     $$PWD/qqmltypecompiler_p.h
@@ -15,6 +17,7 @@ SOURCES += \
     $$PWD/qv4compileddata.cpp \
     $$PWD/qv4compiler.cpp \
     $$PWD/qv4compilationunit_moth.cpp \
+    $$PWD/qv4compilercontext.cpp \
     $$PWD/qv4codegen.cpp \
     $$PWD/qqmlirbuilder.cpp
 

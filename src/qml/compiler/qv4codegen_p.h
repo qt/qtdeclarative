@@ -56,6 +56,7 @@
 #include <private/qqmljsengine_p.h>
 #include <private/qv4instr_moth_p.h>
 #include <private/qv4compiler_p.h>
+#include <private/qv4compilercontext_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <QtCore/QStringList>
 #include <QtCore/QDateTime>
@@ -68,10 +69,9 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace QQmlJS;
+
 namespace QV4 {
-struct ControlFlow;
-struct ControlFlowCatch;
-struct ControlFlowFinally;
 
 namespace Moth {
 struct Instruction;
@@ -80,225 +80,14 @@ struct Instruction;
 namespace CompiledData {
 struct CompilationUnit;
 }
-}
 
-namespace QQmlJS {
+namespace Compiler {
 
-enum CompilationMode {
-    GlobalCode,
-    EvalCode,
-    FunctionCode,
-    QmlBinding // This is almost the same as EvalCode, except:
-               //  * function declarations are moved to the return address when encountered
-               //  * return statements are allowed everywhere (like in FunctionCode)
-               //  * variable declarations are treated as true locals (like in FunctionCode)
-};
+struct ControlFlow;
+struct ControlFlowCatch;
+struct ControlFlowFinally;
 
-struct Context;
-
-struct Module {
-    Module(bool debugMode)
-        : debugMode(debugMode)
-    {}
-    ~Module() {
-        qDeleteAll(contextMap);
-    }
-
-    Context *newContext(AST::Node *node, Context *parent, CompilationMode compilationMode);
-
-    QHash<AST::Node *, Context *> contextMap;
-    QList<Context *> functions;
-    Context *rootContext;
-    QString fileName;
-    QDateTime sourceTimeStamp;
-    uint unitFlags = 0; // flags merged into CompiledData::Unit::flags
-    bool debugMode = false;
-    QString targetABI; // ### seems unused currently
-};
-
-
-struct Context {
-    Context *parent;
-    QString name;
-    int line = 0;
-    int column = 0;
-
-    enum MemberType {
-        UndefinedMember,
-        VariableDefinition,
-        VariableDeclaration,
-        FunctionDefinition
-    };
-
-    struct Member {
-        MemberType type = UndefinedMember;
-        int index = -1;
-        AST::VariableDeclaration::VariableScope scope = AST::VariableDeclaration::FunctionScope;
-        mutable bool canEscape = false;
-        AST::FunctionExpression *function = 0;
-
-        bool isLexicallyScoped() const { return this->scope != AST::VariableDeclaration::FunctionScope; }
-    };
-    typedef QMap<QString, Member> MemberMap;
-
-    MemberMap members;
-    AST::FormalParameterList *formals = 0;
-    QStringList arguments;
-    QStringList locals;
-    QVector<Context *> nestedContexts;
-
-    QV4::ControlFlow *controlFlow = 0;
-    QByteArray code;
-
-    int maxNumberOfArguments = 0;
-    bool hasDirectEval = false;
-    bool hasNestedFunctions = false;
-    bool isStrict = false;
-    bool isNamedFunctionExpression = false;
-    bool usesThis = false;
-    bool hasTry = false;
-    bool hasWith = false;
-    mutable bool argumentsCanEscape = false;
-
-    enum UsesArgumentsObject {
-        ArgumentsObjectUnknown,
-        ArgumentsObjectNotUsed,
-        ArgumentsObjectUsed
-    };
-
-    UsesArgumentsObject usesArgumentsObject = ArgumentsObjectUnknown;
-
-    CompilationMode compilationMode;
-
-    template <typename T>
-    class SmallSet: public QVarLengthArray<T, 8>
-    {
-    public:
-        void insert(int value)
-        {
-            for (auto it : *this) {
-                if (it == value)
-                    return;
-            }
-            this->append(value);
-        }
-    };
-
-    // Map from meta property index (existence implies dependency) to notify signal index
-    struct KeyValuePair
-    {
-        quint32 _key;
-        quint32 _value;
-
-        KeyValuePair(): _key(0), _value(0) {}
-        KeyValuePair(quint32 key, quint32 value): _key(key), _value(value) {}
-
-        quint32 key() const { return _key; }
-        quint32 value() const { return _value; }
-    };
-
-    class PropertyDependencyMap: public QVarLengthArray<KeyValuePair, 8>
-    {
-    public:
-        void insert(quint32 key, quint32 value)
-        {
-            for (auto it = begin(), eit = end(); it != eit; ++it) {
-                if (it->_key == key) {
-                    it->_value = value;
-                    return;
-                }
-            }
-            append(KeyValuePair(key, value));
-        }
-    };
-
-    // Qml extension:
-    SmallSet<int> idObjectDependencies;
-    PropertyDependencyMap contextObjectPropertyDependencies;
-    PropertyDependencyMap scopeObjectPropertyDependencies;
-
-    Context(Context *parent, CompilationMode mode)
-        : parent(parent)
-        , compilationMode(mode)
-    {
-        if (parent && parent->isStrict)
-            isStrict = true;
-    }
-
-    bool forceLookupByName();
-
-
-    bool canUseSimpleCall() const {
-        return nestedContexts.isEmpty() &&
-               locals.isEmpty() && arguments.size() <= QV4::Global::ReservedArgumentCount &&
-               !hasTry && !hasWith && !isNamedFunctionExpression &&
-               usesArgumentsObject == ArgumentsObjectNotUsed && !hasDirectEval;
-    }
-
-    int findArgument(const QString &name, bool canEscape)
-    {
-        // search backwards to handle duplicate argument names correctly
-        for (int i = arguments.size() - 1; i >= 0; --i) {
-            if (arguments.at(i) == name) {
-                if (canEscape)
-                    argumentsCanEscape = true;
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    int findMember(const QString &name, bool canEscape) const
-    {
-        MemberMap::const_iterator it = members.find(name);
-        if (it == members.end())
-            return -1;
-        if (canEscape)
-            (*it).canEscape = true;
-        Q_ASSERT((*it).index != -1 || !parent);
-        return (*it).index;
-    }
-
-    bool memberInfo(const QString &name, const Member **m) const
-    {
-        Q_ASSERT(m);
-        MemberMap::const_iterator it = members.find(name);
-        if (it == members.end()) {
-            *m = 0;
-            return false;
-        }
-        *m = &(*it);
-        return true;
-    }
-
-    void addLocalVar(const QString &name, MemberType type, AST::VariableDeclaration::VariableScope scope, AST::FunctionExpression *function = 0)
-    {
-        if (! name.isEmpty()) {
-            if (type != FunctionDefinition) {
-                for (AST::FormalParameterList *it = formals; it; it = it->next)
-                    if (it->name == name)
-                        return;
-            }
-            MemberMap::iterator it = members.find(name);
-            if (it == members.end()) {
-                Member m;
-                m.type = type;
-                m.function = function;
-                m.scope = scope;
-                members.insert(name, m);
-            } else {
-                Q_ASSERT(scope == (*it).scope);
-                if ((*it).type <= type) {
-                    (*it).type = type;
-                    (*it).function = function;
-                }
-            }
-        }
-    }
-};
-
-
-class Q_QML_PRIVATE_EXPORT Codegen: protected AST::Visitor
+class Q_QML_PRIVATE_EXPORT Codegen: protected QQmlJS::AST::Visitor
 {
 protected:
     using BytecodeGenerator = QV4::Moth::BytecodeGenerator;
@@ -310,12 +99,12 @@ public:
     void generateFromProgram(const QString &fileName,
                              const QString &sourceCode,
                              AST::Program *ast,
-                             QQmlJS::Module *module,
+                             Module *module,
                              CompilationMode mode = GlobalCode);
     void generateFromFunctionExpression(const QString &fileName,
                              const QString &sourceCode,
                              AST::FunctionExpression *ast,
-                             QQmlJS::Module *module);
+                             Module *module);
 
 public:
     struct Reference {
@@ -708,9 +497,9 @@ public:
     static QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading();
 
 protected:
-    friend struct QV4::ControlFlow;
-    friend struct QV4::ControlFlowCatch;
-    friend struct QV4::ControlFlowFinally;
+    friend struct ControlFlow;
+    friend struct ControlFlowCatch;
+    friend struct ControlFlowFinally;
     Result _expr;
     Module *_module;
     BytecodeGenerator::Label _exitBlock;
@@ -816,6 +605,8 @@ private:
     QV4::ExecutionEngine *engine;
 };
 #endif // V4_BOOTSTRAP
+
+}
 
 }
 

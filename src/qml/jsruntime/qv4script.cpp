@@ -80,16 +80,16 @@ void Script::parse()
     if (parsed)
         return;
 
-    using namespace QQmlJS;
+    using namespace QV4::Compiler;
 
     parsed = true;
 
     ExecutionEngine *v4 = scope->engine();
     Scope valueScope(v4);
 
-    QQmlJS::Module module(v4->debugger() != 0);
+    Module module(v4->debugger() != 0);
 
-    QQmlJS::Engine ee, *engine = &ee;
+    Engine ee, *engine = &ee;
     Lexer lexer(engine);
     lexer.setCode(sourceCode, line, parseAsBinding);
     Parser parser(engine);
@@ -97,7 +97,7 @@ void Script::parse()
     const bool parsed = parser.parseProgram();
 
     const auto diagnosticMessages = parser.diagnosticMessages();
-    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
+    for (const DiagnosticMessage &m : diagnosticMessages) {
         if (m.isError()) {
             valueScope.engine->throwSyntaxError(m.message, sourceFile, m.loc.startLine, m.loc.startColumn);
             return;
@@ -120,7 +120,7 @@ void Script::parse()
         RuntimeCodegen cg(v4, &jsGenerator, strictMode);
         if (inheritContext)
             cg.setUseFastLookups(false);
-        cg.generateFromProgram(sourceFile, sourceCode, program, &module, QQmlJS::EvalCode);
+        cg.generateFromProgram(sourceFile, sourceCode, program, &module, EvalCode);
         if (v4->hasException)
             return;
 
@@ -175,26 +175,26 @@ Function *Script::function()
     return vmFunction;
 }
 
-QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QQmlJS::Module *module, Compiler::JSUnitGenerator *unitGenerator,
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compiler::Module *module, Compiler::JSUnitGenerator *unitGenerator,
                                                                       const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors,
-                                                                      QQmlJS::Directives *directivesCollector)
+                                                                      Directives *directivesCollector)
 {
-    using namespace QQmlJS;
+    using namespace QV4::Compiler;
     using namespace QQmlJS::AST;
 
-    QQmlJS::Engine ee;
+    Engine ee;
     if (directivesCollector)
         ee.setDirectives(directivesCollector);
-    QQmlJS::Lexer lexer(&ee);
+    Lexer lexer(&ee);
     lexer.setCode(source, /*line*/1, /*qml mode*/false);
-    QQmlJS::Parser parser(&ee);
+    Parser parser(&ee);
 
     parser.parseProgram();
 
     QList<QQmlError> errors;
 
     const auto diagnosticMessages = parser.diagnosticMessages();
-    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
+    for (const DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
             qWarning("%s:%d : %s", qPrintable(url.toString()), m.loc.startLine, qPrintable(m.message));
             continue;
@@ -221,9 +221,9 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QQmlJS::Mo
         return 0;
     }
 
-    QQmlJS::Codegen cg(unitGenerator, /*strict mode*/false);
+    Codegen cg(unitGenerator, /*strict mode*/false);
     cg.setUseFastLookups(false);
-    cg.generateFromProgram(url.toString(), source, program, module, QQmlJS::EvalCode);
+    cg.generateFromProgram(url.toString(), source, program, module, EvalCode);
     errors = cg.qmlErrors();
     if (!errors.isEmpty()) {
         if (reportedErrors)

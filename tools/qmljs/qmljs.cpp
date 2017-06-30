@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
         if (file.open(QFile::ReadOnly)) {
             QScopedPointer<QV4::Script> script;
             if (cache && QFile::exists(fn + QLatin1Char('c'))) {
-                QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QQmlJS::Codegen::createUnitForLoading();
+                QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
                 QString error;
                 if (unit->loadFromDisk(QUrl::fromLocalFile(fn), QFileInfo(fn).lastModified(), &error)) {
                     script.reset(new QV4::Script(&vm, nullptr, unit));

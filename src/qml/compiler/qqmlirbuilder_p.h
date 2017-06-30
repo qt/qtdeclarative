@@ -428,7 +428,7 @@ struct Q_QML_PRIVATE_EXPORT Document
     Document(bool debugMode);
     QString code;
     QQmlJS::Engine jsParserEngine;
-    QQmlJS::Module jsModule;
+    QV4::Compiler::Module jsModule;
     QList<const QV4::CompiledData::Import *> imports;
     QList<Pragma*> pragmas;
     QQmlJS::AST::UiProgram *program;
@@ -581,9 +581,9 @@ struct Q_QML_EXPORT PropertyResolver
 };
 #endif
 
-struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QQmlJS::Codegen
+struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 {
-    JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator, QQmlJS::Module *jsModule,
+    JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator, QV4::Compiler::Module *jsModule,
               QQmlJS::Engine *jsEngine, QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports,
               const QV4::Compiler::StringTableGenerator *stringPool);
 

@@ -2075,7 +2075,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     if (!v4)
         return false;
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QQmlJS::Codegen::createUnitForLoading();
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
     {
         QString error;
         if (!unit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), &error)) {
@@ -2919,7 +2919,7 @@ struct EmptyCompilationUnit : public QV4::CompiledData::CompilationUnit
 void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 {
     if (!disableDiskCache() || forceDiskCache()) {
-        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QQmlJS::Codegen::createUnitForLoading();
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
         QString error;
         if (unit->loadFromDisk(url(), data.sourceTimeStamp(), &error)) {
             initializeFromCompilationUnit(unit);

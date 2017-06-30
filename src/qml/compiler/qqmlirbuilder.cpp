@@ -1552,9 +1552,9 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, Binding
 }
 
 JSCodeGen::JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
-                     QQmlJS::Module *jsModule, QQmlJS::Engine *jsEngine,
+                     QV4::Compiler::Module *jsModule, QQmlJS::Engine *jsEngine,
                      QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports, const QV4::Compiler::StringTableGenerator *stringPool)
-    : QQmlJS::Codegen(jsUnitGenerator, /*strict mode*/false)
+    : QV4::Compiler::Codegen(jsUnitGenerator, /*strict mode*/false)
     , sourceCode(sourceCode)
     , jsEngine(jsEngine)
     , qmlRoot(qmlRoot)
@@ -1586,8 +1586,8 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
 {
     QVector<int> runtimeFunctionIndices(functions.size());
 
-    ScanFunctions scan(this, sourceCode, QQmlJS::GlobalCode);
-    scan.enterEnvironment(0, QQmlJS::QmlBinding);
+    ScanFunctions scan(this, sourceCode, QV4::Compiler::GlobalCode);
+    scan.enterEnvironment(0, QV4::Compiler::QmlBinding);
     scan.enterQmlScope(qmlRoot, QStringLiteral("context scope"));
     for (const CompiledFunctionOrExpression &f : functions) {
         Q_ASSERT(f.node != qmlRoot);
@@ -1596,7 +1596,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         if (function)
             scan.enterQmlFunction(function);
         else
-            scan.enterEnvironment(f.node, QQmlJS::QmlBinding);
+            scan.enterEnvironment(f.node, QV4::Compiler::QmlBinding);
 
         scan(function ? function->body : f.node);
         scan.leaveEnvironment();
@@ -1936,7 +1936,7 @@ void JSCodeGen::beginFunctionBodyHook()
 #endif
 }
 
-QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
+QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
 {
 #ifndef V4_BOOTSTRAP
     if (_disableAcceleratedLookups)
@@ -1956,7 +1956,7 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
     // Look for IDs first.
     for (const IdMapping &mapping : qAsConst(_idObjects)) {
         if (name == mapping.name) {
-            if (_context->compilationMode == QQmlJS::QmlBinding)
+            if (_context->compilationMode == QV4::Compiler::QmlBinding)
                 _context->idObjectDependencies.insert(mapping.idIndex);
 
             Reference result = Reference::fromTemp(this);

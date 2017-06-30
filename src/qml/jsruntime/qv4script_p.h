@@ -61,10 +61,6 @@ QT_BEGIN_NAMESPACE
 
 class QQmlContextData;
 
-namespace QQmlJS {
-class Directives;
-}
-
 namespace QV4 {
 
 struct ContextStateSaver {
@@ -139,7 +135,7 @@ struct Q_QML_EXPORT Script {
 
     Function *function();
 
-    static QQmlRefPointer<CompiledData::CompilationUnit> precompile(QQmlJS::Module *module, Compiler::JSUnitGenerator *unitGenerator, const QUrl &url, const QString &source,
+    static QQmlRefPointer<CompiledData::CompilationUnit> precompile(QV4::Compiler::Module *module, Compiler::JSUnitGenerator *unitGenerator, const QUrl &url, const QString &source,
                                                                     QList<QQmlError> *reportedErrors = 0, QQmlJS::Directives *directivesCollector = 0);
 
     static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext);
