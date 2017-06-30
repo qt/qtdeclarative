@@ -88,7 +88,7 @@ void Script::parse()
     ExecutionEngine *v4 = scope->engine();
     Scope valueScope(v4);
 
-    IR::Module module(v4->debugger() != 0);
+    QQmlJS::Module module(v4->debugger() != 0);
 
     QQmlJS::Engine ee, *engine = &ee;
     Lexer lexer(engine);
@@ -176,7 +176,7 @@ Function *Script::function()
     return vmFunction;
 }
 
-QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator,
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QQmlJS::Module *module, Compiler::JSUnitGenerator *unitGenerator,
                                                                       const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors,
                                                                       QQmlJS::Directives *directivesCollector)
 {

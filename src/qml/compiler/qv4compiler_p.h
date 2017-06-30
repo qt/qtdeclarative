@@ -95,7 +95,7 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
         bool isAccessor;
     };
 
-    JSUnitGenerator(IR::Module *module);
+    JSUnitGenerator(QQmlJS::Module *module);
 
     int registerString(const QString &str) { return stringTable.registerString(str); }
     int getStringId(const QString &string) const { return stringTable.getStringId(string); }
@@ -126,14 +126,14 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
 
     QV4::CompiledData::Unit *generateUnit(GeneratorOption option = GenerateWithStringTable);
     // Returns bytes written
-    void writeFunction(char *f, IR::Function *irFunction) const;
+    void writeFunction(char *f, QQmlJS::Context *irFunction) const;
 
     StringTableGenerator stringTable;
     QString codeGeneratorName;
 private:
     CompiledData::Unit generateHeader(GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset);
 
-    IR::Module *irModule;
+    QQmlJS::Module *module;
 
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;

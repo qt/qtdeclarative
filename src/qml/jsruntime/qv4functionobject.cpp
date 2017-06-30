@@ -217,7 +217,7 @@ void FunctionCtor::construct(const Managed *that, Scope &scope, CallData *callDa
         return;
     }
 
-    IR::Module module(scope.engine->debugger() != 0);
+    QQmlJS::Module module(scope.engine->debugger() != 0);
 
     Compiler::JSUnitGenerator jsGenerator(&module);
     QQmlJS::RuntimeCodegen cg(scope.engine, &jsGenerator, f->strictMode());

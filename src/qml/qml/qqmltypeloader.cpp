@@ -2442,7 +2442,7 @@ void QQmlTypeData::restoreIR(QQmlRefPointer<QV4::CompiledData::CompilationUnit> 
     m_document.reset(new QmlIR::Document(isDebugging()));
     QmlIR::IRLoader loader(unit->data, m_document.data());
     loader.load();
-    m_document->jsModule.setFileName(finalUrlString());
+    m_document->jsModule.fileName = finalUrlString();
     m_document->javaScriptCompilationUnit = unit;
     continueLoadFromIR();
 }

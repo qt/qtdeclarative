@@ -1552,7 +1552,7 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, Binding
 }
 
 JSCodeGen::JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
-                     QV4::IR::Module *jsModule, QQmlJS::Engine *jsEngine,
+                     QQmlJS::Module *jsModule, QQmlJS::Engine *jsEngine,
                      QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports, const QV4::Compiler::StringTableGenerator *stringPool)
     : QQmlJS::Codegen(jsUnitGenerator, /*strict mode*/false)
     , sourceCode(sourceCode)
@@ -1605,7 +1605,6 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     scan.leaveEnvironment();
 
     _context = 0;
-    _function = _module->functions.at(defineFunction(QStringLiteral("context scope"), qmlRoot, 0, 0));
 
     for (int i = 0; i < functions.count(); ++i) {
         const CompiledFunctionOrExpression &qmlFunction = functions.at(i);
@@ -1647,7 +1646,6 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         runtimeFunctionIndices[i] = idx;
     }
 
-    cgModule = QQmlJS::Module();
     return runtimeFunctionIndices;
 }
 
@@ -1959,8 +1957,8 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
     // Look for IDs first.
     for (const IdMapping &mapping : qAsConst(_idObjects)) {
         if (name == mapping.name) {
-            if (_function->isQmlBinding)
-                _function->idObjectDependencies.insert(mapping.idIndex);
+            if (_context->compilationMode == QQmlJS::QmlBinding)
+                _context->idObjectDependencies.insert(mapping.idIndex);
 
             Reference result = Reference::fromTemp(this);
             Instruction::LoadIdObject load;

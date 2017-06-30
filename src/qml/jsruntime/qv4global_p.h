@@ -147,6 +147,10 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #endif
 
 QT_BEGIN_NAMESPACE
+namespace QQmlJS {
+    struct Module;
+    struct Context;
+}
 
 namespace QV4 {
 

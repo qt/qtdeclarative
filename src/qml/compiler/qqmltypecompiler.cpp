@@ -139,7 +139,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
             sss.scan();
         }
 
-        document->jsModule.setFileName(typeData->finalUrlString());
+        document->jsModule.fileName = typeData->finalUrlString();
         QmlIR::JSCodeGen v4CodeGenerator(document->code, &document->jsGenerator, &document->jsModule, &document->jsParserEngine, document->program, typeNameCache, &document->jsGenerator.stringTable);
         v4CodeGenerator.setUseFastLookups(false);
         // ###        v4CodeGenerator.setUseTypeInference(true);
@@ -207,11 +207,6 @@ QString QQmlTypeCompiler::stringAt(int idx) const
 int QQmlTypeCompiler::registerString(const QString &str)
 {
     return document->jsGenerator.registerString(str);
-}
-
-QV4::IR::Module *QQmlTypeCompiler::jsIRModule() const
-{
-    return &document->jsModule;
 }
 
 const QV4::CompiledData::Unit *QQmlTypeCompiler::qmlUnit() const

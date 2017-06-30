@@ -104,15 +104,16 @@ struct ControlFlow {
     Codegen *cg;
     ControlFlow *parent;
     Type type;
+    bool needsLookupByName = false;
 
     ControlFlow(Codegen *cg, Type type)
-        : cg(cg), parent(cg->_controlFlow), type(type)
+        : cg(cg), parent(cg->_context->controlFlow), type(type)
     {
-        cg->_controlFlow = this;
+        cg->_context->controlFlow = this;
     }
 
     virtual ~ControlFlow() {
-        cg->_controlFlow = parent;
+        cg->_context->controlFlow = parent;
     }
 
     void jumpToHandler(const Handler &h) {
@@ -290,6 +291,7 @@ struct ControlFlowWith : public ControlFlowUnwind
     ControlFlowWith(Codegen *cg)
         : ControlFlowUnwind(cg, With)
     {
+        needsLookupByName = true;
         generator()->setExceptionHandler(&unwindLabel);
     }
 
@@ -340,7 +342,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
     ~ControlFlowCatch() {
         // emit code for unwinding
 
-        ++cg->_function->insideWithOrCatch;
+        needsLookupByName = true;
         insideCatch = true;
 
         // exceptions inside the try block go here
@@ -355,8 +357,8 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
         cg->statement(catchExpression->statement);
 
-        --cg->_function->insideWithOrCatch;
         insideCatch = false;
+        needsLookupByName = false;
 
         // exceptions inside catch and break/return statements go here
         catchUnwindLabel.link();
@@ -495,7 +497,7 @@ void Codegen::ScanFunctions::operator()(Node *node)
 
 void Codegen::ScanFunctions::enterEnvironment(Node *node, CompilationMode compilationMode)
 {
-    Context *e = _cg->cgModule.newContext(node, _variableEnvironment, compilationMode);
+    Context *e = _cg->_module->newContext(node, _variableEnvironment, compilationMode);
     if (!e->isStrict)
         e->isStrict = _cg->_strictMode;
     _envStack.append(e);
@@ -799,7 +801,6 @@ bool Codegen::ScanFunctions::visit(Block *ast) {
 
 void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr, bool isExpression)
 {
-    bool wasStrict = false;
     if (_variableEnvironment) {
         _variableEnvironment->hasNestedFunctions = true;
         // The identifier of a function expression cannot be referenced from the enclosing environment.
@@ -807,7 +808,6 @@ void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, Forma
             _variableEnvironment->enter(name, Context::FunctionDefinition, AST::VariableDeclaration::FunctionScope, expr);
         if (name == QLatin1String("arguments"))
             _variableEnvironment->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
-        wasStrict = _variableEnvironment->isStrict;
     }
 
     enterEnvironment(ast, FunctionCode);
@@ -816,14 +816,13 @@ void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, Forma
     _variableEnvironment->isNamedFunctionExpression = isExpression && !name.isEmpty();
     _variableEnvironment->formals = formals;
 
-    if (body)
+    if (body && !_variableEnvironment->isStrict)
         checkDirectivePrologue(body->elements);
 
-    if (wasStrict || _variableEnvironment->isStrict) {
-        QStringList args;
-        for (FormalParameterList *it = formals; it; it = it->next) {
-            QString arg = it->name.toString();
-            if (args.contains(arg)) {
+    for (FormalParameterList *it = formals; it; it = it->next) {
+        QString arg = it->name.toString();
+        if (_variableEnvironment->isStrict) {
+            if (_variableEnvironment->arguments.contains(arg)) {
                 _cg->throwSyntaxError(it->identifierToken, QStringLiteral("Duplicate parameter name '%1' is not allowed in strict mode").arg(arg));
                 return;
             }
@@ -831,18 +830,16 @@ void Codegen::ScanFunctions::enterFunction(Node *ast, const QString &name, Forma
                 _cg->throwSyntaxError(it->identifierToken, QStringLiteral("'%1' cannot be used as parameter name in strict mode").arg(arg));
                 return;
             }
-            args += arg;
         }
+        _variableEnvironment->arguments += arg;
     }
 }
 
 
 Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     : _module(0)
-    , _function(0)
     , _returnAddress(0)
     , _context(0)
-    , _controlFlow(0)
     , _labelledStatement(0)
     , jsUnitGenerator(jsUnitGenerator)
     , _strictMode(strict)
@@ -854,7 +851,7 @@ Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
 void Codegen::generateFromProgram(const QString &fileName,
                                   const QString &sourceCode,
                                   Program *node,
-                                  QV4::IR::Module *module,
+                                  QQmlJS::Module *module,
                                   CompilationMode mode)
 {
     Q_ASSERT(node);
@@ -862,22 +859,21 @@ void Codegen::generateFromProgram(const QString &fileName,
     _module = module;
     _context = 0;
 
-    _module->setFileName(fileName);
+    _module->fileName = fileName;
 
     ScanFunctions scan(this, sourceCode, mode);
     scan(node);
 
     defineFunction(QStringLiteral("%entry"), node, 0, node->elements);
-    cgModule = QQmlJS::Module();
 }
 
 void Codegen::generateFromFunctionExpression(const QString &fileName,
                                              const QString &sourceCode,
                                              AST::FunctionExpression *ast,
-                                             QV4::IR::Module *module)
+                                             QQmlJS::Module *module)
 {
     _module = module;
-    _module->setFileName(fileName);
+    _module->fileName = fileName;
     _context = 0;
 
     ScanFunctions scan(this, sourceCode, GlobalCode);
@@ -886,21 +882,21 @@ void Codegen::generateFromFunctionExpression(const QString &fileName,
     scan(ast);
     scan.leaveEnvironment();
 
-    defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
-
-    cgModule = QQmlJS::Module();
+    int index = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
+    _module->rootContext = _module->functions.at(index);
 }
 
 
 void Codegen::enterContext(Node *node)
 {
-    _context = cgModule.contextMap.value(node);
+    _context = _module->contextMap.value(node);
     Q_ASSERT(_context);
 }
 
 void Codegen::leaveContext()
 {
     Q_ASSERT(_context);
+    Q_ASSERT(!_context->controlFlow);
     _context = _context->parent;
 }
 
@@ -1902,35 +1898,33 @@ bool Codegen::visit(FunctionExpression *ast)
 Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
 {
     uint scope = 0;
-    Context *e = _context;
-    IR::Function *f = _function;
+    Context *c = _context;
 
-    while (f && e->parent) {
-        if (f->insideWithOrCatch || (f->isNamedExpression && QStringRef(f->name) == name))
+    while (c->parent) {
+        if (c->forceLookupByName() || (c->isNamedFunctionExpression && c->name == name))
             goto loadByName;
 
-        int index = e->findMember(name);
-        Q_ASSERT (index < e->members.size());
+        int index = c->findMember(name);
+        Q_ASSERT (index < c->members.size());
         if (index != -1) {
             Reference r = Reference::fromLocal(this, index, scope);
             if (name == QLatin1String("arguments") || name == QLatin1String("eval")) {
                 r.isArgOrEval = true;
-                if (isLhs && f->isStrict)
+                if (isLhs && c->isStrict)
                     // ### add correct source location
                     throwSyntaxError(SourceLocation(), QStringLiteral("Variable name may not be eval or arguments in strict mode"));
             }
             return r;
         }
-        const int argIdx = f->indexOfArgument(QStringRef(&name));
+        const int argIdx = c->findArgument(name);
         if (argIdx != -1)
             return Reference::fromArgument(this, argIdx, scope);
 
-        if (!e->isStrict && e->hasDirectEval)
+        if (!c->isStrict && c->hasDirectEval)
             goto loadByName;
 
         ++scope;
-        e = e->parent;
-        f = f->outer;
+        c = c->parent;
     }
 
     {
@@ -1940,8 +1934,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
             return fallback;
     }
 
-    if (!e->parent && (!f || !f->insideWithOrCatch) &&
-        _context->compilationMode != EvalCode && e->compilationMode != QmlBinding) {
+    if (!c->parent && !c->forceLookupByName() && _context->compilationMode != EvalCode && c->compilationMode != QmlBinding) {
         Reference r = Reference::fromName(this, name);
         r.global = true;
         return r;
@@ -2397,25 +2390,17 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
                             AST::FormalParameterList *formals,
                             AST::SourceElements *body)
 {
-    ControlFlow *loop = 0;
-    qSwap(_controlFlow, loop);
+    Q_UNUSED(formals);
 
     enterContext(ast);
-    IR::Function *function = _module->newFunction(name, _function);
+
+    _context->name = name;
+    _module->functions.append(_context);
     int functionIndex = _module->functions.count() - 1;
 
-    function->hasDirectEval = _context->hasDirectEval || _context->compilationMode == EvalCode
-            || _module->debugMode; // Conditional breakpoints are like eval in the function
-    function->usesArgumentsObject = _context->parent && (_context->usesArgumentsObject == Context::ArgumentsObjectUsed);
-    function->usesThis = _context->usesThis;
-    function->maxNumberOfArguments = qMax(_context->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);
-    function->isStrict = _context->isStrict;
-    function->isNamedExpression = _context->isNamedFunctionExpression;
-    function->isQmlBinding = _context->compilationMode == QmlBinding;
-
-    AST::SourceLocation loc = ast->firstSourceLocation();
-    function->line = loc.startLine;
-    function->column = loc.startColumn;
+    _context->hasDirectEval |= _context->compilationMode == EvalCode || _module->debugMode; // Conditional breakpoints are like eval in the function
+    // ### still needed?
+    _context->maxNumberOfArguments = qMax(_context->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);
 
     BytecodeGenerator bytecode;
     BytecodeGenerator *savedBytecodeGenerator;
@@ -2423,7 +2408,10 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     bytecodeGenerator = &bytecode;
 
     unsigned returnAddress = bytecodeGenerator->newTemp();
-    if (function->usesArgumentsObject)
+
+    if (!_context->parent || _context->usesArgumentsObject == Context::ArgumentsObjectUnknown)
+        _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
+    if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed)
         _context->enter(QStringLiteral("arguments"), Context::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
 
     // variables in global code are properties of the global context object, not locals as with other functions.
@@ -2431,7 +2419,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         unsigned t = 0;
         for (Context::MemberMap::iterator it = _context->members.begin(), end = _context->members.end(); it != end; ++it) {
             const QString &local = it.key();
-            function->LOCAL(local);
+            _context->locals.append(local);
             (*it).index = t;
             ++t;
         }
@@ -2448,13 +2436,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     auto exitBlock = bytecodeGenerator->newLabel();
 
-    qSwap(_function, function);
     qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
-
-    for (FormalParameterList *it = formals; it; it = it->next) {
-        _function->RECEIVE(it->name.toString());
-    }
 
     for (const Context::Member &member : qAsConst(_context->members)) {
         if (member.function) {
@@ -2471,12 +2454,12 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             }
         }
     }
-    if (_function->usesArgumentsObject) {
+    if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed) {
         Instruction::CallBuiltinSetupArgumentsObject setup;
         setup.result = referenceForName(QStringLiteral("arguments"), false).asLValue();
         bytecodeGenerator->addInstruction(setup);
     }
-    if (_function->usesThis && !_context->isStrict) {
+    if (_context->usesThis && !_context->isStrict) {
         // make sure we convert this to an object
         Instruction::CallBuiltinConvertThisToObject convert;
         bytecodeGenerator->addInstruction(convert);
@@ -2495,18 +2478,16 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         bytecodeGenerator->addInstruction(ret);
     }
 
-    _function->code = bytecodeGenerator->finalize();
+    _context->code = bytecodeGenerator->finalize();
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
-        qDebug() << "=== Bytecode for" << *_function->name;
-        QV4::Moth::dumpBytecode(_function->code);
+        qDebug() << "=== Bytecode for" << _context->name;
+        QV4::Moth::dumpBytecode(_context->code);
         qDebug();
     }
 
-    qSwap(_function, function);
     qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
-    qSwap(_controlFlow, loop);
 
     leaveContext();
 
@@ -2551,12 +2532,12 @@ bool Codegen::visit(BreakStatement *ast)
     if (hasError)
         return false;
 
-    if (!_controlFlow) {
+    if (!_context->controlFlow) {
         throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
         return false;
     }
 
-    ControlFlow::Handler h = _controlFlow->getHandler(ControlFlow::Break, ast->label.toString());
+    ControlFlow::Handler h = _context->controlFlow->getHandler(ControlFlow::Break, ast->label.toString());
     if (h.type == ControlFlow::Invalid) {
         if (ast->label.isEmpty())
             throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
@@ -2565,7 +2546,7 @@ bool Codegen::visit(BreakStatement *ast)
         return false;
     }
 
-    _controlFlow->jumpToHandler(h);
+    _context->controlFlow->jumpToHandler(h);
 
     return false;
 }
@@ -2577,12 +2558,12 @@ bool Codegen::visit(ContinueStatement *ast)
 
     TempScope scope(this);
 
-    if (!_controlFlow) {
+    if (!_context->controlFlow) {
         throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Continue outside of loop"));
         return false;
     }
 
-    ControlFlow::Handler h = _controlFlow->getHandler(ControlFlow::Continue, ast->label.toString());
+    ControlFlow::Handler h = _context->controlFlow->getHandler(ControlFlow::Continue, ast->label.toString());
     if (h.type == ControlFlow::Invalid) {
         if (ast->label.isEmpty())
             throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Undefined label '%1'").arg(ast->label.toString()));
@@ -2591,7 +2572,7 @@ bool Codegen::visit(ContinueStatement *ast)
         return false;
     }
 
-    _controlFlow->jumpToHandler(h);
+    _context->controlFlow->jumpToHandler(h);
 
     return false;
 }
@@ -2762,7 +2743,7 @@ bool Codegen::visit(LabelledStatement *ast)
     TempScope scope(this);
 
     // check that no outer loop contains the label
-    ControlFlow *l = _controlFlow;
+    ControlFlow *l = _context->controlFlow;
     while (l) {
         if (l->label() == ast->label) {
             QString error = QString(QStringLiteral("Label '%1' has already been declared")).arg(ast->label.toString());
@@ -2881,9 +2862,9 @@ bool Codegen::visit(ReturnStatement *ast)
         Reference::fromTemp(this, _returnAddress).storeConsume(expr);
     }
 
-    if (_controlFlow) {
-        ControlFlow::Handler h = _controlFlow->getHandler(ControlFlow::Return);
-        _controlFlow->jumpToHandler(h);
+    if (_context->controlFlow) {
+        ControlFlow::Handler h = _context->controlFlow->getHandler(ControlFlow::Return);
+        _context->controlFlow->jumpToHandler(h);
     } else {
         bytecodeGenerator->jump().link(_exitBlock);
     }
@@ -2971,8 +2952,8 @@ bool Codegen::visit(ThrowStatement *ast)
 
     Reference expr = expression(ast->expression);
 
-    if (_controlFlow) {
-        _controlFlow->handleThrow(expr);
+    if (_context->controlFlow) {
+        _context->controlFlow->handleThrow(expr);
     } else {
         Instruction::CallBuiltinThrow instr;
         instr.arg = expr.asRValue();
@@ -3021,7 +3002,7 @@ bool Codegen::visit(TryStatement *ast)
 
     TempScope scope(this);
 
-    _function->hasTry = true;
+    _context->hasTry = true;
 
     if (ast->finallyExpression && ast->finallyExpression->statement) {
         handleTryFinally(ast);
@@ -3069,7 +3050,7 @@ bool Codegen::visit(WithStatement *ast)
 
     TempScope scope(this);
 
-    _function->hasWith = true;
+    _context->hasWith = true;
 
     Reference src = expression(ast->expression);
     if (hasError)
@@ -3077,14 +3058,12 @@ bool Codegen::visit(WithStatement *ast)
     src.asRValue(); // trigger load before we setup the exception handler, so exceptions here go to the right place
 
     ControlFlowWith flow(this);
-    ++_function->insideWithOrCatch;
 
     Instruction::CallBuiltinPushScope pushScope;
     pushScope.arg = src.asRValue();
     bytecodeGenerator->addInstruction(pushScope);
 
     statement(ast->statement);
-    --_function->insideWithOrCatch;
 
     return false;
 }
@@ -3177,7 +3156,7 @@ QQmlRefPointer<CompiledData::CompilationUnit> Codegen::generateCompilationUnit(b
     Moth::CompilationUnit *compilationUnit = new Moth::CompilationUnit;
     compilationUnit->codeRefs.resize(_module->functions.size());
     int i = 0;
-    for (IR::Function *irFunction : qAsConst(_module->functions))
+    for (QQmlJS::Context *irFunction : qAsConst(_module->functions))
         compilationUnit->codeRefs[i++] = irFunction->code;
 
     if (generateUnitData)
@@ -3517,14 +3496,14 @@ void Codegen::Reference::load(uint tmp) const
         load.propertyIndex = qmlCoreIndex;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
-        codegen->_function->scopeObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
+        codegen->_context->scopeObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } else if (type == QmlContextObject) {
         Instruction::LoadContextObjectProperty load;
         load.base = base;
         load.propertyIndex = qmlCoreIndex;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
-        codegen->_function->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
+        codegen->_context->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } else if (type == This) {
         Instruction::LoadThis load;
         load.result = temp;
@@ -3538,6 +3517,31 @@ void Codegen::Reference::load(uint tmp) const
 Context *Module::newContext(Node *node, Context *parent, CompilationMode compilationMode)
 {
     Context *c = new Context(parent, compilationMode);
+    if (node) {
+        SourceLocation loc = node->firstSourceLocation();
+        c->line = loc.startLine;
+        c->column = loc.startColumn;
+    }
+
     contextMap.insert(node, c);
+
+    if (!parent)
+        rootContext = c;
+    else {
+        parent->nestedContexts.append(c);
+        c->isStrict = parent->isStrict;
+    }
+
     return c;
+}
+
+bool Context::forceLookupByName()
+{
+    QV4::ControlFlow *flow = controlFlow;
+    while (flow) {
+        if (flow->needsLookupByName)
+            return true;
+        flow = flow->parent;
+    }
+    return false;
 }

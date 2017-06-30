@@ -97,7 +97,9 @@ enum CompilationMode {
 struct Context;
 
 struct Module {
-    Module() {}
+    Module(bool debugMode)
+        : debugMode(debugMode)
+    {}
     ~Module() {
         qDeleteAll(contextMap);
     }
@@ -105,11 +107,21 @@ struct Module {
     Context *newContext(AST::Node *node, Context *parent, CompilationMode compilationMode);
 
     QHash<AST::Node *, Context *> contextMap;
+    QList<Context *> functions;
+    Context *rootContext;
+    QString fileName;
+    QDateTime sourceTimeStamp;
+    uint unitFlags = 0; // flags merged into CompiledData::Unit::flags
+    bool debugMode = false;
+    QString targetABI; // ### seems unused currently
 };
 
 
 struct Context {
     Context *parent;
+    QString name;
+    int line = 0;
+    int column = 0;
 
     enum MemberType {
         UndefinedMember,
@@ -130,12 +142,21 @@ struct Context {
 
     MemberMap members;
     AST::FormalParameterList *formals;
+    QStringList arguments;
+    QStringList locals;
+    QVector<Context *> nestedContexts;
+
+    QV4::ControlFlow *controlFlow = 0;
+    QByteArray code;
+
     int maxNumberOfArguments;
     bool hasDirectEval;
     bool hasNestedFunctions;
     bool isStrict;
     bool isNamedFunctionExpression;
     bool usesThis;
+    bool hasTry = false;
+    bool hasWith = false;
     enum UsesArgumentsObject {
         ArgumentsObjectUnknown,
         ArgumentsObjectNotUsed,
@@ -145,6 +166,53 @@ struct Context {
     UsesArgumentsObject usesArgumentsObject;
 
     CompilationMode compilationMode;
+
+    template <typename T>
+    class SmallSet: public QVarLengthArray<T, 8>
+    {
+    public:
+        void insert(int value)
+        {
+            for (auto it : *this) {
+                if (it == value)
+                    return;
+            }
+            this->append(value);
+        }
+    };
+
+    // Map from meta property index (existence implies dependency) to notify signal index
+    struct KeyValuePair
+    {
+        quint32 _key;
+        quint32 _value;
+
+        KeyValuePair(): _key(0), _value(0) {}
+        KeyValuePair(quint32 key, quint32 value): _key(key), _value(value) {}
+
+        quint32 key() const { return _key; }
+        quint32 value() const { return _value; }
+    };
+
+    class PropertyDependencyMap: public QVarLengthArray<KeyValuePair, 8>
+    {
+    public:
+        void insert(quint32 key, quint32 value)
+        {
+            for (auto it = begin(), eit = end(); it != eit; ++it) {
+                if (it->_key == key) {
+                    it->_value = value;
+                    return;
+                }
+            }
+            append(KeyValuePair(key, value));
+        }
+    };
+
+    // Qml extension:
+    SmallSet<int> idObjectDependencies;
+    PropertyDependencyMap contextObjectPropertyDependencies;
+    PropertyDependencyMap scopeObjectPropertyDependencies;
 
     Context(Context *parent, CompilationMode mode)
         : parent(parent)
@@ -160,6 +228,26 @@ struct Context {
     {
         if (parent && parent->isStrict)
             isStrict = true;
+    }
+
+    bool forceLookupByName();
+
+
+    bool canUseSimpleCall() const {
+        return nestedContexts.isEmpty() &&
+               locals.isEmpty() && arguments.size() <= QV4::Global::ReservedArgumentCount &&
+               !hasTry && !hasWith && !isNamedFunctionExpression &&
+               usesArgumentsObject == ArgumentsObjectNotUsed && !hasDirectEval;
+    }
+
+    int findArgument(const QString &name) const
+    {
+        // search backwards to handle duplicate argument names correctly
+        for (int i = arguments.size() - 1; i >= 0; --i) {
+            if (arguments.at(i) == name)
+                return i;
+        }
+        return -1;
     }
 
     int findMember(const QString &name) const
@@ -238,12 +326,12 @@ public:
     void generateFromProgram(const QString &fileName,
                              const QString &sourceCode,
                              AST::Program *ast,
-                             QV4::IR::Module *module,
+                             QQmlJS::Module *module,
                              CompilationMode mode = GlobalCode);
     void generateFromFunctionExpression(const QString &fileName,
                              const QString &sourceCode,
                              AST::FunctionExpression *ast,
-                             QV4::IR::Module *module);
+                             QQmlJS::Module *module);
 
 public:
     struct Reference {
@@ -647,13 +735,10 @@ protected:
     friend struct QV4::ControlFlowCatch;
     friend struct QV4::ControlFlowFinally;
     Result _expr;
-    QV4::IR::Module *_module;
-    QV4::IR::Function *_function;
+    Module *_module;
     BytecodeGenerator::Label _exitBlock;
     unsigned _returnAddress;
     Context *_context;
-    QV4::ControlFlow *_controlFlow;
-    Module cgModule;
     AST::LabelledStatement *_labelledStatement;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
     BytecodeGenerator *bytecodeGenerator = 0;
