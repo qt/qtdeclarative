@@ -1969,16 +1969,6 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
             load.result = result.asLValue();
             bytecodeGenerator->addInstruction(load);
             result.isReadonly = true;
-
-#if 0
-            if (mapping.type) {
-                result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
-                result->memberResolver->owner = _function;
-                initMetaObjectResolver(result->memberResolver, mapping.type);
-                result->memberResolver->flags |= AllPropertiesAreFinal;
-            }
-            result->isReadOnly = true; // don't allow use as lvalue
-#endif
             return result;
         }
     }
@@ -1990,13 +1980,6 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
                 Reference imports = Reference::fromTemp(this, _importedScriptsTemp);
                 return Reference::fromSubscript(imports, Reference::fromConst(this, QV4::Encode(r.scriptIndex)));
             } else if (r.type) {
-#if 0
-                typeName->freeOfSideEffects = true;
-                result = _block->TEMP(result->index);
-                result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
-                result->memberResolver->owner = _function;
-                initQmlTypeResolver(result->memberResolver, r.type);
-#endif
                 if (r.type->isCompositeSingleton()) {
                     Reference result = Reference::fromTemp(this);
                     Instruction::LoadQmlSingleton load;
@@ -2005,21 +1988,10 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
                     bytecodeGenerator->addInstruction(load);
                     return result;
                 }
-                Reference result = Reference::fromName(this, name);
-                return result;
+                return Reference::fromName(this, name);
             } else {
                 Q_ASSERT(r.importNamespace);
-                Reference result = Reference::fromName(this, name);
-#if 0
-                QV4::IR::Name *namespaceName = _block->NAME(name, line, col);
-                namespaceName->freeOfSideEffects = true;
-                QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
-                result->memberResolver = _function->New<QV4::IR::MemberExpressionResolver>();
-                result->memberResolver->owner = _function;
-                initImportNamespaceResolver(result->memberResolver, imports, r.importNamespace);
-                _block->MOVE(result, namespaceName);
-#endif
-                return result;
+                return Reference::fromName(this, name);
             }
         }
     }
@@ -2029,7 +2001,9 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
         if (!data)
             return Reference::fromName(this, name);
         Reference base = Reference::fromTemp(this, _qmlContextTemp);
-        return Reference::fromQmlScopeObject(base, data->coreIndex(), data->notifyIndex());
+        bool requiresCapture = !data->isConstant() && _function->isQmlBinding;
+        return Reference::fromQmlScopeObject(base, data->coreIndex(), data->notifyIndex(),
+                                             requiresCapture);
     }
 
     if (_contextObject) {
@@ -2037,7 +2011,9 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
         if (!data)
             return Reference::fromName(this, name);
         Reference base = Reference::fromTemp(this, _qmlContextTemp);
-        return Reference::fromQmlContextObject(base, data->coreIndex(), data->notifyIndex());
+        bool requiresCapture = !data->isConstant() && _function->isQmlBinding;
+        return Reference::fromQmlContextObject(base, data->coreIndex(), data->notifyIndex(),
+                                               requiresCapture);
     }
 #else
     Q_UNUSED(name)
