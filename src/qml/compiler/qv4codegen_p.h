@@ -271,22 +271,7 @@ struct Context {
         return true;
     }
 
-    bool lookupMember(const QString &name, Context **scope, int *index, int *distance)
-    {
-        Context *it = this;
-        *distance = 0;
-        for (; it; it = it->parent, ++(*distance)) {
-            int idx = it->findMember(name);
-            if (idx != -1) {
-                *scope = it;
-                *index = idx;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    void enter(const QString &name, MemberType type, AST::VariableDeclaration::VariableScope scope, AST::FunctionExpression *function = 0)
+    void addLocalVar(const QString &name, MemberType type, AST::VariableDeclaration::VariableScope scope, AST::FunctionExpression *function = 0)
     {
         if (! name.isEmpty()) {
             if (type != FunctionDefinition) {
@@ -808,8 +793,8 @@ protected:
     // fields:
         Codegen *_cg;
         const QString _sourceCode;
-        Context *_variableEnvironment;
-        QStack<Context *> _envStack;
+        Context *_context;
+        QStack<Context *> _contextStack;
 
         bool _allowFuncDecls;
         CompilationMode defaultProgramMode;
