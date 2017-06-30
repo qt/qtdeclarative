@@ -356,6 +356,19 @@ QString QQuickTextEdit::text() const
 */
 
 /*!
+    \qmlproperty bool QtQuick::TextEdit::font.kerning
+    \since 5.10
+
+    Enables or disables the kerning OpenType feature when shaping the text. This may improve performance
+    when creating or changing the text, at the expense of some cosmetic features. The default value
+    is true.
+
+    \qml
+    Text { text: "OATS FLAVOUR WAY"; kerning: font.false }
+    \endqml
+*/
+
+/*!
     \qmlproperty string QtQuick::TextEdit::text
 
     The text to display.  If the text format is AutoText the text edit will

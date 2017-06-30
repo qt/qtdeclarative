@@ -170,6 +170,7 @@ available when you import \c QtQuick.
     \li \l enumeration \c font.capitalization
     \li \l real \c font.letterSpacing
     \li \l real \c font.wordSpacing
+    \li \l bool \c font.kerning
     \endlist
 
     Example:
