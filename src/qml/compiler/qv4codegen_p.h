@@ -131,10 +131,11 @@ struct Context {
     };
 
     struct Member {
-        MemberType type;
-        int index;
-        AST::FunctionExpression *function;
-        AST::VariableDeclaration::VariableScope scope;
+        MemberType type = UndefinedMember;
+        int index = -1;
+        AST::VariableDeclaration::VariableScope scope = AST::VariableDeclaration::FunctionScope;
+        mutable bool canEscape = false;
+        AST::FunctionExpression *function = 0;
 
         bool isLexicallyScoped() const { return this->scope != AST::VariableDeclaration::FunctionScope; }
     };
@@ -157,6 +158,8 @@ struct Context {
     bool usesThis = false;
     bool hasTry = false;
     bool hasWith = false;
+    mutable bool argumentsCanEscape = false;
+
     enum UsesArgumentsObject {
         ArgumentsObjectUnknown,
         ArgumentsObjectNotUsed,
@@ -232,21 +235,26 @@ struct Context {
                usesArgumentsObject == ArgumentsObjectNotUsed && !hasDirectEval;
     }
 
-    int findArgument(const QString &name) const
+    int findArgument(const QString &name, bool canEscape)
     {
         // search backwards to handle duplicate argument names correctly
         for (int i = arguments.size() - 1; i >= 0; --i) {
-            if (arguments.at(i) == name)
+            if (arguments.at(i) == name) {
+                if (canEscape)
+                    argumentsCanEscape = true;
                 return i;
+            }
         }
         return -1;
     }
 
-    int findMember(const QString &name) const
+    int findMember(const QString &name, bool canEscape) const
     {
         MemberMap::const_iterator it = members.find(name);
         if (it == members.end())
             return -1;
+        if (canEscape)
+            (*it).canEscape = true;
         Q_ASSERT((*it).index != -1 || !parent);
         return (*it).index;
     }
@@ -274,7 +282,6 @@ struct Context {
             MemberMap::iterator it = members.find(name);
             if (it == members.end()) {
                 Member m;
-                m.index = -1;
                 m.type = type;
                 m.function = function;
                 m.scope = scope;
