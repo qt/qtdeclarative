@@ -326,22 +326,18 @@ public:
             r.closureId = functionId;
             return r;
         }
-        static Reference fromQmlScopeObject(const Reference &base, qint16 coreIndex,
-                                            qint16 notifyIndex, bool requiresCapture) {
+        static Reference fromQmlScopeObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex) {
             Reference r(base.codegen, QmlScopeObject);
             r.base = base.asRValue();
             r.qmlCoreIndex = coreIndex;
             r.qmlNotifyIndex = notifyIndex;
-            r.requiresCapture = requiresCapture;
             return r;
         }
-        static Reference fromQmlContextObject(const Reference &base, qint16 coreIndex,
-                                              qint16 notifyIndex, bool requiresCapture) {
+        static Reference fromQmlContextObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex) {
             Reference r(base.codegen, QmlContextObject);
             r.base = base.asRValue();
             r.qmlCoreIndex = coreIndex;
             r.qmlNotifyIndex = notifyIndex;
-            r.requiresCapture = requiresCapture;
             return r;
         }
         static Reference fromThis(Codegen *cg) {
@@ -380,7 +376,6 @@ public:
             struct { // QML scope/context object case
                 qint16 qmlCoreIndex;
                 qint16 qmlNotifyIndex;
-                bool requiresCapture;
             };
         };
         mutable int tempIndex = -1;

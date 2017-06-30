@@ -197,14 +197,6 @@ void dumpBytecode(const char *code, int len)
             d << instr.base << ", " << instr.source;
         MOTH_END_INSTR(SetLookup)
 
-        MOTH_BEGIN_INSTR(StoreQObjectProperty)
-            d << instr.base << "[" << instr.propertyIndex << "]" << ", " << instr.source;
-        MOTH_END_INSTR(StoreQObjectProperty)
-
-        MOTH_BEGIN_INSTR(LoadQObjectProperty)
-            d << instr.result << ", " << instr.base << "[" << instr.propertyIndex << "]";
-        MOTH_END_INSTR(LoadQObjectProperty)
-
         MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
             d << instr.base << "[" << instr.propertyIndex << "]" << ", " << instr.source;
         MOTH_END_INSTR(StoreScopeObjectProperty)
@@ -224,14 +216,6 @@ void dumpBytecode(const char *code, int len)
         MOTH_BEGIN_INSTR(LoadIdObject)
             d << instr.result << ", " << instr.base << "[" << instr.index << "]";
         MOTH_END_INSTR(LoadIdObject)
-
-        MOTH_BEGIN_INSTR(LoadAttachedQObjectProperty)
-            d << instr.result << ", " << instr.attachedPropertiesId << "[" << instr.propertyIndex << "]";
-        MOTH_END_INSTR(LoadAttachedQObjectProperty)
-
-        MOTH_BEGIN_INSTR(LoadSingletonQObjectProperty)
-            d << instr.result << ", " << instr.base << "[" << instr.propertyIndex << "]";
-        MOTH_END_INSTR(LoadSingletonQObjectProperty)
 
         MOTH_BEGIN_INSTR(InitStackFrame)
             d << instr.value;

@@ -87,15 +87,11 @@ QT_BEGIN_NAMESPACE
     F(GetLookup, getLookup) \
     F(StoreProperty, storeProperty) \
     F(SetLookup, setLookup) \
-    F(StoreQObjectProperty, storeQObjectProperty) \
-    F(LoadQObjectProperty, loadQObjectProperty) \
     F(StoreScopeObjectProperty, storeScopeObjectProperty) \
     F(StoreContextObjectProperty, storeContextObjectProperty) \
     F(LoadScopeObjectProperty, loadScopeObjectProperty) \
     F(LoadContextObjectProperty, loadContextObjectProperty) \
     F(LoadIdObject, loadIdObject) \
-    F(LoadAttachedQObjectProperty, loadAttachedQObjectProperty) \
-    F(LoadSingletonQObjectProperty, loadQObjectProperty) \
     F(InitStackFrame, initStackFrame) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
@@ -340,33 +336,18 @@ union Instr
         int propertyIndex;
         Param base;
         Param result;
-        bool captureRequired;
     };
     struct instr_loadContextObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
         Param base;
         Param result;
-        bool captureRequired;
     };
     struct instr_loadIdObject {
         MOTH_INSTR_HEADER
         int index;
         Param base;
         Param result;
-    };
-    struct instr_loadQObjectProperty {
-        MOTH_INSTR_HEADER
-        int propertyIndex;
-        Param base;
-        Param result;
-        bool captureRequired;
-    };
-    struct instr_loadAttachedQObjectProperty {
-        MOTH_INSTR_HEADER
-        int propertyIndex;
-        Param result;
-        int attachedPropertiesId;
     };
     struct instr_storeProperty {
         MOTH_INSTR_HEADER
@@ -387,12 +368,6 @@ union Instr
         Param source;
     };
     struct instr_storeContextObjectProperty {
-        MOTH_INSTR_HEADER
-        Param base;
-        int propertyIndex;
-        Param source;
-    };
-    struct instr_storeQObjectProperty {
         MOTH_INSTR_HEADER
         Param base;
         int propertyIndex;
@@ -845,13 +820,10 @@ union Instr
     instr_loadScopeObjectProperty loadScopeObjectProperty;
     instr_loadContextObjectProperty loadContextObjectProperty;
     instr_loadIdObject loadIdObject;
-    instr_loadQObjectProperty loadQObjectProperty;
-    instr_loadAttachedQObjectProperty loadAttachedQObjectProperty;
     instr_storeProperty storeProperty;
     instr_setLookup setLookup;
     instr_storeScopeObjectProperty storeScopeObjectProperty;
     instr_storeContextObjectProperty storeContextObjectProperty;
-    instr_storeQObjectProperty storeQObjectProperty;
     instr_initStackFrame initStackFrame;
     instr_callValue callValue;
     instr_callProperty callProperty;

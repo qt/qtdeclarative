@@ -310,7 +310,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> InstructionSelection::backend
     return result;
 }
 
-void InstructionSelection::callValue(IR::Expr *value, IR::ExprList *args, IR::Expr *result)
+void InstructionSelection::callValue(IR::Expr *value, IR::ExprList * /*args*/, IR::Expr *result)
 {
     Instruction::CallValue call;
 //    prepareCallArgs(args, call.argc);
@@ -366,7 +366,7 @@ void InstructionSelection::callProperty(IR::Expr *base, const QString &name, IR:
     }
 }
 
-void InstructionSelection::callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList *args,
+void InstructionSelection::callSubscript(IR::Expr *base, IR::Expr *index, IR::ExprList * /*args*/,
                                          IR::Expr *result)
 {
     // call the property on the loaded base
@@ -430,7 +430,7 @@ void InstructionSelection::constructProperty(IR::Expr *base, const QString &name
     addInstruction(create);
 }
 
-void InstructionSelection::constructValue(IR::Expr *value, IR::ExprList *args, IR::Expr *target)
+void InstructionSelection::constructValue(IR::Expr *value, IR::ExprList * /*args*/, IR::Expr *target)
 {
     Instruction::CreateValue create;
     create.func = getParam(value);
@@ -583,29 +583,29 @@ void InstructionSelection::setQmlContextProperty(IR::Expr *source, IR::Expr *tar
     }
 }
 
-void InstructionSelection::setQObjectProperty(IR::Expr *source, IR::Expr *targetBase, int propertyIndex)
+void InstructionSelection::setQObjectProperty(IR::Expr * /*source*/, IR::Expr * /*targetBase*/, int /*propertyIndex*/)
 {
-    Instruction::StoreQObjectProperty store;
-    store.base = getParam(targetBase);
-    store.propertyIndex = propertyIndex;
-    store.source = getParam(source);
-    addInstruction(store);
+//    Instruction::StoreQObjectProperty store;
+//    store.base = getParam(targetBase);
+//    store.propertyIndex = propertyIndex;
+//    store.source = getParam(source);
+//    addInstruction(store);
 }
 
-void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, bool captureRequired, IR::Expr *target)
+void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::MemberKind kind, int index, bool /*captureRequired*/, IR::Expr *target)
 {
     if (kind == IR::Member::MemberOfQmlScopeObject) {
-        Instruction::LoadScopeObjectProperty load;
-        load.base = getParam(source);
-        load.propertyIndex = index;
-        load.captureRequired = captureRequired;
-        load.result = getResultParam(target);
-        addInstruction(load);
+//        Instruction::LoadScopeObjectProperty load;
+//        load.base = getParam(source);
+//        load.propertyIndex = index;
+//        load.captureRequired = captureRequired;
+//        load.result = getResultParam(target);
+//        addInstruction(load);
     } else if (kind == IR::Member::MemberOfQmlContextObject) {
         Instruction::LoadContextObjectProperty load;
         load.base = getParam(source);
         load.propertyIndex = index;
-        load.captureRequired = captureRequired;
+//        load.captureRequired = captureRequired;
         load.result = getResultParam(target);
         addInstruction(load);
     } else if (kind == IR::Member::MemberOfIdObjectsArray) {
@@ -619,29 +619,29 @@ void InstructionSelection::getQmlContextProperty(IR::Expr *source, IR::Member::M
     }
 }
 
-void InstructionSelection::getQObjectProperty(IR::Expr *base, int propertyIndex, bool captureRequired, bool isSingletonProperty, int attachedPropertiesId, IR::Expr *target)
+void InstructionSelection::getQObjectProperty(IR::Expr * /*base*/, int /*propertyIndex*/, bool /*captureRequired*/, bool /*isSingletonProperty*/, int /*attachedPropertiesId*/, IR::Expr * /*target*/)
 {
-    if (attachedPropertiesId != 0) {
-        Instruction::LoadAttachedQObjectProperty load;
-        load.propertyIndex = propertyIndex;
-        load.result = getResultParam(target);
-        load.attachedPropertiesId = attachedPropertiesId;
-        addInstruction(load);
-    } else if (isSingletonProperty) {
-        Instruction::LoadSingletonQObjectProperty load;
-        load.base = getParam(base);
-        load.propertyIndex = propertyIndex;
-        load.result = getResultParam(target);
-        load.captureRequired = captureRequired;
-        addInstruction(load);
-    } else {
-        Instruction::LoadQObjectProperty load;
-        load.base = getParam(base);
-        load.propertyIndex = propertyIndex;
-        load.result = getResultParam(target);
-        load.captureRequired = captureRequired;
-        addInstruction(load);
-    }
+//    if (attachedPropertiesId != 0) {
+//        Instruction::LoadAttachedQObjectProperty load;
+//        load.propertyIndex = propertyIndex;
+//        load.result = getResultParam(target);
+//        load.attachedPropertiesId = attachedPropertiesId;
+//        addInstruction(load);
+//    } else if (isSingletonProperty) {
+//        Instruction::LoadSingletonQObjectProperty load;
+//        load.base = getParam(base);
+//        load.propertyIndex = propertyIndex;
+//        load.result = getResultParam(target);
+//        load.captureRequired = captureRequired;
+//        addInstruction(load);
+//    } else {
+//        Instruction::LoadQObjectProperty load;
+//        load.base = getParam(base);
+//        load.propertyIndex = propertyIndex;
+//        load.result = getResultParam(target);
+//        load.captureRequired = captureRequired;
+//        addInstruction(load);
+//    }
 }
 
 void InstructionSelection::getElement(IR::Expr *base, IR::Expr *index, IR::Expr *target)
@@ -1022,7 +1022,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
     addInstruction(ret);
 }
 
-void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Expr *result)
+void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList * /*args*/, IR::Expr *result)
 {
     if (useFastLookups && func->global) {
         Instruction::CallGlobalLookup call;

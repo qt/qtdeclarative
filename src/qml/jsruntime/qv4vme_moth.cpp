@@ -519,22 +519,13 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
         CHECK_EXCEPTION;
     MOTH_END_INSTR(SetLookup)
 
-    MOTH_BEGIN_INSTR(StoreQObjectProperty)
-        Runtime::method_setQmlQObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, VALUE(instr.source));
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(StoreQObjectProperty)
-
-    MOTH_BEGIN_INSTR(LoadQObjectProperty)
-        STOREVALUE(instr.result, Runtime::method_getQmlQObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, instr.captureRequired));
-    MOTH_END_INSTR(LoadQObjectProperty)
-
     MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
         Runtime::method_setQmlScopeObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, VALUE(instr.source));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreScopeObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadScopeObjectProperty)
-        STOREVALUE(instr.result, Runtime::method_getQmlScopeObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, instr.captureRequired));
+        STOREVALUE(instr.result, Runtime::method_getQmlScopeObjectProperty(engine, VALUE(instr.base), instr.propertyIndex));
     MOTH_END_INSTR(LoadScopeObjectProperty)
 
     MOTH_BEGIN_INSTR(StoreContextObjectProperty)
@@ -543,20 +534,12 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(StoreContextObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadContextObjectProperty)
-        STOREVALUE(instr.result, Runtime::method_getQmlContextObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, instr.captureRequired));
+        STOREVALUE(instr.result, Runtime::method_getQmlContextObjectProperty(engine, VALUE(instr.base), instr.propertyIndex));
     MOTH_END_INSTR(LoadContextObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadIdObject)
         STOREVALUE(instr.result, Runtime::method_getQmlIdObject(engine, VALUE(instr.base), instr.index));
     MOTH_END_INSTR(LoadIdObject)
-
-    MOTH_BEGIN_INSTR(LoadAttachedQObjectProperty)
-        STOREVALUE(instr.result, Runtime::method_getQmlAttachedProperty(engine, instr.attachedPropertiesId, instr.propertyIndex));
-    MOTH_END_INSTR(LoadAttachedQObjectProperty)
-
-    MOTH_BEGIN_INSTR(LoadSingletonQObjectProperty)
-        STOREVALUE(instr.result, Runtime::method_getQmlSingletonQObjectProperty(engine, VALUE(instr.base), instr.propertyIndex, instr.captureRequired));
-    MOTH_END_INSTR(LoadSingletonQObjectProperty)
 
     MOTH_BEGIN_INSTR(InitStackFrame)
         TRACE(inline, "stack size: %u", instr.value);

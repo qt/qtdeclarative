@@ -3275,7 +3275,6 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     case QmlContextObject:
         qmlCoreIndex = other.qmlCoreIndex;
         qmlNotifyIndex = other.qmlNotifyIndex;
-        requiresCapture = other.requiresCapture;
         break;
     case This:
         break;
@@ -3319,8 +3318,7 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         return closureId == other.closureId;
     case QmlScopeObject:
     case QmlContextObject:
-        return qmlCoreIndex == other.qmlCoreIndex && qmlNotifyIndex == other.qmlNotifyIndex &&
-                requiresCapture == other.requiresCapture;
+        return qmlCoreIndex == other.qmlCoreIndex && qmlNotifyIndex == other.qmlNotifyIndex;
     case This:
         return true;
     }
@@ -3517,7 +3515,6 @@ void Codegen::Reference::load(uint tmp) const
         Instruction::LoadScopeObjectProperty load;
         load.base = base;
         load.propertyIndex = qmlCoreIndex;
-        load.captureRequired = requiresCapture;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
         codegen->_function->scopeObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
@@ -3525,7 +3522,6 @@ void Codegen::Reference::load(uint tmp) const
         Instruction::LoadContextObjectProperty load;
         load.base = base;
         load.propertyIndex = qmlCoreIndex;
-        load.captureRequired = requiresCapture;
         load.result = temp;
         codegen->bytecodeGenerator->addInstruction(load);
         codegen->_function->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);

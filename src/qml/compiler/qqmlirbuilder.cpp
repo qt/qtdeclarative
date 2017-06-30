@@ -2001,9 +2001,7 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
         if (!data)
             return Reference::fromName(this, name);
         Reference base = Reference::fromTemp(this, _qmlContextTemp);
-        bool requiresCapture = !data->isConstant() && _function->isQmlBinding;
-        return Reference::fromQmlScopeObject(base, data->coreIndex(), data->notifyIndex(),
-                                             requiresCapture);
+        return Reference::fromQmlScopeObject(base, data->coreIndex(), data->notifyIndex());
     }
 
     if (_contextObject) {
@@ -2011,9 +2009,7 @@ QQmlJS::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
         if (!data)
             return Reference::fromName(this, name);
         Reference base = Reference::fromTemp(this, _qmlContextTemp);
-        bool requiresCapture = !data->isConstant() && _function->isQmlBinding;
-        return Reference::fromQmlContextObject(base, data->coreIndex(), data->notifyIndex(),
-                                               requiresCapture);
+        return Reference::fromQmlContextObject(base, data->coreIndex(), data->notifyIndex());
     }
 #else
     Q_UNUSED(name)

@@ -1056,7 +1056,7 @@ ReturnedValue Runtime::method_callActivationProperty(ExecutionEngine *engine, in
 ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData)
 {
     Scope scope(engine);
-    ScopedFunctionObject o(scope, method_getQmlScopeObjectProperty(engine, callData->thisObject, propertyIndex, /*captureRequired*/true));
+    ScopedFunctionObject o(scope, method_getQmlScopeObjectProperty(engine, callData->thisObject, propertyIndex));
     if (!o) {
         QString error = QStringLiteral("Property '%1' of scope object is not a function").arg(propertyIndex);
         return engine->throwTypeError(error);
@@ -1069,7 +1069,7 @@ ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine
 ReturnedValue Runtime::method_callQmlContextObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData)
 {
     Scope scope(engine);
-    ScopedFunctionObject o(scope, method_getQmlContextObjectProperty(engine, callData->thisObject, propertyIndex, /*captureRequired*/true));
+    ScopedFunctionObject o(scope, method_getQmlContextObjectProperty(engine, callData->thisObject, propertyIndex));
     if (!o) {
         QString error = QStringLiteral("Property '%1' of context object is not a function").arg(propertyIndex);
         return engine->throwTypeError(error);
@@ -1276,7 +1276,7 @@ QV4::ReturnedValue Runtime::method_typeofName(ExecutionEngine *engine, int nameI
 ReturnedValue Runtime::method_typeofScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
 {
     Scope scope(engine);
-    ScopedValue prop(scope, method_getQmlScopeObjectProperty(engine, context, propertyIndex, /*captureRequired*/true));
+    ScopedValue prop(scope, method_getQmlScopeObjectProperty(engine, context, propertyIndex));
     if (scope.engine->hasException)
         return Encode::undefined();
     return method_typeofValue(engine, prop);
@@ -1285,7 +1285,7 @@ ReturnedValue Runtime::method_typeofScopeObjectProperty(ExecutionEngine *engine,
 ReturnedValue Runtime::method_typeofContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
 {
     Scope scope(engine);
-    ScopedValue prop(scope, method_getQmlContextObjectProperty(engine, context, propertyIndex, /*captureRequired*/true));
+    ScopedValue prop(scope, method_getQmlContextObjectProperty(engine, context, propertyIndex));
     if (scope.engine->hasException)
         return Encode::undefined();
     return method_typeofValue(engine, prop);
@@ -1520,48 +1520,16 @@ ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)
     return static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeRegularExpressions[id].asReturnedValue();
 }
 
-ReturnedValue Runtime::method_getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)
-{
-    Scope scope(engine);
-    QV4::Scoped<QObjectWrapper> wrapper(scope, object);
-    if (!wrapper) {
-        engine->throwTypeError(QStringLiteral("Cannot read property of null"));
-        return Encode::undefined();
-    }
-    return QV4::QObjectWrapper::getProperty(scope.engine, wrapper->object(), propertyIndex, captureRequired);
-}
-
-QV4::ReturnedValue Runtime::method_getQmlAttachedProperty(ExecutionEngine *engine, int attachedPropertiesId, int propertyIndex)
-{
-    QObject *scopeObject = engine->qmlScopeObject();
-    QObject *attachedObject = qmlAttachedPropertiesObjectById(attachedPropertiesId, scopeObject);
-
-    QJSEngine *jsEngine = engine->jsEngine();
-    QQmlData::ensurePropertyCache(jsEngine, attachedObject);
-    return QV4::QObjectWrapper::getProperty(engine, attachedObject, propertyIndex, /*captureRequired*/true);
-}
-
-ReturnedValue Runtime::method_getQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
+ReturnedValue Runtime::method_getQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml->scopeObject, propertyIndex, captureRequired);
+    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml->scopeObject, propertyIndex, false);
 }
 
-ReturnedValue Runtime::method_getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
+ReturnedValue Runtime::method_getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, (*c.d()->qml->context)->contextObject, propertyIndex, captureRequired);
-}
-
-ReturnedValue Runtime::method_getQmlSingletonQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)
-{
-    Scope scope(engine);
-    QV4::Scoped<QQmlTypeWrapper> wrapper(scope, object);
-    if (!wrapper) {
-        scope.engine->throwTypeError(QStringLiteral("Cannot read property of null"));
-        return Encode::undefined();
-    }
-    return QV4::QObjectWrapper::getProperty(scope.engine, wrapper->singletonObject(), propertyIndex, captureRequired);
+    return QV4::QObjectWrapper::getProperty(engine, (*c.d()->qml->context)->contextObject, propertyIndex, false);
 }
 
 ReturnedValue Runtime::method_getQmlIdObject(ExecutionEngine *engine, const Value &c, uint index)
@@ -1589,17 +1557,6 @@ void Runtime::method_setQmlContextObjectProperty(ExecutionEngine *engine, const 
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
     return QV4::QObjectWrapper::setProperty(engine, (*c.d()->qml->context)->contextObject, propertyIndex, value);
-}
-
-void Runtime::method_setQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, const Value &value)
-{
-    Scope scope(engine);
-    QV4::Scoped<QObjectWrapper> wrapper(scope, object);
-    if (!wrapper) {
-        engine->throwTypeError(QStringLiteral("Cannot write property of null"));
-        return;
-    }
-    wrapper->setProperty(engine, propertyIndex, value);
 }
 
 ReturnedValue Runtime::method_getQmlImportedScripts(NoThrowEngine *engine)
