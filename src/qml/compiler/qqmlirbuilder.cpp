@@ -1425,7 +1425,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
     }
 
     // write objects
-    quint32 *objectTable = reinterpret_cast<quint32*>(data + qmlUnit->offsetToObjects);
+    QV4::CompiledData::LEUInt32 *objectTable = reinterpret_cast<QV4::CompiledData::LEUInt32*>(data + qmlUnit->offsetToObjects);
     char *objectPtr = data + qmlUnit->offsetToObjects + objectOffsetTableSize;
     for (int i = 0; i < output.objects.count(); ++i) {
         const Object *o = output.objects.at(i);
@@ -1467,7 +1467,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         objectToWrite->offsetToNamedObjectsInComponent = nextOffset;
         nextOffset += objectToWrite->nNamedObjectsInComponent * sizeof(quint32);
 
-        quint32 *functionsTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToFunctions);
+        QV4::CompiledData::LEUInt32 *functionsTable = reinterpret_cast<QV4::CompiledData::LEUInt32*>(objectPtr + objectToWrite->offsetToFunctions);
         for (const Function *f = o->firstFunction(); f; f = f->next)
             *functionsTable++ = o->runtimeFunctionIndices.at(f->index);
 
@@ -1493,7 +1493,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isValueBindingToAlias);
         Q_ASSERT((bindingPtr - objectToWrite->offsetToBindings - objectPtr) / sizeof(QV4::CompiledData::Binding) == unsigned(o->bindingCount()));
 
-        quint32 *signalOffsetTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToSignals);
+        QV4::CompiledData::LEUInt32 *signalOffsetTable = reinterpret_cast<QV4::CompiledData::LEUInt32*>(objectPtr + objectToWrite->offsetToSignals);
         quint32 signalTableSize = 0;
         char *signalPtr = objectPtr + nextOffset;
         for (const Signal *s = o->firstSignal(); s; s = s->next) {
@@ -1513,7 +1513,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
             signalPtr += size;
         }
 
-        quint32 *namedObjectInComponentPtr = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
+        QV4::CompiledData::LEUInt32 *namedObjectInComponentPtr = reinterpret_cast<QV4::CompiledData::LEUInt32*>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
         for (int i = 0; i < o->namedObjectsInComponent.count; ++i) {
             *namedObjectInComponentPtr++ = o->namedObjectsInComponent.at(i);
         }

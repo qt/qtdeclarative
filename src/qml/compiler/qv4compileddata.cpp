@@ -99,6 +99,7 @@ CompilationUnit::CompilationUnit()
     , runtimeLookups(0)
     , runtimeRegularExpressions(0)
     , runtimeClasses(0)
+    , constants(nullptr)
     , totalBindingsCount(0)
     , totalParserStatusCount(0)
     , totalObjectCount(0)
@@ -239,6 +240,7 @@ void CompilationUnit::unlink()
     runtimeFunctions.clear();
 #if Q_BYTE_ORDER == Q_BIG_ENDIAN
     delete [] constants;
+    constants = nullptr;
 #endif
 }
 
