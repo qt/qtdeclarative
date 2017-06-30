@@ -141,7 +141,7 @@ struct Context {
     typedef QMap<QString, Member> MemberMap;
 
     MemberMap members;
-    AST::FormalParameterList *formals;
+    AST::FormalParameterList *formals = 0;
     QStringList arguments;
     QStringList locals;
     QVector<Context *> nestedContexts;
@@ -149,12 +149,12 @@ struct Context {
     QV4::ControlFlow *controlFlow = 0;
     QByteArray code;
 
-    int maxNumberOfArguments;
-    bool hasDirectEval;
-    bool hasNestedFunctions;
-    bool isStrict;
-    bool isNamedFunctionExpression;
-    bool usesThis;
+    int maxNumberOfArguments = 0;
+    bool hasDirectEval = false;
+    bool hasNestedFunctions = false;
+    bool isStrict = false;
+    bool isNamedFunctionExpression = false;
+    bool usesThis = false;
     bool hasTry = false;
     bool hasWith = false;
     enum UsesArgumentsObject {
@@ -163,7 +163,7 @@ struct Context {
         ArgumentsObjectUsed
     };
 
-    UsesArgumentsObject usesArgumentsObject;
+    UsesArgumentsObject usesArgumentsObject = ArgumentsObjectUnknown;
 
     CompilationMode compilationMode;
 
@@ -216,14 +216,6 @@ struct Context {
 
     Context(Context *parent, CompilationMode mode)
         : parent(parent)
-        , formals(0)
-        , maxNumberOfArguments(0)
-        , hasDirectEval(false)
-        , hasNestedFunctions(false)
-        , isStrict(false)
-        , isNamedFunctionExpression(false)
-        , usesThis(false)
-        , usesArgumentsObject(ArgumentsObjectUnknown)
         , compilationMode(mode)
     {
         if (parent && parent->isStrict)
