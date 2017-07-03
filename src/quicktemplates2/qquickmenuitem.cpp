@@ -85,7 +85,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing MenuItem}, {Menu Controls}
+    \sa {Customizing Menu}, Menu, {Menu Controls}
 */
 
 QQuickMenuItemPrivate::QQuickMenuItemPrivate()
@@ -179,7 +179,7 @@ void QQuickMenuItem::setHighlighted(bool highlighted)
 
     This property holds the sub-menu arrow item.
 
-    \sa {Customizing MenuItem}
+    \sa {Customizing Menu}
 */
 QQuickItem *QQuickMenuItem::arrow() const
 {

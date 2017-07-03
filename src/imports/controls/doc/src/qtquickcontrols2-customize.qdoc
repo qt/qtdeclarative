@@ -542,41 +542,23 @@
 
     \section2 Customizing Menu
 
-        Menu consists of a \l {Popup::}{contentItem}.
+        \list
+            \li \l Menu consists of a visual \l {Popup::background}{background} item.
+            \li \l MenuItem consists of four visual items: \l {Control::background}{background},
+                \l {Control::contentItem}{content item}, \l {AbstractButton::}{indicator}, and
+                \l {MenuItem::}{arrow}.
+            \li \l MenuSeparator consists of a visual \l {Control::background}{background} and
+                \l {Control::contentItem}{content item}.
+        \endlist
+
+        \image qtquickcontrols2-menu-custom.png
 
         \quotefromfile qtquickcontrols2-menu-custom.qml
-        \skipto import QtQuick 2.6
-        \printuntil import QtQuick.Controls 2.1
+        \skipto import QtQuick 2.9
+        \printuntil import QtQuick.Controls 2.3
         \skipto Menu
-        \printto contentItem.parent: window
-        \skipline contentItem.parent: window
-        \printuntil text: qsTr("Save")
-        \printuntil }
-        \printuntil }
+        \printto eof
 
-
-    \section2 Customizing MenuItem
-
-        MenuItem can be customized in the same manner as
-        \l {Customizing Button}{Button}.
-
-
-    \section2 Customizing MenuSeparator
-
-        MenuSeparator consists of two visual items: \l {Control::background}{background}
-        and \l {Control::contentItem}{content item}.
-
-        \image qtquickcontrols2-menuseparator-custom.png
-
-        \quotefromfile qtquickcontrols2-menuseparator-custom.qml
-        \skipto import QtQuick 2.6
-        \printuntil import QtQuick.Controls 2.1
-        \skipto Menu
-        \printto contentItem.parent: window
-        \skipline contentItem.parent: window
-        \printuntil text: qsTr("Exit")
-        \printuntil }
-        \printuntil }
 
     \section2 Customizing PageIndicator
 

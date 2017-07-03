@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
     \printuntil }
     \printuntil }
 
-    \sa {Customizing MenuSeparator}, {Separator Controls}
+    \sa {Customizing Menu}, Menu, {Separator Controls}
 */
 
 QQuickMenuSeparator::QQuickMenuSeparator(QQuickItem *parent)

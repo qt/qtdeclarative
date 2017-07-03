@@ -167,7 +167,7 @@ static const int SUBMENU_DELAY = 225;
     Although \l {MenuItem}{MenuItems} are most commonly used with Menu, it can
     contain any type of item.
 
-    \sa {Customizing Menu}, {Menu Controls}, {Popup Controls}
+    \sa {Customizing Menu}, MenuItem, {Menu Controls}, {Popup Controls}
 */
 
 static const QQuickPopup::ClosePolicy defaultMenuClosePolicy = QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside;
