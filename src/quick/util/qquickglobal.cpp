@@ -303,6 +303,7 @@ public:
         QV4::ScopedValue vwspac(scope, obj->get((s = v4->newString(QStringLiteral("wordSpacing")))));
         QV4::ScopedValue vhint(scope, obj->get((s = v4->newString(QStringLiteral("hintingPreference")))));
         QV4::ScopedValue vkerning(scope, obj->get((s = v4->newString(QStringLiteral("kerning")))));
+        QV4::ScopedValue vshaping(scope, obj->get((s = v4->newString(QStringLiteral("preferShaping")))));
 
         // pull out the values, set ok to true if at least one valid field is given.
         if (vbold->isBoolean()) {
@@ -360,6 +361,13 @@ public:
         if (vkerning->isBoolean()) {
             retn.setKerning(vkerning->booleanValue());
             if (ok) *ok = true;
+        }
+        if (vshaping->isBoolean()) {
+            bool enable = vshaping->booleanValue();
+            if (enable)
+                retn.setStyleStrategy(static_cast<QFont::StyleStrategy>(retn.styleStrategy() & ~QFont::PreferNoShaping));
+            else
+                retn.setStyleStrategy(static_cast<QFont::StyleStrategy>(retn.styleStrategy() | QFont::PreferNoShaping));
         }
 
         return retn;

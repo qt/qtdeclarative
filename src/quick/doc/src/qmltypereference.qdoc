@@ -171,6 +171,7 @@ available when you import \c QtQuick.
     \li \l real \c font.letterSpacing
     \li \l real \c font.wordSpacing
     \li \l bool \c font.kerning
+    \li \l bool \c font.preferShaping
     \li \l enumeration \c font.hintingPreference
     \endlist
 

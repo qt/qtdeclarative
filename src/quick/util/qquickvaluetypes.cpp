@@ -767,6 +767,19 @@ void QQuickFontValueType::setKerning(bool b)
     v.setKerning(b);
 }
 
+bool QQuickFontValueType::preferShaping() const
+{
+    return (v.styleStrategy() & QFont::PreferNoShaping) == 0;
+}
+
+void QQuickFontValueType::setPreferShaping(bool enable)
+{
+    if (enable)
+        v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() & ~QFont::PreferNoShaping));
+    else
+        v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() | QFont::PreferNoShaping));
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qquickvaluetypes_p.cpp"
