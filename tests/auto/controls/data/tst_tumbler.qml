@@ -389,7 +389,7 @@ TestCase {
         compare(tumbler.monthTumbler.currentIndex, 0);
         compare(tumbler.monthTumbler.count, 12);
         compare(tumbler.yearTumbler.currentIndex, 0);
-        compare(tumbler.yearTumbler.count, 100);
+        tryCompare(tumbler.yearTumbler, "count", 100);
 
         verify(findView(tumbler.dayTumbler).children.length >= tumbler.dayTumbler.visibleItemCount);
         verify(findView(tumbler.monthTumbler).children.length >= tumbler.monthTumbler.visibleItemCount);
@@ -1056,5 +1056,42 @@ TestCase {
         mouseRelease(tumbler, tumbler.width / 2, tumbler.height / 4, Qt.LeftButton)
         compare(tumbler.moving, true)
         tryCompare(tumbler, "moving", false)
+    }
+
+    Component {
+        id: qtbug61374Component
+
+        Row {
+            property alias tumbler: tumbler
+            property alias label: label
+
+            Component.onCompleted: {
+                tumbler.currentIndex = 2
+            }
+
+            Tumbler {
+                id: tumbler
+                model: 5
+                // ...
+            }
+
+            Label {
+                id: label
+                text: tumbler.currentItem.text
+            }
+        }
+    }
+
+    function test_qtbug61374() {
+        var row = createTemporaryObject(qtbug61374Component, testCase);
+        verify(row);
+
+        var tumbler = row.tumbler;
+        tryCompare(tumbler, "currentIndex", 2);
+
+        tumblerView = findView(tumbler);
+
+        var label = row.label;
+        compare(label.text, "2");
     }
 }

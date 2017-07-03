@@ -87,6 +87,7 @@ Row {
         id: yearTumbler
         objectName: "yearTumbler"
         model: ListModel {
+            objectName: "yearTumblerListModel"
             Component.onCompleted: {
                 for (var i = 2000; i < 2100; ++i) {
                     append({value: i.toString()});
