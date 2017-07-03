@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -101,10 +101,6 @@ public:
                              AST::Program *ast,
                              Module *module,
                              CompilationMode mode = GlobalCode);
-    void generateFromFunctionExpression(const QString &fileName,
-                             const QString &sourceCode,
-                             AST::FunctionExpression *ast,
-                             Module *module);
 
 public:
     struct Reference {
@@ -516,22 +512,6 @@ protected:
     bool hasError;
     QList<QQmlJS::DiagnosticMessage> _errors;
 };
-
-#ifndef V4_BOOTSTRAP
-class RuntimeCodegen : public Codegen
-{
-public:
-    RuntimeCodegen(QV4::ExecutionEngine *engine, QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
-        : Codegen(jsUnitGenerator, strict)
-        , engine(engine)
-    {}
-
-    void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail) override;
-    void throwReferenceError(const AST::SourceLocation &loc, const QString &detail) override;
-private:
-    QV4::ExecutionEngine *engine;
-};
-#endif // V4_BOOTSTRAP
 
 }
 

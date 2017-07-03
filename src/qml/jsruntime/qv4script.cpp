@@ -52,7 +52,7 @@
 #include <private/qqmljsast_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4profiling_p.h>
-#include <qv4codegen_p.h>
+#include <qv4runtimecodegen_p.h>
 
 #include <QtCore/QDebug>
 #include <QtCore/QString>

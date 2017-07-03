@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -39,7 +39,6 @@
 
 #include "qv4codegen_p.h"
 #include "qv4util_p.h"
-#include "qv4engine_p.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
@@ -56,10 +55,6 @@
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4compilationunit_moth_p.h>
 #include <private/qv4compilerscanfunctions_p.h>
-
-#ifndef V4_BOOTSTRAP
-#include <qv4context_p.h>
-#endif
 
 #include <cmath>
 #include <iostream>
@@ -152,26 +147,6 @@ void Codegen::generateFromProgram(const QString &fileName,
 
     defineFunction(QStringLiteral("%entry"), node, 0, node->elements);
 }
-
-void Codegen::generateFromFunctionExpression(const QString &fileName,
-                                             const QString &sourceCode,
-                                             AST::FunctionExpression *ast,
-                                             Module *module)
-{
-    _module = module;
-    _module->fileName = fileName;
-    _context = 0;
-
-    ScanFunctions scan(this, sourceCode, GlobalCode);
-    // fake a global environment
-    scan.enterEnvironment(0, FunctionCode);
-    scan(ast);
-    scan.leaveEnvironment();
-
-    int index = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
-    _module->rootContext = _module->functions.at(index);
-}
-
 
 void Codegen::enterContext(Node *node)
 {
@@ -2484,22 +2459,6 @@ QList<QQmlError> Codegen::qmlErrors() const
     }
 
     return qmlErrors;
-}
-
-void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QString &detail)
-{
-    if (hasError)
-        return;
-    hasError = true;
-    engine->throwSyntaxError(detail, _module->fileName, loc.startLine, loc.startColumn);
-}
-
-void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const QString &detail)
-{
-    if (hasError)
-        return;
-    hasError = true;
-    engine->throwReferenceError(detail, _module->fileName, loc.startLine, loc.startColumn);
 }
 
 #endif // V4_BOOTSTRAP

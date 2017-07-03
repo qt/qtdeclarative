@@ -53,7 +53,7 @@
 #include <private/qqmljsast_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qqmlengine_p.h>
-#include <qv4codegen_p.h>
+#include <qv4runtimecodegen_p.h>
 #include "private/qlocale_tools_p.h"
 #include "private/qqmlbuiltinfunctions_p.h"
 
@@ -219,7 +219,7 @@ void FunctionCtor::construct(const Managed *that, Scope &scope, CallData *callDa
     Compiler::Module module(scope.engine->debugger() != 0);
 
     Compiler::JSUnitGenerator jsGenerator(&module);
-    Compiler::RuntimeCodegen cg(scope.engine, &jsGenerator, f->strictMode());
+    RuntimeCodegen cg(scope.engine, &jsGenerator, f->strictMode());
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
     QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = cg.generateCompilationUnit();
