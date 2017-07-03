@@ -492,6 +492,11 @@ void tst_menu::menuSeparator()
         saveMenuItem->mapToScene(QPointF(saveMenuItem->width() / 2, saveMenuItem->height() / 2)).toPoint());
     QTRY_VERIFY(!menu->isVisible());
 
+    // make sure hover events from QQuickWindowPrivate::flushFrameSynchronousEvents()
+    // do not interfere with the key navigation tests below
+    QEvent leave(QEvent::Leave);
+    QCoreApplication::sendEvent(window, &leave);
+
     menu->open();
     QVERIFY(menu->isVisible());
 
