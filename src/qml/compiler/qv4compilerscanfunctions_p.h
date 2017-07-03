@@ -139,6 +139,7 @@ protected:
 protected:
     void enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::FunctionBody *body, AST::FunctionExpression *expr, bool isExpression);
 
+    void calcEscapingVariables();
 // fields:
     Codegen *_cg;
     const QString _sourceCode;

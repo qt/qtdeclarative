@@ -1165,7 +1165,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
         if (c->forceLookupByName() || (c->isNamedFunctionExpression && c->name == name))
             goto loadByName;
 
-        int index = c->findMember(name, c != _context);
+        int index = c->findMember(name);
         Q_ASSERT (index < c->members.size());
         if (index != -1) {
             Reference r = Reference::fromLocal(this, index, scope);
@@ -1177,7 +1177,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
             }
             return r;
         }
-        const int argIdx = c->findArgument(name, c != _context);
+        const int argIdx = c->findArgument(name);
         if (argIdx != -1)
             return Reference::fromArgument(this, argIdx, scope);
 

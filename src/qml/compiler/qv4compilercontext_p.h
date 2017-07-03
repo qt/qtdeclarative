@@ -123,6 +123,7 @@ struct Context {
     typedef QMap<QString, Member> MemberMap;
 
     MemberMap members;
+    QSet<QString> usedVariables;
     QQmlJS::AST::FormalParameterList *formals = 0;
     QStringList arguments;
     QStringList locals;
@@ -216,26 +217,21 @@ struct Context {
                usesArgumentsObject == ArgumentsObjectNotUsed && !hasDirectEval;
     }
 
-    int findArgument(const QString &name, bool canEscape)
+    int findArgument(const QString &name)
     {
         // search backwards to handle duplicate argument names correctly
         for (int i = arguments.size() - 1; i >= 0; --i) {
-            if (arguments.at(i) == name) {
-                if (canEscape)
-                    argumentsCanEscape = true;
+            if (arguments.at(i) == name)
                 return i;
-            }
         }
         return -1;
     }
 
-    int findMember(const QString &name, bool canEscape) const
+    int findMember(const QString &name) const
     {
         MemberMap::const_iterator it = members.find(name);
         if (it == members.end())
             return -1;
-        if (canEscape)
-            (*it).canEscape = true;
         Q_ASSERT((*it).index != -1 || !parent);
         return (*it).index;
     }
@@ -250,6 +246,10 @@ struct Context {
         }
         *m = &(*it);
         return true;
+    }
+
+    void addUsedVariable(const QString &name) {
+        usedVariables.insert(name);
     }
 
     void addLocalVar(const QString &name, MemberType type, QQmlJS::AST::VariableDeclaration::VariableScope scope, QQmlJS::AST::FunctionExpression *function = 0)

@@ -69,6 +69,8 @@ void ScanFunctions::operator()(Node *node)
 {
     if (node)
         node->accept(this);
+
+    calcEscapingVariables();
 }
 
 void ScanFunctions::enterEnvironment(Node *node, CompilationMode compilationMode)
@@ -220,6 +222,7 @@ bool ScanFunctions::visit(IdentifierExpression *ast)
     checkName(ast->name, ast->identifierToken);
     if (_context->usesArgumentsObject == Context::ArgumentsObjectUnknown && ast->name == QLatin1String("arguments"))
         _context->usesArgumentsObject = Context::ArgumentsObjectUsed;
+    _context->addUsedVariable(ast->name.toString());
     return true;
 }
 
@@ -408,5 +411,42 @@ void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
             }
         }
         _context->arguments += arg;
+    }
+}
+
+void ScanFunctions::calcEscapingVariables()
+{
+    Module *m = _cg->_module;
+
+    for (Context *inner : m->contextMap) {
+        for (const QString &var : qAsConst(inner->usedVariables)) {
+            Context *c = inner;
+            while (c) {
+                Context::MemberMap::const_iterator it = c->members.find(var);
+                if (it != c->members.end()) {
+                    if (c != inner)
+                        it->canEscape = true;
+                    break;
+                }
+                if (c->findArgument(var) != -1) {
+                    if (c != inner)
+                        c->argumentsCanEscape = true;
+                    break;
+                }
+                c = c->parent;
+            }
+        }
+    }
+
+    static const bool showEscapingVars = qEnvironmentVariableIsSet("QV4_SHOW_ESCAPING_VARS");
+    if (showEscapingVars) {
+        qDebug() << "==== escaping variables ====";
+        for (Context *c : m->contextMap) {
+            qDebug() << "Context" << c->name << ":";
+            qDebug() << "    Arguments escape" << c->argumentsCanEscape;
+            for (auto it = c->members.constBegin(); it != c->members.constEnd(); ++it) {
+                qDebug() << "    " << it.key() << it.value().canEscape;
+            }
+        }
     }
 }
