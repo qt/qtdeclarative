@@ -43,6 +43,7 @@
 #include <private/qv4compileddata_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>
+#include <private/qv4compilerscanfunctions_p.h>
 #include <QCoreApplication>
 #include <QCryptographicHash>
 
@@ -1586,7 +1587,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
 {
     QVector<int> runtimeFunctionIndices(functions.size());
 
-    ScanFunctions scan(this, sourceCode, QV4::Compiler::GlobalCode);
+    QV4::Compiler::ScanFunctions scan(this, sourceCode, QV4::Compiler::GlobalCode);
     scan.enterEnvironment(0, QV4::Compiler::QmlBinding);
     scan.enterQmlScope(qmlRoot, QStringLiteral("context scope"));
     for (const CompiledFunctionOrExpression &f : functions) {

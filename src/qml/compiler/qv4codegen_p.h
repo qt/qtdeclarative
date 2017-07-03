@@ -497,6 +497,7 @@ public:
     static QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading();
 
 protected:
+    friend class ScanFunctions;
     friend struct ControlFlow;
     friend struct ControlFlowCatch;
     friend struct ControlFlowFinally;
@@ -514,80 +515,6 @@ protected:
     bool _fileNameIsUrl;
     bool hasError;
     QList<QQmlJS::DiagnosticMessage> _errors;
-
-
-    class ScanFunctions: protected Visitor
-    {
-        typedef QV4::TemporaryAssignment<bool> TemporaryBoolAssignment;
-    public:
-        ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode);
-        void operator()(AST::Node *node);
-
-        void enterEnvironment(AST::Node *node, CompilationMode compilationMode);
-        void leaveEnvironment();
-
-        void enterQmlScope(AST::Node *ast, const QString &name)
-        { enterFunction(ast, name, /*formals*/0, /*body*/0, /*expr*/0, /*isExpression*/false); }
-
-        void enterQmlFunction(AST::FunctionDeclaration *ast)
-        { enterFunction(ast, false, false); }
-
-    protected:
-        using Visitor::visit;
-        using Visitor::endVisit;
-
-        void checkDirectivePrologue(AST::SourceElements *ast);
-
-        void checkName(const QStringRef &name, const AST::SourceLocation &loc);
-        void checkForArguments(AST::FormalParameterList *parameters);
-
-        bool visit(AST::Program *ast) override;
-        void endVisit(AST::Program *) override;
-
-        bool visit(AST::CallExpression *ast) override;
-        bool visit(AST::NewMemberExpression *ast) override;
-        bool visit(AST::ArrayLiteral *ast) override;
-        bool visit(AST::VariableDeclaration *ast) override;
-        bool visit(AST::IdentifierExpression *ast) override;
-        bool visit(AST::ExpressionStatement *ast) override;
-        bool visit(AST::FunctionExpression *ast) override;
-
-        void enterFunction(AST::FunctionExpression *ast, bool enterName, bool isExpression = true);
-
-        void endVisit(AST::FunctionExpression *) override;
-
-        bool visit(AST::ObjectLiteral *ast) override;
-
-        bool visit(AST::PropertyGetterSetter *ast) override;
-        void endVisit(AST::PropertyGetterSetter *) override;
-
-        bool visit(AST::FunctionDeclaration *ast) override;
-        void endVisit(AST::FunctionDeclaration *) override;
-
-        bool visit(AST::WithStatement *ast) override;
-
-        bool visit(AST::DoWhileStatement *ast) override;
-        bool visit(AST::ForStatement *ast) override;
-        bool visit(AST::LocalForStatement *ast) override;
-        bool visit(AST::ForEachStatement *ast) override;
-        bool visit(AST::LocalForEachStatement *ast) override;
-        bool visit(AST::ThisExpression *ast) override;
-
-        bool visit(AST::Block *ast) override;
-
-    protected:
-        void enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::FunctionBody *body, AST::FunctionExpression *expr, bool isExpression);
-
-    // fields:
-        Codegen *_cg;
-        const QString _sourceCode;
-        Context *_context;
-        QStack<Context *> _contextStack;
-
-        bool _allowFuncDecls;
-        CompilationMode defaultProgramMode;
-    };
-
 };
 
 #ifndef V4_BOOTSTRAP
