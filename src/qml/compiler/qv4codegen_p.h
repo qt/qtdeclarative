@@ -138,11 +138,12 @@ public:
         bool isTempLocalArg() const { return isValid() && type < Argument; }
         bool isConst() const { return type == Const; }
 
-        static Reference fromTemp(Codegen *cg, int tempIndex = -1) {
+        static Reference fromTemp(Codegen *cg, int tempIndex = -1, bool isLocal = false) {
             Reference r(cg, Temp);
             if (tempIndex == -1)
                 tempIndex = cg->bytecodeGenerator->newTemp();
             r.base = QV4::Moth::Param::createTemp(tempIndex);
+            r.tempIsLocal = isLocal;
             return r;
         }
         static Reference fromLocal(Codegen *cg, uint index, uint scope) {
@@ -239,6 +240,7 @@ public:
         mutable bool needsWriteBack = false;
         mutable bool isArgOrEval = false;
         bool isReadonly = false;
+        bool tempIsLocal = false;
         bool global = false;
         Codegen *codegen;
 
@@ -319,7 +321,7 @@ protected:
 
 
     void enterContext(AST::Node *node);
-    void leaveContext();
+    int leaveContext();
 
     void leaveLoop();
 

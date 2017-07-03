@@ -305,6 +305,13 @@ void ScanFunctions::endVisit(FunctionDeclaration *)
     leaveEnvironment();
 }
 
+bool ScanFunctions::visit(TryStatement *)
+{
+    // ### should limit to catch(), as try{} finally{} should be ok without
+    _context->hasTry = true;
+    return true;
+}
+
 bool ScanFunctions::visit(WithStatement *ast)
 {
     if (_context->isStrict) {
@@ -312,6 +319,7 @@ bool ScanFunctions::visit(WithStatement *ast)
         return false;
     }
 
+    _context->hasWith = true;
     return true;
 }
 
@@ -435,6 +443,11 @@ void ScanFunctions::calcEscapingVariables()
                 }
                 c = c->parent;
             }
+        }
+        Context *c = inner->parent;
+        while (c) {
+            c->hasDirectEval |= inner->hasDirectEval;
+            c = c->parent;
         }
     }
 

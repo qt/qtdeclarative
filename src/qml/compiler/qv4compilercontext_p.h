@@ -104,6 +104,8 @@ struct Context {
     int line = 0;
     int column = 0;
 
+    int functionIndex = -1;
+
     enum MemberType {
         UndefinedMember,
         VariableDefinition,
@@ -227,13 +229,13 @@ struct Context {
         return -1;
     }
 
-    int findMember(const QString &name) const
+    Member findMember(const QString &name) const
     {
         MemberMap::const_iterator it = members.find(name);
         if (it == members.end())
-            return -1;
-        Q_ASSERT((*it).index != -1 || !parent);
-        return (*it).index;
+            return Member();
+        Q_ASSERT(it->index != -1 || !parent);
+        return (*it);
     }
 
     bool memberInfo(const QString &name, const Member **m) const

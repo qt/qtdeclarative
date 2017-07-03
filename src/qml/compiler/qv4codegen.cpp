@@ -154,11 +154,13 @@ void Codegen::enterContext(Node *node)
     Q_ASSERT(_context);
 }
 
-void Codegen::leaveContext()
+int Codegen::leaveContext()
 {
     Q_ASSERT(_context);
     Q_ASSERT(!_context->controlFlow);
+    int functionIndex = _context->functionIndex;
     _context = _context->parent;
+    return functionIndex;
 }
 
 Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
@@ -1077,6 +1079,10 @@ bool Codegen::visit(DeleteExpression *ast)
         return false;
 
     switch (expr.type) {
+    case Reference::Temp:
+        if (!expr.tempIsLocal)
+            break;
+        // fall through
     case Reference::Local:
     case Reference::Argument:
         // Trying to delete a function argument might throw.
@@ -1117,10 +1123,11 @@ bool Codegen::visit(DeleteExpression *ast)
         return false;
     }
     default:
-        // [[11.4.1]] Return true if it's not a reference
-        _expr.result = Reference::fromConst(this, QV4::Encode(true));
-        return false;
+        break;
     }
+    // [[11.4.1]] Return true if it's not a reference
+    _expr.result = Reference::fromConst(this, QV4::Encode(true));
+    return false;
 }
 
 bool Codegen::visit(FalseLiteral *)
@@ -1165,10 +1172,9 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
         if (c->forceLookupByName() || (c->isNamedFunctionExpression && c->name == name))
             goto loadByName;
 
-        int index = c->findMember(name);
-        Q_ASSERT (index < c->members.size());
-        if (index != -1) {
-            Reference r = Reference::fromLocal(this, index, scope);
+        Context::Member m = c->findMember(name);
+        if (m.type != Context::UndefinedMember) {
+            Reference r = m.canEscape ? Reference::fromLocal(this, m.index, scope) : Reference::fromTemp(this, m.index, true /*isLocal*/);
             if (name == QLatin1String("arguments") || name == QLatin1String("eval")) {
                 r.isArgOrEval = true;
                 if (isLhs && c->isStrict)
@@ -1655,9 +1661,13 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     enterContext(ast);
 
+    if (_context->functionIndex >= 0)
+        // already defined
+        return leaveContext();
+
     _context->name = name;
     _module->functions.append(_context);
-    int functionIndex = _module->functions.count() - 1;
+    _context->functionIndex = _module->functions.count() - 1;
 
     _context->hasDirectEval |= _context->compilationMode == EvalCode || _module->debugMode; // Conditional breakpoints are like eval in the function
     // ### still needed?
@@ -1675,14 +1685,20 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed)
         _context->addLocalVar(QStringLiteral("arguments"), Context::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
 
+    bool allVarsEscape = _context->hasWith || _context->hasTry || _context->hasDirectEval;
+
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_context->compilationMode == FunctionCode || _context->compilationMode == QmlBinding) {
-        unsigned t = 0;
         for (Context::MemberMap::iterator it = _context->members.begin(), end = _context->members.end(); it != end; ++it) {
             const QString &local = it.key();
-            _context->locals.append(local);
-            (*it).index = t;
-            ++t;
+            if (allVarsEscape)
+                it->canEscape = true;
+            if (it->canEscape) {
+                it->index = _context->locals.size();
+                _context->locals.append(local);
+            } else {
+                it->index = bytecodeGenerator->newTemp();
+            }
         }
     } else {
         for (Context::MemberMap::const_iterator it = _context->members.constBegin(), cend = _context->members.constEnd(); it != cend; ++it) {
@@ -1710,7 +1726,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
                 name.store(func);
             } else {
                 Q_ASSERT(member.index >= 0);
-                Reference local = Reference::fromLocal(this, member.index, 0);
+                Reference local = member.canEscape ? Reference::fromLocal(this, member.index, 0) : Reference::fromTemp(this, member.index, true);
                 local.store(func);
             }
         }
@@ -1742,7 +1758,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     _context->code = bytecodeGenerator->finalize();
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
-        qDebug() << "=== Bytecode for" << _context->name;
+        qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict;
         QV4::Moth::dumpBytecode(_context->code);
         qDebug();
     }
@@ -1750,11 +1766,9 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
 
-    leaveContext();
-
     bytecodeGenerator = savedBytecodeGenerator;
 
-    return functionIndex;
+    return leaveContext();
 }
 
 bool Codegen::visit(FunctionSourceElement *ast)
@@ -2261,9 +2275,9 @@ bool Codegen::visit(TryStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    Q_ASSERT(_context->hasTry);
 
-    _context->hasTry = true;
+    TempScope scope(this);
 
     if (ast->finallyExpression && ast->finallyExpression->statement) {
         handleTryFinally(ast);
@@ -2375,7 +2389,7 @@ bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r, 
         if (str == QLatin1String("eval") || str == QLatin1String("arguments")) {
             isArgOrEval = true;
         }
-    } else if (r.type == Reference::Local) {
+    } else if (r.type == Reference::Local || r.type == Reference::Temp) {
         isArgOrEval = r.isArgOrEval;
     }
     if (isArgOrEval)
@@ -2510,6 +2524,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     isArgOrEval = other.isArgOrEval;
     codegen = other.codegen;
     isReadonly = other.isReadonly;
+    tempIsLocal = other.tempIsLocal;
     global = other.global;
     return *this;
 }
