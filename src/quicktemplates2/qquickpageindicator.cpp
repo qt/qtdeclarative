@@ -98,8 +98,13 @@ public:
     {
     }
 
-    QQuickItem *itemAt(const QPoint &pos) const;
-    void updatePressed(bool pressed, const QPoint &pos = QPoint());
+    void handlePress(const QPointF &point) override;
+    void handleMove(const QPointF &point) override;
+    void handleRelease(const QPointF &point) override;
+    void handleUngrab() override;
+
+    QQuickItem *itemAt(const QPointF &pos) const;
+    void updatePressed(bool pressed, const QPointF &pos = QPointF());
     void setContextProperty(QQuickItem *item, const QString &name, const QVariant &value);
 
     void itemChildAdded(QQuickItem *, QQuickItem *child);
@@ -111,7 +116,39 @@ public:
     QQuickItem *pressedItem;
 };
 
-QQuickItem *QQuickPageIndicatorPrivate::itemAt(const QPoint &pos) const
+void QQuickPageIndicatorPrivate::handlePress(const QPointF &point)
+{
+    QQuickControlPrivate::handlePress(point);
+    if (interactive)
+        updatePressed(true, point);
+}
+
+void QQuickPageIndicatorPrivate::handleMove(const QPointF &point)
+{
+    QQuickControlPrivate::handleMove(point);
+    if (interactive)
+        updatePressed(true, point);
+}
+
+void QQuickPageIndicatorPrivate::handleRelease(const QPointF &point)
+{
+    Q_Q(QQuickPageIndicator);
+    QQuickControlPrivate::handleRelease(point);
+    if (interactive) {
+        if (pressedItem && contentItem)
+            q->setCurrentIndex(contentItem->childItems().indexOf(pressedItem));
+        updatePressed(false);
+    }
+}
+
+void QQuickPageIndicatorPrivate::handleUngrab()
+{
+    QQuickControlPrivate::handleUngrab();
+    if (interactive)
+        updatePressed(false);
+}
+
+QQuickItem *QQuickPageIndicatorPrivate::itemAt(const QPointF &pos) const
 {
     Q_Q(const QQuickPageIndicator);
     if (!contentItem || !q->contains(pos))
@@ -144,7 +181,7 @@ QQuickItem *QQuickPageIndicatorPrivate::itemAt(const QPoint &pos) const
     return nearest;
 }
 
-void QQuickPageIndicatorPrivate::updatePressed(bool pressed, const QPoint &pos)
+void QQuickPageIndicatorPrivate::updatePressed(bool pressed, const QPointF &pos)
 {
     QQuickItem *prevItem = pressedItem;
     pressedItem = pressed ? itemAt(pos) : nullptr;
@@ -296,42 +333,6 @@ void QQuickPageIndicator::contentItemChange(QQuickItem *newItem, QQuickItem *old
         QQuickItemPrivate::get(oldItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
     if (newItem)
         QQuickItemPrivate::get(newItem)->addItemChangeListener(d, QQuickItemPrivate::Children);
-}
-
-void QQuickPageIndicator::mousePressEvent(QMouseEvent *event)
-{
-    Q_D(QQuickPageIndicator);
-    if (d->interactive) {
-        d->updatePressed(true, event->pos());
-        event->accept();
-    }
-}
-
-void QQuickPageIndicator::mouseMoveEvent(QMouseEvent *event)
-{
-    Q_D(QQuickPageIndicator);
-    if (d->interactive) {
-        d->updatePressed(true, event->pos());
-        event->accept();
-    }
-}
-
-void QQuickPageIndicator::mouseReleaseEvent(QMouseEvent *event)
-{
-    Q_D(QQuickPageIndicator);
-    if (d->interactive) {
-        if (d->pressedItem)
-            setCurrentIndex(d->contentItem->childItems().indexOf(d->pressedItem));
-        d->updatePressed(false);
-        event->accept();
-    }
-}
-
-void QQuickPageIndicator::mouseUngrabEvent()
-{
-    Q_D(QQuickPageIndicator);
-    if (d->interactive)
-        d->updatePressed(false);
 }
 
 #if QT_CONFIG(accessibility)

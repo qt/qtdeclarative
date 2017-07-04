@@ -83,20 +83,35 @@ TestCase {
         compare(control.currentIndex, 5)
     }
 
-    function test_interactive() {
+    function test_interactive_data() {
+        return [
+            { tag: "mouse", touch: false },
+            { tag: "touch", touch: true }
+        ]
+    }
+
+    function test_interactive(data) {
         var control = createTemporaryObject(pageIndicator, testCase, {count: 5, spacing: 10, padding: 10})
         verify(control)
 
         verify(!control.interactive)
         compare(control.currentIndex, 0)
 
-        mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        var touch = touchEvent(control)
+
+        if (data.touch)
+            touch.press(0, control).commit().release(0, control).commit()
+        else
+            mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.currentIndex, 0)
 
         control.interactive = true
         verify(control.interactive)
 
-        mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton)
+        if (data.touch)
+            touch.press(0, control).commit().release(0, control).commit()
+        else
+            mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.currentIndex, 2)
 
         // test also clicking outside delegates => the nearest should be selected
@@ -108,7 +123,10 @@ TestCase {
                     compare(control.currentIndex, -1)
 
                     var pos = control.mapFromItem(child, x, y)
-                    mouseClick(control, pos.x, pos.y, Qt.LeftButton)
+                    if (data.touch)
+                        touch.press(0, control, pos.x, pos.y).commit().release(0, control, pos.x, pos.y).commit()
+                    else
+                        mouseClick(control, pos.x, pos.y, Qt.LeftButton)
                     compare(control.currentIndex, i)
                 }
             }
