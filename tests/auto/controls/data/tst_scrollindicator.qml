@@ -66,6 +66,11 @@ TestCase {
     }
 
     Component {
+        id: mouseArea
+        MouseArea { }
+    }
+
+    Component {
         id: flickable
         Flickable {
             width: 100
@@ -216,5 +221,27 @@ TestCase {
         horizontal.position = 0.8
         compare(horizontal.contentItem.x, horizontal.leftPadding + 0.8 * horizontal.availableWidth)
         compare(horizontal.contentItem.width, 0.2 * horizontal.availableWidth)
+    }
+
+    // QTBUG-61785
+    function test_mouseArea() {
+        var ma = createTemporaryObject(mouseArea, testCase, {width: testCase.width, height: testCase.height})
+        verify(ma)
+
+        var control = scrollIndicator.createObject(ma, {active: true, size: 0.9, width: testCase.width, height: testCase.height})
+        verify(control)
+
+        mousePress(control)
+        verify(ma.pressed)
+
+        mouseRelease(control)
+        verify(!ma.pressed)
+
+        var touch = touchEvent(control)
+        touch.press(0, control).commit()
+        verify(ma.pressed)
+
+        touch.release(0, control).commit()
+        verify(!ma.pressed)
     }
 }

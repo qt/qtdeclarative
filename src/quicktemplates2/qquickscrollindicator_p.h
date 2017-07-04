@@ -89,6 +89,10 @@ Q_SIGNALS:
     void orientationChanged();
 
 protected:
+#if QT_CONFIG(quicktemplates2_multitouch)
+    void touchEvent(QTouchEvent *event) override;
+#endif
+
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif

@@ -535,6 +535,13 @@ void QQuickScrollIndicatorAttached::setVertical(QQuickScrollIndicator *vertical)
     emit verticalChanged();
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
+void QQuickScrollIndicator::touchEvent(QTouchEvent *event)
+{
+    event->ignore(); // QTBUG-61785
+}
+#endif
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickScrollIndicator::accessibleRole() const
 {
