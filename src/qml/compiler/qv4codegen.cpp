@@ -166,7 +166,7 @@ int Codegen::leaveContext()
 Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
 {
     if (hasError)
-        return _expr.result;
+        return _expr.result();
 
 #ifndef V4_BOOTSTRAP
     if (expr.type == Reference::Const) {
@@ -291,8 +291,8 @@ void Codegen::statement(ExpressionNode *ast)
 //            }
 //        }
 
-        if (r.result.isValid() && !r.result.isTempLocalArg())
-            r.result.asRValue(); // triggers side effects
+        if (r.result().isValid() && !r.result().isTempLocalArg())
+            r.result().asRValue(); // triggers side effects
     }
 }
 
@@ -304,13 +304,15 @@ void Codegen::condition(ExpressionNode *ast, const BytecodeGenerator::Label *ift
         qSwap(_expr, r);
         accept(ast);
         qSwap(_expr, r);
-        if (r.format == ex) {
+        if (r.format() == ex) {
+            Q_ASSERT(iftrue == r.iftrue());
+            Q_ASSERT(iffalse == r.iffalse());
             bytecodeGenerator->setLocation(ast->firstSourceLocation());
-            auto cond = r.result.asRValue();
-            if (r.trueBlockFollowsCondition)
-                bytecodeGenerator->jumpNe(cond).link(*r.iffalse);
+            auto cond = r.result().asRValue();
+            if (r.trueBlockFollowsCondition())
+                bytecodeGenerator->jumpNe(cond).link(*r.iffalse());
             else
-                bytecodeGenerator->jumpEq(cond).link(*r.iftrue);
+                bytecodeGenerator->jumpEq(cond).link(*r.iftrue());
         }
     }
 }
@@ -323,7 +325,7 @@ Codegen::Reference Codegen::expression(ExpressionNode *ast)
         accept(ast);
         qSwap(_expr, r);
     }
-    return r.result;
+    return r.result();
 }
 
 Codegen::Result Codegen::sourceElement(SourceElement *ast)
@@ -609,7 +611,7 @@ bool Codegen::visit(ArrayLiteral *ast)
     call.args = args;
     call.result = result.asLValue();
     bytecodeGenerator->addInstruction(call);
-    _expr.result = result;
+    _expr.setResult(result);
 
     return false;
 }
@@ -623,7 +625,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
     if (hasError)
         return false;
     Reference index = expression(ast->expression);
-    _expr.result = Reference::fromSubscript(base, index);
+    _expr.setResult(Reference::fromSubscript(base, index));
     return false;
 }
 
@@ -653,9 +655,9 @@ bool Codegen::visit(BinaryExpression *ast)
     if (ast->op == QSOperator::And) {
         if (_expr.accept(cx)) {
             auto iftrue = bytecodeGenerator->newLabel();
-            condition(ast->left, &iftrue, _expr.iffalse, true);
+            condition(ast->left, &iftrue, _expr.iffalse(), true);
             iftrue.link();
-            condition(ast->right, _expr.iftrue, _expr.iffalse, _expr.trueBlockFollowsCondition);
+            condition(ast->right, _expr.iftrue(), _expr.iffalse(), _expr.trueBlockFollowsCondition());
         } else {
             auto iftrue = bytecodeGenerator->newLabel();
             auto endif = bytecodeGenerator->newLabel();
@@ -679,15 +681,15 @@ bool Codegen::visit(BinaryExpression *ast)
             r.store(rhs);
             endif.link();
 
-            _expr.result = r;
+            _expr.setResult(r);
         }
         return false;
     } else if (ast->op == QSOperator::Or) {
         if (_expr.accept(cx)) {
             auto iffalse = bytecodeGenerator->newLabel();
-            condition(ast->left, _expr.iftrue, &iffalse, false);
+            condition(ast->left, _expr.iftrue(), &iffalse, false);
             iffalse.link();
-            condition(ast->right, _expr.iftrue, _expr.iffalse, _expr.trueBlockFollowsCondition);
+            condition(ast->right, _expr.iftrue(), _expr.iffalse(), _expr.trueBlockFollowsCondition());
         } else {
             auto iffalse = bytecodeGenerator->newLabel();
             auto endif = bytecodeGenerator->newLabel();
@@ -711,7 +713,7 @@ bool Codegen::visit(BinaryExpression *ast)
             r.store(rhs);
             endif.link();
 
-            _expr.result = r;
+            _expr.setResult(r);
         }
         return false;
     }
@@ -738,7 +740,7 @@ bool Codegen::visit(BinaryExpression *ast)
         }
 
         left.storeConsume(right);
-        _expr.result = left;
+        _expr.setResult(left);
         break;
     }
 
@@ -766,9 +768,9 @@ bool Codegen::visit(BinaryExpression *ast)
         if (hasError)
             return false;
 
-        _expr.result = Reference::fromTemp(this);
-        binopHelper(baseOp(ast->op), left, right, _expr.result);
-        left.store(_expr.result);
+        _expr.setResult(Reference::fromTemp(this));
+        binopHelper(baseOp(ast->op), left, right, _expr.result());
+        left.store(_expr.result());
 
         break;
     }
@@ -804,8 +806,8 @@ bool Codegen::visit(BinaryExpression *ast)
         if (hasError)
             return false;
 
-        _expr.result = Reference::fromTemp(this);
-        binopHelper(static_cast<QSOperator::Op>(ast->op), left, right, _expr.result);
+        _expr.setResult(Reference::fromTemp(this));
+        binopHelper(static_cast<QSOperator::Op>(ast->op), left, right, _expr.result());
 
         break;
     }
@@ -816,7 +818,7 @@ bool Codegen::visit(BinaryExpression *ast)
 }
 
 QV4::Moth::Param Codegen::binopHelper(QSOperator::Op oper, Reference &left,
-                                      Reference &right, Reference &dest)
+                                      Reference &right, const Reference &dest)
 {
     if (oper == QSOperator::Add) {
         Instruction::Add add;
@@ -1016,7 +1018,7 @@ bool Codegen::visit(CallExpression *ast)
         call.result = r.asLValue();
         bytecodeGenerator->addInstruction(call);
     }
-    _expr.result = r;
+    _expr.setResult(r);
     return false;
 }
 
@@ -1046,23 +1048,20 @@ bool Codegen::visit(ConditionalExpression *ast)
         return true;
 
     const unsigned t = bytecodeGenerator->newTemp();
-    _expr = Reference::fromTemp(this, t);
+    _expr.setResult(Reference::fromTemp(this, t));
 
     TempScope scope(this);
 
-    Reference r = expression(ast->expression);
+    BytecodeGenerator::Label iftrue = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label iffalse = bytecodeGenerator->newLabel();
+    condition(ast->expression, &iftrue, &iffalse, true);
 
-    // ### handle const Reference
-
-    BytecodeGenerator::Jump jump_else = bytecodeGenerator->jumpNe(r.asRValue());
-
-    _expr.result.store(expression(ast->ok));
-
+    iftrue.link();
+    _expr.result().store(expression(ast->ok));
     BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
 
-    jump_else.link();
-
-    _expr.result.store(expression(ast->ko));
+    iffalse.link();
+    _expr.result().store(expression(ast->ko));
 
     jump_endif.link();
 
@@ -1090,35 +1089,35 @@ bool Codegen::visit(DeleteExpression *ast)
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
-        _expr.result = Reference::fromConst(this, QV4::Encode(false));
+        _expr.setResult(Reference::fromConst(this, QV4::Encode(false)));
         return false;
     case Reference::Name: {
         if (_context->isStrict) {
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
-        _expr.result = Reference::fromTemp(this);
+        _expr.setResult(Reference::fromTemp(this));
         Instruction::CallBuiltinDeleteName del;
         del.name = expr.nameIndex;
-        del.result = _expr.result.asLValue();
+        del.result = _expr.result().asLValue();
         bytecodeGenerator->addInstruction(del);
         return false;
     }
     case Reference::Member: {
-        _expr.result = Reference::fromTemp(this);
+        _expr.setResult(Reference::fromTemp(this));
         Instruction::CallBuiltinDeleteMember del;
         del.base = expr.base;
         del.member = expr.nameIndex;
-        del.result = _expr.result.asLValue();
+        del.result = _expr.result().asLValue();
         bytecodeGenerator->addInstruction(del);
         return false;
     }
     case Reference::Subscript: {
-        _expr.result = Reference::fromTemp(this);
+        _expr.setResult(Reference::fromTemp(this));
         Instruction::CallBuiltinDeleteSubscript del;
         del.base = expr.base;
         del.index = expr.subscript;
-        del.result = _expr.result.asLValue();
+        del.result = _expr.result().asLValue();
         bytecodeGenerator->addInstruction(del);
         return false;
     }
@@ -1126,7 +1125,7 @@ bool Codegen::visit(DeleteExpression *ast)
         break;
     }
     // [[11.4.1]] Return true if it's not a reference
-    _expr.result = Reference::fromConst(this, QV4::Encode(true));
+    _expr.setResult(Reference::fromConst(this, QV4::Encode(true)));
     return false;
 }
 
@@ -1135,7 +1134,7 @@ bool Codegen::visit(FalseLiteral *)
     if (hasError)
         return false;
 
-    _expr.result = Reference::fromConst(this, QV4::Encode(false));
+    _expr.setResult(Reference::fromConst(this, QV4::Encode(false)));
     return false;
 }
 
@@ -1147,7 +1146,7 @@ bool Codegen::visit(FieldMemberExpression *ast)
     Reference base = expression(ast->base);
     if (hasError)
         return false;
-    _expr.result = Reference::fromMember(base, ast->name.toString());
+    _expr.setResult(Reference::fromMember(base, ast->name.toString()));
     return false;
 }
 
@@ -1159,7 +1158,7 @@ bool Codegen::visit(FunctionExpression *ast)
     TempScope scope(this);
 
     int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
-    _expr.result = Reference::fromClosure(this, function);
+    _expr.setResult(Reference::fromClosure(this, function));
     return false;
 }
 
@@ -1223,7 +1222,7 @@ bool Codegen::visit(IdentifierExpression *ast)
     if (hasError)
         return false;
 
-    _expr.result = referenceForName(ast->name.toString(), false);
+    _expr.setResult(referenceForName(ast->name.toString(), false));
     return false;
 }
 
@@ -1255,7 +1254,7 @@ bool Codegen::visit(NewExpression *ast)
     create.callData = calldata;
     create.result = r.asLValue();
     bytecodeGenerator->addInstruction(create);
-    _expr.result = r;
+    _expr.setResult(r);
     return false;
 }
 
@@ -1280,7 +1279,7 @@ bool Codegen::visit(NewMemberExpression *ast)
     create.callData = calldata;
     create.result = r.asRValue();
     bytecodeGenerator->addInstruction(create);
-    _expr.result = r;
+    _expr.setResult(r);
     return false;
 }
 
@@ -1289,7 +1288,7 @@ bool Codegen::visit(NotExpression *ast)
     if (hasError)
         return false;
 
-    _expr.result = unop(Not, expression(ast->expression));
+    _expr.setResult(unop(Not, expression(ast->expression)));
     return false;
 }
 
@@ -1299,9 +1298,9 @@ bool Codegen::visit(NullExpression *)
         return false;
 
     if (_expr.accept(cx))
-        bytecodeGenerator->jump().link(*_expr.iffalse);
+        bytecodeGenerator->jump().link(*_expr.iffalse());
     else
-        _expr.result = Reference::fromConst(this, Encode::null());
+        _expr.setResult(Reference::fromConst(this, Encode::null()));
 
     return false;
 }
@@ -1311,7 +1310,7 @@ bool Codegen::visit(NumericLiteral *ast)
     if (hasError)
         return false;
 
-    _expr.result = Reference::fromConst(this, QV4::Encode::smallestNumber(ast->value));
+    _expr.setResult(Reference::fromConst(this, QV4::Encode::smallestNumber(ast->value)));
     return false;
 }
 
@@ -1441,7 +1440,7 @@ bool Codegen::visit(ObjectLiteral *ast)
     call.result = result.asLValue();
     bytecodeGenerator->addInstruction(call);
 
-    _expr.result = result;
+    _expr.setResult(result);
     return false;
 }
 
@@ -1460,7 +1459,7 @@ bool Codegen::visit(PostDecrementExpression *ast)
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
         return false;
 
-    _expr.result = unop(PostDecrement, expr);
+    _expr.setResult(unop(PostDecrement, expr));
 
     return false;
 }
@@ -1480,7 +1479,7 @@ bool Codegen::visit(PostIncrementExpression *ast)
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
         return false;
 
-    _expr.result = unop(PostIncrement, expr);
+    _expr.setResult(unop(PostIncrement, expr));
     return false;
 }
 
@@ -1498,7 +1497,7 @@ bool Codegen::visit(PreDecrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->decrementToken))
         return false;
-    _expr.result = unop(PreDecrement, expr);
+    _expr.setResult(unop(PreDecrement, expr));
     return false;
 }
 
@@ -1517,7 +1516,7 @@ bool Codegen::visit(PreIncrementExpression *ast)
 
     if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(expr, ast->incrementToken))
         return false;
-    _expr.result = unop(PreIncrement, expr);
+    _expr.setResult(unop(PreIncrement, expr));
     return false;
 }
 
@@ -1526,11 +1525,12 @@ bool Codegen::visit(RegExpLiteral *ast)
     if (hasError)
         return false;
 
-    _expr.result = Reference::fromTemp(this);
-    _expr.result.isReadonly = true;
+    auto r = Reference::fromTemp(this);
+    r.isReadonly = true;
+    _expr.setResult(r);
 
     Instruction::LoadRegExp instr;
-    instr.result = _expr.result.asLValue();
+    instr.result = r.asLValue();
     instr.regExpId = jsUnitGenerator->registerRegExp(ast);
     bytecodeGenerator->addInstruction(instr);
     return false;
@@ -1541,11 +1541,12 @@ bool Codegen::visit(StringLiteral *ast)
     if (hasError)
         return false;
 
-    _expr.result = Reference::fromTemp(this);
-    _expr.result.isReadonly = true;
+    auto r = Reference::fromTemp(this);
+    r.isReadonly = true;
+    _expr.setResult(r);
 
     Instruction::LoadRuntimeString instr;
-    instr.result = _expr.result.asLValue();
+    instr.result = r.asLValue();
     instr.stringId = registerString(ast->value.toString());
     bytecodeGenerator->addInstruction(instr);
     return false;
@@ -1556,7 +1557,7 @@ bool Codegen::visit(ThisExpression *)
     if (hasError)
         return false;
 
-    _expr.result = Reference::fromThis(this);
+    _expr.setResult(Reference::fromThis(this));
     return false;
 }
 
@@ -1565,7 +1566,7 @@ bool Codegen::visit(TildeExpression *ast)
     if (hasError)
         return false;
 
-    _expr.result = unop(Compl, expression(ast->expression));
+    _expr.setResult(unop(Compl, expression(ast->expression)));
     return false;
 }
 
@@ -1574,7 +1575,7 @@ bool Codegen::visit(TrueLiteral *)
     if (hasError)
         return false;
 
-    _expr.result = Reference::fromConst(this, QV4::Encode(true));
+    _expr.setResult(Reference::fromConst(this, QV4::Encode(true)));
     return false;
 }
 
@@ -1583,7 +1584,7 @@ bool Codegen::visit(TypeOfExpression *ast)
     if (hasError)
         return false;
 
-    _expr.result = Reference::fromTemp(this);
+    _expr.setResult(Reference::fromTemp(this));
 
     TempScope scope(this);
 
@@ -1595,12 +1596,12 @@ bool Codegen::visit(TypeOfExpression *ast)
         // special handling as typeof doesn't throw here
         Instruction::CallBuiltinTypeofName instr;
         instr.name = expr.nameIndex;
-        instr.result = _expr.result.asLValue();
+        instr.result = _expr.result().asLValue();
         bytecodeGenerator->addInstruction(instr);
     } else {
         Instruction::CallBuiltinTypeofValue instr;
         instr.value = expr.asRValue();
-        instr.result = _expr.result.asLValue();
+        instr.result = _expr.result().asLValue();
         bytecodeGenerator->addInstruction(instr);
     }
 
@@ -1612,7 +1613,7 @@ bool Codegen::visit(UnaryMinusExpression *ast)
     if (hasError)
         return false;
 
-    _expr.result = unop(UMinus, expression(ast->expression));
+    _expr.setResult(unop(UMinus, expression(ast->expression)));
     return false;
 }
 
@@ -1621,7 +1622,7 @@ bool Codegen::visit(UnaryPlusExpression *ast)
     if (hasError)
         return false;
 
-    _expr.result = unop(UPlus, expression(ast->expression));
+    _expr.setResult(unop(UPlus, expression(ast->expression)));
     return false;
 }
 
@@ -1633,7 +1634,7 @@ bool Codegen::visit(VoidExpression *ast)
     TempScope scope(this);
 
     statement(ast->expression);
-    _expr.result = Reference::fromConst(this, Encode::undefined());
+    _expr.setResult(Reference::fromConst(this, Encode::undefined()));
     return false;
 }
 

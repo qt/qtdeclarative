@@ -278,50 +278,79 @@ public:
 protected:
 
     enum Format { ex, cx, nx };
-    struct Result {
-        Reference result;
+    class Result {
+        Reference _result;
 
-        const BytecodeGenerator::Label *iftrue;
-        const BytecodeGenerator::Label *iffalse;
-        Format format;
-        Format requested;
-        bool trueBlockFollowsCondition = false;
+        const BytecodeGenerator::Label *_iftrue;
+        const BytecodeGenerator::Label *_iffalse;
+        Format _format;
+        Format _requested;
+        bool _trueBlockFollowsCondition = false;
 
-        Result(const Reference &lrvalue)
-            : result(lrvalue)
-            , iftrue(nullptr)
-            , iffalse(nullptr)
-            , format(ex)
-            , requested(ex)
+    public:
+        explicit Result(const Reference &lrvalue)
+            : _result(lrvalue)
+            , _iftrue(nullptr)
+            , _iffalse(nullptr)
+            , _format(ex)
+            , _requested(ex)
         {
         }
 
         explicit Result(Format requested = ex)
-            : iftrue(0)
-            , iffalse(0)
-            , format(ex)
-            , requested(requested) {}
+            : _iftrue(0)
+            , _iffalse(0)
+            , _format(ex)
+            , _requested(requested) {}
 
         explicit Result(const BytecodeGenerator::Label *iftrue,
                         const BytecodeGenerator::Label *iffalse,
                         bool trueBlockFollowsCondition)
-            : iftrue(iftrue)
-            , iffalse(iffalse)
-            , format(ex)
-            , requested(cx)
-            , trueBlockFollowsCondition(trueBlockFollowsCondition)
-        {}
+            : _iftrue(iftrue)
+            , _iffalse(iffalse)
+            , _format(ex)
+            , _requested(cx)
+            , _trueBlockFollowsCondition(trueBlockFollowsCondition)
+        {
+            Q_ASSERT(iftrue);
+            Q_ASSERT(iffalse);
+        }
+
+        const BytecodeGenerator::Label *iftrue() const {
+            Q_ASSERT(_requested == cx);
+            return _iftrue;
+        }
+
+        const BytecodeGenerator::Label *iffalse() const {
+            Q_ASSERT(_requested == cx);
+            return _iffalse;
+        }
+
+        Format format() const {
+            return _format;
+        }
 
         bool accept(Format f)
         {
-            if (requested == f) {
-                format = f;
+            if (_requested == f) {
+                _format = f;
                 return true;
             }
             return false;
         }
-    };
 
+        bool trueBlockFollowsCondition() const {
+            return _trueBlockFollowsCondition;
+        }
+
+        const Reference &result() const {
+            return _result;
+        }
+
+        void setResult(const Reference &result) {
+            _result = result;
+        }
+    };
 
     void enterContext(AST::Node *node);
     int leaveContext();
@@ -486,7 +515,7 @@ public:
 #endif
 
     QV4::Moth::Param binopHelper(QSOperator::Op oper, Reference &left,
-                                 Reference &right, Reference &dest);
+                                 Reference &right, const Reference &dest);
     int pushArgs(AST::ArgumentList *args);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
