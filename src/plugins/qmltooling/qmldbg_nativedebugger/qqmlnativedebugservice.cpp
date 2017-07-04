@@ -480,7 +480,7 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
     QJsonArray output;
     QV4::Scope scope(engine);
 
-    if (QV4::SimpleCallContext *callContext = executionContext->asSimpleCallContext()) {
+    if (QV4::CallContext *callContext = executionContext->asCallContext()) {
         QV4::Value thisObject = callContext->thisObject();
         collector.collect(&output, QString(), QStringLiteral("this"), thisObject);
         QV4::Identifier *const *variables = callContext->variables();

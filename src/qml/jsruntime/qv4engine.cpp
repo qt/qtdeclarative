@@ -192,7 +192,7 @@ ExecutionEngine::ExecutionEngine()
     internalClasses[Class_SimpleArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SimpleArrayData::staticVTable());
     internalClasses[Class_SparseArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SparseArrayData::staticVTable());
     internalClasses[Class_ExecutionContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::ExecutionContext::staticVTable());
-    internalClasses[Class_SimpleCallContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::CallContext::staticVTable());
+    internalClasses[Class_CallContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::CallContext::staticVTable());
 
     jsStrings[String_Empty] = newIdentifier(QString());
     jsStrings[String_undefined] = newIdentifier(QStringLiteral("undefined"));
@@ -896,7 +896,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     QUrl base;
     ExecutionContext *c = currentContext;
     while (c) {
-        SimpleCallContext *callCtx = c->asSimpleCallContext();
+        CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->d()->v4Function) {
             base.setUrl(callCtx->d()->v4Function->sourceFile());
             break;

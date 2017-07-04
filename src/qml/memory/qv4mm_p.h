@@ -214,8 +214,8 @@ public:
     QV4::Heap::CallContext *allocSimpleCallContext()
     {
         Heap::CallContext *ctxt = stackAllocator.allocate();
-        memset(ctxt, 0, sizeof(Heap::SimpleCallContext));
-        ctxt->internalClass = SimpleCallContext::defaultInternalClass(engine);
+        memset(ctxt, 0, sizeof(Heap::CallContext));
+        ctxt->internalClass = CallContext::defaultInternalClass(engine);
         Q_ASSERT(ctxt->internalClass && ctxt->internalClass->vtable);
         ctxt->init();
         return ctxt;

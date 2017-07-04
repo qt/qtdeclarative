@@ -90,7 +90,7 @@ struct EngineBase {
         Class_SimpleArrayData,
         Class_SparseArrayData,
         Class_ExecutionContext,
-        Class_SimpleCallContext,
+        Class_CallContext,
         Class_Object,
         Class_ArrayObject,
         Class_FunctionObject,

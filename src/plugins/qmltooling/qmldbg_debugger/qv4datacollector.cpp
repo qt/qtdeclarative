@@ -55,11 +55,11 @@
 
 QT_BEGIN_NAMESPACE
 
-QV4::SimpleCallContext *QV4DataCollector::findContext(int frame)
+QV4::CallContext *QV4DataCollector::findContext(int frame)
 {
     QV4::ExecutionContext *ctx = engine()->currentContext;
     while (ctx) {
-        QV4::SimpleCallContext *cCtxt = ctx->asSimpleCallContext();
+        QV4::CallContext *cCtxt = ctx->asCallContext();
         if (cCtxt && cCtxt->d()->v4Function) {
             if (frame < 1)
                 return cCtxt;
@@ -71,7 +71,7 @@ QV4::SimpleCallContext *QV4DataCollector::findContext(int frame)
     return 0;
 }
 
-QV4::Heap::SimpleCallContext *QV4DataCollector::findScope(QV4::ExecutionContext *ctxt, int scope)
+QV4::Heap::CallContext *QV4DataCollector::findScope(QV4::ExecutionContext *ctxt, int scope)
 {
     if (!ctxt)
         return 0;
@@ -81,7 +81,7 @@ QV4::Heap::SimpleCallContext *QV4DataCollector::findScope(QV4::ExecutionContext 
     for (; scope > 0 && ctx; --scope)
         ctx = ctx->d()->outer;
 
-    return (ctx && ctx->d()) ? ctx->asSimpleCallContext()->d() : 0;
+    return (ctx && ctx->d()) ? ctx->asCallContext()->d() : 0;
 }
 
 QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeTypes(int frame)
@@ -89,7 +89,7 @@ QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeType
     QVector<QV4::Heap::ExecutionContext::ContextType> types;
 
     QV4::Scope scope(engine());
-    QV4::SimpleCallContext *sctxt = findContext(frame);
+    QV4::CallContext *sctxt = findContext(frame);
     if (!sctxt || sctxt->d()->type < QV4::Heap::ExecutionContext::Type_QmlContext)
         return types;
 
@@ -340,7 +340,7 @@ QJsonObject QV4DataCollector::buildFrame(const QV4::StackFrame &stackFrame, int 
     QV4::Scope scope(engine());
     QV4::ScopedContext ctxt(scope, findContext(frameNr));
     while (ctxt) {
-        if (QV4::SimpleCallContext *cCtxt = ctxt->asSimpleCallContext()) {
+        if (QV4::CallContext *cCtxt = ctxt->asCallContext()) {
             if (cCtxt->d()->activation)
                 break;
         }
@@ -348,7 +348,7 @@ QJsonObject QV4DataCollector::buildFrame(const QV4::StackFrame &stackFrame, int 
     }
 
     if (ctxt) {
-        QV4::ScopedValue o(scope, ctxt->asSimpleCallContext()->d()->activation);
+        QV4::ScopedValue o(scope, ctxt->d()->activation);
         frame[QLatin1String("receiver")] = toRef(collect(o));
     }
 

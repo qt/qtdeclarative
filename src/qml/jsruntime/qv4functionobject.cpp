@@ -486,7 +486,7 @@ void IndexedBuiltinFunction::call(const Managed *that, Scope &scope, CallData *c
 
     ExecutionContextSaver ctxSaver(scope);
 
-    SimpleCallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext();
+    CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext();
     ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
     ctx->callData = callData;
     v4->pushContext(ctx);

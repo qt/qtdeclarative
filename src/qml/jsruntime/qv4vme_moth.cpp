@@ -414,7 +414,7 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
         int i = 0;
         while (scope) {
             if (scope->type == QV4::Heap::ExecutionContext::Type_SimpleCallContext) {
-                QV4::Heap::SimpleCallContext *cc = static_cast<QV4::Heap::SimpleCallContext *>(scope);
+                QV4::Heap::CallContext *cc = static_cast<QV4::Heap::CallContext *>(scope);
                 scopes[2*i + 2] = { cc->callData->args, 0 };
                 scopes[2*i + 3] = { 0, 0 };
             } else if (scope->type == QV4::Heap::ExecutionContext::Type_CallContext) {

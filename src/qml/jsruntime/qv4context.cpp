@@ -54,7 +54,6 @@
 using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(ExecutionContext);
-DEFINE_MANAGED_VTABLE(SimpleCallContext);
 DEFINE_MANAGED_VTABLE(CallContext);
 DEFINE_MANAGED_VTABLE(CatchContext);
 
@@ -127,15 +126,14 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     while (ctx) {
         switch (ctx->d()->type) {
         case Heap::ExecutionContext::Type_CallContext:
-        case Heap::ExecutionContext::Type_SimpleCallContext: {
-            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
+        case Heap::ExecutionContext::Type_SimpleCallContext:
             if (!activation) {
+                Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
                 if (!c->activation)
                     c->activation.set(scope.engine, scope.engine->newObject());
                 activation = c->activation;
             }
             break;
-        }
         case Heap::ExecutionContext::Type_QmlContext: {
             // this is ugly, as it overrides the inner callcontext, but has to stay as long
             // as bindings still get their own callcontext
@@ -143,8 +141,9 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
             break;
         }
         case Heap::ExecutionContext::Type_GlobalContext: {
+            Q_ASSERT(scope.engine->globalObject->d() == ctx->d()->activation);
             if (!activation)
-                activation = scope.engine->globalObject;
+                activation = ctx->d()->activation;
             break;
         }
         default:
@@ -176,22 +175,22 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
     this->exceptionValue.set(internalClass->engine, exceptionValue);
 }
 
-Identifier * const *SimpleCallContext::formals() const
+Identifier * const *CallContext::formals() const
 {
     return d()->v4Function ? d()->v4Function->internalClass->nameMap.constData() : 0;
 }
 
-unsigned int SimpleCallContext::formalCount() const
+unsigned int CallContext::formalCount() const
 {
     return d()->v4Function ? d()->v4Function->nFormals : 0;
 }
 
-Identifier * const *SimpleCallContext::variables() const
+Identifier * const *CallContext::variables() const
 {
     return d()->v4Function ? d()->v4Function->internalClass->nameMap.constData() + d()->v4Function->nFormals : 0;
 }
 
-unsigned int SimpleCallContext::variableCount() const
+unsigned int CallContext::variableCount() const
 {
     return d()->v4Function ? d()->v4Function->compiledFunction->nLocals : 0;
 }
@@ -263,7 +262,7 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
 
     ExecutionContextSaver ctxSaver(scope);
 
-    SimpleCallContext::Data *ctx = scope.engine->memoryManager->allocSimpleCallContext();
+    CallContext::Data *ctx = scope.engine->memoryManager->allocSimpleCallContext();
 
     ctx->strictMode = function->isStrict();
     ctx->callData = callData;
@@ -316,7 +315,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         }
         case Heap::ExecutionContext::Type_CallContext:
         case Heap::ExecutionContext::Type_SimpleCallContext: {
-            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
+            Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
             if (c->v4Function) {
                 uint index = c->v4Function->internalClass->find(id);
                 if (index < UINT_MAX) {
@@ -483,7 +482,7 @@ Function *ExecutionContext::getFunction() const
     Scope scope(engine());
     ScopedContext it(scope, this->d());
     for (; it; it = it->d()->outer) {
-        if (const SimpleCallContext *callCtx = it->asSimpleCallContext())
+        if (const CallContext *callCtx = it->asCallContext())
             return callCtx->d()->v4Function;
         else if (it->d()->type == Heap::ExecutionContext::Type_CatchContext ||
                  it->d()->type == Heap::ExecutionContext::Type_WithContext)
