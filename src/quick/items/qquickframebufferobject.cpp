@@ -260,7 +260,7 @@ public:
     bool renderPending;
     bool invalidatePending;
 
-    int devicePixelRatio;
+    qreal devicePixelRatio;
 };
 
 static inline bool isOpenGL(QSGRenderContext *rc)
