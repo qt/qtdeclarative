@@ -388,7 +388,7 @@ QString QQuickTextInputPrivate::realText() const
     is true.
 
     \qml
-    Text { text: "OATS FLAVOUR WAY"; font.kerning: false }
+    TextInput { text: "OATS FLAVOUR WAY"; font.kerning: false }
     \endqml
 */
 QFont QQuickTextInput::font() const

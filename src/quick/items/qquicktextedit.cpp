@@ -364,7 +364,7 @@ QString QQuickTextEdit::text() const
     is true.
 
     \qml
-    Text { text: "OATS FLAVOUR WAY"; kerning: font.false }
+    TextEdit { text: "OATS FLAVOUR WAY"; kerning: font.false }
     \endqml
 */
 
