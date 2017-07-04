@@ -216,6 +216,9 @@ Now we can build and run the application:
 
 \borderedimage qtquickcontrols2-chattutorial-chapter1.png
 
+\noautolist
+\generatelist examplefiles .*chapter1.*
+
 \section1 Chapter 2: Lists
 
 In this chapter, we'll explain how to create a list of interactive items using
@@ -289,6 +292,9 @@ height of the delegate on the image's height, so that we don't have any empty
 vertical space.
 
 \borderedimage qtquickcontrols2-chattutorial-chapter2.png
+
+\generatelist examplefiles .*(chapter2|shared).*
+\generatelist exampleimages .*shared.*(Einstein|Hemingway|Gude)\.png
 
 \section1 Chapter 3: Navigation
 
@@ -514,6 +520,9 @@ Finally, the button is only enabled when there is actually a message to send.
 
 \borderedimage qtquickcontrols2-chattutorial-chapter3.gif
 
+\generatelist examplefiles .*(chapter3|shared).*
+\generatelist exampleimages .*shared.*(Einstein|Hemingway|Gude)\.png
+
 \section1 Chapter 4: Models
 
 In chapter 4, we'll take you through the process of creating both read-only and
@@ -730,6 +739,9 @@ text field to make way for future input.
 
 \borderedimage qtquickcontrols2-chattutorial-chapter4.gif
 
+\generatelist examplefiles .*(chapter4|shared).*
+\generatelist exampleimages
+
 \section1 Chapter 5: Styling
 
 Styles in Qt Quick Controls 2 are designed to work on any platform. In this
@@ -855,6 +867,9 @@ After building and running the application, you should see these results:
 
 \borderedimage qtquickcontrols2-chattutorial-chapter5-contacts-universal-dark.png
 \borderedimage qtquickcontrols2-chattutorial-chapter5-conversations-universal-dark.png
+
+\generatelist examplefiles .*(chapter5|shared).*
+\generatelist exampleimages
 
 \section1 Summary
 
