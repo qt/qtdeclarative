@@ -445,6 +445,14 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
         }
     }
 
+    bool lastDirtyWindow = true;
+    for (int i=0; i<m_windows.size(); ++i) {
+        if ( m_windows[i].pendingUpdate) {
+            lastDirtyWindow = false;
+            break;
+        }
+    }
+
     d->flushFrameSynchronousEvents();
     // Event delivery or processing has caused the window to stop rendering.
     if (!windowData(window))
@@ -464,6 +472,8 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
 
     RLDEBUG(" - syncing");
     d->syncSceneGraph();
+    if (lastDirtyWindow)
+        m_rc->endSync();
     QSG_RENDER_TIMING_SAMPLE(QQuickProfiler::SceneGraphRenderLoopFrame, time_synced,
                              QQuickProfiler::SceneGraphRenderLoopSync);
 

@@ -47,7 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
+//! [backend_cpp]
 #include "backend.h"
 
 BackEnd::BackEnd(QObject *parent) :
@@ -68,3 +68,4 @@ void BackEnd::setUserName(const QString &userName)
     m_userName = userName;
     emit userNameChanged();
 }
+//! [backend_cpp]

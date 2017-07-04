@@ -47,7 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
+//! [main_qml]
 import QtQuick 2.6
 import QtQuick.Controls 2.0
 //![import]
@@ -76,4 +76,4 @@ ApplicationWindow {
     }
 //![username_input]
 }
-
+//! [main_qml]
