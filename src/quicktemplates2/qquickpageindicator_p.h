@@ -87,6 +87,10 @@ Q_SIGNALS:
 protected:
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
+#if QT_CONFIG(quicktemplates2_multitouch)
+    void touchEvent(QTouchEvent *event) override;
+#endif
+
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif

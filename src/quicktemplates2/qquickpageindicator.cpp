@@ -335,6 +335,17 @@ void QQuickPageIndicator::contentItemChange(QQuickItem *newItem, QQuickItem *old
         QQuickItemPrivate::get(newItem)->addItemChangeListener(d, QQuickItemPrivate::Children);
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
+void QQuickPageIndicator::touchEvent(QTouchEvent *event)
+{
+    Q_D(QQuickPageIndicator);
+    if (d->interactive)
+        QQuickControl::touchEvent(event);
+    else
+        event->ignore(); // QTBUG-61785
+}
+#endif
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickPageIndicator::accessibleRole() const
 {

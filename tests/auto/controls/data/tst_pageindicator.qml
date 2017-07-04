@@ -65,6 +65,11 @@ TestCase {
         PageIndicator { }
     }
 
+    Component {
+        id: mouseArea
+        MouseArea { }
+    }
+
     function test_count() {
         var control = createTemporaryObject(pageIndicator, testCase)
         verify(control)
@@ -131,5 +136,36 @@ TestCase {
                 }
             }
         }
+    }
+
+    function test_mouseArea_data() {
+        return [
+            { tag: "interactive", interactive: true },
+            { tag: "non-interactive", interactive: false }
+        ]
+    }
+
+    // QTBUG-61785
+    function test_mouseArea(data) {
+        var ma = createTemporaryObject(mouseArea, testCase, {width: testCase.width, height: testCase.height})
+        verify(ma)
+
+        var control = pageIndicator.createObject(ma, {count: 5, interactive: data.interactive, width: testCase.width, height: testCase.height})
+        verify(control)
+
+        compare(control.interactive, data.interactive)
+
+        mousePress(control)
+        compare(ma.pressed, !data.interactive)
+
+        mouseRelease(control)
+        verify(!ma.pressed)
+
+        var touch = touchEvent(control)
+        touch.press(0, control).commit()
+        compare(ma.pressed, !data.interactive)
+
+        touch.release(0, control).commit()
+        verify(!ma.pressed)
     }
 }
