@@ -70,7 +70,6 @@ struct Identifier;
 struct CallContext;
 struct SimpleCallContext;
 struct CatchContext;
-struct WithContext;
 struct QmlContext;
 struct QQmlContextWrapper;
 
@@ -198,15 +197,6 @@ Q_STATIC_ASSERT(offsetof(CallContextData, function) == 0);
 // example it is not. Therefore we have a padding in place and always have a distance of 8 bytes.
 Q_STATIC_ASSERT(offsetof(CallContextData, locals) == offsetof(CallContextData, function) + 8);
 
-#define GlobalContextMembers(class, Member)
-
-DECLARE_HEAP_OBJECT(GlobalContext, ExecutionContext) {
-    DECLARE_MARK_TABLE(GlobalContext);
-
-    void init(ExecutionEngine *engine);
-};
-V4_ASSERT_IS_TRIVIAL(GlobalContext)
-
 #define CatchContextMembers(class, Member) \
     Member(class, Pointer, String *, exceptionVarName) \
     Member(class, HeapValue, HeapValue, exceptionValue)
@@ -217,15 +207,6 @@ DECLARE_HEAP_OBJECT(CatchContext, ExecutionContext) {
     void init(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue);
 };
 V4_ASSERT_IS_TRIVIAL(CatchContext)
-
-#define WithContextMembers(class, Member)
-
-DECLARE_HEAP_OBJECT(WithContext, ExecutionContext) {
-    DECLARE_MARK_TABLE(WithContext);
-
-    void init(ExecutionContext *outerContext, Object *with);
-};
-V4_ASSERT_IS_TRIVIAL(WithContext)
 
 }
 
@@ -240,7 +221,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     V4_INTERNALCLASS(ExecutionContext)
 
     Heap::CallContext *newCallContext(Function *f, CallData *callData);
-    Heap::WithContext *newWithContext(Heap::Object *with);
+    Heap::ExecutionContext *newWithContext(Heap::Object *with);
     Heap::CatchContext *newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue);
 
     void createMutableBinding(String *name, bool deletable);
@@ -252,8 +233,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     inline SimpleCallContext *asSimpleCallContext();
     inline const SimpleCallContext *asSimpleCallContext() const;
-    inline const CatchContext *asCatchContext() const;
-    inline const WithContext *asWithContext() const;
 
     Function *getFunction() const;
 
@@ -297,20 +276,9 @@ struct Q_QML_EXPORT CallContext : public SimpleCallContext
     V4_MANAGED(CallContext, SimpleCallContext)
 };
 
-struct GlobalContext : public ExecutionContext
-{
-    V4_MANAGED(GlobalContext, ExecutionContext)
-
-};
-
 struct CatchContext : public ExecutionContext
 {
     V4_MANAGED(CatchContext, ExecutionContext)
-};
-
-struct WithContext : public ExecutionContext
-{
-    V4_MANAGED(WithContext, ExecutionContext)
 };
 
 inline SimpleCallContext *ExecutionContext::asSimpleCallContext()
@@ -321,16 +289,6 @@ inline SimpleCallContext *ExecutionContext::asSimpleCallContext()
 inline const SimpleCallContext *ExecutionContext::asSimpleCallContext() const
 {
     return d()->type >= Heap::ExecutionContext::Type_SimpleCallContext ? static_cast<const SimpleCallContext *>(this) : 0;
-}
-
-inline const CatchContext *ExecutionContext::asCatchContext() const
-{
-    return d()->type == Heap::ExecutionContext::Type_CatchContext ? static_cast<const CatchContext *>(this) : 0;
-}
-
-inline const WithContext *ExecutionContext::asWithContext() const
-{
-    return d()->type == Heap::ExecutionContext::Type_WithContext ? static_cast<const WithContext *>(this) : 0;
 }
 
 } // namespace QV4

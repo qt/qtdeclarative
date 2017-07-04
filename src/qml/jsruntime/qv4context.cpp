@@ -56,9 +56,7 @@ using namespace QV4;
 DEFINE_MANAGED_VTABLE(ExecutionContext);
 DEFINE_MANAGED_VTABLE(SimpleCallContext);
 DEFINE_MANAGED_VTABLE(CallContext);
-DEFINE_MANAGED_VTABLE(WithContext);
 DEFINE_MANAGED_VTABLE(CatchContext);
-DEFINE_MANAGED_VTABLE(GlobalContext);
 
 Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData *callData)
 {
@@ -98,9 +96,18 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
     return c;
 }
 
-Heap::WithContext *ExecutionContext::newWithContext(Heap::Object *with)
+Heap::ExecutionContext *ExecutionContext::newWithContext(Heap::Object *with)
 {
-    return engine()->memoryManager->alloc<WithContext>(d(), with);
+    Heap::ExecutionContext *c = engine()->memoryManager->alloc<ExecutionContext>(Heap::ExecutionContext::Type_WithContext);
+    c->outer.set(engine(), d());
+    c->activation.set(engine(), with);
+
+    c->callData = d()->callData;
+    c->lookups = d()->lookups;
+    c->constantTable = d()->constantTable;
+    c->compilationUnit = d()->compilationUnit;
+
+    return c;
 }
 
 Heap::CatchContext *ExecutionContext::newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue)
@@ -154,12 +161,6 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     activation->__defineOwnProperty__(scope.engine, name, desc, attrs);
 }
 
-void Heap::GlobalContext::init(ExecutionEngine *eng)
-{
-    Heap::ExecutionContext::init(Heap::ExecutionContext::Type_GlobalContext);
-    activation.set(eng, eng->globalObject->d());
-}
-
 void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionVarName,
                               const Value &exceptionValue)
 {
@@ -173,18 +174,6 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
 
     this->exceptionVarName.set(internalClass->engine, exceptionVarName);
     this->exceptionValue.set(internalClass->engine, exceptionValue);
-}
-
-void Heap::WithContext::init(ExecutionContext *outerContext, Object *with)
-{
-    Heap::ExecutionContext::init(Heap::ExecutionContext::Type_WithContext);
-    outer.set(internalClass->engine, outerContext);
-    callData = outer->callData;
-    lookups = outer->lookups;
-    constantTable = outer->constantTable;
-    compilationUnit = outer->compilationUnit;
-
-    activation.set(internalClass->engine, with);
 }
 
 Identifier * const *SimpleCallContext::formals() const
@@ -318,7 +307,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         }
         case Heap::ExecutionContext::Type_WithContext: {
             // the semantics are different from the setProperty calls of other activations
-            ScopedObject w(scope, static_cast<Heap::WithContext *>(ctx->d())->activation);
+            ScopedObject w(scope, ctx->d()->activation);
             if (w->hasProperty(name)) {
                 w->put(name, value);
                 return;
@@ -496,7 +485,8 @@ Function *ExecutionContext::getFunction() const
     for (; it; it = it->d()->outer) {
         if (const SimpleCallContext *callCtx = it->asSimpleCallContext())
             return callCtx->d()->v4Function;
-        else if (it->asCatchContext() || it->asWithContext())
+        else if (it->d()->type == Heap::ExecutionContext::Type_CatchContext ||
+                 it->d()->type == Heap::ExecutionContext::Type_WithContext)
             continue; // look in the parent context for a FunctionObject
         else
             break;

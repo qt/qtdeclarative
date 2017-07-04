@@ -166,7 +166,6 @@ namespace Heap {
     struct ObjectPrototype;
 
     struct ExecutionContext;
-    struct GlobalContext;
     struct CallContext;
     struct ScriptFunction;
 
@@ -197,7 +196,6 @@ struct Object;
 struct ObjectPrototype;
 struct ObjectIterator;
 struct ExecutionContext;
-struct GlobalContext;
 struct CallContext;
 struct ScriptFunction;
 struct InternalClass;

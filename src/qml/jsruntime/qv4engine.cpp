@@ -516,9 +516,10 @@ void ExecutionEngine::setProfiler(Profiling::Profiler *profiler)
 void ExecutionEngine::initRootContext()
 {
     Scope scope(this);
-    Scoped<GlobalContext> r(scope, memoryManager->allocManaged<GlobalContext>(
-                                sizeof(GlobalContext::Data) + sizeof(CallData)));
-    r->d_unchecked()->init(this);
+    Scoped<ExecutionContext> r(scope, memoryManager->allocManaged<ExecutionContext>(
+                                sizeof(ExecutionContext::Data) + sizeof(CallData)));
+    r->d_unchecked()->init(Heap::ExecutionContext::Type_GlobalContext);
+    r->d()->activation.set(this, globalObject->d());
     r->d()->callData = reinterpret_cast<CallData *>(r->d() + 1);
     r->d()->callData->tag = quint32(Value::ValueTypeInternal::Integer);
     r->d()->callData->argc = 0;
