@@ -345,9 +345,9 @@ protected:
     uint registerGlobalGetterLookup(int nameIndex) { return jsUnitGenerator->registerGlobalGetterLookup(nameIndex); }
 
     // Returns index in _module->functions
-    int defineFunction(const QString &name, AST::Node *ast,
-                       AST::FormalParameterList *formals,
-                       AST::SourceElements *body);
+    virtual int defineFunction(const QString &name, AST::Node *ast,
+                               AST::FormalParameterList *formals,
+                               AST::SourceElements *body);
 
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);

@@ -1650,6 +1650,21 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     return runtimeFunctionIndices;
 }
 
+int JSCodeGen::defineFunction(const QString &name, AST::Node *ast, AST::FormalParameterList *formals, AST::SourceElements *body)
+{
+    int qmlContextTemp = -1;
+    int importedScriptsTemp = -1;
+    qSwap(_qmlContextTemp, qmlContextTemp);
+    qSwap(_importedScriptsTemp, importedScriptsTemp);
+
+    int result = Codegen::defineFunction(name, ast, formals, body);
+
+    qSwap(_importedScriptsTemp, importedScriptsTemp);
+    qSwap(_qmlContextTemp, qmlContextTemp);
+
+    return result;
+}
+
 #ifndef V4_BOOTSTRAP
 QQmlPropertyData *JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name)
 {
