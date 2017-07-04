@@ -127,6 +127,8 @@ struct Pointer {
         WriteBarrier::write(e, base(), reinterpret_cast<Heap::Base **>(&ptr), reinterpret_cast<Heap::Base *>(newVal));
     }
 
+    T get() { return ptr; }
+
     template <typename Type>
     Type *cast() { return static_cast<Type *>(ptr); }
 

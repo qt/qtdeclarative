@@ -365,7 +365,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
 
     QV4::ScopedCallData callData(scope, 2);
     callData->thisObject = workerEngine->global();
-    callData->args[0] = qmlContext->d()->qml; // ###
+    callData->args[0] = qmlContext->d()->qml(); // ###
     callData->args[1] = value;
     f->call(scope, callData);
     if (scope.hasException()) {

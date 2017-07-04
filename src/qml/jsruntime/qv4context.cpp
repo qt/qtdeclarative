@@ -132,8 +132,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
         case Heap::ExecutionContext::Type_QmlContext: {
             // this is ugly, as it overrides the inner callcontext, but has to stay as long
             // as bindings still get their own callcontext
-            Heap::QmlContext *qml = static_cast<Heap::QmlContext *>(ctx->d());
-            activation = qml->qml;
+            activation = ctx->d()->activation;
             break;
         }
         case Heap::ExecutionContext::Type_GlobalContext: {
@@ -158,7 +157,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 void Heap::GlobalContext::init(ExecutionEngine *eng)
 {
     Heap::ExecutionContext::init(Heap::ExecutionContext::Type_GlobalContext);
-    global.set(eng, eng->globalObject->d());
+    activation.set(eng, eng->globalObject->d());
 }
 
 void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionVarName,
@@ -185,7 +184,7 @@ void Heap::WithContext::init(ExecutionContext *outerContext, Object *with)
     constantTable = outer->constantTable;
     compilationUnit = outer->compilationUnit;
 
-    withObject.set(internalClass->engine, with);
+    activation.set(internalClass->engine, with);
 }
 
 Identifier * const *SimpleCallContext::formals() const
@@ -225,18 +224,6 @@ bool ExecutionContext::deleteProperty(String *name)
                 return false;
             break;
         }
-        case Heap::ExecutionContext::Type_WithContext: {
-            ScopedObject withObject(scope, static_cast<Heap::WithContext *>(ctx->d())->withObject);
-            if (withObject->hasProperty(name))
-                return withObject->deleteProperty(name);
-            break;
-        }
-        case Heap::ExecutionContext::Type_GlobalContext: {
-            ScopedObject global(scope, static_cast<Heap::GlobalContext *>(ctx->d())->global);
-            if (global->hasProperty(name))
-                return global->deleteProperty(name);
-            break;
-        }
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
             uint index = c->v4Function->internalClass->find(id);
@@ -245,11 +232,12 @@ bool ExecutionContext::deleteProperty(String *name)
                 return false;
             Q_FALLTHROUGH();
         }
+        case Heap::ExecutionContext::Type_WithContext:
+        case Heap::ExecutionContext::Type_GlobalContext:
         case Heap::ExecutionContext::Type_SimpleCallContext: {
-            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
-            ScopedObject qml(scope, c->activation);
-            if (qml && qml->hasProperty(name))
-                return qml->deleteProperty(name);
+            ScopedObject object(scope, ctx->d()->activation);
+            if (object && object->hasProperty(name))
+                return object->deleteProperty(name);
             break;
         }
         case Heap::ExecutionContext::Type_QmlContext:
@@ -329,15 +317,12 @@ void ExecutionContext::setProperty(String *name, const Value &value)
             break;
         }
         case Heap::ExecutionContext::Type_WithContext: {
-            ScopedObject w(scope, static_cast<Heap::WithContext *>(ctx->d())->withObject);
+            // the semantics are different from the setProperty calls of other activations
+            ScopedObject w(scope, static_cast<Heap::WithContext *>(ctx->d())->activation);
             if (w->hasProperty(name)) {
                 w->put(name, value);
                 return;
             }
-            break;
-        }
-        case Heap::ExecutionContext::Type_GlobalContext: {
-            activation = static_cast<Heap::GlobalContext *>(ctx->d())->global;
             break;
         }
         case Heap::ExecutionContext::Type_CallContext:
@@ -356,11 +341,13 @@ void ExecutionContext::setProperty(String *name, const Value &value)
                     return;
                 }
             }
-            activation = c->activation;
-            break;
         }
+            Q_FALLTHROUGH();
+        case Heap::ExecutionContext::Type_GlobalContext:
+            activation = ctx->d()->activation;
+            break;
         case Heap::ExecutionContext::Type_QmlContext: {
-            activation = static_cast<Heap::QmlContext *>(ctx->d())->qml;
+            activation = ctx->d()->activation;
             activation->put(name, value);
             return;
         }
@@ -401,23 +388,6 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                 return c->exceptionValue.asReturnedValue();
             break;
         }
-        case Heap::ExecutionContext::Type_WithContext: {
-            ScopedObject w(scope, static_cast<Heap::WithContext *>(ctx->d())->withObject);
-            bool hasProperty = false;
-            v = w->get(name, &hasProperty);
-            if (hasProperty) {
-                return v->asReturnedValue();
-            }
-            break;
-        }
-        case Heap::ExecutionContext::Type_GlobalContext: {
-            ScopedObject global(scope, static_cast<Heap::GlobalContext *>(ctx->d())->global);
-            bool hasProperty = false;
-            v = global->get(name, &hasProperty);
-            if (hasProperty)
-                return v->asReturnedValue();
-            break;
-        }
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
             name->makeIdentifier();
@@ -436,23 +406,17 @@ ReturnedValue ExecutionContext::getProperty(String *name)
             }
             Q_FALLTHROUGH();
         }
+        case Heap::ExecutionContext::Type_WithContext:
+        case Heap::ExecutionContext::Type_GlobalContext:
+        case Heap::ExecutionContext::Type_QmlContext:
         case Heap::ExecutionContext::Type_SimpleCallContext: {
-            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
-            ScopedObject activation(scope, c->activation);
+            ScopedObject activation(scope, ctx->d()->activation);
             if (activation) {
                 bool hasProperty = false;
                 v = activation->get(name, &hasProperty);
                 if (hasProperty)
                     return v->asReturnedValue();
             }
-            break;
-        }
-        case Heap::ExecutionContext::Type_QmlContext: {
-            ScopedObject qml(scope, static_cast<Heap::QmlContext *>(ctx->d())->qml);
-            bool hasProperty = false;
-            v = qml->get(name, &hasProperty);
-            if (hasProperty)
-                return v->asReturnedValue();
             break;
         }
         }
@@ -480,24 +444,6 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
                 return c->exceptionValue.asReturnedValue();
             break;
         }
-        case Heap::ExecutionContext::Type_WithContext: {
-            ScopedObject w(scope, static_cast<Heap::WithContext *>(ctx->d())->withObject);
-            bool hasProperty = false;
-            v = w->get(name, &hasProperty);
-            if (hasProperty) {
-                base->setM(w->d());
-                return v->asReturnedValue();
-            }
-            break;
-        }
-        case Heap::ExecutionContext::Type_GlobalContext: {
-            ScopedObject global(scope, static_cast<Heap::GlobalContext *>(ctx->d())->global);
-            bool hasProperty = false;
-            v = global->get(name, &hasProperty);
-            if (hasProperty)
-                return v->asReturnedValue();
-            break;
-        }
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
             name->makeIdentifier();
@@ -515,9 +461,9 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
             }
             Q_FALLTHROUGH();
         }
+        case Heap::ExecutionContext::Type_GlobalContext:
         case Heap::ExecutionContext::Type_SimpleCallContext: {
-            Heap::SimpleCallContext *c = static_cast<Heap::SimpleCallContext *>(ctx->d());
-            ScopedObject activation(scope, c->activation);
+            ScopedObject activation(scope, ctx->d()->activation);
             if (activation) {
                 bool hasProperty = false;
                 v = activation->get(name, &hasProperty);
@@ -526,12 +472,13 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
             }
             break;
         }
+        case Heap::ExecutionContext::Type_WithContext:
         case Heap::ExecutionContext::Type_QmlContext: {
-            ScopedObject qml(scope, static_cast<Heap::QmlContext *>(ctx->d())->qml);
+            ScopedObject o(scope, ctx->d()->activation);
             bool hasProperty = false;
-            v = qml->get(name, &hasProperty);
+            v = o->get(name, &hasProperty);
             if (hasProperty) {
-                base->setM(qml->d());
+                base->setM(o->d());
                 return v->asReturnedValue();
             }
             break;

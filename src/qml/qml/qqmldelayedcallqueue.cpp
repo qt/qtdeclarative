@@ -158,8 +158,8 @@ void QQmlDelayedCallQueue::addUniquelyAndExecuteLater(const QV4::BuiltinFunction
             dfc.m_guarded = true;
         } else if (func->scope()->type == QV4::Heap::ExecutionContext::Type_QmlContext) {
             QV4::QmlContext::Data *g = static_cast<QV4::QmlContext::Data *>(func->scope());
-            Q_ASSERT(g->qml->scopeObject);
-            dfc.m_objectGuard = QQmlGuard<QObject>(g->qml->scopeObject);
+            Q_ASSERT(g->qml()->scopeObject);
+            dfc.m_objectGuard = QQmlGuard<QObject>(g->qml()->scopeObject);
             dfc.m_guarded = true;
         }
     }

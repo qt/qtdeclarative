@@ -110,6 +110,7 @@ struct QmlContext;
     Member(class, NoMark, Lookup *, lookups) \
     Member(class, NoMark, const QV4::Value *, constantTable) \
     Member(class, NoMark, CompiledData::CompilationUnitBase *, compilationUnit) \
+    Member(class, Pointer, Object *, activation) \
     Member(class, NoMark, int, lineNumber) // as member of non-pointer size this has to come last to preserve the ability to
                                            // translate offsetof of it between 64-bit and 32-bit.
 
@@ -150,10 +151,10 @@ Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == offsetof(ExecutionConte
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, lookups) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, constantTable) == offsetof(ExecutionContextData, lookups) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, compilationUnit) == offsetof(ExecutionContextData, constantTable) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, lineNumber) == offsetof(ExecutionContextData, compilationUnit) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, activation) == offsetof(ExecutionContextData, compilationUnit) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, lineNumber) == offsetof(ExecutionContextData, activation) + QT_POINTER_SIZE);
 
 #define SimpleCallContextMembers(class, Member) \
-    Member(class, Pointer, Object *, activation) \
     Member(class, NoMark, QV4::Function *, v4Function)
 
 DECLARE_HEAP_OBJECT(SimpleCallContext, ExecutionContext) {
@@ -169,9 +170,8 @@ DECLARE_HEAP_OBJECT(SimpleCallContext, ExecutionContext) {
 };
 V4_ASSERT_IS_TRIVIAL(SimpleCallContext)
 Q_STATIC_ASSERT(std::is_standard_layout<SimpleCallContextData>::value);
-Q_STATIC_ASSERT(offsetof(SimpleCallContextData, activation) == 0);
-Q_STATIC_ASSERT(offsetof(SimpleCallContextData, v4Function) == offsetof(SimpleCallContextData, activation) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(sizeof(SimpleCallContextData) == 2 * QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(SimpleCallContextData, v4Function) == 0);
+Q_STATIC_ASSERT(sizeof(SimpleCallContextData) == QT_POINTER_SIZE);
 Q_STATIC_ASSERT(sizeof(SimpleCallContext) == sizeof(ExecutionContext) + sizeof(SimpleCallContextData));
 
 #if QT_POINTER_SIZE == 8
@@ -198,8 +198,7 @@ Q_STATIC_ASSERT(offsetof(CallContextData, function) == 0);
 // example it is not. Therefore we have a padding in place and always have a distance of 8 bytes.
 Q_STATIC_ASSERT(offsetof(CallContextData, locals) == offsetof(CallContextData, function) + 8);
 
-#define GlobalContextMembers(class, Member) \
-    Member(class, Pointer, Object *, global)
+#define GlobalContextMembers(class, Member)
 
 DECLARE_HEAP_OBJECT(GlobalContext, ExecutionContext) {
     DECLARE_MARK_TABLE(GlobalContext);
@@ -219,8 +218,7 @@ DECLARE_HEAP_OBJECT(CatchContext, ExecutionContext) {
 };
 V4_ASSERT_IS_TRIVIAL(CatchContext)
 
-#define WithContextMembers(class, Member) \
-    Member(class, Pointer, Object *, withObject)
+#define WithContextMembers(class, Member)
 
 DECLARE_HEAP_OBJECT(WithContext, ExecutionContext) {
     DECLARE_MARK_TABLE(WithContext);

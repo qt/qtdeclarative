@@ -398,7 +398,7 @@ ExecutionEngine::ExecutionEngine()
     //
     // set up the global object
     //
-    rootContext()->d()->global.set(scope.engine, globalObject->d());
+    rootContext()->d()->activation.set(scope.engine, globalObject->d());
     rootContext()->d()->callData->thisObject = globalObject;
     Q_ASSERT(globalObject->d()->vtable());
 
@@ -770,7 +770,7 @@ QObject *ExecutionEngine::qmlScopeObject() const
     if (!ctx)
         return 0;
 
-    return ctx->qml->scopeObject;
+    return ctx->qml()->scopeObject;
 }
 
 ReturnedValue ExecutionEngine::qmlSingletonWrapper(String *name)
@@ -800,7 +800,7 @@ QQmlContextData *ExecutionEngine::callingQmlContext() const
     if (!ctx)
         return 0;
 
-    return ctx->qml->context->contextData();
+    return ctx->qml()->context->contextData();
 }
 
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const

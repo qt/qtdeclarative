@@ -1455,20 +1455,20 @@ ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)
 ReturnedValue Runtime::method_getQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml->scopeObject, propertyIndex, captureRequired);
+    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml()->scopeObject, propertyIndex, captureRequired);
 }
 
 ReturnedValue Runtime::method_getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, (*c.d()->qml->context)->contextObject, propertyIndex, captureRequired);
+    return QV4::QObjectWrapper::getProperty(engine, (*c.d()->qml()->context)->contextObject, propertyIndex, captureRequired);
 }
 
 ReturnedValue Runtime::method_getQmlIdObject(ExecutionEngine *engine, const Value &c, uint index)
 {
     Scope scope(engine);
     const QmlContext &qmlContext = static_cast<const QmlContext &>(c);
-    QQmlContextData *context = *qmlContext.d()->qml->context;
+    QQmlContextData *context = *qmlContext.d()->qml()->context;
     if (!context || index >= (uint)context->idValueCount)
         return Encode::undefined();
 
@@ -1482,13 +1482,13 @@ ReturnedValue Runtime::method_getQmlIdObject(ExecutionEngine *engine, const Valu
 void Runtime::method_setQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::setProperty(engine, c.d()->qml->scopeObject, propertyIndex, value);
+    return QV4::QObjectWrapper::setProperty(engine, c.d()->qml()->scopeObject, propertyIndex, value);
 }
 
 void Runtime::method_setQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::setProperty(engine, (*c.d()->qml->context)->contextObject, propertyIndex, value);
+    return QV4::QObjectWrapper::setProperty(engine, (*c.d()->qml()->context)->contextObject, propertyIndex, value);
 }
 
 ReturnedValue Runtime::method_getQmlImportedScripts(NoThrowEngine *engine)

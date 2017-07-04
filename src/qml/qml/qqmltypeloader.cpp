@@ -2869,7 +2869,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
             ep->warning(error);
     }
 
-    QV4::ScopedValue retval(scope, qmlContext->d()->qml);
+    QV4::ScopedValue retval(scope, qmlContext->d()->qml());
     if (shared) {
         m_value.set(scope.engine, retval);
         m_loaded = true;
