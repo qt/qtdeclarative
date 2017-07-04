@@ -95,8 +95,6 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     /* call */ \
     F(ReturnedValue, callGlobalLookup, (ExecutionEngine *engine, uint index, CallData *callData)) \
     F(ReturnedValue, callActivationProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
-    F(ReturnedValue, callQmlScopeObjectProperty, (ExecutionEngine *engine, int propertyIndex, CallData *callData)) \
-    F(ReturnedValue, callQmlContextObjectProperty, (ExecutionEngine *engine, int propertyIndex, CallData *callData)) \
     F(ReturnedValue, callProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
     F(ReturnedValue, callPropertyLookup, (ExecutionEngine *engine, uint index, CallData *callData)) \
     F(ReturnedValue, callElement, (ExecutionEngine *engine, const Value &index, CallData *callData)) \
@@ -120,10 +118,6 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     /* typeof */  \
     F(ReturnedValue, typeofValue, (ExecutionEngine *engine, const Value &val)) \
     F(ReturnedValue, typeofName, (ExecutionEngine *engine, int nameIndex)) \
-    F(ReturnedValue, typeofScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex)) \
-    F(ReturnedValue, typeofContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex)) \
-    F(ReturnedValue, typeofMember, (ExecutionEngine *engine, const Value &base, int nameIndex)) \
-    F(ReturnedValue, typeofElement, (ExecutionEngine *engine, const Value &base, const Value &index)) \
     \
     /* delete */ \
     F(ReturnedValue, deleteElement, (ExecutionEngine *engine, const Value &base, const Value &index)) \
@@ -214,8 +208,8 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, getQmlContext, (NoThrowEngine *engine)) \
     F(ReturnedValue, getQmlImportedScripts, (NoThrowEngine *engine)) \
     F(ReturnedValue, getQmlSingleton, (NoThrowEngine *engine, int nameIndex)) \
-    F(ReturnedValue, getQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex)) \
-    F(ReturnedValue, getQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex)) \
+    F(ReturnedValue, getQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
+    F(ReturnedValue, getQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
     F(ReturnedValue, getQmlIdObject, (ExecutionEngine *engine, const Value &context, uint index)) \
     \
     F(void, setQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)) \

@@ -1053,32 +1053,6 @@ ReturnedValue Runtime::method_callActivationProperty(ExecutionEngine *engine, in
     return scope.result.asReturnedValue();
 }
 
-ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData)
-{
-    Scope scope(engine);
-    ScopedFunctionObject o(scope, method_getQmlScopeObjectProperty(engine, callData->thisObject, propertyIndex));
-    if (!o) {
-        QString error = QStringLiteral("Property '%1' of scope object is not a function").arg(propertyIndex);
-        return engine->throwTypeError(error);
-    }
-
-    o->call(scope, callData);
-    return scope.result.asReturnedValue();
-}
-
-ReturnedValue Runtime::method_callQmlContextObjectProperty(ExecutionEngine *engine, int propertyIndex, CallData *callData)
-{
-    Scope scope(engine);
-    ScopedFunctionObject o(scope, method_getQmlContextObjectProperty(engine, callData->thisObject, propertyIndex));
-    if (!o) {
-        QString error = QStringLiteral("Property '%1' of context object is not a function").arg(propertyIndex);
-        return engine->throwTypeError(error);
-    }
-
-    o->call(scope, callData);
-    return scope.result.asReturnedValue();
-}
-
 ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, int nameIndex, CallData *callData)
 {
     Scope scope(engine);
@@ -1269,48 +1243,6 @@ QV4::ReturnedValue Runtime::method_typeofName(ExecutionEngine *engine, int nameI
     ScopedValue prop(scope, engine->currentContext->getProperty(name));
     // typeof doesn't throw. clear any possible exception
     scope.engine->hasException = false;
-    return method_typeofValue(engine, prop);
-}
-
-#ifndef V4_BOOTSTRAP
-ReturnedValue Runtime::method_typeofScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
-{
-    Scope scope(engine);
-    ScopedValue prop(scope, method_getQmlScopeObjectProperty(engine, context, propertyIndex));
-    if (scope.engine->hasException)
-        return Encode::undefined();
-    return method_typeofValue(engine, prop);
-}
-
-ReturnedValue Runtime::method_typeofContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
-{
-    Scope scope(engine);
-    ScopedValue prop(scope, method_getQmlContextObjectProperty(engine, context, propertyIndex));
-    if (scope.engine->hasException)
-        return Encode::undefined();
-    return method_typeofValue(engine, prop);
-}
-#endif // V4_BOOTSTRAP
-
-QV4::ReturnedValue Runtime::method_typeofMember(ExecutionEngine *engine, const Value &base, int nameIndex)
-{
-    Scope scope(engine);
-    ScopedString name(scope, engine->current->compilationUnit->runtimeStrings[nameIndex]);
-    ScopedObject obj(scope, base.toObject(engine));
-    if (scope.engine->hasException)
-        return Encode::undefined();
-    ScopedValue prop(scope, obj->get(name));
-    return method_typeofValue(engine, prop);
-}
-
-QV4::ReturnedValue Runtime::method_typeofElement(ExecutionEngine *engine, const Value &base, const Value &index)
-{
-    Scope scope(engine);
-    ScopedString name(scope, index.toString(engine));
-    ScopedObject obj(scope, base.toObject(engine));
-    if (scope.engine->hasException)
-        return Encode::undefined();
-    ScopedValue prop(scope, obj->get(name));
     return method_typeofValue(engine, prop);
 }
 
@@ -1520,16 +1452,16 @@ ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)
     return static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeRegularExpressions[id].asReturnedValue();
 }
 
-ReturnedValue Runtime::method_getQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
+ReturnedValue Runtime::method_getQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml->scopeObject, propertyIndex, false);
+    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml->scopeObject, propertyIndex, captureRequired);
 }
 
-ReturnedValue Runtime::method_getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex)
+ReturnedValue Runtime::method_getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, (*c.d()->qml->context)->contextObject, propertyIndex, false);
+    return QV4::QObjectWrapper::getProperty(engine, (*c.d()->qml->context)->contextObject, propertyIndex, captureRequired);
 }
 
 ReturnedValue Runtime::method_getQmlIdObject(ExecutionEngine *engine, const Value &c, uint index)

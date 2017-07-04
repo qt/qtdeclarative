@@ -96,8 +96,6 @@ QT_BEGIN_NAMESPACE
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
     F(CallPropertyLookup, callPropertyLookup) \
-    F(CallScopeObjectProperty, callScopeObjectProperty) \
-    F(CallContextObjectProperty, callContextObjectProperty) \
     F(CallElement, callElement) \
     F(CallActivationProperty, callActivationProperty) \
     F(CallGlobalLookup, callGlobalLookup) \
@@ -114,10 +112,6 @@ QT_BEGIN_NAMESPACE
     F(CallBuiltinDeleteMember, callBuiltinDeleteMember) \
     F(CallBuiltinDeleteSubscript, callBuiltinDeleteSubscript) \
     F(CallBuiltinDeleteName, callBuiltinDeleteName) \
-    F(CallBuiltinTypeofScopeObjectProperty, callBuiltinTypeofScopeObjectProperty) \
-    F(CallBuiltinTypeofContextObjectProperty, callBuiltinTypeofContextObjectProperty) \
-    F(CallBuiltinTypeofMember, callBuiltinTypeofMember) \
-    F(CallBuiltinTypeofSubscript, callBuiltinTypeofSubscript) \
     F(CallBuiltinTypeofName, callBuiltinTypeofName) \
     F(CallBuiltinTypeofValue, callBuiltinTypeofValue) \
     F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
@@ -336,12 +330,14 @@ union Instr
         int propertyIndex;
         Param base;
         Param result;
+        bool captureRequired;
     };
     struct instr_loadContextObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
         Param base;
         Param result;
+        bool captureRequired;
     };
     struct instr_loadIdObject {
         MOTH_INSTR_HEADER
@@ -424,22 +420,6 @@ union Instr
         Param base;
         Param result;
     };
-    struct instr_callScopeObjectProperty {
-        MOTH_INSTR_HEADER
-        int index;
-        quint32 argc;
-        quint32 callData;
-        Param base;
-        Param result;
-    };
-    struct instr_callContextObjectProperty {
-        MOTH_INSTR_HEADER
-        int index;
-        quint32 argc;
-        quint32 callData;
-        Param base;
-        Param result;
-    };
     struct instr_callElement {
         MOTH_INSTR_HEADER
         Param base;
@@ -515,30 +495,6 @@ union Instr
     struct instr_callBuiltinDeleteName {
         MOTH_INSTR_HEADER
         int name;
-        Param result;
-    };
-    struct instr_callBuiltinTypeofScopeObjectProperty {
-        MOTH_INSTR_HEADER
-        int index;
-        Param base;
-        Param result;
-    };
-    struct instr_callBuiltinTypeofContextObjectProperty {
-        MOTH_INSTR_HEADER
-        int index;
-        Param base;
-        Param result;
-    };
-    struct instr_callBuiltinTypeofMember {
-        MOTH_INSTR_HEADER
-        int member;
-        Param base;
-        Param result;
-    };
-    struct instr_callBuiltinTypeofSubscript {
-        MOTH_INSTR_HEADER
-        Param base;
-        Param index;
         Param result;
     };
     struct instr_callBuiltinTypeofName {
@@ -828,8 +784,6 @@ union Instr
     instr_callValue callValue;
     instr_callProperty callProperty;
     instr_callPropertyLookup callPropertyLookup;
-    instr_callScopeObjectProperty callScopeObjectProperty;
-    instr_callContextObjectProperty callContextObjectProperty;
     instr_callElement callElement;
     instr_callActivationProperty callActivationProperty;
     instr_callGlobalLookup callGlobalLookup;
@@ -846,10 +800,6 @@ union Instr
     instr_callBuiltinDeleteMember callBuiltinDeleteMember;
     instr_callBuiltinDeleteSubscript callBuiltinDeleteSubscript;
     instr_callBuiltinDeleteName callBuiltinDeleteName;
-    instr_callBuiltinTypeofScopeObjectProperty callBuiltinTypeofScopeObjectProperty;
-    instr_callBuiltinTypeofContextObjectProperty callBuiltinTypeofContextObjectProperty;
-    instr_callBuiltinTypeofMember callBuiltinTypeofMember;
-    instr_callBuiltinTypeofSubscript callBuiltinTypeofSubscript;
     instr_callBuiltinTypeofName callBuiltinTypeofName;
     instr_callBuiltinTypeofValue callBuiltinTypeofValue;
     instr_callBuiltinDeclareVar callBuiltinDeclareVar;

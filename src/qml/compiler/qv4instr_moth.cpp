@@ -233,14 +233,6 @@ void dumpBytecode(const char *code, int len)
             d << instr.result << ", " << instr.lookupIndex << "(" << instr.callData << ")";
         MOTH_END_INSTR(CallPropertyLookup)
 
-        MOTH_BEGIN_INSTR(CallScopeObjectProperty)
-            d << instr.result << ", " << instr.base << "[" << instr.index << "]" << "(" << instr.callData << ")";
-        MOTH_END_INSTR(CallScopeObjectProperty)
-
-        MOTH_BEGIN_INSTR(CallContextObjectProperty)
-            d << instr.result << ", " << instr.base << "[" << instr.index << "]" << "(" << instr.callData << ")";
-        MOTH_END_INSTR(CallContextObjectProperty)
-
         MOTH_BEGIN_INSTR(CallElement)
             d << instr.result << ", " << instr.base << "[" << instr.index << "]" << "(" << instr.callData << ")";
         MOTH_END_INSTR(CallElement)
@@ -306,22 +298,6 @@ void dumpBytecode(const char *code, int len)
         MOTH_BEGIN_INSTR(CallBuiltinDeleteName)
             d << instr.result << ", " << instr.name;
         MOTH_END_INSTR(CallBuiltinDeleteName)
-
-        MOTH_BEGIN_INSTR(CallBuiltinTypeofScopeObjectProperty)
-            d << instr.result << ", " << instr.base << "[" << instr.index << "]";
-        MOTH_END_INSTR(CallBuiltinTypeofMember)
-
-        MOTH_BEGIN_INSTR(CallBuiltinTypeofContextObjectProperty)
-            d << instr.result << ", " << instr.base << "[" << instr.index << "]";
-        MOTH_END_INSTR(CallBuiltinTypeofMember)
-
-        MOTH_BEGIN_INSTR(CallBuiltinTypeofMember)
-            d << instr.result << ", " << instr.base << "[" << instr.member << "]";
-        MOTH_END_INSTR(CallBuiltinTypeofMember)
-
-        MOTH_BEGIN_INSTR(CallBuiltinTypeofSubscript)
-            d << instr.result << ", " << instr.base << "[" << instr.index << "]";
-        MOTH_END_INSTR(CallBuiltinTypeofSubscript)
 
         MOTH_BEGIN_INSTR(CallBuiltinTypeofName)
             d << instr.result << ", " << instr.name;
