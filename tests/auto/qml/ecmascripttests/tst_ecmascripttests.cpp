@@ -40,6 +40,7 @@ private slots:
 
 void tst_EcmaScriptTests::runTests()
 {
+#if defined(Q_OS_LINUX) && defined(Q_PROCESSOR_X86_64)
     QProcess process;
     process.setProcessChannelMode(QProcess::ForwardedChannels);
     process.setWorkingDirectory(QLatin1String(SRCDIR));
