@@ -234,7 +234,7 @@ void tst_qmldiskcache::regenerateAfterChange()
 
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(0);
         quint64 firstCodeOffset = (testUnit->unitSize + 15u) & ~15u;
-        QVERIFY(bindingFunction->codeOffset == firstCodeOffset);
+        QCOMPARE(bindingFunction->codeOffset, firstCodeOffset);
     }
 
     {
@@ -259,7 +259,7 @@ void tst_qmldiskcache::regenerateAfterChange()
 
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(0);
         quint64 firstCodeOffset = (testUnit->unitSize + 15u) & ~15u;
-        QVERIFY(bindingFunction->codeOffset == firstCodeOffset);
+        QCOMPARE(bindingFunction->codeOffset, firstCodeOffset);
     }
 }
 
