@@ -173,7 +173,8 @@ public:
         ItemActiveFocusHasChanged, // value.boolValue
         ItemRotationHasChanged,    // value.realValue
         ItemAntialiasingHasChanged, // value.boolValue
-        ItemDevicePixelRatioHasChanged // value.realValue
+        ItemDevicePixelRatioHasChanged, // value.realValue
+        ItemEnabledHasChanged      // value.boolValue
     };
 
     union ItemChangeData {
