@@ -50,9 +50,10 @@ static QStringList testStyles()
     return QStringList(QQuickStyle::name());
 }
 
-static int runTests()
+static int runTests(QObject *testObject, int argc, char *argv[])
 {
     int res = 0;
+    QTest::qInit(testObject, argc, argv);
     const QByteArray testObjectName = QTestResult::currentTestObjectName();
     const QStringList styles = testStyles();
     for (const QString &style : styles) {
@@ -63,6 +64,7 @@ static int runTests()
         res += QTest::qRun();
     }
     QTestResult::setCurrentTestObject(testObjectName);
+    QTest::qCleanup();
     return res;
 }
 
@@ -78,10 +80,7 @@ int main(int argc, char *argv[]) \
     QTEST_ADD_GPU_BLACKLIST_SUPPORT \
     TestCase tc; \
     QTEST_SET_MAIN_SOURCE_PATH \
-    QTest::qInit(&tc, argc, argv); \
-    int ret = runTests(); \
-    QTest::qCleanup(); \
-    return ret; \
+    return runTests(&tc, argc, argv); \
 }
 
 #endif // QTEST_QUICKCONTROLS_H
