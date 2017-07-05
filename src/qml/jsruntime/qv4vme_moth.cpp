@@ -249,7 +249,7 @@ int qt_v4DebuggerHook(const char *json)
     return -NoSuchCommand; // Failure.
 }
 
-static void qt_v4CheckForBreak(QV4::ExecutionContext *context)
+Q_NEVER_INLINE static void qt_v4CheckForBreak(QV4::ExecutionContext *context)
 {
     if (!qt_v4IsStepping && !qt_v4Breakpoints.size())
         return;
@@ -283,6 +283,17 @@ static void qt_v4CheckForBreak(QV4::ExecutionContext *context)
 
         qt_v4TriggerBreakpoint(bp, function);
     }
+}
+
+Q_NEVER_INLINE static void debug_slowPath(const QV4::Moth::Instr::instr_debug &instr,
+                                          QV4::ExecutionEngine *engine)
+{
+    engine->current->lineNumber = instr.lineNumber;
+    QV4::Debugging::Debugger *debugger = engine->debugger();
+    if (debugger && debugger->pauseAtNextOpportunity())
+        debugger->maybeBreakAtInstruction();
+    if (qt_v4IsDebugging)
+        qt_v4CheckForBreak(engine->currentContext);
 }
 
 #endif // QT_NO_QML_DEBUGGER
@@ -868,17 +879,12 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
 
 #ifndef QT_NO_QML_DEBUGGER
     MOTH_BEGIN_INSTR(Debug)
-        engine->current->lineNumber = instr.lineNumber;
-        QV4::Debugging::Debugger *debugger = engine->debugger();
-        if (debugger && debugger->pauseAtNextOpportunity())
-            debugger->maybeBreakAtInstruction();
-        if (qt_v4IsDebugging)
-            qt_v4CheckForBreak(engine->currentContext);
+        debug_slowPath(instr, engine);
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(Line)
         engine->current->lineNumber = instr.lineNumber;
-        if (qt_v4IsDebugging)
+        if (Q_UNLIKELY(qt_v4IsDebugging))
             qt_v4CheckForBreak(engine->currentContext);
     MOTH_END_INSTR(Line)
 #endif // QT_NO_QML_DEBUGGER
