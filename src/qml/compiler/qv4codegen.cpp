@@ -127,6 +127,7 @@ Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     , _fileNameIsUrl(false)
     , hasError(false)
 {
+    jsUnitGenerator->codeGeneratorName = QStringLiteral("moth");
 }
 
 void Codegen::generateFromProgram(const QString &fileName,
