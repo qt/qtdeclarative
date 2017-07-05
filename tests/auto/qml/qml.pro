@@ -83,7 +83,7 @@ qtHaveModule(widgets) {
 SUBDIRS += $$PUBLICTESTS
 SUBDIRS += $$METATYPETESTS
 qtConfig(process):!boot2qt {
-    !contains(QT_CONFIG, no-qml-debug): SUBDIRS += debugger
+#    !contains(QT_CONFIG, no-qml-debug): SUBDIRS += debugger
     SUBDIRS += qmllint qmlplugindump
 }
 
