@@ -638,8 +638,7 @@ void QQuickShapePath::resetFillGradient()
 */
 
 QQuickShapePrivate::QQuickShapePrivate()
-    : componentComplete(true),
-      spChanged(false),
+    : spChanged(false),
       rendererType(QQuickShape::UnknownRenderer),
       async(false),
       status(QQuickShape::Null),

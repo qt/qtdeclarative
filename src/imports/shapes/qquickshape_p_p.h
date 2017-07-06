@@ -177,7 +177,6 @@ public:
 
     static QQuickShapePrivate *get(QQuickShape *item) { return item->d_func(); }
 
-    bool componentComplete;
     bool spChanged;
     QQuickShape::RendererType rendererType;
     bool async;
