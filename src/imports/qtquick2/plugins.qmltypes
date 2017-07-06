@@ -1807,6 +1807,7 @@ Module {
         Property { name: "letterSpacing"; type: "double" }
         Property { name: "wordSpacing"; type: "double" }
         Property { name: "hintingPreference"; type: "HintingPreference" }
+        Property { name: "kerning"; type: "bool" }
         Method { name: "toString"; type: "string" }
     }
     Component {
@@ -1823,6 +1824,7 @@ Module {
         exports: ["QtQuick/Gradient 2.0"]
         exportMetaObjectRevisions: [0]
         Property { name: "stops"; type: "QQuickGradientStop"; isList: true; isReadonly: true }
+        Signal { name: "updated" }
     }
     Component {
         name: "QQuickGradientStop"
@@ -3079,8 +3081,8 @@ Module {
     Component {
         name: "QQuickPathArc"
         prototype: "QQuickCurve"
-        exports: ["QtQuick/PathArc 2.0"]
-        exportMetaObjectRevisions: [0]
+        exports: ["QtQuick/PathArc 2.0", "QtQuick/PathArc 2.9"]
+        exportMetaObjectRevisions: [0, 2]
         Enum {
             name: "ArcDirection"
             values: {
@@ -3092,6 +3094,8 @@ Module {
         Property { name: "radiusY"; type: "double" }
         Property { name: "useLargeArc"; type: "bool" }
         Property { name: "direction"; type: "ArcDirection" }
+        Property { name: "xAxisRotation"; revision: 2; type: "double" }
+        Signal { name: "xAxisRotationChanged"; revision: 2 }
     }
     Component {
         name: "QQuickPathAttribute"
@@ -3141,6 +3145,12 @@ Module {
         name: "QQuickPathLine"
         prototype: "QQuickCurve"
         exports: ["QtQuick/PathLine 2.0"]
+        exportMetaObjectRevisions: [0]
+    }
+    Component {
+        name: "QQuickPathMove"
+        prototype: "QQuickCurve"
+        exports: ["QtQuick/PathMove 2.9"]
         exportMetaObjectRevisions: [0]
     }
     Component {
