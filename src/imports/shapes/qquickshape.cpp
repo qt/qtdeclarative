@@ -131,7 +131,7 @@ QPainterPath QQuickShapePathCommands::toPainterPath() const
     \brief Describes a Path and associated properties for stroking and filling
     \since 5.10
 
-    A Shape contains one or more ShapePath elements. At least one ShapePath is
+    A \l Shape contains one or more ShapePath elements. At least one ShapePath is
     necessary in order to have a Shape output anything visible. A ShapePath
     itself is a \l Path with additional properties describing the stroking and
     filling parameters, such as the stroke width and color, the fill color or
@@ -593,27 +593,6 @@ void QQuickShapePath::resetFillGradient()
     useful since it allows adding visual items, like \l Rectangle or \l Image,
     and non-visual objects, like \l Timer directly as children of Shape.
 
-    \note It is important to be aware of performance implications, in particular
-    when the application is running on the generic Shape implementation due to
-    not having support for accelerated path rendering.  The geometry generation
-    happens entirely on the CPU in this case, and this is potentially
-    expensive. Changing the set of path elements, changing the properties of
-    these elements, or changing certain properties of the Shape itself all lead
-    to retriangulation of the affected elements on every change. Therefore,
-    applying animation to such properties can affect performance on less
-    powerful systems. If animating properties other than stroke and fill colors
-    is a must, it is recommended to target systems providing
-    \c{GL_NV_path_rendering} where the cost of path property changes is much
-    smaller.
-
-    \note However, the data-driven, declarative nature of the Shape API often
-    means better cacheability for the underlying CPU and GPU resources. A
-    property change in one ShapePath will only lead to reprocessing the affected
-    ShapePath, leaving other parts of the Shape unchanged. Therefore, a heavily
-    changing (for example, animating) property can often result in a lower
-    overall system load than with imperative painting approaches (for example,
-    QPainter).
-
     The following list summarizes the available Shape rendering approaches:
 
     \list
@@ -631,6 +610,42 @@ void QQuickShapePath::resetFillGradient()
     \li The Direct 3D 12 backend is not currently supported.
 
     \li The OpenVG backend is not currently supported.
+
+    \endlist
+
+    When using Shape, it is important to be aware of potential performance
+    implications:
+
+    \li When the application is running with the generic, triangulation-based
+    Shape implementation, the geometry generation happens entirely on the
+    CPU. This is potentially expensive. Changing the set of path elements,
+    changing the properties of these elements, or changing certain properties of
+    the Shape itself all lead to retriangulation of the affected paths on every
+    change. Therefore, applying animation to such properties can affect
+    performance on less powerful systems.
+
+    \li However, the data-driven, declarative nature of the Shape API often
+    means better cacheability for the underlying CPU and GPU resources. A
+    property change in one ShapePath will only lead to reprocessing the affected
+    ShapePath, leaving other parts of the Shape unchanged. Therefore, a
+    frequently changing property can still result in a lower overall system load
+    than with imperative painting approaches (for example, QPainter).
+
+    \li If animating properties other than stroke and fill colors is a must, it
+    is recommended to target systems providing \c{GL_NV_path_rendering} where
+    the cost of property changes is smaller.
+
+    \li At the same time, attention must be paid to the number of Shape elements
+    in the scene, in particular when using this special accelerated approach for
+    \c{GL_NV_path_rendering}. The way such a Shape item is represented in the
+    scene graph is different from an ordinary geometry-based item, and incurs a
+    certain cost when it comes to OpenGL state changes.
+
+    \li As a general rule, scenes should avoid using separate Shape items when
+    it is not absolutely necessary. Prefer using one Shape item with multiple
+    ShapePath elements over multiple Shape items. Scenes that cannot avoid using
+    a large number of individual Shape items should consider setting
+    Shape.vendorExtensionsEnabled to \c false.
 
     \endlist
 
