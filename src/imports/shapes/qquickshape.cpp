@@ -846,14 +846,14 @@ QQmlListProperty<QObject> QQuickShape::data()
 
 void QQuickShape::classBegin()
 {
-    Q_D(QQuickShape);
-    d->componentComplete = false;
+    QQuickItem::classBegin();
 }
 
 void QQuickShape::componentComplete()
 {
     Q_D(QQuickShape);
-    d->componentComplete = true;
+
+    QQuickItem::componentComplete();
 
     for (QQuickShapePath *p : d->qmlData.sp)
         connect(p, SIGNAL(shapePathChanged()), this, SLOT(_q_shapePathChanged()));
