@@ -171,6 +171,8 @@ QPainterPath QQuickShapePathCommands::toPainterPath() const
     of 2 (ShapePath.RoundJoin):
 
     \image visualpath-code-example.png
+
+    \sa {Qt Quick Examples - Shapes}, Shape
  */
 
 QQuickShapePathPrivate::QQuickShapePathPrivate()
@@ -649,7 +651,7 @@ void QQuickShapePath::resetFillGradient()
 
     \endlist
 
-    \sa Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
+    \sa {Qt Quick Examples - Shapes}, Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
 */
 
 QQuickShapePrivate::QQuickShapePrivate()
