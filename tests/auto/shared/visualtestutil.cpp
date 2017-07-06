@@ -39,6 +39,7 @@
 #include <QtQuick/QQuickItem>
 #include <QtCore/QDebug>
 #include <QtGui/QCursor>
+#include <QtCore/QCoreApplication>
 
 bool QQuickVisualTestUtil::delegateVisible(QQuickItem *item)
 {
@@ -74,7 +75,10 @@ void QQuickVisualTestUtil::moveMouseAway(QQuickWindow *window)
 {
 #if QT_CONFIG(cursor) // Get the cursor out of the way.
     QCursor::setPos(window->geometry().topRight() + QPoint(100, 100));
-#else
-    Q_UNUSED(window)
 #endif
+
+    // make sure hover events from QQuickWindowPrivate::flushFrameSynchronousEvents()
+    // do not interfere with the tests
+    QEvent leave(QEvent::Leave);
+    QCoreApplication::sendEvent(window, &leave);
 }
