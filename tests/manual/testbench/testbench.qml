@@ -689,189 +689,6 @@ ApplicationWindow {
                     }
                 }
 
-                RowLayout {
-                    GroupBox {
-                        id: normalGroupBox
-                        title: "GroupBox"
-
-                        contentWidth: 200
-                        contentHeight: 100
-
-                        BusyIndicator {
-                            anchors.centerIn: parent
-                        }
-
-                        PageIndicator {
-                            count: 5
-                            interactive: true
-                            anchors.bottom: parent.bottom
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                    GroupBox {
-                        enabled: false
-                        title: "Disabled"
-
-                        contentWidth: 200
-                        contentHeight: 100
-
-                        BusyIndicator {
-                            anchors.centerIn: parent
-                        }
-
-                        PageIndicator {
-                            count: 5
-                            anchors.bottom: parent.bottom
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                    GroupBox {
-                        enabled: false
-                        title: "."
-                        label.visible: false
-
-                        contentWidth: 200
-                        contentHeight: 100
-
-                        PageIndicator {
-                            count: 5
-                            anchors.bottom: parent.bottom
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Frame {
-                        id: scrollBarFrame
-
-                        padding: 0
-                        contentWidth: 200
-                        contentHeight: 100
-
-                        Label {
-                            text: "ScrollBar"
-                            anchors.centerIn: parent
-                        }
-
-                        ScrollBar {
-                            size: 0.6
-                            position: 0.1
-                            policy: ScrollBar.AlwaysOn
-                            orientation: Qt.Vertical
-                            height: parent.height
-                            anchors.right: parent.right
-                        }
-                    }
-
-                    Frame {
-                        padding: 0
-                        contentWidth: 200
-                        contentHeight: 100
-
-                        Label {
-                            text: "Pressed"
-                            anchors.centerIn: parent
-                        }
-
-                        ScrollBar {
-                            size: 0.6
-                            position: 0.1
-                            policy: ScrollBar.AlwaysOn
-                            orientation: Qt.Vertical
-                            height: parent.height
-                            anchors.right: parent.right
-                            pressed: true
-                        }
-                    }
-
-                    Frame {
-                        padding: 0
-                        contentWidth: 200
-                        contentHeight: 100
-                        enabled: false
-
-                        Label {
-                            text: "Disabled"
-                            anchors.centerIn: parent
-                        }
-
-                        ScrollBar {
-                            size: 0.6
-                            position: 0.1
-                            policy: ScrollBar.AlwaysOn
-                            orientation: Qt.Vertical
-                            height: parent.height
-                            anchors.right: parent.right
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Frame {
-                        padding: 0
-                        Layout.preferredWidth: 100
-                        Layout.preferredHeight: 100
-
-                        ScrollIndicator {
-                            size: 0.6
-                            position: 0.1
-                            active: true
-                            orientation: Qt.Vertical
-                            height: parent.height
-                            anchors.right: parent.right
-                        }
-                    }
-
-                    Frame {
-                        padding: 0
-                        Layout.preferredWidth: 100
-                        Layout.preferredHeight: 100
-
-                        ScrollIndicator {
-                            size: 0.6
-                            position: 0.1
-                            active: true
-                            orientation: Qt.Vertical
-                            height: parent.height
-                            anchors.right: parent.right
-                            enabled: false
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Frame {
-                        Tumbler {
-                            model: 5
-                            implicitWidth: 80
-                            implicitHeight: 100
-                        }
-                    }
-                    Frame {
-                        Tumbler {
-                            model: 5
-                            implicitWidth: 80
-                            implicitHeight: 100
-                            enabled: false
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Dial {
-                        value: 0.5
-                        implicitWidth: 100
-                        implicitHeight: 100
-                    }
-                    Dial {
-                        value: 0.5
-                        implicitWidth: 100
-                        implicitHeight: 100
-                        enabled: false
-                    }
-                }
-
                 ListModel {
                     id: checkableDelegateModel
                     ListElement { label: "Pressed"; press: true }
@@ -1029,6 +846,190 @@ ApplicationWindow {
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Frame {
+                        padding: 0
+                        Layout.preferredWidth: 100
+                        Layout.preferredHeight: 100
+
+                        ScrollIndicator {
+                            size: 0.6
+                            position: 0.1
+                            active: true
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                        }
+                    }
+
+                    Frame {
+                        padding: 0
+                        Layout.preferredWidth: 100
+                        Layout.preferredHeight: 100
+
+                        ScrollIndicator {
+                            size: 0.6
+                            position: 0.1
+                            active: true
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                            enabled: false
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Frame {
+                        id: scrollBarFrame
+
+                        padding: 0
+                        contentWidth: 200
+                        contentHeight: 100
+
+                        Label {
+                            text: "ScrollBar"
+                            anchors.centerIn: parent
+                        }
+
+                        ScrollBar {
+                            size: 0.6
+                            position: 0.1
+                            policy: ScrollBar.AlwaysOn
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                        }
+                    }
+
+                    Frame {
+                        padding: 0
+                        contentWidth: 200
+                        contentHeight: 100
+
+                        Label {
+                            text: "Pressed"
+                            anchors.centerIn: parent
+                        }
+
+                        ScrollBar {
+                            size: 0.6
+                            position: 0.1
+                            policy: ScrollBar.AlwaysOn
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                            pressed: true
+                        }
+                    }
+
+                    Frame {
+                        padding: 0
+                        contentWidth: 200
+                        contentHeight: 100
+                        enabled: false
+
+                        Label {
+                            text: "Disabled"
+                            anchors.centerIn: parent
+                        }
+
+                        ScrollBar {
+                            size: 0.6
+                            position: 0.1
+                            policy: ScrollBar.AlwaysOn
+                            orientation: Qt.Vertical
+                            height: parent.height
+                            anchors.right: parent.right
+                        }
+                    }
+                }
+
+                RowLayout {
+                    GroupBox {
+                        id: normalGroupBox
+                        title: "GroupBox"
+
+                        contentWidth: 200
+                        contentHeight: 100
+
+                        BusyIndicator {
+                            anchors.centerIn: parent
+                        }
+
+                        PageIndicator {
+                            count: 5
+                            interactive: true
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+                    GroupBox {
+                        enabled: false
+                        title: "Disabled"
+
+                        contentWidth: 200
+                        contentHeight: 100
+
+                        BusyIndicator {
+                            anchors.centerIn: parent
+                        }
+
+                        PageIndicator {
+                            count: 5
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+                    GroupBox {
+                        enabled: false
+                        title: "."
+                        label.visible: false
+
+                        contentWidth: 200
+                        contentHeight: 100
+
+                        PageIndicator {
+                            count: 5
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Dial {
+                        value: 0.5
+                        implicitWidth: 100
+                        implicitHeight: 100
+                    }
+                    Dial {
+                        value: 0.5
+                        implicitWidth: 100
+                        implicitHeight: 100
+                        enabled: false
+                    }
+                }
+
+                RowLayout {
+                    Frame {
+                        Tumbler {
+                            id: tumbler
+                            model: 10
+                            implicitWidth: 60
+                            implicitHeight: 200
+                        }
+                    }
+                    Frame {
+                        Tumbler {
+                            model: 10
+                            implicitWidth: 60
+                            implicitHeight: 200
+                            enabled: false
                         }
                     }
                 }
