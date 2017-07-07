@@ -186,7 +186,7 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(LoadProperty)
 
         MOTH_BEGIN_INSTR(GetLookup)
-            d << instr.result << ", " << instr.base;
+            d << instr.result << ", " << instr.base << "(" << instr.index << ")";
         MOTH_END_INSTR(GetLookup)
 
         MOTH_BEGIN_INSTR(StoreProperty)

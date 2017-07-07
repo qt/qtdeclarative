@@ -143,6 +143,7 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
                                    &irDocument.jsGenerator, &irDocument.jsModule,
                                    &irDocument.jsParserEngine, irDocument.program,
                                    /*import cache*/0, &irDocument.jsGenerator.stringTable);
+        v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0)
                 continue;
@@ -167,14 +168,6 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
         }
 
         QmlIR::QmlUnitGenerator generator;
-
-//        {
-//            QQmlJavaScriptBindingExpressionSimplificationPass pass(irDocument.objects, &irDocument.jsModule, &irDocument.jsGenerator);
-//            pass.reduceTranslationBindings();
-//        }
-
-        // Disable lookups in non-standalone (aka QML) mode
-        v4CodeGen.setUseFastLookups(false);
         irDocument.javaScriptCompilationUnit = v4CodeGen.generateCompilationUnit(/*generate unit*/false);
         QV4::CompiledData::Unit *unit = generator.generate(irDocument);
         unit->flags |= QV4::CompiledData::Unit::StaticData;
@@ -249,6 +242,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &outputFil
                                    &irDocument.jsModule, &irDocument.jsParserEngine,
                                    irDocument.program, /*import cache*/0,
                                    &irDocument.jsGenerator.stringTable);
+        v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
         v4CodeGen.generateFromProgram(inputFileName, sourceCode, program, &irDocument.jsModule, QV4::Compiler::GlobalCode);
         QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
         if (!jsErrors.isEmpty()) {
@@ -263,8 +257,6 @@ static bool compileJSFile(const QString &inputFileName, const QString &outputFil
 
         QmlIR::QmlUnitGenerator generator;
 
-        // Disable lookups in non-standalone (aka QML) mode
-        v4CodeGen.setUseFastLookups(false);
         irDocument.javaScriptCompilationUnit = v4CodeGen.generateCompilationUnit(/*generate unit*/false);
         QV4::CompiledData::Unit *unit = generator.generate(irDocument);
         unit->flags |= QV4::CompiledData::Unit::StaticData;
