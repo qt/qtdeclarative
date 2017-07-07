@@ -2570,9 +2570,6 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
 
 void Codegen::Reference::storeConsume(Reference &r) const
 {
-    if (*this == r)
-        return;
-
     if (!isSimple() && !r.isSimple()) {
         r.asRValue(); // trigger load
 
