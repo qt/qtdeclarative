@@ -89,6 +89,13 @@ ApplicationWindow {
                 enabled: enabledMenuItem.checked
 
                 ToolButton {
+                    text: "\u2630"
+                    onClicked: drawer.open()
+                }
+
+                ToolSeparator {}
+
+                ToolButton {
                     text: "ToolButton"
                     hoverEnabled: true
                     ToolTip.text: text
@@ -249,6 +256,12 @@ ApplicationWindow {
 
     Pane {
         anchors.fill: parent
+
+        Drawer {
+            id: drawer
+            width: parent.width * 0.33
+            height: parent.height
+        }
 
         Flickable {
             anchors.fill: parent
