@@ -215,6 +215,8 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
     if (menuItem) {
         Q_Q(QQuickMenu);
         QQuickMenuItemPrivate::get(menuItem)->setMenu(q);
+        if (QQuickMenu *subMenu = menuItem->subMenu())
+            QQuickMenuPrivate::get(subMenu)->parentMenu = q;
         QObjectPrivate::connect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
         QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::connect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
@@ -237,6 +239,8 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
     QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
     if (menuItem) {
         QQuickMenuItemPrivate::get(menuItem)->setMenu(nullptr);
+        if (QQuickMenu *subMenu = menuItem->subMenu())
+            QQuickMenuPrivate::get(subMenu)->parentMenu = nullptr;
         QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
         QObjectPrivate::disconnect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::disconnect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
@@ -397,10 +401,10 @@ void QQuickMenuPrivate::onItemTriggered()
         openSubMenu(item, true);
     } else {
         // close the whole chain of menus
-        q->close();
-        while (parentMenu) {
-            parentMenu->close();
-            parentMenu = QQuickMenuPrivate::get(parentMenu)->parentMenu;
+        QQuickMenu *menu = q;
+        while (menu) {
+            menu->close();
+            menu = QQuickMenuPrivate::get(menu)->parentMenu;
         }
     }
 }
@@ -444,7 +448,6 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
 
     QQuickMenuPrivate *p = QQuickMenuPrivate::get(subMenu);
     p->allowHorizontalFlip = cascade;
-    p->parentMenu = q;
     if (activate)
         p->setCurrentIndex(0, Qt::PopupFocusReason);
     subMenu->setCascade(cascade);
