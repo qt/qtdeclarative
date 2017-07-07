@@ -398,11 +398,11 @@ void tst_qquickimage::svg()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
     QVERIFY(obj != 0);
-    QCOMPARE(obj->width(), 212.0);
+    QCOMPARE(int(obj->width()), 212); // round down: highdpi can give back fractional values
     QCOMPARE(obj->height(), 300.0);
     obj->setSourceSize(QSize(200,200));
 
-    QCOMPARE(obj->width(), 141.0);
+    QCOMPARE(int(obj->width()), 141); // round down: highdpi can give back fractional values
     QCOMPARE(obj->height(), 200.0);
     delete obj;
 }
