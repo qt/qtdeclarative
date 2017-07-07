@@ -73,6 +73,16 @@ TestCase {
         compare(control.parent, ApplicationWindow.overlay)
     }
 
+    function test_invalidEdge() {
+        var control = createTemporaryObject(drawer, testCase)
+        compare(control.edge, Qt.LeftEdge)
+
+        // Test an invalid value - it should warn and ignore it.
+        ignoreWarning(Qt.resolvedUrl("tst_drawer.qml") + ":65:9: QML Drawer: invalid edge value - valid values are: Qt.TopEdge, Qt.LeftEdge, Qt.RightEdge, Qt.BottomEdge")
+        control.edge = Drawer.Right
+        compare(control.edge, Qt.LeftEdge)
+    }
+
     Component {
         id: rectDrawer
 

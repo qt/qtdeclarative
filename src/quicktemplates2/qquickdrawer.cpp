@@ -40,6 +40,7 @@
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
@@ -530,20 +531,32 @@ bool QQuickDrawerPrivate::prepareExitTransition()
     return QQuickPopupPrivate::prepareExitTransition();
 }
 
-void QQuickDrawerPrivate::setEdge(Qt::Edge e)
+bool QQuickDrawerPrivate::setEdge(Qt::Edge e)
 {
-    edge = e;
-    if (edge == Qt::LeftEdge || edge == Qt::RightEdge) {
+    Q_Q(QQuickDrawer);
+    switch (e) {
+    case Qt::LeftEdge:
+    case Qt::RightEdge:
         allowVerticalMove = true;
         allowVerticalResize = true;
         allowHorizontalMove = false;
         allowHorizontalResize = false;
-    } else {
+        break;
+    case Qt::TopEdge:
+    case Qt::BottomEdge:
         allowVerticalMove = false;
         allowVerticalResize = false;
         allowHorizontalMove = true;
         allowHorizontalResize = true;
+        break;
+    default:
+        qmlWarning(q) << "invalid edge value - valid values are: "
+            << "Qt.TopEdge, Qt.LeftEdge, Qt.RightEdge, Qt.BottomEdge";
+        return false;
     }
+
+    edge = e;
+    return true;
 }
 
 QQuickDrawer::QQuickDrawer(QObject *parent)
@@ -578,7 +591,9 @@ void QQuickDrawer::setEdge(Qt::Edge edge)
     if (d->edge == edge)
         return;
 
-    d->setEdge(edge);
+    if (!d->setEdge(edge))
+        return;
+
     if (isComponentComplete())
         d->reposition();
     emit edgeChanged();

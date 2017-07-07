@@ -86,7 +86,7 @@ public:
     bool prepareEnterTransition() override;
     bool prepareExitTransition() override;
 
-    void setEdge(Qt::Edge edge);
+    bool setEdge(Qt::Edge edge);
 
     Qt::Edge edge;
     qreal offset;
