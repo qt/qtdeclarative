@@ -360,6 +360,22 @@ void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, 
         resizeItems();
 }
 
+bool QQuickMenuPrivate::prepareExitTransition()
+{
+    if (!QQuickPopupPrivate::prepareExitTransition())
+        return false;
+
+    if (currentItem) {
+        QQuickMenu *subMenu = currentItem->subMenu();
+        while (subMenu) {
+            QPointer<QQuickMenuItem> currentSubMenuItem = QQuickMenuPrivate::get(subMenu)->currentItem;
+            subMenu->close();
+            subMenu = currentSubMenuItem ? currentSubMenuItem->subMenu() : nullptr;
+        }
+    }
+    return true;
+}
+
 bool QQuickMenuPrivate::blockInput(QQuickItem *item, const QPointF &point) const
 {
     // keep the parent menu open when a cascading sub-menu (this menu) is interacted with
@@ -379,8 +395,11 @@ void QQuickMenuPrivate::onItemHovered()
     if (index != -1) {
         setCurrentIndex(index, Qt::OtherFocusReason);
         if (oldCurrentItem != currentItem) {
-            if (oldCurrentItem)
-                closeSubMenu(oldCurrentItem->subMenu());
+            if (oldCurrentItem) {
+                QQuickMenu *subMenu = oldCurrentItem->subMenu();
+                if (subMenu)
+                    subMenu->close();
+            }
             if (currentItem) {
                 QQuickMenu *subMenu = currentItem->menu();
                 if (subMenu && subMenu->cascade())
@@ -397,16 +416,10 @@ void QQuickMenuPrivate::onItemTriggered()
     if (!item)
         return;
 
-    if (item->subMenu()) {
+    if (item->subMenu())
         openSubMenu(item, true);
-    } else {
-        // close the whole chain of menus
-        QQuickMenu *menu = q;
-        while (menu) {
-            menu->close();
-            menu = QQuickMenuPrivate::get(menu)->parentMenu;
-        }
-    }
+    else
+        q->dismiss();
 }
 
 void QQuickMenuPrivate::onItemActiveFocusChanged()
@@ -436,6 +449,7 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
         else
             subMenu->setPosition(QPointF(item->width() + q->rightPadding() - subMenu->overlap(), -subMenu->topPadding()));
     } else {
+        q->close();
         subMenu->setParentItem(parentItem);
         subMenu->setClosePolicy(defaultMenuClosePolicy);
         subMenu->setPosition(QPointF(q->x() + (q->width() - subMenu->width()) / 2,
@@ -448,27 +462,6 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
         p->setCurrentIndex(0, Qt::PopupFocusReason);
     subMenu->setCascade(cascade);
     subMenu->open();
-
-    if (!subMenu->cascade())
-        q->close();
-}
-
-void QQuickMenuPrivate::closeSubMenu(QQuickMenu *subMenu)
-{
-    if (!subMenu || !subMenu->isVisible())
-        return;
-
-    // re-open the parent menu of a cascading sub-menu
-    QQuickMenu *parentMenu = QQuickMenuPrivate::get(subMenu)->parentMenu;
-    if (parentMenu && !subMenu->cascade())
-        parentMenu->open();
-
-    // close the whole chain of sub-menus
-    while (subMenu) {
-        QPointer<QQuickMenuItem> currentSubMenuItem = QQuickMenuPrivate::get(subMenu)->currentItem;
-        subMenu->close();
-        subMenu = currentSubMenuItem ? currentSubMenuItem->subMenu() : nullptr;
-    }
 }
 
 void QQuickMenuPrivate::startHoverTimer()
@@ -1120,7 +1113,7 @@ void QQuickMenu::setCurrentIndex(int index)
 
     The menu can be optionally aligned to a specific menu \a item.
 
-    \sa Popup::open()
+    \sa dismiss(), Popup::open()
 */
 void QQuickMenu::popup(QQmlV4Function *args)
 {
@@ -1186,6 +1179,29 @@ void QQuickMenu::popup(QQmlV4Function *args)
     open();
 }
 
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod void QtQuick.Controls::Menu::dismiss()
+
+    Closes all menus in the hierarchy that this menu belongs to.
+
+    \note Unlike \l {Popup::}{close()} that only closes a menu and its sub-menus,
+    \c dismiss() closes the whole hierarchy of menus, including the parent menus.
+    In practice, \c close() is suitable e.g. for implementing navigation in a
+    hierarchy of menus, and \c dismiss() is the appropriate method for closing
+    the whole hierarchy of menus.
+
+    \sa popup(), Popup::close()
+*/
+void QQuickMenu::dismiss()
+{
+    QQuickMenu *menu = this;
+    while (menu) {
+        menu->close();
+        menu = QQuickMenuPrivate::get(menu)->parentMenu;
+    }
+}
+
 void QQuickMenu::componentComplete()
 {
     Q_D(QQuickMenu);
@@ -1245,8 +1261,11 @@ void QQuickMenu::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Left:
     case Qt::Key_Right:
         if (d->popupItem->isMirrored() == (event->key() == Qt::Key_Right)) {
-            if (d->parentMenu && d->currentItem)
-                d->closeSubMenu(this);
+            if (d->parentMenu && d->currentItem) {
+                if (!d->cascade)
+                    d->parentMenu->open();
+                close();
+            }
         } else {
             d->openSubMenu(d->currentItem, true);
         }

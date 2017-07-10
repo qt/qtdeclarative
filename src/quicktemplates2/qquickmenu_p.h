@@ -114,6 +114,7 @@ public:
     void setCurrentIndex(int index);
 
     Q_REVISION(3) Q_INVOKABLE void popup(QQmlV4Function *args);
+    Q_REVISION(3) Q_INVOKABLE void dismiss();
 
 protected:
     void componentComplete() override;

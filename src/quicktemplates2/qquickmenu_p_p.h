@@ -93,6 +93,7 @@ public:
     void itemDestroyed(QQuickItem *item) override;
     void itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &diff) override;
 
+    bool prepareExitTransition() override;
     bool blockInput(QQuickItem *item, const QPointF &point) const override;
 
     void onItemHovered();
@@ -100,7 +101,6 @@ public:
     void onItemActiveFocusChanged();
 
     void openSubMenu(QQuickMenuItem *item, bool activate);
-    void closeSubMenu(QQuickMenu *subMenu);
 
     void startHoverTimer();
     void stopHoverTimer();
