@@ -54,7 +54,7 @@ T.Menu {
     topPadding: 8
     bottomPadding: 8
 
-    transformOrigin: Item.Top
+    transformOrigin: !cascade ? Item.Top : (mirrored ? Item.TopRight : Item.TopLeft)
 
     delegate: MenuItem { }
 

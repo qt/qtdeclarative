@@ -431,17 +431,13 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
     if (cascade) {
         subMenu->setParentItem(item);
         subMenu->setClosePolicy(cascadingSubMenuClosePolicy);
-        if (popupItem->isMirrored()) {
-            subMenu->setTransformOrigin(QQuickPopup::TopRight);
+        if (popupItem->isMirrored())
             subMenu->setPosition(QPointF(-subMenu->width() - q->leftPadding() + subMenu->overlap(), -subMenu->topPadding()));
-        } else {
-            subMenu->setTransformOrigin(QQuickPopup::TopLeft);
+        else
             subMenu->setPosition(QPointF(item->width() + q->rightPadding() - subMenu->overlap(), -subMenu->topPadding()));
-        }
     } else {
         subMenu->setParentItem(parentItem);
         subMenu->setClosePolicy(defaultMenuClosePolicy);
-        subMenu->setTransformOrigin(QQuickPopup::Center);
         subMenu->setPosition(QPointF(q->x() + (q->width() - subMenu->width()) / 2,
                                      q->y() + (q->height() - subMenu->height()) / 2));
     }
