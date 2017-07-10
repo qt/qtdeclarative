@@ -449,10 +449,6 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
     subMenu->setCascade(cascade);
     subMenu->open();
 
-    // transfer focus to the sub-menu
-    if (focus)
-        subMenu->popupItem()->setFocus(true);
-
     if (!subMenu->cascade())
         q->close();
 }
@@ -462,13 +458,10 @@ void QQuickMenuPrivate::closeSubMenu(QQuickMenu *subMenu)
     if (!subMenu || !subMenu->isVisible())
         return;
 
-    // transfer focus back to the parent menu
+    // re-open the parent menu of a cascading sub-menu
     QQuickMenu *parentMenu = QQuickMenuPrivate::get(subMenu)->parentMenu;
-    if (parentMenu && parentMenu->hasFocus()) {
-        parentMenu->popupItem()->setFocus(true);
-        if (!subMenu->cascade())
-            parentMenu->open();
-    }
+    if (parentMenu && !subMenu->cascade())
+        parentMenu->open();
 
     // close the whole chain of sub-menus
     while (subMenu) {
