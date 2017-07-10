@@ -1194,10 +1194,10 @@ void QQuickMenu::itemChange(QQuickItem::ItemChange change, const QQuickItem::Ite
     }
 }
 
-void QQuickMenu::keyReleaseEvent(QKeyEvent *event)
+void QQuickMenu::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickMenu);
-    QQuickPopup::keyReleaseEvent(event);
+    QQuickPopup::keyPressEvent(event);
     if (d->contentModel->count() == 0)
         return;
 
