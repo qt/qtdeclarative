@@ -203,6 +203,8 @@ QT_BEGIN_NAMESPACE
     \sa closed()
 */
 
+static const QQuickPopup::ClosePolicy DefaultClosePolicy = QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside;
+
 QQuickPopupPrivate::QQuickPopupPrivate()
     : focus(false),
       modal(false),
@@ -225,6 +227,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
       allowHorizontalResize(true),
       hadActiveFocusBeforeExitTransition(false),
       interactive(true),
+      hasClosePolicy(false),
       touchId(-1),
       x(0),
       y(0),
@@ -238,7 +241,7 @@ QQuickPopupPrivate::QQuickPopupPrivate()
       contentWidth(0),
       contentHeight(0),
       transitionState(QQuickPopupPrivate::NoTransition),
-      closePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside),
+      closePolicy(DefaultClosePolicy),
       parentItem(nullptr),
       dimmer(nullptr),
       window(nullptr),
@@ -1962,6 +1965,7 @@ QQuickPopup::ClosePolicy QQuickPopup::closePolicy() const
 void QQuickPopup::setClosePolicy(ClosePolicy policy)
 {
     Q_D(QQuickPopup);
+    d->hasClosePolicy = true;
     if (d->closePolicy == policy)
         return;
     d->closePolicy = policy;
@@ -1972,6 +1976,13 @@ void QQuickPopup::setClosePolicy(ClosePolicy policy)
             d->popupItem->ungrabShortcut();
     }
     emit closePolicyChanged();
+}
+
+void QQuickPopup::resetClosePolicy()
+{
+    Q_D(QQuickPopup);
+    setClosePolicy(DefaultClosePolicy);
+    d->hasClosePolicy = false;
 }
 
 /*!

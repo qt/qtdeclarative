@@ -115,7 +115,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(bool opened READ isOpened NOTIFY openedChanged FINAL REVISION 3)
     Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity NOTIFY opacityChanged FINAL)
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged FINAL)
-    Q_PROPERTY(ClosePolicy closePolicy READ closePolicy WRITE setClosePolicy NOTIFY closePolicyChanged FINAL)
+    Q_PROPERTY(ClosePolicy closePolicy READ closePolicy WRITE setClosePolicy RESET resetClosePolicy NOTIFY closePolicyChanged FINAL)
     Q_PROPERTY(TransformOrigin transformOrigin READ transformOrigin WRITE setTransformOrigin FINAL)
     Q_PROPERTY(QQuickTransition *enter READ enter WRITE setEnter NOTIFY enterChanged FINAL)
     Q_PROPERTY(QQuickTransition *exit READ exit WRITE setExit NOTIFY exitChanged FINAL)
@@ -275,6 +275,7 @@ public:
 
     ClosePolicy closePolicy() const;
     void setClosePolicy(ClosePolicy policy);
+    void resetClosePolicy();
 
     // keep in sync with Item.TransformOrigin
     enum TransformOrigin {

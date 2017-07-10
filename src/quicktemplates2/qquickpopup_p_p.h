@@ -163,6 +163,7 @@ public:
     bool allowHorizontalResize;
     bool hadActiveFocusBeforeExitTransition;
     bool interactive;
+    bool hasClosePolicy;
     int touchId;
     qreal x;
     qreal y;
