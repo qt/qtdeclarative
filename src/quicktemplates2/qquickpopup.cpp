@@ -470,7 +470,13 @@ void QQuickPopupPrivate::finalizeExitTransition()
     popupItem->setVisible(false);
 
     if (hadActiveFocusBeforeExitTransition && window) {
-        if (!qobject_cast<QQuickPopupItem *>(window->activeFocusItem())) {
+        // restore focus to the next popup in chain, or to the window content if there are no other popups open
+        QQuickPopup *popup = nullptr;
+        if (QQuickOverlay *overlay = QQuickOverlay::overlay(window))
+            popup = QQuickOverlayPrivate::get(overlay)->stackingOrderPopups().value(0);
+        if (popup && popup->hasFocus()) {
+            popup->forceActiveFocus();
+        } else {
             QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
             if (applicationWindow)
                 applicationWindow->contentItem()->setFocus(true);

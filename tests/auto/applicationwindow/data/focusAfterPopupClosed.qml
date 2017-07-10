@@ -57,9 +57,12 @@ ApplicationWindow {
     visible: true
 
     signal focusScopeKeyPressed
+    signal focusPopupKeyPressed
 
+    property alias fileMenu: fileMenu
     property alias toolButton: toolButton
     property alias focusScope: focusScope
+    property alias focusPopup: focusPopup
 
     header: ToolBar {
         ToolButton {
@@ -91,6 +94,18 @@ ApplicationWindow {
         anchors.fill: parent
 
         Keys.onSpacePressed: focusScopeKeyPressed()
+    }
+
+    Popup {
+        id: focusPopup
+        focus: true
+        width: parent.width
+        height: parent.height
+
+        Item {
+            focus: true
+            Keys.onSpacePressed: focusPopupKeyPressed()
+        }
     }
 }
 
