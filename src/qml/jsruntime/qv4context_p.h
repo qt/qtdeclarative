@@ -91,7 +91,7 @@ struct CallData
     Value thisObject;
     Value args[1];
 
-    static constexpr int HeaderSize() { return offsetof(CallData, args)/sizeof(QV4::Value); }
+    static Q_DECL_CONSTEXPR int HeaderSize() { return offsetof(CallData, args) / sizeof(QV4::Value); }
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<CallData>::value);
