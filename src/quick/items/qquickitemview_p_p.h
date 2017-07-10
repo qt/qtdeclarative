@@ -363,6 +363,7 @@ protected:
     virtual void createHighlight() = 0;
     virtual void updateHighlight() = 0;
     virtual void resetHighlightPosition() = 0;
+    virtual bool movingFromHighlight() { return false; }
 
     virtual void setPosition(qreal pos) = 0;
     virtual void fixupPosition() = 0;

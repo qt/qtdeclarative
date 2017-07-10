@@ -182,6 +182,7 @@ private slots:
     void snapOneItemCurrentIndexRemoveAnimation();
 
     void QTBUG_9791();
+    void QTBUG_33568();
     void QTBUG_11105();
     void QTBUG_21742();
 
@@ -3468,6 +3469,29 @@ void tst_QQuickListView::QTBUG_9791()
 
     // check that view is positioned correctly
     QTRY_COMPARE(listview->contentX(), 590.0);
+}
+
+void tst_QQuickListView::QTBUG_33568()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("strictlyenforcerange-resize.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
+    QVERIFY(listview != 0);
+
+    // we want to verify that the change animates smoothly, rather than jumping into place
+    QSignalSpy spy(listview, SIGNAL(contentYChanged()));
+
+    listview->incrementCurrentIndex();
+    QTRY_COMPARE(listview->contentY(), -100.0);
+    QVERIFY(spy.count() > 1);
+
+    spy.clear();
+    listview->incrementCurrentIndex();
+    QTRY_COMPARE(listview->contentY(), -50.0);
+    QVERIFY(spy.count() > 1);
 }
 
 void tst_QQuickListView::manualHighlight()
