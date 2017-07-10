@@ -75,7 +75,6 @@ QT_BEGIN_NAMESPACE
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
     F(Move, move) \
-    F(SwapTemps, swapTemps) \
     F(LoadName, loadName) \
     F(GetGlobalLookup, getGlobalLookup) \
     F(StoreName, storeName) \
@@ -287,11 +286,6 @@ union Instr
         MOTH_INSTR_HEADER
         Param source;
         Param result;
-    };
-    struct instr_swapTemps {
-        MOTH_INSTR_HEADER
-        Param left;
-        Param right;
     };
     struct instr_loadClosure {
         MOTH_INSTR_HEADER
@@ -762,7 +756,6 @@ union Instr
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;
     instr_move move;
-    instr_swapTemps swapTemps;
     instr_loadClosure loadClosure;
     instr_loadName loadName;
     instr_getGlobalLookup getGlobalLookup;

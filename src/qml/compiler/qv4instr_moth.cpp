@@ -137,10 +137,6 @@ void dumpBytecode(const char *code, int len)
             d << instr.result << ", " << instr.source;
         MOTH_END_INSTR(Move)
 
-        MOTH_BEGIN_INSTR(SwapTemps)
-            d << instr.left << ", " << instr.right;
-        MOTH_END_INSTR(MoveTemp)
-
         MOTH_BEGIN_INSTR(LoadRuntimeString)
             d << instr.result << ", " << instr.stringId;
         MOTH_END_INSTR(LoadRuntimeString)

@@ -456,10 +456,6 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
         VALUE(instr.result) = VALUE(instr.source);
     MOTH_END_INSTR(Move)
 
-    MOTH_BEGIN_INSTR(SwapTemps)
-        qSwap(VALUE(instr.left),  VALUE(instr.right));
-    MOTH_END_INSTR(MoveTemp)
-
     MOTH_BEGIN_INSTR(LoadRuntimeString)
 //        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
         VALUE(instr.result) = engine->current->compilationUnit->runtimeStrings[instr.stringId];
