@@ -83,11 +83,13 @@ public:
     void removeItem(QQuickItem *item); // ### Qt 6: Q_INVOKABLE
     Q_REVISION(3) Q_INVOKABLE QQuickItem *takeItem(int index);
 
+    Q_REVISION(3) Q_INVOKABLE QQuickMenu *menuAt(int index) const;
     Q_REVISION(3) Q_INVOKABLE void addMenu(QQuickMenu *menu);
     Q_REVISION(3) Q_INVOKABLE void insertMenu(int index, QQuickMenu *menu);
     Q_REVISION(3) Q_INVOKABLE void removeMenu(QQuickMenu *menu);
     Q_REVISION(3) Q_INVOKABLE QQuickMenu *takeMenu(int index);
 
+    Q_REVISION(3) Q_INVOKABLE QQuickAction *actionAt(int index) const;
     Q_REVISION(3) Q_INVOKABLE void addAction(QQuickAction *action);
     Q_REVISION(3) Q_INVOKABLE void insertAction(int index, QQuickAction *action);
     Q_REVISION(3) Q_INVOKABLE void removeAction(QQuickAction *action);

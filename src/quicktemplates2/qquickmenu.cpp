@@ -723,6 +723,23 @@ QQuickItem *QQuickMenu::takeItem(int index)
 
 /*!
     \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod Menu QtQuick.Controls::Menu::menuAt(int index)
+
+    Returns the sub-menu at \a index, or \c null if the index is not valid or
+    there is no sub-menu at the specified index.
+*/
+QQuickMenu *QQuickMenu::menuAt(int index) const
+{
+    Q_D(const QQuickMenu);
+    QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(d->itemAt(index));
+    if (!item)
+        return nullptr;
+
+    return item->subMenu();
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Menu::addMenu(Menu menu)
 
     Adds \a menu as a sub-menu to the end of this menu.
@@ -795,6 +812,23 @@ QQuickMenu *QQuickMenu::takeMenu(int index)
     d->removeItem(index, item);
     item->deleteLater();
     return subMenu;
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlmethod Action QtQuick.Controls::Menu::actionAt(int index)
+
+    Returns the action at \a index, or \c null if the index is not valid or
+    there is no action at the specified index.
+*/
+QQuickAction *QQuickMenu::actionAt(int index) const
+{
+    Q_D(const QQuickMenu);
+    QQuickAbstractButton *item = qobject_cast<QQuickAbstractButton *>(d->itemAt(index));
+    if (!item)
+        return nullptr;
+
+    return item->action();
 }
 
 /*!

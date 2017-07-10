@@ -682,9 +682,18 @@ void tst_menu::actions()
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
     QVERIFY(menu);
 
+    QPointer<QQuickAction> action1 = menu->actionAt(0);
+    QVERIFY(!action1.isNull());
+
+    QPointer<QQuickAction> action3 = menu->actionAt(2);
+    QVERIFY(!action3.isNull());
+
+    QVERIFY(!menu->actionAt(1));
+    QVERIFY(!menu->actionAt(3));
+
     QPointer<QQuickMenuItem> menuItem1 = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
     QVERIFY(!menuItem1.isNull());
-    QVERIFY(menuItem1->action());
+    QCOMPARE(menuItem1->action(), action1.data());
     QCOMPARE(menuItem1->text(), "action1");
 
     QPointer<QQuickMenuItem> menuItem2 = qobject_cast<QQuickMenuItem *>(menu->itemAt(1));
@@ -694,7 +703,7 @@ void tst_menu::actions()
 
     QPointer<QQuickMenuItem> menuItem3 = qobject_cast<QQuickMenuItem *>(menu->itemAt(2));
     QVERIFY(!menuItem3.isNull());
-    QVERIFY(menuItem3->action());
+    QCOMPARE(menuItem3->action(), action3.data());
     QCOMPARE(menuItem3->text(), "action3");
 
     QPointer<QQuickMenuItem> menuItem4 = qobject_cast<QQuickMenuItem *>(menu->itemAt(3));
@@ -703,8 +712,6 @@ void tst_menu::actions()
     QCOMPARE(menuItem4->text(), "menuitem4");
 
     // takeAction(int) does not destroy the action, but does destroy the respective item
-    QPointer<QQuickAction> action1 = menuItem1->action();
-    QVERIFY(!action1.isNull());
     QCOMPARE(menu->takeAction(0), action1.data());
     QVERIFY(!menu->itemAt(3));
     QCoreApplication::sendPostedEvents(action1, QEvent::DeferredDelete);
@@ -1144,11 +1151,19 @@ void tst_menu::addRemoveSubMenus()
     QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
     QVERIFY(mainMenu);
 
+    QVERIFY(!mainMenu->menuAt(0));
+
     QPointer<QQuickMenu> subMenu1 = window->property("subMenu1").value<QQuickMenu *>();
     QVERIFY(!subMenu1.isNull());
+    QCOMPARE(mainMenu->menuAt(1), subMenu1.data());
+
+    QVERIFY(!mainMenu->menuAt(2));
 
     QPointer<QQuickMenu> subMenu2 = window->property("subMenu2").value<QQuickMenu *>();
     QVERIFY(!subMenu2.isNull());
+    QCOMPARE(mainMenu->menuAt(3), subMenu2.data());
+
+    QVERIFY(!mainMenu->menuAt(4));
 
     QPointer<QQuickMenu> subSubMenu1 = window->property("subSubMenu1").value<QQuickMenu *>();
     QVERIFY(!subSubMenu1.isNull());
