@@ -91,6 +91,7 @@ protected:
     void fontChange(const QFont &newFont, const QFont &oldFont) override;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void localeChange(const QLocale &newLocale, const QLocale &oldLocale) override;
+    void mirrorChange() override;
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
     void paletteChange(const QPalette &newPalette, const QPalette &oldPalette) override;

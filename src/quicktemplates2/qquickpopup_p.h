@@ -97,6 +97,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged FINAL)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
+    Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL REVISION 3)
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
     Q_PROPERTY(QQuickItem *parent READ parentItem WRITE setParentItem NOTIFY parentChanged FINAL)
@@ -206,6 +207,8 @@ public:
     QLocale locale() const;
     void setLocale(const QLocale &locale);
     void resetLocale();
+
+    bool isMirrored() const;
 
     QFont font() const;
     void setFont(const QFont &font);
@@ -324,6 +327,7 @@ Q_SIGNALS:
     void bottomPaddingChanged();
     void fontChanged();
     void localeChanged();
+    Q_REVISION(3) void mirroredChanged();
     Q_REVISION(3) void paletteChanged();
     void parentChanged();
     void backgroundChanged();

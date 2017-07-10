@@ -289,6 +289,12 @@ void QQuickPopupItem::localeChange(const QLocale &newLocale, const QLocale &oldL
     d->popup->localeChange(newLocale, oldLocale);
 }
 
+void QQuickPopupItem::mirrorChange()
+{
+    Q_D(QQuickPopupItem);
+    emit d->popup->mirroredChanged();
+}
+
 void QQuickPopupItem::itemChange(ItemChange change, const ItemChangeData &data)
 {
     Q_D(QQuickPopupItem);

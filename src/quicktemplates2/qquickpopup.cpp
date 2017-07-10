@@ -1396,7 +1396,7 @@ void QQuickPopup::resetBottomPadding()
 
     This property holds the locale of the popup.
 
-    \sa {LayoutMirroring}{LayoutMirroring}
+    \sa mirrored, {LayoutMirroring}{LayoutMirroring}
 */
 QLocale QQuickPopup::locale() const
 {
@@ -1414,6 +1414,25 @@ void QQuickPopup::resetLocale()
 {
     Q_D(QQuickPopup);
     d->popupItem->resetLocale();
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty bool QtQuick.Controls::Popup::mirrored
+    \readonly
+
+    This property holds whether the popup is mirrored.
+
+    This property is provided for convenience. A popup is considered mirrored
+    when its visual layout direction is right-to-left; that is, when using a
+    right-to-left locale.
+
+    \sa locale, {Right-to-left User Interfaces}
+*/
+bool QQuickPopup::isMirrored() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->isMirrored();
 }
 
 /*!
