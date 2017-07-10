@@ -515,7 +515,12 @@ void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyD
     Q_ASSERT(propertyData);
 
     QQmlData *data = QQmlData::get(*m_target, false);
-    Q_ASSERT(data && data->propertyCache);
+    Q_ASSERT(data);
+
+    if (Q_UNLIKELY(!data->propertyCache)) {
+        data->propertyCache = QQmlEnginePrivate::get(context()->engine)->cache(m_target->metaObject());
+        data->propertyCache->addref();
+    }
 
     *propertyData = data->propertyCache->property(m_targetIndex.coreIndex());
     Q_ASSERT(*propertyData);
