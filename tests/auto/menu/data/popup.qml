@@ -59,6 +59,7 @@ ApplicationWindow {
     property alias menuItem1: menuItem1
     property alias menuItem2: menuItem2
     property alias menuItem3: menuItem3
+    property alias button: button
 
     function popupAtCursor() {
         menu.popup()
@@ -84,10 +85,40 @@ ApplicationWindow {
         menu.popup(x, y, item)
     }
 
+    function popupAtParentCursor(parent) {
+        menu.popup(parent)
+    }
+
+    function popupAtParentPos(parent, pos) {
+        menu.popup(parent, pos)
+    }
+
+    function popupAtParentCoord(parent, x, y) {
+        menu.popup(parent, x, y)
+    }
+
+    function popupItemAtParentCursor(parent, item) {
+        menu.popup(parent, item)
+    }
+
+    function popupItemAtParentPos(parent, pos, item) {
+        menu.popup(parent, pos, item)
+    }
+
+    function popupItemAtParentCoord(parent, x, y, item) {
+        menu.popup(parent, x, y, item)
+    }
+
     Menu {
         id: menu
         MenuItem { id: menuItem1; text: "Foo" }
         MenuItem { id: menuItem2; text: "Bar" }
         MenuItem { id: menuItem3; text: "Baz" }
+    }
+
+    Button {
+        id: button
+        text: "Button"
+        anchors.centerIn: parent
     }
 }

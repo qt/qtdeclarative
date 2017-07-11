@@ -595,7 +595,7 @@ void tst_menu::order()
 void tst_menu::popup()
 {
     QQuickApplicationHelper helper(this, QLatin1String("popup.qml"));
-    QQuickWindow *window = helper.window;
+    QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
     moveMouseAway(window);
@@ -612,6 +612,9 @@ void tst_menu::popup()
     QQuickMenuItem *menuItem3 = window->property("menuItem3").value<QQuickMenuItem *>();
     QVERIFY(menuItem3);
 
+    QQuickItem *button = window->property("button").value<QQuickItem *>();
+    QVERIFY(button);
+
 #if QT_CONFIG(cursor)
     QPoint oldCursorPos = QCursor::pos();
     QPoint cursorPos = window->mapToGlobal(QPoint(11, 22));
@@ -619,24 +622,56 @@ void tst_menu::popup()
     QTRY_COMPARE(QCursor::pos(), cursorPos);
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtCursor"));
+    QCOMPARE(menu->parentItem(), window->contentItem());
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    QTRY_COMPARE(menu->property("x").toInt(), 11);
-    QTRY_COMPARE(menu->property("y").toInt(), 22);
+    QTRY_COMPARE(menu->x(), 11);
+    QTRY_COMPARE(menu->y(), 22);
     menu->close();
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtPos", Q_ARG(QVariant, QPointF(33, 44))));
+    QCOMPARE(menu->parentItem(), window->contentItem());
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    QTRY_COMPARE(menu->property("x").toInt(), 33);
-    QTRY_COMPARE(menu->property("y").toInt(), 44);
+    QTRY_COMPARE(menu->x(), 33);
+    QTRY_COMPARE(menu->y(), 44);
     menu->close();
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtCoord", Q_ARG(QVariant, 55), Q_ARG(QVariant, 66)));
+    QCOMPARE(menu->parentItem(), window->contentItem());
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    QTRY_COMPARE(menu->property("x").toInt(), 55);
-    QTRY_COMPARE(menu->property("y").toInt(), 66);
+    QTRY_COMPARE(menu->x(), 55);
+    QTRY_COMPARE(menu->y(), 66);
+    menu->close();
+
+    menu->setParentItem(nullptr);
+    QVERIFY(QMetaObject::invokeMethod(window, "popupAtParentCursor", Q_ARG(QVariant, QVariant::fromValue(button))));
+    QCOMPARE(menu->parentItem(), button);
+    QCOMPARE(menu->currentIndex(), -1);
+    QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
+    QTRY_COMPARE(menu->x(), button->mapFromScene(QPointF(11, 22)).x());
+    QTRY_COMPARE(menu->y(), button->mapFromScene(QPointF(11, 22)).y());
+    menu->close();
+
+    menu->setParentItem(nullptr);
+    QVERIFY(QMetaObject::invokeMethod(window, "popupAtParentPos", Q_ARG(QVariant, QVariant::fromValue(button)), Q_ARG(QVariant, QPointF(-11, -22))));
+    QCOMPARE(menu->parentItem(), button);
+    QCOMPARE(menu->currentIndex(), -1);
+    QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
+    QTRY_COMPARE(menu->x(), -11);
+    QTRY_COMPARE(menu->y(), -22);
+    QCOMPARE(menu->popupItem()->position(), button->mapToScene(QPointF(-11, -22)));
+    menu->close();
+
+    menu->setParentItem(nullptr);
+    QVERIFY(QMetaObject::invokeMethod(window, "popupAtParentCoord", Q_ARG(QVariant, QVariant::fromValue(button)), Q_ARG(QVariant, -33), Q_ARG(QVariant, -44)));
+    QCOMPARE(menu->parentItem(), button);
+    QCOMPARE(menu->currentIndex(), -1);
+    QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
+    QTRY_COMPARE(menu->x(), -33);
+    QTRY_COMPARE(menu->y(), -44);
+    QCOMPARE(menu->popupItem()->position(), button->mapToScene(QPointF(-33, -44)));
     menu->close();
 
     cursorPos = window->mapToGlobal(QPoint(12, window->height() / 2));
@@ -645,25 +680,56 @@ void tst_menu::popup()
 
     const QList<QQuickMenuItem *> menuItems = QList<QQuickMenuItem *>() << menuItem1 << menuItem2 << menuItem3;
     for (QQuickMenuItem *menuItem : menuItems) {
+        menu->resetParentItem();
+
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtCursor", Q_ARG(QVariant, QVariant::fromValue(menuItem))));
         QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
-        QTRY_COMPARE(menu->property("x").toInt(), 12);
-        QTRY_COMPARE(menu->property("y").toInt(), window->height() / 2 + menu->topPadding() - menuItem->y());
+        QTRY_COMPARE(menu->x(), 12);
+        QTRY_COMPARE(menu->y(), window->height() / 2 + menu->topPadding() - menuItem->y());
         menu->close();
 
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtPos", Q_ARG(QVariant, QPointF(33, window->height() / 3)), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
         QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
-        QTRY_COMPARE(menu->property("x").toInt(), 33);
-        QTRY_COMPARE(menu->property("y").toInt(), window->height() / 3 + menu->topPadding() - menuItem->y());
+        QTRY_COMPARE(menu->x(), 33);
+        QTRY_COMPARE(menu->y(), window->height() / 3 + menu->topPadding() - menuItem->y());
         menu->close();
 
         QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtCoord", Q_ARG(QVariant, 55), Q_ARG(QVariant, window->height() / 3 * 2), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
         QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
         QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
-        QTRY_COMPARE(menu->property("x").toInt(), 55);
-        QTRY_COMPARE(menu->property("y").toInt(), window->height() / 3 * 2 + menu->topPadding() - menuItem->y());
+        QTRY_COMPARE(menu->x(), 55);
+        QTRY_COMPARE(menu->y(), window->height() / 3 * 2 + menu->topPadding() - menuItem->y());
+        menu->close();
+
+        menu->setParentItem(nullptr);
+        QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtParentCursor", Q_ARG(QVariant, QVariant::fromValue(button)), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QCOMPARE(menu->parentItem(), button);
+        QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
+        QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
+        QTRY_COMPARE(menu->x(), button->mapFromScene(QPoint(12, window->height() / 2)).x());
+        QTRY_COMPARE(menu->y(), button->mapFromScene(QPoint(12, window->height() / 2)).y() + menu->topPadding() - menuItem->y());
+        menu->close();
+
+        menu->setParentItem(nullptr);
+        QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtParentPos", Q_ARG(QVariant, QVariant::fromValue(button)), Q_ARG(QVariant, QPointF(-11, -22)), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QCOMPARE(menu->parentItem(), button);
+        QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
+        QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
+        QTRY_COMPARE(menu->x(), -11);
+        QTRY_COMPARE(menu->y(), -22 + menu->topPadding() - menuItem->y());
+        QCOMPARE(menu->popupItem()->position(), button->mapToScene(QPointF(-11, -22 + menu->topPadding() - menuItem->y())));
+        menu->close();
+
+        menu->setParentItem(nullptr);
+        QVERIFY(QMetaObject::invokeMethod(window, "popupItemAtParentCoord", Q_ARG(QVariant, QVariant::fromValue(button)), Q_ARG(QVariant, -33), Q_ARG(QVariant, -44), Q_ARG(QVariant, QVariant::fromValue(menuItem))));
+        QCOMPARE(menu->parentItem(), button);
+        QCOMPARE(menu->currentIndex(), menuItems.indexOf(menuItem));
+        QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), menuItems.indexOf(menuItem));
+        QTRY_COMPARE(menu->x(), -33);
+        QTRY_COMPARE(menu->y(), -44 + menu->topPadding() - menuItem->y());
+        QCOMPARE(menu->popupItem()->position(), button->mapToScene(QPointF(-33, -44 + menu->topPadding() - menuItem->y())));
         menu->close();
     }
 

@@ -1083,9 +1083,10 @@ void QQuickMenu::setCurrentIndex(int index)
 /*!
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Menu::popup(MenuItem item = null)
+    \qmlmethod void QtQuick.Controls::Menu::popup(Item parent, MenuItem item = null)
 
     Opens the menu at the mouse cursor on desktop platforms that have a mouse cursor
-    available, and otherwise centers the menu over its parent item.
+    available, and otherwise centers the menu over its \a parent item.
 
     The menu can be optionally aligned to a specific menu \a item.
 
@@ -1095,9 +1096,10 @@ void QQuickMenu::setCurrentIndex(int index)
 /*!
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Menu::popup(point pos, MenuItem item = null)
+    \qmlmethod void QtQuick.Controls::Menu::popup(Item parent, point pos, MenuItem item = null)
 
     Opens the menu at the specified position \a pos in the popups coordinate system,
-    that is, a coordinate relative to its parent item.
+    that is, a coordinate relative to its \a parent item.
 
     The menu can be optionally aligned to a specific menu \a item.
 
@@ -1107,9 +1109,10 @@ void QQuickMenu::setCurrentIndex(int index)
 /*!
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Menu::popup(real x, real y, MenuItem item = null)
+    \qmlmethod void QtQuick.Controls::Menu::popup(Item parent, real x, real y, MenuItem item = null)
 
     Opens the menu at the specified position \a x, \a y in the popups coordinate system,
-    that is, a coordinate relative to its parent item.
+    that is, a coordinate relative to its \a parent item.
 
     The menu can be optionally aligned to a specific menu \a item.
 
@@ -1119,7 +1122,7 @@ void QQuickMenu::popup(QQmlV4Function *args)
 {
     Q_D(QQuickMenu);
     const int len = args->length();
-    if (len > 3) {
+    if (len > 4) {
         args->v4engine()->throwTypeError();
         return;
     }
@@ -1128,31 +1131,48 @@ void QQuickMenu::popup(QQmlV4Function *args)
     QV4::Scope scope(v4);
 
     QQmlNullableValue<QPointF> pos;
-    QQuickMenuItem *menuItem = nullptr;
+    QQuickItem *menuItem = nullptr;
+    QQuickItem *parentItem = nullptr;
 
     if (len > 0) {
+        // Item parent
+        QV4::ScopedValue firstArg(scope, (*args)[0]);
+        if (const QV4::QObjectWrapper *obj = firstArg->as<QV4::QObjectWrapper>()) {
+            QQuickItem *item = qobject_cast<QQuickItem *>(obj->object());
+            if (item && !d->popupItem->isAncestorOf(item))
+                parentItem = item;
+        } else if (firstArg->isUndefined()) {
+            resetParentItem();
+            parentItem = d->parentItem;
+        }
+
         // MenuItem item
         QV4::ScopedValue lastArg(scope, (*args)[len - 1]);
-        const QV4::QObjectWrapper *obj = lastArg->as<QV4::QObjectWrapper>();
-        if (obj)
-            menuItem = qobject_cast<QQuickMenuItem *>(obj->object());
+        if (const QV4::QObjectWrapper *obj = lastArg->as<QV4::QObjectWrapper>()) {
+            QQuickItem *item = qobject_cast<QQuickItem *>(obj->object());
+            if (item && d->popupItem->isAncestorOf(item))
+                menuItem = item;
+        }
     }
 
-    if (len >= 2) {
+    if (len >= 3 || (!parentItem && len >= 2)) {
         // real x, real y
-        QV4::ScopedValue firstArg(scope, (*args)[0]);
-        QV4::ScopedValue secondArg(scope, (*args)[1]);
-        if (firstArg->isNumber() && secondArg->isNumber())
-            pos = QPointF(firstArg->asDouble(), secondArg->asDouble());
+        QV4::ScopedValue xArg(scope, (*args)[parentItem ? 1 : 0]);
+        QV4::ScopedValue yArg(scope, (*args)[parentItem ? 2 : 1]);
+        if (xArg->isNumber() && yArg->isNumber())
+            pos = QPointF(xArg->asDouble(), yArg->asDouble());
     }
 
     if (pos.isNull && len >= 1) {
         // point pos
-        QV4::ScopedValue firstArg(scope, (*args)[0]);
-        const QVariant var = v4->toVariant(firstArg, -1);
+        QV4::ScopedValue posArg(scope, (*args)[parentItem ? 1 : 0]);
+        const QVariant var = v4->toVariant(posArg, -1);
         if (var.userType() == QMetaType::QPointF)
             pos = var.toPointF();
     }
+
+    if (parentItem)
+        setParentItem(parentItem);
 
     // Unless the position has been explicitly specified, position the menu at
     // the mouse cursor on desktop platforms that have a mouse cursor available
