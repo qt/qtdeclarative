@@ -88,6 +88,7 @@ public:
     int pendingCurrentIndex;
     bool ignoreCurrentIndexChanges;
     int count;
+    bool ignoreSignals;
 
     void _q_updateItemHeights();
     void _q_updateItemWidths();

@@ -104,7 +104,7 @@ Page {
 
                     Image {
                         id: avatar
-                        source: !sentByMe ? "qrc:/" + model.author + ".png" : ""
+                        source: !sentByMe ? "qrc:/" + model.author.replace(" ", "_") + ".png" : ""
                     }
 
                     Rectangle {

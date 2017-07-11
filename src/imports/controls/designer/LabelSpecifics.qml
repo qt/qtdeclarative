@@ -48,6 +48,30 @@ Column {
         showVerticalAlignment: true
     }
 
+    Section {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        caption: qsTr("Text Color")
+
+        ColorEditor {
+            caption: qsTr("Text Color")
+            backendValue: backendValues.color
+            supportGradient: false
+        }
+    }
+
+    Section {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        caption: qsTr("Style Color")
+
+        ColorEditor {
+            caption: qsTr("Style Color")
+            backendValue: backendValues.styleColor
+            supportGradient: false
+        }
+    }
+
     FontSection {
         width: parent.width
     }

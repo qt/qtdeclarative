@@ -384,15 +384,10 @@ bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
 {
     switch (event->type()) {
     case QEvent::TouchBegin:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (acceptTouch(point))
-                return handlePress(item, item->mapToScene(point.pos()), event->timestamp());
-        }
-        break;
-
     case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (!acceptTouch(point))
+            if (!acceptTouch(point) && !blockInput(item, point.pos()))
                 continue;
 
             switch (point.state()) {
@@ -405,13 +400,6 @@ bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
             default:
                 break;
             }
-        }
-        break;
-
-    case QEvent::TouchEnd:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (acceptTouch(point))
-                return handleRelease(item, item->mapToScene(point.pos()), event->timestamp());
         }
         break;
 
@@ -493,7 +481,13 @@ void QQuickPopupPrivate::finalizeExitTransition()
     destroyOverlay();
 
     if (hadActiveFocusBeforeExitTransition && window) {
-        if (!qobject_cast<QQuickPopupItem *>(window->activeFocusItem())) {
+        // restore focus to the next popup in chain, or to the window content if there are no other popups open
+        QQuickPopup *popup = nullptr;
+        if (QQuickOverlay *overlay = QQuickOverlay::overlay(window))
+            popup = QQuickOverlayPrivate::get(overlay)->stackingOrderPopups().value(0);
+        if (popup && popup->hasFocus()) {
+            popup->forceActiveFocus();
+        } else {
             QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
             if (applicationWindow)
                 applicationWindow->contentItem()->setFocus(true);

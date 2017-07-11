@@ -87,12 +87,12 @@ protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData &data) override;
-    void updatePolish() override;
 
 private:
     QQuickItem *view();
     void createView();
     void updateView();
+    void updateModel();
 
     void wrapChange();
 

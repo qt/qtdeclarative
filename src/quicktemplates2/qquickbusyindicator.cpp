@@ -115,6 +115,13 @@ void QQuickBusyIndicator::setRunning(bool running)
     emit runningChanged();
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
+void QQuickBusyIndicator::touchEvent(QTouchEvent *event)
+{
+    event->ignore(); // QTBUG-61785
+}
+#endif
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickBusyIndicator::accessibleRole() const
 {

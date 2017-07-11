@@ -149,7 +149,7 @@ how to navigate between several pages.
 \printuntil }
 
 We replace the default \c{MainForm {...}} code block with a Page, which is
-sized to occupy all the space on the window using the \l{anchors.fill}
+sized to occupy all the space on the window using the \l {Item::}{anchors.fill}
 property.
 
 Then, we assign a \l Label to its \l {Page::}{header} property. Label extends
@@ -245,7 +245,7 @@ Here is our ListView:
 \section2 Sizing and Positioning
 
 The first thing we do is set a size for the view. It should fill the available
-space on the page, so we use \l {Item::anchors}{anchors.fill}. Note that
+space on the page, so we use \l {Item::}{anchors.fill}. Note that
 Page ensures that its header and footer have enough of their own space
 reserved, so the view in this case will sit below the header, for example.
 

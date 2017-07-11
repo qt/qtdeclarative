@@ -1482,13 +1482,8 @@ void QQuickControl::touchEvent(QTouchEvent *event)
     Q_D(QQuickControl);
     switch (event->type()) {
     case QEvent::TouchBegin:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (d->acceptTouch(point))
-                d->handlePress(point.pos());
-        }
-        break;
-
     case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
             if (!d->acceptTouch(point))
                 continue;
@@ -1506,13 +1501,6 @@ void QQuickControl::touchEvent(QTouchEvent *event)
             default:
                 break;
             }
-        }
-        break;
-
-    case QEvent::TouchEnd:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (d->acceptTouch(point))
-                d->handleRelease(point.pos());
         }
         break;
 

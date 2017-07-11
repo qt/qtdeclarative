@@ -82,7 +82,7 @@ Page {
 
             Image {
                 id: avatar
-                source: "qrc:/" + model.display + ".png"
+                source: "qrc:/" + model.display.replace(" ", "_") + ".png"
             }
         }
     }

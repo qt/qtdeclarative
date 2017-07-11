@@ -97,7 +97,8 @@ QQuickTumblerPrivate::QQuickTumblerPrivate()
       currentIndex(-1),
       pendingCurrentIndex(-1),
       ignoreCurrentIndexChanges(false),
-      count(0)
+      count(0),
+      ignoreSignals(false)
 {
 }
 
@@ -163,6 +164,9 @@ QQuickTumblerPrivate *QQuickTumblerPrivate::get(QQuickTumbler *tumbler)
 
 void QQuickTumblerPrivate::_q_updateItemHeights()
 {
+    if (ignoreSignals)
+        return;
+
     // Can't use our own private padding members here, as the padding property might be set,
     // which doesn't affect them, only their getters.
     Q_Q(const QQuickTumbler);
@@ -174,6 +178,9 @@ void QQuickTumblerPrivate::_q_updateItemHeights()
 
 void QQuickTumblerPrivate::_q_updateItemWidths()
 {
+    if (ignoreSignals)
+        return;
+
     Q_Q(const QQuickTumbler);
     const qreal availableWidth = q->availableWidth();
     const auto items = viewContentItemChildItems();
@@ -195,6 +202,8 @@ void QQuickTumblerPrivate::_q_onViewCurrentIndexChanged()
 void QQuickTumblerPrivate::_q_onViewCountChanged()
 {
     Q_Q(QQuickTumbler);
+    if (ignoreSignals)
+        return;
 
     setCount(view->property("count").toInt());
 
@@ -336,7 +345,9 @@ void QQuickTumbler::setCurrentIndex(int currentIndex)
             couldSet = true;
         } else {
             d->ignoreCurrentIndexChanges = true;
+            d->ignoreSignals = true;
             d->view->setProperty("currentIndex", currentIndex);
+            d->ignoreSignals = false;
             d->ignoreCurrentIndexChanges = false;
 
             couldSet = d->view->property("currentIndex").toInt() == currentIndex;
