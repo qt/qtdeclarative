@@ -170,7 +170,6 @@ static const int SUBMENU_DELAY = 225;
     \sa {Customizing Menu}, MenuItem, {Menu Controls}, {Popup Controls}
 */
 
-static const QQuickPopup::ClosePolicy defaultMenuClosePolicy = QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside;
 static const QQuickPopup::ClosePolicy cascadingSubMenuClosePolicy = QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent;
 
 static bool shouldCascade()
@@ -360,6 +359,21 @@ void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, 
         resizeItems();
 }
 
+bool QQuickMenuPrivate::prepareEnterTransition()
+{
+    Q_Q(QQuickMenu);
+    if (!QQuickPopupPrivate::prepareEnterTransition())
+        return false;
+
+    if (!hasClosePolicy) {
+        if (cascade && parentMenu)
+            closePolicy = cascadingSubMenuClosePolicy;
+        else
+            q->resetClosePolicy();
+    }
+    return true;
+}
+
 bool QQuickMenuPrivate::prepareExitTransition()
 {
     if (!QQuickPopupPrivate::prepareExitTransition())
@@ -443,7 +457,6 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
 
     if (cascade) {
         subMenu->setParentItem(item);
-        subMenu->setClosePolicy(cascadingSubMenuClosePolicy);
         if (popupItem->isMirrored())
             subMenu->setPosition(QPointF(-subMenu->width() - q->leftPadding() + subMenu->overlap(), -subMenu->topPadding()));
         else
@@ -451,7 +464,6 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
     } else {
         q->close();
         subMenu->setParentItem(parentItem);
-        subMenu->setClosePolicy(defaultMenuClosePolicy);
         subMenu->setPosition(QPointF(q->x() + (q->width() - subMenu->width()) / 2,
                                      q->y() + (q->height() - subMenu->height()) / 2));
     }
