@@ -86,7 +86,7 @@ Please see the documentation about the \l{qtqml-syntax-basics.html}
 documentation about \l{qtqml-javascript-topic.html}
 {integrating QML and JavaScript} for in-depth information on that topic.
 
-\section1 Defining Object Types through QML Documents
+\section1 Defining Object Types Through QML Documents
 
 As described briefly in the previous section, a document implicitly defines
 a QML object type.  One of the core principles of QML is the ability to define

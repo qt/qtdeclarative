@@ -101,7 +101,7 @@ QT_BEGIN_NAMESPACE
     \l {Item::}{parent} value, use ParentChange instead.
 
 
-    \section2 Resetting property values
+    \section2 Resetting Property Values
 
     The \c undefined value can be used to reset the property value for a state.
     In the following example, when \c myText changes to the \e widerText
@@ -111,7 +111,7 @@ QT_BEGIN_NAMESPACE
     \snippet qml/propertychanges.qml reset
 
 
-    \section2 Immediate property changes in transitions
+    \section2 Immediate Property Changes in Transitions
 
     When \l{Animation and Transitions in Qt Quick}{Transitions} are used to animate
     state changes, they animate properties from their values in the current

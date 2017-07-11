@@ -245,7 +245,7 @@ void QQuickImageResponse::cancel()
     If you want the rest of the URL to be case insensitive, you will have to take care
     of that yourself inside your image provider.
 
-    \section2 An example
+    \section2 An Example
 
     Here are two images. Their \c source values indicate they should be loaded by
     an image provider named "colors", and the images to be loaded are "yellow"
@@ -291,7 +291,7 @@ void QQuickImageResponse::cancel()
     instead of registering it in the application \c main() function as shown above.
 
 
-    \section2 Asynchronous image loading
+    \section2 Asynchronous Image Loading
 
     Image providers that support QImage or Texture loading automatically include support
     for asychronous loading of images. To enable asynchronous loading for an
@@ -320,7 +320,7 @@ void QQuickImageResponse::cancel()
     See the \l {imageresponseprovider}{Image Response Provider Example} for a complete implementation.
 
 
-    \section2 Image caching
+    \section2 Image Caching
 
     Images returned by a QQuickImageProvider are automatically cached,
     similar to any image loaded by the QML engine. When an image with a

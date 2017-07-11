@@ -329,7 +329,7 @@ them with default constructed values, do not use the indexed delete operator
 ("delete sequence[i]") but instead use the \c {splice} function
 ("sequence.splice(startIndex, deleteCount)").
 
-\section2 Value types
+\section2 Value Types
 
 Some value types in Qt such as QPoint are represented in JavaScript as objects
 that have the same properties and functions like in the C++ API. The same

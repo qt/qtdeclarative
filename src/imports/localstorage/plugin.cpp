@@ -563,7 +563,7 @@ The API conforms to the Synchronous API of the HTML5 Web Database API,
 The \l{Qt Quick Examples - Local Storage}{SQL Local Storage example} demonstrates the basics of
 using the Offline Storage API.
 
-\section3 Open or create a databaseData
+\section3 Open or Create a Database
 \code
 import QtQuick.LocalStorage 2.0 as Sql
 

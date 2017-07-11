@@ -423,7 +423,7 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
     entire purpose of QQuickWidget is to render Quick scenes without a separate native
     window, hence making it a native widget should always be avoided.
 
-    \section1 Scene graph and context persistency
+    \section1 Scene Graph and Context Persistency
 
     QQuickWidget honors QQuickWindow::isPersistentSceneGraph(), meaning that
     applications can decide - by calling

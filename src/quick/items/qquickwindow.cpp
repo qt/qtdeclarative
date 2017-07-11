@@ -1226,7 +1226,7 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
-    \section2 Context and surface formats
+    \section2 Context and Surface Formats
 
     While it is possible to specify a QSurfaceFormat for every QQuickWindow by
     calling the member function setFormat(), windows may also be created from

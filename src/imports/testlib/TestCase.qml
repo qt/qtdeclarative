@@ -49,7 +49,7 @@ import Qt.test.qtestroot 1.0
     \since 4.8
     \ingroup qtquicktest
 
-    \section1 Introduction to QML test cases
+    \section1 Introduction to QML Test Cases
 
     Test cases are written as JavaScript functions within a TestCase
     type:
@@ -98,7 +98,7 @@ import Qt.test.qtestroot 1.0
     once they have all completed.  If a test case doesn't need to run
     (because a precondition has failed), then \l optional can be set to true.
 
-    \section1 Data-driven tests
+    \section1 Data-driven Tests
 
     Table data can be provided to a test using a function name that ends
     with "_data". Alternatively, the \c init_data() function can be used
@@ -172,7 +172,7 @@ import Qt.test.qtestroot 1.0
     To get the effect of the \c{QBENCHMARK_ONCE} macro, prefix the test
     function name with "benchmark_once_".
 
-    \section1 Simulating keyboard and mouse events
+    \section1 Simulating Keyboard and Mouse Events
 
     The keyPress(), keyRelease(), and keyClick() methods can be used
     to simulate keyboard events within unit tests.  The events are
