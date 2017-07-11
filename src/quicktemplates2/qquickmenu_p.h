@@ -116,6 +116,9 @@ public:
     int currentIndex() const;
     void setCurrentIndex(int index);
 
+    void popup(QQuickItem *menuItem = nullptr);
+    void popup(const QPointF &pos, QQuickItem *menuItem = nullptr);
+
     Q_REVISION(3) Q_INVOKABLE void popup(QQmlV4Function *args);
     Q_REVISION(3) Q_INVOKABLE void dismiss();
 

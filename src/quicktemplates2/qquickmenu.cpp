@@ -1167,6 +1167,39 @@ void QQuickMenu::setCurrentIndex(int index)
     d->setCurrentIndex(index, Qt::OtherFocusReason);
 }
 
+void QQuickMenu::popup(QQuickItem *menuItem)
+{
+    Q_D(QQuickMenu);
+    // No position has been explicitly specified, so position the menu at the mouse cursor
+    // on desktop platforms that have a mouse cursor available and support multiple windows.
+    QQmlNullableValue<QPointF> pos;
+#if QT_CONFIG(cursor)
+    if (d->parentItem && QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::MultipleWindows))
+        pos = d->parentItem->mapFromGlobal(QCursor::pos());
+#endif
+
+    // As a fallback, center the menu over its parent item.
+    if (pos.isNull && d->parentItem)
+        pos = QPointF((d->parentItem->width() - width()) / 2, (d->parentItem->height() - height()) / 2);
+
+    popup(pos.isNull ? QPointF() : pos.value, menuItem);
+}
+
+void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
+{
+    Q_D(QQuickMenu);
+    qreal offset = 0;
+#if QT_CONFIG(cursor)
+    if (menuItem)
+        offset = d->popupItem->mapFromItem(menuItem, QPointF(0, 0)).y();
+#endif
+    setPosition(pos - QPointF(0, offset));
+
+    if (menuItem)
+        d->setCurrentIndex(d->contentModel->indexOf(menuItem, nullptr), Qt::PopupFocusReason);
+    open();
+}
+
 /*!
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Menu::popup(MenuItem item = null)
@@ -1250,7 +1283,7 @@ void QQuickMenu::popup(QQmlV4Function *args)
             pos = QPointF(xArg->asDouble(), yArg->asDouble());
     }
 
-    if (pos.isNull && len >= 1) {
+    if (pos.isNull && (len >= 2 || (!parentItem && len >= 1))) {
         // point pos
         QV4::ScopedValue posArg(scope, (*args)[parentItem ? 1 : 0]);
         const QVariant var = v4->toVariant(posArg, -1);
@@ -1261,29 +1294,10 @@ void QQuickMenu::popup(QQmlV4Function *args)
     if (parentItem)
         setParentItem(parentItem);
 
-    // Unless the position has been explicitly specified, position the menu at
-    // the mouse cursor on desktop platforms that have a mouse cursor available
-    // and support multiple windows.
-#if QT_CONFIG(cursor)
-    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::MultipleWindows)) {
-        if (pos.isNull && d->parentItem)
-            pos = d->parentItem->mapFromGlobal(QCursor::pos());
-        if (menuItem)
-            pos.value.ry() -= d->popupItem->mapFromItem(menuItem, QPointF(0, 0)).y();
-    }
-#endif
-
-    // As a fallback, center the menu over its parent item.
-    if (pos.isNull && d->parentItem)
-        pos = QPointF((d->parentItem->width() - width()) / 2, (d->parentItem->height() - height()) / 2);
-
-    if (!pos.isNull)
-        setPosition(pos);
-
-    if (menuItem)
-        d->setCurrentIndex(d->contentModel->indexOf(menuItem, nullptr), Qt::PopupFocusReason);
-
-    open();
+    if (pos.isNull)
+        popup(menuItem);
+    else
+        popup(pos, menuItem);
 }
 
 /*!
