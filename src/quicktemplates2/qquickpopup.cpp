@@ -1570,6 +1570,14 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
     emit parentChanged();
 }
 
+void QQuickPopup::resetParentItem()
+{
+    if (QQuickWindow *window = qobject_cast<QQuickWindow *>(parent()))
+        setParentItem(window->contentItem());
+    else
+        setParentItem(qobject_cast<QQuickItem *>(parent()));
+}
+
 /*!
     \qmlproperty Item QtQuick.Controls::Popup::background
 
@@ -2107,12 +2115,8 @@ void QQuickPopup::classBegin()
 void QQuickPopup::componentComplete()
 {
     Q_D(QQuickPopup);
-    if (!parentItem()) {
-        if (QQuickItem *item = qobject_cast<QQuickItem *>(parent()))
-            setParentItem(item);
-        else if (QQuickWindow *window = qobject_cast<QQuickWindow *>(parent()))
-            setParentItem(window->contentItem());
-    }
+    if (!parentItem())
+        resetParentItem();
 
     if (d->visible && d->window)
         d->transitionManager.transitionEnter();

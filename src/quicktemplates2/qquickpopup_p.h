@@ -100,7 +100,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL REVISION 3)
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
-    Q_PROPERTY(QQuickItem *parent READ parentItem WRITE setParentItem NOTIFY parentChanged FINAL)
+    Q_PROPERTY(QQuickItem *parent READ parentItem WRITE setParentItem RESET resetParentItem NOTIFY parentChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
@@ -223,6 +223,7 @@ public:
 
     QQuickItem *parentItem() const;
     void setParentItem(QQuickItem *parent);
+    void resetParentItem();
 
     QQuickItem *background() const;
     void setBackground(QQuickItem *background);

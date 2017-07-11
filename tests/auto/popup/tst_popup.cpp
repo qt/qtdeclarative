@@ -407,6 +407,28 @@ void tst_popup::windowChange()
     popup.setParentItem(window.contentItem());
     QCOMPARE(popup.window(), &window);
     QCOMPARE(spy.count(), 3);
+
+    popup.resetParentItem();
+    QVERIFY(!popup.window());
+    QCOMPARE(spy.count(), 4);
+
+    popup.setParent(&window);
+    popup.resetParentItem();
+    QCOMPARE(popup.window(), &window);
+    QCOMPARE(spy.count(), 5);
+
+    popup.setParent(this);
+    popup.resetParentItem();
+    QVERIFY(!popup.window());
+    QCOMPARE(spy.count(), 6);
+
+    item.setParentItem(window.contentItem());
+    popup.setParent(&item);
+    popup.resetParentItem();
+    QCOMPARE(popup.window(), &window);
+    QCOMPARE(spy.count(), 7);
+
+    popup.setParent(nullptr);
 }
 
 Q_DECLARE_METATYPE(QQuickPopup::ClosePolicy)
