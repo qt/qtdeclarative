@@ -71,6 +71,15 @@ QT_BEGIN_NAMESPACE
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret, ret) \
     MOTH_DEBUG_INSTR(F) \
+    F(LoadConst, loadConst) \
+    F(LoadLocal, loadLocal) \
+    F(StoreLocal, storeLocal) \
+    F(LoadArg, loadArg) \
+    F(StoreArg, storeArg) \
+    F(LoadScopedLocal, loadScopedLocal) \
+    F(StoreScopedLocal, storeScopedLocal) \
+    F(LoadScopedArg, loadScopedArg) \
+    F(StoreScopedArg, storeScopedArg) \
     F(LoadRuntimeString, loadRuntimeString) \
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
@@ -173,72 +182,20 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Moth {
 
-    // When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
+struct Temp {
+    int index;
 
-struct Param {
-    // Params are looked up as follows:
-    // Constant: 0
-    // Temp: 1
-    // Argument: 2
-    // Local: 3
-    // Arg(outer): 4
-    // Local(outer): 5
-    // ...
-    unsigned scope : 12;
-    unsigned index : 20;
-
-    bool isConstant() const { return !scope; }
-    bool isArgument() const { return scope >= 2 && !(scope &1); }
-    bool isLocal() const { return scope == 3; }
-    bool isTemp() const { return scope == 1; }
-    bool isScopedLocal() const { return scope >= 3 && (scope & 1); }
-
-    static Param createConstant(int index)
-    {
-        Param p;
-        p.scope = 0;
-        p.index = index;
-        return p;
+    static Temp create(int index) {
+        Temp t;
+        t.index = index;
+        return t;
     }
-
-    static Param createArgument(unsigned idx, uint scope)
-    {
-        Param p;
-        p.scope = 2 + 2*scope;
-        p.index = idx;
-        return p;
-    }
-
-    static Param createLocal(unsigned idx)
-    {
-        Param p;
-        p.scope = 3;
-        p.index = idx;
-        return p;
-    }
-
-    static Param createTemp(unsigned idx)
-    {
-        Param p;
-        p.scope = 1;
-        p.index = idx;
-        return p;
-    }
-
-    static Param createScopedLocal(unsigned idx, uint scope)
-    {
-        Param p;
-        p.scope = 3 + 2*scope;
-        p.index = idx;
-        return p;
-    }
-
-    inline bool operator==(const Param &other) const
-    { return scope == other.scope && index == other.index; }
-
-    inline bool operator!=(const Param &other) const
-    { return !(*this == other); }
 };
+
+inline bool operator==(const Temp &l, const Temp &r) { return l.index == r.index; }
+inline bool operator!=(const Temp &l, const Temp &r) { return l.index != r.index; }
+
+// When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
 
 void dumpConstantTable(const Value *constants, uint count);
 void dumpBytecode(const char *bytecode, int len);
@@ -258,7 +215,7 @@ union Instr
     };
     struct instr_ret {
         MOTH_INSTR_HEADER
-        Param result;
+        Temp result;
     };
 
 #ifndef QT_NO_QML_DEBUGGING
@@ -272,166 +229,215 @@ union Instr
     };
 #endif // QT_NO_QML_DEBUGGING
 
+    struct instr_loadConst {
+        MOTH_INSTR_HEADER
+        int index;
+        Temp result;
+    };
+    struct instr_loadLocal {
+        MOTH_INSTR_HEADER
+        int index;
+        Temp result;
+    };
+    struct instr_storeLocal {
+        MOTH_INSTR_HEADER
+        int index;
+        Temp source;
+    };
+    struct instr_loadArg {
+        MOTH_INSTR_HEADER
+        int index;
+        Temp result;
+    };
+    struct instr_storeArg {
+        MOTH_INSTR_HEADER
+        int index;
+        Temp source;
+    };
+    struct instr_loadScopedLocal {
+        MOTH_INSTR_HEADER
+        unsigned scope : 12;
+        unsigned index : 20;
+        Temp result;
+    };
+    struct instr_storeScopedLocal {
+        MOTH_INSTR_HEADER
+        unsigned scope : 12;
+        unsigned index : 20;
+        Temp source;
+    };
+    struct instr_loadScopedArg {
+        MOTH_INSTR_HEADER
+        unsigned scope : 12;
+        unsigned index : 20;
+        Temp result;
+    };
+    struct instr_storeScopedArg {
+        MOTH_INSTR_HEADER
+        unsigned scope : 12;
+        unsigned index : 20;
+        Temp source;
+    };
     struct instr_loadRuntimeString {
         MOTH_INSTR_HEADER
         int stringId;
-        Param result;
+        Temp result;
     };
     struct instr_loadRegExp {
         MOTH_INSTR_HEADER
         int regExpId;
-        Param result;
+        Temp result;
     };
     struct instr_move {
         MOTH_INSTR_HEADER
-        Param source;
-        Param result;
+        Temp source;
+        Temp result;
     };
     struct instr_loadClosure {
         MOTH_INSTR_HEADER
         int value;
-        Param result;
+        Temp result;
     };
     struct instr_loadName {
         MOTH_INSTR_HEADER
         int name;
-        Param result;
+        Temp result;
     };
     struct instr_getGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
-        Param result;
+        Temp result;
     };
     struct instr_storeName {
         MOTH_INSTR_HEADER
         int name;
-        Param source;
+        Temp source;
     };
     struct instr_loadProperty {
         MOTH_INSTR_HEADER
         int name;
-        Param base;
-        Param result;
+        Temp base;
+        Temp result;
     };
     struct instr_getLookup {
         MOTH_INSTR_HEADER
         int index;
-        Param base;
-        Param result;
+        Temp base;
+        Temp result;
     };
     struct instr_loadScopeObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
-        Param base;
-        Param result;
+        Temp base;
+        Temp result;
         bool captureRequired;
     };
     struct instr_loadContextObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
-        Param base;
-        Param result;
+        Temp base;
+        Temp result;
         bool captureRequired;
     };
     struct instr_loadIdObject {
         MOTH_INSTR_HEADER
         int index;
-        Param base;
-        Param result;
+        Temp base;
+        Temp result;
     };
     struct instr_storeProperty {
         MOTH_INSTR_HEADER
         int name;
-        Param base;
-        Param source;
+        Temp base;
+        Temp source;
     };
     struct instr_setLookup {
         MOTH_INSTR_HEADER
         int index;
-        Param base;
-        Param source;
+        Temp base;
+        Temp source;
     };
     struct instr_storeScopeObjectProperty {
         MOTH_INSTR_HEADER
-        Param base;
+        Temp base;
         int propertyIndex;
-        Param source;
+        Temp source;
     };
     struct instr_storeContextObjectProperty {
         MOTH_INSTR_HEADER
-        Param base;
+        Temp base;
         int propertyIndex;
-        Param source;
+        Temp source;
     };
     struct instr_loadElement {
         MOTH_INSTR_HEADER
-        Param base;
-        Param index;
-        Param result;
+        Temp base;
+        Temp index;
+        Temp result;
     };
     struct instr_loadElementLookup {
         MOTH_INSTR_HEADER
         uint lookup;
-        Param base;
-        Param index;
-        Param result;
+        Temp base;
+        Temp index;
+        Temp result;
     };
     struct instr_storeElement {
         MOTH_INSTR_HEADER
-        Param base;
-        Param index;
-        Param source;
+        Temp base;
+        Temp index;
+        Temp source;
     };
     struct instr_storeElementLookup {
         MOTH_INSTR_HEADER
         uint lookup;
-        Param base;
-        Param index;
-        Param source;
+        Temp base;
+        Temp index;
+        Temp source;
     };
     struct instr_initStackFrame {
         MOTH_INSTR_HEADER
-        quint32 value;
+        int value;
     };
     struct instr_callValue {
         MOTH_INSTR_HEADER
-        quint32 callData;
-        Param dest;
-        Param result;
+        Temp callData;
+        Temp dest;
+        Temp result;
     };
     struct instr_callProperty {
         MOTH_INSTR_HEADER
         int name;
-        quint32 callData;
-        Param base;
-        Param result;
+        Temp callData;
+        Temp base;
+        Temp result;
     };
     struct instr_callPropertyLookup {
         MOTH_INSTR_HEADER
         int lookupIndex;
-        quint32 argc;
-        quint32 callData;
-        Param base;
-        Param result;
+        int argc;
+        Temp callData;
+        Temp base;
+        Temp result;
     };
     struct instr_callElement {
         MOTH_INSTR_HEADER
-        Param base;
-        Param index;
-        quint32 callData;
-        Param result;
+        Temp base;
+        Temp index;
+        Temp callData;
+        Temp result;
     };
     struct instr_callActivationProperty {
         MOTH_INSTR_HEADER
         int name;
-        quint32 callData;
-        Param result;
+        Temp callData;
+        Temp result;
     };
     struct instr_callGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
-        quint32 callData;
-        Param result;
+        Temp callData;
+        Temp result;
     };
     struct instr_setExceptionHandler {
         MOTH_INSTR_HEADER
@@ -439,19 +445,19 @@ union Instr
     };
     struct instr_callBuiltinThrow {
         MOTH_INSTR_HEADER
-        Param arg;
+        Temp arg;
     };
     struct instr_getException {
         MOTH_INSTR_HEADER
-        Param result;
+        Temp result;
     };
     struct instr_setException {
         MOTH_INSTR_HEADER
-        Param exception;
+        Temp exception;
     };
     struct instr_callBuiltinUnwindException {
         MOTH_INSTR_HEADER
-        Param result;
+        Temp result;
     };
     struct instr_callBuiltinPushCatchScope {
         MOTH_INSTR_HEADER
@@ -459,47 +465,47 @@ union Instr
     };
     struct instr_callBuiltinPushScope {
         MOTH_INSTR_HEADER
-        Param arg;
+        Temp arg;
     };
     struct instr_callBuiltinPopScope {
         MOTH_INSTR_HEADER
     };
     struct instr_callBuiltinForeachIteratorObject {
         MOTH_INSTR_HEADER
-        Param arg;
-        Param result;
+        Temp arg;
+        Temp result;
     };
     struct instr_callBuiltinForeachNextPropertyName {
         MOTH_INSTR_HEADER
-        Param arg;
-        Param result;
+        Temp arg;
+        Temp result;
     };
     struct instr_callBuiltinDeleteMember {
         MOTH_INSTR_HEADER
         int member;
-        Param base;
-        Param result;
+        Temp base;
+        Temp result;
     };
     struct instr_callBuiltinDeleteSubscript {
         MOTH_INSTR_HEADER
-        Param base;
-        Param index;
-        Param result;
+        Temp base;
+        Temp index;
+        Temp result;
     };
     struct instr_callBuiltinDeleteName {
         MOTH_INSTR_HEADER
         int name;
-        Param result;
+        Temp result;
     };
     struct instr_callBuiltinTypeofName {
         MOTH_INSTR_HEADER
         int name;
-        Param result;
+        Temp result;
     };
     struct instr_callBuiltinTypeofValue {
         MOTH_INSTR_HEADER
-        Param value;
-        Param result;
+        Temp value;
+        Temp result;
     };
     struct instr_callBuiltinDeclareVar {
         MOTH_INSTR_HEADER
@@ -508,60 +514,60 @@ union Instr
     };
     struct instr_callBuiltinDefineArray {
         MOTH_INSTR_HEADER
-        quint32 argc;
-        quint32 args;
-        Param result;
+        uint argc;
+        Temp args;
+        Temp result;
     };
     struct instr_callBuiltinDefineObjectLiteral {
         MOTH_INSTR_HEADER
         int internalClassId;
-        uint arrayValueCount;
-        uint arrayGetterSetterCountAndFlags; // 30 bits for count, 1 bit for needsSparseArray boolean
-        quint32 args;
-        Param result;
+        int arrayValueCount;
+        int arrayGetterSetterCountAndFlags; // 30 bits for count, 1 bit for needsSparseArray boolean
+        Temp args;
+        Temp result;
     };
     struct instr_callBuiltinSetupArgumentsObject {
         MOTH_INSTR_HEADER
-        Param result;
+        Temp result;
     };
     struct instr_callBuiltinConvertThisToObject {
         MOTH_INSTR_HEADER
     };
     struct instr_createValue {
         MOTH_INSTR_HEADER
-        quint32 callData;
-        Param func;
-        Param result;
+        Temp callData;
+        Temp func;
+        Temp result;
     };
     struct instr_createProperty {
         MOTH_INSTR_HEADER
         int name;
-        quint32 argc;
-        quint32 callData;
-        Param base;
-        Param result;
+        int argc;
+        Temp callData;
+        Temp base;
+        Temp result;
     };
     struct instr_constructPropertyLookup {
         MOTH_INSTR_HEADER
         int index;
-        quint32 argc;
-        quint32 callData;
-        Param base;
-        Param result;
+        int argc;
+        Temp callData;
+        Temp base;
+        Temp result;
     };
     struct instr_createActivationProperty {
         MOTH_INSTR_HEADER
         int name;
-        quint32 argc;
-        quint32 callData;
-        Param result;
+        int argc;
+        Temp callData;
+        Temp result;
     };
     struct instr_constructGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
-        quint32 argc;
-        quint32 callData;
-        Param result;
+        int argc;
+        Temp callData;
+        Temp result;
     };
     struct instr_jump {
         MOTH_INSTR_HEADER
@@ -570,182 +576,182 @@ union Instr
     struct instr_jumpEq {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
-        Param condition;
+        Temp condition;
     };
     struct instr_jumpNe {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
-        Param condition;
+        Temp condition;
     };
     struct instr_jumpStrictEqual {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
-        Param lhs;
-        Param rhs;
+        Temp lhs;
+        Temp rhs;
     };
     struct instr_jumpStrictNotEqual {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
-        Param lhs;
-        Param rhs;
+        Temp lhs;
+        Temp rhs;
     };
     struct instr_unot {
         MOTH_INSTR_HEADER
-        Param source;
-        Param result;
+        Temp source;
+        Temp result;
     };
     struct instr_unotBool {
         MOTH_INSTR_HEADER
-        Param source;
-        Param result;
+        Temp source;
+        Temp result;
     };
     struct instr_uplus {
         MOTH_INSTR_HEADER
-        Param source;
-        Param result;
+        Temp source;
+        Temp result;
     };
     struct instr_uminus {
         MOTH_INSTR_HEADER
-        Param source;
-        Param result;
+        Temp source;
+        Temp result;
     };
     struct instr_ucompl {
         MOTH_INSTR_HEADER
-        Param source;
-        Param result;
+        Temp source;
+        Temp result;
     };
     struct instr_ucomplInt {
         MOTH_INSTR_HEADER
-        Param source;
-        Param result;
+        Temp source;
+        Temp result;
     };
     struct instr_preIncrement {
         MOTH_INSTR_HEADER
-        Param source;
-        Param result;
+        Temp source;
+        Temp result;
     };
     struct instr_preDecrement {
         MOTH_INSTR_HEADER
-        Param source;
-        Param result;
+        Temp source;
+        Temp result;
     };
     struct instr_postIncrement {
         MOTH_INSTR_HEADER
-        Param source;
-        Param result;
+        Temp source;
+        Temp result;
     };
     struct instr_postDecrement {
         MOTH_INSTR_HEADER
-        Param source;
-        Param result;
+        Temp source;
+        Temp result;
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
         int alu; // QV4::Runtime::RuntimeMethods enum value
-        Param lhs;
-        Param rhs;
-        Param result;
+        Temp lhs;
+        Temp rhs;
+        Temp result;
     };
     struct instr_add {
         MOTH_INSTR_HEADER
-        Param lhs;
-        Param rhs;
-        Param result;
+        Temp lhs;
+        Temp rhs;
+        Temp result;
     };
     struct instr_bitAnd {
         MOTH_INSTR_HEADER
-        Param lhs;
-        Param rhs;
-        Param result;
+        Temp lhs;
+        Temp rhs;
+        Temp result;
     };
     struct instr_bitOr {
         MOTH_INSTR_HEADER
-        Param lhs;
-        Param rhs;
-        Param result;
+        Temp lhs;
+        Temp rhs;
+        Temp result;
     };
     struct instr_bitXor {
         MOTH_INSTR_HEADER
-        Param lhs;
-        Param rhs;
-        Param result;
+        Temp lhs;
+        Temp rhs;
+        Temp result;
     };
     struct instr_shr {
         MOTH_INSTR_HEADER
-        Param lhs;
-        Param rhs;
-        Param result;
+        Temp lhs;
+        Temp rhs;
+        Temp result;
     };
     struct instr_shl {
         MOTH_INSTR_HEADER
-        Param lhs;
-        Param rhs;
-        Param result;
+        Temp lhs;
+        Temp rhs;
+        Temp result;
     };
     struct instr_bitAndConst {
         MOTH_INSTR_HEADER
-        Param lhs;
+        Temp lhs;
         int rhs;
-        Param result;
+        Temp result;
     };
     struct instr_bitOrConst {
         MOTH_INSTR_HEADER
-        Param lhs;
+        Temp lhs;
         int rhs;
-        Param result;
+        Temp result;
     };
     struct instr_bitXorConst {
         MOTH_INSTR_HEADER
-        Param lhs;
+        Temp lhs;
         int rhs;
-        Param result;
+        Temp result;
     };
     struct instr_shrConst {
         MOTH_INSTR_HEADER
-        Param lhs;
+        Temp lhs;
         int rhs;
-        Param result;
+        Temp result;
     };
     struct instr_shlConst {
         MOTH_INSTR_HEADER
-        Param lhs;
+        Temp lhs;
         int rhs;
-        Param result;
+        Temp result;
     };
     struct instr_mul {
         MOTH_INSTR_HEADER
-        Param lhs;
-        Param rhs;
-        Param result;
+        Temp lhs;
+        Temp rhs;
+        Temp result;
     };
     struct instr_sub {
         MOTH_INSTR_HEADER
-        Param lhs;
-        Param rhs;
-        Param result;
+        Temp lhs;
+        Temp rhs;
+        Temp result;
     };
     struct instr_binopContext {
         MOTH_INSTR_HEADER
         uint alu; // offset inside the runtime methods
-        Param lhs;
-        Param rhs;
-        Param result;
+        Temp lhs;
+        Temp rhs;
+        Temp result;
     };
     struct instr_loadThis {
         MOTH_INSTR_HEADER
-        Param result;
+        Temp result;
     };
     struct instr_loadQmlContext {
         MOTH_INSTR_HEADER
-        Param result;
+        Temp result;
     };
     struct instr_loadQmlImportedScripts {
         MOTH_INSTR_HEADER
-        Param result;
+        Temp result;
     };
     struct instr_loadQmlSingleton {
         MOTH_INSTR_HEADER
-        Param result;
+        Temp result;
         int name;
     };
 
@@ -753,6 +759,15 @@ union Instr
     instr_ret ret;
     instr_line line;
     instr_debug debug;
+    instr_loadConst loadConst;
+    instr_loadLocal loadLocal;
+    instr_storeLocal storeLocal;
+    instr_loadArg loadArg;
+    instr_storeArg storeArg;
+    instr_loadScopedLocal loadScopedLocal;
+    instr_storeScopedLocal storeScopedLocal;
+    instr_loadScopedArg loadScopedArg;
+    instr_storeScopedArg storeScopedArg;
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;
     instr_move move;

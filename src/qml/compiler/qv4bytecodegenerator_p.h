@@ -150,21 +150,21 @@ public:
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpEq(const QV4::Moth::Param &cond)
+    Q_REQUIRED_RESULT Jump jumpEq(const Temp &cond)
     {
         Instruction::JumpEq data;
         data.condition = cond;
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpNe(const QV4::Moth::Param &cond)
+    Q_REQUIRED_RESULT Jump jumpNe(const Temp &cond)
     {
         Instruction::JumpNe data;
         data.condition = cond;
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpStrictEqual(const QV4::Moth::Param &lhs, const QV4::Moth::Param &rhs)
+    Q_REQUIRED_RESULT Jump jumpStrictEqual(const Temp &lhs, const Temp &rhs)
     {
         Instruction::JumpStrictEqual data;
         data.lhs = lhs;
@@ -172,7 +172,7 @@ public:
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpStrictNotEqual(const QV4::Moth::Param &lhs, const QV4::Moth::Param &rhs)
+    Q_REQUIRED_RESULT Jump jumpStrictNotEqual(const Temp &lhs, const Temp &rhs)
     {
         Instruction::JumpStrictNotEqual data;
         data.lhs = lhs;

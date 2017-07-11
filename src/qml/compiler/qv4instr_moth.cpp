@@ -86,12 +86,12 @@ int absoluteInstructionOffset(const char *codeStart, const T &instr)
 
 #define MOTH_BEGIN_INSTR(I) \
     case Instr::I: {\
-    const InstrMeta<(int)Instr::I>::DataType &instr = InstrMeta<(int)Instr::I>::data(*genericInstr); \
+    const InstrMeta<int(Instr::I)>::DataType &instr = InstrMeta<int(Instr::I)>::data(*genericInstr); \
     Q_UNUSED(instr); \
     QDebug d = qDebug(); \
     d.nospace(); \
     d << alignedNumber(code - start).constData() << ":    " << #I << " "; \
-    code += InstrMeta<(int)Instr::I>::Size; \
+    code += InstrMeta<int(Instr::I)>::Size; \
 
 #define MOTH_END_INSTR(I) } break;
 
@@ -99,20 +99,9 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Moth {
 
-QDebug operator<<(QDebug dbg, const Param &p)
+QDebug operator<<(QDebug dbg, const Temp &t)
 {
-    if (p.scope == 0) // const
-        dbg << "C" << p.index;
-    else if (p.scope == 1) // temp
-        dbg << "%" << p.index;
-    else if (p.scope == 2) // arg
-        dbg << "#" << p.index;
-    else if (p.scope == 3) // local
-        dbg << "$" << p.index;
-    else if (p.scope & 1) // scoped local
-        dbg << "$" << p.index << "@" << ((p.scope - 3)/2);
-    else // scoped arg
-        dbg << "#" << p.index << "@" << ((p.scope - 2)/2);
+    dbg << "%" << t.index;
     return dbg;
 }
 
@@ -132,6 +121,42 @@ void dumpBytecode(const char *code, int len)
     while (code < end) {
         const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
         switch (genericInstr->common.instructionType) {
+
+        MOTH_BEGIN_INSTR(LoadConst)
+            d << instr.result << ", " << "C" << instr.index;
+        MOTH_END_INSTR(LoadConst)
+
+        MOTH_BEGIN_INSTR(LoadLocal)
+            d << instr.result << ", " << "$" << instr.index;
+        MOTH_END_INSTR(LoadLocal)
+
+        MOTH_BEGIN_INSTR(StoreLocal)
+            d << "$" << instr.index << ", " << instr.source;
+        MOTH_END_INSTR(StoreLocal)
+
+        MOTH_BEGIN_INSTR(LoadArg)
+            d << instr.result << ", " << "#" << instr.index;
+        MOTH_END_INSTR(LoadArg)
+
+        MOTH_BEGIN_INSTR(StoreArg)
+            d << "#" << instr.index << ", " << instr.source;
+        MOTH_END_INSTR(StoreArg)
+
+        MOTH_BEGIN_INSTR(LoadScopedLocal)
+            d << instr.result << ", " << "$" << instr.index << "@" << instr.scope;
+        MOTH_END_INSTR(LoadScopedLocal)
+
+        MOTH_BEGIN_INSTR(StoreScopedLocal)
+            d << ", " << "$" << instr.index << "@" << instr.scope << ", " << instr.source;
+        MOTH_END_INSTR(StoreScopedLocal)
+
+        MOTH_BEGIN_INSTR(LoadScopedArg)
+            d <<  instr.result << ", " << "#" << instr.index << "@" << instr.scope;
+        MOTH_END_INSTR(LoadScopedArg)
+
+        MOTH_BEGIN_INSTR(StoreScopedArg)
+            d << "#" << instr.index << "@" << instr.scope << ", " << instr.source;
+        MOTH_END_INSTR(StoreScopedArg)
 
         MOTH_BEGIN_INSTR(Move)
             d << instr.result << ", " << instr.source;

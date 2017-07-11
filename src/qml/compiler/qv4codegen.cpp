@@ -609,7 +609,7 @@ bool Codegen::visit(ArrayLiteral *ast)
 
     Instruction::CallBuiltinDefineArray call;
     call.argc = argc;
-    call.args = args;
+    call.args = Moth::Temp::create(args);
     call.result = result.asLValue();
     bytecodeGenerator->addInstruction(call);
     _expr.setResult(result);
@@ -818,8 +818,8 @@ bool Codegen::visit(BinaryExpression *ast)
     return false;
 }
 
-QV4::Moth::Param Codegen::binopHelper(QSOperator::Op oper, Reference &left,
-                                      Reference &right, const Reference &dest)
+QV4::Moth::Temp Codegen::binopHelper(QSOperator::Op oper, Reference &left, Reference &right,
+                                     const Reference &dest)
 {
     if (oper == QSOperator::Add) {
         Instruction::Add add;
@@ -1023,7 +1023,7 @@ bool Codegen::visit(CallExpression *ast)
     return false;
 }
 
-int Codegen::pushArgs(ArgumentList *args)
+Moth::Temp Codegen::pushArgs(ArgumentList *args)
 {
     int argc = 0;
     for (ArgumentList *it = args; it; it = it->next)
@@ -1040,7 +1040,7 @@ int Codegen::pushArgs(ArgumentList *args)
         ++argc;
     }
 
-    return calldata;
+    return Moth::Temp::create(calldata);
 }
 
 bool Codegen::visit(ConditionalExpression *ast)
@@ -1079,7 +1079,7 @@ bool Codegen::visit(DeleteExpression *ast)
         return false;
 
     switch (expr.type) {
-    case Reference::Temp:
+    case Reference::Temporary:
         if (!expr.tempIsLocal)
             break;
         // fall through
@@ -1437,7 +1437,7 @@ bool Codegen::visit(ObjectLiteral *ast)
     call.internalClassId = classId;
     call.arrayValueCount = arrayKeyWithValue.size();
     call.arrayGetterSetterCountAndFlags = arrayGetterSetterCountAndFlags;
-    call.args = args;
+    call.args = Moth::Temp::create(args);
     call.result = result.asLValue();
     bytecodeGenerator->addInstruction(call);
 
@@ -1734,8 +1734,9 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     }
     if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed) {
+        auto args = referenceForName(QStringLiteral("arguments"), false);
         Instruction::CallBuiltinSetupArgumentsObject setup;
-        setup.result = referenceForName(QStringLiteral("arguments"), false).asLValue();
+        setup.result = args.asLValue();
         bytecodeGenerator->addInstruction(setup);
     }
     if (_context->usesThis && !_context->isStrict) {
@@ -2391,7 +2392,7 @@ bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r, 
         if (str == QLatin1String("eval") || str == QLatin1String("arguments")) {
             isArgOrEval = true;
         }
-    } else if (r.type == Reference::Local || r.type == Reference::Temp) {
+    } else if (r.type == Reference::Local || r.type == Reference::Temporary) {
         isArgOrEval = r.isArgOrEval;
     }
     if (isArgOrEval)
@@ -2494,9 +2495,12 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     switch (type) {
     case Invalid:
         break;
-    case Temp:
+    case Temporary:
+        break;
     case Local:
     case Argument:
+        index = other.index;
+        scope = other.scope;
         break;
     case Name:
     case Member:
@@ -2522,7 +2526,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     }
 
     // keep loaded reference
-    tempIndex = other.tempIndex;
+    temp = other.temp;
     needsWriteBack = false;
     isArgOrEval = other.isArgOrEval;
     codegen = other.codegen;
@@ -2544,7 +2548,7 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     switch (type) {
     case Invalid:
         break;
-    case Temp:
+    case Temporary:
     case Local:
     case Argument:
         return base == other.base;
@@ -2568,94 +2572,87 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     return true;
 }
 
-void Codegen::Reference::storeConsume(Reference &r) const
+void Codegen::Reference::storeConsume(Reference &source) const
 {
-    if (!isSimple() && !r.isSimple()) {
-        r.asRValue(); // trigger load
+    if (!isTemp() && !source.isTemp()) {
+        source.asRValue(); // trigger load
 
-        Q_ASSERT(r.tempIndex >= 0);
-        tempIndex = r.tempIndex;
-        r.tempIndex = -1;
+        Q_ASSERT(source.temp.index >= 0);
+        temp = source.temp;
+        source.temp.index = -1;
         needsWriteBack = true;
         return;
     }
 
-    store(r);
+    store(source);
 }
 
-void Codegen::Reference::store(const Reference &r) const
+void Codegen::Reference::store(const Reference &source) const
 {
     Q_ASSERT(type != Const);
     Q_ASSERT(!needsWriteBack);
 
-    if (*this == r)
+    if (*this == source)
         return;
 
-    Moth::Param b = base;
-    if (!isSimple()) {
-        if (tempIndex < 0)
-            tempIndex = codegen->bytecodeGenerator->newTemp();
-        if (!r.isSimple() && r.tempIndex == -1) {
-            r.load(tempIndex);
-            needsWriteBack = true;
+
+    if (isTemp()) {
+        if (source.temp.index != -1) {
+            Instruction::Move move;
+            move.source = source.asRValue();
+            move.result = asLValue();
+            codegen->bytecodeGenerator->addInstruction(move);
             return;
+        } else {
+            source.load(base);
         }
-        b = Moth::Param::createTemp(tempIndex);
-        needsWriteBack = true;
+        return;
     }
 
-    if (r.type == Const) {
-        Instruction::Move move;
-        move.source = r.asRValue();
-        move.result = b;
-        codegen->bytecodeGenerator->addInstruction(move);
+    if (temp.index < 0)
+        temp.index = codegen->bytecodeGenerator->newTemp();
+    if (!source.isTemp() && source.temp.index == -1) {
+        source.load(temp);
+        needsWriteBack = true;
         return;
     }
-    if (r.type == Closure) {
-        Instruction::LoadClosure load;
-        load.value = r.closureId;
-        load.result = b;
-        codegen->bytecodeGenerator->addInstruction(load);
-        return;
-    }
-    Moth::Param x = r.asRValue();
-    Q_ASSERT(b != x);
+    needsWriteBack = true;
+
+    Moth::Temp x = source.asRValue();
+    Q_ASSERT(temp != x);
     Instruction::Move move;
     move.source = x;
-    move.result = b;
+    move.result = temp;
     codegen->bytecodeGenerator->addInstruction(move);
 }
 
-Moth::Param Codegen::Reference::asRValue() const
+Moth::Temp Codegen::Reference::asRValue() const
 {
     Q_ASSERT(!needsWriteBack);
 
     Q_ASSERT(type != Invalid);
-    if (type <= Argument || type == Const) {
-        if (type == Const)
-            base = QV4::Moth::Param::createConstant(codegen->registerConstant(constant));
+    if (isTemp())
         return base;
-    }
 
     // need a temp to hold the value
-    if (tempIndex >= 0)
-        return Moth::Param::createTemp(tempIndex);
-    tempIndex = codegen->bytecodeGenerator->newTemp();
-    load(tempIndex);
-    return Moth::Param::createTemp(tempIndex);
+    if (temp.index == -1) {
+        temp.index = codegen->bytecodeGenerator->newTemp();
+        load(temp);
+    }
+    return temp;
 }
 
-Moth::Param Codegen::Reference::asLValue() const
+Moth::Temp Codegen::Reference::asLValue() const
 {
     Q_ASSERT(type <= LastLValue);
 
-    if (isSimple())
+    if (isTemp())
         return base;
 
-    if (tempIndex < 0)
-        tempIndex = codegen->bytecodeGenerator->newTemp();
+    if (temp.index == -1)
+        temp.index = codegen->bytecodeGenerator->newTemp();
     needsWriteBack = true;
-    return Moth::Param::createTemp(tempIndex);
+    return temp;
 }
 
 void Codegen::Reference::writeBack() const
@@ -2663,17 +2660,46 @@ void Codegen::Reference::writeBack() const
     if (!needsWriteBack)
         return;
 
-    Q_ASSERT(!isSimple());
-    Q_ASSERT(tempIndex >= 0);
+    Q_ASSERT(!isTemp());
+    Q_ASSERT(temp.index >= 0);
     needsWriteBack = false;
 
-    Moth::Param temp = Moth::Param::createTemp(tempIndex);
-    if (type == Name) {
+    switch (type) {
+    case Local:
+        if (scope == 0) {
+            Instruction::StoreLocal store;
+            store.source = temp;
+            store.index = index;
+            codegen->bytecodeGenerator->addInstruction(store);
+        } else {
+            Instruction::StoreScopedLocal store;
+            store.source = temp;
+            store.index = index;
+            store.scope = scope;
+            codegen->bytecodeGenerator->addInstruction(store);
+        }
+        return;
+    case Argument:
+        if (scope == 0) {
+            Instruction::StoreArg store;
+            store.source = temp;
+            store.index = index;
+            codegen->bytecodeGenerator->addInstruction(store);
+        } else {
+            Instruction::StoreScopedArg store;
+            store.source = temp;
+            store.index = index;
+            store.scope = scope;
+            codegen->bytecodeGenerator->addInstruction(store);
+        }
+        return;
+    case Name: {
         Instruction::StoreName store;
         store.source = temp;
         store.name = nameIndex;
         codegen->bytecodeGenerator->addInstruction(store);
-    } else if (type == Member) {
+    } return;
+    case Member:
         if (codegen->useFastLookups) {
             Instruction::SetLookup store;
             store.base = base;
@@ -2687,95 +2713,153 @@ void Codegen::Reference::writeBack() const
             store.source = temp;
             codegen->bytecodeGenerator->addInstruction(store);
         }
-    } else if (type == Subscript) {
+        return;
+    case Subscript: {
         Instruction::StoreElement store;
         store.base = base;
         store.index = subscript;
         store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
-    } else if (type == QmlScopeObject) {
+    } return;
+    case QmlScopeObject: {
         Instruction::StoreScopeObjectProperty store;
         store.base = base;
         store.propertyIndex = qmlCoreIndex;
         store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
-    } else if (type == QmlContextObject) {
+    } return;
+    case QmlContextObject: {
         Instruction::StoreContextObjectProperty store;
         store.base = base;
         store.propertyIndex = qmlCoreIndex;
         store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
-    } else {
-        Q_ASSERT(false);
-        Q_UNREACHABLE();
+    } return;
+    case Invalid:
+    case Temporary:
+    case Closure:
+    case Const:
+    case This:
+        break;
     }
+
+    Q_ASSERT(false);
+    Q_UNREACHABLE();
 }
 
-void Codegen::Reference::load(uint tmp) const
+void Codegen::Reference::load(Moth::Temp dest) const
 {
-    Moth::Param temp = Moth::Param::createTemp(tmp);
-    if (type == Name) {
+    switch (type) {
+    case Const: {
+        Instruction::LoadConst load;
+        load.index = codegen->registerConstant(constant);
+        load.result = dest;
+        codegen->bytecodeGenerator->addInstruction(load);
+    } return;
+    case Local:
+        if (scope == 0) {
+            Instruction::LoadLocal load;
+            load.index = index;
+            load.result = dest;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else {
+            Instruction::LoadScopedLocal load;
+            load.index = index;
+            load.scope = scope;
+            load.result = dest;
+            codegen->bytecodeGenerator->addInstruction(load);
+        }
+        return;
+    case Argument:
+        if (scope == 0) {
+            Instruction::LoadArg load;
+            load.index = index;
+            load.result = dest;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else {
+            Instruction::LoadScopedArg load;
+            load.index = index;
+            load.scope = scope;
+            load.result = dest;
+            codegen->bytecodeGenerator->addInstruction(load);
+        }
+        return;
+    case Name:
         if (codegen->useFastLookups && global) {
             Instruction::GetGlobalLookup load;
             load.index = codegen->registerGlobalGetterLookup(nameIndex);
-            load.result = temp;
+            load.result = dest;
             codegen->bytecodeGenerator->addInstruction(load);
         } else {
             Instruction::LoadName load;
             load.name = nameIndex;
-            load.result = temp;
+            load.result = dest;
             codegen->bytecodeGenerator->addInstruction(load);
         }
-    } else if (type == Member) {
+        return;
+    case Member:
         if (codegen->useFastLookups) {
             Instruction::GetLookup load;
             load.base = base;
             load.index = codegen->registerGetterLookup(nameIndex);
-            load.result = temp;
+            load.result = dest;
             codegen->bytecodeGenerator->addInstruction(load);
         } else {
             Instruction::LoadProperty load;
             load.base = base;
             load.name = nameIndex;
-            load.result = temp;
+            load.result = dest;
             codegen->bytecodeGenerator->addInstruction(load);
         }
-    } else if (type == Subscript) {
+        return;
+    case Subscript: {
         Instruction::LoadElement load;
         load.base = base;
         load.index = subscript;
-        load.result = temp;
+        load.result = dest;
         codegen->bytecodeGenerator->addInstruction(load);
-    } else if (type == Closure) {
+    } return;
+    case Closure: {
         Instruction::LoadClosure load;
         load.value = closureId;
-        load.result = temp;
+        load.result = dest;
         codegen->bytecodeGenerator->addInstruction(load);
-    } else if (type == QmlScopeObject) {
+    } return;
+    case QmlScopeObject: {
         Instruction::LoadScopeObjectProperty load;
         load.base = base;
         load.propertyIndex = qmlCoreIndex;
-        load.result = temp;
+        load.result = dest;
         load.captureRequired = captureRequired;
         codegen->bytecodeGenerator->addInstruction(load);
         if (!captureRequired)
             codegen->_context->scopeObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
-    } else if (type == QmlContextObject) {
+    } return;
+    case QmlContextObject: {
         Instruction::LoadContextObjectProperty load;
         load.base = base;
         load.propertyIndex = qmlCoreIndex;
-        load.result = temp;
+        load.result = dest;
         load.captureRequired = captureRequired;
         codegen->bytecodeGenerator->addInstruction(load);
         if (!captureRequired)
             codegen->_context->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
-    } else if (type == This) {
+    } return;
+    case This: {
         Instruction::LoadThis load;
-        load.result = temp;
+        load.result = dest;
         codegen->bytecodeGenerator->addInstruction(load);
-    } else {
-        Q_ASSERT(false);
-        Q_UNREACHABLE();
+    } return;
+    case Temporary: {
+        Instruction::Move move;
+        move.source = base;
+        move.result = dest;
+        codegen->bytecodeGenerator->addInstruction(move);
+    } return;
+    case Invalid:
+        break;
     }
+    Q_ASSERT(false);
+    Q_UNREACHABLE();
 }
 

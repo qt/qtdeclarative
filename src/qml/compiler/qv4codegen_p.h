@@ -106,7 +106,7 @@ public:
     struct Reference {
         enum Type {
             Invalid,
-            Temp,
+            Temporary,
             Local,
             Argument,
             Name,
@@ -139,21 +139,23 @@ public:
         bool isConst() const { return type == Const; }
 
         static Reference fromTemp(Codegen *cg, int tempIndex = -1, bool isLocal = false) {
-            Reference r(cg, Temp);
+            Reference r(cg, Temporary);
             if (tempIndex == -1)
                 tempIndex = cg->bytecodeGenerator->newTemp();
-            r.base = QV4::Moth::Param::createTemp(tempIndex);
+            r.base = Moth::Temp::create(tempIndex);
             r.tempIsLocal = isLocal;
             return r;
         }
         static Reference fromLocal(Codegen *cg, uint index, uint scope) {
             Reference r(cg, Local);
-            r.base = QV4::Moth::Param::createScopedLocal(index, scope);
+            r.index = index;
+            r.scope = scope;
             return r;
         }
         static Reference fromArgument(Codegen *cg, uint index, uint scope) {
             Reference r(cg, Argument);
-            r.base = QV4::Moth::Param::createArgument(index, scope);
+            r.index = index;
+            r.scope = scope;
             return r;
         }
         static Reference fromName(Codegen *cg, const QString &name) {
@@ -208,7 +210,7 @@ public:
 
         bool isSimple() const {
             switch (type) {
-            case Temp:
+            case Temporary:
             case Local:
             case Argument:
             case Const:
@@ -218,20 +220,28 @@ public:
             }
         }
 
-        void store(const Reference &r) const;
-        void storeConsume(Reference &r) const;
+        bool isTemp() const {
+            return type == Temporary;
+        }
 
-        QV4::Moth::Param asRValue() const;
-        QV4::Moth::Param asLValue() const;
+        void store(const Reference &source) const;
+        void storeConsume(Reference &source) const;
+
+        Moth::Temp asRValue() const;
+        Moth::Temp asLValue() const;
 
         void writeBack() const;
-        void load(uint temp) const;
+        void load(Moth::Temp dest) const;
 
-        mutable QV4::Moth::Param base;
+        Moth::Temp base;
         union {
-            uint nameIndex;
-            QV4::Moth::Param subscript;
             QV4::ReturnedValue constant;
+            struct { // Argument/Local
+                int index;
+                int scope;
+            };
+            uint nameIndex;
+            Moth::Temp subscript;
             int closureId;
             struct { // QML scope/context object case
                 qint16 qmlCoreIndex;
@@ -239,7 +249,7 @@ public:
                 bool captureRequired;
             };
         };
-        mutable int tempIndex = -1;
+        mutable Moth::Temp temp = Moth::Temp::create(-1);
         mutable bool needsWriteBack = false;
         mutable bool isArgOrEval = false;
         bool isReadonly = false;
@@ -514,9 +524,9 @@ public:
     QList<QQmlError> qmlErrors() const;
 #endif
 
-    QV4::Moth::Param binopHelper(QSOperator::Op oper, Reference &left,
-                                 Reference &right, const Reference &dest);
-    int pushArgs(AST::ArgumentList *args);
+    Moth::Temp binopHelper(QSOperator::Op oper, Reference &left, Reference &right,
+                           const Reference &dest);
+    Moth::Temp pushArgs(AST::ArgumentList *args);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
 
