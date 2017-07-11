@@ -107,7 +107,7 @@ public:
     void updatePressed(bool pressed, const QPointF &pos = QPointF());
     void setContextProperty(QQuickItem *item, const QString &name, const QVariant &value);
 
-    void itemChildAdded(QQuickItem *, QQuickItem *child);
+    void itemChildAdded(QQuickItem *, QQuickItem *child) override;
 
     int count;
     int currentIndex;
