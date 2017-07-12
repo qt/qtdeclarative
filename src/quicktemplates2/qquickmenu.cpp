@@ -359,6 +359,23 @@ void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, 
         resizeItems();
 }
 
+void QQuickMenuPrivate::reposition()
+{
+    Q_Q(QQuickMenu);
+    if (parentMenu) {
+        if (cascade) {
+            if (popupItem->isMirrored())
+                q->setPosition(QPointF(-q->width() - parentMenu->leftPadding() + q->overlap(), -q->topPadding()));
+            else if (parentItem)
+                q->setPosition(QPointF(parentItem->width() + parentMenu->rightPadding() - q->overlap(), -q->topPadding()));
+        } else {
+            q->setPosition(QPointF(parentMenu->x() + (parentMenu->width() - q->width()) / 2,
+                                   parentMenu->y() + (parentMenu->height() - q->height()) / 2));
+        }
+    }
+    QQuickPopupPrivate::reposition();
+}
+
 bool QQuickMenuPrivate::prepareEnterTransition()
 {
     Q_Q(QQuickMenu);
@@ -461,15 +478,9 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
 
     if (cascade) {
         subMenu->setParentItem(item);
-        if (popupItem->isMirrored())
-            subMenu->setPosition(QPointF(-subMenu->width() - q->leftPadding() + subMenu->overlap(), -subMenu->topPadding()));
-        else
-            subMenu->setPosition(QPointF(item->width() + q->rightPadding() - subMenu->overlap(), -subMenu->topPadding()));
     } else {
         q->close();
         subMenu->setParentItem(parentItem);
-        subMenu->setPosition(QPointF(q->x() + (q->width() - subMenu->width()) / 2,
-                                     q->y() + (q->height() - subMenu->height()) / 2));
     }
 
     if (activate)
