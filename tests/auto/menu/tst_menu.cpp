@@ -64,6 +64,7 @@ public:
 
 private slots:
     void defaults();
+    void count();
     void mouse();
     void pressAndHold();
     void contextMenuKeyboard();
@@ -93,6 +94,35 @@ void tst_menu::defaults()
     QCOMPARE(emptyMenu->isVisible(), false);
     QCOMPARE(emptyMenu->currentIndex(), -1);
     QCOMPARE(emptyMenu->contentItem()->property("currentIndex"), QVariant(-1));
+    QCOMPARE(emptyMenu->count(), 0);
+}
+
+void tst_menu::count()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+
+    QQuickMenu *menu = helper.window->property("emptyMenu").value<QQuickMenu*>();
+    QVERIFY(menu);
+
+    QSignalSpy countSpy(menu, &QQuickMenu::countChanged);
+    QVERIFY(countSpy.isValid());
+
+    menu->addItem(new QQuickItem);
+    QCOMPARE(menu->count(), 1);
+    QCOMPARE(countSpy.count(), 1);
+
+    menu->insertItem(0, new QQuickItem);
+    QCOMPARE(menu->count(), 2);
+    QCOMPARE(countSpy.count(), 2);
+
+    menu->removeItem(menu->itemAt(1));
+    QCOMPARE(menu->count(), 1);
+    QCOMPARE(countSpy.count(), 3);
+
+    QQuickItem *item = menu->takeItem(0);
+    QVERIFY(item);
+    QCOMPARE(menu->count(), 0);
+    QCOMPARE(countSpy.count(), 4);
 }
 
 void tst_menu::mouse()

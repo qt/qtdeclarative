@@ -619,7 +619,22 @@ void QQuickMenuPrivate::contentData_clear(QQmlListProperty<QObject> *prop)
 QQuickMenu::QQuickMenu(QObject *parent)
     : QQuickPopup(*(new QQuickMenuPrivate), parent)
 {
+    Q_D(QQuickMenu);
     setFocus(true);
+    connect(d->contentModel, &QQmlObjectModel::countChanged, this, &QQuickMenu::countChanged);
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty int QtQuick.Controls::Menu::count
+    \readonly
+
+    This property holds the number of items.
+*/
+int QQuickMenu::count() const
+{
+    Q_D(const QQuickMenu);
+    return d->contentModel->count();
 }
 
 /*!

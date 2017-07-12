@@ -63,6 +63,7 @@ class QQuickMenuPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenu : public QQuickPopup
 {
     Q_OBJECT
+    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL REVISION 3)
     Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
@@ -75,6 +76,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenu : public QQuickPopup
 public:
     explicit QQuickMenu(QObject *parent = nullptr);
 
+    int count() const;
     Q_INVOKABLE QQuickItem *itemAt(int index) const;
     Q_INVOKABLE void addItem(QQuickItem *item);
     Q_INVOKABLE void insertItem(int index, QQuickItem *item);
@@ -124,6 +126,7 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 Q_SIGNALS:
+    Q_REVISION(3) void countChanged();
     void titleChanged(const QString &title);
     Q_REVISION(3) void cascadeChanged(bool cascade);
     Q_REVISION(3) void overlapChanged();
