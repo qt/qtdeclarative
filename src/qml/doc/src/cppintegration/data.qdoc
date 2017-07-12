@@ -352,7 +352,7 @@ properties:
 
  private:
      QString m_name;
- }
+ };
 
  Q_DECLARE_METATYPE(Actor)
 \endcode
