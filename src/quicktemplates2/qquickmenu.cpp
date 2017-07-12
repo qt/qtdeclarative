@@ -215,7 +215,7 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
         Q_Q(QQuickMenu);
         QQuickMenuItemPrivate::get(menuItem)->setMenu(q);
         if (QQuickMenu *subMenu = menuItem->subMenu())
-            QQuickMenuPrivate::get(subMenu)->parentMenu = q;
+            QQuickMenuPrivate::get(subMenu)->setParentMenu(q);
         QObjectPrivate::connect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
         QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::connect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
@@ -239,7 +239,7 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
     if (menuItem) {
         QQuickMenuItemPrivate::get(menuItem)->setMenu(nullptr);
         if (QQuickMenu *subMenu = menuItem->subMenu())
-            QQuickMenuPrivate::get(subMenu)->parentMenu = nullptr;
+            QQuickMenuPrivate::get(subMenu)->setParentMenu(nullptr);
         QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
         QObjectPrivate::disconnect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::disconnect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
@@ -472,8 +472,22 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
     p->allowHorizontalFlip = cascade;
     if (activate)
         p->setCurrentIndex(0, Qt::PopupFocusReason);
-    subMenu->setCascade(cascade);
     subMenu->open();
+}
+
+void QQuickMenuPrivate::setParentMenu(QQuickMenu *parent)
+{
+    Q_Q(QQuickMenu);
+    if (parentMenu == parent)
+        return;
+
+    if (parentMenu)
+        QObject::disconnect(parentMenu.data(), &QQuickMenu::cascadeChanged, q, &QQuickMenu::setCascade);
+    if (parent)
+        QObject::connect(parent, &QQuickMenu::cascadeChanged, q, &QQuickMenu::setCascade);
+
+    parentMenu = parent;
+    q->resetCascade();
 }
 
 void QQuickMenuPrivate::startHoverTimer()
@@ -1005,7 +1019,16 @@ void QQuickMenu::setCascade(bool cascade)
     if (d->cascade == cascade)
         return;
     d->cascade = cascade;
-    emit cascadeChanged();
+    emit cascadeChanged(cascade);
+}
+
+void QQuickMenu::resetCascade()
+{
+    Q_D(QQuickMenu);
+    if (d->parentMenu)
+        setCascade(d->parentMenu->cascade());
+    else
+        setCascade(shouldCascade());
 }
 
 /*!

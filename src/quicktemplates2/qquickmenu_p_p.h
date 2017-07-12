@@ -102,6 +102,7 @@ public:
     void onItemActiveFocusChanged();
 
     void openSubMenu(QQuickMenuItem *item, bool activate);
+    void setParentMenu(QQuickMenu *parent);
 
     void startHoverTimer();
     void stopHoverTimer();

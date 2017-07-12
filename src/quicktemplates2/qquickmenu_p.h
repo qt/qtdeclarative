@@ -66,7 +66,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenu : public QQuickPopup
     Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
-    Q_PROPERTY(bool cascade READ cascade WRITE setCascade NOTIFY cascadeChanged FINAL REVISION 3)
+    Q_PROPERTY(bool cascade READ cascade WRITE setCascade RESET resetCascade NOTIFY cascadeChanged FINAL REVISION 3)
     Q_PROPERTY(qreal overlap READ overlap WRITE setOverlap NOTIFY overlapChanged FINAL REVISION 3)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL REVISION 3)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL REVISION 3)
@@ -103,6 +103,7 @@ public:
 
     bool cascade() const;
     void setCascade(bool cascade);
+    void resetCascade();
 
     qreal overlap() const;
     void setOverlap(qreal overlap);
@@ -124,7 +125,7 @@ protected:
 
 Q_SIGNALS:
     void titleChanged(const QString &title);
-    Q_REVISION(3) void cascadeChanged();
+    Q_REVISION(3) void cascadeChanged(bool cascade);
     Q_REVISION(3) void overlapChanged();
     Q_REVISION(3) void delegateChanged();
     Q_REVISION(3) void currentIndexChanged();
