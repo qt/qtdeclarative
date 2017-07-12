@@ -1034,7 +1034,7 @@ void QQuickMenu::setOverlap(qreal overlap)
     if (d->overlap == overlap)
         return;
     d->overlap = overlap;
-    emit cascadeChanged();
+    emit overlapChanged();
 }
 
 /*!
