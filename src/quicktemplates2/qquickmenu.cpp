@@ -379,6 +379,9 @@ void QQuickMenuPrivate::reposition()
 bool QQuickMenuPrivate::prepareEnterTransition()
 {
     Q_Q(QQuickMenu);
+    if (parentMenu && !cascade)
+        parentMenu->close();
+
     // If a cascading sub-menu doesn't have enough space to open on
     // the right, it flips on the other side of the parent menu.
     allowHorizontalFlip = cascade && parentMenu;
@@ -471,13 +474,9 @@ void QQuickMenuPrivate::onItemActiveFocusChanged()
 
 void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
 {
-    Q_Q(QQuickMenu);
     QQuickMenu *subMenu = item ? item->subMenu() : nullptr;
     if (!subMenu)
         return;
-
-    if (!cascade)
-        q->close();
 
     if (activate)
         QQuickMenuPrivate::get(subMenu)->setCurrentIndex(0, Qt::PopupFocusReason);
