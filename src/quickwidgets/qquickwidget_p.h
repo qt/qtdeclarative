@@ -144,6 +144,7 @@ public:
     bool useSoftwareRenderer;
     QImage softwareImage;
     QRegion updateRegion;
+    bool forceFullUpdate;
 };
 
 QT_END_NAMESPACE
