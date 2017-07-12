@@ -362,6 +362,10 @@ void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, 
 bool QQuickMenuPrivate::prepareEnterTransition()
 {
     Q_Q(QQuickMenu);
+    // If a cascading sub-menu doesn't have enough space to open on
+    // the right, it flips on the other side of the parent menu.
+    allowHorizontalFlip = cascade && parentMenu;
+
     if (!QQuickPopupPrivate::prepareEnterTransition())
         return false;
 
@@ -468,10 +472,8 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
                                      q->y() + (q->height() - subMenu->height()) / 2));
     }
 
-    QQuickMenuPrivate *p = QQuickMenuPrivate::get(subMenu);
-    p->allowHorizontalFlip = cascade;
     if (activate)
-        p->setCurrentIndex(0, Qt::PopupFocusReason);
+        QQuickMenuPrivate::get(subMenu)->setCurrentIndex(0, Qt::PopupFocusReason);
     subMenu->open();
 }
 
