@@ -104,6 +104,7 @@ public:
 
     void openSubMenu(QQuickMenuItem *item, bool activate);
     void setParentMenu(QQuickMenu *parent);
+    void resolveParentItem();
 
     void startHoverTimer();
     void stopHoverTimer();

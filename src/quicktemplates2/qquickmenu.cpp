@@ -476,12 +476,8 @@ void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
     if (!subMenu)
         return;
 
-    if (cascade) {
-        subMenu->setParentItem(item);
-    } else {
+    if (!cascade)
         q->close();
-        subMenu->setParentItem(parentItem);
-    }
 
     if (activate)
         QQuickMenuPrivate::get(subMenu)->setCurrentIndex(0, Qt::PopupFocusReason);
@@ -494,13 +490,40 @@ void QQuickMenuPrivate::setParentMenu(QQuickMenu *parent)
     if (parentMenu == parent)
         return;
 
-    if (parentMenu)
+    if (parentMenu) {
         QObject::disconnect(parentMenu.data(), &QQuickMenu::cascadeChanged, q, &QQuickMenu::setCascade);
-    if (parent)
+        disconnect(parentMenu.data(), &QQuickMenu::parentChanged, this, &QQuickMenuPrivate::resolveParentItem);
+    }
+    if (parent) {
         QObject::connect(parent, &QQuickMenu::cascadeChanged, q, &QQuickMenu::setCascade);
+        connect(parent, &QQuickMenu::parentChanged, this, &QQuickMenuPrivate::resolveParentItem);
+    }
 
     parentMenu = parent;
     q->resetCascade();
+    resolveParentItem();
+}
+
+static QQuickItem *findParentMenuItem(QQuickMenu *subMenu)
+{
+    QQuickMenu *menu = QQuickMenuPrivate::get(subMenu)->parentMenu;
+    for (int i = 0; i < QQuickMenuPrivate::get(menu)->contentModel->count(); ++i) {
+        QQuickMenuItem *item = qobject_cast<QQuickMenuItem *>(menu->itemAt(i));
+        if (item && item->subMenu() == subMenu)
+            return item;
+    }
+    return nullptr;
+}
+
+void QQuickMenuPrivate::resolveParentItem()
+{
+    Q_Q(QQuickMenu);
+    if (!parentMenu)
+        q->resetParentItem();
+    else if (!cascade)
+        q->setParentItem(parentMenu->parentItem());
+    else
+        q->setParentItem(findParentMenuItem(q));
 }
 
 void QQuickMenuPrivate::startHoverTimer()
@@ -1047,6 +1070,8 @@ void QQuickMenu::setCascade(bool cascade)
     if (d->cascade == cascade)
         return;
     d->cascade = cascade;
+    if (d->parentMenu)
+        d->resolveParentItem();
     emit cascadeChanged(cascade);
 }
 
