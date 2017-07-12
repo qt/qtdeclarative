@@ -160,11 +160,13 @@ protected:
     }
 
     void setupFunction(QV4::ExecutionContext *qmlContext, QV4::Function *f);
+    void setCompilationUnit(QV4::CompiledData::CompilationUnit *compilationUnit);
 
 private:
     friend class QQmlContextData;
     friend class QQmlPropertyCapture;
     friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
+    friend class QQmlTranslationBinding;
 
     QQmlDelayedError *m_error;
 

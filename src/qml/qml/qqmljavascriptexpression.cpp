@@ -461,7 +461,12 @@ void QQmlJavaScriptExpression::setupFunction(QV4::ExecutionContext *qmlContext, 
         return;
     m_qmlScope.set(qmlContext->engine(), *qmlContext);
     m_v4Function = f;
-    m_compilationUnit = m_v4Function->compilationUnit;
+    setCompilationUnit(m_v4Function->compilationUnit);
+}
+
+void QQmlJavaScriptExpression::setCompilationUnit(QV4::CompiledData::CompilationUnit *compilationUnit)
+{
+    m_compilationUnit = compilationUnit;
 }
 
 void QQmlJavaScriptExpression::clearActiveGuards()

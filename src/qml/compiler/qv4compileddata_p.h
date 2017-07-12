@@ -361,7 +361,8 @@ struct Q_QML_PRIVATE_EXPORT Binding
 
     static QString escapedString(const QString &string);
 
-    bool evaluatesToString() const { return type == Type_String || type == Type_Translation || type == Type_TranslationById; }
+    bool containsTranslations() const { return type == Type_Translation || type == Type_TranslationById; }
+    bool evaluatesToString() const { return type == Type_String || containsTranslations(); }
 
     QString valueAsString(const Unit *unit) const;
     QString valueAsScriptString(const Unit *unit) const;

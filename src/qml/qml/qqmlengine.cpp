@@ -1328,6 +1328,27 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 }
 
 /*!
+  Refreshes all binding expressions that use strings marked for translation.
+
+  Call this function after you have installed a new translator with
+  QCoreApplication::installTranslator, to ensure that your user-interface
+  shows up-to-date translations.
+
+  \note Due to a limitation in the implementation, this function
+  refreshes all the engine's bindings, not only those that use strings
+  marked for translation.
+  This may be optimized in a future release.
+
+  \since 5.10
+*/
+void QQmlEngine::retranslate()
+{
+    Q_D(QQmlEngine);
+    if (QQmlContextData *firstChildContext = QQmlContextData::get(d->rootContext)->childContexts)
+        firstChildContext->refreshExpressions();
+}
+
+/*!
   Returns the QQmlContext for the \a object, or 0 if no
   context has been set.
 
@@ -1447,6 +1468,9 @@ bool QQmlEngine::event(QEvent *e)
     Q_D(QQmlEngine);
     if (e->type() == QEvent::User)
         d->doDeleteInEngineThread();
+    else if (e->type() == QEvent::LanguageChange) {
+        retranslate();
+    }
 
     return QJSEngine::event(e);
 }

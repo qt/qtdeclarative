@@ -122,7 +122,7 @@ private:
 
     void registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const;
 
-    QV4::Heap::QmlContext *currentQmlContext();
+    QV4::QmlContext *currentQmlContext();
 
     enum Phase {
         Startup,
