@@ -102,7 +102,7 @@ public:
     void onItemTriggered();
     void onItemActiveFocusChanged();
 
-    void openSubMenu(QQuickMenuItem *item, bool activate);
+    QQuickMenu *currentSubMenu() const;
     void setParentMenu(QQuickMenu *parent);
     void resolveParentItem();
 

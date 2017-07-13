@@ -403,13 +403,11 @@ bool QQuickMenuPrivate::prepareExitTransition()
     if (!QQuickPopupPrivate::prepareExitTransition())
         return false;
 
-    if (currentItem) {
-        QQuickMenu *subMenu = currentItem->subMenu();
-        while (subMenu) {
-            QPointer<QQuickMenuItem> currentSubMenuItem = QQuickMenuPrivate::get(subMenu)->currentItem;
-            subMenu->close();
-            subMenu = currentSubMenuItem ? currentSubMenuItem->subMenu() : nullptr;
-        }
+    QQuickMenu *subMenu = currentSubMenu();
+    while (subMenu) {
+        QPointer<QQuickMenuItem> currentSubMenuItem = QQuickMenuPrivate::get(subMenu)->currentItem;
+        subMenu->close();
+        subMenu = currentSubMenuItem ? currentSubMenuItem->subMenu() : nullptr;
     }
     return true;
 }
@@ -454,8 +452,8 @@ void QQuickMenuPrivate::onItemTriggered()
     if (!item)
         return;
 
-    if (item->subMenu())
-        openSubMenu(item, true);
+    if (QQuickMenu *subMenu = item->subMenu())
+        subMenu->popup(subMenu->itemAt(0));
     else
         q->dismiss();
 }
@@ -472,15 +470,12 @@ void QQuickMenuPrivate::onItemActiveFocusChanged()
     setCurrentIndex(indexOfItem, control ? control->focusReason() : Qt::OtherFocusReason);
 }
 
-void QQuickMenuPrivate::openSubMenu(QQuickMenuItem *item, bool activate)
+QQuickMenu *QQuickMenuPrivate::currentSubMenu() const
 {
-    QQuickMenu *subMenu = item ? item->subMenu() : nullptr;
-    if (!subMenu)
-        return;
+    if (!currentItem)
+        return nullptr;
 
-    if (activate)
-        QQuickMenuPrivate::get(subMenu)->setCurrentIndex(0, Qt::PopupFocusReason);
-    subMenu->open();
+    return currentItem->subMenu();
 }
 
 void QQuickMenuPrivate::setParentMenu(QQuickMenu *parent)
@@ -1388,7 +1383,8 @@ void QQuickMenu::keyPressEvent(QKeyEvent *event)
                 close();
             }
         } else {
-            d->openSubMenu(d->currentItem, true);
+            if (QQuickMenu *subMenu = d->currentSubMenu())
+                subMenu->popup(subMenu->itemAt(0));
         }
         return;
 
@@ -1401,7 +1397,8 @@ void QQuickMenu::timerEvent(QTimerEvent *event)
 {
     Q_D(QQuickMenu);
     if (event->timerId() == d->hoverTimer) {
-        d->openSubMenu(d->currentItem, false);
+        if (QQuickMenu *subMenu = d->currentSubMenu())
+            subMenu->open();
         d->stopHoverTimer();
     }
 }
