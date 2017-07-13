@@ -4085,6 +4085,8 @@ void QQuickWindow::resetOpenGLState()
 
     The flags which you read from this property might differ from the ones
     that you set if the requested flags could not be fulfilled.
+
+    \sa Qt::WindowFlags
  */
 
 /*!
