@@ -385,175 +385,175 @@ void Codegen::variableDeclarationList(VariableDeclarationList *ast)
 
 bool Codegen::visit(ArgumentList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(CaseBlock *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(CaseClause *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(CaseClauses *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(Catch *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(DefaultClause *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(ElementList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(Elision *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(Finally *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(FormalParameterList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(FunctionBody *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(Program *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(PropertyAssignmentList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(PropertyNameAndValue *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(PropertyGetterSetter *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(SourceElements *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(StatementList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiArrayMemberList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiImport *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiHeaderItemList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiPragma *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiObjectInitializer *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiObjectMemberList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiParameterList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiProgram *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiQualifiedId *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(UiQualifiedPragmaId *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(VariableDeclaration *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
 bool Codegen::visit(VariableDeclarationList *)
 {
-    Q_ASSERT(!"unreachable");
+    Q_UNREACHABLE();
     return false;
 }
 
@@ -2348,37 +2348,37 @@ bool Codegen::visit(WithStatement *ast)
 
 bool Codegen::visit(UiArrayBinding *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
 bool Codegen::visit(UiObjectBinding *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
 bool Codegen::visit(UiObjectDefinition *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
 bool Codegen::visit(UiPublicMember *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
 bool Codegen::visit(UiScriptBinding *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
 bool Codegen::visit(UiSourceElement *)
 {
-    Q_ASSERT(!"not implemented");
+    Q_UNIMPLEMENTED();
     return false;
 }
 
