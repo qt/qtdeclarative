@@ -114,7 +114,7 @@ QQuickItem *QQuickPanePrivate::getContentItem()
 {
     Q_Q(QQuickPane);
     if (!contentItem)
-        contentItem = new QQuickItem(q);
+        return new QQuickItem(q);
     return contentItem;
 }
 
@@ -206,8 +206,7 @@ void QQuickPane::setContentHeight(qreal height)
 */
 QQmlListProperty<QObject> QQuickPane::contentData()
 {
-    Q_D(QQuickPane);
-    return QQmlListProperty<QObject>(d->getContentItem(), nullptr,
+    return QQmlListProperty<QObject>(contentItem(), nullptr,
                                      QQuickItemPrivate::data_append,
                                      QQuickItemPrivate::data_count,
                                      QQuickItemPrivate::data_at,
@@ -229,8 +228,7 @@ QQmlListProperty<QObject> QQuickPane::contentData()
 */
 QQmlListProperty<QQuickItem> QQuickPane::contentChildren()
 {
-    Q_D(QQuickPane);
-    return QQmlListProperty<QQuickItem>(d->getContentItem(), nullptr,
+    return QQmlListProperty<QQuickItem>(contentItem(), nullptr,
                                         QQuickItemPrivate::children_append,
                                         QQuickItemPrivate::children_count,
                                         QQuickItemPrivate::children_at,

@@ -96,7 +96,7 @@ QQuickItem *QQuickPopupItemPrivate::getContentItem()
 {
     Q_Q(QQuickPopupItem);
     if (!contentItem)
-        contentItem = new QQuickItem(q);
+        return new QQuickItem(q);
     return contentItem;
 }
 

@@ -261,6 +261,7 @@ void QQuickPopupPrivate::init()
     popupItem->setVisible(false);
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
+    QObject::connect(popupItem, &QQuickControl::contentItemChanged, q, &QQuickPopup::contentItemChanged);
     positioner = new QQuickPopupPositioner(q);
 }
 
@@ -2027,7 +2028,6 @@ void QQuickPopup::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_UNUSED(newItem);
     Q_UNUSED(oldItem);
-    emit contentItemChanged();
 }
 
 void QQuickPopup::fontChange(const QFont &newFont, const QFont &oldFont)
