@@ -383,8 +383,8 @@ bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (!acceptTouch(point) && !blockInput(item, point.pos()))
-                continue;
+            if (!acceptTouch(point))
+                return blockInput(item, point.pos());
 
             switch (point.state()) {
             case Qt::TouchPointPressed:

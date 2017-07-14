@@ -347,10 +347,10 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
 bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
 {
     Q_Q(QQuickDrawer);
-    handleTouchEvent(item, event);
+    bool handled = handleTouchEvent(item, event);
 
     if (!window || !interactive || popupItem->keepTouchGrab() || !event->touchPointStates().testFlag(Qt::TouchPointMoved))
-        return false;
+        return handled;
 
     bool overThreshold = false;
     for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
