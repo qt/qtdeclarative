@@ -87,6 +87,8 @@ QSurfaceFormat QQuickNvprFunctions::format()
     return fmt;
 }
 
+#define PROC(type, name) reinterpret_cast<type>(ctx->getProcAddress(#name))
+
 /*!
   \return true if GL_NV_path_rendering is supported with the current OpenGL
   context.
@@ -112,6 +114,10 @@ bool QQuickNvprFunctions::isSupported()
     }
 
     if (!ctx->hasExtension(QByteArrayLiteral("GL_NV_path_rendering")))
+        return false;
+
+    // Check that GL_NV_Path_rendering extension is at least API revision 1.3
+    if (!PROC(PFNGLPROGRAMPATHFRAGMENTINPUTGENNVPROC, glProgramPathFragmentInputGenNV))
         return false;
 
     // Do not check for DSA as the string may not be exposed on ES
@@ -198,8 +204,6 @@ bool QQuickNvprFunctions::createFragmentOnlyPipeline(const char *fragmentShaderS
 
     return true;
 }
-
-#define PROC(type, name) reinterpret_cast<type>(ctx->getProcAddress(#name))
 
 bool QQuickNvprFunctionsPrivate::resolve()
 {
