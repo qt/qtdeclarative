@@ -101,6 +101,7 @@ ApplicationWindow {
                     ToolTip.text: text
                     ToolTip.delay: 1000
                     ToolTip.visible: hovered
+                    Layout.fillWidth: true
                 }
                 ToolButton {
                     text: "Pressed"
@@ -109,6 +110,7 @@ ApplicationWindow {
                     ToolTip.text: text
                     ToolTip.delay: 1000
                     ToolTip.visible: hovered
+                    Layout.fillWidth: true
                 }
                 ToolButton {
                     text: "Checked"
@@ -118,6 +120,7 @@ ApplicationWindow {
                     ToolTip.text: text
                     ToolTip.delay: 1000
                     ToolTip.visible: hovered
+                    Layout.fillWidth: true
                 }
                 ToolButton {
                     text: "Highlighted"
@@ -126,19 +129,12 @@ ApplicationWindow {
                     ToolTip.text: text
                     ToolTip.delay: 1000
                     ToolTip.visible: hovered
+                    Layout.fillWidth: true
                 }
                 ToolButton {
                     text: "Disabled"
                     enabled: false
-                }
-
-                ToolSeparator {}
-
-                ToolButton {
-                    text: "1"
-                }
-                ToolButton {
-                    text: "2"
+                    Layout.fillWidth: true
                 }
 
                 ToolSeparator {}
@@ -147,11 +143,12 @@ ApplicationWindow {
                     id: menuButton
                     text: "Menu"
                     hoverEnabled: true
+                    checked: menu.visible
+                    checkable: true
                     ToolTip.text: text
                     ToolTip.delay: 1000
                     ToolTip.visible: hovered
-                    checked: menu.visible
-                    checkable: true
+                    Layout.fillWidth: true
 
                     Menu {
                         id: menu
@@ -187,6 +184,30 @@ ApplicationWindow {
                             text: "CH+DIS"
                             checked: true
                             enabled: false
+                        }
+                    }
+                }
+
+                ToolButton {
+                    id: dialogButton
+                    text: "Dialog"
+                    hoverEnabled: true
+                    onClicked: dialog.open()
+                    ToolTip.text: text
+                    ToolTip.delay: 1000
+                    ToolTip.visible: hovered
+                    Layout.fillWidth: true
+
+                    Dialog {
+                        id: dialog
+                        x: (window.width - width) / 2
+                        y: (window.height - height) / 2
+                        standardButtons: Dialog.Ok | Dialog.Cancel
+                        parent: window.contentItem
+
+                        Label {
+                            text: "Lorem ipsum dolor sit amet, \nconsectetuer adipiscing elit, \n"
+                                + "sed diam nonummy nibh euismod tincidunt ut \nlaoreet dolore magna aliquam erat volutpat."
                         }
                     }
                 }
@@ -336,6 +357,36 @@ ApplicationWindow {
                         highlighted: true
                         enabled: false
                         checked: true
+                    }
+                }
+
+                RowLayout {
+                    spacing: window.controlSpacing
+
+                    Button {
+                        text: "Flat"
+                        flat: true
+                    }
+                    Button {
+                        text: "Flat+PR"
+                        down: true
+                        flat: true
+                    }
+                    Button {
+                        text: "Flat+CH"
+                        checked: true
+                        flat: true
+                    }
+                    Button {
+                        text: "Flat+CH+PR"
+                        checked: true
+                        down: true
+                        flat: true
+                    }
+                    Button {
+                        text: "Flat+DIS"
+                        enabled: false
+                        flat: true
                     }
                 }
 
