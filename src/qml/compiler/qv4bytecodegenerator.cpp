@@ -54,7 +54,7 @@ void BytecodeGenerator::setLocation(const QQmlJS::AST::SourceLocation &loc)
     addInstruction(line); //### put line numbers in a side-table, not in the instruction stream
 }
 
-unsigned BytecodeGenerator::newTemp()
+int BytecodeGenerator::newTemp()
 {
     int t = currentTemp++;
     if (tempCount < currentTemp)
@@ -62,7 +62,7 @@ unsigned BytecodeGenerator::newTemp()
     return t;
 }
 
-unsigned BytecodeGenerator::newTempArray(int n)
+int BytecodeGenerator::newTempArray(int n)
 {
     int t = currentTemp;
     currentTemp += n;
@@ -77,7 +77,7 @@ QByteArray BytecodeGenerator::finalize()
 
     Instruction::InitStackFrame init;
     init.instructionType = Instr::InitStackFrame;
-    init.value = quint32(tempCount);
+    init.value = tempCount;
     code.append(reinterpret_cast<const char *>(&init), InstrMeta<Instr::InitStackFrame>::Size);
 
     // content

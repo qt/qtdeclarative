@@ -197,8 +197,8 @@ public:
         return currentExceptionHandler;
     }
 
-    unsigned newTemp();
-    unsigned newTempArray(int n);
+    int newTemp();
+    int newTempArray(int n);
 
     QByteArray finalize();
 
@@ -237,9 +237,9 @@ private:
     QVector<int> labels;
     QVector<JumpData> jumps;
     ExceptionHandler *currentExceptionHandler;
-    unsigned tempCount = 0;
+    int tempCount = 0;
 public:
-    unsigned currentTemp = 0;
+    int currentTemp = 0;
 private:
     int currentLine = -1;
 };

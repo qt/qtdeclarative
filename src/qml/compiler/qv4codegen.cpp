@@ -1680,7 +1680,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
 
-    unsigned returnAddress = bytecodeGenerator->newTemp();
+    int returnAddress = bytecodeGenerator->newTemp();
 
     if (!_context->parent || _context->usesArgumentsObject == Context::ArgumentsObjectUnknown)
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;

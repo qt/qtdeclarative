@@ -90,7 +90,7 @@ int absoluteInstructionOffset(const char *codeStart, const T &instr)
     Q_UNUSED(instr); \
     QDebug d = qDebug(); \
     d.nospace(); \
-    d << alignedNumber(code - start).constData() << ":    " << #I << " "; \
+    d << alignedNumber(int(code - start)).constData() << ":    " << #I << " "; \
     code += InstrMeta<int(Instr::I)>::Size; \
 
 #define MOTH_END_INSTR(I) } break;

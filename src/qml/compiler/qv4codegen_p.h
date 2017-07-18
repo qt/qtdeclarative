@@ -384,9 +384,9 @@ protected:
         return jsUnitGenerator->registerString(name);
     }
     int registerConstant(QV4::ReturnedValue v) { return jsUnitGenerator->registerConstant(v); }
-    uint registerGetterLookup(int nameIndex) { return jsUnitGenerator->registerGetterLookup(nameIndex); }
-    uint registerSetterLookup(int nameIndex) { return jsUnitGenerator->registerSetterLookup(nameIndex); }
-    uint registerGlobalGetterLookup(int nameIndex) { return jsUnitGenerator->registerGlobalGetterLookup(nameIndex); }
+    int registerGetterLookup(int nameIndex) { return jsUnitGenerator->registerGetterLookup(nameIndex); }
+    int registerSetterLookup(int nameIndex) { return jsUnitGenerator->registerSetterLookup(nameIndex); }
+    int registerGlobalGetterLookup(int nameIndex) { return jsUnitGenerator->registerGlobalGetterLookup(nameIndex); }
 
     // Returns index in _module->functions
     virtual int defineFunction(const QString &name, AST::Node *ast,
@@ -544,7 +544,7 @@ protected:
     Result _expr;
     Module *_module;
     BytecodeGenerator::Label _exitBlock;
-    unsigned _returnAddress;
+    int _returnAddress;
     Context *_context;
     AST::LabelledStatement *_labelledStatement;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
