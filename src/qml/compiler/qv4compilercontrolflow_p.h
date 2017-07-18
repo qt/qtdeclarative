@@ -104,11 +104,8 @@ struct ControlFlow {
     }
 
     void jumpToHandler(const Handler &h) {
-        if (h.tempIndex >= 0) {
-            Reference val = Reference::fromConst(cg, QV4::Encode(h.value));
-            Reference temp = Reference::fromTemp(cg, h.tempIndex);
-            temp.store(val);
-        }
+        if (h.tempIndex >= 0)
+            Reference::storeConstInTemp(cg, QV4::Encode(h.value), h.tempIndex);
         cg->bytecodeGenerator->jump().link(h.linkLabel);
     }
 
@@ -147,14 +144,14 @@ struct ControlFlow {
     }
 
     virtual void handleThrow(const Reference &expr) {
+        Reference e = expr;
         Handler h = getHandler(ControlFlow::Throw);
         if (h.tempIndex >= 0) {
-            Reference val = Reference::fromConst(cg, QV4::Encode(h.value));
-            Reference temp = Reference::fromTemp(cg, h.tempIndex);
-            temp.store(val);
+            e = e.storeInTemp();
+            Reference::storeConstInTemp(cg, QV4::Encode(h.value), h.tempIndex);
         }
+        e.loadInAccumulator();
         Instruction::CallBuiltinThrow instr;
-        instr.arg = expr.asRValue();
         generator()->addInstruction(instr);
     }
 
@@ -218,7 +215,7 @@ struct ControlFlowUnwind : public ControlFlow
     {
         Q_ASSERT(type != Loop);
         controlFlowTemp = static_cast<int>(generator()->newTemp());
-        Reference::fromTemp(cg, controlFlowTemp).store(Reference::fromConst(cg, QV4::Encode::undefined()));
+        Reference::storeConstInTemp(cg, QV4::Encode::undefined(), controlFlowTemp);
         // we'll need at least a handler for throw
         getHandler(Throw);
     }
@@ -232,20 +229,18 @@ struct ControlFlowUnwind : public ControlFlow
             Codegen::TempScope tempScope(cg);
             Handler parentHandler = getParentHandler(h.type, h.label);
 
-
             if (h.type == Throw || parentHandler.tempIndex >= 0) {
                 BytecodeGenerator::Label skip = generator()->newLabel();
-                generator()->jumpStrictNotEqual(temp.asRValue(), Reference::fromConst(cg, QV4::Encode(h.value)).asRValue())
-                        .link(skip);
+                Reference::fromConst(cg, QV4::Encode(h.value)).loadInAccumulator();
+                generator()->jumpStrictNotEqual(temp.temp()).link(skip);
                 if (h.type == Throw)
                     emitForThrowHandling();
-                Reference parentTemp = Reference::fromTemp(cg, parentHandler.tempIndex);
-                parentTemp.store(Reference::fromConst(cg, QV4::Encode(parentHandler.value)));
+                Reference::storeConstInTemp(cg, QV4::Encode(parentHandler.value), parentHandler.tempIndex);
                 generator()->jump().link(parentHandler.linkLabel);
                 skip.link();
             } else {
-                generator()->jumpStrictEqual(temp.asRValue(), Reference::fromConst(cg, QV4::Encode(h.value)).asRValue())
-                        .link(parentHandler.linkLabel);
+                Reference::fromConst(cg, QV4::Encode(h.value)).loadInAccumulator();
+                generator()->jumpStrictEqual(temp.temp()).link(parentHandler.linkLabel);
             }
         }
     }
@@ -339,10 +334,10 @@ struct ControlFlowCatch : public ControlFlowUnwind
         exceptionLabel.link();
         Reference name = Reference::fromName(cg, catchExpression->name.toString());
         Instruction::CallBuiltinPushCatchScope pushCatchScope;
-        pushCatchScope.name = name.nameIndex;
+        pushCatchScope.name = name.unqualifiedNameIndex;
         generator()->addInstruction(pushCatchScope);
         // clear the unwind temp for exceptions, we want to resume normal code flow afterwards
-        Reference::fromTemp(cg, controlFlowTemp).store(Reference::fromConst(cg, QV4::Encode::undefined()));
+        Reference::storeConstInTemp(cg, QV4::Encode::undefined(), controlFlowTemp);
         generator()->setExceptionHandler(&catchUnwindLabel);
 
         cg->statement(catchExpression->statement);
@@ -396,10 +391,9 @@ struct ControlFlowFinally : public ControlFlowUnwind
 
         insideFinally = true;
         exceptionTemp = generator()->newTemp();
-        Reference exception = Reference::fromTemp(cg, exceptionTemp);
         Instruction::GetException instr;
-        instr.result = exception.asLValue();
         generator()->addInstruction(instr);
+        Reference::fromTemp(cg, exceptionTemp).storeConsumeAccumulator();
 
         generator()->setExceptionHandler(parentExceptionHandler());
         cg->statement(finally->statement);
@@ -410,9 +404,9 @@ struct ControlFlowFinally : public ControlFlowUnwind
 
     virtual void emitForThrowHandling() {
         // reset the exception flag, that got cleared before executing the statements in finally
+        Reference::fromTemp(cg, exceptionTemp).loadInAccumulator();
         Instruction::SetException setException;
         Q_ASSERT(exceptionTemp != -1);
-        setException.exception = Reference::fromTemp(cg, exceptionTemp).asRValue();
         generator()->addInstruction(setException);
     }
 };

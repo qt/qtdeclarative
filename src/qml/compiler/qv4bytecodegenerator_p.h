@@ -150,33 +150,29 @@ public:
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpEq(const Temp &cond)
+    Q_REQUIRED_RESULT Jump jumpEq()
     {
         Instruction::JumpEq data;
-        data.condition = cond;
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpNe(const Temp &cond)
+    Q_REQUIRED_RESULT Jump jumpNe()
     {
         Instruction::JumpNe data;
-        data.condition = cond;
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpStrictEqual(const Temp &lhs, const Temp &rhs)
+    Q_REQUIRED_RESULT Jump jumpStrictEqual(const Temp &lhs)
     {
         Instruction::JumpStrictEqual data;
         data.lhs = lhs;
-        data.rhs = rhs;
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpStrictNotEqual(const Temp &lhs, const Temp &rhs)
+    Q_REQUIRED_RESULT Jump jumpStrictNotEqual(const Temp &lhs)
     {
         Instruction::JumpStrictNotEqual data;
         data.lhs = lhs;
-        data.rhs = rhs;
         return addJumpInstruction(data);
     }
 

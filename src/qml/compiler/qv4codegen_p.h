@@ -106,6 +106,7 @@ public:
     struct Reference {
         enum Type {
             Invalid,
+            Accumulator,
             Temporary,
             Local,
             Argument,
@@ -128,21 +129,34 @@ public:
             , codegen(nullptr)
         {}
         Reference(const Reference &other);
-        ~Reference();
 
         Reference &operator =(const Reference &other);
 
         bool operator==(const Reference &other) const;
 
         bool isValid() const { return type != Invalid; }
-        bool isTempLocalArg() const { return isValid() && type < Argument; }
+        bool loadTriggersSideEffect() const {
+            switch (type) {
+            case Name:
+            case Member:
+            case Subscript:
+                return true;
+            default:
+                return false;
+            }
+        }
         bool isConst() const { return type == Const; }
+        bool isAccumulator() const { return type == Accumulator; }
+        bool isTemp() const { return type == Temporary; }
 
+        static Reference fromAccumulator(Codegen *cg) {
+            return Reference(cg, Accumulator);
+        }
         static Reference fromTemp(Codegen *cg, int tempIndex = -1, bool isLocal = false) {
             Reference r(cg, Temporary);
             if (tempIndex == -1)
                 tempIndex = cg->bytecodeGenerator->newTemp();
-            r.base = Moth::Temp::create(tempIndex);
+            r.temporary = Moth::Temp::create(tempIndex);
             r.tempIsLocal = isLocal;
             return r;
         }
@@ -160,19 +174,22 @@ public:
         }
         static Reference fromName(Codegen *cg, const QString &name) {
             Reference r(cg, Name);
-            r.nameIndex = cg->registerString(name);
+            r.unqualifiedNameIndex = cg->registerString(name);
             return r;
         }
         static Reference fromMember(const Reference &baseRef, const QString &name) {
             Reference r(baseRef.codegen, Member);
-            r.base = baseRef.asRValue();
-            r.nameIndex = r.codegen->registerString(name);
+            //### Add a case where the base can be in the accumulator?
+            r.propertyBase = baseRef.storeInTemp().temp();
+            r.propertyNameIndex = r.codegen->registerString(name);
             return r;
         }
         static Reference fromSubscript(const Reference &baseRef, const Reference &subscript) {
+            Q_ASSERT(baseRef.isTemp());
             Reference r(baseRef.codegen, Subscript);
-            r.base = baseRef.asRValue();
-            r.subscript = subscript.asRValue();
+            r.elementBase = baseRef.temp();
+            //### Add a case where the subscript can be in the accumulator?
+            r.elementSubscript = subscript.storeInTemp().temp();
             return r;
         }
         static Reference fromConst(Codegen *cg, QV4::ReturnedValue constant) {
@@ -188,7 +205,7 @@ public:
         }
         static Reference fromQmlScopeObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, bool captureRequired) {
             Reference r(base.codegen, QmlScopeObject);
-            r.base = base.asRValue();
+            r.qmlBase = base.storeInTemp().temp();
             r.qmlCoreIndex = coreIndex;
             r.qmlNotifyIndex = notifyIndex;
             r.captureRequired = captureRequired;
@@ -196,7 +213,7 @@ public:
         }
         static Reference fromQmlContextObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, bool captureRequired) {
             Reference r(base.codegen, QmlContextObject);
-            r.base = base.asRValue();
+            r.qmlBase = base.storeInTemp().temp();
             r.qmlCoreIndex = coreIndex;
             r.qmlNotifyIndex = notifyIndex;
             r.captureRequired = captureRequired;
@@ -220,43 +237,53 @@ public:
             }
         }
 
-        bool isTemp() const {
-            return type == Temporary;
+        static Reference storeConstInTemp(Codegen *cg, QV4::ReturnedValue constant, int tempIndex)
+        { return Reference::fromConst(cg, constant).storeInTemp(tempIndex); }
+        Q_REQUIRED_RESULT Reference storeInTemp(int tempIndex = -1) const;
+        Q_REQUIRED_RESULT Reference storeRetainAccumulator() const;
+        Reference storeConsumeAccumulator() const;
+
+        bool storeWipesAccumulator() const;
+        void loadInAccumulator() const;
+
+        Moth::Temp temp() const {
+            if (Q_UNLIKELY(!isTemp()))
+                Q_UNREACHABLE();
+            return temporary;
         }
 
-        void store(const Reference &source) const;
-        void storeConsume(Reference &source) const;
-
-        Moth::Temp asRValue() const;
-        Moth::Temp asLValue() const;
-
-        void writeBack() const;
-        void load(Moth::Temp dest) const;
-
-        Moth::Temp base;
         union {
+            Moth::Temp temporary;
             QV4::ReturnedValue constant;
+            int unqualifiedNameIndex;
             struct { // Argument/Local
                 int index;
                 int scope;
             };
-            uint nameIndex;
-            Moth::Temp subscript;
+            struct {
+                Moth::Temp propertyBase;
+                int propertyNameIndex;
+            };
+            struct {
+                Moth::Temp elementBase;
+                Moth::Temp elementSubscript;
+            };
             int closureId;
             struct { // QML scope/context object case
+                Moth::Temp qmlBase;
                 qint16 qmlCoreIndex;
                 qint16 qmlNotifyIndex;
                 bool captureRequired;
             };
         };
-        mutable Moth::Temp temp = Moth::Temp::create(-1);
-        mutable bool needsWriteBack = false;
         mutable bool isArgOrEval = false;
         bool isReadonly = false;
         bool tempIsLocal = false;
         bool global = false;
         Codegen *codegen;
 
+    private:
+        void storeAccumulator() const;
     };
 
     struct TempScope {
@@ -524,8 +551,7 @@ public:
     QList<QQmlError> qmlErrors() const;
 #endif
 
-    Moth::Temp binopHelper(QSOperator::Op oper, Reference &left, Reference &right,
-                           const Reference &dest);
+    Reference binopHelper(QSOperator::Op oper, Reference &left, Reference &right);
     Moth::Temp pushArgs(AST::ArgumentList *args);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }

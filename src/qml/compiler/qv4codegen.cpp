@@ -170,7 +170,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         return _expr.result();
 
 #ifndef V4_BOOTSTRAP
-    if (expr.type == Reference::Const) {
+    if (expr.isConst()) {
         auto v = Value::fromReturnedValue(expr.constant);
         if (v.isNumber()) {
             switch (op) {
@@ -189,66 +189,80 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
     }
 #endif // V4_BOOTSTRAP
 
-    auto dest = Reference::fromTemp(this);
-
     switch (op) {
     case UMinus: {
+        expr.loadInAccumulator();
         Instruction::UMinus uminus;
-        uminus.source = expr.asRValue();
-        uminus.result = dest.asLValue();
         bytecodeGenerator->addInstruction(uminus);
-    } break;
+        return Reference::fromAccumulator(this);
+    }
     case UPlus: {
+        expr.loadInAccumulator();
         Instruction::UPlus uplus;
-        uplus.source = expr.asRValue();
-        uplus.result = dest.asLValue();
         bytecodeGenerator->addInstruction(uplus);
-    } break;
+        return Reference::fromAccumulator(this);
+    }
     case Not: {
+        expr.loadInAccumulator();
         Instruction::UNot unot;
-        unot.source = expr.asRValue();
-        unot.result = dest.asLValue();
         bytecodeGenerator->addInstruction(unot);
-    } break;
+        return Reference::fromAccumulator(this);
+    }
     case Compl: {
+        expr.loadInAccumulator();
         Instruction::UCompl ucompl;
-        ucompl.source = expr.asRValue();
-        ucompl.result = dest.asLValue();
         bytecodeGenerator->addInstruction(ucompl);
-    } break;
+        return Reference::fromAccumulator(this);
+    }
+    case PostIncrement:
+        if (!_expr.accept(nx)) {
+            expr.loadInAccumulator();
+            Instruction::UPlus uplus;
+            bytecodeGenerator->addInstruction(uplus);
+            Reference originalValue = Reference::fromTemp(this).storeRetainAccumulator();
+            Instruction::Increment inc;
+            bytecodeGenerator->addInstruction(inc);
+            expr.storeConsumeAccumulator();
+            return originalValue;
+        } else {
+            // intentionally fall-through: the result is never used, so it's equivalent to
+            // "expr += 1", which is what a pre-increment does as well.
+        }
     case PreIncrement: {
-        Instruction::PreIncrement inc;
-        inc.source = expr.asRValue();
-        inc.result = dest.asLValue();
+        expr.loadInAccumulator();
+        Instruction::Increment inc;
         bytecodeGenerator->addInstruction(inc);
-        expr.store(dest);
-    } break;
+        if (_expr.accept(nx))
+            return expr.storeConsumeAccumulator();
+        else
+            return expr.storeRetainAccumulator();
+    }
+    case PostDecrement:
+        if (!_expr.accept(nx)) {
+            expr.loadInAccumulator();
+            Instruction::UPlus uplus;
+            bytecodeGenerator->addInstruction(uplus);
+            Reference originalValue = Reference::fromTemp(this).storeRetainAccumulator();
+            Instruction::Decrement dec;
+            bytecodeGenerator->addInstruction(dec);
+            expr.storeConsumeAccumulator();
+            return originalValue;
+        } else {
+            // intentionally fall-through: the result is never used, so it's equivalent to
+            // "expr -= 1", which is what a pre-decrement does as well.
+        }
     case PreDecrement: {
-        Instruction::PreDecrement dec;
-        dec.source = expr.asRValue();
-        dec.result = dest.asLValue();
+        expr.loadInAccumulator();
+        Instruction::Decrement dec;
         bytecodeGenerator->addInstruction(dec);
-        expr.store(dest);
-    } break;
-    case PostIncrement: {
-        Instruction::PostIncrement inc;
-        inc.source = expr.asRValue();
-        inc.result = dest.asLValue();
-        bytecodeGenerator->addInstruction(inc);
-        expr.asLValue(); // mark expr as needsWriteBack
-        expr.writeBack();
-    } break;
-    case PostDecrement: {
-        Instruction::PostDecrement dec;
-        dec.source = expr.asRValue();
-        dec.result = dest.asLValue();
-        bytecodeGenerator->addInstruction(dec);
-        expr.asLValue(); // mark expr as needsWriteBack
-        expr.writeBack();
-    } break;
+        if (_expr.accept(nx))
+            return expr.storeConsumeAccumulator();
+        else
+            return expr.storeRetainAccumulator();
+    }
     }
 
-    return dest;
+    Q_UNREACHABLE();
 }
 
 void Codegen::accept(Node *node)
@@ -281,19 +295,8 @@ void Codegen::statement(ExpressionNode *ast)
         if (hasError)
             return;
         qSwap(_expr, r);
-//        if (r.format == ex) {
-//            if (r->asCall()) {
-//                _block->EXP(*r); // the nest nx representation for calls is EXP(CALL(c..))
-//            } else if (r->asTemp() || r->asArgLocal()) {
-//                // there is nothing to do
-//            } else {
-//                unsigned t = bytecodeGenerator->newTemp();
-//                move(_block->TEMP(t), *r);
-//            }
-//        }
-
-        if (r.result().isValid() && !r.result().isTempLocalArg())
-            r.result().asRValue(); // triggers side effects
+        if (r.result().loadTriggersSideEffect())
+            r.result().loadInAccumulator(); // triggers side effects
     }
 }
 
@@ -309,11 +312,11 @@ void Codegen::condition(ExpressionNode *ast, const BytecodeGenerator::Label *ift
             Q_ASSERT(iftrue == r.iftrue());
             Q_ASSERT(iffalse == r.iffalse());
             bytecodeGenerator->setLocation(ast->firstSourceLocation());
-            auto cond = r.result().asRValue();
+            r.result().loadInAccumulator();
             if (r.trueBlockFollowsCondition())
-                bytecodeGenerator->jumpNe(cond).link(*r.iffalse());
+                bytecodeGenerator->jumpNe().link(*r.iffalse());
             else
-                bytecodeGenerator->jumpEq(cond).link(*r.iftrue());
+                bytecodeGenerator->jumpEq().link(*r.iftrue());
         }
     }
 }
@@ -371,8 +374,10 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
     Reference rhs = expression(ast->expression);
     if (hasError)
         return;
+
     Reference lhs = referenceForName(ast->name.toString(), true);
-    lhs.storeConsume(rhs);
+    rhs.loadInAccumulator();
+    lhs.storeConsumeAccumulator();
 }
 
 void Codegen::variableDeclarationList(VariableDeclarationList *ast)
@@ -572,7 +577,6 @@ bool Codegen::visit(ArrayLiteral *ast)
     if (hasError)
         return false;
 
-    auto result = Reference::fromTemp(this);
     TempScope scope(this);
 
     int argc = 0;
@@ -582,10 +586,11 @@ bool Codegen::visit(ArrayLiteral *ast)
         if (args == -1)
             args = temp;
         if (!arg) {
-            Reference::fromTemp(this, temp).store(Reference::fromConst(this, Primitive::emptyValue().asReturnedValue()));
+            auto c = Reference::fromConst(this, Primitive::emptyValue().asReturnedValue());
+            (void) c.storeInTemp(temp);
         } else {
             TempScope scope(this);
-            Reference::fromTemp(this, temp).store(expression(arg));
+            (void) expression(arg).storeInTemp(temp);
         }
         ++argc;
     };
@@ -610,9 +615,8 @@ bool Codegen::visit(ArrayLiteral *ast)
     Instruction::CallBuiltinDefineArray call;
     call.argc = argc;
     call.args = Moth::Temp::create(args);
-    call.result = result.asLValue();
     bytecodeGenerator->addInstruction(call);
-    _expr.setResult(result);
+    _expr.setResult(Reference::fromAccumulator(this));
 
     return false;
 }
@@ -625,6 +629,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
     Reference base = expression(ast->base);
     if (hasError)
         return false;
+    base = base.storeInTemp();
     Reference index = expression(ast->expression);
     _expr.setResult(Reference::fromSubscript(base, index));
     return false;
@@ -663,26 +668,23 @@ bool Codegen::visit(BinaryExpression *ast)
             auto iftrue = bytecodeGenerator->newLabel();
             auto endif = bytecodeGenerator->newLabel();
 
-            auto r = Reference::fromTemp(this);
-
-            Reference lhs = expression(ast->left);
+            Reference left = expression(ast->left);
             if (hasError)
                 return false;
-
-            r.store(lhs);
+            left.loadInAccumulator();
 
             bytecodeGenerator->setLocation(ast->operatorToken);
-            bytecodeGenerator->jumpNe(r.asRValue()).link(endif);
+            bytecodeGenerator->jumpNe().link(endif);
             iftrue.link();
 
-            Reference rhs = expression(ast->right);
+            Reference right = expression(ast->right);
             if (hasError)
                 return false;
+            right.loadInAccumulator();
 
-            r.store(rhs);
             endif.link();
 
-            _expr.setResult(r);
+            _expr.setResult(Reference::fromAccumulator(this));
         }
         return false;
     } else if (ast->op == QSOperator::Or) {
@@ -695,26 +697,23 @@ bool Codegen::visit(BinaryExpression *ast)
             auto iffalse = bytecodeGenerator->newLabel();
             auto endif = bytecodeGenerator->newLabel();
 
-            auto r = Reference::fromTemp(this);
-
-            Reference lhs = expression(ast->left);
+            Reference left = expression(ast->left);
             if (hasError)
                 return false;
-
-            r.store(lhs);
+            left.loadInAccumulator();
 
             bytecodeGenerator->setLocation(ast->operatorToken);
-            bytecodeGenerator->jumpEq(r.asRValue()).link(endif);
+            bytecodeGenerator->jumpEq().link(endif);
             iffalse.link();
 
-            Reference rhs = expression(ast->right);
+            Reference right = expression(ast->right);
             if (hasError)
                 return false;
+            right.loadInAccumulator();
 
-            r.store(rhs);
             endif.link();
 
-            _expr.setResult(r);
+            _expr.setResult(Reference::fromAccumulator(this));
         }
         return false;
     }
@@ -732,7 +731,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::Assign: {
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
-        Reference right = expression(ast->right);
+        expression(ast->right).loadInAccumulator();
         if (hasError)
             return false;
         if (!left.isLValue()) {
@@ -740,8 +739,7 @@ bool Codegen::visit(BinaryExpression *ast)
             return false;
         }
 
-        left.storeConsume(right);
-        _expr.setResult(left);
+        _expr.setResult(left.storeRetainAccumulator());
         break;
     }
 
@@ -764,18 +762,29 @@ bool Codegen::visit(BinaryExpression *ast)
             return false;
         }
 
+        Reference tempLeft = left.storeInTemp();
         Reference right = expression(ast->right);
 
         if (hasError)
             return false;
 
-        _expr.setResult(Reference::fromTemp(this));
-        binopHelper(baseOp(ast->op), left, right, _expr.result());
-        left.store(_expr.result());
+        binopHelper(baseOp(ast->op), tempLeft, right).loadInAccumulator();
+        _expr.setResult(left.storeRetainAccumulator());
 
         break;
     }
 
+    case QSOperator::BitAnd:
+    case QSOperator::BitOr:
+    case QSOperator::BitXor:
+        if (left.isConst()) {
+            Reference right = expression(ast->right);
+            if (hasError)
+                return false;
+            _expr.setResult(binopHelper(static_cast<QSOperator::Op>(ast->op), right, left));
+            break;
+        }
+        // intentional fall-through!
     case QSOperator::In:
     case QSOperator::InstanceOf:
     case QSOperator::Equal:
@@ -787,28 +796,20 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::StrictEqual:
     case QSOperator::StrictNotEqual:
     case QSOperator::Add:
-    case QSOperator::BitAnd:
-    case QSOperator::BitOr:
-    case QSOperator::BitXor:
     case QSOperator::Div:
-    case QSOperator::LShift:
     case QSOperator::Mod:
     case QSOperator::Mul:
-    case QSOperator::RShift:
     case QSOperator::Sub:
+    case QSOperator::LShift:
+    case QSOperator::RShift:
     case QSOperator::URShift: {
-        if (left.isConst()) {
-            //### TODO: try constant folding?
-        }
-
-        left.asRValue(); // force any loads of the lhs, so the rhs won't clobber it
+        auto tempLeft = left.storeInTemp(); // force any loads of the lhs, so the rhs won't clobber it
 
         Reference right = expression(ast->right);
         if (hasError)
             return false;
 
-        _expr.setResult(Reference::fromTemp(this));
-        binopHelper(static_cast<QSOperator::Op>(ast->op), left, right, _expr.result());
+        _expr.setResult(binopHelper(static_cast<QSOperator::Op>(ast->op), tempLeft, right));
 
         break;
     }
@@ -818,153 +819,121 @@ bool Codegen::visit(BinaryExpression *ast)
     return false;
 }
 
-QV4::Moth::Temp Codegen::binopHelper(QSOperator::Op oper, Reference &left, Reference &right,
-                                     const Reference &dest)
+Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Reference &right)
 {
-    if (oper == QSOperator::Add) {
+    switch (oper) {
+    case QSOperator::Add: {
+        right.loadInAccumulator();
         Instruction::Add add;
-        add.lhs = left.asRValue();
-        add.rhs = right.asRValue();
-        add.result = dest.asLValue();
+        add.lhs = left.temp();
         bytecodeGenerator->addInstruction(add);
-        return add.result;
+        break;
     }
-    if (oper == QSOperator::Sub) {
+    case QSOperator::Sub: {
+        right.loadInAccumulator();
         Instruction::Sub sub;
-        sub.lhs = left.asRValue();
-        sub.rhs = right.asRValue();
-        sub.result = dest.asLValue();
+        sub.lhs = left.temp();
         bytecodeGenerator->addInstruction(sub);
-        return sub.result;
+        break;
     }
-    if (oper == QSOperator::Mul) {
+    case QSOperator::Mul: {
+        right.loadInAccumulator();
         Instruction::Mul mul;
-        mul.lhs = left.asRValue();
-        mul.rhs = right.asRValue();
-        mul.result = dest.asLValue();
+        mul.lhs = left.temp();
         bytecodeGenerator->addInstruction(mul);
-        return mul.result;
+        break;
     }
-    if (oper == QSOperator::BitAnd) {
-        Reference *l = &left;
-        Reference *r = &right;
-        if (l->type == Reference::Const)
-            std::swap(l, r);
-        if (r->type == Reference::Const) {
+    case QSOperator::BitAnd:
+        if (right.isConst()) {
+            left.loadInAccumulator();
             Instruction::BitAndConst bitAnd;
-            bitAnd.lhs = l->asRValue();
-            bitAnd.rhs = Primitive::fromReturnedValue(r->constant).toInt32();
-            bitAnd.result = dest.asLValue();
+            bitAnd.rhs = Primitive::fromReturnedValue(right.constant).toInt32();
             bytecodeGenerator->addInstruction(bitAnd);
-            return bitAnd.result;
+        } else {
+            right.loadInAccumulator();
+            Instruction::BitAnd bitAnd;
+            bitAnd.lhs = left.temp();
+            bytecodeGenerator->addInstruction(bitAnd);
         }
-        Instruction::BitAnd bitAnd;
-        bitAnd.lhs = left.asRValue();
-        bitAnd.rhs = right.asRValue();
-        bitAnd.result = dest.asLValue();
-        bytecodeGenerator->addInstruction(bitAnd);
-        return bitAnd.result;
-    }
-    if (oper == QSOperator::BitOr) {
-        Reference *l = &left;
-        Reference *r = &right;
-        if (l->type == Reference::Const)
-            std::swap(l, r);
-        if (r->type == Reference::Const) {
+        break;
+    case QSOperator::BitOr:
+        if (right.isConst()) {
+            left.loadInAccumulator();
             Instruction::BitOrConst bitOr;
-            bitOr.lhs = l->asRValue();
-            bitOr.rhs = Primitive::fromReturnedValue(r->constant).toInt32();
-            bitOr.result = dest.asLValue();
+            bitOr.rhs = Primitive::fromReturnedValue(right.constant).toInt32();
             bytecodeGenerator->addInstruction(bitOr);
-            return bitOr.result;
+        } else {
+            right.loadInAccumulator();
+            Instruction::BitOr bitOr;
+            bitOr.lhs = left.temp();
+            bytecodeGenerator->addInstruction(bitOr);
         }
-        Instruction::BitOr bitOr;
-        bitOr.lhs = left.asRValue();
-        bitOr.rhs = right.asRValue();
-        bitOr.result = dest.asLValue();
-        bytecodeGenerator->addInstruction(bitOr);
-        return bitOr.result;
-    }
-    if (oper == QSOperator::BitXor) {
-        Reference *l = &left;
-        Reference *r = &right;
-        if (l->type == Reference::Const)
-            std::swap(l, r);
-        if (r->type == Reference::Const) {
+        break;
+    case QSOperator::BitXor:
+        if (right.isConst()) {
+            left.loadInAccumulator();
             Instruction::BitXorConst bitXor;
-            bitXor.lhs = l->asRValue();
-            bitXor.rhs = Primitive::fromReturnedValue(r->constant).toInt32();
-            bitXor.result = dest.asLValue();
+            bitXor.rhs = Primitive::fromReturnedValue(right.constant).toInt32();
             bytecodeGenerator->addInstruction(bitXor);
-            return bitXor.result;
+        } else {
+            right.loadInAccumulator();
+            Instruction::BitXor bitXor;
+            bitXor.lhs = left.temp();
+            bytecodeGenerator->addInstruction(bitXor);
         }
-        Instruction::BitXor bitXor;
-        bitXor.lhs = left.asRValue();
-        bitXor.rhs = right.asRValue();
-        bitXor.result = dest.asLValue();
-        bytecodeGenerator->addInstruction(bitXor);
-        return bitXor.result;
-    }
-    if (oper == QSOperator::RShift) {
-        if (right.type == Reference::Const) {
+        break;
+    case QSOperator::RShift:
+        if (right.isConst()) {
+            left.loadInAccumulator();
             Instruction::ShrConst shr;
-            shr.lhs = left.asRValue();
             shr.rhs = Primitive::fromReturnedValue(right.constant).toInt32() & 0x1f;
-            shr.result = dest.asLValue();
             bytecodeGenerator->addInstruction(shr);
-            return shr.result;
+        } else {
+            right.loadInAccumulator();
+            Instruction::Shr shr;
+            shr.lhs = left.temp();
+            bytecodeGenerator->addInstruction(shr);
         }
-        Instruction::Shr shr;
-        shr.lhs = left.asRValue();
-        shr.rhs = right.asRValue();
-        shr.result = dest.asLValue();
-        bytecodeGenerator->addInstruction(shr);
-        return shr.result;
-    }
-    if (oper == QSOperator::LShift) {
-        if (right.type == Reference::Const) {
+        break;
+    case QSOperator::LShift:
+        if (right.isConst()) {
+            left.loadInAccumulator();
             Instruction::ShlConst shl;
-            shl.lhs = left.asRValue();
             shl.rhs = Primitive::fromReturnedValue(right.constant).toInt32() & 0x1f;
-            shl.result = dest.asLValue();
             bytecodeGenerator->addInstruction(shl);
-            return shl.result;
+        } else {
+            right.loadInAccumulator();
+            Instruction::Shl shl;
+            shl.lhs = left.temp();
+            bytecodeGenerator->addInstruction(shl);
         }
-        Instruction::Shl shl;
-        shl.lhs = left.asRValue();
-        shl.rhs = right.asRValue();
-        shl.result = dest.asLValue();
-        bytecodeGenerator->addInstruction(shl);
-        return shl.result;
-    }
-
-    if (oper == QSOperator::InstanceOf || oper == QSOperator::In || oper == QSOperator::Add) {
+        break;
+    case QSOperator::InstanceOf:
+    case QSOperator::In: {
         Instruction::BinopContext binop;
         if (oper == QSOperator::InstanceOf)
             binop.alu = QV4::Runtime::instanceof;
-        else if (oper == QSOperator::In)
-            binop.alu = QV4::Runtime::in;
         else
-            binop.alu = QV4::Runtime::add;
-        binop.lhs = left.asRValue();
-        binop.rhs = right.asRValue();
-        binop.result = dest.asLValue();
+            binop.alu = QV4::Runtime::in;
         Q_ASSERT(binop.alu != QV4::Runtime::InvalidRuntimeMethod);
+        right.loadInAccumulator();
+        binop.lhs = left.temp();
         bytecodeGenerator->addInstruction(binop);
-        return binop.result;
-    } else {
+        break;
+    }
+    default: {
         auto binopFunc = aluOpFunction(oper);
         Q_ASSERT(binopFunc != QV4::Runtime::InvalidRuntimeMethod);
+        right.loadInAccumulator();
         Instruction::Binop binop;
         binop.alu = binopFunc;
-        binop.lhs = left.asRValue();
-        binop.rhs = right.asRValue();
-        binop.result = dest.asLValue();
+        binop.lhs = left.temp();
         bytecodeGenerator->addInstruction(binop);
-        return binop.result;
+        break;
+    }
     }
 
-    Q_UNIMPLEMENTED();
+    return Reference::fromAccumulator(this);
 }
 
 bool Codegen::visit(CallExpression *ast)
@@ -972,54 +941,51 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError)
         return false;
 
-    Reference r = Reference::fromTemp(this);
-
     TempScope scope(this);
 
     Reference base = expression(ast->base);
     if (hasError)
         return false;
+    if (base.type != Reference::Member && base.type != Reference::Subscript &&
+            base.type != Reference::Name)
+        base = base.storeInTemp();
 
     auto calldata = pushArgs(ast->arguments);
     if (hasError)
         return false;
 
+    //### Do we really need all these call instructions? can's we load the callee in a temp?
     if (base.type == Reference::Member) {
         Instruction::CallProperty call;
-        call.base = base.base;
-        call.name = base.nameIndex;
+        call.base = base.propertyBase;
+        call.name = base.propertyNameIndex;
         call.callData = calldata;
-        call.result = r.asLValue();
         bytecodeGenerator->addInstruction(call);
     } else if (base.type == Reference::Subscript) {
         Instruction::CallElement call;
-        call.base = base.base;
-        call.index = base.subscript;
+        call.base = base.elementBase;
+        call.index = base.elementSubscript;
         call.callData = calldata;
-        call.result = r.asLValue();
         bytecodeGenerator->addInstruction(call);
     } else if (base.type == Reference::Name) {
         if (useFastLookups && base.global) {
             Instruction::CallGlobalLookup call;
-            call.index = registerGlobalGetterLookup(base.nameIndex);
+            call.index = registerGlobalGetterLookup(base.unqualifiedNameIndex);
             call.callData = calldata;
-            call.result = r.asLValue();
             bytecodeGenerator->addInstruction(call);
         } else {
             Instruction::CallActivationProperty call;
-            call.name = base.nameIndex;
+            call.name = base.unqualifiedNameIndex;
             call.callData = calldata;
-            call.result = r.asLValue();
             bytecodeGenerator->addInstruction(call);
         }
     } else {
         Instruction::CallValue call;
-        call.dest = base.asRValue();
+        call.dest = base.temp();
         call.callData = calldata;
-        call.result = r.asLValue();
         bytecodeGenerator->addInstruction(call);
     }
-    _expr.setResult(r);
+    _expr.setResult(Reference::fromAccumulator(this));
     return false;
 }
 
@@ -1030,13 +996,16 @@ Moth::Temp Codegen::pushArgs(ArgumentList *args)
         ++argc;
     int calldata = bytecodeGenerator->newTempArray(argc + 2); // 2 additional values for CallData
 
-    Reference::fromTemp(this, calldata).store(Reference::fromConst(this, QV4::Encode(argc)));
-    Reference::fromTemp(this, calldata + 1).store(Reference::fromConst(this, QV4::Encode::undefined()));
+    (void) Reference::fromConst(this, QV4::Encode(argc)).storeInTemp(calldata);
+    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeInTemp(calldata + 1);
 
     argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
         TempScope scope(this);
-        Reference::fromTemp(this, calldata + 2 + argc).store(expression(it->expression));
+        Reference e = expression(it->expression);
+        if (hasError)
+            break;
+        (void) e.storeInTemp(calldata + 2 + argc);
         ++argc;
     }
 
@@ -1048,9 +1017,6 @@ bool Codegen::visit(ConditionalExpression *ast)
     if (hasError)
         return true;
 
-    const unsigned t = bytecodeGenerator->newTemp();
-    _expr.setResult(Reference::fromTemp(this, t));
-
     TempScope scope(this);
 
     BytecodeGenerator::Label iftrue = bytecodeGenerator->newLabel();
@@ -1058,13 +1024,20 @@ bool Codegen::visit(ConditionalExpression *ast)
     condition(ast->expression, &iftrue, &iffalse, true);
 
     iftrue.link();
-    _expr.result().store(expression(ast->ok));
+    Reference ok = expression(ast->ok);
+    if (hasError)
+        return false;
+    ok.loadInAccumulator();
     BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
 
     iffalse.link();
-    _expr.result().store(expression(ast->ko));
+    Reference ko = expression(ast->ko);
+    if (hasError)
+        return false;
+    ko.loadInAccumulator();
 
     jump_endif.link();
+    _expr.setResult(Reference::fromAccumulator(this));
 
     return false;
 }
@@ -1097,29 +1070,26 @@ bool Codegen::visit(DeleteExpression *ast)
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
-        _expr.setResult(Reference::fromTemp(this));
         Instruction::CallBuiltinDeleteName del;
-        del.name = expr.nameIndex;
-        del.result = _expr.result().asLValue();
+        del.name = expr.unqualifiedNameIndex;
         bytecodeGenerator->addInstruction(del);
+        _expr.setResult(Reference::fromAccumulator(this));
         return false;
     }
     case Reference::Member: {
-        _expr.setResult(Reference::fromTemp(this));
         Instruction::CallBuiltinDeleteMember del;
-        del.base = expr.base;
-        del.member = expr.nameIndex;
-        del.result = _expr.result().asLValue();
+        del.base = expr.propertyBase;
+        del.member = expr.propertyNameIndex;
         bytecodeGenerator->addInstruction(del);
+        _expr.setResult(Reference::fromAccumulator(this));
         return false;
     }
     case Reference::Subscript: {
-        _expr.setResult(Reference::fromTemp(this));
         Instruction::CallBuiltinDeleteSubscript del;
-        del.base = expr.base;
-        del.index = expr.subscript;
-        del.result = _expr.result().asLValue();
+        del.base = expr.elementBase;
+        del.index = expr.elementSubscript;
         bytecodeGenerator->addInstruction(del);
+        _expr.setResult(Reference::fromAccumulator(this));
         return false;
     }
     default:
@@ -1241,21 +1211,21 @@ bool Codegen::visit(NewExpression *ast)
     if (hasError)
         return false;
 
-    Reference r = Reference::fromTemp(this);
     TempScope scope(this);
 
     Reference base = expression(ast->expression);
     if (hasError)
         return false;
+    //### Maybe create a CreateValueA that takes an accumulator?
+    base = base.storeInTemp();
 
     auto calldata = pushArgs(0);
 
     Instruction::CreateValue create;
-    create.func = base.asRValue();
+    create.func = base.temp();
     create.callData = calldata;
-    create.result = r.asLValue();
     bytecodeGenerator->addInstruction(create);
-    _expr.setResult(r);
+    _expr.setResult(Reference::fromAccumulator(this));
     return false;
 }
 
@@ -1264,23 +1234,22 @@ bool Codegen::visit(NewMemberExpression *ast)
     if (hasError)
         return false;
 
-    Reference r = Reference::fromTemp(this);
     TempScope scope(this);
 
     Reference base = expression(ast->base);
     if (hasError)
         return false;
+    base = base.storeInTemp();
 
     auto calldata = pushArgs(ast->arguments);
     if (hasError)
         return false;
 
     Instruction::CreateValue create;
-    create.func = base.asRValue();
+    create.func = base.temp();
     create.callData = calldata;
-    create.result = r.asRValue();
     bytecodeGenerator->addInstruction(create);
-    _expr.setResult(r);
+    _expr.setResult(Reference::fromAccumulator(this));
     return false;
 }
 
@@ -1322,7 +1291,6 @@ bool Codegen::visit(ObjectLiteral *ast)
 
     QMap<QString, ObjectPropertyValue> valueMap;
 
-    auto result = Reference::fromTemp(this);
     TempScope scope(this);
 
     for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
@@ -1339,9 +1307,7 @@ bool Codegen::visit(ObjectLiteral *ast)
                 return false;
             }
 
-            v.rvalue = value;
-            if (v.rvalue.type != Reference::Const)
-                v.rvalue.asRValue();
+            v.rvalue = value.storeInTemp();
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
             const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
             ObjectPropertyValue &v = valueMap[name];
@@ -1386,7 +1352,7 @@ bool Codegen::visit(ObjectLiteral *ast)
         int temp = bytecodeGenerator->newTemp();
         if (args == -1)
             args = temp;
-        Reference::fromTemp(this, temp).store(arg);
+        (void) arg.storeInTemp(temp);
     };
 
     auto undefined = [this](){ return Reference::fromConst(this, Encode::undefined()); };
@@ -1438,10 +1404,9 @@ bool Codegen::visit(ObjectLiteral *ast)
     call.arrayValueCount = arrayKeyWithValue.size();
     call.arrayGetterSetterCountAndFlags = arrayGetterSetterCountAndFlags;
     call.args = Moth::Temp::create(args);
-    call.result = result.asLValue();
     bytecodeGenerator->addInstruction(call);
 
-    _expr.setResult(result);
+    _expr.setResult(Reference::fromAccumulator(this));
     return false;
 }
 
@@ -1526,12 +1491,11 @@ bool Codegen::visit(RegExpLiteral *ast)
     if (hasError)
         return false;
 
-    auto r = Reference::fromTemp(this);
+    auto r = Reference::fromAccumulator(this);
     r.isReadonly = true;
     _expr.setResult(r);
 
     Instruction::LoadRegExp instr;
-    instr.result = r.asLValue();
     instr.regExpId = jsUnitGenerator->registerRegExp(ast);
     bytecodeGenerator->addInstruction(instr);
     return false;
@@ -1542,12 +1506,11 @@ bool Codegen::visit(StringLiteral *ast)
     if (hasError)
         return false;
 
-    auto r = Reference::fromTemp(this);
+    auto r = Reference::fromAccumulator(this);
     r.isReadonly = true;
     _expr.setResult(r);
 
     Instruction::LoadRuntimeString instr;
-    instr.result = r.asLValue();
     instr.stringId = registerString(ast->value.toString());
     bytecodeGenerator->addInstruction(instr);
     return false;
@@ -1585,8 +1548,6 @@ bool Codegen::visit(TypeOfExpression *ast)
     if (hasError)
         return false;
 
-    _expr.setResult(Reference::fromTemp(this));
-
     TempScope scope(this);
 
     Reference expr = expression(ast->expression);
@@ -1596,15 +1557,14 @@ bool Codegen::visit(TypeOfExpression *ast)
     if (expr.type == Reference::Name) {
         // special handling as typeof doesn't throw here
         Instruction::CallBuiltinTypeofName instr;
-        instr.name = expr.nameIndex;
-        instr.result = _expr.result().asLValue();
+        instr.name = expr.unqualifiedNameIndex;
         bytecodeGenerator->addInstruction(instr);
     } else {
+        expr.loadInAccumulator();
         Instruction::CallBuiltinTypeofValue instr;
-        instr.value = expr.asRValue();
-        instr.result = _expr.result().asLValue();
         bytecodeGenerator->addInstruction(instr);
     }
+    _expr.setResult(Reference::fromAccumulator(this));
 
     return false;
 }
@@ -1647,9 +1607,8 @@ bool Codegen::visit(FunctionDeclaration * ast)
     TempScope scope(this);
 
     if (_context->compilationMode == QmlBinding) {
-        Reference source = Reference::fromName(this, ast->name.toString());
-        Reference target = Reference::fromTemp(this, _returnAddress);
-        target.store(source);
+        Reference::fromName(this, ast->name.toString()).loadInAccumulator();
+        Reference::fromTemp(this, _returnAddress).storeConsumeAccumulator();
     }
     _expr.accept(nx);
     return false;
@@ -1722,22 +1681,20 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         if (member.function) {
             const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
                                                 member.function->body ? member.function->body->elements : 0);
-            auto func = Reference::fromClosure(this, function);
+            Reference::fromClosure(this, function).loadInAccumulator();
             if (! _context->parent) {
-                Reference name = Reference::fromName(this, member.function->name.toString());
-                name.store(func);
+                Reference::fromName(this, member.function->name.toString()).storeConsumeAccumulator();
             } else {
                 Q_ASSERT(member.index >= 0);
                 Reference local = member.canEscape ? Reference::fromLocal(this, member.index, 0) : Reference::fromTemp(this, member.index, true);
-                local.store(func);
+                local.storeConsumeAccumulator();
             }
         }
     }
     if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-        auto args = referenceForName(QStringLiteral("arguments"), false);
         Instruction::CallBuiltinSetupArgumentsObject setup;
-        setup.result = args.asLValue();
         bytecodeGenerator->addInstruction(setup);
+        referenceForName(QStringLiteral("arguments"), false).storeConsumeAccumulator();
     }
     if (_context->usesThis && !_context->isStrict) {
         // make sure we convert this to an object
@@ -1754,7 +1711,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     {
         Instruction::Ret ret;
-        ret.result = Reference::fromTemp(this, _returnAddress).base;
+        ret.result = Reference::fromTemp(this, _returnAddress).temporary;
         bytecodeGenerator->addInstruction(ret);
     }
 
@@ -1903,8 +1860,8 @@ bool Codegen::visit(ExpressionStatement *ast)
         Reference e = expression(ast->expression);
         if (hasError)
             return false;
-        Reference retVal = Reference::fromTemp(this, _returnAddress);
-        retVal.store(e);
+        e.loadInAccumulator();
+        Reference::fromTemp(this, _returnAddress).storeConsumeAccumulator();
     } else {
         statement(ast->expression);
     }
@@ -1923,10 +1880,10 @@ bool Codegen::visit(ForEachStatement *ast)
     if (hasError)
         return true;
 
+    expr.loadInAccumulator();
     Instruction::CallBuiltinForeachIteratorObject iteratorObjInstr;
-    iteratorObjInstr.result = obj.asLValue();
-    iteratorObjInstr.arg = expr.asRValue();
     bytecodeGenerator->addInstruction(iteratorObjInstr);
+    obj.storeConsumeAccumulator();
 
     BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
@@ -1943,15 +1900,13 @@ bool Codegen::visit(ForEachStatement *ast)
 
     Reference lhs = expression(ast->initialiser);
 
+    obj.loadInAccumulator();
     Instruction::CallBuiltinForeachNextPropertyName nextPropInstr;
-    nextPropInstr.result = lhs.asLValue();
-    nextPropInstr.arg = obj.asRValue();
     bytecodeGenerator->addInstruction(nextPropInstr);
+    lhs = lhs.storeRetainAccumulator().storeInTemp();
 
-    lhs.writeBack();
-
-    Reference null = Reference::fromConst(this, QV4::Encode::null());
-    bytecodeGenerator->jumpStrictNotEqual(lhs.asRValue(), null.asRValue()).link(body);
+    Reference::fromConst(this, QV4::Encode::null()).loadInAccumulator();
+    bytecodeGenerator->jumpStrictNotEqual(lhs.temp()).link(body);
 
     end.link();
 
@@ -2064,10 +2019,10 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
     variableDeclaration(ast->declaration);
 
+    expr.loadInAccumulator();
     Instruction::CallBuiltinForeachIteratorObject iteratorObjInstr;
-    iteratorObjInstr.result = obj.asLValue();
-    iteratorObjInstr.arg = expr.asRValue();
     bytecodeGenerator->addInstruction(iteratorObjInstr);
+    obj.storeConsumeAccumulator();
 
     BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
@@ -2082,15 +2037,13 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
     in.link();
 
+    obj.loadInAccumulator();
     Instruction::CallBuiltinForeachNextPropertyName nextPropInstr;
-    nextPropInstr.result = it.asLValue();
-    nextPropInstr.arg = obj.asRValue();
     bytecodeGenerator->addInstruction(nextPropInstr);
+    auto lhs = it.storeRetainAccumulator().storeInTemp();
 
-    it.writeBack();
-
-    Reference null = Reference::fromConst(this, QV4::Encode::null());
-    bytecodeGenerator->jumpStrictNotEqual(it.asRValue(), null.asRValue()).link(body);
+    Reference::fromConst(this, QV4::Encode::null()).loadInAccumulator();
+    bytecodeGenerator->jumpStrictNotEqual(lhs.temp()).link(body);
 
     end.link();
 
@@ -2137,7 +2090,10 @@ bool Codegen::visit(ReturnStatement *ast)
     }
     if (ast->expression) {
         Reference expr = expression(ast->expression);
-        Reference::fromTemp(this, _returnAddress).storeConsume(expr);
+        if (hasError)
+            return false;
+        expr.loadInAccumulator();
+        Reference::fromTemp(this, _returnAddress).storeConsumeAccumulator();
     }
 
     if (_context->controlFlow) {
@@ -2160,6 +2116,9 @@ bool Codegen::visit(SwitchStatement *ast)
         BytecodeGenerator::Label switchEnd = bytecodeGenerator->newLabel();
 
         Reference lhs = expression(ast->expression);
+        if (hasError)
+            return false;
+        lhs = lhs.storeInTemp();
 
         // set up labels for all clauses
         QHash<Node *, BytecodeGenerator::Label> blockMap;
@@ -2174,13 +2133,19 @@ bool Codegen::visit(SwitchStatement *ast)
         for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
             CaseClause *clause = it->clause;
             Reference rhs = expression(clause->expression);
-            bytecodeGenerator->jumpStrictEqual(lhs.asRValue(), rhs.asRValue()).link(blockMap.value(clause));
+            if (hasError)
+                return false;
+            rhs.loadInAccumulator();
+            bytecodeGenerator->jumpStrictEqual(lhs.temp()).link(blockMap.value(clause));
         }
 
         for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
             CaseClause *clause = it->clause;
             Reference rhs = expression(clause->expression);
-            bytecodeGenerator->jumpStrictEqual(lhs.asRValue(), rhs.asRValue()).link(blockMap.value(clause));
+            if (hasError)
+                return false;
+            rhs.loadInAccumulator();
+            bytecodeGenerator->jumpStrictEqual(lhs.temp()).link(blockMap.value(clause));
         }
 
         if (DefaultClause *defaultClause = ast->block->defaultClause)
@@ -2224,17 +2189,19 @@ bool Codegen::visit(SwitchStatement *ast)
 bool Codegen::visit(ThrowStatement *ast)
 {
     if (hasError)
-        return true;
+        return false;
 
     TempScope scope(this);
 
     Reference expr = expression(ast->expression);
+    if (hasError)
+        return false;
 
     if (_context->controlFlow) {
         _context->controlFlow->handleThrow(expr);
     } else {
+        expr.loadInAccumulator();
         Instruction::CallBuiltinThrow instr;
-        instr.arg = expr.asRValue();
         bytecodeGenerator->addInstruction(instr);
     }
     return false;
@@ -2333,12 +2300,12 @@ bool Codegen::visit(WithStatement *ast)
     Reference src = expression(ast->expression);
     if (hasError)
         return false;
-    src.asRValue(); // trigger load before we setup the exception handler, so exceptions here go to the right place
+    src = src.storeInTemp(); // trigger load before we setup the exception handler, so exceptions here go to the right place
 
     ControlFlowWith flow(this);
 
+    src.loadInAccumulator();
     Instruction::CallBuiltinPushScope pushScope;
-    pushScope.arg = src.asRValue();
     bytecodeGenerator->addInstruction(pushScope);
 
     statement(ast->statement);
@@ -2388,7 +2355,7 @@ bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r, 
         return false;
     bool isArgOrEval = false;
     if (r.type == Reference::Name) {
-        QString str = jsUnitGenerator->stringForIndex(r.nameIndex);
+        QString str = jsUnitGenerator->stringForIndex(r.unqualifiedNameIndex);
         if (str == QLatin1String("eval") || str == QLatin1String("arguments")) {
             isArgOrEval = true;
         }
@@ -2487,15 +2454,14 @@ Codegen::Reference::Reference(const Codegen::Reference &other)
 
 Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
 {
-    other.writeBack();
-
     type = other.type;
-    base = other.base;
 
     switch (type) {
     case Invalid:
+    case Accumulator:
         break;
     case Temporary:
+        temporary = other.temporary;
         break;
     case Local:
     case Argument:
@@ -2503,11 +2469,15 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         scope = other.scope;
         break;
     case Name:
+        unqualifiedNameIndex = other.unqualifiedNameIndex;
+        break;
     case Member:
-        nameIndex = other.nameIndex;
+        propertyBase = other.propertyBase;
+        propertyNameIndex = other.propertyNameIndex;
         break;
     case Subscript:
-        subscript = other.subscript;
+        elementBase = other.elementBase;
+        elementSubscript = other.elementSubscript;
         break;
     case Const:
         constant = other.constant;
@@ -2517,6 +2487,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         break;
     case QmlScopeObject:
     case QmlContextObject:
+        qmlBase = other.qmlBase;
         qmlCoreIndex = other.qmlCoreIndex;
         qmlNotifyIndex = other.qmlNotifyIndex;
         captureRequired = other.captureRequired;
@@ -2526,8 +2497,6 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     }
 
     // keep loaded reference
-    temp = other.temp;
-    needsWriteBack = false;
     isArgOrEval = other.isArgOrEval;
     codegen = other.codegen;
     isReadonly = other.isReadonly;
@@ -2536,28 +2505,25 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     return *this;
 }
 
-Codegen::Reference::~Reference()
-{
-    writeBack();
-}
-
 bool Codegen::Reference::operator==(const Codegen::Reference &other) const
 {
     if (type != other.type)
         return false;
     switch (type) {
     case Invalid:
+    case Accumulator:
         break;
     case Temporary:
+        return temporary == other.temporary;
     case Local:
     case Argument:
-        return base == other.base;
+        return index == other.index && scope == other.scope;
     case Name:
-        return nameIndex == other.nameIndex;
+        return unqualifiedNameIndex == other.unqualifiedNameIndex;
     case Member:
-        return base == other.base && nameIndex == other.nameIndex;
+        return propertyBase == other.propertyBase && propertyNameIndex == other.propertyNameIndex;
     case Subscript:
-        return base == other.base && subscript == other.subscript;
+        return elementBase == other.elementBase && elementSubscript == other.elementSubscript;
     case Const:
         return constant == other.constant;
     case Closure:
@@ -2572,108 +2538,94 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     return true;
 }
 
-void Codegen::Reference::storeConsume(Reference &source) const
+Codegen::Reference Codegen::Reference::storeConsumeAccumulator() const
 {
-    if (!isTemp() && !source.isTemp()) {
-        source.asRValue(); // trigger load
-
-        Q_ASSERT(source.temp.index >= 0);
-        temp = source.temp;
-        source.temp.index = -1;
-        needsWriteBack = true;
-        return;
-    }
-
-    store(source);
+    storeAccumulator(); // it doesn't matter what happens here, just do it.
+    return Reference::fromAccumulator(codegen);
 }
 
-void Codegen::Reference::store(const Reference &source) const
+Codegen::Reference Codegen::Reference::storeInTemp(int tempIndex) const
 {
-    Q_ASSERT(type != Const);
-    Q_ASSERT(!needsWriteBack);
+    if (isTemp() && tempIndex == -1)
+        return *this;
 
-    if (*this == source)
-        return;
-
-
-    if (isTemp()) {
-        if (source.temp.index != -1) {
-            Instruction::Move move;
-            move.source = source.asRValue();
-            move.result = asLValue();
-            codegen->bytecodeGenerator->addInstruction(move);
-            return;
-        } else {
-            source.load(base);
-        }
-        return;
+    if (isTemp()) { // temp-to-temp move
+        Reference dest = Reference::fromTemp(codegen, tempIndex);
+        Instruction::MoveReg move;
+        move.srcReg = temp();
+        move.destReg = dest.temp();
+        codegen->bytecodeGenerator->addInstruction(move);
+        return dest;
     }
 
-    if (temp.index < 0)
-        temp.index = codegen->bytecodeGenerator->newTemp();
-    if (!source.isTemp() && source.temp.index == -1) {
-        source.load(temp);
-        needsWriteBack = true;
-        return;
-    }
-    needsWriteBack = true;
-
-    Moth::Temp x = source.asRValue();
-    Q_ASSERT(temp != x);
-    Instruction::Move move;
-    move.source = x;
-    move.result = temp;
-    codegen->bytecodeGenerator->addInstruction(move);
-}
-
-Moth::Temp Codegen::Reference::asRValue() const
-{
-    Q_ASSERT(!needsWriteBack);
-
-    Q_ASSERT(type != Invalid);
-    if (isTemp())
-        return base;
-
-    // need a temp to hold the value
-    if (temp.index == -1) {
-        temp.index = codegen->bytecodeGenerator->newTemp();
-        load(temp);
+    Reference temp = Reference::fromTemp(codegen, tempIndex);
+    if (isConst()) {
+        Instruction::MoveConst move;
+        move.constIndex = codegen->registerConstant(constant);
+        move.destTemp = temp.temp();
+        codegen->bytecodeGenerator->addInstruction(move);
+    } else {
+        loadInAccumulator();
+        temp.storeConsumeAccumulator();
     }
     return temp;
 }
 
-Moth::Temp Codegen::Reference::asLValue() const
+Codegen::Reference Codegen::Reference::storeRetainAccumulator() const
 {
-    Q_ASSERT(type <= LastLValue);
-
-    if (isTemp())
-        return base;
-
-    if (temp.index == -1)
-        temp.index = codegen->bytecodeGenerator->newTemp();
-    needsWriteBack = true;
-    return temp;
+    if (storeWipesAccumulator()) {
+        // a store will
+        auto tmp = Reference::fromTemp(codegen);
+        tmp.storeAccumulator(); // this is safe, and won't destory the accumulator
+        storeAccumulator();
+        return tmp;
+    } else {
+        // ok, this is safe, just do the store.
+        storeAccumulator();
+        return *this;
+    }
 }
 
-void Codegen::Reference::writeBack() const
+bool Codegen::Reference::storeWipesAccumulator() const
 {
-    if (!needsWriteBack)
-        return;
-
-    Q_ASSERT(!isTemp());
-    Q_ASSERT(temp.index >= 0);
-    needsWriteBack = false;
-
     switch (type) {
+    default:
+    case Invalid:
+    case This:
+    case Const:
+    case Accumulator:
+        Q_UNREACHABLE();
+        return false;
+    case Temporary:
+    case Local:
+    case Argument:
+        return false;
+    case Name:
+    case Member:
+    case Subscript:
+    case Closure:
+    case QmlScopeObject:
+    case QmlContextObject:
+        return true;
+    }
+}
+
+void Codegen::Reference::storeAccumulator() const
+{
+    switch (type) {
+    case Temporary: {
+        Instruction::StoreReg store;
+        store.reg = temporary;
+        codegen->bytecodeGenerator->addInstruction(store);
+        return;
+    }
     case Local:
         if (scope == 0) {
             Instruction::StoreLocal store;
-            store.source = temp;
             store.index = index;
             codegen->bytecodeGenerator->addInstruction(store);
         } else {
             Instruction::StoreScopedLocal store;
-            store.source = temp;
             store.index = index;
             store.scope = scope;
             codegen->bytecodeGenerator->addInstruction(store);
@@ -2682,12 +2634,10 @@ void Codegen::Reference::writeBack() const
     case Argument:
         if (scope == 0) {
             Instruction::StoreArg store;
-            store.source = temp;
             store.index = index;
             codegen->bytecodeGenerator->addInstruction(store);
         } else {
             Instruction::StoreScopedArg store;
-            store.source = temp;
             store.index = index;
             store.scope = scope;
             codegen->bytecodeGenerator->addInstruction(store);
@@ -2695,48 +2645,42 @@ void Codegen::Reference::writeBack() const
         return;
     case Name: {
         Instruction::StoreName store;
-        store.source = temp;
-        store.name = nameIndex;
+        store.name = unqualifiedNameIndex;
         codegen->bytecodeGenerator->addInstruction(store);
     } return;
     case Member:
         if (codegen->useFastLookups) {
             Instruction::SetLookup store;
-            store.base = base;
-            store.index = codegen->registerSetterLookup(nameIndex);
-            store.source = temp;
+            store.base = propertyBase;
+            store.index = codegen->registerSetterLookup(propertyNameIndex);
             codegen->bytecodeGenerator->addInstruction(store);
         } else {
             Instruction::StoreProperty store;
-            store.base = base;
-            store.name = nameIndex;
-            store.source = temp;
+            store.base = propertyBase;
+            store.name = propertyNameIndex;
             codegen->bytecodeGenerator->addInstruction(store);
         }
         return;
     case Subscript: {
         Instruction::StoreElement store;
-        store.base = base;
-        store.index = subscript;
-        store.source = temp;
+        store.base = elementBase;
+        store.index = elementSubscript;
         codegen->bytecodeGenerator->addInstruction(store);
     } return;
     case QmlScopeObject: {
         Instruction::StoreScopeObjectProperty store;
-        store.base = base;
+        store.base = qmlBase;
         store.propertyIndex = qmlCoreIndex;
-        store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
     } return;
     case QmlContextObject: {
         Instruction::StoreContextObjectProperty store;
-        store.base = base;
+        store.base = qmlBase;
         store.propertyIndex = qmlCoreIndex;
-        store.source = temp;
         codegen->bytecodeGenerator->addInstruction(store);
     } return;
     case Invalid:
-    case Temporary:
+    case Accumulator:
     case Closure:
     case Const:
     case This:
@@ -2747,26 +2691,30 @@ void Codegen::Reference::writeBack() const
     Q_UNREACHABLE();
 }
 
-void Codegen::Reference::load(Moth::Temp dest) const
+void Codegen::Reference::loadInAccumulator() const
 {
     switch (type) {
+    case Accumulator:
+        return;
     case Const: {
         Instruction::LoadConst load;
         load.index = codegen->registerConstant(constant);
-        load.result = dest;
+        codegen->bytecodeGenerator->addInstruction(load);
+    } return;
+    case Temporary: {
+        Instruction::LoadReg load;
+        load.reg = temp();
         codegen->bytecodeGenerator->addInstruction(load);
     } return;
     case Local:
         if (scope == 0) {
             Instruction::LoadLocal load;
             load.index = index;
-            load.result = dest;
             codegen->bytecodeGenerator->addInstruction(load);
         } else {
             Instruction::LoadScopedLocal load;
             load.index = index;
             load.scope = scope;
-            load.result = dest;
             codegen->bytecodeGenerator->addInstruction(load);
         }
         return;
@@ -2774,62 +2722,53 @@ void Codegen::Reference::load(Moth::Temp dest) const
         if (scope == 0) {
             Instruction::LoadArg load;
             load.index = index;
-            load.result = dest;
             codegen->bytecodeGenerator->addInstruction(load);
         } else {
             Instruction::LoadScopedArg load;
             load.index = index;
             load.scope = scope;
-            load.result = dest;
             codegen->bytecodeGenerator->addInstruction(load);
         }
         return;
     case Name:
         if (codegen->useFastLookups && global) {
             Instruction::GetGlobalLookup load;
-            load.index = codegen->registerGlobalGetterLookup(nameIndex);
-            load.result = dest;
+            load.index = codegen->registerGlobalGetterLookup(unqualifiedNameIndex);
             codegen->bytecodeGenerator->addInstruction(load);
         } else {
             Instruction::LoadName load;
-            load.name = nameIndex;
-            load.result = dest;
+            load.name = unqualifiedNameIndex;
             codegen->bytecodeGenerator->addInstruction(load);
         }
         return;
     case Member:
         if (codegen->useFastLookups) {
             Instruction::GetLookup load;
-            load.base = base;
-            load.index = codegen->registerGetterLookup(nameIndex);
-            load.result = dest;
+            load.base = propertyBase;
+            load.index = codegen->registerGetterLookup(propertyNameIndex);
             codegen->bytecodeGenerator->addInstruction(load);
         } else {
             Instruction::LoadProperty load;
-            load.base = base;
-            load.name = nameIndex;
-            load.result = dest;
+            load.base = propertyBase;
+            load.name = propertyNameIndex;
             codegen->bytecodeGenerator->addInstruction(load);
         }
         return;
     case Subscript: {
         Instruction::LoadElement load;
-        load.base = base;
-        load.index = subscript;
-        load.result = dest;
+        load.base = elementBase;
+        load.index = elementSubscript;
         codegen->bytecodeGenerator->addInstruction(load);
     } return;
     case Closure: {
         Instruction::LoadClosure load;
         load.value = closureId;
-        load.result = dest;
         codegen->bytecodeGenerator->addInstruction(load);
     } return;
     case QmlScopeObject: {
         Instruction::LoadScopeObjectProperty load;
-        load.base = base;
+        load.base = qmlBase;
         load.propertyIndex = qmlCoreIndex;
-        load.result = dest;
         load.captureRequired = captureRequired;
         codegen->bytecodeGenerator->addInstruction(load);
         if (!captureRequired)
@@ -2837,9 +2776,8 @@ void Codegen::Reference::load(Moth::Temp dest) const
     } return;
     case QmlContextObject: {
         Instruction::LoadContextObjectProperty load;
-        load.base = base;
+        load.base = qmlBase;
         load.propertyIndex = qmlCoreIndex;
-        load.result = dest;
         load.captureRequired = captureRequired;
         codegen->bytecodeGenerator->addInstruction(load);
         if (!captureRequired)
@@ -2847,14 +2785,7 @@ void Codegen::Reference::load(Moth::Temp dest) const
     } return;
     case This: {
         Instruction::LoadThis load;
-        load.result = dest;
         codegen->bytecodeGenerator->addInstruction(load);
-    } return;
-    case Temporary: {
-        Instruction::Move move;
-        move.source = base;
-        move.result = dest;
-        codegen->bytecodeGenerator->addInstruction(move);
     } return;
     case Invalid:
         break;

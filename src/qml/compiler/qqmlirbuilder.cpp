@@ -2053,7 +2053,7 @@ void JSCodeGen::beginFunctionBodyHook()
 
 #ifndef V4_BOOTSTRAP
     Instruction::LoadQmlContext load;
-    load.result = Reference::fromTemp(this, _qmlContextTemp).asLValue();
+    load.result = Reference::fromTemp(this, _qmlContextTemp).temp();
     bytecodeGenerator->addInstruction(load);
 
 #if 0
@@ -2065,7 +2065,7 @@ void JSCodeGen::beginFunctionBodyHook()
 #endif
 
     Instruction::LoadQmlImportedScripts loadScripts;
-    loadScripts.result = Reference::fromTemp(this, _importedScriptsTemp).asLValue();
+    loadScripts.result = Reference::fromTemp(this, _importedScriptsTemp).temp();
     bytecodeGenerator->addInstruction(loadScripts);
 #endif
 }
@@ -2093,11 +2093,11 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
             if (_context->compilationMode == QV4::Compiler::QmlBinding)
                 _context->idObjectDependencies.insert(mapping.idIndex);
 
-            Reference result = Reference::fromTemp(this);
             Instruction::LoadIdObject load;
-            load.base = Reference::fromTemp(this, _qmlContextTemp).asRValue();
+            load.base = Reference::fromTemp(this, _qmlContextTemp).temp();
             load.index = mapping.idIndex;
-            load.result = result.asLValue();
+
+            Reference result = Reference::fromAccumulator(this);
             bytecodeGenerator->addInstruction(load);
             result.isReadonly = true;
             return result;
@@ -2112,12 +2112,10 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
                 return Reference::fromSubscript(imports, Reference::fromConst(this, QV4::Encode(r.scriptIndex)));
             } else if (r.type) {
                 if (r.type->isCompositeSingleton()) {
-                    Reference result = Reference::fromTemp(this);
                     Instruction::LoadQmlSingleton load;
-                    load.result = result.asRValue();
                     load.name = registerString(name);
                     bytecodeGenerator->addInstruction(load);
-                    return result;
+                    return Reference::fromAccumulator(this);
                 }
                 return Reference::fromName(this, name);
             } else {

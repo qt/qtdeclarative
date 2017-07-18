@@ -72,6 +72,10 @@ QT_BEGIN_NAMESPACE
     F(Ret, ret) \
     MOTH_DEBUG_INSTR(F) \
     F(LoadConst, loadConst) \
+    F(MoveConst, moveConst) \
+    F(LoadReg, loadReg) \
+    F(StoreReg, storeReg) \
+    F(MoveReg, moveReg) \
     F(LoadLocal, loadLocal) \
     F(StoreLocal, storeLocal) \
     F(LoadArg, loadArg) \
@@ -83,7 +87,6 @@ QT_BEGIN_NAMESPACE
     F(LoadRuntimeString, loadRuntimeString) \
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
-    F(Move, move) \
     F(LoadName, loadName) \
     F(GetGlobalLookup, getGlobalLookup) \
     F(StoreName, storeName) \
@@ -143,10 +146,8 @@ QT_BEGIN_NAMESPACE
     F(UMinus, uminus) \
     F(UCompl, ucompl) \
     F(UComplInt, ucomplInt) \
-    F(PreIncrement, preIncrement) \
-    F(PreDecrement, preDecrement) \
-    F(PostIncrement, postIncrement) \
-    F(PostDecrement, postDecrement) \
+    F(Increment, increment) \
+    F(Decrement, decrement) \
     F(Binop, binop) \
     F(Add, add) \
     F(BitAnd, bitAnd) \
@@ -232,168 +233,153 @@ union Instr
     struct instr_loadConst {
         MOTH_INSTR_HEADER
         int index;
-        Temp result;
+    };
+    struct instr_moveConst {
+        MOTH_INSTR_HEADER
+        int constIndex;
+        Temp destTemp;
+    };
+    struct instr_loadReg {
+        MOTH_INSTR_HEADER
+        Temp reg;
+    };
+    struct instr_storeReg {
+        MOTH_INSTR_HEADER
+        Temp reg;
+    };
+    struct instr_moveReg {
+        MOTH_INSTR_HEADER
+        Temp srcReg;
+        Temp destReg;
     };
     struct instr_loadLocal {
         MOTH_INSTR_HEADER
         int index;
-        Temp result;
     };
     struct instr_storeLocal {
         MOTH_INSTR_HEADER
         int index;
-        Temp source;
     };
     struct instr_loadArg {
         MOTH_INSTR_HEADER
         int index;
-        Temp result;
     };
     struct instr_storeArg {
         MOTH_INSTR_HEADER
         int index;
-        Temp source;
     };
     struct instr_loadScopedLocal {
         MOTH_INSTR_HEADER
         unsigned scope : 12;
         unsigned index : 20;
-        Temp result;
     };
     struct instr_storeScopedLocal {
         MOTH_INSTR_HEADER
         unsigned scope : 12;
         unsigned index : 20;
-        Temp source;
     };
     struct instr_loadScopedArg {
         MOTH_INSTR_HEADER
         unsigned scope : 12;
         unsigned index : 20;
-        Temp result;
     };
     struct instr_storeScopedArg {
         MOTH_INSTR_HEADER
         unsigned scope : 12;
         unsigned index : 20;
-        Temp source;
     };
     struct instr_loadRuntimeString {
         MOTH_INSTR_HEADER
         int stringId;
-        Temp result;
     };
     struct instr_loadRegExp {
         MOTH_INSTR_HEADER
         int regExpId;
-        Temp result;
-    };
-    struct instr_move {
-        MOTH_INSTR_HEADER
-        Temp source;
-        Temp result;
     };
     struct instr_loadClosure {
         MOTH_INSTR_HEADER
         int value;
-        Temp result;
     };
     struct instr_loadName {
         MOTH_INSTR_HEADER
         int name;
-        Temp result;
     };
     struct instr_getGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
-        Temp result;
     };
     struct instr_storeName {
         MOTH_INSTR_HEADER
         int name;
-        Temp source;
     };
     struct instr_loadProperty {
         MOTH_INSTR_HEADER
         int name;
         Temp base;
-        Temp result;
     };
     struct instr_getLookup {
         MOTH_INSTR_HEADER
         int index;
         Temp base;
-        Temp result;
     };
     struct instr_loadScopeObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
         Temp base;
-        Temp result;
         bool captureRequired;
     };
     struct instr_loadContextObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
         Temp base;
-        Temp result;
         bool captureRequired;
     };
     struct instr_loadIdObject {
         MOTH_INSTR_HEADER
         int index;
         Temp base;
-        Temp result;
     };
     struct instr_storeProperty {
         MOTH_INSTR_HEADER
         int name;
         Temp base;
-        Temp source;
     };
     struct instr_setLookup {
         MOTH_INSTR_HEADER
         int index;
         Temp base;
-        Temp source;
     };
     struct instr_storeScopeObjectProperty {
         MOTH_INSTR_HEADER
         Temp base;
         int propertyIndex;
-        Temp source;
     };
     struct instr_storeContextObjectProperty {
         MOTH_INSTR_HEADER
         Temp base;
         int propertyIndex;
-        Temp source;
     };
     struct instr_loadElement {
         MOTH_INSTR_HEADER
         Temp base;
         Temp index;
-        Temp result;
     };
     struct instr_loadElementLookup {
         MOTH_INSTR_HEADER
         uint lookup;
         Temp base;
         Temp index;
-        Temp result;
     };
     struct instr_storeElement {
         MOTH_INSTR_HEADER
         Temp base;
         Temp index;
-        Temp source;
     };
     struct instr_storeElementLookup {
         MOTH_INSTR_HEADER
         uint lookup;
         Temp base;
         Temp index;
-        Temp source;
     };
     struct instr_initStackFrame {
         MOTH_INSTR_HEADER
@@ -403,14 +389,12 @@ union Instr
         MOTH_INSTR_HEADER
         Temp callData;
         Temp dest;
-        Temp result;
     };
     struct instr_callProperty {
         MOTH_INSTR_HEADER
         int name;
         Temp callData;
         Temp base;
-        Temp result;
     };
     struct instr_callPropertyLookup {
         MOTH_INSTR_HEADER
@@ -418,26 +402,22 @@ union Instr
         int argc;
         Temp callData;
         Temp base;
-        Temp result;
     };
     struct instr_callElement {
         MOTH_INSTR_HEADER
         Temp base;
         Temp index;
         Temp callData;
-        Temp result;
     };
     struct instr_callActivationProperty {
         MOTH_INSTR_HEADER
         int name;
         Temp callData;
-        Temp result;
     };
     struct instr_callGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
         Temp callData;
-        Temp result;
     };
     struct instr_setExceptionHandler {
         MOTH_INSTR_HEADER
@@ -445,19 +425,15 @@ union Instr
     };
     struct instr_callBuiltinThrow {
         MOTH_INSTR_HEADER
-        Temp arg;
     };
     struct instr_getException {
         MOTH_INSTR_HEADER
-        Temp result;
     };
     struct instr_setException {
         MOTH_INSTR_HEADER
-        Temp exception;
     };
     struct instr_callBuiltinUnwindException {
         MOTH_INSTR_HEADER
-        Temp result;
     };
     struct instr_callBuiltinPushCatchScope {
         MOTH_INSTR_HEADER
@@ -465,47 +441,36 @@ union Instr
     };
     struct instr_callBuiltinPushScope {
         MOTH_INSTR_HEADER
-        Temp arg;
     };
     struct instr_callBuiltinPopScope {
         MOTH_INSTR_HEADER
     };
     struct instr_callBuiltinForeachIteratorObject {
         MOTH_INSTR_HEADER
-        Temp arg;
-        Temp result;
     };
     struct instr_callBuiltinForeachNextPropertyName {
         MOTH_INSTR_HEADER
-        Temp arg;
-        Temp result;
     };
     struct instr_callBuiltinDeleteMember {
         MOTH_INSTR_HEADER
         int member;
         Temp base;
-        Temp result;
     };
     struct instr_callBuiltinDeleteSubscript {
         MOTH_INSTR_HEADER
         Temp base;
         Temp index;
-        Temp result;
     };
     struct instr_callBuiltinDeleteName {
         MOTH_INSTR_HEADER
         int name;
-        Temp result;
     };
     struct instr_callBuiltinTypeofName {
         MOTH_INSTR_HEADER
         int name;
-        Temp result;
     };
     struct instr_callBuiltinTypeofValue {
         MOTH_INSTR_HEADER
-        Temp value;
-        Temp result;
     };
     struct instr_callBuiltinDeclareVar {
         MOTH_INSTR_HEADER
@@ -516,7 +481,6 @@ union Instr
         MOTH_INSTR_HEADER
         uint argc;
         Temp args;
-        Temp result;
     };
     struct instr_callBuiltinDefineObjectLiteral {
         MOTH_INSTR_HEADER
@@ -524,11 +488,9 @@ union Instr
         int arrayValueCount;
         int arrayGetterSetterCountAndFlags; // 30 bits for count, 1 bit for needsSparseArray boolean
         Temp args;
-        Temp result;
     };
     struct instr_callBuiltinSetupArgumentsObject {
         MOTH_INSTR_HEADER
-        Temp result;
     };
     struct instr_callBuiltinConvertThisToObject {
         MOTH_INSTR_HEADER
@@ -537,7 +499,6 @@ union Instr
         MOTH_INSTR_HEADER
         Temp callData;
         Temp func;
-        Temp result;
     };
     struct instr_createProperty {
         MOTH_INSTR_HEADER
@@ -545,7 +506,6 @@ union Instr
         int argc;
         Temp callData;
         Temp base;
-        Temp result;
     };
     struct instr_constructPropertyLookup {
         MOTH_INSTR_HEADER
@@ -553,21 +513,18 @@ union Instr
         int argc;
         Temp callData;
         Temp base;
-        Temp result;
     };
     struct instr_createActivationProperty {
         MOTH_INSTR_HEADER
         int name;
         int argc;
         Temp callData;
-        Temp result;
     };
     struct instr_constructGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
         int argc;
         Temp callData;
-        Temp result;
     };
     struct instr_jump {
         MOTH_INSTR_HEADER
@@ -576,170 +533,109 @@ union Instr
     struct instr_jumpEq {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
-        Temp condition;
     };
     struct instr_jumpNe {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
-        Temp condition;
     };
     struct instr_jumpStrictEqual {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
         Temp lhs;
-        Temp rhs;
     };
     struct instr_jumpStrictNotEqual {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
         Temp lhs;
-        Temp rhs;
     };
     struct instr_unot {
         MOTH_INSTR_HEADER
-        Temp source;
-        Temp result;
     };
     struct instr_unotBool {
         MOTH_INSTR_HEADER
-        Temp source;
-        Temp result;
     };
     struct instr_uplus {
         MOTH_INSTR_HEADER
-        Temp source;
-        Temp result;
     };
     struct instr_uminus {
         MOTH_INSTR_HEADER
-        Temp source;
-        Temp result;
     };
     struct instr_ucompl {
         MOTH_INSTR_HEADER
-        Temp source;
-        Temp result;
     };
     struct instr_ucomplInt {
         MOTH_INSTR_HEADER
-        Temp source;
-        Temp result;
     };
-    struct instr_preIncrement {
+    struct instr_increment {
         MOTH_INSTR_HEADER
-        Temp source;
-        Temp result;
     };
-    struct instr_preDecrement {
+    struct instr_decrement {
         MOTH_INSTR_HEADER
-        Temp source;
-        Temp result;
-    };
-    struct instr_postIncrement {
-        MOTH_INSTR_HEADER
-        Temp source;
-        Temp result;
-    };
-    struct instr_postDecrement {
-        MOTH_INSTR_HEADER
-        Temp source;
-        Temp result;
     };
     struct instr_binop {
         MOTH_INSTR_HEADER
         int alu; // QV4::Runtime::RuntimeMethods enum value
         Temp lhs;
-        Temp rhs;
-        Temp result;
     };
     struct instr_add {
         MOTH_INSTR_HEADER
         Temp lhs;
-        Temp rhs;
-        Temp result;
     };
     struct instr_bitAnd {
         MOTH_INSTR_HEADER
         Temp lhs;
-        Temp rhs;
-        Temp result;
     };
     struct instr_bitOr {
         MOTH_INSTR_HEADER
         Temp lhs;
-        Temp rhs;
-        Temp result;
     };
     struct instr_bitXor {
         MOTH_INSTR_HEADER
         Temp lhs;
-        Temp rhs;
-        Temp result;
     };
     struct instr_shr {
         MOTH_INSTR_HEADER
         Temp lhs;
-        Temp rhs;
-        Temp result;
     };
     struct instr_shl {
         MOTH_INSTR_HEADER
         Temp lhs;
-        Temp rhs;
-        Temp result;
     };
     struct instr_bitAndConst {
         MOTH_INSTR_HEADER
-        Temp lhs;
         int rhs;
-        Temp result;
     };
     struct instr_bitOrConst {
         MOTH_INSTR_HEADER
-        Temp lhs;
         int rhs;
-        Temp result;
     };
     struct instr_bitXorConst {
         MOTH_INSTR_HEADER
-        Temp lhs;
         int rhs;
-        Temp result;
     };
     struct instr_shrConst {
         MOTH_INSTR_HEADER
-        Temp lhs;
         int rhs;
-        Temp result;
     };
     struct instr_shlConst {
         MOTH_INSTR_HEADER
-        Temp lhs;
         int rhs;
-        Temp result;
     };
     struct instr_mul {
         MOTH_INSTR_HEADER
         Temp lhs;
-        Temp rhs;
-        Temp result;
     };
     struct instr_sub {
         MOTH_INSTR_HEADER
         Temp lhs;
-        Temp rhs;
-        Temp result;
     };
     struct instr_binopContext {
         MOTH_INSTR_HEADER
         uint alu; // offset inside the runtime methods
         Temp lhs;
-        Temp rhs;
-        Temp result;
     };
     struct instr_loadThis {
         MOTH_INSTR_HEADER
-        Temp result;
     };
     struct instr_loadQmlContext {
         MOTH_INSTR_HEADER
@@ -751,7 +647,6 @@ union Instr
     };
     struct instr_loadQmlSingleton {
         MOTH_INSTR_HEADER
-        Temp result;
         int name;
     };
 
@@ -760,6 +655,10 @@ union Instr
     instr_line line;
     instr_debug debug;
     instr_loadConst loadConst;
+    instr_moveConst moveConst;
+    instr_loadReg loadReg;
+    instr_storeReg storeReg;
+    instr_moveReg moveReg;
     instr_loadLocal loadLocal;
     instr_storeLocal storeLocal;
     instr_loadArg loadArg;
@@ -770,7 +669,6 @@ union Instr
     instr_storeScopedArg storeScopedArg;
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;
-    instr_move move;
     instr_loadClosure loadClosure;
     instr_loadName loadName;
     instr_getGlobalLookup getGlobalLookup;
@@ -831,10 +729,8 @@ union Instr
     instr_uminus uminus;
     instr_ucompl ucompl;
     instr_ucomplInt ucomplInt;
-    instr_preIncrement preIncrement;
-    instr_preDecrement preDecrement;
-    instr_postIncrement postIncrement;
-    instr_postDecrement postDecrement;
+    instr_increment increment;
+    instr_decrement decrement;
     instr_binop binop;
     instr_add add;
     instr_bitAnd bitAnd;

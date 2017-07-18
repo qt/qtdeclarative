@@ -154,10 +154,8 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, uMinus, (const Value &value)) \
     F(ReturnedValue, uNot, (const Value &value)) \
     F(ReturnedValue, complement, (const Value &value)) \
-    F(ReturnedValue, preIncrement, (const Value &value)) \
-    F(ReturnedValue, preDecrement, (const Value &value)) \
-    F(ReturnedValue, postIncrement, (Value *value)) \
-    F(ReturnedValue, postDecrement, (Value *value)) \
+    F(ReturnedValue, increment, (const Value &value)) \
+    F(ReturnedValue, decrement, (const Value &value)) \
     \
     /* binary operators */ \
     F(ReturnedValue, instanceof, (ExecutionEngine *engine, const Value &left, const Value &right)) \
