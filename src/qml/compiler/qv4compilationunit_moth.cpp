@@ -43,6 +43,7 @@
 #endif
 #include <wtf/StdLibExtras.h>
 
+using namespace QV4;
 using namespace QV4::Moth;
 
 CompilationUnit::~CompilationUnit()

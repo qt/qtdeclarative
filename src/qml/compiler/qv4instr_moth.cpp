@@ -79,7 +79,7 @@ static QString toString(QV4::ReturnedValue v)
 }
 
 template<typename T>
-int absoluteInstructionOffset(const char *codeStart, const T &instr)
+size_t absoluteInstructionOffset(const char *codeStart, const T &instr)
 {
     return reinterpret_cast<const char *>(&instr) - codeStart + offsetof(T, offset) + instr.offset;
 }
