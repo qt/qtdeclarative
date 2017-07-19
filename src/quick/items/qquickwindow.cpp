@@ -1494,8 +1494,7 @@ QQuickItem *QQuickWindow::mouseGrabberItem() const
     if (d->touchMouseId != -1 && d->touchMouseDevice) {
         QQuickPointerEvent *event = d->pointerEventInstance(d->touchMouseDevice);
         auto point = event->pointById(d->touchMouseId);
-        Q_ASSERT(point);
-        return point->grabber();
+        return point ? point->grabber() : nullptr;
     }
 
     QQuickPointerEvent *event = d->pointerEventInstance(QQuickPointerDevice::genericMouseDevice());
