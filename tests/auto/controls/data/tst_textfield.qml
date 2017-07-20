@@ -66,6 +66,11 @@ TestCase {
     }
 
     Component {
+        id: rectangle
+        Rectangle { }
+    }
+
+    Component {
         id: signalSpy
         SignalSpy { }
     }
@@ -82,8 +87,7 @@ TestCase {
         var implicitWidthSpy = signalSpy.createObject(control, { target: control, signalName: "implicitWidthChanged"} )
         var implicitHeightSpy = signalSpy.createObject(control, { target: control, signalName: "implicitHeightChanged"} )
 
-        control.background.implicitWidth = 400
-        control.background.implicitHeight = 200
+        control.background = rectangle.createObject(control, {implicitWidth: 400, implicitHeight: 200})
         compare(control.implicitWidth, 400)
         compare(control.implicitHeight, 200)
         compare(implicitWidthSpy.count, 1)
@@ -163,14 +167,14 @@ TestCase {
         if (data.textAlignment !== undefined)
             compare(control.horizontalAlignment, data.textAlignment)
         for (var i = 0; i < control.children.length; ++i) {
-            if (control.children[i].hasOwnProperty("horizontalAlignment"))
+            if (control.children[i].hasOwnProperty("text") && control.children[i].hasOwnProperty("horizontalAlignment"))
                 compare(control.children[i].effectiveHorizontalAlignment, data.placeholderAlignment) // placeholder
         }
 
         control.verticalAlignment = TextField.AlignBottom
         compare(control.verticalAlignment, TextField.AlignBottom)
         for (var j = 0; j < control.children.length; ++j) {
-            if (control.children[j].hasOwnProperty("verticalAlignment"))
+            if (control.children[j].hasOwnProperty("text") && control.children[j].hasOwnProperty("verticalAlignment"))
                 compare(control.children[j].verticalAlignment, Text.AlignBottom) // placeholder
         }
     }
