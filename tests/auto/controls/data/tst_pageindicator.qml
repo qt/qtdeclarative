@@ -96,7 +96,7 @@ TestCase {
     }
 
     function test_interactive(data) {
-        var control = createTemporaryObject(pageIndicator, testCase, {count: 5, spacing: 10, padding: 10})
+        var control = createTemporaryObject(pageIndicator, testCase, {count: 5, spacing: 10, topPadding: 10, leftPadding: 10, rightPadding: 10, bottomPadding: 10})
         verify(control)
 
         verify(!control.interactive)
