@@ -944,6 +944,10 @@ TestCase {
         compare(openedSpy.count, 1)
         verify(control.visible)
 
+        // remove the background so that it won't affect the implicit size of the popup,
+        // so the implicit sizes tested below are entirely based on the content size
+        control.background = null
+
         // implicit size of the content
         control.contentItem.implicitWidth = 10
         compare(control.implicitWidth, 10 + control.leftPadding + control.rightPadding)
