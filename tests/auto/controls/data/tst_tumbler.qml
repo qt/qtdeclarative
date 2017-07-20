@@ -123,7 +123,9 @@ TestCase {
                 return child;
             }
 
-            return findView(child);
+            var grandChild = findView(child);
+            if (grandChild)
+                return grandChild;
         }
 
         return null;
