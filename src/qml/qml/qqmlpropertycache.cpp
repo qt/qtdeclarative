@@ -764,7 +764,11 @@ void QQmlPropertyCache::invalidate(const QMetaObject *metaObject)
 QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it, QObject *object, QQmlContextData *context) const
 {
     QQmlData *data = (object ? QQmlData::get(object) : 0);
-    const QQmlVMEMetaObject *vmemo = (data && data->hasVMEMetaObject ? static_cast<const QQmlVMEMetaObject *>(object->metaObject()) : 0);
+    const QQmlVMEMetaObject *vmemo = 0;
+    if (data && data->hasVMEMetaObject) {
+        QObjectPrivate *op = QObjectPrivate::get(object);
+        vmemo = static_cast<const QQmlVMEMetaObject *>(op->metaObject);
+    }
     return findProperty(it, vmemo, context);
 }
 
@@ -808,9 +812,9 @@ QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it,
         }
 
         if (vmemo) {
-            const int methodCount = vmemo->methodCount();
-            const int signalCount = vmemo->signalCount();
-            const int propertyCount = vmemo->propertyCount();
+            const int methodCount = vmemo->cache->methodCount();
+            const int signalCount = vmemo->cache->signalCount();
+            const int propertyCount = vmemo->cache->propertyCount();
 
             // Ensure that the property we resolve to is accessible from this meta-object
             do {
