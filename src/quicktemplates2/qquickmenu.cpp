@@ -403,6 +403,8 @@ bool QQuickMenuPrivate::prepareExitTransition()
     if (!QQuickPopupPrivate::prepareExitTransition())
         return false;
 
+    stopHoverTimer();
+
     QQuickMenu *subMenu = currentSubMenu();
     while (subMenu) {
         QPointer<QQuickMenuItem> currentSubMenuItem = QQuickMenuPrivate::get(subMenu)->currentItem;
