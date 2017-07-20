@@ -506,10 +506,9 @@ TestCase {
     function test_layout(data) {
         var control = createTemporaryObject(tabBar, testCase, {spacing: data.spacing, width: 200})
 
-        // remove the implicit size from the background so that it won't affect
-        // the implicit size of the tabbar, so the implicit sizes tested below
-        // are entirely based on the content size
-        control.background.implicitWidth = 0
+        // remove the background so that it won't affect the implicit size of the tabbar,
+        // so the implicit sizes tested below are entirely based on the content size
+        control.background = null
 
         var tab1 = tabButton.createObject(control, {text: "First"})
         control.addItem(tab1)
