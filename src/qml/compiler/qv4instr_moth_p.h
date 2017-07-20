@@ -270,23 +270,23 @@ union Instr
     };
     struct instr_loadScopedLocal {
         MOTH_INSTR_HEADER
-        unsigned scope : 12;
-        unsigned index : 20;
+        int scope;
+        int index;
     };
     struct instr_storeScopedLocal {
         MOTH_INSTR_HEADER
-        unsigned scope : 12;
-        unsigned index : 20;
+        int scope;
+        int index;
     };
     struct instr_loadScopedArg {
         MOTH_INSTR_HEADER
-        unsigned scope : 12;
-        unsigned index : 20;
+        int scope;
+        int index;
     };
     struct instr_storeScopedArg {
         MOTH_INSTR_HEADER
-        unsigned scope : 12;
-        unsigned index : 20;
+        int scope;
+        int index;
     };
     struct instr_loadRuntimeString {
         MOTH_INSTR_HEADER
