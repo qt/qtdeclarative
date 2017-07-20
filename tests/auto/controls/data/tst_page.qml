@@ -150,8 +150,10 @@ TestCase {
 
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
-        compare(control.implicitWidth, control.leftPadding + control.rightPadding)
-        compare(control.implicitHeight, control.topPadding + control.bottomPadding)
+        compare(control.implicitWidth, Math.max(control.leftPadding + control.rightPadding,
+            control.background ? control.background.implicitWidth : 0))
+        compare(control.implicitHeight, Math.max(control.topPadding + control.bottomPadding,
+            control.background ? control.background.implicitHeight : 0))
     }
 
     function test_contentItem() {
