@@ -408,9 +408,6 @@ void dumpBytecode(const char *code, int len)
         MOTH_BEGIN_INSTR(UNot)
         MOTH_END_INSTR(UNot)
 
-        MOTH_BEGIN_INSTR(UNotBool)
-        MOTH_END_INSTR(UNotBool)
-
         MOTH_BEGIN_INSTR(UPlus)
         MOTH_END_INSTR(UPlus)
 
@@ -419,9 +416,6 @@ void dumpBytecode(const char *code, int len)
 
         MOTH_BEGIN_INSTR(UCompl)
         MOTH_END_INSTR(UCompl)
-
-        MOTH_BEGIN_INSTR(UComplInt)
-        MOTH_END_INSTR(UComplInt)
 
         MOTH_BEGIN_INSTR(Increment)
         MOTH_END_INSTR(PreIncrement)

@@ -818,33 +818,42 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
         STORE_ACCUMULATOR(Runtime::method_uNot(accumulator));
     MOTH_END_INSTR(UNot)
 
-    MOTH_BEGIN_INSTR(UNotBool)
-        bool b = accumulator.toBoolean();
-        STORE_ACCUMULATOR(QV4::Encode(!b));
-    MOTH_END_INSTR(UNotBool)
-
     MOTH_BEGIN_INSTR(UPlus)
-        STORE_ACCUMULATOR(Runtime::method_uPlus(accumulator));
+        if (!accumulator.isInteger()) {
+            STORE_ACCUMULATOR(Runtime::method_uPlus(accumulator));
+        }
     MOTH_END_INSTR(UPlus)
 
     MOTH_BEGIN_INSTR(UMinus)
-        STORE_ACCUMULATOR(Runtime::method_uMinus(accumulator));
+        if (Q_LIKELY(accumulator.isInteger() && accumulator.int_32() != 0)) {
+            accumulator = sub_int32(0, accumulator.int_32());
+        } else {
+            STORE_ACCUMULATOR(Runtime::method_uMinus(accumulator));
+        }
     MOTH_END_INSTR(UMinus)
 
     MOTH_BEGIN_INSTR(UCompl)
-        STORE_ACCUMULATOR(Runtime::method_complement(accumulator));
+        if (Q_LIKELY(accumulator.isInteger())) {
+            accumulator.setInt_32(~accumulator.int_32());
+        } else {
+            STORE_ACCUMULATOR(Runtime::method_complement(accumulator));
+        }
     MOTH_END_INSTR(UCompl)
 
-    MOTH_BEGIN_INSTR(UComplInt)
-        STORE_ACCUMULATOR(Runtime::method_complement(accumulator));
-    MOTH_END_INSTR(UComplInt)
-
     MOTH_BEGIN_INSTR(Increment)
-        STORE_ACCUMULATOR(Runtime::method_increment(accumulator));
+        if (Q_LIKELY(accumulator.isInteger())) {
+            accumulator = add_int32(accumulator.int_32(), 1);
+        } else {
+            STORE_ACCUMULATOR(Runtime::method_increment(accumulator));
+        }
     MOTH_END_INSTR(Increment)
 
     MOTH_BEGIN_INSTR(Decrement)
-        STORE_ACCUMULATOR(Runtime::method_decrement(accumulator));
+        if (Q_LIKELY(accumulator.isInteger())) {
+            accumulator = sub_int32(accumulator.int_32(), 1);
+        } else {
+            STORE_ACCUMULATOR(Runtime::method_decrement(accumulator));
+        }
     MOTH_END_INSTR(Decrement)
 
     MOTH_BEGIN_INSTR(Binop)
@@ -853,8 +862,31 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(Add)
-        STORE_ACCUMULATOR(Runtime::method_add(engine, TEMP_VALUE(instr.lhs), accumulator));
+        QV4::Value lhs = TEMP_VALUE(instr.lhs);
+        if (Q_LIKELY(Value::integerCompatible(lhs, accumulator))) {
+            accumulator = add_int32(lhs.int_32(), accumulator.int_32());
+        } else {
+            STORE_ACCUMULATOR(Runtime::method_add(engine, lhs, accumulator));
+        }
     MOTH_END_INSTR(Add)
+
+    MOTH_BEGIN_INSTR(Sub)
+        QV4::Value lhs = TEMP_VALUE(instr.lhs);
+        if (Q_LIKELY(Value::integerCompatible(lhs, accumulator))) {
+            accumulator = sub_int32(lhs.int_32(), accumulator.int_32());
+        } else {
+            STORE_ACCUMULATOR(Runtime::method_sub(lhs, accumulator));
+        }
+    MOTH_END_INSTR(Sub)
+
+    MOTH_BEGIN_INSTR(Mul)
+        QV4::Value lhs = TEMP_VALUE(instr.lhs);
+        if (Q_LIKELY(Value::integerCompatible(lhs, accumulator))) {
+            accumulator = mul_int32(lhs.int_32(), accumulator.int_32());
+        } else {
+            STORE_ACCUMULATOR(Runtime::method_mul(lhs, accumulator));
+        }
+    MOTH_END_INSTR(Mul)
 
     MOTH_BEGIN_INSTR(BitAnd)
         STORE_ACCUMULATOR(Runtime::method_bitAnd(TEMP_VALUE(instr.lhs), accumulator));
@@ -877,35 +909,44 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(Shl)
 
     MOTH_BEGIN_INSTR(BitAndConst)
-        int lhs = accumulator.toInt32();
-        STORE_ACCUMULATOR(QV4::Primitive::fromInt32(lhs & instr.rhs));
-    MOTH_END_INSTR(BitAnd)
+        if (Q_LIKELY(accumulator.isInteger())) {
+            accumulator.setInt_32(accumulator.int_32() & instr.rhs);
+        } else {
+            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() & instr.rhs));
+        }
+    MOTH_END_INSTR(BitAndConst)
 
     MOTH_BEGIN_INSTR(BitOrConst)
-        int lhs = accumulator.toInt32();
-        STORE_ACCUMULATOR(QV4::Encode((int)(lhs | instr.rhs)));
-    MOTH_END_INSTR(BitOr)
+        if (Q_LIKELY(accumulator.isInteger())) {
+            accumulator.setInt_32(accumulator.int_32() | instr.rhs);
+        } else {
+            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() | instr.rhs));
+        }
+    MOTH_END_INSTR(BitOrConst)
 
     MOTH_BEGIN_INSTR(BitXorConst)
-        int lhs = accumulator.toInt32();
-        STORE_ACCUMULATOR(QV4::Encode((int)(lhs ^ instr.rhs)));
-    MOTH_END_INSTR(BitXor)
+        if (Q_LIKELY(accumulator.isInteger())) {
+            accumulator.setInt_32(accumulator.int_32() ^ instr.rhs);
+        } else {
+            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() ^ instr.rhs));
+        }
+    MOTH_END_INSTR(BitXorConst)
 
     MOTH_BEGIN_INSTR(ShrConst)
-        STORE_ACCUMULATOR(QV4::Encode((int)(accumulator.toInt32() >> instr.rhs)));
+        if (Q_LIKELY(accumulator.isInteger())) {
+            accumulator.setInt_32(accumulator.int_32() >> instr.rhs);
+        } else {
+            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() >> instr.rhs));
+        }
     MOTH_END_INSTR(ShrConst)
 
     MOTH_BEGIN_INSTR(ShlConst)
-        STORE_ACCUMULATOR(QV4::Encode((int)(accumulator.toInt32() << instr.rhs)));
+        if (Q_LIKELY(accumulator.isInteger())) {
+            accumulator.setInt_32(accumulator.int_32() << instr.rhs);
+        } else {
+            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() << instr.rhs));
+        }
     MOTH_END_INSTR(ShlConst)
-
-    MOTH_BEGIN_INSTR(Mul)
-        STORE_ACCUMULATOR(Runtime::method_mul(TEMP_VALUE(instr.lhs), accumulator));
-    MOTH_END_INSTR(Mul)
-
-    MOTH_BEGIN_INSTR(Sub)
-        STORE_ACCUMULATOR(Runtime::method_sub(TEMP_VALUE(instr.lhs), accumulator));
-    MOTH_END_INSTR(Sub)
 
     MOTH_BEGIN_INSTR(BinopContext)
         QV4::Runtime::BinaryOperationContext op = *reinterpret_cast<QV4::Runtime::BinaryOperationContext *>(reinterpret_cast<char *>(&engine->runtime.runtimeMethods[instr.alu]));

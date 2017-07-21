@@ -144,11 +144,9 @@ QT_BEGIN_NAMESPACE
     F(JumpStrictEqual, jumpStrictEqual) \
     F(JumpStrictNotEqual, jumpStrictNotEqual) \
     F(UNot, unot) \
-    F(UNotBool, unotBool) \
     F(UPlus, uplus) \
     F(UMinus, uminus) \
     F(UCompl, ucompl) \
-    F(UComplInt, ucomplInt) \
     F(Increment, increment) \
     F(Decrement, decrement) \
     F(Binop, binop) \
@@ -566,9 +564,6 @@ union Instr
     struct instr_unot {
         MOTH_INSTR_HEADER
     };
-    struct instr_unotBool {
-        MOTH_INSTR_HEADER
-    };
     struct instr_uplus {
         MOTH_INSTR_HEADER
     };
@@ -576,9 +571,6 @@ union Instr
         MOTH_INSTR_HEADER
     };
     struct instr_ucompl {
-        MOTH_INSTR_HEADER
-    };
-    struct instr_ucomplInt {
         MOTH_INSTR_HEADER
     };
     struct instr_increment {
@@ -742,11 +734,9 @@ union Instr
     instr_jumpStrictEqual jumpStrictEqual;
     instr_jumpStrictNotEqual jumpStrictNotEqual;
     instr_unot unot;
-    instr_unotBool unotBool;
     instr_uplus uplus;
     instr_uminus uminus;
     instr_ucompl ucompl;
-    instr_ucomplInt ucomplInt;
     instr_increment increment;
     instr_decrement decrement;
     instr_binop binop;
