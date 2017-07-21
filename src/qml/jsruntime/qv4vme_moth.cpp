@@ -547,6 +547,10 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
         STORE_ACCUMULATOR(Runtime::method_getElement(engine, TEMP_VALUE(instr.base), TEMP_VALUE(instr.index)));
     MOTH_END_INSTR(LoadElement)
 
+    MOTH_BEGIN_INSTR(LoadElementA)
+        STORE_ACCUMULATOR(Runtime::method_getElement(engine, TEMP_VALUE(instr.base), accumulator));
+    MOTH_END_INSTR(LoadElementA)
+
     MOTH_BEGIN_INSTR(LoadElementLookup)
         QV4::Lookup *l = engine->current->lookups + instr.lookup;
         STORE_ACCUMULATOR(l->indexedGetter(l, engine, TEMP_VALUE(instr.base), TEMP_VALUE(instr.index)));
@@ -567,10 +571,19 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
         STORE_ACCUMULATOR(Runtime::method_getProperty(engine, TEMP_VALUE(instr.base), instr.name));
     MOTH_END_INSTR(LoadProperty)
 
+    MOTH_BEGIN_INSTR(LoadPropertyA)
+        STORE_ACCUMULATOR(Runtime::method_getProperty(engine, accumulator, instr.name));
+    MOTH_END_INSTR(LoadPropertyA)
+
     MOTH_BEGIN_INSTR(GetLookup)
         QV4::Lookup *l = engine->current->lookups + instr.index;
         STORE_ACCUMULATOR(l->getter(l, engine, TEMP_VALUE(instr.base)));
     MOTH_END_INSTR(GetLookup)
+
+    MOTH_BEGIN_INSTR(GetLookupA)
+        QV4::Lookup *l = engine->current->lookups + instr.index;
+        STORE_ACCUMULATOR(l->getter(l, engine, accumulator));
+    MOTH_END_INSTR(GetLookupA)
 
     MOTH_BEGIN_INSTR(StoreProperty)
         Runtime::method_setProperty(engine, TEMP_VALUE(instr.base), instr.name, accumulator);

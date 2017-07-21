@@ -216,49 +216,53 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
     }
     case PostIncrement:
         if (!_expr.accept(nx)) {
-            expr.loadInAccumulator();
+            Reference e = expr.asLValue();
+            e.loadInAccumulator();
             Instruction::UPlus uplus;
             bytecodeGenerator->addInstruction(uplus);
             Reference originalValue = Reference::fromTemp(this).storeRetainAccumulator();
             Instruction::Increment inc;
             bytecodeGenerator->addInstruction(inc);
-            expr.storeConsumeAccumulator();
+            e.storeConsumeAccumulator();
             return originalValue;
         } else {
             // intentionally fall-through: the result is never used, so it's equivalent to
             // "expr += 1", which is what a pre-increment does as well.
         }
     case PreIncrement: {
-        expr.loadInAccumulator();
+        Reference e = expr.asLValue();
+        e.loadInAccumulator();
         Instruction::Increment inc;
         bytecodeGenerator->addInstruction(inc);
         if (_expr.accept(nx))
-            return expr.storeConsumeAccumulator();
+            return e.storeConsumeAccumulator();
         else
-            return expr.storeRetainAccumulator();
+            return e.storeRetainAccumulator();
     }
     case PostDecrement:
         if (!_expr.accept(nx)) {
-            expr.loadInAccumulator();
+            Reference e = expr.asLValue();
+            e.loadInAccumulator();
             Instruction::UPlus uplus;
             bytecodeGenerator->addInstruction(uplus);
             Reference originalValue = Reference::fromTemp(this).storeRetainAccumulator();
             Instruction::Decrement dec;
             bytecodeGenerator->addInstruction(dec);
-            expr.storeConsumeAccumulator();
+            e.storeConsumeAccumulator();
             return originalValue;
         } else {
             // intentionally fall-through: the result is never used, so it's equivalent to
             // "expr -= 1", which is what a pre-decrement does as well.
         }
     case PreDecrement: {
-        expr.loadInAccumulator();
+        Reference e = expr.asLValue();
+        e.loadInAccumulator();
         Instruction::Decrement dec;
         bytecodeGenerator->addInstruction(dec);
         if (_expr.accept(nx))
-            return expr.storeConsumeAccumulator();
+            return e.storeConsumeAccumulator();
         else
-            return expr.storeRetainAccumulator();
+            return e.storeRetainAccumulator();
     }
     }
 
@@ -376,6 +380,7 @@ void Codegen::variableDeclaration(VariableDeclaration *ast)
         return;
 
     Reference lhs = referenceForName(ast->name.toString(), true);
+    //### if lhs is a temp, this won't generate a temp-to-temp move. Same for when rhs is a const
     rhs.loadInAccumulator();
     lhs.storeConsumeAccumulator();
 }
@@ -729,16 +734,16 @@ bool Codegen::visit(BinaryExpression *ast)
         break;
 
     case QSOperator::Assign: {
+        if (!left.isLValue()) {
+            throwReferenceError(ast->operatorToken, QStringLiteral("left-hand side of assignment operator is not an lvalue"));
+            return false;
+        }
+        left = left.asLValue();
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
         expression(ast->right).loadInAccumulator();
         if (hasError)
             return false;
-        if (!left.isLValue()) {
-            throwReferenceError(ast->operatorToken, QStringLiteral("left-hand side of assignment operator is not an lvalue"));
-            return false;
-        }
-
         _expr.setResult(left.storeRetainAccumulator());
         break;
     }
@@ -761,6 +766,7 @@ bool Codegen::visit(BinaryExpression *ast)
             throwSyntaxError(ast->operatorToken, QStringLiteral("left-hand side of inplace operator is not an lvalue"));
             return false;
         }
+        left = left.asLValue();
 
         Reference tempLeft = left.storeInTemp();
         Reference right = expression(ast->right);
@@ -946,9 +952,17 @@ bool Codegen::visit(CallExpression *ast)
     Reference base = expression(ast->base);
     if (hasError)
         return false;
-    if (base.type != Reference::Member && base.type != Reference::Subscript &&
-            base.type != Reference::Name)
+    switch (base.type) {
+    case Reference::Member:
+    case Reference::Subscript:
+        base = base.asLValue();
+        break;
+    case Reference::Name:
+        break;
+    default:
         base = base.storeInTemp();
+        break;
+    }
 
     auto calldata = pushArgs(ast->arguments);
     if (hasError)
@@ -957,14 +971,14 @@ bool Codegen::visit(CallExpression *ast)
     //### Do we really need all these call instructions? can's we load the callee in a temp?
     if (base.type == Reference::Member) {
         Instruction::CallProperty call;
-        call.base = base.propertyBase;
+        call.base = base.propertyBase.temp();
         call.name = base.propertyNameIndex;
         call.callData = calldata;
         bytecodeGenerator->addInstruction(call);
     } else if (base.type == Reference::Subscript) {
         Instruction::CallElement call;
         call.base = base.elementBase;
-        call.index = base.elementSubscript;
+        call.index = base.elementSubscript.temp();
         call.callData = calldata;
         bytecodeGenerator->addInstruction(call);
     } else if (base.type == Reference::Name) {
@@ -1077,17 +1091,21 @@ bool Codegen::visit(DeleteExpression *ast)
         return false;
     }
     case Reference::Member: {
+        //### maybe add a variant where the base can be in the accumulator?
+        expr = expr.asLValue();
         Instruction::CallBuiltinDeleteMember del;
-        del.base = expr.propertyBase;
+        del.base = expr.propertyBase.temp();
         del.member = expr.propertyNameIndex;
         bytecodeGenerator->addInstruction(del);
         _expr.setResult(Reference::fromAccumulator(this));
         return false;
     }
     case Reference::Subscript: {
+        //### maybe add a variant where the index can be in the accumulator?
+        expr = expr.asLValue();
         Instruction::CallBuiltinDeleteSubscript del;
         del.base = expr.elementBase;
-        del.index = expr.elementSubscript;
+        del.index = expr.elementSubscript.temp();
         bytecodeGenerator->addInstruction(del);
         _expr.setResult(Reference::fromAccumulator(this));
         return false;
@@ -1860,8 +1878,7 @@ bool Codegen::visit(ExpressionStatement *ast)
         Reference e = expression(ast->expression);
         if (hasError)
             return false;
-        e.loadInAccumulator();
-        Reference::fromTemp(this, _returnAddress).storeConsumeAccumulator();
+        (void) e.storeInTemp(_returnAddress);
     } else {
         statement(ast->expression);
     }
@@ -2447,6 +2464,34 @@ QList<QQmlError> Codegen::qmlErrors() const
 
 #endif // V4_BOOTSTRAP
 
+bool Codegen::RValue::operator==(const RValue &other) const
+{
+    switch (type) {
+    case Accumulator:
+        return other.isAccumulator();
+    case Temporary:
+        return other.isTemp() && temporary == other.temporary;
+    case Const:
+        return other.isConst() && constant == other.constant;
+    default:
+        return false;
+    }
+}
+
+Codegen::RValue Codegen::RValue::storeInTemp() const
+{
+    switch (type) {
+    case Accumulator:
+        return RValue::fromTemp(codegen, Reference::fromAccumulator(codegen).storeInTemp().temp());
+    case Temporary:
+        return *this;
+    case Const:
+        return RValue::fromTemp(codegen, Reference::storeConstInTemp(codegen, constant).temp());
+    default:
+        Q_UNREACHABLE();
+    }
+}
+
 Codegen::Reference::Reference(const Codegen::Reference &other)
 {
     *this = other;
@@ -2536,6 +2581,48 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         return true;
     }
     return true;
+}
+
+Codegen::RValue Codegen::Reference::asRValue() const
+{
+    switch (type) {
+    case Invalid:
+        Q_UNREACHABLE();
+    case Accumulator:
+        return RValue::fromAccumulator(codegen);
+    case Temporary:
+        return RValue::fromTemp(codegen, temp());
+    case Const:
+        return RValue::fromConst(codegen, constant);
+    default:
+        loadInAccumulator();
+        return RValue::fromAccumulator(codegen);
+    }
+}
+
+Codegen::Reference Codegen::Reference::asLValue() const
+{
+    switch (type) {
+    case Invalid:
+    case Accumulator:
+        Q_UNREACHABLE();
+    case Member:
+        if (!propertyBase.isTemp()) {
+            Reference r = *this;
+            r.propertyBase = propertyBase.storeInTemp();
+            return r;
+        }
+        return *this;
+    case Subscript:
+        if (!elementSubscript.isTemp()) {
+            Reference r = *this;
+            r.elementSubscript = elementSubscript.storeInTemp();
+            return r;
+        }
+        return *this;
+    default:
+        return *this;
+    }
 }
 
 Codegen::Reference Codegen::Reference::storeConsumeAccumulator() const
@@ -2651,12 +2738,12 @@ void Codegen::Reference::storeAccumulator() const
     case Member:
         if (codegen->useFastLookups) {
             Instruction::SetLookup store;
-            store.base = propertyBase;
+            store.base = propertyBase.temp();
             store.index = codegen->registerSetterLookup(propertyNameIndex);
             codegen->bytecodeGenerator->addInstruction(store);
         } else {
             Instruction::StoreProperty store;
-            store.base = propertyBase;
+            store.base = propertyBase.temp();
             store.name = propertyNameIndex;
             codegen->bytecodeGenerator->addInstruction(store);
         }
@@ -2664,7 +2751,7 @@ void Codegen::Reference::storeAccumulator() const
     case Subscript: {
         Instruction::StoreElement store;
         store.base = elementBase;
-        store.index = elementSubscript;
+        store.index = elementSubscript.temp();
         codegen->bytecodeGenerator->addInstruction(store);
     } return;
     case QmlScopeObject: {
@@ -2743,22 +2830,45 @@ void Codegen::Reference::loadInAccumulator() const
         return;
     case Member:
         if (codegen->useFastLookups) {
-            Instruction::GetLookup load;
-            load.base = propertyBase;
-            load.index = codegen->registerGetterLookup(propertyNameIndex);
-            codegen->bytecodeGenerator->addInstruction(load);
+            if (propertyBase.isAccumulator()) {
+                Instruction::GetLookupA load;
+                load.index = codegen->registerGetterLookup(propertyNameIndex);
+                codegen->bytecodeGenerator->addInstruction(load);
+            } else {
+                Instruction::GetLookup load;
+                load.base = propertyBase.storeInTemp().temp();
+                load.index = codegen->registerGetterLookup(propertyNameIndex);
+                codegen->bytecodeGenerator->addInstruction(load);
+            }
         } else {
-            Instruction::LoadProperty load;
-            load.base = propertyBase;
-            load.name = propertyNameIndex;
-            codegen->bytecodeGenerator->addInstruction(load);
+            if (propertyBase.isAccumulator()) {
+                Instruction::LoadPropertyA load;
+                load.name = propertyNameIndex;
+                codegen->bytecodeGenerator->addInstruction(load);
+            } else {
+                Instruction::LoadProperty load;
+                load.base = propertyBase.storeInTemp().temp();
+                load.name = propertyNameIndex;
+                codegen->bytecodeGenerator->addInstruction(load);
+            }
         }
         return;
     case Subscript: {
-        Instruction::LoadElement load;
-        load.base = elementBase;
-        load.index = elementSubscript;
-        codegen->bytecodeGenerator->addInstruction(load);
+        if (elementSubscript.isAccumulator()) {
+            Instruction::LoadElementA load;
+            load.base = elementBase;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else if (elementSubscript.isConst()) {
+            Reference::fromConst(codegen, elementSubscript.constantValue()).loadInAccumulator();
+            Instruction::LoadElementA load;
+            load.base = elementBase;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else {
+            Instruction::LoadElement load;
+            load.base = elementBase;
+            load.index = elementSubscript.storeInTemp().temp();
+            codegen->bytecodeGenerator->addInstruction(load);
+        }
     } return;
     case Closure: {
         Instruction::LoadClosure load;

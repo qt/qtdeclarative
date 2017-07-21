@@ -103,6 +103,60 @@ public:
                              CompilationMode mode = GlobalCode);
 
 public:
+    class RValue {
+        Codegen *codegen;
+        enum Type {
+            Invalid,
+            Accumulator,
+            Temporary,
+            Const
+        } type;
+        union {
+            Moth::Temp temporary;
+            QV4::ReturnedValue constant;
+        };
+
+    public:
+        static RValue fromTemp(Codegen *codegen, Moth::Temp temporary) {
+            RValue r;
+            r.codegen = codegen;
+            r.type = Temporary;
+            r.temporary = temporary;
+            return r;
+        }
+        static RValue fromAccumulator(Codegen *codegen) {
+            RValue r;
+            r.codegen = codegen;
+            r.type = Accumulator;
+            return r;
+        }
+        static RValue fromConst(Codegen *codegen, QV4::ReturnedValue value) {
+            RValue r;
+            r.codegen = codegen;
+            r.type = Const;
+            r.constant = value;
+            return r;
+        }
+
+        bool operator==(const RValue &other) const;
+
+        bool isValid() const { return type != Invalid; }
+        bool isAccumulator() const { return type == Accumulator; }
+        bool isTemp() const { return type == Temporary; }
+        bool isConst() const { return type == Const; }
+
+        Moth::Temp temp() const {
+            Q_ASSERT(isTemp());
+            return temporary;
+        }
+
+        QV4::ReturnedValue constantValue() const {
+            Q_ASSERT(isConst());
+            return constant;
+        }
+
+        Q_REQUIRED_RESULT RValue storeInTemp() const;
+    };
     struct Reference {
         enum Type {
             Invalid,
@@ -179,8 +233,7 @@ public:
         }
         static Reference fromMember(const Reference &baseRef, const QString &name) {
             Reference r(baseRef.codegen, Member);
-            //### Add a case where the base can be in the accumulator?
-            r.propertyBase = baseRef.storeInTemp().temp();
+            r.propertyBase = baseRef.asRValue();
             r.propertyNameIndex = r.codegen->registerString(name);
             return r;
         }
@@ -188,8 +241,7 @@ public:
             Q_ASSERT(baseRef.isTemp());
             Reference r(baseRef.codegen, Subscript);
             r.elementBase = baseRef.temp();
-            //### Add a case where the subscript can be in the accumulator?
-            r.elementSubscript = subscript.storeInTemp().temp();
+            r.elementSubscript = subscript.asRValue();
             return r;
         }
         static Reference fromConst(Codegen *cg, QV4::ReturnedValue constant) {
@@ -237,7 +289,9 @@ public:
             }
         }
 
-        static Reference storeConstInTemp(Codegen *cg, QV4::ReturnedValue constant, int tempIndex)
+        RValue asRValue() const;
+        Reference asLValue() const;
+        static Reference storeConstInTemp(Codegen *cg, QV4::ReturnedValue constant, int tempIndex = -1)
         { return Reference::fromConst(cg, constant).storeInTemp(tempIndex); }
         Q_REQUIRED_RESULT Reference storeInTemp(int tempIndex = -1) const;
         Q_REQUIRED_RESULT Reference storeRetainAccumulator() const;
@@ -261,12 +315,12 @@ public:
                 int scope;
             };
             struct {
-                Moth::Temp propertyBase;
+                RValue propertyBase;
                 int propertyNameIndex;
             };
             struct {
                 Moth::Temp elementBase;
-                Moth::Temp elementSubscript;
+                RValue elementSubscript;
             };
             int closureId;
             struct { // QML scope/context object case

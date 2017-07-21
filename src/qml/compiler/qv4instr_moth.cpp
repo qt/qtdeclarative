@@ -202,6 +202,10 @@ void dumpBytecode(const char *code, int len)
             d << instr.base << "[" << instr.index << "]";
         MOTH_END_INSTR(LoadElement)
 
+        MOTH_BEGIN_INSTR(LoadElementA)
+            d << instr.base << "[acc]";
+        MOTH_END_INSTR(LoadElement)
+
         MOTH_BEGIN_INSTR(LoadElementLookup)
             d << instr.base << "[" << instr.index << "]";
         MOTH_END_INSTR(LoadElementLookup)
@@ -218,9 +222,17 @@ void dumpBytecode(const char *code, int len)
             d << instr.base << "[" << instr.name << "]";
         MOTH_END_INSTR(LoadProperty)
 
+        MOTH_BEGIN_INSTR(LoadPropertyA)
+            d << "acc[" << instr.name << "]";
+        MOTH_END_INSTR(LoadElementA)
+
         MOTH_BEGIN_INSTR(GetLookup)
             d << instr.base << "(" << instr.index << ")";
         MOTH_END_INSTR(GetLookup)
+
+        MOTH_BEGIN_INSTR(GetLookupA)
+            d << "acc(" << instr.index << ")";
+        MOTH_END_INSTR(GetLookupA)
 
         MOTH_BEGIN_INSTR(StoreProperty)
             d << instr.base << "[" << instr.name<< "]";

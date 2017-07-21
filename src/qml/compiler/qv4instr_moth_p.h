@@ -91,11 +91,14 @@ QT_BEGIN_NAMESPACE
     F(GetGlobalLookup, getGlobalLookup) \
     F(StoreName, storeName) \
     F(LoadElement, loadElement) \
+    F(LoadElementA, loadElementA) \
     F(LoadElementLookup, loadElementLookup) \
     F(StoreElement, storeElement) \
     F(StoreElementLookup, storeElementLookup) \
     F(LoadProperty, loadProperty) \
+    F(LoadPropertyA, loadPropertyA) \
     F(GetLookup, getLookup) \
+    F(GetLookupA, getLookupA) \
     F(StoreProperty, storeProperty) \
     F(SetLookup, setLookup) \
     F(StoreScopeObjectProperty, storeScopeObjectProperty) \
@@ -317,10 +320,18 @@ union Instr
         int name;
         Temp base;
     };
+    struct instr_loadPropertyA {
+        MOTH_INSTR_HEADER
+        int name;
+    };
     struct instr_getLookup {
         MOTH_INSTR_HEADER
         int index;
         Temp base;
+    };
+    struct instr_getLookupA {
+        MOTH_INSTR_HEADER
+        int index;
     };
     struct instr_loadScopeObjectProperty {
         MOTH_INSTR_HEADER
@@ -363,6 +374,10 @@ union Instr
         MOTH_INSTR_HEADER
         Temp base;
         Temp index;
+    };
+    struct instr_loadElementA {
+        MOTH_INSTR_HEADER
+        Temp base;
     };
     struct instr_loadElementLookup {
         MOTH_INSTR_HEADER
@@ -674,11 +689,14 @@ union Instr
     instr_getGlobalLookup getGlobalLookup;
     instr_storeName storeName;
     instr_loadElement loadElement;
+    instr_loadElementA loadElementA;
     instr_loadElementLookup loadElementLookup;
     instr_storeElement storeElement;
     instr_storeElementLookup storeElementLookup;
     instr_loadProperty loadProperty;
+    instr_loadPropertyA loadPropertyA;
     instr_getLookup getLookup;
+    instr_getLookupA getLookupA;
     instr_loadScopeObjectProperty loadScopeObjectProperty;
     instr_loadContextObjectProperty loadContextObjectProperty;
     instr_loadIdObject loadIdObject;
