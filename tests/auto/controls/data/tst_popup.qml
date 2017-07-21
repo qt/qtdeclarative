@@ -361,7 +361,7 @@ TestCase {
     }
 
     function test_margins() {
-        var control = createTemporaryObject(popupControl, testCase, {width: 100, height: 100})
+        var control = createTemporaryObject(popupTemplate, testCase, {width: 100, height: 100})
         verify(control)
 
         control.open()
