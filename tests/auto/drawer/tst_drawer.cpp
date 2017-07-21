@@ -86,6 +86,8 @@ private slots:
     void touch_data();
     void touch();
 
+    void multiTouch();
+
     void grabber();
 
     void interactive_data();
@@ -811,6 +813,119 @@ void tst_Drawer::touch()
     QTest::touchEvent(window, touchDevice.data()).release(0, to);
     QVERIFY(drawerClosedSpy.wait());
     QCOMPARE(drawer->position(), 0.0);
+}
+
+void tst_Drawer::multiTouch()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("multiTouch.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    QVERIFY(overlay);
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup);
+
+    QQuickButton *button = window->property("button").value<QQuickButton *>();
+    QVERIFY(button);
+
+    QSignalSpy overlayPressedSpy(overlay, SIGNAL(pressed()));
+    QSignalSpy overlayReleasedSpy(overlay, SIGNAL(released()));
+    QVERIFY(overlayPressedSpy.isValid());
+    QVERIFY(overlayReleasedSpy.isValid());
+
+    QSignalSpy drawerOpenedSpy(drawer, SIGNAL(opened()));
+    QVERIFY(drawerOpenedSpy.isValid());
+
+    QSignalSpy buttonPressedSpy(button, SIGNAL(pressed()));
+    QSignalSpy buttonReleasedSpy(button, SIGNAL(released()));
+    QVERIFY(buttonPressedSpy.isValid());
+    QVERIFY(buttonReleasedSpy.isValid());
+
+    popup->open();
+    QVERIFY(popup->isVisible());
+
+    drawer->open();
+    QVERIFY(drawer->isVisible());
+    QVERIFY(drawerOpenedSpy.wait());
+
+    // 1st press
+    QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(300, 100));
+    QVERIFY(popup->isVisible());
+    QVERIFY(drawer->isVisible());
+    QCOMPARE(buttonPressedSpy.count(), 0);
+    QCOMPARE(overlayPressedSpy.count(), 1);
+
+    // 2nd press (blocked & ignored)
+    QTest::touchEvent(window, touchDevice.data()).stationary(0).press(1, QPoint(300, 200));
+    QVERIFY(popup->isVisible());
+    QVERIFY(drawer->isVisible());
+    QCOMPARE(buttonPressedSpy.count(), 0);
+    QCOMPARE(overlayPressedSpy.count(), 2);
+
+    // 2nd release (blocked & ignored)
+    QTest::touchEvent(window, touchDevice.data()).stationary(0).release(1, QPoint(300, 200));
+    QVERIFY(popup->isVisible());
+    QVERIFY(drawer->isVisible());
+    QCOMPARE(buttonPressedSpy.count(), 0);
+    QCOMPARE(buttonReleasedSpy.count(), 0);
+    QCOMPARE(overlayPressedSpy.count(), 2);
+    QCOMPARE(overlayReleasedSpy.count(), 1);
+
+    // 1st release
+    QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(300, 100));
+    QVERIFY(popup->isVisible());
+    QTRY_VERIFY(!drawer->isVisible());
+    QCOMPARE(buttonPressedSpy.count(), 0);
+    QCOMPARE(buttonReleasedSpy.count(), 0);
+    QCOMPARE(overlayPressedSpy.count(), 2);
+    QCOMPARE(overlayReleasedSpy.count(), 2);
+
+    drawer->open();
+    QVERIFY(drawer->isVisible());
+    QVERIFY(drawerOpenedSpy.wait());
+
+    // 1st drag
+    QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(300, 100));
+    QCOMPARE(buttonPressedSpy.count(), 0);
+    QCOMPARE(overlayPressedSpy.count(), 3);
+    for (int x = 300; x >= 100; x -= 10) {
+        QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, 100));
+        QVERIFY(popup->isVisible());
+        QVERIFY(drawer->isVisible());
+    }
+    QCOMPARE(drawer->position(), 0.5);
+
+    // 2nd drag (blocked & ignored)
+    QTest::touchEvent(window, touchDevice.data()).stationary(0).press(1, QPoint(300, 200));
+    QCOMPARE(buttonPressedSpy.count(), 0);
+    QCOMPARE(overlayPressedSpy.count(), 4);
+    for (int x = 300; x >= 0; x -= 10) {
+        QTest::touchEvent(window, touchDevice.data()).stationary(0).move(1, QPoint(x, 200));
+        QVERIFY(popup->isVisible());
+        QVERIFY(drawer->isVisible());
+    }
+    QCOMPARE(drawer->position(), 0.5);
+
+    // 2nd release (blocked & ignored)
+    QTest::touchEvent(window, touchDevice.data()).stationary(0).release(1, QPoint(300, 0));
+    QVERIFY(popup->isVisible());
+    QVERIFY(drawer->isVisible());
+    QCOMPARE(drawer->position(), 0.5);
+    QCOMPARE(buttonReleasedSpy.count(), 0);
+    QCOMPARE(overlayReleasedSpy.count(), 3);
+
+    // 1st release
+    QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(300, 100));
+    QVERIFY(popup->isVisible());
+    QTRY_VERIFY(!drawer->isVisible());
+    QCOMPARE(buttonReleasedSpy.count(), 0);
+    QCOMPARE(overlayReleasedSpy.count(), 4);
 }
 
 void tst_Drawer::grabber()

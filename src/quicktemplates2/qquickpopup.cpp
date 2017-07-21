@@ -265,6 +265,7 @@ void QQuickPopupPrivate::init()
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
     QObject::connect(popupItem, &QQuickItem::enabledChanged, q, &QQuickPopup::enabledChanged);
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
+    QObject::connect(popupItem, &QQuickControl::contentItemChanged, q, &QQuickPopup::contentItemChanged);
     positioner = new QQuickPopupPositioner(q);
 }
 
@@ -387,8 +388,8 @@ bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (!acceptTouch(point) && !blockInput(item, point.pos()))
-                continue;
+            if (!acceptTouch(point))
+                return blockInput(item, point.pos());
 
             switch (point.state()) {
             case Qt::TouchPointPressed:
@@ -2247,7 +2248,6 @@ void QQuickPopup::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_UNUSED(newItem);
     Q_UNUSED(oldItem);
-    emit contentItemChanged();
 }
 
 void QQuickPopup::fontChange(const QFont &newFont, const QFont &oldFont)

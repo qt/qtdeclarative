@@ -121,6 +121,7 @@ namespace QWidgetPlatform
 #if defined(QT_WIDGETS_LIB) && QT_CONFIG(menu)
         return createWidget<QWidgetPlatformMenu>("Menu", parent);
 #else
+        Q_UNUSED(parent);
         return nullptr;
 #endif
     }
@@ -128,6 +129,7 @@ namespace QWidgetPlatform
 #if defined(QT_WIDGETS_LIB) && QT_CONFIG(menu)
         return createWidget<QWidgetPlatformMenuItem>("MenuItem", parent);
 #else
+        Q_UNUSED(parent);
         return nullptr;
 #endif
     }
@@ -135,11 +137,15 @@ namespace QWidgetPlatform
 #ifndef QT_NO_SYSTEMTRAYICON
         return createWidget<QWidgetPlatformSystemTrayIcon>("SystemTrayIcon", parent);
 #else
+        Q_UNUSED(parent);
         return nullptr;
 #endif
     }
     static inline QPlatformDialogHelper *createDialog(QPlatformTheme::DialogType type, QObject *parent = nullptr)
     {
+#if !defined(QT_WIDGETS_LIB) || !(QT_CONFIG(colordialog) || QT_CONFIG(filedialog) || QT_CONFIG(fontdialog) || QT_CONFIG(messagebox))
+        Q_UNUSED(parent);
+#endif
         switch (type) {
 #if defined(QT_WIDGETS_LIB) && QT_CONFIG(colordialog)
         case QPlatformTheme::ColorDialog: return createWidget<QWidgetPlatformColorDialog>("ColorDialog", parent);
