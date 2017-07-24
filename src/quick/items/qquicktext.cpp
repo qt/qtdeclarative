@@ -80,11 +80,7 @@ QQuickTextPrivate::QQuickTextPrivate()
     , elideMode(QQuickText::ElideNone), hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop)
     , format(QQuickText::AutoText), wrapMode(QQuickText::NoWrap)
     , style(QQuickText::Normal)
-#if defined(QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
-    , renderType(QQuickText::QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
-#else
-    , renderType(QQuickText::QtRendering)
-#endif
+    , renderType(QQuickTextUtil::textRenderType<QQuickText>())
     , updateType(UpdatePaintNode)
     , maximumLineCountValid(false), updateOnComponentComplete(true), richText(false)
     , styledText(false), widthExceeded(false), heightExceeded(false), internalWidthUpdate(false)
@@ -2827,7 +2823,7 @@ void QQuickText::hoverLeaveEvent(QHoverEvent *event)
 
     Supported render types are:
     \list
-    \li Text.QtRendering - the default
+    \li Text.QtRendering
     \li Text.NativeRendering
     \endlist
 
@@ -2835,6 +2831,8 @@ void QQuickText::hoverLeaveEvent(QHoverEvent *event)
     not require advanced features such as transformation of the text. Using such features in
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
+
+    The default rendering type is determined by \l QQuickWindow::textRenderType().
 */
 QQuickText::RenderType QQuickText::renderType() const
 {

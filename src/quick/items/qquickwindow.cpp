@@ -93,6 +93,12 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 
 bool QQuickWindowPrivate::defaultAlphaBuffer = false;
 
+#if defined(QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
+QQuickWindow::TextRenderType QQuickWindowPrivate::textRenderType = QQuickWindow::QT_QUICK_DEFAULT_TEXT_RENDER_TYPE;
+#else
+QQuickWindow::TextRenderType QQuickWindowPrivate::textRenderType = QQuickWindow::QtTextRendering;
+#endif
+
 void QQuickWindowPrivate::updateFocusItemTransform()
 {
 #if QT_CONFIG(im)
@@ -3825,6 +3831,23 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
+    \enum QQuickWindow::TextRenderType
+    \since 5.10
+
+    This enum describes the default render type of text-like elements in Qt
+    Quick (\l Text, \l TextInput, etc.).
+
+    Select NativeTextRendering if you prefer text to look native on the target
+    platform and do not require advanced features such as transformation of the
+    text. Using such features in combination with the NativeTextRendering
+    render type will lend poor and sometimes pixelated results.
+
+    \value QtTextRendering Use Qt's own rasterization algorithm.
+
+    \value NativeTextRendering Use the operating system's native rasterizer for text.
+*/
+
+/*!
     \fn void QQuickWindow::beforeSynchronizing()
 
     This signal is emitted before the scene graph is synchronized with the QML state.
@@ -4844,6 +4867,34 @@ QSGNinePatchNode *QQuickWindow::createNinePatchNode() const
 {
     Q_D(const QQuickWindow);
     return isSceneGraphInitialized() ? d->context->sceneGraphContext()->createNinePatchNode() : nullptr;
+}
+
+/*!
+    \since 5.10
+
+    Returns the render type of text-like elements in Qt Quick.
+    The default is QQuickWindow::QtTextRendering.
+
+    \sa setTextRenderType()
+*/
+QQuickWindow::TextRenderType QQuickWindow::textRenderType()
+{
+    return QQuickWindowPrivate::textRenderType;
+}
+
+/*!
+    \since 5.10
+
+    Sets the default render type of text-like elements in Qt Quick to \a renderType.
+
+    \note setting the render type will only affect elements created afterwards;
+    the render type of existing elements will not be modified.
+
+    \sa textRenderType()
+*/
+void QQuickWindow::setTextRenderType(QQuickWindow::TextRenderType renderType)
+{
+    QQuickWindowPrivate::textRenderType = renderType;
 }
 
 #include "moc_qquickwindow.cpp"

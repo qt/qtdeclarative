@@ -279,6 +279,7 @@ public:
     mutable QQuickWindowIncubationController *incubationController;
 
     static bool defaultAlphaBuffer;
+    static QQuickWindow::TextRenderType textRenderType;
 
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold = -1);
 

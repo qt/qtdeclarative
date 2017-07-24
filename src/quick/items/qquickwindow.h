@@ -100,6 +100,12 @@ public:
     };
     Q_ENUM(SceneGraphError)
 
+    enum TextRenderType {
+        QtTextRendering,
+        NativeTextRendering
+    };
+    Q_ENUM(TextRenderType)
+
     explicit QQuickWindow(QWindow *parent = Q_NULLPTR);
     explicit QQuickWindow(QQuickRenderControl *renderControl);
 
@@ -169,6 +175,9 @@ public:
     QSGRectangleNode *createRectangleNode() const;
     QSGImageNode *createImageNode() const;
     QSGNinePatchNode *createNinePatchNode() const;
+
+    static TextRenderType textRenderType();
+    static void setTextRenderType(TextRenderType renderType);
 
 Q_SIGNALS:
     void frameSwapped();

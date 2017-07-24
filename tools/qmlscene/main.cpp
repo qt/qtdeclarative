@@ -159,6 +159,7 @@ struct Options
         , coreProfile(false)
         , verbose(false)
         , applicationType(DefaultQmlApplicationType)
+        , textRenderType(QQuickWindow::textRenderType())
     {
         // QtWebEngine needs a shared context in order for the GPU thread to
         // upload textures.
@@ -182,6 +183,7 @@ struct Options
     QVector<Qt::ApplicationAttribute> applicationAttributes;
     QString translationFile;
     QmlApplicationType applicationType;
+    QQuickWindow::TextRenderType textRenderType;
 };
 
 #if defined(QMLSCENE_BUNDLE)
@@ -377,6 +379,7 @@ static void usage()
 #ifdef QT_WIDGETS_LIB
     puts("  --apptype [gui|widgets] ...........Select which application class to use. Default is widgets.");
 #endif
+    puts("  --textrendertype [qt|native].......Select the default render type for text-like elements.");
     puts("  -I <path> ........................ Add <path> to the list of import paths");
     puts("  -P <path> ........................ Add <path> to the list of plugin paths");
     puts("  -translation <translationfile> ... Set the language to run in");
@@ -454,6 +457,19 @@ static QUrl parseUrlArgument(const QString &arg)
         }
     }
     return url;
+}
+
+static QQuickWindow::TextRenderType parseTextRenderType(const QString &renderType)
+{
+    if (renderType == QLatin1String("qt"))
+        return QQuickWindow::QtTextRendering;
+    else if (renderType == QLatin1String("native"))
+        return QQuickWindow::NativeTextRendering;
+
+    usage();
+
+    Q_UNREACHABLE();
+    return QQuickWindow::QtTextRendering;
 }
 
 int main(int argc, char ** argv)
@@ -536,6 +552,8 @@ int main(int argc, char ** argv)
                 pluginPaths.append(arguments.at(++i));
             else if (lowerArgument == QLatin1String("--apptype"))
                 ++i; // Consume previously parsed argument
+            else if (lowerArgument == QLatin1String("--textrendertype") && i + 1 < size)
+                options.textRenderType = parseTextRenderType(arguments.at(++i));
             else if (lowerArgument == QLatin1String("--help")
                      || lowerArgument == QLatin1String("-help")
                      || lowerArgument == QLatin1String("--h")
@@ -563,6 +581,8 @@ int main(int argc, char ** argv)
         }
     }
 #endif
+
+    QQuickWindow::setTextRenderType(options.textRenderType);
 
     QUnifiedTimer::instance()->setSlowModeEnabled(options.slowAnimations);
 

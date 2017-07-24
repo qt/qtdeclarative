@@ -40,7 +40,6 @@
 #include "qquicktextinput_p.h"
 #include "qquicktextinput_p_p.h"
 #include "qquickwindow.h"
-#include "qquicktextutil_p.h"
 
 #include <private/qqmlglobal_p.h>
 #include <private/qv4scopedvalue_p.h>
@@ -157,7 +156,7 @@ void QQuickTextInput::setText(const QString &s)
 
     Supported render types are:
     \list
-    \li Text.QtRendering - the default
+    \li Text.QtRendering
     \li Text.NativeRendering
     \endlist
 
@@ -165,6 +164,8 @@ void QQuickTextInput::setText(const QString &s)
     not require advanced features such as transformation of the text. Using such features in
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
+
+    The default rendering type is determined by \l QQuickWindow::textRenderType().
 */
 QQuickTextInput::RenderType QQuickTextInput::renderType() const
 {

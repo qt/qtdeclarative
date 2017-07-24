@@ -45,7 +45,6 @@
 #include "qquickwindow.h"
 #include "qquicktextnode_p.h"
 #include "qquicktextnodeengine_p.h"
-#include "qquicktextutil_p.h"
 
 #include <QtCore/qmath.h>
 #include <QtGui/qguiapplication.h>
@@ -495,7 +494,7 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
 
     Supported render types are:
     \list
-    \li Text.QtRendering - the default
+    \li Text.QtRendering
     \li Text.NativeRendering
     \endlist
 
@@ -503,6 +502,8 @@ void QQuickTextEdit::setTextFormat(TextFormat format)
     not require advanced features such as transformation of the text. Using such features in
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
+
+    The default rendering type is determined by \l QQuickWindow::textRenderType().
 */
 QQuickTextEdit::RenderType QQuickTextEdit::renderType() const
 {
