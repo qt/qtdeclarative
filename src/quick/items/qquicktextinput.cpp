@@ -3545,18 +3545,23 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 #endif
 
         if (m_maskData) {
+            m_validInput = true;
             if (m_text.length() != m_maxLength) {
+                m_validInput = false;
                 m_acceptableInput = false;
             } else {
                 for (int i = 0; i < m_maxLength; ++i) {
                     if (m_maskData[i].separator) {
                         if (m_text.at(i) != m_maskData[i].maskChar) {
+                            m_validInput = false;
                             m_acceptableInput = false;
                             break;
                         }
                     } else {
                         if (!isValidInput(m_text.at(i), m_maskData[i].maskChar)) {
                             m_acceptableInput = false;
+                            if (m_text.at(i) != m_blank)
+                                m_validInput = false;
                             break;
                         }
                     }
