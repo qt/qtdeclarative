@@ -488,9 +488,70 @@
             \li .9.png (or .png)
     \endtable
 
-    \section2 9 Patch Images
+    \section2 9-Patch Images
 
-    ...
+    The Imagine style uses \l
+    {https://developer.android.com/guide/topics/graphics/2d-graphics.html#nine-patch}{9-patch
+    images} in order to give designers control over how a particular element
+    responds to being resized. Here is an example of a 9-patch image that
+    represents a \l {Button}'s \l {Control::}{background}, alongside a
+    magnified version (to make it easier to see the 9-patch lines):
+
+    \image qtquickcontrols2-imagine-9-patch-4x.png
+
+    The content of the image is 44 pixels wide by 32 pixels high. Every 9-patch
+    image needs a one pixel thick border around every side, so the actual size
+    of the image becomes 46 pixels wide by 34 pixels high. The 9-patch lines
+    must be black, and the remaining areas must be transparent or white:
+
+    \image qtquickcontrols2-imagine-9-patch-size.png
+
+    \section3 Stretchable Areas
+
+    The 9-patch lines on the top and left edges determine which parts of the
+    image are stretched when it is resized.
+
+    Below are examples of the 9-patch image being resized to one and a half
+    times its original size in various dimensions:
+
+    \image qtquickcontrols2-imagine-9-patch-resized-stretchable.png
+
+    Notice how the the rounded corners keep their original size, as they are
+    outside the range of the lines.
+
+    \section3 Padding Areas
+
+    The 9-patch lines on the right and bottom edges determine how much space
+    is available for the control's \l {Control::}{contentItem}, which means it
+    can also be thought of as controlling the \l {Control::}{padding}. For a
+    diagram that illustrates padding, see \l {Control Layout}.
+
+    Below are more examples of the 9-patch image being resized, but this time
+    demonstrating how the padding 9-patch lines work.
+
+    \image qtquickcontrols2-imagine-9-patch-resized-padding.png
+
+    The \c contentItem can take up as much space as it needs within the shaded
+    areas. If the padding lines are left out, the \c contentItem will take as
+    much space as it needs without exceeding the stretchable areas.
+
+    \section3 Inset Areas
+
+    In some cases it is necessary for a control to have a drop shadow, for
+    example. However, if we were to add a drop shadow to the button above, it
+    would affect its size, which presents problems for both layouting and
+    mouse/touch input boundaries.
+
+    Inset areas accounts for this by telling the control that a certain area of
+    the 9-patch image should go outside of the control:
+
+    \image qtquickcontrols2-imagine-9-patch-inset.png
+
+    In the image below, the dashed line represents the button's clickable area,
+    as well as the space that it will take up in a layout. The shadow is marked
+    by the striped area behind it:
+
+    \image qtquickcontrols2-imagine-9-patch-inset-boundaries.png
 
     \section2 Animated Images
 
