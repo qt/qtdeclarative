@@ -204,7 +204,7 @@ public:
 
     static void registerQmlDependencies(const QV4::CompiledData::Function *compiledFunction, const QV4::Scope &scope);
     void captureProperty(QQmlNotifier *, Duration duration = OnlyOnce);
-    void captureProperty(QObject *, int, int, Duration duration = OnlyOnce);
+    void captureProperty(QObject *, int, int, Duration duration = OnlyOnce, bool doNotify = true);
 
     QQmlEngine *engine;
     QQmlJavaScriptExpression *expression;

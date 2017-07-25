@@ -1361,13 +1361,9 @@ ReturnedValue ModelObject::get(const Managed *m, String *name, bool *hasProperty
 
     if (QQmlEngine *qmlEngine = that->engine()->qmlEngine()) {
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlEngine);
-        if (ep && ep->propertyCapture) {
-            QObjectPrivate *op = QObjectPrivate::get(that->object());
-            // Temporarily hide the dynamic meta-object, to prevent it from being created when the capture
-            // triggers a QObject::connectNotify() by calling obj->metaObject().
-            QScopedValueRollback<QDynamicMetaObjectData*> metaObjectBlocker(op->metaObject, 0);
-            ep->propertyCapture->captureProperty(that->object(), -1, role->index);
-        }
+        if (ep && ep->propertyCapture)
+            ep->propertyCapture->captureProperty(that->object(), -1, role->index,
+                                                 QQmlPropertyCapture::OnlyOnce, false);
     }
 
     const int elementIndex = that->d()->m_elementIndex;
