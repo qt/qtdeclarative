@@ -966,8 +966,8 @@ static QVector<QStaticPlugin> makePlugins()
     // the list the first time called to only contain QML plugins:
     const auto staticPlugins = QPluginLoader::staticPlugins();
     for (const QStaticPlugin &plugin : staticPlugins) {
-        if (plugin.metaData().value(QLatin1String("IID")).toString()
-                == QLatin1String(QQmlExtensionInterface_iid)) {
+        const QString iid = plugin.metaData().value(QLatin1String("IID")).toString();
+        if (iid == QLatin1String(QQmlExtensionInterface_iid) || iid == QLatin1String(QQmlExtensionInterface_iid_old)) {
             plugins.append(plugin);
         }
     }
