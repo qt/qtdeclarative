@@ -96,6 +96,8 @@ public:
 
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
 
+    void updateGeometry();
+
     QQmlComponent *modal;
     QQmlComponent *modeless;
     QVector<QQuickPopup *> allPopups;
