@@ -14,7 +14,6 @@ HEADERS += \
     qmlprofilerdata.h \
     qmlprofilerclient.h
 
-QMAKE_TARGET_PRODUCT = qmlprofiler
-QMAKE_TARGET_DESCRIPTION = QML profiler
+QMAKE_TARGET_DESCRIPTION = QML Profiler
 
 load(qt_tool)

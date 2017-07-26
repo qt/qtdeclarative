@@ -6,8 +6,7 @@ HEADERS += conf.h
 SOURCES += main.cpp
 RESOURCES += qml.qrc
 
-QMAKE_TARGET_PRODUCT = qml
-QMAKE_TARGET_DESCRIPTION = Utility that loads and displays QML documents
+QMAKE_TARGET_DESCRIPTION = QML Runtime
 
 mac {
     OTHER_FILES += Info.plist

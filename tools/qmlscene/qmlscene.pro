@@ -7,7 +7,6 @@ SOURCES += main.cpp
 DEFINES += QML_RUNTIME_TESTING
 !contains(QT_CONFIG, no-qml-debug): DEFINES += QT_QML_DEBUG_NO_WARNING
 
-QMAKE_TARGET_PRODUCT = qmlscene
-QMAKE_TARGET_DESCRIPTION = Utility that loads and displays QML documents
+QMAKE_TARGET_DESCRIPTION = QML Scene Viewer
 
 load(qt_tool)

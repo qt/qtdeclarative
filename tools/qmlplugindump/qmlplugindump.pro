@@ -22,7 +22,6 @@ macx {
     CONFIG -= app_bundle
 }
 
-QMAKE_TARGET_PRODUCT = qmlplugindump
-QMAKE_TARGET_DESCRIPTION = QML plugin dump tool
+QMAKE_TARGET_DESCRIPTION = QML Plugin Metadata Dumper
 
 load(qt_tool)
