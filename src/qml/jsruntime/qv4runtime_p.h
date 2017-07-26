@@ -83,8 +83,8 @@ private:
 };
 
 #  define TRACE0() RuntimeCounters::instance->count(Q_FUNC_INFO);
-#  define TRACE1(x) RuntimeCounters::instance->count(Q_FUNC_INFO, x->type());
-#  define TRACE2(x, y) RuntimeCounters::instance->count(Q_FUNC_INFO, x->type(), y->type());
+#  define TRACE1(x) RuntimeCounters::instance->count(Q_FUNC_INFO, x.type());
+#  define TRACE2(x, y) RuntimeCounters::instance->count(Q_FUNC_INFO, x.type(), y.type());
 #else
 #  define TRACE0()
 #  define TRACE1(x)
