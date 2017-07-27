@@ -35,6 +35,7 @@
 #include <private/qqmlenginecontrolclient_p.h>
 
 #include <QtTest/qtest.h>
+#include <private/qtestresult_p.h>
 #include <QtCore/qlibraryinfo.h>
 
 #define STR_PORT_FROM "13773"
@@ -154,6 +155,8 @@ void tst_QQmlEngineControl::startEngine()
     QFETCH(bool, restrictMode);
 
     connect("test.qml", restrictMode);
+    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
+        return;
 
     QTRY_VERIFY(!m_client->blockedEngines().empty());
     m_client->releaseEngine(m_client->blockedEngines().last());
@@ -172,6 +175,8 @@ void tst_QQmlEngineControl::stopEngine()
     QFETCH(bool, restrictMode);
 
     connect("exit.qml", restrictMode);
+    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
+        return;
 
     QTRY_VERIFY(!m_client->blockedEngines().empty());
     m_client->releaseEngine(m_client->blockedEngines().last());
