@@ -282,12 +282,14 @@
             \endlist
     \row
         \li \l [QML QtQuickControls] {MenuBar}
-        \li \mdash
+        \li \l [QML QtQuickControls2] {MenuBar}
         \li \l [QML QtLabsPlatform] {MenuBar} \br\sup {(Qt Labs Platform)}
         \li \list
                 \li \b {Qt Quick Controls 1}: \c MenuBar is native on platforms where an
                     implementation is available in the Qt Platform Abstraction Layer. Other
                     platforms use a QML-based menubar item stacked at the top of the window.
+                \li \b {Qt Quick Controls 2}: \c MenuBar is a non-native QML-based menubar
+                    that can be fully customized using QML and Qt Quick.
                 \li \b {Qt Labs Platform}: \c MenuBar is an \e experimental native menubar.
                     It is only available on platforms where a native implementation is available
                     in the Qt Platform Abstraction Layer.
