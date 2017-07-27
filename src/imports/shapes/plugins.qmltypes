@@ -31,7 +31,7 @@ Module {
                 "Processing": 2
             }
         }
-        Property { name: "renderer"; type: "RendererType"; isReadonly: true }
+        Property { name: "rendererType"; type: "RendererType"; isReadonly: true }
         Property { name: "asynchronous"; type: "bool" }
         Property { name: "vendorExtensionsEnabled"; type: "bool" }
         Property { name: "status"; type: "Status"; isReadonly: true }
