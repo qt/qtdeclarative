@@ -2421,8 +2421,12 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
 
     if (allowChildEventFiltering && !handlersOnly) {
         updateFilteringParentItems(targetItems);
-        if (sendFilteredPointerEvent(event, nullptr))
-            return true;
+        QQuickItem *filteredItem;
+        if (sendFilteredPointerEvent(event, nullptr, &filteredItem)) {
+            if (event->isAccepted())
+                return true;
+            targetItems.removeAll(filteredItem);
+        }
     }
 
     for (QQuickItem *item: targetItems) {
@@ -2745,7 +2749,7 @@ void QQuickWindowPrivate::updateFilteringParentItems(const QVector<QQuickItem *>
     }
 }
 
-bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver)
+bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem **itemThatFiltered)
 {
     if (!allowChildEventFiltering)
         return false;
@@ -2759,7 +2763,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQ
             QPointF localPos = item->mapFromScene(pme->point(0)->scenePos());
             QMouseEvent *me = pme->asMouseEvent(localPos);
             if (filteringParent->childMouseEventFilter(item, me)) {
-                event->setAccepted(true);
+                if (itemThatFiltered) *itemThatFiltered = item;
                 ret = true;
             }
         }
