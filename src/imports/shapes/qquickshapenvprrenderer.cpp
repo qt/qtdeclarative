@@ -835,11 +835,11 @@ bool QQuickNvprBlitter::create()
 
     m_program = new QOpenGLShaderProgram;
     if (QOpenGLContext::currentContext()->format().profile() == QSurfaceFormat::CoreProfile) {
-        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/items/shaders/shadereffect_core.vert"));
-        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/items/shaders/shadereffect_core.frag"));
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/shapes/shaders/blit_core.vert"));
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/shapes/shaders/blit_core.frag"));
     } else {
-        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/items/shaders/shadereffect.vert"));
-        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/items/shaders/shadereffect.frag"));
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/shapes/shaders/blit.vert"));
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/shapes/shaders/blit.frag"));
     }
     m_program->bindAttributeLocation("qt_Vertex", 0);
     m_program->bindAttributeLocation("qt_MultiTexCoord0", 1);

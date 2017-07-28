@@ -28,4 +28,6 @@ qtConfig(opengl) {
         qquickshapenvprrenderer.cpp
 }
 
+RESOURCES += shapes.qrc
+
 load(qml_plugin)

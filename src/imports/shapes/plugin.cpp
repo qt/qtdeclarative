@@ -47,6 +47,7 @@ static void initResources()
 #ifdef QT_STATIC
     Q_INIT_RESOURCE(qmake_QtQuick_Shapes);
 #endif
+    Q_INIT_RESOURCE(shapes);
 }
 
 QT_BEGIN_NAMESPACE

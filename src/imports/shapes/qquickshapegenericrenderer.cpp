@@ -703,9 +703,9 @@ QSGMaterialType QQuickShapeLinearGradientShader::type;
 QQuickShapeLinearGradientShader::QQuickShapeLinearGradientShader()
 {
     setShaderSourceFile(QOpenGLShader::Vertex,
-                        QStringLiteral(":/qt-project.org/items/shaders/lineargradient.vert"));
+                        QStringLiteral(":/qt-project.org/shapes/shaders/lineargradient.vert"));
     setShaderSourceFile(QOpenGLShader::Fragment,
-                        QStringLiteral(":/qt-project.org/items/shaders/lineargradient.frag"));
+                        QStringLiteral(":/qt-project.org/shapes/shaders/lineargradient.frag"));
 }
 
 void QQuickShapeLinearGradientShader::initialize()
