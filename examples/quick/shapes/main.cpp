@@ -38,4 +38,4 @@
 **
 ****************************************************************************/
 #include "../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(pathitem/pathitem)
+DECLARATIVE_EXAMPLE_MAIN(shapes/main)

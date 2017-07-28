@@ -3,11 +3,11 @@ TEMPLATE = app
 QT += quick qml
 SOURCES += main.cpp
 RESOURCES += shapes.qrc
-OTHER_FILES += content/pathitem.qml \
-               content/pathitemgallery.qml \
-               content/pathiteminteract.qml \
-               content/pathitemsampling.qml \
-               content/pathitemtigers.qml \
+OTHER_FILES += content/main.qml \
+               content/shapegallery.qml \
+               content/interactive.qml \
+               content/sampling.qml \
+               content/clippedtigers.qml \
                content/tiger.qml \
                content/item1.qml \
                content/item2.qml \
