@@ -55,6 +55,7 @@ private slots:
     void engine();
     void readback();
     void renderingSignals();
+    void grab();
     void grabBeforeShow();
     void reparentToNewWindow();
     void nullEngine();
@@ -296,6 +297,15 @@ void tst_qquickwidget::renderingSignals()
     QTRY_VERIFY(beforeRenderingSpy.size() > 0);
     QTRY_VERIFY(beforeSyncSpy.size() > 0);
     QTRY_VERIFY(afterRenderingSpy.size() > 0);
+}
+
+void tst_qquickwidget::grab()
+{
+    QQuickWidget view;
+    view.setSource(testFileUrl("rectangle.qml"));
+    QPixmap pixmap = view.grab();
+    QRgb pixel = pixmap.toImage().pixel(5, 5);
+    QCOMPARE(pixel, qRgb(255, 0, 0));
 }
 
 // QTBUG-49929, verify that Qt Designer grabbing the contents before drag

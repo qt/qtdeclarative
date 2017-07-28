@@ -301,6 +301,7 @@ Note that the template class type for the QQmlListProperty — in this case,
 
 
 \section2 Grouped Properties
+\keyword Integrating QML and C++ - Grouped Properties
 
 Any read-only object-type property is accessible from QML code as a
 \e {grouped property}. This can be used to expose a group of related

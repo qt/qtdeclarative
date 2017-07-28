@@ -308,9 +308,6 @@ QSGDefaultRenderContext *QSGDefaultRenderContext::from(QOpenGLContext *context)
     return qobject_cast<QSGDefaultRenderContext *>(context->property(QSG_RENDERCONTEXT_PROPERTY).value<QObject *>());
 }
 
-QT_END_NAMESPACE
-
-
 QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(const QRawFont &font)
 {
     QString key = fontKey(font);
@@ -322,5 +319,7 @@ QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(con
 
     return cache;
 }
+
+QT_END_NAMESPACE
 
 #include "moc_qsgdefaultrendercontext_p.cpp"

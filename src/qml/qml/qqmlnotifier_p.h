@@ -100,7 +100,7 @@ public:
     inline bool isConnected(QObject *source, int sourceSignal) const;
     inline bool isConnected(QQmlNotifier *) const;
 
-    void connect(QObject *source, int sourceSignal, QQmlEngine *engine);
+    void connect(QObject *source, int sourceSignal, QQmlEngine *engine, bool doNotify = true);
     inline void connect(QQmlNotifier *);
     inline void disconnect();
 
@@ -121,9 +121,10 @@ private:
     inline QQmlNotifier *senderAsNotifier() const;
 
     Callback callback:4;
+    int needsConnectNotify:1;
     // The index is in the range returned by QObjectPrivate::signalIndex().
     // This is different from QMetaMethod::methodIndex().
-    signed int sourceSignal:28;
+    signed int sourceSignal:27;
 };
 
 QQmlNotifier::QQmlNotifier()
@@ -155,7 +156,7 @@ void QQmlNotifier::notify()
 }
 
 QQmlNotifierEndpoint::QQmlNotifierEndpoint(Callback callback)
-: next(0), prev(0), senderPtr(0), callback(callback), sourceSignal(-1)
+: next(0), prev(0), senderPtr(0), callback(callback), needsConnectNotify(false), sourceSignal(-1)
 {
 }
 
@@ -205,7 +206,8 @@ void QQmlNotifierEndpoint::disconnect()
     if (sourceSignal != -1) {
         QObject * const obj = senderAsObject();
         QObjectPrivate * const priv = QObjectPrivate::get(obj);
-        priv->disconnectNotify(QMetaObjectPrivate::signal(obj->metaObject(), sourceSignal));
+        if (needsConnectNotify)
+            priv->disconnectNotify(QMetaObjectPrivate::signal(obj->metaObject(), sourceSignal));
     }
 
     if (isNotifying()) *((qintptr *)(senderPtr & ~0x1)) = 0;

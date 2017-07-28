@@ -283,7 +283,7 @@ void QQmlPropertyCapture::captureProperty(QQmlNotifier *n, Duration duration)
 
     \a n is in the signal index range (see QObjectPrivate::signalIndex()).
 */
-void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration duration)
+void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration duration, bool doNotify)
 {
     if (watcher->wasDeleted())
         return;
@@ -319,7 +319,7 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration dur
             Q_ASSERT(g->isConnected(o, n));
         } else {
             g = QQmlJavaScriptExpressionGuard::New(expression, engine);
-            g->connect(o, n, engine);
+            g->connect(o, n, engine, doNotify);
         }
 
         if (duration == Permanently)

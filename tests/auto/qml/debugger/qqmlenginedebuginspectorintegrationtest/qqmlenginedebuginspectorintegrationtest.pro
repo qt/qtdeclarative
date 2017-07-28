@@ -1,7 +1,7 @@
 CONFIG += testcase
 TARGET = tst_qqmlenginedebuginspectorintegration
 
-QT += qml testlib gui-private core-private
+QT += qml testlib testlib-private gui-private core-private
 osx:CONFIG -= app_bundle
 
 SOURCES += tst_qqmlenginedebuginspectorintegration.cpp

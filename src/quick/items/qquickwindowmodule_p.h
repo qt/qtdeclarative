@@ -54,10 +54,10 @@
 #include <private/qtquickglobal_p.h>
 #include <qquickwindow.h>
 #include <qqmlparserstatus.h>
+#include <private/qquickwindowattached_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindowAttached;
 class QQuickWindowQmlImplPrivate;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public QQmlParserStatus
@@ -104,5 +104,8 @@ public:
 };
 
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickWindowQmlImpl)
+QML_DECLARE_TYPEINFO(QQuickWindowQmlImpl, QML_HAS_ATTACHED_PROPERTIES)
 
 #endif
