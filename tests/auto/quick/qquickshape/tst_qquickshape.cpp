@@ -55,6 +55,7 @@ private slots:
     void changeSignals();
     void render();
     void renderWithMultipleSp();
+    void radialGrad();
 };
 
 tst_QQuickShape::tst_QQuickShape()
@@ -67,6 +68,7 @@ tst_QQuickShape::tst_QQuickShape()
     qmlRegisterType<QQuickShapePath>(uri, 1, 0, "ShapePath");
     qmlRegisterUncreatableType<QQuickShapeGradient>(uri, 1, 0, "ShapeGradient", QQuickShapeGradient::tr("ShapeGradient is an abstract base class"));
     qmlRegisterType<QQuickShapeLinearGradient>(uri, 1, 0, "LinearGradient");
+    qmlRegisterType<QQuickShapeRadialGradient>(uri, 1, 0, "RadialGradient");
 }
 
 void tst_QQuickShape::initValues()
@@ -240,6 +242,23 @@ void tst_QQuickShape::renderWithMultipleSp()
     QVERIFY(!img.isNull());
 
     QImage refImg(testFileUrl("pathitem4.png").toLocalFile());
+    QVERIFY(!refImg.isNull());
+
+    QVERIFY(QQuickVisualTestUtil::compareImages(img.convertToFormat(refImg.format()), refImg));
+}
+
+void tst_QQuickShape::radialGrad()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("pathitem5.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QImage img = window->grabWindow();
+    QVERIFY(!img.isNull());
+
+    QImage refImg(testFileUrl("pathitem5.png").toLocalFile());
     QVERIFY(!refImg.isNull());
 
     QVERIFY(QQuickVisualTestUtil::compareImages(img.convertToFormat(refImg.format()), refImg));

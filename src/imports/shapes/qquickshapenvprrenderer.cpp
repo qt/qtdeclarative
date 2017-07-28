@@ -125,16 +125,24 @@ void QQuickShapeNvprRenderer::setStrokeStyle(int index, QQuickShapePath::StrokeS
 void QQuickShapeNvprRenderer::setFillGradient(int index, QQuickShapeGradient *gradient)
 {
     ShapePathGuiData &d(m_sp[index]);
-    d.fillGradientActive = gradient != nullptr;
     if (gradient) {
         d.fillGradient.stops = gradient->gradientStops(); // sorted
         d.fillGradient.spread = gradient->spread();
         if (QQuickShapeLinearGradient *g  = qobject_cast<QQuickShapeLinearGradient *>(gradient)) {
-            d.fillGradient.start = QPointF(g->x1(), g->y1());
-            d.fillGradient.end = QPointF(g->x2(), g->y2());
+            d.fillGradientActive = LinearGradient;
+            d.fillGradient.a = QPointF(g->x1(), g->y1());
+            d.fillGradient.b = QPointF(g->x2(), g->y2());
+        } else if (QQuickShapeRadialGradient *g = qobject_cast<QQuickShapeRadialGradient *>(gradient)) {
+            d.fillGradientActive = RadialGradient;
+            d.fillGradient.a = QPointF(g->centerX(), g->centerY());
+            d.fillGradient.b = QPointF(g->focalX(), g->focalY());
+            d.fillGradient.v0 = g->centerRadius();
+            d.fillGradient.v1 = g->focalRadius();
         } else {
             Q_UNREACHABLE();
         }
+    } else {
+        d.fillGradientActive = NoGradient;
     }
     d.dirty |= DirtyFillGradient;
     m_accDirty |= DirtyFillGradient;
@@ -485,6 +493,49 @@ QQuickNvprMaterialManager::MaterialDesc *QQuickNvprMaterialManager::activateMate
             Q_ASSERT(mtl.uniLoc[2] >= 0);
             mtl.uniLoc[3] = f->glGetProgramResourceLocation(mtl.prg, GL_UNIFORM, "gradEnd");
             Q_ASSERT(mtl.uniLoc[3] >= 0);
+        } else if (m == MatRadialGradient) {
+            static const char *fragSrc =
+                    "#version 310 es\n"
+                    "precision highp float;\n"
+                    "uniform sampler2D gradTab;\n"
+                    "uniform float opacity;\n"
+                    "uniform vec2 focalToCenter;\n"
+                    "uniform float centerRadius;\n"
+                    "uniform float focalRadius;\n"
+                    "uniform vec2 translationPoint;\n"
+                    "layout(location = 0) in vec2 uv;\n"
+                    "out vec4 fragColor;\n"
+                    "void main() {\n"
+                    "    vec2 coord = uv - translationPoint;\n"
+                    "    float rd = centerRadius - focalRadius;\n"
+                    "    float b = 2.0 * (rd * focalRadius + dot(coord, focalToCenter));\n"
+                    "    float fmp2_m_radius2 = -focalToCenter.x * focalToCenter.x - focalToCenter.y * focalToCenter.y + rd * rd;\n"
+                    "    float inverse_2_fmp2_m_radius2 = 1.0 / (2.0 * fmp2_m_radius2);\n"
+                    "    float det = b * b - 4.0 * fmp2_m_radius2 * ((focalRadius * focalRadius) - dot(coord, coord));\n"
+                    "    vec4 result = vec4(0.0);\n"
+                    "    if (det >= 0.0) {\n"
+                    "        float detSqrt = sqrt(det);\n"
+                    "        float w = max((-b - detSqrt) * inverse_2_fmp2_m_radius2, (-b + detSqrt) * inverse_2_fmp2_m_radius2);\n"
+                    "        if (focalRadius + w * (centerRadius - focalRadius) >= 0.0)\n"
+                    "            result = texture(gradTab, vec2(w, 0.5)) * opacity;\n"
+                    "    }\n"
+                    "    fragColor = result;\n"
+                    "}\n";
+            if (!m_nvpr->createFragmentOnlyPipeline(fragSrc, &mtl.ppl, &mtl.prg)) {
+                qWarning("NVPR: Failed to create shader pipeline for radial gradient");
+                return nullptr;
+            }
+            Q_ASSERT(mtl.ppl && mtl.prg);
+            mtl.uniLoc[1] = f->glGetProgramResourceLocation(mtl.prg, GL_UNIFORM, "opacity");
+            Q_ASSERT(mtl.uniLoc[1] >= 0);
+            mtl.uniLoc[2] = f->glGetProgramResourceLocation(mtl.prg, GL_UNIFORM, "focalToCenter");
+            Q_ASSERT(mtl.uniLoc[2] >= 0);
+            mtl.uniLoc[3] = f->glGetProgramResourceLocation(mtl.prg, GL_UNIFORM, "centerRadius");
+            Q_ASSERT(mtl.uniLoc[3] >= 0);
+            mtl.uniLoc[4] = f->glGetProgramResourceLocation(mtl.prg, GL_UNIFORM, "focalRadius");
+            Q_ASSERT(mtl.uniLoc[4] >= 0);
+            mtl.uniLoc[5] = f->glGetProgramResourceLocation(mtl.prg, GL_UNIFORM, "translationPoint");
+            Q_ASSERT(mtl.uniLoc[5] >= 0);
         } else {
             Q_UNREACHABLE();
         }
@@ -542,17 +593,40 @@ void QQuickShapeNvprRenderNode::renderFill(ShapePathRenderData *d)
 {
     QQuickNvprMaterialManager::MaterialDesc *mtl = nullptr;
     if (d->fillGradientActive) {
-        mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatLinearGradient);
-        QSGTexture *tx = QQuickShapeGradientCache::currentCache()->get(d->fillGradient);
+        const QQuickShapeGradientCache::Key cacheKey(d->fillGradient.stops, d->fillGradient.spread);
+        QSGTexture *tx = QQuickShapeGradientCache::currentCache()->get(cacheKey);
         tx->bind();
-        // uv = vec2(coeff[0] * x + coeff[1] * y + coeff[2], coeff[3] * x + coeff[4] * y + coeff[5])
-        // where x and y are in path coordinate space, which is just what
-        // we need since the gradient's start and stop are in that space too.
-        GLfloat coeff[6] = { 1, 0, 0,
-                             0, 1, 0 };
-        nvpr.programPathFragmentInputGen(mtl->prg, 0, GL_OBJECT_LINEAR_NV, 2, coeff);
-        f->glProgramUniform2f(mtl->prg, mtl->uniLoc[2], d->fillGradient.start.x(), d->fillGradient.start.y());
-        f->glProgramUniform2f(mtl->prg, mtl->uniLoc[3], d->fillGradient.end.x(), d->fillGradient.end.y());
+
+        if (d->fillGradientActive == QQuickAbstractPathRenderer::LinearGradient) {
+            mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatLinearGradient);
+            // uv = vec2(coeff[0] * x + coeff[1] * y + coeff[2], coeff[3] * x + coeff[4] * y + coeff[5])
+            // where x and y are in path coordinate space, which is just what
+            // we need since the gradient's start and stop are in that space too.
+            GLfloat coeff[6] = { 1, 0, 0,
+                                 0, 1, 0 };
+            nvpr.programPathFragmentInputGen(mtl->prg, 0, GL_OBJECT_LINEAR_NV, 2, coeff);
+            f->glProgramUniform2f(mtl->prg, mtl->uniLoc[2], d->fillGradient.a.x(), d->fillGradient.a.y());
+            f->glProgramUniform2f(mtl->prg, mtl->uniLoc[3], d->fillGradient.b.x(), d->fillGradient.b.y());
+        } else if (d->fillGradientActive == QQuickAbstractPathRenderer::RadialGradient) {
+            mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatRadialGradient);
+            // simply drive uv (location 0) with x and y, just like for the linear gradient
+            GLfloat coeff[6] = { 1, 0, 0,
+                                 0, 1, 0 };
+            nvpr.programPathFragmentInputGen(mtl->prg, 0, GL_OBJECT_LINEAR_NV, 2, coeff);
+
+            const QPointF centerPoint = d->fillGradient.a;
+            const QPointF focalPoint = d->fillGradient.b;
+            const QPointF focalToCenter = centerPoint - focalPoint;
+            const GLfloat centerRadius = d->fillGradient.v0;
+            const GLfloat focalRadius = d->fillGradient.v1;
+
+            f->glProgramUniform2f(mtl->prg, mtl->uniLoc[2], focalToCenter.x(), focalToCenter.y());
+            f->glProgramUniform1f(mtl->prg, mtl->uniLoc[3], centerRadius);
+            f->glProgramUniform1f(mtl->prg, mtl->uniLoc[4], focalRadius);
+            f->glProgramUniform2f(mtl->prg, mtl->uniLoc[5], focalPoint.x(), focalPoint.y());
+        } else {
+            Q_UNREACHABLE();
+        }
     } else {
         mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatSolid);
         f->glProgramUniform4f(mtl->prg, mtl->uniLoc[0],

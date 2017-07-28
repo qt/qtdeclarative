@@ -120,6 +120,53 @@ private:
     QPointF m_end;
 };
 
+class QQuickShapeRadialGradient : public QQuickShapeGradient
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal centerX READ centerX WRITE setCenterX NOTIFY centerXChanged)
+    Q_PROPERTY(qreal centerY READ centerY WRITE setCenterY NOTIFY centerYChanged)
+    Q_PROPERTY(qreal centerRadius READ centerRadius WRITE setCenterRadius NOTIFY centerRadiusChanged)
+    Q_PROPERTY(qreal focalX READ focalX WRITE setFocalX NOTIFY focalXChanged)
+    Q_PROPERTY(qreal focalY READ focalY WRITE setFocalY NOTIFY focalYChanged)
+    Q_PROPERTY(qreal focalRadius READ focalRadius WRITE setFocalRadius NOTIFY focalRadiusChanged)
+    Q_CLASSINFO("DefaultProperty", "stops")
+
+public:
+    QQuickShapeRadialGradient(QObject *parent = nullptr);
+
+    qreal centerX() const;
+    void setCenterX(qreal v);
+
+    qreal centerY() const;
+    void setCenterY(qreal v);
+
+    qreal centerRadius() const;
+    void setCenterRadius(qreal v);
+
+    qreal focalX() const;
+    void setFocalX(qreal v);
+
+    qreal focalY() const;
+    void setFocalY(qreal v);
+
+    qreal focalRadius() const;
+    void setFocalRadius(qreal v);
+
+signals:
+    void centerXChanged();
+    void centerYChanged();
+    void focalXChanged();
+    void focalYChanged();
+    void centerRadiusChanged();
+    void focalRadiusChanged();
+
+private:
+    QPointF m_centerPoint;
+    QPointF m_focalPoint;
+    qreal m_centerRadius = 0;
+    qreal m_focalRadius = 0;
+};
+
 class QQuickShapePath : public QQuickPath
 {
     Q_OBJECT

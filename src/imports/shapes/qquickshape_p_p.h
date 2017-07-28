@@ -70,6 +70,16 @@ public:
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
+    enum FillGradientType { NoGradient = 0, LinearGradient, RadialGradient, ConicalGradient };
+    struct GradientDesc { // can fully describe a linear/radial/conical gradient
+        QGradientStops stops;
+        QQuickShapeGradient::SpreadMode spread;
+        QPointF a; // start (L) or center point (R/C)
+        QPointF b; // end (L) or focal point (R)
+        qreal v0; // center radius (R) or start angle (C)
+        qreal v1; // focal radius (R)
+    };
+
     virtual ~QQuickAbstractPathRenderer() { }
 
     // Gui thread
@@ -171,15 +181,15 @@ public:
 class QQuickShapeGradientCache : public QOpenGLSharedResource
 {
 public:
-    struct GradientDesc {
+    struct Key {
+        Key(const QGradientStops &stops, QQuickShapeGradient::SpreadMode spread)
+            : stops(stops), spread(spread)
+        { }
         QGradientStops stops;
-        QPointF start;
-        QPointF end;
         QQuickShapeGradient::SpreadMode spread;
-        bool operator==(const GradientDesc &other) const
+        bool operator==(const Key &other) const
         {
-            return start == other.start && end == other.end && spread == other.spread
-                   && stops == other.stops;
+            return spread == other.spread && stops == other.stops;
         }
     };
 
@@ -189,18 +199,17 @@ public:
     void invalidateResource() override;
     void freeResource(QOpenGLContext *) override;
 
-    QSGTexture *get(const GradientDesc &grad);
+    QSGTexture *get(const Key &grad);
 
     static QQuickShapeGradientCache *currentCache();
 
 private:
-    QHash<GradientDesc, QSGPlainTexture *> m_cache;
+    QHash<Key, QSGPlainTexture *> m_cache;
 };
 
-inline uint qHash(const QQuickShapeGradientCache::GradientDesc &v, uint seed = 0)
+inline uint qHash(const QQuickShapeGradientCache::Key &v, uint seed = 0)
 {
-    uint h = seed;
-    h += v.start.x() + v.end.y() + v.spread;
+    uint h = seed + v.spread;
     for (int i = 0; i < 3 && i < v.stops.count(); ++i)
         h += v.stops[i].second.rgba();
     return h;

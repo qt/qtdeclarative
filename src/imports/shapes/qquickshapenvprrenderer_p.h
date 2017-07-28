@@ -116,8 +116,8 @@ private:
         bool dashActive;
         qreal dashOffset;
         QVector<qreal> dashPattern;
-        bool fillGradientActive;
-        QQuickShapeGradientCache::GradientDesc fillGradient;
+        FillGradientType fillGradientActive;
+        GradientDesc fillGradient;
     };
 
     void convertPath(const QQuickPath *path, ShapePathGuiData *d);
@@ -136,6 +136,7 @@ public:
     enum Material {
         MatSolid,
         MatLinearGradient,
+        MatRadialGradient,
 
         NMaterials
     };
@@ -143,7 +144,7 @@ public:
     struct MaterialDesc {
         GLuint ppl = 0;
         GLuint prg = 0;
-        int uniLoc[4];
+        int uniLoc[8];
     };
 
     void create(QQuickNvprFunctions *nvpr);
@@ -199,8 +200,8 @@ private:
         GLenum fillRule;
         GLfloat dashOffset;
         QVector<GLfloat> dashPattern;
-        bool fillGradientActive;
-        QQuickShapeGradientCache::GradientDesc fillGradient;
+        QQuickAbstractPathRenderer::FillGradientType fillGradientActive;
+        QQuickAbstractPathRenderer::GradientDesc fillGradient;
         QOpenGLFramebufferObject *fallbackFbo = nullptr;
         bool fallbackValid = false;
         QSize fallbackSize;

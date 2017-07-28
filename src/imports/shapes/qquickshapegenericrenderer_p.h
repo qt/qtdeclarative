@@ -131,10 +131,8 @@ private:
         Color4ub fillColor;
         Qt::FillRule fillRule;
         QPainterPath path;
-        bool fillGradientActive;
-#if QT_CONFIG(opengl)
-        QQuickShapeGradientCache::GradientDesc fillGradient;
-#endif
+        FillGradientType fillGradientActive;
+        GradientDesc fillGradient;
         VertexContainerType fillVertices;
         IndexContainerType fillIndices;
         QSGGeometry::Type indexType;
@@ -211,7 +209,8 @@ public:
 
     enum Material {
         MatSolidColor,
-        MatLinearGradient
+        MatLinearGradient,
+        MatRadialGradient
     };
 
     void activateMaterial(Material m);
@@ -219,16 +218,12 @@ public:
     QQuickWindow *window() const { return m_window; }
 
     // shadow data for custom materials
-#if QT_CONFIG(opengl)
-    QQuickShapeGradientCache::GradientDesc m_fillGradient;
-#endif
+    QQuickAbstractPathRenderer::GradientDesc m_fillGradient;
 
 private:
     QSGGeometry *m_geometry;
     QQuickWindow *m_window;
-    QSGMaterial *m_material;
-    QScopedPointer<QSGMaterial> m_solidColorMaterial;
-    QScopedPointer<QSGMaterial> m_linearGradientMaterial;
+    QScopedPointer<QSGMaterial> m_material;
 
     friend class QQuickShapeGenericRenderer;
 };
@@ -246,6 +241,7 @@ class QQuickShapeGenericMaterialFactory
 public:
     static QSGMaterial *createVertexColor(QQuickWindow *window);
     static QSGMaterial *createLinearGradient(QQuickWindow *window, QQuickShapeGenericStrokeFillNode *node);
+    static QSGMaterial *createRadialGradient(QQuickWindow *window, QQuickShapeGenericStrokeFillNode *node);
 };
 
 #if QT_CONFIG(opengl)
@@ -292,6 +288,53 @@ public:
     QSGMaterialShader *createShader() const override
     {
         return new QQuickShapeLinearGradientShader;
+    }
+
+    QQuickShapeGenericStrokeFillNode *node() const { return m_node; }
+
+private:
+    QQuickShapeGenericStrokeFillNode *m_node;
+};
+
+class QQuickShapeRadialGradientShader : public QSGMaterialShader
+{
+public:
+    QQuickShapeRadialGradientShader();
+
+    void initialize() override;
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+    char const *const *attributeNames() const override;
+
+    static QSGMaterialType type;
+
+private:
+    int m_opacityLoc = -1;
+    int m_matrixLoc = -1;
+    int m_translationPointLoc = -1;
+    int m_focalToCenterLoc = -1;
+    int m_centerRadiusLoc = -1;
+    int m_focalRadiusLoc = -1;
+};
+
+class QQuickShapeRadialGradientMaterial : public QSGMaterial
+{
+public:
+    QQuickShapeRadialGradientMaterial(QQuickShapeGenericStrokeFillNode *node)
+        : m_node(node)
+    {
+        setFlag(Blending | RequiresFullMatrix);
+    }
+
+    QSGMaterialType *type() const override
+    {
+        return &QQuickShapeRadialGradientShader::type;
+    }
+
+    int compare(const QSGMaterial *other) const override;
+
+    QSGMaterialShader *createShader() const override
+    {
+        return new QQuickShapeRadialGradientShader;
     }
 
     QQuickShapeGenericStrokeFillNode *node() const { return m_node; }

@@ -11,6 +11,7 @@ OTHER_FILES += content/pathitem.qml \
                content/tiger.qml \
                content/item1.qml \
                content/item2.qml \
+               content/item3.qml \
                content/item4.qml \
                content/item5.qml \
                content/item6.qml \

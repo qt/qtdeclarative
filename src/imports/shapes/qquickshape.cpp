@@ -1061,12 +1061,12 @@ void QQuickShapeGradient::setSpread(SpreadMode mode)
     \brief Linear gradient
     \since 5.10
 
-    Linear gradients interpolate colors between start and end points. Outside
-    these points the gradient is either padded, reflected or repeated depending
-    on the spread type.
+    Linear gradients interpolate colors between start and end points in Shape
+    items. Outside these points the gradient is either padded, reflected or
+    repeated depending on the spread type.
 
-    \note LinearGradient is not compatible with Rectangle items that only
-    support Gradient. This type is to be used with Shape.
+    \note LinearGradient is only supported in combination with Shape items. It
+    is not compatible with \l Rectangle, as that only supports \l Gradient.
 
     \sa QLinearGradient
  */
@@ -1143,6 +1143,159 @@ void QQuickShapeLinearGradient::setY2(qreal v)
     }
 }
 
+/*!
+    \qmltype RadialGradient
+    \instantiates QQuickShapeRadialGradient
+    \inqmlmodule QtQuick.Shapes
+    \ingroup qtquick-paths
+    \ingroup qtquick-views
+    \inherits ShapeGradient
+    \brief Radial gradient
+    \since 5.10
+
+    Radial gradients interpolate colors between a focal circle and a center
+    circle in Shape items. Points outside the cone defined by the two circles
+    will be transparent.
+
+    Outside the end points the gradient is either padded, reflected or repeated
+    depending on the spread type.
+
+    Below is an example of a simple radial gradient. Here the colors are
+    interpolated between the specified point and the end points on a circle
+    specified by the radius:
+
+    \code
+        fillGradient: RadialGradient {
+            centerX: 50; centerY: 50
+            centerRadius: 100
+            focalX: centerX; focalY: centerY
+            GradientStop { position: 0; color: "blue" }
+            GradientStop { position: 0.2; color: "green" }
+            GradientStop { position: 0.4; color: "red" }
+            GradientStop { position: 0.6; color: "yellow" }
+            GradientStop { position: 1; color: "cyan" }
+        }
+    \endcode
+
+    \image shape-radial-gradient.png
+
+    Extended radial gradients, where a separate focal circle is specified, are
+    also supported.
+
+    \note RadialGradient is only supported in combination with Shape items. It
+    is not compatible with \l Rectangle, as that only supports \l Gradient.
+
+    \sa QRadialGradient
+ */
+
+QQuickShapeRadialGradient::QQuickShapeRadialGradient(QObject *parent)
+    : QQuickShapeGradient(parent)
+{
+}
+
+/*!
+    \qmlproperty real QtQuick.Shapes::RadialGradient::centerX
+    \qmlproperty real QtQuick.Shapes::RadialGradient::centerY
+    \qmlproperty real QtQuick.Shapes::RadialGradient::focalX
+    \qmlproperty real QtQuick.Shapes::RadialGradient::focalY
+
+    These properties define the center and focal points. To specify a simple
+    radial gradient, set focalX and focalY to the value of centerX and centerY,
+    respectively.
+ */
+
+qreal QQuickShapeRadialGradient::centerX() const
+{
+    return m_centerPoint.x();
+}
+
+void QQuickShapeRadialGradient::setCenterX(qreal v)
+{
+    if (m_centerPoint.x() != v) {
+        m_centerPoint.setX(v);
+        emit centerXChanged();
+        emit updated();
+    }
+}
+
+qreal QQuickShapeRadialGradient::centerY() const
+{
+    return m_centerPoint.y();
+}
+
+void QQuickShapeRadialGradient::setCenterY(qreal v)
+{
+    if (m_centerPoint.y() != v) {
+        m_centerPoint.setY(v);
+        emit centerYChanged();
+        emit updated();
+    }
+}
+
+/*!
+    \qmlproperty real QtQuick.Shapes::RadialGradient::centerRadius
+    \qmlproperty real QtQuick.Shapes::RadialGradient::focalRadius
+
+    These properties define the center and focal radius. For simple radial
+    gradients, focalRadius should be set to \c 0 (the default value).
+ */
+
+qreal QQuickShapeRadialGradient::centerRadius() const
+{
+    return m_centerRadius;
+}
+
+void QQuickShapeRadialGradient::setCenterRadius(qreal v)
+{
+    if (m_centerRadius != v) {
+        m_centerRadius = v;
+        emit centerRadiusChanged();
+        emit updated();
+    }
+}
+
+qreal QQuickShapeRadialGradient::focalX() const
+{
+    return m_focalPoint.x();
+}
+
+void QQuickShapeRadialGradient::setFocalX(qreal v)
+{
+    if (m_focalPoint.x() != v) {
+        m_focalPoint.setX(v);
+        emit focalXChanged();
+        emit updated();
+    }
+}
+
+qreal QQuickShapeRadialGradient::focalY() const
+{
+    return m_focalPoint.y();
+}
+
+void QQuickShapeRadialGradient::setFocalY(qreal v)
+{
+    if (m_focalPoint.y() != v) {
+        m_focalPoint.setY(v);
+        emit focalYChanged();
+        emit updated();
+    }
+}
+
+qreal QQuickShapeRadialGradient::focalRadius() const
+{
+    return m_focalRadius;
+}
+
+void QQuickShapeRadialGradient::setFocalRadius(qreal v)
+{
+    if (m_focalRadius != v) {
+        m_focalRadius = v;
+        emit focalRadiusChanged();
+        emit updated();
+    }
+}
+
 #if QT_CONFIG(opengl)
 
 // contexts sharing with each other get the same cache instance
@@ -1181,7 +1334,7 @@ void QQuickShapeGradientCache::freeResource(QOpenGLContext *)
     m_cache.clear();
 }
 
-static void generateGradientColorTable(const QQuickShapeGradientCache::GradientDesc &gradient,
+static void generateGradientColorTable(const QQuickShapeGradientCache::Key &gradient,
                                        uint *colorTable, int size, float opacity)
 {
     int pos = 0;
@@ -1232,7 +1385,7 @@ static void generateGradientColorTable(const QQuickShapeGradientCache::GradientD
     colorTable[size-1] = last_color;
 }
 
-QSGTexture *QQuickShapeGradientCache::get(const GradientDesc &grad)
+QSGTexture *QQuickShapeGradientCache::get(const Key &grad)
 {
     QSGPlainTexture *tx = m_cache[grad];
     if (!tx) {
@@ -1263,6 +1416,7 @@ QSGTexture *QQuickShapeGradientCache::get(const GradientDesc &grad)
             qWarning("Unknown gradient spread mode %d", grad.spread);
             break;
         }
+        tx->setFiltering(QSGTexture::Linear);
         m_cache[grad] = tx;
     }
     return tx;

@@ -130,26 +130,35 @@ void QQuickShapeSoftwareRenderer::setStrokeStyle(int index, QQuickShapePath::Str
     m_accDirty |= DirtyPen;
 }
 
+static inline void setupPainterGradient(QGradient *painterGradient, const QQuickShapeGradient &g)
+{
+    painterGradient->setStops(g.gradientStops()); // sorted
+    switch (g.spread()) {
+    case QQuickShapeGradient::PadSpread:
+        painterGradient->setSpread(QGradient::PadSpread);
+        break;
+    case QQuickShapeGradient::RepeatSpread:
+        painterGradient->setSpread(QGradient::RepeatSpread);
+        break;
+    case QQuickShapeGradient::ReflectSpread:
+        painterGradient->setSpread(QGradient::ReflectSpread);
+        break;
+    default:
+        break;
+    }
+}
+
 void QQuickShapeSoftwareRenderer::setFillGradient(int index, QQuickShapeGradient *gradient)
 {
     ShapePathGuiData &d(m_sp[index]);
-    if (QQuickShapeLinearGradient *linearGradient = qobject_cast<QQuickShapeLinearGradient *>(gradient)) {
-        QLinearGradient painterGradient(linearGradient->x1(), linearGradient->y1(),
-                                        linearGradient->x2(), linearGradient->y2());
-        painterGradient.setStops(linearGradient->gradientStops()); // sorted
-        switch (gradient->spread()) {
-        case QQuickShapeGradient::PadSpread:
-            painterGradient.setSpread(QGradient::PadSpread);
-            break;
-        case QQuickShapeGradient::RepeatSpread:
-            painterGradient.setSpread(QGradient::RepeatSpread);
-            break;
-        case QQuickShapeGradient::ReflectSpread:
-            painterGradient.setSpread(QGradient::ReflectSpread);
-            break;
-        default:
-            break;
-        }
+    if (QQuickShapeLinearGradient *g = qobject_cast<QQuickShapeLinearGradient *>(gradient)) {
+        QLinearGradient painterGradient(g->x1(), g->y1(), g->x2(), g->y2());
+        setupPainterGradient(&painterGradient, *g);
+        d.brush = QBrush(painterGradient);
+    } else if (QQuickShapeRadialGradient *g = qobject_cast<QQuickShapeRadialGradient *>(gradient)) {
+        QRadialGradient painterGradient(g->centerX(), g->centerY(), g->centerRadius(),
+                                        g->focalX(), g->focalY(), g->focalRadius());
+        setupPainterGradient(&painterGradient, *g);
         d.brush = QBrush(painterGradient);
     } else {
         d.brush = QBrush(d.fillColor);

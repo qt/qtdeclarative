@@ -83,6 +83,10 @@ Rectangle {
             shapeUrl: "item5.qml"
         }
         ListElement {
+            name: "Radial gradient"
+            shapeUrl: "item3.qml"
+        }
+        ListElement {
             name: "Fill rules"
             shapeUrl: "item6.qml"
         }

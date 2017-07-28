@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -48,18 +48,51 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.9
+import QtQuick.Shapes 1.0
 
-Item {
-    width: 1280
-    height: 720
-    LauncherList {
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("Shape Gallery", "Simple path rendering examples", Qt.resolvedUrl("pathitemgallery.qml"))
-            addExample("Interactive Shape", "Dynamic, interactive path rendering examples", Qt.resolvedUrl("pathiteminteract.qml"))
-            addExample("Super- and multisampling", "Improving quality", Qt.resolvedUrl("pathitemsampling.qml"))
-            addExample("Clip My Tiger!", "Clip examples, a.k.a. What Not To Do", Qt.resolvedUrl("pathitemtigers.qml"))
+Rectangle {
+    color: "lightGray"
+    Shape {
+        width: 200
+        height: 150
+        anchors.centerIn: parent
+        ShapePath {
+            strokeWidth: 4
+            strokeColor: "red"
+            fillGradient: RadialGradient {
+                centerX: 100; centerY: 100; centerRadius: 100
+                SequentialAnimation on focalRadius {
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 1; to: 20; duration: 2000 }
+                    NumberAnimation { from: 20; to: 1; duration: 2000 }
+                }
+                SequentialAnimation on focalX {
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 50; to: 150; duration: 3000 }
+                    NumberAnimation { from: 150; to: 50; duration: 3000 }
+                }
+                SequentialAnimation on focalY {
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 50; to: 150; duration: 1000 }
+                    NumberAnimation { from: 150; to: 50; duration: 1000 }
+                }
+                GradientStop { position: 0; color: "#ffffff" }
+                GradientStop { position: 0.11; color: "#f9ffa0" }
+                GradientStop { position: 0.13; color: "#f9ff99" }
+                GradientStop { position: 0.14; color: "#f3ff86" }
+                GradientStop { position: 0.49; color: "#93b353" }
+                GradientStop { position: 0.87; color: "#264619" }
+                GradientStop { position: 0.96; color: "#0c1306" }
+                GradientStop { position: 1; color: "#000000" }
+            }
+            fillColor: "blue" // ignored with the gradient set
+            strokeStyle: ShapePath.DashLine
+            dashPattern: [ 1, 4 ]
+            startX: 20; startY: 20
+            PathLine { x: 180; y: 130 }
+            PathLine { x: 20; y: 130 }
+            PathLine { x: 20; y: 20 }
         }
     }
 }
