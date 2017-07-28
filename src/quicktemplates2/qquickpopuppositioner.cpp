@@ -129,14 +129,14 @@ void QQuickPopupPositioner::reposition()
 
             // if the popup doesn't fit horizontally inside the window, try flipping it around (left <-> right)
             if (p->allowHorizontalFlip && (rect.left() < bounds.left() || rect.right() > bounds.right())) {
-                const QRectF flipped(m_parentItem->width() - rect.x() - rect.width(), rect.y(), rect.width(), rect.height());
+                const QRectF flipped(m_parentItem->mapToScene(QPointF(m_parentItem->width() - p->x - rect.width(), p->y)), rect.size());
                 if (flipped.intersected(bounds).width() > rect.intersected(bounds).width())
                     rect.moveLeft(flipped.left());
             }
 
             // if the popup doesn't fit vertically inside the window, try flipping it around (above <-> below)
             if (p->allowVerticalFlip && (rect.top() < bounds.top() || rect.bottom() > bounds.bottom())) {
-                const QRectF flipped(rect.x(), m_parentItem->height() - rect.y() - rect.height(), rect.width(), rect.height());
+                const QRectF flipped(m_parentItem->mapToScene(QPointF(p->x, m_parentItem->height() - p->y - rect.height())), rect.size());
                 if (flipped.intersected(bounds).height() > rect.intersected(bounds).height())
                     rect.moveTop(flipped.top());
             }
