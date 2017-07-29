@@ -70,6 +70,7 @@ class Q_AUTOTEST_EXPORT QQuickAnimatedImage : public QQuickImage
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY frameChanged)
     Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged)
+    Q_PROPERTY(qreal speed READ speed WRITE setSpeed NOTIFY speedChanged REVISION 11)
 
     // read-only for AnimatedImage
     Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
@@ -89,6 +90,9 @@ public:
 
     int frameCount() const;
 
+    qreal speed() const;
+    void setSpeed(qreal speed);
+
     // Extends QQuickImage's src property
     void setSource(const QUrl&) override;
     virtual QSize sourceSize();
@@ -98,6 +102,7 @@ Q_SIGNALS:
     void pausedChanged();
     void frameChanged();
     void frameCountChanged();
+    Q_REVISION(11) void speedChanged();
 
 private Q_SLOTS:
     void movieUpdate();

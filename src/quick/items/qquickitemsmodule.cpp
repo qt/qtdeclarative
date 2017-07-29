@@ -411,6 +411,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #if QT_CONFIG(quick_path)
     qmlRegisterType<QQuickPathAngleArc>(uri, 2, 11, "PathAngleArc");
 #endif
+
+#if QT_CONFIG(quick_animatedimage)
+    qmlRegisterType<QQuickAnimatedImage, 11>(uri, 2, 11,"AnimatedImage");
+#endif
 }
 
 static void initResources()

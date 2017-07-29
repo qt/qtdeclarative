@@ -260,6 +260,32 @@ int QQuickAnimatedImage::frameCount() const
     return d->_movie->frameCount();
 }
 
+/*!
+    \qmlproperty real QtQuick::AnimatedImage::speed
+    \since QtQuick 2.11
+
+    This property holds the speed of the animation.
+
+    The speed is measured in percentage of the original animated image speed.
+    The default speed is 1.0 (original speed).
+*/
+qreal QQuickAnimatedImage::speed() const
+{
+    Q_D(const QQuickAnimatedImage);
+    return d->speed;
+}
+
+void QQuickAnimatedImage::setSpeed(qreal speed)
+{
+    Q_D(QQuickAnimatedImage);
+    if (d->speed != speed) {
+        d->speed = speed;
+        if (d->_movie)
+            d->_movie->setSpeed(qRound(speed * 100.0));
+        emit speedChanged();
+    }
+}
+
 void QQuickAnimatedImage::setSource(const QUrl &url)
 {
     Q_D(QQuickAnimatedImage);
@@ -396,6 +422,7 @@ void QQuickAnimatedImage::movieRequestFinished()
             this, SLOT(movieUpdate()));
     if (d->cache)
         d->_movie->setCacheMode(QMovie::CacheAll);
+    d->_movie->setSpeed(qRound(d->speed * 100.0));
 
     d->status = Ready;
     emit statusChanged(d->status);

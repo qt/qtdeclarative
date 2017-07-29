@@ -70,7 +70,7 @@ class QQuickAnimatedImagePrivate : public QQuickImagePrivate
 
 public:
     QQuickAnimatedImagePrivate()
-      : playing(true), paused(false), preset_currentframe(0), _movie(0), oldPlaying(false)
+      : playing(true), paused(false), speed(1.0), preset_currentframe(0), _movie(0), oldPlaying(false)
 #if QT_CONFIG(qml_network)
         , reply(0), redirectCount(0)
 #endif
@@ -82,6 +82,7 @@ public:
 
     bool playing;
     bool paused;
+    qreal speed;
     int preset_currentframe;
     QMovie *_movie;
     bool oldPlaying;
