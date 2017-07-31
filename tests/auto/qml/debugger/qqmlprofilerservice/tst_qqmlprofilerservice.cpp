@@ -327,9 +327,12 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile, bool 
                  .arg(restrictServices ? QStringLiteral(",services:CanvasFrameRate") : QString())
               << QQmlDataTest::instance()->testFile(testFile);
 
-    m_process = new QQmlDebugProcess(executable, this);
-    m_process->start(QStringList() << arguments);
-    QVERIFY2(m_process->waitForSessionStart(), "Could not launch application, or did not get 'Waiting for connection'.");
+    QScopedPointer<QQmlDebugProcess> process;
+    process.reset(new QQmlDebugProcess(executable, this));
+    process->start(QStringList() << arguments);
+    QVERIFY2(process->waitForSessionStart(), "Could not launch application, or did not get 'Waiting for connection'.");
+
+    m_process = process.take();
 
     m_connection = new QQmlDebugConnection();
     m_client = new QQmlProfilerTestClient(m_connection);
@@ -550,6 +553,8 @@ void tst_QQmlProfilerService::connect()
     QFETCH(bool, traceEnabled);
 
     connect(blockMode, "test.qml", restrictMode);
+    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
+        return;
 
     // if the engine is waiting, then the first message determines if it starts with trace enabled
     if (!traceEnabled)
