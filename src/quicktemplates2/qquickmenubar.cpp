@@ -100,8 +100,11 @@ QQuickItem *QQuickMenuBarPrivate::beginCreateItem()
 
     QObject *object = delegate->beginCreate(context);
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
-    if (!item)
+    if (!item) {
         delete object;
+        delete context;
+        return nullptr;
+    }
 
     item->setParentItem(q);
     QQml_setParent_noEvent(item, q);
