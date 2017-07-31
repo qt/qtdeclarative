@@ -289,7 +289,6 @@ Q_SIGNALS:
     void strokeStyleChanged();
     void dashOffsetChanged();
     void dashPatternChanged();
-    void fillGradientChanged();
 
 private:
     Q_DISABLE_COPY(QQuickShapePath)
