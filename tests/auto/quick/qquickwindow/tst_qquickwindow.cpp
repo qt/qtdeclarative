@@ -2200,6 +2200,7 @@ void tst_qquickwindow::attachedProperty()
 
     QQuickWindow *innerWindow = view.rootObject()->findChild<QQuickWindow*>("extraWindow");
     QVERIFY(innerWindow);
+    innerWindow->show();
     innerWindow->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(innerWindow));
 
