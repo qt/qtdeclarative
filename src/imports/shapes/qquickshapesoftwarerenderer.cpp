@@ -160,6 +160,10 @@ void QQuickShapeSoftwareRenderer::setFillGradient(int index, QQuickShapeGradient
                                         g->focalX(), g->focalY(), g->focalRadius());
         setupPainterGradient(&painterGradient, *g);
         d.brush = QBrush(painterGradient);
+    } else if (QQuickShapeConicalGradient *g = qobject_cast<QQuickShapeConicalGradient *>(gradient)) {
+        QConicalGradient painterGradient(g->centerX(), g->centerY(), g->angle());
+        setupPainterGradient(&painterGradient, *g);
+        d.brush = QBrush(painterGradient);
     } else {
         d.brush = QBrush(d.fillColor);
     }

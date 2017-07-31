@@ -167,6 +167,36 @@ private:
     qreal m_focalRadius = 0;
 };
 
+class QQuickShapeConicalGradient : public QQuickShapeGradient
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal centerX READ centerX WRITE setCenterX NOTIFY centerXChanged)
+    Q_PROPERTY(qreal centerY READ centerY WRITE setCenterY NOTIFY centerYChanged)
+    Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged)
+    Q_CLASSINFO("DefaultProperty", "stops")
+
+public:
+    QQuickShapeConicalGradient(QObject *parent = nullptr);
+
+    qreal centerX() const;
+    void setCenterX(qreal v);
+
+    qreal centerY() const;
+    void setCenterY(qreal v);
+
+    qreal angle() const;
+    void setAngle(qreal v);
+
+signals:
+    void centerXChanged();
+    void centerYChanged();
+    void angleChanged();
+
+private:
+    QPointF m_centerPoint;
+    qreal m_angle = 0;
+};
+
 class QQuickShapePath : public QQuickPath
 {
     Q_OBJECT

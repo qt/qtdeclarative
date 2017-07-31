@@ -137,6 +137,7 @@ public:
         MatSolid,
         MatLinearGradient,
         MatRadialGradient,
+        MatConicalGradient,
 
         NMaterials
     };

@@ -105,6 +105,9 @@ void QQuickShapeGenericStrokeFillNode::activateMaterial(Material m)
     case MatRadialGradient:
         m_material.reset(QQuickShapeGenericMaterialFactory::createRadialGradient(m_window, this));
         break;
+    case MatConicalGradient:
+        m_material.reset(QQuickShapeGenericMaterialFactory::createConicalGradient(m_window, this));
+        break;
     default:
         qWarning("Unknown material %d", m);
         return;
@@ -250,6 +253,10 @@ void QQuickShapeGenericRenderer::setFillGradient(int index, QQuickShapeGradient 
             d.fillGradient.b = QPointF(g->focalX(), g->focalY());
             d.fillGradient.v0 = g->centerRadius();
             d.fillGradient.v1 = g->focalRadius();
+        } else if (QQuickShapeConicalGradient *g = qobject_cast<QQuickShapeConicalGradient *>(gradient)) {
+            d.fillGradientActive = ConicalGradient;
+            d.fillGradient.a = QPointF(g->centerX(), g->centerY());
+            d.fillGradient.v0 = g->angle();
         } else {
             Q_UNREACHABLE();
         }
@@ -594,6 +601,9 @@ void QQuickShapeGenericRenderer::updateFillNode(ShapePathData *d, QQuickShapeGen
         case RadialGradient:
             gradMat = QQuickShapeGenericStrokeFillNode::MatRadialGradient;
             break;
+        case ConicalGradient:
+            gradMat = QQuickShapeGenericStrokeFillNode::MatConicalGradient;
+            break;
         default:
             Q_UNREACHABLE();
         }
@@ -714,6 +724,22 @@ QSGMaterial *QQuickShapeGenericMaterialFactory::createRadialGradient(QQuickWindo
 #endif
 
     qWarning("Radial gradient material: Unsupported graphics API %d", api);
+    return nullptr;
+}
+
+QSGMaterial *QQuickShapeGenericMaterialFactory::createConicalGradient(QQuickWindow *window,
+                                                                      QQuickShapeGenericStrokeFillNode *node)
+{
+    QSGRendererInterface::GraphicsApi api = window->rendererInterface()->graphicsApi();
+
+#if QT_CONFIG(opengl)
+    if (api == QSGRendererInterface::OpenGL)
+        return new QQuickShapeConicalGradientMaterial(node);
+#else
+        Q_UNUSED(node);
+#endif
+
+    qWarning("Conical gradient material: Unsupported graphics API %d", api);
     return nullptr;
 }
 
@@ -885,6 +911,89 @@ int QQuickShapeRadialGradientMaterial::compare(const QSGMaterial *other) const
     if (int d = ga->v0 - gb->v0)
         return d;
     if (int d = ga->v1 - gb->v1)
+        return d;
+
+    if (int d = ga->stops.count() - gb->stops.count())
+        return d;
+
+    for (int i = 0; i < ga->stops.count(); ++i) {
+        if (int d = ga->stops[i].first - gb->stops[i].first)
+            return d;
+        if (int d = ga->stops[i].second.rgba() - gb->stops[i].second.rgba())
+            return d;
+    }
+
+    return 0;
+}
+
+QSGMaterialType QQuickShapeConicalGradientShader::type;
+
+QQuickShapeConicalGradientShader::QQuickShapeConicalGradientShader()
+{
+    setShaderSourceFile(QOpenGLShader::Vertex,
+                        QStringLiteral(":/qt-project.org/shapes/shaders/conicalgradient.vert"));
+    setShaderSourceFile(QOpenGLShader::Fragment,
+                        QStringLiteral(":/qt-project.org/shapes/shaders/conicalgradient.frag"));
+}
+
+void QQuickShapeConicalGradientShader::initialize()
+{
+    QOpenGLShaderProgram *prog = program();
+    m_opacityLoc = prog->uniformLocation("opacity");
+    m_matrixLoc = prog->uniformLocation("matrix");
+    m_angleLoc = prog->uniformLocation("angle");
+    m_translationPointLoc = prog->uniformLocation("translationPoint");
+}
+
+void QQuickShapeConicalGradientShader::updateState(const RenderState &state, QSGMaterial *mat, QSGMaterial *)
+{
+    QQuickShapeConicalGradientMaterial *m = static_cast<QQuickShapeConicalGradientMaterial *>(mat);
+
+    if (state.isOpacityDirty())
+        program()->setUniformValue(m_opacityLoc, state.opacity());
+
+    if (state.isMatrixDirty())
+        program()->setUniformValue(m_matrixLoc, state.combinedMatrix());
+
+    QQuickShapeGenericStrokeFillNode *node = m->node();
+
+    const QPointF centerPoint = node->m_fillGradient.a;
+    const GLfloat angle = -qDegreesToRadians(node->m_fillGradient.v0);
+
+    program()->setUniformValue(m_angleLoc, angle);
+    program()->setUniformValue(m_translationPointLoc, centerPoint);
+
+    const QQuickShapeGradientCache::Key cacheKey(node->m_fillGradient.stops, QQuickShapeGradient::RepeatSpread);
+    QSGTexture *tx = QQuickShapeGradientCache::currentCache()->get(cacheKey);
+    tx->bind();
+}
+
+char const *const *QQuickShapeConicalGradientShader::attributeNames() const
+{
+    static const char *const attr[] = { "vertexCoord", "vertexColor", nullptr };
+    return attr;
+}
+
+int QQuickShapeConicalGradientMaterial::compare(const QSGMaterial *other) const
+{
+    Q_ASSERT(other && type() == other->type());
+    const QQuickShapeConicalGradientMaterial *m = static_cast<const QQuickShapeConicalGradientMaterial *>(other);
+
+    QQuickShapeGenericStrokeFillNode *a = node();
+    QQuickShapeGenericStrokeFillNode *b = m->node();
+    Q_ASSERT(a && b);
+    if (a == b)
+        return 0;
+
+    const QQuickAbstractPathRenderer::GradientDesc *ga = &a->m_fillGradient;
+    const QQuickAbstractPathRenderer::GradientDesc *gb = &b->m_fillGradient;
+
+    if (int d = ga->a.x() - gb->a.x())
+        return d;
+    if (int d = ga->a.y() - gb->a.y())
+        return d;
+
+    if (int d = ga->v0 - gb->v0)
         return d;
 
     if (int d = ga->stops.count() - gb->stops.count())

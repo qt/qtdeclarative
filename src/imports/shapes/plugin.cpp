@@ -67,6 +67,7 @@ public:
         qmlRegisterUncreatableType<QQuickShapeGradient>(uri, 1, 0, "ShapeGradient", QQuickShapeGradient::tr("ShapeGradient is an abstract base class"));
         qmlRegisterType<QQuickShapeLinearGradient>(uri, 1, 0, "LinearGradient");
         qmlRegisterType<QQuickShapeRadialGradient>(uri, 1, 0, "RadialGradient");
+        qmlRegisterType<QQuickShapeConicalGradient>(uri, 1, 0, "ConicalGradient");
     }
 };
 

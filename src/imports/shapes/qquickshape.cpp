@@ -1296,6 +1296,89 @@ void QQuickShapeRadialGradient::setFocalRadius(qreal v)
     }
 }
 
+/*!
+    \qmltype ConicalGradient
+    \instantiates QQuickShapeConicalGradient
+    \inqmlmodule QtQuick.Shapes
+    \ingroup qtquick-paths
+    \ingroup qtquick-views
+    \inherits ShapeGradient
+    \brief Conical gradient
+    \since 5.10
+
+    Conical gradients interpolate colors counter-clockwise around a center
+    point in Shape items.
+
+    \note The \l{ShapeGradient.spread}{spread mode} setting has no effect for
+    conical gradients.
+
+    \note ConicalGradient is only supported in combination with Shape items. It
+    is not compatible with \l Rectangle, as that only supports \l Gradient.
+
+    \sa QConicalGradient
+ */
+
+QQuickShapeConicalGradient::QQuickShapeConicalGradient(QObject *parent)
+    : QQuickShapeGradient(parent)
+{
+}
+
+/*!
+    \qmlproperty real QtQuick.Shapes::ConicalGradient::centerX
+    \qmlproperty real QtQuick.Shapes::ConicalGradient::centerY
+
+    These properties define the center point of the conical gradient.
+ */
+
+qreal QQuickShapeConicalGradient::centerX() const
+{
+    return m_centerPoint.x();
+}
+
+void QQuickShapeConicalGradient::setCenterX(qreal v)
+{
+    if (m_centerPoint.x() != v) {
+        m_centerPoint.setX(v);
+        emit centerXChanged();
+        emit updated();
+    }
+}
+
+qreal QQuickShapeConicalGradient::centerY() const
+{
+    return m_centerPoint.y();
+}
+
+void QQuickShapeConicalGradient::setCenterY(qreal v)
+{
+    if (m_centerPoint.y() != v) {
+        m_centerPoint.setY(v);
+        emit centerYChanged();
+        emit updated();
+    }
+}
+
+/*!
+    \qmlproperty real QtQuick.Shapes::ConicalGradient::angle
+
+    This property defines the start angle for the conical gradient. The value
+    is in degrees (0-360).
+ */
+
+qreal QQuickShapeConicalGradient::angle() const
+{
+    return m_angle;
+}
+
+void QQuickShapeConicalGradient::setAngle(qreal v)
+{
+    if (m_angle != v) {
+        m_angle = v;
+        emit angleChanged();
+        emit updated();
+    }
+}
+
 #if QT_CONFIG(opengl)
 
 // contexts sharing with each other get the same cache instance

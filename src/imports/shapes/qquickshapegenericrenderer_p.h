@@ -210,7 +210,8 @@ public:
     enum Material {
         MatSolidColor,
         MatLinearGradient,
-        MatRadialGradient
+        MatRadialGradient,
+        MatConicalGradient
     };
 
     void activateMaterial(Material m);
@@ -242,6 +243,7 @@ public:
     static QSGMaterial *createVertexColor(QQuickWindow *window);
     static QSGMaterial *createLinearGradient(QQuickWindow *window, QQuickShapeGenericStrokeFillNode *node);
     static QSGMaterial *createRadialGradient(QQuickWindow *window, QQuickShapeGenericStrokeFillNode *node);
+    static QSGMaterial *createConicalGradient(QQuickWindow *window, QQuickShapeGenericStrokeFillNode *node);
 };
 
 #if QT_CONFIG(opengl)
@@ -335,6 +337,51 @@ public:
     QSGMaterialShader *createShader() const override
     {
         return new QQuickShapeRadialGradientShader;
+    }
+
+    QQuickShapeGenericStrokeFillNode *node() const { return m_node; }
+
+private:
+    QQuickShapeGenericStrokeFillNode *m_node;
+};
+
+class QQuickShapeConicalGradientShader : public QSGMaterialShader
+{
+public:
+    QQuickShapeConicalGradientShader();
+
+    void initialize() override;
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+    char const *const *attributeNames() const override;
+
+    static QSGMaterialType type;
+
+private:
+    int m_opacityLoc = -1;
+    int m_matrixLoc = -1;
+    int m_angleLoc = -1;
+    int m_translationPointLoc = -1;
+};
+
+class QQuickShapeConicalGradientMaterial : public QSGMaterial
+{
+public:
+    QQuickShapeConicalGradientMaterial(QQuickShapeGenericStrokeFillNode *node)
+        : m_node(node)
+    {
+        setFlag(Blending | RequiresFullMatrix);
+    }
+
+    QSGMaterialType *type() const override
+    {
+        return &QQuickShapeConicalGradientShader::type;
+    }
+
+    int compare(const QSGMaterial *other) const override;
+
+    QSGMaterialShader *createShader() const override
+    {
+        return new QQuickShapeConicalGradientShader;
     }
 
     QQuickShapeGenericStrokeFillNode *node() const { return m_node; }

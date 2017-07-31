@@ -42,6 +42,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
+#include <qmath.h>
 #include <private/qquickpath_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -138,6 +139,10 @@ void QQuickShapeNvprRenderer::setFillGradient(int index, QQuickShapeGradient *gr
             d.fillGradient.b = QPointF(g->focalX(), g->focalY());
             d.fillGradient.v0 = g->centerRadius();
             d.fillGradient.v1 = g->focalRadius();
+        } else if (QQuickShapeConicalGradient *g = qobject_cast<QQuickShapeConicalGradient *>(gradient)) {
+            d.fillGradientActive = ConicalGradient;
+            d.fillGradient.a = QPointF(g->centerX(), g->centerY());
+            d.fillGradient.v0 = g->angle();
         } else {
             Q_UNREACHABLE();
         }
@@ -536,6 +541,37 @@ QQuickNvprMaterialManager::MaterialDesc *QQuickNvprMaterialManager::activateMate
             Q_ASSERT(mtl.uniLoc[4] >= 0);
             mtl.uniLoc[5] = f->glGetProgramResourceLocation(mtl.prg, GL_UNIFORM, "translationPoint");
             Q_ASSERT(mtl.uniLoc[5] >= 0);
+        } else if (m == MatConicalGradient) {
+            static const char *fragSrc =
+                    "#version 310 es\n"
+                    "precision highp float;\n"
+                    "#define INVERSE_2PI 0.1591549430918953358\n"
+                    "uniform sampler2D gradTab;\n"
+                    "uniform float opacity;\n"
+                    "uniform float angle;\n"
+                    "uniform vec2 translationPoint;\n"
+                    "layout(location = 0) in vec2 uv;\n"
+                    "out vec4 fragColor;\n"
+                    "void main() {\n"
+                    "    vec2 coord = uv - translationPoint;\n"
+                    "    float t;\n"
+                    "    if (abs(coord.y) == abs(coord.x))\n"
+                    "        t = (atan(-coord.y + 0.002, coord.x) + angle) * INVERSE_2PI;\n"
+                    "    else\n"
+                    "        t = (atan(-coord.y, coord.x) + angle) * INVERSE_2PI;\n"
+                    "    fragColor = texture(gradTab, vec2(t - floor(t), 0.5)) * opacity;\n"
+                    "}\n";
+            if (!m_nvpr->createFragmentOnlyPipeline(fragSrc, &mtl.ppl, &mtl.prg)) {
+                qWarning("NVPR: Failed to create shader pipeline for conical gradient");
+                return nullptr;
+            }
+            Q_ASSERT(mtl.ppl && mtl.prg);
+            mtl.uniLoc[1] = f->glGetProgramResourceLocation(mtl.prg, GL_UNIFORM, "opacity");
+            Q_ASSERT(mtl.uniLoc[1] >= 0);
+            mtl.uniLoc[2] = f->glGetProgramResourceLocation(mtl.prg, GL_UNIFORM, "angle");
+            Q_ASSERT(mtl.uniLoc[2] >= 0);
+            mtl.uniLoc[3] = f->glGetProgramResourceLocation(mtl.prg, GL_UNIFORM, "translationPoint");
+            Q_ASSERT(mtl.uniLoc[3] >= 0);
         } else {
             Q_UNREACHABLE();
         }
@@ -593,10 +629,7 @@ void QQuickShapeNvprRenderNode::renderFill(ShapePathRenderData *d)
 {
     QQuickNvprMaterialManager::MaterialDesc *mtl = nullptr;
     if (d->fillGradientActive) {
-        const QQuickShapeGradientCache::Key cacheKey(d->fillGradient.stops, d->fillGradient.spread);
-        QSGTexture *tx = QQuickShapeGradientCache::currentCache()->get(cacheKey);
-        tx->bind();
-
+        QQuickShapeGradient::SpreadMode spread = d->fillGradient.spread;
         if (d->fillGradientActive == QQuickAbstractPathRenderer::LinearGradient) {
             mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatLinearGradient);
             // uv = vec2(coeff[0] * x + coeff[1] * y + coeff[2], coeff[3] * x + coeff[4] * y + coeff[5])
@@ -624,9 +657,26 @@ void QQuickShapeNvprRenderNode::renderFill(ShapePathRenderData *d)
             f->glProgramUniform1f(mtl->prg, mtl->uniLoc[3], centerRadius);
             f->glProgramUniform1f(mtl->prg, mtl->uniLoc[4], focalRadius);
             f->glProgramUniform2f(mtl->prg, mtl->uniLoc[5], focalPoint.x(), focalPoint.y());
+        } else if (d->fillGradientActive == QQuickAbstractPathRenderer::ConicalGradient) {
+            mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatConicalGradient);
+            // same old
+            GLfloat coeff[6] = { 1, 0, 0,
+                                 0, 1, 0 };
+            nvpr.programPathFragmentInputGen(mtl->prg, 0, GL_OBJECT_LINEAR_NV, 2, coeff);
+
+            const QPointF centerPoint = d->fillGradient.a;
+            const GLfloat angle = -qDegreesToRadians(d->fillGradient.v0);
+
+            f->glProgramUniform1f(mtl->prg, mtl->uniLoc[2], angle);
+            f->glProgramUniform2f(mtl->prg, mtl->uniLoc[3], centerPoint.x(), centerPoint.y());
+
+            spread = QQuickShapeGradient::RepeatSpread;
         } else {
             Q_UNREACHABLE();
         }
+        const QQuickShapeGradientCache::Key cacheKey(d->fillGradient.stops, spread);
+        QSGTexture *tx = QQuickShapeGradientCache::currentCache()->get(cacheKey);
+        tx->bind();
     } else {
         mtl = mtlmgr.activateMaterial(QQuickNvprMaterialManager::MatSolid);
         f->glProgramUniform4f(mtl->prg, mtl->uniLoc[0],
