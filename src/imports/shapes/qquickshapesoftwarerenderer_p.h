@@ -73,7 +73,6 @@ public:
 
     void beginSync(int totalCount) override;
     void setPath(int index, const QQuickPath *path) override;
-    void setJSPath(int index, const QQuickShapePathCommands &path) override;
     void setStrokeColor(int index, const QColor &color) override;
     void setStrokeWidth(int index, qreal w) override;
     void setFillColor(int index, const QColor &color) override;

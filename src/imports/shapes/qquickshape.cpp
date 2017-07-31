@@ -77,50 +77,6 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
     dashPattern << 4 << 2; // 4 * strokeWidth dash followed by 2 * strokeWidth space
 }
 
-QPainterPath QQuickShapePathCommands::toPainterPath() const
-{
-    QPainterPath p;
-    int coordIdx = 0;
-    for (int i = 0; i < cmd.count(); ++i) {
-        switch (cmd[i]) {
-        case QQuickShapePathCommands::MoveTo:
-            p.moveTo(coords[coordIdx], coords[coordIdx + 1]);
-            coordIdx += 2;
-            break;
-        case QQuickShapePathCommands::LineTo:
-            p.lineTo(coords[coordIdx], coords[coordIdx + 1]);
-            coordIdx += 2;
-            break;
-        case QQuickShapePathCommands::QuadTo:
-            p.quadTo(coords[coordIdx], coords[coordIdx + 1],
-                    coords[coordIdx + 2], coords[coordIdx + 3]);
-            coordIdx += 4;
-            break;
-        case QQuickShapePathCommands::CubicTo:
-            p.cubicTo(coords[coordIdx], coords[coordIdx + 1],
-                    coords[coordIdx + 2], coords[coordIdx + 3],
-                    coords[coordIdx + 4], coords[coordIdx + 5]);
-            coordIdx += 6;
-            break;
-        case QQuickShapePathCommands::ArcTo:
-            // does not map to the QPainterPath API; reuse the helper code from QQuickSvgParser
-            QQuickSvgParser::pathArc(p,
-                                     coords[coordIdx], coords[coordIdx + 1], // radius
-                                     coords[coordIdx + 2], // xAxisRotation
-                                     !qFuzzyIsNull(coords[coordIdx + 6]), // useLargeArc
-                                     !qFuzzyIsNull(coords[coordIdx + 5]), // sweep flag
-                                     coords[coordIdx + 3], coords[coordIdx + 4], // end
-                                     p.currentPosition().x(), p.currentPosition().y());
-            coordIdx += 7;
-            break;
-        default:
-            qWarning("Unknown JS path command: %d", cmd[i]);
-            break;
-        }
-    }
-    return p;
-}
-
 /*!
     \qmltype ShapePath
     \instantiates QQuickShapePath
@@ -815,7 +771,7 @@ static void vpe_append(QQmlListProperty<QObject> *property, QObject *obj)
     QQuickShapePrivate *d = QQuickShapePrivate::get(item);
     QQuickShapePath *path = qobject_cast<QQuickShapePath *>(obj);
     if (path)
-        d->qmlData.sp.append(path);
+        d->sp.append(path);
 
     QQuickItemPrivate::data_append(property, obj);
 
@@ -830,10 +786,10 @@ static void vpe_clear(QQmlListProperty<QObject> *property)
     QQuickShape *item = static_cast<QQuickShape *>(property->object);
     QQuickShapePrivate *d = QQuickShapePrivate::get(item);
 
-    for (QQuickShapePath *p : d->qmlData.sp)
+    for (QQuickShapePath *p : d->sp)
         QObject::disconnect(p, SIGNAL(shapePathChanged()), item, SLOT(_q_shapePathChanged()));
 
-    d->qmlData.sp.clear();
+    d->sp.clear();
 
     QQuickItemPrivate::data_clear(property);
 
@@ -872,7 +828,7 @@ void QQuickShape::componentComplete()
 
     QQuickItem::componentComplete();
 
-    for (QQuickShapePath *p : d->qmlData.sp)
+    for (QQuickShapePath *p : d->sp)
         connect(p, SIGNAL(shapePathChanged()), this, SLOT(_q_shapePathChanged()));
 
     d->_q_shapePathChanged();
@@ -1010,64 +966,36 @@ void QQuickShapePrivate::sync()
         renderer->setAsyncCallback(q_asyncShapeReady, this);
     }
 
-    if (!jsData.isValid()) {
-        // Standard route: The path and stroke/fill parameters are provided via
-        // QML elements.
-        const int count = qmlData.sp.count();
-        renderer->beginSync(count);
+    const int count = sp.count();
+    renderer->beginSync(count);
 
-        for (int i = 0; i < count; ++i) {
-            QQuickShapePath *p = qmlData.sp[i];
-            int &dirty(QQuickShapePathPrivate::get(p)->dirty);
+    for (int i = 0; i < count; ++i) {
+        QQuickShapePath *p = sp[i];
+        int &dirty(QQuickShapePathPrivate::get(p)->dirty);
 
-            if (dirty & QQuickShapePathPrivate::DirtyPath)
-                renderer->setPath(i, p);
-            if (dirty & QQuickShapePathPrivate::DirtyStrokeColor)
-                renderer->setStrokeColor(i, p->strokeColor());
-            if (dirty & QQuickShapePathPrivate::DirtyStrokeWidth)
-                renderer->setStrokeWidth(i, p->strokeWidth());
-            if (dirty & QQuickShapePathPrivate::DirtyFillColor)
-                renderer->setFillColor(i, p->fillColor());
-            if (dirty & QQuickShapePathPrivate::DirtyFillRule)
-                renderer->setFillRule(i, p->fillRule());
-            if (dirty & QQuickShapePathPrivate::DirtyStyle) {
-                renderer->setJoinStyle(i, p->joinStyle(), p->miterLimit());
-                renderer->setCapStyle(i, p->capStyle());
-            }
-            if (dirty & QQuickShapePathPrivate::DirtyDash)
-                renderer->setStrokeStyle(i, p->strokeStyle(), p->dashOffset(), p->dashPattern());
-            if (dirty & QQuickShapePathPrivate::DirtyFillGradient)
-                renderer->setFillGradient(i, p->fillGradient());
-
-            dirty = 0;
+        if (dirty & QQuickShapePathPrivate::DirtyPath)
+            renderer->setPath(i, p);
+        if (dirty & QQuickShapePathPrivate::DirtyStrokeColor)
+            renderer->setStrokeColor(i, p->strokeColor());
+        if (dirty & QQuickShapePathPrivate::DirtyStrokeWidth)
+            renderer->setStrokeWidth(i, p->strokeWidth());
+        if (dirty & QQuickShapePathPrivate::DirtyFillColor)
+            renderer->setFillColor(i, p->fillColor());
+        if (dirty & QQuickShapePathPrivate::DirtyFillRule)
+            renderer->setFillRule(i, p->fillRule());
+        if (dirty & QQuickShapePathPrivate::DirtyStyle) {
+            renderer->setJoinStyle(i, p->joinStyle(), p->miterLimit());
+            renderer->setCapStyle(i, p->capStyle());
         }
+        if (dirty & QQuickShapePathPrivate::DirtyDash)
+            renderer->setStrokeStyle(i, p->strokeStyle(), p->dashOffset(), p->dashPattern());
+        if (dirty & QQuickShapePathPrivate::DirtyFillGradient)
+            renderer->setFillGradient(i, p->fillGradient());
 
-        renderer->endSync(useAsync);
-    } else {
-
-        // ### there is no public API to reach this code path atm
-        Q_UNREACHABLE();
-
-        // Path and stroke/fill params provided from JavaScript. This avoids
-        // QObjects at the expense of not supporting changes afterwards.
-        const int count = jsData.paths.count();
-        renderer->beginSync(count);
-
-        for (int i = 0; i < count; ++i) {
-            renderer->setJSPath(i, jsData.paths[i]);
-            const QQuickShapeStrokeFillParams sfp(jsData.sfp[i]);
-            renderer->setStrokeColor(i, sfp.strokeColor);
-            renderer->setStrokeWidth(i, sfp.strokeWidth);
-            renderer->setFillColor(i, sfp.fillColor);
-            renderer->setFillRule(i, sfp.fillRule);
-            renderer->setJoinStyle(i, sfp.joinStyle, sfp.miterLimit);
-            renderer->setCapStyle(i, sfp.capStyle);
-            renderer->setStrokeStyle(i, sfp.strokeStyle, sfp.dashOffset, sfp.dashPattern);
-            renderer->setFillGradient(i, sfp.fillGradient);
-        }
-
-        renderer->endSync(useAsync);
+        dirty = 0;
     }
+
+    renderer->endSync(useAsync);
 
     if (!useAsync)
         setStatus(QQuickShape::Ready);

@@ -81,7 +81,6 @@ public:
 
     void beginSync(int totalCount) override;
     void setPath(int index, const QQuickPath *path) override;
-    void setJSPath(int index, const QQuickShapePathCommands &path) override;
     void setStrokeColor(int index, const QColor &color) override;
     void setStrokeWidth(int index, qreal w) override;
     void setFillColor(int index, const QColor &color) override;
@@ -122,7 +121,6 @@ private:
     };
 
     void convertPath(const QQuickPath *path, ShapePathGuiData *d);
-    void convertJSPath(const QQuickShapePathCommands &path, ShapePathGuiData *d);
 
     QQuickShapeNvprRenderNode *m_node = nullptr;
     int m_accDirty = 0;
