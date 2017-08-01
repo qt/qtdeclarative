@@ -55,6 +55,7 @@
 
 #include "qv4alloca_p.h"
 
+#undef COUNT_INSTRUCTIONS
 
 extern "C" {
 
@@ -293,6 +294,25 @@ Q_NEVER_INLINE static void debug_slowPath(const QV4::Moth::Instr::instr_debug &i
 using namespace QV4;
 using namespace QV4::Moth;
 
+#ifdef COUNT_INSTRUCTIONS
+static struct InstrCount {
+    InstrCount() {
+        fprintf(stderr, "Counting instructions...\n");
+        for (int i = 0; i < Instr::LastInstruction; ++i)
+            hits[i] = 0;
+    }
+    ~InstrCount() {
+        fprintf(stderr, "Instruction count:\n");
+#define BLAH(I, FMT) \
+        fprintf(stderr, "%llu : %s\n", hits[Instr::I], #I);
+        FOR_EACH_MOTH_INSTR(BLAH)
+        #undef BLAH
+    }
+    quint64 hits[Instr::LastInstruction];
+    void hit(Instr::Type i) { hits[i]++; }
+} instrCount;
+#endif // COUNT_INSTRUCTIONS
+
 #define MOTH_BEGIN_INSTR_COMMON(I) { \
     const InstrMeta<int(Instr::I)>::DataType &instr = InstrMeta<int(Instr::I)>::data(*genericInstr); \
     code += InstrMeta<int(Instr::I)>::Size; \
@@ -300,8 +320,15 @@ using namespace QV4::Moth;
 
 #ifdef MOTH_THREADED_INTERPRETER
 
+
+#ifdef COUNT_INSTRUCTIONS
+#  define MOTH_BEGIN_INSTR(I) op_##I: \
+    instrCount.hit(Instr::I); \
+    MOTH_BEGIN_INSTR_COMMON(I)
+#else // !COUNT_INSTRUCTIONS
 #  define MOTH_BEGIN_INSTR(I) op_##I: \
     MOTH_BEGIN_INSTR_COMMON(I)
+#endif // COUNT_INSTRUCTIONS
 
 #  define MOTH_END_INSTR(I) } \
     genericInstr = reinterpret_cast<const Instr *>(code); \
