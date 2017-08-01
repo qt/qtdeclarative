@@ -555,7 +555,8 @@
 
     \section2 Animated Images
 
-    ...
+    The \l {https://developers.google.com/speed/webp/}{WebP} and GIF animated
+    image formats are supported by the Imagine style.
 
     \section2 Palette
 
