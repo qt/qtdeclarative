@@ -590,7 +590,7 @@
                 }
                 \endqml
             \li
-                \image qtquickcontrols2-imagine-dark.png
+                \image qtquickcontrols2-imagine-customization-dark.png
     \endtable
 
     In addition to specifying the path in QML, it is also possible to specify
