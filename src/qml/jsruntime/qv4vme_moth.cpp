@@ -408,8 +408,7 @@ static inline void storeArg(ExecutionEngine *engine, QV4::Heap::ExecutionContext
 {
     Q_ASSERT(scope->type == QV4::Heap::ExecutionContext::Type_SimpleCallContext
              || scope->type == QV4::Heap::ExecutionContext::Type_CallContext);
-    if (Q_UNLIKELY(scope->type == QV4::Heap::ExecutionContext::Type_CallContext
-                   && engine->writeBarrierActive))
+    if (Q_UNLIKELY(engine->writeBarrierActive))
         QV4::WriteBarrier::write(engine, scope, slot, value);
     else
         *slot = value;
