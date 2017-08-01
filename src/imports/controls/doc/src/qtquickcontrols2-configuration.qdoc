@@ -53,15 +53,28 @@
     Primary=BlueGrey
     \endcode
 
-    \l {Material style} specific values that can be specified in a \c Material
-    section of the configuration file:
+    \section1 Imagine Style Configuration
+
+    The following table lists values that can be used to configure the
+    \l {Imagine style} in an \c Imagine section of the configuration file:
+
+    \include qquickimaginestyle.qdocinc conf
+
+    \section1 Material Style Configuration
+
+    The following table lists values that can be used to configure the
+    \l {Material style} in a \c Material section of the configuration file:
 
     \include qquickmaterialstyle.qdocinc conf
 
-    \l {Universal style} specific values that can be specified in a \c Universal
-    section of the configuration file:
+    \section1 Universal Style Configuration
+
+    The following table lists values that can be used to configure the
+    \l {Universal style} in a \c Universal section of the configuration file:
 
     \include qquickuniversalstyle.qdocinc conf
+
+    \section1 Font Configuration
 
     The default \l {Control::font}{font} can be specified in a \c Font sub-group
     in each style's section in the configuration file. The \c Font sub-group can
@@ -109,6 +122,8 @@
             \li The \l {QFont::}{style}.
                 Available values: \c StyleNormal, \c StyleItalic, \c StyleOblique.
     \endtable
+
+    \section1 Palette Configuration
 
     The default \l {Control::palette}{palette} can be specified in a \c Palette sub-group
     in each style's section in the configuration file. The \c Palette sub-group can be
@@ -192,6 +207,8 @@
             \li \l {QPalette::ColorRole}{\c Link}
             \li A text color used for hyperlinks.
     \endtable
+
+    \section1 Using the Configuration File in a Project
 
     In order to make it possible for Qt Quick Controls 2 to find the configuration file,
     it must be built into application's resources using the \l {The Qt Resource System}.
