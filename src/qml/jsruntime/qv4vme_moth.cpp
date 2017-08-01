@@ -825,12 +825,14 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(Jump)
 
     MOTH_BEGIN_INSTR(JumpEq)
-        if (accumulator.toBoolean())
+        if ((accumulator.integerCompatible() && accumulator.int_32()) ||
+            accumulator.toBoolean())
             code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
     MOTH_END_INSTR(JumpEq)
 
     MOTH_BEGIN_INSTR(JumpNe)
-        if (!accumulator.toBoolean())
+        if ((accumulator.integerCompatible() && !accumulator.int_32()) ||
+            !accumulator.toBoolean())
             code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
     MOTH_END_INSTR(JumpNe)
 
