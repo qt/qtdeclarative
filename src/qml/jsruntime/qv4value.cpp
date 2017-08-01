@@ -77,24 +77,25 @@ int Value::toUInt16() const
 
 bool Value::toBoolean() const
 {
-    if (isInteger() || isBoolean())
+    if (integerCompatible())
         return static_cast<bool>(int_32());
 
-    if (isUndefined() || isNull())
-        return false;
-
-    if (isManaged()) {
+    if (isManagedOrUndefined()) {
+        Heap::Base *b = m();
+        if (!b)
+            return false;
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
 #else
-        if (String *s = stringValue())
-            return s->toQString().length() > 0;
+        if (b->vtable()->isString)
+            return static_cast<Heap::String *>(b)->length() > 0;
 #endif
         return true;
     }
 
     // double
-    return doubleValue() && !std::isnan(doubleValue());
+    double d = doubleValue();
+    return d && !std::isnan(d);
 }
 
 double Value::toInteger() const
