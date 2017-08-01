@@ -201,12 +201,12 @@ TestCase {
         mousePress(control, 0, 0, Qt.LeftButton)
         compare(control.pressed, true)
         verify(spy.success)
-        mouseMove(control, control.width / 4, control.height / 4, 0, Qt.LeftButton)
+        mouseMove(control, control.width / 2, control.height / 2, 0, Qt.LeftButton)
         compare(control.pressed, true)
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
                                 "released",
                                 "clicked"]
-        mouseRelease(control, control.width / 4, control.height / 4, Qt.LeftButton)
+        mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.checked, false)
         compare(control.pressed, false)
         tryCompare(control, "position", 0) // QTBUG-57944
@@ -304,12 +304,12 @@ TestCase {
         touch.press(0, control, 0, 0).commit()
         compare(control.pressed, true)
         verify(spy.success)
-        touch.move(0, control, control.width / 4, control.height / 4).commit()
+        touch.move(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
                                 "released",
                                 "clicked"]
-        touch.release(0, control, control.width / 4, control.height / 4).commit()
+        touch.release(0, control, control.width / 2, control.height / 2).commit()
         compare(control.checked, false)
         compare(control.pressed, false)
         tryCompare(control, "position", 0) // QTBUG-57944
