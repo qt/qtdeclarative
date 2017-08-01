@@ -667,10 +667,7 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallPropertyLookup)
-        Q_ASSERT(instr.callData.index + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.index);
-        callData->tag = quint32(Value::ValueTypeInternal::Integer);
-        callData->argc = instr.argc;
         callData->thisObject = TEMP_VALUE(instr.base);
         STORE_ACCUMULATOR(Runtime::method_callPropertyLookup(engine, instr.lookupIndex, callData));
     MOTH_END_INSTR(CallPropertyLookup)

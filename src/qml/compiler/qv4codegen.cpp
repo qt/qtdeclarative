@@ -1028,11 +1028,19 @@ bool Codegen::visit(CallExpression *ast)
 
     //### Do we really need all these call instructions? can's we load the callee in a temp?
     if (base.type == Reference::Member) {
-        Instruction::CallProperty call;
-        call.base = base.propertyBase.temp();
-        call.name = base.propertyNameIndex;
-        call.callData = calldata;
-        bytecodeGenerator->addInstruction(call);
+        if (useFastLookups) {
+            Instruction::CallPropertyLookup call;
+            call.base = base.propertyBase.temp();
+            call.lookupIndex = registerGetterLookup(base.propertyNameIndex);
+            call.callData = calldata;
+            bytecodeGenerator->addInstruction(call);
+        } else {
+            Instruction::CallProperty call;
+            call.base = base.propertyBase.temp();
+            call.name = base.propertyNameIndex;
+            call.callData = calldata;
+            bytecodeGenerator->addInstruction(call);
+        }
     } else if (base.type == Reference::Subscript) {
         Instruction::CallElement call;
         call.base = base.elementBase;

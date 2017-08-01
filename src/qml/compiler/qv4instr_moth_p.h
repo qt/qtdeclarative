@@ -414,7 +414,6 @@ union Instr
     struct instr_callPropertyLookup {
         MOTH_INSTR_HEADER
         int lookupIndex;
-        int argc;
         Temp callData;
         Temp base;
     };
