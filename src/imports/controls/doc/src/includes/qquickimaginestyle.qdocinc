@@ -1,5 +1,13 @@
 //! [conf]
-TODO
+\table
+    \header
+        \li Variable
+        \li Description
+    \row
+        \li \c Path
+        \li Specifies the \l {imagine-path-attached-prop}{path} to the directory that contains
+        the Imagine style assets.
+\endtable
 //! [conf]
 
 //! [env]
@@ -9,6 +17,7 @@ TODO
         \li Description
     \row
         \li \c QT_QUICK_CONTROLS_IMAGINE_PATH
-        \li TODO
+        \li Specifies the path to the directory that contains the Imagine style assets.
+            If not specified, the built-in assets are used.
 \endtable
 //! [env]
