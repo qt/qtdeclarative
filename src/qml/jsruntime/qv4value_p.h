@@ -559,8 +559,8 @@ inline uint Value::asArrayIndex() const
 
 inline bool Value::asArrayIndex(uint &idx) const
 {
-    if (!isDouble()) {
-        if (isInteger() && int_32() >= 0) {
+    if (Q_LIKELY(!isDouble())) {
+        if (Q_LIKELY(isInteger() && int_32() >= 0)) {
             idx = (uint)int_32();
             return true;
         }
