@@ -224,6 +224,8 @@ private slots:
     void multilineStrings();
 
     void throwError();
+    void throwErrorObject();
+    void returnError();
     void mathMinMax();
 
     void importModule();
@@ -232,7 +234,9 @@ private slots:
     void importExportErrors();
 
 public:
-    Q_INVOKABLE QJSValue throwingCppMethod();
+    Q_INVOKABLE QJSValue throwingCppMethod1();
+    Q_INVOKABLE void throwingCppMethod2();
+    Q_INVOKABLE QJSValue throwingCppMethod3();
 
 signals:
     void testSignal();
@@ -4384,7 +4388,7 @@ void tst_QJSEngine::throwError()
     QJSValue result = engine.evaluate(
                 "function test(){\n"
                 "try {\n"
-                "    return testCase.throwingCppMethod();\n"
+                "    return testCase.throwingCppMethod1();\n"
                 "} catch (error) {\n"
                 "    return error;\n"
                 "}\n"
@@ -4393,15 +4397,68 @@ void tst_QJSEngine::throwError()
                 "test();"
     );
     QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::GenericError);
     QCOMPARE(result.property("lineNumber").toString(), "3");
     QCOMPARE(result.property("message").toString(), "blub");
     QVERIFY(!result.property("stack").isUndefined());
 }
 
-QJSValue tst_QJSEngine::throwingCppMethod()
+void tst_QJSEngine::throwErrorObject()
+{
+    QJSEngine engine;
+    QJSValue wrappedThis = engine.newQObject(this);
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
+    engine.globalObject().setProperty("testCase", wrappedThis);
+
+    QJSValue result = engine.evaluate(
+                "function test(){\n"
+                "    try {\n"
+                "        testCase.throwingCppMethod2();\n"
+                "    } catch (error) {\n"
+                "        if (error instanceof TypeError) {\n"
+                "            return error;\n"
+                "        }\n"
+                "    }\n"
+                "    return null;\n"
+                "}\n"
+                "test();"
+    );
+    QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::TypeError);
+    QCOMPARE(result.property("lineNumber").toString(), "3");
+    QCOMPARE(result.property("message").toString(), "Wrong type");
+    QVERIFY(!result.property("stack").isUndefined());
+}
+
+void tst_QJSEngine::returnError()
+{
+    QJSEngine engine;
+    QJSValue wrappedThis = engine.newQObject(this);
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
+    engine.globalObject().setProperty("testCase", wrappedThis);
+
+    QJSValue result = engine.evaluate("testCase.throwingCppMethod3()");
+    QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::EvalError);
+    QCOMPARE(result.property("lineNumber").toString(), "1");
+    QCOMPARE(result.property("message").toString(), "Something is wrong");
+    QVERIFY(!result.property("stack").isUndefined());
+}
+
+QJSValue tst_QJSEngine::throwingCppMethod1()
 {
     qjsEngine(this)->throwError("blub");
     return QJSValue(47);
+}
+
+void tst_QJSEngine::throwingCppMethod2()
+{
+    qjsEngine(this)->throwError(QJSValue::TypeError, "Wrong type");
+}
+
+QJSValue tst_QJSEngine::throwingCppMethod3()
+{
+    return qjsEngine(this)->newErrorObject(QJSValue::EvalError, "Something is wrong");
 }
 
 void tst_QJSEngine::mathMinMax()

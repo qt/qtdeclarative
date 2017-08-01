@@ -159,6 +159,22 @@
     This is a typedef for a QList<QJSValue>.
 */
 
+/*!
+    \enum QJSValue::ErrorType
+    \since 5.12
+
+    This enum is used to specify a type of Error object.
+
+    \value NoError Not an Error object.
+    \value GenericError A generic Error object, but not of a specific sub-type.
+    \value EvalError An error regarding the global eval() function.
+    \value RangeError A value did not match the expected set or range.
+    \value ReferenceError A non-existing variable referenced.
+    \value SyntaxError Invalid syntax.
+    \value TypeError A value did not match the expected type.
+    \value URIError A URI handling function was used incorrectly.
+*/
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
@@ -371,7 +387,7 @@ bool QJSValue::isUndefined() const
   Returns true if this QJSValue is an object of the Error class;
   otherwise returns false.
 
-  \sa {QJSEngine#Script Exceptions}{QJSEngine - Script Exceptions}
+  \sa errorType(), {QJSEngine#Script Exceptions}{QJSEngine - Script Exceptions}
 */
 bool QJSValue::isError() const
 {
@@ -379,6 +395,41 @@ bool QJSValue::isError() const
     if (!val)
         return false;
     return val->as<ErrorObject>();
+}
+
+/*!
+  \since 5.12
+  Returns the error type this QJSValue represents if it is an Error object.
+  Otherwise, returns \c NoError."
+
+  \sa isError(), {QJSEngine#Script Exceptions}{QJSEngine - Script Exceptions}
+*/
+QJSValue::ErrorType QJSValue::errorType() const
+{
+    QV4::Value *val = QJSValuePrivate::getValue(this);
+    if (!val)
+        return NoError;
+    QV4::ErrorObject *error = val->as<ErrorObject>();
+    if (!error)
+        return NoError;
+    switch (error->d()->errorType) {
+    case QV4::Heap::ErrorObject::Error:
+        return GenericError;
+    case QV4::Heap::ErrorObject::EvalError:
+        return EvalError;
+    case QV4::Heap::ErrorObject::RangeError:
+        return RangeError;
+    case QV4::Heap::ErrorObject::ReferenceError:
+        return ReferenceError;
+    case QV4::Heap::ErrorObject::SyntaxError:
+        return SyntaxError;
+    case QV4::Heap::ErrorObject::TypeError:
+        return TypeError;
+    case QV4::Heap::ErrorObject::URIError:
+        return URIError;
+    }
+    Q_UNREACHABLE();
+    return NoError;
 }
 
 /*!

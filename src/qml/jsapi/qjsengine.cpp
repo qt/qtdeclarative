@@ -45,6 +45,7 @@
 
 #include "private/qv4engine_p.h"
 #include "private/qv4mm_p.h"
+#include "private/qv4errorobject_p.h"
 #include "private/qv4globalobject_p.h"
 #include "private/qv4script_p.h"
 #include "private/qv4runtime_p.h"
@@ -583,6 +584,46 @@ QJSValue QJSEngine::newObject()
 }
 
 /*!
+  \since 5.12
+  Creates a JavaScript object of class Error.
+
+  The prototype of the created object will be \a errorType.
+
+  \sa newObject(), throwError(), QJSValue::isError()
+*/
+QJSValue QJSEngine::newErrorObject(QJSValue::ErrorType errorType, const QString &message)
+{
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedObject error(scope);
+    switch (errorType) {
+    case QJSValue::RangeError:
+        error = m_v4Engine->newRangeErrorObject(message);
+        break;
+    case QJSValue::SyntaxError:
+        error = m_v4Engine->newSyntaxErrorObject(message);
+        break;
+    case QJSValue::TypeError:
+        error = m_v4Engine->newTypeErrorObject(message);
+        break;
+    case QJSValue::URIError:
+        error = m_v4Engine->newURIErrorObject(message);
+        break;
+    case QJSValue::ReferenceError:
+        error = m_v4Engine->newReferenceErrorObject(message);
+        break;
+    case QJSValue::EvalError:
+        error = m_v4Engine->newEvalErrorObject(message);
+        break;
+    case QJSValue::GenericError:
+        error = m_v4Engine->newErrorObject(message);
+        break;
+    case QJSValue::NoError:
+        return QJSValue::UndefinedValue;
+    }
+    return QJSValue(m_v4Engine, error->asReturnedValue());
+}
+
+/*!
   Creates a JavaScript object of class Array with the given \a length.
 
   \sa newObject()
@@ -892,6 +933,37 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 void QJSEngine::throwError(const QString &message)
 {
     m_v4Engine->throwError(message);
+}
+
+/*!
+    Throws a run-time error (exception) with the given \a errorType and
+    \a message.
+
+    \code
+    // Assuming that DataEntry is a QObject-derived class that has been
+    // registered as a singleton type and provides an invokable method
+    // setAge().
+
+    void DataEntry::setAge(int age) {
+      if (age < 0 || age > 200) {
+        jsEngine->throwError(QJSValue::RangeError,
+                             "Age must be between 0 and 200");
+      }
+      ...
+    }
+    \endcode
+
+    \since Qt 5.12
+    \sa {Script Exceptions}, newErrorObject()
+*/
+void QJSEngine::throwError(QJSValue::ErrorType errorType, const QString &message)
+{
+    QV4::Scope scope(m_v4Engine);
+    QJSValue error = newErrorObject(errorType, message);
+    QV4::ScopedObject e(scope, QJSValuePrivate::getValue(&error));
+    if (!e)
+        return;
+    m_v4Engine->throwError(e);
 }
 
 QJSEnginePrivate *QJSEnginePrivate::get(QV4::ExecutionEngine *e)

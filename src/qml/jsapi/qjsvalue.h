@@ -68,6 +68,17 @@ public:
         UndefinedValue
     };
 
+    enum ErrorType {
+        NoError,
+        GenericError,
+        EvalError,
+        RangeError,
+        ReferenceError,
+        SyntaxError,
+        TypeError,
+        URIError
+    };
+
 public:
     QJSValue(SpecialValue value = UndefinedValue);
     ~QJSValue();
@@ -137,6 +148,7 @@ public:
     QJSValue callWithInstance(const QJSValue &instance, const QJSValueList &args = QJSValueList()); // ### Qt6: Make const
     QJSValue callAsConstructor(const QJSValueList &args = QJSValueList()); // ### Qt6: Make const
 
+    ErrorType errorType() const;
 #ifdef QT_DEPRECATED
     QT_DEPRECATED QJSEngine *engine() const;
 #endif

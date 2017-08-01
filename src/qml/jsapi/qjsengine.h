@@ -84,6 +84,8 @@ public:
         return newQMetaObject(&T::staticMetaObject);
     }
 
+    QJSValue newErrorObject(QJSValue::ErrorType errorType, const QString &message = QString());
+
     template <typename T>
     inline QJSValue toScriptValue(const T &value)
     {
@@ -114,6 +116,7 @@ public:
     QV4::ExecutionEngine *handle() const { return m_v4Engine; }
 
     void throwError(const QString &message);
+    void throwError(QJSValue::ErrorType errorType, const QString &message = QString());
 
 private:
     QJSValue create(int type, const void *ptr);
