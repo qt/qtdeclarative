@@ -136,7 +136,7 @@ Q_QML_EXPORT int qt_v4DebuggerHook(const char *json);
 
 #ifndef QT_NO_QML_DEBUGGER
 static int qt_v4BreakpointCount = 0;
-static bool qt_v4IsDebugging = true;
+static bool qt_v4IsDebugging = false;
 static bool qt_v4IsStepping = false;
 
 class Breakpoint
@@ -213,6 +213,7 @@ int qt_v4DebuggerHook(const char *json)
         bp.fullName = ob.value(QLatin1String("fullName")).toString();
         bp.condition = ob.value(QLatin1String("condition")).toString();
         qt_v4Breakpoints.append(bp);
+        qt_v4IsDebugging = true;
         return bp.bpNumber;
     }
 
@@ -221,6 +222,7 @@ int qt_v4DebuggerHook(const char *json)
         QString fullName = ob.value(QLatin1String("fullName")).toString();
         if (qt_v4Breakpoints.last().matches(fullName, lineNumber)) {
             qt_v4Breakpoints.removeLast();
+            qt_v4IsDebugging = !qt_v4Breakpoints.isEmpty();
             return Success;
         }
         for (int i = 0; i + 1 < qt_v4Breakpoints.size(); ++i) {
