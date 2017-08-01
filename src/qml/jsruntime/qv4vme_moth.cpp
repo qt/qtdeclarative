@@ -825,7 +825,8 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(UPlus)
 
     MOTH_BEGIN_INSTR(UMinus)
-        if (Q_LIKELY(accumulator.isInteger() && accumulator.int_32() != 0)) {
+        if (Q_LIKELY(accumulator.isInteger() && accumulator.int_32() != 0 &&
+                accumulator.int_32() != std::numeric_limits<int>::min())) {
             accumulator = sub_int32(0, accumulator.int_32());
         } else {
             STORE_ACCUMULATOR(Runtime::method_uMinus(accumulator));

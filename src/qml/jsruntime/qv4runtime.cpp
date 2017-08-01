@@ -1496,7 +1496,8 @@ ReturnedValue Runtime::method_uMinus(const Value &value)
     TRACE1(value);
 
     // +0 != -0, so we need to convert to double when negating 0
-    if (value.isInteger() && value.integerValue())
+    if (value.isInteger() && value.integerValue() &&
+            value.integerValue() != std::numeric_limits<int>::min())
         return Encode(-value.integerValue());
     else {
         double n = RuntimeHelpers::toNumber(value);
