@@ -877,7 +877,7 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(UNot)
 
     MOTH_BEGIN_INSTR(UPlus)
-        if (!accumulator.isInteger()) {
+        if (!accumulator.isNumber()) {
             STORE_ACCUMULATOR(Runtime::method_uPlus(accumulator));
         }
     MOTH_END_INSTR(UPlus)
@@ -902,6 +902,8 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_BEGIN_INSTR(Increment)
         if (Q_LIKELY(accumulator.isInteger())) {
             accumulator = add_int32(accumulator.int_32(), 1);
+        } else if (accumulator.isDouble()) {
+            accumulator = QV4::Encode(accumulator.doubleValue() + 1.);
         } else {
             STORE_ACCUMULATOR(Runtime::method_increment(accumulator));
         }
@@ -910,6 +912,8 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_BEGIN_INSTR(Decrement)
         if (Q_LIKELY(accumulator.isInteger())) {
             accumulator = sub_int32(accumulator.int_32(), 1);
+        } else if (accumulator.isDouble()) {
+            accumulator = QV4::Encode(accumulator.doubleValue() - 1.);
         } else {
             STORE_ACCUMULATOR(Runtime::method_decrement(accumulator));
         }
