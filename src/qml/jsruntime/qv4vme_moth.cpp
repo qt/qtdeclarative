@@ -413,6 +413,11 @@ static inline void storeArg(ExecutionEngine *engine, QV4::Heap::ExecutionContext
         *slot = value;
 }
 
+static inline const QV4::Value &constant(ExecutionEngine *engine, int index)
+{
+    return engine->current->constantTable[index];
+}
+
 QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
 {
 #ifdef DO_TRACE_INSTR
@@ -472,11 +477,11 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
 #endif
 
     MOTH_BEGIN_INSTR(LoadConst)
-        accumulator = static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->constants[instr.index];
+        accumulator = constant(engine, instr.index);
     MOTH_END_INSTR(LoadConst)
 
     MOTH_BEGIN_INSTR(MoveConst)
-        TEMP_VALUE(instr.destTemp) = static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->constants[instr.constIndex];
+        TEMP_VALUE(instr.destTemp) = constant(engine, instr.constIndex);
     MOTH_END_INSTR(MoveConst)
 
     MOTH_BEGIN_INSTR(LoadReg)
