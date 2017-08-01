@@ -185,7 +185,9 @@ void MathObject::method_exp(const BuiltinFunction *, Scope &scope, CallData *cal
 void MathObject::method_floor(const BuiltinFunction *, Scope &scope, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    RETURN_RESULT(Encode(std::floor(v)));
+    Value result = Primitive::fromDouble(std::floor(v));
+    result.isInt32();
+    RETURN_RESULT(result);
 }
 
 void MathObject::method_log(const BuiltinFunction *, Scope &scope, CallData *callData)

@@ -744,7 +744,10 @@ bool Codegen::visit(BinaryExpression *ast)
         expression(ast->right).loadInAccumulator();
         if (hasError)
             return false;
-        _expr.setResult(left.storeRetainAccumulator());
+        if (_expr.accept(nx))
+            _expr.setResult(left.storeConsumeAccumulator());
+        else
+            _expr.setResult(left.storeRetainAccumulator());
         break;
     }
 
@@ -809,13 +812,18 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::LShift:
     case QSOperator::RShift:
     case QSOperator::URShift: {
-        auto tempLeft = left.storeInTemp(); // force any loads of the lhs, so the rhs won't clobber it
-
-        Reference right = expression(ast->right);
+        Reference right;
+        if (AST::NumericLiteral *rhs = AST::cast<AST::NumericLiteral *>(ast->right)) {
+            visit(rhs);
+            right = _expr.result();
+        } else {
+            left = left.storeInTemp(); // force any loads of the lhs, so the rhs won't clobber it
+            right = expression(ast->right);
+        }
         if (hasError)
             return false;
 
-        _expr.setResult(binopHelper(static_cast<QSOperator::Op>(ast->op), tempLeft, right));
+        _expr.setResult(binopHelper(static_cast<QSOperator::Op>(ast->op), left, right));
 
         break;
     }
@@ -829,6 +837,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
 {
     switch (oper) {
     case QSOperator::Add: {
+        left = left.storeInTemp();
         right.loadInAccumulator();
         Instruction::Add add;
         add.lhs = left.temp();
@@ -836,6 +845,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::Sub: {
+        left = left.storeInTemp();
         right.loadInAccumulator();
         Instruction::Sub sub;
         sub.lhs = left.temp();
@@ -843,6 +853,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::Mul: {
+        left = left.storeInTemp();
         right.loadInAccumulator();
         Instruction::Mul mul;
         mul.lhs = left.temp();
@@ -922,14 +933,21 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         else
             binop.alu = QV4::Runtime::in;
         Q_ASSERT(binop.alu != QV4::Runtime::InvalidRuntimeMethod);
+        left = left.storeInTemp();
         right.loadInAccumulator();
         binop.lhs = left.temp();
         bytecodeGenerator->addInstruction(binop);
         break;
     }
+    case QSOperator::Equal:
+    case QSOperator::NotEqual:
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+        // else: fallthrough
     default: {
         auto binopFunc = aluOpFunction(oper);
         Q_ASSERT(binopFunc != QV4::Runtime::InvalidRuntimeMethod);
+        left = left.storeInTemp();
         right.loadInAccumulator();
         Instruction::Binop binop;
         binop.alu = binopFunc;
@@ -940,6 +958,46 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
     }
 
     return Reference::fromAccumulator(this);
+}
+
+static QSOperator::Op invert(QSOperator::Op oper)
+{
+    switch (oper) {
+    case QSOperator::Equal: return QSOperator::NotEqual;
+    case QSOperator::NotEqual: return QSOperator::Equal;
+    default: Q_UNIMPLEMENTED(); return QSOperator::Invalid;
+    }
+}
+
+Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Reference &right)
+{
+    left = left.storeInTemp();
+    right = right.storeInTemp();
+    const BytecodeGenerator::Label *jumpTarget = _expr.iftrue();
+    if (_expr.trueBlockFollowsCondition()) {
+        oper = invert(oper);
+        std::swap(left, right);
+        jumpTarget = _expr.iffalse();
+    }
+
+    switch (oper) {
+    case QSOperator::Equal: {
+        Instruction::CmpJmpEq cjump;
+        cjump.lhs = left.temp();
+        cjump.rhs = right.temp();
+        bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+        break;
+    }
+    case QSOperator::NotEqual: {
+        Instruction::CmpJmpNe cjump;
+        cjump.lhs = left.temp();
+        cjump.rhs = right.temp();
+        bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+        break;
+    }
+    default: Q_UNIMPLEMENTED(); Q_UNREACHABLE();
+    }
+    return Reference();
 }
 
 bool Codegen::visit(CallExpression *ast)
@@ -2628,7 +2686,7 @@ Codegen::Reference Codegen::Reference::asLValue() const
 Codegen::Reference Codegen::Reference::storeConsumeAccumulator() const
 {
     storeAccumulator(); // it doesn't matter what happens here, just do it.
-    return Reference::fromAccumulator(codegen);
+    return Reference();
 }
 
 Codegen::Reference Codegen::Reference::storeInTemp(int tempIndex) const

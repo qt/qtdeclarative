@@ -836,6 +836,32 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
             code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
     MOTH_END_INSTR(JumpNe)
 
+    MOTH_BEGIN_INSTR(CmpJmpEq)
+        const Value lhs = TEMP_VALUE(instr.lhs);
+        const Value rhs = TEMP_VALUE(instr.rhs);
+        if (Q_LIKELY(lhs.asReturnedValue() == rhs.asReturnedValue())) {
+            code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        } else if (Q_LIKELY(lhs.isInteger() && rhs.isInteger())) {
+            if (lhs.int_32() == rhs.int_32())
+                code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        } else {
+            if (Runtime::method_compareEqual(lhs, rhs))
+                code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        }
+    MOTH_END_INSTR(CmpJmpEq)
+
+    MOTH_BEGIN_INSTR(CmpJmpNe)
+        const Value lhs = TEMP_VALUE(instr.lhs);
+        const Value rhs = TEMP_VALUE(instr.rhs);
+        if (Q_LIKELY(lhs.isInteger() && rhs.isInteger())) {
+            if (lhs.int_32() != rhs.int_32())
+                code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        } else {
+            if (Runtime::method_compareNotEqual(lhs, rhs))
+                code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        }
+    MOTH_END_INSTR(CmpJmpNe)
+
     MOTH_BEGIN_INSTR(JumpStrictEqual)
         if (RuntimeHelpers::strictEqual(TEMP_VALUE(instr.lhs), accumulator))
             code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;

@@ -198,11 +198,6 @@ public:
 
     QByteArray finalize();
 
-private:
-    friend struct Jump;
-    friend struct Label;
-    friend struct ExceptionHandler;
-
     template<int InstrT>
     Jump addJumpInstruction(const InstrData<InstrT> &data)
     {
@@ -211,6 +206,11 @@ private:
         InstrMeta<InstrT>::setDataNoCommon(genericInstr, data);
         return Jump(this, addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr), offsetof(InstrData<InstrT>, offset));
     }
+
+private:
+    friend struct Jump;
+    friend struct Label;
+    friend struct ExceptionHandler;
 
     int addInstructionHelper(uint size, const Instr &i) {
         int pos = instructions.size();

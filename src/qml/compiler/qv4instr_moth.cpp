@@ -397,6 +397,14 @@ void dumpBytecode(const char *code, int len)
             d << "acc  " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(JumpNe)
 
+        MOTH_BEGIN_INSTR(CmpJmpEq)
+            d << instr.lhs << ", " << instr.rhs << ", " << absoluteInstructionOffset(start, instr);
+        MOTH_END_INSTR(CmpJmpEq)
+
+        MOTH_BEGIN_INSTR(CmpJmpNe)
+                d << instr.lhs << ", " << instr.rhs << ", " << absoluteInstructionOffset(start, instr);
+        MOTH_END_INSTR(CmpJmpNe)
+
         MOTH_BEGIN_INSTR(JumpStrictEqual)
             d << instr.lhs << "  " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(JumpStrictEqual)
@@ -428,7 +436,7 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(Binop)
 
         MOTH_BEGIN_INSTR(Add)
-            d << instr.lhs;
+            d << instr.lhs << ", acc";
         MOTH_END_INSTR(Add)
 
         MOTH_BEGIN_INSTR(BitAnd)
