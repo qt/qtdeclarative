@@ -310,7 +310,10 @@ struct ControlFlowCatch : public ControlFlowUnwind
     }
 
     virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
-        Handler h = ControlFlowUnwind::getHandler(type, label);
+        Handler h = getParentHandler(type, label);
+        if (h.type == Invalid)
+            return h;
+        h = ControlFlowUnwind::getHandler(type, label);
         if (insideCatch)
             // if we're inside the catch block, we need to jump to the pop scope
             // instruction at the end of the catch block, not the unwind handler
