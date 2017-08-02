@@ -256,7 +256,13 @@ struct Function
     inline bool hasQmlDependencies() const { return nDependingIdObjects > 0 || nDependingContextProperties > 0 || nDependingScopeProperties > 0; }
 
     static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int nIdObjectDependencies, int nPropertyDependencies) {
-        return (sizeof(Function) + (nFormals + nLocals + nInnerfunctions + nIdObjectDependencies + 2 * nPropertyDependencies) * sizeof(quint32) + 7) & ~0x7;
+        int trailingData = nFormals + nLocals + nInnerfunctions +  nIdObjectDependencies +
+                2 * nPropertyDependencies;
+        return align(align(sizeof(Function)) + size_t(trailingData) * sizeof(quint32));
+    }
+
+    static size_t align(size_t a) {
+        return (a + 7) & ~size_t(7);
     }
 };
 
