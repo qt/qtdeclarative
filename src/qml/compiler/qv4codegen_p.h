@@ -219,7 +219,7 @@ public:
         }
         static Reference fromArgument(Codegen *cg, int index) {
             Reference r(cg, StackSlot);
-            r.theStackSlot = Moth::StackSlot::createArgument(index);
+            r.theStackSlot = Moth::StackSlot::createArgument(cg->currentContext()->arguments.size(), index);
             r.stackSlotIsLocalOrArgument = true;
             return r;
         }
@@ -613,6 +613,8 @@ public:
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> generateCompilationUnit(bool generateUnitData = true);
     static QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading();
+
+    Context *currentContext() const { return _context; }
 
 protected:
     friend class ScanFunctions;

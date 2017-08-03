@@ -458,10 +458,9 @@ QV4::ReturnedValue VME::exec(Function *function)
     QV4::Scope scope(engine);
     {
         int nFormals = function->nFormals;
-        stack = scope.alloc(function->compiledFunction->nRegisters + nFormals) + nFormals;
-        auto cc = engine->current;
-        for (int i = 0, ei = std::min<int>(cc->callData->argc, nFormals); i != ei; ++i)
-            stack[-i-1] = cc->callData->args[i];
+        stack = scope.alloc(function->compiledFunction->nRegisters + nFormals + 1);
+        memcpy(stack, &engine->current->callData->thisObject, (nFormals + 1)*sizeof(Value));
+        stack += nFormals + 1;
     }
 
     if (QV4::Debugging::Debugger *debugger = engine->debugger())

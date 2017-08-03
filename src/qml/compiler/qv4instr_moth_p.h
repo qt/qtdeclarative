@@ -192,10 +192,10 @@ public:
         return t;
     }
 
-    static StackSlot createArgument(int index) {
+    static StackSlot createArgument(int nFormals, int index) {
         Q_ASSERT(index >= 0);
         StackSlot t;
-        t.index = -index - 1;
+        t.index = index - nFormals;
         return t;
     }
 
