@@ -214,7 +214,7 @@ struct ControlFlowUnwind : public ControlFlow
         : ControlFlow(cg, type), unwindLabel(generator()->newExceptionHandler())
     {
         Q_ASSERT(type != Loop);
-        controlFlowTemp = static_cast<int>(generator()->newTemp());
+        controlFlowTemp = static_cast<int>(generator()->newRegister());
         Reference::storeConstOnStack(cg, QV4::Encode::undefined(), controlFlowTemp);
         // we'll need at least a handler for throw
         getHandler(Throw);
@@ -226,7 +226,7 @@ struct ControlFlowUnwind : public ControlFlow
 
         Reference temp = Reference::fromStackSlot(cg, controlFlowTemp);
         for (const auto &h : qAsConst(handlers)) {
-            Codegen::TempScope tempScope(cg);
+            Codegen::RegisterScope tempScope(cg);
             Handler parentHandler = getParentHandler(h.type, h.label);
 
             if (h.type == Throw || parentHandler.tempIndex >= 0) {
@@ -387,10 +387,10 @@ struct ControlFlowFinally : public ControlFlowUnwind
         // emit code for unwinding
         unwindLabel.link();
 
-        Codegen::TempScope scope(cg);
+        Codegen::RegisterScope scope(cg);
 
         insideFinally = true;
-        exceptionTemp = generator()->newTemp();
+        exceptionTemp = generator()->newRegister();
         Instruction::GetException instr;
         generator()->addInstruction(instr);
         Reference::fromStackSlot(cg, exceptionTemp).storeConsumeAccumulator();

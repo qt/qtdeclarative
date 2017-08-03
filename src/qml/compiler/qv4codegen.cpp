@@ -280,7 +280,7 @@ void Codegen::accept(Node *node)
 
 void Codegen::statement(Statement *ast)
 {
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     bytecodeGenerator->setLocation(ast->firstSourceLocation());
     accept(ast);
@@ -288,7 +288,7 @@ void Codegen::statement(Statement *ast)
 
 void Codegen::statement(ExpressionNode *ast)
 {
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     if (! ast) {
         return;
@@ -371,7 +371,7 @@ void Codegen::sourceElements(SourceElements *ast)
 
 void Codegen::variableDeclaration(VariableDeclaration *ast)
 {
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     if (!ast->expression)
         return;
@@ -582,19 +582,19 @@ bool Codegen::visit(ArrayLiteral *ast)
     if (hasError)
         return false;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     int argc = 0;
     int args = -1;
     auto push = [this, &argc, &args](AST::ExpressionNode *arg) {
-        int temp = bytecodeGenerator->newTemp();
+        int temp = bytecodeGenerator->newRegister();
         if (args == -1)
             args = temp;
         if (!arg) {
             auto c = Reference::fromConst(this, Primitive::emptyValue().asReturnedValue());
             (void) c.storeOnStack(temp);
         } else {
-            TempScope scope(this);
+            RegisterScope scope(this);
             (void) expression(arg).storeOnStack(temp);
         }
         ++argc;
@@ -1005,7 +1005,7 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError)
         return false;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     Reference base = expression(ast->base);
     if (hasError)
@@ -1074,14 +1074,14 @@ Moth::StackSlot Codegen::pushArgs(ArgumentList *args)
     int argc = 0;
     for (ArgumentList *it = args; it; it = it->next)
         ++argc;
-    int calldata = bytecodeGenerator->newTempArray(argc + 2); // 2 additional values for CallData
+    int calldata = bytecodeGenerator->newRegisterArray(argc + 2); // 2 additional values for CallData
 
     (void) Reference::fromConst(this, QV4::Encode(argc)).storeOnStack(calldata);
     (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + 1);
 
     argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
-        TempScope scope(this);
+        RegisterScope scope(this);
         Reference e = expression(it->expression);
         if (hasError)
             break;
@@ -1097,7 +1097,7 @@ bool Codegen::visit(ConditionalExpression *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     BytecodeGenerator::Label iftrue = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label iffalse = bytecodeGenerator->newLabel();
@@ -1210,7 +1210,7 @@ bool Codegen::visit(FunctionExpression *ast)
     if (hasError)
         return false;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
     _expr.setResult(Reference::fromClosure(this, function));
@@ -1295,7 +1295,7 @@ bool Codegen::visit(NewExpression *ast)
     if (hasError)
         return false;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     Reference base = expression(ast->expression);
     if (hasError)
@@ -1318,7 +1318,7 @@ bool Codegen::visit(NewMemberExpression *ast)
     if (hasError)
         return false;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     Reference base = expression(ast->base);
     if (hasError)
@@ -1375,7 +1375,7 @@ bool Codegen::visit(ObjectLiteral *ast)
 
     QMap<QString, ObjectPropertyValue> valueMap;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
         QString name = it->assignment->name->asString();
@@ -1433,7 +1433,7 @@ bool Codegen::visit(ObjectLiteral *ast)
 
     int args = -1;
     auto push = [this, &args](const Reference &arg) {
-        int temp = bytecodeGenerator->newTemp();
+        int temp = bytecodeGenerator->newRegister();
         if (args == -1)
             args = temp;
         (void) arg.storeOnStack(temp);
@@ -1632,7 +1632,7 @@ bool Codegen::visit(TypeOfExpression *ast)
     if (hasError)
         return false;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     Reference expr = expression(ast->expression);
     if (hasError)
@@ -1676,7 +1676,7 @@ bool Codegen::visit(VoidExpression *ast)
     if (hasError)
         return false;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     statement(ast->expression);
     _expr.setResult(Reference::fromConst(this, Encode::undefined()));
@@ -1688,7 +1688,7 @@ bool Codegen::visit(FunctionDeclaration * ast)
     if (hasError)
         return false;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     if (_context->compilationMode == QmlBinding) {
         Reference::fromName(this, ast->name.toString()).loadInAccumulator();
@@ -1723,7 +1723,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
 
-    int returnAddress = bytecodeGenerator->newTemp();
+    int returnAddress = bytecodeGenerator->newRegister();
 
     if (!_context->parent || _context->usesArgumentsObject == Context::ArgumentsObjectUnknown)
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
@@ -1742,7 +1742,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
                 it->index = _context->locals.size();
                 _context->locals.append(local);
             } else {
-                it->index = bytecodeGenerator->newTemp();
+                it->index = bytecodeGenerator->newRegister();
             }
         }
     } else {
@@ -1838,7 +1838,7 @@ bool Codegen::visit(Block *ast)
     if (hasError)
         return false;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     for (StatementList *it = ast->statements; it; it = it->next) {
         statement(it->statement);
@@ -1875,7 +1875,7 @@ bool Codegen::visit(ContinueStatement *ast)
     if (hasError)
         return false;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     if (!_context->controlFlow) {
         throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Continue outside of loop"));
@@ -1907,7 +1907,7 @@ bool Codegen::visit(DoWhileStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     BytecodeGenerator::Label body = bytecodeGenerator->label();
     BytecodeGenerator::Label cond = bytecodeGenerator->newLabel();
@@ -1938,7 +1938,7 @@ bool Codegen::visit(ExpressionStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     if (_context->compilationMode == EvalCode || _context->compilationMode == QmlBinding) {
         Reference e = expression(ast->expression);
@@ -1956,7 +1956,7 @@ bool Codegen::visit(ForEachStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     Reference obj = Reference::fromStackSlot(this);
     Reference expr = expression(ast->expression);
@@ -2001,7 +2001,7 @@ bool Codegen::visit(ForStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     statement(ast->initialiser);
 
@@ -2031,7 +2031,7 @@ bool Codegen::visit(IfStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     BytecodeGenerator::Label trueLabel = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label falseLabel = bytecodeGenerator->newLabel();
@@ -2056,7 +2056,7 @@ bool Codegen::visit(LabelledStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     // check that no outer loop contains the label
     ControlFlow *l = _context->controlFlow;
@@ -2093,7 +2093,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     Reference obj = Reference::fromStackSlot(this);
     Reference expr = expression(ast->expression);
@@ -2138,7 +2138,7 @@ bool Codegen::visit(LocalForStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     variableDeclarationList(ast->declarations);
 
@@ -2193,7 +2193,7 @@ bool Codegen::visit(SwitchStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     if (ast->block) {
         BytecodeGenerator::Label switchEnd = bytecodeGenerator->newLabel();
@@ -2274,7 +2274,7 @@ bool Codegen::visit(ThrowStatement *ast)
     if (hasError)
         return false;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     Reference expr = expression(ast->expression);
     if (hasError)
@@ -2299,11 +2299,11 @@ void Codegen::handleTryCatch(TryStatement *ast)
         return;
     }
 
-    TempScope scope(this);
+    RegisterScope scope(this);
     BytecodeGenerator::Label noException = bytecodeGenerator->newLabel();
     {
         ControlFlowCatch catchFlow(this, ast->catchExpression);
-        TempScope scope(this);
+        RegisterScope scope(this);
         statement(ast->statement);
         bytecodeGenerator->jump().link(noException);
     }
@@ -2312,13 +2312,13 @@ void Codegen::handleTryCatch(TryStatement *ast)
 
 void Codegen::handleTryFinally(TryStatement *ast)
 {
-    TempScope scope(this);
+    RegisterScope scope(this);
     ControlFlowFinally finally(this, ast->finallyExpression);
 
     if (ast->catchExpression) {
         handleTryCatch(ast);
     } else {
-        TempScope scope(this);
+        RegisterScope scope(this);
         statement(ast->statement);
     }
 }
@@ -2330,7 +2330,7 @@ bool Codegen::visit(TryStatement *ast)
 
     Q_ASSERT(_context->hasTry);
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     if (ast->finallyExpression && ast->finallyExpression->statement) {
         handleTryFinally(ast);
@@ -2376,7 +2376,7 @@ bool Codegen::visit(WithStatement *ast)
     if (hasError)
         return true;
 
-    TempScope scope(this);
+    RegisterScope scope(this);
 
     _context->hasWith = true;
 

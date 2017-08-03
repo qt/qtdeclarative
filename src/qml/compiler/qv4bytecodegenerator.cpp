@@ -54,20 +54,20 @@ void BytecodeGenerator::setLocation(const QQmlJS::AST::SourceLocation &loc)
     addInstruction(line); //### put line numbers in a side-table, not in the instruction stream
 }
 
-int BytecodeGenerator::newTemp()
+int BytecodeGenerator::newRegister()
 {
-    int t = currentTemp++;
-    if (tempCount < currentTemp)
-        tempCount = currentTemp;
+    int t = currentReg++;
+    if (regCount < currentReg)
+        regCount = currentReg;
     return t;
 }
 
-int BytecodeGenerator::newTempArray(int n)
+int BytecodeGenerator::newRegisterArray(int n)
 {
-    int t = currentTemp;
-    currentTemp += n;
-    if (tempCount < currentTemp)
-        tempCount = currentTemp;
+    int t = currentReg;
+    currentReg += n;
+    if (regCount < currentReg)
+        regCount = currentReg;
     return t;
 }
 
@@ -77,7 +77,7 @@ QByteArray BytecodeGenerator::finalize()
 
     Instruction::InitStackFrame init;
     init.instructionType = Instr::InitStackFrame;
-    init.value = tempCount;
+    init.value = regCount;
     code.append(reinterpret_cast<const char *>(&init), InstrMeta<Instr::InitStackFrame>::Size);
 
     // content

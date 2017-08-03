@@ -209,7 +209,7 @@ public:
         static Reference fromStackSlot(Codegen *cg, int tempIndex = -1, bool isLocal = false) {
             Reference r(cg, StackSlot);
             if (tempIndex == -1)
-                tempIndex = cg->bytecodeGenerator->newTemp();
+                tempIndex = cg->bytecodeGenerator->newRegister();
             r.theStackSlot = Moth::StackSlot::create(tempIndex);
             r.stackSlotIsLocal = isLocal;
             return r;
@@ -328,15 +328,15 @@ public:
         void storeAccumulator() const;
     };
 
-    struct TempScope {
-        TempScope(Codegen *cg)
+    struct RegisterScope {
+        RegisterScope(Codegen *cg)
             : generator(cg->bytecodeGenerator),
-              tempCountForScope(generator->currentTemp) {}
-        ~TempScope() {
-            generator->currentTemp = tempCountForScope;
+              regCountForScope(generator->currentReg) {}
+        ~RegisterScope() {
+            generator->currentReg = regCountForScope;
         }
         BytecodeGenerator *generator;
-        int tempCountForScope;
+        int regCountForScope;
     };
 
     struct ObjectPropertyValue {

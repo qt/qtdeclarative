@@ -2048,8 +2048,8 @@ static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, 
 
 void JSCodeGen::beginFunctionBodyHook()
 {
-    _qmlContextSlot = bytecodeGenerator->newTemp();
-    _importedScriptsSlot = bytecodeGenerator->newTemp();
+    _qmlContextSlot = bytecodeGenerator->newRegister();
+    _importedScriptsSlot = bytecodeGenerator->newRegister();
 
 #ifndef V4_BOOTSTRAP
     Instruction::LoadQmlContext load;
