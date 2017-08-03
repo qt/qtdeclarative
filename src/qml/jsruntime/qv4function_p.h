@@ -63,7 +63,7 @@ struct Q_QML_EXPORT Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
 
-    ReturnedValue (*code)(Function *, ExecutionEngine *);
+    ReturnedValue (*code)(Function *);
     const uchar *codeData;
 
     // first nArguments names in internalClass are the actual arguments
@@ -73,7 +73,7 @@ struct Q_QML_EXPORT Function {
     bool canUseSimpleCall;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
-             ReturnedValue (*codePtr)(Function *, ExecutionEngine *));
+             ReturnedValue (*codePtr)(Function *));
     ~Function();
 
     // used when dynamically assigning signal handlers (QQmlConnection)

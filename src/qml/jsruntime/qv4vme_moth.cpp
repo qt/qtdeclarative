@@ -419,7 +419,7 @@ static inline const QV4::Value &constant(Function *function, int index)
     return function->compilationUnit->constants[index];
 }
 
-QV4::ReturnedValue VME::exec(Function *function, ExecutionEngine *engine)
+QV4::ReturnedValue VME::exec(Function *function)
 {
 #ifdef DO_TRACE_INSTR
     qDebug("Starting VME with context=%p and code=%p", context, code);
@@ -434,6 +434,8 @@ QV4::ReturnedValue VME::exec(Function *function, ExecutionEngine *engine)
     };
 #undef MOTH_INSTR_ADDR
 #endif
+
+    ExecutionEngine *engine = function->internalClass->engine;
 
     // Arguments/locals are used a *lot*, and pre-fetching them removes a whole bunch of triple
     // (or quadruple) indirect loads.
