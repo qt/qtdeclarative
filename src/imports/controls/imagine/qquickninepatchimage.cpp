@@ -126,7 +126,7 @@ private:
 QQuickNinePatchNode::QQuickNinePatchNode()
     : m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
 {
-    m_geometry.setDrawingMode(GL_TRIANGLES);
+    m_geometry.setDrawingMode(QSGGeometry::DrawTriangles);
     setGeometry(&m_geometry);
     setMaterial(&m_material);
 }
