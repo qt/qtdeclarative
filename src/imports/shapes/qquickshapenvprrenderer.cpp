@@ -370,11 +370,11 @@ void QQuickShapeNvprRenderer::updateNode()
         }
 
         if (dirty & DirtyDash) {
-            dst.dashOffset = src.dashOffset;
+            // Multiply by strokeWidth because the Shape API follows QPen
+            // meaning the input dash pattern and dash offset here are in width units.
+            dst.dashOffset = src.dashOffset * src.strokeWidth;
             if (src.dashActive) {
                 dst.dashPattern.resize(src.dashPattern.count());
-                // Multiply by strokeWidth because the Shape API follows QPen
-                // meaning the input dash pattern here is in width units.
                 for (int i = 0; i < src.dashPattern.count(); ++i)
                     dst.dashPattern[i] = GLfloat(src.dashPattern[i]) * src.strokeWidth;
             } else {
