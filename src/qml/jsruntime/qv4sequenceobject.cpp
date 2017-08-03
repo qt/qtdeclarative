@@ -66,10 +66,10 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
     QQmlError retn;
     retn.setDescription(description);
 
-    QV4::StackFrame frame = v4->currentStackFrame();
+    QV4::StackFrame *stackFrame = v4->currentStackFrame;
 
-    retn.setLine(frame.line);
-    retn.setUrl(QUrl(frame.source));
+    retn.setLine(stackFrame->line);
+    retn.setUrl(QUrl(stackFrame->source()));
     QQmlEnginePrivate::warning(engine, retn);
 }
 

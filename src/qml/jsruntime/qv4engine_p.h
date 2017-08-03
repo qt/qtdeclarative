@@ -408,7 +408,6 @@ public:
 
 
     StackTrace stackTrace(int frameLimit = -1) const;
-    StackFrame currentStackFrame() const;
     QUrl resolvedUrl(const QString &file);
 
     void requireArgumentsAccessors(int n);

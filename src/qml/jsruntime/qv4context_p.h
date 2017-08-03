@@ -107,8 +107,6 @@ struct QmlContext;
     Member(class, Pointer, ExecutionContext *, outer) \
     Member(class, Pointer, Object *, activation) \
     Member(class, NoMark, QV4::Function *, v4Function) \
-    Member(class, NoMark, int, lineNumber) // as member of non-pointer size this has to come last to preserve the ability to
-                                           // translate offsetof of it between 64-bit and 32-bit.
 
 DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
     DECLARE_MARK_TABLE(ExecutionContext);
@@ -127,7 +125,6 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
         Base::init();
 
         type = t;
-        lineNumber = -1;
     }
 
     quint8 type;
@@ -146,7 +143,6 @@ Q_STATIC_ASSERT(offsetof(ExecutionContextData, callData) == 0);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == offsetof(ExecutionContextData, callData) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, activation) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, v4Function) == offsetof(ExecutionContextData, activation) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, lineNumber) == offsetof(ExecutionContextData, v4Function) + QT_POINTER_SIZE);
 
 #define CallContextMembers(class, Member) \
     Member(class, Pointer, FunctionObject *, function) \

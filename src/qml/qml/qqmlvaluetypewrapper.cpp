@@ -472,13 +472,13 @@ bool QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
                 if (auto binding = QQmlPropertyPrivate::binding(referenceObject, QQmlPropertyIndex(referencePropertyIndex, pd->coreIndex()))) {
                     Q_ASSERT(!binding->isValueTypeProxy());
                     const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
-                    const auto stackFrame = v4->currentStackFrame();
+                    const auto stackFrame = v4->currentStackFrame;
                     qCInfo(lcBindingRemoval,
                            "Overwriting binding on %s::%s which was initially bound at %s by setting \"%s\" at %s:%d",
                            referenceObject->metaObject()->className(), referenceObject->metaObject()->property(referencePropertyIndex).name(),
                            qPrintable(qmlBinding->expressionIdentifier()),
                            metaObject->property(pd->coreIndex()).name(),
-                           qPrintable(stackFrame.source), stackFrame.line);
+                           qPrintable(stackFrame->source()), stackFrame->line);
                 }
             }
             QQmlPropertyPrivate::removeBinding(referenceObject, QQmlPropertyIndex(referencePropertyIndex, pd->coreIndex()));

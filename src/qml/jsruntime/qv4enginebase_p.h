@@ -64,6 +64,7 @@ namespace QV4 {
 #endif
 struct EngineBase {
     Heap::ExecutionContext *current = 0;
+    StackFrame *currentStackFrame = 0;
 
     Value *jsStackTop = 0;
     quint8 hasException = false;
@@ -116,7 +117,8 @@ struct EngineBase {
 
 Q_STATIC_ASSERT(std::is_standard_layout<EngineBase>::value);
 Q_STATIC_ASSERT(offsetof(EngineBase, current) == 0);
-Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, current) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(EngineBase, currentStackFrame) == offsetof(EngineBase, current) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, currentStackFrame) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, hasException) == offsetof(EngineBase, jsStackTop) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, runtime) == offsetof(EngineBase, memoryManager) + QT_POINTER_SIZE);

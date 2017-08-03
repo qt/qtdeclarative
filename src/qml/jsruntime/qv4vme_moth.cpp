@@ -243,13 +243,13 @@ int qt_v4DebuggerHook(const char *json)
     return -NoSuchCommand; // Failure.
 }
 
-Q_NEVER_INLINE static void qt_v4CheckForBreak(QV4::ExecutionContext *context)
+Q_NEVER_INLINE static void qt_v4CheckForBreak(QV4::StackFrame *frame)
 {
     if (!qt_v4IsStepping && !qt_v4Breakpoints.size())
         return;
 
-    const int lineNumber = context->d()->lineNumber;
-    QV4::Function *function = qt_v4ExtractFunction(context);
+    const int lineNumber = frame->line;
+    QV4::Function *function = frame->v4Function;
     QString engineName = function->sourceFile();
 
     if (engineName.isEmpty())
@@ -282,12 +282,12 @@ Q_NEVER_INLINE static void qt_v4CheckForBreak(QV4::ExecutionContext *context)
 Q_NEVER_INLINE static void debug_slowPath(const QV4::Moth::Instr::instr_debug &instr,
                                           QV4::ExecutionEngine *engine)
 {
-    engine->current->lineNumber = instr.lineNumber;
+    engine->currentStackFrame->line = instr.lineNumber;
     QV4::Debugging::Debugger *debugger = engine->debugger();
     if (debugger && debugger->pauseAtNextOpportunity())
         debugger->maybeBreakAtInstruction();
     if (qt_v4IsDebugging)
-        qt_v4CheckForBreak(engine->currentContext);
+        qt_v4CheckForBreak(engine->currentStackFrame);
 }
 
 #endif // QT_NO_QML_DEBUGGER
@@ -453,6 +453,12 @@ QV4::ReturnedValue VME::exec(Function *function)
 #endif
 
     ExecutionEngine *engine = function->internalClass->engine;
+
+    StackFrame frame;
+    frame.parent = engine->currentStackFrame;
+    frame.v4Function = function;
+    engine->currentStackFrame = &frame;
+
     QV4::Value accumulator = Primitive::undefinedValue();
     QV4::Value *stack = nullptr;
     const uchar *exceptionHandler = 0;
@@ -466,7 +472,6 @@ QV4::ReturnedValue VME::exec(Function *function)
             stack[-i-1] = cc->callData->args[i];
     }
 
-    engine->current->lineNumber = -1;
     if (QV4::Debugging::Debugger *debugger = engine->debugger())
         debugger->enteringFunction();
 
@@ -985,9 +990,9 @@ QV4::ReturnedValue VME::exec(Function *function)
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(Line)
-        engine->current->lineNumber = instr.lineNumber;
+        frame.line = instr.lineNumber;
         if (Q_UNLIKELY(qt_v4IsDebugging))
-            qt_v4CheckForBreak(engine->currentContext);
+            qt_v4CheckForBreak(&frame);
     MOTH_END_INSTR(Line)
 #endif // QT_NO_QML_DEBUGGER
 
@@ -1029,5 +1034,6 @@ QV4::ReturnedValue VME::exec(Function *function)
 functionExit:
     if (QV4::Debugging::Debugger *debugger = engine->debugger())
         debugger->leavingFunction(accumulator.asReturnedValue());
+    engine->currentStackFrame = frame.parent;
     return accumulator.asReturnedValue();
 }

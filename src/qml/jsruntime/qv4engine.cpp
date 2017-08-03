@@ -804,54 +804,32 @@ QQmlContextData *ExecutionEngine::callingQmlContext() const
     return ctx->qml()->context->contextData();
 }
 
+QString StackFrame::source() const
+{
+    return v4Function->sourceFile();
+}
+
+QString StackFrame::function() const
+{
+    return v4Function->name()->toQString();
+}
+
 QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
 {
     Scope scope(const_cast<ExecutionEngine *>(this));
     ScopedString name(scope);
     QVector<StackFrame> stack;
 
-    ExecutionContext *c = currentContext;
-    while (c && frameLimit) {
-        QV4::Function *function = c->getFunction();
-        if (function) {
-            StackFrame frame;
-            frame.source = function->sourceFile();
-            name = function->name();
-            frame.function = name->toQString();
-
-            // line numbers can be negative for places where you can't set a real breakpoint
-            frame.line = qAbs(c->d()->lineNumber);
-            frame.column = -1;
-
-            stack.append(frame);
-            --frameLimit;
-        }
-        c = parentContext(c);
-    }
-
-    if (frameLimit && globalCode) {
-        StackFrame frame;
-        frame.source = globalCode->sourceFile();
-        frame.function = globalCode->name()->toQString();
-        frame.line = rootContext()->d()->lineNumber;
-        frame.column = -1;
-
+    StackFrame *f = currentStackFrame;
+    while (f && frameLimit) {
+        StackFrame frame = *f;
+        frame.parent = 0;
         stack.append(frame);
+        --frameLimit;
+        f = f->parent;
     }
+
     return stack;
-}
-
-StackFrame ExecutionEngine::currentStackFrame() const
-{
-    StackFrame frame;
-    frame.line = -1;
-    frame.column = -1;
-
-    QVector<StackFrame> trace = stackTrace(/*limit*/ 1);
-    if (!trace.isEmpty())
-        frame = trace.first();
-
-    return frame;
 }
 
 /* Helper and "C" linkage exported function to format a GDBMI stacktrace for
@@ -871,9 +849,9 @@ static inline char *v4StackTrace(const ExecutionContext *context)
         for (int i = 0; i < stackTrace.size(); ++i) {
             if (i)
                 str << ',';
-            const QUrl url(stackTrace.at(i).source);
+            const QUrl url(stackTrace.at(i).source());
             const QString fileName = url.isLocalFile() ? url.toLocalFile() : url.toString();
-            str << "frame={level=\"" << i << "\",func=\"" << stackTrace.at(i).function
+            str << "frame={level=\"" << i << "\",func=\"" << stackTrace.at(i).function()
                 << "\",file=\"" << fileName << "\",fullname=\"" << fileName
                 << "\",line=\"" << stackTrace.at(i).line << "\",language=\"js\"}";
         }
@@ -1088,7 +1066,7 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
     QQmlError error;
     if (!trace.isEmpty()) {
         QV4::StackFrame frame = trace.constFirst();
-        error.setUrl(QUrl(frame.source));
+        error.setUrl(QUrl(frame.source()));
         error.setLine(frame.line);
         error.setColumn(frame.column);
     }

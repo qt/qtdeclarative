@@ -67,13 +67,11 @@ struct ContextStateSaver {
     Value *savedContext;
     bool strictMode;
     QV4::Function *v4Function;
-    int lineNumber;
 
     ContextStateSaver(const Scope &scope, ExecutionContext *context)
         : savedContext(scope.alloc(1))
         , strictMode(context->d()->strictMode)
         , v4Function(context->d()->v4Function)
-        , lineNumber(context->d()->lineNumber)
     {
         savedContext->setM(context->d());
     }
@@ -81,7 +79,6 @@ struct ContextStateSaver {
         : savedContext(scope.alloc(1))
         , strictMode(context->strictMode)
         , v4Function(context->v4Function)
-        , lineNumber(context->lineNumber)
     {
         savedContext->setM(context);
     }
@@ -91,7 +88,6 @@ struct ContextStateSaver {
         Heap::ExecutionContext *ctx = static_cast<Heap::ExecutionContext *>(savedContext->m());
         ctx->strictMode = strictMode;
         ctx->v4Function = v4Function;
-        ctx->lineNumber = lineNumber;
     }
 };
 
