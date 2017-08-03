@@ -63,7 +63,7 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
     size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * (localsAndFormals);
 
     ExecutionEngine *v4 = engine();
-    Heap::CallContext *c = v4->memoryManager->allocManaged<CallContext>(requiredMemory);
+    Heap::CallContext *c = v4->memoryManager->allocManaged<CallContext>(requiredMemory, function->internalClass);
     c->init(Heap::ExecutionContext::Type_CallContext);
 
     c->v4Function = function;
@@ -177,7 +177,7 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
 
 Identifier * const *CallContext::formals() const
 {
-    return d()->v4Function ? d()->v4Function->internalClass->nameMap.constData() : 0;
+    return d()->v4Function ? d()->internalClass->nameMap.constData() : 0;
 }
 
 unsigned int CallContext::formalCount() const
@@ -187,7 +187,7 @@ unsigned int CallContext::formalCount() const
 
 Identifier * const *CallContext::variables() const
 {
-    return d()->v4Function ? d()->v4Function->internalClass->nameMap.constData() + d()->v4Function->nFormals : 0;
+    return d()->v4Function ? d()->internalClass->nameMap.constData() + d()->v4Function->nFormals : 0;
 }
 
 unsigned int CallContext::variableCount() const
@@ -214,7 +214,7 @@ bool ExecutionContext::deleteProperty(String *name)
         }
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
-            uint index = c->v4Function->internalClass->find(id);
+            uint index = c->internalClass->find(id);
             if (index < UINT_MAX)
                 // ### throw in strict mode?
                 return false;
@@ -317,7 +317,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         case Heap::ExecutionContext::Type_SimpleCallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
             if (c->v4Function) {
-                uint index = c->v4Function->internalClass->find(id);
+                uint index = c->internalClass->find(id);
                 if (index < UINT_MAX) {
                     if (index < c->v4Function->nFormals) {
                         c->callData->args[c->v4Function->nFormals - index - 1] = value;
@@ -381,7 +381,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
             name->makeIdentifier();
             Identifier *id = name->identifier();
 
-            uint index = c->v4Function->internalClass->find(id);
+            uint index = c->internalClass->find(id);
             if (index < UINT_MAX) {
                 if (index < c->v4Function->nFormals)
                     return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();
@@ -437,7 +437,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
             name->makeIdentifier();
             Identifier *id = name->identifier();
 
-            uint index = c->v4Function->internalClass->find(id);
+            uint index = c->internalClass->find(id);
             if (index < UINT_MAX) {
                 if (index < c->v4Function->nFormals)
                     return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();

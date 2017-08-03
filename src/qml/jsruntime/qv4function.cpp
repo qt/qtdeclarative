@@ -59,7 +59,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
 {
     Q_UNUSED(engine);
 
-    internalClass = engine->internalClasses[EngineBase::Class_Empty];
+    internalClass = engine->internalClasses[EngineBase::Class_CallContext];
     const CompiledData::LEUInt32 *formalsIndices = compiledFunction->formalsTable();
     // iterate backwards, so we get the right ordering for duplicate names
     Scope scope(engine);

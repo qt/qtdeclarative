@@ -237,6 +237,18 @@ public:
         return static_cast<typename ManagedType::Data *>(o);
     }
 
+    template<typename ManagedType>
+    inline typename ManagedType::Data *allocManaged(std::size_t size, InternalClass *ic)
+    {
+        V4_ASSERT_IS_TRIVIAL(typename ManagedType::Data)
+        size = align(size);
+        Heap::Base *o = allocData(size);
+        o->internalClass = ic;
+        Q_ASSERT(o->internalClass && o->internalClass->vtable);
+        Q_ASSERT(ic->vtable == ManagedType::staticVTable());
+        return static_cast<typename ManagedType::Data *>(o);
+    }
+
     template <typename ObjectType>
     typename ObjectType::Data *allocateObject(InternalClass *ic)
     {
