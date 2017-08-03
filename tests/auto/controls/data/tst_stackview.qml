@@ -1123,6 +1123,12 @@ TestCase {
         compare(item1.StackView.visible, true)
     }
 
+    function test_resolveInitialItem() {
+        var control = createTemporaryObject(stackView, testCase, {initialItem: "TestItem.qml"})
+        verify(control)
+        verify(control.currentItem)
+    }
+
     function test_resolve() {
         var control = createTemporaryObject(stackView, testCase)
         verify(control)
