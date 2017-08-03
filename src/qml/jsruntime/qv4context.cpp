@@ -71,10 +71,6 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
     c->strictMode = function->isStrict();
     c->outer.set(v4, this->d());
 
-    c->compilationUnit = function->compilationUnit;
-    c->lookups = function->compilationUnit->runtimeLookups;
-    c->constantTable = function->compilationUnit->constants;
-
     const CompiledData::Function *compiledFunction = function->compiledFunction;
     uint nLocals = compiledFunction->nLocals;
     c->locals.size = nLocals;
@@ -102,9 +98,7 @@ Heap::ExecutionContext *ExecutionContext::newWithContext(Heap::Object *with)
     c->activation.set(engine(), with);
 
     c->callData = d()->callData;
-    c->lookups = d()->lookups;
-    c->constantTable = d()->constantTable;
-    c->compilationUnit = d()->compilationUnit;
+    c->v4Function = d()->v4Function;
 
     return c;
 }
@@ -167,9 +161,7 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
     outer.set(internalClass->engine, outerContext);
     strictMode = outer->strictMode;
     callData = outer->callData;
-    lookups = outer->lookups;
-    constantTable = outer->constantTable;
-    compilationUnit = outer->compilationUnit;
+    v4Function = outer->v4Function;
 
     this->exceptionVarName.set(internalClass->engine, exceptionVarName);
     this->exceptionValue.set(internalClass->engine, exceptionValue);
@@ -267,9 +259,6 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
     ctx->strictMode = function->isStrict();
     ctx->callData = callData;
     ctx->v4Function = function;
-    ctx->compilationUnit = function->compilationUnit;
-    ctx->lookups = function->compilationUnit->runtimeLookups;
-    ctx->constantTable = function->compilationUnit->constants;
     ctx->outer.set(scope.engine, this->d());
     for (int i = callData->argc; i < (int)function->nFormals; ++i)
         callData->args[i] = Encode::undefined();

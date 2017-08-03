@@ -89,7 +89,7 @@ QT_END_NAMESPACE
     (Q_UNLIKELY(engine->profiler()) &&\
             (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
         Profiling::FunctionCallProfiler::profileCall(engine->profiler(), engine, function) :\
-        function->code(engine, function->codeData))
+        function->code(function, engine))
 
 QT_BEGIN_NAMESPACE
 
@@ -282,7 +282,7 @@ public:
     static ReturnedValue profileCall(Profiler *profiler, ExecutionEngine *engine, Function *function)
     {
         FunctionCallProfiler callProfiler(profiler, function);
-        return function->code(engine, function->codeData);
+        return function->code(function, engine);
     }
 
     Profiler *profiler;

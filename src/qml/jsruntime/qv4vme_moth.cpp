@@ -414,12 +414,12 @@ static inline void storeArg(ExecutionEngine *engine, QV4::Heap::ExecutionContext
         *slot = value;
 }
 
-static inline const QV4::Value &constant(ExecutionEngine *engine, int index)
+static inline const QV4::Value &constant(Function *function, int index)
 {
-    return engine->current->constantTable[index];
+    return function->compilationUnit->constants[index];
 }
 
-QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
+QV4::ReturnedValue VME::exec(Function *function, ExecutionEngine *engine)
 {
 #ifdef DO_TRACE_INSTR
     qDebug("Starting VME with context=%p and code=%p", context, code);
@@ -469,6 +469,8 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     if (QV4::Debugging::Debugger *debugger = engine->debugger())
         debugger->enteringFunction();
 
+    const uchar *code = function->codeData;
+
     for (;;) {
         const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
 #ifdef MOTH_THREADED_INTERPRETER
@@ -478,11 +480,11 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
 #endif
 
     MOTH_BEGIN_INSTR(LoadConst)
-        accumulator = constant(engine, instr.index);
+        accumulator = constant(function, instr.index);
     MOTH_END_INSTR(LoadConst)
 
     MOTH_BEGIN_INSTR(MoveConst)
-        TEMP_VALUE(instr.destTemp) = constant(engine, instr.constIndex);
+        TEMP_VALUE(instr.destTemp) = constant(function, instr.constIndex);
     MOTH_END_INSTR(MoveConst)
 
     MOTH_BEGIN_INSTR(LoadReg)
@@ -551,11 +553,11 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(StoreScopedArg)
 
     MOTH_BEGIN_INSTR(LoadRuntimeString)
-        accumulator = engine->current->compilationUnit->runtimeStrings[instr.stringId];
+        accumulator = function->compilationUnit->runtimeStrings[instr.stringId];
     MOTH_END_INSTR(LoadRuntimeString)
 
     MOTH_BEGIN_INSTR(LoadRegExp)
-        accumulator = static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeRegularExpressions[instr.regExpId];
+        accumulator = function->compilationUnit->runtimeRegularExpressions[instr.regExpId];
     MOTH_END_INSTR(LoadRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)
@@ -567,7 +569,7 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(GetGlobalLookup)
-        QV4::Lookup *l = engine->current->lookups + instr.index;
+        QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.index;
         STORE_ACCUMULATOR(l->globalGetter(l, engine));
     MOTH_END_INSTR(GetGlobalLookup)
 
@@ -585,7 +587,7 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(LoadElementA)
 
     MOTH_BEGIN_INSTR(LoadElementLookup)
-        QV4::Lookup *l = engine->current->lookups + instr.lookup;
+        QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.lookup;
         STORE_ACCUMULATOR(l->indexedGetter(l, engine, TEMP_VALUE(instr.base), TEMP_VALUE(instr.index)));
     MOTH_END_INSTR(LoadElementLookup)
 
@@ -595,7 +597,7 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(StoreElement)
 
     MOTH_BEGIN_INSTR(StoreElementLookup)
-        QV4::Lookup *l = engine->current->lookups + instr.lookup;
+        QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.lookup;
         l->indexedSetter(l, engine, TEMP_VALUE(instr.base), TEMP_VALUE(instr.index), accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreElementLookup)
@@ -609,12 +611,12 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(LoadPropertyA)
 
     MOTH_BEGIN_INSTR(GetLookup)
-        QV4::Lookup *l = engine->current->lookups + instr.index;
+        QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.index;
         STORE_ACCUMULATOR(l->getter(l, engine, TEMP_VALUE(instr.base)));
     MOTH_END_INSTR(GetLookup)
 
     MOTH_BEGIN_INSTR(GetLookupA)
-        QV4::Lookup *l = engine->current->lookups + instr.index;
+        QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.index;
         STORE_ACCUMULATOR(l->getter(l, engine, accumulator));
     MOTH_END_INSTR(GetLookupA)
 
@@ -624,7 +626,7 @@ QV4::ReturnedValue VME::exec(ExecutionEngine *engine, const uchar *code)
     MOTH_END_INSTR(StoreProperty)
 
     MOTH_BEGIN_INSTR(SetLookup)
-        QV4::Lookup *l = engine->current->lookups + instr.index;
+        QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.index;
         l->setter(l, engine, TEMP_VALUE(instr.base), accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(SetLookup)

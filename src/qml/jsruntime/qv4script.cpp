@@ -151,9 +151,7 @@ ReturnedValue Script::run()
         ExecutionContextSaver ctxSaver(valueScope);
         ContextStateSaver stateSaver(valueScope, scope);
         scope->d()->strictMode = vmFunction->isStrict();
-        scope->d()->lookups = vmFunction->compilationUnit->runtimeLookups;
-        scope->d()->constantTable = vmFunction->compilationUnit->constants;
-        scope->d()->compilationUnit = vmFunction->compilationUnit;
+        scope->d()->v4Function = vmFunction;
 
         return Q_V4_PROFILE(engine, vmFunction);
     } else {

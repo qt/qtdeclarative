@@ -66,17 +66,13 @@ namespace QV4 {
 struct ContextStateSaver {
     Value *savedContext;
     bool strictMode;
-    Lookup *lookups;
-    const QV4::Value *constantTable;
-    CompiledData::CompilationUnitBase *compilationUnit;
+    QV4::Function *v4Function;
     int lineNumber;
 
     ContextStateSaver(const Scope &scope, ExecutionContext *context)
         : savedContext(scope.alloc(1))
         , strictMode(context->d()->strictMode)
-        , lookups(context->d()->lookups)
-        , constantTable(context->d()->constantTable)
-        , compilationUnit(context->d()->compilationUnit)
+        , v4Function(context->d()->v4Function)
         , lineNumber(context->d()->lineNumber)
     {
         savedContext->setM(context->d());
@@ -84,9 +80,7 @@ struct ContextStateSaver {
     ContextStateSaver(const Scope &scope, Heap::ExecutionContext *context)
         : savedContext(scope.alloc(1))
         , strictMode(context->strictMode)
-        , lookups(context->lookups)
-        , constantTable(context->constantTable)
-        , compilationUnit(context->compilationUnit)
+        , v4Function(context->v4Function)
         , lineNumber(context->lineNumber)
     {
         savedContext->setM(context);
@@ -96,9 +90,7 @@ struct ContextStateSaver {
     {
         Heap::ExecutionContext *ctx = static_cast<Heap::ExecutionContext *>(savedContext->m());
         ctx->strictMode = strictMode;
-        ctx->lookups = lookups;
-        ctx->constantTable = constantTable;
-        ctx->compilationUnit = compilationUnit;
+        ctx->v4Function = v4Function;
         ctx->lineNumber = lineNumber;
     }
 };

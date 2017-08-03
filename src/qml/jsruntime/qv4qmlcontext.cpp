@@ -301,9 +301,7 @@ void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContex
     outer.set(internalClass->engine, outerContext->d());
     strictMode = false;
     callData = outer->callData;
-    lookups = outer->lookups;
-    constantTable = outer->constantTable;
-    compilationUnit = outer->compilationUnit;
+    v4Function = outer->v4Function;
 
     this->activation.set(internalClass->engine, qml->d());
 }

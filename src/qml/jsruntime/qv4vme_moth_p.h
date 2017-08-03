@@ -65,7 +65,7 @@ namespace Moth {
 class VME
 {
 public:
-    static QV4::ReturnedValue exec(QV4::ExecutionEngine *, const uchar *);
+    static QV4::ReturnedValue exec(QV4::Function *, QV4::ExecutionEngine *);
 };
 
 } // namespace Moth

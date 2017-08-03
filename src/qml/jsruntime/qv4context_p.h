@@ -105,10 +105,8 @@ struct QmlContext;
 #define ExecutionContextMembers(class, Member) \
     Member(class, NoMark, CallData *, callData)  \
     Member(class, Pointer, ExecutionContext *, outer) \
-    Member(class, NoMark, Lookup *, lookups) \
-    Member(class, NoMark, const QV4::Value *, constantTable) \
-    Member(class, NoMark, CompiledData::CompilationUnitBase *, compilationUnit) \
     Member(class, Pointer, Object *, activation) \
+    Member(class, NoMark, QV4::Function *, v4Function) \
     Member(class, NoMark, int, lineNumber) // as member of non-pointer size this has to come last to preserve the ability to
                                            // translate offsetof of it between 64-bit and 32-bit.
 
@@ -146,14 +144,11 @@ Q_STATIC_ASSERT(sizeof(ExecutionContext) == sizeof(Base) + sizeof(ExecutionConte
 Q_STATIC_ASSERT(std::is_standard_layout<ExecutionContextData>::value);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, callData) == 0);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == offsetof(ExecutionContextData, callData) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, lookups) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, constantTable) == offsetof(ExecutionContextData, lookups) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, compilationUnit) == offsetof(ExecutionContextData, constantTable) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, activation) == offsetof(ExecutionContextData, compilationUnit) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, lineNumber) == offsetof(ExecutionContextData, activation) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, activation) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, v4Function) == offsetof(ExecutionContextData, activation) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, lineNumber) == offsetof(ExecutionContextData, v4Function) + QT_POINTER_SIZE);
 
 #define CallContextMembers(class, Member) \
-    Member(class, NoMark, QV4::Function *, v4Function) \
     Member(class, Pointer, FunctionObject *, function) \
     Member(class, ValueArray, ValueArray, locals)
 
@@ -170,8 +165,7 @@ DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
 };
 V4_ASSERT_IS_TRIVIAL(CallContext)
 Q_STATIC_ASSERT(std::is_standard_layout<CallContextData>::value);
-Q_STATIC_ASSERT(offsetof(CallContextData, v4Function) == 0);
-Q_STATIC_ASSERT(offsetof(CallContextData, function) == QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(CallContextData, function) == 0);
 Q_STATIC_ASSERT(offsetof(CallContextData, locals) == offsetof(CallContextData, function) + QT_POINTER_SIZE);
 //### The following size check fails on Win8. With the ValueArray at the end of the
 // CallContextMembers, it doesn't look very useful.
