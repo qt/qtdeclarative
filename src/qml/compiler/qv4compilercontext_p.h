@@ -103,7 +103,7 @@ struct Context {
     QString name;
     int line = 0;
     int column = 0;
-
+    int registerCount = 0;
     int functionIndex = -1;
 
     enum MemberType {

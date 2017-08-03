@@ -336,6 +336,8 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
 
     function->nInnerFunctions = irFunction->nestedContexts.size();
 
+    function->nRegisters = irFunction->registerCount;
+
     function->nDependingIdObjects = 0;
     function->nDependingContextProperties = 0;
     function->nDependingScopeProperties = 0;

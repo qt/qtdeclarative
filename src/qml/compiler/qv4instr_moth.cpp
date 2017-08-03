@@ -142,22 +142,6 @@ void dumpBytecode(const char *code, int len)
             d << instr.destTemp << ", C" << instr.constIndex;
         MOTH_END_INSTR(MoveConst)
 
-        MOTH_BEGIN_INSTR(LoadLocal)
-            d << "$" << instr.index;
-        MOTH_END_INSTR(LoadLocal)
-
-        MOTH_BEGIN_INSTR(StoreLocal)
-            d << "$" << instr.index;
-        MOTH_END_INSTR(StoreLocal)
-
-        MOTH_BEGIN_INSTR(LoadArg)
-            d << "#" << instr.index;
-        MOTH_END_INSTR(LoadArg)
-
-        MOTH_BEGIN_INSTR(StoreArg)
-            d << "#" << instr.index;
-        MOTH_END_INSTR(StoreArg)
-
         MOTH_BEGIN_INSTR(LoadScopedLocal)
             d << "$" << instr.index << "@" << instr.scope;
         MOTH_END_INSTR(LoadScopedLocal)
@@ -166,13 +150,13 @@ void dumpBytecode(const char *code, int len)
             d << ", " << "$" << instr.index << "@" << instr.scope;
         MOTH_END_INSTR(StoreScopedLocal)
 
-        MOTH_BEGIN_INSTR(LoadScopedArg)
+        MOTH_BEGIN_INSTR(LoadScopedArgument)
             d <<  "#" << instr.index << "@" << instr.scope;
-        MOTH_END_INSTR(LoadScopedArg)
+        MOTH_END_INSTR(LoadScopedArgument)
 
-        MOTH_BEGIN_INSTR(StoreScopedArg)
+        MOTH_BEGIN_INSTR(StoreScopedArgument)
             d << "#" << instr.index << "@" << instr.scope;
-        MOTH_END_INSTR(StoreScopedArg)
+        MOTH_END_INSTR(StoreScopedArgument)
 
         MOTH_BEGIN_INSTR(LoadRuntimeString)
             d << instr.stringId;
@@ -261,10 +245,6 @@ void dumpBytecode(const char *code, int len)
         MOTH_BEGIN_INSTR(LoadIdObject)
             d << instr.base << "[" << instr.index << "]";
         MOTH_END_INSTR(LoadIdObject)
-
-        MOTH_BEGIN_INSTR(InitStackFrame)
-            d << instr.value;
-        MOTH_END_INSTR(InitStackFrame)
 
         MOTH_BEGIN_INSTR(CallValue)
             d << instr.dest << "(" << instr.callData << ")";

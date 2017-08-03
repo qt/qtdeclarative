@@ -619,7 +619,7 @@ bool Codegen::visit(ArrayLiteral *ast)
 
     Instruction::CallBuiltinDefineArray call;
     call.argc = argc;
-    call.args = Moth::StackSlot::create(args);
+    call.args = Moth::StackSlot::createRegister(args);
     bytecodeGenerator->addInstruction(call);
     _expr.setResult(Reference::fromAccumulator(this));
 
@@ -1089,7 +1089,7 @@ Moth::StackSlot Codegen::pushArgs(ArgumentList *args)
         ++argc;
     }
 
-    return Moth::StackSlot::create(calldata);
+    return Moth::StackSlot::createRegister(calldata);
 }
 
 bool Codegen::visit(ConditionalExpression *ast)
@@ -1133,11 +1133,11 @@ bool Codegen::visit(DeleteExpression *ast)
 
     switch (expr.type) {
     case Reference::StackSlot:
-        if (!expr.stackSlotIsLocal)
+        if (!expr.stackSlotIsLocalOrArgument)
             break;
         // fall through
-    case Reference::Local:
-    case Reference::Argument:
+    case Reference::ScopedArgument:
+    case Reference::ScopedLocal:
         // Trying to delete a function argument might throw.
         if (_context->isStrict) {
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
@@ -1219,7 +1219,7 @@ bool Codegen::visit(FunctionExpression *ast)
 
 Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
 {
-    uint scope = 0;
+    int scope = 0;
     Context *c = _context;
 
     while (c->parent) {
@@ -1228,7 +1228,8 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
 
         Context::Member m = c->findMember(name);
         if (m.type != Context::UndefinedMember) {
-            Reference r = m.canEscape ? Reference::fromLocal(this, m.index, scope) : Reference::fromStackSlot(this, m.index, true /*isLocal*/);
+            Reference r = m.canEscape ? Reference::fromScopedLocal(this, m.index, scope)
+                                      : Reference::fromStackSlot(this, m.index, true /*isLocal*/);
             if (name == QLatin1String("arguments") || name == QLatin1String("eval")) {
                 r.isArgOrEval = true;
                 if (isLhs && c->isStrict)
@@ -1238,8 +1239,14 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
             return r;
         }
         const int argIdx = c->findArgument(name);
-        if (argIdx != -1)
-            return Reference::fromArgument(this, argIdx, scope);
+        if (argIdx != -1) {
+            if (c->argumentsCanEscape || c->usesArgumentsObject == Context::ArgumentsObjectUsed) {
+                return Reference::fromScopedArgument(this, argIdx, scope);
+            } else {
+                Q_ASSERT(scope == 0);
+                return Reference::fromArgument(this, argIdx);
+            }
+        }
 
         if (!c->isStrict && c->hasDirectEval)
             goto loadByName;
@@ -1487,7 +1494,7 @@ bool Codegen::visit(ObjectLiteral *ast)
     call.internalClassId = classId;
     call.arrayValueCount = arrayKeyWithValue.size();
     call.arrayGetterSetterCountAndFlags = arrayGetterSetterCountAndFlags;
-    call.args = Moth::StackSlot::create(args);
+    call.args = Moth::StackSlot::createRegister(args);
     bytecodeGenerator->addInstruction(call);
 
     _expr.setResult(Reference::fromAccumulator(this));
@@ -1770,7 +1777,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
                 Reference::fromName(this, member.function->name.toString()).storeConsumeAccumulator();
             } else {
                 Q_ASSERT(member.index >= 0);
-                Reference local = member.canEscape ? Reference::fromLocal(this, member.index, 0) : Reference::fromStackSlot(this, member.index, true);
+                Reference local = member.canEscape ? Reference::fromScopedLocal(this, member.index, 0)
+                                                   : Reference::fromStackSlot(this, member.index, true);
                 local.storeConsumeAccumulator();
             }
         }
@@ -1800,9 +1808,11 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     }
 
     _context->code = bytecodeGenerator->finalize();
+    _context->registerCount = bytecodeGenerator->registerCount();
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
-        qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict;
+        qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
+                 << "register count" << _context->registerCount;
         QV4::Moth::dumpBytecode(_context->code);
         qDebug();
     }
@@ -2442,7 +2452,7 @@ bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r, 
         if (str == QLatin1String("eval") || str == QLatin1String("arguments")) {
             isArgOrEval = true;
         }
-    } else if (r.type == Reference::Local || r.type == Reference::StackSlot) {
+    } else if (r.type == Reference::ScopedLocal || r.isRegister()) {
         isArgOrEval = r.isArgOrEval;
     }
     if (isArgOrEval)
@@ -2544,7 +2554,7 @@ bool Codegen::RValue::operator==(const RValue &other) const
     }
 }
 
-Codegen::RValue Codegen::RValue::storeInTemp() const
+Codegen::RValue Codegen::RValue::storeOnStack() const
 {
     switch (type) {
     case Accumulator:
@@ -2574,8 +2584,8 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     case StackSlot:
         theStackSlot = other.theStackSlot;
         break;
-    case Local:
-    case Argument:
+    case ScopedLocal:
+    case ScopedArgument:
         index = other.index;
         scope = other.scope;
         break;
@@ -2611,7 +2621,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     isArgOrEval = other.isArgOrEval;
     codegen = other.codegen;
     isReadonly = other.isReadonly;
-    stackSlotIsLocal = other.stackSlotIsLocal;
+    stackSlotIsLocalOrArgument = other.stackSlotIsLocalOrArgument;
     global = other.global;
     return *this;
 }
@@ -2626,8 +2636,8 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         break;
     case StackSlot:
         return theStackSlot == other.theStackSlot;
-    case Local:
-    case Argument:
+    case ScopedLocal:
+    case ScopedArgument:
         return index == other.index && scope == other.scope;
     case Name:
         return unqualifiedNameIndex == other.unqualifiedNameIndex;
@@ -2675,14 +2685,14 @@ Codegen::Reference Codegen::Reference::asLValue() const
     case Member:
         if (!propertyBase.isStackSlot()) {
             Reference r = *this;
-            r.propertyBase = propertyBase.storeInTemp();
+            r.propertyBase = propertyBase.storeOnStack();
             return r;
         }
         return *this;
     case Subscript:
         if (!elementSubscript.isStackSlot()) {
             Reference r = *this;
-            r.elementSubscript = elementSubscript.storeInTemp();
+            r.elementSubscript = elementSubscript.storeOnStack();
             return r;
         }
         return *this;
@@ -2750,8 +2760,8 @@ bool Codegen::Reference::storeWipesAccumulator() const
         Q_UNREACHABLE();
         return false;
     case StackSlot:
-    case Local:
-    case Argument:
+    case ScopedLocal:
+    case ScopedArgument:
         return false;
     case Name:
     case Member:
@@ -2772,30 +2782,20 @@ void Codegen::Reference::storeAccumulator() const
         codegen->bytecodeGenerator->addInstruction(store);
         return;
     }
-    case Local:
-        if (scope == 0) {
-            Instruction::StoreLocal store;
-            store.index = index;
-            codegen->bytecodeGenerator->addInstruction(store);
-        } else {
-            Instruction::StoreScopedLocal store;
-            store.index = index;
-            store.scope = scope;
-            codegen->bytecodeGenerator->addInstruction(store);
-        }
+    case ScopedLocal: {
+        Instruction::StoreScopedLocal store;
+        store.index = index;
+        store.scope = scope;
+        codegen->bytecodeGenerator->addInstruction(store);
         return;
-    case Argument:
-        if (scope == 0) {
-            Instruction::StoreArg store;
-            store.index = index;
-            codegen->bytecodeGenerator->addInstruction(store);
-        } else {
-            Instruction::StoreScopedArg store;
-            store.index = index;
-            store.scope = scope;
-            codegen->bytecodeGenerator->addInstruction(store);
-        }
+    }
+    case ScopedArgument: {
+        Instruction::StoreScopedArgument store;
+        store.index = index;
+        store.scope = scope;
+        codegen->bytecodeGenerator->addInstruction(store);
         return;
+    }
     case Name: {
         Instruction::StoreName store;
         store.name = unqualifiedNameIndex;
@@ -2859,30 +2859,20 @@ void Codegen::Reference::loadInAccumulator() const
         load.reg = stackSlot();
         codegen->bytecodeGenerator->addInstruction(load);
     } return;
-    case Local:
-        if (scope == 0) {
-            Instruction::LoadLocal load;
-            load.index = index;
-            codegen->bytecodeGenerator->addInstruction(load);
-        } else {
-            Instruction::LoadScopedLocal load;
-            load.index = index;
-            load.scope = scope;
-            codegen->bytecodeGenerator->addInstruction(load);
-        }
+    case ScopedLocal: {
+        Instruction::LoadScopedLocal load;
+        load.index = index;
+        load.scope = scope;
+        codegen->bytecodeGenerator->addInstruction(load);
         return;
-    case Argument:
-        if (scope == 0) {
-            Instruction::LoadArg load;
-            load.index = index;
-            codegen->bytecodeGenerator->addInstruction(load);
-        } else {
-            Instruction::LoadScopedArg load;
-            load.index = index;
-            load.scope = scope;
-            codegen->bytecodeGenerator->addInstruction(load);
-        }
+    }
+    case ScopedArgument: {
+        Instruction::LoadScopedArgument load;
+        load.index = index;
+        load.scope = scope;
+        codegen->bytecodeGenerator->addInstruction(load);
         return;
+    }
     case Name:
         if (codegen->useFastLookups && global) {
             Instruction::GetGlobalLookup load;
@@ -2902,7 +2892,7 @@ void Codegen::Reference::loadInAccumulator() const
                 codegen->bytecodeGenerator->addInstruction(load);
             } else {
                 Instruction::GetLookup load;
-                load.base = propertyBase.storeInTemp().stackSlot();
+                load.base = propertyBase.storeOnStack().stackSlot();
                 load.index = codegen->registerGetterLookup(propertyNameIndex);
                 codegen->bytecodeGenerator->addInstruction(load);
             }
@@ -2913,7 +2903,7 @@ void Codegen::Reference::loadInAccumulator() const
                 codegen->bytecodeGenerator->addInstruction(load);
             } else {
                 Instruction::LoadProperty load;
-                load.base = propertyBase.storeInTemp().stackSlot();
+                load.base = propertyBase.storeOnStack().stackSlot();
                 load.name = propertyNameIndex;
                 codegen->bytecodeGenerator->addInstruction(load);
             }
@@ -2932,7 +2922,7 @@ void Codegen::Reference::loadInAccumulator() const
         } else {
             Instruction::LoadElement load;
             load.base = elementBase;
-            load.index = elementSubscript.storeInTemp().stackSlot();
+            load.index = elementSubscript.storeOnStack().stackSlot();
             codegen->bytecodeGenerator->addInstruction(load);
         }
     } return;

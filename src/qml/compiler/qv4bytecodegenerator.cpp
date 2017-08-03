@@ -75,11 +75,6 @@ QByteArray BytecodeGenerator::finalize()
 {
     QByteArray code;
 
-    Instruction::InitStackFrame init;
-    init.instructionType = Instr::InitStackFrame;
-    init.value = regCount;
-    code.append(reinterpret_cast<const char *>(&init), InstrMeta<Instr::InitStackFrame>::Size);
-
     // content
     QVector<int> instructionOffsets;
     instructionOffsets.reserve(instructions.size());

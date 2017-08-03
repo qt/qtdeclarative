@@ -393,25 +393,46 @@ static inline QV4::Heap::ExecutionContext *getScope(QV4::Heap::ExecutionContext 
     return scope;
 }
 
-static inline void storeLocal(ExecutionEngine *engine, QV4::Heap::ExecutionContext *scope,
-                              QV4::Value *slot, QV4::Value value)
+static inline ReturnedValue loadScopedLocal(ExecutionEngine *engine, int index, int scope)
 {
-    Q_ASSERT(scope->type == QV4::Heap::ExecutionContext::Type_CallContext);
-    if (Q_UNLIKELY(engine->writeBarrierActive))
-        QV4::WriteBarrier::write(engine, scope, slot, value);
-    else
-        *slot = value;
+    auto ctxt = getScope(engine->current, scope);
+    Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
+    auto cc = static_cast<Heap::CallContext *>(ctxt);
+    return cc->locals[index].asReturnedValue();
 }
 
-static inline void storeArg(ExecutionEngine *engine, QV4::Heap::ExecutionContext *scope,
-                            QV4::Value *slot, QV4::Value value)
+static inline void storeScopedLocal(ExecutionEngine *engine, int index, int scope,
+                                    const QV4::Value &value)
 {
-    Q_ASSERT(scope->type == QV4::Heap::ExecutionContext::Type_SimpleCallContext
-             || scope->type == QV4::Heap::ExecutionContext::Type_CallContext);
+    auto ctxt = getScope(engine->current, scope);
+    Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
+    auto cc = static_cast<Heap::CallContext *>(ctxt);
+
     if (Q_UNLIKELY(engine->writeBarrierActive))
-        QV4::WriteBarrier::write(engine, scope, slot, value);
+        QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, value);
     else
-        *slot = value;
+        *(cc->locals.values + index) = value;
+}
+
+static inline ReturnedValue loadScopedArg(ExecutionEngine *engine, int index, int scope)
+{
+    auto ctxt = getScope(engine->current, scope);
+    Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
+    auto cc = static_cast<Heap::CallContext *>(ctxt);
+    return cc->callData->args[index].asReturnedValue();
+}
+
+static inline void storeScopedArg(ExecutionEngine *engine, int index, int scope,
+                                  const QV4::Value &value)
+{
+    auto ctxt = getScope(engine->current, scope);
+    Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
+    auto cc = static_cast<Heap::CallContext *>(ctxt);
+
+    if (Q_UNLIKELY(engine->writeBarrierActive))
+        QV4::WriteBarrier::write(engine, cc, cc->callData->args + index, value);
+    else
+        *(cc->callData->args + index) = value;
 }
 
 static inline const QV4::Value &constant(Function *function, int index)
@@ -421,10 +442,6 @@ static inline const QV4::Value &constant(Function *function, int index)
 
 QV4::ReturnedValue VME::exec(Function *function)
 {
-#ifdef DO_TRACE_INSTR
-    qDebug("Starting VME with context=%p and code=%p", context, code);
-#endif // DO_TRACE_INSTR
-
     qt_v4ResolvePendingBreakpointsHook();
 
 #ifdef MOTH_THREADED_INTERPRETER
@@ -436,38 +453,20 @@ QV4::ReturnedValue VME::exec(Function *function)
 #endif
 
     ExecutionEngine *engine = function->internalClass->engine;
-
-    // Arguments/locals are used a *lot*, and pre-fetching them removes a whole bunch of triple
-    // (or quadruple) indirect loads.
-    QV4::Value *arguments = nullptr;
-    QV4::Value *locals = nullptr;
-    QV4::Value *argumentsScope1 = nullptr;
-    QV4::Value *localsScope1 = nullptr;
-    QV4::Heap::ExecutionContext *functionScope = nullptr;
-    QV4::Heap::ExecutionContext *functionScope1 = nullptr;
-    { // setup args/locals/etc
-        functionScope = engine->current;
-        arguments = functionScope->callData->args;
-        if (functionScope->type == QV4::Heap::ExecutionContext::Type_CallContext)
-            locals = static_cast<QV4::Heap::CallContext *>(functionScope)->locals.values;
-
-        functionScope1 = functionScope->outer;
-        if (functionScope1) {
-            argumentsScope1 = functionScope1->callData->args;
-            if (functionScope1->type == QV4::Heap::ExecutionContext::Type_CallContext)
-                localsScope1 = static_cast<QV4::Heap::CallContext *>(functionScope1)->locals.values;
-        }
-    }
-
     QV4::Value accumulator = Primitive::undefinedValue();
-    QV4::Value *stack = 0;
-    unsigned stackSize = 0;
-
+    QV4::Value *stack = nullptr;
     const uchar *exceptionHandler = 0;
 
     QV4::Scope scope(engine);
-    engine->current->lineNumber = -1;
+    {
+        int nFormals = function->nFormals;
+        stack = scope.alloc(function->compiledFunction->nRegisters + nFormals) + nFormals;
+        auto cc = engine->current;
+        for (int i = 0, ei = std::min<int>(cc->callData->argc, nFormals); i != ei; ++i)
+            stack[-i-1] = cc->callData->args[i];
+    }
 
+    engine->current->lineNumber = -1;
     if (QV4::Debugging::Debugger *debugger = engine->debugger())
         debugger->enteringFunction();
 
@@ -501,58 +500,23 @@ QV4::ReturnedValue VME::exec(Function *function)
         STACK_VALUE(instr.destReg) = STACK_VALUE(instr.srcReg);
     MOTH_END_INSTR(MoveReg)
 
-    MOTH_BEGIN_INSTR(LoadLocal)
-        accumulator = locals[instr.index];
-    MOTH_END_INSTR(LoadLocal)
-
-    MOTH_BEGIN_INSTR(StoreLocal)
-        CHECK_EXCEPTION;
-        storeLocal(engine, functionScope, locals + instr.index, accumulator);
-    MOTH_END_INSTR(StoreLocal)
-
-    MOTH_BEGIN_INSTR(LoadArg)
-        accumulator = arguments[instr.index];
-    MOTH_END_INSTR(LoadArg)
-
-    MOTH_BEGIN_INSTR(StoreArg)
-        CHECK_EXCEPTION;
-        storeArg(engine, functionScope, arguments + instr.index, accumulator);
-    MOTH_END_INSTR(StoreArg)
-
     MOTH_BEGIN_INSTR(LoadScopedLocal)
-        if (Q_LIKELY(instr.scope == 1))
-            accumulator = localsScope1[instr.index];
-        else
-            accumulator = static_cast<QV4::Heap::CallContext *>(getScope(functionScope, instr.scope))->locals[instr.index];
+        accumulator = loadScopedLocal(engine, instr.index, instr.scope);
     MOTH_END_INSTR(LoadScopedLocal)
 
     MOTH_BEGIN_INSTR(StoreScopedLocal)
         CHECK_EXCEPTION;
-        if (Q_LIKELY(instr.scope == 1)) {
-            storeLocal(engine, functionScope1, localsScope1 + instr.index, accumulator);
-        } else {
-            QV4::Heap::ExecutionContext *scope = getScope(functionScope, instr.scope);
-            QV4::Heap::CallContext *cc = static_cast<QV4::Heap::CallContext *>(scope);
-            storeLocal(engine, cc, cc->locals.values + instr.index, accumulator);
-        }
+        storeScopedLocal(engine, instr.index, instr.scope, accumulator);
     MOTH_END_INSTR(StoreScopedLocal)
 
-    MOTH_BEGIN_INSTR(LoadScopedArg)
-        if (Q_LIKELY(instr.scope == 1))
-            accumulator = argumentsScope1[instr.index];
-        else
-            accumulator = getScope(functionScope, instr.scope)->callData->args[instr.index];
-    MOTH_END_INSTR(LoadScopedArg);
+    MOTH_BEGIN_INSTR(LoadScopedArgument)
+        accumulator = loadScopedArg(engine, instr.index, instr.scope);
+    MOTH_END_INSTR(LoadScopedArgument)
 
-    MOTH_BEGIN_INSTR(StoreScopedArg)
+    MOTH_BEGIN_INSTR(StoreScopedArgument)
         CHECK_EXCEPTION;
-        if (Q_LIKELY(instr.scope == 1)) {
-            storeArg(engine, functionScope1, argumentsScope1 + instr.index, accumulator);
-        } else {
-            QV4::Heap::ExecutionContext *scope = getScope(functionScope, instr.scope);
-            storeLocal(engine, scope, scope->callData->args + instr.index, accumulator);
-        }
-    MOTH_END_INSTR(StoreScopedArg)
+        storeScopedArg(engine, instr.index, instr.scope, accumulator);
+    MOTH_END_INSTR(StoreScopedArgument)
 
     MOTH_BEGIN_INSTR(LoadRuntimeString)
         accumulator = function->compilationUnit->runtimeStrings[instr.stringId];
@@ -654,11 +618,6 @@ QV4::ReturnedValue VME::exec(Function *function)
     MOTH_BEGIN_INSTR(LoadIdObject)
         STORE_ACCUMULATOR(Runtime::method_getQmlIdObject(engine, STACK_VALUE(instr.base), instr.index));
     MOTH_END_INSTR(LoadIdObject)
-
-    MOTH_BEGIN_INSTR(InitStackFrame)
-        stackSize = unsigned(instr.value);
-        stack = scope.alloc(instr.value);
-    MOTH_END_INSTR(InitStackFrame)
 
     MOTH_BEGIN_INSTR(CallValue)
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
@@ -763,7 +722,6 @@ QV4::ReturnedValue VME::exec(Function *function)
     MOTH_END_INSTR(CallBuiltinDeclareVar)
 
     MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
-        Q_ASSERT(instr.args.stackSlot() + instr.argc <= stackSize);
         QV4::Value *args = stack + instr.args.stackSlot();
         STORE_ACCUMULATOR(Runtime::method_arrayLiteral(engine, args, instr.argc));
     MOTH_END_INSTR(CallBuiltinDefineArray)
@@ -789,7 +747,6 @@ QV4::ReturnedValue VME::exec(Function *function)
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)
-        Q_ASSERT(instr.callData.stackSlot() + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         callData->tag = quint32(Value::ValueTypeInternal::Integer);
         callData->argc = instr.argc;
@@ -798,7 +755,6 @@ QV4::ReturnedValue VME::exec(Function *function)
     MOTH_END_INSTR(CreateProperty)
 
     MOTH_BEGIN_INSTR(ConstructPropertyLookup)
-        Q_ASSERT(instr.callData.stackSlot() + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         callData->tag = quint32(Value::ValueTypeInternal::Integer);
         callData->argc = instr.argc;
@@ -807,7 +763,6 @@ QV4::ReturnedValue VME::exec(Function *function)
     MOTH_END_INSTR(ConstructPropertyLookup)
 
     MOTH_BEGIN_INSTR(CreateActivationProperty)
-        Q_ASSERT(instr.callData.stackSlot() + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         callData->tag = quint32(Value::ValueTypeInternal::Integer);
         callData->argc = instr.argc;
@@ -816,7 +771,6 @@ QV4::ReturnedValue VME::exec(Function *function)
     MOTH_END_INSTR(CreateActivationProperty)
 
     MOTH_BEGIN_INSTR(ConstructGlobalLookup)
-        Q_ASSERT(instr.callData.stackSlot() + instr.argc + offsetof(QV4::CallData, args)/sizeof(QV4::Value) <= stackSize);
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         callData->tag = quint32(Value::ValueTypeInternal::Integer);
         callData->argc = instr.argc;

@@ -76,14 +76,10 @@ QT_BEGIN_NAMESPACE
     F(LoadReg, loadReg) \
     F(StoreReg, storeReg) \
     F(MoveReg, moveReg) \
-    F(LoadLocal, loadLocal) \
-    F(StoreLocal, storeLocal) \
-    F(LoadArg, loadArg) \
-    F(StoreArg, storeArg) \
     F(LoadScopedLocal, loadScopedLocal) \
     F(StoreScopedLocal, storeScopedLocal) \
-    F(LoadScopedArg, loadScopedArg) \
-    F(StoreScopedArg, storeScopedArg) \
+    F(LoadScopedArgument, loadScopedArgument) \
+    F(StoreScopedArgument, storeScopedArgument) \
     F(LoadRuntimeString, loadRuntimeString) \
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
@@ -106,7 +102,6 @@ QT_BEGIN_NAMESPACE
     F(LoadScopeObjectProperty, loadScopeObjectProperty) \
     F(LoadContextObjectProperty, loadContextObjectProperty) \
     F(LoadIdObject, loadIdObject) \
-    F(InitStackFrame, initStackFrame) \
     F(CallValue, callValue) \
     F(CallProperty, callProperty) \
     F(CallPropertyLookup, callPropertyLookup) \
@@ -190,11 +185,32 @@ class StackSlot {
     int index;
 
 public:
-    static StackSlot create(int index) {
+    static StackSlot createRegister(int index) {
+        Q_ASSERT(index >= 0);
         StackSlot t;
         t.index = index;
         return t;
     }
+
+    static StackSlot createArgument(int index) {
+        Q_ASSERT(index >= 0);
+        StackSlot t;
+        t.index = -index - 1;
+        return t;
+    }
+
+    bool isRegister() const { return index >= 0; }
+    bool isArgument() const { return index < 0; }
+
+//    int tempIndex() const {
+//        Q_ASSERT(isTemp());
+//        return index;
+//    }
+
+//    int argIndex() const {
+//        Q_ASSERT(isArg());
+//        return -index - 1;
+//    }
 
     int stackSlot() const { return index; }
 };
@@ -258,22 +274,6 @@ union Instr
         StackSlot srcReg;
         StackSlot destReg;
     };
-    struct instr_loadLocal {
-        MOTH_INSTR_HEADER
-        int index;
-    };
-    struct instr_storeLocal {
-        MOTH_INSTR_HEADER
-        int index;
-    };
-    struct instr_loadArg {
-        MOTH_INSTR_HEADER
-        int index;
-    };
-    struct instr_storeArg {
-        MOTH_INSTR_HEADER
-        int index;
-    };
     struct instr_loadScopedLocal {
         MOTH_INSTR_HEADER
         int scope;
@@ -284,12 +284,12 @@ union Instr
         int scope;
         int index;
     };
-    struct instr_loadScopedArg {
+    struct instr_loadScopedArgument {
         MOTH_INSTR_HEADER
         int scope;
         int index;
     };
-    struct instr_storeScopedArg {
+    struct instr_storeScopedArgument {
         MOTH_INSTR_HEADER
         int scope;
         int index;
@@ -398,10 +398,6 @@ union Instr
         uint lookup;
         StackSlot base;
         StackSlot index;
-    };
-    struct instr_initStackFrame {
-        MOTH_INSTR_HEADER
-        int value;
     };
     struct instr_callValue {
         MOTH_INSTR_HEADER
@@ -682,14 +678,10 @@ union Instr
     instr_loadReg loadReg;
     instr_storeReg storeReg;
     instr_moveReg moveReg;
-    instr_loadLocal loadLocal;
-    instr_storeLocal storeLocal;
-    instr_loadArg loadArg;
-    instr_storeArg storeArg;
     instr_loadScopedLocal loadScopedLocal;
     instr_storeScopedLocal storeScopedLocal;
-    instr_loadScopedArg loadScopedArg;
-    instr_storeScopedArg storeScopedArg;
+    instr_loadScopedArgument loadScopedArgument;
+    instr_storeScopedArgument storeScopedArgument;
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;
     instr_loadClosure loadClosure;
@@ -712,7 +704,6 @@ union Instr
     instr_setLookup setLookup;
     instr_storeScopeObjectProperty storeScopeObjectProperty;
     instr_storeContextObjectProperty storeContextObjectProperty;
-    instr_initStackFrame initStackFrame;
     instr_callValue callValue;
     instr_callProperty callProperty;
     instr_callPropertyLookup callPropertyLookup;

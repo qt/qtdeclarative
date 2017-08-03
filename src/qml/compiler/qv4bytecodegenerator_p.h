@@ -195,6 +195,7 @@ public:
 
     int newRegister();
     int newRegisterArray(int n);
+    int registerCount() const { return regCount; }
 
     QByteArray finalize();
 

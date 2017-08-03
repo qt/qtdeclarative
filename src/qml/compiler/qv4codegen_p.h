@@ -155,15 +155,15 @@ public:
             return constant;
         }
 
-        Q_REQUIRED_RESULT RValue storeInTemp() const;
+        Q_REQUIRED_RESULT RValue storeOnStack() const;
     };
     struct Reference {
         enum Type {
             Invalid,
             Accumulator,
             StackSlot,
-            Local,
-            Argument,
+            ScopedLocal,
+            ScopedArgument,
             Name,
             Member,
             Subscript,
@@ -202,6 +202,9 @@ public:
         bool isConst() const { return type == Const; }
         bool isAccumulator() const { return type == Accumulator; }
         bool isStackSlot() const { return type == StackSlot; }
+        bool isRegister() const {
+            return isStackSlot() && theStackSlot.isRegister();
+        }
 
         static Reference fromAccumulator(Codegen *cg) {
             return Reference(cg, Accumulator);
@@ -210,18 +213,24 @@ public:
             Reference r(cg, StackSlot);
             if (tempIndex == -1)
                 tempIndex = cg->bytecodeGenerator->newRegister();
-            r.theStackSlot = Moth::StackSlot::create(tempIndex);
-            r.stackSlotIsLocal = isLocal;
+            r.theStackSlot = Moth::StackSlot::createRegister(tempIndex);
+            r.stackSlotIsLocalOrArgument = isLocal;
             return r;
         }
-        static Reference fromLocal(Codegen *cg, uint index, uint scope) {
-            Reference r(cg, Local);
+        static Reference fromArgument(Codegen *cg, int index) {
+            Reference r(cg, StackSlot);
+            r.theStackSlot = Moth::StackSlot::createArgument(index);
+            r.stackSlotIsLocalOrArgument = true;
+            return r;
+        }
+        static Reference fromScopedLocal(Codegen *cg, int index, int scope) {
+            Reference r(cg, ScopedLocal);
             r.index = index;
             r.scope = scope;
             return r;
         }
-        static Reference fromArgument(Codegen *cg, uint index, uint scope) {
-            Reference r(cg, Argument);
+        static Reference fromScopedArgument(Codegen *cg, int index, int scope) {
+            Reference r(cg, ScopedArgument);
             r.index = index;
             r.scope = scope;
             return r;
@@ -298,7 +307,7 @@ public:
             Moth::StackSlot theStackSlot;
             QV4::ReturnedValue constant;
             int unqualifiedNameIndex;
-            struct { // Argument/Local
+            struct { // Scoped arguments/Local
                 int index;
                 int scope;
             };
@@ -320,7 +329,7 @@ public:
         };
         mutable bool isArgOrEval = false;
         bool isReadonly = false;
-        bool stackSlotIsLocal = false;
+        bool stackSlotIsLocalOrArgument = false;
         bool global = false;
         Codegen *codegen;
 
