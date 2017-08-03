@@ -1813,7 +1813,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     if (showCode) {
         qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
                  << "register count" << _context->registerCount;
-        QV4::Moth::dumpBytecode(_context->code);
+        QV4::Moth::dumpBytecode(_context->code, _context->arguments.size());
         qDebug();
     }
 

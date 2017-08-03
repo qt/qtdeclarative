@@ -202,17 +202,19 @@ public:
     bool isRegister() const { return index >= 0; }
     bool isArgument() const { return index < 0; }
 
-//    int tempIndex() const {
-//        Q_ASSERT(isTemp());
-//        return index;
-//    }
-
-//    int argIndex() const {
-//        Q_ASSERT(isArg());
-//        return -index - 1;
-//    }
+    int argIndex() const {
+        Q_ASSERT(isArgument());
+        return -index - 1;
+    }
 
     int stackSlot() const { return index; }
+
+    QString dump(int nFormals) const {
+        if (isRegister())
+            return QStringLiteral("r%1").arg(index);
+
+        return QStringLiteral("a%1").arg(nFormals + index);
+    }
 };
 
 inline bool operator==(const StackSlot &l, const StackSlot &r) { return l.stackSlot() == r.stackSlot(); }
@@ -221,9 +223,9 @@ inline bool operator!=(const StackSlot &l, const StackSlot &r) { return l.stackS
 // When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
 
 void dumpConstantTable(const Value *constants, uint count);
-void dumpBytecode(const char *bytecode, int len);
-inline void dumpBytecode(const QByteArray &bytecode) {
-    dumpBytecode(bytecode.constData(), bytecode.length());
+void dumpBytecode(const char *bytecode, int len, int nFormals);
+inline void dumpBytecode(const QByteArray &bytecode, int nFormals) {
+    dumpBytecode(bytecode.constData(), bytecode.length(), nFormals);
 }
 
 union Instr

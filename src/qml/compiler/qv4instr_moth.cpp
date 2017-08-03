@@ -89,6 +89,7 @@ int absoluteInstructionOffset(const char *codeStart, const T &instr)
     const InstrMeta<int(Instr::I)>::DataType &instr = InstrMeta<int(Instr::I)>::data(*genericInstr); \
     Q_UNUSED(instr); \
     QDebug d = qDebug(); \
+    d.noquote(); \
     d.nospace(); \
     d << alignedNumber(int(code - start)).constData() << ":    " << #I << " "; \
     code += InstrMeta<int(Instr::I)>::Size; \
@@ -99,12 +100,6 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Moth {
 
-QDebug operator<<(QDebug dbg, const StackSlot &t)
-{
-    dbg << "%" << t.stackSlot();
-    return dbg;
-}
-
 void dumpConstantTable(const Value *constants, uint count)
 {
     QDebug d = qDebug();
@@ -114,7 +109,7 @@ void dumpConstantTable(const Value *constants, uint count)
           << toString(constants[i].asReturnedValue()).toUtf8().constData() << "\n";
 }
 
-void dumpBytecode(const char *code, int len)
+void dumpBytecode(const char *code, int len, int nFormals)
 {
     const char *start = code;
     const char *end = code + len;
@@ -123,15 +118,15 @@ void dumpBytecode(const char *code, int len)
         switch (genericInstr->common.instructionType) {
 
         MOTH_BEGIN_INSTR(LoadReg)
-            d << instr.reg;
+            d << instr.reg.dump(nFormals);
         MOTH_END_INSTR(LoadReg)
 
         MOTH_BEGIN_INSTR(StoreReg)
-            d << instr.reg;
+            d << instr.reg.dump(nFormals);
         MOTH_END_INSTR(StoreReg)
 
         MOTH_BEGIN_INSTR(MoveReg)
-            d << instr.destReg << ", " << instr.srcReg;
+            d << instr.destReg.dump(nFormals) << ", " << instr.srcReg.dump(nFormals);
         MOTH_END_INSTR(MoveReg)
 
         MOTH_BEGIN_INSTR(LoadConst)
@@ -139,23 +134,23 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(LoadConst)
 
         MOTH_BEGIN_INSTR(MoveConst)
-            d << instr.destTemp << ", C" << instr.constIndex;
+            d << instr.destTemp.dump(nFormals) << ", C" << instr.constIndex;
         MOTH_END_INSTR(MoveConst)
 
         MOTH_BEGIN_INSTR(LoadScopedLocal)
-            d << "$" << instr.index << "@" << instr.scope;
+            d << "l" << instr.index << "@" << instr.scope;
         MOTH_END_INSTR(LoadScopedLocal)
 
         MOTH_BEGIN_INSTR(StoreScopedLocal)
-            d << ", " << "$" << instr.index << "@" << instr.scope;
+            d << ", " << "l" << instr.index << "@" << instr.scope;
         MOTH_END_INSTR(StoreScopedLocal)
 
         MOTH_BEGIN_INSTR(LoadScopedArgument)
-            d <<  "#" << instr.index << "@" << instr.scope;
+            d <<  "a" << instr.index << "@" << instr.scope;
         MOTH_END_INSTR(LoadScopedArgument)
 
         MOTH_BEGIN_INSTR(StoreScopedArgument)
-            d << "#" << instr.index << "@" << instr.scope;
+            d << "a" << instr.index << "@" << instr.scope;
         MOTH_END_INSTR(StoreScopedArgument)
 
         MOTH_BEGIN_INSTR(LoadRuntimeString)
@@ -183,27 +178,27 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(StoreName)
 
         MOTH_BEGIN_INSTR(LoadElement)
-            d << instr.base << "[" << instr.index << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]";
         MOTH_END_INSTR(LoadElement)
 
         MOTH_BEGIN_INSTR(LoadElementA)
-            d << instr.base << "[acc]";
+            d << instr.base.dump(nFormals) << "[acc]";
         MOTH_END_INSTR(LoadElement)
 
         MOTH_BEGIN_INSTR(LoadElementLookup)
-            d << instr.base << "[" << instr.index << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]";
         MOTH_END_INSTR(LoadElementLookup)
 
         MOTH_BEGIN_INSTR(StoreElement)
-            d << instr.base << "[" << instr.index << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]";
         MOTH_END_INSTR(StoreElement)
 
         MOTH_BEGIN_INSTR(StoreElementLookup)
-            d << instr.base << "[" << instr.index << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]";
         MOTH_END_INSTR(StoreElementLookup)
 
         MOTH_BEGIN_INSTR(LoadProperty)
-            d << instr.base << "[" << instr.name << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.name << "]";
         MOTH_END_INSTR(LoadProperty)
 
         MOTH_BEGIN_INSTR(LoadPropertyA)
@@ -211,7 +206,7 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(LoadElementA)
 
         MOTH_BEGIN_INSTR(GetLookup)
-            d << instr.base << "(" << instr.index << ")";
+            d << instr.base.dump(nFormals) << "(" << instr.index << ")";
         MOTH_END_INSTR(GetLookup)
 
         MOTH_BEGIN_INSTR(GetLookupA)
@@ -219,55 +214,55 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(GetLookupA)
 
         MOTH_BEGIN_INSTR(StoreProperty)
-            d << instr.base << "[" << instr.name<< "]";
+            d << instr.base.dump(nFormals) << "[" << instr.name<< "]";
         MOTH_END_INSTR(StoreProperty)
 
         MOTH_BEGIN_INSTR(SetLookup)
-            d << instr.base;
+            d << instr.base.dump(nFormals);
         MOTH_END_INSTR(SetLookup)
 
         MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
-            d << instr.base << "[" << instr.propertyIndex << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.propertyIndex << "]";
         MOTH_END_INSTR(StoreScopeObjectProperty)
 
         MOTH_BEGIN_INSTR(LoadScopeObjectProperty)
-            d << instr.base << "[" << instr.propertyIndex << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.propertyIndex << "]";
         MOTH_END_INSTR(LoadScopeObjectProperty)
 
         MOTH_BEGIN_INSTR(StoreContextObjectProperty)
-            d << instr.base << "[" << instr.propertyIndex << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.propertyIndex << "]";
         MOTH_END_INSTR(StoreContextObjectProperty)
 
         MOTH_BEGIN_INSTR(LoadContextObjectProperty)
-            d << instr.base << "[" << instr.propertyIndex << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.propertyIndex << "]";
         MOTH_END_INSTR(LoadContextObjectProperty)
 
         MOTH_BEGIN_INSTR(LoadIdObject)
-            d << instr.base << "[" << instr.index << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.index << "]";
         MOTH_END_INSTR(LoadIdObject)
 
         MOTH_BEGIN_INSTR(CallValue)
-            d << instr.dest << "(" << instr.callData << ")";
+            d << instr.dest.dump(nFormals) << "(" << instr.callData.dump(nFormals) << ")";
         MOTH_END_INSTR(CallValue)
 
         MOTH_BEGIN_INSTR(CallProperty)
-            d << instr.base<<"."<<instr.name << "(" << instr.callData << ")";
+            d << instr.base.dump(nFormals) << "." << instr.name << "(" << instr.callData.dump(nFormals) << ")";
         MOTH_END_INSTR(CallProperty)
 
         MOTH_BEGIN_INSTR(CallPropertyLookup)
-            d << instr.lookupIndex << "(" << instr.callData << ")";
+            d << instr.lookupIndex << "(" << instr.callData.dump(nFormals) << ")";
         MOTH_END_INSTR(CallPropertyLookup)
 
         MOTH_BEGIN_INSTR(CallElement)
-            d << instr.base << "[" << instr.index << "]" << "(" << instr.callData << ")";
+            d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]" << "(" << instr.callData.dump(nFormals) << ")";
         MOTH_END_INSTR(CallElement)
 
         MOTH_BEGIN_INSTR(CallActivationProperty)
-            d << instr.name << "(" << instr.callData << ")";
+            d << instr.name << "(" << instr.callData.dump(nFormals) << ")";
         MOTH_END_INSTR(CallActivationProperty)
 
         MOTH_BEGIN_INSTR(CallGlobalLookup)
-            d << instr.index << "(" << instr.callData << ")";
+            d << instr.index << "(" << instr.callData.dump(nFormals) << ")";
         MOTH_END_INSTR(CallGlobalLookup)
 
         MOTH_BEGIN_INSTR(SetExceptionHandler)
@@ -306,11 +301,11 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallBuiltinForeachNextPropertyName)
 
         MOTH_BEGIN_INSTR(CallBuiltinDeleteMember)
-            d << instr.base << "[" << instr.member << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.member << "]";
         MOTH_END_INSTR(CallBuiltinDeleteMember)
 
         MOTH_BEGIN_INSTR(CallBuiltinDeleteSubscript)
-            d << instr.base << "[" << instr.index << "]";
+            d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]";
         MOTH_END_INSTR(CallBuiltinDeleteSubscript)
 
         MOTH_BEGIN_INSTR(CallBuiltinDeleteName)
@@ -329,11 +324,11 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallBuiltinDeclareVar)
 
         MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
-            d << instr.args << ", " << instr.argc;
+            d << instr.args.dump(nFormals) << ", " << instr.argc;
         MOTH_END_INSTR(CallBuiltinDefineArray)
 
         MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
-            d << instr.args
+            d << instr.args.dump(nFormals)
               << ", " << instr.internalClassId
               << ", " << instr.arrayValueCount
               << ", " << instr.arrayGetterSetterCountAndFlags;
@@ -346,23 +341,23 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(CallBuiltinConvertThisToObject)
 
         MOTH_BEGIN_INSTR(CreateValue)
-            d << "new" << instr.func << "(" << instr.callData << ")";
+            d << "new" << instr.func.dump(nFormals) << "(" << instr.callData.dump(nFormals) << ")";
         MOTH_END_INSTR(CreateValue)
 
         MOTH_BEGIN_INSTR(CreateProperty)
-            d << "new" << instr.name << "(" << instr.callData << instr.argc << ")";
+            d << "new" << instr.name << "(" << instr.callData.dump(nFormals) << instr.argc << ")";
         MOTH_END_INSTR(CreateProperty)
 
         MOTH_BEGIN_INSTR(ConstructPropertyLookup)
-            d << "new" << instr.index << "(" << instr.callData << instr.argc << ")";
+            d << "new" << instr.index << "(" << instr.callData.dump(nFormals) << instr.argc << ")";
         MOTH_END_INSTR(ConstructPropertyLookup)
 
         MOTH_BEGIN_INSTR(CreateActivationProperty)
-            d << "new" << instr.name << "(" << instr.callData << instr.argc << ")";
+            d << "new" << instr.name << "(" << instr.callData.dump(nFormals) << instr.argc << ")";
         MOTH_END_INSTR(CreateActivationProperty)
 
         MOTH_BEGIN_INSTR(ConstructGlobalLookup)
-            d << "new" << instr.index << "(" << instr.callData << instr.argc << ")";
+            d << "new" << instr.index << "(" << instr.callData.dump(nFormals) << instr.argc << ")";
         MOTH_END_INSTR(ConstructGlobalLookup)
 
         MOTH_BEGIN_INSTR(Jump)
@@ -378,19 +373,19 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(JumpNe)
 
         MOTH_BEGIN_INSTR(CmpJmpEq)
-            d << instr.lhs << ", " << instr.rhs << ", " << absoluteInstructionOffset(start, instr);
+            d << instr.lhs.dump(nFormals) << ", " << instr.rhs.dump(nFormals) << ", " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(CmpJmpEq)
 
         MOTH_BEGIN_INSTR(CmpJmpNe)
-                d << instr.lhs << ", " << instr.rhs << ", " << absoluteInstructionOffset(start, instr);
+                d << instr.lhs.dump(nFormals) << ", " << instr.rhs.dump(nFormals) << ", " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(CmpJmpNe)
 
         MOTH_BEGIN_INSTR(JumpStrictEqual)
-            d << instr.lhs << "  " << absoluteInstructionOffset(start, instr);
+            d << instr.lhs.dump(nFormals) << "  " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(JumpStrictEqual)
 
         MOTH_BEGIN_INSTR(JumpStrictNotEqual)
-            d << instr.lhs << "  " << absoluteInstructionOffset(start, instr);
+            d << instr.lhs.dump(nFormals) << "  " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(JumpStrictNotEqual)
 
         MOTH_BEGIN_INSTR(UNot)
@@ -412,31 +407,31 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(PreDecrement)
 
         MOTH_BEGIN_INSTR(Binop)
-            d << instr.alu << ", " << instr.lhs << ", acc";
+            d << instr.alu << ", " << instr.lhs.dump(nFormals) << ", acc";
         MOTH_END_INSTR(Binop)
 
         MOTH_BEGIN_INSTR(Add)
-            d << instr.lhs << ", acc";
+            d << instr.lhs.dump(nFormals) << ", acc";
         MOTH_END_INSTR(Add)
 
         MOTH_BEGIN_INSTR(BitAnd)
-            d << instr.lhs << ", acc";
+            d << instr.lhs.dump(nFormals) << ", acc";
         MOTH_END_INSTR(BitAnd)
 
         MOTH_BEGIN_INSTR(BitOr)
-            d << instr.lhs << ", acc";
+            d << instr.lhs.dump(nFormals) << ", acc";
         MOTH_END_INSTR(BitOr)
 
         MOTH_BEGIN_INSTR(BitXor)
-            d << instr.lhs << ", acc";
+            d << instr.lhs.dump(nFormals) << ", acc";
         MOTH_END_INSTR(BitXor)
 
         MOTH_BEGIN_INSTR(Shr)
-            d << instr.lhs << ", acc";
+            d << instr.lhs.dump(nFormals) << ", acc";
         MOTH_END_INSTR(Shr)
 
         MOTH_BEGIN_INSTR(Shl)
-            d << instr.lhs << ", acc";
+            d << instr.lhs.dump(nFormals) << ", acc";
         MOTH_END_INSTR(Shl)
 
         MOTH_BEGIN_INSTR(BitAndConst)
@@ -460,19 +455,19 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(ShlConst)
 
         MOTH_BEGIN_INSTR(Mul)
-            d << instr.lhs << ", acc";
+            d << instr.lhs.dump(nFormals) << ", acc";
         MOTH_END_INSTR(Mul)
 
         MOTH_BEGIN_INSTR(Sub)
-            d << instr.lhs << ", acc";
+            d << instr.lhs.dump(nFormals) << ", acc";
         MOTH_END_INSTR(Sub)
 
         MOTH_BEGIN_INSTR(BinopContext)
-            d << instr.alu << " " << instr.lhs << ", acc";
+            d << instr.alu << " " << instr.lhs.dump(nFormals) << ", acc";
         MOTH_END_INSTR(BinopContext)
 
         MOTH_BEGIN_INSTR(Ret)
-            d << instr.result;
+            d << instr.result.dump(nFormals);
         MOTH_END_INSTR(Ret)
 
     #ifndef QT_NO_QML_DEBUGGER
@@ -488,11 +483,11 @@ void dumpBytecode(const char *code, int len)
         MOTH_END_INSTR(LoadThis)
 
         MOTH_BEGIN_INSTR(LoadQmlContext)
-            d << instr.result;
+            d << instr.result.dump(nFormals);
         MOTH_END_INSTR(LoadQmlContext)
 
         MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
-            d << instr.result;
+            d << instr.result.dump(nFormals);
         MOTH_END_INSTR(LoadQmlImportedScripts)
 
         MOTH_BEGIN_INSTR(LoadQmlSingleton)
