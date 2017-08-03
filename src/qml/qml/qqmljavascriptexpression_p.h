@@ -103,7 +103,8 @@ public:
     virtual QString expressionIdentifier() const = 0;
     virtual void expressionChanged() = 0;
 
-    void evaluate(QV4::CallData *callData, bool *isUndefined, QV4::Scope &scope);
+    QV4::ReturnedValue evaluate(bool *isUndefined);
+    QV4::ReturnedValue evaluate(QV4::CallData *callData, bool *isUndefined);
 
     inline bool notifyOnValueChanged() const;
 

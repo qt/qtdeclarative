@@ -682,6 +682,9 @@ struct Encode {
     Encode(ReturnedValue v) {
         val = v;
     }
+    Encode(Value v) {
+        val = v.rawValue();
+    }
 
     Encode(Heap::Base *o) {
         Q_ASSERT(o);

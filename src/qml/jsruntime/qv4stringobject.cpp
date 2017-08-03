@@ -150,24 +150,25 @@ void Heap::StringCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("String"));
 }
 
-void StringCtor::construct(const Managed *m, Scope &scope, CallData *callData)
+ReturnedValue StringCtor::construct(const Managed *m, CallData *callData)
 {
     ExecutionEngine *v4 = static_cast<const Object *>(m)->engine();
+    Scope scope(v4);
     ScopedString value(scope);
     if (callData->argc)
         value = callData->args[0].toString(v4);
     else
         value = v4->newString();
-    scope.result = Encode(v4->newStringObject(value));
+    return Encode(v4->newStringObject(value));
 }
 
-void StringCtor::call(const Managed *, Scope &scope, CallData *callData)
+ReturnedValue StringCtor::call(const Managed *m, CallData *callData)
 {
-    ExecutionEngine *v4 = scope.engine;
+    ExecutionEngine *v4 = m->engine();
     if (callData->argc)
-        scope.result = callData->args[0].toString(v4);
+        return callData->args[0].toString(v4)->asReturnedValue();
     else
-        scope.result = v4->newString();
+        return v4->newString()->asReturnedValue();
 }
 
 void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
@@ -397,8 +398,7 @@ void StringPrototype::method_match(const BuiltinFunction *, Scope &scope, CallDa
     if (!rx) {
         ScopedCallData callData(scope, 1);
         callData->args[0] = regexp;
-        scope.engine->regExpCtor()->construct(scope, callData);
-        rx = scope.result.asReturnedValue();
+        rx = scope.engine->regExpCtor()->construct(callData);
     }
 
     if (!rx)
@@ -415,7 +415,7 @@ void StringPrototype::method_match(const BuiltinFunction *, Scope &scope, CallDa
     cData->thisObject = rx;
     cData->args[0] = s;
     if (!global) {
-        exec->call(scope, cData);
+        scope.result = exec->call(cData);
         return;
     }
 
@@ -428,7 +428,7 @@ void StringPrototype::method_match(const BuiltinFunction *, Scope &scope, CallDa
     ScopedValue matchStr(scope);
     ScopedValue index(scope);
     while (1) {
-        exec->call(scope, cData);
+        scope.result = exec->call(cData);
         if (scope.result.isNull())
             break;
         assert(scope.result.isObject());
@@ -569,6 +569,7 @@ void StringPrototype::method_replace(const BuiltinFunction *, Scope &scope, Call
     }
 
     QString result;
+    ScopedValue replacement(scope);
     ScopedValue replaceValue(scope, callData->argument(1));
     ScopedFunctionObject searchCallback(scope, replaceValue);
     if (!!searchCallback) {
@@ -593,9 +594,9 @@ void StringPrototype::method_replace(const BuiltinFunction *, Scope &scope, Call
             callData->args[numCaptures] = Primitive::fromUInt32(matchStart);
             callData->args[numCaptures + 1] = scope.engine->newString(string);
 
-            searchCallback->call(scope, callData);
+            replacement = searchCallback->call(callData);
             result += string.midRef(lastEnd, matchStart - lastEnd);
-            result += scope.result.toQString();
+            result += replacement->toQString();
             lastEnd = matchEnd;
         }
         result += string.midRef(lastEnd);
@@ -634,7 +635,7 @@ void StringPrototype::method_search(const BuiltinFunction *, Scope &scope, CallD
     if (!regExp) {
         ScopedCallData callData(scope, 1);
         callData->args[0] = scope.result;
-        scope.engine->regExpCtor()->construct(scope, callData);
+        scope.result = scope.engine->regExpCtor()->construct(callData);
         CHECK_EXCEPTION();
 
         regExp = scope.result.as<RegExpObject>();

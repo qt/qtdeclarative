@@ -535,8 +535,7 @@ ReturnedValue Lookup::getterAccessor0(Lookup *l, ExecutionEngine *engine, const 
 
             ScopedCallData callData(scope, 0);
             callData->thisObject = object;
-            getter->call(scope, callData);
-            return scope.result.asReturnedValue();
+            return getter->call(callData);
         }
     }
     l->getter = getterFallback;
@@ -558,8 +557,7 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, ExecutionEngine *engine, const 
 
             ScopedCallData callData(scope, 0);
             callData->thisObject = object;
-            getter->call(scope, callData);
-            return scope.result.asReturnedValue();
+            return getter->call(callData);
         }
     }
     l->getter = getterFallback;
@@ -584,8 +582,7 @@ ReturnedValue Lookup::getterAccessor2(Lookup *l, ExecutionEngine *engine, const 
 
                     ScopedCallData callData(scope, 0);
                     callData->thisObject = object;
-                    getter->call(scope, callData);
-                    return scope.result.asReturnedValue();
+                    return getter->call(callData);
                 }
             }
         }
@@ -640,8 +637,7 @@ ReturnedValue Lookup::primitiveGetterAccessor0(Lookup *l, ExecutionEngine *engin
 
             ScopedCallData callData(scope, 0);
             callData->thisObject = object;
-            getter->call(scope, callData);
-            return scope.result.asReturnedValue();
+            return getter->call(callData);
         }
     }
     l->getter = getterGeneric;
@@ -661,8 +657,7 @@ ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, ExecutionEngine *engin
 
             ScopedCallData callData(scope, 0);
             callData->thisObject = object;
-            getter->call(scope, callData);
-            return scope.result.asReturnedValue();
+            return getter->call(callData);
         }
     }
     l->getter = getterGeneric;
@@ -781,8 +776,7 @@ ReturnedValue Lookup::globalGetterAccessor0(Lookup *l, ExecutionEngine *engine)
 
         ScopedCallData callData(scope, 0);
         callData->thisObject = Primitive::undefinedValue();
-        getter->call(scope, callData);
-        return scope.result.asReturnedValue();
+        return getter->call(callData);
     }
     l->globalGetter = globalGetterGeneric;
     return globalGetterGeneric(l, engine);
@@ -800,8 +794,7 @@ ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionEngine *engine)
 
         ScopedCallData callData(scope, 0);
         callData->thisObject = Primitive::undefinedValue();
-        getter->call(scope, callData);
-        return scope.result.asReturnedValue();
+        return getter->call(callData);
     }
     l->globalGetter = globalGetterGeneric;
     return globalGetterGeneric(l, engine);
@@ -822,8 +815,7 @@ ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionEngine *engine)
 
                 ScopedCallData callData(scope, 0);
                 callData->thisObject = Primitive::undefinedValue();
-                getter->call(scope, callData);
-                return scope.result.asReturnedValue();
+                return getter->call(callData);
             }
         }
     }

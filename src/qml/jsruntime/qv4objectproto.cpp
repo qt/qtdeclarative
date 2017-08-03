@@ -60,27 +60,29 @@ void Heap::ObjectCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Object"));
 }
 
-void ObjectCtor::construct(const Managed *that, Scope &scope, CallData *callData)
+ReturnedValue ObjectCtor::construct(const Managed *m, CallData *callData)
 {
-    const ObjectCtor *ctor = static_cast<const ObjectCtor *>(that);
+    ExecutionEngine *v4 = m->engine();
+    const ObjectCtor *ctor = static_cast<const ObjectCtor *>(m);
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
+        Scope scope(v4);
         ScopedObject obj(scope, scope.engine->newObject());
         ScopedObject proto(scope, ctor->get(scope.engine->id_prototype()));
         if (!!proto)
             obj->setPrototype(proto);
-        scope.result = obj.asReturnedValue();
+        return obj.asReturnedValue();
     } else {
-        scope.result = callData->args[0].toObject(scope.engine);
+        return callData->args[0].toObject(v4)->asReturnedValue();
     }
 }
 
-void ObjectCtor::call(const Managed *, Scope &scope, CallData *callData)
+ReturnedValue ObjectCtor::call(const Managed *m, CallData *callData)
 {
-    ExecutionEngine *v4 = scope.engine;
+    ExecutionEngine *v4 = m->engine();
     if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
-        scope.result = v4->newObject()->asReturnedValue();
+        return v4->newObject()->asReturnedValue();
     } else {
-        scope.result = callData->args[0].toObject(v4);
+        return callData->args[0].toObject(v4)->asReturnedValue();
     }
 }
 
@@ -476,7 +478,7 @@ void ObjectPrototype::method_toLocaleString(const BuiltinFunction *, Scope &scop
         THROW_TYPE_ERROR();
     ScopedCallData cData(scope);
     cData->thisObject = o;
-    f->call(scope, callData);
+    scope.result = f->call(callData);
 }
 
 void ObjectPrototype::method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData)

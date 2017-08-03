@@ -51,34 +51,30 @@ void Heap::ArrayBufferCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("ArrayBuffer"));
 }
 
-void ArrayBufferCtor::construct(const Managed *m, Scope &scope, CallData *callData)
+ReturnedValue ArrayBufferCtor::construct(const Managed *m, CallData *callData)
 {
-    ExecutionEngine *v4 = static_cast<const Object *>(m)->engine();
+    ExecutionEngine *v4 = m->engine();
+    Scope scope(v4);
 
     ScopedValue l(scope, callData->argument(0));
     double dl = l->toInteger();
-    if (v4->hasException) {
-        scope.result = Encode::undefined();
-        return;
-    }
+    if (v4->hasException)
+        return Encode::undefined();
     uint len = (uint)qBound(0., dl, (double)UINT_MAX);
-    if (len != dl) {
-        scope.result = v4->throwRangeError(QLatin1String("ArrayBuffer constructor: invalid length"));
-        return;
-    }
+    if (len != dl)
+        return v4->throwRangeError(QLatin1String("ArrayBuffer constructor: invalid length"));
 
     Scoped<ArrayBuffer> a(scope, v4->newArrayBuffer(len));
-    if (scope.engine->hasException) {
-        scope.result = Encode::undefined();
-    } else {
-        scope.result = a->asReturnedValue();
-    }
+    if (scope.engine->hasException)
+        return Encode::undefined();
+
+    return a->asReturnedValue();
 }
 
 
-void ArrayBufferCtor::call(const Managed *that, Scope &scope, CallData *callData)
+ReturnedValue ArrayBufferCtor::call(const Managed *that, CallData *callData)
 {
-    construct(that, scope, callData);
+    return construct(that, callData);
 }
 
 void ArrayBufferCtor::method_isView(const BuiltinFunction *, Scope &scope, CallData *callData)
@@ -193,8 +189,7 @@ void ArrayBufferPrototype::method_slice(const BuiltinFunction *, Scope &scope, C
     ScopedCallData cData(scope, 1);
     double newLen = qMax(final - first, 0.);
     cData->args[0] = QV4::Encode(newLen);
-    constructor->construct(scope, cData);
-    QV4::Scoped<ArrayBuffer> newBuffer(scope, scope.result);
+    QV4::Scoped<ArrayBuffer> newBuffer(scope, constructor->construct(cData));
     if (!newBuffer || newBuffer->d()->data->size < (int)newLen)
         THROW_TYPE_ERROR();
 

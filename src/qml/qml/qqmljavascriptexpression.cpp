@@ -179,9 +179,16 @@ void QQmlJavaScriptExpression::refresh()
 {
 }
 
+QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(bool *isUndefined)
+{
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_context->engine);
+    QV4::Scope scope(v4);
+    QV4::ScopedCallData callData(scope);
 
+    return evaluate(callData, isUndefined);
+}
 
-void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefined, QV4::Scope &scope)
+QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefined)
 {
     Q_ASSERT(m_context && m_context->engine);
 
@@ -189,7 +196,7 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
     if (!v4Function) {
         if (isUndefined)
             *isUndefined = true;
-        return;
+        return QV4::Encode::undefined();
     }
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(m_context->engine);
@@ -209,7 +216,8 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
         capture.guards.copyAndClearPrepend(activeGuards);
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
-    scope.result = QV4::Primitive::undefinedValue();
+    QV4::Scope scope(v4);
+    QV4::ScopedValue result(scope, QV4::Primitive::undefinedValue());
     callData->thisObject = v4->globalObject;
     if (scopeObject()) {
         QV4::ScopedValue value(scope, QV4::QObjectWrapper::wrap(v4, scopeObject()));
@@ -223,6 +231,7 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
     } else {
         outer->call(scope, callData, v4Function);
     }
+    result = scope.result;
 
     if (scope.hasException()) {
         if (watcher.wasDeleted())
@@ -233,7 +242,7 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
             *isUndefined = true;
     } else {
         if (isUndefined)
-            *isUndefined = scope.result.isUndefined();
+            *isUndefined = result->isUndefined();
 
         if (!watcher.wasDeleted() && hasDelayedError())
             delayedError()->clearError();
@@ -250,6 +259,8 @@ void QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefin
         g->Delete();
 
     ep->propertyCapture = lastPropertyCapture;
+
+    return result->asReturnedValue();
 }
 
 void QQmlPropertyCapture::captureProperty(QQmlNotifier *n, Duration duration)

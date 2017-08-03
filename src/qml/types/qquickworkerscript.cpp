@@ -250,8 +250,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = function;
     callData->thisObject = global();
-    createsendconstructor->call(scope, callData);
-    createsend.set(scope.engine, scope.result.asReturnedValue());
+    createsend.set(scope.engine, createsendconstructor->call(callData));
 }
 
 // Requires handle and context scope
@@ -264,13 +263,14 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
     QV4::Scope scope(v4);
     QV4::ScopedFunctionObject f(scope, createsend.value());
 
+    QV4::ScopedValue v(scope);
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = QV4::Primitive::fromInt32(id);
     callData->thisObject = global();
-    f->call(scope, callData);
+    v = f->call(callData);
     if (scope.hasException())
-        scope.result = scope.engine->catchException();
-    return scope.result.asReturnedValue();
+        v = scope.engine->catchException();
+    return v->asReturnedValue();
 }
 
 #if QT_CONFIG(qml_network)
@@ -367,7 +367,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     callData->thisObject = workerEngine->global();
     callData->args[0] = qmlContext->d()->qml(); // ###
     callData->args[1] = value;
-    f->call(scope, callData);
+    f->call(callData);
     if (scope.hasException()) {
         QQmlError error = scope.engine->catchExceptionAsQmlError();
         reportScriptException(script, error);

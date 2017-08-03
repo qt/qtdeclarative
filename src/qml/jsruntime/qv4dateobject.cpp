@@ -677,7 +677,7 @@ void Heap::DateCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Date"));
 }
 
-void DateCtor::construct(const Managed *, Scope &scope, CallData *callData)
+ReturnedValue DateCtor::construct(const Managed *that, CallData *callData)
 {
     double t = 0;
 
@@ -685,6 +685,7 @@ void DateCtor::construct(const Managed *, Scope &scope, CallData *callData)
         t = currentTime();
 
     else if (callData->argc == 1) {
+        Scope scope(that->engine());
         ScopedValue arg(scope, callData->args[0]);
         if (DateObject *d = arg->as<DateObject>()) {
             t = d->date();
@@ -712,13 +713,13 @@ void DateCtor::construct(const Managed *, Scope &scope, CallData *callData)
         t = TimeClip(UTC(t));
     }
 
-    scope.result = Encode(scope.engine->newDateObject(Primitive::fromDouble(t)));
+    return Encode(that->engine()->newDateObject(Primitive::fromDouble(t)));
 }
 
-void DateCtor::call(const Managed *m, Scope &scope, CallData *)
+ReturnedValue DateCtor::call(const Managed *m, CallData *)
 {
     double t = currentTime();
-    scope.result = static_cast<const DateCtor *>(m)->engine()->newString(ToString(t));
+    return m->engine()->newString(ToString(t))->asReturnedValue();
 }
 
 void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
@@ -1378,7 +1379,7 @@ void DatePrototype::method_toJSON(const BuiltinFunction *, Scope &scope, CallDat
 
     ScopedCallData cData(scope);
     cData->thisObject = callData->thisObject;
-    toIso->call(scope, cData);
+    scope.result = toIso->call(cData);
 }
 
 void DatePrototype::timezoneUpdated()

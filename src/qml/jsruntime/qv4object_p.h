@@ -175,8 +175,8 @@ Q_STATIC_ASSERT(Object::markTable == ((2 << 2) | (2 << 4)));
 struct ObjectVTable
 {
     VTable vTable;
-    void (*call)(const Managed *, Scope &scope, CallData *data);
-    void (*construct)(const Managed *, Scope &scope, CallData *data);
+    ReturnedValue (*call)(const Managed *, CallData *data);
+    ReturnedValue (*construct)(const Managed *, CallData *data);
     ReturnedValue (*get)(const Managed *, String *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
     bool (*put)(Managed *, String *name, const Value &value);
@@ -440,13 +440,13 @@ public:
     ReturnedValue instanceOf(const Value &var) const
     { return vtable()->instanceOf(this, var); }
 
-    inline void construct(Scope &scope, CallData *d) const
-    { return vtable()->construct(this, scope, d); }
-    inline void call(Scope &scope, CallData *d) const
-    { vtable()->call(this, scope, d); }
+    inline ReturnedValue construct(CallData *d) const
+    { return vtable()->construct(this, d); }
+    inline ReturnedValue call(CallData *d) const
+    { return vtable()->call(this, d); }
 protected:
-    static void construct(const Managed *m, Scope &scope, CallData *);
-    static void call(const Managed *m, Scope &scope, CallData *);
+    static ReturnedValue construct(const Managed *m, CallData *);
+    static ReturnedValue call(const Managed *m, CallData *);
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static bool put(Managed *m, String *name, const Value &value);

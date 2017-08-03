@@ -73,7 +73,7 @@ void QQmlDelayedCallQueue::DelayedFunctionCall::execute(QV4::ExecutionEngine *en
 
         const QV4::FunctionObject *callback = m_function.as<QV4::FunctionObject>();
         Q_ASSERT(callback);
-        callback->call(scope, callData);
+        callback->call(callData);
 
         if (scope.engine->hasException) {
             QQmlError error = scope.engine->catchExceptionAsQmlError();

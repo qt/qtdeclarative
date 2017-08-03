@@ -428,9 +428,9 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
 
     ScopedValue conv(scope, object->get(meth1));
     if (FunctionObject *o = conv->as<FunctionObject>()) {
-        o->call(scope, callData);
-        if (scope.result.isPrimitive())
-            return scope.result.asReturnedValue();
+        ScopedValue r(scope, o->call(callData));
+        if (r->isPrimitive())
+            return r->asReturnedValue();
     }
 
     if (engine->hasException)
@@ -438,9 +438,9 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
 
     conv = object->get(meth2);
     if (FunctionObject *o = conv->as<FunctionObject>()) {
-        o->call(scope, callData);
-        if (scope.result.isPrimitive())
-            return scope.result.asReturnedValue();
+        ScopedValue r(scope, o->call(callData));
+        if (r->isPrimitive())
+            return r->asReturnedValue();
     }
 
     return engine->throwTypeError();
@@ -1011,13 +1011,10 @@ ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint ind
         return engine->throwTypeError();
 
     ScopedString name(scope, engine->current->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-    if (o->d() == scope.engine->evalFunction()->d() && name->equals(scope.engine->id_eval())) {
-        static_cast<EvalFunction *>(o.getPointer())->evalCall(scope, callData, true);
-    } else {
-        o->call(scope, callData);
-    }
+    if (o->d() == scope.engine->evalFunction()->d() && name->equals(scope.engine->id_eval()))
+        return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData, true);
 
-    return scope.result.asReturnedValue();
+    return o->call(callData);
 }
 
 
@@ -1044,13 +1041,10 @@ ReturnedValue Runtime::method_callActivationProperty(ExecutionEngine *engine, in
         return engine->throwTypeError(msg);
     }
 
-    if (o->d() == scope.engine->evalFunction()->d() && name->equals(scope.engine->id_eval())) {
-        static_cast<EvalFunction *>(o)->evalCall(scope, callData, true);
-    } else {
-        o->call(scope, callData);
-    }
+    if (o->d() == scope.engine->evalFunction()->d() && name->equals(scope.engine->id_eval()))
+        return static_cast<EvalFunction *>(o)->evalCall(callData, true);
 
-    return scope.result.asReturnedValue();
+    return o->call(callData);
 }
 
 ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, int nameIndex, CallData *callData)
@@ -1073,8 +1067,7 @@ ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, int nameInde
 
     ScopedFunctionObject o(scope, baseObject->get(name));
     if (o) {
-        o->call(scope, callData);
-        return scope.result.asReturnedValue();
+        return o->call(callData);
     } else {
         QString error = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString(), callData->thisObject.toQStringNoThrow());
         return engine->throwTypeError(error);
@@ -1088,11 +1081,9 @@ ReturnedValue Runtime::method_callPropertyLookup(ExecutionEngine *engine, uint i
     Value v;
     v = l->getter(l, engine, callData->thisObject);
     Object *o = v.objectValue();
-    if (Q_LIKELY(o)) {
-        Scope scope(engine);
-        o->call(scope, callData);
-        return scope.result.asReturnedValue();
-    }
+    if (Q_LIKELY(o))
+        return o->call(callData);
+
     return engine->throwTypeError();
 }
 
@@ -1110,17 +1101,14 @@ ReturnedValue Runtime::method_callElement(ExecutionEngine *engine, const Value &
     if (!o)
         return engine->throwTypeError();
 
-    o->call(scope, callData);
-    return scope.result.asReturnedValue();
+    return o->call(callData);
 }
 
 ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &func, CallData *callData)
 {
-    if (Object *o = func.objectValue()) {
-        Scope scope(engine);
-        o->call(scope, callData);
-        return scope.result.asReturnedValue();
-    }
+    if (Object *o = func.objectValue())
+        return o->call(callData);
+
     return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
 }
 
@@ -1132,12 +1120,10 @@ ReturnedValue Runtime::method_constructGlobalLookup(ExecutionEngine *engine, uin
 
     Lookup *l = engine->current->v4Function->compilationUnit->runtimeLookups + index;
     ScopedObject f(scope, l->globalGetter(l, engine));
-    if (f) {
-        f->construct(scope, callData);
-        return scope.result.asReturnedValue();
-    } else {
-        return engine->throwTypeError();
-    }
+    if (f)
+        return f->construct(callData);
+
+    return engine->throwTypeError();
 }
 
 
@@ -1153,8 +1139,7 @@ ReturnedValue Runtime::method_constructActivationProperty(ExecutionEngine *engin
     if (!f)
         return engine->throwTypeError();
 
-    f->construct(scope, callData);
-    return scope.result.asReturnedValue();
+    return f->construct(callData);
 }
 
 ReturnedValue Runtime::method_constructValue(ExecutionEngine *engine, const Value &func, CallData *callData)
@@ -1163,9 +1148,7 @@ ReturnedValue Runtime::method_constructValue(ExecutionEngine *engine, const Valu
     if (!f)
         return engine->throwTypeError();
 
-    Scope scope(engine);
-    f->construct(scope, callData);
-    return scope.result.asReturnedValue();
+    return f->construct(callData);
 }
 
 ReturnedValue Runtime::method_constructProperty(ExecutionEngine *engine, int nameIndex, CallData *callData)
@@ -1177,13 +1160,10 @@ ReturnedValue Runtime::method_constructProperty(ExecutionEngine *engine, int nam
         return Encode::undefined();
 
     ScopedObject f(scope, thisObject->get(name));
-    if (f) {
-        Scope scope(engine);
-        f->construct(scope, callData);
-        return scope.result.asReturnedValue();
-    } else {
-        return engine->throwTypeError();
-    }
+    if (f)
+        return f->construct(callData);
+
+    return engine->throwTypeError();
 }
 
 ReturnedValue Runtime::method_constructPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData)
@@ -1192,11 +1172,9 @@ ReturnedValue Runtime::method_constructPropertyLookup(ExecutionEngine *engine, u
     Value v;
     v = l->getter(l, engine, callData->thisObject);
     Object *o = v.objectValue();
-    if (Q_LIKELY(o)) {
-        Scope scope(engine);
-        o->construct(scope, callData);
-        return scope.result.asReturnedValue();
-    }
+    if (Q_LIKELY(o))
+        return o->construct(callData);
+
     return engine->throwTypeError();
 }
 

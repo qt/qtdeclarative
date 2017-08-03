@@ -79,8 +79,8 @@ struct DataViewCtor: FunctionObject
 {
     V4_OBJECT2(DataViewCtor, FunctionObject)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static ReturnedValue call(const Managed *that, CallData *callData);
 };
 
 struct DataView : Object

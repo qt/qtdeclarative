@@ -207,7 +207,7 @@ private:
 
     void handleDebuggerDeleted(QObject *debugger);
 
-    void evaluateExpression(QV4::Scope &scope, const QString &expression);
+    QV4::ReturnedValue evaluateExpression(const QString &expression);
     bool checkCondition(const QString &expression);
 
     QStringList breakOnSignals;
@@ -239,13 +239,12 @@ private:
 
 bool NativeDebugger::checkCondition(const QString &expression)
 {
-    QV4::Scope scope(m_engine);
-    evaluateExpression(scope, expression);
-    return scope.result.booleanValue();
+    return evaluateExpression(expression).booleanValue();
 }
 
-void NativeDebugger::evaluateExpression(QV4::Scope &scope, const QString &expression)
+QV4::ReturnedValue NativeDebugger::evaluateExpression(const QString &expression)
 {
+    QV4::Scope scope(m_engine);
     m_runningJob = true;
 
     QV4::ExecutionContextSaver saver(scope);
@@ -260,9 +259,10 @@ void NativeDebugger::evaluateExpression(QV4::Scope &scope, const QString &expres
     script.inheritContext = true;
     script.parse();
     if (!m_engine->hasException)
-        scope.result = script.run();
+        return script.run();
 
     m_runningJob = false;
+    return QV4::Encode::undefined();
 }
 
 NativeDebugger::NativeDebugger(QQmlNativeDebugServiceImpl *service, QV4::ExecutionEngine *engine)
@@ -542,8 +542,7 @@ void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject 
         TRACE_PROTOCOL("Evaluate expression: " << expression);
         m_runningJob = true;
 
-        evaluateExpression(scope, expression);
-        QV4::ScopedValue result(scope, scope.result);
+        QV4::ScopedValue result(scope, evaluateExpression(expression));
 
         m_runningJob = false;
         if (result->isUndefined()) {

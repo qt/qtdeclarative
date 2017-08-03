@@ -54,34 +54,31 @@ void Heap::DataViewCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("DataView"));
 }
 
-void DataViewCtor::construct(const Managed *, Scope &scope, CallData *callData)
+ReturnedValue DataViewCtor::construct(const Managed *m, CallData *callData)
 {
+    Scope scope(m->engine());
     Scoped<ArrayBuffer> buffer(scope, callData->argument(0));
-    if (!buffer) {
-        scope.result = scope.engine->throwTypeError();
-        return;
-    }
+    if (!buffer)
+        return scope.engine->throwTypeError();
 
     double bo = callData->argc > 1 ? callData->args[1].toNumber() : 0;
     uint byteOffset = (uint)bo;
     uint bufferLength = buffer->d()->data->size;
     double bl = callData->argc < 3 || callData->args[2].isUndefined() ? (bufferLength - bo) : callData->args[2].toNumber();
     uint byteLength = (uint)bl;
-    if (bo != byteOffset || bl != byteLength || byteOffset + byteLength > bufferLength) {
-        scope.result = scope.engine->throwRangeError(QStringLiteral("DataView: constructor arguments out of range"));
-        return;
-    }
+    if (bo != byteOffset || bl != byteLength || byteOffset + byteLength > bufferLength)
+        return scope.engine->throwRangeError(QStringLiteral("DataView: constructor arguments out of range"));
 
     Scoped<DataView> a(scope, scope.engine->memoryManager->allocObject<DataView>());
     a->d()->buffer.set(scope.engine, buffer->d());
     a->d()->byteLength = byteLength;
     a->d()->byteOffset = byteOffset;
-    scope.result = a.asReturnedValue();
+    return a.asReturnedValue();
 }
 
-void DataViewCtor::call(const Managed *that, Scope &scope, CallData *callData)
+ReturnedValue DataViewCtor::call(const Managed *that, CallData *callData)
 {
-    construct(that, scope, callData);
+    return construct(that, callData);
 }
 
 void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)

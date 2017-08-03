@@ -535,7 +535,7 @@ inline void Managed::mark(MarkStack *markStack)
     m()->mark(markStack);
 }
 
-#define CHECK_STACK_LIMITS(v4, scope) if ((v4)->checkStackLimits(scope)) return; \
+#define CHECK_STACK_LIMITS(v4, scope) if ((v4)->checkStackLimits(scope)) return Encode::undefined(); \
     ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);
 
 struct ExecutionEngineCallDepthRecorder

@@ -421,8 +421,8 @@ public:
             callData->args[0] = convertElementToValue(m_v4, lhs);
             callData->args[1] = convertElementToValue(m_v4, rhs);
             callData->thisObject = m_v4->globalObject;
-            compare->call(scope, callData);
-            return scope.result.toNumber() < 0;
+            QV4::ScopedValue result(scope, compare->call(callData));
+            return result->toNumber() < 0;
         }
 
     private:

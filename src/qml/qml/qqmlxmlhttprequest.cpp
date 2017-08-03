@@ -1559,7 +1559,7 @@ void QQmlXMLHttpRequest::dispatchCallback(Object *thisObj, QQmlContextData *cont
 
     QV4::ScopedCallData callData(scope);
     callData->thisObject = Encode::undefined();
-    callback->call(scope, callData);
+    callback->call(callData);
 
     if (scope.engine->hasException) {
         QQmlError error = scope.engine->catchExceptionAsQmlError();
@@ -1617,23 +1617,22 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
     V4_OBJECT2(QQmlXMLHttpRequestCtor, FunctionObject)
 
-    static void construct(const Managed *that, Scope &scope, QV4::CallData *)
+    static ReturnedValue construct(const Managed *that, QV4::CallData *)
     {
+        Scope scope(that->engine());
         Scoped<QQmlXMLHttpRequestCtor> ctor(scope, that->as<QQmlXMLHttpRequestCtor>());
-        if (!ctor) {
-            scope.result = scope.engine->throwTypeError();
-            return;
-        }
+        if (!ctor)
+            return scope.engine->throwTypeError();
 
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(scope.engine->v8Engine->networkAccessManager());
         Scoped<QQmlXMLHttpRequestWrapper> w(scope, scope.engine->memoryManager->allocObject<QQmlXMLHttpRequestWrapper>(r));
         ScopedObject proto(scope, ctor->d()->proto);
         w->setPrototype(proto);
-        scope.result = w.asReturnedValue();
+        return w.asReturnedValue();
     }
 
-    static void call(const Managed *, Scope &scope, QV4::CallData *) {
-        scope.result = Primitive::undefinedValue();
+    static ReturnedValue call(const Managed *, QV4::CallData *) {
+        return Encode::undefined();
     }
 
     void setupProto();

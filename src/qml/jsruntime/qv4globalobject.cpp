@@ -337,14 +337,13 @@ void Heap::EvalFunction::init(QV4::ExecutionContext *scope)
     f->defineReadonlyProperty(s.engine->id_length(), Primitive::fromInt32(1));
 }
 
-void EvalFunction::evalCall(Scope &scope, CallData *callData, bool directCall) const
+ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
 {
-    if (callData->argc < 1) {
-        scope.result = Encode::undefined();
-        return;
-    }
+    if (callData->argc < 1)
+        return Encode::undefined();
 
     ExecutionEngine *v4 = engine();
+    Scope scope(v4);
     ExecutionContextSaver ctxSaver(scope);
 
     ExecutionContext *currentContext = v4->currentContext;
@@ -357,10 +356,8 @@ void EvalFunction::evalCall(Scope &scope, CallData *callData, bool directCall) c
     }
 
     String *scode = callData->args[0].stringValue();
-    if (!scode) {
-        scope.result = callData->args[0].asReturnedValue();
-        return;
-    }
+    if (!scode)
+        return callData->args[0].asReturnedValue();
 
     const QString code = scode->toQString();
     bool inheritContext = !ctx->d()->strictMode;
@@ -369,23 +366,18 @@ void EvalFunction::evalCall(Scope &scope, CallData *callData, bool directCall) c
     script.strictMode = (directCall && currentContext->d()->strictMode);
     script.inheritContext = inheritContext;
     script.parse();
-    if (v4->hasException) {
-        scope.result = Encode::undefined();
-        return;
-    }
+    if (v4->hasException)
+        return Encode::undefined();
 
     Function *function = script.function();
-    if (!function) {
-        scope.result = Encode::undefined();
-        return;
-    }
+    if (!function)
+        return Encode::undefined();
 
     if (function->isStrict() || (ctx->d()->strictMode)) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
         ScopedCallData callData(scope, 0);
         callData->thisObject = ctx->thisObject();
-        e->call(scope, callData);
-        return;
+        return e->call(callData);
     }
 
     ContextStateSaver stateSaver(scope, ctx);
@@ -394,14 +386,14 @@ void EvalFunction::evalCall(Scope &scope, CallData *callData, bool directCall) c
     ctx->d()->strictMode = false;
     ctx->d()->v4Function = function;
 
-    scope.result = Q_V4_PROFILE(ctx->engine(), function);
+    return Q_V4_PROFILE(ctx->engine(), function);
 }
 
 
-void EvalFunction::call(const Managed *that, Scope &scope, CallData *callData)
+ReturnedValue EvalFunction::call(const Managed *that, CallData *callData)
 {
     // indirect call
-    static_cast<const EvalFunction *>(that)->evalCall(scope, callData, false);
+    return static_cast<const EvalFunction *>(that)->evalCall(callData, false);
 }
 
 

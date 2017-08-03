@@ -108,8 +108,7 @@ ReturnedValue Object::getValue(const Value &thisObject, const Value &v, Property
     Scope scope(f->engine());
     ScopedCallData callData(scope);
     callData->thisObject = thisObject;
-    f->call(scope, callData);
-    return scope.result.asReturnedValue();
+    return f->call(callData);
 }
 
 bool Object::putValue(uint memberIndex, const Value &value)
@@ -128,7 +127,7 @@ bool Object::putValue(uint memberIndex, const Value &value)
             ScopedCallData callData(scope, 1);
             callData->args[0] = value;
             callData->thisObject = this;
-            setter->call(scope, callData);
+            setter->call(callData);
             return !ic->engine->hasException;
         }
         goto reject;
@@ -400,14 +399,14 @@ bool Object::hasOwnProperty(uint index) const
     return false;
 }
 
-void Object::construct(const Managed *m, Scope &scope, CallData *)
+ReturnedValue Object::construct(const Managed *m, CallData *)
 {
-    scope.result = static_cast<const Object *>(m)->engine()->throwTypeError();
+    return m->engine()->throwTypeError();
 }
 
-void Object::call(const Managed *m, Scope &scope, CallData *)
+ReturnedValue Object::call(const Managed *m, CallData *)
 {
-    scope.result = static_cast<const Object *>(m)->engine()->throwTypeError();
+    return m->engine()->throwTypeError();
 }
 
 ReturnedValue Object::get(const Managed *m, String *name, bool *hasProperty)
@@ -770,7 +769,7 @@ bool Object::internalPut(String *name, const Value &value)
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = this;
-        setter->call(scope, callData);
+        setter->call(callData);
         return !internalClass()->engine->hasException;
     }
 
@@ -844,7 +843,7 @@ bool Object::internalPutIndexed(uint index, const Value &value)
         ScopedCallData callData(scope, 1);
         callData->args[0] = value;
         callData->thisObject = this;
-        setter->call(scope, callData);
+        setter->call(callData);
         return !internalClass()->engine->hasException;
     }
 

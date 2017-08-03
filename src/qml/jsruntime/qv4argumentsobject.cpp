@@ -138,7 +138,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         ScopedCallData callData(scope, 1);
         callData->thisObject = this->asReturnedValue();
         callData->args[0] = desc->value;
-        setter->call(scope, callData);
+        setter->call(callData);
 
         if (attrs.isWritable()) {
             setArrayAttributes(index, mapAttrs);
@@ -205,35 +205,33 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
 
 DEFINE_OBJECT_VTABLE(ArgumentsGetterFunction);
 
-void ArgumentsGetterFunction::call(const Managed *getter, Scope &scope, CallData *callData)
+ReturnedValue ArgumentsGetterFunction::call(const Managed *getter, CallData *callData)
 {
     ExecutionEngine *v4 = static_cast<const ArgumentsGetterFunction *>(getter)->engine();
+    Scope scope(v4);
     Scoped<ArgumentsGetterFunction> g(scope, static_cast<const ArgumentsGetterFunction *>(getter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
-    if (!o) {
-        scope.result = v4->throwTypeError();
-        return;
-    }
+    if (!o)
+        return v4->throwTypeError();
 
     Q_ASSERT(g->index() < static_cast<unsigned>(o->context()->callData->argc));
-    scope.result = o->context()->callData->args[g->index()];
+    return o->context()->callData->args[g->index()].asReturnedValue();
 }
 
 DEFINE_OBJECT_VTABLE(ArgumentsSetterFunction);
 
-void ArgumentsSetterFunction::call(const Managed *setter, Scope &scope, CallData *callData)
+ReturnedValue ArgumentsSetterFunction::call(const Managed *setter, CallData *callData)
 {
     ExecutionEngine *v4 = static_cast<const ArgumentsSetterFunction *>(setter)->engine();
+    Scope scope(v4);
     Scoped<ArgumentsSetterFunction> s(scope, static_cast<const ArgumentsSetterFunction *>(setter));
     Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
-    if (!o) {
-        scope.result = v4->throwTypeError();
-        return;
-    }
+    if (!o)
+        return v4->throwTypeError();
 
     Q_ASSERT(s->index() < static_cast<unsigned>(o->context()->callData->argc));
     o->context()->callData->args[s->index()] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();
-    scope.result = Encode::undefined();
+    return Encode::undefined();
 }
 
 uint ArgumentsObject::getLength(const Managed *m)

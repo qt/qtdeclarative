@@ -237,9 +237,9 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx) const;
     QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc) const;
 
-    static void call(const Managed *, Scope &scope, CallData *callData);
+    static ReturnedValue call(const Managed *, CallData *callData);
 
-    void callInternal(CallData *callData, Scope &scope) const;
+    ReturnedValue callInternal(CallData *callData) const;
 
     static QPair<QObject *, int> extractQtMethod(const QV4::FunctionObject *function);
 };
@@ -251,7 +251,7 @@ struct Q_QML_EXPORT QMetaObjectWrapper : public QV4::FunctionObject
     V4_NEEDS_DESTROY
 
     static ReturnedValue create(ExecutionEngine *engine, const QMetaObject* metaObject);
-    static void construct(const Managed *, Scope &scope, CallData *callData);
+    static ReturnedValue construct(const Managed *, CallData *callData);
     static bool isEqualTo(Managed *a, Managed *b);
 
     const QMetaObject *metaObject() const { return d()->metaObject; }

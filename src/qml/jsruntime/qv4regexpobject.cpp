@@ -216,39 +216,33 @@ void Heap::RegExpCtor::clearLastMatch()
     lastMatchEnd = 0;
 }
 
-void RegExpCtor::construct(const Managed *, Scope &scope, CallData *callData)
+ReturnedValue RegExpCtor::construct(const Managed *m, CallData *callData)
 {
+    Scope scope(m->engine());
     ScopedValue r(scope, callData->argument(0));
     ScopedValue f(scope, callData->argument(1));
     Scoped<RegExpObject> re(scope, r);
     if (re) {
-        if (!f->isUndefined()) {
-            scope.result = scope.engine->throwTypeError();
-            return;
-        }
+        if (!f->isUndefined())
+            return scope.engine->throwTypeError();
 
         Scoped<RegExp> regexp(scope, re->value());
-        scope.result = Encode(scope.engine->newRegExpObject(regexp, re->global()));
-        return;
+        return Encode(scope.engine->newRegExpObject(regexp, re->global()));
     }
 
     QString pattern;
     if (!r->isUndefined())
         pattern = r->toQString();
-    if (scope.hasException()) {
-        scope.result = Encode::undefined();
-        return;
-    }
+    if (scope.hasException())
+        return Encode::undefined();
 
     bool global = false;
     bool ignoreCase = false;
     bool multiLine = false;
     if (!f->isUndefined()) {
         ScopedString s(scope, f->toString(scope.engine));
-        if (scope.hasException()) {
-            scope.result = Encode::undefined();
-            return;
-        }
+        if (scope.hasException())
+            return Encode::undefined();
         QString str = s->toQString();
         for (int i = 0; i < str.length(); ++i) {
             if (str.at(i) == QLatin1Char('g') && !global) {
@@ -258,31 +252,28 @@ void RegExpCtor::construct(const Managed *, Scope &scope, CallData *callData)
             } else if (str.at(i) == QLatin1Char('m') && !multiLine) {
                 multiLine = true;
             } else {
-                scope.result = scope.engine->throwSyntaxError(QStringLiteral("Invalid flags supplied to RegExp constructor"));
-                return;
+                return scope.engine->throwSyntaxError(QStringLiteral("Invalid flags supplied to RegExp constructor"));
             }
         }
     }
 
     Scoped<RegExp> regexp(scope, RegExp::create(scope.engine, pattern, ignoreCase, multiLine));
     if (!regexp->isValid()) {
-        scope.result = scope.engine->throwSyntaxError(QStringLiteral("Invalid regular expression"));
-        return;
+        return scope.engine->throwSyntaxError(QStringLiteral("Invalid regular expression"));
     }
 
-    scope.result = Encode(scope.engine->newRegExpObject(regexp, global));
+    return Encode(scope.engine->newRegExpObject(regexp, global));
 }
 
-void RegExpCtor::call(const Managed *that, Scope &scope, CallData *callData)
+ReturnedValue RegExpCtor::call(const Managed *that, CallData *callData)
 {
     if (callData->argc > 0 && callData->args[0].as<RegExpObject>()) {
         if (callData->argc == 1 || callData->args[1].isUndefined()) {
-            scope.result = callData->args[0];
-            return;
+            return Encode(callData->args[0]);
         }
     }
 
-    construct(that, scope, callData);
+    return construct(that, callData);
 }
 
 void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
@@ -402,7 +393,7 @@ void RegExpPrototype::method_compile(const BuiltinFunction *, Scope &scope, Call
     ScopedCallData cData(scope, callData->argc);
     memcpy(cData->args, callData->args, callData->argc*sizeof(Value));
 
-    scope.engine->regExpCtor()->as<FunctionObject>()->construct(scope, cData);
+    scope.result = scope.engine->regExpCtor()->as<FunctionObject>()->construct(cData);
     Scoped<RegExpObject> re(scope, scope.result.asReturnedValue());
 
     r->d()->value.set(scope.engine, re->value());

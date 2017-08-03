@@ -70,8 +70,8 @@ struct ObjectCtor: FunctionObject
 {
     V4_OBJECT2(ObjectCtor, FunctionObject)
 
-    static void construct(const Managed *that, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue construct(const Managed *that, CallData *callData);
+    static ReturnedValue call(const Managed *m, CallData *callData);
 };
 
 struct ObjectPrototype: Object
