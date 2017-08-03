@@ -162,14 +162,14 @@ public:
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpStrictEqual(const Temp &lhs)
+    Q_REQUIRED_RESULT Jump jumpStrictEqual(const StackSlot &lhs)
     {
         Instruction::JumpStrictEqual data;
         data.lhs = lhs;
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpStrictNotEqual(const Temp &lhs)
+    Q_REQUIRED_RESULT Jump jumpStrictNotEqual(const StackSlot &lhs)
     {
         Instruction::JumpStrictNotEqual data;
         data.lhs = lhs;

@@ -624,8 +624,8 @@ private:
     ObjectIdMapping _idObjects;
     QQmlPropertyCache *_contextObject;
     QQmlPropertyCache *_scopeObject;
-    int _qmlContextTemp;
-    int _importedScriptsTemp;
+    int _qmlContextSlot;
+    int _importedScriptsSlot;
 };
 
 struct Q_QML_PRIVATE_EXPORT IRLoader {

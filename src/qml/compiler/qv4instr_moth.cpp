@@ -99,9 +99,9 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Moth {
 
-QDebug operator<<(QDebug dbg, const Temp &t)
+QDebug operator<<(QDebug dbg, const StackSlot &t)
 {
-    dbg << "%" << t.index;
+    dbg << "%" << t.stackSlot();
     return dbg;
 }
 

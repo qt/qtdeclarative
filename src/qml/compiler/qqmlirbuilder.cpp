@@ -1682,8 +1682,8 @@ JSCodeGen::JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *
     , _disableAcceleratedLookups(false)
     , _contextObject(0)
     , _scopeObject(0)
-    , _qmlContextTemp(-1)
-    , _importedScriptsTemp(-1)
+    , _qmlContextSlot(-1)
+    , _importedScriptsSlot(-1)
 {
     _module = jsModule;
     _fileNameIsUrl = true;
@@ -1772,13 +1772,13 @@ int JSCodeGen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPa
 {
     int qmlContextTemp = -1;
     int importedScriptsTemp = -1;
-    qSwap(_qmlContextTemp, qmlContextTemp);
-    qSwap(_importedScriptsTemp, importedScriptsTemp);
+    qSwap(_qmlContextSlot, qmlContextTemp);
+    qSwap(_importedScriptsSlot, importedScriptsTemp);
 
     int result = Codegen::defineFunction(name, ast, formals, body);
 
-    qSwap(_importedScriptsTemp, importedScriptsTemp);
-    qSwap(_qmlContextTemp, qmlContextTemp);
+    qSwap(_importedScriptsSlot, importedScriptsTemp);
+    qSwap(_qmlContextSlot, qmlContextTemp);
 
     return result;
 }
@@ -2048,12 +2048,12 @@ static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, 
 
 void JSCodeGen::beginFunctionBodyHook()
 {
-    _qmlContextTemp = bytecodeGenerator->newTemp();
-    _importedScriptsTemp = bytecodeGenerator->newTemp();
+    _qmlContextSlot = bytecodeGenerator->newTemp();
+    _importedScriptsSlot = bytecodeGenerator->newTemp();
 
 #ifndef V4_BOOTSTRAP
     Instruction::LoadQmlContext load;
-    load.result = Reference::fromTemp(this, _qmlContextTemp).temp();
+    load.result = Reference::fromStackSlot(this, _qmlContextSlot).stackSlot();
     bytecodeGenerator->addInstruction(load);
 
 #if 0
@@ -2065,7 +2065,7 @@ void JSCodeGen::beginFunctionBodyHook()
 #endif
 
     Instruction::LoadQmlImportedScripts loadScripts;
-    loadScripts.result = Reference::fromTemp(this, _importedScriptsTemp).temp();
+    loadScripts.result = Reference::fromStackSlot(this, _importedScriptsSlot).stackSlot();
     bytecodeGenerator->addInstruction(loadScripts);
 #endif
 }
@@ -2094,7 +2094,7 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
                 _context->idObjectDependencies.insert(mapping.idIndex);
 
             Instruction::LoadIdObject load;
-            load.base = Reference::fromTemp(this, _qmlContextTemp).temp();
+            load.base = Reference::fromStackSlot(this, _qmlContextSlot).stackSlot();
             load.index = mapping.idIndex;
 
             Reference result = Reference::fromAccumulator(this);
@@ -2108,7 +2108,7 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
         QQmlTypeNameCache::Result r = imports->query(name);
         if (r.isValid()) {
             if (r.scriptIndex != -1) {
-                Reference imports = Reference::fromTemp(this, _importedScriptsTemp);
+                Reference imports = Reference::fromStackSlot(this, _importedScriptsSlot);
                 return Reference::fromSubscript(imports, Reference::fromConst(this, QV4::Encode(r.scriptIndex)));
             } else if (r.type) {
                 if (r.type->isCompositeSingleton()) {
@@ -2129,7 +2129,7 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
         QQmlPropertyData *data = lookupQmlCompliantProperty(_scopeObject, name);
         if (!data)
             return Reference::fromName(this, name);
-        Reference base = Reference::fromTemp(this, _qmlContextTemp);
+        Reference base = Reference::fromStackSlot(this, _qmlContextSlot);
         bool captureRequired = !data->isConstant() && !data->isQmlBinding();
         return Reference::fromQmlScopeObject(base, data->coreIndex(), data->notifyIndex(),
                                              captureRequired);
@@ -2139,7 +2139,7 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
         QQmlPropertyData *data = lookupQmlCompliantProperty(_contextObject, name);
         if (!data)
             return Reference::fromName(this, name);
-        Reference base = Reference::fromTemp(this, _qmlContextTemp);
+        Reference base = Reference::fromStackSlot(this, _qmlContextSlot);
         bool captureRequired = !data->isConstant() && !data->isQmlBinding();
         return Reference::fromQmlContextObject(base, data->coreIndex(), data->notifyIndex(),
                                                captureRequired);

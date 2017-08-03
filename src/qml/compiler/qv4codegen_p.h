@@ -108,20 +108,20 @@ public:
         enum Type {
             Invalid,
             Accumulator,
-            Temporary,
+            StackSlot,
             Const
         } type;
         union {
-            Moth::Temp temporary;
+            Moth::StackSlot theStackSlot;
             QV4::ReturnedValue constant;
         };
 
     public:
-        static RValue fromTemp(Codegen *codegen, Moth::Temp temporary) {
+        static RValue fromStackSlot(Codegen *codegen, Moth::StackSlot stackSlot) {
             RValue r;
             r.codegen = codegen;
-            r.type = Temporary;
-            r.temporary = temporary;
+            r.type = StackSlot;
+            r.theStackSlot = stackSlot;
             return r;
         }
         static RValue fromAccumulator(Codegen *codegen) {
@@ -142,12 +142,12 @@ public:
 
         bool isValid() const { return type != Invalid; }
         bool isAccumulator() const { return type == Accumulator; }
-        bool isTemp() const { return type == Temporary; }
+        bool isStackSlot() const { return type == StackSlot; }
         bool isConst() const { return type == Const; }
 
-        Moth::Temp temp() const {
-            Q_ASSERT(isTemp());
-            return temporary;
+        Moth::StackSlot stackSlot() const {
+            Q_ASSERT(isStackSlot());
+            return theStackSlot;
         }
 
         QV4::ReturnedValue constantValue() const {
@@ -161,7 +161,7 @@ public:
         enum Type {
             Invalid,
             Accumulator,
-            Temporary,
+            StackSlot,
             Local,
             Argument,
             Name,
@@ -201,17 +201,17 @@ public:
         }
         bool isConst() const { return type == Const; }
         bool isAccumulator() const { return type == Accumulator; }
-        bool isTemp() const { return type == Temporary; }
+        bool isStackSlot() const { return type == StackSlot; }
 
         static Reference fromAccumulator(Codegen *cg) {
             return Reference(cg, Accumulator);
         }
-        static Reference fromTemp(Codegen *cg, int tempIndex = -1, bool isLocal = false) {
-            Reference r(cg, Temporary);
+        static Reference fromStackSlot(Codegen *cg, int tempIndex = -1, bool isLocal = false) {
+            Reference r(cg, StackSlot);
             if (tempIndex == -1)
                 tempIndex = cg->bytecodeGenerator->newTemp();
-            r.temporary = Moth::Temp::create(tempIndex);
-            r.tempIsLocal = isLocal;
+            r.theStackSlot = Moth::StackSlot::create(tempIndex);
+            r.stackSlotIsLocal = isLocal;
             return r;
         }
         static Reference fromLocal(Codegen *cg, uint index, uint scope) {
@@ -238,9 +238,9 @@ public:
             return r;
         }
         static Reference fromSubscript(const Reference &baseRef, const Reference &subscript) {
-            Q_ASSERT(baseRef.isTemp());
+            Q_ASSERT(baseRef.isStackSlot());
             Reference r(baseRef.codegen, Subscript);
-            r.elementBase = baseRef.temp();
+            r.elementBase = baseRef.stackSlot();
             r.elementSubscript = subscript.asRValue();
             return r;
         }
@@ -257,7 +257,7 @@ public:
         }
         static Reference fromQmlScopeObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, bool captureRequired) {
             Reference r(base.codegen, QmlScopeObject);
-            r.qmlBase = base.storeInTemp().temp();
+            r.qmlBase = base.storeOnStack().stackSlot();
             r.qmlCoreIndex = coreIndex;
             r.qmlNotifyIndex = notifyIndex;
             r.captureRequired = captureRequired;
@@ -265,7 +265,7 @@ public:
         }
         static Reference fromQmlContextObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, bool captureRequired) {
             Reference r(base.codegen, QmlContextObject);
-            r.qmlBase = base.storeInTemp().temp();
+            r.qmlBase = base.storeOnStack().stackSlot();
             r.qmlCoreIndex = coreIndex;
             r.qmlNotifyIndex = notifyIndex;
             r.captureRequired = captureRequired;
@@ -277,37 +277,25 @@ public:
             return r;
         }
 
-        bool isSimple() const {
-            switch (type) {
-            case Temporary:
-            case Local:
-            case Argument:
-            case Const:
-                return true;
-            default:
-                return false;
-            }
-        }
-
         RValue asRValue() const;
         Reference asLValue() const;
-        static Reference storeConstInTemp(Codegen *cg, QV4::ReturnedValue constant, int tempIndex = -1)
-        { return Reference::fromConst(cg, constant).storeInTemp(tempIndex); }
-        Q_REQUIRED_RESULT Reference storeInTemp(int tempIndex = -1) const;
+        static Reference storeConstOnStack(Codegen *cg, QV4::ReturnedValue constant, int stackSlot = -1)
+        { return Reference::fromConst(cg, constant).storeOnStack(stackSlot); }
+        Q_REQUIRED_RESULT Reference storeOnStack(int tempIndex = -1) const;
         Q_REQUIRED_RESULT Reference storeRetainAccumulator() const;
         Reference storeConsumeAccumulator() const;
 
         bool storeWipesAccumulator() const;
         void loadInAccumulator() const;
 
-        Moth::Temp temp() const {
-            if (Q_UNLIKELY(!isTemp()))
+        Moth::StackSlot stackSlot() const {
+            if (Q_UNLIKELY(!isStackSlot()))
                 Q_UNREACHABLE();
-            return temporary;
+            return theStackSlot;
         }
 
         union {
-            Moth::Temp temporary;
+            Moth::StackSlot theStackSlot;
             QV4::ReturnedValue constant;
             int unqualifiedNameIndex;
             struct { // Argument/Local
@@ -319,12 +307,12 @@ public:
                 int propertyNameIndex;
             };
             struct {
-                Moth::Temp elementBase;
+                Moth::StackSlot elementBase;
                 RValue elementSubscript;
             };
             int closureId;
             struct { // QML scope/context object case
-                Moth::Temp qmlBase;
+                Moth::StackSlot qmlBase;
                 qint16 qmlCoreIndex;
                 qint16 qmlNotifyIndex;
                 bool captureRequired;
@@ -332,7 +320,7 @@ public:
         };
         mutable bool isArgOrEval = false;
         bool isReadonly = false;
-        bool tempIsLocal = false;
+        bool stackSlotIsLocal = false;
         bool global = false;
         Codegen *codegen;
 
@@ -607,7 +595,7 @@ public:
 
     Reference binopHelper(QSOperator::Op oper, Reference &left, Reference &right);
     Reference jumpBinop(QSOperator::Op oper, Reference &left, Reference &right);
-    Moth::Temp pushArgs(AST::ArgumentList *args);
+    Moth::StackSlot pushArgs(AST::ArgumentList *args);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
 

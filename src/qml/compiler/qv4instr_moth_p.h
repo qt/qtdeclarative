@@ -186,18 +186,21 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Moth {
 
-struct Temp {
+class StackSlot {
     int index;
 
-    static Temp create(int index) {
-        Temp t;
+public:
+    static StackSlot create(int index) {
+        StackSlot t;
         t.index = index;
         return t;
     }
+
+    int stackSlot() const { return index; }
 };
 
-inline bool operator==(const Temp &l, const Temp &r) { return l.index == r.index; }
-inline bool operator!=(const Temp &l, const Temp &r) { return l.index != r.index; }
+inline bool operator==(const StackSlot &l, const StackSlot &r) { return l.stackSlot() == r.stackSlot(); }
+inline bool operator!=(const StackSlot &l, const StackSlot &r) { return l.stackSlot() != r.stackSlot(); }
 
 // When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
 
@@ -219,7 +222,7 @@ union Instr
     };
     struct instr_ret {
         MOTH_INSTR_HEADER
-        Temp result;
+        StackSlot result;
     };
 
 #ifndef QT_NO_QML_DEBUGGING
@@ -240,20 +243,20 @@ union Instr
     struct instr_moveConst {
         MOTH_INSTR_HEADER
         int constIndex;
-        Temp destTemp;
+        StackSlot destTemp;
     };
     struct instr_loadReg {
         MOTH_INSTR_HEADER
-        Temp reg;
+        StackSlot reg;
     };
     struct instr_storeReg {
         MOTH_INSTR_HEADER
-        Temp reg;
+        StackSlot reg;
     };
     struct instr_moveReg {
         MOTH_INSTR_HEADER
-        Temp srcReg;
-        Temp destReg;
+        StackSlot srcReg;
+        StackSlot destReg;
     };
     struct instr_loadLocal {
         MOTH_INSTR_HEADER
@@ -318,7 +321,7 @@ union Instr
     struct instr_loadProperty {
         MOTH_INSTR_HEADER
         int name;
-        Temp base;
+        StackSlot base;
     };
     struct instr_loadPropertyA {
         MOTH_INSTR_HEADER
@@ -327,7 +330,7 @@ union Instr
     struct instr_getLookup {
         MOTH_INSTR_HEADER
         int index;
-        Temp base;
+        StackSlot base;
     };
     struct instr_getLookupA {
         MOTH_INSTR_HEADER
@@ -336,65 +339,65 @@ union Instr
     struct instr_loadScopeObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
-        Temp base;
+        StackSlot base;
         bool captureRequired;
     };
     struct instr_loadContextObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
-        Temp base;
+        StackSlot base;
         bool captureRequired;
     };
     struct instr_loadIdObject {
         MOTH_INSTR_HEADER
         int index;
-        Temp base;
+        StackSlot base;
     };
     struct instr_storeProperty {
         MOTH_INSTR_HEADER
         int name;
-        Temp base;
+        StackSlot base;
     };
     struct instr_setLookup {
         MOTH_INSTR_HEADER
         int index;
-        Temp base;
+        StackSlot base;
     };
     struct instr_storeScopeObjectProperty {
         MOTH_INSTR_HEADER
-        Temp base;
+        StackSlot base;
         int propertyIndex;
     };
     struct instr_storeContextObjectProperty {
         MOTH_INSTR_HEADER
-        Temp base;
+        StackSlot base;
         int propertyIndex;
     };
     struct instr_loadElement {
         MOTH_INSTR_HEADER
-        Temp base;
-        Temp index;
+        StackSlot base;
+        StackSlot index;
     };
     struct instr_loadElementA {
         MOTH_INSTR_HEADER
-        Temp base;
+        StackSlot base;
     };
     struct instr_loadElementLookup {
         MOTH_INSTR_HEADER
         uint lookup;
-        Temp base;
-        Temp index;
+        StackSlot base;
+        StackSlot index;
     };
     struct instr_storeElement {
         MOTH_INSTR_HEADER
-        Temp base;
-        Temp index;
+        StackSlot base;
+        StackSlot index;
     };
     struct instr_storeElementLookup {
         MOTH_INSTR_HEADER
         uint lookup;
-        Temp base;
-        Temp index;
+        StackSlot base;
+        StackSlot index;
     };
     struct instr_initStackFrame {
         MOTH_INSTR_HEADER
@@ -402,36 +405,36 @@ union Instr
     };
     struct instr_callValue {
         MOTH_INSTR_HEADER
-        Temp callData;
-        Temp dest;
+        StackSlot callData;
+        StackSlot dest;
     };
     struct instr_callProperty {
         MOTH_INSTR_HEADER
         int name;
-        Temp callData;
-        Temp base;
+        StackSlot callData;
+        StackSlot base;
     };
     struct instr_callPropertyLookup {
         MOTH_INSTR_HEADER
         int lookupIndex;
-        Temp callData;
-        Temp base;
+        StackSlot callData;
+        StackSlot base;
     };
     struct instr_callElement {
         MOTH_INSTR_HEADER
-        Temp base;
-        Temp index;
-        Temp callData;
+        StackSlot base;
+        StackSlot index;
+        StackSlot callData;
     };
     struct instr_callActivationProperty {
         MOTH_INSTR_HEADER
         int name;
-        Temp callData;
+        StackSlot callData;
     };
     struct instr_callGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
-        Temp callData;
+        StackSlot callData;
     };
     struct instr_setExceptionHandler {
         MOTH_INSTR_HEADER
@@ -468,12 +471,12 @@ union Instr
     struct instr_callBuiltinDeleteMember {
         MOTH_INSTR_HEADER
         int member;
-        Temp base;
+        StackSlot base;
     };
     struct instr_callBuiltinDeleteSubscript {
         MOTH_INSTR_HEADER
-        Temp base;
-        Temp index;
+        StackSlot base;
+        StackSlot index;
     };
     struct instr_callBuiltinDeleteName {
         MOTH_INSTR_HEADER
@@ -494,14 +497,14 @@ union Instr
     struct instr_callBuiltinDefineArray {
         MOTH_INSTR_HEADER
         uint argc;
-        Temp args;
+        StackSlot args;
     };
     struct instr_callBuiltinDefineObjectLiteral {
         MOTH_INSTR_HEADER
         int internalClassId;
         int arrayValueCount;
         int arrayGetterSetterCountAndFlags; // 30 bits for count, 1 bit for needsSparseArray boolean
-        Temp args;
+        StackSlot args;
     };
     struct instr_callBuiltinSetupArgumentsObject {
         MOTH_INSTR_HEADER
@@ -511,34 +514,34 @@ union Instr
     };
     struct instr_createValue {
         MOTH_INSTR_HEADER
-        Temp callData;
-        Temp func;
+        StackSlot callData;
+        StackSlot func;
     };
     struct instr_createProperty {
         MOTH_INSTR_HEADER
         int name;
         int argc;
-        Temp callData;
-        Temp base;
+        StackSlot callData;
+        StackSlot base;
     };
     struct instr_constructPropertyLookup {
         MOTH_INSTR_HEADER
         int index;
         int argc;
-        Temp callData;
-        Temp base;
+        StackSlot callData;
+        StackSlot base;
     };
     struct instr_createActivationProperty {
         MOTH_INSTR_HEADER
         int name;
         int argc;
-        Temp callData;
+        StackSlot callData;
     };
     struct instr_constructGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
         int argc;
-        Temp callData;
+        StackSlot callData;
     };
     struct instr_jump {
         MOTH_INSTR_HEADER
@@ -554,25 +557,25 @@ union Instr
     };
     struct instr_cmpJmpEq {
         MOTH_INSTR_HEADER
-        Temp lhs;
-        Temp rhs;
+        StackSlot lhs;
+        StackSlot rhs;
         ptrdiff_t offset;
     };
     struct instr_cmpJmpNe {
         MOTH_INSTR_HEADER
-        Temp lhs;
-        Temp rhs;
+        StackSlot lhs;
+        StackSlot rhs;
         ptrdiff_t offset;
     };
     struct instr_jumpStrictEqual {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_jumpStrictNotEqual {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_unot {
         MOTH_INSTR_HEADER
@@ -595,31 +598,31 @@ union Instr
     struct instr_binop {
         MOTH_INSTR_HEADER
         int alu; // QV4::Runtime::RuntimeMethods enum value
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_add {
         MOTH_INSTR_HEADER
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_bitAnd {
         MOTH_INSTR_HEADER
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_bitOr {
         MOTH_INSTR_HEADER
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_bitXor {
         MOTH_INSTR_HEADER
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_shr {
         MOTH_INSTR_HEADER
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_shl {
         MOTH_INSTR_HEADER
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_bitAndConst {
         MOTH_INSTR_HEADER
@@ -643,27 +646,27 @@ union Instr
     };
     struct instr_mul {
         MOTH_INSTR_HEADER
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_sub {
         MOTH_INSTR_HEADER
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_binopContext {
         MOTH_INSTR_HEADER
         uint alu; // offset inside the runtime methods
-        Temp lhs;
+        StackSlot lhs;
     };
     struct instr_loadThis {
         MOTH_INSTR_HEADER
     };
     struct instr_loadQmlContext {
         MOTH_INSTR_HEADER
-        Temp result;
+        StackSlot result;
     };
     struct instr_loadQmlImportedScripts {
         MOTH_INSTR_HEADER
-        Temp result;
+        StackSlot result;
     };
     struct instr_loadQmlSingleton {
         MOTH_INSTR_HEADER
