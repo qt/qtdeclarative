@@ -244,7 +244,7 @@ ReturnedValue ExecutionContext::call(Scope &scope, CallData *callData, Function 
     ReturnedValue res = Q_V4_PROFILE(scope.engine, function);
 
     if (function->hasQmlDependencies)
-        QQmlPropertyCapture::registerQmlDependencies(function->compiledFunction, scope);
+        QQmlPropertyCapture::registerQmlDependencies(scope.engine, function->compiledFunction);
 
     return res;
 }
@@ -271,7 +271,7 @@ ReturnedValue QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData
     ReturnedValue res = Q_V4_PROFILE(scope.engine, function);
 
     if (function->hasQmlDependencies)
-        QQmlPropertyCapture::registerQmlDependencies(function->compiledFunction, scope);
+        QQmlPropertyCapture::registerQmlDependencies(scope.engine, function->compiledFunction);
     scope.engine->memoryManager->freeSimpleCallContext();
 
     return res;
