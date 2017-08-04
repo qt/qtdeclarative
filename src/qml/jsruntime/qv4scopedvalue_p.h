@@ -71,50 +71,39 @@ struct ScopedValue;
 #define CHECK_EXCEPTION() \
     do { \
         if (scope.hasException()) { \
-            scope.result = QV4::Encode::undefined(); \
-            return; \
+            return QV4::Encode::undefined(); \
         } \
     } while (false)
 
 #define RETURN_UNDEFINED() \
-    do { \
-        scope.result = QV4::Encode::undefined(); \
-        return; \
-    } while (false)
+    return QV4::Encode::undefined()
 
 #define RETURN_RESULT(r) \
-    do { \
-        scope.result = r; \
-        return; \
-    } while (false)
+    return QV4::Encode(r)
 
 #define THROW_TYPE_ERROR() \
-    do { \
-        scope.result = scope.engine->throwTypeError(); \
-        return; \
-    } while (false)
+    return scope.engine->throwTypeError()
 
 #define THROW_GENERIC_ERROR(str) \
-    do { \
-        scope.result = scope.engine->throwError(QString::fromUtf8(str)); \
-        return; \
-    } while (false)
+    return scope.engine->throwError(QString::fromUtf8(str))
 
 struct Scope {
     inline Scope(ExecutionContext *ctx)
         : engine(ctx->engine())
         , mark(engine->jsStackTop)
-        , result(*engine->jsAlloca(1))
     {
-        result = Encode::undefined();
     }
 
     explicit Scope(ExecutionEngine *e)
         : engine(e)
         , mark(engine->jsStackTop)
-        , result(*engine->jsAlloca(1))
     {
-        result = Encode::undefined();
+    }
+
+    inline Scope(const Managed *m)
+        : engine(m->engine())
+        , mark(engine->jsStackTop)
+    {
     }
 
     ~Scope() {
@@ -139,7 +128,6 @@ struct Scope {
 
     ExecutionEngine *engine;
     Value *mark;
-    Value &result;
 
 private:
     Q_DISABLE_COPY(Scope)

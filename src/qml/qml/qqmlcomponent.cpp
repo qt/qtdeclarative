@@ -1096,11 +1096,11 @@ struct QmlIncubatorObject : public QV4::Object
     V4_OBJECT2(QmlIncubatorObject, Object)
     V4_NEEDS_DESTROY
 
-    static void method_get_statusChanged(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_set_statusChanged(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_status(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_object(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_forceCompletion(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_get_statusChanged(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_set_statusChanged(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_status(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_object(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_forceCompletion(const BuiltinFunction *, CallData *callData);
 
     void statusChanged(QQmlIncubator::Status);
     void setInitialState(QObject *);
@@ -1446,17 +1446,19 @@ QQmlComponentExtension::QQmlComponentExtension(QV4::ExecutionEngine *v4)
     incubationProto.set(v4, proto);
 }
 
-void QV4::QmlIncubatorObject::method_get_object(const BuiltinFunction *, Scope &scope, CallData *callData)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_object(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QmlIncubatorObject> o(scope, callData->thisObject.as<QmlIncubatorObject>());
     if (!o)
         THROW_TYPE_ERROR();
 
-    scope.result = QV4::QObjectWrapper::wrap(scope.engine, o->d()->incubator->object());
+    return QV4::QObjectWrapper::wrap(scope.engine, o->d()->incubator->object());
 }
 
-void QV4::QmlIncubatorObject::method_forceCompletion(const BuiltinFunction *, Scope &scope, CallData *callData)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_forceCompletion(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QmlIncubatorObject> o(scope, callData->thisObject.as<QmlIncubatorObject>());
     if (!o)
         THROW_TYPE_ERROR();
@@ -1466,26 +1468,29 @@ void QV4::QmlIncubatorObject::method_forceCompletion(const BuiltinFunction *, Sc
     RETURN_UNDEFINED();
 }
 
-void QV4::QmlIncubatorObject::method_get_status(const BuiltinFunction *, Scope &scope, CallData *callData)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_status(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QmlIncubatorObject> o(scope, callData->thisObject.as<QmlIncubatorObject>());
     if (!o)
         THROW_TYPE_ERROR();
 
-    scope.result = QV4::Encode(o->d()->incubator->status());
+    return QV4::Encode(o->d()->incubator->status());
 }
 
-void QV4::QmlIncubatorObject::method_get_statusChanged(const BuiltinFunction *, Scope &scope, CallData *callData)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_statusChanged(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QmlIncubatorObject> o(scope, callData->thisObject.as<QmlIncubatorObject>());
     if (!o)
         THROW_TYPE_ERROR();
 
-    scope.result = o->d()->statusChanged;
+    return QV4::Encode(o->d()->statusChanged);
 }
 
-void QV4::QmlIncubatorObject::method_set_statusChanged(const BuiltinFunction *, Scope &scope, CallData *callData)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_set_statusChanged(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QmlIncubatorObject> o(scope, callData->thisObject.as<QmlIncubatorObject>());
     if (!o || callData->argc < 1)
         THROW_TYPE_ERROR();

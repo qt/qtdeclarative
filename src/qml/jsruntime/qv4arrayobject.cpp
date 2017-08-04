@@ -118,14 +118,15 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("reduceRight"), method_reduceRight, 1);
 }
 
-void ArrayPrototype::method_isArray(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_isArray(const BuiltinFunction *, CallData *callData)
 {
     bool isArray = callData->argc && callData->args[0].as<ArrayObject>();
-    scope.result = Encode(isArray);
+    return Encode(isArray);
 }
 
-void ArrayPrototype::method_toString(const BuiltinFunction *builtin, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_toString(const BuiltinFunction *builtin, CallData *callData)
 {
+    Scope scope(builtin);
     ScopedObject o(scope, callData->thisObject, ScopedObject::Convert);
     CHECK_EXCEPTION();
     ScopedString s(scope, scope.engine->newString(QStringLiteral("join")));
@@ -133,19 +134,19 @@ void ArrayPrototype::method_toString(const BuiltinFunction *builtin, Scope &scop
     if (!!f) {
         ScopedCallData d(scope, 0);
         d->thisObject = callData->thisObject;
-        scope.result = f->call(d);
-        return;
+        return f->call(d);
     }
-    ObjectPrototype::method_toString(builtin, scope, callData);
+    return ObjectPrototype::method_toString(builtin, callData);
 }
 
-void ArrayPrototype::method_toLocaleString(const BuiltinFunction *builtin, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_toLocaleString(const BuiltinFunction *builtin, CallData *callData)
 {
-    return method_toString(builtin, scope, callData);
+    return method_toString(builtin, callData);
 }
 
-void ArrayPrototype::method_concat(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_concat(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject thisObject(scope, callData->thisObject.toObject(scope.engine));
     if (!thisObject)
         RETURN_UNDEFINED();
@@ -179,11 +180,12 @@ void ArrayPrototype::method_concat(const BuiltinFunction *, Scope &scope, CallDa
         }
     }
 
-    scope.result = result;
+    return result.asReturnedValue();
 }
 
-void ArrayPrototype::method_find(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_find(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -199,6 +201,7 @@ void ArrayPrototype::method_find(const BuiltinFunction *, Scope &scope, CallData
     cData->args[2] = instance;
 
     ScopedValue v(scope);
+    ScopedValue result(scope);
 
     for (uint k = 0; k < len; ++k) {
         v = instance->getIndexed(k);
@@ -206,18 +209,19 @@ void ArrayPrototype::method_find(const BuiltinFunction *, Scope &scope, CallData
 
         cData->args[0] = v;
         cData->args[1] = Primitive::fromDouble(k);
-        scope.result = callback->call(cData);
+        result = callback->call(cData);
 
         CHECK_EXCEPTION();
-        if (scope.result.toBoolean())
-            RETURN_RESULT(v);
+        if (result->toBoolean())
+            return v->asReturnedValue();
     }
 
     RETURN_UNDEFINED();
 }
 
-void ArrayPrototype::method_findIndex(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_findIndex(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -233,6 +237,7 @@ void ArrayPrototype::method_findIndex(const BuiltinFunction *, Scope &scope, Cal
     cData->args[2] = instance;
 
     ScopedValue v(scope);
+    ScopedValue result(scope);
 
     for (uint k = 0; k < len; ++k) {
         v = instance->getIndexed(k);
@@ -240,25 +245,24 @@ void ArrayPrototype::method_findIndex(const BuiltinFunction *, Scope &scope, Cal
 
         cData->args[0] = v;
         cData->args[1] = Primitive::fromDouble(k);
-        scope.result = callback->call(cData);
+        result = callback->call(cData);
 
         CHECK_EXCEPTION();
-        if (scope.result.toBoolean())
-            RETURN_RESULT(Encode(k));
+        if (result->toBoolean())
+            return Encode(k);
     }
 
-    RETURN_RESULT(Encode(-1));
+    return Encode(-1);
 }
 
-void ArrayPrototype::method_join(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_join(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedValue arg(scope, callData->argument(0));
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
 
-    if (!instance) {
-        scope.result = scope.engine->newString();
-        return;
-    }
+    if (!instance)
+        return Encode(scope.engine->newString());
 
     QString r4;
     if (arg->isUndefined())
@@ -269,10 +273,8 @@ void ArrayPrototype::method_join(const BuiltinFunction *, Scope &scope, CallData
     ScopedValue length(scope, instance->get(scope.engine->id_length()));
     const quint32 r2 = length->isUndefined() ? 0 : length->toUInt32();
 
-    if (!r2) {
-        scope.result = scope.engine->newString();
-        return;
-    }
+    if (!r2)
+        return Encode(scope.engine->newString());
 
     QString R;
 
@@ -310,11 +312,12 @@ void ArrayPrototype::method_join(const BuiltinFunction *, Scope &scope, CallData
         }
     }
 
-    scope.result = scope.engine->newString(R);
+    return Encode(scope.engine->newString(R));
 }
 
-void ArrayPrototype::method_pop(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_pop(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -337,11 +340,12 @@ void ArrayPrototype::method_pop(const BuiltinFunction *, Scope &scope, CallData 
         instance->setArrayLength(len - 1);
     else
         instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - 1)));
-    scope.result = result;
+    return result->asReturnedValue();
 }
 
-void ArrayPrototype::method_push(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_push(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -364,11 +368,9 @@ void ArrayPrototype::method_push(const BuiltinFunction *, Scope &scope, CallData
             instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(newLen)));
         else {
             ScopedString str(scope, scope.engine->newString(QStringLiteral("Array.prototype.push: Overflow")));
-            scope.result = scope.engine->throwRangeError(str);
-            return;
+            return scope.engine->throwRangeError(str);
         }
-        scope.result = Encode(newLen);
-        return;
+        return Encode(newLen);
     }
 
     if (!callData->argc)
@@ -386,11 +388,12 @@ void ArrayPrototype::method_push(const BuiltinFunction *, Scope &scope, CallData
     else
         instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len)));
 
-    scope.result = Encode(len);
+    return Encode(len);
 }
 
-void ArrayPrototype::method_reverse(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_reverse(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -416,11 +419,12 @@ void ArrayPrototype::method_reverse(const BuiltinFunction *, Scope &scope, CallD
         else
             instance->deleteIndexedProperty(hi);
     }
-    scope.result = instance;
+    return instance->asReturnedValue();
 }
 
-void ArrayPrototype::method_shift(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_shift(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -436,10 +440,11 @@ void ArrayPrototype::method_shift(const BuiltinFunction *, Scope &scope, CallDat
         RETURN_UNDEFINED();
     }
 
+    ScopedValue result(scope);
     if (!instance->protoHasArray() && !instance->arrayData()->attrs && instance->arrayData()->length() <= len && instance->arrayData()->type != Heap::ArrayData::Custom) {
-        scope.result = instance->arrayData()->vtable()->pop_front(instance);
+        result = instance->arrayData()->vtable()->pop_front(instance);
     } else {
-        scope.result = instance->getIndexed(0);
+        result = instance->getIndexed(0);
         CHECK_EXCEPTION();
         ScopedValue v(scope);
         // do it the slow way
@@ -461,10 +466,13 @@ void ArrayPrototype::method_shift(const BuiltinFunction *, Scope &scope, CallDat
         instance->setArrayLengthUnchecked(len - 1);
     else
         instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - 1)));
+
+    return result->asReturnedValue();
 }
 
-void ArrayPrototype::method_slice(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_slice(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject o(scope, callData->thisObject.toObject(scope.engine));
     if (!o)
         RETURN_UNDEFINED();
@@ -500,11 +508,12 @@ void ArrayPrototype::method_slice(const BuiltinFunction *, Scope &scope, CallDat
             result->arraySet(n, v);
         ++n;
     }
-    scope.result = result;
+    return result->asReturnedValue();
 }
 
-void ArrayPrototype::method_sort(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_sort(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -513,11 +522,12 @@ void ArrayPrototype::method_sort(const BuiltinFunction *, Scope &scope, CallData
 
     ScopedValue comparefn(scope, callData->argument(0));
     ArrayData::sort(scope.engine, instance, comparefn, len);
-    scope.result = callData->thisObject;
+    return callData->thisObject.asReturnedValue();
 }
 
-void ArrayPrototype::method_splice(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_splice(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -587,12 +597,13 @@ void ArrayPrototype::method_splice(const BuiltinFunction *, Scope &scope, CallDa
     scope.engine->current->strictMode = true;
     instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - deleteCount + itemCount)));
 
-    scope.result = newArray;
     scope.engine->current->strictMode = wasStrict;
+    return newArray->asReturnedValue();
 }
 
-void ArrayPrototype::method_unshift(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_unshift(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -625,20 +636,19 @@ void ArrayPrototype::method_unshift(const BuiltinFunction *, Scope &scope, CallD
     else
         instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(newLen)));
 
-    scope.result = Encode(newLen);
+    return Encode(newLen);
 }
 
-void ArrayPrototype::method_indexOf(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_indexOf(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
 
     uint len = instance->getLength();
-    if (!len) {
-        scope.result = Encode(-1);
-        return;
-    }
+    if (!len)
+        return Encode(-1);
 
     ScopedValue searchValue(scope, callData->argument(0));
     uint fromIndex = 0;
@@ -646,10 +656,8 @@ void ArrayPrototype::method_indexOf(const BuiltinFunction *, Scope &scope, CallD
     if (callData->argc >= 2) {
         double f = callData->args[1].toInteger();
         CHECK_EXCEPTION();
-        if (f >= len) {
-            scope.result = Encode(-1);
-            return;
-        }
+        if (f >= len)
+            return Encode(-1);
         if (f < 0)
             f = qMax(len + f, 0.);
         fromIndex = (uint) f;
@@ -660,13 +668,10 @@ void ArrayPrototype::method_indexOf(const BuiltinFunction *, Scope &scope, CallD
         for (uint k = fromIndex; k < len; ++k) {
             bool exists;
             v = instance->getIndexed(k, &exists);
-            if (exists && RuntimeHelpers::strictEqual(v, searchValue)) {
-                scope.result = Encode(k);
-                return;
-            }
+            if (exists && RuntimeHelpers::strictEqual(v, searchValue))
+                return Encode(k);
         }
-        scope.result = Encode(-1);
-        return;
+        return Encode(-1);
     }
 
     ScopedValue value(scope);
@@ -678,14 +683,11 @@ void ArrayPrototype::method_indexOf(const BuiltinFunction *, Scope &scope, CallD
             bool exists;
             value = instance->getIndexed(i, &exists);
             CHECK_EXCEPTION();
-            if (exists && RuntimeHelpers::strictEqual(value, searchValue)) {
-                scope.result = Encode(i);
-                return;
-            }
+            if (exists && RuntimeHelpers::strictEqual(value, searchValue))
+                return Encode(i);
         }
     } else if (!instance->arrayData()) {
-        scope.result = Encode(-1);
-        return;
+        return Encode(-1);
     } else {
         Q_ASSERT(instance->arrayType() == Heap::ArrayData::Simple || instance->arrayType() == Heap::ArrayData::Complex);
         Heap::SimpleArrayData *sa = instance->d()->arrayData.cast<Heap::SimpleArrayData>();
@@ -695,27 +697,24 @@ void ArrayPrototype::method_indexOf(const BuiltinFunction *, Scope &scope, CallD
         while (idx < len) {
             value = sa->data(idx);
             CHECK_EXCEPTION();
-            if (RuntimeHelpers::strictEqual(value, searchValue)) {
-                scope.result = Encode(idx);
-                return;
-            }
+            if (RuntimeHelpers::strictEqual(value, searchValue))
+                return Encode(idx);
             ++idx;
         }
     }
-    scope.result = Encode(-1);
+    return Encode(-1);
 }
 
-void ArrayPrototype::method_lastIndexOf(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_lastIndexOf(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
 
     uint len = instance->getLength();
-    if (!len) {
-        scope.result = Encode(-1);
-        return;
-    }
+    if (!len)
+        return Encode(-1);
 
     ScopedValue searchValue(scope);
     uint fromIndex = len;
@@ -732,10 +731,8 @@ void ArrayPrototype::method_lastIndexOf(const BuiltinFunction *, Scope &scope, C
             f = qMin(f, (double)(len - 1));
         else if (f < 0) {
             f = len + f;
-            if (f < 0) {
-                scope.result = Encode(-1);
-                return;
-            }
+            if (f < 0)
+                return Encode(-1);
         }
         fromIndex = (uint) f + 1;
     }
@@ -746,16 +743,15 @@ void ArrayPrototype::method_lastIndexOf(const BuiltinFunction *, Scope &scope, C
         bool exists;
         v = instance->getIndexed(k, &exists);
         CHECK_EXCEPTION();
-        if (exists && RuntimeHelpers::strictEqual(v, searchValue)) {
-            scope.result = Encode(k);
-            return;
-        }
+        if (exists && RuntimeHelpers::strictEqual(v, searchValue))
+            return Encode(k);
     }
-    scope.result = Encode(-1);
+    return Encode(-1);
 }
 
-void ArrayPrototype::method_every(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_every(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -784,11 +780,12 @@ void ArrayPrototype::method_every(const BuiltinFunction *, Scope &scope, CallDat
         r = callback->call(cData);
         ok = r->toBoolean();
     }
-    scope.result = Encode(ok);
+    return Encode(ok);
 }
 
-void ArrayPrototype::method_some(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_some(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -803,6 +800,7 @@ void ArrayPrototype::method_some(const BuiltinFunction *, Scope &scope, CallData
     cData->thisObject = callData->argument(1);
     cData->args[2] = instance;
     ScopedValue v(scope);
+    ScopedValue result(scope);
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
@@ -812,17 +810,16 @@ void ArrayPrototype::method_some(const BuiltinFunction *, Scope &scope, CallData
 
         cData->args[0] = v;
         cData->args[1] = Primitive::fromDouble(k);
-        scope.result = callback->call(cData);
-        if (scope.result.toBoolean()) {
-            scope.result = Encode(true);
-            return;
-        }
+        result = callback->call(cData);
+        if (result->toBoolean())
+            return Encode(true);
     }
-    scope.result = Encode(false);
+    return Encode(false);
 }
 
-void ArrayPrototype::method_forEach(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_forEach(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -846,13 +843,14 @@ void ArrayPrototype::method_forEach(const BuiltinFunction *, Scope &scope, CallD
 
         cData->args[0] = v;
         cData->args[1] = Primitive::fromDouble(k);
-        scope.result = callback->call(cData);
+        callback->call(cData);
     }
     RETURN_UNDEFINED();
 }
 
-void ArrayPrototype::method_map(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_map(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -884,11 +882,12 @@ void ArrayPrototype::method_map(const BuiltinFunction *, Scope &scope, CallData 
         mapped = callback->call(cData);
         a->arraySet(k, mapped);
     }
-    scope.result = a.asReturnedValue();
+    return a.asReturnedValue();
 }
 
-void ArrayPrototype::method_filter(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_filter(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -924,11 +923,12 @@ void ArrayPrototype::method_filter(const BuiltinFunction *, Scope &scope, CallDa
             ++to;
         }
     }
-    scope.result = a.asReturnedValue();
+    return a.asReturnedValue();
 }
 
-void ArrayPrototype::method_reduce(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_reduce(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -973,11 +973,12 @@ void ArrayPrototype::method_reduce(const BuiltinFunction *, Scope &scope, CallDa
         }
         ++k;
     }
-    scope.result = acc->asReturnedValue();
+    return acc->asReturnedValue();
 }
 
-void ArrayPrototype::method_reduceRight(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayPrototype::method_reduceRight(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -991,8 +992,7 @@ void ArrayPrototype::method_reduceRight(const BuiltinFunction *, Scope &scope, C
     if (len == 0) {
         if (callData->argc == 1)
             THROW_TYPE_ERROR();
-        scope.result = callData->argument(1);
-        return;
+        return callData->argument(1);
     }
 
     uint k = len;
@@ -1027,6 +1027,6 @@ void ArrayPrototype::method_reduceRight(const BuiltinFunction *, Scope &scope, C
         }
         --k;
     }
-    scope.result = acc->asReturnedValue();
+    return acc->asReturnedValue();
 }
 

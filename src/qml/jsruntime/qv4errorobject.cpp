@@ -152,11 +152,12 @@ const char *ErrorObject::className(Heap::ErrorObject::ErrorType t)
     Q_UNREACHABLE();
 }
 
-void ErrorObject::method_get_stack(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ErrorObject::method_get_stack(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<ErrorObject> This(scope, callData->thisObject);
+    ExecutionEngine *v4 = b->engine();
+    ErrorObject *This = callData->thisObject.as<ErrorObject>();
     if (!This)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
     if (!This->d()->stack) {
         QString trace;
         for (int i = 0; i < This->d()->stackTrace->count(); ++i) {
@@ -167,9 +168,9 @@ void ErrorObject::method_get_stack(const BuiltinFunction *, Scope &scope, CallDa
             if (frame.line >= 0)
                 trace += QLatin1Char(':') + QString::number(frame.line);
         }
-        This->d()->stack.set(scope.engine, scope.engine->newString(trace));
+        This->d()->stack.set(v4, v4->newString(trace));
     }
-    scope.result = This->d()->stack;
+    return This->d()->stack->asReturnedValue();
 }
 
 DEFINE_OBJECT_VTABLE(ErrorObject);
@@ -315,12 +316,14 @@ void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj, He
     obj->defineDefaultProperty(engine->id_toString(), method_toString, 0);
 }
 
-void ErrorPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ErrorPrototype::method_toString(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     Object *o = callData->thisObject.as<Object>();
     if (!o)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
+    Scope scope(v4);
     ScopedValue name(scope, o->get(scope.engine->id_name()));
     QString qname;
     if (name->isUndefined())
@@ -343,5 +346,5 @@ void ErrorPrototype::method_toString(const BuiltinFunction *, Scope &scope, Call
         str = qname + QLatin1String(": ") + qmessage;
     }
 
-    scope.result = scope.engine->newString(str)->asReturnedValue();
+    return scope.engine->newString(str)->asReturnedValue();
 }

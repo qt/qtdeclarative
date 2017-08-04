@@ -232,7 +232,7 @@ bool ExecutionContext::deleteProperty(String *name)
 }
 
 // Do a standard call with this execution context as the outer scope
-void ExecutionContext::call(Scope &scope, CallData *callData, Function *function, const FunctionObject *f)
+ReturnedValue ExecutionContext::call(Scope &scope, CallData *callData, Function *function, const FunctionObject *f)
 {
     ExecutionContextSaver ctxSaver(scope);
 
@@ -241,14 +241,16 @@ void ExecutionContext::call(Scope &scope, CallData *callData, Function *function
         ctx->d()->function.set(scope.engine, f->d());
     scope.engine->pushContext(ctx);
 
-    scope.result = Q_V4_PROFILE(scope.engine, function);
+    ReturnedValue res = Q_V4_PROFILE(scope.engine, function);
 
     if (function->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(function->compiledFunction, scope);
+
+    return res;
 }
 
 // Do a simple, fast call with this execution context as the outer scope
-void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Function *function)
+ReturnedValue QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Function *function)
 {
     Q_ASSERT(function->canUseSimpleFunction());
 
@@ -266,11 +268,13 @@ void QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Functio
     scope.engine->pushContext(ctx);
     Q_ASSERT(scope.engine->current == ctx);
 
-    scope.result = Q_V4_PROFILE(scope.engine, function);
+    ReturnedValue res = Q_V4_PROFILE(scope.engine, function);
 
     if (function->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(function->compiledFunction, scope);
     scope.engine->memoryManager->freeSimpleCallContext();
+
+    return res;
 }
 
 void ExecutionContext::setProperty(String *name, const Value &value)

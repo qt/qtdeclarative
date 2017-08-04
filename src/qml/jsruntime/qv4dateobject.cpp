@@ -796,25 +796,25 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("toJSON"), method_toJSON, 1);
 }
 
-double DatePrototype::getThisDate(Scope &scope, CallData *callData)
+double DatePrototype::getThisDate(ExecutionEngine *v4, CallData *callData)
 {
     if (DateObject *thisObject = callData->thisObject.as<DateObject>())
         return thisObject->date();
     else {
-        scope.engine->throwTypeError();
+        v4->throwTypeError();
         return 0;
     }
 }
 
-void DatePrototype::method_parse(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_parse(const BuiltinFunction *, CallData *callData)
 {
     if (!callData->argc)
-        scope.result = Encode(qt_qnan());
+        return Encode(qt_qnan());
     else
-        scope.result = Encode(ParseString(callData->args[0].toQString()));
+        return Encode(ParseString(callData->args[0].toQString()));
 }
 
-void DatePrototype::method_UTC(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_UTC(const BuiltinFunction *, CallData *callData)
 {
     const int numArgs = callData->argc;
     if (numArgs >= 2) {
@@ -829,306 +829,349 @@ void DatePrototype::method_UTC(const BuiltinFunction *, Scope &scope, CallData *
             year += 1900;
         double t = MakeDate(MakeDay(year, month, day),
                             MakeTime(hours, mins, secs, ms));
-        scope.result = Encode(TimeClip(t));
-        return;
+        return Encode(TimeClip(t));
     }
     RETURN_UNDEFINED();
 }
 
-void DatePrototype::method_now(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_now(const BuiltinFunction *, CallData *callData)
 {
     Q_UNUSED(callData);
-    double t = currentTime();
-    scope.result = Encode(t);
+    return Encode(currentTime());
 }
 
-void DatePrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_toString(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
-    scope.result = scope.engine->newString(ToString(t));
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
+    return Encode(v4->newString(ToString(t)));
 }
 
-void DatePrototype::method_toDateString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_toDateString(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
-    scope.result = scope.engine->newString(ToDateString(t));
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
+    return Encode(v4->newString(ToDateString(t)));
 }
 
-void DatePrototype::method_toTimeString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_toTimeString(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
-    scope.result = scope.engine->newString(ToTimeString(t));
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
+    return Encode(v4->newString(ToTimeString(t)));
 }
 
-void DatePrototype::method_toLocaleString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_toLocaleString(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
-    scope.result = scope.engine->newString(ToLocaleString(t));
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
+    return Encode(v4->newString(ToLocaleString(t)));
 }
 
-void DatePrototype::method_toLocaleDateString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_toLocaleDateString(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
-    scope.result = scope.engine->newString(ToLocaleDateString(t));
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
+    return Encode(v4->newString(ToLocaleDateString(t)));
 }
 
-void DatePrototype::method_toLocaleTimeString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_toLocaleTimeString(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
-    scope.result = scope.engine->newString(ToLocaleTimeString(t));
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
+    return Encode(v4->newString(ToLocaleTimeString(t)));
 }
 
-void DatePrototype::method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_valueOf(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
-    scope.result = Encode(t);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
+    return Encode(t);
 }
 
-void DatePrototype::method_getTime(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getTime(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
-    scope.result = Encode(t);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
+    return Encode(t);
 }
 
-void DatePrototype::method_getYear(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getYear(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = YearFromTime(LocalTime(t)) - 1900;
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getFullYear(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getFullYear(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = YearFromTime(LocalTime(t));
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getUTCFullYear(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getUTCFullYear(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = YearFromTime(t);
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getMonth(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getMonth(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = MonthFromTime(LocalTime(t));
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getUTCMonth(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getUTCMonth(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = MonthFromTime(t);
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getDate(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getDate(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = DateFromTime(LocalTime(t));
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getUTCDate(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getUTCDate(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = DateFromTime(t);
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getDay(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getDay(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = WeekDay(LocalTime(t));
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getUTCDay(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getUTCDay(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = WeekDay(t);
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getHours(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getHours(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = HourFromTime(LocalTime(t));
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getUTCHours(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getUTCHours(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = HourFromTime(t);
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getMinutes(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getMinutes(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = MinFromTime(LocalTime(t));
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getUTCMinutes(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getUTCMinutes(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = MinFromTime(t);
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getSeconds(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getSeconds(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = SecFromTime(LocalTime(t));
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getUTCSeconds(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getUTCSeconds(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = SecFromTime(t);
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getMilliseconds(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getMilliseconds(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = msFromTime(LocalTime(t));
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getUTCMilliseconds(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getUTCMilliseconds(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = msFromTime(t);
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_getTimezoneOffset(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_getTimezoneOffset(const BuiltinFunction *b, CallData *callData)
 {
-    double t = getThisDate(scope, callData);
+    ExecutionEngine *v4 = b->engine();
+    double t = getThisDate(v4, callData);
     if (!std::isnan(t))
         t = (t - LocalTime(t)) / msPerMinute;
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
-void DatePrototype::method_setTime(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setTime(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<DateObject> self(scope, callData->thisObject);
+    ExecutionEngine *v4 = b->engine();
+    DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     self->setDate(TimeClip(t));
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setMilliseconds(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setMilliseconds(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<DateObject> self(scope, callData->thisObject);
-    if (!self)
-        THROW_TYPE_ERROR();
-
-    double t = LocalTime(self->date());
-    CHECK_EXCEPTION();
-    double ms = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    CHECK_EXCEPTION();
-    self->setDate(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)))));
-    scope.result = Encode(self->date());
-}
-
-void DatePrototype::method_setUTCMilliseconds(const BuiltinFunction *, Scope &scope, CallData *callData)
-{
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
+
+    double t = LocalTime(self->date());
+    if (v4->hasException)
+        return QV4::Encode::undefined();
+    double ms = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
+    self->setDate(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)))));
+    return Encode(self->date());
+}
+
+ReturnedValue DatePrototype::method_setUTCMilliseconds(const BuiltinFunction *b, CallData *callData)
+{
+    ExecutionEngine *v4 = b->engine();
+    DateObject *self = callData->thisObject.as<DateObject>();
+    if (!self)
+        return v4->throwTypeError();
 
     double t = self->date();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double ms = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     self->setDate(TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms))));
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setSeconds(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setSeconds(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = LocalTime(self->date());
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double sec = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double ms = (callData->argc < 2) ? msFromTime(t) : callData->args[1].toNumber();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setUTCSeconds(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setUTCSeconds(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = self->date();
     double sec = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     double ms = (callData->argc < 2) ? msFromTime(t) : callData->args[1].toNumber();
     t = TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms)));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setMinutes(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setMinutes(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = LocalTime(self->date());
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double min = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double sec = (callData->argc < 2) ? SecFromTime(t) : callData->args[1].toNumber();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double ms = (callData->argc < 3) ? msFromTime(t) : callData->args[2].toNumber();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setUTCMinutes(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setUTCMinutes(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = self->date();
     double min = callData->argc ? callData->args[0].toNumber() : qt_qnan();
@@ -1136,35 +1179,42 @@ void DatePrototype::method_setUTCMinutes(const BuiltinFunction *, Scope &scope, 
     double ms = (callData->argc < 3) ? msFromTime(t) : callData->args[2].toNumber();
     t = TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms)));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setHours(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setHours(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = LocalTime(self->date());
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double hour = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double min = (callData->argc < 2) ? MinFromTime(t) : callData->args[1].toNumber();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double sec = (callData->argc < 3) ? SecFromTime(t) : callData->args[2].toNumber();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double ms = (callData->argc < 4) ? msFromTime(t) : callData->args[3].toNumber();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setUTCHours(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setUTCHours(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = self->date();
     double hour = callData->argc ? callData->args[0].toNumber() : qt_qnan();
@@ -1173,75 +1223,87 @@ void DatePrototype::method_setUTCHours(const BuiltinFunction *, Scope &scope, Ca
     double ms = (callData->argc < 4) ? msFromTime(t) : callData->args[3].toNumber();
     t = TimeClip(MakeDate(Day(t), MakeTime(hour, min, sec, ms)));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setDate(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setDate(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = LocalTime(self->date());
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double date = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setUTCDate(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setUTCDate(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = self->date();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double date = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     t = TimeClip(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t)));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setMonth(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setMonth(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = LocalTime(self->date());
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double month = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double date = (callData->argc < 2) ? DateFromTime(t) : callData->args[1].toNumber();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setUTCMonth(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setUTCMonth(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = self->date();
     double month = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     double date = (callData->argc < 2) ? DateFromTime(t) : callData->args[1].toNumber();
     t = TimeClip(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t)));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setYear(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setYear(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = self->date();
     if (std::isnan(t))
@@ -1260,14 +1322,15 @@ void DatePrototype::method_setYear(const BuiltinFunction *, Scope &scope, CallDa
         r = TimeClip(r);
     }
     self->setDate(r);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setUTCFullYear(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setUTCFullYear(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = self->date();
     double year = callData->argc ? callData->args[0].toNumber() : qt_qnan();
@@ -1275,38 +1338,44 @@ void DatePrototype::method_setUTCFullYear(const BuiltinFunction *, Scope &scope,
     double date = (callData->argc < 3) ? DateFromTime(t) : callData->args[2].toNumber();
     t = TimeClip(MakeDate(MakeDay(year, month, date), TimeWithinDay(t)));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_setFullYear(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_setFullYear(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = LocalTime(self->date());
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     if (std::isnan(t))
         t = 0;
     double year = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double month = (callData->argc < 2) ? MonthFromTime(t) : callData->args[1].toNumber();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     double date = (callData->argc < 3) ? DateFromTime(t) : callData->args[2].toNumber();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));
     self->setDate(t);
-    scope.result = Encode(self->date());
+    return Encode(self->date());
 }
 
-void DatePrototype::method_toUTCString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_toUTCString(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = self->date();
-    scope.result = scope.engine->newString(ToUTCString(t));
+    return Encode(v4->newString(ToUTCString(t)));
 }
 
 static void addZeroPrefixedInt(QString &str, int num, int nDigits)
@@ -1322,21 +1391,22 @@ static void addZeroPrefixedInt(QString &str, int num, int nDigits)
     }
 }
 
-void DatePrototype::method_toISOString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_toISOString(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     DateObject *self = callData->thisObject.as<DateObject>();
     if (!self)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double t = self->date();
     if (!std::isfinite(t))
-        RETURN_RESULT(scope.engine->throwRangeError(callData->thisObject));
+        RETURN_RESULT(v4->throwRangeError(callData->thisObject));
 
     QString result;
     int year = (int)YearFromTime(t);
     if (year < 0 || year > 9999) {
         if (qAbs(year) >= 1000000)
-            RETURN_RESULT(scope.engine->newString(QStringLiteral("Invalid Date")));
+            RETURN_RESULT(v4->newString(QStringLiteral("Invalid Date")));
         result += year < 0 ? QLatin1Char('-') : QLatin1Char('+');
         year = qAbs(year);
         addZeroPrefixedInt(result, year, 6);
@@ -1357,29 +1427,32 @@ void DatePrototype::method_toISOString(const BuiltinFunction *, Scope &scope, Ca
     addZeroPrefixedInt(result, msFromTime(t), 3);
     result += QLatin1Char('Z');
 
-    scope.result = scope.engine->newString(result);
+    return Encode(v4->newString(result));
 }
 
-void DatePrototype::method_toJSON(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DatePrototype::method_toJSON(const BuiltinFunction *b, CallData *callData)
 {
-    ScopedObject O(scope, callData->thisObject.toObject(scope.engine));
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    Scope scope(v4);
+    ScopedObject O(scope, callData->thisObject.toObject(v4));
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     ScopedValue tv(scope, RuntimeHelpers::toPrimitive(O, NUMBER_HINT));
 
     if (tv->isNumber() && !std::isfinite(tv->toNumber()))
         RETURN_RESULT(Encode::null());
 
-    ScopedString s(scope, scope.engine->newString(QStringLiteral("toISOString")));
+    ScopedString s(scope, v4->newString(QStringLiteral("toISOString")));
     ScopedValue v(scope, O->get(s));
     FunctionObject *toIso = v->as<FunctionObject>();
 
     if (!toIso)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     ScopedCallData cData(scope);
     cData->thisObject = callData->thisObject;
-    scope.result = toIso->call(cData);
+    return toIso->call(cData);
 }
 
 void DatePrototype::timezoneUpdated()

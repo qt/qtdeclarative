@@ -78,30 +78,30 @@ struct ArrayPrototype: ArrayObject
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_isArray(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_toString(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_toLocaleString(const BuiltinFunction *builtin, Scope &, CallData *callData);
-    static void method_concat(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_find(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_findIndex(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_join(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_pop(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_push(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_reverse(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_shift(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_slice(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_sort(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_splice(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_unshift(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_indexOf(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_lastIndexOf(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_every(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_some(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_forEach(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_map(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_filter(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_reduce(const BuiltinFunction *, Scope &, CallData *callData);
-    static void method_reduceRight(const BuiltinFunction *, Scope &, CallData *callData);
+    static ReturnedValue method_isArray(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_toLocaleString(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_concat(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_find(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_findIndex(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_join(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_pop(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_push(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_reverse(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_shift(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_slice(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_sort(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_splice(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_unshift(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_indexOf(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_lastIndexOf(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_every(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_some(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_forEach(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_map(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_filter(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_reduce(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_reduceRight(const BuiltinFunction *, CallData *callData);
 };
 
 

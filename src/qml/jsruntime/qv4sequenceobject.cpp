@@ -450,8 +450,9 @@ public:
             storeReference();
     }
 
-    static void method_get_length(const BuiltinFunction *, Scope &scope, CallData *callData)
+    static QV4::ReturnedValue method_get_length(const BuiltinFunction *b, CallData *callData)
     {
+        QV4::Scope scope(b);
         QV4::Scoped<QQmlSequence<Container> > This(scope, callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
             THROW_TYPE_ERROR();
@@ -464,8 +465,9 @@ public:
         RETURN_RESULT(Encode(qint32(This->d()->container->size())));
     }
 
-    static void method_set_length(const BuiltinFunction *, Scope &scope, CallData *callData)
+    static QV4::ReturnedValue method_set_length(const BuiltinFunction *b, CallData *callData)
     {
+        QV4::Scope scope(b);
         QV4::Scoped<QQmlSequence<Container> > This(scope, callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
             THROW_TYPE_ERROR();
@@ -647,14 +649,20 @@ void SequencePrototype::init()
 }
 #undef REGISTER_QML_SEQUENCE_METATYPE
 
-void SequencePrototype::method_sort(const BuiltinFunction *b, Scope &scope, CallData *callData)
+ReturnedValue SequencePrototype::method_valueOf(const BuiltinFunction *f, CallData *callData)
 {
+    return Encode(callData->thisObject.toString(f->engine()));
+}
+
+ReturnedValue SequencePrototype::method_sort(const BuiltinFunction *b, CallData *callData)
+{
+    Scope scope(b);
     QV4::ScopedObject o(scope, callData->thisObject);
     if (!o || !o->isListType())
         THROW_TYPE_ERROR();
 
     if (callData->argc >= 2)
-        RETURN_RESULT(o);
+        return o.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
         if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
@@ -665,7 +673,7 @@ void SequencePrototype::method_sort(const BuiltinFunction *b, Scope &scope, Call
 
 #undef CALL_SORT
         {}
-    RETURN_RESULT(o);
+    return o.asReturnedValue();
 }
 
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \

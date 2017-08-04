@@ -207,35 +207,38 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("trim"), method_trim);
 }
 
-static QString getThisString(Scope &scope, CallData *callData)
+static QString getThisString(ExecutionEngine *v4, CallData *callData)
 {
-    ScopedValue t(scope, callData->thisObject);
+    Value *t = &callData->thisObject;
     if (String *s = t->stringValue())
         return s->toQString();
     if (StringObject *thisString = t->as<StringObject>())
         return thisString->d()->string->toQString();
     if (t->isUndefined() || t->isNull()) {
-        scope.engine->throwTypeError();
+        v4->throwTypeError();
         return QString();
     }
     return t->toQString();
 }
 
-void StringPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_toString(const BuiltinFunction *b, CallData *callData)
 {
     if (callData->thisObject.isString())
         RETURN_RESULT(callData->thisObject);
 
+    ExecutionEngine *v4 = b->engine();
     StringObject *o = callData->thisObject.as<StringObject>();
     if (!o)
-        THROW_TYPE_ERROR();
-    scope.result = o->d()->string;
+        return v4->throwTypeError();
+    return o->d()->string->asReturnedValue();
 }
 
-void StringPrototype::method_charAt(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_charAt(const BuiltinFunction *b, CallData *callData)
 {
-    const QString str = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString str = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     int pos = 0;
     if (callData->argc > 0)
@@ -245,13 +248,15 @@ void StringPrototype::method_charAt(const BuiltinFunction *, Scope &scope, CallD
     if (pos >= 0 && pos < str.length())
         result += str.at(pos);
 
-    scope.result = scope.engine->newString(result);
+    return Encode(v4->newString(result));
 }
 
-void StringPrototype::method_charCodeAt(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_charCodeAt(const BuiltinFunction *b, CallData *callData)
 {
-    const QString str = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString str = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     int pos = 0;
     if (callData->argc > 0)
@@ -261,35 +266,41 @@ void StringPrototype::method_charCodeAt(const BuiltinFunction *, Scope &scope, C
     if (pos >= 0 && pos < str.length())
         RETURN_RESULT(Encode(str.at(pos).unicode()));
 
-    scope.result = Encode(qt_qnan());
+    return Encode(qt_qnan());
 }
 
-void StringPrototype::method_concat(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_concat(const BuiltinFunction *b, CallData *callData)
 {
-    QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
+    Scope scope(v4);
     ScopedString s(scope);
     for (int i = 0; i < callData->argc; ++i) {
         s = callData->args[i].toString(scope.engine);
-        CHECK_EXCEPTION();
+        if (v4->hasException)
+            return QV4::Encode::undefined();
 
         Q_ASSERT(s->isString());
         value += s->toQString();
     }
 
-    scope.result = scope.engine->newString(value);
+    return Encode(v4->newString(value));
 }
 
-void StringPrototype::method_endsWith(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_endsWith(const BuiltinFunction *b, CallData *callData)
 {
-    QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     QString searchString;
     if (callData->argc) {
         if (callData->args[0].as<RegExpObject>())
-            THROW_TYPE_ERROR();
+            return v4->throwTypeError();
         searchString = callData->args[0].toQString();
     }
 
@@ -301,13 +312,15 @@ void StringPrototype::method_endsWith(const BuiltinFunction *, Scope &scope, Cal
         RETURN_RESULT(Encode(value.endsWith(searchString)));
 
     QStringRef stringToSearch = value.leftRef(pos);
-    scope.result = Encode(stringToSearch.endsWith(searchString));
+    return Encode(stringToSearch.endsWith(searchString));
 }
 
-void StringPrototype::method_indexOf(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_indexOf(const BuiltinFunction *b, CallData *callData)
 {
-    QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     QString searchString;
     if (callData->argc)
@@ -321,26 +334,28 @@ void StringPrototype::method_indexOf(const BuiltinFunction *, Scope &scope, Call
     if (! value.isEmpty())
         index = value.indexOf(searchString, qMin(qMax(pos, 0), value.length()));
 
-    scope.result = Encode(index);
+    return Encode(index);
 }
 
-void StringPrototype::method_includes(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_includes(const BuiltinFunction *b, CallData *callData)
 {
-    QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     QString searchString;
     if (callData->argc) {
         if (callData->args[0].as<RegExpObject>())
-            THROW_TYPE_ERROR();
+            return v4->throwTypeError();
         searchString = callData->args[0].toQString();
     }
 
     int pos = 0;
     if (callData->argc > 1) {
-        ScopedValue posArg(scope, callData->argument(1));
-        pos = (int) posArg->toInteger();
-        if (!posArg->isInteger() && posArg->isNumber() && qIsInf(posArg->toNumber()))
+        Value &posArg = callData->args[1];
+        pos = (int) posArg.toInteger();
+        if (!posArg.isInteger() && posArg.isNumber() && qIsInf(posArg.toNumber()))
             pos = value.length();
     }
 
@@ -348,20 +363,21 @@ void StringPrototype::method_includes(const BuiltinFunction *, Scope &scope, Cal
         RETURN_RESULT(Encode(value.contains(searchString)));
 
     QStringRef stringToSearch = value.midRef(pos);
-    scope.result = Encode(stringToSearch.contains(searchString));
+    return Encode(stringToSearch.contains(searchString));
 }
 
-void StringPrototype::method_lastIndexOf(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_lastIndexOf(const BuiltinFunction *b, CallData *callData)
 {
-    const QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     QString searchString;
     if (callData->argc)
         searchString = callData->args[0].toQString();
 
-    ScopedValue posArg(scope, callData->argument(1));
-    double position = RuntimeHelpers::toNumber(posArg);
+    double position = callData->argc > 1 ? RuntimeHelpers::toNumber(callData->args[1]) : +qInf();
     if (std::isnan(position))
         position = +qInf();
     else
@@ -373,24 +389,30 @@ void StringPrototype::method_lastIndexOf(const BuiltinFunction *, Scope &scope, 
     if (searchString.isNull() && pos == 0)
         RETURN_RESULT(Encode(-1));
     int index = value.lastIndexOf(searchString, pos);
-    scope.result = Encode(index);
+    return Encode(index);
 }
 
-void StringPrototype::method_localeCompare(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_localeCompare(const BuiltinFunction *b, CallData *callData)
 {
-    const QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
-    ScopedValue v(scope, callData->argument(0));
-    const QString that = v->toQString();
-    scope.result = Encode(QString::localeAwareCompare(value, that));
+    if (callData->argc < 1)
+        callData->args[0] = Encode::undefined();
+
+    const QString that = callData->args[0].toQString();
+    return Encode(QString::localeAwareCompare(value, that));
 }
 
-void StringPrototype::method_match(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     if (callData->thisObject.isUndefined() || callData->thisObject.isNull())
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
+    Scope scope(v4);
     ScopedString s(scope, callData->thisObject.toString(scope.engine));
 
     ScopedValue regexp(scope, callData->argument(0));
@@ -403,7 +425,7 @@ void StringPrototype::method_match(const BuiltinFunction *, Scope &scope, CallDa
 
     if (!rx)
         // ### CHECK
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     bool global = rx->global();
 
@@ -414,10 +436,8 @@ void StringPrototype::method_match(const BuiltinFunction *, Scope &scope, CallDa
     ScopedCallData cData(scope, 1);
     cData->thisObject = rx;
     cData->args[0] = s;
-    if (!global) {
-        scope.result = exec->call(cData);
-        return;
-    }
+    if (!global)
+        return exec->call(cData);
 
     ScopedString lastIndex(scope, scope.engine->newString(QStringLiteral("lastIndex")));
     rx->put(lastIndex, ScopedValue(scope, Primitive::fromInt32(0)));
@@ -427,11 +447,12 @@ void StringPrototype::method_match(const BuiltinFunction *, Scope &scope, CallDa
     uint n = 0;
     ScopedValue matchStr(scope);
     ScopedValue index(scope);
+    ScopedValue result(scope);
     while (1) {
-        scope.result = exec->call(cData);
-        if (scope.result.isNull())
+        result = exec->call(cData);
+        if (result->isNull())
             break;
-        assert(scope.result.isObject());
+        assert(result->isObject());
         index = rx->get(lastIndex, 0);
         double thisIndex = index->toInteger();
         if (previousLastIndex == thisIndex) {
@@ -440,29 +461,30 @@ void StringPrototype::method_match(const BuiltinFunction *, Scope &scope, CallDa
         } else {
             previousLastIndex = thisIndex;
         }
-        matchStr = scope.result.objectValue()->getIndexed(0);
+        matchStr = result->objectValue()->getIndexed(0);
         a->arraySet(n, matchStr);
         ++n;
     }
     if (!n)
-        scope.result = Encode::null();
+        result = Encode::null();
     else
-        scope.result = a;
+        result = a.asReturnedValue();
+    return result->asReturnedValue();
 }
 
-void StringPrototype::method_repeat(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_repeat(const BuiltinFunction *b, CallData *callData)
 {
-    QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     double repeats = callData->args[0].toInteger();
 
-    if (repeats < 0 || qIsInf(repeats)) {
-        scope.result = scope.engine->throwRangeError(QLatin1String("Invalid count value"));
-        return;
-    }
+    if (repeats < 0 || qIsInf(repeats))
+        return v4->throwRangeError(QLatin1String("Invalid count value"));
 
-    scope.result = scope.engine->newString(value.repeated(int(repeats)));
+    return Encode(v4->newString(value.repeated(int(repeats))));
 }
 
 static void appendReplacementString(QString *result, const QString &input, const QString& replaceValue, uint* matchOffsets, int captureCount)
@@ -511,7 +533,7 @@ static void appendReplacementString(QString *result, const QString &input, const
     }
 }
 
-void StringPrototype::method_replace(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData *callData)
 {
     QString string;
     if (StringObject *thisString = callData->thisObject.as<StringObject>())
@@ -526,6 +548,7 @@ void StringPrototype::method_replace(const BuiltinFunction *, Scope &scope, Call
     uint _matchOffsets[64];
     uint *matchOffsets = _matchOffsets;
 
+    Scope scope(b);
     ScopedValue searchValue(scope, callData->argument(0));
     Scoped<RegExpObject> regExp(scope, searchValue);
     if (regExp) {
@@ -622,38 +645,44 @@ void StringPrototype::method_replace(const BuiltinFunction *, Scope &scope, Call
     if (matchOffsets != _matchOffsets)
         free(matchOffsets);
 
-    scope.result = scope.engine->newString(result);
+    return Encode(scope.engine->newString(result));
 }
 
-void StringPrototype::method_search(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_search(const BuiltinFunction *b, CallData *callData)
 {
-    QString string = getThisString(scope, callData);
-    scope.result = callData->argument(0);
-    CHECK_EXCEPTION();
+    Scope scope(b);
+    ScopedValue regExpObj(scope);
+    QString string = getThisString(scope.engine, callData);
+    regExpObj = callData->argument(0);
+    if (scope.engine->hasException)
+        return QV4::Encode::undefined();
 
-    Scoped<RegExpObject> regExp(scope, scope.result.as<RegExpObject>());
+    RegExpObject *regExp = regExpObj->as<RegExpObject>();
     if (!regExp) {
         ScopedCallData callData(scope, 1);
-        callData->args[0] = scope.result;
-        scope.result = scope.engine->regExpCtor()->construct(callData);
-        CHECK_EXCEPTION();
+        callData->args[0] = regExpObj;
+        regExpObj = scope.engine->regExpCtor()->construct(callData);
+        if (scope.engine->hasException)
+            return QV4::Encode::undefined();
 
-        regExp = scope.result.as<RegExpObject>();
+        regExp = regExpObj->as<RegExpObject>();
         Q_ASSERT(regExp);
     }
     Scoped<RegExp> re(scope, regExp->value());
     Q_ALLOCA_VAR(uint, matchOffsets, regExp->value()->captureCount() * 2 * sizeof(uint));
     uint result = re->match(string, /*offset*/0, matchOffsets);
     if (result == JSC::Yarr::offsetNoMatch)
-        scope.result = Encode(-1);
+        return Encode(-1);
     else
-        scope.result = Encode(result);
+        return Encode(result);
 }
 
-void StringPrototype::method_slice(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_slice(const BuiltinFunction *b, CallData *callData)
 {
-    const QString text = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString text = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     const double length = text.length();
 
@@ -675,14 +704,17 @@ void StringPrototype::method_slice(const BuiltinFunction *, Scope &scope, CallDa
     const int intEnd = int(end);
 
     int count = qMax(0, intEnd - intStart);
-    scope.result = scope.engine->newString(text.mid(intStart, count));
+    return Encode(v4->newString(text.mid(intStart, count)));
 }
 
-void StringPrototype::method_split(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_split(const BuiltinFunction *b, CallData *callData)
 {
-    QString text = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    QString text = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
+    Scope scope(v4);
     ScopedValue separatorValue(scope, callData->argument(0));
     ScopedValue limitValue(scope, callData->argument(1));
 
@@ -692,7 +724,7 @@ void StringPrototype::method_split(const BuiltinFunction *, Scope &scope, CallDa
         if (limitValue->isUndefined()) {
             ScopedString s(scope, scope.engine->newString(text));
             array->push_back(s);
-            RETURN_RESULT(array);
+            return array.asReturnedValue();
         }
         RETURN_RESULT(scope.engine->newString(text.left(limitValue->toInteger())));
     }
@@ -700,7 +732,7 @@ void StringPrototype::method_split(const BuiltinFunction *, Scope &scope, CallDa
     uint limit = limitValue->isUndefined() ? UINT_MAX : limitValue->toUInt32();
 
     if (limit == 0)
-        RETURN_RESULT(array);
+        return array.asReturnedValue();
 
     Scoped<RegExpObject> re(scope, separatorValue);
     if (re) {
@@ -741,7 +773,7 @@ void StringPrototype::method_split(const BuiltinFunction *, Scope &scope, CallDa
         if (separator.isEmpty()) {
             for (uint i = 0; i < qMin(limit, uint(text.length())); ++i)
                 array->push_back((s = scope.engine->newString(text.mid(i, 1))));
-            RETURN_RESULT(array);
+            return array.asReturnedValue();
         }
 
         int start = 0;
@@ -755,18 +787,20 @@ void StringPrototype::method_split(const BuiltinFunction *, Scope &scope, CallDa
         if (array->getLength() < limit && start != -1)
             array->push_back((s = scope.engine->newString(text.mid(start))));
     }
-    RETURN_RESULT(array);
+    return array.asReturnedValue();
 }
 
-void StringPrototype::method_startsWith(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_startsWith(const BuiltinFunction *b, CallData *callData)
 {
-    QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     QString searchString;
     if (callData->argc) {
         if (callData->args[0].as<RegExpObject>())
-            THROW_TYPE_ERROR();
+            return v4->throwTypeError();
         searchString = callData->args[0].toQString();
     }
 
@@ -775,16 +809,18 @@ void StringPrototype::method_startsWith(const BuiltinFunction *, Scope &scope, C
         pos = (int) callData->args[1].toInteger();
 
     if (pos == 0)
-        RETURN_RESULT(Encode(value.startsWith(searchString)));
+        return Encode(value.startsWith(searchString));
 
     QStringRef stringToSearch = value.midRef(pos);
     RETURN_RESULT(Encode(stringToSearch.startsWith(searchString)));
 }
 
-void StringPrototype::method_substr(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_substr(const BuiltinFunction *b, CallData *callData)
 {
-    const QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     double start = 0;
     if (callData->argc > 0)
@@ -802,13 +838,15 @@ void StringPrototype::method_substr(const BuiltinFunction *, Scope &scope, CallD
 
     qint32 x = Primitive::toInt32(start);
     qint32 y = Primitive::toInt32(length);
-    scope.result = scope.engine->newString(value.mid(x, y));
+    return Encode(v4->newString(value.mid(x, y)));
 }
 
-void StringPrototype::method_substring(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_substring(const BuiltinFunction *b, CallData *callData)
 {
-    QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     int length = value.length();
 
@@ -818,9 +856,8 @@ void StringPrototype::method_substring(const BuiltinFunction *, Scope &scope, Ca
     if (callData->argc > 0)
         start = callData->args[0].toInteger();
 
-    ScopedValue endValue(scope, callData->argument(1));
-    if (!endValue->isUndefined())
-        end = endValue->toInteger();
+    if (callData->argc > 1 && !callData->args[1].isUndefined())
+        end = callData->args[1].toInteger();
 
     if (std::isnan(start) || start < 0)
         start = 0;
@@ -842,36 +879,40 @@ void StringPrototype::method_substring(const BuiltinFunction *, Scope &scope, Ca
 
     qint32 x = (int)start;
     qint32 y = (int)(end - start);
-    scope.result = scope.engine->newString(value.mid(x, y));
+    return Encode(v4->newString(value.mid(x, y)));
 }
 
-void StringPrototype::method_toLowerCase(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_toLowerCase(const BuiltinFunction *b, CallData *callData)
 {
-    QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
-    scope.result = scope.engine->newString(value.toLower());
+    return Encode(v4->newString(value.toLower()));
 }
 
-void StringPrototype::method_toLocaleLowerCase(const BuiltinFunction *b, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_toLocaleLowerCase(const BuiltinFunction *b, CallData *callData)
 {
-    method_toLowerCase(b, scope, callData);
+    return method_toLowerCase(b, callData);
 }
 
-void StringPrototype::method_toUpperCase(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_toUpperCase(const BuiltinFunction *b, CallData *callData)
 {
-    QString value = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    const QString value = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
-    scope.result = scope.engine->newString(value.toUpper());
+    return Encode(v4->newString(value.toUpper()));
 }
 
-void StringPrototype::method_toLocaleUpperCase(const BuiltinFunction *b, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_toLocaleUpperCase(const BuiltinFunction *b, CallData *callData)
 {
-    return method_toUpperCase(b, scope, callData);
+    return method_toUpperCase(b, callData);
 }
 
-void StringPrototype::method_fromCharCode(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_fromCharCode(const BuiltinFunction *b, CallData *callData)
 {
     QString str(callData->argc, Qt::Uninitialized);
     QChar *ch = str.data();
@@ -879,13 +920,15 @@ void StringPrototype::method_fromCharCode(const BuiltinFunction *, Scope &scope,
         *ch = QChar(callData->args[i].toUInt16());
         ++ch;
     }
-    scope.result = scope.engine->newString(str);
+    return Encode(b->engine()->newString(str));
 }
 
-void StringPrototype::method_trim(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue StringPrototype::method_trim(const BuiltinFunction *b, CallData *callData)
 {
-    QString s = getThisString(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    QString s = getThisString(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     const QChar *chars = s.constData();
     int start, end;
@@ -898,5 +941,5 @@ void StringPrototype::method_trim(const BuiltinFunction *, Scope &scope, CallDat
             break;
     }
 
-    scope.result = scope.engine->newString(QString(chars + start, end - start + 1));
+    return Encode(v4->newString(QString(chars + start, end - start + 1)));
 }

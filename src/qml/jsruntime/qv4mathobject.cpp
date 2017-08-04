@@ -92,7 +92,7 @@ static Q_ALWAYS_INLINE double copySign(double x, double y)
     return ::copysign(x, y);
 }
 
-void MathObject::method_abs(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_abs(const BuiltinFunction *, CallData *callData)
 {
     if (!callData->argc)
         RETURN_RESULT(Encode(qt_qnan()));
@@ -109,7 +109,7 @@ void MathObject::method_abs(const BuiltinFunction *, Scope &scope, CallData *cal
     RETURN_RESULT(Encode(v < 0 ? -v : v));
 }
 
-void MathObject::method_acos(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_acos(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : 2;
     if (v > 1)
@@ -118,7 +118,7 @@ void MathObject::method_acos(const BuiltinFunction *, Scope &scope, CallData *ca
     RETURN_RESULT(Encode(std::acos(v)));
 }
 
-void MathObject::method_asin(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_asin(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : 2;
     if (v > 1)
@@ -127,7 +127,7 @@ void MathObject::method_asin(const BuiltinFunction *, Scope &scope, CallData *ca
         RETURN_RESULT(Encode(std::asin(v)));
 }
 
-void MathObject::method_atan(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_atan(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     if (v == 0.0)
@@ -136,7 +136,7 @@ void MathObject::method_atan(const BuiltinFunction *, Scope &scope, CallData *ca
         RETURN_RESULT(Encode(std::atan(v)));
 }
 
-void MathObject::method_atan2(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_atan2(const BuiltinFunction *, CallData *callData)
 {
     double v1 = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     double v2 = callData->argc > 1 ? callData->args[1].toNumber() : qt_qnan();
@@ -154,7 +154,7 @@ void MathObject::method_atan2(const BuiltinFunction *, Scope &scope, CallData *c
     RETURN_RESULT(Encode(std::atan2(v1, v2)));
 }
 
-void MathObject::method_ceil(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_ceil(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     if (v < 0.0 && v > -1.0)
@@ -163,13 +163,13 @@ void MathObject::method_ceil(const BuiltinFunction *, Scope &scope, CallData *ca
         RETURN_RESULT(Encode(std::ceil(v)));
 }
 
-void MathObject::method_cos(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_cos(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     RETURN_RESULT(Encode(std::cos(v)));
 }
 
-void MathObject::method_exp(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_exp(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     if (qt_is_inf(v)) {
@@ -182,7 +182,7 @@ void MathObject::method_exp(const BuiltinFunction *, Scope &scope, CallData *cal
     }
 }
 
-void MathObject::method_floor(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_floor(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     Value result = Primitive::fromDouble(std::floor(v));
@@ -190,7 +190,7 @@ void MathObject::method_floor(const BuiltinFunction *, Scope &scope, CallData *c
     RETURN_RESULT(result);
 }
 
-void MathObject::method_log(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_log(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     if (v < 0)
@@ -199,7 +199,7 @@ void MathObject::method_log(const BuiltinFunction *, Scope &scope, CallData *cal
         RETURN_RESULT(Encode(std::log(v)));
 }
 
-void MathObject::method_max(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_max(const BuiltinFunction *, CallData *callData)
 {
     double mx = -qt_inf();
     for (int i = 0; i < callData->argc; ++i) {
@@ -210,7 +210,7 @@ void MathObject::method_max(const BuiltinFunction *, Scope &scope, CallData *cal
     RETURN_RESULT(Encode(mx));
 }
 
-void MathObject::method_min(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_min(const BuiltinFunction *, CallData *callData)
 {
     double mx = qt_inf();
     for (int i = 0; i < callData->argc; ++i) {
@@ -223,7 +223,7 @@ void MathObject::method_min(const BuiltinFunction *, Scope &scope, CallData *cal
     RETURN_RESULT(Encode(mx));
 }
 
-void MathObject::method_pow(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_pow(const BuiltinFunction *, CallData *callData)
 {
     double x = callData->argc > 0 ? callData->args[0].toNumber() : qt_qnan();
     double y = callData->argc > 1 ? callData->args[1].toNumber() : qt_qnan();
@@ -275,12 +275,12 @@ void MathObject::method_pow(const BuiltinFunction *, Scope &scope, CallData *cal
 
 Q_GLOBAL_STATIC(QThreadStorage<bool *>, seedCreatedStorage);
 
-void MathObject::method_random(const BuiltinFunction *, Scope &scope, CallData *)
+ReturnedValue MathObject::method_random(const BuiltinFunction *b, CallData *)
 {
     if (!seedCreatedStorage()->hasLocalData()) {
         int msecs = QTime(0,0,0).msecsTo(QTime::currentTime());
         Q_ASSERT(msecs >= 0);
-        qsrand(uint(uint(msecs) ^ reinterpret_cast<quintptr>(scope.engine)));
+        qsrand(uint(uint(msecs) ^ reinterpret_cast<quintptr>(b)));
         seedCreatedStorage()->setLocalData(new bool(true));
     }
     // rand()/qrand() return a value where the upperbound is RAND_MAX inclusive. So, instead of
@@ -289,14 +289,14 @@ void MathObject::method_random(const BuiltinFunction *, Scope &scope, CallData *
     RETURN_RESULT(Encode(qrand() / double(upperLimit)));
 }
 
-void MathObject::method_round(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_round(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     v = copySign(std::floor(v + 0.5), v);
     RETURN_RESULT(Encode(v));
 }
 
-void MathObject::method_sign(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_sign(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
 
@@ -309,19 +309,19 @@ void MathObject::method_sign(const BuiltinFunction *, Scope &scope, CallData *ca
     RETURN_RESULT(Encode(std::signbit(v) ? -1 : 1));
 }
 
-void MathObject::method_sin(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_sin(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     RETURN_RESULT(Encode(std::sin(v)));
 }
 
-void MathObject::method_sqrt(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_sqrt(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     RETURN_RESULT(Encode(std::sqrt(v)));
 }
 
-void MathObject::method_tan(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue MathObject::method_tan(const BuiltinFunction *, CallData *callData)
 {
     double v = callData->argc ? callData->args[0].toNumber() : qt_qnan();
     if (v == 0.0)

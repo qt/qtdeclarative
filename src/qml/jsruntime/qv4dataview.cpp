@@ -119,60 +119,60 @@ void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("setUInt32"), method_set<unsigned int>, 0);
 }
 
-void DataViewPrototype::method_get_buffer(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DataViewPrototype::method_get_buffer(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<DataView> v(scope, callData->thisObject);
+    DataView *v = callData->thisObject.as<DataView>();
     if (!v)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
 
-    scope.result = v->d()->buffer;
+    return v->d()->buffer->asReturnedValue();
 }
 
-void DataViewPrototype::method_get_byteLength(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DataViewPrototype::method_get_byteLength(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<DataView> v(scope, callData->thisObject);
+    DataView *v = callData->thisObject.as<DataView>();
     if (!v)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
 
-    scope.result = Encode(v->d()->byteLength);
+    return Encode(v->d()->byteLength);
 }
 
-void DataViewPrototype::method_get_byteOffset(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DataViewPrototype::method_get_byteOffset(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<DataView> v(scope, callData->thisObject);
+    DataView *v = callData->thisObject.as<DataView>();
     if (!v)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
 
-    scope.result = Encode(v->d()->byteOffset);
+    return Encode(v->d()->byteOffset);
 }
 
 template <typename T>
-void DataViewPrototype::method_getChar(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DataViewPrototype::method_getChar(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<DataView> v(scope, callData->thisObject);
+    DataView *v = callData->thisObject.as<DataView>();
     if (!v || callData->argc < 1)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
     T t = T(v->d()->buffer->data->data()[idx]);
 
-    scope.result = Encode((int)t);
+    return Encode((int)t);
 }
 
 template <typename T>
-void DataViewPrototype::method_get(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DataViewPrototype::method_get(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<DataView> v(scope, callData->thisObject);
+    DataView *v = callData->thisObject.as<DataView>();
     if (!v || callData->argc < 1)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
     bool littleEndian = callData->argc < 2 ? false : callData->args[1].toBoolean();
@@ -181,19 +181,19 @@ void DataViewPrototype::method_get(const BuiltinFunction *, Scope &scope, CallDa
             ? qFromLittleEndian<T>((uchar *)v->d()->buffer->data->data() + idx)
             : qFromBigEndian<T>((uchar *)v->d()->buffer->data->data() + idx);
 
-    scope.result = Encode(t);
+    return Encode(t);
 }
 
 template <typename T>
-void DataViewPrototype::method_getFloat(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DataViewPrototype::method_getFloat(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<DataView> v(scope, callData->thisObject);
+    DataView *v = callData->thisObject.as<DataView>();
     if (!v || callData->argc < 1)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
     bool littleEndian = callData->argc < 2 ? false : callData->args[1].toBoolean();
@@ -207,7 +207,7 @@ void DataViewPrototype::method_getFloat(const BuiltinFunction *, Scope &scope, C
         u.i = littleEndian
                 ? qFromLittleEndian<uint>((uchar *)v->d()->buffer->data->data() + idx)
                 : qFromBigEndian<uint>((uchar *)v->d()->buffer->data->data() + idx);
-        scope.result = Encode(u.f);
+        return Encode(u.f);
     } else {
         Q_ASSERT(sizeof(T) == 8);
         union {
@@ -217,20 +217,20 @@ void DataViewPrototype::method_getFloat(const BuiltinFunction *, Scope &scope, C
         u.i = littleEndian
                 ? qFromLittleEndian<quint64>((uchar *)v->d()->buffer->data->data() + idx)
                 : qFromBigEndian<quint64>((uchar *)v->d()->buffer->data->data() + idx);
-        scope.result = Encode(u.d);
+        return Encode(u.d);
     }
 }
 
 template <typename T>
-void DataViewPrototype::method_setChar(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DataViewPrototype::method_setChar(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<DataView> v(scope, callData->thisObject);
+    DataView *v = callData->thisObject.as<DataView>();
     if (!v || callData->argc < 1)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
     int val = callData->argc >= 2 ? callData->args[1].toInt32() : 0;
@@ -240,15 +240,15 @@ void DataViewPrototype::method_setChar(const BuiltinFunction *, Scope &scope, Ca
 }
 
 template <typename T>
-void DataViewPrototype::method_set(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DataViewPrototype::method_set(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<DataView> v(scope, callData->thisObject);
+    DataView *v = callData->thisObject.as<DataView>();
     if (!v || callData->argc < 1)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
     int val = callData->argc >= 2 ? callData->args[1].toInt32() : 0;
@@ -264,15 +264,15 @@ void DataViewPrototype::method_set(const BuiltinFunction *, Scope &scope, CallDa
 }
 
 template <typename T>
-void DataViewPrototype::method_setFloat(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue DataViewPrototype::method_setFloat(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<DataView> v(scope, callData->thisObject);
+    DataView *v = callData->thisObject.as<DataView>();
     if (!v || callData->argc < 1)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     double l = callData->args[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
     double val = callData->argc >= 2 ? callData->args[1].toNumber() : qt_qnan();

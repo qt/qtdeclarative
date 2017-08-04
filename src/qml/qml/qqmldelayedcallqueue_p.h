@@ -70,7 +70,7 @@ public:
 
     void init(QV4::ExecutionEngine *);
 
-    void addUniquelyAndExecuteLater(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    QV4::ReturnedValue addUniquelyAndExecuteLater(const QV4::BuiltinFunction *, QV4::CallData *callData);
 
 public Q_SLOTS:
     void ticked();

@@ -414,8 +414,9 @@ static inline int toInt(const QChar &qc, int R)
 }
 
 // parseInt [15.1.2.2]
-void GlobalFunctions::method_parseInt(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_parseInt(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedValue inputString(scope, callData->argument(0));
     ScopedValue radix(scope, callData->argument(1));
     int R = radix->isUndefined() ? 0 : radix->toInt32();
@@ -494,8 +495,9 @@ void GlobalFunctions::method_parseInt(const BuiltinFunction *, Scope &scope, Cal
 }
 
 // parseFloat [15.1.2.3]
-void GlobalFunctions::method_parseFloat(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_parseFloat(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     // [15.1.2.3] step by step:
     ScopedString inputString(scope, callData->argument(0), ScopedString::Convert);
     CHECK_EXCEPTION();
@@ -520,7 +522,7 @@ void GlobalFunctions::method_parseFloat(const BuiltinFunction *, Scope &scope, C
 }
 
 /// isNaN [15.1.2.4]
-void GlobalFunctions::method_isNaN(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_isNaN(const BuiltinFunction *, CallData *callData)
 {
     if (!callData->argc)
         // undefined gets converted to NaN
@@ -534,7 +536,7 @@ void GlobalFunctions::method_isNaN(const BuiltinFunction *, Scope &scope, CallDa
 }
 
 /// isFinite [15.1.2.5]
-void GlobalFunctions::method_isFinite(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_isFinite(const BuiltinFunction *, CallData *callData)
 {
     if (!callData->argc)
         // undefined gets converted to NaN
@@ -548,87 +550,97 @@ void GlobalFunctions::method_isFinite(const BuiltinFunction *, Scope &scope, Cal
 }
 
 /// decodeURI [15.1.3.1]
-void GlobalFunctions::method_decodeURI(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_decodeURI(const BuiltinFunction *b, CallData *callData)
 {
     if (callData->argc == 0)
         RETURN_UNDEFINED();
 
+    ExecutionEngine *v4 = b->engine();
     QString uriString = callData->args[0].toQString();
     bool ok;
     QString out = decode(uriString, DecodeNonReserved, &ok);
     if (!ok) {
+        Scope scope(v4);
         ScopedString s(scope, scope.engine->newString(QStringLiteral("malformed URI sequence")));
         RETURN_RESULT(scope.engine->throwURIError(s));
     }
 
-    RETURN_RESULT(scope.engine->newString(out));
+    RETURN_RESULT(v4->newString(out));
 }
 
 /// decodeURIComponent [15.1.3.2]
-void GlobalFunctions::method_decodeURIComponent(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_decodeURIComponent(const BuiltinFunction *b, CallData *callData)
 {
     if (callData->argc == 0)
         RETURN_UNDEFINED();
 
+    ExecutionEngine *v4 = b->engine();
     QString uriString = callData->args[0].toQString();
     bool ok;
     QString out = decode(uriString, DecodeAll, &ok);
     if (!ok) {
+        Scope scope(v4);
         ScopedString s(scope, scope.engine->newString(QStringLiteral("malformed URI sequence")));
         RETURN_RESULT(scope.engine->throwURIError(s));
     }
 
-    RETURN_RESULT(scope.engine->newString(out));
+    RETURN_RESULT(v4->newString(out));
 }
 
 /// encodeURI [15.1.3.3]
-void GlobalFunctions::method_encodeURI(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_encodeURI(const BuiltinFunction *b, CallData *callData)
 {
     if (callData->argc == 0)
         RETURN_UNDEFINED();
 
+    ExecutionEngine *v4 = b->engine();
     QString uriString = callData->args[0].toQString();
     bool ok;
     QString out = encode(uriString, uriUnescapedReserved, &ok);
     if (!ok) {
+        Scope scope(v4);
         ScopedString s(scope, scope.engine->newString(QStringLiteral("malformed URI sequence")));
         RETURN_RESULT(scope.engine->throwURIError(s));
     }
 
-    RETURN_RESULT(scope.engine->newString(out));
+    RETURN_RESULT(v4->newString(out));
 }
 
 /// encodeURIComponent [15.1.3.4]
-void GlobalFunctions::method_encodeURIComponent(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_encodeURIComponent(const BuiltinFunction *b, CallData *callData)
 {
     if (callData->argc == 0)
         RETURN_UNDEFINED();
 
+    ExecutionEngine *v4 = b->engine();
     QString uriString = callData->args[0].toQString();
     bool ok;
     QString out = encode(uriString, uriUnescaped, &ok);
     if (!ok) {
+        Scope scope(v4);
         ScopedString s(scope, scope.engine->newString(QStringLiteral("malformed URI sequence")));
         RETURN_RESULT(scope.engine->throwURIError(s));
     }
 
-    RETURN_RESULT(scope.engine->newString(out));
+    RETURN_RESULT(v4->newString(out));
 }
 
-void GlobalFunctions::method_escape(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_escape(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     if (!callData->argc)
-        RETURN_RESULT(scope.engine->newString(QStringLiteral("undefined")));
+        RETURN_RESULT(v4->newString(QStringLiteral("undefined")));
 
     QString str = callData->args[0].toQString();
-    RETURN_RESULT(scope.engine->newString(escape(str)));
+    RETURN_RESULT(v4->newString(escape(str)));
 }
 
-void GlobalFunctions::method_unescape(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue GlobalFunctions::method_unescape(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     if (!callData->argc)
-        RETURN_RESULT(scope.engine->newString(QStringLiteral("undefined")));
+        RETURN_RESULT(v4->newString(QStringLiteral("undefined")));
 
     QString str = callData->args[0].toQString();
-    RETURN_RESULT(scope.engine->newString(unescape(str)));
+    RETURN_RESULT(v4->newString(unescape(str)));
 }

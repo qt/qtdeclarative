@@ -158,17 +158,17 @@ struct RegExpPrototype: RegExpObject
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_exec(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_test(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_compile(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_exec(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_test(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_compile(const BuiltinFunction *, CallData *callData);
 
     template <int index>
-    static void method_get_lastMatch_n(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_lastParen(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_input(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_leftContext(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_rightContext(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_get_lastMatch_n(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_lastParen(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_input(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_leftContext(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_rightContext(const BuiltinFunction *, CallData *callData);
 };
 
 }

@@ -77,19 +77,16 @@ ReturnedValue ArrayBufferCtor::call(const Managed *that, CallData *callData)
     return construct(that, callData);
 }
 
-void ArrayBufferCtor::method_isView(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayBufferCtor::method_isView(const BuiltinFunction *, CallData *callData)
 {
-    QV4::Scoped<TypedArray> a(scope, callData->argument(0));
-    if (!!a) {
-        scope.result = Encode(true);
-        return;
-    }
-    QV4::Scoped<DataView> v(scope, callData->argument(0));
-    if (!!v) {
-        scope.result = Encode(true);
-        return;
-    }
-    scope.result = Encode(false);
+    if (callData->argc < 1)
+        return Encode(false);
+
+    if (callData->args[0].as<TypedArray>() ||
+        callData->args[0].as<DataView>())
+        return Encode(true);
+
+    return Encode(false);
 }
 
 
@@ -159,47 +156,52 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
 }
 
-void ArrayBufferPrototype::method_get_byteLength(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayBufferPrototype::method_get_byteLength(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<ArrayBuffer> v(scope, callData->thisObject);
-    if (!v)
-        THROW_TYPE_ERROR();
+    ArrayBuffer *a = callData->thisObject.as<ArrayBuffer>();
+    if (!a)
+        return b->engine()->throwTypeError();
 
-    scope.result = Encode(v->d()->data->size);
+    return Encode(a->d()->data->size);
 }
 
-void ArrayBufferPrototype::method_slice(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayBufferPrototype::method_slice(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<ArrayBuffer> a(scope, callData->thisObject);
+    ExecutionEngine *v4 = b->engine();
+    ArrayBuffer *a = callData->thisObject.as<ArrayBuffer>();
     if (!a)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     double start = callData->argc > 0 ? callData->args[0].toInteger() : 0;
     double end = (callData->argc < 2 || callData->args[1].isUndefined()) ?
                 a->d()->data->size : callData->args[1].toInteger();
-    CHECK_EXCEPTION();
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     double first = (start < 0) ? qMax(a->d()->data->size + start, 0.) : qMin(start, (double)a->d()->data->size);
     double final = (end < 0) ? qMax(a->d()->data->size + end, 0.) : qMin(end, (double)a->d()->data->size);
 
+    Scope scope(v4);
     ScopedFunctionObject constructor(scope, a->get(scope.engine->id_constructor()));
     if (!constructor)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     ScopedCallData cData(scope, 1);
     double newLen = qMax(final - first, 0.);
     cData->args[0] = QV4::Encode(newLen);
     QV4::Scoped<ArrayBuffer> newBuffer(scope, constructor->construct(cData));
     if (!newBuffer || newBuffer->d()->data->size < (int)newLen)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     memcpy(newBuffer->d()->data->data(), a->d()->data->data() + (uint)first, newLen);
+    return Encode::undefined();
 }
 
-void ArrayBufferPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue ArrayBufferPrototype::method_toString(const BuiltinFunction *b, CallData *callData)
 {
-    Scoped<ArrayBuffer> a(scope, callData->thisObject);
+    ExecutionEngine *v4 = b->engine();
+    ArrayBuffer *a = callData->thisObject.as<ArrayBuffer>();
     if (!a)
         RETURN_UNDEFINED();
-    scope.result = scope.engine->newString(QString::fromUtf8(a->asByteArray()));
+    return Encode(v4->newString(QString::fromUtf8(a->asByteArray())));
 }

@@ -185,7 +185,7 @@ public:
 
     int m_nextId;
 
-    static void method_sendMessage(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static QV4::ReturnedValue method_sendMessage(const QV4::BuiltinFunction *, QV4::CallData *callData);
 
 signals:
     void stopThread();
@@ -246,7 +246,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     Q_ASSERT(!scope.engine->hasException);
     QV4::ScopedString name(scope, m_v4Engine->newString(QStringLiteral("sendMessage")));
     QV4::ScopedValue function(scope, QV4::BuiltinFunction::create(globalContext, name,
-                                                                    QQuickWorkerScriptEnginePrivate::method_sendMessage));
+                                                                  QQuickWorkerScriptEnginePrivate::method_sendMessage));
     QV4::ScopedCallData callData(scope, 1);
     callData->args[0] = function;
     callData->thisObject = global();
@@ -292,8 +292,10 @@ QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *eng
 {
 }
 
-void QQuickWorkerScriptEnginePrivate::method_sendMessage(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(const QV4::BuiltinFunction *b,
+                                                                       QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     WorkerEngine *engine = (WorkerEngine*)scope.engine->v8Engine;
 
     int id = callData->argc > 1 ? callData->args[1].toInt32() : 0;
@@ -306,7 +308,7 @@ void QQuickWorkerScriptEnginePrivate::method_sendMessage(const QV4::BuiltinFunct
     if (script && script->owner)
         QCoreApplication::postEvent(script->owner, new WorkerDataEvent(0, data));
 
-    scope.result = QV4::Encode::undefined();
+    return QV4::Encode::undefined();
 }
 
 QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *script)

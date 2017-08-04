@@ -164,8 +164,9 @@ DEFINE_OBJECT_VTABLE(QV4::QQmlSqlDatabaseWrapper);
 
 
 
-static void qmlsqldatabase_version(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_version(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
@@ -173,8 +174,9 @@ static void qmlsqldatabase_version(const QV4::BuiltinFunction *, QV4::Scope &sco
     RETURN_RESULT(Encode(scope.engine->newString(*r->d()->version)));
 }
 
-static void qmlsqldatabase_rows_length(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_rows_length(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
@@ -191,16 +193,18 @@ static void qmlsqldatabase_rows_length(const QV4::BuiltinFunction *, QV4::Scope 
     RETURN_RESULT(Encode(s));
 }
 
-static void qmlsqldatabase_rows_forwardOnly(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_rows_forwardOnly(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
     RETURN_RESULT(Encode(r->d()->sqlQuery->isForwardOnly()));
 }
 
-static void qmlsqldatabase_rows_setForwardOnly(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_rows_setForwardOnly(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
@@ -249,8 +253,9 @@ ReturnedValue QQmlSqlDatabaseWrapper::getIndexed(const Managed *m, uint index, b
     return qmlsqldatabase_rows_index(r, r->engine(), index, hasProperty);
 }
 
-static void qmlsqldatabase_rows_item(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_rows_item(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
@@ -267,8 +272,9 @@ static QVariant toSqlVariant(QV4::ExecutionEngine *engine, const QV4::ScopedValu
     return engine->toVariant(value, /*typehint*/-1);
 }
 
-static void qmlsqldatabase_executeSql(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_executeSql(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Query)
         V4THROW_REFERENCE("Not a SQLDatabase::Query object");
@@ -377,8 +383,9 @@ struct TransactionRollback {
 };
 
 
-static void qmlsqldatabase_changeVersion(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_changeVersion(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     if (callData->argc < 2)
         RETURN_UNDEFINED();
 
@@ -433,8 +440,9 @@ static void qmlsqldatabase_changeVersion(const QV4::BuiltinFunction *, QV4::Scop
     RETURN_UNDEFINED();
 }
 
-static void qmlsqldatabase_transaction_shared(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData, bool readOnly)
+static ReturnedValue qmlsqldatabase_transaction_shared(const QV4::BuiltinFunction *b, QV4::CallData *callData, bool readOnly)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
@@ -469,14 +477,14 @@ static void qmlsqldatabase_transaction_shared(const QV4::BuiltinFunction *, QV4:
     RETURN_UNDEFINED();
 }
 
-static void qmlsqldatabase_transaction(const QV4::BuiltinFunction *f, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_transaction(const QV4::BuiltinFunction *f, QV4::CallData *callData)
 {
-    qmlsqldatabase_transaction_shared(f, scope, callData, false);
+    return qmlsqldatabase_transaction_shared(f, callData, false);
 }
 
-static void qmlsqldatabase_read_transaction(const QV4::BuiltinFunction *f, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_read_transaction(const QV4::BuiltinFunction *f, QV4::CallData *callData)
 {
-    qmlsqldatabase_transaction_shared(f, scope, callData, true);
+    return qmlsqldatabase_transaction_shared(f, callData, true);
 }
 
 QQmlSqlDatabaseData::QQmlSqlDatabaseData(ExecutionEngine *v4)

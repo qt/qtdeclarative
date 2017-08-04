@@ -79,8 +79,8 @@ struct BooleanPrototype: BooleanObject
     V4_PROTOTYPE(objectPrototype)
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_valueOf(const BuiltinFunction *, CallData *callData);
 };
 
 

@@ -449,11 +449,9 @@ public:
     bool metaTypeFromJS(const Value *value, int type, void *data);
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
 
-    bool checkStackLimits(Scope &scope);
+    bool checkStackLimits();
 
 private:
-    void failStackLimitCheck(Scope &scope);
-
 #ifndef QT_NO_QML_DEBUGGER
     QV4::Debugging::Debugger *m_debugger;
     QV4::Profiling::Profiler *m_profiler;
@@ -535,7 +533,7 @@ inline void Managed::mark(MarkStack *markStack)
     m()->mark(markStack);
 }
 
-#define CHECK_STACK_LIMITS(v4, scope) if ((v4)->checkStackLimits(scope)) return Encode::undefined(); \
+#define CHECK_STACK_LIMITS(v4) if ((v4)->checkStackLimits()) return Encode::undefined(); \
     ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);
 
 struct ExecutionEngineCallDepthRecorder
@@ -546,10 +544,10 @@ struct ExecutionEngineCallDepthRecorder
     ~ExecutionEngineCallDepthRecorder() { --ee->callDepth; }
 };
 
-inline bool ExecutionEngine::checkStackLimits(Scope &scope)
+inline bool ExecutionEngine::checkStackLimits()
 {
     if (Q_UNLIKELY((jsStackTop > jsStackLimit) || (callDepth >= maxCallDepth))) {
-        failStackLimitCheck(scope);
+        throwRangeError(QStringLiteral("Maximum call stack size exceeded."));
         return true;
     }
 

@@ -153,7 +153,7 @@ void Object::defineDefaultProperty(const QString &name, const Value &value)
     defineDefaultProperty(s, value);
 }
 
-void Object::defineDefaultProperty(const QString &name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount)
+void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(const BuiltinFunction *, CallData *), int argumentCount)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -164,7 +164,7 @@ void Object::defineDefaultProperty(const QString &name, void (*code)(const Built
     defineDefaultProperty(s, function);
 }
 
-void Object::defineDefaultProperty(String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *), int argumentCount)
+void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(const BuiltinFunction *, CallData *), int argumentCount)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -174,8 +174,8 @@ void Object::defineDefaultProperty(String *name, void (*code)(const BuiltinFunct
     defineDefaultProperty(name, function);
 }
 
-void Object::defineAccessorProperty(const QString &name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
-                                    void (*setter)(const BuiltinFunction *, Scope &, CallData *))
+void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const BuiltinFunction *, CallData *),
+                                    ReturnedValue (*setter)(const BuiltinFunction *, CallData *))
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -183,8 +183,8 @@ void Object::defineAccessorProperty(const QString &name, void (*getter)(const Bu
     defineAccessorProperty(s, getter, setter);
 }
 
-void Object::defineAccessorProperty(String *name, void (*getter)(const BuiltinFunction *, Scope &, CallData *),
-                                    void (*setter)(const BuiltinFunction *, Scope &, CallData *))
+void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(const BuiltinFunction *, CallData *),
+                                    ReturnedValue (*setter)(const BuiltinFunction *, CallData *))
 {
     ExecutionEngine *v4 = engine();
     QV4::Scope scope(v4);

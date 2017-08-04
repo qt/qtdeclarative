@@ -667,28 +667,33 @@ struct Encode {
         return Primitive::nullValue().rawValue();
     }
 
-    Encode(bool b) {
+    explicit Encode(bool b) {
         val = Primitive::fromBoolean(b).rawValue();
     }
-    Encode(double d) {
+    explicit Encode(double d) {
         val = Primitive::fromDouble(d).rawValue();
     }
-    Encode(int i) {
+    explicit Encode(int i) {
         val = Primitive::fromInt32(i).rawValue();
     }
-    Encode(uint i) {
+    explicit Encode(uint i) {
         val = Primitive::fromUInt32(i).rawValue();
     }
-    Encode(ReturnedValue v) {
+    explicit Encode(ReturnedValue v) {
         val = v;
     }
     Encode(Value v) {
         val = v.rawValue();
     }
 
-    Encode(Heap::Base *o) {
+    explicit Encode(Heap::Base *o) {
         Q_ASSERT(o);
         val = Value::fromHeapObject(o).asReturnedValue();
+    }
+
+    explicit Encode(Value *o) {
+        Q_ASSERT(o);
+        val = o->asReturnedValue();
     }
 
     static ReturnedValue smallestNumber(double d) {
@@ -703,7 +708,7 @@ struct Encode {
     }
     quint64 val;
 private:
-    Encode(void *);
+    explicit Encode(void *);
 };
 
 template<typename T>

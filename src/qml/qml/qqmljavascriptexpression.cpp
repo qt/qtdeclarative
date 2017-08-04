@@ -227,11 +227,10 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
 
     QV4::ExecutionContext *outer = static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef());
     if (v4Function->canUseSimpleFunction()) {
-        outer->simpleCall(scope, callData, v4Function);
+        result = outer->simpleCall(scope, callData, v4Function);
     } else {
-        outer->call(scope, callData, v4Function);
+        result = outer->call(scope, callData, v4Function);
     }
-    result = scope.result;
 
     if (scope.hasException()) {
         if (watcher.wasDeleted())

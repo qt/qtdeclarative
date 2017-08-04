@@ -899,8 +899,10 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
 } // namespace QV4
 
-void QObjectWrapper::method_connect(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QObjectWrapper::method_connect(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
+
     if (callData->argc == 0)
         THROW_GENERIC_ERROR("Function.prototype.connect: no arguments given");
 
@@ -949,8 +951,10 @@ void QObjectWrapper::method_connect(const BuiltinFunction *, Scope &scope, CallD
     RETURN_UNDEFINED();
 }
 
-void QObjectWrapper::method_disconnect(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QObjectWrapper::method_disconnect(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
+
     if (callData->argc == 0)
         THROW_GENERIC_ERROR("Function.prototype.disconnect: no arguments given");
 

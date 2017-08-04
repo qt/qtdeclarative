@@ -96,14 +96,9 @@ struct FunctionPrototype : FunctionObject {
     void init();
 };
 
-struct Q_QML_EXPORT OldBuiltinFunction : FunctionObject {
-    void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(QV4::CallContext *));
-    ReturnedValue (*code)(QV4::CallContext *);
-};
-
 struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
-    void init(QV4::ExecutionContext *scope, QV4::String *name, void (*code)(const QV4::BuiltinFunction *, Scope &, CallData *));
-    void (*code)(const QV4::BuiltinFunction *, Scope &, CallData *);
+    void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *));
+    ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *);
 };
 
 struct IndexedBuiltinFunction : FunctionObject {
@@ -188,17 +183,17 @@ struct FunctionPrototype: FunctionObject
 
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_apply(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_call(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_bind(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_apply(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_call(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_bind(const BuiltinFunction *, CallData *callData);
 };
 
 struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
     V4_OBJECT2(BuiltinFunction, FunctionObject)
     V4_INTERNALCLASS(BuiltinFunction)
 
-    static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *))
+    static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(const BuiltinFunction *, CallData *))
     {
         return scope->engine()->memoryManager->allocObject<BuiltinFunction>(scope, name, code);
     }

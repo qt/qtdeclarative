@@ -883,25 +883,28 @@ void Heap::JsonObject::init()
 }
 
 
-void JsonObject::method_parse(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue JsonObject::method_parse(const BuiltinFunction *b, CallData *callData)
 {
-    ScopedValue v(scope, callData->argument(0));
-    QString jtext = v->toQString();
+    ExecutionEngine *v4 = b->engine();
+    QString jtext;
+    if (callData->argc > 0)
+        jtext = callData->args[0].toQString();
 
     DEBUG << "parsing source = " << jtext;
-    JsonParser parser(scope.engine, jtext.constData(), jtext.length());
+    JsonParser parser(v4, jtext.constData(), jtext.length());
     QJsonParseError error;
-    ScopedValue result(scope, parser.parse(&error));
+    ReturnedValue result = parser.parse(&error);
     if (error.error != QJsonParseError::NoError) {
         DEBUG << "parse error" << error.errorString();
-        RETURN_RESULT(scope.engine->throwSyntaxError(QStringLiteral("JSON.parse: Parse error")));
+        RETURN_RESULT(v4->throwSyntaxError(QStringLiteral("JSON.parse: Parse error")));
     }
 
-    scope.result = result;
+    return result;
 }
 
-void JsonObject::method_stringify(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue JsonObject::method_stringify(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     Stringify stringify(scope.engine);
 
     ScopedObject o(scope, callData->argument(1));
@@ -946,7 +949,7 @@ void JsonObject::method_stringify(const BuiltinFunction *, Scope &scope, CallDat
     QString result = stringify.Str(QString(), arg0);
     if (result.isEmpty() || scope.engine->hasException)
         RETURN_UNDEFINED();
-    scope.result = scope.engine->newString(result);
+    return Encode(scope.engine->newString(result));
 }
 
 

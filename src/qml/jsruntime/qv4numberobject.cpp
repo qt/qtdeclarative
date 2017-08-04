@@ -124,117 +124,99 @@ QT_WARNING_POP
     defineDefaultProperty(QStringLiteral("toPrecision"), method_toPrecision, 1);
 }
 
-inline ReturnedValue thisNumberValue(Scope &scope, CallData *callData)
+inline ReturnedValue thisNumberValue(ExecutionEngine *v4, CallData *callData)
 {
     if (callData->thisObject.isNumber())
         return callData->thisObject.asReturnedValue();
     NumberObject *n = callData->thisObject.as<NumberObject>();
     if (!n) {
-        scope.engine->throwTypeError();
+        v4->throwTypeError();
         return Encode::undefined();
     }
     return Encode(n->value());
 }
 
-inline double thisNumber(Scope &scope, CallData *callData)
+inline double thisNumber(ExecutionEngine *engine, CallData *callData)
 {
     if (callData->thisObject.isNumber())
         return callData->thisObject.asDouble();
     NumberObject *n = callData->thisObject.as<NumberObject>();
     if (!n) {
-        scope.engine->throwTypeError();
+        engine->throwTypeError();
         return 0;
     }
     return n->value();
 }
 
-void NumberPrototype::method_isFinite(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue NumberPrototype::method_isFinite(const BuiltinFunction *, CallData *callData)
 {
-    if (!callData->argc) {
-        scope.result = Encode(false);
-        return;
-    }
+    if (!callData->argc)
+        return Encode(false);
 
     double v = callData->args[0].toNumber();
-    scope.result = Encode(!std::isnan(v) && !qt_is_inf(v));
+    return Encode(!std::isnan(v) && !qt_is_inf(v));
 }
 
-void NumberPrototype::method_isInteger(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue NumberPrototype::method_isInteger(const BuiltinFunction *, CallData *callData)
 {
-    if (!callData->argc) {
-        scope.result = Encode(false);
-        return;
-    }
+    if (!callData->argc)
+        return Encode(false);
 
     const Value &v = callData->args[0];
-    if (!v.isNumber()) {
-        scope.result = Encode(false);
-        return;
-    }
+    if (!v.isNumber())
+        return Encode(false);
 
     double dv = v.toNumber();
-    if (std::isnan(dv) || qt_is_inf(dv)) {
-        scope.result = Encode(false);
-        return;
-    }
+    if (std::isnan(dv) || qt_is_inf(dv))
+        return Encode(false);
 
     double iv = v.toInteger();
-    scope.result = Encode(dv == iv);
+    return Encode(dv == iv);
 }
 
-void NumberPrototype::method_isSafeInteger(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue NumberPrototype::method_isSafeInteger(const BuiltinFunction *, CallData *callData)
 {
-    if (!callData->argc) {
-        scope.result = Encode(false);
-        return;
-    }
+    if (!callData->argc)
+        return Encode(false);
 
     const Value &v = callData->args[0];
-    if (!v.isNumber()) {
-        scope.result = Encode(false);
-        return;
-    }
+    if (!v.isNumber())
+        return Encode(false);
 
     double dv = v.toNumber();
-    if (std::isnan(dv) || qt_is_inf(dv)) {
-        scope.result = Encode(false);
-        return;
-    }
+    if (std::isnan(dv) || qt_is_inf(dv))
+        return Encode(false);
 
     double iv = v.toInteger();
-    scope.result = Encode(dv == iv && std::fabs(iv) <= (2^53)-1);
+    return Encode(dv == iv && std::fabs(iv) <= (2^53)-1);
 }
 
-void NumberPrototype::method_isNaN(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue NumberPrototype::method_isNaN(const BuiltinFunction *, CallData *callData)
 {
-    if (!callData->argc) {
-        scope.result = Encode(false);
-        return;
-    }
+    if (!callData->argc)
+        return Encode(false);
 
     double v = callData->args[0].toNumber();
-    scope.result = Encode(std::isnan(v));
+    return Encode(std::isnan(v));
 }
 
-void NumberPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue NumberPrototype::method_toString(const BuiltinFunction *b, CallData *callData)
 {
-    double num = thisNumber(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    double num = thisNumber(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     if (callData->argc && !callData->args[0].isUndefined()) {
         int radix = callData->args[0].toInt32();
         if (radix < 2 || radix > 36) {
-            scope.result = scope.engine->throwError(QStringLiteral("Number.prototype.toString: %0 is not a valid radix")
-                            .arg(radix));
-            return;
+            return v4->throwError(QStringLiteral("Number.prototype.toString: %0 is not a valid radix").arg(radix));
         }
 
         if (std::isnan(num)) {
-            scope.result = scope.engine->newString(QStringLiteral("NaN"));
-            return;
+            return Encode(v4->newString(QStringLiteral("NaN")));
         } else if (qt_is_inf(num)) {
-            scope.result = scope.engine->newString(QLatin1String(num < 0 ? "-Infinity" : "Infinity"));
-            return;
+            return Encode(v4->newString(QLatin1String(num < 0 ? "-Infinity" : "Infinity")));
         }
 
         if (radix != 10) {
@@ -264,30 +246,31 @@ void NumberPrototype::method_toString(const BuiltinFunction *, Scope &scope, Cal
             }
             if (negative)
                 str.prepend(QLatin1Char('-'));
-            scope.result = scope.engine->newString(str);
-            return;
+            return Encode(v4->newString(str));
         }
     }
 
-    scope.result = Primitive::fromDouble(num).toString(scope.engine);
+    return Encode(Primitive::fromDouble(num).toString(v4));
 }
 
-void NumberPrototype::method_toLocaleString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue NumberPrototype::method_toLocaleString(const BuiltinFunction *b, CallData *callData)
 {
-    ScopedValue v(scope, thisNumberValue(scope, callData));
-    scope.result = v->toString(scope.engine);
-    CHECK_EXCEPTION();
+    Scope scope(b);
+    ScopedValue v(scope, thisNumberValue(b->engine(), callData));
+    return Encode(v->toString(scope.engine));
 }
 
-void NumberPrototype::method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue NumberPrototype::method_valueOf(const BuiltinFunction *b, CallData *callData)
 {
-    scope.result = thisNumberValue(scope, callData);
+    return thisNumberValue(b->engine(), callData);
 }
 
-void NumberPrototype::method_toFixed(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue NumberPrototype::method_toFixed(const BuiltinFunction *b, CallData *callData)
 {
-    double v = thisNumber(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    double v = thisNumber(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
     double fdigits = 0;
 
@@ -297,10 +280,8 @@ void NumberPrototype::method_toFixed(const BuiltinFunction *, Scope &scope, Call
     if (std::isnan(fdigits))
         fdigits = 0;
 
-    if (fdigits < 0 || fdigits > 20) {
-        scope.result = scope.engine->throwRangeError(callData->thisObject);
-        return;
-    }
+    if (fdigits < 0 || fdigits > 20)
+        return v4->throwRangeError(callData->thisObject);
 
     QString str;
     if (std::isnan(v))
@@ -310,49 +291,51 @@ void NumberPrototype::method_toFixed(const BuiltinFunction *, Scope &scope, Call
     else if (v < 1.e21)
         str = NumberLocale::instance()->toString(v, 'f', int(fdigits));
     else {
-        scope.result = RuntimeHelpers::stringFromNumber(scope.engine, v);
-        return;
+        return Encode(RuntimeHelpers::stringFromNumber(v4, v));
     }
-    scope.result = scope.engine->newString(str);
+    return Encode(v4->newString(str));
 }
 
-void NumberPrototype::method_toExponential(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue NumberPrototype::method_toExponential(const BuiltinFunction *b, CallData *callData)
 {
-    double d = thisNumber(scope, callData);
-    CHECK_EXCEPTION();
+    ExecutionEngine *v4 = b->engine();
+    double d = thisNumber(v4, callData);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
+
 
     int fdigits = NumberLocale::instance()->defaultDoublePrecision;
 
     if (callData->argc && !callData->args[0].isUndefined()) {
         fdigits = callData->args[0].toInt32();
         if (fdigits < 0 || fdigits > 20) {
-            ScopedString error(scope, scope.engine->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range")));
-            scope.result = scope.engine->throwRangeError(error);
-            return;
+            Scope scope(v4);
+            ScopedString error(scope, v4->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range")));
+            return v4->throwRangeError(error);
         }
     }
 
     QString result = NumberLocale::instance()->toString(d, 'e', fdigits);
-    scope.result = scope.engine->newString(result);
+    return Encode(v4->newString(result));
 }
 
-void NumberPrototype::method_toPrecision(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue NumberPrototype::method_toPrecision(const BuiltinFunction *b, CallData *callData)
 {
-    ScopedValue v(scope, thisNumberValue(scope, callData));
-    CHECK_EXCEPTION();
+    Scope scope(b);
+    ScopedValue v(scope, thisNumberValue(scope.engine, callData));
+    if (scope.engine->hasException)
+        return QV4::Encode::undefined();
 
-    if (!callData->argc || callData->args[0].isUndefined()) {
-        scope.result = v->toString(scope.engine);
-        return;
-    }
+
+    if (!callData->argc || callData->args[0].isUndefined())
+        return Encode(v->toString(scope.engine));
 
     int precision = callData->args[0].toInt32();
     if (precision < 1 || precision > 21) {
         ScopedString error(scope, scope.engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range")));
-        scope.result = scope.engine->throwRangeError(error);
-        return;
+        return scope.engine->throwRangeError(error);
     }
 
     QString result = NumberLocale::instance()->toString(v->asDouble(), 'g', precision);
-    scope.result = scope.engine->newString(result);
+    return Encode(scope.engine->newString(result));
 }

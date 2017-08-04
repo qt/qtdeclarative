@@ -76,16 +76,16 @@ struct Q_QML_EXPORT EvalFunction : FunctionObject
 
 struct GlobalFunctions
 {
-    static void method_parseInt(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_parseFloat(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_isNaN(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_isFinite(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_decodeURI(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_decodeURIComponent(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_encodeURI(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_encodeURIComponent(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_escape(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_unescape(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_parseInt(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_parseFloat(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_isNaN(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_isFinite(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_decodeURI(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_decodeURIComponent(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_encodeURI(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_encodeURIComponent(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_escape(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_unescape(const BuiltinFunction *, CallData *callData);
 };
 
 }

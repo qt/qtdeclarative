@@ -115,30 +115,30 @@ struct StringPrototype: StringObject
     V4_PROTOTYPE(objectPrototype)
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_charAt(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_charCodeAt(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_concat(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_endsWith(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_indexOf(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_includes(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_lastIndexOf(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_localeCompare(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_match(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_repeat(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_replace(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_search(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_slice(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_split(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_startsWith(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_substr(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_substring(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toLowerCase(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toLocaleLowerCase(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toUpperCase(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_toLocaleUpperCase(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_fromCharCode(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_trim(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_charAt(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_charCodeAt(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_concat(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_endsWith(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_indexOf(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_includes(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_lastIndexOf(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_localeCompare(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_match(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_repeat(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_replace(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_search(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_slice(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_split(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_startsWith(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_substr(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_substring(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_toLowerCase(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_toLocaleLowerCase(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_toUpperCase(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_toLocaleUpperCase(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_fromCharCode(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_trim(const BuiltinFunction *, CallData *callData);
 };
 
 }

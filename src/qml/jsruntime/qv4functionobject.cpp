@@ -254,20 +254,23 @@ void FunctionPrototype::init(ExecutionEngine *engine, Object *ctor)
 
 }
 
-void FunctionPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue FunctionPrototype::method_toString(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     FunctionObject *fun = callData->thisObject.as<FunctionObject>();
     if (!fun)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
-    scope.result = scope.engine->newString(QStringLiteral("function() { [code] }"));
+    return Encode(v4->newString(QStringLiteral("function() { [code] }")));
 }
 
-void FunctionPrototype::method_apply(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue FunctionPrototype::method_apply(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
+    Scope scope(v4);
     FunctionObject *o = callData->thisObject.as<FunctionObject>();
     if (!o)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
     ScopedValue arg(scope, callData->argument(1));
 
@@ -277,7 +280,7 @@ void FunctionPrototype::method_apply(const BuiltinFunction *, Scope &scope, Call
     if (!arr) {
         len = 0;
         if (!arg->isNullOrUndefined())
-            THROW_TYPE_ERROR();
+            return v4->throwTypeError();
     } else {
         len = arr->getLength();
     }
@@ -307,14 +310,15 @@ void FunctionPrototype::method_apply(const BuiltinFunction *, Scope &scope, Call
     }
 
     cData->thisObject = callData->argument(0);
-    scope.result = o->call(cData);
+    return o->call(cData);
 }
 
-void FunctionPrototype::method_call(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue FunctionPrototype::method_call(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     FunctionObject *o = callData->thisObject.as<FunctionObject>();
     if (!o)
-        THROW_TYPE_ERROR();
+        return scope.engine->throwTypeError();
 
     ScopedCallData cData(scope, callData->argc ? callData->argc - 1 : 0);
     if (callData->argc) {
@@ -323,14 +327,15 @@ void FunctionPrototype::method_call(const BuiltinFunction *, Scope &scope, CallD
     }
     cData->thisObject = callData->argument(0);
 
-    scope.result = o->call(cData);
+    return o->call(cData);
 }
 
-void FunctionPrototype::method_bind(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue FunctionPrototype::method_bind(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     FunctionObject *target = callData->thisObject.as<FunctionObject>();
     if (!target)
-        THROW_TYPE_ERROR();
+        return scope.engine->throwTypeError();
 
     ScopedValue boundThis(scope, callData->argument(0));
     Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
@@ -342,7 +347,7 @@ void FunctionPrototype::method_bind(const BuiltinFunction *, Scope &scope, CallD
     }
 
     ExecutionContext *global = scope.engine->rootContext();
-    scope.result = BoundFunction::create(global, target, boundThis, boundArgs);
+    return BoundFunction::create(global, target, boundThis, boundArgs)->asReturnedValue();
 }
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);
@@ -352,10 +357,9 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     ExecutionEngine *v4 = that->engine();
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
+    CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    CHECK_STACK_LIMITS(v4, scope);
-
     ExecutionContextSaver ctxSaver(scope);
 
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
@@ -369,16 +373,17 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     Q_ASSERT(v4Function);
 
     ScopedContext c(scope, f->scope());
+    ScopedValue result(scope);
     if (v4Function->canUseSimpleCall)
-        c->simpleCall(scope, callData, v4Function);
+        result = c->simpleCall(scope, callData, v4Function);
     else
-        c->call(scope, callData, v4Function, f);
+        result = c->call(scope, callData, v4Function, f);
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
-    else if (!scope.result.isObject())
+    else if (!result->isObject())
         return obj.asReturnedValue();
-    return Encode(scope.result);
+    return result->asReturnedValue();
 }
 
 ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
@@ -386,10 +391,9 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
     ExecutionEngine *v4 = that->engine();
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
+    CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    CHECK_STACK_LIMITS(v4, scope);
-
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
 
     QV4::Function *v4Function = f->function();
@@ -397,10 +401,9 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
 
     ScopedContext c(scope, f->scope());
     if (v4Function->canUseSimpleCall)
-        c->simpleCall(scope, callData, v4Function);
+        return c->simpleCall(scope, callData, v4Function);
     else
-        c->call(scope, callData, v4Function, f);
-    return Encode(scope.result);
+        return c->call(scope, callData, v4Function, f);
 }
 
 void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
@@ -447,7 +450,7 @@ InternalClass *ScriptFunction::classForConstructor() const
 
 DEFINE_OBJECT_VTABLE(BuiltinFunction);
 
-void Heap::BuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name, void (*code)(const QV4::BuiltinFunction *, Scope &, CallData *))
+void Heap::BuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *))
 {
     Heap::FunctionObject::init(scope, name);
     this->code = code;
@@ -465,9 +468,7 @@ ReturnedValue BuiltinFunction::call(const Managed *that, CallData *callData)
     if (v4->hasException)
         return Encode::undefined();
 
-    Scope scope(v4);
-    f->d()->code(f, scope, callData);
-    return Encode(scope.result);
+    return f->d()->code(f, callData);
 }
 
 
@@ -477,10 +478,9 @@ ReturnedValue IndexedBuiltinFunction::call(const Managed *that, CallData *callDa
     ExecutionEngine *v4 = f->engine();
     if (v4->hasException)
         return Encode::undefined();
+    CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    CHECK_STACK_LIMITS(v4, scope);
-
     ExecutionContextSaver ctxSaver(scope);
 
     CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext();
@@ -489,9 +489,9 @@ ReturnedValue IndexedBuiltinFunction::call(const Managed *that, CallData *callDa
     v4->pushContext(ctx);
     Q_ASSERT(v4->current == ctx);
 
-    scope.result = f->d()->code(static_cast<QV4::CallContext *>(v4->currentContext), f->d()->index);
+    ReturnedValue result = f->d()->code(static_cast<QV4::CallContext *>(v4->currentContext), f->d()->index);
     v4->memoryManager->freeSimpleCallContext();
-    return Encode(scope.result);
+    return result;
 }
 
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);

@@ -316,8 +316,9 @@ bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
     return true;
 }
 
-void QQmlValueTypeWrapper::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlValueTypeWrapper::method_toString(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     Object *o = callData->thisObject.as<Object>();
     if (!o)
         THROW_TYPE_ERROR();
@@ -350,7 +351,7 @@ void QQmlValueTypeWrapper::method_toString(const BuiltinFunction *, Scope &scope
         }
         result += QLatin1Char(')');
     }
-    scope.result = scope.engine->newString(result);
+    return Encode(scope.engine->newString(result));
 }
 
 ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *hasProperty)

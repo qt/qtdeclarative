@@ -73,31 +73,30 @@ void BooleanPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(engine->id_valueOf(), method_valueOf);
 }
 
-void BooleanPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue BooleanPrototype::method_toString(const BuiltinFunction *b, CallData *callData)
 {
+    ExecutionEngine *v4 = b->engine();
     bool result;
     if (callData->thisObject.isBoolean()) {
         result = callData->thisObject.booleanValue();
     } else {
         const BooleanObject *thisObject = callData->thisObject.as<BooleanObject>();
         if (!thisObject)
-            THROW_TYPE_ERROR();
+            return v4->throwTypeError();
         result = thisObject->value();
     }
 
-    scope.result = result ? scope.engine->id_true() : scope.engine->id_false();
+    return Encode(result ? v4->id_true() : v4->id_false());
 }
 
-void BooleanPrototype::method_valueOf(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue BooleanPrototype::method_valueOf(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->thisObject.isBoolean()) {
-        scope.result = callData->thisObject.asReturnedValue();
-        return;
-    }
+    if (callData->thisObject.isBoolean())
+        return callData->thisObject.asReturnedValue();
 
     const BooleanObject *thisObject = callData->thisObject.as<BooleanObject>();
     if (!thisObject)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
 
-    scope.result = Encode(thisObject->value());
+    return Encode(thisObject->value());
 }

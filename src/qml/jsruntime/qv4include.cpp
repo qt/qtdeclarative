@@ -195,8 +195,9 @@ void QV4Include::finished()
 /*
     Documented in qv8engine.cpp
 */
-void QV4Include::method_include(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QV4Include::method_include(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     if (!callData->argc)
         RETURN_UNDEFINED();
 
@@ -260,13 +261,13 @@ void QV4Include::method_include(const QV4::BuiltinFunction *, QV4::Scope &scope,
         callback(callbackFunction, result);
     }
 
-    scope.result = result;
 #else
     QV4::ScopedValue result(scope);
     result = resultValue(scope.engine, NetworkError);
     callback(callbackFunction, result);
-    scope.result = result;
 #endif
+
+    return result->asReturnedValue();
 }
 
 QT_END_NAMESPACE

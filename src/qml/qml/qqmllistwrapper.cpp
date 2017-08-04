@@ -171,8 +171,9 @@ void PropertyListPrototype::init(ExecutionEngine *)
     defineDefaultProperty(QStringLiteral("push"), method_push, 1);
 }
 
-void PropertyListPrototype::method_push(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue PropertyListPrototype::method_push(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -189,6 +190,7 @@ void PropertyListPrototype::method_push(const BuiltinFunction *, Scope &scope, C
         if (QV4::QObjectWrapper *wrapper = so->as<QV4::QObjectWrapper>())
             w->d()->property().append(&w->d()->property(), wrapper->object() );
     }
+    return Encode::undefined();
 }
 
 QT_END_NAMESPACE

@@ -112,7 +112,7 @@ public:
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
 
     static void initProto(ExecutionEngine *v4);
 };

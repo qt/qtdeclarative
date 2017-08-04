@@ -101,9 +101,9 @@ using namespace QV4;
 
 static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 
-void throwTypeError(const BuiltinFunction *, Scope &scope, CallData *)
+ReturnedValue throwTypeError(const BuiltinFunction *b, CallData *)
 {
-    scope.result = scope.engine->throwTypeError();
+    return b->engine()->throwTypeError();
 }
 
 
@@ -1552,11 +1552,6 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     }
     Q_UNREACHABLE();
     return 0;
-}
-
-void ExecutionEngine::failStackLimitCheck(Scope &scope)
-{
-    scope.result = throwRangeError(QStringLiteral("Maximum call stack size exceeded."));
 }
 
 // Converts a JS value to a meta-type.
