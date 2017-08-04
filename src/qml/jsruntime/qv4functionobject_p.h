@@ -62,6 +62,7 @@ struct QQmlSourceLocation;
 namespace QV4 {
 
 struct BuiltinFunction;
+struct IndexedBuiltinFunction;
 
 namespace Heap {
 
@@ -101,9 +102,8 @@ struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
     ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *);
 };
 
-struct IndexedBuiltinFunction : FunctionObject {
-    inline void init(QV4::ExecutionContext *scope, uint index, ReturnedValue (*code)(QV4::CallContext *ctx, uint index));
-    ReturnedValue (*code)(QV4::CallContext *, uint index);
+struct IndexedBuiltinFunction : BuiltinFunction {
+    inline void init(QV4::ExecutionContext *scope, uint index, ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *));
     uint index;
 };
 
@@ -202,24 +202,17 @@ struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
     static ReturnedValue call(const Managed *that, CallData *callData);
 };
 
-struct IndexedBuiltinFunction: FunctionObject
+struct IndexedBuiltinFunction: BuiltinFunction
 {
-    V4_OBJECT2(IndexedBuiltinFunction, FunctionObject)
-
-    static ReturnedValue construct(const Managed *m, CallData *)
-    {
-        return m->engine()->throwTypeError();
-    }
-
-    static ReturnedValue call(const Managed *that, CallData *callData);
+    V4_OBJECT2(IndexedBuiltinFunction, BuiltinFunction)
 };
 
 void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index,
-                                        ReturnedValue (*code)(QV4::CallContext *ctx, uint index))
+                                        ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *))
 {
     Heap::FunctionObject::init(scope);
-    this->index = index;
     this->code = code;
+    this->index = index;
 }
 
 

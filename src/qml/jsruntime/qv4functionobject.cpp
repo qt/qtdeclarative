@@ -471,29 +471,6 @@ ReturnedValue BuiltinFunction::call(const Managed *that, CallData *callData)
     return f->d()->code(f, callData);
 }
 
-
-ReturnedValue IndexedBuiltinFunction::call(const Managed *that, CallData *callData)
-{
-    const IndexedBuiltinFunction *f = static_cast<const IndexedBuiltinFunction *>(that);
-    ExecutionEngine *v4 = f->engine();
-    if (v4->hasException)
-        return Encode::undefined();
-    CHECK_STACK_LIMITS(v4);
-
-    Scope scope(v4);
-    ExecutionContextSaver ctxSaver(scope);
-
-    CallContext::Data *ctx = v4->memoryManager->allocSimpleCallContext();
-    ctx->strictMode = f->scope()->strictMode; // ### needed? scope or parent context?
-    ctx->callData = callData;
-    v4->pushContext(ctx);
-    Q_ASSERT(v4->current == ctx);
-
-    ReturnedValue result = f->d()->code(static_cast<QV4::CallContext *>(v4->currentContext), f->d()->index);
-    v4->memoryManager->freeSimpleCallContext();
-    return result;
-}
-
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
 
 DEFINE_OBJECT_VTABLE(BoundFunction);
