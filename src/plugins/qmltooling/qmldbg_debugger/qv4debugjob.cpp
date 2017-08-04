@@ -63,7 +63,7 @@ void JavaScriptJob::run()
 {
     QV4::Scope scope(engine);
 
-    QV4::ExecutionContextSaver saver(scope);
+    QV4::ExecutionContextSaver saver(engine);
 
     QV4::ExecutionContext *ctx = engine->currentContext;
     QObject scopeObject;

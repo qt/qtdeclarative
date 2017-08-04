@@ -360,14 +360,11 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     CHECK_STACK_LIMITS(v4);
 
     Scope scope(v4);
-    ExecutionContextSaver ctxSaver(scope);
-
     Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
 
     InternalClass *ic = f->classForConstructor();
     ScopedObject proto(scope, ic->prototype);
-    ScopedObject obj(scope, v4->newObject(ic, proto));
-    callData->thisObject = obj.asReturnedValue();
+    callData->thisObject = v4->newObject(ic, proto);
 
     QV4::Function *v4Function = f->function();
     Q_ASSERT(v4Function);
@@ -382,7 +379,7 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
     else if (!result->isObject())
-        return obj.asReturnedValue();
+        return callData->thisObject.asReturnedValue();
     return result->asReturnedValue();
 }
 
@@ -393,12 +390,11 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
-    Scope scope(v4);
-    Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
-
+    const ScriptFunction *f = static_cast<const ScriptFunction *>(that);
     QV4::Function *v4Function = f->function();
     Q_ASSERT(v4Function);
 
+    Scope scope(v4);
     ScopedContext c(scope, f->scope());
     if (v4Function->canUseSimpleCall)
         return c->simpleCall(scope, callData, v4Function);

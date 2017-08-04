@@ -438,7 +438,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 {
     QV4::ExecutionEngine *v4 = d->m_v4Engine;
     QV4::Scope scope(v4);
-    QV4::ExecutionContextSaver saver(scope);
+    QV4::ExecutionContextSaver saver(v4);
 
     QV4::ExecutionContext *ctx = v4->currentContext;
     if (ctx->d() != v4->rootContext()->d())

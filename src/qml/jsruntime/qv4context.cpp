@@ -234,7 +234,7 @@ bool ExecutionContext::deleteProperty(String *name)
 // Do a standard call with this execution context as the outer scope
 ReturnedValue ExecutionContext::call(Scope &scope, CallData *callData, Function *function, const FunctionObject *f)
 {
-    ExecutionContextSaver ctxSaver(scope);
+    ExecutionContextSaver ctxSaver(scope.engine);
 
     Scoped<CallContext> ctx(scope, newCallContext(function, callData));
     if (f)
@@ -254,7 +254,7 @@ ReturnedValue QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData
 {
     Q_ASSERT(function->canUseSimpleFunction());
 
-    ExecutionContextSaver ctxSaver(scope);
+    ExecutionContextSaver ctxSaver(scope.engine);
 
     CallContext::Data *ctx = scope.engine->memoryManager->allocSimpleCallContext();
 

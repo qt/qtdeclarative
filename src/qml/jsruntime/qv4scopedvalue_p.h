@@ -401,19 +401,19 @@ struct ScopedProperty
 
 struct ExecutionContextSaver
 {
-    Scope scope; // this makes sure that a reference to context on the JS stack goes out of scope as soon as the context is not used anymore.
+    ExecutionEngine *engine;
     ExecutionContext *savedContext;
 
-    ExecutionContextSaver(const Scope &scope)
-        : scope(scope.engine)
+    ExecutionContextSaver(ExecutionEngine *engine)
+        : engine(engine)
     {
-        savedContext = scope.engine->currentContext;
+        savedContext = engine->currentContext;
     }
     ~ExecutionContextSaver()
     {
-        Q_ASSERT(scope.engine->jsStackTop > scope.engine->currentContext);
-        scope.engine->currentContext = savedContext;
-        scope.engine->current = savedContext->d();
+        Q_ASSERT(engine->jsStackTop > engine->currentContext);
+        engine->currentContext = savedContext;
+        engine->current = savedContext->d();
     }
 };
 

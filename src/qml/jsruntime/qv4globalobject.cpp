@@ -344,7 +344,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
 
     ExecutionEngine *v4 = engine();
     Scope scope(v4);
-    ExecutionContextSaver ctxSaver(scope);
+    ExecutionContextSaver ctxSaver(scope.engine);
 
     ExecutionContext *currentContext = v4->currentContext;
     ExecutionContext *ctx = currentContext;

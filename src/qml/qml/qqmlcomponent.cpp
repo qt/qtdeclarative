@@ -1210,7 +1210,7 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
     if (engine->hasException)
         return;
 
-    QV4::ExecutionContextSaver saver(scope);
+    QV4::ExecutionContextSaver saver(scope.engine);
     engine->pushContext(qmlContext);
 
     while (1) {

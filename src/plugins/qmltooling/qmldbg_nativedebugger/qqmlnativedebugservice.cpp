@@ -249,7 +249,7 @@ QV4::ReturnedValue NativeDebugger::evaluateExpression(const QString &expression)
     QV4::Scope scope(m_engine);
     m_runningJob = true;
 
-    QV4::ExecutionContextSaver saver(scope);
+    QV4::ExecutionContextSaver saver(m_engine);
 
     QV4::ExecutionContext *ctx = m_engine->currentContext;
     m_engine->pushContext(ctx);
