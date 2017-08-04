@@ -63,6 +63,16 @@ namespace QV4 {
 #pragma pack(push, 1)
 #endif
 struct EngineBase {
+    struct StackFrame {
+        StackFrame *parent;
+        Function *v4Function;
+        int line = -1;
+        int column = -1;
+
+        QString source() const;
+        QString function() const;
+    };
+
     Heap::ExecutionContext *current = 0;
     StackFrame *currentStackFrame = 0;
 

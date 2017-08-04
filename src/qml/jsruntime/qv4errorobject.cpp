@@ -96,7 +96,7 @@ void Heap::ErrorObject::init(const Value &message, ErrorType t)
 
     e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
     if (!e->d()->stackTrace->isEmpty()) {
-        setProperty(scope.engine, QV4::ErrorObject::Index_FileName, scope.engine->newString(e->d()->stackTrace->at(0).source()));
+        setProperty(scope.engine, QV4::ErrorObject::Index_FileName, scope.engine->newString(e->d()->stackTrace->at(0).source));
         setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Primitive::fromInt32(e->d()->stackTrace->at(0).line));
     }
 
@@ -117,13 +117,14 @@ void Heap::ErrorObject::init(const Value &message, const QString &fileName, int 
     setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Primitive::undefinedValue());
 
     e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
-    StackFrame frame = *scope.engine->currentStackFrame;
+    StackFrame frame;
+    frame.source = fileName;
     frame.line = line;
     frame.column = column;
     e->d()->stackTrace->prepend(frame);
 
     Q_ASSERT(!e->d()->stackTrace->isEmpty());
-    setProperty(scope.engine, QV4::ErrorObject::Index_FileName, scope.engine->newString(e->d()->stackTrace->at(0).source()));
+    setProperty(scope.engine, QV4::ErrorObject::Index_FileName, scope.engine->newString(e->d()->stackTrace->at(0).source));
     setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Primitive::fromInt32(e->d()->stackTrace->at(0).line));
 
     if (!message.isUndefined())
@@ -162,7 +163,7 @@ void ErrorObject::method_get_stack(const BuiltinFunction *, Scope &scope, CallDa
             if (i > 0)
                 trace += QLatin1Char('\n');
             const StackFrame &frame = This->d()->stackTrace->at(i);
-            trace += frame.function() + QLatin1Char('@') + frame.source();
+            trace += frame.function + QLatin1Char('@') + frame.source;
             if (frame.line >= 0)
                 trace += QLatin1Char(':') + QString::number(frame.line);
         }

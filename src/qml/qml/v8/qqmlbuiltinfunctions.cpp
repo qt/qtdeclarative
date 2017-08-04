@@ -1326,7 +1326,7 @@ void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *originalFunction
 
 QQmlSourceLocation QQmlBindingFunction::currentLocation() const
 {
-    QV4::StackFrame *frame = engine()->currentStackFrame;
+    QV4::EngineBase::StackFrame *frame = engine()->currentStackFrame;
     return QQmlSourceLocation(frame->source(), frame->line, 0);
 }
 
@@ -1475,13 +1475,13 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
 
         QString stackFrame;
         if (frame.column >= 0)
-            stackFrame = QStringLiteral("%1 (%2:%3:%4)").arg(frame.function(),
-                                                             frame.source(),
+            stackFrame = QStringLiteral("%1 (%2:%3:%4)").arg(frame.function,
+                                                             frame.source,
                                                              QString::number(frame.line),
                                                              QString::number(frame.column));
         else
-            stackFrame = QStringLiteral("%1 (%2:%3)").arg(frame.function(),
-                                                             frame.source(),
+            stackFrame = QStringLiteral("%1 (%2:%3)").arg(frame.function,
+                                                             frame.source,
                                                              QString::number(frame.line));
 
         if (i)
@@ -1530,7 +1530,7 @@ static void writeToConsole(const BuiltinFunction *, Scope &scope, CallData *call
 
     if (!loggingCategory)
         loggingCategory = v4->qmlEngine() ? &qmlLoggingCategory : &jsLoggingCategory;
-    QV4::StackFrame *frame = v4->currentStackFrame;
+    QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
     const QByteArray baSource = frame->source().toUtf8();
     const QByteArray baFunction = frame->function().toUtf8();
     QMessageLogger logger(baSource.constData(), frame->line, baFunction.constData(), loggingCategory->categoryName());
@@ -1583,7 +1583,7 @@ void ConsoleObject::method_profile(const BuiltinFunction *, Scope &scope, CallDa
 {
     QV4::ExecutionEngine *v4 = scope.engine;
 
-    QV4::StackFrame *frame = v4->currentStackFrame;
+    QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
     const QByteArray baSource = frame->source().toUtf8();
     const QByteArray baFunction = frame->function().toUtf8();
     QMessageLogger logger(baSource.constData(), frame->line, baFunction.constData());
@@ -1602,7 +1602,7 @@ void ConsoleObject::method_profileEnd(const BuiltinFunction *, Scope &scope, Cal
 {
     QV4::ExecutionEngine *v4 = scope.engine;
 
-    QV4::StackFrame *frame = v4->currentStackFrame;
+    QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
     const QByteArray baSource = frame->source().toUtf8();
     const QByteArray baFunction = frame->function().toUtf8();
     QMessageLogger logger(baSource.constData(), frame->line, baFunction.constData());
@@ -1656,7 +1656,7 @@ void ConsoleObject::method_count(const BuiltinFunction *, Scope &scope, CallData
     QV4::ExecutionEngine *v4 = scope.engine;
     QV8Engine *v8engine = scope.engine->v8Engine;
 
-    QV4::StackFrame *frame = v4->currentStackFrame;
+    QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
 
     QString scriptName = frame->source();
 
@@ -1679,7 +1679,7 @@ void ConsoleObject::method_trace(const BuiltinFunction *, Scope &scope, CallData
 
     QString stack = jsStack(v4);
 
-    QV4::StackFrame *frame = v4->currentStackFrame;
+    QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
     QMessageLogger(frame->source().toUtf8().constData(), frame->line,
                    frame->function().toUtf8().constData())
         .debug("%s", qPrintable(stack));
@@ -1710,7 +1710,7 @@ void ConsoleObject::method_assert(const BuiltinFunction *, Scope &scope, CallDat
 
         QString stack = jsStack(v4);
 
-        QV4::StackFrame *frame = v4->currentStackFrame;
+        QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
         QMessageLogger(frame->source().toUtf8().constData(), frame->line,
                        frame->function().toUtf8().constData())
             .critical("%s\n%s",qPrintable(message), qPrintable(stack));

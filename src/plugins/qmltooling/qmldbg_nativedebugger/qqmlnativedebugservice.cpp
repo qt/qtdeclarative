@@ -239,7 +239,9 @@ private:
 
 bool NativeDebugger::checkCondition(const QString &expression)
 {
-    return evaluateExpression(expression).booleanValue();
+    QV4::Scope scope(m_engine);
+    QV4::ScopedValue r(scope, evaluateExpression(expression));
+    return r->booleanValue();
 }
 
 QV4::ReturnedValue NativeDebugger::evaluateExpression(const QString &expression)
@@ -333,25 +335,24 @@ void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &a
     int limit = arguments.value(QLatin1String("limit")).toInt(0);
 
     QJsonArray frameArray;
-    QV4::ExecutionContext *executionContext = m_engine->currentContext;
-    for (int i  = 0; i < limit && executionContext; ++i) {
-        if (QV4::Function *function = executionContext->getFunction()) {
+    QV4::EngineBase::StackFrame *f= m_engine->currentStackFrame;
+    for (int i  = 0; i < limit && f; ++i) {
+        QV4::Function *function = f->v4Function;
 
-            QJsonObject frame;
-            frame.insert(QStringLiteral("language"), QStringLiteral("js"));
-            frame.insert(QStringLiteral("context"), encodeContext(executionContext));
+        QJsonObject frame;
+        frame.insert(QStringLiteral("language"), QStringLiteral("js"));
+        frame.insert(QStringLiteral("context"), encodeContext(nullptr /*####  context*/));
 
-            if (QV4::Heap::String *functionName = function->name())
-                frame.insert(QStringLiteral("function"), functionName->toQString());
-            frame.insert(QStringLiteral("file"), function->sourceFile());
+        if (QV4::Heap::String *functionName = function->name())
+            frame.insert(QStringLiteral("function"), functionName->toQString());
+        frame.insert(QStringLiteral("file"), function->sourceFile());
 
-            int line = executionContext->d()->lineNumber;
-            frame.insert(QStringLiteral("line"), (line < 0 ? -line : line));
+        int line = f->line;
+        frame.insert(QStringLiteral("line"), (line < 0 ? -line : line));
 
-            frameArray.push_back(frame);
-        }
+        frameArray.push_back(frame);
 
-        executionContext = m_engine->parentContext(executionContext);
+        f = f->parent;
     }
 
     response->insert(QStringLiteral("frames"), frameArray);
@@ -621,7 +622,7 @@ void NativeDebugger::maybeBreakAtInstruction()
 
     if (m_service->m_breakHandler->m_haveBreakPoints) {
         if (QV4::Function *function = getFunction()) {
-            const int lineNumber = m_engine->current->lineNumber;
+            const int lineNumber = m_engine->currentStackFrame->line;
             if (reallyHitTheBreakPoint(function, lineNumber))
                 pauseAndWait();
         }
@@ -679,12 +680,11 @@ void NativeDebugger::pauseAndWait()
 
     event.insert(QStringLiteral("event"), QStringLiteral("break"));
     event.insert(QStringLiteral("language"), QStringLiteral("js"));
-    if (QV4::ExecutionContext *executionContext = m_engine->currentContext) {
-        if (QV4::Function *function = executionContext->getFunction()) {
-            event.insert(QStringLiteral("file"), function->sourceFile());
-            int line = executionContext->d()->lineNumber;
-            event.insert(QStringLiteral("line"), (line < 0 ? -line : line));
-        }
+    if (QV4::EngineBase::StackFrame *frame = m_engine->currentStackFrame) {
+        QV4::Function *function = frame->v4Function;
+        event.insert(QStringLiteral("file"), function->sourceFile());
+        int line = frame->line;
+        event.insert(QStringLiteral("line"), (line < 0 ? -line : line));
     }
 
     m_service->emitAsynchronousMessageToClient(event);

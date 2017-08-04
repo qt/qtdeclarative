@@ -804,26 +804,29 @@ QQmlContextData *ExecutionEngine::callingQmlContext() const
     return ctx->qml()->context->contextData();
 }
 
-QString StackFrame::source() const
+QString EngineBase::StackFrame::source() const
 {
     return v4Function->sourceFile();
 }
 
-QString StackFrame::function() const
+QString EngineBase::StackFrame::function() const
 {
     return v4Function->name()->toQString();
 }
 
-QVector<StackFrame> ExecutionEngine::stackTrace(int frameLimit) const
+StackTrace ExecutionEngine::stackTrace(int frameLimit) const
 {
     Scope scope(const_cast<ExecutionEngine *>(this));
     ScopedString name(scope);
-    QVector<StackFrame> stack;
+    StackTrace stack;
 
     StackFrame *f = currentStackFrame;
     while (f && frameLimit) {
-        StackFrame frame = *f;
-        frame.parent = 0;
+        QV4::StackFrame frame;
+        frame.source = f->source();
+        frame.function = f->function();
+        frame.line = f->line;
+        frame.column = f->column;
         stack.append(frame);
         --frameLimit;
         f = f->parent;
@@ -849,9 +852,9 @@ static inline char *v4StackTrace(const ExecutionContext *context)
         for (int i = 0; i < stackTrace.size(); ++i) {
             if (i)
                 str << ',';
-            const QUrl url(stackTrace.at(i).source());
+            const QUrl url(stackTrace.at(i).source);
             const QString fileName = url.isLocalFile() ? url.toLocalFile() : url.toString();
-            str << "frame={level=\"" << i << "\",func=\"" << stackTrace.at(i).function()
+            str << "frame={level=\"" << i << "\",func=\"" << stackTrace.at(i).function
                 << "\",file=\"" << fileName << "\",fullname=\"" << fileName
                 << "\",line=\"" << stackTrace.at(i).line << "\",language=\"js\"}";
         }
@@ -1066,7 +1069,7 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
     QQmlError error;
     if (!trace.isEmpty()) {
         QV4::StackFrame frame = trace.constFirst();
-        error.setUrl(QUrl(frame.source()));
+        error.setUrl(QUrl(frame.source));
         error.setLine(frame.line);
         error.setColumn(frame.column);
     }

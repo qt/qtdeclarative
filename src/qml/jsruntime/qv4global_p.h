@@ -358,13 +358,10 @@ struct PropertyAttributes
 };
 
 struct Q_QML_EXPORT StackFrame {
-    StackFrame *parent;
-    Function *v4Function;
+    QString source;
+    QString function;
     int line = -1;
     int column = -1;
-
-    QString source() const;
-    QString function() const;
 };
 typedef QVector<StackFrame> StackTrace;
 

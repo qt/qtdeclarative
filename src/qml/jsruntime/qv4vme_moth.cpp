@@ -235,7 +235,7 @@ int qt_v4DebuggerHook(const char *json)
     return -NoSuchCommand; // Failure.
 }
 
-Q_NEVER_INLINE static void qt_v4CheckForBreak(QV4::StackFrame *frame)
+Q_NEVER_INLINE static void qt_v4CheckForBreak(QV4::EngineBase::StackFrame *frame)
 {
     if (!qt_v4IsStepping && !qt_v4Breakpoints.size())
         return;
@@ -446,7 +446,7 @@ QV4::ReturnedValue VME::exec(Function *function)
 
     ExecutionEngine *engine = function->internalClass->engine;
 
-    StackFrame frame;
+    EngineBase::StackFrame frame;
     frame.parent = engine->currentStackFrame;
     frame.v4Function = function;
     engine->currentStackFrame = &frame;
