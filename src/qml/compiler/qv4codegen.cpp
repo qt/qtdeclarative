@@ -369,6 +369,11 @@ void Codegen::sourceElements(SourceElements *ast)
         sourceElement(it->element);
         if (hasError)
             return;
+        if (StatementSourceElement *sse = AST::cast<StatementSourceElement *>(it->element)) {
+            if (AST::cast<ThrowStatement *>(sse->statement) ||
+                    AST::cast<ReturnStatement *>(sse->statement))
+                return;
+        }
     }
 }
 
@@ -384,6 +389,12 @@ void Codegen::statementList(StatementList *ast)
                 requiresReturnValue = _requiresReturnValue;
         statement(it->statement);
         requiresReturnValue = false;
+        if (it->statement->kind == Statement::Kind_ThrowStatement ||
+            it->statement->kind == Statement::Kind_BreakStatement ||
+            it->statement->kind == Statement::Kind_ContinueStatement ||
+            it->statement->kind == Statement::Kind_ReturnStatement)
+            // any code after those statements is unreachable
+            break;
     }
     requiresReturnValue = _requiresReturnValue;
 }
@@ -1792,6 +1803,8 @@ static bool endsWithReturn(Node *node)
     if (!node)
         return false;
     if (AST::cast<ReturnStatement *>(node))
+        return true;
+    if (AST::cast<ThrowStatement *>(node))
         return true;
     if (Program *p = AST::cast<Program *>(node))
         return endsWithReturn(p->elements);
