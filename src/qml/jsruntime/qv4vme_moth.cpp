@@ -451,17 +451,16 @@ QV4::ReturnedValue VME::exec(Function *function)
     frame.v4Function = function;
     engine->currentStackFrame = &frame;
 
-    QV4::Value accumulator = Primitive::undefinedValue();
     QV4::Value *stack = nullptr;
     const uchar *exceptionHandler = 0;
 
     QV4::Scope scope(engine);
-    {
-        int nFormals = function->nFormals;
-        stack = scope.alloc(function->compiledFunction->nRegisters + nFormals + 1);
-        memcpy(stack, &engine->current->callData->thisObject, (nFormals + 1)*sizeof(Value));
-        stack += nFormals + 1;
-    }
+    int nFormals = function->nFormals;
+    stack = scope.alloc(function->compiledFunction->nRegisters + nFormals + 2);
+    QV4::Value &accumulator = *stack;
+    ++stack;
+    memcpy(stack, &engine->current->callData->thisObject, (nFormals + 1)*sizeof(Value));
+    stack += nFormals + 1;
 
     if (QV4::Debugging::Debugger *debugger = engine->debugger())
         debugger->enteringFunction();
