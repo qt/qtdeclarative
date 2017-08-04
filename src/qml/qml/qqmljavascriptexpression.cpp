@@ -227,9 +227,9 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
 
     QV4::ExecutionContext *outer = static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef());
     if (v4Function->canUseSimpleFunction()) {
-        result = outer->simpleCall(scope, callData, v4Function);
+        result = outer->simpleCall(scope.engine, callData, v4Function);
     } else {
-        result = outer->call(scope, callData, v4Function);
+        result = outer->call(scope.engine, callData, v4Function);
     }
 
     if (scope.hasException()) {

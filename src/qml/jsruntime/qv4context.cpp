@@ -232,47 +232,48 @@ bool ExecutionContext::deleteProperty(String *name)
 }
 
 // Do a standard call with this execution context as the outer scope
-ReturnedValue ExecutionContext::call(Scope &scope, CallData *callData, Function *function, const FunctionObject *f)
+ReturnedValue ExecutionContext::call(ExecutionEngine *engine, CallData *callData, Function *function, const FunctionObject *f)
 {
-    ExecutionContextSaver ctxSaver(scope.engine);
+    Scope scope(engine);
+    ExecutionContextSaver ctxSaver(engine);
 
     Scoped<CallContext> ctx(scope, newCallContext(function, callData));
     if (f)
-        ctx->d()->function.set(scope.engine, f->d());
-    scope.engine->pushContext(ctx);
+        ctx->d()->function.set(engine, f->d());
+    engine->pushContext(ctx);
 
-    ReturnedValue res = Q_V4_PROFILE(scope.engine, function);
+    ReturnedValue res = Q_V4_PROFILE(engine, function);
 
     if (function->hasQmlDependencies)
-        QQmlPropertyCapture::registerQmlDependencies(scope.engine, function->compiledFunction);
+        QQmlPropertyCapture::registerQmlDependencies(engine, function->compiledFunction);
 
     return res;
 }
 
 // Do a simple, fast call with this execution context as the outer scope
-ReturnedValue QV4::ExecutionContext::simpleCall(Scope &scope, CallData *callData, Function *function)
+ReturnedValue QV4::ExecutionContext::simpleCall(ExecutionEngine *engine, CallData *callData, Function *function)
 {
     Q_ASSERT(function->canUseSimpleFunction());
 
-    ExecutionContextSaver ctxSaver(scope.engine);
+    ExecutionContextSaver ctxSaver(engine);
 
-    CallContext::Data *ctx = scope.engine->memoryManager->allocSimpleCallContext();
+    CallContext::Data *ctx = engine->memoryManager->allocSimpleCallContext();
 
     ctx->strictMode = function->isStrict();
     ctx->callData = callData;
     ctx->v4Function = function;
-    ctx->outer.set(scope.engine, this->d());
+    ctx->outer.set(engine, this->d());
     for (int i = callData->argc; i < (int)function->nFormals; ++i)
         callData->args[i] = Encode::undefined();
 
-    scope.engine->pushContext(ctx);
-    Q_ASSERT(scope.engine->current == ctx);
+    engine->pushContext(ctx);
+    Q_ASSERT(engine->current == ctx);
 
-    ReturnedValue res = Q_V4_PROFILE(scope.engine, function);
+    ReturnedValue res = Q_V4_PROFILE(engine, function);
 
     if (function->hasQmlDependencies)
-        QQmlPropertyCapture::registerQmlDependencies(scope.engine, function->compiledFunction);
-    scope.engine->memoryManager->freeSimpleCallContext();
+        QQmlPropertyCapture::registerQmlDependencies(engine, function->compiledFunction);
+    engine->memoryManager->freeSimpleCallContext();
 
     return res;
 }

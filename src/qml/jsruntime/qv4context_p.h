@@ -223,8 +223,8 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         return d()->callData->argument(i);
     }
 
-    ReturnedValue call(Scope &scope, CallData *callData, QV4::Function *function, const QV4::FunctionObject *f = 0);
-    ReturnedValue simpleCall(Scope &scope, CallData *callData, QV4::Function *function);
+    ReturnedValue call(ExecutionEngine *engine, CallData *callData, QV4::Function *function, const QV4::FunctionObject *f = 0);
+    ReturnedValue simpleCall(ExecutionEngine *engine, CallData *callData, QV4::Function *function);
 };
 
 struct Q_QML_EXPORT CallContext : public ExecutionContext
