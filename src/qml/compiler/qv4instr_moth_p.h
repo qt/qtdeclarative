@@ -144,6 +144,8 @@ QT_BEGIN_NAMESPACE
     F(CmpJmpLe, cmpJmpLe) \
     F(JumpStrictEqual, jumpStrictEqual) \
     F(JumpStrictNotEqual, jumpStrictNotEqual) \
+    F(JumpStrictEqualStackSlotInt, jumpStrictEqualStackSlotInt) \
+    F(JumpStrictNotEqualStackSlotInt, jumpStrictNotEqualStackSlotInt) \
     F(UNot, unot) \
     F(UPlus, uplus) \
     F(UMinus, uminus) \
@@ -247,7 +249,6 @@ union Instr
     };
     struct instr_ret {
         MOTH_INSTR_HEADER
-        StackSlot result;
     };
 
 #ifndef QT_NO_QML_DEBUGGING
@@ -597,6 +598,18 @@ union Instr
         ptrdiff_t offset;
         StackSlot lhs;
     };
+    struct instr_jumpStrictEqualStackSlotInt {
+        MOTH_INSTR_HEADER
+        ptrdiff_t offset;
+        StackSlot lhs;
+        int rhs;
+    };
+    struct instr_jumpStrictNotEqualStackSlotInt {
+        MOTH_INSTR_HEADER
+        ptrdiff_t offset;
+        StackSlot lhs;
+        int rhs;
+    };
     struct instr_unot {
         MOTH_INSTR_HEADER
     };
@@ -770,6 +783,8 @@ union Instr
     instr_cmpJmpLe cmpJmpLe;
     instr_jumpStrictEqual jumpStrictEqual;
     instr_jumpStrictNotEqual jumpStrictNotEqual;
+    instr_jumpStrictEqualStackSlotInt jumpStrictEqualStackSlotInt;
+    instr_jumpStrictNotEqualStackSlotInt jumpStrictNotEqualStackSlotInt;
     instr_unot unot;
     instr_uplus uplus;
     instr_uminus uminus;

@@ -103,10 +103,34 @@ struct ControlFlow {
         cg->_context->controlFlow = parent;
     }
 
+    void emitReturnStatement() const {
+        if (cg->_returnAddress >= 0) {
+            Instruction::LoadReg load;
+            load.reg = Moth::StackSlot::createRegister(cg->_returnAddress);
+            generator()->addInstruction(load);
+        }
+        Instruction::Ret ret;
+        cg->bytecodeGenerator->addInstruction(ret);
+    }
+
     void jumpToHandler(const Handler &h) {
-        if (h.tempIndex >= 0)
-            Reference::storeConstOnStack(cg, QV4::Encode(h.value), h.tempIndex);
-        cg->bytecodeGenerator->jump().link(h.linkLabel);
+        if (h.linkLabel.isReturn()) {
+            emitReturnStatement();
+        } else {
+            if (h.tempIndex >= 0)
+                Reference::storeConstOnStack(cg, QV4::Encode(h.value), h.tempIndex);
+            cg->bytecodeGenerator->jump().link(h.linkLabel);
+        }
+    }
+
+    bool returnRequiresUnwind() const {
+        const ControlFlow *f = this;
+        while (f) {
+            if (f->type == Finally)
+                return true;
+            f = f->parent;
+        }
+        return false;
     }
 
     virtual QString label() const { return QString(); }
@@ -124,7 +148,7 @@ struct ControlFlow {
             return { Invalid, QString(), {}, -1, 0 };
         case Return:
         case Throw:
-            return { type, QString(), cg->_exitBlock, -1, 0 };
+            return { type, QString(), BytecodeGenerator::Label::returnLabel(), -1, 0 };
         case Invalid:
             break;
         }
@@ -132,16 +156,16 @@ struct ControlFlow {
         Q_UNREACHABLE();
     }
 
-    virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
-        return getParentHandler(type, label);
-    }
+    virtual Handler getHandler(HandlerType type, const QString &label = QString()) = 0;
 
-    virtual BytecodeGenerator::ExceptionHandler *exceptionHandler() {
-        return parent ? parent->exceptionHandler() : 0;
-    }
     BytecodeGenerator::ExceptionHandler *parentExceptionHandler() {
         return parent ? parent->exceptionHandler() : 0;
     }
+
+    virtual BytecodeGenerator::ExceptionHandler *exceptionHandler() {
+        return parentExceptionHandler();
+    }
+
 
     virtual void handleThrow(const Reference &expr) {
         Reference e = expr;
@@ -199,7 +223,7 @@ struct ControlFlowLoop : public ControlFlow
             Q_ASSERT(false);
             Q_UNREACHABLE();
         }
-        return ControlFlow::getHandler(type, label);
+        return getParentHandler(type, label);
     }
 
 };
@@ -226,21 +250,24 @@ struct ControlFlowUnwind : public ControlFlow
 
         Reference temp = Reference::fromStackSlot(cg, controlFlowTemp);
         for (const auto &h : qAsConst(handlers)) {
-            Codegen::RegisterScope tempScope(cg);
             Handler parentHandler = getParentHandler(h.type, h.label);
 
             if (h.type == Throw || parentHandler.tempIndex >= 0) {
                 BytecodeGenerator::Label skip = generator()->newLabel();
-                Reference::fromConst(cg, QV4::Encode(h.value)).loadInAccumulator();
-                generator()->jumpStrictNotEqual(temp.stackSlot()).link(skip);
+                generator()->jumpStrictNotEqualStackSlotInt(temp.stackSlot(), h.value).link(skip);
                 if (h.type == Throw)
                     emitForThrowHandling();
-                Reference::storeConstOnStack(cg, QV4::Encode(parentHandler.value), parentHandler.tempIndex);
-                generator()->jump().link(parentHandler.linkLabel);
+                jumpToHandler(parentHandler);
                 skip.link();
             } else {
-                Reference::fromConst(cg, QV4::Encode(h.value)).loadInAccumulator();
-                generator()->jumpStrictEqual(temp.stackSlot()).link(parentHandler.linkLabel);
+                if (parentHandler.linkLabel.isReturn()) {
+                    BytecodeGenerator::Label skip = generator()->newLabel();
+                    generator()->jumpStrictNotEqualStackSlotInt(temp.stackSlot(), h.value).link(skip);
+                    emitReturnStatement();
+                    skip.link();
+                } else {
+                   generator()->jumpStrictEqualStackSlotInt(temp.stackSlot(), h.value).link(parentHandler.linkLabel);
+                }
             }
         }
     }
@@ -389,7 +416,7 @@ struct ControlFlowFinally : public ControlFlowUnwind
         // if we're inside the finally block, any exceptions etc. should
         // go directly to the parent handler
         if (insideFinally)
-            return ControlFlow::getHandler(type, label);
+            return getParentHandler(type, label);
         return ControlFlowUnwind::getHandler(type, label);
     }
 
@@ -403,6 +430,11 @@ struct ControlFlowFinally : public ControlFlowUnwind
 
         Codegen::RegisterScope scope(cg);
 
+        Moth::StackSlot retVal = Moth::StackSlot::createRegister(generator()->newRegister());
+        Instruction::StoreReg storeRetVal;
+        storeRetVal.reg = retVal;
+        generator()->addInstruction(storeRetVal);
+
         insideFinally = true;
         exceptionTemp = generator()->newRegister();
         Instruction::GetException instr;
@@ -412,6 +444,10 @@ struct ControlFlowFinally : public ControlFlowUnwind
         generator()->setExceptionHandler(parentExceptionHandler());
         cg->statement(finally->statement);
         insideFinally = false;
+
+        Instruction::LoadReg loadRetVal;
+        loadRetVal.reg = retVal;
+        generator()->addInstruction(loadRetVal);
 
         emitUnwindHandler();
     }

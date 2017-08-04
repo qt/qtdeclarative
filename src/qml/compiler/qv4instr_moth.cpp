@@ -405,6 +405,14 @@ void dumpBytecode(const char *code, int len, int nFormals)
             d << instr.lhs.dump(nFormals) << "  " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(JumpStrictNotEqual)
 
+        MOTH_BEGIN_INSTR(JumpStrictEqualStackSlotInt)
+            d << instr.lhs.dump(nFormals) << ", " << instr.rhs << "  " << absoluteInstructionOffset(start, instr);
+        MOTH_END_INSTR(JumpStrictEqualStackSlotInt)
+
+        MOTH_BEGIN_INSTR(JumpStrictNotEqualStackSlotInt)
+            d << instr.lhs.dump(nFormals) << ", " << instr.rhs << "  " << absoluteInstructionOffset(start, instr);
+        MOTH_END_INSTR(JumpStrictNotEqualStackSlotInt)
+
         MOTH_BEGIN_INSTR(UNot)
         MOTH_END_INSTR(UNot)
 
@@ -484,7 +492,6 @@ void dumpBytecode(const char *code, int len, int nFormals)
         MOTH_END_INSTR(BinopContext)
 
         MOTH_BEGIN_INSTR(Ret)
-            d << instr.result.dump(nFormals);
         MOTH_END_INSTR(Ret)
 
     #ifndef QT_NO_QML_DEBUGGER

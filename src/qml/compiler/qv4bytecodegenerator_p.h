@@ -77,6 +77,14 @@ public:
               index(generator->labels.size()) {
             generator->labels.append(mode == LinkNow ? generator->instructions.size() : -1);
         }
+        static Label returnLabel() {
+            Label l;
+            l.index = INT_MAX;
+            return l;
+        }
+        bool isReturn() const {
+            return index == INT_MAX;
+        }
 
         void link() {
             Q_ASSERT(index >= 0);
@@ -173,6 +181,22 @@ public:
     {
         Instruction::JumpStrictNotEqual data;
         data.lhs = lhs;
+        return addJumpInstruction(data);
+    }
+
+    Q_REQUIRED_RESULT Jump jumpStrictEqualStackSlotInt(const StackSlot &lhs, int rhs)
+    {
+        Instruction::JumpStrictEqualStackSlotInt data;
+        data.lhs = lhs;
+        data.rhs = rhs;
+        return addJumpInstruction(data);
+    }
+
+    Q_REQUIRED_RESULT Jump jumpStrictNotEqualStackSlotInt(const StackSlot &lhs, int rhs)
+    {
+        Instruction::JumpStrictNotEqualStackSlotInt data;
+        data.lhs = lhs;
+        data.rhs = rhs;
         return addJumpInstruction(data);
     }
 

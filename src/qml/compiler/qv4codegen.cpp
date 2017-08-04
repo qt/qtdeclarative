@@ -214,7 +214,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         return Reference::fromAccumulator(this);
     }
     case PostIncrement:
-        if (!_expr.accept(nx)) {
+        if (!_expr.accept(nx) || requiresReturnValue) {
             Reference e = expr.asLValue();
             e.loadInAccumulator();
             Instruction::UPlus uplus;
@@ -239,7 +239,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
             return e.storeRetainAccumulator();
     }
     case PostDecrement:
-        if (!_expr.accept(nx)) {
+        if (!_expr.accept(nx) || requiresReturnValue) {
             Reference e = expr.asLValue();
             e.loadInAccumulator();
             Instruction::UPlus uplus;
@@ -361,11 +361,31 @@ void Codegen::program(Program *ast)
 
 void Codegen::sourceElements(SourceElements *ast)
 {
+    bool _requiresReturnValue = false;
+    qSwap(_requiresReturnValue, requiresReturnValue);
     for (SourceElements *it = ast; it; it = it->next) {
+        if (!it->next)
+            qSwap(_requiresReturnValue, requiresReturnValue);
         sourceElement(it->element);
         if (hasError)
             return;
     }
+}
+
+void Codegen::statementList(StatementList *ast)
+{
+    bool _requiresReturnValue = requiresReturnValue;
+    requiresReturnValue = false;
+    for (StatementList *it = ast; it; it = it->next) {
+        if (!it->next ||
+            it->next->statement->kind == Statement::Kind_BreakStatement ||
+            it->next->statement->kind == Statement::Kind_ContinueStatement ||
+            it->next->statement->kind == Statement::Kind_ReturnStatement)
+                requiresReturnValue = _requiresReturnValue;
+        statement(it->statement);
+        requiresReturnValue = false;
+    }
+    requiresReturnValue = _requiresReturnValue;
 }
 
 void Codegen::variableDeclaration(VariableDeclaration *ast)
@@ -1761,11 +1781,36 @@ bool Codegen::visit(FunctionDeclaration * ast)
 
     RegisterScope scope(this);
 
-    if (_context->compilationMode == QmlBinding) {
+    if (_context->compilationMode == QmlBinding)
         Reference::fromName(this, ast->name.toString()).loadInAccumulator();
-        Reference::fromStackSlot(this, _returnAddress).storeConsumeAccumulator();
-    }
     _expr.accept(nx);
+    return false;
+}
+
+static bool endsWithReturn(Node *node)
+{
+    if (!node)
+        return false;
+    if (AST::cast<ReturnStatement *>(node))
+        return true;
+    if (Program *p = AST::cast<Program *>(node))
+        return endsWithReturn(p->elements);
+    if (SourceElements *se = AST::cast<SourceElements *>(node)) {
+        while (se->next)
+            se = se->next;
+        return endsWithReturn(se->element);
+    }
+    if (StatementSourceElement *sse = AST::cast<StatementSourceElement *>(node))
+        return endsWithReturn(sse->statement);
+    if (StatementList *sl = AST::cast<StatementList *>(node)) {
+        while (sl->next)
+            sl = sl->next;
+        return endsWithReturn(sl->statement);
+    }
+    if (Block *b = AST::cast<Block *>(node))
+        return endsWithReturn(b->statements);
+    if (IfStatement *is = AST::cast<IfStatement *>(node))
+        return is->ko && endsWithReturn(is->ok) && endsWithReturn(is->ko);
     return false;
 }
 
@@ -1797,8 +1842,11 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     // allocate the js stack frame (Context & js Function & accumulator)
     bytecodeGenerator->newRegisterArray(sizeof(JSStackFrame)/sizeof(Value));
 
-    int returnAddress = bytecodeGenerator->newRegister();
-
+    int returnAddress = -1;
+    bool _requiresReturnValue = (_context->compilationMode == QmlBinding || _context->compilationMode == EvalCode);
+    qSwap(requiresReturnValue, _requiresReturnValue);
+    if (requiresReturnValue)
+        returnAddress = bytecodeGenerator->newRegister();
     if (!_context->parent || _context->usesArgumentsObject == Context::ArgumentsObjectUnknown)
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed)
@@ -1830,11 +1878,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     }
 
-    auto exitBlock = bytecodeGenerator->newLabel();
-
-    qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
-
     for (const Context::Member &member : qAsConst(_context->members)) {
         if (member.function) {
             const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
@@ -1870,13 +1914,17 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     sourceElements(body);
 
-    _exitBlock.link();
-    bytecodeGenerator->setLocation(ast->lastSourceLocation());
-
-    {
-        Instruction::Ret ret;
-        ret.result = Reference::fromStackSlot(this, _returnAddress).theStackSlot;
-        bytecodeGenerator->addInstruction(ret);
+    if (hasError || !endsWithReturn(body)) {
+        if (requiresReturnValue) {
+            if (_returnAddress >= 0) {
+                Instruction::LoadReg load;
+                load.reg = Moth::StackSlot::createRegister(_returnAddress);
+                bytecodeGenerator->addInstruction(load);
+            }
+        } else {
+            Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
+        }
+        bytecodeGenerator->addInstruction(Instruction::Ret());
     }
 
     _context->code = bytecodeGenerator->finalize();
@@ -1889,9 +1937,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         qDebug();
     }
 
-    qSwap(_exitBlock, exitBlock);
     qSwap(_returnAddress, returnAddress);
-
+    qSwap(requiresReturnValue, _requiresReturnValue);
     bytecodeGenerator = savedBytecodeGenerator;
 
     return leaveContext();
@@ -1922,9 +1969,7 @@ bool Codegen::visit(Block *ast)
 
     RegisterScope scope(this);
 
-    for (StatementList *it = ast->statements; it; it = it->next) {
-        statement(it->statement);
-    }
+    statementList(ast->statements);
     return false;
 }
 
@@ -2022,7 +2067,7 @@ bool Codegen::visit(ExpressionStatement *ast)
 
     RegisterScope scope(this);
 
-    if (_context->compilationMode == EvalCode || _context->compilationMode == QmlBinding) {
+    if (requiresReturnValue) {
         Reference e = expression(ast->expression);
         if (hasError)
             return false;
@@ -2122,10 +2167,15 @@ bool Codegen::visit(IfStatement *ast)
     trueLabel.link();
     statement(ast->ok);
     if (ast->ko) {
-        BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
-        falseLabel.link();
-        statement(ast->ko);
-        jump_endif.link();
+        if (endsWithReturn(ast)) {
+            falseLabel.link();
+            statement(ast->ko);
+        } else {
+            BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
+            falseLabel.link();
+            statement(ast->ko);
+            jump_endif.link();
+        }
     } else {
         falseLabel.link();
     }
@@ -2253,19 +2303,25 @@ bool Codegen::visit(ReturnStatement *ast)
         throwSyntaxError(ast->returnToken, QStringLiteral("Return statement outside of function"));
         return false;
     }
+    Reference expr;
     if (ast->expression) {
-        Reference expr = expression(ast->expression);
+         expr = expression(ast->expression);
         if (hasError)
             return false;
-        expr.loadInAccumulator();
-        Reference::fromStackSlot(this, _returnAddress).storeConsumeAccumulator();
+    } else {
+        expr = Reference::fromConst(this, Encode::undefined());
     }
 
-    if (_context->controlFlow) {
+    if (_context->controlFlow && _context->controlFlow->returnRequiresUnwind()) {
+        if (_returnAddress >= 0)
+            (void) expr.storeOnStack(_returnAddress);
+        else
+            expr.loadInAccumulator();
         ControlFlow::Handler h = _context->controlFlow->getHandler(ControlFlow::Return);
         _context->controlFlow->jumpToHandler(h);
     } else {
-        bytecodeGenerator->jump().link(_exitBlock);
+        expr.loadInAccumulator();
+        bytecodeGenerator->addInstruction(Instruction::Ret());
     }
     return false;
 }
@@ -2324,24 +2380,21 @@ bool Codegen::visit(SwitchStatement *ast)
             CaseClause *clause = it->clause;
             blockMap[clause].link();
 
-            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
-                statement(it2->statement);
+            statementList(clause->statements);
         }
 
         if (ast->block->defaultClause) {
             DefaultClause *clause = ast->block->defaultClause;
             blockMap[clause].link();
 
-            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
-                statement(it2->statement);
+            statementList(clause->statements);
         }
 
         for (CaseClauses *it = ast->block->moreClauses; it; it = it->next) {
             CaseClause *clause = it->clause;
             blockMap[clause].link();
 
-            for (StatementList *it2 = clause->statements; it2; it2 = it2->next)
-                statement(it2->statement);
+            statementList(clause->statements);
         }
 
         switchEnd.link();
@@ -2437,6 +2490,8 @@ bool Codegen::visit(WhileStatement *ast)
     if (hasError)
         return true;
 
+    RegisterScope scope(this);
+
     BytecodeGenerator::Label start = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label cond = bytecodeGenerator->label();
@@ -2449,7 +2504,6 @@ bool Codegen::visit(WhileStatement *ast)
     bytecodeGenerator->jump().link(cond);
 
     end.link();
-
     return false;
 }
 
@@ -3037,4 +3091,3 @@ void Codegen::Reference::loadInAccumulator() const
     Q_ASSERT(false);
     Q_UNREACHABLE();
 }
-

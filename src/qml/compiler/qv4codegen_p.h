@@ -484,6 +484,7 @@ protected:
     void functionBody(AST::FunctionBody *ast);
     void program(AST::Program *ast);
     void sourceElements(AST::SourceElements *ast);
+    void statementList(AST::StatementList *ast);
     void variableDeclaration(AST::VariableDeclaration *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
@@ -623,7 +624,6 @@ protected:
     friend struct ControlFlowFinally;
     Result _expr;
     Module *_module;
-    BytecodeGenerator::Label _exitBlock;
     int _returnAddress;
     Context *_context;
     AST::LabelledStatement *_labelledStatement;
@@ -631,6 +631,7 @@ protected:
     BytecodeGenerator *bytecodeGenerator = 0;
     bool _strictMode;
     bool useFastLookups = true;
+    bool requiresReturnValue = false;
 
     bool _fileNameIsUrl;
     bool hasError;

@@ -640,7 +640,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(ThrowException)
         Runtime::method_throwException(engine, accumulator);
-        CHECK_EXCEPTION;
+        goto catchException;
     MOTH_END_INSTR(ThrowException)
 
     MOTH_BEGIN_INSTR(GetException)
@@ -905,6 +905,16 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         }
     MOTH_END_INSTR(JumpStrictNotEqual)
 
+    MOTH_BEGIN_INSTR(JumpStrictNotEqualStackSlotInt)
+        if (STACK_VALUE(instr.lhs).int_32() != instr.rhs || STACK_VALUE(instr.lhs).isUndefined())
+            code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+    MOTH_END_INSTR(JumpStrictNotEqualStackSlotInt)
+
+    MOTH_BEGIN_INSTR(JumpStrictEqualStackSlotInt)
+        if (STACK_VALUE(instr.lhs).int_32() == instr.rhs && !STACK_VALUE(instr.lhs).isUndefined())
+            code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+    MOTH_END_INSTR(JumpStrictNotEqualStackSlotInt)
+
     MOTH_BEGIN_INSTR(UNot)
         if (accumulator.integerCompatible()) {
             STORE_ACCUMULATOR(Encode(!static_cast<bool>(accumulator.int_32())))
@@ -1039,7 +1049,6 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(BinopContext)
 
     MOTH_BEGIN_INSTR(Ret)
-        accumulator = STACK_VALUE(instr.result).asReturnedValue();
         goto functionExit;
     MOTH_END_INSTR(Ret)
 
