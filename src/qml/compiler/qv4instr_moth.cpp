@@ -242,7 +242,7 @@ void dumpBytecode(const char *code, int len, int nFormals)
         MOTH_END_INSTR(LoadIdObject)
 
         MOTH_BEGIN_INSTR(CallValue)
-            d << instr.dest.dump(nFormals) << "(" << instr.callData.dump(nFormals) << ")";
+            d << "(" << instr.callData.dump(nFormals) << ")";
         MOTH_END_INSTR(CallValue)
 
         MOTH_BEGIN_INSTR(CallProperty)

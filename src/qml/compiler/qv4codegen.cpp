@@ -1060,11 +1060,13 @@ bool Codegen::visit(CallExpression *ast)
             bytecodeGenerator->addInstruction(call);
         }
     } else {
+        base.loadInAccumulator();
+
         Instruction::CallValue call;
-        call.dest = base.stackSlot();
         call.callData = calldata;
         bytecodeGenerator->addInstruction(call);
     }
+
     _expr.setResult(Reference::fromAccumulator(this));
     return false;
 }

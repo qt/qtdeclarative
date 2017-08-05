@@ -404,7 +404,6 @@ union Instr
     struct instr_callValue {
         MOTH_INSTR_HEADER
         StackSlot callData;
-        StackSlot dest;
     };
     struct instr_callProperty {
         MOTH_INSTR_HEADER

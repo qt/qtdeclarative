@@ -616,7 +616,7 @@ QV4::ReturnedValue VME::exec(Function *function)
 
     MOTH_BEGIN_INSTR(CallValue)
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
-        STORE_ACCUMULATOR(Runtime::method_callValue(engine, STACK_VALUE(instr.dest), callData));
+        STORE_ACCUMULATOR(Runtime::method_callValue(engine, accumulator, callData));
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
