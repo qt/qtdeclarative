@@ -870,13 +870,17 @@ QV4::ReturnedValue VME::exec(Function *function)
     MOTH_END_INSTR(CmpJmpLe)
 
     MOTH_BEGIN_INSTR(JumpStrictEqual)
-        if (RuntimeHelpers::strictEqual(STACK_VALUE(instr.lhs), accumulator))
+        if (STACK_VALUE(instr.lhs).rawValue() == accumulator.rawValue() && !accumulator.isNaN())
+            code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        else if (RuntimeHelpers::strictEqual(STACK_VALUE(instr.lhs), accumulator))
             code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
     MOTH_END_INSTR(JumpStrictEqual)
 
     MOTH_BEGIN_INSTR(JumpStrictNotEqual)
-        if (!RuntimeHelpers::strictEqual(STACK_VALUE(instr.lhs), accumulator))
-            code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        if (STACK_VALUE(instr.lhs).rawValue() != accumulator.rawValue()) {
+            if (!RuntimeHelpers::strictEqual(STACK_VALUE(instr.lhs), accumulator))
+                code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        }
     MOTH_END_INSTR(JumpStrictNotEqual)
 
     MOTH_BEGIN_INSTR(UNot)
