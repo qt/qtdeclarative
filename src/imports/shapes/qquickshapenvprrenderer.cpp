@@ -387,9 +387,22 @@ void QQuickShapeNvprRenderer::updateNode()
             // meaning the input dash pattern and dash offset here are in width units.
             dst.dashOffset = src.dashOffset * src.strokeWidth;
             if (src.dashActive) {
-                dst.dashPattern.resize(src.dashPattern.count());
-                for (int i = 0; i < src.dashPattern.count(); ++i)
-                    dst.dashPattern[i] = GLfloat(src.dashPattern[i]) * src.strokeWidth;
+                if (src.dashPattern.isEmpty()) {
+                    // default values for DashLine as defined in qpen.cpp
+                    dst.dashPattern.resize(2);
+                    dst.dashPattern[0]  = 4 * src.strokeWidth; // dash
+                    dst.dashPattern[1]  = 2 * src.strokeWidth; // space
+                } else {
+                    dst.dashPattern.resize(src.dashPattern.count());
+                    for (int i = 0; i < src.dashPattern.count(); ++i)
+                        dst.dashPattern[i] = GLfloat(src.dashPattern[i]) * src.strokeWidth;
+
+                    // QPen expects a dash pattern of even length and so should we
+                    if (src.dashPattern.count() % 2 != 0) {
+                        qWarning("QQuickShapeNvprRenderNode: dash pattern not of even length");
+                        dst.dashPattern << src.strokeWidth;
+                    }
+                }
             } else {
                 dst.dashPattern.clear();
             }
