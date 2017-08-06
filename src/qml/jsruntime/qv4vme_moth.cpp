@@ -887,50 +887,49 @@ QV4::ReturnedValue VME::exec(Function *function)
         if (accumulator.integerCompatible()) {
             STORE_ACCUMULATOR(Encode(!static_cast<bool>(accumulator.int_32())))
         } else {
-            STORE_ACCUMULATOR(Runtime::method_uNot(accumulator));
+            STORE_ACCUMULATOR(Encode(!accumulator.toBoolean()));
         }
     MOTH_END_INSTR(UNot)
 
     MOTH_BEGIN_INSTR(UPlus)
-        if (!accumulator.isNumber()) {
-            STORE_ACCUMULATOR(Runtime::method_uPlus(accumulator));
-        }
+        if (!accumulator.isNumber())
+            STORE_ACCUMULATOR(Encode(accumulator.toNumberImpl()));
     MOTH_END_INSTR(UPlus)
 
     MOTH_BEGIN_INSTR(UMinus)
-        if (Q_LIKELY(accumulator.isInteger() && accumulator.int_32() != 0 &&
+        if (Q_LIKELY(accumulator.integerCompatible() && accumulator.int_32() != 0 &&
                 accumulator.int_32() != std::numeric_limits<int>::min())) {
             accumulator = sub_int32(0, accumulator.int_32());
         } else {
-            STORE_ACCUMULATOR(Encode(!accumulator.toBoolean()));
+            STORE_ACCUMULATOR(Encode(-accumulator.toNumber()));
         }
     MOTH_END_INSTR(UMinus)
 
     MOTH_BEGIN_INSTR(UCompl)
-        if (Q_LIKELY(accumulator.isInteger())) {
+        if (Q_LIKELY(accumulator.integerCompatible())) {
             accumulator.setInt_32(~accumulator.int_32());
         } else {
-            STORE_ACCUMULATOR(Runtime::method_complement(accumulator));
+            STORE_ACCUMULATOR(Encode((int)~accumulator.toInt32()));
         }
     MOTH_END_INSTR(UCompl)
 
     MOTH_BEGIN_INSTR(Increment)
-        if (Q_LIKELY(accumulator.isInteger())) {
+        if (Q_LIKELY(accumulator.integerCompatible())) {
             accumulator = add_int32(accumulator.int_32(), 1);
         } else if (accumulator.isDouble()) {
             accumulator = QV4::Encode(accumulator.doubleValue() + 1.);
         } else {
-            STORE_ACCUMULATOR(Runtime::method_increment(accumulator));
+            STORE_ACCUMULATOR(Encode(accumulator.toNumberImpl() + 1.));
         }
     MOTH_END_INSTR(Increment)
 
     MOTH_BEGIN_INSTR(Decrement)
-        if (Q_LIKELY(accumulator.isInteger())) {
+        if (Q_LIKELY(accumulator.integerCompatible())) {
             accumulator = sub_int32(accumulator.int_32(), 1);
         } else if (accumulator.isDouble()) {
             accumulator = QV4::Encode(accumulator.doubleValue() - 1.);
         } else {
-            STORE_ACCUMULATOR(Runtime::method_decrement(accumulator));
+            STORE_ACCUMULATOR(Encode(accumulator.toNumberImpl() - 1.));
         }
     MOTH_END_INSTR(Decrement)
 
@@ -943,6 +942,8 @@ QV4::ReturnedValue VME::exec(Function *function)
         QV4::Value lhs = STACK_VALUE(instr.lhs);
         if (Q_LIKELY(Value::integerCompatible(lhs, accumulator))) {
             accumulator = add_int32(lhs.int_32(), accumulator.int_32());
+        } else if (lhs.isNumber() && accumulator.isNumber()) {
+            accumulator = Encode(lhs.asDouble() + accumulator.asDouble());
         } else {
             STORE_ACCUMULATOR(Runtime::method_add(engine, lhs, accumulator));
         }
@@ -952,6 +953,8 @@ QV4::ReturnedValue VME::exec(Function *function)
         QV4::Value lhs = STACK_VALUE(instr.lhs);
         if (Q_LIKELY(Value::integerCompatible(lhs, accumulator))) {
             accumulator = sub_int32(lhs.int_32(), accumulator.int_32());
+        } else if (lhs.isNumber() && accumulator.isNumber()) {
+            accumulator = Encode(lhs.asDouble() - accumulator.asDouble());
         } else {
             STORE_ACCUMULATOR(Runtime::method_sub(lhs, accumulator));
         }
@@ -961,29 +964,31 @@ QV4::ReturnedValue VME::exec(Function *function)
         QV4::Value lhs = STACK_VALUE(instr.lhs);
         if (Q_LIKELY(Value::integerCompatible(lhs, accumulator))) {
             accumulator = mul_int32(lhs.int_32(), accumulator.int_32());
+        } else if (lhs.isNumber() && accumulator.isNumber()) {
+            accumulator = Encode(lhs.asDouble() * accumulator.asDouble());
         } else {
             STORE_ACCUMULATOR(Runtime::method_mul(lhs, accumulator));
         }
     MOTH_END_INSTR(Mul)
 
     MOTH_BEGIN_INSTR(BitAnd)
-        STORE_ACCUMULATOR(Runtime::method_bitAnd(STACK_VALUE(instr.lhs), accumulator));
+        STORE_ACCUMULATOR(Encode((int)(STACK_VALUE(instr.lhs).toInt32() & accumulator.toInt32())));
     MOTH_END_INSTR(BitAnd)
 
     MOTH_BEGIN_INSTR(BitOr)
-        STORE_ACCUMULATOR(Runtime::method_bitOr(STACK_VALUE(instr.lhs), accumulator));
+        STORE_ACCUMULATOR(Encode((int)(STACK_VALUE(instr.lhs).toInt32() | accumulator.toInt32())));
     MOTH_END_INSTR(BitOr)
 
     MOTH_BEGIN_INSTR(BitXor)
-        STORE_ACCUMULATOR(Runtime::method_bitXor(STACK_VALUE(instr.lhs), accumulator));
+        STORE_ACCUMULATOR(Encode((int)(STACK_VALUE(instr.lhs).toInt32() ^ accumulator.toInt32())));
     MOTH_END_INSTR(BitXor)
 
     MOTH_BEGIN_INSTR(Shr)
-        STORE_ACCUMULATOR(Runtime::method_shr(STACK_VALUE(instr.lhs), accumulator));
+        STORE_ACCUMULATOR(Encode((int)(STACK_VALUE(instr.lhs).toInt32() >> (accumulator.toInt32() & 0x1f))));
     MOTH_END_INSTR(Shr)
 
     MOTH_BEGIN_INSTR(Shl)
-        STORE_ACCUMULATOR(Runtime::method_shl(STACK_VALUE(instr.lhs), accumulator));
+        STORE_ACCUMULATOR(Encode((int)(STACK_VALUE(instr.lhs).toInt32() << (accumulator.toInt32() & 0x1f))));
     MOTH_END_INSTR(Shl)
 
     MOTH_BEGIN_INSTR(BitAndConst)
@@ -997,6 +1002,9 @@ QV4::ReturnedValue VME::exec(Function *function)
     MOTH_BEGIN_INSTR(BitOrConst)
         if (Q_LIKELY(accumulator.isInteger())) {
             accumulator.setInt_32(accumulator.int_32() | instr.rhs);
+        } else if (accumulator.isDouble()) {
+            int i = (int)(qint64)accumulator.doubleValue();
+            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(i | instr.rhs));
         } else {
             STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() | instr.rhs));
         }

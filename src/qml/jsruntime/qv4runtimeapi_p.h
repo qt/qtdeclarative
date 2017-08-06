@@ -150,21 +150,13 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, foreachNextPropertyName, (const Value &foreach_iterator)) \
     \
     /* unary operators */ \
-    F(ReturnedValue, uPlus, (const Value &value)) \
     F(ReturnedValue, uMinus, (const Value &value)) \
-    F(ReturnedValue, uNot, (const Value &value)) \
-    F(ReturnedValue, complement, (const Value &value)) \
-    F(ReturnedValue, increment, (const Value &value)) \
-    F(ReturnedValue, decrement, (const Value &value)) \
     \
     /* binary operators */ \
     F(ReturnedValue, instanceof, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     F(ReturnedValue, in, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     F(ReturnedValue, add, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     F(ReturnedValue, addString, (ExecutionEngine *engine, const Value &left, const Value &right)) \
-    F(ReturnedValue, bitOr, (const Value &left, const Value &right)) \
-    F(ReturnedValue, bitXor, (const Value &left, const Value &right)) \
-    F(ReturnedValue, bitAnd, (const Value &left, const Value &right)) \
     F(ReturnedValue, sub, (const Value &left, const Value &right)) \
     F(ReturnedValue, mul, (const Value &left, const Value &right)) \
     F(ReturnedValue, div, (const Value &left, const Value &right)) \

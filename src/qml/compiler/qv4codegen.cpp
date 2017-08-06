@@ -73,12 +73,6 @@ static inline QV4::Runtime::RuntimeMethods aluOpFunction(QSOperator::Op op)
     switch (op) {
     case QSOperator::Invalid:
         return QV4::Runtime::InvalidRuntimeMethod;
-    case QSOperator::BitAnd:
-        return QV4::Runtime::bitAnd;
-    case QSOperator::BitOr:
-        return QV4::Runtime::bitOr;
-    case QSOperator::BitXor:
-        return QV4::Runtime::bitXor;
     case QSOperator::Add:
         return QV4::Runtime::InvalidRuntimeMethod;
     case QSOperator::Sub:
@@ -111,6 +105,11 @@ static inline QV4::Runtime::RuntimeMethods aluOpFunction(QSOperator::Op op)
         return QV4::Runtime::strictEqual;
     case QSOperator::StrictNotEqual:
         return QV4::Runtime::strictNotEqual;
+    case QSOperator::BitAnd:
+    case QSOperator::BitOr:
+    case QSOperator::BitXor:
+        Q_UNREACHABLE();
+        // fall through
     default:
         Q_ASSERT(!"Unknown AluOp");
         return QV4::Runtime::InvalidRuntimeMethod;
@@ -175,13 +174,13 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         if (v.isNumber()) {
             switch (op) {
             case Not:
-                return Reference::fromConst(this, Runtime::method_uNot(v));
+                return Reference::fromConst(this, Encode(!v.toBoolean()));
             case UMinus:
                 return Reference::fromConst(this, Runtime::method_uMinus(v));
             case UPlus:
                 return expr;
             case Compl:
-                return Reference::fromConst(this, Runtime::method_complement(v));
+                return Reference::fromConst(this, Encode((int)~v.toInt32()));
             default:
                 break;
             }

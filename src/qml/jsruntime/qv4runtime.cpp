@@ -1324,30 +1324,6 @@ QV4::ReturnedValue Runtime::method_setupArgumentsObject(ExecutionEngine *engine)
 
 #endif // V4_BOOTSTRAP
 
-QV4::ReturnedValue Runtime::method_increment(const Value &value)
-{
-    TRACE1(value);
-
-    if (value.isInteger() && value.integerValue() < INT_MAX)
-        return Encode(value.integerValue() + 1);
-    else {
-        double d = value.toNumber();
-        return Encode(d + 1.);
-    }
-}
-
-QV4::ReturnedValue Runtime::method_decrement(const Value &value)
-{
-    TRACE1(value);
-
-    if (value.isInteger() && value.integerValue() > INT_MIN)
-        return Encode(value.integerValue() - 1);
-    else {
-        double d = value.toNumber();
-        return Encode(d - 1.);
-    }
-}
-
 ReturnedValue Runtime::method_toDouble(const Value &value)
 {
     TRACE1(value);
@@ -1455,19 +1431,6 @@ void Runtime::method_convertThisToObject(ExecutionEngine *engine)
     }
 }
 
-ReturnedValue Runtime::method_uPlus(const Value &value)
-{
-    TRACE1(value);
-
-    if (value.isNumber())
-        return value.asReturnedValue();
-    if (value.integerCompatible())
-        return Encode(value.int_32());
-
-    double n = value.toNumberImpl();
-    return Encode(n);
-}
-
 ReturnedValue Runtime::method_uMinus(const Value &value)
 {
     TRACE1(value);
@@ -1482,49 +1445,7 @@ ReturnedValue Runtime::method_uMinus(const Value &value)
     }
 }
 
-ReturnedValue Runtime::method_complement(const Value &value)
-{
-    TRACE1(value);
-
-    int n = value.toInt32();
-    return Encode((int)~n);
-}
-
-ReturnedValue Runtime::method_uNot(const Value &value)
-{
-    TRACE1(value);
-
-    bool b = value.toBoolean();
-    return Encode(!b);
-}
-
 // binary operators
-ReturnedValue Runtime::method_bitOr(const Value &left, const Value &right)
-{
-    TRACE2(left, right);
-
-    int lval = left.toInt32();
-    int rval = right.toInt32();
-    return Encode(lval | rval);
-}
-
-ReturnedValue Runtime::method_bitXor(const Value &left, const Value &right)
-{
-    TRACE2(left, right);
-
-    int lval = left.toInt32();
-    int rval = right.toInt32();
-    return Encode(lval ^ rval);
-}
-
-ReturnedValue Runtime::method_bitAnd(const Value &left, const Value &right)
-{
-    TRACE2(left, right);
-
-    int lval = left.toInt32();
-    int rval = right.toInt32();
-    return Encode(lval & rval);
-}
 
 #ifndef V4_BOOTSTRAP
 ReturnedValue Runtime::method_add(ExecutionEngine *engine, const Value &left, const Value &right)
