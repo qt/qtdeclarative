@@ -635,6 +635,17 @@ bool Codegen::visit(ArrayMemberExpression *ast)
     if (hasError)
         return false;
     base = base.storeOnStack();
+    if (AST::StringLiteral *str = AST::cast<AST::StringLiteral *>(ast->expression)) {
+        QString s = str->value.toString();
+        uint arrayIndex = QV4::String::toArrayIndex(s);
+        if (arrayIndex == UINT_MAX) {
+            _expr.setResult(Reference::fromMember(base, str->value.toString()));
+            return false;
+        }
+        Reference index = Reference::fromConst(this, QV4::Encode(arrayIndex));
+        _expr.setResult(Reference::fromSubscript(base, index));
+        return false;
+    }
     Reference index = expression(ast->expression);
     _expr.setResult(Reference::fromSubscript(base, index));
     return false;
