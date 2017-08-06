@@ -1404,7 +1404,6 @@ ReturnedValue Runtime::method_getQmlContextObjectProperty(ExecutionEngine *engin
 
 ReturnedValue Runtime::method_getQmlIdObject(ExecutionEngine *engine, const Value &c, uint index)
 {
-    Scope scope(engine);
     const QmlContext &qmlContext = static_cast<const QmlContext &>(c);
     QQmlContextData *context = *qmlContext.d()->qml()->context;
     if (!context || index >= (uint)context->idValueCount)
