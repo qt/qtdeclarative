@@ -884,7 +884,11 @@ QV4::ReturnedValue VME::exec(Function *function)
     MOTH_END_INSTR(JumpStrictNotEqual)
 
     MOTH_BEGIN_INSTR(UNot)
-        STORE_ACCUMULATOR(Runtime::method_uNot(accumulator));
+        if (accumulator.integerCompatible()) {
+            STORE_ACCUMULATOR(Encode(!static_cast<bool>(accumulator.int_32())))
+        } else {
+            STORE_ACCUMULATOR(Runtime::method_uNot(accumulator));
+        }
     MOTH_END_INSTR(UNot)
 
     MOTH_BEGIN_INSTR(UPlus)
@@ -898,7 +902,7 @@ QV4::ReturnedValue VME::exec(Function *function)
                 accumulator.int_32() != std::numeric_limits<int>::min())) {
             accumulator = sub_int32(0, accumulator.int_32());
         } else {
-            STORE_ACCUMULATOR(Runtime::method_uMinus(accumulator));
+            STORE_ACCUMULATOR(Encode(!accumulator.toBoolean()));
         }
     MOTH_END_INSTR(UMinus)
 
