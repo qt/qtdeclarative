@@ -952,6 +952,10 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
     }
     case QSOperator::Equal:
     case QSOperator::NotEqual:
+    case QSOperator::Gt:
+    case QSOperator::Ge:
+    case QSOperator::Lt:
+    case QSOperator::Le:
         if (_expr.accept(cx))
             return jumpBinop(oper, left, right);
         // else: fallthrough
@@ -976,6 +980,10 @@ static QSOperator::Op invert(QSOperator::Op oper)
     switch (oper) {
     case QSOperator::Equal: return QSOperator::NotEqual;
     case QSOperator::NotEqual: return QSOperator::Equal;
+    case QSOperator::Gt: return QSOperator::Le;
+    case QSOperator::Ge: return QSOperator::Lt;
+    case QSOperator::Lt: return QSOperator::Ge;
+    case QSOperator::Le: return QSOperator::Gt;
     default: Q_UNIMPLEMENTED(); return QSOperator::Invalid;
     }
 }
@@ -987,7 +995,6 @@ Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Refe
     const BytecodeGenerator::Label *jumpTarget = _expr.iftrue();
     if (_expr.trueBlockFollowsCondition()) {
         oper = invert(oper);
-        std::swap(left, right);
         jumpTarget = _expr.iffalse();
     }
 
@@ -1001,6 +1008,34 @@ Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Refe
     }
     case QSOperator::NotEqual: {
         Instruction::CmpJmpNe cjump;
+        cjump.lhs = left.stackSlot();
+        cjump.rhs = right.stackSlot();
+        bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+        break;
+    }
+    case QSOperator::Gt: {
+        Instruction::CmpJmpGt cjump;
+        cjump.lhs = left.stackSlot();
+        cjump.rhs = right.stackSlot();
+        bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+        break;
+    }
+    case QSOperator::Ge: {
+        Instruction::CmpJmpGe cjump;
+        cjump.lhs = left.stackSlot();
+        cjump.rhs = right.stackSlot();
+        bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+        break;
+    }
+    case QSOperator::Lt: {
+        Instruction::CmpJmpLt cjump;
+        cjump.lhs = left.stackSlot();
+        cjump.rhs = right.stackSlot();
+        bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+        break;
+    }
+    case QSOperator::Le: {
+        Instruction::CmpJmpLe cjump;
         cjump.lhs = left.stackSlot();
         cjump.rhs = right.stackSlot();
         bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);

@@ -138,6 +138,10 @@ QT_BEGIN_NAMESPACE
     F(JumpNe, jumpNe) \
     F(CmpJmpEq, cmpJmpEq) \
     F(CmpJmpNe, cmpJmpNe) \
+    F(CmpJmpGt, cmpJmpGt) \
+    F(CmpJmpGe, cmpJmpGe) \
+    F(CmpJmpLt, cmpJmpLt) \
+    F(CmpJmpLe, cmpJmpLe) \
     F(JumpStrictEqual, jumpStrictEqual) \
     F(JumpStrictNotEqual, jumpStrictNotEqual) \
     F(UNot, unot) \
@@ -564,6 +568,30 @@ union Instr
         StackSlot rhs;
         ptrdiff_t offset;
     };
+    struct instr_cmpJmpGt {
+        MOTH_INSTR_HEADER
+        StackSlot lhs;
+        StackSlot rhs;
+        ptrdiff_t offset;
+    };
+    struct instr_cmpJmpGe {
+        MOTH_INSTR_HEADER
+        StackSlot lhs;
+        StackSlot rhs;
+        ptrdiff_t offset;
+    };
+    struct instr_cmpJmpLt {
+        MOTH_INSTR_HEADER
+        StackSlot lhs;
+        StackSlot rhs;
+        ptrdiff_t offset;
+    };
+    struct instr_cmpJmpLe {
+        MOTH_INSTR_HEADER
+        StackSlot lhs;
+        StackSlot rhs;
+        ptrdiff_t offset;
+    };
     struct instr_jumpStrictEqual {
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
@@ -741,6 +769,10 @@ union Instr
     instr_jumpNe jumpNe;
     instr_cmpJmpEq cmpJmpEq;
     instr_cmpJmpNe cmpJmpNe;
+    instr_cmpJmpGt cmpJmpGt;
+    instr_cmpJmpGe cmpJmpGe;
+    instr_cmpJmpLt cmpJmpLt;
+    instr_cmpJmpLe cmpJmpLe;
     instr_jumpStrictEqual jumpStrictEqual;
     instr_jumpStrictNotEqual jumpStrictNotEqual;
     instr_unot unot;

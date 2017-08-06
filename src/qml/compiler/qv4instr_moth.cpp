@@ -380,6 +380,22 @@ void dumpBytecode(const char *code, int len, int nFormals)
                 d << instr.lhs.dump(nFormals) << ", " << instr.rhs.dump(nFormals) << ", " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(CmpJmpNe)
 
+        MOTH_BEGIN_INSTR(CmpJmpGt)
+                d << instr.lhs.dump(nFormals) << ", " << instr.rhs.dump(nFormals) << ", " << absoluteInstructionOffset(start, instr);
+        MOTH_END_INSTR(CmpJmpGt)
+
+        MOTH_BEGIN_INSTR(CmpJmpGe)
+                d << instr.lhs.dump(nFormals) << ", " << instr.rhs.dump(nFormals) << ", " << absoluteInstructionOffset(start, instr);
+        MOTH_END_INSTR(CmpJmpGe)
+
+        MOTH_BEGIN_INSTR(CmpJmpLt)
+                d << instr.lhs.dump(nFormals) << ", " << instr.rhs.dump(nFormals) << ", " << absoluteInstructionOffset(start, instr);
+        MOTH_END_INSTR(CmpJmpLt)
+
+        MOTH_BEGIN_INSTR(CmpJmpLe)
+                d << instr.lhs.dump(nFormals) << ", " << instr.rhs.dump(nFormals) << ", " << absoluteInstructionOffset(start, instr);
+        MOTH_END_INSTR(CmpJmpLe)
+
         MOTH_BEGIN_INSTR(JumpStrictEqual)
             d << instr.lhs.dump(nFormals) << "  " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(JumpStrictEqual)
