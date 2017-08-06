@@ -344,7 +344,7 @@ void ExecutionContext::setProperty(String *name, const Value &value)
         }
     }
 
-    if (d()->strictMode || name->equals(engine()->id_this())) {
+    if (d()->strictMode) {
         ScopedValue n(scope, name->asReturnedValue());
         engine()->throwReferenceError(n);
         return;
@@ -357,9 +357,6 @@ ReturnedValue ExecutionContext::getProperty(String *name)
     Scope scope(this);
     ScopedValue v(scope);
     name->makeIdentifier();
-
-    if (name->equals(engine()->id_this()))
-        return thisObject().asReturnedValue();
 
     ScopedContext ctx(scope, this);
     for (; ctx; ctx = ctx->d()->outer) {
@@ -413,9 +410,6 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
     ScopedValue v(scope);
     base->setM(0);
     name->makeIdentifier();
-
-    if (name->equals(engine()->id_this()))
-        return thisObject().asReturnedValue();
 
     ScopedContext ctx(scope, this);
     for (; ctx; ctx = ctx->d()->outer) {
