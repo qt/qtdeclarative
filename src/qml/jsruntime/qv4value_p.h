@@ -594,9 +594,9 @@ struct Q_QML_PRIVATE_EXPORT Primitive : public Value
     using Value::toInt32;
     using Value::toUInt32;
 
-    static double toInteger(double fromNumber);
-    static int toInt32(double value);
-    static unsigned int toUInt32(double value);
+    static double toInteger(double d);
+    static int toInt32(double d);
+    static unsigned int toUInt32(double d);
 };
 
 inline Primitive Primitive::undefinedValue()
@@ -659,6 +659,72 @@ inline Primitive Primitive::fromUInt32(uint i)
     return v;
 }
 
+struct Double {
+    quint64 d;
+
+    Double(double dbl) {
+        memcpy(&d, &dbl, sizeof(double));
+    }
+
+    int sign() const {
+        return (d >> 63) ? -1 : 1;
+    }
+
+    bool isDenormal() const {
+        return static_cast<int>((d << 1) >> 53) == 0;
+    }
+
+    int exponent() const {
+        return static_cast<int>((d << 1) >> 53) - 1023;
+    }
+
+    quint64 significant() const {
+        quint64 m = (d << 12) >> 12;
+        if (!isDenormal())
+            m |= (static_cast<quint64>(1) << 52);
+        return m;
+    }
+
+    static int toInt32(double d) {
+        int i = static_cast<int>(d);
+        if (i == d)
+                return i;
+        return Double(d).toInt32();
+    }
+
+    int toInt32() {
+        int e = exponent() - 52;
+        if (e < 0) {
+            if (e <= -53)
+                return 0;
+            return sign() * static_cast<int>(significant() >> -e);
+        } else {
+            if (e > 31)
+                return 0;
+            return sign() * (static_cast<int>(significant()) << e);
+        }
+    }
+};
+
+inline double Primitive::toInteger(double d)
+{
+    if (std::isnan(d))
+        return +0;
+    else if (!d || std::isinf(d))
+        return d;
+    return d >= 0 ? std::floor(d) : std::ceil(d);
+}
+
+inline int Primitive::toInt32(double value)
+{
+    return Double::toInt32(value);
+}
+
+inline unsigned int Primitive::toUInt32(double d)
+{
+    return static_cast<uint>(toInt32(d));
+}
+
 struct Encode {
     static ReturnedValue undefined() {
         return Primitive::undefinedValue().rawValue();
@@ -716,23 +782,27 @@ ReturnedValue value_convert(ExecutionEngine *e, const Value &v);
 
 inline int Value::toInt32() const
 {
-    if (isInteger())
+    if (integerCompatible())
         return int_32();
-    double d = isNumber() ? doubleValue() : toNumberImpl();
 
-    const double D32 = 4294967296.0;
-    const double D31 = D32 / 2.0;
+    double d = isDouble() ? doubleValue() : toNumberImpl();
 
-    if ((d >= -D31 && d < D31))
-        return static_cast<int>(d);
-
-    return Primitive::toInt32(d);
+    return Double::toInt32(d);
 }
 
 inline unsigned int Value::toUInt32() const
 {
-    return (unsigned int)toInt32();
+    return static_cast<unsigned int>(toInt32());
 }
+
+inline double Value::toInteger() const
+{
+    if (integerCompatible())
+        return int_32();
+
+    return Primitive::toInteger(isDouble() ? doubleValue() : toNumberImpl());
+}
+
 
 }
 

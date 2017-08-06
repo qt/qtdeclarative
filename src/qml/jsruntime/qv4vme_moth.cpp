@@ -1014,46 +1014,23 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(Shl)
 
     MOTH_BEGIN_INSTR(BitAndConst)
-        if (Q_LIKELY(accumulator.isInteger())) {
-            accumulator.setInt_32(accumulator.int_32() & instr.rhs);
-        } else {
-            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() & instr.rhs));
-        }
+        STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() & instr.rhs));
     MOTH_END_INSTR(BitAndConst)
 
     MOTH_BEGIN_INSTR(BitOrConst)
-        if (Q_LIKELY(accumulator.isInteger())) {
-            accumulator.setInt_32(accumulator.int_32() | instr.rhs);
-        } else if (accumulator.isDouble()) {
-            int i = (int)(qint64)accumulator.doubleValue();
-            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(i | instr.rhs));
-        } else {
-            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() | instr.rhs));
-        }
+        STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() | instr.rhs));
     MOTH_END_INSTR(BitOrConst)
 
     MOTH_BEGIN_INSTR(BitXorConst)
-        if (Q_LIKELY(accumulator.isInteger())) {
-            accumulator.setInt_32(accumulator.int_32() ^ instr.rhs);
-        } else {
-            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() ^ instr.rhs));
-        }
+        STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() ^ instr.rhs));
     MOTH_END_INSTR(BitXorConst)
 
     MOTH_BEGIN_INSTR(ShrConst)
-        if (Q_LIKELY(accumulator.isInteger())) {
-            accumulator.setInt_32(accumulator.int_32() >> instr.rhs);
-        } else {
-            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() >> instr.rhs));
-        }
+        STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() >> instr.rhs));
     MOTH_END_INSTR(ShrConst)
 
     MOTH_BEGIN_INSTR(ShlConst)
-        if (Q_LIKELY(accumulator.isInteger())) {
-            accumulator.setInt_32(accumulator.int_32() << instr.rhs);
-        } else {
-            STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() << instr.rhs));
-        }
+        STORE_ACCUMULATOR(QV4::Primitive::fromInt32(accumulator.toInt32() << instr.rhs));
     MOTH_END_INSTR(ShlConst)
 
     MOTH_BEGIN_INSTR(BinopContext)
