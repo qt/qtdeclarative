@@ -559,37 +559,31 @@ union Instr
     struct instr_cmpJmpEq {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        StackSlot rhs;
         ptrdiff_t offset;
     };
     struct instr_cmpJmpNe {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        StackSlot rhs;
         ptrdiff_t offset;
     };
     struct instr_cmpJmpGt {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        StackSlot rhs;
         ptrdiff_t offset;
     };
     struct instr_cmpJmpGe {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        StackSlot rhs;
         ptrdiff_t offset;
     };
     struct instr_cmpJmpLt {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        StackSlot rhs;
         ptrdiff_t offset;
     };
     struct instr_cmpJmpLe {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        StackSlot rhs;
         ptrdiff_t offset;
     };
     struct instr_jumpStrictEqual {

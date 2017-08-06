@@ -791,86 +791,80 @@ QV4::ReturnedValue VME::exec(Function *function)
 
     MOTH_BEGIN_INSTR(CmpJmpEq)
         const Value lhs = STACK_VALUE(instr.lhs);
-        const Value rhs = STACK_VALUE(instr.rhs);
-        if (Q_LIKELY(lhs.asReturnedValue() == rhs.asReturnedValue())) {
+        if (Q_LIKELY(lhs.asReturnedValue() == accumulator.asReturnedValue())) {
             code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
-        } else if (Q_LIKELY(lhs.isInteger() && rhs.isInteger())) {
-            if (lhs.int_32() == rhs.int_32())
+        } else if (Q_LIKELY(lhs.isInteger() && accumulator.isInteger())) {
+            if (lhs.int_32() == accumulator.int_32())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         } else {
-            if (Runtime::method_compareEqual(lhs, rhs))
+            if (Runtime::method_compareEqual(lhs, accumulator))
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         }
     MOTH_END_INSTR(CmpJmpEq)
 
     MOTH_BEGIN_INSTR(CmpJmpNe)
         const Value lhs = STACK_VALUE(instr.lhs);
-        const Value rhs = STACK_VALUE(instr.rhs);
-        if (Q_LIKELY(lhs.isInteger() && rhs.isInteger())) {
-            if (lhs.int_32() != rhs.int_32())
+        if (Q_LIKELY(lhs.isInteger() && accumulator.isInteger())) {
+            if (lhs.int_32() != accumulator.int_32())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         } else {
-            if (Runtime::method_compareNotEqual(lhs, rhs))
+            if (Runtime::method_compareNotEqual(lhs, accumulator))
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         }
     MOTH_END_INSTR(CmpJmpNe)
 
     MOTH_BEGIN_INSTR(CmpJmpGt)
         const Value lhs = STACK_VALUE(instr.lhs);
-        const Value rhs = STACK_VALUE(instr.rhs);
-        if (Q_LIKELY(lhs.isInteger() && rhs.isInteger())) {
-            if (lhs.int_32() > rhs.int_32())
+        if (Q_LIKELY(lhs.isInteger() && accumulator.isInteger())) {
+            if (lhs.int_32() > accumulator.int_32())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
-        } if (lhs.isNumber() && rhs.isNumber()) {
-            if (lhs.asDouble() > rhs.asDouble())
+        } if (lhs.isNumber() && accumulator.isNumber()) {
+            if (lhs.asDouble() > accumulator.asDouble())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         } else {
-            if (Runtime::method_compareGreaterThan(lhs, rhs))
+            if (Runtime::method_compareGreaterThan(lhs, accumulator))
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         }
     MOTH_END_INSTR(CmpJmpGt)
 
     MOTH_BEGIN_INSTR(CmpJmpGe)
         const Value lhs = STACK_VALUE(instr.lhs);
-        const Value rhs = STACK_VALUE(instr.rhs);
-        if (Q_LIKELY(lhs.isInteger() && rhs.isInteger())) {
-            if (lhs.int_32() >= rhs.int_32())
+        if (Q_LIKELY(lhs.isInteger() && accumulator.isInteger())) {
+            if (lhs.int_32() >= accumulator.int_32())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
-        } if (lhs.isNumber() && rhs.isNumber()) {
-            if (lhs.asDouble() >= rhs.asDouble())
+        } if (lhs.isNumber() && accumulator.isNumber()) {
+            if (lhs.asDouble() >= accumulator.asDouble())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         } else {
-            if (Runtime::method_compareGreaterEqual(lhs, rhs))
+            if (Runtime::method_compareGreaterEqual(lhs, accumulator))
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         }
     MOTH_END_INSTR(CmpJmpGe)
 
     MOTH_BEGIN_INSTR(CmpJmpLt)
         const Value lhs = STACK_VALUE(instr.lhs);
-        const Value rhs = STACK_VALUE(instr.rhs);
-        if (Q_LIKELY(lhs.isInteger() && rhs.isInteger())) {
-            if (lhs.int_32() < rhs.int_32())
+        if (Q_LIKELY(lhs.isInteger() && accumulator.isInteger())) {
+            if (lhs.int_32() < accumulator.int_32())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
-        } if (lhs.isNumber() && rhs.isNumber()) {
-            if (lhs.asDouble() < rhs.asDouble())
+        } if (lhs.isNumber() && accumulator.isNumber()) {
+            if (lhs.asDouble() < accumulator.asDouble())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         } else {
-            if (Runtime::method_compareLessThan(lhs, rhs))
+            if (Runtime::method_compareLessThan(lhs, accumulator))
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         }
     MOTH_END_INSTR(CmpJmpLt)
 
     MOTH_BEGIN_INSTR(CmpJmpLe)
         const Value lhs = STACK_VALUE(instr.lhs);
-        const Value rhs = STACK_VALUE(instr.rhs);
-        if (Q_LIKELY(lhs.isInteger() && rhs.isInteger())) {
-            if (lhs.int_32() <= rhs.int_32())
+        if (Q_LIKELY(lhs.isInteger() && accumulator.isInteger())) {
+            if (lhs.int_32() <= accumulator.int_32())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
-        } if (lhs.isNumber() && rhs.isNumber()) {
-            if (lhs.asDouble() <= rhs.asDouble())
+        } if (lhs.isNumber() && accumulator.isNumber()) {
+            if (lhs.asDouble() <= accumulator.asDouble())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         } else {
-            if (Runtime::method_compareLessEqual(lhs, rhs))
+            if (Runtime::method_compareLessEqual(lhs, accumulator))
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         }
     MOTH_END_INSTR(CmpJmpLe)
