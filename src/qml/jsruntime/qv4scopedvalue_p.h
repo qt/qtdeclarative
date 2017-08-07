@@ -109,7 +109,7 @@ struct Scope {
     ~Scope() {
 #ifndef QT_NO_DEBUG
         Q_ASSERT(engine->jsStackTop >= mark);
-        Q_ASSERT(engine->currentContext < mark);
+//        Q_ASSERT(engine->currentContext < mark);
         memset(mark, 0, (engine->jsStackTop - mark)*sizeof(Value));
 #endif
 #ifdef V4_USE_VALGRIND

@@ -929,11 +929,10 @@ ReturnedValue ArrayPrototype::method_filter(const BuiltinFunction *b, CallData *
     a->arrayReserve(len);
 
     ScopedValue selected(scope);
+    ScopedValue v(scope);
     ScopedCallData cData(scope, 3);
     cData->thisObject = callData->argument(1);
     cData->args[2] = instance;
-
-    ScopedValue v(scope);
 
     uint to = 0;
     for (uint k = 0; k < len; ++k) {

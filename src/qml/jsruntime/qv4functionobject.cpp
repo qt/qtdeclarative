@@ -359,28 +359,28 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
         return Encode::undefined();
     CHECK_STACK_LIMITS(v4);
 
-    Scope scope(v4);
-    Scoped<ScriptFunction> f(scope, static_cast<const ScriptFunction *>(that));
+    const ScriptFunction *f = static_cast<const ScriptFunction *>(that);
 
     InternalClass *ic = f->classForConstructor();
-    ScopedObject proto(scope, ic->prototype);
-    callData->thisObject = v4->newObject(ic, proto);
+    Scope scope(v4);
+    callData->thisObject = v4->memoryManager->allocObject<Object>(ic);
 
     QV4::Function *v4Function = f->function();
     Q_ASSERT(v4Function);
 
-    ScopedContext c(scope, f->scope());
-    ScopedValue result(scope);
+    Value s = Value::fromHeapObject(f->scope());
+    ExecutionContext *outer = static_cast<ExecutionContext *>(&s);
+    ReturnedValue result;
     if (v4Function->canUseSimpleCall)
-        result = c->simpleCall(scope.engine, callData, v4Function);
+        result = outer->simpleCall(scope.engine, callData, v4Function);
     else
-        result = c->call(scope.engine, callData, v4Function, f);
+        result = outer->call(scope.engine, callData, v4Function, f);
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
-    else if (!result->isObject())
+    else if (!Value::fromReturnedValue(result).isObject())
         return callData->thisObject.asReturnedValue();
-    return result->asReturnedValue();
+    return result;
 }
 
 ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)

@@ -1263,6 +1263,29 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
     int scope = 0;
     Context *c = _context;
 
+    // skip the innermost context if it's simple (as the runtime won't
+    // create a context for it
+    if (c->canUseSimpleCall()) {
+        Context::Member m = c->findMember(name);
+        if (m.type != Context::UndefinedMember) {
+            Q_ASSERT((!m.canEscape));
+            Reference r = Reference::fromStackSlot(this, m.index, true /*isLocal*/);
+            if (name == QLatin1String("arguments") || name == QLatin1String("eval")) {
+                r.isArgOrEval = true;
+                if (isLhs && c->isStrict)
+                    // ### add correct source location
+                    throwSyntaxError(SourceLocation(), QStringLiteral("Variable name may not be eval or arguments in strict mode"));
+            }
+            return r;
+        }
+        const int argIdx = c->findArgument(name);
+        if (argIdx != -1) {
+            Q_ASSERT(!c->argumentsCanEscape && c->usesArgumentsObject != Context::ArgumentsObjectUsed);
+            return Reference::fromArgument(this, argIdx);
+        }
+        c = c->parent;
+    }
+
     while (c->parent) {
         if (c->forceLookupByName() || (c->isNamedFunctionExpression && c->name == name))
             goto loadByName;
@@ -1771,8 +1794,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
 
-    // allocate the js stack frame (Context & js Function)
-    bytecodeGenerator->newRegisterArray(2);
+    // allocate the js stack frame (Context & js Function & accumulator)
+    bytecodeGenerator->newRegisterArray(sizeof(EngineBase::JSStackFrame)/sizeof(Value));
 
     int returnAddress = bytecodeGenerator->newRegister();
 

@@ -1908,10 +1908,10 @@ ReturnedValue GlobalExtensions::method_qsTr(const BuiltinFunction *b, CallData *
         int length = lastDot - (lastSlash + 1);
         context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
     } else {
-        ExecutionContext *parentCtx = scope.engine->currentContext;
+        ExecutionEngine::StackFrame *frame = scope.engine->currentStackFrame;
         // The first non-empty source URL in the call stack determines the translation context.
-        while (!!parentCtx && context.isEmpty()) {
-            if (CompiledData::CompilationUnit *unit = parentCtx->d()->v4Function->compilationUnit) {
+        while (frame && context.isEmpty()) {
+            if (CompiledData::CompilationUnit *unit = frame->v4Function->compilationUnit) {
                 QString fileName = unit->fileName();
                 QUrl url(unit->fileName());
                 if (url.isValid() && url.isRelative()) {
@@ -1923,7 +1923,7 @@ ReturnedValue GlobalExtensions::method_qsTr(const BuiltinFunction *b, CallData *
                 }
                 context = QFileInfo(context).baseName();
             }
-            parentCtx = scope.engine->parentContext(parentCtx);
+            frame = frame->parent;
         }
     }
 

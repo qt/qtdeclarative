@@ -508,7 +508,7 @@ bool Object::setLookup(Managed *m, Lookup *l, const Value &value)
 {
     Scope scope(static_cast<Object *>(m)->engine());
     ScopedObject o(scope, static_cast<Object *>(m));
-    ScopedString name(scope, scope.engine->current->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
+    ScopedString name(scope, scope.engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
 
     InternalClass *c = o->internalClass();
     uint idx = c->find(name);
@@ -1219,7 +1219,7 @@ void Heap::ArrayObject::init(const QStringList &list)
 ReturnedValue ArrayObject::getLookup(const Managed *m, Lookup *l)
 {
     Scope scope(static_cast<const Object *>(m)->engine());
-    ScopedString name(scope, scope.engine->current->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
+    ScopedString name(scope, scope.engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
     if (name->equals(scope.engine->id_length())) {
         // special case, as the property is on the object itself
         l->getter = Lookup::arrayLengthGetter;

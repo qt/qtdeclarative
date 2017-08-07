@@ -875,14 +875,13 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
         return src;
 
     QUrl base;
-    ExecutionContext *c = currentContext;
-    while (c) {
-        CallContext *callCtx = c->asCallContext();
-        if (callCtx && callCtx->d()->v4Function) {
-            base.setUrl(callCtx->d()->v4Function->sourceFile());
+    StackFrame *f = currentStackFrame;
+    while (f) {
+        if (f->v4Function) {
+            base.setUrl(f->v4Function->sourceFile());
             break;
         }
-        c = parentContext(c);
+        f = f->parent;
     }
 
     if (base.isEmpty() && globalCode)

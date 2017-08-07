@@ -455,16 +455,20 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
     const uchar *exceptionHandler = 0;
 
     QV4::Scope scope(engine);
-    int nFormals = function->nFormals;
-    stack = scope.alloc(function->compiledFunction->nRegisters + nFormals + 2 + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
-    QV4::Value &accumulator = *stack;
-    ++stack;
-    memcpy(stack, &engine->current->callData->thisObject, (nFormals + 1)*sizeof(Value));
-    stack += nFormals + 1;
+    if (!function->canUseSimpleFunction()) {
+        int nFormals = function->nFormals;
+        stack = scope.alloc(nFormals + 1 + function->compiledFunction->nRegisters + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
+        memcpy(stack, &engine->current->callData->thisObject, (nFormals + 1)*sizeof(Value));
+        stack += nFormals + 1;
+    } else {
+        stack = scope.alloc(function->compiledFunction->nRegisters + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
+    }
     frame.jsFrame = reinterpret_cast<EngineBase::JSStackFrame *>(stack);
     frame.jsFrame->context = engine->current;
     if (jsFunction)
         frame.jsFrame->jsFunction = *jsFunction;
+
+    QV4::Value &accumulator = frame.jsFrame->accumulator;
 
     if (QV4::Debugging::Debugger *debugger = engine->debugger())
         debugger->enteringFunction();

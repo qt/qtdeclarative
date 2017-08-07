@@ -65,8 +65,9 @@ namespace QV4 {
 struct EngineBase {
     struct JSStackFrame {
         // callData is directly before this
-        QV4::Value jsFunction;
-        QV4::Value context;
+        Value jsFunction;
+        Value context;
+        Value accumulator; // ###
         // registers follow
     };
 

@@ -100,7 +100,8 @@ struct Q_QML_EXPORT Function {
 
 inline unsigned int Heap::CallContext::formalParameterCount() const
 {
-    return v4Function ? v4Function->nFormals : 0;
+    Q_ASSERT(v4Function);
+    return v4Function->nFormals;
 }
 
 

@@ -253,24 +253,24 @@ ReturnedValue QV4::ExecutionContext::simpleCall(ExecutionEngine *engine, CallDat
 {
     Q_ASSERT(function->canUseSimpleFunction());
 
-    ExecutionContextSaver ctxSaver(engine);
-
-    CallContext::Data *ctx = engine->memoryManager->allocSimpleCallContext();
-
-    ctx->callData = callData;
-    ctx->v4Function = function;
-    ctx->outer.set(engine, this->d());
+    Value *jsStackTop = engine->jsStackTop;
+    engine->jsStackTop = reinterpret_cast<QV4::Value *>(callData) + 2 + (int)function->nFormals;
     for (int i = callData->argc; i < (int)function->nFormals; ++i)
         callData->args[i] = Encode::undefined();
 
-    engine->pushContext(ctx);
-    Q_ASSERT(engine->current == ctx);
+    ExecutionContext *old = engine->currentContext;
+    engine->currentContext = this;
+    engine->current = d();
 
     ReturnedValue res = Q_V4_PROFILE(engine, function, 0);
 
     if (function->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(engine, function->compiledFunction);
-    engine->memoryManager->freeSimpleCallContext();
+
+    engine->currentContext = old;
+    engine->current = old->d();
+
+    engine->jsStackTop = jsStackTop;
 
     return res;
 }

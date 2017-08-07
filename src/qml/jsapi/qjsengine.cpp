@@ -446,7 +446,11 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     QV4::ScopedValue result(scope);
 
     QV4::Script script(ctx, program, fileName, lineNumber);
-    script.strictMode = ctx->d()->v4Function ? ctx->d()->v4Function->isStrict() : false;
+    script.strictMode = false;
+    if (v4->currentStackFrame)
+        script.strictMode = v4->currentStackFrame->v4Function->isStrict();
+    else if (v4->globalCode)
+        script.strictMode = v4->globalCode->isStrict();
     script.inheritContext = true;
     script.parse();
     if (!scope.engine->hasException)
