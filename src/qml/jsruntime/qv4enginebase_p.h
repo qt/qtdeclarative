@@ -63,9 +63,17 @@ namespace QV4 {
 #pragma pack(push, 1)
 #endif
 struct EngineBase {
+    struct JSStackFrame {
+        // callData is directly before this
+        QV4::Value jsFunction;
+        QV4::Value context;
+        // registers follow
+    };
+
     struct StackFrame {
         StackFrame *parent;
         Function *v4Function;
+        JSStackFrame *jsFrame;
         int line = -1;
         int column = -1;
 

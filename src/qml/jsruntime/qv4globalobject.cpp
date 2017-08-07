@@ -386,7 +386,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     ctx->d()->strictMode = false;
     ctx->d()->v4Function = function;
 
-    return Q_V4_PROFILE(ctx->engine(), function);
+    return Q_V4_PROFILE(ctx->engine(), function, 0);
 }
 
 

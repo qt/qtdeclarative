@@ -49,8 +49,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
-                   ReturnedValue (*codePtr)(Function *))
+Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function, Code codePtr)
         : compiledFunction(function)
         , compilationUnit(unit)
         , code(codePtr)

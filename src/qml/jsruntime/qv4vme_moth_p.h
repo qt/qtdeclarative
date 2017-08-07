@@ -65,7 +65,7 @@ namespace Moth {
 class VME
 {
 public:
-    static QV4::ReturnedValue exec(QV4::Function *);
+    static QV4::ReturnedValue exec(QV4::Function *, const FunctionObject *jsFunction = 0);
 };
 
 } // namespace Moth

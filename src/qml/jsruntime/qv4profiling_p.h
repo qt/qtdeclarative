@@ -61,7 +61,7 @@
 
 #define Q_V4_PROFILE_ALLOC(engine, size, type) (!engine)
 #define Q_V4_PROFILE_DEALLOC(engine, size, type) (!engine)
-#define Q_V4_PROFILE(engine, function) (function->code(function))
+#define Q_V4_PROFILE(engine, function, jsFunction) (function->code(function, jsFunction))
 
 QT_BEGIN_NAMESPACE
 
@@ -85,11 +85,11 @@ QT_END_NAMESPACE
             (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
         engine->profiler()->trackDealloc(size, type) : false)
 
-#define Q_V4_PROFILE(engine, function)\
+#define Q_V4_PROFILE(engine, function, jsFunction)\
     (Q_UNLIKELY(engine->profiler()) &&\
             (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
-        Profiling::FunctionCallProfiler::profileCall(engine->profiler(), function) :\
-        function->code(function))
+        Profiling::FunctionCallProfiler::profileCall(engine->profiler(), function, jsFunction) :\
+        function->code(function, jsFunction))
 
 QT_BEGIN_NAMESPACE
 
@@ -279,10 +279,10 @@ public:
         profiler->m_data.append(FunctionCall(function, startTime, profiler->m_timer.nsecsElapsed()));
     }
 
-    static ReturnedValue profileCall(Profiler *profiler, Function *function)
+    static ReturnedValue profileCall(Profiler *profiler, Function *function, const FunctionObject *jsFunction)
     {
         FunctionCallProfiler callProfiler(profiler, function);
-        return function->code(function);
+        return function->code(function, jsFunction);
     }
 
     Profiler *profiler;

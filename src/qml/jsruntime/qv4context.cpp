@@ -244,7 +244,7 @@ ReturnedValue ExecutionContext::call(ExecutionEngine *engine, CallData *callData
         ctx->d()->function.set(engine, f->d());
     engine->pushContext(ctx);
 
-    ReturnedValue res = Q_V4_PROFILE(engine, function);
+    ReturnedValue res = Q_V4_PROFILE(engine, function, f);
 
     if (function->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(engine, function->compiledFunction);
@@ -271,7 +271,7 @@ ReturnedValue QV4::ExecutionContext::simpleCall(ExecutionEngine *engine, CallDat
     engine->pushContext(ctx);
     Q_ASSERT(engine->current == ctx);
 
-    ReturnedValue res = Q_V4_PROFILE(engine, function);
+    ReturnedValue res = Q_V4_PROFILE(engine, function, 0);
 
     if (function->hasQmlDependencies)
         QQmlPropertyCapture::registerQmlDependencies(engine, function->compiledFunction);

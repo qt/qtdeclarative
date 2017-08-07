@@ -153,7 +153,7 @@ ReturnedValue Script::run()
         scope->d()->strictMode = vmFunction->isStrict();
         scope->d()->v4Function = vmFunction;
 
-        return Q_V4_PROFILE(engine, vmFunction);
+        return Q_V4_PROFILE(engine, vmFunction, 0);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
         ScopedCallData callData(valueScope);

@@ -432,7 +432,7 @@ static inline const QV4::Value &constant(Function *function, int index)
     return function->compilationUnit->constants[index];
 }
 
-QV4::ReturnedValue VME::exec(Function *function)
+QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunction)
 {
     qt_v4ResolvePendingBreakpointsHook();
 
@@ -456,11 +456,15 @@ QV4::ReturnedValue VME::exec(Function *function)
 
     QV4::Scope scope(engine);
     int nFormals = function->nFormals;
-    stack = scope.alloc(function->compiledFunction->nRegisters + nFormals + 2);
+    stack = scope.alloc(function->compiledFunction->nRegisters + nFormals + 2 + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
     QV4::Value &accumulator = *stack;
     ++stack;
     memcpy(stack, &engine->current->callData->thisObject, (nFormals + 1)*sizeof(Value));
     stack += nFormals + 1;
+    frame.jsFrame = reinterpret_cast<EngineBase::JSStackFrame *>(stack);
+    frame.jsFrame->context = engine->current;
+    if (jsFunction)
+        frame.jsFrame->jsFunction = *jsFunction;
 
     if (QV4::Debugging::Debugger *debugger = engine->debugger())
         debugger->enteringFunction();

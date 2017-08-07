@@ -1771,6 +1771,9 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
 
+    // allocate the js stack frame (Context & js Function)
+    bytecodeGenerator->newRegisterArray(2);
+
     int returnAddress = bytecodeGenerator->newRegister();
 
     if (!_context->parent || _context->usesArgumentsObject == Context::ArgumentsObjectUnknown)
