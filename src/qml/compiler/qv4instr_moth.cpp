@@ -185,17 +185,9 @@ void dumpBytecode(const char *code, int len, int nFormals)
             d << instr.base.dump(nFormals) << "[acc]";
         MOTH_END_INSTR(LoadElement)
 
-        MOTH_BEGIN_INSTR(LoadElementLookup)
-            d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]";
-        MOTH_END_INSTR(LoadElementLookup)
-
         MOTH_BEGIN_INSTR(StoreElement)
             d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]";
         MOTH_END_INSTR(StoreElement)
-
-        MOTH_BEGIN_INSTR(StoreElementLookup)
-            d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]";
-        MOTH_END_INSTR(StoreElementLookup)
 
         MOTH_BEGIN_INSTR(LoadProperty)
             d << instr.base.dump(nFormals) << "[" << instr.name << "]";

@@ -551,21 +551,10 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
         STORE_ACCUMULATOR(Runtime::method_getElement(engine, STACK_VALUE(instr.base), accumulator));
     MOTH_END_INSTR(LoadElementA)
 
-    MOTH_BEGIN_INSTR(LoadElementLookup)
-        QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.lookup;
-        STORE_ACCUMULATOR(l->indexedGetter(l, engine, STACK_VALUE(instr.base), STACK_VALUE(instr.index)));
-    MOTH_END_INSTR(LoadElementLookup)
-
     MOTH_BEGIN_INSTR(StoreElement)
         Runtime::method_setElement(engine, STACK_VALUE(instr.base), STACK_VALUE(instr.index), accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreElement)
-
-    MOTH_BEGIN_INSTR(StoreElementLookup)
-        QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.lookup;
-        l->indexedSetter(l, engine, STACK_VALUE(instr.base), STACK_VALUE(instr.index), accumulator);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(StoreElementLookup)
 
     MOTH_BEGIN_INSTR(LoadProperty)
         STORE_ACCUMULATOR(Runtime::method_getProperty(engine, STACK_VALUE(instr.base), instr.name));

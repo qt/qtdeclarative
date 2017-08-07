@@ -107,24 +107,6 @@ QV4::Compiler::JSUnitGenerator::JSUnitGenerator(QV4::Compiler::Module *module)
     registerString(QString());
 }
 
-int QV4::Compiler::JSUnitGenerator::registerIndexedGetterLookup()
-{
-    CompiledData::Lookup l;
-    l.type_and_flags = CompiledData::Lookup::Type_IndexedGetter;
-    l.nameIndex = 0;
-    lookups << l;
-    return lookups.size() - 1;
-}
-
-int QV4::Compiler::JSUnitGenerator::registerIndexedSetterLookup()
-{
-    CompiledData::Lookup l;
-    l.type_and_flags = CompiledData::Lookup::Type_IndexedSetter;
-    l.nameIndex = 0;
-    lookups << l;
-    return lookups.size() - 1;
-}
-
 int QV4::Compiler::JSUnitGenerator::registerGetterLookup(const QString &name)
 {
     return registerGetterLookup(registerString(name));

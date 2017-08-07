@@ -111,8 +111,6 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     int registerSetterLookup(int nameIndex);
     int registerGlobalGetterLookup(const QString &name);
     int registerGlobalGetterLookup(int nameIndex);
-    int registerIndexedGetterLookup();
-    int registerIndexedSetterLookup();
 
     int registerRegExp(QQmlJS::AST::RegExpLiteral *regexp);
 

@@ -158,9 +158,7 @@ struct Lookup
     enum Type : unsigned int {
         Type_Getter = 0x0,
         Type_Setter = 0x1,
-        Type_GlobalGetter = 2,
-        Type_IndexedGetter = 3,
-        Type_IndexedSetter = 4
+        Type_GlobalGetter = 2
     };
 
     union {

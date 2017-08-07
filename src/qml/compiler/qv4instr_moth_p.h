@@ -88,9 +88,7 @@ QT_BEGIN_NAMESPACE
     F(StoreName, storeName) \
     F(LoadElement, loadElement) \
     F(LoadElementA, loadElementA) \
-    F(LoadElementLookup, loadElementLookup) \
     F(StoreElement, storeElement) \
-    F(StoreElementLookup, storeElementLookup) \
     F(LoadProperty, loadProperty) \
     F(LoadPropertyA, loadPropertyA) \
     F(GetLookup, getLookup) \
@@ -392,20 +390,8 @@ union Instr
         MOTH_INSTR_HEADER
         StackSlot base;
     };
-    struct instr_loadElementLookup {
-        MOTH_INSTR_HEADER
-        uint lookup;
-        StackSlot base;
-        StackSlot index;
-    };
     struct instr_storeElement {
         MOTH_INSTR_HEADER
-        StackSlot base;
-        StackSlot index;
-    };
-    struct instr_storeElementLookup {
-        MOTH_INSTR_HEADER
-        uint lookup;
         StackSlot base;
         StackSlot index;
     };
@@ -720,9 +706,7 @@ union Instr
     instr_storeName storeName;
     instr_loadElement loadElement;
     instr_loadElementA loadElementA;
-    instr_loadElementLookup loadElementLookup;
     instr_storeElement storeElement;
-    instr_storeElementLookup storeElementLookup;
     instr_loadProperty loadProperty;
     instr_loadPropertyA loadPropertyA;
     instr_getLookup getLookup;
