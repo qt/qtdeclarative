@@ -918,7 +918,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
         if (attrs.isEmpty() || p->isSubset(attrs, lp, cattrs))
             return true;
         if (!cattrs.isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
-            goto reject;
+            return false;
         bool succeeded = true;
         if (attrs.type() == PropertyAttributes::Data) {
             bool ok;
@@ -935,7 +935,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
             InternalClass::changeMember(this, engine->id_length(), cattrs);
         }
         if (!succeeded)
-            goto reject;
+            return false;
         return true;
     }
 
@@ -945,7 +945,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
     if (memberIndex == UINT_MAX) {
         // clause 3
         if (!isExtensible())
-            goto reject;
+            return false;
         // clause 4
         ScopedProperty pd(scope);
         pd->copy(p, attrs);
@@ -955,26 +955,18 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
     }
 
     return __defineOwnProperty__(engine, memberIndex, name, p, attrs);
-reject:
-  if (engine->current->strictMode)
-      engine->throwTypeError();
-  return false;
 }
 
 bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs)
 {
     // 15.4.5.1, 4b
     if (isArrayObject() && index >= getLength() && !internalClass()->propertyData[Heap::ArrayObject::LengthPropertyIndex].isWritable())
-        goto reject;
+        return false;
 
     if (ArgumentsObject::isNonStrictArgumentsObject(this))
         return static_cast<ArgumentsObject *>(this)->defineOwnProperty(engine, index, p, attrs);
 
     return defineOwnProperty2(engine, index, p, attrs);
-reject:
-  if (engine->current->strictMode)
-      engine->throwTypeError();
-  return false;
 }
 
 bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs)
@@ -991,7 +983,7 @@ bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Prope
     if (!hasProperty) {
         // clause 3
         if (!isExtensible())
-            goto reject;
+            return false;
         // clause 4
         Scope scope(engine);
         ScopedProperty pp(scope);
@@ -1007,10 +999,6 @@ bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Prope
     }
 
     return __defineOwnProperty__(engine, index, 0, p, attrs);
-reject:
-  if (engine->current->strictMode)
-      engine->throwTypeError();
-  return false;
 }
 
 bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *member, const Property *p, PropertyAttributes attrs)
@@ -1037,9 +1025,9 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
     // clause 7
     if (!cattrs.isConfigurable()) {
         if (attrs.isConfigurable())
-            goto reject;
+            return false;
         if (attrs.hasEnumerable() && attrs.isEnumerable() != cattrs.isEnumerable())
-            goto reject;
+            return false;
     }
 
     // clause 8
@@ -1050,7 +1038,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
     if (cattrs.isData() != attrs.isData()) {
         // 9a
         if (!cattrs.isConfigurable())
-            goto reject;
+            return false;
         if (cattrs.isData()) {
             // 9b
             cattrs.setType(PropertyAttributes::Accessor);
@@ -1076,15 +1064,15 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
     } else if (cattrs.isData() && attrs.isData()) { // clause 10
         if (!cattrs.isConfigurable() && !cattrs.isWritable()) {
             if (attrs.isWritable() || !current->value.sameValue(p->value))
-                goto reject;
+                return false;
         }
     } else { // clause 10
         Q_ASSERT(cattrs.isAccessor() && attrs.isAccessor());
         if (!cattrs.isConfigurable()) {
             if (!p->value.isEmpty() && current->value.rawValue() != p->value.rawValue())
-                goto reject;
+                return false;
             if (!p->set.isEmpty() && current->set.rawValue() != p->set.rawValue())
-                goto reject;
+                return false;
         }
     }
 
@@ -1099,10 +1087,6 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
         arrayData()->setProperty(scope.engine, index, current);
     }
     return true;
-  reject:
-    if (engine->current->strictMode)
-        engine->throwTypeError();
-    return false;
 }
 
 

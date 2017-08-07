@@ -129,8 +129,11 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     }
 
     bool result = Object::defineOwnProperty2(scope.engine, index, desc, attrs);
-    if (!result)
+    if (!result) {
+        if (d()->isStrict)
+            return engine->throwTypeError();
         return false;
+    }
 
     if (isMapped && attrs.isData()) {
         Q_ASSERT(arrayData());

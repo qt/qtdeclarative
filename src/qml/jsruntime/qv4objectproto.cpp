@@ -561,7 +561,9 @@ ReturnedValue ObjectPrototype::method_defineGetter(const BuiltinFunction *b, Cal
     ScopedProperty pd(scope);
     pd->value = f;
     pd->set = Primitive::emptyValue();
-    o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
+    bool ok = o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
+    if (!ok)
+        THROW_TYPE_ERROR();
     RETURN_UNDEFINED();
 }
 
@@ -589,7 +591,9 @@ ReturnedValue ObjectPrototype::method_defineSetter(const BuiltinFunction *b, Cal
     ScopedProperty pd(scope);
     pd->value = Primitive::emptyValue();
     pd->set = f;
-    o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
+    bool ok = o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
+    if (!ok)
+        THROW_TYPE_ERROR();
     RETURN_UNDEFINED();
 }
 
