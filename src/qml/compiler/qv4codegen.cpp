@@ -2994,8 +2994,15 @@ void Codegen::Reference::loadInAccumulator() const
             codegen->_context->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } return;
     case This: {
-        Instruction::LoadThis load;
-        codegen->bytecodeGenerator->addInstruction(load);
+        Context *c = codegen->currentContext();
+        if (c->canUseSimpleCall()) {
+            Instruction::LoadReg load;
+            load.reg = Moth::StackSlot::createArgument(c->arguments.size(), -1);
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else {
+            Instruction::LoadThis load;
+            codegen->bytecodeGenerator->addInstruction(load);
+        }
     } return;
     case Invalid:
         break;

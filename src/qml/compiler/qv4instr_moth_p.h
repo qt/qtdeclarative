@@ -197,7 +197,7 @@ public:
     }
 
     static StackSlot createArgument(int nFormals, int index) {
-        Q_ASSERT(index >= 0);
+        Q_ASSERT(index >= -1);
         StackSlot t;
         t.index = index - nFormals;
         return t;
@@ -216,6 +216,9 @@ public:
     QString dump(int nFormals) const {
         if (isRegister())
             return QStringLiteral("r%1").arg(index);
+
+        if (nFormals + index == -1)
+            return QStringLiteral("(this)");
 
         return QStringLiteral("a%1").arg(nFormals + index);
     }

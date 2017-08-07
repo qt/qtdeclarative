@@ -735,7 +735,18 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
     MOTH_END_INSTR(CallBuiltinSetupArgumentsObject)
 
     MOTH_BEGIN_INSTR(CallBuiltinConvertThisToObject)
-        Runtime::method_convertThisToObject(engine);
+        if (function->canUseSimpleFunction()) {
+            Value *t = &stack[-(int)function->nFormals - 1];
+            if (!t->isObject()) {
+                if (t->isNullOrUndefined()) {
+                    *t = engine->globalObject->asReturnedValue();
+                } else {
+                    *t = t->toObject(engine)->asReturnedValue();
+                }
+            }
+        } else {
+            Runtime::method_convertThisToObject(engine);
+        }
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallBuiltinConvertThisToObject)
 
