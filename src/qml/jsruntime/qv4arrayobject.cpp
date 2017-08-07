@@ -173,6 +173,7 @@ ReturnedValue ArrayPrototype::method_concat(const BuiltinFunction *b, CallData *
             const uint startIndex = result->getLength();
             for (int i = 0, len = eltAsObj->getLength(); i < len; ++i) {
                 entry = eltAsObj->getIndexed(i);
+                // spec says not to throw if this fails
                 result->putIndexed(startIndex + i, entry);
             }
         } else {
@@ -356,17 +357,19 @@ ReturnedValue ArrayPrototype::method_push(const BuiltinFunction *b, CallData *ca
     uint len = instance->getLength();
 
     if (len + callData->argc < len) {
-        // ughh...
+        // ughh... this goes beyond UINT_MAX
         double l = len;
         ScopedString s(scope);
         for (int i = 0; i < callData->argc; ++i) {
             s = Primitive::fromDouble(l + i).toString(scope.engine);
-            instance->put(s, callData->args[i]);
+            if (!instance->put(s, callData->args[i]))
+                return scope.engine->throwTypeError();
         }
         double newLen = l + callData->argc;
-        if (!instance->isArrayObject())
-            instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(newLen)));
-        else {
+        if (!instance->isArrayObject()) {
+            if (!instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(newLen))))
+                return scope.engine->throwTypeError();
+        } else {
             ScopedString str(scope, scope.engine->newString(QStringLiteral("Array.prototype.push: Overflow")));
             return scope.engine->throwRangeError(str);
         }
@@ -380,13 +383,16 @@ ReturnedValue ArrayPrototype::method_push(const BuiltinFunction *b, CallData *ca
         len = instance->arrayData()->length();
     } else {
         for (int i = 0; i < callData->argc; ++i)
-            instance->putIndexed(len + i, callData->args[i]);
+            if (!instance->putIndexed(len + i, callData->args[i]))
+                return scope.engine->throwTypeError();
         len += callData->argc;
     }
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len);
-    else
-        instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len)));
+    else {
+        if (!instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len))))
+            return scope.engine->throwTypeError();
+    }
 
     return Encode(len);
 }
@@ -409,15 +415,19 @@ ReturnedValue ArrayPrototype::method_reverse(const BuiltinFunction *b, CallData 
         lval = instance->getIndexed(lo, &loExists);
         hval = instance->getIndexed(hi, &hiExists);
         CHECK_EXCEPTION();
+        bool ok;
         if (hiExists)
-            instance->putIndexed(lo, hval);
+            ok = instance->putIndexed(lo, hval);
         else
-            instance->deleteIndexedProperty(lo);
-        CHECK_EXCEPTION();
-        if (loExists)
-            instance->putIndexed(hi, lval);
-        else
-            instance->deleteIndexedProperty(hi);
+            ok = instance->deleteIndexedProperty(lo);
+        if (ok) {
+            if (loExists)
+                ok = instance->putIndexed(hi, lval);
+            else
+                ok = instance->deleteIndexedProperty(hi);
+        }
+        if (!ok)
+            return scope.engine->throwTypeError();
     }
     return instance->asReturnedValue();
 }
@@ -436,7 +446,8 @@ ReturnedValue ArrayPrototype::method_shift(const BuiltinFunction *b, CallData *c
 
     if (!len) {
         if (!instance->isArrayObject())
-            instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromInt32(0)));
+            if (!instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromInt32(0))))
+                return scope.engine->throwTypeError();
         RETURN_UNDEFINED();
     }
 
@@ -452,20 +463,26 @@ ReturnedValue ArrayPrototype::method_shift(const BuiltinFunction *b, CallData *c
             bool exists;
             v = instance->getIndexed(k, &exists);
             CHECK_EXCEPTION();
+            bool ok;
             if (exists)
-                instance->putIndexed(k - 1, v);
+                ok = instance->putIndexed(k - 1, v);
             else
-                instance->deleteIndexedProperty(k - 1);
-            CHECK_EXCEPTION();
+                ok = instance->deleteIndexedProperty(k - 1);
+            if (!ok)
+                return scope.engine->throwTypeError();
         }
-        instance->deleteIndexedProperty(len - 1);
-        CHECK_EXCEPTION();
+        bool ok = instance->deleteIndexedProperty(len - 1);
+        if (!ok)
+            return scope.engine->throwTypeError();
     }
 
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len - 1);
-    else
-        instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - 1)));
+    else {
+        bool ok = instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - 1)));
+        if (!ok)
+            return scope.engine->throwTypeError();
+    }
 
     return result->asReturnedValue();
 }
@@ -563,11 +580,13 @@ ReturnedValue ArrayPrototype::method_splice(const BuiltinFunction *b, CallData *
             bool exists;
             v = instance->getIndexed(k + deleteCount, &exists);
             CHECK_EXCEPTION();
+            bool ok;
             if (exists)
-                instance->putIndexed(k + itemCount, v);
+                ok = instance->putIndexed(k + itemCount, v);
             else
-                instance->deleteIndexedProperty(k + itemCount);
-            CHECK_EXCEPTION();
+                ok = instance->deleteIndexedProperty(k + itemCount);
+            if (!ok)
+                return scope.engine->throwTypeError();
         }
         for (uint k = len; k > len - deleteCount + itemCount; --k) {
             instance->deleteIndexedProperty(k - 1);
@@ -579,21 +598,22 @@ ReturnedValue ArrayPrototype::method_splice(const BuiltinFunction *b, CallData *
             bool exists;
             v = instance->getIndexed(k + deleteCount - 1, &exists);
             CHECK_EXCEPTION();
+            bool ok;
             if (exists)
-                instance->putIndexed(k + itemCount - 1, v);
+                ok = instance->putIndexed(k + itemCount - 1, v);
             else
-                instance->deleteIndexedProperty(k + itemCount - 1);
-            CHECK_EXCEPTION();
+                ok = instance->deleteIndexedProperty(k + itemCount - 1);
+            if (!ok)
+                return scope.engine->throwTypeError();
             --k;
         }
     }
 
-    for (uint i = 0; i < itemCount; ++i) {
+    for (uint i = 0; i < itemCount; ++i)
         instance->putIndexed(start + i, callData->args[i + 2]);
-        CHECK_EXCEPTION();
-    }
 
-    instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - deleteCount + itemCount)));
+    if (!instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - deleteCount + itemCount))))
+        return scope.engine->throwTypeError();
 
     return newArray->asReturnedValue();
 }
@@ -618,20 +638,28 @@ ReturnedValue ArrayPrototype::method_unshift(const BuiltinFunction *b, CallData 
         for (uint k = len; k > 0; --k) {
             bool exists;
             v = instance->getIndexed(k - 1, &exists);
+            bool ok;
             if (exists)
-                instance->putIndexed(k + callData->argc - 1, v);
+                ok = instance->putIndexed(k + callData->argc - 1, v);
             else
-                instance->deleteIndexedProperty(k + callData->argc - 1);
+                ok = instance->deleteIndexedProperty(k + callData->argc - 1);
+            if (!ok)
+                return scope.engine->throwTypeError();
         }
-        for (int i = 0; i < callData->argc; ++i)
-            instance->putIndexed(i, callData->args[i]);
+        for (int i = 0; i < callData->argc; ++i) {
+            bool ok = instance->putIndexed(i, callData->args[i]);
+            if (!ok)
+                return scope.engine->throwTypeError();
+        }
     }
 
     uint newLen = len + callData->argc;
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(newLen);
-    else
-        instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(newLen)));
+    else {
+        if (!instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(newLen))))
+            return scope.engine->throwTypeError();
+    }
 
     return Encode(newLen);
 }

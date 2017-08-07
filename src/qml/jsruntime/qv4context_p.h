@@ -200,7 +200,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     void createMutableBinding(String *name, bool deletable);
 
-    void setProperty(String *name, const Value &value);
+    bool setProperty(String *name, const Value &value);
     ReturnedValue getProperty(String *name);
     ReturnedValue getPropertyAndBase(String *name, Value *base);
     bool deleteProperty(String *name);

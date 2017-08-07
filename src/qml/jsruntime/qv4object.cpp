@@ -130,19 +130,14 @@ bool Object::putValue(uint memberIndex, const Value &value)
             setter->call(callData);
             return !ic->engine->hasException;
         }
-        goto reject;
+        return false;
     }
 
     if (!attrs.isWritable())
-        goto reject;
+        return false;
 
     setProperty(memberIndex, value);
     return true;
-
-  reject:
-    if (engine()->current->strictMode)
-        engine()->throwTypeError();
-    return false;
 }
 
 void Object::defineDefaultProperty(const QString &name, const Value &value)
@@ -509,7 +504,7 @@ ReturnedValue Object::getLookup(const Managed *m, Lookup *l)
     return Encode::undefined();
 }
 
-void Object::setLookup(Managed *m, Lookup *l, const Value &value)
+bool Object::setLookup(Managed *m, Lookup *l, const Value &value)
 {
     Scope scope(static_cast<Object *>(m)->engine());
     ScopedObject o(scope, static_cast<Object *>(m));
@@ -523,42 +518,44 @@ void Object::setLookup(Managed *m, Lookup *l, const Value &value)
             l->index = idx;
             l->setter = idx < o->d()->vtable()->nInlineProperties ? Lookup::setter0Inline : Lookup::setter0;
             o->setProperty(idx, value);
-            return;
+            return true;
         }
 
-        if (idx != UINT_MAX) {
-            o->putValue(idx, value);
-            return;
-        }
+        if (idx != UINT_MAX)
+            return o->putValue(idx, value);
     }
 
-    o->put(name, value);
+    if (!o->put(name, value)) {
+        l->setter = Lookup::setterFallback;
+        return false;
+    }
 
     if (o->internalClass() == c)
-        return;
+        return true;
     idx = o->internalClass()->find(name);
-    if (idx == UINT_MAX)
-        return;
+    if (idx == UINT_MAX) // ### can this even happen?
+        return false;
     l->classList[0] = c;
     l->classList[3] = o->internalClass();
     l->index = idx;
     if (!o->prototype()) {
         l->setter = Lookup::setterInsert0;
-        return;
+        return true;
     }
     o = o->prototype();
     l->classList[1] = o->internalClass();
     if (!o->prototype()) {
         l->setter = Lookup::setterInsert1;
-        return;
+        return true;
     }
     o = o->prototype();
     l->classList[2] = o->internalClass();
     if (!o->prototype()) {
         l->setter = Lookup::setterInsert2;
-        return;
+        return true;
     }
     l->setter = Lookup::setterGeneric;
+    return true;
 }
 
 void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
@@ -722,9 +719,9 @@ bool Object::internalPut(String *name, const Value &value)
         if (attrs.isAccessor()) {
             if (memberIndex->as<FunctionObject>())
                 goto cont;
-            goto reject;
+            return false;
         } else if (!attrs.isWritable())
-            goto reject;
+            return false;
         else if (isArrayObject() && name->equals(engine->id_length())) {
             bool ok;
             uint l = value.asArrayLength(&ok);
@@ -734,14 +731,14 @@ bool Object::internalPut(String *name, const Value &value)
             }
             ok = setArrayLength(l);
             if (!ok)
-                goto reject;
+                return false;
         } else {
             memberIndex.set(engine, value);
         }
         return true;
     } else if (!prototype()) {
         if (!isExtensible())
-            goto reject;
+            return false;
     } else {
         // clause 4
         Scope scope(engine);
@@ -749,12 +746,12 @@ bool Object::internalPut(String *name, const Value &value)
         if (!memberIndex.isNull()) {
             if (attrs.isAccessor()) {
                 if (!memberIndex->as<FunctionObject>())
-                    goto reject;
+                    return false;
             } else if (!isExtensible() || !attrs.isWritable()) {
-                goto reject;
+                return false;
             }
         } else if (!isExtensible()) {
-            goto reject;
+            return false;
         }
     }
 
@@ -775,15 +772,6 @@ bool Object::internalPut(String *name, const Value &value)
 
     insertMember(name, value);
     return true;
-
-  reject:
-    // ### this should be removed once everything is ported to use Object::set()
-    if (engine->current->strictMode) {
-        QString message = QLatin1String("Cannot assign to read-only property \"") +
-                name->toQString() + QLatin1Char('\"');
-        engine->throwTypeError(message);
-    }
-    return false;
 }
 
 bool Object::internalPutIndexed(uint index, const Value &value)
@@ -799,7 +787,7 @@ bool Object::internalPutIndexed(uint index, const Value &value)
     if (arrayIndex.isNull() && isStringObject()) {
         if (index < static_cast<StringObject *>(this)->length())
             // not writable
-            goto reject;
+            return false;
     }
 
     // clause 1
@@ -807,15 +795,15 @@ bool Object::internalPutIndexed(uint index, const Value &value)
         if (attrs.isAccessor()) {
             if (arrayIndex->as<FunctionObject>())
                 goto cont;
-            goto reject;
+            return false;
         } else if (!attrs.isWritable())
-            goto reject;
+            return false;
 
         arrayIndex.set(engine, value);
         return true;
     } else if (!prototype()) {
         if (!isExtensible())
-            goto reject;
+            return false;
     } else {
         // clause 4
         Scope scope(engine);
@@ -823,12 +811,12 @@ bool Object::internalPutIndexed(uint index, const Value &value)
         if (!arrayIndex.isNull()) {
             if (attrs.isAccessor()) {
                 if (!arrayIndex->as<FunctionObject>())
-                    goto reject;
+                    return false;
             } else if (!isExtensible() || !attrs.isWritable()) {
-                goto reject;
+                return false;
             }
         } else if (!isExtensible()) {
-            goto reject;
+            return false;
         }
     }
 
@@ -849,12 +837,6 @@ bool Object::internalPutIndexed(uint index, const Value &value)
 
     arraySet(index, value);
     return true;
-
-  reject:
-    // ### this should be removed once everything is ported to use Object::setIndexed()
-    if (engine->current->strictMode)
-        engine->throwTypeError();
-    return false;
 }
 
 // Section 8.12.7

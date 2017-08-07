@@ -689,87 +689,88 @@ ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionEngine *engine)
     return globalGetterGeneric(l, engine);
 }
 
-void Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Scope scope(engine);
     ScopedObject o(scope, object);
     if (!o) {
         o = RuntimeHelpers::convertToObject(scope.engine, object);
         if (!o) // type error
-            return;
+            return false;
         ScopedString name(scope, engine->current->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-        o->put(name, value);
-        return;
+        return o->put(name, value);
     }
-    o->setLookup(l, value);
+    return o->setLookup(l, value);
 }
 
-void Lookup::setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Lookup l1 = *l;
 
     if (Object *o = object.as<Object>()) {
-        o->setLookup(l, value);
+        if (!o->setLookup(l, value))
+            return false;
 
         if (l->setter == Lookup::setter0 || l->setter == Lookup::setter0Inline) {
             l->setter = setter0setter0;
             l->classList[1] = l1.classList[0];
             l->index2 = l1.index;
-            return;
+            return true;
         }
     }
 
     l->setter = setterFallback;
-    setterFallback(l, engine, object, value);
+    return setterFallback(l, engine, object, value);
 }
 
-void Lookup::setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     QV4::Scope scope(engine);
     QV4::ScopedObject o(scope, object.toObject(scope.engine));
-    if (o) {
-        ScopedString name(scope, engine->current->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-        o->put(name, value);
-    }
+    if (!o)
+        return false;
+
+    ScopedString name(scope, engine->current->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
+    return o->put(name, value);
 }
 
-void Lookup::setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Object *o = static_cast<Object *>(object.managed());
     if (o && o->internalClass() == l->classList[0]) {
         o->setProperty(engine, l->index, value);
-        return;
+        return true;
     }
 
-    setterTwoClasses(l, engine, object, value);
+    return setterTwoClasses(l, engine, object, value);
 }
 
-void Lookup::setter0Inline(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::setter0Inline(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Object *o = static_cast<Object *>(object.managed());
     if (o && o->internalClass() == l->classList[0]) {
         o->d()->setInlineProperty(engine, l->index, value);
-        return;
+        return true;
     }
 
-    setterTwoClasses(l, engine, object, value);
+    return setterTwoClasses(l, engine, object, value);
 }
 
-void Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Object *o = static_cast<Object *>(object.managed());
     if (o && o->internalClass() == l->classList[0]) {
         Q_ASSERT(!o->prototype());
         o->setInternalClass(l->classList[3]);
         o->setProperty(l->index, value);
-        return;
+        return true;
     }
 
     l->setter = setterFallback;
-    setterFallback(l, engine, object, value);
+    return setterFallback(l, engine, object, value);
 }
 
-void Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Object *o = static_cast<Object *>(object.managed());
     if (o && o->internalClass() == l->classList[0]) {
@@ -779,15 +780,15 @@ void Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, co
             Q_ASSERT(!p->prototype());
             o->setInternalClass(l->classList[3]);
             o->setProperty(l->index, value);
-            return;
+            return true;
         }
     }
 
     l->setter = setterFallback;
-    setterFallback(l, engine, object, value);
+    return setterFallback(l, engine, object, value);
 }
 
-void Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Object *o = static_cast<Object *>(object.managed());
     if (o && o->internalClass() == l->classList[0]) {
@@ -800,32 +801,31 @@ void Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, co
                 Q_ASSERT(!p->prototype());
                 o->setInternalClass(l->classList[3]);
                 o->setProperty(l->index, value);
-                return;
+                return true;
             }
         }
     }
 
     l->setter = setterFallback;
-    setterFallback(l, engine, object, value);
+    return setterFallback(l, engine, object, value);
 }
 
-void Lookup::setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Object *o = static_cast<Object *>(object.managed());
     if (o) {
         if (o->internalClass() == l->classList[0]) {
             o->setProperty(l->index, value);
-            return;
+            return true;
         }
         if (o->internalClass() == l->classList[1]) {
             o->setProperty(l->index2, value);
-            return;
+            return true;
         }
     }
 
     l->setter = setterFallback;
-    setterFallback(l, engine, object, value);
-
+    return setterFallback(l, engine, object, value);
 }
 
 QT_END_NAMESPACE

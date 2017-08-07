@@ -384,15 +384,10 @@ bool TypedArray::putIndexed(Managed *m, uint index, const Value &value)
     uint bytesPerElement = a->d()->type->bytesPerElement;
     uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
     if (byteOffset + bytesPerElement > (uint)a->d()->buffer->byteLength())
-        goto reject;
+        return false;
 
     a->d()->type->write(scope.engine, a->d()->buffer->data->data(), byteOffset, value);
     return true;
-
-reject:
-  if (scope.engine->current->strictMode)
-      scope.engine->throwTypeError();
-  return false;
 }
 
 void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)

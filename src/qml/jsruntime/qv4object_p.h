@@ -186,7 +186,7 @@ struct ObjectVTable
     bool (*deleteProperty)(Managed *m, String *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
     ReturnedValue (*getLookup)(const Managed *m, Lookup *l);
-    void (*setLookup)(Managed *m, Lookup *l, const Value &v);
+    bool (*setLookup)(Managed *m, Lookup *l, const Value &v);
     uint (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     ReturnedValue (*instanceOf)(const Object *typeObject, const Value &var);
@@ -409,19 +409,6 @@ public:
         return ret;
     }
 
-    inline bool setIndexed(uint idx, const Value &v, ThrowOnFailure shouldThrow)
-    {
-        bool ret = vtable()->putIndexed(this, idx, v);
-        if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
-            ExecutionEngine *e = engine();
-            if (!e->hasException) { // allow a custom set impl to throw itself
-                e->throwTypeError();
-            }
-        }
-        return ret;
-    }
-
-
     PropertyAttributes query(String *name) const
     { return vtable()->query(this, name); }
     PropertyAttributes queryIndexed(uint index) const
@@ -432,8 +419,8 @@ public:
     { return vtable()->deleteIndexedProperty(this, index); }
     ReturnedValue getLookup(Lookup *l) const
     { return vtable()->getLookup(this, l); }
-    void setLookup(Lookup *l, const Value &v)
-    { vtable()->setLookup(this, l, v); }
+    bool setLookup(Lookup *l, const Value &v)
+    { return vtable()->setLookup(this, l, v); }
     void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
     uint getLength() const { return vtable()->getLength(this); }
@@ -456,7 +443,7 @@ protected:
     static bool deleteProperty(Managed *m, String *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static ReturnedValue getLookup(const Managed *m, Lookup *l);
-    static void setLookup(Managed *m, Lookup *l, const Value &v);
+    static bool setLookup(Managed *m, Lookup *l, const Value &v);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);

@@ -539,7 +539,11 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
     MOTH_END_INSTR(GetGlobalLookup)
 
     MOTH_BEGIN_INSTR(StoreName)
-        Runtime::method_setActivationProperty(engine, instr.name, accumulator);
+        if (!Runtime::method_setActivationProperty(engine, instr.name, accumulator) && function->isStrict()) {
+            Scope scope(engine);
+            ScopedString n(scope, function->compilationUnit->runtimeStrings[instr.name]);
+            engine->throwReferenceError(n);
+        }
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreName)
 
@@ -552,7 +556,8 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
     MOTH_END_INSTR(LoadElementA)
 
     MOTH_BEGIN_INSTR(StoreElement)
-        Runtime::method_setElement(engine, STACK_VALUE(instr.base), STACK_VALUE(instr.index), accumulator);
+        if (!Runtime::method_setElement(engine, STACK_VALUE(instr.base), STACK_VALUE(instr.index), accumulator) && function->isStrict())
+            engine->throwTypeError();
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreElement)
 
@@ -575,13 +580,15 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
     MOTH_END_INSTR(GetLookupA)
 
     MOTH_BEGIN_INSTR(StoreProperty)
-        Runtime::method_setProperty(engine, STACK_VALUE(instr.base), instr.name, accumulator);
+        if (!Runtime::method_setProperty(engine, STACK_VALUE(instr.base), instr.name, accumulator) && function->isStrict())
+            engine->throwTypeError();
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreProperty)
 
     MOTH_BEGIN_INSTR(SetLookup)
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.index;
-        l->setter(l, engine, STACK_VALUE(instr.base), accumulator);
+        if (!l->setter(l, engine, STACK_VALUE(instr.base), accumulator) && function->isStrict())
+            engine->throwTypeError();
         CHECK_EXCEPTION;
     MOTH_END_INSTR(SetLookup)
 

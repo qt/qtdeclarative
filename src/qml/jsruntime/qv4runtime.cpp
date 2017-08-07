@@ -589,14 +589,14 @@ QV4::ReturnedValue Runtime::method_addString(ExecutionEngine *engine, const Valu
     return (mm->alloc<String>(sleft->d(), sright->d()))->asReturnedValue();
 }
 
-void Runtime::method_setProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)
+bool Runtime::method_setProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->current->v4Function->compilationUnit->runtimeStrings[nameIndex]);
     ScopedObject o(scope, object.toObject(engine));
     if (!o)
-        return;
-    o->put(name, value);
+        return false;
+    return o->put(name, value);
 }
 
 static Q_NEVER_INLINE ReturnedValue getElementIntFallback(ExecutionEngine *engine, const Value &object, uint idx)
@@ -675,12 +675,12 @@ ReturnedValue Runtime::method_getElement(ExecutionEngine *engine, const Value &o
     return getElementFallback(engine, object, index);
 }
 
-static Q_NEVER_INLINE void setElementFallback(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
+static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
 {
     Scope scope(engine);
     ScopedObject o(scope, object.toObject(engine));
     if (engine->hasException)
-        return;
+        return false;
 
     uint idx;
     if (index.asArrayIndex(idx)) {
@@ -688,18 +688,17 @@ static Q_NEVER_INLINE void setElementFallback(ExecutionEngine *engine, const Val
             Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
             if (idx < s->values.size) {
                 s->setData(engine, idx, value);
-                return;
+                return true;
             }
         }
-        o->putIndexed(idx, value);
-        return;
+        return o->putIndexed(idx, value);
     }
 
     ScopedString name(scope, index.toString(engine));
-    o->put(name, value);
+    return o->put(name, value);
 }
 
-void Runtime::method_setElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
+bool Runtime::method_setElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
 {
     uint idx;
     if (index.asArrayIndex(idx)) {
@@ -710,7 +709,7 @@ void Runtime::method_setElement(ExecutionEngine *engine, const Value &object, co
                     Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
                     if (idx < s->values.size) {
                         s->setData(engine, idx, value);
-                        return;
+                        return true;
                     }
                 }
             }
@@ -740,11 +739,11 @@ ReturnedValue Runtime::method_foreachNextPropertyName(const Value &foreach_itera
 }
 
 
-void Runtime::method_setActivationProperty(ExecutionEngine *engine, int nameIndex, const Value &value)
+bool Runtime::method_setActivationProperty(ExecutionEngine *engine, int nameIndex, const Value &value)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->current->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    engine->currentContext->setProperty(name, value);
+    return engine->currentContext->setProperty(name, value);
 }
 
 ReturnedValue Runtime::method_getProperty(ExecutionEngine *engine, const Value &object, int nameIndex)
