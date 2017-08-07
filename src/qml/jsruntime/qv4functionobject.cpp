@@ -420,7 +420,7 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()) == Index_Length);
     setProperty(s.engine, Index_Length, Primitive::fromInt32(f->formalParameterCount()));
 
-    if (scope->d()->strictMode) {
+    if (function->isStrict()) {
         ScopedProperty pd(s);
         pd->value = s.engine->thrower();
         pd->set = s.engine->thrower();

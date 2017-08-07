@@ -360,10 +360,10 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
         return callData->args[0].asReturnedValue();
 
     const QString code = scode->toQString();
-    bool inheritContext = !ctx->d()->strictMode;
+    bool inheritContext = !ctx->d()->v4Function->isStrict();
 
     Script script(ctx, code, QStringLiteral("eval code"));
-    script.strictMode = (directCall && currentContext->d()->strictMode);
+    script.strictMode = (directCall && currentContext->d()->v4Function->isStrict());
     script.inheritContext = inheritContext;
     script.parse();
     if (v4->hasException)
@@ -373,7 +373,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     if (!function)
         return Encode::undefined();
 
-    if (function->isStrict() || (ctx->d()->strictMode)) {
+    if (function->isStrict() || (ctx->d()->v4Function->isStrict())) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
         ScopedCallData callData(scope, 0);
         callData->thisObject = ctx->thisObject();
