@@ -150,7 +150,6 @@ ReturnedValue Script::run()
 
         ExecutionContextSaver ctxSaver(valueScope.engine);
         ContextStateSaver stateSaver(valueScope, scope);
-        scope->d()->strictMode = vmFunction->isStrict();
         scope->d()->v4Function = vmFunction;
 
         return Q_V4_PROFILE(engine, vmFunction, 0);

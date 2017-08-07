@@ -382,8 +382,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
 
     ContextStateSaver stateSaver(scope, ctx);
 
-    // set the correct strict mode flag on the context
-    ctx->d()->strictMode = false;
+    // set the correct v4 function for the context
     ctx->d()->v4Function = function;
 
     return Q_V4_PROFILE(ctx->engine(), function, 0);

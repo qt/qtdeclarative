@@ -65,19 +65,16 @@ namespace QV4 {
 
 struct ContextStateSaver {
     Value *savedContext;
-    bool strictMode;
     QV4::Function *v4Function;
 
     ContextStateSaver(const Scope &scope, ExecutionContext *context)
         : savedContext(scope.alloc(1))
-        , strictMode(context->d()->strictMode)
         , v4Function(context->d()->v4Function)
     {
         savedContext->setM(context->d());
     }
     ContextStateSaver(const Scope &scope, Heap::ExecutionContext *context)
         : savedContext(scope.alloc(1))
-        , strictMode(context->strictMode)
         , v4Function(context->v4Function)
     {
         savedContext->setM(context);
@@ -86,7 +83,6 @@ struct ContextStateSaver {
     ~ContextStateSaver()
     {
         Heap::ExecutionContext *ctx = static_cast<Heap::ExecutionContext *>(savedContext->m());
-        ctx->strictMode = strictMode;
         ctx->v4Function = v4Function;
     }
 };

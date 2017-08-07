@@ -68,7 +68,6 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
 
     c->v4Function = function;
 
-    c->strictMode = function->isStrict();
     c->outer.set(v4, this->d());
 
     const CompiledData::Function *compiledFunction = function->compiledFunction;
@@ -159,7 +158,6 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
 {
     Heap::ExecutionContext::init(Heap::ExecutionContext::Type_CatchContext);
     outer.set(internalClass->engine, outerContext);
-    strictMode = outer->strictMode;
     callData = outer->callData;
     v4Function = outer->v4Function;
 
@@ -259,7 +257,6 @@ ReturnedValue QV4::ExecutionContext::simpleCall(ExecutionEngine *engine, CallDat
 
     CallContext::Data *ctx = engine->memoryManager->allocSimpleCallContext();
 
-    ctx->strictMode = function->isStrict();
     ctx->callData = callData;
     ctx->v4Function = function;
     ctx->outer.set(engine, this->d());
@@ -341,7 +338,7 @@ bool ExecutionContext::setProperty(String *name, const Value &value)
 
     }
 
-    if (d()->strictMode)
+    if (d()->v4Function->isStrict())
         return false;
     return engine()->globalObject->put(name, value);
 }

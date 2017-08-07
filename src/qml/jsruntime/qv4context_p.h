@@ -128,11 +128,10 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
     }
 
     quint8 type;
-    bool strictMode : 8;
 #if QT_POINTER_SIZE == 8
-    quint8 padding_[6];
+    quint8 padding_[7];
 #else
-    quint8 padding_[2];
+    quint8 padding_[3];
 #endif
 };
 V4_ASSERT_IS_TRIVIAL(ExecutionContext)

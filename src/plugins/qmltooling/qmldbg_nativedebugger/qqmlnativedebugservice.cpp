@@ -255,7 +255,7 @@ QV4::ReturnedValue NativeDebugger::evaluateExpression(const QString &expression)
     m_engine->pushContext(ctx);
 
     QV4::Script script(ctx, expression);
-    script.strictMode = ctx->d()->strictMode;
+    script.strictMode = ctx->d()->v4Function->isStrict();
     // In order for property lookups in QML to work, we need to disable fast v4 lookups.
     // That is a side-effect of inheritContext.
     script.inheritContext = true;
