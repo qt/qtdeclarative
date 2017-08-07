@@ -593,11 +593,8 @@ ReturnedValue ArrayPrototype::method_splice(const BuiltinFunction *b, CallData *
         CHECK_EXCEPTION();
     }
 
-    bool wasStrict = scope.engine->current->strictMode;
-    scope.engine->current->strictMode = true;
     instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - deleteCount + itemCount)));
 
-    scope.engine->current->strictMode = wasStrict;
     return newArray->asReturnedValue();
 }
 
