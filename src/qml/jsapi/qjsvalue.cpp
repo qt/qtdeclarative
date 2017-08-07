@@ -1166,10 +1166,7 @@ bool QJSValue::deleteProperty(const QString &name)
         return false;
 
     ScopedString s(scope, engine->newString(name));
-    bool b = o->deleteProperty(s);
-    if (engine->hasException)
-        engine->catchException();
-    return b;
+    return o->deleteProperty(s);
 }
 
 /*!

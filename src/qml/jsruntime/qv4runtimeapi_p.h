@@ -58,7 +58,6 @@ namespace QV4 {
 
 typedef uint Bool;
 struct NoThrowEngine;
-
 namespace {
 template <typename T>
 struct ExceptionCheck {
@@ -120,10 +119,10 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, typeofName, (ExecutionEngine *engine, int nameIndex)) \
     \
     /* delete */ \
-    F(ReturnedValue, deleteElement, (ExecutionEngine *engine, const Value &base, const Value &index)) \
-    F(ReturnedValue, deleteMember, (ExecutionEngine *engine, const Value &base, int nameIndex)) \
-    F(ReturnedValue, deleteMemberString, (ExecutionEngine *engine, const Value &base, String *name)) \
-    F(ReturnedValue, deleteName, (ExecutionEngine *engine, int nameIndex)) \
+    F(bool, deleteElement, (ExecutionEngine *engine, const Value &base, const Value &index)) \
+    F(bool, deleteMember, (ExecutionEngine *engine, const Value &base, int nameIndex)) \
+    F(bool, deleteMemberString, (ExecutionEngine *engine, const Value &base, String *name)) \
+    F(bool, deleteName, (ExecutionEngine *engine, int nameIndex)) \
     \
     /* exceptions & scopes */ \
     F(void, throwException, (ExecutionEngine *engine, const Value &value)) \

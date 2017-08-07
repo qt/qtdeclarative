@@ -693,15 +693,40 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
     MOTH_END_INSTR(CallBuiltinForeachNextPropertyName)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteMember)
-        STORE_ACCUMULATOR(Runtime::method_deleteMember(engine, STACK_VALUE(instr.base), instr.member));
+        if (!Runtime::method_deleteMember(engine, STACK_VALUE(instr.base), instr.member)) {
+            if (function->isStrict()) {
+                engine->throwTypeError();
+                goto catchException;
+            }
+            accumulator = Encode(false);
+        } else {
+            accumulator = Encode(true);
+        }
     MOTH_END_INSTR(CallBuiltinDeleteMember)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteSubscript)
-        STORE_ACCUMULATOR(Runtime::method_deleteElement(engine, STACK_VALUE(instr.base), STACK_VALUE(instr.index)));
+        if (!Runtime::method_deleteElement(engine, STACK_VALUE(instr.base), STACK_VALUE(instr.index))) {
+            if (function->isStrict()) {
+                engine->throwTypeError();
+                goto catchException;
+            }
+            accumulator = Encode(false);
+        } else {
+            accumulator = Encode(true);
+        }
     MOTH_END_INSTR(CallBuiltinDeleteSubscript)
 
     MOTH_BEGIN_INSTR(CallBuiltinDeleteName)
-        STORE_ACCUMULATOR(Runtime::method_deleteName(engine, instr.name));
+        if (!Runtime::method_deleteName(engine, instr.name)) {
+            if (function->isStrict()) {
+                QString name = function->compilationUnit->runtimeStrings[instr.name]->toQString();
+                engine->throwSyntaxError(QStringLiteral("Can't delete property %1").arg(name));
+                goto catchException;
+            }
+            accumulator = Encode(false);
+        } else {
+            accumulator = Encode(true);
+        }
     MOTH_END_INSTR(CallBuiltinDeleteName)
 
     MOTH_BEGIN_INSTR(CallBuiltinTypeofName)

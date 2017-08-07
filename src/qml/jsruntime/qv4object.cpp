@@ -857,8 +857,6 @@ bool Object::internalDeleteProperty(String *name)
             InternalClass::removeMember(this, name->identifier());
             return true;
         }
-        if (engine()->current->strictMode)
-            engine()->throwTypeError();
         return false;
     }
 
@@ -875,8 +873,6 @@ bool Object::internalDeleteIndexedProperty(uint index)
     if (!ad || ad->vtable()->del(this, index))
         return true;
 
-    if (engine()->current->strictMode)
-        engine()->throwTypeError();
     return false;
 }
 

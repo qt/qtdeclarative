@@ -228,9 +228,7 @@ bool ExecutionContext::deleteProperty(String *name)
         }
     }
 
-    if (d()->strictMode)
-        engine()->throwSyntaxError(QStringLiteral("Can't delete property %1").arg(name->toQString()));
-    return true;
+    return !d()->v4Function->isStrict();
 }
 
 // Do a standard call with this execution context as the outer scope

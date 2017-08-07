@@ -106,11 +106,8 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
     Scoped<StringObject> o(scope, m->as<StringObject>());
     Q_ASSERT(!!o);
 
-    if (index < static_cast<uint>(o->d()->string->toQString().length())) {
-        if (v4->current->strictMode)
-            v4->throwTypeError();
+    if (index < static_cast<uint>(o->d()->string->toQString().length()))
         return false;
-    }
     return true;
 }
 

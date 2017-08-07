@@ -313,42 +313,41 @@ ReturnedValue Runtime::method_closure(ExecutionEngine *engine, int functionId)
     return FunctionObject::createScriptFunction(engine->currentContext, clos)->asReturnedValue();
 }
 
-ReturnedValue Runtime::method_deleteElement(ExecutionEngine *engine, const Value &base, const Value &index)
+bool Runtime::method_deleteElement(ExecutionEngine *engine, const Value &base, const Value &index)
 {
     Scope scope(engine);
     ScopedObject o(scope, base);
     if (o) {
         uint n = index.asArrayIndex();
-        if (n < UINT_MAX) {
-            return Encode((bool)o->deleteIndexedProperty(n));
-        }
+        if (n < UINT_MAX)
+            return o->deleteIndexedProperty(n);
     }
 
     ScopedString name(scope, index.toString(engine));
     return method_deleteMemberString(engine, base, name);
 }
 
-ReturnedValue Runtime::method_deleteMember(ExecutionEngine *engine, const Value &base, int nameIndex)
+bool Runtime::method_deleteMember(ExecutionEngine *engine, const Value &base, int nameIndex)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->current->v4Function->compilationUnit->runtimeStrings[nameIndex]);
     return method_deleteMemberString(engine, base, name);
 }
 
-ReturnedValue Runtime::method_deleteMemberString(ExecutionEngine *engine, const Value &base, String *name)
+bool Runtime::method_deleteMemberString(ExecutionEngine *engine, const Value &base, String *name)
 {
     Scope scope(engine);
     ScopedObject obj(scope, base.toObject(engine));
     if (scope.engine->hasException)
         return Encode::undefined();
-    return Encode(obj->deleteProperty(name));
+    return obj->deleteProperty(name);
 }
 
-ReturnedValue Runtime::method_deleteName(ExecutionEngine *engine, int nameIndex)
+bool Runtime::method_deleteName(ExecutionEngine *engine, int nameIndex)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->current->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    return Encode(engine->currentContext->deleteProperty(name));
+    return engine->currentContext->deleteProperty(name);
 }
 
 QV4::ReturnedValue Runtime::method_instanceof(ExecutionEngine *engine, const Value &lval, const Value &rval)

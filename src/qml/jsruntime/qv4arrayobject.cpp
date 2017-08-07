@@ -334,13 +334,15 @@ ReturnedValue ArrayPrototype::method_pop(const BuiltinFunction *b, CallData *cal
     ScopedValue result(scope, instance->getIndexed(len - 1));
     CHECK_EXCEPTION();
 
-    instance->deleteIndexedProperty(len - 1);
-    CHECK_EXCEPTION();
+    if (!instance->deleteIndexedProperty(len - 1))
+        return scope.engine->throwTypeError();
 
     if (instance->isArrayObject())
         instance->setArrayLength(len - 1);
-    else
-        instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - 1)));
+    else {
+        if (!instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(len - 1))))
+            return scope.engine->throwTypeError();
+    }
     return result->asReturnedValue();
 }
 
@@ -589,8 +591,8 @@ ReturnedValue ArrayPrototype::method_splice(const BuiltinFunction *b, CallData *
                 return scope.engine->throwTypeError();
         }
         for (uint k = len; k > len - deleteCount + itemCount; --k) {
-            instance->deleteIndexedProperty(k - 1);
-            CHECK_EXCEPTION();
+            if (!instance->deleteIndexedProperty(k - 1))
+                return scope.engine->throwTypeError();
         }
     } else if (itemCount > deleteCount) {
         uint k = len - deleteCount;
