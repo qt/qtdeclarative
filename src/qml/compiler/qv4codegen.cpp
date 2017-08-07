@@ -1828,8 +1828,13 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     }
     if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-        Instruction::CallBuiltinSetupArgumentsObject setup;
-        bytecodeGenerator->addInstruction(setup);
+        if (_context->isStrict) {
+            Instruction::CreateUnmappedArgumentsObject setup;
+            bytecodeGenerator->addInstruction(setup);
+        } else {
+            Instruction::CreateMappedArgumentsObject setup;
+            bytecodeGenerator->addInstruction(setup);
+        }
         referenceForName(QStringLiteral("arguments"), false).storeConsumeAccumulator();
     }
     if (_context->usesThis && !_context->isStrict) {

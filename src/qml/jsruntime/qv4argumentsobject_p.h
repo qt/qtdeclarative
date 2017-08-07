@@ -78,7 +78,8 @@ DECLARE_HEAP_OBJECT(ArgumentsSetterFunction, FunctionObject) {
 #define ArgumentsObjectMembers(class, Member) \
     Member(class, Pointer, CallContext *, context) \
     Member(class, Pointer, MemberData *, mappedArguments) \
-    Member(class, NoMark, bool, fullyCreated)
+    Member(class, NoMark, bool, fullyCreated) \
+    Member(class, NoMark, bool, isStrict)
 
 DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
     DECLARE_MARK_TABLE(ArgumentsObject);
@@ -87,7 +88,7 @@ DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
         CalleePropertyIndex = 1,
         CallerPropertyIndex = 3
     };
-    void init(QV4::CallContext *context);
+    void init(QV4::CallContext *context, bool strict);
 };
 
 }
@@ -132,7 +133,7 @@ struct ArgumentsObject: Object {
 
     static bool isNonStrictArgumentsObject(Managed *m) {
         return m->d()->vtable()->type == Type_ArgumentsObject &&
-                !static_cast<ArgumentsObject *>(m)->context()->strictMode;
+                !static_cast<ArgumentsObject *>(m)->d()->isStrict;
     }
 
     bool defineOwnProperty(ExecutionEngine *engine, uint index, const Property *desc, PropertyAttributes attrs);

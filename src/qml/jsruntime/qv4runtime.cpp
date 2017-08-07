@@ -1314,12 +1314,20 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, const QV4::
     return o.asReturnedValue();
 }
 
-QV4::ReturnedValue Runtime::method_setupArgumentsObject(ExecutionEngine *engine)
+QV4::ReturnedValue Runtime::method_createMappedArgumentsObject(ExecutionEngine *engine)
 {
     Q_ASSERT(engine->current->type == Heap::ExecutionContext::Type_CallContext);
     QV4::CallContext *c = static_cast<QV4::CallContext *>(engine->currentContext);
-    QV4::InternalClass *ic = engine->internalClasses[c->d()->strictMode ? EngineBase::Class_StrictArgumentsObject : EngineBase::Class_ArgumentsObject];
-    return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c)->asReturnedValue();
+    QV4::InternalClass *ic = engine->internalClasses[EngineBase::Class_ArgumentsObject];
+    return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c, false)->asReturnedValue();
+}
+
+QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine *engine)
+{
+    Q_ASSERT(engine->current->type == Heap::ExecutionContext::Type_CallContext);
+    QV4::CallContext *c = static_cast<QV4::CallContext *>(engine->currentContext);
+    QV4::InternalClass *ic = engine->internalClasses[EngineBase::Class_StrictArgumentsObject];
+    return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c, true)->asReturnedValue();
 }
 
 #endif // V4_BOOTSTRAP

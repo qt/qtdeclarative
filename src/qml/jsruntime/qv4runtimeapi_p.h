@@ -137,7 +137,8 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     \
     /* function header */ \
     F(void, declareVar, (ExecutionEngine *engine, bool deletable, int nameIndex)) \
-    F(ReturnedValue, setupArgumentsObject, (ExecutionEngine *engine)) \
+    F(ReturnedValue, createMappedArgumentsObject, (ExecutionEngine *engine)) \
+    F(ReturnedValue, createUnmappedArgumentsObject, (ExecutionEngine *engine)) \
     F(void, convertThisToObject, (ExecutionEngine *engine)) \
     \
     /* literals */ \

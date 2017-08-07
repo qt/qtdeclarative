@@ -126,7 +126,8 @@ QT_BEGIN_NAMESPACE
     F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
     F(CallBuiltinDefineArray, callBuiltinDefineArray) \
     F(CallBuiltinDefineObjectLiteral, callBuiltinDefineObjectLiteral) \
-    F(CallBuiltinSetupArgumentsObject, callBuiltinSetupArgumentsObject) \
+    F(CreateMappedArgumentsObject, createMappedArgumentsObject) \
+    F(CreateUnmappedArgumentsObject, createUnmappedArgumentsObject) \
     F(CallBuiltinConvertThisToObject, callBuiltinConvertThisToObject) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
@@ -510,7 +511,10 @@ union Instr
         int arrayGetterSetterCountAndFlags; // 30 bits for count, 1 bit for needsSparseArray boolean
         StackSlot args;
     };
-    struct instr_callBuiltinSetupArgumentsObject {
+    struct instr_createMappedArgumentsObject {
+        MOTH_INSTR_HEADER
+    };
+    struct instr_createUnmappedArgumentsObject {
         MOTH_INSTR_HEADER
     };
     struct instr_callBuiltinConvertThisToObject {
@@ -754,7 +758,8 @@ union Instr
     instr_callBuiltinDeclareVar callBuiltinDeclareVar;
     instr_callBuiltinDefineArray callBuiltinDefineArray;
     instr_callBuiltinDefineObjectLiteral callBuiltinDefineObjectLiteral;
-    instr_callBuiltinSetupArgumentsObject callBuiltinSetupArgumentsObject;
+    instr_createMappedArgumentsObject createMappedArgumentsObject;
+    instr_createUnmappedArgumentsObject createUnmappedArgumentsObject;
     instr_callBuiltinConvertThisToObject callBuiltinConvertThisToObject;
     instr_createValue createValue;
     instr_createProperty createProperty;

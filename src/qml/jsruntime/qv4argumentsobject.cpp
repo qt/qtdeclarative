@@ -46,19 +46,20 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
-void Heap::ArgumentsObject::init(QV4::CallContext *context)
+void Heap::ArgumentsObject::init(QV4::CallContext *context, bool strict)
 {
     ExecutionEngine *v4 = internalClass->engine;
 
     Object::init();
     fullyCreated = false;
+    isStrict = strict;
     this->context.set(v4, context->d());
     Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());
 
     Scope scope(v4);
     Scoped<QV4::ArgumentsObject> args(scope, this);
 
-    if (context->d()->strictMode) {
+    if (isStrict) {
         Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(v4->id_callee()));
         Q_ASSERT(CallerPropertyIndex == args->internalClass()->find(v4->id_caller()));
         args->setProperty(CalleePropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
@@ -127,10 +128,9 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         arrayIndex.set(scope.engine, d()->mappedArguments->values[index]);
     }
 
-    bool strict = engine->current->strictMode;
-    engine->current->strictMode = false;
     bool result = Object::defineOwnProperty2(scope.engine, index, desc, attrs);
-    engine->current->strictMode = strict;
+    if (!result)
+        return false;
 
     if (isMapped && attrs.isData()) {
         Q_ASSERT(arrayData());
@@ -146,8 +146,6 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         }
     }
 
-    if (engine->current->strictMode && !result)
-        return engine->throwTypeError();
     return result;
 }
 

@@ -334,8 +334,11 @@ void dumpBytecode(const char *code, int len, int nFormals)
               << ", " << instr.arrayGetterSetterCountAndFlags;
         MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 
-        MOTH_BEGIN_INSTR(CallBuiltinSetupArgumentsObject)
-        MOTH_END_INSTR(CallBuiltinSetupArgumentsObject)
+        MOTH_BEGIN_INSTR(CreateMappedArgumentsObject)
+        MOTH_END_INSTR(CreateMappedArgumentsObject)
+
+        MOTH_BEGIN_INSTR(CreateUnmappedArgumentsObject)
+        MOTH_END_INSTR(CreateUnmappedArgumentsObject)
 
         MOTH_BEGIN_INSTR(CallBuiltinConvertThisToObject)
         MOTH_END_INSTR(CallBuiltinConvertThisToObject)

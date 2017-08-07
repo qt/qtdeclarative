@@ -730,9 +730,13 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
         STORE_ACCUMULATOR(Runtime::method_objectLiteral(engine, args, instr.internalClassId, instr.arrayValueCount, instr.arrayGetterSetterCountAndFlags));
     MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
 
-    MOTH_BEGIN_INSTR(CallBuiltinSetupArgumentsObject)
-        STORE_ACCUMULATOR(Runtime::method_setupArgumentsObject(engine));
-    MOTH_END_INSTR(CallBuiltinSetupArgumentsObject)
+    MOTH_BEGIN_INSTR(CreateMappedArgumentsObject)
+        STORE_ACCUMULATOR(Runtime::method_createMappedArgumentsObject(engine));
+    MOTH_END_INSTR(CreateMappedArgumentsObject)
+
+    MOTH_BEGIN_INSTR(CreateUnmappedArgumentsObject)
+        STORE_ACCUMULATOR(Runtime::method_createUnmappedArgumentsObject(engine));
+    MOTH_END_INSTR(CreateUnmappedArgumentsObject)
 
     MOTH_BEGIN_INSTR(CallBuiltinConvertThisToObject)
         if (function->canUseSimpleFunction()) {
