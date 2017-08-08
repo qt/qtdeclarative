@@ -127,9 +127,9 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     /* exceptions & scopes */ \
     F(void, throwException, (ExecutionEngine *engine, const Value &value)) \
     F(ReturnedValue, unwindException, (ExecutionEngine *engine)) \
-    F(void, pushWithScope, (const Value &o, NoThrowEngine *engine)) \
-    F(void, pushCatchScope, (NoThrowEngine *engine, int exceptionVarNameIndex)) \
-    F(void, popScope, (NoThrowEngine *engine)) \
+    F(ReturnedValue, pushWithContext, (const Value &o, NoThrowEngine *engine)) \
+    F(ReturnedValue, pushCatchContext, (NoThrowEngine *engine, int exceptionVarNameIndex)) \
+    F(void, popContext, (NoThrowEngine *engine, const Value &oldContext)) \
     \
     /* closures */ \
     F(ReturnedValue, closure, (ExecutionEngine *engine, int functionId)) \

@@ -234,8 +234,8 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     int methodIndex() const { return d()->index; }
     QObject *object() const { return d()->object(); }
 
-    QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx) const;
-    QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc) const;
+    QV4::ReturnedValue method_toString(QV4::ExecutionEngine *engine) const;
+    QV4::ReturnedValue method_destroy(QV4::ExecutionEngine *ctx, const Value *args, int argc) const;
 
     static ReturnedValue call(const Managed *, CallData *callData);
 

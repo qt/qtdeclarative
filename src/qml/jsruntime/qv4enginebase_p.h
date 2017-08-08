@@ -62,7 +62,7 @@ namespace QV4 {
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(push, 1)
 #endif
-struct EngineBase {
+struct Q_QML_EXPORT EngineBase {
     struct JSStackFrame {
         // callData is directly before this
         Value jsFunction;
@@ -80,9 +80,10 @@ struct EngineBase {
 
         QString source() const;
         QString function() const;
+        QV4::ExecutionContext *context() const;
+        QV4::Heap::CallContext *callContext() const;
     };
 
-    Heap::ExecutionContext *current = 0;
     StackFrame *currentStackFrame = 0;
 
     Value *jsStackTop = 0;
@@ -99,7 +100,6 @@ struct EngineBase {
     Value *jsStackLimit = 0;
     Value *jsStackBase = 0;
 
-    ExecutionContext *currentContext = 0;
     IdentifierTable *identifierTable = 0;
     Object *globalObject = 0;
 
@@ -135,8 +135,7 @@ struct EngineBase {
 #endif
 
 Q_STATIC_ASSERT(std::is_standard_layout<EngineBase>::value);
-Q_STATIC_ASSERT(offsetof(EngineBase, current) == 0);
-Q_STATIC_ASSERT(offsetof(EngineBase, currentStackFrame) == offsetof(EngineBase, current) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(EngineBase, currentStackFrame) == 0);
 Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, currentStackFrame) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, hasException) == offsetof(EngineBase, jsStackTop) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + QT_POINTER_SIZE);

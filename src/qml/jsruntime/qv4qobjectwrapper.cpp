@@ -1848,7 +1848,7 @@ const QMetaObject *Heap::QObjectMethod::metaObject()
     return object()->metaObject();
 }
 
-QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx) const
+QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionEngine *engine) const
 {
     QString result;
     if (const QMetaObject *metaObject = d()->metaObject()) {
@@ -1867,15 +1867,15 @@ QV4::ReturnedValue QObjectMethod::method_toString(QV4::ExecutionContext *ctx) co
         result = QLatin1String("null");
     }
 
-    return ctx->engine()->newString(result)->asReturnedValue();
+    return engine->newString(result)->asReturnedValue();
 }
 
-QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc) const
+QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionEngine *engine, const Value *args, int argc) const
 {
     if (!d()->object())
         return Encode::undefined();
     if (QQmlData::keepAliveDuringGarbageCollection(d()->object()))
-        return ctx->engine()->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
+        return engine->throwError(QStringLiteral("Invalid attempt to destroy() an indestructible object"));
 
     int delay = 0;
     if (argc > 0)
@@ -1898,11 +1898,10 @@ ReturnedValue QObjectMethod::call(const Managed *m, CallData *callData)
 ReturnedValue QObjectMethod::callInternal(CallData *callData) const
 {
     ExecutionEngine *v4 = engine();
-    ExecutionContext *context = v4->currentContext;
     if (d()->index == DestroyMethod)
-        return method_destroy(context, callData->args, callData->argc);
+        return method_destroy(v4, callData->args, callData->argc);
     else if (d()->index == ToStringMethod)
-        return method_toString(context);
+        return method_toString(v4);
 
     QQmlObjectOrGadget object(d()->object());
     if (!d()->object()) {

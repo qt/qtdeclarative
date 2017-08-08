@@ -232,18 +232,16 @@ bool ExecutionContext::deleteProperty(String *name)
 // Do a standard call with this execution context as the outer scope
 ReturnedValue ExecutionContext::call(ExecutionEngine *engine, CallData *callData, Function *function, const FunctionObject *f)
 {
-    Scope scope(engine);
-    ExecutionContextSaver ctxSaver(engine);
-
-    Scoped<CallContext> ctx(scope, newCallContext(function, callData));
+    Heap::CallContext *ctx = newCallContext(function, callData);
     if (f)
-        ctx->d()->function.set(engine, f->d());
-    engine->pushContext(ctx);
+        ctx->function.set(engine, f->d());
 
-    ReturnedValue res = Q_V4_PROFILE(engine, function, f);
+    ReturnedValue res = Q_V4_PROFILE(engine, ctx, function, f);
 
-    if (function->hasQmlDependencies)
-        QQmlPropertyCapture::registerQmlDependencies(engine, function->compiledFunction);
+    if (function->hasQmlDependencies) {
+        Q_ASSERT(d()->type == Heap::ExecutionContext::Type_QmlContext);
+        QQmlPropertyCapture::registerQmlDependencies(static_cast<QmlContext *>(this), engine, function->compiledFunction);
+    }
 
     return res;
 }
@@ -258,17 +256,12 @@ ReturnedValue QV4::ExecutionContext::simpleCall(ExecutionEngine *engine, CallDat
     for (int i = callData->argc; i < (int)function->nFormals; ++i)
         callData->args[i] = Encode::undefined();
 
-    ExecutionContext *old = engine->currentContext;
-    engine->currentContext = this;
-    engine->current = d();
+    ReturnedValue res = Q_V4_PROFILE(engine, d(), function, 0);
 
-    ReturnedValue res = Q_V4_PROFILE(engine, function, 0);
-
-    if (function->hasQmlDependencies)
-        QQmlPropertyCapture::registerQmlDependencies(engine, function->compiledFunction);
-
-    engine->currentContext = old;
-    engine->current = old->d();
+    if (function->hasQmlDependencies) {
+        Q_ASSERT(d()->type == Heap::ExecutionContext::Type_QmlContext);
+        QQmlPropertyCapture::registerQmlDependencies(static_cast<QmlContext *>(this), engine, function->compiledFunction);
+    }
 
     engine->jsStackTop = jsStackTop;
 

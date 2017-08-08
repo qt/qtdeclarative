@@ -373,10 +373,9 @@ static struct InstrCount {
     if (engine->hasException) \
         goto catchException
 
-static inline QV4::Heap::ExecutionContext *getScope(QV4::Heap::ExecutionContext *functionScope,
-                                                    int level)
+static inline QV4::Heap::ExecutionContext *getScope(EngineBase::JSStackFrame *frame, int level)
 {
-    QV4::Heap::ExecutionContext *scope = functionScope;
+    QV4::Heap::ExecutionContext *scope = static_cast<ExecutionContext &>(frame->context).d();
     while (level > 0) {
         --level;
         scope = scope->outer;
@@ -385,46 +384,40 @@ static inline QV4::Heap::ExecutionContext *getScope(QV4::Heap::ExecutionContext 
     return scope;
 }
 
-static inline ReturnedValue loadScopedLocal(ExecutionEngine *engine, int index, int scope)
+static inline ReturnedValue loadScopedLocal(EngineBase::StackFrame &frame, int index, int scope)
 {
-    auto ctxt = getScope(engine->current, scope);
+    auto ctxt = getScope(frame.jsFrame, scope);
     Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
     auto cc = static_cast<Heap::CallContext *>(ctxt);
     return cc->locals[index].asReturnedValue();
 }
 
-static inline void storeScopedLocal(ExecutionEngine *engine, int index, int scope,
+static inline void storeScopedLocal(ExecutionEngine *engine, EngineBase::StackFrame &frame, int index, int scope,
                                     const QV4::Value &value)
 {
-    auto ctxt = getScope(engine->current, scope);
+    auto ctxt = getScope(frame.jsFrame, scope);
     Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
     auto cc = static_cast<Heap::CallContext *>(ctxt);
 
-    if (Q_UNLIKELY(engine->writeBarrierActive))
-        QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, value);
-    else
-        *(cc->locals.values + index) = value;
+    QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, value);
 }
 
-static inline ReturnedValue loadScopedArg(ExecutionEngine *engine, int index, int scope)
+static inline ReturnedValue loadScopedArg(EngineBase::StackFrame &frame, int index, int scope)
 {
-    auto ctxt = getScope(engine->current, scope);
+    auto ctxt = getScope(frame.jsFrame, scope);
     Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
     auto cc = static_cast<Heap::CallContext *>(ctxt);
     return cc->callData->args[index].asReturnedValue();
 }
 
-static inline void storeScopedArg(ExecutionEngine *engine, int index, int scope,
+static inline void storeScopedArg(ExecutionEngine *engine, EngineBase::StackFrame &frame, int index, int scope,
                                   const QV4::Value &value)
 {
-    auto ctxt = getScope(engine->current, scope);
+    auto ctxt = getScope(frame.jsFrame, scope);
     Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
     auto cc = static_cast<Heap::CallContext *>(ctxt);
 
-    if (Q_UNLIKELY(engine->writeBarrierActive))
-        QV4::WriteBarrier::write(engine, cc, cc->callData->args + index, value);
-    else
-        *(cc->callData->args + index) = value;
+    QV4::WriteBarrier::write(engine, cc, cc->callData->args + index, value);
 }
 
 static inline const QV4::Value &constant(Function *function, int index)
@@ -432,7 +425,7 @@ static inline const QV4::Value &constant(Function *function, int index)
     return function->compilationUnit->constants[index];
 }
 
-QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunction)
+QV4::ReturnedValue VME::exec(Heap::ExecutionContext *context, Function *function, const FunctionObject *jsFunction)
 {
     qt_v4ResolvePendingBreakpointsHook();
 
@@ -458,13 +451,14 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
     if (!function->canUseSimpleFunction()) {
         int nFormals = function->nFormals;
         stack = scope.alloc(nFormals + 1 + function->compiledFunction->nRegisters + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
-        memcpy(stack, &engine->current->callData->thisObject, (nFormals + 1)*sizeof(Value));
+// ### why copy those on the stack again?
+        memcpy(stack, &context->callData->thisObject, (nFormals + 1)*sizeof(Value));
         stack += nFormals + 1;
     } else {
         stack = scope.alloc(function->compiledFunction->nRegisters + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
     }
     frame.jsFrame = reinterpret_cast<EngineBase::JSStackFrame *>(stack);
-    frame.jsFrame->context = engine->current;
+    frame.jsFrame->context = context;
     if (jsFunction)
         frame.jsFrame->jsFunction = *jsFunction;
 
@@ -504,21 +498,21 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
     MOTH_END_INSTR(MoveReg)
 
     MOTH_BEGIN_INSTR(LoadScopedLocal)
-        accumulator = loadScopedLocal(engine, instr.index, instr.scope);
+        accumulator = loadScopedLocal(frame, instr.index, instr.scope);
     MOTH_END_INSTR(LoadScopedLocal)
 
     MOTH_BEGIN_INSTR(StoreScopedLocal)
         CHECK_EXCEPTION;
-        storeScopedLocal(engine, instr.index, instr.scope, accumulator);
+        storeScopedLocal(engine, frame, instr.index, instr.scope, accumulator);
     MOTH_END_INSTR(StoreScopedLocal)
 
     MOTH_BEGIN_INSTR(LoadScopedArgument)
-        accumulator = loadScopedArg(engine, instr.index, instr.scope);
+        accumulator = loadScopedArg(frame, instr.index, instr.scope);
     MOTH_END_INSTR(LoadScopedArgument)
 
     MOTH_BEGIN_INSTR(StoreScopedArgument)
         CHECK_EXCEPTION;
-        storeScopedArg(engine, instr.index, instr.scope, accumulator);
+        storeScopedArg(engine, frame, instr.index, instr.scope, accumulator);
     MOTH_END_INSTR(StoreScopedArgument)
 
     MOTH_BEGIN_INSTR(LoadRuntimeString)
@@ -675,18 +669,19 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
         STORE_ACCUMULATOR(Runtime::method_unwindException(engine));
     MOTH_END_INSTR(CallBuiltinUnwindException)
 
-    MOTH_BEGIN_INSTR(CallBuiltinPushCatchScope)
-        Runtime::method_pushCatchScope(static_cast<QV4::NoThrowEngine*>(engine), instr.name);
-    MOTH_END_INSTR(CallBuiltinPushCatchScope)
+    MOTH_BEGIN_INSTR(CallBuiltinPushCatchContext)
+        STACK_VALUE(instr.reg) = Runtime::method_pushCatchContext(static_cast<QV4::NoThrowEngine*>(engine), instr.name);
+    MOTH_END_INSTR(CallBuiltinPushCatchContext)
 
-    MOTH_BEGIN_INSTR(CallBuiltinPushScope)
-        Runtime::method_pushWithScope(accumulator, static_cast<QV4::NoThrowEngine*>(engine));
+    MOTH_BEGIN_INSTR(CallBuiltinPushWithContext)
+        accumulator = accumulator.toObject(engine);
         CHECK_EXCEPTION;
-    MOTH_END_INSTR(CallBuiltinPushScope)
+        STACK_VALUE(instr.reg) = Runtime::method_pushWithContext(accumulator, static_cast<QV4::NoThrowEngine*>(engine));
+    MOTH_END_INSTR(CallBuiltinPushWithContext)
 
-    MOTH_BEGIN_INSTR(CallBuiltinPopScope)
-        Runtime::method_popScope(static_cast<QV4::NoThrowEngine*>(engine));
-    MOTH_END_INSTR(CallBuiltinPopScope)
+    MOTH_BEGIN_INSTR(CallBuiltinPopContext)
+        Runtime::method_popContext(static_cast<QV4::NoThrowEngine*>(engine), STACK_VALUE(instr.reg));
+    MOTH_END_INSTR(CallBuiltinPopContext)
 
     MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)
         STORE_ACCUMULATOR(Runtime::method_foreachIterator(engine, accumulator));
@@ -1101,7 +1096,7 @@ QV4::ReturnedValue VME::exec(Function *function, const FunctionObject *jsFunctio
 #endif // QT_NO_QML_DEBUGGER
 
     MOTH_BEGIN_INSTR(LoadThis)
-        STORE_ACCUMULATOR(engine->currentContext->thisObject());
+        STORE_ACCUMULATOR(static_cast<ExecutionContext &>(frame.jsFrame->context).thisObject());
     MOTH_END_INSTR(LoadThis)
 
     MOTH_BEGIN_INSTR(LoadQmlContext)

@@ -55,47 +55,37 @@
 
 QT_BEGIN_NAMESPACE
 
-QV4::CallContext *QV4DataCollector::findContext(int frame)
+QV4::Heap::CallContext *QV4DataCollector::findContext(int frame)
 {
-    QV4::ExecutionContext *ctx = engine()->currentContext;
-    while (ctx) {
-        QV4::CallContext *cCtxt = ctx->asCallContext();
-        if (cCtxt && cCtxt->d()->v4Function) {
-            if (frame < 1)
-                return cCtxt;
-            --frame;
-        }
-        ctx = engine()->parentContext(ctx);
+    QV4::EngineBase::StackFrame *f = engine()->currentStackFrame;
+    while (f && frame) {
+        --frame;
+        f = f->parent;
     }
 
-    return 0;
+    return f ? f->callContext() : 0;
 }
 
-QV4::Heap::CallContext *QV4DataCollector::findScope(QV4::ExecutionContext *ctxt, int scope)
+QV4::Heap::CallContext *QV4DataCollector::findScope(QV4::Heap::ExecutionContext *ctx, int scope)
 {
-    if (!ctxt)
+    if (!ctx)
         return 0;
 
-    QV4::Scope s(ctxt);
-    QV4::ScopedContext ctx(s, ctxt);
     for (; scope > 0 && ctx; --scope)
-        ctx = ctx->d()->outer;
+        ctx = ctx->outer;
 
-    return (ctx && ctx->d()) ? ctx->asCallContext()->d() : 0;
+    return (ctx && ctx->type == QV4::Heap::ExecutionContext::Type_CallContext) ?
+                static_cast<QV4::Heap::CallContext *>(ctx) : 0;
 }
 
 QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeTypes(int frame)
 {
     QVector<QV4::Heap::ExecutionContext::ContextType> types;
 
-    QV4::Scope scope(engine());
-    QV4::CallContext *sctxt = findContext(frame);
-    if (!sctxt || sctxt->d()->type < QV4::Heap::ExecutionContext::Type_QmlContext)
-        return types;
+    QV4::Heap::ExecutionContext *it = findContext(frame);
 
-    QV4::ScopedContext it(scope, sctxt);
-    for (; it; it = it->d()->outer)
-        types.append(QV4::Heap::ExecutionContext::ContextType(it->d()->type));
+    for (; it; it = it->outer)
+        types.append(QV4::Heap::ExecutionContext::ContextType(it->type));
 
     return types;
 }

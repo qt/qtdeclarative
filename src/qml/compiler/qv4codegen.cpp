@@ -2466,12 +2466,9 @@ bool Codegen::visit(WithStatement *ast)
     if (hasError)
         return false;
     src = src.storeOnStack(); // trigger load before we setup the exception handler, so exceptions here go to the right place
+    src.loadInAccumulator();
 
     ControlFlowWith flow(this);
-
-    src.loadInAccumulator();
-    Instruction::CallBuiltinPushScope pushScope;
-    bytecodeGenerator->addInstruction(pushScope);
 
     statement(ast->statement);
 

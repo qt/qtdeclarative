@@ -343,16 +343,14 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
         return Encode::undefined();
 
     ExecutionEngine *v4 = engine();
-    Scope scope(v4);
-    ExecutionContextSaver ctxSaver(scope.engine);
+    bool isStrict = v4->currentContext()->d()->v4Function->isStrict();
 
-    ExecutionContext *currentContext = v4->currentContext;
-    ExecutionContext *ctx = currentContext;
+    Scope scope(v4);
+    ScopedContext ctx(scope, v4->currentContext());
 
     if (!directCall) {
-        // the context for eval should be the global scope, so we fake a root
-        // context
-        ctx = v4->pushGlobalContext();
+        // the context for eval should be the global scope
+        ctx = v4->rootContext();
     }
 
     String *scode = callData->args[0].stringValue();
@@ -363,7 +361,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     bool inheritContext = !ctx->d()->v4Function->isStrict();
 
     Script script(ctx, code, QStringLiteral("eval code"));
-    script.strictMode = (directCall && currentContext->d()->v4Function->isStrict());
+    script.strictMode = (directCall && isStrict);
     script.inheritContext = inheritContext;
     script.parse();
     if (v4->hasException)
@@ -385,7 +383,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     // set the correct v4 function for the context
     ctx->d()->v4Function = function;
 
-    return Q_V4_PROFILE(ctx->engine(), function, 0);
+    return Q_V4_PROFILE(v4, ctx->d(), function, 0);
 }
 
 

@@ -527,9 +527,6 @@ void ExecutionEngine::initRootContext()
     r->d()->callData->args[0] = Encode::undefined();
     jsObjects[RootContext] = r;
     jsObjects[IntegerNull] = Encode((int)0);
-
-    currentContext = static_cast<ExecutionContext *>(jsObjects + RootContext);
-    current = currentContext->d();
 }
 
 InternalClass *ExecutionEngine::newClass(const InternalClass &other)
@@ -537,12 +534,10 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
     return new (classPool) InternalClass(other);
 }
 
-ExecutionContext *ExecutionEngine::pushGlobalContext()
+Heap::ExecutionContext *ExecutionEngine::pushGlobalContext()
 {
-    pushContext(rootContext()->d());
-
-    Q_ASSERT(current == rootContext()->d());
-    return currentContext;
+    setCurrentContext(rootContext()->d());
+    return currentContext()->d();
 }
 
 InternalClass *ExecutionEngine::newInternalClass(const VTable *vtable, Object *prototype)
@@ -746,11 +741,9 @@ Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
 
 Heap::QmlContext *ExecutionEngine::qmlContext() const
 {
-    Heap::ExecutionContext *ctx = current;
-
-    // get the correct context when we're within a builtin function
-    if (ctx->type == Heap::ExecutionContext::Type_SimpleCallContext && !ctx->outer)
-        ctx = parentContext(currentContext)->d();
+    if (!currentStackFrame)
+        return 0;
+    Heap::ExecutionContext *ctx = currentContext()->d();
 
     if (ctx->type != Heap::ExecutionContext::Type_QmlContext && !ctx->outer)
         return 0;

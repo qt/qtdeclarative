@@ -310,7 +310,8 @@ ReturnedValue Runtime::method_closure(ExecutionEngine *engine, int functionId)
 {
     QV4::Function *clos = static_cast<CompiledData::CompilationUnit*>(engine->currentStackFrame->v4Function->compilationUnit)->runtimeFunctions[functionId];
     Q_ASSERT(clos);
-    return FunctionObject::createScriptFunction(engine->currentContext, clos)->asReturnedValue();
+    ExecutionContext *current = static_cast<ExecutionContext *>(&engine->currentStackFrame->jsFrame->context);
+    return FunctionObject::createScriptFunction(current, clos)->asReturnedValue();
 }
 
 bool Runtime::method_deleteElement(ExecutionEngine *engine, const Value &base, const Value &index)
@@ -347,7 +348,7 @@ bool Runtime::method_deleteName(ExecutionEngine *engine, int nameIndex)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    return engine->currentContext->deleteProperty(name);
+    return static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).deleteProperty(name);
 }
 
 QV4::ReturnedValue Runtime::method_instanceof(ExecutionEngine *engine, const Value &lval, const Value &rval)
@@ -742,7 +743,7 @@ bool Runtime::method_setActivationProperty(ExecutionEngine *engine, int nameInde
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    return engine->currentContext->setProperty(name, value);
+    return static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).setProperty(name, value);
 }
 
 ReturnedValue Runtime::method_getProperty(ExecutionEngine *engine, const Value &object, int nameIndex)
@@ -769,7 +770,7 @@ ReturnedValue Runtime::method_getActivationProperty(ExecutionEngine *engine, int
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    return engine->currentContext->getProperty(name);
+    return static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).getProperty(name);
 }
 
 #endif // V4_BOOTSTRAP
@@ -1023,7 +1024,7 @@ ReturnedValue Runtime::method_callActivationProperty(ExecutionEngine *engine, in
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
 
     ScopedObject base(scope);
-    ScopedValue func(scope, engine->currentContext->getPropertyAndBase(name, base.getRef()));
+    ScopedValue func(scope, static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).getPropertyAndBase(name, base.getRef()));
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -1129,7 +1130,7 @@ ReturnedValue Runtime::method_constructActivationProperty(ExecutionEngine *engin
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    ScopedValue func(scope, engine->currentContext->getProperty(name));
+    ScopedValue func(scope, static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).getProperty(name));
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -1216,7 +1217,7 @@ QV4::ReturnedValue Runtime::method_typeofName(ExecutionEngine *engine, int nameI
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    ScopedValue prop(scope, engine->currentContext->getProperty(name));
+    ScopedValue prop(scope, static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).getProperty(name));
     // typeof doesn't throw. clear any possible exception
     scope.engine->hasException = false;
     return method_typeofValue(engine, prop);
@@ -1234,35 +1235,34 @@ ReturnedValue Runtime::method_unwindException(ExecutionEngine *engine)
  *
  * Instead the push/pop pair acts as a non local scope.
  */
-void Runtime::method_pushWithScope(const Value &o, NoThrowEngine *engine)
+ReturnedValue Runtime::method_pushWithContext(const Value &o, NoThrowEngine *engine)
 {
-    QV4::Value *v = engine->jsAlloca(1);
-    Heap::Object *withObject = o.toObject(engine);
-    *v = withObject;
-    engine->pushContext(engine->currentContext->newWithContext(withObject));
-    Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
+    Q_ASSERT(o.isObject());
+    ExecutionContext *c = engine->currentContext();
+    ReturnedValue oldContext = c->asReturnedValue();
+    const Object &obj = static_cast<const Object &>(o);
+    engine->setCurrentContext(c->newWithContext(obj.d()));
+    return oldContext;
 }
 
-void Runtime::method_pushCatchScope(NoThrowEngine *engine, int exceptionVarNameIndex)
+ReturnedValue Runtime::method_pushCatchContext(NoThrowEngine *engine, int exceptionVarNameIndex)
 {
-    engine->jsAlloca(1); // keep this symmetric with pushWithScope
-    ExecutionContext *c = engine->currentContext;
-    engine->pushContext(c->newCatchContext(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[exceptionVarNameIndex], engine->catchException(0)));
-    Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
+    ExecutionContext *c = engine->currentContext();
+    ReturnedValue oldContext = c->asReturnedValue();
+    engine->setCurrentContext(c->newCatchContext(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[exceptionVarNameIndex], engine->catchException(0)));
+    return oldContext;
 }
 
-void Runtime::method_popScope(NoThrowEngine *engine)
+void Runtime::method_popContext(NoThrowEngine *engine, const Value &oldContext)
 {
-    Q_ASSERT(engine->jsStackTop == engine->currentContext + 2);
-    engine->popContext();
-    engine->jsStackTop -= 3;
+    engine->setCurrentContext(static_cast<const ExecutionContext &>(oldContext).d());
 }
 
 void Runtime::method_declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    engine->currentContext->createMutableBinding(name, deletable);
+    static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).createMutableBinding(name, deletable);
 }
 
 ReturnedValue Runtime::method_arrayLiteral(ExecutionEngine *engine, Value *values, uint length)
@@ -1314,16 +1314,16 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, const QV4::
 
 QV4::ReturnedValue Runtime::method_createMappedArgumentsObject(ExecutionEngine *engine)
 {
-    Q_ASSERT(engine->current->type == Heap::ExecutionContext::Type_CallContext);
-    QV4::CallContext *c = static_cast<QV4::CallContext *>(engine->currentContext);
+    Q_ASSERT(engine->currentContext()->d()->type == Heap::ExecutionContext::Type_CallContext);
+    QV4::CallContext *c = static_cast<QV4::CallContext *>(&engine->currentStackFrame->jsFrame->context);
     QV4::InternalClass *ic = engine->internalClasses[EngineBase::Class_ArgumentsObject];
     return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c, false)->asReturnedValue();
 }
 
 QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine *engine)
 {
-    Q_ASSERT(engine->current->type == Heap::ExecutionContext::Type_CallContext);
-    QV4::CallContext *c = static_cast<QV4::CallContext *>(engine->currentContext);
+    Q_ASSERT(engine->currentContext()->d()->type == Heap::ExecutionContext::Type_CallContext);
+    QV4::CallContext *c = static_cast<QV4::CallContext *>(&engine->currentStackFrame->jsFrame->context);
     QV4::InternalClass *ic = engine->internalClasses[EngineBase::Class_StrictArgumentsObject];
     return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c, true)->asReturnedValue();
 }
@@ -1427,7 +1427,7 @@ QV4::ReturnedValue Runtime::method_getQmlSingleton(QV4::NoThrowEngine *engine, i
 
 void Runtime::method_convertThisToObject(ExecutionEngine *engine)
 {
-    Value *t = &engine->current->callData->thisObject;
+    Value *t = &engine->currentContext()->d()->callData->thisObject;
     if (t->isObject())
         return;
     if (t->isNullOrUndefined()) {

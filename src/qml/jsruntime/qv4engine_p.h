@@ -354,11 +354,11 @@ public:
     void setProfiler(Profiling::Profiler *profiler);
 #endif // QT_NO_QML_DEBUGGER
 
-    ExecutionContext *pushGlobalContext();
-    void pushContext(Heap::ExecutionContext *context);
-    void pushContext(ExecutionContext *context);
-    void popContext();
-    ExecutionContext *parentContext(ExecutionContext *context) const;
+    Heap::ExecutionContext *pushGlobalContext();
+    void setCurrentContext(Heap::ExecutionContext *context);
+    ExecutionContext *currentContext() const {
+        return static_cast<ExecutionContext *>(&currentStackFrame->jsFrame->context);
+    }
 
     InternalClass *newInternalClass(const VTable *vtable, Object *prototype);
 
@@ -469,39 +469,9 @@ struct NoThrowEngine;
 #endif
 
 
-inline void ExecutionEngine::pushContext(Heap::ExecutionContext *context)
+inline void ExecutionEngine::setCurrentContext(Heap::ExecutionContext *context)
 {
-    Q_ASSERT(currentContext && context);
-    Value *v = jsAlloca(2);
-    v[0] = Encode(context);
-    v[1] = Encode((int)(v - static_cast<Value *>(currentContext)));
-    currentContext = static_cast<ExecutionContext *>(v);
-    current = currentContext->d();
-}
-
-inline void ExecutionEngine::pushContext(ExecutionContext *context)
-{
-    pushContext(context->d());
-}
-
-
-inline void ExecutionEngine::popContext()
-{
-    Q_ASSERT(jsStackTop > currentContext);
-    QV4::Value *offset = (currentContext + 1);
-    Q_ASSERT(offset->isInteger());
-    int o = offset->integerValue();
-    Q_ASSERT(o);
-    currentContext -= o;
-    current = currentContext->d();
-}
-
-inline ExecutionContext *ExecutionEngine::parentContext(ExecutionContext *context) const
-{
-    Value *offset = static_cast<Value *>(context) + 1;
-    Q_ASSERT(offset->isInteger());
-    int o = offset->integerValue();
-    return o ? context - o : 0;
+    currentStackFrame->jsFrame->context = context;
 }
 
 inline
@@ -552,6 +522,19 @@ inline bool ExecutionEngine::checkStackLimits()
     }
 
     return false;
+}
+
+inline QV4::ExecutionContext *EngineBase::StackFrame::context() const
+{
+    return static_cast<ExecutionContext *>(&jsFrame->context);
+}
+
+inline QV4::Heap::CallContext *EngineBase::StackFrame::callContext() const
+{
+    Heap::ExecutionContext *ctx = static_cast<ExecutionContext &>(jsFrame->context).d();\
+    while (ctx->type != Heap::ExecutionContext::Type_CallContext)
+        ctx = ctx->outer;
+    return static_cast<Heap::CallContext *>(ctx);
 }
 
 } // namespace QV4

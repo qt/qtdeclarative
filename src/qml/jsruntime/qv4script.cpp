@@ -148,11 +148,10 @@ ReturnedValue Script::run()
     if (qmlContext.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        ExecutionContextSaver ctxSaver(valueScope.engine);
         ContextStateSaver stateSaver(valueScope, scope);
         scope->d()->v4Function = vmFunction;
 
-        return Q_V4_PROFILE(engine, vmFunction, 0);
+        return Q_V4_PROFILE(engine, scope->d(), vmFunction, 0);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
         ScopedCallData callData(valueScope);

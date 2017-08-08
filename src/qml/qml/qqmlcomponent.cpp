@@ -1210,8 +1210,7 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
     if (engine->hasException)
         return;
 
-    QV4::ExecutionContextSaver saver(scope.engine);
-    engine->pushContext(qmlContext);
+    QV4::ScopedStackFrame frame(scope, qmlContext->d());
 
     while (1) {
         name = it.nextPropertyNameAsString(val);

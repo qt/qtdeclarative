@@ -111,9 +111,9 @@ QT_BEGIN_NAMESPACE
     F(GetException, getException) \
     F(SetException, setException) \
     F(CallBuiltinUnwindException, callBuiltinUnwindException) \
-    F(CallBuiltinPushCatchScope, callBuiltinPushCatchScope) \
-    F(CallBuiltinPushScope, callBuiltinPushScope) \
-    F(CallBuiltinPopScope, callBuiltinPopScope) \
+    F(CallBuiltinPushCatchContext, callBuiltinPushCatchContext) \
+    F(CallBuiltinPushWithContext, callBuiltinPushWithContext) \
+    F(CallBuiltinPopContext, callBuiltinPopContext) \
     F(CallBuiltinForeachIteratorObject, callBuiltinForeachIteratorObject) \
     F(CallBuiltinForeachNextPropertyName, callBuiltinForeachNextPropertyName) \
     F(CallBuiltinDeleteMember, callBuiltinDeleteMember) \
@@ -443,15 +443,18 @@ union Instr
     struct instr_callBuiltinUnwindException {
         MOTH_INSTR_HEADER
     };
-    struct instr_callBuiltinPushCatchScope {
+    struct instr_callBuiltinPushCatchContext {
         MOTH_INSTR_HEADER
         int name;
+        StackSlot reg;
     };
-    struct instr_callBuiltinPushScope {
+    struct instr_callBuiltinPushWithContext {
         MOTH_INSTR_HEADER
+        StackSlot reg;
     };
-    struct instr_callBuiltinPopScope {
+    struct instr_callBuiltinPopContext {
         MOTH_INSTR_HEADER
+        StackSlot reg;
     };
     struct instr_callBuiltinForeachIteratorObject {
         MOTH_INSTR_HEADER
@@ -729,9 +732,9 @@ union Instr
     instr_setException setException;
     instr_setExceptionHandler setExceptionHandler;
     instr_callBuiltinUnwindException callBuiltinUnwindException;
-    instr_callBuiltinPushCatchScope callBuiltinPushCatchScope;
-    instr_callBuiltinPushScope callBuiltinPushScope;
-    instr_callBuiltinPopScope callBuiltinPopScope;
+    instr_callBuiltinPushCatchContext callBuiltinPushCatchContext;
+    instr_callBuiltinPushWithContext callBuiltinPushWithContext;
+    instr_callBuiltinPopContext callBuiltinPopContext;
     instr_callBuiltinForeachIteratorObject callBuiltinForeachIteratorObject;
     instr_callBuiltinForeachNextPropertyName callBuiltinForeachNextPropertyName;
     instr_callBuiltinDeleteMember callBuiltinDeleteMember;

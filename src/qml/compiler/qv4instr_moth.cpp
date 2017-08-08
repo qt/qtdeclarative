@@ -276,15 +276,17 @@ void dumpBytecode(const char *code, int len, int nFormals)
         MOTH_BEGIN_INSTR(CallBuiltinUnwindException)
         MOTH_END_INSTR(CallBuiltinUnwindException)
 
-        MOTH_BEGIN_INSTR(CallBuiltinPushCatchScope)
-            d << instr.name;
-        MOTH_END_INSTR(CallBuiltinPushCatchScope)
+        MOTH_BEGIN_INSTR(CallBuiltinPushCatchContext)
+            d << instr.reg.dump(nFormals) << ", " << instr.name;
+        MOTH_END_INSTR(CallBuiltinPushCatchContext)
 
-        MOTH_BEGIN_INSTR(CallBuiltinPushScope)
-        MOTH_END_INSTR(CallBuiltinPushScope)
+        MOTH_BEGIN_INSTR(CallBuiltinPushWithContext)
+            d << instr.reg.dump(nFormals);
+        MOTH_END_INSTR(CallBuiltinPushWithContext)
 
-        MOTH_BEGIN_INSTR(CallBuiltinPopScope)
-        MOTH_END_INSTR(CallBuiltinPopScope)
+        MOTH_BEGIN_INSTR(CallBuiltinPopContext)
+            d << instr.reg.dump(nFormals);
+        MOTH_END_INSTR(CallBuiltinPopContext)
 
         MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)
         MOTH_END_INSTR(CallBuiltinForeachIteratorObject)

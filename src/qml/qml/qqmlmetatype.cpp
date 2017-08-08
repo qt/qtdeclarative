@@ -224,8 +224,6 @@ public:
 
 void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(e->handle());
-    v4->pushGlobalContext();
     if (scriptCallback && scriptApi(e).isUndefined()) {
         setScriptApi(e, scriptCallback(e, e));
     } else if (qobjectCallback && !qobjectApi(e)) {
@@ -241,7 +239,6 @@ void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
         QObject *o = component.create();
         setQObjectApi(e, o);
     }
-    v4->popContext();
 }
 
 void QQmlType::SingletonInstanceInfo::destroy(QQmlEngine *e)

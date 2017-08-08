@@ -63,7 +63,7 @@ struct Q_QML_EXPORT Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
 
-    typedef ReturnedValue (*Code)(Function *, const FunctionObject *);
+    typedef ReturnedValue (*Code)(Heap::ExecutionContext *c, Function *, const FunctionObject *);
     Code code;
     const uchar *codeData;
 

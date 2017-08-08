@@ -339,7 +339,7 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration dur
     }
 }
 
-void QQmlPropertyCapture::registerQmlDependencies(const QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction)
+void QQmlPropertyCapture::registerQmlDependencies(QV4::QmlContext *context, const QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction)
 {
     // Let the caller check and avoid the function call :)
     Q_ASSERT(compiledFunction->hasQmlDependencies());
@@ -356,8 +356,8 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::ExecutionEngine *en
 
     capture->expression->m_permanentDependenciesRegistered = true;
 
-    QV4::Heap::QmlContext *context = engine->qmlContext();
-    QQmlContextData *qmlContext = context->qml()->context->contextData();
+    QV4::Heap::QQmlContextWrapper *wrapper = context->d()->qml();
+    QQmlContextData *qmlContext = wrapper->context->contextData();
 
     const QV4::CompiledData::LEUInt32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
     const int idObjectDependencyCount = compiledFunction->nDependingIdObjects;
@@ -377,7 +377,7 @@ void QQmlPropertyCapture::registerQmlDependencies(const QV4::ExecutionEngine *en
                                  QQmlPropertyCapture::Permanently);
     }
 
-    QObject *scopeObject = context->qml()->scopeObject;
+    QObject *scopeObject = wrapper->scopeObject;
     const QV4::CompiledData::LEUInt32 *scopePropertyDependency = compiledFunction->qmlScopePropertiesDependencyTable();
     const int scopePropertyDependencyCount = compiledFunction->nDependingScopeProperties;
     for (int i = 0; i < scopePropertyDependencyCount; ++i) {

@@ -229,7 +229,7 @@ private:
 
     QV4::ExecutionEngine *m_engine;
     QQmlNativeDebugServiceImpl *m_service;
-    QV4::PersistentValue m_currentContext;
+    QV4::EngineBase::StackFrame *m_currentFrame = 0;
     Speed m_stepping;
     bool m_pauseRequested;
     bool m_runningJob;
@@ -249,10 +249,7 @@ QV4::ReturnedValue NativeDebugger::evaluateExpression(const QString &expression)
     QV4::Scope scope(m_engine);
     m_runningJob = true;
 
-    QV4::ExecutionContextSaver saver(m_engine);
-
-    QV4::ExecutionContext *ctx = m_engine->currentContext;
-    m_engine->pushContext(ctx);
+    QV4::ExecutionContext *ctx = m_engine->currentContext();
 
     QV4::Script script(ctx, expression);
     script.strictMode = ctx->d()->v4Function->isStrict();
@@ -594,7 +591,7 @@ void NativeDebugger::handleContinue(QJsonObject *response, Speed speed)
     if (!m_returnedValue.isUndefined())
         m_returnedValue.set(m_engine, QV4::Encode::undefined());
 
-    m_currentContext.set(m_engine, *m_engine->currentContext);
+    m_currentFrame = m_engine->currentStackFrame;
     m_stepping = speed;
 }
 
@@ -604,7 +601,7 @@ void NativeDebugger::maybeBreakAtInstruction()
         return;
 
     if (m_stepping == StepOver) {
-        if (m_currentContext.asManaged()->d() == m_engine->current)
+        if (m_currentFrame == m_engine->currentStackFrame)
             pauseAndWait();
         return;
     }
@@ -635,7 +632,7 @@ void NativeDebugger::enteringFunction()
         return;
 
     if (m_stepping == StepIn) {
-        m_currentContext.set(m_engine, *m_engine->currentContext);
+        m_currentFrame = m_engine->currentStackFrame;
     }
 }
 
@@ -644,8 +641,8 @@ void NativeDebugger::leavingFunction(const QV4::ReturnedValue &retVal)
     if (m_runningJob)
         return;
 
-    if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->current) {
-        m_currentContext.set(m_engine, *m_engine->parentContext(m_engine->currentContext));
+    if (m_stepping != NotStepping && m_currentFrame == m_engine->currentStackFrame) {
+        m_currentFrame = m_currentFrame->parent;
         m_stepping = StepOver;
         m_returnedValue.set(m_engine, retVal);
     }
@@ -667,7 +664,7 @@ void NativeDebugger::aboutToThrow()
 
 QV4::Function *NativeDebugger::getFunction() const
 {
-    QV4::ExecutionContext *context = m_engine->currentContext;
+    QV4::ExecutionContext *context = m_engine->currentContext();
     if (QV4::Function *function = context->getFunction())
         return function;
     else

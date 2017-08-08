@@ -274,6 +274,13 @@ struct ControlFlowWith : public ControlFlowUnwind
         : ControlFlowUnwind(cg, With)
     {
         needsLookupByName = true;
+
+        savedContextRegister = Moth::StackSlot::createRegister(generator()->newRegister());
+
+        // assumes the with object is in the accumulator
+        Instruction::CallBuiltinPushWithContext pushScope;
+        pushScope.reg = savedContextRegister;
+        generator()->addInstruction(pushScope);
         generator()->setExceptionHandler(&unwindLabel);
     }
 
@@ -282,11 +289,13 @@ struct ControlFlowWith : public ControlFlowUnwind
         unwindLabel.link();
 
         generator()->setExceptionHandler(parentExceptionHandler());
-        Instruction::CallBuiltinPopScope pop;
+        Instruction::CallBuiltinPopContext pop;
+        pop.reg = savedContextRegister;
         generator()->addInstruction(pop);
 
         emitUnwindHandler();
     }
+    Moth::StackSlot savedContextRegister;
 };
 
 struct ControlFlowCatch : public ControlFlowUnwind
@@ -330,12 +339,16 @@ struct ControlFlowCatch : public ControlFlowUnwind
         needsLookupByName = true;
         insideCatch = true;
 
+        Codegen::RegisterScope scope(cg);
+
         // exceptions inside the try block go here
         exceptionLabel.link();
         Reference name = Reference::fromName(cg, catchExpression->name.toString());
-        Instruction::CallBuiltinPushCatchScope pushCatchScope;
-        pushCatchScope.name = name.unqualifiedNameIndex;
-        generator()->addInstruction(pushCatchScope);
+        Moth::StackSlot savedContextReg = Moth::StackSlot::createRegister(generator()->newRegister());
+        Instruction::CallBuiltinPushCatchContext pushCatch;
+        pushCatch.name = name.unqualifiedNameIndex;
+        pushCatch.reg = savedContextReg;
+        generator()->addInstruction(pushCatch);
         // clear the unwind temp for exceptions, we want to resume normal code flow afterwards
         Reference::storeConstOnStack(cg, QV4::Encode::undefined(), controlFlowTemp);
         generator()->setExceptionHandler(&catchUnwindLabel);
@@ -347,7 +360,8 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
         // exceptions inside catch and break/return statements go here
         catchUnwindLabel.link();
-        Instruction::CallBuiltinPopScope pop;
+        Instruction::CallBuiltinPopContext pop;
+        pop.reg = savedContextReg;
         generator()->addInstruction(pop);
 
         // break/continue/return statements in try go here

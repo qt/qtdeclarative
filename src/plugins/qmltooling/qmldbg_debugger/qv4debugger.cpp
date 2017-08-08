@@ -115,7 +115,7 @@ void QV4Debugger::resume(Speed speed)
     if (!m_returnedValue.isUndefined())
         m_returnedValue.set(m_engine, QV4::Encode::undefined());
 
-    m_currentContext.set(m_engine, *m_engine->currentContext);
+    m_currentFrame = m_engine->currentStackFrame;
     m_stepping = speed;
     m_runningCondition.wakeAll();
 }
@@ -187,7 +187,7 @@ void QV4Debugger::maybeBreakAtInstruction()
 
     switch (m_stepping) {
     case StepOver:
-        if (m_currentContext.asManaged()->d() != m_engine->current)
+        if (m_currentFrame != m_engine->currentStackFrame)
             break;
         // fall through
     case StepIn:
@@ -216,9 +216,8 @@ void QV4Debugger::enteringFunction()
         return;
     QMutexLocker locker(&m_lock);
 
-    if (m_stepping == StepIn) {
-        m_currentContext.set(m_engine, *m_engine->currentContext);
-    }
+    if (m_stepping == StepIn)
+        m_currentFrame = m_engine->currentStackFrame;
 }
 
 void QV4Debugger::leavingFunction(const QV4::ReturnedValue &retVal)
@@ -229,13 +228,8 @@ void QV4Debugger::leavingFunction(const QV4::ReturnedValue &retVal)
 
     QMutexLocker locker(&m_lock);
 
-    if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->current) {
-        if (QV4::ExecutionContext *parentContext
-                = m_engine->parentContext(m_engine->currentContext)) {
-            m_currentContext.set(m_engine, *parentContext);
-        } else {
-            m_currentContext.clear();
-        }
+    if (m_stepping != NotStepping && m_currentFrame == m_engine->currentStackFrame) {
+        m_currentFrame = m_currentFrame->parent;
         m_stepping = StepOver;
         m_returnedValue.set(m_engine, retVal);
     }
@@ -255,10 +249,8 @@ void QV4Debugger::aboutToThrow()
 
 QV4::Function *QV4Debugger::getFunction() const
 {
-    QV4::Scope scope(m_engine);
-    QV4::ExecutionContext *context = m_engine->currentContext;
-    if (QV4::Function *function = context->getFunction())
-        return function;
+    if (m_engine->currentStackFrame)
+        return m_engine->currentStackFrame->v4Function;
     else
         return m_engine->globalCode;
 }

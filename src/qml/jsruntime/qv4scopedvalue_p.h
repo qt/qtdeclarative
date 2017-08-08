@@ -371,6 +371,25 @@ struct ScopedCallData {
     CallData *ptr;
 };
 
+struct ScopedStackFrame {
+    Scope &scope;
+    EngineBase::StackFrame frame;
+
+    ScopedStackFrame(Scope &scope, Heap::ExecutionContext *context)
+        : scope(scope)
+    {
+        frame.parent = scope.engine->currentStackFrame;
+        if (!context)
+            return;
+        frame.jsFrame = reinterpret_cast<EngineBase::JSStackFrame *>(scope.alloc(sizeof(EngineBase::JSStackFrame)/sizeof(Value)));
+        frame.jsFrame->context = context;
+        frame.v4Function = frame.parent ? frame.parent->v4Function : 0;
+        scope.engine->currentStackFrame = &frame;
+    }
+    ~ScopedStackFrame() {
+        scope.engine->currentStackFrame = frame.parent;
+    }
+};
 
 inline Value &Value::operator =(const ScopedValue &v)
 {
@@ -398,25 +417,6 @@ struct ScopedProperty
 
     Property *property;
 };
-
-struct ExecutionContextSaver
-{
-    ExecutionEngine *engine;
-    ExecutionContext *savedContext;
-
-    ExecutionContextSaver(ExecutionEngine *engine)
-        : engine(engine)
-    {
-        savedContext = engine->currentContext;
-    }
-    ~ExecutionContextSaver()
-    {
-        Q_ASSERT(engine->jsStackTop > engine->currentContext);
-        engine->currentContext = savedContext;
-        engine->current = savedContext->d();
-    }
-};
-
 
 }
 
