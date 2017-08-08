@@ -1328,40 +1328,6 @@ QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine
     return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c, true)->asReturnedValue();
 }
 
-#endif // V4_BOOTSTRAP
-
-ReturnedValue Runtime::method_toDouble(const Value &value)
-{
-    TRACE1(value);
-    return Encode(value.toNumber());
-}
-
-int Runtime::method_toInt(const Value &value)
-{
-    TRACE1(value);
-    return value.toInt32();
-}
-
-int Runtime::method_doubleToInt(const double &d)
-{
-    TRACE0();
-    return Primitive::toInt32(d);
-}
-
-unsigned Runtime::method_toUInt(const Value &value)
-{
-    TRACE1(value);
-    return value.toUInt32();
-}
-
-unsigned Runtime::method_doubleToUInt(const double &d)
-{
-    TRACE0();
-    return Primitive::toUInt32(d);
-}
-
-#ifndef V4_BOOTSTRAP
-
 ReturnedValue Runtime::method_getQmlContext(NoThrowEngine *engine)
 {
     return engine->qmlContext()->asReturnedValue();
@@ -1665,11 +1631,6 @@ Bool Runtime::method_compareStrictNotEqual(const Value &left, const Value &right
     TRACE2(left, right);
 
     return ! RuntimeHelpers::strictEqual(left, right);
-}
-
-Bool Runtime::method_toBoolean(const Value &value)
-{
-    return value.toBoolean();
 }
 
 } // namespace QV4

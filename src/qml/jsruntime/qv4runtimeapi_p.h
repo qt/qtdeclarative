@@ -186,14 +186,6 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(Bool, compareInstanceof, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     F(Bool, compareIn, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     \
-    /* conversions */ \
-    F(Bool, toBoolean, (const Value &value)) \
-    F(ReturnedValue, toDouble, (const Value &value)) \
-    F(int, toInt, (const Value &value)) \
-    F(int, doubleToInt, (const double &d)) \
-    F(unsigned, toUInt, (const Value &value)) \
-    F(unsigned, doubleToUInt, (const double &d)) \
-    \
     /* qml */ \
     F(ReturnedValue, getQmlContext, (NoThrowEngine *engine)) \
     F(ReturnedValue, getQmlImportedScripts, (NoThrowEngine *engine)) \
