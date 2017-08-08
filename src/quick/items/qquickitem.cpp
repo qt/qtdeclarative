@@ -67,6 +67,7 @@
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
+#include <QtQuick/private/qquickpointerhandler_p.h>
 
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
@@ -3189,6 +3190,11 @@ QQuickItemPrivate::QQuickItemPrivate()
     , antialiasingValid(false)
     , isTabFence(false)
     , replayingPressEvent(false)
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    , touchEnabled(true)
+#else
+    , touchEnabled(false)
+#endif
     , dirtyAttributes(0)
     , nextDirtyItem(0)
     , prevDirtyItem(0)
@@ -3240,7 +3246,14 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
     } else {
         if (o->inherits("QGraphicsItem"))
             qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
-        else {
+        else if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
+            Q_ASSERT(pointerHandler->parentItem() == that);
+            // Accept all buttons, and leave filtering to pointerEvent() and/or user JS,
+            // because there can be multiple handlers...
+            that->setAcceptedMouseButtons(Qt::AllButtons);
+            QQuickItemPrivate *p = QQuickItemPrivate::get(that);
+            p->extra.value().pointerHandlers.append(pointerHandler);
+        } else {
             QQuickWindow *thisWindow = qmlobject_cast<QQuickWindow *>(o);
             QQuickItem *item = that;
             QQuickWindow *itemWindow = that->window();
@@ -5102,6 +5115,28 @@ void QQuickItemPrivate::deliverShortcutOverrideEvent(QKeyEvent *event)
     if (extra.isAllocated() && extra->keyHandler) {
         extra->keyHandler->shortcutOverride(event);
     }
+}
+
+/*!
+    \internal
+    Deliver the \a event to all PointerHandlers which are in the pre-determined
+    eventDeliveryTargets() vector.  If \a avoidExclusiveGrabber is true, it skips
+    delivery to any handler which is the exclusive grabber of any point within this event
+    (because delivery to exclusive grabbers is handled separately).
+*/
+bool QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event, bool avoidExclusiveGrabber)
+{
+    bool delivered = false;
+    QVector<QQuickPointerHandler *> &eventDeliveryTargets = event->device()->eventDeliveryTargets();
+    if (extra.isAllocated()) {
+        for (QQuickPointerHandler *handler : extra->pointerHandlers) {
+            if ((!avoidExclusiveGrabber || !event->hasExclusiveGrabber(handler)) && !eventDeliveryTargets.contains(handler)) {
+                handler->handlePointerEvent(event);
+                delivered = true;
+            }
+        }
+    }
+    return delivered;
 }
 
 /*!
@@ -7187,6 +7222,32 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
     Q_D(QQuickItem);
     d->hoverEnabled = enabled;
     d->setHasHoverInChild(enabled);
+}
+
+/*!
+    Returns whether touch events are accepted by this item.
+
+    The default value is false.
+
+    If this is false, then the item will not receive any touch events through
+    the touchEvent() function.
+*/
+bool QQuickItem::acceptTouchEvents() const
+{
+    Q_D(const QQuickItem);
+    return d->touchEnabled;
+}
+
+/*!
+    If \a enabled is true, this sets the item to accept touch events;
+    otherwise, touch events are not accepted by this item.
+
+    \sa acceptTouchEvents()
+*/
+void QQuickItem::setAcceptTouchEvents(bool accept)
+{
+    Q_D(QQuickItem);
+    d->touchEnabled = accept;
 }
 
 void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)

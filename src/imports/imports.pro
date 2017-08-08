@@ -14,6 +14,7 @@ qtConfig(statemachine): SUBDIRS += statemachine
 
 qtHaveModule(quick) {
     SUBDIRS += \
+        handlers \
         layouts \
         qtquick2 \
         window \
