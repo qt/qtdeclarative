@@ -339,18 +339,6 @@ static struct InstrCount {
 
 #endif
 
-// ### add write barrier here
-#define STOREVALUE(param, value) { \
-    QV4::ReturnedValue tmp = (value); \
-    if (engine->hasException) \
-        goto catchException; \
-    if (Q_LIKELY(!engine->writeBarrierActive || !scopes[param.scope].base)) { \
-        VALUE(param) = tmp; \
-    } else { \
-        QV4::WriteBarrier::write(engine, scopes[param.scope].base, VALUEPTR(param), QV4::Value::fromReturnedValue(tmp)); \
-    } \
-}
-
 #define STACK_VALUE(temp) stack[temp.stackSlot()]
 #define STORE_STACK_VALUE(temp, value) { \
     QV4::ReturnedValue tmp = (value); \
@@ -448,15 +436,7 @@ QV4::ReturnedValue VME::exec(Heap::ExecutionContext *context, Function *function
     const uchar *exceptionHandler = 0;
 
     QV4::Scope scope(engine);
-    if (!function->canUseSimpleFunction()) {
-        int nFormals = function->nFormals;
-        stack = scope.alloc(nFormals + 1 + function->compiledFunction->nRegisters + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
-// ### why copy those on the stack again?
-        memcpy(stack, &context->callData->thisObject, (nFormals + 1)*sizeof(Value));
-        stack += nFormals + 1;
-    } else {
-        stack = scope.alloc(function->compiledFunction->nRegisters + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
-    }
+    stack = scope.alloc(function->compiledFunction->nRegisters + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
     frame.jsFrame = reinterpret_cast<EngineBase::JSStackFrame *>(stack);
     frame.jsFrame->context = context;
     if (jsFunction)
@@ -777,7 +757,6 @@ QV4::ReturnedValue VME::exec(Heap::ExecutionContext *context, Function *function
     MOTH_BEGIN_INSTR(CreateValue)
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         STORE_ACCUMULATOR(Runtime::method_constructValue(engine, STACK_VALUE(instr.func), callData));
-        //### write barrier?
     MOTH_END_INSTR(CreateValue)
 
     MOTH_BEGIN_INSTR(CreateProperty)

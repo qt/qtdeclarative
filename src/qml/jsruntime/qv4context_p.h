@@ -193,7 +193,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     Q_MANAGED_TYPE(ExecutionContext)
     V4_INTERNALCLASS(ExecutionContext)
 
-    Heap::CallContext *newCallContext(Function *f, CallData *callData);
+    static Heap::CallContext *newCallContext(Heap::ExecutionContext *outer, Function *f, CallData *callData);
     Heap::ExecutionContext *newWithContext(Heap::Object *with);
     Heap::CatchContext *newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue);
 
@@ -222,8 +222,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
         return d()->callData->argument(i);
     }
 
-    ReturnedValue call(ExecutionEngine *engine, CallData *callData, QV4::Function *function, const QV4::FunctionObject *f = 0);
-    ReturnedValue simpleCall(ExecutionEngine *engine, CallData *callData, QV4::Function *function);
+    static ReturnedValue call(Heap::ExecutionContext *context, CallData *callData, QV4::Function *function, const QV4::FunctionObject *f = 0);
 };
 
 struct Q_QML_EXPORT CallContext : public ExecutionContext

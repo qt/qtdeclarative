@@ -368,13 +368,7 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     QV4::Function *v4Function = f->function();
     Q_ASSERT(v4Function);
 
-    Value s = Value::fromHeapObject(f->scope());
-    ExecutionContext *outer = static_cast<ExecutionContext *>(&s);
-    ReturnedValue result;
-    if (v4Function->canUseSimpleCall)
-        result = outer->simpleCall(scope.engine, callData, v4Function);
-    else
-        result = outer->call(scope.engine, callData, v4Function, f);
+    ReturnedValue result = ExecutionContext::call(f->scope(), callData, v4Function, f);
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
@@ -394,12 +388,7 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
     QV4::Function *v4Function = f->function();
     Q_ASSERT(v4Function);
 
-    Value s = Value::fromHeapObject(f->scope());
-    ExecutionContext *outer = static_cast<ExecutionContext *>(&s);
-    if (v4Function->canUseSimpleCall)
-        return outer->simpleCall(v4, callData, v4Function);
-    else
-        return outer->call(v4, callData, v4Function, f);
+    return ExecutionContext::call(f->scope(), callData, v4Function, f);
 }
 
 void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)

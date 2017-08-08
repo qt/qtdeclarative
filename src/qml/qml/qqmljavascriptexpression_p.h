@@ -203,7 +203,7 @@ public:
         Permanently
     };
 
-    static void registerQmlDependencies(QV4::QmlContext *context, const QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction);
+    static void registerQmlDependencies(QV4::Heap::QmlContext *context, const QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction);
     void captureProperty(QQmlNotifier *, Duration duration = OnlyOnce);
     void captureProperty(QObject *, int, int, Duration duration = OnlyOnce);
 

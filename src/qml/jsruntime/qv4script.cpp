@@ -156,10 +156,7 @@ ReturnedValue Script::run()
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
         ScopedCallData callData(valueScope);
         callData->thisObject = Primitive::undefinedValue();
-        if (vmFunction->canUseSimpleFunction())
-            return qml->simpleCall(valueScope.engine, callData, vmFunction);
-        else
-            return qml->call(valueScope.engine, callData, vmFunction);
+        return ExecutionContext::call(qml->d(), callData, vmFunction);
     }
 }
 

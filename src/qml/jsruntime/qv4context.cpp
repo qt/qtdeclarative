@@ -57,18 +57,19 @@ DEFINE_MANAGED_VTABLE(ExecutionContext);
 DEFINE_MANAGED_VTABLE(CallContext);
 DEFINE_MANAGED_VTABLE(CatchContext);
 
-Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData *callData)
+Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *outer, Function *function, CallData *callData)
 {
-    uint localsAndFormals = function->compiledFunction->nLocals + sizeof(CallData)/sizeof(Value) - 1 + qMax(static_cast<uint>(callData->argc), function->nFormals);
+    uint nFormals = qMax(static_cast<uint>(callData->argc), function->nFormals);
+    uint localsAndFormals = function->compiledFunction->nLocals + sizeof(CallData)/sizeof(Value) - 1 + nFormals;
     size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * (localsAndFormals);
 
-    ExecutionEngine *v4 = engine();
+    ExecutionEngine *v4 = outer->internalClass->engine;
     Heap::CallContext *c = v4->memoryManager->allocManaged<CallContext>(requiredMemory, function->internalClass);
     c->init(Heap::ExecutionContext::Type_CallContext);
 
     c->v4Function = function;
 
-    c->outer.set(v4, this->d());
+    c->outer.set(v4, outer);
 
     const CompiledData::Function *compiledFunction = function->compiledFunction;
     uint nLocals = compiledFunction->nLocals;
@@ -83,9 +84,7 @@ Heap::CallContext *ExecutionContext::newCallContext(Function *function, CallData
 #endif
 
     c->callData = reinterpret_cast<CallData *>(c->locals.values + nLocals);
-    ::memcpy(c->callData, callData, sizeof(CallData) - sizeof(Value) + static_cast<uint>(callData->argc) * sizeof(Value));
-    if (callData->argc < static_cast<int>(compiledFunction->nFormals))
-        std::fill(c->callData->args + c->callData->argc, c->callData->args + compiledFunction->nFormals, Primitive::undefinedValue());
+    ::memcpy(c->callData, callData, sizeof(CallData) - sizeof(Value) + nFormals * sizeof(Value));
 
     return c;
 }
@@ -229,38 +228,26 @@ bool ExecutionContext::deleteProperty(String *name)
     return !d()->v4Function->isStrict();
 }
 
-// Do a standard call with this execution context as the outer scope
-ReturnedValue ExecutionContext::call(ExecutionEngine *engine, CallData *callData, Function *function, const FunctionObject *f)
+// Do a call with this execution context as the outer scope
+ReturnedValue ExecutionContext::call(Heap::ExecutionContext *context, CallData *callData, Function *function, const FunctionObject *f)
 {
-    Heap::CallContext *ctx = newCallContext(function, callData);
-    if (f)
-        ctx->function.set(engine, f->d());
-
-    ReturnedValue res = Q_V4_PROFILE(engine, ctx, function, f);
-
-    if (function->hasQmlDependencies) {
-        Q_ASSERT(d()->type == Heap::ExecutionContext::Type_QmlContext);
-        QQmlPropertyCapture::registerQmlDependencies(static_cast<QmlContext *>(this), engine, function->compiledFunction);
-    }
-
-    return res;
-}
-
-// Do a simple, fast call with this execution context as the outer scope
-ReturnedValue QV4::ExecutionContext::simpleCall(ExecutionEngine *engine, CallData *callData, Function *function)
-{
-    Q_ASSERT(function->canUseSimpleFunction());
-
+    ExecutionEngine *engine = context->internalClass->engine;
     Value *jsStackTop = engine->jsStackTop;
     engine->jsStackTop = reinterpret_cast<QV4::Value *>(callData) + 2 + (int)function->nFormals;
     for (int i = callData->argc; i < (int)function->nFormals; ++i)
         callData->args[i] = Encode::undefined();
 
-    ReturnedValue res = Q_V4_PROFILE(engine, d(), function, 0);
+    if (!function->canUseSimpleCall) {
+        context = newCallContext(context, function, callData);
+        if (f)
+            static_cast<Heap::CallContext *>(context)->function.set(engine, f->d());
+    }
+
+    ReturnedValue res = Q_V4_PROFILE(engine, context, function, f);
 
     if (function->hasQmlDependencies) {
-        Q_ASSERT(d()->type == Heap::ExecutionContext::Type_QmlContext);
-        QQmlPropertyCapture::registerQmlDependencies(static_cast<QmlContext *>(this), engine, function->compiledFunction);
+        Q_ASSERT(context->type == Heap::ExecutionContext::Type_QmlContext);
+        QQmlPropertyCapture::registerQmlDependencies(static_cast<Heap::QmlContext *>(context), engine, function->compiledFunction);
     }
 
     engine->jsStackTop = jsStackTop;

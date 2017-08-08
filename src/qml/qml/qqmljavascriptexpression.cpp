@@ -227,11 +227,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
     }
 
     QV4::ExecutionContext *outer = static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef());
-    if (v4Function->canUseSimpleFunction()) {
-        result = outer->simpleCall(scope.engine, callData, v4Function);
-    } else {
-        result = outer->call(scope.engine, callData, v4Function);
-    }
+    result = QV4::ExecutionContext::call(outer->d(), callData, v4Function);
 
     if (scope.hasException()) {
         if (watcher.wasDeleted())
@@ -339,7 +335,7 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration dur
     }
 }
 
-void QQmlPropertyCapture::registerQmlDependencies(QV4::QmlContext *context, const QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction)
+void QQmlPropertyCapture::registerQmlDependencies(QV4::Heap::QmlContext *context, const QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction)
 {
     // Let the caller check and avoid the function call :)
     Q_ASSERT(compiledFunction->hasQmlDependencies());
@@ -356,7 +352,7 @@ void QQmlPropertyCapture::registerQmlDependencies(QV4::QmlContext *context, cons
 
     capture->expression->m_permanentDependenciesRegistered = true;
 
-    QV4::Heap::QQmlContextWrapper *wrapper = context->d()->qml();
+    QV4::Heap::QQmlContextWrapper *wrapper = context->qml();
     QQmlContextData *qmlContext = wrapper->context->contextData();
 
     const QV4::CompiledData::LEUInt32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
