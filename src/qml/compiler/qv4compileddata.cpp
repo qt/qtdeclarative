@@ -46,6 +46,7 @@
 #include <private/qv4objectproto_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
+#include <private/qv4regexp_p.h>
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlengine_p.h>
@@ -136,14 +137,16 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     memset(runtimeRegularExpressions, 0, data->regexpTableSize * sizeof(QV4::Value));
     for (uint i = 0; i < data->regexpTableSize; ++i) {
         const CompiledData::RegExp *re = data->regexpAt(i);
-        int flags = 0;
+        bool global = false;
+        bool multiline = false;
+        bool ignoreCase = false;
         if (re->flags & CompiledData::RegExp::RegExp_Global)
-            flags |= IR::RegExp::RegExp_Global;
+            global = true;
         if (re->flags & CompiledData::RegExp::RegExp_IgnoreCase)
-            flags |= IR::RegExp::RegExp_IgnoreCase;
+            ignoreCase = true;
         if (re->flags & CompiledData::RegExp::RegExp_Multiline)
-            flags |= IR::RegExp::RegExp_Multiline;
-        runtimeRegularExpressions[i] = engine->newRegExpObject(data->stringAt(re->stringIndex), flags);
+            multiline = true;
+        runtimeRegularExpressions[i] = QV4::RegExp::create(engine, data->stringAt(re->stringIndex), ignoreCase, multiline, global);
     }
 
     if (data->lookupTableSize) {

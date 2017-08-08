@@ -50,6 +50,8 @@
 #include <private/qv4math_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4regexp_p.h>
+#include <private/qv4regexpobject_p.h>
 #include <private/qv4string_p.h>
 #include <iostream>
 
@@ -443,7 +445,10 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
 
     MOTH_BEGIN_INSTR(LoadRegExp)
 //        TRACE(value, "%s", instr.value.toString(context)->toQString().toUtf8().constData());
-        VALUE(instr.result) = static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeRegularExpressions[instr.regExpId];
+        Heap::RegExpObject *ro = engine->newRegExpObject(
+                static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)
+                        ->runtimeRegularExpressions[instr.regExpId].as<RegExp>());
+        VALUE(instr.result) = ro;
     MOTH_END_INSTR(LoadRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)

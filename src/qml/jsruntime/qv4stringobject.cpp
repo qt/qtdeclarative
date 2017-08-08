@@ -542,7 +542,7 @@ void StringPrototype::method_replace(const BuiltinFunction *, Scope &scope, Call
                 break;
             }
             nMatchOffsets += re->captureCount() * 2;
-            if (!regExp->d()->global)
+            if (!regExp->global())
                 break;
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }

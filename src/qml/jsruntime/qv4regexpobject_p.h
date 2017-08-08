@@ -60,6 +60,7 @@
 #include "qv4managed_p.h"
 #include "qv4property_p.h"
 #include "qv4objectiterator_p.h"
+#include "qv4regexp_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -75,11 +76,10 @@ namespace Heap {
 
 struct RegExpObject : Object {
     void init();
-    void init(QV4::RegExp *value, bool global);
+    void init(QV4::RegExp *value);
     void init(const QRegExp &re);
 
     Pointer<RegExp> value;
-    bool global;
 };
 
 struct RegExpCtor : FunctionObject {
@@ -117,7 +117,7 @@ struct RegExpObject: Object {
     };
 
     Heap::RegExp *value() const { return d()->value; }
-    bool global() const { return d()->global; }
+    bool global() const { return d()->value->global; }
 
     void initProperties();
 

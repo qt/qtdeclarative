@@ -145,6 +145,7 @@ private slots:
     void array_join_QTBUG_53672();
 
     void regexpLastMatch();
+    void regexpLastIndex();
     void indexedAccesses();
 
     void prototypeChainGc();
@@ -3294,6 +3295,28 @@ void tst_QJSEngine::regexpLastMatch()
         QCOMPARE(match.toString(), QString());
     }
 
+}
+
+void tst_QJSEngine::regexpLastIndex()
+{
+    QJSEngine eng;
+    QJSValue result;
+    result = eng.evaluate("function test(text, rx) {"
+                          "    var res;"
+                          "    while (res = rx.exec(text)) { "
+                          "        return true;"
+                          "    }"
+                          "    return false;"
+                          " }"
+                          "function tester(text) {"
+                          "    return test(text, /,\\s*/g);"
+                          "}");
+    QVERIFY(!result.isError());
+
+    result = eng.evaluate("tester(\",  \\n\");");
+    QVERIFY(result.toBool());
+    result = eng.evaluate("tester(\",  \\n\");");
+    QVERIFY(result.toBool());
 }
 
 void tst_QJSEngine::indexedAccesses()

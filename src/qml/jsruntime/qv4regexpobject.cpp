@@ -74,15 +74,13 @@ void Heap::RegExpObject::init()
     Object::init();
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
-    o->d()->value = QV4::RegExp::create(scope.engine, QString(), false, false);
-    o->d()->global = false;
+    o->d()->value = QV4::RegExp::create(scope.engine, QString(), false, false, false);
     o->initProperties();
 }
 
-void Heap::RegExpObject::init(QV4::RegExp *value, bool global)
+void Heap::RegExpObject::init(QV4::RegExp *value)
 {
     Object::init();
-    this->global = global;
     this->value = value->d();
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
@@ -95,7 +93,6 @@ void Heap::RegExpObject::init(QV4::RegExp *value, bool global)
 void Heap::RegExpObject::init(const QRegExp &re)
 {
     Object::init();
-    global = false;
 
     // Convert the pattern to a ECMAScript pattern.
     QString pattern = QT_PREPEND_NAMESPACE(qt_regexp_toCanonical)(re.pattern(), re.patternSyntax());
@@ -246,7 +243,7 @@ void RegExpCtor::construct(const Managed *, Scope &scope, CallData *callData)
         }
 
         Scoped<RegExp> regexp(scope, re->value());
-        scope.result = Encode(scope.engine->newRegExpObject(regexp, re->global()));
+        scope.result = Encode(scope.engine->newRegExpObject(regexp));
         return;
     }
 
@@ -282,13 +279,13 @@ void RegExpCtor::construct(const Managed *, Scope &scope, CallData *callData)
         }
     }
 
-    Scoped<RegExp> regexp(scope, RegExp::create(scope.engine, pattern, ignoreCase, multiLine));
+    Scoped<RegExp> regexp(scope, RegExp::create(scope.engine, pattern, ignoreCase, multiLine, global));
     if (!regexp->isValid()) {
         scope.result = scope.engine->throwSyntaxError(QStringLiteral("Invalid regular expression"));
         return;
     }
 
-    scope.result = Encode(scope.engine->newRegExpObject(regexp, global));
+    scope.result = Encode(scope.engine->newRegExpObject(regexp));
 }
 
 void RegExpCtor::call(const Managed *that, Scope &scope, CallData *callData)
@@ -433,7 +430,6 @@ void RegExpPrototype::method_compile(const BuiltinFunction *, Scope &scope, Call
     Scoped<RegExpObject> re(scope, scope.result.asReturnedValue());
 
     r->d()->value = re->value();
-    r->d()->global = re->global();
     RETURN_UNDEFINED();
 }
 
