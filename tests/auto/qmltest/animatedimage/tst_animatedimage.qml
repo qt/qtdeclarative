@@ -114,6 +114,44 @@ Item {
         fillMode: AnimatedImage.TileHorizontally
     }
 
+    Loader {
+        id: raceConditionLoader
+        active: false
+        anchors.fill: parent
+
+        sourceComponent: ListView {
+            anchors.fill: parent
+            model: 5000
+            delegate: Item {
+                height: 10
+                width: parent.width
+                Text {
+                    anchors.fill: parent
+                    text: index
+                }
+                AnimatedImage {
+                    anchors.fill: parent
+                    source: "http://127.0.0.1/some-image-url.gif"
+                    Component.onCompleted: source = "";
+                }
+            }
+
+            function scrollToNext() {
+                currentIndex = currentIndex + 30 < model ? currentIndex + 30 : model;
+                positionViewAtIndex(currentIndex, ListView.Beginning);
+                if (currentIndex >= model)
+                    raceConditionLoader.active = false;
+            }
+
+            property Timer timer: Timer {
+                interval: 10
+                repeat: true
+                onTriggered: parent.scrollToNext()
+                Component.onCompleted: start()
+            }
+        }
+    }
+
     TestCase {
         name: "AnimatedImage"
 
@@ -214,6 +252,11 @@ Item {
             compare(tileModes3.width, 300)
             compare(tileModes3.height, 150)
             compare(tileModes3.fillMode, AnimatedImage.TileHorizontally)
+        }
+
+        function test_crashRaceCondition_replyFinished() {
+            raceConditionLoader.active = true;
+            tryCompare(raceConditionLoader, "active", false);
         }
 
     }
