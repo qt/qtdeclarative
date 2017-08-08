@@ -370,7 +370,7 @@ void QQuickAnimatedImage::movieRequestFinished()
     }
 #endif
 
-    if (!d->_movie->isValid()) {
+    if (!d->_movie || !d->_movie->isValid()) {
         qmlWarning(this) << "Error Reading Animated Image File " << d->url.toString();
         delete d->_movie;
         d->_movie = 0;
