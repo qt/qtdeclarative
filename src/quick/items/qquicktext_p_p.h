@@ -154,6 +154,8 @@ public:
     QQuickText::RenderType renderType;
     UpdateType updateType;
 
+    QString assignedFont;
+
     bool maximumLineCountValid:1;
     bool updateOnComponentComplete:1;
     bool richText:1;

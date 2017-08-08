@@ -1059,6 +1059,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
     if (eos != multilengthEos)
         truncated = true;
 
+    assignedFont = QFontInfo(font).family();
+
     if (elide) {
         if (!elideLayout) {
             elideLayout = new QTextLayout;
@@ -2414,6 +2416,12 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 void QQuickText::updatePolish()
 {
     Q_D(QQuickText);
+    // If the fonts used for rendering are different from the ones used in the GUI thread,
+    // it means we will get warnings and corrupted text. If this case is detected, we need
+    // to update the text layout before creating the scenegraph nodes.
+    if (!d->assignedFont.isEmpty() && QFontInfo(d->font).family() != d->assignedFont)
+        d->polishSize = true;
+
     if (d->polishSize) {
         d->updateSize();
         d->polishSize = false;
