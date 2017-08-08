@@ -96,6 +96,8 @@ public:
     int maxTextureSize() const override { return m_maxTextureSize; }
 
 protected:
+    static QString fontKey(const QRawFont &font);
+
     QOpenGLContext *m_gl;
     QSGDepthStencilBufferManager *m_depthStencilManager;
     int m_maxTextureSize;

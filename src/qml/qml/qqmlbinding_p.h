@@ -77,6 +77,8 @@ public:
                                const QString &url = QString(), quint16 lineNumber = 0);
     static QQmlBinding *create(const QQmlPropertyData *property, QV4::Function *function,
                                QObject *obj, QQmlContextData *ctxt, QV4::ExecutionContext *scope);
+    static QQmlBinding *createTranslationBinding(QV4::CompiledData::CompilationUnit *unit, const QV4::CompiledData::Binding *binding,
+                                                 QObject *obj, QQmlContextData *ctxt);
     ~QQmlBinding();
 
     void setTarget(const QQmlProperty &);

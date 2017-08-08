@@ -86,6 +86,7 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, cons
     flags = QV4::CompiledData::Object::NoFlag;
     properties = pool->New<PoolList<Property> >();
     aliases = pool->New<PoolList<Alias> >();
+    qmlEnums = pool->New<PoolList<Enum>>();
     qmlSignals = pool->New<PoolList<Signal> >();
     bindings = pool->New<PoolList<Binding> >();
     functions = pool->New<PoolList<Function> >();
@@ -115,6 +116,21 @@ QString Object::sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQml
         if (illegalNames.contains(name))
             return tr("Illegal method name");
     }
+    return QString(); // no error
+}
+
+QString Object::appendEnum(Enum *enumeration)
+{
+    Object *target = declarationsOverride;
+    if (!target)
+        target = this;
+
+    for (Enum *e = qmlEnums->first; e; e = e->next) {
+        if (e->nameIndex == enumeration->nameIndex)
+            return tr("Duplicate scoped enum name");
+    }
+
+    target->qmlEnums->append(enumeration);
     return QString(); // no error
 }
 
@@ -708,6 +724,48 @@ static QStringList astNodeToStringList(QQmlJS::AST::Node *node)
     }
     return QStringList();
 }
+
+bool IRBuilder::visit(QQmlJS::AST::UiEnumDeclaration *node)
+{
+    Enum *enumeration = New<Enum>();
+    QString enumName = node->name.toString();
+    enumeration->nameIndex = registerString(enumName);
+
+    if (enumName.at(0).isLower())
+        COMPILE_EXCEPTION(node->enumToken, tr("Scoped enum names must begin with an upper case letter"));
+
+    enumeration->location.line = node->enumToken.startLine;
+    enumeration->location.column = node->enumToken.startColumn;
+
+    enumeration->enumValues = New<PoolList<EnumValue>>();
+
+    QQmlJS::AST::UiEnumMemberList *e = node->members;
+    int i = -1;
+    while (e) {
+        EnumValue *enumValue = New<EnumValue>();
+        QString member = e->member.toString();
+        enumValue->nameIndex = registerString(member);
+        enumValue->value = ++i;
+
+        if (member.at(0).isLower())
+            COMPILE_EXCEPTION(e->memberToken, tr("Enum names must begin with an upper case letter"));
+
+        enumValue->location.line = e->memberToken.startLine;
+        enumValue->location.column = e->memberToken.startColumn;
+        enumeration->enumValues->append(enumValue);
+
+        e = e->next;
+    }
+
+    QString error = _object->appendEnum(enumeration);
+    if (!error.isEmpty()) {
+        recordError(node->enumToken, error);
+        return false;
+    }
+
+    return false;
+}
+
 
 bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 {
@@ -1375,13 +1433,19 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
     int objectsSize = 0;
     for (Object *o : qAsConst(output.objects)) {
         objectOffsets.insert(o, unitSize + importSize + objectOffsetTableSize + objectsSize);
-        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
+        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
 
         int signalTableSize = 0;
         for (const Signal *s = o->firstSignal(); s; s = s->next)
             signalTableSize += QV4::CompiledData::Signal::calculateSize(s->parameters->count);
 
         objectsSize += signalTableSize;
+
+        int enumTableSize = 0;
+        for (const Enum *e = o->firstEnum(); e; e = e->next)
+            enumTableSize += QV4::CompiledData::Enum::calculateSize(e->enumValues->count);
+
+        objectsSize += enumTableSize;
     }
 
     const int totalSize = unitSize + importSize + objectOffsetTableSize + objectsSize + output.jsGenerator.stringTable.sizeOfTableAndData();
@@ -1425,7 +1489,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
     }
 
     // write objects
-    quint32 *objectTable = reinterpret_cast<quint32*>(data + qmlUnit->offsetToObjects);
+    quint32_le *objectTable = reinterpret_cast<quint32_le*>(data + qmlUnit->offsetToObjects);
     char *objectPtr = data + qmlUnit->offsetToObjects + objectOffsetTableSize;
     for (int i = 0; i < output.objects.count(); ++i) {
         const Object *o = output.objects.at(i);
@@ -1455,6 +1519,10 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         objectToWrite->offsetToAliases = nextOffset;
         nextOffset += objectToWrite->nAliases * sizeof(QV4::CompiledData::Alias);
 
+        objectToWrite->nEnums = o->enumCount();
+        objectToWrite->offsetToEnums = nextOffset;
+        nextOffset += objectToWrite->nEnums * sizeof(quint32);
+
         objectToWrite->nSignals = o->signalCount();
         objectToWrite->offsetToSignals = nextOffset;
         nextOffset += objectToWrite->nSignals * sizeof(quint32);
@@ -1467,7 +1535,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         objectToWrite->offsetToNamedObjectsInComponent = nextOffset;
         nextOffset += objectToWrite->nNamedObjectsInComponent * sizeof(quint32);
 
-        quint32 *functionsTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToFunctions);
+        quint32_le *functionsTable = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToFunctions);
         for (const Function *f = o->firstFunction(); f; f = f->next)
             *functionsTable++ = o->runtimeFunctionIndices.at(f->index);
 
@@ -1493,7 +1561,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isValueBindingToAlias);
         Q_ASSERT((bindingPtr - objectToWrite->offsetToBindings - objectPtr) / sizeof(QV4::CompiledData::Binding) == unsigned(o->bindingCount()));
 
-        quint32 *signalOffsetTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToSignals);
+        quint32_le *signalOffsetTable = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToSignals);
         quint32 signalTableSize = 0;
         char *signalPtr = objectPtr + nextOffset;
         for (const Signal *s = o->firstSignal(); s; s = s->next) {
@@ -1512,14 +1580,36 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
             signalTableSize += size;
             signalPtr += size;
         }
+        nextOffset += signalTableSize;
 
-        quint32 *namedObjectInComponentPtr = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
+        quint32_le *enumOffsetTable = reinterpret_cast<quint32_le*>(objectPtr + objectToWrite->offsetToEnums);
+        quint32 enumTableSize = 0;
+        char *enumPtr = objectPtr + nextOffset;
+        for (const Enum *e = o->firstEnum(); e; e = e->next) {
+            *enumOffsetTable++ = enumPtr - objectPtr;
+            QV4::CompiledData::Enum *enumToWrite = reinterpret_cast<QV4::CompiledData::Enum*>(enumPtr);
+
+            enumToWrite->nameIndex = e->nameIndex;
+            enumToWrite->location = e->location;
+            enumToWrite->nEnumValues = e->enumValues->count;
+
+            QV4::CompiledData::EnumValue *enumValueToWrite = reinterpret_cast<QV4::CompiledData::EnumValue*>(enumPtr + sizeof(*enumToWrite));
+            for (EnumValue *enumValue = e->enumValues->first; enumValue; enumValue = enumValue->next, ++enumValueToWrite)
+                *enumValueToWrite = *enumValue;
+
+            int size = QV4::CompiledData::Enum::calculateSize(e->enumValues->count);
+            enumTableSize += size;
+            enumPtr += size;
+        }
+
+        quint32_le *namedObjectInComponentPtr = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
         for (int i = 0; i < o->namedObjectsInComponent.count; ++i) {
             *namedObjectInComponentPtr++ = o->namedObjectsInComponent.at(i);
         }
 
-        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
+        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
         objectPtr += signalTableSize;
+        objectPtr += enumTableSize;
     }
 
     // enable flag if we encountered pragma Singleton
@@ -2225,7 +2315,7 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
 
     QQmlJS::Engine *jsParserEngine = &output->jsParserEngine;
 
-    const QV4::CompiledData::LEUInt32 *functionIdx = serializedObject->functionOffsetTable();
+    const quint32_le *functionIdx = serializedObject->functionOffsetTable();
     for (uint i = 0; i < serializedObject->nFunctions; ++i, ++functionIdx) {
         QmlIR::Function *f = pool->New<QmlIR::Function>();
         const QV4::CompiledData::Function *compiledFunction = unit->functionAt(*functionIdx);
@@ -2236,7 +2326,7 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
         f->nameIndex = compiledFunction->nameIndex;
 
         QQmlJS::AST::FormalParameterList *paramList = 0;
-        const QV4::CompiledData::LEUInt32 *formalNameIdx = compiledFunction->formalsTable();
+        const quint32_le *formalNameIdx = compiledFunction->formalsTable();
         for (uint i = 0; i < compiledFunction->nFormals; ++i, ++formalNameIdx) {
             const QString formal = unit->stringAt(*formalNameIdx);
             QStringRef paramNameRef = jsParserEngine->newStringRef(formal);

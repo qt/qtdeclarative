@@ -178,13 +178,6 @@ void QQuickShapeGenericRenderer::setPath(int index, const QQuickPath *path)
     d.syncDirty |= DirtyFillGeom | DirtyStrokeGeom;
 }
 
-void QQuickShapeGenericRenderer::setJSPath(int index, const QQuickShapePathCommands &path)
-{
-    ShapePathData &d(m_sp[index]);
-    d.path = path.toPainterPath();
-    d.syncDirty |= DirtyFillGeom | DirtyStrokeGeom;
-}
-
 void QQuickShapeGenericRenderer::setStrokeColor(int index, const QColor &color)
 {
     ShapePathData &d(m_sp[index]);
@@ -703,9 +696,9 @@ QSGMaterialType QQuickShapeLinearGradientShader::type;
 QQuickShapeLinearGradientShader::QQuickShapeLinearGradientShader()
 {
     setShaderSourceFile(QOpenGLShader::Vertex,
-                        QStringLiteral(":/qt-project.org/items/shaders/lineargradient.vert"));
+                        QStringLiteral(":/qt-project.org/shapes/shaders/lineargradient.vert"));
     setShaderSourceFile(QOpenGLShader::Fragment,
-                        QStringLiteral(":/qt-project.org/items/shaders/lineargradient.frag"));
+                        QStringLiteral(":/qt-project.org/shapes/shaders/lineargradient.frag"));
 }
 
 void QQuickShapeLinearGradientShader::initialize()

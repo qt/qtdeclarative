@@ -62,14 +62,6 @@ void QQuickShapeNvprRenderer::setPath(int index, const QQuickPath *path)
     m_accDirty |= DirtyPath;
 }
 
-void QQuickShapeNvprRenderer::setJSPath(int index, const QQuickShapePathCommands &path)
-{
-    ShapePathGuiData &d(m_sp[index]);
-    convertJSPath(path, &d);
-    d.dirty |= DirtyPath;
-    m_accDirty |= DirtyPath;
-}
-
 void QQuickShapeNvprRenderer::setStrokeColor(int index, const QColor &color)
 {
     ShapePathGuiData &d(m_sp[index]);
@@ -296,82 +288,6 @@ void QQuickShapeNvprRenderer::convertPath(const QQuickPath *path, ShapePathGuiDa
         d->path.cmd.append(GL_CLOSE_PATH_NV);
 }
 
-void QQuickShapeNvprRenderer::convertJSPath(const QQuickShapePathCommands &path, ShapePathGuiData *d)
-{
-    d->path = NvprPath();
-    if (path.cmd.isEmpty())
-        return;
-
-    QPointF startPos(0, 0);
-    QPointF pos(startPos);
-    int coordIdx = 0;
-
-    for (QQuickShapePathCommands::Command cmd : path.cmd) {
-        switch (cmd) {
-        case QQuickShapePathCommands::MoveTo:
-            d->path.cmd.append(GL_MOVE_TO_NV);
-            pos = QPointF(path.coords[coordIdx], path.coords[coordIdx + 1]);
-            startPos = pos;
-            d->path.coord.append(pos.x());
-            d->path.coord.append(pos.y());
-            coordIdx += 2;
-            break;
-        case QQuickShapePathCommands::LineTo:
-            d->path.cmd.append(GL_LINE_TO_NV);
-            pos = QPointF(path.coords[coordIdx], path.coords[coordIdx + 1]);
-            d->path.coord.append(pos.x());
-            d->path.coord.append(pos.y());
-            coordIdx += 2;
-            break;
-        case QQuickShapePathCommands::QuadTo:
-            d->path.cmd.append(GL_QUADRATIC_CURVE_TO_NV);
-            d->path.coord.append(path.coords[coordIdx]);
-            d->path.coord.append(path.coords[coordIdx + 1]);
-            pos = QPointF(path.coords[coordIdx + 2], path.coords[coordIdx + 3]);
-            d->path.coord.append(pos.x());
-            d->path.coord.append(pos.y());
-            coordIdx += 4;
-            break;
-        case QQuickShapePathCommands::CubicTo:
-            d->path.cmd.append(GL_CUBIC_CURVE_TO_NV);
-            d->path.coord.append(path.coords[coordIdx]);
-            d->path.coord.append(path.coords[coordIdx + 1]);
-            d->path.coord.append(path.coords[coordIdx + 2]);
-            d->path.coord.append(path.coords[coordIdx + 3]);
-            pos = QPointF(path.coords[coordIdx + 4], path.coords[coordIdx + 5]);
-            d->path.coord.append(pos.x());
-            d->path.coord.append(pos.y());
-            coordIdx += 6;
-            break;
-        case QQuickShapePathCommands::ArcTo:
-        {
-            const bool sweepFlag = !qFuzzyIsNull(path.coords[coordIdx + 5]);
-            const bool useLargeArc = !qFuzzyIsNull(path.coords[coordIdx + 6]);
-            GLenum cmd;
-            if (useLargeArc)
-                cmd = sweepFlag ? GL_LARGE_CCW_ARC_TO_NV : GL_LARGE_CW_ARC_TO_NV;
-            else
-                cmd = sweepFlag ? GL_SMALL_CCW_ARC_TO_NV : GL_SMALL_CW_ARC_TO_NV;
-            d->path.cmd.append(cmd);
-            d->path.coord.append(path.coords[coordIdx]); // rx
-            d->path.coord.append(path.coords[coordIdx + 1]); // ry
-            d->path.coord.append(path.coords[coordIdx + 2]); // xrot
-            pos = QPointF(path.coords[coordIdx + 3], path.coords[coordIdx + 4]);
-            d->path.coord.append(pos.x());
-            d->path.coord.append(pos.y());
-            coordIdx += 7;
-        }
-            break;
-        default:
-            qWarning("Unknown JS path command: %d", cmd);
-            break;
-        }
-    }
-
-    if (pos == startPos)
-        d->path.cmd.append(GL_CLOSE_PATH_NV);
-}
-
 static inline QVector4D qsg_premultiply(const QColor &c, float globalOpacity)
 {
     const float o = c.alphaF() * globalOpacity;
@@ -454,11 +370,11 @@ void QQuickShapeNvprRenderer::updateNode()
         }
 
         if (dirty & DirtyDash) {
-            dst.dashOffset = src.dashOffset;
+            // Multiply by strokeWidth because the Shape API follows QPen
+            // meaning the input dash pattern and dash offset here are in width units.
+            dst.dashOffset = src.dashOffset * src.strokeWidth;
             if (src.dashActive) {
                 dst.dashPattern.resize(src.dashPattern.count());
-                // Multiply by strokeWidth because the Shape API follows QPen
-                // meaning the input dash pattern here is in width units.
                 for (int i = 0; i < src.dashPattern.count(); ++i)
                     dst.dashPattern[i] = GLfloat(src.dashPattern[i]) * src.strokeWidth;
             } else {
@@ -835,11 +751,11 @@ bool QQuickNvprBlitter::create()
 
     m_program = new QOpenGLShaderProgram;
     if (QOpenGLContext::currentContext()->format().profile() == QSurfaceFormat::CoreProfile) {
-        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/items/shaders/shadereffect_core.vert"));
-        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/items/shaders/shadereffect_core.frag"));
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/shapes/shaders/blit_core.vert"));
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/shapes/shaders/blit_core.frag"));
     } else {
-        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/items/shaders/shadereffect.vert"));
-        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/items/shaders/shadereffect.frag"));
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/shapes/shaders/blit.vert"));
+        m_program->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/shapes/shaders/blit.frag"));
     }
     m_program->bindAttributeLocation("qt_Vertex", 0);
     m_program->bindAttributeLocation("qt_MultiTexCoord0", 1);

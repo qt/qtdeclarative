@@ -223,7 +223,7 @@ private:
 class QQuickShape : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(RendererType renderer READ rendererType NOTIFY rendererChanged)
+    Q_PROPERTY(RendererType rendererType READ rendererType NOTIFY rendererChanged)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     Q_PROPERTY(bool vendorExtensionsEnabled READ vendorExtensionsEnabled WRITE setVendorExtensionsEnabled NOTIFY vendorExtensionsEnabledChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)

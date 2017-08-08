@@ -11,4 +11,6 @@ build_integration.path = $$[QT_HOST_DATA]/mkspecs/features
 prefix_build: INSTALLS += build_integration
 else: COPIES += build_integration
 
+QMAKE_TARGET_DESCRIPTION = QML Cache Generator
+
 load(qt_tool)

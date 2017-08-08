@@ -1009,6 +1009,7 @@ int main(int argc, char *argv[])
             ? new QApplication(argc, argv)
             : new QGuiApplication(argc, argv));
 #else
+    Q_UNUSED(useQApplication);
     QScopedPointer<QCoreApplication> app(new QGuiApplication(argc, argv));
 #endif // QT_WIDGETS_LIB
 

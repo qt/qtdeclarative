@@ -181,7 +181,7 @@ static inline int classify4(const QChar *s, bool qmlMode) {
     else if (s[1].unicode() == 'n') {
       if (s[2].unicode() == 'u') {
         if (s[3].unicode() == 'm') {
-          return Lexer::T_ENUM;
+          return qmlMode ? int(Lexer::T_ENUM) : int(Lexer::T_RESERVED_WORD);
         }
       }
     }

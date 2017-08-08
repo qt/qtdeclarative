@@ -58,14 +58,6 @@ void QQuickShapeSoftwareRenderer::setPath(int index, const QQuickPath *path)
     m_accDirty |= DirtyPath;
 }
 
-void QQuickShapeSoftwareRenderer::setJSPath(int index, const QQuickShapePathCommands &path)
-{
-    ShapePathGuiData &d(m_sp[index]);
-    d.path = path.toPainterPath();
-    d.dirty |= DirtyPath;
-    m_accDirty |= DirtyPath;
-}
-
 void QQuickShapeSoftwareRenderer::setStrokeColor(int index, const QColor &color)
 {
     ShapePathGuiData &d(m_sp[index]);

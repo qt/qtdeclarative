@@ -378,6 +378,19 @@ QString QQuickTextInputPrivate::realText() const
     TextInput { text: "Hello"; renderType: TextInput.NativeRendering; font.hintingPreference: Font.PreferVerticalHinting }
     \endqml
 */
+
+/*!
+    \qmlproperty bool QtQuick::TextInput::font.kerning
+    \since 5.10
+
+    Enables or disables the kerning OpenType feature when shaping the text. This may improve performance
+    when creating or changing the text, at the expense of some cosmetic features. The default value
+    is true.
+
+    \qml
+    TextInput { text: "OATS FLAVOUR WAY"; font.kerning: false }
+    \endqml
+*/
 QFont QQuickTextInput::font() const
 {
     Q_D(const QQuickTextInput);
@@ -3407,9 +3420,9 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     if (!event->commitString().isEmpty()) {
         internalInsert(event->commitString());
         cursorPositionChanged = true;
+    } else {
+        m_cursor = qBound(0, c, m_text.length());
     }
-
-    m_cursor = qBound(0, c, m_text.length());
 
     for (int i = 0; i < event->attributes().size(); ++i) {
         const QInputMethodEvent::Attribute &a = event->attributes().at(i);

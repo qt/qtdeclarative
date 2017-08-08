@@ -77,50 +77,6 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
     dashPattern << 4 << 2; // 4 * strokeWidth dash followed by 2 * strokeWidth space
 }
 
-QPainterPath QQuickShapePathCommands::toPainterPath() const
-{
-    QPainterPath p;
-    int coordIdx = 0;
-    for (int i = 0; i < cmd.count(); ++i) {
-        switch (cmd[i]) {
-        case QQuickShapePathCommands::MoveTo:
-            p.moveTo(coords[coordIdx], coords[coordIdx + 1]);
-            coordIdx += 2;
-            break;
-        case QQuickShapePathCommands::LineTo:
-            p.lineTo(coords[coordIdx], coords[coordIdx + 1]);
-            coordIdx += 2;
-            break;
-        case QQuickShapePathCommands::QuadTo:
-            p.quadTo(coords[coordIdx], coords[coordIdx + 1],
-                    coords[coordIdx + 2], coords[coordIdx + 3]);
-            coordIdx += 4;
-            break;
-        case QQuickShapePathCommands::CubicTo:
-            p.cubicTo(coords[coordIdx], coords[coordIdx + 1],
-                    coords[coordIdx + 2], coords[coordIdx + 3],
-                    coords[coordIdx + 4], coords[coordIdx + 5]);
-            coordIdx += 6;
-            break;
-        case QQuickShapePathCommands::ArcTo:
-            // does not map to the QPainterPath API; reuse the helper code from QQuickSvgParser
-            QQuickSvgParser::pathArc(p,
-                                     coords[coordIdx], coords[coordIdx + 1], // radius
-                                     coords[coordIdx + 2], // xAxisRotation
-                                     !qFuzzyIsNull(coords[coordIdx + 6]), // useLargeArc
-                                     !qFuzzyIsNull(coords[coordIdx + 5]), // sweep flag
-                                     coords[coordIdx + 3], coords[coordIdx + 4], // end
-                                     p.currentPosition().x(), p.currentPosition().y());
-            coordIdx += 7;
-            break;
-        default:
-            qWarning("Unknown JS path command: %d", cmd[i]);
-            break;
-        }
-    }
-    return p;
-}
-
 /*!
     \qmltype ShapePath
     \instantiates QQuickShapePath
@@ -131,7 +87,7 @@ QPainterPath QQuickShapePathCommands::toPainterPath() const
     \brief Describes a Path and associated properties for stroking and filling
     \since 5.10
 
-    A Shape contains one or more ShapePath elements. At least one ShapePath is
+    A \l Shape contains one or more ShapePath elements. At least one ShapePath is
     necessary in order to have a Shape output anything visible. A ShapePath
     itself is a \l Path with additional properties describing the stroking and
     filling parameters, such as the stroke width and color, the fill color or
@@ -171,6 +127,8 @@ QPainterPath QQuickShapePathCommands::toPainterPath() const
     of 2 (ShapePath.RoundJoin):
 
     \image visualpath-code-example.png
+
+    \sa {Qt Quick Examples - Shapes}, Shape
  */
 
 QQuickShapePathPrivate::QQuickShapePathPrivate()
@@ -593,27 +551,6 @@ void QQuickShapePath::resetFillGradient()
     useful since it allows adding visual items, like \l Rectangle or \l Image,
     and non-visual objects, like \l Timer directly as children of Shape.
 
-    \note It is important to be aware of performance implications, in particular
-    when the application is running on the generic Shape implementation due to
-    not having support for accelerated path rendering.  The geometry generation
-    happens entirely on the CPU in this case, and this is potentially
-    expensive. Changing the set of path elements, changing the properties of
-    these elements, or changing certain properties of the Shape itself all lead
-    to retriangulation of the affected elements on every change. Therefore,
-    applying animation to such properties can affect performance on less
-    powerful systems. If animating properties other than stroke and fill colors
-    is a must, it is recommended to target systems providing
-    \c{GL_NV_path_rendering} where the cost of path property changes is much
-    smaller.
-
-    \note However, the data-driven, declarative nature of the Shape API often
-    means better cacheability for the underlying CPU and GPU resources. A
-    property change in one ShapePath will only lead to reprocessing the affected
-    ShapePath, leaving other parts of the Shape unchanged. Therefore, a heavily
-    changing (for example, animating) property can often result in a lower
-    overall system load than with imperative painting approaches (for example,
-    QPainter).
-
     The following list summarizes the available Shape rendering approaches:
 
     \list
@@ -634,12 +571,47 @@ void QQuickShapePath::resetFillGradient()
 
     \endlist
 
-    \sa Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
+    When using Shape, it is important to be aware of potential performance
+    implications:
+
+    \li When the application is running with the generic, triangulation-based
+    Shape implementation, the geometry generation happens entirely on the
+    CPU. This is potentially expensive. Changing the set of path elements,
+    changing the properties of these elements, or changing certain properties of
+    the Shape itself all lead to retriangulation of the affected paths on every
+    change. Therefore, applying animation to such properties can affect
+    performance on less powerful systems.
+
+    \li However, the data-driven, declarative nature of the Shape API often
+    means better cacheability for the underlying CPU and GPU resources. A
+    property change in one ShapePath will only lead to reprocessing the affected
+    ShapePath, leaving other parts of the Shape unchanged. Therefore, a
+    frequently changing property can still result in a lower overall system load
+    than with imperative painting approaches (for example, QPainter).
+
+    \li If animating properties other than stroke and fill colors is a must, it
+    is recommended to target systems providing \c{GL_NV_path_rendering} where
+    the cost of property changes is smaller.
+
+    \li At the same time, attention must be paid to the number of Shape elements
+    in the scene, in particular when using this special accelerated approach for
+    \c{GL_NV_path_rendering}. The way such a Shape item is represented in the
+    scene graph is different from an ordinary geometry-based item, and incurs a
+    certain cost when it comes to OpenGL state changes.
+
+    \li As a general rule, scenes should avoid using separate Shape items when
+    it is not absolutely necessary. Prefer using one Shape item with multiple
+    ShapePath elements over multiple Shape items. Scenes that cannot avoid using
+    a large number of individual Shape items should consider setting
+    Shape.vendorExtensionsEnabled to \c false.
+
+    \endlist
+
+    \sa {Qt Quick Examples - Shapes}, Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
 */
 
 QQuickShapePrivate::QQuickShapePrivate()
-    : componentComplete(true),
-      spChanged(false),
+    : spChanged(false),
       rendererType(QQuickShape::UnknownRenderer),
       async(false),
       status(QQuickShape::Null),
@@ -799,7 +771,7 @@ static void vpe_append(QQmlListProperty<QObject> *property, QObject *obj)
     QQuickShapePrivate *d = QQuickShapePrivate::get(item);
     QQuickShapePath *path = qobject_cast<QQuickShapePath *>(obj);
     if (path)
-        d->qmlData.sp.append(path);
+        d->sp.append(path);
 
     QQuickItemPrivate::data_append(property, obj);
 
@@ -814,10 +786,10 @@ static void vpe_clear(QQmlListProperty<QObject> *property)
     QQuickShape *item = static_cast<QQuickShape *>(property->object);
     QQuickShapePrivate *d = QQuickShapePrivate::get(item);
 
-    for (QQuickShapePath *p : d->qmlData.sp)
+    for (QQuickShapePath *p : d->sp)
         QObject::disconnect(p, SIGNAL(shapePathChanged()), item, SLOT(_q_shapePathChanged()));
 
-    d->qmlData.sp.clear();
+    d->sp.clear();
 
     QQuickItemPrivate::data_clear(property);
 
@@ -847,16 +819,16 @@ QQmlListProperty<QObject> QQuickShape::data()
 
 void QQuickShape::classBegin()
 {
-    Q_D(QQuickShape);
-    d->componentComplete = false;
+    QQuickItem::classBegin();
 }
 
 void QQuickShape::componentComplete()
 {
     Q_D(QQuickShape);
-    d->componentComplete = true;
 
-    for (QQuickShapePath *p : d->qmlData.sp)
+    QQuickItem::componentComplete();
+
+    for (QQuickShapePath *p : d->sp)
         connect(p, SIGNAL(shapePathChanged()), this, SLOT(_q_shapePathChanged()));
 
     d->_q_shapePathChanged();
@@ -994,64 +966,36 @@ void QQuickShapePrivate::sync()
         renderer->setAsyncCallback(q_asyncShapeReady, this);
     }
 
-    if (!jsData.isValid()) {
-        // Standard route: The path and stroke/fill parameters are provided via
-        // QML elements.
-        const int count = qmlData.sp.count();
-        renderer->beginSync(count);
+    const int count = sp.count();
+    renderer->beginSync(count);
 
-        for (int i = 0; i < count; ++i) {
-            QQuickShapePath *p = qmlData.sp[i];
-            int &dirty(QQuickShapePathPrivate::get(p)->dirty);
+    for (int i = 0; i < count; ++i) {
+        QQuickShapePath *p = sp[i];
+        int &dirty(QQuickShapePathPrivate::get(p)->dirty);
 
-            if (dirty & QQuickShapePathPrivate::DirtyPath)
-                renderer->setPath(i, p);
-            if (dirty & QQuickShapePathPrivate::DirtyStrokeColor)
-                renderer->setStrokeColor(i, p->strokeColor());
-            if (dirty & QQuickShapePathPrivate::DirtyStrokeWidth)
-                renderer->setStrokeWidth(i, p->strokeWidth());
-            if (dirty & QQuickShapePathPrivate::DirtyFillColor)
-                renderer->setFillColor(i, p->fillColor());
-            if (dirty & QQuickShapePathPrivate::DirtyFillRule)
-                renderer->setFillRule(i, p->fillRule());
-            if (dirty & QQuickShapePathPrivate::DirtyStyle) {
-                renderer->setJoinStyle(i, p->joinStyle(), p->miterLimit());
-                renderer->setCapStyle(i, p->capStyle());
-            }
-            if (dirty & QQuickShapePathPrivate::DirtyDash)
-                renderer->setStrokeStyle(i, p->strokeStyle(), p->dashOffset(), p->dashPattern());
-            if (dirty & QQuickShapePathPrivate::DirtyFillGradient)
-                renderer->setFillGradient(i, p->fillGradient());
-
-            dirty = 0;
+        if (dirty & QQuickShapePathPrivate::DirtyPath)
+            renderer->setPath(i, p);
+        if (dirty & QQuickShapePathPrivate::DirtyStrokeColor)
+            renderer->setStrokeColor(i, p->strokeColor());
+        if (dirty & QQuickShapePathPrivate::DirtyStrokeWidth)
+            renderer->setStrokeWidth(i, p->strokeWidth());
+        if (dirty & QQuickShapePathPrivate::DirtyFillColor)
+            renderer->setFillColor(i, p->fillColor());
+        if (dirty & QQuickShapePathPrivate::DirtyFillRule)
+            renderer->setFillRule(i, p->fillRule());
+        if (dirty & QQuickShapePathPrivate::DirtyStyle) {
+            renderer->setJoinStyle(i, p->joinStyle(), p->miterLimit());
+            renderer->setCapStyle(i, p->capStyle());
         }
+        if (dirty & QQuickShapePathPrivate::DirtyDash)
+            renderer->setStrokeStyle(i, p->strokeStyle(), p->dashOffset(), p->dashPattern());
+        if (dirty & QQuickShapePathPrivate::DirtyFillGradient)
+            renderer->setFillGradient(i, p->fillGradient());
 
-        renderer->endSync(useAsync);
-    } else {
-
-        // ### there is no public API to reach this code path atm
-        Q_UNREACHABLE();
-
-        // Path and stroke/fill params provided from JavaScript. This avoids
-        // QObjects at the expense of not supporting changes afterwards.
-        const int count = jsData.paths.count();
-        renderer->beginSync(count);
-
-        for (int i = 0; i < count; ++i) {
-            renderer->setJSPath(i, jsData.paths[i]);
-            const QQuickShapeStrokeFillParams sfp(jsData.sfp[i]);
-            renderer->setStrokeColor(i, sfp.strokeColor);
-            renderer->setStrokeWidth(i, sfp.strokeWidth);
-            renderer->setFillColor(i, sfp.fillColor);
-            renderer->setFillRule(i, sfp.fillRule);
-            renderer->setJoinStyle(i, sfp.joinStyle, sfp.miterLimit);
-            renderer->setCapStyle(i, sfp.capStyle);
-            renderer->setStrokeStyle(i, sfp.strokeStyle, sfp.dashOffset, sfp.dashPattern);
-            renderer->setFillGradient(i, sfp.fillGradient);
-        }
-
-        renderer->endSync(useAsync);
+        dirty = 0;
     }
+
+    renderer->endSync(useAsync);
 
     if (!useAsync)
         setStatus(QQuickShape::Ready);

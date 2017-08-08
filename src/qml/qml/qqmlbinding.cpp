@@ -195,7 +195,7 @@ class QQmlNonbindingBinding: public QQmlBinding
 {
 protected:
     void doUpdate(const DeleteWatcher &watcher,
-                  QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) Q_DECL_OVERRIDE Q_DECL_FINAL
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) Q_DECL_OVERRIDE
     {
         auto ep = QQmlEnginePrivate::get(scope.engine);
         ep->referenceScarceResources();
@@ -295,6 +295,50 @@ protected:
         return pd->writeProperty(targetObject(), o, flags);
     }
 };
+
+class QQmlTranslationBinding : public GenericBinding<QMetaType::QString> {
+public:
+    QQmlTranslationBinding(QV4::CompiledData::CompilationUnit *compilationUnit, const QV4::CompiledData::Binding *binding)
+    {
+        setCompilationUnit(compilationUnit);
+        m_binding = binding;
+        setSourceLocation(QQmlSourceLocation(compilationUnit->fileName(), binding->valueLocation.line, binding->valueLocation.column));
+    }
+
+    void doUpdate(const DeleteWatcher &watcher,
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &) Q_DECL_OVERRIDE Q_DECL_FINAL
+    {
+        if (watcher.wasDeleted())
+            return;
+
+        if (!isAddedToObject() || hasError())
+            return;
+
+        const QString result = m_binding->valueAsString(m_compilationUnit->data);
+
+        Q_ASSERT(targetObject());
+
+        QQmlPropertyData *pd;
+        QQmlPropertyData vpd;
+        getPropertyData(&pd, &vpd);
+        Q_ASSERT(pd);
+        doStore(result, pd, flags);
+    }
+
+private:
+    const QV4::CompiledData::Binding *m_binding;
+};
+
+QQmlBinding *QQmlBinding::createTranslationBinding(QV4::CompiledData::CompilationUnit *unit, const QV4::CompiledData::Binding *binding, QObject *obj, QQmlContextData *ctxt)
+{
+    QQmlTranslationBinding *b = new QQmlTranslationBinding(unit, binding);
+
+    b->setNotifyOnValueChanged(true);
+    b->QQmlJavaScriptExpression::setContext(ctxt);
+    b->setScopeObject(obj);
+
+    return b;
+}
 
 Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
                                            const QQmlPropertyData &valueTypeData,
@@ -515,7 +559,12 @@ void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyD
     Q_ASSERT(propertyData);
 
     QQmlData *data = QQmlData::get(*m_target, false);
-    Q_ASSERT(data && data->propertyCache);
+    Q_ASSERT(data);
+
+    if (Q_UNLIKELY(!data->propertyCache)) {
+        data->propertyCache = QQmlEnginePrivate::get(context()->engine)->cache(m_target->metaObject());
+        data->propertyCache->addref();
+    }
 
     *propertyData = data->propertyCache->property(m_targetIndex.coreIndex());
     Q_ASSERT(*propertyData);

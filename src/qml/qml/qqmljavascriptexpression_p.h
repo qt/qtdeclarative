@@ -160,11 +160,13 @@ protected:
     }
 
     void setupFunction(QV4::ExecutionContext *qmlContext, QV4::Function *f);
+    void setCompilationUnit(QV4::CompiledData::CompilationUnit *compilationUnit);
 
 private:
     friend class QQmlContextData;
     friend class QQmlPropertyCapture;
     friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
+    friend class QQmlTranslationBinding;
 
     QQmlDelayedError *m_error;
 
@@ -204,7 +206,7 @@ public:
 
     static void registerQmlDependencies(const QV4::CompiledData::Function *compiledFunction, const QV4::Scope &scope);
     void captureProperty(QQmlNotifier *, Duration duration = OnlyOnce);
-    void captureProperty(QObject *, int, int, Duration duration = OnlyOnce);
+    void captureProperty(QObject *, int, int, Duration duration = OnlyOnce, bool doNotify = true);
 
     QQmlEngine *engine;
     QQmlJavaScriptExpression *expression;

@@ -260,7 +260,7 @@ public:
     bool renderPending;
     bool invalidatePending;
 
-    int devicePixelRatio;
+    qreal devicePixelRatio;
 };
 
 static inline bool isOpenGL(QSGRenderContext *rc)
@@ -312,14 +312,12 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
     n->devicePixelRatio = window()->effectiveDevicePixelRatio();
     desiredFboSize *= n->devicePixelRatio;
 
-    if (n->fbo && (d->followsItemSize || n->invalidatePending)) {
-        if (n->fbo->size() != desiredFboSize) {
-            delete n->fbo;
-            n->fbo = 0;
-            delete n->msDisplayFbo;
-            n->msDisplayFbo = 0;
-            n->invalidatePending = false;
-        }
+    if (n->fbo && ((d->followsItemSize && n->fbo->size() != desiredFboSize) || n->invalidatePending)) {
+        delete n->fbo;
+        n->fbo = 0;
+        delete n->msDisplayFbo;
+        n->msDisplayFbo = 0;
+        n->invalidatePending = false;
     }
 
     if (!n->fbo) {

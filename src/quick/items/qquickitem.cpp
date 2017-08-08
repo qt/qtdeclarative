@@ -2139,6 +2139,9 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
     \value ItemAntialiasingHasChanged The antialiasing has changed. The current
     (boolean) value can be found in QQuickItem::antialiasing.
+
+    \value ItemEnabledHasChanged The item's enabled state has changed.
+    ItemChangeData::boolValue contains the new enabled state. (since Qt 5.10)
 */
 
 /*!
@@ -5962,6 +5965,7 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
                 scope, q, Qt::OtherFocusReason, QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);
     }
 
+    itemChange(QQuickItem::ItemEnabledHasChanged, effectiveEnable);
     emit q->enabledChanged();
 }
 
@@ -6129,6 +6133,18 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
             for (const QQuickItemPrivate::ChangeListener &change : listeners) {
                 if (change.types & QQuickItemPrivate::Visibility) {
                     change.listener->itemVisibilityChanged(q);
+                }
+            }
+        }
+        break;
+    }
+    case QQuickItem::ItemEnabledHasChanged: {
+        q->itemChange(change, data);
+        if (!changeListeners.isEmpty()) {
+            const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+            for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+                if (change.types & QQuickItemPrivate::Enabled) {
+                    change.listener->itemEnabledChanged(q);
                 }
             }
         }

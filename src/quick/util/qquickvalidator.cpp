@@ -228,9 +228,15 @@ void QQuickDoubleValidator::resetLocaleName()
 
    \list
    \li A list of numbers with one to three positions separated by a comma:
+       \badcode
        /\d{1,3}(?:,\d{1,3})+$/
+       \endcode
+
    \li An amount consisting of up to 3 numbers before the decimal point, and
-       1 to 2 after the decimal point: \li /(\d{1,3})([.,]\d{1,2})?$/
+       1 to 2 after the decimal point:
+       \badcode
+       /(\d{1,3})([.,]\d{1,2})?$/
+       \endcode
    \endlist
 */
 

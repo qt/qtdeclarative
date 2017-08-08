@@ -302,6 +302,7 @@ public:
         QV4::ScopedValue vweight(scope, obj->get((s = v4->newString(QStringLiteral("weight")))));
         QV4::ScopedValue vwspac(scope, obj->get((s = v4->newString(QStringLiteral("wordSpacing")))));
         QV4::ScopedValue vhint(scope, obj->get((s = v4->newString(QStringLiteral("hintingPreference")))));
+        QV4::ScopedValue vkerning(scope, obj->get((s = v4->newString(QStringLiteral("kerning")))));
 
         // pull out the values, set ok to true if at least one valid field is given.
         if (vbold->isBoolean()) {
@@ -354,6 +355,10 @@ public:
         }
         if (vhint->isInt32()) {
             retn.setHintingPreference(static_cast<QFont::HintingPreference>(vhint->integerValue()));
+            if (ok) *ok = true;
+        }
+        if (vkerning->isBoolean()) {
+            retn.setKerning(vkerning->booleanValue());
             if (ok) *ok = true;
         }
 

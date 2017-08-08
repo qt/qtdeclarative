@@ -52,7 +52,7 @@
 
 #include <QtCore/qstring.h>
 #include "qv4jsir_p.h"
-#include <private/qjson_p.h>
+#include <private/qendian_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -120,7 +120,7 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     StringTableGenerator stringTable;
     QString codeGeneratorName;
 private:
-    CompiledData::Unit generateHeader(GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset);
+    CompiledData::Unit generateHeader(GeneratorOption option, quint32_le *functionOffsets, uint *jsClassDataOffset);
 
     IR::Module *irModule;
 

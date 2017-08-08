@@ -175,9 +175,14 @@ Q_DECLARE_METATYPE(QList<int>)
   called from the script to create a new QObject instance with
   JavaScriptOwnership.
 
-
-
   \snippet code/src_script_qjsengine.cpp 5
+
+  \section2 Dynamic QObject Properties
+
+  Dynamic QObject properties are not supported. For example, the following code
+  will not work:
+
+  \snippet code/src_script_qjsengine.cpp 6
 
   \section1 Extensions
 

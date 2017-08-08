@@ -34,6 +34,7 @@
 #include <private/qqmldebugconnection_p.h>
 
 #include <QtTest/qtest.h>
+#include <private/qtestresult_p.h>
 #include <QtTest/qsignalspy.h>
 #include <QtNetwork/qhostaddress.h>
 #include <QtCore/qtimer.h>
@@ -101,6 +102,10 @@ QmlDebugObjectReference tst_QQmlEngineDebugInspectorIntegration::findRootObject(
 
 void tst_QQmlEngineDebugInspectorIntegration::init(bool restrictServices)
 {
+#if defined(Q_OS_WIN) && defined(Q_CC_MINGW)
+    QSKIP("Capturing output while running nested event loop is not reliable on Windows/GCC");
+#endif
+
     const QString argument = QString::fromLatin1("-qmljsdebugger=port:%1,%2,block%3")
             .arg(STR_PORT_FROM).arg(STR_PORT_TO)
             .arg(restrictServices ? QStringLiteral(",services:QmlDebugger,QmlInspector") :
@@ -164,6 +169,8 @@ void tst_QQmlEngineDebugInspectorIntegration::connect()
 void tst_QQmlEngineDebugInspectorIntegration::objectLocationLookup()
 {
     init(true);
+    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
+        return;
 
     bool success = false;
     QmlDebugObjectReference rootObject = findRootObject();
@@ -190,6 +197,9 @@ void tst_QQmlEngineDebugInspectorIntegration::objectLocationLookup()
 void tst_QQmlEngineDebugInspectorIntegration::select()
 {
     init(true);
+    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
+        return;
+
     QmlDebugObjectReference rootObject = findRootObject();
     QList<int> childIds;
     int requestId = 0;
@@ -207,6 +217,8 @@ void tst_QQmlEngineDebugInspectorIntegration::select()
 void tst_QQmlEngineDebugInspectorIntegration::createObject()
 {
     init(true);
+    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
+        return;
 
     QString qml = QLatin1String("Rectangle {\n"
                                 "  id: xxxyxxx\n"
@@ -234,6 +246,10 @@ void tst_QQmlEngineDebugInspectorIntegration::createObject()
 void tst_QQmlEngineDebugInspectorIntegration::moveObject()
 {
     init(true);
+    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
+        return;
+
+    QCOMPARE(m_inspectorClient->state(), QQmlDebugClient::Enabled);
     QmlDebugObjectReference rootObject = findRootObject();
     QVERIFY(rootObject.debugId != -1);
     QCOMPARE(rootObject.children.length(), 2);
@@ -257,6 +273,10 @@ void tst_QQmlEngineDebugInspectorIntegration::moveObject()
 void tst_QQmlEngineDebugInspectorIntegration::destroyObject()
 {
     init(true);
+    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
+        return;
+
+    QCOMPARE(m_inspectorClient->state(), QQmlDebugClient::Enabled);
     QmlDebugObjectReference rootObject = findRootObject();
     QVERIFY(rootObject.debugId != -1);
     QCOMPARE(rootObject.children.length(), 2);

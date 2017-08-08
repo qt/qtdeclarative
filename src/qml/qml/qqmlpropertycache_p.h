@@ -349,6 +349,20 @@ private:
     bool notFullyResolved() const { return _flags.notFullyResolved; }
 };
 
+struct QQmlEnumValue
+{
+    QQmlEnumValue() : value(-1) {}
+    QQmlEnumValue(const QString &n, int v) : namedValue(n), value(v) {}
+    QString namedValue;
+    int value;
+};
+
+struct QQmlEnumData
+{
+    QString name;
+    QVector<QQmlEnumValue> values;
+};
+
 class QQmlPropertyCacheMethodArguments;
 class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount, public QQmlCleanup
 {
@@ -374,13 +388,14 @@ public:
                 QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());
 
     QQmlPropertyCache *copyAndReserve(int propertyCount,
-                                      int methodCount, int signalCount);
+                                      int methodCount, int signalCount, int enumCount);
     void appendProperty(const QString &, QQmlPropertyRawData::Flags flags, int coreIndex,
                         int propType, int notifyIndex);
     void appendSignal(const QString &, QQmlPropertyRawData::Flags, int coreIndex,
                       const int *types = 0, const QList<QByteArray> &names = QList<QByteArray>());
     void appendMethod(const QString &, QQmlPropertyData::Flags flags, int coreIndex,
                       const QList<QByteArray> &names = QList<QByteArray>());
+    void appendEnum(const QString &, const QVector<QQmlEnumValue> &);
 
     const QMetaObject *metaObject() const;
     const QMetaObject *createMetaObject();
@@ -395,6 +410,7 @@ public:
     QQmlPropertyData *property(int) const;
     QQmlPropertyData *method(int) const;
     QQmlPropertyData *signal(int index) const;
+    QQmlEnumData *qmlEnum(int) const;
     int methodIndexToSignalIndex(int) const;
 
     QString defaultPropertyName() const;
@@ -434,6 +450,7 @@ public:
     inline int methodOffset() const;
     inline int signalCount() const;
     inline int signalOffset() const;
+    inline int qmlEnumCount() const;
 
     static bool isDynamicMetaObject(const QMetaObject *);
 
@@ -507,6 +524,7 @@ private:
     IndexCache signalHandlerIndexCache;
     StringCache stringCache;
     AllowedRevisionCache allowedRevisionCache;
+    QVector<QQmlEnumData> enumCache;
 
     bool _hasPropertyOverrides : 1;
     bool _ownMetaObject : 1;
@@ -747,6 +765,14 @@ inline QQmlPropertyData *QQmlPropertyCache::signal(int index) const
     return ensureResolved(rv);
 }
 
+inline QQmlEnumData *QQmlPropertyCache::qmlEnum(int index) const
+{
+    if (index < 0 || index >= enumCache.count())
+        return 0;
+
+    return const_cast<QQmlEnumData *>(&enumCache.at(index));
+}
+
 inline int QQmlPropertyCache::methodIndexToSignalIndex(int index) const
 {
     if (index < 0 || index >= (methodIndexCacheStart + methodIndexCache.count()))
@@ -815,6 +841,11 @@ int QQmlPropertyCache::signalCount() const
 int QQmlPropertyCache::signalOffset() const
 {
     return signalHandlerIndexCacheStart;
+}
+
+int QQmlPropertyCache::qmlEnumCount() const
+{
+    return enumCache.count();
 }
 
 bool QQmlPropertyCache::callJSFactoryMethod(QObject *object, void **args) const

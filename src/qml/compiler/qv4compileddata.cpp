@@ -99,6 +99,7 @@ CompilationUnit::CompilationUnit()
     , runtimeLookups(0)
     , runtimeRegularExpressions(0)
     , runtimeClasses(0)
+    , constants(nullptr)
     , totalBindingsCount(0)
     , totalParserStatusCount(0)
     , totalObjectCount(0)
@@ -186,7 +187,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 
 #if Q_BYTE_ORDER == Q_BIG_ENDIAN
     Value *bigEndianConstants = new Value[data->constantTableSize];
-    const LEUInt64 *littleEndianConstants = data->constants();
+    const quint64_le *littleEndianConstants = data->constants();
     for (uint i = 0; i < data->constantTableSize; ++i)
         bigEndianConstants[i] = Value::fromReturnedValue(littleEndianConstants[i]);
     constants = bigEndianConstants;
@@ -238,6 +239,7 @@ void CompilationUnit::unlink()
     runtimeFunctions.clear();
 #if Q_BYTE_ORDER == Q_BIG_ENDIAN
     delete [] constants;
+    constants = nullptr;
 #endif
 }
 
@@ -269,7 +271,7 @@ IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjec
     if (it == namedObjectsPerComponentCache.end()) {
         IdentifierHash<int> namedObjectCache(engine);
         const CompiledData::Object *component = data->objectAt(componentObjectIndex);
-        const LEUInt32 *namedObjectIndexPtr = component->namedObjectsInComponentTable();
+        const quint32_le *namedObjectIndexPtr = component->namedObjectsInComponentTable();
         for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {
             const CompiledData::Object *namedObject = data->objectAt(*namedObjectIndexPtr);
             namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->id);

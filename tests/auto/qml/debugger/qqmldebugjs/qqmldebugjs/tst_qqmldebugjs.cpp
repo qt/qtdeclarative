@@ -865,6 +865,8 @@ void tst_QQmlDebugJS::connect()
     QFETCH(bool, restrictMode);
     QFETCH(bool, qmlscene);
     init(qmlscene, QString(TEST_QMLFILE), blockMode, restrictMode);
+    if (QTest::currentTestFailed())
+        return;
     client->connect();
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(connected())));
 }
@@ -877,6 +879,8 @@ void tst_QQmlDebugJS::interrupt()
     QFETCH(bool, redundantRefs);
     QFETCH(bool, namesAsObjects);
     init(qmlscene);
+    if (QTest::currentTestFailed())
+        return;
     client->connect(redundantRefs, namesAsObjects);
 
     client->interrupt();
@@ -891,6 +895,8 @@ void tst_QQmlDebugJS::getVersion()
     QFETCH(bool, redundantRefs);
     QFETCH(bool, namesAsObjects);
     init(qmlscene);
+    if (QTest::currentTestFailed())
+        return;
     client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(connected())));
 
@@ -906,6 +912,8 @@ void tst_QQmlDebugJS::getVersionWhenAttaching()
     QFETCH(bool, namesAsObjects);
 
     init(qmlscene, QLatin1String(TIMER_QMLFILE), false);
+    if (QTest::currentTestFailed())
+        return;
     client->connect(redundantRefs, namesAsObjects);
 
     client->version();
@@ -920,6 +928,8 @@ void tst_QQmlDebugJS::disconnect()
     QFETCH(bool, redundantRefs);
     QFETCH(bool, namesAsObjects);
     init(qmlscene);
+    if (QTest::currentTestFailed())
+        return;
     client->connect(redundantRefs, namesAsObjects);
 
     client->disconnect();
@@ -935,6 +945,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnCompleted()
 
     int sourceLine = 34;
     init(qmlscene, ONCOMPLETED_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -958,6 +970,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComponentCreated()
 
     int sourceLine = 34;
     init(qmlscene, CREATECOMPONENT_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -979,6 +993,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnTimerCallback()
     QFETCH(bool, namesAsObjects);
     int sourceLine = 35;
     init(qmlscene, TIMER_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->connect(redundantRefs, namesAsObjects);
     //We can set the breakpoint after connect() here because the timer is repeating and if we miss
@@ -1004,6 +1020,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptInDifferentFile()
 
     int sourceLine = 31;
     init(qmlscene, LOADJSFILE_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(TEST_JSFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -1028,6 +1046,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComment()
     int sourceLine = 34;
     int actualLine = 36;
     init(qmlscene, BREAKPOINTRELOCATION_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -1053,6 +1073,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnEmptyLine()
     int sourceLine = 35;
     int actualLine = 36;
     init(qmlscene, BREAKPOINTRELOCATION_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -1077,6 +1099,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
 
     int sourceLine = 39;
     init(qmlscene, BREAKPOINTRELOCATION_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -1099,6 +1123,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
     int out = 10;
     int sourceLine = 37;
     init(qmlscene, CONDITION_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->connect(redundantRefs, namesAsObjects);
     //The breakpoint is in a timer loop so we can set it after connect().
@@ -1136,6 +1162,8 @@ void tst_QQmlDebugJS::setBreakpointInScriptThatQuits()
     QFETCH(bool, redundantRefs);
     QFETCH(bool, namesAsObjects);
     init(qmlscene, QUIT_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     int sourceLine = 36;
 
@@ -1160,6 +1188,8 @@ void tst_QQmlDebugJS::setBreakpointWhenAttaching()
 {
     int sourceLine = 35;
     init(true, QLatin1String(TIMER_QMLFILE), false);
+    if (QTest::currentTestFailed())
+        return;
 
     client->connect();
 
@@ -1183,6 +1213,8 @@ void tst_QQmlDebugJS::clearBreakpoint()
     int sourceLine1 = 37;
     int sourceLine2 = 38;
     init(qmlscene, CHANGEBREAKPOINT_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->connect(redundantRefs, namesAsObjects);
     //The breakpoints are in a timer loop so we can set them after connect().
@@ -1231,6 +1263,8 @@ void tst_QQmlDebugJS::setExceptionBreak()
     QFETCH(bool, namesAsObjects);
 
     init(qmlscene, EXCEPTION_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
     client->setExceptionBreak(QJSDebugClient::All,true);
     client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(client, SIGNAL(stopped())));
@@ -1245,6 +1279,8 @@ void tst_QQmlDebugJS::stepNext()
 
     int sourceLine = 37;
     init(qmlscene, STEPACTION_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -1272,6 +1308,8 @@ void tst_QQmlDebugJS::stepIn()
     int sourceLine = 41;
     int actualLine = 37;
     init(qmlscene, STEPACTION_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, 1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -1299,6 +1337,8 @@ void tst_QQmlDebugJS::stepOut()
     int sourceLine = 37;
     int actualLine = 41;
     init(qmlscene, STEPACTION_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -1326,6 +1366,8 @@ void tst_QQmlDebugJS::continueDebugging()
     int sourceLine1 = 41;
     int sourceLine2 = 38;
     init(qmlscene, STEPACTION_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine1, -1, true);
     client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine2, -1, true);
@@ -1353,6 +1395,8 @@ void tst_QQmlDebugJS::backtrace()
 
     int sourceLine = 34;
     init(qmlscene, ONCOMPLETED_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -1371,6 +1415,8 @@ void tst_QQmlDebugJS::getFrameDetails()
 
     int sourceLine = 34;
     init(qmlscene, ONCOMPLETED_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -1389,6 +1435,8 @@ void tst_QQmlDebugJS::getScopeDetails()
 
     int sourceLine = 34;
     init(qmlscene, ONCOMPLETED_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -1402,6 +1450,8 @@ void tst_QQmlDebugJS::evaluateInGlobalScope()
 {
     //void evaluate(QString expr, int frame = -1);
     init(true);
+    if (QTest::currentTestFailed())
+        return;
 
     client->connect();
 
@@ -1426,6 +1476,8 @@ void tst_QQmlDebugJS::evaluateInLocalScope()
     QFETCH(bool, namesAsObjects);
     int sourceLine = 34;
     init(qmlscene, ONCOMPLETED_QMLFILE);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     client->connect(redundantRefs, namesAsObjects);
@@ -1514,6 +1566,8 @@ void tst_QQmlDebugJS::getScripts()
     QFETCH(bool, redundantRefs);
     QFETCH(bool, namesAsObjects);
     init(qmlscene);
+    if (QTest::currentTestFailed())
+        return;
 
     client->setBreakpoint(QString(TEST_QMLFILE), 35, -1, true);
     client->connect(redundantRefs, namesAsObjects);

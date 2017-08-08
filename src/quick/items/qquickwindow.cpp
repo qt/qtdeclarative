@@ -433,9 +433,7 @@ void QQuickWindowPrivate::syncSceneGraph()
 
     emit q->afterSynchronizing();
     runAndClearJobs(&afterSynchronizingJobs);
-    context->endSync();
 }
-
 
 void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
 {
@@ -3614,7 +3612,7 @@ void QQuickWindow::setRenderTarget(QOpenGLFramebufferObject *fbo)
 {
     Q_D(QQuickWindow);
     if (d->context && QThread::currentThread() != d->context->thread()) {
-        qWarning("QQuickWindow::setRenderThread: Cannot set render target from outside the rendering thread");
+        qWarning("QQuickWindow::setRenderTarget: Cannot set render target from outside the rendering thread");
         return;
     }
 
@@ -4276,6 +4274,8 @@ void QQuickWindow::resetOpenGLState()
 
     The flags which you read from this property might differ from the ones
     that you set if the requested flags could not be fulfilled.
+
+    \sa Qt::WindowFlags
  */
 
 /*!

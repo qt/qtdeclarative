@@ -90,7 +90,7 @@ public:
     };
     Result query(const QHashedStringRef &) const;
     Result query(const QHashedStringRef &, const void *importNamespace) const;
-    Result query(const QV4::String *) const;
+    Result query(const QV4::String *, QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion) const;
     Result query(const QV4::String *, const void *importNamespace) const;
 
 private:

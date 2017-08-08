@@ -468,16 +468,16 @@ class YarrGenerator : private DefaultMacroAssembler {
 
         // The operation, as a YarrOpCode, and also a reference to the PatternTerm.
         YarrOpCode m_op;
-        PatternTerm* m_term;
+        PatternTerm* m_term = nullptr;
 
         // For alternatives, this holds the PatternAlternative and doubly linked
         // references to this alternative's siblings. In the case of the
         // OpBodyAlternativeEnd node at the end of a section of repeating nodes,
         // m_nextOp will reference the OpBodyAlternativeBegin node of the first
         // repeating alternative.
-        PatternAlternative* m_alternative;
-        size_t m_previousOp;
-        size_t m_nextOp;
+        PatternAlternative* m_alternative = nullptr;
+        size_t m_previousOp = 0;
+        size_t m_nextOp = 0;
 
         // Used to record a set of Jumps out of the generated code, typically
         // used for jumps out to backtracking code, and a single reentry back

@@ -156,6 +156,7 @@ struct Options
         , quitImmediately(false)
         , resizeViewToRootItem(false)
         , multisample(false)
+        , coreProfile(false)
         , verbose(false)
         , applicationType(DefaultQmlApplicationType)
     {
@@ -176,6 +177,7 @@ struct Options
     bool quitImmediately;
     bool resizeViewToRootItem;
     bool multisample;
+    bool coreProfile;
     bool verbose;
     QVector<Qt::ApplicationAttribute> applicationAttributes;
     QString translationFile;
@@ -359,6 +361,7 @@ static void usage()
     puts("  --fullscreen ..................... Run fullscreen");
     puts("  --transparent .................... Make the window transparent");
     puts("  --multisample .................... Enable multisampling (OpenGL anti-aliasing)");
+    puts("  --core-profile ................... Request a core profile OpenGL context");
     puts("  --no-version-detection ........... Do not try to detect the version of the .qml file");
     puts("  --slow-animations ................ Run all animations in slow motion");
     puts("  --resize-to-root ................. Resize the window to the size of the root item");
@@ -523,6 +526,8 @@ int main(int argc, char ** argv)
                 options.resizeViewToRootItem = true;
             else if (lowerArgument == QLatin1String("--multisample"))
                 options.multisample = true;
+            else if (lowerArgument == QLatin1String("--core-profile"))
+                options.coreProfile = true;
             else if (lowerArgument == QLatin1String("--verbose"))
                 options.verbose = true;
             else if (lowerArgument == QLatin1String("-i") && i + 1 < size)
@@ -640,6 +645,10 @@ int main(int argc, char ** argv)
                     window->setClearBeforeRendering(true);
                     window->setColor(QColor(Qt::transparent));
                     window->setFlags(Qt::FramelessWindowHint);
+                }
+                if (options.coreProfile) {
+                    surfaceFormat.setVersion(4, 1);
+                    surfaceFormat.setProfile(QSurfaceFormat::CoreProfile);
                 }
                 window->setFormat(surfaceFormat);
 

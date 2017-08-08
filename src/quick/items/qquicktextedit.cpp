@@ -356,6 +356,19 @@ QString QQuickTextEdit::text() const
 */
 
 /*!
+    \qmlproperty bool QtQuick::TextEdit::font.kerning
+    \since 5.10
+
+    Enables or disables the kerning OpenType feature when shaping the text. This may improve performance
+    when creating or changing the text, at the expense of some cosmetic features. The default value
+    is true.
+
+    \qml
+    TextEdit { text: "OATS FLAVOUR WAY"; kerning: font.false }
+    \endqml
+*/
+
+/*!
     \qmlproperty string QtQuick::TextEdit::text
 
     The text to display.  If the text format is AutoText the text edit will
@@ -3035,6 +3048,32 @@ void QQuickTextEdit::resetBottomPadding()
 {
     Q_D(QQuickTextEdit);
     d->setBottomPadding(0, true);
+}
+
+/*!
+    \qmlproperty real QtQuick::TextEdit::tabStopDistance
+    \since 5.10
+
+    The default distance, in device units, between tab stops.
+
+    \sa QTextOption::setTabStop()
+*/
+int QQuickTextEdit::tabStopDistance() const
+{
+    Q_D(const QQuickTextEdit);
+    return d->document->defaultTextOption().tabStop();
+}
+
+void QQuickTextEdit::setTabStopDistance(qreal distance)
+{
+    Q_D(QQuickTextEdit);
+    QTextOption textOptions = d->document->defaultTextOption();
+    if (textOptions.tabStop() == distance)
+        return;
+
+    textOptions.setTabStop(distance);
+    d->document->setDefaultTextOption(textOptions);
+    emit tabStopDistanceChanged(distance);
 }
 
 /*!

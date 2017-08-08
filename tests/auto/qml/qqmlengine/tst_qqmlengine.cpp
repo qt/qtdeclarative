@@ -741,6 +741,9 @@ public:
 
         if (url.path().endsWith("Test.2/qmldir"))//Special case
             return QUrl::fromLocalFile(m_base.path() + "interception/module/intercepted/qmldir");
+        // Special case: with 5.10 we always add the implicit import, so we need to explicitly handle this case now
+        if (url.path().endsWith("intercepted/qmldir"))
+            return url;
 
         QString alteredPath = url.path();
         int a = alteredPath.lastIndexOf('/');

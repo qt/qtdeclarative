@@ -66,7 +66,10 @@ public:
 
 Q_DECLARE_INTERFACE(QQmlTypesExtensionInterface, "org.qt-project.Qt.QQmlTypesExtensionInterface/1.0")
 
+// NOTE: When changing this to a new version and deciding to add backup code to
+// continue to support the previous version, make sure to support both of these iids.
 #define QQmlExtensionInterface_iid "org.qt-project.Qt.QQmlExtensionInterface/1.0"
+#define QQmlExtensionInterface_iid_old "org.qt-project.Qt.QQmlExtensionInterface"
 
 Q_DECLARE_INTERFACE(QQmlExtensionInterface, QQmlExtensionInterface_iid)
 

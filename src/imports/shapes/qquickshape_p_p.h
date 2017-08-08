@@ -62,21 +62,37 @@ QT_BEGIN_NAMESPACE
 
 class QSGPlainTexture;
 
-struct QQuickShapePathCommands
+class QQuickAbstractPathRenderer
 {
-    enum Command {
-        MoveTo,
-        LineTo,
-        QuadTo,
-        CubicTo,
-        ArcTo
+public:
+    enum Flag {
+        SupportsAsync = 0x01
     };
+    Q_DECLARE_FLAGS(Flags, Flag)
 
-    QVector<Command> cmd;
-    QVector<float> coords;
+    virtual ~QQuickAbstractPathRenderer() { }
 
-    QPainterPath toPainterPath() const;
+    // Gui thread
+    virtual void beginSync(int totalCount) = 0;
+    virtual void endSync(bool async) = 0;
+    virtual void setAsyncCallback(void (*)(void *), void *) { }
+    virtual Flags flags() const { return 0; }
+    virtual void setPath(int index, const QQuickPath *path) = 0;
+    virtual void setStrokeColor(int index, const QColor &color) = 0;
+    virtual void setStrokeWidth(int index, qreal w) = 0;
+    virtual void setFillColor(int index, const QColor &color) = 0;
+    virtual void setFillRule(int index, QQuickShapePath::FillRule fillRule) = 0;
+    virtual void setJoinStyle(int index, QQuickShapePath::JoinStyle joinStyle, int miterLimit) = 0;
+    virtual void setCapStyle(int index, QQuickShapePath::CapStyle capStyle) = 0;
+    virtual void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
+                                qreal dashOffset, const QVector<qreal> &dashPattern) = 0;
+    virtual void setFillGradient(int index, QQuickShapeGradient *gradient) = 0;
+
+    // Render thread, with gui blocked
+    virtual void updateNode() = 0;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickAbstractPathRenderer::Flags)
 
 struct QQuickShapeStrokeFillParams
 {
@@ -94,42 +110,6 @@ struct QQuickShapeStrokeFillParams
     QVector<qreal> dashPattern;
     QQuickShapeGradient *fillGradient;
 };
-
-class QQuickAbstractPathRenderer
-{
-public:
-    enum Flag {
-        SupportsAsync = 0x01
-    };
-    Q_DECLARE_FLAGS(Flags, Flag)
-
-    virtual ~QQuickAbstractPathRenderer() { }
-
-    // Gui thread
-    virtual void beginSync(int totalCount) = 0;
-    virtual void endSync(bool async) = 0;
-    virtual void setAsyncCallback(void (*)(void *), void *) { }
-    virtual Flags flags() const { return 0; }
-    //  - QML API
-    virtual void setPath(int index, const QQuickPath *path) = 0;
-    //  - JS API
-    virtual void setJSPath(int index, const QQuickShapePathCommands &path) = 0;
-    // - stroke/fill parameters
-    virtual void setStrokeColor(int index, const QColor &color) = 0;
-    virtual void setStrokeWidth(int index, qreal w) = 0;
-    virtual void setFillColor(int index, const QColor &color) = 0;
-    virtual void setFillRule(int index, QQuickShapePath::FillRule fillRule) = 0;
-    virtual void setJoinStyle(int index, QQuickShapePath::JoinStyle joinStyle, int miterLimit) = 0;
-    virtual void setCapStyle(int index, QQuickShapePath::CapStyle capStyle) = 0;
-    virtual void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
-                                qreal dashOffset, const QVector<qreal> &dashPattern) = 0;
-    virtual void setFillGradient(int index, QQuickShapeGradient *gradient) = 0;
-
-    // Render thread, with gui blocked
-    virtual void updateNode() = 0;
-};
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickAbstractPathRenderer::Flags)
 
 class QQuickShapePathPrivate : public QQuickPathPrivate
 {
@@ -177,61 +157,13 @@ public:
 
     static QQuickShapePrivate *get(QQuickShape *item) { return item->d_func(); }
 
-    bool componentComplete;
     bool spChanged;
     QQuickShape::RendererType rendererType;
     bool async;
     QQuickShape::Status status;
     QQuickAbstractPathRenderer *renderer;
-
-    struct {
-        QVector<QQuickShapePath *> sp;
-    } qmlData;
-
-    struct {
-        bool isValid() const { Q_ASSERT(paths.count() == sfp.count()); return !paths.isEmpty(); }
-        QVector<QQuickShapePathCommands> paths;
-        QVector<QQuickShapeStrokeFillParams> sfp;
-    } jsData;
-
+    QVector<QQuickShapePath *> sp;
     bool enableVendorExts;
-};
-
-class QQuickShapePathObject : public QObject
-{
-    Q_OBJECT
-
-public:
-    QQuickShapePathObject(QObject *parent = nullptr) : QObject(parent) { }
-
-    void setV4Engine(QV4::ExecutionEngine *engine);
-    QV4::ReturnedValue v4value() const { return m_v4value.value(); }
-
-    QQuickShapePath path;
-
-    void clear();
-
-private:
-    QV4::PersistentValue m_v4value;
-};
-
-class QQuickShapeStrokeFillParamsObject : public QObject
-{
-    Q_OBJECT
-
-public:
-    QQuickShapeStrokeFillParamsObject(QObject *parent = nullptr) : QObject(parent) { }
-
-    void setV4Engine(QV4::ExecutionEngine *engine);
-    QV4::ReturnedValue v4value() const { return m_v4value.value(); }
-
-    QQuickShapeStrokeFillParams sfp;
-    QV4::PersistentValue v4fillGradient;
-
-    void clear();
-
-private:
-    QV4::PersistentValue m_v4value;
 };
 
 #if QT_CONFIG(opengl)

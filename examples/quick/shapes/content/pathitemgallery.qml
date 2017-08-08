@@ -180,7 +180,7 @@ Rectangle {
         color: "darkBlue"
         font.pointSize: 12
         property variant rendererStrings: [ "Unknown", "Generic (QtGui triangulator)", "GL_NV_path_rendering", "Software (QPainter)" ]
-        text: "Active Shape backend: " + rendererStrings[dummyShape.renderer]
+        text: "Active Shape backend: " + rendererStrings[dummyShape.rendererType]
         SequentialAnimation on opacity {
             NumberAnimation { from: 1; to: 0; duration: 5000 }
             PauseAnimation { duration: 5000 }

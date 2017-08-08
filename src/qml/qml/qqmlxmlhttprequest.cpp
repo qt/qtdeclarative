@@ -1823,8 +1823,13 @@ void QQmlXMLHttpRequestCtor::method_send(const QV4::BuiltinFunction *, QV4::Scop
         THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     QByteArray data;
-    if (callData->argc > 0)
-        data = callData->args[0].toQStringNoThrow().toUtf8();
+    if (callData->argc > 0) {
+        if (const ArrayBuffer *buffer = callData->args[0].as<ArrayBuffer>()) {
+            data = buffer->asByteArray();
+        } else {
+            data = callData->args[0].toQStringNoThrow().toUtf8();
+        }
+    }
 
     scope.result = r->send(w, scope.engine->callingQmlContext(), data);
 }
