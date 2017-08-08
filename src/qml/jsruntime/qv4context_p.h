@@ -116,8 +116,7 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
         Type_CatchContext = 0x2,
         Type_WithContext = 0x3,
         Type_QmlContext = 0x4,
-        Type_SimpleCallContext = 0x5,
-        Type_CallContext = 0x6
+        Type_CallContext = 0x5
     };
 
     void init(ContextType t)
@@ -150,9 +149,9 @@ Q_STATIC_ASSERT(offsetof(ExecutionContextData, v4Function) == offsetof(Execution
 DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
     DECLARE_MARK_TABLE(CallContext);
 
-    void init(ContextType t = Type_SimpleCallContext)
+    void init()
     {
-        ExecutionContext::init(t);
+        ExecutionContext::init(Type_CallContext);
     }
 
     inline unsigned int formalParameterCount() const;
@@ -250,12 +249,12 @@ struct CatchContext : public ExecutionContext
 
 inline CallContext *ExecutionContext::asCallContext()
 {
-    return d()->type >= Heap::ExecutionContext::Type_SimpleCallContext ? static_cast<CallContext *>(this) : 0;
+    return d()->type == Heap::ExecutionContext::Type_CallContext ? static_cast<CallContext *>(this) : 0;
 }
 
 inline const CallContext *ExecutionContext::asCallContext() const
 {
-    return d()->type >= Heap::ExecutionContext::Type_SimpleCallContext ? static_cast<const CallContext *>(this) : 0;
+    return d()->type == Heap::ExecutionContext::Type_CallContext ? static_cast<const CallContext *>(this) : 0;
 }
 
 } // namespace QV4

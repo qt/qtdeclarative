@@ -65,7 +65,7 @@ Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *oute
 
     ExecutionEngine *v4 = outer->internalClass->engine;
     Heap::CallContext *c = v4->memoryManager->allocManaged<CallContext>(requiredMemory, function->internalClass);
-    c->init(Heap::ExecutionContext::Type_CallContext);
+    c->init();
 
     c->v4Function = function;
 
@@ -118,7 +118,6 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     while (ctx) {
         switch (ctx->d()->type) {
         case Heap::ExecutionContext::Type_CallContext:
-        case Heap::ExecutionContext::Type_SimpleCallContext:
             if (!activation) {
                 Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
                 if (!c->activation)
@@ -209,8 +208,7 @@ bool ExecutionContext::deleteProperty(String *name)
             Q_FALLTHROUGH();
         }
         case Heap::ExecutionContext::Type_WithContext:
-        case Heap::ExecutionContext::Type_GlobalContext:
-        case Heap::ExecutionContext::Type_SimpleCallContext: {
+        case Heap::ExecutionContext::Type_GlobalContext: {
             if (ctx->activation) {
                 Scope scope(this);
                 ScopedObject object(scope, ctx->activation);
@@ -281,8 +279,7 @@ bool ExecutionContext::setProperty(String *name, const Value &value)
                 return w->put(name, value);
             break;
         }
-        case Heap::ExecutionContext::Type_CallContext:
-        case Heap::ExecutionContext::Type_SimpleCallContext: {
+        case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
             if (c->v4Function) {
                 uint index = c->internalClass->find(id);
@@ -357,8 +354,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         }
         case Heap::ExecutionContext::Type_WithContext:
         case Heap::ExecutionContext::Type_GlobalContext:
-        case Heap::ExecutionContext::Type_QmlContext:
-        case Heap::ExecutionContext::Type_SimpleCallContext: {
+        case Heap::ExecutionContext::Type_QmlContext: {
             if (ctx->activation) {
                 Scope scope(this);
                 ScopedObject activation(scope, ctx->activation);
@@ -406,8 +402,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
             }
             Q_FALLTHROUGH();
         }
-        case Heap::ExecutionContext::Type_GlobalContext:
-        case Heap::ExecutionContext::Type_SimpleCallContext: {
+        case Heap::ExecutionContext::Type_GlobalContext: {
             if (ctx->activation) {
                 Scope scope(this);
                 ScopedObject activation(scope, ctx->activation);

@@ -553,51 +553,6 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
 #endif
 }
 
-
-template<typename T>
-StackAllocator<T>::StackAllocator(ChunkAllocator *chunkAlloc)
-    : chunkAllocator(chunkAlloc)
-{
-    chunks.push_back(chunkAllocator->allocate());
-    firstInChunk = chunks.back()->first();
-    nextFree = firstInChunk;
-    lastInChunk = firstInChunk + (Chunk::AvailableSlots - 1)/requiredSlots*requiredSlots;
-}
-
-template<typename T>
-void StackAllocator<T>::freeAll()
-{
-    for (auto c : chunks)
-        chunkAllocator->free(c);
-}
-
-template<typename T>
-void StackAllocator<T>::nextChunk() {
-    Q_ASSERT(nextFree == lastInChunk);
-    ++currentChunk;
-    if (currentChunk >= chunks.size()) {
-        Chunk *newChunk = chunkAllocator->allocate();
-        chunks.push_back(newChunk);
-    }
-    firstInChunk = chunks.at(currentChunk)->first();
-    nextFree = firstInChunk;
-    lastInChunk = firstInChunk + (Chunk::AvailableSlots - 1)/requiredSlots*requiredSlots;
-}
-
-template<typename T>
-void QV4::StackAllocator<T>::prevChunk() {
-    Q_ASSERT(nextFree == firstInChunk);
-    Q_ASSERT(chunks.at(currentChunk) == nextFree->chunk());
-    Q_ASSERT(currentChunk > 0);
-    --currentChunk;
-    firstInChunk = chunks.at(currentChunk)->first();
-    lastInChunk = firstInChunk + (Chunk::AvailableSlots - 1)/requiredSlots*requiredSlots;
-    nextFree = lastInChunk;
-}
-
-template struct StackAllocator<Heap::CallContext>;
-
-
 HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
     Q_ASSERT((size % Chunk::SlotSize) == 0);
     size_t slotsRequired = size >> Chunk::SlotSizeShift;
@@ -836,7 +791,6 @@ void HugeItemAllocator::freeAll()
 MemoryManager::MemoryManager(ExecutionEngine *engine)
     : engine(engine)
     , chunkAllocator(new ChunkAllocator)
-    , stackAllocator(chunkAllocator)
     , blockAllocator(chunkAllocator)
     , hugeItemAllocator(chunkAllocator)
     , m_persistentValues(new PersistentValueStorage(engine))
@@ -1261,7 +1215,6 @@ MemoryManager::~MemoryManager()
     sweep(/*lastSweep*/true);
     blockAllocator.freeAll();
     hugeItemAllocator.freeAll();
-    stackAllocator.freeAll();
 
     delete m_weakValues;
 #ifdef V4_USE_VALGRIND
