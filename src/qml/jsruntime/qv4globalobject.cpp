@@ -384,7 +384,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     ctx->d()->v4Function = function;
 
     ScopedCallData cData(scope);
-    cData->thisObject = Encode::undefined(); // ####
+    cData->thisObject = scope.engine->currentStackFrame->thisObject();
     return function->execute(ctx->d(), cData);
 }
 
