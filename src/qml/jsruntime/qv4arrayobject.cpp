@@ -199,7 +199,6 @@ ReturnedValue ArrayPrototype::method_find(const BuiltinFunction *b, CallData *ca
 
     ScopedCallData cData(scope, 3);
     cData->thisObject = callData->argument(1);
-    cData->args[2] = instance;
 
     ScopedValue v(scope);
     ScopedValue result(scope);
@@ -210,6 +209,7 @@ ReturnedValue ArrayPrototype::method_find(const BuiltinFunction *b, CallData *ca
 
         cData->args[0] = v;
         cData->args[1] = Primitive::fromDouble(k);
+        cData->args[2] = instance;
         result = callback->call(cData);
 
         CHECK_EXCEPTION();
@@ -235,7 +235,6 @@ ReturnedValue ArrayPrototype::method_findIndex(const BuiltinFunction *b, CallDat
 
     ScopedCallData cData(scope, 3);
     cData->thisObject = callData->argument(1);
-    cData->args[2] = instance;
 
     ScopedValue v(scope);
     ScopedValue result(scope);
@@ -246,6 +245,7 @@ ReturnedValue ArrayPrototype::method_findIndex(const BuiltinFunction *b, CallDat
 
         cData->args[0] = v;
         cData->args[1] = Primitive::fromDouble(k);
+        cData->args[2] = instance;
         result = callback->call(cData);
 
         CHECK_EXCEPTION();
@@ -790,7 +790,6 @@ ReturnedValue ArrayPrototype::method_every(const BuiltinFunction *b, CallData *c
         THROW_TYPE_ERROR();
 
     ScopedCallData cData(scope, 3);
-    cData->args[2] = instance;
     cData->thisObject = callData->argument(1);
     ScopedValue r(scope);
     ScopedValue v(scope);
@@ -804,6 +803,7 @@ ReturnedValue ArrayPrototype::method_every(const BuiltinFunction *b, CallData *c
 
         cData->args[0] = v;
         cData->args[1] = Primitive::fromDouble(k);
+        cData->args[2] = instance;
         r = callback->call(cData);
         ok = r->toBoolean();
     }
@@ -825,7 +825,6 @@ ReturnedValue ArrayPrototype::method_some(const BuiltinFunction *b, CallData *ca
 
     ScopedCallData cData(scope, 3);
     cData->thisObject = callData->argument(1);
-    cData->args[2] = instance;
     ScopedValue v(scope);
     ScopedValue result(scope);
 
@@ -837,6 +836,7 @@ ReturnedValue ArrayPrototype::method_some(const BuiltinFunction *b, CallData *ca
 
         cData->args[0] = v;
         cData->args[1] = Primitive::fromDouble(k);
+        cData->args[2] = instance;
         result = callback->call(cData);
         if (result->toBoolean())
             return Encode(true);
@@ -859,7 +859,6 @@ ReturnedValue ArrayPrototype::method_forEach(const BuiltinFunction *b, CallData 
 
     ScopedCallData cData(scope, 3);
     cData->thisObject = callData->argument(1);
-    cData->args[2] = instance;
 
     ScopedValue v(scope);
     for (uint k = 0; k < len; ++k) {
@@ -870,6 +869,7 @@ ReturnedValue ArrayPrototype::method_forEach(const BuiltinFunction *b, CallData 
 
         cData->args[0] = v;
         cData->args[1] = Primitive::fromDouble(k);
+        cData->args[2] = instance;
         callback->call(cData);
     }
     RETURN_UNDEFINED();
@@ -895,7 +895,6 @@ ReturnedValue ArrayPrototype::method_map(const BuiltinFunction *b, CallData *cal
     ScopedValue mapped(scope);
     ScopedCallData cData(scope, 3);
     cData->thisObject = callData->argument(1);
-    cData->args[2] = instance;
 
     ScopedValue v(scope);
     for (uint k = 0; k < len; ++k) {
@@ -906,6 +905,7 @@ ReturnedValue ArrayPrototype::method_map(const BuiltinFunction *b, CallData *cal
 
         cData->args[0] = v;
         cData->args[1] = Primitive::fromDouble(k);
+        cData->args[2] = instance;
         mapped = callback->call(cData);
         a->arraySet(k, mapped);
     }
@@ -932,7 +932,6 @@ ReturnedValue ArrayPrototype::method_filter(const BuiltinFunction *b, CallData *
     ScopedValue v(scope);
     ScopedCallData cData(scope, 3);
     cData->thisObject = callData->argument(1);
-    cData->args[2] = instance;
 
     uint to = 0;
     for (uint k = 0; k < len; ++k) {
@@ -943,6 +942,7 @@ ReturnedValue ArrayPrototype::method_filter(const BuiltinFunction *b, CallData *
 
         cData->args[0] = v;
         cData->args[1] = Primitive::fromDouble(k);
+        cData->args[2] = instance;
         selected = callback->call(cData);
         if (selected->toBoolean()) {
             a->arraySet(to, v);
@@ -985,8 +985,6 @@ ReturnedValue ArrayPrototype::method_reduce(const BuiltinFunction *b, CallData *
 
     ScopedCallData cData(scope, 4);
     cData->thisObject = Primitive::undefinedValue();
-    cData->args[0] = acc;
-    cData->args[3] = instance;
 
     while (k < len) {
         bool kPresent;
@@ -995,6 +993,7 @@ ReturnedValue ArrayPrototype::method_reduce(const BuiltinFunction *b, CallData *
             cData->args[0] = acc;
             cData->args[1] = v;
             cData->args[2] = Primitive::fromDouble(k);
+            cData->args[3] = instance;
             acc = callback->call(cData);
         }
         ++k;
@@ -1040,7 +1039,6 @@ ReturnedValue ArrayPrototype::method_reduceRight(const BuiltinFunction *b, CallD
 
     ScopedCallData cData(scope, 4);
     cData->thisObject = Primitive::undefinedValue();
-    cData->args[3] = instance;
 
     while (k > 0) {
         bool kPresent;
@@ -1049,6 +1047,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(const BuiltinFunction *b, CallD
             cData->args[0] = acc;
             cData->args[1] = v;
             cData->args[2] = Primitive::fromDouble(k - 1);
+            cData->args[3] = instance;
             acc = callback->call(cData);
         }
         --k;
