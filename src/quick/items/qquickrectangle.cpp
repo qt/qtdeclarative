@@ -325,6 +325,9 @@ QQuickRectangle::QQuickRectangle(QQuickItem *parent)
 : QQuickItem(*(new QQuickRectanglePrivate), parent)
 {
     setFlag(ItemHasContents);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    setAcceptTouchEvents(false);
+#endif
 }
 
 void QQuickRectangle::doUpdate()

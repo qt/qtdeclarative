@@ -50,6 +50,7 @@ Rectangle {
     MultiPointTouchArea {
         id: mpta
         anchors.fill: parent
+        //onGestureStarted: gesture.grab() // in case this is embedded in something that might steal
         touchPoints: [
             TouchPoint { property color color: "red" },
             TouchPoint { property color color: "orange" },

@@ -49,7 +49,12 @@ public:
         : QQuickItem(parent), focused(false), pressCount(0), releaseCount(0)
         , wheelCount(0), acceptIncomingTouchEvents(true)
         , touchEventReached(false), timestamp(0)
-        , lastWheelEventPos(0, 0), lastWheelEventGlobalPos(0, 0) {}
+        , lastWheelEventPos(0, 0), lastWheelEventGlobalPos(0, 0)
+    {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        setAcceptTouchEvents(true);
+#endif
+    }
 
     bool focused;
     int pressCount;

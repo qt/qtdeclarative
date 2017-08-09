@@ -52,6 +52,15 @@ Rectangle {
         myModel.append({"name":name, "description":desc, "url":url})
     }
 
+    function hideExample()
+    {
+        ei.visible = false;
+    }
+    function showExample(url)
+    {
+        ei.exampleUrl = url;
+    }
+
     // The container rectangle here is used to give a nice "feel" when
     // transitioning into an example.
     Rectangle {

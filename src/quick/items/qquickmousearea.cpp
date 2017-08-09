@@ -85,6 +85,7 @@ void QQuickMouseAreaPrivate::init()
 {
     Q_Q(QQuickMouseArea);
     q->setAcceptedMouseButtons(Qt::LeftButton);
+    q->setAcceptTouchEvents(false); // rely on mouse events synthesized from touch
     q->setFiltersChildMouseEvents(true);
     if (qmlVisualTouchDebugging()) {
         q->setFlag(QQuickItem::ItemHasContents);

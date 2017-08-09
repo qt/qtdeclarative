@@ -288,6 +288,7 @@ QQuickPinchArea::QQuickPinchArea(QQuickItem *parent)
 {
     Q_D(QQuickPinchArea);
     d->init();
+    setAcceptTouchEvents(true);
 #ifdef Q_OS_OSX
     setAcceptHoverEvents(true); // needed to enable touch events on mouse hover.
 #endif
