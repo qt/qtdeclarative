@@ -851,6 +851,8 @@ In addition the following expressions can be used to specify the time:
             \li use AM/PM display. \e AP will be replaced by either "AM" or "PM".
     \row \li ap
             \li use am/pm display. \e ap will be replaced by either "am" or "pm".
+    \row \li t
+            \li include a time-zone indicator.
     \endtable
 
     All other input characters will be ignored. Any sequence of characters that
