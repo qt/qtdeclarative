@@ -739,11 +739,25 @@ ReturnedValue Runtime::method_foreachNextPropertyName(const Value &foreach_itera
 }
 
 
-bool Runtime::method_setActivationProperty(ExecutionEngine *engine, int nameIndex, const Value &value)
+void Runtime::method_storeNameSloppy(ExecutionEngine *engine, int nameIndex, const Value &value)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    return static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).setProperty(name, value);
+    ExecutionContext::Error e = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).setProperty(name, value);
+
+    if (e == ExecutionContext::RangeError)
+        engine->globalObject->put(name, value);
+}
+
+void Runtime::method_storeNameStrict(ExecutionEngine *engine, int nameIndex, const Value &value)
+{
+    Scope scope(engine);
+    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    ExecutionContext::Error e = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).setProperty(name, value);
+    if (e == ExecutionContext::TypeError)
+        engine->throwTypeError();
+    else if (e == ExecutionContext::RangeError)
+        engine->throwReferenceError(name);
 }
 
 ReturnedValue Runtime::method_getProperty(ExecutionEngine *engine, const Value &object, int nameIndex)

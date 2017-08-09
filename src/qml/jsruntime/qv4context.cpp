@@ -253,7 +253,7 @@ ReturnedValue ExecutionContext::call(Heap::ExecutionContext *context, CallData *
     return res;
 }
 
-bool ExecutionContext::setProperty(String *name, const Value &value)
+ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value &value)
 {
     name->makeIdentifier();
     Identifier *id = name->identifier();
@@ -267,16 +267,18 @@ bool ExecutionContext::setProperty(String *name, const Value &value)
             Heap::CatchContext *c = static_cast<Heap::CatchContext *>(ctx);
             if (c->exceptionVarName->isEqualTo(name->d())) {
                     c->exceptionValue.set(v4, value);
-                    return true;
+                    return NoError;
             }
             break;
         }
         case Heap::ExecutionContext::Type_WithContext: {
-            // the semantics are different from the setProperty calls of other activations
             Scope scope(v4);
             ScopedObject w(scope, ctx->activation);
-            if (w->hasProperty(name))
-                return w->put(name, value);
+            if (w->hasProperty(name)) {
+                if (!w->put(name, value))
+                    return TypeError;
+                return NoError;
+            }
             break;
         }
         case Heap::ExecutionContext::Type_CallContext: {
@@ -291,7 +293,7 @@ bool ExecutionContext::setProperty(String *name, const Value &value)
                         index -= c->v4Function->nFormals;
                         static_cast<Heap::CallContext *>(c)->locals.set(v4, index, value);
                     }
-                    return true;
+                    return NoError;
                 }
             }
         }
@@ -302,22 +304,24 @@ bool ExecutionContext::setProperty(String *name, const Value &value)
                 if (member < UINT_MAX) {
                     Scope scope(v4);
                     ScopedObject a(scope, ctx->activation);
-                    return a->putValue(member, value);
+                    if (!a->putValue(member, value))
+                        return TypeError;
+                    return NoError;
                 }
             }
             break;
         case Heap::ExecutionContext::Type_QmlContext: {
             Scope scope(v4);
             ScopedObject activation(scope, ctx->activation);
-            return activation->put(name, value);
+            if (!activation->put(name, value))
+                return TypeError;
+            return NoError;
         }
         }
 
     }
 
-    if (d()->v4Function->isStrict())
-        return false;
-    return engine()->globalObject->put(name, value);
+    return RangeError;
 }
 
 ReturnedValue ExecutionContext::getProperty(String *name)

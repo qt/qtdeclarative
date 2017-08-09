@@ -516,14 +516,15 @@ QV4::ReturnedValue VME::exec(Heap::ExecutionContext *context, Function *function
         STORE_ACCUMULATOR(l->globalGetter(l, engine));
     MOTH_END_INSTR(GetGlobalLookup)
 
-    MOTH_BEGIN_INSTR(StoreName)
-        if (!Runtime::method_setActivationProperty(engine, instr.name, accumulator) && function->isStrict()) {
-            Scope scope(engine);
-            ScopedString n(scope, function->compilationUnit->runtimeStrings[instr.name]);
-            engine->throwReferenceError(n);
-        }
+    MOTH_BEGIN_INSTR(StoreNameStrict)
+        Runtime::method_storeNameStrict(engine, instr.name, accumulator);
         CHECK_EXCEPTION;
-    MOTH_END_INSTR(StoreName)
+    MOTH_END_INSTR(StoreNameSloppy)
+
+    MOTH_BEGIN_INSTR(StoreNameSloppy)
+        Runtime::method_storeNameSloppy(engine, instr.name, accumulator);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(StoreNameSloppy)
 
     MOTH_BEGIN_INSTR(LoadElement)
         STORE_ACCUMULATOR(Runtime::method_getElement(engine, STACK_VALUE(instr.base), STACK_VALUE(instr.index)));

@@ -64,6 +64,11 @@ namespace QV4 {
 #endif
 struct Q_QML_EXPORT EngineBase {
     struct JSStackFrame {
+        enum Offsets {
+            JSFunction = 0,
+            Context = 1,
+            Accumulator = 2
+        };
         // callData is directly before this
         Value jsFunction;
         Value context;

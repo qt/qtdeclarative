@@ -85,7 +85,8 @@ QT_BEGIN_NAMESPACE
     F(LoadClosure, loadClosure) \
     F(LoadName, loadName) \
     F(GetGlobalLookup, getGlobalLookup) \
-    F(StoreName, storeName) \
+    F(StoreNameSloppy, storeNameSloppy) \
+    F(StoreNameStrict, storeNameStrict) \
     F(LoadElement, loadElement) \
     F(LoadElementA, loadElementA) \
     F(StoreElement, storeElement) \
@@ -322,7 +323,11 @@ union Instr
         MOTH_INSTR_HEADER
         int index;
     };
-    struct instr_storeName {
+    struct instr_storeNameSloppy {
+        MOTH_INSTR_HEADER
+        int name;
+    };
+    struct instr_storeNameStrict {
         MOTH_INSTR_HEADER
         int name;
     };
@@ -706,7 +711,8 @@ union Instr
     instr_loadClosure loadClosure;
     instr_loadName loadName;
     instr_getGlobalLookup getGlobalLookup;
-    instr_storeName storeName;
+    instr_storeNameSloppy storeNameSloppy;
+    instr_storeNameStrict storeNameStrict;
     instr_loadElement loadElement;
     instr_loadElementA loadElementA;
     instr_storeElement storeElement;

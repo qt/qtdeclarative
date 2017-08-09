@@ -173,9 +173,13 @@ void dumpBytecode(const char *code, int len, int nFormals)
             d << instr.index;
         MOTH_END_INSTR(GetGlobalLookup)
 
-        MOTH_BEGIN_INSTR(StoreName)
+        MOTH_BEGIN_INSTR(StoreNameSloppy)
             d << instr.name;
-        MOTH_END_INSTR(StoreName)
+        MOTH_END_INSTR(StoreNameSloppy)
+
+        MOTH_BEGIN_INSTR(StoreNameStrict)
+            d << instr.name;
+        MOTH_END_INSTR(StoreNameStrict)
 
         MOTH_BEGIN_INSTR(LoadElement)
             d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]";

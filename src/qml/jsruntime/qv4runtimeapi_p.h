@@ -107,7 +107,8 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, constructValue, (ExecutionEngine *engine, const Value &func, CallData *callData)) \
     \
     /* set & get */ \
-    F(bool, setActivationProperty, (ExecutionEngine *engine, int nameIndex, const Value &value)) \
+    F(void, storeNameStrict, (ExecutionEngine *engine, int nameIndex, const Value &value)) \
+    F(void, storeNameSloppy, (ExecutionEngine *engine, int nameIndex, const Value &value)) \
     F(bool, setProperty, (ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)) \
     F(bool, setElement, (ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)) \
     F(ReturnedValue, getProperty, (ExecutionEngine *engine, const Value &object, int nameIndex)) \

@@ -2866,9 +2866,16 @@ void Codegen::Reference::storeAccumulator() const
         return;
     }
     case Name: {
-        Instruction::StoreName store;
-        store.name = unqualifiedNameIndex;
-        codegen->bytecodeGenerator->addInstruction(store);
+        Context *c = codegen->currentContext();
+        if (c->isStrict) {
+            Instruction::StoreNameStrict store;
+            store.name = unqualifiedNameIndex;
+            codegen->bytecodeGenerator->addInstruction(store);
+        } else {
+            Instruction::StoreNameSloppy store;
+            store.name = unqualifiedNameIndex;
+            codegen->bytecodeGenerator->addInstruction(store);
+        }
     } return;
     case Member:
         if (codegen->useFastLookups) {

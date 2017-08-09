@@ -198,7 +198,14 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     void createMutableBinding(String *name, bool deletable);
 
-    bool setProperty(String *name, const Value &value);
+    enum Error {
+        NoError,
+        TypeError,
+        RangeError
+    };
+
+    Error setProperty(String *name, const Value &value);
+
     ReturnedValue getProperty(String *name);
     ReturnedValue getPropertyAndBase(String *name, Value *base);
     bool deleteProperty(String *name);
