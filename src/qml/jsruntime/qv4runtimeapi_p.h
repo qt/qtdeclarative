@@ -93,7 +93,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
 #define FOR_EACH_RUNTIME_METHOD(F) \
     /* call */ \
     F(ReturnedValue, callGlobalLookup, (ExecutionEngine *engine, uint index, CallData *callData)) \
-    F(ReturnedValue, callActivationProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
+    F(ReturnedValue, callName, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
     F(ReturnedValue, callProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
     F(ReturnedValue, callPropertyLookup, (ExecutionEngine *engine, uint index, CallData *callData)) \
     F(ReturnedValue, callElement, (ExecutionEngine *engine, const Value &index, CallData *callData)) \
@@ -101,19 +101,19 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     \
     /* construct */ \
     F(ReturnedValue, constructGlobalLookup, (ExecutionEngine *engine, uint index, CallData *callData)) \
-    F(ReturnedValue, constructActivationProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
+    F(ReturnedValue, constructName, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
     F(ReturnedValue, constructProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
     F(ReturnedValue, constructPropertyLookup, (ExecutionEngine *engine, uint index, CallData *callData)) \
     F(ReturnedValue, constructValue, (ExecutionEngine *engine, const Value &func, CallData *callData)) \
     \
-    /* set & get */ \
+    /* load & store */ \
     F(void, storeNameStrict, (ExecutionEngine *engine, int nameIndex, const Value &value)) \
     F(void, storeNameSloppy, (ExecutionEngine *engine, int nameIndex, const Value &value)) \
-    F(bool, setProperty, (ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)) \
-    F(bool, setElement, (ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)) \
-    F(ReturnedValue, getProperty, (ExecutionEngine *engine, const Value &object, int nameIndex)) \
-    F(ReturnedValue, getActivationProperty, (ExecutionEngine *engine, int nameIndex)) \
-    F(ReturnedValue, getElement, (ExecutionEngine *engine, const Value &object, const Value &index)) \
+    F(bool, storeProperty, (ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)) \
+    F(bool, storeElement, (ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)) \
+    F(ReturnedValue, loadProperty, (ExecutionEngine *engine, const Value &object, int nameIndex)) \
+    F(ReturnedValue, loadName, (ExecutionEngine *engine, int nameIndex)) \
+    F(ReturnedValue, loadElement, (ExecutionEngine *engine, const Value &object, const Value &index)) \
     \
     /* typeof */  \
     F(ReturnedValue, typeofValue, (ExecutionEngine *engine, const Value &val)) \
@@ -188,15 +188,15 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(Bool, compareIn, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     \
     /* qml */ \
-    F(ReturnedValue, getQmlContext, (NoThrowEngine *engine)) \
-    F(ReturnedValue, getQmlImportedScripts, (NoThrowEngine *engine)) \
-    F(ReturnedValue, getQmlSingleton, (NoThrowEngine *engine, int nameIndex)) \
-    F(ReturnedValue, getQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
-    F(ReturnedValue, getQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
-    F(ReturnedValue, getQmlIdObject, (ExecutionEngine *engine, const Value &context, uint index)) \
+    F(ReturnedValue, loadQmlContext, (NoThrowEngine *engine)) \
+    F(ReturnedValue, loadQmlImportedScripts, (NoThrowEngine *engine)) \
+    F(ReturnedValue, loadQmlSingleton, (NoThrowEngine *engine, int nameIndex)) \
+    F(ReturnedValue, loadQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
+    F(ReturnedValue, loadQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
+    F(ReturnedValue, loadQmlIdObject, (ExecutionEngine *engine, const Value &context, uint index)) \
     \
-    F(void, setQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)) \
-    F(void, setQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)) \
+    F(void, storeQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)) \
+    F(void, storeQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)) \
 
 struct Q_QML_PRIVATE_EXPORT Runtime {
     Runtime();

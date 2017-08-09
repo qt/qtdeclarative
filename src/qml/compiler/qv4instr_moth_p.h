@@ -84,7 +84,7 @@ QT_BEGIN_NAMESPACE
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
     F(LoadName, loadName) \
-    F(GetGlobalLookup, getGlobalLookup) \
+    F(LoadGlobalLookup, loadGlobalLookup) \
     F(StoreNameSloppy, storeNameSloppy) \
     F(StoreNameStrict, storeNameStrict) \
     F(LoadElement, loadElement) \
@@ -105,33 +105,33 @@ QT_BEGIN_NAMESPACE
     F(CallProperty, callProperty) \
     F(CallPropertyLookup, callPropertyLookup) \
     F(CallElement, callElement) \
-    F(CallActivationProperty, callActivationProperty) \
+    F(CallName, callName) \
     F(CallGlobalLookup, callGlobalLookup) \
     F(SetExceptionHandler, setExceptionHandler) \
-    F(CallBuiltinThrow, callBuiltinThrow) \
+    F(ThrowException, throwException) \
     F(GetException, getException) \
     F(SetException, setException) \
-    F(CallBuiltinUnwindException, callBuiltinUnwindException) \
-    F(CallBuiltinPushCatchContext, callBuiltinPushCatchContext) \
-    F(CallBuiltinPushWithContext, callBuiltinPushWithContext) \
-    F(CallBuiltinPopContext, callBuiltinPopContext) \
-    F(CallBuiltinForeachIteratorObject, callBuiltinForeachIteratorObject) \
-    F(CallBuiltinForeachNextPropertyName, callBuiltinForeachNextPropertyName) \
-    F(CallBuiltinDeleteMember, callBuiltinDeleteMember) \
-    F(CallBuiltinDeleteSubscript, callBuiltinDeleteSubscript) \
-    F(CallBuiltinDeleteName, callBuiltinDeleteName) \
-    F(CallBuiltinTypeofName, callBuiltinTypeofName) \
-    F(CallBuiltinTypeofValue, callBuiltinTypeofValue) \
-    F(CallBuiltinDeclareVar, callBuiltinDeclareVar) \
-    F(CallBuiltinDefineArray, callBuiltinDefineArray) \
-    F(CallBuiltinDefineObjectLiteral, callBuiltinDefineObjectLiteral) \
+    F(UnwindException, unwindException) \
+    F(PushCatchContext, pushCatchContext) \
+    F(PushWithContext, pushWithContext) \
+    F(PopContext, popContext) \
+    F(ForeachIteratorObject, foreachIteratorObject) \
+    F(ForeachNextPropertyName, foreachNextPropertyName) \
+    F(DeleteMember, deleteMember) \
+    F(DeleteSubscript, deleteSubscript) \
+    F(DeleteName, deleteName) \
+    F(TypeofName, typeofName) \
+    F(TypeofValue, typeofValue) \
+    F(DeclareVar, declareVar) \
+    F(DefineArray, defineArray) \
+    F(DefineObjectLiteral, defineObjectLiteral) \
     F(CreateMappedArgumentsObject, createMappedArgumentsObject) \
     F(CreateUnmappedArgumentsObject, createUnmappedArgumentsObject) \
-    F(CallBuiltinConvertThisToObject, callBuiltinConvertThisToObject) \
+    F(ConvertThisToObject, convertThisToObject) \
     F(CreateValue, createValue) \
     F(CreateProperty, createProperty) \
     F(ConstructPropertyLookup, constructPropertyLookup) \
-    F(CreateActivationProperty, createActivationProperty) \
+    F(CreateName, createName) \
     F(ConstructGlobalLookup, constructGlobalLookup) \
     F(Jump, jump) \
     F(JumpEq, jumpEq) \
@@ -319,7 +319,7 @@ union Instr
         MOTH_INSTR_HEADER
         int name;
     };
-    struct instr_getGlobalLookup {
+    struct instr_loadGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
     };
@@ -422,7 +422,7 @@ union Instr
         StackSlot index;
         StackSlot callData;
     };
-    struct instr_callActivationProperty {
+    struct instr_callName {
         MOTH_INSTR_HEADER
         int name;
         StackSlot callData;
@@ -436,7 +436,7 @@ union Instr
         MOTH_INSTR_HEADER
         qptrdiff offset;
     };
-    struct instr_callBuiltinThrow {
+    struct instr_throwException {
         MOTH_INSTR_HEADER
     };
     struct instr_getException {
@@ -445,60 +445,60 @@ union Instr
     struct instr_setException {
         MOTH_INSTR_HEADER
     };
-    struct instr_callBuiltinUnwindException {
+    struct instr_unwindException {
         MOTH_INSTR_HEADER
     };
-    struct instr_callBuiltinPushCatchContext {
+    struct instr_pushCatchContext {
         MOTH_INSTR_HEADER
         int name;
         StackSlot reg;
     };
-    struct instr_callBuiltinPushWithContext {
+    struct instr_pushWithContext {
         MOTH_INSTR_HEADER
         StackSlot reg;
     };
-    struct instr_callBuiltinPopContext {
+    struct instr_popContext {
         MOTH_INSTR_HEADER
         StackSlot reg;
     };
-    struct instr_callBuiltinForeachIteratorObject {
+    struct instr_foreachIteratorObject {
         MOTH_INSTR_HEADER
     };
-    struct instr_callBuiltinForeachNextPropertyName {
+    struct instr_foreachNextPropertyName {
         MOTH_INSTR_HEADER
     };
-    struct instr_callBuiltinDeleteMember {
+    struct instr_deleteMember {
         MOTH_INSTR_HEADER
         int member;
         StackSlot base;
     };
-    struct instr_callBuiltinDeleteSubscript {
+    struct instr_deleteSubscript {
         MOTH_INSTR_HEADER
         StackSlot base;
         StackSlot index;
     };
-    struct instr_callBuiltinDeleteName {
+    struct instr_deleteName {
         MOTH_INSTR_HEADER
         int name;
     };
-    struct instr_callBuiltinTypeofName {
+    struct instr_typeofName {
         MOTH_INSTR_HEADER
         int name;
     };
-    struct instr_callBuiltinTypeofValue {
+    struct instr_typeofValue {
         MOTH_INSTR_HEADER
     };
-    struct instr_callBuiltinDeclareVar {
+    struct instr_declareVar {
         MOTH_INSTR_HEADER
         int varName;
         bool isDeletable;
     };
-    struct instr_callBuiltinDefineArray {
+    struct instr_defineArray {
         MOTH_INSTR_HEADER
         uint argc;
         StackSlot args;
     };
-    struct instr_callBuiltinDefineObjectLiteral {
+    struct instr_defineObjectLiteral {
         MOTH_INSTR_HEADER
         int internalClassId;
         int arrayValueCount;
@@ -511,7 +511,7 @@ union Instr
     struct instr_createUnmappedArgumentsObject {
         MOTH_INSTR_HEADER
     };
-    struct instr_callBuiltinConvertThisToObject {
+    struct instr_convertThisToObject {
         MOTH_INSTR_HEADER
     };
     struct instr_createValue {
@@ -533,7 +533,7 @@ union Instr
         StackSlot callData;
         StackSlot base;
     };
-    struct instr_createActivationProperty {
+    struct instr_createName {
         MOTH_INSTR_HEADER
         int name;
         int argc;
@@ -710,7 +710,7 @@ union Instr
     instr_loadRegExp loadRegExp;
     instr_loadClosure loadClosure;
     instr_loadName loadName;
-    instr_getGlobalLookup getGlobalLookup;
+    instr_loadGlobalLookup loadGlobalLookup;
     instr_storeNameSloppy storeNameSloppy;
     instr_storeNameStrict storeNameStrict;
     instr_loadElement loadElement;
@@ -731,33 +731,33 @@ union Instr
     instr_callProperty callProperty;
     instr_callPropertyLookup callPropertyLookup;
     instr_callElement callElement;
-    instr_callActivationProperty callActivationProperty;
+    instr_callName callName;
     instr_callGlobalLookup callGlobalLookup;
-    instr_callBuiltinThrow callBuiltinThrow;
+    instr_throwException throwException;
     instr_getException getException;
     instr_setException setException;
     instr_setExceptionHandler setExceptionHandler;
-    instr_callBuiltinUnwindException callBuiltinUnwindException;
-    instr_callBuiltinPushCatchContext callBuiltinPushCatchContext;
-    instr_callBuiltinPushWithContext callBuiltinPushWithContext;
-    instr_callBuiltinPopContext callBuiltinPopContext;
-    instr_callBuiltinForeachIteratorObject callBuiltinForeachIteratorObject;
-    instr_callBuiltinForeachNextPropertyName callBuiltinForeachNextPropertyName;
-    instr_callBuiltinDeleteMember callBuiltinDeleteMember;
-    instr_callBuiltinDeleteSubscript callBuiltinDeleteSubscript;
-    instr_callBuiltinDeleteName callBuiltinDeleteName;
-    instr_callBuiltinTypeofName callBuiltinTypeofName;
-    instr_callBuiltinTypeofValue callBuiltinTypeofValue;
-    instr_callBuiltinDeclareVar callBuiltinDeclareVar;
-    instr_callBuiltinDefineArray callBuiltinDefineArray;
-    instr_callBuiltinDefineObjectLiteral callBuiltinDefineObjectLiteral;
+    instr_unwindException unwindException;
+    instr_pushCatchContext pushCatchContext;
+    instr_pushWithContext pushWithContext;
+    instr_popContext popContext;
+    instr_foreachIteratorObject foreachIteratorObject;
+    instr_foreachNextPropertyName foreachNextPropertyName;
+    instr_deleteMember deleteMember;
+    instr_deleteSubscript deleteSubscript;
+    instr_deleteName deleteName;
+    instr_typeofName typeofName;
+    instr_typeofValue typeofValue;
+    instr_declareVar declareVar;
+    instr_defineArray defineArray;
+    instr_defineObjectLiteral defineObjectLiteral;
     instr_createMappedArgumentsObject createMappedArgumentsObject;
     instr_createUnmappedArgumentsObject createUnmappedArgumentsObject;
-    instr_callBuiltinConvertThisToObject callBuiltinConvertThisToObject;
+    instr_convertThisToObject convertThisToObject;
     instr_createValue createValue;
     instr_createProperty createProperty;
     instr_constructPropertyLookup constructPropertyLookup;
-    instr_createActivationProperty createActivationProperty;
+    instr_createName createName;
     instr_constructGlobalLookup constructGlobalLookup;
     instr_jump jump;
     instr_jumpEq jumpEq;

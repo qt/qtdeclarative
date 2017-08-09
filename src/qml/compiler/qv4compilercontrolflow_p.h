@@ -151,7 +151,7 @@ struct ControlFlow {
             Reference::storeConstOnStack(cg, QV4::Encode(h.value), h.tempIndex);
         }
         e.loadInAccumulator();
-        Instruction::CallBuiltinThrow instr;
+        Instruction::ThrowException instr;
         generator()->addInstruction(instr);
     }
 
@@ -278,7 +278,7 @@ struct ControlFlowWith : public ControlFlowUnwind
         savedContextRegister = Moth::StackSlot::createRegister(generator()->newRegister());
 
         // assumes the with object is in the accumulator
-        Instruction::CallBuiltinPushWithContext pushScope;
+        Instruction::PushWithContext pushScope;
         pushScope.reg = savedContextRegister;
         generator()->addInstruction(pushScope);
         generator()->setExceptionHandler(&unwindLabel);
@@ -289,7 +289,7 @@ struct ControlFlowWith : public ControlFlowUnwind
         unwindLabel.link();
 
         generator()->setExceptionHandler(parentExceptionHandler());
-        Instruction::CallBuiltinPopContext pop;
+        Instruction::PopContext pop;
         pop.reg = savedContextRegister;
         generator()->addInstruction(pop);
 
@@ -345,7 +345,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
         exceptionLabel.link();
         Reference name = Reference::fromName(cg, catchExpression->name.toString());
         Moth::StackSlot savedContextReg = Moth::StackSlot::createRegister(generator()->newRegister());
-        Instruction::CallBuiltinPushCatchContext pushCatch;
+        Instruction::PushCatchContext pushCatch;
         pushCatch.name = name.unqualifiedNameIndex;
         pushCatch.reg = savedContextReg;
         generator()->addInstruction(pushCatch);
@@ -360,7 +360,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
         // exceptions inside catch and break/return statements go here
         catchUnwindLabel.link();
-        Instruction::CallBuiltinPopContext pop;
+        Instruction::PopContext pop;
         pop.reg = savedContextReg;
         generator()->addInstruction(pop);
 

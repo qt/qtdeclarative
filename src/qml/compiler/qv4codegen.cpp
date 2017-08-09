@@ -616,7 +616,7 @@ bool Codegen::visit(ArrayLiteral *ast)
         args = 0;
     }
 
-    Instruction::CallBuiltinDefineArray call;
+    Instruction::DefineArray call;
     call.argc = argc;
     call.args = Moth::StackSlot::createRegister(args);
     bytecodeGenerator->addInstruction(call);
@@ -1093,7 +1093,7 @@ bool Codegen::visit(CallExpression *ast)
             call.callData = calldata;
             bytecodeGenerator->addInstruction(call);
         } else {
-            Instruction::CallActivationProperty call;
+            Instruction::CallName call;
             call.name = base.unqualifiedNameIndex;
             call.callData = calldata;
             bytecodeGenerator->addInstruction(call);
@@ -1191,7 +1191,7 @@ bool Codegen::visit(DeleteExpression *ast)
             throwSyntaxError(ast->deleteToken, QStringLiteral("Delete of an unqualified identifier in strict mode."));
             return false;
         }
-        Instruction::CallBuiltinDeleteName del;
+        Instruction::DeleteName del;
         del.name = expr.unqualifiedNameIndex;
         bytecodeGenerator->addInstruction(del);
         _expr.setResult(Reference::fromAccumulator(this));
@@ -1200,7 +1200,7 @@ bool Codegen::visit(DeleteExpression *ast)
     case Reference::Member: {
         //### maybe add a variant where the base can be in the accumulator?
         expr = expr.asLValue();
-        Instruction::CallBuiltinDeleteMember del;
+        Instruction::DeleteMember del;
         del.base = expr.propertyBase.stackSlot();
         del.member = expr.propertyNameIndex;
         bytecodeGenerator->addInstruction(del);
@@ -1210,7 +1210,7 @@ bool Codegen::visit(DeleteExpression *ast)
     case Reference::Subscript: {
         //### maybe add a variant where the index can be in the accumulator?
         expr = expr.asLValue();
-        Instruction::CallBuiltinDeleteSubscript del;
+        Instruction::DeleteSubscript del;
         del.base = expr.elementBase;
         del.index = expr.elementSubscript.stackSlot();
         bytecodeGenerator->addInstruction(del);
@@ -1554,7 +1554,7 @@ bool Codegen::visit(ObjectLiteral *ast)
     if (args == -1)
         args = 0;
 
-    Instruction::CallBuiltinDefineObjectLiteral call;
+    Instruction::DefineObjectLiteral call;
     call.internalClassId = classId;
     call.arrayValueCount = arrayKeyWithValue.size();
     call.arrayGetterSetterCountAndFlags = arrayGetterSetterCountAndFlags;
@@ -1711,12 +1711,12 @@ bool Codegen::visit(TypeOfExpression *ast)
 
     if (expr.type == Reference::Name) {
         // special handling as typeof doesn't throw here
-        Instruction::CallBuiltinTypeofName instr;
+        Instruction::TypeofName instr;
         instr.name = expr.unqualifiedNameIndex;
         bytecodeGenerator->addInstruction(instr);
     } else {
         expr.loadInAccumulator();
-        Instruction::CallBuiltinTypeofValue instr;
+        Instruction::TypeofValue instr;
         bytecodeGenerator->addInstruction(instr);
     }
     _expr.setResult(Reference::fromAccumulator(this));
@@ -1823,7 +1823,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         for (Context::MemberMap::const_iterator it = _context->members.constBegin(), cend = _context->members.constEnd(); it != cend; ++it) {
             const QString &local = it.key();
 
-            Instruction::CallBuiltinDeclareVar declareVar;
+            Instruction::DeclareVar declareVar;
             declareVar.isDeletable = false;
             declareVar.varName = registerString(local);
             bytecodeGenerator->addInstruction(declareVar);
@@ -1862,7 +1862,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     }
     if (_context->usesThis && !_context->isStrict) {
         // make sure we convert this to an object
-        Instruction::CallBuiltinConvertThisToObject convert;
+        Instruction::ConvertThisToObject convert;
         bytecodeGenerator->addInstruction(convert);
     }
 
@@ -2046,7 +2046,7 @@ bool Codegen::visit(ForEachStatement *ast)
         return true;
 
     expr.loadInAccumulator();
-    Instruction::CallBuiltinForeachIteratorObject iteratorObjInstr;
+    Instruction::ForeachIteratorObject iteratorObjInstr;
     bytecodeGenerator->addInstruction(iteratorObjInstr);
     obj.storeConsumeAccumulator();
 
@@ -2066,7 +2066,7 @@ bool Codegen::visit(ForEachStatement *ast)
     Reference lhs = expression(ast->initialiser);
 
     obj.loadInAccumulator();
-    Instruction::CallBuiltinForeachNextPropertyName nextPropInstr;
+    Instruction::ForeachNextPropertyName nextPropInstr;
     bytecodeGenerator->addInstruction(nextPropInstr);
     lhs = lhs.storeRetainAccumulator().storeOnStack();
 
@@ -2185,7 +2185,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     variableDeclaration(ast->declaration);
 
     expr.loadInAccumulator();
-    Instruction::CallBuiltinForeachIteratorObject iteratorObjInstr;
+    Instruction::ForeachIteratorObject iteratorObjInstr;
     bytecodeGenerator->addInstruction(iteratorObjInstr);
     obj.storeConsumeAccumulator();
 
@@ -2203,7 +2203,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     in.link();
 
     obj.loadInAccumulator();
-    Instruction::CallBuiltinForeachNextPropertyName nextPropInstr;
+    Instruction::ForeachNextPropertyName nextPropInstr;
     bytecodeGenerator->addInstruction(nextPropInstr);
     auto lhs = it.storeRetainAccumulator().storeOnStack();
 
@@ -2366,7 +2366,7 @@ bool Codegen::visit(ThrowStatement *ast)
         _context->controlFlow->handleThrow(expr);
     } else {
         expr.loadInAccumulator();
-        Instruction::CallBuiltinThrow instr;
+        Instruction::ThrowException instr;
         bytecodeGenerator->addInstruction(instr);
     }
     return false;
@@ -2951,7 +2951,7 @@ void Codegen::Reference::loadInAccumulator() const
     }
     case Name:
         if (codegen->useFastLookups && global) {
-            Instruction::GetGlobalLookup load;
+            Instruction::LoadGlobalLookup load;
             load.index = codegen->registerGlobalGetterLookup(unqualifiedNameIndex);
             codegen->bytecodeGenerator->addInstruction(load);
         } else {

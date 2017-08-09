@@ -169,9 +169,9 @@ void dumpBytecode(const char *code, int len, int nFormals)
             d << instr.name;
         MOTH_END_INSTR(LoadName)
 
-        MOTH_BEGIN_INSTR(GetGlobalLookup)
+        MOTH_BEGIN_INSTR(LoadGlobalLookup)
             d << instr.index;
-        MOTH_END_INSTR(GetGlobalLookup)
+        MOTH_END_INSTR(LoadGlobalLookup)
 
         MOTH_BEGIN_INSTR(StoreNameSloppy)
             d << instr.name;
@@ -253,9 +253,9 @@ void dumpBytecode(const char *code, int len, int nFormals)
             d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]" << "(" << instr.callData.dump(nFormals) << ")";
         MOTH_END_INSTR(CallElement)
 
-        MOTH_BEGIN_INSTR(CallActivationProperty)
+        MOTH_BEGIN_INSTR(CallName)
             d << instr.name << "(" << instr.callData.dump(nFormals) << ")";
-        MOTH_END_INSTR(CallActivationProperty)
+        MOTH_END_INSTR(CallName)
 
         MOTH_BEGIN_INSTR(CallGlobalLookup)
             d << instr.index << "(" << instr.callData.dump(nFormals) << ")";
@@ -268,8 +268,8 @@ void dumpBytecode(const char *code, int len, int nFormals)
                 d << "<null>";
         MOTH_END_INSTR(SetExceptionHandler)
 
-        MOTH_BEGIN_INSTR(CallBuiltinThrow)
-        MOTH_END_INSTR(CallBuiltinThrow)
+        MOTH_BEGIN_INSTR(ThrowException)
+        MOTH_END_INSTR(ThrowException)
 
         MOTH_BEGIN_INSTR(GetException)
         MOTH_END_INSTR(HasException)
@@ -277,60 +277,60 @@ void dumpBytecode(const char *code, int len, int nFormals)
         MOTH_BEGIN_INSTR(SetException)
         MOTH_END_INSTR(SetExceptionFlag)
 
-        MOTH_BEGIN_INSTR(CallBuiltinUnwindException)
-        MOTH_END_INSTR(CallBuiltinUnwindException)
+        MOTH_BEGIN_INSTR(UnwindException)
+        MOTH_END_INSTR(UnwindException)
 
-        MOTH_BEGIN_INSTR(CallBuiltinPushCatchContext)
+        MOTH_BEGIN_INSTR(PushCatchContext)
             d << instr.reg.dump(nFormals) << ", " << instr.name;
-        MOTH_END_INSTR(CallBuiltinPushCatchContext)
+        MOTH_END_INSTR(PushCatchContext)
 
-        MOTH_BEGIN_INSTR(CallBuiltinPushWithContext)
+        MOTH_BEGIN_INSTR(PushWithContext)
             d << instr.reg.dump(nFormals);
-        MOTH_END_INSTR(CallBuiltinPushWithContext)
+        MOTH_END_INSTR(PushWithContext)
 
-        MOTH_BEGIN_INSTR(CallBuiltinPopContext)
+        MOTH_BEGIN_INSTR(PopContext)
             d << instr.reg.dump(nFormals);
-        MOTH_END_INSTR(CallBuiltinPopContext)
+        MOTH_END_INSTR(PopContext)
 
-        MOTH_BEGIN_INSTR(CallBuiltinForeachIteratorObject)
-        MOTH_END_INSTR(CallBuiltinForeachIteratorObject)
+        MOTH_BEGIN_INSTR(ForeachIteratorObject)
+        MOTH_END_INSTR(ForeachIteratorObject)
 
-        MOTH_BEGIN_INSTR(CallBuiltinForeachNextPropertyName)
-        MOTH_END_INSTR(CallBuiltinForeachNextPropertyName)
+        MOTH_BEGIN_INSTR(ForeachNextPropertyName)
+        MOTH_END_INSTR(ForeachNextPropertyName)
 
-        MOTH_BEGIN_INSTR(CallBuiltinDeleteMember)
+        MOTH_BEGIN_INSTR(DeleteMember)
             d << instr.base.dump(nFormals) << "[" << instr.member << "]";
-        MOTH_END_INSTR(CallBuiltinDeleteMember)
+        MOTH_END_INSTR(DeleteMember)
 
-        MOTH_BEGIN_INSTR(CallBuiltinDeleteSubscript)
+        MOTH_BEGIN_INSTR(DeleteSubscript)
             d << instr.base.dump(nFormals) << "[" << instr.index.dump(nFormals) << "]";
-        MOTH_END_INSTR(CallBuiltinDeleteSubscript)
+        MOTH_END_INSTR(DeleteSubscript)
 
-        MOTH_BEGIN_INSTR(CallBuiltinDeleteName)
+        MOTH_BEGIN_INSTR(DeleteName)
             d << instr.name;
-        MOTH_END_INSTR(CallBuiltinDeleteName)
+        MOTH_END_INSTR(DeleteName)
 
-        MOTH_BEGIN_INSTR(CallBuiltinTypeofName)
+        MOTH_BEGIN_INSTR(TypeofName)
             d << instr.name;
-        MOTH_END_INSTR(CallBuiltinTypeofName)
+        MOTH_END_INSTR(TypeofName)
 
-        MOTH_BEGIN_INSTR(CallBuiltinTypeofValue)
-        MOTH_END_INSTR(CallBuiltinTypeofValue)
+        MOTH_BEGIN_INSTR(TypeofValue)
+        MOTH_END_INSTR(TypeofValue)
 
-        MOTH_BEGIN_INSTR(CallBuiltinDeclareVar)
+        MOTH_BEGIN_INSTR(DeclareVar)
             d << instr.isDeletable << ", " << instr.varName;
-        MOTH_END_INSTR(CallBuiltinDeclareVar)
+        MOTH_END_INSTR(DeclareVar)
 
-        MOTH_BEGIN_INSTR(CallBuiltinDefineArray)
+        MOTH_BEGIN_INSTR(DefineArray)
             d << instr.args.dump(nFormals) << ", " << instr.argc;
-        MOTH_END_INSTR(CallBuiltinDefineArray)
+        MOTH_END_INSTR(DefineArray)
 
-        MOTH_BEGIN_INSTR(CallBuiltinDefineObjectLiteral)
+        MOTH_BEGIN_INSTR(DefineObjectLiteral)
             d << instr.args.dump(nFormals)
               << ", " << instr.internalClassId
               << ", " << instr.arrayValueCount
               << ", " << instr.arrayGetterSetterCountAndFlags;
-        MOTH_END_INSTR(CallBuiltinDefineObjectLiteral)
+        MOTH_END_INSTR(DefineObjectLiteral)
 
         MOTH_BEGIN_INSTR(CreateMappedArgumentsObject)
         MOTH_END_INSTR(CreateMappedArgumentsObject)
@@ -338,8 +338,8 @@ void dumpBytecode(const char *code, int len, int nFormals)
         MOTH_BEGIN_INSTR(CreateUnmappedArgumentsObject)
         MOTH_END_INSTR(CreateUnmappedArgumentsObject)
 
-        MOTH_BEGIN_INSTR(CallBuiltinConvertThisToObject)
-        MOTH_END_INSTR(CallBuiltinConvertThisToObject)
+        MOTH_BEGIN_INSTR(ConvertThisToObject)
+        MOTH_END_INSTR(ConvertThisToObject)
 
         MOTH_BEGIN_INSTR(CreateValue)
             d << "new" << instr.func.dump(nFormals) << "(" << instr.callData.dump(nFormals) << ")";
@@ -353,9 +353,9 @@ void dumpBytecode(const char *code, int len, int nFormals)
             d << "new" << instr.index << "(" << instr.callData.dump(nFormals) << instr.argc << ")";
         MOTH_END_INSTR(ConstructPropertyLookup)
 
-        MOTH_BEGIN_INSTR(CreateActivationProperty)
+        MOTH_BEGIN_INSTR(CreateName)
             d << "new" << instr.name << "(" << instr.callData.dump(nFormals) << instr.argc << ")";
-        MOTH_END_INSTR(CreateActivationProperty)
+        MOTH_END_INSTR(CreateName)
 
         MOTH_BEGIN_INSTR(ConstructGlobalLookup)
             d << "new" << instr.index << "(" << instr.callData.dump(nFormals) << instr.argc << ")";

@@ -589,7 +589,7 @@ QV4::ReturnedValue Runtime::method_addString(ExecutionEngine *engine, const Valu
     return (mm->alloc<String>(sleft->d(), sright->d()))->asReturnedValue();
 }
 
-bool Runtime::method_setProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)
+bool Runtime::method_storeProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
@@ -654,7 +654,7 @@ static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, 
     return o->get(name);
 }
 
-ReturnedValue Runtime::method_getElement(ExecutionEngine *engine, const Value &object, const Value &index)
+ReturnedValue Runtime::method_loadElement(ExecutionEngine *engine, const Value &object, const Value &index)
 {
     uint idx;
     if (index.asArrayIndex(idx)) {
@@ -698,7 +698,7 @@ static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Val
     return o->put(name, value);
 }
 
-bool Runtime::method_setElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
+bool Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
 {
     uint idx;
     if (index.asArrayIndex(idx)) {
@@ -760,7 +760,7 @@ void Runtime::method_storeNameStrict(ExecutionEngine *engine, int nameIndex, con
         engine->throwReferenceError(name);
 }
 
-ReturnedValue Runtime::method_getProperty(ExecutionEngine *engine, const Value &object, int nameIndex)
+ReturnedValue Runtime::method_loadProperty(ExecutionEngine *engine, const Value &object, int nameIndex)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
@@ -780,7 +780,7 @@ ReturnedValue Runtime::method_getProperty(ExecutionEngine *engine, const Value &
     return o->get(name);
 }
 
-ReturnedValue Runtime::method_getActivationProperty(ExecutionEngine *engine, int nameIndex)
+ReturnedValue Runtime::method_loadName(ExecutionEngine *engine, int nameIndex)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
@@ -1031,7 +1031,7 @@ ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint ind
 }
 
 
-ReturnedValue Runtime::method_callActivationProperty(ExecutionEngine *engine, int nameIndex, CallData *callData)
+ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, CallData *callData)
 {
     Q_ASSERT(callData->thisObject.isUndefined());
     Scope scope(engine);
@@ -1140,7 +1140,7 @@ ReturnedValue Runtime::method_constructGlobalLookup(ExecutionEngine *engine, uin
 }
 
 
-ReturnedValue Runtime::method_constructActivationProperty(ExecutionEngine *engine, int nameIndex, CallData *callData)
+ReturnedValue Runtime::method_constructName(ExecutionEngine *engine, int nameIndex, CallData *callData)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
@@ -1342,7 +1342,7 @@ QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine
     return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c, true)->asReturnedValue();
 }
 
-ReturnedValue Runtime::method_getQmlContext(NoThrowEngine *engine)
+ReturnedValue Runtime::method_loadQmlContext(NoThrowEngine *engine)
 {
     return engine->qmlContext()->asReturnedValue();
 }
@@ -1352,19 +1352,19 @@ ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)
     return static_cast<CompiledData::CompilationUnit*>(engine->currentStackFrame->v4Function->compilationUnit)->runtimeRegularExpressions[id].asReturnedValue();
 }
 
-ReturnedValue Runtime::method_getQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
+ReturnedValue Runtime::method_loadQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
     return QV4::QObjectWrapper::getProperty(engine, c.d()->qml()->scopeObject, propertyIndex, captureRequired);
 }
 
-ReturnedValue Runtime::method_getQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
+ReturnedValue Runtime::method_loadQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
     return QV4::QObjectWrapper::getProperty(engine, (*c.d()->qml()->context)->contextObject, propertyIndex, captureRequired);
 }
 
-ReturnedValue Runtime::method_getQmlIdObject(ExecutionEngine *engine, const Value &c, uint index)
+ReturnedValue Runtime::method_loadQmlIdObject(ExecutionEngine *engine, const Value &c, uint index)
 {
     const QmlContext &qmlContext = static_cast<const QmlContext &>(c);
     QQmlContextData *context = *qmlContext.d()->qml()->context;
@@ -1378,19 +1378,19 @@ ReturnedValue Runtime::method_getQmlIdObject(ExecutionEngine *engine, const Valu
     return QObjectWrapper::wrap(engine, context->idValues[index].data());
 }
 
-void Runtime::method_setQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)
+void Runtime::method_storeQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
     return QV4::QObjectWrapper::setProperty(engine, c.d()->qml()->scopeObject, propertyIndex, value);
 }
 
-void Runtime::method_setQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)
+void Runtime::method_storeQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)
 {
     const QmlContext &c = static_cast<const QmlContext &>(context);
     return QV4::QObjectWrapper::setProperty(engine, (*c.d()->qml()->context)->contextObject, propertyIndex, value);
 }
 
-ReturnedValue Runtime::method_getQmlImportedScripts(NoThrowEngine *engine)
+ReturnedValue Runtime::method_loadQmlImportedScripts(NoThrowEngine *engine)
 {
     QQmlContextData *context = engine->callingQmlContext();
     if (!context)
@@ -1398,7 +1398,7 @@ ReturnedValue Runtime::method_getQmlImportedScripts(NoThrowEngine *engine)
     return context->importedScripts.value();
 }
 
-QV4::ReturnedValue Runtime::method_getQmlSingleton(QV4::NoThrowEngine *engine, int nameIndex)
+QV4::ReturnedValue Runtime::method_loadQmlSingleton(QV4::NoThrowEngine *engine, int nameIndex)
 {
     Scope scope(engine);
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
