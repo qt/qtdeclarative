@@ -214,7 +214,7 @@ ReturnedValue FunctionCtor::construct(const Managed *that, CallData *callData)
     Compiler::Module module(scope.engine->debugger() != 0);
 
     Compiler::JSUnitGenerator jsGenerator(&module);
-    RuntimeCodegen cg(scope.engine, &jsGenerator, f->strictMode());
+    RuntimeCodegen cg(scope.engine, &jsGenerator, false);
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
     QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = cg.generateCompilationUnit();
