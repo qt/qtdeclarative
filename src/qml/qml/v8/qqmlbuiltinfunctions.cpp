@@ -1339,7 +1339,7 @@ void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *originalFunction
 
 QQmlSourceLocation QQmlBindingFunction::currentLocation() const
 {
-    QV4::EngineBase::StackFrame *frame = engine()->currentStackFrame;
+    QV4::CppStackFrame *frame = engine()->currentStackFrame;
     return QQmlSourceLocation(frame->source(), frame->line, 0);
 }
 
@@ -1547,7 +1547,7 @@ static ReturnedValue writeToConsole(const BuiltinFunction *b, CallData *callData
 
     if (!loggingCategory)
         loggingCategory = v4->qmlEngine() ? &qmlLoggingCategory : &jsLoggingCategory;
-    QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
+    QV4::CppStackFrame *frame = v4->currentStackFrame;
     const QByteArray baSource = frame->source().toUtf8();
     const QByteArray baFunction = frame->function().toUtf8();
     QMessageLogger logger(baSource.constData(), frame->line, baFunction.constData(), loggingCategory->categoryName());
@@ -1601,7 +1601,7 @@ ReturnedValue ConsoleObject::method_profile(const BuiltinFunction *b, CallData *
     QV4::Scope scope(b);
     QV4::ExecutionEngine *v4 = scope.engine;
 
-    QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
+    QV4::CppStackFrame *frame = v4->currentStackFrame;
     const QByteArray baSource = frame->source().toUtf8();
     const QByteArray baFunction = frame->function().toUtf8();
     QMessageLogger logger(baSource.constData(), frame->line, baFunction.constData());
@@ -1621,7 +1621,7 @@ ReturnedValue ConsoleObject::method_profileEnd(const BuiltinFunction *b, CallDat
     QV4::Scope scope(b);
     QV4::ExecutionEngine *v4 = scope.engine;
 
-    QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
+    QV4::CppStackFrame *frame = v4->currentStackFrame;
     const QByteArray baSource = frame->source().toUtf8();
     const QByteArray baFunction = frame->function().toUtf8();
     QMessageLogger logger(baSource.constData(), frame->line, baFunction.constData());
@@ -1678,7 +1678,7 @@ ReturnedValue ConsoleObject::method_count(const BuiltinFunction *b, CallData *ca
     QV4::ExecutionEngine *v4 = scope.engine;
     QV8Engine *v8engine = scope.engine->v8Engine;
 
-    QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
+    QV4::CppStackFrame *frame = v4->currentStackFrame;
 
     QString scriptName = frame->source();
 
@@ -1702,7 +1702,7 @@ ReturnedValue ConsoleObject::method_trace(const BuiltinFunction *b, CallData *ca
 
     QString stack = jsStack(v4);
 
-    QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
+    QV4::CppStackFrame *frame = v4->currentStackFrame;
     QMessageLogger(frame->source().toUtf8().constData(), frame->line,
                    frame->function().toUtf8().constData())
         .debug("%s", qPrintable(stack));
@@ -1734,7 +1734,7 @@ ReturnedValue ConsoleObject::method_assert(const BuiltinFunction *b, CallData *c
 
         QString stack = jsStack(v4);
 
-        QV4::EngineBase::StackFrame *frame = v4->currentStackFrame;
+        QV4::CppStackFrame *frame = v4->currentStackFrame;
         QMessageLogger(frame->source().toUtf8().constData(), frame->line,
                        frame->function().toUtf8().constData())
             .critical("%s\n%s",qPrintable(message), qPrintable(stack));
@@ -1908,7 +1908,7 @@ ReturnedValue GlobalExtensions::method_qsTr(const BuiltinFunction *b, CallData *
         int length = lastDot - (lastSlash + 1);
         context = (lastSlash > -1) ? path.mid(lastSlash + 1, (length > -1) ? length : -1) : QString();
     } else {
-        ExecutionEngine::StackFrame *frame = scope.engine->currentStackFrame;
+        CppStackFrame *frame = scope.engine->currentStackFrame;
         // The first non-empty source URL in the call stack determines the translation context.
         while (frame && context.isEmpty()) {
             if (CompiledData::CompilationUnit *unit = frame->v4Function->compilationUnit) {

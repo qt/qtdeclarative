@@ -343,7 +343,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
         return Encode::undefined();
 
     ExecutionEngine *v4 = engine();
-    bool isStrict = v4->currentContext()->d()->v4Function->isStrict();
+    bool isStrict = v4->currentStackFrame->v4Function->isStrict();
 
     Scope scope(v4);
     ScopedContext ctx(scope, v4->currentContext());

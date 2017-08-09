@@ -1795,7 +1795,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     bytecodeGenerator = &bytecode;
 
     // allocate the js stack frame (Context & js Function & accumulator)
-    bytecodeGenerator->newRegisterArray(sizeof(EngineBase::JSStackFrame)/sizeof(Value));
+    bytecodeGenerator->newRegisterArray(sizeof(JSStackFrame)/sizeof(Value));
 
     int returnAddress = bytecodeGenerator->newRegister();
 

@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 QV4::Heap::CallContext *QV4DataCollector::findContext(int frame)
 {
-    QV4::EngineBase::StackFrame *f = engine()->currentStackFrame;
+    QV4::CppStackFrame *f = engine()->currentStackFrame;
     while (f && frame) {
         --frame;
         f = f->parent;
@@ -99,7 +99,6 @@ int QV4DataCollector::encodeScopeType(QV4::Heap::ExecutionContext::ContextType s
         return 4;
     case QV4::Heap::ExecutionContext::Type_WithContext:
         return 2;
-    case QV4::Heap::ExecutionContext::Type_SimpleCallContext:
     case QV4::Heap::ExecutionContext::Type_CallContext:
         return 1;
     case QV4::Heap::ExecutionContext::Type_QmlContext:

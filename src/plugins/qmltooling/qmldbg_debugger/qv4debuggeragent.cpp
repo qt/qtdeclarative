@@ -79,7 +79,7 @@ void QV4DebuggerAgent::debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseR
     case QV4Debugger::PauseRequest:
     case QV4Debugger::BreakPointHit: {
         event.insert(QStringLiteral("event"), QStringLiteral("break"));
-        QV4::EngineBase::StackFrame *frame = debugger->engine()->currentStackFrame;
+        QV4::CppStackFrame *frame = debugger->engine()->currentStackFrame;
         if (!frame)
             break;
 

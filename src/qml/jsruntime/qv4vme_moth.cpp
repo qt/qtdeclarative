@@ -236,7 +236,7 @@ int qt_v4DebuggerHook(const char *json)
     return -NoSuchCommand; // Failure.
 }
 
-Q_NEVER_INLINE static void qt_v4CheckForBreak(QV4::EngineBase::StackFrame *frame)
+Q_NEVER_INLINE static void qt_v4CheckForBreak(QV4::CppStackFrame *frame)
 {
     if (!qt_v4IsStepping && !qt_v4Breakpoints.size())
         return;
@@ -362,7 +362,7 @@ static struct InstrCount {
     if (engine->hasException) \
         goto catchException
 
-static inline QV4::Heap::ExecutionContext *getScope(EngineBase::JSStackFrame *frame, int level)
+static inline QV4::Heap::ExecutionContext *getScope(JSStackFrame *frame, int level)
 {
     QV4::Heap::ExecutionContext *scope = static_cast<ExecutionContext &>(frame->context).d();
     while (level > 0) {
@@ -373,7 +373,7 @@ static inline QV4::Heap::ExecutionContext *getScope(EngineBase::JSStackFrame *fr
     return scope;
 }
 
-static inline ReturnedValue loadScopedLocal(EngineBase::StackFrame &frame, int index, int scope)
+static inline ReturnedValue loadScopedLocal(CppStackFrame &frame, int index, int scope)
 {
     auto ctxt = getScope(frame.jsFrame, scope);
     Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
@@ -381,7 +381,7 @@ static inline ReturnedValue loadScopedLocal(EngineBase::StackFrame &frame, int i
     return cc->locals[index].asReturnedValue();
 }
 
-static inline void storeScopedLocal(ExecutionEngine *engine, EngineBase::StackFrame &frame, int index, int scope,
+static inline void storeScopedLocal(ExecutionEngine *engine, CppStackFrame &frame, int index, int scope,
                                     const QV4::Value &value)
 {
     auto ctxt = getScope(frame.jsFrame, scope);
@@ -391,7 +391,7 @@ static inline void storeScopedLocal(ExecutionEngine *engine, EngineBase::StackFr
     QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, value);
 }
 
-static inline ReturnedValue loadScopedArg(EngineBase::StackFrame &frame, int index, int scope)
+static inline ReturnedValue loadScopedArg(CppStackFrame &frame, int index, int scope)
 {
     auto ctxt = getScope(frame.jsFrame, scope);
     Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
@@ -399,7 +399,7 @@ static inline ReturnedValue loadScopedArg(EngineBase::StackFrame &frame, int ind
     return cc->callData->args[index].asReturnedValue();
 }
 
-static inline void storeScopedArg(ExecutionEngine *engine, EngineBase::StackFrame &frame, int index, int scope,
+static inline void storeScopedArg(ExecutionEngine *engine, CppStackFrame &frame, int index, int scope,
                                   const QV4::Value &value)
 {
     auto ctxt = getScope(frame.jsFrame, scope);
@@ -434,7 +434,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     for (int i = callData->argc; i < (int)function->nFormals; ++i)
         callData->args[i] = Encode::undefined();
 
-    EngineBase::StackFrame frame;
+    CppStackFrame frame;
     frame.parent = engine->currentStackFrame;
     frame.v4Function = function;
     engine->currentStackFrame = &frame;
@@ -442,8 +442,8 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     QV4::Value *stack = nullptr;
     const uchar *exceptionHandler = 0;
 
-    stack = engine->jsAlloca(function->compiledFunction->nRegisters + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
-    frame.jsFrame = reinterpret_cast<EngineBase::JSStackFrame *>(stack);
+    stack = engine->jsAlloca(function->compiledFunction->nRegisters + sizeof(JSStackFrame)/sizeof(QV4::Value));
+    frame.jsFrame = reinterpret_cast<JSStackFrame *>(stack);
     frame.jsFrame->context = context;
     if (jsFunction)
         frame.jsFrame->jsFunction = *jsFunction;

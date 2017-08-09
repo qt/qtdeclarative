@@ -57,39 +57,16 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct CppStackFrame;
+
 // Base class for the execution engine
 
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(push, 1)
 #endif
 struct Q_QML_EXPORT EngineBase {
-    struct JSStackFrame {
-        enum Offsets {
-            JSFunction = 0,
-            Context = 1,
-            Accumulator = 2
-        };
-        // callData is directly before this
-        Value jsFunction;
-        Value context;
-        Value accumulator; // ###
-        // registers follow
-    };
 
-    struct StackFrame {
-        StackFrame *parent;
-        Function *v4Function;
-        JSStackFrame *jsFrame;
-        int line = -1;
-        int column = -1;
-
-        QString source() const;
-        QString function() const;
-        QV4::ExecutionContext *context() const;
-        QV4::Heap::CallContext *callContext() const;
-    };
-
-    StackFrame *currentStackFrame = 0;
+    CppStackFrame *currentStackFrame = 0;
 
     Value *jsStackTop = 0;
     quint8 hasException = false;

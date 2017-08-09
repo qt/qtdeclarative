@@ -229,7 +229,7 @@ private:
 
     QV4::ExecutionEngine *m_engine;
     QQmlNativeDebugServiceImpl *m_service;
-    QV4::EngineBase::StackFrame *m_currentFrame = 0;
+    QV4::CppStackFrame *m_currentFrame = 0;
     Speed m_stepping;
     bool m_pauseRequested;
     bool m_runningJob;
@@ -332,7 +332,7 @@ void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &a
     int limit = arguments.value(QLatin1String("limit")).toInt(0);
 
     QJsonArray frameArray;
-    QV4::EngineBase::StackFrame *f= m_engine->currentStackFrame;
+    QV4::CppStackFrame *f= m_engine->currentStackFrame;
     for (int i  = 0; i < limit && f; ++i) {
         QV4::Function *function = f->v4Function;
 
@@ -677,7 +677,7 @@ void NativeDebugger::pauseAndWait()
 
     event.insert(QStringLiteral("event"), QStringLiteral("break"));
     event.insert(QStringLiteral("language"), QStringLiteral("js"));
-    if (QV4::EngineBase::StackFrame *frame = m_engine->currentStackFrame) {
+    if (QV4::CppStackFrame *frame = m_engine->currentStackFrame) {
         QV4::Function *function = frame->v4Function;
         event.insert(QStringLiteral("file"), function->sourceFile());
         int line = frame->line;

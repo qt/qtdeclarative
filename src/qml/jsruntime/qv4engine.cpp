@@ -534,12 +534,6 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
     return new (classPool) InternalClass(other);
 }
 
-Heap::ExecutionContext *ExecutionEngine::pushGlobalContext()
-{
-    setCurrentContext(rootContext()->d());
-    return currentContext()->d();
-}
-
 InternalClass *ExecutionEngine::newInternalClass(const VTable *vtable, Object *prototype)
 {
     return internalClasses[EngineBase::Class_Empty]->changeVTable(vtable)->changePrototype(prototype ? prototype->d() : 0);
@@ -797,14 +791,18 @@ QQmlContextData *ExecutionEngine::callingQmlContext() const
     return ctx->qml()->context->contextData();
 }
 
-QString EngineBase::StackFrame::source() const
+QString CppStackFrame::source() const
 {
     return v4Function->sourceFile();
 }
 
-QString EngineBase::StackFrame::function() const
+QString CppStackFrame::function() const
 {
     return v4Function->name()->toQString();
+}
+
+ReturnedValue CppStackFrame::thisObject() const {
+    return jsFrame->stack[-(int)v4Function->nFormals - 1].asReturnedValue();
 }
 
 StackTrace ExecutionEngine::stackTrace(int frameLimit) const
@@ -813,7 +811,7 @@ StackTrace ExecutionEngine::stackTrace(int frameLimit) const
     ScopedString name(scope);
     StackTrace stack;
 
-    StackFrame *f = currentStackFrame;
+    CppStackFrame *f = currentStackFrame;
     while (f && frameLimit) {
         QV4::StackFrame frame;
         frame.source = f->source();
@@ -868,7 +866,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
         return src;
 
     QUrl base;
-    StackFrame *f = currentStackFrame;
+    CppStackFrame *f = currentStackFrame;
     while (f) {
         if (f->v4Function) {
             base.setUrl(f->v4Function->sourceFile());

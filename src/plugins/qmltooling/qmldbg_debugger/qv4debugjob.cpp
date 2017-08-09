@@ -67,7 +67,7 @@ void JavaScriptJob::run()
     QObject scopeObject;
 
     if (frameNr > 0) {
-        QV4::EngineBase::StackFrame *f = engine->currentStackFrame;
+        QV4::CppStackFrame *f = engine->currentStackFrame;
         for (int i = 0; i < frameNr; ++i)
             f = f->parent;
         ctx = static_cast<QV4::ExecutionContext *>(&f->jsFrame->context);

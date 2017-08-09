@@ -87,6 +87,46 @@ struct CompilationUnit;
 struct InternalClass;
 struct InternalClassPool;
 
+struct JSStackFrame {
+    enum Offsets {
+        JSFunction = 0,
+        Context = 1,
+        Accumulator = 2
+    };
+    // callData is directly before this
+    union {
+        Value jsFunction;
+        Value stack[1];
+    };
+    Value context;
+    Value accumulator; // ###
+    // registers follow
+};
+
+struct Q_QML_EXPORT CppStackFrame {
+    CppStackFrame *parent;
+    Function *v4Function;
+    JSStackFrame *jsFrame;
+    int line = -1;
+    int column = -1;
+
+    QString source() const;
+    QString function() const;
+    inline QV4::ExecutionContext *context() const {
+        return static_cast<ExecutionContext *>(&jsFrame->context);
+    }
+
+    inline QV4::Heap::CallContext *callContext() const {
+        Heap::ExecutionContext *ctx = static_cast<ExecutionContext &>(jsFrame->context).d();\
+        while (ctx->type != Heap::ExecutionContext::Type_CallContext)
+            ctx = ctx->outer;
+        return static_cast<Heap::CallContext *>(ctx);
+    }
+    ReturnedValue thisObject() const;
+};
+
+
+
 struct Q_QML_EXPORT ExecutionEngine : public EngineBase
 {
 private:
@@ -354,7 +394,6 @@ public:
     void setProfiler(Profiling::Profiler *profiler);
 #endif // QT_NO_QML_DEBUGGER
 
-    Heap::ExecutionContext *pushGlobalContext();
     void setCurrentContext(Heap::ExecutionContext *context);
     ExecutionContext *currentContext() const {
         return static_cast<ExecutionContext *>(&currentStackFrame->jsFrame->context);
@@ -522,19 +561,6 @@ inline bool ExecutionEngine::checkStackLimits()
     }
 
     return false;
-}
-
-inline QV4::ExecutionContext *EngineBase::StackFrame::context() const
-{
-    return static_cast<ExecutionContext *>(&jsFrame->context);
-}
-
-inline QV4::Heap::CallContext *EngineBase::StackFrame::callContext() const
-{
-    Heap::ExecutionContext *ctx = static_cast<ExecutionContext &>(jsFrame->context).d();\
-    while (ctx->type != Heap::ExecutionContext::Type_CallContext)
-        ctx = ctx->outer;
-    return static_cast<Heap::CallContext *>(ctx);
 }
 
 } // namespace QV4
