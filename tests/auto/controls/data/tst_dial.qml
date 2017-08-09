@@ -54,15 +54,19 @@ import QtQuick.Controls 2.2
 
 TestCase {
     id: testCase
-    width: 200
-    height: 200
+    width: 450
+    height: 450
     visible: true
     when: windowShown
     name: "Dial"
 
     Component {
         id: dialComponent
-        Dial {}
+        Dial {
+            width: 100
+            height: 100
+            anchors.centerIn: parent
+        }
     }
 
     Component {
@@ -591,5 +595,94 @@ TestCase {
 
         mouseRelease(control)
         compare(control.pressed, false)
+    }
+
+    function move(inputEventType, control, x, y) {
+        if (inputEventType === "mouseInput") {
+            mouseMove(control, x, y);
+        } else {
+            var touch = touchEvent(control);
+            touch.move(0, control, x, y).commit();
+        }
+    }
+
+    function press(inputEventType, control, x, y) {
+        if (inputEventType === "mouseInput") {
+            mousePress(control, x, y);
+        } else {
+            var touch = touchEvent(control);
+            touch.press(0, control, x, y).commit();
+        }
+    }
+
+    function release(inputEventType, control, x, y) {
+        if (inputEventType === "mouseInput") {
+            mouseRelease(control, x, y);
+        } else {
+            var touch = touchEvent(control);
+            touch.release(0, control, x, y).commit();
+        }
+    }
+
+    function test_horizontalAndVertical_data() {
+        var data = [
+            { eventType: "mouseInput", inputMode: Dial.Vertical, moveToX: 0.5, moveToY: 0.25, expectedPosition: 0.125 },
+            // Horizontal movement should have no effect on a vertical dial.
+            { eventType: "mouseInput", inputMode: Dial.Vertical, moveToX: 2.0, moveToY: 0.25, expectedPosition: 0.125 },
+            { eventType: "mouseInput", inputMode: Dial.Vertical, moveToX: 0.5, moveToY: 0.0, expectedPosition: 0.25 },
+            { eventType: "mouseInput", inputMode: Dial.Vertical, moveToX: 0.5, moveToY: -1.5, expectedPosition: 1.0 },
+            // Going above the drag area shouldn't make the position higher than 1.0.
+            { eventType: "mouseInput", inputMode: Dial.Vertical, moveToX: 0.5, moveToY: -2.0, expectedPosition: 1.0 },
+            // Try to decrease the position by moving the mouse down.
+            // The dial's position is 0 before the press event, so nothing should happen.
+            { eventType: "mouseInput", inputMode: Dial.Vertical, moveToX: 0.5, moveToY: 1.25, expectedPosition: 0.0 },
+
+            { eventType: "mouseInput", inputMode: Dial.Horizontal, moveToX: 0.75, moveToY: 0.5, expectedPosition: 0.125 },
+            // Vertical movement should have no effect on a horizontal dial.
+            { eventType: "mouseInput", inputMode: Dial.Horizontal, moveToX: 0.75, moveToY: 2.0, expectedPosition: 0.125 },
+            { eventType: "mouseInput", inputMode: Dial.Horizontal, moveToX: 1.0, moveToY: 0.5, expectedPosition: 0.25 },
+            { eventType: "mouseInput", inputMode: Dial.Horizontal, moveToX: 1.5, moveToY: 0.5, expectedPosition: 0.5 },
+            { eventType: "mouseInput", inputMode: Dial.Horizontal, moveToX: 2.5, moveToY: 0.5, expectedPosition: 1.0 },
+            // Going above the drag area shouldn't make the position higher than 1.0.
+            { eventType: "mouseInput", inputMode: Dial.Horizontal, moveToX: 2.525, moveToY: 0.5, expectedPosition: 1.0 },
+            // Try to decrease the position by moving the mouse to the left.
+            // The dial's position is 0 before the press event, so nothing should happen.
+            { eventType: "mouseInput", inputMode: Dial.Vertical, moveToX: 0.25, moveToY: 0.5, expectedPosition: 0.0 }
+        ];
+
+        // Do the same tests for touch by copying the mouse tests and adding them to the end of the array.
+        var mouseTestCount = data.length;
+        for (var i = mouseTestCount; i < mouseTestCount * 2; ++i) {
+            // Shallow-copy the object.
+            data[i] = JSON.parse(JSON.stringify(data[i - mouseTestCount]));
+            data[i].eventType = "touchInput";
+        }
+
+        for (i = 0; i < data.length; ++i) {
+            var row = data[i];
+            row.tag = "eventType=" + row.eventType + ", "
+                    + "inputMode=" + (row.inputMode === Dial.Vertical ? "Vertical" : "Horizontal") + ", "
+                    + "moveToX=" + row.moveToX + ", moveToY=" + row.moveToY + ", "
+                    + "expectedPosition=" + row.expectedPosition;
+        }
+
+        return data;
+    }
+
+    function test_horizontalAndVertical(data) {
+        var control = createTemporaryObject(dialComponent, testCase, { inputMode: data.inputMode });
+        verify(control);
+
+        press(data.eventType, control);
+        compare(control.pressed, true);
+        // The position shouldn't change until the mouse has actually moved.
+        compare(control.position, 0);
+
+        move(data.eventType, control, control.width * data.moveToX, control.width * data.moveToY);
+        compare(control.position, data.expectedPosition);
+
+        release(data.eventType, control, control.width * data.moveToX, control.width * data.moveToY);
+        compare(control.pressed, false);
+        compare(control.position, data.expectedPosition);
     }
 }

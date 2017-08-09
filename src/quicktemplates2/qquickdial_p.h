@@ -72,6 +72,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDial : public QQuickControl
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
     // 2.2 (Qt 5.9)
     Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION 2)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(InputMode inputMode READ inputMode WRITE setInputMode NOTIFY inputModeChanged FINAL REVISION 5)
     Q_CLASSINFO("DeferredPropertyNames", "background,handle")
 
 public:
@@ -103,6 +105,13 @@ public:
     SnapMode snapMode() const;
     void setSnapMode(SnapMode mode);
 
+    enum InputMode {
+        Circular,
+        Horizontal,
+        Vertical,
+    };
+    Q_ENUM(InputMode)
+
     bool wrap() const;
     void setWrap(bool wrap);
 
@@ -115,6 +124,10 @@ public:
     // 2.2 (Qt 5.9)
     bool live() const;
     void setLive(bool live);
+
+    // 2.5 (Qt 5.12)
+    InputMode inputMode() const;
+    void setInputMode(InputMode mode);
 
 public Q_SLOTS:
     void increase();
@@ -134,6 +147,8 @@ Q_SIGNALS:
     // 2.2 (Qt 5.9)
     Q_REVISION(2) void moved();
     Q_REVISION(2) void liveChanged();
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) void inputModeChanged();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
