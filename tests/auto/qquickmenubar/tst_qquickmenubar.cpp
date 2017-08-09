@@ -83,6 +83,7 @@ void tst_qquickmenubar::mouse()
     QVERIFY(window);
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
+    centerOnScreen(window.data());
     moveMouseAway(window.data());
 
     QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
@@ -221,6 +222,7 @@ void tst_qquickmenubar::keys()
     QVERIFY(window);
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
+    centerOnScreen(window.data());
     moveMouseAway(window.data());
 
     QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
@@ -408,6 +410,7 @@ void tst_qquickmenubar::mnemonics()
     QVERIFY(window);
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
+    centerOnScreen(window.data());
     moveMouseAway(window.data());
 
     QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();

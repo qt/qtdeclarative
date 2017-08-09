@@ -54,6 +54,8 @@ namespace QQuickVisualTestUtil
 
     bool delegateVisible(QQuickItem *item);
 
+    void centerOnScreen(QQuickWindow *window);
+
     void moveMouseAway(QQuickWindow *window);
 
     /*

@@ -132,6 +132,7 @@ void tst_menu::mouse()
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
+    centerOnScreen(window);
     moveMouseAway(window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -245,6 +246,7 @@ void tst_menu::contextMenuKeyboard()
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
+    centerOnScreen(window);
     moveMouseAway(window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -485,6 +487,7 @@ void tst_menu::menuSeparator()
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
+    centerOnScreen(window);
     moveMouseAway(window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -625,6 +628,7 @@ void tst_menu::popup()
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
+    centerOnScreen(window);
     moveMouseAway(window);
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
@@ -898,6 +902,7 @@ void tst_menu::subMenuMouse()
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
+    centerOnScreen(window);
     moveMouseAway(window);
 
     QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
@@ -1000,6 +1005,7 @@ void tst_menu::subMenuKeyboard()
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
+    centerOnScreen(window);
     moveMouseAway(window);
 
     if (mirrored)
@@ -1139,6 +1145,7 @@ void tst_menu::subMenuPosition()
 
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
+    centerOnScreen(window);
     moveMouseAway(window);
 
     if (mirrored)

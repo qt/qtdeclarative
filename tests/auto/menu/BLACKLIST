@@ -1,5 +1,0 @@
-# See qtbase/src/testlib/qtestblacklist.cpp for format
-
-# https://bugreports.qt.io/browse/QTBUG-62383
-[mouse]
-ubuntu-16.04 ci
