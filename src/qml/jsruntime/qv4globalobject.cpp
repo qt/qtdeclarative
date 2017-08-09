@@ -383,7 +383,9 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     // set the correct v4 function for the context
     ctx->d()->v4Function = function;
 
-    return Q_V4_PROFILE(v4, ctx->d(), function, 0);
+    ScopedCallData cData(scope);
+    cData->thisObject = Encode::undefined(); // ####
+    return function->execute(ctx->d(), cData);
 }
 
 

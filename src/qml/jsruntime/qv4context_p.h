@@ -227,8 +227,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     ReturnedValue argument(int i) const {
         return d()->callData->argument(i);
     }
-
-    static ReturnedValue call(Heap::ExecutionContext *context, CallData *callData, QV4::Function *function, const QV4::FunctionObject *f = 0);
 };
 
 struct Q_QML_EXPORT CallContext : public ExecutionContext

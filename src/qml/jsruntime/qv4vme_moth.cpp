@@ -51,6 +51,7 @@
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4string_p.h>
+#include <private/qv4profiling_p.h>
 #include <iostream>
 
 #include "qv4alloca_p.h"
@@ -413,7 +414,7 @@ static inline const QV4::Value &constant(Function *function, int index)
     return function->compilationUnit->constants[index];
 }
 
-QV4::ReturnedValue VME::exec(Heap::ExecutionContext *context, Function *function, const FunctionObject *jsFunction)
+QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callData, Heap::ExecutionContext *context, QV4::Function *function)
 {
     qt_v4ResolvePendingBreakpointsHook();
 
@@ -426,6 +427,12 @@ QV4::ReturnedValue VME::exec(Heap::ExecutionContext *context, Function *function
 #endif
 
     ExecutionEngine *engine = function->internalClass->engine;
+    Profiling::FunctionCallProfiler(engine, function);
+
+    Value *jsStackTop = engine->jsStackTop;
+    engine->jsStackTop = reinterpret_cast<QV4::Value *>(callData) + 2 + (int)function->nFormals;
+    for (int i = callData->argc; i < (int)function->nFormals; ++i)
+        callData->args[i] = Encode::undefined();
 
     EngineBase::StackFrame frame;
     frame.parent = engine->currentStackFrame;
@@ -435,8 +442,7 @@ QV4::ReturnedValue VME::exec(Heap::ExecutionContext *context, Function *function
     QV4::Value *stack = nullptr;
     const uchar *exceptionHandler = 0;
 
-    QV4::Scope scope(engine);
-    stack = scope.alloc(function->compiledFunction->nRegisters + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
+    stack = engine->jsAlloca(function->compiledFunction->nRegisters + sizeof(EngineBase::JSStackFrame)/sizeof(QV4::Value));
     frame.jsFrame = reinterpret_cast<EngineBase::JSStackFrame *>(stack);
     frame.jsFrame->context = context;
     if (jsFunction)
@@ -1114,5 +1120,7 @@ functionExit:
     if (QV4::Debugging::Debugger *debugger = engine->debugger())
         debugger->leavingFunction(accumulator.asReturnedValue());
     engine->currentStackFrame = frame.parent;
+    engine->jsStackTop = jsStackTop;
+
     return accumulator.asReturnedValue();
 }

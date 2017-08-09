@@ -63,7 +63,15 @@ struct Q_QML_EXPORT Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
 
-    typedef ReturnedValue (*Code)(Heap::ExecutionContext *c, Function *, const FunctionObject *);
+    ReturnedValue execute(Heap::ExecutionContext *c, CallData *callData, const FunctionObject *f = 0) {
+        return code(f, callData, c, this);
+    }
+    ReturnedValue call(Heap::ExecutionContext *c, CallData *callData, const FunctionObject *f = 0) {
+        return call(f, callData, c, this);
+    }
+
+
+    typedef ReturnedValue (*Code)(const FunctionObject *, CallData *, Heap::ExecutionContext *c, Function *);
     Code code;
     const uchar *codeData;
 
@@ -95,6 +103,8 @@ struct Q_QML_EXPORT Function {
         return QQmlSourceLocation(sourceFile(), compiledFunction->location.line, compiledFunction->location.column);
     }
 
+private:
+    static ReturnedValue call(const FunctionObject *f, CallData *callData, Heap::ExecutionContext *context, Function *function);
 };
 
 

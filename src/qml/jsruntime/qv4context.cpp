@@ -48,8 +48,6 @@
 #include "qv4errorobject_p.h"
 #include "qv4string_p.h"
 #include "qv4qmlcontext_p.h"
-#include "qv4profiling_p.h"
-#include <private/qqmljavascriptexpression_p.h>
 
 using namespace QV4;
 
@@ -224,33 +222,6 @@ bool ExecutionContext::deleteProperty(String *name)
     }
 
     return !d()->v4Function->isStrict();
-}
-
-// Do a call with this execution context as the outer scope
-ReturnedValue ExecutionContext::call(Heap::ExecutionContext *context, CallData *callData, Function *function, const FunctionObject *f)
-{
-    ExecutionEngine *engine = context->internalClass->engine;
-    Value *jsStackTop = engine->jsStackTop;
-    engine->jsStackTop = reinterpret_cast<QV4::Value *>(callData) + 2 + (int)function->nFormals;
-    for (int i = callData->argc; i < (int)function->nFormals; ++i)
-        callData->args[i] = Encode::undefined();
-
-    if (!function->canUseSimpleCall) {
-        context = newCallContext(context, function, callData);
-        if (f)
-            static_cast<Heap::CallContext *>(context)->function.set(engine, f->d());
-    }
-
-    ReturnedValue res = Q_V4_PROFILE(engine, context, function, f);
-
-    if (function->hasQmlDependencies) {
-        Q_ASSERT(context->type == Heap::ExecutionContext::Type_QmlContext);
-        QQmlPropertyCapture::registerQmlDependencies(static_cast<Heap::QmlContext *>(context), engine, function->compiledFunction);
-    }
-
-    engine->jsStackTop = jsStackTop;
-
-    return res;
 }
 
 ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value &value)
