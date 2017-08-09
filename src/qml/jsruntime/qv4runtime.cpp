@@ -1405,18 +1405,6 @@ QV4::ReturnedValue Runtime::method_loadQmlSingleton(QV4::NoThrowEngine *engine, 
     return engine->qmlSingletonWrapper(name);
 }
 
-void Runtime::method_convertThisToObject(ExecutionEngine *engine)
-{
-    Value *t = &engine->currentContext()->d()->callData->thisObject;
-    if (t->isObject())
-        return;
-    if (t->isNullOrUndefined()) {
-        *t = engine->globalObject->asReturnedValue();
-    } else {
-        *t = t->toObject(engine)->asReturnedValue();
-    }
-}
-
 ReturnedValue Runtime::method_uMinus(const Value &value)
 {
     TRACE1(value);

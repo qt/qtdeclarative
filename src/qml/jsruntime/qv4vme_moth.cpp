@@ -746,17 +746,13 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(CreateUnmappedArgumentsObject)
 
     MOTH_BEGIN_INSTR(ConvertThisToObject)
-        if (function->canUseSimpleFunction()) {
-            Value *t = &stack[-(int)function->nFormals - 1];
-            if (!t->isObject()) {
-                if (t->isNullOrUndefined()) {
-                    *t = engine->globalObject->asReturnedValue();
-                } else {
-                    *t = t->toObject(engine)->asReturnedValue();
-                }
+        Value *t = &stack[-(int)function->nFormals - 1];
+        if (!t->isObject()) {
+            if (t->isNullOrUndefined()) {
+                *t = engine->globalObject->asReturnedValue();
+            } else {
+                *t = t->toObject(engine)->asReturnedValue();
             }
-        } else {
-            Runtime::method_convertThisToObject(engine);
         }
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ConvertThisToObject)
