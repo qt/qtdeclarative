@@ -52,6 +52,7 @@
 #include <private/qv4lookup_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4profiling_p.h>
+#include <private/qqmljavascriptexpression_p.h>
 #include <iostream>
 
 #include "qv4alloca_p.h"
@@ -1117,6 +1118,11 @@ functionExit:
         debugger->leavingFunction(accumulator.asReturnedValue());
     engine->currentStackFrame = frame.parent;
     engine->jsStackTop = jsStackTop;
+
+    if (function->hasQmlDependencies) {
+        Q_ASSERT(context->type == Heap::ExecutionContext::Type_QmlContext);
+        QQmlPropertyCapture::registerQmlDependencies(static_cast<Heap::QmlContext *>(context), engine, function->compiledFunction);
+    }
 
     return accumulator.asReturnedValue();
 }

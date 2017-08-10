@@ -55,7 +55,7 @@ DEFINE_MANAGED_VTABLE(ExecutionContext);
 DEFINE_MANAGED_VTABLE(CallContext);
 DEFINE_MANAGED_VTABLE(CatchContext);
 
-Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *outer, Function *function, CallData *callData)
+Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *outer, Function *function, CallData *callData, const FunctionObject *f)
 {
     uint nFormals = qMax(static_cast<uint>(callData->argc), function->nFormals);
     uint localsAndFormals = function->compiledFunction->nLocals + sizeof(CallData)/sizeof(Value) - 1 + nFormals;
@@ -68,6 +68,8 @@ Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *oute
     c->v4Function = function;
 
     c->outer.set(v4, outer);
+    if (f)
+        c->function.set(v4, f->d());
 
     const CompiledData::Function *compiledFunction = function->compiledFunction;
     uint nLocals = compiledFunction->nLocals;

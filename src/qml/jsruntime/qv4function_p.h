@@ -104,7 +104,13 @@ struct Q_QML_EXPORT Function {
     }
 
 private:
-    static ReturnedValue call(const FunctionObject *f, CallData *callData, Heap::ExecutionContext *context, Function *function);
+    static ReturnedValue call(const FunctionObject *f, CallData *callData, Heap::ExecutionContext *context, Function *function)
+    {
+        if (!function->canUseSimpleCall)
+            context = ExecutionContext::newCallContext(context, function, callData, f);
+
+        return function->execute(context, callData, f);
+    }
 };
 
 

@@ -45,7 +45,6 @@
 #include "qv4engine_p.h"
 #include "qv4lookup_p.h"
 #include <private/qv4mm_p.h>
-#include <private/qqmljavascriptexpression_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -117,28 +116,6 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
         internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
 
     canUseSimpleCall = false;
-}
-
-
-// Do a call with this execution context as the outer scope
-ReturnedValue Function::call(const FunctionObject *f, CallData *callData, Heap::ExecutionContext *context, Function *function)
-{
-    ExecutionEngine *engine = context->internalClass->engine;
-
-    if (!function->canUseSimpleCall) {
-        context = ExecutionContext::newCallContext(context, function, callData);
-        if (f)
-            static_cast<Heap::CallContext *>(context)->function.set(engine, f->d());
-    }
-
-    ReturnedValue res = function->execute(context, callData, f);
-
-    if (function->hasQmlDependencies) {
-        Q_ASSERT(context->type == Heap::ExecutionContext::Type_QmlContext);
-        QQmlPropertyCapture::registerQmlDependencies(static_cast<Heap::QmlContext *>(context), engine, function->compiledFunction);
-    }
-
-    return res;
 }
 
 QT_END_NAMESPACE
