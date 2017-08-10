@@ -128,6 +128,7 @@ signals:
     void updated();
 
 protected:
+    bool wantsPointerEvent(QQuickPointerEvent *event) override;
     void onActiveChanged() override;
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
 

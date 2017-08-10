@@ -243,6 +243,28 @@ void QQuickPinchHandler::setMaximumY(qreal maxY)
     emit maximumYChanged();
 }
 
+bool QQuickPinchHandler::wantsPointerEvent(QQuickPointerEvent *event)
+{
+    if (!QQuickMultiPointHandler::wantsPointerEvent(event))
+        return false;
+
+    if (minimumPointCount() == 2) {
+        if (const auto gesture = event->asPointerNativeGestureEvent()) {
+            switch (gesture->type()) {
+            case Qt::BeginNativeGesture:
+            case Qt::EndNativeGesture:
+            case Qt::ZoomNativeGesture:
+            case Qt::RotateNativeGesture:
+                return parentContains(event->point(0));
+            default:
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 /*!
     \qmlproperty int QtQuick::PinchHandler::minimumTouchPoints
 
@@ -289,51 +311,87 @@ void QQuickPinchHandler::onActiveChanged()
 
 void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
-    Q_UNUSED(event)
     if (Q_UNLIKELY(lcPinchHandler().isDebugEnabled())) {
         for (QQuickEventPoint *point : qAsConst(m_currentPoints))
             qCDebug(lcPinchHandler) << point->state() << point->sceneGrabPosition() << "->" << point->scenePosition();
     }
 
-    bool containsReleasedPoints = event->isReleaseEvent();
-    if (!active() && !containsReleasedPoints) {
-        // Verify that least one of the points have moved beyond threshold needed to activate the handler
-        for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
-            if (QQuickWindowPrivate::dragOverThreshold(point)) {
-                if (grabPoints(m_currentPoints))
-                    setActive(true);
-                break;
-            }
-        }
-        if (!active())
+    qreal dist = 0;
+    if (const auto gesture = event->asPointerNativeGestureEvent()) {
+        switch (gesture->type()) {
+        case Qt::EndNativeGesture:
+            m_activeScale = 1;
+            m_activeRotation = 0;
+            m_activeTranslation = QVector2D();
+            m_centroid = QPointF();
+            m_centroidVelocity = QVector2D();
+            setActive(false);
+            emit updated();
             return;
+        case Qt::ZoomNativeGesture:
+            m_activeScale *= 1 + gesture->value();
+            break;
+        case Qt::RotateNativeGesture:
+            m_activeRotation += gesture->value();
+            break;
+        default:
+            // Nothing of interest (which is unexpected, because wantsPointerEvent() should have returned false)
+            return;
+        }
+        if (!active()) {
+            m_centroid = gesture->point(0)->scenePosition();
+            setActive(true);
+            m_startCentroid = m_centroid;
+            // Native gestures for 2-finger pinch do not allow dragging, so
+            // the centroid won't move during the gesture, and translation stays at zero
+            m_centroidVelocity = QVector2D();
+            m_activeTranslation = QVector2D();
+        }
+    } else {
+        bool containsReleasedPoints = event->isReleaseEvent();
+        if (!active() && !containsReleasedPoints) {
+            // Verify that at least one of the points has moved beyond threshold needed to activate the handler
+            for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
+                if (QQuickWindowPrivate::dragOverThreshold(point)) {
+                    if (grabPoints(m_currentPoints))
+                        setActive(true);
+                    break;
+                }
+            }
+            if (!active())
+                return;
+        }
+        // TODO check m_pinchOrigin: right now it acts like it's set to PinchCenter
+        m_centroid = touchPointCentroid();
+        m_centroidVelocity = touchPointCentroidVelocity();
+        // avoid mapping the minima and maxima, as they might have unmappable values
+        // such as -inf/+inf. Because of this we perform the bounding to min/max in local coords.
+        // 1. scale
+        dist = averageTouchPointDistance(m_centroid);
+        m_activeScale = dist / m_startDistance;
+        m_activeScale = qBound(m_minimumScale/m_startScale, m_activeScale, m_maximumScale/m_startScale);
+
+        // 2. rotate
+        QVector<PointData> newAngles = angles(m_centroid);
+        const qreal angleDelta = averageAngleDelta(m_startAngles, newAngles);
+        m_activeRotation += angleDelta;
+        m_startAngles = std::move(newAngles);
+
+        if (!containsReleasedPoints)
+            acceptPoints(m_currentPoints);
     }
-    // TODO check m_pinchOrigin: right now it acts like it's set to PinchCenter
-    m_centroid = touchPointCentroid();
-    m_centroidVelocity = touchPointCentroidVelocity();
-    QRectF bounds(m_minimumX, m_minimumY, m_maximumX - m_minimumX, m_maximumY - m_minimumY);
-    // avoid mapping the minima and maxima, as they might have unmappable values
-    // such as -inf/+inf. Because of this we perform the bounding to min/max in local coords.
+
     QPointF centroidParentPos;
+    QRectF bounds(m_minimumX, m_minimumY, m_maximumX - m_minimumX, m_maximumY - m_minimumY);
     if (target() && target()->parentItem()) {
         centroidParentPos = target()->parentItem()->mapFromScene(m_centroid);
         centroidParentPos = QPointF(qBound(bounds.left(), centroidParentPos.x(), bounds.right()),
                                    qBound(bounds.top(), centroidParentPos.y(), bounds.bottom()));
     }
-    // 1. scale
-    const qreal dist = averageTouchPointDistance(m_centroid);
-    m_activeScale = dist / m_startDistance;
-    m_activeScale = qBound(m_minimumScale/m_startScale, m_activeScale, m_maximumScale/m_startScale);
-    const qreal scale = m_startScale * m_activeScale;
-
-    // 2. rotate
-    QVector<PointData> newAngles = angles(m_centroid);
-    const qreal angleDelta = averageAngleDelta(m_startAngles, newAngles);
-    m_activeRotation += angleDelta;
     const qreal totalRotation = m_startRotation + m_activeRotation;
     const qreal rotation = qBound(m_minimumRotation, totalRotation, m_maximumRotation);
     m_activeRotation += (rotation - totalRotation);   //adjust for the potential bounding above
-    m_startAngles = std::move(newAngles);
+    const qreal scale = m_startScale * m_activeScale;
 
     if (target() && target()->parentItem()) {
         // 3. Drag/translate
@@ -364,14 +422,14 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     } else {
         m_activeTranslation = QVector2D(m_centroid - m_startCentroid);
     }
+
     qCDebug(lcPinchHandler) << "centroid" << m_startCentroid << "->"  << m_centroid
                             << ", distance" << m_startDistance << "->" << dist
                             << ", startScale" << m_startScale << "->" << scale
                             << ", activeRotation" << m_activeRotation
-                            << ", rotation" << rotation;
+                            << ", rotation" << rotation
+                            << " from " << event->device()->type();
 
-    if (!containsReleasedPoints)
-        acceptPoints(m_currentPoints);
     emit updated();
 }
 

@@ -66,6 +66,7 @@ QT_BEGIN_NAMESPACE
 class QQuickPointerDevice;
 class QQuickPointerEvent;
 class QQuickPointerMouseEvent;
+class QQuickPointerNativeGestureEvent;
 class QQuickPointerTabletEvent;
 class QQuickPointerTouchEvent;
 class QQuickPointerHandler;
@@ -413,9 +414,11 @@ public: // helpers for C++ only (during event delivery)
     virtual QQuickPointerMouseEvent *asPointerMouseEvent() { return nullptr; }
     virtual QQuickPointerTouchEvent *asPointerTouchEvent() { return nullptr; }
     virtual QQuickPointerTabletEvent *asPointerTabletEvent() { return nullptr; }
+    virtual QQuickPointerNativeGestureEvent *asPointerNativeGestureEvent() { return nullptr; }
     virtual const QQuickPointerMouseEvent *asPointerMouseEvent() const { return nullptr; }
     virtual const QQuickPointerTouchEvent *asPointerTouchEvent() const { return nullptr; }
     virtual const QQuickPointerTabletEvent *asPointerTabletEvent() const { return nullptr; }
+    virtual const QQuickPointerNativeGestureEvent *asPointerNativeGestureEvent() const { return nullptr; }
     virtual bool allPointsAccepted() const = 0;
     virtual bool allUpdatedPointsAccepted() const = 0;
     virtual bool allPointsGrabbed() const = 0;
@@ -515,6 +518,42 @@ private:
     Q_DISABLE_COPY(QQuickPointerTouchEvent)
 };
 
+class Q_QUICK_PRIVATE_EXPORT QQuickPointerNativeGestureEvent : public QQuickPointerEvent
+{
+    Q_OBJECT
+    Q_PROPERTY(Qt::NativeGestureType type READ type CONSTANT)
+    Q_PROPERTY(qreal value READ value CONSTANT)
+
+public:
+    QQuickPointerNativeGestureEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
+        : QQuickPointerEvent(parent, device), m_gesturePoint(new QQuickEventPoint(this)) { }
+
+    QQuickPointerEvent *reset(QEvent *) override;
+    void localize(QQuickItem *target) override;
+    bool isPressEvent() const override;
+    bool isUpdateEvent() const override;
+    bool isReleaseEvent() const override;
+    QQuickPointerNativeGestureEvent *asPointerNativeGestureEvent() override { return this; }
+    const QQuickPointerNativeGestureEvent *asPointerNativeGestureEvent() const override { return this; }
+    int pointCount() const override { return 1; }
+    QQuickEventPoint *point(int i) const override;
+    QQuickEventPoint *pointById(int pointId) const override;
+    bool allPointsAccepted() const override;
+    bool allUpdatedPointsAccepted() const override;
+    bool allPointsGrabbed() const override;
+    QVector<QObject *> exclusiveGrabbers() const override;
+    void clearGrabbers() const override;
+    bool hasExclusiveGrabber(const QQuickPointerHandler *handler) const override;
+    Qt::NativeGestureType type() const;
+    qreal value() const;
+
+private:
+    QQuickEventPoint *m_gesturePoint;
+
+    Q_DISABLE_COPY(QQuickPointerNativeGestureEvent)
+};
+
+
 // ### Qt 6: move this to qtbase, replace QTouchDevice and the enums in QTabletEvent
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerDevice : public QObject
 {
@@ -579,7 +618,7 @@ public:
     QString name() const { return m_name; }
     QPointingDeviceUniqueId uniqueId() const { return m_uniqueId; }
 
-    static QQuickPointerDevice *touchDevice(QTouchDevice *d);
+    static QQuickPointerDevice *touchDevice(const QTouchDevice *d);
     static QList<QQuickPointerDevice *> touchDevices();
     static QQuickPointerDevice *genericMouseDevice();
     static QQuickPointerDevice *tabletDevice(qint64);

@@ -76,6 +76,9 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
 
+    if (event->asPointerNativeGestureEvent())
+        return true;
+
     if (sameAsCurrentPoints(event))
         return true;
 

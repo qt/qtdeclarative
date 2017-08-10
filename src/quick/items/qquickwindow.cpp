@@ -1915,10 +1915,20 @@ bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGes
             return true;
     }
 
-    QPointF p = item->mapFromScene(event->localPos());
+    // Try the Item's pointer handlers first
+    QQuickPointerEvent *pointerEvent = pointerEventInstance(event);
+    pointerEvent->localize(item);
+    if (itemPrivate->handlePointerEvent(pointerEvent, false)) {
+        if (pointerEvent->allPointsAccepted()) {
+            event->accept();
+            return true;
+        }
+    }
 
+    // If still not accepted, try direct delivery to the item
+    QPointF p = item->mapFromScene(event->localPos());
     if (item->contains(p)) {
-        QNativeGestureEvent copy(event->gestureType(), p, event->windowPos(), event->screenPos(),
+        QNativeGestureEvent copy(event->gestureType(), event->device(), p, event->windowPos(), event->screenPos(),
                                  event->value(), 0L, 0L); // TODO can't copy things I can't access
         event->accept();
         item->event(&copy);
@@ -2164,23 +2174,36 @@ void QQuickWindowPrivate::flushFrameSynchronousEvents()
     }
 }
 
-QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QQuickPointerDevice *device) const
+QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QQuickPointerDevice *device, QEvent::Type eventType) const
 {
-    // the list of devices should be very small so a linear search should be ok
-    for (QQuickPointerEvent *e: pointerEventInstances) {
+    // Search for a matching reusable event object.
+    for (QQuickPointerEvent *e : pointerEventInstances) {
+        // If device can generate native gestures (e.g. a trackpad), there might be two QQuickPointerEvents:
+        // QQuickPointerNativeGestureEvent and QQuickPointerTouchEvent.  Use eventType to disambiguate.
+        if (eventType == QEvent::NativeGesture && !qobject_cast<QQuickPointerNativeGestureEvent*>(e))
+            continue;
+        // Otherwise we assume there's only one event type per device.
+        // More disambiguation tests might need to be added above if that changes later.
         if (e->device() == device)
             return e;
     }
 
+    // Not found: we have to create a suitable event instance.
     QQuickPointerEvent *ev = nullptr;
     QQuickWindow *q = const_cast<QQuickWindow*>(q_func());
     switch (device->type()) {
     case QQuickPointerDevice::Mouse:
+        // QWindowSystemInterface::handleMouseEvent() does not take a device parameter:
+        // we assume all mouse events come from one mouse (the "core pointer").
+        // So when the event is a mouse event, device == QQuickPointerDevice::genericMouseDevice()
         ev = new QQuickPointerMouseEvent(q, device);
         break;
     case QQuickPointerDevice::TouchPad:
     case QQuickPointerDevice::TouchScreen:
-        ev = new QQuickPointerTouchEvent(q, device);
+        if (eventType == QEvent::NativeGesture)
+            ev = new QQuickPointerNativeGestureEvent(q, device);
+        else // assume QEvent::Type is one of TouchBegin/Update/End
+            ev = new QQuickPointerTouchEvent(q, device);
         break;
     default:
         // TODO tablet event types
@@ -2200,29 +2223,29 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QQuickPointerDevic
 QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event) const
 {
     QQuickPointerDevice *dev = nullptr;
-    QQuickPointerEvent *ev = nullptr;
     switch (event->type()) {
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
     case QEvent::MouseButtonDblClick:
     case QEvent::MouseMove:
         dev = QQuickPointerDevice::genericMouseDevice();
-        ev = pointerEventInstance(dev);
         break;
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
     case QEvent::TouchCancel:
         dev = QQuickPointerDevice::touchDevice(static_cast<QTouchEvent *>(event)->device());
-        ev = pointerEventInstance(dev);
         break;
     // TODO tablet event types
+    case QEvent::NativeGesture:
+        dev = QQuickPointerDevice::touchDevice(static_cast<QNativeGestureEvent *>(event)->device());
+        break;
     default:
         break;
     }
 
-    Q_ASSERT(ev);
-    return ev->reset(event);
+    Q_ASSERT(dev);
+    return pointerEventInstance(dev, event->type())->reset(event);
 }
 
 void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
