@@ -133,6 +133,16 @@ void dumpBytecode(const char *code, int len, int nFormals)
             d << "C" << instr.index;
         MOTH_END_INSTR(LoadConst)
 
+        MOTH_BEGIN_INSTR(LoadNull)
+        MOTH_END_INSTR(LoadNull)
+
+        MOTH_BEGIN_INSTR(LoadUndefined)
+        MOTH_END_INSTR(LoadUndefined)
+
+        MOTH_BEGIN_INSTR(LoadInt)
+            d << instr.value;
+        MOTH_END_INSTR(LoadInt)
+
         MOTH_BEGIN_INSTR(MoveConst)
             d << instr.destTemp.dump(nFormals) << ", C" << instr.constIndex;
         MOTH_END_INSTR(MoveConst)

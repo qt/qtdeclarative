@@ -72,6 +72,9 @@ QT_BEGIN_NAMESPACE
     F(Ret, ret) \
     MOTH_DEBUG_INSTR(F) \
     F(LoadConst, loadConst) \
+    F(LoadNull, loadNull) \
+    F(LoadUndefined, loadUndefined) \
+    F(LoadInt, loadInt) \
     F(MoveConst, moveConst) \
     F(LoadReg, loadReg) \
     F(StoreReg, storeReg) \
@@ -265,6 +268,16 @@ union Instr
     struct instr_loadConst {
         MOTH_INSTR_HEADER
         int index;
+    };
+    struct instr_loadNull {
+        MOTH_INSTR_HEADER
+    };
+    struct instr_loadUndefined {
+        MOTH_INSTR_HEADER
+    };
+    struct instr_loadInt {
+        MOTH_INSTR_HEADER
+        int value;
     };
     struct instr_moveConst {
         MOTH_INSTR_HEADER
@@ -711,6 +724,9 @@ union Instr
     instr_line line;
     instr_debug debug;
     instr_loadConst loadConst;
+    instr_loadNull loadNull;
+    instr_loadUndefined loadUndefined;
+    instr_loadInt loadInt;
     instr_moveConst moveConst;
     instr_loadReg loadReg;
     instr_storeReg storeReg;

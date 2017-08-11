@@ -468,6 +468,18 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         accumulator = constant(function, instr.index);
     MOTH_END_INSTR(LoadConst)
 
+    MOTH_BEGIN_INSTR(LoadNull)
+        accumulator = Encode::null();
+    MOTH_END_INSTR(LoadNull)
+
+    MOTH_BEGIN_INSTR(LoadUndefined)
+        accumulator = Encode::undefined();
+    MOTH_END_INSTR(LoadUndefined)
+
+    MOTH_BEGIN_INSTR(LoadInt)
+        accumulator = Encode(instr.value);
+    MOTH_END_INSTR(LoadInt)
+
     MOTH_BEGIN_INSTR(MoveConst)
         STACK_VALUE(instr.destTemp) = constant(function, instr.constIndex);
     MOTH_END_INSTR(MoveConst)

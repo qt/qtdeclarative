@@ -3001,9 +3001,28 @@ void Codegen::Reference::loadInAccumulator() const
     case Accumulator:
         return;
     case Const: {
-        Instruction::LoadConst load;
-        load.index = codegen->registerConstant(constant);
-        codegen->bytecodeGenerator->addInstruction(load);
+        if (constant == Encode::null()) {
+            Instruction::LoadNull load;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else if (constant == Encode::undefined()) {
+            Instruction::LoadUndefined load;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else {
+            Value p = Primitive::fromReturnedValue(constant);
+            if (p.isNumber()) {
+                double d = p.asDouble();
+                int i = static_cast<int>(d);
+                if (d == i && (d != 0 || !std::signbit(d))) {
+                    Instruction::LoadInt load;
+                    load.value = Primitive::fromReturnedValue(constant).toInt32();
+                    codegen->bytecodeGenerator->addInstruction(load);
+                    return;
+                }
+            }
+            Instruction::LoadConst load;
+            load.index = codegen->registerConstant(constant);
+            codegen->bytecodeGenerator->addInstruction(load);
+        }
     } return;
     case StackSlot: {
         Instruction::LoadReg load;
