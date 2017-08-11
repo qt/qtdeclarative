@@ -80,16 +80,17 @@ void QQuickPointerDeviceHandler::setAcceptedPointerTypes(QQuickPointerDevice::Po
 }
 
 /*!
-     \qmlproperty QQuickPointerDeviceHandler::acceptedModifiers
+     \qmlproperty int PointerDeviceHandler::acceptedModifiers
 
      If this property is set, it will require the given keyboard modifiers to
      be pressed in order to react to pointer events, and otherwise ignore them.
 
-     If this property is set to Qt.KeyboardModifierMask (the default value),
+     If this property is set to \c Qt.KeyboardModifierMask (the default value),
      then the PointerHandler ignores the modifier keys.
 
-     For example an Item could have two handlers of the same type, one of which
-     is enabled only if the required keyboard modifiers are pressed:
+     For example, an \l [QML] Item could have two handlers of the same type,
+     one of which is enabled only if the required keyboard modifiers are
+     pressed:
 
      \qml
      Item {

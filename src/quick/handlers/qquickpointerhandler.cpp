@@ -46,10 +46,10 @@ Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
 
 /*!
     \qmltype PointerHandler
-    \instantiates QQuickPointerHandler
+    //! \instantiates QQuickPointerHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-handlers
-    \brief Handler for pointer events
+    \brief Handler for pointer events.
 
     PointerHandler is a handler for pointer events regardless of source.
     They may represent events from a touch, mouse or tablet device.
@@ -165,7 +165,7 @@ bool QQuickPointerHandler::parentContains(const QQuickEventPoint *point) const
 }
 
 /*!
-     \qmlproperty QQuickPointerHandler::enabled
+     \qmlproperty bool PointerHandler::enabled
 
      If a PointerHandler is disabled, it will reject all events
      and no signals will be emitted.
@@ -241,7 +241,7 @@ void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 }
 
 /*!
-    \qmlproperty QQuickPointerHandler::parent
+    \qmlproperty Item PointerHandler::parent
 
     The \l Item which is the scope of the handler; the Item in which it was declared.
     The handler will handle events on behalf of this Item, which means a
