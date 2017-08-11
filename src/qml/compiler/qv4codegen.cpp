@@ -980,6 +980,8 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         bytecodeGenerator->addInstruction(binop);
         break;
     }
+    case QSOperator::StrictEqual:
+    case QSOperator::StrictNotEqual:
     case QSOperator::Equal:
     case QSOperator::NotEqual:
     case QSOperator::Gt:
@@ -1008,6 +1010,8 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
 static QSOperator::Op invert(QSOperator::Op oper)
 {
     switch (oper) {
+    case QSOperator::StrictEqual: return QSOperator::StrictNotEqual;
+    case QSOperator::StrictNotEqual: return QSOperator::StrictEqual;
     case QSOperator::Equal: return QSOperator::NotEqual;
     case QSOperator::NotEqual: return QSOperator::Equal;
     case QSOperator::Gt: return QSOperator::Le;
@@ -1029,6 +1033,18 @@ Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Refe
     }
 
     switch (oper) {
+    case QSOperator::StrictEqual: {
+        Instruction::JumpStrictEqual cjump;
+        cjump.lhs = left.stackSlot();
+        bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+        break;
+    }
+    case QSOperator::StrictNotEqual: {
+        Instruction::JumpStrictNotEqual cjump;
+        cjump.lhs = left.stackSlot();
+        bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+        break;
+    }
     case QSOperator::Equal: {
         Instruction::CmpJmpEq cjump;
         cjump.lhs = left.stackSlot();
