@@ -1358,6 +1358,14 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
     }
 
     if (!c->parent && !c->forceLookupByName() && _context->compilationMode != EvalCode && c->compilationMode != QmlBinding) {
+        // these value properties of the global object are immutable, we we can directly convert them
+        // to their numeric value here
+        if (name == QStringLiteral("undefined"))
+            return Reference::fromConst(this, Encode::undefined());
+        else if (name == QStringLiteral("Infinity"))
+            return Reference::fromConst(this, Encode(qInf()));
+        else if (name == QStringLiteral("Nan"))
+            return Reference::fromConst(this, Encode(qQNaN()));
         Reference r = Reference::fromName(this, name);
         r.global = true;
         return r;
