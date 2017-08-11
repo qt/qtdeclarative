@@ -903,9 +903,14 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
     }
     case QSOperator::BitAnd:
         if (right.isConst()) {
+            int rightAsInt = Primitive::fromReturnedValue(right.constant).toInt32();
+            if (left.isConst()) {
+                int result = Primitive::fromReturnedValue(left.constant).toInt32() & rightAsInt;
+                return Reference::fromConst(this, Encode(result));
+            }
             left.loadInAccumulator();
             Instruction::BitAndConst bitAnd;
-            bitAnd.rhs = Primitive::fromReturnedValue(right.constant).toInt32();
+            bitAnd.rhs = rightAsInt;
             bytecodeGenerator->addInstruction(bitAnd);
         } else {
             right.loadInAccumulator();
@@ -916,9 +921,14 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     case QSOperator::BitOr:
         if (right.isConst()) {
+            int rightAsInt = Primitive::fromReturnedValue(right.constant).toInt32();
+            if (left.isConst()) {
+                int result = Primitive::fromReturnedValue(left.constant).toInt32() | rightAsInt;
+                return Reference::fromConst(this, Encode(result));
+            }
             left.loadInAccumulator();
             Instruction::BitOrConst bitOr;
-            bitOr.rhs = Primitive::fromReturnedValue(right.constant).toInt32();
+            bitOr.rhs = rightAsInt;
             bytecodeGenerator->addInstruction(bitOr);
         } else {
             right.loadInAccumulator();
@@ -929,9 +939,14 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     case QSOperator::BitXor:
         if (right.isConst()) {
+            int rightAsInt = Primitive::fromReturnedValue(right.constant).toInt32();
+            if (left.isConst()) {
+                int result = Primitive::fromReturnedValue(left.constant).toInt32() ^ rightAsInt;
+                return Reference::fromConst(this, Encode(result));
+            }
             left.loadInAccumulator();
             Instruction::BitXorConst bitXor;
-            bitXor.rhs = Primitive::fromReturnedValue(right.constant).toInt32();
+            bitXor.rhs = rightAsInt;
             bytecodeGenerator->addInstruction(bitXor);
         } else {
             right.loadInAccumulator();
