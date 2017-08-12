@@ -136,6 +136,12 @@ void dumpBytecode(const char *code, int len, int nFormals)
         MOTH_BEGIN_INSTR(LoadNull)
         MOTH_END_INSTR(LoadNull)
 
+        MOTH_BEGIN_INSTR(LoadTrue)
+        MOTH_END_INSTR(LoadTrue)
+
+        MOTH_BEGIN_INSTR(LoadFalse)
+        MOTH_END_INSTR(LoadFalse)
+
         MOTH_BEGIN_INSTR(LoadUndefined)
         MOTH_END_INSTR(LoadUndefined)
 

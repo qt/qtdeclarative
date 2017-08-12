@@ -3035,6 +3035,12 @@ void Codegen::Reference::loadInAccumulator() const
         if (constant == Encode::null()) {
             Instruction::LoadNull load;
             codegen->bytecodeGenerator->addInstruction(load);
+        } else if (constant == Encode(true)) {
+            Instruction::LoadTrue load;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else if (constant == Encode(false)) {
+            Instruction::LoadFalse load;
+            codegen->bytecodeGenerator->addInstruction(load);
         } else if (constant == Encode::undefined()) {
             Instruction::LoadUndefined load;
             codegen->bytecodeGenerator->addInstruction(load);

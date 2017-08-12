@@ -72,6 +72,8 @@ QT_BEGIN_NAMESPACE
     F(Ret, ret) \
     MOTH_DEBUG_INSTR(F) \
     F(LoadConst, loadConst) \
+    F(LoadTrue, loadTrue) \
+    F(LoadFalse, loadFalse) \
     F(LoadNull, loadNull) \
     F(LoadUndefined, loadUndefined) \
     F(LoadInt, loadInt) \
@@ -268,6 +270,12 @@ union Instr
     struct instr_loadConst {
         MOTH_INSTR_HEADER
         int index;
+    };
+    struct instr_loadTrue {
+        MOTH_INSTR_HEADER
+    };
+    struct instr_loadFalse {
+        MOTH_INSTR_HEADER
     };
     struct instr_loadNull {
         MOTH_INSTR_HEADER
@@ -724,6 +732,8 @@ union Instr
     instr_line line;
     instr_debug debug;
     instr_loadConst loadConst;
+    instr_loadTrue loadTrue;
+    instr_loadFalse loadFalse;
     instr_loadNull loadNull;
     instr_loadUndefined loadUndefined;
     instr_loadInt loadInt;
