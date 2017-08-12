@@ -374,7 +374,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     if (function->isStrict() || (ctx->d()->v4Function->isStrict())) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
         ScopedCallData callData(scope, 0);
-        callData->thisObject = ctx->thisObject();
+        callData->thisObject = scope.engine->currentStackFrame->thisObject();
         return e->call(callData);
     }
 
