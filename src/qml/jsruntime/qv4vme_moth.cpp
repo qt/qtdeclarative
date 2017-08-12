@@ -911,7 +911,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(JumpStrictEqual)
 
     MOTH_BEGIN_INSTR(JumpStrictNotEqual)
-        if (STACK_VALUE(instr.lhs).rawValue() != accumulator.rawValue()) {
+        if (STACK_VALUE(instr.lhs).rawValue() != accumulator.rawValue() || accumulator.isNaN()) {
             if (!RuntimeHelpers::strictEqual(STACK_VALUE(instr.lhs), accumulator))
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         }
