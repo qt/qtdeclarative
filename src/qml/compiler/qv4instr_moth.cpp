@@ -519,9 +519,6 @@ void dumpBytecode(const char *code, int len, int nFormals)
         MOTH_END_INSTR(Line)
     #endif // QT_NO_QML_DEBUGGER
 
-        MOTH_BEGIN_INSTR(LoadThis)
-        MOTH_END_INSTR(LoadThis)
-
         MOTH_BEGIN_INSTR(LoadQmlContext)
             d << instr.result.dump(nFormals);
         MOTH_END_INSTR(LoadQmlContext)

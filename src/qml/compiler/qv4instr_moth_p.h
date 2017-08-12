@@ -172,7 +172,6 @@ QT_BEGIN_NAMESPACE
     F(Mul, mul) \
     F(Sub, sub) \
     F(BinopContext, binopContext) \
-    F(LoadThis, loadThis) \
     F(LoadQmlContext, loadQmlContext) \
     F(LoadQmlImportedScripts, loadQmlImportedScripts) \
     F(LoadQmlSingleton, loadQmlSingleton)
@@ -711,9 +710,6 @@ union Instr
         uint alu; // offset inside the runtime methods
         StackSlot lhs;
     };
-    struct instr_loadThis {
-        MOTH_INSTR_HEADER
-    };
     struct instr_loadQmlContext {
         MOTH_INSTR_HEADER
         StackSlot result;
@@ -832,7 +828,6 @@ union Instr
     instr_mul mul;
     instr_sub sub;
     instr_binopContext binopContext;
-    instr_loadThis loadThis;
     instr_loadQmlContext loadQmlContext;
     instr_loadQmlImportedScripts loadQmlImportedScripts;
     instr_loadQmlSingleton loadQmlSingleton;

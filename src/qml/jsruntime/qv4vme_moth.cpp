@@ -1084,10 +1084,6 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(Line)
 #endif // QT_NO_QML_DEBUGGER
 
-    MOTH_BEGIN_INSTR(LoadThis)
-        STORE_ACCUMULATOR(static_cast<ExecutionContext &>(frame.jsFrame->context).thisObject());
-    MOTH_END_INSTR(LoadThis)
-
     MOTH_BEGIN_INSTR(LoadQmlContext)
         STACK_VALUE(instr.result) = Runtime::method_loadQmlContext(static_cast<QV4::NoThrowEngine*>(engine));
     MOTH_END_INSTR(LoadQmlContext)
