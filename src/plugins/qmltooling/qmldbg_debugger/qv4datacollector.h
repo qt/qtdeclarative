@@ -62,7 +62,8 @@ public:
     static int encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType);
 
     QVector<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(int frame);
-    QV4::Heap::CallContext *findContext(int frame);
+    QV4::Heap::ExecutionContext *findContext(int frame);
+    QV4::CppStackFrame *findFrame(int frame);
 
     QV4DataCollector(QV4::ExecutionEngine *engine);
 

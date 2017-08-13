@@ -55,15 +55,21 @@
 
 QT_BEGIN_NAMESPACE
 
-QV4::Heap::CallContext *QV4DataCollector::findContext(int frame)
+QV4::CppStackFrame *QV4DataCollector::findFrame(int frame)
 {
     QV4::CppStackFrame *f = engine()->currentStackFrame;
     while (f && frame) {
         --frame;
         f = f->parent;
     }
+    return f;
+}
 
-    return f ? f->callContext() : 0;
+QV4::Heap::ExecutionContext *QV4DataCollector::findContext(int frame)
+{
+    QV4::CppStackFrame *f = findFrame(frame);
+
+    return f ? f->context()->d() : 0;
 }
 
 QV4::Heap::CallContext *QV4DataCollector::findScope(QV4::Heap::ExecutionContext *ctx, int scope)
@@ -82,7 +88,7 @@ QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeType
 {
     QVector<QV4::Heap::ExecutionContext::ContextType> types;
 
-    QV4::Heap::ExecutionContext *it = findContext(frame);
+    QV4::Heap::ExecutionContext *it = findFrame(frame)->context()->d();
 
     for (; it; it = it->outer)
         types.append(QV4::Heap::ExecutionContext::ContextType(it->type));
@@ -258,27 +264,26 @@ bool QV4DataCollector::collectScope(QJsonObject *dict, int frameNr, int scopeNr)
     QStringList names;
 
     QV4::Scope scope(engine());
+    QV4::CppStackFrame *frame = findFrame(frameNr);
+    if (frame->v4Function->canUseSimpleCall) {
+        if (!scopeNr) {
+            // ### collect locals from the stack frame
+        } else {
+            // the current call context is actually the parent's context
+            --scopeNr;
+        }
+    }
+
     QV4::Scoped<QV4::CallContext> ctxt(scope, findScope(findContext(frameNr), scopeNr));
     if (!ctxt)
         return false;
 
     Refs collectedRefs;
     QV4::ScopedValue v(scope);
-    int nFormals = ctxt->formalCount();
-    for (unsigned i = 0, ei = nFormals; i != ei; ++i) {
-        QString qName;
-        if (QV4::Identifier *name = ctxt->formals()[nFormals - i - 1])
-            qName = name->string;
-        names.append(qName);
-        v = ctxt->argument(i);
-        collectedRefs.append(collect(v));
-    }
-
-    for (unsigned i = 0, ei = ctxt->variableCount(); i != ei; ++i) {
-        QString qName;
-        if (QV4::Identifier *name = ctxt->variables()[i])
-            qName = name->string;
-        names.append(qName);
+    QV4::InternalClass *ic = ctxt->internalClass();
+    for (uint i = 0; i < ic->size; ++i) {
+        QString name = ic->nameMap[i]->string;
+        names.append(name);
         v = ctxt->d()->locals[i];
         collectedRefs.append(collect(v));
     }

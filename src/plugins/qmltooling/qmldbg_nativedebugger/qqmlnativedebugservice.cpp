@@ -312,19 +312,19 @@ void NativeDebugger::handleCommand(QJsonObject *response, const QString &cmd,
         handleContinue(response, NotStepping);
 }
 
-static QString encodeContext(QV4::ExecutionContext *executionContext)
+static QString encodeFrame(QV4::CppStackFrame *f)
 {
     QQmlDebugPacket ds;
-    ds << quintptr(executionContext);
+    ds << quintptr(f);
     return QString::fromLatin1(ds.data().toHex());
 }
 
-static void decodeContext(const QString &context, QV4::ExecutionContext **executionContext)
+static void decodeFrame(const QString &f, QV4::CppStackFrame **frame)
 {
-    quintptr rawContext;
-    QQmlDebugPacket ds(QByteArray::fromHex(context.toLatin1()));
-    ds >> rawContext;
-    *executionContext = reinterpret_cast<QV4::ExecutionContext *>(rawContext);
+    quintptr rawFrame;
+    QQmlDebugPacket ds(QByteArray::fromHex(f.toLatin1()));
+    ds >> rawFrame;
+    *frame = reinterpret_cast<QV4::CppStackFrame *>(rawFrame);
 }
 
 void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &arguments)
@@ -338,7 +338,7 @@ void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &a
 
         QJsonObject frame;
         frame.insert(QStringLiteral("language"), QStringLiteral("js"));
-        frame.insert(QStringLiteral("context"), encodeContext(nullptr /*####  context*/));
+        frame.insert(QStringLiteral("context"), encodeFrame(f));
 
         if (QV4::Heap::String *functionName = function->name())
             frame.insert(QStringLiteral("function"), functionName->toQString());
@@ -454,15 +454,15 @@ void Collector::collect(QJsonArray *out, const QString &parentIName, const QStri
 void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &arguments)
 {
     TRACE_PROTOCOL("Build variables");
-    QV4::ExecutionContext *executionContext = 0;
-    decodeContext(arguments.value(QLatin1String("context")).toString(), &executionContext);
-    if (!executionContext) {
-        setError(response, QStringLiteral("No execution context passed"));
+    QV4::CppStackFrame *frame = 0;
+    decodeFrame(arguments.value(QLatin1String("context")).toString(), &frame);
+    if (!frame) {
+        setError(response, QStringLiteral("No stack frame passed"));
         return;
     }
-    TRACE_PROTOCOL("Context: " << executionContext);
+    TRACE_PROTOCOL("Context: " << frame);
 
-    QV4::ExecutionEngine *engine = executionContext->engine();
+    QV4::ExecutionEngine *engine = frame->v4Function->internalClass->engine;
     if (!engine) {
         setError(response, QStringLiteral("No execution engine passed"));
         return;
@@ -478,28 +478,16 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
     QJsonArray output;
     QV4::Scope scope(engine);
 
-    if (QV4::CallContext *callContext = executionContext->asCallContext()) {
-        QV4::Value thisObject = callContext->thisObject();
-        collector.collect(&output, QString(), QStringLiteral("this"), thisObject);
-        QV4::Identifier *const *variables = callContext->variables();
-        QV4::Identifier *const *formals = callContext->formals();
-        if (callContext->d()->type == QV4::Heap::ExecutionContext::Type_CallContext) {
-            QV4::CallContext *ctx = static_cast<QV4::CallContext *>(callContext);
-            for (unsigned i = 0, ei = ctx->variableCount(); i != ei; ++i) {
-                QString qName;
-                if (QV4::Identifier *name = variables[i])
-                    qName = name->string;
-                QV4::Value val = ctx->d()->locals[i];
-                collector.collect(&output, QString(), qName, val);
-            }
-        }
-        for (unsigned i = 0, ei = callContext->formalCount(); i != ei; ++i) {
-            QString qName;
-            if (QV4::Identifier *name = formals[i])
-                qName = name->string;
-            QV4::ReturnedValue rval = callContext->argument(i);
-            QV4::ScopedValue sval(scope, rval);
-            collector.collect(&output, QString(), qName, *sval);
+    QV4::ScopedValue thisObject(scope, frame->thisObject());
+    collector.collect(&output, QString(), QStringLiteral("this"), thisObject);
+    QV4::Scoped<QV4::CallContext> callContext(scope, frame->callContext());
+    if (callContext) {
+        QV4::InternalClass *ic = callContext->internalClass();
+        QV4::ScopedValue v(scope);
+        for (uint i = 0; i < ic->size; ++i) {
+            QString name = ic->nameMap[i]->string;
+            v = callContext->d()->locals[i];
+            collector.collect(&output, QString(), name, v);
         }
     }
 
@@ -509,15 +497,15 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
 void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject &arguments)
 {
     TRACE_PROTOCOL("Evaluate expressions");
-    QV4::ExecutionContext *executionContext = 0;
-    decodeContext(arguments.value(QLatin1String("context")).toString(), &executionContext);
-    if (!executionContext) {
-        setError(response, QStringLiteral("No execution context passed"));
+    QV4::CppStackFrame *frame = 0;
+    decodeFrame(arguments.value(QLatin1String("context")).toString(), &frame);
+    if (!frame) {
+        setError(response, QStringLiteral("No stack frame passed"));
         return;
     }
     TRACE_PROTOCOL("Context: " << executionContext);
 
-    QV4::ExecutionEngine *engine = executionContext->engine();
+    QV4::ExecutionEngine *engine = frame->v4Function->internalClass->engine;
     if (!engine) {
         setError(response, QStringLiteral("No execution engine passed"));
         return;
