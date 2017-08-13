@@ -454,6 +454,10 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         accumulator = Encode::null();
     MOTH_END_INSTR(LoadNull)
 
+    MOTH_BEGIN_INSTR(LoadZero)
+        accumulator = Encode(static_cast<int>(0));
+    MOTH_END_INSTR(LoadZero)
+
     MOTH_BEGIN_INSTR(LoadTrue)
         accumulator = Encode(true);
     MOTH_END_INSTR(LoadTrue)

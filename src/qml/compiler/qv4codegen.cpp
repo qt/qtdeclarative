@@ -3040,6 +3040,11 @@ void Codegen::Reference::loadInAccumulator() const
                 double d = p.asDouble();
                 int i = static_cast<int>(d);
                 if (d == i && (d != 0 || !std::signbit(d))) {
+                    if (!i) {
+                        Instruction::LoadZero load;
+                        codegen->bytecodeGenerator->addInstruction(load);
+                        return;
+                    }
                     Instruction::LoadInt load;
                     load.value = Primitive::fromReturnedValue(constant).toInt32();
                     codegen->bytecodeGenerator->addInstruction(load);
