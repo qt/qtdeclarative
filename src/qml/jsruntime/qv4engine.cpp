@@ -399,7 +399,6 @@ ExecutionEngine::ExecutionEngine()
     // set up the global object
     //
     rootContext()->d()->activation.set(scope.engine, globalObject->d());
-    rootContext()->d()->callData->thisObject = globalObject;
     Q_ASSERT(globalObject->d()->vtable());
 
     globalObject->defineDefaultProperty(QStringLiteral("Object"), *objectCtor());
@@ -516,15 +515,9 @@ void ExecutionEngine::setProfiler(Profiling::Profiler *profiler)
 void ExecutionEngine::initRootContext()
 {
     Scope scope(this);
-    Scoped<ExecutionContext> r(scope, memoryManager->allocManaged<ExecutionContext>(
-                                sizeof(ExecutionContext::Data) + sizeof(CallData)));
+    Scoped<ExecutionContext> r(scope, memoryManager->allocManaged<ExecutionContext>(sizeof(ExecutionContext::Data)));
     r->d_unchecked()->init(Heap::ExecutionContext::Type_GlobalContext);
     r->d()->activation.set(this, globalObject->d());
-    r->d()->callData = reinterpret_cast<CallData *>(r->d() + 1);
-    r->d()->callData->tag = quint32(Value::ValueTypeInternal::Integer);
-    r->d()->callData->argc = 0;
-    r->d()->callData->thisObject = globalObject;
-    r->d()->callData->args[0] = Encode::undefined();
     jsObjects[RootContext] = r;
     jsObjects[IntegerNull] = Encode((int)0);
 }

@@ -95,7 +95,6 @@ Heap::ExecutionContext *ExecutionContext::newWithContext(Heap::Object *with)
     c->outer.set(engine(), d());
     c->activation.set(engine(), with);
 
-    c->callData = d()->callData;
     c->v4Function = d()->v4Function;
 
     return c;
@@ -156,7 +155,6 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
 {
     Heap::ExecutionContext::init(Heap::ExecutionContext::Type_CatchContext);
     outer.set(internalClass->engine, outerContext);
-    callData = outer->callData;
     v4Function = outer->v4Function;
 
     this->exceptionVarName.set(internalClass->engine, exceptionVarName);

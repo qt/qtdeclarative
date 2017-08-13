@@ -299,7 +299,6 @@ void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContex
 {
     Heap::ExecutionContext::init(Heap::ExecutionContext::Type_QmlContext);
     outer.set(internalClass->engine, outerContext->d());
-    callData = outer->callData;
     v4Function = outer->v4Function;
 
     this->activation.set(internalClass->engine, qml->d());

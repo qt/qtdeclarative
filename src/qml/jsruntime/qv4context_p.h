@@ -103,7 +103,6 @@ namespace Heap {
 struct QmlContext;
 
 #define ExecutionContextMembers(class, Member) \
-    Member(class, NoMark, CallData *, callData)  \
     Member(class, Pointer, ExecutionContext *, outer) \
     Member(class, Pointer, Object *, activation) \
     Member(class, NoMark, QV4::Function *, v4Function) \
@@ -137,12 +136,12 @@ V4_ASSERT_IS_TRIVIAL(ExecutionContext)
 Q_STATIC_ASSERT(sizeof(ExecutionContext) == sizeof(Base) + sizeof(ExecutionContextData) + QT_POINTER_SIZE);
 
 Q_STATIC_ASSERT(std::is_standard_layout<ExecutionContextData>::value);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, callData) == 0);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == offsetof(ExecutionContextData, callData) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == 0);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, activation) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, v4Function) == offsetof(ExecutionContextData, activation) + QT_POINTER_SIZE);
 
 #define CallContextMembers(class, Member) \
+    Member(class, NoMark, CallData *, callData)  \
     Member(class, Pointer, FunctionObject *, function) \
     Member(class, ValueArray, ValueArray, locals)
 
@@ -159,7 +158,8 @@ DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
 };
 V4_ASSERT_IS_TRIVIAL(CallContext)
 Q_STATIC_ASSERT(std::is_standard_layout<CallContextData>::value);
-Q_STATIC_ASSERT(offsetof(CallContextData, function) == 0);
+Q_STATIC_ASSERT(offsetof(CallContextData, callData) == 0);
+Q_STATIC_ASSERT(offsetof(CallContextData, function) == offsetof(CallContextData, callData) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(CallContextData, locals) == offsetof(CallContextData, function) + QT_POINTER_SIZE);
 //### The following size check fails on Win8. With the ValueArray at the end of the
 // CallContextMembers, it doesn't look very useful.
@@ -215,18 +215,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     Function *getFunction() const;
 
-    Value &thisObject() const {
-        return d()->callData->thisObject;
-    }
-    int argc() const {
-        return d()->callData->argc;
-    }
-    const Value *args() const {
-        return d()->callData->args;
-    }
-    ReturnedValue argument(int i) const {
-        return d()->callData->argument(i);
-    }
 };
 
 struct Q_QML_EXPORT CallContext : public ExecutionContext
@@ -240,12 +228,19 @@ struct Q_QML_EXPORT CallContext : public ExecutionContext
     Identifier * const *variables() const;
     unsigned int variableCount() const;
 
-    inline ReturnedValue argument(int i) const;
+    Value &thisObject() const {
+        return d()->callData->thisObject;
+    }
+    int argc() const {
+        return d()->callData->argc;
+    }
+    const Value *args() const {
+        return d()->callData->args;
+    }
+    ReturnedValue argument(int i) const {
+        return d()->callData->argument(i);
+    }
 };
-
-inline ReturnedValue CallContext::argument(int i) const {
-    return i < argc() ? args()[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
-}
 
 struct CatchContext : public ExecutionContext
 {
