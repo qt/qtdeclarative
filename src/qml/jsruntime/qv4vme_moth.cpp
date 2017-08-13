@@ -397,17 +397,18 @@ static inline ReturnedValue loadScopedArg(CppStackFrame &frame, int index, int s
     auto ctxt = getScope(frame.jsFrame, scope);
     Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
     auto cc = static_cast<Heap::CallContext *>(ctxt);
-    return cc->callData->args[index].asReturnedValue();
+    return cc->args()[index].asReturnedValue();
 }
 
 static inline void storeScopedArg(ExecutionEngine *engine, CppStackFrame &frame, int index, int scope,
                                   const QV4::Value &value)
 {
+    Q_UNUSED(engine);
     auto ctxt = getScope(frame.jsFrame, scope);
     Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
     auto cc = static_cast<Heap::CallContext *>(ctxt);
 
-    QV4::WriteBarrier::write(engine, cc, cc->callData->args + index, value);
+    cc->setArg(index, value);
 }
 
 static inline const QV4::Value &constant(Function *function, int index)

@@ -60,28 +60,18 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     Q_UNUSED(engine);
 
     internalClass = engine->internalClasses[EngineBase::Class_CallContext];
-    const CompiledData::LEUInt32 *formalsIndices = compiledFunction->formalsTable();
-    // iterate backwards, so we get the right ordering for duplicate names
-    Scope scope(engine);
-    ScopedString arg(scope);
-    for (int i = static_cast<int>(compiledFunction->nFormals - 1); i >= 0; --i) {
-        arg = compilationUnit->runtimeStrings[formalsIndices[i]];
-        while (1) {
-            InternalClass *newClass = internalClass->addMember(arg, Attr_NotConfigurable);
-            if (newClass != internalClass) {
-                internalClass = newClass;
-                break;
-            }
-            // duplicate arguments, need some trick to store them
-            MemoryManager *mm = engine->memoryManager;
-            arg = mm->alloc<String>(arg->d(), engine->newString(QString(0xfffe)));
-        }
-    }
-    nFormals = compiledFunction->nFormals;
 
+    // first locals
     const CompiledData::LEUInt32 *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
         internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
+
+    const CompiledData::LEUInt32 *formalsIndices = compiledFunction->formalsTable();
+    for (quint32 i = 0; i < compiledFunction->nFormals; ++i)
+        internalClass = internalClass->addMember(compilationUnit->runtimeStrings[formalsIndices[i]]->identifier, Attr_NotConfigurable);
+
+    nFormals = compiledFunction->nFormals;
+
 
     canUseSimpleCall = compiledFunction->flags & CompiledData::Function::CanUseSimpleCall;
 }

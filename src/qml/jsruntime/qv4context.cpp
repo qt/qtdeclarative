@@ -58,7 +58,7 @@ DEFINE_MANAGED_VTABLE(CatchContext);
 Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *outer, Function *function, CallData *callData, const FunctionObject *f)
 {
     uint nFormals = qMax(static_cast<uint>(callData->argc), function->nFormals);
-    uint localsAndFormals = function->compiledFunction->nLocals + sizeof(CallData)/sizeof(Value) - 1 + nFormals;
+    uint localsAndFormals = function->compiledFunction->nLocals + nFormals;
     size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * (localsAndFormals);
 
     ExecutionEngine *v4 = outer->internalClass->engine;
@@ -83,8 +83,8 @@ Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *oute
         std::fill(c->locals.values, c->locals.values + nLocals, Primitive::undefinedValue());
 #endif
 
-    c->callData = reinterpret_cast<CallData *>(c->locals.values + nLocals);
-    ::memcpy(c->callData, callData, sizeof(CallData) - sizeof(Value) + nFormals * sizeof(Value));
+    ::memcpy(c->locals.values + nLocals, &callData->args[0], nFormals * sizeof(Value));
+    c->nArgs = callData->argc;
 
     return c;
 }
@@ -161,28 +161,6 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
     this->exceptionValue.set(internalClass->engine, exceptionValue);
 }
 
-Identifier * const *CallContext::formals() const
-{
-    return d()->v4Function ? d()->internalClass->nameMap.constData() : 0;
-}
-
-unsigned int CallContext::formalCount() const
-{
-    return d()->v4Function ? d()->v4Function->nFormals : 0;
-}
-
-Identifier * const *CallContext::variables() const
-{
-    return d()->v4Function ? d()->internalClass->nameMap.constData() + d()->v4Function->nFormals : 0;
-}
-
-unsigned int CallContext::variableCount() const
-{
-    return d()->v4Function ? d()->v4Function->compiledFunction->nLocals : 0;
-}
-
-
-
 bool ExecutionContext::deleteProperty(String *name)
 {
     name->makeIdentifier();
@@ -257,13 +235,7 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
             if (c->v4Function) {
                 uint index = c->internalClass->find(id);
                 if (index < UINT_MAX) {
-                    if (index < c->v4Function->nFormals) {
-                        c->callData->args[c->v4Function->nFormals - index - 1] = value;
-                    } else {
-                        Q_ASSERT(c->type == Heap::ExecutionContext::Type_CallContext);
-                        index -= c->v4Function->nFormals;
-                        static_cast<Heap::CallContext *>(c)->locals.set(v4, index, value);
-                    }
+                    static_cast<Heap::CallContext *>(c)->locals.set(v4, index, value);
                     return NoError;
                 }
             }
@@ -314,12 +286,8 @@ ReturnedValue ExecutionContext::getProperty(String *name)
             Identifier *id = name->identifier();
 
             uint index = c->internalClass->find(id);
-            if (index < UINT_MAX) {
-                if (index < c->v4Function->nFormals)
-                    return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();
-                Q_ASSERT(c->type == Heap::ExecutionContext::Type_CallContext);
-                return c->locals[index - c->v4Function->nFormals].asReturnedValue();
-            }
+            if (index < UINT_MAX)
+                return c->locals[index].asReturnedValue();
             if (c->v4Function->isNamedExpression()) {
                 Scope scope(this);
                 if (c->function && name->equals(ScopedString(scope, c->v4Function->name())))
@@ -365,11 +333,8 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
             Identifier *id = name->identifier();
 
             uint index = c->internalClass->find(id);
-            if (index < UINT_MAX) {
-                if (index < c->v4Function->nFormals)
-                    return c->callData->args[c->v4Function->nFormals - index - 1].asReturnedValue();
-                return c->locals[index - c->v4Function->nFormals].asReturnedValue();
-            }
+            if (index < UINT_MAX)
+                return c->locals[index].asReturnedValue();
             if (c->v4Function->isNamedExpression()) {
                 Scope scope(this);
                 if (c->function && name->equals(ScopedString(scope, c->v4Function->name())))
@@ -420,4 +385,10 @@ Function *ExecutionContext::getFunction() const
     }
 
     return 0;
+}
+
+
+void Heap::CallContext::setArg(uint index, Value v)
+{
+    locals.set(internalClass->engine, locals.size + index, v);
 }

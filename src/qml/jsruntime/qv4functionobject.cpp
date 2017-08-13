@@ -290,8 +290,8 @@ ReturnedValue FunctionPrototype::method_apply(const BuiltinFunction *b, CallData
     if (len) {
         if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
             QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();
-            int l = qMin(len, (uint)a->d()->context->callData->argc);
-            memcpy(cData->args, a->d()->context->callData->args, l*sizeof(Value));
+            int l = qMin(len, (uint)a->d()->context->argc());
+            memcpy(cData->args, a->d()->context->args(), l*sizeof(Value));
             for (quint32 i = l; i < len; ++i)
                 cData->args[i] = Primitive::undefinedValue();
         } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {

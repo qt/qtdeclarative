@@ -408,11 +408,20 @@ void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
 
     for (FormalParameterList *it = formals; it; it = it->next) {
         QString arg = it->name.toString();
-        if (_context->isStrict) {
-            if (_context->arguments.contains(arg)) {
+        int duplicateIndex = _context->arguments.indexOf(arg);
+        if (duplicateIndex != -1) {
+            if (_context->isStrict) {
                 _cg->throwSyntaxError(it->identifierToken, QStringLiteral("Duplicate parameter name '%1' is not allowed in strict mode").arg(arg));
                 return;
+            } else {
+                // change the name of the earlier argument to enforce the specified lookup semantics
+                QString modified = arg;
+                while (_context->arguments.contains(modified))
+                    modified += QString(0xfffe);
+                _context->arguments[duplicateIndex] = modified;
             }
+        }
+        if (_context->isStrict) {
             if (arg == QLatin1String("eval") || arg == QLatin1String("arguments")) {
                 _cg->throwSyntaxError(it->identifierToken, QStringLiteral("'%1' cannot be used as parameter name in strict mode").arg(arg));
                 return;

@@ -75,7 +75,7 @@ void Heap::ArgumentsObject::init(QV4::CallContext *context, bool strict)
         args->setProperty(CalleePropertyIndex, context->d()->function);
     }
     Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(v4->id_length()));
-    args->setProperty(LengthPropertyIndex, Primitive::fromInt32(context->d()->callData->argc));
+    args->setProperty(LengthPropertyIndex, Primitive::fromInt32(context->argc()));
 }
 
 void ArgumentsObject::fullyCreate()
@@ -85,7 +85,7 @@ void ArgumentsObject::fullyCreate()
 
     Scope scope(engine());
 
-    uint argCount = context()->callData->argc;
+    uint argCount = context()->argc();
     uint numAccessors = qMin(context()->formalParameterCount(), argCount);
     ArrayData::realloc(this, Heap::ArrayData::Sparse, argCount, true);
     scope.engine->requireArgumentsAccessors(numAccessors);
@@ -94,11 +94,11 @@ void ArgumentsObject::fullyCreate()
     if (numAccessors) {
         d()->mappedArguments.set(scope.engine, md->allocate(scope.engine, numAccessors));
         for (uint i = 0; i < numAccessors; ++i) {
-            d()->mappedArguments->values.set(scope.engine, i, context()->callData->args[i]);
+            d()->mappedArguments->values.set(scope.engine, i, context()->args()[i]);
             arraySet(i, scope.engine->argumentsAccessors + i, Attr_Accessor);
         }
     }
-    arrayPut(numAccessors, context()->callData->args + numAccessors, argCount - numAccessors);
+    arrayPut(numAccessors, context()->args() + numAccessors, argCount - numAccessors);
     for (uint i = numAccessors; i < argCount; ++i)
         setArrayAttributes(i, Attr_Data);
 
@@ -112,7 +112,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     Scope scope(engine);
     ScopedProperty map(scope);
     PropertyAttributes mapAttrs;
-    uint numAccessors = qMin(context()->formalParameterCount(), static_cast<uint>(context()->callData->argc));
+    uint numAccessors = qMin(context()->formalParameterCount(), static_cast<uint>(context()->argc()));
     bool isMapped = false;
     if (arrayData() && index < numAccessors &&
         arrayData()->attributes(index).isAccessor() &&
@@ -158,10 +158,10 @@ ReturnedValue ArgumentsObject::getIndexed(const Managed *m, uint index, bool *ha
     if (args->fullyCreated())
         return Object::getIndexed(m, index, hasProperty);
 
-    if (index < static_cast<uint>(args->context()->callData->argc)) {
+    if (index < static_cast<uint>(args->context()->argc())) {
         if (hasProperty)
             *hasProperty = true;
-        return args->context()->callData->args[index].asReturnedValue();
+        return args->context()->args()[index].asReturnedValue();
     }
     if (hasProperty)
         *hasProperty = false;
@@ -171,13 +171,13 @@ ReturnedValue ArgumentsObject::getIndexed(const Managed *m, uint index, bool *ha
 bool ArgumentsObject::putIndexed(Managed *m, uint index, const Value &value)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
-    if (!args->fullyCreated() && index >= static_cast<uint>(args->context()->callData->argc))
+    if (!args->fullyCreated() && index >= static_cast<uint>(args->context()->argc()))
         args->fullyCreate();
 
     if (args->fullyCreated())
         return Object::putIndexed(m, index, value);
 
-    args->context()->callData->args[index] = value;
+    args->context()->setArg(index, value);
     return true;
 }
 
@@ -195,8 +195,8 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
     if (args->fullyCreated())
         return Object::queryIndexed(m, index);
 
-    uint numAccessors = qMin((int)args->context()->formalParameterCount(), args->context()->callData->argc);
-    uint argCount = args->context()->callData->argc;
+    uint numAccessors = qMin((int)args->context()->formalParameterCount(), args->context()->argc());
+    uint argCount = args->context()->argc();
     if (index >= argCount)
         return PropertyAttributes();
     if (index >= numAccessors)
@@ -215,8 +215,8 @@ ReturnedValue ArgumentsGetterFunction::call(const Managed *getter, CallData *cal
     if (!o)
         return v4->throwTypeError();
 
-    Q_ASSERT(g->index() < static_cast<unsigned>(o->context()->callData->argc));
-    return o->context()->callData->args[g->index()].asReturnedValue();
+    Q_ASSERT(g->index() < static_cast<unsigned>(o->context()->argc()));
+    return o->context()->args()[g->index()].asReturnedValue();
 }
 
 DEFINE_OBJECT_VTABLE(ArgumentsSetterFunction);
@@ -230,8 +230,8 @@ ReturnedValue ArgumentsSetterFunction::call(const Managed *setter, CallData *cal
     if (!o)
         return v4->throwTypeError();
 
-    Q_ASSERT(s->index() < static_cast<unsigned>(o->context()->callData->argc));
-    o->context()->callData->args[s->index()] = callData->argc ? callData->args[0].asReturnedValue() : Encode::undefined();
+    Q_ASSERT(s->index() < static_cast<unsigned>(o->context()->argc()));
+    o->context()->setArg(s->index(), (callData->argc ? callData->args[0] : Primitive::undefinedValue()));
     return Encode::undefined();
 }
 
