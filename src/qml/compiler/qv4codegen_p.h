@@ -163,7 +163,6 @@ public:
             Accumulator,
             StackSlot,
             ScopedLocal,
-            ScopedArgument,
             Name,
             Member,
             Subscript,
@@ -225,12 +224,6 @@ public:
         }
         static Reference fromScopedLocal(Codegen *cg, int index, int scope) {
             Reference r(cg, ScopedLocal);
-            r.index = index;
-            r.scope = scope;
-            return r;
-        }
-        static Reference fromScopedArgument(Codegen *cg, int index, int scope) {
-            Reference r(cg, ScopedArgument);
             r.index = index;
             r.scope = scope;
             return r;

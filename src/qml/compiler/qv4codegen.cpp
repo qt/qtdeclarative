@@ -1239,7 +1239,6 @@ bool Codegen::visit(DeleteExpression *ast)
         if (!expr.stackSlotIsLocalOrArgument)
             break;
         // fall through
-    case Reference::ScopedArgument:
     case Reference::ScopedLocal:
         // Trying to delete a function argument might throw.
         if (_context->isStrict) {
@@ -1367,7 +1366,8 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
         const int argIdx = c->findArgument(name);
         if (argIdx != -1) {
             if (c->argumentsCanEscape || c->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-                return Reference::fromScopedArgument(this, argIdx, scope);
+                int idx = argIdx + c->locals.size();
+                return Reference::fromScopedLocal(this, idx, scope);
             } else {
                 Q_ASSERT(scope == 0);
                 return Reference::fromArgument(this, argIdx);
@@ -1985,7 +1985,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     if (showCode) {
         qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
                  << "register count" << _context->registerCount;
-        QV4::Moth::dumpBytecode(_context->code, _context->arguments.size());
+        QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size());
         qDebug();
     }
 
@@ -2760,7 +2760,6 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         theStackSlot = other.theStackSlot;
         break;
     case ScopedLocal:
-    case ScopedArgument:
         index = other.index;
         scope = other.scope;
         break;
@@ -2812,7 +2811,6 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     case StackSlot:
         return theStackSlot == other.theStackSlot;
     case ScopedLocal:
-    case ScopedArgument:
         return index == other.index && scope == other.scope;
     case Name:
         return unqualifiedNameIndex == other.unqualifiedNameIndex;
@@ -2936,7 +2934,6 @@ bool Codegen::Reference::storeWipesAccumulator() const
         return false;
     case StackSlot:
     case ScopedLocal:
-    case ScopedArgument:
         return false;
     case Name:
     case Member:
@@ -2959,13 +2956,6 @@ void Codegen::Reference::storeAccumulator() const
     }
     case ScopedLocal: {
         Instruction::StoreScopedLocal store;
-        store.index = index;
-        store.scope = scope;
-        codegen->bytecodeGenerator->addInstruction(store);
-        return;
-    }
-    case ScopedArgument: {
-        Instruction::StoreScopedArgument store;
         store.index = index;
         store.scope = scope;
         codegen->bytecodeGenerator->addInstruction(store);
@@ -3068,13 +3058,6 @@ void Codegen::Reference::loadInAccumulator() const
     } return;
     case ScopedLocal: {
         Instruction::LoadScopedLocal load;
-        load.index = index;
-        load.scope = scope;
-        codegen->bytecodeGenerator->addInstruction(load);
-        return;
-    }
-    case ScopedArgument: {
-        Instruction::LoadScopedArgument load;
         load.index = index;
         load.scope = scope;
         codegen->bytecodeGenerator->addInstruction(load);

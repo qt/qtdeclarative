@@ -109,7 +109,7 @@ void dumpConstantTable(const Value *constants, uint count)
           << toString(constants[i].asReturnedValue()).toUtf8().constData() << "\n";
 }
 
-void dumpBytecode(const char *code, int len, int nFormals)
+void dumpBytecode(const char *code, int len, int nLocals, int nFormals)
 {
     const char *start = code;
     const char *end = code + len;
@@ -154,20 +154,18 @@ void dumpBytecode(const char *code, int len, int nFormals)
         MOTH_END_INSTR(MoveConst)
 
         MOTH_BEGIN_INSTR(LoadScopedLocal)
-            d << "l" << instr.index << "@" << instr.scope;
+            if (instr.index < nLocals)
+                d << "l" << instr.index << "@" << instr.scope;
+            else
+                d << "a" << (instr.index - nLocals) << "@" << instr.scope;
         MOTH_END_INSTR(LoadScopedLocal)
 
         MOTH_BEGIN_INSTR(StoreScopedLocal)
-            d << ", " << "l" << instr.index << "@" << instr.scope;
+            if (instr.index < nLocals)
+                d << ", " << "l" << instr.index << "@" << instr.scope;
+            else
+                d << ", " << "a" << (instr.index - nLocals) << "@" << instr.scope;
         MOTH_END_INSTR(StoreScopedLocal)
-
-        MOTH_BEGIN_INSTR(LoadScopedArgument)
-            d <<  "a" << instr.index << "@" << instr.scope;
-        MOTH_END_INSTR(LoadScopedArgument)
-
-        MOTH_BEGIN_INSTR(StoreScopedArgument)
-            d << "a" << instr.index << "@" << instr.scope;
-        MOTH_END_INSTR(StoreScopedArgument)
 
         MOTH_BEGIN_INSTR(LoadRuntimeString)
             d << instr.stringId;

@@ -392,25 +392,6 @@ static inline void storeScopedLocal(ExecutionEngine *engine, CppStackFrame &fram
     QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, value);
 }
 
-static inline ReturnedValue loadScopedArg(CppStackFrame &frame, int index, int scope)
-{
-    auto ctxt = getScope(frame.jsFrame, scope);
-    Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
-    auto cc = static_cast<Heap::CallContext *>(ctxt);
-    return cc->args()[index].asReturnedValue();
-}
-
-static inline void storeScopedArg(ExecutionEngine *engine, CppStackFrame &frame, int index, int scope,
-                                  const QV4::Value &value)
-{
-    Q_UNUSED(engine);
-    auto ctxt = getScope(frame.jsFrame, scope);
-    Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
-    auto cc = static_cast<Heap::CallContext *>(ctxt);
-
-    cc->setArg(index, value);
-}
-
 static inline const QV4::Value &constant(Function *function, int index)
 {
     return function->compilationUnit->constants[index];
@@ -513,15 +494,6 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         CHECK_EXCEPTION;
         storeScopedLocal(engine, frame, instr.index, instr.scope, accumulator);
     MOTH_END_INSTR(StoreScopedLocal)
-
-    MOTH_BEGIN_INSTR(LoadScopedArgument)
-        accumulator = loadScopedArg(frame, instr.index, instr.scope);
-    MOTH_END_INSTR(LoadScopedArgument)
-
-    MOTH_BEGIN_INSTR(StoreScopedArgument)
-        CHECK_EXCEPTION;
-        storeScopedArg(engine, frame, instr.index, instr.scope, accumulator);
-    MOTH_END_INSTR(StoreScopedArgument)
 
     MOTH_BEGIN_INSTR(LoadRuntimeString)
         accumulator = function->compilationUnit->runtimeStrings[instr.stringId];

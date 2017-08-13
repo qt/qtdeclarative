@@ -83,8 +83,6 @@ QT_BEGIN_NAMESPACE
     F(MoveReg, moveReg) \
     F(LoadScopedLocal, loadScopedLocal) \
     F(StoreScopedLocal, storeScopedLocal) \
-    F(LoadScopedArgument, loadScopedArgument) \
-    F(StoreScopedArgument, storeScopedArgument) \
     F(LoadRuntimeString, loadRuntimeString) \
     F(LoadRegExp, loadRegExp) \
     F(LoadClosure, loadClosure) \
@@ -236,9 +234,9 @@ inline bool operator!=(const StackSlot &l, const StackSlot &r) { return l.stackS
 // When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
 
 void dumpConstantTable(const Value *constants, uint count);
-void dumpBytecode(const char *bytecode, int len, int nFormals);
-inline void dumpBytecode(const QByteArray &bytecode, int nFormals) {
-    dumpBytecode(bytecode.constData(), bytecode.length(), nFormals);
+void dumpBytecode(const char *bytecode, int len, int nLocals, int nFormals);
+inline void dumpBytecode(const QByteArray &bytecode, int nLocals, int nFormals) {
+    dumpBytecode(bytecode.constData(), bytecode.length(), nLocals, nFormals);
 }
 
 union Instr
@@ -310,16 +308,6 @@ union Instr
         int index;
     };
     struct instr_storeScopedLocal {
-        MOTH_INSTR_HEADER
-        int scope;
-        int index;
-    };
-    struct instr_loadScopedArgument {
-        MOTH_INSTR_HEADER
-        int scope;
-        int index;
-    };
-    struct instr_storeScopedArgument {
         MOTH_INSTR_HEADER
         int scope;
         int index;
@@ -739,8 +727,6 @@ union Instr
     instr_moveReg moveReg;
     instr_loadScopedLocal loadScopedLocal;
     instr_storeScopedLocal storeScopedLocal;
-    instr_loadScopedArgument loadScopedArgument;
-    instr_storeScopedArgument storeScopedArgument;
     instr_loadRuntimeString loadRuntimeString;
     instr_loadRegExp loadRegExp;
     instr_loadClosure loadClosure;
