@@ -38,6 +38,9 @@
 #include <QtCore/QDebug>
 #include <QtQml/qqmlengine.h>
 
+#include <QtWidgets/QBoxLayout>
+#include <QtWidgets/QLabel>
+
 #include <QtQuickWidgets/QQuickWidget>
 
 class tst_qquickwidget : public QQmlDataTest
@@ -51,6 +54,7 @@ private slots:
     void reparentAfterShow();
     void changeGeometry();
     void resizemodeitem();
+    void layoutSizeChange();
     void errors();
     void engine();
     void readback();
@@ -223,6 +227,39 @@ void tst_qquickwidget::resizemodeitem()
     QTRY_COMPARE(view->size(), QSize(300, 300));
     QCOMPARE(view->size(), view->sizeHint());
     QCOMPARE(view->initialSize(), QSize(200, 200)); // initial object size
+}
+
+void tst_qquickwidget::layoutSizeChange()
+{
+    QWidget window;
+    window.resize(400, 400);
+
+    QVBoxLayout *layout = new QVBoxLayout(&window);
+    layout->setContentsMargins(0,0,0,0);
+    layout->setSpacing(0);
+    QScopedPointer<QQuickWidget> view(new QQuickWidget);
+    layout->addWidget(view.data());
+    QLabel *label = new QLabel("Label");
+    layout->addWidget(label);
+    layout->addStretch(1);
+
+
+    view->resize(300,300);
+    view->setResizeMode(QQuickWidget::SizeViewToRootObject);
+    QCOMPARE(QSize(0,0), view->initialSize());
+    view->setSource(testFileUrl("rectangle.qml"));
+    QQuickItem* item = qobject_cast<QQuickItem*>(view->rootObject());
+    QVERIFY(item);
+    QCOMPARE(item->height(), 200.0);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window, 5000));
+    QTRY_COMPARE(view->height(), 200);
+    QTRY_COMPARE(label->y(), 200);
+
+    item->setSize(QSizeF(100,100));
+    QCOMPARE(item->height(), 100.0);
+    QTRY_COMPARE(view->height(), 100);
+    QTRY_COMPARE(label->y(), 100);
 }
 
 void tst_qquickwidget::errors()

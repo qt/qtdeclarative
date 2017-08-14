@@ -768,6 +768,7 @@ void QQuickWidgetPrivate::updateSize()
         QSize newSize = QSize(root->width(), root->height());
         if (newSize.isValid() && newSize != q->size()) {
             q->resize(newSize);
+            q->updateGeometry();
         }
     } else if (resizeMode == QQuickWidget::SizeRootObjectToView) {
         bool needToUpdateWidth = !qFuzzyCompare(q->width(), root->width());
