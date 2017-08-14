@@ -98,7 +98,6 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
     Q_ASSERT(point);
     if (grabber == this) {
         bool wasCanceled = false;
-        emit grabChanged(point);
         switch (stateChange) {
         case QQuickEventPoint::GrabPassive:
         case QQuickEventPoint::GrabExclusive:
@@ -115,6 +114,7 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
                 par->setKeepMouseGrab(m_hadKeepMouseGrab);
                 par->setKeepTouchGrab(m_hadKeepTouchGrab);
             }
+            break;
         case QQuickEventPoint::OverrideGrabPassive:
             // Passive grab is still there, but we won't receive point updates right now.
             // No need to notify about this.
