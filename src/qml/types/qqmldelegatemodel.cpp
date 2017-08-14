@@ -269,7 +269,8 @@ QQmlDelegateModel::~QQmlDelegateModel()
             delete cacheItem->object;
 
             cacheItem->object = 0;
-            cacheItem->contextData->destroy();
+            cacheItem->contextData->invalidate();
+            Q_ASSERT(cacheItem->contextData->refCount == 1);
             cacheItem->contextData = 0;
             cacheItem->scriptRef -= 1;
         }
@@ -840,7 +841,8 @@ void QQDMIncubationTask::statusChanged(Status status)
         delete incubating->object;
         incubating->object = 0;
         if (incubating->contextData) {
-            incubating->contextData->destroy();
+            incubating->contextData->invalidate();
+            Q_ASSERT(incubating->contextData->refCount == 1);
             incubating->contextData = 0;
         }
         incubating->scriptRef = 0;
@@ -900,8 +902,10 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
         delete cacheItem->object;
         cacheItem->object = 0;
         cacheItem->scriptRef -= 1;
-        if (cacheItem->contextData)
-            cacheItem->contextData->destroy();
+        if (cacheItem->contextData) {
+            cacheItem->contextData->invalidate();
+            Q_ASSERT(cacheItem->contextData->refCount == 1);
+        }
         cacheItem->contextData = 0;
 
         if (!cacheItem->isReferenced()) {
@@ -983,7 +987,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
             if (QQmlAdaptorModelProxyInterface *proxy
                     = qobject_cast<QQmlAdaptorModelProxyInterface *>(cacheItem)) {
                 ctxt = new QQmlContextData;
-                ctxt->setParent(cacheItem->contextData, true);
+                ctxt->setParent(cacheItem->contextData);
                 ctxt->contextObject = proxy->proxiedObject();
             }
         }
@@ -1966,8 +1970,11 @@ void QQmlDelegateModelItem::destroyObject()
 
     QQmlData *data = QQmlData::get(object);
     Q_ASSERT(data);
-    if (data->ownContext && data->context)
-        data->context->clearContext();
+    if (data->ownContext) {
+        data->ownContext->clearContext();
+        data->ownContext = 0;
+        data->context = 0;
+    }
     object->deleteLater();
 
     if (attached) {
@@ -1975,7 +1982,7 @@ void QQmlDelegateModelItem::destroyObject()
         attached = 0;
     }
 
-    contextData->destroy();
+    contextData->invalidate();
     contextData = 0;
     object = 0;
 }

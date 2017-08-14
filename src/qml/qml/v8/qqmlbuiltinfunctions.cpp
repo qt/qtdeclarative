@@ -1150,6 +1150,10 @@ void QtObject::method_createQmlObject(const BuiltinFunction *, Scope &scope, Cal
     if (!component.isReady())
         THROW_GENERIC_ERROR("Qt.createQmlObject(): Component is not ready");
 
+    if (!effectiveContext->isValid()) {
+        THROW_GENERIC_ERROR("Qt.createQmlObject(): Cannot create a component in an invalid context");
+    }
+
     QObject *obj = component.beginCreate(effectiveContext);
     if (obj) {
         QQmlData::get(obj, true)->explicitIndestructibleSet = false;

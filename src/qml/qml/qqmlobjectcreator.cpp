@@ -1131,7 +1131,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             c->linkedContext = context;
         } else
             context->addObject(instance);
-        ddata->ownContext = true;
+        ddata->ownContext = ddata->context;
     } else if (!ddata->context)
         context->addObject(instance);
 

@@ -2817,7 +2817,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
         effectiveCtxt = 0;
 
     // Create the script context if required
-    QQmlContextData *ctxt = new QQmlContextData;
+    QQmlContextDataRef ctxt(new QQmlContextData);
     ctxt->isInternal = true;
     ctxt->isJSContext = true;
     if (shared)
@@ -2837,7 +2837,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
     }
 
     if (effectiveCtxt) {
-        ctxt->setParent(effectiveCtxt, true);
+        ctxt->setParent(effectiveCtxt);
     } else {
         ctxt->engine = parentCtxt->engine; // Fix for QTBUG-21620
     }
@@ -2859,12 +2859,10 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
     if (!m_program) {
         if (shared)
             m_loaded = true;
-        ctxt->destroy();
         return QV4::Encode::undefined();
     }
 
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, 0));
-    qmlContext->takeContextOwnership();
 
     m_program->qmlContext.set(scope.engine, qmlContext);
     m_program->run();
