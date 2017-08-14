@@ -826,26 +826,23 @@ QVector2D QQuickEventPoint::estimatedVelocity() const
         prevPoint->pos = QPointF();
         g_previousPointData->insert(m_pointId, prevPoint);
     }
-    if (prevPoint) {
-        const ulong timeElapsed = m_timestamp - prevPoint->timestamp;
-        if (timeElapsed == 0)   // in case we call estimatedVelocity() twice on the same QQuickEventPoint
-            return m_velocity;
+    const ulong timeElapsed = m_timestamp - prevPoint->timestamp;
+    if (timeElapsed == 0)   // in case we call estimatedVelocity() twice on the same QQuickEventPoint
+        return m_velocity;
 
-        QVector2D newVelocity;
-        if (prevPoint->timestamp != 0)
-            newVelocity = QVector2D(m_scenePos - prevPoint->pos)/timeElapsed;
+    QVector2D newVelocity;
+    if (prevPoint->timestamp != 0)
+        newVelocity = QVector2D(m_scenePos - prevPoint->pos)/timeElapsed;
 
-        // VERY simple kalman filter: does a weighted average
-        // where the older velocities get less and less significant
-        static const float KalmanGain = 0.7f;
-        QVector2D filteredVelocity = newVelocity * KalmanGain + m_velocity * (1.0f - KalmanGain);
+    // VERY simple kalman filter: does a weighted average
+    // where the older velocities get less and less significant
+    static const float KalmanGain = 0.7f;
+    QVector2D filteredVelocity = newVelocity * KalmanGain + m_velocity * (1.0f - KalmanGain);
 
-        prevPoint->velocity = filteredVelocity;
-        prevPoint->pos = m_scenePos;
-        prevPoint->timestamp = m_timestamp;
-        return filteredVelocity;
-    }
-    return QVector2D();
+    prevPoint->velocity = filteredVelocity;
+    prevPoint->pos = m_scenePos;
+    prevPoint->timestamp = m_timestamp;
+    return filteredVelocity;
 }
 
 /*!
