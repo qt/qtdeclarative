@@ -65,6 +65,7 @@ QT_BEGIN_NAMESPACE
 class QQmlAbstractBinding;
 struct QQmlTypeCompiler;
 class QQmlInstantiationInterrupt;
+class QQmlIncubatorPrivate;
 
 struct QQmlObjectCreatorSharedState : public QSharedData
 {
@@ -84,7 +85,7 @@ class QQmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlObjectCreator)
 public:
-    QQmlObjectCreator(QQmlContextData *parentContext, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlContextData *creationContext, void *activeVMEDataForRootContext = 0);
+    QQmlObjectCreator(QQmlContextData *parentContext, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlContextData *creationContext, QQmlIncubatorPrivate  *incubator = 0);
     ~QQmlObjectCreator();
 
     QObject *create(int subComponentIndex = -1, QObject *parent = 0, QQmlInstantiationInterrupt *interrupt = 0);
@@ -143,7 +144,7 @@ private:
     const QQmlPropertyCacheVector *propertyCaches;
     QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
     bool topLevelCreator;
-    void *activeVMEDataForRootContext;
+    QQmlIncubatorPrivate *incubator;
 
     QObject *_qobject;
     QObject *_scopeObject;

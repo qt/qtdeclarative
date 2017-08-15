@@ -70,14 +70,15 @@ struct ActiveOCRestorer
 };
 }
 
-QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlContextData *creationContext, void *activeVMEDataForRootContext)
+QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlContextData *creationContext,
+                                     QQmlIncubatorPrivate *incubator)
     : phase(Startup)
     , compilationUnit(compilationUnit)
     , resolvedTypes(compilationUnit->resolvedTypes)
     , propertyCaches(&compilationUnit->propertyCaches)
     , sharedState(new QQmlObjectCreatorSharedState)
     , topLevelCreator(true)
-    , activeVMEDataForRootContext(activeVMEDataForRootContext)
+    , incubator(incubator)
 {
     init(parentContext);
 
@@ -104,7 +105,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::Compil
     , propertyCaches(&compilationUnit->propertyCaches)
     , sharedState(inheritedSharedState)
     , topLevelCreator(false)
-    , activeVMEDataForRootContext(0)
+    , incubator(0)
 {
     init(parentContext);
 }
@@ -176,7 +177,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
 
     if (!sharedState->rootContext) {
         sharedState->rootContext = context;
-        sharedState->rootContext->activeVMEData = activeVMEDataForRootContext;
+        sharedState->rootContext->incubator = incubator;
         sharedState->rootContext->isRootObjectInCreation = true;
     }
 

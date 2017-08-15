@@ -78,6 +78,7 @@ class QQmlExpression;
 class QQmlExpressionPrivate;
 class QQmlJavaScriptExpression;
 class QQmlContextData;
+class QQmlIncubatorPrivate;
 
 class QQmlContextPrivate : public QObjectPrivate
 {
@@ -145,8 +146,8 @@ public:
     quint32 dummy:25;
     QQmlContext *publicContext;
 
-    // VME data that is constructing this context if any
-    void *activeVMEData;
+    // The incubator that is constructing this context if any
+    QQmlIncubatorPrivate *incubator;
 
     // Compilation unit for contexts that belong to a compiled type.
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> typeCompilationUnit;
