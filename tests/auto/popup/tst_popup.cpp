@@ -80,6 +80,8 @@ private slots:
     void componentComplete();
     void closeOnEscapeWithNestedPopups();
     void enabled();
+    void orientation_data();
+    void orientation();
 };
 
 void tst_popup::initTestCase()
@@ -1002,6 +1004,36 @@ void tst_popup::enabled()
     QVERIFY(popup.isEnabled());
     QVERIFY(popup.popupItem()->isEnabled());
     QCOMPARE(enabledSpy.count(), 2);
+}
+
+void tst_popup::orientation_data()
+{
+    QTest::addColumn<Qt::ScreenOrientation>("orientation");
+    QTest::addColumn<QPointF>("position");
+
+    QTest::newRow("Portrait") << Qt::PortraitOrientation << QPointF(330, 165);
+    QTest::newRow("Landscape") << Qt::LandscapeOrientation << QPointF(165, 270);
+    QTest::newRow("InvertedPortrait") << Qt::InvertedPortraitOrientation << QPointF(270, 135);
+    QTest::newRow("InvertedLandscape") << Qt::InvertedLandscapeOrientation << QPointF(135, 330);
+}
+
+void tst_popup::orientation()
+{
+    QFETCH(Qt::ScreenOrientation, orientation);
+    QFETCH(QPointF, position);
+
+    QQuickApplicationHelper helper(this, "orientation.qml");
+
+    QQuickWindow *window = helper.window;
+    window->reportContentOrientationChange(orientation);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+    popup->open();
+
+    QCOMPARE(popup->popupItem()->position(), position);
 }
 
 QTEST_MAIN(tst_popup)

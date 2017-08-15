@@ -55,7 +55,7 @@ SpinBox {
         height: parent.height
         implicitWidth: 40
         implicitHeight: 40
-        color: up.pressed ? "#e4e4e4" : "#f6f6f6"
+        color: control.up.pressed ? "#e4e4e4" : "#f6f6f6"
         border.color: enabled ? "#21be2b" : "#bdbebf"
 
         Text {
@@ -74,7 +74,7 @@ SpinBox {
         height: parent.height
         implicitWidth: 40
         implicitHeight: 40
-        color: down.pressed ? "#e4e4e4" : "#f6f6f6"
+        color: control.down.pressed ? "#e4e4e4" : "#f6f6f6"
         border.color: enabled ? "#21be2b" : "#bdbebf"
 
         Text {

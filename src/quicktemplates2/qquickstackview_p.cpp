@@ -278,9 +278,13 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
     }
 
     if (transitioner->runningJobs.isEmpty()) {
-        qDeleteAll(removed);
-        removed.clear();
+        // ~QQuickStackElement() emits QQuickStackViewAttached::removed(), which may be used
+        // to modify the stack. Set the status first and make a copy of the destroyable stack
+        // elements to exclude any modifications that may happen during the loop. (QTBUG-62153)
         setBusy(false);
+        QList<QQuickStackElement*> elements = removed;
+        removed.clear();
+        qDeleteAll(elements);
     }
 
     removing.remove(element);

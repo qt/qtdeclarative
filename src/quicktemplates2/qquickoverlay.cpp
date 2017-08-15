@@ -109,10 +109,9 @@ QVector<QQuickDrawer *> QQuickOverlayPrivate::stackingOrderDrawers() const
     return sorted;
 }
 
-void QQuickOverlayPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange, const QRectF &)
+void QQuickOverlayPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
 {
-    Q_Q(QQuickOverlay);
-    q->setSize(QSizeF(item->width(), item->height()));
+    updateGeometry();
 }
 
 QQuickOverlayPrivate::QQuickOverlayPrivate()
@@ -282,6 +281,43 @@ void QQuickOverlayPrivate::setMouseGrabberPopup(QQuickPopup *popup)
     mouseGrabberPopup = popup;
 }
 
+void QQuickOverlayPrivate::updateGeometry()
+{
+    Q_Q(QQuickOverlay);
+    if (!window)
+        return;
+
+    QPointF pos;
+    QSizeF size = window->size();
+    qreal rotation = 0;
+
+    switch (window->contentOrientation()) {
+    case Qt::PrimaryOrientation:
+    case Qt::PortraitOrientation:
+        size = window->size();
+        break;
+    case Qt::LandscapeOrientation:
+        rotation = 90;
+        pos = QPointF((size.width() - size.height()) / 2, -(size.width() - size.height()) / 2);
+        size.transpose();
+        break;
+    case Qt::InvertedPortraitOrientation:
+        rotation = 180;
+        break;
+    case Qt::InvertedLandscapeOrientation:
+        rotation = 270;
+        pos = QPointF((size.width() - size.height()) / 2, -(size.width() - size.height()) / 2);
+        size.transpose();
+        break;
+    default:
+        break;
+    }
+
+    q->setSize(size);
+    q->setPosition(pos);
+    q->setRotation(rotation);
+}
+
 QQuickOverlay::QQuickOverlay(QQuickItem *parent)
     : QQuickItem(*(new QQuickOverlayPrivate), parent)
 {
@@ -292,10 +328,12 @@ QQuickOverlay::QQuickOverlay(QQuickItem *parent)
     setVisible(false);
 
     if (parent) {
-        setSize(QSizeF(parent->width(), parent->height()));
+        d->updateGeometry();
         QQuickItemPrivate::get(parent)->addItemChangeListener(d, QQuickItemPrivate::Geometry);
-        if (QQuickWindow *window = parent->window())
+        if (QQuickWindow *window = parent->window()) {
             window->installEventFilter(this);
+            QObjectPrivate::connect(window, &QWindow::contentOrientationChanged, d, &QQuickOverlayPrivate::updateGeometry);
+        }
     }
 }
 

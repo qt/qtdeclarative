@@ -786,6 +786,19 @@ TestCase {
         compare(control.busy, false)
     }
 
+    function test_pushOnRemoved() {
+        var control = createTemporaryObject(stackView, testCase, { initialItem: component })
+        verify(control)
+
+        var item = control.push(component, StackView.Immediate)
+        verify(item)
+
+        item.StackView.onRemoved.connect(function() { control.push(component, StackView.Immediate) } )
+
+        // don't crash (QTBUG-62153)
+        control.pop(StackView.Immediate)
+    }
+
     Component {
         id: attachedItem
         Item {
@@ -1168,6 +1181,12 @@ TestCase {
         control.pop(StackView.Immediate)
         compare(item1.visible, true)
         compare(item1.StackView.visible, true)
+    }
+
+    function test_resolveInitialItem() {
+        var control = createTemporaryObject(stackView, testCase, {initialItem: "TestItem.qml"})
+        verify(control)
+        verify(control.currentItem)
     }
 
     function test_resolve() {

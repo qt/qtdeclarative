@@ -130,6 +130,9 @@ QQuickStackElement *QQuickStackElement::fromString(const QString &str, QQuickSta
         return nullptr;
     }
 
+    if (url.isRelative())
+        url = qmlContext(view)->resolvedUrl(url);
+
     QQuickStackElement *element = new QQuickStackElement;
     element->component = new QQmlComponent(qmlEngine(view), url, view);
     element->ownComponent = true;

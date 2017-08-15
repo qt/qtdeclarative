@@ -116,25 +116,27 @@ void QQuickPopupPositioner::reposition()
                 !p->hasWidth && iw > 0 ? iw : w,
                 !p->hasHeight && ih > 0 ? ih : h);
     if (m_parentItem) {
-        rect = m_parentItem->mapRectToScene(rect);
+        rect.moveTopLeft(m_parentItem->mapToItem(popupItem->parentItem(), rect.topLeft()));
 
         if (p->window) {
             const QMarginsF margins = p->getMargins();
-            const QRectF bounds(qMax<qreal>(0.0, margins.left()),
-                                qMax<qreal>(0.0, margins.top()),
-                                p->window->width() - qMax<qreal>(0.0, margins.left()) - qMax<qreal>(0.0, margins.right()),
-                                p->window->height() - qMax<qreal>(0.0, margins.top()) - qMax<qreal>(0.0, margins.bottom()));
+            QRectF bounds(qMax<qreal>(0.0, margins.left()),
+                          qMax<qreal>(0.0, margins.top()),
+                          p->window->width() - qMax<qreal>(0.0, margins.left()) - qMax<qreal>(0.0, margins.right()),
+                          p->window->height() - qMax<qreal>(0.0, margins.top()) - qMax<qreal>(0.0, margins.bottom()));
+            if (p->window->contentOrientation() == Qt::LandscapeOrientation || p->window->contentOrientation() == Qt::InvertedLandscapeOrientation)
+                bounds = bounds.transposed();
 
             // if the popup doesn't fit horizontally inside the window, try flipping it around (left <-> right)
             if (p->allowHorizontalFlip && (rect.left() < bounds.left() || rect.right() > bounds.right())) {
-                const QRectF flipped = m_parentItem->mapRectToScene(QRectF(m_parentItem->width() - p->x - rect.width(), p->y, rect.width(), rect.height()));
+                const QRectF flipped(m_parentItem->mapToScene(QPointF(m_parentItem->width() - p->x - rect.width(), p->y)), rect.size());
                 if (flipped.intersected(bounds).width() > rect.intersected(bounds).width())
                     rect.moveLeft(flipped.left());
             }
 
             // if the popup doesn't fit vertically inside the window, try flipping it around (above <-> below)
             if (p->allowVerticalFlip && (rect.top() < bounds.top() || rect.bottom() > bounds.bottom())) {
-                const QRectF flipped = m_parentItem->mapRectToScene(QRectF(p->x, m_parentItem->height() - p->y - rect.height(), rect.width(), rect.height()));
+                const QRectF flipped(m_parentItem->mapToScene(QPointF(p->x, m_parentItem->height() - p->y - rect.height())), rect.size());
                 if (flipped.intersected(bounds).height() > rect.intersected(bounds).height())
                     rect.moveTop(flipped.top());
             }
