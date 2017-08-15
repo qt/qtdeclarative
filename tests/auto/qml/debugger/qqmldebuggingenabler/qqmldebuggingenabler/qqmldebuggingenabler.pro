@@ -6,8 +6,6 @@ osx:CONFIG -= app_bundle
 
 SOURCES += tst_qqmldebuggingenabler.cpp
 
-INCLUDEPATH += ../../shared
-include(../../../../shared/util.pri)
 include(../../shared/debugutil.pri)
 
 OTHER_FILES += data/test.qml

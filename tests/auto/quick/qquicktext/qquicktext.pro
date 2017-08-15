@@ -4,7 +4,6 @@ macx:CONFIG -= app_bundle
 
 SOURCES += tst_qquicktext.cpp
 
-INCLUDEPATH += ../../shared/
 HEADERS += ../../shared/testhttpserver.h
 SOURCES += ../../shared/testhttpserver.cpp
 

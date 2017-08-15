@@ -4,8 +4,6 @@ osx:CONFIG -= app_bundle
 
 SOURCES += tst_qqmlenginecontrol.cpp
 
-INCLUDEPATH += ../shared
-include(../../../shared/util.pri)
 include(../shared/debugutil.pri)
 
 TESTDATA = data/*

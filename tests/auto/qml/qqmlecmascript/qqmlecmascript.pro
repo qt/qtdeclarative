@@ -7,7 +7,6 @@ SOURCES += tst_qqmlecmascript.cpp \
            ../../shared/testhttpserver.cpp
 HEADERS += testtypes.h \
            ../../shared/testhttpserver.h
-INCLUDEPATH += ../../shared
 
 RESOURCES += qqmlecmascript.qrc
 
