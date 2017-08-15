@@ -45,9 +45,6 @@
 #include "qqmlmemoryprofiler_p.h"
 #include "qqmlobjectcreator_p.h"
 
-// XXX TODO
-//   - check that the Component.onCompleted behavior is the same as 4.8 in the synchronous and
-//     async if nested cases
 void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
 {
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> p(i.d);
