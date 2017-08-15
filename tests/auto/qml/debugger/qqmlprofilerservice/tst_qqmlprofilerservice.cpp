@@ -33,11 +33,7 @@
 #include <private/qqmldebugconnection_p.h>
 
 #include <QtTest/qtest.h>
-#include <private/qtestresult_p.h>
 #include <QtCore/qlibraryinfo.h>
-
-#define STR_PORT_FROM "13773"
-#define STR_PORT_TO "13783"
 
 struct QQmlProfilerData
 {
@@ -258,24 +254,11 @@ void QQmlProfilerTestClient::complete()
     emit recordingFinished();
 }
 
-class tst_QQmlProfilerService : public QQmlDataTest
+class tst_QQmlProfilerService : public QQmlDebugTest
 {
     Q_OBJECT
 
-public:
-    tst_QQmlProfilerService()
-        : m_process(0)
-        , m_connection(0)
-        , m_client(0)
-    {
-    }
-
-
 private:
-    QQmlDebugProcess *m_process;
-    QQmlDebugConnection *m_connection;
-    QQmlProfilerTestClient *m_client;
-
     enum MessageListType {
         MessageListQML,
         MessageListJavaScript,
@@ -294,23 +277,17 @@ private:
         CheckAll = CheckMessageType | CheckDetailType | CheckLine | CheckColumn | CheckDataEndsWith
     };
 
-    enum ConnectResult
-    {
-        ConnectSuccess,
-        ProcessFailed,
-        ClientFailed,
-        EnableFailed,
-        RestrictFailed
-    };
-
     ConnectResult connect(bool block, const QString &testFile, bool restrictServices = true);
     void checkTraceReceived();
     void checkJsHeap();
     bool verify(MessageListType type, int expectedPosition, const QQmlProfilerData &expected,
                 quint32 checks);
 
+    QList<QQmlDebugClient *> createClients() override;
+    QPointer<QQmlProfilerTestClient> m_client;
+
 private slots:
-    void cleanup();
+    void cleanup() override;
 
     void connect_data();
     void connect();
@@ -325,65 +302,13 @@ private slots:
 
 #define VERIFY(type, position, expected, checks) QVERIFY(verify(type, position, expected, checks))
 
-template<typename F>
-struct Finalizer {
-    F m_lambda;
-    Finalizer(F &&lambda) : m_lambda(std::forward<F>(lambda)) {}
-    ~Finalizer() { m_lambda(); }
-};
-
-template<typename F>
-static Finalizer<F> defer(F &&lambda)
-{
-    return Finalizer<F>(std::forward<F>(lambda));
-}
-
-tst_QQmlProfilerService::ConnectResult tst_QQmlProfilerService::connect(
-        bool block, const QString &testFile, bool restrictServices)
+QQmlDebugTest::ConnectResult tst_QQmlProfilerService::connect(bool block, const QString &file,
+                                                              bool restrictServices)
 {
     // ### Still using qmlscene due to QTBUG-33377
-    const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
-    QStringList arguments;
-    arguments << QString::fromLatin1("-qmljsdebugger=port:%1,%2%3%4")
-                 .arg(STR_PORT_FROM).arg(STR_PORT_TO)
-                 .arg(block ? QStringLiteral(",block") : QString())
-                 .arg(restrictServices ? QStringLiteral(",services:CanvasFrameRate") : QString())
-              << QQmlDataTest::instance()->testFile(testFile);
-
-    QScopedPointer<QQmlDebugProcess> process;
-    process.reset(new QQmlDebugProcess(executable, this));
-    process->start(QStringList() << arguments);
-    if (!process->waitForSessionStart()) {
-        qDebug("Could not launch application, or did not get 'Waiting for connection'.");
-        return ProcessFailed;
-    }
-
-    m_process = process.take();
-
-    m_connection = new QQmlDebugConnection();
-    m_client = new QQmlProfilerTestClient(m_connection);
-    if (!m_client)
-        return ClientFailed;
-
-    QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(m_connection);
-    auto deleter = defer([&others]() { qDeleteAll(others); });
-    Q_UNUSED(deleter);
-
-    const int port = m_process->debugPort();
-    m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
-    for (int tries = 0; tries < 100 && m_client->state() != QQmlDebugClient::Enabled; ++tries)
-        QTest::qWait(50);
-    if (m_client->state() != QQmlDebugClient::Enabled)
-        return EnableFailed;
-
-    const QQmlDebugClient::State expectedState = restrictServices ? QQmlDebugClient::Unavailable
-                                                                  : QQmlDebugClient::Enabled;
-    for (QQmlDebugClient *other : others) {
-        if (other->state() != expectedState)
-            return RestrictFailed;
-    }
-
-    return ConnectSuccess;
+    return QQmlDebugTest::connect(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
+                                  restrictServices ? QStringLiteral("CanvasFrameRate") : QString(),
+                                  testFile(file), block);
 }
 
 void tst_QQmlProfilerService::checkTraceReceived()
@@ -518,6 +443,12 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
     return false;
 }
 
+QList<QQmlDebugClient *> tst_QQmlProfilerService::createClients()
+{
+    m_client = new QQmlProfilerTestClient(m_connection);
+    return QList<QQmlDebugClient *>({m_client});
+}
+
 void tst_QQmlProfilerService::cleanup()
 {
     if (m_client && QTest::currentTestFailed()) {
@@ -555,17 +486,9 @@ void tst_QQmlProfilerService::cleanup()
             qDebug() << i++ << data.time << data.messageType << data.detailType;
         }
         qDebug() << " ";
-        qDebug() << "Process State:" << (m_process ? m_process->state() : QLatin1String("null"));
-        qDebug() << "Application Output:" << (m_process ? m_process->output() : QLatin1String("null"));
-        qDebug() << "Connection State:" << QQmlDebugTest::connectionStateString(m_connection);
-        qDebug() << "Client State:" << QQmlDebugTest::clientStateString(m_client);
     }
-    delete m_process;
-    m_process = 0;
-    delete m_client;
-    m_client = 0;
-    delete m_connection;
-    m_connection = 0;
+
+    QQmlDebugTest::cleanup();
 }
 
 void tst_QQmlProfilerService::connect_data()
