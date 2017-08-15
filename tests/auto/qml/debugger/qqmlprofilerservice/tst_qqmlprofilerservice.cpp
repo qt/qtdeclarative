@@ -294,7 +294,16 @@ private:
         CheckAll = CheckMessageType | CheckDetailType | CheckLine | CheckColumn | CheckDataEndsWith
     };
 
-    void connect(bool block, const QString &testFile, bool restrictServices = true);
+    enum ConnectResult
+    {
+        ConnectSuccess,
+        ProcessFailed,
+        ClientFailed,
+        EnableFailed,
+        RestrictFailed
+    };
+
+    ConnectResult connect(bool block, const QString &testFile, bool restrictServices = true);
     void checkTraceReceived();
     void checkJsHeap();
     bool verify(MessageListType type, int expectedPosition, const QQmlProfilerData &expected,
@@ -316,7 +325,21 @@ private slots:
 
 #define VERIFY(type, position, expected, checks) QVERIFY(verify(type, position, expected, checks))
 
-void tst_QQmlProfilerService::connect(bool block, const QString &testFile, bool restrictServices)
+template<typename F>
+struct Finalizer {
+    F m_lambda;
+    Finalizer(F &&lambda) : m_lambda(std::forward<F>(lambda)) {}
+    ~Finalizer() { m_lambda(); }
+};
+
+template<typename F>
+static Finalizer<F> defer(F &&lambda)
+{
+    return Finalizer<F>(std::forward<F>(lambda));
+}
+
+tst_QQmlProfilerService::ConnectResult tst_QQmlProfilerService::connect(
+        bool block, const QString &testFile, bool restrictServices)
 {
     // ### Still using qmlscene due to QTBUG-33377
     const QString executable = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene";
@@ -330,23 +353,37 @@ void tst_QQmlProfilerService::connect(bool block, const QString &testFile, bool 
     QScopedPointer<QQmlDebugProcess> process;
     process.reset(new QQmlDebugProcess(executable, this));
     process->start(QStringList() << arguments);
-    QVERIFY2(process->waitForSessionStart(), "Could not launch application, or did not get 'Waiting for connection'.");
+    if (!process->waitForSessionStart()) {
+        qDebug("Could not launch application, or did not get 'Waiting for connection'.");
+        return ProcessFailed;
+    }
 
     m_process = process.take();
 
     m_connection = new QQmlDebugConnection();
     m_client = new QQmlProfilerTestClient(m_connection);
+    if (!m_client)
+        return ClientFailed;
+
     QList<QQmlDebugClient *> others = QQmlDebugTest::createOtherClients(m_connection);
+    auto deleter = defer([&others]() { qDeleteAll(others); });
+    Q_UNUSED(deleter);
 
     const int port = m_process->debugPort();
     m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
-    QVERIFY(m_client);
-    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+    for (int tries = 0; tries < 100 && m_client->state() != QQmlDebugClient::Enabled; ++tries)
+        QTest::qWait(50);
+    if (m_client->state() != QQmlDebugClient::Enabled)
+        return EnableFailed;
 
-    foreach (QQmlDebugClient *other, others)
-        QCOMPARE(other->state(), restrictServices ? QQmlDebugClient::Unavailable :
-                                                    QQmlDebugClient::Enabled);
-    qDeleteAll(others);
+    const QQmlDebugClient::State expectedState = restrictServices ? QQmlDebugClient::Unavailable
+                                                                  : QQmlDebugClient::Enabled;
+    for (QQmlDebugClient *other : others) {
+        if (other->state() != expectedState)
+            return RestrictFailed;
+    }
+
+    return ConnectSuccess;
 }
 
 void tst_QQmlProfilerService::checkTraceReceived()
@@ -552,9 +589,7 @@ void tst_QQmlProfilerService::connect()
     QFETCH(bool, restrictMode);
     QFETCH(bool, traceEnabled);
 
-    connect(blockMode, "test.qml", restrictMode);
-    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
-        return;
+    QCOMPARE(connect(blockMode, "test.qml", restrictMode), ConnectSuccess);
 
     // if the engine is waiting, then the first message determines if it starts with trace enabled
     if (!traceEnabled)
@@ -567,9 +602,7 @@ void tst_QQmlProfilerService::connect()
 
 void tst_QQmlProfilerService::pixmapCacheData()
 {
-    connect(true, "pixmapCacheTest.qml");
-    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
-        return;
+    QCOMPARE(connect(true, "pixmapCacheTest.qml"), ConnectSuccess);
 
     m_client->sendRecordingStatus(true);
     QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
@@ -606,9 +639,7 @@ void tst_QQmlProfilerService::pixmapCacheData()
 
 void tst_QQmlProfilerService::scenegraphData()
 {
-    connect(true, "scenegraphTest.qml");
-    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
-        return;
+    QCOMPARE(connect(true, "scenegraphTest.qml"), ConnectSuccess);
 
     m_client->sendRecordingStatus(true);
 
@@ -665,9 +696,7 @@ void tst_QQmlProfilerService::scenegraphData()
 
 void tst_QQmlProfilerService::profileOnExit()
 {
-    connect(true, "exit.qml");
-    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
-        return;
+    QCOMPARE(connect(true, "exit.qml"), ConnectSuccess);
 
     m_client->sendRecordingStatus(true);
 
@@ -677,9 +706,7 @@ void tst_QQmlProfilerService::profileOnExit()
 
 void tst_QQmlProfilerService::controlFromJS()
 {
-    connect(true, "controlFromJS.qml");
-    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
-        return;
+    QCOMPARE(connect(true, "controlFromJS.qml"), ConnectSuccess);
 
     m_client->sendRecordingStatus(false);
     checkTraceReceived();
@@ -688,9 +715,7 @@ void tst_QQmlProfilerService::controlFromJS()
 
 void tst_QQmlProfilerService::signalSourceLocation()
 {
-    connect(true, "signalSourceLocation.qml");
-    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
-        return;
+    QCOMPARE(connect(true, "signalSourceLocation.qml"), ConnectSuccess);
 
     m_client->sendRecordingStatus(true);
     while (!(m_process->output().contains(QLatin1String("500"))))
@@ -713,9 +738,7 @@ void tst_QQmlProfilerService::signalSourceLocation()
 
 void tst_QQmlProfilerService::javascript()
 {
-    connect(true, "javascript.qml");
-    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
-        return;
+    QCOMPARE(connect(true, "javascript.qml"), ConnectSuccess);
 
     m_client->sendRecordingStatus(true);
     while (!(m_process->output().contains(QLatin1String("done"))))
@@ -745,9 +768,7 @@ void tst_QQmlProfilerService::javascript()
 
 void tst_QQmlProfilerService::flushInterval()
 {
-    connect(true, "timer.qml");
-    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
-        return;
+    QCOMPARE(connect(true, "timer.qml"), ConnectSuccess);
 
     m_client->sendRecordingStatus(true, -1, 1);
 
