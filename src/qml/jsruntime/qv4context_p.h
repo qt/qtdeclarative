@@ -164,7 +164,6 @@ DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
 V4_ASSERT_IS_TRIVIAL(CallContext)
 Q_STATIC_ASSERT(std::is_standard_layout<CallContextData>::value);
 Q_STATIC_ASSERT(offsetof(CallContextData, function) == 0);
-Q_STATIC_ASSERT(offsetof(CallContextData, locals) == offsetof(CallContextData, function) + QT_POINTER_SIZE);
 //### The following size check fails on Win8. With the ValueArray at the end of the
 // CallContextMembers, it doesn't look very useful.
 //#if defined(Q_PROCESSOR_ARM_32) && !defined(Q_OS_IOS)
