@@ -641,8 +641,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 if (t == QV4::CompiledData::Property::Var) {
                     // the context can be null if accessing var properties from cpp after re-parenting an item.
                     QQmlEnginePrivate *ep = (ctxt == 0 || ctxt->engine == 0) ? 0 : QQmlEnginePrivate::get(ctxt->engine);
-                    QV8Engine *v8e = (ep == 0) ? 0 : ep->v8engine();
-                    if (v8e) {
+                    if (ep) {
                         if (c == QMetaObject::ReadProperty) {
                             *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
                         } else if (c == QMetaObject::WriteProperty) {
