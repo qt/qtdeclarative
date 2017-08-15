@@ -397,6 +397,93 @@ static inline const QV4::Value &constant(Function *function, int index)
     return function->compilationUnit->constants[index];
 }
 
+
+static bool compareEqual(Value lhs, Value rhs)
+{
+    if (lhs.asReturnedValue() == rhs.asReturnedValue())
+        return !lhs.isNaN();
+
+    int lt = lhs.quickType();
+    int rt = rhs.quickType();
+    if (rt < lt) {
+        qSwap(lhs, rhs);
+        qSwap(lt, rt);
+    }
+
+    switch (lt) {
+    case Value::QT_ManagedOrUndefined:
+        if (lhs.isUndefined())
+            return rhs.isNullOrUndefined();
+        Q_FALLTHROUGH();
+    case Value::QT_ManagedOrUndefined1:
+    case Value::QT_ManagedOrUndefined2:
+    case Value::QT_ManagedOrUndefined3:
+        // LHS: Managed
+        switch (rt) {
+        case Value::QT_ManagedOrUndefined:
+            Q_ASSERT(!rhs.isUndefined());
+            Q_FALLTHROUGH();
+        case Value::QT_ManagedOrUndefined1:
+        case Value::QT_ManagedOrUndefined2:
+        case Value::QT_ManagedOrUndefined3: {
+            // RHS: Managed
+            Heap::Base *l = lhs.m();
+            Heap::Base *r = rhs.m();
+            Q_ASSERT(l);
+            Q_ASSERT(r);
+            if (l->vtable()->isString == r->vtable()->isString)
+                return static_cast<QV4::Managed &>(lhs).isEqualTo(&static_cast<QV4::Managed &>(rhs));
+            if (l->vtable()->isString) {
+                rhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(rhs), PREFERREDTYPE_HINT));
+                break;
+            } else {
+                Q_ASSERT(r->vtable()->isString);
+                lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
+                break;
+            }
+            return false;
+        }
+        case Value::QT_Empty:
+            Q_UNREACHABLE();
+        case Value::QT_Null:
+            return false;
+        case Value::QT_Bool:
+        case Value::QT_Int:
+            rhs = Primitive::fromDouble(rhs.int_32());
+            // fall through
+        default: // double
+            if (lhs.m()->vtable()->isString)
+                return RuntimeHelpers::toNumber(lhs) == rhs.doubleValue();
+            else
+                lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
+        }
+        return compareEqual(lhs, rhs);
+    case Value::QT_Empty:
+        Q_UNREACHABLE();
+    case Value::QT_Null:
+        return rhs.isNull();
+    case Value::QT_Bool:
+    case Value::QT_Int:
+        switch (rt) {
+        case Value::QT_ManagedOrUndefined:
+        case Value::QT_ManagedOrUndefined1:
+        case Value::QT_ManagedOrUndefined2:
+        case Value::QT_ManagedOrUndefined3:
+        case Value::QT_Empty:
+        case Value::QT_Null:
+            Q_UNREACHABLE();
+        case Value::QT_Bool:
+        case Value::QT_Int:
+            return lhs.int_32() == rhs.int_32();
+        default: // double
+            return lhs.int_32() == rhs.doubleValue();
+        }
+    default: // double
+        Q_ASSERT(rhs.isDouble());
+        return lhs.doubleValue() == rhs.doubleValue();
+    }
+}
+
 QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callData, Heap::ExecutionContext *context, QV4::Function *function)
 {
     qt_v4ResolvePendingBreakpointsHook();
@@ -816,7 +903,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
             if (lhs.int_32() == accumulator.int_32())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         } else {
-            if (Runtime::method_compareEqual(lhs, accumulator))
+            if (compareEqual(lhs, accumulator))
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         }
     MOTH_END_INSTR(CmpJmpEq)
@@ -827,8 +914,8 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
             if (lhs.int_32() != accumulator.int_32())
                 code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         } else {
-            if (Runtime::method_compareNotEqual(lhs, accumulator))
-                code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+            if (!compareEqual(lhs, accumulator))
+                    code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
         }
     MOTH_END_INSTR(CmpJmpNe)
 
