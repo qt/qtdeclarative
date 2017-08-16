@@ -421,7 +421,8 @@ static bool compareEqual(Value lhs, Value rhs)
         // LHS: Managed
         switch (rt) {
         case Value::QT_ManagedOrUndefined:
-            Q_ASSERT(!rhs.isUndefined());
+            if (rhs.isUndefined())
+                return false;
             Q_FALLTHROUGH();
         case Value::QT_ManagedOrUndefined1:
         case Value::QT_ManagedOrUndefined2:
@@ -894,6 +895,16 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
             !accumulator.toBoolean())
             code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
     MOTH_END_INSTR(JumpNe)
+
+    MOTH_BEGIN_INSTR(CmpJmpEqNull)
+        if (accumulator.isNullOrUndefined())
+            code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+    MOTH_END_INSTR(CmpJmpEqNull)
+
+    MOTH_BEGIN_INSTR(CmpJmpNeNull)
+        if (!accumulator.isNullOrUndefined())
+            code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+    MOTH_END_INSTR(CmpJmpNeNull)
 
     MOTH_BEGIN_INSTR(CmpJmpEq)
         const Value lhs = STACK_VALUE(instr.lhs);

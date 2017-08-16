@@ -390,6 +390,14 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals)
             d << "acc  " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(JumpNe)
 
+        MOTH_BEGIN_INSTR(CmpJmpEqNull)
+            d << absoluteInstructionOffset(start, instr);
+        MOTH_END_INSTR(CmpJmpEqNull)
+
+        MOTH_BEGIN_INSTR(CmpJmpNeNull)
+            d << absoluteInstructionOffset(start, instr);
+        MOTH_END_INSTR(CmpJmpNeNull)
+
         MOTH_BEGIN_INSTR(CmpJmpEq)
             d << instr.lhs.dump(nFormals) << ", " << absoluteInstructionOffset(start, instr);
         MOTH_END_INSTR(CmpJmpEq)

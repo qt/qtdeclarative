@@ -1037,15 +1037,51 @@ static QSOperator::Op invert(QSOperator::Op oper)
     }
 }
 
+static QSOperator::Op swap(QSOperator::Op oper)
+{
+    switch (oper) {
+    case QSOperator::StrictEqual: return QSOperator::StrictEqual;
+    case QSOperator::StrictNotEqual: return QSOperator::StrictNotEqual;
+    case QSOperator::Equal: return QSOperator::Equal;
+    case QSOperator::NotEqual: return QSOperator::NotEqual;
+    case QSOperator::Gt: return QSOperator::Le;
+    case QSOperator::Ge: return QSOperator::Lt;
+    case QSOperator::Lt: return QSOperator::Ge;
+    case QSOperator::Le: return QSOperator::Gt;
+    default: Q_UNIMPLEMENTED(); return QSOperator::Invalid;
+    }
+}
+
 Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Reference &right)
 {
-    left = left.storeOnStack();
-    right.loadInAccumulator();
+    if (left.isConst()) {
+        oper = swap(oper);
+        qSwap(left, right);
+    }
     const BytecodeGenerator::Label *jumpTarget = _expr.iftrue();
     if (_expr.trueBlockFollowsCondition()) {
         oper = invert(oper);
         jumpTarget = _expr.iffalse();
     }
+
+    if (right.isConst()) {
+        if (right.constant == Encode::null() || right.constant == Encode::undefined()) {
+            if (oper == QSOperator::Equal) {
+                left.loadInAccumulator();
+                Instruction::CmpJmpEqNull cjump;
+                bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+                return Reference();
+            } else if (oper == QSOperator::NotEqual) {
+                left.loadInAccumulator();
+                Instruction::CmpJmpNeNull cjump;
+                bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+                return Reference();
+            }
+        }
+    }
+
+    left = left.storeOnStack();
+    right.loadInAccumulator();
 
     switch (oper) {
     case QSOperator::StrictEqual: {
