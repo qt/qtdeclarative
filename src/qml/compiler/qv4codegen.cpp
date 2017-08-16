@@ -1064,19 +1064,33 @@ Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Refe
         jumpTarget = _expr.iffalse();
     }
 
-    if (right.isConst()) {
-        if (right.constant == Encode::null() || right.constant == Encode::undefined()) {
+    if (right.isConst() && (oper == QSOperator::Equal || oper == QSOperator::NotEqual)) {
+        Value c = Primitive::fromReturnedValue(right.constant);
+        if (c.isNull() || c.isUndefined()) {
+            left.loadInAccumulator();
             if (oper == QSOperator::Equal) {
-                left.loadInAccumulator();
                 Instruction::CmpJmpEqNull cjump;
                 bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
                 return Reference();
             } else if (oper == QSOperator::NotEqual) {
-                left.loadInAccumulator();
                 Instruction::CmpJmpNeNull cjump;
                 bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
                 return Reference();
             }
+        } else if (c.isInt32()) {
+            left.loadInAccumulator();
+            if (oper == QSOperator::Equal) {
+                Instruction::CmpJmpEqInt cjump;
+                cjump.lhs = c.int_32();
+                bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+                return Reference();
+            } else if (oper == QSOperator::NotEqual) {
+                Instruction::CmpJmpNeInt cjump;
+                cjump.lhs = c.int_32();
+                bytecodeGenerator->addJumpInstruction(cjump).link(*jumpTarget);
+                return Reference();
+            }
+
         }
     }
 

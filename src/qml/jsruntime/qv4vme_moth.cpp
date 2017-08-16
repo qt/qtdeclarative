@@ -400,6 +400,7 @@ static inline const QV4::Value &constant(Function *function, int index)
 
 static bool compareEqual(Value lhs, Value rhs)
 {
+  redo:
     if (lhs.asReturnedValue() == rhs.asReturnedValue())
         return !lhs.isNaN();
 
@@ -458,7 +459,7 @@ static bool compareEqual(Value lhs, Value rhs)
             else
                 lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
         }
-        return compareEqual(lhs, rhs);
+        goto redo;
     case Value::QT_Empty:
         Q_UNREACHABLE();
     case Value::QT_Null:
@@ -484,6 +485,36 @@ static bool compareEqual(Value lhs, Value rhs)
         return lhs.doubleValue() == rhs.doubleValue();
     }
 }
+
+static bool compareEqualInt(Value lhs, int rhs)
+{
+  redo:
+    switch (lhs.quickType()) {
+    case Value::QT_ManagedOrUndefined:
+        if (lhs.isUndefined())
+            return false;
+        Q_FALLTHROUGH();
+    case Value::QT_ManagedOrUndefined1:
+    case Value::QT_ManagedOrUndefined2:
+    case Value::QT_ManagedOrUndefined3:
+        // LHS: Managed
+        if (lhs.m()->vtable()->isString)
+            return RuntimeHelpers::toNumber(lhs) == rhs;
+        else
+            lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
+        goto redo;
+    case Value::QT_Empty:
+        Q_UNREACHABLE();
+    case Value::QT_Null:
+        return false;
+    case Value::QT_Bool:
+    case Value::QT_Int:
+        return lhs.int_32() == rhs;
+    default: // double
+        return lhs.doubleValue() == rhs;
+    }
+}
+
 
 QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callData, Heap::ExecutionContext *context, QV4::Function *function)
 {
@@ -905,6 +936,24 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         if (!accumulator.isNullOrUndefined())
             code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
     MOTH_END_INSTR(CmpJmpNeNull)
+
+    MOTH_BEGIN_INSTR(CmpJmpEqInt)
+        if (accumulator.isIntOrBool()) {
+            if (accumulator.int_32() == instr.lhs)
+            code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        } else if (compareEqualInt(accumulator, instr.lhs)) {
+            code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        }
+    MOTH_END_INSTR(CmpJmpEqInt)
+
+    MOTH_BEGIN_INSTR(CmpJmpNeInt)
+        if (accumulator.isIntOrBool()) {
+            if (accumulator.int_32() != instr.lhs)
+            code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        } else if (!compareEqualInt(accumulator, instr.lhs)) {
+            code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;
+        }
+    MOTH_END_INSTR(CmpJmpNeInt)
 
     MOTH_BEGIN_INSTR(CmpJmpEq)
         const Value lhs = STACK_VALUE(instr.lhs);

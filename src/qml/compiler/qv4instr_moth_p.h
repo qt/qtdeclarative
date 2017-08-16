@@ -142,6 +142,8 @@ QT_BEGIN_NAMESPACE
     F(JumpNe, jumpNe) \
     F(CmpJmpEqNull, cmpJmpEqNull) \
     F(CmpJmpNeNull, cmpJmpNeNull) \
+    F(CmpJmpEqInt, cmpJmpEqInt) \
+    F(CmpJmpNeInt, cmpJmpNeInt) \
     F(CmpJmpEq, cmpJmpEq) \
     F(CmpJmpNe, cmpJmpNe) \
     F(CmpJmpGt, cmpJmpGt) \
@@ -580,6 +582,16 @@ union Instr
         MOTH_INSTR_HEADER
         ptrdiff_t offset;
     };
+    struct instr_cmpJmpEqInt {
+        MOTH_INSTR_HEADER
+        int lhs;
+        ptrdiff_t offset;
+    };
+    struct instr_cmpJmpNeInt {
+        MOTH_INSTR_HEADER
+        int lhs;
+        ptrdiff_t offset;
+    };
     struct instr_cmpJmpEq {
         MOTH_INSTR_HEADER
         StackSlot lhs;
@@ -800,6 +812,8 @@ union Instr
     instr_jumpNe jumpNe;
     instr_cmpJmpEqNull cmpJmpEqNull;
     instr_cmpJmpNeNull cmpJmpNeNull;
+    instr_cmpJmpEqInt cmpJmpEqInt;
+    instr_cmpJmpNeInt cmpJmpNeInt;
     instr_cmpJmpEq cmpJmpEq;
     instr_cmpJmpNe cmpJmpNe;
     instr_cmpJmpGt cmpJmpGt;
