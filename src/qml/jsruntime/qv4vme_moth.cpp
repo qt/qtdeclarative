@@ -744,6 +744,11 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         STORE_ACCUMULATOR(Runtime::method_callName(engine, instr.name, callData));
     MOTH_END_INSTR(CallName)
 
+    MOTH_BEGIN_INSTR(CallPossiblyDirectEval)
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
+        STORE_ACCUMULATOR(Runtime::method_callPossiblyDirectEval(engine, callData));
+    MOTH_END_INSTR(CallPossiblyDirectEval)
+
     MOTH_BEGIN_INSTR(CallGlobalLookup)
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         STORE_ACCUMULATOR(Runtime::method_callGlobalLookup(engine, instr.index, callData));

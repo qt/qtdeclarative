@@ -98,6 +98,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, callPropertyLookup, (ExecutionEngine *engine, uint index, CallData *callData)) \
     F(ReturnedValue, callElement, (ExecutionEngine *engine, const Value &index, CallData *callData)) \
     F(ReturnedValue, callValue, (ExecutionEngine *engine, const Value &func, CallData *callData)) \
+    F(ReturnedValue, callPossiblyDirectEval, (ExecutionEngine *engine, CallData *callData)) \
     \
     /* construct */ \
     F(ReturnedValue, construct, (ExecutionEngine *engine, const Value &func, CallData *callData)) \

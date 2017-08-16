@@ -274,6 +274,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals)
             d << instr.name << "(" << instr.callData.dump(nFormals) << ")";
         MOTH_END_INSTR(CallName)
 
+        MOTH_BEGIN_INSTR(CallPossiblyDirectEval)
+            d << "(" << instr.callData.dump(nFormals) << ")";
+        MOTH_END_INSTR(CallPossiblyDirectEval)
+
         MOTH_BEGIN_INSTR(CallGlobalLookup)
             d << instr.index << "(" << instr.callData.dump(nFormals) << ")";
         MOTH_END_INSTR(CallGlobalLookup)

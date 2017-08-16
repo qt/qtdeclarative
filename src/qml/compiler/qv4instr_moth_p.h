@@ -110,6 +110,7 @@ QT_BEGIN_NAMESPACE
     F(CallPropertyLookup, callPropertyLookup) \
     F(CallElement, callElement) \
     F(CallName, callName) \
+    F(CallPossiblyDirectEval, callPossiblyDirectEval) \
     F(CallGlobalLookup, callGlobalLookup) \
     F(SetExceptionHandler, setExceptionHandler) \
     F(ThrowException, throwException) \
@@ -440,6 +441,10 @@ union Instr
         int name;
         StackSlot callData;
     };
+    struct instr_callPossiblyDirectEval {
+        MOTH_INSTR_HEADER
+        StackSlot callData;
+    };
     struct instr_callGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
@@ -750,6 +755,7 @@ union Instr
     instr_callPropertyLookup callPropertyLookup;
     instr_callElement callElement;
     instr_callName callName;
+    instr_callPossiblyDirectEval callPossiblyDirectEval;
     instr_callGlobalLookup callGlobalLookup;
     instr_throwException throwException;
     instr_getException getException;

@@ -1199,7 +1199,11 @@ bool Codegen::visit(CallExpression *ast)
         call.callData = calldata;
         bytecodeGenerator->addInstruction(call);
     } else if (base.type == Reference::Name) {
-        if (useFastLookups && base.global) {
+        if (base.name == QStringLiteral("eval")) {
+            Instruction::CallPossiblyDirectEval call;
+            call.callData = calldata;
+            bytecodeGenerator->addInstruction(call);
+        } else if (useFastLookups && base.global) {
             Instruction::CallGlobalLookup call;
             call.index = registerGlobalGetterLookup(base.nameAsIndex());
             call.callData = calldata;

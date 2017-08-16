@@ -1023,13 +1023,36 @@ ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint ind
     if (!o)
         return engine->throwTypeError();
 
-    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-    if (o->d() == scope.engine->evalFunction()->d() && name->equals(scope.engine->id_eval()))
-        return static_cast<EvalFunction *>(o.getPointer())->evalCall(callData, true);
-
     return o->call(callData);
 }
 
+ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, CallData *callData)
+{
+    Q_ASSERT(callData->thisObject.isUndefined());
+    Scope scope(engine);
+    ScopedObject base(scope);
+    ExecutionContext &ctx = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context);
+    ScopedValue func(scope, ctx.getPropertyAndBase(engine->id_eval(), base.getRef()));
+    if (scope.engine->hasException)
+        return Encode::undefined();
+
+    if (base)
+        callData->thisObject = base;
+
+    FunctionObject *o = func->as<FunctionObject>();
+    if (!o) {
+        QString objectAsString = QStringLiteral("[null]");
+        if (base)
+            objectAsString = ScopedValue(scope, base.asReturnedValue())->toQStringNoThrow();
+        QString msg = QStringLiteral("Property 'eval' of object %2 is not a function").arg(objectAsString);
+        return engine->throwTypeError(msg);
+    }
+
+    if (o->d() == scope.engine->evalFunction()->d())
+        return static_cast<EvalFunction *>(o)->evalCall(callData, true);
+
+    return o->call(callData);
+}
 
 ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, CallData *callData)
 {
@@ -1038,7 +1061,8 @@ ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, C
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
 
     ScopedObject base(scope);
-    ScopedValue func(scope, static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).getPropertyAndBase(name, base.getRef()));
+    ExecutionContext &ctx = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context);
+    ScopedValue func(scope, ctx.getPropertyAndBase(name, base.getRef()));
     if (scope.engine->hasException)
         return Encode::undefined();
 
@@ -1053,9 +1077,6 @@ ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, C
         QString msg = QStringLiteral("Property '%1' of object %2 is not a function").arg(name->toQString()).arg(objectAsString);
         return engine->throwTypeError(msg);
     }
-
-    if (o->d() == scope.engine->evalFunction()->d() && name->equals(scope.engine->id_eval()))
-        return static_cast<EvalFunction *>(o)->evalCall(callData, true);
 
     return o->call(callData);
 }
