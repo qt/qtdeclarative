@@ -54,7 +54,7 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
 /*!
     \qmltype TapHandler
     \instantiates QQuickTapHandler
-    \inqmlmodule QtQuick
+    \inqmlmodule Qt.labs.handlers
     \ingroup qtquick-handlers
     \brief Handler for taps and clicks.
 
