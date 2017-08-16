@@ -1342,8 +1342,11 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 void QQmlEngine::retranslate()
 {
     Q_D(QQmlEngine);
-    if (QQmlContextData *firstChildContext = QQmlContextData::get(d->rootContext)->childContexts)
-        firstChildContext->refreshExpressions();
+    QQmlContextData *context = QQmlContextData::get(d->rootContext)->childContexts;
+    while (context) {
+        context->refreshExpressions();
+        context = context->nextChild;
+    }
 }
 
 /*!
