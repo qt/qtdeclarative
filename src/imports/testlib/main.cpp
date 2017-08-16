@@ -91,14 +91,14 @@ public Q_SLOTS:
     {
         QString name(v.typeName());
         if (v.canConvert<QObject*>()) {
-            QQmlType *type = 0;
+            QQmlType type;
             const QMetaObject *mo = v.value<QObject*>()->metaObject();
-            while (!type && mo) {
+            while (!type.isValid() && mo) {
                 type = QQmlMetaType::qmlType(mo);
                 mo = mo->superClass();
             }
-            if (type) {
-                name = type->qmlTypeName();
+            if (type.isValid()) {
+                name = type.qmlTypeName();
             }
         }
 

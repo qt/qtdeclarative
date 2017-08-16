@@ -288,8 +288,8 @@ public:
 
     inline bool operator==(const QQmlPropertyRawData &);
 
-    static Flags flagsForProperty(const QMetaProperty &, QQmlEngine *engine = 0);
-    void load(const QMetaProperty &, QQmlEngine *engine = 0);
+    static Flags flagsForProperty(const QMetaProperty &);
+    void load(const QMetaProperty &);
     void load(const QMetaMethod &);
     QString name(QObject *) const;
     QString name(const QMetaObject *) const;
@@ -364,11 +364,11 @@ struct QQmlEnumData
 };
 
 class QQmlPropertyCacheMethodArguments;
-class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount, public QQmlCleanup
+class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
 {
 public:
-    QQmlPropertyCache(QV4::ExecutionEngine *);
-    QQmlPropertyCache(QV4::ExecutionEngine *, const QMetaObject *);
+    QQmlPropertyCache();
+    QQmlPropertyCache(const QMetaObject *);
     virtual ~QQmlPropertyCache();
 
     void update(const QMetaObject *);
@@ -462,11 +462,6 @@ public:
     static bool addToHash(QCryptographicHash &hash, const QMetaObject &mo);
 
     QByteArray checksum(bool *ok);
-
-protected:
-    void destroy() override;
-    void clear() override;
-
 private:
     friend class QQmlEnginePrivate;
     friend class QQmlCompiler;
@@ -474,6 +469,7 @@ private:
     template <typename T> friend class QQmlPropertyCacheAliasCreator;
     friend class QQmlComponentAndAliasResolver;
     friend class QQmlMetaObject;
+    friend struct QQmlMetaTypeData;
 
     inline QQmlPropertyCache *copy(int reserve);
 
@@ -510,9 +506,6 @@ private:
         _hasPropertyOverrides |= isOverride;
     }
 
-public:
-    QV4::ExecutionEngine *engine;
-
 private:
     QQmlPropertyCache *_parent;
     int propertyIndexCacheStart;
@@ -536,6 +529,8 @@ private:
     int _jsFactoryMethodIndex;
     QByteArray _checksum;
 };
+
+typedef QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCachePtr;
 
 // QQmlMetaObject serves as a wrapper around either QMetaObject or QQmlPropertyCache.
 // This is necessary as we delay creation of QMetaObject for synthesized QObjects, but

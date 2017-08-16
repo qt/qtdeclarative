@@ -90,7 +90,7 @@ struct QQmlImportInstance
     static QQmlDirScripts getVersionedScripts(const QQmlDirScripts &qmldirscripts, int vmaj, int vmin);
 
     bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
-                     int *vmajor, int *vminor, QQmlType** type_return,
+                     int *vmajor, int *vminor, QQmlType* type_return,
                      QString *base = 0, bool *typeRecursionDetected = 0,
                      QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion) const;
 };
@@ -106,7 +106,7 @@ public:
     QQmlImportInstance *findImport(const QString &uri) const;
 
     bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef& type,
-                     int *vmajor, int *vminor, QQmlType** type_return,
+                     int *vmajor, int *vminor, QQmlType* type_return,
                      QString *base = 0, QList<QQmlError> *errors = 0,
                      QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion);
 
@@ -131,14 +131,14 @@ public:
     QUrl baseUrl() const;
 
     bool resolveType(const QHashedStringRef &type,
-                     QQmlType** type_return,
+                     QQmlType *type_return,
                      int *version_major, int *version_minor,
-                     QQmlImportNamespace** ns_return,
+                     QQmlImportNamespace **ns_return,
                      QList<QQmlError> *errors = 0,
                      QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion) const;
-    bool resolveType(QQmlImportNamespace*,
+    bool resolveType(QQmlImportNamespace *,
                      const QHashedStringRef& type,
-                     QQmlType** type_return, int *version_major, int *version_minor) const;
+                     QQmlType *type_return, int *version_major, int *version_minor) const;
 
     bool addImplicitImport(QQmlImportDatabase *importDb, QList<QQmlError> *errors);
 

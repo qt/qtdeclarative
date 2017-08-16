@@ -75,7 +75,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
 
     for (auto it = resolvedTypes.constBegin(), end = resolvedTypes.constEnd();
          it != end; ++it) {
-        QQmlCustomParser *customParser = (*it)->type ? (*it)->type->customParser() : 0;
+        QQmlCustomParser *customParser = (*it)->type.customParser();
         if (customParser)
             customParsers.insert(it.key(), customParser);
     }
@@ -170,7 +170,6 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     compilationUnit->resolvedTypes = resolvedTypes;
     compilationUnit->propertyCaches = std::move(m_propertyCaches);
     Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->data->nObjects));
-
 
     if (errors.isEmpty())
         return compilationUnit;
@@ -345,11 +344,11 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             const QmlIR::Object *attachedObj = qmlObjects.at(binding->value.objectIndex);
             auto *typeRef = resolvedTypes.value(binding->propertyNameIndex);
-            QQmlType *type = typeRef ? typeRef->type : 0;
-            if (!type) {
+            QQmlType type = typeRef ? typeRef->type : QQmlType();
+            if (!type.isValid()) {
                 if (imports->resolveType(propertyName, &type, 0, 0, 0)) {
-                    if (type->isComposite()) {
-                        QQmlTypeData *tdata = enginePrivate->typeLoader.getType(type->sourceUrl());
+                    if (type.isComposite()) {
+                        QQmlTypeData *tdata = enginePrivate->typeLoader.getType(type.sourceUrl());
                         Q_ASSERT(tdata);
                         Q_ASSERT(tdata->isComplete());
 
@@ -361,7 +360,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 }
             }
 
-            const QMetaObject *attachedType = type ? type->attachedPropertiesType(enginePrivate) : 0;
+            const QMetaObject *attachedType = type.attachedPropertiesType(enginePrivate);
             if (!attachedType)
                 COMPILE_EXCEPTION(binding, tr("Non-existent attached object"));
             QQmlPropertyCache *cache = compiler->enginePrivate()->cache(attachedType);
@@ -418,9 +417,9 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
 
                 auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
-                const QQmlType *type = typeRef ? typeRef->type : 0;
-                if (type) {
-                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(originalPropertyName).arg(type->module()).arg(type->majorVersion()).arg(type->minorVersion()));
+                const QQmlType type = typeRef->type;
+                if (type.isValid()) {
+                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(originalPropertyName).arg(type.module()).arg(type.majorVersion()).arg(type.minorVersion()));
                 } else {
                     COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(originalPropertyName));
                 }
@@ -623,17 +622,17 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
         }
         return true;
     }
-    QQmlType *type = 0;
+    QQmlType type;
     imports->resolveType(typeName, &type, 0, 0, 0);
 
-    if (!type && !isQtObject)
+    if (!type.isValid() && !isQtObject)
         return true;
 
     int value = 0;
     bool ok = false;
 
     auto *tr = resolvedTypes->value(obj->inheritedTypeNameIndex);
-    if (type && tr && tr->type == type) {
+    if (type.isValid() && tr && tr->type == type) {
         // When these two match, we can short cut the search
         QMetaProperty mprop = propertyCache->firstCppMetaObject()->property(prop->coreIndex());
         QMetaEnum menum = mprop.enumerator();
@@ -648,11 +647,11 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
         }
     } else {
         // Otherwise we have to search the whole type
-        if (type) {
+        if (type.isValid()) {
             if (!scopedEnumName.isEmpty())
-                value = type->scopedEnumValue(compiler->enginePrivate(), scopedEnumName, enumValue, &ok);
+                value = type.scopedEnumValue(compiler->enginePrivate(), scopedEnumName, enumValue, &ok);
             else
-                value = type->enumValue(compiler->enginePrivate(), QHashedStringRef(enumValue), &ok);
+                value = type.enumValue(compiler->enginePrivate(), QHashedStringRef(enumValue), &ok);
         } else {
             QByteArray enumName = enumValue.toUtf8();
             const QMetaObject *metaObject = StaticQtMetaObject::get();
@@ -675,13 +674,13 @@ int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, const QStringRef &e
     *ok = false;
 
     if (scope != QLatin1String("Qt")) {
-        QQmlType *type = 0;
+        QQmlType type;
         imports->resolveType(scope, &type, 0, 0, 0);
-        if (!type)
+        if (!type.isValid())
             return -1;
         if (!enumName.isEmpty())
-            return type->scopedEnumValue(compiler->enginePrivate(), enumName, enumValue, ok);
-        return type->enumValue(compiler->enginePrivate(), QHashedStringRef(enumValue.constData(), enumValue.length()), ok);
+            return type.scopedEnumValue(compiler->enginePrivate(), enumName, enumValue, ok);
+        return type.enumValue(compiler->enginePrivate(), QHashedStringRef(enumValue.constData(), enumValue.length()), ok);
     }
 
     const QMetaObject *mo = StaticQtMetaObject::get();
@@ -820,8 +819,8 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         const QmlIR::Object *targetObject = qmlObjects->at(binding->value.objectIndex);
         auto *tr = resolvedTypes->value(targetObject->inheritedTypeNameIndex);
         Q_ASSERT(tr);
-        if (QQmlType *targetType = tr->type) {
-            if (targetType->metaObject() == &QQmlComponent::staticMetaObject)
+        if (tr->type.isValid()) {
+            if (tr->type.metaObject() == &QQmlComponent::staticMetaObject)
                 continue;
         } else if (tr->compilationUnit) {
             if (tr->compilationUnit->rootPropertyCache()->firstCppMetaObject() == &QQmlComponent::staticMetaObject)
@@ -850,22 +849,22 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
             continue;
 
         // emulate "import Qml 2.0 as QmlInternals" and then wrap the component in "QmlInternals.Component {}"
-        QQmlType *componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
-        Q_ASSERT(componentType);
+        QQmlType componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
+        Q_ASSERT(componentType.isValid());
         const QString qualifier = QStringLiteral("QmlInternals");
 
-        compiler->addImport(componentType->module(), qualifier, componentType->majorVersion(), componentType->minorVersion());
+        compiler->addImport(componentType.module(), qualifier, componentType.majorVersion(), componentType.minorVersion());
 
         QmlIR::Object *syntheticComponent = pool->New<QmlIR::Object>();
-        syntheticComponent->init(pool, compiler->registerString(qualifier + QLatin1Char('.') + componentType->elementName()), compiler->registerString(QString()));
+        syntheticComponent->init(pool, compiler->registerString(qualifier + QLatin1Char('.') + componentType.elementName()), compiler->registerString(QString()));
         syntheticComponent->location = binding->valueLocation;
         syntheticComponent->flags |= QV4::CompiledData::Object::IsComponent;
 
         if (!resolvedTypes->contains(syntheticComponent->inheritedTypeNameIndex)) {
             auto typeRef = new QV4::CompiledData::ResolvedTypeReference;
             typeRef->type = componentType;
-            typeRef->majorVersion = componentType->majorVersion();
-            typeRef->minorVersion = componentType->minorVersion();
+            typeRef->majorVersion = componentType.majorVersion();
+            typeRef->minorVersion = componentType.minorVersion();
             resolvedTypes->insert(syntheticComponent->inheritedTypeNameIndex, typeRef);
         }
 
@@ -906,7 +905,7 @@ bool QQmlComponentAndAliasResolver::resolve()
         if (obj->inheritedTypeNameIndex) {
             auto *tref = resolvedTypes->value(obj->inheritedTypeNameIndex);
             Q_ASSERT(tref);
-            if (tref->type && tref->type->metaObject() == &QQmlComponent::staticMetaObject)
+            if (tref->type.metaObject() == &QQmlComponent::staticMetaObject)
                 isExplicitComponent = true;
         }
         if (!isExplicitComponent) {

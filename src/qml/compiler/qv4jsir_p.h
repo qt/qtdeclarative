@@ -54,6 +54,9 @@
 #include <private/qqmljsmemorypool_p.h>
 #include <private/qqmljsastfwd_p.h>
 #include <private/qflagpointer_p.h>
+#ifndef V4_BOOTSTRAP
+#include <private/qqmlmetatype_p.h>
+#endif
 
 #include <QtCore/private/qnumeric_p.h>
 #include <QtCore/QVector>
@@ -77,6 +80,8 @@ class QQmlType;
 class QQmlPropertyData;
 class QQmlPropertyCache;
 class QQmlEnginePrivate;
+struct QQmlImportRef;
+class QQmlTypeNameCache;
 
 namespace QV4 {
 
@@ -248,14 +253,18 @@ struct MemberExpressionResolver
                                               Member *member);
 
     MemberExpressionResolver()
-        : resolveMember(0), data(0), extraData(0), owner(nullptr), flags(0) {}
+        : resolveMember(0), import(nullptr), propertyCache(nullptr), typenameCache(nullptr), owner(nullptr), flags(0) {}
 
     bool isValid() const { return !!resolveMember; }
     void clear() { *this = MemberExpressionResolver(); }
 
     ResolveFunction resolveMember;
-    void *data; // Could be pointer to meta object, importNameSpace, etc. - depends on resolveMember implementation
-    void *extraData; // Could be QQmlTypeNameCache
+#ifndef V4_BOOTSTRAP
+    QQmlType qmlType;
+#endif
+    const QQmlImportRef *import;
+    QQmlPropertyCache *propertyCache;
+    QQmlTypeNameCache *typenameCache;
     Function *owner;
     unsigned int flags;
 };

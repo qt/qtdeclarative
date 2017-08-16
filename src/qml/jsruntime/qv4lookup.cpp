@@ -40,6 +40,7 @@
 #include "qv4functionobject_p.h"
 #include "qv4scopedvalue_p.h"
 #include "qv4string_p.h"
+#include <private/qv4identifiertable_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -49,7 +50,7 @@ using namespace QV4;
 ReturnedValue Lookup::lookup(const Value &thisObject, Object *o, PropertyAttributes *attrs)
 {
     ExecutionEngine *engine = o->engine();
-    Identifier *name = engine->current->compilationUnit->runtimeStrings[nameIndex]->identifier;
+    Identifier *name = engine->identifierTable->identifier(engine->current->compilationUnit->runtimeStrings[nameIndex]);
     int i = 0;
     Heap::Object *obj = o->d();
     while (i < Size && obj) {
@@ -85,7 +86,7 @@ ReturnedValue Lookup::lookup(const Object *thisObject, PropertyAttributes *attrs
 {
     Heap::Object *obj = thisObject->d();
     ExecutionEngine *engine = thisObject->engine();
-    Identifier *name = engine->current->compilationUnit->runtimeStrings[nameIndex]->identifier;
+    Identifier *name = engine->identifierTable->identifier(engine->current->compilationUnit->runtimeStrings[nameIndex]);
     int i = 0;
     while (i < Size && obj) {
         classList[i] = obj->internalClass;
