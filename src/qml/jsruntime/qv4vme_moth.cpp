@@ -874,42 +874,10 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ConvertThisToObject)
 
-    MOTH_BEGIN_INSTR(CreateValue)
+    MOTH_BEGIN_INSTR(Construct)
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
-        STORE_ACCUMULATOR(Runtime::method_constructValue(engine, STACK_VALUE(instr.func), callData));
-    MOTH_END_INSTR(CreateValue)
-
-    MOTH_BEGIN_INSTR(CreateProperty)
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
-        callData->tag = quint32(Value::ValueTypeInternal::Integer);
-        callData->argc = instr.argc;
-        callData->thisObject = STACK_VALUE(instr.base);
-        STORE_ACCUMULATOR(Runtime::method_constructProperty(engine, instr.name, callData));
-    MOTH_END_INSTR(CreateProperty)
-
-    MOTH_BEGIN_INSTR(ConstructPropertyLookup)
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
-        callData->tag = quint32(Value::ValueTypeInternal::Integer);
-        callData->argc = instr.argc;
-        callData->thisObject = STACK_VALUE(instr.base);
-        STORE_ACCUMULATOR(Runtime::method_constructPropertyLookup(engine, instr.index, callData));
-    MOTH_END_INSTR(ConstructPropertyLookup)
-
-    MOTH_BEGIN_INSTR(CreateName)
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
-        callData->tag = quint32(Value::ValueTypeInternal::Integer);
-        callData->argc = instr.argc;
-        callData->thisObject = QV4::Primitive::undefinedValue();
-        STORE_ACCUMULATOR(Runtime::method_constructName(engine, instr.name, callData));
-    MOTH_END_INSTR(CreateName)
-
-    MOTH_BEGIN_INSTR(ConstructGlobalLookup)
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
-        callData->tag = quint32(Value::ValueTypeInternal::Integer);
-        callData->argc = instr.argc;
-        callData->thisObject = QV4::Primitive::undefinedValue();
-        STORE_ACCUMULATOR(Runtime::method_constructGlobalLookup(engine, instr.index, callData));
-    MOTH_END_INSTR(ConstructGlobalLookup)
+        STORE_ACCUMULATOR(Runtime::method_construct(engine, STACK_VALUE(instr.func), callData));
+    MOTH_END_INSTR(Construct)
 
     MOTH_BEGIN_INSTR(Jump)
         code = reinterpret_cast<const uchar *>(&instr.offset) + instr.offset;

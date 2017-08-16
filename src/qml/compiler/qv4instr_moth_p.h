@@ -132,11 +132,7 @@ QT_BEGIN_NAMESPACE
     F(CreateMappedArgumentsObject, createMappedArgumentsObject) \
     F(CreateUnmappedArgumentsObject, createUnmappedArgumentsObject) \
     F(ConvertThisToObject, convertThisToObject) \
-    F(CreateValue, createValue) \
-    F(CreateProperty, createProperty) \
-    F(ConstructPropertyLookup, constructPropertyLookup) \
-    F(CreateName, createName) \
-    F(ConstructGlobalLookup, constructGlobalLookup) \
+    F(Construct, construct) \
     F(Jump, jump) \
     F(JumpEq, jumpEq) \
     F(JumpNe, jumpNe) \
@@ -531,36 +527,10 @@ union Instr
     struct instr_convertThisToObject {
         MOTH_INSTR_HEADER
     };
-    struct instr_createValue {
+    struct instr_construct {
         MOTH_INSTR_HEADER
         StackSlot callData;
         StackSlot func;
-    };
-    struct instr_createProperty {
-        MOTH_INSTR_HEADER
-        int name;
-        int argc;
-        StackSlot callData;
-        StackSlot base;
-    };
-    struct instr_constructPropertyLookup {
-        MOTH_INSTR_HEADER
-        int index;
-        int argc;
-        StackSlot callData;
-        StackSlot base;
-    };
-    struct instr_createName {
-        MOTH_INSTR_HEADER
-        int name;
-        int argc;
-        StackSlot callData;
-    };
-    struct instr_constructGlobalLookup {
-        MOTH_INSTR_HEADER
-        int index;
-        int argc;
-        StackSlot callData;
     };
     struct instr_jump {
         MOTH_INSTR_HEADER
@@ -802,11 +772,7 @@ union Instr
     instr_createMappedArgumentsObject createMappedArgumentsObject;
     instr_createUnmappedArgumentsObject createUnmappedArgumentsObject;
     instr_convertThisToObject convertThisToObject;
-    instr_createValue createValue;
-    instr_createProperty createProperty;
-    instr_constructPropertyLookup constructPropertyLookup;
-    instr_createName createName;
-    instr_constructGlobalLookup constructGlobalLookup;
+    instr_construct construct;
     instr_jump jump;
     instr_jumpEq jumpEq;
     instr_jumpNe jumpNe;

@@ -358,25 +358,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals)
         MOTH_BEGIN_INSTR(ConvertThisToObject)
         MOTH_END_INSTR(ConvertThisToObject)
 
-        MOTH_BEGIN_INSTR(CreateValue)
+        MOTH_BEGIN_INSTR(Construct)
             d << "new" << instr.func.dump(nFormals) << "(" << instr.callData.dump(nFormals) << ")";
-        MOTH_END_INSTR(CreateValue)
-
-        MOTH_BEGIN_INSTR(CreateProperty)
-            d << "new" << instr.name << "(" << instr.callData.dump(nFormals) << instr.argc << ")";
-        MOTH_END_INSTR(CreateProperty)
-
-        MOTH_BEGIN_INSTR(ConstructPropertyLookup)
-            d << "new" << instr.index << "(" << instr.callData.dump(nFormals) << instr.argc << ")";
-        MOTH_END_INSTR(ConstructPropertyLookup)
-
-        MOTH_BEGIN_INSTR(CreateName)
-            d << "new" << instr.name << "(" << instr.callData.dump(nFormals) << instr.argc << ")";
-        MOTH_END_INSTR(CreateName)
-
-        MOTH_BEGIN_INSTR(ConstructGlobalLookup)
-            d << "new" << instr.index << "(" << instr.callData.dump(nFormals) << instr.argc << ")";
-        MOTH_END_INSTR(ConstructGlobalLookup)
+        MOTH_END_INSTR(Construct)
 
         MOTH_BEGIN_INSTR(Jump)
             d << absoluteInstructionOffset(start, instr);

@@ -1126,36 +1126,7 @@ ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &fu
 }
 
 
-ReturnedValue Runtime::method_constructGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData)
-{
-    Scope scope(engine);
-    Q_ASSERT(callData->thisObject.isUndefined());
-
-    Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
-    ScopedObject f(scope, l->globalGetter(l, engine));
-    if (f)
-        return f->construct(callData);
-
-    return engine->throwTypeError();
-}
-
-
-ReturnedValue Runtime::method_constructName(ExecutionEngine *engine, int nameIndex, CallData *callData)
-{
-    Scope scope(engine);
-    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    ScopedValue func(scope, static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).getProperty(name));
-    if (scope.engine->hasException)
-        return Encode::undefined();
-
-    Object *f = func->as<Object>();
-    if (!f)
-        return engine->throwTypeError();
-
-    return f->construct(callData);
-}
-
-ReturnedValue Runtime::method_constructValue(ExecutionEngine *engine, const Value &func, CallData *callData)
+ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &func, CallData *callData)
 {
     const Object *f = func.as<Object>();
     if (!f)
@@ -1163,34 +1134,6 @@ ReturnedValue Runtime::method_constructValue(ExecutionEngine *engine, const Valu
 
     return f->construct(callData);
 }
-
-ReturnedValue Runtime::method_constructProperty(ExecutionEngine *engine, int nameIndex, CallData *callData)
-{
-    Scope scope(engine);
-    ScopedObject thisObject(scope, callData->thisObject.toObject(engine));
-    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    if (scope.engine->hasException)
-        return Encode::undefined();
-
-    ScopedObject f(scope, thisObject->get(name));
-    if (f)
-        return f->construct(callData);
-
-    return engine->throwTypeError();
-}
-
-ReturnedValue Runtime::method_constructPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData)
-{
-    Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
-    Value v;
-    v = l->getter(l, engine, callData->thisObject);
-    Object *o = v.objectValue();
-    if (Q_LIKELY(o))
-        return o->construct(callData);
-
-    return engine->throwTypeError();
-}
-
 
 void Runtime::method_throwException(ExecutionEngine *engine, const Value &value)
 {

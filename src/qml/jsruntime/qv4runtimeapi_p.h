@@ -100,11 +100,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, callValue, (ExecutionEngine *engine, const Value &func, CallData *callData)) \
     \
     /* construct */ \
-    F(ReturnedValue, constructGlobalLookup, (ExecutionEngine *engine, uint index, CallData *callData)) \
-    F(ReturnedValue, constructName, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
-    F(ReturnedValue, constructProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
-    F(ReturnedValue, constructPropertyLookup, (ExecutionEngine *engine, uint index, CallData *callData)) \
-    F(ReturnedValue, constructValue, (ExecutionEngine *engine, const Value &func, CallData *callData)) \
+    F(ReturnedValue, construct, (ExecutionEngine *engine, const Value &func, CallData *callData)) \
     \
     /* load & store */ \
     F(void, storeNameStrict, (ExecutionEngine *engine, int nameIndex, const Value &value)) \

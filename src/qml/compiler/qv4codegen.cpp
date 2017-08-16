@@ -1483,12 +1483,12 @@ bool Codegen::visit(NewExpression *ast)
     Reference base = expression(ast->expression);
     if (hasError)
         return false;
-    //### Maybe create a CreateValueA that takes an accumulator?
+    //### Maybe create a ConstructA that takes an accumulator?
     base = base.storeOnStack();
 
     auto calldata = pushArgs(0);
 
-    Instruction::CreateValue create;
+    Instruction::Construct create;
     create.func = base.stackSlot();
     create.callData = calldata;
     bytecodeGenerator->addInstruction(create);
@@ -1512,7 +1512,7 @@ bool Codegen::visit(NewMemberExpression *ast)
     if (hasError)
         return false;
 
-    Instruction::CreateValue create;
+    Instruction::Construct create;
     create.func = base.stackSlot();
     create.callData = calldata;
     bytecodeGenerator->addInstruction(create);
