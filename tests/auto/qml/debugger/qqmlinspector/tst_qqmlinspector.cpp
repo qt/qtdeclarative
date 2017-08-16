@@ -28,6 +28,7 @@
 
 #include "qqmlinspectorclient.h"
 #include "../shared/debugutil_p.h"
+#include "../shared/qqmldebugprocess_p.h"
 #include "../../../shared/util.h"
 
 #include <private/qqmldebugconnection_p.h>
