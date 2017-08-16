@@ -67,7 +67,7 @@
     possible, such as \c disabled, \c pressed, etc. This will ensure that
     interactive controls visually behave as the end user would expect them to.
 
-    TODO: mention priority order, scoring system?
+    \section2 Element Reference
 
     The following table lists which elements are supported for each control,
     along with the possible states for that element, and the file extension
@@ -143,7 +143,7 @@
             \li .9.png (or .png)
         \row
             \li \l DelayButton
-            \li background, progress, mask
+            \li background
             \li disabled, pressed, checked, checkable, focused, mirrored, hovered
             \li .9.png (or .png)
         \row
@@ -248,8 +248,13 @@
             \li .png
         \row
             \li \l MenuSeparator
-            \li background, separator
+            \li background
             \li disabled, mirrored
+            \li .9.png (or .png)
+        \row
+            \li
+            \li separator
+            \li same as above
             \li .9.png (or .png)
         \row
             \li \l Page
@@ -303,7 +308,7 @@
             \li .9.png (or .png)
         \row
             \li \l RadioButton
-            \li background, indicator
+            \li background
             \li disabled, pressed, checked, focused, mirrored, hovered
             \li .9.png (or .png)
         \row
@@ -413,7 +418,7 @@
             \li .9.png (or .png)
         \row
             \li \l Switch
-            \li background, handle, indicator
+            \li background
             \li disabled, pressed, checked, focused, mirrored, hovered
             \li .9.png (or .png)
         \row
@@ -428,7 +433,7 @@
             \li .9.png (or .png)
         \row
             \li \l SwitchDelegate
-            \li background, handle, indicator
+            \li background
             \li disabled, pressed, checked, focused, highlighted, mirrored, hovered
             \li .9.png (or .png)
         \row
@@ -473,8 +478,13 @@
             \li .9.png (or .png)
         \row
             \li \l ToolSeparator
-            \li background, separator
+            \li background
             \li vertical, horizontal, disabled, mirrored
+            \li .9.png (or .png)
+        \row
+            \li
+            \li separator
+            \li same as above
             \li .9.png (or .png)
         \row
             \li \l ToolTip
