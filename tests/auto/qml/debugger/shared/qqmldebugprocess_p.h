@@ -76,6 +76,12 @@ private slots:
     void processError(QProcess::ProcessError error);
 
 private:
+    enum SessionState {
+        SessionUnknown,
+        SessionStarted,
+        SessionFailed
+    };
+
     QString m_executable;
     QProcess m_process;
     QString m_outputBuffer;
@@ -83,7 +89,7 @@ private:
     QTimer m_timer;
     QEventLoop m_eventLoop;
     QMutex m_mutex;
-    bool m_started;
+    SessionState m_state;
     QStringList m_environment;
     int m_port;
     int m_maximumBindErrors;

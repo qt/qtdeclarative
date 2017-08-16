@@ -35,7 +35,7 @@
 QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
     : QObject(parent)
     , m_executable(executable)
-    , m_started(false)
+    , m_state(SessionUnknown)
     , m_port(0)
     , m_maximumBindErrors(0)
     , m_receivedBindErrors(0)
@@ -47,6 +47,11 @@ QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
             this, &QQmlDebugProcess::processAppOutput);
     connect(&m_process, &QProcess::errorOccurred,
             this, &QQmlDebugProcess::processError);
+    connect(&m_process, static_cast<void(QProcess::*)(int)>(&QProcess::finished),
+            this, [this]() {
+        m_timer.stop();
+        m_eventLoop.quit();
+    });
     connect(&m_timer, &QTimer::timeout,
             this, &QQmlDebugProcess::timeout);
 }
@@ -99,8 +104,6 @@ void QQmlDebugProcess::start(const QStringList &arguments)
         qWarning() << "QML Debug Client: Could not launch app " << m_executable
                    << ": " << m_process.errorString();
         m_eventLoop.quit();
-    } else {
-        m_timer.start();
     }
     m_mutex.unlock();
 }
@@ -108,6 +111,7 @@ void QQmlDebugProcess::start(const QStringList &arguments)
 void QQmlDebugProcess::stop()
 {
     if (m_process.state() != QProcess::NotRunning) {
+        disconnect(&m_process, &QProcess::errorOccurred, this, &QQmlDebugProcess::processError);
         m_process.kill();
         m_process.waitForFinished(5000);
     }
@@ -131,12 +135,16 @@ bool QQmlDebugProcess::waitForSessionStart()
     if (m_process.state() != QProcess::Running) {
         qWarning() << "Could not start up " << m_executable;
         return false;
-    } else if (m_started) {
+    } else if (m_state == SessionStarted) {
         return true;
+    } else if (m_state == SessionFailed) {
+        return false;
     }
+
+    m_timer.start();
     m_eventLoop.exec();
 
-    return m_started;
+    return m_state == SessionStarted;
 }
 
 int QQmlDebugProcess::debugPort() const
@@ -186,7 +194,7 @@ void QQmlDebugProcess::processAppOutput()
             if (portRx.indexIn(line) != -1) {
                 m_port = portRx.cap(1).toInt();
                 m_timer.stop();
-                m_started = true;
+                m_state = SessionStarted;
                 m_eventLoop.quit();
                 continue;
             }
@@ -195,14 +203,15 @@ void QQmlDebugProcess::processAppOutput()
                     if (m_maximumBindErrors == 0)
                         qWarning() << "App was unable to bind to port!";
                     m_timer.stop();
+                    m_state = SessionFailed;
                     m_eventLoop.quit();
                  }
                  continue;
             }
-        } else {
-            // set to true if there is output not coming from the debugger
-            outputFromAppItself = true;
         }
+
+        // set to true if there is output not coming from the debugger or we don't understand it
+        outputFromAppItself = true;
     }
     m_mutex.unlock();
 
@@ -212,9 +221,6 @@ void QQmlDebugProcess::processAppOutput()
 
 void QQmlDebugProcess::processError(QProcess::ProcessError error)
 {
-    if (!m_eventLoop.isRunning())
-       return;
-
     qDebug() << "An error occurred while waiting for debug process to become available:";
     switch (error) {
     case QProcess::FailedToStart:
@@ -236,6 +242,4 @@ void QQmlDebugProcess::processError(QProcess::ProcessError error)
         qDebug() << "Unknown process error.";
         break;
     }
-
-    m_eventLoop.exit();
 }

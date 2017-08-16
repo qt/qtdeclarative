@@ -10,7 +10,8 @@ PUBLICTESTS += \
     qqmlenginedebuginspectorintegrationtest \
     qqmlenginecontrol \
     qqmldebuggingenabler \
-    qqmlnativeconnector
+    qqmlnativeconnector \
+    qqmldebugprocess
 
 PRIVATETESTS += \
     qqmldebugclient \
