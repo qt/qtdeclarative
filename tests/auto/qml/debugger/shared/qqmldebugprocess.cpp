@@ -43,10 +43,12 @@ QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
     m_process.setProcessChannelMode(QProcess::MergedChannels);
     m_timer.setSingleShot(true);
     m_timer.setInterval(15000);
-    connect(&m_process, SIGNAL(readyReadStandardOutput()), this, SLOT(processAppOutput()));
-    connect(&m_process, SIGNAL(errorOccurred(QProcess::ProcessError)),
-            this, SLOT(processError(QProcess::ProcessError)));
-    connect(&m_timer, SIGNAL(timeout()), SLOT(timeout()));
+    connect(&m_process, &QProcess::readyReadStandardOutput,
+            this, &QQmlDebugProcess::processAppOutput);
+    connect(&m_process, &QProcess::errorOccurred,
+            this, &QQmlDebugProcess::processError);
+    connect(&m_timer, &QTimer::timeout,
+            this, &QQmlDebugProcess::timeout);
 }
 
 QQmlDebugProcess::~QQmlDebugProcess()
@@ -66,8 +68,12 @@ QString QQmlDebugProcess::state()
             stateStr += ", return value " + QString::number(m_process.exitCode());
         break;
     }
-    case QProcess::Starting: stateStr = "starting"; break;
-    case QProcess::Running: stateStr = "running"; break;
+    case QProcess::Starting:
+        stateStr = "starting";
+        break;
+    case QProcess::Running:
+        stateStr = "running";
+        break;
     }
     return stateStr;
 }
@@ -115,7 +121,8 @@ void QQmlDebugProcess::setMaximumBindErrors(int ignore)
 void QQmlDebugProcess::timeout()
 {
     qWarning() << "Timeout while waiting for QML debugging messages "
-                  "in application output. Process is in state" << m_process.state() << ", Output:" << m_output << ".";
+                  "in application output. Process is in state" << m_process.state()
+               << ", Output:" << m_output << ".";
     m_eventLoop.quit();
 }
 
@@ -210,12 +217,24 @@ void QQmlDebugProcess::processError(QProcess::ProcessError error)
 
     qDebug() << "An error occurred while waiting for debug process to become available:";
     switch (error) {
-    case QProcess::FailedToStart: qDebug() << "Process failed to start."; break;
-    case QProcess::Crashed: qDebug() << "Process crashed."; break;
-    case QProcess::Timedout: qDebug() << "Process timed out."; break;
-    case QProcess::WriteError: qDebug() << "Error while writing to process."; break;
-    case QProcess::ReadError: qDebug() << "Error while reading from process."; break;
-    case QProcess::UnknownError: qDebug() << "Unknown process error."; break;
+    case QProcess::FailedToStart:
+        qDebug() << "Process failed to start.";
+        break;
+    case QProcess::Crashed:
+        qDebug() << "Process crashed.";
+        break;
+    case QProcess::Timedout:
+        qDebug() << "Process timed out.";
+        break;
+    case QProcess::WriteError:
+        qDebug() << "Error while writing to process.";
+        break;
+    case QProcess::ReadError:
+        qDebug() << "Error while reading from process.";
+        break;
+    case QProcess::UnknownError:
+        qDebug() << "Unknown process error.";
+        break;
     }
 
     m_eventLoop.exit();
