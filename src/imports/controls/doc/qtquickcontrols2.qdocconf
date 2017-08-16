@@ -48,7 +48,8 @@ sourcedirs += ../../../quicktemplates2 \
               ../../templates/doc/src \
               src
 
-imagedirs += images
+imagedirs += images \
+             ..
 
 navigation.landingpage  = "Qt Quick Controls 2"
 navigation.qmltypespage = "Qt Quick Controls 2 QML Types"
