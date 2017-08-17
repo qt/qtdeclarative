@@ -549,6 +549,10 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("scopedEnumList") << "scopedEnumList.qml" << "scopedEnumList.errors.txt" << false;
     QTest::newRow("lowercase enum value") << "lowercaseQmlEnum.1.qml" << "lowercaseQmlEnum.1.errors.txt" << false;
     QTest::newRow("lowercase enum type") << "lowercaseQmlEnum.2.qml" << "lowercaseQmlEnum.2.errors.txt" << false;
+    QTest::newRow("string enum value") << "invalidQmlEnumValue.1.qml" << "invalidQmlEnumValue.1.errors.txt" << false;
+    QTest::newRow("identifier enum type") << "invalidQmlEnumValue.2.qml" << "invalidQmlEnumValue.2.errors.txt" << false;
+    QTest::newRow("enum value too large") << "invalidQmlEnumValue.3.qml" << "invalidQmlEnumValue.3.errors.txt" << false;
+    QTest::newRow("non-integer enum value") << "invalidQmlEnumValue.4.qml" << "invalidQmlEnumValue.4.errors.txt" << false;
 
     const QString expectedError = isCaseSensitiveFileSystem(dataDirectory()) ?
         QStringLiteral("incorrectCase.errors.sensitive.txt") :
@@ -3730,6 +3734,12 @@ void tst_qqmllanguage::qmlEnums()
         QCOMPARE(o->property("enumValue").toInt(), 1);
         QCOMPARE(o->property("enumValue2").toInt(), 2);
         QCOMPARE(o->property("scopedEnumValue").toInt(), 1);
+
+        QCOMPARE(o->property("otherEnumValue1").toInt(), 24);
+        QCOMPARE(o->property("otherEnumValue2").toInt(), 25);
+        QCOMPARE(o->property("otherEnumValue3").toInt(), 24);
+        QCOMPARE(o->property("otherEnumValue4").toInt(), 25);
+        QCOMPARE(o->property("otherEnumValue5").toInt(), 1);
     }
 
     {

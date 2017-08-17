@@ -45,6 +45,7 @@
 #include <private/qqmljslexer_p.h>
 #include <QCoreApplication>
 #include <QCryptographicHash>
+#include <cmath>
 
 #ifndef V4_BOOTSTRAP
 #include <private/qqmlglobal_p.h>
@@ -740,15 +741,19 @@ bool IRBuilder::visit(QQmlJS::AST::UiEnumDeclaration *node)
     enumeration->enumValues = New<PoolList<EnumValue>>();
 
     QQmlJS::AST::UiEnumMemberList *e = node->members;
-    int i = -1;
     while (e) {
         EnumValue *enumValue = New<EnumValue>();
         QString member = e->member.toString();
         enumValue->nameIndex = registerString(member);
-        enumValue->value = ++i;
-
         if (member.at(0).isLower())
             COMPILE_EXCEPTION(e->memberToken, tr("Enum names must begin with an upper case letter"));
+
+        double part;
+        if (std::modf(e->value, &part) != 0.0)
+            COMPILE_EXCEPTION(e->valueToken, tr("Enum value must be an integer"));
+        if (e->value > std::numeric_limits<qint32>::max() || e->value < std::numeric_limits<qint32>::min())
+            COMPILE_EXCEPTION(e->valueToken, tr("Enum value out of range"));
+        enumValue->value = e->value;
 
         enumValue->location.line = e->memberToken.startLine;
         enumValue->location.column = e->memberToken.startColumn;

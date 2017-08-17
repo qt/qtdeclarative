@@ -2791,12 +2791,21 @@ class QML_PARSER_EXPORT UiEnumMemberList: public Node
 {
     QQMLJS_DECLARE_AST_NODE(UiEnumMemberList)
 public:
-    UiEnumMemberList(const QStringRef &member)
-        : next(this), member(member)
+    UiEnumMemberList(const QStringRef &member, double v = 0.0)
+        : next(this), member(member), value(v)
     { kind = K; }
 
     UiEnumMemberList(UiEnumMemberList *previous, const QStringRef &member)
         : member(member)
+    {
+        kind = K;
+        next = previous->next;
+        previous->next = this;
+        value = previous->value + 1;
+    }
+
+    UiEnumMemberList(UiEnumMemberList *previous, const QStringRef &member, double v)
+        : member(member), value(v)
     {
         kind = K;
         next = previous->next;
@@ -2807,7 +2816,8 @@ public:
     { return memberToken; }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : memberToken; }
+    { return next ? next->lastSourceLocation() :
+                    valueToken.isValid() ? valueToken : memberToken; }
 
     void accept0(Visitor *visitor) override;
 
@@ -2821,7 +2831,9 @@ public:
 // attributes
     UiEnumMemberList *next;
     QStringRef member;
+    double value;
     SourceLocation memberToken;
+    SourceLocation valueToken;
 };
 
 class QML_PARSER_EXPORT UiEnumDeclaration: public UiObjectMember

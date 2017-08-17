@@ -1230,11 +1230,33 @@ case $rule_number: {
 }
 ./
 
+EnumMemberList: T_IDENTIFIER T_EQ T_NUMERIC_LITERAL;
+/.
+case $rule_number: {
+    AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(stringRef(1), sym(3).dval);
+    node->memberToken = loc(1);
+    node->valueToken = loc(3);
+    sym(1).Node = node;
+    break;
+}
+./
+
 EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER;
 /.
 case $rule_number: {
     AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3));
     node->memberToken = loc(3);
+    sym(1).Node = node;
+    break;
+}
+./
+
+EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER T_EQ T_NUMERIC_LITERAL;
+/.
+case $rule_number: {
+    AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3), sym(5).dval);
+    node->memberToken = loc(3);
+    node->valueToken = loc(5);
     sym(1).Node = node;
     break;
 }
