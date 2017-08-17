@@ -239,7 +239,7 @@ struct QQuickStyleSpec
     {
         if (configFilePath.isEmpty()) {
             configFilePath = QFile::decodeName(qgetenv("QT_QUICK_CONTROLS_CONF"));
-            if (!QFile::exists(configFilePath)) {
+            if (configFilePath.isEmpty() || !QFile::exists(configFilePath)) {
                 if (!configFilePath.isEmpty())
                     qWarning("QT_QUICK_CONTROLS_CONF=%s: No such file", qPrintable(configFilePath));
 
