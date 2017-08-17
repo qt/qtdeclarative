@@ -553,6 +553,7 @@ void QSGRenderThread::sync(bool inExpose)
         if (d->renderer)
             d->renderer->clearChangedFlag();
         d->syncSceneGraph();
+        sgrc->endSync();
         if (!hadRenderer && d->renderer) {
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- renderer was created";
             syncResultedInChanges = true;
