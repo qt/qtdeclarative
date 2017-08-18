@@ -18,3 +18,7 @@
 
 [SwipeDelegate::test_swipeVelocity]
 *
+
+# https://bugreports.qt.io/browse/QTBUG-62549
+[Dialog::test_reject]
+*
