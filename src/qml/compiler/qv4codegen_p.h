@@ -281,9 +281,15 @@ public:
 
         RValue asRValue() const;
         Reference asLValue() const;
-        static Reference storeConstOnStack(Codegen *cg, QV4::ReturnedValue constant, int stackSlot = -1)
-        { return Reference::fromConst(cg, constant).storeOnStack(stackSlot); }
-        Q_REQUIRED_RESULT Reference storeOnStack(int tempIndex = -1) const;
+
+        Q_REQUIRED_RESULT static Reference storeConstOnStack(Codegen *cg, QV4::ReturnedValue constant)
+        { return Reference::fromConst(cg, constant).storeOnStack(); }
+
+        static void storeConstOnStack(Codegen *cg, QV4::ReturnedValue constant, int stackSlot)
+        { Reference::fromConst(cg, constant).storeOnStack(stackSlot); }
+
+        Q_REQUIRED_RESULT Reference storeOnStack() const;
+        void storeOnStack(int tempIndex) const;
         Q_REQUIRED_RESULT Reference storeRetainAccumulator() const;
         Reference storeConsumeAccumulator() const;
 
@@ -328,6 +334,7 @@ public:
 
     private:
         void storeAccumulator() const;
+        Reference doStoreOnStack(int tempIndex) const;
     };
 
     struct RegisterScope {

@@ -2880,7 +2880,13 @@ Codegen::Reference Codegen::Reference::storeConsumeAccumulator() const
     return Reference();
 }
 
-Codegen::Reference Codegen::Reference::storeOnStack(int slotIndex) const
+Codegen::Reference Codegen::Reference::storeOnStack() const
+{ return doStoreOnStack(-1); }
+
+void Codegen::Reference::storeOnStack(int slotIndex) const
+{ doStoreOnStack(slotIndex); }
+
+Codegen::Reference Codegen::Reference::doStoreOnStack(int slotIndex) const
 {
     if (isStackSlot() && slotIndex == -1)
         return *this;
