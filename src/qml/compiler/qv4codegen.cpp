@@ -2152,7 +2152,7 @@ bool Codegen::visit(ForEachStatement *ast)
 
     in.link();
 
-    Reference lhs = expression(ast->initialiser);
+    Reference lhs = expression(ast->initialiser).asLValue();
 
     obj.loadInAccumulator();
     Instruction::ForeachNextPropertyName nextPropInstr;
@@ -2291,7 +2291,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
     BytecodeGenerator::Label body = bytecodeGenerator->label();
 
-    Reference it = referenceForName(ast->declaration->name.toString(), true);
+    Reference it = referenceForName(ast->declaration->name.toString(), true).asLValue();
     statement(ast->statement);
 
     in.link();
