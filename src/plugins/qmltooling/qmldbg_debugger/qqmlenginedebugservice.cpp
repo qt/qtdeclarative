@@ -695,8 +695,9 @@ bool QQmlEngineDebugServiceImpl::resetBinding(int objectId, const QString &prope
                 property.reset();
             } else {
                 // overwrite with default value
-                if (QQmlType *objType = QQmlMetaType::qmlType(object->metaObject())) {
-                    if (QObject *emptyObject = objType->create()) {
+                QQmlType objType = QQmlMetaType::qmlType(object->metaObject());
+                if (objType.isValid()) {
+                    if (QObject *emptyObject = objType.create()) {
                         if (emptyObject->property(parentProperty).isValid()) {
                             QVariant defaultValue = QQmlProperty(emptyObject, propertyName).read();
                             if (defaultValue.isValid()) {

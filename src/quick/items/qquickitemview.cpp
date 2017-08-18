@@ -1921,7 +1921,7 @@ void QQuickItemViewPrivate::layout()
     markExtentsDirty();
     updateHighlight();
 
-    if (!q->isMoving() && !q->isFlicking()) {
+    if (!q->isMoving() && !q->isFlicking() && !movingFromHighlight()) {
         fixupPosition();
         refill();
     }

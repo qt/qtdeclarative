@@ -142,13 +142,13 @@ bool isPathAbsolute(const QString &path)
     Errors (if there are any) are placed into \a errors, if it is nonzero. Note
     that errors are treated as fatal if \a errors is not set.
 */
-QQmlType *fetchOrCreateTypeForUrl(const QString &urlString, const QHashedStringRef& typeName,
+QQmlType fetchOrCreateTypeForUrl(const QString &urlString, const QHashedStringRef& typeName,
                         bool isCompositeSingleton, QList<QQmlError> *errors,
                         int majorVersion=-1, int minorVersion=-1)
 {
     QUrl url(urlString); // ### unfortunate (costly) conversion
-    QQmlType *ret = QQmlMetaType::qmlType(url);
-    if (ret)
+    QQmlType ret = QQmlMetaType::qmlType(url);
+    if (ret.isValid())
         return ret;
 
     int dot = typeName.indexOf(QLatin1Char('.'));
@@ -183,7 +183,7 @@ QQmlType *fetchOrCreateTypeForUrl(const QString &urlString, const QHashedStringR
             minorVersion,
             buf.constData()
         };
-        ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeSingletonRegistration, &reg));
+        ret = QQmlMetaType::registerCompositeSingletonType(reg);
     } else {
         QQmlPrivate::RegisterCompositeType reg = {
             url,
@@ -192,13 +192,13 @@ QQmlType *fetchOrCreateTypeForUrl(const QString &urlString, const QHashedStringR
             minorVersion,
             buf.constData()
         };
-        ret = QQmlMetaType::qmlTypeFromIndex(QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &reg));
+        ret = QQmlMetaType::registerCompositeType(reg);
     }
 
     // This means that the type couldn't be found by URL, but could not be
     // registered either, meaning we most likely were passed some kind of bad
     // data.
-    if (!ret) {
+    if (!ret.isValid()) {
         if (!errors) // Cannot list errors properly, just quit
             qFatal("%s", QQmlMetaType::typeRegistrationFailures().join('\n').toLatin1().constData());
         QQmlError error;
@@ -295,7 +295,7 @@ public:
                              QList<QQmlError> *errors);
 
     bool resolveType(const QHashedStringRef &type, int *vmajor, int *vminor,
-                     QQmlType** type_return, QList<QQmlError> *errors,
+                     QQmlType* type_return, QList<QQmlError> *errors,
                      QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion);
 
     QUrl baseUrl;
@@ -421,13 +421,14 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
         const QQmlImportNamespace &set = *ns;
 
         // positioning is important; we must create the namespace even if there is no module.
-        QQmlTypeNameCache::Import &typeimport = cache->m_namedImports[set.prefix];
+        QQmlImportRef &typeimport = cache->m_namedImports[set.prefix];
         typeimport.m_qualifier = set.prefix;
 
         for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
             const QQmlImportInstance *import = set.imports.at(ii);
             QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->majversion);
             if (module) {
+                QQmlImportRef &typeimport = cache->m_namedImports[set.prefix];
                 typeimport.modules.append(QQmlTypeModuleVersion(module, import->minversion));
             }
         }
@@ -620,7 +621,7 @@ QString QQmlImports::versionString(int vmaj, int vmin, ImportVersion version)
   \sa addFileImport(), addLibraryImport
 */
 bool QQmlImports::resolveType(const QHashedStringRef &type,
-                              QQmlType** type_return, int *vmaj, int *vmin,
+                              QQmlType* type_return, int *vmaj, int *vmin,
                               QQmlImportNamespace** ns_return, QList<QQmlError> *errors,
                               QQmlImport::RecursionRestriction recursionRestriction) const
 {
@@ -631,17 +632,19 @@ bool QQmlImports::resolveType(const QHashedStringRef &type,
         return true;
     }
     if (type_return) {
-        if (d->resolveType(type,vmaj,vmin,type_return, errors, recursionRestriction)) {
+        if (d->resolveType(type, vmaj, vmin, type_return, errors, recursionRestriction)) {
             if (qmlImportTrace()) {
 #define RESOLVE_TYPE_DEBUG qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) \
                                               << ')' << "::resolveType: " << type.toString() << " => "
 
-                if (type_return && *type_return && (*type_return)->isCompositeSingleton())
-                    RESOLVE_TYPE_DEBUG << (*type_return)->typeName() << ' ' << (*type_return)->sourceUrl() << " TYPE/URL-SINGLETON";
-                else if (type_return && *type_return && (*type_return)->isComposite())
-                    RESOLVE_TYPE_DEBUG << (*type_return)->typeName() << ' ' << (*type_return)->sourceUrl() << " TYPE/URL";
-                else if (type_return && *type_return)
-                    RESOLVE_TYPE_DEBUG << (*type_return)->typeName() << " TYPE";
+                if (type_return && type_return->isValid()) {
+                    if (type_return->isCompositeSingleton())
+                        RESOLVE_TYPE_DEBUG << type_return->typeName() << ' ' << type_return->sourceUrl() << " TYPE/URL-SINGLETON";
+                    else if (type_return->isComposite())
+                        RESOLVE_TYPE_DEBUG << type_return->typeName() << ' ' << type_return->sourceUrl() << " TYPE/URL";
+                    else
+                        RESOLVE_TYPE_DEBUG << type_return->typeName() << " TYPE";
+                }
 #undef RESOLVE_TYPE_DEBUG
             }
             return true;
@@ -706,20 +709,20 @@ QQmlDirScripts QQmlImportInstance::getVersionedScripts(const QQmlDirScripts &qml
 
   If the return pointer is 0, the corresponding search is not done.
 */
-bool QQmlImports::resolveType(QQmlImportNamespace* ns, const QHashedStringRef &type,
-                              QQmlType** type_return, int *vmaj, int *vmin) const
+bool QQmlImports::resolveType(QQmlImportNamespace *ns, const QHashedStringRef &type,
+                              QQmlType *type_return, int *vmaj, int *vmin) const
 {
-    return ns->resolveType(d->typeLoader,type,vmaj,vmin,type_return);
+    return ns->resolveType(d->typeLoader, type, vmaj, vmin, type_return);
 }
 
 bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader,
                                               const QHashedStringRef& type, int *vmajor, int *vminor,
-                                              QQmlType** type_return, QString *base, bool *typeRecursionDetected,
+                                              QQmlType* type_return, QString *base, bool *typeRecursionDetected,
                                               QQmlImport::RecursionRestriction recursionRestriction) const
 {
     if (majversion >= 0 && minversion >= 0) {
-        QQmlType *t = QQmlMetaType::qmlType(type, uri, majversion, minversion);
-        if (t) {
+        QQmlType t = QQmlMetaType::qmlType(type, uri, majversion, minversion);
+        if (t.isValid()) {
             if (vmajor) *vmajor = majversion;
             if (vminor) *vminor = minversion;
             if (type_return)
@@ -769,11 +772,11 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader,
                 componentUrl = resolveLocalUrl(QString(url + candidate->typeName + dotqml_string), candidate->fileName);
             int major = vmajor ? *vmajor : -1;
             int minor = vminor ? *vminor : -1;
-            QQmlType *returnType = fetchOrCreateTypeForUrl(componentUrl, type, isCompositeSingleton, 0,
+            QQmlType returnType = fetchOrCreateTypeForUrl(componentUrl, type, isCompositeSingleton, 0,
                                                  major, minor);
             if (type_return)
                 *type_return = returnType;
-            return returnType != 0;
+            return returnType.isValid();
         }
     } else if (!isLibrary) {
         QString qmlUrl;
@@ -797,10 +800,10 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader,
                 if (typeRecursionDetected)
                     *typeRecursionDetected = true;
             } else {
-                QQmlType *returnType = fetchOrCreateTypeForUrl(qmlUrl, type, false, 0);
+                QQmlType returnType = fetchOrCreateTypeForUrl(qmlUrl, type, false, 0);
                 if (type_return)
                     *type_return = returnType;
-                return returnType != 0;
+                return returnType.isValid();
             }
         }
     }
@@ -809,7 +812,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader,
 }
 
 bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, int *vminor,
-                                     QQmlType** type_return, QList<QQmlError> *errors,
+                                     QQmlType* type_return, QList<QQmlError> *errors,
                                      QQmlImport::RecursionRestriction recursionRestriction)
 {
     QQmlImportNamespace *s = 0;
@@ -839,12 +842,12 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
     }
     QHashedStringRef unqualifiedtype = dot < 0 ? type : QHashedStringRef(type.constData()+dot+1, type.length()-dot-1);
     if (s) {
-        if (s->resolveType(typeLoader,unqualifiedtype,vmajor,vminor,type_return, &base, errors, recursionRestriction))
+        if (s->resolveType(typeLoader, unqualifiedtype, vmajor, vminor, type_return, &base, errors, recursionRestriction))
             return true;
         if (s->imports.count() == 1 && !s->imports.at(0)->isLibrary && type_return && s != &unqualifiedset) {
             // qualified, and only 1 url
             *type_return = fetchOrCreateTypeForUrl(resolveLocalUrl(s->imports.at(0)->url, unqualifiedtype.toString() + QLatin1String(".qml")), type, false, errors);
-            return (*type_return != 0);
+            return type_return->isValid();
         }
     }
 
@@ -861,7 +864,7 @@ QQmlImportInstance *QQmlImportNamespace::findImport(const QString &uri) const
 }
 
 bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
-                                      int *vmajor, int *vminor, QQmlType** type_return,
+                                      int *vmajor, int *vminor, QQmlType* type_return,
                                       QString *base, QList<QQmlError> *errors,
                                       QQmlImport::RecursionRestriction recursionRestriction)
 {

@@ -55,6 +55,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qatomic.h>
 #include <QtCore/qfileinfo.h>
+#include <QtCore/qcache.h>
 #if QT_CONFIG(qml_network)
 #include <QtNetwork/qnetworkreply.h>
 #endif
@@ -362,8 +363,7 @@ private:
     typedef QHash<QUrl, QQmlTypeData *> TypeCache;
     typedef QHash<QUrl, QQmlScriptBlob *> ScriptCache;
     typedef QHash<QUrl, QQmlQmldirData *> QmldirCache;
-    typedef QStringHash<bool> StringSet;
-    typedef QStringHash<StringSet*> ImportDirCache;
+    typedef QCache<QString, QCache<QString, bool> > ImportDirCache;
     typedef QStringHash<QQmlTypeLoaderQmldirContent *> ImportQmlDirCache;
 
     QQmlEngine *m_engine;
@@ -393,10 +393,10 @@ class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 public:
     struct TypeReference
     {
-        TypeReference() : type(0), majorVersion(0), minorVersion(0), typeData(0), needsCreation(true) {}
+        TypeReference() : majorVersion(0), minorVersion(0), typeData(0), needsCreation(true) {}
 
         QV4::CompiledData::Location location;
-        QQmlType *type;
+        QQmlType type;
         int majorVersion;
         int minorVersion;
         QQmlTypeData *typeData;

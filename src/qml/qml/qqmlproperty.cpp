@@ -253,24 +253,24 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
         if (typeNameCache) {
             QQmlTypeNameCache::Result r = typeNameCache->query(pathName);
             if (r.isValid()) {
-                if (r.type) {
+                if (r.type.isValid()) {
                     QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
-                    QQmlAttachedPropertiesFunc func = r.type->attachedPropertiesFunction(enginePrivate);
+                    QQmlAttachedPropertiesFunc func = r.type.attachedPropertiesFunction(enginePrivate);
                     if (!func) return; // Not an attachable type
 
-                    currentObject = qmlAttachedPropertiesObjectById(r.type->attachedPropertiesId(enginePrivate), currentObject);
+                    currentObject = qmlAttachedPropertiesObjectById(r.type.attachedPropertiesId(enginePrivate), currentObject);
                     if (!currentObject) return; // Something is broken with the attachable type
                 } else if (r.importNamespace) {
                     if ((ii + 1) == path.count()) return; // No type following the namespace
 
                     ++ii; r = typeNameCache->query(path.at(ii), r.importNamespace);
-                    if (!r.type) return; // Invalid type in namespace
+                    if (!r.type.isValid()) return; // Invalid type in namespace
 
                     QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
-                    QQmlAttachedPropertiesFunc func = r.type->attachedPropertiesFunction(enginePrivate);
+                    QQmlAttachedPropertiesFunc func = r.type.attachedPropertiesFunction(enginePrivate);
                     if (!func) return; // Not an attachable type
 
-                    currentObject = qmlAttachedPropertiesObjectById(r.type->attachedPropertiesId(enginePrivate), currentObject);
+                    currentObject = qmlAttachedPropertiesObjectById(r.type.attachedPropertiesId(enginePrivate), currentObject);
                     if (!currentObject) return; // Something is broken with the attachable type
 
                 } else if (r.scriptIndex != -1) {
@@ -1275,10 +1275,10 @@ bool QQmlPropertyPrivate::write(QObject *object,
         if (enginePriv) {
             listType = enginePriv->rawMetaObjectForType(enginePriv->listType(property.propType()));
         } else {
-            QQmlType *type = QQmlMetaType::qmlType(QQmlMetaType::listType(property.propType()));
-            if (!type)
+            QQmlType type = QQmlMetaType::qmlType(QQmlMetaType::listType(property.propType()));
+            if (!type.isValid())
                 return false;
-            listType = type->baseMetaObject();
+            listType = type.baseMetaObject();
         }
         if (listType.isNull())
             return false;
@@ -1393,8 +1393,9 @@ QQmlMetaObject QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate *engi
         return metaType.metaObject();
     if (engine)
         return engine->rawMetaObjectForType(userType);
-    if (QQmlType *type = QQmlMetaType::qmlType(userType))
-        return QQmlMetaObject(type->baseMetaObject());
+    QQmlType type = QQmlMetaType::qmlType(userType);
+    if (type.isValid())
+        return QQmlMetaObject(type.baseMetaObject());
     return QQmlMetaObject();
 }
 

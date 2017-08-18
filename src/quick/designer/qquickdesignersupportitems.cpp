@@ -175,29 +175,24 @@ static bool isWindow(QObject *object) {
     return false;
 }
 
-static QQmlType *getQmlType(const QString &typeName, int majorNumber, int minorNumber)
+static bool isCrashingType(const QQmlType &type)
 {
-     return QQmlMetaType::qmlType(typeName, majorNumber, minorNumber);
-}
+    QString name = type.qmlTypeName();
 
-static bool isCrashingType(QQmlType *type)
-{
-    if (type) {
-        if (type->qmlTypeName() == QLatin1String("QtMultimedia/MediaPlayer"))
-            return true;
+    if (type.qmlTypeName() == QLatin1String("QtMultimedia/MediaPlayer"))
+        return true;
 
-        if (type->qmlTypeName() == QLatin1String("QtMultimedia/Audio"))
-            return true;
+    if (type.qmlTypeName() == QLatin1String("QtMultimedia/Audio"))
+        return true;
 
-        if (type->qmlTypeName() == QLatin1String("QtQuick.Controls/MenuItem"))
-            return true;
+    if (type.qmlTypeName() == QLatin1String("QtQuick.Controls/MenuItem"))
+        return true;
 
-        if (type->qmlTypeName() == QLatin1String("QtQuick.Controls/Menu"))
-            return true;
+    if (type.qmlTypeName() == QLatin1String("QtQuick.Controls/Menu"))
+        return true;
 
-        if (type->qmlTypeName() == QLatin1String("QtQuick/Timer"))
-            return true;
-    }
+    if (type.qmlTypeName() == QLatin1String("QtQuick/Timer"))
+        return true;
 
     return false;
 }
@@ -209,19 +204,19 @@ QObject *QQuickDesignerSupportItems::createPrimitive(const QString &typeName, in
     Q_UNUSED(disableComponentComplete)
 
     QObject *object = 0;
-    QQmlType *type = getQmlType(typeName, majorNumber, minorNumber);
+    QQmlType type = QQmlMetaType::qmlType(typeName, majorNumber, minorNumber);
 
     if (isCrashingType(type)) {
         object = new QObject;
-    } else if (type) {
-        if ( type->isComposite()) {
-             object = createComponent(type->sourceUrl(), context);
+    } else if (type.isValid()) {
+        if ( type.isComposite()) {
+             object = createComponent(type.sourceUrl(), context);
         } else
         {
-            if (type->typeName() == "QQmlComponent") {
+            if (type.typeName() == "QQmlComponent") {
                 object = new QQmlComponent(context->engine(), 0);
             } else  {
-                object = type->create();
+                object = type.create();
             }
         }
 

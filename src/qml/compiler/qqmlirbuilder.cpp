@@ -1777,7 +1777,7 @@ enum MetaObjectResolverFlags {
 };
 
 static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
-static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlType *qmlType, int index);
+static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, const QQmlType &qmlType, int index);
 
 static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
                                               const QV4::IR::MemberExpressionResolver *resolver,
@@ -1785,16 +1785,16 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
 {
     QV4::IR::Type result = QV4::IR::VarType;
 
-    QQmlType *type = static_cast<QQmlType*>(resolver->data);
+    QQmlType type = resolver->qmlType;
 
     if (member->name->constData()->isUpper()) {
         bool ok = false;
-        int value = type->enumValue(qmlEngine, *member->name, &ok);
+        int value = type.enumValue(qmlEngine, *member->name, &ok);
         if (ok) {
             member->setEnumValue(value);
             return QV4::IR::SInt32Type;
         } else {
-            int index = type->scopedEnumIndex(qmlEngine, *member->name, &ok);
+            int index = type.scopedEnumIndex(qmlEngine, *member->name, &ok);
             if (ok) {
                 auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
                 newResolver->owner = resolver->owner;
@@ -1804,8 +1804,8 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
         }
     }
 
-    if (type->isCompositeSingleton()) {
-        QQmlRefPointer<QQmlTypeData> tdata = qmlEngine->typeLoader.getType(type->singletonInstanceInfo()->url);
+    if (type.isCompositeSingleton()) {
+        QQmlRefPointer<QQmlTypeData> tdata = qmlEngine->typeLoader.getType(type.singletonInstanceInfo()->url);
         Q_ASSERT(tdata);
         tdata->release(); // Decrease the reference count added from QQmlTypeLoader::getType()
         // When a singleton tries to reference itself, it may not be complete yet.
@@ -1816,8 +1816,8 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
             newResolver->flags |= AllPropertiesAreFinal;
             return newResolver->resolveMember(qmlEngine, newResolver, member);
         }
-    }  else if (type->isSingleton()) {
-        const QMetaObject *singletonMeta = type->singletonInstanceInfo()->instanceMetaObject;
+    }  else if (type.isSingleton()) {
+        const QMetaObject *singletonMeta = type.singletonInstanceInfo()->instanceMetaObject;
         if (singletonMeta) { // QJSValue-based singletons cannot be accelerated
             auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
             newResolver->owner = resolver->owner;
@@ -1842,13 +1842,13 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
     return result;
 }
 
-static void initQmlTypeResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlType *qmlType)
+static void initQmlTypeResolver(QV4::IR::MemberExpressionResolver *resolver, const QQmlType &qmlType)
 {
     Q_ASSERT(resolver);
 
     resolver->resolveMember = &resolveQmlType;
-    resolver->data = qmlType;
-    resolver->extraData = 0;
+    resolver->qmlType = qmlType;
+    resolver->typenameCache = 0;
     resolver->flags = 0;
 }
 
@@ -1857,8 +1857,8 @@ static QV4::IR::DiscoveredType resolveImportNamespace(
         QV4::IR::Member *member)
 {
     QV4::IR::Type result = QV4::IR::VarType;
-    QQmlTypeNameCache *typeNamespace = static_cast<QQmlTypeNameCache*>(resolver->extraData);
-    void *importNamespace = resolver->data;
+    QQmlTypeNameCache *typeNamespace = resolver->typenameCache;
+    const QQmlImportRef *importNamespace = resolver->import;
 
     QQmlTypeNameCache::Result r = typeNamespace->query(*member->name, importNamespace);
     if (r.isValid()) {
@@ -1866,11 +1866,11 @@ static QV4::IR::DiscoveredType resolveImportNamespace(
         if (r.scriptIndex != -1) {
             // TODO: remember the index and replace with subscript later.
             result = QV4::IR::VarType;
-        } else if (r.type) {
+        } else if (r.type.isValid()) {
             // TODO: Propagate singleton information, so that it is loaded
             // through the singleton getter in the run-time. Until then we
             // can't accelerate access :(
-            if (!r.type->isSingleton()) {
+            if (!r.type.isSingleton()) {
                 auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
                 newResolver->owner = resolver->owner;
                 initQmlTypeResolver(newResolver, r.type);
@@ -1885,11 +1885,11 @@ static QV4::IR::DiscoveredType resolveImportNamespace(
 }
 
 static void initImportNamespaceResolver(QV4::IR::MemberExpressionResolver *resolver,
-                                        QQmlTypeNameCache *imports, const void *importNamespace)
+                                        QQmlTypeNameCache *imports, const QQmlImportRef *importNamespace)
 {
     resolver->resolveMember = &resolveImportNamespace;
-    resolver->data = const_cast<void*>(importNamespace);
-    resolver->extraData = imports;
+    resolver->import = importNamespace;
+    resolver->typenameCache = imports;
     resolver->flags = 0;
 }
 
@@ -1898,7 +1898,7 @@ static QV4::IR::DiscoveredType resolveMetaObjectProperty(
         QV4::IR::Member *member)
 {
     QV4::IR::Type result = QV4::IR::VarType;
-    QQmlPropertyCache *metaObject = static_cast<QQmlPropertyCache*>(resolver->data);
+    QQmlPropertyCache *metaObject = resolver->propertyCache;
 
     if (member->name->constData()->isUpper() && (resolver->flags & LookupsIncludeEnums)) {
         const QMetaObject *mo = metaObject->createMetaObject();
@@ -1980,7 +1980,7 @@ static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, 
     Q_ASSERT(resolver);
 
     resolver->resolveMember = &resolveMetaObjectProperty;
-    resolver->data = metaObject;
+    resolver->propertyCache = metaObject;
     resolver->flags = 0;
 }
 
@@ -1991,24 +1991,23 @@ static QV4::IR::DiscoveredType resolveScopedEnum(QQmlEnginePrivate *qmlEngine,
     if (!member->name->constData()->isUpper())
         return QV4::IR::VarType;
 
-    QQmlType *type = static_cast<QQmlType*>(resolver->data);
+    QQmlType type = resolver->qmlType;
     int index = resolver->flags;
 
     bool ok = false;
-    int value = type->scopedEnumValue(qmlEngine, index, *member->name, &ok);
+    int value = type.scopedEnumValue(qmlEngine, index, *member->name, &ok);
     if (!ok)
         return QV4::IR::VarType;
     member->setEnumValue(value);
     return QV4::IR::SInt32Type;
 }
 
-static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlType *qmlType, int index)
+static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, const QQmlType &qmlType, int index)
 {
     Q_ASSERT(resolver);
 
     resolver->resolveMember = &resolveScopedEnum;
-    resolver->data = qmlType;
-    resolver->extraData = 0;
+    resolver->qmlType = qmlType;
     resolver->flags = index;
 }
 
@@ -2077,10 +2076,10 @@ QV4::IR::Expr *JSCodeGen::fallbackNameLookup(const QString &name, int line, int 
             if (r.scriptIndex != -1) {
                 return _block->SUBSCRIPT(_block->TEMP(_importedScriptsTemp),
                                          _block->CONST(QV4::IR::SInt32Type, r.scriptIndex));
-            } else if (r.type) {
+            } else if (r.type.isValid()) {
                 QV4::IR::Name *typeName = _block->NAME(name, line, col);
                 // Make sure the run-time loads this through the more efficient singleton getter.
-                typeName->qmlSingleton = r.type->isCompositeSingleton();
+                typeName->qmlSingleton = r.type.isCompositeSingleton();
                 typeName->freeOfSideEffects = true;
                 QV4::IR::Temp *result = _block->TEMP(_block->newTemp());
                 _block->MOVE(result, typeName);

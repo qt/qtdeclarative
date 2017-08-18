@@ -101,6 +101,7 @@ public:
     void createHighlight() override;
     void updateHighlight() override;
     void resetHighlightPosition() override;
+    bool movingFromHighlight() override;
 
     void setPosition(qreal pos) override;
     void layoutVisibleItems(int fromModelIndex = 0) override;
@@ -944,6 +945,17 @@ void QQuickListViewPrivate::resetHighlightPosition()
     if (highlight && currentItem)
         static_cast<FxListItemSG*>(highlight)->setPosition(static_cast<FxListItemSG*>(currentItem)->itemPosition());
 }
+
+bool QQuickListViewPrivate::movingFromHighlight()
+{
+    if (!haveHighlightRange || highlightRange != QQuickListView::StrictlyEnforceRange)
+        return false;
+
+    return (highlightPosAnimator && highlightPosAnimator->isRunning()) ||
+           (highlightHeightAnimator && highlightHeightAnimator->isRunning()) ||
+           (highlightWidthAnimator && highlightWidthAnimator->isRunning());
+}
+
 
 QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
 {

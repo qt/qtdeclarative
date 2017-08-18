@@ -57,6 +57,7 @@
 #include <QScopedValueRollback>
 #include <QStandardPaths>
 #include <QDir>
+#include <private/qv4identifiertable_p.h>
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
@@ -127,7 +128,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     // memset the strings to 0 in case a GC run happens while we're within the loop below
     memset(runtimeStrings, 0, data->stringTableSize * sizeof(QV4::Heap::String*));
     for (uint i = 0; i < data->stringTableSize; ++i)
-        runtimeStrings[i] = engine->newIdentifier(data->stringAt(i));
+        runtimeStrings[i] = engine->newString(data->stringAt(i));
 
     runtimeRegularExpressions = new QV4::Value[data->regexpTableSize];
     // memset the regexps to 0 in case a GC run happens while we're within the loop below
@@ -179,7 +180,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             const CompiledData::JSClassMember *member = data->jsClassAt(i, &memberCount);
             QV4::InternalClass *klass = engine->internalClasses[QV4::ExecutionEngine::Class_Object];
             for (int j = 0; j < memberCount; ++j, ++member)
-                klass = klass->addMember(runtimeStrings[member->nameOffset]->identifier, member->isAccessor ? QV4::Attr_Accessor : QV4::Attr_Data);
+                klass = klass->addMember(engine->identifierTable->identifier(runtimeStrings[member->nameOffset]), member->isAccessor ? QV4::Attr_Accessor : QV4::Attr_Data);
 
             runtimeClasses[i] = klass;
         }
@@ -210,8 +211,9 @@ void CompilationUnit::unlink()
 
     if (isRegisteredWithEngine) {
         Q_ASSERT(data && quint32(propertyCaches.count()) > data->indexOfRootObject && propertyCaches.at(data->indexOfRootObject));
-        QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(propertyCaches.at(data->indexOfRootObject)->engine);
-        qmlEngine->unregisterInternalCompositeType(this);
+        if (engine)
+            QQmlEnginePrivate::get(engine)->unregisterInternalCompositeType(this);
+        QQmlMetaType::unregisterInternalCompositeType(this);
         isRegisteredWithEngine = false;
     }
 
@@ -284,9 +286,10 @@ IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjec
 void CompilationUnit::finalize(QQmlEnginePrivate *engine)
 {
     // Add to type registry of composites
-    if (propertyCaches.needsVMEMetaObject(data->indexOfRootObject))
+    if (propertyCaches.needsVMEMetaObject(data->indexOfRootObject)) {
+        QQmlMetaType::registerInternalCompositeType(this);
         engine->registerInternalCompositeType(this);
-    else {
+    } else {
         const QV4::CompiledData::Object *obj = objectAt(data->indexOfRootObject);
         auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
@@ -294,8 +297,8 @@ void CompilationUnit::finalize(QQmlEnginePrivate *engine)
             metaTypeId = typeRef->compilationUnit->metaTypeId;
             listMetaTypeId = typeRef->compilationUnit->listMetaTypeId;
         } else {
-            metaTypeId = typeRef->type->typeId();
-            listMetaTypeId = typeRef->type->qListTypeId();
+            metaTypeId = typeRef->type.typeId();
+            listMetaTypeId = typeRef->type.qListTypeId();
         }
     }
 
@@ -307,8 +310,8 @@ void CompilationUnit::finalize(QQmlEnginePrivate *engine)
         const QV4::CompiledData::Object *obj = data->objectAt(i);
         bindingCount += obj->nBindings;
         if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
-            if (QQmlType *qmlType = typeRef->type) {
-                if (qmlType->parserStatusCast() != -1)
+            if (typeRef->type.isValid()) {
+                if (typeRef->type.parserStatusCast() != -1)
                     ++parserStatusCount;
             }
             ++objectCount;
@@ -672,7 +675,7 @@ Returns the property cache, if one alread exists.  The cache is not referenced.
 */
 QQmlPropertyCache *ResolvedTypeReference::propertyCache() const
 {
-    if (type)
+    if (type.isValid())
         return typePropertyCache;
     else
         return compilationUnit->rootPropertyCache();
@@ -685,8 +688,8 @@ QQmlPropertyCache *ResolvedTypeReference::createPropertyCache(QQmlEngine *engine
 {
     if (typePropertyCache) {
         return typePropertyCache;
-    } else if (type) {
-        typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type->metaObject());
+    } else if (type.isValid()) {
+        typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type.metaObject());
         return typePropertyCache;
     } else {
         return compilationUnit->rootPropertyCache();
@@ -695,7 +698,7 @@ QQmlPropertyCache *ResolvedTypeReference::createPropertyCache(QQmlEngine *engine
 
 bool ResolvedTypeReference::addToHash(QCryptographicHash *hash, QQmlEngine *engine)
 {
-    if (type) {
+    if (type.isValid()) {
         bool ok = false;
         hash->addData(createPropertyCache(engine)->checksum(&ok));
         return ok;
@@ -719,8 +722,8 @@ void ResolvedTypeReference::doDynamicTypeCheck()
     const QMetaObject *mo = 0;
     if (typePropertyCache)
         mo = typePropertyCache->firstCppMetaObject();
-    else if (type)
-        mo = type->metaObject();
+    else if (type.isValid())
+        mo = type.metaObject();
     else if (compilationUnit)
         mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
