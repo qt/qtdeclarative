@@ -370,10 +370,9 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
         // exceptions inside the try block go here
         exceptionLabel.link();
-        Reference name = Reference::fromName(cg, catchExpression->name.toString());
         Moth::StackSlot savedContextReg = Moth::StackSlot::createRegister(generator()->newRegister());
         Instruction::PushCatchContext pushCatch;
-        pushCatch.name = name.unqualifiedNameIndex;
+        pushCatch.name = cg->registerString(catchExpression->name.toString());
         pushCatch.reg = savedContextReg;
         generator()->addInstruction(pushCatch);
         // clear the unwind temp for exceptions, we want to resume normal code flow afterwards

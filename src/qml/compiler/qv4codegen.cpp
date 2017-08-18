@@ -1151,12 +1151,12 @@ bool Codegen::visit(CallExpression *ast)
     } else if (base.type == Reference::Name) {
         if (useFastLookups && base.global) {
             Instruction::CallGlobalLookup call;
-            call.index = registerGlobalGetterLookup(base.unqualifiedNameIndex);
+            call.index = registerGlobalGetterLookup(base.nameAsIndex());
             call.callData = calldata;
             bytecodeGenerator->addInstruction(call);
         } else {
             Instruction::CallName call;
-            call.name = base.unqualifiedNameIndex;
+            call.name = base.nameAsIndex();
             call.callData = calldata;
             bytecodeGenerator->addInstruction(call);
         }
@@ -1253,7 +1253,7 @@ bool Codegen::visit(DeleteExpression *ast)
             return false;
         }
         Instruction::DeleteName del;
-        del.name = expr.unqualifiedNameIndex;
+        del.name = expr.nameAsIndex();
         bytecodeGenerator->addInstruction(del);
         _expr.setResult(Reference::fromAccumulator(this));
         return false;
@@ -1782,7 +1782,7 @@ bool Codegen::visit(TypeOfExpression *ast)
     if (expr.type == Reference::Name) {
         // special handling as typeof doesn't throw here
         Instruction::TypeofName instr;
-        instr.name = expr.unqualifiedNameIndex;
+        instr.name = expr.nameAsIndex();
         bytecodeGenerator->addInstruction(instr);
     } else {
         expr.loadInAccumulator();
@@ -2623,7 +2623,7 @@ bool Codegen::throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r, 
         return false;
     bool isArgOrEval = false;
     if (r.type == Reference::Name) {
-        QString str = jsUnitGenerator->stringForIndex(r.unqualifiedNameIndex);
+        QString str = jsUnitGenerator->stringForIndex(r.nameAsIndex());
         if (str == QLatin1String("eval") || str == QLatin1String("arguments")) {
             isArgOrEval = true;
         }
@@ -2764,7 +2764,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         scope = other.scope;
         break;
     case Name:
-        unqualifiedNameIndex = other.unqualifiedNameIndex;
+        name = other.name;
         break;
     case Member:
         propertyBase = other.propertyBase;
@@ -2813,7 +2813,7 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     case ScopedLocal:
         return index == other.index && scope == other.scope;
     case Name:
-        return unqualifiedNameIndex == other.unqualifiedNameIndex;
+        return nameAsIndex() == other.nameAsIndex();
     case Member:
         return propertyBase == other.propertyBase && propertyNameIndex == other.propertyNameIndex;
     case Subscript:
@@ -2971,11 +2971,11 @@ void Codegen::Reference::storeAccumulator() const
         Context *c = codegen->currentContext();
         if (c->isStrict) {
             Instruction::StoreNameStrict store;
-            store.name = unqualifiedNameIndex;
+            store.name = nameAsIndex();
             codegen->bytecodeGenerator->addInstruction(store);
         } else {
             Instruction::StoreNameSloppy store;
-            store.name = unqualifiedNameIndex;
+            store.name = nameAsIndex();
             codegen->bytecodeGenerator->addInstruction(store);
         }
     } return;
@@ -3077,11 +3077,11 @@ void Codegen::Reference::loadInAccumulator() const
     case Name:
         if (codegen->useFastLookups && global) {
             Instruction::LoadGlobalLookup load;
-            load.index = codegen->registerGlobalGetterLookup(unqualifiedNameIndex);
+            load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
             codegen->bytecodeGenerator->addInstruction(load);
         } else {
             Instruction::LoadName load;
-            load.name = unqualifiedNameIndex;
+            load.name = nameAsIndex();
             codegen->bytecodeGenerator->addInstruction(load);
         }
         return;

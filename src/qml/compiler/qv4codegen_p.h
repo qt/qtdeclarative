@@ -230,7 +230,7 @@ public:
         }
         static Reference fromName(Codegen *cg, const QString &name) {
             Reference r(cg, Name);
-            r.unqualifiedNameIndex = cg->registerString(name);
+            r.name = name;
             return r;
         }
         static Reference fromMember(const Reference &baseRef, const QString &name) {
@@ -296,6 +296,11 @@ public:
         bool storeWipesAccumulator() const;
         void loadInAccumulator() const;
 
+        int nameAsIndex() const {
+            Q_ASSERT(type == Name);
+            return codegen->registerString(name);
+        }
+
         Moth::StackSlot stackSlot() const {
             if (Q_UNLIKELY(!isStackSlot()))
                 Q_UNREACHABLE();
@@ -305,7 +310,6 @@ public:
         union {
             Moth::StackSlot theStackSlot;
             QV4::ReturnedValue constant;
-            int unqualifiedNameIndex;
             struct { // Scoped arguments/Local
                 int index;
                 int scope;
@@ -326,6 +330,7 @@ public:
                 bool captureRequired;
             };
         };
+        QString name;
         mutable bool isArgOrEval = false;
         bool isReadonly = false;
         bool stackSlotIsLocalOrArgument = false;
