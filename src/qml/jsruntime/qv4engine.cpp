@@ -794,6 +794,19 @@ QString CppStackFrame::function() const
     return v4Function->name()->toQString();
 }
 
+int CppStackFrame::lineNumber() const
+{
+    const QV4::CompiledData::Function *cf = v4Function->compiledFunction;
+    uint offset = static_cast<uint>(instructionPointer - v4Function->codeData - 1); // -1 because the instructionPointer points to the next instruction
+    const quint32_le *lineNumbers = cf->lineNumberTable();
+    int nLineNumbers = cf->nLineNumbers;
+    for (int i = 0; i < nLineNumbers; ++i) {
+        if (offset <= lineNumbers[i])
+            return cf->location.line + i;
+    }
+    return cf->location.line + nLineNumbers;
+}
+
 ReturnedValue CppStackFrame::thisObject() const {
     return jsFrame->stack[-(int)v4Function->nFormals - 1].asReturnedValue();
 }
@@ -809,8 +822,8 @@ StackTrace ExecutionEngine::stackTrace(int frameLimit) const
         QV4::StackFrame frame;
         frame.source = f->source();
         frame.function = f->function();
-        frame.line = f->line;
-        frame.column = f->column;
+        frame.line = f->lineNumber();
+        frame.column = -1;
         stack.append(frame);
         --frameLimit;
         f = f->parent;

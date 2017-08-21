@@ -479,7 +479,7 @@ bool QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
                            referenceObject->metaObject()->className(), referenceObject->metaObject()->property(referencePropertyIndex).name(),
                            qPrintable(qmlBinding->expressionIdentifier()),
                            metaObject->property(pd->coreIndex()).name(),
-                           qPrintable(stackFrame->source()), stackFrame->line);
+                           qPrintable(stackFrame->source()), stackFrame->lineNumber());
                 }
             }
             QQmlPropertyPrivate::removeBinding(referenceObject, QQmlPropertyIndex(referencePropertyIndex, pd->coreIndex()));

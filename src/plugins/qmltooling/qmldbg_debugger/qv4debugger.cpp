@@ -158,7 +158,7 @@ QV4Debugger::ExecutionState QV4Debugger::currentExecutionState() const
 {
     ExecutionState state;
     state.fileName = getFunction()->sourceFile();
-    state.lineNumber = engine()->currentStackFrame->line;
+    state.lineNumber = engine()->currentStackFrame->lineNumber();
 
     return state;
 }
@@ -203,7 +203,7 @@ void QV4Debugger::maybeBreakAtInstruction()
         pauseAndWait(PauseRequest);
     } else if (m_haveBreakPoints) {
         if (QV4::Function *f = getFunction()) {
-            const int lineNumber = engine()->currentStackFrame->line;
+            const int lineNumber = engine()->currentStackFrame->lineNumber();
             if (reallyHitTheBreakPoint(f->sourceFile(), lineNumber))
                 pauseAndWait(BreakPointHit);
         }

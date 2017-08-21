@@ -1932,7 +1932,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     // ### still needed?
     _context->maxNumberOfArguments = qMax(_context->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);
 
-    BytecodeGenerator bytecode;
+    BytecodeGenerator bytecode(_context->line);
     BytecodeGenerator *savedBytecodeGenerator;
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
@@ -2025,13 +2025,14 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         bytecodeGenerator->addInstruction(Instruction::Ret());
     }
 
-    _context->code = bytecodeGenerator->finalize();
+    bytecodeGenerator->finalize(_context);
     _context->registerCount = bytecodeGenerator->registerCount();
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
         qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
                  << "register count" << _context->registerCount;
-        QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size());
+        QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size(),
+                                _context->line, _context->lineNumberMapping);
         qDebug();
     }
 

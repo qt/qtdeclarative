@@ -68,7 +68,7 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
 
     QV4::CppStackFrame *stackFrame = v4->currentStackFrame;
 
-    retn.setLine(stackFrame->line);
+    retn.setLine(stackFrame->lineNumber());
     retn.setUrl(QUrl(stackFrame->source()));
     QQmlEnginePrivate::warning(engine, retn);
 }

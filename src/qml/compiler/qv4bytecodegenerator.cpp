@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <private/qv4bytecodegenerator_p.h>
+#include <private/qv4compilercontext_p.h>
 #include <private/qqmljsastfwd_p.h>
 
 QT_USE_NAMESPACE
@@ -46,12 +47,7 @@ using namespace Moth;
 
 void BytecodeGenerator::setLocation(const QQmlJS::AST::SourceLocation &loc)
 {
-    if (static_cast<int>(loc.startLine) == currentLine)
-        return;
     currentLine = static_cast<int>(loc.startLine);
-    Instruction::Line line;
-    line.lineNumber = currentLine;
-    addInstruction(line); //### put line numbers in a side-table, not in the instruction stream
 }
 
 int BytecodeGenerator::newRegister()
@@ -71,14 +67,23 @@ int BytecodeGenerator::newRegisterArray(int n)
     return t;
 }
 
-QByteArray BytecodeGenerator::finalize()
+void BytecodeGenerator::finalize(Compiler::Context *context)
 {
     QByteArray code;
 
     // content
     QVector<int> instructionOffsets;
+    QVector<int> lineNumbers;
+    currentLine = startLine;
     instructionOffsets.reserve(instructions.size());
     for (const auto &i : qAsConst(instructions)) {
+        if (i.line != currentLine) {
+            Q_ASSERT(i.line > currentLine);
+            while (currentLine < i.line) {
+                lineNumbers.append(code.size());
+                ++currentLine;
+            }
+        }
         instructionOffsets.append(code.size());
         code.append(reinterpret_cast<const char *>(&i.instr), i.size);
     }
@@ -97,5 +102,6 @@ QByteArray BytecodeGenerator::finalize()
         memcpy(c, &linkedInstructionOffset, sizeof(ptrdiff_t));
     }
 
-    return code;
+    context->code = code;
+    context->lineNumberMapping = lineNumbers;
 }

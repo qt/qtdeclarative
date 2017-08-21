@@ -64,7 +64,6 @@ QT_BEGIN_NAMESPACE
 #define MOTH_DEBUG_INSTR(F)
 #else
 #define MOTH_DEBUG_INSTR(F) \
-    F(Line, line) \
     F(Debug, debug)
 #endif
 
@@ -236,9 +235,9 @@ inline bool operator!=(const StackSlot &l, const StackSlot &r) { return l.stackS
 // When making changes to the instructions, make sure to bump QV4_DATA_STRUCTURE_VERSION in qv4compileddata_p.h
 
 void dumpConstantTable(const Value *constants, uint count);
-void dumpBytecode(const char *bytecode, int len, int nLocals, int nFormals);
-inline void dumpBytecode(const QByteArray &bytecode, int nLocals, int nFormals) {
-    dumpBytecode(bytecode.constData(), bytecode.length(), nLocals, nFormals);
+void dumpBytecode(const char *bytecode, int len, int nLocals, int nFormals, int startLine = 1, const QVector<int> &lineNumberMapping = QVector<int>());
+inline void dumpBytecode(const QByteArray &bytecode, int nLocals, int nFormals, int startLine = 1, const QVector<int> &lineNumberMapping = QVector<int>()) {
+    dumpBytecode(bytecode.constData(), bytecode.length(), nLocals, nFormals, startLine, lineNumberMapping);
 }
 
 union Instr
@@ -256,13 +255,8 @@ union Instr
     };
 
 #ifndef QT_NO_QML_DEBUGGING
-    struct instr_line {
-        MOTH_INSTR_HEADER
-        qint32 lineNumber;
-    };
     struct instr_debug {
         MOTH_INSTR_HEADER
-        qint32 lineNumber;
     };
 #endif // QT_NO_QML_DEBUGGING
 
@@ -714,7 +708,6 @@ union Instr
 
     instr_common common;
     instr_ret ret;
-    instr_line line;
     instr_debug debug;
     instr_loadConst loadConst;
     instr_loadZero loadZero;

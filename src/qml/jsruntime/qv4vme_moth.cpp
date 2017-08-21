@@ -242,7 +242,7 @@ Q_NEVER_INLINE static void qt_v4CheckForBreak(QV4::CppStackFrame *frame)
     if (!qt_v4IsStepping && !qt_v4Breakpoints.size())
         return;
 
-    const int lineNumber = frame->line;
+    const int lineNumber = frame->lineNumber();
     QV4::Function *function = frame->v4Function;
     QString engineName = function->sourceFile();
 
@@ -273,10 +273,8 @@ Q_NEVER_INLINE static void qt_v4CheckForBreak(QV4::CppStackFrame *frame)
     }
 }
 
-Q_NEVER_INLINE static void debug_slowPath(const QV4::Moth::Instr::instr_debug &instr,
-                                          QV4::ExecutionEngine *engine)
+Q_NEVER_INLINE static void debug_slowPath(QV4::ExecutionEngine *engine)
 {
-    engine->currentStackFrame->line = instr.lineNumber;
     QV4::Debugging::Debugger *debugger = engine->debugger();
     if (debugger && debugger->pauseAtNextOpportunity())
         debugger->maybeBreakAtInstruction();
@@ -515,6 +513,7 @@ static bool compareEqualInt(Value lhs, int rhs)
     }
 }
 
+#define STORE_IP() frame.instructionPointer = code
 
 QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callData, Heap::ExecutionContext *context, QV4::Function *function)
 {
@@ -539,6 +538,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     CppStackFrame frame;
     frame.parent = engine->currentStackFrame;
     frame.v4Function = function;
+    frame.instructionPointer = function->codeData;
     engine->currentStackFrame = &frame;
 
     QV4::Value *stack = nullptr;
@@ -631,6 +631,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)
+        STORE_IP();
         STORE_ACCUMULATOR(Runtime::method_loadName(engine, instr.name));
     MOTH_END_INSTR(LoadName)
 
@@ -640,54 +641,65 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(LoadGlobalLookup)
 
     MOTH_BEGIN_INSTR(StoreNameStrict)
+        STORE_IP();
         Runtime::method_storeNameStrict(engine, instr.name, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreNameSloppy)
 
     MOTH_BEGIN_INSTR(StoreNameSloppy)
+        STORE_IP();
         Runtime::method_storeNameSloppy(engine, instr.name, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreNameSloppy)
 
     MOTH_BEGIN_INSTR(LoadElement)
+        STORE_IP();
         STORE_ACCUMULATOR(Runtime::method_loadElement(engine, STACK_VALUE(instr.base), STACK_VALUE(instr.index)));
     MOTH_END_INSTR(LoadElement)
 
     MOTH_BEGIN_INSTR(LoadElementA)
+        STORE_IP();
         STORE_ACCUMULATOR(Runtime::method_loadElement(engine, STACK_VALUE(instr.base), accumulator));
     MOTH_END_INSTR(LoadElementA)
 
     MOTH_BEGIN_INSTR(StoreElement)
+        STORE_IP();
         if (!Runtime::method_storeElement(engine, STACK_VALUE(instr.base), STACK_VALUE(instr.index), accumulator) && function->isStrict())
             engine->throwTypeError();
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreElement)
 
     MOTH_BEGIN_INSTR(LoadProperty)
+        STORE_IP();
         STORE_ACCUMULATOR(Runtime::method_loadProperty(engine, STACK_VALUE(instr.base), instr.name));
     MOTH_END_INSTR(LoadProperty)
 
     MOTH_BEGIN_INSTR(LoadPropertyA)
+        STORE_IP();
         STORE_ACCUMULATOR(Runtime::method_loadProperty(engine, accumulator, instr.name));
     MOTH_END_INSTR(LoadPropertyA)
 
     MOTH_BEGIN_INSTR(GetLookup)
+        STORE_IP();
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.index;
         STORE_ACCUMULATOR(l->getter(l, engine, STACK_VALUE(instr.base)));
     MOTH_END_INSTR(GetLookup)
 
     MOTH_BEGIN_INSTR(GetLookupA)
+        STORE_IP();
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.index;
         STORE_ACCUMULATOR(l->getter(l, engine, accumulator));
     MOTH_END_INSTR(GetLookupA)
 
     MOTH_BEGIN_INSTR(StoreProperty)
+        STORE_IP();
         if (!Runtime::method_storeProperty(engine, STACK_VALUE(instr.base), instr.name, accumulator) && function->isStrict())
             engine->throwTypeError();
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreProperty)
 
     MOTH_BEGIN_INSTR(SetLookup)
+        STORE_IP();
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + instr.index;
         if (!l->setter(l, engine, STACK_VALUE(instr.base), accumulator) && function->isStrict())
             engine->throwTypeError();
@@ -717,39 +729,46 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(LoadIdObject)
 
     MOTH_BEGIN_INSTR(CallValue)
+        STORE_IP();
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         STORE_ACCUMULATOR(Runtime::method_callValue(engine, accumulator, callData));
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
+        STORE_IP();
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         callData->thisObject = STACK_VALUE(instr.base);
         STORE_ACCUMULATOR(Runtime::method_callProperty(engine, instr.name, callData));
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallPropertyLookup)
+        STORE_IP();
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         callData->thisObject = STACK_VALUE(instr.base);
         STORE_ACCUMULATOR(Runtime::method_callPropertyLookup(engine, instr.lookupIndex, callData));
     MOTH_END_INSTR(CallPropertyLookup)
 
     MOTH_BEGIN_INSTR(CallElement)
+        STORE_IP();
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         callData->thisObject = STACK_VALUE(instr.base);
         STORE_ACCUMULATOR(Runtime::method_callElement(engine, STACK_VALUE(instr.index), callData));
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallName)
+        STORE_IP();
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         STORE_ACCUMULATOR(Runtime::method_callName(engine, instr.name, callData));
     MOTH_END_INSTR(CallName)
 
     MOTH_BEGIN_INSTR(CallPossiblyDirectEval)
+        STORE_IP();
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         STORE_ACCUMULATOR(Runtime::method_callPossiblyDirectEval(engine, callData));
     MOTH_END_INSTR(CallPossiblyDirectEval)
 
     MOTH_BEGIN_INSTR(CallGlobalLookup)
+        STORE_IP();
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         STORE_ACCUMULATOR(Runtime::method_callGlobalLookup(engine, instr.index, callData));
     MOTH_END_INSTR(CallGlobalLookup)
@@ -760,6 +779,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(SetExceptionHandler)
 
     MOTH_BEGIN_INSTR(ThrowException)
+        STORE_IP();
         Runtime::method_throwException(engine, accumulator);
         goto catchException;
     MOTH_END_INSTR(ThrowException)
@@ -783,6 +803,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(PushCatchContext)
 
     MOTH_BEGIN_INSTR(PushWithContext)
+        STORE_IP();
         accumulator = accumulator.toObject(engine);
         CHECK_EXCEPTION;
         STACK_VALUE(instr.reg) = Runtime::method_pushWithContext(accumulator, static_cast<QV4::NoThrowEngine*>(engine));
@@ -803,6 +824,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_BEGIN_INSTR(DeleteMember)
         if (!Runtime::method_deleteMember(engine, STACK_VALUE(instr.base), instr.member)) {
             if (function->isStrict()) {
+                STORE_IP();
                 engine->throwTypeError();
                 goto catchException;
             }
@@ -815,6 +837,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_BEGIN_INSTR(DeleteSubscript)
         if (!Runtime::method_deleteElement(engine, STACK_VALUE(instr.base), STACK_VALUE(instr.index))) {
             if (function->isStrict()) {
+                STORE_IP();
                 engine->throwTypeError();
                 goto catchException;
             }
@@ -827,6 +850,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_BEGIN_INSTR(DeleteName)
         if (!Runtime::method_deleteName(engine, instr.name)) {
             if (function->isStrict()) {
+                STORE_IP();
                 QString name = function->compilationUnit->runtimeStrings[instr.name]->toQString();
                 engine->throwSyntaxError(QStringLiteral("Can't delete property %1").arg(name));
                 goto catchException;
@@ -880,6 +904,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(ConvertThisToObject)
 
     MOTH_BEGIN_INSTR(Construct)
+        STORE_IP();
         QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
         STORE_ACCUMULATOR(Runtime::method_construct(engine, STACK_VALUE(instr.func), callData));
     MOTH_END_INSTR(Construct)
@@ -1171,14 +1196,8 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
 #ifndef QT_NO_QML_DEBUGGER
     MOTH_BEGIN_INSTR(Debug)
-        debug_slowPath(instr, engine);
+        debug_slowPath(engine);
     MOTH_END_INSTR(Debug)
-
-    MOTH_BEGIN_INSTR(Line)
-        frame.line = instr.lineNumber;
-        if (Q_UNLIKELY(qt_v4IsDebugging))
-            qt_v4CheckForBreak(&frame);
-    MOTH_END_INSTR(Line)
 #endif // QT_NO_QML_DEBUGGER
 
     MOTH_BEGIN_INSTR(LoadQmlContext)

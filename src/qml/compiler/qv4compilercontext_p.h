@@ -133,6 +133,7 @@ struct Context {
 
     ControlFlow *controlFlow = 0;
     QByteArray code;
+    QVector<int> lineNumberMapping;
 
     int maxNumberOfArguments = 0;
     bool hasDirectEval = false;

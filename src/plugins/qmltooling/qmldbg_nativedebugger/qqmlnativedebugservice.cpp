@@ -344,7 +344,7 @@ void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &a
             frame.insert(QStringLiteral("function"), functionName->toQString());
         frame.insert(QStringLiteral("file"), function->sourceFile());
 
-        int line = f->line;
+        int line = f->lineNumber();
         frame.insert(QStringLiteral("line"), (line < 0 ? -line : line));
 
         frameArray.push_back(frame);
@@ -607,7 +607,7 @@ void NativeDebugger::maybeBreakAtInstruction()
 
     if (m_service->m_breakHandler->m_haveBreakPoints) {
         if (QV4::Function *function = getFunction()) {
-            const int lineNumber = m_engine->currentStackFrame->line;
+            const int lineNumber = m_engine->currentStackFrame->lineNumber();
             if (reallyHitTheBreakPoint(function, lineNumber))
                 pauseAndWait();
         }
@@ -668,7 +668,7 @@ void NativeDebugger::pauseAndWait()
     if (QV4::CppStackFrame *frame = m_engine->currentStackFrame) {
         QV4::Function *function = frame->v4Function;
         event.insert(QStringLiteral("file"), function->sourceFile());
-        int line = frame->line;
+        int line = frame->lineNumber();
         event.insert(QStringLiteral("line"), (line < 0 ? -line : line));
     }
 

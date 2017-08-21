@@ -65,6 +65,8 @@ namespace Moth {
 
 class BytecodeGenerator {
 public:
+    BytecodeGenerator(int line)
+        : startLine(line) {}
 
     struct Label {
         enum LinkMode {
@@ -221,7 +223,7 @@ public:
     int newRegisterArray(int n);
     int registerCount() const { return regCount; }
 
-    QByteArray finalize();
+    void finalize(Compiler::Context *context);
 
     template<int InstrT>
     Jump addJumpInstruction(const InstrData<InstrT> &data)
@@ -239,7 +241,7 @@ private:
 
     int addInstructionHelper(uint size, const Instr &i) {
         int pos = instructions.size();
-        instructions.append({size, i});
+        instructions.append({size, currentLine, i});
         return pos;
     }
 
@@ -251,6 +253,7 @@ private:
 
     struct I {
         uint size;
+        int line;
         Instr instr;
     };
 
@@ -262,7 +265,8 @@ private:
 public:
     int currentReg = 0;
 private:
-    int currentLine = -1;
+    int startLine = 0;
+    int currentLine = 0;
 };
 
 }

@@ -59,6 +59,12 @@ static QByteArray alignedNumber(int n) {
     return number;
 }
 
+static QByteArray alignedLineNumber(int line) {
+    if (line > 0)
+        return alignedNumber(static_cast<int>(line));
+    return QByteArray("            ");
+}
+
 static QString toString(QV4::ReturnedValue v)
 {
 #ifdef V4_BOOTSTRAP
@@ -91,7 +97,7 @@ size_t absoluteInstructionOffset(const char *codeStart, const T &instr)
     QDebug d = qDebug(); \
     d.noquote(); \
     d.nospace(); \
-    d << alignedNumber(int(code - start)).constData() << ":    " << #I << " "; \
+    d << alignedLineNumber(line) << alignedNumber(int(code - start)).constData() << ":    " << #I << " "; \
     code += InstrMeta<int(Instr::I)>::Size; \
 
 #define MOTH_END_INSTR(I) } break;
@@ -109,12 +115,18 @@ void dumpConstantTable(const Value *constants, uint count)
           << toString(constants[i].asReturnedValue()).toUtf8().constData() << "\n";
 }
 
-void dumpBytecode(const char *code, int len, int nLocals, int nFormals)
+void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int startLine, const QVector<int> &lineNumberMapping)
 {
+    int lastLine = -1;
     const char *start = code;
     const char *end = code + len;
     while (code < end) {
         const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
+        int line = startLine + ((code == start) ? 0 : lineNumberMapping.lastIndexOf(static_cast<uint>(code - start)) + 1);
+        if (line > lastLine)
+            lastLine = line;
+        else
+            line = -1;
         switch (genericInstr->common.instructionType) {
 
         MOTH_BEGIN_INSTR(LoadReg)
@@ -516,14 +528,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals)
         MOTH_BEGIN_INSTR(Ret)
         MOTH_END_INSTR(Ret)
 
-    #ifndef QT_NO_QML_DEBUGGER
+#ifndef QT_NO_QML_DEBUGGER
         MOTH_BEGIN_INSTR(Debug)
         MOTH_END_INSTR(Debug)
-
-        MOTH_BEGIN_INSTR(Line)
-            d << instr.lineNumber;
-        MOTH_END_INSTR(Line)
-    #endif // QT_NO_QML_DEBUGGER
+#endif // QT_NO_QML_DEBUGGER
 
         MOTH_BEGIN_INSTR(LoadQmlContext)
             d << instr.result.dump(nFormals);

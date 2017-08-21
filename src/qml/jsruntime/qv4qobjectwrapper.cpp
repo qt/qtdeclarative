@@ -472,7 +472,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
                 qCInfo(lcBindingRemoval,
                        "Overwriting binding on %s::%s at %s:%d that was initially bound at %s",
                        object->metaObject()->className(), qPrintable(property->name(object)),
-                       qPrintable(stackFrame->source()), stackFrame->line,
+                       qPrintable(stackFrame->source()), stackFrame->lineNumber(),
                        qPrintable(qmlBinding->expressionIdentifier()));
             }
         }

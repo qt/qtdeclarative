@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x12
+#define QV4_DATA_STRUCTURE_VERSION 0x13
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -217,6 +217,8 @@ struct Function
     quint32_le formalsOffset;
     quint32_le nLocals;
     quint32_le localsOffset;
+    quint32_le nLineNumbers;
+    quint32_le lineNumberOffset;
     quint32_le nInnerFunctions;
     quint32_le nRegisters;
     Location location;
@@ -240,6 +242,7 @@ struct Function
 
     const quint32_le *formalsTable() const { return reinterpret_cast<const quint32_le *>(reinterpret_cast<const char *>(this) + formalsOffset); }
     const quint32_le *localsTable() const { return reinterpret_cast<const quint32_le *>(reinterpret_cast<const char *>(this) + localsOffset); }
+    const quint32_le *lineNumberTable() const { return reinterpret_cast<const quint32_le *>(reinterpret_cast<const char *>(this) + lineNumberOffset); }
     const quint32_le *qmlIdObjectDependencyTable() const { return reinterpret_cast<const quint32_le *>(reinterpret_cast<const char *>(this) + dependingIdObjectsOffset); }
     const quint32_le *qmlContextPropertiesDependencyTable() const { return reinterpret_cast<const quint32_le *>(reinterpret_cast<const char *>(this) + dependingContextPropertiesOffset); }
     const quint32_le *qmlScopePropertiesDependencyTable() const { return reinterpret_cast<const quint32_le *>(reinterpret_cast<const char *>(this) + dependingScopePropertiesOffset); }
@@ -251,8 +254,8 @@ struct Function
 
     inline bool hasQmlDependencies() const { return nDependingIdObjects > 0 || nDependingContextProperties > 0 || nDependingScopeProperties > 0; }
 
-    static int calculateSize(int nFormals, int nLocals, int nInnerfunctions, int nIdObjectDependencies, int nPropertyDependencies) {
-        int trailingData = nFormals + nLocals + nInnerfunctions +  nIdObjectDependencies +
+    static int calculateSize(int nFormals, int nLocals, int nLines, int nInnerfunctions, int nIdObjectDependencies, int nPropertyDependencies) {
+        int trailingData = nFormals + nLocals + nLines + nInnerfunctions +  nIdObjectDependencies +
                 2 * nPropertyDependencies;
         return align(align(sizeof(Function)) + size_t(trailingData) * sizeof(quint32));
     }

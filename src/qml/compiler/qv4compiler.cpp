@@ -316,6 +316,10 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     function->localsOffset = currentOffset;
     currentOffset += function->nLocals * sizeof(quint32);
 
+    function->nLineNumbers = irFunction->lineNumberMapping.size();
+    function->lineNumberOffset = currentOffset;
+    currentOffset += function->nLineNumbers * sizeof(quint32);
+
     function->nInnerFunctions = irFunction->nestedContexts.size();
 
     function->nRegisters = irFunction->registerCount;
@@ -357,6 +361,11 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     quint32_le *locals = (quint32_le *)(f + function->localsOffset);
     for (int i = 0; i < irFunction->locals.size(); ++i)
         locals[i] = getStringId(irFunction->locals.at(i));
+
+    // write line numbers
+    quint32 *lineNumbers = (quint32 *)(f + function->lineNumberOffset);
+    for (int i = 0; i < irFunction->lineNumberMapping.size(); ++i)
+        lineNumbers[i] = irFunction->lineNumberMapping.at(i);
 
     // write QML dependencies
     quint32_le *writtenDeps = (quint32_le *)(f + function->dependingIdObjectsOffset);
@@ -428,7 +437,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
 
         const int qmlIdDepsCount = f->idObjectDependencies.count();
         const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
-        nextOffset += QV4::CompiledData::Function::calculateSize(f->arguments.size(), f->locals.size(), f->nestedContexts.size(), qmlIdDepsCount, qmlPropertyDepsCount);
+        nextOffset += QV4::CompiledData::Function::calculateSize(f->arguments.size(), f->locals.size(), f->lineNumberMapping.size(), f->nestedContexts.size(), qmlIdDepsCount, qmlPropertyDepsCount);
     }
 
     if (option == GenerateWithStringTable) {

@@ -60,7 +60,7 @@
 using namespace QV4;
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
-    : line(0), column(0), scope(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
+    : line(1), column(0), scope(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
     , compilationUnit(compilationUnit), vmFunction(0), parseAsBinding(true)
 {
     if (qml)

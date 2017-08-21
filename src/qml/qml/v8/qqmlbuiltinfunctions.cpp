@@ -1342,7 +1342,7 @@ void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *originalFunction
 QQmlSourceLocation QQmlBindingFunction::currentLocation() const
 {
     QV4::CppStackFrame *frame = engine()->currentStackFrame;
-    return QQmlSourceLocation(frame->source(), frame->line, 0);
+    return QQmlSourceLocation(frame->source(), frame->lineNumber(), 0);
 }
 
 DEFINE_OBJECT_VTABLE(QQmlBindingFunction);
@@ -1552,7 +1552,7 @@ static ReturnedValue writeToConsole(const BuiltinFunction *b, CallData *callData
     QV4::CppStackFrame *frame = v4->currentStackFrame;
     const QByteArray baSource = frame->source().toUtf8();
     const QByteArray baFunction = frame->function().toUtf8();
-    QMessageLogger logger(baSource.constData(), frame->line, baFunction.constData(), loggingCategory->categoryName());
+    QMessageLogger logger(baSource.constData(), frame->lineNumber(), baFunction.constData(), loggingCategory->categoryName());
 
     switch (logType) {
     case Log:
@@ -1606,7 +1606,7 @@ ReturnedValue ConsoleObject::method_profile(const BuiltinFunction *b, CallData *
     QV4::CppStackFrame *frame = v4->currentStackFrame;
     const QByteArray baSource = frame->source().toUtf8();
     const QByteArray baFunction = frame->function().toUtf8();
-    QMessageLogger logger(baSource.constData(), frame->line, baFunction.constData());
+    QMessageLogger logger(baSource.constData(), frame->lineNumber(), baFunction.constData());
     QQmlProfilerService *service = QQmlDebugConnector::service<QQmlProfilerService>();
     if (!service) {
         logger.warning("Cannot start profiling because debug service is disabled. Start with -qmljsdebugger=port:XXXXX.");
@@ -1626,7 +1626,7 @@ ReturnedValue ConsoleObject::method_profileEnd(const BuiltinFunction *b, CallDat
     QV4::CppStackFrame *frame = v4->currentStackFrame;
     const QByteArray baSource = frame->source().toUtf8();
     const QByteArray baFunction = frame->function().toUtf8();
-    QMessageLogger logger(baSource.constData(), frame->line, baFunction.constData());
+    QMessageLogger logger(baSource.constData(), frame->lineNumber(), baFunction.constData());
 
     QQmlProfilerService *service = QQmlDebugConnector::service<QQmlProfilerService>();
     if (!service) {
@@ -1684,10 +1684,10 @@ ReturnedValue ConsoleObject::method_count(const BuiltinFunction *b, CallData *ca
 
     QString scriptName = frame->source();
 
-    int value = v8engine->consoleCountHelper(scriptName, frame->line, frame->column);
+    int value = v8engine->consoleCountHelper(scriptName, frame->lineNumber(), -1);
     QString message = name + QLatin1String(": ") + QString::number(value);
 
-    QMessageLogger(qPrintable(scriptName), frame->line,
+    QMessageLogger(qPrintable(scriptName), frame->lineNumber(),
                    qPrintable(frame->function()))
         .debug("%s", qPrintable(message));
 
@@ -1705,7 +1705,7 @@ ReturnedValue ConsoleObject::method_trace(const BuiltinFunction *b, CallData *ca
     QString stack = jsStack(v4);
 
     QV4::CppStackFrame *frame = v4->currentStackFrame;
-    QMessageLogger(frame->source().toUtf8().constData(), frame->line,
+    QMessageLogger(frame->source().toUtf8().constData(), frame->lineNumber(),
                    frame->function().toUtf8().constData())
         .debug("%s", qPrintable(stack));
 
@@ -1737,7 +1737,7 @@ ReturnedValue ConsoleObject::method_assert(const BuiltinFunction *b, CallData *c
         QString stack = jsStack(v4);
 
         QV4::CppStackFrame *frame = v4->currentStackFrame;
-        QMessageLogger(frame->source().toUtf8().constData(), frame->line,
+        QMessageLogger(frame->source().toUtf8().constData(), frame->lineNumber(),
                        frame->function().toUtf8().constData())
             .critical("%s\n%s",qPrintable(message), qPrintable(stack));
 

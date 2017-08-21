@@ -84,11 +84,11 @@ void QV4DebuggerAgent::debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseR
             break;
 
         body.insert(QStringLiteral("invocationText"), frame->function());
-        body.insert(QStringLiteral("sourceLine"), frame->line - 1);
-        if (frame->column > 0)
-            body.insert(QStringLiteral("sourceColumn"), frame->column);
+        body.insert(QStringLiteral("sourceLine"), frame->lineNumber() - 1);
+//        if (frame->column > 0)
+//            body.insert(QStringLiteral("sourceColumn"), frame->column);
         QJsonArray breakPoints;
-        foreach (int breakPointId, breakPointIds(frame->source(), frame->line))
+        foreach (int breakPointId, breakPointIds(frame->source(), frame->lineNumber()))
             breakPoints.push_back(breakPointId);
         body.insert(QStringLiteral("breakpoints"), breakPoints);
         script.insert(QStringLiteral("name"), frame->source());

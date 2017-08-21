@@ -107,14 +107,14 @@ struct Q_QML_EXPORT CppStackFrame {
     CppStackFrame *parent;
     Function *v4Function;
     JSStackFrame *jsFrame;
-    int line = -1;
-    int column = -1;
+    const uchar *instructionPointer;
 
     QString source() const;
     QString function() const;
     inline QV4::ExecutionContext *context() const {
         return static_cast<ExecutionContext *>(&jsFrame->context);
     }
+    int lineNumber() const;
 
     inline QV4::Heap::CallContext *callContext() const {
         Heap::ExecutionContext *ctx = static_cast<ExecutionContext &>(jsFrame->context).d();\
