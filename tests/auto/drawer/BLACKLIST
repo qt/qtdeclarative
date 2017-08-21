@@ -1,0 +1,14 @@
+# See qtbase/src/testlib/qtestblacklist.cpp for format
+
+# https://bugreports.qt.io/browse/QTBUG-62628
+[multiple]
+*
+
+[touch]
+*
+
+[multiTouch]
+*
+
+[grabber]
+*
