@@ -134,7 +134,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
 
     if (context->imports && name->startsWithUpper()) {
         // Search for attached properties, enums and imported scripts
-        QQmlTypeNameCache::Result r = context->imports->query(name);
+        QQmlTypeNameCache::Result r = context->imports->query(name, QQmlImport::AllowRecursion);
 
         if (r.isValid()) {
             if (hasProperty)
@@ -142,7 +142,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
             if (r.scriptIndex != -1) {
                 QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
                 return scripts->getIndexed(r.scriptIndex);
-            } else if (r.type) {
+            } else if (r.type.isValid()) {
                 return QQmlTypeWrapper::create(v4, scopeObject, r.type);
             } else if (r.importNamespace) {
                 return QQmlTypeWrapper::create(v4, scopeObject, context->imports, r.importNamespace);

@@ -41,6 +41,7 @@
 // We mean it.
 //
 
+#include <../../../shared/util.h>
 #include <private/qqmldebugclient_p.h>
 
 #include <QtCore/qeventloop.h>
@@ -51,13 +52,40 @@
 #include <QtTest/qtest.h>
 #include <QtQml/qqmlengine.h>
 
-class QQmlDebugTest
+class QQmlDebugProcess;
+class QQmlDebugTest : public QQmlDataTest
 {
+    Q_OBJECT
 public:
     static bool waitForSignal(QObject *receiver, const char *member, int timeout = 5000);
     static QList<QQmlDebugClient *> createOtherClients(QQmlDebugConnection *connection);
     static QString clientStateString(const QQmlDebugClient *client);
     static QString connectionStateString(const QQmlDebugConnection *connection);
+
+protected:
+    enum ConnectResult {
+        ConnectSuccess,
+        ProcessFailed,
+        SessionFailed,
+        ConnectionFailed,
+        ClientsFailed,
+        EnableFailed,
+        RestrictFailed
+    };
+
+    ConnectResult connect(const QString &executable, const QString &services,
+                          const QString &extraArgs, bool block);
+
+    virtual QQmlDebugProcess *createProcess(const QString &executable);
+    virtual QQmlDebugConnection *createConnection();
+    virtual QList<QQmlDebugClient *> createClients();
+
+    QQmlDebugProcess *m_process = nullptr;
+    QQmlDebugConnection *m_connection = nullptr;
+    QList<QQmlDebugClient *> m_clients;
+
+protected slots:
+    virtual void cleanup();
 };
 
 class QQmlDebugTestClient : public QQmlDebugClient

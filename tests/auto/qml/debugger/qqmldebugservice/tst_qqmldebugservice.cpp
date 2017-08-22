@@ -105,10 +105,13 @@ void tst_QQmlDebugService::initTestCase()
 
 void tst_QQmlDebugService::checkPortRange()
 {
-    QQmlDebugConnection *connection1 = new QQmlDebugConnection();
-    QQmlDebugProcess *process1 = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
+    QScopedPointer<QQmlDebugConnection> connection1(new QQmlDebugConnection());
+    QScopedPointer<QQmlDebugProcess> process1(
+                new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath)
+                                     + "/qmlscene", this));
 
-    process1->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792") << testFile("test.qml"));
+    process1->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792")
+                                  << testFile("test.qml"));
 
     if (!process1->waitForSessionStart())
         QFAIL("could not launch application, or did not get 'Waiting for connection'.");
@@ -119,10 +122,13 @@ void tst_QQmlDebugService::checkPortRange()
         QFAIL("could not connect to host!");
 
     // Second instance
-    QQmlDebugConnection *connection2 = new QQmlDebugConnection();
-    QQmlDebugProcess *process2 = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
+    QScopedPointer<QQmlDebugConnection> connection2(new QQmlDebugConnection());
+    QScopedPointer<QQmlDebugProcess> process2(
+                new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath)
+                                     + "/qmlscene", this));
 
-    process2->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792") << testFile("test.qml"));
+    process2->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792")
+                                  << testFile("test.qml"));
 
     if (!process2->waitForSessionStart())
         QFAIL("could not launch application, or did not get 'Waiting for connection'.");
@@ -131,11 +137,6 @@ void tst_QQmlDebugService::checkPortRange()
     connection2->connectToHost("127.0.0.1", port2);
     if (!connection2->waitForConnected())
         QFAIL("could not connect to host!");
-
-    delete connection1;
-    delete process1;
-    delete connection2;
-    delete process2;
 }
 
 void tst_QQmlDebugService::name()

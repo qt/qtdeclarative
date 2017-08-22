@@ -44,6 +44,7 @@ private slots:
     void translation_data();
     void translation();
     void idTranslation();
+    void translationChange();
 };
 
 void tst_qqmltranslation::translation_data()
@@ -160,6 +161,51 @@ void tst_qqmltranslation::idTranslation()
 
     QCoreApplication::removeTranslator(&translator);
     delete object;
+}
+
+class DummyTranslator : public QTranslator
+{
+    Q_OBJECT
+
+    QString translate(const char *context, const char *sourceText, const char *disambiguation, int n) const override
+    {
+        Q_UNUSED(context);
+        Q_UNUSED(disambiguation);
+        Q_UNUSED(n);
+        if (!qstrcmp(sourceText, "translate me"))
+            return QString::fromUtf8("xxx");
+        return QString();
+    }
+
+    bool isEmpty() const override
+    {
+        return false;
+    }
+};
+
+void tst_qqmltranslation::translationChange()
+{
+    QQmlEngine engine;
+
+    QQmlComponent component(&engine, testFileUrl("translationChange.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QCOMPARE(object->property("baseProperty").toString(), QString::fromUtf8("do not translate"));
+    QCOMPARE(object->property("text1").toString(), QString::fromUtf8("translate me"));
+    QCOMPARE(object->property("text2").toString(), QString::fromUtf8("translate me"));
+
+    DummyTranslator translator;
+    QCoreApplication::installTranslator(&translator);
+
+    QEvent ev(QEvent::LanguageChange);
+    QCoreApplication::sendEvent(&engine, &ev);
+
+    QCOMPARE(object->property("baseProperty").toString(), QString::fromUtf8("do not translate"));
+    QCOMPARE(object->property("text1").toString(), QString::fromUtf8("xxx"));
+    QCOMPARE(object->property("text2").toString(), QString::fromUtf8("xxx"));
+
+    QCoreApplication::removeTranslator(&translator);
 }
 
 QTEST_MAIN(tst_qqmltranslation)

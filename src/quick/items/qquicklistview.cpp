@@ -101,6 +101,7 @@ public:
     void createHighlight() override;
     void updateHighlight() override;
     void resetHighlightPosition() override;
+    bool movingFromHighlight() override;
 
     void setPosition(qreal pos) override;
     void layoutVisibleItems(int fromModelIndex = 0) override;
@@ -944,6 +945,17 @@ void QQuickListViewPrivate::resetHighlightPosition()
     if (highlight && currentItem)
         static_cast<FxListItemSG*>(highlight)->setPosition(static_cast<FxListItemSG*>(currentItem)->itemPosition());
 }
+
+bool QQuickListViewPrivate::movingFromHighlight()
+{
+    if (!haveHighlightRange || highlightRange != QQuickListView::StrictlyEnforceRange)
+        return false;
+
+    return (highlightPosAnimator && highlightPosAnimator->isRunning()) ||
+           (highlightHeightAnimator && highlightHeightAnimator->isRunning()) ||
+           (highlightWidthAnimator && highlightWidthAnimator->isRunning());
+}
+
 
 QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
 {
@@ -1835,6 +1847,38 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 
     \snippet qml/listview/listview.qml flickBothDirections
 
+    \section1 Stacking Order in ListView
+
+    The \l {QQuickItem::z}{Z value} of items determines whether they are
+    rendered above or below other items. ListView uses several different
+    default Z values, depending on what type of item is being created:
+
+    \table
+    \header
+        \li Property
+        \li Default Z value
+    \row
+        \li \l delegate
+        \li 1
+    \row
+        \li \l footer
+        \li 1
+    \row
+        \li \l header
+        \li 1
+    \row
+        \li \l highlight
+        \li 0
+    \row
+        \li \l section.delegate
+        \li 2
+    \endtable
+
+    These default values are set if the Z value of the item is \c 0, so setting
+    the Z value of these items to \c 0 has no effect. Note that the Z value is
+    of type \l [QML] {real}, so it is possible to set fractional
+    values like \c 0.1.
+
     \sa {QML Data Models}, GridView, PathView, {Qt Quick Examples - Views}
 */
 QQuickListView::QQuickListView(QQuickItem *parent)
@@ -1963,6 +2007,8 @@ QQuickListView::~QQuickListView()
     \note Delegates are instantiated as needed and may be destroyed at any time.
     They are parented to ListView's \l {Flickable::contentItem}{contentItem}, not to the view itself.
     State should \e never be stored in a delegate.
+
+    \sa {Stacking Order in ListView}
 */
 /*!
     \qmlproperty int QtQuick::ListView::currentIndex
@@ -1990,7 +2036,7 @@ QQuickListView::~QQuickListView()
   The default \l {QQuickItem::z}{stacking order}
   of the highlight item is \c 0.
 
-  \sa highlight, highlightFollowsCurrentItem
+  \sa highlight, highlightFollowsCurrentItem, {Stacking Order in ListView}
 */
 
 /*!
@@ -2009,7 +2055,8 @@ QQuickListView::~QQuickListView()
     highlight item is \c 0.
 
     \sa highlightItem, highlightFollowsCurrentItem,
-    {Qt Quick Examples - Views#Highlight}{ListView highlight example}
+    {Qt Quick Examples - Views#Highlight}{ListView highlight example},
+    {Stacking Order in ListView}
 */
 
 /*!
@@ -2352,7 +2399,8 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
     differing sections will result in a section header being created
     even if that section exists elsewhere.
 
-    \sa {Qt Quick Examples - Views}{ListView examples}
+    \sa {Qt Quick Examples - Views}{ListView examples},
+    {Stacking Order in ListView}
 */
 QQuickViewSection *QQuickListView::sectionCriteria()
 {
@@ -2503,7 +2551,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     footer is positioned at the end of the view, after any items. The
     default \l {QQuickItem::z}{stacking order} of the footer is \c 1.
 
-    \sa header, footerItem
+    \sa header, footerItem, {Stacking Order in ListView}
 */
 
 
@@ -2515,7 +2563,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     header is positioned at the beginning of the view, before any items.
     The default \l {QQuickItem::z}{stacking order} of the header is \c 1.
 
-    \sa footer, headerItem
+    \sa footer, headerItem, {Stacking Order in ListView}
 */
 
 /*!
@@ -2526,7 +2574,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     header is positioned at the beginning of the view, before any items.
     The default \l {QQuickItem::z}{stacking order} of the header is \c 1.
 
-    \sa header, footerItem
+    \sa header, footerItem, {Stacking Order in ListView}
 */
 
 /*!
@@ -2537,7 +2585,7 @@ void QQuickListView::setSnapMode(SnapMode mode)
     footer is positioned at the end of the view, after any items. The
     default \l {QQuickItem::z}{stacking order} of the footer is \c 1.
 
-    \sa footer, headerItem
+    \sa footer, headerItem, {Stacking Order in ListView}
 */
 
 /*!
@@ -2555,6 +2603,12 @@ void QQuickListView::setSnapMode(SnapMode mode)
     The header can be pushed away by moving the content forwards, and pulled back by
     moving the content backwards.
     \endlist
+
+    \note This property has no effect on the \l {QQuickItem::z}{stacking order}
+    of the header. For example, if the header should be shown above the
+    \l delegate items when using \c ListView.OverlayHeader, its Z value
+    should be set to a value higher than that of the delegates. For more
+    information, see \l {Stacking Order in ListView}.
 */
 QQuickListView::HeaderPositioning QQuickListView::headerPositioning() const
 {
@@ -2592,6 +2646,12 @@ void QQuickListView::setHeaderPositioning(QQuickListView::HeaderPositioning posi
     The footer can be pushed away by moving the content backwards, and pulled back by
     moving the content forwards.
     \endlist
+
+    \note This property has no effect on the \l {QQuickItem::z}{stacking order}
+    of the footer. For example, if the footer should be shown above the
+    \l delegate items when using \c ListView.OverlayFooter, its Z value
+    should be set to a value higher than that of the delegates. For more
+    information, see \l {Stacking Order in ListView}.
 */
 QQuickListView::FooterPositioning QQuickListView::footerPositioning() const
 {

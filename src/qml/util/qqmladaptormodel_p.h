@@ -82,7 +82,6 @@ public:
         virtual QQmlDelegateModelItem *createItem(
                 QQmlAdaptorModel &,
                 QQmlDelegateModelItemMetaType *,
-                QQmlEngine *,
                 int) const { return 0; }
 
         virtual bool notify(
@@ -122,8 +121,8 @@ public:
     inline int count() const { return qMax(0, accessors->count(*this)); }
     inline QVariant value(int index, const QString &role) const {
         return accessors->value(*this, index, role); }
-    inline QQmlDelegateModelItem *createItem(QQmlDelegateModelItemMetaType *metaType, QQmlEngine *engine, int index) {
-        return accessors->createItem(*this, metaType, engine, index); }
+    inline QQmlDelegateModelItem *createItem(QQmlDelegateModelItemMetaType *metaType, int index) {
+        return accessors->createItem(*this, metaType, index); }
     inline bool hasProxyObject() const {
         return list.type() == QQmlListAccessor::Instance || list.type() == QQmlListAccessor::ListProperty; }
 

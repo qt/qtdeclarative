@@ -90,7 +90,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectMaterial : public QSGMateri
 public:
     struct UniformData
     {
-        enum SpecialType { None, Sampler, SubRect, Opacity, Matrix };
+        enum SpecialType { None, Sampler, SamplerExternal, SubRect, Opacity, Matrix };
 
         QByteArray name;
         QVariant value;

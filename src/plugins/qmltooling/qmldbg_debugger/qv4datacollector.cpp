@@ -144,8 +144,6 @@ const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::Execution
         dict.insert(valueKey, QJsonValue::Undefined);
         return 0;
     case QV4::Value::Null_Type:
-        // "null" is not the correct type, but we leave this in until QtC can deal with "object"
-        dict.insert(QStringLiteral("type"), QStringLiteral("null"));
         dict.insert(valueKey, QJsonValue::Null);
         return 0;
     case QV4::Value::Boolean_Type:

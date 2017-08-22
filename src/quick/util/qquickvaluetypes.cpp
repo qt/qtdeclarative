@@ -757,6 +757,16 @@ void QQuickFontValueType::setHintingPreference(QQuickFontValueType::HintingPrefe
     v.setHintingPreference(QFont::HintingPreference(hintingPreference));
 }
 
+bool QQuickFontValueType::kerning() const
+{
+    return v.kerning();
+}
+
+void QQuickFontValueType::setKerning(bool b)
+{
+    v.setKerning(b);
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qquickvaluetypes_p.cpp"

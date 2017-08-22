@@ -53,7 +53,6 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qstringlist.h>
-#include <private/qjson_p.h>
 #include <private/qv4global_p.h>
 #include <private/qqmljsastfwd_p.h>
 #include <private/qv4compileddata_p.h>
@@ -132,7 +131,7 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     StringTableGenerator stringTable;
     QString codeGeneratorName;
 private:
-    CompiledData::Unit generateHeader(GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset);
+    CompiledData::Unit generateHeader(GeneratorOption option, quint32_le *functionOffsets, uint *jsClassDataOffset);
 
     Module *module;
 

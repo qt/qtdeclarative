@@ -768,6 +768,7 @@ void QQuickWidgetPrivate::updateSize()
         QSize newSize = QSize(root->width(), root->height());
         if (newSize.isValid() && newSize != q->size()) {
             q->resize(newSize);
+            q->updateGeometry();
         }
     } else if (resizeMode == QQuickWidget::SizeRootObjectToView) {
         bool needToUpdateWidth = !qFuzzyCompare(q->width(), root->width());
@@ -913,9 +914,9 @@ void QQuickWidget::createFramebufferObject()
     d->offscreenWindow->setGeometry(globalPos.x(), globalPos.y(), width(), height());
 
     if (d->useSoftwareRenderer) {
-        const QSize imageSize = size() * devicePixelRatio();
+        const QSize imageSize = size() * devicePixelRatioF();
         d->softwareImage = QImage(imageSize, QImage::Format_ARGB32_Premultiplied);
-        d->softwareImage.setDevicePixelRatio(devicePixelRatio());
+        d->softwareImage.setDevicePixelRatio(devicePixelRatioF());
         return;
     }
 
@@ -960,7 +961,7 @@ void QQuickWidget::createFramebufferObject()
         format.setInternalTextureFormat(GL_SRGB8_ALPHA8_EXT);
 #endif
 
-    const QSize fboSize = size() * devicePixelRatio();
+    const QSize fboSize = size() * devicePixelRatioF();
 
     // Could be a simple hide - show, in which case the previous fbo is just fine.
     if (!d->fbo || d->fbo->size() != fboSize) {
@@ -1181,7 +1182,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
     // Software Renderer
     if (d->useSoftwareRenderer) {
         needsSync = true;
-        if (d->softwareImage.size() != size() * devicePixelRatio()) {
+        if (d->softwareImage.size() != size() * devicePixelRatioF()) {
             createFramebufferObject();
         }
     } else {
@@ -1191,7 +1192,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
             // during hide - resize - show sequences and also during application exit.
             if (!d->fbo && !d->offscreenWindow->openglContext())
                 return;
-            if (!d->fbo || d->fbo->size() != size() * devicePixelRatio()) {
+            if (!d->fbo || d->fbo->size() != size() * devicePixelRatioF()) {
                 needsSync = true;
                 createFramebufferObject();
             }
@@ -1607,10 +1608,12 @@ void QQuickWidget::paintEvent(QPaintEvent *event)
             //Paint everything
             painter.drawImage(rect(), d->softwareImage);
         } else {
+            QTransform transform;
+            transform.scale(devicePixelRatioF(), devicePixelRatioF());
             //Paint only the updated areas
             const auto rects = d->updateRegion.rects();
             for (auto targetRect : rects) {
-                auto sourceRect = QRect(targetRect.topLeft() * devicePixelRatio(), targetRect.size() * devicePixelRatio());
+                auto sourceRect = transform.mapRect(QRectF(targetRect));
                 painter.drawImage(targetRect, d->softwareImage, sourceRect);
             }
             d->updateRegion = QRegion();

@@ -6,7 +6,6 @@ SOURCES += tst_qqmllanguage.cpp \
            testtypes.cpp
 HEADERS += testtypes.h
 
-INCLUDEPATH += ../../shared/
 HEADERS += ../../shared/testhttpserver.h
 SOURCES += ../../shared/testhttpserver.cpp
 

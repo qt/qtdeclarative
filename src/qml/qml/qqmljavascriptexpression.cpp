@@ -111,6 +111,7 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
 
     clearActiveGuards();
     clearPermanentGuards();
+    clearError();
     if (m_scopeObject.isT2()) // notify DeleteWatcher of our deletion.
         m_scopeObject.asT2()->_s = 0;
 
@@ -289,7 +290,7 @@ void QQmlPropertyCapture::captureProperty(QQmlNotifier *n, Duration duration)
 
     \a n is in the signal index range (see QObjectPrivate::signalIndex()).
 */
-void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration duration)
+void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration duration, bool doNotify)
 {
     if (watcher->wasDeleted())
         return;
@@ -325,7 +326,7 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration dur
             Q_ASSERT(g->isConnected(o, n));
         } else {
             g = QQmlJavaScriptExpressionGuard::New(expression, engine);
-            g->connect(o, n, engine);
+            g->connect(o, n, engine, doNotify);
         }
 
         if (duration == Permanently)
@@ -355,7 +356,7 @@ void QQmlPropertyCapture::registerQmlDependencies(QV4::Heap::QmlContext *context
     QV4::Heap::QQmlContextWrapper *wrapper = context->qml();
     QQmlContextData *qmlContext = wrapper->context->contextData();
 
-    const QV4::CompiledData::LEUInt32 *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
+    const quint32_le *idObjectDependency = compiledFunction->qmlIdObjectDependencyTable();
     const int idObjectDependencyCount = compiledFunction->nDependingIdObjects;
     for (int i = 0; i < idObjectDependencyCount; ++i, ++idObjectDependency) {
         Q_ASSERT(int(*idObjectDependency) < qmlContext->idValueCount);
@@ -364,7 +365,7 @@ void QQmlPropertyCapture::registerQmlDependencies(QV4::Heap::QmlContext *context
     }
 
     Q_ASSERT(qmlContext->contextObject);
-    const QV4::CompiledData::LEUInt32 *contextPropertyDependency = compiledFunction->qmlContextPropertiesDependencyTable();
+    const quint32_le *contextPropertyDependency = compiledFunction->qmlContextPropertiesDependencyTable();
     const int contextPropertyDependencyCount = compiledFunction->nDependingContextProperties;
     for (int i = 0; i < contextPropertyDependencyCount; ++i) {
         const int propertyIndex = *contextPropertyDependency++;
@@ -374,7 +375,7 @@ void QQmlPropertyCapture::registerQmlDependencies(QV4::Heap::QmlContext *context
     }
 
     QObject *scopeObject = wrapper->scopeObject;
-    const QV4::CompiledData::LEUInt32 *scopePropertyDependency = compiledFunction->qmlScopePropertiesDependencyTable();
+    const quint32_le *scopePropertyDependency = compiledFunction->qmlScopePropertiesDependencyTable();
     const int scopePropertyDependencyCount = compiledFunction->nDependingScopeProperties;
     for (int i = 0; i < scopePropertyDependencyCount; ++i) {
         const int propertyIndex = *scopePropertyDependency++;
@@ -466,7 +467,12 @@ void QQmlJavaScriptExpression::setupFunction(QV4::ExecutionContext *qmlContext, 
         return;
     m_qmlScope.set(qmlContext->engine(), *qmlContext);
     m_v4Function = f;
-    m_compilationUnit = m_v4Function->compilationUnit;
+    setCompilationUnit(m_v4Function->compilationUnit);
+}
+
+void QQmlJavaScriptExpression::setCompilationUnit(QV4::CompiledData::CompilationUnit *compilationUnit)
+{
+    m_compilationUnit = compilationUnit;
 }
 
 void QQmlJavaScriptExpression::clearActiveGuards()

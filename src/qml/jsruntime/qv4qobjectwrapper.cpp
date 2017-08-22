@@ -296,7 +296,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
                 if (r.isValid()) {
                     if (r.scriptIndex != -1) {
                         return QV4::Encode::undefined();
-                    } else if (r.type) {
+                    } else if (r.type.isValid()) {
                         return QQmlTypeWrapper::create(v4, d()->object(),
                                                       r.type, Heap::QQmlTypeWrapper::ExcludeEnums);
                     } else if (r.importNamespace) {

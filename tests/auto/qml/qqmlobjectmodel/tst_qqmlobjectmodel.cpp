@@ -26,6 +26,7 @@
 **
 ****************************************************************************/
 #include <QtQml/private/qqmlobjectmodel_p.h>
+#include <QtQml/private/qqmlchangeset_p.h>
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
 
@@ -46,16 +47,41 @@ static bool compareItems(QQmlObjectModel *model, const QObjectList &items)
     return true;
 }
 
+static bool verifyChangeSet(const QQmlChangeSet &changeSet, int expectedInserts, int expectedRemoves, bool isMove)
+{
+    int actualRemoves = 0;
+    for (const QQmlChangeSet::Change &r : changeSet.removes()) {
+        if (r.isMove() != isMove)
+            return false;
+        actualRemoves += r.count;
+    }
+
+    int actualInserts = 0;
+    for (const QQmlChangeSet::Change &i : changeSet.inserts()) {
+        if (i.isMove() != isMove)
+            return false;
+        actualInserts += i.count;
+    }
+
+    return actualRemoves == expectedRemoves && actualInserts == expectedInserts;
+}
+
+Q_DECLARE_METATYPE(QQmlChangeSet)
+
 void tst_QQmlObjectModel::changes()
 {
     QQmlObjectModel model;
 
+    qRegisterMetaType<QQmlChangeSet>();
+
     QSignalSpy countSpy(&model, SIGNAL(countChanged()));
     QSignalSpy childrenSpy(&model, SIGNAL(childrenChanged()));
+    QSignalSpy modelUpdateSpy(&model, SIGNAL(modelUpdated(QQmlChangeSet,bool)));
 
     int count = 0;
     int countSignals = 0;
     int childrenSignals = 0;
+    int modelUpdateSignals = 0;
 
     QObjectList items;
     QObject item0, item1, item2, item3;
@@ -66,6 +92,8 @@ void tst_QQmlObjectModel::changes()
     QVERIFY(compareItems(&model, items));
     QCOMPARE(countSpy.count(), ++countSignals);
     QCOMPARE(childrenSpy.count(), ++childrenSignals);
+    QCOMPARE(modelUpdateSpy.count(), ++modelUpdateSignals);
+    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 1, 0, false));
 
     // insert(0, item1) -> [item1, item0]
     model.insert(0, &item1); items.insert(0, &item1);
@@ -73,6 +101,8 @@ void tst_QQmlObjectModel::changes()
     QVERIFY(compareItems(&model, items));
     QCOMPARE(countSpy.count(), ++countSignals);
     QCOMPARE(childrenSpy.count(), ++childrenSignals);
+    QCOMPARE(modelUpdateSpy.count(), ++modelUpdateSignals);
+    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 1, 0, false));
 
     // append(item2) -> [item1, item0, item2]
     model.append(&item2); items.append(&item2);
@@ -80,6 +110,8 @@ void tst_QQmlObjectModel::changes()
     QVERIFY(compareItems(&model, items));
     QCOMPARE(countSpy.count(), ++countSignals);
     QCOMPARE(childrenSpy.count(), ++childrenSignals);
+    QCOMPARE(modelUpdateSpy.count(), ++modelUpdateSignals);
+    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 1, 0, false));
 
     // insert(2, item3) -> [item1, item0, item3, item2]
     model.insert(2, &item3); items.insert(2, &item3);
@@ -87,6 +119,8 @@ void tst_QQmlObjectModel::changes()
     QVERIFY(compareItems(&model, items));
     QCOMPARE(countSpy.count(), ++countSignals);
     QCOMPARE(childrenSpy.count(), ++childrenSignals);
+    QCOMPARE(modelUpdateSpy.count(), ++modelUpdateSignals);
+    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 1, 0, false));
 
     // move(0, 1) -> [item0, item1, item3, item2]
     model.move(0, 1); items.move(0, 1);
@@ -94,6 +128,8 @@ void tst_QQmlObjectModel::changes()
     QVERIFY(compareItems(&model, items));
     QCOMPARE(countSpy.count(), countSignals);
     QCOMPARE(childrenSpy.count(), ++childrenSignals);
+    QCOMPARE(modelUpdateSpy.count(), ++modelUpdateSignals);
+    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 1, 1, true));
 
     // move(3, 2) -> [item0, item1, item2, item3]
     model.move(3, 2); items.move(3, 2);
@@ -101,6 +137,8 @@ void tst_QQmlObjectModel::changes()
     QVERIFY(compareItems(&model, items));
     QCOMPARE(countSpy.count(), countSignals);
     QCOMPARE(childrenSpy.count(), ++childrenSignals);
+    QCOMPARE(modelUpdateSpy.count(), ++modelUpdateSignals);
+    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 1, 1, true));
 
     // remove(0) -> [item1, item2, item3]
     model.remove(0); items.removeAt(0);
@@ -108,6 +146,8 @@ void tst_QQmlObjectModel::changes()
     QVERIFY(compareItems(&model, items));
     QCOMPARE(countSpy.count(), ++countSignals);
     QCOMPARE(childrenSpy.count(), ++childrenSignals);
+    QCOMPARE(modelUpdateSpy.count(), ++modelUpdateSignals);
+    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 0, 1, false));
 
     // remove(2) -> [item1, item2]
     model.remove(2); items.removeAt(2);
@@ -115,6 +155,8 @@ void tst_QQmlObjectModel::changes()
     QVERIFY(compareItems(&model, items));
     QCOMPARE(countSpy.count(), ++countSignals);
     QCOMPARE(childrenSpy.count(), ++childrenSignals);
+    QCOMPARE(modelUpdateSpy.count(), ++modelUpdateSignals);
+    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 0, 1, false));
 
     // clear() -> []
     model.clear(); items.clear();
@@ -122,6 +164,8 @@ void tst_QQmlObjectModel::changes()
     QVERIFY(compareItems(&model, items));
     QCOMPARE(countSpy.count(), ++countSignals);
     QCOMPARE(childrenSpy.count(), ++childrenSignals);
+    QCOMPARE(modelUpdateSpy.count(), ++modelUpdateSignals);
+    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 0, 2, false));
 }
 
 QTEST_MAIN(tst_QQmlObjectModel)

@@ -380,6 +380,16 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     bool alsoSwap = data.updatePending;
     data.updatePending = false;
 
+    bool lastDirtyWindow = true;
+    auto i = m_windows.constBegin();
+    while (i != m_windows.constEnd()) {
+        if (i.value().updatePending) {
+            lastDirtyWindow = false;
+            break;
+        }
+        i++;
+    }
+
     if (!current)
         return;
 
@@ -407,6 +417,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     emit window->afterAnimating();
 
     cd->syncSceneGraph();
+    if (lastDirtyWindow)
+        rc->endSync();
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();

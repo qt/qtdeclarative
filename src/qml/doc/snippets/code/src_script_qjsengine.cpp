@@ -91,3 +91,16 @@ myEngine.evaluate("button.checkable = true");
 qDebug() << scriptButton.property("checkable").toBool();
 scriptButton.property("show").call(); // call the show() slot
 //! [5]
+
+
+//! [6]
+QJSEngine engine;
+
+QObject *myQObject = new QObject();
+myQObject->setProperty("dynamicProperty", 3);
+
+QJSValue myScriptQObject = engine.newQObject(myQObject);
+engine.globalObject().setProperty("myObject", myScriptQObject);
+
+qDebug() << engine.evaluate("myObject.dynamicProperty").toInt();
+//! [6]

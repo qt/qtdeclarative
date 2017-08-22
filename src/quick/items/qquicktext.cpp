@@ -269,9 +269,6 @@ void QQuickTextPrivate::updateLayout()
                 formatModifiesFontSize = fontSizeModified;
                 multilengthEos = -1;
             } else {
-                layout.clearFormats();
-                if (elideLayout)
-                    elideLayout->clearFormats();
                 QString tmp = text;
                 multilengthEos = tmp.indexOf(QLatin1Char('\x9c'));
                 if (multilengthEos != -1)
@@ -630,6 +627,13 @@ QString QQuickTextPrivate::elidedText(qreal lineWidth, const QTextLine &line, QT
         }
         return elideText;
     }
+}
+
+void QQuickTextPrivate::clearFormats()
+{
+    layout.clearFormats();
+    if (elideLayout)
+        elideLayout->clearFormats();
 }
 
 /*!
@@ -1055,12 +1059,15 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
     if (eos != multilengthEos)
         truncated = true;
 
+    assignedFont = QFontInfo(font).family();
+
     if (elide) {
         if (!elideLayout) {
             elideLayout = new QTextLayout;
             elideLayout->setCacheEnabled(true);
         }
-        if (styledText) {
+        QTextEngine *engine = layout.engine();
+        if (engine && engine->hasFormats()) {
             QVector<QTextLayout::FormatRange> formats;
             switch (elideMode) {
             case QQuickText::ElideRight:
@@ -1499,6 +1506,19 @@ QQuickText::~QQuickText()
     Text { text: "Hello"; renderType: Text.NativeRendering; font.hintingPreference: Font.PreferVerticalHinting }
     \endqml
 */
+
+/*!
+    \qmlproperty bool QtQuick::Text::font.kerning
+    \since 5.10
+
+    Enables or disables the kerning OpenType feature when shaping the text. This may improve performance
+    when creating or changing the text, at the expense of some cosmetic features. The default value
+    is true.
+
+    \qml
+    Text { text: "OATS FLAVOUR WAY"; font.kerning: false }
+    \endqml
+*/
 QFont QQuickText::font() const
 {
     Q_D(const QQuickText);
@@ -1599,6 +1619,7 @@ void QQuickText::setText(const QString &n)
             d->extra->doc->setText(n);
             d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
+            d->clearFormats();
             d->rightToLeftText = d->text.isRightToLeft();
         }
         d->determineHorizontalAlignment();
@@ -2089,6 +2110,7 @@ void QQuickText::setTextFormat(TextFormat format)
             d->extra->doc->setText(d->text);
             d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
+            d->clearFormats();
             d->rightToLeftText = d->text.isRightToLeft();
             d->textHasChanged = true;
         }
@@ -2394,6 +2416,12 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 void QQuickText::updatePolish()
 {
     Q_D(QQuickText);
+    // If the fonts used for rendering are different from the ones used in the GUI thread,
+    // it means we will get warnings and corrupted text. If this case is detected, we need
+    // to update the text layout before creating the scenegraph nodes.
+    if (!d->assignedFont.isEmpty() && QFontInfo(d->font).family() != d->assignedFont)
+        d->polishSize = true;
+
     if (d->polishSize) {
         d->updateSize();
         d->polishSize = false;

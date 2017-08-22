@@ -613,11 +613,11 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
 }
 
-static QQmlType *qmlTypeForObject(QObject *object)
+static QQmlType qmlTypeForObject(QObject *object)
 {
-    QQmlType *type = 0;
+    QQmlType type;
     const QMetaObject *mo = object->metaObject();
-    while (mo && !type) {
+    while (mo && !type.isValid()) {
         type = QQmlMetaType::qmlType(mo);
         mo = mo->superClass();
     }
@@ -654,7 +654,7 @@ void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
         } else if (binding) {
             QQmlValueTypeProxyBinding *proxy = static_cast<QQmlValueTypeProxyBinding *>(binding);
 
-            if (qmlTypeForObject(_bindingTarget)) {
+            if (qmlTypeForObject(_bindingTarget).isValid()) {
                 quint32 bindingSkipList = 0;
 
                 QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultPropertyOrAlias != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
@@ -712,15 +712,15 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         Q_ASSERT(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
         QV4::CompiledData::ResolvedTypeReference *tr = resolvedTypes.value(binding->propertyNameIndex);
         Q_ASSERT(tr);
-        QQmlType *attachedType = tr->type;
-        if (!attachedType) {
+        QQmlType attachedType = tr->type;
+        if (!attachedType.isValid()) {
             QQmlTypeNameCache::Result res = context->imports->query(stringAt(binding->propertyNameIndex));
             if (res.isValid())
                 attachedType = res.type;
             else
                 return false;
         }
-        const int id = attachedType->attachedPropertiesId(QQmlEnginePrivate::get(engine));
+        const int id = attachedType.attachedPropertiesId(QQmlEnginePrivate::get(engine));
         QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
         if (!populateInstance(binding->value.objectIndex, qmlObject, qmlObject, /*value type property*/0))
             return false;
@@ -801,17 +801,13 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         && !_valueTypeProperty)
         QQmlPropertyPrivate::removeBinding(_bindingTarget, QQmlPropertyIndex(property->coreIndex()));
 
-    if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-        QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
-
-        QV4::Scope scope(v4);
-        QV4::Scoped<QV4::QmlContext> qmlContext(scope, currentQmlContext());
-
+    if (binding->type == QV4::CompiledData::Binding::Type_Script || binding->containsTranslations()) {
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
+            QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
             int signalIndex = _propertyCache->methodIndexToSignalIndex(property->coreIndex());
             QQmlBoundSignal *bs = new QQmlBoundSignal(_bindingTarget, signalIndex, _scopeObject, engine);
             QQmlBoundSignalExpression *expr = new QQmlBoundSignalExpression(_bindingTarget, signalIndex,
-                                                                            context, _scopeObject, runtimeFunction, qmlContext);
+                                                                            context, _scopeObject, runtimeFunction, currentQmlContext());
 
             bs->takeExpression(expr);
         } else {
@@ -827,7 +823,12 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
                 prop = _valueTypeProperty;
                 subprop = property;
             }
-            qmlBinding = QQmlBinding::create(prop, runtimeFunction, _scopeObject, context, qmlContext);
+            if (binding->containsTranslations()) {
+                qmlBinding = QQmlBinding::createTranslationBinding(compilationUnit, binding, _scopeObject, context);
+            } else {
+                QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
+                qmlBinding = QQmlBinding::create(prop, runtimeFunction, _scopeObject, context, currentQmlContext());
+            }
             qmlBinding->setTarget(_bindingTarget, *prop, subprop);
 
             sharedState->allCreatedBindings.push(QQmlAbstractBinding::Ptr(qmlBinding));
@@ -850,10 +851,10 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
     if (binding->type == QV4::CompiledData::Binding::Type_Object) {
         if (binding->flags & QV4::CompiledData::Binding::IsOnAssignment) {
             // ### determine value source and interceptor casts ahead of time.
-            QQmlType *type = qmlTypeForObject(createdSubObject);
-            Q_ASSERT(type);
+            QQmlType type = qmlTypeForObject(createdSubObject);
+            Q_ASSERT(type.isValid());
 
-            int valueSourceCast = type->propertyValueSourceCast();
+            int valueSourceCast = type.propertyValueSourceCast();
             if (valueSourceCast != -1) {
                 QQmlPropertyValueSource *vs = reinterpret_cast<QQmlPropertyValueSource *>(reinterpret_cast<char *>(createdSubObject) + valueSourceCast);
                 QObject *target = createdSubObject->parent();
@@ -865,7 +866,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
                 vs->setTarget(prop);
                 return true;
             }
-            int valueInterceptorCast = type->propertyValueInterceptorCast();
+            int valueInterceptorCast = type.propertyValueInterceptorCast();
             if (valueInterceptorCast != -1) {
                 QQmlPropertyValueInterceptor *vi = reinterpret_cast<QQmlPropertyValueInterceptor *>(reinterpret_cast<char *>(createdSubObject) + valueInterceptorCast);
                 QObject *target = createdSubObject->parent();
@@ -996,7 +997,7 @@ void QQmlObjectCreator::setupFunctions()
     QV4::ScopedValue function(scope);
     QV4::ScopedContext qmlContext(scope, currentQmlContext());
 
-    const QV4::CompiledData::LEUInt32 *functionIdx = _compiledObject->functionOffsetTable();
+    const quint32_le *functionIdx = _compiledObject->functionOffsetTable();
     for (quint32 i = 0; i < _compiledObject->nFunctions; ++i, ++functionIdx) {
         QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[*functionIdx];
         const QString name = runtimeFunction->name()->toQString();
@@ -1026,12 +1027,12 @@ void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::O
         context->setIdProperty(object->id, instance);
 }
 
-QV4::Heap::QmlContext *QQmlObjectCreator::currentQmlContext()
+QV4::QmlContext *QQmlObjectCreator::currentQmlContext()
 {
     if (!_qmlContext->isManaged())
         _qmlContext->setM(QV4::QmlContext::create(v4->rootContext(), context, _scopeObject));
 
-    return _qmlContext->d();
+    return _qmlContext;
 }
 
 QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
@@ -1060,13 +1061,13 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         QV4::CompiledData::ResolvedTypeReference *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
         installPropertyCache = !typeRef->isFullyDynamicType;
-        QQmlType *type = typeRef->type;
-        if (type) {
+        QQmlType type = typeRef->type;
+        if (type.isValid()) {
             Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
-                                 compilationUnit, obj, type->qmlTypeName(), context->url()));
+                                 compilationUnit, obj, type.qmlTypeName(), context->url()));
 
             void *ddataMemory = 0;
-            type->create(&instance, &ddataMemory, sizeof(QQmlData));
+            type.create(&instance, &ddataMemory, sizeof(QQmlData));
             if (!instance) {
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return 0;
@@ -1080,11 +1081,11 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                 p->declarativeData = ddata;
             }
 
-            const int parserStatusCast = type->parserStatusCast();
+            const int parserStatusCast = type.parserStatusCast();
             if (parserStatusCast != -1)
                 parserStatus = reinterpret_cast<QQmlParserStatus*>(reinterpret_cast<char *>(instance) + parserStatusCast);
 
-            customParser = type->customParser();
+            customParser = type.customParser();
 
             if (sharedState->rootContext && sharedState->rootContext->isRootObjectInCreation) {
                 QQmlData *ddata = QQmlData::get(instance, /*create*/true);
@@ -1325,7 +1326,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     if (propertyCaches->needsVMEMetaObject(_compiledObjectIndex)) {
         Q_ASSERT(!cache.isNull());
         // install on _object
-        vmeMetaObject = new QQmlVMEMetaObject(_qobject, cache, compilationUnit, _compiledObjectIndex);
+        vmeMetaObject = new QQmlVMEMetaObject(v4, _qobject, cache, compilationUnit, _compiledObjectIndex);
         if (_ddata->propertyCache)
             _ddata->propertyCache->release();
         _ddata->propertyCache = cache;

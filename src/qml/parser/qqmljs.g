@@ -77,6 +77,7 @@
 %token T_MULTILINE_STRING_LITERAL "multiline string literal"
 %token T_COMMENT "comment"
 %token T_COMPATIBILITY_SEMICOLON
+%token T_ENUM "enum"
 
 --- context keywords.
 %token T_PUBLIC "public"
@@ -281,6 +282,7 @@ public:
       AST::UiArrayMemberList *UiArrayMemberList;
       AST::UiQualifiedId *UiQualifiedId;
       AST::UiQualifiedPragmaId *UiQualifiedPragmaId;
+      AST::UiEnumMemberList *UiEnumMemberList;
     };
 
 public:
@@ -449,6 +451,7 @@ Parser::Parser(Engine *engine):
     location_stack(0),
     string_stack(0),
     program(0),
+    yylval(0),
     first_token(0),
     last_token(0)
 {
@@ -1207,6 +1210,59 @@ case $rule_number: {
 }   break;
 ./
 
+UiObjectMember: T_ENUM T_IDENTIFIER T_LBRACE EnumMemberList T_RBRACE;
+/.
+case $rule_number: {
+    AST::UiEnumDeclaration *enumDeclaration = new (pool) AST::UiEnumDeclaration(stringRef(2), sym(4).UiEnumMemberList->finish());
+    enumDeclaration->enumToken = loc(1);
+    enumDeclaration->rbraceToken = loc(5);
+    sym(1).Node = enumDeclaration;
+    break;
+}
+./
+
+EnumMemberList: T_IDENTIFIER;
+/.
+case $rule_number: {
+    AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(stringRef(1));
+    node->memberToken = loc(1);
+    sym(1).Node = node;
+    break;
+}
+./
+
+EnumMemberList: T_IDENTIFIER T_EQ T_NUMERIC_LITERAL;
+/.
+case $rule_number: {
+    AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(stringRef(1), sym(3).dval);
+    node->memberToken = loc(1);
+    node->valueToken = loc(3);
+    sym(1).Node = node;
+    break;
+}
+./
+
+EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER;
+/.
+case $rule_number: {
+    AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3));
+    node->memberToken = loc(3);
+    sym(1).Node = node;
+    break;
+}
+./
+
+EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER T_EQ T_NUMERIC_LITERAL;
+/.
+case $rule_number: {
+    AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3), sym(5).dval);
+    node->memberToken = loc(3);
+    node->valueToken = loc(5);
+    sym(1).Node = node;
+    break;
+}
+./
+
 JsIdentifier: T_IDENTIFIER;
 
 JsIdentifier: T_PROPERTY ;
@@ -1602,6 +1658,7 @@ ReservedIdentifier: T_DEFAULT ;
 ReservedIdentifier: T_DELETE ;
 ReservedIdentifier: T_DO ;
 ReservedIdentifier: T_ELSE ;
+ReservedIdentifier: T_ENUM ;
 ReservedIdentifier: T_FALSE ;
 ReservedIdentifier: T_FINALLY ;
 ReservedIdentifier: T_FOR ;

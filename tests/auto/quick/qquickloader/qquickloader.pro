@@ -2,7 +2,6 @@ CONFIG += testcase
 TARGET = tst_qquickloader
 macx:CONFIG -= app_bundle
 
-INCLUDEPATH += ../../shared/
 HEADERS += ../../shared/testhttpserver.h
 
 SOURCES += tst_qquickloader.cpp \

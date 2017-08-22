@@ -265,6 +265,25 @@ public:
 
 struct Object;
 
+struct EnumValue : public QV4::CompiledData::EnumValue
+{
+    EnumValue *next;
+};
+
+struct Enum
+{
+    int nameIndex;
+    QV4::CompiledData::Location location;
+    PoolList<EnumValue> *enumValues;
+
+    int enumValueCount() const { return enumValues->count; }
+    PoolList<EnumValue>::Iterator enumValuesBegin() const { return enumValues->begin(); }
+    PoolList<EnumValue>::Iterator enumValuesEnd() const { return enumValues->end(); }
+
+    Enum *next;
+};
+
+
 struct SignalParameter : public QV4::CompiledData::Parameter
 {
     SignalParameter *next;
@@ -359,6 +378,8 @@ public:
     int propertyCount() const { return properties->count; }
     Alias *firstAlias() const { return aliases->first; }
     int aliasCount() const { return aliases->count; }
+    const Enum *firstEnum() const { return qmlEnums->first; }
+    int enumCount() const { return qmlEnums->count; }
     const Signal *firstSignal() const { return qmlSignals->first; }
     int signalCount() const { return qmlSignals->count; }
     Binding *firstBinding() const { return bindings->first; }
@@ -372,6 +393,8 @@ public:
     PoolList<Property>::Iterator propertiesEnd() const { return properties->end(); }
     PoolList<Alias>::Iterator aliasesBegin() const { return aliases->begin(); }
     PoolList<Alias>::Iterator aliasesEnd() const { return aliases->end(); }
+    PoolList<Enum>::Iterator enumsBegin() const { return qmlEnums->begin(); }
+    PoolList<Enum>::Iterator enumsEnd() const { return qmlEnums->end(); }
     PoolList<Signal>::Iterator signalsBegin() const { return qmlSignals->begin(); }
     PoolList<Signal>::Iterator signalsEnd() const { return qmlSignals->end(); }
     PoolList<Function>::Iterator functionsBegin() const { return functions->begin(); }
@@ -385,6 +408,7 @@ public:
 
     QString sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation);
 
+    QString appendEnum(Enum *enumeration);
     QString appendSignal(Signal *signal);
     QString appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
     QString appendAlias(Alias *prop, const QString &aliasName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
@@ -408,6 +432,7 @@ private:
 
     PoolList<Property> *properties;
     PoolList<Alias> *aliases;
+    PoolList<Enum> *qmlEnums;
     PoolList<Signal> *qmlSignals;
     PoolList<Binding> *bindings;
     PoolList<Function> *functions;
@@ -482,6 +507,7 @@ public:
     bool visit(QQmlJS::AST::UiArrayBinding *ast) override;
     bool visit(QQmlJS::AST::UiObjectBinding *ast) override;
     bool visit(QQmlJS::AST::UiObjectDefinition *ast) override;
+    bool visit(QQmlJS::AST::UiEnumDeclaration *ast) override;
     bool visit(QQmlJS::AST::UiPublicMember *ast) override;
     bool visit(QQmlJS::AST::UiScriptBinding *ast) override;
     bool visit(QQmlJS::AST::UiSourceElement *ast) override;

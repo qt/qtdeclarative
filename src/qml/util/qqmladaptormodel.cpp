@@ -521,16 +521,15 @@ public:
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
             QQmlDelegateModelItemMetaType *metaType,
-            QQmlEngine *engine,
             int index) const override
     {
         VDMAbstractItemModelDataType *dataType = const_cast<VDMAbstractItemModelDataType *>(this);
         if (!metaObject)
-            dataType->initializeMetaType(model, engine);
+            dataType->initializeMetaType(model);
         return new QQmlDMAbstractItemModelData(metaType, dataType, index);
     }
 
-    void initializeMetaType(QQmlAdaptorModel &model, QQmlEngine *engine)
+    void initializeMetaType(QQmlAdaptorModel &model)
     {
         QMetaObjectBuilder builder;
         setModelDataType<QQmlDMAbstractItemModelData>(&builder, this);
@@ -555,7 +554,7 @@ public:
 
         metaObject = builder.toMetaObject();
         *static_cast<QMetaObject *>(this) = *metaObject;
-        propertyCache = new QQmlPropertyCache(QV8Engine::getV4(engine), metaObject);
+        propertyCache = new QQmlPropertyCache(metaObject);
     }
 };
 
@@ -669,7 +668,6 @@ public:
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
             QQmlDelegateModelItemMetaType *metaType,
-            QQmlEngine *,
             int index) const override
     {
         return new QQmlDMListAccessorData(
@@ -754,7 +752,6 @@ public:
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
             QQmlDelegateModelItemMetaType *metaType,
-            QQmlEngine *,
             int index) const override
     {
         VDMObjectDelegateDataType *dataType = const_cast<VDMObjectDelegateDataType *>(this);

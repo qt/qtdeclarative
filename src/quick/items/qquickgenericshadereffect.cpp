@@ -546,7 +546,10 @@ void QQuickGenericShaderEffect::updateShaderVars(Shader shaderType)
             // Have a QSignalMapper that emits mapped() with an index+type on each property change notify signal.
             auto &sm(m_signalMappers[shaderType][i]);
             if (!sm.mapper) {
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_DEPRECATED
                 sm.mapper = new QSignalMapper;
+QT_WARNING_POP
                 sm.mapper->setMapping(m_item, i | (shaderType << 16));
             }
             sm.active = true;

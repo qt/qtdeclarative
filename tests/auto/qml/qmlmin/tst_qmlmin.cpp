@@ -98,6 +98,8 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/qml/qqmllanguage/data/insertedSemicolon.1.qml";
     invalidFiles << "tests/auto/qml/qqmllanguage/data/nonexistantProperty.5.qml";
     invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidRoot.1.qml";
+    invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidQmlEnumValue.1.qml";
+    invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidQmlEnumValue.2.qml";
     invalidFiles << "tests/auto/qml/qquickfolderlistmodel/data/dummy.qml";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/qtbug_22843.js";
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/qtbug_22843.library.js";

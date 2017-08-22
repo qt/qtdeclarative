@@ -144,6 +144,10 @@ public:
     bool outputWarningsToStandardError() const;
     void setOutputWarningsToStandardError(bool);
 
+public Q_SLOTS:
+    void retranslate();
+
+public:
     static QQmlContext *contextForObject(const QObject *);
     static void setContextForObject(QObject *, QQmlContext *);
 

@@ -259,7 +259,7 @@ void QSGDefaultRenderContext::compileShader(QSGMaterialShader *shader, QSGMateri
     if (vertexCode || fragmentCode) {
         Q_ASSERT_X((material->flags() & QSGMaterial::CustomCompileStep) == 0,
                    "QSGRenderContext::compile()",
-                   "materials with custom compile step cannot have custom vertex/fragment code");
+                   "materials with custom compile step cannot have modified vertex or fragment code");
         QOpenGLShaderProgram *p = shader->program();
         p->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, vertexCode ? vertexCode : shader->vertexShader());
         p->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, fragmentCode ? fragmentCode : shader->fragmentShader());
@@ -268,6 +268,26 @@ void QSGDefaultRenderContext::compileShader(QSGMaterialShader *shader, QSGMateri
             qWarning() << "shader compilation failed:" << endl << p->log();
     } else {
         shader->compile();
+    }
+}
+
+QString QSGDefaultRenderContext::fontKey(const QRawFont &font)
+{
+    QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
+    if (!fe->faceId().filename.isEmpty()) {
+        QByteArray keyName = fe->faceId().filename;
+        if (font.style() != QFont::StyleNormal)
+            keyName += QByteArray(" I");
+        if (font.weight() != QFont::Normal)
+            keyName += ' ' + QByteArray::number(font.weight());
+        keyName += QByteArray(" DF");
+        return QString::fromUtf8(keyName);
+    } else {
+        return QString::fromLatin1("%1_%2_%3_%4")
+            .arg(font.familyName())
+            .arg(font.styleName())
+            .arg(font.weight())
+            .arg(font.style());
     }
 }
 
@@ -288,18 +308,18 @@ QSGDefaultRenderContext *QSGDefaultRenderContext::from(QOpenGLContext *context)
     return qobject_cast<QSGDefaultRenderContext *>(context->property(QSG_RENDERCONTEXT_PROPERTY).value<QObject *>());
 }
 
-QT_END_NAMESPACE
-
-
 QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(const QRawFont &font)
 {
-    QSGDistanceFieldGlyphCache *cache = m_glyphCaches.value(font, 0);
+    QString key = fontKey(font);
+    QSGDistanceFieldGlyphCache *cache = m_glyphCaches.value(key, 0);
     if (!cache) {
         cache = new QSGDefaultDistanceFieldGlyphCache(openglContext(), font);
-        m_glyphCaches.insert(font, cache);
+        m_glyphCaches.insert(key, cache);
     }
 
     return cache;
 }
+
+QT_END_NAMESPACE
 
 #include "moc_qsgdefaultrendercontext_p.cpp"

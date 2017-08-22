@@ -87,6 +87,7 @@ class QQuickItemKeyFilter;
 class QQuickLayoutMirroringAttached;
 class QQuickEnterKeyAttached;
 class QQuickScreenAttached;
+class QQuickPointerHandler;
 
 class QQuickContents : public QQuickItemChangeListener
 {
@@ -321,7 +322,8 @@ public:
         Children = 0x40,
         Rotation = 0x80,
         ImplicitWidth = 0x100,
-        ImplicitHeight = 0x200
+        ImplicitHeight = 0x200,
+        Enabled = 0x400,
     };
 
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)
@@ -348,6 +350,7 @@ public:
         QQuickLayoutMirroringAttached* layoutDirectionAttached;
         QQuickEnterKeyAttached *enterKeyAttached;
         QQuickItemKeyFilter *keyHandler;
+        QVector<QQuickPointerHandler *> pointerHandlers;
 #if QT_CONFIG(quick_shadereffect)
         mutable QQuickItemLayer *layer;
 #endif
@@ -437,6 +440,7 @@ public:
     // focus chain and prevents tabbing outside.
     bool isTabFence:1;
     bool replayingPressEvent:1;
+    bool touchEnabled:1;
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,
@@ -564,6 +568,8 @@ public:
     void deliverInputMethodEvent(QInputMethodEvent *);
 #endif
     void deliverShortcutOverrideEvent(QKeyEvent *);
+
+    virtual bool handlePointerEvent(QQuickPointerEvent *, bool avoidExclusiveGrabber = false);
 
     bool isTransparentForPositioner() const;
     void setTransparentForPositioner(bool trans);

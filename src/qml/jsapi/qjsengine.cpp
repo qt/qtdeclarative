@@ -175,9 +175,14 @@ Q_DECLARE_METATYPE(QList<int>)
   called from the script to create a new QObject instance with
   JavaScriptOwnership.
 
-
-
   \snippet code/src_script_qjsengine.cpp 5
+
+  \section2 Dynamic QObject Properties
+
+  Dynamic QObject properties are not supported. For example, the following code
+  will not work:
+
+  \snippet code/src_script_qjsengine.cpp 6
 
   \section1 Extensions
 
@@ -726,10 +731,7 @@ QJSEnginePrivate *QJSEnginePrivate::get(QV4::ExecutionEngine *e)
 
 QJSEnginePrivate::~QJSEnginePrivate()
 {
-    typedef QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator PropertyCacheIt;
-
-    for (PropertyCacheIt iter = propertyCache.begin(), end = propertyCache.end(); iter != end; ++iter)
-        (*iter)->release();
+    QQmlMetaType::freeUnusedTypesAndCaches();
 }
 
 void QJSEnginePrivate::addToDebugServer(QJSEngine *q)
@@ -750,20 +752,6 @@ void QJSEnginePrivate::removeFromDebugServer(QJSEngine *q)
     QQmlDebugConnector *server = QQmlDebugConnector::instance();
     if (server && server->hasEngine(q))
         server->removeEngine(q);
-}
-
-QQmlPropertyCache *QJSEnginePrivate::createCache(const QMetaObject *mo)
-{
-    if (!mo->superClass()) {
-        QQmlPropertyCache *rv = new QQmlPropertyCache(QV8Engine::getV4(q_func()), mo);
-        propertyCache.insert(mo, rv);
-        return rv;
-    } else {
-        QQmlPropertyCache *super = cache(mo->superClass());
-        QQmlPropertyCache *rv = super->copyAndAppend(mo);
-        propertyCache.insert(mo, rv);
-        return rv;
-    }
 }
 
 /*!

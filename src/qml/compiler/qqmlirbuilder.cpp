@@ -46,6 +46,7 @@
 #include <private/qv4compilerscanfunctions_p.h>
 #include <QCoreApplication>
 #include <QCryptographicHash>
+#include <cmath>
 
 #ifndef V4_BOOTSTRAP
 #include <private/qqmlglobal_p.h>
@@ -87,6 +88,7 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, cons
     flags = QV4::CompiledData::Object::NoFlag;
     properties = pool->New<PoolList<Property> >();
     aliases = pool->New<PoolList<Alias> >();
+    qmlEnums = pool->New<PoolList<Enum>>();
     qmlSignals = pool->New<PoolList<Signal> >();
     bindings = pool->New<PoolList<Binding> >();
     functions = pool->New<PoolList<Function> >();
@@ -116,6 +118,21 @@ QString Object::sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQml
         if (illegalNames.contains(name))
             return tr("Illegal method name");
     }
+    return QString(); // no error
+}
+
+QString Object::appendEnum(Enum *enumeration)
+{
+    Object *target = declarationsOverride;
+    if (!target)
+        target = this;
+
+    for (Enum *e = qmlEnums->first; e; e = e->next) {
+        if (e->nameIndex == enumeration->nameIndex)
+            return tr("Duplicate scoped enum name");
+    }
+
+    target->qmlEnums->append(enumeration);
     return QString(); // no error
 }
 
@@ -709,6 +726,52 @@ static QStringList astNodeToStringList(QQmlJS::AST::Node *node)
     }
     return QStringList();
 }
+
+bool IRBuilder::visit(QQmlJS::AST::UiEnumDeclaration *node)
+{
+    Enum *enumeration = New<Enum>();
+    QString enumName = node->name.toString();
+    enumeration->nameIndex = registerString(enumName);
+
+    if (enumName.at(0).isLower())
+        COMPILE_EXCEPTION(node->enumToken, tr("Scoped enum names must begin with an upper case letter"));
+
+    enumeration->location.line = node->enumToken.startLine;
+    enumeration->location.column = node->enumToken.startColumn;
+
+    enumeration->enumValues = New<PoolList<EnumValue>>();
+
+    QQmlJS::AST::UiEnumMemberList *e = node->members;
+    while (e) {
+        EnumValue *enumValue = New<EnumValue>();
+        QString member = e->member.toString();
+        enumValue->nameIndex = registerString(member);
+        if (member.at(0).isLower())
+            COMPILE_EXCEPTION(e->memberToken, tr("Enum names must begin with an upper case letter"));
+
+        double part;
+        if (std::modf(e->value, &part) != 0.0)
+            COMPILE_EXCEPTION(e->valueToken, tr("Enum value must be an integer"));
+        if (e->value > std::numeric_limits<qint32>::max() || e->value < std::numeric_limits<qint32>::min())
+            COMPILE_EXCEPTION(e->valueToken, tr("Enum value out of range"));
+        enumValue->value = e->value;
+
+        enumValue->location.line = e->memberToken.startLine;
+        enumValue->location.column = e->memberToken.startColumn;
+        enumeration->enumValues->append(enumValue);
+
+        e = e->next;
+    }
+
+    QString error = _object->appendEnum(enumeration);
+    if (!error.isEmpty()) {
+        recordError(node->enumToken, error);
+        return false;
+    }
+
+    return false;
+}
+
 
 bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 {
@@ -1494,13 +1557,19 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
     int objectsSize = 0;
     for (Object *o : qAsConst(output.objects)) {
         objectOffsets.insert(o, unitSize + importSize + objectOffsetTableSize + objectsSize);
-        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
+        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
 
         int signalTableSize = 0;
         for (const Signal *s = o->firstSignal(); s; s = s->next)
             signalTableSize += QV4::CompiledData::Signal::calculateSize(s->parameters->count);
 
         objectsSize += signalTableSize;
+
+        int enumTableSize = 0;
+        for (const Enum *e = o->firstEnum(); e; e = e->next)
+            enumTableSize += QV4::CompiledData::Enum::calculateSize(e->enumValues->count);
+
+        objectsSize += enumTableSize;
     }
 
     const int totalSize = unitSize + importSize + objectOffsetTableSize + objectsSize + output.jsGenerator.stringTable.sizeOfTableAndData();
@@ -1544,7 +1613,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
     }
 
     // write objects
-    quint32 *objectTable = reinterpret_cast<quint32*>(data + qmlUnit->offsetToObjects);
+    quint32_le *objectTable = reinterpret_cast<quint32_le*>(data + qmlUnit->offsetToObjects);
     char *objectPtr = data + qmlUnit->offsetToObjects + objectOffsetTableSize;
     for (int i = 0; i < output.objects.count(); ++i) {
         const Object *o = output.objects.at(i);
@@ -1574,6 +1643,10 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         objectToWrite->offsetToAliases = nextOffset;
         nextOffset += objectToWrite->nAliases * sizeof(QV4::CompiledData::Alias);
 
+        objectToWrite->nEnums = o->enumCount();
+        objectToWrite->offsetToEnums = nextOffset;
+        nextOffset += objectToWrite->nEnums * sizeof(quint32);
+
         objectToWrite->nSignals = o->signalCount();
         objectToWrite->offsetToSignals = nextOffset;
         nextOffset += objectToWrite->nSignals * sizeof(quint32);
@@ -1586,7 +1659,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         objectToWrite->offsetToNamedObjectsInComponent = nextOffset;
         nextOffset += objectToWrite->nNamedObjectsInComponent * sizeof(quint32);
 
-        quint32 *functionsTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToFunctions);
+        quint32_le *functionsTable = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToFunctions);
         for (const Function *f = o->firstFunction(); f; f = f->next)
             *functionsTable++ = o->runtimeFunctionIndices.at(f->index);
 
@@ -1612,7 +1685,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isValueBindingToAlias);
         Q_ASSERT((bindingPtr - objectToWrite->offsetToBindings - objectPtr) / sizeof(QV4::CompiledData::Binding) == unsigned(o->bindingCount()));
 
-        quint32 *signalOffsetTable = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToSignals);
+        quint32_le *signalOffsetTable = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToSignals);
         quint32 signalTableSize = 0;
         char *signalPtr = objectPtr + nextOffset;
         for (const Signal *s = o->firstSignal(); s; s = s->next) {
@@ -1631,14 +1704,36 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
             signalTableSize += size;
             signalPtr += size;
         }
+        nextOffset += signalTableSize;
 
-        quint32 *namedObjectInComponentPtr = reinterpret_cast<quint32*>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
+        quint32_le *enumOffsetTable = reinterpret_cast<quint32_le*>(objectPtr + objectToWrite->offsetToEnums);
+        quint32 enumTableSize = 0;
+        char *enumPtr = objectPtr + nextOffset;
+        for (const Enum *e = o->firstEnum(); e; e = e->next) {
+            *enumOffsetTable++ = enumPtr - objectPtr;
+            QV4::CompiledData::Enum *enumToWrite = reinterpret_cast<QV4::CompiledData::Enum*>(enumPtr);
+
+            enumToWrite->nameIndex = e->nameIndex;
+            enumToWrite->location = e->location;
+            enumToWrite->nEnumValues = e->enumValues->count;
+
+            QV4::CompiledData::EnumValue *enumValueToWrite = reinterpret_cast<QV4::CompiledData::EnumValue*>(enumPtr + sizeof(*enumToWrite));
+            for (EnumValue *enumValue = e->enumValues->first; enumValue; enumValue = enumValue->next, ++enumValueToWrite)
+                *enumValueToWrite = *enumValue;
+
+            int size = QV4::CompiledData::Enum::calculateSize(e->enumValues->count);
+            enumTableSize += size;
+            enumPtr += size;
+        }
+
+        quint32_le *namedObjectInComponentPtr = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
         for (int i = 0; i < o->namedObjectsInComponent.count; ++i) {
             *namedObjectInComponentPtr++ = o->namedObjectsInComponent.at(i);
         }
 
-        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignals(o->functionCount(), o->propertyCount(), o->aliasCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
+        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
         objectPtr += signalTableSize;
+        objectPtr += enumTableSize;
     }
 
     // enable flag if we encountered pragma Singleton
@@ -1808,7 +1903,7 @@ enum MetaObjectResolverFlags {
 #if 0
 static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlPropertyCache *metaObject);
 
-static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlType *qmlType, int index);
+static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, const QQmlType &qmlType, int index);
 
 static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
                                               const QV4::IR::MemberExpressionResolver *resolver,
@@ -1816,16 +1911,16 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
 {
     QV4::IR::Type result = QV4::IR::VarType;
 
-    QQmlType *type = static_cast<QQmlType*>(resolver->data);
+    QQmlType type = resolver->qmlType;
 
     if (member->name->constData()->isUpper()) {
         bool ok = false;
-        int value = type->enumValue(qmlEngine, *member->name, &ok);
+        int value = type.enumValue(qmlEngine, *member->name, &ok);
         if (ok) {
             member->setEnumValue(value);
             return QV4::IR::SInt32Type;
         } else {
-            int index = type->scopedEnumIndex(qmlEngine, *member->name, &ok);
+            int index = type.scopedEnumIndex(qmlEngine, *member->name, &ok);
             if (ok) {
                 auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
                 newResolver->owner = resolver->owner;
@@ -1835,8 +1930,8 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
         }
     }
 
-    if (type->isCompositeSingleton()) {
-        QQmlRefPointer<QQmlTypeData> tdata = qmlEngine->typeLoader.getType(type->singletonInstanceInfo()->url);
+    if (type.isCompositeSingleton()) {
+        QQmlRefPointer<QQmlTypeData> tdata = qmlEngine->typeLoader.getType(type.singletonInstanceInfo()->url);
         Q_ASSERT(tdata);
         tdata->release(); // Decrease the reference count added from QQmlTypeLoader::getType()
         // When a singleton tries to reference itself, it may not be complete yet.
@@ -1847,8 +1942,8 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
             newResolver->flags |= AllPropertiesAreFinal;
             return newResolver->resolveMember(qmlEngine, newResolver, member);
         }
-    }  else if (type->isSingleton()) {
-        const QMetaObject *singletonMeta = type->singletonInstanceInfo()->instanceMetaObject;
+    }  else if (type.isSingleton()) {
+        const QMetaObject *singletonMeta = type.singletonInstanceInfo()->instanceMetaObject;
         if (singletonMeta) { // QJSValue-based singletons cannot be accelerated
             auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
             newResolver->owner = resolver->owner;
@@ -1873,13 +1968,13 @@ static QV4::IR::DiscoveredType resolveQmlType(QQmlEnginePrivate *qmlEngine,
     return result;
 }
 
-static void initQmlTypeResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlType *qmlType)
+static void initQmlTypeResolver(QV4::IR::MemberExpressionResolver *resolver, const QQmlType &qmlType)
 {
     Q_ASSERT(resolver);
 
     resolver->resolveMember = &resolveQmlType;
-    resolver->data = qmlType;
-    resolver->extraData = 0;
+    resolver->qmlType = qmlType;
+    resolver->typenameCache = 0;
     resolver->flags = 0;
 }
 
@@ -1888,8 +1983,8 @@ static QV4::IR::DiscoveredType resolveImportNamespace(
         QV4::IR::Member *member)
 {
     QV4::IR::Type result = QV4::IR::VarType;
-    QQmlTypeNameCache *typeNamespace = static_cast<QQmlTypeNameCache*>(resolver->extraData);
-    void *importNamespace = resolver->data;
+    QQmlTypeNameCache *typeNamespace = resolver->typenameCache;
+    const QQmlImportRef *importNamespace = resolver->import;
 
     QQmlTypeNameCache::Result r = typeNamespace->query(*member->name, importNamespace);
     if (r.isValid()) {
@@ -1897,11 +1992,11 @@ static QV4::IR::DiscoveredType resolveImportNamespace(
         if (r.scriptIndex != -1) {
             // TODO: remember the index and replace with subscript later.
             result = QV4::IR::VarType;
-        } else if (r.type) {
+        } else if (r.type.isValid()) {
             // TODO: Propagate singleton information, so that it is loaded
             // through the singleton getter in the run-time. Until then we
             // can't accelerate access :(
-            if (!r.type->isSingleton()) {
+            if (!r.type.isSingleton()) {
                 auto newResolver = resolver->owner->New<QV4::IR::MemberExpressionResolver>();
                 newResolver->owner = resolver->owner;
                 initQmlTypeResolver(newResolver, r.type);
@@ -1916,11 +2011,11 @@ static QV4::IR::DiscoveredType resolveImportNamespace(
 }
 
 static void initImportNamespaceResolver(QV4::IR::MemberExpressionResolver *resolver,
-                                        QQmlTypeNameCache *imports, const void *importNamespace)
+                                        QQmlTypeNameCache *imports, const QQmlImportRef *importNamespace)
 {
     resolver->resolveMember = &resolveImportNamespace;
-    resolver->data = const_cast<void*>(importNamespace);
-    resolver->extraData = imports;
+    resolver->import = importNamespace;
+    resolver->typenameCache = imports;
     resolver->flags = 0;
 }
 
@@ -1929,7 +2024,7 @@ static QV4::IR::DiscoveredType resolveMetaObjectProperty(
         QV4::IR::Member *member)
 {
     QV4::IR::Type result = QV4::IR::VarType;
-    QQmlPropertyCache *metaObject = static_cast<QQmlPropertyCache*>(resolver->data);
+    QQmlPropertyCache *metaObject = resolver->propertyCache;
 
     if (member->name->constData()->isUpper() && (resolver->flags & LookupsIncludeEnums)) {
         const QMetaObject *mo = metaObject->createMetaObject();
@@ -2011,7 +2106,7 @@ static void initMetaObjectResolver(QV4::IR::MemberExpressionResolver *resolver, 
     Q_ASSERT(resolver);
 
     resolver->resolveMember = &resolveMetaObjectProperty;
-    resolver->data = metaObject;
+    resolver->propertyCache = metaObject;
     resolver->flags = 0;
 }
 
@@ -2022,24 +2117,23 @@ static QV4::IR::DiscoveredType resolveScopedEnum(QQmlEnginePrivate *qmlEngine,
     if (!member->name->constData()->isUpper())
         return QV4::IR::VarType;
 
-    QQmlType *type = static_cast<QQmlType*>(resolver->data);
+    QQmlType type = resolver->qmlType;
     int index = resolver->flags;
 
     bool ok = false;
-    int value = type->scopedEnumValue(qmlEngine, index, *member->name, &ok);
+    int value = type.scopedEnumValue(qmlEngine, index, *member->name, &ok);
     if (!ok)
         return QV4::IR::VarType;
     member->setEnumValue(value);
     return QV4::IR::SInt32Type;
 }
 
-static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, QQmlType *qmlType, int index)
+static void initScopedEnumResolver(QV4::IR::MemberExpressionResolver *resolver, const QQmlType &qmlType, int index)
 {
     Q_ASSERT(resolver);
 
     resolver->resolveMember = &resolveScopedEnum;
-    resolver->data = qmlType;
-    resolver->extraData = 0;
+    resolver->qmlType = qmlType;
     resolver->flags = index;
 }
 #endif
@@ -2110,8 +2204,8 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
             if (r.scriptIndex != -1) {
                 Reference imports = Reference::fromStackSlot(this, _importedScriptsSlot);
                 return Reference::fromSubscript(imports, Reference::fromConst(this, QV4::Encode(r.scriptIndex)));
-            } else if (r.type) {
-                if (r.type->isCompositeSingleton()) {
+            } else if (r.type.isValid()) {
+                if (r.type.isCompositeSingleton()) {
                     Instruction::LoadQmlSingleton load;
                     load.name = registerString(name);
                     bytecodeGenerator->addInstruction(load);
@@ -2326,7 +2420,7 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
 
     QQmlJS::Engine *jsParserEngine = &output->jsParserEngine;
 
-    const QV4::CompiledData::LEUInt32 *functionIdx = serializedObject->functionOffsetTable();
+    const quint32_le *functionIdx = serializedObject->functionOffsetTable();
     for (uint i = 0; i < serializedObject->nFunctions; ++i, ++functionIdx) {
         QmlIR::Function *f = pool->New<QmlIR::Function>();
         const QV4::CompiledData::Function *compiledFunction = unit->functionAt(*functionIdx);
@@ -2337,7 +2431,7 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
         f->nameIndex = compiledFunction->nameIndex;
 
         QQmlJS::AST::FormalParameterList *paramList = 0;
-        const QV4::CompiledData::LEUInt32 *formalNameIdx = compiledFunction->formalsTable();
+        const quint32_le *formalNameIdx = compiledFunction->formalsTable();
         for (uint i = 0; i < compiledFunction->nFormals; ++i, ++formalNameIdx) {
             const QString formal = unit->stringAt(*formalNameIdx);
             QStringRef paramNameRef = jsParserEngine->newStringRef(formal);

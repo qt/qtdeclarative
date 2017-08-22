@@ -64,7 +64,7 @@ QT_REQUIRE_CONFIG(quick_path);
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPathPrivate : public QObjectPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickPathPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPath)
 

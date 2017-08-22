@@ -277,18 +277,21 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
             QMatrix4x4 m = m_transform;
             rd->m_matrix = &m;
             rd->m_opacity = m_opacity;
-            RenderNodeState rs;
-            rs.cr = m_clipRegion;
 
-            const QRect br = m_handle.renderNode->flags().testFlag(QSGRenderNode::BoundedRectRendering)
-                ? m_boundingRectMax :
-                QRect(0, 0, painter->device()->width(), painter->device()->height());
+            // all the clip region below is in world coordinates, taking m_transform into account already
+            QRegion cr = m_dirtyRegion;
+            if (m_clipRegion.rectCount() > 1)
+                cr &= m_clipRegion;
 
             painter->save();
-            painter->setClipRegion(br, Qt::ReplaceClip);
+            RenderNodeState rs;
+            rs.cr = cr;
             m_handle.renderNode->render(&rs);
             painter->restore();
 
+            const QRect br = m_handle.renderNode->flags().testFlag(QSGRenderNode::BoundedRectRendering)
+                ? m_boundingRectMax // already mapped to world
+                : QRect(0, 0, painter->device()->width(), painter->device()->height());
             m_previousDirtyRegion = QRegion(br);
             m_isDirty = false;
             m_dirtyRegion = QRegion();
@@ -299,7 +302,7 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
     painter->save();
     painter->setOpacity(m_opacity);
 
-    // Set clipRegion to m_dirtyRegion (in world coordinates)
+    // Set clipRegion to m_dirtyRegion (in world coordinates, so must be done before the setTransform below)
     // as m_dirtyRegion already accounts for clipRegion
     painter->setClipRegion(m_dirtyRegion, Qt::ReplaceClip);
     if (m_clipRegion.rectCount() > 1)

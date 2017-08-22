@@ -47,6 +47,7 @@ PRIVATETESTS += \
 !qtHaveModule(xmlpatterns): PRIVATETESTS -= qquickxmllistmodel
 
 QUICKTESTS =  \
+    pointerhandlers \
     qquickaccessible \
     qquickanchors \
     qquickanimatedimage \
@@ -69,6 +70,7 @@ QUICKTESTS =  \
     qquickmousearea \
     qquickmultipointtoucharea \
     qquickpainteditem \
+    qquickshape \
     qquickpathview \
     qquickpincharea \
     qquickpositioners \

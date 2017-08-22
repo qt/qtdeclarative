@@ -30,6 +30,7 @@
 #include <QtTest/QtTest>
 
 #include <QtGui/qstylehints.h>
+#include <private/qdebug_p.h>
 
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
@@ -62,6 +63,21 @@ struct Event
     QList<QTouchEvent::TouchPoint> points;
 };
 
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug dbg, const struct Event &event) {
+    QDebugStateSaver saver(dbg);
+    dbg.nospace();
+    dbg << "Event(";
+    QtDebugUtils::formatQEnum(dbg, event.type);
+    if (event.points.isEmpty())
+        dbg << " @ " << event.mousePos << " global " << event.mousePosGlobal;
+    else
+        dbg << ", " << event.points.count() << " touchpoints: " << event.points;
+    dbg << ')';
+    return dbg;
+}
+#endif
+
 class EventItem : public QQuickItem
 {
     Q_OBJECT
@@ -74,6 +90,9 @@ public:
         : QQuickItem(parent), touchUngrabCount(0), acceptMouse(false), acceptTouch(false), filterTouch(false), point0(-1)
     {
         setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        setAcceptTouchEvents(true);
+#endif
     }
 
     void touchEvent(QTouchEvent *event)
@@ -572,7 +591,7 @@ void tst_TouchMouse::buttonOnFlickable()
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
     QVERIFY(windowPriv->touchMouseId != -1);
     auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
-    QCOMPARE(pointerEvent->point(0)->grabber(), eventItem1);
+    QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), eventItem1);
     QCOMPARE(window->mouseGrabberItem(), eventItem1);
 
     int dragDelta = -qApp->styleHints()->startDragDistance();
@@ -594,7 +613,7 @@ void tst_TouchMouse::buttonOnFlickable()
 
     QCOMPARE(window->mouseGrabberItem(), flickable);
     QVERIFY(windowPriv->touchMouseId != -1);
-    QCOMPARE(pointerEvent->point(0)->grabber(), flickable);
+    QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), flickable);
     QVERIFY(flickable->isMovingVertically());
 
     QTest::touchEvent(window.data(), device).release(0, p3, window.data());
@@ -633,7 +652,7 @@ void tst_TouchMouse::touchButtonOnFlickable()
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
     QVERIFY(windowPriv->touchMouseId == -1);
     auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
-    QCOMPARE(pointerEvent->point(0)->grabber(), eventItem2);
+    QCOMPARE(pointerEvent->point(0)->grabberItem(), eventItem2);
     QCOMPARE(window->mouseGrabberItem(), nullptr);
 
     int dragDelta = qApp->styleHints()->startDragDistance() * -0.7;
@@ -654,7 +673,7 @@ void tst_TouchMouse::touchButtonOnFlickable()
     QCOMPARE(eventItem2->touchUngrabCount, 1);
     QCOMPARE(window->mouseGrabberItem(), flickable);
     QVERIFY(windowPriv->touchMouseId != -1);
-    QCOMPARE(pointerEvent->point(0)->grabber(), flickable);
+    QCOMPARE(pointerEvent->point(0)->grabberItem(), flickable);
     QVERIFY(flickable->isMovingVertically());
 
     QTest::touchEvent(window.data(), device).release(0, p3, window.data());
@@ -759,7 +778,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     QCOMPARE(window->mouseGrabberItem(), flickable);
     QVERIFY(windowPriv->touchMouseId != -1);
     auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
-    QCOMPARE(pointerEvent->point(0)->grabber(), flickable);
+    QCOMPARE(pointerEvent->point(0)->grabberItem(), flickable);
 
     QTest::touchEvent(window.data(), device).release(0, p3, window.data());
     QQuickTouchUtils::flush(window.data());

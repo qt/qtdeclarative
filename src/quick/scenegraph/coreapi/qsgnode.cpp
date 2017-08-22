@@ -1582,6 +1582,7 @@ QDebug operator<<(QDebug d, const QSGRootNode *n)
         d << "RootNode(null)";
         return d;
     }
+    QDebugStateSaver saver(d);
     d << "RootNode" << hex << (const void *) n << (n->isSubtreeBlocked() ? "*BLOCKED*" : "");
 #ifdef QSG_RUNTIME_DESCRIPTION
     d << QSGNodePrivate::description(n);

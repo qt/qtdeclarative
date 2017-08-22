@@ -71,7 +71,8 @@ PRIVATETESTS += \
     qqmlimport \
     qqmlobjectmodel \
     qv4mm \
-    ecmascripttests
+    ecmascripttests \
+    bindingdependencyapi
 }
 
 qtHaveModule(widgets) {

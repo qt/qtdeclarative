@@ -45,6 +45,7 @@
 #include "qv4engine_p.h"
 #include "qv4lookup_p.h"
 #include <private/qv4mm_p.h>
+#include <private/qv4identifiertable_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,13 +63,13 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     internalClass = engine->internalClasses[EngineBase::Class_CallContext];
 
     // first locals
-    const CompiledData::LEUInt32 *localsIndices = compiledFunction->localsTable();
+    const quint32_le *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
-        internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
+        internalClass = internalClass->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
-    const CompiledData::LEUInt32 *formalsIndices = compiledFunction->formalsTable();
+    const quint32_le *formalsIndices = compiledFunction->formalsTable();
     for (quint32 i = 0; i < compiledFunction->nFormals; ++i)
-        internalClass = internalClass->addMember(compilationUnit->runtimeStrings[formalsIndices[i]]->identifier, Attr_NotConfigurable);
+        internalClass = internalClass->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[formalsIndices[i]]), Attr_NotConfigurable);
 
     nFormals = compiledFunction->nFormals;
 
@@ -101,9 +102,9 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
     }
     nFormals = parameters.size();
 
-    const CompiledData::LEUInt32 *localsIndices = compiledFunction->localsTable();
+    const quint32_le *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
-        internalClass = internalClass->addMember(compilationUnit->runtimeStrings[localsIndices[i]]->identifier, Attr_NotConfigurable);
+        internalClass = internalClass->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
     canUseSimpleCall = false;
 }

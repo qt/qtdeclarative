@@ -2,7 +2,6 @@ CONFIG += testcase
 TARGET = tst_qqmlcomponent
 macx:CONFIG -= app_bundle
 
-INCLUDEPATH += ../../shared/
 SOURCES += tst_qqmlcomponent.cpp \
             ../../shared/testhttpserver.cpp
 

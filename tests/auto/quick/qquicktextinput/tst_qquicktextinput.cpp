@@ -215,6 +215,9 @@ private slots:
     void clearInputMask();
     void keypress_inputMask_data();
     void keypress_inputMask();
+    void keypress_inputMethod_inputMask();
+    void keypress_inputMask_withValidator_data();
+    void keypress_inputMask_withValidator();
     void hasAcceptableInputMask_data();
     void hasAcceptableInputMask();
     void maskCharacter_data();
@@ -2291,8 +2294,9 @@ void tst_qquicktextinput::inputMethods()
     QGuiApplication::sendEvent(input, &event);
     QCOMPARE(input->text(), QString("Our Goodbye world!"));
     QCOMPARE(input->displayText(), QString("Our Goodbye world!"));
-    QCOMPARE(input->cursorPosition(), 7);
+    QCOMPARE(input->cursorPosition(), 3);
 
+    input->setCursorPosition(7);
     QInputMethodEvent preeditEvent("PREEDIT", QList<QInputMethodEvent::Attribute>());
     QGuiApplication::sendEvent(input, &preeditEvent);
     QCOMPARE(input->text(), QString("Our Goodbye world!"));
@@ -6110,6 +6114,79 @@ void tst_qquicktextinput::negativeDimensions()
     QCOMPARE(input->height(), qreal(-1));
 }
 
+void tst_qquicktextinput::keypress_inputMask_withValidator_data()
+{
+    QTest::addColumn<QString>("mask");
+    QTest::addColumn<qreal>("validatorMinimum");
+    QTest::addColumn<qreal>("validatorMaximum");
+    QTest::addColumn<int>("decimals");
+    QTest::addColumn<QString>("validatorRegExp");
+    QTest::addColumn<KeyList>("keys");
+    QTest::addColumn<QString>("expectedText");
+    QTest::addColumn<QString>("expectedDisplayText");
+
+    {
+        KeyList keys;
+        // inserting '1212' then two backspaces
+        keys << Qt::Key_Home << "1212" << Qt::Key_Backspace << Qt::Key_Backspace;
+        QTest::newRow("backspaceWithInt") << QString("9999;_") << 1.0 << 9999.00 << 0 << QString()
+                                             << keys << QString("12") << QString("12__");
+    }
+    {
+        KeyList keys;
+        // inserting '12.12' then two backspaces
+        keys << Qt::Key_Home << "12.12" << Qt::Key_Backspace << Qt::Key_Backspace;
+        QTest::newRow("backspaceWithDouble") << QString("99.99;_") << 1.0 << 99.99 << 2 << QString()
+                                             << keys << QString("12.") << QString("12.__");
+    }
+    {
+        KeyList keys;
+        // inserting '1111.11' then two backspaces
+        keys << Qt::Key_Home << "1111.11" << Qt::Key_Backspace << Qt::Key_Backspace;
+        QTest::newRow("backspaceWithRegExp") << QString("9999.99;_") << 0.0 << 0.0 << 0
+                                             << QString("/^[-]?((\\.\\d+)|(\\d+(\\.\\d+)?))$/")
+                                             << keys << QString("1111.") << QString("1111.__");
+    }
+}
+
+void tst_qquicktextinput::keypress_inputMask_withValidator()
+{
+    QFETCH(QString, mask);
+    QFETCH(qreal, validatorMinimum);
+    QFETCH(qreal, validatorMaximum);
+    QFETCH(int, decimals);
+    QFETCH(QString, validatorRegExp);
+    QFETCH(KeyList, keys);
+    QFETCH(QString, expectedText);
+    QFETCH(QString, expectedDisplayText);
+
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; inputMask: \"" + mask + "\"\n";
+    if (!validatorRegExp.isEmpty())
+        componentStr += "validator: RegExpValidator { regExp: " + validatorRegExp + " }\n}";
+    else if (decimals > 0)
+        componentStr += QString("validator: DoubleValidator { bottom: %1; decimals: %2; top: %3 }\n}").
+                            arg(validatorMinimum).arg(decimals).arg(validatorMaximum);
+    else
+        componentStr += QString("validator: IntValidator { bottom: %1; top: %2 }\n}").
+                            arg((int)validatorMinimum).arg((int)validatorMaximum);
+
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickWindow window;
+    textInput->setParentItem(window.contentItem());
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+    QVERIFY(textInput->hasActiveFocus());
+
+    simulateKeys(&window, keys);
+
+    QCOMPARE(textInput->text(), expectedText);
+    QCOMPARE(textInput->displayText(), expectedDisplayText);
+}
 
 void tst_qquicktextinput::setInputMask_data()
 {
@@ -6481,6 +6558,48 @@ void tst_qquicktextinput::keypress_inputMask()
     QCOMPARE(textInput->displayText(), expectedDisplayText);
 }
 
+void tst_qquicktextinput::keypress_inputMethod_inputMask()
+{
+    // Similar to the keypress_inputMask test, but this is done solely via
+    // input methods
+    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; inputMask: \"AA.AA.AA\" }";
+    QQmlComponent textInputComponent(&engine);
+    textInputComponent.setData(componentStr.toLatin1(), QUrl());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput*>(textInputComponent.create());
+    QVERIFY(textInput != 0);
+
+    QQuickWindow window;
+    textInput->setParentItem(window.contentItem());
+    window.show();
+    window.requestActivate();
+    QTest::qWaitForWindowActive(&window);
+    QVERIFY(textInput->hasActiveFocus());
+
+    {
+        QList<QInputMethodEvent::Attribute> attributes;
+        QInputMethodEvent event("", attributes);
+        event.setCommitString("EE");
+        QGuiApplication::sendEvent(textInput, &event);
+    }
+    QCOMPARE(textInput->cursorPosition(), 3);
+    QCOMPARE(textInput->text(), QStringLiteral("EE.."));
+    {
+        QList<QInputMethodEvent::Attribute> attributes;
+        QInputMethodEvent event("", attributes);
+        event.setCommitString("EE");
+        QGuiApplication::sendEvent(textInput, &event);
+    }
+    QCOMPARE(textInput->cursorPosition(), 6);
+    QCOMPARE(textInput->text(), QStringLiteral("EE.EE."));
+    {
+        QList<QInputMethodEvent::Attribute> attributes;
+        QInputMethodEvent event("", attributes);
+        event.setCommitString("EE");
+        QGuiApplication::sendEvent(textInput, &event);
+    }
+    QCOMPARE(textInput->cursorPosition(), 8);
+    QCOMPARE(textInput->text(), QStringLiteral("EE.EE.EE"));
+}
 
 void tst_qquicktextinput::hasAcceptableInputMask_data()
 {

@@ -194,7 +194,7 @@ protected:
     QMutex m_mutex;
     QHash<QQuickTextureFactory *, QSGTexture *> m_textures;
     QSet<QSGTexture *> m_texturesToDelete;
-    QHash<QRawFont, QSGDistanceFieldGlyphCache*> m_glyphCaches;
+    QHash<QString, QSGDistanceFieldGlyphCache *> m_glyphCaches;
 
     QSet<QFontEngine *> m_fontEnginesToClean;
 };

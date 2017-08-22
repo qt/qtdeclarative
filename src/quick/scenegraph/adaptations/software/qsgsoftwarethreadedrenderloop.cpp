@@ -330,6 +330,7 @@ bool QSGSoftwareRenderThread::event(QEvent *e)
                 softwareRenderer->setBackingStore(backingStore);
             rc->initialize(nullptr);
             wd->syncSceneGraph();
+            rc->endSync();
             wd->renderSceneGraph(wme->window->size());
             *wme->image = backingStore->handle()->toImage();
         }
@@ -443,6 +444,7 @@ void QSGSoftwareRenderThread::sync(bool inExpose)
 
         rc->initialize(nullptr);
         wd->syncSceneGraph();
+        rc->endSync();
 
         if (!hadRenderer && wd->renderer) {
             qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - created renderer");

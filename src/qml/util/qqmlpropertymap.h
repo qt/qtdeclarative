@@ -80,15 +80,13 @@ protected:
 
     template<class DerivedType>
     QQmlPropertyMap(DerivedType *derived, QObject *parentObj)
-        : QObject(*allocatePrivate(), parentObj)
+        : QQmlPropertyMap(&DerivedType::staticMetaObject, parentObj)
     {
         Q_UNUSED(derived)
-        init(&DerivedType::staticMetaObject);
     }
 
 private:
-    void init(const QMetaObject *staticMetaObject);
-    static QObjectPrivate *allocatePrivate();
+    QQmlPropertyMap(const QMetaObject *staticMetaObject, QObject *parent);
 
     Q_DECLARE_PRIVATE(QQmlPropertyMap)
     Q_DISABLE_COPY(QQmlPropertyMap)

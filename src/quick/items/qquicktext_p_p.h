@@ -85,6 +85,7 @@ public:
     int lineHeightOffset() const;
     QString elidedText(qreal lineWidth, const QTextLine &line, QTextLine *nextLine = 0) const;
     void elideFormats(int start, int length, int offset, QVector<QTextLayout::FormatRange> *elidedFormats);
+    void clearFormats();
 
     void processHoverEvent(QHoverEvent *event);
 
@@ -152,6 +153,8 @@ public:
     QQuickText::TextStyle style;
     QQuickText::RenderType renderType;
     UpdateType updateType;
+
+    QString assignedFont;
 
     bool maximumLineCountValid:1;
     bool updateOnComponentComplete:1;

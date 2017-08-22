@@ -969,9 +969,10 @@ bool Renderer::changeBatchRoot(Node *node, Node *root)
 void Renderer::nodeChangedBatchRoot(Node *node, Node *root)
 {
     if (node->type() == QSGNode::ClipNodeType || node->isBatchRoot) {
-        if (!changeBatchRoot(node, root))
-            return;
-        node = root;
+        // When we reach a batchroot, we only need to update it. Its subtree
+        // is relative to that root, so no need to recurse further.
+        changeBatchRoot(node, root);
+        return;
     } else if (node->type() == QSGNode::GeometryNodeType) {
         // Only need to change the root as nodeChanged anyway flags a full update.
         Element *e = node->element();

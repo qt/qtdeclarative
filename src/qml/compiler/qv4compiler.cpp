@@ -80,7 +80,7 @@ void QV4::Compiler::StringTableGenerator::clear()
 void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
 {
     char *dataStart = reinterpret_cast<char *>(unit);
-    CompiledData::LEUInt32 *stringTable = reinterpret_cast<CompiledData::LEUInt32 *>(dataStart + unit->offsetToStringTable);
+    quint32_le *stringTable = reinterpret_cast<quint32_le *>(dataStart + unit->offsetToStringTable);
     char *stringData = dataStart + unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
     for (int i = 0; i < strings.size(); ++i) {
         stringTable[i] = stringData - dataStart;
@@ -230,7 +230,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
             registerString(f->locals.at(i));
     }
 
-    Q_ALLOCA_VAR(CompiledData::LEUInt32, functionOffsets, module->functions.size() * sizeof(CompiledData::LEUInt32));
+    Q_ALLOCA_VAR(quint32_le, functionOffsets, module->functions.size() * sizeof(quint32_le));
     uint jsClassDataOffset = 0;
 
     char *dataPtr;
@@ -243,7 +243,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
         memcpy(unit, &tempHeader, sizeof(tempHeader));
     }
 
-    memcpy(dataPtr + unit->offsetToFunctionTable, functionOffsets, unit->functionTableSize * sizeof(CompiledData::LEUInt32));
+    memcpy(dataPtr + unit->offsetToFunctionTable, functionOffsets, unit->functionTableSize * sizeof(quint32_le));
 
     for (int i = 0; i < module->functions.size(); ++i) {
         Context *function = module->functions.at(i);
@@ -264,7 +264,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     ReturnedValue *constantTable = reinterpret_cast<ReturnedValue *>(dataPtr + unit->offsetToConstantTable);
     memcpy(constantTable, constants.constData(), constants.size() * sizeof(ReturnedValue));
 #else
-    CompiledData::LEUInt64 *constantTable = reinterpret_cast<CompiledData::LEUInt64 *>(dataPtr + unit->offsetToConstantTable);
+    quint64_le *constantTable = reinterpret_cast<quint64_le *>(dataPtr + unit->offsetToConstantTable);
     for (int i = 0; i < constants.count(); ++i)
         constantTable[i] = constants.at(i);
 #endif
@@ -273,7 +273,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
         memcpy(dataPtr + jsClassDataOffset, jsClassData.constData(), jsClassData.size());
 
         // write js classes and js class lookup table
-        CompiledData::LEUInt32 *jsClassOffsetTable = reinterpret_cast<CompiledData::LEUInt32 *>(dataPtr + unit->offsetToJSClassTable);
+        quint32_le *jsClassOffsetTable = reinterpret_cast<quint32_le *>(dataPtr + unit->offsetToJSClassTable);
         for (int i = 0; i < jsClassOffsets.count(); ++i)
             jsClassOffsetTable[i] = jsClassDataOffset + jsClassOffsets.at(i);
     }
@@ -349,36 +349,36 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     function->codeSize = 0;
 
     // write formals
-    quint32 *formals = (quint32 *)(f + function->formalsOffset);
+    quint32_le *formals = (quint32_le *)(f + function->formalsOffset);
     for (int i = 0; i < irFunction->arguments.size(); ++i)
         formals[i] = getStringId(irFunction->arguments.at(i));
 
     // write locals
-    quint32 *locals = (quint32 *)(f + function->localsOffset);
+    quint32_le *locals = (quint32_le *)(f + function->localsOffset);
     for (int i = 0; i < irFunction->locals.size(); ++i)
         locals[i] = getStringId(irFunction->locals.at(i));
 
     // write QML dependencies
-    quint32 *writtenDeps = (quint32 *)(f + function->dependingIdObjectsOffset);
+    quint32_le *writtenDeps = (quint32_le *)(f + function->dependingIdObjectsOffset);
     for (int id : irFunction->idObjectDependencies) {
         Q_ASSERT(id >= 0);
         *writtenDeps++ = static_cast<quint32>(id);
     }
 
-    writtenDeps = (quint32 *)(f + function->dependingContextPropertiesOffset);
+    writtenDeps = (quint32_le *)(f + function->dependingContextPropertiesOffset);
     for (auto property : irFunction->contextObjectPropertyDependencies) {
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
     }
 
-    writtenDeps = (quint32 *)(f + function->dependingScopePropertiesOffset);
+    writtenDeps = (quint32_le *)(f + function->dependingScopePropertiesOffset);
     for (auto property : irFunction->scopeObjectPropertyDependencies) {
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
     }
 }
 
-QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, QJsonPrivate::q_littleendian<quint32> *functionOffsets, uint *jsClassDataOffset)
+QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, quint32_le *functionOffsets, uint *jsClassDataOffset)
 {
     CompiledData::Unit unit;
     memset(&unit, 0, sizeof(unit));
@@ -419,6 +419,8 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
 
     *jsClassDataOffset = nextOffset;
     nextOffset += jsClassData.size();
+
+    nextOffset = (nextOffset + 7) & ~quint32(0x7);
 
     for (int i = 0; i < module->functions.size(); ++i) {
         Context *f = module->functions.at(i);

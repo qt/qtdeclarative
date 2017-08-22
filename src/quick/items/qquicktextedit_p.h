@@ -111,6 +111,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION 6)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
     Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION 7)
+    Q_PROPERTY(qreal tabStopDistance READ tabStopDistance WRITE setTabStopDistance NOTIFY tabStopDistanceChanged REVISION 10)
 
 public:
     QQuickTextEdit(QQuickItem *parent=0);
@@ -296,6 +297,9 @@ public:
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
 
+    int tabStopDistance() const;
+    void setTabStopDistance(qreal distance);
+
 Q_SIGNALS:
     void textChanged();
     Q_REVISION(7) void preeditTextChanged();
@@ -340,6 +344,7 @@ Q_SIGNALS:
     Q_REVISION(6) void leftPaddingChanged();
     Q_REVISION(6) void rightPaddingChanged();
     Q_REVISION(6) void bottomPaddingChanged();
+    Q_REVISION(10) void tabStopDistanceChanged(qreal distance);
 
 public Q_SLOTS:
     void selectAll();

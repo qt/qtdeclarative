@@ -107,7 +107,7 @@ DECLARE_HEAP_OBJECT(ArrayData, Base) {
         Heap::ArrayData *arrayData;
         uint index;
 
-        void set(ExecutionEngine *e, Value newVal) {
+        void set(EngineBase *e, Value newVal) {
             arrayData->values.set(e, index, newVal);
         }
         const Value *operator->() const { return &arrayData->values[index]; }
@@ -123,7 +123,7 @@ DECLARE_HEAP_OBJECT(ArrayData, Base) {
         return vtable()->get(this, i);
     }
     inline bool getProperty(uint index, Property *p, PropertyAttributes *attrs);
-    inline void setProperty(ExecutionEngine *e, uint index, const Property *p);
+    inline void setProperty(EngineBase *e, uint index, const Property *p);
     inline Index getValueOrSetter(uint index, PropertyAttributes *attrs);
     inline PropertyAttributes attributes(uint i) const;
 
@@ -135,7 +135,7 @@ DECLARE_HEAP_OBJECT(ArrayData, Base) {
         return vtable()->length(this);
     }
 
-    void setArrayData(ExecutionEngine *e, uint index, Value newVal) {
+    void setArrayData(EngineBase *e, uint index, Value newVal) {
         values.set(e, index, newVal);
     }
 
@@ -146,7 +146,7 @@ V4_ASSERT_IS_TRIVIAL(ArrayData)
 struct SimpleArrayData : public ArrayData {
     uint mappedIndex(uint index) const { return (index + offset) % values.alloc; }
     const Value &data(uint index) const { return values[mappedIndex(index)]; }
-    void setData(ExecutionEngine *e, uint index, Value newVal) {
+    void setData(EngineBase *e, uint index, Value newVal) {
         values.set(e, mappedIndex(index), newVal);
     }
 
@@ -197,7 +197,7 @@ struct Q_QML_EXPORT ArrayData : public Managed
     PropertyAttributes *attrs() const { return d()->attrs; }
     void setAttrs(PropertyAttributes *a) { d()->attrs = a; }
     const Value *arrayData() const { return d()->values.data(); }
-    void setArrayData(ExecutionEngine *e, uint index, Value newVal) {
+    void setArrayData(EngineBase *e, uint index, Value newVal) {
         d()->setArrayData(e, index, newVal);
     }
 
@@ -310,7 +310,7 @@ bool ArrayData::getProperty(uint index, Property *p, PropertyAttributes *attrs)
     return true;
 }
 
-void ArrayData::setProperty(QV4::ExecutionEngine *e, uint index, const Property *p)
+void ArrayData::setProperty(QV4::EngineBase *e, uint index, const Property *p)
 {
     uint mapped = mappedIndex(index);
     Q_ASSERT(mapped != UINT_MAX);

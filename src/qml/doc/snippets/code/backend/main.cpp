@@ -47,7 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
+//! [main_cpp]
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
@@ -64,3 +64,4 @@ int main(int argc, char *argv[])
 
     return app.exec();
 }
+//! [main_cpp]

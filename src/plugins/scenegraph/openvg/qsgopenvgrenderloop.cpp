@@ -205,6 +205,7 @@ void QSGOpenVGRenderLoop::renderWindow(QQuickWindow *window)
     emit window->afterAnimating();
 
     cd->syncSceneGraph();
+    rc->endSync();
 
     if (profileFrames)
         syncTime = renderTimer.nsecsElapsed();

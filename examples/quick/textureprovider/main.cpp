@@ -48,6 +48,10 @@ int main(int argc, char* argv[])
     QGuiApplication app(argc,argv);
     QQuickView view;
 
+    /*
+          NOTE: ETC compressed textures in PKM files are supported out-of-the-box since Qt 5.10.
+          However, we retain this example to show how custom texture providers can be integrated.
+    */
     EtcProvider *provider = new EtcProvider();
     provider->setBaseUrl(QUrl("qrc:///textureprovider/"));
     view.engine()->addImageProvider("etc", provider);
