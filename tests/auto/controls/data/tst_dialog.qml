@@ -105,6 +105,8 @@ TestCase {
     }
 
     function test_reject() {
+        skip("QTBUG-62549, QTBUG-62628")
+
         var control = createTemporaryObject(dialog, testCase)
 
         var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
