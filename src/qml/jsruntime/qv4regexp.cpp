@@ -106,7 +106,7 @@ void Heap::RegExp::init(ExecutionEngine* engine, const QString &pattern, bool ig
     byteCode = p.take();
 #if ENABLE(YARR_JIT)
     jitCode = new JSC::Yarr::YarrCodeBlock;
-    if (!yarrPattern.m_containsBackreferences && engine->iselFactory->jitCompileRegexps()) {
+    if (!yarrPattern.m_containsBackreferences) {
         JSC::JSGlobalData dummy(engine->regExpAllocator);
         JSC::Yarr::jitCompile(yarrPattern, JSC::Yarr::Char16, &dummy, *jitCode);
     }
