@@ -2720,13 +2720,6 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
 
 void QQuickWindowPrivate::updateFilteringParentItems(const QVector<QQuickItem *> &targetItems)
 {
-    if (Q_UNLIKELY(DBG_MOUSE_TARGET().isDebugEnabled())) {
-        // qDebug() << map(&objectName, targetItems) but done the hard way because C++ is still that primitive
-        QStringList targetNames;
-        for (QQuickItem *t : targetItems)
-            targetNames << (QLatin1String(t->metaObject()->className()) + QLatin1Char(' ') + t->objectName());
-        qCDebug(DBG_MOUSE_TARGET) << "finding potential filtering parents of" << targetNames;
-    }
     filteringParentItems.clear();
     for (QQuickItem *item : targetItems) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -2752,6 +2745,13 @@ void QQuickWindowPrivate::updateFilteringParentItems(const QVector<QQuickItem *>
             }
             parent = parent->parentItem();
         }
+    }
+    if (Q_UNLIKELY(DBG_MOUSE_TARGET().isDebugEnabled())) {
+        QStringList l;
+        for (QPair<QQuickItem *,QQuickItem *> pair : filteringParentItems)
+            l << (QLatin1String(pair.first->metaObject()->className()) + QLatin1Char(' ') + pair.first->objectName() +
+                  QLatin1String(" <- ") + pair.second->metaObject()->className()) + QLatin1Char(' ') + pair.second->objectName();
+        qCDebug(DBG_MOUSE_TARGET) << "potential filtering parents:" << l;
     }
 }
 
@@ -2873,7 +2873,7 @@ bool QQuickWindowPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem 
         hasFiltered->insert(target);
         if (target->childMouseEventFilter(item, event))
             filtered = true;
-        qCDebug(DBG_MOUSE_TARGET) << target << "childMouseEventFilter ->" << filtered;
+        qCDebug(DBG_MOUSE_TARGET) << "for" << item << target << "childMouseEventFilter ->" << filtered;
     }
 
     return sendFilteredMouseEvent(target->parentItem(), item, event, hasFiltered) || filtered;
