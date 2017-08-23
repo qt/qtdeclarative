@@ -798,7 +798,7 @@ QQmlPropertyPrivate::binding(QObject *object, QQmlPropertyIndex index)
     const int coreIndex = index.coreIndex();
     const int valueTypeIndex = index.valueTypeIndex();
 
-    if (!data->hasBindingBit(coreIndex))
+    if (coreIndex < 0 || !data->hasBindingBit(coreIndex))
         return 0;
 
     QQmlAbstractBinding *binding = data->bindings;

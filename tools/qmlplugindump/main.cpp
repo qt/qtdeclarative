@@ -999,7 +999,7 @@ int main(int argc, char *argv[])
     // Check which kind of application should be instantiated.
     bool useQApplication = false;
     for (int i = 0; i < argc; ++i) {
-        QString arg = QLatin1String(argv[1]);
+        QString arg = QLatin1String(argv[i]);
         if (arg == QLatin1String("--qapp") || arg == QLatin1String("-qapp"))
             useQApplication = true;
     }

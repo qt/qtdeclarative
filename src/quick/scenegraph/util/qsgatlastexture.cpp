@@ -116,7 +116,7 @@ QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
     Texture *t = 0;
     if (image.width() < m_atlas_size_limit && image.height() < m_atlas_size_limit) {
         if (!m_atlas)
-            m_atlas = new Atlas(m_atlas_size, this);
+            m_atlas = new Atlas(m_atlas_size);
         // t may be null for atlas allocation failure
         t = m_atlas->create(image);
         if (t && !hasAlphaChannel && t->hasAlphaChannel())
@@ -125,9 +125,8 @@ QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
     return t;
 }
 
-Atlas::Atlas(const QSize &size, QObject *parent)
-    : QObject(parent)
-    , m_allocator(size)
+Atlas::Atlas(const QSize &size)
+    : m_allocator(size)
     , m_texture_id(0)
     , m_size(size)
     , m_atlas_transient_image_threshold(0)

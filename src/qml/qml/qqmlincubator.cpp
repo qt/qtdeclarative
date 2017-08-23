@@ -45,9 +45,6 @@
 #include "qqmlmemoryprofiler_p.h"
 #include "qqmlobjectcreator_p.h"
 
-// XXX TODO
-//   - check that the Component.onCompleted behavior is the same as 4.8 in the synchronous and
-//     async if nested cases
 void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
 {
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> p(i.d);
@@ -64,8 +61,8 @@ void QQmlEnginePrivate::incubate(QQmlIncubator &i, QQmlContextData *forContext)
         QExplicitlySharedDataPointer<QQmlIncubatorPrivate> parentIncubator;
         QQmlContextData *cctxt = forContext;
         while (cctxt) {
-            if (cctxt->activeVMEData) {
-                parentIncubator = (QQmlIncubatorPrivate *)cctxt->activeVMEData;
+            if (cctxt->incubator) {
+                parentIncubator = cctxt->incubator;
                 break;
             }
             cctxt = cctxt->parent;
@@ -152,7 +149,7 @@ void QQmlIncubatorPrivate::clear()
     }
     enginePriv = 0;
     if (!rootContext.isNull()) {
-        rootContext->activeVMEData = 0;
+        rootContext->incubator = 0;
         rootContext = 0;
     }
 
@@ -388,7 +385,7 @@ void QQmlIncubatorPrivate::cancel(QObject *object, QQmlContext *context)
         return;
 
     QQmlContextData *data = QQmlContextData::get(context);
-    QQmlIncubatorPrivate *p = (QQmlIncubatorPrivate *)data->activeVMEData;
+    QQmlIncubatorPrivate *p = data->incubator;
     if (!p)
         return;
 

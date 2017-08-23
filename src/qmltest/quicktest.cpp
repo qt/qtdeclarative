@@ -277,6 +277,11 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     }
 #endif
 
+#ifdef Q_OS_ANDROID
+    if (testPath.isEmpty())
+        testPath = QLatin1String(":/");
+#endif
+
     // Determine where to look for the test data.
     if (testPath.isEmpty() && sourceDir) {
         const QString s = QString::fromLocal8Bit(sourceDir);

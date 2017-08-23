@@ -126,7 +126,7 @@ QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
 {
     m_process.setProcessChannelMode(QProcess::MergedChannels);
     m_timer.setSingleShot(true);
-    m_timer.setInterval(5000);
+    m_timer.setInterval(15000);
     connect(&m_process, SIGNAL(readyReadStandardOutput()), this, SLOT(processAppOutput()));
     connect(&m_process, SIGNAL(errorOccurred(QProcess::ProcessError)),
             this, SLOT(processError(QProcess::ProcessError)));
@@ -208,7 +208,10 @@ bool QQmlDebugProcess::waitForSessionStart()
     if (m_process.state() != QProcess::Running) {
         qWarning() << "Could not start up " << m_executable;
         return false;
+    } else if (m_started) {
+        return true;
     }
+
     m_eventLoop.exec();
 
     return m_started;

@@ -97,6 +97,7 @@ static QString cacheFilePath(const QUrl &url)
 CompilationUnit::CompilationUnit()
     : data(0)
     , engine(0)
+    , qmlEngine(0)
     , runtimeLookups(0)
     , runtimeRegularExpressions(0)
     , runtimeClasses(0)
@@ -211,8 +212,8 @@ void CompilationUnit::unlink()
 
     if (isRegisteredWithEngine) {
         Q_ASSERT(data && quint32(propertyCaches.count()) > data->indexOfRootObject && propertyCaches.at(data->indexOfRootObject));
-        if (engine)
-            QQmlEnginePrivate::get(engine)->unregisterInternalCompositeType(this);
+        if (qmlEngine)
+            qmlEngine->unregisterInternalCompositeType(this);
         QQmlMetaType::unregisterInternalCompositeType(this);
         isRegisteredWithEngine = false;
     }
@@ -229,6 +230,7 @@ void CompilationUnit::unlink()
     resolvedTypes.clear();
 
     engine = 0;
+    qmlEngine = 0;
     free(runtimeStrings);
     runtimeStrings = 0;
     delete [] runtimeLookups;
@@ -258,9 +260,6 @@ void CompilationUnit::markObjects(QV4::MarkStack *markStack)
 
 void CompilationUnit::destroy()
 {
-    QQmlEngine *qmlEngine = 0;
-    if (engine && engine->v8Engine)
-        qmlEngine = engine->v8Engine->engine();
     if (qmlEngine)
         QQmlEnginePrivate::deleteInEngineThread(qmlEngine, this);
     else
@@ -283,12 +282,14 @@ IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjec
     return *it;
 }
 
-void CompilationUnit::finalize(QQmlEnginePrivate *engine)
+void CompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngine)
 {
+    this->qmlEngine = qmlEngine;
+
     // Add to type registry of composites
     if (propertyCaches.needsVMEMetaObject(data->indexOfRootObject)) {
         QQmlMetaType::registerInternalCompositeType(this);
-        engine->registerInternalCompositeType(this);
+        qmlEngine->registerInternalCompositeType(this);
     } else {
         const QV4::CompiledData::Object *obj = objectAt(data->indexOfRootObject);
         auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
