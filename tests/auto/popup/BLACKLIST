@@ -1,0 +1,10 @@
+[overlay]
+# QTBUG-62668
+*
+
+[closePolicy]
+# QTBUG-62668
+*
+
+
+
