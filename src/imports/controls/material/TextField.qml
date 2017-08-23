@@ -77,7 +77,7 @@ T.TextField {
     }
 
     background: Rectangle {
-        y: control.height - height - control.bottomPadding / 2
+        y: control.height - height - control.bottomPadding + 8
         implicitWidth: 120
         height: control.activeFocus ? 2 : 1
         color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
