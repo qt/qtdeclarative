@@ -2425,17 +2425,25 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
         }
     }
 
-    if (allowChildEventFiltering && !handlersOnly) {
+    if (allowChildEventFiltering && !handlersOnly)
         updateFilteringParentItems(targetItems);
-        QQuickItem *filteredItem;
-        if (sendFilteredPointerEvent(event, nullptr, &filteredItem)) {
-            if (event->isAccepted())
-                return true;
-            targetItems.removeAll(filteredItem);
-        }
-    }
 
-    for (QQuickItem *item: targetItems) {
+    QVarLengthArray<QQuickItem *> filteredItems;
+    for (QQuickItem *item : targetItems) {
+        if (sendFilteredPointerEvent(event, item)) {
+            if (event->isAccepted()) {
+                for (int i = 0; i < event->pointCount(); ++i)
+                    event->point(i)->setAccepted();
+                return true;
+            }
+            while (!filteringParentItems.isEmpty() && filteringParentItems.first().first == item)
+                filteringParentItems.removeFirst();
+            filteredItems << item;
+        }
+
+        // Do not deliverMatchingPointsTo any item for which the parent-filter already intercepted the event
+        if (filteredItems.contains(item))
+            continue;
         deliverMatchingPointsToItem(item, event, handlersOnly);
         if (event->allPointsAccepted())
             break;
@@ -2755,23 +2763,25 @@ void QQuickWindowPrivate::updateFilteringParentItems(const QVector<QQuickItem *>
     }
 }
 
-bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem **itemThatFiltered)
+bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver)
 {
     if (!allowChildEventFiltering)
         return false;
     bool ret = false;
+    QVarLengthArray<QQuickItem *> filteringParentsToSkip;
     if (QQuickPointerMouseEvent *pme = event->asPointerMouseEvent()) {
         for (QPair<QQuickItem *,QQuickItem *> itemAndParent : filteringParentItems) {
             QQuickItem *item = receiver ? receiver : itemAndParent.first;
             QQuickItem *filteringParent = itemAndParent.second;
             if (item == filteringParent)
                 continue; // a filtering item never needs to filter for itself
+            if (filteringParentsToSkip.contains(filteringParent))
+                continue;
             QPointF localPos = item->mapFromScene(pme->point(0)->scenePos());
             QMouseEvent *me = pme->asMouseEvent(localPos);
-            if (filteringParent->childMouseEventFilter(item, me)) {
-                if (itemThatFiltered) *itemThatFiltered = item;
+            if (filteringParent->childMouseEventFilter(item, me))
                 ret = true;
-            }
+            filteringParentsToSkip.append(filteringParent);
         }
     } else if (QQuickPointerTouchEvent *pte = event->asPointerTouchEvent()) {
         QVarLengthArray<QPair<QQuickPointerHandler *, QQuickEventPoint *>, 32> passiveGrabsToCancel;
