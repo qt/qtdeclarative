@@ -824,6 +824,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
 
 #ifndef V4_BOOTSTRAP
     ExecutionEngine *engine;
+    QQmlEnginePrivate *qmlEngine; // only used in QML environment for composite types, not in plain QJSEngine case.
 
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
     QUrl url() const { if (m_url.isNull) m_url = QUrl(fileName()); return m_url; }
@@ -853,7 +854,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
     // pointers either to data->constants() or little-endian memory copy.
     const Value* constants;
 
-    void finalize(QQmlEnginePrivate *engine);
+    void finalizeCompositeType(QQmlEnginePrivate *qmlEngine);
 
     int totalBindingsCount; // Number of bindings used in this type
     int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses
