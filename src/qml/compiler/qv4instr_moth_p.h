@@ -341,6 +341,27 @@ QT_BEGIN_NAMESPACE
 #define MOTH_EMIT_INSTR_MEMBER_INSTRUCTION(name, nargs, ...) \
     instr_##name name;
 
+/* collect jump labels */
+#define COLLECT_LABELS(instr) \
+    INSTR_##instr(GET_LABEL)
+#define GET_LABEL_INSTRUCTION(name, ...) \
+    &&op_char_##name,
+
+#define COLLECT_LABELS_WIDE(instr) \
+    INSTR_##instr(GET_LABEL_WIDE)
+#define GET_LABEL_WIDE_INSTRUCTION(name, ...) \
+    &&op_short_##name,
+
+#define COLLECT_LABELS_XWIDE(instr) \
+    INSTR_##instr(GET_LABEL_XWIDE)
+#define GET_LABEL_XWIDE_INSTRUCTION(name, ...) \
+    &&op_int_##name,
+
+#define MOTH_JUMP_TABLE \
+    static const void *jumpTable[] = { FOR_EACH_MOTH_INSTR(COLLECT_LABELS) }; \
+    static const void *jumpTableWide[] = { FOR_EACH_MOTH_INSTR(COLLECT_LABELS_WIDE) }; \
+    static const void *jumpTableXWide[] = { FOR_EACH_MOTH_INSTR(COLLECT_LABELS_XWIDE) }
+
 
 #define MOTH_DECODE_ARG(arg, type, offset) \
     arg = reinterpret_cast<const type *>(code)[offset]
@@ -352,6 +373,16 @@ QT_BEGIN_NAMESPACE
     op_int_##name: \
         MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
         MOTH_ADJUST_CODE(int, nargs); \
+        goto op_main_##name; \
+    op_short_##name: \
+        MOTH_DECODE_ARGS(name, short, nargs, __VA_ARGS__) \
+        MOTH_ADJUST_CODE(short, nargs); \
+        goto op_main_##name; \
+    op_char_##name: \
+        MOTH_DECODE_ARGS(name, char, nargs, __VA_ARGS__) \
+        MOTH_ADJUST_CODE(char, nargs); \
+    op_main_##name: \
+        ; \
 
 #define MOTH_DECODE_ARGS(name, type, nargs, ...) \
     MOTH_DECODE_ARGS##nargs(name, type, __VA_ARGS__)
@@ -373,6 +404,16 @@ QT_BEGIN_NAMESPACE
     int instr = *code; \
     ++code; \
     goto *jumpTable[instr];
+
+#define MOTH_DISPATCH_WIDE() \
+    int winstr = *code; \
+    ++code; \
+    goto *jumpTableWide[winstr];
+
+#define MOTH_DISPATCH_XWIDE() \
+    int xwinstr = *code; \
+    ++code; \
+    goto *jumpTableXWide[xwinstr];
 
 namespace QV4 {
 namespace Moth {

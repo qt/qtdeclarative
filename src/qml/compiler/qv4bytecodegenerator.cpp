@@ -71,11 +71,12 @@ void BytecodeGenerator::compressInstructions()
 {
     for (auto &i : instructions) {
         Instr instr = i.instr;
-        i.packed[0] = static_cast<char>(i.type);
-        memcpy(i.packed + 1, reinterpret_cast<char *>(&instr), i.size);
-        ++i.size;
+        i.packed[0] = static_cast<char>(Instr::Type::XWide);
+        i.packed[1] = static_cast<char>(i.type);
+        memcpy(i.packed + 2, reinterpret_cast<char *>(&instr), i.size);
+        i.size += 2;
         if (i.offsetForJump != -1)
-            ++i.offsetForJump;
+            i.offsetForJump += 2;
     }
 }
 

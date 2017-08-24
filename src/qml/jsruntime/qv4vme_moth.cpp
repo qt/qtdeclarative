@@ -519,13 +519,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 {
     qt_v4ResolvePendingBreakpointsHook();
 
-#ifdef MOTH_THREADED_INTERPRETER
-#define MOTH_INSTR_ADDR(I) &&op_int_##I,
-    static void *jumpTable[] = {
-        FOR_EACH_MOTH_INSTR(MOTH_INSTR_ADDR)
-    };
-#undef MOTH_INSTR_ADDR
-#endif
+    MOTH_JUMP_TABLE;
 
     ExecutionEngine *engine = function->internalClass->engine;
     Profiling::FunctionCallProfiler(engine, function);
@@ -565,12 +559,12 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(Nop)
 
     MOTH_BEGIN_INSTR(Wide)
-            ; // nop
-    MOTH_END_INSTR(Wide)
+        MOTH_DISPATCH_WIDE()
+    }
 
     MOTH_BEGIN_INSTR(XWide)
-            ; // nop
-    MOTH_END_INSTR(XWide)
+        MOTH_DISPATCH_XWIDE()
+    }
 
     MOTH_BEGIN_INSTR(LoadConst)
         accumulator = constant(function, index);

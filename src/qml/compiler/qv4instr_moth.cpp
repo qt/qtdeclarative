@@ -92,7 +92,12 @@ static QString toString(QV4::ReturnedValue v)
         QDebug d = qDebug(); \
         d.noquote(); \
         d.nospace(); \
-        d << alignedLineNumber(line) << alignedNumber(int(code - start)).constData() << ":    " << #instr << " ";
+        d << alignedLineNumber(line) << alignedNumber(codeOffset).constData() << ":    " << #instr; \
+        switch(mode) { \
+            case Normal: d << " "; break; \
+            case Wide: d << ".Wide "; break; \
+            case XWide: d << ".XWide "; break; \
+        }
 
 #define MOTH_END_INSTR(instr) \
         continue; \
@@ -114,13 +119,7 @@ void dumpConstantTable(const Value *constants, uint count)
 void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int startLine, const QVector<int> &lineNumberMapping)
 {
 
-#ifdef MOTH_THREADED_INTERPRETER
-#define MOTH_INSTR_ADDR(I) &&op_int_##I,
-    static void *jumpTable[] = {
-        FOR_EACH_MOTH_INSTR(MOTH_INSTR_ADDR)
-    };
-#undef MOTH_INSTR_ADDR
-#endif
+    MOTH_JUMP_TABLE;
 
     int lastLine = -1;
     const char *start = code;
@@ -131,16 +130,30 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int star
             lastLine = line;
         else
             line = -1;
+        enum Mode {
+            Normal,
+            Wide,
+            XWide
+        } mode = Normal;
+
+        int codeOffset = (code - start);
+
         MOTH_DISPATCH()
 
         MOTH_BEGIN_INSTR(Nop)
         MOTH_END_INSTR(Nop)
 
-        MOTH_BEGIN_INSTR(Wide)
-        MOTH_END_INSTR(Wide)
+        {
+            INSTR_Wide(MOTH_DECODE) \
+            mode = Wide;
+            MOTH_DISPATCH_WIDE();
+        }
 
-        MOTH_BEGIN_INSTR(XWide)
-        MOTH_END_INSTR(XWide)
+        {
+            INSTR_XWide(MOTH_DECODE) \
+            mode = XWide;
+            MOTH_DISPATCH_XWIDE();
+        }
 
         MOTH_BEGIN_INSTR(LoadReg)
             d << StackSlot::createRegister(reg).dump(nFormals);
