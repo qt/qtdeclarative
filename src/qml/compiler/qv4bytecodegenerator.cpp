@@ -67,9 +67,23 @@ int BytecodeGenerator::newRegisterArray(int n)
     return t;
 }
 
+void BytecodeGenerator::compressInstructions()
+{
+    for (auto &i : instructions) {
+        Instr instr = i.instr;
+        i.packed[0] = static_cast<char>(i.type);
+        memcpy(i.packed + 1, reinterpret_cast<char *>(&instr), i.size);
+        ++i.size;
+        if (i.offsetForJump != -1)
+            ++i.offsetForJump;
+    }
+}
+
 void BytecodeGenerator::finalize(Compiler::Context *context)
 {
     QByteArray code;
+
+    compressInstructions();
 
     // content
     QVector<int> instructionOffsets;
@@ -85,7 +99,7 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
             }
         }
         instructionOffsets.append(code.size());
-        code.append(reinterpret_cast<const char *>(&i.instr), i.size);
+        code.append(i.packed, i.size);
     }
 
     // resolve jumps

@@ -148,9 +148,8 @@ public:
     void addInstruction(const InstrData<InstrT> &data)
     {
         Instr genericInstr;
-        genericInstr.Nop.instructionType = InstrT;
-        InstrMeta<InstrT>::setDataNoCommon(genericInstr, data);
-        addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr);
+        InstrMeta<InstrT>::setData(genericInstr, data);
+        addInstructionHelper(Moth::Instr::Type(InstrT), InstrMeta<InstrT>::Size, genericInstr);
     }
 
     Q_REQUIRED_RESULT Jump jump()
@@ -228,9 +227,8 @@ public:
     Jump addJumpInstruction(const InstrData<InstrT> &data)
     {
         Instr genericInstr;
-        genericInstr.Nop.instructionType = InstrT;
-        InstrMeta<InstrT>::setDataNoCommon(genericInstr, data);
-        return Jump(this, addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr, offsetof(InstrData<InstrT>, offset)));
+        InstrMeta<InstrT>::setData(genericInstr, data);
+        return Jump(this, addInstructionHelper(Moth::Instr::Type(InstrT), InstrMeta<InstrT>::Size, genericInstr, offsetof(InstrData<InstrT>, offset)));
     }
 
 private:
@@ -238,18 +236,24 @@ private:
     friend struct Label;
     friend struct ExceptionHandler;
 
-    int addInstructionHelper(uint size, const Instr &i, int offsetOfOffset = -1) {
+    int addInstructionHelper(Moth::Instr::Type type, uint size, const Instr &i, int offsetOfOffset = -1) {
         int pos = instructions.size();
-        instructions.append({size, currentLine, offsetOfOffset, -1, i});
+        instructions.append({type, size, 0, currentLine, offsetOfOffset, -1, { i } });
         return pos;
     }
+    void compressInstructions();
 
     struct I {
+        Moth::Instr::Type type;
         uint size;
+        uint position;
         int line;
         int offsetForJump;
         int linkedLabel;
-        Instr instr;
+        union {
+            Instr instr;
+            char packed[sizeof(Instr) + 2]; // 2 for instruction and prefix
+        };
     };
 
     QVector<I> instructions;

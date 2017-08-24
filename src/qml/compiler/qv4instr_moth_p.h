@@ -302,8 +302,6 @@ QT_BEGIN_NAMESPACE
 
 #define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
 
-#define MOTH_INSTR_HEADER int instructionType;
-
 #define MOTH_INSTR_ENUM(I)  I,
 #define MOTH_INSTR_SIZE(I) ((sizeof(QV4::Moth::Instr::instr_##I) + MOTH_INSTR_ALIGN_MASK) & ~MOTH_INSTR_ALIGN_MASK)
 
@@ -335,7 +333,6 @@ QT_BEGIN_NAMESPACE
     INSTR_##instr(MOTH_EMIT_STRUCT)
 #define MOTH_EMIT_STRUCT_INSTRUCTION(name, nargs, ...) \
     struct instr_##name { \
-        MOTH_INSTR_HEADER \
         MOTH_DEFINE_ARGS(nargs, __VA_ARGS__) \
     };
 
@@ -373,8 +370,8 @@ QT_BEGIN_NAMESPACE
         MOTH_DECODE_ARG(arg4, type, 3);
 
 #define MOTH_DISPATCH() \
-    int instr = *reinterpret_cast<const int *>(code); \
-    code += 4; \
+    int instr = *code; \
+    ++code; \
     goto *jumpTable[instr];
 
 namespace QV4 {
@@ -455,11 +452,10 @@ QT_WARNING_DISABLE_GCC("-Wuninitialized")
         enum { Size = MOTH_INSTR_SIZE(I) }; \
         typedef Instr::instr_##I DataType; \
         static const DataType &data(const Instr &instr) { return instr.I; } \
-        static void setData(Instr &instr, const DataType &v) { instr.I = v; } \
-        static void setDataNoCommon(Instr &instr, const DataType &v) \
-        { memcpy(reinterpret_cast<char *>(&instr.I) + sizeof(Instr::instr_Nop), \
-                 reinterpret_cast<const char *>(&v) + sizeof(Instr::instr_Nop), \
-                 Size - sizeof(Instr::instr_Nop)); } \
+        static void setData(Instr &instr, const DataType &v) \
+        { memcpy(reinterpret_cast<char *>(&instr.I), \
+                 reinterpret_cast<const char *>(&v), \
+                 Size); } \
     };
 FOR_EACH_MOTH_INSTR(MOTH_INSTR_META_TEMPLATE);
 #undef MOTH_INSTR_META_TEMPLATE
