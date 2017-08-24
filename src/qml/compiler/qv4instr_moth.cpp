@@ -86,7 +86,7 @@ static QString toString(QV4::ReturnedValue v)
 template<typename T>
 size_t absoluteInstructionOffset(const char *codeStart, const T &instr)
 {
-    return reinterpret_cast<const char *>(&instr) - codeStart + offsetof(T, offset) + instr.offset;
+    return reinterpret_cast<const char *>(&instr) - codeStart + sizeof(T) + instr.offset;
 }
 
 #define MOTH_BEGIN_INSTR(I) \
@@ -126,7 +126,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int star
             lastLine = line;
         else
             line = -1;
-        switch (genericInstr->Common.instructionType) {
+        switch (Instr::Type(genericInstr->Common.instructionType)) {
 
         MOTH_BEGIN_INSTR(LoadReg)
             d << StackSlot::createRegister(instr.reg).dump(nFormals);

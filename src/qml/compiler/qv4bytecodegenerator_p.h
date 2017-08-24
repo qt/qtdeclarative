@@ -149,7 +149,7 @@ public:
     void addInstruction(const InstrData<InstrT> &data)
     {
         Instr genericInstr;
-        genericInstr.Common.instructionType = static_cast<Instr::Type>(InstrT);
+        genericInstr.Common.instructionType = InstrT;
         InstrMeta<InstrT>::setDataNoCommon(genericInstr, data);
         addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr);
     }
@@ -229,7 +229,7 @@ public:
     Jump addJumpInstruction(const InstrData<InstrT> &data)
     {
         Instr genericInstr;
-        genericInstr.Common.instructionType = static_cast<Instr::Type>(InstrT);
+        genericInstr.Common.instructionType = InstrT;
         InstrMeta<InstrT>::setDataNoCommon(genericInstr, data);
         return Jump(this, addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr), offsetof(InstrData<InstrT>, offset));
     }

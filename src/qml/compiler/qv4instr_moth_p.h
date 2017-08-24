@@ -297,7 +297,7 @@ QT_BEGIN_NAMESPACE
 
 #define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
 
-#define MOTH_INSTR_HEADER union { Instr::Type instructionType; quint64 _dummy; };
+#define MOTH_INSTR_HEADER int instructionType;
 
 #define MOTH_INSTR_ENUM(I)  I,
 #define MOTH_INSTR_SIZE(I) ((sizeof(QV4::Moth::Instr::instr_##I) + MOTH_INSTR_ALIGN_MASK) & ~MOTH_INSTR_ALIGN_MASK)
@@ -339,6 +339,38 @@ QT_BEGIN_NAMESPACE
 #define MOTH_EMIT_INSTR_MEMBER_INSTRUCTION(name, nargs, ...) \
     instr_##name name;
 
+
+#define MOTH_DECODE_ARG(arg, type, offset) \
+    arg = reinterpret_cast<const type *>(code)[offset]
+#define MOTH_ADJUST_CODE(type, nargs) \
+    code += nargs*sizeof(type)
+
+#define MOTH_DECODE_INSTRUCTION(name, nargs, ...) \
+        MOTH_DEFINE_ARGS(nargs, __VA_ARGS__) \
+    op_int_##name: \
+        MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
+        MOTH_ADJUST_CODE(int, nargs); \
+
+#define MOTH_DECODE_ARGS(name, type, nargs, ...) \
+    MOTH_DECODE_ARGS##nargs(name, type, __VA_ARGS__)
+
+#define MOTH_DECODE_ARGS0(name, type, dummy)
+#define MOTH_DECODE_ARGS1(name, type, arg) \
+        MOTH_DECODE_ARG(arg, type, 0);
+#define MOTH_DECODE_ARGS2(name, type, arg1, arg2) \
+        MOTH_DECODE_ARGS1(name, type, arg1); \
+        MOTH_DECODE_ARG(arg2, type, 1);
+#define MOTH_DECODE_ARGS3(name, type, arg1, arg2, arg3) \
+        MOTH_DECODE_ARGS2(name, type, arg1, arg2); \
+        MOTH_DECODE_ARG(arg3, type, 2);
+#define MOTH_DECODE_ARGS4(name, type, arg1, arg2, arg3, arg4) \
+        MOTH_DECODE_ARGS3(name, type, arg1, arg2, arg3); \
+        MOTH_DECODE_ARG(arg4, type, 3);
+
+#define MOTH_DISPATCH() \
+    int instr = *reinterpret_cast<const int *>(code); \
+    code += 4; \
+    goto *jumpTable[instr];
 
 namespace QV4 {
 namespace Moth {
