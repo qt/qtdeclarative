@@ -339,12 +339,12 @@ static struct InstrCount {
 
 #endif
 
-#define STACK_VALUE(temp) stack[temp.stackSlot()]
+#define STACK_VALUE(temp) stack[temp]
 #define STORE_STACK_VALUE(temp, value) { \
     QV4::ReturnedValue tmp = (value); \
     if (engine->hasException) \
         goto catchException; \
-    stack[temp.index] = tmp; \
+    stack[temp] = tmp; \
 }
 
 #define STORE_ACCUMULATOR(value) { \
@@ -564,6 +564,9 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 #else
         switch (genericInstr->Common.instructionType) {
 #endif
+    MOTH_BEGIN_INSTR(Common)
+            ; // nop
+    MOTH_END_INSTR(Common)
 
     MOTH_BEGIN_INSTR(LoadConst)
         accumulator = constant(function, instr.index);
@@ -730,46 +733,46 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(CallValue)
         STORE_IP();
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         STORE_ACCUMULATOR(Runtime::method_callValue(engine, accumulator, callData));
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
         STORE_IP();
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->thisObject = STACK_VALUE(instr.base);
         STORE_ACCUMULATOR(Runtime::method_callProperty(engine, instr.name, callData));
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallPropertyLookup)
         STORE_IP();
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->thisObject = STACK_VALUE(instr.base);
         STORE_ACCUMULATOR(Runtime::method_callPropertyLookup(engine, instr.lookupIndex, callData));
     MOTH_END_INSTR(CallPropertyLookup)
 
     MOTH_BEGIN_INSTR(CallElement)
         STORE_IP();
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         callData->thisObject = STACK_VALUE(instr.base);
         STORE_ACCUMULATOR(Runtime::method_callElement(engine, STACK_VALUE(instr.index), callData));
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallName)
         STORE_IP();
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         STORE_ACCUMULATOR(Runtime::method_callName(engine, instr.name, callData));
     MOTH_END_INSTR(CallName)
 
     MOTH_BEGIN_INSTR(CallPossiblyDirectEval)
         STORE_IP();
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         STORE_ACCUMULATOR(Runtime::method_callPossiblyDirectEval(engine, callData));
     MOTH_END_INSTR(CallPossiblyDirectEval)
 
     MOTH_BEGIN_INSTR(CallGlobalLookup)
         STORE_IP();
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         STORE_ACCUMULATOR(Runtime::method_callGlobalLookup(engine, instr.index, callData));
     MOTH_END_INSTR(CallGlobalLookup)
 
@@ -874,12 +877,12 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(DeclareVar)
 
     MOTH_BEGIN_INSTR(DefineArray)
-        QV4::Value *args = stack + instr.args.stackSlot();
+        QV4::Value *args = stack + instr.args;
         STORE_ACCUMULATOR(Runtime::method_arrayLiteral(engine, args, instr.argc));
     MOTH_END_INSTR(DefineArray)
 
     MOTH_BEGIN_INSTR(DefineObjectLiteral)
-        QV4::Value *args = stack + instr.args.stackSlot();
+        QV4::Value *args = stack + instr.args;
         STORE_ACCUMULATOR(Runtime::method_objectLiteral(engine, args, instr.internalClassId, instr.arrayValueCount, instr.arrayGetterSetterCountAndFlags));
     MOTH_END_INSTR(DefineObjectLiteral)
 
@@ -905,7 +908,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(Construct)
         STORE_IP();
-        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData.stackSlot());
+        QV4::CallData *callData = reinterpret_cast<QV4::CallData *>(stack + instr.callData);
         STORE_ACCUMULATOR(Runtime::method_construct(engine, STACK_VALUE(instr.func), callData));
     MOTH_END_INSTR(Construct)
 
