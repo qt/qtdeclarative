@@ -446,7 +446,7 @@ union Instr
     };
     struct instr_setExceptionHandler {
         MOTH_INSTR_HEADER
-        qptrdiff offset;
+        int offset;
     };
     struct instr_throwException {
         MOTH_INSTR_HEADER
@@ -533,83 +533,83 @@ union Instr
     };
     struct instr_jump {
         MOTH_INSTR_HEADER
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_jumpEq {
         MOTH_INSTR_HEADER
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_jumpNe {
         MOTH_INSTR_HEADER
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_cmpJmpEqNull {
         MOTH_INSTR_HEADER
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_cmpJmpNeNull {
         MOTH_INSTR_HEADER
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_cmpJmpEqInt {
         MOTH_INSTR_HEADER
         int lhs;
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_cmpJmpNeInt {
         MOTH_INSTR_HEADER
         int lhs;
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_cmpJmpEq {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_cmpJmpNe {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_cmpJmpGt {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_cmpJmpGe {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_cmpJmpLt {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_cmpJmpLe {
         MOTH_INSTR_HEADER
         StackSlot lhs;
-        ptrdiff_t offset;
+        int offset;
     };
     struct instr_jumpStrictEqual {
         MOTH_INSTR_HEADER
-        ptrdiff_t offset;
+        int offset;
         StackSlot lhs;
     };
     struct instr_jumpStrictNotEqual {
         MOTH_INSTR_HEADER
-        ptrdiff_t offset;
+        int offset;
         StackSlot lhs;
     };
     struct instr_jumpStrictEqualStackSlotInt {
         MOTH_INSTR_HEADER
-        ptrdiff_t offset;
+        int offset;
         StackSlot lhs;
         int rhs;
     };
     struct instr_jumpStrictNotEqualStackSlotInt {
         MOTH_INSTR_HEADER
-        ptrdiff_t offset;
+        int offset;
         StackSlot lhs;
         int rhs;
     };

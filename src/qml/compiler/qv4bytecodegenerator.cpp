@@ -97,9 +97,9 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
         int offset = instructionOffsets.at(j.instructionIndex) + j.offset;
 //        qDebug() << "offset data is at" << offset;
         char *c = code.data() + offset;
-        ptrdiff_t linkedInstructionOffset = instructionOffsets.at(linkedInstruction) - offset;
+        int linkedInstructionOffset = instructionOffsets.at(linkedInstruction) - offset;
 //        qDebug() << "linked instruction" << linkedInstruction << "at " << instructionOffsets.at(linkedInstruction);
-        memcpy(c, &linkedInstructionOffset, sizeof(ptrdiff_t));
+        memcpy(c, &linkedInstructionOffset, sizeof(int));
     }
 
     context->code = code;
