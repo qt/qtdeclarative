@@ -341,6 +341,11 @@ QT_BEGIN_NAMESPACE
 #define MOTH_EMIT_INSTR_MEMBER_INSTRUCTION(name, nargs, ...) \
     instr_##name name;
 
+#define MOTH_COLLECT_NARGS(instr) \
+    INSTR_##instr(MOTH_COLLECT_ARG_COUNT)
+#define MOTH_COLLECT_ARG_COUNT_INSTRUCTION(name, nargs, ...) \
+    nargs,
+
 /* collect jump labels */
 #define COLLECT_LABELS(instr) \
     INSTR_##instr(GET_LABEL)
@@ -474,6 +479,8 @@ union Instr
     enum class Type {
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_ENUM)
     };
+
+    static const int argumentCount[];
 
     FOR_EACH_MOTH_INSTR(MOTH_EMIT_STRUCTS)
 

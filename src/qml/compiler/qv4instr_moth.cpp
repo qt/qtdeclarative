@@ -107,6 +107,11 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Moth {
 
+const int Instr::argumentCount[] = {
+    FOR_EACH_MOTH_INSTR(MOTH_COLLECT_NARGS)
+};
+
+
 void dumpConstantTable(const Value *constants, uint count)
 {
     QDebug d = qDebug();

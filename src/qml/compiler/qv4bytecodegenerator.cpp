@@ -67,16 +67,67 @@ int BytecodeGenerator::newRegisterArray(int n)
     return t;
 }
 
+void BytecodeGenerator::packInstruction(I &i)
+{
+    int instructionsAsInts[sizeof(Instr)/sizeof(int)];
+    int nMembers = Moth::Instr::argumentCount[static_cast<int>(i.type)];
+    memcpy(instructionsAsInts, &i.instr, nMembers*sizeof(int));
+    enum {
+        Normal,
+        Wide,
+        XWide
+    } width = Normal;
+    for (int n = 0; n < nMembers; ++n) {
+        if (width == Normal && (static_cast<char>(instructionsAsInts[n]) != instructionsAsInts[n]))
+            width = Wide;
+        if (width == Wide && (static_cast<short>(instructionsAsInts[n]) != instructionsAsInts[n]))
+            width = XWide;
+    }
+    char *code = i.packed;
+    switch (width) {
+    case Normal:
+        *code++ = static_cast<char>(i.type);
+        for (int n = 0; n < nMembers; ++n) {
+            char v = static_cast<char>(instructionsAsInts[n]);
+            memcpy(code, &v, 1);
+            code += 1;
+        }
+        break;
+    case Wide:
+        *code++ = static_cast<char>(Instr::Type::Wide);
+        *code++ = static_cast<char>(i.type);
+        for (int n = 0; n < nMembers; ++n) {
+            short v = static_cast<short>(instructionsAsInts[n]);
+            memcpy(code, &v, 2);
+            code += 2;
+        }
+        break;
+    case XWide:
+        *code++ = static_cast<char>(Instr::Type::XWide);
+        *code++ = static_cast<char>(i.type);
+        for (int n = 0; n < nMembers; ++n) {
+            int v = instructionsAsInts[n];
+            memcpy(code, &v, 4);
+            code += 4;
+        }
+        break;
+    }
+    i.size = code - i.packed;
+}
+
 void BytecodeGenerator::compressInstructions()
 {
+    // first round: compress all non jump instructions
+    int position = 0;
     for (auto &i : instructions) {
-        Instr instr = i.instr;
-        i.packed[0] = static_cast<char>(Instr::Type::XWide);
-        i.packed[1] = static_cast<char>(i.type);
-        memcpy(i.packed + 2, reinterpret_cast<char *>(&instr), i.size);
-        i.size += 2;
-        if (i.offsetForJump != -1)
+        if (i.offsetForJump != -1) {
+            int dummy = INT_MAX;
+            memcpy(reinterpret_cast<char *>(&i.instr) + i.offsetForJump, &dummy, 4);
             i.offsetForJump += 2;
+        }
+        i.position = position;
+        packInstruction(i);
+        position += i.size;
     }
 }
 
