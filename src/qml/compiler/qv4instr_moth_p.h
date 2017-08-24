@@ -70,7 +70,9 @@ QT_BEGIN_NAMESPACE
 #define INSTRUCTION(op, name, nargs, ...) \
     op##_INSTRUCTION(name, nargs, __VA_ARGS__)
 
-#define INSTR_Common(op) INSTRUCTION(op, Common, 0)
+#define INSTR_Nop(op) INSTRUCTION(op, Nop, 0)
+#define INSTR_Wide(op) INSTRUCTION(op, Wide, 0)
+#define INSTR_XWide(op) INSTRUCTION(op, XWide, 0)
 #define INSTR_Ret(op) INSTRUCTION(op, Ret, 0)
 #define INSTR_Debug(op) INSTRUCTION(op, Debug, 0)
 #define INSTR_LoadConst(op) INSTRUCTION(op, LoadConst, 1, index)
@@ -183,7 +185,9 @@ QT_BEGIN_NAMESPACE
 
 
 #define FOR_EACH_MOTH_INSTR(F) \
-    F(Common) \
+    F(Nop) \
+    F(Wide) \
+    F(XWide) \
     F(Ret) \
     F(Debug) \
     F(LoadConst) \
@@ -452,9 +456,9 @@ QT_WARNING_DISABLE_GCC("-Wuninitialized")
         static const DataType &data(const Instr &instr) { return instr.I; } \
         static void setData(Instr &instr, const DataType &v) { instr.I = v; } \
         static void setDataNoCommon(Instr &instr, const DataType &v) \
-        { memcpy(reinterpret_cast<char *>(&instr.I) + sizeof(Instr::instr_Common), \
-                 reinterpret_cast<const char *>(&v) + sizeof(Instr::instr_Common), \
-                 Size - sizeof(Instr::instr_Common)); } \
+        { memcpy(reinterpret_cast<char *>(&instr.I) + sizeof(Instr::instr_Nop), \
+                 reinterpret_cast<const char *>(&v) + sizeof(Instr::instr_Nop), \
+                 Size - sizeof(Instr::instr_Nop)); } \
     };
 FOR_EACH_MOTH_INSTR(MOTH_INSTR_META_TEMPLATE);
 #undef MOTH_INSTR_META_TEMPLATE

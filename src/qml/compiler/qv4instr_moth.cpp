@@ -126,7 +126,16 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int star
             lastLine = line;
         else
             line = -1;
-        switch (Instr::Type(genericInstr->Common.instructionType)) {
+        switch (Instr::Type(genericInstr->Nop.instructionType)) {
+
+        MOTH_BEGIN_INSTR(Nop)
+        MOTH_END_INSTR(Nop)
+
+        MOTH_BEGIN_INSTR(Wide)
+        MOTH_END_INSTR(Wide)
+
+        MOTH_BEGIN_INSTR(XWide)
+        MOTH_END_INSTR(XWide)
 
         MOTH_BEGIN_INSTR(LoadReg)
             d << StackSlot::createRegister(instr.reg).dump(nFormals);
@@ -543,9 +552,6 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int star
         MOTH_BEGIN_INSTR(LoadQmlSingleton)
             d << instr.name;
         MOTH_END_INSTR(LoadQmlSingleton)
-
-        default:
-            Q_UNREACHABLE();
         }
     }
 }

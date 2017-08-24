@@ -560,9 +560,17 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_DISPATCH()
 
     for (;;) {
-    MOTH_BEGIN_INSTR(Common)
+    MOTH_BEGIN_INSTR(Nop)
             ; // nop
-    MOTH_END_INSTR(Common)
+    MOTH_END_INSTR(Nop)
+
+    MOTH_BEGIN_INSTR(Wide)
+            ; // nop
+    MOTH_END_INSTR(Wide)
+
+    MOTH_BEGIN_INSTR(XWide)
+            ; // nop
+    MOTH_END_INSTR(XWide)
 
     MOTH_BEGIN_INSTR(LoadConst)
         accumulator = constant(function, index);
