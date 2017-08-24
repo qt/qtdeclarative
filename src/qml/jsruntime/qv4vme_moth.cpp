@@ -308,8 +308,8 @@ static struct InstrCount {
 #endif // COUNT_INSTRUCTIONS
 
 #define MOTH_BEGIN_INSTR_COMMON(I) { \
-    const InstrMeta<int(Instr::I)>::DataType &instr = InstrMeta<int(Instr::I)>::data(*genericInstr); \
-    code += InstrMeta<int(Instr::I)>::Size; \
+    const InstrMeta<int(Instr::Type::I)>::DataType &instr = InstrMeta<int(Instr::Type::I)>::data(*genericInstr); \
+    code += InstrMeta<int(Instr::Type::I)>::Size; \
     Q_UNUSED(instr);
 
 #ifdef MOTH_THREADED_INTERPRETER
@@ -317,7 +317,7 @@ static struct InstrCount {
 
 #ifdef COUNT_INSTRUCTIONS
 #  define MOTH_BEGIN_INSTR(I) op_##I: \
-    instrCount.hit(Instr::I); \
+    instrCount.hit(Instr::Type::I); \
     MOTH_BEGIN_INSTR_COMMON(I)
 #else // !COUNT_INSTRUCTIONS
 #  define MOTH_BEGIN_INSTR(I) op_##I: \
@@ -326,12 +326,12 @@ static struct InstrCount {
 
 #  define MOTH_END_INSTR(I) } \
     genericInstr = reinterpret_cast<const Instr *>(code); \
-    goto *jumpTable[genericInstr->common.instructionType]; \
+    goto *jumpTable[(int)genericInstr->Common.instructionType]; \
 
 #else
 
 #  define MOTH_BEGIN_INSTR(I) \
-    case Instr::I: \
+    case Instr::Type::I: \
     MOTH_BEGIN_INSTR_COMMON(I)
 
 #  define MOTH_END_INSTR(I) } \
@@ -520,7 +520,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     qt_v4ResolvePendingBreakpointsHook();
 
 #ifdef MOTH_THREADED_INTERPRETER
-#define MOTH_INSTR_ADDR(I, FMT) &&op_##I,
+#define MOTH_INSTR_ADDR(I) &&op_##I,
     static void *jumpTable[] = {
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_ADDR)
     };
@@ -560,9 +560,9 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     for (;;) {
         const Instr *genericInstr = reinterpret_cast<const Instr *>(code);
 #ifdef MOTH_THREADED_INTERPRETER
-        goto *jumpTable[genericInstr->common.instructionType];
+        goto *jumpTable[(int)genericInstr->Common.instructionType];
 #else
-        switch (genericInstr->common.instructionType) {
+        switch (genericInstr->Common.instructionType) {
 #endif
 
     MOTH_BEGIN_INSTR(LoadConst)

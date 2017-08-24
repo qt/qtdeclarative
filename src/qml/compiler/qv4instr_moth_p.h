@@ -64,116 +64,116 @@ QT_BEGIN_NAMESPACE
 #define MOTH_DEBUG_INSTR(F)
 #else
 #define MOTH_DEBUG_INSTR(F) \
-    F(Debug, debug)
+    F(Debug)
 #endif
 
 #define FOR_EACH_MOTH_INSTR(F) \
-    F(Ret, ret) \
+    F(Ret) \
     MOTH_DEBUG_INSTR(F) \
-    F(LoadConst, loadConst) \
-    F(LoadZero, loadZero) \
-    F(LoadTrue, loadTrue) \
-    F(LoadFalse, loadFalse) \
-    F(LoadNull, loadNull) \
-    F(LoadUndefined, loadUndefined) \
-    F(LoadInt, loadInt) \
-    F(MoveConst, moveConst) \
-    F(LoadReg, loadReg) \
-    F(StoreReg, storeReg) \
-    F(MoveReg, moveReg) \
-    F(LoadScopedLocal, loadScopedLocal) \
-    F(StoreScopedLocal, storeScopedLocal) \
-    F(LoadRuntimeString, loadRuntimeString) \
-    F(LoadRegExp, loadRegExp) \
-    F(LoadClosure, loadClosure) \
-    F(LoadName, loadName) \
-    F(LoadGlobalLookup, loadGlobalLookup) \
-    F(StoreNameSloppy, storeNameSloppy) \
-    F(StoreNameStrict, storeNameStrict) \
-    F(LoadElement, loadElement) \
-    F(LoadElementA, loadElementA) \
-    F(StoreElement, storeElement) \
-    F(LoadProperty, loadProperty) \
-    F(LoadPropertyA, loadPropertyA) \
-    F(GetLookup, getLookup) \
-    F(GetLookupA, getLookupA) \
-    F(StoreProperty, storeProperty) \
-    F(SetLookup, setLookup) \
-    F(StoreScopeObjectProperty, storeScopeObjectProperty) \
-    F(StoreContextObjectProperty, storeContextObjectProperty) \
-    F(LoadScopeObjectProperty, loadScopeObjectProperty) \
-    F(LoadContextObjectProperty, loadContextObjectProperty) \
-    F(LoadIdObject, loadIdObject) \
-    F(CallValue, callValue) \
-    F(CallProperty, callProperty) \
-    F(CallPropertyLookup, callPropertyLookup) \
-    F(CallElement, callElement) \
-    F(CallName, callName) \
-    F(CallPossiblyDirectEval, callPossiblyDirectEval) \
-    F(CallGlobalLookup, callGlobalLookup) \
-    F(SetExceptionHandler, setExceptionHandler) \
-    F(ThrowException, throwException) \
-    F(GetException, getException) \
-    F(SetException, setException) \
-    F(UnwindException, unwindException) \
-    F(PushCatchContext, pushCatchContext) \
-    F(PushWithContext, pushWithContext) \
-    F(PopContext, popContext) \
-    F(ForeachIteratorObject, foreachIteratorObject) \
-    F(ForeachNextPropertyName, foreachNextPropertyName) \
-    F(DeleteMember, deleteMember) \
-    F(DeleteSubscript, deleteSubscript) \
-    F(DeleteName, deleteName) \
-    F(TypeofName, typeofName) \
-    F(TypeofValue, typeofValue) \
-    F(DeclareVar, declareVar) \
-    F(DefineArray, defineArray) \
-    F(DefineObjectLiteral, defineObjectLiteral) \
-    F(CreateMappedArgumentsObject, createMappedArgumentsObject) \
-    F(CreateUnmappedArgumentsObject, createUnmappedArgumentsObject) \
-    F(ConvertThisToObject, convertThisToObject) \
-    F(Construct, construct) \
-    F(Jump, jump) \
-    F(JumpEq, jumpEq) \
-    F(JumpNe, jumpNe) \
-    F(CmpJmpEqNull, cmpJmpEqNull) \
-    F(CmpJmpNeNull, cmpJmpNeNull) \
-    F(CmpJmpEqInt, cmpJmpEqInt) \
-    F(CmpJmpNeInt, cmpJmpNeInt) \
-    F(CmpJmpEq, cmpJmpEq) \
-    F(CmpJmpNe, cmpJmpNe) \
-    F(CmpJmpGt, cmpJmpGt) \
-    F(CmpJmpGe, cmpJmpGe) \
-    F(CmpJmpLt, cmpJmpLt) \
-    F(CmpJmpLe, cmpJmpLe) \
-    F(JumpStrictEqual, jumpStrictEqual) \
-    F(JumpStrictNotEqual, jumpStrictNotEqual) \
-    F(JumpStrictEqualStackSlotInt, jumpStrictEqualStackSlotInt) \
-    F(JumpStrictNotEqualStackSlotInt, jumpStrictNotEqualStackSlotInt) \
-    F(UNot, unot) \
-    F(UPlus, uplus) \
-    F(UMinus, uminus) \
-    F(UCompl, ucompl) \
-    F(Increment, increment) \
-    F(Decrement, decrement) \
-    F(Binop, binop) \
-    F(Add, add) \
-    F(BitAnd, bitAnd) \
-    F(BitOr, bitOr) \
-    F(BitXor, bitXor) \
-    F(Shr, shr) \
-    F(Shl, shl) \
-    F(BitAndConst, bitAndConst) \
-    F(BitOrConst, bitOrConst) \
-    F(BitXorConst, bitXorConst) \
-    F(ShrConst, shrConst) \
-    F(ShlConst, shlConst) \
-    F(Mul, mul) \
-    F(Sub, sub) \
-    F(BinopContext, binopContext) \
-    F(LoadQmlContext, loadQmlContext) \
-    F(LoadQmlImportedScripts, loadQmlImportedScripts) \
-    F(LoadQmlSingleton, loadQmlSingleton)
+    F(LoadConst) \
+    F(LoadZero) \
+    F(LoadTrue) \
+    F(LoadFalse) \
+    F(LoadNull) \
+    F(LoadUndefined) \
+    F(LoadInt) \
+    F(MoveConst) \
+    F(LoadReg) \
+    F(StoreReg) \
+    F(MoveReg) \
+    F(LoadScopedLocal) \
+    F(StoreScopedLocal) \
+    F(LoadRuntimeString) \
+    F(LoadRegExp) \
+    F(LoadClosure) \
+    F(LoadName) \
+    F(LoadGlobalLookup) \
+    F(StoreNameSloppy) \
+    F(StoreNameStrict) \
+    F(LoadElement) \
+    F(LoadElementA) \
+    F(StoreElement) \
+    F(LoadProperty) \
+    F(LoadPropertyA) \
+    F(GetLookup) \
+    F(GetLookupA) \
+    F(StoreProperty) \
+    F(SetLookup) \
+    F(StoreScopeObjectProperty) \
+    F(StoreContextObjectProperty) \
+    F(LoadScopeObjectProperty) \
+    F(LoadContextObjectProperty) \
+    F(LoadIdObject) \
+    F(CallValue) \
+    F(CallProperty) \
+    F(CallPropertyLookup) \
+    F(CallElement) \
+    F(CallName) \
+    F(CallPossiblyDirectEval) \
+    F(CallGlobalLookup) \
+    F(SetExceptionHandler) \
+    F(ThrowException) \
+    F(GetException) \
+    F(SetException) \
+    F(UnwindException) \
+    F(PushCatchContext) \
+    F(PushWithContext) \
+    F(PopContext) \
+    F(ForeachIteratorObject) \
+    F(ForeachNextPropertyName) \
+    F(DeleteMember) \
+    F(DeleteSubscript) \
+    F(DeleteName) \
+    F(TypeofName) \
+    F(TypeofValue) \
+    F(DeclareVar) \
+    F(DefineArray) \
+    F(DefineObjectLiteral) \
+    F(CreateMappedArgumentsObject) \
+    F(CreateUnmappedArgumentsObject) \
+    F(ConvertThisToObject) \
+    F(Construct) \
+    F(Jump) \
+    F(JumpEq) \
+    F(JumpNe) \
+    F(CmpJmpEqNull) \
+    F(CmpJmpNeNull) \
+    F(CmpJmpEqInt) \
+    F(CmpJmpNeInt) \
+    F(CmpJmpEq) \
+    F(CmpJmpNe) \
+    F(CmpJmpGt) \
+    F(CmpJmpGe) \
+    F(CmpJmpLt) \
+    F(CmpJmpLe) \
+    F(JumpStrictEqual) \
+    F(JumpStrictNotEqual) \
+    F(JumpStrictEqualStackSlotInt) \
+    F(JumpStrictNotEqualStackSlotInt) \
+    F(UNot) \
+    F(UPlus) \
+    F(UMinus) \
+    F(UCompl) \
+    F(Increment) \
+    F(Decrement) \
+    F(Binop) \
+    F(Add) \
+    F(BitAnd) \
+    F(BitOr) \
+    F(BitXor) \
+    F(Shr) \
+    F(Shl) \
+    F(BitAndConst) \
+    F(BitOrConst) \
+    F(BitXorConst) \
+    F(ShrConst) \
+    F(ShlConst) \
+    F(Mul) \
+    F(Sub) \
+    F(BinopContext) \
+    F(LoadQmlContext) \
+    F(LoadQmlImportedScripts) \
+    F(LoadQmlSingleton)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -183,8 +183,8 @@ QT_BEGIN_NAMESPACE
 
 #define MOTH_INSTR_HEADER union { Instr::Type instructionType; quint64 _dummy; };
 
-#define MOTH_INSTR_ENUM(I, FMT)  I,
-#define MOTH_INSTR_SIZE(I, FMT) ((sizeof(QV4::Moth::Instr::instr_##FMT) + MOTH_INSTR_ALIGN_MASK) & ~MOTH_INSTR_ALIGN_MASK)
+#define MOTH_INSTR_ENUM(I)  I,
+#define MOTH_INSTR_SIZE(I) ((sizeof(QV4::Moth::Instr::instr_##I) + MOTH_INSTR_ALIGN_MASK) & ~MOTH_INSTR_ALIGN_MASK)
 
 
 namespace QV4 {
@@ -242,577 +242,577 @@ inline void dumpBytecode(const QByteArray &bytecode, int nLocals, int nFormals, 
 
 union Instr
 {
-    enum Type {
+    enum class Type {
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_ENUM)
         LastInstruction
     };
 
-    struct instr_common {
+    struct instr_Common {
         MOTH_INSTR_HEADER
     };
-    struct instr_ret {
+    struct instr_Ret {
         MOTH_INSTR_HEADER
     };
 
 #ifndef QT_NO_QML_DEBUGGING
-    struct instr_debug {
+    struct instr_Debug {
         MOTH_INSTR_HEADER
     };
 #endif // QT_NO_QML_DEBUGGING
 
-    struct instr_loadConst {
+    struct instr_LoadConst {
         MOTH_INSTR_HEADER
         int index;
     };
-    struct instr_loadZero {
+    struct instr_LoadZero {
         MOTH_INSTR_HEADER
     };
-    struct instr_loadTrue {
+    struct instr_LoadTrue {
         MOTH_INSTR_HEADER
     };
-    struct instr_loadFalse {
+    struct instr_LoadFalse {
         MOTH_INSTR_HEADER
     };
-    struct instr_loadNull {
+    struct instr_LoadNull {
         MOTH_INSTR_HEADER
     };
-    struct instr_loadUndefined {
+    struct instr_LoadUndefined {
         MOTH_INSTR_HEADER
     };
-    struct instr_loadInt {
+    struct instr_LoadInt {
         MOTH_INSTR_HEADER
         int value;
     };
-    struct instr_moveConst {
+    struct instr_MoveConst {
         MOTH_INSTR_HEADER
         int constIndex;
         StackSlot destTemp;
     };
-    struct instr_loadReg {
+    struct instr_LoadReg {
         MOTH_INSTR_HEADER
         StackSlot reg;
     };
-    struct instr_storeReg {
+    struct instr_StoreReg {
         MOTH_INSTR_HEADER
         StackSlot reg;
     };
-    struct instr_moveReg {
+    struct instr_MoveReg {
         MOTH_INSTR_HEADER
         StackSlot srcReg;
         StackSlot destReg;
     };
-    struct instr_loadScopedLocal {
+    struct instr_LoadScopedLocal {
         MOTH_INSTR_HEADER
         int scope;
         int index;
     };
-    struct instr_storeScopedLocal {
+    struct instr_StoreScopedLocal {
         MOTH_INSTR_HEADER
         int scope;
         int index;
     };
-    struct instr_loadRuntimeString {
+    struct instr_LoadRuntimeString {
         MOTH_INSTR_HEADER
         int stringId;
     };
-    struct instr_loadRegExp {
+    struct instr_LoadRegExp {
         MOTH_INSTR_HEADER
         int regExpId;
     };
-    struct instr_loadClosure {
+    struct instr_LoadClosure {
         MOTH_INSTR_HEADER
         int value;
     };
-    struct instr_loadName {
+    struct instr_LoadName {
         MOTH_INSTR_HEADER
         int name;
     };
-    struct instr_loadGlobalLookup {
+    struct instr_LoadGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
     };
-    struct instr_storeNameSloppy {
+    struct instr_StoreNameSloppy {
         MOTH_INSTR_HEADER
         int name;
     };
-    struct instr_storeNameStrict {
+    struct instr_StoreNameStrict {
         MOTH_INSTR_HEADER
         int name;
     };
-    struct instr_loadProperty {
+    struct instr_LoadProperty {
         MOTH_INSTR_HEADER
         int name;
         StackSlot base;
     };
-    struct instr_loadPropertyA {
+    struct instr_LoadPropertyA {
         MOTH_INSTR_HEADER
         int name;
     };
-    struct instr_getLookup {
+    struct instr_GetLookup {
         MOTH_INSTR_HEADER
         int index;
         StackSlot base;
     };
-    struct instr_getLookupA {
+    struct instr_GetLookupA {
         MOTH_INSTR_HEADER
         int index;
     };
-    struct instr_loadScopeObjectProperty {
+    struct instr_LoadScopeObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
         StackSlot base;
         bool captureRequired;
     };
-    struct instr_loadContextObjectProperty {
+    struct instr_LoadContextObjectProperty {
         MOTH_INSTR_HEADER
         int propertyIndex;
         StackSlot base;
         bool captureRequired;
     };
-    struct instr_loadIdObject {
+    struct instr_LoadIdObject {
         MOTH_INSTR_HEADER
         int index;
         StackSlot base;
     };
-    struct instr_storeProperty {
+    struct instr_StoreProperty {
         MOTH_INSTR_HEADER
         int name;
         StackSlot base;
     };
-    struct instr_setLookup {
+    struct instr_SetLookup {
         MOTH_INSTR_HEADER
         int index;
         StackSlot base;
     };
-    struct instr_storeScopeObjectProperty {
+    struct instr_StoreScopeObjectProperty {
         MOTH_INSTR_HEADER
         StackSlot base;
         int propertyIndex;
     };
-    struct instr_storeContextObjectProperty {
+    struct instr_StoreContextObjectProperty {
         MOTH_INSTR_HEADER
         StackSlot base;
         int propertyIndex;
     };
-    struct instr_loadElement {
+    struct instr_LoadElement {
         MOTH_INSTR_HEADER
         StackSlot base;
         StackSlot index;
     };
-    struct instr_loadElementA {
+    struct instr_LoadElementA {
         MOTH_INSTR_HEADER
         StackSlot base;
     };
-    struct instr_storeElement {
+    struct instr_StoreElement {
         MOTH_INSTR_HEADER
         StackSlot base;
         StackSlot index;
     };
-    struct instr_callValue {
+    struct instr_CallValue {
         MOTH_INSTR_HEADER
         StackSlot callData;
     };
-    struct instr_callProperty {
+    struct instr_CallProperty {
         MOTH_INSTR_HEADER
         int name;
         StackSlot callData;
         StackSlot base;
     };
-    struct instr_callPropertyLookup {
+    struct instr_CallPropertyLookup {
         MOTH_INSTR_HEADER
         int lookupIndex;
         StackSlot callData;
         StackSlot base;
     };
-    struct instr_callElement {
+    struct instr_CallElement {
         MOTH_INSTR_HEADER
         StackSlot base;
         StackSlot index;
         StackSlot callData;
     };
-    struct instr_callName {
+    struct instr_CallName {
         MOTH_INSTR_HEADER
         int name;
         StackSlot callData;
     };
-    struct instr_callPossiblyDirectEval {
+    struct instr_CallPossiblyDirectEval {
         MOTH_INSTR_HEADER
         StackSlot callData;
     };
-    struct instr_callGlobalLookup {
+    struct instr_CallGlobalLookup {
         MOTH_INSTR_HEADER
         int index;
         StackSlot callData;
     };
-    struct instr_setExceptionHandler {
+    struct instr_SetExceptionHandler {
         MOTH_INSTR_HEADER
         int offset;
     };
-    struct instr_throwException {
+    struct instr_ThrowException {
         MOTH_INSTR_HEADER
     };
-    struct instr_getException {
+    struct instr_GetException {
         MOTH_INSTR_HEADER
     };
-    struct instr_setException {
+    struct instr_SetException {
         MOTH_INSTR_HEADER
     };
-    struct instr_unwindException {
+    struct instr_UnwindException {
         MOTH_INSTR_HEADER
     };
-    struct instr_pushCatchContext {
+    struct instr_PushCatchContext {
         MOTH_INSTR_HEADER
         int name;
         StackSlot reg;
     };
-    struct instr_pushWithContext {
+    struct instr_PushWithContext {
         MOTH_INSTR_HEADER
         StackSlot reg;
     };
-    struct instr_popContext {
+    struct instr_PopContext {
         MOTH_INSTR_HEADER
         StackSlot reg;
     };
-    struct instr_foreachIteratorObject {
+    struct instr_ForeachIteratorObject {
         MOTH_INSTR_HEADER
     };
-    struct instr_foreachNextPropertyName {
+    struct instr_ForeachNextPropertyName {
         MOTH_INSTR_HEADER
     };
-    struct instr_deleteMember {
+    struct instr_DeleteMember {
         MOTH_INSTR_HEADER
         int member;
         StackSlot base;
     };
-    struct instr_deleteSubscript {
+    struct instr_DeleteSubscript {
         MOTH_INSTR_HEADER
         StackSlot base;
         StackSlot index;
     };
-    struct instr_deleteName {
+    struct instr_DeleteName {
         MOTH_INSTR_HEADER
         int name;
     };
-    struct instr_typeofName {
+    struct instr_TypeofName {
         MOTH_INSTR_HEADER
         int name;
     };
-    struct instr_typeofValue {
+    struct instr_TypeofValue {
         MOTH_INSTR_HEADER
     };
-    struct instr_declareVar {
+    struct instr_DeclareVar {
         MOTH_INSTR_HEADER
         int varName;
         bool isDeletable;
     };
-    struct instr_defineArray {
+    struct instr_DefineArray {
         MOTH_INSTR_HEADER
         uint argc;
         StackSlot args;
     };
-    struct instr_defineObjectLiteral {
+    struct instr_DefineObjectLiteral {
         MOTH_INSTR_HEADER
         int internalClassId;
         int arrayValueCount;
         int arrayGetterSetterCountAndFlags; // 30 bits for count, 1 bit for needsSparseArray boolean
         StackSlot args;
     };
-    struct instr_createMappedArgumentsObject {
+    struct instr_CreateMappedArgumentsObject {
         MOTH_INSTR_HEADER
     };
-    struct instr_createUnmappedArgumentsObject {
+    struct instr_CreateUnmappedArgumentsObject {
         MOTH_INSTR_HEADER
     };
-    struct instr_convertThisToObject {
+    struct instr_ConvertThisToObject {
         MOTH_INSTR_HEADER
     };
-    struct instr_construct {
+    struct instr_Construct {
         MOTH_INSTR_HEADER
         StackSlot callData;
         StackSlot func;
     };
-    struct instr_jump {
+    struct instr_Jump {
         MOTH_INSTR_HEADER
         int offset;
     };
-    struct instr_jumpEq {
+    struct instr_JumpEq {
         MOTH_INSTR_HEADER
         int offset;
     };
-    struct instr_jumpNe {
+    struct instr_JumpNe {
         MOTH_INSTR_HEADER
         int offset;
     };
-    struct instr_cmpJmpEqNull {
+    struct instr_CmpJmpEqNull {
         MOTH_INSTR_HEADER
         int offset;
     };
-    struct instr_cmpJmpNeNull {
+    struct instr_CmpJmpNeNull {
         MOTH_INSTR_HEADER
         int offset;
     };
-    struct instr_cmpJmpEqInt {
-        MOTH_INSTR_HEADER
-        int lhs;
-        int offset;
-    };
-    struct instr_cmpJmpNeInt {
+    struct instr_CmpJmpEqInt {
         MOTH_INSTR_HEADER
         int lhs;
         int offset;
     };
-    struct instr_cmpJmpEq {
+    struct instr_CmpJmpNeInt {
+        MOTH_INSTR_HEADER
+        int lhs;
+        int offset;
+    };
+    struct instr_CmpJmpEq {
         MOTH_INSTR_HEADER
         StackSlot lhs;
         int offset;
     };
-    struct instr_cmpJmpNe {
+    struct instr_CmpJmpNe {
         MOTH_INSTR_HEADER
         StackSlot lhs;
         int offset;
     };
-    struct instr_cmpJmpGt {
+    struct instr_CmpJmpGt {
         MOTH_INSTR_HEADER
         StackSlot lhs;
         int offset;
     };
-    struct instr_cmpJmpGe {
+    struct instr_CmpJmpGe {
         MOTH_INSTR_HEADER
         StackSlot lhs;
         int offset;
     };
-    struct instr_cmpJmpLt {
+    struct instr_CmpJmpLt {
         MOTH_INSTR_HEADER
         StackSlot lhs;
         int offset;
     };
-    struct instr_cmpJmpLe {
+    struct instr_CmpJmpLe {
         MOTH_INSTR_HEADER
         StackSlot lhs;
         int offset;
     };
-    struct instr_jumpStrictEqual {
+    struct instr_JumpStrictEqual {
         MOTH_INSTR_HEADER
         int offset;
         StackSlot lhs;
     };
-    struct instr_jumpStrictNotEqual {
+    struct instr_JumpStrictNotEqual {
         MOTH_INSTR_HEADER
         int offset;
         StackSlot lhs;
     };
-    struct instr_jumpStrictEqualStackSlotInt {
+    struct instr_JumpStrictEqualStackSlotInt {
         MOTH_INSTR_HEADER
         int offset;
         StackSlot lhs;
         int rhs;
     };
-    struct instr_jumpStrictNotEqualStackSlotInt {
+    struct instr_JumpStrictNotEqualStackSlotInt {
         MOTH_INSTR_HEADER
         int offset;
         StackSlot lhs;
         int rhs;
     };
-    struct instr_unot {
+    struct instr_UNot {
         MOTH_INSTR_HEADER
     };
-    struct instr_uplus {
+    struct instr_UPlus {
         MOTH_INSTR_HEADER
     };
-    struct instr_uminus {
+    struct instr_UMinus {
         MOTH_INSTR_HEADER
     };
-    struct instr_ucompl {
+    struct instr_UCompl {
         MOTH_INSTR_HEADER
     };
-    struct instr_increment {
+    struct instr_Increment {
         MOTH_INSTR_HEADER
     };
-    struct instr_decrement {
+    struct instr_Decrement {
         MOTH_INSTR_HEADER
     };
-    struct instr_binop {
+    struct instr_Binop {
         MOTH_INSTR_HEADER
         int alu; // QV4::Runtime::RuntimeMethods enum value
         StackSlot lhs;
     };
-    struct instr_add {
+    struct instr_Add {
         MOTH_INSTR_HEADER
         StackSlot lhs;
     };
-    struct instr_bitAnd {
+    struct instr_BitAnd {
         MOTH_INSTR_HEADER
         StackSlot lhs;
     };
-    struct instr_bitOr {
+    struct instr_BitOr {
         MOTH_INSTR_HEADER
         StackSlot lhs;
     };
-    struct instr_bitXor {
+    struct instr_BitXor {
         MOTH_INSTR_HEADER
         StackSlot lhs;
     };
-    struct instr_shr {
+    struct instr_Shr {
         MOTH_INSTR_HEADER
         StackSlot lhs;
     };
-    struct instr_shl {
+    struct instr_Shl {
         MOTH_INSTR_HEADER
         StackSlot lhs;
     };
-    struct instr_bitAndConst {
+    struct instr_BitAndConst {
         MOTH_INSTR_HEADER
         int rhs;
     };
-    struct instr_bitOrConst {
+    struct instr_BitOrConst {
         MOTH_INSTR_HEADER
         int rhs;
     };
-    struct instr_bitXorConst {
+    struct instr_BitXorConst {
         MOTH_INSTR_HEADER
         int rhs;
     };
-    struct instr_shrConst {
+    struct instr_ShrConst {
         MOTH_INSTR_HEADER
         int rhs;
     };
-    struct instr_shlConst {
+    struct instr_ShlConst {
         MOTH_INSTR_HEADER
         int rhs;
     };
-    struct instr_mul {
+    struct instr_Mul {
         MOTH_INSTR_HEADER
         StackSlot lhs;
     };
-    struct instr_sub {
+    struct instr_Sub {
         MOTH_INSTR_HEADER
         StackSlot lhs;
     };
-    struct instr_binopContext {
+    struct instr_BinopContext {
         MOTH_INSTR_HEADER
         uint alu; // offset inside the runtime methods
         StackSlot lhs;
     };
-    struct instr_loadQmlContext {
+    struct instr_LoadQmlContext {
         MOTH_INSTR_HEADER
         StackSlot result;
     };
-    struct instr_loadQmlImportedScripts {
+    struct instr_LoadQmlImportedScripts {
         MOTH_INSTR_HEADER
         StackSlot result;
     };
-    struct instr_loadQmlSingleton {
+    struct instr_LoadQmlSingleton {
         MOTH_INSTR_HEADER
         int name;
     };
 
-    instr_common common;
-    instr_ret ret;
-    instr_debug debug;
-    instr_loadConst loadConst;
-    instr_loadZero loadZero;
-    instr_loadTrue loadTrue;
-    instr_loadFalse loadFalse;
-    instr_loadNull loadNull;
-    instr_loadUndefined loadUndefined;
-    instr_loadInt loadInt;
-    instr_moveConst moveConst;
-    instr_loadReg loadReg;
-    instr_storeReg storeReg;
-    instr_moveReg moveReg;
-    instr_loadScopedLocal loadScopedLocal;
-    instr_storeScopedLocal storeScopedLocal;
-    instr_loadRuntimeString loadRuntimeString;
-    instr_loadRegExp loadRegExp;
-    instr_loadClosure loadClosure;
-    instr_loadName loadName;
-    instr_loadGlobalLookup loadGlobalLookup;
-    instr_storeNameSloppy storeNameSloppy;
-    instr_storeNameStrict storeNameStrict;
-    instr_loadElement loadElement;
-    instr_loadElementA loadElementA;
-    instr_storeElement storeElement;
-    instr_loadProperty loadProperty;
-    instr_loadPropertyA loadPropertyA;
-    instr_getLookup getLookup;
-    instr_getLookupA getLookupA;
-    instr_loadScopeObjectProperty loadScopeObjectProperty;
-    instr_loadContextObjectProperty loadContextObjectProperty;
-    instr_loadIdObject loadIdObject;
-    instr_storeProperty storeProperty;
-    instr_setLookup setLookup;
-    instr_storeScopeObjectProperty storeScopeObjectProperty;
-    instr_storeContextObjectProperty storeContextObjectProperty;
-    instr_callValue callValue;
-    instr_callProperty callProperty;
-    instr_callPropertyLookup callPropertyLookup;
-    instr_callElement callElement;
-    instr_callName callName;
-    instr_callPossiblyDirectEval callPossiblyDirectEval;
-    instr_callGlobalLookup callGlobalLookup;
-    instr_throwException throwException;
-    instr_getException getException;
-    instr_setException setException;
-    instr_setExceptionHandler setExceptionHandler;
-    instr_unwindException unwindException;
-    instr_pushCatchContext pushCatchContext;
-    instr_pushWithContext pushWithContext;
-    instr_popContext popContext;
-    instr_foreachIteratorObject foreachIteratorObject;
-    instr_foreachNextPropertyName foreachNextPropertyName;
-    instr_deleteMember deleteMember;
-    instr_deleteSubscript deleteSubscript;
-    instr_deleteName deleteName;
-    instr_typeofName typeofName;
-    instr_typeofValue typeofValue;
-    instr_declareVar declareVar;
-    instr_defineArray defineArray;
-    instr_defineObjectLiteral defineObjectLiteral;
-    instr_createMappedArgumentsObject createMappedArgumentsObject;
-    instr_createUnmappedArgumentsObject createUnmappedArgumentsObject;
-    instr_convertThisToObject convertThisToObject;
-    instr_construct construct;
-    instr_jump jump;
-    instr_jumpEq jumpEq;
-    instr_jumpNe jumpNe;
-    instr_cmpJmpEqNull cmpJmpEqNull;
-    instr_cmpJmpNeNull cmpJmpNeNull;
-    instr_cmpJmpEqInt cmpJmpEqInt;
-    instr_cmpJmpNeInt cmpJmpNeInt;
-    instr_cmpJmpEq cmpJmpEq;
-    instr_cmpJmpNe cmpJmpNe;
-    instr_cmpJmpGt cmpJmpGt;
-    instr_cmpJmpGe cmpJmpGe;
-    instr_cmpJmpLt cmpJmpLt;
-    instr_cmpJmpLe cmpJmpLe;
-    instr_jumpStrictEqual jumpStrictEqual;
-    instr_jumpStrictNotEqual jumpStrictNotEqual;
-    instr_jumpStrictEqualStackSlotInt jumpStrictEqualStackSlotInt;
-    instr_jumpStrictNotEqualStackSlotInt jumpStrictNotEqualStackSlotInt;
-    instr_unot unot;
-    instr_uplus uplus;
-    instr_uminus uminus;
-    instr_ucompl ucompl;
-    instr_increment increment;
-    instr_decrement decrement;
-    instr_binop binop;
-    instr_add add;
-    instr_bitAnd bitAnd;
-    instr_bitOr bitOr;
-    instr_bitXor bitXor;
-    instr_shr shr;
-    instr_shl shl;
-    instr_bitAndConst bitAndConst;
-    instr_bitOrConst bitOrConst;
-    instr_bitXorConst bitXorConst;
-    instr_shrConst shrConst;
-    instr_shlConst shlConst;
-    instr_mul mul;
-    instr_sub sub;
-    instr_binopContext binopContext;
-    instr_loadQmlContext loadQmlContext;
-    instr_loadQmlImportedScripts loadQmlImportedScripts;
-    instr_loadQmlSingleton loadQmlSingleton;
+    instr_Common Common;
+    instr_Ret Ret;
+    instr_Debug Debug;
+    instr_LoadConst LoadConst;
+    instr_LoadZero LoadZero;
+    instr_LoadTrue LoadTrue;
+    instr_LoadFalse LoadFalse;
+    instr_LoadNull LoadNull;
+    instr_LoadUndefined LoadUndefined;
+    instr_LoadInt LoadInt;
+    instr_MoveConst MoveConst;
+    instr_LoadReg LoadReg;
+    instr_StoreReg StoreReg;
+    instr_MoveReg MoveReg;
+    instr_LoadScopedLocal LoadScopedLocal;
+    instr_StoreScopedLocal StoreScopedLocal;
+    instr_LoadRuntimeString LoadRuntimeString;
+    instr_LoadRegExp LoadRegExp;
+    instr_LoadClosure LoadClosure;
+    instr_LoadName LoadName;
+    instr_LoadGlobalLookup LoadGlobalLookup;
+    instr_StoreNameSloppy StoreNameSloppy;
+    instr_StoreNameStrict StoreNameStrict;
+    instr_LoadElement LoadElement;
+    instr_LoadElementA LoadElementA;
+    instr_StoreElement StoreElement;
+    instr_LoadProperty LoadProperty;
+    instr_LoadPropertyA LoadPropertyA;
+    instr_GetLookup GetLookup;
+    instr_GetLookupA GetLookupA;
+    instr_LoadScopeObjectProperty LoadScopeObjectProperty;
+    instr_LoadContextObjectProperty LoadContextObjectProperty;
+    instr_LoadIdObject LoadIdObject;
+    instr_StoreProperty StoreProperty;
+    instr_SetLookup SetLookup;
+    instr_StoreScopeObjectProperty StoreScopeObjectProperty;
+    instr_StoreContextObjectProperty StoreContextObjectProperty;
+    instr_CallValue CallValue;
+    instr_CallProperty CallProperty;
+    instr_CallPropertyLookup CallPropertyLookup;
+    instr_CallElement CallElement;
+    instr_CallName CallName;
+    instr_CallPossiblyDirectEval CallPossiblyDirectEval;
+    instr_CallGlobalLookup CallGlobalLookup;
+    instr_ThrowException ThrowException;
+    instr_GetException GetException;
+    instr_SetException SetException;
+    instr_SetExceptionHandler SetExceptionHandler;
+    instr_UnwindException UnwindException;
+    instr_PushCatchContext PushCatchContext;
+    instr_PushWithContext PushWithContext;
+    instr_PopContext PopContext;
+    instr_ForeachIteratorObject ForeachIteratorObject;
+    instr_ForeachNextPropertyName ForeachNextPropertyName;
+    instr_DeleteMember DeleteMember;
+    instr_DeleteSubscript DeleteSubscript;
+    instr_DeleteName DeleteName;
+    instr_TypeofName TypeofName;
+    instr_TypeofValue TypeofValue;
+    instr_DeclareVar DeclareVar;
+    instr_DefineArray DefineArray;
+    instr_DefineObjectLiteral DefineObjectLiteral;
+    instr_CreateMappedArgumentsObject CreateMappedArgumentsObject;
+    instr_CreateUnmappedArgumentsObject CreateUnmappedArgumentsObject;
+    instr_ConvertThisToObject ConvertThisToObject;
+    instr_Construct Construct;
+    instr_Jump Jump;
+    instr_JumpEq JumpEq;
+    instr_JumpNe JumpNe;
+    instr_CmpJmpEqNull CmpJmpEqNull;
+    instr_CmpJmpNeNull CmpJmpNeNull;
+    instr_CmpJmpEqInt CmpJmpEqInt;
+    instr_CmpJmpNeInt CmpJmpNeInt;
+    instr_CmpJmpEq CmpJmpEq;
+    instr_CmpJmpNe CmpJmpNe;
+    instr_CmpJmpGt CmpJmpGt;
+    instr_CmpJmpGe CmpJmpGe;
+    instr_CmpJmpLt CmpJmpLt;
+    instr_CmpJmpLe CmpJmpLe;
+    instr_JumpStrictEqual JumpStrictEqual;
+    instr_JumpStrictNotEqual JumpStrictNotEqual;
+    instr_JumpStrictEqualStackSlotInt JumpStrictEqualStackSlotInt;
+    instr_JumpStrictNotEqualStackSlotInt JumpStrictNotEqualStackSlotInt;
+    instr_UNot UNot;
+    instr_UPlus UPlus;
+    instr_UMinus UMinus;
+    instr_UCompl UCompl;
+    instr_Increment Increment;
+    instr_Decrement Decrement;
+    instr_Binop Binop;
+    instr_Add Add;
+    instr_BitAnd BitAnd;
+    instr_BitOr BitOr;
+    instr_BitXor BitXor;
+    instr_Shr Shr;
+    instr_Shl Shl;
+    instr_BitAndConst BitAndConst;
+    instr_BitOrConst BitOrConst;
+    instr_BitXorConst BitXorConst;
+    instr_ShrConst ShrConst;
+    instr_ShlConst ShlConst;
+    instr_Mul Mul;
+    instr_Sub Sub;
+    instr_BinopContext BinopContext;
+    instr_LoadQmlContext LoadQmlContext;
+    instr_LoadQmlImportedScripts LoadQmlImportedScripts;
+    instr_LoadQmlSingleton LoadQmlSingleton;
 
     static int size(Type type);
 };
@@ -823,16 +823,16 @@ struct InstrMeta {
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Wuninitialized")
-#define MOTH_INSTR_META_TEMPLATE(I, FMT) \
-    template<> struct InstrMeta<(int)Instr::I> { \
-        enum { Size = MOTH_INSTR_SIZE(I, FMT) }; \
-        typedef Instr::instr_##FMT DataType; \
-        static const DataType &data(const Instr &instr) { return instr.FMT; } \
-        static void setData(Instr &instr, const DataType &v) { instr.FMT = v; } \
+#define MOTH_INSTR_META_TEMPLATE(I) \
+    template<> struct InstrMeta<(int)Instr::Type::I> { \
+        enum { Size = MOTH_INSTR_SIZE(I) }; \
+        typedef Instr::instr_##I DataType; \
+        static const DataType &data(const Instr &instr) { return instr.I; } \
+        static void setData(Instr &instr, const DataType &v) { instr.I = v; } \
         static void setDataNoCommon(Instr &instr, const DataType &v) \
-        { memcpy(reinterpret_cast<char *>(&instr.FMT) + sizeof(Instr::instr_common), \
-                 reinterpret_cast<const char *>(&v) + sizeof(Instr::instr_common), \
-                 Size - sizeof(Instr::instr_common)); } \
+        { memcpy(reinterpret_cast<char *>(&instr.I) + sizeof(Instr::instr_Common), \
+                 reinterpret_cast<const char *>(&v) + sizeof(Instr::instr_Common), \
+                 Size - sizeof(Instr::instr_Common)); } \
     };
 FOR_EACH_MOTH_INSTR(MOTH_INSTR_META_TEMPLATE);
 #undef MOTH_INSTR_META_TEMPLATE
@@ -844,7 +844,7 @@ class InstrData : public InstrMeta<InstrType>::DataType
 };
 
 struct Instruction {
-#define MOTH_INSTR_DATA_TYPEDEF(I, FMT) typedef InstrData<Instr::I> I;
+#define MOTH_INSTR_DATA_TYPEDEF(I) typedef InstrData<(int)Instr::Type::I> I;
 FOR_EACH_MOTH_INSTR(MOTH_INSTR_DATA_TYPEDEF)
 #undef MOTH_INSTR_DATA_TYPEDEF
 private:

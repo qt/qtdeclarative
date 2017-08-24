@@ -44,7 +44,7 @@ using namespace QV4::Moth;
 
 int Instr::size(Type type)
 {
-#define MOTH_RETURN_INSTR_SIZE(I, FMT) case I: return InstrMeta<(int)I>::Size;
+#define MOTH_RETURN_INSTR_SIZE(I) case Type::I: return InstrMeta<(int)Type::I>::Size;
     switch (type) {
     FOR_EACH_MOTH_INSTR(MOTH_RETURN_INSTR_SIZE)
     default: return 0;
@@ -91,14 +91,14 @@ size_t absoluteInstructionOffset(const char *codeStart, const T &instr)
 }
 
 #define MOTH_BEGIN_INSTR(I) \
-    case Instr::I: {\
-    const InstrMeta<int(Instr::I)>::DataType &instr = InstrMeta<int(Instr::I)>::data(*genericInstr); \
+    case Instr::Type::I: {\
+    const InstrMeta<int(Instr::Type::I)>::DataType &instr = InstrMeta<int(Instr::Type::I)>::data(*genericInstr); \
     Q_UNUSED(instr); \
     QDebug d = qDebug(); \
     d.noquote(); \
     d.nospace(); \
     d << alignedLineNumber(line) << alignedNumber(int(code - start)).constData() << ":    " << #I << " "; \
-    code += InstrMeta<int(Instr::I)>::Size; \
+    code += InstrMeta<int(Instr::Type::I)>::Size; \
 
 #define MOTH_END_INSTR(I) } break;
 
@@ -127,7 +127,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int star
             lastLine = line;
         else
             line = -1;
-        switch (genericInstr->common.instructionType) {
+        switch (genericInstr->Common.instructionType) {
 
         MOTH_BEGIN_INSTR(LoadReg)
             d << instr.reg.dump(nFormals);
