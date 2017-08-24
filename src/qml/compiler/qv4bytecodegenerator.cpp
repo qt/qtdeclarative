@@ -90,14 +90,17 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
 
     // resolve jumps
 //    qDebug() << "resolving jumps";
-    for (const auto &j : jumps) {
-        Q_ASSERT(j.linkedLabel != -1);
-        int linkedInstruction = labels.at(j.linkedLabel);
+    for (int index = 0; index < instructions.size(); ++index) {
+        const auto &i = instructions.at(index);
+        if (i.offsetForJump == -1) // no jump
+            continue;
+        Q_ASSERT(i.linkedLabel != -1);
+        int linkedInstruction = labels.at(i.linkedLabel);
         Q_ASSERT(linkedInstruction != -1);
-        int offset = instructionOffsets.at(j.instructionIndex) + j.offset;
+        int offset = instructionOffsets.at(index) + i.offsetForJump;
 //        qDebug() << "offset data is at" << offset;
         char *c = code.data() + offset;
-        int linkedInstructionOffset = instructionOffsets.at(linkedInstruction) - instructionOffsets.at(j.instructionIndex + 1);
+        int linkedInstructionOffset = instructionOffsets.at(linkedInstruction) - instructionOffsets.at(index + 1);
 //        qDebug() << "linked instruction" << linkedInstruction << "at " << instructionOffsets.at(linkedInstruction);
         memcpy(c, &linkedInstructionOffset, sizeof(int));
     }

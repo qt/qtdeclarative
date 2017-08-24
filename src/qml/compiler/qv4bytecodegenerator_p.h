@@ -99,13 +99,12 @@ public:
     };
 
     struct Jump {
-        Jump(BytecodeGenerator *generator, int instruction, int offset)
+        Jump(BytecodeGenerator *generator, int instruction)
             : generator(generator),
-              index(generator->jumps.size()) {
-            generator->jumps.append({ instruction, offset, -1 });
-        }
+              index(instruction)
+        {}
         ~Jump() {
-            Q_ASSERT(generator->jumps[index].linkedLabel != -1);
+            Q_ASSERT(generator->instructions[index].linkedLabel != -1);
         }
 
 
@@ -117,8 +116,8 @@ public:
         }
         void link(Label l) {
             Q_ASSERT(l.index >= 0);
-            Q_ASSERT(generator->jumps[index].linkedLabel == -1);
-            generator->jumps[index].linkedLabel = l.index;
+            Q_ASSERT(generator->instructions[index].linkedLabel == -1);
+            generator->instructions[index].linkedLabel = l.index;
         }
     };
 
@@ -231,7 +230,7 @@ public:
         Instr genericInstr;
         genericInstr.Nop.instructionType = InstrT;
         InstrMeta<InstrT>::setDataNoCommon(genericInstr, data);
-        return Jump(this, addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr), offsetof(InstrData<InstrT>, offset));
+        return Jump(this, addInstructionHelper(InstrMeta<InstrT>::Size, genericInstr, offsetof(InstrData<InstrT>, offset)));
     }
 
 private:
@@ -239,27 +238,22 @@ private:
     friend struct Label;
     friend struct ExceptionHandler;
 
-    int addInstructionHelper(uint size, const Instr &i) {
+    int addInstructionHelper(uint size, const Instr &i, int offsetOfOffset = -1) {
         int pos = instructions.size();
-        instructions.append({size, currentLine, i});
+        instructions.append({size, currentLine, offsetOfOffset, -1, i});
         return pos;
     }
-
-    struct JumpData {
-        int instructionIndex;
-        int offset;
-        int linkedLabel;
-    };
 
     struct I {
         uint size;
         int line;
+        int offsetForJump;
+        int linkedLabel;
         Instr instr;
     };
 
     QVector<I> instructions;
     QVector<int> labels;
-    QVector<JumpData> jumps;
     ExceptionHandler *currentExceptionHandler;
     int regCount = 0;
 public:
