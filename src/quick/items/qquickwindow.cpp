@@ -1678,8 +1678,9 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             // if the grabber is an Item:
             // if the update consists of changing button state, don't accept it unless
             // the button is one in which the grabber is interested
-            if (pointerEvent->button() != Qt::NoButton && grabber->acceptedMouseButtons()
-                    && !(grabber->acceptedMouseButtons() & pointerEvent->button())) {
+            Qt::MouseButtons acceptedButtons = grabber->acceptedMouseButtons();
+            if (pointerEvent->button() != Qt::NoButton && acceptedButtons
+                    && !(acceptedButtons & pointerEvent->button())) {
                 pointerEvent->setAccepted(false);
                 return;
             }
