@@ -298,7 +298,7 @@ QT_BEGIN_NAMESPACE
 #define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::LoadQmlSingleton) + 1)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
-#  define MOTH_THREADED_INTERPRETER
+#  define MOTH_COMPUTED_GOTO
 #endif
 
 #define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
@@ -347,29 +347,6 @@ QT_BEGIN_NAMESPACE
 #define MOTH_COLLECT_ARG_COUNT_INSTRUCTION(name, nargs, ...) \
     nargs,
 
-/* collect jump labels */
-#define COLLECT_LABELS(instr) \
-    INSTR_##instr(GET_LABEL)
-#define GET_LABEL_INSTRUCTION(name, ...) \
-    &&op_char_##name,
-
-#define COLLECT_LABELS_WIDE(instr) \
-    INSTR_##instr(GET_LABEL_WIDE)
-#define GET_LABEL_WIDE_INSTRUCTION(name, ...) \
-    &&op_short_##name,
-
-#define COLLECT_LABELS_XWIDE(instr) \
-    INSTR_##instr(GET_LABEL_XWIDE)
-#define GET_LABEL_XWIDE_INSTRUCTION(name, ...) \
-    &&op_int_##name,
-
-#define MOTH_JUMP_TABLE \
-    static const void *jumpTable[] = { \
-        FOR_EACH_MOTH_INSTR(COLLECT_LABELS) \
-        FOR_EACH_MOTH_INSTR(COLLECT_LABELS_WIDE) \
-        FOR_EACH_MOTH_INSTR(COLLECT_LABELS_XWIDE) \
-    };
-
 #define MOTH_DECODE_ARG(arg, type, nargs, offset) \
     arg = reinterpret_cast<const type *>(code)[-nargs + offset];
 #define MOTH_ADJUST_CODE(type, nargs) \
@@ -407,14 +384,65 @@ QT_BEGIN_NAMESPACE
         MOTH_DECODE_ARGS3(name, type, nargs, arg1, arg2, arg3); \
         MOTH_DECODE_ARG(arg4, type, nargs, 3);
 
+#ifdef MOTH_COMPUTED_GOTO
+/* collect jump labels */
+#define COLLECT_LABELS(instr) \
+    INSTR_##instr(GET_LABEL)
+#define GET_LABEL_INSTRUCTION(name, ...) \
+    &&op_char_##name,
+
+#define COLLECT_LABELS_WIDE(instr) \
+    INSTR_##instr(GET_LABEL_WIDE)
+#define GET_LABEL_WIDE_INSTRUCTION(name, ...) \
+    &&op_short_##name,
+
+#define COLLECT_LABELS_XWIDE(instr) \
+    INSTR_##instr(GET_LABEL_XWIDE)
+#define GET_LABEL_XWIDE_INSTRUCTION(name, ...) \
+    &&op_int_##name,
+
+#define MOTH_JUMP_TABLE \
+    static const void *jumpTable[] = { \
+        FOR_EACH_MOTH_INSTR(COLLECT_LABELS) \
+        FOR_EACH_MOTH_INSTR(COLLECT_LABELS_WIDE) \
+        FOR_EACH_MOTH_INSTR(COLLECT_LABELS_XWIDE) \
+    };
+
 #define MOTH_DISPATCH() \
     goto *jumpTable[static_cast<int>(*code)];
-
 #define MOTH_DISPATCH_WIDE() \
     goto *jumpTable[static_cast<int>(*code) + MOTH_NUM_INSTRUCTIONS()];
-
 #define MOTH_DISPATCH_XWIDE() \
     goto *jumpTable[static_cast<int>(*code) + 2*MOTH_NUM_INSTRUCTIONS()];
+#else
+#define MOTH_JUMP_TABLE
+
+#define MOTH_INSTR_CASE_AND_JUMP(instr) \
+    INSTR_##instr(GET_CASE_AND_JUMP)
+#define GET_CASE_AND_JUMP_INSTRUCTION(name, ...) \
+    case Instr::Type::name: goto op_char_##name;
+#define MOTH_INSTR_CASE_AND_JUMP_WIDE(instr) \
+    INSTR_##instr(GET_CASE_AND_JUMP_WIDE)
+#define GET_CASE_AND_JUMP_WIDE_INSTRUCTION(name, ...) \
+    case Instr::Type::name: goto op_short_##name;
+#define MOTH_INSTR_CASE_AND_JUMP_XWIDE(instr) \
+    INSTR_##instr(GET_CASE_AND_JUMP_XWIDE)
+#define GET_CASE_AND_JUMP_XWIDE_INSTRUCTION(name, ...) \
+    case Instr::Type::name: goto op_int_##name;
+
+#define MOTH_DISPATCH() \
+    switch (static_cast<Instr::Type>(*code)) { \
+        FOR_EACH_MOTH_INSTR(MOTH_INSTR_CASE_AND_JUMP) \
+    }
+#define MOTH_DISPATCH_WIDE() \
+    switch (static_cast<Instr::Type>(*code)) { \
+        FOR_EACH_MOTH_INSTR(MOTH_INSTR_CASE_AND_JUMP_WIDE) \
+    }
+#define MOTH_DISPATCH_XWIDE() \
+    switch (static_cast<Instr::Type>(*code)) { \
+        FOR_EACH_MOTH_INSTR(MOTH_INSTR_CASE_AND_JUMP_XWIDE) \
+    }
+#endif
 
 namespace QV4 {
 namespace Moth {

@@ -311,33 +311,18 @@ static struct InstrCount {
     { \
         INSTR_##instr(MOTH_DECODE)
 
-#ifdef MOTH_THREADED_INTERPRETER
-
-
 #ifdef COUNT_INSTRUCTIONS
-#  define MOTH_BEGIN_INSTR(I) op_##I: \
-    instrCount.hit(Instr::Type::I); \
-    MOTH_BEGIN_INSTR_COMMON(I)
+#  define MOTH_BEGIN_INSTR(instr) op_##I: \
+    instrCount.hit(static_cast<int>(Instr::Type::instr)); \
+    MOTH_BEGIN_INSTR_COMMON(instr)
 #else // !COUNT_INSTRUCTIONS
 #  define MOTH_BEGIN_INSTR(instr) \
     MOTH_BEGIN_INSTR_COMMON(instr)
-
 #endif // COUNT_INSTRUCTIONS
 
 #define MOTH_END_INSTR(instr) \
         MOTH_DISPATCH() \
     }
-
-#else
-
-#  define MOTH_BEGIN_INSTR(I) \
-    case Instr::Type::I: \
-    MOTH_BEGIN_INSTR_COMMON(I)
-
-#  define MOTH_END_INSTR(I) } \
-    continue;
-
-#endif
 
 #define STACK_VALUE(temp) stack[temp]
 #define STORE_STACK_VALUE(temp, value) { \
@@ -551,9 +536,9 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     const uchar *code = function->codeData;
 
+    for (;;) {
     MOTH_DISPATCH()
 
-    for (;;) {
     MOTH_BEGIN_INSTR(Nop)
         MOTH_DISPATCH()
     }
@@ -1212,16 +1197,6 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         accumulator = Runtime::method_loadQmlSingleton(static_cast<QV4::NoThrowEngine*>(engine), name);
     MOTH_END_INSTR(LoadQmlSingleton)
 
-#ifdef MOTH_THREADED_INTERPRETER
-    // nothing to do
-#else
-        default:
-            qFatal("QQmlJS::Moth::VME: Internal error - unknown instruction %d", genericInstr->common.instructionType);
-            break;
-        }
-#endif
-
-        Q_ASSERT(false);
     catchException:
         Q_ASSERT(engine->hasException);
         if (!exceptionHandler) {
