@@ -1037,7 +1037,7 @@ static QSOperator::Op invert(QSOperator::Op oper)
     }
 }
 
-static QSOperator::Op swap(QSOperator::Op oper)
+static QSOperator::Op operatorForSwappedOperands(QSOperator::Op oper)
 {
     switch (oper) {
     case QSOperator::StrictEqual: return QSOperator::StrictEqual;
@@ -1055,7 +1055,7 @@ static QSOperator::Op swap(QSOperator::Op oper)
 Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Reference &right)
 {
     if (left.isConst()) {
-        oper = swap(oper);
+        oper = operatorForSwappedOperands(oper);
         qSwap(left, right);
     }
     const BytecodeGenerator::Label *jumpTarget = _expr.iftrue();
