@@ -555,7 +555,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     for (;;) {
     MOTH_BEGIN_INSTR(Nop)
-        MOTH_DISPATCH();
+        MOTH_DISPATCH()
     }
 
     MOTH_BEGIN_INSTR(Wide)

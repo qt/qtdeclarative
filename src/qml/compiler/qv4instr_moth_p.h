@@ -295,6 +295,7 @@ QT_BEGIN_NAMESPACE
     F(LoadQmlContext) \
     F(LoadQmlImportedScripts) \
     F(LoadQmlSingleton)
+#define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::LoadQmlSingleton) + 1)
 
 #if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
 #  define MOTH_THREADED_INTERPRETER
@@ -363,62 +364,57 @@ QT_BEGIN_NAMESPACE
     &&op_int_##name,
 
 #define MOTH_JUMP_TABLE \
-    static const void *jumpTable[] = { FOR_EACH_MOTH_INSTR(COLLECT_LABELS) }; \
-    static const void *jumpTableWide[] = { FOR_EACH_MOTH_INSTR(COLLECT_LABELS_WIDE) }; \
-    static const void *jumpTableXWide[] = { FOR_EACH_MOTH_INSTR(COLLECT_LABELS_XWIDE) }
+    static const void *jumpTable[] = { \
+        FOR_EACH_MOTH_INSTR(COLLECT_LABELS) \
+        FOR_EACH_MOTH_INSTR(COLLECT_LABELS_WIDE) \
+        FOR_EACH_MOTH_INSTR(COLLECT_LABELS_XWIDE) \
+    };
 
-
-#define MOTH_DECODE_ARG(arg, type, offset) \
-    arg = reinterpret_cast<const type *>(code)[offset]
+#define MOTH_DECODE_ARG(arg, type, nargs, offset) \
+    arg = reinterpret_cast<const type *>(code)[-nargs + offset];
 #define MOTH_ADJUST_CODE(type, nargs) \
-    code += nargs*sizeof(type)
+    code += static_cast<quintptr>(nargs*sizeof(type) + 1)
 
 #define MOTH_DECODE_INSTRUCTION(name, nargs, ...) \
         MOTH_DEFINE_ARGS(nargs, __VA_ARGS__) \
     op_int_##name: \
-        MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
         MOTH_ADJUST_CODE(int, nargs); \
+        MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
         goto op_main_##name; \
     op_short_##name: \
-        MOTH_DECODE_ARGS(name, short, nargs, __VA_ARGS__) \
         MOTH_ADJUST_CODE(short, nargs); \
+        MOTH_DECODE_ARGS(name, short, nargs, __VA_ARGS__) \
         goto op_main_##name; \
     op_char_##name: \
-        MOTH_DECODE_ARGS(name, char, nargs, __VA_ARGS__) \
         MOTH_ADJUST_CODE(char, nargs); \
+        MOTH_DECODE_ARGS(name, char, nargs, __VA_ARGS__) \
     op_main_##name: \
         ; \
 
 #define MOTH_DECODE_ARGS(name, type, nargs, ...) \
-    MOTH_DECODE_ARGS##nargs(name, type, __VA_ARGS__)
+    MOTH_DECODE_ARGS##nargs(name, type, nargs, __VA_ARGS__)
 
-#define MOTH_DECODE_ARGS0(name, type, dummy)
-#define MOTH_DECODE_ARGS1(name, type, arg) \
-        MOTH_DECODE_ARG(arg, type, 0);
-#define MOTH_DECODE_ARGS2(name, type, arg1, arg2) \
-        MOTH_DECODE_ARGS1(name, type, arg1); \
-        MOTH_DECODE_ARG(arg2, type, 1);
-#define MOTH_DECODE_ARGS3(name, type, arg1, arg2, arg3) \
-        MOTH_DECODE_ARGS2(name, type, arg1, arg2); \
-        MOTH_DECODE_ARG(arg3, type, 2);
-#define MOTH_DECODE_ARGS4(name, type, arg1, arg2, arg3, arg4) \
-        MOTH_DECODE_ARGS3(name, type, arg1, arg2, arg3); \
-        MOTH_DECODE_ARG(arg4, type, 3);
+#define MOTH_DECODE_ARGS0(name, type, nargs, dummy)
+#define MOTH_DECODE_ARGS1(name, type, nargs, arg) \
+        MOTH_DECODE_ARG(arg, type, nargs, 0);
+#define MOTH_DECODE_ARGS2(name, type, nargs, arg1, arg2) \
+        MOTH_DECODE_ARGS1(name, type, nargs, arg1); \
+        MOTH_DECODE_ARG(arg2, type, nargs, 1);
+#define MOTH_DECODE_ARGS3(name, type, nargs, arg1, arg2, arg3) \
+        MOTH_DECODE_ARGS2(name, type, nargs, arg1, arg2); \
+        MOTH_DECODE_ARG(arg3, type, nargs, 2);
+#define MOTH_DECODE_ARGS4(name, type, nargs, arg1, arg2, arg3, arg4) \
+        MOTH_DECODE_ARGS3(name, type, nargs, arg1, arg2, arg3); \
+        MOTH_DECODE_ARG(arg4, type, nargs, 3);
 
 #define MOTH_DISPATCH() \
-    int instr = *code; \
-    ++code; \
-    goto *jumpTable[instr];
+    goto *jumpTable[static_cast<int>(*code)];
 
 #define MOTH_DISPATCH_WIDE() \
-    int winstr = *code; \
-    ++code; \
-    goto *jumpTableWide[winstr];
+    goto *jumpTable[static_cast<int>(*code) + MOTH_NUM_INSTRUCTIONS()];
 
 #define MOTH_DISPATCH_XWIDE() \
-    int xwinstr = *code; \
-    ++code; \
-    goto *jumpTableXWide[xwinstr];
+    goto *jumpTable[static_cast<int>(*code) + 2*MOTH_NUM_INSTRUCTIONS()];
 
 namespace QV4 {
 namespace Moth {
