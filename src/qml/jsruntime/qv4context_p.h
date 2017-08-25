@@ -155,7 +155,7 @@ DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
         return static_cast<int>(nArgs);
     }
     const Value *args() const {
-        return &locals[locals.size];
+        return locals.data() + locals.size;
     }
     void setArg(uint index, Value v);
 
