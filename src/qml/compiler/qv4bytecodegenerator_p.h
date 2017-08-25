@@ -236,27 +236,21 @@ private:
     friend struct Label;
     friend struct ExceptionHandler;
 
-    int addInstructionHelper(Moth::Instr::Type type, const Instr &i, int offsetOfOffset = -1) {
-        int pos = instructions.size();
-        instructions.append({type, 0, 0, currentLine, offsetOfOffset, -1, { i } });
-        return pos;
-    }
+    int addInstructionHelper(Moth::Instr::Type type, const Instr &i, int offsetOfOffset = -1);
 
     struct I {
         Moth::Instr::Type type;
-        uint size;
+        short size;
         uint position;
         int line;
         int offsetForJump;
         int linkedLabel;
-        union {
-            Instr instr;
-            char packed[sizeof(Instr) + 2]; // 2 for instruction and prefix
-        };
+        char packed[sizeof(Instr) + 2]; // 2 for instruction and prefix
     };
 
     void compressInstructions();
     void packInstruction(I &i);
+    void adjustJumpOffsets();
 
     QVector<I> instructions;
     QVector<int> labels;

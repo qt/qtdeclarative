@@ -71,7 +71,10 @@ void BytecodeGenerator::packInstruction(I &i)
 {
     int instructionsAsInts[sizeof(Instr)/sizeof(int)];
     int nMembers = Moth::Instr::argumentCount[static_cast<int>(i.type)];
-    memcpy(instructionsAsInts, &i.instr, nMembers*sizeof(int));
+    char *data = i.packed;
+    Q_ASSERT(*data == static_cast<char>(Instr::Type::XWide));
+    data += 2;
+    memcpy(instructionsAsInts, data, nMembers*sizeof(int));
     enum {
         Normal,
         Wide,
@@ -92,6 +95,9 @@ void BytecodeGenerator::packInstruction(I &i)
             memcpy(code, &v, 1);
             code += 1;
         }
+        i.size = code - i.packed;
+        if (i.offsetForJump != -1)
+            i.offsetForJump = i.size - 1;
         break;
     case Wide:
         *code++ = static_cast<char>(Instr::Type::Wide);
@@ -101,18 +107,43 @@ void BytecodeGenerator::packInstruction(I &i)
             memcpy(code, &v, 2);
             code += 2;
         }
+        i.size = code - i.packed;
+        if (i.offsetForJump != -1)
+            i.offsetForJump = i.size - 2;
         break;
     case XWide:
-        *code++ = static_cast<char>(Instr::Type::XWide);
-        *code++ = static_cast<char>(i.type);
-        for (int n = 0; n < nMembers; ++n) {
-            int v = instructionsAsInts[n];
-            memcpy(code, &v, 4);
-            code += 4;
-        }
+        // nothing to do
         break;
     }
-    i.size = code - i.packed;
+}
+
+void BytecodeGenerator::adjustJumpOffsets()
+{
+    for (int index = 0; index < instructions.size(); ++index) {
+        auto &i = instructions[index];
+        if (i.offsetForJump == -1) // no jump
+            continue;
+        Q_ASSERT(i.linkedLabel != -1 && labels.at(i.linkedLabel) != -1);
+        const auto &linkedInstruction = instructions.at(labels.at(i.linkedLabel));
+        char *c = i.packed + i.offsetForJump;
+        int jumpOffset = linkedInstruction.position - (i.position + i.size);
+//        qDebug() << "adjusting jump offset for instruction" << index << i.position << i.size << "offsetForJump" << i.offsetForJump << "target"
+//                 << labels.at(i.linkedLabel) << linkedInstruction.position << "jumpOffset" << jumpOffset;
+        if (*i.packed == static_cast<char>(Instr::Type::XWide)) {
+            Q_ASSERT(i.offsetForJump == i.size - 4);
+            memcpy(c, &jumpOffset, sizeof(int));
+        } else if (*i.packed == static_cast<char>(Instr::Type::Wide)) {
+            Q_ASSERT(i.offsetForJump == i.size - 2);
+            short o = jumpOffset;
+            Q_ASSERT(o == jumpOffset);
+            memcpy(c, &o, sizeof(short));
+        } else {
+            Q_ASSERT(i.offsetForJump == i.size - 1);
+            char o = jumpOffset;
+            Q_ASSERT(o == jumpOffset);
+            *c = o;
+        }
+    }
 }
 
 void BytecodeGenerator::compressInstructions()
@@ -120,28 +151,35 @@ void BytecodeGenerator::compressInstructions()
     // first round: compress all non jump instructions
     int position = 0;
     for (auto &i : instructions) {
-        if (i.offsetForJump != -1) {
-            int dummy = INT_MAX;
-            memcpy(reinterpret_cast<char *>(&i.instr) + i.offsetForJump, &dummy, 4);
-            i.offsetForJump += 2;
-        }
         i.position = position;
-        packInstruction(i);
+        if (i.offsetForJump == -1)
+            packInstruction(i);
         position += i.size;
     }
+
+    adjustJumpOffsets();
+
+    // compress all jumps
+    position = 0;
+    for (auto &i : instructions) {
+        i.position = position;
+        if (i.offsetForJump != -1)
+            packInstruction(i);
+        position += i.size;
+    }
+
+    // adjust once again, as the packing above could have changed offsets
+    adjustJumpOffsets();
 }
 
 void BytecodeGenerator::finalize(Compiler::Context *context)
 {
-    QByteArray code;
-
     compressInstructions();
 
-    // content
-    QVector<int> instructionOffsets;
+    // collect content and line numbers
+    QByteArray code;
     QVector<int> lineNumbers;
     currentLine = startLine;
-    instructionOffsets.reserve(instructions.size());
     for (const auto &i : qAsConst(instructions)) {
         if (i.line != currentLine) {
             Q_ASSERT(i.line > currentLine);
@@ -150,27 +188,24 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
                 ++currentLine;
             }
         }
-        instructionOffsets.append(code.size());
         code.append(i.packed, i.size);
-    }
-
-    // resolve jumps
-//    qDebug() << "resolving jumps";
-    for (int index = 0; index < instructions.size(); ++index) {
-        const auto &i = instructions.at(index);
-        if (i.offsetForJump == -1) // no jump
-            continue;
-        Q_ASSERT(i.linkedLabel != -1);
-        int linkedInstruction = labels.at(i.linkedLabel);
-        Q_ASSERT(linkedInstruction != -1);
-        int offset = instructionOffsets.at(index) + i.offsetForJump;
-//        qDebug() << "offset data is at" << offset;
-        char *c = code.data() + offset;
-        int linkedInstructionOffset = instructionOffsets.at(linkedInstruction) - instructionOffsets.at(index + 1);
-//        qDebug() << "linked instruction" << linkedInstruction << "at " << instructionOffsets.at(linkedInstruction);
-        memcpy(c, &linkedInstructionOffset, sizeof(int));
     }
 
     context->code = code;
     context->lineNumberMapping = lineNumbers;
+}
+
+int BytecodeGenerator::addInstructionHelper(Instr::Type type, const Instr &i, int offsetOfOffset) {
+    int pos = instructions.size();
+    int s = Moth::Instr::argumentCount[static_cast<int>(type)]*sizeof(int);
+    if (offsetOfOffset != -1)
+        offsetOfOffset += 2;
+    I instr{type, static_cast<short>(s + 2), 0, currentLine, offsetOfOffset, -1, "\0\0" };
+    char *code = instr.packed;
+    *code++ = static_cast<char>(Instr::Type::XWide);
+    *code++ = static_cast<char>(type);
+    memcpy(code, &i, s);
+    instructions.append(instr);
+
+    return pos;
 }
