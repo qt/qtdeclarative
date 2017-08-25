@@ -146,6 +146,9 @@ QT_BEGIN_NAMESPACE
         \li No
     \endtable
 
+    \note Path is a non-visual type; it does not display anything on its own.
+    To draw a path, use \l Shape.
+
     \sa PathView, Shape, PathAttribute, PathPercent, PathLine, PathMove, PathQuad, PathCubic, PathArc, PathCurve, PathSvg
 */
 QQuickPath::QQuickPath(QObject *parent)
