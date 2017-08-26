@@ -3009,10 +3009,16 @@ void Codegen::Reference::storeAccumulator() const
         return;
     }
     case ScopedLocal: {
-        Instruction::StoreScopedLocal store;
-        store.index = index;
-        store.scope = scope;
-        codegen->bytecodeGenerator->addInstruction(store);
+        if (scope == 0) {
+            Instruction::StoreLocal store;
+            store.index = index;
+            codegen->bytecodeGenerator->addInstruction(store);
+        } else {
+            Instruction::StoreScopedLocal store;
+            store.index = index;
+            store.scope = scope;
+            codegen->bytecodeGenerator->addInstruction(store);
+        }
         return;
     }
     case Name: {
@@ -3116,10 +3122,16 @@ void Codegen::Reference::loadInAccumulator() const
         codegen->bytecodeGenerator->addInstruction(load);
     } return;
     case ScopedLocal: {
-        Instruction::LoadScopedLocal load;
-        load.index = index;
-        load.scope = scope;
-        codegen->bytecodeGenerator->addInstruction(load);
+        if (!scope) {
+            Instruction::LoadLocal load;
+            load.index = index;
+            codegen->bytecodeGenerator->addInstruction(load);
+        } else {
+            Instruction::LoadScopedLocal load;
+            load.index = index;
+            load.scope = scope;
+            codegen->bytecodeGenerator->addInstruction(load);
+        }
         return;
     }
     case Name:

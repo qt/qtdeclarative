@@ -571,6 +571,17 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         STACK_VALUE(destReg) = STACK_VALUE(srcReg);
     MOTH_END_INSTR(MoveReg)
 
+    MOTH_BEGIN_INSTR(LoadLocal)
+        auto cc = static_cast<Heap::CallContext *>(frame.jsFrame->context.m());
+        accumulator = cc->locals[index];
+    MOTH_END_INSTR(LoadLocal)
+
+    MOTH_BEGIN_INSTR(StoreLocal)
+        CHECK_EXCEPTION;
+        auto cc = static_cast<Heap::CallContext *>(frame.jsFrame->context.m());
+        QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, accumulator);
+    MOTH_END_INSTR(StoreLocal)
+
     MOTH_BEGIN_INSTR(LoadScopedLocal)
         accumulator = loadScopedLocal(frame, index, scope);
     MOTH_END_INSTR(LoadScopedLocal)

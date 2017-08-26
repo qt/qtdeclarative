@@ -174,6 +174,20 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int star
             d << StackSlot::dump(destTemp, nFormals) << ", C" << constIndex;
         MOTH_END_INSTR(MoveConst)
 
+        MOTH_BEGIN_INSTR(LoadLocal)
+            if (index < nLocals)
+                d << "l" << index;
+            else
+                d << "a" << (index - nLocals);
+        MOTH_END_INSTR(LoadLocal)
+
+        MOTH_BEGIN_INSTR(StoreLocal)
+            if (index < nLocals)
+                d << ", " << "l" << index;
+            else
+                d << ", " << "a" << (index - nLocals);
+        MOTH_END_INSTR(StoreLocal)
+
         MOTH_BEGIN_INSTR(LoadScopedLocal)
             if (index < nLocals)
                 d << "l" << index << "@" << scope;
