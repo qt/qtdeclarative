@@ -69,27 +69,26 @@ int BytecodeGenerator::newRegisterArray(int n)
 
 void BytecodeGenerator::packInstruction(I &i)
 {
+    uchar type = *reinterpret_cast<uchar *>(i.packed);
+    Q_ASSERT(type >= MOTH_NUM_INSTRUCTIONS());
+    if (type >= MOTH_NUM_INSTRUCTIONS())
+        type -= MOTH_NUM_INSTRUCTIONS();
     int instructionsAsInts[sizeof(Instr)/sizeof(int)];
     int nMembers = Moth::Instr::argumentCount[static_cast<int>(i.type)];
-    char *data = i.packed;
-    Q_ASSERT(*data == static_cast<char>(Instr::Type::XWide));
-    data += 2;
-    memcpy(instructionsAsInts, data, nMembers*sizeof(int));
+    memcpy(instructionsAsInts, i.packed + 1, nMembers*sizeof(int));
     enum {
         Normal,
-        Wide,
-        XWide
+        Wide
     } width = Normal;
     for (int n = 0; n < nMembers; ++n) {
         if (width == Normal && (static_cast<char>(instructionsAsInts[n]) != instructionsAsInts[n]))
             width = Wide;
-        if (width == Wide && (static_cast<short>(instructionsAsInts[n]) != instructionsAsInts[n]))
-            width = XWide;
     }
     char *code = i.packed;
     switch (width) {
     case Normal:
-        *code++ = static_cast<char>(i.type);
+        *reinterpret_cast<uchar *>(code) = type;
+        ++code;
         for (int n = 0; n < nMembers; ++n) {
             char v = static_cast<char>(instructionsAsInts[n]);
             memcpy(code, &v, 1);
@@ -100,18 +99,6 @@ void BytecodeGenerator::packInstruction(I &i)
             i.offsetForJump = i.size - 1;
         break;
     case Wide:
-        *code++ = static_cast<char>(Instr::Type::Wide);
-        *code++ = static_cast<char>(i.type);
-        for (int n = 0; n < nMembers; ++n) {
-            short v = static_cast<short>(instructionsAsInts[n]);
-            memcpy(code, &v, 2);
-            code += 2;
-        }
-        i.size = code - i.packed;
-        if (i.offsetForJump != -1)
-            i.offsetForJump = i.size - 2;
-        break;
-    case XWide:
         // nothing to do
         break;
     }
@@ -129,14 +116,10 @@ void BytecodeGenerator::adjustJumpOffsets()
         int jumpOffset = linkedInstruction.position - (i.position + i.size);
 //        qDebug() << "adjusting jump offset for instruction" << index << i.position << i.size << "offsetForJump" << i.offsetForJump << "target"
 //                 << labels.at(i.linkedLabel) << linkedInstruction.position << "jumpOffset" << jumpOffset;
-        if (*i.packed == static_cast<char>(Instr::Type::XWide)) {
+        uchar type = *reinterpret_cast<const uchar *>(i.packed);
+        if (type >= MOTH_NUM_INSTRUCTIONS()) {
             Q_ASSERT(i.offsetForJump == i.size - 4);
             memcpy(c, &jumpOffset, sizeof(int));
-        } else if (*i.packed == static_cast<char>(Instr::Type::Wide)) {
-            Q_ASSERT(i.offsetForJump == i.size - 2);
-            short o = jumpOffset;
-            Q_ASSERT(o == jumpOffset);
-            memcpy(c, &o, sizeof(short));
         } else {
             Q_ASSERT(i.offsetForJump == i.size - 1);
             char o = jumpOffset;
@@ -199,11 +182,12 @@ int BytecodeGenerator::addInstructionHelper(Instr::Type type, const Instr &i, in
     int pos = instructions.size();
     int s = Moth::Instr::argumentCount[static_cast<int>(type)]*sizeof(int);
     if (offsetOfOffset != -1)
-        offsetOfOffset += 2;
-    I instr{type, static_cast<short>(s + 2), 0, currentLine, offsetOfOffset, -1, "\0\0" };
+        offsetOfOffset += 1;
+    I instr{type, static_cast<short>(s + 1), 0, currentLine, offsetOfOffset, -1, "\0\0" };
     char *code = instr.packed;
-    *code++ = static_cast<char>(Instr::Type::XWide);
-    *code++ = static_cast<char>(type);
+    *reinterpret_cast<uchar *>(code) = static_cast<uchar>(MOTH_NUM_INSTRUCTIONS() + static_cast<int>(type));
+    ++code;
+    Q_ASSERT(MOTH_NUM_INSTRUCTIONS() + static_cast<int>(type) < 256);
     memcpy(code, &i, s);
     instructions.append(instr);
 

@@ -71,9 +71,6 @@ QT_BEGIN_NAMESPACE
     op##_INSTRUCTION(name, nargs, __VA_ARGS__)
 
 /* for all jump instructions, the offset has to come last, to simplify the job of the bytecode generator */
-#define INSTR_Nop(op) INSTRUCTION(op, Nop, 0)
-#define INSTR_Wide(op) INSTRUCTION(op, Wide, 0)
-#define INSTR_XWide(op) INSTRUCTION(op, XWide, 0)
 #define INSTR_Ret(op) INSTRUCTION(op, Ret, 0)
 #define INSTR_Debug(op) INSTRUCTION(op, Debug, 0)
 #define INSTR_LoadConst(op) INSTRUCTION(op, LoadConst, 1, index)
@@ -186,9 +183,6 @@ QT_BEGIN_NAMESPACE
 
 
 #define FOR_EACH_MOTH_INSTR(F) \
-    F(Nop) \
-    F(Wide) \
-    F(XWide) \
     F(Ret) \
     F(Debug) \
     F(LoadConst) \
@@ -358,10 +352,6 @@ QT_BEGIN_NAMESPACE
         MOTH_ADJUST_CODE(int, nargs); \
         MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
         goto op_main_##name; \
-    op_short_##name: \
-        MOTH_ADJUST_CODE(short, nargs); \
-        MOTH_DECODE_ARGS(name, short, nargs, __VA_ARGS__) \
-        goto op_main_##name; \
     op_char_##name: \
         MOTH_ADJUST_CODE(char, nargs); \
         MOTH_DECODE_ARGS(name, char, nargs, __VA_ARGS__) \
@@ -390,30 +380,19 @@ QT_BEGIN_NAMESPACE
     INSTR_##instr(GET_LABEL)
 #define GET_LABEL_INSTRUCTION(name, ...) \
     &&op_char_##name,
-
 #define COLLECT_LABELS_WIDE(instr) \
     INSTR_##instr(GET_LABEL_WIDE)
 #define GET_LABEL_WIDE_INSTRUCTION(name, ...) \
-    &&op_short_##name,
-
-#define COLLECT_LABELS_XWIDE(instr) \
-    INSTR_##instr(GET_LABEL_XWIDE)
-#define GET_LABEL_XWIDE_INSTRUCTION(name, ...) \
     &&op_int_##name,
 
 #define MOTH_JUMP_TABLE \
     static const void *jumpTable[] = { \
         FOR_EACH_MOTH_INSTR(COLLECT_LABELS) \
         FOR_EACH_MOTH_INSTR(COLLECT_LABELS_WIDE) \
-        FOR_EACH_MOTH_INSTR(COLLECT_LABELS_XWIDE) \
     };
 
 #define MOTH_DISPATCH() \
-    goto *jumpTable[static_cast<int>(*code)];
-#define MOTH_DISPATCH_WIDE() \
-    goto *jumpTable[static_cast<int>(*code) + MOTH_NUM_INSTRUCTIONS()];
-#define MOTH_DISPATCH_XWIDE() \
-    goto *jumpTable[static_cast<int>(*code) + 2*MOTH_NUM_INSTRUCTIONS()];
+    goto *jumpTable[*reinterpret_cast<const uchar *>(code)];
 #else
 #define MOTH_JUMP_TABLE
 
@@ -424,23 +403,11 @@ QT_BEGIN_NAMESPACE
 #define MOTH_INSTR_CASE_AND_JUMP_WIDE(instr) \
     INSTR_##instr(GET_CASE_AND_JUMP_WIDE)
 #define GET_CASE_AND_JUMP_WIDE_INSTRUCTION(name, ...) \
-    case Instr::Type::name: goto op_short_##name;
-#define MOTH_INSTR_CASE_AND_JUMP_XWIDE(instr) \
-    INSTR_##instr(GET_CASE_AND_JUMP_XWIDE)
-#define GET_CASE_AND_JUMP_XWIDE_INSTRUCTION(name, ...) \
     case Instr::Type::name: goto op_int_##name;
 
 #define MOTH_DISPATCH() \
     switch (static_cast<Instr::Type>(*code)) { \
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_CASE_AND_JUMP) \
-    }
-#define MOTH_DISPATCH_WIDE() \
-    switch (static_cast<Instr::Type>(*code)) { \
-        FOR_EACH_MOTH_INSTR(MOTH_INSTR_CASE_AND_JUMP_WIDE) \
-    }
-#define MOTH_DISPATCH_XWIDE() \
-    switch (static_cast<Instr::Type>(*code)) { \
-        FOR_EACH_MOTH_INSTR(MOTH_INSTR_CASE_AND_JUMP_XWIDE) \
     }
 #endif
 
@@ -476,6 +443,11 @@ public:
     int stackSlot() const { return index; }
     operator int() const { return index; }
 
+    static QString dump(int reg, int nFormals) {
+        StackSlot t;
+        t.index = reg;
+        return t.dump(nFormals);
+    }
     QString dump(int nFormals) const {
         if (isRegister())
             return QStringLiteral("r%1").arg(index);
@@ -512,6 +484,8 @@ union Instr
 
     static int size(Type type);
 };
+
+Q_STATIC_ASSERT(MOTH_NUM_INSTRUCTIONS() < 128);
 
 template<int N>
 struct InstrMeta {
