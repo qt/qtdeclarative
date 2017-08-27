@@ -354,13 +354,13 @@ static inline ReturnedValue loadScopedLocal(CppStackFrame &frame, int index, int
 }
 
 static inline void storeScopedLocal(ExecutionEngine *engine, CppStackFrame &frame, int index, int scope,
-                                    const QV4::Value &value)
+                                    ReturnedValue value)
 {
     auto ctxt = getScope(frame.jsFrame, scope);
     Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
     auto cc = static_cast<Heap::CallContext *>(ctxt);
 
-    QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, value);
+    QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, Primitive::fromReturnedValue(value));
 }
 
 static inline const QV4::Value &constant(Function *function, int index)
@@ -486,7 +486,9 @@ static bool compareEqualInt(Value lhs, int rhs)
     }
 }
 
-#define STORE_IP() frame.instructionPointer = code
+#define STORE_IP() frame.instructionPointer = code;
+#define STORE_ACC() accumulator = acc;
+#define ACC Primitive::fromReturnedValue(acc)
 
 QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callData, Heap::ExecutionContext *context, QV4::Function *function)
 {
@@ -518,6 +520,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         frame.jsFrame->jsFunction = *jsFunction;
 
     QV4::Value &accumulator = frame.jsFrame->accumulator;
+    QV4::ReturnedValue acc = Encode::undefined();
 
     if (QV4::Debugging::Debugger *debugger = engine->debugger())
         debugger->enteringFunction();
@@ -528,31 +531,31 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_DISPATCH()
 
     MOTH_BEGIN_INSTR(LoadConst)
-        accumulator = constant(function, index);
+        acc = constant(function, index).asReturnedValue();
     MOTH_END_INSTR(LoadConst)
 
     MOTH_BEGIN_INSTR(LoadNull)
-        accumulator = Encode::null();
+        acc = Encode::null();
     MOTH_END_INSTR(LoadNull)
 
     MOTH_BEGIN_INSTR(LoadZero)
-        accumulator = Encode(static_cast<int>(0));
+        acc = Encode(static_cast<int>(0));
     MOTH_END_INSTR(LoadZero)
 
     MOTH_BEGIN_INSTR(LoadTrue)
-        accumulator = Encode(true);
+        acc = Encode(true);
     MOTH_END_INSTR(LoadTrue)
 
     MOTH_BEGIN_INSTR(LoadFalse)
-        accumulator = Encode(false);
+        acc = Encode(false);
     MOTH_END_INSTR(LoadFalse)
 
     MOTH_BEGIN_INSTR(LoadUndefined)
-        accumulator = Encode::undefined();
+        acc = Encode::undefined();
     MOTH_END_INSTR(LoadUndefined)
 
     MOTH_BEGIN_INSTR(LoadInt)
-        accumulator = Encode(value);
+        acc = Encode(value);
     MOTH_END_INSTR(LoadInt)
 
     MOTH_BEGIN_INSTR(MoveConst)
@@ -560,11 +563,11 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(MoveConst)
 
     MOTH_BEGIN_INSTR(LoadReg)
-        accumulator = STACK_VALUE(reg);
+        acc = STACK_VALUE(reg).asReturnedValue();
     MOTH_END_INSTR(LoadReg)
 
     MOTH_BEGIN_INSTR(StoreReg)
-        STACK_VALUE(reg) = accumulator;
+        STACK_VALUE(reg) = acc;
     MOTH_END_INSTR(StoreReg)
 
     MOTH_BEGIN_INSTR(MoveReg)
@@ -573,74 +576,78 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(LoadLocal)
         auto cc = static_cast<Heap::CallContext *>(frame.jsFrame->context.m());
-        accumulator = cc->locals[index];
+        acc = cc->locals[index].asReturnedValue();
     MOTH_END_INSTR(LoadLocal)
 
     MOTH_BEGIN_INSTR(StoreLocal)
         CHECK_EXCEPTION;
         auto cc = static_cast<Heap::CallContext *>(frame.jsFrame->context.m());
-        QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, accumulator);
+        QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, Primitive::fromReturnedValue(acc));
     MOTH_END_INSTR(StoreLocal)
 
     MOTH_BEGIN_INSTR(LoadScopedLocal)
-        accumulator = loadScopedLocal(frame, index, scope);
+        acc = loadScopedLocal(frame, index, scope);
     MOTH_END_INSTR(LoadScopedLocal)
 
     MOTH_BEGIN_INSTR(StoreScopedLocal)
         CHECK_EXCEPTION;
-        storeScopedLocal(engine, frame, index, scope, accumulator);
+        storeScopedLocal(engine, frame, index, scope, acc);
     MOTH_END_INSTR(StoreScopedLocal)
 
     MOTH_BEGIN_INSTR(LoadRuntimeString)
-        accumulator = function->compilationUnit->runtimeStrings[stringId];
+        acc = function->compilationUnit->runtimeStrings[stringId]->asReturnedValue();
     MOTH_END_INSTR(LoadRuntimeString)
 
     MOTH_BEGIN_INSTR(LoadRegExp)
-        accumulator = function->compilationUnit->runtimeRegularExpressions[regExpId];
+        acc = function->compilationUnit->runtimeRegularExpressions[regExpId].asReturnedValue();
     MOTH_END_INSTR(LoadRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)
-        accumulator = Runtime::method_closure(engine, value);
+        acc = Runtime::method_closure(engine, value);
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)
         STORE_IP();
-        accumulator = Runtime::method_loadName(engine, name);
+        acc = Runtime::method_loadName(engine, name);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(LoadGlobalLookup)
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
-        accumulator = l->globalGetter(l, engine);
+        acc = l->globalGetter(l, engine);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadGlobalLookup)
 
     MOTH_BEGIN_INSTR(StoreNameStrict)
         STORE_IP();
+        STORE_ACC();
         Runtime::method_storeNameStrict(engine, name, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreNameSloppy)
 
     MOTH_BEGIN_INSTR(StoreNameSloppy)
         STORE_IP();
+        STORE_ACC();
         Runtime::method_storeNameSloppy(engine, name, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreNameSloppy)
 
     MOTH_BEGIN_INSTR(LoadElement)
         STORE_IP();
-        accumulator = Runtime::method_loadElement(engine, STACK_VALUE(base), STACK_VALUE(index));
+        acc = Runtime::method_loadElement(engine, STACK_VALUE(base), STACK_VALUE(index));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadElement)
 
     MOTH_BEGIN_INSTR(LoadElementA)
         STORE_IP();
-        accumulator = Runtime::method_loadElement(engine, STACK_VALUE(base), accumulator);
+        STORE_ACC();
+        acc = Runtime::method_loadElement(engine, STACK_VALUE(base), accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadElementA)
 
     MOTH_BEGIN_INSTR(StoreElement)
         STORE_IP();
+        STORE_ACC();
         if (!Runtime::method_storeElement(engine, STACK_VALUE(base), STACK_VALUE(index), accumulator) && function->isStrict())
             engine->throwTypeError();
         CHECK_EXCEPTION;
@@ -648,32 +655,35 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(LoadProperty)
         STORE_IP();
-        accumulator = Runtime::method_loadProperty(engine, STACK_VALUE(base), name);
+        acc = Runtime::method_loadProperty(engine, STACK_VALUE(base), name);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadProperty)
 
     MOTH_BEGIN_INSTR(LoadPropertyA)
         STORE_IP();
-        accumulator = Runtime::method_loadProperty(engine, accumulator, name);
+        STORE_ACC();
+        acc = Runtime::method_loadProperty(engine, accumulator, name);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadPropertyA)
 
     MOTH_BEGIN_INSTR(GetLookup)
         STORE_IP();
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
-        accumulator = l->getter(l, engine, STACK_VALUE(base));
+        acc = l->getter(l, engine, STACK_VALUE(base));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(GetLookup)
 
     MOTH_BEGIN_INSTR(GetLookupA)
         STORE_IP();
+        STORE_ACC();
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
-        accumulator = l->getter(l, engine, accumulator);
+        acc = l->getter(l, engine, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(GetLookupA)
 
     MOTH_BEGIN_INSTR(StoreProperty)
         STORE_IP();
+        STORE_ACC();
         if (!Runtime::method_storeProperty(engine, STACK_VALUE(base), name, accumulator) && function->isStrict())
             engine->throwTypeError();
         CHECK_EXCEPTION;
@@ -681,6 +691,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(SetLookup)
         STORE_IP();
+        STORE_ACC();
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
         if (!l->setter(l, engine, STACK_VALUE(base), accumulator) && function->isStrict())
             engine->throwTypeError();
@@ -688,34 +699,41 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(SetLookup)
 
     MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
+        STORE_ACC();
         Runtime::method_storeQmlScopeObjectProperty(engine, STACK_VALUE(base), propertyIndex, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreScopeObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadScopeObjectProperty)
-        accumulator = Runtime::method_loadQmlScopeObjectProperty(engine, STACK_VALUE(base), propertyIndex, captureRequired);
+        STORE_IP();
+        acc = Runtime::method_loadQmlScopeObjectProperty(engine, STACK_VALUE(base), propertyIndex, captureRequired);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadScopeObjectProperty)
 
     MOTH_BEGIN_INSTR(StoreContextObjectProperty)
+        STORE_IP();
+        STORE_ACC();
         Runtime::method_storeQmlContextObjectProperty(engine, STACK_VALUE(base), propertyIndex, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreContextObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadContextObjectProperty)
-        accumulator = Runtime::method_loadQmlContextObjectProperty(engine, STACK_VALUE(base), propertyIndex, captureRequired);
+        STORE_IP();
+        acc = Runtime::method_loadQmlContextObjectProperty(engine, STACK_VALUE(base), propertyIndex, captureRequired);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadContextObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadIdObject)
-        accumulator = Runtime::method_loadQmlIdObject(engine, STACK_VALUE(base), index);
+        STORE_IP();
+        acc = Runtime::method_loadQmlIdObject(engine, STACK_VALUE(base), index);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadIdObject)
 
     MOTH_BEGIN_INSTR(CallValue)
         STORE_IP();
+        STORE_ACC();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        accumulator = Runtime::method_callValue(engine, accumulator, cData);
+        acc = Runtime::method_callValue(engine, accumulator, cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallValue)
 
@@ -723,7 +741,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
         cData->thisObject = STACK_VALUE(base);
-        accumulator = Runtime::method_callProperty(engine, name, cData);
+        acc = Runtime::method_callProperty(engine, name, cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallProperty)
 
@@ -731,7 +749,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
         cData->thisObject = STACK_VALUE(base);
-        accumulator = Runtime::method_callPropertyLookup(engine, lookupIndex, cData);
+        acc = Runtime::method_callPropertyLookup(engine, lookupIndex, cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallPropertyLookup)
 
@@ -739,28 +757,28 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
         cData->thisObject = STACK_VALUE(base);
-        accumulator = Runtime::method_callElement(engine, STACK_VALUE(index), cData);
+        acc = Runtime::method_callElement(engine, STACK_VALUE(index), cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallName)
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        accumulator = Runtime::method_callName(engine, name, cData);
+        acc = Runtime::method_callName(engine, name, cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallName)
 
     MOTH_BEGIN_INSTR(CallPossiblyDirectEval)
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        accumulator = Runtime::method_callPossiblyDirectEval(engine, cData);
+        acc = Runtime::method_callPossiblyDirectEval(engine, cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallPossiblyDirectEval)
 
     MOTH_BEGIN_INSTR(CallGlobalLookup)
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        accumulator = Runtime::method_callGlobalLookup(engine, index, cData);
+        acc = Runtime::method_callGlobalLookup(engine, index, cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallGlobalLookup)
 
@@ -770,22 +788,23 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(ThrowException)
         STORE_IP();
+        STORE_ACC();
         Runtime::method_throwException(engine, accumulator);
         goto catchException;
     MOTH_END_INSTR(ThrowException)
 
     MOTH_BEGIN_INSTR(GetException)
-        accumulator = engine->hasException ? *engine->exceptionValue : Primitive::emptyValue();
+        acc = engine->hasException ? engine->exceptionValue->asReturnedValue() : Primitive::emptyValue().asReturnedValue();
         engine->hasException = false;
     MOTH_END_INSTR(HasException)
 
     MOTH_BEGIN_INSTR(SetException)
-        *engine->exceptionValue = accumulator;
+        *engine->exceptionValue = acc;
         engine->hasException = true;
     MOTH_END_INSTR(SetException)
 
     MOTH_BEGIN_INSTR(UnwindException)
-        accumulator = Runtime::method_unwindException(engine);
+        acc = Runtime::method_unwindException(engine);
     MOTH_END_INSTR(UnwindException)
 
     MOTH_BEGIN_INSTR(PushCatchContext)
@@ -794,6 +813,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(PushWithContext)
         STORE_IP();
+        STORE_ACC();
         accumulator = accumulator.toObject(engine);
         CHECK_EXCEPTION;
         STACK_VALUE(reg) = Runtime::method_pushWithContext(accumulator, static_cast<QV4::NoThrowEngine*>(engine));
@@ -804,12 +824,14 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(PopContext)
 
     MOTH_BEGIN_INSTR(ForeachIteratorObject)
-        accumulator = Runtime::method_foreachIterator(engine, accumulator);
+        STORE_ACC();
+        acc = Runtime::method_foreachIterator(engine, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ForeachIteratorObject)
 
     MOTH_BEGIN_INSTR(ForeachNextPropertyName)
-        accumulator = Runtime::method_foreachNextPropertyName(accumulator);
+        STORE_ACC();
+        acc = Runtime::method_foreachNextPropertyName(accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ForeachNextPropertyName)
 
@@ -820,9 +842,9 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
                 engine->throwTypeError();
                 goto catchException;
             }
-            accumulator = Encode(false);
+            acc = Encode(false);
         } else {
-            accumulator = Encode(true);
+            acc = Encode(true);
         }
     MOTH_END_INSTR(DeleteMember)
 
@@ -833,9 +855,9 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
                 engine->throwTypeError();
                 goto catchException;
             }
-            accumulator = Encode(false);
+            acc = Encode(false);
         } else {
-            accumulator = Encode(true);
+            acc = Encode(true);
         }
     MOTH_END_INSTR(DeleteSubscript)
 
@@ -847,18 +869,19 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
                 engine->throwSyntaxError(QStringLiteral("Can't delete property %1").arg(n));
                 goto catchException;
             }
-            accumulator = Encode(false);
+            acc = Encode(false);
         } else {
-            accumulator = Encode(true);
+            acc = Encode(true);
         }
     MOTH_END_INSTR(DeleteName)
 
     MOTH_BEGIN_INSTR(TypeofName)
-        accumulator = Runtime::method_typeofName(engine, name);
+        acc = Runtime::method_typeofName(engine, name);
     MOTH_END_INSTR(TypeofName)
 
     MOTH_BEGIN_INSTR(TypeofValue)
-        accumulator = Runtime::method_typeofValue(engine, accumulator);
+        STORE_ACC();
+        acc = Runtime::method_typeofValue(engine, accumulator);
     MOTH_END_INSTR(TypeofValue)
 
     MOTH_BEGIN_INSTR(DeclareVar)
@@ -867,20 +890,20 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(DefineArray)
         QV4::Value *arguments = stack + args;
-        accumulator = Runtime::method_arrayLiteral(engine, arguments, argc);
+        acc = Runtime::method_arrayLiteral(engine, arguments, argc);
     MOTH_END_INSTR(DefineArray)
 
     MOTH_BEGIN_INSTR(DefineObjectLiteral)
         QV4::Value *arguments = stack + args;
-        accumulator = Runtime::method_objectLiteral(engine, arguments, internalClassId, arrayValueCount, arrayGetterSetterCountAndFlags);
+        acc = Runtime::method_objectLiteral(engine, arguments, internalClassId, arrayValueCount, arrayGetterSetterCountAndFlags);
     MOTH_END_INSTR(DefineObjectLiteral)
 
     MOTH_BEGIN_INSTR(CreateMappedArgumentsObject)
-        accumulator = Runtime::method_createMappedArgumentsObject(engine);
+        acc = Runtime::method_createMappedArgumentsObject(engine);
     MOTH_END_INSTR(CreateMappedArgumentsObject)
 
     MOTH_BEGIN_INSTR(CreateUnmappedArgumentsObject)
-        accumulator = Runtime::method_createUnmappedArgumentsObject(engine);
+        acc = Runtime::method_createUnmappedArgumentsObject(engine);
     MOTH_END_INSTR(CreateUnmappedArgumentsObject)
 
     MOTH_BEGIN_INSTR(ConvertThisToObject)
@@ -898,7 +921,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_BEGIN_INSTR(Construct)
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        accumulator = Runtime::method_construct(engine, STACK_VALUE(func), cData);
+        acc = Runtime::method_construct(engine, STACK_VALUE(func), cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Construct)
 
@@ -907,53 +930,56 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(Jump)
 
     MOTH_BEGIN_INSTR(JumpEq)
-        if ((accumulator.integerCompatible() && accumulator.int_32()) ||
-            accumulator.toBoolean())
+        if ((ACC.integerCompatible() && ACC.int_32()) || ACC.toBoolean())
             code += offset;
     MOTH_END_INSTR(JumpEq)
 
     MOTH_BEGIN_INSTR(JumpNe)
-        if ((accumulator.integerCompatible() && !accumulator.int_32()) ||
-            !accumulator.toBoolean())
+        if ((ACC.integerCompatible() && !ACC.int_32()) || !ACC.toBoolean())
             code += offset;
     MOTH_END_INSTR(JumpNe)
 
     MOTH_BEGIN_INSTR(CmpJmpEqNull)
-        if (accumulator.isNullOrUndefined())
+        if (ACC.isNullOrUndefined())
             code += offset;
     MOTH_END_INSTR(CmpJmpEqNull)
 
     MOTH_BEGIN_INSTR(CmpJmpNeNull)
-        if (!accumulator.isNullOrUndefined())
+        if (!ACC.isNullOrUndefined())
             code += offset;
     MOTH_END_INSTR(CmpJmpNeNull)
 
     MOTH_BEGIN_INSTR(CmpJmpEqInt)
-        if (accumulator.isIntOrBool()) {
-            if (accumulator.int_32() == lhs)
+        if (ACC.isIntOrBool()) {
+            if (ACC.int_32() == lhs)
             code += offset;
-        } else if (compareEqualInt(accumulator, lhs)) {
-            code += offset;
+        } else {
+            STORE_ACC();
+            if (compareEqualInt(accumulator, lhs))
+                code += offset;
         }
     MOTH_END_INSTR(CmpJmpEqInt)
 
     MOTH_BEGIN_INSTR(CmpJmpNeInt)
-        if (accumulator.isIntOrBool()) {
-            if (accumulator.int_32() != lhs)
+        if (ACC.isIntOrBool()) {
+            if (ACC.int_32() != lhs)
             code += offset;
-        } else if (!compareEqualInt(accumulator, lhs)) {
-            code += offset;
+        } else {
+            STORE_ACC();
+            if (!compareEqualInt(accumulator, lhs))
+                code += offset;
         }
     MOTH_END_INSTR(CmpJmpNeInt)
 
     MOTH_BEGIN_INSTR(CmpJmpEq)
         const Value left = STACK_VALUE(lhs);
-        if (Q_LIKELY(left.asReturnedValue() == accumulator.asReturnedValue())) {
+        if (Q_LIKELY(left.asReturnedValue() == ACC.asReturnedValue())) {
             code += offset;
-        } else if (Q_LIKELY(left.isInteger() && accumulator.isInteger())) {
-            if (left.int_32() == accumulator.int_32())
+        } else if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
+            if (left.int_32() == ACC.int_32())
                 code += offset;
         } else {
+            STORE_ACC();
             if (compareEqual(left, accumulator))
                 code += offset;
         }
@@ -961,10 +987,11 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(CmpJmpNe)
         const Value left = STACK_VALUE(lhs);
-        if (Q_LIKELY(left.isInteger() && accumulator.isInteger())) {
-            if (left.int_32() != accumulator.int_32())
+        if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
+            if (left.int_32() != ACC.int_32())
                 code += offset;
         } else {
+            STORE_ACC();
             if (!compareEqual(left, accumulator))
                 code += offset;
         }
@@ -972,13 +999,14 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(CmpJmpGt)
         const Value left = STACK_VALUE(lhs);
-        if (Q_LIKELY(left.isInteger() && accumulator.isInteger())) {
-            if (left.int_32() > accumulator.int_32())
+        if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
+            if (left.int_32() > ACC.int_32())
                 code += offset;
-        } else if (left.isNumber() && accumulator.isNumber()) {
-            if (left.asDouble() > accumulator.asDouble())
+        } else if (left.isNumber() && ACC.isNumber()) {
+            if (left.asDouble() > ACC.asDouble())
                 code += offset;
         } else {
+            STORE_ACC();
             if (Runtime::method_compareGreaterThan(left, accumulator))
                 code += offset;
         }
@@ -986,13 +1014,14 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(CmpJmpGe)
         const Value left = STACK_VALUE(lhs);
-        if (Q_LIKELY(left.isInteger() && accumulator.isInteger())) {
-            if (left.int_32() >= accumulator.int_32())
+        if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
+            if (left.int_32() >= ACC.int_32())
                 code += offset;
-        } else if (left.isNumber() && accumulator.isNumber()) {
-            if (left.asDouble() >= accumulator.asDouble())
+        } else if (left.isNumber() && ACC.isNumber()) {
+            if (left.asDouble() >= ACC.asDouble())
                 code += offset;
         } else {
+            STORE_ACC();
             if (Runtime::method_compareGreaterEqual(left, accumulator))
                 code += offset;
         }
@@ -1000,13 +1029,14 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(CmpJmpLt)
         const Value left = STACK_VALUE(lhs);
-        if (Q_LIKELY(left.isInteger() && accumulator.isInteger())) {
-            if (left.int_32() < accumulator.int_32())
+        if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
+            if (left.int_32() < ACC.int_32())
                 code += offset;
-        } else if (left.isNumber() && accumulator.isNumber()) {
-            if (left.asDouble() < accumulator.asDouble())
+        } else if (left.isNumber() && ACC.isNumber()) {
+            if (left.asDouble() < ACC.asDouble())
                 code += offset;
         } else {
+            STORE_ACC();
             if (Runtime::method_compareLessThan(left, accumulator))
                 code += offset;
         }
@@ -1014,27 +1044,32 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(CmpJmpLe)
         const Value left = STACK_VALUE(lhs);
-        if (Q_LIKELY(left.isInteger() && accumulator.isInteger())) {
-            if (left.int_32() <= accumulator.int_32())
+        if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
+            if (left.int_32() <= ACC.int_32())
                 code += offset;
-        } else if (left.isNumber() && accumulator.isNumber()) {
-            if (left.asDouble() <= accumulator.asDouble())
+        } else if (left.isNumber() && ACC.isNumber()) {
+            if (left.asDouble() <= ACC.asDouble())
                 code += offset;
         } else {
+            STORE_ACC();
             if (Runtime::method_compareLessEqual(left, accumulator))
                 code += offset;
         }
     MOTH_END_INSTR(CmpJmpLe)
 
     MOTH_BEGIN_INSTR(JumpStrictEqual)
-        if (STACK_VALUE(lhs).rawValue() == accumulator.rawValue() && !accumulator.isNaN())
+        if (STACK_VALUE(lhs).rawValue() == ACC.rawValue() && !ACC.isNaN())
             code += offset;
-        else if (RuntimeHelpers::strictEqual(STACK_VALUE(lhs), accumulator))
-            code += offset;
+        else {
+            STORE_ACC();
+            if (RuntimeHelpers::strictEqual(STACK_VALUE(lhs), accumulator))
+                code += offset;
+        }
     MOTH_END_INSTR(JumpStrictEqual)
 
     MOTH_BEGIN_INSTR(JumpStrictNotEqual)
-        if (STACK_VALUE(lhs).rawValue() != accumulator.rawValue() || accumulator.isNaN()) {
+        if (STACK_VALUE(lhs).rawValue() != ACC.rawValue() || ACC.isNaN()) {
+            STORE_ACC();
             if (!RuntimeHelpers::strictEqual(STACK_VALUE(lhs), accumulator))
                 code += offset;
         }
@@ -1051,157 +1086,177 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(JumpStrictNotEqualStackSlotInt)
 
     MOTH_BEGIN_INSTR(UNot)
-        if (accumulator.integerCompatible()) {
-            accumulator = Encode(!static_cast<bool>(accumulator.int_32()));
+        if (ACC.integerCompatible()) {
+            acc = Encode(!static_cast<bool>(ACC.int_32()));
         } else {
-            accumulator = Encode(!accumulator.toBoolean());
+            acc = Encode(!ACC.toBoolean());
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(UNot)
 
     MOTH_BEGIN_INSTR(UPlus)
-        if (!accumulator.isNumber()) {
-            accumulator = Encode(accumulator.toNumberImpl());
+        if (!ACC.isNumber()) {
+            STORE_ACC();
+            acc = Encode(accumulator.toNumberImpl());
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(UPlus)
 
     MOTH_BEGIN_INSTR(UMinus)
-        if (Q_LIKELY(accumulator.integerCompatible() && accumulator.int_32() != 0 &&
-                accumulator.int_32() != std::numeric_limits<int>::min())) {
-            accumulator = sub_int32(0, accumulator.int_32());
+        if (Q_LIKELY(ACC.integerCompatible() && ACC.int_32() != 0 &&
+                ACC.int_32() != std::numeric_limits<int>::min())) {
+            acc = sub_int32(0, ACC.int_32());
         } else {
-            accumulator = Encode(-accumulator.toNumber());
+            STORE_ACC();
+            acc = Encode(-accumulator.toNumber());
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(UMinus)
 
     MOTH_BEGIN_INSTR(UCompl)
-        if (Q_LIKELY(accumulator.integerCompatible())) {
-            accumulator.setInt_32(~accumulator.int_32());
+        if (Q_LIKELY(ACC.integerCompatible())) {
+            acc = Encode(~ACC.int_32());
         } else {
-            accumulator = Encode((int)~accumulator.toInt32());
+            STORE_ACC();
+            acc = Encode((int)~accumulator.toInt32());
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(UCompl)
 
     MOTH_BEGIN_INSTR(Increment)
-        if (Q_LIKELY(accumulator.integerCompatible())) {
-            accumulator = add_int32(accumulator.int_32(), 1);
-        } else if (accumulator.isDouble()) {
-            accumulator = QV4::Encode(accumulator.doubleValue() + 1.);
+        if (Q_LIKELY(ACC.integerCompatible())) {
+            acc = add_int32(ACC.int_32(), 1);
+        } else if (ACC.isDouble()) {
+            acc = QV4::Encode(ACC.doubleValue() + 1.);
         } else {
-            accumulator = Encode(accumulator.toNumberImpl() + 1.);
+            STORE_ACC();
+            acc = Encode(accumulator.toNumberImpl() + 1.);
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(Increment)
 
     MOTH_BEGIN_INSTR(Decrement)
-        if (Q_LIKELY(accumulator.integerCompatible())) {
-            accumulator = sub_int32(accumulator.int_32(), 1);
-        } else if (accumulator.isDouble()) {
-            accumulator = QV4::Encode(accumulator.doubleValue() - 1.);
+        if (Q_LIKELY(ACC.integerCompatible())) {
+            acc = sub_int32(ACC.int_32(), 1);
+        } else if (ACC.isDouble()) {
+            acc = QV4::Encode(ACC.doubleValue() - 1.);
         } else {
-            accumulator = Encode(accumulator.toNumberImpl() - 1.);
+            STORE_ACC();
+            acc = Encode(accumulator.toNumberImpl() - 1.);
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(Decrement)
 
     MOTH_BEGIN_INSTR(Binop)
         QV4::Runtime::BinaryOperation op = *reinterpret_cast<QV4::Runtime::BinaryOperation *>(reinterpret_cast<char *>(&engine->runtime.runtimeMethods[alu]));
-        accumulator = op(STACK_VALUE(lhs), accumulator);
+        STORE_ACC();
+        acc = op(STACK_VALUE(lhs), accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Binop)
 
     MOTH_BEGIN_INSTR(Add)
         const Value left = STACK_VALUE(lhs);
-        if (Q_LIKELY(Value::integerCompatible(left, accumulator))) {
-            accumulator = add_int32(left.int_32(), accumulator.int_32());
-        } else if (left.isNumber() && accumulator.isNumber()) {
-            accumulator = Encode(left.asDouble() + accumulator.asDouble());
+        if (Q_LIKELY(Value::integerCompatible(left, ACC))) {
+            acc = add_int32(left.int_32(), ACC.int_32());
+        } else if (left.isNumber() && ACC.isNumber()) {
+            acc = Encode(left.asDouble() + ACC.asDouble());
         } else {
-            accumulator = Runtime::method_add(engine, left, accumulator);
+            STORE_ACC();
+            acc = Runtime::method_add(engine, left, accumulator);
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(Add)
 
     MOTH_BEGIN_INSTR(Sub)
         const Value left = STACK_VALUE(lhs);
-        if (Q_LIKELY(Value::integerCompatible(left, accumulator))) {
-            accumulator = sub_int32(left.int_32(), accumulator.int_32());
-        } else if (left.isNumber() && accumulator.isNumber()) {
-            accumulator = Encode(left.asDouble() - accumulator.asDouble());
+        if (Q_LIKELY(Value::integerCompatible(left, ACC))) {
+            acc = sub_int32(left.int_32(), ACC.int_32());
+        } else if (left.isNumber() && ACC.isNumber()) {
+            acc = Encode(left.asDouble() - ACC.asDouble());
         } else {
-            accumulator = Runtime::method_sub(left, accumulator);
+            STORE_ACC();
+            acc = Runtime::method_sub(left, accumulator);
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(Sub)
 
     MOTH_BEGIN_INSTR(Mul)
         const Value left = STACK_VALUE(lhs);
-        if (Q_LIKELY(Value::integerCompatible(left, accumulator))) {
-            accumulator = mul_int32(left.int_32(), accumulator.int_32());
-        } else if (left.isNumber() && accumulator.isNumber()) {
-            accumulator = Encode(left.asDouble() * accumulator.asDouble());
+        if (Q_LIKELY(Value::integerCompatible(left, ACC))) {
+            acc = mul_int32(left.int_32(), ACC.int_32());
+        } else if (left.isNumber() && ACC.isNumber()) {
+            acc = Encode(left.asDouble() * ACC.asDouble());
         } else {
-            accumulator = Runtime::method_mul(left, accumulator);
+            STORE_ACC();
+            acc = Runtime::method_mul(left, accumulator);
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(Mul)
 
     MOTH_BEGIN_INSTR(BitAnd)
-        accumulator = Encode((int)(STACK_VALUE(lhs).toInt32() & accumulator.toInt32()));
+        STORE_ACC();
+        acc = Encode((int)(STACK_VALUE(lhs).toInt32() & accumulator.toInt32()));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitAnd)
 
     MOTH_BEGIN_INSTR(BitOr)
-        accumulator = Encode((int)(STACK_VALUE(lhs).toInt32() | accumulator.toInt32()));
+        STORE_ACC();
+        acc = Encode((int)(STACK_VALUE(lhs).toInt32() | accumulator.toInt32()));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitOr)
 
     MOTH_BEGIN_INSTR(BitXor)
-        accumulator = Encode((int)(STACK_VALUE(lhs).toInt32() ^ accumulator.toInt32()));
+        STORE_ACC();
+        acc = Encode((int)(STACK_VALUE(lhs).toInt32() ^ accumulator.toInt32()));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitXor)
 
     MOTH_BEGIN_INSTR(Shr)
-        accumulator = Encode((int)(STACK_VALUE(lhs).toInt32() >> (accumulator.toInt32() & 0x1f)));
+        STORE_ACC();
+        acc = Encode((int)(STACK_VALUE(lhs).toInt32() >> (accumulator.toInt32() & 0x1f)));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Shr)
 
     MOTH_BEGIN_INSTR(Shl)
-        accumulator = Encode((int)(STACK_VALUE(lhs).toInt32() << (accumulator.toInt32() & 0x1f)));
+        STORE_ACC();
+        acc = Encode((int)(STACK_VALUE(lhs).toInt32() << (accumulator.toInt32() & 0x1f)));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Shl)
 
     MOTH_BEGIN_INSTR(BitAndConst)
-        accumulator = QV4::Primitive::fromInt32(accumulator.toInt32() & rhs);
+        STORE_ACC();
+        acc = Encode(accumulator.toInt32() & rhs);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitAndConst)
 
     MOTH_BEGIN_INSTR(BitOrConst)
-        accumulator = QV4::Primitive::fromInt32(accumulator.toInt32() | rhs);
+        STORE_ACC();
+        acc = Encode(accumulator.toInt32() | rhs);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitOrConst)
 
     MOTH_BEGIN_INSTR(BitXorConst)
-        accumulator = QV4::Primitive::fromInt32(accumulator.toInt32() ^ rhs);
+        STORE_ACC();
+        acc = Encode(accumulator.toInt32() ^ rhs);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitXorConst)
 
     MOTH_BEGIN_INSTR(ShrConst)
-        accumulator = QV4::Primitive::fromInt32(accumulator.toInt32() >> rhs);
+        STORE_ACC();
+        acc = Encode(accumulator.toInt32() >> rhs);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ShrConst)
 
     MOTH_BEGIN_INSTR(ShlConst)
-        accumulator = QV4::Primitive::fromInt32(accumulator.toInt32() << rhs);
+        STORE_ACC();
+        acc = Encode(accumulator.toInt32() << rhs);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ShlConst)
 
     MOTH_BEGIN_INSTR(BinopContext)
+        STORE_ACC();
         QV4::Runtime::BinaryOperationContext op = *reinterpret_cast<QV4::Runtime::BinaryOperationContext *>(reinterpret_cast<char *>(&engine->runtime.runtimeMethods[alu]));
-        accumulator = op(engine, STACK_VALUE(lhs), accumulator);
+        acc = op(engine, STACK_VALUE(lhs), accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BinopContext)
 
@@ -1224,13 +1279,13 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(LoadQmlImportedScripts)
 
     MOTH_BEGIN_INSTR(LoadQmlSingleton)
-        accumulator = Runtime::method_loadQmlSingleton(static_cast<QV4::NoThrowEngine*>(engine), name);
+        acc = Runtime::method_loadQmlSingleton(static_cast<QV4::NoThrowEngine*>(engine), name);
     MOTH_END_INSTR(LoadQmlSingleton)
 
     catchException:
         Q_ASSERT(engine->hasException);
         if (!exceptionHandler) {
-            accumulator = Primitive::undefinedValue();
+            acc = Encode::undefined();
             goto functionExit;
         }
         code = exceptionHandler;
@@ -1238,7 +1293,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
 functionExit:
     if (QV4::Debugging::Debugger *debugger = engine->debugger())
-        debugger->leavingFunction(accumulator.asReturnedValue());
+        debugger->leavingFunction(ACC.asReturnedValue());
     engine->currentStackFrame = frame.parent;
     engine->jsStackTop = jsStackTop;
 
@@ -1247,5 +1302,5 @@ functionExit:
         QQmlPropertyCapture::registerQmlDependencies(static_cast<Heap::QmlContext *>(context), engine, function->compiledFunction);
     }
 
-    return accumulator.asReturnedValue();
+    return ACC.asReturnedValue();
 }
