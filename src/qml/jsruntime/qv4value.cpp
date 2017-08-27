@@ -113,6 +113,7 @@ double Value::toNumberImpl() const
     {
         Q_ASSERT(isObject());
         Scope scope(objectValue()->engine());
+        ScopedValue protectThis(scope, *this);
         ScopedValue prim(scope, RuntimeHelpers::toPrimitive(*this, NUMBER_HINT));
             if (scope.engine->hasException)
                 return 0;

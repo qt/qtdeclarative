@@ -457,7 +457,7 @@ static bool compareEqual(Value lhs, Value rhs)
     }
 }
 
-static bool compareEqualInt(Value lhs, int rhs)
+static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
 {
   redo:
     switch (lhs.quickType()) {
@@ -470,9 +470,9 @@ static bool compareEqualInt(Value lhs, int rhs)
     case Value::QT_ManagedOrUndefined3:
         // LHS: Managed
         if (lhs.m()->vtable()->isString)
-            return RuntimeHelpers::toNumber(lhs) == rhs;
-        else
-            lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
+            return RuntimeHelpers::stringToNumber(static_cast<String &>(lhs).toQString()) == rhs;
+        accumulator = lhs;
+        lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(accumulator), PREFERREDTYPE_HINT));
         goto redo;
     case Value::QT_Empty:
         Q_UNREACHABLE();
@@ -582,7 +582,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_BEGIN_INSTR(StoreLocal)
         CHECK_EXCEPTION;
         auto cc = static_cast<Heap::CallContext *>(frame.jsFrame->context.m());
-        QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, Primitive::fromReturnedValue(acc));
+        QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, ACC);
     MOTH_END_INSTR(StoreLocal)
 
     MOTH_BEGIN_INSTR(LoadScopedLocal)
@@ -952,10 +952,9 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_BEGIN_INSTR(CmpJmpEqInt)
         if (ACC.isIntOrBool()) {
             if (ACC.int_32() == lhs)
-            code += offset;
+                code += offset;
         } else {
-            STORE_ACC();
-            if (compareEqualInt(accumulator, lhs))
+            if (compareEqualInt(accumulator, ACC, lhs))
                 code += offset;
         }
     MOTH_END_INSTR(CmpJmpEqInt)
@@ -965,8 +964,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
             if (ACC.int_32() != lhs)
             code += offset;
         } else {
-            STORE_ACC();
-            if (!compareEqualInt(accumulator, lhs))
+            if (!compareEqualInt(accumulator, ACC, lhs))
                 code += offset;
         }
     MOTH_END_INSTR(CmpJmpNeInt)
@@ -1096,8 +1094,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
 
     MOTH_BEGIN_INSTR(UPlus)
         if (!ACC.isNumber()) {
-            STORE_ACC();
-            acc = Encode(accumulator.toNumberImpl());
+            acc = Encode(ACC.toNumberImpl());
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(UPlus)
@@ -1107,8 +1104,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
                 ACC.int_32() != std::numeric_limits<int>::min())) {
             acc = sub_int32(0, ACC.int_32());
         } else {
-            STORE_ACC();
-            acc = Encode(-accumulator.toNumber());
+            acc = Encode(-ACC.toNumber());
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(UMinus)
@@ -1117,8 +1113,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         if (Q_LIKELY(ACC.integerCompatible())) {
             acc = Encode(~ACC.int_32());
         } else {
-            STORE_ACC();
-            acc = Encode((int)~accumulator.toInt32());
+            acc = Encode((int)~ACC.toInt32());
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(UCompl)
@@ -1129,8 +1124,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         } else if (ACC.isDouble()) {
             acc = QV4::Encode(ACC.doubleValue() + 1.);
         } else {
-            STORE_ACC();
-            acc = Encode(accumulator.toNumberImpl() + 1.);
+            acc = Encode(ACC.toNumberImpl() + 1.);
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(Increment)
@@ -1141,8 +1135,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         } else if (ACC.isDouble()) {
             acc = QV4::Encode(ACC.doubleValue() - 1.);
         } else {
-            STORE_ACC();
-            acc = Encode(accumulator.toNumberImpl() - 1.);
+            acc = Encode(ACC.toNumberImpl() - 1.);
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(Decrement)
@@ -1194,62 +1187,52 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(Mul)
 
     MOTH_BEGIN_INSTR(BitAnd)
-        STORE_ACC();
-        acc = Encode((int)(STACK_VALUE(lhs).toInt32() & accumulator.toInt32()));
+        acc = Encode((int)(STACK_VALUE(lhs).toInt32() & ACC.toInt32()));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitAnd)
 
     MOTH_BEGIN_INSTR(BitOr)
-        STORE_ACC();
-        acc = Encode((int)(STACK_VALUE(lhs).toInt32() | accumulator.toInt32()));
+        acc = Encode((int)(STACK_VALUE(lhs).toInt32() | ACC.toInt32()));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitOr)
 
     MOTH_BEGIN_INSTR(BitXor)
-        STORE_ACC();
-        acc = Encode((int)(STACK_VALUE(lhs).toInt32() ^ accumulator.toInt32()));
+        acc = Encode((int)(STACK_VALUE(lhs).toInt32() ^ ACC.toInt32()));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitXor)
 
     MOTH_BEGIN_INSTR(Shr)
-        STORE_ACC();
-        acc = Encode((int)(STACK_VALUE(lhs).toInt32() >> (accumulator.toInt32() & 0x1f)));
+        acc = Encode((int)(STACK_VALUE(lhs).toInt32() >> (ACC.toInt32() & 0x1f)));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Shr)
 
     MOTH_BEGIN_INSTR(Shl)
-        STORE_ACC();
-        acc = Encode((int)(STACK_VALUE(lhs).toInt32() << (accumulator.toInt32() & 0x1f)));
+        acc = Encode((int)(STACK_VALUE(lhs).toInt32() << (ACC.toInt32() & 0x1f)));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Shl)
 
     MOTH_BEGIN_INSTR(BitAndConst)
-        STORE_ACC();
-        acc = Encode(accumulator.toInt32() & rhs);
+        acc = Encode(ACC.toInt32() & rhs);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitAndConst)
 
     MOTH_BEGIN_INSTR(BitOrConst)
-        STORE_ACC();
-        acc = Encode(accumulator.toInt32() | rhs);
+        acc = Encode(ACC.toInt32() | rhs);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitOrConst)
 
     MOTH_BEGIN_INSTR(BitXorConst)
-        STORE_ACC();
-        acc = Encode(accumulator.toInt32() ^ rhs);
+        acc = Encode(ACC.toInt32() ^ rhs);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitXorConst)
 
     MOTH_BEGIN_INSTR(ShrConst)
-        STORE_ACC();
-        acc = Encode(accumulator.toInt32() >> rhs);
+        acc = Encode(ACC.toInt32() >> rhs);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ShrConst)
 
     MOTH_BEGIN_INSTR(ShlConst)
-        STORE_ACC();
-        acc = Encode(accumulator.toInt32() << rhs);
+        acc = Encode(ACC.toInt32() << rhs);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ShlConst)
 
