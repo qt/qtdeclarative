@@ -75,13 +75,10 @@ int Value::toUInt16() const
     return (unsigned short)number;
 }
 
-bool Value::toBoolean() const
+bool Value::toBooleanImpl(Value val)
 {
-    if (integerCompatible())
-        return static_cast<bool>(int_32());
-
-    if (isManagedOrUndefined()) {
-        Heap::Base *b = m();
+    if (val.isManagedOrUndefined()) {
+        Heap::Base *b = val.m();
         if (!b)
             return false;
 #ifdef V4_BOOTSTRAP
@@ -94,13 +91,13 @@ bool Value::toBoolean() const
     }
 
     // double
-    double d = doubleValue();
+    double d = val.doubleValue();
     return d && !std::isnan(d);
 }
 
-double Value::toNumberImpl() const
+double Value::toNumberImpl(Value val)
 {
-    switch (type()) {
+    switch (val.type()) {
     case QV4::Value::Undefined_Type:
         return std::numeric_limits<double>::quiet_NaN();
     case QV4::Value::Managed_Type:
@@ -108,13 +105,13 @@ double Value::toNumberImpl() const
         Q_UNIMPLEMENTED();
         Q_FALLTHROUGH();
 #else
-        if (String *s = stringValue())
+        if (String *s = val.stringValue())
             return RuntimeHelpers::stringToNumber(s->toQString());
     {
-        Q_ASSERT(isObject());
-        Scope scope(objectValue()->engine());
-        ScopedValue protectThis(scope, *this);
-        ScopedValue prim(scope, RuntimeHelpers::toPrimitive(*this, NUMBER_HINT));
+        Q_ASSERT(val.isObject());
+        Scope scope(val.objectValue()->engine());
+        ScopedValue protectThis(scope, val);
+        ScopedValue prim(scope, RuntimeHelpers::toPrimitive(val, NUMBER_HINT));
             if (scope.engine->hasException)
                 return 0;
             return prim->toNumber();
@@ -123,7 +120,7 @@ double Value::toNumberImpl() const
     case QV4::Value::Null_Type:
     case QV4::Value::Boolean_Type:
     case QV4::Value::Integer_Type:
-        return int_32();
+        return val.int_32();
     default: // double
         Q_UNREACHABLE();
     }
@@ -239,18 +236,18 @@ bool Value::sameValue(Value other) const {
 }
 
 #ifndef V4_BOOTSTRAP
-Heap::String *Value::toString(ExecutionEngine *e) const
+Heap::String *Value::toString(ExecutionEngine *e, Value val)
 {
-    if (String *s = stringValue())
+    if (String *s = val.stringValue())
         return s->d();
-    return RuntimeHelpers::convertToString(e, *this);
+    return RuntimeHelpers::convertToString(e, val);
 }
 
-Heap::Object *Value::toObject(ExecutionEngine *e) const
+Heap::Object *Value::toObject(ExecutionEngine *e, Value val)
 {
-    if (Object *o = objectValue())
+    if (Object *o = val.objectValue())
         return o->d();
-    return RuntimeHelpers::convertToObject(e, *this);
+    return RuntimeHelpers::convertToObject(e, val);
 }
 
 uint Value::asArrayLength(bool *ok) const

@@ -413,14 +413,27 @@ public:
     inline int toInt32() const;
     inline unsigned int toUInt32() const;
 
-    bool toBoolean() const;
+    bool toBoolean() const {
+        if (integerCompatible())
+            return static_cast<bool>(int_32());
+
+        return toBooleanImpl(*this);
+    }
+    static bool toBooleanImpl(Value val);
     double toInteger() const;
     inline double toNumber() const;
-    double toNumberImpl() const;
+    static double toNumberImpl(Value v);
+    double toNumberImpl() const { return toNumberImpl(*this); }
     QString toQStringNoThrow() const;
     QString toQString() const;
-    Heap::String *toString(ExecutionEngine *e) const;
-    Heap::Object *toObject(ExecutionEngine *e) const;
+    Heap::String *toString(ExecutionEngine *e) const {
+        return toString(e, *this);
+    }
+    static Heap::String *toString(ExecutionEngine *e, Value val);
+    Heap::Object *toObject(ExecutionEngine *e) const {
+        return toObject(e, *this);
+    }
+    static Heap::Object *toObject(ExecutionEngine *e, Value val);
 
     inline bool isPrimitive() const;
     inline bool tryIntegerConversion() {
