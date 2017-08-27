@@ -489,6 +489,23 @@ static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
 #define STORE_IP() frame.instructionPointer = code;
 #define STORE_ACC() accumulator = acc;
 #define ACC Primitive::fromReturnedValue(acc)
+#define VALUE_TO_INT(i, val) \
+    int i; \
+    do { \
+        if (Q_LIKELY(val.integerCompatible())) { \
+            i = val.int_32(); \
+        } else { \
+            double d; \
+            if (val.isDouble()) \
+                d = val.doubleValue(); \
+            else { \
+                d = val.toNumberImpl(); \
+                CHECK_EXCEPTION; \
+            } \
+            i = Double::toInt32(d); \
+        } \
+    } while (false)
+
 
 QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callData, Heap::ExecutionContext *context, QV4::Function *function)
 {
@@ -1087,8 +1104,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         if (ACC.integerCompatible()) {
             acc = Encode(!static_cast<bool>(ACC.int_32()));
         } else {
-            acc = Encode(!ACC.toBoolean());
-            CHECK_EXCEPTION;
+            acc = Encode(!Value::toBooleanImpl(ACC));
         }
     MOTH_END_INSTR(UNot)
 
@@ -1100,22 +1116,24 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(UPlus)
 
     MOTH_BEGIN_INSTR(UMinus)
-        if (Q_LIKELY(ACC.integerCompatible() && ACC.int_32() != 0 &&
-                ACC.int_32() != std::numeric_limits<int>::min())) {
-            acc = sub_int32(0, ACC.int_32());
+        if (Q_LIKELY(ACC.integerCompatible())) {
+            int a = ACC.int_32();
+            if (a == 0 || a == std::numeric_limits<int>::min()) {
+                acc = Encode(-static_cast<double>(a));
+            } else {
+                acc = sub_int32(0, ACC.int_32());
+            }
+        } else if (ACC.isDouble()) {
+            acc ^= (1ull << 63); // simply flip sign bit
         } else {
-            acc = Encode(-ACC.toNumber());
+            acc = Encode(-ACC.toNumberImpl());
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(UMinus)
 
     MOTH_BEGIN_INSTR(UCompl)
-        if (Q_LIKELY(ACC.integerCompatible())) {
-            acc = Encode(~ACC.int_32());
-        } else {
-            acc = Encode((int)~ACC.toInt32());
-            CHECK_EXCEPTION;
-        }
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(~a);
     MOTH_END_INSTR(UCompl)
 
     MOTH_BEGIN_INSTR(Increment)
@@ -1187,53 +1205,59 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(Mul)
 
     MOTH_BEGIN_INSTR(BitAnd)
-        acc = Encode((int)(STACK_VALUE(lhs).toInt32() & ACC.toInt32()));
-        CHECK_EXCEPTION;
+        VALUE_TO_INT(l, STACK_VALUE(lhs));
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(l & a);
     MOTH_END_INSTR(BitAnd)
 
     MOTH_BEGIN_INSTR(BitOr)
-        acc = Encode((int)(STACK_VALUE(lhs).toInt32() | ACC.toInt32()));
-        CHECK_EXCEPTION;
+        VALUE_TO_INT(l, STACK_VALUE(lhs));
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(l | a);
     MOTH_END_INSTR(BitOr)
 
     MOTH_BEGIN_INSTR(BitXor)
-        acc = Encode((int)(STACK_VALUE(lhs).toInt32() ^ ACC.toInt32()));
-        CHECK_EXCEPTION;
+        VALUE_TO_INT(l, STACK_VALUE(lhs));
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(l ^ a);
     MOTH_END_INSTR(BitXor)
 
     MOTH_BEGIN_INSTR(Shr)
-        acc = Encode((int)(STACK_VALUE(lhs).toInt32() >> (ACC.toInt32() & 0x1f)));
-        CHECK_EXCEPTION;
+        VALUE_TO_INT(l, STACK_VALUE(lhs));
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(l >> (a & 0x1f));
     MOTH_END_INSTR(Shr)
 
     MOTH_BEGIN_INSTR(Shl)
-        acc = Encode((int)(STACK_VALUE(lhs).toInt32() << (ACC.toInt32() & 0x1f)));
-        CHECK_EXCEPTION;
+        VALUE_TO_INT(l, STACK_VALUE(lhs));
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(l << (a & 0x1f));
     MOTH_END_INSTR(Shl)
 
     MOTH_BEGIN_INSTR(BitAndConst)
-        acc = Encode(ACC.toInt32() & rhs);
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(a & rhs);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(BitAndConst)
 
     MOTH_BEGIN_INSTR(BitOrConst)
-        acc = Encode(ACC.toInt32() | rhs);
-        CHECK_EXCEPTION;
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(a | rhs);
     MOTH_END_INSTR(BitOrConst)
 
     MOTH_BEGIN_INSTR(BitXorConst)
-        acc = Encode(ACC.toInt32() ^ rhs);
-        CHECK_EXCEPTION;
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(a ^ rhs);
     MOTH_END_INSTR(BitXorConst)
 
     MOTH_BEGIN_INSTR(ShrConst)
-        acc = Encode(ACC.toInt32() >> rhs);
-        CHECK_EXCEPTION;
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(a >> rhs);
     MOTH_END_INSTR(ShrConst)
 
     MOTH_BEGIN_INSTR(ShlConst)
-        acc = Encode(ACC.toInt32() << rhs);
-        CHECK_EXCEPTION;
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(a << rhs);
     MOTH_END_INSTR(ShlConst)
 
     MOTH_BEGIN_INSTR(BinopContext)
