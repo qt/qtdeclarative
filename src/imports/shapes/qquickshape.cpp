@@ -574,6 +574,8 @@ void QQuickShapePath::resetFillGradient()
     When using Shape, it is important to be aware of potential performance
     implications:
 
+    \list
+
     \li When the application is running with the generic, triangulation-based
     Shape implementation, the geometry generation happens entirely on the
     CPU. This is potentially expensive. Changing the set of path elements,

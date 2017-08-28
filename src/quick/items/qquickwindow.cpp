@@ -4827,7 +4827,7 @@ void QQuickWindow::setSceneGraphBackend(const QString &backend)
 }
 
 /*!
-    Returns the requested Qt Quick scenegraph \a backend.
+    Returns the requested Qt Quick scenegraph backend.
 
     \note The return value of this function may still be outdated by
     subsequent calls to setSceneGraphBackend() until the first QQuickWindow in the
