@@ -5794,7 +5794,7 @@ void QQuickItem::setVisible(bool v)
     are returned to \c true, unless they have explicitly been set to \c false.
 
     Setting this property to \c false automatically causes \l activeFocus to be
-    set to \c false, and this item will longer receive keyboard events.
+    set to \c false, and this item will no longer receive keyboard events.
 
     \sa visible
 */
