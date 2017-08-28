@@ -467,8 +467,9 @@ Heap::Object *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const Val
     }
 }
 
-Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, const Value &value)
+Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, Value value, TypeHint hint)
 {
+  redo:
     switch (value.type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
@@ -482,15 +483,15 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, const Val
             return engine->id_true()->d();
         else
             return engine->id_false()->d();
-    case Value::Managed_Type:
-        if (String *s = value.stringValue())
-            return s->d();
-        {
-            Scope scope(engine);
-            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(value, STRING_HINT));
-            Q_ASSERT(!prim->isManaged() || prim->isString());
-            return RuntimeHelpers::convertToString(engine, prim);
-        }
+    case Value::Managed_Type: {
+        if (value.isString())
+            return static_cast<const String &>(value).d();
+        value = Primitive::fromReturnedValue(RuntimeHelpers::toPrimitive(value, hint));
+        Q_ASSERT(value.isPrimitive());
+        if (value.isString())
+            return static_cast<const String &>(value).d();
+        goto redo;
+    }
     case Value::Integer_Type:
         return RuntimeHelpers::stringFromNumber(engine, value.int_32());
     default: // double
@@ -500,34 +501,9 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, const Val
 
 // This is slightly different from the method above, as
 // the + operator requires a slightly different conversion
-static Heap::String *convert_to_string_add(ExecutionEngine *engine, const Value &value)
+static Heap::String *convert_to_string_add(ExecutionEngine *engine, Value value)
 {
-    switch (value.type()) {
-    case Value::Empty_Type:
-        Q_ASSERT(!"empty Value encountered");
-        Q_UNREACHABLE();
-    case Value::Undefined_Type:
-        return engine->id_undefined()->d();
-    case Value::Null_Type:
-        return engine->id_null()->d();
-    case Value::Boolean_Type:
-        if (value.booleanValue())
-            return engine->id_true()->d();
-        else
-            return engine->id_false()->d();
-    case Value::Managed_Type:
-        if (String *s = value.stringValue())
-            return s->d();
-        {
-            Scope scope(engine);
-            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(value, PREFERREDTYPE_HINT));
-            return RuntimeHelpers::convertToString(engine, prim);
-        }
-    case Value::Integer_Type:
-        return RuntimeHelpers::stringFromNumber(engine, value.int_32());
-    default: // double
-        return RuntimeHelpers::stringFromNumber(engine, value.doubleValue());
-    } // switch
+    return RuntimeHelpers::convertToString(engine, value, PREFERREDTYPE_HINT);
 }
 
 QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Value &left, const Value &right)
