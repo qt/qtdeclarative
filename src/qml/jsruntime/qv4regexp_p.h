@@ -76,7 +76,7 @@ struct RegExpCacheKey;
 namespace Heap {
 
 struct RegExp : Base {
-    void init(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline);
+    void init(const QString& pattern, bool ignoreCase, bool multiline);
     void destroy();
 
     QString *pattern;
@@ -84,10 +84,18 @@ struct RegExp : Base {
 #if ENABLE(YARR_JIT)
     JSC::Yarr::YarrCodeBlock *jitCode;
 #endif
+    bool hasValidJITCode() const {
+#if ENABLE(YARR_JIT)
+        return jitCode && !jitCode->isFallBack() && jitCode->has16BitCode();
+#else
+        return false;
+#endif
+    }
     RegExpCache *cache;
     int subPatternCount;
     bool ignoreCase;
     bool multiLine;
+    bool valid;
 
     int captureCount() const { return subPatternCount + 1; }
 };
@@ -114,7 +122,7 @@ struct RegExp : public Managed
 
     static Heap::RegExp *create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false);
 
-    bool isValid() const { return d()->byteCode; }
+    bool isValid() const { return d()->valid; }
 
     uint match(const QString& string, int start, uint *matchOffsets);
 
