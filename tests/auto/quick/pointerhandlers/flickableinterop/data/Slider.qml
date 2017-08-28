@@ -47,7 +47,7 @@ Item {
     property int maximumValue: 99
     property alias label: label.text
     property alias tapEnabled: tap.enabled
-    property alias pressed: tap.isPressed
+    property alias pressed: tap.pressed
     signal tapped
 
     Rectangle {
@@ -72,7 +72,7 @@ Item {
         anchors.horizontalCenterOffset: 1
         radius: 5
         color: "#4400FFFF"
-        opacity: tap.isPressed || tapFlash.running ? 1 : 0
+        opacity: tap.pressed || tapFlash.running ? 1 : 0
         FlashAnimation on visible {
             id: tapFlash
         }
