@@ -144,7 +144,7 @@ DECLARE_HEAP_OBJECT(ArrayData, Base) {
 V4_ASSERT_IS_TRIVIAL(ArrayData)
 
 struct SimpleArrayData : public ArrayData {
-    uint mappedIndex(uint index) const { index += offset; if (index > values.alloc) index -= values.alloc; return index; }
+    uint mappedIndex(uint index) const { index += offset; if (index >= values.alloc) index -= values.alloc; return index; }
     const Value &data(uint index) const { return values[mappedIndex(index)]; }
     void setData(EngineBase *e, uint index, Value newVal) {
         values.set(e, mappedIndex(index), newVal);
