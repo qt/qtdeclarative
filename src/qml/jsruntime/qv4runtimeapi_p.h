@@ -125,9 +125,8 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     /* exceptions & scopes */ \
     F(void, throwException, (ExecutionEngine *engine, const Value &value)) \
     F(ReturnedValue, unwindException, (ExecutionEngine *engine)) \
-    F(ReturnedValue, pushWithContext, (const Value &o, NoThrowEngine *engine)) \
-    F(ReturnedValue, pushCatchContext, (NoThrowEngine *engine, int exceptionVarNameIndex)) \
-    F(void, popContext, (NoThrowEngine *engine, const Value &oldContext)) \
+    F(ReturnedValue, createWithContext, (ExecutionContext *parent, const Value &o)) \
+    F(ReturnedValue, createCatchContext, (ExecutionContext *parent, int exceptionVarNameIndex)) \
     \
     /* closures */ \
     F(ReturnedValue, closure, (ExecutionEngine *engine, int functionId)) \
@@ -140,7 +139,6 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     /* literals */ \
     F(ReturnedValue, arrayLiteral, (ExecutionEngine *engine, Value *values, uint length)) \
     F(ReturnedValue, objectLiteral, (ExecutionEngine *engine, const Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags)) \
-    F(ReturnedValue, regexpLiteral, (ExecutionEngine *engine, int id)) \
     \
     /* foreach */ \
     F(ReturnedValue, foreachIterator, (ExecutionEngine *engine, const Value &in)) \

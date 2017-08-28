@@ -1189,27 +1189,18 @@ ReturnedValue Runtime::method_unwindException(ExecutionEngine *engine)
  *
  * Instead the push/pop pair acts as a non local scope.
  */
-ReturnedValue Runtime::method_pushWithContext(const Value &o, NoThrowEngine *engine)
+ReturnedValue Runtime::method_createWithContext(ExecutionContext *parent, const Value &o)
 {
     Q_ASSERT(o.isObject());
-    ExecutionContext *c = engine->currentContext();
-    ReturnedValue oldContext = c->asReturnedValue();
     const Object &obj = static_cast<const Object &>(o);
-    engine->setCurrentContext(c->newWithContext(obj.d()));
-    return oldContext;
+    return parent->newWithContext(obj.d())->asReturnedValue();
 }
 
-ReturnedValue Runtime::method_pushCatchContext(NoThrowEngine *engine, int exceptionVarNameIndex)
+ReturnedValue Runtime::method_createCatchContext(ExecutionContext *parent, int exceptionVarNameIndex)
 {
-    ExecutionContext *c = engine->currentContext();
-    ReturnedValue oldContext = c->asReturnedValue();
-    engine->setCurrentContext(c->newCatchContext(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[exceptionVarNameIndex], engine->catchException(0)));
-    return oldContext;
-}
-
-void Runtime::method_popContext(NoThrowEngine *engine, const Value &oldContext)
-{
-    engine->setCurrentContext(static_cast<const ExecutionContext &>(oldContext).d());
+    ExecutionEngine *e = parent->engine();
+    return parent->newCatchContext(e->currentStackFrame->v4Function->compilationUnit->runtimeStrings[exceptionVarNameIndex],
+                                   e->catchException(0))->asReturnedValue();
 }
 
 void Runtime::method_declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
@@ -1285,11 +1276,6 @@ QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine
 ReturnedValue Runtime::method_loadQmlContext(NoThrowEngine *engine)
 {
     return engine->qmlContext()->asReturnedValue();
-}
-
-ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)
-{
-    return static_cast<CompiledData::CompilationUnit*>(engine->currentStackFrame->v4Function->compilationUnit)->runtimeRegularExpressions[id].asReturnedValue();
 }
 
 ReturnedValue Runtime::method_loadQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)

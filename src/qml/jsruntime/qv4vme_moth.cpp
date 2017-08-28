@@ -825,7 +825,9 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(UnwindException)
 
     MOTH_BEGIN_INSTR(PushCatchContext)
-        STACK_VALUE(reg) = Runtime::method_pushCatchContext(static_cast<QV4::NoThrowEngine*>(engine), name);
+        STACK_VALUE(reg) = STACK_VALUE(JSStackFrame::Context);
+        ExecutionContext *c = static_cast<ExecutionContext *>(stack + JSStackFrame::Context);
+        STACK_VALUE(JSStackFrame::Context) = Runtime::method_createCatchContext(c, name);
     MOTH_END_INSTR(PushCatchContext)
 
     MOTH_BEGIN_INSTR(PushWithContext)
@@ -833,11 +835,13 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         STORE_ACC();
         accumulator = accumulator.toObject(engine);
         CHECK_EXCEPTION;
-        STACK_VALUE(reg) = Runtime::method_pushWithContext(accumulator, static_cast<QV4::NoThrowEngine*>(engine));
+        STACK_VALUE(reg) = STACK_VALUE(JSStackFrame::Context);
+        ExecutionContext *c = static_cast<ExecutionContext *>(stack + JSStackFrame::Context);
+        STACK_VALUE(JSStackFrame::Context) = Runtime::method_createWithContext(c, accumulator);
     MOTH_END_INSTR(PushWithContext)
 
     MOTH_BEGIN_INSTR(PopContext)
-        Runtime::method_popContext(static_cast<QV4::NoThrowEngine*>(engine), STACK_VALUE(reg));
+        STACK_VALUE(JSStackFrame::Context) = STACK_VALUE(reg);
     MOTH_END_INSTR(PopContext)
 
     MOTH_BEGIN_INSTR(ForeachIteratorObject)
