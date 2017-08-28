@@ -411,7 +411,7 @@ bool QQuickDrawerPrivate::handleMove(QQuickItem *item, const QPointF &point, ulo
         return false;
 
     // limit/reset the offset to the edge of the drawer when pushed from the outside
-    if (qFuzzyCompare(position, 1.0) && !contains(point))
+    if (qFuzzyCompare(position, qreal(1.0)) && !contains(point))
         offset = 0;
 
     bool isGrabbed = popupItem->keepMouseGrab() || popupItem->keepTouchGrab();

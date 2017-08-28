@@ -433,7 +433,7 @@ void QQuickSwipePrivate::beginTransition(qreal newPosition)
 void QQuickSwipePrivate::finishTransition()
 {
     Q_Q(QQuickSwipe);
-    q->setComplete(qFuzzyCompare(qAbs(position), 1.0));
+    q->setComplete(qFuzzyCompare(qAbs(position), qreal(1.0)));
     if (complete)
         emit q->opened();
     else
@@ -693,7 +693,7 @@ void QQuickSwipe::setTransition(QQuickTransition *transition)
 void QQuickSwipe::open(QQuickSwipeDelegate::Side side)
 {
     Q_D(QQuickSwipe);
-    if (qFuzzyCompare(qAbs(d->position), 1.0))
+    if (qFuzzyCompare(qAbs(d->position), qreal(1.0)))
         return;
 
     if ((side != QQuickSwipeDelegate::Left && side != QQuickSwipeDelegate::Right)
