@@ -1369,7 +1369,8 @@ bool Codegen::visit(FunctionExpression *ast)
     RegisterScope scope(this);
 
     int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
-    _expr.setResult(Reference::fromClosure(this, function));
+    loadClosure(function);
+    _expr.setResult(Reference::fromAccumulator(this));
     return false;
 }
 
@@ -1451,6 +1452,18 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
     // global context or with. Lookup by name
   loadByName:
     return Reference::fromName(this, name);
+}
+
+void Codegen::loadClosure(int closureId)
+{
+    if (closureId >= 0) {
+        Instruction::LoadClosure load;
+        load.value = closureId;
+        bytecodeGenerator->addInstruction(load);
+    } else {
+        Instruction::LoadUndefined load;
+        bytecodeGenerator->addInstruction(load);
+    }
 }
 
 Codegen::Reference Codegen::fallbackNameLookup(const QString &name)
@@ -1626,17 +1639,19 @@ bool Codegen::visit(ObjectLiteral *ast)
         (void) arg.storeOnStack(temp);
     };
 
-    auto undefined = [this](){ return Reference::fromConst(this, Encode::undefined()); };
     QVector<QV4::Compiler::JSUnitGenerator::MemberInfo> members;
 
+    Reference acc = Reference::fromAccumulator(this);
     // generate the key/value pairs
     for (const QString &key : qAsConst(nonArrayKey)) {
         const ObjectPropertyValue &prop = valueMap[key];
 
         if (prop.hasGetter() || prop.hasSetter()) {
             Q_ASSERT(!prop.rvalue.isValid());
-            push(prop.hasGetter() ? Reference::fromClosure(this, prop.getter) : undefined());
-            push(prop.hasSetter() ? Reference::fromClosure(this, prop.setter) : undefined());
+            loadClosure(prop.getter);
+            push(acc);
+            loadClosure(prop.setter);
+            push(acc);
             members.append({ key, true });
         } else {
             Q_ASSERT(prop.rvalue.isValid());
@@ -1658,8 +1673,10 @@ bool Codegen::visit(ObjectLiteral *ast)
         const ObjectPropertyValue &prop = valueMap[key];
         Q_ASSERT(!prop.rvalue.isValid());
         push(Reference::fromConst(this, Encode(prop.keyAsIndex)));
-        push(prop.hasGetter() ? Reference::fromClosure(this, prop.getter) : undefined());
-        push(prop.hasSetter() ? Reference::fromClosure(this, prop.setter) : undefined());
+        loadClosure(prop.getter);
+        push(acc);
+        loadClosure(prop.setter);
+        push(acc);
     }
 
     int classId = jsUnitGenerator->registerJSClass(members);
@@ -1982,7 +1999,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         if (member.function) {
             const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
                                                 member.function->body ? member.function->body->elements : 0);
-            Reference::fromClosure(this, function).loadInAccumulator();
+            loadClosure(function);
             if (! _context->parent) {
                 Reference::fromName(this, member.function->name.toString()).storeConsumeAccumulator();
             } else {
@@ -2825,9 +2842,6 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     case Const:
         constant = other.constant;
         break;
-    case Closure:
-        closureId = other.closureId;
-        break;
     case QmlScopeObject:
     case QmlContextObject:
         qmlBase = other.qmlBase;
@@ -2868,8 +2882,6 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         return elementBase == other.elementBase && elementSubscript == other.elementSubscript;
     case Const:
         return constant == other.constant;
-    case Closure:
-        return closureId == other.closureId;
     case QmlScopeObject:
     case QmlContextObject:
         return qmlCoreIndex == other.qmlCoreIndex && qmlNotifyIndex == other.qmlNotifyIndex
@@ -2992,7 +3004,6 @@ bool Codegen::Reference::storeWipesAccumulator() const
     case Name:
     case Member:
     case Subscript:
-    case Closure:
     case QmlScopeObject:
     case QmlContextObject:
         return true;
@@ -3066,7 +3077,6 @@ void Codegen::Reference::storeAccumulator() const
     } return;
     case Invalid:
     case Accumulator:
-    case Closure:
     case Const:
     case This:
         break;
@@ -3200,11 +3210,6 @@ void Codegen::Reference::loadInAccumulator() const
             load.index = elementSubscript.storeOnStack().stackSlot();
             codegen->bytecodeGenerator->addInstruction(load);
         }
-    } return;
-    case Closure: {
-        Instruction::LoadClosure load;
-        load.value = closureId;
-        codegen->bytecodeGenerator->addInstruction(load);
     } return;
     case QmlScopeObject: {
         Instruction::LoadScopeObjectProperty load;

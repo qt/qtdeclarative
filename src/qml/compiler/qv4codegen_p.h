@@ -166,7 +166,6 @@ public:
             Name,
             Member,
             Subscript,
-            Closure,
             QmlScopeObject,
             QmlContextObject,
             LastLValue = QmlContextObject,
@@ -252,11 +251,6 @@ public:
             r.isReadonly = true;
             return r;
         }
-        static Reference fromClosure(Codegen *cg, int functionId) {
-            Reference r(cg, Closure);
-            r.closureId = functionId;
-            return r;
-        }
         static Reference fromQmlScopeObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, bool captureRequired) {
             Reference r(base.codegen, QmlScopeObject);
             r.qmlBase = base.storeOnStack().stackSlot();
@@ -322,7 +316,6 @@ public:
                 Moth::StackSlot elementBase;
                 RValue elementSubscript;
             };
-            int closureId;
             struct { // QML scope/context object case
                 Moth::StackSlot qmlBase;
                 qint16 qmlCoreIndex;
@@ -494,6 +487,8 @@ protected:
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
     Reference referenceForName(const QString &name, bool lhs);
+
+    void loadClosure(int index);
 
     // Hook provided to implement QML lookup semantics
     virtual Reference fallbackNameLookup(const QString &name);
