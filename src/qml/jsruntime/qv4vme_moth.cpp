@@ -820,10 +820,6 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
         engine->hasException = true;
     MOTH_END_INSTR(SetException)
 
-    MOTH_BEGIN_INSTR(UnwindException)
-        acc = Runtime::method_unwindException(engine);
-    MOTH_END_INSTR(UnwindException)
-
     MOTH_BEGIN_INSTR(PushCatchContext)
         STACK_VALUE(reg) = STACK_VALUE(JSStackFrame::Context);
         ExecutionContext *c = static_cast<ExecutionContext *>(stack + JSStackFrame::Context);

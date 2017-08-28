@@ -120,7 +120,6 @@ QT_BEGIN_NAMESPACE
 #define INSTR_ThrowException(op) INSTRUCTION(op, ThrowException, 0)
 #define INSTR_GetException(op) INSTRUCTION(op, GetException, 0)
 #define INSTR_SetException(op) INSTRUCTION(op, SetException, 0)
-#define INSTR_UnwindException(op) INSTRUCTION(op, UnwindException, 0)
 #define INSTR_PushCatchContext(op) INSTRUCTION(op, PushCatchContext, 2, name, reg)
 #define INSTR_PushWithContext(op) INSTRUCTION(op, PushWithContext, 1, reg)
 #define INSTR_PopContext(op) INSTRUCTION(op, PopContext, 1, reg)
@@ -234,7 +233,6 @@ QT_BEGIN_NAMESPACE
     F(ThrowException) \
     F(GetException) \
     F(SetException) \
-    F(UnwindException) \
     F(PushCatchContext) \
     F(PushWithContext) \
     F(PopContext) \

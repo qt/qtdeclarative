@@ -330,9 +330,6 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int star
         MOTH_BEGIN_INSTR(SetException)
         MOTH_END_INSTR(SetExceptionFlag)
 
-        MOTH_BEGIN_INSTR(UnwindException)
-        MOTH_END_INSTR(UnwindException)
-
         MOTH_BEGIN_INSTR(PushCatchContext)
             d << StackSlot::dump(reg, nFormals) << ", " << name;
         MOTH_END_INSTR(PushCatchContext)

@@ -1177,13 +1177,6 @@ QV4::ReturnedValue Runtime::method_typeofName(ExecutionEngine *engine, int nameI
     return method_typeofValue(engine, prop);
 }
 
-ReturnedValue Runtime::method_unwindException(ExecutionEngine *engine)
-{
-    if (!engine->hasException)
-        return Primitive::emptyValue().asReturnedValue();
-    return engine->catchException(0);
-}
-
 /* The next three methods are a bit tricky. They can't open up a Scope, as that
  * would mess up the pushing of the context.
  *
