@@ -53,11 +53,11 @@ QT_BEGIN_NAMESPACE
     \qmlmodule QtQuick.Shapes 1.0
     \title Qt Quick Shapes QML Types
     \ingroup qmlmodules
-    \brief Provides QML types for drawing stroked and filled shapes
+    \brief Provides QML types for drawing stroked and filled shapes.
 
     To use the types in this module, import the module with the following line:
 
-    \code
+    \badcode
     import QtQuick.Shapes 1.0
     \endcode
 */
@@ -84,7 +84,7 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
     \ingroup qtquick-paths
     \ingroup qtquick-views
     \inherits Path
-    \brief Describes a Path and associated properties for stroking and filling
+    \brief Describes a Path and associated properties for stroking and filling.
     \since 5.10
 
     A \l Shape contains one or more ShapePath elements. At least one ShapePath is
@@ -104,7 +104,7 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
     In the following example the line join style changes automatically based on
     the value of joinStyleIndex:
 
-    \code
+    \qml
     ShapePath {
         strokeColor: "black"
         strokeWidth: 16
@@ -112,7 +112,12 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
         capStyle: ShapePath.RoundCap
 
         property int joinStyleIndex: 0
-        property variant styles: [ ShapePath.BevelJoin, ShapePath.MiterJoin, ShapePath.RoundJoin ]
+
+        property variant styles: [
+            ShapePath.BevelJoin,
+            ShapePath.MiterJoin,
+            ShapePath.RoundJoin
+        ]
 
         joinStyle: styles[joinStyleIndex]
 
@@ -121,7 +126,7 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
         PathLine { x: 100; y: 100 }
         PathLine { x: 30; y: 100 }
     }
-    \endcode
+    \endqml
 
     Once associated with a Shape, here is the output with a joinStyleIndex
     of 2 (ShapePath.RoundJoin):
@@ -240,13 +245,14 @@ void QQuickShapePath::setFillColor(const QColor &color)
     \qmlproperty enumeration QtQuick.Shapes::ShapePath::fillRule
 
     This property holds the fill rule. The default value is
-    ShapePath.OddEvenFill. For an example on fill rules, see
+    \c ShapePath.OddEvenFill. For an explanation on fill rules, see
     QPainterPath::setFillRule().
 
-    \list
-    \li ShapePath.OddEvenFill
-    \li ShapePath.WindingFill
-    \endlist
+    \value ShapePath.OddEvenFill
+           Odd-even fill rule.
+
+    \value ShapePath.WindingFill
+           Non-zero winding fill rule.
  */
 
 QQuickShapePath::FillRule QQuickShapePath::fillRule() const
@@ -270,13 +276,17 @@ void QQuickShapePath::setFillRule(FillRule fillRule)
     \qmlproperty enumeration QtQuick.Shapes::ShapePath::joinStyle
 
     This property defines how joins between two connected lines are drawn. The
-    default value is ShapePath.BevelJoin.
+    default value is \c ShapePath.BevelJoin.
 
-    \list
-    \li ShapePath.MiterJoin - The outer edges of the lines are extended to meet at an angle, and this area is filled.
-    \li ShapePath.BevelJoin - The triangular notch between the two lines is filled.
-    \li ShapePath.RoundJoin - A circular arc between the two lines is filled.
-    \endlist
+    \value ShapePath.MiterJoin
+           The outer edges of the lines are extended to meet at an angle, and
+           this area is filled.
+
+    \value ShapePath.BevelJoin
+           The triangular notch between the two lines is filled.
+
+    \value ShapePath.RoundJoin
+           A circular arc between the two lines is filled.
  */
 
 QQuickShapePath::JoinStyle QQuickShapePath::joinStyle() const
@@ -299,7 +309,7 @@ void QQuickShapePath::setJoinStyle(JoinStyle style)
 /*!
     \qmlproperty int QtQuick.Shapes::ShapePath::miterLimit
 
-    When ShapePath.joinStyle is set to ShapePath.MiterJoin, this property
+    When joinStyle is set to \c ShapePath.MiterJoin, this property
     specifies how far the miter join can extend from the join point.
 
     The default value is 2.
@@ -326,13 +336,17 @@ void QQuickShapePath::setMiterLimit(int limit)
     \qmlproperty enumeration QtQuick.Shapes::ShapePath::capStyle
 
     This property defines how the end points of lines are drawn. The
-    default value is ShapePath.SquareCap.
+    default value is \c ShapePath.SquareCap.
 
-    \list
-    \li ShapePath.FlatCap - A square line end that does not cover the end point of the line.
-    \li ShapePath.SquareCap - A square line end that covers the end point and extends beyond it by half the line width.
-    \li ShapePath.RoundCap - A rounded line end.
-    \endlist
+    \value ShapePath.FlatCap
+           A square line end that does not cover the end point of the line.
+
+    \value ShapePath.SquareCap
+           A square line end that covers the end point and extends beyond it
+           by half the line width.
+
+    \value ShapePath.RoundCap
+           A rounded line end.
  */
 
 QQuickShapePath::CapStyle QQuickShapePath::capStyle() const
@@ -414,8 +428,8 @@ void QQuickShapePath::setDashOffset(qreal offset)
 
     This property defines the dash pattern when ShapePath.strokeStyle is set
     to ShapePath.DashLine. The pattern must be specified as an even number of
-    positive entries where the entries 1, 3, 5... are the dashes and 2, 4, 6...
-    are the spaces. The pattern is specified in units of the pen's width.
+    positive entries where the entries 1, 3, 5... are the dashes and 2, 4,
+    6... are the spaces. The pattern is specified in units of the pen's width.
 
     The default value is (4, 2), meaning a dash of 4 * ShapePath.strokeWidth
     pixels followed by a space of 2 * ShapePath.strokeWidth pixels.
@@ -444,14 +458,14 @@ void QQuickShapePath::setDashPattern(const QVector<qreal> &array)
     \qmlproperty ShapeGradient QtQuick.Shapes::ShapePath::fillGradient
 
     This property defines the fill gradient. By default no gradient is enabled
-    and the value is \c null. In this case the fill uses a solid color based on
-    the value of ShapePath.fillColor.
+    and the value is \c null. In this case the fill uses a solid color based
+    on the value of ShapePath.fillColor.
 
     When set, ShapePath.fillColor is ignored and filling is done using one of
     the ShapeGradient subtypes.
 
-    \note The Gradient type cannot be used here. Rather, prefer using one of the
-    advanced subtypes, like LinearGradient.
+    \note The Gradient type cannot be used here. Rather, prefer using one of
+    the advanced subtypes, like LinearGradient.
  */
 
 QQuickShapeGradient *QQuickShapePath::fillGradient() const
@@ -495,29 +509,30 @@ void QQuickShapePath::resetFillGradient()
     \ingroup qtquick-paths
     \ingroup qtquick-views
     \inherits Item
-    \brief Renders a path
+    \brief Renders a path.
     \since 5.10
 
     Renders a path either by generating geometry via QPainterPath and manual
-    triangulation or by using a GPU vendor extension like \c{GL_NV_path_rendering}.
+    triangulation or by using a GPU vendor extension like
+    \c{GL_NV_path_rendering}.
 
     This approach is different from rendering shapes via QQuickPaintedItem or
-    the 2D Canvas because the path never gets rasterized in software. Therefore
-    Shape is suitable for creating shapes spreading over larger areas of the
-    screen, avoiding the performance penalty for texture uploads or framebuffer
-    blits. In addition, the declarative API allows manipulating, binding to,
-    and even animating the path element properties like starting and ending
-    position, the control points, etc.
+    the 2D Canvas because the path never gets rasterized in software.
+    Therefore Shape is suitable for creating shapes spreading over larger
+    areas of the screen, avoiding the performance penalty for texture uploads
+    or framebuffer blits. In addition, the declarative API allows manipulating,
+    binding to, and even animating the path element properties like starting
+    and ending position, the control points, and so on.
 
     The types for specifying path elements are shared between \l PathView and
     Shape. However, not all Shape implementations support all path
     element types, while some may not make sense for PathView. Shape's
     currently supported subset is: PathMove, PathLine, PathQuad, PathCubic,
-    PathArc, PathSvg.
+    PathArc, and PathSvg.
 
     See \l Path for a detailed overview of the supported path elements.
 
-    \code
+    \qml
     Shape {
         width: 200
         height: 150
@@ -542,7 +557,7 @@ void QQuickShapePath::resetFillGradient()
             PathLine { x: 20; y: 20 }
         }
     }
-    \endcode
+    \endqml
 
     \image pathitem-code-example.png
 
@@ -579,34 +594,34 @@ void QQuickShapePath::resetFillGradient()
     \li When the application is running with the generic, triangulation-based
     Shape implementation, the geometry generation happens entirely on the
     CPU. This is potentially expensive. Changing the set of path elements,
-    changing the properties of these elements, or changing certain properties of
-    the Shape itself all lead to retriangulation of the affected paths on every
-    change. Therefore, applying animation to such properties can affect
+    changing the properties of these elements, or changing certain properties
+    of the Shape itself all lead to retriangulation of the affected paths on
+    every change. Therefore, applying animation to such properties can affect
     performance on less powerful systems.
 
     \li However, the data-driven, declarative nature of the Shape API often
     means better cacheability for the underlying CPU and GPU resources. A
-    property change in one ShapePath will only lead to reprocessing the affected
-    ShapePath, leaving other parts of the Shape unchanged. Therefore, a
-    frequently changing property can still result in a lower overall system load
-    than with imperative painting approaches (for example, QPainter).
+    property change in one ShapePath will only lead to reprocessing the
+    affected ShapePath, leaving other parts of the Shape unchanged. Therefore,
+    a frequently changing property can still result in a lower overall system
+    load than with imperative painting approaches (for example, QPainter).
 
-    \li If animating properties other than stroke and fill colors is a must, it
-    is recommended to target systems providing \c{GL_NV_path_rendering} where
-    the cost of property changes is smaller.
+    \li If animating properties other than stroke and fill colors is a must,
+    it is recommended to target systems providing \c{GL_NV_path_rendering}
+    where the cost of property changes is smaller.
 
-    \li At the same time, attention must be paid to the number of Shape elements
-    in the scene, in particular when using this special accelerated approach for
-    \c{GL_NV_path_rendering}. The way such a Shape item is represented in the
-    scene graph is different from an ordinary geometry-based item, and incurs a
-    certain cost when it comes to OpenGL state changes.
+    \li At the same time, attention must be paid to the number of Shape
+    elements in the scene, in particular when using this special accelerated
+    approach for \c{GL_NV_path_rendering}. The way such a Shape item is
+    represented in the scene graph is different from an ordinary
+    geometry-based item, and incurs a certain cost when it comes to OpenGL
+    state changes.
 
     \li As a general rule, scenes should avoid using separate Shape items when
     it is not absolutely necessary. Prefer using one Shape item with multiple
-    ShapePath elements over multiple Shape items. Scenes that cannot avoid using
-    a large number of individual Shape items should consider setting
+    ShapePath elements over multiple Shape items. Scenes that cannot avoid
+    using a large number of individual Shape items should consider setting
     Shape.vendorExtensionsEnabled to \c false.
-
     \endlist
 
     \sa {Qt Quick Examples - Shapes}, Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
@@ -658,25 +673,25 @@ QQuickShape::~QQuickShape()
 
     This property determines which path rendering backend is active.
 
-    \list
+    \value Shape.UnknownRenderer
+           The renderer is unknown.
 
-    \li Shape.UnknownRenderer - The renderer is unknown.
+    \value Shape.GeometryRenderer
+           The generic, driver independent solution for OpenGL. Uses the same
+           CPU-based triangulation approach as QPainter's OpenGL 2 paint
+           engine. This is the default on non-NVIDIA hardware when the default,
+           OpenGL Qt Quick scenegraph backend is in use.
 
-    \li Shape.GeometryRenderer - The generic, driver independent solution
-    for OpenGL. Uses the same CPU-based triangulation approach as QPainter's
-    OpenGL 2 paint engine. This is the default on non-NVIDIA hardware when the
-    default, OpenGL Qt Quick scenegraph backend is in use.
+    \value Shape.NvprRenderer
+           Path items are rendered by performing OpenGL calls using the
+           \c{GL_NV_path_rendering} extension. This is the default on NVIDIA
+           hardware when the default, OpenGL Qt Quick scenegraph backend is in
+           use.
 
-    \li Shape.NvprRenderer - Path items are rendered by performing OpenGL
-    calls using the \c{GL_NV_path_rendering} extension. This is the default on
-    NVIDIA hardware when the default, OpenGL Qt Quick scenegraph backend is in
-    use.
-
-    \li Shape.SoftwareRenderer - Pure QPainter drawing using the raster
-    paint engine. This is the default, and only, option when the Qt Quick
-    scenegraph is running with the \c software backend.
-
-    \endlist
+    \value Shape.SoftwareRenderer
+           Pure QPainter drawing using the raster paint engine. This is the
+           default, and only, option when the Qt Quick scenegraph is running
+           with the \c software backend.
 */
 
 QQuickShape::RendererType QQuickShape::rendererType() const
@@ -688,15 +703,15 @@ QQuickShape::RendererType QQuickShape::rendererType() const
 /*!
     \qmlproperty bool QtQuick.Shapes::Shape::asynchronous
 
-    When Shape.rendererType is Shape.GeometryRenderer, the input path is
+    When rendererType is \c Shape.GeometryRenderer, the input path is
     triangulated on the CPU during the polishing phase of the Shape. This is
-    potentially expensive. To offload this work to separate worker threads, set
-    this property to \c true.
+    potentially expensive. To offload this work to separate worker threads,
+    set this property to \c true.
 
     When enabled, making a Shape visible will not wait for the content to
     become available. Instead, the gui/main thread is not blocked and the
-    results of the path rendering are shown only when all the asynchronous work
-    has been finished.
+    results of the path rendering are shown only when all the asynchronous
+    work has been finished.
 
     The default value is \c false.
  */
@@ -722,7 +737,7 @@ void QQuickShape::setAsynchronous(bool async)
     \qmlproperty bool QtQuick.Shapes::Shape::vendorExtensionsEnabled
 
     This property controls the usage of non-standard OpenGL extensions like
-    GL_NV_path_rendering. To disable Shape.NvprRenderer and force a uniform
+    \c GL_NV_path_rendering. To disable Shape.NvprRenderer and force a uniform
     behavior regardless of the graphics card and drivers, set this property to
     \c false.
 
@@ -750,15 +765,14 @@ void QQuickShape::setVendorExtensionsEnabled(bool enable)
     This property determines the status of the Shape and is relevant when
     Shape.asynchronous is set to \c true.
 
-    \list
+    \value Shape.Null
+           Not yet initialized.
 
-    \li Shape.Null - Not yet initialized.
+    \value Shape.Ready
+           The Shape has finished processing.
 
-    \li Shape.Ready - The Shape has finished processing.
-
-    \li Shape.Processing - The path is being processed.
-
-    \endlist
+    \value Shape.Processing
+           The path is being processed.
  */
 
 QQuickShape::Status QQuickShape::status() const
@@ -803,8 +817,8 @@ static void vpe_clear(QQmlListProperty<QObject> *property)
     \qmlproperty list<Object> QtQuick.Shapes::Shape::data
 
     This property holds the ShapePath objects that define the contents of the
-    Shape. It can also contain any other type of objects, since Shape, like Item,
-    allows adding any visual or non-visual objects as children.
+    Shape. It can also contain any other type of objects, since Shape, like
+    Item, allows adding any visual or non-visual objects as children.
 
     \default
  */
@@ -1012,7 +1026,7 @@ void QQuickShapePrivate::sync()
     \ingroup qtquick-paths
     \ingroup qtquick-views
     \inherits Gradient
-    \brief Base type of Shape fill gradients
+    \brief Base type of Shape fill gradients.
     \since 5.10
 
     This is an abstract base class for gradients like LinearGradient and
@@ -1030,13 +1044,16 @@ QQuickShapeGradient::QQuickShapeGradient(QObject *parent)
     \qmlproperty enumeration QtQuick.Shapes::ShapeGradient::spread
 
     Specifies how the area outside the gradient area should be filled. The
-    default value is ShapeGradient.PadSpread.
+    default value is \c ShapeGradient.PadSpread.
 
-    \list
-    \li ShapeGradient.PadSpread - The area is filled with the closest stop color.
-    \li ShapeGradient.RepeatSpread - The gradient is repeated outside the gradient area.
-    \li ShapeGradient.ReflectSpread - The gradient is reflected outside the gradient area.
-    \endlist
+    \value ShapeGradient.PadSpread
+           The area is filled with the closest stop color.
+
+    \value ShapeGradient.RepeatSpread
+           The gradient is repeated outside the gradient area.
+
+    \value ShapeGradient.ReflectSpread
+           The gradient is reflected outside the gradient area.
  */
 
 QQuickShapeGradient::SpreadMode QQuickShapeGradient::spread() const
@@ -1060,7 +1077,7 @@ void QQuickShapeGradient::setSpread(SpreadMode mode)
     \ingroup qtquick-paths
     \ingroup qtquick-views
     \inherits ShapeGradient
-    \brief Linear gradient
+    \brief Linear gradient.
     \since 5.10
 
     Linear gradients interpolate colors between start and end points in Shape
@@ -1085,8 +1102,7 @@ QQuickShapeLinearGradient::QQuickShapeLinearGradient(QObject *parent)
     \qmlproperty real QtQuick.Shapes::LinearGradient::y2
 
     These properties define the start and end points between which color
-    interpolation occurs. By default both the stard and end points are set to
-    (0, 0).
+    interpolation occurs. By default both points are set to (0, 0).
  */
 
 qreal QQuickShapeLinearGradient::x1() const
@@ -1152,7 +1168,7 @@ void QQuickShapeLinearGradient::setY2(qreal v)
     \ingroup qtquick-paths
     \ingroup qtquick-views
     \inherits ShapeGradient
-    \brief Radial gradient
+    \brief Radial gradient.
     \since 5.10
 
     Radial gradients interpolate colors between a focal circle and a center
@@ -1202,8 +1218,8 @@ QQuickShapeRadialGradient::QQuickShapeRadialGradient(QObject *parent)
     \qmlproperty real QtQuick.Shapes::RadialGradient::focalY
 
     These properties define the center and focal points. To specify a simple
-    radial gradient, set focalX and focalY to the value of centerX and centerY,
-    respectively.
+    radial gradient, set focalX and focalY to the value of centerX and
+    centerY, respectively.
  */
 
 qreal QQuickShapeRadialGradient::centerX() const
@@ -1305,7 +1321,7 @@ void QQuickShapeRadialGradient::setFocalRadius(qreal v)
     \ingroup qtquick-paths
     \ingroup qtquick-views
     \inherits ShapeGradient
-    \brief Conical gradient
+    \brief Conical gradient.
     \since 5.10
 
     Conical gradients interpolate colors counter-clockwise around a center
