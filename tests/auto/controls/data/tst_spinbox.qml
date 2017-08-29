@@ -582,4 +582,10 @@ TestCase {
         mouseRelease(control.up.indicator, -1, -1)
         verify(!control.up.pressed)
     }
+
+    function test_initialValue() {
+        var control = createTemporaryObject(spinBox, testCase, {from: 1000, to: 10000})
+        verify(control)
+        compare(control.value, 1000)
+    }
 }
