@@ -1669,9 +1669,9 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
 {
     auto point = pointerEvent->point(0);
     lastMousePosition = point->scenePos();
+    const bool mouseIsReleased = (point->state() == QQuickEventPoint::Released && pointerEvent->buttons() == Qt::NoButton);
 
     if (point->exclusiveGrabber()) {
-        bool mouseIsReleased = (point->state() == QQuickEventPoint::Released && pointerEvent->buttons() == Qt::NoButton);
         if (auto grabber = point->grabberItem()) {
             if (sendFilteredPointerEvent(pointerEvent, grabber))
                 return;
@@ -1700,10 +1700,8 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             pointerEvent->localize(handler->parentItem());
             if (!sendFilteredPointerEvent(pointerEvent, handler->parentItem()))
                 handler->handlePointerEvent(pointerEvent);
-            if (mouseIsReleased) {
+            if (mouseIsReleased)
                 point->setGrabberPointerHandler(nullptr, true);
-                point->clearPassiveGrabbers();
-            }
         }
     } else {
         bool delivered = false;
@@ -1742,6 +1740,9 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             // make sure not to accept unhandled events
             pointerEvent->setAccepted(false);
     }
+    // failsafe: never allow any kind of grab to persist after release
+    if (mouseIsReleased)
+        pointerEvent->clearGrabbers();
 }
 
 bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
@@ -2332,8 +2333,9 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
         }
     }
 
-    if (allReleased && !event->exclusiveGrabbers().isEmpty()) {
-        qWarning() << "No release received for some grabbers" << event->exclusiveGrabbers();
+    if (allReleased) {
+        if (Q_UNLIKELY(!event->exclusiveGrabbers().isEmpty()))
+                qWarning() << "No release received for some grabbers" << event->exclusiveGrabbers();
         event->clearGrabbers();
     }
 }
