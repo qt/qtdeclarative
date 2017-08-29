@@ -417,7 +417,6 @@ public: // helpers for C++ only (during event delivery)
     virtual const QQuickPointerMouseEvent *asPointerMouseEvent() const { return nullptr; }
     virtual const QQuickPointerTouchEvent *asPointerTouchEvent() const { return nullptr; }
     virtual const QQuickPointerTabletEvent *asPointerTabletEvent() const { return nullptr; }
-    bool isValid() const { return m_event != nullptr; }
     virtual bool allPointsAccepted() const = 0;
     virtual bool allUpdatedPointsAccepted() const = 0;
     virtual bool allPointsGrabbed() const = 0;
