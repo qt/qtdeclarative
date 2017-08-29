@@ -2731,11 +2731,6 @@ QList<QQmlJS::DiagnosticMessage> Codegen::errors() const
 QQmlRefPointer<CompiledData::CompilationUnit> Codegen::generateCompilationUnit(bool generateUnitData)
 {
     Moth::CompilationUnit *compilationUnit = new Moth::CompilationUnit;
-    compilationUnit->codeRefs.resize(_module->functions.size());
-    int i = 0;
-    for (Context *irFunction : qAsConst(_module->functions))
-        compilationUnit->codeRefs[i++] = irFunction->code;
-
     if (generateUnitData)
         compilationUnit->data = jsUnitGenerator->generateUnit();
 

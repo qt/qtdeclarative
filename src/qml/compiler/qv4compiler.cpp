@@ -349,8 +349,8 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     function->location.line = irFunction->line;
     function->location.column = irFunction->column;
 
-    function->codeOffset = 0;
-    function->codeSize = 0;
+    function->codeOffset = currentOffset;
+    function->codeSize = irFunction->code.size();
 
     // write formals
     quint32_le *formals = (quint32_le *)(f + function->formalsOffset);
@@ -383,6 +383,9 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
     }
+
+    // write byte code
+    memcpy(f + function->codeOffset, irFunction->code.constData(), irFunction->code.size());
 }
 
 QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, quint32_le *functionOffsets, uint *jsClassDataOffset)
@@ -435,7 +438,8 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
 
         const int qmlIdDepsCount = f->idObjectDependencies.count();
         const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
-        nextOffset += QV4::CompiledData::Function::calculateSize(f->arguments.size(), f->locals.size(), f->lineNumberMapping.size(), f->nestedContexts.size(), qmlIdDepsCount, qmlPropertyDepsCount);
+        nextOffset += QV4::CompiledData::Function::calculateSize(f->arguments.size(), f->locals.size(), f->lineNumberMapping.size(), f->nestedContexts.size(),
+                                                                 qmlIdDepsCount, qmlPropertyDepsCount, f->code.size());
     }
 
     if (option == GenerateWithStringTable) {

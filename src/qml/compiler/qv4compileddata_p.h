@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x14
+#define QV4_DATA_STRUCTURE_VERSION 0x15
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -212,10 +212,9 @@ struct Function
         CanUseSimpleCall    = 0x20
     };
 
-    // Absolute offset into file where the code for this function is located. Only used when the function
-    // is serialized.
-    quint64_le codeOffset;
-    quint64_le codeSize;
+    // Absolute offset into file where the code for this function is located.
+    quint32_le codeOffset;
+    quint32_le codeSize;
 
     quint32_le nameIndex;
     quint32_le nFormals;
@@ -257,12 +256,14 @@ struct Function
     const quint32_le *formalsEnd() const { return formalsTable() + nFormals; }
     // ---
 
+    const uchar *code() const { return reinterpret_cast<const uchar *>(this) + codeOffset; }
+
     inline bool hasQmlDependencies() const { return nDependingIdObjects > 0 || nDependingContextProperties > 0 || nDependingScopeProperties > 0; }
 
-    static int calculateSize(int nFormals, int nLocals, int nLines, int nInnerfunctions, int nIdObjectDependencies, int nPropertyDependencies) {
+    static int calculateSize(int nFormals, int nLocals, int nLines, int nInnerfunctions, int nIdObjectDependencies, int nPropertyDependencies, int codeSize) {
         int trailingData = (nFormals + nLocals + nInnerfunctions +  nIdObjectDependencies +
                 2 * nPropertyDependencies)*sizeof (quint32) + nLines*sizeof(CodeOffsetToLine);
-        return align(align(sizeof(Function)) + size_t(trailingData));
+        return align(align(sizeof(Function)) + size_t(trailingData)) + align(codeSize);
     }
 
     static size_t align(size_t a) {
@@ -958,7 +959,6 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
 
 protected:
     virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
-    virtual bool memoryMapCode(QString *errorString);
 #endif // V4_BOOTSTRAP
 
 public:
@@ -967,10 +967,6 @@ public:
 #else
     bool saveToDisk(const QUrl &unitUrl, QString *errorString);
 #endif
-
-protected:
-    virtual void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit);
-    virtual bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString);
 };
 
 #ifndef V4_BOOTSTRAP

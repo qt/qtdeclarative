@@ -387,19 +387,10 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &sourceTimeS
         }
     }
 
-    if (!memoryMapCode(errorString))
-        return false;
-
     dataPtrChange.commit();
     free(const_cast<Unit*>(oldDataPtr));
     backingFile.reset(cacheFile.take());
     return true;
-}
-
-bool CompilationUnit::memoryMapCode(QString *errorString)
-{
-    *errorString = QStringLiteral("Missing code mapping backend");
-    return false;
 }
 
 #endif // V4_BOOTSTRAP
@@ -441,16 +432,11 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
     memcpy(&unitPtr, &dataPtr, sizeof(unitPtr));
     unitPtr->flags |= Unit::StaticData;
 
-    prepareCodeOffsetsForDiskStorage(unitPtr);
-
     qint64 headerWritten = cacheFile.write(modifiedUnit);
     if (headerWritten != modifiedUnit.size()) {
         *errorString = cacheFile.errorString();
         return false;
     }
-
-    if (!saveCodeToDisk(&cacheFile, unitPtr, errorString))
-        return false;
 
     if (!cacheFile.commit()) {
         *errorString = cacheFile.errorString();
@@ -463,19 +449,6 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
     *errorString = QStringLiteral("features.temporaryfile is disabled.");
     return false;
 #endif // QT_CONFIG(temporaryfile)
-}
-
-void CompilationUnit::prepareCodeOffsetsForDiskStorage(Unit *unit)
-{
-    Q_UNUSED(unit);
-}
-
-bool CompilationUnit::saveCodeToDisk(QIODevice *device, const Unit *unit, QString *errorString)
-{
-    Q_UNUSED(device);
-    Q_UNUSED(unit);
-    *errorString = QStringLiteral("Saving code to disk is not supported in this configuration");
-    return false;
 }
 
 Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
