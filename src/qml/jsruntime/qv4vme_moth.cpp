@@ -334,33 +334,15 @@ static struct InstrCount {
     if (engine->hasException) \
         goto catchException
 
-static inline QV4::Heap::ExecutionContext *getScope(JSStackFrame *frame, int level)
+static inline Heap::CallContext *getScope(Value *stack, int level)
 {
-    QV4::Heap::ExecutionContext *scope = static_cast<ExecutionContext &>(frame->context).d();
+    Heap::ExecutionContext *scope = static_cast<ExecutionContext &>(stack[JSStackFrame::Context]).d();
     while (level > 0) {
         --level;
         scope = scope->outer;
     }
     Q_ASSERT(scope);
-    return scope;
-}
-
-static inline ReturnedValue loadScopedLocal(CppStackFrame &frame, int index, int scope)
-{
-    auto ctxt = getScope(frame.jsFrame, scope);
-    Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
-    auto cc = static_cast<Heap::CallContext *>(ctxt);
-    return cc->locals[index].asReturnedValue();
-}
-
-static inline void storeScopedLocal(ExecutionEngine *engine, CppStackFrame &frame, int index, int scope,
-                                    ReturnedValue value)
-{
-    auto ctxt = getScope(frame.jsFrame, scope);
-    Q_ASSERT(ctxt->type == QV4::Heap::ExecutionContext::Type_CallContext);
-    auto cc = static_cast<Heap::CallContext *>(ctxt);
-
-    QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, Primitive::fromReturnedValue(value));
+    return static_cast<Heap::CallContext *>(scope);
 }
 
 static inline const QV4::Value &constant(Function *function, int index)
@@ -592,23 +574,25 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     MOTH_END_INSTR(MoveReg)
 
     MOTH_BEGIN_INSTR(LoadLocal)
-        auto cc = static_cast<Heap::CallContext *>(frame.jsFrame->context.m());
+        auto cc = static_cast<Heap::CallContext *>(stack[JSStackFrame::Context].m());
         acc = cc->locals[index].asReturnedValue();
     MOTH_END_INSTR(LoadLocal)
 
     MOTH_BEGIN_INSTR(StoreLocal)
         CHECK_EXCEPTION;
-        auto cc = static_cast<Heap::CallContext *>(frame.jsFrame->context.m());
+        auto cc = static_cast<Heap::CallContext *>(stack[JSStackFrame::Context].m());
         QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, ACC);
     MOTH_END_INSTR(StoreLocal)
 
     MOTH_BEGIN_INSTR(LoadScopedLocal)
-        acc = loadScopedLocal(frame, index, scope);
+        auto cc = getScope(stack, scope);
+        acc = cc->locals[index].asReturnedValue();
     MOTH_END_INSTR(LoadScopedLocal)
 
     MOTH_BEGIN_INSTR(StoreScopedLocal)
         CHECK_EXCEPTION;
-        storeScopedLocal(engine, frame, index, scope, acc);
+        auto cc = getScope(stack, scope);
+        QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, ACC);
     MOTH_END_INSTR(StoreScopedLocal)
 
     MOTH_BEGIN_INSTR(LoadRuntimeString)
