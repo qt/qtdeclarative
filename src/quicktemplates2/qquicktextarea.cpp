@@ -256,7 +256,7 @@ void QQuickTextAreaPrivate::detachFlickable()
     QObject::disconnect(flickable, &QQuickFlickable::contentXChanged, q, &QQuickItem::update);
     QObject::disconnect(flickable, &QQuickFlickable::contentYChanged, q, &QQuickItem::update);
 
-    QQuickItemPrivate::get(flickable)->updateOrRemoveGeometryChangeListener(this, QQuickGeometryChange::Size);
+    QQuickItemPrivate::get(flickable)->updateOrRemoveGeometryChangeListener(this, QQuickGeometryChange::Nothing);
     QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
     QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
 
@@ -404,6 +404,13 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent)
 #endif
     QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
                             d, &QQuickTextAreaPrivate::readOnlyChanged);
+}
+
+QQuickTextArea::~QQuickTextArea()
+{
+    Q_D(QQuickTextArea);
+    if (d->flickable)
+        d->detachFlickable();
 }
 
 QQuickTextAreaAttached *QQuickTextArea::qmlAttachedProperties(QObject *object)

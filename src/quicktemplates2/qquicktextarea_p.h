@@ -72,6 +72,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextArea : public QQuickTextEdit
 
 public:
     explicit QQuickTextArea(QQuickItem *parent = nullptr);
+    ~QQuickTextArea();
 
     static QQuickTextAreaAttached *qmlAttachedProperties(QObject *object);
 
