@@ -496,7 +496,7 @@ struct InstrMeta {
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Wuninitialized")
 #define MOTH_INSTR_META_TEMPLATE(I) \
-    template<> struct InstrMeta<(int)Instr::Type::I> { \
+    template<> struct InstrMeta<int(Instr::Type::I)> { \
         enum { Size = MOTH_INSTR_SIZE(I) }; \
         typedef Instr::instr_##I DataType; \
         static const DataType &data(const Instr &instr) { return instr.I; } \
@@ -515,7 +515,7 @@ class InstrData : public InstrMeta<InstrType>::DataType
 };
 
 struct Instruction {
-#define MOTH_INSTR_DATA_TYPEDEF(I) typedef InstrData<(int)Instr::Type::I> I;
+#define MOTH_INSTR_DATA_TYPEDEF(I) typedef InstrData<int(Instr::Type::I)> I;
 FOR_EACH_MOTH_INSTR(MOTH_INSTR_DATA_TYPEDEF)
 #undef MOTH_INSTR_DATA_TYPEDEF
 private:

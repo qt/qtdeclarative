@@ -49,6 +49,7 @@ int Instr::size(Type type)
     FOR_EACH_MOTH_INSTR(MOTH_RETURN_INSTR_SIZE)
     }
 #undef MOTH_RETURN_INSTR_SIZE
+    Q_UNREACHABLE();
 }
 
 static QByteArray alignedNumber(int n) {
@@ -263,7 +264,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int star
         MOTH_END_INSTR(StoreProperty)
 
         MOTH_BEGIN_INSTR(SetLookup)
-            d << StackSlot::dump(base, nFormals);
+            d << StackSlot::dump(base, nFormals) << "(" << index << ")";
         MOTH_END_INSTR(SetLookup)
 
         MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
@@ -271,7 +272,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int star
         MOTH_END_INSTR(StoreScopeObjectProperty)
 
         MOTH_BEGIN_INSTR(LoadScopeObjectProperty)
-            d << StackSlot::dump(base, nFormals) << "[" << propertyIndex << "]";
+            d << StackSlot::dump(base, nFormals) << "[" << propertyIndex << "]" << (captureRequired ? " (capture)" : " (no capture)");
         MOTH_END_INSTR(LoadScopeObjectProperty)
 
         MOTH_BEGIN_INSTR(StoreContextObjectProperty)
@@ -279,7 +280,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int star
         MOTH_END_INSTR(StoreContextObjectProperty)
 
         MOTH_BEGIN_INSTR(LoadContextObjectProperty)
-            d << StackSlot::dump(base, nFormals) << "[" << propertyIndex << "]";
+            d << StackSlot::dump(base, nFormals) << "[" << propertyIndex << "]" << (captureRequired ? " (capture)" : " (no capture)");
         MOTH_END_INSTR(LoadContextObjectProperty)
 
         MOTH_BEGIN_INSTR(LoadIdObject)
@@ -295,7 +296,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int star
         MOTH_END_INSTR(CallProperty)
 
         MOTH_BEGIN_INSTR(CallPropertyLookup)
-            d << lookupIndex << "(" << StackSlot::dump(callData, nFormals) << ")";
+            d << StackSlot::dump(base, nFormals) << "." << lookupIndex << "(" << StackSlot::dump(callData, nFormals) << ")";
         MOTH_END_INSTR(CallPropertyLookup)
 
         MOTH_BEGIN_INSTR(CallElement)

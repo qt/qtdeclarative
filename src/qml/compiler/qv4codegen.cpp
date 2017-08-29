@@ -1461,8 +1461,7 @@ void Codegen::loadClosure(int closureId)
         load.value = closureId;
         bytecodeGenerator->addInstruction(load);
     } else {
-        Instruction::LoadUndefined load;
-        bytecodeGenerator->addInstruction(load);
+        Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
     }
 }
 
@@ -3092,6 +3091,8 @@ void Codegen::Reference::loadInAccumulator() const
     case Accumulator:
         return;
     case Const: {
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty structs.
         if (constant == Encode::null()) {
             Instruction::LoadNull load;
             codegen->bytecodeGenerator->addInstruction(load);
@@ -3104,6 +3105,7 @@ void Codegen::Reference::loadInAccumulator() const
         } else if (constant == Encode::undefined()) {
             Instruction::LoadUndefined load;
             codegen->bytecodeGenerator->addInstruction(load);
+QT_WARNING_POP
         } else {
             Value p = Primitive::fromReturnedValue(constant);
             if (p.isNumber()) {
