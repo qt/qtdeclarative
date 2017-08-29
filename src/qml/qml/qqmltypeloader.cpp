@@ -2914,11 +2914,6 @@ QQmlScriptData *QQmlScriptBlob::scriptData() const
     return m_scriptData;
 }
 
-struct EmptyCompilationUnit : public QV4::CompiledData::CompilationUnit
-{
-    void linkBackendToEngine(QV4::ExecutionEngine *) override {}
-};
-
 void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 {
     if (!disableDiskCache() || forceDiskCache()) {
@@ -2954,7 +2949,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         return;
     }
     if (!unit) {
-        unit.adopt(new EmptyCompilationUnit);
+        unit.adopt(new QV4::CompiledData::CompilationUnit);
     }
     irUnit.javaScriptCompilationUnit = unit;
     irUnit.imports = collector.imports;

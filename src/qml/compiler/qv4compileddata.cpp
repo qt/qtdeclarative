@@ -48,6 +48,7 @@
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qv4vme_moth_p.h>
 #include "qv4compilationunitmapper_p.h"
 #include <QQmlPropertyMap>
 #include <QDateTime>
@@ -391,6 +392,15 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &sourceTimeS
     free(const_cast<Unit*>(oldDataPtr));
     backingFile.reset(cacheFile.take());
     return true;
+}
+
+void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
+{
+    runtimeFunctions.resize(data->functionTableSize);
+    for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
+        const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
+        runtimeFunctions[i] = new QV4::Function(engine, this, compiledFunction, &Moth::VME::exec);
+    }
 }
 
 #endif // V4_BOOTSTRAP

@@ -958,7 +958,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
     bool loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString);
 
 protected:
-    virtual void linkBackendToEngine(QV4::ExecutionEngine *engine) = 0;
+    void linkBackendToEngine(QV4::ExecutionEngine *engine);
 #endif // V4_BOOTSTRAP
 
 public:

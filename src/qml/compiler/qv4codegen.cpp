@@ -53,7 +53,6 @@
 #include <private/qv4compilercontext_p.h>
 #include <private/qv4compilercontrolflow_p.h>
 #include <private/qv4bytecodegenerator_p.h>
-#include <private/qv4compilationunit_moth_p.h>
 #include <private/qv4compilerscanfunctions_p.h>
 
 #include <cmath>
@@ -2730,7 +2729,7 @@ QList<QQmlJS::DiagnosticMessage> Codegen::errors() const
 
 QQmlRefPointer<CompiledData::CompilationUnit> Codegen::generateCompilationUnit(bool generateUnitData)
 {
-    Moth::CompilationUnit *compilationUnit = new Moth::CompilationUnit;
+    CompiledData::CompilationUnit *compilationUnit = new CompiledData::CompilationUnit;
     if (generateUnitData)
         compilationUnit->data = jsUnitGenerator->generateUnit();
 
@@ -2742,7 +2741,7 @@ QQmlRefPointer<CompiledData::CompilationUnit> Codegen::generateCompilationUnit(b
 QQmlRefPointer<CompiledData::CompilationUnit> Codegen::createUnitForLoading()
 {
     QQmlRefPointer<CompiledData::CompilationUnit> result;
-    result.adopt(new Moth::CompilationUnit);
+    result.adopt(new CompiledData::CompilationUnit);
     return result;
 }
 
