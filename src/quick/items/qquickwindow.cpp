@@ -780,8 +780,8 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
 
     if (oldGrabber) {
         QEvent e(QEvent::UngrabMouse);
-        QSet<QQuickItem *> hasFiltered;
-        if (!sendFilteredMouseEvent(oldGrabber->parentItem(), oldGrabber, &e, &hasFiltered))
+        hasFiltered.clear();
+        if (!sendFilteredMouseEvent(&e, oldGrabber, oldGrabber->parentItem()))
             oldGrabber->mouseUngrabEvent();
     }
 }
@@ -1757,10 +1757,9 @@ bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
     hoverEvent.setTimestamp(timestamp);
     hoverEvent.setAccepted(accepted);
 
-    QSet<QQuickItem *> hasFiltered;
-    if (sendFilteredMouseEvent(item->parentItem(), item, &hoverEvent, &hasFiltered)) {
+    hasFiltered.clear();
+    if (sendFilteredMouseEvent(&hoverEvent, item, item->parentItem()))
         return true;
-    }
 
     QCoreApplication::sendEvent(item, &hoverEvent);
 
@@ -2840,24 +2839,24 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
     return sendFilteredPointerEventImpl(event, receiver, filteringParent->parentItem()) || filtered;
 }
 
-bool QQuickWindowPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem *item, QEvent *event, QSet<QQuickItem *> *hasFiltered)
+bool QQuickWindowPrivate::sendFilteredMouseEvent(QEvent *event, QQuickItem *receiver, QQuickItem *filteringParent)
 {
-    if (!target)
+    if (!filteringParent)
         return false;
 
-    QQuickItemPrivate *targetPrivate = QQuickItemPrivate::get(target);
-    if (targetPrivate->replayingPressEvent)
+    QQuickItemPrivate *filteringParentPrivate = QQuickItemPrivate::get(filteringParent);
+    if (filteringParentPrivate->replayingPressEvent)
         return false;
 
     bool filtered = false;
-    if (targetPrivate->filtersChildMouseEvents && !hasFiltered->contains(target)) {
-        hasFiltered->insert(target);
-        if (target->childMouseEventFilter(item, event))
+    if (filteringParentPrivate->filtersChildMouseEvents && !hasFiltered.contains(filteringParent)) {
+        hasFiltered.append(filteringParent);
+        if (filteringParent->childMouseEventFilter(receiver, event))
             filtered = true;
-        qCDebug(DBG_MOUSE_TARGET) << "for" << item << target << "childMouseEventFilter ->" << filtered;
+        qCDebug(DBG_MOUSE_TARGET) << "for" << receiver << filteringParent << "childMouseEventFilter ->" << filtered;
     }
 
-    return sendFilteredMouseEvent(target->parentItem(), item, event, hasFiltered) || filtered;
+    return sendFilteredMouseEvent(event, receiver, filteringParent->parentItem()) || filtered;
 }
 
 bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold)
@@ -3007,8 +3006,8 @@ bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
     case QEvent::MouseButtonDblClick:
     case QEvent::MouseMove: {
             // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
-            QSet<QQuickItem *> hasFiltered;
-            if (!d->sendFilteredMouseEvent(item->parentItem(), item, e, &hasFiltered)) {
+            d->hasFiltered.clear();
+            if (!d->sendFilteredMouseEvent(e, item, item->parentItem())) {
                 // accept because qml items by default accept and have to explicitly opt out of accepting
                 e->accept();
                 QCoreApplication::sendEvent(item, e);
