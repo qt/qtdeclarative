@@ -300,7 +300,7 @@ QT_BEGIN_NAMESPACE
 #define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
 
 #define MOTH_INSTR_ENUM(I)  I,
-#define MOTH_INSTR_SIZE(I) ((sizeof(QV4::Moth::Instr::instr_##I) + MOTH_INSTR_ALIGN_MASK) & ~MOTH_INSTR_ALIGN_MASK)
+#define MOTH_INSTR_SIZE(I) (sizeof(QV4::Moth::Instr::instr_##I))
 
 #define MOTH_DEFINE_ARGS(nargs, ...) \
     MOTH_DEFINE_ARGS##nargs(__VA_ARGS__)
