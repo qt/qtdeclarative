@@ -52,6 +52,7 @@
 
 #include "private/qv4global_p.h"
 #include <private/qqmljsast_p.h>
+#include <private/qv4compileddata_p.h>
 #include <QtCore/QStringList>
 #include <QtCore/QDateTime>
 #include <QtCore/QStack>
@@ -133,7 +134,7 @@ struct Context {
 
     ControlFlow *controlFlow = 0;
     QByteArray code;
-    QVector<int> lineNumberMapping;
+    QVector<CompiledData::CodeOffsetToLine> lineNumberMapping;
 
     int maxNumberOfArguments = 0;
     bool hasDirectEval = false;

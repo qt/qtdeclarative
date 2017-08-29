@@ -796,15 +796,16 @@ QString CppStackFrame::function() const
 
 int CppStackFrame::lineNumber() const
 {
+    auto findLine = [](const CompiledData::CodeOffsetToLine &entry, uint offset) {
+        return entry.codeOffset < offset;
+    };
+
     const QV4::CompiledData::Function *cf = v4Function->compiledFunction;
-    uint offset = static_cast<uint>(instructionPointer - v4Function->codeData - 1); // -1 because the instructionPointer points to the next instruction
-    const quint32_le *lineNumbers = cf->lineNumberTable();
-    int nLineNumbers = cf->nLineNumbers;
-    for (int i = 0; i < nLineNumbers; ++i) {
-        if (offset <= lineNumbers[i])
-            return cf->location.line + i;
-    }
-    return cf->location.line + nLineNumbers;
+    uint offset = static_cast<uint>(instructionPointer - v4Function->codeData);
+    const CompiledData::CodeOffsetToLine *lineNumbers = cf->lineNumberTable();
+    uint nLineNumbers = cf->nLineNumbers;
+    const CompiledData::CodeOffsetToLine *line = std::lower_bound(lineNumbers, lineNumbers + nLineNumbers, offset, findLine) - 1;
+    return line->line;
 }
 
 ReturnedValue CppStackFrame::thisObject() const {

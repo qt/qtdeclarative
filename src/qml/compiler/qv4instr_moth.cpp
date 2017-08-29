@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qv4instr_moth_p.h"
+#include <private/qv4compileddata_p.h>
 
 using namespace QV4;
 using namespace QV4::Moth;
@@ -117,17 +118,21 @@ void dumpConstantTable(const Value *constants, uint count)
           << toString(constants[i].asReturnedValue()).toUtf8().constData() << "\n";
 }
 
-void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int startLine, const QVector<int> &lineNumberMapping)
+void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*startLine*/, const QVector<CompiledData::CodeOffsetToLine> &lineNumberMapping)
 {
-
     MOTH_JUMP_TABLE;
+
+    auto findLine = [](const CompiledData::CodeOffsetToLine &entry, uint offset) {
+        return entry.codeOffset < offset;
+    };
 
     int lastLine = -1;
     const char *start = code;
     const char *end = code + len;
     while (code < end) {
-        int line = startLine + ((code == start) ? 0 : lineNumberMapping.lastIndexOf(static_cast<uint>(code - start)) + 1);
-        if (line > lastLine)
+        const CompiledData::CodeOffsetToLine *codeToLine = std::lower_bound(lineNumberMapping.constBegin(), lineNumberMapping.constEnd(), static_cast<uint>(code - start) + 1, findLine) - 1;
+        int line = codeToLine->line;
+        if (line != lastLine)
             lastLine = line;
         else
             line = -1;

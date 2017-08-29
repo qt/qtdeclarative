@@ -318,7 +318,7 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
 
     function->nLineNumbers = irFunction->lineNumberMapping.size();
     function->lineNumberOffset = currentOffset;
-    currentOffset += function->nLineNumbers * sizeof(quint32);
+    currentOffset += function->nLineNumbers * sizeof(CompiledData::CodeOffsetToLine);
 
     function->nInnerFunctions = irFunction->nestedContexts.size();
 
@@ -363,9 +363,7 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         locals[i] = getStringId(irFunction->locals.at(i));
 
     // write line numbers
-    quint32 *lineNumbers = (quint32 *)(f + function->lineNumberOffset);
-    for (int i = 0; i < irFunction->lineNumberMapping.size(); ++i)
-        lineNumbers[i] = irFunction->lineNumberMapping.at(i);
+    memcpy(f + function->lineNumberOffset, irFunction->lineNumberMapping.constData(), irFunction->lineNumberMapping.size()*sizeof(CompiledData::CodeOffsetToLine));
 
     // write QML dependencies
     quint32_le *writtenDeps = (quint32_le *)(f + function->dependingIdObjectsOffset);

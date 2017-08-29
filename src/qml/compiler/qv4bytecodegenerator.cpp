@@ -40,6 +40,7 @@
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qqmljsastfwd_p.h>
+#include <private/qv4compileddata_p.h>
 
 QT_USE_NAMESPACE
 using namespace QV4;
@@ -161,15 +162,16 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
 
     // collect content and line numbers
     QByteArray code;
-    QVector<int> lineNumbers;
-    currentLine = startLine;
+    QVector<CompiledData::CodeOffsetToLine> lineNumbers;
+    currentLine = -1;
+    Q_UNUSED(startLine);
     for (const auto &i : qAsConst(instructions)) {
         if (i.line != currentLine) {
-            Q_ASSERT(i.line > currentLine);
-            while (currentLine < i.line) {
-                lineNumbers.append(code.size());
-                ++currentLine;
-            }
+            currentLine = i.line;
+            CompiledData::CodeOffsetToLine entry;
+            entry.codeOffset = code.size();
+            entry.line = currentLine;
+            lineNumbers.append(entry);
         }
         code.append(i.packed, i.size);
     }
