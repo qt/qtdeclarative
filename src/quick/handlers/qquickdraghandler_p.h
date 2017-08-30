@@ -51,7 +51,7 @@
 // We mean it.
 //
 
-#include "qquickpointersinglehandler_p.h"
+#include "qquicksinglepointhandler_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -85,7 +85,7 @@ private:
     bool m_enabled;
 };
 
-class Q_AUTOTEST_EXPORT QQuickDragHandler : public QQuickPointerSingleHandler
+class Q_AUTOTEST_EXPORT QQuickDragHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)

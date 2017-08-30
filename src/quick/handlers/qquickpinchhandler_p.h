@@ -53,12 +53,12 @@
 
 #include "qquickitem.h"
 #include "qevent.h"
-#include "qquickmultipointerhandler_p.h"
+#include "qquickmultipointhandler_p.h"
 #include <private/qquicktranslate_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickPinchHandler : public QQuickMultiPointerHandler
+class Q_AUTOTEST_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
 {
     Q_OBJECT
     Q_PROPERTY(qreal minimumScale READ minimumScale WRITE setMinimumScale NOTIFY minimumScaleChanged)

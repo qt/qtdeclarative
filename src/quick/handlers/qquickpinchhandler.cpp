@@ -63,7 +63,7 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 */
 
 QQuickPinchHandler::QQuickPinchHandler(QObject *parent)
-    : QQuickMultiPointerHandler(parent, 2)
+    : QQuickMultiPointHandler(parent, 2)
     , m_activeScale(1)
     , m_activeRotation(0)
     , m_activeTranslation(0,0)

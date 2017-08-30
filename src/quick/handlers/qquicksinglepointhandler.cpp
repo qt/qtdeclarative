@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qquickpointersinglehandler_p.h"
+#include "qquicksinglepointhandler_p.h"
 
 QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
@@ -50,14 +50,14 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
     Override handleEventPoint() to implement a single-point handler.
 */
 
-QQuickPointerSingleHandler::QQuickPointerSingleHandler(QObject *parent)
+QQuickSinglePointHandler::QQuickSinglePointHandler(QObject *parent)
   : QQuickPointerDeviceHandler(parent)
   , m_acceptedButtons(Qt::LeftButton)
   , m_ignoreAdditionalPoints(false)
 {
 }
 
-bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
+bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
@@ -113,7 +113,7 @@ bool QQuickPointerSingleHandler::wantsPointerEvent(QQuickPointerEvent *event)
     return m_pointInfo.m_id;
 }
 
-void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *event)
+void QQuickSinglePointHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
     QQuickPointerDeviceHandler::handlePointerEventImpl(event);
     QQuickEventPoint *currentPoint = event->pointById(m_pointInfo.m_id);
@@ -158,12 +158,12 @@ void QQuickPointerSingleHandler::handlePointerEventImpl(QQuickPointerEvent *even
     }
 }
 
-bool QQuickPointerSingleHandler::wantsEventPoint(QQuickEventPoint *point)
+bool QQuickSinglePointHandler::wantsEventPoint(QQuickEventPoint *point)
 {
     return parentContains(point);
 }
 
-void QQuickPointerSingleHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
+void QQuickSinglePointHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
     if (grabber != this)
         return;
@@ -191,19 +191,19 @@ void QQuickPointerSingleHandler::onGrabChanged(QQuickPointerHandler *grabber, QQ
     emit singlePointGrabChanged();
 }
 
-void QQuickPointerSingleHandler::setIgnoreAdditionalPoints(bool v)
+void QQuickSinglePointHandler::setIgnoreAdditionalPoints(bool v)
 {
     m_ignoreAdditionalPoints = v;
 }
 
-void QQuickPointerSingleHandler::moveTarget(QPointF pos, QQuickEventPoint *point)
+void QQuickSinglePointHandler::moveTarget(QPointF pos, QQuickEventPoint *point)
 {
     target()->setPosition(pos);
     m_pointInfo.m_scenePosition = point->scenePos();
     m_pointInfo.m_position = target()->mapFromScene(m_pointInfo.m_scenePosition);
 }
 
-void QQuickPointerSingleHandler::setAcceptedButtons(Qt::MouseButtons buttons)
+void QQuickSinglePointHandler::setAcceptedButtons(Qt::MouseButtons buttons)
 {
     if (m_acceptedButtons == buttons)
         return;
@@ -212,7 +212,7 @@ void QQuickPointerSingleHandler::setAcceptedButtons(Qt::MouseButtons buttons)
     emit acceptedButtonsChanged();
 }
 
-void QQuickPointerSingleHandler::reset()
+void QQuickSinglePointHandler::reset()
 {
     setActive(false);
     m_pointInfo.reset();
