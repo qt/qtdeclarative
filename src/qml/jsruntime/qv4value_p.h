@@ -357,6 +357,7 @@ public:
     }
     inline bool isString() const;
     inline bool isObject() const;
+    inline bool isFunctionObject() const;
     inline bool isInt32() {
         if (tag() == quint32(ValueTypeInternal::Integer))
             return true;
@@ -518,6 +519,12 @@ inline bool Value::isObject() const
 {
     Heap::Base *b = heapObject();
     return b && b->vtable()->isObject;
+}
+
+inline bool Value::isFunctionObject() const
+{
+    Heap::Base *b = heapObject();
+    return b && b->vtable()->isFunctionObject;
 }
 
 inline bool Value::isPrimitive() const

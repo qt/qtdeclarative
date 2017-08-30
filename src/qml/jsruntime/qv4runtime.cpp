@@ -995,10 +995,10 @@ ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint ind
 
     Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
     callData->function = l->globalGetter(l, engine);
-    if (!callData->function.isObject())
+    if (!callData->function.isFunctionObject())
         return engine->throwTypeError();
 
-    return static_cast<Object &>(callData->function).call(callData);
+    return static_cast<FunctionObject &>(callData->function).call(callData);
 }
 
 ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, CallData *callData)
@@ -1009,8 +1009,7 @@ ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Ca
     if (engine->hasException)
         return Encode::undefined();
 
-    FunctionObject *f = callData->function.as<FunctionObject>();
-    if (!f) {
+    if (!callData->function.isFunctionObject()) {
         QString objectAsString = QStringLiteral("[null]");
         if (!callData->thisObject.isUndefined())
             objectAsString = callData->thisObject.toQStringNoThrow();
@@ -1018,10 +1017,12 @@ ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Ca
         return engine->throwTypeError(msg);
     }
 
-    if (f->d() == engine->evalFunction()->d())
-        return static_cast<EvalFunction *>(f)->evalCall(callData, true);
+    FunctionObject &f = static_cast<FunctionObject &>(callData->function);
 
-    return f->call(callData);
+    if (f.d() == engine->evalFunction()->d())
+        return static_cast<EvalFunction &>(f).evalCall(callData, true);
+
+    return f.call(callData);
 }
 
 ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, CallData *callData)
@@ -1034,8 +1035,7 @@ ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, C
     if (engine->hasException)
         return Encode::undefined();
 
-    FunctionObject *f = callData->function.as<FunctionObject>();
-    if (!f) {
+    if (!callData->function.isFunctionObject()) {
         QString objectAsString = QStringLiteral("[null]");
         if (!callData->thisObject.isUndefined())
             objectAsString = callData->thisObject.toQStringNoThrow();
@@ -1045,7 +1045,8 @@ ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, C
         return engine->throwTypeError(msg);
     }
 
-    return f->call(callData);
+    FunctionObject &f = static_cast<FunctionObject &>(callData->function);
+    return f.call(callData);
 }
 
 ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, int nameIndex, CallData *callData)
@@ -1066,27 +1067,28 @@ ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, int nameInde
 
     callData->function = engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex];
     callData->function = static_cast<Object &>(callData->thisObject).get(static_cast<String *>(&callData->function));
-    FunctionObject *f = callData->function.as<FunctionObject>();
-    if (f) {
-        return f->call(callData);
-    } else {
+
+    if (!callData->function.isFunctionObject()) {
         QString error = QStringLiteral("Property '%1' of object %2 is not a function")
                 .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString(),
                      callData->thisObject.toQStringNoThrow());
         return engine->throwTypeError(error);
     }
 
+    FunctionObject &f = static_cast<FunctionObject &>(callData->function);
+    return f.call(callData);
 }
 
 ReturnedValue Runtime::method_callPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData)
 {
     Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
     callData->function = l->getter(l, engine, callData->thisObject);
-    Object *o = callData->function.objectValue();
-    if (Q_LIKELY(o))
-        return o->call(callData);
 
-    return engine->throwTypeError();
+    if (!callData->function.isFunctionObject())
+        return engine->throwTypeError();
+
+    FunctionObject &f = static_cast<FunctionObject &>(callData->function);
+    return f.call(callData);
 }
 
 ReturnedValue Runtime::method_callElement(ExecutionEngine *engine, const Value &index, CallData *callData)
@@ -1097,30 +1099,29 @@ ReturnedValue Runtime::method_callElement(ExecutionEngine *engine, const Value &
         return Encode::undefined();
 
     callData->function = static_cast<Object &>(callData->thisObject).get(static_cast<String *>(&callData->function));
-    if (!callData->function.isObject())
+    if (!callData->function.isFunctionObject())
         return engine->throwTypeError();
 
-    return static_cast<Object &>(callData->function).call(callData);
+    return static_cast<FunctionObject &>(callData->function).call(callData);
 }
 
 ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &func, CallData *callData)
 {
     callData->function = func;
-    if (Object *o = func.objectValue())
-        return o->call(callData);
+    if (!func.isFunctionObject())
+        return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
 
-    return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
+    return static_cast<FunctionObject &>(callData->function).call(callData);
 }
 
 
 ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &func, CallData *callData)
 {
     callData->function = func;
-    const Object *f = func.as<Object>();
-    if (!f)
+    if (!func.isFunctionObject())
         return engine->throwTypeError();
 
-    return f->construct(callData);
+    return static_cast<FunctionObject &>(callData->function).construct(callData);
 }
 
 void Runtime::method_throwException(ExecutionEngine *engine, const Value &value)
