@@ -63,15 +63,15 @@ struct Q_QML_EXPORT Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
 
-    ReturnedValue execute(Heap::ExecutionContext *c, CallData *callData, const FunctionObject *f = 0) {
-        return code(f, callData, c, this);
+    ReturnedValue execute(Heap::ExecutionContext *c, CallData *callData) {
+        return code(callData, c, this);
     }
-    ReturnedValue call(Heap::ExecutionContext *c, CallData *callData, const FunctionObject *f = 0) {
-        return call(f, callData, c, this);
+    ReturnedValue call(Heap::ExecutionContext *c, CallData *callData) {
+        return call(callData, c, this);
     }
 
 
-    typedef ReturnedValue (*Code)(const FunctionObject *, CallData *, Heap::ExecutionContext *c, Function *);
+    typedef ReturnedValue (*Code)(CallData *, Heap::ExecutionContext *c, Function *);
     Code code;
     const uchar *codeData;
 
@@ -104,12 +104,12 @@ struct Q_QML_EXPORT Function {
     }
 
 private:
-    static ReturnedValue call(const FunctionObject *f, CallData *callData, Heap::ExecutionContext *context, Function *function)
+    static ReturnedValue call(CallData *callData, Heap::ExecutionContext *context, Function *function)
     {
         if (!function->canUseSimpleCall)
-            context = ExecutionContext::newCallContext(context, function, callData, f);
+            context = ExecutionContext::newCallContext(context, function, callData);
 
-        return function->execute(context, callData, f);
+        return function->execute(context, callData);
     }
 };
 

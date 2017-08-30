@@ -489,7 +489,7 @@ static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
     } while (false)
 
 
-QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callData, Heap::ExecutionContext *context, QV4::Function *function)
+QV4::ReturnedValue VME::exec(CallData *callData, Heap::ExecutionContext *context, QV4::Function *function)
 {
     qt_v4ResolvePendingBreakpointsHook();
 
@@ -515,8 +515,6 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     stack = engine->jsAlloca(function->compiledFunction->nRegisters + sizeof(JSStackFrame)/sizeof(QV4::Value));
     frame.jsFrame = reinterpret_cast<JSStackFrame *>(stack);
     frame.jsFrame->context = context;
-    if (jsFunction)
-        frame.jsFrame->jsFunction = *jsFunction;
 
     QV4::Value &accumulator = frame.jsFrame->accumulator;
     QV4::ReturnedValue acc = Encode::undefined();

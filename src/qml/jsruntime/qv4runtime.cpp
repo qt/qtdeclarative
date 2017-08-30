@@ -1081,9 +1081,8 @@ ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, int nameInde
 ReturnedValue Runtime::method_callPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData)
 {
     Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
-    Value v;
-    v = l->getter(l, engine, callData->thisObject);
-    Object *o = v.objectValue();
+    callData->function = l->getter(l, engine, callData->thisObject);
+    Object *o = callData->function.objectValue();
     if (Q_LIKELY(o))
         return o->call(callData);
 
