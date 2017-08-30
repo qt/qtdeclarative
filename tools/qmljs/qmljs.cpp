@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
                 const QString code = QString::fromUtf8(file.readAll());
                 file.close();
 
-                script.reset(new QV4::Script(ctx, code, fn));
+                script.reset(new QV4::Script(ctx, QV4::Compiler::GlobalCode, code, fn));
                 script->parseAsBinding = runAsQml;
                 script->parse();
             }

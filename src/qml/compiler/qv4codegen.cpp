@@ -1949,7 +1949,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     _module->functions.append(_context);
     _context->functionIndex = _module->functions.count() - 1;
 
-    _context->hasDirectEval |= _context->compilationMode == EvalCode || _module->debugMode; // Conditional breakpoints are like eval in the function
+    _context->hasDirectEval |= (_context->compilationMode == EvalCode || _context->compilationMode == GlobalCode || _module->debugMode); // Conditional breakpoints are like eval in the function
     // ### still needed?
     _context->maxNumberOfArguments = qMax(_context->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);
 
@@ -1963,7 +1963,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + _context->arguments.size());
 
     int returnAddress = -1;
-    bool _requiresReturnValue = (_context->compilationMode == QmlBinding || _context->compilationMode == EvalCode);
+    bool _requiresReturnValue = (_context->compilationMode == QmlBinding || _context->compilationMode == EvalCode || _context->compilationMode == GlobalCode);
     qSwap(requiresReturnValue, _requiresReturnValue);
     if (requiresReturnValue)
         returnAddress = bytecodeGenerator->newRegister();
@@ -1973,6 +1973,11 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         _context->addLocalVar(QStringLiteral("arguments"), Context::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
 
     bool allVarsEscape = _context->hasWith || _context->hasTry || _context->hasDirectEval;
+
+    if (!_context->canUseSimpleCall() && _context->compilationMode != GlobalCode && (_context->compilationMode != EvalCode || _context->isStrict)) {
+        Instruction::CreateCallContext createContext;
+        bytecodeGenerator->addInstruction(createContext);
+    }
 
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (_context->compilationMode == FunctionCode || _context->compilationMode == QmlBinding) {

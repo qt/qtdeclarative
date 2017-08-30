@@ -54,6 +54,7 @@
 #include "qv4engine_p.h"
 #include "qv4functionobject_p.h"
 #include "qv4qmlcontext_p.h"
+#include "private/qv4compilercontext_p.h"
 
 #include <QQmlError>
 
@@ -88,9 +89,9 @@ struct ContextStateSaver {
 };
 
 struct Q_QML_EXPORT Script {
-    Script(ExecutionContext *scope, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
+    Script(ExecutionContext *scope, QV4::Compiler::CompilationMode mode, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(scope), strictMode(false), inheritContext(false), parsed(false)
+        , scope(scope), strictMode(false), inheritContext(false), parsed(false), compilationMode(mode)
         , vmFunction(0), parseAsBinding(false) {}
     Script(ExecutionEngine *engine, QmlContext *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
@@ -109,6 +110,7 @@ struct Q_QML_EXPORT Script {
     bool strictMode;
     bool inheritContext;
     bool parsed;
+    QV4::Compiler::CompilationMode compilationMode = QV4::Compiler::EvalCode;
     QV4::PersistentValue qmlContext;
     QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit;
     Function *vmFunction;

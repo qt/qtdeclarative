@@ -120,7 +120,7 @@ void Script::parse()
         RuntimeCodegen cg(v4, &jsGenerator, strictMode);
         if (inheritContext)
             cg.setUseFastLookups(false);
-        cg.generateFromProgram(sourceFile, sourceCode, program, &module, EvalCode);
+        cg.generateFromProgram(sourceFile, sourceCode, program, &module, compilationMode);
         if (v4->hasException)
             return;
 
@@ -219,7 +219,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
 
     Codegen cg(unitGenerator, /*strict mode*/false);
     cg.setUseFastLookups(false);
-    cg.generateFromProgram(url.toString(), source, program, module, EvalCode);
+    cg.generateFromProgram(url.toString(), source, program, module, GlobalCode);
     errors = cg.qmlErrors();
     if (!errors.isEmpty()) {
         if (reportedErrors)

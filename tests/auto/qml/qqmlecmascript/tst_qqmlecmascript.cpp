@@ -2338,7 +2338,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::Scope scope(QV8Engine::getV4(engine));
-    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), functionSource);
+    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), QV4::Compiler::EvalCode, functionSource);
     program.inheritContext = true;
 
     QV4::ScopedFunctionObject function(scope, program.run());
@@ -2364,7 +2364,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::Scope scope(QV8Engine::getV4(engine));
-    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), functionSource);
+    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), QV4::Compiler::EvalCode, functionSource);
     program.inheritContext = true;
 
     QV4::ScopedFunctionObject function(scope, program.run());
@@ -2395,7 +2395,7 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::Value &o
 
     QV4::Scope scope(QV8Engine::getV4(engine));
 
-    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), functionSource);
+    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), QV4::Compiler::EvalCode, functionSource);
     program.inheritContext = true;
 
     QV4::ScopedFunctionObject function(scope, program.run());

@@ -360,7 +360,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     const QString code = scode->toQString();
     bool inheritContext = !ctx->d()->v4Function->isStrict();
 
-    Script script(ctx, code, QStringLiteral("eval code"));
+    Script script(ctx, QV4::Compiler::EvalCode, code, QStringLiteral("eval code"));
     script.strictMode = (directCall && isStrict);
     script.inheritContext = inheritContext;
     script.parse();

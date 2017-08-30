@@ -807,6 +807,11 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
         STACK_VALUE(CallData::Context) = Runtime::method_createCatchContext(c, name);
     MOTH_END_INSTR(PushCatchContext)
 
+    MOTH_BEGIN_INSTR(CreateCallContext)
+        Heap::ExecutionContext *ctx = static_cast<Heap::ExecutionContext *>(stack[CallData::Context].m());
+        stack[CallData::Context] = ExecutionContext::newCallContext(ctx, function, reinterpret_cast<CallData *>(stack));
+    MOTH_END_INSTR(CreateCallContext)
+
     MOTH_BEGIN_INSTR(PushWithContext)
         STORE_IP();
         STORE_ACC();
