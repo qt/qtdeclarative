@@ -315,6 +315,13 @@ QAccessible::Role QQuickControlPrivate::accessibleRole() const
     Q_Q(const QQuickControl);
     return q->accessibleRole();
 }
+
+QQuickAccessibleAttached *QQuickControlPrivate::accessibleAttached(const QObject *object)
+{
+    if (!QAccessible::isActive())
+        return nullptr;
+    return QQuickAccessibleAttached::attachedProperties(object);
+}
 #endif
 
 /*!
@@ -1613,7 +1620,7 @@ void QQuickControl::accessibilityActiveChanged(bool active)
 QString QQuickControl::accessibleName() const
 {
 #if QT_CONFIG(accessibility)
-    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(this))
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this))
         return accessibleAttached->name();
 #endif
     return QString();
@@ -1622,7 +1629,7 @@ QString QQuickControl::accessibleName() const
 void QQuickControl::setAccessibleName(const QString &name)
 {
 #if QT_CONFIG(accessibility)
-    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(this))
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this))
         accessibleAttached->setName(name);
 #else
     Q_UNUSED(name)
@@ -1632,7 +1639,8 @@ void QQuickControl::setAccessibleName(const QString &name)
 QVariant QQuickControl::accessibleProperty(const char *propertyName)
 {
 #if QT_CONFIG(accessibility)
-    return QQuickAccessibleAttached::property(this, propertyName);
+    if (QAccessible::isActive())
+        return QQuickAccessibleAttached::property(this, propertyName);
 #endif
     Q_UNUSED(propertyName)
     return QVariant();
@@ -1641,7 +1649,8 @@ QVariant QQuickControl::accessibleProperty(const char *propertyName)
 bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVariant &value)
 {
 #if QT_CONFIG(accessibility)
-    return QQuickAccessibleAttached::setProperty(this, propertyName, value);
+    if (QAccessible::isActive())
+        return QQuickAccessibleAttached::setProperty(this, propertyName, value);
 #endif
     Q_UNUSED(propertyName)
     Q_UNUSED(value)

@@ -60,6 +60,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickAccessibleAttached;
+
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControlPrivate : public QQuickItemPrivate
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
@@ -100,6 +102,7 @@ public:
 #if QT_CONFIG(accessibility)
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;
+    static QQuickAccessibleAttached *accessibleAttached(const QObject *object);
 #endif
 
     virtual void resolveFont();

@@ -176,7 +176,7 @@ void QQuickLabelPrivate::textChanged(const QString &text)
 {
 #if QT_CONFIG(accessibility)
     Q_Q(QQuickLabel);
-    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(q))
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(q))
         accessibleAttached->setName(text);
 #else
     Q_UNUSED(text)
