@@ -55,7 +55,7 @@ int Instr::size(Type type)
 
 static QByteArray alignedNumber(int n) {
     QByteArray number = QByteArray::number(n);
-    while (number.size() < 12)
+    while (number.size() < 8)
         number.prepend(' ');
     return number;
 }
@@ -63,7 +63,23 @@ static QByteArray alignedNumber(int n) {
 static QByteArray alignedLineNumber(int line) {
     if (line > 0)
         return alignedNumber(static_cast<int>(line));
-    return QByteArray("            ");
+    return QByteArray("        ");
+}
+
+static QByteArray rawBytes(const char *data, int n)
+{
+    QByteArray ba;
+    while (n) {
+        uint num = *reinterpret_cast<const uchar *>(data);
+        if (num < 16)
+            ba += '0';
+        ba += QByteArray::number(num, 16) + " ";
+        ++data;
+        --n;
+    }
+    while (ba.size() < 25)
+        ba += ' ';
+    return ba;
 }
 
 static QString toString(QV4::ReturnedValue v)
@@ -90,11 +106,11 @@ static QString toString(QV4::ReturnedValue v)
 
 #define MOTH_BEGIN_INSTR(instr) \
     { \
-        INSTR_##instr(MOTH_DECODE) \
+        INSTR_##instr(MOTH_DECODE_WITH_BASE) \
         QDebug d = qDebug(); \
         d.noquote(); \
         d.nospace(); \
-        d << alignedLineNumber(line) << alignedNumber(codeOffset).constData() << ":    " << #instr << " "; \
+        d << alignedLineNumber(line) << alignedNumber(codeOffset).constData() << ": " << rawBytes(base_ptr, code - base_ptr) << #instr << " "; \
 
 #define MOTH_END_INSTR(instr) \
         continue; \

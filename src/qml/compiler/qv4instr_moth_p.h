@@ -360,6 +360,21 @@ QT_BEGIN_NAMESPACE
     op_main_##name: \
         ; \
 
+#define MOTH_DECODE_WITH_BASE_INSTRUCTION(name, nargs, ...) \
+        MOTH_DEFINE_ARGS(nargs, __VA_ARGS__) \
+        const char *base_ptr; \
+    op_int_##name: \
+        base_ptr = code; \
+        MOTH_ADJUST_CODE(int, nargs); \
+        MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
+        goto op_main_##name; \
+    op_char_##name: \
+        base_ptr = code; \
+        MOTH_ADJUST_CODE(char, nargs); \
+        MOTH_DECODE_ARGS(name, char, nargs, __VA_ARGS__) \
+    op_main_##name: \
+        ; \
+
 #define MOTH_DECODE_ARGS(name, type, nargs, ...) \
     MOTH_DECODE_ARGS##nargs(name, type, nargs, __VA_ARGS__)
 
