@@ -36,6 +36,9 @@
 #include <QtTest/qtest.h>
 #include <QtCore/qlibraryinfo.h>
 
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
+
 struct QQmlProfilerData
 {
     QQmlProfilerData(qint64 time = -2, int messageType = -1, int detailType = -1,
@@ -584,16 +587,18 @@ void tst_QQmlProfilerService::scenegraphData()
     qint64 contextFrameTime = -1;
     qint64 renderFrameTime = -1;
 #if QT_CONFIG(opengl) //Software renderer doesn't have context frames
-    foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
-        if (msg.messageType == QQmlProfilerDefinitions::SceneGraphFrame) {
-            if (msg.detailType == QQmlProfilerDefinitions::SceneGraphContextFrame) {
-                contextFrameTime = msg.time;
-                break;
+    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL)) {
+        foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
+            if (msg.messageType == QQmlProfilerDefinitions::SceneGraphFrame) {
+                if (msg.detailType == QQmlProfilerDefinitions::SceneGraphContextFrame) {
+                    contextFrameTime = msg.time;
+                    break;
+                }
             }
         }
-    }
 
-    QVERIFY(contextFrameTime != -1);
+        QVERIFY(contextFrameTime != -1);
+    }
 #endif
     foreach (const QQmlProfilerData &msg, m_client->asynchronousMessages) {
         if (msg.detailType == QQmlProfilerDefinitions::SceneGraphRendererFrame) {

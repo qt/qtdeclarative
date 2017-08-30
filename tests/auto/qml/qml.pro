@@ -9,7 +9,6 @@ PUBLICTESTS += \
     qjsonbinding \
     qqmlfile \
 
-!boot2qt {
 PUBLICTESTS += \
     qmlmin \
     qqmlcomponent \
@@ -31,7 +30,6 @@ PUBLICTESTS += \
     qqmlsettings \
     qqmlstatemachine \
     qmldiskcache
-}
 
 PRIVATETESTS += \
     qqmlcpputils \
@@ -39,7 +37,6 @@ PRIVATETESTS += \
     v4misc \
     qmlcachegen
 
-!boot2qt {
 PRIVATETESTS += \
     animation \
     qqmlecmascript \
@@ -74,7 +71,6 @@ PRIVATETESTS += \
     qv4mm \
     ecmascripttests \
     bindingdependencyapi
-}
 
 qtHaveModule(widgets) {
     PUBLICTESTS += \
@@ -84,9 +80,11 @@ qtHaveModule(widgets) {
 
 SUBDIRS += $$PUBLICTESTS
 SUBDIRS += $$METATYPETESTS
-qtConfig(process):!boot2qt {
+qtConfig(process) {
     !contains(QT_CONFIG, no-qml-debug): SUBDIRS += debugger
-    SUBDIRS += qmllint qmlplugindump
+    !boot2qt {
+        SUBDIRS += qmllint qmlplugindump
+    }
 }
 
 qtConfig(library) {

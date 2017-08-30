@@ -6,6 +6,10 @@ CanvasTestCase {
     name: "imagedata"
     function init_data() { return testData("2d"); }
     function test_rounding(row) {
+        if ((Qt.platform.pluginName === "offscreen")
+            || (Qt.platform.pluginName === "minimal"))
+            skip("ctx.getImageData crashes on offscreen/minimal platforms");
+
         var canvas = createCanvasObject(row);
         var ctx = canvas.getContext('2d');
         var size = 17

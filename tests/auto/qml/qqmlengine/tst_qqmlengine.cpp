@@ -862,6 +862,10 @@ void tst_qqmlengine::qmlContextProperties()
 
 void tst_qqmlengine::testGCCorruption()
 {
+#ifdef SKIP_GCCORRUPTION_TEST
+    QSKIP("Test too heavy for qemu");
+#endif
+
     QQmlEngine e;
 
     QQmlComponent c(&e, testFileUrl("testGCCorruption.qml"));
