@@ -154,7 +154,7 @@ ReturnedValue Script::run()
         QV4::ScopedCallData cData(scope);
         cData->thisObject = engine->globalObject;
         cData->context = *scope;
-        return vmFunction->execute(cData);
+        return vmFunction->call(cData);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
         ScopedCallData callData(valueScope);

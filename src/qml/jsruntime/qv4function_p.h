@@ -63,11 +63,8 @@ struct Q_QML_EXPORT Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
 
-    ReturnedValue execute(CallData *callData) {
-        return code(callData, this);
-    }
     ReturnedValue call(CallData *callData) {
-        return call(callData, this);
+        return code(callData, this);
     }
 
 
@@ -101,12 +98,6 @@ struct Q_QML_EXPORT Function {
     QQmlSourceLocation sourceLocation() const
     {
         return QQmlSourceLocation(sourceFile(), compiledFunction->location.line, compiledFunction->location.column);
-    }
-
-private:
-    static ReturnedValue call(CallData *callData, Function *function)
-    {
-        return function->execute(callData);
     }
 };
 
