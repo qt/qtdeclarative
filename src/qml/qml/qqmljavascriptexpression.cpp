@@ -227,8 +227,9 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
             callData->thisObject = value;
     }
 
-    QV4::ExecutionContext *outer = static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef());
-    result = v4Function->call(outer->d(), callData);
+    Q_ASSERT(m_qmlScope.valueRef());
+    callData->context = *m_qmlScope.valueRef();
+    result = v4Function->call(callData);
 
     if (scope.hasException()) {
         if (watcher.wasDeleted())

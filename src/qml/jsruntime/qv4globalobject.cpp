@@ -388,7 +388,8 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
 
     ScopedCallData cData(scope);
     cData->thisObject = scope.engine->currentStackFrame->thisObject();
-    return function->execute(ctx->d(), cData);
+    cData->context = *ctx;
+    return function->execute(cData);
 }
 
 

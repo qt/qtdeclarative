@@ -89,7 +89,7 @@ struct CallData
     }
 
     Value function;
-    Value dummy_context;
+    Value context;
     Value thisObject;
     Value args[1];
 

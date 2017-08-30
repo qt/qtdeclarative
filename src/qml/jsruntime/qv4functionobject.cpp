@@ -368,7 +368,8 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     QV4::Function *v4Function = f->function();
     Q_ASSERT(v4Function);
 
-    ReturnedValue result = v4Function->call(f->scope(), callData);
+    callData->context = f->scope();
+ReturnedValue result = v4Function->call(callData);
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
@@ -388,7 +389,8 @@ ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
     QV4::Function *v4Function = f->function();
     Q_ASSERT(v4Function);
 
-    return v4Function->call(f->scope(), callData);
+    callData->context = f->scope();
+    return v4Function->call(callData);
 }
 
 void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)

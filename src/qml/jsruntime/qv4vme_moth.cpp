@@ -489,7 +489,7 @@ static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
     } while (false)
 
 
-QV4::ReturnedValue VME::exec(CallData *callData, Heap::ExecutionContext *context, QV4::Function *function)
+QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
 {
     qt_v4ResolvePendingBreakpointsHook();
 
@@ -514,7 +514,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, Heap::ExecutionContext *context
 
     stack = engine->jsAlloca(function->compiledFunction->nRegisters + sizeof(JSStackFrame)/sizeof(QV4::Value));
     frame.jsFrame = reinterpret_cast<JSStackFrame *>(stack);
-    frame.jsFrame->context = context;
+    frame.jsFrame->context = callData->context;
 
     QV4::Value &accumulator = frame.jsFrame->accumulator;
     QV4::ReturnedValue acc = Encode::undefined();
@@ -1287,8 +1287,9 @@ functionExit:
     engine->jsStackTop = jsStackTop;
 
     if (function->hasQmlDependencies) {
-        Q_ASSERT(context->type == Heap::ExecutionContext::Type_QmlContext);
-        QQmlPropertyCapture::registerQmlDependencies(static_cast<Heap::QmlContext *>(context), engine, function->compiledFunction);
+        Heap::QmlContext *c = static_cast<Heap::QmlContext *>(callData->context.m());
+        Q_ASSERT(c->type == Heap::ExecutionContext::Type_QmlContext);
+        QQmlPropertyCapture::registerQmlDependencies(c, engine, function->compiledFunction);
     }
 
     return ACC.asReturnedValue();
