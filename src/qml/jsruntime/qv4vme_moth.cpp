@@ -336,7 +336,7 @@ static struct InstrCount {
 
 static inline Heap::CallContext *getScope(Value *stack, int level)
 {
-    Heap::ExecutionContext *scope = static_cast<ExecutionContext &>(stack[JSStackFrame::Context]).d();
+    Heap::ExecutionContext *scope = static_cast<ExecutionContext &>(stack[CallData::Context]).d();
     while (level > 0) {
         --level;
         scope = scope->outer;
@@ -499,22 +499,21 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     Profiling::FunctionCallProfiler(engine, function);
 
     Value *jsStackTop = engine->jsStackTop;
-    engine->jsStackTop = reinterpret_cast<QV4::Value *>(callData) + sizeof(CallData)/sizeof(Value) - 1 + (int)function->nFormals;
-    for (int i = callData->argc; i < (int)function->nFormals; ++i)
-        callData->args[i] = Encode::undefined();
 
     CppStackFrame frame;
     frame.parent = engine->currentStackFrame;
     frame.v4Function = function;
     frame.instructionPointer = function->codeData;
+    frame.jsFrame = callData;
     engine->currentStackFrame = &frame;
 
-    QV4::Value *stack = nullptr;
-    const uchar *exceptionHandler = 0;
+    engine->jsStackTop = reinterpret_cast<QV4::Value *>(callData) + function->compiledFunction->nRegisters + 1;
+    // clear out remaining arguments and local registers
+    for (Value *v = callData->args + callData->argc; v < jsStackTop; ++v)
+        *v = Encode::undefined();
 
-    stack = engine->jsAlloca(function->compiledFunction->nRegisters + sizeof(JSStackFrame)/sizeof(QV4::Value));
-    frame.jsFrame = reinterpret_cast<JSStackFrame *>(stack);
-    frame.jsFrame->context = callData->context;
+    QV4::Value *stack = reinterpret_cast<QV4::Value *>(callData);
+    const uchar *exceptionHandler = 0;
 
     QV4::Value &accumulator = frame.jsFrame->accumulator;
     QV4::ReturnedValue acc = Encode::undefined();
@@ -572,13 +571,13 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_END_INSTR(MoveReg)
 
     MOTH_BEGIN_INSTR(LoadLocal)
-        auto cc = static_cast<Heap::CallContext *>(stack[JSStackFrame::Context].m());
+        auto cc = static_cast<Heap::CallContext *>(stack[CallData::Context].m());
         acc = cc->locals[index].asReturnedValue();
     MOTH_END_INSTR(LoadLocal)
 
     MOTH_BEGIN_INSTR(StoreLocal)
         CHECK_EXCEPTION;
-        auto cc = static_cast<Heap::CallContext *>(stack[JSStackFrame::Context].m());
+        auto cc = static_cast<Heap::CallContext *>(stack[CallData::Context].m());
         QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, ACC);
     MOTH_END_INSTR(StoreLocal)
 
@@ -803,9 +802,9 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_END_INSTR(SetException)
 
     MOTH_BEGIN_INSTR(PushCatchContext)
-        STACK_VALUE(reg) = STACK_VALUE(JSStackFrame::Context);
-        ExecutionContext *c = static_cast<ExecutionContext *>(stack + JSStackFrame::Context);
-        STACK_VALUE(JSStackFrame::Context) = Runtime::method_createCatchContext(c, name);
+        STACK_VALUE(reg) = STACK_VALUE(CallData::Context);
+        ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
+        STACK_VALUE(CallData::Context) = Runtime::method_createCatchContext(c, name);
     MOTH_END_INSTR(PushCatchContext)
 
     MOTH_BEGIN_INSTR(PushWithContext)
@@ -813,13 +812,13 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
         STORE_ACC();
         accumulator = accumulator.toObject(engine);
         CHECK_EXCEPTION;
-        STACK_VALUE(reg) = STACK_VALUE(JSStackFrame::Context);
-        ExecutionContext *c = static_cast<ExecutionContext *>(stack + JSStackFrame::Context);
-        STACK_VALUE(JSStackFrame::Context) = Runtime::method_createWithContext(c, accumulator);
+        STACK_VALUE(reg) = STACK_VALUE(CallData::Context);
+        ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
+        STACK_VALUE(CallData::Context) = Runtime::method_createWithContext(c, accumulator);
     MOTH_END_INSTR(PushWithContext)
 
     MOTH_BEGIN_INSTR(PopContext)
-        STACK_VALUE(JSStackFrame::Context) = STACK_VALUE(reg);
+        STACK_VALUE(CallData::Context) = STACK_VALUE(reg);
     MOTH_END_INSTR(PopContext)
 
     MOTH_BEGIN_INSTR(ForeachIteratorObject)
@@ -906,7 +905,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_END_INSTR(CreateUnmappedArgumentsObject)
 
     MOTH_BEGIN_INSTR(ConvertThisToObject)
-        Value *t = &stack[-(int)function->nFormals - 1];
+        Value *t = &stack[CallData::This];
         if (!t->isObject()) {
             if (t->isNullOrUndefined()) {
                 *t = engine->globalObject->asReturnedValue();

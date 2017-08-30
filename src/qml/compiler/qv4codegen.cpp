@@ -1232,13 +1232,14 @@ Moth::StackSlot Codegen::pushArgs(ArgumentList *args)
         ++argc;
     int calldata = bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + argc);
 
-    (void) Reference::fromConst(this, QV4::Encode(argc)).storeOnStack(calldata);
 #ifndef QT_NO_DEBUG
-    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + 1);
-    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + 2);
+    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::Function);
+    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::Context);
+    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::Accumulator);
 #endif
-    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + 3);
-    Q_STATIC_ASSERT(sizeof(CallData) == 5 * sizeof(Value));
+    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::This);
+    (void) Reference::fromConst(this, QV4::Encode(argc)).storeOnStack(calldata + CallData::Argc);
+    Q_STATIC_ASSERT(sizeof(CallData) == 6 * sizeof(Value));
 
     argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
@@ -1958,8 +1959,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     bytecodeGenerator = &bytecode;
     bytecodeGenerator->setLocation(ast->firstSourceLocation());
 
-    // allocate the js stack frame (Context & js Function & accumulator)
-    bytecodeGenerator->newRegisterArray(sizeof(JSStackFrame)/sizeof(Value));
+    // reserve the js stack frame (Context & js Function & accumulator)
+    bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + _context->arguments.size());
 
     int returnAddress = -1;
     bool _requiresReturnValue = (_context->compilationMode == QmlBinding || _context->compilationMode == EvalCode);
@@ -3231,9 +3232,8 @@ QT_WARNING_POP
             codegen->_context->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } return;
     case This: {
-        Context *c = codegen->currentContext();
         Instruction::LoadReg load;
-        load.reg = Moth::StackSlot::createArgument(c->arguments.size(), -1);
+        load.reg = Moth::StackSlot::createRegister(CallData::This);
         codegen->bytecodeGenerator->addInstruction(load);
     } return;
     case Invalid:

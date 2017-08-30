@@ -134,6 +134,31 @@ void dumpConstantTable(const Value *constants, uint count)
           << toString(constants[i].asReturnedValue()).toUtf8().constData() << "\n";
 }
 
+QString dumpRegister(int reg, int nFormals)
+{
+    Q_STATIC_ASSERT(offsetof(CallData, function) == 0);
+    Q_STATIC_ASSERT(offsetof(CallData, context) == sizeof(Value));
+    Q_STATIC_ASSERT(offsetof(CallData, accumulator) == 2*sizeof(Value));
+    Q_STATIC_ASSERT(offsetof(CallData, thisObject) == 3*sizeof(Value));
+    if (reg == CallData::Function)
+        return QStringLiteral("(function)");
+    else if (reg == CallData::Context)
+        return QStringLiteral("(context)");
+    else if (reg == CallData::Accumulator)
+        return QStringLiteral("(accumulator)");
+    else if (reg == CallData::This)
+        return QStringLiteral("(this)");
+    else if (reg == CallData::Argc)
+        return QStringLiteral("(argc)");
+    reg -= 4;
+    if (reg <= nFormals)
+        return QStringLiteral("a%1").arg(reg);
+    reg -= nFormals;
+    return QStringLiteral("r%1").arg(reg);
+
+}
+
+
 void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*startLine*/, const QVector<CompiledData::CodeOffsetToLine> &lineNumberMapping)
 {
     MOTH_JUMP_TABLE;
@@ -158,15 +183,15 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_DISPATCH()
 
         MOTH_BEGIN_INSTR(LoadReg)
-            d << StackSlot::dump(reg, nFormals);
+            d << dumpRegister(reg, nFormals);
         MOTH_END_INSTR(LoadReg)
 
         MOTH_BEGIN_INSTR(StoreReg)
-            d << StackSlot::dump(reg, nFormals);
+            d << dumpRegister(reg, nFormals);
         MOTH_END_INSTR(StoreReg)
 
         MOTH_BEGIN_INSTR(MoveReg)
-            d << StackSlot::dump(destReg, nFormals) << ", " << StackSlot::dump(srcReg, nFormals);
+            d << dumpRegister(destReg, nFormals) << ", " << dumpRegister(srcReg, nFormals);
         MOTH_END_INSTR(MoveReg)
 
         MOTH_BEGIN_INSTR(LoadConst)
@@ -193,7 +218,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(LoadInt)
 
         MOTH_BEGIN_INSTR(MoveConst)
-            d << StackSlot::dump(destTemp, nFormals) << ", C" << constIndex;
+            d << dumpRegister(destTemp, nFormals) << ", C" << constIndex;
         MOTH_END_INSTR(MoveConst)
 
         MOTH_BEGIN_INSTR(LoadLocal)
@@ -253,19 +278,19 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(StoreNameStrict)
 
         MOTH_BEGIN_INSTR(LoadElement)
-            d << StackSlot::dump(base, nFormals) << "[" << StackSlot::dump(index, nFormals) << "]";
+            d << dumpRegister(base, nFormals) << "[" << dumpRegister(index, nFormals) << "]";
         MOTH_END_INSTR(LoadElement)
 
         MOTH_BEGIN_INSTR(LoadElementA)
-            d << StackSlot::dump(base, nFormals) << "[acc]";
+            d << dumpRegister(base, nFormals) << "[acc]";
         MOTH_END_INSTR(LoadElement)
 
         MOTH_BEGIN_INSTR(StoreElement)
-            d << StackSlot::dump(base, nFormals) << "[" << StackSlot::dump(index, nFormals) << "]";
+            d << dumpRegister(base, nFormals) << "[" << dumpRegister(index, nFormals) << "]";
         MOTH_END_INSTR(StoreElement)
 
         MOTH_BEGIN_INSTR(LoadProperty)
-            d << StackSlot::dump(base, nFormals) << "[" << name << "]";
+            d << dumpRegister(base, nFormals) << "[" << name << "]";
         MOTH_END_INSTR(LoadProperty)
 
         MOTH_BEGIN_INSTR(LoadPropertyA)
@@ -273,7 +298,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(LoadElementA)
 
         MOTH_BEGIN_INSTR(GetLookup)
-            d << StackSlot::dump(base, nFormals) << "(" << index << ")";
+            d << dumpRegister(base, nFormals) << "(" << index << ")";
         MOTH_END_INSTR(GetLookup)
 
         MOTH_BEGIN_INSTR(GetLookupA)
@@ -281,59 +306,59 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(GetLookupA)
 
         MOTH_BEGIN_INSTR(StoreProperty)
-            d << StackSlot::dump(base, nFormals) << "[" << name<< "]";
+            d << dumpRegister(base, nFormals) << "[" << name<< "]";
         MOTH_END_INSTR(StoreProperty)
 
         MOTH_BEGIN_INSTR(SetLookup)
-            d << StackSlot::dump(base, nFormals) << "(" << index << ")";
+            d << dumpRegister(base, nFormals) << "(" << index << ")";
         MOTH_END_INSTR(SetLookup)
 
         MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
-            d << StackSlot::dump(base, nFormals) << "[" << propertyIndex << "]";
+            d << dumpRegister(base, nFormals) << "[" << propertyIndex << "]";
         MOTH_END_INSTR(StoreScopeObjectProperty)
 
         MOTH_BEGIN_INSTR(LoadScopeObjectProperty)
-            d << StackSlot::dump(base, nFormals) << "[" << propertyIndex << "]" << (captureRequired ? " (capture)" : " (no capture)");
+            d << dumpRegister(base, nFormals) << "[" << propertyIndex << "]" << (captureRequired ? " (capture)" : " (no capture)");
         MOTH_END_INSTR(LoadScopeObjectProperty)
 
         MOTH_BEGIN_INSTR(StoreContextObjectProperty)
-            d << StackSlot::dump(base, nFormals) << "[" << propertyIndex << "]";
+            d << dumpRegister(base, nFormals) << "[" << propertyIndex << "]";
         MOTH_END_INSTR(StoreContextObjectProperty)
 
         MOTH_BEGIN_INSTR(LoadContextObjectProperty)
-            d << StackSlot::dump(base, nFormals) << "[" << propertyIndex << "]" << (captureRequired ? " (capture)" : " (no capture)");
+            d << dumpRegister(base, nFormals) << "[" << propertyIndex << "]" << (captureRequired ? " (capture)" : " (no capture)");
         MOTH_END_INSTR(LoadContextObjectProperty)
 
         MOTH_BEGIN_INSTR(LoadIdObject)
-            d << StackSlot::dump(base, nFormals) << "[" << index << "]";
+            d << dumpRegister(base, nFormals) << "[" << index << "]";
         MOTH_END_INSTR(LoadIdObject)
 
         MOTH_BEGIN_INSTR(CallValue)
-            d << "(" << StackSlot::dump(callData, nFormals) << ")";
+            d << "(" << dumpRegister(callData, nFormals) << ")";
         MOTH_END_INSTR(CallValue)
 
         MOTH_BEGIN_INSTR(CallProperty)
-            d << StackSlot::dump(base, nFormals) << "." << name << "(" << StackSlot::dump(callData, nFormals) << ")";
+            d << dumpRegister(base, nFormals) << "." << name << "(" << dumpRegister(callData, nFormals) << ")";
         MOTH_END_INSTR(CallProperty)
 
         MOTH_BEGIN_INSTR(CallPropertyLookup)
-            d << StackSlot::dump(base, nFormals) << "." << lookupIndex << "(" << StackSlot::dump(callData, nFormals) << ")";
+            d << dumpRegister(base, nFormals) << "." << lookupIndex << "(" << dumpRegister(callData, nFormals) << ")";
         MOTH_END_INSTR(CallPropertyLookup)
 
         MOTH_BEGIN_INSTR(CallElement)
-            d << StackSlot::dump(base, nFormals) << "[" << StackSlot::dump(index, nFormals) << "]" << "(" << StackSlot::dump(callData, nFormals) << ")";
+            d << dumpRegister(base, nFormals) << "[" << dumpRegister(index, nFormals) << "]" << "(" << dumpRegister(callData, nFormals) << ")";
         MOTH_END_INSTR(CallElement)
 
         MOTH_BEGIN_INSTR(CallName)
-            d << name << "(" << StackSlot::dump(callData, nFormals) << ")";
+            d << name << "(" << dumpRegister(callData, nFormals) << ")";
         MOTH_END_INSTR(CallName)
 
         MOTH_BEGIN_INSTR(CallPossiblyDirectEval)
-            d << "(" << StackSlot::dump(callData, nFormals) << ")";
+            d << "(" << dumpRegister(callData, nFormals) << ")";
         MOTH_END_INSTR(CallPossiblyDirectEval)
 
         MOTH_BEGIN_INSTR(CallGlobalLookup)
-            d << index << "(" << StackSlot::dump(callData, nFormals) << ")";
+            d << index << "(" << dumpRegister(callData, nFormals) << ")";
         MOTH_END_INSTR(CallGlobalLookup)
 
         MOTH_BEGIN_INSTR(SetExceptionHandler)
@@ -353,15 +378,15 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(SetExceptionFlag)
 
         MOTH_BEGIN_INSTR(PushCatchContext)
-            d << StackSlot::dump(reg, nFormals) << ", " << name;
+            d << dumpRegister(reg, nFormals) << ", " << name;
         MOTH_END_INSTR(PushCatchContext)
 
         MOTH_BEGIN_INSTR(PushWithContext)
-            d << StackSlot::dump(reg, nFormals);
+            d << dumpRegister(reg, nFormals);
         MOTH_END_INSTR(PushWithContext)
 
         MOTH_BEGIN_INSTR(PopContext)
-            d << StackSlot::dump(reg, nFormals);
+            d << dumpRegister(reg, nFormals);
         MOTH_END_INSTR(PopContext)
 
         MOTH_BEGIN_INSTR(ForeachIteratorObject)
@@ -371,11 +396,11 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(ForeachNextPropertyName)
 
         MOTH_BEGIN_INSTR(DeleteMember)
-            d << StackSlot::dump(base, nFormals) << "[" << member << "]";
+            d << dumpRegister(base, nFormals) << "[" << member << "]";
         MOTH_END_INSTR(DeleteMember)
 
         MOTH_BEGIN_INSTR(DeleteSubscript)
-            d << StackSlot::dump(base, nFormals) << "[" << StackSlot::dump(index, nFormals) << "]";
+            d << dumpRegister(base, nFormals) << "[" << dumpRegister(index, nFormals) << "]";
         MOTH_END_INSTR(DeleteSubscript)
 
         MOTH_BEGIN_INSTR(DeleteName)
@@ -394,11 +419,11 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(DeclareVar)
 
         MOTH_BEGIN_INSTR(DefineArray)
-            d << StackSlot::dump(args, nFormals) << ", " << argc;
+            d << dumpRegister(args, nFormals) << ", " << argc;
         MOTH_END_INSTR(DefineArray)
 
         MOTH_BEGIN_INSTR(DefineObjectLiteral)
-            d << StackSlot::dump(args, nFormals)
+            d << dumpRegister(args, nFormals)
               << ", " << internalClassId
               << ", " << arrayValueCount
               << ", " << arrayGetterSetterCountAndFlags;
@@ -414,7 +439,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(ConvertThisToObject)
 
         MOTH_BEGIN_INSTR(Construct)
-            d << "new" << StackSlot::dump(func, nFormals) << "(" << StackSlot::dump(callData, nFormals) << ")";
+            d << "new" << dumpRegister(func, nFormals) << "(" << dumpRegister(callData, nFormals) << ")";
         MOTH_END_INSTR(Construct)
 
         MOTH_BEGIN_INSTR(Jump)
@@ -447,43 +472,43 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
 
 
         MOTH_BEGIN_INSTR(CmpJmpEq)
-            d << StackSlot::dump(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
+            d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(CmpJmpEq)
 
         MOTH_BEGIN_INSTR(CmpJmpNe)
-                d << StackSlot::dump(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
+                d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(CmpJmpNe)
 
         MOTH_BEGIN_INSTR(CmpJmpGt)
-                d << StackSlot::dump(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
+                d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(CmpJmpGt)
 
         MOTH_BEGIN_INSTR(CmpJmpGe)
-                d << StackSlot::dump(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
+                d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(CmpJmpGe)
 
         MOTH_BEGIN_INSTR(CmpJmpLt)
-                d << StackSlot::dump(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
+                d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(CmpJmpLt)
 
         MOTH_BEGIN_INSTR(CmpJmpLe)
-                d << StackSlot::dump(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
+                d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(CmpJmpLe)
 
         MOTH_BEGIN_INSTR(JumpStrictEqual)
-            d << StackSlot::dump(lhs, nFormals) << "  " << ABSOLUTE_OFFSET();
+            d << dumpRegister(lhs, nFormals) << "  " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(JumpStrictEqual)
 
         MOTH_BEGIN_INSTR(JumpStrictNotEqual)
-            d << StackSlot::dump(lhs, nFormals) << "  " << ABSOLUTE_OFFSET();
+            d << dumpRegister(lhs, nFormals) << "  " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(JumpStrictNotEqual)
 
         MOTH_BEGIN_INSTR(JumpStrictEqualStackSlotInt)
-            d << StackSlot::dump(lhs, nFormals) << ", " << rhs << "  " << ABSOLUTE_OFFSET();
+            d << dumpRegister(lhs, nFormals) << ", " << rhs << "  " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(JumpStrictEqualStackSlotInt)
 
         MOTH_BEGIN_INSTR(JumpStrictNotEqualStackSlotInt)
-            d << StackSlot::dump(lhs, nFormals) << ", " << rhs << "  " << ABSOLUTE_OFFSET();
+            d << dumpRegister(lhs, nFormals) << ", " << rhs << "  " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(JumpStrictNotEqualStackSlotInt)
 
         MOTH_BEGIN_INSTR(UNot)
@@ -505,31 +530,31 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(PreDecrement)
 
         MOTH_BEGIN_INSTR(Binop)
-            d << alu << ", " << StackSlot::dump(lhs, nFormals) << ", acc";
+            d << alu << ", " << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(Binop)
 
         MOTH_BEGIN_INSTR(Add)
-            d << StackSlot::dump(lhs, nFormals) << ", acc";
+            d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(Add)
 
         MOTH_BEGIN_INSTR(BitAnd)
-            d << StackSlot::dump(lhs, nFormals) << ", acc";
+            d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(BitAnd)
 
         MOTH_BEGIN_INSTR(BitOr)
-            d << StackSlot::dump(lhs, nFormals) << ", acc";
+            d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(BitOr)
 
         MOTH_BEGIN_INSTR(BitXor)
-            d << StackSlot::dump(lhs, nFormals) << ", acc";
+            d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(BitXor)
 
         MOTH_BEGIN_INSTR(Shr)
-            d << StackSlot::dump(lhs, nFormals) << ", acc";
+            d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(Shr)
 
         MOTH_BEGIN_INSTR(Shl)
-            d << StackSlot::dump(lhs, nFormals) << ", acc";
+            d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(Shl)
 
         MOTH_BEGIN_INSTR(BitAndConst)
@@ -553,15 +578,15 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(ShlConst)
 
         MOTH_BEGIN_INSTR(Mul)
-            d << StackSlot::dump(lhs, nFormals) << ", acc";
+            d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(Mul)
 
         MOTH_BEGIN_INSTR(Sub)
-            d << StackSlot::dump(lhs, nFormals) << ", acc";
+            d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(Sub)
 
         MOTH_BEGIN_INSTR(BinopContext)
-            d << alu << " " << StackSlot::dump(lhs, nFormals) << ", acc";
+            d << alu << " " << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(BinopContext)
 
         MOTH_BEGIN_INSTR(Ret)
@@ -573,11 +598,11 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
 #endif // QT_NO_QML_DEBUGGER
 
         MOTH_BEGIN_INSTR(LoadQmlContext)
-            d << StackSlot::dump(result, nFormals);
+            d << dumpRegister(result, nFormals);
         MOTH_END_INSTR(LoadQmlContext)
 
         MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
-            d << StackSlot::dump(result, nFormals);
+            d << dumpRegister(result, nFormals);
         MOTH_END_INSTR(LoadQmlImportedScripts)
 
         MOTH_BEGIN_INSTR(LoadQmlSingleton)

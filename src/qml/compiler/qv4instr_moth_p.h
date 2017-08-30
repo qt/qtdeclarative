@@ -447,38 +447,8 @@ public:
         return t;
     }
 
-    static StackSlot createArgument(int nFormals, int index) {
-        Q_ASSERT(index >= -1);
-        StackSlot t;
-        t.index = index - nFormals;
-        return t;
-    }
-
-    bool isRegister() const { return index >= 0; }
-    bool isArgument() const { return index < 0; }
-
-    int argIndex() const {
-        Q_ASSERT(isArgument());
-        return -index - 1;
-    }
-
     int stackSlot() const { return index; }
     operator int() const { return index; }
-
-    static QString dump(int reg, int nFormals) {
-        StackSlot t;
-        t.index = reg;
-        return t.dump(nFormals);
-    }
-    QString dump(int nFormals) const {
-        if (isRegister())
-            return QStringLiteral("r%1").arg(index);
-
-        if (nFormals + index == -1)
-            return QStringLiteral("(this)");
-
-        return QStringLiteral("a%1").arg(nFormals + index);
-    }
 };
 
 inline bool operator==(const StackSlot &l, const StackSlot &r) { return l.stackSlot() == r.stackSlot(); }

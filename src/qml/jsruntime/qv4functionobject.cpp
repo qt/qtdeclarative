@@ -369,7 +369,7 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     Q_ASSERT(v4Function);
 
     callData->context = f->scope();
-ReturnedValue result = v4Function->call(callData);
+    ReturnedValue result = v4Function->call(callData);
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();

@@ -72,10 +72,21 @@ struct CatchContext;
 struct QmlContext;
 struct QQmlContextWrapper;
 
-// Attention: Make sure that this structure is the same size on 32-bit and 64-bit
-// architecture or you'll have to change the JIT code.
 struct CallData
 {
+    enum Offsets {
+        Function = 0,
+        Context = 1,
+        Accumulator = 2,
+        This = 3,
+        Argc = 4
+    };
+
+    Value function;
+    Value context;
+    Value accumulator;
+    Value thisObject;
+
     // below is to be compatible with Value. Initialize tag to 0
 #if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
     uint tag;
@@ -88,17 +99,14 @@ struct CallData
         return i < argc ? args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
     }
 
-    Value function;
-    Value context;
-    Value thisObject;
     Value args[1];
 
     static Q_DECL_CONSTEXPR int HeaderSize() { return offsetof(CallData, args) / sizeof(QV4::Value); }
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<CallData>::value);
-Q_STATIC_ASSERT(offsetof(CallData, thisObject) == 3*sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, args) == 4*sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, thisObject) == CallData::This*sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, args) == 5*sizeof(Value));
 
 namespace Heap {
 

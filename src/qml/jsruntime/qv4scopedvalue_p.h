@@ -381,7 +381,7 @@ struct ScopedStackFrame {
         frame.parent = scope.engine->currentStackFrame;
         if (!context)
             return;
-        frame.jsFrame = reinterpret_cast<JSStackFrame *>(scope.alloc(sizeof(JSStackFrame)/sizeof(Value)));
+        frame.jsFrame = reinterpret_cast<CallData *>(scope.alloc(sizeof(CallData)/sizeof(Value)));
         frame.jsFrame->context = context;
         frame.v4Function = frame.parent ? frame.parent->v4Function : 0;
         scope.engine->currentStackFrame = &frame;

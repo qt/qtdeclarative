@@ -809,7 +809,7 @@ int CppStackFrame::lineNumber() const
 }
 
 ReturnedValue CppStackFrame::thisObject() const {
-    return jsFrame->stack[-(int)v4Function->nFormals - 1].asReturnedValue();
+    return jsFrame->thisObject.asReturnedValue();
 }
 
 StackTrace ExecutionEngine::stackTrace(int frameLimit) const

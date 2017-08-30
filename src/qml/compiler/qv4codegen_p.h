@@ -201,7 +201,7 @@ public:
         bool isAccumulator() const { return type == Accumulator; }
         bool isStackSlot() const { return type == StackSlot; }
         bool isRegister() const {
-            return isStackSlot() && theStackSlot.isRegister();
+            return isStackSlot();
         }
 
         static Reference fromAccumulator(Codegen *cg) {
@@ -217,7 +217,7 @@ public:
         }
         static Reference fromArgument(Codegen *cg, int index) {
             Reference r(cg, StackSlot);
-            r.theStackSlot = Moth::StackSlot::createArgument(cg->currentContext()->arguments.size(), index);
+            r.theStackSlot = Moth::StackSlot::createRegister(index + sizeof(CallData)/sizeof(Value) - 1);
             r.stackSlotIsLocalOrArgument = true;
             return r;
         }

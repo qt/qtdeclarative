@@ -87,26 +87,10 @@ struct CompilationUnit;
 struct InternalClass;
 struct InternalClassPool;
 
-struct JSStackFrame {
-    enum Offsets {
-        JSFunction = 0,
-        Context = 1,
-        Accumulator = 2
-    };
-    // callData is directly before this
-    union {
-        Value jsFunction;
-        Value stack[1];
-    };
-    Value context;
-    Value accumulator; // ###
-    // registers follow
-};
-
 struct Q_QML_EXPORT CppStackFrame {
     CppStackFrame *parent;
     Function *v4Function;
-    JSStackFrame *jsFrame;
+    CallData *jsFrame;
     const uchar *instructionPointer;
 
     QString source() const;
