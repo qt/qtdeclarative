@@ -499,7 +499,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *jsFunction, CallData *callDat
     Profiling::FunctionCallProfiler(engine, function);
 
     Value *jsStackTop = engine->jsStackTop;
-    engine->jsStackTop = reinterpret_cast<QV4::Value *>(callData) + 2 + (int)function->nFormals;
+    engine->jsStackTop = reinterpret_cast<QV4::Value *>(callData) + sizeof(CallData)/sizeof(Value) - 1 + (int)function->nFormals;
     for (int i = callData->argc; i < (int)function->nFormals; ++i)
         callData->args[i] = Encode::undefined();
 

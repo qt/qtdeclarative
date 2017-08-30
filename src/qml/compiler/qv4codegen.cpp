@@ -1230,10 +1230,15 @@ Moth::StackSlot Codegen::pushArgs(ArgumentList *args)
     int argc = 0;
     for (ArgumentList *it = args; it; it = it->next)
         ++argc;
-    int calldata = bytecodeGenerator->newRegisterArray(argc + 2); // 2 additional values for CallData
+    int calldata = bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + argc);
 
     (void) Reference::fromConst(this, QV4::Encode(argc)).storeOnStack(calldata);
+#ifndef QT_NO_DEBUG
     (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + 1);
+    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + 2);
+#endif
+    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + 3);
+    Q_STATIC_ASSERT(sizeof(CallData) == 5 * sizeof(Value));
 
     argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
@@ -1241,7 +1246,7 @@ Moth::StackSlot Codegen::pushArgs(ArgumentList *args)
         Reference e = expression(it->expression);
         if (hasError)
             break;
-        (void) e.storeOnStack(calldata + 2 + argc);
+        (void) e.storeOnStack(calldata + sizeof(CallData)/sizeof(Value) - 1 + argc);
         ++argc;
     }
 

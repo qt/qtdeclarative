@@ -88,6 +88,8 @@ struct CallData
         return i < argc ? args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
     }
 
+    Value function;
+    Value dummy_context;
     Value thisObject;
     Value args[1];
 
@@ -95,8 +97,8 @@ struct CallData
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<CallData>::value);
-Q_STATIC_ASSERT(offsetof(CallData, thisObject) == 8);
-Q_STATIC_ASSERT(offsetof(CallData, args) == 16);
+Q_STATIC_ASSERT(offsetof(CallData, thisObject) == 3*sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, args) == 4*sizeof(Value));
 
 namespace Heap {
 
