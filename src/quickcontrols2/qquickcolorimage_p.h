@@ -57,13 +57,14 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickColorImage : public QQuickImage
 {
     Q_OBJECT
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
+    Q_PROPERTY(QColor color READ color WRITE setColor RESET resetColor NOTIFY colorChanged FINAL)
 
 public:
     explicit QQuickColorImage(QQuickItem *parent = nullptr);
 
     QColor color() const;
     void setColor(const QColor &color);
+    void resetColor();
 
 Q_SIGNALS:
     void colorChanged();
