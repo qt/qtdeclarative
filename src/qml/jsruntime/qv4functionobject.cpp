@@ -355,8 +355,6 @@ DEFINE_OBJECT_VTABLE(ScriptFunction);
 ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
 {
     ExecutionEngine *v4 = that->engine();
-    CHECK_STACK_LIMITS(v4);
-
     const ScriptFunction *f = static_cast<const ScriptFunction *>(that);
 
     InternalClass *ic = f->classForConstructor();
@@ -377,9 +375,6 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
 
 ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
 {
-    ExecutionEngine *v4 = that->engine();
-    CHECK_STACK_LIMITS(v4);
-
     const ScriptFunction *f = static_cast<const ScriptFunction *>(that);
     QV4::Function *v4Function = f->function();
     Q_ASSERT(v4Function);

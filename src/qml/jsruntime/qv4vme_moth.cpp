@@ -496,6 +496,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_JUMP_TABLE;
 
     ExecutionEngine *engine = function->internalClass->engine;
+    CHECK_STACK_LIMITS(engine);
     Profiling::FunctionCallProfiler(engine, function);
 
     Value *jsStackTop = engine->jsStackTop;
