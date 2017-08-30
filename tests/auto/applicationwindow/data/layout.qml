@@ -49,13 +49,14 @@
 ****************************************************************************/
 
 import QtQuick 2.6
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.3
 
 ApplicationWindow {
     width: 200
     height: 200
     visible: true
 
+    menuBar: MenuBar { }
     header: ToolBar { }
     footer: ToolBar { }
 }

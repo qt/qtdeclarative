@@ -827,10 +827,17 @@ void tst_applicationwindow::layout()
 
     QQuickItem *content = window->contentItem();
     QVERIFY(content);
+    QQuickItem *menuBar = window->menuBar();
+    QVERIFY(menuBar);
     QQuickItem *header = window->header();
     QVERIFY(header);
     QQuickItem *footer = window->footer();
     QVERIFY(footer);
+
+    QCOMPARE(menuBar->x(), 0.0);
+    QCOMPARE(menuBar->y(), -menuBar->height() - header->height());
+    QCOMPARE(header->width(), qreal(window->width()));
+    QVERIFY(menuBar->height() > 0);
 
     QCOMPARE(header->x(), 0.0);
     QCOMPARE(header->y(), -header->height());
@@ -842,6 +849,12 @@ void tst_applicationwindow::layout()
     QCOMPARE(footer->width(), qreal(window->width()));
     QVERIFY(footer->height() > 0.0);
 
+    QCOMPARE(content->x(), 0.0);
+    QCOMPARE(content->y(), menuBar->height() + header->height());
+    QCOMPARE(content->width(), qreal(window->width()));
+    QCOMPARE(content->height(), window->height() - menuBar->height() - header->height() - footer->height());
+
+    menuBar->setVisible(false);
     QCOMPARE(content->x(), 0.0);
     QCOMPARE(content->y(), header->height());
     QCOMPARE(content->width(), qreal(window->width()));

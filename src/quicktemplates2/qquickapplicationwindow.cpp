@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
     \brief Styled top-level window with support for a header and footer.
 
     ApplicationWindow is a \l Window which makes it convenient to add
-    a \l header and \l footer item to the window.
+    a \l {menuBar}{menu bar}, \l header and \l footer item to the window.
 
     You can declare ApplicationWindow as the root item of your application,
     and run it by using \l QQmlApplicationEngine.  In this way you can control
@@ -69,10 +69,14 @@ QT_BEGIN_NAMESPACE
     \image qtquickcontrols2-applicationwindow-wireframe.png
 
     \qml
-    import QtQuick.Controls 2.1
+    import QtQuick.Controls 2.3
 
     ApplicationWindow {
         visible: true
+
+        menuBar: MenuBar {
+            // ...
+        }
 
         header: ToolBar {
             // ...
@@ -119,6 +123,7 @@ public:
         : complete(true),
           background(nullptr),
           contentItem(nullptr),
+          menuBar(nullptr),
           header(nullptr),
           footer(nullptr),
           overlay(nullptr),
@@ -162,6 +167,7 @@ public:
     bool complete;
     QQuickItem *background;
     QQuickItem *contentItem;
+    QQuickItem *menuBar;
     QQuickItem *header;
     QQuickItem *footer;
     QQuickOverlay *overlay;
@@ -172,34 +178,34 @@ public:
     QQuickApplicationWindow *q_ptr;
 };
 
+static void layoutItem(QQuickItem *item, qreal y, qreal width)
+{
+    if (!item)
+        return;
+
+    item->setY(y);
+    QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+    if (!p->widthValid) {
+        item->setWidth(width);
+        p->widthValid = false;
+    }
+}
+
 void QQuickApplicationWindowPrivate::relayout()
 {
     Q_Q(QQuickApplicationWindow);
     QQuickItem *content = q->contentItem();
     qreal hh = header && header->isVisible() ? header->height() : 0;
     qreal fh = footer && footer->isVisible() ? footer->height() : 0;
+    qreal mbh = menuBar && menuBar->isVisible() ? menuBar->height() : 0;
 
-    content->setY(hh);
+    content->setY(mbh + hh);
     content->setWidth(q->width());
-    content->setHeight(q->height() - hh - fh);
+    content->setHeight(q->height() - mbh - hh - fh);
 
-    if (header) {
-        header->setY(-hh);
-        QQuickItemPrivate *p = QQuickItemPrivate::get(header);
-        if (!p->widthValid) {
-            header->setWidth(q->width());
-            p->widthValid = false;
-        }
-    }
-
-    if (footer) {
-        footer->setY(content->height());
-        QQuickItemPrivate *p = QQuickItemPrivate::get(footer);
-        if (!p->widthValid) {
-            footer->setWidth(q->width());
-            p->widthValid = false;
-        }
-    }
+    layoutItem(menuBar, -mbh - hh, q->width());
+    layoutItem(header, -hh, q->width());
+    layoutItem(footer, content->height(), q->width());
 
     if (background) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(background);
@@ -331,6 +337,8 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
     Q_D(QQuickApplicationWindow);
     d->setActiveFocusControl(nullptr);
     disconnect(this, SIGNAL(activeFocusItemChanged()), this, SLOT(_q_updateActiveFocus()));
+    if (d->menuBar)
+        QQuickItemPrivate::get(d->menuBar)->removeItemChangeListener(d, ItemChanges);
     if (d->header)
         QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, ItemChanges);
     if (d->footer)
@@ -383,8 +391,9 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
 /*!
     \qmlproperty Item QtQuick.Controls::ApplicationWindow::header
 
-    This property holds the window header item. The header item is positioned to
-    the top, and resized to the width of the window. The default value is \c null.
+    This property holds the window header item. The header item is positioned at the
+    top of the window, below the menu bar, and resized to the width of the window.
+    The default value is \c null.
 
     \code
     ApplicationWindow {
@@ -398,7 +407,7 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
     automatically sets the respective \l ToolBar::position, \l TabBar::position,
     or \l DialogButtonBox::position property to \c Header.
 
-    \sa footer, Page::header
+    \sa menuBar, footer, Page::header
 */
 QQuickItem *QQuickApplicationWindow::header() const
 {
@@ -453,7 +462,7 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
     automatically sets the respective \l ToolBar::position, \l TabBar::position,
     or \l DialogButtonBox::position property to \c Footer.
 
-    \sa header, Page::footer
+    \sa menuBar, header, Page::footer
 */
 QQuickItem *QQuickApplicationWindow::footer() const
 {
@@ -526,9 +535,9 @@ QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
     This property holds the window content item.
 
     The content item is stacked above the \l background item, and under the
-    \l header, and \l footer items.
+    \l menuBar, \l header, and \l footer items.
 
-    \sa background, header, footer
+    \sa background, menuBar, header, footer
 */
 QQuickItem *QQuickApplicationWindow::contentItem() const
 {
@@ -729,6 +738,53 @@ void QQuickApplicationWindow::resetPalette()
     setPalette(QPalette());
 }
 
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty Item QtQuick.Controls::ApplicationWindow::menuBar
+
+    This property holds the window menu bar. The menu bar is positioned at the
+    top of the window, above the header, and resized to the width of the window.
+    The default value is \c null.
+
+    \code
+    ApplicationWindow {
+        menuBar: MenuBar {
+            // ...
+        }
+    }
+    \endcode
+
+    \sa header, footer, MenuBar
+*/
+QQuickItem *QQuickApplicationWindow::menuBar() const
+{
+    Q_D(const QQuickApplicationWindow);
+    return d->menuBar;
+}
+
+void QQuickApplicationWindow::setMenuBar(QQuickItem *menuBar)
+{
+    Q_D(QQuickApplicationWindow);
+    if (d->menuBar == menuBar)
+        return;
+
+    if (d->menuBar) {
+        QQuickItemPrivate::get(d->menuBar)->removeItemChangeListener(d, ItemChanges);
+        d->menuBar->setParentItem(nullptr);
+    }
+    d->menuBar = menuBar;
+    if (menuBar) {
+        menuBar->setParentItem(contentItem());
+        QQuickItemPrivate *p = QQuickItemPrivate::get(menuBar);
+        p->addItemChangeListener(d, ItemChanges);
+        if (qFuzzyIsNull(menuBar->z()))
+            menuBar->setZ(2);
+    }
+    if (isComponentComplete())
+        d->relayout();
+    emit menuBarChanged();
+}
+
 QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(QObject *object)
 {
     return new QQuickApplicationWindowAttached(object);
@@ -794,6 +850,8 @@ void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
     if (oldWindow) {
         disconnect(oldWindow, &QQuickApplicationWindow::activeFocusControlChanged,
                    this, &QQuickApplicationWindowAttachedPrivate::activeFocusChange);
+        QObject::disconnect(oldWindow, &QQuickApplicationWindow::menuBarChanged,
+                            q, &QQuickApplicationWindowAttached::menuBarChanged);
         QObject::disconnect(oldWindow, &QQuickApplicationWindow::headerChanged,
                             q, &QQuickApplicationWindowAttached::headerChanged);
         QObject::disconnect(oldWindow, &QQuickApplicationWindow::footerChanged,
@@ -807,6 +865,8 @@ void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
     if (newWindow) {
         connect(newWindow, &QQuickApplicationWindow::activeFocusControlChanged,
                 this, &QQuickApplicationWindowAttachedPrivate::activeFocusChange);
+        QObject::connect(newWindow, &QQuickApplicationWindow::menuBarChanged,
+                         q, &QQuickApplicationWindowAttached::menuBarChanged);
         QObject::connect(newWindow, &QQuickApplicationWindow::headerChanged,
                          q, &QQuickApplicationWindowAttached::headerChanged);
         QObject::connect(newWindow, &QQuickApplicationWindow::footerChanged,
@@ -822,6 +882,8 @@ void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
     emit q->overlayChanged();
 
     activeFocusChange();
+    if ((oldWindow && oldWindow->menuBar()) || (newWindow && newWindow->menuBar()))
+        emit q->menuBarChanged();
     if ((oldWindow && oldWindow->header()) || (newWindow && newWindow->header()))
         emit q->headerChanged();
     if ((oldWindow && oldWindow->footer()) || (newWindow && newWindow->footer()))
@@ -966,6 +1028,25 @@ QQuickOverlay *QQuickApplicationWindowAttached::overlay() const
 {
     Q_D(const QQuickApplicationWindowAttached);
     return QQuickOverlay::overlay(d->window);
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlattachedproperty Item QtQuick.Controls::ApplicationWindow::menuBar
+    \readonly
+
+    This attached property holds the window menu bar. The property can be attached
+    to any item. The value is \c null if the item is not in an ApplicationWindow, or
+    the window has no menu bar.
+
+    \sa {Attached ApplicationWindow Properties}
+*/
+QQuickItem *QQuickApplicationWindowAttached::menuBar() const
+{
+    Q_D(const QQuickApplicationWindowAttached);
+    if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(d->window))
+        return window->menuBar();
+    return nullptr;
 }
 
 QT_END_NAMESPACE

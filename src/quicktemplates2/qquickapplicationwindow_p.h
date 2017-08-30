@@ -74,6 +74,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindow : public QQuickWi
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
+    Q_PROPERTY(QQuickItem *menuBar READ menuBar WRITE setMenuBar NOTIFY menuBarChanged FINAL REVISION 3)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -108,6 +109,9 @@ public:
     void setPalette(const QPalette &palette);
     void resetPalette();
 
+    QQuickItem *menuBar() const;
+    void setMenuBar(QQuickItem *menuBar);
+
     static QQuickApplicationWindowAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
@@ -118,6 +122,7 @@ Q_SIGNALS:
     void fontChanged();
     void localeChanged();
     Q_REVISION(3) void paletteChanged();
+    Q_REVISION(3) void menuBarChanged();
 
 protected:
     bool isComponentComplete() const;
@@ -141,6 +146,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindowAttached : public 
     Q_PROPERTY(QQuickItem *header READ header NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer NOTIFY footerChanged FINAL)
     Q_PROPERTY(QQuickOverlay *overlay READ overlay NOTIFY overlayChanged FINAL)
+    Q_PROPERTY(QQuickItem *menuBar READ menuBar NOTIFY menuBarChanged FINAL /*REVISION 3*/)
 
 public:
     explicit QQuickApplicationWindowAttached(QObject *parent = nullptr);
@@ -151,6 +157,7 @@ public:
     QQuickItem *header() const;
     QQuickItem *footer() const;
     QQuickOverlay *overlay() const;
+    QQuickItem *menuBar() const;
 
 Q_SIGNALS:
     void windowChanged();
@@ -159,6 +166,7 @@ Q_SIGNALS:
     void headerChanged();
     void footerChanged();
     void overlayChanged();
+    /*Q_REVISION(3)*/ void menuBarChanged();
 
 private:
     Q_DISABLE_COPY(QQuickApplicationWindowAttached)
