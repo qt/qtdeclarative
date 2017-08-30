@@ -107,6 +107,9 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing ApplicationWindow}, Overlay, Page, {Container Controls}
 */
 
+static const QQuickItemPrivate::ChangeTypes ItemChanges = QQuickItemPrivate::Visibility
+        | QQuickItemPrivate::Geometry | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
+
 class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickApplicationWindow)
@@ -329,11 +332,9 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
     d->setActiveFocusControl(nullptr);
     disconnect(this, SIGNAL(activeFocusItemChanged()), this, SLOT(_q_updateActiveFocus()));
     if (d->header)
-        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
-                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, ItemChanges);
     if (d->footer)
-        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
-                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, ItemChanges);
     d_ptr.reset(); // QTBUG-52731
 }
 
@@ -412,16 +413,14 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
         return;
 
     if (d->header) {
-        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
-                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, ItemChanges);
         d->header->setParentItem(nullptr);
     }
     d->header = header;
     if (header) {
         header->setParentItem(contentItem());
         QQuickItemPrivate *p = QQuickItemPrivate::get(header);
-        p->addItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
-                                 QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        p->addItemChangeListener(d, ItemChanges);
         if (qFuzzyIsNull(header->z()))
             header->setZ(1);
         if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(header))
@@ -469,16 +468,14 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
         return;
 
     if (d->footer) {
-        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
-                                                                    QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, ItemChanges);
         d->footer->setParentItem(nullptr);
     }
     d->footer = footer;
     if (footer) {
         footer->setParentItem(contentItem());
         QQuickItemPrivate *p = QQuickItemPrivate::get(footer);
-        p->addItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility |
-                                 QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight);
+        p->addItemChangeListener(d, ItemChanges);
         if (qFuzzyIsNull(footer->z()))
             footer->setZ(1);
         if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(footer))
