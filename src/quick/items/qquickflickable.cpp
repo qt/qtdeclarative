@@ -1773,6 +1773,7 @@ void QQuickFlickable::flick(qreal xVelocity, qreal yVelocity)
     d->vData.reset();
     d->hData.velocity = xVelocity;
     d->vData.velocity = yVelocity;
+    d->hData.vTime = d->vData.vTime = d->timeline.time();
 
     bool flickedX = d->flickX(xVelocity);
     bool flickedY = d->flickY(yVelocity);
