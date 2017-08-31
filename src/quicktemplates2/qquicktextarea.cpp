@@ -450,9 +450,6 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent)
 #endif
     QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
                             d, &QQuickTextAreaPrivate::readOnlyChanged);
-
-    // ### TODO: ItemEnabledChanged?
-    connect(this, &QQuickItem::enabledChanged, this, &QQuickTextArea::paletteChanged);
 }
 
 QQuickTextAreaAttached *QQuickTextArea::qmlAttachedProperties(QObject *object)
@@ -697,19 +694,28 @@ void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem:
 {
     Q_D(QQuickTextArea);
     QQuickTextEdit::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item) {
-        d->resolveFont();
-        d->resolvePalette();
+    switch (change) {
+    case ItemEnabledHasChanged:
+        emit paletteChanged();
+        break;
+    case ItemParentHasChanged:
+        if (value.item) {
+            d->resolveFont();
+            d->resolvePalette();
 #if QT_CONFIG(quicktemplates2_hover)
-        if (!d->explicitHoverEnabled)
-            d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+            if (!d->explicitHoverEnabled)
+                d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
 #endif
-        QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(value.item->parentItem());
-        if (flickable) {
-            QQuickScrollView *scrollView = qobject_cast<QQuickScrollView *>(flickable->parentItem());
-            if (scrollView)
-                d->attachFlickable(flickable);
+            QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(value.item->parentItem());
+            if (flickable) {
+                QQuickScrollView *scrollView = qobject_cast<QQuickScrollView *>(flickable->parentItem());
+                if (scrollView)
+                    d->attachFlickable(flickable);
+            }
         }
+        break;
+    default:
+        break;
     }
 }
 

@@ -324,9 +324,6 @@ QQuickTextField::QQuickTextField(QQuickItem *parent)
 #endif
     QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged, d, &QQuickTextFieldPrivate::readOnlyChanged);
     QObjectPrivate::connect(this, &QQuickTextInput::echoModeChanged, d, &QQuickTextFieldPrivate::echoModeChanged);
-
-    // ### TODO: ItemEnabledChanged?
-    connect(this, &QQuickItem::enabledChanged, this, &QQuickTextField::paletteChanged);
 }
 
 QFont QQuickTextField::font() const
@@ -558,13 +555,22 @@ void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem
 {
     Q_D(QQuickTextField);
     QQuickTextInput::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item) {
-        d->resolveFont();
-        d->resolvePalette();
+    switch (change) {
+    case ItemEnabledHasChanged:
+        emit paletteChanged();
+        break;
+    case ItemParentHasChanged:
+        if (value.item) {
+            d->resolveFont();
+            d->resolvePalette();
 #if QT_CONFIG(quicktemplates2_hover)
-        if (!d->explicitHoverEnabled)
-            d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+            if (!d->explicitHoverEnabled)
+                d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
 #endif
+        }
+        break;
+    default:
+        break;
     }
 }
 

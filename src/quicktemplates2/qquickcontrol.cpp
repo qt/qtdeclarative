@@ -669,15 +669,11 @@ void QQuickControlPrivate::destroyDelegate(QObject *delegate, QObject *parent)
 QQuickControl::QQuickControl(QQuickItem *parent)
     : QQuickItem(*(new QQuickControlPrivate), parent)
 {
-    // ### TODO: ItemEnabledChanged?
-    connect(this, &QQuickItem::enabledChanged, this, &QQuickControl::paletteChanged);
 }
 
 QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent)
     : QQuickItem(dd, parent)
 {
-    // ### TODO: ItemEnabledChanged?
-    connect(this, &QQuickItem::enabledChanged, this, &QQuickControl::paletteChanged);
 }
 
 void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
@@ -685,6 +681,9 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     Q_D(QQuickControl);
     QQuickItem::itemChange(change, value);
     switch (change) {
+    case ItemEnabledHasChanged:
+        emit paletteChanged();
+        break;
     case ItemVisibleHasChanged:
 #if QT_CONFIG(quicktemplates2_hover)
         if (!value.boolValue)

@@ -207,9 +207,6 @@ QQuickLabel::QQuickLabel(QQuickItem *parent)
 {
     Q_D(QQuickLabel);
     QObjectPrivate::connect(this, &QQuickText::textChanged, d, &QQuickLabelPrivate::textChanged);
-
-    // ### TODO: ItemEnabledChanged?
-    connect(this, &QQuickItem::enabledChanged, this, &QQuickLabel::paletteChanged);
 }
 
 QFont QQuickLabel::font() const
@@ -314,9 +311,18 @@ void QQuickLabel::itemChange(QQuickItem::ItemChange change, const QQuickItem::It
 {
     Q_D(QQuickLabel);
     QQuickText::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item) {
-        d->resolveFont();
-        d->resolvePalette();
+    switch (change) {
+    case ItemEnabledHasChanged:
+        emit paletteChanged();
+        break;
+    case ItemParentHasChanged:
+        if (value.item) {
+            d->resolveFont();
+            d->resolvePalette();
+        }
+        break;
+    default:
+        break;
     }
 }
 
