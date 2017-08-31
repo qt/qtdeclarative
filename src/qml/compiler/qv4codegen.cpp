@@ -1236,8 +1236,8 @@ Moth::StackSlot Codegen::pushArgs(ArgumentList *args)
     (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::Function);
     (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::Context);
     (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::Accumulator);
-#endif
     (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::This);
+#endif
     (void) Reference::fromConst(this, QV4::Encode(argc)).storeOnStack(calldata + CallData::Argc);
     Q_STATIC_ASSERT(sizeof(CallData) == 6 * sizeof(Value));
 

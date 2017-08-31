@@ -991,7 +991,7 @@ uint Runtime::method_compareIn(ExecutionEngine *engine, const Value &left, const
 
 ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint index, CallData *callData)
 {
-    Q_ASSERT(callData->thisObject.isUndefined());
+    callData->thisObject = Encode::undefined();
 
     Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
     callData->function = l->globalGetter(l, engine);
@@ -1003,7 +1003,7 @@ ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint ind
 
 ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, CallData *callData)
 {
-    Q_ASSERT(callData->thisObject.isUndefined());
+    callData->thisObject = Encode::undefined();
     ExecutionContext &ctx = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context);
     callData->function = ctx.getPropertyAndBase(engine->id_eval(), &callData->thisObject);
     if (engine->hasException)
@@ -1027,7 +1027,7 @@ ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Ca
 
 ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, CallData *callData)
 {
-    Q_ASSERT(callData->thisObject.isUndefined());
+    callData->thisObject = Encode::undefined();
     callData->function = engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex];
 
     ExecutionContext &ctx = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context);
@@ -1107,6 +1107,7 @@ ReturnedValue Runtime::method_callElement(ExecutionEngine *engine, const Value &
 
 ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &func, CallData *callData)
 {
+    callData->thisObject = Encode::undefined();
     callData->function = func;
     if (!func.isFunctionObject())
         return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
