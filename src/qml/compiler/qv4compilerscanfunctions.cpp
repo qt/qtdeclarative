@@ -252,11 +252,11 @@ bool ScanFunctions::visit(FunctionExpression *ast)
     return true;
 }
 
-void ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName, bool isExpression)
+void ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
 {
     if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
         _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Function name may not be eval or arguments in strict mode"));
-    enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : 0, isExpression);
+    enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : 0);
 }
 
 void ScanFunctions::endVisit(FunctionExpression *)
@@ -285,7 +285,7 @@ bool ScanFunctions::visit(ObjectLiteral *ast)
 bool ScanFunctions::visit(PropertyGetterSetter *ast)
 {
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
-    enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/0, /*isExpression*/false);
+    enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/0);
     return true;
 }
 
@@ -296,7 +296,7 @@ void ScanFunctions::endVisit(PropertyGetterSetter *)
 
 bool ScanFunctions::visit(FunctionDeclaration *ast)
 {
-    enterFunction(ast, /*enterName*/ true, /*isExpression */false);
+    enterFunction(ast, /*enterName*/ true);
     return true;
 }
 
@@ -386,7 +386,7 @@ bool ScanFunctions::visit(Block *ast) {
     return false;
 }
 
-void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr, bool isExpression)
+void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr)
 {
     if (_context) {
         _context->hasNestedFunctions = true;
@@ -400,7 +400,8 @@ void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
     enterEnvironment(ast, FunctionCode);
     checkForArguments(formals);
 
-    _context->isNamedFunctionExpression = isExpression && !name.isEmpty();
+    if (!name.isEmpty())
+        _context->addLocalVar(name, Context::ThisFunctionName, QQmlJS::AST::VariableDeclaration::FunctionScope);
     _context->formals = formals;
 
     if (body && !_context->isStrict)

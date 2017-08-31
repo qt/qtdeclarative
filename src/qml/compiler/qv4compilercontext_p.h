@@ -109,6 +109,7 @@ struct Context {
 
     enum MemberType {
         UndefinedMember,
+        ThisFunctionName,
         VariableDefinition,
         VariableDeclaration,
         FunctionDefinition
@@ -140,7 +141,6 @@ struct Context {
     bool hasDirectEval = false;
     bool hasNestedFunctions = false;
     bool isStrict = false;
-    bool isNamedFunctionExpression = false;
     bool usesThis = false;
     bool hasTry = false;
     bool hasWith = false;
@@ -217,7 +217,7 @@ struct Context {
     bool canUseSimpleCall() const {
         return nestedContexts.isEmpty() &&
                locals.isEmpty() && arguments.size() <= QV4::Global::ReservedArgumentCount &&
-               !hasTry && !hasWith && !isNamedFunctionExpression &&
+               !hasTry && !hasWith &&
                usesArgumentsObject == ArgumentsObjectNotUsed && !hasDirectEval;
     }
 

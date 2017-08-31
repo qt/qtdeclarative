@@ -91,7 +91,6 @@ struct Q_QML_EXPORT Function {
 
     inline bool usesArgumentsObject() const { return compiledFunction->flags & CompiledData::Function::UsesArgumentsObject; }
     inline bool isStrict() const { return compiledFunction->flags & CompiledData::Function::IsStrict; }
-    inline bool isNamedExpression() const { return compiledFunction->flags & CompiledData::Function::IsNamedExpression; }
 
     inline bool canUseSimpleFunction() const { return canUseSimpleCall; }
 

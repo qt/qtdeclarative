@@ -287,11 +287,6 @@ ReturnedValue ExecutionContext::getProperty(String *name)
             uint index = c->internalClass->find(id);
             if (index < UINT_MAX)
                 return c->locals[index].asReturnedValue();
-            if (c->v4Function->isNamedExpression()) {
-                Scope scope(this);
-                if (c->function && name->equals(ScopedString(scope, c->v4Function->name())))
-                    return c->function->asReturnedValue();
-            }
             Q_FALLTHROUGH();
         }
         case Heap::ExecutionContext::Type_WithContext:
@@ -334,11 +329,6 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
             uint index = c->internalClass->find(id);
             if (index < UINT_MAX)
                 return c->locals[index].asReturnedValue();
-            if (c->v4Function->isNamedExpression()) {
-                Scope scope(this);
-                if (c->function && name->equals(ScopedString(scope, c->v4Function->name())))
-                    return c->function->asReturnedValue();
-            }
             Q_FALLTHROUGH();
         }
         case Heap::ExecutionContext::Type_GlobalContext: {

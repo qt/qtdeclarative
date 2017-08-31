@@ -302,8 +302,6 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         function->flags |= CompiledData::Function::UsesArgumentsObject;
     if (irFunction->isStrict)
         function->flags |= CompiledData::Function::IsStrict;
-    if (irFunction->isNamedFunctionExpression)
-        function->flags |= CompiledData::Function::IsNamedExpression;
     if (irFunction->hasTry || irFunction->hasWith)
         function->flags |= CompiledData::Function::HasCatchOrWith;
     if (irFunction->canUseSimpleCall())

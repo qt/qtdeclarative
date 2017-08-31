@@ -88,10 +88,10 @@ public:
     void leaveEnvironment();
 
     void enterQmlScope(AST::Node *ast, const QString &name)
-    { enterFunction(ast, name, /*formals*/0, /*body*/0, /*expr*/0, /*isExpression*/false); }
+    { enterFunction(ast, name, /*formals*/0, /*body*/0, /*expr*/0); }
 
     void enterQmlFunction(AST::FunctionDeclaration *ast)
-    { enterFunction(ast, false, false); }
+    { enterFunction(ast, false); }
 
 protected:
     using Visitor::visit;
@@ -113,7 +113,7 @@ protected:
     bool visit(AST::ExpressionStatement *ast) override;
     bool visit(AST::FunctionExpression *ast) override;
 
-    void enterFunction(AST::FunctionExpression *ast, bool enterName, bool isExpression = true);
+    void enterFunction(AST::FunctionExpression *ast, bool enterName);
 
     void endVisit(AST::FunctionExpression *) override;
 
@@ -138,7 +138,7 @@ protected:
     bool visit(AST::Block *ast) override;
 
 protected:
-    void enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::FunctionBody *body, AST::FunctionExpression *expr, bool isExpression);
+    void enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::FunctionBody *body, AST::FunctionExpression *expr);
 
     void calcEscapingVariables();
 // fields:

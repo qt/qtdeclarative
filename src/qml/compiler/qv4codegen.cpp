@@ -1488,7 +1488,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
     }
 
     while (c->parent) {
-        if (c->forceLookupByName() || (c->isNamedFunctionExpression && c->name == name))
+        if (c->forceLookupByName())
             goto loadByName;
 
         Context::Member m = c->findMember(name);
@@ -2068,8 +2068,20 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             if (it->canEscape) {
                 it->index = _context->locals.size();
                 _context->locals.append(local);
+                if (it->type == Context::ThisFunctionName) {
+                    // move the name from the stack to the call context
+                    Instruction::LoadReg load;
+                    load.reg = CallData::Function;
+                    bytecodeGenerator->addInstruction(load);
+                    Instruction::StoreLocal store;
+                    store.index = it->index;
+                    bytecodeGenerator->addInstruction(store);
+                }
             } else {
-                it->index = bytecodeGenerator->newRegister();
+                if (it->type == Context::ThisFunctionName)
+                    it->index = CallData::Function;
+                else
+                    it->index = bytecodeGenerator->newRegister();
             }
         }
     } else {

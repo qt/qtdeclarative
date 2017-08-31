@@ -207,7 +207,7 @@ struct Function
         IsStrict            = 0x1,
         HasDirectEval       = 0x2,
         UsesArgumentsObject = 0x4,
-        IsNamedExpression   = 0x8,
+//        Unused  = 0x8,
         HasCatchOrWith      = 0x10,
         CanUseSimpleCall    = 0x20
     };
