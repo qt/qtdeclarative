@@ -89,7 +89,6 @@ class QQuickDefaultStyle : public QObject
     Q_PROPERTY(QColor frameLightColor READ frameLightColor CONSTANT FINAL)
     Q_PROPERTY(QColor scrollBarColor READ scrollBarColor CONSTANT FINAL)
     Q_PROPERTY(QColor scrollBarPressedColor READ scrollBarPressedColor CONSTANT FINAL)
-    Q_PROPERTY(QColor pageIndicatorColor READ pageIndicatorColor CONSTANT FINAL)
     Q_PROPERTY(QColor separatorColor READ separatorColor CONSTANT FINAL)
     Q_PROPERTY(QColor disabledDarkColor READ disabledDarkColor CONSTANT FINAL)
     Q_PROPERTY(QColor disabledLightColor READ disabledLightColor CONSTANT FINAL)
@@ -132,7 +131,6 @@ public:
     QColor frameLightColor() const;
     QColor scrollBarColor() const;
     QColor scrollBarPressedColor() const;
-    QColor pageIndicatorColor() const;
     QColor separatorColor() const;
     QColor disabledDarkColor() const;
     QColor disabledLightColor() const;
