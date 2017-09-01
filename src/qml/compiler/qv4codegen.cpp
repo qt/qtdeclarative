@@ -883,6 +883,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
 {
     switch (oper) {
     case QSOperator::Add: {
+        //### Todo: when we add type hints, we can generate an Increment when both the lhs is a number and the rhs == 1
         left = left.storeOnStack();
         right.loadInAccumulator();
         Instruction::Add add;
@@ -891,11 +892,16 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::Sub: {
-        left = left.storeOnStack();
-        right.loadInAccumulator();
-        Instruction::Sub sub;
-        sub.lhs = left.stackSlot();
-        bytecodeGenerator->addInstruction(sub);
+        if (right.isConst() && right.constant == Encode(int(1))) {
+            left.loadInAccumulator();
+            bytecodeGenerator->addInstruction(Instruction::Decrement());
+        } else {
+            left = left.storeOnStack();
+            right.loadInAccumulator();
+            Instruction::Sub sub;
+            sub.lhs = left.stackSlot();
+            bytecodeGenerator->addInstruction(sub);
+        }
         break;
     }
     case QSOperator::Mul: {
