@@ -1000,17 +1000,93 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         bytecodeGenerator->addInstruction(binop);
         break;
     }
-    case QSOperator::StrictEqual:
-    case QSOperator::StrictNotEqual:
-    case QSOperator::Equal:
-    case QSOperator::NotEqual:
-    case QSOperator::Gt:
-    case QSOperator::Ge:
-    case QSOperator::Lt:
+    case QSOperator::StrictEqual: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpStrictEqual cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::StrictNotEqual: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpStrictNotEqual cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::Equal: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpEq cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::NotEqual: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpNe cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::Gt: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpGt cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::Ge: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpGe cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
+    case QSOperator::Lt: {
+        if (_expr.accept(cx))
+            return jumpBinop(oper, left, right);
+
+        Instruction::CmpLt cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
+    }
     case QSOperator::Le:
         if (_expr.accept(cx))
             return jumpBinop(oper, left, right);
-        // else: fallthrough
+
+        Instruction::CmpLe cmp;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        cmp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(cmp);
+        break;
     default: {
         auto binopFunc = aluOpFunction(oper);
         Q_ASSERT(binopFunc != QV4::Runtime::InvalidRuntimeMethod);
