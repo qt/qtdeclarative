@@ -99,6 +99,9 @@ private slots:
     void dragOverModalShadow_data();
     void dragOverModalShadow();
 
+    void nonModal_data();
+    void nonModal();
+
 private:
     struct TouchDeviceDeleter
     {
@@ -1134,6 +1137,86 @@ void tst_Drawer::dragOverModalShadow()
     else
         QTest::touchEvent(window, touchDevice.data()).release(0, to);
     QVERIFY(!drawer->isVisible());
+}
+
+void tst_Drawer::nonModal_data()
+{
+    QTest::addColumn<bool>("mouse");
+    QTest::newRow("mouse") << true;
+    QTest::newRow("touch") << false;
+}
+
+// QTBUG-59652
+void tst_Drawer::nonModal()
+{
+    QFETCH(bool, mouse);
+
+    QQuickApplicationHelper helper(this, QStringLiteral("window.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+    drawer->setModal(false);
+
+    const QPoint from(1, 1);
+    const QPoint to(150, 1);
+
+    // drag to open
+    QSignalSpy openedSpy(drawer, SIGNAL(opened()));
+    QVERIFY(openedSpy.isValid());
+
+    if (mouse)
+        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, from);
+    else
+        QTest::touchEvent(window, touchDevice.data()).press(0, from);
+
+    static const int steps = 10;
+    for (int i = 0; i < steps; ++i) {
+        int x = i * qAbs(from.x() - to.x()) / steps;
+        int y = i * qAbs(from.y() - to.y()) / steps;
+
+        if (mouse)
+            QTest::mouseMove(window, QPoint(x, y));
+        else
+            QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, y));
+        QTest::qWait(1); // avoid infinite velocity
+    }
+    QVERIFY(drawer->isVisible());
+
+    if (mouse)
+        QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, to);
+    else
+        QTest::touchEvent(window, touchDevice.data()).release(0, to);
+    QVERIFY(openedSpy.wait());
+
+    // drag to close
+    QSignalSpy closedSpy(drawer, SIGNAL(closed()));
+    QVERIFY(closedSpy.isValid());
+
+    if (mouse)
+        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, to);
+    else
+        QTest::touchEvent(window, touchDevice.data()).press(0, to);
+
+    for (int i = steps - 1; i >= 0; --i) {
+        int x = i * qAbs(from.x() - to.x()) / steps;
+        int y = i * qAbs(from.y() - to.y()) / steps;
+
+        if (mouse)
+            QTest::mouseMove(window, QPoint(x, y));
+        else
+            QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(x, y));
+        QTest::qWait(1); // avoid infinite velocity
+    }
+    QVERIFY(drawer->isVisible());
+
+    if (mouse)
+        QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, from);
+    else
+        QTest::touchEvent(window, touchDevice.data()).release(0, from);
+    QVERIFY(closedSpy.wait());
 }
 
 QTEST_MAIN(tst_Drawer)

@@ -246,7 +246,7 @@ void QQuickDrawerPrivate::resizeOverlay()
     dimmer->setSize(geometry.size());
 }
 
-static bool isWithinDragMargin(QQuickDrawer *drawer, const QPointF &pos)
+static bool isWithinDragMargin(const QQuickDrawer *drawer, const QPointF &pos)
 {
     switch (drawer->edge()) {
     case Qt::LeftEdge:
@@ -392,6 +392,30 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
 #endif
 
 static const qreal openCloseVelocityThreshold = 300;
+
+bool QQuickDrawerPrivate::blockInput(QQuickItem *item, const QPointF &point) const
+{
+    Q_Q(const QQuickDrawer);
+
+    // We want all events, if mouse/touch is already grabbed.
+    if (popupItem->keepMouseGrab() || popupItem->keepTouchGrab())
+        return true;
+
+    // Don't block input to drawer's children/content.
+    if (popupItem->isAncestorOf(item))
+        return false;
+
+    // Don't block outside a drawer's background dimming
+    if (dimmer && !dimmer->contains(dimmer->mapFromScene(point)))
+        return false;
+
+    // Accept all events within drag area.
+    if (isWithinDragMargin(q, point))
+        return true;
+
+    // Accept all other events if drawer is modal.
+    return modal;
+}
 
 bool QQuickDrawerPrivate::handlePress(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
