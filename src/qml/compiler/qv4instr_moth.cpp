@@ -230,9 +230,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
 
         MOTH_BEGIN_INSTR(StoreLocal)
             if (index < nLocals)
-                d << ", " << "l" << index;
+                d << "l" << index;
             else
-                d << ", " << "a" << (index - nLocals);
+                d << "a" << (index - nLocals);
         MOTH_END_INSTR(StoreLocal)
 
         MOTH_BEGIN_INSTR(LoadScopedLocal)
@@ -449,62 +449,59 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(Jump)
 
-        MOTH_BEGIN_INSTR(JumpEq)
-            d << "acc  " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(JumpEq)
-
-        MOTH_BEGIN_INSTR(JumpNe)
-            d << "acc  " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(JumpNe)
-
-        MOTH_BEGIN_INSTR(CmpJmpEqNull)
+        MOTH_BEGIN_INSTR(JumpTrue)
             d << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(CmpJmpEqNull)
+        MOTH_END_INSTR(JumpTrue)
 
-        MOTH_BEGIN_INSTR(CmpJmpNeNull)
+        MOTH_BEGIN_INSTR(JumpFalse)
             d << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(CmpJmpNeNull)
+        MOTH_END_INSTR(JumpFalse)
 
-        MOTH_BEGIN_INSTR(CmpJmpEqInt)
-            d << lhs << ", " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(CmpJmpEq)
+        MOTH_BEGIN_INSTR(CmpEqNull)
+        MOTH_END_INSTR(CmpEqNull)
 
-        MOTH_BEGIN_INSTR(CmpJmpNeInt)
-                d << lhs << ", " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(CmpJmpNe)
+        MOTH_BEGIN_INSTR(CmpNeNull)
+        MOTH_END_INSTR(CmpNeNull)
 
+        MOTH_BEGIN_INSTR(CmpEqInt)
+            d << lhs;
+        MOTH_END_INSTR(CmpEq)
 
-        MOTH_BEGIN_INSTR(CmpJmpEq)
-            d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(CmpJmpEq)
+        MOTH_BEGIN_INSTR(CmpNeInt)
+                d << lhs;
+        MOTH_END_INSTR(CmpNeInt)
 
-        MOTH_BEGIN_INSTR(CmpJmpNe)
-                d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(CmpJmpNe)
+        MOTH_BEGIN_INSTR(CmpEq)
+            d << dumpRegister(lhs, nFormals);
+        MOTH_END_INSTR(CmpEq)
 
-        MOTH_BEGIN_INSTR(CmpJmpGt)
-                d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(CmpJmpGt)
+        MOTH_BEGIN_INSTR(CmpNe)
+                d << dumpRegister(lhs, nFormals);
+        MOTH_END_INSTR(CmpNe)
 
-        MOTH_BEGIN_INSTR(CmpJmpGe)
-                d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(CmpJmpGe)
+        MOTH_BEGIN_INSTR(CmpGt)
+                d << dumpRegister(lhs, nFormals);
+        MOTH_END_INSTR(CmpGt)
 
-        MOTH_BEGIN_INSTR(CmpJmpLt)
-                d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(CmpJmpLt)
+        MOTH_BEGIN_INSTR(CmpGe)
+                d << dumpRegister(lhs, nFormals);
+        MOTH_END_INSTR(CmpGe)
 
-        MOTH_BEGIN_INSTR(CmpJmpLe)
-                d << dumpRegister(lhs, nFormals) << ", " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(CmpJmpLe)
+        MOTH_BEGIN_INSTR(CmpLt)
+                d << dumpRegister(lhs, nFormals);
+        MOTH_END_INSTR(CmpLt)
 
-        MOTH_BEGIN_INSTR(JumpStrictEqual)
-            d << dumpRegister(lhs, nFormals) << "  " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(JumpStrictEqual)
+        MOTH_BEGIN_INSTR(CmpLe)
+                d << dumpRegister(lhs, nFormals);
+        MOTH_END_INSTR(CmpLe)
 
-        MOTH_BEGIN_INSTR(JumpStrictNotEqual)
-            d << dumpRegister(lhs, nFormals) << "  " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(JumpStrictNotEqual)
+        MOTH_BEGIN_INSTR(CmpStrictEqual)
+            d << dumpRegister(lhs, nFormals);
+        MOTH_END_INSTR(CmpStrictEqual)
+
+        MOTH_BEGIN_INSTR(CmpStrictNotEqual)
+            d << dumpRegister(lhs, nFormals);
+        MOTH_END_INSTR(CmpStrictNotEqual)
 
         MOTH_BEGIN_INSTR(JumpStrictEqualStackSlotInt)
             d << dumpRegister(lhs, nFormals) << ", " << rhs << "  " << ABSOLUTE_OFFSET();

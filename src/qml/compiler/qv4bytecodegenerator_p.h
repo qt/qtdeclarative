@@ -158,30 +158,32 @@ public:
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpEq()
+    Q_REQUIRED_RESULT Jump jumpTrue()
     {
-        Instruction::JumpEq data;
+        Instruction::JumpTrue data;
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpNe()
+    Q_REQUIRED_RESULT Jump jumpFalse()
     {
-        Instruction::JumpNe data;
+        Instruction::JumpFalse data;
         return addJumpInstruction(data);
     }
 
-    Q_REQUIRED_RESULT Jump jumpStrictEqual(const StackSlot &lhs)
+    void jumpStrictEqual(const StackSlot &lhs, const Label &target)
     {
-        Instruction::JumpStrictEqual data;
-        data.lhs = lhs;
-        return addJumpInstruction(data);
+        Instruction::CmpStrictEqual cmp;
+        cmp.lhs = lhs;
+        addInstruction(cmp);
+        addJumpInstruction(Instruction::JumpTrue()).link(target);
     }
 
-    Q_REQUIRED_RESULT Jump jumpStrictNotEqual(const StackSlot &lhs)
+    void jumpStrictNotEqual(const StackSlot &lhs, const Label &target)
     {
-        Instruction::JumpStrictNotEqual data;
-        data.lhs = lhs;
-        return addJumpInstruction(data);
+        Instruction::CmpStrictNotEqual cmp;
+        cmp.lhs = lhs;
+        addInstruction(cmp);
+        addJumpInstruction(Instruction::JumpTrue()).link(target);
     }
 
     Q_REQUIRED_RESULT Jump jumpStrictEqualStackSlotInt(const StackSlot &lhs, int rhs)
@@ -229,6 +231,14 @@ public:
         Instr genericInstr;
         InstrMeta<InstrT>::setData(genericInstr, data);
         return Jump(this, addInstructionHelper(Moth::Instr::Type(InstrT), genericInstr, offsetof(InstrData<InstrT>, offset)));
+    }
+
+    void addCJumpInstruction(bool jumpOnFalse, const Label *trueLabel, const Label *falseLabel)
+    {
+        if (jumpOnFalse)
+            addJumpInstruction(Instruction::JumpFalse()).link(*falseLabel);
+        else
+            addJumpInstruction(Instruction::JumpTrue()).link(*trueLabel);
     }
 
 private:

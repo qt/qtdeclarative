@@ -456,6 +456,8 @@ protected:
 
     Reference unop(UnaryOperation op, const Reference &expr);
 
+    void addCJump();
+
     int registerString(const QString &name) {
         return jsUnitGenerator->registerString(name);
     }

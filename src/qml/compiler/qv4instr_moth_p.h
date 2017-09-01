@@ -140,20 +140,20 @@ QT_BEGIN_NAMESPACE
 #define INSTR_ConvertThisToObject(op) INSTRUCTION(op, ConvertThisToObject, 0)
 #define INSTR_Construct(op) INSTRUCTION(op, Construct, 2, callData, func)
 #define INSTR_Jump(op) INSTRUCTION(op, Jump, 1, offset)
-#define INSTR_JumpEq(op) INSTRUCTION(op, JumpEq, 1, offset)
-#define INSTR_JumpNe(op) INSTRUCTION(op, JumpNe, 1, offset)
-#define INSTR_CmpJmpEqNull(op) INSTRUCTION(op, CmpJmpEqNull, 1, offset)
-#define INSTR_CmpJmpNeNull(op) INSTRUCTION(op, CmpJmpNeNull, 1, offset)
-#define INSTR_CmpJmpEqInt(op) INSTRUCTION(op, CmpJmpEqInt, 2, lhs, offset)
-#define INSTR_CmpJmpNeInt(op) INSTRUCTION(op, CmpJmpNeInt, 2, lhs, offset)
-#define INSTR_CmpJmpEq(op) INSTRUCTION(op, CmpJmpEq, 2, lhs, offset)
-#define INSTR_CmpJmpNe(op) INSTRUCTION(op, CmpJmpNe, 2, lhs, offset)
-#define INSTR_CmpJmpGt(op) INSTRUCTION(op, CmpJmpGt, 2, lhs, offset)
-#define INSTR_CmpJmpGe(op) INSTRUCTION(op, CmpJmpGe, 2, lhs, offset)
-#define INSTR_CmpJmpLt(op) INSTRUCTION(op, CmpJmpLt, 2, lhs, offset)
-#define INSTR_CmpJmpLe(op) INSTRUCTION(op, CmpJmpLe, 2, lhs, offset)
-#define INSTR_JumpStrictEqual(op) INSTRUCTION(op, JumpStrictEqual, 2, lhs, offset)
-#define INSTR_JumpStrictNotEqual(op) INSTRUCTION(op, JumpStrictNotEqual, 2, lhs, offset)
+#define INSTR_JumpTrue(op) INSTRUCTION(op, JumpTrue, 1, offset)
+#define INSTR_JumpFalse(op) INSTRUCTION(op, JumpFalse, 1, offset)
+#define INSTR_CmpEqNull(op) INSTRUCTION(op, CmpEqNull, 0)
+#define INSTR_CmpNeNull(op) INSTRUCTION(op, CmpNeNull, 0)
+#define INSTR_CmpEqInt(op) INSTRUCTION(op, CmpEqInt, 1, lhs)
+#define INSTR_CmpNeInt(op) INSTRUCTION(op, CmpNeInt, 1, lhs)
+#define INSTR_CmpEq(op) INSTRUCTION(op, CmpEq, 1, lhs)
+#define INSTR_CmpNe(op) INSTRUCTION(op, CmpNe, 1, lhs)
+#define INSTR_CmpGt(op) INSTRUCTION(op, CmpGt, 1, lhs)
+#define INSTR_CmpGe(op) INSTRUCTION(op, CmpGe, 1, lhs)
+#define INSTR_CmpLt(op) INSTRUCTION(op, CmpLt, 1, lhs)
+#define INSTR_CmpLe(op) INSTRUCTION(op, CmpLe, 1, lhs)
+#define INSTR_CmpStrictEqual(op) INSTRUCTION(op, CmpStrictEqual, 1, lhs)
+#define INSTR_CmpStrictNotEqual(op) INSTRUCTION(op, CmpStrictNotEqual, 1, lhs)
 #define INSTR_JumpStrictEqualStackSlotInt(op) INSTRUCTION(op, JumpStrictEqualStackSlotInt, 3, lhs, rhs, offset)
 #define INSTR_JumpStrictNotEqualStackSlotInt(op) INSTRUCTION(op, JumpStrictNotEqualStackSlotInt, 3, lhs, rhs, offset)
 #define INSTR_UNot(op) INSTRUCTION(op, UNot, 0)
@@ -253,20 +253,20 @@ QT_BEGIN_NAMESPACE
     F(ConvertThisToObject) \
     F(Construct) \
     F(Jump) \
-    F(JumpEq) \
-    F(JumpNe) \
-    F(CmpJmpEqNull) \
-    F(CmpJmpNeNull) \
-    F(CmpJmpEqInt) \
-    F(CmpJmpNeInt) \
-    F(CmpJmpEq) \
-    F(CmpJmpNe) \
-    F(CmpJmpGt) \
-    F(CmpJmpGe) \
-    F(CmpJmpLt) \
-    F(CmpJmpLe) \
-    F(JumpStrictEqual) \
-    F(JumpStrictNotEqual) \
+    F(JumpTrue) \
+    F(JumpFalse) \
+    F(CmpEqNull) \
+    F(CmpNeNull) \
+    F(CmpEqInt) \
+    F(CmpNeInt) \
+    F(CmpEq) \
+    F(CmpNe) \
+    F(CmpGt) \
+    F(CmpGe) \
+    F(CmpLt) \
+    F(CmpLe) \
+    F(CmpStrictEqual) \
+    F(CmpStrictNotEqual) \
     F(JumpStrictEqualStackSlotInt) \
     F(JumpStrictNotEqualStackSlotInt) \
     F(UNot) \

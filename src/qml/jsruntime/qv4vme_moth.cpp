@@ -933,149 +933,143 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
         code += offset;
     MOTH_END_INSTR(Jump)
 
-    MOTH_BEGIN_INSTR(JumpEq)
+    MOTH_BEGIN_INSTR(JumpTrue)
+        //### store a type hint, and if the input is a bool, do:
+        //  ((acc & 1) == 1)
+        // because if(1) will end up here with an integer in the accumulator
         if ((ACC.integerCompatible() && ACC.int_32()) || ACC.toBoolean())
             code += offset;
-    MOTH_END_INSTR(JumpEq)
+    MOTH_END_INSTR(JumpTrue)
 
-    MOTH_BEGIN_INSTR(JumpNe)
+    MOTH_BEGIN_INSTR(JumpFalse)
+        //### see comment for JumpTrue
         if ((ACC.integerCompatible() && !ACC.int_32()) || !ACC.toBoolean())
             code += offset;
-    MOTH_END_INSTR(JumpNe)
+    MOTH_END_INSTR(JumpFalse)
 
-    MOTH_BEGIN_INSTR(CmpJmpEqNull)
-        if (ACC.isNullOrUndefined())
-            code += offset;
-    MOTH_END_INSTR(CmpJmpEqNull)
+    MOTH_BEGIN_INSTR(CmpEqNull)
+        acc = Encode(ACC.isNullOrUndefined());
+    MOTH_END_INSTR(CmpEqNull)
 
-    MOTH_BEGIN_INSTR(CmpJmpNeNull)
-        if (!ACC.isNullOrUndefined())
-            code += offset;
-    MOTH_END_INSTR(CmpJmpNeNull)
+    MOTH_BEGIN_INSTR(CmpNeNull)
+        acc = Encode(!ACC.isNullOrUndefined());
+    MOTH_END_INSTR(CmpNeNull)
 
-    MOTH_BEGIN_INSTR(CmpJmpEqInt)
+    MOTH_BEGIN_INSTR(CmpEqInt)
         if (ACC.isIntOrBool()) {
-            if (ACC.int_32() == lhs)
-                code += offset;
+            acc = Encode(ACC.int_32() == lhs);
         } else {
-            if (compareEqualInt(accumulator, ACC, lhs))
-                code += offset;
+            STORE_ACC();
+            acc = Encode(compareEqualInt(accumulator, ACC, lhs));
+            CHECK_EXCEPTION;
         }
-    MOTH_END_INSTR(CmpJmpEqInt)
+    MOTH_END_INSTR(CmpEqInt)
 
-    MOTH_BEGIN_INSTR(CmpJmpNeInt)
+    MOTH_BEGIN_INSTR(CmpNeInt)
         if (ACC.isIntOrBool()) {
-            if (ACC.int_32() != lhs)
-            code += offset;
+            acc = Encode(bool(ACC.int_32() != lhs));
         } else {
-            if (!compareEqualInt(accumulator, ACC, lhs))
-                code += offset;
+            STORE_ACC();
+            acc = Encode(!compareEqualInt(accumulator, ACC, lhs));
+            CHECK_EXCEPTION;
         }
-    MOTH_END_INSTR(CmpJmpNeInt)
+    MOTH_END_INSTR(CmpNeInt)
 
-    MOTH_BEGIN_INSTR(CmpJmpEq)
+    MOTH_BEGIN_INSTR(CmpEq)
         const Value left = STACK_VALUE(lhs);
         if (Q_LIKELY(left.asReturnedValue() == ACC.asReturnedValue())) {
-            code += offset;
+            acc = Encode(!ACC.isNaN());
         } else if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
-            if (left.int_32() == ACC.int_32())
-                code += offset;
+            acc = Encode(left.int_32() == ACC.int_32());
         } else {
             STORE_ACC();
-            if (compareEqual(left, accumulator))
-                code += offset;
+            acc = Encode(compareEqual(left, accumulator));
+            CHECK_EXCEPTION;
         }
-    MOTH_END_INSTR(CmpJmpEq)
+    MOTH_END_INSTR(CmpEq)
 
-    MOTH_BEGIN_INSTR(CmpJmpNe)
+    MOTH_BEGIN_INSTR(CmpNe)
         const Value left = STACK_VALUE(lhs);
         if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
-            if (left.int_32() != ACC.int_32())
-                code += offset;
+            acc = Encode(bool(left.int_32() != ACC.int_32()));
         } else {
             STORE_ACC();
-            if (!compareEqual(left, accumulator))
-                code += offset;
+            acc = Encode(!compareEqual(left, accumulator));
+            CHECK_EXCEPTION;
         }
-    MOTH_END_INSTR(CmpJmpNe)
+    MOTH_END_INSTR(CmpNe)
 
-    MOTH_BEGIN_INSTR(CmpJmpGt)
+    MOTH_BEGIN_INSTR(CmpGt)
         const Value left = STACK_VALUE(lhs);
         if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
-            if (left.int_32() > ACC.int_32())
-                code += offset;
+            acc = Encode(left.int_32() > ACC.int_32());
         } else if (left.isNumber() && ACC.isNumber()) {
-            if (left.asDouble() > ACC.asDouble())
-                code += offset;
+            acc = Encode(left.asDouble() > ACC.asDouble());
         } else {
             STORE_ACC();
-            if (Runtime::method_compareGreaterThan(left, accumulator))
-                code += offset;
+            acc = Encode(bool(Runtime::method_compareGreaterThan(left, accumulator)));
+            CHECK_EXCEPTION;
         }
-    MOTH_END_INSTR(CmpJmpGt)
+    MOTH_END_INSTR(CmpGt)
 
-    MOTH_BEGIN_INSTR(CmpJmpGe)
+    MOTH_BEGIN_INSTR(CmpGe)
         const Value left = STACK_VALUE(lhs);
         if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
-            if (left.int_32() >= ACC.int_32())
-                code += offset;
+            acc = Encode(left.int_32() >= ACC.int_32());
         } else if (left.isNumber() && ACC.isNumber()) {
-            if (left.asDouble() >= ACC.asDouble())
-                code += offset;
+            acc = Encode(left.asDouble() >= ACC.asDouble());
         } else {
             STORE_ACC();
-            if (Runtime::method_compareGreaterEqual(left, accumulator))
-                code += offset;
+            acc = Encode(bool(Runtime::method_compareGreaterEqual(left, accumulator)));
+            CHECK_EXCEPTION;
         }
-    MOTH_END_INSTR(CmpJmpGe)
+    MOTH_END_INSTR(CmpGe)
 
-    MOTH_BEGIN_INSTR(CmpJmpLt)
+    MOTH_BEGIN_INSTR(CmpLt)
         const Value left = STACK_VALUE(lhs);
         if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
-            if (left.int_32() < ACC.int_32())
-                code += offset;
+            acc = Encode(left.int_32() < ACC.int_32());
         } else if (left.isNumber() && ACC.isNumber()) {
-            if (left.asDouble() < ACC.asDouble())
-                code += offset;
+            acc = Encode(left.asDouble() < ACC.asDouble());
         } else {
             STORE_ACC();
-            if (Runtime::method_compareLessThan(left, accumulator))
-                code += offset;
+            acc = Encode(bool(Runtime::method_compareLessThan(left, accumulator)));
+            CHECK_EXCEPTION;
         }
-    MOTH_END_INSTR(CmpJmpLt)
+    MOTH_END_INSTR(CmpLt)
 
-    MOTH_BEGIN_INSTR(CmpJmpLe)
+    MOTH_BEGIN_INSTR(CmpLe)
         const Value left = STACK_VALUE(lhs);
         if (Q_LIKELY(left.isInteger() && ACC.isInteger())) {
-            if (left.int_32() <= ACC.int_32())
-                code += offset;
+            acc = Encode(left.int_32() <= ACC.int_32());
         } else if (left.isNumber() && ACC.isNumber()) {
-            if (left.asDouble() <= ACC.asDouble())
-                code += offset;
+            acc = Encode(left.asDouble() <= ACC.asDouble());
         } else {
             STORE_ACC();
-            if (Runtime::method_compareLessEqual(left, accumulator))
-                code += offset;
+            acc = Encode(bool(Runtime::method_compareLessEqual(left, accumulator)));
+            CHECK_EXCEPTION;
         }
-    MOTH_END_INSTR(CmpJmpLe)
+    MOTH_END_INSTR(CmpLe)
 
-    MOTH_BEGIN_INSTR(JumpStrictEqual)
-        if (STACK_VALUE(lhs).rawValue() == ACC.rawValue() && !ACC.isNaN())
-            code += offset;
-        else {
+    MOTH_BEGIN_INSTR(CmpStrictEqual)
+        if (STACK_VALUE(lhs).rawValue() == ACC.rawValue() && !ACC.isNaN()) {
+            acc = Encode(true);
+        } else {
             STORE_ACC();
-            if (RuntimeHelpers::strictEqual(STACK_VALUE(lhs), accumulator))
-                code += offset;
+            acc = Encode(bool(RuntimeHelpers::strictEqual(STACK_VALUE(lhs), accumulator)));
+            CHECK_EXCEPTION;
         }
-    MOTH_END_INSTR(JumpStrictEqual)
+    MOTH_END_INSTR(CmpStrictEqual)
 
-    MOTH_BEGIN_INSTR(JumpStrictNotEqual)
+    MOTH_BEGIN_INSTR(CmpStrictNotEqual)
         if (STACK_VALUE(lhs).rawValue() != ACC.rawValue() || ACC.isNaN()) {
             STORE_ACC();
-            if (!RuntimeHelpers::strictEqual(STACK_VALUE(lhs), accumulator))
-                code += offset;
+            acc = Encode(!RuntimeHelpers::strictEqual(STACK_VALUE(lhs), accumulator));
+            CHECK_EXCEPTION;
+        } else {
+            acc = Encode(false);
         }
-    MOTH_END_INSTR(JumpStrictNotEqual)
+    MOTH_END_INSTR(CmpStrictNotEqual)
 
     MOTH_BEGIN_INSTR(JumpStrictNotEqualStackSlotInt)
         if (STACK_VALUE(lhs).int_32() != rhs || STACK_VALUE(lhs).isUndefined())
