@@ -54,6 +54,8 @@ QQuickDefaultTheme::QQuickDefaultTheme()
 
     systemPalette.setColor(QPalette::HighlightedText, QColor::fromRgba(0xFFFFFFFF));
 
+    systemPalette.setColor(QPalette::Light, QColor::fromRgba(0xFFE4E4E4));
+
     systemPalette.setColor(QPalette::Link, QColor::fromRgba(0xFF45A7D7));
 
     systemPalette.setColor(QPalette::Text, QColor::fromRgba(0xFF353637));

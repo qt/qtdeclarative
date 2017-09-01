@@ -208,11 +208,6 @@ QColor QQuickDefaultStyle::scrollBarPressedColor() const
     return QColor::fromRgba(0xFF28282A);
 }
 
-QColor QQuickDefaultStyle::progressBarColor() const
-{
-    return QColor::fromRgba(0xFFE4E4E4);
-}
-
 QColor QQuickDefaultStyle::pageIndicatorColor() const
 {
     return QColor::fromRgba(0xFF28282A);

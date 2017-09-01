@@ -53,7 +53,7 @@ T.ProgressBar {
         scale: control.mirrored ? -1 : 1
         progress: control.position
         indeterminate: control.visible && control.indeterminate
-        color: Default.textColor
+        color: control.palette.dark
     }
 
     background: Rectangle {
@@ -64,6 +64,6 @@ T.ProgressBar {
         width: control.availableWidth
         height: 6
 
-        color: Default.progressBarColor
+        color: control.palette.light
     }
 }

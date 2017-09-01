@@ -101,7 +101,6 @@ Module {
         Property { name: "frameLightColor"; type: "QColor"; isReadonly: true }
         Property { name: "scrollBarColor"; type: "QColor"; isReadonly: true }
         Property { name: "scrollBarPressedColor"; type: "QColor"; isReadonly: true }
-        Property { name: "progressBarColor"; type: "QColor"; isReadonly: true }
         Property { name: "pageIndicatorColor"; type: "QColor"; isReadonly: true }
         Property { name: "separatorColor"; type: "QColor"; isReadonly: true }
         Property { name: "disabledDarkColor"; type: "QColor"; isReadonly: true }
