@@ -479,9 +479,9 @@ ReturnedValue ObjectPrototype::method_toLocaleString(const BuiltinFunction *b, C
     ScopedFunctionObject f(scope, o->get(scope.engine->id_toString()));
     if (!f)
         THROW_TYPE_ERROR();
-    ScopedCallData cData(scope);
-    cData->thisObject = o;
-    return f->call(callData);
+    JSCall jsCall(scope, f);
+    jsCall->thisObject = o;
+    return jsCall.call();
 }
 
 ReturnedValue ObjectPrototype::method_valueOf(const BuiltinFunction *b, CallData *callData)

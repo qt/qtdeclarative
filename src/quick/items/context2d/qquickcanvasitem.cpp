@@ -729,13 +729,13 @@ void QQuickCanvasItem::updatePolish()
 
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
         QV4::Scope scope(v4);
-        QV4::ScopedCallData callData(scope, 1);
-        callData->thisObject = QV4::QObjectWrapper::wrap(v4, this);
+        QV4::JSCall jsCall(scope, nullptr, 1);
+        jsCall->thisObject = QV4::QObjectWrapper::wrap(v4, this);
 
         for (auto it = animationCallbacks.cbegin(), end = animationCallbacks.cend(); it != end; ++it) {
-            QV4::ScopedFunctionObject f(scope, it.value().value());
-            callData->args[0] = QV4::Primitive::fromUInt32(QDateTime::currentMSecsSinceEpoch() / 1000);
-            f->call(callData);
+            jsCall->function = it.value().value();
+            jsCall->args[0] = QV4::Primitive::fromUInt32(QDateTime::currentMSecsSinceEpoch() / 1000);
+            jsCall.call();
         }
     }
     else {

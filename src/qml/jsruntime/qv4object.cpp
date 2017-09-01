@@ -107,9 +107,9 @@ ReturnedValue Object::getValue(const Value &thisObject, const Value &v, Property
         return Encode::undefined();
 
     Scope scope(f->engine());
-    ScopedCallData callData(scope);
-    callData->thisObject = thisObject;
-    return f->call(callData);
+    JSCall jsCall(scope, f);
+    jsCall->thisObject = thisObject;
+    return jsCall.call();
 }
 
 bool Object::putValue(uint memberIndex, const Value &value)
@@ -125,10 +125,10 @@ bool Object::putValue(uint memberIndex, const Value &value)
         if (set) {
             Scope scope(ic->engine);
             ScopedFunctionObject setter(scope, set);
-            ScopedCallData callData(scope, 1);
-            callData->args[0] = value;
-            callData->thisObject = this;
-            setter->call(callData);
+            JSCall jsCall(scope, setter, 1);
+            jsCall->args[0] = value;
+            jsCall->thisObject = this;
+            jsCall.call();
             return !ic->engine->hasException;
         }
         return false;
@@ -764,11 +764,11 @@ bool Object::internalPut(String *name, const Value &value)
 
         Scope scope(engine);
         ScopedFunctionObject setter(scope, *memberIndex);
-        ScopedCallData callData(scope, 1);
-        callData->args[0] = value;
-        callData->thisObject = this;
-        setter->call(callData);
-        return !internalClass()->engine->hasException;
+        JSCall jsCall(scope, setter, 1);
+        jsCall->args[0] = value;
+        jsCall->thisObject = this;
+        jsCall.call();
+        return !engine->hasException;
     }
 
     insertMember(name, value);
@@ -829,11 +829,11 @@ bool Object::internalPutIndexed(uint index, const Value &value)
 
         Scope scope(engine);
         ScopedFunctionObject setter(scope, *arrayIndex);
-        ScopedCallData callData(scope, 1);
-        callData->args[0] = value;
-        callData->thisObject = this;
-        setter->call(callData);
-        return !internalClass()->engine->hasException;
+        JSCall jsCall(scope, setter, 1);
+        jsCall->args[0] = value;
+        jsCall->thisObject = this;
+        jsCall.call();
+        return !engine->hasException;
     }
 
     arraySet(index, value);

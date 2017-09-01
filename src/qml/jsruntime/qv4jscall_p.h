@@ -60,22 +60,29 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct ScopedCallData {
-    ScopedCallData(const Scope &scope, int argc = 0)
+struct JSCall {
+    JSCall(const Scope &scope, std::nullptr_t, int argc = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + qMax(argc , int(QV4::Global::ReservedArgumentCount));
         ptr = reinterpret_cast<CallData *>(scope.alloc(size));
         ptr->tag = quint32(QV4::Value::ValueTypeInternal::Integer);
         ptr->argc = argc;
     }
-
-    ScopedCallData(const Scope &scope, const FunctionObject *function, int argc = 0)
+    JSCall(const Scope &scope, const FunctionObject *function, int argc = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + qMax(argc , int(QV4::Global::ReservedArgumentCount));
         ptr = reinterpret_cast<CallData *>(scope.alloc(size));
         ptr->tag = quint32(QV4::Value::ValueTypeInternal::Integer);
         ptr->argc = argc;
         ptr->function = *function;
+    }
+    JSCall(const Scope &scope, Heap::FunctionObject *function, int argc = 0)
+    {
+        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + qMax(argc , int(QV4::Global::ReservedArgumentCount));
+        ptr = reinterpret_cast<CallData *>(scope.alloc(size));
+        ptr->tag = quint32(QV4::Value::ValueTypeInternal::Integer);
+        ptr->argc = argc;
+        ptr->function = function;
     }
 
     CallData *operator->() {
@@ -88,6 +95,10 @@ struct ScopedCallData {
 
     ReturnedValue call() const {
         return static_cast<FunctionObject &>(ptr->function).call(ptr);
+    }
+
+    ReturnedValue callAsConstructor() const {
+        return static_cast<FunctionObject &>(ptr->function).construct(ptr);
     }
 
     CallData *ptr;

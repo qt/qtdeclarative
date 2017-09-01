@@ -1576,9 +1576,7 @@ void QQmlXMLHttpRequest::dispatchCallback(Object *thisObj, QQmlContextData *cont
         return;
     }
 
-    QV4::ScopedCallData callData(scope);
-    callData->thisObject = Encode::undefined();
-    callback->call(callData);
+    QV4::JSCall(scope, callback).call();
 
     if (scope.engine->hasException) {
         QQmlError error = scope.engine->catchExceptionAsQmlError();

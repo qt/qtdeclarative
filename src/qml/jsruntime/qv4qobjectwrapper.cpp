@@ -816,18 +816,18 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             QV4::Scope scope(v4);
             QV4::ScopedFunctionObject f(scope, This->function.value());
 
-            QV4::ScopedCallData callData(scope, argCount);
-            callData->thisObject = This->thisObject.isUndefined() ? v4->globalObject->asReturnedValue() : This->thisObject.value();
+            QV4::JSCall jsCall(scope, f, argCount);
+            jsCall->thisObject = This->thisObject.isUndefined() ? v4->globalObject->asReturnedValue() : This->thisObject.value();
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];
                 if (type == qMetaTypeId<QVariant>()) {
-                    callData->args[ii] = v4->fromVariant(*((QVariant *)metaArgs[ii + 1]));
+                    jsCall->args[ii] = v4->fromVariant(*((QVariant *)metaArgs[ii + 1]));
                 } else {
-                    callData->args[ii] = v4->fromVariant(QVariant(type, metaArgs[ii + 1]));
+                    jsCall->args[ii] = v4->fromVariant(QVariant(type, metaArgs[ii + 1]));
                 }
             }
 
-            f->call(callData);
+            jsCall.call();
             if (scope.hasException()) {
                 QQmlError error = v4->catchExceptionAsQmlError();
                 if (error.description().isEmpty()) {

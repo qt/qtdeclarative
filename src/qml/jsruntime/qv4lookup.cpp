@@ -400,9 +400,9 @@ ReturnedValue Lookup::getterAccessor0(Lookup *l, ExecutionEngine *engine, const 
             if (!getter)
                 return Encode::undefined();
 
-            ScopedCallData callData(scope, 0);
-            callData->thisObject = object;
-            return getter->call(callData);
+            JSCall jsCall(scope, getter, 0);
+            jsCall->thisObject = object;
+            return jsCall.call();
         }
     }
     l->getter = getterFallback;
@@ -422,9 +422,9 @@ ReturnedValue Lookup::getterAccessor1(Lookup *l, ExecutionEngine *engine, const 
             if (!getter)
                 return Encode::undefined();
 
-            ScopedCallData callData(scope, 0);
-            callData->thisObject = object;
-            return getter->call(callData);
+            JSCall jsCall(scope, getter, 0);
+            jsCall->thisObject = object;
+            return jsCall.call();
         }
     }
     l->getter = getterFallback;
@@ -447,9 +447,9 @@ ReturnedValue Lookup::getterAccessor2(Lookup *l, ExecutionEngine *engine, const 
                     if (!getter)
                         return Encode::undefined();
 
-                    ScopedCallData callData(scope, 0);
-                    callData->thisObject = object;
-                    return getter->call(callData);
+                    JSCall jsCall(scope, getter, 0);
+                    jsCall->thisObject = object;
+                    return jsCall.call();
                 }
             }
         }
@@ -502,9 +502,9 @@ ReturnedValue Lookup::primitiveGetterAccessor0(Lookup *l, ExecutionEngine *engin
             if (!getter)
                 return Encode::undefined();
 
-            ScopedCallData callData(scope, 0);
-            callData->thisObject = object;
-            return getter->call(callData);
+            JSCall jsCall(scope, getter, 0);
+            jsCall->thisObject = object;
+            return jsCall.call();
         }
     }
     l->getter = getterGeneric;
@@ -522,9 +522,9 @@ ReturnedValue Lookup::primitiveGetterAccessor1(Lookup *l, ExecutionEngine *engin
             if (!getter)
                 return Encode::undefined();
 
-            ScopedCallData callData(scope, 0);
-            callData->thisObject = object;
-            return getter->call(callData);
+            JSCall jsCall(scope, getter, 0);
+            jsCall->thisObject = object;
+            return jsCall.call();
         }
     }
     l->getter = getterGeneric;
@@ -641,9 +641,8 @@ ReturnedValue Lookup::globalGetterAccessor0(Lookup *l, ExecutionEngine *engine)
         if (!getter)
             return Encode::undefined();
 
-        ScopedCallData callData(scope, 0);
-        callData->thisObject = Primitive::undefinedValue();
-        return getter->call(callData);
+        JSCall jsCall(scope, getter, 0);
+        return jsCall.call();
     }
     l->globalGetter = globalGetterGeneric;
     return globalGetterGeneric(l, engine);
@@ -659,9 +658,8 @@ ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionEngine *engine)
         if (!getter)
             return Encode::undefined();
 
-        ScopedCallData callData(scope, 0);
-        callData->thisObject = Primitive::undefinedValue();
-        return getter->call(callData);
+        JSCall jsCall(scope, getter, 0);
+        return jsCall.call();
     }
     l->globalGetter = globalGetterGeneric;
     return globalGetterGeneric(l, engine);
@@ -680,9 +678,8 @@ ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionEngine *engine)
                 if (!getter)
                     return Encode::undefined();
 
-                ScopedCallData callData(scope, 0);
-                callData->thisObject = Primitive::undefinedValue();
-                return getter->call(callData);
+                JSCall jsCall(scope, getter, 0);
+                return jsCall.call();
             }
         }
     }

@@ -411,9 +411,9 @@ ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *
     ScopedValue regexp(scope, callData->argument(0));
     Scoped<RegExpObject> rx(scope, regexp);
     if (!rx) {
-        ScopedCallData callData(scope, 1);
-        callData->args[0] = regexp;
-        rx = scope.engine->regExpCtor()->construct(callData);
+        JSCall jsCall(scope, scope.engine->regExpCtor(), 1);
+        jsCall->args[0] = regexp;
+        rx = jsCall.callAsConstructor();
     }
 
     if (!rx)
@@ -426,11 +426,11 @@ ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *
     ScopedString execString(scope, scope.engine->newString(QStringLiteral("exec")));
     ScopedFunctionObject exec(scope, scope.engine->regExpPrototype()->get(execString));
 
-    ScopedCallData cData(scope, 1);
-    cData->thisObject = rx;
-    cData->args[0] = s;
+    JSCall jsCall(scope, exec, 1);
+    jsCall->thisObject = rx;
+    jsCall->args[0] = s;
     if (!global)
-        return exec->call(cData);
+        return jsCall.call();
 
     ScopedString lastIndex(scope, scope.engine->newString(QStringLiteral("lastIndex")));
     rx->put(lastIndex, ScopedValue(scope, Primitive::fromInt32(0)));
@@ -442,7 +442,7 @@ ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *
     ScopedValue index(scope);
     ScopedValue result(scope);
     while (1) {
-        result = exec->call(cData);
+        result = jsCall.call();
         if (result->isNull())
             break;
         assert(result->isObject());
@@ -590,8 +590,8 @@ ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData
     ScopedFunctionObject searchCallback(scope, replaceValue);
     if (!!searchCallback) {
         result.reserve(string.length() + 10*numStringMatches);
-        ScopedCallData callData(scope, numCaptures + 2);
-        callData->thisObject = Primitive::undefinedValue();
+        JSCall jsCall(scope, searchCallback, numCaptures + 2);
+        jsCall->thisObject = Primitive::undefinedValue();
         int lastEnd = 0;
         ScopedValue entry(scope);
         for (int i = 0; i < numStringMatches; ++i) {
@@ -602,15 +602,15 @@ ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData
                 entry = Primitive::undefinedValue();
                 if (start != JSC::Yarr::offsetNoMatch && end != JSC::Yarr::offsetNoMatch)
                     entry = scope.engine->newString(string.mid(start, end - start));
-                callData->args[k] = entry;
+                jsCall->args[k] = entry;
             }
             uint matchStart = matchOffsets[i * numCaptures * 2];
             Q_ASSERT(matchStart >= static_cast<uint>(lastEnd));
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
-            callData->args[numCaptures] = Primitive::fromUInt32(matchStart);
-            callData->args[numCaptures + 1] = scope.engine->newString(string);
+            jsCall->args[numCaptures] = Primitive::fromUInt32(matchStart);
+            jsCall->args[numCaptures + 1] = scope.engine->newString(string);
 
-            replacement = searchCallback->call(callData);
+            replacement = jsCall.call();
             result += string.midRef(lastEnd, matchStart - lastEnd);
             result += replacement->toQString();
             lastEnd = matchEnd;
@@ -652,9 +652,9 @@ ReturnedValue StringPrototype::method_search(const BuiltinFunction *b, CallData 
 
     RegExpObject *regExp = regExpObj->as<RegExpObject>();
     if (!regExp) {
-        ScopedCallData callData(scope, 1);
-        callData->args[0] = regExpObj;
-        regExpObj = scope.engine->regExpCtor()->construct(callData);
+        JSCall jsCall(scope, scope.engine->regExpCtor(), 1);
+        jsCall->args[0] = regExpObj;
+        regExpObj = jsCall.callAsConstructor();
         if (scope.engine->hasException)
             return QV4::Encode::undefined();
 

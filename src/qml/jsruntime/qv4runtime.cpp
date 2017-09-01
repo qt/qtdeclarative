@@ -424,12 +424,13 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
         qSwap(meth1, meth2);
 
     Scope scope(engine);
-    ScopedCallData callData(scope, 0);
-    callData->thisObject = *object;
+    JSCall jsCall(scope, nullptr, 0);
+    jsCall->thisObject = *object;
 
     ScopedValue conv(scope, object->get(meth1));
     if (FunctionObject *o = conv->as<FunctionObject>()) {
-        ScopedValue r(scope, o->call(callData));
+        jsCall->function = o;
+        ScopedValue r(scope, jsCall.call());
         if (r->isPrimitive())
             return r->asReturnedValue();
     }
@@ -439,7 +440,8 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
 
     conv = object->get(meth2);
     if (FunctionObject *o = conv->as<FunctionObject>()) {
-        ScopedValue r(scope, o->call(callData));
+        jsCall->function = o;
+        ScopedValue r(scope, jsCall.call());
         if (r->isPrimitive())
             return r->asReturnedValue();
     }

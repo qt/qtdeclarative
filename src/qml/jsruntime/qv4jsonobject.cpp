@@ -697,21 +697,21 @@ QString Stringify::Str(const QString &key, const Value &v)
         ScopedString s(scope, v4->newString(QStringLiteral("toJSON")));
         ScopedFunctionObject toJSON(scope, o->get(s));
         if (!!toJSON) {
-            ScopedCallData callData(scope, 1);
-            callData->thisObject = value;
-            callData->args[0] = v4->newString(key);
-            value = toJSON->call(callData);
+            JSCall jsCall(scope, toJSON, 1);
+            jsCall->thisObject = value;
+            jsCall->args[0] = v4->newString(key);
+            value = jsCall.call();
         }
     }
 
     if (replacerFunction) {
         ScopedObject holder(scope, v4->newObject());
         holder->put(scope.engine->id_empty(), value);
-        ScopedCallData callData(scope, 2);
-        callData->args[0] = v4->newString(key);
-        callData->args[1] = value;
-        callData->thisObject = holder;
-        value = replacerFunction->call(callData);
+        JSCall jsCall(scope, replacerFunction, 2);
+        jsCall->args[0] = v4->newString(key);
+        jsCall->args[1] = value;
+        jsCall->thisObject = holder;
+        value = jsCall.call();
     }
 
     o = value->asReturnedValue();

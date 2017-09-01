@@ -64,17 +64,17 @@ void QQmlDelayedCallQueue::DelayedFunctionCall::execute(QV4::ExecutionEngine *en
         QV4::Scope scope(engine);
 
         QV4::ArrayObject *array = m_args.as<QV4::ArrayObject>();
-        const int argCount = array ? array->getLength() : 0;
-        QV4::ScopedCallData callData(scope, argCount);
-        callData->thisObject = QV4::Encode::undefined();
-
-        for (int i = 0; i < argCount; i++) {
-            callData->args[i] = array->getIndexed(i);
-        }
-
         const QV4::FunctionObject *callback = m_function.as<QV4::FunctionObject>();
         Q_ASSERT(callback);
-        callback->call(callData);
+        const int argCount = array ? array->getLength() : 0;
+        QV4::JSCall jsCall(scope, callback, argCount);
+        jsCall->thisObject = QV4::Encode::undefined();
+
+        for (int i = 0; i < argCount; i++) {
+            jsCall->args[i] = array->getIndexed(i);
+        }
+
+        jsCall.call();
 
         if (scope.engine->hasException) {
             QQmlError error = scope.engine->catchExceptionAsQmlError();

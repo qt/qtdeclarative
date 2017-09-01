@@ -286,49 +286,48 @@ ReturnedValue FunctionPrototype::method_apply(const BuiltinFunction *b, CallData
         len = arr->getLength();
     }
 
-    ScopedCallData cData(scope, len);
+    JSCall jsCall(scope, o, len);
 
     if (len) {
         if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
             QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();
             int l = qMin(len, (uint)a->d()->context->argc());
-            memcpy(cData->args, a->d()->context->args(), l*sizeof(Value));
+            memcpy(jsCall->args, a->d()->context->args(), l*sizeof(Value));
             for (quint32 i = l; i < len; ++i)
-                cData->args[i] = Primitive::undefinedValue();
+                jsCall->args[i] = Primitive::undefinedValue();
         } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
             auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
             uint alen = sad ? sad->values.size : 0;
             if (alen > len)
                 alen = len;
             for (uint i = 0; i < alen; ++i)
-                cData->args[i] = sad->data(i);
+                jsCall->args[i] = sad->data(i);
             for (quint32 i = alen; i < len; ++i)
-                cData->args[i] = Primitive::undefinedValue();
+                jsCall->args[i] = Primitive::undefinedValue();
         } else {
             for (quint32 i = 0; i < len; ++i)
-                cData->args[i] = arr->getIndexed(i);
+                jsCall->args[i] = arr->getIndexed(i);
         }
     }
 
-    cData->thisObject = callData->argument(0);
-    return o->call(cData);
+    jsCall->thisObject = callData->argument(0);
+    return jsCall.call();
 }
 
 ReturnedValue FunctionPrototype::method_call(const BuiltinFunction *b, CallData *callData)
 {
-    QV4::Scope scope(b);
-    FunctionObject *o = callData->thisObject.as<FunctionObject>();
-    if (!o)
-        return scope.engine->throwTypeError();
-
-    ScopedCallData cData(scope, callData->argc ? callData->argc - 1 : 0);
-    if (callData->argc) {
-        for (int i = 1; i < callData->argc; ++i)
-            cData->args[i - 1] = callData->args[i];
+    if (!callData->thisObject.isFunctionObject()) {
+        ExecutionEngine *e = b->engine();
+        return e->throwTypeError();
     }
-    cData->thisObject = callData->argument(0);
-
-    return o->call(cData);
+    callData->function = callData->thisObject;
+    callData->thisObject = callData->argc ? callData->args[0] : Primitive::undefinedValue();
+    if (callData->argc) {
+        --callData->argc;
+        for (int i = 0; i < callData->argc; ++i)
+            callData->args[i] = callData->args[i + 1];
+    }
+    return static_cast<FunctionObject &>(callData->function).call(callData);
 }
 
 ReturnedValue FunctionPrototype::method_bind(const BuiltinFunction *b, CallData *callData)
@@ -488,16 +487,15 @@ ReturnedValue BoundFunction::call(const Managed *that, CallData *dd)
         return Encode::undefined();
 
     Scoped<MemberData> boundArgs(scope, f->boundArgs());
-    ScopedCallData callData(scope, (boundArgs ? boundArgs->size() : 0) + dd->argc);
-    callData->thisObject = f->boundThis();
-    Value *argp = callData->args;
+    JSCall jsCall(scope, f->target(), (boundArgs ? boundArgs->size() : 0) + dd->argc);
+    jsCall->thisObject = f->boundThis();
+    Value *argp = jsCall->args;
     if (boundArgs) {
         memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
         argp += boundArgs->size();
     }
     memcpy(argp, dd->args, dd->argc*sizeof(Value));
-    ScopedFunctionObject t(scope, f->target());
-    return t->call(callData);
+    return jsCall.call();
 }
 
 ReturnedValue BoundFunction::construct(const Managed *that, CallData *dd)
@@ -509,13 +507,12 @@ ReturnedValue BoundFunction::construct(const Managed *that, CallData *dd)
         return Encode::undefined();
 
     Scoped<MemberData> boundArgs(scope, f->boundArgs());
-    ScopedCallData callData(scope, (boundArgs ? boundArgs->size() : 0) + dd->argc);
-    Value *argp = callData->args;
+    JSCall jsCall(scope, f->target(), (boundArgs ? boundArgs->size() : 0) + dd->argc);
+    Value *argp = jsCall->args;
     if (boundArgs) {
         memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
         argp += boundArgs->size();
     }
     memcpy(argp, dd->args, dd->argc*sizeof(Value));
-    ScopedFunctionObject t(scope, f->target());
-    return t->construct(callData);
+    return jsCall.callAsConstructor();
 }

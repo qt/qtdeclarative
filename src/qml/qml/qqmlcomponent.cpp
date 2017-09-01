@@ -1547,10 +1547,10 @@ void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
 
     QV4::ScopedFunctionObject f(scope, d()->statusChanged);
     if (f) {
-        QV4::ScopedCallData callData(scope, 1);
-        callData->thisObject = this;
-        callData->args[0] = QV4::Primitive::fromUInt32(s);
-        f->call(callData);
+        QV4::JSCall jsCall(scope, f, 1);
+        jsCall->thisObject = this;
+        jsCall->args[0] = QV4::Primitive::fromUInt32(s);
+        jsCall.call();
         if (scope.hasException()) {
             QQmlError error = scope.engine->catchExceptionAsQmlError();
             QQmlEnginePrivate::warning(QQmlEnginePrivate::get(scope.engine->qmlEngine()), error);

@@ -417,12 +417,14 @@ public:
         bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
         {
             QV4::Scope scope(m_v4);
-            ScopedObject compare(scope, m_compareFn);
-            ScopedCallData callData(scope, 2);
-            callData->args[0] = convertElementToValue(m_v4, lhs);
-            callData->args[1] = convertElementToValue(m_v4, rhs);
-            callData->thisObject = m_v4->globalObject;
-            QV4::ScopedValue result(scope, compare->call(callData));
+            ScopedFunctionObject compare(scope, m_compareFn);
+            if (!compare)
+                return m_v4->throwTypeError();
+            JSCall jsCall(scope, compare, 2);
+            jsCall->args[0] = convertElementToValue(m_v4, lhs);
+            jsCall->args[1] = convertElementToValue(m_v4, rhs);
+            jsCall->thisObject = m_v4->globalObject;
+            QV4::ScopedValue result(scope, jsCall.call());
             return result->toNumber() < 0;
         }
 
