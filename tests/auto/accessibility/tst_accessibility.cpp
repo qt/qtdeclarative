@@ -43,6 +43,9 @@
 #include "../shared/util.h"
 
 #if QT_CONFIG(accessibility)
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/qpa/qplatformaccessibility.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
 
@@ -113,6 +116,14 @@ void tst_accessibility::a11y_data()
     QTest::newRow("WeekNumberColumn") << "weeknumbercolumn" << 0x0 << "WeekNumberColumn"; //QAccessible::NoRole
 }
 
+#if QT_CONFIG(accessibility)
+static QPlatformAccessibility *platformAccessibility()
+{
+    QPlatformIntegration *pfIntegration = QGuiApplicationPrivate::platformIntegration();
+    return pfIntegration ? pfIntegration->accessibility() : nullptr;
+}
+#endif
+
 void tst_accessibility::a11y()
 {
     QFETCH(QString, name);
@@ -150,7 +161,10 @@ void tst_accessibility::a11y()
             QVERIFY(acc);
         } else {
             QVERIFY(!acc);
-            QAccessible::setActive(true);
+            QPlatformAccessibility *accessibility = platformAccessibility();
+            if (!accessibility)
+                QSKIP("No QPlatformAccessibility available.");
+            accessibility->setActive(true);
             acc = QQuickAccessibleAttached::attachedProperties(item);
         }
     }

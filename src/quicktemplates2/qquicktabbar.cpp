@@ -228,27 +228,29 @@ void QQuickTabBarPrivate::updateLayout()
         contentHeightChange = true;
     }
 
+    updatingLayout = true;
     if (contentWidthChange)
         emit q->contentWidthChanged();
     if (contentHeightChange)
         emit q->contentHeightChanged();
+    updatingLayout = false;
 }
 
-void QQuickTabBarPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
+void QQuickTabBarPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &)
 {
-    if (!updatingLayout)
+    if (!updatingLayout && change.sizeChange() && QQuickItemPrivate::get(item)->componentComplete)
         updateLayout();
 }
 
-void QQuickTabBarPrivate::itemImplicitWidthChanged(QQuickItem *)
+void QQuickTabBarPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
-    if (!updatingLayout && !hasContentWidth)
+    if (!updatingLayout && !hasContentWidth && QQuickItemPrivate::get(item)->componentComplete)
         updateLayout();
 }
 
-void QQuickTabBarPrivate::itemImplicitHeightChanged(QQuickItem *)
+void QQuickTabBarPrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
-    if (!updatingLayout && !hasContentHeight)
+    if (!updatingLayout && !hasContentHeight && QQuickItemPrivate::get(item)->componentComplete)
         updateLayout();
 }
 
@@ -397,7 +399,10 @@ void QQuickTabBar::geometryChanged(const QRectF &newGeometry, const QRectF &oldG
 {
     Q_D(QQuickTabBar);
     QQuickContainer::geometryChanged(newGeometry, oldGeometry);
-    d->updateLayout();
+    if (!d->updatingLayout)
+        d->updateLayout();
+    else
+        polish();
 }
 
 bool QQuickTabBar::isContent(QQuickItem *item) const
