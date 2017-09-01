@@ -169,6 +169,8 @@ struct RegExpPrototype: RegExpObject
     static ReturnedValue method_get_input(const BuiltinFunction *, CallData *callData);
     static ReturnedValue method_get_leftContext(const BuiltinFunction *, CallData *callData);
     static ReturnedValue method_get_rightContext(const BuiltinFunction *, CallData *callData);
+
+    static ReturnedValue execFirstMatch(const BuiltinFunction *b, CallData *callData);
 };
 
 }

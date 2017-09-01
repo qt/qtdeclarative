@@ -314,6 +314,52 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     defineDefaultProperty(QStringLiteral("compile"), method_compile, 2);
 }
 
+/* used by String.match */
+ReturnedValue RegExpPrototype::execFirstMatch(const BuiltinFunction *b, CallData *callData)
+{
+    Scope scope(b);
+    Scoped<RegExpObject> r(scope, callData->thisObject.as<RegExpObject>());
+    Q_ASSERT(r && r->global());
+
+    ScopedString str(scope, callData->args[0]);
+    Q_ASSERT(str);
+    QString s = str->toQString();
+
+    int offset = r->lastIndex();
+    if (offset < 0 || offset > s.length()) {
+        r->setLastIndex(0);
+        RETURN_RESULT(Encode::null());
+    }
+
+    Q_ALLOCA_VAR(uint, matchOffsets, r->value()->captureCount() * 2 * sizeof(uint));
+    const int result = Scoped<RegExp>(scope, r->value())->match(s, offset, matchOffsets);
+
+    RegExpCtor *regExpCtor = static_cast<RegExpCtor *>(scope.engine->regExpCtor());
+    regExpCtor->d()->clearLastMatch();
+
+    if (result == -1) {
+        r->setLastIndex(0);
+        RETURN_RESULT(Encode::null());
+    }
+
+    ReturnedValue retVal = Encode::undefined();
+    // return first match
+    if (r->value()->captureCount()) {
+        int start = matchOffsets[0];
+        int end = matchOffsets[1];
+        retVal = (start != -1) ? scope.engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
+    }
+
+    RegExpCtor::Data *dd = regExpCtor->d();
+    dd->lastInput.set(scope.engine, str->d());
+    dd->lastMatchStart = matchOffsets[0];
+    dd->lastMatchEnd = matchOffsets[1];
+
+    r->setLastIndex(matchOffsets[1]);
+
+    return retVal;
+}
+
 ReturnedValue RegExpPrototype::method_exec(const BuiltinFunction *b, CallData *callData)
 {
     Scope scope(b);
@@ -336,7 +382,7 @@ ReturnedValue RegExpPrototype::method_exec(const BuiltinFunction *b, CallData *c
     Q_ALLOCA_VAR(uint, matchOffsets, r->value()->captureCount() * 2 * sizeof(uint));
     const int result = Scoped<RegExp>(scope, r->value())->match(s, offset, matchOffsets);
 
-    Scoped<RegExpCtor> regExpCtor(scope, scope.engine->regExpCtor());
+    RegExpCtor *regExpCtor = static_cast<RegExpCtor *>(scope.engine->regExpCtor());
     regExpCtor->d()->clearLastMatch();
 
     if (result == -1) {

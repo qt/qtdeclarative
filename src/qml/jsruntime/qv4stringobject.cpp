@@ -402,67 +402,56 @@ ReturnedValue StringPrototype::method_localeCompare(const BuiltinFunction *b, Ca
 ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *callData)
 {
     ExecutionEngine *v4 = b->engine();
-    if (callData->thisObject.isUndefined() || callData->thisObject.isNull())
+    if (callData->thisObject.isNullOrUndefined())
         return v4->throwTypeError();
 
     Scope scope(v4);
-    ScopedString s(scope, callData->thisObject.toString(scope.engine));
+    callData->thisObject = callData->thisObject.toString(scope.engine);
+    if (v4->hasException)
+        return Encode::undefined();
 
-    ScopedValue regexp(scope, callData->argument(0));
-    Scoped<RegExpObject> rx(scope, regexp);
-    if (!rx) {
-        JSCall jsCall(scope, scope.engine->regExpCtor(), 1);
-        jsCall->args[0] = regexp;
-        rx = jsCall.callAsConstructor();
+    if (!callData->argc)
+        callData->args[0] = Encode::undefined();
+    callData->argc = 1;
+
+    if (!callData->args[0].as<RegExpObject>()) {
+        // convert args[0] to a regexp
+        callData->args[0] = RegExpCtor::construct(b, callData);
+        if (v4->hasException)
+            return Encode::undefined();
     }
 
-    if (!rx)
-        // ### CHECK
-        return v4->throwTypeError();
+    bool global = static_cast<RegExpObject *>(&callData->args[0])->global();
 
-    bool global = rx->global();
-
-    // ### use the standard builtin function, not the one that might be redefined in the proto
-    ScopedString execString(scope, scope.engine->newString(QStringLiteral("exec")));
-    ScopedFunctionObject exec(scope, scope.engine->regExpPrototype()->get(execString));
-
-    JSCall jsCall(scope, exec, 1);
-    jsCall->thisObject = rx;
-    jsCall->args[0] = s;
+    qSwap(callData->thisObject, callData->args[0]);
     if (!global)
-        return jsCall.call();
+        return RegExpPrototype::method_exec(b, callData);
 
-    ScopedString lastIndex(scope, scope.engine->newString(QStringLiteral("lastIndex")));
-    rx->put(lastIndex, ScopedValue(scope, Primitive::fromInt32(0)));
+    // rx is now in thisObject
+    RegExpObject *rx = static_cast<RegExpObject *>(&callData->thisObject);
+    rx->setLastIndex(0);
     ScopedArrayObject a(scope, scope.engine->newArrayObject());
 
-    double previousLastIndex = 0;
+    int previousLastIndex = 0;
     uint n = 0;
-    ScopedValue matchStr(scope);
-    ScopedValue index(scope);
-    ScopedValue result(scope);
     while (1) {
-        result = jsCall.call();
-        if (result->isNull())
+        Value result = Primitive::fromReturnedValue(RegExpPrototype::execFirstMatch(b, callData));
+        if (result.isNull())
             break;
-        assert(result->isObject());
-        index = rx->get(lastIndex, 0);
-        double thisIndex = index->toInteger();
-        if (previousLastIndex == thisIndex) {
-            previousLastIndex = thisIndex + 1;
-            rx->put(lastIndex, ScopedValue(scope, Primitive::fromDouble(previousLastIndex)));
+        int index = rx->lastIndex();
+        if (previousLastIndex == index) {
+            previousLastIndex = index + 1;
+            rx->setLastIndex(previousLastIndex);
         } else {
-            previousLastIndex = thisIndex;
+            previousLastIndex = index;
         }
-        matchStr = result->objectValue()->getIndexed(0);
-        a->arraySet(n, matchStr);
+        a->arraySet(n, result);
         ++n;
     }
     if (!n)
-        result = Encode::null();
+        return Encode::null();
     else
-        result = a.asReturnedValue();
-    return result->asReturnedValue();
+        return a.asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_repeat(const BuiltinFunction *b, CallData *callData)
