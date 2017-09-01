@@ -45,6 +45,7 @@
 
 #include "qv4arrayobject_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4jscall_p.h"
 #include "qv4argumentsobject_p.h"
 
 #include <private/qqmljsengine_p.h>

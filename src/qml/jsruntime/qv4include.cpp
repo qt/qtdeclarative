@@ -39,6 +39,7 @@
 
 #include "qv4include_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4jscall_p.h"
 
 #include <QtQml/qjsengine.h>
 #if QT_CONFIG(qml_network)

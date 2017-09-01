@@ -43,6 +43,7 @@
 #include "qv4scopedvalue_p.h"
 #include "qv4runtime_p.h"
 #include "qv4string_p.h"
+#include "qv4jscall_p.h"
 
 #include <QtCore/QDebug>
 #include <QtCore/QDateTime>

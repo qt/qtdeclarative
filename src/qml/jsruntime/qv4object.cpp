@@ -49,6 +49,7 @@
 #include "qv4identifier_p.h"
 #include "qv4string_p.h"
 #include "qv4identifiertable_p.h"
+#include "qv4jscall_p.h"
 
 #include <stdint.h>
 

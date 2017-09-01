@@ -43,6 +43,7 @@
 #include "qv4runtime_p.h"
 #include "qv4argumentsobject_p.h"
 #include "qv4string_p.h"
+#include "qv4jscall_p.h"
 
 using namespace QV4;
 

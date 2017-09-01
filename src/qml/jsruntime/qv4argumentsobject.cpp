@@ -41,6 +41,7 @@
 #include <qv4scopedvalue_p.h>
 #include <qv4string_p.h>
 #include <qv4function_p.h>
+#include <qv4jscall_p.h>
 
 using namespace QV4;
 
@@ -138,10 +139,10 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     if (isMapped && attrs.isData()) {
         Q_ASSERT(arrayData());
         ScopedFunctionObject setter(scope, map->setter());
-        ScopedCallData callData(scope, 1);
+        ScopedCallData callData(scope, setter, 1);
         callData->thisObject = this->asReturnedValue();
         callData->args[0] = desc->value;
-        setter->call(callData);
+        callData.call();
 
         if (attrs.isWritable()) {
             setArrayAttributes(index, mapAttrs);

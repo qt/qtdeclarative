@@ -40,7 +40,7 @@
 #include "qv4arrayobject_p.h"
 #include "qv4sparsearray_p.h"
 #include "qv4objectproto_p.h"
-#include "qv4scopedvalue_p.h"
+#include "qv4jscall_p.h"
 #include "qv4argumentsobject_p.h"
 #include "qv4runtime_p.h"
 #include "qv4string_p.h"

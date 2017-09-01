@@ -43,6 +43,7 @@
 #include "qv4stringobject_p.h"
 #include <private/qv4mm_p.h>
 #include "qv4scopedvalue_p.h"
+#include "qv4jscall_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>

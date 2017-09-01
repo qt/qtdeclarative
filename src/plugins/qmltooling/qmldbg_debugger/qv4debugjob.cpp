@@ -44,6 +44,7 @@
 #include <private/qv4qmlcontext_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmldebugservice_p.h>
+#include <private/qv4jscall_p.h>
 
 #include <QtQml/qqmlengine.h>
 

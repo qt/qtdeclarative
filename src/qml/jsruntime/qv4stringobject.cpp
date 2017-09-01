@@ -45,14 +45,10 @@
 #include <private/qv4mm_p.h>
 #include "qv4scopedvalue_p.h"
 #include "qv4alloca_p.h"
+#include "qv4jscall_p.h"
 #include <QtCore/QDateTime>
 #include <QtCore/QDebug>
 #include <QtCore/QStringList>
-
-#include <private/qqmljsengine_p.h>
-#include <private/qqmljslexer_p.h>
-#include <private/qqmljsparser_p.h>
-#include <private/qqmljsast_p.h>
 
 #include <cassert>
 

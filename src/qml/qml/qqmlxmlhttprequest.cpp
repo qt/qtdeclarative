@@ -51,6 +51,7 @@
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4jscall_p.h>
 
 #include <QtCore/qobject.h>
 #include <QtQml/qjsvalue.h>

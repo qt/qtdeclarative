@@ -59,6 +59,7 @@ HEADERS += \
     $$PWD/qv4identifiertable_p.h \
     $$PWD/qv4managed_p.h \
     $$PWD/qv4internalclass_p.h \
+    $$PWD/qv4jscall_p.h \
     $$PWD/qv4sparsearray_p.h \
     $$PWD/qv4arraydata_p.h \
     $$PWD/qv4arrayobject_p.h \

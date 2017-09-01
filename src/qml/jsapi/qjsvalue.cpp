@@ -53,7 +53,7 @@
 #include "qv4errorobject_p.h"
 #include "private/qv8engine_p.h"
 #include <private/qv4mm_p.h>
-#include <private/qv4scopedvalue_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
 /*!
@@ -657,7 +657,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
     Q_ASSERT(engine);
 
     Scope scope(engine);
-    ScopedCallData callData(scope, args.length());
+    ScopedCallData callData(scope, f, args.length());
     callData->thisObject = engine->globalObject;
     for (int i = 0; i < args.size(); ++i) {
         if (!QJSValuePrivate::checkEngine(engine, args.at(i))) {
@@ -667,7 +667,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
         callData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
     }
 
-    ScopedValue result(scope, f->call(callData));
+    ScopedValue result(scope, callData.call());
     if (engine->hasException)
         result = engine->catchException();
 

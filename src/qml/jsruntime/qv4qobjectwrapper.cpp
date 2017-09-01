@@ -62,6 +62,7 @@
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qqmlscriptstring_p.h>
 #include <private/qv4compileddata_p.h>

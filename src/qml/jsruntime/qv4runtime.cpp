@@ -53,6 +53,7 @@
 #include "qv4numberobject_p.h"
 #include "private/qlocale_tools_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4jscall_p.h"
 #include <private/qv4qmlcontext_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlengine_p.h>

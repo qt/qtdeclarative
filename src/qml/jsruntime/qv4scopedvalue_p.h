@@ -52,7 +52,6 @@
 
 #include "qv4engine_p.h"
 #include "qv4value_p.h"
-#include "qv4persistent_p.h"
 #include "qv4property_p.h"
 
 #ifdef V4_USE_VALGRIND
@@ -349,46 +348,6 @@ struct Scoped
     }
 
     Value *ptr;
-};
-
-struct ScopedCallData {
-    ScopedCallData(const Scope &scope, int argc = 0)
-    {
-        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + qMax(argc , int(QV4::Global::ReservedArgumentCount));
-        ptr = reinterpret_cast<CallData *>(scope.alloc(size));
-        ptr->tag = quint32(QV4::Value::ValueTypeInternal::Integer);
-        ptr->argc = argc;
-    }
-
-    CallData *operator->() {
-        return ptr;
-    }
-
-    operator CallData *() const {
-        return ptr;
-    }
-
-    CallData *ptr;
-};
-
-struct ScopedStackFrame {
-    Scope &scope;
-    CppStackFrame frame;
-
-    ScopedStackFrame(Scope &scope, Heap::ExecutionContext *context)
-        : scope(scope)
-    {
-        frame.parent = scope.engine->currentStackFrame;
-        if (!context)
-            return;
-        frame.jsFrame = reinterpret_cast<CallData *>(scope.alloc(sizeof(CallData)/sizeof(Value)));
-        frame.jsFrame->context = context;
-        frame.v4Function = frame.parent ? frame.parent->v4Function : 0;
-        scope.engine->currentStackFrame = &frame;
-    }
-    ~ScopedStackFrame() {
-        scope.engine->currentStackFrame = frame.parent;
-    }
 };
 
 inline Value &Value::operator =(const ScopedValue &v)
