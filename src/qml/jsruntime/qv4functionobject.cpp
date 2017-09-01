@@ -45,7 +45,6 @@
 
 #include "qv4arrayobject_p.h"
 #include "qv4scopedvalue_p.h"
-#include "qv4jscall_p.h"
 #include "qv4argumentsobject_p.h"
 
 #include <private/qqmljsengine_p.h>
@@ -268,50 +267,47 @@ ReturnedValue FunctionPrototype::method_toString(const BuiltinFunction *b, CallD
 ReturnedValue FunctionPrototype::method_apply(const BuiltinFunction *b, CallData *callData)
 {
     ExecutionEngine *v4 = b->engine();
-    Scope scope(v4);
-    FunctionObject *o = callData->thisObject.as<FunctionObject>();
+    callData->function = callData->thisObject;
+    FunctionObject *o = callData->function.as<FunctionObject>();
     if (!o)
         return v4->throwTypeError();
+    callData->thisObject = callData->argument(0);
+    callData->accumulator = callData->argument(1);
 
-    ScopedValue arg(scope, callData->argument(1));
+    if (callData->accumulator.isObject()) {
+        Object *arr = static_cast<Object *>(&callData->accumulator);
+        uint len = arr->getLength();
+        callData->setArgc(len);
 
-    ScopedObject arr(scope, arg);
-
-    quint32 len;
-    if (!arr) {
-        len = 0;
-        if (!arg->isNullOrUndefined())
-            return v4->throwTypeError();
-    } else {
-        len = arr->getLength();
-    }
-
-    JSCall jsCall(scope, o, len);
-
-    if (len) {
-        if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
-            QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();
-            int l = qMin(len, (uint)a->d()->context->argc());
-            memcpy(jsCall->args, a->d()->context->args(), l*sizeof(Value));
-            for (quint32 i = l; i < len; ++i)
-                jsCall->args[i] = Primitive::undefinedValue();
-        } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
-            auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
-            uint alen = sad ? sad->values.size : 0;
-            if (alen > len)
-                alen = len;
-            for (uint i = 0; i < alen; ++i)
-                jsCall->args[i] = sad->data(i);
-            for (quint32 i = alen; i < len; ++i)
-                jsCall->args[i] = Primitive::undefinedValue();
-        } else {
-            for (quint32 i = 0; i < len; ++i)
-                jsCall->args[i] = arr->getIndexed(i);
+        v4->jsStackTop = callData->args + len;
+        if (len) {
+            if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
+                QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();
+                int l = qMin(len, (uint)a->d()->context->argc());
+                memcpy(callData->args, a->d()->context->args(), l*sizeof(Value));
+                for (quint32 i = l; i < len; ++i)
+                    callData->args[i] = Primitive::undefinedValue();
+            } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
+                auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
+                uint alen = sad ? sad->values.size : 0;
+                if (alen > len)
+                    alen = len;
+                for (uint i = 0; i < alen; ++i)
+                    callData->args[i] = sad->data(i);
+                for (quint32 i = alen; i < len; ++i)
+                    callData->args[i] = Primitive::undefinedValue();
+            } else {
+                for (quint32 i = 0; i < len; ++i)
+                    callData->args[i] = arr->getIndexed(i);
+            }
         }
+    } else if (!callData->accumulator.isNullOrUndefined()) {
+        return v4->throwTypeError();
+    } else {
+        callData->setArgc(0);
     }
 
-    jsCall->thisObject = callData->argument(0);
-    return jsCall.call();
+    return o->call(callData);
 }
 
 ReturnedValue FunctionPrototype::method_call(const BuiltinFunction *b, CallData *callData)
@@ -478,41 +474,38 @@ void Heap::BoundFunction::init(QV4::ExecutionContext *scope, QV4::FunctionObject
     f->insertMember(s.engine->id_caller(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 }
 
-ReturnedValue BoundFunction::call(const Managed *that, CallData *dd)
+ReturnedValue BoundFunction::call(const Managed *that, CallData *callData)
 {
     const BoundFunction *f = static_cast<const BoundFunction *>(that);
-    Scope scope(f->engine());
+    Heap::MemberData *boundArgs = f->boundArgs();
 
-    if (scope.hasException())
-        return Encode::undefined();
-
-    Scoped<MemberData> boundArgs(scope, f->boundArgs());
-    JSCall jsCall(scope, f->target(), (boundArgs ? boundArgs->size() : 0) + dd->argc());
-    jsCall->thisObject = f->boundThis();
-    Value *argp = jsCall->args;
-    if (boundArgs) {
-        memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
-        argp += boundArgs->size();
+    int nBoundArgs = boundArgs ? boundArgs->values.size : 0;
+    if (nBoundArgs) {
+        memmove(&callData->args + nBoundArgs, &callData->args, callData->argc()*sizeof(Value));
+        memcpy(callData->args, boundArgs->values.data(), nBoundArgs*sizeof(Value));
+        callData->setArgc(callData->argc() + nBoundArgs);
+        f->engine()->jsStackTop += nBoundArgs;
     }
-    memcpy(argp, dd->args, dd->argc()*sizeof(Value));
-    return jsCall.call();
+
+    callData->thisObject = f->boundThis();
+    callData->function = f->target();
+    return static_cast<FunctionObject &>(callData->function).call(callData);
 }
 
-ReturnedValue BoundFunction::construct(const Managed *that, CallData *dd)
+ReturnedValue BoundFunction::construct(const Managed *that, CallData *callData)
 {
     const BoundFunction *f = static_cast<const BoundFunction *>(that);
-    Scope scope(f->engine());
+    Heap::MemberData *boundArgs = f->boundArgs();
 
-    if (scope.hasException())
-        return Encode::undefined();
-
-    Scoped<MemberData> boundArgs(scope, f->boundArgs());
-    JSCall jsCall(scope, f->target(), (boundArgs ? boundArgs->size() : 0) + dd->argc());
-    Value *argp = jsCall->args;
-    if (boundArgs) {
-        memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
-        argp += boundArgs->size();
+    int nBoundArgs = boundArgs ? boundArgs->values.size : 0;
+    if (nBoundArgs) {
+        memmove(callData->args + nBoundArgs, callData->args, callData->argc()*sizeof(Value));
+        memcpy(callData->args, boundArgs->values.data(), nBoundArgs*sizeof(Value));
+        callData->setArgc(callData->argc() + nBoundArgs);
+        f->engine()->jsStackTop += nBoundArgs;
     }
-    memcpy(argp, dd->args, dd->argc()*sizeof(Value));
-    return jsCall.callAsConstructor();
+
+    callData->thisObject = f->boundThis();
+    callData->function = f->target();
+    return static_cast<FunctionObject &>(callData->function).construct(callData);
 }
