@@ -409,7 +409,7 @@ void QQuickTextAreaPrivate::readOnlyChanged(bool isReadOnly)
 {
     Q_UNUSED(isReadOnly);
 #if QT_CONFIG(accessibility)
-    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(q_func()))
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(q_func()))
         accessibleAttached->set_readOnly(isReadOnly);
 #endif
 #if QT_CONFIG(cursor)
@@ -450,9 +450,6 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent)
 #endif
     QObjectPrivate::connect(this, &QQuickTextEdit::readOnlyChanged,
                             d, &QQuickTextAreaPrivate::readOnlyChanged);
-
-    // ### TODO: ItemEnabledChanged?
-    connect(this, &QQuickItem::enabledChanged, this, &QQuickTextArea::paletteChanged);
 }
 
 QQuickTextAreaAttached *QQuickTextArea::qmlAttachedProperties(QObject *object)
@@ -528,7 +525,7 @@ void QQuickTextArea::setPlaceholderText(const QString &text)
 
     d->placeholder = text;
 #if QT_CONFIG(accessibility)
-    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(this))
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this))
         accessibleAttached->setDescription(text);
 #endif
     emit placeholderTextChanged();
@@ -697,19 +694,28 @@ void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem:
 {
     Q_D(QQuickTextArea);
     QQuickTextEdit::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item) {
-        d->resolveFont();
-        d->resolvePalette();
+    switch (change) {
+    case ItemEnabledHasChanged:
+        emit paletteChanged();
+        break;
+    case ItemParentHasChanged:
+        if (value.item) {
+            d->resolveFont();
+            d->resolvePalette();
 #if QT_CONFIG(quicktemplates2_hover)
-        if (!d->explicitHoverEnabled)
-            d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
+            if (!d->explicitHoverEnabled)
+                d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
 #endif
-        QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(value.item->parentItem());
-        if (flickable) {
-            QQuickScrollView *scrollView = qobject_cast<QQuickScrollView *>(flickable->parentItem());
-            if (scrollView)
-                d->attachFlickable(flickable);
+            QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(value.item->parentItem());
+            if (flickable) {
+                QQuickScrollView *scrollView = qobject_cast<QQuickScrollView *>(flickable->parentItem());
+                if (scrollView)
+                    d->attachFlickable(flickable);
+            }
         }
+        break;
+    default:
+        break;
     }
 }
 

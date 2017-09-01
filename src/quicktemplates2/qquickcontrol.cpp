@@ -315,6 +315,13 @@ QAccessible::Role QQuickControlPrivate::accessibleRole() const
     Q_Q(const QQuickControl);
     return q->accessibleRole();
 }
+
+QQuickAccessibleAttached *QQuickControlPrivate::accessibleAttached(const QObject *object)
+{
+    if (!QAccessible::isActive())
+        return nullptr;
+    return QQuickAccessibleAttached::attachedProperties(object);
+}
 #endif
 
 /*!
@@ -662,15 +669,11 @@ void QQuickControlPrivate::destroyDelegate(QObject *delegate, QObject *parent)
 QQuickControl::QQuickControl(QQuickItem *parent)
     : QQuickItem(*(new QQuickControlPrivate), parent)
 {
-    // ### TODO: ItemEnabledChanged?
-    connect(this, &QQuickItem::enabledChanged, this, &QQuickControl::paletteChanged);
 }
 
 QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent)
     : QQuickItem(dd, parent)
 {
-    // ### TODO: ItemEnabledChanged?
-    connect(this, &QQuickItem::enabledChanged, this, &QQuickControl::paletteChanged);
 }
 
 void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
@@ -678,6 +681,9 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     Q_D(QQuickControl);
     QQuickItem::itemChange(change, value);
     switch (change) {
+    case ItemEnabledHasChanged:
+        emit paletteChanged();
+        break;
     case ItemVisibleHasChanged:
 #if QT_CONFIG(quicktemplates2_hover)
         if (!value.boolValue)
@@ -1613,7 +1619,7 @@ void QQuickControl::accessibilityActiveChanged(bool active)
 QString QQuickControl::accessibleName() const
 {
 #if QT_CONFIG(accessibility)
-    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(this))
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this))
         return accessibleAttached->name();
 #endif
     return QString();
@@ -1622,7 +1628,7 @@ QString QQuickControl::accessibleName() const
 void QQuickControl::setAccessibleName(const QString &name)
 {
 #if QT_CONFIG(accessibility)
-    if (QQuickAccessibleAttached *accessibleAttached = QQuickAccessibleAttached::attachedProperties(this))
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this))
         accessibleAttached->setName(name);
 #else
     Q_UNUSED(name)
@@ -1632,7 +1638,8 @@ void QQuickControl::setAccessibleName(const QString &name)
 QVariant QQuickControl::accessibleProperty(const char *propertyName)
 {
 #if QT_CONFIG(accessibility)
-    return QQuickAccessibleAttached::property(this, propertyName);
+    if (QAccessible::isActive())
+        return QQuickAccessibleAttached::property(this, propertyName);
 #endif
     Q_UNUSED(propertyName)
     return QVariant();
@@ -1641,7 +1648,8 @@ QVariant QQuickControl::accessibleProperty(const char *propertyName)
 bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVariant &value)
 {
 #if QT_CONFIG(accessibility)
-    return QQuickAccessibleAttached::setProperty(this, propertyName, value);
+    if (QAccessible::isActive())
+        return QQuickAccessibleAttached::setProperty(this, propertyName, value);
 #endif
     Q_UNUSED(propertyName)
     Q_UNUSED(value)

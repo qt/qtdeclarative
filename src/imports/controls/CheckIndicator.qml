@@ -58,7 +58,7 @@ Rectangle {
     ColorImage {
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-        color: control.visualFocus ? Default.focusColor : Default.textColor
+        color: control.visualFocus ? Default.focusColor : undefined
         source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
         visible: control.checkState === Qt.Checked
     }

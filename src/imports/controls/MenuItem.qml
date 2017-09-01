@@ -79,7 +79,7 @@ T.MenuItem {
 
         visible: control.checked
         source: control.checkable ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png" : ""
-        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
+        color: control.enabled ? undefined : Default.textDisabledColor
     }
 
     arrow: ColorImage {
@@ -89,7 +89,7 @@ T.MenuItem {
         visible: control.subMenu
         mirror: control.mirrored
         source: control.subMenu ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/arrow-indicator.png" : ""
-        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
+        color: control.enabled ? undefined : Default.textDisabledColor
     }
 
     background: Item {

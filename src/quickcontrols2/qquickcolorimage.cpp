@@ -61,6 +61,11 @@ void QQuickColorImage::setColor(const QColor &color)
     emit colorChanged();
 }
 
+void QQuickColorImage::resetColor()
+{
+    setColor(Qt::transparent);
+}
+
 void QQuickColorImage::pixmapChange()
 {
     QQuickImage::pixmapChange();
