@@ -705,9 +705,6 @@ TestCase {
         var activatedSpy = signalSpy.createObject(control, {target: control, signalName: "activated"})
         verify(activatedSpy.valid)
 
-        var highlightedSpy = signalSpy.createObject(control, {target: control, signalName: "highlighted"})
-        verify(highlightedSpy.valid)
-
         mouseClick(control)
         compare(control.popup.visible, true)
 
@@ -717,28 +714,19 @@ TestCase {
         // press - move - release outside - not activated - not closed
         mousePress(content)
         compare(activatedSpy.count, 0)
-        compare(highlightedSpy.count, 0)
         mouseMove(content, content.width * 2)
         compare(activatedSpy.count, 0)
-        compare(highlightedSpy.count, 0)
         mouseRelease(content, content.width * 2)
         compare(activatedSpy.count, 0)
-        compare(highlightedSpy.count, 0)
         compare(control.popup.visible, true)
 
         // press - move - release inside - activated - closed
         mousePress(content)
         compare(activatedSpy.count, 0)
-        compare(highlightedSpy.count, 0)
         mouseMove(content, content.width / 2 + 1, content.height / 2 + 1)
         compare(activatedSpy.count, 0)
-        if ((Qt.platform.pluginName === "offscreen")
-            || (Qt.platform.pluginName === "minimal"))
-            expectFail("", "Mouse highlighting not functional on offscreen/minimal platforms")
-        compare(highlightedSpy.count, 1)
         mouseRelease(content)
         compare(activatedSpy.count, 1)
-        compare(highlightedSpy.count, 1)
         tryCompare(control.popup, "visible", false)
     }
 
