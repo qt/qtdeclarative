@@ -3110,7 +3110,6 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty str
         } else if (constant == Encode::undefined()) {
             Instruction::LoadUndefined load;
             codegen->bytecodeGenerator->addInstruction(load);
-QT_WARNING_POP
         } else {
             Value p = Primitive::fromReturnedValue(constant);
             if (p.isNumber()) {
@@ -3132,6 +3131,7 @@ QT_WARNING_POP
             load.index = codegen->registerConstant(constant);
             codegen->bytecodeGenerator->addInstruction(load);
         }
+QT_WARNING_POP
     } return;
     case StackSlot: {
         Instruction::LoadReg load;
