@@ -150,7 +150,6 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, instanceof, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     F(ReturnedValue, in, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     F(ReturnedValue, add, (ExecutionEngine *engine, const Value &left, const Value &right)) \
-    F(ReturnedValue, addString, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     F(ReturnedValue, sub, (const Value &left, const Value &right)) \
     F(ReturnedValue, mul, (const Value &left, const Value &right)) \
     F(ReturnedValue, div, (const Value &left, const Value &right)) \

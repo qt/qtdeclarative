@@ -540,34 +540,6 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Valu
     return Encode(x + y);
 }
 
-QV4::ReturnedValue Runtime::method_addString(ExecutionEngine *engine, const Value &left, const Value &right)
-{
-    Q_ASSERT(left.isString() || right.isString());
-
-    Scope scope(engine);
-    ScopedValue pleft(scope, left);
-    ScopedValue pright(scope, right);
-    String *sleft = pleft->stringValue();
-    String *sright = pright->stringValue();
-
-    if (!sleft) {
-        pleft = convert_to_string_add(engine, pleft);
-        sleft = static_cast<String *>(pleft.ptr);
-    }
-    if (!sright) {
-        pright = convert_to_string_add(engine, pright);
-        sright = static_cast<String *>(pright.ptr);
-    }
-    if (scope.engine->hasException)
-        return Encode::undefined();
-    if (!sleft->d()->length())
-        return pright->asReturnedValue();
-    if (!sright->d()->length())
-        return pleft->asReturnedValue();
-    MemoryManager *mm = engine->memoryManager;
-    return (mm->alloc<String>(sleft->d(), sright->d()))->asReturnedValue();
-}
-
 bool Runtime::method_storeProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)
 {
     Scope scope(engine);
