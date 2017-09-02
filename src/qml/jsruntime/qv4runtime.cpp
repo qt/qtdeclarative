@@ -430,9 +430,9 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
     ScopedValue conv(scope, object->get(meth1));
     if (FunctionObject *o = conv->as<FunctionObject>()) {
         jsCall->function = o;
-        ScopedValue r(scope, jsCall.call());
-        if (r->isPrimitive())
-            return r->asReturnedValue();
+        jsCall->accumulator = jsCall.call();
+        if (jsCall->accumulator.isPrimitive())
+            return jsCall->accumulator.asReturnedValue();
     }
 
     if (engine->hasException)
@@ -441,9 +441,9 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
     conv = object->get(meth2);
     if (FunctionObject *o = conv->as<FunctionObject>()) {
         jsCall->function = o;
-        ScopedValue r(scope, jsCall.call());
-        if (r->isPrimitive())
-            return r->asReturnedValue();
+        jsCall->accumulator = jsCall.call();
+        if (jsCall->accumulator.isPrimitive())
+            return jsCall->accumulator.asReturnedValue();
     }
 
     return engine->throwTypeError();
@@ -526,7 +526,7 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Valu
             pright = convert_to_string_add(engine, pright);
             sright = static_cast<String *>(pright.ptr);
         }
-        if (scope.engine->hasException)
+        if (engine->hasException)
             return Encode::undefined();
         if (!sleft->d()->length())
             return sright->asReturnedValue();
