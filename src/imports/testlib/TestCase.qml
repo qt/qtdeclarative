@@ -1321,15 +1321,27 @@ Item {
         if (ddy < (util.dragThreshold + 1))
             ddy = 0
 
+        var originalX = item.x;
+        var originalY = item.y;
+
         mousePress(item, x, y, button, modifiers, delay)
-        //trigger dragging
-        mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, moveDelay, button)
+
+        // trigger dragging, this doesn't actually move the item yet
+        var triggerDragXPos = x + Math.min(util.dragThreshold + 1, dx);
+        var triggerDragYPos = y + Math.min(util.dragThreshold + 1, dy);
+        mouseMove(item, triggerDragXPos, triggerDragYPos, moveDelay, button)
+
         if (ddx > 0 || ddy > 0) {
-            mouseMove(item, x + ddx, y + ddy, moveDelay, button)
-            mouseMove(item, x + 2*ddx, y + 2*ddy, moveDelay, button)
+            // move the item by ddx, ddy
+            mouseMove(item, triggerDragXPos + ddx, triggerDragYPos + ddy, moveDelay, button)
+
+            // move the item by ddx, ddy again
+            // need to account for whether the previous move actually moved the item or not
+            mouseMove(item, triggerDragXPos + 2*ddx - (item.x - originalX), triggerDragYPos + 2*ddy - (item.y - originalY), moveDelay, button)
         }
-        mouseMove(item, x + dx, y + dy, moveDelay, button)
-        mouseRelease(item, x + dx, y + dy, button, modifiers, delay)
+        // Release, causes a final move
+        // need to account for whether the previous moves actually moved the item or not
+        mouseRelease(item, x + dx - (item.x - originalX), y + dy - (item.y - originalY), button, modifiers, delay)
     }
 
     /*!

@@ -72,12 +72,14 @@ Rectangle{
         height:100
         color: "red"
         property bool updatePositionWhileDragging: false
-        property var posX: 0
-        property var posY: 0
+        property double posX: 0
+        property double posY: 0
 
-        function reset() {
-            fakeHandle.x = 0
-            fakeHandle.y = 0
+        function reset(mouseX, mouseY) {
+            posX = mouseX;
+            posY = mouseY;
+            fakeHandle.x = mouseX;
+            fakeHandle.y = mouseY;
             spyX.clear()
             spyY.clear()
         }
@@ -116,52 +118,56 @@ Rectangle{
     TestCase {
         name:"mouserelease"
         when:windowShown
-        function test_mouseDrag() {
-            mouseDrag(container, 10, 10, util.dragThreshold * 2, util.dragThreshold * 3);
-            compare(container.x, util.dragThreshold - 1);
-            compare(container.y, util.dragThreshold * 2 - 1);
+
+        function test_mouseDrag_data() {
+            return [
+                { tag: "short", dx: 20, dy: 30 },
+                { tag: "long", dx: 70, dy: 60 },
+                { tag: "longshort", dx: 70, dy: 20 },
+                { tag: "shortlong", dx: 20, dy: 70 }
+            ];
         }
 
-        function test_doSomethingWhileDragging() {
-            container2.updatePositionWhileDragging = false
-            // dx and dy are superior to 3 times util.dragThreshold.
-            // but here the dragging does not update posX and posY
-            // posX and posY are only updated on mouseRelease
-            container2.reset()
-            mouseDrag(container2, container2.x + 10, container2.y + 10, 10*util.dragThreshold, 10*util.dragThreshold);
-            compare(spyX.count, 1)
-            compare(spyY.count, 1)
+        function test_mouseDrag(data) {
+            container.x = 0;
+            container.y = 0;
+            mouseDrag(container, 10, 10, data.dx, data.dy);
+            compare(container.x, data.dx - util.dragThreshold - 1);
+            compare(container.y, data.dy - util.dragThreshold - 1);
+        }
 
-            container2.updatePositionWhileDragging = true
-            // dx and dy are superior to 3 times util.dragThreshold.
-            // 3 intermediate mouseMove when dragging
-            container2.reset()
-            mouseDrag(container2, container2.x + 10, container2.y + 10, 10*util.dragThreshold, 10*util.dragThreshold);
-            compare(spyX.count, 3)
-            compare(spyY.count, 3)
+        function test_doSomethingInsteadOfDragging_data() {
+            return [
+                { tag: "short",            updatePositionWhileDragging: false, dx: 2*util.dragThreshold,   dy: 2*util.dragThreshold },
+                { tag: "long",             updatePositionWhileDragging: false, dx: 10*util.dragThreshold,  dy: 10*util.dragThreshold },
+                { tag: "nothing_short",    updatePositionWhileDragging: false, dx: 0,                      dy: 2*util.dragThreshold },
+                { tag: "long_nothing",     updatePositionWhileDragging: false, dx: 10*util.dragThreshold,  dy: 0 },
+                { tag: "short_update",     updatePositionWhileDragging: true, dx: 2*util.dragThreshold,   dy: 2*util.dragThreshold },
+                { tag: "long_update",      updatePositionWhileDragging: true, dx: 10*util.dragThreshold,  dy: 10*util.dragThreshold },
+                { tag: "nothing_short_up", updatePositionWhileDragging: true, dx: 0,                      dy: 2*util.dragThreshold },
+                { tag: "long_nothing_up",  updatePositionWhileDragging: true, dx: 10*util.dragThreshold,  dy: 0 },
+            ];
+        }
 
-            // dx and dy are inferior to 3 times util.dragThreshold.
-            // No intermediate mouseMove when dragging, only one mouseMove
-            container2.reset()
-            mouseDrag(container2, container2.x + 10, container2.y + 10, 2*util.dragThreshold, 2*util.dragThreshold);
-            compare(spyX.count, 1)
-            compare(spyY.count, 1)
+        function test_doSomethingInsteadOfDragging(data) {
+            var expectedSpyCountX;
+            var expectedSpyCountY;
 
-            // dx is superior to 3 times util.dragThreshold.
-            // 3 intermediate mouseMove when dragging on x axis
-            // no move on the y axis
-            container2.reset()
-            mouseDrag(container2, container2.x + 10, container2.y + 10, 10*util.dragThreshold, 0);
-            compare(spyX.count, 3)
-            compare(spyY.count, 0)
+            if (!data.updatePositionWhileDragging) {
+                expectedSpyCountX = data.dx > util.dragThreshold ? 1 : 0;
+                expectedSpyCountY = data.dy > util.dragThreshold ? 1 : 0;
+            } else {
+                expectedSpyCountX = data.dx > util.dragThreshold * 3 ? 3 :
+                                        (data.dx > util.dragThreshold ? 1 : 0);
+                expectedSpyCountY = data.dy > util.dragThreshold * 3 ? 3 :
+                                        (data.dy > util.dragThreshold ? 1 : 0);
+            }
 
-            // dy is inferior to 3 times util.dragThreshold.
-            // No intermediate mouseMove when dragging, only one mouseMove on y axis
-            // no move on the x axis
-            container2.reset()
-            mouseDrag(container2, container2.x + 10, container2.y + 10, 0, 2*util.dragThreshold);
-            compare(spyX.count, 0)
-            compare(spyY.count, 1)
+            container2.updatePositionWhileDragging = data.updatePositionWhileDragging;
+            container2.reset(container2.x + 10, container2.y + 10);
+            mouseDrag(container2, container2.x + 10, container2.y + 10, data.dx, data.dy);
+            compare(spyX.count, expectedSpyCountX)
+            compare(spyY.count, expectedSpyCountY)
         }
     }
 }

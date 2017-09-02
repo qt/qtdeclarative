@@ -5029,22 +5029,31 @@ void QQuickItemPrivate::transformChanged()
 #endif
 }
 
+bool QQuickItemPrivate::filterKeyEvent(QKeyEvent *e, bool post)
+{
+    if (!extra.isAllocated() || !extra->keyHandler)
+        return false;
+
+    if (post)
+        e->accept();
+
+    if (e->type() == QEvent::KeyPress)
+        extra->keyHandler->keyPressed(e, post);
+    else
+        extra->keyHandler->keyReleased(e, post);
+
+    return e->isAccepted();
+}
+
 void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
 {
     Q_Q(QQuickItem);
 
     Q_ASSERT(e->isAccepted());
-    if (extra.isAllocated() && extra->keyHandler) {
-        if (e->type() == QEvent::KeyPress)
-            extra->keyHandler->keyPressed(e, false);
-        else
-            extra->keyHandler->keyReleased(e, false);
-
-        if (e->isAccepted())
-            return;
-        else
-            e->accept();
-    }
+    if (filterKeyEvent(e, false))
+        return;
+    else
+        e->accept();
 
     if (e->type() == QEvent::KeyPress)
         q->keyPressEvent(e);
@@ -5054,16 +5063,7 @@ void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
     if (e->isAccepted())
         return;
 
-    if (extra.isAllocated() && extra->keyHandler) {
-        e->accept();
-
-        if (e->type() == QEvent::KeyPress)
-            extra->keyHandler->keyPressed(e, true);
-        else
-            extra->keyHandler->keyReleased(e, true);
-    }
-
-    if (e->isAccepted() || !q->window())
+    if (filterKeyEvent(e, true) || !q->window())
         return;
 
     //only care about KeyPress now

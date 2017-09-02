@@ -324,6 +324,7 @@ class QQuickFontValueType
     Q_PROPERTY(qreal wordSpacing READ wordSpacing WRITE setWordSpacing FINAL)
     Q_PROPERTY(HintingPreference hintingPreference READ hintingPreference WRITE setHintingPreference FINAL)
     Q_PROPERTY(bool kerning READ kerning WRITE setKerning FINAL)
+    Q_PROPERTY(bool preferShaping READ preferShaping WRITE setPreferShaping FINAL)
 
 public:
     enum FontWeight { Thin = QFont::Thin,
@@ -397,6 +398,9 @@ public:
 
     bool kerning() const;
     void setKerning(bool b);
+
+    bool preferShaping() const;
+    void setPreferShaping(bool b);
 };
 
 QT_END_NAMESPACE

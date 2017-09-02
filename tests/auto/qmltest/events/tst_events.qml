@@ -59,9 +59,10 @@ Rectangle {
 
     Window {
         id: sub
-        visible: true
+        visible: false
         property bool clicked: false
         MouseArea {
+            id: subMouseArea
             anchors.fill: parent
             onClicked: sub.clicked = true
         }
@@ -101,6 +102,8 @@ Rectangle {
         }
 
         function test_mouse_click_subwindow() {
+            sub.visible = true;
+            waitForRendering(subMouseArea); // Since we don't have a waitForWindowShown
             mouseClick(sub)
             tryCompare(sub, "clicked", true, 10000)
         }

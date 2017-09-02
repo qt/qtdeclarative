@@ -66,12 +66,12 @@ public:
     QQuickTextureFactory *read(QIODevice *device);
 };
 
-class EtcTexture : public QSGTexture, protected QOpenGLFunctions
+class QEtcTexture : public QSGTexture, protected QOpenGLFunctions
 {
     Q_OBJECT
 public:
-    EtcTexture();
-    ~EtcTexture();
+    QEtcTexture();
+    ~QEtcTexture();
 
     void bind();
 

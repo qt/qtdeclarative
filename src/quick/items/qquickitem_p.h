@@ -564,6 +564,7 @@ public:
     virtual void transformChanged();
 
     void deliverKeyEvent(QKeyEvent *);
+    bool filterKeyEvent(QKeyEvent *, bool post);
 #if QT_CONFIG(im)
     void deliverInputMethodEvent(QInputMethodEvent *);
 #endif

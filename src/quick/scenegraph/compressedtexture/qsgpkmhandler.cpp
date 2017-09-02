@@ -75,35 +75,35 @@ static unsigned int typeMap[5] = {
     GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2
 };
 
-EtcTexture::EtcTexture()
+QEtcTexture::QEtcTexture()
     : m_texture_id(0), m_uploaded(false)
 {
     initializeOpenGLFunctions();
 }
 
-EtcTexture::~EtcTexture()
+QEtcTexture::~QEtcTexture()
 {
     if (m_texture_id)
         glDeleteTextures(1, &m_texture_id);
 }
 
-int EtcTexture::textureId() const
+int QEtcTexture::textureId() const
 {
     if (m_texture_id == 0) {
-        EtcTexture *texture = const_cast<EtcTexture*>(this);
+        QEtcTexture *texture = const_cast<QEtcTexture*>(this);
         texture->glGenTextures(1, &texture->m_texture_id);
     }
     return m_texture_id;
 }
 
-bool EtcTexture::hasAlphaChannel() const
+bool QEtcTexture::hasAlphaChannel() const
 {
     return m_type == GL_COMPRESSED_RGBA8_ETC2_EAC ||
            m_type == GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2;
 }
 
 
-void EtcTexture::bind()
+void QEtcTexture::bind()
 {
     if (m_uploaded && m_texture_id) {
         glBindTexture(GL_TEXTURE_2D, m_texture_id);
@@ -158,7 +158,7 @@ public:
     int textureByteCount() const { return m_data.size(); }
 
     QSGTexture *createTexture(QQuickWindow *) const {
-        EtcTexture *texture = new EtcTexture;
+        QEtcTexture *texture = new QEtcTexture;
         texture->m_data = m_data;
         texture->m_size = m_size;
         texture->m_paddedSize = m_paddedSize;

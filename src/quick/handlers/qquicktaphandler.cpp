@@ -287,7 +287,7 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
                 else
                     m_tapCount = 1;
                 qCDebug(lcTapHandler) << objectName() << "tapped" << m_tapCount << "times";
-                emit tapped(point);
+                emit tapped();
                 emit tapCountChanged();
                 m_lastTapTimestamp = ts;
                 m_lastTapPos = point->scenePos();
