@@ -298,7 +298,7 @@ public:
 
     static bool dragOverThreshold(const QQuickEventPoint *point)
     {
-        QPointF delta = point->scenePos() - point->scenePressPos();
+        QPointF delta = point->scenePosition() - point->scenePressPosition();
         return (QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point) ||
                 QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point));
     }

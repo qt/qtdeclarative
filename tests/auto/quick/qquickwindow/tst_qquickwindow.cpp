@@ -2674,7 +2674,7 @@ void tst_qquickwindow::pointerEventTypeAndPointCount()
     QVERIFY(!pme.asPointerTabletEvent());
 //    QVERIFY(!pe->asTabletEvent()); // TODO
     QCOMPARE(pme.pointCount(), 1);
-    QCOMPARE(pme.point(0)->scenePos(), scenePosition);
+    QCOMPARE(pme.point(0)->scenePosition(), scenePosition);
     QCOMPARE(pme.asMouseEvent(localPosition)->localPos(), localPosition);
     QCOMPARE(pme.asMouseEvent(localPosition)->screenPos(), screenPosition);
 

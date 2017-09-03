@@ -1667,7 +1667,7 @@ QMouseEvent *QQuickWindowPrivate::cloneMouseEvent(QMouseEvent *event, QPointF *t
 void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent)
 {
     auto point = pointerEvent->point(0);
-    lastMousePosition = point->scenePos();
+    lastMousePosition = point->scenePosition();
     const bool mouseIsReleased = (point->state() == QQuickEventPoint::Released && pointerEvent->buttons() == Qt::NoButton);
 
     if (point->exclusiveGrabber()) {
@@ -1722,7 +1722,7 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             }
             // If some points weren't grabbed, deliver to non-grabber PointerHandlers in reverse paint order
             if (!pointerEvent->allPointsGrabbed() && pointerEvent->buttons()) {
-                QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point->scenePos(), false, false);
+                QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point->scenePosition(), false, false);
                 for (QQuickItem *item : targetItems) {
                     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
                     pointerEvent->localize(item);
@@ -2387,7 +2387,7 @@ void QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
                 QQuickEventPoint *point = event->point(i);
                 if (point->state() == QQuickEventPoint::Pressed)
                     continue; // presses were delivered earlier; not the responsibility of deliverUpdatedTouchPoints
-                QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point->scenePos(), false, false);
+                QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point->scenePosition(), false, false);
                 if (targetItems.count()) {
                     targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
                 } else {
@@ -2419,7 +2419,7 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
         point->setAccepted(false); // because otherwise touchEventForItem will ignore it
         if (point->grabberPointerHandler() && point->state() == QQuickEventPoint::Released)
             point->setGrabberPointerHandler(nullptr, true);
-        QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point->scenePos(), !isTouchEvent, isTouchEvent);
+        QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point->scenePosition(), !isTouchEvent, isTouchEvent);
         if (targetItems.count()) {
             targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
         } else {
@@ -2486,7 +2486,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
             // The only reason to already have a mouse grabber here is
             // synthetic events - flickable sends one when setPressDelay is used.
             auto oldMouseGrabber = q->mouseGrabberItem();
-            QPointF localPos = item->mapFromScene(point->scenePos());
+            QPointF localPos = item->mapFromScene(point->scenePosition());
             Q_ASSERT(item->contains(localPos)); // transform is checked already
             QMouseEvent *me = event->asMouseEvent(localPos);
             me->accept();
@@ -2779,7 +2779,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQ
                 continue; // a filtering item never needs to filter for itself
             if (filteringParentsToSkip.contains(filteringParent))
                 continue;
-            QPointF localPos = item->mapFromScene(pme->point(0)->scenePos());
+            QPointF localPos = item->mapFromScene(pme->point(0)->scenePosition());
             QMouseEvent *me = pme->asMouseEvent(localPos);
             if (filteringParent->childMouseEventFilter(item, me))
                 ret = true;
