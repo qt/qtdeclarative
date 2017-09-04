@@ -87,7 +87,7 @@ public:
     static QTestRootObject *instance() {
         static QPointer<QTestRootObject> object = new QTestRootObject;
         if (!object) {
-            qWarning("A new test root object has been created, the behavior may be compromised");
+            // QTestRootObject was deleted when previous test ended, create a new one
             object = new QTestRootObject;
         }
         return object;
@@ -331,43 +331,45 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
 
     // Register the test object
     qmlRegisterSingletonType<QTestRootObject>("Qt.test.qtestroot", 1, 0, "QTestRootObject", testRootObject);
+
     // Scan through all of the "tst_*.qml" files and run each of them
-    // in turn with a QQuickView.
-    QQuickView *view = new QQuickView;
-    view->setFlags(Qt::Window | Qt::WindowSystemMenuHint
-                         | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint
-                         | Qt::WindowCloseButtonHint);
-    QEventLoop eventLoop;
-    QObject::connect(view->engine(), SIGNAL(quit()),
-                     QTestRootObject::instance(), SLOT(quit()));
-    QObject::connect(view->engine(), SIGNAL(quit()),
-                     &eventLoop, SLOT(quit()));
-    view->rootContext()->setContextProperty
-        (QLatin1String("qtest"), QTestRootObject::instance()); // Deprecated. Use QTestRootObject from Qt.test.qtestroot instead
-    for (const QString &path : qAsConst(imports))
-        view->engine()->addImportPath(path);
-    for (const QString &path : qAsConst(pluginPaths))
-        view->engine()->addPluginPath(path);
+    // in turn with a separate QQuickView (for test isolation).
     for (const QString &file : qAsConst(files)) {
         const QFileInfo fi(file);
         if (!fi.exists())
             continue;
 
-        view->setObjectName(fi.baseName());
-        view->setTitle(view->objectName());
+        QQuickView view ;
+        view.setFlags(Qt::Window | Qt::WindowSystemMenuHint
+                         | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint
+                         | Qt::WindowCloseButtonHint);
+        QEventLoop eventLoop;
+        QObject::connect(view.engine(), SIGNAL(quit()),
+                         QTestRootObject::instance(), SLOT(quit()));
+        QObject::connect(view.engine(), SIGNAL(quit()),
+                         &eventLoop, SLOT(quit()));
+        view.rootContext()->setContextProperty
+            (QLatin1String("qtest"), QTestRootObject::instance()); // Deprecated. Use QTestRootObject from Qt.test.qtestroot instead
+        for (const QString &path : qAsConst(imports))
+            view.engine()->addImportPath(path);
+        for (const QString &path : qAsConst(pluginPaths))
+            view.engine()->addPluginPath(path);
+
+        view.setObjectName(fi.baseName());
+        view.setTitle(view.objectName());
         QTestRootObject::instance()->init();
         QString path = fi.absoluteFilePath();
         if (path.startsWith(QLatin1String(":/")))
-            view->setSource(QUrl(QLatin1String("qrc:") + path.midRef(2)));
+            view.setSource(QUrl(QLatin1String("qrc:") + path.midRef(2)));
         else
-            view->setSource(QUrl::fromLocalFile(path));
+            view.setSource(QUrl::fromLocalFile(path));
 
         if (QTest::printAvailableFunctions)
             continue;
-        while (view->status() == QQuickView::Loading)
+        while (view.status() == QQuickView::Loading)
             QTest::qWait(10);
-        if (view->status() == QQuickView::Error) {
-            handleCompileErrors(fi, view);
+        if (view.status() == QQuickView::Error) {
+            handleCompileErrors(fi, &view);
             continue;
         }
         if (!QTestRootObject::instance()->hasQuit) {
@@ -376,21 +378,21 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             // an asynchronous test and we need to show the window
             // and wait for the first frame to be rendered
             // and then wait for quit indication.
-            view->setFramePosition(QPoint(50, 50));
-            if (view->size().isEmpty()) { // Avoid hangs with empty windows.
-                view->resize(200, 200);
+            view.setFramePosition(QPoint(50, 50));
+            if (view.size().isEmpty()) { // Avoid hangs with empty windows.
+                view.resize(200, 200);
             }
-            view->show();
-            if (!QTest::qWaitForWindowExposed(view)) {
+            view.show();
+            if (!QTest::qWaitForWindowExposed(&view)) {
                 qWarning().nospace()
                     << "Test '" << QDir::toNativeSeparators(path) << "' window not exposed after show().";
             }
-            view->requestActivate();
-            if (!QTest::qWaitForWindowActive(view)) {
+            view.requestActivate();
+            if (!QTest::qWaitForWindowActive(&view)) {
                 qWarning().nospace()
                     << "Test '" << QDir::toNativeSeparators(path) << "' window not active after requestActivate().";
             }
-            if (view->isExposed()) {
+            if (view.isExposed()) {
                 QTestRootObject::instance()->setWindowShown(true);
             } else {
                 qWarning().nospace()
@@ -399,13 +401,11 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             }
             if (!QTestRootObject::instance()->hasQuit && QTestRootObject::instance()->hasTestCase())
                 eventLoop.exec();
-            // view->hide(); Causes a crash in Qt 3D due to deletion of the GL context, see QTBUG-27696
         }
     }
 
     // Flush the current logging stream.
     QuickTestResult::setProgramName(0);
-    delete view;
     delete app;
 
     // Return the number of failures as the exit code.
