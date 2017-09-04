@@ -16,7 +16,7 @@ exists("qqml_enable_gcov") {
     LIBS_PRIVATE += -lgcov
 }
 
-greaterThan(QT_GCC_MAJOR_VERSION, 5) {
+greaterThan(QT_GCC_MAJOR_VERSION, 5):!qnx {
     # Our code is bad. Temporary workaround.
     QMAKE_CXXFLAGS += -fno-delete-null-pointer-checks -fno-lifetime-dse
 }
