@@ -74,6 +74,7 @@ class QQmlComponentPrivate;
 class QQmlTypeData;
 class QQmlTypeLoader;
 class QQmlExtensionInterface;
+class QQmlProfiler;
 
 namespace QmlIR {
 struct Document;
@@ -211,7 +212,7 @@ private:
 
 class QQmlTypeLoaderThread;
 
-class Q_AUTOTEST_EXPORT QQmlTypeLoader
+class Q_QML_PRIVATE_EXPORT QQmlTypeLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
 public:
@@ -311,6 +312,15 @@ public:
     void initializeEngine(QQmlExtensionInterface *, const char *);
     void invalidate();
 
+#ifdef QT_NO_QML_DEBUGGER
+    QQmlProfiler *profiler() const { return 0; }
+    void enableProfiler() {}
+#else
+    QQmlProfiler *profiler() const { return m_profiler; }
+    void enableProfiler();
+#endif // QT_NO_QML_DEBUGGER
+
+
 private:
     friend class QQmlDataBlob;
     friend class QQmlTypeLoaderThread;
@@ -356,6 +366,11 @@ private:
 
     QQmlEngine *m_engine;
     QQmlTypeLoaderThread *m_thread;
+
+#ifndef QT_NO_QML_DEBUGGER
+    QQmlProfiler *m_profiler;
+#endif
+
     NetworkReplies m_networkReplies;
     TypeCache m_typeCache;
     int m_typeCacheTrimThreshold;

@@ -37,19 +37,32 @@
 QT_BEGIN_NAMESPACE
 
 QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEnginePrivate *engine) :
-    QQmlAbstractProfilerAdapter(service), next(0)
+    QQmlAbstractProfilerAdapter(service)
 {
     engine->enableProfiler();
-    connect(this, SIGNAL(profilingEnabled(quint64)), engine->profiler, SLOT(startProfiling(quint64)));
+    init(engine->profiler);
+}
+
+QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlTypeLoader *loader) :
+    QQmlAbstractProfilerAdapter(service)
+{
+    loader->enableProfiler();
+    init(loader->profiler());
+}
+
+void QQmlProfilerAdapter::init(QQmlProfiler *profiler)
+{
+    next = 0;
+    connect(this, SIGNAL(profilingEnabled(quint64)), profiler, SLOT(startProfiling(quint64)));
     connect(this, SIGNAL(profilingEnabledWhileWaiting(quint64)),
-            engine->profiler, SLOT(startProfiling(quint64)), Qt::DirectConnection);
-    connect(this, SIGNAL(profilingDisabled()), engine->profiler, SLOT(stopProfiling()));
+            profiler, SLOT(startProfiling(quint64)), Qt::DirectConnection);
+    connect(this, SIGNAL(profilingDisabled()), profiler, SLOT(stopProfiling()));
     connect(this, SIGNAL(profilingDisabledWhileWaiting()),
-            engine->profiler, SLOT(stopProfiling()), Qt::DirectConnection);
-    connect(this, SIGNAL(dataRequested()), engine->profiler, SLOT(reportData()));
+            profiler, SLOT(stopProfiling()), Qt::DirectConnection);
+    connect(this, SIGNAL(dataRequested()), profiler, SLOT(reportData()));
     connect(this, SIGNAL(referenceTimeKnown(QElapsedTimer)),
-            engine->profiler, SLOT(setTimer(QElapsedTimer)));
-    connect(engine->profiler, SIGNAL(dataReady(QVector<QQmlProfilerData>)),
+            profiler, SLOT(setTimer(QElapsedTimer)));
+    connect(profiler, SIGNAL(dataReady(QVector<QQmlProfilerData>)),
             this, SLOT(receiveData(QVector<QQmlProfilerData>)));
 }
 

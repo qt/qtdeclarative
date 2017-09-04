@@ -98,9 +98,14 @@ void QQmlProfilerServiceImpl::engineAboutToBeAdded(QQmlEngine *engine)
                "QML profilers have to be added from the engine thread");
 
     QMutexLocker lock(&m_configMutex);
-    QQmlProfilerAdapter *qmlAdapter = new QQmlProfilerAdapter(this, QQmlEnginePrivate::get(engine));
-    QV4ProfilerAdapter *v4Adapter = new QV4ProfilerAdapter(this, QV8Engine::getV4(engine->handle()));
+    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+    QQmlProfilerAdapter *qmlAdapter = new QQmlProfilerAdapter(this, enginePrivate);
+    QQmlProfilerAdapter *compileAdapter
+            = new QQmlProfilerAdapter(this, &(enginePrivate->typeLoader));
+    QV4ProfilerAdapter *v4Adapter
+            = new QV4ProfilerAdapter(this, QV8Engine::getV4(engine->handle()));
     addEngineProfiler(qmlAdapter, engine);
+    addEngineProfiler(compileAdapter, engine);
     addEngineProfiler(v4Adapter, engine);
     QQmlConfigurableDebugService<QQmlProfilerService>::engineAboutToBeAdded(engine);
 }
