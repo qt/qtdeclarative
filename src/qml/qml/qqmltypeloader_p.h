@@ -84,6 +84,7 @@ class QQmlComponentPrivate;
 class QQmlTypeData;
 class QQmlTypeLoader;
 class QQmlExtensionInterface;
+class QQmlProfiler;
 struct QQmlCompileError;
 
 namespace QmlIR {
@@ -320,6 +321,15 @@ public:
     void initializeEngine(QQmlExtensionInterface *, const char *);
     void invalidate();
 
+#ifdef QT_NO_QML_DEBUGGER
+    QQmlProfiler *profiler() const { return nullptr; }
+    void setProfiler(QQmlProfiler *) {}
+#else
+    QQmlProfiler *profiler() const { return m_profiler; }
+    void setProfiler(QQmlProfiler *profiler) { Q_ASSERT(!m_profiler); m_profiler = profiler; }
+#endif // QT_NO_QML_DEBUGGER
+
+
 private:
     friend class QQmlDataBlob;
     friend class QQmlTypeLoaderThread;
@@ -368,6 +378,11 @@ private:
 
     QQmlEngine *m_engine;
     QQmlTypeLoaderThread *m_thread;
+
+#ifndef QT_NO_QML_DEBUGGER
+    QQmlProfiler *m_profiler;
+#endif
+
 #if QT_CONFIG(qml_network)
     NetworkReplies m_networkReplies;
 #endif
