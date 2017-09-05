@@ -40,7 +40,6 @@
 
 #include "mainwindow.h"
 #include "fbitem.h"
-#include <QCoreApplication>
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QRadioButton>
@@ -48,10 +47,11 @@
 #include <QLabel>
 #include <QQuickItem>
 
-MainWindow::MainWindow(bool transparency)
+MainWindow::MainWindow(bool transparency, bool noRenderAlpha)
     : m_currentView(0),
       m_currentRootObject(0),
-      m_transparent(transparency)
+      m_transparent(transparency),
+      m_noRenderAlpha(noRenderAlpha)
 {
     QVBoxLayout *layout = new QVBoxLayout;
 
@@ -178,7 +178,7 @@ void MainWindow::updateView()
     if (m_currentRootObject) {
         m_currentRootObject->setProperty("currentText", text);
         m_currentRootObject->setProperty("multisample", m_checkboxMultiSample->isChecked());
-        if (!QCoreApplication::arguments().contains(QStringLiteral("--no_render_alpha")))
+        if (!m_noRenderAlpha)
             m_currentRootObject->setProperty("translucency", m_transparent);
     }
 

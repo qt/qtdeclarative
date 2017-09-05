@@ -53,7 +53,7 @@ QT_FORWARD_DECLARE_CLASS(QLayout)
 class MainWindow : public QWidget
 {
 public:
-    MainWindow(bool transparency);
+    explicit MainWindow(bool transparency, bool noRenderAlpha);
 
 protected:
     void resizeEvent(QResizeEvent*);
@@ -86,6 +86,7 @@ private:
     QSurfaceFormat m_format;
 
     bool m_transparent;
+    bool m_noRenderAlpha;
 };
 
 #endif

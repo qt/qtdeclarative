@@ -44,6 +44,9 @@
 #include <QtWidgets>
 #include "fbitem.h"
 
+static bool optMultipleSample = false;
+static bool optCoreProfile = false;
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
@@ -65,11 +68,11 @@ MainWindow::MainWindow()
    : m_quickWidget(new QQuickWidget)
 {
     QSurfaceFormat format;
-    if (QCoreApplication::arguments().contains(QStringLiteral("--coreprofile"))) {
+    if (optCoreProfile) {
         format.setVersion(4, 4);
         format.setProfile(QSurfaceFormat::CoreProfile);
     }
-    if (QCoreApplication::arguments().contains(QStringLiteral("--multisample")))
+    if (optMultipleSample)
         format.setSamples(4);
     m_quickWidget->setFormat(format);
 
@@ -183,6 +186,23 @@ void MainWindow::grabToImage()
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
+
+    QCoreApplication::setApplicationName("Qt QQuickWidget Example");
+    QCoreApplication::setOrganizationName("QtProject");
+    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
+    QCommandLineParser parser;
+    parser.setApplicationDescription(QCoreApplication::applicationName());
+    parser.addHelpOption();
+    parser.addVersionOption();
+    QCommandLineOption multipleSampleOption("multisample", "Multisampling");
+    parser.addOption(multipleSampleOption);
+    QCommandLineOption coreProfileOption("coreprofile", "Use core profile");
+    parser.addOption(coreProfileOption);
+
+    parser.process(app);
+
+    optMultipleSample = parser.isSet(multipleSampleOption);
+    optCoreProfile = parser.isSet(coreProfileOption);
 
     qmlRegisterType<FbItem>("QuickWidgetExample", 1, 0, "FbItem");
 
