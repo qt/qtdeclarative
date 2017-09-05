@@ -50,7 +50,7 @@ import Qt.test.qtestroot 1.0
     \since 4.8
     \ingroup qtquicktest
 
-    \section1 Introduction to QML test cases
+    \section1 Introduction to QML Test Cases
 
     Test cases are written as JavaScript functions within a TestCase
     type:
@@ -99,7 +99,7 @@ import Qt.test.qtestroot 1.0
     once they have all completed.  If a test case doesn't need to run
     (because a precondition has failed), then \l optional can be set to true.
 
-    \section1 Data-driven tests
+    \section1 Data-driven Tests
 
     Table data can be provided to a test using a function name that ends
     with "_data". Alternatively, the \c init_data() function can be used
@@ -173,7 +173,7 @@ import Qt.test.qtestroot 1.0
     To get the effect of the \c{QBENCHMARK_ONCE} macro, prefix the test
     function name with "benchmark_once_".
 
-    \section1 Simulating keyboard and mouse events
+    \section1 Simulating Keyboard and Mouse Events
 
     The keyPress(), keyRelease(), and keyClick() methods can be used
     to simulate keyboard events within unit tests.  The events are
@@ -1321,27 +1321,15 @@ Item {
         if (ddy < (util.dragThreshold + 1))
             ddy = 0
 
-        var originalX = item.x;
-        var originalY = item.y;
-
         mousePress(item, x, y, button, modifiers, delay)
-
-        // trigger dragging, this doesn't actually move the item yet
-        var triggerDragXPos = x + Math.min(util.dragThreshold + 1, dx);
-        var triggerDragYPos = y + Math.min(util.dragThreshold + 1, dy);
-        mouseMove(item, triggerDragXPos, triggerDragYPos, moveDelay, button)
-
+        //trigger dragging
+        mouseMove(item, x + util.dragThreshold + 1, y + util.dragThreshold + 1, moveDelay, button)
         if (ddx > 0 || ddy > 0) {
-            // move the item by ddx, ddy
-            mouseMove(item, triggerDragXPos + ddx, triggerDragYPos + ddy, moveDelay, button)
-
-            // move the item by ddx, ddy again
-            // need to account for whether the previous move actually moved the item or not
-            mouseMove(item, triggerDragXPos + 2*ddx - (item.x - originalX), triggerDragYPos + 2*ddy - (item.y - originalY), moveDelay, button)
+            mouseMove(item, x + ddx, y + ddy, moveDelay, button)
+            mouseMove(item, x + 2*ddx, y + 2*ddy, moveDelay, button)
         }
-        // Release, causes a final move
-        // need to account for whether the previous moves actually moved the item or not
-        mouseRelease(item, x + dx - (item.x - originalX), y + dy - (item.y - originalY), button, modifiers, delay)
+        mouseMove(item, x + dx, y + dy, moveDelay, button)
+        mouseRelease(item, x + dx, y + dy, button, modifiers, delay)
     }
 
     /*!

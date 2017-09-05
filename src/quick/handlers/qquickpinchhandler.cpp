@@ -63,7 +63,7 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 */
 
 QQuickPinchHandler::QQuickPinchHandler(QObject *parent)
-    : QQuickMultiPointerHandler(parent, 2)
+    : QQuickMultiPointHandler(parent, 2)
     , m_activeScale(1)
     , m_activeRotation(0)
     , m_activeTranslation(0,0)
@@ -131,7 +131,7 @@ void QQuickPinchHandler::setPinchOrigin(QQuickPinchHandler::PinchOrigin pinchOri
 }
 
 /*!
-    \qmlproperty QQuickPinchHandler::minimumX
+    \qmlproperty real QQuickPinchHandler::minimumX
 
     The minimum acceptable x coordinate of the centroid
  */
@@ -144,7 +144,7 @@ void QQuickPinchHandler::setMinimumX(qreal minX)
 }
 
 /*!
-    \qmlproperty QQuickPinchHandler::maximumX
+    \qmlproperty real QQuickPinchHandler::maximumX
 
     The maximum acceptable x coordinate of the centroid
  */
@@ -157,7 +157,7 @@ void QQuickPinchHandler::setMaximumX(qreal maxX)
 }
 
 /*!
-    \qmlproperty QQuickPinchHandler::minimumY
+    \qmlproperty real QQuickPinchHandler::minimumY
 
     The minimum acceptable y coordinate of the centroid
  */
@@ -170,7 +170,7 @@ void QQuickPinchHandler::setMinimumY(qreal minY)
 }
 
 /*!
-    \qmlproperty QQuickPinchHandler::maximumY
+    \qmlproperty real QQuickPinchHandler::maximumY
 
     The maximum acceptable y coordinate of the centroid
  */

@@ -3079,17 +3079,17 @@ void QQuickTextEdit::resetBottomPadding()
 int QQuickTextEdit::tabStopDistance() const
 {
     Q_D(const QQuickTextEdit);
-    return d->document->defaultTextOption().tabStop();
+    return d->document->defaultTextOption().tabStopDistance();
 }
 
 void QQuickTextEdit::setTabStopDistance(qreal distance)
 {
     Q_D(QQuickTextEdit);
     QTextOption textOptions = d->document->defaultTextOption();
-    if (textOptions.tabStop() == distance)
+    if (textOptions.tabStopDistance() == distance)
         return;
 
-    textOptions.setTabStop(distance);
+    textOptions.setTabStopDistance(distance);
     d->document->setDefaultTextOption(textOptions);
     emit tabStopDistanceChanged(distance);
 }

@@ -33,7 +33,7 @@
     Qt Quick Layouts are items that are used to arrange items in a user interface. Since Qt Quick
     Layouts also resize their items, they are well suited for resizable user interfaces.
 
-    \section1 Getting started
+    \section1 Getting Started
 
     The QML types can be imported into your application using the following import statement in your \c {.qml} file.
 
@@ -152,7 +152,7 @@
     height specified in the QML file.
 
 
-    \section1 Connecting windows and layouts
+    \section1 Connecting Windows and Layouts
     You can just use normal anchoring concepts to ensure that the layout will follow the window
     resizing.
 

@@ -1244,7 +1244,7 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
-    \section2 Context and surface formats
+    \section2 Context and Surface Formats
 
     While it is possible to specify a QSurfaceFormat for every QQuickWindow by
     calling the member function setFormat(), windows may also be created from
@@ -1512,8 +1512,7 @@ QQuickItem *QQuickWindow::mouseGrabberItem() const
     if (d->touchMouseId != -1 && d->touchMouseDevice) {
         QQuickPointerEvent *event = d->pointerEventInstance(d->touchMouseDevice);
         auto point = event->pointById(d->touchMouseId);
-        Q_ASSERT(point);
-        return point->grabberItem();
+        return point ? point->grabberItem() : nullptr;
     }
 
     QQuickPointerEvent *event = d->pointerEventInstance(QQuickPointerDevice::genericMouseDevice());
@@ -1669,9 +1668,9 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
 {
     auto point = pointerEvent->point(0);
     lastMousePosition = point->scenePos();
+    const bool mouseIsReleased = (point->state() == QQuickEventPoint::Released && pointerEvent->buttons() == Qt::NoButton);
 
     if (point->exclusiveGrabber()) {
-        bool mouseIsReleased = (point->state() == QQuickEventPoint::Released && pointerEvent->buttons() == Qt::NoButton);
         if (auto grabber = point->grabberItem()) {
             if (sendFilteredPointerEvent(pointerEvent, grabber))
                 return;
@@ -1701,10 +1700,8 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             pointerEvent->localize(handler->parentItem());
             if (!sendFilteredPointerEvent(pointerEvent, handler->parentItem()))
                 handler->handlePointerEvent(pointerEvent);
-            if (mouseIsReleased) {
+            if (mouseIsReleased)
                 point->setGrabberPointerHandler(nullptr, true);
-                point->clearPassiveGrabbers();
-            }
         }
     } else {
         bool delivered = false;
@@ -1743,6 +1740,9 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             // make sure not to accept unhandled events
             pointerEvent->setAccepted(false);
     }
+    // failsafe: never allow any kind of grab to persist after release
+    if (mouseIsReleased)
+        pointerEvent->clearGrabbers();
 }
 
 bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
@@ -2333,8 +2333,9 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
         }
     }
 
-    if (allReleased && !event->exclusiveGrabbers().isEmpty()) {
-        qWarning() << "No release received for some grabbers" << event->exclusiveGrabbers();
+    if (allReleased) {
+        if (Q_UNLIKELY(!event->exclusiveGrabbers().isEmpty()))
+                qWarning() << "No release received for some grabbers" << event->exclusiveGrabbers();
         event->clearGrabbers();
     }
 }
@@ -4828,7 +4829,7 @@ void QQuickWindow::setSceneGraphBackend(const QString &backend)
 }
 
 /*!
-    Returns the requested Qt Quick scenegraph \a backend.
+    Returns the requested Qt Quick scenegraph backend.
 
     \note The return value of this function may still be outdated by
     subsequent calls to setSceneGraphBackend() until the first QQuickWindow in the

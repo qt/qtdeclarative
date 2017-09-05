@@ -75,7 +75,7 @@ Item {
 
 the text will only be visible when the switch is on.
 
-\section2 Images and user interaction
+\section2 Images and User Interaction
 \snippet customitems/slideswitch/content/Switch.qml 4
 
 First, we create the background image of the switch.

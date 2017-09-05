@@ -475,7 +475,7 @@ QT_BEGIN_NAMESPACE
       \li \snippet qml/opacitymask.qml 1
     \endtable
 
-    \section1 Other notes
+    \section1 Other Notes
 
     By default, the ShaderEffect consists of four vertices, one for each
     corner. For non-linear vertex transformations, like page curl, you can

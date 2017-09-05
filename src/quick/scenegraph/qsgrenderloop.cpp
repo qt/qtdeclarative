@@ -56,6 +56,7 @@
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qsgrenderer_p.h>
 #include <private/qquickprofiler_p.h>
 
 #if QT_CONFIG(opengl)
@@ -152,7 +153,7 @@ public:
     void update(QQuickWindow *window) override { maybeUpdate(window); } // identical for this implementation.
     void handleUpdateRequest(QQuickWindow *) override;
 
-    void releaseResources(QQuickWindow *) override { }
+    void releaseResources(QQuickWindow *) override;
 
     QAnimationDriver *animationDriver() const override { return 0; }
 
@@ -503,6 +504,14 @@ void QSGGuiThreadRenderLoop::maybeUpdate(QQuickWindow *window)
 QSGContext *QSGGuiThreadRenderLoop::sceneGraphContext() const
 {
     return sg;
+}
+
+void QSGGuiThreadRenderLoop::releaseResources(QQuickWindow *w)
+{
+    // No full invalidation of the rendercontext, just clear some caches.
+    QQuickWindowPrivate *d = QQuickWindowPrivate::get(w);
+    if (d->renderer)
+        d->renderer->releaseCachedResources();
 }
 
 void QSGGuiThreadRenderLoop::handleUpdateRequest(QQuickWindow *window)

@@ -185,7 +185,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \l sourceComponent to \c undefined destroys the currently loaded object,
     freeing resources and leaving the Loader empty.
 
-    \section2 Loader sizing behavior
+    \section2 Loader Sizing Behavior
 
     If the source component is not an Item type, Loader does not
     apply any special sizing rules.  When used to load visual types,
@@ -217,7 +217,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \endtable
 
 
-    \section2 Receiving signals from loaded objects
+    \section2 Receiving Signals from Loaded Objects
 
     Any signals emitted from the loaded object can be received using the
     \l Connections type. For example, the following \c application.qml
@@ -238,7 +238,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     its parent \l Item.
 
 
-    \section2 Focus and key events
+    \section2 Focus and Key Events
 
     Loader is a focus scope. Its \l {Item::}{focus} property must be set to
     \c true for any of its children to get the \e {active focus}. (See
@@ -266,7 +266,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
 
     Since \c {QtQuick 2.0}, Loader can also load non-visual components.
 
-    \section2 Using a Loader within a view delegate
+    \section2 Using a Loader within a View Delegate
 
     In some cases you may wish to use a Loader within a view delegate to improve delegate
     loading performance. This works well in most cases, but there is one important issue to

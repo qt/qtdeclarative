@@ -1457,13 +1457,7 @@ bool CompilationUnit::memoryMapCode(QString *errorString)
     for (uint i = 0; i < data->functionTableSize; ++i) {
         const CompiledData::Function *compiledFunction = data->functionAt(i);
         const char *codePtr = const_cast<const char *>(reinterpret_cast<const char *>(basePtr + compiledFunction->codeOffset));
-#ifdef MOTH_THREADED_INTERPRETER
-        // for the threaded interpreter we need to make a copy of the data because it needs to be
-        // modified for the instruction handler addresses.
-        QByteArray code(codePtr, compiledFunction->codeSize);
-#else
         QByteArray code = QByteArray::fromRawData(codePtr, compiledFunction->codeSize);
-#endif
         codeRefs[i] = code;
     }
 

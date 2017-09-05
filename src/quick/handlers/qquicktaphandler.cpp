@@ -54,7 +54,7 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
 /*!
     \qmltype TapHandler
     \instantiates QQuickTapHandler
-    \inqmlmodule QtQuick
+    \inqmlmodule Qt.labs.handlers
     \ingroup qtquick-handlers
     \brief Handler for taps and clicks.
 
@@ -78,7 +78,7 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
 */
 
 QQuickTapHandler::QQuickTapHandler(QObject *parent)
-    : QQuickPointerSingleHandler(parent)
+    : QQuickSinglePointHandler(parent)
     , m_pressed(false)
     , m_gesturePolicy(ReleaseWithinBounds)
     , m_tapCount(0)
@@ -305,7 +305,7 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
 
 void QQuickTapHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
-    QQuickPointerSingleHandler::onGrabChanged(grabber, stateChange, point);
+    QQuickSinglePointHandler::onGrabChanged(grabber, stateChange, point);
     bool isCanceled = stateChange == QQuickEventPoint::CancelGrabExclusive || stateChange == QQuickEventPoint::CancelGrabPassive;
     if (grabber == this && (isCanceled || point->state() == QQuickEventPoint::Released))
         setPressed(false, isCanceled, point);

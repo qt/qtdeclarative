@@ -139,7 +139,7 @@ values.
 
 
 \target qml-transition-animations
-\section2 Transitions during State Changes
+\section2 Transitions During State Changes
 
 \l{State}{Qt Quick States} are property configurations where a property may have different values to reflect different states. State changes introduce
 abrupt property changes; animations smooth transitions to produce visually

@@ -5832,7 +5832,7 @@ void QQuickItem::setVisible(bool v)
     are returned to \c true, unless they have explicitly been set to \c false.
 
     Setting this property to \c false automatically causes \l activeFocus to be
-    set to \c false, and this item will longer receive keyboard events.
+    set to \c false, and this item will no longer receive keyboard events.
 
     \sa visible
 */
@@ -7231,6 +7231,8 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
 
     If this is false, then the item will not receive any touch events through
     the touchEvent() function.
+
+    \since 5.10
 */
 bool QQuickItem::acceptTouchEvents() const
 {
@@ -7242,12 +7244,14 @@ bool QQuickItem::acceptTouchEvents() const
     If \a enabled is true, this sets the item to accept touch events;
     otherwise, touch events are not accepted by this item.
 
+    \since 5.10
+
     \sa acceptTouchEvents()
 */
-void QQuickItem::setAcceptTouchEvents(bool accept)
+void QQuickItem::setAcceptTouchEvents(bool enabled)
 {
     Q_D(QQuickItem);
-    d->touchEnabled = accept;
+    d->touchEnabled = enabled;
 }
 
 void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)
