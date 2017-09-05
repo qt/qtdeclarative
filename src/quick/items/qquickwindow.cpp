@@ -1244,7 +1244,7 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
-    \section2 Context and surface formats
+    \section2 Context and Surface Formats
 
     While it is possible to specify a QSurfaceFormat for every QQuickWindow by
     calling the member function setFormat(), windows may also be created from
@@ -1512,8 +1512,7 @@ QQuickItem *QQuickWindow::mouseGrabberItem() const
     if (d->touchMouseId != -1 && d->touchMouseDevice) {
         QQuickPointerEvent *event = d->pointerEventInstance(d->touchMouseDevice);
         auto point = event->pointById(d->touchMouseId);
-        Q_ASSERT(point);
-        return point->grabberItem();
+        return point ? point->grabberItem() : nullptr;
     }
 
     QQuickPointerEvent *event = d->pointerEventInstance(QQuickPointerDevice::genericMouseDevice());

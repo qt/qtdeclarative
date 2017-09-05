@@ -61,7 +61,7 @@
 
   \annotatedlist statemachine-qmltypes
 
-  \section1 Using both QtQuick and QtQml.StateMachine imports
+  \section1 Using Both QtQuick and QtQml.StateMachine Imports
 
   \warning If you're attempting to import both \l{QtQuick} and
     \e{QtQml.StateMachine} in one single QML file, make sure to import

@@ -50,7 +50,7 @@ and registering the type with the QML engine, as discussed in
 \section1 Defining Object Types from QML
 
 
-\section2 Defining Object Types through QML Documents
+\section2 Defining Object Types Through QML Documents
 
 Plugin writers and application developers may provide types defined as QML
 documents.  A QML document, when visible to the QML import system, defines a

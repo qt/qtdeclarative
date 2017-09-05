@@ -92,7 +92,8 @@ public:
     QSGNodeUpdater *nodeUpdater() const;
     void setNodeUpdater(QSGNodeUpdater *updater);
     inline QSGMaterialShader::RenderState state(QSGMaterialShader::RenderState::DirtyStates dirty) const;
-    virtual void setCustomRenderMode(const QByteArray &) { };
+    virtual void setCustomRenderMode(const QByteArray &) { }
+    virtual void releaseCachedResources() { }
 
     void clearChangedFlag() { m_changed_emitted = false; }
 

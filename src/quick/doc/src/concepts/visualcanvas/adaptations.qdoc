@@ -35,7 +35,7 @@ Originally Qt Quick always relied on OpenGL (OpenGL ES 2.0 or OpenGL 2.0) for pa
 the scene graph and rendering the results to a render target. From Qt 5.8 onwards
 Qt Quick also supports rendering in software and with Direct3D 12.
 
-\section1 Switching between the adaptation used by the application
+\section1 Switching Between the Adaptation Used by the Application
 
 The default rendering backend is still OpenGL, or - in Qt builds with disabled OpenGL support -
 the software renderer. This can be overridden either by using an environment variable
@@ -261,7 +261,7 @@ offscreen render targets will be created with the specified sample count and a
 quality of the maximum supported quality level. The backend automatically
 performs resolving into the non-multisample swapchain buffers after each frame.
 
-\section2 Semi-transparent windows
+\section2 Semi-transparent Windows
 
 When the alpha channel is enabled either via
 QQuickWindow::setDefaultAlphaBuffer() or by setting alphaBufferSize to a
@@ -286,7 +286,7 @@ power-of-two images at the moment. Textures of other size will work too, but
 this involves a QImage-based scaling on the CPU first. Therefore avoid enabling
 mipmapping for NPOT images whenever possible.
 
-\section2 Image formats
+\section2 Image Formats
 
 When creating textures via the C++ scenegraph APIs like
 QQuickWindow::createTextureFromImage(), 32-bit formats will not involve any

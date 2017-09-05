@@ -629,6 +629,7 @@ public:
 protected:
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state) Q_DECL_OVERRIDE;
     void render() Q_DECL_OVERRIDE;
+    void releaseCachedResources() Q_DECL_OVERRIDE;
 
 private:
     enum ClipTypeBit

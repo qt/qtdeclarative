@@ -540,7 +540,7 @@ with multiple windows.
   and may trigger early-z when available, but again, setting
   Item::visible to false is always faster.
 
-  \section2 Mixing with 3D primitives
+  \section2 Mixing with 3D Primitives
 
   The scene graph can support pseudo 3D and proper 3D primitives. For
   instance, one can implement a "page curl" effect using a

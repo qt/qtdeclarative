@@ -43,7 +43,7 @@ Item {
     Item {
         focus: true
         Keys.onPressed: {
-            console.log("Loaded item captured:",
+            console.log("KeyReader captured:",
                         event.text);
             event.accepted = true;
         }

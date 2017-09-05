@@ -693,7 +693,7 @@ void QQuickXmlListModelPrivate::clear_role(QQmlListProperty<QQuickXmlListModelRo
     populated until the model is loaded.
 
 
-    \section2 Using key XML roles
+    \section2 Using Key XML Roles
 
     You can define certain roles as "keys" so that when reload() is called,
     the model will only add and refresh data that contains new values for
