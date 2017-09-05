@@ -141,10 +141,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(0)
     , m_multiplyWrappedQObjects(0)
-#ifndef QT_NO_QML_DEBUGGER
-    , m_debugger(0)
-    , m_profiler(0)
-#endif
 {
     memoryManager = new QV4::MemoryManager(this);
 
@@ -477,12 +473,6 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
 
 ExecutionEngine::~ExecutionEngine()
 {
-#ifndef QT_NO_QML_DEBUGGER
-    delete m_debugger;
-    m_debugger = 0;
-    delete m_profiler;
-    m_profiler = 0;
-#endif
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = 0;
     delete identifierTable;
@@ -508,13 +498,13 @@ ExecutionEngine::~ExecutionEngine()
 void ExecutionEngine::setDebugger(Debugging::Debugger *debugger)
 {
     Q_ASSERT(!m_debugger);
-    m_debugger = debugger;
+    m_debugger.reset(debugger);
 }
 
 void ExecutionEngine::setProfiler(Profiling::Profiler *profiler)
 {
     Q_ASSERT(!m_profiler);
-    m_profiler = profiler;
+    m_profiler.reset(profiler);
 }
 #endif // QT_NO_QML_DEBUGGER
 

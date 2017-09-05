@@ -962,6 +962,14 @@ void QQmlTypeLoader::invalidate()
 #endif // qml_network
 }
 
+#ifndef QT_NO_QML_DEBUGGER
+void QQmlTypeLoader::setProfiler(QQmlProfiler *profiler)
+{
+    Q_ASSERT(!m_profiler);
+    m_profiler.reset(profiler);
+}
+#endif
+
 void QQmlTypeLoader::lock()
 {
     m_thread->lock();
@@ -1596,9 +1604,6 @@ Constructs a new type loader that uses the given \a engine.
 */
 QQmlTypeLoader::QQmlTypeLoader(QQmlEngine *engine)
     : m_engine(engine), m_thread(new QQmlTypeLoaderThread(this)),
-#ifndef QT_NO_QML_DEBUGGER
-      m_profiler(nullptr),
-#endif
       m_typeCacheTrimThreshold(TYPELOADER_MINIMUM_TRIM_THRESHOLD)
 {
 }
@@ -1615,10 +1620,6 @@ QQmlTypeLoader::~QQmlTypeLoader()
     clearCache();
 
     invalidate();
-
-#ifndef QT_NO_QML_DEBUGGER
-    delete m_profiler;
-#endif
 }
 
 QQmlImportDatabase *QQmlTypeLoader::importDatabase() const

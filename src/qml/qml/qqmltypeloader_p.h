@@ -249,7 +249,7 @@ private:
     QString m_location;
 };
 
-class Q_AUTOTEST_EXPORT QQmlTypeLoader
+class Q_QML_PRIVATE_EXPORT QQmlTypeLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
 public:
@@ -325,8 +325,8 @@ public:
     QQmlProfiler *profiler() const { return nullptr; }
     void setProfiler(QQmlProfiler *) {}
 #else
-    QQmlProfiler *profiler() const { return m_profiler; }
-    void setProfiler(QQmlProfiler *profiler) { Q_ASSERT(!m_profiler); m_profiler = profiler; }
+    QQmlProfiler *profiler() const { return m_profiler.data(); }
+    void setProfiler(QQmlProfiler *profiler);
 #endif // QT_NO_QML_DEBUGGER
 
 
@@ -380,7 +380,7 @@ private:
     QQmlTypeLoaderThread *m_thread;
 
 #ifndef QT_NO_QML_DEBUGGER
-    QQmlProfiler *m_profiler;
+    QScopedPointer<QQmlProfiler> m_profiler;
 #endif
 
 #if QT_CONFIG(qml_network)

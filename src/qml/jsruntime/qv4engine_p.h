@@ -353,8 +353,8 @@ public:
     void setDebugger(Debugging::Debugger *) {}
     void setProfiler(Profiling::Profiler *) {}
 #else
-    QV4::Debugging::Debugger *debugger() const { return m_debugger; }
-    QV4::Profiling::Profiler *profiler() const { return m_profiler; }
+    QV4::Debugging::Debugger *debugger() const { return m_debugger.data(); }
+    QV4::Profiling::Profiler *profiler() const { return m_profiler.data(); }
 
     void setDebugger(Debugging::Debugger *debugger);
     void setProfiler(Profiling::Profiler *profiler);
@@ -464,8 +464,8 @@ private:
     void failStackLimitCheck(Scope &scope);
 
 #ifndef QT_NO_QML_DEBUGGER
-    QV4::Debugging::Debugger *m_debugger;
-    QV4::Profiling::Profiler *m_profiler;
+    QScopedPointer<QV4::Debugging::Debugger> m_debugger;
+    QScopedPointer<QV4::Profiling::Profiler> m_profiler;
 #endif
 };
 
