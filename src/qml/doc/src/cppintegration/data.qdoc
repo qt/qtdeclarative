@@ -347,6 +347,11 @@ them with default constructed values, do not use the indexed delete operator
 ("delete sequence[i]") but instead use the \c {splice} function
 ("sequence.splice(startIndex, deleteCount)").
 
+\section2 QByteArray to JavaScript ArrayBuffer
+
+The QML engine provides automatic type conversion between QByteArray values and
+JavaScript \c ArrayBuffer objects.
+
 \section2 Value Types
 
 Some value types in Qt such as QPoint are represented in JavaScript as objects
