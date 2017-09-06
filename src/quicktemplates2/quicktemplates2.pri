@@ -15,6 +15,8 @@ HEADERS += \
     $$PWD/qquickcontainer_p_p.h \
     $$PWD/qquickcontrol_p.h \
     $$PWD/qquickcontrol_p_p.h \
+    $$PWD/qquickdeferredexecute_p_p.h \
+    $$PWD/qquickdeferredpointer_p_p.h \
     $$PWD/qquickdelaybutton_p.h \
     $$PWD/qquickdial_p.h \
     $$PWD/qquickdialog_p.h \
@@ -91,6 +93,7 @@ SOURCES += \
     $$PWD/qquickcombobox.cpp \
     $$PWD/qquickcontainer.cpp \
     $$PWD/qquickcontrol.cpp \
+    $$PWD/qquickdeferredexecute.cpp \
     $$PWD/qquickdelaybutton.cpp \
     $$PWD/qquickdial.cpp \
     $$PWD/qquickdialog.cpp \

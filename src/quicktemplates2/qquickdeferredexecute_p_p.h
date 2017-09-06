@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKABSTRACTBUTTON_P_P_H
-#define QQUICKABSTRACTBUTTON_P_P_H
+#ifndef QQUICKDEFERREDEXECUTE_P_P_H
+#define QQUICKDEFERREDEXECUTE_P_P_H
 
 //
 //  W A R N I N G
@@ -48,66 +48,32 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
-#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
+#include <QtCore/qglobal.h>
+#include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickButtonGroup;
+class QString;
+class QObject;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButtonPrivate : public QQuickControlPrivate
+namespace QtQuickPrivate {
+    void executeDeferred(QObject *object, const QString &property);
+}
+
+template<typename T>
+void quickExecuteDeferred(QObject *object, const QString &property, QQuickDeferredPointer<T> &delegate)
 {
-    Q_DECLARE_PUBLIC(QQuickAbstractButton)
+    if (!delegate.isNull() || delegate.wasExecuted())
+        return;
 
-public:
-    QQuickAbstractButtonPrivate();
+    delegate.setExecuting(true);
+    QtQuickPrivate::executeDeferred(object, property);
+    delegate.setExecuting(false);
 
-    static QQuickAbstractButtonPrivate *get(QQuickAbstractButton *button)
-    {
-        return button->d_func();
-    }
-
-    QQuickItem *getContentItem() override;
-
-    void handlePress(const QPointF &point) override;
-    void handleMove(const QPointF &point) override;
-    void handleRelease(const QPointF &point) override;
-    void handleUngrab() override;
-
-    bool isPressAndHoldConnected();
-    void startPressAndHold();
-    void stopPressAndHold();
-
-    void startRepeatDelay();
-    void startPressRepeat();
-    void stopPressRepeat();
-
-    QQuickAbstractButton *findCheckedButton() const;
-    QList<QQuickAbstractButton *> findExclusiveButtons() const;
-
-    void toggle(bool value);
-
-    void executeIndicator();
-
-    QString text;
-    bool down;
-    bool explicitDown;
-    bool pressed;
-    bool keepPressed;
-    bool checked;
-    bool checkable;
-    bool autoExclusive;
-    bool autoRepeat;
-    bool wasHeld;
-    int holdTimer;
-    int delayTimer;
-    int repeatTimer;
-    QPointF pressPoint;
-    Qt::MouseButtons pressButtons;
-    QQuickDeferredPointer<QQuickItem> indicator;
-    QQuickButtonGroup *group;
-};
+    if (!delegate.isNull())
+        delegate.setExecuted();
+}
 
 QT_END_NAMESPACE
 
-#endif // QQUICKABSTRACTBUTTON_P_P_H
+#endif // QQUICKDEFERREDEXECUTE_P_P_H

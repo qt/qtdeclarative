@@ -49,6 +49,7 @@
 //
 
 #include "qquickcontrol_p.h"
+#include "qquickdeferredpointer_p_p.h"
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQml/private/qlazilyallocated_p.h>
@@ -126,6 +127,9 @@ public:
     static bool calcHoverEnabled(const QQuickItem *item);
 #endif
 
+    void executeContentItem();
+    void executeBackground();
+
     static void destroyDelegate(QObject *object, QObject *parent);
 
     struct ExtraData {
@@ -155,8 +159,8 @@ public:
     QLocale locale;
     Qt::FocusPolicy focusPolicy;
     Qt::FocusReason focusReason;
-    QQuickItem *background;
-    QQuickItem *contentItem;
+    QQuickDeferredPointer<QQuickItem> background;
+    QQuickDeferredPointer<QQuickItem> contentItem;
     QQuickAccessibleAttached *accessibleAttached;
 };
 

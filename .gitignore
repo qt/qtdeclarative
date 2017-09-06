@@ -32,6 +32,7 @@
 /tests/auto/controls/material/tst_material
 /tests/auto/controls/universal/tst_universal
 /tests/auto/cursor/tst_cursor
+/tests/auto/customization/tst_customization
 /tests/auto/focus/tst_focus
 /tests/auto/font/tst_font
 /tests/auto/platform/tst_platform

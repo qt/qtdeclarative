@@ -4,6 +4,7 @@ SUBDIRS += \
     calendar \
     controls \
     cursor \
+    customization \
     focus \
     font \
     platform \

@@ -48,6 +48,7 @@
 #include "qquickpopup_p.h"
 #include "qquickpopupitem_p_p.h"
 #include "qquickapplicationwindow_p.h"
+#include "qquickdeferredexecute_p_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
@@ -290,7 +291,7 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
         return;
 
     q->contentItemChange(item, contentItem);
-    destroyDelegate(contentItem, q);
+    delete contentItem;
     contentItem = item;
 
     if (item) {
@@ -300,7 +301,7 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
             resizeContent();
     }
 
-    if (notify)
+    if (notify && !contentItem.isExecuting())
         emit q->contentItemChanged();
 }
 
@@ -933,6 +934,18 @@ QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
     return QLocale();
 }
 
+void QQuickControlPrivate::executeContentItem()
+{
+    Q_Q(QQuickControl);
+    quickExecuteDeferred(q, QStringLiteral("contentItem"), contentItem);
+}
+
+void QQuickControlPrivate::executeBackground()
+{
+    Q_Q(QQuickControl);
+    quickExecuteDeferred(q, QStringLiteral("background"), background);
+}
+
 /*
     Cancels incubation recursively to avoid "Object destroyed during incubation" (QTBUG-50992)
 */
@@ -1214,7 +1227,8 @@ void QQuickControl::setWheelEnabled(bool enabled)
 */
 QQuickItem *QQuickControl::background() const
 {
-    Q_D(const QQuickControl);
+    QQuickControlPrivate *d = const_cast<QQuickControlPrivate *>(d_func());
+    d->executeBackground();
     return d->background;
 }
 
@@ -1224,7 +1238,7 @@ void QQuickControl::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    QQuickControlPrivate::destroyDelegate(d->background, this);
+    delete d->background;
     d->background = background;
     if (background) {
         background->setParentItem(this);
@@ -1233,7 +1247,8 @@ void QQuickControl::setBackground(QQuickItem *background)
         if (isComponentComplete())
             d->resizeBackground();
     }
-    emit backgroundChanged();
+    if (!d->background.isExecuting())
+        emit backgroundChanged();
 }
 
 /*!
