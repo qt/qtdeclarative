@@ -36,6 +36,7 @@
 
 import QtQuick 2.10
 import QtQuick.Templates 2.3 as T
+import QtQuick.Controls.Material 2.3
 
 T.SwipeView {
     id: control
