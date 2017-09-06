@@ -772,6 +772,7 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
         drag->setPixmap(QPixmap::fromImage(pixmapLoader.image()));
     }
 
+    drag->setHotSpot(hotSpot.toPoint());
     emit q->dragStarted();
 
     Qt::DropAction dropAction = drag->exec(supportedActions);
