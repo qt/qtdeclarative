@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
+import QtQuick 2.10
 import QtQuick.Controls 2.2
 
 Item {
