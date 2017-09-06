@@ -81,7 +81,7 @@ struct QQmlImportRef {
 
 class QQmlType;
 class QQmlEngine;
-class QQmlTypeNameCache : public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlTypeNameCache : public QQmlRefCount
 {
 public:
     QQmlTypeNameCache(const QQmlImports &imports);

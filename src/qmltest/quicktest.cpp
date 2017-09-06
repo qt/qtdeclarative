@@ -63,6 +63,8 @@
 #include <QtCore/QTranslator>
 #include <QtTest/QSignalSpy>
 
+#include <private/qqmlcomponent_p.h>
+
 #ifdef QT_QMLTEST_WITH_WIDGETS
 #include <QtWidgets/QApplication>
 #endif
@@ -194,6 +196,133 @@ bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000)
 
     return spy.size();
 }
+
+using namespace QV4::CompiledData;
+
+class TestCaseCollector
+{
+public:
+    typedef QList<QString> TestCaseList;
+
+    TestCaseCollector(const QFileInfo &fileInfo, QQmlEngine *engine)
+    {
+        QQmlComponent component(engine, fileInfo.absoluteFilePath());
+        m_errors += component.errors();
+
+        if (component.isReady()) {
+            CompilationUnit *rootCompilationUnit = QQmlComponentPrivate::get(&component)->compilationUnit;
+            TestCaseEnumerationResult result = enumerateTestCases(rootCompilationUnit);
+            m_testCases = result.testCases + result.finalizedPartialTestCases();
+            m_errors += result.errors;
+        }
+    }
+
+    TestCaseList testCases() const { return m_testCases; }
+    QList<QQmlError> errors() const { return m_errors; }
+
+private:
+    TestCaseList m_testCases;
+    QList<QQmlError> m_errors;
+
+    struct TestCaseEnumerationResult
+    {
+        TestCaseList testCases;
+        QList<QQmlError> errors;
+
+        // Partially constructed test cases
+        bool isTestCase = false;
+        TestCaseList testFunctions;
+        QString testCaseName;
+
+        TestCaseList finalizedPartialTestCases() const
+        {
+            TestCaseList result;
+            for (const QString &function : testFunctions)
+                result << QString(QStringLiteral("%1::%2")).arg(testCaseName).arg(function);
+            return result;
+        }
+
+        TestCaseEnumerationResult &operator<<(const TestCaseEnumerationResult &other)
+        {
+            testCases += other.testCases + other.finalizedPartialTestCases();
+            errors += other.errors;
+            return *this;
+        }
+    };
+
+    TestCaseEnumerationResult enumerateTestCases(CompilationUnit *compilationUnit, const Object *object = nullptr)
+    {
+        QQmlType testCaseType;
+        for (quint32 i = 0; i < compilationUnit->data->nImports; ++i) {
+            const Import *import = compilationUnit->data->importAt(i);
+            if (compilationUnit->stringAt(import->uriIndex) != QLatin1Literal("QtTest"))
+                continue;
+
+            QString testCaseTypeName(QStringLiteral("TestCase"));
+            QString typeQualifier = compilationUnit->stringAt(import->qualifierIndex);
+            if (!typeQualifier.isEmpty())
+                testCaseTypeName = typeQualifier % QLatin1Char('.') % testCaseTypeName;
+
+            testCaseType = compilationUnit->typeNameCache->query(testCaseTypeName).type;
+            if (testCaseType.isValid())
+                break;
+        }
+
+        TestCaseEnumerationResult result;
+
+        if (!object) // Start at root of compilation unit if not enumerating a specific child
+            object = compilationUnit->objectAt(compilationUnit->rootObjectIndex());
+
+        if (CompilationUnit *superTypeUnit = compilationUnit->resolvedTypes.value(object->inheritedTypeNameIndex)->compilationUnit) {
+            // We have a non-C++ super type, which could indicate we're a subtype of a TestCase
+            if (testCaseType.isValid() && superTypeUnit->url() == testCaseType.sourceUrl())
+                result.isTestCase = true;
+            else
+                result = enumerateTestCases(superTypeUnit);
+
+            if (result.isTestCase) {
+                // Look for override of name in this type
+                for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
+                    if (compilationUnit->stringAt(binding->propertyNameIndex) == QLatin1Literal("name")) {
+                        if (binding->type == QV4::CompiledData::Binding::Type_String) {
+                            result.testCaseName = compilationUnit->stringAt(binding->stringIndex);
+                        } else {
+                            QQmlError error;
+                            error.setUrl(compilationUnit->url());
+                            error.setLine(binding->location.line);
+                            error.setColumn(binding->location.column);
+                            error.setDescription(QStringLiteral("the 'name' property of a TestCase must be a literal string"));
+                            result.errors << error;
+                        }
+                        break;
+                    }
+                }
+
+                // Look for additional functions in this type
+                auto functionsEnd = compilationUnit->objectFunctionsEnd(object);
+                for (auto function = compilationUnit->objectFunctionsBegin(object); function != functionsEnd; ++function) {
+                    QString functionName = compilationUnit->stringAt(function->nameIndex);
+                    if (!(functionName.startsWith(QLatin1Literal("test_")) || functionName.startsWith(QLatin1Literal("benchmark_"))))
+                        continue;
+
+                    if (functionName.endsWith(QLatin1Literal("_data")))
+                        continue;
+
+                    result.testFunctions << functionName;
+                }
+            }
+        }
+
+        for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
+            if (binding->type == QV4::CompiledData::Binding::Type_Object) {
+                const Object *child = compilationUnit->objectAt(binding->value.objectIndex);
+                result << enumerateTestCases(compilationUnit, child);
+            }
+        }
+
+        return result;
+    }
+};
 
 int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir)
 {
@@ -339,7 +468,28 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
         if (!fi.exists())
             continue;
 
-        QQuickView view ;
+        QQmlEngine engine;
+
+        TestCaseCollector testCaseCollector(fi, &engine);
+        if (!testCaseCollector.errors().isEmpty()) {
+            for (const QQmlError &error : testCaseCollector.errors())
+                qWarning() << error;
+            exit(1);
+        }
+
+        TestCaseCollector::TestCaseList availableTestFunctions = testCaseCollector.testCases();
+        if (QTest::printAvailableFunctions) {
+            for (const QString &function : availableTestFunctions)
+                qDebug("%s()", qPrintable(function));
+            continue;
+        }
+
+        static const QSet<QString> commandLineTestFunctions = QTest::testFunctions.toSet();
+        if (!commandLineTestFunctions.isEmpty() &&
+            !availableTestFunctions.toSet().intersects(commandLineTestFunctions))
+            continue;
+
+        QQuickView view(&engine, nullptr);
         view.setFlags(Qt::Window | Qt::WindowSystemMenuHint
                          | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint
                          | Qt::WindowCloseButtonHint);
@@ -364,8 +514,6 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
         else
             view.setSource(QUrl::fromLocalFile(path));
 
-        if (QTest::printAvailableFunctions)
-            continue;
         while (view.status() == QQuickView::Loading)
             QTest::qWait(10);
         if (view.status() == QQuickView::Error) {
