@@ -1251,7 +1251,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
             _seenObjectWithId |= seenSubObjectWithId;
         }
 
-        if (!seenSubObjectWithId
+        if (!seenSubObjectWithId && binding->type != QV4::CompiledData::Binding::Type_GroupProperty
             && !deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
 
             binding->flags |= QV4::CompiledData::Binding::IsDeferredBinding;
