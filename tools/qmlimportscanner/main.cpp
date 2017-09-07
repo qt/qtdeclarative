@@ -404,7 +404,7 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir)
     if (qmlDir.isEmpty())
         return ret;
 
-    QDirIterator iterator(qmlDir, QDir::AllDirs | QDir::NoDot | QDir::NoDotDot, QDirIterator::Subdirectories);
+    QDirIterator iterator(qmlDir, QDir::AllDirs | QDir::NoDotDot, QDirIterator::Subdirectories);
     QStringList blacklist;
 
     while (iterator.hasNext()) {
