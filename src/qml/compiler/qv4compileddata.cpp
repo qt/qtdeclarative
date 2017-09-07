@@ -731,8 +731,6 @@ void ResolvedTypeReference::doDynamicTypeCheck()
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }
 
-#if defined(QT_BUILD_INTERNAL)
-
 static QByteArray ownLibraryChecksum()
 {
     static QByteArray libraryChecksum;
@@ -740,7 +738,10 @@ static QByteArray ownLibraryChecksum()
     if (checksumInitialized)
         return libraryChecksum;
     checksumInitialized = true;
-#if !defined(QT_NO_DYNAMIC_CAST) && QT_CONFIG(dlopen)
+#if defined(QT_BUILD_INTERNAL) && !defined(QT_NO_DYNAMIC_CAST) && QT_CONFIG(dlopen)
+    // This is a bit of a hack to make development easier. When hacking on the code generator
+    // the cache files may end up being re-used. To avoid that we also add the checksum of
+    // the QtQml library.
     Dl_info libInfo;
     if (dladdr(reinterpret_cast<const void *>(&ownLibraryChecksum), &libInfo) != 0) {
         QFile library(QFile::decodeName(libInfo.dli_fname));
@@ -750,13 +751,13 @@ static QByteArray ownLibraryChecksum()
             libraryChecksum = hash.result();
         }
     }
+#elif defined(QML_COMPILE_HASH)
+    libraryChecksum = QByteArray(QT_STRINGIFY(QML_COMPILE_HASH));
 #else
     // Not implemented.
 #endif
     return libraryChecksum;
 }
-
-#endif
 
 bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *engine) const
 {
@@ -765,12 +766,7 @@ bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *e
             return false;
     }
 
-    // This is a bit of a hack to make development easier. When hacking on the code generator
-    // the cache files may end up being re-used. To avoid that we also add the checksum of
-    // the QtQml library.
-#if defined(QT_BUILD_INTERNAL)
     hash->addData(ownLibraryChecksum());
-#endif
 
     return true;
 }
