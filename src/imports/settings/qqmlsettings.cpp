@@ -188,6 +188,9 @@ QT_BEGIN_NAMESPACE
     only provides a cleaner settings structure, but also prevents possible
     conflicts between setting keys.
 
+    If several categories are required, use several Settings objects, each with
+    their own category:
+
     \qml
     Item {
         id: panel
@@ -197,6 +200,12 @@ QT_BEGIN_NAMESPACE
         Settings {
             category: "OutputPanel"
             property alias visible: panel.visible
+            // ...
+        }
+
+        Settings {
+            category: "General"
+            property alias fontSize: fontSizeSpinBox.value
             // ...
         }
     }
