@@ -233,8 +233,9 @@ void tst_qmldiskcache::regenerateAfterChange()
         QCOMPARE(quint32(testUnit->functionTableSize), quint32(1));
 
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(0);
-        quint64 firstCodeOffset = (testUnit->unitSize + 15u) & ~15u;
-        QCOMPARE(bindingFunction->codeOffset, firstCodeOffset);
+        QCOMPARE(testUnit->stringAt(bindingFunction->nameIndex), QString("expression for blah")); // check if we have the correct function
+        QVERIFY(bindingFunction->codeSize > 0);
+        QVERIFY(bindingFunction->codeOffset < testUnit->unitSize);
     }
 
     {
@@ -258,8 +259,9 @@ void tst_qmldiskcache::regenerateAfterChange()
         QCOMPARE(quint32(testUnit->functionTableSize), quint32(1));
 
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(0);
-        quint64 firstCodeOffset = (testUnit->unitSize + 15u) & ~15u;
-        QCOMPARE(bindingFunction->codeOffset, firstCodeOffset);
+        QCOMPARE(testUnit->stringAt(bindingFunction->nameIndex), QString("expression for blah")); // check if we have the correct function
+        QVERIFY(bindingFunction->codeSize > 0);
+        QVERIFY(bindingFunction->codeOffset < testUnit->unitSize);
     }
 }
 
