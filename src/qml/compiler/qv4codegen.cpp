@@ -2053,8 +2053,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         _context->addLocalVar(QStringLiteral("arguments"), Context::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
 
     bool allVarsEscape = _context->hasWith || _context->hasTry || _context->hasDirectEval;
-
-    if (!_context->canUseSimpleCall() && _context->compilationMode != GlobalCode && (_context->compilationMode != EvalCode || _context->isStrict)) {
+    if (_context->compilationMode == QmlBinding // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
+            || (!_context->canUseSimpleCall() && _context->compilationMode != GlobalCode && (_context->compilationMode != EvalCode || _context->isStrict))) {
         Instruction::CreateCallContext createContext;
         bytecodeGenerator->addInstruction(createContext);
     }
