@@ -94,16 +94,6 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
     if (!propertyCache)
         return QVector<QQmlCompileError>();
 
-    QStringList deferredPropertyNames;
-    {
-        const QMetaObject *mo = propertyCache->firstCppMetaObject();
-        const int namesIndex = mo->indexOfClassInfo("DeferredPropertyNames");
-        if (namesIndex != -1) {
-            QMetaClassInfo classInfo = mo->classInfo(namesIndex);
-            deferredPropertyNames = QString::fromUtf8(classInfo.value()).split(QLatin1Char(','));
-        }
-    }
-
     QQmlCustomParser *customParser = 0;
     if (auto typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
         if (typeRef->type.isValid())
