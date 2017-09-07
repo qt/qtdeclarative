@@ -112,6 +112,11 @@ void dataLogFString(const char* str)
 }
 
 extern "C" {
+// When adding a new stub here do not forget to add
+// DEFINES += StubFunctionName=qmlStubFunctionName
+// for example:
+// DEFINES += WTFReportAssertionFailureWithMessage=qmlWTFReportAssertionFailureWithMessage
+// to prevent "duplicate symbol" error during static library linking. See bugs QTBUG-35041 and QTBUG-63050
 
 void WTFReportAssertionFailure(const char* file, int line, const char* function, const char*assertion)
 {
