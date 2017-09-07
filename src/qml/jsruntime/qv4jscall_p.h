@@ -126,4 +126,6 @@ struct ScopedStackFrame {
 
 }
 
-#endif
+QT_END_NAMESPACE
+
+#endif // QV4JSCALL_H
