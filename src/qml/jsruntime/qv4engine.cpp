@@ -927,8 +927,18 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
     }
 }
 
+static void drainMarkStack(ExecutionEngine *engine, Value *markBase)
+{
+    while (engine->jsStackTop > markBase) {
+        Heap::Base *h = engine->popForGC();
+        Q_ASSERT (h->vtable()->markObjects);
+        h->vtable()->markObjects(h, engine);
+    }
+}
+
 void ExecutionEngine::markObjects()
 {
+    Value *markBase = jsStackTop;
     identifierTable->mark(this);
 
     for (int i = 0; i < nArgumentsAccessors; ++i) {
@@ -941,9 +951,13 @@ void ExecutionEngine::markObjects()
 
     classPool->markObjects(this);
 
+    drainMarkStack(this, markBase);
+
     for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
-         it != end; ++it)
+         it != end; ++it) {
         (*it)->markObjects(this);
+        drainMarkStack(this, markBase);
+    }
 }
 
 ReturnedValue ExecutionEngine::throwError(const Value &value)
