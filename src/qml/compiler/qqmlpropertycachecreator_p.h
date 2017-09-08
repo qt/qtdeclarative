@@ -562,6 +562,8 @@ template <typename ObjectContainer>
 inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertiesToMetaObjects()
 {
     for (int i = 0; i < objectContainer->objectCount(); ++i) {
+        if (i == objectContainer->rootObjectIndex())
+            continue;
         const CompiledObject &component = *objectContainer->objectAt(i);
         if (!(component.flags & QV4::CompiledData::Object::IsComponent))
             continue;
