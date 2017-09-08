@@ -5029,22 +5029,31 @@ void QQuickItemPrivate::transformChanged()
 #endif
 }
 
+bool QQuickItemPrivate::filterKeyEvent(QKeyEvent *e, bool post)
+{
+    if (!extra.isAllocated() || !extra->keyHandler)
+        return false;
+
+    if (post)
+        e->accept();
+
+    if (e->type() == QEvent::KeyPress)
+        extra->keyHandler->keyPressed(e, post);
+    else
+        extra->keyHandler->keyReleased(e, post);
+
+    return e->isAccepted();
+}
+
 void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
 {
     Q_Q(QQuickItem);
 
     Q_ASSERT(e->isAccepted());
-    if (extra.isAllocated() && extra->keyHandler) {
-        if (e->type() == QEvent::KeyPress)
-            extra->keyHandler->keyPressed(e, false);
-        else
-            extra->keyHandler->keyReleased(e, false);
-
-        if (e->isAccepted())
-            return;
-        else
-            e->accept();
-    }
+    if (filterKeyEvent(e, false))
+        return;
+    else
+        e->accept();
 
     if (e->type() == QEvent::KeyPress)
         q->keyPressEvent(e);
@@ -5054,16 +5063,7 @@ void QQuickItemPrivate::deliverKeyEvent(QKeyEvent *e)
     if (e->isAccepted())
         return;
 
-    if (extra.isAllocated() && extra->keyHandler) {
-        e->accept();
-
-        if (e->type() == QEvent::KeyPress)
-            extra->keyHandler->keyPressed(e, true);
-        else
-            extra->keyHandler->keyReleased(e, true);
-    }
-
-    if (e->isAccepted() || !q->window())
+    if (filterKeyEvent(e, true) || !q->window())
         return;
 
     //only care about KeyPress now
@@ -5832,7 +5832,7 @@ void QQuickItem::setVisible(bool v)
     are returned to \c true, unless they have explicitly been set to \c false.
 
     Setting this property to \c false automatically causes \l activeFocus to be
-    set to \c false, and this item will longer receive keyboard events.
+    set to \c false, and this item will no longer receive keyboard events.
 
     \sa visible
 */
@@ -7231,6 +7231,8 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
 
     If this is false, then the item will not receive any touch events through
     the touchEvent() function.
+
+    \since 5.10
 */
 bool QQuickItem::acceptTouchEvents() const
 {
@@ -7242,12 +7244,14 @@ bool QQuickItem::acceptTouchEvents() const
     If \a enabled is true, this sets the item to accept touch events;
     otherwise, touch events are not accepted by this item.
 
+    \since 5.10
+
     \sa acceptTouchEvents()
 */
-void QQuickItem::setAcceptTouchEvents(bool accept)
+void QQuickItem::setAcceptTouchEvents(bool enabled)
 {
     Q_D(QQuickItem);
-    d->touchEnabled = accept;
+    d->touchEnabled = enabled;
 }
 
 void QQuickItemPrivate::setHasCursorInChild(bool hasCursor)

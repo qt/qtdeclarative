@@ -44,6 +44,7 @@
 #include <QtQuick/qsgtexturematerial.h>
 #include <QtQuick/qsgtexture.h>
 #include <QFile>
+#include <QRandomGenerator>
 #include "qquickimageparticle_p.h"
 #include "qquickparticleemitter_p.h"
 #include <private/qquicksprite_p.h>
@@ -1729,9 +1730,9 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                 if (!datum->rotationOwner)
                     datum->rotationOwner = this;
                 rotation =
-                        (m_rotation + (m_rotationVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationVariation) ) * CONV;
+                        (m_rotation + (m_rotationVariation - 2*QRandomGenerator::bounded(m_rotationVariation)) ) * CONV;
                 rotationVelocity =
-                        (m_rotationVelocity + (m_rotationVelocityVariation - 2*((qreal)rand()/RAND_MAX)*m_rotationVelocityVariation) ) * CONV;
+                        (m_rotationVelocity + (m_rotationVelocityVariation - 2*QRandomGenerator::bounded(m_rotationVelocityVariation)) ) * CONV;
                 autoRotate = m_autoRotation?1.0:0.0;
                 if (datum->rotationOwner == this) {
                     datum->rotation = rotation;
@@ -1750,10 +1751,10 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
             if (m_explicitColor) {
                 if (!datum->colorOwner)
                     datum->colorOwner = this;
-                color.r = m_color.red() * (1 - redVariation) + rand() % 256 * redVariation;
-                color.g = m_color.green() * (1 - greenVariation) + rand() % 256 * greenVariation;
-                color.b = m_color.blue() * (1 - blueVariation) + rand() % 256 * blueVariation;
-                color.a = m_alpha * m_color.alpha() * (1 - m_alphaVariation) + rand() % 256 * m_alphaVariation;
+                color.r = m_color.red() * (1 - redVariation) + QRandomGenerator::bounded(256) * redVariation;
+                color.g = m_color.green() * (1 - greenVariation) + QRandomGenerator::bounded(256) * greenVariation;
+                color.b = m_color.blue() * (1 - blueVariation) + QRandomGenerator::bounded(256) * blueVariation;
+                color.a = m_alpha * m_color.alpha() * (1 - m_alphaVariation) + QRandomGenerator::bounded(256) * m_alphaVariation;
                 if (datum->colorOwner == this)
                     datum->color = color;
                 else

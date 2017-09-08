@@ -48,6 +48,7 @@
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgdefaultrendercontext_p.h>
 
 #include <QtQuick/QQuickWindow>
@@ -501,6 +502,15 @@ void QSGWindowsRenderLoop::renderWindow(QQuickWindow *window)
 
     Q_QUICK_SG_PROFILE_REPORT(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopSwap);
+}
+
+void QSGWindowsRenderLoop::releaseResources(QQuickWindow *w)
+{
+    // No full invalidation of the rendercontext, just clear some caches.
+    RLDEBUG("releaseResources");
+    QQuickWindowPrivate *d = QQuickWindowPrivate::get(w);
+    if (d->renderer)
+        d->renderer->releaseCachedResources();
 }
 
 QT_END_NAMESPACE

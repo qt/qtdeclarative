@@ -2668,7 +2668,6 @@ void tst_qquickwindow::pointerEventTypeAndPointCount()
 
     QQuickPointerMouseEvent pme;
     pme.reset(&me);
-    QVERIFY(pme.isValid());
     QCOMPARE(pme.asMouseEvent(localPosition), &me);
     QVERIFY(pme.asPointerMouseEvent());
     QVERIFY(!pme.asPointerTouchEvent());
@@ -2681,7 +2680,6 @@ void tst_qquickwindow::pointerEventTypeAndPointCount()
 
     QQuickPointerTouchEvent pte;
     pte.reset(&te);
-    QVERIFY(pte.isValid());
     QCOMPARE(pte.asTouchEvent(), &te);
     QVERIFY(!pte.asPointerMouseEvent());
     QVERIFY(pte.asPointerTouchEvent());

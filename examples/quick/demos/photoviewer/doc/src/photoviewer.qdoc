@@ -222,7 +222,7 @@
     \printuntil onClicked
     \printuntil }
 
-    \section1 Laying out Photos on a Path
+    \section1 Laying Out Photos on a Path
 
     In AlbumDelegate.qml, we use a PathView type to lay out the photos provided
     by the \c visualModel.parts.stack model on a path that has the form of a

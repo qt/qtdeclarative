@@ -49,11 +49,14 @@ Rectangle {
 
     MouseArea {
         anchors.fill: parent
-        onClicked: loader.source = "KeyReader.qml"
+        onClicked: {
+            loader.source = "KeyReader.qml"
+        }
     }
 
     Keys.onPressed: {
-        console.log("Captured:", event.text);
+        console.log("Captured:",
+                    event.text);
     }
 }
 //![0]

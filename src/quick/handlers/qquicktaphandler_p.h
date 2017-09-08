@@ -53,12 +53,12 @@
 
 #include "qquickitem.h"
 #include "qevent.h"
-#include "qquickpointersinglehandler_p.h"
+#include "qquicksinglepointhandler_p.h"
 #include <QtCore/qbasictimer.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickTapHandler : public QQuickPointerSingleHandler
+class Q_AUTOTEST_EXPORT QQuickTapHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
     Q_PROPERTY(bool isPressed READ isPressed NOTIFY pressedChanged)
@@ -95,7 +95,7 @@ Q_SIGNALS:
     void timeHeldChanged();
     void longPressThresholdChanged();
     void gesturePolicyChanged();
-    void tapped(QQuickEventPoint *point);
+    void tapped();
     void longPressed();
 
 protected:

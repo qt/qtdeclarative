@@ -88,7 +88,7 @@ private:
 class Atlas : public QObject
 {
 public:
-    Atlas(const QSize &size, QObject *parent);
+    Atlas(const QSize &size);
     ~Atlas();
 
     void invalidate();

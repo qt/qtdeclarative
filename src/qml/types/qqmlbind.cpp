@@ -102,7 +102,7 @@ void QQmlBindPrivate::validate(QObject *binding) const
     In QML, property bindings result in a dependency between the properties of
     different objects.
 
-    \section1 Binding to an inaccessible property
+    \section1 Binding to an Inaccessible Property
 
     Sometimes it is necessary to bind an object's property to
     that of another object that isn't directly instantiated by QML, such as a
@@ -120,7 +120,7 @@ void QQmlBindPrivate::validate(QObject *binding) const
     When \c{text} changes, the C++ property \c{enteredText} will update
     automatically.
 
-    \section1 Conditional bindings
+    \section1 Conditional Bindings
 
     In some cases you may want to modify the value of a property when a certain
     condition is met but leave it unmodified otherwise. Often, it's not possible

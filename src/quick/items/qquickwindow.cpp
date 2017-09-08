@@ -93,6 +93,12 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 
 bool QQuickWindowPrivate::defaultAlphaBuffer = false;
 
+#if defined(QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
+QQuickWindow::TextRenderType QQuickWindowPrivate::textRenderType = QQuickWindow::QT_QUICK_DEFAULT_TEXT_RENDER_TYPE;
+#else
+QQuickWindow::TextRenderType QQuickWindowPrivate::textRenderType = QQuickWindow::QtTextRendering;
+#endif
+
 void QQuickWindowPrivate::updateFocusItemTransform()
 {
 #if QT_CONFIG(im)
@@ -1238,7 +1244,7 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
-    \section2 Context and surface formats
+    \section2 Context and Surface Formats
 
     While it is possible to specify a QSurfaceFormat for every QQuickWindow by
     calling the member function setFormat(), windows may also be created from
@@ -1506,8 +1512,7 @@ QQuickItem *QQuickWindow::mouseGrabberItem() const
     if (d->touchMouseId != -1 && d->touchMouseDevice) {
         QQuickPointerEvent *event = d->pointerEventInstance(d->touchMouseDevice);
         auto point = event->pointById(d->touchMouseId);
-        Q_ASSERT(point);
-        return point->grabberItem();
+        return point ? point->grabberItem() : nullptr;
     }
 
     QQuickPointerEvent *event = d->pointerEventInstance(QQuickPointerDevice::genericMouseDevice());
@@ -1663,17 +1668,18 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
 {
     auto point = pointerEvent->point(0);
     lastMousePosition = point->scenePos();
+    const bool mouseIsReleased = (point->state() == QQuickEventPoint::Released && pointerEvent->buttons() == Qt::NoButton);
 
     if (point->exclusiveGrabber()) {
-        bool mouseIsReleased = (point->state() == QQuickEventPoint::Released && pointerEvent->buttons() == Qt::NoButton);
         if (auto grabber = point->grabberItem()) {
             if (sendFilteredPointerEvent(pointerEvent, grabber))
                 return;
             // if the grabber is an Item:
             // if the update consists of changing button state, don't accept it unless
             // the button is one in which the grabber is interested
-            if (pointerEvent->button() != Qt::NoButton && grabber->acceptedMouseButtons()
-                    && !(grabber->acceptedMouseButtons() & pointerEvent->button())) {
+            Qt::MouseButtons acceptedButtons = grabber->acceptedMouseButtons();
+            if (pointerEvent->button() != Qt::NoButton && acceptedButtons
+                    && !(acceptedButtons & pointerEvent->button())) {
                 pointerEvent->setAccepted(false);
                 return;
             }
@@ -1694,10 +1700,8 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             pointerEvent->localize(handler->parentItem());
             if (!sendFilteredPointerEvent(pointerEvent, handler->parentItem()))
                 handler->handlePointerEvent(pointerEvent);
-            if (mouseIsReleased) {
+            if (mouseIsReleased)
                 point->setGrabberPointerHandler(nullptr, true);
-                point->clearPassiveGrabbers();
-            }
         }
     } else {
         bool delivered = false;
@@ -1736,6 +1740,9 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             // make sure not to accept unhandled events
             pointerEvent->setAccepted(false);
     }
+    // failsafe: never allow any kind of grab to persist after release
+    if (mouseIsReleased)
+        pointerEvent->clearGrabbers();
 }
 
 bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
@@ -2326,8 +2333,9 @@ void QQuickWindowPrivate::deliverTouchEvent(QQuickPointerTouchEvent *event)
         }
     }
 
-    if (allReleased && !event->exclusiveGrabbers().isEmpty()) {
-        qWarning() << "No release received for some grabbers" << event->exclusiveGrabbers();
+    if (allReleased) {
+        if (Q_UNLIKELY(!event->exclusiveGrabbers().isEmpty()))
+                qWarning() << "No release received for some grabbers" << event->exclusiveGrabbers();
         event->clearGrabbers();
     }
 }
@@ -2419,17 +2427,25 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
         }
     }
 
-    if (allowChildEventFiltering && !handlersOnly) {
+    if (allowChildEventFiltering && !handlersOnly)
         updateFilteringParentItems(targetItems);
-        QQuickItem *filteredItem;
-        if (sendFilteredPointerEvent(event, nullptr, &filteredItem)) {
-            if (event->isAccepted())
-                return true;
-            targetItems.removeAll(filteredItem);
-        }
-    }
 
-    for (QQuickItem *item: targetItems) {
+    QVarLengthArray<QQuickItem *> filteredItems;
+    for (QQuickItem *item : targetItems) {
+        if (sendFilteredPointerEvent(event, item)) {
+            if (event->isAccepted()) {
+                for (int i = 0; i < event->pointCount(); ++i)
+                    event->point(i)->setAccepted();
+                return true;
+            }
+            while (!filteringParentItems.isEmpty() && filteringParentItems.first().first == item)
+                filteringParentItems.removeFirst();
+            filteredItems << item;
+        }
+
+        // Do not deliverMatchingPointsTo any item for which the parent-filter already intercepted the event
+        if (filteredItems.contains(item))
+            continue;
         deliverMatchingPointsToItem(item, event, handlersOnly);
         if (event->allPointsAccepted())
             break;
@@ -2714,13 +2730,6 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
 
 void QQuickWindowPrivate::updateFilteringParentItems(const QVector<QQuickItem *> &targetItems)
 {
-    if (Q_UNLIKELY(DBG_MOUSE_TARGET().isDebugEnabled())) {
-        // qDebug() << map(&objectName, targetItems) but done the hard way because C++ is still that primitive
-        QStringList targetNames;
-        for (QQuickItem *t : targetItems)
-            targetNames << (QLatin1String(t->metaObject()->className()) + QLatin1Char(' ') + t->objectName());
-        qCDebug(DBG_MOUSE_TARGET) << "finding potential filtering parents of" << targetNames;
-    }
     filteringParentItems.clear();
     for (QQuickItem *item : targetItems) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -2747,25 +2756,34 @@ void QQuickWindowPrivate::updateFilteringParentItems(const QVector<QQuickItem *>
             parent = parent->parentItem();
         }
     }
+    if (Q_UNLIKELY(DBG_MOUSE_TARGET().isDebugEnabled())) {
+        QStringList l;
+        for (QPair<QQuickItem *,QQuickItem *> pair : filteringParentItems)
+            l << (QLatin1String(pair.first->metaObject()->className()) + QLatin1Char(' ') + pair.first->objectName() +
+                  QLatin1String(" <- ") + pair.second->metaObject()->className()) + QLatin1Char(' ') + pair.second->objectName();
+        qCDebug(DBG_MOUSE_TARGET) << "potential filtering parents:" << l;
+    }
 }
 
-bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem **itemThatFiltered)
+bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver)
 {
     if (!allowChildEventFiltering)
         return false;
     bool ret = false;
+    QVarLengthArray<QQuickItem *> filteringParentsToSkip;
     if (QQuickPointerMouseEvent *pme = event->asPointerMouseEvent()) {
         for (QPair<QQuickItem *,QQuickItem *> itemAndParent : filteringParentItems) {
             QQuickItem *item = receiver ? receiver : itemAndParent.first;
             QQuickItem *filteringParent = itemAndParent.second;
             if (item == filteringParent)
                 continue; // a filtering item never needs to filter for itself
+            if (filteringParentsToSkip.contains(filteringParent))
+                continue;
             QPointF localPos = item->mapFromScene(pme->point(0)->scenePos());
             QMouseEvent *me = pme->asMouseEvent(localPos);
-            if (filteringParent->childMouseEventFilter(item, me)) {
-                if (itemThatFiltered) *itemThatFiltered = item;
+            if (filteringParent->childMouseEventFilter(item, me))
                 ret = true;
-            }
+            filteringParentsToSkip.append(filteringParent);
         }
     } else if (QQuickPointerTouchEvent *pte = event->asPointerTouchEvent()) {
         QVarLengthArray<QPair<QQuickPointerHandler *, QQuickEventPoint *>, 32> passiveGrabsToCancel;
@@ -2867,7 +2885,7 @@ bool QQuickWindowPrivate::sendFilteredMouseEvent(QQuickItem *target, QQuickItem 
         hasFiltered->insert(target);
         if (target->childMouseEventFilter(item, event))
             filtered = true;
-        qCDebug(DBG_MOUSE_TARGET) << target << "childMouseEventFilter ->" << filtered;
+        qCDebug(DBG_MOUSE_TARGET) << "for" << item << target << "childMouseEventFilter ->" << filtered;
     }
 
     return sendFilteredMouseEvent(target->parentItem(), item, event, hasFiltered) || filtered;
@@ -3823,6 +3841,23 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     \since 5.3
  */
+
+/*!
+    \enum QQuickWindow::TextRenderType
+    \since 5.10
+
+    This enum describes the default render type of text-like elements in Qt
+    Quick (\l Text, \l TextInput, etc.).
+
+    Select NativeTextRendering if you prefer text to look native on the target
+    platform and do not require advanced features such as transformation of the
+    text. Using such features in combination with the NativeTextRendering
+    render type will lend poor and sometimes pixelated results.
+
+    \value QtTextRendering Use Qt's own rasterization algorithm.
+
+    \value NativeTextRendering Use the operating system's native rasterizer for text.
+*/
 
 /*!
     \fn void QQuickWindow::beforeSynchronizing()
@@ -4794,7 +4829,7 @@ void QQuickWindow::setSceneGraphBackend(const QString &backend)
 }
 
 /*!
-    Returns the requested Qt Quick scenegraph \a backend.
+    Returns the requested Qt Quick scenegraph backend.
 
     \note The return value of this function may still be outdated by
     subsequent calls to setSceneGraphBackend() until the first QQuickWindow in the
@@ -4844,6 +4879,34 @@ QSGNinePatchNode *QQuickWindow::createNinePatchNode() const
 {
     Q_D(const QQuickWindow);
     return isSceneGraphInitialized() ? d->context->sceneGraphContext()->createNinePatchNode() : nullptr;
+}
+
+/*!
+    \since 5.10
+
+    Returns the render type of text-like elements in Qt Quick.
+    The default is QQuickWindow::QtTextRendering.
+
+    \sa setTextRenderType()
+*/
+QQuickWindow::TextRenderType QQuickWindow::textRenderType()
+{
+    return QQuickWindowPrivate::textRenderType;
+}
+
+/*!
+    \since 5.10
+
+    Sets the default render type of text-like elements in Qt Quick to \a renderType.
+
+    \note setting the render type will only affect elements created afterwards;
+    the render type of existing elements will not be modified.
+
+    \sa textRenderType()
+*/
+void QQuickWindow::setTextRenderType(QQuickWindow::TextRenderType renderType)
+{
+    QQuickWindowPrivate::textRenderType = renderType;
 }
 
 #include "moc_qquickwindow.cpp"

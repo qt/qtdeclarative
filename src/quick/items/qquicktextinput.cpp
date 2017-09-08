@@ -40,7 +40,6 @@
 #include "qquicktextinput_p.h"
 #include "qquicktextinput_p_p.h"
 #include "qquickwindow.h"
-#include "qquicktextutil_p.h"
 
 #include <private/qqmlglobal_p.h>
 #include <private/qv4scopedvalue_p.h>
@@ -157,7 +156,7 @@ void QQuickTextInput::setText(const QString &s)
 
     Supported render types are:
     \list
-    \li Text.QtRendering - the default
+    \li Text.QtRendering
     \li Text.NativeRendering
     \endlist
 
@@ -165,6 +164,8 @@ void QQuickTextInput::setText(const QString &s)
     not require advanced features such as transformation of the text. Using such features in
     combination with the NativeRendering render type will lend poor and sometimes pixelated
     results.
+
+    The default rendering type is determined by \l QQuickWindow::textRenderType().
 */
 QQuickTextInput::RenderType QQuickTextInput::renderType() const
 {
@@ -389,6 +390,23 @@ QString QQuickTextInputPrivate::realText() const
 
     \qml
     TextInput { text: "OATS FLAVOUR WAY"; font.kerning: false }
+    \endqml
+*/
+
+/*!
+    \qmlproperty bool QtQuick::TextInput::font.preferShaping
+    \since 5.10
+
+    Sometimes, a font will apply complex rules to a set of characters in order to
+    display them correctly. In some writing systems, such as Brahmic scripts, this is
+    required in order for the text to be legible, but in e.g. Latin script, it is merely
+    a cosmetic feature. Setting the \c preferShaping property to false will disable all
+    such features when they are not required, which will improve performance in most cases.
+
+    The default value is true.
+
+    \qml
+    TextInput { text: "Some text"; font.preferShaping: false }
     \endqml
 */
 QFont QQuickTextInput::font() const

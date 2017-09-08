@@ -38,10 +38,10 @@
 ****************************************************************************/
 
 #include "qquickcustomparticle_p.h"
+#include <QtCore/qrandom.h>
 #include <QtQuick/private/qquickshadereffectmesh_p.h>
 #include <QtQuick/private/qsgshadersourcebuilder_p.h>
 #include <QtQml/qqmlinfo.h>
-#include <cstdlib>
 
 QT_BEGIN_NAMESPACE
 
@@ -425,7 +425,7 @@ void QQuickCustomParticle::buildData(QQuickOpenGLShaderEffectNode *rootNode)
 void QQuickCustomParticle::initialize(int gIdx, int pIdx)
 {
     QQuickParticleData* datum = m_system->groupData[gIdx]->data[pIdx];
-    datum->r = rand()/(qreal)RAND_MAX;
+    datum->r = QRandomGenerator::getReal();
 }
 
 void QQuickCustomParticle::commit(int gIdx, int pIdx)

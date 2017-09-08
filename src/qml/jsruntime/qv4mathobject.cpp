@@ -42,6 +42,7 @@
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmath.h>
+#include <QtCore/qrandom.h>
 #include <QtCore/private/qnumeric_p.h>
 #include <QtCore/qthreadstorage.h>
 
@@ -273,20 +274,9 @@ ReturnedValue MathObject::method_pow(const BuiltinFunction *, CallData *callData
     RETURN_RESULT(Encode(qt_qnan()));
 }
 
-Q_GLOBAL_STATIC(QThreadStorage<bool *>, seedCreatedStorage);
-
-ReturnedValue MathObject::method_random(const BuiltinFunction *b, CallData *)
+ReturnedValue MathObject::method_random(const BuiltinFunction *, CallData *)
 {
-    if (!seedCreatedStorage()->hasLocalData()) {
-        int msecs = QTime(0,0,0).msecsTo(QTime::currentTime());
-        Q_ASSERT(msecs >= 0);
-        qsrand(uint(uint(msecs) ^ reinterpret_cast<quintptr>(b)));
-        seedCreatedStorage()->setLocalData(new bool(true));
-    }
-    // rand()/qrand() return a value where the upperbound is RAND_MAX inclusive. So, instead of
-    // dividing by RAND_MAX (which would return 0..RAND_MAX inclusive), we divide by RAND_MAX + 1.
-    qint64 upperLimit = qint64(RAND_MAX) + 1;
-    RETURN_RESULT(Encode(qrand() / double(upperLimit)));
+    RETURN_RESULT(Encode(QRandomGenerator::getReal()));
 }
 
 ReturnedValue MathObject::method_round(const BuiltinFunction *, CallData *callData)

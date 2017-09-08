@@ -204,7 +204,7 @@ public:
     template<typename T>
     inline void deleteInEngineThread(T *);
     template<typename T>
-    inline static void deleteInEngineThread(QQmlEngine *, T *);
+    inline static void deleteInEngineThread(QQmlEnginePrivate *, T *);
     QString offlineStorageDatabaseDirectory() const;
 
     // These methods may be called from the loader thread
@@ -359,10 +359,10 @@ Delete \a value in the \a engine thread.  If the calling thread is the engine
 thread, \a value will be deleted immediately.
 */
 template<typename T>
-void QQmlEnginePrivate::deleteInEngineThread(QQmlEngine *engine, T *value)
+void QQmlEnginePrivate::deleteInEngineThread(QQmlEnginePrivate *engine, T *value)
 {
     Q_ASSERT(engine);
-    QQmlEnginePrivate::get(engine)->deleteInEngineThread<T>(value);
+    engine->deleteInEngineThread<T>(value);
 }
 
 /*!

@@ -53,6 +53,7 @@
 
 #include "qquicktextedit_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
+#include "qquicktextutil_p.h"
 
 #include <QtQml/qqml.h>
 #include <QtCore/qlist.h>
@@ -112,11 +113,7 @@ public:
         , quickDocument(0), lastSelectionStart(0), lastSelectionEnd(0), lineCount(0)
         , hAlign(QQuickTextEdit::AlignLeft), vAlign(QQuickTextEdit::AlignTop)
         , format(QQuickTextEdit::PlainText), wrapMode(QQuickTextEdit::NoWrap)
-#if defined(QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
-        , renderType(QQuickTextEdit::QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
-#else
-        , renderType(QQuickTextEdit::QtRendering)
-#endif
+        , renderType(QQuickTextUtil::textRenderType<QQuickTextEdit>())
         , contentDirection(Qt::LayoutDirectionAuto)
         , mouseSelectionMode(QQuickTextEdit::SelectCharacters)
 #if QT_CONFIG(im)

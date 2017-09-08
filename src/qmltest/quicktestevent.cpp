@@ -156,7 +156,7 @@ namespace QtQuickTest
             return;
         }
 
-        QPoint pos;
+        QPoint pos = _pos.toPoint();
         QQuickItem *sgitem = qobject_cast<QQuickItem *>(item);
         if (sgitem)
             pos = sgitem->mapToScene(_pos).toPoint();

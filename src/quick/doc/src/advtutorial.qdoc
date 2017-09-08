@@ -70,7 +70,7 @@ directory.
 
 \example tutorials/samegame/samegame1
 
-\section2 Creating the application screen
+\section2 Creating the Application Screen
 
 The first step is to create the basic QML items in your application.
 
@@ -92,7 +92,7 @@ and is used to give the button a more native look-and-feel.
 Notice the anchors for the \c Item, \c Button and \c Text types are set using
 group (dot) notation for readability.
 
-\section2 Adding \c Button and \c Block components
+\section2 Adding \c Button and \c Block Components
 
 The \c Button item in the code above is defined in a separate component file named \c Button.qml.
 To create a functional button, we use the QML types \l Text and \l MouseArea inside a \l Rectangle.
@@ -138,7 +138,7 @@ types to get started. Next, we will populate the game canvas with some blocks.
 
 \example tutorials/samegame/samegame2
 
-\section2 Generating the blocks in JavaScript
+\section2 Generating the Blocks in JavaScript
 
 Now that we've written some types, let's start writing the game.
 
@@ -181,7 +181,7 @@ and moves the new block to its position on the game canvas. This involves severa
 \endlist
 
 
-\section2 Connecting JavaScript components to QML
+\section2 Connecting JavaScript Components to QML
 
 Now we need to call the JavaScript code in \c samegame.js from our QML files.
 To do this, we add this line to \c samegame.qml which imports
@@ -212,7 +212,7 @@ Now, we have a screen of blocks, and we can begin to add the game mechanics.
 
 \example tutorials/samegame/samegame3
 
-\section2 Making a playable game
+\section2 Making a Playable Game
 
 Now that we have all the game components, we can add the game logic that
 dictates how a player interacts with the blocks and plays the game
@@ -230,7 +230,7 @@ To do this, we have added the following functions to \c samegame.js:
 
 As this is a tutorial about QML, not game design, we will only discuss \c handleClick() and \c victoryCheck() below since they interface directly with the QML types. Note that although the game logic here is written in JavaScript, it could have been written in C++ and then exposed to QML.
 
-\section3 Enabling mouse click interaction
+\section3 Enabling Mouse Click Interaction
 
 To make it easier for the JavaScript code to interface with the QML types, we have added an Item called \c gameCanvas to \c samegame.qml. It replaces the background as the item which contains the blocks. It also accepts mouse input from the user.  Here is the item code:
 
@@ -248,7 +248,7 @@ When clicked, the \l MouseArea calls \c{handleClick()} in \c samegame.js, which 
 
 Note that if \c score was a global variable in the \c{samegame.js} file you would not be able to bind to it. You can only bind to QML properties.
 
-\section3 Updating the score
+\section3 Updating the Score
 
 When the player clicks a block and triggers \c handleClick(), \c handleClick() also calls \c victoryCheck() to update the score and to check whether the player has completed the game. Here is the \c victoryCheck() code:
 
@@ -267,14 +267,14 @@ And this is how it is used in the main \c samegame.qml file:
 We give the dialog a \l {Item::z}{z} value of 100 to ensure it is displayed on top of our other components. The default \c z value for an item is 0.
 
 
-\section3 A dash of color
+\section3 A Dash of Color
 
 It's not much fun to play Same Game if all the blocks are the same color, so we've modified the \c createBlock() function in \c samegame.js to randomly create a different type of block (for either red, green or blue) each time it is called. \c Block.qml has also changed so that each block contains a different image depending on its type:
 
 \snippet tutorials/samegame/samegame3/Block.qml 0
 
 
-\section2 A working game
+\section2 A Working Game
 
 Now we now have a working game! The blocks can be clicked, the player can score, and the game can end (and then you can start a new one).
 Here is a screenshot of what has been accomplished so far:
@@ -298,7 +298,7 @@ until the next chapter - where your application becomes alive!
 
 \example tutorials/samegame/samegame4
 
-\section2 Adding some flair
+\section2 Adding Some Flair
 
 Now we're going to do two things to liven up the game: animate the blocks and add a High Score system.
 
@@ -307,7 +307,7 @@ JavaScript and QML files outside of \c samegame.qml have been moved into a new s
 
 In anticipation of the new block animations, \c Block.qml file is now renamed to \c BoomBlock.qml.
 
-\section3 Animating block movement
+\section3 Animating Block Movement
 
 First we will animate the blocks so that they move in a fluid manner. QML has a number of methods for adding fluid
 movement, and in this case we're going to use the \l Behavior type to add a \l SpringAnimation.
@@ -324,7 +324,7 @@ This ensures the \l SpringAnimation on the \c x is only enabled after \c createB
 the correct position. Otherwise, the blocks will slide out of the corner (0,0) when a game begins, instead of falling
 from the top in rows. (Try commenting out \c {enabled: spawned} and see for yourself.)
 
-\section3 Animating block opacity changes
+\section3 Animating Block Opacity Changes
 
 Next, we will add a smooth exit animation. For this, we'll use a \l Behavior type, which allows us to specify
 a default animation when a property change occurs. In this case, when the \c opacity of a Block changes, we will
@@ -353,7 +353,7 @@ Initially, we add these States to the root type of \c{BoomBlock.qml}:
 Now blocks will automatically fade in, as we already set \c spawned to true when we implemented the block animations.
 To fade out, we set \c dying to true instead of setting opacity to 0 when a block is destroyed (in the \c floodFill() function).
 
-\section3 Adding particle effects
+\section3 Adding Particle Effects
 
 Finally, we'll add a cool-looking particle effect to the blocks when they are destroyed. To do this, we first add a \l ParticleSystem in
 \c BoomBlock.qml, like so:
@@ -374,7 +374,7 @@ player's actions. The end result is shown below, with a different set of images 
 
 The theme change here is produced simply by replacing the block images. This can be done at runtime by changing the \l Image \c source property, so for a further challenge, you could add a button that toggles between themes with different images.
 
-\section2 Keeping a High Scores table
+\section2 Keeping a High Scores Table
 
 Another feature we might want to add to the game is a method of storing and retrieving high scores.
 
@@ -409,7 +409,7 @@ The \c nameInputDialog is activated in the \c victoryCheck() function in \c same
 \dots 4
 \snippet tutorials/samegame/samegame4/content/samegame.js 4
 
-\section3 Storing high scores offline
+\section3 Storing High Scores Offline
 
 Now we need to implement the functionality to actually save the High Scores table.
 
@@ -423,7 +423,7 @@ Then, we use the \l{QtQuick.LocalStorage}{Local Storage API} to maintain a persi
 
 This is one way of storing and displaying high scores locally, but certainly not the only way. A more complex alternative would be to create a high score dialog component, and pass it the results for processing and display (instead of reusing the \c Dialog). This would allow a more themeable dialog that could better present the high scores. If your QML is the UI for a C++ application, you could also have passed the score to a C++ function to store it locally in a variety of ways, including a simple format without SQL or in another SQL database.
 
-\section3 Storing high scores online
+\section3 Storing High Scores Online
 
 You've seen how you can store high scores locally, but it is also easy to integrate a web-enabled high score storage into your QML application. The implementation we've done her is very
 simple: the high score data is posted to a php script running on a server somewhere, and that server then stores it and
@@ -445,7 +445,7 @@ An alternate way to access and submit web-based data would be to use QML types d
 makes it very easy to fetch and display XML based data such as RSS in a QML application (see the Flickr demo for an example).
 
 
-\section2 That's it!
+\section2 That's It!
 
 By following this tutorial you've seen how you can write a fully functional application in QML:
 

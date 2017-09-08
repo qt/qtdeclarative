@@ -55,7 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPointerSingleHandler;
+class QQuickSinglePointHandler;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickHandlerPoint {
     Q_GADGET
@@ -102,17 +102,17 @@ private:
     qreal m_rotation;
     qreal m_pressure;
     QSizeF m_ellipseDiameters;
-    friend class QQuickPointerSingleHandler;
+    friend class QQuickSinglePointHandler;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPointerSingleHandler : public QQuickPointerDeviceHandler
+class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointHandler : public QQuickPointerDeviceHandler
 {
     Q_OBJECT
     Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
     Q_PROPERTY(QQuickHandlerPoint point READ point NOTIFY pointChanged)
 public:
-    explicit QQuickPointerSingleHandler(QObject *parent = 0);
-    virtual ~QQuickPointerSingleHandler() { }
+    explicit QQuickSinglePointHandler(QObject *parent = 0);
+    virtual ~QQuickSinglePointHandler() { }
 
     Qt::MouseButtons acceptedButtons() const { return m_acceptedButtons; }
     void setAcceptedButtons(Qt::MouseButtons buttons);
@@ -149,6 +149,6 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickHandlerPoint)
-QML_DECLARE_TYPE(QQuickPointerSingleHandler)
+QML_DECLARE_TYPE(QQuickSinglePointHandler)
 
 #endif // QQUICKPOINTERSINGLEHANDLER_H

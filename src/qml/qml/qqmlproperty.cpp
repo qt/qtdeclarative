@@ -798,7 +798,7 @@ QQmlPropertyPrivate::binding(QObject *object, QQmlPropertyIndex index)
     const int coreIndex = index.coreIndex();
     const int valueTypeIndex = index.valueTypeIndex();
 
-    if (!data->hasBindingBit(coreIndex))
+    if (coreIndex < 0 || !data->hasBindingBit(coreIndex))
         return 0;
 
     QQmlAbstractBinding *binding = data->bindings;
@@ -1546,6 +1546,9 @@ bool QQmlProperty::connectNotifySignal(QObject *dest, int method) const
     represent a regular Qt property or if it has no
     change notifier signal, or if the \a dest object does
     not have the specified \a slot.
+
+    \note \a slot should be passed using the SLOT() macro so it is
+    correctly identified.
 */
 bool QQmlProperty::connectNotifySignal(QObject *dest, const char *slot) const
 {

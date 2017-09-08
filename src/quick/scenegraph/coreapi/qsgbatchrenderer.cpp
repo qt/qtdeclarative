@@ -2914,6 +2914,11 @@ void Renderer::renderRenderNode(Batch *batch)
         glBindFramebuffer(GL_FRAMEBUFFER, prevFbo);
 }
 
+void Renderer::releaseCachedResources()
+{
+    m_shaderManager->invalidated();
+}
+
 class VisualizeShader : public QOpenGLShaderProgram
 {
 public:

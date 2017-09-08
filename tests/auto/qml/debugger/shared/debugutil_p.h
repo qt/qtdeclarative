@@ -1,4 +1,3 @@
-
 /****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
@@ -43,14 +42,6 @@
 
 #include <../../../shared/util.h>
 #include <private/qqmldebugclient_p.h>
-
-#include <QtCore/qeventloop.h>
-#include <QtCore/qtimer.h>
-#include <QtCore/qthread.h>
-#include <QtCore/qprocess.h>
-#include <QtCore/qmutex.h>
-#include <QtTest/qtest.h>
-#include <QtQml/qqmlengine.h>
 
 class QQmlDebugProcess;
 class QQmlDebugTest : public QQmlDataTest
@@ -106,51 +97,6 @@ protected:
 
 private:
     QByteArray lastMsg;
-};
-
-class QQmlDebugProcess : public QObject
-{
-    Q_OBJECT
-public:
-    QQmlDebugProcess(const QString &executable, QObject *parent = 0);
-    ~QQmlDebugProcess();
-
-    QString state();
-
-    void addEnvironment(const QString &environment);
-
-    void start(const QStringList &arguments);
-    bool waitForSessionStart();
-    int debugPort() const;
-
-    bool waitForFinished();
-    QProcess::ExitStatus exitStatus() const;
-
-    QString output() const;
-    void stop();
-    void setMaximumBindErrors(int numErrors);
-
-signals:
-    void readyReadStandardOutput();
-
-private slots:
-    void timeout();
-    void processAppOutput();
-    void processError(QProcess::ProcessError error);
-
-private:
-    QString m_executable;
-    QProcess m_process;
-    QString m_outputBuffer;
-    QString m_output;
-    QTimer m_timer;
-    QEventLoop m_eventLoop;
-    QMutex m_mutex;
-    bool m_started;
-    QStringList m_environment;
-    int m_port;
-    int m_maximumBindErrors;
-    int m_receivedBindErrors;
 };
 
 class QQmlInspectorResultRecipient : public QObject

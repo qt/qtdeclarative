@@ -27,6 +27,7 @@
 ****************************************************************************/
 
 #include "debugutil_p.h"
+#include "qqmldebugprocess_p.h"
 #include "../../shared/qqmlenginedebugclient.h"
 #include "../../../../shared/util.h"
 

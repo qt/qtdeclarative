@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickDragHandler::QQuickDragHandler(QObject *parent)
-    : QQuickPointerSingleHandler(parent)
+    : QQuickSinglePointHandler(parent)
 {
 }
 
@@ -70,7 +70,7 @@ bool QQuickDragHandler::wantsEventPoint(QQuickEventPoint *point)
 {
     // If we've already been interested in a point, stay interested, even if it has strayed outside bounds.
     return ((point->state() != QQuickEventPoint::Pressed && this->point().id() == point->pointId())
-            || QQuickPointerSingleHandler::wantsEventPoint(point));
+            || QQuickSinglePointHandler::wantsEventPoint(point));
 }
 
 void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
@@ -79,7 +79,7 @@ void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEvent
         // In case the grab got handled over from another grabber, we might not get the Press
         initializeTargetStartPos(point);
     enforceConstraints();
-    QQuickPointerSingleHandler::onGrabChanged(grabber, stateChange, point);
+    QQuickSinglePointHandler::onGrabChanged(grabber, stateChange, point);
 }
 
 void QQuickDragHandler::onActiveChanged()

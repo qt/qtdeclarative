@@ -75,7 +75,7 @@ The API works just like with \l QStringList, as shown in the previous section.
 have changed. If the QVariantList changes, it will be necessary to reset
 the model.
 
-\section2 QObjectList-based model
+\section2 QObjectList-based Model
 
 A list of QObject* values can also be used as a model. A QList<QObject*> provides
 the properties of the objects in the list as roles.
@@ -112,7 +112,7 @@ has changed.  If the QList changes, it is necessary to reset
 the model by calling QQmlContext::setContextProperty() again.
 
 
-\section2 QAbstractItemModel subclass
+\section2 QAbstractItemModel Subclass
 
 A model can be defined by subclassing QAbstractItemModel. This is the
 best approach if you have a more complex model that cannot be supported

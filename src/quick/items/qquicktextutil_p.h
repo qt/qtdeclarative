@@ -54,6 +54,7 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlincubator.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickwindow.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -64,6 +65,7 @@ public:
     template <typename Private> static void setCursorDelegate(Private *d, QQmlComponent *delegate);
     template <typename Private> static void createCursor(Private *d);
 
+    template <typename T> static typename T::RenderType textRenderType();
 
     static qreal alignedX(qreal textWidth, qreal itemWidth, int alignment);
     static qreal alignedY(qreal textHeight, qreal itemHeight, int alignment);
@@ -122,6 +124,20 @@ void QQuickTextUtil::createCursor(Private *d)
     d->setNativeCursorEnabled(!d->cursorItem);
     d->updateType = Private::UpdatePaintNode;
     parent->update();
+}
+
+template <typename T>
+typename T::RenderType QQuickTextUtil::textRenderType()
+{
+    switch (QQuickWindow::textRenderType()) {
+    case QQuickWindow::QtTextRendering:
+        return T::QtRendering;
+    case QQuickWindow::NativeTextRendering:
+        return T::NativeRendering;
+    }
+
+    Q_UNREACHABLE();
+    return T::QtRendering;
 }
 
 QT_END_NAMESPACE

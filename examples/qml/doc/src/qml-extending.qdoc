@@ -171,7 +171,7 @@ is a little contrived, but in real applications it is likely that the two
 extensions would add additional properties or modify the Person classes
 behavior.
 
-\section2 Define People as a base class
+\section2 Define People as a Base Class
 
 The implementation of the People class itself has not changed since the
 previous example.  However, as we have repurposed the People class as a common

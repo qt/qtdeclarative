@@ -43,6 +43,7 @@
 #include "qquicktextinput_p.h"
 #include "qquicktext_p.h"
 #include "qquickimplicitsizeitem_p_p.h"
+#include "qquicktextutil_p.h"
 
 #include <QtQml/qqml.h>
 #include <QtCore/qelapsedtimer.h>
@@ -122,11 +123,7 @@ public:
         , vAlign(QQuickTextInput::AlignTop)
         , wrapMode(QQuickTextInput::NoWrap)
         , m_echoMode(QQuickTextInput::Normal)
-#if defined(QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
-        , renderType(QQuickTextInput::QT_QUICK_DEFAULT_TEXT_RENDER_TYPE)
-#else
-        , renderType(QQuickTextInput::QtRendering)
-#endif
+        , renderType(QQuickTextUtil::textRenderType<QQuickTextInput>())
         , updateType(UpdatePaintNode)
         , mouseSelectionMode(QQuickTextInput::SelectCharacters)
         , m_layoutDirection(Qt::LayoutDirectionAuto)

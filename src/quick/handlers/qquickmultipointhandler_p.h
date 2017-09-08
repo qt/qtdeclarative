@@ -57,15 +57,15 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickMultiPointerHandler : public QQuickPointerDeviceHandler
+class Q_AUTOTEST_EXPORT QQuickMultiPointHandler : public QQuickPointerDeviceHandler
 {
     Q_OBJECT
     Q_PROPERTY(int requiredPointCount READ requiredPointCount WRITE setRequiredPointCount NOTIFY requiredPointCountChanged)
     Q_PROPERTY(qreal pointDistanceThreshold READ pointDistanceThreshold WRITE setPointDistanceThreshold NOTIFY pointDistanceThresholdChanged)
 
 public:
-    explicit QQuickMultiPointerHandler(QObject *parent = 0, int requiredPointCount = 2);
-    ~QQuickMultiPointerHandler();
+    explicit QQuickMultiPointHandler(QObject *parent = 0, int requiredPointCount = 2);
+    ~QQuickMultiPointHandler();
 
     int requiredPointCount() const { return m_requiredPointCount; }
     void setRequiredPointCount(int c);
@@ -107,6 +107,6 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMultiPointerHandler)
+QML_DECLARE_TYPE(QQuickMultiPointHandler)
 
 #endif // QQUICKPOINTERMULTIHANDLER_H

@@ -2296,7 +2296,7 @@ void QQmlTypeData::done()
             }
         }
 
-        m_compiledData->finalize(enginePrivate);
+        m_compiledData->finalizeCompositeType(enginePrivate);
     }
 
     {

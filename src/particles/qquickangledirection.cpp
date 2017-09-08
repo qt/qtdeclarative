@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qquickangledirection_p.h"
-#include <stdlib.h>
+#include <QRandomGenerator>
 #include <qmath.h>
 
 QT_BEGIN_NAMESPACE
@@ -108,8 +108,8 @@ QPointF QQuickAngleDirection::sample(const QPointF &from)
 {
     Q_UNUSED(from);
     QPointF ret;
-    qreal theta = m_angle*CONV - m_angleVariation*CONV + rand()/float(RAND_MAX) * m_angleVariation*CONV * 2;
-    qreal mag = m_magnitude- m_magnitudeVariation + rand()/float(RAND_MAX) * m_magnitudeVariation * 2;
+    qreal theta = m_angle*CONV - m_angleVariation*CONV + QRandomGenerator::getReal() * m_angleVariation*CONV * 2;
+    qreal mag = m_magnitude- m_magnitudeVariation + QRandomGenerator::getReal() * m_magnitudeVariation * 2;
     ret.setX(mag * qCos(theta));
     ret.setY(mag * qSin(theta));
     return ret;

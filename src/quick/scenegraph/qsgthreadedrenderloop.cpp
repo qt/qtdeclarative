@@ -406,6 +406,13 @@ bool QSGRenderThread::event(QEvent *e)
                 stopEventProcessing = true;
         } else {
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- not releasing because window is still active";
+            if (window) {
+                QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+                if (d->renderer) {
+                    qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- requesting renderer to release cached resources";
+                    d->renderer->releaseCachedResources();
+                }
+            }
         }
         waitCondition.wakeOne();
         wm->m_lockedForSync = false;
@@ -553,6 +560,7 @@ void QSGRenderThread::sync(bool inExpose)
         if (d->renderer)
             d->renderer->clearChangedFlag();
         d->syncSceneGraph();
+        sgrc->endSync();
         if (!hadRenderer && d->renderer) {
             qCDebug(QSG_LOG_RENDERLOOP) << QSG_RT_PAD << "- renderer was created";
             syncResultedInChanges = true;

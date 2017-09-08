@@ -148,7 +148,7 @@ public:
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
     void deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent);
     bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *, QSet<QQuickItem *> *);
-    bool sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem **itemThatFiltered = 0);
+    bool sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver);
 #if QT_CONFIG(wheelevent)
     bool deliverWheelEvent(QQuickItem *, QWheelEvent *);
 #endif
@@ -279,6 +279,7 @@ public:
     mutable QQuickWindowIncubationController *incubationController;
 
     static bool defaultAlphaBuffer;
+    static QQuickWindow::TextRenderType textRenderType;
 
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold = -1);
 

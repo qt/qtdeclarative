@@ -86,7 +86,7 @@ public:
     QSGContext *sceneGraphContext() const override { return m_sg; }
     QSGRenderContext *createRenderContext(QSGContext *) const override;
 
-    void releaseResources(QQuickWindow *) override { }
+    void releaseResources(QQuickWindow *) override;
 
     void render();
     void renderWindow(QQuickWindow *window);

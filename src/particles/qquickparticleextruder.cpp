@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qquickparticleextruder_p.h"
-#include <stdlib.h>
+#include <QRandomGenerator>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,8 +59,8 @@ QQuickParticleExtruder::QQuickParticleExtruder(QObject *parent) :
 
 QPointF QQuickParticleExtruder::extrude(const QRectF &rect)
 {
-    return QPointF(((qreal)rand() / RAND_MAX) * rect.width() + rect.x(),
-                   ((qreal)rand() / RAND_MAX) * rect.height() + rect.y());
+    return QPointF(QRandomGenerator::getReal() * rect.width() + rect.x(),
+                   QRandomGenerator::getReal() * rect.height() + rect.y());
 }
 
 bool QQuickParticleExtruder::contains(const QRectF &bounds, const QPointF &point)
