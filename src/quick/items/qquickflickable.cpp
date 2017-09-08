@@ -55,6 +55,7 @@
 #include <QtCore/qmath.h>
 #include "qplatformdefs.h"
 
+#include <math.h>
 #include <cmath>
 
 QT_BEGIN_NAMESPACE

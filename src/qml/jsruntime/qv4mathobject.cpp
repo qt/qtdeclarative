@@ -45,6 +45,7 @@
 #include <QtCore/private/qnumeric_p.h>
 #include <QtCore/qthreadstorage.h>
 
+#include <math.h>
 #include <cmath>
 
 using namespace QV4;
