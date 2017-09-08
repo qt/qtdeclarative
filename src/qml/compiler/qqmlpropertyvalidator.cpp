@@ -58,7 +58,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, c
 
 QVector<QQmlCompileError> QQmlPropertyValidator::validate()
 {
-    return validateObject(qmlUnit->indexOfRootObject, /*instantiatingBinding*/0);
+    return validateObject(/*root object*/0, /*instantiatingBinding*/0);
 }
 
 typedef QVarLengthArray<const QV4::CompiledData::Binding *, 8> GroupPropertyVector;

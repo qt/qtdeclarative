@@ -432,7 +432,6 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.offsetToImports = 0;
     unit.nObjects = 0;
     unit.offsetToObjects = 0;
-    unit.indexOfRootObject = 0;
 
     unit.unitSize = nextOffset;
 

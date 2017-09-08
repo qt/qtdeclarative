@@ -228,15 +228,10 @@ QVector<QmlIR::Object *> *QQmlTypeCompiler::qmlObjects() const
     return &document->objects;
 }
 
-int QQmlTypeCompiler::rootObjectIndex() const
-{
-    return document->indexOfRootObject;
-}
-
 void QQmlTypeCompiler::setPropertyCaches(QQmlPropertyCacheVector &&caches)
 {
     m_propertyCaches = std::move(caches);
-    Q_ASSERT(m_propertyCaches.count() >= document->indexOfRootObject);
+    Q_ASSERT(m_propertyCaches.count() > 0);
 }
 
 const QQmlPropertyCacheVector *QQmlTypeCompiler::propertyCaches() const
@@ -680,7 +675,7 @@ QQmlCustomParserScriptIndexer::QQmlCustomParserScriptIndexer(QQmlTypeCompiler *t
 
 void QQmlCustomParserScriptIndexer::annotateBindingsWithScriptStrings()
 {
-    scanObjectRecursively(compiler->rootObjectIndex());
+    scanObjectRecursively(/*root object*/0);
 }
 
 void QQmlCustomParserScriptIndexer::scanObjectRecursively(int objectIndex, bool annotateScriptBindings)
@@ -775,7 +770,6 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
     , enginePrivate(typeCompiler->enginePrivate())
     , pool(typeCompiler->memoryPool())
     , qmlObjects(typeCompiler->qmlObjects())
-    , indexOfRootObject(typeCompiler->rootObjectIndex())
     , resolvedTypes(&typeCompiler->resolvedTypes)
     , propertyCaches(std::move(typeCompiler->takePropertyCaches()))
 {
@@ -913,9 +907,9 @@ bool QQmlComponentAndAliasResolver::resolve()
         if (rootBinding->next || rootBinding->type != QV4::CompiledData::Binding::Type_Object)
             COMPILE_EXCEPTION(obj, tr("Invalid component body specification"));
 
-        // We are going to collect ids/aliases and resolve them for the root object as a separate
+        // For the root object, we are going to collect ids/aliases and resolve them for as a separate
         // last pass.
-        if (i != indexOfRootObject)
+        if (i != 0)
             componentRoots.append(i);
 
     }
@@ -941,12 +935,12 @@ bool QQmlComponentAndAliasResolver::resolve()
     _idToObjectIndex.clear();
     _objectsWithAliases.clear();
 
-    collectIdsAndAliases(indexOfRootObject);
+    collectIdsAndAliases(/*root object*/0);
 
-    QmlIR::Object *rootComponent = qmlObjects->at(indexOfRootObject);
+    QmlIR::Object *rootComponent = qmlObjects->at(/*root object*/0);
     rootComponent->namedObjectsInComponent.allocate(pool, _idToObjectIndex);
 
-    if (!resolveAliases(indexOfRootObject))
+    if (!resolveAliases(/*root object*/0))
         return false;
 
     // Implicit component insertion may have added objects and thus we also need
@@ -974,7 +968,7 @@ bool QQmlComponentAndAliasResolver::collectIdsAndAliases(int objectIndex)
         _objectsWithAliases.append(objectIndex);
 
     // Stop at Component boundary
-    if (obj->flags & QV4::CompiledData::Object::IsComponent && objectIndex != compiler->rootObjectIndex())
+    if (obj->flags & QV4::CompiledData::Object::IsComponent && objectIndex != /*root object*/0)
         return true;
 
     for (const QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
@@ -1165,7 +1159,7 @@ QQmlDeferredAndCustomParserBindingScanner::QQmlDeferredAndCustomParserBindingSca
 
 bool QQmlDeferredAndCustomParserBindingScanner::scanObject()
 {
-    return scanObject(compiler->rootObjectIndex());
+    return scanObject(/*root object*/0);
 }
 
 bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
@@ -1291,7 +1285,7 @@ bool QQmlJSCodeGenerator::generateCodeForComponents()
             return false;
     }
 
-    return compileComponent(compiler->rootObjectIndex());
+    return compileComponent(/*root object*/0);
 }
 
 bool QQmlJSCodeGenerator::compileComponent(int contextObject)

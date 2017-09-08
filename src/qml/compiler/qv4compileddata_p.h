@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x12
+#define QV4_DATA_STRUCTURE_VERSION 0x13
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -666,7 +666,6 @@ struct Unit
     LEUInt32 offsetToImports;
     LEUInt32 nObjects;
     LEUInt32 offsetToObjects;
-    LEUInt32 indexOfRootObject;
 
     LEUInt32 padding;
 
@@ -854,7 +853,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
 
     // QML specific fields
     QQmlPropertyCacheVector propertyCaches;
-    QQmlPropertyCache *rootPropertyCache() const { return propertyCaches.at(data->indexOfRootObject); }
+    QQmlPropertyCache *rootPropertyCache() const { return propertyCaches.at(/*root object*/0); }
 
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
 
@@ -891,7 +890,6 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
     // --- interface for QQmlPropertyCacheCreator
     typedef Object CompiledObject;
     int objectCount() const { return data->nObjects; }
-    int rootObjectIndex() const { return data->indexOfRootObject; }
     const Object *objectAt(int index) const { return data->objectAt(index); }
     QString stringAt(int index) const { return data->stringAt(index); }
 

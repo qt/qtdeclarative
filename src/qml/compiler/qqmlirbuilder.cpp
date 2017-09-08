@@ -300,7 +300,6 @@ void Document::removeScriptPragmas(QString &script)
 Document::Document(bool debugMode)
     : jsModule(debugMode)
     , program(0)
-    , indexOfRootObject(0)
     , jsGenerator(&jsModule)
 {
 }
@@ -404,7 +403,10 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
 
     QQmlJS::AST::UiObjectDefinition *rootObject = QQmlJS::AST::cast<QQmlJS::AST::UiObjectDefinition*>(program->members->member);
     Q_ASSERT(rootObject);
-    defineQMLObject(&output->indexOfRootObject, rootObject);
+    int rootObjectIndex = -1;
+    if (defineQMLObject(&rootObjectIndex, rootObject)) {
+        Q_ASSERT(rootObjectIndex == 0);
+    }
 
     qSwap(_imports, output->imports);
     qSwap(_pragmas, output->pragmas);
@@ -1399,7 +1401,6 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
     qmlUnit->nImports = output.imports.count();
     qmlUnit->offsetToObjects = unitSize + importSize;
     qmlUnit->nObjects = output.objects.count();
-    qmlUnit->indexOfRootObject = output.indexOfRootObject;
     qmlUnit->offsetToStringTable = totalSize - output.jsGenerator.stringTable.sizeOfTableAndData();
     qmlUnit->stringTableSize = output.jsGenerator.stringTable.stringCount();
 
@@ -2084,8 +2085,6 @@ void IRLoader::load()
         p->type = QmlIR::Pragma::PragmaSingleton;
         output->pragmas << p;
     }
-
-    output->indexOfRootObject = unit->indexOfRootObject;
 
     for (uint i = 0; i < unit->nObjects; ++i) {
         const QV4::CompiledData::Object *serializedObject = unit->objectAt(i);

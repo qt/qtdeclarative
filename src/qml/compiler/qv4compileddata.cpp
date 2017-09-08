@@ -212,7 +212,7 @@ void CompilationUnit::unlink()
         engine->compilationUnits.erase(engine->compilationUnits.find(this));
 
     if (isRegisteredWithEngine) {
-        Q_ASSERT(data && quint32(propertyCaches.count()) > data->indexOfRootObject && propertyCaches.at(data->indexOfRootObject));
+        Q_ASSERT(data && propertyCaches.count() > 0 && propertyCaches.at(/*root object*/0));
         if (qmlEngine)
             qmlEngine->unregisterInternalCompositeType(this);
         QQmlMetaType::unregisterInternalCompositeType(this);
@@ -288,11 +288,11 @@ void CompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngine)
     this->qmlEngine = qmlEngine;
 
     // Add to type registry of composites
-    if (propertyCaches.needsVMEMetaObject(data->indexOfRootObject)) {
+    if (propertyCaches.needsVMEMetaObject(/*root object*/0)) {
         QQmlMetaType::registerInternalCompositeType(this);
         qmlEngine->registerInternalCompositeType(this);
     } else {
-        const QV4::CompiledData::Object *obj = objectAt(data->indexOfRootObject);
+        const QV4::CompiledData::Object *obj = objectAt(/*root object*/0);
         auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
         if (typeRef->compilationUnit) {

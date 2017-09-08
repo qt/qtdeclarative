@@ -163,7 +163,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     int objectToCreate;
 
     if (subComponentIndex == -1) {
-        objectToCreate = qmlUnit->indexOfRootObject;
+        objectToCreate = /*root object*/0;
     } else {
         const QV4::CompiledData::Object *compObj = qmlUnit->objectAt(subComponentIndex);
         objectToCreate = compObj->bindingTable()->value.objectIndex;
@@ -1121,7 +1121,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     }
 
     ddata->setImplicitDestructible();
-    if (static_cast<quint32>(index) == qmlUnit->indexOfRootObject || ddata->rootObjectInCreation) {
+    if (static_cast<quint32>(index) == /*root object*/0 || ddata->rootObjectInCreation) {
         if (ddata->context) {
             Q_ASSERT(ddata->context != context);
             Q_ASSERT(ddata->outerContext);
