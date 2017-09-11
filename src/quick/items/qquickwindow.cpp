@@ -2232,6 +2232,7 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     // the usecase a bit evil, but we at least don't want to lose events.
     ++pointerEventRecursionGuard;
 
+    skipDelivery.clear();
     if (event->asPointerMouseEvent()) {
         deliverMouseEvent(event->asPointerMouseEvent());
     } else if (event->asPointerTouchEvent()) {
@@ -2426,7 +2427,6 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
         }
     }
 
-    QVarLengthArray<QQuickItem *> filteredItems;
     for (QQuickItem *item : targetItems) {
         if (!handlersOnly && sendFilteredPointerEvent(event, item)) {
             if (event->isAccepted()) {
@@ -2434,15 +2434,12 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
                     event->point(i)->setAccepted();
                 return true;
             }
-            filteredItems << item;
+            skipDelivery.append(item);
         }
 
-        // Do not deliverMatchingPointsTo any item for which the parent-filter already intercepted the event
-        if (filteredItems.contains(item))
-            continue;
-        // Do not deliverMatchingPointsTo any item which already had a chance to filter
-        // e.g. if Flickable has filtered events from one of its children, it does not need normal delivery
-        if (hasFiltered.contains(item))
+        // Do not deliverMatchingPointsTo any item for which the filtering parent already intercepted the event,
+        // nor to any item which already had a chance to filter.
+        if (skipDelivery.contains(item))
             continue;
         deliverMatchingPointsToItem(item, event, handlersOnly);
         if (event->allPointsAccepted())
@@ -2743,8 +2740,11 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
             if (receiver->acceptedMouseButtons()) {
                 QPointF localPos = receiver->mapFromScene(pme->point(0)->scenePosition());
                 QMouseEvent *me = pme->asMouseEvent(localPos);
-                if (filteringParent->childMouseEventFilter(receiver, me))
+                if (filteringParent->childMouseEventFilter(receiver, me)) {
+                    qCDebug(DBG_MOUSE) << "mouse event intercepted by childMouseEventFilter of " << filteringParent;
+                    skipDelivery.append(filteringParent);
                     filtered = true;
+                }
             }
         } else if (QQuickPointerTouchEvent *pte = event->asPointerTouchEvent()) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -2760,6 +2760,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                     QVarLengthArray<QPair<QQuickPointerHandler *, QQuickEventPoint *>, 32> passiveGrabsToCancel;
                     if (filteringParent->childMouseEventFilter(receiver, filteringParentTouchEvent.data())) {
                         qCDebug(DBG_TOUCH) << "touch event intercepted by childMouseEventFilter of " << filteringParent;
+                        skipDelivery.append(filteringParent);
                         filteringParent->grabMouse();
                         for (auto point: qAsConst(filteringParentTouchEvent->touchPoints())) {
                             auto pointerEventPoint = pte->pointById(point.id());
@@ -2804,6 +2805,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                                 touchMouseDevice = event->device();
                                 if (filteringParent->childMouseEventFilter(receiver, mouseEvent.data())) {
                                     qCDebug(DBG_TOUCH) << "touch event intercepted as synth mouse event by childMouseEventFilter of " << filteringParent;
+                                    skipDelivery.append(filteringParent);
                                     if (t != QEvent::MouseButtonRelease) {
                                         qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << hex << tp.id() << "->" << filteringParent;
                                         pointerEventInstance(touchMouseDevice)->pointById(tp.id())->setGrabberItem(filteringParent);
@@ -2851,8 +2853,10 @@ bool QQuickWindowPrivate::sendFilteredMouseEvent(QEvent *event, QQuickItem *rece
     bool filtered = false;
     if (filteringParentPrivate->filtersChildMouseEvents && !hasFiltered.contains(filteringParent)) {
         hasFiltered.append(filteringParent);
-        if (filteringParent->childMouseEventFilter(receiver, event))
+        if (filteringParent->childMouseEventFilter(receiver, event)) {
             filtered = true;
+            skipDelivery.append(filteringParent);
+        }
         qCDebug(DBG_MOUSE_TARGET) << "for" << receiver << filteringParent << "childMouseEventFilter ->" << filtered;
     }
 

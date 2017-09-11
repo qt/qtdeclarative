@@ -227,7 +227,8 @@ public:
     QList<QSGNode *> cleanupNodeList;
 
     QVector<QQuickItem *> itemsToPolish;
-    QVector<QQuickItem *> hasFiltered; // during event delivery, the items for which childMouseEventFilter was already called
+    QVector<QQuickItem *> hasFiltered; // during event delivery to a single receiver, the filtering parents for which childMouseEventFilter was already called
+    QVector<QQuickItem *> skipDelivery; // during delivery of one event to all receivers, Items to which we know delivery is no longer necessary
 
     qreal devicePixelRatio;
     QMetaObject::Connection physicalDpiChangedConnection;
