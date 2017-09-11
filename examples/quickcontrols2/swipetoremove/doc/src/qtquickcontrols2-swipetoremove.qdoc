@@ -29,10 +29,10 @@
     \example swipetoremove
     \title Qt Quick Controls 2 - Swipe to Remove
     \ingroup qtquickcontrols2-examples
-    \brief Demonstrates removing list items by swipe.
+    \brief Demonstrates removal of list items by swipe gesture.
 
     This example demonstrates how \l SwipeDelegate can be used to implement
-    removal of list items by swipe. This UI pattern is often used in touch
+    removal of list items by swiping. This UI pattern is often used in touch
     user interfaces.
 
     \image qtquickcontrols2-swipetoremove.png
@@ -46,7 +46,7 @@
 
     The following snippet presents how the logic of removing items is
     implemented. When the swipe is \l {SwipeDelegate::swipe}{completed}, it
-    starts a timer tha waits a few seconds to let the user undo the remove
+    starts a timer that waits a few seconds to let the user undo the remove
     action. Once the undo timer triggers, the item is removed from the list:
 
     \snippet swipetoremove/swipetoremove.qml removal

@@ -884,8 +884,10 @@ void QQuickSpinBox::componentComplete()
 {
     Q_D(QQuickSpinBox);
     QQuickControl::componentComplete();
-    d->updateUpEnabled();
-    d->updateDownEnabled();
+    if (!d->setValue(d->value, /* modified = */ false, /* allowWrap = */ false)) {
+        d->updateUpEnabled();
+        d->updateDownEnabled();
+    }
 }
 
 void QQuickSpinBox::itemChange(ItemChange change, const ItemChangeData &value)

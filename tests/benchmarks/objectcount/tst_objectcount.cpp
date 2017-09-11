@@ -112,9 +112,12 @@ static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QSt
                 if (QFile::exists(filePath)) {
                     QTest::newRow(qPrintable(name)) << QUrl::fromLocalFile(filePath);
                     break;
-                } else if (QFile::exists(QQmlFile::urlToLocalFileOrQrc(filePath))) {
-                    QTest::newRow(qPrintable(name)) << QUrl(filePath);
-                    break;
+                } else {
+                    filePath = QQmlFile::urlToLocalFileOrQrc(filePath);
+                    if (!filePath.isEmpty() && QFile::exists(filePath)) {
+                        QTest::newRow(qPrintable(name)) << QUrl(filePath);
+                        break;
+                    }
                 }
             }
         }
@@ -125,6 +128,7 @@ static void initTestRows(QQmlEngine *engine)
 {
     addTestRows(engine, "controls", "QtQuick/Controls.2", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
     addTestRows(engine, "controls/fusion", "QtQuick/Controls.2/Fusion", QStringList() << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
+    addTestRows(engine, "controls/imagine", "QtQuick/Controls.2/Imagine");
     addTestRows(engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
     addTestRows(engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }

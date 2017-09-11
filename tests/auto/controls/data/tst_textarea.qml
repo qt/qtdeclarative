@@ -449,4 +449,20 @@ TestCase {
         mouseClick(control, rect.x + rect.width / 2, rect.y + rect.height / 2)
         compare(control.selectedText, "Qt Quick Controls 2 TextArea")
     }
+
+    Component {
+        id: scrollView
+        ScrollView {
+            TextArea { }
+        }
+    }
+
+    function test_scrollView() {
+        var control = createTemporaryObject(scrollView, testCase)
+        verify(control)
+
+        // don't crash (QTBUG-62292)
+        control.destroy()
+        wait(0)
+    }
 }

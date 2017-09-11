@@ -48,15 +48,32 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.10
+import QtQuick 2.9
 import QtQuick.Controls 2.2
 
-Control {
-    font.capitalization: Font.AllUppercase
-    font.family: "Courier"
-    font.italic: true
-    font.pixelSize: 60
-    font.strikeout: true
-    font.underline: true
-    font.weight: Font.DemiBold
+ApplicationWindow {
+    id: window
+    width: 200
+    height: 200
+
+    property alias listView: listView
+
+    font.pixelSize: 55
+
+    ListView {
+        id: listView
+        anchors.fill: parent
+        model: 1
+        delegate: Column {
+            property alias control: control
+            property alias label: label
+            property alias textarea: textarea
+            property alias textfield: textfield
+
+            Control { id: control }
+            Label { id: label }
+            TextArea { id: textarea }
+            TextField { id: textfield }
+        }
+    }
 }

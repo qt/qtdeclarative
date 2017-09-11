@@ -313,6 +313,11 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickScrollIndicator, 3>(uri, 2, 3, "ScrollIndicator");
     qmlRegisterType<QQuickSlider, 3>(uri, 2, 3, "Slider");
     qmlRegisterType<QQuickSpinBox, 3>(uri, 2, 3, "SpinBox");
+
+    // NOTE: register the latest revisions of all template/control base classes to
+    // make revisioned properties available to their subclasses (synced with Qt 5.10)
+    qmlRegisterRevision<QQuickText, 10>(uri, 2, 3);
+    qmlRegisterRevision<QQuickTextEdit, 10>(uri, 2, 3);
 }
 
 QT_END_NAMESPACE

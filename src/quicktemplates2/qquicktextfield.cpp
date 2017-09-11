@@ -559,8 +559,9 @@ void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem
     case ItemEnabledHasChanged:
         emit paletteChanged();
         break;
+    case ItemSceneChange:
     case ItemParentHasChanged:
-        if (value.item) {
+        if ((change == ItemParentHasChanged && value.item) || (change == ItemSceneChange && value.window)) {
             d->resolveFont();
             d->resolvePalette();
 #if QT_CONFIG(quicktemplates2_hover)

@@ -79,6 +79,7 @@ public:
 #if QT_CONFIG(quicktemplates2_multitouch)
     bool grabTouch(QQuickItem *item, QTouchEvent *event);
 #endif
+    bool blockInput(QQuickItem *item, const QPointF &point) const override;
 
     bool handlePress(QQuickItem* item, const QPointF &point, ulong timestamp) override;
     bool handleMove(QQuickItem* item, const QPointF &point, ulong timestamp) override;

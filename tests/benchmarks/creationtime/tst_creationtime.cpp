@@ -47,6 +47,9 @@ private slots:
     void controls();
     void controls_data();
 
+    void fusion();
+    void fusion_data();
+
     void imagine();
     void imagine_data();
 
@@ -92,9 +95,12 @@ static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QSt
                 if (QFile::exists(filePath)) {
                     QTest::newRow(qPrintable(name)) << QUrl::fromLocalFile(filePath);
                     break;
-                } else if (QFile::exists(QQmlFile::urlToLocalFileOrQrc(filePath))) {
-                    QTest::newRow(qPrintable(name)) << QUrl(filePath);
-                    break;
+                } else {
+                    filePath = QQmlFile::urlToLocalFileOrQrc(filePath);
+                    if (!filePath.isEmpty() && QFile::exists(filePath)) {
+                        QTest::newRow(qPrintable(name)) << QUrl(filePath);
+                        break;
+                    }
                 }
             }
         }
@@ -125,7 +131,19 @@ void tst_CreationTime::controls()
 void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls", "QtQuick/Controls.2", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls", "QtQuick/Controls.2", QStringList() << "ApplicationWindow" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+}
+
+void tst_CreationTime::fusion()
+{
+    QFETCH(QUrl, url);
+    doBenchmark(&engine, url);
+}
+
+void tst_CreationTime::fusion_data()
+{
+    QTest::addColumn<QUrl>("url");
+    addTestRows(&engine, "controls/fusion", "QtQuick/Controls.2/Fusion", QStringList() << "ApplicationWindow" << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
 }
 
 void tst_CreationTime::imagine()
@@ -137,7 +155,7 @@ void tst_CreationTime::imagine()
 void tst_CreationTime::imagine_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/imagine", "QtQuick/Controls.2/Imagine");
+    addTestRows(&engine, "controls/imagine", "QtQuick/Controls.2/Imagine", QStringList() << "ApplicationWindow");
 }
 
 void tst_CreationTime::material()
@@ -149,7 +167,7 @@ void tst_CreationTime::material()
 void tst_CreationTime::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
+    addTestRows(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "ApplicationWindow" << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
 }
 
 void tst_CreationTime::universal()
@@ -161,7 +179,7 @@ void tst_CreationTime::universal()
 void tst_CreationTime::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "ApplicationWindow" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 void tst_CreationTime::calendar()
