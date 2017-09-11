@@ -25,6 +25,7 @@ qtConfig(opengl(es1|es2)?) {
 
 PRIVATETESTS += \
     nokeywords \
+    propertyrequirements \
     qquickanimations \
     qquickapplication \
     qquickbehaviors \
