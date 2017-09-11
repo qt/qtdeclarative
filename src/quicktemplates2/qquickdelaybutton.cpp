@@ -125,7 +125,7 @@ void QQuickDelayTransitionManager::transition(QQuickTransition *transition, qrea
 
 void QQuickDelayTransitionManager::finished()
 {
-    if (qFuzzyCompare(m_button->progress(), 1.0))
+    if (qFuzzyCompare(m_button->progress(), qreal(1.0)))
         emit m_button->activated();
 }
 
@@ -154,7 +154,7 @@ void QQuickDelayButtonPrivate::beginTransition(qreal to)
 void QQuickDelayButtonPrivate::finishTransition()
 {
     Q_Q(QQuickDelayButton);
-    if (qFuzzyCompare(progress, 1.0))
+    if (qFuzzyCompare(progress, qreal(1.0)))
         emit q->activated();
 }
 
@@ -260,7 +260,7 @@ void QQuickDelayButton::buttonChange(ButtonChange change)
 void QQuickDelayButton::nextCheckState()
 {
     Q_D(QQuickDelayButton);
-    setChecked(!d->checked && qFuzzyCompare(d->progress, 1.0));
+    setChecked(!d->checked && qFuzzyCompare(d->progress, qreal(1.0)));
 }
 
 QFont QQuickDelayButton::defaultFont() const

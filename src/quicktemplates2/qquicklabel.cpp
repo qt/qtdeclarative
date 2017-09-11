@@ -315,8 +315,9 @@ void QQuickLabel::itemChange(QQuickItem::ItemChange change, const QQuickItem::It
     case ItemEnabledHasChanged:
         emit paletteChanged();
         break;
+    case ItemSceneChange:
     case ItemParentHasChanged:
-        if (value.item) {
+        if ((change == ItemParentHasChanged && value.item) || (change == ItemSceneChange && value.window)) {
             d->resolveFont();
             d->resolvePalette();
         }

@@ -158,7 +158,7 @@ qreal QQuickDialPrivate::positionAt(const QPointF &point) const
 {
     qreal yy = height / 2.0 - point.y();
     qreal xx = point.x() - width / 2.0;
-    qreal angle = (xx || yy) ? atan2(yy, xx) : 0;
+    qreal angle = (xx || yy) ? std::atan2(yy, xx) : 0;
 
     if (angle < M_PI / -2)
         angle = angle + M_PI * 2;
