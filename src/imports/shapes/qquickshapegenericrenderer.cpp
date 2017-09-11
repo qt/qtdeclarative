@@ -75,38 +75,32 @@ static inline QQuickShapeGenericRenderer::Color4ub colorToColor4ub(const QColor 
 }
 
 QQuickShapeGenericStrokeFillNode::QQuickShapeGenericStrokeFillNode(QQuickWindow *window)
-    : m_geometry(new QSGGeometry(QSGGeometry::defaultAttributes_ColoredPoint2D(), 0, 0)),
-      m_window(window),
-      m_material(nullptr)
+    : m_material(nullptr)
 {
-    setGeometry(m_geometry);
-    activateMaterial(MatSolidColor);
+    setFlag(QSGNode::OwnsGeometry, true);
+    setGeometry(new QSGGeometry(QSGGeometry::defaultAttributes_ColoredPoint2D(), 0, 0));
+    activateMaterial(window, MatSolidColor);
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("stroke-fill"));
 #endif
 }
 
-QQuickShapeGenericStrokeFillNode::~QQuickShapeGenericStrokeFillNode()
-{
-    delete m_geometry;
-}
-
-void QQuickShapeGenericStrokeFillNode::activateMaterial(Material m)
+void QQuickShapeGenericStrokeFillNode::activateMaterial(QQuickWindow *window, Material m)
 {
     switch (m) {
     case MatSolidColor:
         // Use vertexcolor material. Items with different colors remain batchable
         // this way, at the expense of having to provide per-vertex color values.
-        m_material.reset(QQuickShapeGenericMaterialFactory::createVertexColor(m_window));
+        m_material.reset(QQuickShapeGenericMaterialFactory::createVertexColor(window));
         break;
     case MatLinearGradient:
-        m_material.reset(QQuickShapeGenericMaterialFactory::createLinearGradient(m_window, this));
+        m_material.reset(QQuickShapeGenericMaterialFactory::createLinearGradient(window, this));
         break;
     case MatRadialGradient:
-        m_material.reset(QQuickShapeGenericMaterialFactory::createRadialGradient(m_window, this));
+        m_material.reset(QQuickShapeGenericMaterialFactory::createRadialGradient(window, this));
         break;
     case MatConicalGradient:
-        m_material.reset(QQuickShapeGenericMaterialFactory::createConicalGradient(m_window, this));
+        m_material.reset(QQuickShapeGenericMaterialFactory::createConicalGradient(window, this));
         break;
     default:
         qWarning("Unknown material %d", m);
@@ -583,7 +577,7 @@ void QQuickShapeGenericRenderer::updateFillNode(ShapePathData *d, QQuickShapeGen
     QQuickShapeGenericStrokeFillNode *n = node->m_fillNode;
     updateShadowDataInNode(d, n);
 
-    QSGGeometry *g = n->m_geometry;
+    QSGGeometry *g = n->geometry();
     if (d->fillVertices.isEmpty()) {
         if (g->vertexCount() || g->indexCount()) {
             g->allocate(0, 0);
@@ -607,7 +601,7 @@ void QQuickShapeGenericRenderer::updateFillNode(ShapePathData *d, QQuickShapeGen
         default:
             Q_UNREACHABLE();
         }
-        n->activateMaterial(gradMat);
+        n->activateMaterial(m_item->window(), gradMat);
         if (d->effectiveDirty & DirtyFillGradient) {
             // Gradients are implemented via a texture-based material.
             n->markDirty(QSGNode::DirtyMaterial);
@@ -616,7 +610,7 @@ void QQuickShapeGenericRenderer::updateFillNode(ShapePathData *d, QQuickShapeGen
                 return;
         }
     } else {
-        n->activateMaterial(QQuickShapeGenericStrokeFillNode::MatSolidColor);
+        n->activateMaterial(m_item->window(), QQuickShapeGenericStrokeFillNode::MatSolidColor);
         // fast path for updating only color values when no change in vertex positions
         if ((d->effectiveDirty & DirtyColor) && !(d->effectiveDirty & DirtyFillGeom)) {
             ColoredVertex *vdst = reinterpret_cast<ColoredVertex *>(g->vertexData());
@@ -633,8 +627,6 @@ void QQuickShapeGenericRenderer::updateFillNode(ShapePathData *d, QQuickShapeGen
         g = new QSGGeometry(QSGGeometry::defaultAttributes_ColoredPoint2D(),
                             d->fillVertices.count(), indexCount, d->indexType);
         n->setGeometry(g);
-        delete n->m_geometry;
-        n->m_geometry = g;
     } else {
         g->allocate(d->fillVertices.count(), indexCount);
     }
@@ -653,7 +645,7 @@ void QQuickShapeGenericRenderer::updateStrokeNode(ShapePathData *d, QQuickShapeG
         return;
 
     QQuickShapeGenericStrokeFillNode *n = node->m_strokeNode;
-    QSGGeometry *g = n->m_geometry;
+    QSGGeometry *g = n->geometry();
     if (d->strokeVertices.isEmpty()) {
         if (g->vertexCount() || g->indexCount()) {
             g->allocate(0, 0);

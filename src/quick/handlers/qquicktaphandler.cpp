@@ -102,7 +102,7 @@ QQuickTapHandler::~QQuickTapHandler()
 
 static bool dragOverThreshold(QQuickEventPoint *point)
 {
-    QPointF delta = point->scenePos() - point->scenePressPos();
+    QPointF delta = point->scenePosition() - point->scenePressPosition();
     return (QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point) ||
             QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point));
 }
@@ -280,7 +280,7 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
                 // Assuming here that pointerEvent()->timestamp() is in ms.
                 qreal ts = point->pointerEvent()->timestamp() / 1000.0;
                 if (ts - m_lastTapTimestamp < m_multiTapInterval &&
-                        QVector2D(point->scenePos() - m_lastTapPos).lengthSquared() <
+                        QVector2D(point->scenePosition() - m_lastTapPos).lengthSquared() <
                         (point->pointerEvent()->device()->type() == QQuickPointerDevice::Mouse ?
                          m_mouseMultiClickDistanceSquared : m_touchMultiTapDistanceSquared))
                     ++m_tapCount;
@@ -290,7 +290,7 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
                 emit tapped();
                 emit tapCountChanged();
                 m_lastTapTimestamp = ts;
-                m_lastTapPos = point->scenePos();
+                m_lastTapPos = point->scenePosition();
             } else {
                 qCDebug(lcTapHandler) << objectName() << "tap threshold" << longPressThreshold() << "exceeded:" << point->timeHeld();
             }

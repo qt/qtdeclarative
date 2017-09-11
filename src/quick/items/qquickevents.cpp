@@ -548,7 +548,7 @@ void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos,
 void QQuickEventPoint::localizePosition(QQuickItem *target)
 {
     if (target)
-        m_pos = target->mapFromScene(scenePos());
+        m_pos = target->mapFromScene(scenePosition());
     else
         m_pos = QPointF();
 }
@@ -938,8 +938,8 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
         if (auto point = pointById(pid)) {
             preserves[i].pointId = pid;
             preserves[i].pressTimestamp = point->m_pressTimestamp;
-            preserves[i].scenePressPos = point->scenePressPos();
-            preserves[i].sceneGrabPos = point->sceneGrabPos();
+            preserves[i].scenePressPos = point->scenePressPosition();
+            preserves[i].sceneGrabPos = point->sceneGrabPosition();
             preserves[i].grabber = point->exclusiveGrabber();
             preserves[i].passiveGrabbers = point->passiveGrabbers();
         }
@@ -1155,7 +1155,7 @@ QVector<QPointF> QQuickPointerEvent::unacceptedPressedPointScenePositions() cons
     QVector<QPointF> points;
     for (int i = 0; i < pointCount(); ++i) {
         if (!point(i)->isAccepted() && point(i)->state() == QQuickEventPoint::Pressed)
-            points << point(i)->scenePos();
+            points << point(i)->scenePosition();
     }
     return points;
 }
@@ -1277,7 +1277,7 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
         if (isGrabber)
             anyGrabber = true;
         // include points inside the bounds if no other item is the grabber or if the item is filtering
-        bool isInside = item->contains(item->mapFromScene(p->scenePos()));
+        bool isInside = item->contains(item->mapFromScene(p->scenePosition()));
         bool hasAnotherGrabber = p->exclusiveGrabber() && p->exclusiveGrabber() != item;
 
         // filtering: (childMouseEventFilter) include points that are grabbed by children of the target item
@@ -1395,7 +1395,7 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickEventPoint *eve
     dbg << "QQuickEventPoint(accepted:" << event->isAccepted()
         << " state:";
     QtDebugUtils::formatQEnum(dbg, event->state());
-    dbg << " scenePos:" << event->scenePos() << " id:" << hex << event->pointId() << dec
+    dbg << " scenePos:" << event->scenePosition() << " id:" << hex << event->pointId() << dec
         << " timeHeld:" << event->timeHeld() << ')';
     return dbg;
 }

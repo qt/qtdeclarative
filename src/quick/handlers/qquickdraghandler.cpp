@@ -97,7 +97,7 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
         setPassiveGrab(point);
         break;
     case QQuickEventPoint::Updated: {
-        QPointF delta = point->scenePos() - point->scenePressPos();
+        QPointF delta = point->scenePosition() - point->scenePressPosition();
         if (!m_xAxis.enabled())
             delta.setX(0);
         if (!m_yAxis.enabled())
@@ -151,10 +151,10 @@ void QQuickDragHandler::initializeTargetStartPos(QQuickEventPoint *point)
 {
     if (target() && target()->parentItem() && m_targetStartPos.isNull()) {    // prefer the m_targetStartPos we got when it got Pressed.
         m_targetStartPos = target()->parentItem()->mapToScene(target()->position());
-        if (!target()->contains(point->pos())) {
+        if (!target()->contains(point->position())) {
             // If pressed outside of target item, move the target item so that the touchpoint is in its center,
             // while still respecting the axis constraints.
-            const QPointF center = target()->parentItem()->mapFromScene(point->scenePos());
+            const QPointF center = target()->parentItem()->mapFromScene(point->scenePosition());
             const QPointF pointCenteredInItemPos = target()->parentItem()->mapToScene(center - QPointF(target()->width(), target()->height())/2);
             if (m_xAxis.enabled())
                 m_targetStartPos.setX(pointCenteredInItemPos.x());

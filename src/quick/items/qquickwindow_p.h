@@ -148,7 +148,8 @@ public:
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
     void deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent);
     bool sendFilteredMouseEvent(QQuickItem *, QQuickItem *, QEvent *, QSet<QQuickItem *> *);
-    bool sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver);
+    bool sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent = nullptr);
+    bool sendFilteredPointerEventImpl(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent);
 #if QT_CONFIG(wheelevent)
     bool deliverWheelEvent(QQuickItem *, QWheelEvent *);
 #endif
@@ -178,7 +179,6 @@ public:
 
     QVector<QQuickItem *> pointerTargets(QQuickItem *, const QPointF &, bool checkMouseButtons, bool checkAcceptsTouch) const;
     QVector<QQuickItem *> mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const;
-    void updateFilteringParentItems(const QVector<QQuickItem *> &targetItems);
 
     // hover delivery
     bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp, bool &accepted);
@@ -227,7 +227,7 @@ public:
     QList<QSGNode *> cleanupNodeList;
 
     QVector<QQuickItem *> itemsToPolish;
-    QVector<QPair<QQuickItem *,QQuickItem *> > filteringParentItems;  // item:parent pairs
+    QVector<QQuickItem *> hasFiltered; // during event delivery, the items for which childMouseEventFilter was already called
 
     qreal devicePixelRatio;
     QMetaObject::Connection physicalDpiChangedConnection;
@@ -298,7 +298,7 @@ public:
 
     static bool dragOverThreshold(const QQuickEventPoint *point)
     {
-        QPointF delta = point->scenePos() - point->scenePressPos();
+        QPointF delta = point->scenePosition() - point->scenePressPosition();
         return (QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point) ||
                 QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point));
     }

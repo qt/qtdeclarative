@@ -225,7 +225,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     Q_UNUSED(event)
     if (Q_UNLIKELY(lcPinchHandler().isDebugEnabled())) {
         for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-            qCDebug(lcPinchHandler) << point->state() << point->sceneGrabPos() << "->" << point->scenePos();
+            qCDebug(lcPinchHandler) << point->state() << point->sceneGrabPosition() << "->" << point->scenePosition();
     }
 
     bool containsReleasedPoints = event->isReleaseEvent();
