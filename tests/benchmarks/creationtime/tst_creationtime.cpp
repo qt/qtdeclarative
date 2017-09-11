@@ -47,6 +47,9 @@ private slots:
     void controls();
     void controls_data();
 
+    void fusion();
+    void fusion_data();
+
     void imagine();
     void imagine_data();
 
@@ -129,6 +132,18 @@ void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QUrl>("url");
     addTestRows(&engine, "controls", "QtQuick/Controls.2", QStringList() << "ApplicationWindow" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+}
+
+void tst_CreationTime::fusion()
+{
+    QFETCH(QUrl, url);
+    doBenchmark(&engine, url);
+}
+
+void tst_CreationTime::fusion_data()
+{
+    QTest::addColumn<QUrl>("url");
+    addTestRows(&engine, "controls/fusion", "QtQuick/Controls.2/Fusion", QStringList() << "ApplicationWindow" << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
 }
 
 void tst_CreationTime::imagine()
