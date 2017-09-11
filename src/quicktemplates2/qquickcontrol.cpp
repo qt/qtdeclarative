@@ -569,8 +569,9 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
             setHovered(false);
 #endif
         break;
+    case ItemSceneChange:
     case ItemParentHasChanged:
-        if (value.item) {
+        if ((change == ItemParentHasChanged && value.item) || (change == ItemSceneChange && value.window)) {
             d->resolveFont();
             if (!d->hasLocale)
                 d->updateLocale(QQuickControlPrivate::calcLocale(d->parentItem), false); // explicit=false

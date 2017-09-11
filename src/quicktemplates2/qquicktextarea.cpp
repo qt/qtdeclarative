@@ -622,17 +622,19 @@ void QQuickTextArea::itemChange(QQuickItem::ItemChange change, const QQuickItem:
 {
     Q_D(QQuickTextArea);
     QQuickTextEdit::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item) {
+    if ((change == ItemParentHasChanged && value.item) || (change == ItemSceneChange && value.window)) {
         d->resolveFont();
 #if QT_CONFIG(quicktemplates2_hover)
         if (!d->explicitHoverEnabled)
             d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
 #endif
-        QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(value.item->parentItem());
-        if (flickable) {
-            QQuickScrollView *scrollView = qobject_cast<QQuickScrollView *>(flickable->parentItem());
-            if (scrollView)
-                d->attachFlickable(flickable);
+        if (change == ItemParentHasChanged) {
+            QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(value.item->parentItem());
+            if (flickable) {
+                QQuickScrollView *scrollView = qobject_cast<QQuickScrollView *>(flickable->parentItem());
+                if (scrollView)
+                    d->attachFlickable(flickable);
+            }
         }
     }
 }

@@ -231,7 +231,7 @@ void QQuickLabel::itemChange(QQuickItem::ItemChange change, const QQuickItem::It
 {
     Q_D(QQuickLabel);
     QQuickText::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item)
+    if ((change == ItemParentHasChanged && value.item) || (change == ItemSceneChange && value.window))
         d->resolveFont();
 }
 

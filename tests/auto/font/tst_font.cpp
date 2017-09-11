@@ -62,6 +62,9 @@ private slots:
 
     void defaultFont_data();
     void defaultFont();
+
+    void listView_data();
+    void listView();
 };
 
 void tst_font::font_data()
@@ -282,6 +285,47 @@ void tst_font::defaultFont()
     }
 
     QCOMPARE(actualFont, *expectedFont);
+}
+
+void tst_font::listView_data()
+{
+    QTest::addColumn<QString>("objectName");
+
+    QTest::newRow("Control") << "control";
+    QTest::newRow("Label") << "label";
+    QTest::newRow("TextArea") << "textarea";
+    QTest::newRow("TextField") << "textfield";
+}
+
+void tst_font::listView()
+{
+    QFETCH(QString, objectName);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("listview.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
+    QVERIFY2(!window.isNull(), qPrintable(component.errorString()));
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickItem *listView = window->property("listView").value<QQuickItem *>();
+    QVERIFY(listView);
+
+    QQuickItem *contentItem = listView->property("contentItem").value<QQuickItem *>();
+    QVERIFY(contentItem);
+
+    QVERIFY(QMetaObject::invokeMethod(listView, "forceLayout"));
+
+    QQuickItem *column = contentItem->childItems().value(0);
+    QVERIFY(column);
+
+    QQuickItem *control = column->property(objectName.toUtf8()).value<QQuickItem *>();
+    QVERIFY(control);
+
+    QCOMPARE(control->property("font").value<QFont>().pixelSize(), 55);
 }
 
 QTEST_MAIN(tst_font)

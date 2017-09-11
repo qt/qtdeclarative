@@ -476,7 +476,7 @@ void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem
 {
     Q_D(QQuickTextField);
     QQuickTextInput::itemChange(change, value);
-    if (change == ItemParentHasChanged && value.item) {
+    if ((change == ItemParentHasChanged && value.item) || (change == ItemSceneChange && value.window)) {
         d->resolveFont();
 #if QT_CONFIG(quicktemplates2_hover)
         if (!d->explicitHoverEnabled)
