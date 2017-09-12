@@ -62,23 +62,20 @@ Item {
         property real ylimit: root.height - __contentItem.height
 
         function returnToBounds() {
-            var startAnim = false
             if (x > 0) {
-                returnToBoundsAnim.x = 0
-                startAnim = true
+                returnXAnim.to = 0
+                returnXAnim.start()
             } else if (x < xlimit) {
-                returnToBoundsAnim.x = xlimit
-                startAnim = true
+                returnXAnim.to = xlimit
+                returnXAnim.start()
             }
             if (y > 0) {
-                returnToBoundsAnim.y = 0
-                startAnim = true
+                returnYAnim.to = 0
+                returnYAnim.start()
             } else if (y < ylimit) {
-                returnToBoundsAnim.y = ylimit
-                startAnim = true
+                returnYAnim.to = ylimit
+                returnYAnim.start()
             }
-            if (startAnim)
-                returnToBoundsAnim.start()
         }
 
         DragHandler {
@@ -94,29 +91,19 @@ Item {
                 root.flickEnded()
             }
         }
-        ParallelAnimation {
-            id: returnToBoundsAnim
-            property Item target: __contentItem
-            property int duration: 200
-            property real x: 0
-            property real y: 0
-
-            NumberAnimation {
-                id: xAnim
-                target: returnToBoundsAnim.target
-                property: "x"
-                to: returnToBoundsAnim.x
-                duration: returnToBoundsAnim.duration
-                easing.type: Easing.OutQuad
-            }
-            NumberAnimation {
-                id: yAnim
-                target: returnToBoundsAnim.target
-                property: "y"
-                to: returnToBoundsAnim.y
-                duration: returnToBoundsAnim.duration
-                easing.type: Easing.OutQuad
-            }
+        NumberAnimation {
+            id: returnXAnim
+            target: __contentItem
+            property: "x"
+            duration: 200
+            easing.type: Easing.OutQuad
+        }
+        NumberAnimation {
+            id: returnYAnim
+            target: __contentItem
+            property: "y"
+            duration: 200
+            easing.type: Easing.OutQuad
         }
     }
 }

@@ -135,15 +135,15 @@ void QQuickSinglePointHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             m_pointInfo.m_pressure = event->buttons() ? 1 : 0;
             m_pointInfo.m_ellipseDiameters = QSizeF();
         }
-        m_pointInfo.m_position = currentPoint->pos();
-        m_pointInfo.m_scenePosition = currentPoint->scenePos();
+        m_pointInfo.m_position = currentPoint->position();
+        m_pointInfo.m_scenePosition = currentPoint->scenePosition();
         if (currentPoint->state() == QQuickEventPoint::Updated)
             m_pointInfo.m_velocity = currentPoint->velocity();
         handleEventPoint(currentPoint);
         switch (currentPoint->state()) {
         case QQuickEventPoint::Pressed:
-            m_pointInfo.m_pressPosition = currentPoint->pos();
-            m_pointInfo.m_scenePressPosition = currentPoint->scenePos();
+            m_pointInfo.m_pressPosition = currentPoint->position();
+            m_pointInfo.m_scenePressPosition = currentPoint->scenePosition();
             m_pointInfo.m_pressedButtons = event->buttons();
             break;
         case QQuickEventPoint::Released:
@@ -169,12 +169,12 @@ void QQuickSinglePointHandler::onGrabChanged(QQuickPointerHandler *grabber, QQui
         return;
     switch (stateChange) {
     case QQuickEventPoint::GrabExclusive:
-        m_pointInfo.m_sceneGrabPosition = point->sceneGrabPos();
+        m_pointInfo.m_sceneGrabPosition = point->sceneGrabPosition();
         setActive(true);
         QQuickPointerHandler::onGrabChanged(grabber, stateChange, point);
         break;
     case QQuickEventPoint::GrabPassive:
-        m_pointInfo.m_sceneGrabPosition = point->sceneGrabPos();
+        m_pointInfo.m_sceneGrabPosition = point->sceneGrabPosition();
         QQuickPointerHandler::onGrabChanged(grabber, stateChange, point);
         break;
     case QQuickEventPoint::OverrideGrabPassive:
@@ -199,7 +199,7 @@ void QQuickSinglePointHandler::setIgnoreAdditionalPoints(bool v)
 void QQuickSinglePointHandler::moveTarget(QPointF pos, QQuickEventPoint *point)
 {
     target()->setPosition(pos);
-    m_pointInfo.m_scenePosition = point->scenePos();
+    m_pointInfo.m_scenePosition = point->scenePosition();
     m_pointInfo.m_position = target()->mapFromScene(m_pointInfo.m_scenePosition);
 }
 

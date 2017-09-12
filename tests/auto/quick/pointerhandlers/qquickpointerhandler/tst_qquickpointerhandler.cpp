@@ -200,7 +200,7 @@ class EventHandler : public QQuickPointerHandler
             item->eventList.append(Event(Event::HandlerDestination, QEvent::Pointer,
                 static_cast<Qt::TouchPointState>(point->state()),
                 item->grabPointer ? (int)QQuickEventPoint::GrabExclusive : (int)NoGrab,
-                eventPos(point), point->scenePos()));
+                eventPos(point), point->scenePosition()));
         }
     }
 
@@ -208,7 +208,7 @@ class EventHandler : public QQuickPointerHandler
     {
         EventItem *item = static_cast<EventItem *>(target());
         item->eventList.append(Event(Event::HandlerDestination, QEvent::None,
-            static_cast<Qt::TouchPointState>(point->state()), stateChange, eventPos(point), point->scenePos()));
+            static_cast<Qt::TouchPointState>(point->state()), stateChange, eventPos(point), point->scenePosition()));
     }
 };
 

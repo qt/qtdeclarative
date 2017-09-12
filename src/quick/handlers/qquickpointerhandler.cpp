@@ -152,14 +152,14 @@ void QQuickPointerHandler::cancelAllGrabs(QQuickEventPoint *point)
 
 QPointF QQuickPointerHandler::eventPos(const QQuickEventPoint *point) const
 {
-    return (target() ? target()->mapFromScene(point->scenePos()) : point->scenePos());
+    return (target() ? target()->mapFromScene(point->scenePosition()) : point->scenePosition());
 }
 
 bool QQuickPointerHandler::parentContains(const QQuickEventPoint *point) const
 {
     if (point) {
         if (QQuickItem *par = parentItem())
-            return par->contains(par->mapFromScene(point->scenePos()));
+            return par->contains(par->mapFromScene(point->scenePosition()));
     }
     return false;
 }

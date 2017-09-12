@@ -930,10 +930,13 @@ void ExecutionEngine::markObjects(MarkStack *markStack)
     }
 
     classPool->markObjects(markStack);
+    markStack->drain();
 
     for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
-         it != end; ++it)
+         it != end; ++it) {
         (*it)->markObjects(markStack);
+        markStack->drain();
+    }
 }
 
 ReturnedValue ExecutionEngine::throwError(const Value &value)

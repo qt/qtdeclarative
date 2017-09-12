@@ -205,7 +205,6 @@ class QQuickShapeGenericStrokeFillNode : public QSGGeometryNode
 {
 public:
     QQuickShapeGenericStrokeFillNode(QQuickWindow *window);
-    ~QQuickShapeGenericStrokeFillNode();
 
     enum Material {
         MatSolidColor,
@@ -214,16 +213,12 @@ public:
         MatConicalGradient
     };
 
-    void activateMaterial(Material m);
-
-    QQuickWindow *window() const { return m_window; }
+    void activateMaterial(QQuickWindow *window, Material m);
 
     // shadow data for custom materials
     QQuickAbstractPathRenderer::GradientDesc m_fillGradient;
 
 private:
-    QSGGeometry *m_geometry;
-    QQuickWindow *m_window;
     QScopedPointer<QSGMaterial> m_material;
 
     friend class QQuickShapeGenericRenderer;

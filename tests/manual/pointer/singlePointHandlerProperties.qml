@@ -150,9 +150,10 @@ Rectangle {
     DragHandler {
         id: dragHandler
         target: null
+        acceptedButtons: Qt.AllButtons
         onGrabChanged: if (active) {    // 'point' is an implicit parameter referencing to a QQuickEventPoint instance
             console.log("grabbed " + point.pointId + " @ " + point.sceneGrabPos)
-            grabbingLocationIndicator.createObject(root, {"x": point.sceneGrabPos.x, "y": point.sceneGrabPos.y - 16})
+            grabbingLocationIndicator.createObject(root, {"x": point.sceneGrabPosition.x, "y": point.sceneGrabPosition.y - 16})
         }
         onPointChanged: {
             // Here, 'point' is referring to the property of the DragHandler

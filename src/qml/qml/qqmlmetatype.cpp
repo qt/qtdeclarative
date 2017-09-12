@@ -812,10 +812,10 @@ void QQmlTypePrivate::insertEnumsFromPropertyCache(const QQmlPropertyCache *cach
     const QMetaObject *cppMetaObject = cache->firstCppMetaObject();
 
     while (cache && cache->metaObject() != cppMetaObject) {
-        QStringHash<int> *scoped = new QStringHash<int>();
 
         int count = cache->qmlEnumCount();
         for (int ii = 0; ii < count; ++ii) {
+            QStringHash<int> *scoped = new QStringHash<int>();
             QQmlEnumData *enumData = cache->qmlEnum(ii);
 
             for (int jj = 0; jj < enumData->values.count(); ++jj) {

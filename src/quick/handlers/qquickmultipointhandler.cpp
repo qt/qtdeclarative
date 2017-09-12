@@ -93,7 +93,7 @@ QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointe
             if (exclusiveGrabber && exclusiveGrabber != this)
                 continue;
         }
-        if (p->state() != QQuickEventPoint::Released && targetBounds.contains(p->scenePos()))
+        if (p->state() != QQuickEventPoint::Released && targetBounds.contains(p->scenePosition()))
             ret << p;
     }
     return ret;
@@ -146,7 +146,7 @@ QPointF QQuickMultiPointHandler::touchPointCentroid()
     if (Q_UNLIKELY(m_currentPoints.size() == 0))
         return ret;
     for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-        ret += point->scenePos();
+        ret += point->scenePosition();
     return ret / m_currentPoints.size();
 }
 
@@ -166,7 +166,7 @@ qreal QQuickMultiPointHandler::averageTouchPointDistance(const QPointF &ref)
     if (Q_UNLIKELY(m_currentPoints.size() == 0))
         return ret;
     for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-        ret += QVector2D(point->scenePos() - ref).length();
+        ret += QVector2D(point->scenePosition() - ref).length();
     return ret / m_currentPoints.size();
 }
 
@@ -177,7 +177,7 @@ qreal QQuickMultiPointHandler::averageStartingDistance(const QPointF &ref)
     if (Q_UNLIKELY(m_currentPoints.size() == 0))
         return ret;
     for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-        ret += QVector2D(point->sceneGrabPos() - ref).length();
+        ret += QVector2D(point->sceneGrabPosition() - ref).length();
     return ret / m_currentPoints.size();
 }
 
@@ -186,7 +186,7 @@ QVector<QQuickMultiPointHandler::PointData> QQuickMultiPointHandler::angles(cons
     QVector<PointData> angles;
     angles.reserve(m_currentPoints.count());
     for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
-        qreal angle = QLineF(ref, point->scenePos()).angle();
+        qreal angle = QLineF(ref, point->scenePosition()).angle();
         angles.append(PointData(point->pointId(), -angle));     // convert to clockwise, to be consistent with QQuickItem::rotation
     }
     return angles;

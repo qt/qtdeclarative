@@ -253,10 +253,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickPointerEvent *event READ pointerEvent)
-    Q_PROPERTY(QPointF pos READ pos)
-    Q_PROPERTY(QPointF scenePos READ scenePos)
-    Q_PROPERTY(QPointF scenePressPos READ scenePressPos)
-    Q_PROPERTY(QPointF sceneGrabPos READ sceneGrabPos)
+    Q_PROPERTY(QPointF position READ position)
+    Q_PROPERTY(QPointF scenePosition READ scenePosition)
+    Q_PROPERTY(QPointF scenePressPosition READ scenePressPosition)
+    Q_PROPERTY(QPointF sceneGrabPosition READ sceneGrabPosition)
     Q_PROPERTY(State state READ state)
     Q_PROPERTY(int pointId READ pointId)
     Q_PROPERTY(qreal timeHeld READ timeHeld)
@@ -288,14 +288,14 @@ public:
 
     QQuickEventPoint(QQuickPointerEvent *parent);
 
-    void reset(Qt::TouchPointState state, const QPointF &scenePos, int pointId, ulong timestamp, const QVector2D &velocity = QVector2D());
+    void reset(Qt::TouchPointState state, const QPointF &scenePosition, int pointId, ulong timestamp, const QVector2D &velocity = QVector2D());
     void localizePosition(QQuickItem *target);
 
     QQuickPointerEvent *pointerEvent() const;
-    QPointF pos() const { return m_pos; }
-    QPointF scenePos() const { return m_scenePos; }
-    QPointF scenePressPos() const { return m_scenePressPos; }
-    QPointF sceneGrabPos() const { return m_sceneGrabPos; }
+    QPointF position() const { return m_pos; }
+    QPointF scenePosition() const { return m_scenePos; }
+    QPointF scenePressPosition() const { return m_scenePressPos; }
+    QPointF sceneGrabPosition() const { return m_sceneGrabPos; }
     QVector2D velocity() const { return m_velocity; }
     State state() const { return m_state; }
     int pointId() const { return m_pointId; }
