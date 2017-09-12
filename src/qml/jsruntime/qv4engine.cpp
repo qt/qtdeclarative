@@ -927,7 +927,7 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
     }
 }
 
-static void drainMarkStack(ExecutionEngine *engine, Value *markBase)
+static void drainMarkStack(ExecutionEngine *engine, QV4::Value *markBase)
 {
     while (engine->jsStackTop > markBase) {
         Heap::Base *h = engine->popForGC();
