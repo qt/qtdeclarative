@@ -247,7 +247,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     // TODO check m_pinchOrigin: right now it acts like it's set to PinchCenter
     m_centroid = touchPointCentroid();
     m_centroidVelocity = touchPointCentroidVelocity();
-    QRectF bounds(m_minimumX, m_minimumY, m_maximumX, m_maximumY);
+    QRectF bounds(m_minimumX, m_minimumY, m_maximumX - m_minimumX, m_maximumY - m_minimumY);
     // avoid mapping the minima and maxima, as they might have unmappable values
     // such as -inf/+inf. Because of this we perform the bounding to min/max in local coords.
     QPointF centroidParentPos;
