@@ -2480,7 +2480,7 @@ void QQuickTextEdit::updateSize()
 
     if (d->isImplicitResizeEnabled()) {
         // ### Setting the implicitWidth triggers another updateSize(), and unless there are bindings nothing has changed.
-        if (!widthValid() && !d->requireImplicitWidth)
+        if (!widthValid())
             setImplicitSize(newWidth + leftPadding() + rightPadding(), newHeight + topPadding() + bottomPadding());
         else
             setImplicitHeight(newHeight + topPadding() + bottomPadding());
