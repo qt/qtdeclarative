@@ -83,7 +83,7 @@ Function::~Function()
 
 void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters)
 {
-    internalClass = engine->internalClasses[EngineBase::Class_Empty];
+    internalClass = engine->internalClasses[EngineBase::Class_CallContext];
 
     // iterate backwards, so we get the right ordering for duplicate names
     Scope scope(engine);
