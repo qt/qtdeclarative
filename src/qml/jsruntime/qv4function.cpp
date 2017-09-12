@@ -83,22 +83,39 @@ Function::~Function()
 
 void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters)
 {
-    internalClass = engine->internalClasses[EngineBase::Class_CallContext];
+    QStringList parameterNames;
 
-    // iterate backwards, so we get the right ordering for duplicate names
-    Scope scope(engine);
-    ScopedString arg(scope);
-    for (int i = parameters.size() - 1; i >= 0; --i) {
-        arg = engine->newString(QString::fromUtf8(parameters.at(i)));
-        while (1) {
-            InternalClass *newClass = internalClass->addMember(arg, Attr_NotConfigurable);
-            if (newClass != internalClass) {
-                internalClass = newClass;
+    // Resolve duplicate parameter names:
+    for (int i = 0, ei = parameters.count(); i != ei; ++i) {
+        const QByteArray &param = parameters.at(i);
+        int duplicate = -1;
+
+        for (int j = i - 1; j >= 0; --j) {
+            const QByteArray &prevParam = parameters.at(j);
+            if (param == prevParam) {
+                duplicate = j;
                 break;
             }
-            // duplicate arguments, need some trick to store them
-            arg = engine->memoryManager->alloc<String>(arg->d(), engine->newString(QString(0xfffe)));
         }
+
+        if (duplicate == -1) {
+            parameterNames.append(QString::fromUtf8(param));
+        } else {
+            const QString &dup = parameterNames[duplicate];
+            parameterNames.append(dup);
+            parameterNames[duplicate] =
+                    QString(0xfffe) + QString::number(duplicate) + dup;
+        }
+
+    }
+
+    internalClass = engine->internalClasses[EngineBase::Class_CallContext];
+
+    Scope scope(engine);
+    ScopedString arg(scope);
+    for (const QString &parameterName : parameterNames) {
+        arg = engine->newString(parameterName);
+        internalClass = internalClass->addMember(arg, Attr_NotConfigurable);
     }
     nFormals = parameters.size();
 
