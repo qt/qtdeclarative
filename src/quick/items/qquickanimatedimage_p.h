@@ -69,7 +69,7 @@ class Q_AUTOTEST_EXPORT QQuickAnimatedImage : public QQuickImage
     Q_PROPERTY(bool playing READ isPlaying WRITE setPlaying NOTIFY playingChanged)
     Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY frameChanged)
-    Q_PROPERTY(int frameCount READ frameCount)
+    Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged)
 
     // read-only for AnimatedImage
     Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
@@ -98,6 +98,7 @@ Q_SIGNALS:
     void pausedChanged();
     void frameChanged();
     void sourceSizeChanged();
+    void frameCountChanged();
 
 private Q_SLOTS:
     void movieUpdate();

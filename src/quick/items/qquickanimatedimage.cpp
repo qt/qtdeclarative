@@ -279,8 +279,7 @@ void QQuickAnimatedImage::setSource(const QUrl &url)
 
     d->oldPlaying = isPlaying();
     if (d->_movie) {
-        delete d->_movie;
-        d->_movie = 0;
+        d->setMovie(nullptr);
     }
 
     d->url = url;
@@ -320,7 +319,7 @@ void QQuickAnimatedImage::load()
         QString lf = QQmlFile::urlToLocalFileOrQrc(loadUrl);
 
         if (!lf.isEmpty()) {
-            d->_movie = new QMovie(lf);
+            d->setMovie(new QMovie(lf));
             movieRequestFinished();
         } else {
 #if QT_CONFIG(qml_network)
@@ -366,14 +365,13 @@ void QQuickAnimatedImage::movieRequestFinished()
         }
 
         d->redirectCount=0;
-        d->_movie = new QMovie(d->reply);
+        d->setMovie(new QMovie(d->reply));
     }
 #endif
 
     if (!d->_movie || !d->_movie->isValid()) {
         qmlWarning(this) << "Error Reading Animated Image File " << d->url.toString();
-        delete d->_movie;
-        d->_movie = 0;
+        d->setMovie(nullptr);
         d->setImage(QImage());
         if (d->progress != 0) {
             d->progress = 0;
@@ -488,6 +486,18 @@ void QQuickAnimatedImage::componentComplete()
 {
     QQuickItem::componentComplete(); // NOT QQuickImage
     load();
+}
+
+void QQuickAnimatedImagePrivate::setMovie(QMovie *movie)
+{
+    Q_Q(QQuickAnimatedImage);
+    const int oldFrameCount = q->frameCount();
+
+    delete _movie;
+    _movie = movie;
+
+    if (oldFrameCount != q->frameCount())
+        emit q->frameCountChanged();
 }
 
 QT_END_NAMESPACE
