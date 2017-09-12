@@ -1258,6 +1258,18 @@ QQmlType QQmlTypeModule::type(const QV4::String *name, int minor) const
     return QQmlType();
 }
 
+void QQmlTypeModule::walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const
+{
+    QMutexLocker lock(metaTypeDataLock());
+    for (auto typeCandidates = d->typeHash.begin(), end = d->typeHash.end();
+         typeCandidates != end; ++typeCandidates) {
+        for (auto type: typeCandidates.value()) {
+            if (type->regType == QQmlType::CompositeSingletonType)
+                callback(QQmlType(type));
+        }
+    }
+}
+
 QQmlTypeModuleVersion::QQmlTypeModuleVersion()
 : m_module(0), m_minor(0)
 {

@@ -298,6 +298,8 @@ public:
     QQmlType type(const QHashedStringRef &, int) const;
     QQmlType type(const QV4::String *, int) const;
 
+    void walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const;
+
     QQmlTypeModulePrivate *priv() { return d; }
 private:
     //Used by register functions and creates the QQmlTypeModule for them

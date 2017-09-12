@@ -471,6 +471,17 @@ void findCompositeSingletons(const QQmlImportNamespace &set, QList<QQmlImports::
                 resultList.append(ref);
             }
         }
+
+        if (QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->majversion)) {
+            module->walkCompositeSingletons([&resultList, &set](const QQmlType &singleton) {
+                QQmlImports::CompositeSingletonReference ref;
+                ref.typeName = singleton.elementName();
+                ref.prefix = set.prefix;
+                ref.majorVersion = singleton.majorVersion();
+                ref.minorVersion = singleton.minorVersion();
+                resultList.append(ref);
+            });
+        }
     }
 }
 
