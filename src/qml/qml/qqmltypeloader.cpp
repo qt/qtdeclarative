@@ -900,11 +900,13 @@ void QQmlTypeLoader::invalidate()
     m_networkReplies.clear();
 }
 
+#ifndef QT_NO_QML_DEBUGGER
 void QQmlTypeLoader::enableProfiler()
 {
     Q_ASSERT(!m_profiler);
     m_profiler = new QQmlProfiler;
 }
+#endif // QT_NO_QML_DEBUGGER
 
 void QQmlTypeLoader::lock()
 {
