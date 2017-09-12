@@ -75,7 +75,7 @@ void BytecodeGenerator::packInstruction(I &i)
     if (type >= MOTH_NUM_INSTRUCTIONS())
         type -= MOTH_NUM_INSTRUCTIONS();
     int instructionsAsInts[sizeof(Instr)/sizeof(int)];
-    int nMembers = Moth::Instr::argumentCount[static_cast<int>(i.type)];
+    int nMembers = Moth::InstrInfo::argumentCount[static_cast<int>(i.type)];
     memcpy(instructionsAsInts, i.packed + 1, nMembers*sizeof(int));
     enum {
         Normal,
@@ -182,7 +182,7 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
 
 int BytecodeGenerator::addInstructionHelper(Instr::Type type, const Instr &i, int offsetOfOffset) {
     int pos = instructions.size();
-    int s = Moth::Instr::argumentCount[static_cast<int>(type)]*sizeof(int);
+    int s = Moth::InstrInfo::argumentCount[static_cast<int>(type)]*sizeof(int);
     if (offsetOfOffset != -1)
         offsetOfOffset += 1;
     I instr{type, static_cast<short>(s + 1), 0, currentLine, offsetOfOffset, -1, "\0\0" };

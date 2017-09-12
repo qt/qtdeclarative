@@ -43,9 +43,9 @@
 using namespace QV4;
 using namespace QV4::Moth;
 
-int Instr::size(Type type)
+int InstrInfo::size(Instr::Type type)
 {
-#define MOTH_RETURN_INSTR_SIZE(I) case Type::I: return InstrMeta<(int)Type::I>::Size;
+#define MOTH_RETURN_INSTR_SIZE(I) case Instr::Type::I: return InstrMeta<int(Instr::Type::I)>::Size;
     switch (type) {
     FOR_EACH_MOTH_INSTR(MOTH_RETURN_INSTR_SIZE)
     }
@@ -120,7 +120,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Moth {
 
-const int Instr::argumentCount[] = {
+const int InstrInfo::argumentCount[] = {
     FOR_EACH_MOTH_INSTR(MOTH_COLLECT_NARGS)
 };
 

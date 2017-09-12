@@ -475,13 +475,15 @@ union Instr
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_ENUM)
     };
 
-    static const int argumentCount[];
-
     FOR_EACH_MOTH_INSTR(MOTH_EMIT_STRUCTS)
 
     FOR_EACH_MOTH_INSTR(MOTH_EMIT_INSTR_MEMBERS)
+};
 
-    static int size(Type type);
+struct InstrInfo
+{
+    static const int argumentCount[];
+    static int size(Instr::Type type);
 };
 
 Q_STATIC_ASSERT(MOTH_NUM_INSTRUCTIONS() < 128);
