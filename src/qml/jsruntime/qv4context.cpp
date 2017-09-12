@@ -281,7 +281,6 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         }
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
-            name->makeIdentifier();
             Identifier *id = name->identifier();
 
             uint index = c->internalClass->find(id);

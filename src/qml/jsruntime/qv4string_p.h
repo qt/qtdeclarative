@@ -181,7 +181,8 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         makeIdentifierImpl();
     }
 
-    void makeIdentifierImpl() const;
+    // slow path
+    Q_NEVER_INLINE void makeIdentifierImpl() const;
 
     static uint createHashValue(const QChar *ch, int length, uint *subtype)
     {
