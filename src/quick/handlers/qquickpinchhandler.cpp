@@ -198,23 +198,26 @@ void QQuickPinchHandler::setMaximumY(qreal maxY)
 void QQuickPinchHandler::onActiveChanged()
 {
     if (active()) {
+        m_startMatrix = QMatrix4x4();
+        m_startCentroid = touchPointCentroid();
+        m_startAngles = angles(m_startCentroid);
+        m_startDistance = averageTouchPointDistance(m_startCentroid);
+        m_activeRotation = 0;
+        m_activeTranslation = QVector2D();
         if (const QQuickItem *t = target()) {
             m_startScale = t->scale(); // TODO incompatible with independent x/y scaling
             m_startRotation = t->rotation();
-            m_startCentroid = touchPointCentroid();
-            m_startAngles = angles(m_startCentroid);
-            m_startDistance = averageTouchPointDistance(m_startCentroid);
             QVector3D xformOrigin(t->transformOriginPoint());
-            m_startMatrix = QMatrix4x4();
             m_startMatrix.translate(t->x(), t->y());
             m_startMatrix.translate(xformOrigin);
             m_startMatrix.scale(m_startScale);
             m_startMatrix.rotate(m_startRotation, 0, 0, -1);
             m_startMatrix.translate(-xformOrigin);
-            m_activeRotation = 0;
-            m_activeTranslation = QPointF(0,0);
-            qCInfo(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
+        } else {
+            m_startScale = 1;
+            m_startRotation = 0;
         }
+        qCInfo(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
     } else {
         qCInfo(lcPinchHandler) << "deactivated with scale" << m_activeScale << "rotation" << m_activeRotation;
     }
@@ -271,7 +274,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     if (target() && target()->parentItem()) {
         // 3. Drag/translate
         const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(m_startCentroid);
-        m_activeTranslation = centroidParentPos - centroidStartParentPos;
+        m_activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
 
         // apply rotation + scaling around the centroid - then apply translation.
         QMatrix4x4 mat;
@@ -293,15 +296,15 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         target()->setRotation(rotation);
         target()->setScale(scale);
 
-
         // TODO some translation inadvertently happens; try to hold the chosen pinch origin in place
-
-        qCDebug(lcPinchHandler) << "centroid" << m_startCentroid << "->"  << m_centroid
-                                << ", distance" << m_startDistance << "->" << dist
-                                << ", startScale" << m_startScale << "->" << scale
-                                << ", activeRotation" << m_activeRotation
-                                << ", rotation" << rotation;
+    } else {
+        m_activeTranslation = QVector2D(m_centroid - m_startCentroid);
     }
+    qCDebug(lcPinchHandler) << "centroid" << m_startCentroid << "->"  << m_centroid
+                            << ", distance" << m_startDistance << "->" << dist
+                            << ", startScale" << m_startScale << "->" << scale
+                            << ", activeRotation" << m_activeRotation
+                            << ", rotation" << rotation;
 
     if (!containsReleasedPoints)
         acceptPoints(m_currentPoints);
