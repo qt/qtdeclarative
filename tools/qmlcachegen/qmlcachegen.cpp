@@ -114,6 +114,37 @@ static void annotateListElements(QmlIR::Document *document)
     }
 }
 
+static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc, Error *error)
+{
+    for (QmlIR::Object *object: qAsConst(doc.objects)) {
+        for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
+            if (binding->type != QV4::CompiledData::Binding::Type_Script)
+                continue;
+            const QString propName =  doc.stringAt(binding->propertyNameIndex);
+            if (!propName.startsWith(QLatin1String("on"))
+                || propName.length() < 3
+                || !propName.at(2).isUpper())
+                continue;
+            auto compiledFunction = doc.jsModule.functions.value(object->runtimeFunctionIndices.at(binding->value.compiledScriptIndex));
+            if (!compiledFunction)
+                continue;
+            if (compiledFunction->usesArgumentsObject) {
+                error->message = QLatin1Char(':') + QString::number(compiledFunction->line) + QLatin1Char(':');
+                if (compiledFunction->column > 0)
+                    error->message += QString::number(compiledFunction->column) + QLatin1Char(':');
+
+                error->message += QLatin1String(" error: The use of the arguments object in signal handlers is\n"
+                                                "not supported when compiling qml files ahead of time, because it may be ambiguous if\n"
+                                                "any signal parameter is called \"arguments\". Unfortunately we cannot distinguish\n"
+                                                "between it being a parameter or the JavaScript arguments object at this point.\n"
+                                                "Consider renaming the parameter of the signal if applicable.");
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 static bool compileQmlFile(const QString &inputFileName, const QString &outputFileName, QV4::EvalISelFactory *iselFactory, const QString &targetABI, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
@@ -171,6 +202,11 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
 
             QQmlJS::MemoryPool *pool = irDocument.jsParserEngine.pool();
             object->runtimeFunctionIndices.allocate(pool, runtimeFunctionIndices);
+        }
+
+        if (!checkArgumentsObjectUseInSignalHandlers(irDocument, error)) {
+            *error = error->augment(inputFileName);
+            return false;
         }
 
         QmlIR::QmlUnitGenerator generator;
