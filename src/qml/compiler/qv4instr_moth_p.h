@@ -493,6 +493,7 @@ struct InstrMeta {
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Wuninitialized")
+QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized")
 #define MOTH_INSTR_META_TEMPLATE(I) \
     template<> struct InstrMeta<int(Instr::Type::I)> { \
         enum { Size = MOTH_INSTR_SIZE(I) }; \
