@@ -64,17 +64,16 @@ QQuickImagineStyle *QQuickImagineStyle::qmlAttachedProperties(QObject *object)
 
 QString QQuickImagineStyle::path() const
 {
-    return m_path; // ### TODO: url?
+    return m_path;
 }
 
 void QQuickImagineStyle::setPath(const QString &path)
 {
-    QString p = ensureSlash(path);
     m_explicitPath = true;
-    if (m_path == p)
+    if (m_path == path)
         return;
 
-    m_path = p;
+    m_path = path;
     propagatePath();
 
     emit pathChanged();
@@ -108,6 +107,29 @@ void QQuickImagineStyle::resetPath()
     m_explicitPath = false;
     QQuickImagineStyle *imagine = qobject_cast<QQuickImagineStyle *>(attachedParent());
     inheritPath(imagine ? imagine->path() : *GlobalPath());
+}
+
+QUrl QQuickImagineStyle::url() const
+{
+    // Using ApplicationWindow as an example, its NinePatchImage url
+    // was previously assigned like this:
+    //
+    // soruce: Imagine.path + "applicationwindow-background"
+    //
+    // If Imagine.path is set to ":/images" by the user, then the final URL would be:
+    //
+    // QUrl("file:///home/user/qt/qtbase/qml/QtQuick/Controls.2/Imagine/:/images/applicationwindow-background")
+    //
+    // To ensure that the correct URL is constructed, we do it ourselves here,
+    // and then the control QML files use the "url" property instead.
+    const QString path = ensureSlash(m_path);
+    if (path.startsWith(QLatin1String("qrc")))
+        return QUrl(path);
+
+    if (path.startsWith(QLatin1String(":/")))
+        return QUrl(QLatin1String("qrc") + path);
+
+    return QUrl::fromLocalFile(path);
 }
 
 void QQuickImagineStyle::attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent)

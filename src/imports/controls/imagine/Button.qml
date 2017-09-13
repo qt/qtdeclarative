@@ -81,7 +81,7 @@ T.Button {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "button-background"
+        source: Imagine.url + "button-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

@@ -56,7 +56,7 @@ T.Dial {
         x: background.x + background.width / 2 - handle.width / 2
         y: background.y + background.height / 2 - handle.height / 2
 
-        source: Imagine.path + "dial-handle"
+        source: Imagine.url + "dial-handle"
         ImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -85,7 +85,7 @@ T.Dial {
         width: Math.max(64, Math.min(control.width, control.height))
         height: width
 
-        source: Imagine.path + "dial-background"
+        source: Imagine.url + "dial-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

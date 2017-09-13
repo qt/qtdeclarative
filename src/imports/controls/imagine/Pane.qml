@@ -58,7 +58,7 @@ T.Pane {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "pane-background"
+        source: Imagine.url + "pane-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

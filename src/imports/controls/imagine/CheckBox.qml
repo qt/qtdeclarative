@@ -60,7 +60,7 @@ T.CheckBox {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
-        source: Imagine.path + "checkbox-indicator"
+        source: Imagine.url + "checkbox-indicator"
         ImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -92,7 +92,7 @@ T.CheckBox {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "checkbox-background"
+        source: Imagine.url + "checkbox-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

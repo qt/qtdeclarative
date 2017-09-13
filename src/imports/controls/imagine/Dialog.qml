@@ -65,7 +65,7 @@ T.Dialog {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "dialog-background"
+        source: Imagine.url + "dialog-background"
         NinePatchImageSelector on source {
             states: [
                 {"modal": control.modal},
@@ -85,7 +85,7 @@ T.Dialog {
             width: parent.width
             height: parent.height
 
-            source: Imagine.path + "dialog-title"
+            source: Imagine.url + "dialog-title"
             NinePatchImageSelector on source {
                 states: [
                     {"modal": control.modal},
@@ -100,7 +100,7 @@ T.Dialog {
     }
 
     T.Overlay.modal: NinePatchImage {
-        source: Imagine.path + "dialog-overlay"
+        source: Imagine.url + "dialog-overlay"
         NinePatchImageSelector on source {
             states: [
                 {"modal": true}
@@ -109,7 +109,7 @@ T.Dialog {
     }
 
     T.Overlay.modeless: NinePatchImage {
-        source: Imagine.path + "dialog-overlay"
+        source: Imagine.url + "dialog-overlay"
         NinePatchImageSelector on source {
             states: [
                 {"modal": false}

@@ -72,7 +72,7 @@ T.RoundButton {
         height: control.height + topInset + bottomInset
 
         // ### TODO: radius?
-        source: Imagine.path + "roundbutton-background"
+        source: Imagine.url + "roundbutton-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

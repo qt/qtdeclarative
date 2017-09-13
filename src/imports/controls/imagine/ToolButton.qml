@@ -77,7 +77,7 @@ T.ToolButton {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "toolbutton-background"
+        source: Imagine.url + "toolbutton-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

@@ -82,7 +82,7 @@ T.TextArea {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "textarea-background"
+        source: Imagine.url + "textarea-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

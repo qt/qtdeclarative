@@ -82,7 +82,7 @@ T.TextField {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "textfield-background"
+        source: Imagine.url + "textfield-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

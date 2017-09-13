@@ -63,7 +63,7 @@ T.Drawer {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "drawer-background"
+        source: Imagine.url + "drawer-background"
         NinePatchImageSelector on source {
             states: [
                 {"modal": control.modal},
@@ -77,7 +77,7 @@ T.Drawer {
     }
 
     T.Overlay.modal: NinePatchImage {
-        source: Imagine.path + "drawer-overlay"
+        source: Imagine.url + "drawer-overlay"
         NinePatchImageSelector on source {
             states: [
                 {"modal": true}
@@ -86,7 +86,7 @@ T.Drawer {
     }
 
     T.Overlay.modeless: NinePatchImage {
-        source: Imagine.path + "drawer-overlay"
+        source: Imagine.url + "drawer-overlay"
         NinePatchImageSelector on source {
             states: [
                 {"modal": false}

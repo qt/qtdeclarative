@@ -60,7 +60,7 @@ T.RadioButton {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
-        source: Imagine.path + "radiobutton-indicator"
+        source: Imagine.url + "radiobutton-indicator"
         ImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -91,7 +91,7 @@ T.RadioButton {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "radiobutton-background"
+        source: Imagine.url + "radiobutton-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

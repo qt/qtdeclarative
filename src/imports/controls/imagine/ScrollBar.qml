@@ -58,7 +58,7 @@ T.ScrollBar {
         width: control.availableWidth
         height: control.availableHeight
 
-        source: Imagine.path + "scrollbar-handle"
+        source: Imagine.url + "scrollbar-handle"
         NinePatchImageSelector on source {
             states: [
                 {"vertical": control.vertical},
@@ -78,7 +78,7 @@ T.ScrollBar {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "scrollbar-background"
+        source: Imagine.url + "scrollbar-background"
         NinePatchImageSelector on source {
             states: [
                 {"vertical": control.vertical},

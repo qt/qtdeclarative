@@ -65,7 +65,7 @@ T.ComboBox {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
 
-        source: Imagine.path + "combobox-indicator"
+        source: Imagine.url + "combobox-indicator"
         ImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -107,7 +107,7 @@ T.ComboBox {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "combobox-background"
+        source: Imagine.url + "combobox-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -155,7 +155,7 @@ T.ComboBox {
             width: control.popup.width + leftInset + rightInset
             height: control.popup.height + topInset + bottomInset
 
-            source: Imagine.path + "combobox-popup"
+            source: Imagine.url + "combobox-popup"
             NinePatchImageSelector on source {
                 states: [
                     {"disabled": !control.enabled},

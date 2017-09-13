@@ -75,7 +75,7 @@ T.DialogButtonBox {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "dialogbuttonbox-background"
+        source: Imagine.url + "dialogbuttonbox-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

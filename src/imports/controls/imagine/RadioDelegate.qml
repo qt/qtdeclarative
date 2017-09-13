@@ -66,7 +66,7 @@ T.RadioDelegate {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
 
-        source: Imagine.path + "radiodelegate-indicator"
+        source: Imagine.url + "radiodelegate-indicator"
         ImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -100,7 +100,7 @@ T.RadioDelegate {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "radiodelegate-background"
+        source: Imagine.url + "radiodelegate-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

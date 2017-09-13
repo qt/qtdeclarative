@@ -16,6 +16,7 @@ SUBDIRS += \
     qquickcolor \
     qquickiconimage \
     qquickiconlabel \
+    qquickimaginestyle \
     qquickmaterialstyle \
     qquickmaterialstyleconf \
     qquickmenubar \

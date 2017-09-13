@@ -76,7 +76,7 @@ T.Menu {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "menu-background"
+        source: Imagine.url + "menu-background"
         NinePatchImageSelector on source {
             states: [
                 {"modal": control.modal},
@@ -86,7 +86,7 @@ T.Menu {
     }
 
     T.Overlay.modal: NinePatchImage {
-        source: Imagine.path + "menu-overlay"
+        source: Imagine.url + "menu-overlay"
         NinePatchImageSelector on source {
             states: [
                 {"modal": true}
@@ -95,7 +95,7 @@ T.Menu {
     }
 
     T.Overlay.modeless: NinePatchImage {
-        source: Imagine.path + "menu-overlay"
+        source: Imagine.url + "menu-overlay"
         NinePatchImageSelector on source {
             states: [
                 {"modal": false}

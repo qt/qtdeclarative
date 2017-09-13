@@ -3,7 +3,7 @@
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,29 +34,5 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.10
-import QtQuick.Templates 2.3 as T
-import QtQuick.Controls.Imagine 2.3
-import QtQuick.Controls.Imagine.impl 2.3
-
-T.Label {
-    id: control
-
-    color: control.palette.windowText
-    linkColor: control.palette.link
-
-    background: NinePatchImage {
-        x: -leftInset; y: -topInset
-        width: control.width + leftInset + rightInset
-        height: control.height + topInset + bottomInset
-
-        source: Imagine.url + "label-background"
-        NinePatchImageSelector on source {
-            states: [
-                {"disabled": !control.enabled},
-                {"mirrored": control.mirrored},
-                {"hovered": control.hovered}
-            ]
-        }
-    }
-}
+#include <QtQuickTest/quicktest.h>
+QUICK_TEST_MAIN(tst_qquickmaterialstyle)

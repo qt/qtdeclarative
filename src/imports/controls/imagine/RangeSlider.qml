@@ -58,7 +58,7 @@ T.RangeSlider {
         x: control.leftPadding + (control.horizontal ? control.first.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height))
 
-        source: Imagine.path + "rangeslider-handle"
+        source: Imagine.url + "rangeslider-handle"
         ImageSelector on source {
             states: [
                 {"first": true},
@@ -77,7 +77,7 @@ T.RangeSlider {
         x: control.leftPadding + (control.horizontal ? control.second.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
 
-        source: Imagine.path + "rangeslider-handle"
+        source: Imagine.url + "rangeslider-handle"
         ImageSelector on source {
             states: [
                 {"second": true},
@@ -98,7 +98,7 @@ T.RangeSlider {
         height: control.height + topInset + bottomInset
         scale: control.horizontal && control.mirrored ? -1 : 1
 
-        source: Imagine.path + "rangeslider-background"
+        source: Imagine.url + "rangeslider-background"
         NinePatchImageSelector on source {
             states: [
                 {"vertical": control.vertical},
@@ -116,7 +116,7 @@ T.RangeSlider {
             width: control.horizontal ? control.second.position * (parent.width - control.first.handle.width) - control.first.position * (parent.width - control.first.handle.width) : parent.width
             height: control.vertical ? control.second.position * (parent.height - control.first.handle.height) - control.first.position * (parent.height - control.first.handle.height): parent.height
 
-            source: Imagine.path + "rangeslider-progress"
+            source: Imagine.url + "rangeslider-progress"
             NinePatchImageSelector on source {
                 states: [
                     {"vertical": control.vertical},
