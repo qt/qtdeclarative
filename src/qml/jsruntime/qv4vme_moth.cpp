@@ -320,9 +320,15 @@ static struct InstrCount {
     MOTH_BEGIN_INSTR_COMMON(instr)
 #endif // COUNT_INSTRUCTIONS
 
+#ifdef MOTH_COMPUTED_GOTO
 #define MOTH_END_INSTR(instr) \
         MOTH_DISPATCH() \
     }
+#else // !MOTH_COMPUTED_GOTO
+#define MOTH_END_INSTR(instr) \
+        continue; \
+    }
+#endif
 
 #define STACK_VALUE(temp) stack[temp]
 
