@@ -353,7 +353,6 @@ QT_BEGIN_NAMESPACE
 
 #define MOTH_DECODE_INSTRUCTION(name, nargs, ...) \
         MOTH_DEFINE_ARGS(nargs, __VA_ARGS__) \
-        goto op_int_##name; \
     op_int_##name: \
         MOTH_ADJUST_CODE(int, nargs); \
         MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
@@ -367,7 +366,6 @@ QT_BEGIN_NAMESPACE
 #define MOTH_DECODE_WITH_BASE_INSTRUCTION(name, nargs, ...) \
         MOTH_DEFINE_ARGS(nargs, __VA_ARGS__) \
         const char *base_ptr; \
-        goto op_int_##name; \
     op_int_##name: \
         base_ptr = code; \
         MOTH_ADJUST_CODE(int, nargs); \
@@ -421,15 +419,16 @@ QT_BEGIN_NAMESPACE
 #define MOTH_INSTR_CASE_AND_JUMP(instr) \
     INSTR_##instr(GET_CASE_AND_JUMP)
 #define GET_CASE_AND_JUMP_INSTRUCTION(name, ...) \
-    case Instr::Type::name: goto op_char_##name;
+    case static_cast<uchar>(Instr::Type::name): goto op_char_##name;
 #define MOTH_INSTR_CASE_AND_JUMP_WIDE(instr) \
     INSTR_##instr(GET_CASE_AND_JUMP_WIDE)
 #define GET_CASE_AND_JUMP_WIDE_INSTRUCTION(name, ...) \
-    case Instr::Type::name: goto op_int_##name;
+    case (static_cast<uchar>(Instr::Type::name) + MOTH_NUM_INSTRUCTIONS()): goto op_int_##name;
 
 #define MOTH_DISPATCH() \
-    switch (static_cast<Instr::Type>(*code)) { \
+    switch (static_cast<uchar>(*code)) { \
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_CASE_AND_JUMP) \
+        FOR_EACH_MOTH_INSTR(MOTH_INSTR_CASE_AND_JUMP_WIDE) \
     }
 #endif
 

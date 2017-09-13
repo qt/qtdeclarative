@@ -526,6 +526,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
 
     for (;;) {
     MOTH_DISPATCH()
+    Q_UNREACHABLE(); // only reached when the dispatch doesn't jump somewhere
 
     MOTH_BEGIN_INSTR(LoadConst)
         acc = constant(function, index).asReturnedValue();
