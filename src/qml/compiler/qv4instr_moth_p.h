@@ -304,10 +304,11 @@ QT_BEGIN_NAMESPACE
 #define MOTH_INSTR_ENUM(I)  I,
 #define MOTH_INSTR_SIZE(I) (sizeof(QV4::Moth::Instr::instr_##I))
 
+#define MOTH_EXPAND_FOR_MSVC(x) x
 #define MOTH_DEFINE_ARGS(nargs, ...) \
-    MOTH_DEFINE_ARGS##nargs(__VA_ARGS__)
+    MOTH_EXPAND_FOR_MSVC(MOTH_DEFINE_ARGS##nargs(__VA_ARGS__))
 
-#define MOTH_DEFINE_ARGS0(dummy)
+#define MOTH_DEFINE_ARGS0()
 #define MOTH_DEFINE_ARGS1(arg) \
     int arg;
 #define MOTH_DEFINE_ARGS2(arg1, arg2) \
@@ -352,6 +353,7 @@ QT_BEGIN_NAMESPACE
 
 #define MOTH_DECODE_INSTRUCTION(name, nargs, ...) \
         MOTH_DEFINE_ARGS(nargs, __VA_ARGS__) \
+        goto op_int_##name; \
     op_int_##name: \
         MOTH_ADJUST_CODE(int, nargs); \
         MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
@@ -365,6 +367,7 @@ QT_BEGIN_NAMESPACE
 #define MOTH_DECODE_WITH_BASE_INSTRUCTION(name, nargs, ...) \
         MOTH_DEFINE_ARGS(nargs, __VA_ARGS__) \
         const char *base_ptr; \
+        goto op_int_##name; \
     op_int_##name: \
         base_ptr = code; \
         MOTH_ADJUST_CODE(int, nargs); \
@@ -378,7 +381,7 @@ QT_BEGIN_NAMESPACE
         ; \
 
 #define MOTH_DECODE_ARGS(name, type, nargs, ...) \
-    MOTH_DECODE_ARGS##nargs(name, type, nargs, __VA_ARGS__)
+    MOTH_EXPAND_FOR_MSVC(MOTH_DECODE_ARGS##nargs(name, type, nargs, __VA_ARGS__))
 
 #define MOTH_DECODE_ARGS0(name, type, nargs, dummy)
 #define MOTH_DECODE_ARGS1(name, type, nargs, arg) \

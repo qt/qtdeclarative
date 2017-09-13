@@ -263,7 +263,9 @@ struct Function
     static int calculateSize(int nFormals, int nLocals, int nLines, int nInnerfunctions, int nIdObjectDependencies, int nPropertyDependencies, int codeSize) {
         int trailingData = (nFormals + nLocals + nInnerfunctions +  nIdObjectDependencies +
                 2 * nPropertyDependencies)*sizeof (quint32) + nLines*sizeof(CodeOffsetToLine);
-        return align(align(sizeof(Function)) + size_t(trailingData)) + align(codeSize);
+        auto size = align(align(sizeof(Function)) + size_t(trailingData)) + align(codeSize);
+        Q_ASSERT(size >= 0 && size < INT_MAX);
+        return int(size);
     }
 
     static size_t align(size_t a) {
