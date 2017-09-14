@@ -233,10 +233,10 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     return instance;
 }
 
-bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
+bool QQmlObjectCreator::populateDeferredProperties(QObject *instance, QQmlData::DeferredData *deferredData)
 {
     QQmlData *declarativeData = QQmlData::get(instance);
-    context = declarativeData->deferredData->context;
+    context = deferredData->context;
     sharedState->rootContext = context;
 
     QObject *bindingTarget = instance;
@@ -260,7 +260,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance)
     qSwap(_propertyCache, cache);
     qSwap(_qobject, instance);
 
-    int objectIndex = declarativeData->deferredData->deferredIdx;
+    int objectIndex = deferredData->deferredIdx;
     qSwap(_compiledObjectIndex, objectIndex);
 
     const QV4::CompiledData::Object *obj = qmlUnit->objectAt(_compiledObjectIndex);
@@ -1347,7 +1347,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         deferData->compilationUnit = compilationUnit;
         deferData->compilationUnit->addref();
         deferData->context = context;
-        _ddata->deferredData = deferData;
+        _ddata->deferredData.append(deferData);
     }
 
     if (_compiledObject->nFunctions > 0)
