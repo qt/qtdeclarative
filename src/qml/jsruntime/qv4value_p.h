@@ -292,7 +292,7 @@ public:
     inline bool isNullOrUndefined() const { return isNull() || isUndefined(); }
     inline bool isNumber() const { return quickType() >= QT_Int; }
 
-#if QT_POINTER_SIZE == 8
+#if /*QT_POINTER_SIZE ==*/ 8 // TODO: check if we need specialized versions for 32bit
     inline bool isUndefined() const { return _val == 0; }
     inline bool isDouble() const { return (_val >> IsDouble_Shift); }
     inline bool isManaged() const { return _val && ((_val >> IsManagedOrUndefined_Shift) == 0); }
