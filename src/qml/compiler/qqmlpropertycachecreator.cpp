@@ -64,7 +64,7 @@ QQmlBindingInstantiationContext::QQmlBindingInstantiationContext(int referencing
         Q_ASSERT(instantiatingBinding->propertyNameIndex != 0);
 
         bool notInRevision = false;
-        instantiatingProperty = QmlIR::PropertyResolver(referencingObjectPropertyCache).property(instantiatingPropertyName, &notInRevision);
+        instantiatingProperty = QmlIR::PropertyResolver(referencingObjectPropertyCache).property(instantiatingPropertyName, &notInRevision, QmlIR::PropertyResolver::IgnoreRevision);
     }
 }
 

@@ -665,10 +665,11 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
     } else if (property->propType() == qMetaTypeId<QQmlScriptString>()) {
         return QQmlCompileError(binding->valueLocation, tr("Invalid property assignment: script expected"));
     } else {
-        // We want to raw metaObject here as the raw metaobject is the
+        // We want to use the raw metaObject here as the raw metaobject is the
         // actual property type before we applied any extensions that might
         // effect the properties on the type, but don't effect assignability
-        QQmlPropertyCache *propertyMetaObject = enginePrivate->rawPropertyCacheForType(property->propType());
+        // Using -1 for the minor version ensures that we get the raw metaObject.
+        QQmlPropertyCache *propertyMetaObject = enginePrivate->rawPropertyCacheForType(property->propType(), -1);
 
         // Will be true if the assgned type inherits propertyMetaObject
         bool isAssignable = false;

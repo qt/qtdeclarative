@@ -75,6 +75,7 @@ private slots:
     void urlInterceptor();
     void qmlContextProperties();
     void testGCCorruption();
+    void testGroupedPropertyRevisions();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -871,6 +872,17 @@ void tst_qqmlengine::testGCCorruption()
     QQmlComponent c(&e, testFileUrl("testGCCorruption.qml"));
     QObject *o = c.create();
     QVERIFY2(o, qPrintable(c.errorString()));
+}
+
+void tst_qqmlengine::testGroupedPropertyRevisions()
+{
+    QQmlEngine e;
+
+    QQmlComponent c(&e, testFileUrl("testGroupedPropertiesRevision.1.qml"));
+    QScopedPointer<QObject> object(c.create());
+    QVERIFY2(object.data(), qPrintable(c.errorString()));
+    QQmlComponent c2(&e, testFileUrl("testGroupedPropertiesRevision.2.qml"));
+    QVERIFY(!c2.errorString().isEmpty());
 }
 
 QTEST_MAIN(tst_qqmlengine)

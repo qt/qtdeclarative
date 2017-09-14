@@ -218,12 +218,38 @@ public:
         _coreIndex = qint16(idx);
     }
 
-    int revision() const { return _revision; }
-    void setRevision(int rev)
+    quint8 revision() const { return _revision; }
+    void setRevision(quint8 rev)
     {
-        Q_ASSERT(rev >= std::numeric_limits<qint16>::min());
-        Q_ASSERT(rev <= std::numeric_limits<qint16>::max());
-        _revision = qint16(rev);
+        Q_ASSERT(rev >= std::numeric_limits<quint8>::min());
+        Q_ASSERT(rev <= std::numeric_limits<quint8>::max());
+        _revision = quint8(rev);
+    }
+
+    /* If a property is a C++ type, then we store the minor
+     * version of this type.
+     * This is required to resolve property or signal revisions
+     * if this property is used as a grouped property.
+     *
+     * Test.qml
+     * property TextEdit someTextEdit: TextEdit {}
+     *
+     * Test {
+     *   someTextEdit.preeditText: "test" //revision 7
+     *   someTextEdit.onEditingFinished: console.log("test") //revision 6
+     * }
+     *
+     * To determine if these properties with revisions are available we need
+     * the minor version of TextEdit as imported in Test.qml.
+     *
+     */
+
+    quint8 typeMinorVersion() const { return _typeMinorVersion; }
+    void setTypeMinorVersion(quint8 rev)
+    {
+        Q_ASSERT(rev >= std::numeric_limits<quint8>::min());
+        Q_ASSERT(rev <= std::numeric_limits<quint8>::max());
+        _typeMinorVersion = quint8(rev);
     }
 
     QQmlPropertyCacheMethodArguments *arguments() const { return _arguments; }
@@ -257,7 +283,8 @@ private:
     qint16 _notifyIndex;
     qint16 _overrideIndex;
 
-    qint16 _revision;
+    quint8 _revision;
+    quint8 _typeMinorVersion;
     qint16 _metaObjectOffset;
 
     QQmlPropertyCacheMethodArguments *_arguments;
@@ -390,7 +417,7 @@ public:
     QQmlPropertyCache *copyAndReserve(int propertyCount,
                                       int methodCount, int signalCount, int enumCount);
     void appendProperty(const QString &, QQmlPropertyRawData::Flags flags, int coreIndex,
-                        int propType, int notifyIndex);
+                        int propType, int revision, int notifyIndex);
     void appendSignal(const QString &, QQmlPropertyRawData::Flags, int coreIndex,
                       const int *types = 0, const QList<QByteArray> &names = QList<QByteArray>());
     void appendMethod(const QString &, QQmlPropertyData::Flags flags, int coreIndex,

@@ -220,7 +220,7 @@ public:
     QQmlMetaObject rawMetaObjectForType(int) const;
     QQmlMetaObject metaObjectForType(int) const;
     QQmlPropertyCache *propertyCacheForType(int);
-    QQmlPropertyCache *rawPropertyCacheForType(int);
+    QQmlPropertyCache *rawPropertyCacheForType(int, int minorVersion = -1);
     void registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
     void unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
 

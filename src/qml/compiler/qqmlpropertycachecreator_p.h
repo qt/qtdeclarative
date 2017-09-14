@@ -184,7 +184,7 @@ inline QQmlPropertyCache *QQmlPropertyCacheCreator<ObjectContainer>::propertyCac
 {
     if (context.instantiatingProperty) {
         if (context.instantiatingProperty->isQObject()) {
-            return enginePrivate->rawPropertyCacheForType(context.instantiatingProperty->propType());
+            return enginePrivate->rawPropertyCacheForType(context.instantiatingProperty->propType(), context.instantiatingProperty->typeMinorVersion());
         } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(context.instantiatingProperty->propType())) {
             return enginePrivate->cache(vtmo);
         }
@@ -476,6 +476,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
     pend = obj->propertiesEnd();
     for ( ; p != pend; ++p, ++propertyIdx) {
         int propertyType = 0;
+        int propertTypeMinorVersion = 0;
         QQmlPropertyData::Flags propertyFlags;
 
         if (p->type == QV4::CompiledData::Property::Var) {
@@ -513,6 +514,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
             } else {
                 if (p->type == QV4::CompiledData::Property::Custom) {
                     propertyType = qmltype.typeId();
+                    propertTypeMinorVersion = qmltype.minorVersion();
                 } else {
                     propertyType = qmltype.qListTypeId();
                 }
@@ -532,7 +534,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
         if (!obj->defaultPropertyIsAlias && propertyIdx == obj->indexOfDefaultPropertyOrAlias)
             cache->_defaultPropertyName = propertyName;
         cache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                              propertyType, effectiveSignalIndex);
+                              propertyType, propertTypeMinorVersion, effectiveSignalIndex);
 
         effectiveSignalIndex++;
     }
@@ -555,7 +557,7 @@ public:
 
 private:
     void appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex);
-    void propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, QQmlPropertyRawData::Flags *propertyFlags);
+    void propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *rev, QQmlPropertyRawData::Flags *propertyFlags);
 
     void collectObjectsWithAliasesRecursively(int objectIndex, QVector<int> *objectsWithAliases) const;
 
@@ -667,7 +669,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAl
 
 template <typename ObjectContainer>
 inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(
-        const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type,
+        const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, int *minorVersion,
         QQmlPropertyData::Flags *propertyFlags)
 {
     const int targetObjectIndex = objectForId(component, alias.targetObjectId);
@@ -685,7 +687,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias
         auto targetAlias = targetObject.aliasesBegin();
         for (uint i = 0; i < alias.localAliasIndex; ++i)
             ++targetAlias;
-        propertyDataForAlias(component, *targetAlias, type, propertyFlags);
+        propertyDataForAlias(component, *targetAlias, type, minorVersion, propertyFlags);
         return;
     } else if (alias.encodedMetaPropertyIndex == -1) {
         Q_ASSERT(alias.flags & QV4::CompiledData::Alias::AliasPointsToPointerObject);
@@ -696,6 +698,8 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias
             *type = typeRef->type.typeId();
         else
             *type = typeRef->compilationUnit->metaTypeId;
+
+        *minorVersion = typeRef->minorVersion;
 
         propertyFlags->type = QQmlPropertyData::Flags::QObjectDerivedType;
     } else {
@@ -756,8 +760,9 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPrope
         Q_ASSERT(alias->flags & QV4::CompiledData::Alias::Resolved);
 
         int type = 0;
+        int minorVersion = 0;
         QQmlPropertyData::Flags propertyFlags;
-        propertyDataForAlias(component, *alias, &type, &propertyFlags);
+        propertyDataForAlias(component, *alias, &type, &minorVersion, &propertyFlags);
 
         const QString propertyName = objectContainer->stringAt(alias->nameIndex);
 
@@ -765,7 +770,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPrope
             propertyCache->_defaultPropertyName = propertyName;
 
         propertyCache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
-                                      type, effectiveSignalIndex++);
+                                      type, minorVersion, effectiveSignalIndex++);
     }
 }
 

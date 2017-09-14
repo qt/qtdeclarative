@@ -2342,7 +2342,7 @@ QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
     }
 }
 
-QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
+QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, int minorVersion)
 {
     Locker locker(this);
     auto iter = m_compositeTypes.constFind(t);
@@ -2351,7 +2351,11 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
     } else {
         QQmlType type = QQmlMetaType::qmlType(t);
         locker.unlock();
-        return type.isValid() ? cache(type.baseMetaObject()) : 0;
+
+        if (minorVersion >= 0)
+            return type.isValid() ? cache(type, minorVersion) : 0;
+        else
+            return type.isValid() ? cache(type.baseMetaObject()) : 0;
     }
 }
 

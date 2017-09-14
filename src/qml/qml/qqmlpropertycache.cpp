@@ -321,13 +321,14 @@ QQmlPropertyCache *QQmlPropertyCache::copyAndReserve(int propertyCount, int meth
     This is different from QMetaMethod::methodIndex().
 */
 void QQmlPropertyCache::appendProperty(const QString &name, QQmlPropertyData::Flags flags,
-                                       int coreIndex, int propType, int notifyIndex)
+                                       int coreIndex, int propType, int minorVersion, int notifyIndex)
 {
     QQmlPropertyData data;
     data.setPropType(propType);
     data.setCoreIndex(coreIndex);
     data.setNotifyIndex(notifyIndex);
     data.setFlags(flags);
+    data.setTypeMinorVersion(minorVersion);
 
     QQmlPropertyData *old = findNamedProperty(name);
     if (old)
