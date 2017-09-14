@@ -1266,6 +1266,13 @@ void QQmlDelegateModel::_q_itemsInserted(int index, int count)
     d->emitChanges();
 }
 
+//### This method should be split in two. It will remove delegates, and it will re-render the list.
+// When e.g. QQmlListModel::remove is called, the removal of the delegates should be done on
+// QAbstractItemModel::rowsAboutToBeRemoved, and the re-rendering on
+// QAbstractItemModel::rowsRemoved. Currently both are done on the latter signal. The problem is
+// that the destruction of an item will emit a changed signal that ends up at the delegate, which
+// in turn will try to load the data from the model (which should have already freed it), resulting
+// in a use-after-free. See QTBUG-59256.
 void QQmlDelegateModelPrivate::itemsRemoved(
         const QVector<Compositor::Remove> &removes,
         QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedRemoves,
