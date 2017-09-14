@@ -54,10 +54,11 @@
 #include <QtGui/QGuiApplication>
 
 QT_BEGIN_NAMESPACE
-#if QT_CONFIG(opengl)
-#define QT_MINIMUM_FBO_SIZE 64
 
 Q_LOGGING_CATEGORY(lcCanvas, "qt.quick.canvas")
+
+#if QT_CONFIG(opengl)
+#define QT_MINIMUM_FBO_SIZE 64
 
 static inline int qt_next_power_of_two(int v)
 {
