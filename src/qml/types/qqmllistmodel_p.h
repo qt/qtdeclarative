@@ -159,6 +159,8 @@ private:
     void emitItemsInserted(int index, int count);
     void emitItemsAboutToBeMoved(int from, int to, int n);
     void emitItemsMoved(int from, int to, int n);
+
+    void removeElements(int index, int removeCount);
 };
 
 // ### FIXME
