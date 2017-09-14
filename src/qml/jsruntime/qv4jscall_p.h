@@ -65,23 +65,20 @@ struct JSCall {
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + qMax(argc , int(QV4::Global::ReservedArgumentCount));
         ptr = reinterpret_cast<CallData *>(scope.alloc(size));
-        ptr->tag = quint32(QV4::Value::ValueTypeInternal::Integer);
-        ptr->argc = argc;
+        ptr->setArgc(argc);
     }
     JSCall(const Scope &scope, const FunctionObject *function, int argc = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + qMax(argc , int(QV4::Global::ReservedArgumentCount));
         ptr = reinterpret_cast<CallData *>(scope.alloc(size));
-        ptr->tag = quint32(QV4::Value::ValueTypeInternal::Integer);
-        ptr->argc = argc;
+        ptr->setArgc(argc);
         ptr->function = *function;
     }
     JSCall(const Scope &scope, Heap::FunctionObject *function, int argc = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + qMax(argc , int(QV4::Global::ReservedArgumentCount));
         ptr = reinterpret_cast<CallData *>(scope.alloc(size));
-        ptr->tag = quint32(QV4::Value::ValueTypeInternal::Integer);
-        ptr->argc = argc;
+        ptr->setArgc(argc);
         ptr->function = function;
     }
 

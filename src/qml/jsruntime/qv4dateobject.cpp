@@ -682,10 +682,10 @@ ReturnedValue DateCtor::construct(const Managed *that, CallData *callData)
 {
     double t = 0;
 
-    if (callData->argc == 0)
+    if (callData->argc() == 0)
         t = currentTime();
 
-    else if (callData->argc == 1) {
+    else if (callData->argc() == 1) {
         Scope scope(that->engine());
         ScopedValue arg(scope, callData->args[0]);
         if (DateObject *d = arg->as<DateObject>()) {
@@ -703,11 +703,11 @@ ReturnedValue DateCtor::construct(const Managed *that, CallData *callData)
     else { // d.argc > 1
         double year  = callData->args[0].toNumber();
         double month = callData->args[1].toNumber();
-        double day  = callData->argc >= 3 ? callData->args[2].toNumber() : 1;
-        double hours = callData->argc >= 4 ? callData->args[3].toNumber() : 0;
-        double mins = callData->argc >= 5 ? callData->args[4].toNumber() : 0;
-        double secs = callData->argc >= 6 ? callData->args[5].toNumber() : 0;
-        double ms    = callData->argc >= 7 ? callData->args[6].toNumber() : 0;
+        double day  = callData->argc() >= 3 ? callData->args[2].toNumber() : 1;
+        double hours = callData->argc() >= 4 ? callData->args[3].toNumber() : 0;
+        double mins = callData->argc() >= 5 ? callData->args[4].toNumber() : 0;
+        double secs = callData->argc() >= 6 ? callData->args[5].toNumber() : 0;
+        double ms    = callData->argc() >= 7 ? callData->args[6].toNumber() : 0;
         if (year >= 0 && year <= 99)
             year += 1900;
         t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));
@@ -809,7 +809,7 @@ double DatePrototype::getThisDate(ExecutionEngine *v4, CallData *callData)
 
 ReturnedValue DatePrototype::method_parse(const BuiltinFunction *, CallData *callData)
 {
-    if (!callData->argc)
+    if (!callData->argc())
         return Encode(qt_qnan());
     else
         return Encode(ParseString(callData->args[0].toQString()));
@@ -817,7 +817,7 @@ ReturnedValue DatePrototype::method_parse(const BuiltinFunction *, CallData *cal
 
 ReturnedValue DatePrototype::method_UTC(const BuiltinFunction *, CallData *callData)
 {
-    const int numArgs = callData->argc;
+    const int numArgs = callData->argc();
     if (numArgs >= 2) {
         double year  = callData->args[0].toNumber();
         double month = callData->args[1].toNumber();
@@ -1066,7 +1066,7 @@ ReturnedValue DatePrototype::method_setTime(const BuiltinFunction *b, CallData *
     if (!self)
         return v4->throwTypeError();
 
-    double t = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double t = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
     self->setDate(TimeClip(t));
@@ -1083,7 +1083,7 @@ ReturnedValue DatePrototype::method_setMilliseconds(const BuiltinFunction *b, Ca
     double t = LocalTime(self->date());
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double ms = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double ms = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
     self->setDate(TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms)))));
@@ -1100,7 +1100,7 @@ ReturnedValue DatePrototype::method_setUTCMilliseconds(const BuiltinFunction *b,
     double t = self->date();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double ms = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double ms = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
     self->setDate(TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms))));
@@ -1117,10 +1117,10 @@ ReturnedValue DatePrototype::method_setSeconds(const BuiltinFunction *b, CallDat
     double t = LocalTime(self->date());
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double sec = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double sec = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double ms = (callData->argc < 2) ? msFromTime(t) : callData->args[1].toNumber();
+    double ms = (callData->argc() < 2) ? msFromTime(t) : callData->args[1].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms))));
@@ -1136,8 +1136,8 @@ ReturnedValue DatePrototype::method_setUTCSeconds(const BuiltinFunction *b, Call
         return v4->throwTypeError();
 
     double t = self->date();
-    double sec = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    double ms = (callData->argc < 2) ? msFromTime(t) : callData->args[1].toNumber();
+    double sec = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double ms = (callData->argc() < 2) ? msFromTime(t) : callData->args[1].toNumber();
     t = TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), MinFromTime(t), sec, ms)));
     self->setDate(t);
     return Encode(self->date());
@@ -1153,13 +1153,13 @@ ReturnedValue DatePrototype::method_setMinutes(const BuiltinFunction *b, CallDat
     double t = LocalTime(self->date());
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double min = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double min = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double sec = (callData->argc < 2) ? SecFromTime(t) : callData->args[1].toNumber();
+    double sec = (callData->argc() < 2) ? SecFromTime(t) : callData->args[1].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double ms = (callData->argc < 3) ? msFromTime(t) : callData->args[2].toNumber();
+    double ms = (callData->argc() < 3) ? msFromTime(t) : callData->args[2].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms))));
@@ -1175,9 +1175,9 @@ ReturnedValue DatePrototype::method_setUTCMinutes(const BuiltinFunction *b, Call
         return v4->throwTypeError();
 
     double t = self->date();
-    double min = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    double sec = (callData->argc < 2) ? SecFromTime(t) : callData->args[1].toNumber();
-    double ms = (callData->argc < 3) ? msFromTime(t) : callData->args[2].toNumber();
+    double min = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double sec = (callData->argc() < 2) ? SecFromTime(t) : callData->args[1].toNumber();
+    double ms = (callData->argc() < 3) ? msFromTime(t) : callData->args[2].toNumber();
     t = TimeClip(MakeDate(Day(t), MakeTime(HourFromTime(t), min, sec, ms)));
     self->setDate(t);
     return Encode(self->date());
@@ -1193,16 +1193,16 @@ ReturnedValue DatePrototype::method_setHours(const BuiltinFunction *b, CallData 
     double t = LocalTime(self->date());
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double hour = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double hour = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double min = (callData->argc < 2) ? MinFromTime(t) : callData->args[1].toNumber();
+    double min = (callData->argc() < 2) ? MinFromTime(t) : callData->args[1].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double sec = (callData->argc < 3) ? SecFromTime(t) : callData->args[2].toNumber();
+    double sec = (callData->argc() < 3) ? SecFromTime(t) : callData->args[2].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double ms = (callData->argc < 4) ? msFromTime(t) : callData->args[3].toNumber();
+    double ms = (callData->argc() < 4) ? msFromTime(t) : callData->args[3].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(Day(t), MakeTime(hour, min, sec, ms))));
@@ -1218,10 +1218,10 @@ ReturnedValue DatePrototype::method_setUTCHours(const BuiltinFunction *b, CallDa
         return v4->throwTypeError();
 
     double t = self->date();
-    double hour = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    double min = (callData->argc < 2) ? MinFromTime(t) : callData->args[1].toNumber();
-    double sec = (callData->argc < 3) ? SecFromTime(t) : callData->args[2].toNumber();
-    double ms = (callData->argc < 4) ? msFromTime(t) : callData->args[3].toNumber();
+    double hour = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double min = (callData->argc() < 2) ? MinFromTime(t) : callData->args[1].toNumber();
+    double sec = (callData->argc() < 3) ? SecFromTime(t) : callData->args[2].toNumber();
+    double ms = (callData->argc() < 4) ? msFromTime(t) : callData->args[3].toNumber();
     t = TimeClip(MakeDate(Day(t), MakeTime(hour, min, sec, ms)));
     self->setDate(t);
     return Encode(self->date());
@@ -1237,7 +1237,7 @@ ReturnedValue DatePrototype::method_setDate(const BuiltinFunction *b, CallData *
     double t = LocalTime(self->date());
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double date = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double date = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t))));
@@ -1255,7 +1255,7 @@ ReturnedValue DatePrototype::method_setUTCDate(const BuiltinFunction *b, CallDat
     double t = self->date();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double date = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double date = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
     t = TimeClip(MakeDate(MakeDay(YearFromTime(t), MonthFromTime(t), date), TimeWithinDay(t)));
@@ -1273,10 +1273,10 @@ ReturnedValue DatePrototype::method_setMonth(const BuiltinFunction *b, CallData 
     double t = LocalTime(self->date());
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double month = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double month = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double date = (callData->argc < 2) ? DateFromTime(t) : callData->args[1].toNumber();
+    double date = (callData->argc() < 2) ? DateFromTime(t) : callData->args[1].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t))));
@@ -1292,8 +1292,8 @@ ReturnedValue DatePrototype::method_setUTCMonth(const BuiltinFunction *b, CallDa
         return v4->throwTypeError();
 
     double t = self->date();
-    double month = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    double date = (callData->argc < 2) ? DateFromTime(t) : callData->args[1].toNumber();
+    double month = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double date = (callData->argc() < 2) ? DateFromTime(t) : callData->args[1].toNumber();
     t = TimeClip(MakeDate(MakeDay(YearFromTime(t), month, date), TimeWithinDay(t)));
     self->setDate(t);
     return Encode(self->date());
@@ -1311,7 +1311,7 @@ ReturnedValue DatePrototype::method_setYear(const BuiltinFunction *b, CallData *
         t = 0;
     else
         t = LocalTime(t);
-    double year = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double year = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     double r;
     if (std::isnan(year)) {
         r = qt_qnan();
@@ -1334,9 +1334,9 @@ ReturnedValue DatePrototype::method_setUTCFullYear(const BuiltinFunction *b, Cal
         return v4->throwTypeError();
 
     double t = self->date();
-    double year = callData->argc ? callData->args[0].toNumber() : qt_qnan();
-    double month = (callData->argc < 2) ? MonthFromTime(t) : callData->args[1].toNumber();
-    double date = (callData->argc < 3) ? DateFromTime(t) : callData->args[2].toNumber();
+    double year = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double month = (callData->argc() < 2) ? MonthFromTime(t) : callData->args[1].toNumber();
+    double date = (callData->argc() < 3) ? DateFromTime(t) : callData->args[2].toNumber();
     t = TimeClip(MakeDate(MakeDay(year, month, date), TimeWithinDay(t)));
     self->setDate(t);
     return Encode(self->date());
@@ -1354,13 +1354,13 @@ ReturnedValue DatePrototype::method_setFullYear(const BuiltinFunction *b, CallDa
         return QV4::Encode::undefined();
     if (std::isnan(t))
         t = 0;
-    double year = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double year = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double month = (callData->argc < 2) ? MonthFromTime(t) : callData->args[1].toNumber();
+    double month = (callData->argc() < 2) ? MonthFromTime(t) : callData->args[1].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
-    double date = (callData->argc < 3) ? DateFromTime(t) : callData->args[2].toNumber();
+    double date = (callData->argc() < 3) ? DateFromTime(t) : callData->args[2].toNumber();
     if (v4->hasException)
         return QV4::Encode::undefined();
     t = TimeClip(UTC(MakeDate(MakeDay(year, month, date), TimeWithinDay(t))));

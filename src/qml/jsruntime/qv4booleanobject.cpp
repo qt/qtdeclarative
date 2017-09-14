@@ -52,13 +52,13 @@ void Heap::BooleanCtor::init(QV4::ExecutionContext *scope)
 
 ReturnedValue BooleanCtor::construct(const Managed *that, CallData *callData)
 {
-    bool n = callData->argc ? callData->args[0].toBoolean() : false;
+    bool n = callData->argc() ? callData->args[0].toBoolean() : false;
     return Encode(that->engine()->newBooleanObject(n));
 }
 
 ReturnedValue BooleanCtor::call(const Managed *, CallData *callData)
 {
-    bool value = callData->argc ? callData->args[0].toBoolean() : 0;
+    bool value = callData->argc() ? callData->args[0].toBoolean() : 0;
     return Encode(value);
 }
 

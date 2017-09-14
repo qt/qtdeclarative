@@ -904,7 +904,7 @@ ReturnedValue QObjectWrapper::method_connect(const BuiltinFunction *b, CallData 
 {
     QV4::Scope scope(b);
 
-    if (callData->argc == 0)
+    if (callData->argc() == 0)
         THROW_GENERIC_ERROR("Function.prototype.connect: no arguments given");
 
     QPair<QObject *, int> signalInfo = extractQtSignal(callData->thisObject);
@@ -923,9 +923,9 @@ ReturnedValue QObjectWrapper::method_connect(const BuiltinFunction *b, CallData 
     QV4::ScopedFunctionObject f(scope);
     QV4::ScopedValue thisObject (scope, QV4::Encode::undefined());
 
-    if (callData->argc == 1) {
+    if (callData->argc() == 1) {
         f = callData->args[0];
-    } else if (callData->argc >= 2) {
+    } else if (callData->argc() >= 2) {
         thisObject = callData->args[0];
         f = callData->args[1];
     }
@@ -956,7 +956,7 @@ ReturnedValue QObjectWrapper::method_disconnect(const BuiltinFunction *b, CallDa
 {
     QV4::Scope scope(b);
 
-    if (callData->argc == 0)
+    if (callData->argc() == 0)
         THROW_GENERIC_ERROR("Function.prototype.disconnect: no arguments given");
 
     QPair<QObject *, int> signalInfo = extractQtSignal(callData->thisObject);
@@ -975,9 +975,9 @@ ReturnedValue QObjectWrapper::method_disconnect(const BuiltinFunction *b, CallDa
     QV4::ScopedFunctionObject functionValue(scope);
     QV4::ScopedValue functionThisValue(scope, QV4::Encode::undefined());
 
-    if (callData->argc == 1) {
+    if (callData->argc() == 1) {
         functionValue = callData->args[0];
-    } else if (callData->argc >= 2) {
+    } else if (callData->argc() >= 2) {
         functionThisValue = callData->args[0];
         functionValue = callData->args[1];
     }
@@ -1413,7 +1413,7 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
                                       + QLatin1String(unknownTypeError));
         }
 
-        if (args[0] > callArgs->argc) {
+        if (args[0] > callArgs->argc()) {
             QString error = QLatin1String("Insufficient arguments");
             return engine->throwError(error);
         }
@@ -1444,7 +1444,7 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
                                          QV4::ExecutionEngine *engine, QV4::CallData *callArgs, const QQmlPropertyCache *propertyCache,
                                          QMetaObject::Call callType = QMetaObject::InvokeMetaMethod)
 {
-    int argumentCount = callArgs->argc;
+    int argumentCount = callArgs->argc();
 
     QQmlPropertyData best;
     int bestParameterScore = INT_MAX;
@@ -1900,7 +1900,7 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData) const
 {
     ExecutionEngine *v4 = engine();
     if (d()->index == DestroyMethod)
-        return method_destroy(v4, callData->args, callData->argc);
+        return method_destroy(v4, callData->args, callData->argc());
     else if (d()->index == ToStringMethod)
         return method_toString(v4);
 
@@ -2061,7 +2061,7 @@ ReturnedValue QMetaObjectWrapper::callConstructor(const QQmlPropertyData &data, 
 
 ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const {
     const int numberOfConstructors = d()->constructorCount;
-    const int argumentCount = callArgs->argc;
+    const int argumentCount = callArgs->argc();
     const QQmlStaticMetaObject object(d()->metaObject);
 
     QQmlPropertyData best;

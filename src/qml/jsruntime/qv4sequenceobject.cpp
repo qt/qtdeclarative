@@ -441,7 +441,7 @@ public:
             loadReference();
         }
 
-        if (callData->argc == 1 && callData->args[0].as<FunctionObject>()) {
+        if (callData->argc() == 1 && callData->args[0].as<FunctionObject>()) {
             CompareFunctor cf(scope.engine, callData->args[0]);
             std::sort(d()->container->begin(), d()->container->end(), cf);
         } else {
@@ -664,7 +664,7 @@ ReturnedValue SequencePrototype::method_sort(const BuiltinFunction *b, CallData 
     if (!o || !o->isListType())
         THROW_TYPE_ERROR();
 
-    if (callData->argc >= 2)
+    if (callData->argc() >= 2)
         return o.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \

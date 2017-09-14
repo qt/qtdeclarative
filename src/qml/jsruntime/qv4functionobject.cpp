@@ -185,13 +185,13 @@ ReturnedValue FunctionCtor::construct(const Managed *that, CallData *callData)
 
     QString arguments;
     QString body;
-    if (callData->argc > 0) {
-        for (int i = 0; i < callData->argc - 1; ++i) {
+    if (callData->argc() > 0) {
+        for (int i = 0, ei = callData->argc() - 1; i < ei; ++i) {
             if (i)
                 arguments += QLatin1String(", ");
             arguments += callData->args[i].toQString();
         }
-        body = callData->args[callData->argc - 1].toQString();
+        body = callData->args[callData->argc() - 1].toQString();
     }
     if (scope.engine->hasException)
         return Encode::undefined();
@@ -321,10 +321,10 @@ ReturnedValue FunctionPrototype::method_call(const BuiltinFunction *b, CallData 
         return e->throwTypeError();
     }
     callData->function = callData->thisObject;
-    callData->thisObject = callData->argc ? callData->args[0] : Primitive::undefinedValue();
-    if (callData->argc) {
-        --callData->argc;
-        for (int i = 0; i < callData->argc; ++i)
+    callData->thisObject = callData->argc() ? callData->args[0] : Primitive::undefinedValue();
+    if (callData->argc()) {
+        callData->setArgc(callData->argc() - 1);
+        for (int i = 0, ei = callData->argc(); i < ei; ++i)
             callData->args[i] = callData->args[i + 1];
     }
     return static_cast<FunctionObject &>(callData->function).call(callData);
@@ -339,10 +339,10 @@ ReturnedValue FunctionPrototype::method_bind(const BuiltinFunction *b, CallData 
 
     ScopedValue boundThis(scope, callData->argument(0));
     Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
-    if (callData->argc > 1) {
-        boundArgs = MemberData::allocate(scope.engine, callData->argc - 1);
-        boundArgs->d()->values.size = callData->argc - 1;
-        for (uint i = 0; i < static_cast<uint>(callData->argc - 1); ++i)
+    if (callData->argc() > 1) {
+        boundArgs = MemberData::allocate(scope.engine, callData->argc() - 1);
+        boundArgs->d()->values.size = callData->argc() - 1;
+        for (uint i = 0, ei = static_cast<uint>(callData->argc() - 1); i < ei; ++i)
             boundArgs->set(scope.engine, i, callData->args[i + 1]);
     }
 
@@ -487,14 +487,14 @@ ReturnedValue BoundFunction::call(const Managed *that, CallData *dd)
         return Encode::undefined();
 
     Scoped<MemberData> boundArgs(scope, f->boundArgs());
-    JSCall jsCall(scope, f->target(), (boundArgs ? boundArgs->size() : 0) + dd->argc);
+    JSCall jsCall(scope, f->target(), (boundArgs ? boundArgs->size() : 0) + dd->argc());
     jsCall->thisObject = f->boundThis();
     Value *argp = jsCall->args;
     if (boundArgs) {
         memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
         argp += boundArgs->size();
     }
-    memcpy(argp, dd->args, dd->argc*sizeof(Value));
+    memcpy(argp, dd->args, dd->argc()*sizeof(Value));
     return jsCall.call();
 }
 
@@ -507,12 +507,12 @@ ReturnedValue BoundFunction::construct(const Managed *that, CallData *dd)
         return Encode::undefined();
 
     Scoped<MemberData> boundArgs(scope, f->boundArgs());
-    JSCall jsCall(scope, f->target(), (boundArgs ? boundArgs->size() : 0) + dd->argc);
+    JSCall jsCall(scope, f->target(), (boundArgs ? boundArgs->size() : 0) + dd->argc());
     Value *argp = jsCall->args;
     if (boundArgs) {
         memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
         argp += boundArgs->size();
     }
-    memcpy(argp, dd->args, dd->argc*sizeof(Value));
+    memcpy(argp, dd->args, dd->argc()*sizeof(Value));
     return jsCall.callAsConstructor();
 }

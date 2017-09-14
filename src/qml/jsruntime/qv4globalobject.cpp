@@ -340,7 +340,7 @@ void Heap::EvalFunction::init(QV4::ExecutionContext *scope)
 
 ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
 {
-    if (callData->argc < 1)
+    if (callData->argc() < 1)
         return Encode::undefined();
 
     ExecutionEngine *v4 = engine();
@@ -528,7 +528,7 @@ ReturnedValue GlobalFunctions::method_parseFloat(const BuiltinFunction *b, CallD
 /// isNaN [15.1.2.4]
 ReturnedValue GlobalFunctions::method_isNaN(const BuiltinFunction *, CallData *callData)
 {
-    if (!callData->argc)
+    if (!callData->argc())
         // undefined gets converted to NaN
         RETURN_RESULT(Encode(true));
 
@@ -542,7 +542,7 @@ ReturnedValue GlobalFunctions::method_isNaN(const BuiltinFunction *, CallData *c
 /// isFinite [15.1.2.5]
 ReturnedValue GlobalFunctions::method_isFinite(const BuiltinFunction *, CallData *callData)
 {
-    if (!callData->argc)
+    if (!callData->argc())
         // undefined gets converted to NaN
         RETURN_RESULT(Encode(false));
 
@@ -556,7 +556,7 @@ ReturnedValue GlobalFunctions::method_isFinite(const BuiltinFunction *, CallData
 /// decodeURI [15.1.3.1]
 ReturnedValue GlobalFunctions::method_decodeURI(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc == 0)
+    if (callData->argc() == 0)
         RETURN_UNDEFINED();
 
     ExecutionEngine *v4 = b->engine();
@@ -575,7 +575,7 @@ ReturnedValue GlobalFunctions::method_decodeURI(const BuiltinFunction *b, CallDa
 /// decodeURIComponent [15.1.3.2]
 ReturnedValue GlobalFunctions::method_decodeURIComponent(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc == 0)
+    if (callData->argc() == 0)
         RETURN_UNDEFINED();
 
     ExecutionEngine *v4 = b->engine();
@@ -594,7 +594,7 @@ ReturnedValue GlobalFunctions::method_decodeURIComponent(const BuiltinFunction *
 /// encodeURI [15.1.3.3]
 ReturnedValue GlobalFunctions::method_encodeURI(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc == 0)
+    if (callData->argc() == 0)
         RETURN_UNDEFINED();
 
     ExecutionEngine *v4 = b->engine();
@@ -613,7 +613,7 @@ ReturnedValue GlobalFunctions::method_encodeURI(const BuiltinFunction *b, CallDa
 /// encodeURIComponent [15.1.3.4]
 ReturnedValue GlobalFunctions::method_encodeURIComponent(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc == 0)
+    if (callData->argc() == 0)
         RETURN_UNDEFINED();
 
     ExecutionEngine *v4 = b->engine();
@@ -632,7 +632,7 @@ ReturnedValue GlobalFunctions::method_encodeURIComponent(const BuiltinFunction *
 ReturnedValue GlobalFunctions::method_escape(const BuiltinFunction *b, CallData *callData)
 {
     ExecutionEngine *v4 = b->engine();
-    if (!callData->argc)
+    if (!callData->argc())
         RETURN_RESULT(v4->newString(QStringLiteral("undefined")));
 
     QString str = callData->args[0].toQString();
@@ -642,7 +642,7 @@ ReturnedValue GlobalFunctions::method_escape(const BuiltinFunction *b, CallData 
 ReturnedValue GlobalFunctions::method_unescape(const BuiltinFunction *b, CallData *callData)
 {
     ExecutionEngine *v4 = b->engine();
-    if (!callData->argc)
+    if (!callData->argc())
         RETURN_RESULT(v4->newString(QStringLiteral("undefined")));
 
     QString str = callData->args[0].toQString();

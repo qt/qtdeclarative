@@ -1738,7 +1738,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(const BuiltinFunction *b, QV4:
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->d()->request;
 
-    if (callData->argc < 2 || callData->argc > 5)
+    if (callData->argc() < 2 || callData->argc() > 5)
         THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     // Argument 0 - Method
@@ -1761,15 +1761,15 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(const BuiltinFunction *b, QV4:
 
     bool async = true;
     // Argument 2 - async (optional)
-    if (callData->argc > 2) {
+    if (callData->argc() > 2) {
         async = callData->args[2].booleanValue();
     }
 
     // Argument 3/4 - user/pass (optional)
     QString username, password;
-    if (callData->argc > 3)
+    if (callData->argc() > 3)
         username = callData->args[3].toQStringNoThrow();
-    if (callData->argc > 4)
+    if (callData->argc() > 4)
         password = callData->args[4].toQStringNoThrow();
 
     // Clear the fragment (if any)
@@ -1790,7 +1790,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(const BuiltinFunct
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->d()->request;
 
-    if (callData->argc != 2)
+    if (callData->argc() != 2)
         THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QQmlXMLHttpRequest::Opened || r->sendFlag())
@@ -1842,7 +1842,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_send(const BuiltinFunction *b, QV4:
         THROW_DOM(DOMEXCEPTION_INVALID_STATE_ERR, "Invalid state");
 
     QByteArray data;
-    if (callData->argc > 0) {
+    if (callData->argc() > 0) {
         if (const ArrayBuffer *buffer = callData->args[0].as<ArrayBuffer>()) {
             data = buffer->asByteArray();
         } else {
@@ -1872,7 +1872,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(const BuiltinFunc
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->d()->request;
 
-    if (callData->argc != 1)
+    if (callData->argc() != 1)
         THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QQmlXMLHttpRequest::Loading &&
@@ -1891,7 +1891,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_getAllResponseHeaders(const Builtin
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->d()->request;
 
-    if (callData->argc != 0)
+    if (callData->argc() != 0)
         THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     if (r->readyState() != QQmlXMLHttpRequest::Loading &&
@@ -2029,7 +2029,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_set_responseType(const BuiltinFunct
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->d()->request;
 
-    if (callData->argc < 1)
+    if (callData->argc() < 1)
         THROW_DOM(DOMEXCEPTION_SYNTAX_ERR, "Incorrect argument count");
 
     // Argument 0 - response type

@@ -109,7 +109,7 @@ void QQmlDelayedCallQueue::init(QV4::ExecutionEngine* engine)
 QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
     QV4::Scope scope(b);
-    if (callData->argc == 0)
+    if (callData->argc() == 0)
         THROW_GENERIC_ERROR("Qt.callLater: no arguments given");
 
     const QV4::FunctionObject *func = callData->args[0].as<QV4::FunctionObject>();
@@ -176,17 +176,16 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(const QV4::B
 
 void QQmlDelayedCallQueue::storeAnyArguments(DelayedFunctionCall &dfc, const QV4::CallData *callData, int offset, QV4::ExecutionEngine *engine)
 {
-    const int length = callData->argc - offset;
+    const int length = callData->argc() - offset;
     if (length == 0) {
         dfc.m_args.clear();
         return;
     }
     QV4::Scope scope(engine);
     QV4::ScopedArrayObject array(scope, engine->newArrayObject(length));
-    int i = 0;
-    for (int j = offset; j < callData->argc; ++i, ++j) {
+    uint i = 0;
+    for (int j = offset, ej = callData->argc(); j < ej; ++i, ++j)
         array->putIndexed(i, callData->args[j]);
-    }
     dfc.m_args.set(engine, array);
 }
 

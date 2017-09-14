@@ -80,7 +80,7 @@ ReturnedValue ArrayBufferCtor::call(const Managed *that, CallData *callData)
 
 ReturnedValue ArrayBufferCtor::method_isView(const BuiltinFunction *, CallData *callData)
 {
-    if (callData->argc < 1)
+    if (callData->argc() < 1)
         return Encode(false);
 
     if (callData->args[0].as<TypedArray>() ||
@@ -173,8 +173,8 @@ ReturnedValue ArrayBufferPrototype::method_slice(const BuiltinFunction *b, CallD
     if (!a)
         return v4->throwTypeError();
 
-    double start = callData->argc > 0 ? callData->args[0].toInteger() : 0;
-    double end = (callData->argc < 2 || callData->args[1].isUndefined()) ?
+    double start = callData->argc() > 0 ? callData->args[0].toInteger() : 0;
+    double end = (callData->argc() < 2 || callData->args[1].isUndefined()) ?
                 a->d()->data->size : callData->args[1].toInteger();
     if (v4->hasException)
         return QV4::Encode::undefined();

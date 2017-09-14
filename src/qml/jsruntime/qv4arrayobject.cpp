@@ -61,7 +61,7 @@ ReturnedValue ArrayCtor::construct(const Managed *m, CallData *callData)
     Scope scope(v4);
     ScopedArrayObject a(scope, v4->newArrayObject());
     uint len;
-    if (callData->argc == 1 && callData->args[0].isNumber()) {
+    if (callData->argc() == 1 && callData->args[0].isNumber()) {
         bool ok;
         len = callData->args[0].asArrayLength(&ok);
 
@@ -71,7 +71,7 @@ ReturnedValue ArrayCtor::construct(const Managed *m, CallData *callData)
         if (len < 0x1000)
             a->arrayReserve(len);
     } else {
-        len = callData->argc;
+        len = callData->argc();
         a->arrayReserve(len);
         a->arrayPut(0, callData->args, len);
     }
@@ -120,7 +120,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
 
 ReturnedValue ArrayPrototype::method_isArray(const BuiltinFunction *, CallData *callData)
 {
-    bool isArray = callData->argc && callData->args[0].as<ArrayObject>();
+    bool isArray = callData->argc() && callData->args[0].as<ArrayObject>();
     return Encode(isArray);
 }
 
@@ -163,7 +163,7 @@ ReturnedValue ArrayPrototype::method_concat(const BuiltinFunction *b, CallData *
     ScopedArrayObject elt(scope);
     ScopedObject eltAsObj(scope);
     ScopedValue entry(scope);
-    for (int i = 0; i < callData->argc; ++i) {
+    for (int i = 0, ei = callData->argc(); i < ei; ++i) {
         eltAsObj = callData->args[i];
         elt = callData->args[i];
         if (elt) {
@@ -359,16 +359,16 @@ ReturnedValue ArrayPrototype::method_push(const BuiltinFunction *b, CallData *ca
 
     uint len = instance->getLength();
 
-    if (len + callData->argc < len) {
+    if (len + callData->argc() < len) {
         // ughh... this goes beyond UINT_MAX
         double l = len;
         ScopedString s(scope);
-        for (int i = 0; i < callData->argc; ++i) {
+        for (int i = 0, ei = callData->argc(); i < ei; ++i) {
             s = Primitive::fromDouble(l + i).toString(scope.engine);
             if (!instance->put(s, callData->args[i]))
                 return scope.engine->throwTypeError();
         }
-        double newLen = l + callData->argc;
+        double newLen = l + callData->argc();
         if (!instance->isArrayObject()) {
             if (!instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(newLen))))
                 return scope.engine->throwTypeError();
@@ -379,16 +379,17 @@ ReturnedValue ArrayPrototype::method_push(const BuiltinFunction *b, CallData *ca
         return Encode(newLen);
     }
 
-    if (!callData->argc)
+    if (!callData->argc())
         ;
     else if (!instance->protoHasArray() && instance->arrayData()->length() <= len && instance->arrayData()->type == Heap::ArrayData::Simple) {
-        instance->arrayData()->vtable()->putArray(instance, len, callData->args, callData->argc);
+        instance->arrayData()->vtable()->putArray(instance, len, callData->args, callData->argc());
         len = instance->arrayData()->length();
     } else {
-        for (int i = 0; i < callData->argc; ++i)
+        for (int i = 0, ei = callData->argc(); i < ei; ++i) {
             if (!instance->putIndexed(len + i, callData->args[i]))
                 return scope.engine->throwTypeError();
-        len += callData->argc;
+        }
+        len += callData->argc();
     }
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len);
@@ -508,7 +509,7 @@ ReturnedValue ArrayPrototype::method_slice(const BuiltinFunction *b, CallData *c
     else
         start = (uint) s;
     uint end = len;
-    if (callData->argc > 1 && !callData->args[1].isUndefined()) {
+    if (callData->argc() > 1 && !callData->args[1].isUndefined()) {
         double e = callData->args[1].toInteger();
         if (e < 0)
             end = (uint)qMax(len + e, 0.);
@@ -576,7 +577,7 @@ ReturnedValue ArrayPrototype::method_splice(const BuiltinFunction *b, CallData *
     }
     newArray->setArrayLengthUnchecked(deleteCount);
 
-    uint itemCount = callData->argc < 2 ? 0 : callData->argc - 2;
+    uint itemCount = callData->argc() < 2 ? 0 : callData->argc() - 2;
 
     if (itemCount < deleteCount) {
         for (uint k = start; k < len - deleteCount; ++k) {
@@ -635,7 +636,7 @@ ReturnedValue ArrayPrototype::method_unshift(const BuiltinFunction *b, CallData 
 
     if (!instance->protoHasArray() && !instance->arrayData()->attrs && instance->arrayData()->length() <= len &&
         instance->arrayData()->type != Heap::ArrayData::Custom) {
-        instance->arrayData()->vtable()->push_front(instance, callData->args, callData->argc);
+        instance->arrayData()->vtable()->push_front(instance, callData->args, callData->argc());
     } else {
         ScopedValue v(scope);
         for (uint k = len; k > 0; --k) {
@@ -643,20 +644,20 @@ ReturnedValue ArrayPrototype::method_unshift(const BuiltinFunction *b, CallData 
             v = instance->getIndexed(k - 1, &exists);
             bool ok;
             if (exists)
-                ok = instance->putIndexed(k + callData->argc - 1, v);
+                ok = instance->putIndexed(k + callData->argc() - 1, v);
             else
-                ok = instance->deleteIndexedProperty(k + callData->argc - 1);
+                ok = instance->deleteIndexedProperty(k + callData->argc() - 1);
             if (!ok)
                 return scope.engine->throwTypeError();
         }
-        for (int i = 0; i < callData->argc; ++i) {
+        for (int i = 0, ei = callData->argc(); i < ei; ++i) {
             bool ok = instance->putIndexed(i, callData->args[i]);
             if (!ok)
                 return scope.engine->throwTypeError();
         }
     }
 
-    uint newLen = len + callData->argc;
+    uint newLen = len + callData->argc();
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(newLen);
     else {
@@ -681,7 +682,7 @@ ReturnedValue ArrayPrototype::method_indexOf(const BuiltinFunction *b, CallData 
     ScopedValue searchValue(scope, callData->argument(0));
     uint fromIndex = 0;
 
-    if (callData->argc >= 2) {
+    if (callData->argc() >= 2) {
         double f = callData->args[1].toInteger();
         CHECK_EXCEPTION();
         if (f >= len)
@@ -747,12 +748,12 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(const BuiltinFunction *b, CallD
     ScopedValue searchValue(scope);
     uint fromIndex = len;
 
-    if (callData->argc >= 1)
+    if (callData->argc() >= 1)
         searchValue = callData->argument(0);
     else
         searchValue = Primitive::undefinedValue();
 
-    if (callData->argc >= 2) {
+    if (callData->argc() >= 2) {
         double f = callData->args[1].toInteger();
         CHECK_EXCEPTION();
         if (f > 0)
@@ -970,7 +971,7 @@ ReturnedValue ArrayPrototype::method_reduce(const BuiltinFunction *b, CallData *
     ScopedValue acc(scope);
     ScopedValue v(scope);
 
-    if (callData->argc > 1) {
+    if (callData->argc() > 1) {
         acc = callData->argument(1);
     } else {
         bool kPresent = false;
@@ -1015,7 +1016,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(const BuiltinFunction *b, CallD
         THROW_TYPE_ERROR();
 
     if (len == 0) {
-        if (callData->argc == 1)
+        if (callData->argc() == 1)
             THROW_TYPE_ERROR();
         return callData->argument(1);
     }
@@ -1023,7 +1024,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(const BuiltinFunction *b, CallD
     uint k = len;
     ScopedValue acc(scope);
     ScopedValue v(scope);
-    if (callData->argc > 1) {
+    if (callData->argc() > 1) {
         acc = callData->argument(1);
     } else {
         bool kPresent = false;

@@ -232,7 +232,7 @@ ReturnedValue ArgumentsSetterFunction::call(const Managed *setter, CallData *cal
         return v4->throwTypeError();
 
     Q_ASSERT(s->index() < static_cast<unsigned>(o->context()->argc()));
-    o->context()->setArg(s->index(), (callData->argc ? callData->args[0] : Primitive::undefinedValue()));
+    o->context()->setArg(s->index(), (callData->argc() ? callData->args[0] : Primitive::undefinedValue()));
     return Encode::undefined();
 }
 

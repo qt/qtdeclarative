@@ -86,17 +86,20 @@ struct CallData
     Value context;
     Value accumulator;
     Value thisObject;
+    Value _argc;
 
-    // below is to be compatible with Value. Initialize tag to 0
-#if Q_BYTE_ORDER != Q_LITTLE_ENDIAN
-    uint tag;
-#endif
-    int argc;
-#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-    uint tag;
-#endif
+    int argc() const {
+        Q_ASSERT(_argc.isInteger());
+        return _argc.int_32();
+    }
+
+    void setArgc(int argc) {
+        Q_ASSERT(argc >= 0);
+        _argc.setInt_32(argc);
+    }
+
     inline ReturnedValue argument(int i) const {
-        return i < argc ? args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
+        return i < argc() ? args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
     }
 
     Value args[1];

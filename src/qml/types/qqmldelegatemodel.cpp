@@ -1830,7 +1830,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::set_groups(const QV4::BuiltinFunction 
     if (!o)
         return scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-    if (!callData->argc)
+    if (!callData->argc())
         THROW_TYPE_ERROR();
 
     if (!o->d()->item->metaType->model)

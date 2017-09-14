@@ -184,7 +184,7 @@ ReturnedValue PropertyListPrototype::method_push(const BuiltinFunction *b, CallD
         THROW_GENERIC_ERROR("List doesn't define an Append function");
 
     QV4::ScopedObject so(scope);
-    for (int i = 0; i < callData->argc; ++i)
+    for (int i = 0, ei = callData->argc(); i < ei; ++i)
     {
         so = callData->args[i].toObject(scope.engine);
         if (QV4::QObjectWrapper *wrapper = so->as<QV4::QObjectWrapper>())

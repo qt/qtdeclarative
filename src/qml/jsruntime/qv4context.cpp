@@ -57,7 +57,7 @@ DEFINE_MANAGED_VTABLE(CatchContext);
 
 Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *outer, Function *function, CallData *callData)
 {
-    uint nFormals = qMax(static_cast<uint>(callData->argc), function->nFormals);
+    uint nFormals = qMax(static_cast<uint>(callData->argc()), function->nFormals);
     uint localsAndFormals = function->compiledFunction->nLocals + nFormals;
     size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * (localsAndFormals);
 
@@ -83,7 +83,7 @@ Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *oute
 #endif
 
     ::memcpy(c->locals.values + nLocals, &callData->args[0], nFormals * sizeof(Value));
-    c->nArgs = callData->argc;
+    c->nArgs = callData->argc();
 
     return c;
 }

@@ -371,7 +371,7 @@ QV4::ReturnedValue QQmlDMCachedModelData::set_property(const QV4::BuiltinFunctio
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, callData->thisObject.as<QQmlDelegateModelItemObject>());
     if (!o)
         return scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
-    if (!callData->argc)
+    if (!callData->argc())
         return scope.engine->throwTypeError();
 
     uint propertyId = static_cast<const QV4::IndexedBuiltinFunction *>(b)->d()->index;
@@ -602,7 +602,7 @@ public:
         QQmlDelegateModelItemObject *o = callData->thisObject.as<QQmlDelegateModelItemObject>();
         if (!o)
             return v4->throwTypeError(QStringLiteral("Not a valid VisualData object"));
-        if (!callData->argc)
+        if (!callData->argc())
             return v4->throwTypeError();
 
         static_cast<QQmlDMListAccessorData *>(o->d()->item)->setModelData(v4->toVariant(callData->args[0], QVariant::Invalid));

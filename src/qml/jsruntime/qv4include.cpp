@@ -199,7 +199,7 @@ void QV4Include::finished()
 QV4::ReturnedValue QV4Include::method_include(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
     QV4::Scope scope(b);
-    if (!callData->argc)
+    if (!callData->argc())
         RETURN_UNDEFINED();
 
     QQmlContextData *context = scope.engine->callingQmlContext();
@@ -208,7 +208,7 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::BuiltinFunction *b, QV4
         RETURN_RESULT(scope.engine->throwError(QString::fromUtf8("Qt.include(): Can only be called from JavaScript files")));
 
     QV4::ScopedValue callbackFunction(scope, QV4::Primitive::undefinedValue());
-    if (callData->argc >= 2 && callData->args[1].as<QV4::FunctionObject>())
+    if (callData->argc() >= 2 && callData->args[1].as<QV4::FunctionObject>())
         callbackFunction = callData->args[1];
 
 #if QT_CONFIG(qml_network)

@@ -888,7 +888,7 @@ ReturnedValue JsonObject::method_parse(const BuiltinFunction *b, CallData *callD
 {
     ExecutionEngine *v4 = b->engine();
     QString jtext;
-    if (callData->argc > 0)
+    if (callData->argc() > 0)
         jtext = callData->args[0].toQString();
 
     DEBUG << "parsing source = " << jtext;

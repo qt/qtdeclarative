@@ -1492,7 +1492,7 @@ QV4::ReturnedValue QV4::QmlIncubatorObject::method_set_statusChanged(const Built
 {
     QV4::Scope scope(b);
     QV4::Scoped<QmlIncubatorObject> o(scope, callData->thisObject.as<QmlIncubatorObject>());
-    if (!o || callData->argc < 1)
+    if (!o || callData->argc() < 1)
         THROW_TYPE_ERROR();
 
     o->d()->statusChanged.set(scope.engine, callData->args[0]);

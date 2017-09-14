@@ -80,13 +80,13 @@ void Heap::NumberCtor::init(QV4::ExecutionContext *scope)
 
 ReturnedValue NumberCtor::construct(const Managed *m, CallData *callData)
 {
-    double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
+    double dbl = callData->argc() ? callData->args[0].toNumber() : 0.;
     return Encode(m->engine()->newNumberObject(dbl));
 }
 
 ReturnedValue NumberCtor::call(const Managed *, CallData *callData)
 {
-    double dbl = callData->argc ? callData->args[0].toNumber() : 0.;
+    double dbl = callData->argc() ? callData->args[0].toNumber() : 0.;
     return Encode(dbl);
 }
 
@@ -150,7 +150,7 @@ inline double thisNumber(ExecutionEngine *engine, CallData *callData)
 
 ReturnedValue NumberPrototype::method_isFinite(const BuiltinFunction *, CallData *callData)
 {
-    if (!callData->argc)
+    if (!callData->argc())
         return Encode(false);
 
     double v = callData->args[0].toNumber();
@@ -159,7 +159,7 @@ ReturnedValue NumberPrototype::method_isFinite(const BuiltinFunction *, CallData
 
 ReturnedValue NumberPrototype::method_isInteger(const BuiltinFunction *, CallData *callData)
 {
-    if (!callData->argc)
+    if (!callData->argc())
         return Encode(false);
 
     const Value &v = callData->args[0];
@@ -176,7 +176,7 @@ ReturnedValue NumberPrototype::method_isInteger(const BuiltinFunction *, CallDat
 
 ReturnedValue NumberPrototype::method_isSafeInteger(const BuiltinFunction *, CallData *callData)
 {
-    if (!callData->argc)
+    if (!callData->argc())
         return Encode(false);
 
     const Value &v = callData->args[0];
@@ -193,7 +193,7 @@ ReturnedValue NumberPrototype::method_isSafeInteger(const BuiltinFunction *, Cal
 
 ReturnedValue NumberPrototype::method_isNaN(const BuiltinFunction *, CallData *callData)
 {
-    if (!callData->argc)
+    if (!callData->argc())
         return Encode(false);
 
     double v = callData->args[0].toNumber();
@@ -207,7 +207,7 @@ ReturnedValue NumberPrototype::method_toString(const BuiltinFunction *b, CallDat
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    if (callData->argc && !callData->args[0].isUndefined()) {
+    if (callData->argc() && !callData->args[0].isUndefined()) {
         int radix = callData->args[0].toInt32();
         if (radix < 2 || radix > 36) {
             return v4->throwError(QStringLiteral("Number.prototype.toString: %0 is not a valid radix").arg(radix));
@@ -274,7 +274,7 @@ ReturnedValue NumberPrototype::method_toFixed(const BuiltinFunction *b, CallData
 
     double fdigits = 0;
 
-    if (callData->argc > 0)
+    if (callData->argc() > 0)
         fdigits = callData->args[0].toInteger();
 
     if (std::isnan(fdigits))
@@ -306,7 +306,7 @@ ReturnedValue NumberPrototype::method_toExponential(const BuiltinFunction *b, Ca
 
     int fdigits = NumberLocale::instance()->defaultDoublePrecision;
 
-    if (callData->argc && !callData->args[0].isUndefined()) {
+    if (callData->argc() && !callData->args[0].isUndefined()) {
         fdigits = callData->args[0].toInt32();
         if (fdigits < 0 || fdigits > 20) {
             Scope scope(v4);
@@ -327,7 +327,7 @@ ReturnedValue NumberPrototype::method_toPrecision(const BuiltinFunction *b, Call
         return QV4::Encode::undefined();
 
 
-    if (!callData->argc || callData->args[0].isUndefined())
+    if (!callData->argc() || callData->args[0].isUndefined())
         return Encode(v->toString(scope.engine));
 
     int precision = callData->args[0].toInt32();

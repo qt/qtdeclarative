@@ -268,10 +268,9 @@ ReturnedValue RegExpCtor::construct(const Managed *m, CallData *callData)
 
 ReturnedValue RegExpCtor::call(const Managed *that, CallData *callData)
 {
-    if (callData->argc > 0 && callData->args[0].as<RegExpObject>()) {
-        if (callData->argc == 1 || callData->args[1].isUndefined()) {
+    if (callData->argc() > 0 && callData->args[0].as<RegExpObject>()) {
+        if (callData->argc() == 1 || callData->args[1].isUndefined())
             return Encode(callData->args[0]);
-        }
     }
 
     return construct(that, callData);
@@ -440,8 +439,8 @@ ReturnedValue RegExpPrototype::method_compile(const BuiltinFunction *b, CallData
     if (!r)
         return scope.engine->throwTypeError();
 
-    JSCall jsCall(scope, scope.engine->regExpCtor(), callData->argc);
-    memcpy(jsCall->args, callData->args, callData->argc*sizeof(Value));
+    JSCall jsCall(scope, scope.engine->regExpCtor(), callData->argc());
+    memcpy(jsCall->args, callData->args, callData->argc()*sizeof(Value));
 
     Scoped<RegExpObject> re(scope, jsCall.callAsConstructor());
 

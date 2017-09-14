@@ -346,7 +346,7 @@ static QV4::ReturnedValue particleData_set_ ## NAME (const QV4::BuiltinFunction 
     if (!r || !r->d()->datum)\
         RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object")));\
 \
-    double d = callData->argc ? callData->args[0].toNumber() : 0; \
+    double d = callData->argc() ? callData->args[0].toNumber() : 0; \
     r->d()->datum->color. VAR = qMin(255, qMax(0, (int)::floor(d * 255.0)));\
     RETURN_UNDEFINED(); \
 }
@@ -369,7 +369,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (const QV4::BuiltinFunct
     if (!r || !r->d()->datum)\
         RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object")));\
 \
-    r->d()->datum-> VARIABLE = (callData->argc && callData->args[0].toBoolean()) ? 1.0 : 0.0;\
+    r->d()->datum-> VARIABLE = (callData->argc() && callData->args[0].toBoolean()) ? 1.0 : 0.0;\
     RETURN_UNDEFINED(); \
 }
 
@@ -390,7 +390,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (const QV4::BuiltinFunct
     if (!r || !r->d()->datum)\
         RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object")));\
 \
-    r->d()->datum-> VARIABLE = callData->argc ? callData->args[0].toNumber() : qt_qnan();\
+    r->d()->datum-> VARIABLE = callData->argc() ? callData->args[0].toNumber() : qt_qnan();\
     RETURN_UNDEFINED(); \
 }
 
@@ -411,7 +411,7 @@ static QV4::ReturnedValue particleData_set_ ## VARIABLE (const QV4::BuiltinFunct
     if (!r || !r->d()->datum)\
         RETURN_RESULT(scope.engine->throwError(QStringLiteral("Not a valid ParticleData object")));\
 \
-    r->d()->datum-> SETTER (callData->argc ? callData->args[0].toNumber() : qt_qnan(), r->d()->particleSystem);\
+    r->d()->datum-> SETTER (callData->argc() ? callData->args[0].toNumber() : qt_qnan(), r->d()->particleSystem);\
     RETURN_UNDEFINED(); \
 }
 

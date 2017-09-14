@@ -214,9 +214,9 @@ ReturnedValue TypedArrayCtor::construct(const Managed *m, CallData *callData)
     Scope scope(m->engine());
     Scoped<TypedArrayCtor> that(scope, static_cast<const TypedArrayCtor *>(m));
 
-    if (!callData->argc || !callData->args[0].isObject()) {
+    if (!callData->argc() || !callData->args[0].isObject()) {
         // ECMA 6 22.2.1.1
-        double l = callData->argc ? callData->args[0].toNumber() : 0;
+        double l = callData->argc() ? callData->args[0].toNumber() : 0;
         if (scope.engine->hasException)
             return Encode::undefined();
         uint len = (uint)l;
@@ -276,14 +276,14 @@ ReturnedValue TypedArrayCtor::construct(const Managed *m, CallData *callData)
     if (!!buffer) {
         // ECMA 6 22.2.1.4
 
-        double dbyteOffset = callData->argc > 1 ? callData->args[1].toInteger() : 0;
+        double dbyteOffset = callData->argc() > 1 ? callData->args[1].toInteger() : 0;
         uint byteOffset = (uint)dbyteOffset;
         uint elementSize = operations[that->d()->type].bytesPerElement;
         if (dbyteOffset < 0 || (byteOffset % elementSize) || dbyteOffset > buffer->byteLength())
             return scope.engine->throwRangeError(QStringLiteral("new TypedArray: invalid byteOffset"));
 
         uint byteLength;
-        if (callData->argc < 3 || callData->args[2].isUndefined()) {
+        if (callData->argc() < 3 || callData->args[2].isUndefined()) {
             byteLength = buffer->byteLength() - byteOffset;
             if (buffer->byteLength() < byteOffset || byteLength % elementSize)
                 return scope.engine->throwRangeError(QStringLiteral("new TypedArray: invalid length"));
@@ -459,7 +459,7 @@ ReturnedValue TypedArrayPrototype::method_set(const BuiltinFunction *b, CallData
     if (!buffer)
         scope.engine->throwTypeError();
 
-    double doffset = callData->argc >= 2 ? callData->args[1].toInteger() : 0;
+    double doffset = callData->argc() >= 2 ? callData->args[1].toInteger() : 0;
     if (scope.engine->hasException)
         RETURN_UNDEFINED();
 
@@ -551,12 +551,12 @@ ReturnedValue TypedArrayPrototype::method_subarray(const BuiltinFunction *builti
         return scope.engine->throwTypeError();
 
     int len = a->length();
-    double b = callData->argc > 0 ? callData->args[0].toInteger() : 0;
+    double b = callData->argc() > 0 ? callData->args[0].toInteger() : 0;
     if (b < 0)
         b = len + b;
     uint begin = (uint)qBound(0., b, (double)len);
 
-    double e = callData->argc < 2 || callData->args[1].isUndefined() ? len : callData->args[1].toInteger();
+    double e = callData->argc() < 2 || callData->args[1].isUndefined() ? len : callData->args[1].toInteger();
     if (e < 0)
         e = len + e;
     uint end = (uint)qBound(0., e, (double)len);

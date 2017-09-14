@@ -516,7 +516,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
 
     engine->jsStackTop = reinterpret_cast<QV4::Value *>(callData) + function->compiledFunction->nRegisters + 1;
     // clear out remaining arguments and local registers
-    for (Value *v = callData->args + callData->argc; v < jsStackTop; ++v)
+    for (Value *v = callData->args + callData->argc(); v < jsStackTop; ++v)
         *v = Encode::undefined();
 
     QV4::Value *stack = reinterpret_cast<QV4::Value *>(callData);

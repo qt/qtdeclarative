@@ -65,7 +65,7 @@ ReturnedValue ObjectCtor::construct(const Managed *m, CallData *callData)
 {
     ExecutionEngine *v4 = m->engine();
     const ObjectCtor *ctor = static_cast<const ObjectCtor *>(m);
-    if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
+    if (!callData->argc() || callData->args[0].isUndefined() || callData->args[0].isNull()) {
         Scope scope(v4);
         ScopedObject obj(scope, scope.engine->newObject());
         ScopedObject proto(scope, ctor->get(scope.engine->id_prototype()));
@@ -80,7 +80,7 @@ ReturnedValue ObjectCtor::construct(const Managed *m, CallData *callData)
 ReturnedValue ObjectCtor::call(const Managed *m, CallData *callData)
 {
     ExecutionEngine *v4 = m->engine();
-    if (!callData->argc || callData->args[0].isUndefined() || callData->args[0].isNull()) {
+    if (!callData->argc() || callData->args[0].isUndefined() || callData->args[0].isNull()) {
         return v4->newObject()->asReturnedValue();
     } else {
         return callData->args[0].toObject(v4)->asReturnedValue();
@@ -129,7 +129,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
 ReturnedValue ObjectPrototype::method_getPrototypeOf(const BuiltinFunction *b, CallData *callData)
 {
     Scope scope(b);
-    if (callData->argc < 1)
+    if (callData->argc() < 1)
         return scope.engine->throwTypeError();
 
     ScopedObject o(scope, callData->args[0].toObject(scope.engine));
@@ -143,7 +143,7 @@ ReturnedValue ObjectPrototype::method_getPrototypeOf(const BuiltinFunction *b, C
 ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const BuiltinFunction *b, CallData *callData)
 {
     Scope scope(b);
-    if (callData->argc < 1)
+    if (callData->argc() < 1)
         return scope.engine->throwTypeError();
 
     ScopedObject O(scope, callData->args[0].toObject(scope.engine));
@@ -167,7 +167,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const BuiltinFunc
 ReturnedValue ObjectPrototype::method_getOwnPropertyNames(const BuiltinFunction *b, CallData *callData)
 {
     Scope scope(b);
-    if (callData->argc < 1)
+    if (callData->argc() < 1)
         return scope.engine->throwTypeError();
 
     ScopedObject O(scope, callData->args[0].toObject(scope.engine));
@@ -181,17 +181,17 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyNames(const BuiltinFunction 
 ReturnedValue ObjectPrototype::method_assign(const BuiltinFunction *b, CallData *callData)
 {
     Scope scope(b);
-    if (callData->argc < 1)
+    if (callData->argc() < 1)
         return scope.engine->throwTypeError();
 
     ScopedObject to(scope, callData->args[0].toObject(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    if (callData->argc == 1)
+    if (callData->argc() == 1)
         return to.asReturnedValue();
 
-    for (int i = 1; i < callData->argc; ++i) {
+    for (int i = 1, ei = callData->argc(); i < ei; ++i) {
         if (callData->args[i].isUndefined() || callData->args[i].isNull())
             continue;
 
@@ -236,7 +236,7 @@ ReturnedValue ObjectPrototype::method_create(const BuiltinFunction *builtin, Cal
     ScopedObject newObject(scope, scope.engine->newObject());
     newObject->setPrototype(O->as<Object>());
 
-    if (callData->argc > 1 && !callData->args[1].isUndefined()) {
+    if (callData->argc() > 1 && !callData->args[1].isUndefined()) {
         callData->args[0] = newObject;
         return method_defineProperties(builtin, callData);
     }
@@ -541,7 +541,7 @@ ReturnedValue ObjectPrototype::method_propertyIsEnumerable(const BuiltinFunction
 ReturnedValue ObjectPrototype::method_defineGetter(const BuiltinFunction *b, CallData *callData)
 {
     Scope scope(b);
-    if (callData->argc < 2)
+    if (callData->argc() < 2)
         THROW_TYPE_ERROR();
 
     ScopedFunctionObject f(scope, callData->argument(1));
@@ -571,7 +571,7 @@ ReturnedValue ObjectPrototype::method_defineGetter(const BuiltinFunction *b, Cal
 ReturnedValue ObjectPrototype::method_defineSetter(const BuiltinFunction *b, CallData *callData)
 {
     Scope scope(b);
-    if (callData->argc < 2)
+    if (callData->argc() < 2)
         THROW_TYPE_ERROR();
 
     ScopedFunctionObject f(scope, callData->argument(1));
@@ -612,7 +612,7 @@ ReturnedValue ObjectPrototype::method_set_proto(const BuiltinFunction *b, CallDa
 {
     Scope scope(b);
     ScopedObject o(scope, callData->thisObject);
-    if (!o || !callData->argc)
+    if (!o || !callData->argc())
         THROW_TYPE_ERROR();
 
     if (callData->args[0].isNull()) {

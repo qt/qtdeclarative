@@ -299,7 +299,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(const QV4
     QV4::Scope scope(b);
     WorkerEngine *engine = (WorkerEngine*)scope.engine->v8Engine;
 
-    int id = callData->argc > 1 ? callData->args[1].toInt32() : 0;
+    int id = callData->argc() > 1 ? callData->args[1].toInt32() : 0;
 
     QV4::ScopedValue v(scope, callData->argument(2));
     QByteArray data = QV4::Serialize::serialize(v, scope.engine);
