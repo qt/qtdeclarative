@@ -51,6 +51,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
+#include <QIcon>
 
 int main(int argc, char *argv[])
 {
@@ -60,6 +61,10 @@ int main(int argc, char *argv[])
     //! [style]
     QQuickStyle::setStyle(QStringLiteral("qrc:/qml/Style"));
     //! [style]
+
+    //! [icons]
+    QIcon::setThemeName(QStringLiteral("wearable"));
+    //! [icons]
 
     QQmlApplicationEngine engine;
     engine.load(QUrl(QStringLiteral("qrc:/wearable.qml")));

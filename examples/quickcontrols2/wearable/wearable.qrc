@@ -3,18 +3,29 @@
         <file>wearable.qml</file>
         <file>qml/LauncherPage.qml</file>
         <file>qml/NaviButton.qml</file>
+        <file>icons/wearable/index.theme</file>
+        <file>icons/wearable/36x36/alarms.png</file>
+        <file>icons/wearable/36x36/fitness.png</file>
+        <file>icons/wearable/36x36/navigation.png</file>
+        <file>icons/wearable/36x36/notifications.png</file>
+        <file>icons/wearable/36x36/settings.png</file>
+        <file>icons/wearable/36x36/weather.png</file>
+        <file>icons/wearable/36x36/worldclock.png</file>
+        <file>icons/wearable/36x36@2/alarms.png</file>
+        <file>icons/wearable/36x36@2/fitness.png</file>
+        <file>icons/wearable/36x36@2/navigation.png</file>
+        <file>icons/wearable/36x36@2/notifications.png</file>
+        <file>icons/wearable/36x36@2/settings.png</file>
+        <file>icons/wearable/36x36@2/weather.png</file>
+        <file>icons/wearable/36x36@2/worldclock.png</file>
         <file>images/background.png</file>
         <file>images/back.png</file>
         <file>images/back@2x.png</file>
         <file>images/home.png</file>
         <file>images/home@2x.png</file>
         <file>qml/Alarms/AlarmsPage.qml</file>
-        <file>qml/Alarms/images/alarms.png</file>
-        <file>qml/Alarms/images/alarms@2x.png</file>
         <file>qml/Fitness/fitness.js</file>
         <file>qml/Fitness/FitnessPage.qml</file>
-        <file>qml/Fitness/images/fitness.png</file>
-        <file>qml/Fitness/images/fitness@2x.png</file>
         <file>qml/Fitness/images/man-running.png</file>
         <file>qml/Fitness/images/man-running@2x.png</file>
         <file>qml/Fitness/images/man-walking.png</file>
@@ -45,8 +56,6 @@
         <file>qml/Notifications/images/avatarm@2x.png</file>
         <file>qml/Notifications/images/missedcall.png</file>
         <file>qml/Notifications/images/missedcall@2x.png</file>
-        <file>qml/Notifications/images/notifications.png</file>
-        <file>qml/Notifications/images/notifications@2x.png</file>
         <file>qml/Settings/SettingsPage.qml</file>
         <file>qml/Settings/images/bluetooth.png</file>
         <file>qml/Settings/images/bluetooth@2x.png</file>
@@ -54,8 +63,6 @@
         <file>qml/Settings/images/brightness@2x.png</file>
         <file>qml/Settings/images/contrast.png</file>
         <file>qml/Settings/images/contrast@2x.png</file>
-        <file>qml/Settings/images/settings.png</file>
-        <file>qml/Settings/images/settings@2x.png</file>
         <file>qml/Settings/images/wifi.png</file>
         <file>qml/Settings/images/wifi@2x.png</file>
         <file>qml/Style/qmldir</file>
@@ -76,8 +83,6 @@
         <file>qml/Weather/images/sunset@2x.png</file>
         <file>qml/Weather/images/temperature.png</file>
         <file>qml/Weather/images/temperature@2x.png</file>
-        <file>qml/Weather/images/weather.png</file>
-        <file>qml/Weather/images/weather@2x.png</file>
         <file>qml/Weather/images/wind.png</file>
         <file>qml/Weather/images/wind@2x.png</file>
         <file>qml/WorldClock/Clock.qml</file>
@@ -98,7 +103,5 @@
         <file>qml/WorldClock/images/swissnighthour@2x.png</file>
         <file>qml/WorldClock/images/swissnightminute.png</file>
         <file>qml/WorldClock/images/swissnightminute@2x.png</file>
-        <file>qml/WorldClock/images/worldclock.png</file>
-        <file>qml/WorldClock/images/worldclock@2x.png</file>
     </qresource>
 </RCC>

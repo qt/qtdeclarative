@@ -159,8 +159,8 @@
     }
     \endcode
 
-    The \l {Qt Quick Controls 2 - Gallery}{Gallery example} provides a complete runnable
-    application with a bundled icon theme.
+    The \l {Qt Quick Controls 2 - Gallery}{Gallery example} and \l {Qt Quick Controls 2 - Wearable Demo}
+    {Wearable Demo} provide complete runnable applications with a bundled icon theme.
 
     \section1 Related Information
     \list

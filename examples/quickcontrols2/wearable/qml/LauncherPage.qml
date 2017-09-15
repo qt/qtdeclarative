@@ -49,7 +49,7 @@
 ****************************************************************************/
 
 import QtQuick 2.7
-import QtQuick.Controls 2.0 as QQC2
+import QtQuick.Controls 2.1 as QQC2
 import "Style"
 
 PathView {
@@ -68,55 +68,52 @@ PathView {
     model: ListModel {
         ListElement {
             title: qsTr("World Clock")
-            icon: "WorldClock/images/worldclock.png"
+            icon: "worldclock"
             page: "WorldClock/WorldClockPage.qml"
         }
         ListElement {
             title: qsTr("Navigation")
-            icon: "Navigation/images/navigation.png"
+            icon: "navigation"
             page: "Navigation/NavigationPage.qml"
         }
         ListElement {
             title: qsTr("Weather")
-            icon: "Weather/images/weather.png"
+            icon: "weather"
             page: "Weather/WeatherPage.qml"
         }
         ListElement {
             title: qsTr("Fitness")
-            icon: "Fitness/images/fitness.png"
+            icon: "fitness"
             page: "Fitness/FitnessPage.qml"
         }
         ListElement {
             title: qsTr("Notifications")
-            icon: "Notifications/images/notifications.png"
+            icon: "notifications"
             page: "Notifications/NotificationsPage.qml"
         }
         ListElement {
             title: qsTr("Alarm")
-            icon: "Alarms/images/alarms.png"
+            icon: "alarms"
             page: "Alarms/AlarmsPage.qml"
         }
         ListElement {
             title: qsTr("Settings")
-            icon: "Settings/images/settings.png"
+            icon: "settings"
             page: "Settings/SettingsPage.qml"
         }
     }
 
-    delegate: QQC2.AbstractButton {
+    delegate: QQC2.RoundButton {
         width: circularView.itemSize
         height: circularView.itemSize
 
-        text: model.title
+        property string title: model.title
+
+        icon.width: 36
+        icon.height: 36
+        icon.name: model.icon
         opacity: PathView.itemOpacity
         padding: 12
-
-        contentItem: Image {
-            source: model.icon
-            fillMode: Image.Pad
-            sourceSize.width: parent.availableWidth
-            sourceSize.height: parent.availableHeight
-        }
 
         background: Rectangle {
             radius: width / 2
@@ -180,7 +177,7 @@ PathView {
 
         visible: currentItem ? currentItem.PathView.itemOpacity === 1.0 : 0
 
-        text: currentItem ? currentItem.text : ""
+        text: currentItem ? currentItem.title : ""
         anchors.centerIn: parent
         anchors.verticalCenterOffset: (circularView.itemSize + height) / 2
 

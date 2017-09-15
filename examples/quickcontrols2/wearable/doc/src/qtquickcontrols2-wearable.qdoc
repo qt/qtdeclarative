@@ -99,6 +99,21 @@
     \skipto }
     \printuntil /^\}/
 
+    \section1 Icons
+
+    The demo ships a custom icon theme. The icons are bundled into the \c :/icons
+    folder in the application's resources. The \c index.theme file lists the contents
+    of the icon theme:
+
+    \quotefile wearable/icons/wearable/index.theme
+
+    Finally, the icon theme is selected in \c main():
+
+    \snippet wearable/wearable.cpp icons
+
+    The icons are used on the Launcher Page, which is presented below. See
+    \l {Icons in Qt Quick Controls 2} for more details about icons and themes.
+
     \section1 Launcher Page
 
     The application launcher is implemented using a circular PathView in
@@ -115,6 +130,9 @@
     \printline ListElement
     \skipto "Settings"
     \printuntil delegate:
+    \dots 8
+    \skipto icon.width
+    \printuntil icon.name
     \dots 8
     \skipto onClicked:
     \printto path:
