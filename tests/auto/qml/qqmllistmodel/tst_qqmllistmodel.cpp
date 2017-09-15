@@ -123,6 +123,7 @@ private slots:
     void about_to_be_signals();
     void modify_through_delegate();
     void bindingsOnGetResult();
+    void stringifyModelEntry();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1480,6 +1481,28 @@ void tst_qqmllistmodel::bindingsOnGetResult()
     QVERIFY(!obj.isNull());
 
     QVERIFY(obj->property("success").toBool());
+}
+
+void tst_qqmllistmodel::stringifyModelEntry()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+                      "import QtQuick 2.0\n"
+                      "Item {\n"
+                      "   ListModel {\n"
+                      "       id: testModel\n"
+                      "       objectName: \"testModel\"\n"
+                      "       ListElement { name: \"Joe\"; age: 22 }\n"
+                      "   }\n"
+                      "}\n", QUrl());
+    QScopedPointer<QObject> scene(component.create());
+    QQmlListModel *model = scene->findChild<QQmlListModel*>("testModel");
+    QQmlExpression expr(engine.rootContext(), model, "JSON.stringify(get(0));");
+    QVariant v = expr.evaluate();
+    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+    const QString expectedString = QStringLiteral("{\"age\":22,\"name\":\"Joe\"}");
+    QCOMPARE(v.toString(), expectedString);
 }
 
 QTEST_MAIN(tst_qqmllistmodel)

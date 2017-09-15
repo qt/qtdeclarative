@@ -1394,7 +1394,10 @@ void ModelObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, u
         p->value = v4->fromVariant(value);
         return;
     }
-    QV4::QObjectWrapper::advanceIterator(m, it, name, index, p, attributes);
+    // Fall back to QV4::Object as opposed to QV4::QObjectWrapper otherwise it will add
+    // unnecessary entries that relate to the roles used. These just create extra work
+    // later on as they will just be ignored.
+    QV4::Object::advanceIterator(m, it, name, index, p, attributes);
 }
 
 DEFINE_OBJECT_VTABLE(ModelObject);
