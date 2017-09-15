@@ -309,8 +309,8 @@ protected:
                             QObject *defaultTarget = 0) override;
 Q_SIGNALS:
     void durationChanged(int);
-    void fromChanged(const QVariant &);
-    void toChanged(const QVariant &);
+    void fromChanged();
+    void toChanged();
     void easingChanged(const QEasingCurve &);
     void propertiesChanged(const QString &);
     void targetChanged();
@@ -340,8 +340,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickNumberAnimation : public QQuickPropertyAnimat
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
 
-    Q_PROPERTY(qreal from READ from WRITE setFrom)
-    Q_PROPERTY(qreal to READ to WRITE setTo)
+    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged)
+    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged)
 
 public:
     QQuickNumberAnimation(QObject *parent=0);
@@ -365,8 +365,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickVector3dAnimation : public QQuickPropertyAnim
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
 
-    Q_PROPERTY(QVector3D from READ from WRITE setFrom)
-    Q_PROPERTY(QVector3D to READ to WRITE setTo)
+    Q_PROPERTY(QVector3D from READ from WRITE setFrom NOTIFY fromChanged)
+    Q_PROPERTY(QVector3D to READ to WRITE setTo NOTIFY toChanged)
 
 public:
     QQuickVector3dAnimation(QObject *parent=0);
@@ -385,8 +385,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimation : public QQuickPropertyAnim
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickRotationAnimation)
 
-    Q_PROPERTY(qreal from READ from WRITE setFrom)
-    Q_PROPERTY(qreal to READ to WRITE setTo)
+    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged)
+    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged)
     Q_PROPERTY(RotationDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
 
 public:

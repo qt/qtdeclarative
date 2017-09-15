@@ -2112,7 +2112,7 @@ void QQuickPropertyAnimation::setFrom(const QVariant &f)
         return;
     d->from = f;
     d->fromIsDefined = f.isValid();
-    emit fromChanged(f);
+    emit fromChanged();
 }
 
 /*!
@@ -2139,7 +2139,7 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
         return;
     d->to = t;
     d->toIsDefined = t.isValid();
-    emit toChanged(t);
+    emit toChanged();
 }
 
 /*!

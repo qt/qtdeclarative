@@ -120,12 +120,16 @@ void tst_qquickanimations::simpleProperty()
 {
     QQuickRectangle rect;
     QQuickPropertyAnimation animation;
+    QSignalSpy fromChangedSpy(&animation, &QQuickPropertyAnimation::fromChanged);
+    QSignalSpy toChangedSpy(&animation, &QQuickPropertyAnimation::toChanged);
     animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setTo(200);
     QCOMPARE(animation.target(), &rect);
     QCOMPARE(animation.property(), QLatin1String("x"));
     QCOMPARE(animation.to().toReal(), 200.0);
+    QCOMPARE(fromChangedSpy.count(), 0);
+    QCOMPARE(toChangedSpy.count(), 1);
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -139,18 +143,25 @@ void tst_qquickanimations::simpleProperty()
     animation.setCurrentTime(125);
     QCOMPARE(animation.currentTime(), 125);
     QCOMPARE(rect.x(),100.0);
+    animation.setFrom(100);
+    QCOMPARE(fromChangedSpy.count(), 1);
+    QCOMPARE(toChangedSpy.count(), 1);
 }
 
 void tst_qquickanimations::simpleNumber()
 {
     QQuickRectangle rect;
     QQuickNumberAnimation animation;
+    QSignalSpy fromChangedSpy(&animation, &QQuickNumberAnimation::fromChanged);
+    QSignalSpy toChangedSpy(&animation, &QQuickNumberAnimation::toChanged);
     animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setTo(200);
     QCOMPARE(animation.target(), &rect);
     QCOMPARE(animation.property(), QLatin1String("x"));
     QCOMPARE(animation.to(), qreal(200));
+    QCOMPARE(fromChangedSpy.count(), 0);
+    QCOMPARE(toChangedSpy.count(), 1);
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -164,18 +175,25 @@ void tst_qquickanimations::simpleNumber()
     animation.setCurrentTime(125);
     QCOMPARE(animation.currentTime(), 125);
     QCOMPARE(rect.x(), qreal(100));
+    animation.setFrom(100);
+    QCOMPARE(fromChangedSpy.count(), 1);
+    QCOMPARE(toChangedSpy.count(), 1);
 }
 
 void tst_qquickanimations::simpleColor()
 {
     QQuickRectangle rect;
     QQuickColorAnimation animation;
+    QSignalSpy fromChangedSpy(&animation, &QQuickColorAnimation::fromChanged);
+    QSignalSpy toChangedSpy(&animation, &QQuickColorAnimation::toChanged);
     animation.setTargetObject(&rect);
     animation.setProperty("color");
     animation.setTo(QColor("red"));
     QCOMPARE(animation.target(), &rect);
     QCOMPARE(animation.property(), QLatin1String("color"));
     QCOMPARE(animation.to(), QColor("red"));
+    QCOMPARE(fromChangedSpy.count(), 0);
+    QCOMPARE(toChangedSpy.count(), 1);
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -193,6 +211,8 @@ void tst_qquickanimations::simpleColor()
     rect.setColor(QColor("green"));
     animation.setFrom(QColor("blue"));
     QCOMPARE(animation.from(), QColor("blue"));
+    QCOMPARE(fromChangedSpy.count(), 1);
+    QCOMPARE(toChangedSpy.count(), 1);
     animation.restart();
     QCOMPARE(rect.color(), QColor("blue"));
     QVERIFY(animation.isRunning());
@@ -204,6 +224,8 @@ void tst_qquickanimations::simpleRotation()
 {
     QQuickRectangle rect;
     QQuickRotationAnimation animation;
+    QSignalSpy fromChangedSpy(&animation, &QQuickRotationAnimation::fromChanged);
+    QSignalSpy toChangedSpy(&animation, &QQuickRotationAnimation::toChanged);
     animation.setTargetObject(&rect);
     animation.setProperty("rotation");
     animation.setTo(270);
@@ -211,6 +233,8 @@ void tst_qquickanimations::simpleRotation()
     QCOMPARE(animation.property(), QLatin1String("rotation"));
     QCOMPARE(animation.to(), qreal(270));
     QCOMPARE(animation.direction(), QQuickRotationAnimation::Numerical);
+    QCOMPARE(fromChangedSpy.count(), 0);
+    QCOMPARE(toChangedSpy.count(), 1);
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -224,6 +248,9 @@ void tst_qquickanimations::simpleRotation()
     animation.setCurrentTime(125);
     QCOMPARE(animation.currentTime(), 125);
     QCOMPARE(rect.rotation(), qreal(135));
+    animation.setFrom(90);
+    QCOMPARE(fromChangedSpy.count(), 1);
+    QCOMPARE(toChangedSpy.count(), 1);
 }
 
 void tst_qquickanimations::simplePath()
