@@ -61,7 +61,7 @@
 using namespace QV4;
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
-    : line(1), column(0), scope(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
+    : line(1), column(0), context(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
     , compilationUnit(compilationUnit), vmFunction(0), parseAsBinding(true)
 {
     if (qml)
@@ -85,7 +85,7 @@ void Script::parse()
 
     parsed = true;
 
-    ExecutionEngine *v4 = scope->engine();
+    ExecutionEngine *v4 = context->engine();
     Scope valueScope(v4);
 
     Module module(v4->debugger() != 0);
@@ -143,18 +143,18 @@ ReturnedValue Script::run()
     if (!vmFunction)
         return Encode::undefined();
 
-    QV4::ExecutionEngine *engine = scope->engine();
+    QV4::ExecutionEngine *engine = context->engine();
     QV4::Scope valueScope(engine);
 
     if (qmlContext.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        ContextStateSaver stateSaver(valueScope, scope);
-        scope->d()->v4Function = vmFunction;
+        ContextStateSaver stateSaver(valueScope, context);
+        context->d()->v4Function = vmFunction;
 
-        QV4::JSCall jsCall(scope, nullptr);
+        QV4::JSCall jsCall(valueScope, nullptr);
         jsCall->thisObject = engine->globalObject;
-        jsCall->context = *scope;
+        jsCall->context = *context;
         return vmFunction->call(jsCall);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());

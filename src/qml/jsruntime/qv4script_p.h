@@ -91,11 +91,11 @@ struct ContextStateSaver {
 struct Q_QML_EXPORT Script {
     Script(ExecutionContext *scope, QV4::Compiler::CompilationMode mode, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(scope), strictMode(false), inheritContext(false), parsed(false), compilationMode(mode)
+        , context(scope), strictMode(false), inheritContext(false), parsed(false), compilationMode(mode)
         , vmFunction(0), parseAsBinding(false) {}
     Script(ExecutionEngine *engine, QmlContext *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , scope(engine->rootContext()), strictMode(false), inheritContext(true), parsed(false)
+        , context(engine->rootContext()), strictMode(false), inheritContext(true), parsed(false)
         , vmFunction(0), parseAsBinding(true) {
         if (qml)
             qmlContext.set(engine, *qml);
@@ -106,7 +106,7 @@ struct Q_QML_EXPORT Script {
     int line;
     int column;
     QString sourceCode;
-    ExecutionContext *scope;
+    ExecutionContext *context;
     bool strictMode;
     bool inheritContext;
     bool parsed;

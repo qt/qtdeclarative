@@ -87,7 +87,7 @@ struct ScopedValue;
     return scope.engine->throwError(QString::fromUtf8(str))
 
 struct Scope {
-    inline Scope(ExecutionContext *ctx)
+    explicit Scope(ExecutionContext *ctx)
         : engine(ctx->engine())
         , mark(engine->jsStackTop)
     {
@@ -99,7 +99,7 @@ struct Scope {
     {
     }
 
-    inline Scope(const Managed *m)
+    explicit Scope(const Managed *m)
         : engine(m->engine())
         , mark(engine->jsStackTop)
     {
