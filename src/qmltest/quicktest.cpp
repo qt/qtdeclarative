@@ -469,6 +469,10 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             continue;
 
         QQmlEngine engine;
+        for (const QString &path : qAsConst(imports))
+            engine.addImportPath(path);
+        for (const QString &path : qAsConst(pluginPaths))
+            engine.addPluginPath(path);
 
         TestCaseCollector testCaseCollector(fi, &engine);
         if (!testCaseCollector.errors().isEmpty()) {
@@ -500,10 +504,6 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
                          &eventLoop, SLOT(quit()));
         view.rootContext()->setContextProperty
             (QLatin1String("qtest"), QTestRootObject::instance()); // Deprecated. Use QTestRootObject from Qt.test.qtestroot instead
-        for (const QString &path : qAsConst(imports))
-            view.engine()->addImportPath(path);
-        for (const QString &path : qAsConst(pluginPaths))
-            view.engine()->addPluginPath(path);
 
         view.setObjectName(fi.baseName());
         view.setTitle(view.objectName());
