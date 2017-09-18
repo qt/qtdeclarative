@@ -245,6 +245,7 @@ public:
     QQmlTypePrivate *priv() const { return d; }
     static void refHandle(QQmlTypePrivate *priv);
     static void derefHandle(QQmlTypePrivate *priv);
+    static int refCount(QQmlTypePrivate *priv);
 
     enum RegistrationType {
         CppType = 0,

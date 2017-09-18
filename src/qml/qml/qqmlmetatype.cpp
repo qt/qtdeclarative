@@ -1144,6 +1144,13 @@ void QQmlType::derefHandle(QQmlTypePrivate *priv)
         delete priv;
 }
 
+int QQmlType::refCount(QQmlTypePrivate *priv)
+{
+    if (priv)
+        return priv->refCount;
+    return -1;
+}
+
 namespace {
 template <typename QQmlTypeContainer>
 void removeQQmlTypePrivate(QQmlTypeContainer &container, const QQmlTypePrivate *reference)
@@ -1334,6 +1341,7 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
     data->urlToNonFileImportType.clear();
     data->metaObjectToType.clear();
     data->uriToModule.clear();
+    data->undeletableTypes.clear();
 
     QQmlEnginePrivate::baseModulesUninitialized = true; //So the engine re-registers its types
 #if QT_CONFIG(library)
