@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
+import QtQuick 2.11
 import Qt.labs.calendar 1.0
 
 AbstractMonthGrid {

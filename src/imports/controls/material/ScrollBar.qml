@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.10
-import QtQuick.Templates 2.3 as T
-import QtQuick.Controls.Material 2.3
+import QtQuick 2.11
+import QtQuick.Templates 2.4 as T
+import QtQuick.Controls.Material 2.4
 
 T.ScrollBar {
     id: control

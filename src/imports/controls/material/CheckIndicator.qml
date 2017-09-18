@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.10
-import QtQuick.Controls.Material 2.3
-import QtQuick.Controls.Material.impl 2.3
+import QtQuick 2.11
+import QtQuick.Controls.Material 2.4
+import QtQuick.Controls.Material.impl 2.4
 
 Rectangle {
     id: indicatorItem

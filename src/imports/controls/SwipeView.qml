@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.10
-import QtQuick.Controls 2.3
-import QtQuick.Templates 2.3 as T
+import QtQuick 2.11
+import QtQuick.Controls 2.4
+import QtQuick.Templates 2.4 as T
 
 T.SwipeView {
     id: control
