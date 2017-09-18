@@ -119,6 +119,113 @@ TestCase {
         compare(control.implicitHeight, 220)
     }
 
+    function test_pressPoint_data() {
+        return [
+            { tag: "mouse", mouse: true },
+            { tag: "touch", touch: true }
+        ]
+    }
+
+    function test_pressPoint(data) {
+        var control = createTemporaryObject(button, testCase, {width: 100, height: 40})
+        verify(control)
+
+        var pressXChanges = 0
+        var pressYChanges = 0
+
+        var pressXSpy = signalSpy.createObject(control, {target: control, signalName: "pressXChanged"})
+        verify(pressXSpy.valid)
+
+        var pressYSpy = signalSpy.createObject(control, {target: control, signalName: "pressYChanged"})
+        verify(pressYSpy.valid)
+
+        compare(control.pressX, 0)
+        compare(control.pressY, 0)
+
+        var touch = data.touch ? touchEvent(control) : null
+
+        if (data.touch)
+            touch.press(0, control, control.width / 2, control.height / 2).commit()
+        else
+            mousePress(control, control.width / 2, control.height / 2)
+        compare(control.pressX, control.width / 2)
+        compare(control.pressY, control.height / 2)
+        compare(pressXSpy.count, ++pressXChanges)
+        compare(pressYSpy.count, ++pressYChanges)
+
+        if (data.touch)
+            touch.move(0, control, control.width / 2, control.height / 2).commit()
+        else
+            mouseMove(control, control.width / 2, control.height / 2)
+        compare(control.pressX, control.width / 2)
+        compare(control.pressY, control.height / 2)
+        compare(pressXSpy.count, pressXChanges)
+        compare(pressYSpy.count, pressYChanges)
+
+        if (data.touch)
+            touch.move(0, control, control.width / 4, control.height / 4).commit()
+        else
+            mouseMove(control, control.width / 4, control.height / 4)
+        compare(control.pressX, control.width / 4)
+        compare(control.pressY, control.height / 4)
+        compare(pressXSpy.count, ++pressXChanges)
+        compare(pressYSpy.count, ++pressYChanges)
+
+        if (data.touch)
+            touch.move(0, control, 0, 0).commit()
+        else
+            mouseMove(control, 0, 0)
+        compare(control.pressX, 0)
+        compare(control.pressY, 0)
+        compare(pressXSpy.count, ++pressXChanges)
+        compare(pressYSpy.count, ++pressYChanges)
+
+        if (data.touch)
+            touch.move(0, control, -control.width / 2, -control.height / 2).commit()
+        else
+            mouseMove(control, -control.width / 2, -control.height / 2)
+        compare(control.pressX, -control.width / 2)
+        compare(control.pressY, -control.height / 2)
+        compare(pressXSpy.count, ++pressXChanges)
+        compare(pressYSpy.count, ++pressYChanges)
+
+        if (data.touch)
+            touch.release(0, control, -control.width / 2, -control.height / 2).commit()
+        else
+            mouseRelease(control, -control.width / 2, -control.height / 2)
+        compare(control.pressX, -control.width / 2)
+        compare(control.pressY, -control.height / 2)
+        compare(pressXSpy.count, pressXChanges)
+        compare(pressYSpy.count, pressYChanges)
+
+        if (data.touch)
+            touch.press(0, control, control.width - 1, control.height - 1).commit()
+        else
+            mousePress(control, control.width - 1, control.height - 1)
+        compare(control.pressX, control.width - 1)
+        compare(control.pressY, control.height - 1)
+        compare(pressXSpy.count, ++pressXChanges)
+        compare(pressYSpy.count, ++pressYChanges)
+
+        if (data.touch)
+            touch.move(0, control, control.width + 1, control.height + 1).commit()
+        else
+            mousePress(control, control.width + 1, control.height + 1)
+        compare(control.pressX, control.width + 1)
+        compare(control.pressY, control.height + 1)
+        compare(pressXSpy.count, ++pressXChanges)
+        compare(pressYSpy.count, ++pressYChanges)
+
+        if (data.touch)
+            touch.release(0, control, control.width + 2, control.height + 2).commit()
+        else
+            mouseRelease(control, control.width + 2, control.height + 2)
+        compare(control.pressX, control.width + 2)
+        compare(control.pressY, control.height + 2)
+        compare(pressXSpy.count, ++pressXChanges)
+        compare(pressYSpy.count, ++pressYChanges)
+    }
+
     function test_pressAndHold() {
         var control = createTemporaryObject(button, testCase, {checkable: true})
         verify(control)

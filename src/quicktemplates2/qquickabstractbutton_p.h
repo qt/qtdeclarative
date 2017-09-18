@@ -72,6 +72,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(QQuickAction *action READ action WRITE setAction NOTIFY actionChanged FINAL REVISION 3)
     Q_PROPERTY(int autoRepeatDelay READ autoRepeatDelay WRITE setAutoRepeatDelay NOTIFY autoRepeatDelayChanged FINAL REVISION 4)
     Q_PROPERTY(int autoRepeatInterval READ autoRepeatInterval WRITE setAutoRepeatInterval NOTIFY autoRepeatIntervalChanged FINAL REVISION 4)
+    Q_PROPERTY(qreal pressX READ pressX NOTIFY pressXChanged FINAL REVISION 4)
+    Q_PROPERTY(qreal pressY READ pressY NOTIFY pressYChanged FINAL REVISION 4)
 
 public:
     explicit QQuickAbstractButton(QQuickItem *parent = nullptr);
@@ -130,6 +132,9 @@ public:
     int autoRepeatInterval() const;
     void setAutoRepeatInterval(int interval);
 
+    qreal pressX() const;
+    qreal pressY() const;
+
 public Q_SLOTS:
     void toggle();
 
@@ -154,6 +159,8 @@ Q_SIGNALS:
     Q_REVISION(3) void actionChanged();
     Q_REVISION(4) void autoRepeatDelayChanged();
     Q_REVISION(4) void autoRepeatIntervalChanged();
+    Q_REVISION(4) void pressXChanged();
+    Q_REVISION(4) void pressYChanged();
 
 protected:
     QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);

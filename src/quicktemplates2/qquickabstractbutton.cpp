@@ -192,11 +192,29 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
 {
 }
 
+void QQuickAbstractButtonPrivate::setPressPoint(const QPointF &point)
+{
+    pressPoint = point;
+    setMovePoint(point);
+}
+
+void QQuickAbstractButtonPrivate::setMovePoint(const QPointF &point)
+{
+    Q_Q(QQuickAbstractButton);
+    bool xChange = !qFuzzyCompare(point.x(), movePoint.x());
+    bool yChange = !qFuzzyCompare(point.y(), movePoint.y());
+    movePoint = point;
+    if (xChange)
+        emit q->pressXChanged();
+    if (yChange)
+        emit q->pressYChanged();
+}
+
 void QQuickAbstractButtonPrivate::handlePress(const QPointF &point)
 {
     Q_Q(QQuickAbstractButton);
     QQuickControlPrivate::handlePress(point);
-    pressPoint = point;
+    setPressPoint(point);
     q->setPressed(true);
 
     emit q->pressed();
@@ -213,6 +231,7 @@ void QQuickAbstractButtonPrivate::handleMove(const QPointF &point)
 {
     Q_Q(QQuickAbstractButton);
     QQuickControlPrivate::handleMove(point);
+    setMovePoint(point);
     q->setPressed(keepPressed || q->contains(point));
 
     if (!pressed && autoRepeat)
@@ -226,6 +245,7 @@ void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
     Q_Q(QQuickAbstractButton);
     QQuickControlPrivate::handleRelease(point);
     bool wasPressed = pressed;
+    setPressPoint(point);
     q->setPressed(false);
     pressButtons = Qt::NoButton;
 
@@ -894,6 +914,40 @@ void QQuickAbstractButton::setShortcut(const QKeySequence &shortcut)
 #endif
 
 /*!
+    \readonly
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty real QtQuick.Controls::AbstractButton::pressX
+
+    This property holds the x-coordinate of the last press.
+
+    \note The value is updated on touch moves, but left intact after touch release.
+
+    \sa pressY
+*/
+qreal QQuickAbstractButton::pressX() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->movePoint.x();
+}
+
+/*!
+    \readonly
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty real QtQuick.Controls::AbstractButton::pressY
+
+    This property holds the y-coordinate of the last press.
+
+    \note The value is updated on touch moves, but left intact after touch release.
+
+    \sa pressX
+*/
+qreal QQuickAbstractButton::pressY() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->movePoint.y();
+}
+
+/*!
     \qmlmethod void QtQuick.Controls::AbstractButton::toggle()
 
     Toggles the checked state of the button.
@@ -932,7 +986,7 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
     Q_D(QQuickAbstractButton);
     QQuickControl::keyPressEvent(event);
     if (event->key() == Qt::Key_Space) {
-        d->pressPoint = QPoint(qRound(width() / 2), qRound(height() / 2));
+        d->setPressPoint(QPoint(qRound(width() / 2), qRound(height() / 2)));
         setPressed(true);
 
         if (d->autoRepeat)

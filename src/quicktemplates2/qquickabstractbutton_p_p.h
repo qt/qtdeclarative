@@ -69,6 +69,9 @@ public:
         return button->d_func();
     }
 
+    void setPressPoint(const QPointF &point);
+    void setMovePoint(const QPointF &point);
+
     void handlePress(const QPointF &point) override;
     void handleMove(const QPointF &point) override;
     void handleRelease(const QPointF &point) override;
@@ -115,6 +118,7 @@ public:
 #endif
     QQuickIcon icon;
     QPointF pressPoint;
+    QPointF movePoint;
     Qt::MouseButtons pressButtons;
     QQuickItem *indicator;
     QQuickButtonGroup *group;

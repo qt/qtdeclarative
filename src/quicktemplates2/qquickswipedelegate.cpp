@@ -736,7 +736,7 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
         // The press point could be incorrect if the press happened over a child item,
         // so we correct it after calling the base class' mousePressEvent(), rather
         // than having to duplicate its code just so we can set the pressPoint.
-        pressPoint = item->mapToItem(q, event->pos());
+        setPressPoint(item->mapToItem(q, event->pos()));
         q->grabMouse();
         return true;
     }
@@ -746,7 +746,7 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
     // mouse movement in case it turns into a swipe, in which case we grab the mouse.
     swipePrivate->positionBeforePress = swipePrivate->position;
     swipePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
-    pressPoint = item->mapToItem(q, event->pos());
+    setPressPoint(item->mapToItem(q, event->pos()));
 
     // When a delegate uses the attached properties and signals, it declares that it wants mouse events.
     Attached *attached = attachedObject(item);
