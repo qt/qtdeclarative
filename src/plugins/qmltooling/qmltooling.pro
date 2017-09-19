@@ -19,17 +19,19 @@ qtConfig(qml-network) {
         qmldbg_tcp
 }
 
+# Services
+SUBDIRS += \
+    qmldbg_messages \
+    qmldbg_profiler
+qmldbg_messages.depends = packetprotocol
+qmldbg_profiler.depends = packetprotocol
+
 qtConfig(qml-interpreter) {
-    # Services
     SUBDIRS += \
         qmldbg_debugger \
-        qmldbg_profiler \
-        qmldbg_messages \
         qmldbg_nativedebugger
 
     qmldbg_debugger.depends = packetprotocol
-    qmldbg_profiler.depends = packetprotocol
-    qmldbg_messages.depends = packetprotocol
     qmldbg_nativedebugger.depends = packetprotocol
 }
 
