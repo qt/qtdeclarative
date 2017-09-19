@@ -74,13 +74,8 @@ Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *oute
     uint nLocals = compiledFunction->nLocals;
     c->locals.size = nLocals;
     c->locals.alloc = localsAndFormals;
-#if QT_POINTER_SIZE == 8
-    // memory allocated from the JS heap is 0 initialized, so skip the std::fill() below
+    // memory allocated from the JS heap is 0 initialized, so check if undefined is 0
     Q_ASSERT(Primitive::undefinedValue().asReturnedValue() == 0);
-#else
-    if (nLocals)
-        std::fill(c->locals.values, c->locals.values + nLocals, Primitive::undefinedValue());
-#endif
 
     ::memcpy(c->locals.values + nLocals, &callData->args[0], nFormals * sizeof(Value));
     c->nArgs = callData->argc();
