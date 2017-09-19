@@ -287,7 +287,11 @@ void Codegen::statement(Statement *ast)
     RegisterScope scope(this);
 
     bytecodeGenerator->setLocation(ast->firstSourceLocation());
+
+    VolatileMemoryLocations vLocs = scanVolatileMemoryLocations(ast);
+    qSwap(_volataleMemoryLocations, vLocs);
     accept(ast);
+    qSwap(_volataleMemoryLocations, vLocs);
 }
 
 void Codegen::statement(ExpressionNode *ast)
@@ -299,10 +303,16 @@ void Codegen::statement(ExpressionNode *ast)
     } else {
         Result r(nx);
         qSwap(_expr, r);
+        VolatileMemoryLocations vLocs = scanVolatileMemoryLocations(ast);
+        qSwap(_volataleMemoryLocations, vLocs);
+
         accept(ast);
+
+        qSwap(_volataleMemoryLocations, vLocs);
+        qSwap(_expr, r);
+
         if (hasError)
             return;
-        qSwap(_expr, r);
         if (r.result().loadTriggersSideEffect())
             r.result().loadInAccumulator(); // triggers side effects
     }
@@ -1482,7 +1492,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
         const int argIdx = c->findArgument(name);
         if (argIdx != -1) {
             Q_ASSERT(!c->argumentsCanEscape && c->usesArgumentsObject != Context::ArgumentsObjectUsed);
-            return Reference::fromArgument(this, argIdx);
+            return Reference::fromArgument(this, argIdx, _volataleMemoryLocations.isVolatile(name));
         }
         c = c->parent;
     }
@@ -1510,7 +1520,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
                 return Reference::fromScopedLocal(this, idx, scope);
             } else {
                 Q_ASSERT(scope == 0);
-                return Reference::fromArgument(this, argIdx);
+                return Reference::fromArgument(this, argIdx, _volataleMemoryLocations.isVolatile(name));
             }
         }
 
@@ -2848,6 +2858,97 @@ QQmlRefPointer<CompiledData::CompilationUnit> Codegen::createUnitForLoading()
     return result;
 }
 
+class Codegen::VolatileMemoryLocationScanner: protected QQmlJS::AST::Visitor
+{
+    VolatileMemoryLocations locs;
+
+public:
+    Codegen::VolatileMemoryLocations scan(AST::Node *s)
+    {
+        s->accept(this);
+        return locs;
+    }
+
+    bool visit(ArrayMemberExpression *) Q_DECL_OVERRIDE
+    {
+        locs.setAllVolatile();
+        return false;
+    }
+
+    bool visit(FieldMemberExpression *) Q_DECL_OVERRIDE
+    {
+        locs.setAllVolatile();
+        return false;
+    }
+
+    bool visit(PostIncrementExpression *e) Q_DECL_OVERRIDE
+    {
+        collectIdentifiers(locs.specificLocations, e->base);
+        return false;
+    }
+
+    bool visit(PostDecrementExpression *e) Q_DECL_OVERRIDE
+    {
+        collectIdentifiers(locs.specificLocations, e->base);
+        return false;
+    }
+
+    bool visit(PreIncrementExpression *e) Q_DECL_OVERRIDE
+    {
+        collectIdentifiers(locs.specificLocations, e->expression);
+        return false;
+    }
+
+    bool visit(PreDecrementExpression *e) Q_DECL_OVERRIDE
+    {
+        collectIdentifiers(locs.specificLocations, e->expression);
+        return false;
+    }
+
+    bool visit(BinaryExpression *e) Q_DECL_OVERRIDE
+    {
+        switch (e->op) {
+        case QSOperator::InplaceAnd:
+        case QSOperator::InplaceSub:
+        case QSOperator::InplaceDiv:
+        case QSOperator::InplaceAdd:
+        case QSOperator::InplaceLeftShift:
+        case QSOperator::InplaceMod:
+        case QSOperator::InplaceMul:
+        case QSOperator::InplaceOr:
+        case QSOperator::InplaceRightShift:
+        case QSOperator::InplaceURightShift:
+        case QSOperator::InplaceXor:
+            collectIdentifiers(locs.specificLocations, e);
+            return false;
+
+        default:
+            return true;
+        }
+    }
+
+private:
+    void collectIdentifiers(QVector<QStringView> &ids, AST::Node *node) const {
+        class Collector: public QQmlJS::AST::Visitor {
+            QVector<QStringView> &ids;
+        public:
+            Collector(QVector<QStringView> &ids): ids(ids) {}
+            virtual bool visit(IdentifierExpression *ie) {
+                ids.append(ie->name);
+                return false;
+            }
+        };
+        Collector collector(ids);
+        node->accept(&collector);
+    }
+};
+
+Codegen::VolatileMemoryLocations Codegen::scanVolatileMemoryLocations(AST::Node *ast) const
+{
+    VolatileMemoryLocationScanner scanner;
+    return scanner.scan(ast);
+}
+
 
 #ifndef V4_BOOTSTRAP
 
@@ -2954,6 +3055,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     codegen = other.codegen;
     isReadonly = other.isReadonly;
     stackSlotIsLocalOrArgument = other.stackSlotIsLocalOrArgument;
+    isVolatile = other.isVolatile;
     global = other.global;
     return *this;
 }
@@ -3044,7 +3146,7 @@ void Codegen::Reference::storeOnStack(int slotIndex) const
 
 Codegen::Reference Codegen::Reference::doStoreOnStack(int slotIndex) const
 {
-    if (isStackSlot() && slotIndex == -1)
+    if (isStackSlot() && slotIndex == -1 && !(stackSlotIsLocalOrArgument && isVolatile))
         return *this;
 
     if (isStackSlot()) { // temp-to-temp move

@@ -343,6 +343,7 @@ private slots:
     void freeze_empty_object();
     void singleBlockLoops();
     void qtbug_60547();
+    void delayLoadingArgs();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8369,6 +8370,13 @@ void tst_qqmlecmascript::qtbug_60547()
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
     QCOMPARE(object->property("counter"), QVariant(int(1)));
+}
+
+void tst_qqmlecmascript::delayLoadingArgs()
+{
+    QJSEngine engine;
+    QJSValue ret = engine.evaluate("(function(x){return x + (x+=2)})(20)");
+    QCOMPARE(ret.toInt(), 42); // esp. not 44.
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

@@ -103,6 +103,21 @@ public:
                              CompilationMode mode = GlobalCode);
 
 public:
+    class VolatileMemoryLocationScanner;
+    class VolatileMemoryLocations {
+        friend VolatileMemoryLocationScanner;
+        bool allVolatile = false;
+        QVector<QStringView> specificLocations;
+    public:
+        bool isVolatile(const QStringView &name) {
+            if (allVolatile)
+                return true;
+            return specificLocations.contains(name);
+        }
+
+        void add(const QStringRef &name) { if (!allVolatile) specificLocations.append(name); }
+        void setAllVolatile() { allVolatile = true; }
+    };
     class RValue {
         Codegen *codegen;
         enum Type {
@@ -215,10 +230,11 @@ public:
             r.stackSlotIsLocalOrArgument = isLocal;
             return r;
         }
-        static Reference fromArgument(Codegen *cg, int index) {
+        static Reference fromArgument(Codegen *cg, int index, bool isVolatile) {
             Reference r(cg, StackSlot);
             r.theStackSlot = Moth::StackSlot::createRegister(index + sizeof(CallData)/sizeof(Value) - 1);
             r.stackSlotIsLocalOrArgument = true;
+            r.isVolatile = isVolatile;
             return r;
         }
         static Reference fromScopedLocal(Codegen *cg, int index, int scope) {
@@ -327,6 +343,7 @@ public:
         mutable bool isArgOrEval = false;
         bool isReadonly = false;
         bool stackSlotIsLocalOrArgument = false;
+        bool isVolatile = false;
         bool global = false;
         Codegen *codegen;
 
@@ -625,6 +642,7 @@ protected:
     friend struct ControlFlowCatch;
     friend struct ControlFlowFinally;
     Result _expr;
+    VolatileMemoryLocations _volataleMemoryLocations;
     Module *_module;
     int _returnAddress;
     Context *_context;
@@ -638,6 +656,9 @@ protected:
     bool _fileNameIsUrl;
     bool hasError;
     QList<QQmlJS::DiagnosticMessage> _errors;
+
+private:
+    VolatileMemoryLocations scanVolatileMemoryLocations(AST::Node *ast) const;
 };
 
 }
