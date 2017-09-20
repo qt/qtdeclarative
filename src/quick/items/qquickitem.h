@@ -392,7 +392,7 @@ Q_SIGNALS:
     void implicitHeightChanged();
 
 protected:
-    bool event(QEvent *) Q_DECL_OVERRIDE;
+    bool event(QEvent *) override;
 
     bool isComponentComplete() const;
     virtual void itemChange(ItemChange, const ItemChangeData &);
@@ -405,8 +405,8 @@ protected:
     bool heightValid() const; // ### better name?
     void setImplicitSize(qreal, qreal);
 
-    void classBegin() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void classBegin() override;
+    void componentComplete() override;
 
     virtual void keyPressEvent(QKeyEvent *event);
     virtual void keyReleaseEvent(QKeyEvent *event);

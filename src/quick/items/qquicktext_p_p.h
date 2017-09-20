@@ -78,7 +78,7 @@ public:
     void updateLayout();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickText::HAlignment, bool forceAlign = false);
-    void mirrorChange() Q_DECL_OVERRIDE;
+    void mirrorChange() override;
     bool isLineLaidOutConnected();
     void setLineGeometry(QTextLine &line, qreal lineWidth, qreal &height);
 
@@ -177,8 +177,8 @@ public:
 
     static const QChar elideChar;
 
-    qreal getImplicitWidth() const Q_DECL_OVERRIDE;
-    qreal getImplicitHeight() const Q_DECL_OVERRIDE;
+    qreal getImplicitWidth() const override;
+    qreal getImplicitHeight() const override;
 
     qreal availableWidth() const;
     qreal availableHeight() const;

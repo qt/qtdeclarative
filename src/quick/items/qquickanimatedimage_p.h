@@ -90,7 +90,7 @@ public:
     int frameCount() const;
 
     // Extends QQuickImage's src property
-    void setSource(const QUrl&) Q_DECL_OVERRIDE;
+    void setSource(const QUrl&) override;
     virtual QSize sourceSize();
 
 Q_SIGNALS:
@@ -106,8 +106,8 @@ private Q_SLOTS:
     void onCacheChanged();
 
 protected:
-    void load() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void load() override;
+    void componentComplete() override;
 
 private:
     Q_DISABLE_COPY(QQuickAnimatedImage)

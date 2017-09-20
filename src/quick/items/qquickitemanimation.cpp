@@ -211,7 +211,7 @@ struct QQuickParentAnimationData : public QAbstractAnimationAction
     //### reverse should probably apply on a per-action basis
     bool reverse;
     QList<QQuickParentChange *> pc;
-    void doAction() Q_DECL_OVERRIDE
+    void doAction() override
     {
         for (int ii = 0; ii < actions.count(); ++ii) {
             const QQuickStateAction &action = actions.at(ii);

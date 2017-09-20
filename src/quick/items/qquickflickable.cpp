@@ -213,7 +213,7 @@ public:
     }
 
 protected:
-    void finished() Q_DECL_OVERRIDE {
+    void finished() override {
         if (!flickable)
             return;
         axisData->move.setValue(axisData->transitionTo);

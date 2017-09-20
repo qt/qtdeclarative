@@ -301,7 +301,7 @@ public:
         setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/32bitcolortext.frag"));
     }
 
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) Q_DECL_OVERRIDE;
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
 };
 
 void QSG32BitColorTextShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)

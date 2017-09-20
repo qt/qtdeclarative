@@ -955,7 +955,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
 
     void markObjects(MarkStack *markStack);
 
-    void destroy() Q_DECL_OVERRIDE;
+    void destroy() override;
 
     bool loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, EvalISelFactory *iselFactory, QString *errorString);
 

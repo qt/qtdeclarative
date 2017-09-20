@@ -132,7 +132,7 @@ public:
     }
 
 protected:
-    void timerEvent(QTimerEvent *) Q_DECL_OVERRIDE
+    void timerEvent(QTimerEvent *) override
     {
         killTimer(m_timer);
         m_timer = 0;
@@ -163,7 +163,7 @@ public slots:
     void animationStopped() { incubate(); }
 
 protected:
-    void incubatingObjectCountChanged(int count) Q_DECL_OVERRIDE
+    void incubatingObjectCountChanged(int count) override
     {
         if (count && !m_renderLoop->interleaveIncubation())
             incubateAgain();

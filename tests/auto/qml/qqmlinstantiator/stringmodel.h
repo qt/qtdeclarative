@@ -65,7 +65,7 @@ public:
         return items.count();
     }
 
-    virtual QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE
+    QHash<int, QByteArray> roleNames() const override
     {
         return roles;
     }
@@ -75,7 +75,7 @@ public:
         return 1;
     }
 
-    virtual bool hasChildren(const QModelIndex &) const Q_DECL_OVERRIDE
+    bool hasChildren(const QModelIndex &) const override
     {
         return rowCount(QModelIndex()) > 0;
     }

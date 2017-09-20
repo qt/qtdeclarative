@@ -86,8 +86,8 @@ Q_SIGNALS:
     Q_REVISION(2) void screenChanged();
 
 protected:
-    void classBegin() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void classBegin() override;
+    void componentComplete() override;
 
 private Q_SLOTS:
     void setWindowVisibility();

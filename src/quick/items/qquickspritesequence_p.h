@@ -105,7 +105,7 @@ private Q_SLOTS:
 
 protected:
     void reset();
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 private:
     void prepareNextFrame(QSGSpriteNode *node);
     QSGSpriteNode* initNode();

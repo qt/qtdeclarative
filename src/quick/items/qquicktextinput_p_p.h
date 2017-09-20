@@ -172,7 +172,7 @@ public:
     void updateVerticalScroll();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextInput::HAlignment, bool forceAlign = false);
-    void mirrorChange() Q_DECL_OVERRIDE;
+    void mirrorChange() override;
     bool sendMouseEventToInputContext(QMouseEvent *event);
 #if QT_CONFIG(im)
     Qt::InputMethodHints effectiveInputMethodHints() const;
@@ -451,7 +451,7 @@ public:
     void updateLayout();
     void updateBaselineOffset();
 
-    qreal getImplicitWidth() const Q_DECL_OVERRIDE;
+    qreal getImplicitWidth() const override;
 
     inline qreal padding() const { return extra.isAllocated() ? extra->padding : 0.0; }
     void setTopPadding(qreal value, bool reset = false);

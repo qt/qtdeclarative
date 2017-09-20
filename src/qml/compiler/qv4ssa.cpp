@@ -2068,7 +2068,7 @@ public:
     }
 
 protected:
-    void visitTemp(Temp *e) Q_DECL_OVERRIDE Q_DECL_FINAL
+    void visitTemp(Temp *e) override Q_DECL_FINAL
     {
         _collectedTemps.append(e);
     }
@@ -5108,7 +5108,7 @@ private:
         return checker.seenSideEffects();
     }
 
-    void visitTemp(Temp *) Q_DECL_OVERRIDE Q_DECL_FINAL {}
+    void visitTemp(Temp *) override Q_DECL_FINAL {}
 };
 
 void mergeBasicBlocks(IR::Function *function, DefUses *du, DominatorTree *dt)

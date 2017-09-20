@@ -90,7 +90,7 @@ public:
     explicit QSGContextPlugin(QObject *parent = 0);
     virtual ~QSGContextPlugin();
 
-    virtual QStringList keys() const override = 0;
+    QStringList keys() const override = 0;
 
     QQuickTextureFactory *createTextureFactoryFromImage(const QImage &) override { return 0; }
     QSGRenderLoop *createWindowManager() override { return 0; }

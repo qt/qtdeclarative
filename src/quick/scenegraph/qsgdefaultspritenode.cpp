@@ -109,7 +109,7 @@ public:
         setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/sprite.frag"));
     }
 
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *) Q_DECL_OVERRIDE
+    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *) override
     {
         QQuickSpriteMaterial *m = static_cast<QQuickSpriteMaterial *>(newEffect);
         m->texture->bind();
@@ -122,14 +122,14 @@ public:
             program()->setUniformValue(m_matrix_id, state.combinedMatrix());
     }
 
-    void initialize() Q_DECL_OVERRIDE {
+    void initialize() override {
         m_matrix_id = program()->uniformLocation("qt_Matrix");
         m_opacity_id = program()->uniformLocation("qt_Opacity");
         m_animData_id = program()->uniformLocation("animData");
         m_animPos_id = program()->uniformLocation("animPos");
     }
 
-    char const *const *attributeNames() const Q_DECL_OVERRIDE {
+    char const *const *attributeNames() const override {
         static const char *attr[] = {
            "vPos",
            "vTex",

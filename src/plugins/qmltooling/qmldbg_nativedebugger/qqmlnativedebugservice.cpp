@@ -188,16 +188,16 @@ public:
 
     QV4::ExecutionEngine *engine() const { return m_engine; }
 
-    bool pauseAtNextOpportunity() const Q_DECL_OVERRIDE {
+    bool pauseAtNextOpportunity() const override {
         return m_pauseRequested
                 || m_service->m_breakHandler->m_haveBreakPoints
                 || m_stepping >= StepOver;
     }
 
-    void maybeBreakAtInstruction() Q_DECL_OVERRIDE;
-    void enteringFunction() Q_DECL_OVERRIDE;
-    void leavingFunction(const QV4::ReturnedValue &retVal) Q_DECL_OVERRIDE;
-    void aboutToThrow() Q_DECL_OVERRIDE;
+    void maybeBreakAtInstruction() override;
+    void enteringFunction() override;
+    void leavingFunction(const QV4::ReturnedValue &retVal) override;
+    void aboutToThrow() override;
 
     void handleCommand(QJsonObject *response, const QString &cmd, const QJsonObject &arguments);
 

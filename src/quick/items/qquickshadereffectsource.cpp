@@ -87,7 +87,7 @@ public:
         : texture(t)
         , provider(p)
     {}
-    void run() Q_DECL_OVERRIDE {
+    void run() override {
         delete texture;
         delete provider;
     }

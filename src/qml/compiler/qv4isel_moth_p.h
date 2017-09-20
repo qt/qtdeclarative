@@ -72,11 +72,11 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
 {
     virtual ~CompilationUnit();
 #if !defined(V4_BOOTSTRAP)
-    void linkBackendToEngine(QV4::ExecutionEngine *engine) Q_DECL_OVERRIDE;
-    bool memoryMapCode(QString *errorString) Q_DECL_OVERRIDE;
+    void linkBackendToEngine(QV4::ExecutionEngine *engine) override;
+    bool memoryMapCode(QString *errorString) override;
 #endif
-    void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit) Q_DECL_OVERRIDE;
-    bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString) Q_DECL_OVERRIDE;
+    void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit) override;
+    bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString) override;
 
     QVector<QByteArray> codeRefs;
 
@@ -216,11 +216,11 @@ class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 public:
     ISelFactory() : EvalISelFactory(QStringLiteral("moth")) {}
     virtual ~ISelFactory() {}
-    EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) Q_DECL_OVERRIDE Q_DECL_FINAL
+    EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) override Q_DECL_FINAL
     { return new InstructionSelection(qmlEngine, execAllocator, module, jsGenerator, this); }
-    bool jitCompileRegexps() const Q_DECL_OVERRIDE Q_DECL_FINAL
+    bool jitCompileRegexps() const override Q_DECL_FINAL
     { return false; }
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading() Q_DECL_OVERRIDE;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading() override;
 
 };
 

@@ -86,10 +86,10 @@ public:
 
     void setNotifyOnValueChanged(bool);
 
-    void refresh() Q_DECL_OVERRIDE;
+    void refresh() override;
 
-    void setEnabled(bool, QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding) Q_DECL_OVERRIDE;
-    QString expression() const Q_DECL_OVERRIDE;
+    void setEnabled(bool, QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding) override;
+    QString expression() const override;
     void update(QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding);
 
     typedef int Identifier;

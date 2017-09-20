@@ -98,7 +98,7 @@ public:
     }
 
 protected:
-    void connectNotify(const QMetaMethod &signal) Q_DECL_OVERRIDE {
+    void connectNotify(const QMetaMethod &signal) override {
         if (signal.name() == "qmlObjectPropChanged") qmlObjectPropConnections++;
         if (signal.name() == "cppObjectPropChanged") cppObjectPropConnections++;
         if (signal.name() == "unboundPropChanged") unboundPropConnections++;
@@ -112,7 +112,7 @@ protected:
         //qDebug() << Q_FUNC_INFO << this << signal.name();
     }
 
-    void disconnectNotify(const QMetaMethod &signal) Q_DECL_OVERRIDE {
+    void disconnectNotify(const QMetaMethod &signal) override {
         if (signal.name() == "qmlObjectPropChanged") qmlObjectPropConnections--;
         if (signal.name() == "cppObjectPropChanged") cppObjectPropConnections--;
         if (signal.name() == "unboundPropChanged") unboundPropConnections--;
@@ -146,7 +146,7 @@ public:
     {}
 
 private slots:
-    void initTestCase() Q_DECL_OVERRIDE;
+    void initTestCase() override;
     void cleanupTestCase();
     void testConnectNotify();
 

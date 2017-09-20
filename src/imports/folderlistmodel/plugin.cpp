@@ -59,7 +59,7 @@ class QmlFolderListModelPlugin : public QQmlExtensionPlugin
 
 public:
     QmlFolderListModelPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
-    void registerTypes(const char *uri) Q_DECL_OVERRIDE
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.folderlistmodel"));
         qmlRegisterType<QQuickFolderListModel>(uri,1,0,"FolderListModel");

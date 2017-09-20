@@ -57,7 +57,7 @@ public:
     }
 
 private slots:
-    void initTestCase() Q_DECL_OVERRIDE;
+    void initTestCase() override;
     void layerEnabled();
     void layerSmooth();
 #if QT_CONFIG(opengl)

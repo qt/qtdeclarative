@@ -87,7 +87,7 @@ public:
     {
         Velocity(QQuickFlickablePrivate *p)
             : parent(p) {}
-        void setValue(qreal v) Q_DECL_OVERRIDE {
+        void setValue(qreal v) override {
             if (v != value()) {
                 QQuickTimeLineValue::setValue(v);
                 parent->updateVelocity();
@@ -195,7 +195,7 @@ public:
 
     qreal overShootDistance(qreal size) const;
 
-    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
 
     void draggingStarting();
     void draggingEnding();

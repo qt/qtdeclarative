@@ -80,7 +80,7 @@ class QQuickWidgetRenderControl : public QQuickRenderControl
 {
 public:
     QQuickWidgetRenderControl(QQuickWidget *quickwidget) : m_quickWidget(quickwidget) {}
-    QWindow *renderWindow(QPoint *offset) Q_DECL_OVERRIDE {
+    QWindow *renderWindow(QPoint *offset) override {
         if (offset)
             *offset = m_quickWidget->mapTo(m_quickWidget->window(), QPoint());
         return m_quickWidget->window()->windowHandle();

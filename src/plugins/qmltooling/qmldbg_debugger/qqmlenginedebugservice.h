@@ -95,17 +95,17 @@ public:
         bool hasNotifySignal;
     };
 
-    void engineAboutToBeAdded(QJSEngine *) Q_DECL_OVERRIDE;
-    void engineAboutToBeRemoved(QJSEngine *) Q_DECL_OVERRIDE;
-    void objectCreated(QJSEngine *, QObject *) Q_DECL_OVERRIDE;
+    void engineAboutToBeAdded(QJSEngine *) override;
+    void engineAboutToBeRemoved(QJSEngine *) override;
+    void objectCreated(QJSEngine *, QObject *) override;
 
-    void setStatesDelegate(QQmlDebugStatesDelegate *) Q_DECL_OVERRIDE;
+    void setStatesDelegate(QQmlDebugStatesDelegate *) override;
 
 signals:
     void scheduleMessage(const QByteArray &);
 
 protected:
-    virtual void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
+    void messageReceived(const QByteArray &) override;
 
 private:
     friend class QQmlDebuggerServiceFactory;

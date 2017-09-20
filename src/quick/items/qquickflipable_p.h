@@ -93,7 +93,7 @@ Q_SIGNALS:
     void sideChanged();
 
 protected:
-    void updatePolish() Q_DECL_OVERRIDE;
+    void updatePolish() override;
 
 private Q_SLOTS:
     void retransformBack();

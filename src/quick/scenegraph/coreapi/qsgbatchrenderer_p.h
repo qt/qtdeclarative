@@ -627,9 +627,9 @@ public:
     };
 
 protected:
-    void nodeChanged(QSGNode *node, QSGNode::DirtyState state) Q_DECL_OVERRIDE;
-    void render() Q_DECL_OVERRIDE;
-    void releaseCachedResources() Q_DECL_OVERRIDE;
+    void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
+    void render() override;
+    void releaseCachedResources() override;
 
 private:
     enum ClipTypeBit
@@ -698,7 +698,7 @@ private:
     void visualizeOverdraw();
     void visualizeOverdraw_helper(Node *node);
     void visualizeDrawGeometry(const QSGGeometry *g);
-    void setCustomRenderMode(const QByteArray &mode) Q_DECL_OVERRIDE;
+    void setCustomRenderMode(const QByteArray &mode) override;
 
     QSGDefaultRenderContext *m_context;
     QSet<Node *> m_taggedRoots;

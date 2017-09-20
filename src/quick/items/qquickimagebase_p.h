@@ -115,9 +115,9 @@ Q_SIGNALS:
 
 protected:
     virtual void load();
-    void componentComplete() Q_DECL_OVERRIDE;
+    void componentComplete() override;
     virtual void pixmapChange();
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
     QQuickImageBase(QQuickImageBasePrivate &dd, QQuickItem *parent);
 
 private Q_SLOTS:

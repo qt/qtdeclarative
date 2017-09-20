@@ -66,73 +66,73 @@ class QAccessibleQuickItem : public QAccessibleObject, public QAccessibleActionI
 public:
     QAccessibleQuickItem(QQuickItem *item);
 
-    QWindow *window() const Q_DECL_OVERRIDE;
+    QWindow *window() const override;
 
-    QRect rect() const Q_DECL_OVERRIDE;
+    QRect rect() const override;
     QRect viewRect() const;
 
     bool clipsChildren() const;
-    QAccessibleInterface *childAt(int x, int y) const Q_DECL_OVERRIDE;
+    QAccessibleInterface *childAt(int x, int y) const override;
 
-    QAccessibleInterface *parent() const Q_DECL_OVERRIDE;
-    QAccessibleInterface *child(int index) const Q_DECL_OVERRIDE;
-    int childCount() const Q_DECL_OVERRIDE;
-    int indexOfChild(const QAccessibleInterface *iface) const Q_DECL_OVERRIDE;
+    QAccessibleInterface *parent() const override;
+    QAccessibleInterface *child(int index) const override;
+    int childCount() const override;
+    int indexOfChild(const QAccessibleInterface *iface) const override;
     QList<QQuickItem *> childItems() const;
 
-    QAccessible::State state() const Q_DECL_OVERRIDE;
-    QAccessible::Role role() const Q_DECL_OVERRIDE;
-    QString text(QAccessible::Text) const Q_DECL_OVERRIDE;
+    QAccessible::State state() const override;
+    QAccessible::Role role() const override;
+    QString text(QAccessible::Text) const override;
 
     bool isAccessible() const;
 
     // Action Interface
-    QStringList actionNames() const Q_DECL_OVERRIDE;
-    void doAction(const QString &actionName) Q_DECL_OVERRIDE;
-    QStringList keyBindingsForAction(const QString &actionName) const Q_DECL_OVERRIDE;
+    QStringList actionNames() const override;
+    void doAction(const QString &actionName) override;
+    QStringList keyBindingsForAction(const QString &actionName) const override;
 
     // Value Interface
-    QVariant currentValue() const Q_DECL_OVERRIDE;
-    void setCurrentValue(const QVariant &value) Q_DECL_OVERRIDE;
-    QVariant maximumValue() const Q_DECL_OVERRIDE;
-    QVariant minimumValue() const Q_DECL_OVERRIDE;
-    QVariant minimumStepSize() const Q_DECL_OVERRIDE;
+    QVariant currentValue() const override;
+    void setCurrentValue(const QVariant &value) override;
+    QVariant maximumValue() const override;
+    QVariant minimumValue() const override;
+    QVariant minimumStepSize() const override;
 
 
     // Text Interface
-    void selection(int selectionIndex, int *startOffset, int *endOffset) const Q_DECL_OVERRIDE;
-    int selectionCount() const Q_DECL_OVERRIDE;
-    void addSelection(int startOffset, int endOffset) Q_DECL_OVERRIDE;
-    void removeSelection(int selectionIndex) Q_DECL_OVERRIDE;
-    void setSelection(int selectionIndex, int startOffset, int endOffset) Q_DECL_OVERRIDE;
+    void selection(int selectionIndex, int *startOffset, int *endOffset) const override;
+    int selectionCount() const override;
+    void addSelection(int startOffset, int endOffset) override;
+    void removeSelection(int selectionIndex) override;
+    void setSelection(int selectionIndex, int startOffset, int endOffset) override;
 
     // cursor
-    int cursorPosition() const Q_DECL_OVERRIDE;
-    void setCursorPosition(int position) Q_DECL_OVERRIDE;
+    int cursorPosition() const override;
+    void setCursorPosition(int position) override;
 
     // text
-    QString text(int startOffset, int endOffset) const Q_DECL_OVERRIDE;
+    QString text(int startOffset, int endOffset) const override;
     QString textBeforeOffset(int offset, QAccessible::TextBoundaryType boundaryType,
-                                     int *startOffset, int *endOffset) const Q_DECL_OVERRIDE;
+                                     int *startOffset, int *endOffset) const override;
     QString textAfterOffset(int offset, QAccessible::TextBoundaryType boundaryType,
-                                    int *startOffset, int *endOffset) const Q_DECL_OVERRIDE;
+                                    int *startOffset, int *endOffset) const override;
     QString textAtOffset(int offset, QAccessible::TextBoundaryType boundaryType,
-                                 int *startOffset, int *endOffset) const Q_DECL_OVERRIDE;
-    int characterCount() const Q_DECL_OVERRIDE;
+                                 int *startOffset, int *endOffset) const override;
+    int characterCount() const override;
 
     // character <-> geometry
-    QRect characterRect(int /* offset */) const Q_DECL_OVERRIDE { return QRect(); }
-    int offsetAtPoint(const QPoint & /* point */) const Q_DECL_OVERRIDE { return -1; }
+    QRect characterRect(int /* offset */) const override { return QRect(); }
+    int offsetAtPoint(const QPoint & /* point */) const override { return -1; }
 
-    void scrollToSubstring(int /* startIndex */, int /* endIndex */) Q_DECL_OVERRIDE {}
-    QString attributes(int /* offset */, int *startOffset, int *endOffset) const Q_DECL_OVERRIDE
+    void scrollToSubstring(int /* startIndex */, int /* endIndex */) override {}
+    QString attributes(int /* offset */, int *startOffset, int *endOffset) const override
     { *startOffset = 0; *endOffset = 0; return QString(); }
 
     QTextDocument *textDocument() const;
 
 protected:
     QQuickItem *item() const { return static_cast<QQuickItem*>(object()); }
-    void *interface_cast(QAccessible::InterfaceType t) Q_DECL_OVERRIDE;
+    void *interface_cast(QAccessible::InterfaceType t) override;
 
 private:
     QTextDocument *m_doc;

@@ -82,8 +82,8 @@ public:
     {
     }
 
-    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
-    void itemParentChanged(QQuickItem *, QQuickItem *parent) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
+    void itemParentChanged(QQuickItem *, QQuickItem *parent) override;
     void updatePosition();
     void restartDrag();
     void deliverEnterEvent();

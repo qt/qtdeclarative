@@ -89,7 +89,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) Q_DECL_OVERRIDE;
+                            QObject *defaultTarget = 0) override;
 };
 
 class QQuickAnchorAnimationPrivate;
@@ -121,7 +121,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) Q_DECL_OVERRIDE;
+                            QObject *defaultTarget = 0) override;
 };
 
 #if QT_CONFIG(quick_path)
@@ -188,7 +188,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) Q_DECL_OVERRIDE;
+                            QObject *defaultTarget = 0) override;
 Q_SIGNALS:
     void durationChanged(int);
     void easingChanged(const QEasingCurve &);

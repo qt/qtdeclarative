@@ -292,7 +292,7 @@ class KillerThread : public QThread
 {
     Q_OBJECT
 protected:
-    void run() Q_DECL_OVERRIDE {
+    void run() override {
         sleep(3);
         qFatal("Either the GUI or the render thread is stuck in an infinite loop.");
     }

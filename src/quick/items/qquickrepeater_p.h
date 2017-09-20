@@ -94,8 +94,8 @@ private:
     void regenerate();
 
 protected:
-    void componentComplete() Q_DECL_OVERRIDE;
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
+    void componentComplete() override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
 private Q_SLOTS:
     void createdItem(int index, QObject *item);

@@ -106,9 +106,9 @@ Q_SIGNALS:
     void activatedAmbiguously();
 
 protected:
-    void classBegin() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
-    bool event(QEvent *event) Q_DECL_OVERRIDE;
+    void classBegin() override;
+    void componentComplete() override;
+    bool event(QEvent *event) override;
 
     struct Shortcut {
         Shortcut() : id(0) { }

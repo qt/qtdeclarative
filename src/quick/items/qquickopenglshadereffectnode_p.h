@@ -110,9 +110,9 @@ public:
     };
 
     explicit QQuickOpenGLShaderEffectMaterial(QQuickOpenGLShaderEffectNode *node = 0);
-    QSGMaterialType *type() const Q_DECL_OVERRIDE;
-    QSGMaterialShader *createShader() const Q_DECL_OVERRIDE;
-    int compare(const QSGMaterial *other) const Q_DECL_OVERRIDE;
+    QSGMaterialType *type() const override;
+    QSGMaterialShader *createShader() const override;
+    int compare(const QSGMaterial *other) const override;
 
     QVector<QByteArray> attributes;
     QVector<UniformData> uniforms[QQuickOpenGLShaderEffectMaterialKey::ShaderTypeCount];
@@ -151,7 +151,7 @@ public:
     QQuickOpenGLShaderEffectNode();
     virtual ~QQuickOpenGLShaderEffectNode();
 
-    void preprocess() Q_DECL_OVERRIDE;
+    void preprocess() override;
 
 Q_SIGNALS:
     void logAndStatusChanged(const QString &, int status);

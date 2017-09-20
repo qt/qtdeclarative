@@ -114,7 +114,7 @@ public:
     QQuickItem *contentItem() const;
 
     QQuickItem *activeFocusItem() const;
-    QObject *focusObject() const Q_DECL_OVERRIDE;
+    QObject *focusObject() const override;
 
     QQuickItem *mouseGrabberItem() const;
 
@@ -136,7 +136,7 @@ public:
     QQmlIncubationController *incubationController() const;
 
 #if QT_CONFIG(accessibility)
-    QAccessibleInterface *accessibleRoot() const Q_DECL_OVERRIDE;
+    QAccessibleInterface *accessibleRoot() const override;
 #endif
 
     // Scene graph specific functions
@@ -204,25 +204,25 @@ public Q_SLOTS:
 protected:
     QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent = Q_NULLPTR);
 
-    void exposeEvent(QExposeEvent *) Q_DECL_OVERRIDE;
-    void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
+    void exposeEvent(QExposeEvent *) override;
+    void resizeEvent(QResizeEvent *) override;
 
-    void showEvent(QShowEvent *) Q_DECL_OVERRIDE;
-    void hideEvent(QHideEvent *) Q_DECL_OVERRIDE;
+    void showEvent(QShowEvent *) override;
+    void hideEvent(QHideEvent *) override;
     // TODO Qt 6: reimplement QWindow::closeEvent to emit closing
 
-    void focusInEvent(QFocusEvent *) Q_DECL_OVERRIDE;
-    void focusOutEvent(QFocusEvent *) Q_DECL_OVERRIDE;
+    void focusInEvent(QFocusEvent *) override;
+    void focusOutEvent(QFocusEvent *) override;
 
-    bool event(QEvent *) Q_DECL_OVERRIDE;
-    void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
-    void keyReleaseEvent(QKeyEvent *) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-    void mouseDoubleClickEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-    void mouseMoveEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    bool event(QEvent *) override;
+    void keyPressEvent(QKeyEvent *) override;
+    void keyReleaseEvent(QKeyEvent *) override;
+    void mousePressEvent(QMouseEvent *) override;
+    void mouseReleaseEvent(QMouseEvent *) override;
+    void mouseDoubleClickEvent(QMouseEvent *) override;
+    void mouseMoveEvent(QMouseEvent *) override;
 #if QT_CONFIG(wheelevent)
-    void wheelEvent(QWheelEvent *) Q_DECL_OVERRIDE;
+    void wheelEvent(QWheelEvent *) override;
 #endif
 
 private Q_SLOTS:

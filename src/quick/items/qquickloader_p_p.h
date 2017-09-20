@@ -68,8 +68,8 @@ public:
     QQuickLoaderIncubator(QQuickLoaderPrivate *l, IncubationMode mode) : QQmlIncubator(mode), loader(l) {}
 
 protected:
-    void statusChanged(Status) Q_DECL_OVERRIDE;
-    void setInitialState(QObject *) Q_DECL_OVERRIDE;
+    void statusChanged(Status) override;
+    void setInitialState(QObject *) override;
 
 private:
     QQuickLoaderPrivate *loader;
@@ -84,9 +84,9 @@ public:
     QQuickLoaderPrivate();
     ~QQuickLoaderPrivate();
 
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void itemImplicitWidthChanged(QQuickItem *) Q_DECL_OVERRIDE;
-    void itemImplicitHeightChanged(QQuickItem *) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &oldGeometry) override;
+    void itemImplicitWidthChanged(QQuickItem *) override;
+    void itemImplicitHeightChanged(QQuickItem *) override;
     void clear();
     void initResize();
     void load();
@@ -97,8 +97,8 @@ public:
     static QUrl resolveSourceUrl(QQmlV4Function *args);
     QV4::ReturnedValue extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error);
 
-    qreal getImplicitWidth() const Q_DECL_OVERRIDE;
-    qreal getImplicitHeight() const Q_DECL_OVERRIDE;
+    qreal getImplicitWidth() const override;
+    qreal getImplicitHeight() const override;
 
     QUrl source;
     QQuickItem *item;

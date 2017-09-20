@@ -51,16 +51,16 @@ class QQmlNativeDebugConnector : public QQmlDebugConnector
 
 public:
     QQmlNativeDebugConnector();
-    ~QQmlNativeDebugConnector() Q_DECL_OVERRIDE;
+    ~QQmlNativeDebugConnector() override;
 
-    bool blockingMode() const Q_DECL_OVERRIDE;
-    QQmlDebugService *service(const QString &name) const Q_DECL_OVERRIDE;
-    void addEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
-    void removeEngine(QJSEngine *engine) Q_DECL_OVERRIDE;
-    bool hasEngine(QJSEngine *engine) const Q_DECL_OVERRIDE;
-    bool addService(const QString &name, QQmlDebugService *service) Q_DECL_OVERRIDE;
-    bool removeService(const QString &name) Q_DECL_OVERRIDE;
-    bool open(const QVariantHash &configuration) Q_DECL_OVERRIDE;
+    bool blockingMode() const override;
+    QQmlDebugService *service(const QString &name) const override;
+    void addEngine(QJSEngine *engine) override;
+    void removeEngine(QJSEngine *engine) override;
+    bool hasEngine(QJSEngine *engine) const override;
+    bool addService(const QString &name, QQmlDebugService *service) override;
+    bool removeService(const QString &name) override;
+    bool open(const QVariantHash &configuration) override;
     static void setDataStreamVersion(int version);
 
 private:

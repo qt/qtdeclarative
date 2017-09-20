@@ -2424,13 +2424,13 @@ public:
         m_childMouseEventFilterEventCount.clear();
     }
 protected:
-    bool childMouseEventFilter(QQuickItem *, QEvent *event) Q_DECL_OVERRIDE
+    bool childMouseEventFilter(QQuickItem *, QEvent *event) override
     {
         m_childMouseEventFilterEventCount[event->type()]++;
         return m_returnTrueForType.contains(event->type());
     }
 
-    bool event(QEvent *event) Q_DECL_OVERRIDE
+    bool event(QEvent *event) override
     {
         m_eventCount[event->type()]++;
         return QQuickRectangle::event(event);
@@ -2611,7 +2611,7 @@ public:
         return false;
     }
 
-    virtual bool contains(const QPointF &pos) const override {
+    bool contains(const QPointF &pos) const override {
         // returns true if the point is inside the the embedded circle inside the (square) rect
         const float radius = (float)width()/2;
         const QVector2D center(radius, radius);

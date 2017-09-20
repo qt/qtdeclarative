@@ -158,10 +158,10 @@ public:
 
 protected:
     QQuickBasePositioner(QQuickBasePositionerPrivate &dd, PositionerType at, QQuickItem *parent);
-    void componentComplete() Q_DECL_OVERRIDE;
-    void itemChange(ItemChange, const ItemChangeData &) Q_DECL_OVERRIDE;
+    void componentComplete() override;
+    void itemChange(ItemChange, const ItemChangeData &) override;
 
-    void updatePolish() Q_DECL_OVERRIDE;
+    void updatePolish() override;
 
 Q_SIGNALS:
     void spacingChanged();
@@ -234,8 +234,8 @@ public:
     QQuickColumn(QQuickItem *parent=0);
 
 protected:
-    void doPositioning(QSizeF *contentSize) Q_DECL_OVERRIDE;
-    void reportConflictingAnchors() Q_DECL_OVERRIDE;
+    void doPositioning(QSizeF *contentSize) override;
+    void reportConflictingAnchors() override;
 private:
     Q_DISABLE_COPY(QQuickColumn)
 };
@@ -258,8 +258,8 @@ Q_SIGNALS:
     void effectiveLayoutDirectionChanged();
 
 protected:
-    void doPositioning(QSizeF *contentSize) Q_DECL_OVERRIDE;
-    void reportConflictingAnchors() Q_DECL_OVERRIDE;
+    void doPositioning(QSizeF *contentSize) override;
+    void reportConflictingAnchors() override;
 private:
     Q_DISABLE_COPY(QQuickRow)
     Q_DECLARE_PRIVATE(QQuickRow)
@@ -335,8 +335,8 @@ Q_SIGNALS:
     Q_REVISION(1) void verticalAlignmentChanged(VAlignment alignment);
 
 protected:
-    void doPositioning(QSizeF *contentSize) Q_DECL_OVERRIDE;
-    void reportConflictingAnchors() Q_DECL_OVERRIDE;
+    void doPositioning(QSizeF *contentSize) override;
+    void reportConflictingAnchors() override;
 
 private:
     int m_rows;
@@ -377,8 +377,8 @@ Q_SIGNALS:
     void effectiveLayoutDirectionChanged();
 
 protected:
-    void doPositioning(QSizeF *contentSize) Q_DECL_OVERRIDE;
-    void reportConflictingAnchors() Q_DECL_OVERRIDE;
+    void doPositioning(QSizeF *contentSize) override;
+    void reportConflictingAnchors() override;
 protected:
     QQuickFlow(QQuickFlowPrivate &dd, QQuickItem *parent);
 private:

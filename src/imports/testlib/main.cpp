@@ -151,7 +151,7 @@ class QTestQmlModule : public QQmlExtensionPlugin
 
 public:
     QTestQmlModule(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
-    void registerTypes(const char *uri) Q_DECL_OVERRIDE
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtTest"));
         qmlRegisterType<QuickTestResult, 0>(uri,1,0,"TestResult");

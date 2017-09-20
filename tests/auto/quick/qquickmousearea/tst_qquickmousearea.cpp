@@ -77,7 +77,7 @@ public:
     {}
 
 private slots:
-    void initTestCase() Q_DECL_OVERRIDE;
+    void initTestCase() override;
     void dragProperties();
     void resetDrag();
     void dragging_data() { acceptedButton_data(); }

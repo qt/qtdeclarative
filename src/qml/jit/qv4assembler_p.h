@@ -80,11 +80,11 @@ struct CompilationUnit : public QV4::CompiledData::CompilationUnit
     virtual ~CompilationUnit();
 
 #if !defined(V4_BOOTSTRAP)
-    void linkBackendToEngine(QV4::ExecutionEngine *engine) Q_DECL_OVERRIDE;
-    bool memoryMapCode(QString *errorString) Q_DECL_OVERRIDE;
+    void linkBackendToEngine(QV4::ExecutionEngine *engine) override;
+    bool memoryMapCode(QString *errorString) override;
 #endif
-    void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit) Q_DECL_OVERRIDE;
-    bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString) Q_DECL_OVERRIDE;
+    void prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit) override;
+    bool saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString) override;
 
     // Coderef + execution engine
 
