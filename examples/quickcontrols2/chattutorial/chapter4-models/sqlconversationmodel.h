@@ -64,8 +64,8 @@ public:
     QString recipient() const;
     void setRecipient(const QString &recipient);
 
-    QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
-    QHash<int, QByteArray> roleNames() const Q_DECL_OVERRIDE;
+    QVariant data(const QModelIndex &index, int role) const override;
+    QHash<int, QByteArray> roleNames() const override;
 
     Q_INVOKABLE void sendMessage(const QString &recipient, const QString &message);
 
