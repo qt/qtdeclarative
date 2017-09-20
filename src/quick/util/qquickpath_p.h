@@ -331,6 +331,63 @@ private:
     qreal _xAxisRotation;
 };
 
+class Q_QUICK_PRIVATE_EXPORT QQuickPathAngleArc : public QQuickCurve
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal centerX READ centerX WRITE setCenterX NOTIFY centerXChanged)
+    Q_PROPERTY(qreal centerY READ centerY WRITE setCenterY NOTIFY centerYChanged)
+    Q_PROPERTY(qreal radiusX READ radiusX WRITE setRadiusX NOTIFY radiusXChanged)
+    Q_PROPERTY(qreal radiusY READ radiusY WRITE setRadiusY NOTIFY radiusYChanged)
+    Q_PROPERTY(qreal startAngle READ startAngle WRITE setStartAngle NOTIFY startAngleChanged)
+    Q_PROPERTY(qreal sweepAngle READ sweepAngle WRITE setSweepAngle NOTIFY sweepAngleChanged)
+    Q_PROPERTY(bool moveToStart READ moveToStart WRITE setMoveToStart NOTIFY moveToStartChanged)
+
+public:
+    QQuickPathAngleArc(QObject *parent=0)
+        : QQuickCurve(parent), _centerX(0), _centerY(0), _radiusX(0), _radiusY(0), _startAngle(0), _sweepAngle(0), _moveToStart(true) {}
+
+    qreal centerX() const;
+    void setCenterX(qreal);
+
+    qreal centerY() const;
+    void setCenterY(qreal);
+
+    qreal radiusX() const;
+    void setRadiusX(qreal);
+
+    qreal radiusY() const;
+    void setRadiusY(qreal);
+
+    qreal startAngle() const;
+    void setStartAngle(qreal);
+
+    qreal sweepAngle() const;
+    void setSweepAngle(qreal);
+
+    bool moveToStart() const;
+    void setMoveToStart(bool);
+
+    void addToPath(QPainterPath &path, const QQuickPathData &) override;
+
+Q_SIGNALS:
+    void centerXChanged();
+    void centerYChanged();
+    void radiusXChanged();
+    void radiusYChanged();
+    void startAngleChanged();
+    void sweepAngleChanged();
+    void moveToStartChanged();
+
+private:
+    qreal _centerX;
+    qreal _centerY;
+    qreal _radiusX;
+    qreal _radiusY;
+    qreal _startAngle;
+    qreal _sweepAngle;
+    bool _moveToStart;
+};
+
 class Q_QUICK_PRIVATE_EXPORT QQuickPathSvg : public QQuickCurve
 {
     Q_OBJECT
@@ -479,6 +536,7 @@ QML_DECLARE_TYPE(QQuickPathQuad)
 QML_DECLARE_TYPE(QQuickPathCubic)
 QML_DECLARE_TYPE(QQuickPathCatmullRomCurve)
 QML_DECLARE_TYPE(QQuickPathArc)
+QML_DECLARE_TYPE(QQuickPathAngleArc)
 QML_DECLARE_TYPE(QQuickPathSvg)
 QML_DECLARE_TYPE(QQuickPathPercent)
 QML_DECLARE_TYPE(QQuickPath)

@@ -402,6 +402,10 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickFlickable, 10>(uri, 2, 10, "Flickable");
     qmlRegisterType<QQuickTextEdit, 10>(uri, 2, 10, "TextEdit");
     qmlRegisterType<QQuickText, 10>(uri, 2, 10, "Text");
+
+#if QT_CONFIG(quick_path)
+    qmlRegisterType<QQuickPathAngleArc, 2>(uri, 2, 11, "PathAngleArc");
+#endif
 }
 
 static void initResources()

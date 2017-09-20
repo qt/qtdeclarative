@@ -43,6 +43,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
 #include <qmath.h>
+#include <private/qpainterpath_p.h>
 #include <private/qquickpath_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -287,6 +288,30 @@ void QQuickShapeNvprRenderer::convertPath(const QQuickPath *path, ShapePathGuiDa
             if (d->path.str.isEmpty())
                 d->path.str = QString(QStringLiteral("M %1 %2 ")).arg(pos.x()).arg(pos.y()).toUtf8();
             d->path.str.append(o->path().toUtf8());
+        } else if (QQuickPathAngleArc *o = qobject_cast<QQuickPathAngleArc *>(e)) {
+            QRectF rect(o->centerX() - o->radiusX(), o->centerY() - o->radiusY(), o->radiusX() * 2, o->radiusY() * 2);
+            QPointF startPoint;
+            QPointF endPoint;
+            qt_find_ellipse_coords(rect, o->startAngle(), -o->sweepAngle(), &startPoint, &endPoint);
+
+            // get to our starting position
+            if (o->moveToStart())
+                d->path.cmd.append(GL_MOVE_TO_NV);
+            else
+                d->path.cmd.append(GL_LINE_TO_NV); // ### should we check if startPoint == pos?
+            d->path.coord.append(startPoint.x());
+            d->path.coord.append(startPoint.y());
+
+            const bool sweepFlag = o->sweepAngle() > 0; // maps to CCW, not a typo
+            d->path.cmd.append(qAbs(o->sweepAngle()) > 180.0
+                                 ? (sweepFlag ? GL_LARGE_CCW_ARC_TO_NV : GL_LARGE_CW_ARC_TO_NV)
+                                 : (sweepFlag ? GL_SMALL_CCW_ARC_TO_NV : GL_SMALL_CW_ARC_TO_NV));
+            d->path.coord.append(o->radiusX());
+            d->path.coord.append(o->radiusY());
+            d->path.coord.append(0); // xAxisRotation
+            d->path.coord.append(endPoint.x());
+            d->path.coord.append(endPoint.y());
+            pos = endPoint;
         } else {
             qWarning() << "Shape/NVPR: unsupported Path element" << e;
         }
