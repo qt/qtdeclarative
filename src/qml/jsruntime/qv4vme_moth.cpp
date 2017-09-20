@@ -1097,7 +1097,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_END_INSTR(UNot)
 
     MOTH_BEGIN_INSTR(UPlus)
-        if (!ACC.isNumber()) {
+        if (Q_UNLIKELY(!ACC.isNumber())) {
             acc = Encode(ACC.toNumberImpl());
             CHECK_EXCEPTION;
         }
