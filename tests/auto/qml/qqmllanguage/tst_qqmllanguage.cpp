@@ -250,6 +250,7 @@ private slots:
     void propertyCacheInSync();
 
     void rootObjectInCreationNotForSubObjects();
+    void lazyDeferredSubObject();
 
     void noChildEvents();
 
@@ -2152,7 +2153,7 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
         td->compilationUnit()->data = qmlUnit;
 
-        const QV4::CompiledData::Object *rootObject = qmlUnit->objectAt(qmlUnit->indexOfRootObject);
+        const QV4::CompiledData::Object *rootObject = qmlUnit->objectAt(/*root object*/0);
         QCOMPARE(qmlUnit->stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));
         quint32 i;
         for (i = 0; i < rootObject->nBindings; ++i) {
@@ -4312,6 +4313,21 @@ void tst_qqmllanguage::rootObjectInCreationNotForSubObjects()
     // This should never have been set in the first place as there is no
     // QQmlComponent to set it back to false.
     QVERIFY(!ddata->rootObjectInCreation);
+}
+
+// QTBUG-63036
+void tst_qqmllanguage::lazyDeferredSubObject()
+{
+    QQmlComponent component(&engine, testFile("lazyDeferredSubObject.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QObject *subObject = qvariant_cast<QObject *>(object->property("subObject"));
+    QVERIFY(subObject);
+
+    QCOMPARE(object->objectName(), QStringLiteral("custom"));
+    QCOMPARE(subObject->objectName(), QStringLiteral("custom"));
 }
 
 void tst_qqmllanguage::noChildEvents()

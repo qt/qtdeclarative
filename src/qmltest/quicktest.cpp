@@ -271,7 +271,7 @@ private:
         TestCaseEnumerationResult result;
 
         if (!object) // Start at root of compilation unit if not enumerating a specific child
-            object = compilationUnit->objectAt(compilationUnit->rootObjectIndex());
+            object = compilationUnit->objectAt(0);
 
         if (CompilationUnit *superTypeUnit = compilationUnit->resolvedTypes.value(object->inheritedTypeNameIndex)->compilationUnit) {
             // We have a non-C++ super type, which could indicate we're a subtype of a TestCase

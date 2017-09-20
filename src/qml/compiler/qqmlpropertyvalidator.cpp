@@ -58,7 +58,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, c
 
 QVector<QQmlCompileError> QQmlPropertyValidator::validate()
 {
-    return validateObject(qmlUnit->indexOfRootObject, /*instantiatingBinding*/0);
+    return validateObject(/*root object*/0, /*instantiatingBinding*/0);
 }
 
 typedef QVarLengthArray<const QV4::CompiledData::Binding *, 8> GroupPropertyVector;
@@ -93,16 +93,6 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
     QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
     if (!propertyCache)
         return QVector<QQmlCompileError>();
-
-    QStringList deferredPropertyNames;
-    {
-        const QMetaObject *mo = propertyCache->firstCppMetaObject();
-        const int namesIndex = mo->indexOfClassInfo("DeferredPropertyNames");
-        if (namesIndex != -1) {
-            QMetaClassInfo classInfo = mo->classInfo(namesIndex);
-            deferredPropertyNames = QString::fromUtf8(classInfo.value()).split(QLatin1Char(','));
-        }
-    }
 
     QQmlCustomParser *customParser = 0;
     if (auto typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {

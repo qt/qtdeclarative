@@ -1306,6 +1306,13 @@ void QQmlType::derefHandle(QQmlTypePrivate *priv)
         delete priv;
 }
 
+int QQmlType::refCount(QQmlTypePrivate *priv)
+{
+    if (priv)
+        return priv->refCount;
+    return -1;
+}
+
 namespace {
 template <typename QQmlTypeContainer>
 void removeQQmlTypePrivate(QQmlTypeContainer &container, const QQmlTypePrivate *reference)
@@ -1377,7 +1384,7 @@ void QQmlTypeModulePrivate::add(QQmlTypePrivate *type)
 void QQmlTypeModulePrivate::remove(const QQmlTypePrivate *type)
 {
     for (TypeHash::ConstIterator elementIt = typeHash.begin(); elementIt != typeHash.end();) {
-        QList<QQmlTypePrivate *> &list = typeHash[elementIt.key()];
+        QList<QQmlTypePrivate *> &list = const_cast<QList<QQmlTypePrivate *> &>(elementIt.value());
 
         removeQQmlTypePrivate(list, type);
 
@@ -1418,6 +1425,18 @@ QQmlType QQmlTypeModule::type(const QV4::String *name, int minor) const
     }
 
     return QQmlType();
+}
+
+void QQmlTypeModule::walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const
+{
+    QMutexLocker lock(metaTypeDataLock());
+    for (auto typeCandidates = d->typeHash.begin(), end = d->typeHash.end();
+         typeCandidates != end; ++typeCandidates) {
+        for (auto type: typeCandidates.value()) {
+            if (type->regType == QQmlType::CompositeSingletonType)
+                callback(QQmlType(type));
+        }
+    }
 }
 
 QQmlTypeModuleVersion::QQmlTypeModuleVersion()
@@ -1484,6 +1503,7 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
     data->urlToNonFileImportType.clear();
     data->metaObjectToType.clear();
     data->uriToModule.clear();
+    data->undeletableTypes.clear();
 
     QQmlEnginePrivate::baseModulesUninitialized = true; //So the engine re-registers its types
 #if QT_CONFIG(library)

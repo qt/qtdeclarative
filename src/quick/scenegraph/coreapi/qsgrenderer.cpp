@@ -50,7 +50,9 @@
 
 QT_BEGIN_NAMESPACE
 
+#if QT_CONFIG(opengl)
 static const bool qsg_sanity_check = qEnvironmentVariableIntValue("QSG_SANITY_CHECK");
+#endif
 
 static QElapsedTimer frameTimer;
 static qint64 preprocessTime;

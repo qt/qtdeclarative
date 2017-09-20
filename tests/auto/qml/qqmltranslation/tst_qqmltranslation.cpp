@@ -86,7 +86,7 @@ void tst_qqmltranslation::translation()
                              << QStringLiteral("singular") << QStringLiteral("plural");
 
         const QV4::CompiledData::Unit *unit = compilationUnit->data;
-        const QV4::CompiledData::Object *rootObject = unit->objectAt(unit->indexOfRootObject);
+        const QV4::CompiledData::Object *rootObject = unit->objectAt(/*root object*/0);
         const QV4::CompiledData::Binding *binding = rootObject->bindingTable();
         for (quint32 i = 0; i < rootObject->nBindings; ++i, ++binding) {
             const QString propertyName = unit->stringAt(binding->propertyNameIndex);
@@ -141,7 +141,7 @@ void tst_qqmltranslation::idTranslation()
         QVERIFY(compilationUnit);
 
         const QV4::CompiledData::Unit *unit = compilationUnit->data;
-        const QV4::CompiledData::Object *rootObject = unit->objectAt(unit->indexOfRootObject);
+        const QV4::CompiledData::Object *rootObject = unit->objectAt(/*root object*/0);
         const QV4::CompiledData::Binding *binding = rootObject->bindingTable();
         for (quint32 i = 0; i < rootObject->nBindings; ++i, ++binding) {
             const QString propertyName = unit->stringAt(binding->propertyNameIndex);

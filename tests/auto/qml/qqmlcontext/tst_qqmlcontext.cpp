@@ -62,6 +62,7 @@ private slots:
     void evalAfterInvalidate();
     void qobjectDerived();
     void qtbug_49232();
+    void contextViaClosureAfterDestruction();
 
 private:
     QQmlEngine engine;
@@ -721,6 +722,33 @@ void tst_qqmlcontext::qtbug_49232()
 
     QCOMPARE(obj->property("valueOne"), QVariant('a'));
     QCOMPARE(obj->property("valueTwo"), QVariant(97));
+}
+
+void tst_qqmlcontext::contextViaClosureAfterDestruction()
+{
+    qmlRegisterSingletonType(testFileUrl("Singleton.qml"), "constants", 1, 0, "Sing");
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("contextViaClosureAfterDestruction.qml"));
+    QJSValue valueClosure;
+    QJSValue componentFactoryClosure;
+    {
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        // meta-calls don't support QJSValue return types, so do the call "by hand"
+        valueClosure = engine.newQObject(obj.data()).property(QStringLiteral("createClosure")).call();
+        QVERIFY(valueClosure.isCallable());
+        componentFactoryClosure = engine.newQObject(obj.data()).property(QStringLiteral("createComponentFactory")).call();
+        QVERIFY(componentFactoryClosure.isCallable());
+    }
+    QCOMPARE(valueClosure.call().toString(), QLatin1String("Highway to Hell"));
+
+    QScopedPointer<QObject> parent(new QObject);
+    QJSValue parentWrapper = engine.newQObject(parent.data());
+    QQmlEngine::setObjectOwnership(parent.data(), QQmlEngine::CppOwnership);
+
+    QJSValue subObject = componentFactoryClosure.callWithInstance(componentFactoryClosure, QJSValueList() << parentWrapper);
+    QVERIFY(subObject.isError());
+    QCOMPARE(subObject.toString(), QLatin1String("Error: Qt.createQmlObject(): Cannot create a component in an invalid context"));
 }
 
 QTEST_MAIN(tst_qqmlcontext)
