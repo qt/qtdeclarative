@@ -253,6 +253,7 @@ public:
     QQmlTypePrivate *priv() const { return d; }
     static void refHandle(QQmlTypePrivate *priv);
     static void derefHandle(QQmlTypePrivate *priv);
+    static int refCount(QQmlTypePrivate *priv);
 
     enum RegistrationType {
         CppType = 0,
@@ -306,6 +307,8 @@ public:
 
     QQmlType type(const QHashedStringRef &, int) const;
     QQmlType type(const QV4::String *, int) const;
+
+    void walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const;
 
     QQmlTypeModulePrivate *priv() { return d; }
 private:

@@ -78,6 +78,34 @@ struct CompilationUnit;
 }
 }
 
+// This is declared here because QQmlData below needs it and this file
+// in turn is included from qqmlcontext_p.h.
+class QQmlContextData;
+class Q_QML_PRIVATE_EXPORT QQmlContextDataRef
+{
+public:
+    inline QQmlContextDataRef();
+    inline QQmlContextDataRef(QQmlContextData *);
+    inline QQmlContextDataRef(const QQmlContextDataRef &);
+    inline ~QQmlContextDataRef();
+
+    inline QQmlContextData *contextData() const;
+    inline void setContextData(QQmlContextData *);
+
+    inline bool isNull() const { return !m_contextData; }
+
+    inline operator QQmlContextData*() const { return m_contextData; }
+    inline QQmlContextData* operator->() const { return m_contextData; }
+    inline QQmlContextDataRef &operator=(QQmlContextData *d);
+    inline QQmlContextDataRef &operator=(const QQmlContextDataRef &other);
+
+private:
+
+    inline void clear();
+
+    QQmlContextData *m_contextData;
+};
+
 // This class is structured in such a way, that simply zero'ing it is the
 // default state for elemental object allocations.  This is crucial in the
 // workings of the QQmlInstruction::CreateSimpleObject instruction.
@@ -114,7 +142,6 @@ public:
 
     quint32 ownedByQml1:1; // This bit is shared with QML1's QDeclarativeData.
     quint32 ownMemory:1;
-    quint32 ownContext:1;
     quint32 indestructible:1;
     quint32 explicitIndestructibleSet:1;
     quint32 hasTaintedV4Object:1;
@@ -127,7 +154,7 @@ public:
     quint32 hasInterceptorMetaObject:1;
     quint32 hasVMEMetaObject:1;
     quint32 parentFrozen:1;
-    quint32 dummy:21;
+    quint32 dummy:22;
 
     // When bindingBitsSize < sizeof(ptr), we store the binding bit flags inside
     // bindingBitsValue. When we need more than sizeof(ptr) bits, we allocated
@@ -161,9 +188,10 @@ public:
     void disconnectNotifiers();
 
     // The context that created the C++ object
-    QQmlContextData *context;
+    QQmlContextData *context = 0;
     // The outermost context in which this object lives
-    QQmlContextData *outerContext;
+    QQmlContextData *outerContext = 0;
+    QQmlContextDataRef ownContext;
 
     QQmlAbstractBinding *bindings;
     QQmlBoundSignal *signalHandlers;

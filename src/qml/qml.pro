@@ -16,6 +16,19 @@ gcc:isEqual(QT_ARCH, "mips"): QMAKE_CXXFLAGS += -fno-reorder-blocks
 
 DEFINES += QT_NO_FOREACH
 
+tagFile=$$PWD/../../.tag
+tag=
+exists($$tagFile) {
+    tag=$$cat($$tagFile, singleline)
+    QMAKE_INTERNAL_INCLUDED_FILES += $$tagFile
+}
+!equals(tag, "$${LITERAL_DOLLAR}Format:%H$${LITERAL_DOLLAR}") {
+    DEFINES += QML_COMPILE_HASH="$$tag"
+} else:exists($$PWD/../../.git) {
+    commit=$$system(git describe --tags --always --long --dirty)
+    DEFINES += QML_COMPILE_HASH="$$commit"
+}
+
 exists("qqml_enable_gcov") {
     QMAKE_CXXFLAGS = -fprofile-arcs -ftest-coverage -fno-elide-constructors
     LIBS_PRIVATE += -lgcov

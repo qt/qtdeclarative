@@ -1532,12 +1532,17 @@ private:
 class MyWorkerObject : public QObject
 {
     Q_OBJECT
+public:
+    ~MyWorkerObject();
 
 public Q_SLOTS:
     void doIt();
 
 Q_SIGNALS:
     void done(const QString &result);
+
+private:
+    QThread *m_thread = 0;
 };
 
 class MyUnregisteredEnumTypeObject : public QObject

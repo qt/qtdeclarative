@@ -119,7 +119,6 @@ public:
     QQmlEnginePrivate *enginePrivate() const { return engine; }
     const QQmlImports *imports() const;
     QVector<QmlIR::Object *> *qmlObjects() const;
-    int rootObjectIndex() const;
     void setPropertyCaches(QQmlPropertyCacheVector &&caches);
     const QQmlPropertyCacheVector *propertyCaches() const;
     QQmlPropertyCacheVector &&takePropertyCaches();
@@ -282,7 +281,6 @@ protected:
     QQmlJS::MemoryPool *pool;
 
     QVector<QmlIR::Object*> *qmlObjects;
-    const int indexOfRootObject;
 
     // indices of the objects that are actually Component {}
     QVector<quint32> componentRoots;

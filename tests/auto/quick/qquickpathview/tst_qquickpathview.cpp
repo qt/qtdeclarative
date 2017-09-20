@@ -48,6 +48,8 @@
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
 
+#include <math.h>
+
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
 

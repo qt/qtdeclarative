@@ -51,6 +51,8 @@
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
 #include "qv4numberobject_p.h"
+#include "qv4regexp_p.h"
+#include "qv4regexpobject_p.h"
 #include "private/qlocale_tools_p.h"
 #include "qv4scopedvalue_p.h"
 #include <private/qv4qmlcontext_p.h>
@@ -1477,7 +1479,10 @@ ReturnedValue Runtime::method_getQmlContext(NoThrowEngine *engine)
 
 ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)
 {
-    return static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)->runtimeRegularExpressions[id].asReturnedValue();
+    Heap::RegExpObject *ro = engine->newRegExpObject(
+            static_cast<CompiledData::CompilationUnit*>(engine->current->compilationUnit)
+                    ->runtimeRegularExpressions[id].as<RegExp>());
+    return ro->asReturnedValue();
 }
 
 ReturnedValue Runtime::method_getQmlQObjectProperty(ExecutionEngine *engine, const Value &object, int propertyIndex, bool captureRequired)

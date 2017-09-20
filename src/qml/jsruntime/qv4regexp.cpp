@@ -69,9 +69,9 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     return JSC::Yarr::interpret(byteCode(), s.characters16(), string.length(), start, matchOffsets);
 }
 
-Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline)
+Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline, bool global)
 {
-    RegExpCacheKey key(pattern, ignoreCase, multiline);
+    RegExpCacheKey key(pattern, ignoreCase, multiline, global);
 
     RegExpCache *cache = engine->regExpCache;
     if (!cache)
@@ -82,7 +82,7 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
         return result->d();
 
     Scope scope(engine);
-    Scoped<RegExp> result(scope, engine->memoryManager->alloc<RegExp>(engine, pattern, ignoreCase, multiline));
+    Scoped<RegExp> result(scope, engine->memoryManager->alloc<RegExp>(engine, pattern, ignoreCase, multiline, global));
 
     result->d()->cache = cache;
     cachedValue.set(engine, result);
@@ -90,12 +90,13 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
     return result->d();
 }
 
-void Heap::RegExp::init(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline)
+void Heap::RegExp::init(ExecutionEngine* engine, const QString &pattern, bool ignoreCase, bool multiline, bool global)
 {
     Base::init();
     this->pattern = new QString(pattern);
     this->ignoreCase = ignoreCase;
     this->multiLine = multiline;
+    this->global = global;
 
     const char* error = 0;
     JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), ignoreCase, multiline, &error);

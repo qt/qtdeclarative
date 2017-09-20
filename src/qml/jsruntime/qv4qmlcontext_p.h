@@ -67,13 +67,12 @@ struct QQmlContextWrapper;
 namespace Heap {
 
 struct QQmlContextWrapper : Object {
-    void init(QQmlContextData *context, QObject *scopeObject, bool ownsContext = false);
+    void init(QQmlContextData *context, QObject *scopeObject);
     void destroy();
     bool readOnly;
-    bool ownsContext;
     bool isNullWrapper;
 
-    QQmlGuardedContextData *context;
+    QQmlContextDataRef *context;
     QQmlQPointer<QObject> scopeObject;
 };
 
@@ -92,10 +91,6 @@ struct Q_QML_EXPORT QQmlContextWrapper : Object
 {
     V4_OBJECT2(QQmlContextWrapper, Object)
     V4_NEEDS_DESTROY
-
-    void takeContextOwnership() {
-        d()->ownsContext = true;
-    }
 
     inline QObject *getScopeObject() const { return d()->scopeObject; }
     inline QQmlContextData *getContext() const { return *d()->context; }
@@ -118,10 +113,6 @@ struct Q_QML_EXPORT QmlContext : public ExecutionContext
     }
     QQmlContextData *qmlContext() const {
         return *d()->qml->context;
-    }
-
-    void takeContextOwnership() {
-        d()->qml->ownsContext = true;
     }
 };
 

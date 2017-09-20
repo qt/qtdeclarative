@@ -91,6 +91,7 @@ public:
 #endif
     QMap<int, QQuickPixmap *> frameMap;
     QSize currentSourceSize;
+    void setMovie(QMovie *movie);
 };
 
 QT_END_NAMESPACE

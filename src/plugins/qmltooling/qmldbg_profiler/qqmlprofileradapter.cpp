@@ -44,24 +44,36 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEnginePrivate *engine) :
-    next(0)
+QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEnginePrivate *engine)
 {
-    setService(service);
     engine->profiler = new QQmlProfiler;
+    init(service, engine->profiler);
+}
+
+QQmlProfilerAdapter::QQmlProfilerAdapter(QQmlProfilerService *service, QQmlTypeLoader *loader)
+{
+    QQmlProfiler *profiler = new QQmlProfiler;
+    loader->setProfiler(profiler);
+    init(service, profiler);
+}
+
+void QQmlProfilerAdapter::init(QQmlProfilerService *service, QQmlProfiler *profiler)
+{
+    next = 0;
+    setService(service);
     connect(this, &QQmlProfilerAdapter::profilingEnabled,
-            engine->profiler, &QQmlProfiler::startProfiling);
+            profiler, &QQmlProfiler::startProfiling);
     connect(this, &QQmlAbstractProfilerAdapter::profilingEnabledWhileWaiting,
-            engine->profiler, &QQmlProfiler::startProfiling, Qt::DirectConnection);
+            profiler, &QQmlProfiler::startProfiling, Qt::DirectConnection);
     connect(this, &QQmlAbstractProfilerAdapter::profilingDisabled,
-            engine->profiler, &QQmlProfiler::stopProfiling);
+            profiler, &QQmlProfiler::stopProfiling);
     connect(this, &QQmlAbstractProfilerAdapter::profilingDisabledWhileWaiting,
-            engine->profiler, &QQmlProfiler::stopProfiling, Qt::DirectConnection);
+            profiler, &QQmlProfiler::stopProfiling, Qt::DirectConnection);
     connect(this, &QQmlAbstractProfilerAdapter::dataRequested,
-            engine->profiler, &QQmlProfiler::reportData);
+            profiler, &QQmlProfiler::reportData);
     connect(this, &QQmlAbstractProfilerAdapter::referenceTimeKnown,
-            engine->profiler, &QQmlProfiler::setTimer);
-    connect(engine->profiler, &QQmlProfiler::dataReady,
+            profiler, &QQmlProfiler::setTimer);
+    connect(profiler, &QQmlProfiler::dataReady,
             this, &QQmlProfilerAdapter::receiveData);
 }
 
