@@ -116,7 +116,6 @@ public:
     void setMaximumY(qreal maxY);
 
 signals:
-    void requiredPointCountChanged();
     void minimumScaleChanged();
     void maximumScaleChanged();
     void minimumRotationChanged();
