@@ -53,8 +53,8 @@ T.TextArea {
     leftPadding: padding + 4
 
     color: control.palette.text
-    selectionColor: Default.textSelectionColor
-    selectedTextColor: color
+    selectionColor: control.palette.highlight
+    selectedTextColor: control.palette.highlightedText
 
     PlaceholderText {
         id: placeholder

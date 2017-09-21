@@ -62,7 +62,6 @@ class QQuickDefaultStyle : public QObject
     Q_PROPERTY(QColor textColor READ textColor CONSTANT FINAL)
     Q_PROPERTY(QColor textDarkColor READ textDarkColor CONSTANT FINAL)
     Q_PROPERTY(QColor textLightColor READ textLightColor CONSTANT FINAL)
-    Q_PROPERTY(QColor textSelectionColor READ textSelectionColor CONSTANT FINAL)
     Q_PROPERTY(QColor textDisabledColor READ textDisabledColor CONSTANT FINAL)
     Q_PROPERTY(QColor textDisabledLightColor READ textDisabledLightColor CONSTANT FINAL)
     Q_PROPERTY(QColor textPlaceholderColor READ textPlaceholderColor CONSTANT FINAL)

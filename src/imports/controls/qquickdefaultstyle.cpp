@@ -73,11 +73,6 @@ QColor QQuickDefaultStyle::textLightColor() const
     return QColor::fromRgba(0xFFFFFFFF);
 }
 
-QColor QQuickDefaultStyle::textSelectionColor() const
-{
-    return QColor::fromRgba(0xFFFDDD5C);
-}
-
 QColor QQuickDefaultStyle::textDisabledColor() const
 {
     return QColor::fromRgba(0xFFBDBEBF);
