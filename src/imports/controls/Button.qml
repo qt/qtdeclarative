@@ -55,9 +55,9 @@ T.Button {
 
     icon.width: 24
     icon.height: 24
-    icon.color: Color.transparent(checked || highlighted ? Default.textLightColor :
-        visualFocus ? Default.focusColor : down ? Default.textDarkColor : Default.textColor,
-        enabled || highlighted || checked ? 1 : 0.3)
+    icon.color: control.checked || control.highlighted ? control.palette.brightText :
+                control.visualFocus ? control.palette.highlight :
+                control.flat && !control.down ? control.palette.windowText : control.palette.buttonText
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -67,9 +67,9 @@ T.Button {
         icon: control.icon
         text: control.text
         font: control.font
-        color: Color.transparent(control.checked || control.highlighted ? Default.textLightColor :
-                                 control.visualFocus ? Default.focusColor : control.down ? Default.textDarkColor : Default.textColor,
-                                 enabled || control.highlighted || control.checked ? 1 : 0.3)
+        color: control.checked || control.highlighted ? control.palette.brightText :
+               control.visualFocus ? control.palette.highlight :
+               control.flat && !control.down ? control.palette.windowText : control.palette.buttonText
     }
 
     background: Rectangle {
