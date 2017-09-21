@@ -118,7 +118,7 @@ Rectangle {
             PinchHandler {
                 id: pinch3
                 objectName: "3-finger pinch"
-                requiredPointCount: 3
+                minimumPointCount: 3
                 minimumScale: 0.1
                 maximumScale: 10
                 onActiveChanged: {

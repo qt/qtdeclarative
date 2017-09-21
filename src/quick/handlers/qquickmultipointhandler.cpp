@@ -59,9 +59,10 @@ QT_BEGIN_NAMESPACE
     for any type of handler which requires and acts upon a specific number
     of multiple touchpoints.
 */
-QQuickMultiPointHandler::QQuickMultiPointHandler(QObject *parent, int requiredPointCount)
+QQuickMultiPointHandler::QQuickMultiPointHandler(QObject *parent, int minimumPointCount)
     : QQuickPointerDeviceHandler(parent)
-    , m_requiredPointCount(requiredPointCount)
+    , m_minimumPointCount(minimumPointCount)
+    , m_maximumPointCount(-1)
     , m_pointDistanceThreshold(0)
 {
 }
@@ -79,7 +80,7 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
         return true;
 
     const QVector<QQuickEventPoint *> candidatePoints = eligiblePoints(event);
-    const bool ret = (candidatePoints.size() == m_requiredPointCount);
+    const bool ret = (candidatePoints.size() >= minimumPointCount() && candidatePoints.size() <= maximumPointCount());
     if (ret)
         m_currentPoints = candidatePoints;
     return ret;
@@ -109,28 +110,52 @@ QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointe
 }
 
 /*!
-     \qmlproperty int MultiPointHandler::requiredPointCount
+     \qmlproperty int MultiPointHandler::minimumPointCount
 
-     The number of touchpoints that are required to activate this handler. If
-     a smaller number of touchpoints are in contact with the
-     \l {PointerHandler::parent}{parent}, they will be ignored. If a larger number
-     of touchpoints are in contact, the required number of points will be
-     chosen in the order that they are pressed, and the remaining points will
-     be ignored. Any ignored points are eligible to activate other Pointer
-     Handlers, which have different constraints, on the same Item or on other
-     Items.
+     The minimum number of touchpoints required to activate this handler.
+
+     If a smaller number of touchpoints are in contact with the
+     \l {PointerHandler::parent}{parent}, they will be ignored.
+
+     Any ignored points are eligible to activate other Pointer Handlers that
+     have different constraints, on the same Item or on other Items.
 
      The default value is 2.
 */
-void QQuickMultiPointHandler::setRequiredPointCount(int c)
+void QQuickMultiPointHandler::setMinimumPointCount(int c)
 {
-    if (m_requiredPointCount == c)
+    if (m_minimumPointCount == c)
         return;
 
-    m_requiredPointCount = c;
-    emit requiredPointCountChanged();
+    m_minimumPointCount = c;
+    emit minimumPointCountChanged();
+    if (m_maximumPointCount < 0)
+        emit maximumPointCountChanged();
 }
 
+/*!
+     \qmlproperty int MultiPointHandler::maximumPointCount
+
+     The maximum number of touchpoints this handler can utilize.
+
+     If a larger number of touchpoints are in contact with the
+     \l {PointerHandler::parent}{parent}, the required number of points will be
+     chosen in the order that they are pressed, and the remaining points will
+     be ignored.
+
+     Any ignored points are eligible to activate other Pointer Handlers that
+     have different constraints, on the same Item or on other Items.
+
+     The default value is the same as \l minimumPointCount.
+*/
+void QQuickMultiPointHandler::setMaximumPointCount(int maximumPointCount)
+{
+    if (m_maximumPointCount == maximumPointCount)
+        return;
+
+    m_maximumPointCount = maximumPointCount;
+    emit maximumPointCountChanged();
+}
 
 /*!
      \qmlproperty real MultiPointHandler::pointDistanceThreshold
