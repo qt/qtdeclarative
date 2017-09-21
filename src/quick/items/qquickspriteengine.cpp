@@ -544,7 +544,7 @@ void QQuickStochasticEngine::restart(int index)
     if (m_addAdvance)
         m_startTimes[index] += m_advanceTime.elapsed();
     if (randomStart)
-        m_startTimes[index] -= QRandomGenerator::bounded(m_duration.at(index));
+        m_startTimes[index] -= QRandomGenerator::global()->bounded(m_duration.at(index));
     int time = m_duration.at(index) + m_startTimes.at(index);
     for (int i=0; i<m_stateUpdates.count(); i++)
         m_stateUpdates[i].second.removeAll(index);
@@ -558,13 +558,13 @@ void QQuickSpriteEngine::restart(int index) //Reimplemented to recognize and han
     if (m_loaded && m_sprites.at(m_things.at(index))->frameSync()) {//Manually advanced
         m_startTimes[index] = 0;
         if (randomStart && m_sprites.at(m_things.at(index))->m_generatedCount)
-            m_startTimes[index] += QRandomGenerator::bounded(m_sprites.at(m_things.at(index))->m_generatedCount);
+            m_startTimes[index] += QRandomGenerator::global()->bounded(m_sprites.at(m_things.at(index))->m_generatedCount);
     } else {
         m_startTimes[index] = m_timeOffset;
         if (m_addAdvance)
             m_startTimes[index] += m_advanceTime.elapsed();
         if (randomStart)
-            m_startTimes[index] -= QRandomGenerator::bounded(m_duration.at(index));
+            m_startTimes[index] -= QRandomGenerator::global()->bounded(m_duration.at(index));
         int time = spriteDuration(index) + m_startTimes.at(index);
         if (randomStart) {
             int curTime = m_timeOffset + (m_addAdvance ? m_advanceTime.elapsed() : 0);
@@ -630,7 +630,7 @@ int QQuickStochasticEngine::nextState(int curState, int curThing)
     int nextIdx = -1;
     int goalPath = goalSeek(curState, curThing);
     if (goalPath == -1){//Random
-        qreal r = QRandomGenerator::getReal();
+        qreal r = QRandomGenerator::global()->generateDouble();
         qreal total = 0.0;
         for (QVariantMap::const_iterator iter=m_states.at(curState)->m_to.constBegin();
             iter!=m_states.at(curState)->m_to.constEnd(); ++iter)
@@ -720,7 +720,7 @@ int QQuickStochasticEngine::goalSeek(int curIdx, int spriteIdx, int dist)
             if (options.count()==1)
                 return *(options.begin());
             int option = -1;
-            qreal r = QRandomGenerator::getReal();
+            qreal r = QRandomGenerator::global()->generateDouble();
             qreal total = 0;
             for (QSet<int>::const_iterator iter=options.constBegin();
                 iter!=options.constEnd(); ++iter)

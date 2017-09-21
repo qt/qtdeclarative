@@ -425,7 +425,7 @@ void QQuickCustomParticle::buildData(QQuickOpenGLShaderEffectNode *rootNode)
 void QQuickCustomParticle::initialize(int gIdx, int pIdx)
 {
     QQuickParticleData* datum = m_system->groupData[gIdx]->data[pIdx];
-    datum->r = QRandomGenerator::getReal();
+    datum->r = QRandomGenerator::global()->generateDouble();
 }
 
 void QQuickCustomParticle::commit(int gIdx, int pIdx)

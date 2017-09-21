@@ -60,21 +60,21 @@ QQuickRectangleExtruder::QQuickRectangleExtruder(QObject *parent) :
 QPointF QQuickRectangleExtruder::extrude(const QRectF &rect)
 {
     if (m_fill)
-        return QPointF(QRandomGenerator::getReal() * rect.width() + rect.x(),
-                       QRandomGenerator::getReal() * rect.height() + rect.y());
-    int side = QRandomGenerator::bounded(4);
+        return QPointF(QRandomGenerator::global()->generateDouble() * rect.width() + rect.x(),
+                       QRandomGenerator::global()->generateDouble() * rect.height() + rect.y());
+    int side = QRandomGenerator::global()->bounded(4);
     switch (side){//TODO: Doesn't this overlap the corners?
     case 0:
         return QPointF(rect.x(),
-                       QRandomGenerator::getReal() * rect.height() + rect.y());
+                       QRandomGenerator::global()->generateDouble() * rect.height() + rect.y());
     case 1:
         return QPointF(rect.width() + rect.x(),
-                       QRandomGenerator::getReal() * rect.height() + rect.y());
+                       QRandomGenerator::global()->generateDouble() * rect.height() + rect.y());
     case 2:
-        return QPointF(QRandomGenerator::getReal() * rect.width() + rect.x(),
+        return QPointF(QRandomGenerator::global()->generateDouble() * rect.width() + rect.x(),
                        rect.y());
     default:
-        return QPointF(QRandomGenerator::getReal() * rect.width() + rect.x(),
+        return QPointF(QRandomGenerator::global()->generateDouble() * rect.width() + rect.x(),
                        rect.height() + rect.y());
     }
 }

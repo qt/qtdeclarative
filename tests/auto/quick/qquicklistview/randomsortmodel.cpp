@@ -74,14 +74,14 @@ QVariant RandomSortModel::data(const QModelIndex& index, int role) const
 
 void RandomSortModel::randomize()
 {
-    const int row = QRandomGenerator::bounded(mData.count());
+    const int row = QRandomGenerator::global()->bounded(mData.count());
     int random;
     bool exists = false;
     // Make sure we won't end up with two items with the same weight, as that
     // would make unit-testing much harder
     do {
         exists = false;
-        random = QRandomGenerator::bounded(mData.count() * 10);
+        random = QRandomGenerator::global()->bounded(mData.count() * 10);
         QList<QPair<QString, int> >::ConstIterator iter, end;
         for (iter = mData.constBegin(), end = mData.constEnd(); iter != end; ++iter) {
             if ((*iter).second == random) {

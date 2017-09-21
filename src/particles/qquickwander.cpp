@@ -103,8 +103,8 @@ WanderData* QQuickWanderAffector::getData(int idx)
     d->y_vel = 0;
     d->x_peak = m_xVariance;
     d->y_peak = m_yVariance;
-    d->x_var = m_pace * QRandomGenerator::getReal();
-    d->y_var = m_pace * QRandomGenerator::getReal();
+    d->x_var = m_pace * QRandomGenerator::global()->generateDouble();
+    d->y_var = m_pace * QRandomGenerator::global()->generateDouble();
 
     m_wanderData.insert(idx, d);
     return d;
@@ -125,7 +125,7 @@ bool QQuickWanderAffector::affectParticle(QQuickParticleData* data, qreal dt)
     if (m_xVariance != 0.) {
         if ((d->x_vel > d->x_peak && d->x_var > 0.0) || (d->x_vel < -d->x_peak && d->x_var < 0.0)) {
             d->x_var = -d->x_var;
-            d->x_peak = m_xVariance + m_xVariance * QRandomGenerator::getReal();
+            d->x_peak = m_xVariance + m_xVariance * QRandomGenerator::global()->generateDouble();
         }
         d->x_vel += d->x_var * dt;
     }
@@ -134,7 +134,7 @@ bool QQuickWanderAffector::affectParticle(QQuickParticleData* data, qreal dt)
     if (m_yVariance != 0.) {
         if ((d->y_vel > d->y_peak && d->y_var > 0.0) || (d->y_vel < -d->y_peak && d->y_var < 0.0)) {
             d->y_var = -d->y_var;
-            d->y_peak = m_yVariance + m_yVariance * QRandomGenerator::getReal();
+            d->y_peak = m_yVariance + m_yVariance * QRandomGenerator::global()->generateDouble();
         }
         d->y_vel += d->y_var * dt;
     }
@@ -147,8 +147,8 @@ bool QQuickWanderAffector::affectParticle(QQuickParticleData* data, qreal dt)
     p->y += dy;
     return true;
     */
-    qreal dx = dt * m_pace * (2 * QRandomGenerator::getReal() - 1);
-    qreal dy = dt * m_pace * (2 * QRandomGenerator::getReal() - 1);
+    qreal dx = dt * m_pace * (2 * QRandomGenerator::global()->generateDouble() - 1);
+    qreal dy = dt * m_pace * (2 * QRandomGenerator::global()->generateDouble() - 1);
     qreal newX, newY;
     switch (m_affectedParameter){
     case Position:

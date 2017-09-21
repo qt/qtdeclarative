@@ -59,8 +59,8 @@ QQuickParticleExtruder::QQuickParticleExtruder(QObject *parent) :
 
 QPointF QQuickParticleExtruder::extrude(const QRectF &rect)
 {
-    return QPointF(QRandomGenerator::getReal() * rect.width() + rect.x(),
-                   QRandomGenerator::getReal() * rect.height() + rect.y());
+    return QPointF(QRandomGenerator::global()->generateDouble() * rect.width() + rect.x(),
+                   QRandomGenerator::global()->generateDouble() * rect.height() + rect.y());
 }
 
 bool QQuickParticleExtruder::contains(const QRectF &bounds, const QPointF &point)

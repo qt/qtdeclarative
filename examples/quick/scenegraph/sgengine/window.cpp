@@ -72,9 +72,9 @@ public:
         transformNode->appendChildNode(textureNode);
         parentNode->appendChildNode(transformNode);
 
-        int duration = QRandomGenerator::getReal() * 400 + 800;
-        rotAnimation.setStartValue(QRandomGenerator::getReal() * 720 - 180);
-        rotAnimation.setEndValue(QRandomGenerator::getReal() * 720 - 180);
+        int duration = QRandomGenerator::global()->generateDouble() * 400 + 800;
+        rotAnimation.setStartValue(QRandomGenerator::global()->generateDouble() * 720 - 180);
+        rotAnimation.setEndValue(QRandomGenerator::global()->generateDouble() * 720 - 180);
         rotAnimation.setDuration(duration);
         rotAnimation.start();
 
@@ -182,8 +182,8 @@ void Window::addItems()
     QSGTexture *textures[] = { m_smileTexture.data(), m_qtTexture.data() };
     for (int i = 0; i < 50; ++i) {
         QSGTexture *tex = textures[i%2];
-        QPointF fromPos(-tex->textureSize().width(), QRandomGenerator::getReal() * (height() - tex->textureSize().height()));
-        QPointF toPos(width(), QRandomGenerator::getReal() * height() * 1.5 - height() * 0.25);
+        QPointF fromPos(-tex->textureSize().width(), QRandomGenerator::global()->generateDouble() * (height() - tex->textureSize().height()));
+        QPointF toPos(width(), QRandomGenerator::global()->generateDouble() * height() * 1.5 - height() * 0.25);
         m_items.append(QSharedPointer<Item>::create(m_sgRootNode.data(), tex, fromPos, toPos));
     }
     update();
