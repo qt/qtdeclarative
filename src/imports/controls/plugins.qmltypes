@@ -75,7 +75,6 @@ Module {
         Property { name: "textColor"; type: "QColor"; isReadonly: true }
         Property { name: "textDarkColor"; type: "QColor"; isReadonly: true }
         Property { name: "textLightColor"; type: "QColor"; isReadonly: true }
-        Property { name: "textLinkColor"; type: "QColor"; isReadonly: true }
         Property { name: "textSelectionColor"; type: "QColor"; isReadonly: true }
         Property { name: "textDisabledColor"; type: "QColor"; isReadonly: true }
         Property { name: "textDisabledLightColor"; type: "QColor"; isReadonly: true }

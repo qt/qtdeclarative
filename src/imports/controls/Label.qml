@@ -43,5 +43,5 @@ T.Label {
     id: control
 
     color: control.palette.windowText
-    linkColor: Default.textLinkColor
+    linkColor: control.palette.link
 }
