@@ -41,6 +41,15 @@ QT_BEGIN_NAMESPACE
 QQuickDefaultTheme::QQuickDefaultTheme()
     : QQuickTheme(QStringLiteral("Default"))
 {
+    systemPalette.setColor(QPalette::Text, QColor::fromRgba(0xFF353637));
+    systemPalette.setColor(QPalette::Disabled, QPalette::Text, QColor::fromRgba(0xFFC2C2C2));
+    systemPalette = resolvePalette(systemPalette);
+}
+
+const QPalette *QQuickDefaultTheme::palette(QPlatformTheme::Palette type) const
+{
+    Q_UNUSED(type);
+    return &systemPalette;
 }
 
 QT_END_NAMESPACE

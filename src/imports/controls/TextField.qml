@@ -52,7 +52,7 @@ T.TextField {
     padding: 6
     leftPadding: padding + 4
 
-    color: enabled ? Default.textColor : Default.textDisabledColor
+    color: control.palette.text
     selectionColor: Default.textSelectionColor
     selectedTextColor: color
     verticalAlignment: TextInput.AlignVCenter

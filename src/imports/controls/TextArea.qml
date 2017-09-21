@@ -52,7 +52,7 @@ T.TextArea {
     padding: 6
     leftPadding: padding + 4
 
-    color: enabled ? Default.textColor : Default.textDisabledLightColor
+    color: control.palette.text
     selectionColor: Default.textSelectionColor
     selectedTextColor: color
 
