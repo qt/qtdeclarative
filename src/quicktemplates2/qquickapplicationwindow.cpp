@@ -194,6 +194,9 @@ static void layoutItem(QQuickItem *item, qreal y, qreal width)
 void QQuickApplicationWindowPrivate::relayout()
 {
     Q_Q(QQuickApplicationWindow);
+    if (!complete)
+        return;
+
     QQuickItem *content = q->contentItem();
     qreal hh = header && header->isVisible() ? header->height() : 0;
     qreal fh = footer && footer->isVisible() ? footer->height() : 0;
@@ -810,6 +813,7 @@ void QQuickApplicationWindow::componentComplete()
     Q_D(QQuickApplicationWindow);
     d->complete = true;
     QQuickWindowQmlImpl::componentComplete();
+    d->relayout();
 }
 
 void QQuickApplicationWindow::resizeEvent(QResizeEvent *event)
