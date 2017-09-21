@@ -292,18 +292,18 @@ using namespace QV4::Moth;
 static struct InstrCount {
     InstrCount() {
         fprintf(stderr, "Counting instructions...\n");
-        for (int i = 0; i < Instr::LastInstruction; ++i)
+        for (int i = 0; i < MOTH_NUM_INSTRUCTIONS(); ++i)
             hits[i] = 0;
     }
     ~InstrCount() {
         fprintf(stderr, "Instruction count:\n");
-#define BLAH(I, FMT) \
-        fprintf(stderr, "%llu : %s\n", hits[Instr::I], #I);
+#define BLAH(I) \
+        fprintf(stderr, "%llu : %s\n", hits[int(Instr::Type::I)], #I);
         FOR_EACH_MOTH_INSTR(BLAH)
         #undef BLAH
     }
-    quint64 hits[Instr::LastInstruction];
-    void hit(Instr::Type i) { hits[i]++; }
+    quint64 hits[MOTH_NUM_INSTRUCTIONS()];
+    void hit(Instr::Type i) { hits[int(i)]++; }
 } instrCount;
 #endif // COUNT_INSTRUCTIONS
 
@@ -312,9 +312,9 @@ static struct InstrCount {
         INSTR_##instr(MOTH_DECODE)
 
 #ifdef COUNT_INSTRUCTIONS
-#  define MOTH_BEGIN_INSTR(instr) op_##I: \
-    instrCount.hit(static_cast<int>(Instr::Type::instr)); \
-    MOTH_BEGIN_INSTR_COMMON(instr)
+#  define MOTH_BEGIN_INSTR(instr) \
+    MOTH_BEGIN_INSTR_COMMON(instr) \
+    instrCount.hit(Instr::Type::instr);
 #else // !COUNT_INSTRUCTIONS
 #  define MOTH_BEGIN_INSTR(instr) \
     MOTH_BEGIN_INSTR_COMMON(instr)
