@@ -87,7 +87,7 @@ public:
     {}
 
 protected:
-    void addStmtNr(Stmt *s) override Q_DECL_FINAL
+    void addStmtNr(Stmt *s) override final
     {
         addJustifiedNr(intervals->positionForStatement(s));
     }
@@ -115,7 +115,7 @@ public:
     }
 
 protected:
-    void visitTemp(Temp *e) override Q_DECL_FINAL
+    void visitTemp(Temp *e) override final
     {
         switch (e->kind) {
         case Temp::PhysicalRegister: {

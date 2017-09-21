@@ -302,11 +302,11 @@ class Q_QML_EXPORT ISelFactory: public EvalISelFactory
 public:
     ISelFactory() : EvalISelFactory(QStringLiteral("jit")) {}
     virtual ~ISelFactory() {}
-    EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) override Q_DECL_FINAL
+    EvalInstructionSelection *create(QQmlEnginePrivate *qmlEngine, QV4::ExecutableAllocator *execAllocator, IR::Module *module, QV4::Compiler::JSUnitGenerator *jsGenerator) override final
     { return new InstructionSelection<JITAssembler>(qmlEngine, execAllocator, module, jsGenerator, this); }
-    bool jitCompileRegexps() const override Q_DECL_FINAL
+    bool jitCompileRegexps() const override final
     { return true; }
-    QQmlRefPointer<CompiledData::CompilationUnit> createUnitForLoading() override Q_DECL_FINAL;
+    QQmlRefPointer<CompiledData::CompilationUnit> createUnitForLoading() override final;
 };
 
 } // end of namespace JIT
