@@ -184,6 +184,7 @@ public:
 
     static bool isLocal(const QString &url);
     static bool isLocal(const QUrl &url);
+    static QUrl urlFromLocalFileOrQrcOrUrl(const QString &);
 
     static void setDesignerSupportRequired(bool b);
 

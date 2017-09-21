@@ -1436,8 +1436,13 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
                 // We haven't yet resolved this import
                 m_unresolvedImports.insert(import, 0);
 
-                // Query any network import paths for this library
-                QStringList remotePathList = importDatabase->importPathList(QQmlImportDatabase::Remote);
+                QQmlAbstractUrlInterceptor *interceptor = typeLoader()->engine()->urlInterceptor();
+
+                // Query any network import paths for this library.
+                // Interceptor might redirect local paths.
+                QStringList remotePathList = importDatabase->importPathList(
+                            interceptor ? QQmlImportDatabase::LocalOrRemote
+                                        : QQmlImportDatabase::Remote);
                 if (!remotePathList.isEmpty()) {
                     // Add this library and request the possible locations for it
                     if (!m_importCache.addLibraryImport(importDatabase, importUri, importQualifier, import->majorVersion,
@@ -1448,8 +1453,18 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
                     int priority = 0;
                     const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(importUri, remotePathList, import->majorVersion, import->minorVersion);
                     for (const QString &qmldirPath : qmlDirPaths) {
-                        if (!fetchQmldir(QUrl(qmldirPath), import, ++priority, errors))
+                        if (interceptor) {
+                            QUrl url = interceptor->intercept(
+                                        QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
+                                        QQmlAbstractUrlInterceptor::QmldirFile);
+                            if (!QQmlFile::isLocalFile(url)
+                                    && !fetchQmldir(url, import, ++priority, errors)) {
+                                return false;
+                            }
+                        } else if (!fetchQmldir(QUrl(qmldirPath), import, ++priority, errors)) {
                             return false;
+                        }
+
                     }
                 }
             }
@@ -1872,19 +1887,22 @@ It can also be a remote path for a remote directory import, but it will have bee
 */
 const QQmlTypeLoaderQmldirContent *QQmlTypeLoader::qmldirContent(const QString &filePathIn)
 {
-    QUrl url(filePathIn); //May already contain http scheme
-    if (url.scheme() == QLatin1String("http") || url.scheme() == QLatin1String("https"))
-        return *(m_importQmlDirCache.value(filePathIn)); //Can't load the remote here, but should be cached
-    else
-        url = QUrl::fromLocalFile(filePathIn);
-    if (engine() && engine()->urlInterceptor())
-        url = engine()->urlInterceptor()->intercept(url, QQmlAbstractUrlInterceptor::QmldirFile);
-    Q_ASSERT(url.scheme() == QLatin1String("file"));
     QString filePath;
-    if (url.scheme() == QLatin1String("file"))
-        filePath = url.toLocalFile();
-    else
-        filePath = url.path();
+
+    // Try to guess if filePathIn is already a URL. This is necessarily fragile, because
+    // - paths can contain ':', which might make them appear as URLs with schemes.
+    // - windows drive letters appear as schemes (thus "< 2" below).
+    // - a "file:" URL is equivalent to the respective file, but will be treated differently.
+    // Yet, this heuristic is the best we can do until we pass more structured information here,
+    // for example a QUrl also for local files.
+    QUrl url(filePathIn);
+    if (url.scheme().length() < 2) {
+        filePath = filePathIn;
+    } else {
+        filePath = QQmlFile::urlToLocalFileOrQrc(url);
+        if (filePath.isEmpty()) // Can't load the remote here, but should be cached
+            return *(m_importQmlDirCache.value(filePathIn));
+    }
 
     QQmlTypeLoaderQmldirContent *qmldir;
     QQmlTypeLoaderQmldirContent **val = m_importQmlDirCache.value(filePath);
