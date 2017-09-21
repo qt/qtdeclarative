@@ -445,6 +445,7 @@ The following functions are also on the Qt object.
         \li \c "tvos" - tvOS
         \li \c "linux" - Linux
         \li \c "osx" - \macos
+        \li \c "qnx" - QNX (since Qt 5.9.3)
         \li \c "unix" - Other Unix-based OS
         \li \c "windows" - Windows
         \li \c "winrt" - WinRT / UWP
