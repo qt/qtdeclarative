@@ -118,7 +118,7 @@ public:
     bool isReversable() override;
     void reverse() override;
     EventType type() const override;
-    bool override(QQuickStateActionEvent*other) override;
+    bool mayOverride(QQuickStateActionEvent*other) override;
     void rewind() override;
     void saveCurrentValues() override;
 };
@@ -201,7 +201,7 @@ public:
     bool isReversable() override;
     void reverse() override;
     EventType type() const override;
-    bool override(QQuickStateActionEvent*other) override;
+    bool mayOverride(QQuickStateActionEvent*other) override;
     bool changesBindings() override;
     void saveOriginals() override;
     bool needsCopy() override { return true; }

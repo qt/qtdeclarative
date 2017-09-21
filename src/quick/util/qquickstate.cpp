@@ -106,7 +106,7 @@ void QQuickStateActionEvent::clearBindings()
 {
 }
 
-bool QQuickStateActionEvent::override(QQuickStateActionEvent *other)
+bool QQuickStateActionEvent::mayOverride(QQuickStateActionEvent *other)
 {
     Q_UNUSED(other);
     return false;
@@ -574,7 +574,7 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
             for (int jj = 0; jj < d->revertList.count(); ++jj) {
                 QQuickStateActionEvent *event = d->revertList.at(jj).event();
                 if (event && event->type() == action.event->type()) {
-                    if (action.event->override(event)) {
+                    if (action.event->mayOverride(event)) {
                         found = true;
 
                         if (action.event != d->revertList.at(jj).event() && action.event->needsCopy()) {
@@ -636,7 +636,7 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
             for (int jj = 0; !found && jj < applyList.count(); ++jj) {
                 const QQuickStateAction &action = applyList.at(jj);
                 if (action.event && action.event->type() == event->type()) {
-                    if (action.event->override(event))
+                    if (action.event->mayOverride(event))
                         found = true;
                 }
             }

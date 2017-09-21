@@ -115,7 +115,7 @@ public:
 
     virtual bool changesBindings();
     virtual void clearBindings();
-    virtual bool override(QQuickStateActionEvent*other);
+    virtual bool mayOverride(QQuickStateActionEvent*other);
 };
 
 //### rename to QQuickStateChange?
