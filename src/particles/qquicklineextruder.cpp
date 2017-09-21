@@ -69,10 +69,10 @@ QPointF QQuickLineExtruder::extrude(const QRectF &r)
 {
     qreal x,y;
     if (!r.height()){
-        x = r.width() * QRandomGenerator::getReal();
+        x = r.width() * QRandomGenerator::global()->generateDouble();
         y = 0;
     }else{
-        y = r.height() * QRandomGenerator::getReal();
+        y = r.height() * QRandomGenerator::global()->generateDouble();
         if (!r.width()){
             x = 0;
         }else{

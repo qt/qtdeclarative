@@ -620,7 +620,7 @@ signals:
 
 private slots:
     void updateProperty() {
-        m_targetProperty.write(QRandomGenerator::bounded(m_maxValue));
+        m_targetProperty.write(QRandomGenerator::global()->bounded(m_maxValue));
     }
 
 private:

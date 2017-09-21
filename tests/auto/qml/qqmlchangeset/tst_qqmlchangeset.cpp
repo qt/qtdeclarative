@@ -1487,27 +1487,27 @@ void tst_qqmlchangeset::random()
         for (int j = 0; j < combinations; ++j) {
             QQmlChangeSet set;
             for (int k = 0; k < depth; ++k) {
-                switch (-QRandomGenerator::bounded(3)) {
+                switch (-QRandomGenerator::global()->bounded(3)) {
                 case InsertOp: {
-                    int index = QRandomGenerator::bounded(modelCount + 1);
-                    int count = QRandomGenerator::bounded(5) + 1;
+                    int index = QRandomGenerator::global()->bounded(modelCount + 1);
+                    int count = QRandomGenerator::global()->bounded(5) + 1;
                     set.insert(index, count);
                     input.append(Insert(index, count));
                     modelCount += count;
                     break;
                 }
                 case RemoveOp: {
-                    const int index = QRandomGenerator::bounded(modelCount + 1);
-                    const int count = QRandomGenerator::bounded(modelCount - index + 1);
+                    const int index = QRandomGenerator::global()->bounded(modelCount + 1);
+                    const int count = QRandomGenerator::global()->bounded(modelCount - index + 1);
                     set.remove(index, count);
                     input.append(Remove(index, count));
                     modelCount -= count;
                     break;
                 }
                 case MoveOp: {
-                    const int from = QRandomGenerator::bounded(modelCount + 1);
-                    const int count = QRandomGenerator::bounded(modelCount - from + 1);
-                    const int to = QRandomGenerator::bounded(modelCount - count + 1);
+                    const int from = QRandomGenerator::global()->bounded(modelCount + 1);
+                    const int count = QRandomGenerator::global()->bounded(modelCount - from + 1);
+                    const int to = QRandomGenerator::global()->bounded(modelCount - count + 1);
                     const int moveId = moveCount++;
                     set.move(from, to, count, moveId);
                     input.append(Move(from, to, count, moveId));

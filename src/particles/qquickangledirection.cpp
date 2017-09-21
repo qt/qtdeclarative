@@ -108,8 +108,8 @@ QPointF QQuickAngleDirection::sample(const QPointF &from)
 {
     Q_UNUSED(from);
     QPointF ret;
-    qreal theta = m_angle*CONV - m_angleVariation*CONV + QRandomGenerator::getReal() * m_angleVariation*CONV * 2;
-    qreal mag = m_magnitude- m_magnitudeVariation + QRandomGenerator::getReal() * m_magnitudeVariation * 2;
+    qreal theta = m_angle*CONV - m_angleVariation*CONV + QRandomGenerator::global()->generateDouble() * m_angleVariation*CONV * 2;
+    qreal mag = m_magnitude- m_magnitudeVariation + QRandomGenerator::global()->generateDouble() * m_magnitudeVariation * 2;
     ret.setX(mag * qCos(theta));
     ret.setY(mag * qSin(theta));
     return ret;
