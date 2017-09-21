@@ -216,6 +216,7 @@ public:
             QObject,
             VariantMap,
             DateTime,
+            Function,
 
             MaxDataType
         };
@@ -283,6 +284,7 @@ private:
     int setVariantMapProperty(const ListLayout::Role &role, QV4::Object *o);
     int setVariantMapProperty(const ListLayout::Role &role, QVariantMap *m);
     int setDateTimeProperty(const ListLayout::Role &role, const QDateTime &dt);
+    int setFunctionProperty(const ListLayout::Role &role, const QJSValue &f);
 
     void setStringPropertyFast(const ListLayout::Role &role, const QString &s);
     void setDoublePropertyFast(const ListLayout::Role &role, double n);
@@ -291,6 +293,7 @@ private:
     void setListPropertyFast(const ListLayout::Role &role, ListModel *m);
     void setVariantMapFast(const ListLayout::Role &role, QV4::Object *o);
     void setDateTimePropertyFast(const ListLayout::Role &role, const QDateTime &dt);
+    void setFunctionPropertyFast(const ListLayout::Role &role, const QJSValue &f);
 
     void clearProperty(const ListLayout::Role &role);
 
@@ -301,6 +304,7 @@ private:
     QPointer<QObject> *getGuardProperty(const ListLayout::Role &role);
     QVariantMap *getVariantMapProperty(const ListLayout::Role &role);
     QDateTime *getDateTimeProperty(const ListLayout::Role &role);
+    QJSValue *getFunctionProperty(const ListLayout::Role &role);
 
     inline char *getPropertyMemory(const ListLayout::Role &role);
 
@@ -401,6 +405,7 @@ private:
 
     friend class ListElement;
     friend class QQmlListModelWorkerAgent;
+    friend class QQmlListModelParser;
 };
 
 QT_END_NAMESPACE

@@ -151,6 +151,15 @@ Item {
         }
     }
 
+    ListView {
+        id: viewWithActionModel
+        property string funcResult
+        model: ListModel { ListElement { friendlyText: "one"; action: function(text) { viewWithActionModel.funcResult = text } } }
+        delegate: Item {
+            Component.onCompleted: action(model.friendlyText)
+        }
+    }
+
     Component {
         id: delegateModelAfterCreateComponent
         Rectangle {
@@ -339,6 +348,10 @@ Item {
         function test_forceLayoutForContentHeight() {
             singleElementList.heightForDelegate = 200;
             compare(singleElementList.contentHeightOnDelegateResize, 200);
+        }
+
+        function test_viewWithAction() {
+            compare(viewWithActionModel.funcResult, "one")
         }
     }
 }

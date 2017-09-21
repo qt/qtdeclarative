@@ -1067,6 +1067,8 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
         } else if (QQmlJS::AST::NumericLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(expr)) {
             binding->type = QV4::CompiledData::Binding::Type_Number;
             binding->setNumberValueInternal(lit->value);
+        } else if (QQmlJS::AST::cast<QQmlJS::AST::FunctionExpression *>(expr)) {
+            binding->flags |= QV4::CompiledData::Binding::IsFunctionExpression;
         } else {
 
             if (QQmlJS::AST::UnaryMinusExpression *unaryMinus = QQmlJS::AST::cast<QQmlJS::AST::UnaryMinusExpression *>(expr)) {

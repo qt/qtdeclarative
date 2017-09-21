@@ -300,6 +300,7 @@ struct Q_QML_PRIVATE_EXPORT Binding
         IsBindingToAlias = 0x40,
         IsDeferredBinding = 0x80,
         IsCustomParserBinding = 0x100,
+        IsFunctionExpression = 0x200
     };
 
     union {
@@ -366,6 +367,8 @@ struct Q_QML_PRIVATE_EXPORT Binding
         }
         return false;
     }
+
+    bool isFunctionExpression() const { return (flags & IsFunctionExpression); }
 
     static QString escapedString(const QString &string);
 

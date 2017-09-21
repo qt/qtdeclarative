@@ -51,6 +51,16 @@ Item {
     ListModel { id: secondmodel; ListElement { name: "SecondModelElement0" } ListElement { name: "SecondModelElement1" } }
     ListModel { id: altermodel; ListElement { name: "AlterModelElement0" } ListElement { name: "AlterModelElement1" } }
 
+    property string funcResult
+    ListModel {
+        id: funcModel
+        property string modelProp
+        ListElement { friendlyText: "one"; action: function(obj) { funcResult = obj.friendlyText } }
+        ListElement { friendlyText: "two"; action: function() {} }
+        ListElement { friendlyText: "three"; action: function() { modelProp = "fail" } }
+        ListElement { friendlyText: "four"; action: function() { funcResult = friendlyText } }
+    }
+
     TestCase {
         name: "ListModel"
 
@@ -127,6 +137,52 @@ Item {
             altermodel.clear()
             tryCompare(altermodel, 'count', 0)
             compare(altermodel.get(0), undefined)
+        }
+
+        function test_functions() {
+            // test different ways of calling
+            funcModel.get(0).action(funcModel.get(0))
+            compare(funcResult, "one")
+            funcModel.get(0).action.call(this, { friendlyText: "seven" })
+            compare(funcResult, "seven")
+
+            // test different ways of setting
+            funcResult = ""
+            funcModel.get(1).action()
+            compare(funcResult, "")
+
+            funcModel.set(1, { friendlyText: "two", action: function() { funcResult = "set" } })
+            funcModel.get(1).action()
+            compare(funcResult, "set")
+
+            funcModel.setProperty(1, "action", function() { top.funcResult = "setProperty" })
+            funcModel.get(1).action()
+            compare(funcResult, "setProperty")
+
+            funcModel.get(1).action = function() { funcResult = "jsSet" }
+            funcModel.get(1).action()
+            compare(funcResult, "jsSet")
+
+            // test unsupported features
+            var didThrow = false
+            try {
+                funcModel.get(2).action()
+            } catch(ex) {
+                verify(ex.toString().includes("Error: Invalid write to global property"))
+                didThrow = true
+            }
+            verify(didThrow)
+
+            didThrow = false
+            try {
+                funcModel.get(3).action()
+            } catch(ex) {
+                verify(ex.toString().includes("ReferenceError: friendlyText is not defined"))
+                didThrow = true
+            }
+            verify(didThrow)
+
+
         }
     }
 }

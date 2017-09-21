@@ -42,6 +42,7 @@
 #include <private/qqmlopenmetaobject_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsengine_p.h>
+#include <private/qjsvalue_p.h>
 
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlengine_p.h>
@@ -84,7 +85,7 @@ static QString roleTypeName(ListLayout::Role::DataType t)
     static const QString roleTypeNames[] = {
         QStringLiteral("String"), QStringLiteral("Number"), QStringLiteral("Bool"),
         QStringLiteral("List"), QStringLiteral("QObject"), QStringLiteral("VariantMap"),
-        QStringLiteral("DateTime")
+        QStringLiteral("DateTime"), QStringLiteral("Function")
     };
 
     if (t > ListLayout::Role::Invalid && t < ListLayout::Role::MaxDataType)
@@ -123,8 +124,8 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(QV4::String *key, Role::Data
 
 const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::Role::DataType type)
 {
-    const int dataSizes[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QPointer<QObject>), sizeof(QVariantMap), sizeof(QDateTime) };
-    const int dataAlignments[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QObject *), sizeof(QVariantMap), sizeof(QDateTime) };
+    const int dataSizes[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QPointer<QObject>), sizeof(QVariantMap), sizeof(QDateTime), sizeof(QJSValue) };
+    const int dataAlignments[] = { sizeof(QString), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QObject *), sizeof(QVariantMap), sizeof(QDateTime), sizeof(QJSValue) };
 
     Role *r = new Role;
     r->name = key;
@@ -217,11 +218,20 @@ const ListLayout::Role *ListLayout::getRoleOrCreate(const QString &key, const QV
     switch (data.type()) {
         case QVariant::Double:      type = Role::Number;      break;
         case QVariant::Int:         type = Role::Number;      break;
-        case QVariant::UserType:    type = Role::List;        break;
         case QVariant::Bool:        type = Role::Bool;        break;
         case QVariant::String:      type = Role::String;      break;
         case QVariant::Map:         type = Role::VariantMap;  break;
         case QVariant::DateTime:    type = Role::DateTime;    break;
+        case QVariant::UserType:    {
+            if (data.userType() == qMetaTypeId<QJSValue>() &&
+                data.value<QJSValue>().isCallable()) {
+                type = Role::Function;
+                break;
+            } else {
+                type = Role::List;
+                break;
+            }
+        }
         default:                    type = Role::Invalid;     break;
     }
 
@@ -463,6 +473,12 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
             QDateTime dt = dd->toQDateTime();
             roleIndex = e->setDateTimeProperty(r, dt);
+        } else if (QV4::FunctionObject *f = propertyValue->as<QV4::FunctionObject>()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Function);
+            QV4::ScopedFunctionObject func(scope, f);
+            QJSValue jsv;
+            QJSValuePrivate::setValue(&jsv, v4, func);
+            roleIndex = e->setFunctionProperty(r, jsv);
         } else if (QV4::Object *o = propertyValue->as<QV4::Object>()) {
             if (QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>()) {
                 QObject *o = wrapper->object();
@@ -696,6 +712,17 @@ QDateTime *ListElement::getDateTimeProperty(const ListLayout::Role &role)
     return dt;
 }
 
+QJSValue *ListElement::getFunctionProperty(const ListLayout::Role &role)
+{
+    QJSValue *f = 0;
+
+    char *mem = getPropertyMemory(role);
+    if (isMemoryUsed<QJSValue>(mem))
+        f = reinterpret_cast<QJSValue *>(mem);
+
+    return f;
+}
+
 QPointer<QObject> *ListElement::getGuardProperty(const ListLayout::Role &role)
 {
     char *mem = getPropertyMemory(role);
@@ -786,6 +813,14 @@ QVariant ListElement::getProperty(const ListLayout::Role &role, const QQmlListMo
                 if (isMemoryUsed<QDateTime>(mem)) {
                     QDateTime *dt = reinterpret_cast<QDateTime *>(mem);
                     data = *dt;
+                }
+            }
+            break;
+        case ListLayout::Role::Function:
+            {
+                if (isMemoryUsed<QJSValue>(mem)) {
+                    QJSValue *func = reinterpret_cast<QJSValue *>(mem);
+                    data = QVariant::fromValue(*func);
                 }
             }
             break;
@@ -951,6 +986,24 @@ int ListElement::setDateTimeProperty(const ListLayout::Role &role, const QDateTi
     return roleIndex;
 }
 
+int ListElement::setFunctionProperty(const ListLayout::Role &role, const QJSValue &f)
+{
+    int roleIndex = -1;
+
+    if (role.type == ListLayout::Role::Function) {
+        char *mem = getPropertyMemory(role);
+        if (isMemoryUsed<QJSValue>(mem)) {
+            QJSValue *f = reinterpret_cast<QJSValue *>(mem);
+            f->~QJSValue();
+        }
+        new (mem) QJSValue(f);
+        roleIndex = role.index;
+    }
+
+    return roleIndex;
+}
+
+
 void ListElement::setStringPropertyFast(const ListLayout::Role &role, const QString &s)
 {
     char *mem = getPropertyMemory(role);
@@ -997,6 +1050,12 @@ void ListElement::setDateTimePropertyFast(const ListLayout::Role &role, const QD
     new (mem) QDateTime(dt);
 }
 
+void ListElement::setFunctionPropertyFast(const ListLayout::Role &role, const QJSValue &f)
+{
+    char *mem = getPropertyMemory(role);
+    new (mem) QJSValue(f);
+}
+
 void ListElement::clearProperty(const ListLayout::Role &role)
 {
     switch (role.type) {
@@ -1020,6 +1079,9 @@ void ListElement::clearProperty(const ListLayout::Role &role)
         break;
     case ListLayout::Role::VariantMap:
         setVariantMapProperty(role, (QVariantMap *)0);
+        break;
+    case ListLayout::Role::Function:
+        setFunctionProperty(role, QJSValue());
         break;
     default:
         break;
@@ -1078,6 +1140,7 @@ void ListElement::sync(ListElement *src, ListLayout *srcLayout, ListElement *tar
             case ListLayout::Role::Number:
             case ListLayout::Role::Bool:
             case ListLayout::Role::DateTime:
+            case ListLayout::Role::Function:
                 {
                     QVariant v = src->getProperty(srcRole, 0, 0);
                     target->setVariantProperty(targetRole, v);
@@ -1140,6 +1203,13 @@ void ListElement::destroy(ListLayout *layout)
                             dt->~QDateTime();
                     }
                     break;
+                case ListLayout::Role::Function:
+                    {
+                        QJSValue *f = getFunctionProperty(r);
+                        if (f)
+                            f->~QJSValue();
+                    }
+                    break;
                 default:
                     // other types don't need explicit cleanup.
                     break;
@@ -1178,6 +1248,9 @@ int ListElement::setVariantProperty(const ListLayout::Role &role, const QVariant
             break;
         case ListLayout::Role::DateTime:
             roleIndex = setDateTimeProperty(role, d.toDateTime());
+            break;
+        case ListLayout::Role::Function:
+            roleIndex = setFunctionProperty(role, d.value<QJSValue>());
             break;
         default:
             break;
@@ -1221,6 +1294,11 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
         QV4::Scoped<QV4::DateObject> dd(scope, d);
         QDateTime dt = dd->toQDateTime();
         roleIndex = setDateTimeProperty(role, dt);
+    } else if (d.as<QV4::FunctionObject>()) {
+        QV4::ScopedFunctionObject f(scope, d);
+        QJSValue jsv;
+        QJSValuePrivate::setValue(&jsv, eng, f);
+        roleIndex = setFunctionProperty(role, jsv);
     } else if (d.isObject()) {
         QV4::ScopedObject o(scope, d);
         QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>();
@@ -2457,7 +2535,7 @@ bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::Unit *qmlUnit,
         }
     } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
         QString scriptStr = binding->valueAsScriptString(qmlUnit);
-        if (!definesEmptyList(scriptStr)) {
+        if (!binding->isFunctionExpression() && !definesEmptyList(scriptStr)) {
             QByteArray script = scriptStr.toUtf8();
             bool ok;
             evaluateEnum(script, &ok);
@@ -2471,7 +2549,7 @@ bool QQmlListModelParser::verifyProperty(const QV4::CompiledData::Unit *qmlUnit,
     return true;
 }
 
-bool QQmlListModelParser::applyProperty(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
+bool QQmlListModelParser::applyProperty(QV4::CompiledData::CompilationUnit *compilationUnit, const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
 {
     const QString elementName = qmlUnit->stringAt(binding->propertyNameIndex);
 
@@ -2499,7 +2577,7 @@ bool QQmlListModelParser::applyProperty(const QV4::CompiledData::Unit *qmlUnit, 
 
         const QV4::CompiledData::Binding *subBinding = target->bindingTable();
         for (quint32 i = 0; i < target->nBindings; ++i, ++subBinding) {
-            roleSet |= applyProperty(qmlUnit, subBinding, subModel, elementIndex);
+            roleSet |= applyProperty(compilationUnit, qmlUnit, subBinding, subModel, elementIndex);
         }
 
     } else {
@@ -2517,6 +2595,25 @@ bool QQmlListModelParser::applyProperty(const QV4::CompiledData::Unit *qmlUnit, 
                 const ListLayout::Role &role = model->getOrCreateListRole(elementName);
                 ListModel *emptyModel = new ListModel(role.subLayout, 0, -1);
                 value = QVariant::fromValue(emptyModel);
+            } else if (binding->isFunctionExpression()) {
+                QQmlBinding::Identifier id = binding->value.compiledScriptIndex;
+                Q_ASSERT(id != QQmlBinding::Invalid);
+
+                auto v4 = compilationUnit->engine;
+                QV4::Scope scope(v4);
+                // for now we do not provide a context object; data from the ListElement must be passed to the function
+                QV4::ScopedContext context(scope, QV4::QmlContext::create(v4->rootContext(), QQmlContextData::get(qmlContext(model->m_modelCache)), nullptr));
+                QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::createScriptFunction(context, compilationUnit->runtimeFunctions[id]));
+
+                // ### we need the inner function declaration (at this point the function has been wrapped)
+                const unsigned int parameterCount = function->formalParameterCount();
+                QV4::ScopedCallData callData(scope, parameterCount);
+                callData->thisObject = v4->globalObject;
+                function->call(scope, callData);
+
+                QJSValue v;
+                QJSValuePrivate::setValue(&v, v4, scope.result);
+                value.setValue<QJSValue>(v);
             } else {
                 QByteArray script = scriptStr.toUtf8();
                 bool ok;
@@ -2560,7 +2657,7 @@ void QQmlListModelParser::applyBindings(QObject *obj, QV4::CompiledData::Compila
     for (const QV4::CompiledData::Binding *binding : bindings) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object)
             continue;
-        setRoles |= applyProperty(qmlUnit, binding, rv->m_listModel, /*outter element index*/-1);
+        setRoles |= applyProperty(compilationUnit, qmlUnit, binding, rv->m_listModel, /*outter element index*/-1);
     }
 
     if (setRoles == false)
@@ -2599,6 +2696,9 @@ bool QQmlListModelParser::definesEmptyList(const QString &s)
     common to all elements in a given model. Values must be simple constants; either
     strings (quoted and optionally within a call to QT_TR_NOOP), boolean values
     (true, false), numbers, or enumeration values (such as AlignText.AlignHCenter).
+
+    Beginning with Qt 5.11 ListElement also allows assigning a function declaration to
+    a role. This allows the definition of ListElements with callable actions.
 
     \section1 Referencing Roles
 
