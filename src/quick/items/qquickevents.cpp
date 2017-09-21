@@ -717,7 +717,7 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(qint64 id)
     \readonly
     \qmlproperty real QtQuick::EventPoint::timeHeld
 
-    This property holds the amount of time that the button or touchpoint has
+    This property holds the amount of time in seconds that the button or touchpoint has
     been held.  It can be used to detect a "long press", and can drive an
     animation to show progress toward activation of the "long press" action.
 */
