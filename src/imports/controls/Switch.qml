@@ -64,7 +64,7 @@ T.Switch {
 
         text: control.text
         font: control.font
-        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
+        color: control.palette.windowText
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft

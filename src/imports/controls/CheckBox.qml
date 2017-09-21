@@ -64,11 +64,10 @@ T.CheckBox {
 
         text: control.text
         font: control.font
-        color: control.down ? Default.textDarkColor : Default.textColor
+        color: control.palette.windowText
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        opacity: enabled ? 1 : 0.3
     }
 }

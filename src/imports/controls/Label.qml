@@ -42,6 +42,6 @@ import QtQuick.Templates 2.3 as T
 T.Label {
     id: control
 
-    color: Default.textDarkColor
+    color: control.palette.windowText
     linkColor: Default.textLinkColor
 }
