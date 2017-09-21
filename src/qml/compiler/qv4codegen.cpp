@@ -2273,7 +2273,13 @@ bool Codegen::visit(DoWhileStatement *ast)
     statement(ast->statement);
 
     cond.link();
-    condition(ast->expression, &body, &end, false);
+
+    if (!AST::cast<FalseLiteral *>(ast->expression)) {
+        if (AST::cast<TrueLiteral *>(ast->expression))
+            bytecodeGenerator->jump().link(body);
+        else
+            condition(ast->expression, &body, &end, false);
+    }
 
     end.link();
 
@@ -2718,6 +2724,9 @@ bool Codegen::visit(WhileStatement *ast)
     if (hasError)
         return true;
 
+    if (AST::cast<FalseLiteral *>(ast->expression))
+        return false;
+
     RegisterScope scope(this);
 
     BytecodeGenerator::Label start = bytecodeGenerator->newLabel();
@@ -2725,7 +2734,8 @@ bool Codegen::visit(WhileStatement *ast)
     BytecodeGenerator::Label cond = bytecodeGenerator->label();
     ControlFlowLoop flow(this, &end, &cond);
 
-    condition(ast->expression, &start, &end, true);
+    if (!AST::cast<TrueLiteral *>(ast->expression))
+        condition(ast->expression, &start, &end, true);
 
     start.link();
     statement(ast->statement);
