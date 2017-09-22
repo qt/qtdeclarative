@@ -90,7 +90,7 @@ class Q_AUTOTEST_EXPORT QQuickDragHandler : public QQuickSinglePointHandler
     Q_OBJECT
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
     Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
-    Q_PROPERTY(QPointF translation READ translation NOTIFY translationChanged)
+    Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
 
 public:
     explicit QQuickDragHandler(QObject *parent = 0);
@@ -101,8 +101,8 @@ public:
     QQuickDragAxis *xAxis() { return &m_xAxis; }
     QQuickDragAxis *yAxis() { return &m_yAxis; }
 
-    QPointF translation() const { return m_translation; }
-    void setTranslation(const QPointF &trans);
+    QVector2D translation() const { return m_translation; }
+    void setTranslation(const QVector2D &trans);
 
     Q_INVOKABLE void enforceConstraints();
 
@@ -122,7 +122,7 @@ private:
 
 private:
     QPointF m_targetStartPos;
-    QPointF m_translation;
+    QVector2D m_translation;
     QQuickDragAxis m_xAxis;
     QQuickDragAxis m_yAxis;
 

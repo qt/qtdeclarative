@@ -103,7 +103,7 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
         if (!m_yAxis.enabled())
             delta.setY(0);
         if (active()) {
-            setTranslation(delta);
+            setTranslation(QVector2D(delta));
             if (target() && target()->parentItem()) {
                 QPointF pos = target()->parentItem()->mapFromScene(m_targetStartPos + delta);
                 enforceAxisConstraints(&pos);
@@ -164,7 +164,7 @@ void QQuickDragHandler::initializeTargetStartPos(QQuickEventPoint *point)
     }
 }
 
-void QQuickDragHandler::setTranslation(const QPointF &trans)
+void QQuickDragHandler::setTranslation(const QVector2D &trans)
 {
     if (trans == m_translation) // fuzzy compare?
         return;
@@ -206,5 +206,12 @@ void QQuickDragAxis::setEnabled(bool enabled)
     m_enabled = enabled;
     emit enabledChanged();
 }
+
+/*!
+    \readonly
+    \qmlproperty QVector2D QtQuick::DragHandler::translation
+
+    The translation since the gesture began.
+*/
 
 QT_END_NAMESPACE
