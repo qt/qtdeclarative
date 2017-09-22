@@ -44,6 +44,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickControls2/private/qquickproxytheme_p.h>
 
@@ -54,6 +55,8 @@ class tst_palette : public QQmlDataTest
     Q_OBJECT
 
 private slots:
+    void initTestCase();
+
     void palette_data();
     void palette();
 
@@ -67,12 +70,25 @@ private slots:
     void listView();
 };
 
+void tst_palette::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+
+    // Import QtQuick.Controls to initialize styles and themes so that
+    // QQuickControlPrivate::themePalette() returns a palette from the
+    // style's theme instead of the platform's theme.
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick.Controls 2.3; Control { }", QUrl());
+    delete component.create();
+}
+
 void tst_palette::palette_data()
 {
     QTest::addColumn<QString>("testFile");
     QTest::addColumn<QPalette>("expectedPalette");
 
-    QPalette defaultPalette;
+    QPalette defaultPalette = QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette);
     defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
     defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 
@@ -156,7 +172,7 @@ void tst_palette::inheritance()
     QObject *grandChild = window->property("grandChild").value<QObject *>();
     QVERIFY(control && child && grandChild);
 
-    QPalette defaultPalette;
+    QPalette defaultPalette = QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette);
     defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
     defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 
