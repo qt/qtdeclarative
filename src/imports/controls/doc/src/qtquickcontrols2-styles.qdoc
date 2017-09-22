@@ -45,6 +45,13 @@
     The \l {Fusion Style} is a platform-agnostic style that offers a desktop-oriented
     look'n'feel for Qt Quick Controls 2.
 
+    \section2 Imagine Style
+
+    \image qtquickcontrols2-imagine-thumbnail.png
+    The \l {Imagine Style} is based on image assets. The style comes with a default
+    set of images which can easily be changed by providing a directory
+    with images using a predefined naming convention.
+
     \section2 Material Style
 
     \image qtquickcontrols2-material-thumbnail.png
