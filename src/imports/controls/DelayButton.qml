@@ -79,7 +79,7 @@ T.DelayButton {
                 text: control.text
                 font: control.font
                 opacity: enabled ? 1 : 0.3
-                color: control.visualFocus ? Default.focusColor : (control.down ? Default.textDarkColor : Default.textColor)
+                color: control.visualFocus ? control.palette.highlight : control.palette.buttonText
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
@@ -102,7 +102,7 @@ T.DelayButton {
                 text: control.text
                 font: control.font
                 opacity: enabled ? 1 : 0.3
-                color: Default.textLightColor
+                color: control.palette.brightText
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
