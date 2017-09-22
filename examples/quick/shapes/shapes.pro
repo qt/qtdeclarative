@@ -9,7 +9,7 @@ OTHER_FILES += content/main.qml \
                content/sampling.qml \
                content/clippedtigers.qml \
                content/tiger.qml \
-               content/item1.qml \
+               content/tapableTriangle.qml \
                content/item2.qml \
                content/item3.qml \
                content/item4.qml \

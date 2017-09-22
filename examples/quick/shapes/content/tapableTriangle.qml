@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -48,15 +48,21 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
-import QtQuick.Shapes 1.0
+import QtQuick 2.11
+import QtQuick.Shapes 1.11
+import Qt.labs.handlers 1.0
 
 Rectangle {
-    color: "lightGray"
+    width: 120
+    height: 120
+    color: th.pressed ? "steelBlue" : "lightGray"
 
     Shape {
         id: ctr
         anchors.fill: parent
+        containsMode: Shape.FillContains
+
+        TapHandler { id: th }
 
         ShapePath {
             strokeColor: "red"

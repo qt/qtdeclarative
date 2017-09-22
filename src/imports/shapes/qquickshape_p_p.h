@@ -177,6 +177,7 @@ public:
     int syncTimeCounter = 0;
     QQuickShape::Status status = QQuickShape::Null;
     QQuickShape::RendererType rendererType = QQuickShape::UnknownRenderer;
+    QQuickShape::ContainsMode containsMode = QQuickShape::BoundingRectContains;
     bool spChanged = false;
     bool async = false;
     bool enableVendorExts = true;

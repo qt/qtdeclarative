@@ -303,6 +303,7 @@ class QQuickShape : public QQuickItem
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     Q_PROPERTY(bool vendorExtensionsEnabled READ vendorExtensionsEnabled WRITE setVendorExtensionsEnabled NOTIFY vendorExtensionsEnabledChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(ContainsMode containsMode READ containsMode WRITE setContainsMode NOTIFY containsModeChanged REVISION 11)
     Q_PROPERTY(QQmlListProperty<QObject> data READ data)
     Q_CLASSINFO("DefaultProperty", "data")
 
@@ -322,6 +323,12 @@ public:
     };
     Q_ENUM(Status)
 
+    enum ContainsMode {
+        BoundingRectContains,
+        FillContains
+    };
+    Q_ENUM(ContainsMode)
+
     QQuickShape(QQuickItem *parent = nullptr);
     ~QQuickShape();
 
@@ -334,6 +341,11 @@ public:
     void setVendorExtensionsEnabled(bool enable);
 
     Status status() const;
+
+    ContainsMode containsMode() const;
+    void setContainsMode(ContainsMode containsMode);
+
+    bool contains(const QPointF &point) const override;
 
     QQmlListProperty<QObject> data();
 
@@ -349,6 +361,7 @@ Q_SIGNALS:
     void asynchronousChanged();
     void vendorExtensionsEnabledChanged();
     void statusChanged();
+    Q_REVISION(11) void containsModeChanged();
 
 private:
     Q_DISABLE_COPY(QQuickShape)
