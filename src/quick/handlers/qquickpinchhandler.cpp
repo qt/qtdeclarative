@@ -55,6 +55,7 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 /*!
     \qmltype PinchHandler
     \instantiates QQuickPinchHandler
+    \inherits MultiPointHandler
     \inqmlmodule Qt.labs.handlers
     \ingroup qtquick-handlers
     \brief Handler for pinch gestures
@@ -373,5 +374,52 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         acceptPoints(m_currentPoints);
     emit updated();
 }
+
+/*!
+    \readonly
+    \qmlproperty QPointF QtQuick::PinchHandler::centroid
+
+    A point exactly in the middle of the currently-pressed touch points.
+    If \l pinchOrigin is set to \c PinchCenter, the \l target will be rotated
+    around this point.
+*/
+
+/*!
+    \readonly
+    \qmlproperty QVector2D QtQuick::PinchHandler::centroidVelocity
+
+    The average velocity of the \l centroid: a vector representing the speed
+    and direction of movement of the whole group of touchpoints, in logical
+    pixels per second.
+*/
+
+/*!
+    \readonly
+    \qmlproperty real QtQuick::PinchHandler::scale
+
+    The scale factor. It is 1.0 when the gesture begins, increases as the
+    touchpoints are spread apart, and decreases as the touchpoints are brought
+    together. If \l target is not null, this will be automatically applied to its
+    \l {Item::scale}{scale}. Otherwise, bindings can be used to do arbitrary
+    things with this value.
+*/
+
+/*!
+    \readonly
+    \qmlproperty real QtQuick::PinchHandler::rotation
+
+    The rotation of the pinch gesture in degrees, with positive values clockwise.
+    It is 0 when the gesture begins. If \l target is not null, this will be
+    automatically applied to its \l {Item::rotation}{rotation}. Otherwise,
+    bindings can be used to do arbitrary things with this value.
+*/
+
+/*!
+    \readonly
+    \qmlproperty QVector2D QtQuick::PinchHandler::translation
+
+    The translation of the gesture \l centroid. It is \c (0, 0) when the
+    gesture begins.
+*/
 
 QT_END_NAMESPACE
