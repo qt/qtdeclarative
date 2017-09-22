@@ -41,7 +41,7 @@ ListView {
         width: ListView.view.width
         height: 100
         asynchronous: true
-        source: "Intercept.qml"
+        source: index == 0 ? "Intercept.qml" : "GenericView.qml"
 
         onLoaded: {
             test.loaded++

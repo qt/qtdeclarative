@@ -1577,8 +1577,8 @@ bool QQmlImportsPrivate::updateQmldirContent(const QString &uri, const QString &
 
             if (import->setQmldirContent(qmldirUrl, qmldir, nameSpace, errors)) {
                 if (import->qmlDirComponents.isEmpty() && import->qmlDirScripts.isEmpty()) {
-                    // The implicit import qmldir can be empty
-                    if (uri != QLatin1String(".")) {
+                    // The implicit import qmldir can be empty, and plugins have no extra versions
+                    if (uri != QLatin1String(".") && !QQmlMetaType::isModule(uri, vmaj, vmin)) {
                         QQmlError error;
                         if (QQmlMetaType::isAnyModule(uri))
                             error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri).arg(vmaj).arg(vmin));

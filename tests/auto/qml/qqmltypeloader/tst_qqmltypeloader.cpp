@@ -72,7 +72,7 @@ void tst_QQMLTypeLoader::loadComponentSynchronously()
     QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
                              QLatin1String(".*nonprotocol::1:1: QtObject is not a type.*")));
     QQmlComponent component(&engine, testFileUrl("load_synchronous.qml"));
-    QObject *o = component.create();
+    QScopedPointer<QObject> o(component.create());
     QVERIFY(o);
 }
 
@@ -113,7 +113,7 @@ void tst_QQMLTypeLoader::trimCache()
 
 void tst_QQMLTypeLoader::trimCache2()
 {
-    QQuickView *window = new QQuickView();
+    QScopedPointer<QQuickView> window(new QQuickView());
     window->setSource(testFileUrl("trim_cache2.qml"));
     QQmlTypeLoader &loader = QQmlEnginePrivate::get(window->engine())->typeLoader;
     // in theory if gc has already run this could be false
@@ -279,12 +279,43 @@ public:
                 QFile file(filename);
                 if (file.open(QIODevice::ReadOnly)) {
                     emit loaded(filename);
-                    reply->setData(file.readAll());
+                    reply->setData(transformQmldir(filename, file.readAll()));
                 } else
                     reply->fail();
             }
         });
         return reply;
+    }
+
+    QByteArray transformQmldir(const QString &filename, const QByteArray &content)
+    {
+        if (!filename.endsWith("/qmldir"))
+            return content;
+
+        // Make qmldir plugin paths absolute, so that we don't try to load them over the network
+        QByteArray result;
+        QByteArray path = filename.toUtf8();
+        path.chop(sizeof("qmldir") - 1);
+        for (QByteArray line : content.split('\n')) {
+            if (line.isEmpty())
+                continue;
+            QList<QByteArray> segments = line.split(' ');
+            if (segments.startsWith("plugin")) {
+                if (segments.length() == 2) {
+                    segments.append(path);
+                } else if (segments.length() == 3) {
+                    if (!segments[2].startsWith('/'))
+                        segments[2] = path + segments[2];
+                } else {
+                    // Invalid plugin declaration. Ignore
+                }
+                result.append(segments.join(' '));
+            } else {
+                result.append(line);
+            }
+            result.append('\n');
+        }
+        return result;
     }
 
 signals:
@@ -315,13 +346,6 @@ public:
         if (!QQmlFile::isLocalFile(path))
             return path;
 
-        // Don't rewrite internal Qt paths. We'd hit C++ plugins there.
-        QString filename = QQmlFile::urlToLocalFileOrQrc(path);
-        if (filename.startsWith(":/qt-project.org/")
-                || filename.startsWith(QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath))) {
-            return path;
-        }
-
         QUrl result = path;
         QString scheme = result.scheme();
         if (!scheme.endsWith("+debug"))
@@ -332,8 +356,11 @@ public:
 
 void tst_QQMLTypeLoader::intercept()
 {
+    qmlClearTypeRegistrations();
+
     QQmlEngine engine;
     engine.addImportPath(dataDirectory());
+    engine.addImportPath(QT_TESTCASE_BUILDDIR);
 
     UrlInterceptor interceptor;
     NetworkAccessManagerFactory factory;
@@ -353,11 +380,13 @@ void tst_QQMLTypeLoader::intercept()
     QTRY_COMPARE(o->property("created").toInt(), 2);
     QTRY_COMPARE(o->property("loaded").toInt(), 2);
 
-    QCOMPARE(factory.loadedFiles.length(), 4);
+    QVERIFY(factory.loadedFiles.length() >= 6);
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/test_intercept.qml"));
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/Intercept.qml"));
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/Fast/qmldir"));
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/Fast/Fast.qml"));
+    QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/GenericView.qml"));
+    QVERIFY(factory.loadedFiles.contains(QLatin1String(QT_TESTCASE_BUILDDIR) + "/Slow/qmldir"));
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)
