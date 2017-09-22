@@ -245,9 +245,16 @@ public:
     MyWorkerObject *o;
 };
 
+MyWorkerObject::~MyWorkerObject()
+{
+    if (m_thread)
+        m_thread->wait();
+}
+
 void MyWorkerObject::doIt()
 {
-    new MyWorkerObjectThread(this);
+    Q_ASSERT(!m_thread);
+    m_thread = new MyWorkerObjectThread(this);
 }
 
 class MyDateClass : public QObject

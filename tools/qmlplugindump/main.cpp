@@ -788,7 +788,7 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
                 QString version = obj.value(QStringLiteral("version")).toString();
                 if (name.isEmpty() || urisToSkip.contains(name) || version.isEmpty())
                     continue;
-                if (name.endsWith(QLatin1String("Private"), Qt::CaseInsensitive)) {
+                if (name.contains(QLatin1String("Private"), Qt::CaseInsensitive)) {
                     if (verbose)
                         std::cerr << "skipping private dependecy "
                                   << qPrintable( name ) << " "  << qPrintable(version) << std::endl;

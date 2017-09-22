@@ -168,6 +168,7 @@ protected:
     QSize m_canvasSize;
     QSize m_tileSize;
     QRect m_canvasWindow;
+    qreal m_canvasDevicePixelRatio;
 
     QMutex m_mutex;
     QWaitCondition m_condition;

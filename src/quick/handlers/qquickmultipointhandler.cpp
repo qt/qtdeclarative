@@ -80,7 +80,7 @@ QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointe
 {
     QVector<QQuickEventPoint *> ret;
     int c = event->pointCount();
-    QRectF targetBounds = target()->mapRectToScene(target()->boundingRect())
+    QRectF parentBounds = parentItem()->mapRectToScene(parentItem()->boundingRect())
             .marginsAdded(QMarginsF(m_pointDistanceThreshold, m_pointDistanceThreshold, m_pointDistanceThreshold, m_pointDistanceThreshold));
     // If one or more points are newly pressed or released, all non-released points are candidates for this handler.
     // In other cases however, do not steal the grab: that is, if a point has a grabber,
@@ -93,7 +93,7 @@ QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointe
             if (exclusiveGrabber && exclusiveGrabber != this)
                 continue;
         }
-        if (p->state() != QQuickEventPoint::Released && targetBounds.contains(p->scenePosition()))
+        if (p->state() != QQuickEventPoint::Released && parentBounds.contains(p->scenePosition()))
             ret << p;
     }
     return ret;

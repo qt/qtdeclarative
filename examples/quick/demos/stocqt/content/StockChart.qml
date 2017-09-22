@@ -86,7 +86,7 @@ Rectangle {
             gridSize = 3;
         }
         else {
-            chart.startDate = new Date(2005, 3, 25);
+            chart.startDate = new Date(2011, 4, 25);
             gridSize = 4;
         }
 
@@ -345,7 +345,6 @@ Rectangle {
 
             onPaint: {
                 numPoints = stockModel.indexOf(chart.startDate);
-
                 if (chart.gridSize == 0)
                     chart.gridSize = numPoints
 

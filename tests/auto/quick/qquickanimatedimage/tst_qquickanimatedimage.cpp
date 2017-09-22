@@ -132,6 +132,16 @@ void tst_qquickanimatedimage::frameCount()
     QVERIFY(anim->isPlaying());
     QCOMPARE(anim->frameCount(), 3);
 
+    QSignalSpy frameCountChangedSpy(anim, &QQuickAnimatedImage::frameCountChanged);
+
+    const QUrl origSource = anim->source();
+    anim->setSource(QUrl());
+    QCOMPARE(anim->frameCount(), 0);
+    QCOMPARE(frameCountChangedSpy.count(), 1);
+    anim->setSource(origSource);
+    QCOMPARE(anim->frameCount(), 3);
+    QCOMPARE(frameCountChangedSpy.count(), 2);
+
     delete anim;
 }
 

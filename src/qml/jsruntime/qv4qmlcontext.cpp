@@ -62,20 +62,17 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(QQmlContextWrapper);
 DEFINE_MANAGED_VTABLE(QmlContext);
 
-void Heap::QQmlContextWrapper::init(QQmlContextData *context, QObject *scopeObject, bool ownsContext)
+void Heap::QQmlContextWrapper::init(QQmlContextData *context, QObject *scopeObject)
 {
     Object::init();
     readOnly = true;
-    this->ownsContext = ownsContext;
     isNullWrapper = false;
-    this->context = new QQmlGuardedContextData(context);
+    this->context = new QQmlContextDataRef(context);
     this->scopeObject.init(scopeObject);
 }
 
 void Heap::QQmlContextWrapper::destroy()
 {
-    if (*context && ownsContext)
-        (*context)->destroy();
     delete context;
     scopeObject.destroy();
     Object::destroy();
@@ -318,7 +315,7 @@ Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, cons
     context->isInternal = true;
     context->isJSContext = true;
 
-    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, (QObject*)0, true));
+    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, (QObject*)0));
     qml->d()->isNullWrapper = true;
 
     qml->setReadOnly(false);

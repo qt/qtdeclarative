@@ -3146,8 +3146,6 @@ void tst_qquickwindow::testChildMouseEventFilter_data()
     QTest::addColumn<InputState>("inputState");
     QTest::addColumn<DeliveryRecordVector>("expectedDeliveryOrder");
 
-    /*
-    // (This is an intended behavior change in progress: I24003f72875b309fa10b2d316916c5f86702cb57)
     QTest::newRow("if filtered and rejected, do not deliver it to the item that filtered it")
         << QPoint(100, 100)
         << InputState({
@@ -3166,7 +3164,6 @@ void tst_qquickwindow::testChildMouseEventFilter_data()
             // DeliveryRecord("r2")         // r2 filtered it -> do not deliver
             << DeliveryRecord("r1")
             );
-    */
 
     QTest::newRow("no filtering, no accepting")
         << QPoint(100, 100)
@@ -3283,7 +3280,7 @@ void tst_qquickwindow::testChildMouseEventFilter_data()
             << DeliveryRecord("r0", "r2")
 //            << DeliveryRecord("r2"   // since it got filtered we don't deliver to r2
             << DeliveryRecord("r0", "r1")
-            << DeliveryRecord("r1")
+//            << DeliveryRecord("r1")  // since it acted as a filter and returned true, we don't deliver to r1
             << DeliveryRecord("r0")
             << DeliveryRecord("root")
             );

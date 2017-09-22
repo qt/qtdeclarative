@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
 class Q_AUTOTEST_EXPORT QQuickTapHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
-    Q_PROPERTY(bool isPressed READ isPressed NOTIFY pressedChanged)
+    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged)
     Q_PROPERTY(int tapCount READ tapCount NOTIFY tapCountChanged)
     Q_PROPERTY(qreal timeHeld READ timeHeld NOTIFY timeHeldChanged)
     Q_PROPERTY(qreal longPressThreshold READ longPressThreshold WRITE setLongPressThreshold NOTIFY longPressThresholdChanged)

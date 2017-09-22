@@ -50,7 +50,7 @@ Item {
         id: rect
         anchors.fill: parent; anchors.margins: 40
         border.width: 3; border.color: "transparent"
-        color: handler.isPressed ? "lightsteelblue" : "darkgrey"
+        color: handler.pressed ? "lightsteelblue" : "darkgrey"
 
         TapHandler {
             id: handler
@@ -111,7 +111,7 @@ Item {
         Rectangle {
             id: expandingCircle
             radius: handler.timeHeld * 100
-            visible: radius > 0 && handler.isPressed
+            visible: radius > 0 && handler.pressed
             border.width: 3
             border.color: borderBlink.blinkColor
             color: "transparent"

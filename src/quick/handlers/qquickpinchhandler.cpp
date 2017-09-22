@@ -55,11 +55,33 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 /*!
     \qmltype PinchHandler
     \instantiates QQuickPinchHandler
-    \inqmlmodule QtQuick
+    \inqmlmodule Qt.labs.handlers
     \ingroup qtquick-handlers
     \brief Handler for pinch gestures
 
-    PinchHandler is a handler that is used to interactively rotate and zoom an Item.
+    PinchHandler is a handler that interprets a multi-finger gesture to
+    interactively rotate, zoom, and drag an Item. Like other Pointer Handlers,
+    by default it is fully functional, and manipulates its \l target,
+    which is the Item within which it is declared.
+
+    \snippet pointerHandlers/pinchHandler.qml 0
+
+    It has properties to restrict the range of dragging, rotation, and zoom.
+
+    If it is declared within one Item but is assigned a different \l target, it
+    handles events within the bounds of the outer Item but manipulates the
+    \c target Item instead:
+
+    \snippet pointerHandlers/pinchHandlerDifferentTarget.qml 0
+
+    A third way to use it is to set \l target to \c null and react to property
+    changes in some other way:
+
+    \snippet pointerHandlers/pinchHandlerNullTarget.qml 0
+
+    \image touchpoints-pinchhandler.png
+
+    \sa PinchArea
 */
 
 QQuickPinchHandler::QQuickPinchHandler(QObject *parent)
@@ -85,6 +107,12 @@ QQuickPinchHandler::~QQuickPinchHandler()
 {
 }
 
+/*!
+    \qmlproperty real QtQuick::PinchHandler::minimumScale
+
+    The minimum acceptable \l {Item::scale}{scale} to be applied
+    to the \l target.
+*/
 void QQuickPinchHandler::setMinimumScale(qreal minimumScale)
 {
     if (m_minimumScale == minimumScale)
@@ -94,6 +122,12 @@ void QQuickPinchHandler::setMinimumScale(qreal minimumScale)
     emit minimumScaleChanged();
 }
 
+/*!
+    \qmlproperty real QtQuick::PinchHandler::maximumScale
+
+    The maximum acceptable \l {Item::scale}{scale} to be applied
+    to the \l target.
+*/
 void QQuickPinchHandler::setMaximumScale(qreal maximumScale)
 {
     if (m_maximumScale == maximumScale)
@@ -103,6 +137,12 @@ void QQuickPinchHandler::setMaximumScale(qreal maximumScale)
     emit maximumScaleChanged();
 }
 
+/*!
+    \qmlproperty real QtQuick::PinchHandler::minimumRotation
+
+    The minimum acceptable \l {Item::rotation}{rotation} to be applied
+    to the \l target.
+*/
 void QQuickPinchHandler::setMinimumRotation(qreal minimumRotation)
 {
     if (m_minimumRotation == minimumRotation)
@@ -112,6 +152,12 @@ void QQuickPinchHandler::setMinimumRotation(qreal minimumRotation)
     emit minimumRotationChanged();
 }
 
+/*!
+    \qmlproperty real QtQuick::PinchHandler::maximumRotation
+
+    The maximum acceptable \l {Item::rotation}{rotation} to be applied
+    to the \l target.
+*/
 void QQuickPinchHandler::setMaximumRotation(qreal maximumRotation)
 {
     if (m_maximumRotation == maximumRotation)
@@ -121,6 +167,20 @@ void QQuickPinchHandler::setMaximumRotation(qreal maximumRotation)
     emit maximumRotationChanged();
 }
 
+/*!
+    \qmlproperty real QtQuick::PinchHandler::pinchOrigin
+
+    The point to be held in place, around which the \l target is scaled and
+    rotated.
+
+    \value FirstPoint
+        the first touch point, wherever the first finger is pressed
+    \value PinchCenter
+        the centroid between all the touch points at the time when the
+        PinchHandler becomes \l active
+    \value TargetCenter
+        the center of the \l target
+*/
 void QQuickPinchHandler::setPinchOrigin(QQuickPinchHandler::PinchOrigin pinchOrigin)
 {
     if (m_pinchOrigin == pinchOrigin)
@@ -131,10 +191,10 @@ void QQuickPinchHandler::setPinchOrigin(QQuickPinchHandler::PinchOrigin pinchOri
 }
 
 /*!
-    \qmlproperty real QQuickPinchHandler::minimumX
+    \qmlproperty real QtQuick::PinchHandler::minimumX
 
     The minimum acceptable x coordinate of the centroid
- */
+*/
 void QQuickPinchHandler::setMinimumX(qreal minX)
 {
     if (m_minimumX == minX)
@@ -144,10 +204,10 @@ void QQuickPinchHandler::setMinimumX(qreal minX)
 }
 
 /*!
-    \qmlproperty real QQuickPinchHandler::maximumX
+    \qmlproperty real QtQuick::PinchHandler::maximumX
 
     The maximum acceptable x coordinate of the centroid
- */
+*/
 void QQuickPinchHandler::setMaximumX(qreal maxX)
 {
     if (m_maximumX == maxX)
@@ -157,10 +217,10 @@ void QQuickPinchHandler::setMaximumX(qreal maxX)
 }
 
 /*!
-    \qmlproperty real QQuickPinchHandler::minimumY
+    \qmlproperty real QtQuick::PinchHandler::minimumY
 
     The minimum acceptable y coordinate of the centroid
- */
+*/
 void QQuickPinchHandler::setMinimumY(qreal minY)
 {
     if (m_minimumY == minY)
@@ -170,10 +230,10 @@ void QQuickPinchHandler::setMinimumY(qreal minY)
 }
 
 /*!
-    \qmlproperty real QQuickPinchHandler::maximumY
+    \qmlproperty real QtQuick::PinchHandler::maximumY
 
     The maximum acceptable y coordinate of the centroid
- */
+*/
 void QQuickPinchHandler::setMaximumY(qreal maxY)
 {
     if (m_maximumY == maxY)
@@ -183,7 +243,7 @@ void QQuickPinchHandler::setMaximumY(qreal maxY)
 }
 
 /*!
-    \qmlproperty QQuickPinchHandler::minimumTouchPoints
+    \qmlproperty int QtQuick::PinchHandler::minimumTouchPoints
 
     The pinch begins when this number of fingers are pressed.
     Until then, PinchHandler tracks the positions of any pressed fingers,
@@ -192,29 +252,35 @@ void QQuickPinchHandler::setMaximumY(qreal maxY)
 */
 
 /*!
-    \qmlproperty QQuickPinchHandler::active
+    \qmlproperty bool QtQuick::PinchHandler::active
+
+    This property is true when all the constraints (epecially \l minimumTouchPoints)
+    are satisfied and the \l target, if any, is being manipulated.
 */
 
 void QQuickPinchHandler::onActiveChanged()
 {
     if (active()) {
+        m_startMatrix = QMatrix4x4();
+        m_startCentroid = touchPointCentroid();
+        m_startAngles = angles(m_startCentroid);
+        m_startDistance = averageTouchPointDistance(m_startCentroid);
+        m_activeRotation = 0;
+        m_activeTranslation = QVector2D();
         if (const QQuickItem *t = target()) {
             m_startScale = t->scale(); // TODO incompatible with independent x/y scaling
             m_startRotation = t->rotation();
-            m_startCentroid = touchPointCentroid();
-            m_startAngles = angles(m_startCentroid);
-            m_startDistance = averageTouchPointDistance(m_startCentroid);
             QVector3D xformOrigin(t->transformOriginPoint());
-            m_startMatrix = QMatrix4x4();
             m_startMatrix.translate(t->x(), t->y());
             m_startMatrix.translate(xformOrigin);
             m_startMatrix.scale(m_startScale);
             m_startMatrix.rotate(m_startRotation, 0, 0, -1);
             m_startMatrix.translate(-xformOrigin);
-            m_activeRotation = 0;
-            m_activeTranslation = QPointF(0,0);
-            qCInfo(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
+        } else {
+            m_startScale = 1;
+            m_startRotation = 0;
         }
+        qCInfo(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
     } else {
         qCInfo(lcPinchHandler) << "deactivated with scale" << m_activeScale << "rotation" << m_activeRotation;
     }
@@ -244,7 +310,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     // TODO check m_pinchOrigin: right now it acts like it's set to PinchCenter
     m_centroid = touchPointCentroid();
     m_centroidVelocity = touchPointCentroidVelocity();
-    QRectF bounds(m_minimumX, m_minimumY, m_maximumX, m_maximumY);
+    QRectF bounds(m_minimumX, m_minimumY, m_maximumX - m_minimumX, m_maximumY - m_minimumY);
     // avoid mapping the minima and maxima, as they might have unmappable values
     // such as -inf/+inf. Because of this we perform the bounding to min/max in local coords.
     QPointF centroidParentPos;
@@ -271,7 +337,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     if (target() && target()->parentItem()) {
         // 3. Drag/translate
         const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(m_startCentroid);
-        m_activeTranslation = centroidParentPos - centroidStartParentPos;
+        m_activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
 
         // apply rotation + scaling around the centroid - then apply translation.
         QMatrix4x4 mat;
@@ -293,15 +359,15 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         target()->setRotation(rotation);
         target()->setScale(scale);
 
-
         // TODO some translation inadvertently happens; try to hold the chosen pinch origin in place
-
-        qCDebug(lcPinchHandler) << "centroid" << m_startCentroid << "->"  << m_centroid
-                                << ", distance" << m_startDistance << "->" << dist
-                                << ", startScale" << m_startScale << "->" << scale
-                                << ", activeRotation" << m_activeRotation
-                                << ", rotation" << rotation;
+    } else {
+        m_activeTranslation = QVector2D(m_centroid - m_startCentroid);
     }
+    qCDebug(lcPinchHandler) << "centroid" << m_startCentroid << "->"  << m_centroid
+                            << ", distance" << m_startDistance << "->" << dist
+                            << ", startScale" << m_startScale << "->" << scale
+                            << ", activeRotation" << m_activeRotation
+                            << ", rotation" << rotation;
 
     if (!containsReleasedPoints)
         acceptPoints(m_currentPoints);

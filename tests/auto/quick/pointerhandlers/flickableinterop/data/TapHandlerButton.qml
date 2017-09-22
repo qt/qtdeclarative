@@ -44,7 +44,7 @@ import Qt.labs.handlers 1.0
 Rectangle {
     id: root
     property alias label: label.text
-    property alias pressed: tap.isPressed
+    property alias pressed: tap.pressed
     property bool checked: false
     property alias gesturePolicy: tap.gesturePolicy
     property alias enabled: tap.enabled
@@ -54,7 +54,7 @@ Rectangle {
     border.color: "#9f9d9a"; border.width: 1; radius: height / 4; antialiasing: true
 
     gradient: Gradient {
-        GradientStop { position: 0.0; color: tap.isPressed ? "#b8b5b2" : "#efebe7" }
+        GradientStop { position: 0.0; color: tap.pressed ? "#b8b5b2" : "#efebe7" }
         GradientStop { position: 1.0; color: "#b8b5b2" }
     }
 
@@ -86,7 +86,7 @@ Rectangle {
     Rectangle {
         objectName: "expandingCircle"
         radius: tap.timeHeld * 100
-        visible: radius > 0 && tap.isPressed
+        visible: radius > 0 && tap.pressed
         border.width: 3
         border.color: "cyan"
         color: "transparent"

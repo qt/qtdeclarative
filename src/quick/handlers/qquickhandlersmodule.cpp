@@ -70,13 +70,18 @@ static void qt_quickhandlers_defineModule(const char *uri, int major, int minor)
     QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
     qmlRegisterUncreatableType<QQuickPointerEvent>(uri, major, minor, "PointerEvent",
         QQuickPointerHandler::tr("PointerEvent is only available as a parameter of several signals in PointerHandler"));
+    qmlRegisterUncreatableType<QQuickEventPoint>(uri, major, minor, "EventPoint",
+        QQuickPointerHandler::tr("EventPoint is only available as a member of PointerEvent"));
+    qmlRegisterUncreatableType<QQuickEventTouchPoint>(uri, major, minor, "EventTouchPoint",
+        QQuickPointerHandler::tr("EventTouchPoint is only available as a member of PointerEvent"));
     qmlRegisterUncreatableType<QQuickPointerDevice>(uri, major, minor, "PointerDevice",
         QQuickPointerHandler::tr("PointerDevice is only available as a property of PointerEvent"));
     qRegisterMetaType<QPointingDeviceUniqueId>("QPointingDeviceUniqueId");
     qmlRegisterUncreatableType<QPointingDeviceUniqueId>(uri, major, minor, "PointingDeviceUniqueId",
         QQuickPointerHandler::tr("PointingDeviceUniqueId is only available as a property of PointerEvent"));
 
-    qmlRegisterType<QQuickPointerHandler>(uri,major,minor,"PointerHandler");
+    qmlRegisterUncreatableType<QQuickPointerHandler>(uri,major,minor,"PointerHandler",
+        QQuickPointerHandler::tr("PointerHandler is an abstract base class"));
     qmlRegisterType<QQuickDragHandler>(uri,major,minor,"DragHandler");
     qmlRegisterUncreatableType<QQuickDragAxis>(uri, major, minor, "DragAxis",
         QQuickDragHandler::tr("DragAxis is only available as a grouped property of DragHandler"));

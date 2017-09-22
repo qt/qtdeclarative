@@ -18,5 +18,6 @@
         <file>content/+windows/Settings.qml</file>
         <file>content/StockListDelegate.qml</file>
         <file>content/Banner.qml</file>
+        <file>content/stocqt.js</file>
     </qresource>
 </RCC>
