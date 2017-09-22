@@ -6,6 +6,8 @@ HEADERS += ../../shared/testhttpserver.h
 SOURCES += tst_qquickmousearea.cpp \
            ../../shared/testhttpserver.cpp
 
+OTHER_FILES += $$files(data/*.qml)
+
 include (../../shared/util.pri)
 include (../shared/util.pri)
 

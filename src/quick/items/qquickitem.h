@@ -144,6 +144,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool antialiasing READ antialiasing WRITE setAntialiasing NOTIFY antialiasingChanged RESET resetAntialiasing)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged)
+    Q_PROPERTY(QObject *containsMask READ containsMask WRITE setContainsMask NOTIFY containsMaskChanged REVISION 11)
 
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickItemLayer *layer READ layer DESIGNABLE false CONSTANT FINAL)
 
@@ -320,6 +321,8 @@ public:
     QSharedPointer<QQuickItemGrabResult> grabToImage(const QSize &targetSize = QSize());
 
     Q_INVOKABLE virtual bool contains(const QPointF &point) const;
+    QObject *containsMask() const;
+    void setContainsMask(QObject *mask);
 
     QTransform itemTransform(QQuickItem *, bool *) const;
     QPointF mapToItem(const QQuickItem *item, const QPointF &point) const;
@@ -390,6 +393,7 @@ Q_SIGNALS:
     void zChanged();
     void implicitWidthChanged();
     void implicitHeightChanged();
+    Q_REVISION(11) void containsMaskChanged();
 
 protected:
     bool event(QEvent *) override;

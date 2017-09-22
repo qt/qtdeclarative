@@ -7568,9 +7568,75 @@ void QQuickItem::setKeepTouchGrab(bool keep)
 bool QQuickItem::contains(const QPointF &point) const
 {
     Q_D(const QQuickItem);
-    qreal x = point.x();
-    qreal y = point.y();
-    return x >= 0 && y >= 0 && x <= d->width && y <= d->height;
+    if (d->mask) {
+        bool res = false;
+        d->extra->maskContains.invoke(d->mask,
+                      Qt::DirectConnection,
+                      Q_RETURN_ARG(bool, res),
+                      Q_ARG(QPointF, point));
+        return res;
+    } else {
+        qreal x = point.x();
+        qreal y = point.y();
+        return x >= 0 && y >= 0 && x <= d->width && y <= d->height;
+    }
+}
+
+/*!
+    \qmlproperty QObject * QtQuick::Item::containsMask
+    \since 5.11
+    This property holds an optional mask for the Item to be used in the
+    QtQuick::Item::contains method.
+    QtQuick::Item::contains main use is currently to determine whether
+    an input event has landed into the item or not.
+
+    By default the \l contains method will return true for any point
+    within the Item's bounding box. \c containsMask allows for a
+    more fine-grained control. For example, the developer could
+    define and use an AnotherItem element as containsMask,
+    which has a specialized contains method, like:
+
+    \code
+    Item { id: item; containsMask: AnotherItem { id: anotherItem } }
+    \endcode
+
+    \e{item}'s contains method would then return true only if
+    \e{anotherItem}'s contains implementation returns true.
+*/
+QObject *QQuickItem::containsMask() const
+{
+    Q_D(const QQuickItem);
+    return d->mask.data();
+}
+
+void QQuickItem::setContainsMask(QObject *mask)
+{
+    Q_D(QQuickItem);
+    // an Item can't mask itself (to prevent infinite loop in contains())
+    if (d->mask.data() == mask || mask == static_cast<QObject *>(this))
+        return;
+
+    QQuickItem *quickMask = qobject_cast<QQuickItem *>(d->mask);
+    if (quickMask) {
+        QQuickItemPrivate *maskPrivate = QQuickItemPrivate::get(quickMask);
+        maskPrivate->registerAsContainsMask(this, false); // removed from use as my mask
+    }
+
+    if (mask) {
+        int methodIndex = mask->metaObject()->indexOfMethod(QByteArrayLiteral("contains(QPointF)"));
+        if (methodIndex < 0) {
+            qmlWarning(this) << QStringLiteral("QQuickItem: Object set as mask does not have an invokable contains method, ignoring it.");
+            return;
+        }
+        d->extra.value().maskContains = mask->metaObject()->method(methodIndex);
+    }
+    d->mask = mask;
+    quickMask = qobject_cast<QQuickItem *>(mask);
+    if (quickMask) {
+        QQuickItemPrivate *maskPrivate = QQuickItemPrivate::get(quickMask);
+        maskPrivate->registerAsContainsMask(this, true); // telling maskPrivate that "this" is using it as mask
+    }
+    emit containsMaskChanged();
 }
 
 /*!

@@ -368,6 +368,9 @@ public:
         QQuickDefaultClipNode *clipNode;
         QSGRootNode *rootNode;
 
+        // Mask contains() method
+        QMetaMethod maskContains;
+
         QObjectList resourcesList;
 
         // Although acceptedMouseButtons is inside ExtraData, we actually store
@@ -382,6 +385,10 @@ public:
         // 26 bits padding
     };
     QLazilyAllocated<ExtraData> extra;
+    // Contains mask
+    QPointer<QObject> mask;
+    // If the mask is an Item, inform it that it's being used as a mask (true) or is no longer being used (false)
+    virtual void registerAsContainsMask(QQuickItem * /* maskedItem */, bool /* set */) { }
 
     QQuickAnchors *anchors() const;
     mutable QQuickAnchors *_anchors;

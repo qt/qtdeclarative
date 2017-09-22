@@ -68,13 +68,45 @@ static bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut, QByteArr
     return true;
 }
 
+class CircleMask : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged)
+
+public:
+    virtual ~CircleMask() {}
+    qreal radius() const { return m_radius; }
+    void setRadius(qreal radius)
+    {
+        if (m_radius == radius)
+            return;
+        m_radius = radius;
+        emit radiusChanged();
+    }
+
+    Q_INVOKABLE bool contains(const QPointF &point) const
+    {
+        QPointF center(m_radius, m_radius);
+        QLineF line(center, point);
+        return line.length() <= m_radius;
+    }
+
+signals:
+    void radiusChanged();
+
+private:
+    qreal m_radius;
+};
+
 class tst_QQuickMouseArea: public QQmlDataTest
 {
     Q_OBJECT
 public:
     tst_QQuickMouseArea()
         : device(nullptr)
-    {}
+    {
+        qmlRegisterType<CircleMask>("Test", 1, 0, "CircleMask");
+    }
 
 private slots:
     void initTestCase() override;
@@ -132,6 +164,7 @@ private slots:
     void pressAndHold();
     void pressOneAndTapAnother_data();
     void pressOneAndTapAnother();
+    void mask();
 
 private:
     int startDragDistance() const {
@@ -2245,6 +2278,34 @@ void tst_QQuickMouseArea::pressOneAndTapAnother()
         QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, lower);
         QTRY_COMPARE(bottomMA->pressed(), false);
     }
+}
+
+void tst_QQuickMouseArea::mask()
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(initView(window, testFileUrl("mask.qml"), true, &errorMessage), errorMessage.constData());
+    window.show();
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root != 0);
+
+    // click inside the mask, and verify it registers
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100,100));
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(100,100));
+
+    QCOMPARE(window.rootObject()->property("pressed").toInt(), 1);
+    QCOMPARE(window.rootObject()->property("released").toInt(), 1);
+    QCOMPARE(window.rootObject()->property("clicked").toInt(), 1);
+
+    // click outside the mask (but inside the MouseArea), and verify it doesn't register
+    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(10,10));
+    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(10,10));
+
+    QCOMPARE(window.rootObject()->property("pressed").toInt(), 1);
+    QCOMPARE(window.rootObject()->property("released").toInt(), 1);
+    QCOMPARE(window.rootObject()->property("clicked").toInt(), 1);
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)
