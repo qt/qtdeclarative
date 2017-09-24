@@ -74,7 +74,7 @@ class QQuickShortcut : public QObject, public QQmlParserStatus
     Q_PROPERTY(Qt::ShortcutContext context READ context WRITE setContext NOTIFY contextChanged FINAL)
 
 public:
-    explicit QQuickShortcut(QObject *parent = Q_NULLPTR);
+    explicit QQuickShortcut(QObject *parent = nullptr);
     ~QQuickShortcut();
 
     QVariant sequence() const;

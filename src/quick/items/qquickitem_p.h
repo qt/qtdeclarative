@@ -749,7 +749,7 @@ class QQuickEnterKeyAttached : public QObject
     Q_PROPERTY(Qt::EnterKeyType type READ type WRITE setType NOTIFY typeChanged)
 
 public:
-    explicit QQuickEnterKeyAttached(QObject *parent = Q_NULLPTR);
+    explicit QQuickEnterKeyAttached(QObject *parent = nullptr);
 
     Qt::EnterKeyType type() const;
     void setType(Qt::EnterKeyType type);

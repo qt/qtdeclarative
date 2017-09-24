@@ -70,7 +70,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public Q
     Q_PROPERTY(QObject *screen READ screen WRITE setScreen NOTIFY screenChanged REVISION 2)
 
 public:
-    QQuickWindowQmlImpl(QWindow *parent = Q_NULLPTR);
+    QQuickWindowQmlImpl(QWindow *parent = nullptr);
 
     void setVisible(bool visible);
     void setVisibility(Visibility visibility);

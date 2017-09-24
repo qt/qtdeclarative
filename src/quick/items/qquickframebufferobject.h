@@ -75,7 +75,7 @@ public:
         void *data;
     };
 
-    QQuickFramebufferObject(QQuickItem *parent = Q_NULLPTR);
+    QQuickFramebufferObject(QQuickItem *parent = nullptr);
 
     bool textureFollowsItemSize() const;
     void setTextureFollowsItemSize(bool follows);

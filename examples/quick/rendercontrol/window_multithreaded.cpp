@@ -224,7 +224,7 @@ private:
 };
 
 WindowMultiThreaded::WindowMultiThreaded()
-    : m_qmlComponent(Q_NULLPTR),
+    : m_qmlComponent(nullptr),
       m_rootItem(0),
       m_quickInitialized(false),
       m_psrRequested(false)

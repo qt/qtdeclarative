@@ -399,11 +399,11 @@ ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *ha
     VALUE_TYPE_LOAD(QMetaType::Bool, bool, bool);
 
     QVariant v;
-    void *args[] = { Q_NULLPTR, Q_NULLPTR };
+    void *args[] = { nullptr, nullptr };
     if (result->propType() == QMetaType::QVariant) {
         args[0] = &v;
     } else {
-        v = QVariant(result->propType(), static_cast<void *>(Q_NULLPTR));
+        v = QVariant(result->propType(), static_cast<void *>(nullptr));
         args[0] = v.data();
     }
     metaObject->d.static_metacall(reinterpret_cast<QObject*>(gadget), QMetaObject::ReadProperty, index, args);

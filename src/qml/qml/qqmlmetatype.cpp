@@ -235,7 +235,7 @@ public:
 
     struct PropertyCacheByMinorVersion
     {
-        PropertyCacheByMinorVersion() : cache(Q_NULLPTR), minorVersion(-1) {}
+        PropertyCacheByMinorVersion() : cache(nullptr), minorVersion(-1) {}
         explicit PropertyCacheByMinorVersion(QQmlPropertyCache *pc, int ver) : cache(pc), minorVersion(ver) {}
         QQmlPropertyCachePtr cache;
         int minorVersion;
@@ -840,7 +840,7 @@ QQmlPropertyCache *QQmlTypePrivate::propertyCacheForMinorVersion(int minorVersio
     for (int i = 0; i < propertyCaches.count(); ++i)
         if (propertyCaches.at(i).minorVersion == minorVersion)
             return propertyCaches.at(i).cache;
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 void QQmlTypePrivate::setPropertyCacheForMinorVersion(int minorVersion, QQmlPropertyCache *cache)
@@ -2442,7 +2442,7 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
             while (it != data->propertyCaches.end()) {
 
                 if ((*it)->count() == 1) {
-                    QQmlPropertyCache *pc = Q_NULLPTR;
+                    QQmlPropertyCache *pc = nullptr;
                     qSwap(pc, *it);
                     it = data->propertyCaches.erase(it);
                     pc->release();

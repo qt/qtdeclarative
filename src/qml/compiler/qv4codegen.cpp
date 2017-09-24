@@ -2628,7 +2628,7 @@ bool Codegen::visit(ReturnStatement *ast)
 
     // Since we're leaving, don't let any finally statements we emit as part of the unwinding
     // jump to exception handlers at run-time if they throw.
-    IR::BasicBlock *unwindBlock = _function->newBasicBlock(/*no exception handler*/Q_NULLPTR);
+    IR::BasicBlock *unwindBlock = _function->newBasicBlock(/*no exception handler*/nullptr);
     _block->JUMP(unwindBlock);
     _block = unwindBlock;
 

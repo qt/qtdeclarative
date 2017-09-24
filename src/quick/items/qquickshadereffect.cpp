@@ -876,7 +876,7 @@ void QQuickShaderEffectPrivate::updatePolish()
 #if QT_CONFIG(opengl)
 bool QQuickShaderEffect::isOpenGLShaderEffect() const
 {
-    return m_glImpl != Q_NULLPTR;
+    return m_glImpl != nullptr;
 }
 #endif
 

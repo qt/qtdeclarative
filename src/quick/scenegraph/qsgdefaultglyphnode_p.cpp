@@ -310,7 +310,7 @@ void QSG32BitColorTextShader::updateState(const RenderState &state, QSGMaterial 
     QSGTextMaskMaterial *material = static_cast<QSGTextMaskMaterial *>(newEffect);
     QSGTextMaskMaterial *oldMaterial = static_cast<QSGTextMaskMaterial *>(oldEffect);
 
-    if (oldMaterial == Q_NULLPTR || material->color() != oldMaterial->color() || state.isOpacityDirty()) {
+    if (oldMaterial == nullptr || material->color() != oldMaterial->color() || state.isOpacityDirty()) {
         float opacity = material->color().w() * state.opacity();
         program()->setUniformValue(m_color_id, opacity);
     }

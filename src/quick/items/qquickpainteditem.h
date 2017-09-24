@@ -57,7 +57,7 @@ class Q_QUICK_EXPORT QQuickPaintedItem : public QQuickItem
     Q_PROPERTY(QSize textureSize READ textureSize WRITE setTextureSize NOTIFY textureSizeChanged)
 
 public:
-    explicit QQuickPaintedItem(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickPaintedItem(QQuickItem *parent = nullptr);
     virtual ~QQuickPaintedItem();
 
     enum RenderTarget {
@@ -118,7 +118,7 @@ Q_SIGNALS:
     void textureSizeChanged();
 
 protected:
-    QQuickPaintedItem(QQuickPaintedItemPrivate &dd, QQuickItem *parent = Q_NULLPTR);
+    QQuickPaintedItem(QQuickPaintedItemPrivate &dd, QQuickItem *parent = nullptr);
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
     void releaseResources() override;
     void itemChange(ItemChange, const ItemChangeData &) override;

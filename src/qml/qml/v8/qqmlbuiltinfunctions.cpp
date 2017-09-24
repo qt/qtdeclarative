@@ -521,7 +521,7 @@ void QtObject::method_matrix4x4(const BuiltinFunction *, Scope &scope, CallData 
     QV4::ExecutionEngine *v4 = scope.engine;
 
     if (callData->argc == 0) {
-        scope.result = scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 0, Q_NULLPTR));
+        scope.result = scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 0, nullptr));
         return;
     }
 

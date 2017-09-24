@@ -106,7 +106,7 @@ public:
     };
     Q_ENUM(TextRenderType)
 
-    explicit QQuickWindow(QWindow *parent = Q_NULLPTR);
+    explicit QQuickWindow(QWindow *parent = nullptr);
     explicit QQuickWindow(QQuickRenderControl *renderControl);
 
     virtual ~QQuickWindow();
@@ -202,7 +202,7 @@ public Q_SLOTS:
     void releaseResources();
 
 protected:
-    QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent = Q_NULLPTR);
+    QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent = nullptr);
 
     void exposeEvent(QExposeEvent *) override;
     void resizeEvent(QResizeEvent *) override;

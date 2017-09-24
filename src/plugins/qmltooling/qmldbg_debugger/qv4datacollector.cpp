@@ -432,7 +432,7 @@ QV4::ReturnedValue QV4DataCollector::getValue(Ref ref)
     QV4::Scope scope(engine());
     QV4::ScopedObject array(scope, m_values.value());
     Q_ASSERT(ref < array->getLength());
-    return array->getIndexed(ref, Q_NULLPTR);
+    return array->getIndexed(ref, nullptr);
 }
 
 // TODO: Drop this method once we don't need to support namesAsObjects anymore

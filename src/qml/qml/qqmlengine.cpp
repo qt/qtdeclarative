@@ -131,21 +131,21 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
         0,
         0,
         0,
-        Q_NULLPTR,
+        nullptr,
         reason,
 
         uri, versionMajor, versionMinor, qmlName, &staticMetaObject,
 
         QQmlAttachedPropertiesFunc(),
-        Q_NULLPTR,
+        nullptr,
 
         0,
         0,
         0,
 
-        Q_NULLPTR, Q_NULLPTR,
+        nullptr, nullptr,
 
-        Q_NULLPTR,
+        nullptr,
         0
     };
 

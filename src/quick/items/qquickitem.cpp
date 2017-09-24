@@ -2488,13 +2488,13 @@ QQuickItem *QQuickItemPrivate::nextTabChildItem(const QQuickItem *item, int star
 {
     if (!item) {
         qWarning() << "QQuickItemPrivate::nextTabChildItem called with null item.";
-        return Q_NULLPTR;
+        return nullptr;
     }
     const QList<QQuickItem *> &children = item->childItems();
     const int count = children.count();
     if (start < 0 || start >= count) {
         qWarning() << "QQuickItemPrivate::nextTabChildItem: Start index value out of range for item" << item;
-        return Q_NULLPTR;
+        return nullptr;
     }
     while (start < count) {
         QQuickItem *child = children.at(start);
@@ -2502,14 +2502,14 @@ QQuickItem *QQuickItemPrivate::nextTabChildItem(const QQuickItem *item, int star
             return child;
         ++start;
     }
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 QQuickItem *QQuickItemPrivate::prevTabChildItem(const QQuickItem *item, int start)
 {
     if (!item) {
         qWarning() << "QQuickItemPrivate::prevTabChildItem called with null item.";
-        return Q_NULLPTR;
+        return nullptr;
     }
     const QList<QQuickItem *> &children = item->childItems();
     const int count = children.count();
@@ -2517,7 +2517,7 @@ QQuickItem *QQuickItemPrivate::prevTabChildItem(const QQuickItem *item, int star
         start = count - 1;
     if (start < 0 || start >= count) {
         qWarning() << "QQuickItemPrivate::prevTabChildItem: Start index value out of range for item" << item;
-        return Q_NULLPTR;
+        return nullptr;
     }
     while (start >= 0) {
         QQuickItem *child = children.at(start);
@@ -2525,7 +2525,7 @@ QQuickItem *QQuickItemPrivate::prevTabChildItem(const QQuickItem *item, int star
             return child;
         --start;
     }
-    return Q_NULLPTR;
+    return nullptr;
 }
 
 QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, bool forward)
@@ -2565,8 +2565,8 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
         QQuickItem *last = current;
 
         bool hasChildren = !current->childItems().isEmpty() && current->isEnabled() && current->isVisible();
-        QQuickItem *firstChild = Q_NULLPTR;
-        QQuickItem *lastChild = Q_NULLPTR;
+        QQuickItem *firstChild = nullptr;
+        QQuickItem *lastChild = nullptr;
         if (hasChildren) {
             firstChild = nextTabChildItem(current, 0);
             if (!firstChild)
@@ -2598,11 +2598,11 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
             if (!current->childItems().isEmpty())
                 skip = true;
         // back to the parent
-        } else if (QQuickItem *parent = !isTabFence ? current->parentItem() : Q_NULLPTR) {
+        } else if (QQuickItem *parent = !isTabFence ? current->parentItem() : nullptr) {
             // we would evaluate the parent twice, thus we skip
             if (forward) {
                 skip = true;
-            } else if (QQuickItem *firstSibling = !forward ? nextTabChildItem(parent, 0) : Q_NULLPTR) {
+            } else if (QQuickItem *firstSibling = !forward ? nextTabChildItem(parent, 0) : nullptr) {
                 if (last != firstSibling
                     || (parent->isFocusScope() && parent->activeFocusOnTab() && parent->hasActiveFocus()))
                         skip = true;

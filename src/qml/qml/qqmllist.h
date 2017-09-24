@@ -61,20 +61,20 @@ public:
     typedef void (*ClearFunction)(QQmlListProperty<T> *);
 
     QQmlListProperty()
-        : object(Q_NULLPTR),
-          data(Q_NULLPTR),
-          append(Q_NULLPTR),
-          count(Q_NULLPTR),
-          at(Q_NULLPTR),
-          clear(Q_NULLPTR),
-          dummy1(Q_NULLPTR),
-          dummy2(Q_NULLPTR)
+        : object(nullptr),
+          data(nullptr),
+          append(nullptr),
+          count(nullptr),
+          at(nullptr),
+          clear(nullptr),
+          dummy1(nullptr),
+          dummy2(nullptr)
     {}
     QQmlListProperty(QObject *o, QList<T *> &list)
         : object(o), data(&list), append(qlist_append), count(qlist_count), at(qlist_at),
           clear(qlist_clear),
-          dummy1(Q_NULLPTR),
-          dummy2(Q_NULLPTR)
+          dummy1(nullptr),
+          dummy2(nullptr)
     {}
     QQmlListProperty(QObject *o, void *d, AppendFunction a, CountFunction c, AtFunction t,
                     ClearFunction r )
@@ -84,17 +84,17 @@ public:
           count(c),
           at(t),
           clear(r),
-          dummy1(Q_NULLPTR),
-          dummy2(Q_NULLPTR)
+          dummy1(nullptr),
+          dummy2(nullptr)
     {}
     QQmlListProperty(QObject *o, void *d, CountFunction c, AtFunction t)
         : object(o),
           data(d),
-          append(Q_NULLPTR),
+          append(nullptr),
           count(c), at(t),
-          clear(Q_NULLPTR),
-          dummy1(Q_NULLPTR),
-          dummy2(Q_NULLPTR)
+          clear(nullptr),
+          dummy1(nullptr),
+          dummy2(nullptr)
     {}
     bool operator==(const QQmlListProperty &o) const {
         return object == o.object &&
@@ -140,7 +140,7 @@ class Q_QML_EXPORT QQmlListReference
 {
 public:
     QQmlListReference();
-    QQmlListReference(QObject *, const char *property, QQmlEngine * = Q_NULLPTR);
+    QQmlListReference(QObject *, const char *property, QQmlEngine * = nullptr);
     QQmlListReference(const QQmlListReference &);
     QQmlListReference &operator=(const QQmlListReference &);
     ~QQmlListReference();

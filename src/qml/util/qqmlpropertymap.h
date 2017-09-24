@@ -55,7 +55,7 @@ class Q_QML_EXPORT QQmlPropertyMap : public QObject
 {
     Q_OBJECT
 public:
-    explicit QQmlPropertyMap(QObject *parent = Q_NULLPTR);
+    explicit QQmlPropertyMap(QObject *parent = nullptr);
     virtual ~QQmlPropertyMap();
 
     QVariant value(const QString &key) const;

@@ -1311,12 +1311,12 @@ bool QHashedString::compare(const char *lhs, const char *rhs, int length)
 
 quint32 QHashedString::stringHash(const QChar *data, int length)
 {
-    return QV4::String::createHashValue(data, length, Q_NULLPTR);
+    return QV4::String::createHashValue(data, length, nullptr);
 }
 
 quint32 QHashedString::stringHash(const char *data, int length)
 {
-    return QV4::String::createHashValue(data, length, Q_NULLPTR);
+    return QV4::String::createHashValue(data, length, nullptr);
 }
 
 void QHashedString::computeHash() const

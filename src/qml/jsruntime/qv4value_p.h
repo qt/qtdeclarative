@@ -601,7 +601,7 @@ struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 inline Primitive Primitive::undefinedValue()
 {
     Primitive v;
-    v.setM(Q_NULLPTR);
+    v.setM(nullptr);
     return v;
 }
 
