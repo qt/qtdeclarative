@@ -52,6 +52,6 @@ T.Frame {
 
     background: Rectangle {
         color: "transparent"
-        border.color: Default.frameLightColor
+        border.color: control.palette.mid
     }
 }
