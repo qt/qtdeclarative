@@ -48,47 +48,64 @@
 **
 ****************************************************************************/
 
-#include <QDebug>
-#include <QFontDatabase>
-#include <QGuiApplication>
-#include <QSettings>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QQuickStyle>
+import QtQuick 2.10
+import QtQuick.Controls 2.3
+import QtQuick.Layouts 1.3
 
-#include "assetfixer.h"
-#include "clipboard.h"
-#include "directoryvalidator.h"
+QtObject {
+    property var supportedStates: [
+        [],
+        ["disabled"],
+        // TODO: no down property to test this with
+//        ["pressed"]
+    ]
 
-int main(int argc, char *argv[])
-{
-    QGuiApplication::setApplicationName("testbench");
-    QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
-    QGuiApplication app(argc, argv);
-
-    QSettings settings;
-    QString style = QQuickStyle::name();
-    if (!style.isEmpty())
-        settings.setValue("style", style);
-    else
-        QQuickStyle::setStyle(settings.value("style").isValid() ? settings.value("style").toString() : "Imagine");
-
-    if (QFontDatabase::addApplicationFont(":/fonts/fontawesome.ttf") == -1) {
-        qWarning() << "Failed to load fontawesome font";
+    property Component component: PageIndicator {
+        enabled: !is("disabled")
+        count: 5
     }
 
-    QQmlApplicationEngine engine;
+    property Component exampleComponent: ColumnLayout {
+        implicitWidth: 200
+        implicitHeight: 200
 
-    qmlRegisterType<AssetFixer>("App", 1, 0, "AssetFixer");
-    qmlRegisterType<Clipboard>("App", 1, 0, "Clipboard");
-    qmlRegisterType<DirectoryValidator>("App", 1, 0, "DirectoryValidator");
+        // TODO: why doesn't this fill the ColumnLayout? :/
+        StackLayout {
+            id: swipeView
+            currentIndex: pageIndicator.currentIndex
 
-    engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
+            Label {
+                text: qsTr("Page 1")
+                horizontalAlignment: Label.AlignHCenter
+            }
 
-    engine.load(QUrl(QStringLiteral("qrc:/testbench.qml")));
+            Label {
+                text: qsTr("Page 2")
+                horizontalAlignment: Label.AlignHCenter
+            }
 
-    return app.exec();
+            Label {
+                text: qsTr("Page 3")
+                horizontalAlignment: Label.AlignHCenter
+            }
+
+            Label {
+                text: qsTr("Page 4")
+                horizontalAlignment: Label.AlignHCenter
+            }
+
+            Label {
+                text: qsTr("Page 5")
+                horizontalAlignment: Label.AlignHCenter
+            }
+        }
+
+        PageIndicator {
+            id: pageIndicator
+            currentIndex: swipeView.currentIndex
+            count: swipeView.count
+            interactive: true
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+    }
 }
-

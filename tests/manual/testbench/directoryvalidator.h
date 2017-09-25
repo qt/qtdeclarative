@@ -48,47 +48,37 @@
 **
 ****************************************************************************/
 
-#include <QDebug>
-#include <QFontDatabase>
-#include <QGuiApplication>
-#include <QSettings>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QQuickStyle>
+#ifndef DIRECTORYVALIDATOR_H
+#define DIRECTORYVALIDATOR_H
 
-#include "assetfixer.h"
-#include "clipboard.h"
-#include "directoryvalidator.h"
+#include <QObject>
 
-int main(int argc, char *argv[])
+class DirectoryValidator : public QObject
 {
-    QGuiApplication::setApplicationName("testbench");
-    QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    Q_OBJECT
+    Q_PROPERTY(QString path READ path WRITE setPath NOTIFY pathChanged FINAL)
+    Q_PROPERTY(bool valid READ isValid NOTIFY validChanged FINAL)
+    Q_PROPERTY(QString errorMessage READ errorMessage NOTIFY errorMessageChanged FINAL)
 
-    QGuiApplication app(argc, argv);
+public:
+    explicit DirectoryValidator(QObject *parent = nullptr);
 
-    QSettings settings;
-    QString style = QQuickStyle::name();
-    if (!style.isEmpty())
-        settings.setValue("style", style);
-    else
-        QQuickStyle::setStyle(settings.value("style").isValid() ? settings.value("style").toString() : "Imagine");
+    QString path() const;
+    void setPath(const QString &path);
 
-    if (QFontDatabase::addApplicationFont(":/fonts/fontawesome.ttf") == -1) {
-        qWarning() << "Failed to load fontawesome font";
-    }
+    bool isValid() const;
+    QString errorMessage() const;
 
-    QQmlApplicationEngine engine;
+signals:
+    void pathChanged();
+    void validChanged();
+    void errorMessageChanged();
 
-    qmlRegisterType<AssetFixer>("App", 1, 0, "AssetFixer");
-    qmlRegisterType<Clipboard>("App", 1, 0, "Clipboard");
-    qmlRegisterType<DirectoryValidator>("App", 1, 0, "DirectoryValidator");
+private:
+    void updateValid();
 
-    engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
+    QString mPath;
+    QString mErrorMessage;
+};
 
-    engine.load(QUrl(QStringLiteral("qrc:/testbench.qml")));
-
-    return app.exec();
-}
-
+#endif // DIRECTORYVALIDATOR_H

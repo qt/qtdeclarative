@@ -48,47 +48,47 @@
 **
 ****************************************************************************/
 
-#include <QDebug>
-#include <QFontDatabase>
-#include <QGuiApplication>
-#include <QSettings>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QQuickStyle>
+import QtQuick 2.10
+import QtQuick.Controls 2.3
 
-#include "assetfixer.h"
-#include "clipboard.h"
-#include "directoryvalidator.h"
+QtObject {
+    property var supportedStates: [
+        [],
+        ["disabled"],
+        ["pressed"],
+        ["checked"],
+        ["checked", "disabled"],
+        ["checked", "hovered"],
+        ["highlighted"],
+        ["highlighted", "disabled"],
+        ["highlighted", "hovered"],
+        ["highlighted", "pressed"],
+        ["highlighted", "checked"],
+        ["highlighted", "checkable", "hovered"],
+        ["highlighted", "checkable", "pressed"],
+        ["highlighted", "checkable", "checked"],
+        ["hovered"],
+        ["flat"],
+        ["flat", "disabled"],
+        ["flat", "hovered"],
+        ["flat", "pressed"],
+        ["flat", "checked"],
+        ["flat", "checkable"],
+        ["flat", "checkable", "hovered"],
+        ["flat", "checkable", "pressed"],
+        ["flat", "checkable", "checked", "pressed"],
+        ["flat", "checkable", "highlighted"],
+        ["flat", "checkable", "highlighted", "pressed"],
+        ["flat", "checkable", "highlighted", "checked"]
+    ]
 
-int main(int argc, char *argv[])
-{
-    QGuiApplication::setApplicationName("testbench");
-    QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
-    QGuiApplication app(argc, argv);
-
-    QSettings settings;
-    QString style = QQuickStyle::name();
-    if (!style.isEmpty())
-        settings.setValue("style", style);
-    else
-        QQuickStyle::setStyle(settings.value("style").isValid() ? settings.value("style").toString() : "Imagine");
-
-    if (QFontDatabase::addApplicationFont(":/fonts/fontawesome.ttf") == -1) {
-        qWarning() << "Failed to load fontawesome font";
+    property Component component: Button {
+        text: "Button"
+        enabled: !is("disabled")
+        flat: is("flat")
+        checkable: is("checkable")
+        // Only set it if it's pressed, or the non-pressed examples will have no press effects
+        down: is("pressed") ? true : undefined
+        highlighted: is("highlighted")
     }
-
-    QQmlApplicationEngine engine;
-
-    qmlRegisterType<AssetFixer>("App", 1, 0, "AssetFixer");
-    qmlRegisterType<Clipboard>("App", 1, 0, "Clipboard");
-    qmlRegisterType<DirectoryValidator>("App", 1, 0, "DirectoryValidator");
-
-    engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
-
-    engine.load(QUrl(QStringLiteral("qrc:/testbench.qml")));
-
-    return app.exec();
 }
-

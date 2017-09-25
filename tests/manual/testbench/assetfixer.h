@@ -48,47 +48,79 @@
 **
 ****************************************************************************/
 
-#include <QDebug>
-#include <QFontDatabase>
-#include <QGuiApplication>
-#include <QSettings>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QQuickStyle>
+#ifndef ASSETFIXER_H
+#define ASSETFIXER_H
 
-#include "assetfixer.h"
-#include "clipboard.h"
-#include "directoryvalidator.h"
+#include <QObject>
+#include <QDateTime>
+#include <QFileSystemWatcher>
+#include <QQmlParserStatus>
+#include <QUrl>
 
-int main(int argc, char *argv[])
+class AssetFixer : public QObject, public QQmlParserStatus
 {
-    QGuiApplication::setApplicationName("testbench");
-    QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    Q_OBJECT
+    Q_PROPERTY(bool shouldWatch READ shouldWatch WRITE setShouldWatch NOTIFY shouldWatchChanged FINAL)
+    Q_PROPERTY(bool shouldFix READ shouldFix WRITE setShouldFix NOTIFY shouldFixChanged FINAL)
+    Q_PROPERTY(QString assetDirectory READ assetDirectory WRITE setAssetDirectory NOTIFY assetDirectoryChanged FINAL)
+    Q_PROPERTY(QUrl assetDirectoryUrl READ assetDirectoryUrl NOTIFY assetDirectoryChanged FINAL)
+    Q_PROPERTY(QDateTime assetDirectoryLastModified READ assetDirectoryLastModified WRITE setAssetDirectoryLastModified
+        NOTIFY assetDirectoryLastModifiedChanged FINAL)
+    Q_INTERFACES(QQmlParserStatus)
 
-    QGuiApplication app(argc, argv);
+public:
+    explicit AssetFixer(QObject *parent = nullptr);
 
-    QSettings settings;
-    QString style = QQuickStyle::name();
-    if (!style.isEmpty())
-        settings.setValue("style", style);
-    else
-        QQuickStyle::setStyle(settings.value("style").isValid() ? settings.value("style").toString() : "Imagine");
+    bool shouldWatch() const;
+    void setShouldWatch(bool shouldWatch);
 
-    if (QFontDatabase::addApplicationFont(":/fonts/fontawesome.ttf") == -1) {
-        qWarning() << "Failed to load fontawesome font";
-    }
+    bool shouldFix() const;
+    void setShouldFix(bool shouldFix);
 
-    QQmlApplicationEngine engine;
+    QString assetDirectory() const;
+    void setAssetDirectory(const QString &assetDirectory);
 
-    qmlRegisterType<AssetFixer>("App", 1, 0, "AssetFixer");
-    qmlRegisterType<Clipboard>("App", 1, 0, "Clipboard");
-    qmlRegisterType<DirectoryValidator>("App", 1, 0, "DirectoryValidator");
+    QUrl assetDirectoryUrl() const;
 
-    engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
+    QDateTime assetDirectoryLastModified() const;
+    void setAssetDirectoryLastModified(const QDateTime &assetDirectoryLastModified);
 
-    engine.load(QUrl(QStringLiteral("qrc:/testbench.qml")));
+signals:
+    void shouldWatchChanged();
+    void shouldFixChanged();
+    void assetDirectoryChanged();
+    void assetDirectoryLastModifiedChanged();
 
-    return app.exec();
-}
+    void fixSuggested();
+    void delayedFixSuggested();
+    void reloadSuggested();
 
+    void error(const QString &errorMessage);
+
+public slots:
+    void clearImageCache();
+    void fixAssets();
+
+protected:
+    void componentComplete() override;
+    void classBegin() override;
+
+private slots:
+    void onAssetsChanged();
+
+private:
+    void stopWatching();
+    void startWatching();
+
+    bool isAssetDirectoryValid(const QString &assetDirectory);
+
+    bool mComponentComplete;
+    bool mFirstWatch;
+    bool mShouldWatch;
+    bool mShouldFix;
+    QString mAssetDirectory;
+    QFileSystemWatcher mFileSystemWatcher;
+    QDateTime mLastModified;
+};
+
+#endif // ASSETFIXER_H

@@ -48,47 +48,33 @@
 **
 ****************************************************************************/
 
-#include <QDebug>
-#include <QFontDatabase>
-#include <QGuiApplication>
-#include <QSettings>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QQuickStyle>
+import QtQuick 2.10
+import QtQuick.Controls 2.3
+import QtQuick.Layouts 1.3
 
-#include "assetfixer.h"
-#include "clipboard.h"
-#include "directoryvalidator.h"
+RowLayout {
+    property alias labelText: label.text
+    property string toolTipText
+    property alias color: textField.text
 
-int main(int argc, char *argv[])
-{
-    QGuiApplication::setApplicationName("testbench");
-    QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    ToolTip.text: toolTipText
+    ToolTip.visible: textField.hovered
 
-    QGuiApplication app(argc, argv);
+    Layout.columnSpan: 2
 
-    QSettings settings;
-    QString style = QQuickStyle::name();
-    if (!style.isEmpty())
-        settings.setValue("style", style);
-    else
-        QQuickStyle::setStyle(settings.value("style").isValid() ? settings.value("style").toString() : "Imagine");
+    Label {
+        id: label
 
-    if (QFontDatabase::addApplicationFont(":/fonts/fontawesome.ttf") == -1) {
-        qWarning() << "Failed to load fontawesome font";
+        Layout.fillWidth: true
     }
 
-    QQmlApplicationEngine engine;
+    TextField {
+        id: textField
 
-    qmlRegisterType<AssetFixer>("App", 1, 0, "AssetFixer");
-    qmlRegisterType<Clipboard>("App", 1, 0, "Clipboard");
-    qmlRegisterType<DirectoryValidator>("App", 1, 0, "DirectoryValidator");
+        validator: RegExpValidator{
+            regExp: /#?[0-9a-fA-F]*/
+        }
 
-    engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
-
-    engine.load(QUrl(QStringLiteral("qrc:/testbench.qml")));
-
-    return app.exec();
+        Layout.preferredWidth: 200
+    }
 }
-

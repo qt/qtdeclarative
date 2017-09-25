@@ -48,47 +48,25 @@
 **
 ****************************************************************************/
 
-#include <QDebug>
-#include <QFontDatabase>
-#include <QGuiApplication>
-#include <QSettings>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QQuickStyle>
+#ifndef CLIPBOARD_H
+#define CLIPBOARD_H
 
-#include "assetfixer.h"
-#include "clipboard.h"
-#include "directoryvalidator.h"
+#include <QObject>
+#include <QJSValue>
+#include <QVariant>
 
-int main(int argc, char *argv[])
+class Clipboard : public QObject
 {
-    QGuiApplication::setApplicationName("testbench");
-    QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    Q_OBJECT
+public:
+    explicit Clipboard(QObject *parent = nullptr);
 
-    QGuiApplication app(argc, argv);
+public slots:
+    void copy(const QJSValue &keyValueMap);
+    QVariant paste() const;
 
-    QSettings settings;
-    QString style = QQuickStyle::name();
-    if (!style.isEmpty())
-        settings.setValue("style", style);
-    else
-        QQuickStyle::setStyle(settings.value("style").isValid() ? settings.value("style").toString() : "Imagine");
+//    void copyPaletteSettingsToClipboard();
+//    void importPaletteSettingsFromClipboard();
+};
 
-    if (QFontDatabase::addApplicationFont(":/fonts/fontawesome.ttf") == -1) {
-        qWarning() << "Failed to load fontawesome font";
-    }
-
-    QQmlApplicationEngine engine;
-
-    qmlRegisterType<AssetFixer>("App", 1, 0, "AssetFixer");
-    qmlRegisterType<Clipboard>("App", 1, 0, "Clipboard");
-    qmlRegisterType<DirectoryValidator>("App", 1, 0, "DirectoryValidator");
-
-    engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
-
-    engine.load(QUrl(QStringLiteral("qrc:/testbench.qml")));
-
-    return app.exec();
-}
-
+#endif // CLIPBOARD_H

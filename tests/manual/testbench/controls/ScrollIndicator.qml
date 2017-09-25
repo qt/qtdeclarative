@@ -48,47 +48,57 @@
 **
 ****************************************************************************/
 
-#include <QDebug>
-#include <QFontDatabase>
-#include <QGuiApplication>
-#include <QSettings>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QQuickStyle>
+import QtQuick 2.10
+import QtQuick.Controls 2.3
 
-#include "assetfixer.h"
-#include "clipboard.h"
-#include "directoryvalidator.h"
+QtObject {
+    property var supportedStates: [
+        ["vertical"],
+        ["vertical", "disabled"],
+        ["horizontal"],
+        ["horizontal", "disabled"],
+    ]
 
-int main(int argc, char *argv[])
-{
-    QGuiApplication::setApplicationName("testbench");
-    QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    property Component component: Frame {
+        width: 100
+        height: 100
+        clip: true
 
-    QGuiApplication app(argc, argv);
+        Label {
+            text: "ABCDEFG\nHIJKLMN"
+            font.pixelSize: 40
+            x: horizontalScrollIndicator.position * width
+            y: verticalScrollIndicator.position * height
+        }
 
-    QSettings settings;
-    QString style = QQuickStyle::name();
-    if (!style.isEmpty())
-        settings.setValue("style", style);
-    else
-        QQuickStyle::setStyle(settings.value("style").isValid() ? settings.value("style").toString() : "Imagine");
+        ScrollIndicator {
+            id: verticalScrollIndicator
+            enabled: !is("disabled")
+            orientation: Qt.Vertical
+            active: true
+            visible: is("vertical")
+            size: 0.3
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+        }
 
-    if (QFontDatabase::addApplicationFont(":/fonts/fontawesome.ttf") == -1) {
-        qWarning() << "Failed to load fontawesome font";
+        ScrollIndicator {
+            id: horizontalScrollIndicator
+            enabled: !is("disabled")
+            orientation: Qt.Vertical
+            active: true
+            visible: is("horizontal")
+            size: 0.3
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+
+            Binding {
+                target: horizontalScrollIndicator
+                property: "active"
+                value: horizontalScrollIndicator.visible
+            }
+        }
     }
-
-    QQmlApplicationEngine engine;
-
-    qmlRegisterType<AssetFixer>("App", 1, 0, "AssetFixer");
-    qmlRegisterType<Clipboard>("App", 1, 0, "Clipboard");
-    qmlRegisterType<DirectoryValidator>("App", 1, 0, "DirectoryValidator");
-
-    engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
-
-    engine.load(QUrl(QStringLiteral("qrc:/testbench.qml")));
-
-    return app.exec();
 }
-

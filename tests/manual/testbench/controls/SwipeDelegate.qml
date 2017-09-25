@@ -48,47 +48,57 @@
 **
 ****************************************************************************/
 
-#include <QDebug>
-#include <QFontDatabase>
-#include <QGuiApplication>
-#include <QSettings>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-#include <QQuickStyle>
+import QtQuick 2.10
+import QtQuick.Controls 2.3
 
-#include "assetfixer.h"
-#include "clipboard.h"
-#include "directoryvalidator.h"
+QtObject {
+    property var supportedStates: [
+        [],
+        ["disabled"],
+        ["pressed"],
+        ["highlighted"],
+        ["highlighted", "pressed"]
+    ]
 
-int main(int argc, char *argv[])
-{
-    QGuiApplication::setApplicationName("testbench");
-    QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    property Component actionComponent: Component {
+        Rectangle {
+            color: SwipeDelegate.pressed ? "#333" : "#444"
+            width: parent ? parent.width : 0
+            height: parent ? parent.height: 0
+            clip: true
 
-    QGuiApplication app(argc, argv);
-
-    QSettings settings;
-    QString style = QQuickStyle::name();
-    if (!style.isEmpty())
-        settings.setValue("style", style);
-    else
-        QQuickStyle::setStyle(settings.value("style").isValid() ? settings.value("style").toString() : "Imagine");
-
-    if (QFontDatabase::addApplicationFont(":/fonts/fontawesome.ttf") == -1) {
-        qWarning() << "Failed to load fontawesome font";
+            Label {
+                text: "Test"
+                color: "white"
+                anchors.centerIn: parent
+            }
+        }
     }
 
-    QQmlApplicationEngine engine;
+    property Component component: SwipeDelegate {
+        id: swipeDelegate
+        text: "SwipeDelegate"
+        enabled: !is("disabled")
+        checkable: is("checkable")
+        // Only set it if it's pressed, or the non-pressed examples will have no press effects
+        down: is("pressed") ? true : undefined
+        highlighted: is("highlighted")
 
-    qmlRegisterType<AssetFixer>("App", 1, 0, "AssetFixer");
-    qmlRegisterType<Clipboard>("App", 1, 0, "Clipboard");
-    qmlRegisterType<DirectoryValidator>("App", 1, 0, "DirectoryValidator");
+        swipe.left: actionComponent
+        swipe.right: actionComponent
+    }
 
-    engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
+    property Component exampleComponent: ListView {
+        implicitWidth: 200
+        implicitHeight: 200
+        clip: true
+        model: 20
+        delegate: SwipeDelegate {
+            width: parent.width
+            text: "SwipeDelegate"
 
-    engine.load(QUrl(QStringLiteral("qrc:/testbench.qml")));
-
-    return app.exec();
+            swipe.left: actionComponent
+            swipe.right: actionComponent
+        }
+    }
 }
-
