@@ -70,8 +70,6 @@ Module {
         isSingleton: true
         exportMetaObjectRevisions: [0]
         Property { name: "backgroundColor"; type: "QColor"; isReadonly: true }
-        Property { name: "overlayModalColor"; type: "QColor"; isReadonly: true }
-        Property { name: "overlayDimColor"; type: "QColor"; isReadonly: true }
         Property { name: "textColor"; type: "QColor"; isReadonly: true }
         Property { name: "textDarkColor"; type: "QColor"; isReadonly: true }
         Property { name: "textLightColor"; type: "QColor"; isReadonly: true }

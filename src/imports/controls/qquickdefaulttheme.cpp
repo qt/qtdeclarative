@@ -61,8 +61,12 @@ QQuickDefaultTheme::QQuickDefaultTheme()
     systemPalette.setColor(QPalette::Text, QColor::fromRgba(0xFF353637));
     systemPalette.setColor(QPalette::Disabled, QPalette::Text, QColor::fromRgba(0xFFC2C2C2));
 
+    systemPalette.setColor(QPalette::Shadow, QColor::fromRgba(0xFF28282A));
+
     systemPalette.setColor(QPalette::ToolTipBase, QColor::fromRgba(0xFFFFFFFF));
     systemPalette.setColor(QPalette::ToolTipText, QColor::fromRgba(0xFF000000));
+
+    systemPalette.setColor(QPalette::Window, QColor::fromRgba(0xFFFFFFFF));
 
     systemPalette.setColor(QPalette::WindowText, QColor::fromRgba(0xFF26282A));
     systemPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor::fromRgba(0xFFBDBEBF));

@@ -48,16 +48,6 @@ QColor QQuickDefaultStyle::backgroundColor() const
     return QColor::fromRgba(0xFFFFFFFF);
 }
 
-QColor QQuickDefaultStyle::overlayModalColor() const
-{
-    return QColor::fromRgba(0x7F28282A);
-}
-
-QColor QQuickDefaultStyle::overlayDimColor() const
-{
-    return QColor::fromRgba(0x1F28282A);
-}
-
 QColor QQuickDefaultStyle::textColor() const
 {
     return QColor::fromRgba(0xFF353637);

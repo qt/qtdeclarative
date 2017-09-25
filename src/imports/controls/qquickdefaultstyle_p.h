@@ -57,8 +57,6 @@ class QQuickDefaultStyle : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QColor backgroundColor READ backgroundColor CONSTANT FINAL)
-    Q_PROPERTY(QColor overlayModalColor READ overlayModalColor CONSTANT FINAL)
-    Q_PROPERTY(QColor overlayDimColor READ overlayDimColor CONSTANT FINAL)
     Q_PROPERTY(QColor textColor READ textColor CONSTANT FINAL)
     Q_PROPERTY(QColor textDarkColor READ textDarkColor CONSTANT FINAL)
     Q_PROPERTY(QColor textLightColor READ textLightColor CONSTANT FINAL)
@@ -97,8 +95,6 @@ public:
     explicit QQuickDefaultStyle(QObject *parent = nullptr);
 
     QColor backgroundColor() const;
-    QColor overlayModalColor() const;
-    QColor overlayDimColor() const;
     QColor textColor() const;
     QColor textDarkColor() const;
     QColor textLightColor() const;
