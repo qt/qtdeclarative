@@ -179,6 +179,7 @@ private slots:
     void importJs_data();
     void importJs();
     void explicitSelfImport();
+    void importInternalType();
 
     void qmlAttachedPropertiesObjectMethod();
     void customOnProperty();
@@ -3084,6 +3085,29 @@ void tst_qqmllanguage::explicitSelfImport()
     QVERIFY(component.errors().count() == 0);
 
     engine.setImportPathList(defaultImportPathList);
+}
+
+void tst_qqmllanguage::importInternalType()
+{
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+
+    {
+        QQmlComponent component(&engine);
+        component.setData("import modulewithinternaltypes 1.0\nPublicType{}", QUrl());
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QVERIFY(obj->property("myInternalType").value<QObject*>() != 0);
+    }
+    {
+        QQmlComponent component(&engine);
+        component.setData("import modulewithinternaltypes 1.0\nPublicTypeWithExplicitImport{}", QUrl());
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QVERIFY(obj->property("myInternalType").value<QObject*>() != 0);
+    }
 }
 
 void tst_qqmllanguage::qmlAttachedPropertiesObjectMethod()

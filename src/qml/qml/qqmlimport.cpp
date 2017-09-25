@@ -753,6 +753,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader,
 
             // importing version -1 means import ALL versions
             if ((majversion == -1) ||
+                (implicitlyImported && c.internal) || // allow the implicit import of internal types
                 (c.majorVersion == majversion && c.minorVersion <= minversion)) {
                 // Is this better than the previous candidate?
                 if ((candidate == end) ||
@@ -1510,12 +1511,15 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
 
     // ### For enum support, we are now adding the implicit import always (and earlier). Bail early
     //     if the implicit import has already been explicitly added, otherwise we can run into issues
-    //     with duplicate imports
+    //     with duplicate imports. However remember that we attempted to add this as implicit import, to
+    //     allow for the loading of internal types.
     if (isImplicitImport) {
         for (QList<QQmlImportInstance *>::const_iterator it = nameSpace->imports.constBegin();
              it != nameSpace->imports.constEnd(); ++it) {
-            if ((*it)->uri == importUri)
+            if ((*it)->uri == importUri) {
+                (*it)->implicitlyImported = true;
                 return true;
+            }
         }
     }
 

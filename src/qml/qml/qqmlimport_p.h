@@ -81,6 +81,7 @@ struct QQmlImportInstance
     int majversion; // the major version imported
     int minversion; // the minor version imported
     bool isLibrary; // true means that this is not a file import
+    bool implicitlyImported = false;
     QQmlDirComponents qmlDirComponents; // a copy of the components listed in the qmldir
     QQmlDirScripts qmlDirScripts; // a copy of the scripts in the qmldir
 
