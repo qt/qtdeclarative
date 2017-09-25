@@ -1422,9 +1422,12 @@ bool QQuickComboBox::eventFilter(QObject *object, QEvent *event)
             d->hidePopup(false);
         break;
     case QEvent::KeyPress: {
-        const int key = static_cast<QKeyEvent *>(event)->key();
+        QKeyEvent *ke = static_cast<QKeyEvent *>(event);
+        if (d->filterKeyEvent(ke, false))
+            return true;
+        event->accept();
         if (d->extra.isAllocated())
-            d->extra->allowComplete = key != Qt::Key_Backspace && key != Qt::Key_Delete;
+            d->extra->allowComplete = ke->key() != Qt::Key_Backspace && ke->key() != Qt::Key_Delete;
         break;
     }
     case QEvent::FocusOut:

@@ -56,6 +56,11 @@ class QQuickDefaultTheme : public QQuickTheme
 {
 public:
     explicit QQuickDefaultTheme();
+
+    const QPalette *palette(Palette type) const override;
+
+private:
+    QPalette systemPalette;
 };
 
 QT_END_NAMESPACE

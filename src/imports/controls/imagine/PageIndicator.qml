@@ -53,7 +53,7 @@ T.PageIndicator {
     bottomPadding: background ? background.bottomPadding : 0
 
     delegate: Image {
-        source: Imagine.path + "pageindicator-delegate"
+        source: Imagine.url + "pageindicator-delegate"
         ImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -79,7 +79,7 @@ T.PageIndicator {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "pageindicator-background"
+        source: Imagine.url + "pageindicator-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

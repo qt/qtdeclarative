@@ -53,7 +53,7 @@ T.ToolSeparator {
     bottomPadding: background ? background.bottomPadding : 0
 
     contentItem: NinePatchImage {
-        source: Imagine.path + "toolseparator-separator"
+        source: Imagine.url + "toolseparator-separator"
         NinePatchImageSelector on source {
             states: [
                 {"vertical": control.vertical},
@@ -69,7 +69,7 @@ T.ToolSeparator {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "toolseparator-background"
+        source: Imagine.url + "toolseparator-background"
         NinePatchImageSelector on source {
             states: [
                 {"vertical": control.vertical},

@@ -60,7 +60,7 @@ T.Popup {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "popup-background"
+        source: Imagine.url + "popup-background"
         NinePatchImageSelector on source {
             states: [
                 {"modal": control.modal},
@@ -70,7 +70,7 @@ T.Popup {
     }
 
     T.Overlay.modal: NinePatchImage {
-        source: Imagine.path + "popup-overlay"
+        source: Imagine.url + "popup-overlay"
         NinePatchImageSelector on source {
             states: [
                 {"modal": true}
@@ -79,7 +79,7 @@ T.Popup {
     }
 
     T.Overlay.modeless: NinePatchImage {
-        source: Imagine.path + "popup-overlay"
+        source: Imagine.url + "popup-overlay"
         NinePatchImageSelector on source {
             states: [
                 {"modal": false}

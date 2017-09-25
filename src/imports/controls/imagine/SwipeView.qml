@@ -73,7 +73,7 @@ T.SwipeView {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "swipeview-background"
+        source: Imagine.url + "swipeview-background"
         NinePatchImageSelector on source {
             states: [
                 {"vertical": control.vertical},

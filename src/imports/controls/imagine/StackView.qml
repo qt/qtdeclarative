@@ -79,7 +79,7 @@ T.StackView {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "stackview-background"
+        source: Imagine.url + "stackview-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

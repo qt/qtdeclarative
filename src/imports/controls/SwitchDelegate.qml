@@ -54,7 +54,7 @@ T.SwitchDelegate {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? Default.textDarkColor : Default.textDisabledColor
+    icon.color: control.palette.text
 
     indicator: SwitchIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
@@ -74,7 +74,7 @@ T.SwitchDelegate {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
+        color: control.palette.text
     }
 
     background: Rectangle {

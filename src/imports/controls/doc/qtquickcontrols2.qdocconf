@@ -1,4 +1,5 @@
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+include($PWD/manifest-meta.qdocconf)
 
 project                 = QtQuickControls2
 description             = Qt Quick Controls 2 Reference Documentation
@@ -48,7 +49,8 @@ sourcedirs += ../../../quicktemplates2 \
               ../../templates/doc/src \
               src
 
-imagedirs += images
+imagedirs += images \
+             ..
 
 navigation.landingpage  = "Qt Quick Controls 2"
 navigation.qmltypespage = "Qt Quick Controls 2 QML Types"

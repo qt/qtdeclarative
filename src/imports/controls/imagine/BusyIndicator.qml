@@ -58,7 +58,7 @@ T.BusyIndicator {
         visible: control.running || animator.running
         Behavior on opacity { OpacityAnimator { id: animator; duration: 250 } }
 
-        source: Imagine.path + "busyindicator-animation"
+        source: Imagine.url + "busyindicator-animation"
         AnimatedImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -74,7 +74,7 @@ T.BusyIndicator {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "busyindicator-background"
+        source: Imagine.url + "busyindicator-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

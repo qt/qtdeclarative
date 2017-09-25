@@ -55,7 +55,7 @@ T.PageIndicator {
         implicitHeight: 8
 
         radius: width / 2
-        color: Default.pageIndicatorColor
+        color: control.palette.dark
 
         opacity: index === currentIndex ? 0.95 : pressed ? 0.7 : 0.45
         Behavior on opacity { OpacityAnimator { duration: 100 } }

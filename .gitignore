@@ -46,6 +46,7 @@
 /tests/auto/qquickcolor/tst_qquickcolor
 /tests/auto/qquickiconimage/tst_qquickiconimage
 /tests/auto/qquickiconlabel/tst_qquickiconlabel
+/tests/auto/qquickimaginestyle/tst_qquickimaginestyle
 /tests/auto/qquickmaterialstyle/tst_qquickmaterialstyle
 /tests/auto/qquickmaterialstyleconf/tst_qquickmaterialstyleconf
 /tests/auto/qquickmenubar/tst_qquickmenubar

@@ -58,7 +58,7 @@ T.ToolBar {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "toolbar-background"
+        source: Imagine.url + "toolbar-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

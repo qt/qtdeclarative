@@ -45,7 +45,7 @@ T.ApplicationWindow {
 
     // ### remove?
     overlay.modal: NinePatchImage {
-        source: Imagine.path + "applicationwindow-overlay"
+        source: Imagine.url + "applicationwindow-overlay"
         NinePatchImageSelector on source {
             states: [
                 {"modal": true}
@@ -55,7 +55,7 @@ T.ApplicationWindow {
 
     // ### remove?
     overlay.modeless: NinePatchImage {
-        source: Imagine.path + "applicationwindow-overlay"
+        source: Imagine.url + "applicationwindow-overlay"
         NinePatchImageSelector on source {
             states: [
                 {"modal": false}
@@ -67,7 +67,7 @@ T.ApplicationWindow {
         width: window.width
         height: window.height
 
-        source: Imagine.path + "applicationwindow-background"
+        source: Imagine.url + "applicationwindow-background"
         NinePatchImageSelector on source {
             states: [
                 {"active": window.active}

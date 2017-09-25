@@ -1460,7 +1460,6 @@ TestCase {
 
         keyPress(Qt.Key_B)
         verify(control.activeFocus)
-        expectFail("", "An editable ComboBox does not yet support the Keys attached property.")
         verify(control.gotit)
         compare(control.editText, "a")
 

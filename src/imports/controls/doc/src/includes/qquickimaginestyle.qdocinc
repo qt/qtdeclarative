@@ -6,7 +6,10 @@
     \row
         \li \c Path
         \li Specifies the \l {imagine-path-attached-prop}{path} to the directory that contains
-        the Imagine style assets.
+        the Imagine style assets. If not specified, the built-in assets are used.
+
+        \note Due to a technical limitation, the path should not be named
+              \e "imagine" if it is relative to the \c qtquickcontrols2.conf file.
 \endtable
 //! [conf]
 
@@ -19,5 +22,8 @@
         \li \c QT_QUICK_CONTROLS_IMAGINE_PATH
         \li Specifies the path to the directory that contains the Imagine style assets.
             If not specified, the built-in assets are used.
+
+            \note Due to a technical limitation, the path should not be named
+                  \e "imagine" if it is relative to the \c qtquickcontrols2.conf file.
 \endtable
 //! [env]

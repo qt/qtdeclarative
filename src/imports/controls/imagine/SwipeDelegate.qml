@@ -81,7 +81,7 @@ T.SwipeDelegate {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "swipedelegate-background"
+        source: Imagine.url + "swipedelegate-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

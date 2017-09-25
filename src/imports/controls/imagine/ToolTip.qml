@@ -74,7 +74,7 @@ T.ToolTip {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "tooltip-background"
+        source: Imagine.url + "tooltip-background"
         NinePatchImageSelector on source {
             states: [
                 // ###

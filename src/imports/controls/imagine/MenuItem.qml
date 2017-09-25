@@ -84,7 +84,7 @@ T.MenuItem {
         y: control.topPadding + (control.availableHeight - height) / 2
 
         visible: control.subMenu
-        source: Imagine.path + "menuitem-arrow"
+        source: Imagine.url + "menuitem-arrow"
         ImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -103,7 +103,7 @@ T.MenuItem {
         y: control.topPadding + (control.availableHeight - height) / 2
 
         visible: control.checkable
-        source: Imagine.path + "menuitem-indicator"
+        source: Imagine.url + "menuitem-indicator"
         ImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -122,7 +122,7 @@ T.MenuItem {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "menuitem-background"
+        source: Imagine.url + "menuitem-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

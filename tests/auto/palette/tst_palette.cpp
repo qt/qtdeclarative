@@ -44,6 +44,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickControls2/private/qquickproxytheme_p.h>
 
@@ -54,6 +55,8 @@ class tst_palette : public QQmlDataTest
     Q_OBJECT
 
 private slots:
+    void initTestCase();
+
     void palette_data();
     void palette();
 
@@ -62,14 +65,30 @@ private slots:
 
     void defaultPalette_data();
     void defaultPalette();
+
+    void listView_data();
+    void listView();
 };
+
+void tst_palette::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+
+    // Import QtQuick.Controls to initialize styles and themes so that
+    // QQuickControlPrivate::themePalette() returns a palette from the
+    // style's theme instead of the platform's theme.
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick.Controls 2.3; Control { }", QUrl());
+    delete component.create();
+}
 
 void tst_palette::palette_data()
 {
     QTest::addColumn<QString>("testFile");
     QTest::addColumn<QPalette>("expectedPalette");
 
-    QPalette defaultPalette;
+    QPalette defaultPalette = QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette);
     defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
     defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 
@@ -153,7 +172,7 @@ void tst_palette::inheritance()
     QObject *grandChild = window->property("grandChild").value<QObject *>();
     QVERIFY(control && child && grandChild);
 
-    QPalette defaultPalette;
+    QPalette defaultPalette = QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette);
     defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
     defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 
@@ -340,6 +359,47 @@ void tst_palette::defaultPalette()
 
     QPalette actualPalette = var.value<QPalette>();
     QCOMPARE(actualPalette, *expectedPalette);
+}
+
+void tst_palette::listView_data()
+{
+    QTest::addColumn<QString>("objectName");
+
+    QTest::newRow("Control") << "control";
+    QTest::newRow("Label") << "label";
+    QTest::newRow("TextArea") << "textarea";
+    QTest::newRow("TextField") << "textfield";
+}
+
+void tst_palette::listView()
+{
+    QFETCH(QString, objectName);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("listview.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
+    QVERIFY2(!window.isNull(), qPrintable(component.errorString()));
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickItem *listView = window->property("listView").value<QQuickItem *>();
+    QVERIFY(listView);
+
+    QQuickItem *contentItem = listView->property("contentItem").value<QQuickItem *>();
+    QVERIFY(contentItem);
+
+    QVERIFY(QMetaObject::invokeMethod(listView, "forceLayout"));
+
+    QQuickItem *column = contentItem->childItems().value(0);
+    QVERIFY(column);
+
+    QQuickItem *control = column->property(objectName.toUtf8()).value<QQuickItem *>();
+    QVERIFY(control);
+
+    QCOMPARE(control->property("palette").value<QPalette>().color(QPalette::Highlight), QColor(Qt::red));
 }
 
 QTEST_MAIN(tst_palette)

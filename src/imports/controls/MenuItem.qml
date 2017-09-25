@@ -70,7 +70,7 @@ T.MenuItem {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
+        color: control.palette.windowText
     }
 
     indicator: ColorImage {

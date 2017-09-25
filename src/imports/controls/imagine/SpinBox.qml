@@ -85,7 +85,7 @@ T.SpinBox {
             height: control.height
             visible: control.editable
 
-            source: Imagine.path + "spinbox-editor"
+            source: Imagine.url + "spinbox-editor"
             NinePatchImageSelector on source {
                 states: [
                     {"disabled": !control.enabled},
@@ -102,7 +102,7 @@ T.SpinBox {
         x: control.mirrored ? 0 : parent.width - width
         height: parent.height
 
-        source: Imagine.path + "spinbox-indicator"
+        source: Imagine.url + "spinbox-indicator"
         NinePatchImageSelector on source {
             states: [
                 {"up": true},
@@ -121,7 +121,7 @@ T.SpinBox {
         x: control.mirrored ? parent.width - width : 0
         height: parent.height
 
-        source: Imagine.path + "spinbox-indicator"
+        source: Imagine.url + "spinbox-indicator"
         NinePatchImageSelector on source {
             states: [
                 {"down": true},
@@ -140,7 +140,7 @@ T.SpinBox {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "spinbox-background"
+        source: Imagine.url + "spinbox-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

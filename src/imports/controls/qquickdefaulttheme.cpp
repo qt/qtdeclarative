@@ -41,6 +41,39 @@ QT_BEGIN_NAMESPACE
 QQuickDefaultTheme::QQuickDefaultTheme()
     : QQuickTheme(QStringLiteral("Default"))
 {
+    systemPalette.setColor(QPalette::ButtonText, QColor::fromRgba(0xFF26282A));
+    systemPalette.setColor(QPalette::Disabled, QPalette::ButtonText, QColor::fromRgba(0x4D26282A));
+
+    systemPalette.setColor(QPalette::BrightText, QColor::fromRgba(0xFFFFFFFF));
+    systemPalette.setColor(QPalette::Disabled, QPalette::BrightText, QColor::fromRgba(0x4DFFFFFF));
+
+    systemPalette.setColor(QPalette::Dark, QColor::fromRgba(0xFF353637));
+
+    systemPalette.setColor(QPalette::Highlight, QColor::fromRgba(0xFF0066FF));
+    systemPalette.setColor(QPalette::Disabled, QPalette::Highlight, QColor::fromRgba(0xFFF0F6FF));
+
+    systemPalette.setColor(QPalette::HighlightedText, QColor::fromRgba(0xFFFFFFFF));
+
+    systemPalette.setColor(QPalette::Light, QColor::fromRgba(0xFFE4E4E4));
+
+    systemPalette.setColor(QPalette::Link, QColor::fromRgba(0xFF45A7D7));
+
+    systemPalette.setColor(QPalette::Text, QColor::fromRgba(0xFF353637));
+    systemPalette.setColor(QPalette::Disabled, QPalette::Text, QColor::fromRgba(0xFFC2C2C2));
+
+    systemPalette.setColor(QPalette::ToolTipBase, QColor::fromRgba(0xFFFFFFFF));
+    systemPalette.setColor(QPalette::ToolTipText, QColor::fromRgba(0xFF000000));
+
+    systemPalette.setColor(QPalette::WindowText, QColor::fromRgba(0xFF26282A));
+    systemPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor::fromRgba(0xFFBDBEBF));
+
+    systemPalette = resolvePalette(systemPalette);
+}
+
+const QPalette *QQuickDefaultTheme::palette(QPlatformTheme::Palette type) const
+{
+    Q_UNUSED(type);
+    return &systemPalette;
 }
 
 QT_END_NAMESPACE

@@ -84,12 +84,11 @@ T.ComboBox {
         validator: control.validator
 
         font: control.font
-        color: !control.editable && control.visualFocus ? Default.focusColor : Default.textColor
-        selectionColor: Default.focusColor
-        selectedTextColor: Default.textLightColor
+        color: !control.editable && control.visualFocus ? Default.focusColor : control.palette.text
+        selectionColor: control.palette.highlight
+        selectedTextColor: control.palette.highlightedText
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        opacity: control.enabled ? 1 : 0.3
 
         background: Rectangle {
             visible: control.editable && !control.flat

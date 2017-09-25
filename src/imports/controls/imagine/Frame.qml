@@ -58,7 +58,7 @@ T.Frame {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "frame-background"
+        source: Imagine.url + "frame-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

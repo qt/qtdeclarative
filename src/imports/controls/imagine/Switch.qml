@@ -62,7 +62,7 @@ T.Switch {
         width: Math.max(implicitWidth, handle.leftPadding && handle.rightPadding ? handle.implicitWidth : 2 * handle.implicitWidth)
         height: Math.max(implicitHeight, handle.implicitHeight)
 
-        source: Imagine.path + "switch-indicator"
+        source: Imagine.url + "switch-indicator"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -83,7 +83,7 @@ T.Switch {
             x: Math.max(minPos, Math.min(maxPos, control.visualPosition * parent.width - (width / 2)))
             y: (parent.height - height) / 2
 
-            source: Imagine.path + "switch-handle"
+            source: Imagine.url + "switch-handle"
             NinePatchImageSelector on source {
                 states: [
                     {"disabled": !control.enabled},
@@ -120,7 +120,7 @@ T.Switch {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "switch-background"
+        source: Imagine.url + "switch-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

@@ -75,8 +75,6 @@ Module {
         Property { name: "textColor"; type: "QColor"; isReadonly: true }
         Property { name: "textDarkColor"; type: "QColor"; isReadonly: true }
         Property { name: "textLightColor"; type: "QColor"; isReadonly: true }
-        Property { name: "textLinkColor"; type: "QColor"; isReadonly: true }
-        Property { name: "textSelectionColor"; type: "QColor"; isReadonly: true }
         Property { name: "textDisabledColor"; type: "QColor"; isReadonly: true }
         Property { name: "textDisabledLightColor"; type: "QColor"; isReadonly: true }
         Property { name: "focusColor"; type: "QColor"; isReadonly: true }
@@ -103,8 +101,6 @@ Module {
         Property { name: "frameLightColor"; type: "QColor"; isReadonly: true }
         Property { name: "scrollBarColor"; type: "QColor"; isReadonly: true }
         Property { name: "scrollBarPressedColor"; type: "QColor"; isReadonly: true }
-        Property { name: "progressBarColor"; type: "QColor"; isReadonly: true }
-        Property { name: "pageIndicatorColor"; type: "QColor"; isReadonly: true }
         Property { name: "separatorColor"; type: "QColor"; isReadonly: true }
         Property { name: "disabledDarkColor"; type: "QColor"; isReadonly: true }
         Property { name: "disabledLightColor"; type: "QColor"; isReadonly: true }

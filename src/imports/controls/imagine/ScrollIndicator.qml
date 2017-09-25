@@ -56,7 +56,7 @@ T.ScrollIndicator {
         width: control.availableWidth
         height: control.availableHeight
 
-        source: Imagine.path + "scrollindicator-handle"
+        source: Imagine.url + "scrollindicator-handle"
         NinePatchImageSelector on source {
             states: [
                 {"vertical": control.vertical},
@@ -74,7 +74,7 @@ T.ScrollIndicator {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "scrollindicator-background"
+        source: Imagine.url + "scrollindicator-background"
         NinePatchImageSelector on source {
             states: [
                 {"vertical": control.vertical},

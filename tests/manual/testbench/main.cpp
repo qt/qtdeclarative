@@ -48,22 +48,45 @@
 **
 ****************************************************************************/
 
+#include <QDebug>
+#include <QFontDatabase>
 #include <QGuiApplication>
+#include <QSettings>
 #include <QQmlApplicationEngine>
-#include <QtCore/private/qabstractanimation_p.h>
+#include <QQmlContext>
+#include <QQuickStyle>
+
+#include "assetfixer.h"
+#include "clipboard.h"
+#include "directoryvalidator.h"
 
 int main(int argc, char *argv[])
 {
+    QGuiApplication::setApplicationName("testbench");
+    QGuiApplication::setOrganizationName("QtProject");
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QGuiApplication app(argc, argv);
 
-    QUnifiedTimer::instance()->setSlowModeEnabled(app.arguments().contains("-slow"));
+    QSettings settings;
+    QString style = QQuickStyle::name();
+    if (!style.isEmpty())
+        settings.setValue("style", style);
+    else
+        QQuickStyle::setStyle(settings.value("style").isValid() ? settings.value("style").toString() : "Imagine");
 
-    // These must be set before running.
-    // TODO: move style selection into app UI and use settings to save choices.
-    // qputenv("QT_QUICK_CONTROLS_STYLE", "material");
+    if (QFontDatabase::addApplicationFont(":/fonts/fontawesome.ttf") == -1) {
+        qWarning() << "Failed to load fontawesome font";
+    }
+
     QQmlApplicationEngine engine;
+
+    qmlRegisterType<AssetFixer>("App", 1, 0, "AssetFixer");
+    qmlRegisterType<Clipboard>("App", 1, 0, "Clipboard");
+    qmlRegisterType<DirectoryValidator>("App", 1, 0, "DirectoryValidator");
+
+    engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
+
     engine.load(QUrl(QStringLiteral("qrc:/testbench.qml")));
 
     return app.exec();

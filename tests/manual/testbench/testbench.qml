@@ -48,169 +48,132 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
+import QtQuick 2.10
 import QtQuick.Window 2.3
 import QtQuick.Layouts 1.2
 import QtQuick.Controls 2.3
-import QtQuick.Controls.Material 2.3
-import QtQuick.Controls.Universal 2.3
+import QtQuick.Controls.Imagine 2.3
+import Qt.labs.folderlistmodel 1.0
+import Qt.labs.settings 1.0
+
+import App 1.0
 
 ApplicationWindow {
     id: window
     visible: true
-    width: 750
-    height: 1000
+    width: 1000
+    height: 750
+    title: "Style Testbench - " + settings.style + " Style" + (usingImagineStyle ? imagineTitleText : "")
 
-    Component.onCompleted: {
-        x = Screen.width / 2 - width / 2
-        y = Screen.height / 2 - height / 2
+    Imagine.path: defaultImaginePath
+
+    readonly property bool usingImagineStyle: settings.style.toLowerCase() === "imagine"
+    // Some controls should be visible regardless of whether or not custom assets are lacking for it,
+    // so we use the default assets in some cases.
+    readonly property string defaultImaginePath: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Imagine/images/"
+    property bool settingsLoaded: false
+    readonly property string imagineTitleText: " - " + (settings.useCustomImaginePath ? settings.imaginePath : "Default Assets")
+
+    LoggingCategory {
+        id: brief
+        name: "qt.quick.controls.tools.testbench.assetfixer.brief"
     }
 
-    LayoutMirroring.childrenInherit: true
-    LayoutMirroring.enabled: mirroredMenuItem.checked
-
-    Material.theme: darkMenuItem.checked ? Material.Dark : Material.Light
-    Universal.theme: darkMenuItem.checked ? Universal.Dark : Universal.Light
-
-    property int controlSpacing: 10
+    Shortcut {
+        sequence: "Ctrl+F"
+        onActivated: searchTextField.forceActiveFocus()
+    }
 
     Shortcut {
         sequence: "Ctrl+Q"
         onActivated: Qt.quit()
     }
 
+    Action {
+        id: useCustomAssetsAction
+        text: qsTr("Use Custom Assets")
+        shortcut: "Ctrl+Shift+C"
+        enabled: usingImagineStyle
+        checkable: true
+        checked: settings.useCustomImaginePath
+        onTriggered: settings.useCustomImaginePath = !settings.useCustomImaginePath
+    }
+
+    Action {
+        id: reloadAssetsAction
+        text: qsTr("Reload Assets")
+        shortcut: "Ctrl+R"
+        enabled: usingImagineStyle
+        onTriggered: assetFixer.reloadAssets()
+    }
+
+    FontMetrics {
+        id: fontMetrics
+    }
+
+    Settings {
+        id: settings
+
+        property alias windowX: window.x
+        property alias windowY: window.y
+        property alias windowWidth: window.width
+        property alias windowHeight: window.height
+
+        property string style: "Imagine"
+
+        property bool useCustomImaginePath
+        property string imaginePath
+        property bool fixImagineAssets
+        property alias imagineDirLastModified: assetFixer.assetDirectoryLastModified
+
+        Component.onCompleted: settingsLoaded = true
+    }
+
+    Settings {
+        id: paletteSettings
+
+        category: "Palette"
+
+        property bool useCustomPalette
+        property string window
+        property string windowText
+        property string base
+        property string text
+        property string button
+        property string buttonText
+        property string brightText
+        property string toolTipBase
+        property string toolTipText
+        property string light
+        property string midlight
+        property string dark
+        property string mid
+        property string shadow
+        property string highlight
+        property string highlightedText
+        property string link
+    }
+
     header: ToolBar {
-        Material.theme: Material.Dark
+        // Seems to be necessary to get the default assets to be used here,
+        // though it should inherit the window's path
+        Imagine.path: defaultImaginePath
 
         RowLayout {
             anchors.fill: parent
 
-            RowLayout {
-                enabled: enabledMenuItem.checked
+            ToolButton {
+                text: "\uf0c9"
+                font.family: "fontawesome"
+                font.pixelSize: Qt.application.font.pixelSize * 1.6
+                onClicked: drawer.open()
+            }
 
-                ToolButton {
-                    text: "\u2630"
-                    onClicked: drawer.open()
-                }
+            ToolSeparator {}
 
-                ToolSeparator {}
-
-                ToolButton {
-                    text: "ToolButton"
-                    hoverEnabled: true
-                    ToolTip.text: text
-                    ToolTip.delay: 1000
-                    ToolTip.visible: hovered
-                    Layout.fillWidth: true
-                }
-                ToolButton {
-                    text: "Pressed"
-                    down: true
-                    hoverEnabled: true
-                    ToolTip.text: text
-                    ToolTip.delay: 1000
-                    ToolTip.visible: hovered
-                    Layout.fillWidth: true
-                }
-                ToolButton {
-                    text: "Checked"
-                    checkable: true
-                    checked: true
-                    hoverEnabled: true
-                    ToolTip.text: text
-                    ToolTip.delay: 1000
-                    ToolTip.visible: hovered
-                    Layout.fillWidth: true
-                }
-                ToolButton {
-                    text: "Highlighted"
-                    highlighted: true
-                    hoverEnabled: true
-                    ToolTip.text: text
-                    ToolTip.delay: 1000
-                    ToolTip.visible: hovered
-                    Layout.fillWidth: true
-                }
-                ToolButton {
-                    text: "Disabled"
-                    enabled: false
-                    Layout.fillWidth: true
-                }
-
-                ToolSeparator {}
-
-                ToolButton {
-                    id: menuButton
-                    text: "Menu"
-                    hoverEnabled: true
-                    checked: menu.visible
-                    checkable: true
-                    ToolTip.text: text
-                    ToolTip.delay: 1000
-                    ToolTip.visible: hovered
-                    Layout.fillWidth: true
-
-                    Menu {
-                        id: menu
-                        x: 1
-                        y: 1 + parent.height
-                        visible: menuButton.checked
-                        closePolicy: Popup.CloseOnPressOutsideParent
-
-                        MenuItem {
-                            text: "MenuItem"
-                        }
-                        MenuItem {
-                            text: "Pressed"
-                            down: true
-                        }
-                        MenuItem {
-                            text: "Disabled"
-                            enabled: false
-                        }
-
-                        MenuSeparator {}
-
-                        MenuItem {
-                            text: "Checked"
-                            checked: true
-                        }
-                        MenuItem {
-                            text: "CH+PR"
-                            checked: true
-                            down: true
-                        }
-                        MenuItem {
-                            text: "CH+DIS"
-                            checked: true
-                            enabled: false
-                        }
-                    }
-                }
-
-                ToolButton {
-                    id: dialogButton
-                    text: "Dialog"
-                    hoverEnabled: true
-                    onClicked: dialog.open()
-                    ToolTip.text: text
-                    ToolTip.delay: 1000
-                    ToolTip.visible: hovered
-                    Layout.fillWidth: true
-
-                    Dialog {
-                        id: dialog
-                        x: (window.width - width) / 2
-                        y: (window.height - height) / 2
-                        standardButtons: Dialog.Ok | Dialog.Cancel
-                        parent: window.contentItem
-
-                        Label {
-                            text: "Lorem ipsum dolor sit amet, \nconsectetuer adipiscing elit, \n"
-                                + "sed diam nonummy nibh euismod tincidunt ut \nlaoreet dolore magna aliquam erat volutpat."
-                        }
-                    }
-                }
+            TextField {
+                id: searchTextField
+                placeholderText: "Search"
             }
 
             Item {
@@ -219,9 +182,13 @@ ApplicationWindow {
 
             ToolButton {
                 id: optionsMenuButton
-                text: "\u22EE" // VERTICAL ELLIPSIS
+                text: "\ue800"
+                font.family: "FontAwesome"
+                font.pixelSize: Qt.application.font.pixelSize * 1.6
                 checked: optionsMenu.visible
                 checkable: true
+
+                onClicked: optionsMenu.open()
 
                 Menu {
                     id: optionsMenu
@@ -230,29 +197,34 @@ ApplicationWindow {
                     visible: optionsMenuButton.checked
                     closePolicy: Popup.CloseOnPressOutsideParent
 
+                    Imagine.path: defaultImaginePath
+
                     MenuItem {
-                        id: enabledMenuItem
-                        text: "Enabled"
-                        checkable: true
-                        checked: true
+                        text: qsTr("Open Asset Directory")
+                        onClicked: Qt.openUrlExternally(assetFixer.assetDirectoryUrl)
+                        enabled: usingImagineStyle
                     }
 
                     MenuItem {
-                        id: mirroredMenuItem
-                        text: "Mirrored"
-                        checkable: true
+                        action: reloadAssetsAction
                     }
 
                     MenuItem {
-                        id: darkMenuItem
-                        text: "Dark"
-                        checkable: true
+                        action: useCustomAssetsAction
                     }
 
                     MenuSeparator {}
 
                     MenuItem {
-                        text: "Quit"
+                        id: settingsMenuItem
+                        text: qsTr("Settings")
+                        onTriggered: settingsDialog.open()
+                    }
+
+                    MenuSeparator {}
+
+                    MenuItem {
+                        text: qsTr("Quit")
                         onTriggered: Qt.quit()
                     }
                 }
@@ -260,838 +232,268 @@ ApplicationWindow {
         }
     }
 
-    footer: TabBar {
-        enabled: enabledMenuItem.checked
-        TabButton {
-            text: "TabButton"
-        }
-        TabButton {
-            text: "Pressed"
-            down: true
-        }
-        TabButton {
-            text: "Disabled"
-            enabled: false
+    SettingsDialog {
+        id: settingsDialog
+
+        Imagine.path: defaultImaginePath
+    }
+
+    Drawer {
+        id: drawer
+        width: parent.width * 0.33
+        height: window.height
+        focus: false
+        modal: false
+
+        Label {
+            text: "Drawer contents go here"
+            anchors.centerIn: parent
         }
     }
 
+    AssetFixer {
+        id: assetFixer
+        assetDirectory: settings.imaginePath
+        // Don't start watching until the settings have loaded, as AssetFixer can be completed before it.
+        // AssetFixer needs the settings in order to check the last modified time of the asset directory.
+        // Also, wait until the UI has been rendered for the first time so that we can show our busy indicators, etc.
+        shouldWatch: usingImagineStyle && settings.useCustomImaginePath && settingsLoaded && initialUiRenderDelayTimer.hasRun
+        shouldFix: shouldWatch && settings.fixImagineAssets
+
+        onFixSuggested: fixEmUp()
+        onDelayedFixSuggested: assetFixerFileSystemDelayTimer.restart()
+        onReloadSuggested: reloadAssets()
+
+        function reloadAssets() {
+            console.log(brief, "Reloading assets...")
+            window.Imagine.path = ""
+            assetReloadNextFrameTimer.start()
+        }
+
+        function fixEmUp() {
+            // This is a bit of a hack, but I can't think of a nice way to solve it.
+            // The problem is that shouldWatch becomes true, causing startWatching() to be called.
+            // If a fix is suggested as a result of that, this function is called.
+            // However, the shouldFix binding hasn't been updated yet, so even though shouldWatch
+            // and settings.fixImagineAssets are both true (the properties that make up its binding),
+            // the if check below fails. So, we check for that case with effectiveShouldFix.
+            var effectiveShouldFix = shouldWatch && settings.fixImagineAssets;
+            if (shouldWatch && effectiveShouldFix && assetDirectory.length > 0) {
+                // Disable image caching if it hasn't already been done.
+                assetFixer.clearImageCache()
+
+                busyIndicatorRow.visible = true
+                assetFixerAnimationDelayTimer.start()
+            }
+        }
+    }
+
+    // The controls' assets don't always "reload" if the path is cleared and then set in the same frame,
+    // so we delay the setting to the next frame.
+    Timer {
+        id: assetReloadNextFrameTimer
+        interval: 0
+        onTriggered: {
+            window.Imagine.path = Qt.binding(function() {
+                return settings.useCustomImaginePath && settings.imaginePath.length > 0 ? settings.imaginePath : undefined
+            })
+            infoToolTip.text = "Reloaded assets"
+            infoToolTip.timeout = 1500
+            infoToolTip.open()
+            console.log(brief, "... reloaded assets.")
+        }
+    }
+
+    // When exporting or deleting a large amount of assets (not uncommon),
+    // the filesystem watcher seems to emit directoryChanged() every second or so,
+    // so rather than process hundreds of assets every time we get notified, delay
+    // it until we haven't been notified for a while.
+    Timer {
+        id: assetFixerFileSystemDelayTimer
+        interval: 2000
+        onRunningChanged: {
+            if (running) {
+                infoToolTip.text = "Assets changed on disk - reloading in 2 seconds if no further changes are detected"
+                infoToolTip.timeout = 2000
+                infoToolTip.open()
+            }
+        }
+        onTriggered: assetFixer.fixEmUp()
+    }
+
+    // Gives the BusyIndicator animation a chance to start.
+    Timer {
+        id: assetFixerAnimationDelayTimer
+        interval: 100
+        onTriggered: {
+            assetFixer.fixAssets()
+            busyIndicatorRow.visible = false
+        }
+    }
+
+    // Gives the UI a chance to render before the initial fixup.
+    Timer {
+        id: initialUiRenderDelayTimer
+        interval: 300
+        running: true
+        onTriggered: hasRun = true
+
+        property bool hasRun: false
+    }
+
+    function getControlElements(control) {
+        var props = [];
+        for (var p in control) {
+            if (p !== "component" && typeof control[p] === 'object')
+                props.push(p);
+        }
+        return props;
+    }
+
     Pane {
+        id: contentPane
         anchors.fill: parent
 
-        Drawer {
-            id: drawer
-            width: parent.width * 0.33
-            height: parent.height
+        Imagine.path: settings.useCustomImaginePath && settings.imaginePath.length > 0 ? settings.imaginePath : undefined
+
+        palette.window: effectiveColor(paletteSettings.window)
+        palette.windowText: effectiveColor(paletteSettings.windowText)
+        palette.base: effectiveColor(paletteSettings.base)
+        palette.text: effectiveColor(paletteSettings.text)
+        palette.button: effectiveColor(paletteSettings.button)
+        palette.buttonText: effectiveColor(paletteSettings.buttonText)
+        palette.brightText: effectiveColor(paletteSettings.brightText)
+        palette.toolTipBase: effectiveColor(paletteSettings.toolTipBase)
+        palette.toolTipText: effectiveColor(paletteSettings.toolTipText)
+        palette.light: effectiveColor(paletteSettings.light)
+        palette.midlight: effectiveColor(paletteSettings.midlight)
+        palette.dark: effectiveColor(paletteSettings.dark)
+        palette.mid: effectiveColor(paletteSettings.mid)
+        palette.shadow: effectiveColor(paletteSettings.shadow)
+        palette.highlight: effectiveColor(paletteSettings.highlight)
+        palette.highlightedText: effectiveColor(paletteSettings.highlightedText)
+        palette.link: effectiveColor(paletteSettings.link)
+
+        function effectiveColor(paletteColorString) {
+            return paletteSettings.useCustomPalette && paletteColorString.length > 0 ? paletteColorString : undefined
         }
 
-        Flickable {
+        ListView {
             anchors.fill: parent
-            contentHeight: flow.height
-
-            Flow {
-                id: flow
-                width: parent.width
-                spacing: 30
-                enabled: enabledMenuItem.checked
-
-                RowLayout {
-                    spacing: window.controlSpacing
-
-                    Button {
-                        text: "Button"
-                    }
-                    Button {
-                        text: "Pressed"
-                        down: true
-                    }
-                    Button {
-                        text: "Checked"
-                        checked: true
-                    }
-                    Button {
-                        text: "CH + PR"
-                        checked: true
-                        down: true
-                    }
-                    Button {
-                        text: "Disabled"
-                        enabled: false
-                    }
-                    Button {
-                        text: "CH + DIS"
-                        enabled: false
-                        checked: true
-                    }
-                }
-
-                RowLayout {
-                    spacing: window.controlSpacing
-
-                    Button {
-                        text: "HI"
-                        highlighted: true
-                    }
-                    Button {
-                        text: "HI + PR"
-                        highlighted: true
-                        down: true
-                    }
-                    Button {
-                        text: "HI + CH"
-                        highlighted: true
-                        checked: true
-                    }
-                    Button {
-                        text: "HI+CH+PR"
-                        highlighted: true
-                        down: true
-                        checked: true
-                    }
-                    Button {
-                        text: "HI + DIS"
-                        highlighted: true
-                        enabled: false
-                    }
-                    Button {
-                        text: "HI+CH+DIS"
-                        highlighted: true
-                        enabled: false
-                        checked: true
-                    }
-                }
-
-                RowLayout {
-                    spacing: window.controlSpacing
-
-                    Button {
-                        text: "Flat"
-                        flat: true
-                    }
-                    Button {
-                        text: "Flat+PR"
-                        down: true
-                        flat: true
-                    }
-                    Button {
-                        text: "Flat+CH"
-                        checked: true
-                        flat: true
-                    }
-                    Button {
-                        text: "Flat+CH+PR"
-                        checked: true
-                        down: true
-                        flat: true
-                    }
-                    Button {
-                        text: "Flat+DIS"
-                        enabled: false
-                        flat: true
-                    }
-                }
-
-                RowLayout {
-                    spacing: window.controlSpacing
-
-                    DelayButton {
-                        text: "DelayButton"
-                    }
-                    DelayButton {
-                        text: "Pressed"
-                        down: true
-                    }
-                    DelayButton {
-                        text: "Checked"
-                        checked: true
-                    }
-                    DelayButton {
-                        text: "CH + PR"
-                        checked: true
-                        down: true
-                    }
-                    DelayButton {
-                        text: "Disabled"
-                        enabled: false
-                    }
-                    DelayButton {
-                        text: "CH + DIS"
-                        enabled: false
-                        checked: true
-                    }
-                }
-
-                RowLayout {
-                    spacing: window.controlSpacing * 2
-
-                    ColumnLayout {
-                        RoundButton {
-                            highlighted: true
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                        Label {
-                            text: "HI"
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                    }
-                    ColumnLayout {
-                        RoundButton {
-                            highlighted: true
-                            down: true
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                        Label {
-                            text: "HI + PR"
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                    }
-                    ColumnLayout {
-                        RoundButton {
-                            highlighted: true
-                            checked: true
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                        Label {
-                            text: "HI + CH"
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                    }
-                    ColumnLayout {
-                        RoundButton {
-                            highlighted: true
-                            down: true
-                            checked: true
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                        Label {
-                            text: "HI+CH+PR"
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                    }
-                    ColumnLayout {
-                        RoundButton {
-                            highlighted: true
-                            enabled: false
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                        Label {
-                            text: "HI + DIS"
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                    }
-                    ColumnLayout {
-                        RoundButton {
-                            highlighted: true
-                            enabled: false
-                            checked: true
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                        Label {
-                            text: "HI+CH+DIS"
-                            Layout.alignment: Qt.AlignHCenter
-                        }
-                    }
-                }
-
-                RowLayout {
-                    CheckBox {
-                        text: "CheckBox"
-                    }
-                    CheckBox {
-                        text: "Pressed"
-                        down: true
-                    }
-                    CheckBox {
-                        text: "Checked"
-                        checked: true
-                    }
-                    CheckBox {
-                        text: "CH + PR"
-                        checked: true
-                        down: true
-                    }
-                    CheckBox {
-                        text: "Disabled"
-                        enabled: false
-                    }
-                    CheckBox {
-                        text: "CH + DIS"
-                        checked: true
-                        enabled: false
-                    }
-                }
-
-                RowLayout {
-                    CheckBox {
-                        text: "Tri-state\nCheckBox"
-                        tristate: true
-                    }
-                    CheckBox {
-                        text: "Pressed"
-                        down: true
-                        tristate: true
-                    }
-                    CheckBox {
-                        text: "Partially\nChecked"
-                        tristate: true
-                        checkState: Qt.PartiallyChecked
-                    }
-                    CheckBox {
-                        text: "CH + PR"
-                        tristate: true
-                        checkState: Qt.PartiallyChecked
-                        down: true
-                    }
-                    CheckBox {
-                        text: "Disabled"
-                        tristate: true
-                        enabled: false
-                    }
-                    CheckBox {
-                        text: "CH + DIS"
-                        tristate: true
-                        checkState: Qt.PartiallyChecked
-                        enabled: false
-                    }
-                }
-
-                RowLayout {
-                    RadioButton {
-                        text: "RadioButton"
-                    }
-                    RadioButton {
-                        text: "Pressed"
-                        down: true
-                    }
-                    RadioButton {
-                        text: "Checked"
-                        checked: true
-                    }
-                    RadioButton {
-                        text: "CH + PR"
-                        checked: true
-                        down: true
-                    }
-                    RadioButton {
-                        text: "Disabled"
-                        enabled: false
-                    }
-                    RadioButton {
-                        text: "CH + DIS"
-                        checked: true
-                        enabled: false
-                    }
-                }
-
-                RowLayout {
-                    Switch {
-                        text: "Switch"
-                    }
-                    Switch {
-                        text: "Pressed"
-                        down: true
-                    }
-                    Switch {
-                        text: "Checked"
-                        checked: true
-                    }
-                    Switch {
-                        text: "CH + PR"
-                        checked: true
-                        down: true
-                    }
-                    Switch {
-                        text: "Disabled"
-                        enabled: false
-                    }
-                    Switch {
-                        text: "CH + DIS"
-                        checked: true
-                        enabled: false
-                    }
-                }
-
-                RowLayout {
-                    ProgressBar {
-                        value: slider.value
-                    }
-                    ProgressBar {
-                        value: 0.5
-                        indeterminate: true
-                    }
-                    ProgressBar {
-                        value: 0.5
-                        enabled: false
-                    }
-                }
-
-                RowLayout {
-                    Slider {
-                        id: slider
-                        value: 0.5
-                    }
-                    Slider {
-                        value: 0.5
-                        pressed: true
-                    }
-                    Slider {
-                        value: 0.5
-                        enabled: false
-                    }
-                }
-
-                RowLayout {
-                    RangeSlider {
-                        first.value: 0.25
-                        second.value: 0.75
-                    }
-                    RangeSlider {
-                        first.value: 0.25
-                        first.pressed: true
-                        second.value: 0.75
-                    }
-                    RangeSlider {
-                        first.value: 0.25
-                        second.value: 0.75
-                        enabled: false
-                    }
-                }
-
-                RowLayout {
-                    spacing: window.controlSpacing * 2
-
-                    TextArea {
-                        text: "TextArea"
-                        Layout.preferredWidth: normalGroupBox.implicitWidth
-                    }
-
-                    TextArea {
-                        placeholderText: "Placeholder"
-                        Layout.preferredWidth: normalGroupBox.implicitWidth
-                    }
-
-                    TextArea {
-                        text: "Disabled"
-                        enabled: false
-                        Layout.preferredWidth: normalGroupBox.implicitWidth
-                    }
-                }
-
-                RowLayout {
-                    spacing: window.controlSpacing * 2
-
-                    TextField {
-                        text: "TextField"
-                    }
-                    TextField {
-                        placeholderText: "Placeholder"
-                    }
-                    TextField {
-                        text: "Disabled"
-                        enabled: false
-                    }
-                }
-
-                RowLayout {
-                    spacing: window.controlSpacing * 2
-
-                    SpinBox {
-                        id: normalSpinBox
-                    }
-                    SpinBox {
-                        up.pressed: true
-                    }
-                    SpinBox {
-                        editable: true
-                    }
-                    SpinBox {
-                        enabled: false
-                    }
-                }
-
-                RowLayout {
-                    spacing: window.controlSpacing * 2
-
-                    ComboBox {
-                        model: 5
-                    }
-
-                    ComboBox {
-                        pressed: true
-                        model: ["Pressed"]
-                    }
-
-                    ComboBox {
-                        editable: true
-                        model: ListModel {
-                            id: fruitModel
-                            ListElement { text: "Banana" }
-                            ListElement { text: "Apple" }
-                            ListElement { text: "Coconut" }
-                        }
-                        onAccepted: {
-                            if (find(editText) === -1)
-                                fruitModel.append({text: editText})
-                        }
-                    }
-
-                    ComboBox {
-                        enabled: false
-                        model: ["Disabled"]
-                    }
-                }
-
-                ListModel {
-                    id: checkableDelegateModel
-                    ListElement { label: "Pressed"; press: true }
-                    ListElement { label: "Checked"; check: true }
-                    ListElement { label: "CH + PR"; check: true; press: true }
-                    ListElement { label: "Disabled"; disabled: true }
-                    ListElement { label: "CH + DIS"; check: true; disabled: true }
-                }
-
-                RowLayout {
-                    Frame {
-                        Column {
-                            width: 200
-
-                            CheckDelegate {
-                                text: "CheckDelegate"
-                                width: parent.width
-                                focusPolicy: Qt.StrongFocus
-                            }
-
-                            Repeater {
-                                model: checkableDelegateModel
-                                delegate: CheckDelegate {
-                                    text: label
-                                    width: parent.width
-                                    down: press
-                                    checked: check
-                                    enabled: !disabled
-                                    focusPolicy: Qt.StrongFocus
-                                }
-                            }
-                        }
-                    }
-
-                    Frame {
-                        Column {
-                            width: 200
-
-                            RadioDelegate {
-                                text: "RadioDelegate"
-                                width: parent.width
-                                focusPolicy: Qt.StrongFocus
-                            }
-
-                            Repeater {
-                                model: checkableDelegateModel
-                                delegate: RadioDelegate {
-                                    text: label
-                                    down: press
-                                    width: parent.width
-                                    checked: check
-                                    enabled: !disabled
-                                    focusPolicy: Qt.StrongFocus
-                                }
-                            }
-                        }
-                    }
-
-                    Frame {
-                        Column {
-                            width: 200
-
-                            SwitchDelegate {
-                                text: "SwitchDelegate"
-                                width: parent.width
-                                focusPolicy: Qt.StrongFocus
-                            }
-
-                            Repeater {
-                                model: checkableDelegateModel
-                                delegate: SwitchDelegate {
-                                    text: label
-                                    width: parent.width
-                                    checked: check
-                                    down: press
-                                    enabled: !disabled
-                                    focusPolicy: Qt.StrongFocus
-                                }
-                            }
-                        }
-                    }
-                }
-
-                ListModel {
-                    id: regularDelegateModel
-                    ListElement { label: "Pressed"; press: true }
-                    ListElement { label: "Disabled"; disabled: true }
-                }
-
-                RowLayout {
-                    Frame {
-                        Column {
-                            width: 200
-
-                            ItemDelegate {
-                                text: "ItemDelegate"
-                                width: parent.width
-                                focusPolicy: Qt.StrongFocus
-                            }
-
-                            Repeater {
-                                model: regularDelegateModel
-                                delegate: ItemDelegate {
-                                    text: label
-                                    width: parent.width
-                                    down: press
-                                    enabled: !disabled
-                                    focusPolicy: Qt.StrongFocus
-                                }
-                            }
-                        }
-                    }
-                    Frame {
-                        Column {
-                            id: listView
-                            width: 200
-                            clip: true
-
-                            SwipeDelegate {
-                                text: "SwipeDelegate"
-                                width: parent.width
-                                swipe.left: removeComponent
-                                swipe.right: removeComponent
-                                focusPolicy: Qt.StrongFocus
-                            }
-
-                            Repeater {
-                                model: regularDelegateModel
-                                delegate: SwipeDelegate {
-                                    text: label
-                                    width: parent.width
-                                    down: press
-                                    enabled: !disabled
-                                    focusPolicy: Qt.StrongFocus
-
-                                    swipe.left: removeComponent
-                                    swipe.right: removeComponent
-                                }
-                            }
-
-                            Component {
-                                id: removeComponent
-
-                                Rectangle {
-                                    color: parent.swipe.complete && parent.pressed ? "#333" : "#444"
-                                    width: parent.width
-                                    height: parent.height
-                                    clip: true
-
-                                    Label {
-                                        font.pixelSize: parent.parent.font.pixelSize
-                                        text: "Boop"
-                                        color: "white"
-                                        anchors.centerIn: parent
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Frame {
-                        padding: 0
-                        Layout.preferredWidth: 100
-                        Layout.preferredHeight: 100
-
-                        ScrollIndicator {
-                            size: 0.6
-                            position: 0.1
-                            active: true
-                            orientation: Qt.Vertical
-                            height: parent.height
-                            anchors.right: parent.right
-                        }
-                    }
-
-                    Frame {
-                        padding: 0
-                        Layout.preferredWidth: 100
-                        Layout.preferredHeight: 100
-
-                        ScrollIndicator {
-                            size: 0.6
-                            position: 0.1
-                            active: true
-                            orientation: Qt.Vertical
-                            height: parent.height
-                            anchors.right: parent.right
-                            enabled: false
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Frame {
-                        id: scrollBarFrame
-
-                        padding: 0
-                        contentWidth: 200
-                        contentHeight: 100
-
-                        Label {
-                            text: "ScrollBar"
-                            anchors.centerIn: parent
-                        }
-
-                        ScrollBar {
-                            size: 0.6
-                            position: 0.1
-                            policy: ScrollBar.AlwaysOn
-                            orientation: Qt.Vertical
-                            height: parent.height
-                            anchors.right: parent.right
-                        }
-                    }
-
-                    Frame {
-                        padding: 0
-                        contentWidth: 200
-                        contentHeight: 100
-
-                        Label {
-                            text: "Pressed"
-                            anchors.centerIn: parent
-                        }
-
-                        ScrollBar {
-                            size: 0.6
-                            position: 0.1
-                            policy: ScrollBar.AlwaysOn
-                            orientation: Qt.Vertical
-                            height: parent.height
-                            anchors.right: parent.right
-                            pressed: true
-                        }
-                    }
-
-                    Frame {
-                        padding: 0
-                        contentWidth: 200
-                        contentHeight: 100
-                        enabled: false
-
-                        Label {
-                            text: "Disabled"
-                            anchors.centerIn: parent
-                        }
-
-                        ScrollBar {
-                            size: 0.6
-                            position: 0.1
-                            policy: ScrollBar.AlwaysOn
-                            orientation: Qt.Vertical
-                            height: parent.height
-                            anchors.right: parent.right
-                        }
-                    }
-                }
-
-                RowLayout {
-                    GroupBox {
-                        id: normalGroupBox
-                        title: "GroupBox"
-
-                        contentWidth: 200
-                        contentHeight: 100
-
-                        BusyIndicator {
-                            anchors.centerIn: parent
-                        }
-
-                        PageIndicator {
-                            count: 5
-                            interactive: true
-                            anchors.bottom: parent.bottom
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                    GroupBox {
-                        enabled: false
-                        title: "Disabled"
-
-                        contentWidth: 200
-                        contentHeight: 100
-
-                        BusyIndicator {
-                            anchors.centerIn: parent
-                        }
-
-                        PageIndicator {
-                            count: 5
-                            anchors.bottom: parent.bottom
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                    GroupBox {
-                        enabled: false
-                        title: "."
-                        label.visible: false
-
-                        contentWidth: 200
-                        contentHeight: 100
-
-                        PageIndicator {
-                            count: 5
-                            anchors.bottom: parent.bottom
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Dial {
-                        value: 0.5
-                        implicitWidth: 100
-                        implicitHeight: 100
-                    }
-                    Dial {
-                        value: 0.5
-                        implicitWidth: 100
-                        implicitHeight: 100
-                        enabled: false
-                    }
-                }
-
-                RowLayout {
-                    Frame {
-                        Tumbler {
-                            id: tumbler
-                            model: 10
-                            implicitWidth: 60
-                            implicitHeight: 200
-                        }
-                    }
-                    Frame {
-                        Tumbler {
-                            model: 10
-                            implicitWidth: 60
-                            implicitHeight: 200
-                            enabled: false
-                        }
-                    }
-                }
+            spacing: 30
+            visible: !busyIndicatorRow.visible
+
+            ScrollBar.vertical: ScrollBar {}
+
+            model: FolderListModel {
+                folder: "qrc:/controls"
+                showDirs: false
+                nameFilters: searchTextField.text.length > 0 ? ["*" + searchTextField.text + "*.qml"] : []
             }
+            delegate: ColumnLayout {
+                id: rootDelegate
+                width: parent.width
 
-            ScrollBar.vertical: ScrollBar {
-                parent: window.contentItem
-                x: parent.width - width
-                height: parent.height
+                MenuSeparator {
+                    Layout.fillWidth: true
+                    visible: index !== 0
+                }
+
+                Label {
+                    text: customControlName.length === 0 ? model.fileBaseName : customControlName
+                    font.pixelSize: Qt.application.font.pixelSize * 2
+                }
+
+                readonly property var controlName: model.fileBaseName
+                readonly property var controlMetaObject: controlMetaObjectLoader.item
+                readonly property string customControlName: controlMetaObject && controlMetaObject.hasOwnProperty("customControlName")
+                    ? controlMetaObject.customControlName : ""
+                readonly property var supportedStates: rootDelegate.controlMetaObject.supportedStates
+                readonly property int maxStateCombinations: {
+                    var largest = 0;
+                    for (var i = 0; i < supportedStates.length; ++i) {
+                        var combinations = supportedStates[i];
+                        if (combinations.length > largest)
+                            largest = combinations.length;
+                    }
+                    return largest;
+                }
+
+                Loader {
+                    id: controlMetaObjectLoader
+                    source: "qrc" + model.filePath
+                }
+
+                Flow {
+                    spacing: 10
+
+                    Layout.fillWidth: true
+
+                    Repeater {
+                        id: stateRepeater
+                        model: rootDelegate.supportedStates
+
+                        ColumnLayout {
+                            id: labelWithDelegatesColumn
+                            spacing: 4
+
+                            readonly property var states: modelData
+                            readonly property string statesAsString: states.join("\n")
+
+                            Label {
+                                text: statesAsString.length > 0 ? statesAsString : "normal"
+
+                                // 4 is the most states for any element (Button)
+                                Layout.preferredHeight: (fontMetrics.lineSpacing) * (rootDelegate.maxStateCombinations + 1)
+                            }
+
+                            ControlContainer {
+                                id: controlContainer
+                                objectName: controlName + "ControlContainer"
+                                controlMetaObject: rootDelegate.controlMetaObject
+                                states: labelWithDelegatesColumn.states
+
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+                    }
+                }
+
+                ExampleContainer {
+                    id: exampleContainer
+                    controlMetaObject: rootDelegate.controlMetaObject
+                    visible: !!controlMetaObject.exampleComponent
+
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.topMargin: visible ? 14 : 0
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: visible ? implicitHeight : 0
+                }
             }
         }
+    }
+
+    RowLayout {
+        id: busyIndicatorRow
+        anchors.centerIn: parent
+        visible: false
+
+        BusyIndicator {
+            id: busyIndicator
+            running: visible
+        }
+
+        Label {
+            text: qsTr("Fixing assets...")
+            font.pixelSize: Qt.application.font.pixelSize * 2
+        }
+    }
+
+    ToolTip {
+        id: infoToolTip
+        x: (parent.width - width) / 2
+        y: parent.height - height - 40
+        parent: window.contentItem
     }
 }
 

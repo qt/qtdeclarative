@@ -1,11 +1,20 @@
 TEMPLATE = app
 
-QT += qml quick core-private
+QT += qml quick quickcontrols2
 CONFIG += c++11
 
-SOURCES += main.cpp
+HEADERS += \
+    assetfixer.h \
+    directoryvalidator.h \
+    clipboard.h
 
-RESOURCES += qml.qrc
+SOURCES += main.cpp \
+    assetfixer.cpp \
+    directoryvalidator.cpp \
+    clipboard.cpp
+
+RESOURCES += qml.qrc \
+    fonts.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =

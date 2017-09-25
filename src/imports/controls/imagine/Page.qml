@@ -64,7 +64,7 @@ T.Page {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "page-background"
+        source: Imagine.url + "page-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

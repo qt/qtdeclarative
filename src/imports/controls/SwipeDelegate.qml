@@ -54,7 +54,7 @@ T.SwipeDelegate {
 
     icon.width: 24
     icon.height: 24
-    icon.color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
+    icon.color: control.palette.text
 
     swipe.transition: Transition { SmoothedAnimation { velocity: 3; easing.type: Easing.InOutCubic } }
 
@@ -67,7 +67,7 @@ T.SwipeDelegate {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
+        color: control.palette.text
     }
 
     background: Rectangle {

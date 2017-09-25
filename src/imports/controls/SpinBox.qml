@@ -65,12 +65,11 @@ T.SpinBox {
     contentItem: TextInput {
         z: 2
         text: control.textFromValue(control.value, control.locale)
-        opacity: control.enabled ? 1 : 0.3
 
         font: control.font
-        color: Default.textColor
-        selectionColor: Default.focusColor
-        selectedTextColor: Default.textLightColor
+        color: control.palette.text
+        selectionColor: control.palette.highlight
+        selectedTextColor: control.palette.highlightedText
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
 

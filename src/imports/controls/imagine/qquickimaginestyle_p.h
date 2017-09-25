@@ -58,6 +58,7 @@ class QQuickImagineStyle : public QQuickAttachedObject
 {
     Q_OBJECT
     Q_PROPERTY(QString path READ path WRITE setPath RESET resetPath NOTIFY pathChanged FINAL)
+    Q_PROPERTY(QUrl url READ url NOTIFY pathChanged FINAL)
 
 public:
     explicit QQuickImagineStyle(QObject *parent = nullptr);
@@ -69,6 +70,8 @@ public:
     void inheritPath(const QString &path);
     void propagatePath();
     void resetPath();
+
+    QUrl url() const;
 
 Q_SIGNALS:
     void pathChanged();

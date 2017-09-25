@@ -50,7 +50,7 @@ T.Label {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "label-background"
+        source: Imagine.url + "label-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

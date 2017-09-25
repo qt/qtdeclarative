@@ -64,7 +64,7 @@ T.ProgressBar {
             height: parent.height
             visible: !control.indeterminate && mask.status === Image.Null
 
-            source: Imagine.path + "progressbar-progress"
+            source: Imagine.url + "progressbar-progress"
             NinePatchImageSelector on source {
                 states: [
                     {"disabled": !control.enabled},
@@ -82,7 +82,7 @@ T.ProgressBar {
             playing: control.indeterminate
             visible: control.indeterminate && mask.status === Image.Null
 
-            source: Imagine.path + "progressbar-animation"
+            source: Imagine.url + "progressbar-animation"
             AnimatedImageSelector on source {
                 states: [
                     {"disabled": !control.enabled},
@@ -98,7 +98,7 @@ T.ProgressBar {
             height: parent.height
             visible: false
 
-            source: Imagine.path + "progressbar-mask"
+            source: Imagine.url + "progressbar-mask"
             NinePatchImageSelector on source {
                 states: [
                     {"disabled": !control.enabled},
@@ -127,7 +127,7 @@ T.ProgressBar {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "progressbar-background"
+        source: Imagine.url + "progressbar-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

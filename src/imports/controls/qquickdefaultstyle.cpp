@@ -73,16 +73,6 @@ QColor QQuickDefaultStyle::textLightColor() const
     return QColor::fromRgba(0xFFFFFFFF);
 }
 
-QColor QQuickDefaultStyle::textLinkColor() const
-{
-    return QColor::fromRgba(0xFF45A7D7);
-}
-
-QColor QQuickDefaultStyle::textSelectionColor() const
-{
-    return QColor::fromRgba(0xFFFDDD5C);
-}
-
 QColor QQuickDefaultStyle::textDisabledColor() const
 {
     return QColor::fromRgba(0xFFBDBEBF);
@@ -91,6 +81,11 @@ QColor QQuickDefaultStyle::textDisabledColor() const
 QColor QQuickDefaultStyle::textDisabledLightColor() const
 {
     return QColor::fromRgba(0xFFC2C2C2);
+}
+
+QColor QQuickDefaultStyle::textPlaceholderColor() const
+{
+    return QColor::fromRgba(0xFF777777);
 }
 
 QColor QQuickDefaultStyle::focusColor() const
@@ -209,16 +204,6 @@ QColor QQuickDefaultStyle::scrollBarColor() const
 }
 
 QColor QQuickDefaultStyle::scrollBarPressedColor() const
-{
-    return QColor::fromRgba(0xFF28282A);
-}
-
-QColor QQuickDefaultStyle::progressBarColor() const
-{
-    return QColor::fromRgba(0xFFE4E4E4);
-}
-
-QColor QQuickDefaultStyle::pageIndicatorColor() const
 {
     return QColor::fromRgba(0xFF28282A);
 }

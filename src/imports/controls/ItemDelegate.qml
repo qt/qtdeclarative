@@ -54,7 +54,7 @@ T.ItemDelegate {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? Default.textDarkColor : Default.textDisabledColor
+    icon.color: control.palette.text
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -65,7 +65,7 @@ T.ItemDelegate {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
+        color: control.palette.text
     }
 
     background: Rectangle {

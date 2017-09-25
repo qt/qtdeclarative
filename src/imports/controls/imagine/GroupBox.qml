@@ -78,7 +78,7 @@ T.GroupBox {
             width: parent.width
             height: parent.height
 
-            source: Imagine.path + "groupbox-title"
+            source: Imagine.url + "groupbox-title"
             NinePatchImageSelector on source {
                 states: [
                     {"disabled": !control.enabled},
@@ -94,7 +94,7 @@ T.GroupBox {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset - control.topPadding + control.padding
 
-        source: Imagine.path + "groupbox-background"
+        source: Imagine.url + "groupbox-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},

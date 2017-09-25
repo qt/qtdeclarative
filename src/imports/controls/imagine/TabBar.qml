@@ -73,7 +73,7 @@ T.TabBar {
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset
 
-        source: Imagine.path + "tabbar-background"
+        source: Imagine.url + "tabbar-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
