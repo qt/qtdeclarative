@@ -198,11 +198,6 @@ QColor QQuickDefaultStyle::scrollBarPressedColor() const
     return QColor::fromRgba(0xFF28282A);
 }
 
-QColor QQuickDefaultStyle::separatorColor() const
-{
-    return QColor::fromRgba(0xFFCCCCCC);
-}
-
 QColor QQuickDefaultStyle::disabledDarkColor() const
 {
     return QColor::fromRgba(0xFF353637);
