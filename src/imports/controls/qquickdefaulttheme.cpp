@@ -44,6 +44,8 @@ QQuickDefaultTheme::QQuickDefaultTheme()
     systemPalette.setColor(QPalette::Base, QColor::fromRgba(0xFFFFFFFF));
     systemPalette.setColor(QPalette::Disabled, QPalette::Base, QColor::fromRgba(0xFFD6D6D6));
 
+    systemPalette.setColor(QPalette::Button, QColor::fromRgba(0xFFE0E0E0));
+
     systemPalette.setColor(QPalette::ButtonText, QColor::fromRgba(0xFF26282A));
     systemPalette.setColor(QPalette::Disabled, QPalette::ButtonText, QColor::fromRgba(0x4D26282A));
 

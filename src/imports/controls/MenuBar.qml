@@ -58,6 +58,6 @@ T.MenuBar {
 
     background: Rectangle {
         implicitHeight: 40
-        color: Default.delegateColor
+        color: control.palette.button
     }
 }
