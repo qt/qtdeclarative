@@ -266,6 +266,10 @@ ApplicationWindow {
 
         function reloadAssets() {
             console.log(brief, "Reloading assets...")
+            // Clear the model, otherwise ListView will keep the old items around
+            // with the old assets, even after clearing the pixmap cache
+            listView.resettingModel = true
+            listView.model = null
             window.Imagine.path = ""
             assetReloadNextFrameTimer.start()
         }
@@ -297,9 +301,14 @@ ApplicationWindow {
             window.Imagine.path = Qt.binding(function() {
                 return settings.useCustomImaginePath && settings.imaginePath.length > 0 ? settings.imaginePath : undefined
             })
+
             infoToolTip.text = "Reloaded assets"
             infoToolTip.timeout = 1500
             infoToolTip.open()
+
+            listView.model = controlFolderListModel
+            listView.resettingModel = false
+
             console.log(brief, "... reloaded assets.")
         }
     }
@@ -378,18 +387,24 @@ ApplicationWindow {
             return paletteSettings.useCustomPalette && paletteColorString.length > 0 ? paletteColorString : undefined
         }
 
+        FolderListModel {
+            id: controlFolderListModel
+            folder: "qrc:/controls"
+            showDirs: false
+            nameFilters: searchTextField.text.length > 0 ? ["*" + searchTextField.text + "*.qml"] : []
+        }
+
         ListView {
+            id: listView
             anchors.fill: parent
             spacing: 30
-            visible: !busyIndicatorRow.visible
+            visible: !busyIndicatorRow.visible && !resettingModel
+
+            property bool resettingModel: false
 
             ScrollBar.vertical: ScrollBar {}
 
-            model: FolderListModel {
-                folder: "qrc:/controls"
-                showDirs: false
-                nameFilters: searchTextField.text.length > 0 ? ["*" + searchTextField.text + "*.qml"] : []
-            }
+            model: controlFolderListModel
             delegate: ColumnLayout {
                 id: rootDelegate
                 width: parent.width
