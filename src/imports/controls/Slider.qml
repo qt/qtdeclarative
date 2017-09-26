@@ -55,13 +55,9 @@ T.Slider {
         implicitWidth: 28
         implicitHeight: 28
         radius: width / 2
-        color: control.enabled ? (control.pressed
-            ? (control.visualFocus ? Default.focusPressedColor : Default.indicatorPressedColor)
-            : (control.visualFocus ? Default.focusLightColor : Default.backgroundColor)) : Default.indicatorDisabledColor
+        color: control.pressed ? control.palette.light : control.palette.window
         border.width: control.visualFocus ? 2 : 1
-        border.color: control.enabled ? (control.visualFocus
-            ? control.palette.highlight
-            : (control.pressed ? Default.indicatorFramePressedColor : Default.indicatorFrameColor)) : Default.indicatorFrameDisabledColor
+        border.color: control.visualFocus ? control.palette.highlight : control.enabled ? control.palette.mid : control.palette.midlight
     }
 
     background: Rectangle {
@@ -72,7 +68,7 @@ T.Slider {
         width: control.horizontal ? control.availableWidth : implicitWidth
         height: control.horizontal ? implicitHeight : control.availableHeight
         radius: 3
-        color: Default.buttonColor
+        color: control.palette.midlight
         scale: control.horizontal && control.mirrored ? -1 : 1
 
         Rectangle {
@@ -81,7 +77,7 @@ T.Slider {
             height: control.horizontal ? 6 : control.position * parent.height
 
             radius: 3
-            color: Default.textColor
+            color: control.palette.dark
         }
     }
 }
