@@ -60,7 +60,7 @@ T.Slider {
             : (control.visualFocus ? Default.focusLightColor : Default.backgroundColor)) : Default.indicatorDisabledColor
         border.width: control.visualFocus ? 2 : 1
         border.color: control.enabled ? (control.visualFocus
-            ? Default.focusColor
+            ? control.palette.highlight
             : (control.pressed ? Default.indicatorFramePressedColor : Default.indicatorFrameColor)) : Default.indicatorFrameDisabledColor
     }
 

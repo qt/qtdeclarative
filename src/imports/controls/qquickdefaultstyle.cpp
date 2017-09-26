@@ -78,11 +78,6 @@ QColor QQuickDefaultStyle::textPlaceholderColor() const
     return QColor::fromRgba(0xFF777777);
 }
 
-QColor QQuickDefaultStyle::focusColor() const
-{
-    return QColor::fromRgba(0xFF0066FF);
-}
-
 QColor QQuickDefaultStyle::focusLightColor() const
 {
     return QColor::fromRgba(0xFFF0F6FF);

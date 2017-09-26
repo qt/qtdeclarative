@@ -77,9 +77,9 @@ T.Button {
         implicitHeight: 40
         visible: !control.flat || control.down || control.checked || control.highlighted
         color: control.checked || control.highlighted ?
-            (control.visualFocus ? (control.down ? Default.buttonCheckedFocusColor : Default.focusColor) : (control.down ? Default.buttonCheckedPressedColor : Default.textColor)) :
+            (control.visualFocus ? (control.down ? Default.buttonCheckedFocusColor : control.palette.highlight) : (control.down ? Default.buttonCheckedPressedColor : Default.textColor)) :
             (control.visualFocus ? (control.down ? Default.focusPressedColor : Default.focusLightColor) : (control.down ? Default.buttonPressedColor : Default.buttonColor))
-        border.color: Default.focusColor
+        border.color: control.palette.highlight
         border.width: control.visualFocus ? 2 : 0
     }
 }

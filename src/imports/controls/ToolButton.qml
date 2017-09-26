@@ -53,7 +53,7 @@ T.ToolButton {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? (visualFocus ? Default.focusColor : Default.textDarkColor) : Default.textDisabledLightColor
+    icon.color: enabled ? (visualFocus ? control.palette.highlight : Default.textDarkColor) : Default.textDisabledLightColor
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -63,7 +63,7 @@ T.ToolButton {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.enabled ? (control.visualFocus ? Default.focusColor : Default.textDarkColor) : Default.textDisabledLightColor
+        color: control.enabled ? (control.visualFocus ? control.palette.highlight : Default.textDarkColor) : Default.textDisabledLightColor
     }
 
     background: Rectangle {

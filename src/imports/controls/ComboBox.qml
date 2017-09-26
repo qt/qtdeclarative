@@ -64,7 +64,7 @@ T.ComboBox {
     indicator: ColorImage {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
-        color: !control.editable && control.visualFocus ? Default.focusColor : undefined
+        color: !control.editable && control.visualFocus ? control.palette.highlight : undefined
         source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/double-arrow.png"
         opacity: enabled ? 1 : 0.3
     }
@@ -84,7 +84,7 @@ T.ComboBox {
         validator: control.validator
 
         font: control.font
-        color: !control.editable && control.visualFocus ? Default.focusColor : control.palette.text
+        color: !control.editable && control.visualFocus ? control.palette.highlight : control.palette.text
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
         horizontalAlignment: Text.AlignLeft
@@ -93,7 +93,7 @@ T.ComboBox {
         background: Rectangle {
             visible: control.editable && !control.flat
             border.width: parent && parent.activeFocus ? 2 : 1
-            border.color: parent && parent.activeFocus ? Default.focusColor : Default.buttonColor
+            border.color: parent && parent.activeFocus ? control.palette.highlight : Default.buttonColor
         }
     }
 
@@ -103,7 +103,7 @@ T.ComboBox {
 
         color: !control.editable && control.visualFocus ? (control.pressed ? Default.focusPressedColor : Default.focusLightColor) :
             (control.down || popup.visible ? Default.buttonPressedColor : Default.buttonColor)
-        border.color: Default.focusColor
+        border.color: control.palette.highlight
         border.width: !control.editable && control.visualFocus ? 2 : 0
         visible: !control.flat || control.down
     }

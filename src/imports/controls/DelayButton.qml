@@ -114,13 +114,13 @@ T.DelayButton {
         implicitWidth: 100
         implicitHeight: 40
         color: control.visualFocus ? (control.down ? Default.focusPressedColor : Default.focusLightColor) : (control.down ? Default.buttonPressedColor : Default.buttonColor)
-        border.color: Default.focusColor
+        border.color: control.palette.highlight
         border.width: control.visualFocus ? 2 : 0
 
         Rectangle {
             width: control.progress * parent.width
             height: parent.height
-            color: control.visualFocus ? (control.down ? Default.buttonCheckedFocusColor : Default.focusColor) : (control.down ? Default.buttonCheckedPressedColor : Default.textColor)
+            color: control.visualFocus ? (control.down ? Default.buttonCheckedFocusColor : control.palette.highlight) : (control.down ? Default.buttonCheckedPressedColor : Default.textColor)
         }
     }
 }

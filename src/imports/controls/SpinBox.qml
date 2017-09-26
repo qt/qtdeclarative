@@ -84,7 +84,7 @@ T.SpinBox {
             height: control.height
             visible: control.activeFocus
             color: "transparent"
-            border.color: Default.focusColor
+            border.color: control.palette.highlight
             border.width: 2
         }
     }

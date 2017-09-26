@@ -51,14 +51,14 @@ Rectangle {
         : Default.backgroundColor) : Default.disabledDarkColor
     border.width: control.visualFocus ? 2 : 1
     border.color: control.enabled ? (control.visualFocus
-        ? Default.focusColor
+        ? control.palette.highlight
         : (control.down ? Default.indicatorFramePressedColor : Default.indicatorFrameColor)) : "transparent"
     opacity: enabled ? 1 : 0.3
 
     ColorImage {
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-        color: control.visualFocus ? Default.focusColor : undefined
+        color: control.visualFocus ? control.palette.highlight : undefined
         source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
         visible: control.checkState === Qt.Checked
     }
@@ -68,7 +68,7 @@ Rectangle {
         y: (parent.height - height) / 2
         width: 16
         height: 3
-        color: control.visualFocus ? Default.focusColor : Default.frameDarkColor
+        color: control.visualFocus ? control.palette.highlight : Default.frameDarkColor
         visible: control.checkState === Qt.PartiallyChecked
     }
 }
