@@ -39,5 +39,6 @@
         <file>controls/Tumbler.qml</file>
         <file>controls/BusyIndicator.qml</file>
         <file>testbench.qml</file>
+        <file>controls/MenuBar.qml</file>
     </qresource>
 </RCC>
