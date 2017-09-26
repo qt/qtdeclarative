@@ -53,7 +53,7 @@ import QtQuick.Window 2.3
 import QtQuick.Layouts 1.2
 import QtQuick.Controls 2.3
 import QtQuick.Controls.Imagine 2.3
-import Qt.labs.folderlistmodel 1.0
+import Qt.labs.folderlistmodel 2.2
 import Qt.labs.settings 1.0
 
 import App 1.0
@@ -392,6 +392,7 @@ ApplicationWindow {
             folder: "qrc:/controls"
             showDirs: false
             nameFilters: searchTextField.text.length > 0 ? ["*" + searchTextField.text + "*.qml"] : []
+            caseSensitive: false
         }
 
         ListView {
