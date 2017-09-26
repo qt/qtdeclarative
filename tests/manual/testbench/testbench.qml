@@ -403,7 +403,12 @@ ApplicationWindow {
 
             property bool resettingModel: false
 
-            ScrollBar.vertical: ScrollBar {}
+            ScrollBar.vertical: ScrollBar {
+                parent: contentPane
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+            }
 
             model: controlFolderListModel
             delegate: ColumnLayout {
