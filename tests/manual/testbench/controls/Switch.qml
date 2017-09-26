@@ -65,7 +65,7 @@ QtObject {
     ]
 
     property Component component: Switch {
-        text: "CheckBox"
+        text: "Switch"
         enabled: !is("disabled")
         checked: is("checked")
         // Only set it if it's pressed, or the non-pressed examples will have no press effects
