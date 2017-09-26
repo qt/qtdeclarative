@@ -7972,6 +7972,11 @@ QQuickItemLayer *QQuickItemPrivate::layer() const
 #endif
 }
 
+bool QQuickItemPrivate::hasPointerHandlers() const
+{
+    return extra.isAllocated() && !extra->pointerHandlers.isEmpty();
+}
+
 #if QT_CONFIG(quick_shadereffect)
 QQuickItemLayer::QQuickItemLayer(QQuickItem *item)
     : m_item(item)

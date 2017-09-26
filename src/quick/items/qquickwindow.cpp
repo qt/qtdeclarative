@@ -2301,10 +2301,12 @@ QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, cons
     }
 
     bool relevant = item->contains(itemPos);
-    if (relevant && checkMouseButtons && item->acceptedMouseButtons() == Qt::NoButton)
-        relevant = false;
-    if (relevant && checkAcceptsTouch && !(item->acceptTouchEvents() || item->acceptedMouseButtons()))
-        relevant = false;
+    if (!(itemPrivate->hasPointerHandlers())) {
+        if (relevant && checkMouseButtons && item->acceptedMouseButtons() == Qt::NoButton)
+            relevant = false;
+        if (relevant && checkAcceptsTouch && !(item->acceptTouchEvents() || item->acceptedMouseButtons()))
+            relevant = false;
+    }
     if (relevant)
         targets << item; // add this item last: children take precedence
     return targets;
