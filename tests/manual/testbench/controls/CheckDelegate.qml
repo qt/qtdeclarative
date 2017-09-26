@@ -70,6 +70,7 @@ QtObject {
         checkState: is("checked") ? Qt.Checked : is("partially-checked") ? Qt.PartiallyChecked : Qt.Unchecked
         // Only set it if it's pressed, or the non-pressed examples will have no press effects
         down: is("pressed") ? true : undefined
+        focusPolicy: Qt.StrongFocus
     }
 
     property Component exampleComponent: ListView {
@@ -80,6 +81,7 @@ QtObject {
         delegate: CheckDelegate {
             width: parent.width
             text: "CheckDelegate"
+            focusPolicy: Qt.StrongFocus
         }
     }
 }
