@@ -62,6 +62,7 @@ public:
     explicit QQuickColor(QObject *parent = nullptr);
 
     Q_INVOKABLE QColor transparent(const QColor &color, qreal opacity) const;
+    Q_INVOKABLE QColor blend(const QColor &a, const QColor &b, qreal factor) const;
 };
 
 QT_END_NAMESPACE
