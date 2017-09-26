@@ -76,7 +76,7 @@ T.TextField {
         implicitWidth: 200
         implicitHeight: 40
         border.width: control.activeFocus ? 2 : 1
-        color: control.enabled ? Default.backgroundColor : Default.indicatorFrameDisabledColor
-        border.color: control.activeFocus ? control.palette.highlight : (control.enabled ? Default.disabledLightColor : "transparent")
+        color: control.palette.base
+        border.color: control.activeFocus ? control.palette.highlight : control.palette.mid
     }
 }

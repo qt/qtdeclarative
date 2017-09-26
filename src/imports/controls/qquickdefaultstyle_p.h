@@ -87,7 +87,6 @@ class QQuickDefaultStyle : public QObject
     Q_PROPERTY(QColor scrollBarColor READ scrollBarColor CONSTANT FINAL)
     Q_PROPERTY(QColor scrollBarPressedColor READ scrollBarPressedColor CONSTANT FINAL)
     Q_PROPERTY(QColor disabledDarkColor READ disabledDarkColor CONSTANT FINAL)
-    Q_PROPERTY(QColor disabledLightColor READ disabledLightColor CONSTANT FINAL)
 
 public:
     explicit QQuickDefaultStyle(QObject *parent = nullptr);
@@ -125,7 +124,6 @@ public:
     QColor scrollBarColor() const;
     QColor scrollBarPressedColor() const;
     QColor disabledDarkColor() const;
-    QColor disabledLightColor() const;
 };
 
 QT_END_NAMESPACE

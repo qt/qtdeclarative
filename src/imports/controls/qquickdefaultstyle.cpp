@@ -198,9 +198,4 @@ QColor QQuickDefaultStyle::disabledDarkColor() const
     return QColor::fromRgba(0xFF353637);
 }
 
-QColor QQuickDefaultStyle::disabledLightColor() const
-{
-    return QColor::fromRgba(0xFFBDBEBF);
-}
-
 QT_END_NAMESPACE
