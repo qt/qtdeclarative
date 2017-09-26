@@ -41,7 +41,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickColorImage::QQuickColorImage(QQuickItem *parent)
-    : QQuickImage(parent), m_color(Qt::transparent)
+    : QQuickImage(parent), m_color(Qt::transparent), m_defaultColor(Qt::transparent)
 {
 }
 
@@ -66,10 +66,29 @@ void QQuickColorImage::resetColor()
     setColor(Qt::transparent);
 }
 
+QColor QQuickColorImage::defaultColor() const
+{
+    return m_defaultColor;
+}
+
+void QQuickColorImage::setDefaultColor(const QColor &color)
+{
+    if (m_defaultColor == color)
+        return;
+
+    m_defaultColor = color;
+    emit defaultColorChanged();
+}
+
+void QQuickColorImage::resetDefaultColor()
+{
+    setDefaultColor(Qt::transparent);
+}
+
 void QQuickColorImage::pixmapChange()
 {
     QQuickImage::pixmapChange();
-    if (m_color.alpha() > 0) {
+    if (m_color.alpha() > 0 && m_color != m_defaultColor) {
         QQuickImageBasePrivate *d = static_cast<QQuickImageBasePrivate *>(QQuickItemPrivate::get(this));
         QImage image = d->pix.image();
         if (!image.isNull()) {
