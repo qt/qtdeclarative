@@ -64,6 +64,6 @@ T.ProgressBar {
         width: control.availableWidth
         height: 6
 
-        color: control.palette.light
+        color: control.palette.midlight
     }
 }
