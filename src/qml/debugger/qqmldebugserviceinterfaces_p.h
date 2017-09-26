@@ -116,7 +116,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QV4DebugService(float version, QObject *parent = 0) :
+    QV4DebugService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
@@ -138,7 +138,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlProfilerService(float version, QObject *parent = 0) :
+    QQmlProfilerService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
@@ -154,7 +154,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlEngineDebugService(float version, QObject *parent = 0) :
+    QQmlEngineDebugService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 
     QQmlBoundSignal *nextSignal(QQmlBoundSignal *prev) { return prev->m_nextSignal; }
@@ -173,7 +173,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlInspectorService(float version, QObject *parent = 0) :
+    QQmlInspectorService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
@@ -188,7 +188,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QDebugMessageService(float version, QObject *parent = 0) :
+    QDebugMessageService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 };
 
@@ -201,7 +201,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlEngineControlService(float version, QObject *parent = 0) :
+    QQmlEngineControlService(float version, QObject *parent = nullptr) :
         QQmlDebugService(s_key, version, parent) {}
 
 };
@@ -215,7 +215,7 @@ public:
 protected:
     friend class QQmlDebugConnector;
 
-    QQmlNativeDebugService(float version, QObject *parent = 0)
+    QQmlNativeDebugService(float version, QObject *parent = nullptr)
         : QQmlDebugService(s_key, version,  parent) {}
 };
 
