@@ -55,6 +55,6 @@ T.Page {
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
     background: Rectangle {
-        color: Default.backgroundColor
+        color: control.palette.window
     }
 }
