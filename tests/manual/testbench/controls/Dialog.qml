@@ -57,7 +57,9 @@ QtObject {
     property string customControlName: qsTr("Dialog")
 
     property var supportedStates: [
-        []
+        [],
+        ["modal"],
+        ["dim"]
     ]
 
     property Component component: Button {
@@ -73,6 +75,8 @@ QtObject {
             y: (window.height - height) / 2
             standardButtons: Dialog.Ok | Dialog.Cancel
             parent: window.contentItem
+            modal: is("modal")
+            dim: is("dim")
 
             Label {
                 text: "Lorem ipsum dolor sit amet, \nconsectetuer adipiscing elit, \n"
