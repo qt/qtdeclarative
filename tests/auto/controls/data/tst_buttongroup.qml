@@ -346,4 +346,36 @@ TestCase {
         verify(container.group.checkedButton)
         compare(container.group.checkedButton.objectName, "0")
     }
+
+    Component {
+        id: checkedButtonColumn
+        Column {
+            id: column
+            ButtonGroup { buttons: column.children }
+            Repeater {
+                id: repeater
+                delegate: Button {
+                    checkable: true
+                    text: modelData
+                    onClicked: listModel.remove(index)
+                }
+                model: ListModel {
+                    id: listModel
+                    Component.onCompleted: {
+                        for (var i = 0; i < 10; ++i)
+                            append({text: i})
+                    }
+                }
+            }
+        }
+    }
+
+    function test_checkedButtonDestroyed() {
+        var column = createTemporaryObject(checkedButtonColumn, testCase)
+        verify(column)
+
+        waitForRendering(column)
+        mouseClick(column.children[0])
+        wait(0) // don't crash (QTBUG-62946, QTBUG-63470)
+    }
 }
