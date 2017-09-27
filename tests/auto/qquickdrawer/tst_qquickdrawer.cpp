@@ -54,7 +54,7 @@
 
 using namespace QQuickVisualTestUtil;
 
-class tst_Drawer : public QQmlDataTest
+class tst_QQuickDrawer : public QQmlDataTest
 {
     Q_OBJECT
 
@@ -116,7 +116,7 @@ private:
 };
 
 
-void tst_Drawer::initTestCase()
+void tst_QQuickDrawer::initTestCase()
 {
     QQmlDataTest::initTestCase();
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
@@ -126,14 +126,14 @@ void tst_Drawer::initTestCase()
     QWindowSystemInterface::registerTouchDevice(touchDevice.data());
 }
 
-void tst_Drawer::visible_data()
+void tst_QQuickDrawer::visible_data()
 {
     QTest::addColumn<QString>("source");
     QTest::newRow("Window") << "window.qml";
     QTest::newRow("ApplicationWindow") << "applicationwindow.qml";
 }
 
-void tst_Drawer::visible()
+void tst_QQuickDrawer::visible()
 {
     QFETCH(QString, source);
     QQuickApplicationHelper helper(this, source);
@@ -174,7 +174,7 @@ void tst_Drawer::visible()
     QTRY_VERIFY(!overlay->childItems().contains(popupItem));
 }
 
-void tst_Drawer::state()
+void tst_QQuickDrawer::state()
 {
     QQuickApplicationHelper helper(this, "applicationwindow.qml");
 
@@ -274,7 +274,7 @@ void tst_Drawer::state()
     QCOMPARE(closedSpy.count(), ++closedCount);
 }
 
-void tst_Drawer::position_data()
+void tst_QQuickDrawer::position_data()
 {
     QTest::addColumn<Qt::Edge>("edge");
     QTest::addColumn<QPoint>("press");
@@ -288,7 +288,7 @@ void tst_Drawer::position_data()
     QTest::newRow("bottom") << Qt::BottomEdge << QPoint(100, 399) << QPoint(100, 350) << QPoint(150, 250) << qreal(0.5);
 }
 
-void tst_Drawer::position()
+void tst_QQuickDrawer::position()
 {
     QFETCH(Qt::Edge, edge);
     QFETCH(QPoint, press);
@@ -317,7 +317,7 @@ void tst_Drawer::position()
     QTRY_COMPARE(drawer->position(), 1.0);
 }
 
-void tst_Drawer::dragMargin_data()
+void tst_QQuickDrawer::dragMargin_data()
 {
     QTest::addColumn<Qt::Edge>("edge");
     QTest::addColumn<qreal>("dragMargin");
@@ -335,7 +335,7 @@ void tst_Drawer::dragMargin_data()
     QTest::newRow("right:startDragDistance*2") << Qt::RightEdge << qreal(QGuiApplication::styleHints()->startDragDistance() * 2) << qreal(0) << qreal(0.75);
 }
 
-void tst_Drawer::dragMargin()
+void tst_QQuickDrawer::dragMargin()
 {
     QFETCH(Qt::Edge, edge);
     QFETCH(qreal, dragMargin);
@@ -385,7 +385,7 @@ static QRectF geometry(const QQuickItem *item)
     return QRectF(item->x(), item->y(), item->width(), item->height());
 }
 
-void tst_Drawer::reposition()
+void tst_QQuickDrawer::reposition()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("reposition.qml"));
 
@@ -443,7 +443,7 @@ void tst_Drawer::reposition()
     QTRY_COMPARE(popupItem2->x(), 0.0);
 }
 
-void tst_Drawer::header()
+void tst_QQuickDrawer::header()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("header.qml"));
 
@@ -483,7 +483,7 @@ void tst_Drawer::header()
     QCOMPARE(clickSpy.count(), 1);
 }
 
-void tst_Drawer::hover_data()
+void tst_QQuickDrawer::hover_data()
 {
     QTest::addColumn<QString>("source");
     QTest::addColumn<bool>("modal");
@@ -494,7 +494,7 @@ void tst_Drawer::hover_data()
     QTest::newRow("ApplicationWindow:modeless") << "applicationwindow-hover.qml" << false;
 }
 
-void tst_Drawer::hover()
+void tst_QQuickDrawer::hover()
 {
     QFETCH(QString, source);
     QFETCH(bool, modal);
@@ -556,7 +556,7 @@ void tst_Drawer::hover()
     QVERIFY(!drawerItem->isHovered());
 }
 
-void tst_Drawer::wheel_data()
+void tst_QQuickDrawer::wheel_data()
 {
     QTest::addColumn<QString>("source");
     QTest::addColumn<bool>("modal");
@@ -575,7 +575,7 @@ static bool sendWheelEvent(QQuickItem *item, const QPoint &localPos, int degrees
     return qGuiApp->notify(window, &wheelEvent);
 }
 
-void tst_Drawer::wheel()
+void tst_QQuickDrawer::wheel()
 {
     QFETCH(QString, source);
     QFETCH(bool, modal);
@@ -640,7 +640,7 @@ void tst_Drawer::wheel()
     }
 }
 
-void tst_Drawer::multiple()
+void tst_QQuickDrawer::multiple()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("multiple.qml"));
     QQuickWindow *window = helper.window;
@@ -763,7 +763,7 @@ void tst_Drawer::multiple()
     QCOMPARE(leftDrawer->position(), 0.0);
 }
 
-void tst_Drawer::touch_data()
+void tst_QQuickDrawer::touch_data()
 {
     QTest::addColumn<QString>("source");
     QTest::addColumn<QPoint>("from");
@@ -780,7 +780,7 @@ void tst_Drawer::touch_data()
     QTest::newRow("ApplicationWindow+Button:outside") << "applicationwindow-button.qml" << QPoint(300, 100) << QPoint(100, 100);
 }
 
-void tst_Drawer::touch()
+void tst_QQuickDrawer::touch()
 {
     QFETCH(QString, source);
     QFETCH(QPoint, from);
@@ -818,7 +818,7 @@ void tst_Drawer::touch()
     QCOMPARE(drawer->position(), 0.0);
 }
 
-void tst_Drawer::multiTouch()
+void tst_QQuickDrawer::multiTouch()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("multiTouch.qml"));
     QQuickWindow *window = helper.window;
@@ -931,7 +931,7 @@ void tst_Drawer::multiTouch()
     QCOMPARE(overlayReleasedSpy.count(), 4);
 }
 
-void tst_Drawer::grabber()
+void tst_QQuickDrawer::grabber()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("grabber.qml"));
     QQuickWindow *window = helper.window;
@@ -967,14 +967,14 @@ void tst_Drawer::grabber()
     QTRY_COMPARE(popupClosedSpy.count(), 1);
 }
 
-void tst_Drawer::interactive_data()
+void tst_QQuickDrawer::interactive_data()
 {
     QTest::addColumn<QString>("source");
     QTest::newRow("Window") << "window.qml";
     QTest::newRow("ApplicationWindow") << "applicationwindow.qml";
 }
 
-void tst_Drawer::interactive()
+void tst_QQuickDrawer::interactive()
 {
     QFETCH(QString, source);
     QQuickApplicationHelper helper(this, source);
@@ -1021,7 +1021,7 @@ void tst_Drawer::interactive()
     QCOMPARE(aboutToHideSpy.count(), 0);
 }
 
-void tst_Drawer::flickable_data()
+void tst_QQuickDrawer::flickable_data()
 {
     QTest::addColumn<bool>("mouse");
     QTest::addColumn<QPoint>("from");
@@ -1033,7 +1033,7 @@ void tst_Drawer::flickable_data()
     QTest::newRow("touch,diagonal") << false << QPoint(200, 200) << QPoint(250, 100);
 }
 
-void tst_Drawer::flickable()
+void tst_QQuickDrawer::flickable()
 {
     QFETCH(bool, mouse);
     QFETCH(QPoint, from);
@@ -1083,7 +1083,7 @@ void tst_Drawer::flickable()
     QVERIFY(!flickable->isDragging());
 }
 
-void tst_Drawer::dragOverModalShadow_data()
+void tst_QQuickDrawer::dragOverModalShadow_data()
 {
     QTest::addColumn<bool>("mouse");
     QTest::newRow("mouse") << true;
@@ -1091,7 +1091,7 @@ void tst_Drawer::dragOverModalShadow_data()
 }
 
 // QTBUG-60602
-void tst_Drawer::dragOverModalShadow()
+void tst_QQuickDrawer::dragOverModalShadow()
 {
     QFETCH(bool, mouse);
 
@@ -1139,7 +1139,7 @@ void tst_Drawer::dragOverModalShadow()
     QVERIFY(!drawer->isVisible());
 }
 
-void tst_Drawer::nonModal_data()
+void tst_QQuickDrawer::nonModal_data()
 {
     QTest::addColumn<bool>("mouse");
     QTest::newRow("mouse") << true;
@@ -1147,7 +1147,7 @@ void tst_Drawer::nonModal_data()
 }
 
 // QTBUG-59652
-void tst_Drawer::nonModal()
+void tst_QQuickDrawer::nonModal()
 {
     QFETCH(bool, mouse);
 
@@ -1219,6 +1219,6 @@ void tst_Drawer::nonModal()
     QVERIFY(closedSpy.wait());
 }
 
-QTEST_MAIN(tst_Drawer)
+QTEST_MAIN(tst_QQuickDrawer)
 
-#include "tst_drawer.moc"
+#include "tst_qquickdrawer.moc"

@@ -1,6 +1,6 @@
 CONFIG += testcase
-TARGET = tst_menu
-SOURCES += tst_menu.cpp
+TARGET = tst_qquickdrawer
+SOURCES += tst_qquickdrawer.cpp
 
 macos:CONFIG -= app_bundle
 
@@ -12,4 +12,3 @@ TESTDATA = data/*
 
 OTHER_FILES += \
     data/*.qml
-

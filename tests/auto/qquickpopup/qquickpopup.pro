@@ -1,6 +1,6 @@
 CONFIG += testcase
-TARGET = tst_drawer
-SOURCES += tst_drawer.cpp
+TARGET = tst_qquickpopup
+SOURCES += tst_qquickpopup.cpp
 
 macos:CONFIG -= app_bundle
 

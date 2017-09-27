@@ -56,7 +56,7 @@
 
 using namespace QQuickVisualTestUtil;
 
-class tst_menu : public QQmlDataTest
+class tst_QQuickMenu : public QQmlDataTest
 {
     Q_OBJECT
 
@@ -86,7 +86,7 @@ private slots:
     void addRemoveSubMenus();
 };
 
-void tst_menu::defaults()
+void tst_QQuickMenu::defaults()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
@@ -97,7 +97,7 @@ void tst_menu::defaults()
     QCOMPARE(emptyMenu->count(), 0);
 }
 
-void tst_menu::count()
+void tst_QQuickMenu::count()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
@@ -125,7 +125,7 @@ void tst_menu::count()
     QCOMPARE(countSpy.count(), 4);
 }
 
-void tst_menu::mouse()
+void tst_QQuickMenu::mouse()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
@@ -217,7 +217,7 @@ void tst_menu::mouse()
 //    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 }
 
-void tst_menu::pressAndHold()
+void tst_QQuickMenu::pressAndHold()
 {
     QQuickApplicationHelper helper(this, QLatin1String("pressAndHold.qml"));
 
@@ -238,7 +238,7 @@ void tst_menu::pressAndHold()
     QTRY_VERIFY(!menu->isVisible());
 }
 
-void tst_menu::contextMenuKeyboard()
+void tst_QQuickMenu::contextMenuKeyboard()
 {
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
@@ -388,7 +388,7 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(!menu->isVisible());
 }
 
-void tst_menu::mnemonics()
+void tst_QQuickMenu::mnemonics()
 {
 #ifdef Q_OS_MACOS
     QSKIP("Mnemonics are not used on macOS");
@@ -436,7 +436,7 @@ void tst_menu::mnemonics()
     QCOMPARE(subMenuItemSpy.count(), 1);
 }
 
-void tst_menu::menuButton()
+void tst_QQuickMenu::menuButton()
 {
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
@@ -464,7 +464,7 @@ void tst_menu::menuButton()
     QVERIFY(firstItem->hasActiveFocus());
 }
 
-void tst_menu::addItem()
+void tst_QQuickMenu::addItem()
 {
     QQuickApplicationHelper helper(this, QLatin1String("addItem.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
@@ -485,7 +485,7 @@ void tst_menu::addItem()
     QTRY_VERIFY(!menu->isVisible());
 }
 
-void tst_menu::menuSeparator()
+void tst_QQuickMenu::menuSeparator()
 {
     QQuickApplicationHelper helper(this, QLatin1String("menuSeparator.qml"));
     QQuickWindow *window = helper.window;
@@ -561,7 +561,7 @@ void tst_menu::menuSeparator()
     QCOMPARE(newMenuItem->focusReason(), Qt::BacktabFocusReason);
 }
 
-void tst_menu::repeater()
+void tst_QQuickMenu::repeater()
 {
     QQuickApplicationHelper helper(this, QLatin1String("repeater.qml"));
     QQuickWindow *window = helper.window;
@@ -605,7 +605,7 @@ void tst_menu::repeater()
     }
 }
 
-void tst_menu::order()
+void tst_QQuickMenu::order()
 {
     QQuickApplicationHelper helper(this, QLatin1String("order.qml"));
     QQuickWindow *window = helper.window;
@@ -626,7 +626,7 @@ void tst_menu::order()
     }
 }
 
-void tst_menu::popup()
+void tst_QQuickMenu::popup()
 {
     QQuickApplicationHelper helper(this, QLatin1String("popup.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
@@ -773,7 +773,7 @@ void tst_menu::popup()
 #endif
 }
 
-void tst_menu::actions()
+void tst_QQuickMenu::actions()
 {
     QQuickApplicationHelper helper(this, QLatin1String("actions.qml"));
     QQuickWindow *window = helper.window;
@@ -841,7 +841,7 @@ void tst_menu::actions()
     QVERIFY(menuItem1.isNull());
 }
 
-void tst_menu::removeTakeItem()
+void tst_QQuickMenu::removeTakeItem()
 {
     QQuickApplicationHelper helper(this, QLatin1String("removeTakeItem.qml"));
     QQuickWindow *window = helper.window;
@@ -890,7 +890,7 @@ void tst_menu::removeTakeItem()
     QVERIFY(!menuItem3.isNull());
 }
 
-void tst_menu::subMenuMouse_data()
+void tst_QQuickMenu::subMenuMouse_data()
 {
     QTest::addColumn<bool>("cascade");
 
@@ -898,7 +898,7 @@ void tst_menu::subMenuMouse_data()
     QTest::newRow("non-cascading") << false;
 }
 
-void tst_menu::subMenuMouse()
+void tst_QQuickMenu::subMenuMouse()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
@@ -993,7 +993,7 @@ void tst_menu::subMenuMouse()
     QVERIFY(!subSubMenu1->isVisible());
 }
 
-void tst_menu::subMenuKeyboard_data()
+void tst_QQuickMenu::subMenuKeyboard_data()
 {
     QTest::addColumn<bool>("cascade");
     QTest::addColumn<bool>("mirrored");
@@ -1004,7 +1004,7 @@ void tst_menu::subMenuKeyboard_data()
     QTest::newRow("non-cascading,mirrored") << false << true;
 }
 
-void tst_menu::subMenuKeyboard()
+void tst_QQuickMenu::subMenuKeyboard()
 {
     QFETCH(bool, cascade);
     QFETCH(bool, mirrored);
@@ -1117,7 +1117,7 @@ void tst_menu::subMenuKeyboard()
     QVERIFY(!subSubMenu1->isVisible());
 }
 
-void tst_menu::subMenuPosition_data()
+void tst_QQuickMenu::subMenuPosition_data()
 {
     QTest::addColumn<bool>("cascade");
     QTest::addColumn<bool>("flip");
@@ -1135,7 +1135,7 @@ void tst_menu::subMenuPosition_data()
     QTest::newRow("non-cascading") << false << false << false << 0.0;
 }
 
-void tst_menu::subMenuPosition()
+void tst_QQuickMenu::subMenuPosition()
 {
     QFETCH(bool, cascade);
     QFETCH(bool, flip);
@@ -1249,7 +1249,7 @@ void tst_menu::subMenuPosition()
     }
 }
 
-void tst_menu::addRemoveSubMenus()
+void tst_QQuickMenu::addRemoveSubMenus()
 {
     QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
     QQuickWindow *window = helper.window;
@@ -1309,6 +1309,6 @@ void tst_menu::addRemoveSubMenus()
     QVERIFY(subSubMenu1Item.isNull());
 }
 
-QTEST_MAIN(tst_menu)
+QTEST_MAIN(tst_QQuickMenu)
 
-#include "tst_menu.moc"
+#include "tst_qquickmenu.moc"

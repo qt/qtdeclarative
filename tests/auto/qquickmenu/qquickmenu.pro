@@ -1,6 +1,6 @@
 CONFIG += testcase
-TARGET = tst_popup
-SOURCES += tst_popup.cpp
+TARGET = tst_qquickmenu
+SOURCES += tst_qquickmenu.cpp
 
 macos:CONFIG -= app_bundle
 
@@ -12,3 +12,4 @@ TESTDATA = data/*
 
 OTHER_FILES += \
     data/*.qml
+
