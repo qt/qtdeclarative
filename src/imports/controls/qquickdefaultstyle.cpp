@@ -183,16 +183,6 @@ QColor QQuickDefaultStyle::frameLightColor() const
     return QColor::fromRgba(0xFFBDBEBF);
 }
 
-QColor QQuickDefaultStyle::scrollBarColor() const
-{
-    return QColor::fromRgba(0xFFBDBEBF);
-}
-
-QColor QQuickDefaultStyle::scrollBarPressedColor() const
-{
-    return QColor::fromRgba(0xFF28282A);
-}
-
 QColor QQuickDefaultStyle::disabledDarkColor() const
 {
     return QColor::fromRgba(0xFF353637);

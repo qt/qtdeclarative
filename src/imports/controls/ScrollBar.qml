@@ -57,7 +57,7 @@ T.ScrollBar {
         implicitHeight: control.interactive ? 6 : 2
 
         radius: width / 2
-        color: control.pressed ? Default.scrollBarPressedColor : Default.scrollBarColor
+        color: control.pressed ? control.palette.dark : control.palette.mid
         opacity: 0.0
 
         states: State {
