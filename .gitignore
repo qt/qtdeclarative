@@ -34,13 +34,13 @@
 /tests/auto/cursor/tst_cursor
 /tests/auto/focus/tst_focus
 /tests/auto/font/tst_font
-/tests/auto/menu/tst_menu
 /tests/auto/platform/tst_platform
 /tests/auto/pressandhold/tst_pressandhold
 /tests/auto/qquickapplicationwindow/tst_qquickapplicationwindow
 /tests/auto/qquickdrawer/tst_qquickdrawer
 /tests/auto/qquickmaterialstyle/tst_qquickmaterialstyle
 /tests/auto/qquickmaterialstyleconf/tst_qquickmaterialstyleconf
+/tests/auto/qquickmenu/tst_qquickmenu
 /tests/auto/qquickpopup/tst_qquickpopup
 /tests/auto/qquickstyle/tst_qquickstyle
 /tests/auto/qquickstyleselector/tst_qquickstyleselector

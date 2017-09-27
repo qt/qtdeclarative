@@ -54,7 +54,7 @@
 
 using namespace QQuickVisualTestUtil;
 
-class tst_menu : public QQmlDataTest
+class tst_QQuickMenu : public QQmlDataTest
 {
     Q_OBJECT
 
@@ -72,7 +72,7 @@ private slots:
     void order();
 };
 
-void tst_menu::defaults()
+void tst_QQuickMenu::defaults()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
@@ -81,7 +81,7 @@ void tst_menu::defaults()
     QCOMPARE(emptyMenu->contentItem()->property("currentIndex"), QVariant(-1));
 }
 
-void tst_menu::mouse()
+void tst_QQuickMenu::mouse()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
 
@@ -150,7 +150,7 @@ void tst_menu::mouse()
 //    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 }
 
-void tst_menu::pressAndHold()
+void tst_QQuickMenu::pressAndHold()
 {
     QQuickApplicationHelper helper(this, QLatin1String("pressAndHold.qml"));
 
@@ -171,7 +171,7 @@ void tst_menu::pressAndHold()
     QTRY_VERIFY(!menu->isVisible());
 }
 
-void tst_menu::contextMenuKeyboard()
+void tst_QQuickMenu::contextMenuKeyboard()
 {
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
@@ -291,7 +291,7 @@ void tst_menu::contextMenuKeyboard()
     QVERIFY(!menu->isVisible());
 }
 
-void tst_menu::menuButton()
+void tst_QQuickMenu::menuButton()
 {
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
@@ -319,7 +319,7 @@ void tst_menu::menuButton()
     QVERIFY(firstItem->hasActiveFocus());
 }
 
-void tst_menu::addItem()
+void tst_QQuickMenu::addItem()
 {
     QQuickApplicationHelper helper(this, QLatin1String("addItem.qml"));
     QQuickApplicationWindow *window = helper.appWindow;
@@ -340,7 +340,7 @@ void tst_menu::addItem()
     QTRY_VERIFY(!menu->isVisible());
 }
 
-void tst_menu::menuSeparator()
+void tst_QQuickMenu::menuSeparator()
 {
     QQuickApplicationHelper helper(this, QLatin1String("menuSeparator.qml"));
     QQuickWindow *window = helper.window;
@@ -412,7 +412,7 @@ void tst_menu::menuSeparator()
     QCOMPARE(newMenuItem->focusReason(), Qt::BacktabFocusReason);
 }
 
-void tst_menu::repeater()
+void tst_QQuickMenu::repeater()
 {
     QQuickApplicationHelper helper(this, QLatin1String("repeater.qml"));
     QQuickWindow *window = helper.window;
@@ -456,7 +456,7 @@ void tst_menu::repeater()
     }
 }
 
-void tst_menu::order()
+void tst_QQuickMenu::order()
 {
     QQuickApplicationHelper helper(this, QLatin1String("order.qml"));
     QQuickWindow *window = helper.window;
@@ -477,6 +477,6 @@ void tst_menu::order()
     }
 }
 
-QTEST_MAIN(tst_menu)
+QTEST_MAIN(tst_QQuickMenu)
 
-#include "tst_menu.moc"
+#include "tst_qquickmenu.moc"

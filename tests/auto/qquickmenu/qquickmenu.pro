@@ -1,6 +1,6 @@
 CONFIG += testcase
-TARGET = tst_menu
-SOURCES += tst_menu.cpp
+TARGET = tst_qquickmenu
+SOURCES += tst_qquickmenu.cpp
 
 macos:CONFIG -= app_bundle
 
