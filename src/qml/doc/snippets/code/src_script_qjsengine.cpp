@@ -58,7 +58,7 @@ QJSValue three = myEngine.evaluate("1 + 2");
 QJSValue fun = myEngine.evaluate("(function(a, b) { return a + b; })");
 QJSValueList args;
 args << 1 << 2;
-QJSValue threeAgain = fun.call(QJSValue(), args);
+QJSValue threeAgain = fun.call(args);
 //! [1]
 
 
