@@ -50,6 +50,6 @@ T.ToolBar {
 
     background: Rectangle {
         implicitHeight: 40
-        color: Default.delegateColor
+        color: control.palette.button
     }
 }

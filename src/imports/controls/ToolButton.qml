@@ -53,7 +53,7 @@ T.ToolButton {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? (visualFocus ? control.palette.highlight : Default.textDarkColor) : Default.textDisabledLightColor
+    icon.color: visualFocus ? control.palette.highlight : control.palette.buttonText
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -63,15 +63,14 @@ T.ToolButton {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.enabled ? (control.visualFocus ? control.palette.highlight : Default.textDarkColor) : Default.textDisabledLightColor
+        color: control.visualFocus ? control.palette.highlight : control.palette.buttonText
     }
 
     background: Rectangle {
         implicitWidth: 40
         implicitHeight: 40
 
-        color: Qt.darker(Default.toolButtonColor, control.enabled && (control.checked || control.highlighted) ? 1.5 : 1.0)
-        opacity: control.down ? 1.0 : control.enabled && (control.checked || control.highlighted) ? 0.5 : 0
-        visible: control.down || (control.enabled && (control.checked || control.highlighted))
+        opacity: control.down ? 1.0 : 0.5
+        color: control.down || control.checked || control.highlighted ? control.palette.mid : control.palette.button
     }
 }
