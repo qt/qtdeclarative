@@ -66,7 +66,8 @@ T.TextField {
 
         text: control.placeholderText
         font: control.font
-        color: enabled ? Default.textPlaceholderColor : Default.textDisabledColor
+        opacity: 0.5
+        color: control.palette.text
         verticalAlignment: control.verticalAlignment
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight

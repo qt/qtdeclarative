@@ -68,7 +68,7 @@ QQuickDefaultTheme::QQuickDefaultTheme()
     systemPalette.setColor(QPalette::Midlight, QColor::fromRgba(0xFFE4E4E4));
 
     systemPalette.setColor(QPalette::Text, QColor::fromRgba(0xFF353637));
-    systemPalette.setColor(QPalette::Disabled, QPalette::Text, QColor::fromRgba(0x4D353637));
+    systemPalette.setColor(QPalette::Disabled, QPalette::Text, QColor::fromRgba(0x7F353637));
 
     systemPalette.setColor(QPalette::Shadow, QColor::fromRgba(0xFF28282A));
 
