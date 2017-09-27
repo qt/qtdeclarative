@@ -1,6 +1,6 @@
 CONFIG += testcase
-TARGET = tst_applicationwindow
-SOURCES += tst_applicationwindow.cpp
+TARGET = tst_qquickapplicationwindow
+SOURCES += tst_qquickapplicationwindow.cpp
 
 macos:CONFIG -= app_bundle
 

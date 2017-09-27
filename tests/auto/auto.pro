@@ -1,7 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS += \
     accessibility \
-    applicationwindow \
     calendar \
     controls \
     cursor \
@@ -10,6 +9,7 @@ SUBDIRS += \
     menu \
     platform \
     pressandhold \
+    qquickapplicationwindow \
     qquickdrawer \
     qquickmaterialstyle \
     qquickmaterialstyleconf \
@@ -23,7 +23,7 @@ SUBDIRS += \
     snippets
 
 # QTBUG-60268
-boot2qt: SUBDIRS -= applicationwindow calendar controls cursor \
+boot2qt: SUBDIRS -= qquickapplicationwindow calendar controls cursor \
                     qquickdrawer focus font menu platform qquickpopup qquickmaterialstyle \
                     qquickmaterialstyleconf qquickuniversalstyle \
                     qquickuniversalstyleconf snippets

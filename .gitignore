@@ -27,7 +27,6 @@
 /examples/quickcontrols2/wearable/wearable
 
 /tests/auto/accessibility/tst_accessibility
-/tests/auto/applicationwindow/tst_applicationwindow
 /tests/auto/calendar/tst_calendar
 /tests/auto/controls/default/tst_default
 /tests/auto/controls/material/tst_material
@@ -38,6 +37,7 @@
 /tests/auto/menu/tst_menu
 /tests/auto/platform/tst_platform
 /tests/auto/pressandhold/tst_pressandhold
+/tests/auto/qquickapplicationwindow/tst_qquickapplicationwindow
 /tests/auto/qquickdrawer/tst_qquickdrawer
 /tests/auto/qquickmaterialstyle/tst_qquickmaterialstyle
 /tests/auto/qquickmaterialstyleconf/tst_qquickmaterialstyleconf

@@ -56,7 +56,7 @@
 
 using namespace QQuickVisualTestUtil;
 
-class tst_applicationwindow : public QQmlDataTest
+class tst_QQuickApplicationWindow : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -79,7 +79,7 @@ private slots:
     void componentComplete();
 };
 
-void tst_applicationwindow::qmlCreation()
+void tst_QQuickApplicationWindow::qmlCreation()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -104,7 +104,7 @@ void tst_applicationwindow::qmlCreation()
     QVERIFY(!footer);
 }
 
-void tst_applicationwindow::activeFocusOnTab1()
+void tst_QQuickApplicationWindow::activeFocusOnTab1()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -156,7 +156,7 @@ void tst_applicationwindow::activeFocusOnTab1()
     QVERIFY(item->hasActiveFocus());
 }
 
-void tst_applicationwindow::activeFocusOnTab2()
+void tst_QQuickApplicationWindow::activeFocusOnTab2()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -208,7 +208,7 @@ void tst_applicationwindow::activeFocusOnTab2()
     QVERIFY(item->hasActiveFocus());
 }
 
-void tst_applicationwindow::defaultFocus()
+void tst_QQuickApplicationWindow::defaultFocus()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -236,7 +236,7 @@ void tst_applicationwindow::defaultFocus()
     QVERIFY(item->hasActiveFocus());
 }
 
-void tst_applicationwindow::implicitFill()
+void tst_QQuickApplicationWindow::implicitFill()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -267,7 +267,7 @@ void tst_applicationwindow::implicitFill()
     QCOMPARE(nextItem->height(), 400.0);
 }
 
-void tst_applicationwindow::attachedProperties()
+void tst_QQuickApplicationWindow::attachedProperties()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -450,7 +450,7 @@ void tst_applicationwindow::attachedProperties()
     qApp->processEvents();
 }
 
-void tst_applicationwindow::font()
+void tst_QQuickApplicationWindow::font()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -521,7 +521,7 @@ public:
     QFont m_font;
 };
 
-void tst_applicationwindow::defaultFont()
+void tst_QQuickApplicationWindow::defaultFont()
 {
     TestTheme theme(QGuiApplicationPrivate::platform_theme);
 
@@ -535,7 +535,7 @@ void tst_applicationwindow::defaultFont()
     QCOMPARE(window->font(), *theme.font());
 }
 
-void tst_applicationwindow::locale()
+void tst_QQuickApplicationWindow::locale()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -586,7 +586,7 @@ void tst_applicationwindow::locale()
     QCOMPARE(item3->locale(), l);
 }
 
-void tst_applicationwindow::activeFocusControl_data()
+void tst_QQuickApplicationWindow::activeFocusControl_data()
 {
     QTest::addColumn<QByteArray>("containerName");
     QTest::addColumn<QByteArray>("activeFocusItemName");
@@ -605,7 +605,7 @@ void tst_applicationwindow::activeFocusControl_data()
     QTest::newRow("Frame:SpinBox") << QByteArray("container_frame") << QByteArray("spinContent_frame") << QByteArray("spinBox_frame");
 }
 
-void tst_applicationwindow::activeFocusControl()
+void tst_QQuickApplicationWindow::activeFocusControl()
 {
     QFETCH(QByteArray, containerName);
     QFETCH(QByteArray, activeFocusItemName);
@@ -645,7 +645,7 @@ void tst_applicationwindow::activeFocusControl()
     QCOMPARE(window->activeFocusControl(), activeFocusControl);
 }
 
-void tst_applicationwindow::focusAfterPopupClosed()
+void tst_QQuickApplicationWindow::focusAfterPopupClosed()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -723,7 +723,7 @@ void tst_applicationwindow::focusAfterPopupClosed()
     QCOMPARE(focusScopeSpy.count(), 3);
 }
 
-void tst_applicationwindow::clearFocusOnDestruction()
+void tst_QQuickApplicationWindow::clearFocusOnDestruction()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -764,7 +764,7 @@ void tst_applicationwindow::clearFocusOnDestruction()
     QCOMPARE(spy.count(), 1);
 }
 
-void tst_applicationwindow::layout()
+void tst_QQuickApplicationWindow::layout()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -813,10 +813,10 @@ void tst_applicationwindow::layout()
 
 class FriendlyApplicationWindow : public QQuickApplicationWindow
 {
-    friend class tst_applicationwindow;
+    friend class tst_QQuickApplicationWindow;
 };
 
-void tst_applicationwindow::componentComplete()
+void tst_QQuickApplicationWindow::componentComplete()
 {
     FriendlyApplicationWindow cppWindow;
     QVERIFY(cppWindow.isComponentComplete());
@@ -833,6 +833,6 @@ void tst_applicationwindow::componentComplete()
     QVERIFY(qmlWindow->isComponentComplete());
 }
 
-QTEST_MAIN(tst_applicationwindow)
+QTEST_MAIN(tst_QQuickApplicationWindow)
 
-#include "tst_applicationwindow.moc"
+#include "tst_qquickapplicationwindow.moc"
