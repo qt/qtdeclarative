@@ -5,13 +5,13 @@ SUBDIRS += \
     calendar \
     controls \
     cursor \
-    drawer \
     focus \
     font \
     menu \
     platform \
     popup \
     pressandhold \
+    qquickdrawer \
     qquickmaterialstyle \
     qquickmaterialstyleconf \
     qquickstyle \
@@ -24,6 +24,6 @@ SUBDIRS += \
 
 # QTBUG-60268
 boot2qt: SUBDIRS -= applicationwindow calendar controls cursor \
-                    drawer focus font menu platform popup qquickmaterialstyle \
+                    qquickdrawer focus font menu platform popup qquickmaterialstyle \
                     qquickmaterialstyleconf qquickuniversalstyle \
                     qquickuniversalstyleconf snippets

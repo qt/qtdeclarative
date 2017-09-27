@@ -1,6 +1,6 @@
 CONFIG += testcase
-TARGET = tst_drawer
-SOURCES += tst_drawer.cpp
+TARGET = tst_qquickdrawer
+SOURCES += tst_qquickdrawer.cpp
 
 macos:CONFIG -= app_bundle
 
