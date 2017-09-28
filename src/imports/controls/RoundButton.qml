@@ -54,8 +54,7 @@ T.RoundButton {
     icon.width: 24
     icon.height: 24
     icon.color: control.checked || control.highlighted ? control.palette.brightText :
-                control.visualFocus ? control.palette.highlight :
-                control.flat && !control.down ? control.palette.windowText : control.palette.buttonText
+                control.flat && !control.down ? (control.visualFocus ? control.palette.highlight : control.palette.windowText) : control.palette.buttonText
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -66,8 +65,7 @@ T.RoundButton {
         text: control.text
         font: control.font
         color: control.checked || control.highlighted ? control.palette.brightText :
-               control.visualFocus ? control.palette.highlight :
-               control.flat && !control.down ? control.palette.windowText : control.palette.buttonText
+               control.flat && !control.down ? (control.visualFocus ? control.palette.highlight : control.palette.windowText) : control.palette.buttonText
     }
 
     background: Rectangle {
@@ -76,9 +74,8 @@ T.RoundButton {
         radius: control.radius
         opacity: enabled ? 1 : 0.3
         visible: !control.flat || control.down || control.checked || control.highlighted
-        color: control.checked || control.highlighted ?
-            (control.visualFocus ? (control.down ? Default.buttonCheckedFocusColor : control.palette.highlight) : (control.down ? Default.buttonCheckedPressedColor : Default.buttonCheckedColor)) :
-            (control.visualFocus ? (control.down ? Default.focusPressedColor : Default.focusLightColor) : (control.down ? Default.buttonPressedColor : Default.buttonColor))
+        color: Color.blend(control.checked || control.highlighted ? control.palette.dark : control.palette.button,
+                                                                    control.palette.mid, control.down ? 0.5 : 0.0)
         border.color: control.palette.highlight
         border.width: control.visualFocus ? 2 : 0
     }
