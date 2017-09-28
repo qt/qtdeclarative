@@ -64,7 +64,8 @@ T.ComboBox {
     indicator: ColorImage {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
-        color: !control.editable && control.visualFocus ? control.palette.highlight : undefined
+        color: control.palette.dark
+        defaultColor: "#353637"
         source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/double-arrow.png"
         opacity: enabled ? 1 : 0.3
     }
@@ -84,16 +85,17 @@ T.ComboBox {
         validator: control.validator
 
         font: control.font
-        color: !control.editable && control.visualFocus ? control.palette.highlight : control.palette.text
+        color: control.editable ? control.palette.text : control.palette.buttonText
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
 
         background: Rectangle {
-            visible: control.editable && !control.flat
+            visible: control.enabled && control.editable && !control.flat
             border.width: parent && parent.activeFocus ? 2 : 1
-            border.color: parent && parent.activeFocus ? control.palette.highlight : Default.buttonColor
+            border.color: parent && parent.activeFocus ? control.palette.highlight : control.palette.button
+            color: control.palette.base
         }
     }
 
@@ -101,8 +103,7 @@ T.ComboBox {
         implicitWidth: 140
         implicitHeight: 40
 
-        color: !control.editable && control.visualFocus ? (control.pressed ? Default.focusPressedColor : Default.focusLightColor) :
-            (control.down || popup.visible ? Default.buttonPressedColor : Default.buttonColor)
+        color: control.down || popup.visible ? control.palette.mid : control.palette.button
         border.color: control.palette.highlight
         border.width: !control.editable && control.visualFocus ? 2 : 0
         visible: !control.flat || control.down
@@ -127,7 +128,7 @@ T.ComboBox {
                 width: parent.width
                 height: parent.height
                 color: "transparent"
-                border.color: Default.frameLightColor
+                border.color: control.palette.mid
             }
 
             T.ScrollIndicator.vertical: ScrollIndicator { }
