@@ -1391,8 +1391,6 @@ bool QQuickWidget::event(QEvent *e)
     Q_D(QQuickWidget);
 
     switch (e->type()) {
-    case QEvent::InputMethod:
-    case QEvent::InputMethodQuery:
 
     case QEvent::TouchBegin:
     case QEvent::TouchEnd:
@@ -1400,6 +1398,10 @@ bool QQuickWidget::event(QEvent *e)
     case QEvent::TouchCancel:
         // Touch events only have local and global positions, no need to map.
         return QCoreApplication::sendEvent(d->offscreenWindow, e);
+
+    case QEvent::InputMethod:
+    case QEvent::InputMethodQuery:
+        return QCoreApplication::sendEvent(d->offscreenWindow->focusObject(), e);
 
     case QEvent::WindowChangeInternal:
         d->handleWindowChange();
