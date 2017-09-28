@@ -57,12 +57,17 @@ class QQuickDefaultStyle : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QColor backgroundColor READ backgroundColor CONSTANT FINAL)
+    Q_PROPERTY(QColor overlayModalColor READ overlayModalColor CONSTANT FINAL)
+    Q_PROPERTY(QColor overlayDimColor READ overlayDimColor CONSTANT FINAL)
     Q_PROPERTY(QColor textColor READ textColor CONSTANT FINAL)
     Q_PROPERTY(QColor textDarkColor READ textDarkColor CONSTANT FINAL)
     Q_PROPERTY(QColor textLightColor READ textLightColor CONSTANT FINAL)
+    Q_PROPERTY(QColor textLinkColor READ textLinkColor CONSTANT FINAL)
+    Q_PROPERTY(QColor textSelectionColor READ textSelectionColor CONSTANT FINAL)
     Q_PROPERTY(QColor textDisabledColor READ textDisabledColor CONSTANT FINAL)
     Q_PROPERTY(QColor textDisabledLightColor READ textDisabledLightColor CONSTANT FINAL)
     Q_PROPERTY(QColor textPlaceholderColor READ textPlaceholderColor CONSTANT FINAL)
+    Q_PROPERTY(QColor focusColor READ focusColor CONSTANT FINAL)
     Q_PROPERTY(QColor focusLightColor READ focusLightColor CONSTANT FINAL)
     Q_PROPERTY(QColor focusPressedColor READ focusPressedColor CONSTANT FINAL)
     Q_PROPERTY(QColor buttonColor READ buttonColor CONSTANT FINAL)
@@ -84,12 +89,20 @@ class QQuickDefaultStyle : public QObject
     Q_PROPERTY(QColor indicatorFrameDisabledColor READ indicatorFrameDisabledColor CONSTANT FINAL)
     Q_PROPERTY(QColor frameDarkColor READ frameDarkColor CONSTANT FINAL)
     Q_PROPERTY(QColor frameLightColor READ frameLightColor CONSTANT FINAL)
+    Q_PROPERTY(QColor scrollBarColor READ scrollBarColor CONSTANT FINAL)
+    Q_PROPERTY(QColor scrollBarPressedColor READ scrollBarPressedColor CONSTANT FINAL)
+    Q_PROPERTY(QColor progressBarColor READ progressBarColor CONSTANT FINAL)
+    Q_PROPERTY(QColor pageIndicatorColor READ pageIndicatorColor CONSTANT FINAL)
+    Q_PROPERTY(QColor separatorColor READ separatorColor CONSTANT FINAL)
     Q_PROPERTY(QColor disabledDarkColor READ disabledDarkColor CONSTANT FINAL)
+    Q_PROPERTY(QColor disabledLightColor READ disabledLightColor CONSTANT FINAL)
 
 public:
     explicit QQuickDefaultStyle(QObject *parent = nullptr);
 
     QColor backgroundColor() const;
+    QColor overlayModalColor() const;
+    QColor overlayDimColor() const;
     QColor textColor() const;
     QColor textDarkColor() const;
     QColor textLightColor() const;
@@ -98,6 +111,7 @@ public:
     QColor textDisabledColor() const;
     QColor textDisabledLightColor() const;
     QColor textPlaceholderColor() const;
+    QColor focusColor() const;
     QColor focusLightColor() const;
     QColor focusPressedColor() const;
     QColor buttonColor() const;
@@ -121,7 +135,11 @@ public:
     QColor frameLightColor() const;
     QColor scrollBarColor() const;
     QColor scrollBarPressedColor() const;
+    QColor progressBarColor() const;
+    QColor pageIndicatorColor() const;
+    QColor separatorColor() const;
     QColor disabledDarkColor() const;
+    QColor disabledLightColor() const;
 };
 
 QT_END_NAMESPACE

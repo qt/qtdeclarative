@@ -48,6 +48,16 @@ QColor QQuickDefaultStyle::backgroundColor() const
     return QColor::fromRgba(0xFFFFFFFF);
 }
 
+QColor QQuickDefaultStyle::overlayModalColor() const
+{
+    return QColor::fromRgba(0x7F28282A);
+}
+
+QColor QQuickDefaultStyle::overlayDimColor() const
+{
+    return QColor::fromRgba(0x1F28282A);
+}
+
 QColor QQuickDefaultStyle::textColor() const
 {
     return QColor::fromRgba(0xFF353637);
@@ -63,6 +73,16 @@ QColor QQuickDefaultStyle::textLightColor() const
     return QColor::fromRgba(0xFFFFFFFF);
 }
 
+QColor QQuickDefaultStyle::textLinkColor() const
+{
+    return QColor::fromRgba(0xFF45A7D7);
+}
+
+QColor QQuickDefaultStyle::textSelectionColor() const
+{
+    return QColor::fromRgba(0xFFFDDD5C);
+}
+
 QColor QQuickDefaultStyle::textDisabledColor() const
 {
     return QColor::fromRgba(0xFFBDBEBF);
@@ -76,6 +96,11 @@ QColor QQuickDefaultStyle::textDisabledLightColor() const
 QColor QQuickDefaultStyle::textPlaceholderColor() const
 {
     return QColor::fromRgba(0xFF777777);
+}
+
+QColor QQuickDefaultStyle::focusColor() const
+{
+    return QColor::fromRgba(0xFF0066FF);
 }
 
 QColor QQuickDefaultStyle::focusLightColor() const
@@ -183,9 +208,39 @@ QColor QQuickDefaultStyle::frameLightColor() const
     return QColor::fromRgba(0xFFBDBEBF);
 }
 
+QColor QQuickDefaultStyle::scrollBarColor() const
+{
+    return QColor::fromRgba(0xFFBDBEBF);
+}
+
+QColor QQuickDefaultStyle::scrollBarPressedColor() const
+{
+    return QColor::fromRgba(0xFF28282A);
+}
+
+QColor QQuickDefaultStyle::progressBarColor() const
+{
+    return QColor::fromRgba(0xFFE4E4E4);
+}
+
+QColor QQuickDefaultStyle::pageIndicatorColor() const
+{
+    return QColor::fromRgba(0xFF28282A);
+}
+
+QColor QQuickDefaultStyle::separatorColor() const
+{
+    return QColor::fromRgba(0xFFCCCCCC);
+}
+
 QColor QQuickDefaultStyle::disabledDarkColor() const
 {
     return QColor::fromRgba(0xFF353637);
+}
+
+QColor QQuickDefaultStyle::disabledLightColor() const
+{
+    return QColor::fromRgba(0xFFBDBEBF);
 }
 
 QT_END_NAMESPACE
