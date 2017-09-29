@@ -1324,5 +1324,5 @@ functionExit:
     engine->currentStackFrame = frame.parent;
     engine->jsStackTop = jsStackTop;
 
-    return ACC.asReturnedValue();
+    return acc;
 }
