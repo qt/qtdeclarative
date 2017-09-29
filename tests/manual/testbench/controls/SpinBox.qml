@@ -53,16 +53,18 @@ import QtQuick.Controls 2.3
 
 QtObject {
     property var supportedStates: [
-        ["disabled"],
+        [],
         ["pressed"],
+        ["disabled"],
         ["mirrored"],
-        ["mirrored", "disabled"],
         ["mirrored", "pressed"],
+        ["mirrored", "disabled"],
         ["editable"],
         ["editable", "pressed"],
+        ["editable", "disabled"],
         ["editable", "mirrored"],
         ["editable", "mirrored", "pressed"],
-        ["editable", "mirrored", "mirrored"]
+        ["editable", "mirrored", "disabled"]
     ]
 
     property Component component: SpinBox {
