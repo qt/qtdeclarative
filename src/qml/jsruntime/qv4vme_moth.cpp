@@ -1324,15 +1324,5 @@ functionExit:
     engine->currentStackFrame = frame.parent;
     engine->jsStackTop = jsStackTop;
 
-    if (function->hasQmlDependencies) {
-        Heap::ExecutionContext *c = static_cast<Heap::ExecutionContext *>(stack[CallData::Context].m());
-        // CreateCallContext might have been executed, and that will push a CallContext on top of
-        // the current one. So, search back to the original QMLContext.
-        while (c->type != Heap::ExecutionContext::Type_QmlContext)
-            c = c->outer;
-        Heap::QmlContext *qc = static_cast<Heap::QmlContext *>(c);
-        QQmlPropertyCapture::registerQmlDependencies(qc, engine, function->compiledFunction);
-    }
-
     return ACC.asReturnedValue();
 }
