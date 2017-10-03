@@ -47,18 +47,11 @@ Rectangle {
     //function used to add to model A) to enforce scheme B) to allow Qt.resolveUrl in url assignments
 
     color: "#eee"
-    function addExample(name, desc, url)
-    {
+    function addExample(name, desc, url) {
         myModel.append({"name":name, "description":desc, "url":url})
     }
-
-    function hideExample()
-    {
-        ei.visible = false;
-    }
-    function showExample(url)
-    {
-        ei.exampleUrl = url;
+    function showExample(url) {
+        pageComponent.createObject(pageContainer, { exampleUrl: url }).show()
     }
 
     // The container rectangle here is used to give a nice "feel" when
@@ -71,10 +64,7 @@ Rectangle {
             id: launcherList
             clip: true
             delegate: SimpleLauncherDelegate{
-                onClicked: {
-                    var page = pageComponent.createObject(pageContainer, { exampleUrl: url })
-                    page.show()
-                }
+                onClicked: showExample(url)
             }
             model: ListModel {id:myModel}
             anchors.fill: parent
