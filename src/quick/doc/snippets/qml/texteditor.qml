@@ -63,7 +63,6 @@ Flickable {
      TextEdit {
          id: edit
          width: flick.width
-         height: flick.height
          focus: true
          wrapMode: TextEdit.Wrap
          onCursorRectangleChanged: flick.ensureVisible(cursorRectangle)
