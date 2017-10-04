@@ -86,7 +86,7 @@ QtObject {
         ScrollIndicator {
             id: horizontalScrollIndicator
             enabled: !is("disabled")
-            orientation: Qt.Vertical
+            orientation: Qt.Horizontal
             active: true
             visible: is("horizontal")
             size: 0.3

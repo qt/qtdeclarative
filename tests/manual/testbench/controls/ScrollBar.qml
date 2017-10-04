@@ -96,7 +96,7 @@ QtObject {
         ScrollBar {
             id: horizontalScrollBar
             enabled: !is("disabled")
-            orientation: Qt.Vertical
+            orientation: Qt.Horizontal
             interactive: is("interactive")
             visible: is("horizontal")
             size: 0.3
