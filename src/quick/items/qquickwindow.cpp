@@ -1745,9 +1745,6 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             // make sure not to accept unhandled events
             pointerEvent->setAccepted(false);
     }
-    // failsafe: never allow any kind of grab to persist after release
-    if (mouseIsReleased)
-        pointerEvent->clearGrabbers();
 }
 
 bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
@@ -2263,6 +2260,9 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     skipDelivery.clear();
     if (event->asPointerMouseEvent()) {
         deliverMouseEvent(event->asPointerMouseEvent());
+        // failsafe: never allow any kind of grab to persist after release
+        if (event->isReleaseEvent() && event->buttons() == Qt::NoButton)
+            event->clearGrabbers();
     } else if (event->asPointerTouchEvent()) {
         deliverTouchEvent(event->asPointerTouchEvent());
     } else {
@@ -2768,10 +2768,20 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
             if (receiver->acceptedMouseButtons()) {
                 QPointF localPos = receiver->mapFromScene(pme->point(0)->scenePosition());
                 QMouseEvent *me = pme->asMouseEvent(localPos);
+                me->setAccepted(true);
+                auto oldMouseGrabber = pme->point(0)->grabberItem();
                 if (filteringParent->childMouseEventFilter(receiver, me)) {
                     qCDebug(DBG_MOUSE) << "mouse event intercepted by childMouseEventFilter of " << filteringParent;
                     skipDelivery.append(filteringParent);
                     filtered = true;
+                    if (me->isAccepted() && pme->isPressEvent()) {
+                        auto mouseGrabber = pme->point(0)->grabberItem();
+                        if (mouseGrabber && mouseGrabber != receiver && mouseGrabber != oldMouseGrabber) {
+                            receiver->mouseUngrabEvent();
+                        } else {
+                            pme->point(0)->setGrabberItem(receiver);
+                        }
+                    }
                 }
             }
         } else if (QQuickPointerTouchEvent *pte = event->asPointerTouchEvent()) {
@@ -2789,7 +2799,6 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                     if (filteringParent->childMouseEventFilter(receiver, filteringParentTouchEvent.data())) {
                         qCDebug(DBG_TOUCH) << "touch event intercepted by childMouseEventFilter of " << filteringParent;
                         skipDelivery.append(filteringParent);
-                        filteringParent->grabMouse();
                         for (auto point: qAsConst(filteringParentTouchEvent->touchPoints())) {
                             auto pointerEventPoint = pte->pointById(point.id());
                             for (auto handler : pointerEventPoint->passiveGrabbers()) {
@@ -2797,7 +2806,9 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                                 if (!passiveGrabsToCancel.contains(grab))
                                     passiveGrabsToCancel.append(grab);
                             }
-                            event->pointById(point.id())->setAccepted();
+                            QQuickEventPoint *pt = event->pointById(point.id());
+                            pt->setAccepted();
+                            pt->setGrabberItem(filteringParent);
                         }
                         return true;
                     } else {
@@ -2838,7 +2849,8 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                                         qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << hex << tp.id() << "->" << filteringParent;
                                         pointerEventInstance(touchMouseDevice)->pointById(tp.id())->setGrabberItem(filteringParent);
                                         touchMouseUnset = false; // We want to leave touchMouseId and touchMouseDevice set
-                                        filteringParent->grabMouse();
+                                        if (mouseEvent->isAccepted())
+                                            filteringParent->grabMouse();
                                         auto pointerEventPoint = pte->pointById(tp.id());
                                         for (auto handler : pointerEventPoint->passiveGrabbers()) {
                                             QPair<QQuickPointerHandler *, QQuickEventPoint *> grab(handler, pointerEventPoint);

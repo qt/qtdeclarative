@@ -1460,7 +1460,7 @@ bool QQuickPointerMouseEvent::isUpdateEvent() const
 bool QQuickPointerMouseEvent::isReleaseEvent() const
 {
     auto me = static_cast<QMouseEvent*>(m_event);
-    return me->type() == QEvent::MouseButtonRelease;
+    return me && me->type() == QEvent::MouseButtonRelease;
 }
 
 bool QQuickPointerTouchEvent::allPointsAccepted() const {
