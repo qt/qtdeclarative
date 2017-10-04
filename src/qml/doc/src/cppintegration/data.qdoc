@@ -174,7 +174,6 @@ function, passing a QVariantList and a QVariantMap, which are automatically
 converted to JavaScript array and object values, repectively:
 
 \table
-\header
 \row
 \li QML
 \li \snippet qml/qtbinding/variantlistmap/MyItem.qml 0
@@ -213,7 +212,6 @@ a \c Date object that is automatically converted into a QDateTime value when it
 is received in C++:
 
 \table
-\header
 \row
 \li QML
 \li

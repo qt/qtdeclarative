@@ -852,6 +852,7 @@ qreal QQuickLoader::progress() const
 \qmlproperty bool QtQuick::Loader::asynchronous
 
 This property holds whether the component will be instantiated asynchronously.
+By default it is \c false.
 
 When used in conjunction with the \l source property, loading and compilation
 will also be performed in a background thread.

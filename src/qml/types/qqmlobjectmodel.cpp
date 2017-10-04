@@ -72,7 +72,7 @@ public:
         int ref;
     };
 
-    QQmlObjectModelPrivate() : QObjectPrivate() {}
+    QQmlObjectModelPrivate() : QObjectPrivate(), moveId(0) {}
 
     static void children_append(QQmlListProperty<QObject> *prop, QObject *item) {
         int index = static_cast<QQmlObjectModelPrivate *>(prop->data)->children.count();
@@ -129,7 +129,7 @@ public:
         }
 
         QQmlChangeSet changeSet;
-        changeSet.move(from, to, n, 0);
+        changeSet.move(from, to, n, ++moveId);
         emit q->modelUpdated(changeSet, false);
         emit q->childrenChanged();
     }
@@ -166,7 +166,7 @@ public:
         return -1;
     }
 
-
+    uint moveId;
     QList<Item> children;
 };
 

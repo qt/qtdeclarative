@@ -112,6 +112,8 @@ public:
             if (it->m_propertyIndex == propertyIndex)
                 return true;
         }
+        if (auto parentInterceptor = ((parent.isT1() && parent.flag()) ? static_cast<QQmlInterceptorMetaObject *>(parent.asT1()) : 0))
+            return parentInterceptor->intercepts(propertyIndex);
         return false;
     }
 
