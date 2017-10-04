@@ -2793,7 +2793,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
 #endif
             if (acceptsTouchEvents || receiver->acceptedMouseButtons()) {
                 // get a touch event customized for delivery to filteringParent
-                QScopedPointer<QTouchEvent> filteringParentTouchEvent(pte->touchEventForItem(filteringParent, true));
+                QScopedPointer<QTouchEvent> filteringParentTouchEvent(pte->touchEventForItem(receiver, true));
                 if (filteringParentTouchEvent) {
                     QVarLengthArray<QPair<QQuickPointerHandler *, QQuickEventPoint *>, 32> passiveGrabsToCancel;
                     if (filteringParent->childMouseEventFilter(receiver, filteringParentTouchEvent.data())) {
