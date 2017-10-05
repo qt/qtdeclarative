@@ -59,6 +59,7 @@
 
 #ifndef V4_BOOTSTRAP
 #  include <private/qv8engine_p.h>
+#  include <private/qv4compileddata_p.h>
 #endif
 
 namespace WTF {
@@ -318,7 +319,9 @@ public:
     String *id_buffer() const { return reinterpret_cast<String *>(jsStrings + String_buffer); }
     String *id_lastIndex() const { return reinterpret_cast<String *>(jsStrings + String_lastIndex); }
 
-    QSet<CompiledData::CompilationUnit*> compilationUnits;
+#ifndef V4_BOOTSTRAP
+    QIntrusiveList<CompiledData::CompilationUnit, &CompiledData::CompilationUnit::nextCompilationUnit> compilationUnits;
+#endif
 
     quint32 m_engineId;
 

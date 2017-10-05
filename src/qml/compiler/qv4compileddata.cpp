@@ -212,7 +212,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 void CompilationUnit::unlink()
 {
     if (engine)
-        engine->compilationUnits.erase(engine->compilationUnits.find(this));
+        nextCompilationUnit.remove();
 
     if (isRegisteredWithEngine) {
         Q_ASSERT(data && propertyCaches.count() > 0 && propertyCaches.at(/*root object*/0));

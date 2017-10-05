@@ -66,6 +66,7 @@
 #ifndef V4_BOOTSTRAP
 #include <private/qqmltypenamecache_p.h>
 #include <private/qqmlpropertycache_p.h>
+#include "private/qintrusivelist_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -837,6 +838,7 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
     virtual QV4::CompiledData::Unit *createUnitData(QmlIR::Document *irDocument);
 
 #ifndef V4_BOOTSTRAP
+    QIntrusiveListNode nextCompilationUnit;
     ExecutionEngine *engine;
     QQmlEnginePrivate *qmlEngine; // only used in QML environment for composite types, not in plain QJSEngine case.
 

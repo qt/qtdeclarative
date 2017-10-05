@@ -951,9 +951,8 @@ void ExecutionEngine::markObjects()
 
     drainMarkStack(this, markBase);
 
-    for (QSet<CompiledData::CompilationUnit*>::ConstIterator it = compilationUnits.constBegin(), end = compilationUnits.constEnd();
-         it != end; ++it) {
-        (*it)->markObjects(this);
+    for (auto compilationUnit: compilationUnits) {
+        compilationUnit->markObjects(this);
         drainMarkStack(this, markBase);
     }
 }
