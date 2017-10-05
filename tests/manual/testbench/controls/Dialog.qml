@@ -76,7 +76,7 @@ QtObject {
             standardButtons: Dialog.Ok | Dialog.Cancel
             parent: window.contentItem
             modal: is("modal")
-            dim: is("dim")
+            dim: is("dim") || is("modal")
 
             Label {
                 text: "Lorem ipsum dolor sit amet, \nconsectetuer adipiscing elit, \n"
