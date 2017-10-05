@@ -72,8 +72,7 @@ T.ItemDelegate {
         implicitWidth: 100
         implicitHeight: 40
         visible: control.down || control.highlighted || control.visualFocus
-        color: control.visualFocus
-            ? (control.pressed ? Default.focusPressedColor : Default.delegateFocusColor)
-            : (control.down ? Default.delegatePressedColor : Default.delegateColor)
+        color: Color.blend(control.down ? control.palette.midlight : control.palette.light,
+                                          control.palette.highlight, control.visualFocus ? 0.15 : 0.0)
     }
 }

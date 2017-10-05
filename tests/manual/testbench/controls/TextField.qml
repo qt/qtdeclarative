@@ -57,8 +57,17 @@ QtObject {
         ["disabled"],
     ]
 
-    property Component component: TextField {
-        text: "TextField"
-        enabled: !is("disabled")
+    property Component component: Column {
+        spacing: 10
+
+        TextField {
+            text: "TextField with text"
+            enabled: !is("disabled")
+        }
+
+        TextField {
+            placeholderText: "TextField with placeholderText"
+            enabled: !is("disabled")
+        }
     }
 }

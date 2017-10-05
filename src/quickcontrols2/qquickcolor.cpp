@@ -48,4 +48,18 @@ QColor QQuickColor::transparent(const QColor &color, qreal opacity) const
     return QColor(color.red(), color.green(), color.blue(), qBound(0.0, opacity, 1.0) * 255);
 }
 
+QColor QQuickColor::blend(const QColor &a, const QColor &b, qreal factor) const
+{
+    if (factor <= 0.0)
+        return a;
+    if (factor >= 1.0)
+        return b;
+
+    QColor color;
+    color.setRedF(a.redF() * (1.0 - factor) + b.redF() * factor);
+    color.setGreenF(a.greenF() * (1.0 - factor) + b.greenF() * factor);
+    color.setBlueF(a.blueF() * (1.0 - factor) + b.blueF() * factor);
+    return color;
+}
+
 QT_END_NAMESPACE

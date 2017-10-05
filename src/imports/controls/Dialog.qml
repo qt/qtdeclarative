@@ -57,7 +57,8 @@ T.Dialog {
     padding: 12
 
     background: Rectangle {
-        border.color: Default.frameDarkColor
+        color: control.palette.window
+        border.color: control.palette.dark
     }
 
     header: Label {
@@ -70,6 +71,7 @@ T.Dialog {
             x: 1; y: 1
             width: parent.width - 2
             height: parent.height - 1
+            color: control.palette.window
         }
     }
 
@@ -78,10 +80,10 @@ T.Dialog {
     }
 
     T.Overlay.modal: Rectangle {
-        color: Default.overlayModalColor
+        color: Color.transparent(control.palette.shadow, 0.5)
     }
 
     T.Overlay.modeless: Rectangle {
-        color: Default.overlayDimColor
+        color: Color.transparent(control.palette.shadow, 0.12)
     }
 }

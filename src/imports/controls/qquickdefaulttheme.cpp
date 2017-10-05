@@ -41,6 +41,11 @@ QT_BEGIN_NAMESPACE
 QQuickDefaultTheme::QQuickDefaultTheme()
     : QQuickTheme(QStringLiteral("Default"))
 {
+    systemPalette.setColor(QPalette::Base, QColor::fromRgba(0xFFFFFFFF));
+    systemPalette.setColor(QPalette::Disabled, QPalette::Base, QColor::fromRgba(0xFFD6D6D6));
+
+    systemPalette.setColor(QPalette::Button, QColor::fromRgba(0xFFE0E0E0));
+
     systemPalette.setColor(QPalette::ButtonText, QColor::fromRgba(0xFF26282A));
     systemPalette.setColor(QPalette::Disabled, QPalette::ButtonText, QColor::fromRgba(0x4D26282A));
 
@@ -54,15 +59,23 @@ QQuickDefaultTheme::QQuickDefaultTheme()
 
     systemPalette.setColor(QPalette::HighlightedText, QColor::fromRgba(0xFFFFFFFF));
 
-    systemPalette.setColor(QPalette::Light, QColor::fromRgba(0xFFE4E4E4));
+    systemPalette.setColor(QPalette::Light, QColor::fromRgba(0xFFF6F6F6));
 
     systemPalette.setColor(QPalette::Link, QColor::fromRgba(0xFF45A7D7));
 
+    systemPalette.setColor(QPalette::Mid, QColor::fromRgba(0xFFBDBDBD));
+
+    systemPalette.setColor(QPalette::Midlight, QColor::fromRgba(0xFFE4E4E4));
+
     systemPalette.setColor(QPalette::Text, QColor::fromRgba(0xFF353637));
-    systemPalette.setColor(QPalette::Disabled, QPalette::Text, QColor::fromRgba(0xFFC2C2C2));
+    systemPalette.setColor(QPalette::Disabled, QPalette::Text, QColor::fromRgba(0x7F353637));
+
+    systemPalette.setColor(QPalette::Shadow, QColor::fromRgba(0xFF28282A));
 
     systemPalette.setColor(QPalette::ToolTipBase, QColor::fromRgba(0xFFFFFFFF));
     systemPalette.setColor(QPalette::ToolTipText, QColor::fromRgba(0xFF000000));
+
+    systemPalette.setColor(QPalette::Window, QColor::fromRgba(0xFFFFFFFF));
 
     systemPalette.setColor(QPalette::WindowText, QColor::fromRgba(0xFF26282A));
     systemPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor::fromRgba(0xFFBDBEBF));

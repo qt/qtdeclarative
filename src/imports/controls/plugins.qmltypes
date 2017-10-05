@@ -70,14 +70,11 @@ Module {
         isSingleton: true
         exportMetaObjectRevisions: [0]
         Property { name: "backgroundColor"; type: "QColor"; isReadonly: true }
-        Property { name: "overlayModalColor"; type: "QColor"; isReadonly: true }
-        Property { name: "overlayDimColor"; type: "QColor"; isReadonly: true }
         Property { name: "textColor"; type: "QColor"; isReadonly: true }
         Property { name: "textDarkColor"; type: "QColor"; isReadonly: true }
         Property { name: "textLightColor"; type: "QColor"; isReadonly: true }
         Property { name: "textDisabledColor"; type: "QColor"; isReadonly: true }
         Property { name: "textDisabledLightColor"; type: "QColor"; isReadonly: true }
-        Property { name: "focusColor"; type: "QColor"; isReadonly: true }
         Property { name: "focusLightColor"; type: "QColor"; isReadonly: true }
         Property { name: "focusPressedColor"; type: "QColor"; isReadonly: true }
         Property { name: "buttonColor"; type: "QColor"; isReadonly: true }
@@ -101,7 +98,6 @@ Module {
         Property { name: "frameLightColor"; type: "QColor"; isReadonly: true }
         Property { name: "scrollBarColor"; type: "QColor"; isReadonly: true }
         Property { name: "scrollBarPressedColor"; type: "QColor"; isReadonly: true }
-        Property { name: "separatorColor"; type: "QColor"; isReadonly: true }
         Property { name: "disabledDarkColor"; type: "QColor"; isReadonly: true }
         Property { name: "disabledLightColor"; type: "QColor"; isReadonly: true }
     }

@@ -63,5 +63,7 @@ T.TabBar {
         preferredHighlightEnd: width - 40
     }
 
-    background: Rectangle { }
+    background: Rectangle {
+        color: control.palette.window
+    }
 }

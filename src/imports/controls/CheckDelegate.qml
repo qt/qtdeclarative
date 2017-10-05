@@ -82,6 +82,6 @@ T.CheckDelegate {
         implicitWidth: 100
         implicitHeight: 40
         visible: control.down || control.highlighted
-        color: control.down ? Default.delegatePressedColor : Default.delegateColor
+        color: control.down ? control.palette.midlight : control.palette.light
     }
 }

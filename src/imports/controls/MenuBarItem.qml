@@ -56,7 +56,7 @@ T.MenuBarItem {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? Default.textDarkColor : Default.textDisabledColor
+    icon.color: control.palette.buttonText
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -67,12 +67,12 @@ T.MenuBarItem {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
+        color: control.palette.buttonText
     }
 
     background: Rectangle {
         implicitWidth: 40
         implicitHeight: 40
-        color: control.highlighted || control.down ? Default.delegatePressedColor : "transparent"
+        color: control.down || control.highlighted ? control.palette.mid : "transparent"
     }
 }

@@ -515,6 +515,7 @@ void AssetFixer::clearImageCache()
 
     // We can't seem to disable image caching on a per-Image basis (by the time the QQuickImages
     // are available, the cache has already been filled), so we call this instead.
+    qCDebug(lcAssetFixer) << "Calling QQuickWindow::releaseResources() to clear pixmap cache";
     window->releaseResources();
 }
 

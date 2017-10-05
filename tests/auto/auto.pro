@@ -1,26 +1,26 @@
 TEMPLATE = subdirs
 SUBDIRS += \
     accessibility \
-    applicationwindow \
     calendar \
     controls \
     cursor \
-    drawer \
     focus \
     font \
-    menu \
     palette \
     platform \
-    popup \
     pressandhold \
+    qquickapplicationwindow \
     qquickcolor \
+    qquickdrawer \
     qquickiconimage \
     qquickiconlabel \
     qquickimaginestyle \
     qquickmaterialstyle \
     qquickmaterialstyleconf \
+    qquickmenu \
     qquickmenubar \
     qquickninepatchimage \
+    qquickpopup \
     qquickstyle \
     qquickstyleselector \
     qquickuniversalstyle \
@@ -28,4 +28,3 @@ SUBDIRS += \
     revisions \
     sanity \
     snippets
-

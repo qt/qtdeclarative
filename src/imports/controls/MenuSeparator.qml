@@ -52,6 +52,6 @@ T.MenuSeparator {
     contentItem: Rectangle {
         implicitWidth: 188
         implicitHeight: 1
-        color: Default.separatorColor
+        color: control.palette.mid
     }
 }

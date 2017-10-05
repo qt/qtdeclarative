@@ -68,6 +68,7 @@ QtObject {
             checked: is("checked")
             // Only set it if it's pressed, or the non-pressed examples will have no press effects
             down: is("pressed") ? true : undefined
+            focusPolicy: Qt.StrongFocus
         }
     }
 
@@ -79,6 +80,7 @@ QtObject {
         delegate: RadioDelegate {
             width: parent.width
             text: "RadioDelegate"
+            focusPolicy: Qt.StrongFocus
         }
     }
 }

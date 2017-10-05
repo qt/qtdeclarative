@@ -200,7 +200,10 @@ QSGNode *QQuickPaddedRectangle::updatePaintNode(QSGNode *node, UpdatePaintNodeDa
             m.translate(left, top);
             transformNode->setMatrix(m);
 
-            rectNode->setRect(boundingRect().adjusted(0, 0, -left-right, -top-bottom));
+            qreal w = qMax<qreal>(0.0, width() -left-right);
+            qreal h = qMax<qreal>(0.0, height() -top-bottom);
+
+            rectNode->setRect(QRectF(0, 0, w, h));
             rectNode->update();
         }
     }

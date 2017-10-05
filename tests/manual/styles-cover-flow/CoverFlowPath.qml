@@ -49,56 +49,109 @@
 ****************************************************************************/
 
 import QtQuick 2.10
-import QtQuick.Controls 2.3
 
-QtObject {
-    property var supportedStates: [
-        ["vertical"],
-        ["vertical", "disabled"],
-        ["horizontal"],
-        ["horizontal", "disabled"],
-    ]
+Path {
+    // Point 1
+    property PathView pathView
 
-    property Component component: Frame {
-        width: 100
-        height: 100
-        clip: true
+    startX: 0
+    startY: pathView.centerY
 
-        Label {
-            text: "ABCDEFG\nHIJKLMN"
-            font.pixelSize: 40
-            x: horizontalScrollIndicator.position * width
-            y: verticalScrollIndicator.position * height
-        }
+    PathAttribute {
+        name: "rotateY"
+        value: 50.0
+    }
+    PathAttribute {
+        name: "scale"
+        value: 0.7
+    }
+    PathAttribute {
+        name: "zOrder"
+        value: 1.0
+    }
 
-        ScrollIndicator {
-            id: verticalScrollIndicator
-            enabled: !is("disabled")
-            orientation: Qt.Vertical
-            active: true
-            visible: is("vertical")
-            size: 0.3
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-        }
+    // Line to point 2
+    PathLine {
+        x: pathView.centerX - pathView.delegateSize * 0.4
+        y: pathView.centerY
+    }
+    PathPercent {
+        value: 0.44
+    }
+    PathAttribute {
+        name: "rotateY"
+        value: 50.0
+    }
+    PathAttribute {
+        name: "scale"
+        value: 0.7
+    }
+    PathAttribute {
+        name: "zOrder"
+        value: 10.0
+    }
 
-        ScrollIndicator {
-            id: horizontalScrollIndicator
-            enabled: !is("disabled")
-            orientation: Qt.Horizontal
-            active: true
-            visible: is("horizontal")
-            size: 0.3
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
+    // Quad to point 3
+    PathQuad {
+        x: pathView.centerX
+        y: pathView.centerY + pathView.delegateSize * 0.04
+        controlX: pathView.centerX - pathView.delegateSize * 0.2
+        controlY: pathView.centerY + pathView.delegateSize * 0.04
+    }
+    PathPercent {
+        value: 0.5
+    }
+    PathAttribute {
+        name: "rotateY"
+        value: 0.0
+    }
+    PathAttribute {
+        name: "scale"
+        value: 1.0
+    }
+    PathAttribute {
+        name: "zOrder"
+        value: 50.0
+    }
 
-            Binding {
-                target: horizontalScrollIndicator
-                property: "active"
-                value: horizontalScrollIndicator.visible
-            }
-        }
+    // Quad to point 4
+    PathQuad {
+        x: pathView.centerX + pathView.delegateSize * 0.4
+        y: pathView.centerY
+        controlX: pathView.centerX + pathView.delegateSize * 0.2
+        controlY: pathView.centerY + pathView.delegateSize * 0.04
+    }
+    PathPercent {
+        value: 0.56
+    }
+    PathAttribute {
+        name: "rotateY"
+        value: -50.0
+    }
+    PathAttribute {
+        name: "scale"
+        value: 0.7
+    }
+    PathAttribute {
+        name: "zOrder"
+        value: 10.0
+    }
+
+    // Line to point 5
+    PathLine {
+        x: pathView.width
+        y: pathView.centerY
+    }
+    PathAttribute {
+        name: "rotateY"
+        value: -50.0
+    }
+    PathAttribute {
+        name: "scale"
+        value: 0.7
+    }
+    PathAttribute {
+        name: "zOrder"
+        value: 1.0
     }
 }

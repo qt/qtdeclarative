@@ -54,7 +54,7 @@ T.MenuItem {
 
     icon.width: 24
     icon.height: 24
-    icon.color: enabled ? Default.textDarkColor : Default.textDisabledColor
+    icon.color: control.palette.windowText
 
     contentItem: IconLabel {
         readonly property real arrowPadding: control.subMenu && control.arrow ? control.arrow.width + control.spacing : 0
@@ -79,7 +79,8 @@ T.MenuItem {
 
         visible: control.checked
         source: control.checkable ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png" : ""
-        color: control.enabled ? undefined : Default.textDisabledColor
+        color: control.palette.windowText
+        defaultColor: "#353637"
     }
 
     arrow: ColorImage {
@@ -89,7 +90,8 @@ T.MenuItem {
         visible: control.subMenu
         mirror: control.mirrored
         source: control.subMenu ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/arrow-indicator.png" : ""
-        color: control.enabled ? undefined : Default.textDisabledColor
+        color: control.palette.windowText
+        defaultColor: "#353637"
     }
 
     background: Item {
@@ -101,7 +103,7 @@ T.MenuItem {
             y: 1
             width: parent.width - 2
             height: parent.height - 2
-            color: control.highlighted || control.down ? Default.delegateColor : "transparent"
+            color: control.down ? control.palette.midlight : control.highlighted ? control.palette.light : "transparent"
         }
     }
 }

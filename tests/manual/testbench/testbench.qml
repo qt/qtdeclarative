@@ -53,7 +53,7 @@ import QtQuick.Window 2.3
 import QtQuick.Layouts 1.2
 import QtQuick.Controls 2.3
 import QtQuick.Controls.Imagine 2.3
-import Qt.labs.folderlistmodel 1.0
+import Qt.labs.folderlistmodel 2.2
 import Qt.labs.settings 1.0
 
 import App 1.0
@@ -266,6 +266,10 @@ ApplicationWindow {
 
         function reloadAssets() {
             console.log(brief, "Reloading assets...")
+            // Clear the model, otherwise ListView will keep the old items around
+            // with the old assets, even after clearing the pixmap cache
+            listView.resettingModel = true
+            listView.model = null
             window.Imagine.path = ""
             assetReloadNextFrameTimer.start()
         }
@@ -297,9 +301,14 @@ ApplicationWindow {
             window.Imagine.path = Qt.binding(function() {
                 return settings.useCustomImaginePath && settings.imaginePath.length > 0 ? settings.imaginePath : undefined
             })
+
             infoToolTip.text = "Reloaded assets"
             infoToolTip.timeout = 1500
             infoToolTip.open()
+
+            listView.model = controlFolderListModel
+            listView.resettingModel = false
+
             console.log(brief, "... reloaded assets.")
         }
     }
@@ -378,18 +387,30 @@ ApplicationWindow {
             return paletteSettings.useCustomPalette && paletteColorString.length > 0 ? paletteColorString : undefined
         }
 
+        FolderListModel {
+            id: controlFolderListModel
+            folder: "qrc:/controls"
+            showDirs: false
+            nameFilters: searchTextField.text.length > 0 ? ["*" + searchTextField.text + "*.qml"] : []
+            caseSensitive: false
+        }
+
         ListView {
+            id: listView
             anchors.fill: parent
             spacing: 30
-            visible: !busyIndicatorRow.visible
+            visible: !busyIndicatorRow.visible && !resettingModel
 
-            ScrollBar.vertical: ScrollBar {}
+            property bool resettingModel: false
 
-            model: FolderListModel {
-                folder: "qrc:/controls"
-                showDirs: false
-                nameFilters: searchTextField.text.length > 0 ? ["*" + searchTextField.text + "*.qml"] : []
+            ScrollBar.vertical: ScrollBar {
+                parent: contentPane
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
             }
+
+            model: controlFolderListModel
             delegate: ColumnLayout {
                 id: rootDelegate
                 width: parent.width

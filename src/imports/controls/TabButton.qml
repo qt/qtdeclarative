@@ -53,7 +53,7 @@ T.TabButton {
 
     icon.width: 24
     icon.height: 24
-    icon.color: Color.transparent(!checked ? Default.textLightColor : down ? Default.textDarkColor : Default.textColor, enabled ? 1 : 0.3)
+    icon.color: checked ? control.palette.windowText : control.palette.brightText
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -63,14 +63,12 @@ T.TabButton {
         icon: control.icon
         text: control.text
         font: control.font
-        color: Color.transparent(!control.checked ? Default.textLightColor : control.down ? Default.textDarkColor : Default.textColor,
-                                 enabled ? 1 : 0.3)
+        color: checked ? control.palette.windowText : control.palette.brightText
     }
 
     background: Rectangle {
         implicitHeight: 40
-        color: control.down
-            ? (control.checked ? Default.tabButtonCheckedPressedColor : Default.tabButtonPressedColor)
-            : (control.checked ? "transparent" : Default.tabButtonColor)
+        color: Color.blend(control.checked ? control.palette.window : control.palette.dark,
+                                             control.palette.mid, control.down ? 0.5 : 0.0)
     }
 }

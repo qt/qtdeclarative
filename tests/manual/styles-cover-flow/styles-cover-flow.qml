@@ -49,56 +49,52 @@
 ****************************************************************************/
 
 import QtQuick 2.10
-import QtQuick.Controls 2.3
+import QtQuick.Window 2.3
 
-QtObject {
-    property var supportedStates: [
-        ["vertical"],
-        ["vertical", "disabled"],
-        ["horizontal"],
-        ["horizontal", "disabled"],
-    ]
+Window {
+    // Different delegate positions and widths and window background colors
+    // can cause some unwanted "rogue pixels", so an easy way to get it perfect
+    // is to mess with the width.
+    width: 814
+    height: 512
+    visible: true
+    color: backgroundColor
+    flags: Qt.FramelessWindowHint
 
-    property Component component: Frame {
-        width: 100
-        height: 100
-        clip: true
+    readonly property color backgroundColor: "#ffffff"
 
-        Label {
-            text: "ABCDEFG\nHIJKLMN"
-            font.pixelSize: 40
-            x: horizontalScrollIndicator.position * width
-            y: verticalScrollIndicator.position * height
+    Shortcut {
+        sequence: "Ctrl+Q"
+        onActivated: Qt.quit()
+    }
+
+    PathView {
+        id: view
+        anchors.fill: parent
+        anchors.leftMargin: 130
+        anchors.rightMargin: 130
+        model: ListModel {
+            ListElement { source: "qtquickcontrols2-default.png"; dark: false }
+            ListElement { source: "qtquickcontrols2-fusion.png"; dark: false }
+            ListElement { source: "qtquickcontrols2-universal-light.png"; dark: false }
+            ListElement { source: "qtquickcontrols2-universal-dark.png"; dark: true }
+            ListElement { source: "qtquickcontrols2-material-dark.png"; dark: true }
+            ListElement { source: "qtquickcontrols2-imagine.png"; dark: false }
+            ListElement { source: "qtquickcontrols2-material-light.png"; dark: false }
         }
 
-        ScrollIndicator {
-            id: verticalScrollIndicator
-            enabled: !is("disabled")
-            orientation: Qt.Vertical
-            active: true
-            visible: is("vertical")
-            size: 0.3
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-        }
+        highlightRangeMode: PathView.StrictlyEnforceRange
+        preferredHighlightBegin: 0.5
+        preferredHighlightEnd: 0.5
+        pathItemCount: 9
 
-        ScrollIndicator {
-            id: horizontalScrollIndicator
-            enabled: !is("disabled")
-            orientation: Qt.Horizontal
-            active: true
-            visible: is("horizontal")
-            size: 0.3
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
+        property real centerX: width / 2
+        property real centerY: height * 0.4
+        property real delegateSize: 393 / 2
 
-            Binding {
-                target: horizontalScrollIndicator
-                property: "active"
-                value: horizontalScrollIndicator.visible
-            }
+        path: CoverFlowPath {
+            pathView: view
         }
+        delegate: CoverFlowDelegate {}
     }
 }

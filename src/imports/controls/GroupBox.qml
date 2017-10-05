@@ -72,6 +72,6 @@ T.GroupBox {
         height: parent.height - control.topPadding + control.padding
 
         color: "transparent"
-        border.color: Default.frameLightColor
+        border.color: control.palette.mid
     }
 }

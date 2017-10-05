@@ -79,7 +79,7 @@ T.DelayButton {
                 text: control.text
                 font: control.font
                 opacity: enabled ? 1 : 0.3
-                color: control.visualFocus ? control.palette.highlight : control.palette.buttonText
+                color: control.palette.buttonText
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
@@ -113,14 +113,15 @@ T.DelayButton {
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
-        color: control.visualFocus ? (control.down ? Default.focusPressedColor : Default.focusLightColor) : (control.down ? Default.buttonPressedColor : Default.buttonColor)
-        border.color: Default.focusColor
+        color: Color.blend(control.palette.button, control.palette.mid, control.down ? 0.5 : 0.0)
+        border.color: control.palette.highlight
         border.width: control.visualFocus ? 2 : 0
 
-        Rectangle {
+        PaddedRectangle {
+            padding: control.visualFocus ? 2 : 0
             width: control.progress * parent.width
             height: parent.height
-            color: control.visualFocus ? (control.down ? Default.buttonCheckedFocusColor : Default.focusColor) : (control.down ? Default.buttonCheckedPressedColor : Default.textColor)
+            color: Color.blend(control.palette.dark, control.palette.mid, control.down ? 0.5 : 0.0)
         }
     }
 }

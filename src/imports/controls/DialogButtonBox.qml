@@ -69,5 +69,6 @@ T.DialogButtonBox {
         x: 1; y: 1
         width: parent.width - 2
         height: parent.height - 2
+        color: control.palette.window
     }
 }

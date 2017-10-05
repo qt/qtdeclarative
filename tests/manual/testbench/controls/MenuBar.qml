@@ -51,54 +51,29 @@
 import QtQuick 2.10
 import QtQuick.Controls 2.3
 
+// TODO
 QtObject {
+    property string customControlName: qsTr("MenuBar & MenuBarItem")
+
     property var supportedStates: [
-        ["vertical"],
-        ["vertical", "disabled"],
-        ["horizontal"],
-        ["horizontal", "disabled"],
+        []
     ]
 
-    property Component component: Frame {
-        width: 100
-        height: 100
-        clip: true
-
-        Label {
-            text: "ABCDEFG\nHIJKLMN"
-            font.pixelSize: 40
-            x: horizontalScrollIndicator.position * width
-            y: verticalScrollIndicator.position * height
+    property Component component: MenuBar {
+        MenuBarItem {
+            text: qsTr("Normal")
         }
-
-        ScrollIndicator {
-            id: verticalScrollIndicator
-            enabled: !is("disabled")
-            orientation: Qt.Vertical
-            active: true
-            visible: is("vertical")
-            size: 0.3
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
+        MenuBarItem {
+            text: qsTr("Pressed")
+            down: true
         }
-
-        ScrollIndicator {
-            id: horizontalScrollIndicator
-            enabled: !is("disabled")
-            orientation: Qt.Horizontal
-            active: true
-            visible: is("horizontal")
-            size: 0.3
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-
-            Binding {
-                target: horizontalScrollIndicator
-                property: "active"
-                value: horizontalScrollIndicator.visible
-            }
+        MenuBarItem {
+            text: qsTr("Highlighted")
+            highlighted: true
+        }
+        MenuBarItem {
+            text: qsTr("Disabled")
+            enabled: false
         }
     }
 }

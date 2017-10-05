@@ -57,7 +57,17 @@ QtObject {
         ["disabled"],
     ]
 
-    property Component component: TextArea {
-        text: "TextArea\nTextArea\nTextArea"
+    property Component component: Column {
+        spacing: 10
+
+        TextArea {
+            text: "TextArea\nwith\ntext"
+            enabled: !is("disabled")
+        }
+
+        TextArea {
+            placeholderText: "TextArea with placeholderText"
+            enabled: !is("disabled")
+        }
     }
 }

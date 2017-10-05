@@ -58,6 +58,7 @@ class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickColorImage : public QQuickImage
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor RESET resetColor NOTIFY colorChanged FINAL)
+    Q_PROPERTY(QColor defaultColor READ defaultColor WRITE setDefaultColor RESET resetDefaultColor NOTIFY defaultColorChanged FINAL)
 
 public:
     explicit QQuickColorImage(QQuickItem *parent = nullptr);
@@ -66,14 +67,20 @@ public:
     void setColor(const QColor &color);
     void resetColor();
 
+    QColor defaultColor() const;
+    void setDefaultColor(const QColor &color);
+    void resetDefaultColor();
+
 Q_SIGNALS:
     void colorChanged();
+    void defaultColorChanged();
 
 protected:
     void pixmapChange() override;
 
 private:
     QColor m_color;
+    QColor m_defaultColor;
 };
 
 QT_END_NAMESPACE

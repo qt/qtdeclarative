@@ -55,7 +55,7 @@ T.ScrollIndicator {
         implicitWidth: 2
         implicitHeight: 2
 
-        color: Default.scrollBarColor
+        color: control.palette.mid
         visible: control.size < 1.0
         opacity: 0.0
 

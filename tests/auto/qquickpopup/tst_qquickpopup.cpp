@@ -50,7 +50,7 @@
 
 using namespace QQuickVisualTestUtil;
 
-class tst_popup : public QQmlDataTest
+class tst_QQuickPopup : public QQmlDataTest
 {
     Q_OBJECT
 
@@ -84,20 +84,20 @@ private slots:
     void orientation();
 };
 
-void tst_popup::initTestCase()
+void tst_QQuickPopup::initTestCase()
 {
     QQmlDataTest::initTestCase();
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
 }
 
-void tst_popup::visible_data()
+void tst_QQuickPopup::visible_data()
 {
     QTest::addColumn<QString>("source");
     QTest::newRow("Window") << "window.qml";
     QTest::newRow("ApplicationWindow") << "applicationwindow.qml";
 }
 
-void tst_popup::visible()
+void tst_QQuickPopup::visible()
 {
     QFETCH(QString, source);
     QQuickApplicationHelper helper(this, source);
@@ -131,7 +131,7 @@ void tst_popup::visible()
     QVERIFY(!overlay->childItems().contains(popupItem));
 }
 
-void tst_popup::state()
+void tst_QQuickPopup::state()
 {
     QQuickApplicationHelper helper(this, "applicationwindow.qml");
 
@@ -171,7 +171,7 @@ void tst_popup::state()
     QTRY_COMPARE(closedSpy.count(), 1);
 }
 
-void tst_popup::overlay_data()
+void tst_QQuickPopup::overlay_data()
 {
     QTest::addColumn<QString>("source");
     QTest::addColumn<bool>("modal");
@@ -188,7 +188,7 @@ void tst_popup::overlay_data()
     QTest::newRow("ApplicationWindow,modal,dim") << "applicationwindow.qml" << true << true;
 }
 
-void tst_popup::overlay()
+void tst_QQuickPopup::overlay()
 {
     QFETCH(QString, source);
     QFETCH(bool, modal);
@@ -345,14 +345,14 @@ void tst_popup::overlay()
     QCOMPARE(overlayReleasedSignal.count(), overlayReleaseCount);
 }
 
-void tst_popup::zOrder_data()
+void tst_QQuickPopup::zOrder_data()
 {
     QTest::addColumn<QString>("source");
     QTest::newRow("Window") << "window.qml";
     QTest::newRow("ApplicationWindow") << "applicationwindow.qml";
 }
 
-void tst_popup::zOrder()
+void tst_QQuickPopup::zOrder()
 {
     QFETCH(QString, source);
     QQuickApplicationHelper helper(this, source);
@@ -386,7 +386,7 @@ void tst_popup::zOrder()
     QVERIFY(!popup->isVisible());
 }
 
-void tst_popup::windowChange()
+void tst_QQuickPopup::windowChange()
 {
     QQuickPopup popup;
     QSignalSpy spy(&popup, SIGNAL(windowChanged(QQuickWindow*)));
@@ -435,7 +435,7 @@ void tst_popup::windowChange()
 
 Q_DECLARE_METATYPE(QQuickPopup::ClosePolicy)
 
-void tst_popup::closePolicy_data()
+void tst_QQuickPopup::closePolicy_data()
 {
     qRegisterMetaType<QQuickPopup::ClosePolicy>();
 
@@ -459,7 +459,7 @@ void tst_popup::closePolicy_data()
     QTest::newRow("ApplicationWindow:CloseOnEscape") << "applicationwindow.qml"<< static_cast<QQuickPopup::ClosePolicy>(QQuickPopup::CloseOnEscape);
 }
 
-void tst_popup::closePolicy()
+void tst_QQuickPopup::closePolicy()
 {
     QFETCH(QString, source);
     QFETCH(QQuickPopup::ClosePolicy, closePolicy);
@@ -538,7 +538,7 @@ void tst_popup::closePolicy()
         QVERIFY(popup->isVisible());
 }
 
-void tst_popup::activeFocusOnClose1()
+void tst_QQuickPopup::activeFocusOnClose1()
 {
     // Test that a popup that never sets focus: true (e.g. ToolTip) doesn't affect
     // the active focus item when it closes.
@@ -567,7 +567,7 @@ void tst_popup::activeFocusOnClose1()
     QVERIFY(focusedPopup->hasActiveFocus());
 }
 
-void tst_popup::activeFocusOnClose2()
+void tst_QQuickPopup::activeFocusOnClose2()
 {
     // Test that a popup that sets focus: true but relinquishes focus (e.g. by
     // calling forceActiveFocus() on another item) before it closes doesn't
@@ -602,7 +602,7 @@ void tst_popup::activeFocusOnClose2()
     QVERIFY(popup1->hasActiveFocus());
 }
 
-void tst_popup::activeFocusOnClose3()
+void tst_QQuickPopup::activeFocusOnClose3()
 {
     // Test that a closing popup that had focus doesn't steal focus from
     // another popup that the focus was transferred to.
@@ -634,7 +634,7 @@ void tst_popup::activeFocusOnClose3()
     QTRY_VERIFY(popup2->hasActiveFocus());
 }
 
-void tst_popup::hover_data()
+void tst_QQuickPopup::hover_data()
 {
     QTest::addColumn<QString>("source");
     QTest::addColumn<bool>("modal");
@@ -645,7 +645,7 @@ void tst_popup::hover_data()
     QTest::newRow("ApplicationWindow:modeless") << "applicationwindow-hover.qml" << false;
 }
 
-void tst_popup::hover()
+void tst_QQuickPopup::hover()
 {
     QFETCH(QString, source);
     QFETCH(bool, modal);
@@ -698,7 +698,7 @@ void tst_popup::hover()
     QVERIFY(parentButton->isHovered());
 }
 
-void tst_popup::wheel_data()
+void tst_QQuickPopup::wheel_data()
 {
     QTest::addColumn<QString>("source");
     QTest::addColumn<bool>("modal");
@@ -717,7 +717,7 @@ static bool sendWheelEvent(QQuickItem *item, const QPoint &localPos, int degrees
     return qGuiApp->notify(window, &wheelEvent);
 }
 
-void tst_popup::wheel()
+void tst_QQuickPopup::wheel()
 {
     QFETCH(QString, source);
     QFETCH(bool, modal);
@@ -782,7 +782,7 @@ void tst_popup::wheel()
     }
 }
 
-void tst_popup::parentDestroyed()
+void tst_QQuickPopup::parentDestroyed()
 {
     QQuickPopup popup;
     popup.setParentItem(new QQuickItem);
@@ -790,7 +790,7 @@ void tst_popup::parentDestroyed()
     QVERIFY(!popup.parentItem());
 }
 
-void tst_popup::nested()
+void tst_QQuickPopup::nested()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("nested.qml"));
     QQuickWindow *window = helper.window;
@@ -817,7 +817,7 @@ void tst_popup::nested()
 }
 
 // QTBUG-56697
-void tst_popup::grabber()
+void tst_QQuickPopup::grabber()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("grabber.qml"));
     QQuickWindow *window = helper.window;
@@ -867,7 +867,7 @@ void tst_popup::grabber()
     QCOMPARE(combo->isVisible(), false);
 }
 
-void tst_popup::cursorShape()
+void tst_QQuickPopup::cursorShape()
 {
     // Ensure that the mouse cursor has the correct shape when over a popup
     // which is itself over an item with a different shape.
@@ -901,10 +901,10 @@ void tst_popup::cursorShape()
 
 class FriendlyPopup : public QQuickPopup
 {
-    friend class tst_popup;
+    friend class tst_QQuickPopup;
 };
 
-void tst_popup::componentComplete()
+void tst_QQuickPopup::componentComplete()
 {
     FriendlyPopup cppPopup;
     QVERIFY(cppPopup.isComponentComplete());
@@ -921,7 +921,7 @@ void tst_popup::componentComplete()
     QVERIFY(qmlPopup->isComponentComplete());
 }
 
-void tst_popup::closeOnEscapeWithNestedPopups()
+void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
 {
     // Tests the scenario in the Gallery example, where there are nested popups that should
     // close in the correct order when the Escape key is pressed.
@@ -986,7 +986,7 @@ void tst_popup::closeOnEscapeWithNestedPopups()
     QCOMPARE(stackView->depth(), 1);
 }
 
-void tst_popup::enabled()
+void tst_QQuickPopup::enabled()
 {
     QQuickPopup popup;
     QVERIFY(popup.isEnabled());
@@ -1006,7 +1006,7 @@ void tst_popup::enabled()
     QCOMPARE(enabledSpy.count(), 2);
 }
 
-void tst_popup::orientation_data()
+void tst_QQuickPopup::orientation_data()
 {
     QTest::addColumn<Qt::ScreenOrientation>("orientation");
     QTest::addColumn<QPointF>("position");
@@ -1017,7 +1017,7 @@ void tst_popup::orientation_data()
     QTest::newRow("InvertedLandscape") << Qt::InvertedLandscapeOrientation << QPointF(135, 330);
 }
 
-void tst_popup::orientation()
+void tst_QQuickPopup::orientation()
 {
     QFETCH(Qt::ScreenOrientation, orientation);
     QFETCH(QPointF, position);
@@ -1036,6 +1036,6 @@ void tst_popup::orientation()
     QCOMPARE(popup->popupItem()->position(), position);
 }
 
-QTEST_MAIN(tst_popup)
+QTEST_MAIN(tst_QQuickPopup)
 
-#include "tst_popup.moc"
+#include "tst_qquickpopup.moc"

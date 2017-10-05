@@ -84,7 +84,7 @@ T.SpinBox {
             height: control.height
             visible: control.activeFocus
             color: "transparent"
-            border.color: Default.focusColor
+            border.color: control.palette.highlight
             border.width: 2
         }
     }
@@ -94,21 +94,21 @@ T.SpinBox {
         height: parent.height
         implicitWidth: 40
         implicitHeight: 40
-        color: up.pressed ? Default.buttonPressedColor : Default.buttonColor
+        color: up.pressed ? control.palette.mid : control.palette.button
 
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: enabled ? Default.textColor : Default.textDisabledColor
+            color: enabled ? control.palette.buttonText : control.palette.mid
         }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: 2
             height: parent.width / 3
-            color: enabled ? Default.textColor : Default.textDisabledColor
+            color: enabled ? control.palette.buttonText : control.palette.mid
         }
     }
 
@@ -117,19 +117,20 @@ T.SpinBox {
         height: parent.height
         implicitWidth: 40
         implicitHeight: 40
-        color: down.pressed ? Default.buttonPressedColor : Default.buttonColor
+        color: down.pressed ? control.palette.mid : control.palette.button
 
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: enabled ? Default.textColor : Default.textDisabledColor
+            color: enabled ? control.palette.buttonText : control.palette.mid
         }
     }
 
     background: Rectangle {
         implicitWidth: 140
-        border.color: Default.buttonColor
+        color: enabled ? control.palette.base : control.palette.button
+        border.color: control.palette.button
     }
 }

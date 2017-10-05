@@ -48,56 +48,88 @@
 **
 ****************************************************************************/
 
+import QtGraphicalEffects 1.0
 import QtQuick 2.10
-import QtQuick.Controls 2.3
 
-QtObject {
-    property var supportedStates: [
-        ["vertical"],
-        ["vertical", "disabled"],
-        ["horizontal"],
-        ["horizontal", "disabled"],
+Item {
+    id: root
+    width: PathView.view.delegateSize
+    height: width
+    z: PathView.zOrder
+
+    transform: [
+        Rotation {
+            angle: root.PathView.rotateY
+            origin.x: sourceImage.width / 2
+            origin.y: sourceImage.height * 0.3
+            axis.x: 0
+            axis.y: 1
+            axis.z: 0
+        },
+        Scale {
+            xScale: 1.0
+            yScale: root.PathView.scale
+            origin.x: sourceImage.width / 2
+            origin.y: sourceImage.height * 0.4
+        }
     ]
 
-    property Component component: Frame {
-        width: 100
-        height: 100
-        clip: true
+    Image {
+        id: sourceImage
+        width: root.PathView.view.delegateSize
+        height: width
+        fillMode: Image.PreserveAspectFit
+        source: "file:/" + docImagesDir + model.source
 
-        Label {
-            text: "ABCDEFG\nHIJKLMN"
-            font.pixelSize: 40
-            x: horizontalScrollIndicator.position * width
-            y: verticalScrollIndicator.position * height
+        Rectangle {
+            x: (sourceImage.width - sourceImage.paintedWidth) / 2
+            width: sourceImage.paintedWidth + (index == 6 ? 2 : 1)
+            height: sourceImage.height
+            color: "transparent"
+            border.color: "#f4f4f4"
+            antialiasing: true
+            visible: !model.dark
         }
+    }
 
-        ScrollIndicator {
-            id: verticalScrollIndicator
-            enabled: !is("disabled")
-            orientation: Qt.Vertical
-            active: true
-            visible: is("vertical")
-            size: 0.3
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-        }
+    ShaderEffectSource {
+        id: reflection
+        sourceItem: sourceImage
+        y: sourceItem.height
+        width: sourceItem.width
+        height: sourceItem.height
 
-        ScrollIndicator {
-            id: horizontalScrollIndicator
-            enabled: !is("disabled")
-            orientation: Qt.Horizontal
-            active: true
-            visible: is("horizontal")
-            size: 0.3
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
+        transform: [
+            Rotation {
+                origin.x: reflection.width / 2
+                origin.y: reflection.height / 2
+                axis.x: 1
+                axis.y: 0
+                axis.z: 0
+                angle: 180
+            }
+        ]
+    }
 
-            Binding {
-                target: horizontalScrollIndicator
-                property: "active"
-                value: horizontalScrollIndicator.visible
+    Rectangle {
+        objectName: sourceImage.source.toString().slice(-20)
+        x: (parent.width - sourceImage.paintedWidth) / 2// + (paintedWidthDiff > 0 ? 1.0 - paintedWidthDiff : 0)
+        y: reflection.y
+        width: sourceImage.paintedWidth + (index == 6 ? 2 : 1)
+        height: sourceImage.paintedHeight
+
+        // TODO: figure out how to get perfect x/width without using the current width hack
+//        readonly property real paintedWidthDiff: sourceImage.paintedWidth - Math.floor(sourceImage.paintedWidth)
+
+        gradient: Gradient {
+            GradientStop {
+                position: 0.0
+                color: Qt.rgba(backgroundColor.r, backgroundColor.g, backgroundColor.b, 0.33)
+            }
+            GradientStop {
+                // This determines the point at which the reflection fades out.
+                position: 1.0
+                color: backgroundColor
             }
         }
     }

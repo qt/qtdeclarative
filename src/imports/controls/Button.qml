@@ -56,8 +56,7 @@ T.Button {
     icon.width: 24
     icon.height: 24
     icon.color: control.checked || control.highlighted ? control.palette.brightText :
-                control.visualFocus ? control.palette.highlight :
-                control.flat && !control.down ? control.palette.windowText : control.palette.buttonText
+                control.flat && !control.down ? (control.visualFocus ? control.palette.highlight : control.palette.windowText) : control.palette.buttonText
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -68,18 +67,16 @@ T.Button {
         text: control.text
         font: control.font
         color: control.checked || control.highlighted ? control.palette.brightText :
-               control.visualFocus ? control.palette.highlight :
-               control.flat && !control.down ? control.palette.windowText : control.palette.buttonText
+               control.flat && !control.down ? (control.visualFocus ? control.palette.highlight : control.palette.windowText) : control.palette.buttonText
     }
 
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
         visible: !control.flat || control.down || control.checked || control.highlighted
-        color: control.checked || control.highlighted ?
-            (control.visualFocus ? (control.down ? Default.buttonCheckedFocusColor : Default.focusColor) : (control.down ? Default.buttonCheckedPressedColor : Default.textColor)) :
-            (control.visualFocus ? (control.down ? Default.focusPressedColor : Default.focusLightColor) : (control.down ? Default.buttonPressedColor : Default.buttonColor))
-        border.color: Default.focusColor
+        color: Color.blend(control.checked || control.highlighted ? control.palette.dark : control.palette.button,
+                                                                    control.palette.mid, control.down ? 0.5 : 0.0)
+        border.color: control.palette.highlight
         border.width: control.visualFocus ? 2 : 0
     }
 }

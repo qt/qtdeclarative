@@ -27,7 +27,6 @@
 /examples/quickcontrols2/wearable/wearable
 
 /tests/auto/accessibility/tst_accessibility
-/tests/auto/applicationwindow/tst_applicationwindow
 /tests/auto/calendar/tst_calendar
 /tests/auto/controls/default/tst_default
 /tests/auto/controls/fusion/tst_fusion
@@ -35,22 +34,23 @@
 /tests/auto/controls/material/tst_material
 /tests/auto/controls/universal/tst_universal
 /tests/auto/cursor/tst_cursor
-/tests/auto/drawer/tst_drawer
 /tests/auto/focus/tst_focus
 /tests/auto/font/tst_font
-/tests/auto/menu/tst_menu
 /tests/auto/palette/tst_palette
 /tests/auto/platform/tst_platform
-/tests/auto/popup/tst_popup
 /tests/auto/pressandhold/tst_pressandhold
+/tests/auto/qquickapplicationwindow/tst_qquickapplicationwindow
 /tests/auto/qquickcolor/tst_qquickcolor
+/tests/auto/qquickdrawer/tst_qquickdrawer
 /tests/auto/qquickiconimage/tst_qquickiconimage
 /tests/auto/qquickiconlabel/tst_qquickiconlabel
 /tests/auto/qquickimaginestyle/tst_qquickimaginestyle
 /tests/auto/qquickmaterialstyle/tst_qquickmaterialstyle
 /tests/auto/qquickmaterialstyleconf/tst_qquickmaterialstyleconf
+/tests/auto/qquickmenu/tst_qquickmenu
 /tests/auto/qquickmenubar/tst_qquickmenubar
 /tests/auto/qquickninepatchimage/tst_qquickninepatchimage
+/tests/auto/qquickpopup/tst_qquickpopup
 /tests/auto/qquickstyle/tst_qquickstyle
 /tests/auto/qquickstyleselector/tst_qquickstyleselector
 /tests/auto/qquickuniversalstyle/tst_qquickuniversalstyle

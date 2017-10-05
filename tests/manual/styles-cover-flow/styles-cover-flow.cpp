@@ -48,57 +48,19 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.10
-import QtQuick.Controls 2.3
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
 
-QtObject {
-    property var supportedStates: [
-        ["vertical"],
-        ["vertical", "disabled"],
-        ["horizontal"],
-        ["horizontal", "disabled"],
-    ]
+int main(int argc, char *argv[])
+{
+    QGuiApplication app(argc, argv);
 
-    property Component component: Frame {
-        width: 100
-        height: 100
-        clip: true
+    QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("docImagesDir", QString(DOC_IMAGES_DIR));
+    engine.load(QUrl("qrc:/styles-cover-flow.qml"));
+    if (engine.rootObjects().isEmpty())
+        return -1;
 
-        Label {
-            text: "ABCDEFG\nHIJKLMN"
-            font.pixelSize: 40
-            x: horizontalScrollIndicator.position * width
-            y: verticalScrollIndicator.position * height
-        }
-
-        ScrollIndicator {
-            id: verticalScrollIndicator
-            enabled: !is("disabled")
-            orientation: Qt.Vertical
-            active: true
-            visible: is("vertical")
-            size: 0.3
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-        }
-
-        ScrollIndicator {
-            id: horizontalScrollIndicator
-            enabled: !is("disabled")
-            orientation: Qt.Horizontal
-            active: true
-            visible: is("horizontal")
-            size: 0.3
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-
-            Binding {
-                target: horizontalScrollIndicator
-                property: "active"
-                value: horizontalScrollIndicator.visible
-            }
-        }
-    }
+    return app.exec();
 }

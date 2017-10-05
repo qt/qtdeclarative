@@ -83,6 +83,7 @@ QtObject {
         // Only set it if it's pressed, or the non-pressed examples will have no press effects
         down: is("pressed") ? true : undefined
         highlighted: is("highlighted")
+        focusPolicy: Qt.StrongFocus
 
         swipe.left: actionComponent
         swipe.right: actionComponent
@@ -96,6 +97,7 @@ QtObject {
         delegate: SwipeDelegate {
             width: parent.width
             text: "SwipeDelegate"
+            focusPolicy: Qt.StrongFocus
 
             swipe.left: actionComponent
             swipe.right: actionComponent

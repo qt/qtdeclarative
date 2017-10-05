@@ -156,7 +156,7 @@ public:
 
     bool enabled;
     bool exclusive;
-    QQuickAction *checkedAction;
+    QPointer<QQuickAction> checkedAction;
     QVector<QQuickAction*> actions;
 };
 

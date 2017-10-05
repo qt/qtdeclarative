@@ -67,6 +67,7 @@ QtObject {
         // Only set it if it's pressed, or the non-pressed examples will have no press effects
         down: is("pressed") ? true : undefined
         highlighted: is("highlighted")
+        focusPolicy: Qt.StrongFocus
 
         LayoutMirroring.enabled: is("mirrored")
     }
@@ -79,6 +80,7 @@ QtObject {
         delegate: SwitchDelegate {
             width: parent.width
             text: "SwitchDelegate"
+            focusPolicy: Qt.StrongFocus
         }
     }
 }

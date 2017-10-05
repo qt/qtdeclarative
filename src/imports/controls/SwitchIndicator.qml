@@ -49,9 +49,7 @@ Item {
         width: 56
         height: 16
         radius: 8
-        color: control.checked ? (control.visualFocus ? Default.focusColor : Default.buttonCheckedColor) : Default.buttonColor
-        border.width: control.visualFocus ? 2 : 0
-        border.color: Default.focusColor
+        color: control.checked ? control.palette.dark : control.palette.midlight
     }
 
     Rectangle {
@@ -60,13 +58,9 @@ Item {
         width: 28
         height: 28
         radius: 16
-        color: control.enabled ? (control.down
-            ? (control.visualFocus ? Default.focusPressedColor : Default.indicatorPressedColor)
-            : (control.visualFocus ? Default.focusLightColor : Default.backgroundColor)) : Default.indicatorDisabledColor
+        color: control.down ? control.palette.light : control.palette.window
         border.width: control.visualFocus ? 2 : 1
-        border.color: control.enabled ? (control.visualFocus
-            ? Default.focusColor
-            : (control.down ? Default.indicatorFramePressedColor : Default.indicatorFrameColor)) : Default.indicatorFrameDisabledColor
+        border.color: control.visualFocus ? control.palette.highlight : control.enabled ? control.palette.mid : control.palette.midlight
 
         Behavior on x {
             enabled: !control.down
