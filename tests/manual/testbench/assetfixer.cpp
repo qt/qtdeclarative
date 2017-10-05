@@ -521,7 +521,7 @@ void AssetFixer::clearImageCache()
 
 void AssetFixer::fixAssets()
 {
-    if (!mShouldWatch || !mShouldFix || !mComponentComplete || mAssetDirectory.isEmpty() || !isAssetDirectoryValid(mAssetDirectory))
+    if (!mShouldFix || !mComponentComplete || mAssetDirectory.isEmpty() || !isAssetDirectoryValid(mAssetDirectory))
         return;
 
     QDir assetDir(mAssetDirectory);

@@ -90,6 +90,14 @@ ApplicationWindow {
     }
 
     Action {
+        id: fixAssetsAction
+        text: qsTr("Fix Custom Assets")
+        shortcut: "Ctrl+Shift+X"
+        enabled: usingImagineStyle
+        onTriggered: assetFixer.manualFix()
+    }
+
+    Action {
         id: useCustomAssetsAction
         text: qsTr("Use Custom Assets")
         shortcut: "Ctrl+Shift+C"
@@ -123,7 +131,7 @@ ApplicationWindow {
 
         property bool useCustomImaginePath
         property string imaginePath
-        property bool fixImagineAssets
+        property bool autoFixImagineAssets
         property alias imagineDirLastModified: assetFixer.assetDirectoryLastModified
 
         Component.onCompleted: settingsLoaded = true
@@ -213,6 +221,10 @@ ApplicationWindow {
                         action: useCustomAssetsAction
                     }
 
+                    MenuItem {
+                        action: fixAssetsAction
+                    }
+
                     MenuSeparator {}
 
                     MenuItem {
@@ -258,11 +270,13 @@ ApplicationWindow {
         // AssetFixer needs the settings in order to check the last modified time of the asset directory.
         // Also, wait until the UI has been rendered for the first time so that we can show our busy indicators, etc.
         shouldWatch: usingImagineStyle && settings.useCustomImaginePath && settingsLoaded && initialUiRenderDelayTimer.hasRun
-        shouldFix: shouldWatch && settings.fixImagineAssets
+        shouldFix: (shouldWatch && settings.autoFixImagineAssets) || manuallyFixing
 
-        onFixSuggested: fixEmUp()
+        onFixSuggested: autoFix()
         onDelayedFixSuggested: assetFixerFileSystemDelayTimer.restart()
         onReloadSuggested: reloadAssets()
+
+        property bool manuallyFixing: false
 
         function reloadAssets() {
             console.log(brief, "Reloading assets...")
@@ -274,21 +288,31 @@ ApplicationWindow {
             assetReloadNextFrameTimer.start()
         }
 
-        function fixEmUp() {
+        function autoFix() {
             // This is a bit of a hack, but I can't think of a nice way to solve it.
             // The problem is that shouldWatch becomes true, causing startWatching() to be called.
             // If a fix is suggested as a result of that, this function is called.
             // However, the shouldFix binding hasn't been updated yet, so even though shouldWatch
-            // and settings.fixImagineAssets are both true (the properties that make up its binding),
+            // and settings.autoFixImagineAssets are both true (the properties that make up its binding),
             // the if check below fails. So, we check for that case with effectiveShouldFix.
-            var effectiveShouldFix = shouldWatch && settings.fixImagineAssets;
+            var effectiveShouldFix = shouldWatch && settings.autoFixImagineAssets;
             if (shouldWatch && effectiveShouldFix && assetDirectory.length > 0) {
-                // Disable image caching if it hasn't already been done.
-                assetFixer.clearImageCache()
-
-                busyIndicatorRow.visible = true
-                assetFixerAnimationDelayTimer.start()
+                fixEmUp();
             }
+        }
+
+        function manualFix() {
+            fixEmUp(true);
+        }
+
+        function fixEmUp(manually) {
+            assetFixer.manuallyFixing = !!manually
+
+            // Disable image caching if it hasn't already been done.
+            assetFixer.clearImageCache()
+
+            busyIndicatorRow.visible = true
+            assetFixerAnimationDelayTimer.start()
         }
     }
 
@@ -327,7 +351,7 @@ ApplicationWindow {
                 infoToolTip.open()
             }
         }
-        onTriggered: assetFixer.fixEmUp()
+        onTriggered: assetFixer.autoFix()
     }
 
     // Gives the BusyIndicator animation a chance to start.
@@ -337,6 +361,7 @@ ApplicationWindow {
         onTriggered: {
             assetFixer.fixAssets()
             busyIndicatorRow.visible = false
+            assetFixer.manuallyFixing = false
         }
     }
 
