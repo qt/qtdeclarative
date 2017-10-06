@@ -61,7 +61,7 @@ ApplicationWindow {
     height: Math.max(600, loader.implicitHeight)
 
     property string currentFilePath
-    property string lastSavePath
+    property url lastSaveUrl
 
     Shortcut {
         sequence: "Ctrl+Q"
@@ -139,8 +139,8 @@ ApplicationWindow {
             ToolButton {
                 text: "Open Last Screenshot"
                 focusPolicy: Qt.NoFocus
-                enabled: lastSavePath.length > 0
-                onClicked: Qt.openUrlExternally(lastSavePath)
+                enabled: lastSaveUrl.toString().length > 0
+                onClicked: Qt.openUrlExternally(lastSaveUrl)
             }
 
             Item {
@@ -159,7 +159,7 @@ ApplicationWindow {
                         var savePath = screenshotsDirStr + "/" + snippetsListView.currentItem.baseName + ".png";
                         if (result.saveToFile(savePath)) {
                             saveResultToolTip.text = "Successfully saved screenshot to output folder";
-                            lastSavePath = savePath;
+                            lastSaveUrl = screenshotsDir + "/" + snippetsListView.currentItem.baseName + ".png";
                         } else {
                             saveResultToolTip.text = "Failed to save screenshot";
                         }
