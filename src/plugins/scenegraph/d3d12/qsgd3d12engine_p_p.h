@@ -105,6 +105,7 @@ public:
 
     struct DeviceLossObserver {
         virtual void deviceLost() = 0;
+        virtual ~DeviceLossObserver() = default;
     };
     void registerDeviceLossObserver(DeviceLossObserver *observer);
 
