@@ -998,7 +998,7 @@ void tst_qqmlqt::exit()
 
     QSignalSpy spy(&engine, &QQmlEngine::exit);
     QObject *object = component.create();
-    QVERIFY(object != Q_NULLPTR);
+    QVERIFY(object != nullptr);
     QCOMPARE(spy.count(), 1);
     QList<QVariant> arguments = spy.takeFirst();
     QVERIFY(arguments.at(0).toInt() == object->property("returnCode").toInt());

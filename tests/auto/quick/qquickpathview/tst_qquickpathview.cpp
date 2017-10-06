@@ -2351,7 +2351,7 @@ void tst_QQuickPathView::qtbug37815()
     QTest::qWait(1000);
 
     QQuickPathView *pathView = findItem<QQuickPathView>(window->rootObject(), "pathView");
-    QVERIFY(pathView != Q_NULLPTR);
+    QVERIFY(pathView != nullptr);
 
     const int pathItemCount = pathView->pathItemCount();
     const int cacheItemCount = pathView->cacheItemCount();
@@ -2421,7 +2421,7 @@ void tst_QQuickPathView::qtbug53464()
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickPathView *pathView = findItem<QQuickPathView>(window->rootObject(), "pathView");
-    QVERIFY(pathView != Q_NULLPTR);
+    QVERIFY(pathView != nullptr);
     const int currentIndex = pathView->currentIndex();
     QCOMPARE(currentIndex, 8);
 

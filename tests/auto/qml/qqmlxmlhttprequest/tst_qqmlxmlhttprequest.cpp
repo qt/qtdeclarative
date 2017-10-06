@@ -291,7 +291,7 @@ class TestThreadedHTTPServer : public QObject
     Q_OBJECT
 public:
     TestThreadedHTTPServer(const QUrl &expectUrl, const QUrl &replyUrl, const QUrl &bodyUrl)
-        : m_server(Q_NULLPTR) {
+        : m_server(nullptr) {
         QMutexLocker locker(&m_lock);
         moveToThread(&m_thread);
         m_thread.start();

@@ -7289,8 +7289,8 @@ class WeakReferenceMutator : public QObject
     Q_OBJECT
 public:
     WeakReferenceMutator()
-        : resultPtr(Q_NULLPTR)
-        , weakRef(Q_NULLPTR)
+        : resultPtr(nullptr)
+        , weakRef(nullptr)
     {}
 
     void init(QV4::ExecutionEngine *v4, QV4::WeakValue *weakRef, bool *resultPtr)

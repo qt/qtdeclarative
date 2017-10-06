@@ -147,9 +147,9 @@ public:
 int DummyRenderer::globalRendereringOrder;
 
 NodesTest::NodesTest()
-    : surface(Q_NULLPTR)
-    , context(Q_NULLPTR)
-    , renderContext(Q_NULLPTR)
+    : surface(nullptr)
+    , context(nullptr)
+    , renderContext(nullptr)
 {
 }
 

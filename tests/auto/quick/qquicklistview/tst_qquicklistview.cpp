@@ -8485,7 +8485,7 @@ void tst_QQuickListView::QTBUG_48870_fastModelUpdates()
 
     QQuickItemViewPrivate *priv = QQuickItemViewPrivate::get(listview);
     bool nonUnique;
-    FxViewItem *item = Q_NULLPTR;
+    FxViewItem *item = nullptr;
     int expectedIdx;
     QVERIFY(testVisibleItems(priv, &nonUnique, &item, &expectedIdx));
 

@@ -60,7 +60,7 @@ public:
         NumImageParameters
     };
 
-    QuickSharedImageLoader(QObject *parent = Q_NULLPTR)
+    QuickSharedImageLoader(QObject *parent = nullptr)
         : QSharedImageLoader(parent)
     {
     }

@@ -6650,7 +6650,7 @@ void tst_QQuickGridView::QTBUG_48870_fastModelUpdates()
 
     QQuickItemViewPrivate *priv = QQuickItemViewPrivate::get(view);
     bool nonUnique;
-    FxViewItem *item = Q_NULLPTR;
+    FxViewItem *item = nullptr;
     int expectedIdx;
     QVERIFY(testVisibleItems(priv, &nonUnique, &item, &expectedIdx));
 

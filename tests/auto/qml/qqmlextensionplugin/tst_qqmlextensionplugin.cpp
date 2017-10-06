@@ -105,7 +105,7 @@ void tst_qqmlextensionplugin::iidCheck()
 
     QPluginLoader loader(filePath);
     QVERIFY2(loader.load(), qPrintable(loader.errorString()));
-    QVERIFY(loader.instance() != Q_NULLPTR);
+    QVERIFY(loader.instance() != nullptr);
 
     if (qobject_cast<QQmlExtensionPlugin *>(loader.instance())) {
         QString iid = loader.metaData().value(QStringLiteral("IID")).toString();

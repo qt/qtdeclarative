@@ -59,7 +59,7 @@ class SignalTransition : public QSignalTransition, public QQmlParserStatus
     Q_PROPERTY(QQmlScriptString guard READ guard WRITE setGuard NOTIFY guardChanged)
 
 public:
-    explicit SignalTransition(QState *parent = Q_NULLPTR);
+    explicit SignalTransition(QState *parent = nullptr);
 
     QQmlScriptString guard() const;
     void setGuard(const QQmlScriptString &guard);

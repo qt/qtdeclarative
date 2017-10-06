@@ -301,7 +301,7 @@ class TabFenceItem : public QQuickItem
     Q_OBJECT
 
 public:
-    TabFenceItem(QQuickItem *parent = Q_NULLPTR)
+    TabFenceItem(QQuickItem *parent = nullptr)
         : QQuickItem(parent)
     {
         QQuickItemPrivate *d = QQuickItemPrivate::get(this);
@@ -316,7 +316,7 @@ class TabFenceItem2 : public QQuickItem
     Q_OBJECT
 
 public:
-    TabFenceItem2(QQuickItem *parent = Q_NULLPTR)
+    TabFenceItem2(QQuickItem *parent = nullptr)
         : QQuickItem(parent)
     {
         QQuickItemPrivate *d = QQuickItemPrivate::get(this);
@@ -1188,12 +1188,12 @@ void tst_QQuickItem::tabFence()
     QVERIFY(window->rootObject()->hasActiveFocus());
 
     const char *rootTabFocusChain[] = {
-          "input1", "input2", "input3", "input1", Q_NULLPTR
+          "input1", "input2", "input3", "input1", nullptr
     };
     verifyTabFocusChain(window, rootTabFocusChain, true /* forward */);
 
     const char *rootBacktabFocusChain[] = {
-          "input3", "input2", "input1", "input3", Q_NULLPTR
+          "input3", "input2", "input1", "input3", nullptr
     };
     verifyTabFocusChain(window, rootBacktabFocusChain, false /* forward */);
 
@@ -1204,12 +1204,12 @@ void tst_QQuickItem::tabFence()
     QVERIFY(item->hasActiveFocus());
 
     const char *fence1TabFocusChain[] = {
-          "input12", "input13", "input11", "input12", Q_NULLPTR
+          "input12", "input13", "input11", "input12", nullptr
     };
     verifyTabFocusChain(window, fence1TabFocusChain, true /* forward */);
 
     const char *fence1BacktabFocusChain[] = {
-          "input11", "input13", "input12", "input11", Q_NULLPTR
+          "input11", "input13", "input12", "input11", nullptr
     };
     verifyTabFocusChain(window, fence1BacktabFocusChain, false /* forward */);
 }

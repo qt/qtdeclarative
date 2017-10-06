@@ -54,7 +54,7 @@
 #include <private/qqmlboundsignal_p.h>
 
 SignalTransition::SignalTransition(QState *parent)
-    : QSignalTransition(this, SIGNAL(invokeYourself()), parent), m_complete(false), m_signalExpression(Q_NULLPTR)
+    : QSignalTransition(this, SIGNAL(invokeYourself()), parent), m_complete(false), m_signalExpression(nullptr)
 {
     connect(this, SIGNAL(signalChanged()), SIGNAL(qmlSignalChanged()));
 }
