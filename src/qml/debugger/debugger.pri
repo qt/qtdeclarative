@@ -3,8 +3,11 @@ contains(QT_CONFIG, no-qml-debug) {
     MODULE_DEFINES += QT_NO_QML_DEBUGGER
 } else {
     HEADERS += \
+        $$PWD/qqmlconfigurabledebugservice_p.h \
         $$PWD/qqmldebugpluginmanager_p.h \
-        $$PWD/qqmldebugservicefactory_p.h
+        $$PWD/qqmldebugservicefactory_p.h \
+        $$PWD/qqmldebugserver_p.h \
+        $$PWD/qqmldebugserverconnection_p.h
 
     SOURCES += \
         $$PWD/qqmldebug.cpp \

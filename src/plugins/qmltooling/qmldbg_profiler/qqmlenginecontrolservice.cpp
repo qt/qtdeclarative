@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qqmlenginecontrolservice.h"
-#include "qqmldebugpacket.h"
+#include <private/qqmldebugpacket_p.h>
 #include <QJSEngine>
 
 QT_BEGIN_NAMESPACE

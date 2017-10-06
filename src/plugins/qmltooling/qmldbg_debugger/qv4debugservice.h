@@ -51,9 +51,9 @@
 // We mean it.
 //
 
-#include "qqmlconfigurabledebugservice.h"
 #include "qv4debuggeragent.h"
 #include "qv4datacollector.h"
+#include <private/qqmlconfigurabledebugservice_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qv4debugging_p.h>
 

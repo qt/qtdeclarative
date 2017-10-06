@@ -6,12 +6,8 @@ SOURCES += \
     $$PWD/qdebugmessageservicefactory.cpp
 
 HEADERS += \
-    $$PWD/../shared/qqmldebugpacket.h \
     $$PWD/qdebugmessageservice.h \
     $$PWD/qdebugmessageservicefactory.h
-
-INCLUDEPATH += $$PWD \
-    $$PWD/../shared
 
 OTHER_FILES += \
     $$PWD/qdebugmessageservice.json

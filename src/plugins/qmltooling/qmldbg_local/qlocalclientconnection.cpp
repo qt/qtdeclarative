@@ -38,10 +38,10 @@
 ****************************************************************************/
 
 #include "qlocalclientconnectionfactory.h"
-#include "qqmldebugserver.h"
 
 #include <QtCore/qplugin.h>
 #include <QtNetwork/qlocalsocket.h>
+#include <private/qqmldebugserver_p.h>
 
 Q_DECLARE_METATYPE(QLocalSocket::LocalSocketError)
 

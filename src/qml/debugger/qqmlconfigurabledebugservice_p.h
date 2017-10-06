@@ -38,8 +38,8 @@
 ****************************************************************************/
 
 
-#ifndef QQMLCONFIGURABLEDEBUGSEVICE_H
-#define QQMLCONFIGURABLEDEBUGSEVICE_H
+#ifndef QQMLCONFIGURABLEDEBUGSEVICE_P_H
+#define QQMLCONFIGURABLEDEBUGSEVICE_P_H
 
 //
 //  W A R N I N G
@@ -52,8 +52,9 @@
 // We mean it.
 //
 
-#include <private/qqmldebugservice_p.h>
-#include <private/qqmldebugconnector_p.h>
+#include "qqmldebugservice_p.h"
+#include "qqmldebugconnector_p.h"
+
 #include <QtCore/qmutex.h>
 
 QT_BEGIN_NAMESPACE
@@ -109,4 +110,4 @@ protected:
 
 QT_END_NAMESPACE
 
-#endif // QQMLCONFIGURABLEDEBUGSEVICE_H
+#endif // QQMLCONFIGURABLEDEBUGSEVICE_P_H

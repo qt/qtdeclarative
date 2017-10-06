@@ -38,8 +38,9 @@
 ****************************************************************************/
 
 #include "qquickprofileradapter.h"
-#include "qqmldebugpacket.h"
+
 #include <QCoreApplication>
+#include <private/qqmldebugpacket_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qquickprofiler_p.h>
 

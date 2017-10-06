@@ -5,12 +5,7 @@ SOURCES += \
     $$PWD/qtcpserverconnection.cpp
 
 HEADERS += \
-    $$PWD/qtcpserverconnectionfactory.h \
-    $$PWD/../shared/qqmldebugserver.h \
-    $$PWD/../shared/qqmldebugserverconnection.h
-
-INCLUDEPATH += $$PWD \
-    $$PWD/../shared
+    $$PWD/qtcpserverconnectionfactory.h
 
 OTHER_FILES += \
     $$PWD/qtcpserverconnection.json
