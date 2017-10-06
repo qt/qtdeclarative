@@ -321,13 +321,13 @@ public:
     void initializeEngine(QQmlExtensionInterface *, const char *);
     void invalidate();
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
     quintptr profiler() const { return 0; }
     void setProfiler(quintptr) {}
 #else
     QQmlProfiler *profiler() const { return m_profiler.data(); }
     void setProfiler(QQmlProfiler *profiler);
-#endif // QT_NO_QML_DEBUGGER
+#endif // QT_CONFIG(qml_debug)
 
 
 private:
@@ -379,7 +379,7 @@ private:
     QQmlEngine *m_engine;
     QQmlTypeLoaderThread *m_thread;
 
-#ifndef QT_NO_QML_DEBUGGER
+#if QT_CONFIG(qml_debug)
     QScopedPointer<QQmlProfiler> m_profiler;
 #endif
 

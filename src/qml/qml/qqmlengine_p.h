@@ -135,7 +135,7 @@ public:
 
     QQmlContext *rootContext;
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
     static const quintptr profiler = 0;
 #else
     QQmlProfiler *profiler;

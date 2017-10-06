@@ -57,7 +57,7 @@
 
 #include <QElapsedTimer>
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
 
 #define Q_V4_PROFILE_ALLOC(engine, size, type) (!engine)
 #define Q_V4_PROFILE_DEALLOC(engine, size, type) (!engine)
@@ -305,6 +305,6 @@ Q_DECLARE_METATYPE(QV4::Profiling::FunctionLocationHash)
 Q_DECLARE_METATYPE(QVector<QV4::Profiling::FunctionCallProperties>)
 Q_DECLARE_METATYPE(QVector<QV4::Profiling::MemoryAllocationProperties>)
 
-#endif // QT_NO_QML_DEBUGGER
+#endif // QT_CONFIG(qml_debug)
 
 #endif // QV4PROFILING_H

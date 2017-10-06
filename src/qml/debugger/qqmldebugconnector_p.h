@@ -44,7 +44,9 @@
 #include <QtQml/qjsengine.h>
 #include <QtCore/QVariantList>
 
+#if QT_CONFIG(qml_debug)
 #include <private/qqmldebugservice_p.h>
+#endif
 
 //
 //  W A R N I N G
@@ -59,7 +61,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
 
 class Q_QML_PRIVATE_EXPORT QQmlDebugConnector
 {

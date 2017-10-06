@@ -14,6 +14,6 @@ mac {
     ICON = qml.icns
 }
 
-!contains(QT_CONFIG, no-qml-debug): DEFINES += QT_QML_DEBUG_NO_WARNING
+qtConfig(qml-debug): DEFINES += QT_QML_DEBUG_NO_WARNING
 
 load(qt_tool)

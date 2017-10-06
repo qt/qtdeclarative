@@ -28,7 +28,7 @@ SOURCES += \
     $$PWD/qquicktextmetrics.cpp \
     $$PWD/qquickvalidator.cpp
 
-!contains(QT_CONFIG, no-qml-debug): SOURCES += $$PWD/qquickprofiler.cpp
+qtConfig(qml-debug): SOURCES += $$PWD/qquickprofiler.cpp
 
 HEADERS += \
     $$PWD/qquickapplication_p.h\

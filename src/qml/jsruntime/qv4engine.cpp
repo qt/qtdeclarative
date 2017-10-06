@@ -518,7 +518,7 @@ ExecutionEngine::~ExecutionEngine()
     delete [] argumentsAccessors;
 }
 
-#ifndef QT_NO_QML_DEBUGGER
+#if QT_CONFIG(qml_debug)
 void ExecutionEngine::setDebugger(Debugging::Debugger *debugger)
 {
     Q_ASSERT(!m_debugger);
@@ -530,7 +530,7 @@ void ExecutionEngine::setProfiler(Profiling::Profiler *profiler)
     Q_ASSERT(!m_profiler);
     m_profiler.reset(profiler);
 }
-#endif // QT_NO_QML_DEBUGGER
+#endif // QT_CONFIG(qml_debug)
 
 void ExecutionEngine::initRootContext()
 {

@@ -43,6 +43,8 @@
 #include <private/qtqmlglobal_p.h>
 #include <private/qv4profiling_p.h>
 
+QT_REQUIRE_CONFIG(qml_debug);
+
 //
 //  W A R N I N G
 //  -------------
@@ -55,8 +57,6 @@
 //
 
 QT_BEGIN_NAMESPACE
-
-#ifndef QT_NO_QML_DEBUGGER
 
 struct QQmlProfilerDefinitions {
     enum Message {
@@ -162,8 +162,6 @@ struct QQmlProfilerDefinitions {
         MaximumInputEventType
     };
 };
-
-#endif // QT_NO_QML_DEBUGGER
 
 QT_END_NAMESPACE
 

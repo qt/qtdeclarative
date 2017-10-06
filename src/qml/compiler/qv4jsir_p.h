@@ -956,7 +956,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
     bool isQmlModule; // implies rootFunction is always 0
     uint unitFlags; // flags merged into CompiledData::Unit::flags
     QString targetABI; // fallback to QSysInfo::buildAbi() if empty
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
     static const bool debugMode = false;
 #else
     bool debugMode;
@@ -968,7 +968,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
         : rootFunction(0)
         , isQmlModule(false)
         , unitFlags(0)
-#ifndef QT_NO_QML_DEBUGGER
+#if QT_CONFIG(qml_debug)
         , debugMode(debugMode)
     {}
 #else

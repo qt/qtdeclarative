@@ -30,6 +30,6 @@ HEADERS += \
     $$PWD/quicktestresult_p.h \
     $$PWD/qtestoptions_p.h
 
-!contains(QT_CONFIG, no-qml-debug): DEFINES += QT_QML_DEBUG_NO_WARNING
+qtConfig(qml-debug): DEFINES += QT_QML_DEBUG_NO_WARNING
 
 load(qt_module)

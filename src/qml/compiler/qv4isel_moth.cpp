@@ -256,7 +256,7 @@ void InstructionSelection::run(int functionIndex)
                 if (s->location.startLine != currentLine) {
                     blockNeedsDebugInstruction = false;
                     currentLine = s->location.startLine;
-#ifndef QT_NO_QML_DEBUGGER
+#if QT_CONFIG(qml_debug)
                     if (irModule->debugMode) {
                         Instruction::Debug debug;
                         debug.lineNumber = currentLine;
@@ -943,7 +943,7 @@ void InstructionSelection::prepareCallArgs(IR::ExprList *e, quint32 &argc, quint
 
 void InstructionSelection::addDebugInstruction()
 {
-#ifndef QT_NO_QML_DEBUGGER
+#if QT_CONFIG(qml_debug)
     if (blockNeedsDebugInstruction) {
         Instruction::Debug debug;
         debug.lineNumber = -int(currentLine);

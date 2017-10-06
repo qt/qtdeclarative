@@ -57,7 +57,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#if defined(QT_NO_QML_DEBUGGER)
+#if !QT_CONFIG(qml_debug)
 
 #define Q_QML_DEBUG_PLUGIN_LOADER(interfaceName)\
     interfaceName *load##interfaceName(const QString &key)\
@@ -72,7 +72,7 @@ QT_BEGIN_NAMESPACE
     }
 #define Q_QML_IMPORT_DEBUG_PLUGIN(className)
 
-#else // QT_NO_QML_DEBUGGER
+#else // QT_CONFIG(qml_debug)
 
 #define Q_QML_DEBUG_PLUGIN_LOADER(interfaceName)\
     Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, interfaceName##Loader,\
@@ -86,7 +86,7 @@ QT_BEGIN_NAMESPACE
         return interfaceName##Loader()->metaData();\
     }
 
-#endif // QT_NO_QML_DEBUGGER
+#endif // QT_CONFIG(qml_debug)
 
 QT_END_NAMESPACE
 #endif // QQMLDEBUGPLUGINMANAGER_P_H

@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Debugging {
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
 
 class Debugger
 {

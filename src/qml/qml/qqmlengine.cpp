@@ -667,7 +667,7 @@ the same object as is returned from the Qt.include() call.
 
 QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 : propertyCapture(0), rootContext(0),
-#ifndef QT_NO_QML_DEBUGGER
+#if QT_CONFIG(qml_debug)
   profiler(0),
 #endif
   outputWarningsToMsgLog(true),
@@ -711,7 +711,7 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
         QMetaType::unregisterType(iter.value()->metaTypeId);
         QMetaType::unregisterType(iter.value()->listMetaTypeId);
     }
-#ifndef QT_NO_QML_DEBUGGER
+#if QT_CONFIG(qml_debug)
     delete profiler;
 #endif
 }

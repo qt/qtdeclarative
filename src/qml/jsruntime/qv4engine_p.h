@@ -345,7 +345,7 @@ public:
     ExecutionEngine(EvalISelFactory *iselFactory = 0);
     ~ExecutionEngine();
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
     QV4::Debugging::Debugger *debugger() const { return nullptr; }
     QV4::Profiling::Profiler *profiler() const { return nullptr; }
 
@@ -357,7 +357,7 @@ public:
 
     void setDebugger(Debugging::Debugger *debugger);
     void setProfiler(Profiling::Profiler *profiler);
-#endif // QT_NO_QML_DEBUGGER
+#endif // QT_CONFIG(qml_debug)
 
     ExecutionContext *pushGlobalContext();
     void pushContext(Heap::ExecutionContext *context);
@@ -460,7 +460,7 @@ public:
 private:
     void failStackLimitCheck(Scope &scope);
 
-#ifndef QT_NO_QML_DEBUGGER
+#if QT_CONFIG(qml_debug)
     QScopedPointer<QV4::Debugging::Debugger> m_debugger;
     QScopedPointer<QV4::Profiling::Profiler> m_profiler;
 #endif

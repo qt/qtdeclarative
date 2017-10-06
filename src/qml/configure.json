@@ -8,7 +8,8 @@
     "commandline": {
         "options": {
             "qml-interpreter": "boolean",
-            "qml-network": "boolean"
+            "qml-network": "boolean",
+            "qml-debug": "boolean"
         }
     },
 
@@ -25,6 +26,12 @@
             "section": "QML",
             "output": [ "publicFeature" ]
         },
+        "qml-debug": {
+            "label": "QML debugging and profiling support",
+            "purpose": "Provides infrastructure and plugins for debugging and profiling.",
+            "section": "QML",
+            "output": [ "publicFeature" ]
+        },
         "qml-profiler": {
             "label": "Command line QML Profiler",
             "purpose": "Supports retrieving QML tracing data from an application.",
@@ -33,6 +40,7 @@
                 "features.commandlineparser",
                 "features.localserver",
                 "features.process",
+                "features.qml-debug",
                 "features.qml-network",
                 "features.xmlstreamwriter"
             ],
@@ -45,7 +53,8 @@
             "section": "Qt QML",
             "entries": [
                 "qml-interpreter",
-                "qml-network"
+                "qml-network",
+                "qml-debug"
             ]
         }
     ]

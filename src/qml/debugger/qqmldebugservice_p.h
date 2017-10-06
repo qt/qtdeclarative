@@ -56,9 +56,9 @@
 // We mean it.
 //
 
-QT_BEGIN_NAMESPACE
+QT_REQUIRE_CONFIG(qml_debug);
 
-#ifndef QT_NO_QML_DEBUGGER
+QT_BEGIN_NAMESPACE
 
 class QJSEngine;
 
@@ -102,8 +102,6 @@ signals:
     void messageToClient(const QString &name, const QByteArray &message);
     void messagesToClient(const QString &name, const QList<QByteArray> &messages);
 };
-
-#endif
 
 QT_END_NAMESPACE
 

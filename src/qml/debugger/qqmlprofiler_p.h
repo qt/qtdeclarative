@@ -55,15 +55,17 @@
 #include <private/qqmlboundsignal_p.h>
 #include <private/qfinitestack_p.h>
 #include <private/qqmlbinding_p.h>
+#if QT_CONFIG(qml_debug)
 #include "qqmlprofilerdefinitions_p.h"
 #include "qqmlabstractprofileradapter_p.h"
+#endif
 
 #include <QUrl>
 #include <QString>
 
 QT_BEGIN_NAMESPACE
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
 
 #define Q_QML_PROFILE_IF_ENABLED(feature, profiler, Code)
 #define Q_QML_PROFILE(feature, profiler, Method)
@@ -450,6 +452,6 @@ QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QVector<QQmlProfilerData>)
 Q_DECLARE_METATYPE(QQmlProfiler::LocationHash)
 
-#endif // QT_NO_QML_DEBUGGER
+#endif // QT_CONFIG(qml_debug)
 
 #endif // QQMLPROFILER_P_H

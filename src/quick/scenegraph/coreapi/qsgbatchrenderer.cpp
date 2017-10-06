@@ -55,6 +55,7 @@
 #include <QtGui/QOpenGLFunctions_1_0>
 #include <QtGui/QOpenGLFunctions_3_2_Core>
 
+#include <private/qnumeric_p.h>
 #include <private/qquickprofiler_p.h>
 #include "qsgmaterialshader_p.h"
 

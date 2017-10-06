@@ -44,6 +44,8 @@
 #include <private/qqmlengine_p.h>
 #include <private/qv4compileddata_p.h>
 
+QT_REQUIRE_CONFIG(qml_debug);
+
 QT_BEGIN_NAMESPACE
 
 QQmlDebuggingEnabler::QQmlDebuggingEnabler(bool printWarning)

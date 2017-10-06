@@ -60,7 +60,7 @@ QT_REQUIRE_CONFIG(qml_interpreter);
 
 QT_BEGIN_NAMESPACE
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
 #define MOTH_DEBUG_INSTR(F)
 #else
 #define MOTH_DEBUG_INSTR(F) \

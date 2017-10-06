@@ -962,7 +962,7 @@ void QQmlTypeLoader::invalidate()
 #endif // qml_network
 }
 
-#ifndef QT_NO_QML_DEBUGGER
+#if QT_CONFIG(qml_debug)
 void QQmlTypeLoader::setProfiler(QQmlProfiler *profiler)
 {
     Q_ASSERT(!m_profiler);

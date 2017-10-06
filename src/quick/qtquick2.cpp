@@ -62,7 +62,7 @@ static void initResources()
 
 QT_BEGIN_NAMESPACE
 
-#ifdef QT_NO_QML_DEBUGGER
+#if !QT_CONFIG(qml_debug)
 
 class QQmlQtQuick2DebugStatesDelegate : public QQmlDebugStatesDelegate {};
 
@@ -181,7 +181,7 @@ void QQmlQtQuick2DebugStatesDelegate::resetBindingForInvalidProperty(QObject *ob
     }
 }
 
-#endif // QT_NO_QML_DEBUGGER
+#endif // QT_CONFIG(qml_debug)
 
 void QQmlQtQuick2Module::defineModule()
 {
