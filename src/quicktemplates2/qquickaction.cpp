@@ -526,10 +526,13 @@ void QQuickAction::trigger(QObject *source)
     if (!d->enabled)
         return;
 
-    if (d->checkable)
+    QPointer<QObject> guard = this;
+    // the checked action of an exclusive group cannot be unchecked
+    if (d->checkable && (!d->checked || !d->group || !d->group->isExclusive() || d->group->checkedAction() != this))
         toggle(source);
 
-    emit triggered(source);
+    if (!guard.isNull())
+        emit triggered(source);
 }
 
 bool QQuickAction::event(QEvent *event)
