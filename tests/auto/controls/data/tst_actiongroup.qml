@@ -71,6 +71,15 @@ TestCase {
     }
 
     Component {
+        id: declarativeGroup
+        ActionGroup {
+            Action { text: "First" }
+            Action { text: "Second" }
+            Action { text: "Third" }
+        }
+    }
+
+    Component {
         id: signalSpy
         SignalSpy { }
     }
@@ -206,6 +215,16 @@ TestCase {
         compare(group.actions.length, 0)
         tryCompare(group, "checkedAction", null)
         compare(actionsSpy.count, 5)
+    }
+
+    function test_declarative() {
+        var group = createTemporaryObject(declarativeGroup, testCase)
+        verify(group)
+
+        compare(group.actions.length, 3)
+        compare(group.actions[0].text, "First")
+        compare(group.actions[1].text, "Second")
+        compare(group.actions[2].text, "Third")
     }
 
     function test_triggered_data() {
