@@ -2768,6 +2768,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
             if (receiver->acceptedMouseButtons()) {
                 QPointF localPos = receiver->mapFromScene(pme->point(0)->scenePosition());
                 QMouseEvent *me = pme->asMouseEvent(localPos);
+                const bool wasAccepted = me->isAccepted();
                 me->setAccepted(true);
                 auto oldMouseGrabber = pme->point(0)->grabberItem();
                 if (filteringParent->childMouseEventFilter(receiver, me)) {
@@ -2782,6 +2783,9 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                             pme->point(0)->setGrabberItem(receiver);
                         }
                     }
+                } else {
+                    // Restore accepted state if the event was not filtered.
+                    me->setAccepted(wasAccepted);
                 }
             }
         } else if (QQuickPointerTouchEvent *pte = event->asPointerTouchEvent()) {
