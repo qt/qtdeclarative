@@ -110,7 +110,8 @@ static QString toString(QV4::ReturnedValue v)
         QDebug d = qDebug(); \
         d.noquote(); \
         d.nospace(); \
-        d << alignedLineNumber(line) << alignedNumber(codeOffset).constData() << ": " << rawBytes(base_ptr, code - base_ptr) << #instr << " "; \
+        d << alignedLineNumber(line) << alignedNumber(codeOffset).constData() << ": " \
+          << rawBytes(base_ptr, int(code - base_ptr)) << #instr << " ";
 
 #define MOTH_END_INSTR(instr) \
         continue; \
@@ -130,7 +131,7 @@ void dumpConstantTable(const Value *constants, uint count)
     QDebug d = qDebug();
     d.nospace();
     for (uint i = 0; i < count; ++i)
-        d << alignedNumber(i).constData() << ":    "
+        d << alignedNumber(int(i)).constData() << ":    "
           << toString(constants[i].asReturnedValue()).toUtf8().constData() << "\n";
 }
 
@@ -172,13 +173,13 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
     const char *end = code + len;
     while (code < end) {
         const CompiledData::CodeOffsetToLine *codeToLine = std::lower_bound(lineNumberMapping.constBegin(), lineNumberMapping.constEnd(), static_cast<uint>(code - start) + 1, findLine) - 1;
-        int line = codeToLine->line;
+        int line = int(codeToLine->line);
         if (line != lastLine)
             lastLine = line;
         else
             line = -1;
 
-        int codeOffset = (code - start);
+        int codeOffset = int(code - start);
 
         MOTH_DISPATCH()
 
