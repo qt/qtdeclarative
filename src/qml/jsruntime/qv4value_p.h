@@ -788,12 +788,13 @@ ReturnedValue value_convert(ExecutionEngine *e, const Value &v);
 
 inline int Value::toInt32() const
 {
-    if (integerCompatible())
+    if (Q_LIKELY(integerCompatible()))
         return int_32();
 
-    double d = isDouble() ? doubleValue() : toNumberImpl();
+    if (Q_LIKELY(isDouble()))
+        return Double::toInt32(doubleValue());
 
-    return Double::toInt32(d);
+    return Double::toInt32(toNumberImpl());
 }
 
 inline unsigned int Value::toUInt32() const

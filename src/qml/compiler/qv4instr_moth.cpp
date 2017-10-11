@@ -530,10 +530,6 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(Decrement)
         MOTH_END_INSTR(PreDecrement)
 
-        MOTH_BEGIN_INSTR(Binop)
-            d << alu << ", " << dumpRegister(lhs, nFormals) << ", acc";
-        MOTH_END_INSTR(Binop)
-
         MOTH_BEGIN_INSTR(Add)
             d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(Add)
@@ -549,6 +545,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(BitXor)
             d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(BitXor)
+
+        MOTH_BEGIN_INSTR(UShr)
+            d << dumpRegister(lhs, nFormals) << ", acc";
+        MOTH_END_INSTR(UShr)
 
         MOTH_BEGIN_INSTR(Shr)
             d << dumpRegister(lhs, nFormals) << ", acc";
@@ -570,6 +570,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << "acc, " << rhs;
         MOTH_END_INSTR(BitXor)
 
+        MOTH_BEGIN_INSTR(UShrConst)
+            d << "acc, " << rhs;
+        MOTH_END_INSTR(UShrConst)
+
         MOTH_BEGIN_INSTR(ShrConst)
             d << "acc, " << rhs;
         MOTH_END_INSTR(ShrConst)
@@ -582,13 +586,25 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(Mul)
 
+        MOTH_BEGIN_INSTR(Div)
+            d << dumpRegister(lhs, nFormals) << ", acc";
+        MOTH_END_INSTR(Div)
+
+        MOTH_BEGIN_INSTR(Mod)
+            d << dumpRegister(lhs, nFormals) << ", acc";
+        MOTH_END_INSTR(Mod)
+
         MOTH_BEGIN_INSTR(Sub)
             d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(Sub)
 
-        MOTH_BEGIN_INSTR(BinopContext)
-            d << alu << " " << dumpRegister(lhs, nFormals) << ", acc";
-        MOTH_END_INSTR(BinopContext)
+        MOTH_BEGIN_INSTR(CmpIn)
+            d << dumpRegister(lhs, nFormals) << ", acc";
+        MOTH_END_INSTR(CmpIn)
+
+        MOTH_BEGIN_INSTR(CmpInstanceOf)
+            d << dumpRegister(lhs, nFormals) << ", acc";
+        MOTH_END_INSTR(CmpInstanceOf)
 
         MOTH_BEGIN_INSTR(Ret)
         MOTH_END_INSTR(Ret)

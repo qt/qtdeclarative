@@ -67,54 +67,6 @@ using namespace QV4;
 using namespace QV4::Compiler;
 using namespace QQmlJS::AST;
 
-static inline QV4::Runtime::RuntimeMethods aluOpFunction(QSOperator::Op op)
-{
-    switch (op) {
-    case QSOperator::Invalid:
-        return QV4::Runtime::InvalidRuntimeMethod;
-    case QSOperator::Add:
-        return QV4::Runtime::InvalidRuntimeMethod;
-    case QSOperator::Sub:
-        return QV4::Runtime::sub;
-    case QSOperator::Mul:
-        return QV4::Runtime::mul;
-    case QSOperator::Div:
-        return QV4::Runtime::div;
-    case QSOperator::Mod:
-        return QV4::Runtime::mod;
-    case QSOperator::LShift:
-        return QV4::Runtime::shl;
-    case QSOperator::RShift:
-        return QV4::Runtime::shr;
-    case QSOperator::URShift:
-        return QV4::Runtime::ushr;
-    case QSOperator::Gt:
-        return QV4::Runtime::greaterThan;
-    case QSOperator::Lt:
-        return QV4::Runtime::lessThan;
-    case QSOperator::Ge:
-        return QV4::Runtime::greaterEqual;
-    case QSOperator::Le:
-        return QV4::Runtime::lessEqual;
-    case QSOperator::Equal:
-        return QV4::Runtime::equal;
-    case QSOperator::NotEqual:
-        return QV4::Runtime::notEqual;
-    case QSOperator::StrictEqual:
-        return QV4::Runtime::strictEqual;
-    case QSOperator::StrictNotEqual:
-        return QV4::Runtime::strictNotEqual;
-    case QSOperator::BitAnd:
-    case QSOperator::BitOr:
-    case QSOperator::BitXor:
-        Q_UNREACHABLE();
-        // fall through
-    default:
-        Q_ASSERT(!"Unknown AluOp");
-        return QV4::Runtime::InvalidRuntimeMethod;
-    }
-};
-
 Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     : _module(0)
     , _returnAddress(0)
@@ -931,6 +883,22 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         bytecodeGenerator->addInstruction(mul);
         break;
     }
+    case QSOperator::Div: {
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        Instruction::Div div;
+        div.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(div);
+        break;
+    }
+    case QSOperator::Mod: {
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        Instruction::Mod mod;
+        mod.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(mod);
+        break;
+    }
     case QSOperator::BitAnd:
         if (right.isConst()) {
             int rightAsInt = Primitive::fromReturnedValue(right.constant).toInt32();
@@ -985,6 +953,19 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
             bytecodeGenerator->addInstruction(bitXor);
         }
         break;
+    case QSOperator::URShift:
+        if (right.isConst()) {
+            left.loadInAccumulator();
+            Instruction::UShrConst ushr;
+            ushr.rhs = Primitive::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            bytecodeGenerator->addInstruction(ushr);
+        } else {
+            right.loadInAccumulator();
+            Instruction::UShr ushr;
+            ushr.lhs = left.stackSlot();
+            bytecodeGenerator->addInstruction(ushr);
+        }
+        break;
     case QSOperator::RShift:
         if (right.isConst()) {
             left.loadInAccumulator();
@@ -1011,14 +992,16 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
             bytecodeGenerator->addInstruction(shl);
         }
         break;
-    case QSOperator::InstanceOf:
+    case QSOperator::InstanceOf: {
+        Instruction::CmpInstanceOf binop;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        binop.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(binop);
+        break;
+    }
     case QSOperator::In: {
-        Instruction::BinopContext binop;
-        if (oper == QSOperator::InstanceOf)
-            binop.alu = QV4::Runtime::instanceof;
-        else
-            binop.alu = QV4::Runtime::in;
-        Q_ASSERT(binop.alu != QV4::Runtime::InvalidRuntimeMethod);
+        Instruction::CmpIn binop;
         left = left.storeOnStack();
         right.loadInAccumulator();
         binop.lhs = left.stackSlot();
@@ -1112,17 +1095,8 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         cmp.lhs = left.stackSlot();
         bytecodeGenerator->addInstruction(cmp);
         break;
-    default: {
-        auto binopFunc = aluOpFunction(oper);
-        Q_ASSERT(binopFunc != QV4::Runtime::InvalidRuntimeMethod);
-        left = left.storeOnStack();
-        right.loadInAccumulator();
-        Instruction::Binop binop;
-        binop.alu = binopFunc;
-        binop.lhs = left.stackSlot();
-        bytecodeGenerator->addInstruction(binop);
-        break;
-    }
+    default:
+        Q_UNREACHABLE();
     }
 
     return Reference::fromAccumulator(this);
@@ -1244,7 +1218,8 @@ Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Refe
         addCJump();
         break;
     }
-    default: Q_UNIMPLEMENTED(); Q_UNREACHABLE();
+    default:
+        Q_UNREACHABLE();
     }
     return Reference();
 }

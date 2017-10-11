@@ -154,6 +154,8 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CmpLe(op) INSTRUCTION(op, CmpLe, 1, lhs)
 #define INSTR_CmpStrictEqual(op) INSTRUCTION(op, CmpStrictEqual, 1, lhs)
 #define INSTR_CmpStrictNotEqual(op) INSTRUCTION(op, CmpStrictNotEqual, 1, lhs)
+#define INSTR_CmpIn(op) INSTRUCTION(op, CmpIn, 1, lhs)
+#define INSTR_CmpInstanceOf(op) INSTRUCTION(op, CmpInstanceOf, 1, lhs)
 #define INSTR_JumpStrictEqualStackSlotInt(op) INSTRUCTION(op, JumpStrictEqualStackSlotInt, 3, lhs, rhs, offset)
 #define INSTR_JumpStrictNotEqualStackSlotInt(op) INSTRUCTION(op, JumpStrictNotEqualStackSlotInt, 3, lhs, rhs, offset)
 #define INSTR_UNot(op) INSTRUCTION(op, UNot, 0)
@@ -162,23 +164,23 @@ QT_BEGIN_NAMESPACE
 #define INSTR_UCompl(op) INSTRUCTION(op, UCompl, 0)
 #define INSTR_Increment(op) INSTRUCTION(op, Increment, 0)
 #define INSTR_Decrement(op) INSTRUCTION(op, Decrement, 0)
-// alu is QV4::Runtime::RuntimeMethods enum value
-#define INSTR_Binop(op) INSTRUCTION(op, Binop, 2, alu, lhs)
 #define INSTR_Add(op) INSTRUCTION(op, Add, 1, lhs)
 #define INSTR_BitAnd(op) INSTRUCTION(op, BitAnd, 1, lhs)
 #define INSTR_BitOr(op) INSTRUCTION(op, BitOr, 1, lhs)
 #define INSTR_BitXor(op) INSTRUCTION(op, BitXor, 1, lhs)
+#define INSTR_UShr(op) INSTRUCTION(op, UShr, 1, lhs)
 #define INSTR_Shr(op) INSTRUCTION(op, Shr, 1, lhs)
 #define INSTR_Shl(op) INSTRUCTION(op, Shl, 1, lhs)
 #define INSTR_BitAndConst(op) INSTRUCTION(op, BitAndConst, 1, rhs)
 #define INSTR_BitOrConst(op) INSTRUCTION(op, BitOrConst, 1, rhs)
 #define INSTR_BitXorConst(op) INSTRUCTION(op, BitXorConst, 1, rhs)
+#define INSTR_UShrConst(op) INSTRUCTION(op, UShrConst, 1, rhs)
 #define INSTR_ShrConst(op) INSTRUCTION(op, ShrConst, 1, rhs)
 #define INSTR_ShlConst(op) INSTRUCTION(op, ShlConst, 1, rhs)
 #define INSTR_Mul(op) INSTRUCTION(op, Mul, 1, lhs)
+#define INSTR_Div(op) INSTRUCTION(op, Div, 1, lhs)
+#define INSTR_Mod(op) INSTRUCTION(op, Mod, 1, lhs)
 #define INSTR_Sub(op) INSTRUCTION(op, Sub, 1, lhs)
-// alu is offset inside the runtime methods
-#define INSTR_BinopContext(op) INSTRUCTION(op, BinopContext, 2, alu, lhs)
 #define INSTR_LoadQmlContext(op) INSTRUCTION(op, LoadQmlContext, 1, result)
 #define INSTR_LoadQmlImportedScripts(op) INSTRUCTION(op, LoadQmlImportedScripts, 1, result)
 #define INSTR_LoadQmlSingleton(op) INSTRUCTION(op, LoadQmlSingleton, 1, name)
@@ -267,6 +269,8 @@ QT_BEGIN_NAMESPACE
     F(CmpLe) \
     F(CmpStrictEqual) \
     F(CmpStrictNotEqual) \
+    F(CmpIn) \
+    F(CmpInstanceOf) \
     F(JumpStrictEqualStackSlotInt) \
     F(JumpStrictNotEqualStackSlotInt) \
     F(UNot) \
@@ -275,21 +279,23 @@ QT_BEGIN_NAMESPACE
     F(UCompl) \
     F(Increment) \
     F(Decrement) \
-    F(Binop) \
     F(Add) \
     F(BitAnd) \
     F(BitOr) \
     F(BitXor) \
+    F(UShr) \
     F(Shr) \
     F(Shl) \
     F(BitAndConst) \
     F(BitOrConst) \
     F(BitXorConst) \
+    F(UShrConst) \
     F(ShrConst) \
     F(ShlConst) \
     F(Mul) \
+    F(Div) \
+    F(Mod) \
     F(Sub) \
-    F(BinopContext) \
     F(LoadQmlContext) \
     F(LoadQmlImportedScripts) \
     F(LoadQmlSingleton)

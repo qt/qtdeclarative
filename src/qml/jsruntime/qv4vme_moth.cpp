@@ -496,7 +496,6 @@ static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
         } \
     } while (false)
 
-
 QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
 {
     qt_v4ResolvePendingBreakpointsHook();
@@ -1091,6 +1090,18 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
         }
     MOTH_END_INSTR(CmpStrictNotEqual)
 
+    MOTH_BEGIN_INSTR(CmpIn)
+        STORE_ACC();
+        acc = Runtime::method_in(engine, STACK_VALUE(lhs), accumulator);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(CmpIn)
+
+    MOTH_BEGIN_INSTR(CmpInstanceOf)
+        STORE_ACC();
+        acc = Runtime::method_instanceof(engine, STACK_VALUE(lhs), accumulator);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(CmpInstanceOf)
+
     MOTH_BEGIN_INSTR(JumpStrictNotEqualStackSlotInt)
         if (STACK_VALUE(lhs).int_32() != rhs || STACK_VALUE(lhs).isUndefined())
             code += offset;
@@ -1159,13 +1170,6 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
         }
     MOTH_END_INSTR(Decrement)
 
-    MOTH_BEGIN_INSTR(Binop)
-        QV4::Runtime::BinaryOperation op = *reinterpret_cast<QV4::Runtime::BinaryOperation *>(reinterpret_cast<char *>(&engine->runtime.runtimeMethods[alu]));
-        STORE_ACC();
-        acc = op(STACK_VALUE(lhs), accumulator);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(Binop)
-
     MOTH_BEGIN_INSTR(Add)
         const Value left = STACK_VALUE(lhs);
         if (Q_LIKELY(Value::integerCompatible(left, ACC))) {
@@ -1205,6 +1209,18 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
         }
     MOTH_END_INSTR(Mul)
 
+    MOTH_BEGIN_INSTR(Div)
+        STORE_ACC();
+        acc = Runtime::method_div(STACK_VALUE(lhs), accumulator);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(Div)
+
+    MOTH_BEGIN_INSTR(Mod)
+        STORE_ACC();
+        acc = Runtime::method_mod(STACK_VALUE(lhs), accumulator);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(Mod)
+
     MOTH_BEGIN_INSTR(BitAnd)
         VALUE_TO_INT(l, STACK_VALUE(lhs));
         VALUE_TO_INT(a, ACC);
@@ -1222,6 +1238,12 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
         VALUE_TO_INT(a, ACC);
         acc = Encode(l ^ a);
     MOTH_END_INSTR(BitXor)
+
+    MOTH_BEGIN_INSTR(UShr)
+        uint l = STACK_VALUE(lhs).toUInt32();
+        VALUE_TO_INT(a, ACC);
+        acc = Encode(l >> uint(a & 0x1f));
+    MOTH_END_INSTR(UShr)
 
     MOTH_BEGIN_INSTR(Shr)
         VALUE_TO_INT(l, STACK_VALUE(lhs));
@@ -1251,6 +1273,10 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
         acc = Encode(a ^ rhs);
     MOTH_END_INSTR(BitXorConst)
 
+    MOTH_BEGIN_INSTR(UShrConst)
+        acc = Encode(ACC.toUInt32() >> uint(rhs));
+    MOTH_END_INSTR(UShrConst)
+
     MOTH_BEGIN_INSTR(ShrConst)
         VALUE_TO_INT(a, ACC);
         acc = Encode(a >> rhs);
@@ -1260,13 +1286,6 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
         VALUE_TO_INT(a, ACC);
         acc = Encode(a << rhs);
     MOTH_END_INSTR(ShlConst)
-
-    MOTH_BEGIN_INSTR(BinopContext)
-        STORE_ACC();
-        QV4::Runtime::BinaryOperationContext op = *reinterpret_cast<QV4::Runtime::BinaryOperationContext *>(reinterpret_cast<char *>(&engine->runtime.runtimeMethods[alu]));
-        acc = op(engine, STACK_VALUE(lhs), accumulator);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(BinopContext)
 
     MOTH_BEGIN_INSTR(Ret)
         goto functionExit;
