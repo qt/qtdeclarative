@@ -321,21 +321,30 @@ void Codegen::statement(ExpressionNode *ast)
 void Codegen::condition(ExpressionNode *ast, const BytecodeGenerator::Label *iftrue,
                         const BytecodeGenerator::Label *iffalse, bool trueBlockFollowsCondition)
 {
-    if (ast) {
-        Result r(iftrue, iffalse, trueBlockFollowsCondition);
-        qSwap(_expr, r);
-        accept(ast);
-        qSwap(_expr, r);
-        if (r.format() == ex) {
-            Q_ASSERT(iftrue == r.iftrue());
-            Q_ASSERT(iffalse == r.iffalse());
-            bytecodeGenerator->setLocation(ast->firstSourceLocation());
-            r.result().loadInAccumulator();
-            if (r.trueBlockFollowsCondition())
-                bytecodeGenerator->jumpFalse().link(*r.iffalse());
-            else
-                bytecodeGenerator->jumpTrue().link(*r.iftrue());
-        }
+    if (hasError)
+        return;
+
+    if (!ast)
+        return;
+
+    Result r(iftrue, iffalse, trueBlockFollowsCondition);
+    qSwap(_expr, r);
+    accept(ast);
+    qSwap(_expr, r);
+
+    if (hasError)
+        return;
+
+    if (r.format() == ex) {
+        Q_ASSERT(iftrue == r.iftrue());
+        Q_ASSERT(iffalse == r.iffalse());
+        Q_ASSERT(r.result().isValid());
+        bytecodeGenerator->setLocation(ast->firstSourceLocation());
+        r.result().loadInAccumulator();
+        if (r.trueBlockFollowsCondition())
+            bytecodeGenerator->jumpFalse().link(*r.iffalse());
+        else
+            bytecodeGenerator->jumpTrue().link(*r.iftrue());
     }
 }
 
