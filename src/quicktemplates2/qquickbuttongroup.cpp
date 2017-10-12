@@ -154,11 +154,7 @@ class QQuickButtonGroupPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickButtonGroup)
 
 public:
-    QQuickButtonGroupPrivate()
-        : exclusive(true),
-          checkedButton(nullptr)
-    {
-    }
+    QQuickButtonGroupPrivate() : exclusive(true) { }
 
     void clear();
     void buttonClicked();
@@ -170,7 +166,7 @@ public:
     static void buttons_clear(QQmlListProperty<QQuickAbstractButton> *prop);
 
     bool exclusive;
-    QQuickAbstractButton *checkedButton;
+    QPointer<QQuickAbstractButton> checkedButton;
     QVector<QQuickAbstractButton*> buttons;
 };
 

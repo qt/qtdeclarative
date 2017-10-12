@@ -129,6 +129,16 @@ TestCase {
         }
     }
 
+    Component {
+        id: scrollableTextArea
+        ScrollView {
+            TextArea {
+                text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas id dignissim ipsum. Nam molestie nisl turpis."
+                wrapMode: TextArea.WordWrap
+            }
+        }
+    }
+
     function test_scrollBars() {
         var control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200})
         verify(control)
@@ -338,5 +348,20 @@ TestCase {
             compare(horizontal.position, Math.max(0.0, 0.5 - i * 0.1))
         }
         compare(horizontal.position, 0.0)
+    }
+
+    function test_textArea() {
+        // TODO: verify no binding loop warnings (QTBUG-62325)
+        var control = createTemporaryObject(scrollableTextArea, testCase)
+        verify(control)
+
+        var flickable = control.contentItem
+        verify(flickable && flickable.hasOwnProperty("contentX"))
+
+        var textArea = flickable.contentItem.children[0]
+        verify(textArea && textArea.hasOwnProperty("text"))
+
+        compare(control.contentWidth, flickable.contentWidth)
+        compare(control.contentHeight, flickable.contentHeight)
     }
 }

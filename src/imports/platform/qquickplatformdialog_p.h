@@ -72,7 +72,6 @@ class QQuickPlatformDialog : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
     Q_PROPERTY(int result READ result WRITE setResult NOTIFY resultChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
-    Q_ENUMS(StandardCode)
 
 public:
     explicit QQuickPlatformDialog(QPlatformTheme::DialogType type, QObject *parent = nullptr);
@@ -98,6 +97,7 @@ public:
     void setVisible(bool visible);
 
     enum StandardCode { Rejected, Accepted };
+    Q_ENUM(StandardCode)
 
     int result() const;
     void setResult(int result);

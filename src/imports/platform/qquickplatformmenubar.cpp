@@ -117,7 +117,7 @@ QQuickPlatformMenuBar::QQuickPlatformMenuBar(QObject *parent)
 
 QQuickPlatformMenuBar::~QQuickPlatformMenuBar()
 {
-    for (QQuickPlatformMenu *menu : m_menus)
+    for (QQuickPlatformMenu *menu : qAsConst(m_menus))
         menu->setMenuBar(nullptr);
     delete m_handle;
     m_handle = nullptr;
@@ -235,7 +235,7 @@ void QQuickPlatformMenuBar::clear()
     if (m_menus.isEmpty())
         return;
 
-    for (QQuickPlatformMenu *menu : m_menus) {
+    for (QQuickPlatformMenu *menu : qAsConst(m_menus)) {
         m_data.removeOne(menu);
         if (m_handle)
             m_handle->removeMenu(menu->handle());
@@ -254,7 +254,7 @@ void QQuickPlatformMenuBar::classBegin()
 void QQuickPlatformMenuBar::componentComplete()
 {
     m_complete = true;
-    for (QQuickPlatformMenu *menu : m_menus)
+    for (QQuickPlatformMenu *menu : qAsConst(m_menus))
         menu->sync();
     if (!m_window)
         setWindow(findWindow());
