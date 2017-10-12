@@ -39,11 +39,14 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qcache.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlfile.h>
 #include <QtQml/private/qqmlproperty_p.h>
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcQtQuickControlsImagine)
 
 // input: [focused, pressed]
 // => [[focused, pressed], [pressed, focused], [focused], [pressed]]
@@ -255,6 +258,8 @@ void QQuickImageSelector::updateSource()
         if (m_cache)
             cache.insert(key, new QString(bestFilePath));
     }
+
+    qCDebug(lcQtQuickControlsImagine) << m_name << m_activeStates << "->" << bestFilePath;
 
     if (bestFilePath.startsWith(QLatin1Char(':')))
         setSource(QUrl(QLatin1String("qrc") + bestFilePath));
