@@ -294,4 +294,35 @@ TestCase {
         keyPress(Qt.Key_A)
         compare(shortcutActivatedSpy.count, 1)
     }
+
+    Component {
+        id: hoverComponent
+        MouseArea {
+            id: hoverArea
+            property alias tooltip: tooltip
+            hoverEnabled: true
+            width: testCase.width
+            height: testCase.height
+            ToolTip {
+                id: tooltip
+                x: 10; y: 10
+                width: 10; height: 10
+                visible: hoverArea.containsMouse
+            }
+        }
+    }
+
+    // QTBUG-63644
+    function test_hover() {
+        var root = createTemporaryObject(hoverComponent, testCase)
+        verify(root)
+
+        var tooltip = root.tooltip
+        verify(tooltip)
+
+        for (var pos = 0; pos <= 25; pos += 5) {
+            mouseMove(root, pos, pos)
+            verify(tooltip.visible)
+        }
+    }
 }
