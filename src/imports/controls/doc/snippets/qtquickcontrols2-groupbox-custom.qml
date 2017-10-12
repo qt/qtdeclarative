@@ -42,6 +42,14 @@ GroupBox {
         radius: 2
     }
 
+    label: Label {
+        x: control.leftPadding
+        width: control.availableWidth
+        text: control.title
+        color: "#21be2b"
+        elide: Text.ElideRight
+    }
+
     Label {
         text: qsTr("Content goes here!")
     }

@@ -353,4 +353,45 @@ TestCase {
         verify(!control)
         keyClick(Qt.Key_H, Qt.AltModifier)
     }
+
+    Component {
+        id: actionGroup
+        ActionGroup {
+            Action { id: action1; checkable: true; checked: true }
+            Action { id: action2; checkable: true }
+            Action { id: action3; checkable: true }
+        }
+    }
+
+    function test_actionGroup() {
+        var group = createTemporaryObject(actionGroup, testCase)
+        verify(group)
+
+        var button1 = createTemporaryObject(button, testCase, {action: group.actions[0], width: 10, height: 10})
+        var button2 = createTemporaryObject(button, testCase, {action: group.actions[1], width: 10, height: 10, y: 10})
+        var button3 = createTemporaryObject(button, testCase, {action: group.actions[2], width: 10, height: 10, y: 20})
+
+        verify(button1)
+        compare(button1.checked, true)
+        compare(button1.action.checked, true)
+
+        verify(button2)
+        compare(button2.checked, false)
+        compare(button2.action.checked, false)
+
+        verify(button3)
+        compare(button3.checked, false)
+        compare(button3.action.checked, false)
+
+        mouseClick(button2)
+
+        compare(button1.checked, false)
+        compare(button1.action.checked, false)
+
+        compare(button2.checked, true)
+        compare(button2.action.checked, true)
+
+        compare(button3.checked, false)
+        compare(button3.action.checked, false)
+    }
 }

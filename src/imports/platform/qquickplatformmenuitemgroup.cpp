@@ -164,7 +164,7 @@ void QQuickPlatformMenuItemGroup::setEnabled(bool enabled)
     m_enabled = enabled;
     emit enabledChanged();
 
-    for (QQuickPlatformMenuItem *item : m_items) {
+    for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
         if (item->m_enabled) {
             item->sync();
             emit item->enabledChanged();
@@ -193,7 +193,7 @@ void QQuickPlatformMenuItemGroup::setVisible(bool visible)
     m_visible = visible;
     emit visibleChanged();
 
-    for (QQuickPlatformMenuItem *item : m_items) {
+    for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
         if (item->m_visible) {
             item->sync();
             emit item->visibleChanged();
@@ -222,7 +222,7 @@ void QQuickPlatformMenuItemGroup::setExclusive(bool exclusive)
     m_exclusive = exclusive;
     emit exclusiveChanged();
 
-    for (QQuickPlatformMenuItem *item : m_items)
+    for (QQuickPlatformMenuItem *item : qAsConst(m_items))
         item->sync();
 }
 
@@ -317,7 +317,7 @@ void QQuickPlatformMenuItemGroup::clear()
     if (m_items.isEmpty())
         return;
 
-    for (QQuickPlatformMenuItem *item : m_items) {
+    for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
         item->setGroup(nullptr);
         disconnect(item, &QQuickPlatformMenuItem::checkedChanged, this, &QQuickPlatformMenuItemGroup::updateCurrent);
         disconnect(item, &QQuickPlatformMenuItem::triggered, this, &QQuickPlatformMenuItemGroup::activateItem);

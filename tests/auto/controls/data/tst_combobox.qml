@@ -699,7 +699,7 @@ TestCase {
     }
 
     function test_mouse() {
-        var control = createTemporaryObject(comboBox, testCase, {model: 3})
+        var control = createTemporaryObject(comboBox, testCase, {model: 3, hoverEnabled: false})
         verify(control)
 
         var activatedSpy = signalSpy.createObject(control, {target: control, signalName: "activated"})

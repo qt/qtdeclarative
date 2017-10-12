@@ -124,13 +124,13 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 /*!
     \qmlsignal QtQuick.Controls::AbstractButton::pressed()
 
-    This signal is emitted when the button is interactively pressed by the user.
+    This signal is emitted when the button is interactively pressed by the user via touch, mouse, or keyboard.
 */
 
 /*!
     \qmlsignal QtQuick.Controls::AbstractButton::released()
 
-    This signal is emitted when the button is interactively released by the user.
+    This signal is emitted when the button is interactively released by the user via touch, mouse, or keyboard.
 */
 
 /*!
@@ -144,26 +144,26 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 /*!
     \qmlsignal QtQuick.Controls::AbstractButton::clicked()
 
-    This signal is emitted when the button is interactively clicked by the user.
+    This signal is emitted when the button is interactively clicked by the user via touch, mouse, or keyboard.
 */
 
 /*!
     \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlsignal QtQuick.Controls::AbstractButton::toggled()
 
-    This signal is emitted when a checkable button is interactively toggled by the user.
+    This signal is emitted when a checkable button is interactively toggled by the user via touch, mouse, or keyboard.
 */
 
 /*!
     \qmlsignal QtQuick.Controls::AbstractButton::pressAndHold()
 
-    This signal is emitted when the button is interactively pressed and held down by the user.
+    This signal is emitted when the button is interactively pressed and held down by the user via touch or mouse.
 */
 
 /*!
     \qmlsignal QtQuick.Controls::AbstractButton::doubleClicked()
 
-    This signal is emitted when the button is interactively double clicked by the user.
+    This signal is emitted when the button is interactively double clicked by the user via touch or mouse.
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()

@@ -29,6 +29,7 @@ The "Copy Palette Settings To Clipboard" button in the settings dialog can be us
 | Name              | Shortcut     | Shortcut (Mac) | Description                                                                                                                                      |
 |-------------------|--------------|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
 | Use Custom Assets | Ctrl+Shift+C | ⌘+Shift+C      | If using the Imagine style, toggles between the default assets and the user's custom assets. Custom assets are specified in the settings dialog. |
-| Reload Assets     | Ctrl+Shift+R | ⌘+R            | If using the Imagine style, reloads the assets from disk. This is usually done automatically.                                                    |
+| Fix Custom Assets | Ctrl+Shift+X | ⌘+Shift+X      | If using the Imagine style, manually fixes the assets. This is done automatically when "Automatically Fix Custom Assets" checkbox is checked. |
+| Reload Assets     | Ctrl+R       | ⌘+R            | If using the Imagine style, reloads the assets from disk. This is usually done automatically.                                                    |
 | Search/Filter     | Ctrl+F       | ⌘+F            | Filter the controls that are shown. Case-sensitive.                                                                                              |
 | Quit              | Ctrl+Q       | ⌘+Q            | Quit the application.                                                                                                                            |

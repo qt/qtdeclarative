@@ -185,7 +185,7 @@ void QQuickImageSelector::setCache(bool cache)
 
 void QQuickImageSelector::write(const QVariant &value)
 {
-    setUrl(value.value<QUrl>());
+    setUrl(value.toUrl());
 }
 
 void QQuickImageSelector::setTarget(const QQmlProperty &property)
@@ -199,7 +199,7 @@ void QQuickImageSelector::classBegin()
 
 void QQuickImageSelector::componentComplete()
 {
-    setUrl(m_property.read().value<QUrl>());
+    setUrl(m_property.read().toUrl());
     m_complete = true;
     updateSource();
 }

@@ -68,14 +68,17 @@ QT_BEGIN_NAMESPACE
 
         Action {
             checked: true
+            checkable: true
             text: qsTr("Left")
         }
 
         Action {
+            checkable: true
             text: qsTr("Center")
         }
 
         Action {
+            checkable: true
             text: qsTr("Right")
         }
     }
@@ -89,16 +92,19 @@ QT_BEGIN_NAMESPACE
 
     Action {
         checked: true
+        checkable: true
         text: qsTr("Left")
         ActionGroup.group: alignmentGroup
     }
 
     Action {
+        checkable: true
         text: qsTr("Center")
         ActionGroup.group: alignmentGroup
     }
 
     Action {
+        checkable: true
         text: qsTr("Right")
         ActionGroup.group: alignmentGroup
     }

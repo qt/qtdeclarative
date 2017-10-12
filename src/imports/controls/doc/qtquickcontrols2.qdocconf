@@ -1,5 +1,5 @@
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
-include($PWD/manifest-meta.qdocconf)
+include(manifest-meta.qdocconf)
 
 project                 = QtQuickControls2
 description             = Qt Quick Controls 2 Reference Documentation

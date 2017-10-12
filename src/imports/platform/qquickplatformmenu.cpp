@@ -153,7 +153,7 @@ QQuickPlatformMenu::~QQuickPlatformMenu()
         m_menuBar->removeMenu(this);
     if (m_parentMenu)
         m_parentMenu->removeMenu(this);
-    for (QQuickPlatformMenuItem *item : m_items) {
+    for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
         if (QQuickPlatformMenu *subMenu = item->subMenu())
             subMenu->setParentMenu(nullptr);
         item->setMenu(nullptr);
@@ -197,7 +197,7 @@ QPlatformMenu * QQuickPlatformMenu::create()
             connect(m_handle, &QPlatformMenu::aboutToShow, this, &QQuickPlatformMenu::aboutToShow);
             connect(m_handle, &QPlatformMenu::aboutToHide, this, &QQuickPlatformMenu::aboutToHide);
 
-            for (QQuickPlatformMenuItem *item : m_items)
+            for (QQuickPlatformMenuItem *item : qAsConst(m_items))
                 m_handle->insertMenuItem(item->create(), nullptr);
 
             if (m_menuItem) {
@@ -237,7 +237,7 @@ void QQuickPlatformMenu::sync()
         m_systemTrayIcon->handle()->updateMenu(m_handle);
 #endif
 
-    for (QQuickPlatformMenuItem *item : m_items)
+    for (QQuickPlatformMenuItem *item : qAsConst(m_items))
         item->sync();
 }
 
@@ -637,7 +637,7 @@ void QQuickPlatformMenu::clear()
     if (m_items.isEmpty())
         return;
 
-    for (QQuickPlatformMenuItem *item : m_items) {
+    for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
         m_data.removeOne(item);
         if (m_handle)
             m_handle->removeMenuItem(item->handle());

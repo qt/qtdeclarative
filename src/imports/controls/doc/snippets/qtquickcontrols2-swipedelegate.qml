@@ -56,8 +56,8 @@ ListView {
                 easing.type: Easing.InOutQuad
             }
             PropertyAction {
-                target: swipeDelegate;
-                property: "ListView.delayRemove";
+                target: swipeDelegate
+                property: "ListView.delayRemove"
                 value: false
             }
         }
