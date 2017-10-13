@@ -68,6 +68,7 @@ public:
     void insertItem(int index, QQuickItem *item);
     void moveItem(int from, int to);
     void removeItem(int index, QQuickItem *item);
+    void reorderItems();
 
     void _q_currentIndexChanged();
 

@@ -128,7 +128,7 @@ TestCase {
     }
 
     Component {
-        id: repeaterContainer
+        id: repeaterContainer1
         Container {
             id: container
             Item { objectName: "0" }
@@ -143,9 +143,33 @@ TestCase {
         }
     }
 
+    Component {
+        id: repeaterContainer2
+        Container {
+            id: container
+            contentItem: Item {
+                Repeater {
+                    model: container.contentModel
+                }
+                Rectangle { objectName: "extra" }
+            }
+            Rectangle { objectName: "0" }
+            Rectangle { objectName: "1" }
+            Rectangle { objectName: "2" }
+            Rectangle { objectName: "3" }
+        }
+    }
+
+    function test_repeater_data() {
+        return [
+            { tag: "1", component: repeaterContainer1 },
+            { tag: "2", component: repeaterContainer2 }
+        ]
+    }
+
     // don't crash (QTBUG-61310)
-    function test_repeater() {
-        var control = createTemporaryObject(repeaterContainer)
+    function test_repeater(data) {
+        var control = createTemporaryObject(data.component)
         verify(control)
 
         compare(control.itemAt(0).objectName, "0")
