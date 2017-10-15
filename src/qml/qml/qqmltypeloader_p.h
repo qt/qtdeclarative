@@ -322,8 +322,8 @@ public:
     void invalidate();
 
 #ifdef QT_NO_QML_DEBUGGER
-    QQmlProfiler *profiler() const { return nullptr; }
-    void setProfiler(QQmlProfiler *) {}
+    quintptr profiler() const { return 0; }
+    void setProfiler(quintptr) {}
 #else
     QQmlProfiler *profiler() const { return m_profiler.data(); }
     void setProfiler(QQmlProfiler *profiler);

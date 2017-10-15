@@ -412,7 +412,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
 
                 auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
-                const QQmlType type = typeRef->type;
+                const QQmlType type = typeRef ? typeRef->type : QQmlType();
                 if (type.isValid()) {
                     COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(originalPropertyName).arg(type.module()).arg(type.majorVersion()).arg(type.minorVersion()));
                 } else {
