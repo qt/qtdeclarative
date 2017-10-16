@@ -7,4 +7,6 @@ SUBDIRS += \
     styles \
     testbench
 
+qtConfig(systemtrayicon): SUBDIRS += systemtrayicon
+
 qtHaveModule(widgets): SUBDIRS += viewinqwidget
