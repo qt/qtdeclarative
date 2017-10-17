@@ -138,6 +138,13 @@ rasterization and does not respond as well to transformations such as scaling
 as when using OpenGL. The quality is similar to choosing \l [QML] {Text::renderType}
 {Text.NativeRendering} with \l [QML] {Text} items.
 
+\section2 Qt Multimedia VideoOutput
+The VideoOutput item of the Qt Multimedia module is not supported with the software
+adaptation.  This is because VideoOutput uses the QVideoRendererControl item which
+requires custom QSGGeometryNode behavior that is only present in the default OpenGL
+adaptation.
+
+
 */
 
 
