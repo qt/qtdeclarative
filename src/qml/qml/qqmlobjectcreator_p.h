@@ -81,7 +81,7 @@ struct QQmlObjectCreatorSharedState : public QSharedData
     QRecursionNode recursionNode;
 };
 
-class QQmlObjectCreator
+class Q_QML_PRIVATE_EXPORT QQmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlObjectCreator)
 public:
@@ -90,6 +90,7 @@ public:
 
     QObject *create(int subComponentIndex = -1, QObject *parent = 0, QQmlInstantiationInterrupt *interrupt = 0);
     bool populateDeferredProperties(QObject *instance, QQmlData::DeferredData *deferredData);
+    bool populateDeferredBinding(const QQmlProperty &qmlProperty, QQmlData::DeferredData *deferredData, const QV4::CompiledData::Binding *binding);
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
     void cancel(QObject *object);
     void clear();
