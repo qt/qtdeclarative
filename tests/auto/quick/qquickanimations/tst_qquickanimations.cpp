@@ -35,6 +35,7 @@
 #include <QtQuick/private/qquickitemanimation_p_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
+#include <QtQuick/private/qquickanimatorjob_p.h>
 #include <QtQuick/private/qquickpathinterpolator_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QEasingCurve>
@@ -103,6 +104,7 @@ private slots:
     void defaultPropertyWarning();
     void pathSvgAnimation();
     void pathLineUnspecifiedXYBug();
+    void unsetAnimatorProxyJobWindow();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1565,6 +1567,22 @@ void tst_qquickanimations::pathLineUnspecifiedXYBug()
     pathAnim->start();
     QTRY_COMPARE(redRect->x(), qreal(0));
     QCOMPARE(redRect->y(), qreal(0));
+}
+
+void tst_qquickanimations::unsetAnimatorProxyJobWindow()
+{
+    QQuickWindow window;
+    QQuickItem item(window.contentItem());
+    QQuickAbstractAnimation animation(&item);
+    QAbstractAnimationJob *job = new QAbstractAnimationJob;
+    QQuickAnimatorProxyJob proxy(job, &animation);
+    QQuickItem dummy;
+    item.setParentItem(&dummy);
+    QSignalSpy spy(&window, SIGNAL(sceneGraphInitialized()));
+    window.show();
+    if (spy.count() < 1)
+        spy.wait();
+    QCOMPARE(proxy.job().data(), job);
 }
 
 QTEST_MAIN(tst_qquickanimations)
