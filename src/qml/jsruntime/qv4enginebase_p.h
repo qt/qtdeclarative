@@ -66,24 +66,27 @@ struct CppStackFrame;
 #endif
 struct Q_QML_EXPORT EngineBase {
 
-    CppStackFrame *currentStackFrame = 0;
+    CppStackFrame *currentStackFrame = nullptr;
 
-    Value *jsStackTop = 0;
+    Value *jsStackTop = nullptr;
     quint8 hasException = false;
     quint8 writeBarrierActive = false;
     quint16 unused = 0;
 #if QT_POINTER_SIZE == 8
     quint8 padding[4];
 #endif
-    MemoryManager *memoryManager = 0;
+    MemoryManager *memoryManager = nullptr;
     Runtime runtime;
 
     qint32 callDepth = 0;
-    Value *jsStackLimit = 0;
-    Value *jsStackBase = 0;
+    Value *jsStackLimit = nullptr;
+    Value *jsStackBase = nullptr;
 
-    IdentifierTable *identifierTable = 0;
-    Object *globalObject = 0;
+    IdentifierTable *identifierTable = nullptr;
+    Object *globalObject = nullptr;
+
+    // Exception handling
+    Value *exceptionValue = nullptr;
 
     enum {
         Class_Empty,

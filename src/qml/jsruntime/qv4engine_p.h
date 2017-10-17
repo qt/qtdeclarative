@@ -441,8 +441,6 @@ public:
 
     InternalClass *newClass(const InternalClass &other);
 
-    // Exception handling
-    Value *exceptionValue;
     StackTrace exceptionStackTrace;
 
     ReturnedValue throwError(const Value &value);

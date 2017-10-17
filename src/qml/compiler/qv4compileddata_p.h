@@ -869,39 +869,58 @@ typedef QVector<QQmlPropertyData*> BindingPropertyData;
 
 struct Q_QML_PRIVATE_EXPORT CompilationUnitBase
 {
-    QV4::Heap::String **runtimeStrings = 0; // Array
+    // pointers either to data->constants() or little-endian memory copy.
+    QV4::Heap::String **runtimeStrings = nullptr; // Array
+    const Value* constants = nullptr;
+    QV4::Value *runtimeRegularExpressions = nullptr;
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<CompilationUnitBase>::value);
 Q_STATIC_ASSERT(offsetof(CompilationUnitBase, runtimeStrings) == 0);
+Q_STATIC_ASSERT(offsetof(CompilationUnitBase, constants) == sizeof(QV4::Heap::String **));
+Q_STATIC_ASSERT(offsetof(CompilationUnitBase, runtimeRegularExpressions) == offsetof(CompilationUnitBase, constants) + sizeof(const Value *));
 
-struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public QQmlRefCount
+struct Q_QML_PRIVATE_EXPORT CompilationUnit final : public CompilationUnitBase
 {
-#ifdef V4_BOOTSTRAP
-    CompilationUnit()
-        : data(0)
-    {}
-    virtual ~CompilationUnit() {}
-#else
+public:
     CompilationUnit();
-    virtual ~CompilationUnit();
+#ifdef V4_BOOTSTRAP
+    ~CompilationUnit() {}
+#else
+    ~CompilationUnit();
 #endif
 
-    const Unit *data;
+    void addref()
+    {
+        Q_ASSERT(refCount.load() > 0);
+        refCount.ref();
+    }
+
+    void release()
+    {
+        Q_ASSERT(refCount.load() > 0);
+        if (!refCount.deref())
+            destroy();
+    }
+    int count() const
+    {
+        return refCount.load();
+    }
+
+    const Unit *data = nullptr;
 
     // Called only when building QML, when we build the header for JS first and append QML data
-    virtual QV4::CompiledData::Unit *createUnitData(QmlIR::Document *irDocument);
+    QV4::CompiledData::Unit *createUnitData(QmlIR::Document *irDocument);
 
 #ifndef V4_BOOTSTRAP
-    ExecutionEngine *engine;
-    QQmlEnginePrivate *qmlEngine; // only used in QML environment for composite types, not in plain QJSEngine case.
+    ExecutionEngine *engine = nullptr;
+    QQmlEnginePrivate *qmlEngine = nullptr; // only used in QML environment for composite types, not in plain QJSEngine case.
 
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
     QUrl url() const { if (m_url.isNull) m_url = QUrl(fileName()); return m_url; }
 
-    QV4::Lookup *runtimeLookups;
-    QV4::Value *runtimeRegularExpressions;
-    QV4::InternalClass **runtimeClasses;
+    QV4::Lookup *runtimeLookups = nullptr;
+    QV4::InternalClass **runtimeClasses = nullptr;
     QVector<QV4::Function *> runtimeFunctions;
     mutable QQmlNullableValue<QUrl> m_url;
 
@@ -921,23 +940,20 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
     QHash<int, IdentifierHash<int>> namedObjectsPerComponentCache;
     IdentifierHash<int> namedObjectsPerComponent(int componentObjectIndex);
 
-    // pointers either to data->constants() or little-endian memory copy.
-    const Value* constants;
-
     void finalizeCompositeType(QQmlEnginePrivate *qmlEngine);
 
-    int totalBindingsCount; // Number of bindings used in this type
-    int totalParserStatusCount; // Number of instantiated types that are QQmlParserStatus subclasses
-    int totalObjectCount; // Number of objects explicitly instantiated
+    int totalBindingsCount = 0; // Number of bindings used in this type
+    int totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
+    int totalObjectCount = 0; // Number of objects explicitly instantiated
 
     QVector<QQmlScriptData *> dependentScripts;
     ResolvedTypeReferenceMap resolvedTypes;
 
     bool verifyChecksum(const DependentTypesHasher &dependencyHasher) const;
 
-    int metaTypeId;
-    int listMetaTypeId;
-    bool isRegisteredWithEngine;
+    int metaTypeId = -1;
+    int listMetaTypeId = -1;
+    bool isRegisteredWithEngine = false;
 
     QScopedPointer<CompilationUnitMapper> backingFile;
 
@@ -968,13 +984,16 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnit : public CompilationUnitBase, public
 
     void markObjects(MarkStack *markStack);
 
-    void destroy() override;
-
     bool loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString);
 
 protected:
     void linkBackendToEngine(QV4::ExecutionEngine *engine);
 #endif // V4_BOOTSTRAP
+
+private:
+    void destroy();
+
+    QAtomicInt refCount = 1;
 
 public:
 #if defined(V4_BOOTSTRAP)

@@ -94,23 +94,10 @@ static QString cacheFilePath(const QUrl &url)
 }
 #endif
 
-#ifndef V4_BOOTSTRAP
 CompilationUnit::CompilationUnit()
-    : data(0)
-    , engine(0)
-    , qmlEngine(0)
-    , runtimeLookups(0)
-    , runtimeRegularExpressions(0)
-    , runtimeClasses(0)
-    , constants(nullptr)
-    , totalBindingsCount(0)
-    , totalParserStatusCount(0)
-    , totalObjectCount(0)
-    , metaTypeId(-1)
-    , listMetaTypeId(-1)
-    , isRegisteredWithEngine(false)
 {}
 
+#ifndef V4_BOOTSTRAP
 CompilationUnit::~CompilationUnit()
 {
     unlink();
@@ -267,14 +254,6 @@ void CompilationUnit::markObjects(QV4::MarkStack *markStack)
         for (uint i = 0; i < data->regexpTableSize; ++i)
             runtimeRegularExpressions[i].mark(markStack);
     }
-}
-
-void CompilationUnit::destroy()
-{
-    if (qmlEngine)
-        QQmlEnginePrivate::deleteInEngineThread(qmlEngine, this);
-    else
-        delete this;
 }
 
 IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjectIndex)
@@ -764,6 +743,17 @@ bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *e
 }
 
 #endif
+
+void CompilationUnit::destroy()
+{
+#if !defined(V4_BOOTSTRAP)
+    if (qmlEngine)
+        QQmlEnginePrivate::deleteInEngineThread(qmlEngine, this);
+    else
+#endif
+        delete this;
+}
+
 
 void Unit::generateChecksum()
 {
