@@ -40,6 +40,7 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qcache.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qfileselector.h>
 #include <QtQml/qqmlfile.h>
 #include <QtQml/private/qqmlproperty_p.h>
 #include <algorithm>
@@ -87,7 +88,7 @@ static QString findFile(const QDir &dir, const QString &baseName, const QStringL
     for (const QString &ext : extensions) {
         QString filePath = dir.filePath(baseName + QLatin1Char('.') + ext);
         if (QFile::exists(filePath))
-            return filePath;
+            return QFileSelector().select(filePath);
     }
     return QString();
 }
