@@ -344,6 +344,7 @@ private slots:
     void singleBlockLoops();
     void qtbug_60547();
     void delayLoadingArgs();
+    void manyArguments();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8374,6 +8375,17 @@ void tst_qqmlecmascript::delayLoadingArgs()
     QJSValue ret = engine.evaluate("(function(x){return x + (x+=2)})(20)");
     QCOMPARE(ret.toInt(), 42); // esp. not 44.
 }
+
+void tst_qqmlecmascript::manyArguments()
+{
+    const char *testCase =
+            "function x() { var sum; for (var i = 0; i < arguments.length; ++i) sum += arguments[i][0]; }"
+            "x([0],[1],[2],[3],[4],[5],[6],[7],[8],[9], [0],[1],[2],[3],[4],[5],[6],[7],[8],[9], [0],[1],[2],[3],[4],[5],[6],[7],[8],[9])";
+
+    QJSEngine engine;
+    engine.evaluate(testCase);
+}
+
 
 QTEST_MAIN(tst_qqmlecmascript)
 

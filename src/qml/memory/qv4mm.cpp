@@ -1256,9 +1256,11 @@ void MemoryManager::collectFromJSStack(MarkStack *markStack) const
     Value *top = engine->jsStackTop;
     while (v < top) {
         Managed *m = v->managed();
-        if (m && m->inUse())
+        if (m) {
+            Q_ASSERT(m->inUse());
             // Skip pointers to already freed objects, they are bogus as well
             m->mark(markStack);
+        }
         ++v;
     }
 }

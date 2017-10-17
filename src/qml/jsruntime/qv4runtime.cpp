@@ -1028,6 +1028,7 @@ ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, C
 
 ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, int nameIndex, CallData *callData)
 {
+    Q_ASSERT(engine->jsStackTop >= callData->args + callData->argc());
     if (!callData->thisObject.isObject()) {
         Q_ASSERT(!callData->thisObject.isEmpty());
         if (callData->thisObject.isNullOrUndefined()) {
@@ -1058,6 +1059,7 @@ ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, int nameInde
 
 ReturnedValue Runtime::method_callPropertyLookup(ExecutionEngine *engine, uint index, CallData *callData)
 {
+    Q_ASSERT(engine->jsStackTop >= callData->args + callData->argc());
     Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
     callData->function = l->getter(l, engine, callData->thisObject);
 

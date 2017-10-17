@@ -509,6 +509,15 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
 
     Value *jsStackTop = engine->jsStackTop;
 
+    Q_ASSERT(engine->jsStackTop >= callData->args + callData->argc() - 1);
+    Value *stack = engine->jsStackTop;
+    engine->jsStackTop += sizeof(CallData)/sizeof(Value) - 1 + qMax(callData->argc(), int(function->compiledFunction->nRegisters));
+    memcpy(stack, callData, sizeof(CallData) - sizeof(Value) + callData->argc()*sizeof(Value));
+    // clear out remaining arguments and local registers
+    callData = reinterpret_cast<CallData *>(stack);
+    for (Value *v = callData->args + callData->argc(); v < engine->jsStackTop; ++v)
+        *v = Encode::undefined();
+
     CppStackFrame frame;
     frame.parent = engine->currentStackFrame;
     frame.v4Function = function;
@@ -516,12 +525,6 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     frame.jsFrame = callData;
     engine->currentStackFrame = &frame;
 
-    engine->jsStackTop = reinterpret_cast<QV4::Value *>(callData) + function->compiledFunction->nRegisters + 1;
-    // clear out remaining arguments and local registers
-    for (Value *v = callData->args + callData->argc(); v < jsStackTop; ++v)
-        *v = Encode::undefined();
-
-    QV4::Value *stack = reinterpret_cast<QV4::Value *>(callData);
     const uchar *exceptionHandler = 0;
 
     QV4::Value &accumulator = frame.jsFrame->accumulator;
@@ -741,6 +744,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
         STORE_IP();
         STORE_ACC();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
+        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
         acc = Runtime::method_callValue(engine, accumulator, cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallValue)
@@ -748,6 +752,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_BEGIN_INSTR(CallProperty)
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
+        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
         cData->thisObject = STACK_VALUE(base);
         acc = Runtime::method_callProperty(engine, name, cData);
         CHECK_EXCEPTION;
@@ -756,6 +761,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_BEGIN_INSTR(CallPropertyLookup)
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
+        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
         cData->thisObject = STACK_VALUE(base);
         acc = Runtime::method_callPropertyLookup(engine, lookupIndex, cData);
         CHECK_EXCEPTION;
@@ -764,6 +770,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_BEGIN_INSTR(CallElement)
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
+        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
         cData->thisObject = STACK_VALUE(base);
         acc = Runtime::method_callElement(engine, STACK_VALUE(index), cData);
         CHECK_EXCEPTION;
@@ -772,6 +779,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_BEGIN_INSTR(CallName)
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
+        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
         acc = Runtime::method_callName(engine, name, cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallName)
@@ -779,6 +787,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_BEGIN_INSTR(CallPossiblyDirectEval)
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
+        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
         acc = Runtime::method_callPossiblyDirectEval(engine, cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallPossiblyDirectEval)
@@ -786,6 +795,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_BEGIN_INSTR(CallGlobalLookup)
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
+        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
         acc = Runtime::method_callGlobalLookup(engine, index, cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallGlobalLookup)
@@ -934,6 +944,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_BEGIN_INSTR(Construct)
         STORE_IP();
         QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
+        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
         acc = Runtime::method_construct(engine, STACK_VALUE(func), cData);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Construct)
