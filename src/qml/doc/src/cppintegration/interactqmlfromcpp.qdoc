@@ -114,17 +114,7 @@ multiple children with the same \c objectName. In this case,
 QObject::findChildren() can be used to find all children with a matching
 \c objectName.
 
-\warning While it is possible to use C++ to access and manipulate QML objects
-deep into the object tree, we recommend that you do not take this approach
-outside of application testing and prototyping. One strength of QML and C++
-integration is the ability to implement the QML user interface separately
-from the C++ logic and dataset backend, and this strategy breaks if the C++
-side reaches deep into the QML components to manipulate them directly. This
-would make it difficult to, for example, swap a QML view component for
-another view, if the new component was missing a required \c objectName. It
-is better for the C++ implementation to know as little as possible about the
-QML user interface implementation and the composition of the QML object tree.
-
+\include warning.qdocinc
 
 \section1 Accessing Members of a QML Object Type from C++
 
