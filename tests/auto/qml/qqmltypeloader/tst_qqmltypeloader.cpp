@@ -43,6 +43,7 @@ private slots:
     void loadComponentSynchronously();
     void trimCache();
     void trimCache2();
+    void keepSingleton();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -118,6 +119,30 @@ void tst_QQMLTypeLoader::trimCache2()
     QTest::qWait(1);    // force event loop
     window->engine()->trimComponentCache();
     QCOMPARE(loader.isTypeLoaded(testFileUrl("MyComponent2.qml")), false);
+}
+
+static void checkSingleton(const QString &dataDirectory)
+{
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory);
+    QQmlComponent component(&engine);
+    component.setData("import ClusterDemo 1.0\n"
+                      "import QtQuick 2.6\n"
+                      "import \"..\"\n"
+                      "Item { property int t: ValueSource.something }",
+                      QUrl::fromLocalFile(dataDirectory + "/abc/Xyz.qml"));
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o.data());
+    QCOMPARE(o->property("t").toInt(), 10);
+}
+
+void tst_QQMLTypeLoader::keepSingleton()
+{
+    qmlRegisterSingletonType(testFileUrl("ValueSource.qml"), "ClusterDemo", 1, 0, "ValueSource");
+    checkSingleton(dataDirectory());
+    QQmlMetaType::freeUnusedTypesAndCaches();
+    checkSingleton(dataDirectory());
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)
