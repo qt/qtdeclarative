@@ -63,23 +63,35 @@ namespace QV4 {
 struct JSCall {
     JSCall(const Scope &scope, std::nullptr_t, int argc = 0)
     {
-        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + qMax(argc , int(QV4::Global::ReservedArgumentCount));
+        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
         ptr = reinterpret_cast<CallData *>(scope.alloc(size));
         ptr->setArgc(argc);
     }
     JSCall(const Scope &scope, const FunctionObject *function, int argc = 0)
     {
-        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + qMax(argc , int(QV4::Global::ReservedArgumentCount));
+        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
         ptr = reinterpret_cast<CallData *>(scope.alloc(size));
         ptr->setArgc(argc);
         ptr->function = *function;
     }
     JSCall(const Scope &scope, Heap::FunctionObject *function, int argc = 0)
     {
-        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + qMax(argc , int(QV4::Global::ReservedArgumentCount));
+        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
         ptr = reinterpret_cast<CallData *>(scope.alloc(size));
         ptr->setArgc(argc);
         ptr->function = function;
+    }
+    JSCall(const Scope &scope, Value *argv, int argc, Value *thisObject = 0)
+    {
+        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
+        ptr = reinterpret_cast<CallData *>(scope.engine->jsStackTop);
+        scope.engine->jsStackTop += size;
+        ptr->function = Encode::undefined();
+        ptr->context = Encode::undefined();
+        ptr->accumulator = Encode::undefined();
+        ptr->thisObject = thisObject ? thisObject->asReturnedValue() : Encode::undefined();
+        ptr->setArgc(argc);
+        memcpy(ptr->args, argv, argc*sizeof(Value));
     }
 
     CallData *operator->() {

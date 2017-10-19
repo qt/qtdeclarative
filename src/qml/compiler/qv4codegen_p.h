@@ -624,7 +624,8 @@ public:
 
     Reference binopHelper(QSOperator::Op oper, Reference &left, Reference &right);
     Reference jumpBinop(QSOperator::Op oper, Reference &left, Reference &right);
-    Moth::StackSlot pushArgs(AST::ArgumentList *args);
+    struct Arguments { int argc; int argv; };
+    Arguments pushArgs(AST::ArgumentList *args);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
 

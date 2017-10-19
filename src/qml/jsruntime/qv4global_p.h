@@ -248,12 +248,6 @@ struct IdentifierTable;
 class RegExpCache;
 class MultiplyWrappedQObjectMap;
 
-namespace Global {
-    enum {
-        ReservedArgumentCount = 6
-    };
-}
-
 enum PropertyFlag {
     Attr_Data = 0,
     Attr_Accessor = 0x1,

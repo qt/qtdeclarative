@@ -159,6 +159,13 @@ QString dumpRegister(int reg, int nFormals)
 
 }
 
+QString dumpArguments(int argc, int argv, int nFormals)
+{
+    if (!argc)
+        return QStringLiteral("()");
+    return QStringLiteral("(") + dumpRegister(argv, nFormals) + QStringLiteral(", ") + QString::number(argc) + QStringLiteral(")");
+}
+
 
 void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*startLine*/, const QVector<CompiledData::CodeOffsetToLine> &lineNumberMapping)
 {
@@ -335,31 +342,31 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(LoadIdObject)
 
         MOTH_BEGIN_INSTR(CallValue)
-            d << "(" << dumpRegister(callData, nFormals) << ")";
+            d << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallValue)
 
         MOTH_BEGIN_INSTR(CallProperty)
-            d << dumpRegister(base, nFormals) << "." << name << "(" << dumpRegister(callData, nFormals) << ")";
+            d << dumpRegister(base, nFormals) << "." << name << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallProperty)
 
         MOTH_BEGIN_INSTR(CallPropertyLookup)
-            d << dumpRegister(base, nFormals) << "." << lookupIndex << "(" << dumpRegister(callData, nFormals) << ")";
+            d << dumpRegister(base, nFormals) << "." << lookupIndex << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallPropertyLookup)
 
         MOTH_BEGIN_INSTR(CallElement)
-            d << dumpRegister(base, nFormals) << "[" << dumpRegister(index, nFormals) << "]" << "(" << dumpRegister(callData, nFormals) << ")";
+            d << dumpRegister(base, nFormals) << "[" << dumpRegister(index, nFormals) << "]" << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallElement)
 
         MOTH_BEGIN_INSTR(CallName)
-            d << name << "(" << dumpRegister(callData, nFormals) << ")";
+            d << name << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallName)
 
         MOTH_BEGIN_INSTR(CallPossiblyDirectEval)
-            d << "(" << dumpRegister(callData, nFormals) << ")";
+            d << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallPossiblyDirectEval)
 
         MOTH_BEGIN_INSTR(CallGlobalLookup)
-            d << index << "(" << dumpRegister(callData, nFormals) << ")";
+            d << index << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallGlobalLookup)
 
         MOTH_BEGIN_INSTR(SetExceptionHandler)
@@ -443,7 +450,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(ConvertThisToObject)
 
         MOTH_BEGIN_INSTR(Construct)
-            d << "new" << dumpRegister(func, nFormals) << "(" << dumpRegister(callData, nFormals) << ")";
+            d << "new" << dumpRegister(func, nFormals) << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(Construct)
 
         MOTH_BEGIN_INSTR(Jump)

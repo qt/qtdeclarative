@@ -305,6 +305,7 @@ ReturnedValue FunctionPrototype::method_apply(const BuiltinFunction *b, CallData
         return v4->throwTypeError();
     } else {
         callData->setArgc(0);
+        v4->jsStackTop = callData->args;
     }
 
     return o->call(callData);
@@ -312,16 +313,19 @@ ReturnedValue FunctionPrototype::method_apply(const BuiltinFunction *b, CallData
 
 ReturnedValue FunctionPrototype::method_call(const BuiltinFunction *b, CallData *callData)
 {
-    if (!callData->thisObject.isFunctionObject()) {
-        ExecutionEngine *e = b->engine();
-        return e->throwTypeError();
-    }
+    ExecutionEngine *engine = b->engine();
+    if (!callData->thisObject.isFunctionObject())
+        return engine->throwTypeError();
+
+    Q_ASSERT(engine->jsStackTop == callData->args + callData->argc());
+
     callData->function = callData->thisObject;
     callData->thisObject = callData->argc() ? callData->args[0] : Primitive::undefinedValue();
     if (callData->argc()) {
         callData->setArgc(callData->argc() - 1);
         for (int i = 0, ei = callData->argc(); i < ei; ++i)
             callData->args[i] = callData->args[i + 1];
+        --engine->jsStackTop;
     }
     return static_cast<FunctionObject &>(callData->function).call(callData);
 }
@@ -354,12 +358,12 @@ ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
     const ScriptFunction *f = static_cast<const ScriptFunction *>(that);
 
     InternalClass *ic = f->classForConstructor();
+    callData->context = f->scope();
     callData->thisObject = v4->memoryManager->allocObject<Object>(ic);
 
     QV4::Function *v4Function = f->function();
     Q_ASSERT(v4Function);
 
-    callData->context = f->scope();
     ReturnedValue result = v4Function->call(callData);
 
     if (Q_UNLIKELY(v4->hasException))

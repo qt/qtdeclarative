@@ -791,10 +791,10 @@ ReturnedValue ArrayPrototype::method_every(const BuiltinFunction *b, CallData *c
     if (!callback)
         THROW_TYPE_ERROR();
 
-    JSCall jsCall(scope, callback, 3);
-    jsCall->thisObject = callData->argument(1);
     ScopedValue r(scope);
     ScopedValue v(scope);
+    JSCall jsCall(scope, callback, 3);
+    jsCall->thisObject = callData->argument(1);
 
     bool ok = true;
     for (uint k = 0; ok && k < len; ++k) {
@@ -825,10 +825,10 @@ ReturnedValue ArrayPrototype::method_some(const BuiltinFunction *b, CallData *ca
     if (!callback)
         THROW_TYPE_ERROR();
 
-    JSCall jsCall(scope, callback, 3);
-    jsCall->thisObject = callData->argument(1);
     ScopedValue v(scope);
     ScopedValue result(scope);
+    JSCall jsCall(scope, callback, 3);
+    jsCall->thisObject = callData->argument(1);
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
@@ -859,10 +859,10 @@ ReturnedValue ArrayPrototype::method_forEach(const BuiltinFunction *b, CallData 
     if (!callback)
         THROW_TYPE_ERROR();
 
+    ScopedValue v(scope);
     JSCall jsCall(scope, callback, 3);
     jsCall->thisObject = callData->argument(1);
 
-    ScopedValue v(scope);
     for (uint k = 0; k < len; ++k) {
         bool exists;
         v = instance->getIndexed(k, &exists);
@@ -894,11 +894,11 @@ ReturnedValue ArrayPrototype::method_map(const BuiltinFunction *b, CallData *cal
     a->arrayReserve(len);
     a->setArrayLengthUnchecked(len);
 
+    ScopedValue v(scope);
     ScopedValue mapped(scope);
     JSCall jsCall(scope, callback, 3);
     jsCall->thisObject = callData->argument(1);
 
-    ScopedValue v(scope);
     for (uint k = 0; k < len; ++k) {
         bool exists;
         v = instance->getIndexed(k, &exists);

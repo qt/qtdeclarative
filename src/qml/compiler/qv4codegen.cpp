@@ -1256,42 +1256,49 @@ bool Codegen::visit(CallExpression *ast)
             Instruction::CallPropertyLookup call;
             call.base = base.propertyBase.stackSlot();
             call.lookupIndex = registerGetterLookup(base.propertyNameIndex);
-            call.callData = calldata;
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
         } else {
             Instruction::CallProperty call;
             call.base = base.propertyBase.stackSlot();
             call.name = base.propertyNameIndex;
-            call.callData = calldata;
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
         }
     } else if (base.type == Reference::Subscript) {
         Instruction::CallElement call;
         call.base = base.elementBase;
         call.index = base.elementSubscript.stackSlot();
-        call.callData = calldata;
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
         bytecodeGenerator->addInstruction(call);
     } else if (base.type == Reference::Name) {
         if (base.name == QStringLiteral("eval")) {
             Instruction::CallPossiblyDirectEval call;
-            call.callData = calldata;
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
         } else if (useFastLookups && base.global) {
             Instruction::CallGlobalLookup call;
             call.index = registerGlobalGetterLookup(base.nameAsIndex());
-            call.callData = calldata;
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
         } else {
             Instruction::CallName call;
             call.name = base.nameAsIndex();
-            call.callData = calldata;
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
         }
     } else {
         base.loadInAccumulator();
 
         Instruction::CallValue call;
-        call.callData = calldata;
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
         bytecodeGenerator->addInstruction(call);
     }
 
@@ -1299,21 +1306,16 @@ bool Codegen::visit(CallExpression *ast)
     return false;
 }
 
-Moth::StackSlot Codegen::pushArgs(ArgumentList *args)
+Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
 {
     int argc = 0;
     for (ArgumentList *it = args; it; it = it->next)
         ++argc;
-    int calldata = bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + argc);
 
-#ifndef QT_NO_DEBUG
-    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::Function);
-    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::Context);
-    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::Accumulator);
-    (void) Reference::fromConst(this, QV4::Encode::undefined()).storeOnStack(calldata + CallData::This);
-#endif
-    (void) Reference::fromConst(this, QV4::Encode(argc)).storeOnStack(calldata + CallData::Argc);
-    Q_STATIC_ASSERT(sizeof(CallData) == 6 * sizeof(Value));
+    if (!argc)
+        return { 0, 0 };
+
+    int calldata = bytecodeGenerator->newRegisterArray(argc);
 
     argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
@@ -1321,11 +1323,16 @@ Moth::StackSlot Codegen::pushArgs(ArgumentList *args)
         Reference e = expression(it->expression);
         if (hasError)
             break;
-        (void) e.storeOnStack(calldata + sizeof(CallData)/sizeof(Value) - 1 + argc);
+        if (!argc && !it->next) {
+            // avoid copy for functions taking a single argument
+            if (e.isStackSlot())
+                return { 1, e.stackSlot() };
+        }
+        (void) e.storeOnStack(calldata + argc);
         ++argc;
     }
 
-    return Moth::StackSlot::createRegister(calldata);
+    return { argc, calldata };
 }
 
 bool Codegen::visit(ConditionalExpression *ast)
@@ -1581,11 +1588,10 @@ bool Codegen::visit(NewExpression *ast)
     //### Maybe create a ConstructA that takes an accumulator?
     base = base.storeOnStack();
 
-    auto calldata = pushArgs(0);
-
     Instruction::Construct create;
     create.func = base.stackSlot();
-    create.callData = calldata;
+    create.argc = 0;
+    create.argv = 0;
     bytecodeGenerator->addInstruction(create);
     _expr.setResult(Reference::fromAccumulator(this));
     return false;
@@ -1609,7 +1615,8 @@ bool Codegen::visit(NewMemberExpression *ast)
 
     Instruction::Construct create;
     create.func = base.stackSlot();
-    create.callData = calldata;
+    create.argc = calldata.argc;
+    create.argv = calldata.argv;
     bytecodeGenerator->addInstruction(create);
     _expr.setResult(Reference::fromAccumulator(this));
     return false;
@@ -2024,8 +2031,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     _context->functionIndex = _module->functions.count() - 1;
 
     _context->hasDirectEval |= (_context->compilationMode == EvalCode || _context->compilationMode == GlobalCode || _module->debugMode); // Conditional breakpoints are like eval in the function
-    // ### still needed?
-    _context->maxNumberOfArguments = qMax(_context->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);
 
     BytecodeGenerator bytecode(_context->line, _module->debugMode);
     BytecodeGenerator *savedBytecodeGenerator;

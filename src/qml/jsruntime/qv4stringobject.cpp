@@ -405,14 +405,17 @@ ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *
     if (callData->thisObject.isNullOrUndefined())
         return v4->throwTypeError();
 
-    Scope scope(v4);
-    callData->thisObject = callData->thisObject.toString(scope.engine);
+    callData->thisObject = callData->thisObject.toString(v4);
     if (v4->hasException)
         return Encode::undefined();
 
+    Q_ASSERT(v4->jsStackTop == callData->args + callData->argc());
     if (!callData->argc())
         callData->args[0] = Encode::undefined();
     callData->setArgc(1);
+    v4->jsStackTop = callData->args + 1;
+
+    Scope scope(v4);
 
     if (!callData->args[0].as<RegExpObject>()) {
         // convert args[0] to a regexp
@@ -579,10 +582,10 @@ ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData
     ScopedFunctionObject searchCallback(scope, replaceValue);
     if (!!searchCallback) {
         result.reserve(string.length() + 10*numStringMatches);
+        ScopedValue entry(scope);
         JSCall jsCall(scope, searchCallback, numCaptures + 2);
         jsCall->thisObject = Primitive::undefinedValue();
         int lastEnd = 0;
-        ScopedValue entry(scope);
         for (int i = 0; i < numStringMatches; ++i) {
             for (int k = 0; k < numCaptures; ++k) {
                 int idx = (i * numCaptures + k) * 2;

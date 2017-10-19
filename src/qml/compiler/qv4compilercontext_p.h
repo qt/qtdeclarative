@@ -216,7 +216,7 @@ struct Context {
 
     bool canUseSimpleCall() const {
         return nestedContexts.isEmpty() &&
-               locals.isEmpty() && arguments.size() <= QV4::Global::ReservedArgumentCount &&
+               locals.isEmpty() &&
                !hasTry && !hasWith &&
                usesArgumentsObject == ArgumentsObjectNotUsed && !hasDirectEval;
     }

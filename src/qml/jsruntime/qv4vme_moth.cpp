@@ -54,6 +54,7 @@
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4profiling_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <iostream>
 
@@ -509,14 +510,15 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
 
     Value *jsStackTop = engine->jsStackTop;
 
-    Q_ASSERT(engine->jsStackTop >= callData->args + callData->argc() - 1);
-    Value *stack = engine->jsStackTop;
-    engine->jsStackTop += sizeof(CallData)/sizeof(Value) - 1 + qMax(callData->argc(), int(function->compiledFunction->nRegisters));
-    memcpy(stack, callData, sizeof(CallData) - sizeof(Value) + callData->argc()*sizeof(Value));
-    // clear out remaining arguments and local registers
-    callData = reinterpret_cast<CallData *>(stack);
-    for (Value *v = callData->args + callData->argc(); v < engine->jsStackTop; ++v)
-        *v = Encode::undefined();
+    Q_ASSERT(engine->jsStackTop == callData->args + callData->argc());
+    Value *stack = reinterpret_cast<Value *>(callData);
+    int stackSpaceToAdd = int(function->compiledFunction->nRegisters) - callData->argc();
+    if (stackSpaceToAdd > 0) {
+        // clear out remaining arguments and local registers
+        for (int i = 0; i < stackSpaceToAdd; ++i)
+            engine->jsStackTop[i] = Encode::undefined();
+        engine->jsStackTop += stackSpaceToAdd;
+    }
 
     CppStackFrame frame;
     frame.parent = engine->currentStackFrame;
@@ -743,60 +745,78 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_BEGIN_INSTR(CallValue)
         STORE_IP();
         STORE_ACC();
-        QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
-        acc = Runtime::method_callValue(engine, accumulator, cData);
+        {
+            Scope scope(engine);
+            JSCall cData(scope, stack + argv, argc);
+            Q_ASSERT(cData->args + cData->argc() == engine->jsStackTop);
+            acc = Runtime::method_callValue(engine, accumulator, cData);
+        }
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallValue)
 
     MOTH_BEGIN_INSTR(CallProperty)
         STORE_IP();
-        QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
-        cData->thisObject = STACK_VALUE(base);
-        acc = Runtime::method_callProperty(engine, name, cData);
+        {
+            Scope scope(engine);
+            JSCall cData(scope, stack + argv, argc, stack + base);
+            Q_ASSERT(cData->args + cData->argc() == engine->jsStackTop);
+            acc = Runtime::method_callProperty(engine, name, cData);
+        }
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallProperty)
 
     MOTH_BEGIN_INSTR(CallPropertyLookup)
         STORE_IP();
-        QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
-        cData->thisObject = STACK_VALUE(base);
-        acc = Runtime::method_callPropertyLookup(engine, lookupIndex, cData);
+        {
+            Scope scope(engine);
+            JSCall cData(scope, stack + argv, argc, stack + base);
+            Q_ASSERT(cData->args + cData->argc() == engine->jsStackTop);
+            acc = Runtime::method_callPropertyLookup(engine, lookupIndex, cData);
+        }
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallPropertyLookup)
 
     MOTH_BEGIN_INSTR(CallElement)
         STORE_IP();
-        QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
-        cData->thisObject = STACK_VALUE(base);
-        acc = Runtime::method_callElement(engine, STACK_VALUE(index), cData);
+        {
+            Scope scope(engine);
+            JSCall cData(scope, stack + argv, argc, stack + base);
+            Q_ASSERT(cData->args + cData->argc() == engine->jsStackTop);
+            acc = Runtime::method_callElement(engine, STACK_VALUE(index), cData);
+        }
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallName)
         STORE_IP();
-        QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
-        acc = Runtime::method_callName(engine, name, cData);
+        {
+            Scope scope(engine);
+            JSCall cData(scope, stack + argv, argc);
+            Q_ASSERT(cData->args + cData->argc() == engine->jsStackTop);
+            acc = Runtime::method_callName(engine, name, cData);
+        }
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallName)
 
     MOTH_BEGIN_INSTR(CallPossiblyDirectEval)
         STORE_IP();
-        QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
-        acc = Runtime::method_callPossiblyDirectEval(engine, cData);
+        {
+            Scope scope(engine);
+            JSCall cData(scope, stack + argv, argc);
+            Q_ASSERT(cData->args + cData->argc() == engine->jsStackTop);
+            acc = Runtime::method_callPossiblyDirectEval(engine, cData);
+        }
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallPossiblyDirectEval)
 
     MOTH_BEGIN_INSTR(CallGlobalLookup)
         STORE_IP();
-        QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
-        acc = Runtime::method_callGlobalLookup(engine, index, cData);
+        {
+            Scope scope(engine);
+            JSCall cData(scope, stack + argv, argc);
+            Q_ASSERT(cData->args + cData->argc() == engine->jsStackTop);
+            acc = Runtime::method_callGlobalLookup(engine, index, cData);
+        }
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallGlobalLookup)
 
@@ -943,9 +963,12 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
 
     MOTH_BEGIN_INSTR(Construct)
         STORE_IP();
-        QV4::CallData *cData = reinterpret_cast<QV4::CallData *>(stack + callData);
-        Q_ASSERT(cData->args + cData->argc() <= engine->jsStackTop);
-        acc = Runtime::method_construct(engine, STACK_VALUE(func), cData);
+        {
+            Scope scope(engine);
+            JSCall cData(scope, stack + argv, argc);
+            Q_ASSERT(cData->args + cData->argc() == engine->jsStackTop);
+            acc = Runtime::method_construct(engine, STACK_VALUE(func), cData);
+        }
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Construct)
 

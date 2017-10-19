@@ -426,10 +426,11 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
         qSwap(meth1, meth2);
 
     Scope scope(engine);
+    ScopedValue conv(scope, object->get(meth1));
+
     JSCall jsCall(scope, nullptr, 0);
     jsCall->thisObject = *object;
 
-    ScopedValue conv(scope, object->get(meth1));
     if (FunctionObject *o = conv->as<FunctionObject>()) {
         jsCall->function = o;
         jsCall->accumulator = jsCall.call();
