@@ -235,7 +235,8 @@ void Heap::ErrorCtor::init(QV4::ExecutionContext *scope, const QString &name)
 
 ReturnedValue ErrorCtor::construct(const Managed *that, CallData *callData)
 {
-    return ErrorObject::create<ErrorObject>(that->engine(), callData->args[0])->asReturnedValue();
+    Value v = Value::fromReturnedValue(callData->argument(0));
+    return ErrorObject::create<ErrorObject>(that->engine(), v)->asReturnedValue();
 }
 
 ReturnedValue ErrorCtor::call(const Managed *that, CallData *callData)
