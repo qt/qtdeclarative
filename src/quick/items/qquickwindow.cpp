@@ -1669,6 +1669,36 @@ QMouseEvent *QQuickWindowPrivate::cloneMouseEvent(QMouseEvent *event, QPointF *t
     return me;
 }
 
+void QQuickWindowPrivate::deliverToPassiveGrabbers(const QVector<QPointer <QQuickPointerHandler> > &passiveGrabbers,
+                                                   QQuickPointerEvent *pointerEvent)
+{
+    const QVector<QQuickPointerHandler *> &eventDeliveryTargets = pointerEvent->device()->eventDeliveryTargets();
+    QVarLengthArray<QPair<QQuickItem *, bool>, 4> sendFilteredPointerEventResult;
+    for (auto handler : passiveGrabbers) {
+        // a null pointer in passiveGrabbers is unlikely, unless the grabbing handler was deleted dynamically
+        if (Q_LIKELY(handler) && !eventDeliveryTargets.contains(handler)) {
+            bool alreadyFiltered = false;
+            QQuickItem *par = handler->parentItem();
+
+            // see if we already have sent a filter event to the parent
+            auto it = std::find_if(sendFilteredPointerEventResult.begin(), sendFilteredPointerEventResult.end(),
+                                        [par](const QPair<QQuickItem *, bool> &pair) { return pair.first == par; });
+            if (it != sendFilteredPointerEventResult.end()) {
+                // Yes, the event was already filtered to that parent, do not call it again but use
+                // the result of the previous call to determine if we should call the handler.
+                alreadyFiltered = it->second;
+            } else {
+                alreadyFiltered = sendFilteredPointerEvent(pointerEvent, par);
+                sendFilteredPointerEventResult << qMakePair<QQuickItem*, bool>(par, alreadyFiltered);
+            }
+            if (!alreadyFiltered)
+                handler->handlePointerEvent(pointerEvent);
+        }
+    }
+}
+
+
+
 void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent)
 {
     auto point = pointerEvent->point(0);
@@ -1717,14 +1747,8 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             // if this is an update or release from an actual mouse,
             // and the point wasn't grabbed, deliver only to PointerHandlers:
             // passive grabbers first, then the rest
-            const QVector<QQuickPointerHandler *> &eventDeliveryTargets = pointerEvent->device()->eventDeliveryTargets();
-            for (auto handler : point->passiveGrabbers()) {
-                // a null pointer in passiveGrabbers is unlikely, unless the grabbing handler was deleted dynamically
-                if (Q_LIKELY(handler) && !eventDeliveryTargets.contains(handler)) {
-                    if (!sendFilteredPointerEvent(pointerEvent, handler->parentItem()))
-                        handler->handlePointerEvent(pointerEvent);
-                }
-            }
+            deliverToPassiveGrabbers(point->passiveGrabbers(), pointerEvent);
+
             // If some points weren't grabbed, deliver to non-grabber PointerHandlers in reverse paint order
             if (!pointerEvent->allPointsGrabbed() && pointerEvent->buttons()) {
                 QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point->scenePosition(), false, false);
@@ -2398,16 +2422,9 @@ void QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
         int pointCount = event->pointCount();
 
         // Deliver to each eventpoint's passive grabbers (but don't visit any handler more than once)
-        const QVector<QQuickPointerHandler *> &eventDeliveryTargets = event->device()->eventDeliveryTargets();
         for (int i = 0; i < pointCount; ++i) {
             QQuickEventPoint *point = event->point(i);
-            for (auto handler : point->passiveGrabbers()) {
-                if (Q_LIKELY(handler) && !eventDeliveryTargets.contains(handler)) {
-                    if (sendFilteredPointerEvent(event, handler->parentItem()))
-                        return;
-                    handler->handlePointerEvent(event);
-                }
-            }
+            deliverToPassiveGrabbers(point->passiveGrabbers(), event);
         }
 
         // If some points weren't grabbed, deliver to non-grabber PointerHandlers in reverse paint order
