@@ -122,18 +122,30 @@ TestCase {
         // test also clicking outside delegates => the nearest should be selected
         for (var i = 0; i < control.count; ++i) {
             var child = control.contentItem.children[i]
-            for (var x = -2; x <= child.width + 2; ++x) {
-                for (var y = -2; y <= child.height + 2; ++y) {
-                    control.currentIndex = -1
-                    compare(control.currentIndex, -1)
 
-                    var pos = control.mapFromItem(child, x, y)
-                    if (data.touch)
-                        touch.press(0, control, pos.x, pos.y).commit().release(0, control, pos.x, pos.y).commit()
-                    else
-                        mouseClick(control, pos.x, pos.y, Qt.LeftButton)
-                    compare(control.currentIndex, i)
-                }
+            var points = [
+                Qt.point(child.width / 2, -2), // top
+                Qt.point(-2, child.height / 2), // left
+                Qt.point(child.width + 2, child.height / 2), // right
+                Qt.point(child.width / 2, child.height + 2), // bottom
+
+                Qt.point(-2, -2), // top-left
+                Qt.point(child.width + 2, -2), // top-right
+                Qt.point(-2, child.height + 2), // bottom-left
+                Qt.point(child.width + 2, child.height + 2), // bottom-right
+            ]
+
+            for (var j = 0; j < points.length; ++j) {
+                control.currentIndex = -1
+                compare(control.currentIndex, -1)
+
+                var point = points[j]
+                var pos = control.mapFromItem(child, x, y)
+                if (data.touch)
+                    touch.press(0, control, pos.x, pos.y).commit().release(0, control, pos.x, pos.y).commit()
+                else
+                    mouseClick(control, pos.x, pos.y, Qt.LeftButton)
+                compare(control.currentIndex, i)
             }
         }
     }
