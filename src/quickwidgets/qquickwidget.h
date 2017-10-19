@@ -43,7 +43,6 @@
 #include <QtWidgets/qwidget.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtCore/qurl.h>
-#include <QtQml/qqmldebug.h>
 #include <QtQuickWidgets/qtquickwidgetsglobal.h>
 #include <QtGui/qimage.h>
 

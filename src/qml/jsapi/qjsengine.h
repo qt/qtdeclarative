@@ -47,6 +47,8 @@
 #include <QtCore/qobject.h>
 #include <QtQml/qjsvalue.h>
 
+#include <QtQml/qqmldebug.h>
+
 QT_BEGIN_NAMESPACE
 
 

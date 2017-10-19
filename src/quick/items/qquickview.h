@@ -42,7 +42,6 @@
 
 #include <QtQuick/qquickwindow.h>
 #include <QtCore/qurl.h>
-#include <QtQml/qqmldebug.h>
 
 QT_BEGIN_NAMESPACE
 

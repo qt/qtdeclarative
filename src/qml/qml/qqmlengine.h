@@ -46,7 +46,6 @@
 #include <QtQml/qjsengine.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlerror.h>
-#include <QtQml/qqmldebug.h>
 
 QT_BEGIN_NAMESPACE
 

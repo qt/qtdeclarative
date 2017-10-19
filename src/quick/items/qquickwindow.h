@@ -47,6 +47,7 @@
 #include <QtGui/qwindow.h>
 #include <QtGui/qevent.h>
 #include <QtQml/qqml.h>
+#include <QtQml/qqmldebug.h>
 
 QT_BEGIN_NAMESPACE
 
