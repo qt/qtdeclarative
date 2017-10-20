@@ -762,16 +762,16 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     Q_ASSERT(engine);
 
     Scope scope(engine);
-    JSCallData jsCall(scope, f, args.size());
+    JSCallData jsCallData(scope, f, args.size());
     for (int i = 0; i < args.size(); ++i) {
         if (!QJSValuePrivate::checkEngine(engine, args.at(i))) {
             qWarning("QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
             return QJSValue();
         }
-        jsCall->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
+        jsCallData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
     }
 
-    ScopedValue result(scope, jsCall.callAsConstructor());
+    ScopedValue result(scope, f->callAsConstructor(jsCallData));
     if (engine->hasException)
         result = engine->catchException();
 

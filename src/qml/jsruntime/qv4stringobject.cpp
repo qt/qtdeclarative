@@ -644,9 +644,9 @@ ReturnedValue StringPrototype::method_search(const BuiltinFunction *b, CallData 
 
     RegExpObject *regExp = regExpObj->as<RegExpObject>();
     if (!regExp) {
-        JSCallData jsCall(scope, scope.engine->regExpCtor(), 1);
-        jsCall->args[0] = regExpObj;
-        regExpObj = jsCall.callAsConstructor();
+        JSCallData jsCallData(scope, scope.engine->regExpCtor(), 1);
+        jsCallData->args[0] = regExpObj;
+        regExpObj = scope.engine->regExpCtor()->callAsConstructor(jsCallData);
         if (scope.engine->hasException)
             return QV4::Encode::undefined();
 

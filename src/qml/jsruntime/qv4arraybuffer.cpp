@@ -187,10 +187,10 @@ ReturnedValue ArrayBufferPrototype::method_slice(const BuiltinFunction *b, CallD
     if (!constructor)
         return v4->throwTypeError();
 
-    JSCallData jsCall(scope, constructor, 1);
+    JSCallData jsCallData(scope, constructor, 1);
     double newLen = qMax(final - first, 0.);
-    jsCall->args[0] = QV4::Encode(newLen);
-    QV4::Scoped<ArrayBuffer> newBuffer(scope, jsCall.callAsConstructor());
+    jsCallData->args[0] = QV4::Encode(newLen);
+    QV4::Scoped<ArrayBuffer> newBuffer(scope, constructor->callAsConstructor(jsCallData));
     if (!newBuffer || newBuffer->d()->data->size < (int)newLen)
         return v4->throwTypeError();
 

@@ -118,10 +118,6 @@ struct JSCallData {
         return static_cast<FunctionObject &>(ptr->function).call(*this);
     }
 
-    ReturnedValue callAsConstructor() const {
-        return static_cast<FunctionObject &>(ptr->function).callAsConstructor(*this);
-    }
-
     CallData *ptr;
 };
 

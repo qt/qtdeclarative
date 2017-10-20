@@ -572,9 +572,9 @@ ReturnedValue TypedArrayPrototype::method_subarray(const BuiltinFunction *builti
     if (!constructor)
         return scope.engine->throwTypeError();
 
-    JSCallData jsCall(scope, constructor, 3);
-    jsCall->args[0] = buffer;
-    jsCall->args[1] = Encode(a->d()->byteOffset + begin*a->d()->type->bytesPerElement);
-    jsCall->args[2] = Encode(newLen);
-    return jsCall.callAsConstructor();
+    JSCallData jsCallData(scope, constructor, 3);
+    jsCallData->args[0] = buffer;
+    jsCallData->args[1] = Encode(a->d()->byteOffset + begin*a->d()->type->bytesPerElement);
+    jsCallData->args[2] = Encode(newLen);
+    return constructor->callAsConstructor(jsCallData);
 }
