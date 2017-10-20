@@ -5,6 +5,3 @@ osx
 #QTBUG-53863
 [populateTransitions]
 opensuse-42.1
-#QTBUG-63909
-[flickBothDirections]
-windows msvc-2015 64bit developer-build
