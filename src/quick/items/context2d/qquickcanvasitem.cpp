@@ -731,7 +731,7 @@ void QQuickCanvasItem::updatePolish()
         QV4::Scope scope(v4);
         QV4::ScopedFunctionObject function(scope);
         QV4::JSCallData jsCall(scope, 1);
-        jsCall->thisObject = QV4::QObjectWrapper::wrap(v4, this);
+        *jsCall->thisObject = QV4::QObjectWrapper::wrap(v4, this);
 
         for (auto it = animationCallbacks.cbegin(), end = animationCallbacks.cend(); it != end; ++it) {
             function = it.value().value();

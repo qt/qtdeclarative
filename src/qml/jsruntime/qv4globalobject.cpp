@@ -376,9 +376,9 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
         JSCallData jsCallData(scope, 0);
         if (directCall)
-            jsCallData->thisObject = scope.engine->currentStackFrame->thisObject();
+            *jsCallData->thisObject = scope.engine->currentStackFrame->thisObject();
         else
-            jsCallData->thisObject = scope.engine->globalObject;
+            *jsCallData->thisObject = scope.engine->globalObject;
         return e->call(jsCallData);
     }
 
@@ -387,10 +387,12 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     // set the correct v4 function for the context
     ctx->d()->v4Function = function;
 
-    JSCallData jsCall(scope);
-    jsCall->thisObject = scope.engine->currentStackFrame->thisObject();
-    jsCall->context = *ctx;
-    return function->call(jsCall.callData());
+    JSCallData jsCallData(scope);
+    *jsCallData->thisObject = scope.engine->currentStackFrame->thisObject();
+    CallData *cData = jsCallData.callData();
+    cData->context = *ctx;
+
+    return function->call(cData);
 }
 
 

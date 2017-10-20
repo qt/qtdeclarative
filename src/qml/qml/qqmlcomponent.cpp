@@ -1548,7 +1548,7 @@ void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
     QV4::ScopedFunctionObject f(scope, d()->statusChanged);
     if (f) {
         QV4::JSCallData jsCallData(scope, 1);
-        jsCallData->thisObject = this;
+        *jsCallData->thisObject = this;
         jsCallData->args[0] = QV4::Primitive::fromUInt32(s);
         f->call(jsCallData);
         if (scope.hasException()) {

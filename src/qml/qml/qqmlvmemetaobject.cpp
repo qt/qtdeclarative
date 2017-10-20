@@ -951,7 +951,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 
                 const unsigned int parameterCount = function->formalParameterCount();
                 QV4::JSCallData jsCallData(scope, parameterCount);
-                jsCallData->thisObject = ep->v8engine()->global();
+                *jsCallData->thisObject = ep->v8engine()->global();
 
                 for (uint ii = 0; ii < parameterCount; ++ii)
                     jsCallData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);

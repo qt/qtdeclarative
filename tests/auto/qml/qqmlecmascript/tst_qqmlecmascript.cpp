@@ -2351,7 +2351,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
     }
     QV4::JSCallData jsCallData(scope, 1);
     jsCallData->args[0] = o;
-    jsCallData->thisObject = engine->global();
+    *jsCallData->thisObject = engine->global();
     function->call(jsCallData);
     if (scope.engine->hasException) {
         scope.engine->catchException();
@@ -2381,7 +2381,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
     QV4::ScopedValue value(scope);
     QV4::JSCallData jsCallData(scope, 1);
     jsCallData->args[0] = o;
-    jsCallData->thisObject = engine->global();
+    *jsCallData->thisObject = engine->global();
     value = function->call(jsCallData);
     if (scope.engine->hasException) {
         scope.engine->catchException();
@@ -2410,7 +2410,7 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::Value &o
         return QV4::Encode::undefined();
     QV4::JSCallData jsCallData(scope, 1);
     jsCallData->args[0] = o;
-    jsCallData->thisObject = engine->global();
+    *jsCallData->thisObject = engine->global();
     QV4::ScopedValue result(scope, function->call(jsCallData));
     if (scope.engine->hasException) {
         scope.engine->catchException();

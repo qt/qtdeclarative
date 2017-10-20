@@ -140,7 +140,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         Q_ASSERT(arrayData());
         ScopedFunctionObject setter(scope, map->setter());
         JSCallData jsCallData(scope, 1);
-        jsCallData->thisObject = this->asReturnedValue();
+        *jsCallData->thisObject = this->asReturnedValue();
         jsCallData->args[0] = desc->value;
         setter->call(jsCallData);
 

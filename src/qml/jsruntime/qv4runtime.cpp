@@ -429,12 +429,8 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
     ScopedValue result(scope);
     ScopedValue conv(scope, object->get(meth1));
 
-    JSCallData jsCallData(scope, 0);
-    jsCallData->thisObject = *object;
-
     if (FunctionObject *o = conv->as<FunctionObject>()) {
-        jsCallData->function = o;
-        result = o->call(jsCallData);
+        result = o->call(object, nullptr, 0);
         if (result->isPrimitive())
             return result->asReturnedValue();
     }
@@ -444,8 +440,7 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
 
     conv = object->get(meth2);
     if (FunctionObject *o = conv->as<FunctionObject>()) {
-        jsCallData->function = o;
-        result = o->call(jsCallData);
+        result = o->call(object, nullptr, 0);
         if (result->isPrimitive())
             return result->asReturnedValue();
     }
@@ -983,135 +978,116 @@ ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Va
 {
     Scope scope(engine);
     JSCallData callData(scope, argc, argv);
-    Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
 
     ExecutionContext &ctx = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context);
-    callData->function = ctx.getPropertyAndBase(engine->id_eval(), &callData->thisObject);
+    ScopedFunctionObject function(scope, ctx.getPropertyAndBase(engine->id_eval(), callData->thisObject));
     if (engine->hasException)
         return Encode::undefined();
 
-    if (!callData->function.isFunctionObject()) {
+    if (!function) {
         QString objectAsString = QStringLiteral("[null]");
-        if (!callData->thisObject.isUndefined())
-            objectAsString = callData->thisObject.toQStringNoThrow();
+        if (!callData->thisObject->isUndefined())
+            objectAsString = callData->thisObject->toQStringNoThrow();
         QString msg = QStringLiteral("Property 'eval' of object %2 is not a function").arg(objectAsString);
         return engine->throwTypeError(msg);
     }
 
-    FunctionObject &f = static_cast<FunctionObject &>(callData->function);
+    if (function->d() == engine->evalFunction()->d())
+        return static_cast<EvalFunction *>(function.getPointer())->evalCall(callData.callData(function), true);
 
-    if (f.d() == engine->evalFunction()->d())
-        return static_cast<EvalFunction &>(f).evalCall(callData.callData(&f), true);
-
-    return f.call(&callData->thisObject, callData->args, callData->argc());
+    return function->call(callData);
 }
 
 ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, Value *argv, int argc)
 {
     Scope scope(engine);
-    JSCallData callData(scope, argc, argv);
-    Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
-
-    callData->function = engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex];
+    ScopedValue thisObject(scope);
+    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
 
     ExecutionContext &ctx = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context);
-    callData->function = ctx.getPropertyAndBase(static_cast<String *>(&callData->function), &callData->thisObject);
+    ScopedFunctionObject f(scope, ctx.getPropertyAndBase(name, thisObject));
     if (engine->hasException)
         return Encode::undefined();
 
-    if (!callData->function.isFunctionObject()) {
+    if (!f) {
         QString objectAsString = QStringLiteral("[null]");
-        if (!callData->thisObject.isUndefined())
-            objectAsString = callData->thisObject.toQStringNoThrow();
+        if (!thisObject->isUndefined())
+            objectAsString = thisObject->toQStringNoThrow();
         QString msg = QStringLiteral("Property '%1' of object %2 is not a function")
                 .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString(),
                      objectAsString);
         return engine->throwTypeError(msg);
     }
 
-    FunctionObject &f = static_cast<FunctionObject &>(callData->function);
-    return f.call(&callData->thisObject, callData->args, callData->argc());
+    return f->call(thisObject, argv, argc);
 }
 
 ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, Value *base, int nameIndex, Value *argv, int argc)
 {
     Scope scope(engine);
-    JSCallData callData(scope, argc, argv, base);
-    Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
 
-    if (!callData->thisObject.isObject()) {
-        Q_ASSERT(!callData->thisObject.isEmpty());
-        if (callData->thisObject.isNullOrUndefined()) {
+    if (!base->isObject()) {
+        Q_ASSERT(!base->isEmpty());
+        if (base->isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot call method '%1' of %2")
                     .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString(),
-                         callData->thisObject.toQStringNoThrow());
+                         base->toQStringNoThrow());
             return engine->throwTypeError(message);
         }
 
-        callData->thisObject = RuntimeHelpers::convertToObject(engine, callData->thisObject);
+        ScopedValue thisObject(scope, RuntimeHelpers::convertToObject(engine, *base));
         if (engine->hasException) // type error
             return Encode::undefined();
+        base = thisObject;
     }
 
-    callData->function = engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex];
-    callData->function = static_cast<Object &>(callData->thisObject).get(static_cast<String *>(&callData->function));
+    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    ScopedFunctionObject f(scope, static_cast<Object *>(base)->get(name));
 
-    if (!callData->function.isFunctionObject()) {
+    if (!f) {
         QString error = QStringLiteral("Property '%1' of object %2 is not a function")
                 .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString(),
-                     callData->thisObject.toQStringNoThrow());
+                     base->toQStringNoThrow());
         return engine->throwTypeError(error);
     }
 
-    FunctionObject &f = static_cast<FunctionObject &>(callData->function);
-    return f.call(&callData->thisObject, callData->args, callData->argc());
+    return f->call(base, argv, argc);
 }
 
 ReturnedValue Runtime::method_callPropertyLookup(ExecutionEngine *engine, Value *base, uint index, Value *argv, int argc)
 {
-    Scope scope(engine);
-    JSCallData callData(scope, argc, argv, base);
-    Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
-
-    Q_ASSERT(engine->jsStackTop >= callData->args + callData->argc());
     Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
-    callData->function = l->getter(l, engine, callData->thisObject);
+    // ok to have the value on the stack here
+    Value f = Value::fromReturnedValue(l->getter(l, engine, *base));
 
-    if (!callData->function.isFunctionObject())
+    if (!f.isFunctionObject())
         return engine->throwTypeError();
 
-    FunctionObject &f = static_cast<FunctionObject &>(callData->function);
-    return f.call(&callData->thisObject, callData->args, callData->argc());
+    return static_cast<FunctionObject &>(f).call(base, argv, argc);
 }
 
 ReturnedValue Runtime::method_callElement(ExecutionEngine *engine, Value *base, const Value &index, Value *argv, int argc)
 {
     Scope scope(engine);
-    JSCallData callData(scope, argc, argv, base);
-    Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
+    ScopedValue thisObject(scope, base->toObject(engine));
+    base = thisObject;
 
-    callData->thisObject = callData->thisObject.toObject(engine);
-    callData->function = index.toString(engine);
+    ScopedString str(scope, index.toString(engine));
     if (engine->hasException)
         return Encode::undefined();
 
-    callData->function = static_cast<Object &>(callData->thisObject).get(static_cast<String *>(&callData->function));
-    if (!callData->function.isFunctionObject())
+    ScopedFunctionObject f(scope, static_cast<Object *>(base)->get(str));
+    if (!f)
         return engine->throwTypeError();
 
-    return static_cast<FunctionObject &>(callData->function).call(&callData->thisObject, callData->args, callData->argc());
+    return f->call(base, argv, argc);
 }
 
 ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &func, Value *argv, int argc)
 {
     if (!func.isFunctionObject())
         return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
-
-    Scope scope(engine);
-    JSCallData callData(scope, argc, argv);
-    Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
-
-    return static_cast<const FunctionObject &>(func).call(&callData->thisObject, callData->args, callData->argc());
+    return static_cast<const FunctionObject &>(func).call(nullptr, argv, argc);
 }
 
 

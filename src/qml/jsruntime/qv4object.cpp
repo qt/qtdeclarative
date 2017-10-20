@@ -108,7 +108,7 @@ ReturnedValue Object::getValue(const Value &thisObject, const Value &v, Property
 
     Scope scope(f->engine());
     JSCallData jsCallData(scope);
-    jsCallData->thisObject = thisObject;
+    *jsCallData->thisObject = thisObject;
     return f->call(jsCallData);
 }
 
@@ -127,7 +127,7 @@ bool Object::putValue(uint memberIndex, const Value &value)
             ScopedFunctionObject setter(scope, set);
             JSCallData jsCallData(scope, 1);
             jsCallData->args[0] = value;
-            jsCallData->thisObject = this;
+            *jsCallData->thisObject = this;
             setter->call(jsCallData);
             return !ic->engine->hasException;
         }
@@ -766,7 +766,7 @@ bool Object::internalPut(String *name, const Value &value)
         ScopedFunctionObject setter(scope, *memberIndex);
         JSCallData jsCallData(scope, 1);
         jsCallData->args[0] = value;
-        jsCallData->thisObject = this;
+        *jsCallData->thisObject = this;
         setter->call(jsCallData);
         return !engine->hasException;
     }
@@ -831,7 +831,7 @@ bool Object::internalPutIndexed(uint index, const Value &value)
         ScopedFunctionObject setter(scope, *arrayIndex);
         JSCallData jsCallData(scope, 1);
         jsCallData->args[0] = value;
-        jsCallData->thisObject = this;
+        *jsCallData->thisObject = this;
         setter->call(jsCallData);
         return !engine->hasException;
     }

@@ -658,7 +658,7 @@ QJSValue QJSValue::call(const QJSValueList &args)
 
     Scope scope(engine);
     JSCallData jsCallData(scope, args.length());
-    jsCallData->thisObject = engine->globalObject;
+    *jsCallData->thisObject = engine->globalObject;
     for (int i = 0; i < args.size(); ++i) {
         if (!QJSValuePrivate::checkEngine(engine, args.at(i))) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
@@ -714,7 +714,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     }
 
     JSCallData jsCallData(scope, args.size());
-    jsCallData->thisObject = QJSValuePrivate::convertedToValue(engine, instance);
+    *jsCallData->thisObject = QJSValuePrivate::convertedToValue(engine, instance);
     for (int i = 0; i < args.size(); ++i) {
         if (!QJSValuePrivate::checkEngine(engine, args.at(i))) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");

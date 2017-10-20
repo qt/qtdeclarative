@@ -423,7 +423,7 @@ public:
             JSCallData jsCallData(scope, 2);
             jsCallData->args[0] = convertElementToValue(m_v4, lhs);
             jsCallData->args[1] = convertElementToValue(m_v4, rhs);
-            jsCallData->thisObject = m_v4->globalObject;
+            *jsCallData->thisObject = m_v4->globalObject;
             QV4::ScopedValue result(scope, compare->call(jsCallData));
             return result->toNumber() < 0;
         }

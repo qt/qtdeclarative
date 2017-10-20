@@ -154,14 +154,15 @@ ReturnedValue Script::run()
 
         QV4::JSCallData jsCall(valueScope);
         jsCall->thisObject = engine->globalObject;
-        jsCall->context = *context;
-        return vmFunction->call(jsCall.callData());
+        QV4::CallData *cData = jsCall.callData();
+        cData->context = *context;
+        return vmFunction->call(cData);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
         JSCallData jsCall(valueScope);
-        jsCall->thisObject = Primitive::undefinedValue();
-        jsCall->context = *qml;
-        return vmFunction->call(jsCall.callData());
+        QV4::CallData *cData = jsCall.callData();
+        cData->context = *qml;
+        return vmFunction->call(cData);
     }
 }
 

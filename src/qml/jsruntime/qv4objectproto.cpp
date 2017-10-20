@@ -480,7 +480,7 @@ ReturnedValue ObjectPrototype::method_toLocaleString(const BuiltinFunction *b, C
     if (!f)
         THROW_TYPE_ERROR();
     JSCallData jsCallData(scope);
-    jsCallData->thisObject = o;
+    *jsCallData->thisObject = o;
     return f->call(jsCallData);
 }
 

@@ -62,42 +62,53 @@ namespace QV4 {
 
 struct JSCallData {
     JSCallData(const Scope &scope, int argc = 0, const Value *argv = 0, const Value *thisObject = 0)
+        : scope(scope), argc(argc)
     {
+        if (thisObject)
+            this->thisObject = const_cast<Value *>(thisObject);
+        else
+            this->thisObject = scope.alloc(1);
+        if (argv)
+            this->args = const_cast<Value *>(argv);
+        else
+            this->args = scope.alloc(argc);
+    }
+
+    JSCallData *operator->() {
+        return this;
+    }
+
+    CallData *callData(const FunctionObject *f = nullptr) const {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
-        ptr = reinterpret_cast<CallData *>(scope.engine->jsStackTop);
+        CallData *ptr = reinterpret_cast<CallData *>(scope.engine->jsStackTop);
         scope.engine->jsStackTop += size;
         ptr->function = Encode::undefined();
         ptr->context = Encode::undefined();
         ptr->accumulator = Encode::undefined();
-        ptr->thisObject = thisObject ? thisObject->asReturnedValue() : Encode::undefined();
+        ptr->thisObject = thisObject->asReturnedValue();
         ptr->setArgc(argc);
-        if (argv)
-            memcpy(ptr->args, argv, argc*sizeof(Value));
-    }
-
-    CallData *operator->() const {
-        return ptr;
-    }
-
-    CallData *callData(const FunctionObject *f = nullptr) const {
+        if (argc)
+            memcpy(ptr->args, args, argc*sizeof(Value));
         if (f)
             ptr->function = f->asReturnedValue();
         return ptr;
     }
-
-    CallData *ptr;
+    const Scope &scope;
+    int argc;
+    Value *args;
+    Value *thisObject;
 };
 
 inline
 ReturnedValue FunctionObject::callAsConstructor(const JSCallData &data) const
 {
-    return d()->jsConstruct(this, data->args, data->argc());
+    return d()->jsConstruct(this, data.args, data.argc);
 }
 
 inline
 ReturnedValue FunctionObject::call(const JSCallData &data) const
 {
-    return d()->jsCall(this, &data->thisObject, data->args, data->argc());
+    return d()->jsCall(this, data.thisObject, data.args, data.argc);
 }
 
 

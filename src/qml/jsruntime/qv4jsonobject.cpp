@@ -698,7 +698,7 @@ QString Stringify::Str(const QString &key, const Value &v)
         ScopedFunctionObject toJSON(scope, o->get(s));
         if (!!toJSON) {
             JSCallData jsCallData(scope, 1);
-            jsCallData->thisObject = value;
+            *jsCallData->thisObject = value;
             jsCallData->args[0] = v4->newString(key);
             value = toJSON->call(jsCallData);
         }
@@ -710,7 +710,7 @@ QString Stringify::Str(const QString &key, const Value &v)
         JSCallData jsCallData(scope, 2);
         jsCallData->args[0] = v4->newString(key);
         jsCallData->args[1] = value;
-        jsCallData->thisObject = holder;
+        *jsCallData->thisObject = holder;
         value = replacerFunction->call(jsCallData);
     }
 

@@ -584,7 +584,7 @@ ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData
         result.reserve(string.length() + 10*numStringMatches);
         ScopedValue entry(scope);
         JSCallData jsCallData(scope, numCaptures + 2);
-        jsCallData->thisObject = Primitive::undefinedValue();
+        *jsCallData->thisObject = Primitive::undefinedValue();
         int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
             for (int k = 0; k < numCaptures; ++k) {
