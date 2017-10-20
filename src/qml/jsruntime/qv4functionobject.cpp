@@ -69,15 +69,17 @@ DEFINE_OBJECT_VTABLE(FunctionObject);
 
 Q_STATIC_ASSERT((Heap::FunctionObject::markTable & Heap::Object::markTable) == Heap::Object::markTable);
 
-static ReturnedValue jsCallWrapper(const QV4::Managed *m, CallData *data)
+static ReturnedValue jsCallWrapper(const QV4::FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
-    const FunctionObject *f = static_cast<const FunctionObject *>(m);
-    return f->vtable()->call(f, data);
+    Scope scope(f->engine());
+    JSCall callData(scope, f->asReturnedValue(), argv, argc, thisObject);
+    return f->vtable()->call(f, callData);
 }
-ReturnedValue jsConstructWrapper(const QV4::Managed *m, CallData *data)
+ReturnedValue jsConstructWrapper(const QV4::FunctionObject *f, const Value *argv, int argc)
 {
-    const FunctionObject *f = static_cast<const FunctionObject *>(m);
-    return f->vtable()->construct(f, data);
+    Scope scope(f->engine());
+    JSCall callData(scope, f->asReturnedValue(), argv, argc);
+    return f->vtable()->construct(f, callData);
 }
 
 
@@ -97,8 +99,8 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
 
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function, bool createProto)
 {
-    jsCall = reinterpret_cast<const ObjectVTable *>(vtable())->call;
-    jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->construct;
+    jsCall = jsCallWrapper;
+    jsConstruct = jsConstructWrapper;
 
     Object::init();
     this->function = function;
@@ -119,8 +121,8 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &nam
 
 void Heap::FunctionObject::init()
 {
-    jsCall = reinterpret_cast<const ObjectVTable *>(vtable())->call;
-    jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->construct;
+    jsCall = jsCallWrapper;
+    jsConstruct = jsConstructWrapper;
 
     Object::init();
     function = nullptr;
@@ -349,7 +351,7 @@ ReturnedValue FunctionPrototype::method_call(const BuiltinFunction *b, CallData 
             callData->args[i] = callData->args[i + 1];
         --engine->jsStackTop;
     }
-    return static_cast<FunctionObject &>(callData->function).call(callData);
+    return static_cast<FunctionObject &>(callData->function).call(&callData->thisObject, callData->args, callData->argc());
 }
 
 ReturnedValue FunctionPrototype::method_bind(const BuiltinFunction *b, CallData *callData)

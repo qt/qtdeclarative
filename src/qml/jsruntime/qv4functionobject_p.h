@@ -64,8 +64,8 @@ namespace QV4 {
 struct BuiltinFunction;
 struct IndexedBuiltinFunction;
 
-typedef ReturnedValue (*jsCallFunction)(const Managed *, CallData *data);
-typedef ReturnedValue (*jsConstructFunction)(const Managed *, CallData *data);
+typedef ReturnedValue (*jsCallFunction)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+typedef ReturnedValue (*jsConstructFunction)(const FunctionObject *, const Value *argv, int argc);
 
 namespace Heap {
 
@@ -155,11 +155,11 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     void init(String *name, bool createProto);
 
-    ReturnedValue construct(CallData *callData) {
-        return d()->jsConstruct(this, callData);
+    ReturnedValue construct(const Value *argv, int argc) const {
+        return d()->jsConstruct(this, argv, argc);
     }
-    ReturnedValue call(CallData *callData) {
-        return d()->jsCall(this, callData);
+    ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const {
+        return d()->jsCall(this, thisObject, argv, argc);
     }
     static ReturnedValue construct(const Managed *that, CallData *);
     static ReturnedValue call(const Managed *that, CallData *d);

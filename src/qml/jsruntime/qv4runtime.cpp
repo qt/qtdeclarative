@@ -970,15 +970,12 @@ uint Runtime::method_compareIn(ExecutionEngine *engine, const Value &left, const
 ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint index, Value *argv, int argc)
 {
     Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
-    ReturnedValue function = l->globalGetter(l, engine);
-    Scope scope(engine);
-    JSCall callData(scope, function, argv, argc);
-    Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
-
-    if (!callData->function.isFunctionObject())
+    Value function = Value::fromReturnedValue(l->globalGetter(l, engine));
+    if (!function.isFunctionObject())
         return engine->throwTypeError();
 
-    return static_cast<FunctionObject &>(callData->function).call(callData);
+    Value thisObject = Primitive::undefinedValue();
+    return static_cast<FunctionObject &>(function).call(&thisObject, argv, argc);
 }
 
 ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Value *argv, int argc)
@@ -1005,7 +1002,7 @@ ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Va
     if (f.d() == engine->evalFunction()->d())
         return static_cast<EvalFunction &>(f).evalCall(callData, true);
 
-    return f.call(callData);
+    return f.call(&callData->thisObject, callData->args, callData->argc());
 }
 
 ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, Value *argv, int argc)
@@ -1032,7 +1029,7 @@ ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, V
     }
 
     FunctionObject &f = static_cast<FunctionObject &>(callData->function);
-    return f.call(callData);
+    return f.call(&callData->thisObject, callData->args, callData->argc());
 }
 
 ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, Value *base, int nameIndex, Value *argv, int argc)
@@ -1066,7 +1063,7 @@ ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, Value *base,
     }
 
     FunctionObject &f = static_cast<FunctionObject &>(callData->function);
-    return f.call(callData);
+    return f.call(&callData->thisObject, callData->args, callData->argc());
 }
 
 ReturnedValue Runtime::method_callPropertyLookup(ExecutionEngine *engine, Value *base, uint index, Value *argv, int argc)
@@ -1083,7 +1080,7 @@ ReturnedValue Runtime::method_callPropertyLookup(ExecutionEngine *engine, Value 
         return engine->throwTypeError();
 
     FunctionObject &f = static_cast<FunctionObject &>(callData->function);
-    return f.call(callData);
+    return f.call(&callData->thisObject, callData->args, callData->argc());
 }
 
 ReturnedValue Runtime::method_callElement(ExecutionEngine *engine, Value *base, const Value &index, Value *argv, int argc)
@@ -1101,7 +1098,7 @@ ReturnedValue Runtime::method_callElement(ExecutionEngine *engine, Value *base, 
     if (!callData->function.isFunctionObject())
         return engine->throwTypeError();
 
-    return static_cast<FunctionObject &>(callData->function).call(callData);
+    return static_cast<FunctionObject &>(callData->function).call(&callData->thisObject, callData->args, callData->argc());
 }
 
 ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &func, Value *argv, int argc)
@@ -1113,20 +1110,16 @@ ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &fu
     JSCall callData(scope, func.asReturnedValue(), argv, argc);
     Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
 
-    return static_cast<FunctionObject &>(callData->function).call(callData);
+    return static_cast<FunctionObject &>(callData->function).call(&callData->thisObject, callData->args, callData->argc());
 }
 
 
-ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &func, Value *argv, int argc)
+ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &function, Value *argv, int argc)
 {
-    if (!func.isFunctionObject())
+    if (!function.isFunctionObject())
         return engine->throwTypeError();
 
-    Scope scope(engine);
-    JSCall callData(scope, func.asReturnedValue(), argv, argc);
-    Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
-
-    return static_cast<FunctionObject &>(callData->function).construct(callData);
+    return static_cast<const FunctionObject &>(function).construct(argv, argc);
 }
 
 void Runtime::method_throwException(ExecutionEngine *engine, const Value &value)

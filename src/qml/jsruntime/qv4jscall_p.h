@@ -93,7 +93,7 @@ struct JSCall {
         ptr->setArgc(argc);
         memcpy(ptr->args, argv, argc*sizeof(Value));
     }
-    JSCall(const Scope &scope, ReturnedValue function, Value *argv, int argc, Value *thisObject = 0)
+    JSCall(const Scope &scope, ReturnedValue function, const Value *argv, int argc, const Value *thisObject = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
         ptr = reinterpret_cast<CallData *>(scope.engine->jsStackTop);
@@ -115,11 +115,11 @@ struct JSCall {
     }
 
     ReturnedValue call() const {
-        return static_cast<FunctionObject &>(ptr->function).call(ptr);
+        return static_cast<FunctionObject &>(ptr->function).call(&ptr->thisObject, ptr->args, ptr->argc());
     }
 
     ReturnedValue callAsConstructor() const {
-        return static_cast<FunctionObject &>(ptr->function).construct(ptr);
+        return static_cast<FunctionObject &>(ptr->function).construct(ptr->args, ptr->argc());
     }
 
     CallData *ptr;

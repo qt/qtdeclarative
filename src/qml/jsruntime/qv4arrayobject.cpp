@@ -136,7 +136,7 @@ ReturnedValue ArrayPrototype::method_toString(const BuiltinFunction *builtin, Ca
     callData->accumulator = v4->newString(QStringLiteral("join"));
     callData->function = static_cast<Object &>(callData->thisObject).get(static_cast<String *>(&callData->accumulator));
     if (callData->function.isFunctionObject())
-        return static_cast<FunctionObject &>(callData->function).call(callData);
+        return static_cast<FunctionObject &>(callData->function).call(&callData->thisObject, callData->args, callData->argc());
     return ObjectPrototype::method_toString(builtin, callData);
 }
 
