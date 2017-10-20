@@ -304,8 +304,6 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         function->flags |= CompiledData::Function::IsStrict;
     if (irFunction->hasTry || irFunction->hasWith)
         function->flags |= CompiledData::Function::HasCatchOrWith;
-    if (irFunction->canUseSimpleCall())
-        function->flags |= CompiledData::Function::CanUseSimpleCall;
     function->nFormals = irFunction->arguments.size();
     function->formalsOffset = currentOffset;
     currentOffset += function->nFormals * sizeof(quint32);

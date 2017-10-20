@@ -210,8 +210,7 @@ struct Function
         HasDirectEval       = 0x2,
         UsesArgumentsObject = 0x4,
 //        Unused  = 0x8,
-        HasCatchOrWith      = 0x10,
-        CanUseSimpleCall    = 0x20
+        HasCatchOrWith      = 0x10
     };
 
     // Absolute offset into file where the code for this function is located.

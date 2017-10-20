@@ -76,7 +76,6 @@ struct Q_QML_EXPORT Function {
     InternalClass *internalClass;
     uint nFormals;
     bool hasQmlDependencies;
-    bool canUseSimpleCall;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function, Code codePtr);
     ~Function();
@@ -91,8 +90,6 @@ struct Q_QML_EXPORT Function {
 
     inline bool usesArgumentsObject() const { return compiledFunction->flags & CompiledData::Function::UsesArgumentsObject; }
     inline bool isStrict() const { return compiledFunction->flags & CompiledData::Function::IsStrict; }
-
-    inline bool canUseSimpleFunction() const { return canUseSimpleCall; }
 
     QQmlSourceLocation sourceLocation() const
     {

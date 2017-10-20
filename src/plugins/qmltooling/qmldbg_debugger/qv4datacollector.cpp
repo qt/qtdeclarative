@@ -262,15 +262,6 @@ bool QV4DataCollector::collectScope(QJsonObject *dict, int frameNr, int scopeNr)
     QStringList names;
 
     QV4::Scope scope(engine());
-    QV4::CppStackFrame *frame = findFrame(frameNr);
-    if (frame->v4Function->canUseSimpleCall) {
-        if (!scopeNr) {
-            // ### collect locals from the stack frame
-        } else {
-            // the current call context is actually the parent's context
-            --scopeNr;
-        }
-    }
 
     QV4::Scoped<QV4::CallContext> ctxt(scope, findScope(findContext(frameNr), scopeNr));
     if (!ctxt)
