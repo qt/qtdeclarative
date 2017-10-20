@@ -554,7 +554,7 @@
         \image qtquickcontrols2-menu-custom.png
 
         \quotefromfile qtquickcontrols2-menu-custom.qml
-        \skipto import QtQuick 2.9
+        \skipto import QtQuick 2.10
         \printuntil import QtQuick.Controls 2.3
         \skipto Menu
         \printto eof
@@ -569,7 +569,7 @@
         \image qtquickcontrols2-menubar-custom.png
 
         \quotefromfile qtquickcontrols2-menubar-custom.qml
-        \skipto import QtQuick 2.9
+        \skipto import QtQuick 2.10
         \printuntil import QtQuick.Controls 2.3
         \skipto MenuBar
         \printto eof
