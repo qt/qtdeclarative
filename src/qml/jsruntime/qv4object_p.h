@@ -427,10 +427,6 @@ public:
     ReturnedValue instanceOf(const Value &var) const
     { return vtable()->instanceOf(this, var); }
 
-    inline ReturnedValue construct(CallData *d) const
-    { return vtable()->construct(this, d); }
-    inline ReturnedValue call(CallData *d) const
-    { return vtable()->call(this, d); }
 protected:
     static ReturnedValue construct(const Managed *m, CallData *);
     static ReturnedValue call(const Managed *m, CallData *);

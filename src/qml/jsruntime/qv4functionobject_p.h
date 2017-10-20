@@ -64,11 +64,17 @@ namespace QV4 {
 struct BuiltinFunction;
 struct IndexedBuiltinFunction;
 
+typedef ReturnedValue (*jsCallFunction)(const Managed *, CallData *data);
+typedef ReturnedValue (*jsConstructFunction)(const Managed *, CallData *data);
+
 namespace Heap {
+
 
 #define FunctionObjectMembers(class, Member) \
     Member(class, Pointer, ExecutionContext *, scope) \
-    Member(class, NoMark, Function *, function)
+    Member(class, NoMark, Function *, function) \
+    Member(class, NoMark, jsCallFunction, jsCall) \
+    Member(class, NoMark, jsConstructFunction, jsConstruct)
 
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     DECLARE_MARK_TABLE(FunctionObject);
@@ -149,8 +155,12 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     void init(String *name, bool createProto);
 
-    using Object::construct;
-    using Object::call;
+    ReturnedValue construct(CallData *callData) {
+        return d()->jsConstruct(this, callData);
+    }
+    ReturnedValue call(CallData *callData) {
+        return d()->jsCall(this, callData);
+    }
     static ReturnedValue construct(const Managed *that, CallData *);
     static ReturnedValue call(const Managed *that, CallData *d);
 

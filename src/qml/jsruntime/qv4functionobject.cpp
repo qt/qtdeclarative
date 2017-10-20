@@ -69,8 +69,24 @@ DEFINE_OBJECT_VTABLE(FunctionObject);
 
 Q_STATIC_ASSERT((Heap::FunctionObject::markTable & Heap::Object::markTable) == Heap::Object::markTable);
 
+static ReturnedValue jsCallWrapper(const QV4::Managed *m, CallData *data)
+{
+    const FunctionObject *f = static_cast<const FunctionObject *>(m);
+    return f->vtable()->call(f, data);
+}
+ReturnedValue jsConstructWrapper(const QV4::Managed *m, CallData *data)
+{
+    const FunctionObject *f = static_cast<const FunctionObject *>(m);
+    return f->vtable()->construct(f, data);
+}
+
+
+
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
 {
+    jsCall = jsCallWrapper;
+    jsConstruct = jsConstructWrapper;
+
     Object::init();
     function = nullptr;
     this->scope.set(scope->engine(), scope->d());
@@ -81,6 +97,9 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
 
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function, bool createProto)
 {
+    jsCall = reinterpret_cast<const ObjectVTable *>(vtable())->call;
+    jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->construct;
+
     Object::init();
     this->function = function;
     function->compilationUnit->addref();
@@ -100,6 +119,9 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &nam
 
 void Heap::FunctionObject::init()
 {
+    jsCall = reinterpret_cast<const ObjectVTable *>(vtable())->call;
+    jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->construct;
+
     Object::init();
     function = nullptr;
     this->scope.set(internalClass->engine, internalClass->engine->rootContext()->d());
@@ -441,10 +463,6 @@ ReturnedValue BuiltinFunction::construct(const Managed *f, CallData *)
 ReturnedValue BuiltinFunction::call(const Managed *that, CallData *callData)
 {
     const BuiltinFunction *f = static_cast<const BuiltinFunction *>(that);
-    ExecutionEngine *v4 = f->engine();
-    if (v4->hasException)
-        return Encode::undefined();
-
     return f->d()->code(f, callData);
 }
 
