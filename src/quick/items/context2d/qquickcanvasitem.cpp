@@ -729,7 +729,7 @@ void QQuickCanvasItem::updatePolish()
 
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
         QV4::Scope scope(v4);
-        QV4::JSCall jsCall(scope, nullptr, 1);
+        QV4::JSCallData jsCall(scope, nullptr, 1);
         jsCall->thisObject = QV4::QObjectWrapper::wrap(v4, this);
 
         for (auto it = animationCallbacks.cbegin(), end = animationCallbacks.cend(); it != end; ++it) {

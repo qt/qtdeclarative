@@ -248,7 +248,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     QV4::ScopedString name(scope, m_v4Engine->newString(QStringLiteral("sendMessage")));
     QV4::ScopedValue function(scope, QV4::BuiltinFunction::create(globalContext, name,
                                                                   QQuickWorkerScriptEnginePrivate::method_sendMessage));
-    QV4::JSCall jsCall(scope, createsendconstructor, 1);
+    QV4::JSCallData jsCall(scope, createsendconstructor, 1);
     jsCall->args[0] = function;
     jsCall->thisObject = global();
     createsend.set(scope.engine, jsCall.call());
@@ -265,7 +265,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
     QV4::ScopedFunctionObject f(scope, createsend.value());
 
     QV4::ScopedValue v(scope);
-    QV4::JSCall jsCall(scope, f, 1);
+    QV4::JSCallData jsCall(scope, f, 1);
     jsCall->args[0] = QV4::Primitive::fromInt32(id);
     jsCall->thisObject = global();
     v = jsCall.call();
@@ -366,7 +366,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, script->qmlContext.value());
     Q_ASSERT(!!qmlContext);
 
-    QV4::JSCall jsCall(scope, f, 2);
+    QV4::JSCallData jsCall(scope, f, 2);
     jsCall->thisObject = workerEngine->global();
     jsCall->args[0] = qmlContext->d()->qml(); // ###
     jsCall->args[1] = value;

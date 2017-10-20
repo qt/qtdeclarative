@@ -60,28 +60,28 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct JSCall {
-    JSCall(const Scope &scope, std::nullptr_t, int argc = 0)
+struct JSCallData {
+    JSCallData(const Scope &scope, std::nullptr_t, int argc = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
         ptr = reinterpret_cast<CallData *>(scope.alloc(size));
         ptr->setArgc(argc);
     }
-    JSCall(const Scope &scope, const FunctionObject *function, int argc = 0)
+    JSCallData(const Scope &scope, const FunctionObject *function, int argc = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
         ptr = reinterpret_cast<CallData *>(scope.alloc(size));
         ptr->setArgc(argc);
         ptr->function = *function;
     }
-    JSCall(const Scope &scope, Heap::FunctionObject *function, int argc = 0)
+    JSCallData(const Scope &scope, Heap::FunctionObject *function, int argc = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
         ptr = reinterpret_cast<CallData *>(scope.alloc(size));
         ptr->setArgc(argc);
         ptr->function = function;
     }
-    JSCall(const Scope &scope, Value *argv, int argc, Value *thisObject = 0)
+    JSCallData(const Scope &scope, Value *argv, int argc, Value *thisObject = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
         ptr = reinterpret_cast<CallData *>(scope.engine->jsStackTop);
@@ -93,7 +93,7 @@ struct JSCall {
         ptr->setArgc(argc);
         memcpy(ptr->args, argv, argc*sizeof(Value));
     }
-    JSCall(const Scope &scope, ReturnedValue function, const Value *argv, int argc, const Value *thisObject = 0)
+    JSCallData(const Scope &scope, ReturnedValue function, const Value *argv, int argc, const Value *thisObject = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
         ptr = reinterpret_cast<CallData *>(scope.engine->jsStackTop);
@@ -119,7 +119,7 @@ struct JSCall {
     }
 
     ReturnedValue callAsConstructor() const {
-        return static_cast<FunctionObject &>(ptr->function).construct(ptr->args, ptr->argc());
+        return static_cast<FunctionObject &>(ptr->function).callAsConstructor(ptr->args, ptr->argc());
     }
 
     CallData *ptr;

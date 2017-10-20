@@ -155,7 +155,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     void init(String *name, bool createProto);
 
-    ReturnedValue construct(const Value *argv, int argc) const {
+    ReturnedValue callAsConstructor(const Value *argv, int argc) const {
         return d()->jsConstruct(this, argv, argc);
     }
     ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const {

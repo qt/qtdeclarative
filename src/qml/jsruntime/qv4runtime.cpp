@@ -428,7 +428,7 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
     Scope scope(engine);
     ScopedValue conv(scope, object->get(meth1));
 
-    JSCall jsCall(scope, nullptr, 0);
+    JSCallData jsCall(scope, nullptr, 0);
     jsCall->thisObject = *object;
 
     if (FunctionObject *o = conv->as<FunctionObject>()) {
@@ -981,7 +981,7 @@ ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint ind
 ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Value *argv, int argc)
 {
     Scope scope(engine);
-    JSCall callData(scope, argv, argc);
+    JSCallData callData(scope, argv, argc);
     Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
 
     ExecutionContext &ctx = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context);
@@ -1008,7 +1008,7 @@ ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Va
 ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, Value *argv, int argc)
 {
     Scope scope(engine);
-    JSCall callData(scope, argv, argc);
+    JSCallData callData(scope, argv, argc);
     Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
 
     callData->function = engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex];
@@ -1035,7 +1035,7 @@ ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, V
 ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, Value *base, int nameIndex, Value *argv, int argc)
 {
     Scope scope(engine);
-    JSCall callData(scope, argv, argc, base);
+    JSCallData callData(scope, argv, argc, base);
     Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
 
     if (!callData->thisObject.isObject()) {
@@ -1069,7 +1069,7 @@ ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, Value *base,
 ReturnedValue Runtime::method_callPropertyLookup(ExecutionEngine *engine, Value *base, uint index, Value *argv, int argc)
 {
     Scope scope(engine);
-    JSCall callData(scope, argv, argc, base);
+    JSCallData callData(scope, argv, argc, base);
     Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
 
     Q_ASSERT(engine->jsStackTop >= callData->args + callData->argc());
@@ -1086,7 +1086,7 @@ ReturnedValue Runtime::method_callPropertyLookup(ExecutionEngine *engine, Value 
 ReturnedValue Runtime::method_callElement(ExecutionEngine *engine, Value *base, const Value &index, Value *argv, int argc)
 {
     Scope scope(engine);
-    JSCall callData(scope, argv, argc, base);
+    JSCallData callData(scope, argv, argc, base);
     Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
 
     callData->thisObject = callData->thisObject.toObject(engine);
@@ -1107,7 +1107,7 @@ ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &fu
         return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
 
     Scope scope(engine);
-    JSCall callData(scope, func.asReturnedValue(), argv, argc);
+    JSCallData callData(scope, func.asReturnedValue(), argv, argc);
     Q_ASSERT(callData->args + callData->argc() == engine->jsStackTop);
 
     return static_cast<FunctionObject &>(callData->function).call(&callData->thisObject, callData->args, callData->argc());
@@ -1119,7 +1119,7 @@ ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &fu
     if (!function.isFunctionObject())
         return engine->throwTypeError();
 
-    return static_cast<const FunctionObject &>(function).construct(argv, argc);
+    return static_cast<const FunctionObject &>(function).callAsConstructor(argv, argc);
 }
 
 void Runtime::method_throwException(ExecutionEngine *engine, const Value &value)

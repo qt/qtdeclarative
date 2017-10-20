@@ -950,7 +950,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 }
 
                 const unsigned int parameterCount = function->formalParameterCount();
-                QV4::JSCall jsCall(scope, function, parameterCount);
+                QV4::JSCallData jsCall(scope, function, parameterCount);
                 jsCall->thisObject = ep->v8engine()->global();
 
                 for (uint ii = 0; ii < parameterCount; ++ii)

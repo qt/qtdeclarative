@@ -677,7 +677,7 @@ bool ArrayElementLessThan::operator()(Value v1, Value v2) const
     if (o) {
         Scope scope(o->engine());
         ScopedValue result(scope);
-        JSCall jsCall(scope, o, 2);
+        JSCallData jsCall(scope, o, 2);
         jsCall->args[0] = v1;
         jsCall->args[1] = v2;
         result = jsCall.call();

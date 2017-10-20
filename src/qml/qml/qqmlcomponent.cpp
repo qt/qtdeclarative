@@ -1547,7 +1547,7 @@ void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
 
     QV4::ScopedFunctionObject f(scope, d()->statusChanged);
     if (f) {
-        QV4::JSCall jsCall(scope, f, 1);
+        QV4::JSCallData jsCall(scope, f, 1);
         jsCall->thisObject = this;
         jsCall->args[0] = QV4::Primitive::fromUInt32(s);
         jsCall.call();

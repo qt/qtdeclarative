@@ -139,7 +139,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     if (isMapped && attrs.isData()) {
         Q_ASSERT(arrayData());
         ScopedFunctionObject setter(scope, map->setter());
-        JSCall jsCall(scope, setter, 1);
+        JSCallData jsCall(scope, setter, 1);
         jsCall->thisObject = this->asReturnedValue();
         jsCall->args[0] = desc->value;
         jsCall.call();

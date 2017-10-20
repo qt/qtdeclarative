@@ -67,7 +67,7 @@ void QQmlDelayedCallQueue::DelayedFunctionCall::execute(QV4::ExecutionEngine *en
         const QV4::FunctionObject *callback = m_function.as<QV4::FunctionObject>();
         Q_ASSERT(callback);
         const int argCount = array ? array->getLength() : 0;
-        QV4::JSCall jsCall(scope, callback, argCount);
+        QV4::JSCallData jsCall(scope, callback, argCount);
         jsCall->thisObject = QV4::Encode::undefined();
 
         for (int i = 0; i < argCount; i++) {

@@ -56,6 +56,7 @@
 #include <qv4runtimecodegen_p.h>
 #include "private/qlocale_tools_p.h"
 #include "private/qqmlbuiltinfunctions_p.h"
+#include <private/qv4jscall_p.h>
 
 #include <QtCore/QDebug>
 #include <algorithm>
@@ -72,13 +73,13 @@ Q_STATIC_ASSERT((Heap::FunctionObject::markTable & Heap::Object::markTable) == H
 static ReturnedValue jsCallWrapper(const QV4::FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(f->engine());
-    JSCall callData(scope, f->asReturnedValue(), argv, argc, thisObject);
+    JSCallData callData(scope, f->asReturnedValue(), argv, argc, thisObject);
     return f->vtable()->call(f, callData);
 }
 ReturnedValue jsConstructWrapper(const QV4::FunctionObject *f, const Value *argv, int argc)
 {
     Scope scope(f->engine());
-    JSCall callData(scope, f->asReturnedValue(), argv, argc);
+    JSCallData callData(scope, f->asReturnedValue(), argv, argc);
     return f->vtable()->construct(f, callData);
 }
 
@@ -332,7 +333,7 @@ ReturnedValue FunctionPrototype::method_apply(const BuiltinFunction *b, CallData
         v4->jsStackTop = callData->args;
     }
 
-    return o->call(callData);
+    return o->call(&callData->thisObject, callData->args, callData->argc());
 }
 
 ReturnedValue FunctionPrototype::method_call(const BuiltinFunction *b, CallData *callData)
@@ -513,7 +514,7 @@ ReturnedValue BoundFunction::call(const Managed *that, CallData *callData)
 
     callData->thisObject = f->boundThis();
     callData->function = f->target();
-    return static_cast<FunctionObject &>(callData->function).call(callData);
+    return static_cast<FunctionObject &>(callData->function).call(&callData->thisObject, callData->args, callData->argc());
 }
 
 ReturnedValue BoundFunction::construct(const Managed *that, CallData *callData)
@@ -531,5 +532,5 @@ ReturnedValue BoundFunction::construct(const Managed *that, CallData *callData)
 
     callData->thisObject = f->boundThis();
     callData->function = f->target();
-    return static_cast<FunctionObject &>(callData->function).construct(callData);
+    return static_cast<FunctionObject &>(callData->function).callAsConstructor(callData->args, callData->argc());
 }

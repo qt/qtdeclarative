@@ -572,7 +572,7 @@ ReturnedValue TypedArrayPrototype::method_subarray(const BuiltinFunction *builti
     if (!constructor)
         return scope.engine->throwTypeError();
 
-    JSCall jsCall(scope, constructor, 3);
+    JSCallData jsCall(scope, constructor, 3);
     jsCall->args[0] = buffer;
     jsCall->args[1] = Encode(a->d()->byteOffset + begin*a->d()->type->bytesPerElement);
     jsCall->args[2] = Encode(newLen);

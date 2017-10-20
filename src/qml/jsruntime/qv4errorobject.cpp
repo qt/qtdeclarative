@@ -241,7 +241,7 @@ ReturnedValue ErrorCtor::construct(const Managed *that, CallData *callData)
 
 ReturnedValue ErrorCtor::call(const Managed *that, CallData *callData)
 {
-    return static_cast<const Object *>(that)->construct(callData);
+    return static_cast<const FunctionObject *>(that)->callAsConstructor(callData->args, callData->argc());
 }
 
 void Heap::EvalErrorCtor::init(QV4::ExecutionContext *scope)

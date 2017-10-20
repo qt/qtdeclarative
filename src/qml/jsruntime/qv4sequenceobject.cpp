@@ -420,7 +420,7 @@ public:
             ScopedFunctionObject compare(scope, m_compareFn);
             if (!compare)
                 return m_v4->throwTypeError();
-            JSCall jsCall(scope, compare, 2);
+            JSCallData jsCall(scope, compare, 2);
             jsCall->args[0] = convertElementToValue(m_v4, lhs);
             jsCall->args[1] = convertElementToValue(m_v4, rhs);
             jsCall->thisObject = m_v4->globalObject;
