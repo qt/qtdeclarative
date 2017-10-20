@@ -61,20 +61,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct JSCallData {
-    JSCallData(const Scope &scope, std::nullptr_t, int argc = 0)
-    {
-        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
-        ptr = reinterpret_cast<CallData *>(scope.alloc(size));
-        ptr->setArgc(argc);
-    }
-    JSCallData(const Scope &scope, const FunctionObject *function, int argc = 0)
-    {
-        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
-        ptr = reinterpret_cast<CallData *>(scope.alloc(size));
-        ptr->setArgc(argc);
-        ptr->function = *function;
-    }
-    JSCallData(const Scope &scope, Value *argv, int argc, Value *thisObject = 0)
+    JSCallData(const Scope &scope, int argc = 0, const Value *argv = 0, const Value *thisObject = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
         ptr = reinterpret_cast<CallData *>(scope.engine->jsStackTop);
@@ -84,19 +71,8 @@ struct JSCallData {
         ptr->accumulator = Encode::undefined();
         ptr->thisObject = thisObject ? thisObject->asReturnedValue() : Encode::undefined();
         ptr->setArgc(argc);
-        memcpy(ptr->args, argv, argc*sizeof(Value));
-    }
-    JSCallData(const Scope &scope, ReturnedValue function, const Value *argv, int argc, const Value *thisObject = 0)
-    {
-        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
-        ptr = reinterpret_cast<CallData *>(scope.engine->jsStackTop);
-        scope.engine->jsStackTop += size;
-        ptr->function = function;
-        ptr->context = Encode::undefined();
-        ptr->accumulator = Encode::undefined();
-        ptr->thisObject = thisObject ? thisObject->asReturnedValue() : Encode::undefined();
-        ptr->setArgc(argc);
-        memcpy(ptr->args, argv, argc*sizeof(Value));
+        if (argv)
+            memcpy(ptr->args, argv, argc*sizeof(Value));
     }
 
     CallData *operator->() const {

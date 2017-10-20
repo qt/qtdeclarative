@@ -119,7 +119,7 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
     if (!f)
         return;
 
-    QV4::JSCallData jsCallData(scope, f, 1);
+    QV4::JSCallData jsCallData(scope, 1);
     jsCallData->thisObject = v4->globalObject->asReturnedValue();
     jsCallData->args[0] = status;
     f->call(jsCallData);

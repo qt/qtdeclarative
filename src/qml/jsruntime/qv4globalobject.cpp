@@ -374,7 +374,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
 
     if (function->isStrict() || (ctx->d()->v4Function->isStrict())) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
-        JSCallData jsCallData(scope, e, 0);
+        JSCallData jsCallData(scope, 0);
         if (directCall)
             jsCallData->thisObject = scope.engine->currentStackFrame->thisObject();
         else
@@ -387,7 +387,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     // set the correct v4 function for the context
     ctx->d()->v4Function = function;
 
-    JSCallData jsCall(scope, nullptr);
+    JSCallData jsCall(scope);
     jsCall->thisObject = scope.engine->currentStackFrame->thisObject();
     jsCall->context = *ctx;
     return function->call(jsCall.callData());

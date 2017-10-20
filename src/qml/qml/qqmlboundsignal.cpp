@@ -193,7 +193,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, 0);
     int argCount = argsTypes ? *argsTypes : 0;
 
-    QV4::JSCallData jsCall(scope, nullptr, argCount);
+    QV4::JSCallData jsCall(scope, argCount);
     for (int ii = 0; ii < argCount; ++ii) {
         int type = argsTypes[ii + 1];
         //### ideally we would use metaTypeToJS, however it currently gives different results
@@ -238,7 +238,7 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
-    QV4::JSCallData jsCall(scope, nullptr, args.count());
+    QV4::JSCallData jsCall(scope, args.count());
     for (int ii = 0; ii < args.count(); ++ii) {
         jsCall->args[ii] = scope.engine->fromVariant(args[ii]);
     }

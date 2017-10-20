@@ -1576,7 +1576,7 @@ void QQmlXMLHttpRequest::dispatchCallback(Object *thisObj, QQmlContextData *cont
         return;
     }
 
-    QV4::JSCallData jsCallData(scope, callback);
+    QV4::JSCallData jsCallData(scope);
     callback->call(jsCallData);
 
     if (scope.engine->hasException) {

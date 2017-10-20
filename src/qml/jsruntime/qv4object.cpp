@@ -107,7 +107,7 @@ ReturnedValue Object::getValue(const Value &thisObject, const Value &v, Property
         return Encode::undefined();
 
     Scope scope(f->engine());
-    JSCallData jsCallData(scope, f);
+    JSCallData jsCallData(scope);
     jsCallData->thisObject = thisObject;
     return f->call(jsCallData);
 }
@@ -125,7 +125,7 @@ bool Object::putValue(uint memberIndex, const Value &value)
         if (set) {
             Scope scope(ic->engine);
             ScopedFunctionObject setter(scope, set);
-            JSCallData jsCallData(scope, setter, 1);
+            JSCallData jsCallData(scope, 1);
             jsCallData->args[0] = value;
             jsCallData->thisObject = this;
             setter->call(jsCallData);
@@ -764,7 +764,7 @@ bool Object::internalPut(String *name, const Value &value)
 
         Scope scope(engine);
         ScopedFunctionObject setter(scope, *memberIndex);
-        JSCallData jsCallData(scope, setter, 1);
+        JSCallData jsCallData(scope, 1);
         jsCallData->args[0] = value;
         jsCallData->thisObject = this;
         setter->call(jsCallData);
@@ -829,7 +829,7 @@ bool Object::internalPutIndexed(uint index, const Value &value)
 
         Scope scope(engine);
         ScopedFunctionObject setter(scope, *arrayIndex);
-        JSCallData jsCallData(scope, setter, 1);
+        JSCallData jsCallData(scope, 1);
         jsCallData->args[0] = value;
         jsCallData->thisObject = this;
         setter->call(jsCallData);

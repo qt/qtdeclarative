@@ -198,7 +198,7 @@ ReturnedValue ArrayPrototype::method_find(const BuiltinFunction *b, CallData *ca
     if (!callback)
         THROW_TYPE_ERROR();
 
-    JSCallData jsCallData(scope, callback, 3);
+    JSCallData jsCallData(scope, 3);
     jsCallData->thisObject = callData->argument(1);
 
     ScopedValue v(scope);
@@ -234,7 +234,7 @@ ReturnedValue ArrayPrototype::method_findIndex(const BuiltinFunction *b, CallDat
     if (!callback)
         THROW_TYPE_ERROR();
 
-    JSCallData jsCallData(scope, callback, 3);
+    JSCallData jsCallData(scope, 3);
     jsCallData->thisObject = callData->argument(1);
 
     ScopedValue v(scope);
@@ -793,7 +793,7 @@ ReturnedValue ArrayPrototype::method_every(const BuiltinFunction *b, CallData *c
 
     ScopedValue r(scope);
     ScopedValue v(scope);
-    JSCallData jsCallData(scope, callback, 3);
+    JSCallData jsCallData(scope, 3);
     jsCallData->thisObject = callData->argument(1);
 
     bool ok = true;
@@ -827,7 +827,7 @@ ReturnedValue ArrayPrototype::method_some(const BuiltinFunction *b, CallData *ca
 
     ScopedValue v(scope);
     ScopedValue result(scope);
-    JSCallData jsCallData(scope, callback, 3);
+    JSCallData jsCallData(scope, 3);
     jsCallData->thisObject = callData->argument(1);
 
     for (uint k = 0; k < len; ++k) {
@@ -860,7 +860,7 @@ ReturnedValue ArrayPrototype::method_forEach(const BuiltinFunction *b, CallData 
         THROW_TYPE_ERROR();
 
     ScopedValue v(scope);
-    JSCallData jsCallData(scope, callback, 3);
+    JSCallData jsCallData(scope, 3);
     jsCallData->thisObject = callData->argument(1);
 
     for (uint k = 0; k < len; ++k) {
@@ -896,7 +896,7 @@ ReturnedValue ArrayPrototype::method_map(const BuiltinFunction *b, CallData *cal
 
     ScopedValue v(scope);
     ScopedValue mapped(scope);
-    JSCallData jsCallData(scope, callback, 3);
+    JSCallData jsCallData(scope, 3);
     jsCallData->thisObject = callData->argument(1);
 
     for (uint k = 0; k < len; ++k) {
@@ -932,7 +932,7 @@ ReturnedValue ArrayPrototype::method_filter(const BuiltinFunction *b, CallData *
 
     ScopedValue selected(scope);
     ScopedValue v(scope);
-    JSCallData jsCallData(scope, callback, 3);
+    JSCallData jsCallData(scope, 3);
     jsCallData->thisObject = callData->argument(1);
 
     uint to = 0;
@@ -985,7 +985,7 @@ ReturnedValue ArrayPrototype::method_reduce(const BuiltinFunction *b, CallData *
             THROW_TYPE_ERROR();
     }
 
-    JSCallData jsCallData(scope, callback, 4);
+    JSCallData jsCallData(scope, 4);
 
     while (k < len) {
         bool kPresent;
@@ -1038,7 +1038,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(const BuiltinFunction *b, CallD
             THROW_TYPE_ERROR();
     }
 
-    JSCallData jsCallData(scope, callback, 4);
+    JSCallData jsCallData(scope, 4);
     jsCallData->thisObject = Primitive::undefinedValue();
 
     while (k > 0) {

@@ -436,7 +436,7 @@ ReturnedValue RegExpPrototype::method_compile(const BuiltinFunction *b, CallData
     if (!r)
         return scope.engine->throwTypeError();
 
-    JSCallData jsCallData(scope, scope.engine->regExpCtor(), callData->argc());
+    JSCallData jsCallData(scope, callData->argc());
     memcpy(jsCallData->args, callData->args, callData->argc()*sizeof(Value));
 
     Scoped<RegExpObject> re(scope, scope.engine->regExpCtor()->callAsConstructor(jsCallData));

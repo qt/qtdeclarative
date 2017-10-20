@@ -1451,7 +1451,7 @@ ReturnedValue DatePrototype::method_toJSON(const BuiltinFunction *b, CallData *c
     if (!toIso)
         return v4->throwTypeError();
 
-    JSCallData jsCallData(scope, toIso);
+    JSCallData jsCallData(scope);
     jsCallData->thisObject = callData->thisObject;
     return toIso->call(jsCallData);
 }

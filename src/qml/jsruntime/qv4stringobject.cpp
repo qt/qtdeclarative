@@ -583,7 +583,7 @@ ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData
     if (!!searchCallback) {
         result.reserve(string.length() + 10*numStringMatches);
         ScopedValue entry(scope);
-        JSCallData jsCallData(scope, searchCallback, numCaptures + 2);
+        JSCallData jsCallData(scope, numCaptures + 2);
         jsCallData->thisObject = Primitive::undefinedValue();
         int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
@@ -644,9 +644,9 @@ ReturnedValue StringPrototype::method_search(const BuiltinFunction *b, CallData 
 
     RegExpObject *regExp = regExpObj->as<RegExpObject>();
     if (!regExp) {
-        JSCallData jsCallDataData(scope, scope.engine->regExpCtor(), 1);
-        jsCallDataData->args[0] = regExpObj;
-        regExpObj = scope.engine->regExpCtor()->callAsConstructor(jsCallDataData);
+        JSCallData jsCallData(scope, 1);
+        jsCallData->args[0] = regExpObj;
+        regExpObj = scope.engine->regExpCtor()->callAsConstructor(jsCallData);
         if (scope.engine->hasException)
             return QV4::Encode::undefined();
 

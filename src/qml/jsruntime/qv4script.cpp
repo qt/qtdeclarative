@@ -152,13 +152,13 @@ ReturnedValue Script::run()
         ContextStateSaver stateSaver(valueScope, context);
         context->d()->v4Function = vmFunction;
 
-        QV4::JSCallData jsCall(valueScope, nullptr);
+        QV4::JSCallData jsCall(valueScope);
         jsCall->thisObject = engine->globalObject;
         jsCall->context = *context;
         return vmFunction->call(jsCall.callData());
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
-        JSCallData jsCall(valueScope, nullptr);
+        JSCallData jsCall(valueScope);
         jsCall->thisObject = Primitive::undefinedValue();
         jsCall->context = *qml;
         return vmFunction->call(jsCall.callData());

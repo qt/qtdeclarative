@@ -73,13 +73,13 @@ Q_STATIC_ASSERT((Heap::FunctionObject::markTable & Heap::Object::markTable) == H
 static ReturnedValue jsCallWrapper(const QV4::FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(f->engine());
-    JSCallData callData(scope, f->asReturnedValue(), argv, argc, thisObject);
+    JSCallData callData(scope, argc, argv, thisObject);
     return f->vtable()->call(f, callData.callData(f));
 }
 ReturnedValue jsConstructWrapper(const QV4::FunctionObject *f, const Value *argv, int argc)
 {
     Scope scope(f->engine());
-    JSCallData callData(scope, f->asReturnedValue(), argv, argc);
+    JSCallData callData(scope, argc, argv);
     return f->vtable()->construct(f, callData.callData(f));
 }
 

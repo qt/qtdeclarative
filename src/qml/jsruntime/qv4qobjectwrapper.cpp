@@ -816,7 +816,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             QV4::Scope scope(v4);
             QV4::ScopedFunctionObject f(scope, This->function.value());
 
-            QV4::JSCallData jsCallData(scope, f, argCount);
+            QV4::JSCallData jsCallData(scope, argCount);
             jsCallData->thisObject = This->thisObject.isUndefined() ? v4->globalObject->asReturnedValue() : This->thisObject.value();
             for (int ii = 0; ii < argCount; ++ii) {
                 int type = argsTypes[ii + 1];
