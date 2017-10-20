@@ -187,7 +187,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(bool *isUndefined)
     QV4::Scope scope(v4);
     QV4::JSCallData jsCall(scope, nullptr);
 
-    return evaluate(jsCall, isUndefined);
+    return evaluate(jsCall.callData(), isUndefined);
 }
 
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefined)

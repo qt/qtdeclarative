@@ -1001,7 +1001,7 @@ ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Va
     FunctionObject &f = static_cast<FunctionObject &>(callData->function);
 
     if (f.d() == engine->evalFunction()->d())
-        return static_cast<EvalFunction &>(f).evalCall(callData, true);
+        return static_cast<EvalFunction &>(f).evalCall(callData.callData(&f), true);
 
     return f.call(&callData->thisObject, callData->args, callData->argc());
 }

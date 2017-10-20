@@ -390,7 +390,7 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
     JSCallData jsCall(scope, nullptr);
     jsCall->thisObject = scope.engine->currentStackFrame->thisObject();
     jsCall->context = *ctx;
-    return function->call(jsCall);
+    return function->call(jsCall.callData());
 }
 
 

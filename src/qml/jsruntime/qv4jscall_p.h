@@ -103,7 +103,9 @@ struct JSCallData {
         return ptr;
     }
 
-    operator CallData *() const {
+    CallData *callData(const FunctionObject *f = nullptr) const {
+        if (f)
+            ptr->function = f->asReturnedValue();
         return ptr;
     }
 

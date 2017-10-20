@@ -74,13 +74,13 @@ static ReturnedValue jsCallWrapper(const QV4::FunctionObject *f, const Value *th
 {
     Scope scope(f->engine());
     JSCallData callData(scope, f->asReturnedValue(), argv, argc, thisObject);
-    return f->vtable()->call(f, callData);
+    return f->vtable()->call(f, callData.callData(f));
 }
 ReturnedValue jsConstructWrapper(const QV4::FunctionObject *f, const Value *argv, int argc)
 {
     Scope scope(f->engine());
     JSCallData callData(scope, f->asReturnedValue(), argv, argc);
-    return f->vtable()->construct(f, callData);
+    return f->vtable()->construct(f, callData.callData(f));
 }
 
 
