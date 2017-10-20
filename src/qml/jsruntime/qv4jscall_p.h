@@ -106,7 +106,7 @@ struct JSCallData {
         memcpy(ptr->args, argv, argc*sizeof(Value));
     }
 
-    CallData *operator->() {
+    CallData *operator->() const {
         return ptr;
     }
 
@@ -115,15 +115,28 @@ struct JSCallData {
     }
 
     ReturnedValue call() const {
-        return static_cast<FunctionObject &>(ptr->function).call(&ptr->thisObject, ptr->args, ptr->argc());
+        return static_cast<FunctionObject &>(ptr->function).call(*this);
     }
 
     ReturnedValue callAsConstructor() const {
-        return static_cast<FunctionObject &>(ptr->function).callAsConstructor(ptr->args, ptr->argc());
+        return static_cast<FunctionObject &>(ptr->function).callAsConstructor(*this);
     }
 
     CallData *ptr;
 };
+
+inline
+ReturnedValue FunctionObject::callAsConstructor(const JSCallData &data) const
+{
+    return d()->jsConstruct(this, data->args, data->argc());
+}
+
+inline
+ReturnedValue FunctionObject::call(const JSCallData &data) const
+{
+    return d()->jsCall(this, &data->thisObject, data->args, data->argc());
+}
+
 
 struct ScopedStackFrame {
     Scope &scope;

@@ -63,6 +63,7 @@ namespace QV4 {
 
 struct BuiltinFunction;
 struct IndexedBuiltinFunction;
+struct JSCallData;
 
 typedef ReturnedValue (*jsCallFunction)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 typedef ReturnedValue (*jsConstructFunction)(const FunctionObject *, const Value *argv, int argc);
@@ -155,9 +156,11 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     void init(String *name, bool createProto);
 
+    inline ReturnedValue callAsConstructor(const JSCallData &data) const;
     ReturnedValue callAsConstructor(const Value *argv, int argc) const {
         return d()->jsConstruct(this, argv, argc);
     }
+    inline ReturnedValue call(const JSCallData &data) const;
     ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const {
         return d()->jsCall(this, thisObject, argv, argc);
     }
