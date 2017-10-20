@@ -748,7 +748,8 @@ void QQuickFlickable::setContentX(qreal pos)
     d->hData.explicitValue = true;
     d->resetTimeline(d->hData);
     d->hData.vTime = d->timeline.time();
-    movementEnding(true, false);
+    if (isMoving() || isFlicking())
+        movementEnding(true, false);
     if (-pos != d->hData.move.value())
         d->hData.move.setValue(-pos);
 }
@@ -765,7 +766,8 @@ void QQuickFlickable::setContentY(qreal pos)
     d->vData.explicitValue = true;
     d->resetTimeline(d->vData);
     d->vData.vTime = d->timeline.time();
-    movementEnding(false, true);
+    if (isMoving() || isFlicking())
+        movementEnding(false, true);
     if (-pos != d->vData.move.value())
         d->vData.move.setValue(-pos);
 }

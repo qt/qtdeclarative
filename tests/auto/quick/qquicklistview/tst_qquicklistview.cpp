@@ -259,6 +259,8 @@ private slots:
     void itemFiltered();
     void releaseItems();
 
+    void QTBUG_34576_velocityZero();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -8605,6 +8607,54 @@ void tst_QQuickListView::releaseItems()
 
     // don't crash (QTBUG-61294)
     listview->setModel(123);
+}
+
+void tst_QQuickListView::QTBUG_34576_velocityZero()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setGeometry(0,0,240,320);
+
+    QQmlContext *ctxt = window->rootContext();
+
+    QString filename(testFile("qtbug34576.qml"));
+    window->setSource(QUrl::fromLocalFile(filename));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != 0);
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    QSignalSpy horizontalVelocitySpy(listview, SIGNAL(horizontalVelocityChanged()));
+
+    // currentIndex is initialized to 0
+    QCOMPARE(listview->currentIndex(), 0);
+
+    // set currentIndex to last item currently visible item
+    window->rootObject()->setProperty("horizontalVelocityZeroCount", QVariant(0));
+    listview->setCurrentIndex(2);
+    QTRY_COMPARE(window->rootObject()->property("current").toInt(), 2);
+    QTRY_COMPARE(horizontalVelocitySpy.count(), 0);
+    QTRY_COMPARE(window->rootObject()->property("horizontalVelocityZeroCount").toInt(), 0);
+
+    // click button which increases currentIndex
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(295,215));
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(295,215));
+
+    // verify that currentIndexChanged is triggered
+    QVERIFY(horizontalVelocitySpy.wait());
+
+    // set currentIndex to item out of view to cause listview scroll
+    QTRY_COMPARE(window->rootObject()->property("current").toInt(), 3);
+    QTRY_COMPARE(horizontalVelocitySpy.count() > 0, true);
+    QVERIFY(horizontalVelocitySpy.wait(1000));
+
+    // velocity should be always > 0.0
+    QTRY_COMPARE(window->rootObject()->property("horizontalVelocityZeroCount").toInt(), 0);
+
+    delete window;
 }
 
 QTEST_MAIN(tst_QQuickListView)
