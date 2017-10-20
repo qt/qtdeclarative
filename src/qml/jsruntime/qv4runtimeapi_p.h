@@ -92,16 +92,16 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
 
 #define FOR_EACH_RUNTIME_METHOD(F) \
     /* call */ \
-    F(ReturnedValue, callGlobalLookup, (ExecutionEngine *engine, uint index, CallData *callData)) \
-    F(ReturnedValue, callName, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
-    F(ReturnedValue, callProperty, (ExecutionEngine *engine, int nameIndex, CallData *callData)) \
-    F(ReturnedValue, callPropertyLookup, (ExecutionEngine *engine, uint index, CallData *callData)) \
-    F(ReturnedValue, callElement, (ExecutionEngine *engine, const Value &index, CallData *callData)) \
-    F(ReturnedValue, callValue, (ExecutionEngine *engine, const Value &func, CallData *callData)) \
-    F(ReturnedValue, callPossiblyDirectEval, (ExecutionEngine *engine, CallData *callData)) \
+    F(ReturnedValue, callGlobalLookup, (ExecutionEngine *engine, uint index, Value *argv, int argc)) \
+    F(ReturnedValue, callName, (ExecutionEngine *engine, int nameIndex, Value *argv, int argc)) \
+    F(ReturnedValue, callProperty, (ExecutionEngine *engine, Value *base, int nameIndex, Value *argv, int argc)) \
+    F(ReturnedValue, callPropertyLookup, (ExecutionEngine *engine, Value *base, uint index, Value *argv, int argc)) \
+    F(ReturnedValue, callElement, (ExecutionEngine *engine, Value *base, const Value &index, Value *argv, int argc)) \
+    F(ReturnedValue, callValue, (ExecutionEngine *engine, const Value &func, Value *argv, int argc)) \
+    F(ReturnedValue, callPossiblyDirectEval, (ExecutionEngine *engine, Value *argv, int argc)) \
     \
     /* construct */ \
-    F(ReturnedValue, construct, (ExecutionEngine *engine, const Value &func, CallData *callData)) \
+    F(ReturnedValue, construct, (ExecutionEngine *engine, const Value &func, Value *argv, int argc)) \
     \
     /* load & store */ \
     F(void, storeNameStrict, (ExecutionEngine *engine, int nameIndex, const Value &value)) \
