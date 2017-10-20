@@ -374,12 +374,12 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
 
     if (function->isStrict() || (ctx->d()->v4Function->isStrict())) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
-        JSCallData jsCall(scope, e, 0);
+        JSCallData jsCallData(scope, e, 0);
         if (directCall)
-            jsCall->thisObject = scope.engine->currentStackFrame->thisObject();
+            jsCallData->thisObject = scope.engine->currentStackFrame->thisObject();
         else
-            jsCall->thisObject = scope.engine->globalObject;
-        return jsCall.call();
+            jsCallData->thisObject = scope.engine->globalObject;
+        return e->call(jsCallData);
     }
 
     ContextStateSaver stateSaver(scope, ctx);

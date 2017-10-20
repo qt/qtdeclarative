@@ -420,11 +420,11 @@ public:
             ScopedFunctionObject compare(scope, m_compareFn);
             if (!compare)
                 return m_v4->throwTypeError();
-            JSCallData jsCall(scope, compare, 2);
-            jsCall->args[0] = convertElementToValue(m_v4, lhs);
-            jsCall->args[1] = convertElementToValue(m_v4, rhs);
-            jsCall->thisObject = m_v4->globalObject;
-            QV4::ScopedValue result(scope, jsCall.call());
+            JSCallData jsCallData(scope, compare, 2);
+            jsCallData->args[0] = convertElementToValue(m_v4, lhs);
+            jsCallData->args[1] = convertElementToValue(m_v4, rhs);
+            jsCallData->thisObject = m_v4->globalObject;
+            QV4::ScopedValue result(scope, compare->call(jsCallData));
             return result->toNumber() < 0;
         }
 

@@ -119,10 +119,10 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
     if (!f)
         return;
 
-    QV4::JSCallData jsCall(scope, f, 1);
-    jsCall->thisObject = v4->globalObject->asReturnedValue();
-    jsCall->args[0] = status;
-    jsCall.call();
+    QV4::JSCallData jsCallData(scope, f, 1);
+    jsCallData->thisObject = v4->globalObject->asReturnedValue();
+    jsCallData->args[0] = status;
+    f->call(jsCallData);
     if (scope.hasException())
         scope.engine->catchException();
 }

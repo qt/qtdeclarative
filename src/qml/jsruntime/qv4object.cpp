@@ -107,9 +107,9 @@ ReturnedValue Object::getValue(const Value &thisObject, const Value &v, Property
         return Encode::undefined();
 
     Scope scope(f->engine());
-    JSCallData jsCall(scope, f);
-    jsCall->thisObject = thisObject;
-    return jsCall.call();
+    JSCallData jsCallData(scope, f);
+    jsCallData->thisObject = thisObject;
+    return f->call(jsCallData);
 }
 
 bool Object::putValue(uint memberIndex, const Value &value)
@@ -125,10 +125,10 @@ bool Object::putValue(uint memberIndex, const Value &value)
         if (set) {
             Scope scope(ic->engine);
             ScopedFunctionObject setter(scope, set);
-            JSCallData jsCall(scope, setter, 1);
-            jsCall->args[0] = value;
-            jsCall->thisObject = this;
-            jsCall.call();
+            JSCallData jsCallData(scope, setter, 1);
+            jsCallData->args[0] = value;
+            jsCallData->thisObject = this;
+            setter->call(jsCallData);
             return !ic->engine->hasException;
         }
         return false;
@@ -764,10 +764,10 @@ bool Object::internalPut(String *name, const Value &value)
 
         Scope scope(engine);
         ScopedFunctionObject setter(scope, *memberIndex);
-        JSCallData jsCall(scope, setter, 1);
-        jsCall->args[0] = value;
-        jsCall->thisObject = this;
-        jsCall.call();
+        JSCallData jsCallData(scope, setter, 1);
+        jsCallData->args[0] = value;
+        jsCallData->thisObject = this;
+        setter->call(jsCallData);
         return !engine->hasException;
     }
 
@@ -829,10 +829,10 @@ bool Object::internalPutIndexed(uint index, const Value &value)
 
         Scope scope(engine);
         ScopedFunctionObject setter(scope, *arrayIndex);
-        JSCallData jsCall(scope, setter, 1);
-        jsCall->args[0] = value;
-        jsCall->thisObject = this;
-        jsCall.call();
+        JSCallData jsCallData(scope, setter, 1);
+        jsCallData->args[0] = value;
+        jsCallData->thisObject = this;
+        setter->call(jsCallData);
         return !engine->hasException;
     }
 

@@ -950,13 +950,13 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 }
 
                 const unsigned int parameterCount = function->formalParameterCount();
-                QV4::JSCallData jsCall(scope, function, parameterCount);
-                jsCall->thisObject = ep->v8engine()->global();
+                QV4::JSCallData jsCallData(scope, function, parameterCount);
+                jsCallData->thisObject = ep->v8engine()->global();
 
                 for (uint ii = 0; ii < parameterCount; ++ii)
-                    jsCall->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);
+                    jsCallData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);
 
-                QV4::ScopedValue result(scope, jsCall.call());
+                QV4::ScopedValue result(scope, function->call(jsCallData));
                 if (scope.hasException()) {
                     QQmlError error = scope.engine->catchExceptionAsQmlError();
                     if (error.isValid())

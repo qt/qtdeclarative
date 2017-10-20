@@ -677,10 +677,10 @@ bool ArrayElementLessThan::operator()(Value v1, Value v2) const
     if (o) {
         Scope scope(o->engine());
         ScopedValue result(scope);
-        JSCallData jsCall(scope, o, 2);
-        jsCall->args[0] = v1;
-        jsCall->args[1] = v2;
-        result = jsCall.call();
+        JSCallData jsCallData(scope, o, 2);
+        jsCallData->args[0] = v1;
+        jsCallData->args[1] = v2;
+        result = o->call(jsCallData);
 
         return result->toNumber() < 0;
     }

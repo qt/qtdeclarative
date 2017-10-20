@@ -583,8 +583,8 @@ ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData
     if (!!searchCallback) {
         result.reserve(string.length() + 10*numStringMatches);
         ScopedValue entry(scope);
-        JSCallData jsCall(scope, searchCallback, numCaptures + 2);
-        jsCall->thisObject = Primitive::undefinedValue();
+        JSCallData jsCallData(scope, searchCallback, numCaptures + 2);
+        jsCallData->thisObject = Primitive::undefinedValue();
         int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
             for (int k = 0; k < numCaptures; ++k) {
@@ -594,15 +594,15 @@ ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData
                 entry = Primitive::undefinedValue();
                 if (start != JSC::Yarr::offsetNoMatch && end != JSC::Yarr::offsetNoMatch)
                     entry = scope.engine->newString(string.mid(start, end - start));
-                jsCall->args[k] = entry;
+                jsCallData->args[k] = entry;
             }
             uint matchStart = matchOffsets[i * numCaptures * 2];
             Q_ASSERT(matchStart >= static_cast<uint>(lastEnd));
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
-            jsCall->args[numCaptures] = Primitive::fromUInt32(matchStart);
-            jsCall->args[numCaptures + 1] = scope.engine->newString(string);
+            jsCallData->args[numCaptures] = Primitive::fromUInt32(matchStart);
+            jsCallData->args[numCaptures + 1] = scope.engine->newString(string);
 
-            replacement = jsCall.call();
+            replacement = searchCallback->call(jsCallData);
             result += string.midRef(lastEnd, matchStart - lastEnd);
             result += replacement->toQString();
             lastEnd = matchEnd;
@@ -644,9 +644,9 @@ ReturnedValue StringPrototype::method_search(const BuiltinFunction *b, CallData 
 
     RegExpObject *regExp = regExpObj->as<RegExpObject>();
     if (!regExp) {
-        JSCallData jsCallData(scope, scope.engine->regExpCtor(), 1);
-        jsCallData->args[0] = regExpObj;
-        regExpObj = scope.engine->regExpCtor()->callAsConstructor(jsCallData);
+        JSCallData jsCallDataData(scope, scope.engine->regExpCtor(), 1);
+        jsCallDataData->args[0] = regExpObj;
+        regExpObj = scope.engine->regExpCtor()->callAsConstructor(jsCallDataData);
         if (scope.engine->hasException)
             return QV4::Encode::undefined();
 

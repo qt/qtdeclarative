@@ -74,13 +74,6 @@ struct JSCallData {
         ptr->setArgc(argc);
         ptr->function = *function;
     }
-    JSCallData(const Scope &scope, Heap::FunctionObject *function, int argc = 0)
-    {
-        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
-        ptr = reinterpret_cast<CallData *>(scope.alloc(size));
-        ptr->setArgc(argc);
-        ptr->function = function;
-    }
     JSCallData(const Scope &scope, Value *argv, int argc, Value *thisObject = 0)
     {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
@@ -112,10 +105,6 @@ struct JSCallData {
 
     operator CallData *() const {
         return ptr;
-    }
-
-    ReturnedValue call() const {
-        return static_cast<FunctionObject &>(ptr->function).call(*this);
     }
 
     CallData *ptr;

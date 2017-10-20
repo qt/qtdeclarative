@@ -1451,9 +1451,9 @@ ReturnedValue DatePrototype::method_toJSON(const BuiltinFunction *b, CallData *c
     if (!toIso)
         return v4->throwTypeError();
 
-    JSCallData jsCall(scope, toIso);
-    jsCall->thisObject = callData->thisObject;
-    return jsCall.call();
+    JSCallData jsCallData(scope, toIso);
+    jsCallData->thisObject = callData->thisObject;
+    return toIso->call(jsCallData);
 }
 
 void DatePrototype::timezoneUpdated()

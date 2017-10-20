@@ -198,8 +198,8 @@ ReturnedValue ArrayPrototype::method_find(const BuiltinFunction *b, CallData *ca
     if (!callback)
         THROW_TYPE_ERROR();
 
-    JSCallData jsCall(scope, callback, 3);
-    jsCall->thisObject = callData->argument(1);
+    JSCallData jsCallData(scope, callback, 3);
+    jsCallData->thisObject = callData->argument(1);
 
     ScopedValue v(scope);
     ScopedValue result(scope);
@@ -208,10 +208,10 @@ ReturnedValue ArrayPrototype::method_find(const BuiltinFunction *b, CallData *ca
         v = instance->getIndexed(k);
         CHECK_EXCEPTION();
 
-        jsCall->args[0] = v;
-        jsCall->args[1] = Primitive::fromDouble(k);
-        jsCall->args[2] = instance;
-        result = jsCall.call();
+        jsCallData->args[0] = v;
+        jsCallData->args[1] = Primitive::fromDouble(k);
+        jsCallData->args[2] = instance;
+        result = callback->call(jsCallData);
 
         CHECK_EXCEPTION();
         if (result->toBoolean())
@@ -234,8 +234,8 @@ ReturnedValue ArrayPrototype::method_findIndex(const BuiltinFunction *b, CallDat
     if (!callback)
         THROW_TYPE_ERROR();
 
-    JSCallData jsCall(scope, callback, 3);
-    jsCall->thisObject = callData->argument(1);
+    JSCallData jsCallData(scope, callback, 3);
+    jsCallData->thisObject = callData->argument(1);
 
     ScopedValue v(scope);
     ScopedValue result(scope);
@@ -244,10 +244,10 @@ ReturnedValue ArrayPrototype::method_findIndex(const BuiltinFunction *b, CallDat
         v = instance->getIndexed(k);
         CHECK_EXCEPTION();
 
-        jsCall->args[0] = v;
-        jsCall->args[1] = Primitive::fromDouble(k);
-        jsCall->args[2] = instance;
-        result = jsCall.call();
+        jsCallData->args[0] = v;
+        jsCallData->args[1] = Primitive::fromDouble(k);
+        jsCallData->args[2] = instance;
+        result = callback->call(jsCallData);
 
         CHECK_EXCEPTION();
         if (result->toBoolean())
@@ -793,8 +793,8 @@ ReturnedValue ArrayPrototype::method_every(const BuiltinFunction *b, CallData *c
 
     ScopedValue r(scope);
     ScopedValue v(scope);
-    JSCallData jsCall(scope, callback, 3);
-    jsCall->thisObject = callData->argument(1);
+    JSCallData jsCallData(scope, callback, 3);
+    jsCallData->thisObject = callData->argument(1);
 
     bool ok = true;
     for (uint k = 0; ok && k < len; ++k) {
@@ -803,10 +803,10 @@ ReturnedValue ArrayPrototype::method_every(const BuiltinFunction *b, CallData *c
         if (!exists)
             continue;
 
-        jsCall->args[0] = v;
-        jsCall->args[1] = Primitive::fromDouble(k);
-        jsCall->args[2] = instance;
-        r = jsCall.call();
+        jsCallData->args[0] = v;
+        jsCallData->args[1] = Primitive::fromDouble(k);
+        jsCallData->args[2] = instance;
+        r = callback->call(jsCallData);
         ok = r->toBoolean();
     }
     return Encode(ok);
@@ -827,8 +827,8 @@ ReturnedValue ArrayPrototype::method_some(const BuiltinFunction *b, CallData *ca
 
     ScopedValue v(scope);
     ScopedValue result(scope);
-    JSCallData jsCall(scope, callback, 3);
-    jsCall->thisObject = callData->argument(1);
+    JSCallData jsCallData(scope, callback, 3);
+    jsCallData->thisObject = callData->argument(1);
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
@@ -836,10 +836,10 @@ ReturnedValue ArrayPrototype::method_some(const BuiltinFunction *b, CallData *ca
         if (!exists)
             continue;
 
-        jsCall->args[0] = v;
-        jsCall->args[1] = Primitive::fromDouble(k);
-        jsCall->args[2] = instance;
-        result = jsCall.call();
+        jsCallData->args[0] = v;
+        jsCallData->args[1] = Primitive::fromDouble(k);
+        jsCallData->args[2] = instance;
+        result = callback->call(jsCallData);
         if (result->toBoolean())
             return Encode(true);
     }
@@ -860,8 +860,8 @@ ReturnedValue ArrayPrototype::method_forEach(const BuiltinFunction *b, CallData 
         THROW_TYPE_ERROR();
 
     ScopedValue v(scope);
-    JSCallData jsCall(scope, callback, 3);
-    jsCall->thisObject = callData->argument(1);
+    JSCallData jsCallData(scope, callback, 3);
+    jsCallData->thisObject = callData->argument(1);
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
@@ -869,10 +869,10 @@ ReturnedValue ArrayPrototype::method_forEach(const BuiltinFunction *b, CallData 
         if (!exists)
             continue;
 
-        jsCall->args[0] = v;
-        jsCall->args[1] = Primitive::fromDouble(k);
-        jsCall->args[2] = instance;
-        jsCall.call();
+        jsCallData->args[0] = v;
+        jsCallData->args[1] = Primitive::fromDouble(k);
+        jsCallData->args[2] = instance;
+        callback->call(jsCallData);
     }
     RETURN_UNDEFINED();
 }
@@ -896,8 +896,8 @@ ReturnedValue ArrayPrototype::method_map(const BuiltinFunction *b, CallData *cal
 
     ScopedValue v(scope);
     ScopedValue mapped(scope);
-    JSCallData jsCall(scope, callback, 3);
-    jsCall->thisObject = callData->argument(1);
+    JSCallData jsCallData(scope, callback, 3);
+    jsCallData->thisObject = callData->argument(1);
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
@@ -905,10 +905,10 @@ ReturnedValue ArrayPrototype::method_map(const BuiltinFunction *b, CallData *cal
         if (!exists)
             continue;
 
-        jsCall->args[0] = v;
-        jsCall->args[1] = Primitive::fromDouble(k);
-        jsCall->args[2] = instance;
-        mapped = jsCall.call();
+        jsCallData->args[0] = v;
+        jsCallData->args[1] = Primitive::fromDouble(k);
+        jsCallData->args[2] = instance;
+        mapped = callback->call(jsCallData);
         a->arraySet(k, mapped);
     }
     return a.asReturnedValue();
@@ -932,8 +932,8 @@ ReturnedValue ArrayPrototype::method_filter(const BuiltinFunction *b, CallData *
 
     ScopedValue selected(scope);
     ScopedValue v(scope);
-    JSCallData jsCall(scope, callback, 3);
-    jsCall->thisObject = callData->argument(1);
+    JSCallData jsCallData(scope, callback, 3);
+    jsCallData->thisObject = callData->argument(1);
 
     uint to = 0;
     for (uint k = 0; k < len; ++k) {
@@ -942,10 +942,10 @@ ReturnedValue ArrayPrototype::method_filter(const BuiltinFunction *b, CallData *
         if (!exists)
             continue;
 
-        jsCall->args[0] = v;
-        jsCall->args[1] = Primitive::fromDouble(k);
-        jsCall->args[2] = instance;
-        selected = jsCall.call();
+        jsCallData->args[0] = v;
+        jsCallData->args[1] = Primitive::fromDouble(k);
+        jsCallData->args[2] = instance;
+        selected = callback->call(jsCallData);
         if (selected->toBoolean()) {
             a->arraySet(to, v);
             ++to;
@@ -985,17 +985,17 @@ ReturnedValue ArrayPrototype::method_reduce(const BuiltinFunction *b, CallData *
             THROW_TYPE_ERROR();
     }
 
-    JSCallData jsCall(scope, callback, 4);
+    JSCallData jsCallData(scope, callback, 4);
 
     while (k < len) {
         bool kPresent;
         v = instance->getIndexed(k, &kPresent);
         if (kPresent) {
-            jsCall->args[0] = acc;
-            jsCall->args[1] = v;
-            jsCall->args[2] = Primitive::fromDouble(k);
-            jsCall->args[3] = instance;
-            acc = jsCall.call();
+            jsCallData->args[0] = acc;
+            jsCallData->args[1] = v;
+            jsCallData->args[2] = Primitive::fromDouble(k);
+            jsCallData->args[3] = instance;
+            acc = callback->call(jsCallData);
         }
         ++k;
     }
@@ -1038,18 +1038,18 @@ ReturnedValue ArrayPrototype::method_reduceRight(const BuiltinFunction *b, CallD
             THROW_TYPE_ERROR();
     }
 
-    JSCallData jsCall(scope, callback, 4);
-    jsCall->thisObject = Primitive::undefinedValue();
+    JSCallData jsCallData(scope, callback, 4);
+    jsCallData->thisObject = Primitive::undefinedValue();
 
     while (k > 0) {
         bool kPresent;
         v = instance->getIndexed(k - 1, &kPresent);
         if (kPresent) {
-            jsCall->args[0] = acc;
-            jsCall->args[1] = v;
-            jsCall->args[2] = Primitive::fromDouble(k - 1);
-            jsCall->args[3] = instance;
-            acc = jsCall.call();
+            jsCallData->args[0] = acc;
+            jsCallData->args[1] = v;
+            jsCallData->args[2] = Primitive::fromDouble(k - 1);
+            jsCallData->args[3] = instance;
+            acc = callback->call(jsCallData);
         }
         --k;
     }
