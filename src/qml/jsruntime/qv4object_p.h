@@ -176,7 +176,7 @@ struct ObjectVTable
 {
     VTable vTable;
     ReturnedValue (*call)(const Managed *, CallData *data);
-    ReturnedValue (*construct)(const Managed *, CallData *data);
+    ReturnedValue (*callAsConstructor)(const Managed *, CallData *data);
     ReturnedValue (*get)(const Managed *, String *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
     bool (*put)(Managed *, String *name, const Value &value);
@@ -197,7 +197,7 @@ const QV4::ObjectVTable classname::static_vtbl =    \
 {     \
     DEFINE_MANAGED_VTABLE_INT(classname, (std::is_same<classname::SuperClass, Object>::value) ? nullptr : &classname::SuperClass::static_vtbl.vTable), \
     call,                                       \
-    construct,                                  \
+    callAsConstructor,                          \
     get,                                        \
     getIndexed,                                 \
     put,                                        \
@@ -428,7 +428,7 @@ public:
     { return vtable()->instanceOf(this, var); }
 
 protected:
-    static ReturnedValue construct(const Managed *m, CallData *);
+    static ReturnedValue callAsConstructor(const Managed *m, CallData *);
     static ReturnedValue call(const Managed *m, CallData *);
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);

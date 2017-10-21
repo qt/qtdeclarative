@@ -54,7 +54,7 @@ void Heap::DataViewCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("DataView"));
 }
 
-ReturnedValue DataViewCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue DataViewCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     Scoped<ArrayBuffer> buffer(scope, callData->argument(0));
@@ -78,7 +78,7 @@ ReturnedValue DataViewCtor::construct(const Managed *m, CallData *callData)
 
 ReturnedValue DataViewCtor::call(const Managed *that, CallData *callData)
 {
-    return construct(that, callData);
+    return callAsConstructor(that, callData);
 }
 
 void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)

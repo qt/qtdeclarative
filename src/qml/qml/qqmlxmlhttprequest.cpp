@@ -1635,7 +1635,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
     V4_OBJECT2(QQmlXMLHttpRequestCtor, FunctionObject)
 
-    static ReturnedValue construct(const Managed *that, QV4::CallData *)
+    static ReturnedValue callAsConstructor(const Managed *that, QV4::CallData *)
     {
         Scope scope(that->engine());
         Scoped<QQmlXMLHttpRequestCtor> ctor(scope, that->as<QQmlXMLHttpRequestCtor>());

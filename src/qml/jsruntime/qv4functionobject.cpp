@@ -80,7 +80,7 @@ ReturnedValue jsConstructWrapper(const QV4::FunctionObject *f, const Value *argv
 {
     Scope scope(f->engine());
     JSCallData callData(scope, argc, argv);
-    return f->vtable()->construct(f, callData.callData(f));
+    return f->vtable()->callAsConstructor(f, callData.callData(f));
 }
 
 
@@ -164,7 +164,7 @@ ReturnedValue FunctionObject::name() const
     return get(scope()->internalClass->engine->id_name());
 }
 
-ReturnedValue FunctionObject::construct(const Managed *that, CallData *)
+ReturnedValue FunctionObject::callAsConstructor(const Managed *that, CallData *)
 {
     return that->engine()->throwTypeError();
 }
@@ -202,7 +202,7 @@ void Heap::FunctionCtor::init(QV4::ExecutionContext *scope)
 }
 
 // 15.3.2
-ReturnedValue FunctionCtor::construct(const Managed *that, CallData *callData)
+ReturnedValue FunctionCtor::callAsConstructor(const Managed *that, CallData *callData)
 {
     Scope scope(that->engine());
     Scoped<FunctionCtor> f(scope, static_cast<const FunctionCtor *>(that));
@@ -252,7 +252,7 @@ ReturnedValue FunctionCtor::construct(const Managed *that, CallData *callData)
 // 15.3.1: This is equivalent to new Function(...)
 ReturnedValue FunctionCtor::call(const Managed *that, CallData *callData)
 {
-    return construct(that, callData);
+    return callAsConstructor(that, callData);
 }
 
 DEFINE_OBJECT_VTABLE(FunctionPrototype);
@@ -377,7 +377,7 @@ ReturnedValue FunctionPrototype::method_bind(const BuiltinFunction *b, CallData 
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);
 
-ReturnedValue ScriptFunction::construct(const Managed *that, CallData *callData)
+ReturnedValue ScriptFunction::callAsConstructor(const Managed *that, CallData *callData)
 {
     ExecutionEngine *v4 = that->engine();
     const ScriptFunction *f = static_cast<const ScriptFunction *>(that);
@@ -458,7 +458,7 @@ void Heap::BuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name
     this->code = code;
 }
 
-ReturnedValue BuiltinFunction::construct(const Managed *f, CallData *)
+ReturnedValue BuiltinFunction::callAsConstructor(const Managed *f, CallData *)
 {
     return f->engine()->throwTypeError();
 }
@@ -517,7 +517,7 @@ ReturnedValue BoundFunction::call(const Managed *that, CallData *callData)
     return static_cast<FunctionObject &>(callData->function).call(&callData->thisObject, callData->args, callData->argc());
 }
 
-ReturnedValue BoundFunction::construct(const Managed *that, CallData *callData)
+ReturnedValue BoundFunction::callAsConstructor(const Managed *that, CallData *callData)
 {
     const BoundFunction *f = static_cast<const BoundFunction *>(that);
     Heap::MemberData *boundArgs = f->boundArgs();

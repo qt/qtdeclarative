@@ -209,7 +209,7 @@ void Heap::TypedArrayCtor::init(QV4::ExecutionContext *scope, TypedArray::Type t
     type = t;
 }
 
-ReturnedValue TypedArrayCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue TypedArrayCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     Scoped<TypedArrayCtor> that(scope, static_cast<const TypedArrayCtor *>(m));
@@ -339,7 +339,7 @@ ReturnedValue TypedArrayCtor::construct(const Managed *m, CallData *callData)
 
 ReturnedValue TypedArrayCtor::call(const Managed *that, CallData *callData)
 {
-    return construct(that, callData);
+    return callAsConstructor(that, callData);
 }
 
 void Heap::TypedArray::init(Type t)

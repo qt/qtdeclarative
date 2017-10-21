@@ -395,7 +395,7 @@ bool Object::hasOwnProperty(uint index) const
     return false;
 }
 
-ReturnedValue Object::construct(const Managed *m, CallData *)
+ReturnedValue Object::callAsConstructor(const Managed *m, CallData *)
 {
     return m->engine()->throwTypeError();
 }

@@ -61,7 +61,7 @@ void Heap::ObjectCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Object"));
 }
 
-ReturnedValue ObjectCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue ObjectCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     ExecutionEngine *v4 = m->engine();
     const ObjectCtor *ctor = static_cast<const ObjectCtor *>(m);

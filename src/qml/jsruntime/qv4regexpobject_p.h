@@ -150,7 +150,7 @@ struct RegExpCtor: FunctionObject
     int lastMatchStart() { return d()->lastMatchStart; }
     int lastMatchEnd() { return d()->lastMatchEnd; }
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static ReturnedValue callAsConstructor(const Managed *m, CallData *callData);
     static ReturnedValue call(const Managed *that, CallData *callData);
 };
 

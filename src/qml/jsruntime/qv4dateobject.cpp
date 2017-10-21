@@ -678,7 +678,7 @@ void Heap::DateCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Date"));
 }
 
-ReturnedValue DateCtor::construct(const Managed *that, CallData *callData)
+ReturnedValue DateCtor::callAsConstructor(const Managed *that, CallData *callData)
 {
     double t = 0;
 

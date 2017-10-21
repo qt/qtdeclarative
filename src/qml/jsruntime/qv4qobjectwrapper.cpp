@@ -2022,7 +2022,7 @@ void QMetaObjectWrapper::init(ExecutionEngine *) {
     }
 }
 
-ReturnedValue QMetaObjectWrapper::construct(const Managed *m, CallData *callData)
+ReturnedValue QMetaObjectWrapper::callAsConstructor(const Managed *m, CallData *callData)
 {
     const QMetaObjectWrapper *This = static_cast<const QMetaObjectWrapper*>(m);
     return This->constructInternal(callData);

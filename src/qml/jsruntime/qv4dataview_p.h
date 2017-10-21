@@ -79,7 +79,7 @@ struct DataViewCtor: FunctionObject
 {
     V4_OBJECT2(DataViewCtor, FunctionObject)
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static ReturnedValue callAsConstructor(const Managed *m, CallData *callData);
     static ReturnedValue call(const Managed *that, CallData *callData);
 };
 

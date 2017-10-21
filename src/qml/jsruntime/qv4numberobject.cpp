@@ -78,7 +78,7 @@ void Heap::NumberCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Number"));
 }
 
-ReturnedValue NumberCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue NumberCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     double dbl = callData->argc() ? callData->args[0].toNumber() : 0.;
     return Encode(m->engine()->newNumberObject(dbl));

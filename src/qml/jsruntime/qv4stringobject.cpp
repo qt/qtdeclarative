@@ -143,7 +143,7 @@ void Heap::StringCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("String"));
 }
 
-ReturnedValue StringCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue StringCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     ExecutionEngine *v4 = static_cast<const Object *>(m)->engine();
     Scope scope(v4);
@@ -419,7 +419,7 @@ ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *
 
     if (!callData->args[0].as<RegExpObject>()) {
         // convert args[0] to a regexp
-        callData->args[0] = RegExpCtor::construct(b, callData);
+        callData->args[0] = RegExpCtor::callAsConstructor(b, callData);
         if (v4->hasException)
             return Encode::undefined();
     }

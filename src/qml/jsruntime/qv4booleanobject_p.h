@@ -70,7 +70,7 @@ struct BooleanCtor: FunctionObject
 {
     V4_OBJECT2(BooleanCtor, FunctionObject)
 
-    static ReturnedValue construct(const Managed *, CallData *callData);
+    static ReturnedValue callAsConstructor(const Managed *, CallData *callData);
     static ReturnedValue call(const Managed *that, CallData *callData);
 };
 

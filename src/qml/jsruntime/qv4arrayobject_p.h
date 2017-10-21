@@ -70,7 +70,7 @@ struct ArrayCtor: FunctionObject
 {
     V4_OBJECT2(ArrayCtor, FunctionObject)
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static ReturnedValue callAsConstructor(const Managed *m, CallData *callData);
     static ReturnedValue call(const Managed *that, CallData *callData);
 };
 

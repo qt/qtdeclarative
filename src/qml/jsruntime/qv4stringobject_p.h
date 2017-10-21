@@ -106,7 +106,7 @@ struct StringCtor: FunctionObject
 {
     V4_OBJECT2(StringCtor, FunctionObject)
 
-    static ReturnedValue construct(const Managed *m, CallData *callData);
+    static ReturnedValue callAsConstructor(const Managed *m, CallData *callData);
     static ReturnedValue call(const Managed *, CallData *callData);
 };
 

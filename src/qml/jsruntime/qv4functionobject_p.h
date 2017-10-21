@@ -164,7 +164,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const {
         return d()->jsCall(this, thisObject, argv, argc);
     }
-    static ReturnedValue construct(const Managed *that, CallData *);
+    static ReturnedValue callAsConstructor(const Managed *that, CallData *);
     static ReturnedValue call(const Managed *that, CallData *d);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
@@ -186,7 +186,7 @@ struct FunctionCtor: FunctionObject
 {
     V4_OBJECT2(FunctionCtor, FunctionObject)
 
-    static ReturnedValue construct(const Managed *that, CallData *callData);
+    static ReturnedValue callAsConstructor(const Managed *that, CallData *callData);
     static ReturnedValue call(const Managed *that, CallData *callData);
 };
 
@@ -211,7 +211,7 @@ struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
         return scope->engine()->memoryManager->allocObject<BuiltinFunction>(scope, name, code);
     }
 
-    static ReturnedValue construct(const Managed *, CallData *);
+    static ReturnedValue callAsConstructor(const Managed *, CallData *);
     static ReturnedValue call(const Managed *that, CallData *callData);
 };
 
@@ -233,7 +233,7 @@ struct ScriptFunction : FunctionObject {
     V4_OBJECT2(ScriptFunction, FunctionObject)
     V4_INTERNALCLASS(ScriptFunction)
 
-    static ReturnedValue construct(const Managed *, CallData *callData);
+    static ReturnedValue callAsConstructor(const Managed *, CallData *callData);
     static ReturnedValue call(const Managed *that, CallData *callData);
 
     InternalClass *classForConstructor() const;
@@ -252,7 +252,7 @@ struct BoundFunction: FunctionObject {
     Value boundThis() const { return d()->boundThis; }
     Heap::MemberData *boundArgs() const { return d()->boundArgs; }
 
-    static ReturnedValue construct(const Managed *, CallData *d);
+    static ReturnedValue callAsConstructor(const Managed *, CallData *d);
     static ReturnedValue call(const Managed *that, CallData *dd);
 };
 

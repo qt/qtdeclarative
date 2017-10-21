@@ -214,7 +214,7 @@ void Heap::RegExpCtor::clearLastMatch()
     lastMatchEnd = 0;
 }
 
-ReturnedValue RegExpCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue RegExpCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     Scope scope(m->engine());
     ScopedValue r(scope, callData->argument(0));
@@ -270,7 +270,7 @@ ReturnedValue RegExpCtor::call(const Managed *that, CallData *callData)
             return Encode(callData->args[0]);
     }
 
-    return construct(that, callData);
+    return callAsConstructor(that, callData);
 }
 
 void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)

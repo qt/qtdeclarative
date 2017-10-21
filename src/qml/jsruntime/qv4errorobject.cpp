@@ -233,7 +233,7 @@ void Heap::ErrorCtor::init(QV4::ExecutionContext *scope, const QString &name)
     Heap::FunctionObject::init(scope, name);
 }
 
-ReturnedValue ErrorCtor::construct(const Managed *that, CallData *callData)
+ReturnedValue ErrorCtor::callAsConstructor(const Managed *that, CallData *callData)
 {
     Value v = Value::fromReturnedValue(callData->argument(0));
     return ErrorObject::create<ErrorObject>(that->engine(), v)->asReturnedValue();
@@ -249,7 +249,7 @@ void Heap::EvalErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("EvalError"));
 }
 
-ReturnedValue EvalErrorCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue EvalErrorCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     return ErrorObject::create<EvalErrorObject>(m->engine(), callData->args[0])->asReturnedValue();
 }
@@ -259,7 +259,7 @@ void Heap::RangeErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("RangeError"));
 }
 
-ReturnedValue RangeErrorCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue RangeErrorCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     return ErrorObject::create<RangeErrorObject>(m->engine(), callData->args[0])->asReturnedValue();
 }
@@ -269,7 +269,7 @@ void Heap::ReferenceErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("ReferenceError"));
 }
 
-ReturnedValue ReferenceErrorCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue ReferenceErrorCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     return ErrorObject::create<ReferenceErrorObject>(m->engine(), callData->args[0])->asReturnedValue();
 }
@@ -279,7 +279,7 @@ void Heap::SyntaxErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("SyntaxError"));
 }
 
-ReturnedValue SyntaxErrorCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue SyntaxErrorCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     return ErrorObject::create<SyntaxErrorObject>(m->engine(), callData->args[0])->asReturnedValue();
 }
@@ -289,7 +289,7 @@ void Heap::TypeErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("TypeError"));
 }
 
-ReturnedValue TypeErrorCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue TypeErrorCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     return ErrorObject::create<TypeErrorObject>(m->engine(), callData->args[0])->asReturnedValue();
 }
@@ -299,7 +299,7 @@ void Heap::URIErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("URIError"));
 }
 
-ReturnedValue URIErrorCtor::construct(const Managed *m, CallData *callData)
+ReturnedValue URIErrorCtor::callAsConstructor(const Managed *m, CallData *callData)
 {
     return ErrorObject::create<URIErrorObject>(m->engine(), callData->args[0])->asReturnedValue();
 }

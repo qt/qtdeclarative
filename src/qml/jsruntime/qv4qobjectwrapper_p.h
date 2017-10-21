@@ -251,7 +251,7 @@ struct Q_QML_EXPORT QMetaObjectWrapper : public QV4::FunctionObject
     V4_NEEDS_DESTROY
 
     static ReturnedValue create(ExecutionEngine *engine, const QMetaObject* metaObject);
-    static ReturnedValue construct(const Managed *, CallData *callData);
+    static ReturnedValue callAsConstructor(const Managed *, CallData *callData);
     static bool isEqualTo(Managed *a, Managed *b);
 
     const QMetaObject *metaObject() const { return d()->metaObject; }
