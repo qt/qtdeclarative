@@ -70,21 +70,10 @@ DEFINE_OBJECT_VTABLE(FunctionObject);
 
 Q_STATIC_ASSERT((Heap::FunctionObject::markTable & Heap::Object::markTable) == Heap::Object::markTable);
 
-static ReturnedValue jsCallWrapper(const QV4::FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
-{
-    return f->vtable()->call(f, thisObject, argv, argc);
-}
-ReturnedValue jsConstructWrapper(const QV4::FunctionObject *f, const Value *argv, int argc)
-{
-    return f->vtable()->callAsConstructor(f, argv, argc);
-}
-
-
-
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
 {
-    jsCall = jsCallWrapper;
-    jsConstruct = jsConstructWrapper;
+    jsCall = reinterpret_cast<const ObjectVTable *>(vtable())->call;
+    jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->callAsConstructor;
 
     Object::init();
     function = nullptr;
@@ -96,8 +85,8 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
 
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function, bool createProto)
 {
-    jsCall = jsCallWrapper;
-    jsConstruct = jsConstructWrapper;
+    jsCall = reinterpret_cast<const ObjectVTable *>(vtable())->call;
+    jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->callAsConstructor;
 
     Object::init();
     this->function = function;
@@ -118,8 +107,8 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &nam
 
 void Heap::FunctionObject::init()
 {
-    jsCall = jsCallWrapper;
-    jsConstruct = jsConstructWrapper;
+    jsCall = reinterpret_cast<const ObjectVTable *>(vtable())->call;
+    jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->callAsConstructor;
 
     Object::init();
     function = nullptr;
