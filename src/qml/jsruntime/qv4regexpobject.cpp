@@ -214,11 +214,11 @@ void Heap::RegExpCtor::clearLastMatch()
     lastMatchEnd = 0;
 }
 
-ReturnedValue RegExpCtor::callAsConstructor(const Managed *m, CallData *callData)
+ReturnedValue RegExpCtor::callAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
 {
-    Scope scope(m->engine());
-    ScopedValue r(scope, callData->argument(0));
-    ScopedValue f(scope, callData->argument(1));
+    Scope scope(fo->engine());
+    ScopedValue r(scope, argc ? argv[0] : Primitive::undefinedValue());
+    ScopedValue f(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
     Scoped<RegExpObject> re(scope, r);
     if (re) {
         if (!f->isUndefined())
@@ -263,14 +263,14 @@ ReturnedValue RegExpCtor::callAsConstructor(const Managed *m, CallData *callData
     return Encode(scope.engine->newRegExpObject(regexp));
 }
 
-ReturnedValue RegExpCtor::call(const Managed *that, CallData *callData)
+ReturnedValue RegExpCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    if (callData->argc() > 0 && callData->args[0].as<RegExpObject>()) {
-        if (callData->argc() == 1 || callData->args[1].isUndefined())
-            return Encode(callData->args[0]);
+    if (argc > 0 && argv[0].as<RegExpObject>()) {
+        if (argc == 1 || argv[1].isUndefined())
+            return Encode(argv[0]);
     }
 
-    return callAsConstructor(that, callData);
+    return callAsConstructor(f, argv, argc);
 }
 
 void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)

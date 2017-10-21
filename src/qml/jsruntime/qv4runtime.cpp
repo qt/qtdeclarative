@@ -977,25 +977,25 @@ ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint ind
 ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Value *argv, int argc)
 {
     Scope scope(engine);
-    JSCallData callData(scope, argc, argv);
+    ScopedValue thisObject(scope);
 
     ExecutionContext &ctx = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context);
-    ScopedFunctionObject function(scope, ctx.getPropertyAndBase(engine->id_eval(), callData->thisObject));
+    ScopedFunctionObject function(scope, ctx.getPropertyAndBase(engine->id_eval(), thisObject));
     if (engine->hasException)
         return Encode::undefined();
 
     if (!function) {
         QString objectAsString = QStringLiteral("[null]");
-        if (!callData->thisObject->isUndefined())
-            objectAsString = callData->thisObject->toQStringNoThrow();
+        if (!thisObject->isUndefined())
+            objectAsString = thisObject->toQStringNoThrow();
         QString msg = QStringLiteral("Property 'eval' of object %2 is not a function").arg(objectAsString);
         return engine->throwTypeError(msg);
     }
 
     if (function->d() == engine->evalFunction()->d())
-        return static_cast<EvalFunction *>(function.getPointer())->evalCall(callData.callData(function), true);
+        return static_cast<EvalFunction *>(function.getPointer())->evalCall(thisObject, argv, argc, true);
 
-    return function->call(callData);
+    return function->call(thisObject, argv, argc);
 }
 
 ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, Value *argv, int argc)

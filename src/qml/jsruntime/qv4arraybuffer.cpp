@@ -52,12 +52,12 @@ void Heap::ArrayBufferCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("ArrayBuffer"));
 }
 
-ReturnedValue ArrayBufferCtor::callAsConstructor(const Managed *m, CallData *callData)
+ReturnedValue ArrayBufferCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
-    ExecutionEngine *v4 = m->engine();
+    ExecutionEngine *v4 = f->engine();
     Scope scope(v4);
 
-    ScopedValue l(scope, callData->argument(0));
+    ScopedValue l(scope, argc ? argv[0] : Primitive::undefinedValue());
     double dl = l->toInteger();
     if (v4->hasException)
         return Encode::undefined();
@@ -73,9 +73,9 @@ ReturnedValue ArrayBufferCtor::callAsConstructor(const Managed *m, CallData *cal
 }
 
 
-ReturnedValue ArrayBufferCtor::call(const Managed *that, CallData *callData)
+ReturnedValue ArrayBufferCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return callAsConstructor(that, callData);
+    return callAsConstructor(f, argv, argc);
 }
 
 ReturnedValue ArrayBufferCtor::method_isView(const BuiltinFunction *, CallData *callData)

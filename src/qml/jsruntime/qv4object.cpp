@@ -395,14 +395,14 @@ bool Object::hasOwnProperty(uint index) const
     return false;
 }
 
-ReturnedValue Object::callAsConstructor(const Managed *m, CallData *)
+ReturnedValue Object::callAsConstructor(const FunctionObject *f, const Value *, int)
 {
-    return m->engine()->throwTypeError();
+    return f->engine()->throwTypeError();
 }
 
-ReturnedValue Object::call(const Managed *m, CallData *)
+ReturnedValue Object::call(const FunctionObject *f, const Value *, const Value *, int)
 {
-    return m->engine()->throwTypeError();
+    return f->engine()->throwTypeError();
 }
 
 ReturnedValue Object::get(const Managed *m, String *name, bool *hasProperty)

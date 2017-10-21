@@ -1635,12 +1635,10 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
     V4_OBJECT2(QQmlXMLHttpRequestCtor, FunctionObject)
 
-    static ReturnedValue callAsConstructor(const Managed *that, QV4::CallData *)
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *, int)
     {
-        Scope scope(that->engine());
-        Scoped<QQmlXMLHttpRequestCtor> ctor(scope, that->as<QQmlXMLHttpRequestCtor>());
-        if (!ctor)
-            return scope.engine->throwTypeError();
+        Scope scope(f->engine());
+        const QQmlXMLHttpRequestCtor *ctor = static_cast<const QQmlXMLHttpRequestCtor *>(f);
 
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(scope.engine->v8Engine->networkAccessManager());
         Scoped<QQmlXMLHttpRequestWrapper> w(scope, scope.engine->memoryManager->allocObject<QQmlXMLHttpRequestWrapper>(r));
@@ -1649,7 +1647,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         return w.asReturnedValue();
     }
 
-    static ReturnedValue call(const Managed *, QV4::CallData *) {
+    static ReturnedValue call(const FunctionObject *, const Value *, const Value *, int) {
         return Encode::undefined();
     }
 

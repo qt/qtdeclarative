@@ -55,34 +55,34 @@ void Heap::ArrayCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Array"));
 }
 
-ReturnedValue ArrayCtor::callAsConstructor(const Managed *m, CallData *callData)
+ReturnedValue ArrayCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
-    ExecutionEngine *v4 = static_cast<const ArrayCtor *>(m)->engine();
+    ExecutionEngine *v4 = static_cast<const ArrayCtor *>(f)->engine();
     Scope scope(v4);
     ScopedArrayObject a(scope, v4->newArrayObject());
     uint len;
-    if (callData->argc() == 1 && callData->args[0].isNumber()) {
+    if (argc == 1 && argv[0].isNumber()) {
         bool ok;
-        len = callData->args[0].asArrayLength(&ok);
+        len = argv[0].asArrayLength(&ok);
 
         if (!ok)
-            return v4->throwRangeError(callData->args[0]);
+            return v4->throwRangeError(argv[0]);
 
         if (len < 0x1000)
             a->arrayReserve(len);
     } else {
-        len = callData->argc();
+        len = argc;
         a->arrayReserve(len);
-        a->arrayPut(0, callData->args, len);
+        a->arrayPut(0, argv, len);
     }
     a->setArrayLengthUnchecked(len);
 
     return a.asReturnedValue();
 }
 
-ReturnedValue ArrayCtor::call(const Managed *that, CallData *callData)
+ReturnedValue ArrayCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return callAsConstructor(that, callData);
+    return callAsConstructor(f, argv, argc);
 }
 
 void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)

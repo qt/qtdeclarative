@@ -678,16 +678,16 @@ void Heap::DateCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Date"));
 }
 
-ReturnedValue DateCtor::callAsConstructor(const Managed *that, CallData *callData)
+ReturnedValue DateCtor::callAsConstructor(const FunctionObject *that, const Value *argv, int argc)
 {
     double t = 0;
 
-    if (callData->argc() == 0)
+    if (argc == 0)
         t = currentTime();
 
-    else if (callData->argc() == 1) {
+    else if (argc == 1) {
         Scope scope(that->engine());
-        ScopedValue arg(scope, callData->args[0]);
+        ScopedValue arg(scope, argv[0]);
         if (DateObject *d = arg->as<DateObject>()) {
             t = d->date();
         } else {
@@ -701,13 +701,13 @@ ReturnedValue DateCtor::callAsConstructor(const Managed *that, CallData *callDat
     }
 
     else { // d.argc > 1
-        double year  = callData->args[0].toNumber();
-        double month = callData->args[1].toNumber();
-        double day  = callData->argc() >= 3 ? callData->args[2].toNumber() : 1;
-        double hours = callData->argc() >= 4 ? callData->args[3].toNumber() : 0;
-        double mins = callData->argc() >= 5 ? callData->args[4].toNumber() : 0;
-        double secs = callData->argc() >= 6 ? callData->args[5].toNumber() : 0;
-        double ms    = callData->argc() >= 7 ? callData->args[6].toNumber() : 0;
+        double year  = argv[0].toNumber();
+        double month = argv[1].toNumber();
+        double day  = argc >= 3 ? argv[2].toNumber() : 1;
+        double hours = argc >= 4 ? argv[3].toNumber() : 0;
+        double mins = argc >= 5 ? argv[4].toNumber() : 0;
+        double secs = argc >= 6 ? argv[5].toNumber() : 0;
+        double ms    = argc >= 7 ? argv[6].toNumber() : 0;
         if (year >= 0 && year <= 99)
             year += 1900;
         t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));
@@ -717,7 +717,7 @@ ReturnedValue DateCtor::callAsConstructor(const Managed *that, CallData *callDat
     return Encode(that->engine()->newDateObject(Primitive::fromDouble(t)));
 }
 
-ReturnedValue DateCtor::call(const Managed *m, CallData *)
+ReturnedValue DateCtor::call(const FunctionObject *m, const Value *, const Value *, int)
 {
     double t = currentTime();
     return m->engine()->newString(ToString(t))->asReturnedValue();

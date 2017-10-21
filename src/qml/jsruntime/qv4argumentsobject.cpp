@@ -207,12 +207,12 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
 
 DEFINE_OBJECT_VTABLE(ArgumentsGetterFunction);
 
-ReturnedValue ArgumentsGetterFunction::call(const Managed *getter, CallData *callData)
+ReturnedValue ArgumentsGetterFunction::call(const FunctionObject *getter, const Value *thisObject, const Value *, int)
 {
-    ExecutionEngine *v4 = static_cast<const ArgumentsGetterFunction *>(getter)->engine();
+    ExecutionEngine *v4 = getter->engine();
     Scope scope(v4);
-    Scoped<ArgumentsGetterFunction> g(scope, static_cast<const ArgumentsGetterFunction *>(getter));
-    Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
+    const ArgumentsGetterFunction *g = static_cast<const ArgumentsGetterFunction *>(getter);
+    Scoped<ArgumentsObject> o(scope, thisObject->as<ArgumentsObject>());
     if (!o)
         return v4->throwTypeError();
 
@@ -222,17 +222,17 @@ ReturnedValue ArgumentsGetterFunction::call(const Managed *getter, CallData *cal
 
 DEFINE_OBJECT_VTABLE(ArgumentsSetterFunction);
 
-ReturnedValue ArgumentsSetterFunction::call(const Managed *setter, CallData *callData)
+ReturnedValue ArgumentsSetterFunction::call(const FunctionObject *setter, const Value *thisObject, const Value *argv, int argc)
 {
-    ExecutionEngine *v4 = static_cast<const ArgumentsSetterFunction *>(setter)->engine();
+    ExecutionEngine *v4 = setter->engine();
     Scope scope(v4);
-    Scoped<ArgumentsSetterFunction> s(scope, static_cast<const ArgumentsSetterFunction *>(setter));
-    Scoped<ArgumentsObject> o(scope, callData->thisObject.as<ArgumentsObject>());
+    const ArgumentsSetterFunction *s = static_cast<const ArgumentsSetterFunction *>(setter);
+    Scoped<ArgumentsObject> o(scope, thisObject->as<ArgumentsObject>());
     if (!o)
         return v4->throwTypeError();
 
     Q_ASSERT(s->index() < static_cast<unsigned>(o->context()->argc()));
-    o->context()->setArg(s->index(), (callData->argc() ? callData->args[0] : Primitive::undefinedValue()));
+    o->context()->setArg(s->index(), argc ? argv[0] : Primitive::undefinedValue());
     return Encode::undefined();
 }
 

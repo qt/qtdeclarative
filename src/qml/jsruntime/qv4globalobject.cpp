@@ -338,9 +338,9 @@ void Heap::EvalFunction::init(QV4::ExecutionContext *scope)
     f->defineReadonlyProperty(s.engine->id_length(), Primitive::fromInt32(1));
 }
 
-ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
+ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc, bool directCall) const
 {
-    if (callData->argc() < 1)
+    if (argc < 1)
         return Encode::undefined();
 
     ExecutionEngine *v4 = engine();
@@ -354,9 +354,9 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
         ctx = v4->rootContext();
     }
 
-    String *scode = callData->args[0].stringValue();
+    String *scode = argv[0].stringValue();
     if (!scode)
-        return callData->args[0].asReturnedValue();
+        return argv[0].asReturnedValue();
 
     const QString code = scode->toQString();
     bool inheritContext = !ctx->d()->v4Function->isStrict();
@@ -396,10 +396,10 @@ ReturnedValue EvalFunction::evalCall(CallData *callData, bool directCall) const
 }
 
 
-ReturnedValue EvalFunction::call(const Managed *that, CallData *callData)
+ReturnedValue EvalFunction::call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     // indirect call
-    return static_cast<const EvalFunction *>(that)->evalCall(callData, false);
+    return static_cast<const EvalFunction *>(f)->evalCall(thisObject, argv, argc, false);
 }
 
 

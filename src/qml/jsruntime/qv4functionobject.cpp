@@ -72,15 +72,11 @@ Q_STATIC_ASSERT((Heap::FunctionObject::markTable & Heap::Object::markTable) == H
 
 static ReturnedValue jsCallWrapper(const QV4::FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
-    Scope scope(f->engine());
-    JSCallData callData(scope, argc, argv, thisObject);
-    return f->vtable()->call(f, callData.callData(f));
+    return f->vtable()->call(f, thisObject, argv, argc);
 }
 ReturnedValue jsConstructWrapper(const QV4::FunctionObject *f, const Value *argv, int argc)
 {
-    Scope scope(f->engine());
-    JSCallData callData(scope, argc, argv);
-    return f->vtable()->callAsConstructor(f, callData.callData(f));
+    return f->vtable()->callAsConstructor(f, argv, argc);
 }
 
 
@@ -164,12 +160,12 @@ ReturnedValue FunctionObject::name() const
     return get(scope()->internalClass->engine->id_name());
 }
 
-ReturnedValue FunctionObject::callAsConstructor(const Managed *that, CallData *)
+ReturnedValue FunctionObject::callAsConstructor(const FunctionObject *f, const Value *, int)
 {
-    return that->engine()->throwTypeError();
+    return f->engine()->throwTypeError();
 }
 
-ReturnedValue FunctionObject::call(const Managed *, CallData *)
+ReturnedValue FunctionObject::call(const FunctionObject *, const Value *, const Value *, int)
 {
     return Encode::undefined();
 }
@@ -202,20 +198,19 @@ void Heap::FunctionCtor::init(QV4::ExecutionContext *scope)
 }
 
 // 15.3.2
-ReturnedValue FunctionCtor::callAsConstructor(const Managed *that, CallData *callData)
+ReturnedValue FunctionCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
-    Scope scope(that->engine());
-    Scoped<FunctionCtor> f(scope, static_cast<const FunctionCtor *>(that));
+    Scope scope(f->engine());
 
     QString arguments;
     QString body;
-    if (callData->argc() > 0) {
-        for (int i = 0, ei = callData->argc() - 1; i < ei; ++i) {
+    if (argc > 0) {
+        for (int i = 0, ei = argc - 1; i < ei; ++i) {
             if (i)
                 arguments += QLatin1String(", ");
-            arguments += callData->args[i].toQString();
+            arguments += argv[i].toQString();
         }
-        body = callData->args[callData->argc() - 1].toQString();
+        body = argv[argc - 1].toQString();
     }
     if (scope.engine->hasException)
         return Encode::undefined();
@@ -250,9 +245,9 @@ ReturnedValue FunctionCtor::callAsConstructor(const Managed *that, CallData *cal
 }
 
 // 15.3.1: This is equivalent to new Function(...)
-ReturnedValue FunctionCtor::call(const Managed *that, CallData *callData)
+ReturnedValue FunctionCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return callAsConstructor(that, callData);
+    return callAsConstructor(f, argv, argc);
 }
 
 DEFINE_OBJECT_VTABLE(FunctionPrototype);
@@ -377,35 +372,41 @@ ReturnedValue FunctionPrototype::method_bind(const BuiltinFunction *b, CallData 
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);
 
-ReturnedValue ScriptFunction::callAsConstructor(const Managed *that, CallData *callData)
+ReturnedValue ScriptFunction::callAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
 {
-    ExecutionEngine *v4 = that->engine();
-    const ScriptFunction *f = static_cast<const ScriptFunction *>(that);
+    ExecutionEngine *v4 = fo->engine();
+    const ScriptFunction *f = static_cast<const ScriptFunction *>(fo);
 
+    Scope scope(v4);
+    JSCallData callData(scope, argc, argv);
+    CallData *cData = callData.callData(f);
     InternalClass *ic = f->classForConstructor();
-    callData->context = f->scope();
-    callData->thisObject = v4->memoryManager->allocObject<Object>(ic);
+    cData->context = f->scope();
+    cData->thisObject = v4->memoryManager->allocObject<Object>(ic);
 
     QV4::Function *v4Function = f->function();
     Q_ASSERT(v4Function);
 
-    ReturnedValue result = v4Function->call(callData);
+    ReturnedValue result = v4Function->call(cData);
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
     else if (!Value::fromReturnedValue(result).isObject())
-        return callData->thisObject.asReturnedValue();
+        return cData->thisObject.asReturnedValue();
     return result;
 }
 
-ReturnedValue ScriptFunction::call(const Managed *that, CallData *callData)
+ReturnedValue ScriptFunction::call(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
 {
-    const ScriptFunction *f = static_cast<const ScriptFunction *>(that);
+    const ScriptFunction *f = static_cast<const ScriptFunction *>(fo);
+    Scope scope(f->engine());
+    JSCallData callData(scope, argc, argv, thisObject);
+    CallData *cData = callData.callData(f);
+    cData->context = f->scope();
+
     QV4::Function *v4Function = f->function();
     Q_ASSERT(v4Function);
-
-    callData->context = f->scope();
-    return v4Function->call(callData);
+    return v4Function->call(cData);
 }
 
 void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
@@ -458,15 +459,17 @@ void Heap::BuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name
     this->code = code;
 }
 
-ReturnedValue BuiltinFunction::callAsConstructor(const Managed *f, CallData *)
+ReturnedValue BuiltinFunction::callAsConstructor(const QV4::FunctionObject *f, const Value *, int)
 {
     return f->engine()->throwTypeError();
 }
 
-ReturnedValue BuiltinFunction::call(const Managed *that, CallData *callData)
+ReturnedValue BuiltinFunction::call(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
 {
-    const BuiltinFunction *f = static_cast<const BuiltinFunction *>(that);
-    return f->d()->code(f, callData);
+    const BuiltinFunction *f = static_cast<const BuiltinFunction *>(fo);
+    Scope scope(f->engine());
+    JSCallData callData(scope, argc, argv, thisObject);
+    return f->d()->code(f, callData.callData());
 }
 
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
@@ -499,38 +502,43 @@ void Heap::BoundFunction::init(QV4::ExecutionContext *scope, QV4::FunctionObject
     f->insertMember(s.engine->id_caller(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 }
 
-ReturnedValue BoundFunction::call(const Managed *that, CallData *callData)
+ReturnedValue BoundFunction::call(const FunctionObject *fo, const Value *, const Value *argv, int argc)
 {
-    const BoundFunction *f = static_cast<const BoundFunction *>(that);
-    Heap::MemberData *boundArgs = f->boundArgs();
+    const BoundFunction *f = static_cast<const BoundFunction *>(fo);
+    Scope scope(f->engine());
 
-    int nBoundArgs = boundArgs ? boundArgs->values.size : 0;
-    if (nBoundArgs) {
-        memmove(&callData->args + nBoundArgs, &callData->args, callData->argc()*sizeof(Value));
-        memcpy(callData->args, boundArgs->values.data(), nBoundArgs*sizeof(Value));
-        callData->setArgc(callData->argc() + nBoundArgs);
-        f->engine()->jsStackTop += nBoundArgs;
+    if (scope.hasException())
+        return Encode::undefined();
+
+    Scoped<MemberData> boundArgs(scope, f->boundArgs());
+    ScopedFunctionObject target(scope, f->target());
+    JSCallData jsCallData(scope, (boundArgs ? boundArgs->size() : 0) + argc);
+    *jsCallData->thisObject = f->boundThis();
+    Value *argp = jsCallData->args;
+    if (boundArgs) {
+        memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
+        argp += boundArgs->size();
     }
-
-    callData->thisObject = f->boundThis();
-    callData->function = f->target();
-    return static_cast<FunctionObject &>(callData->function).call(&callData->thisObject, callData->args, callData->argc());
+    memcpy(argp, argv, argc*sizeof(Value));
+    return target->call(jsCallData);
 }
 
-ReturnedValue BoundFunction::callAsConstructor(const Managed *that, CallData *callData)
+ReturnedValue BoundFunction::callAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
 {
-    const BoundFunction *f = static_cast<const BoundFunction *>(that);
-    Heap::MemberData *boundArgs = f->boundArgs();
+    const BoundFunction *f = static_cast<const BoundFunction *>(fo);
+    Scope scope(f->engine());
 
-    int nBoundArgs = boundArgs ? boundArgs->values.size : 0;
-    if (nBoundArgs) {
-        memmove(callData->args + nBoundArgs, callData->args, callData->argc()*sizeof(Value));
-        memcpy(callData->args, boundArgs->values.data(), nBoundArgs*sizeof(Value));
-        callData->setArgc(callData->argc() + nBoundArgs);
-        f->engine()->jsStackTop += nBoundArgs;
+    if (scope.hasException())
+        return Encode::undefined();
+
+    Scoped<MemberData> boundArgs(scope, f->boundArgs());
+    ScopedFunctionObject target(scope, f->target());
+    JSCallData jsCallData(scope, (boundArgs ? boundArgs->size() : 0) + argc);
+    Value *argp = jsCallData->args;
+    if (boundArgs) {
+        memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
+        argp += boundArgs->size();
     }
-
-    callData->thisObject = f->boundThis();
-    callData->function = f->target();
-    return static_cast<FunctionObject &>(callData->function).callAsConstructor(callData->args, callData->argc());
+    memcpy(argp, argv, argc*sizeof(Value));
+    return target->callAsConstructor(jsCallData);
 }

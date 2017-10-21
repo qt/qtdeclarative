@@ -209,14 +209,14 @@ void Heap::TypedArrayCtor::init(QV4::ExecutionContext *scope, TypedArray::Type t
     type = t;
 }
 
-ReturnedValue TypedArrayCtor::callAsConstructor(const Managed *m, CallData *callData)
+ReturnedValue TypedArrayCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
-    Scope scope(m->engine());
-    Scoped<TypedArrayCtor> that(scope, static_cast<const TypedArrayCtor *>(m));
+    Scope scope(f->engine());
+    const TypedArrayCtor *that = static_cast<const TypedArrayCtor *>(f);
 
-    if (!callData->argc() || !callData->args[0].isObject()) {
+    if (!argc || !argv[0].isObject()) {
         // ECMA 6 22.2.1.1
-        double l = callData->argc() ? callData->args[0].toNumber() : 0;
+        double l = argc ? argv[0].toNumber() : 0;
         if (scope.engine->hasException)
             return Encode::undefined();
         uint len = (uint)l;
@@ -234,7 +234,7 @@ ReturnedValue TypedArrayCtor::callAsConstructor(const Managed *m, CallData *call
 
         return array.asReturnedValue();
     }
-    Scoped<TypedArray> typedArray(scope, callData->argument(0));
+    Scoped<TypedArray> typedArray(scope, argc ? argv[0] : Primitive::undefinedValue());
     if (!!typedArray) {
         // ECMA 6 22.2.1.2
         Scoped<ArrayBuffer> buffer(scope, typedArray->d()->buffer);
@@ -272,23 +272,23 @@ ReturnedValue TypedArrayCtor::callAsConstructor(const Managed *m, CallData *call
 
         return array.asReturnedValue();
     }
-    Scoped<ArrayBuffer> buffer(scope, callData->argument(0));
+    Scoped<ArrayBuffer> buffer(scope, argc ? argv[0] : Primitive::undefinedValue());
     if (!!buffer) {
         // ECMA 6 22.2.1.4
 
-        double dbyteOffset = callData->argc() > 1 ? callData->args[1].toInteger() : 0;
+        double dbyteOffset = argc > 1 ? argv[1].toInteger() : 0;
         uint byteOffset = (uint)dbyteOffset;
         uint elementSize = operations[that->d()->type].bytesPerElement;
         if (dbyteOffset < 0 || (byteOffset % elementSize) || dbyteOffset > buffer->byteLength())
             return scope.engine->throwRangeError(QStringLiteral("new TypedArray: invalid byteOffset"));
 
         uint byteLength;
-        if (callData->argc() < 3 || callData->args[2].isUndefined()) {
+        if (argc < 3 || argv[2].isUndefined()) {
             byteLength = buffer->byteLength() - byteOffset;
             if (buffer->byteLength() < byteOffset || byteLength % elementSize)
                 return scope.engine->throwRangeError(QStringLiteral("new TypedArray: invalid length"));
         } else {
-            double l = qBound(0., callData->args[2].toInteger(), (double)UINT_MAX);
+            double l = qBound(0., argv[2].toInteger(), (double)UINT_MAX);
             if (scope.engine->hasException)
                 return Encode::undefined();
             l *= elementSize;
@@ -306,7 +306,7 @@ ReturnedValue TypedArrayCtor::callAsConstructor(const Managed *m, CallData *call
 
     // ECMA 6 22.2.1.3
 
-    ScopedObject o(scope, callData->argument(0));
+    ScopedObject o(scope, argc ? argv[0] : Primitive::undefinedValue());
     uint l = (uint) qBound(0., ScopedValue(scope, o->get(scope.engine->id_length()))->toInteger(), (double)UINT_MAX);
     if (scope.engine->hasException)
         return scope.engine->throwTypeError();
@@ -337,9 +337,9 @@ ReturnedValue TypedArrayCtor::callAsConstructor(const Managed *m, CallData *call
     return array.asReturnedValue();
 }
 
-ReturnedValue TypedArrayCtor::call(const Managed *that, CallData *callData)
+ReturnedValue TypedArrayCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return callAsConstructor(that, callData);
+    return callAsConstructor(f, argv, argc);
 }
 
 void Heap::TypedArray::init(Type t)

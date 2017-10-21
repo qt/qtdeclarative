@@ -61,11 +61,11 @@ void Heap::ObjectCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Object"));
 }
 
-ReturnedValue ObjectCtor::callAsConstructor(const Managed *m, CallData *callData)
+ReturnedValue ObjectCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
-    ExecutionEngine *v4 = m->engine();
-    const ObjectCtor *ctor = static_cast<const ObjectCtor *>(m);
-    if (!callData->argc() || callData->args[0].isUndefined() || callData->args[0].isNull()) {
+    ExecutionEngine *v4 = f->engine();
+    const ObjectCtor *ctor = static_cast<const ObjectCtor *>(f);
+    if (!argc || argv[0].isUndefined() || argv[0].isNull()) {
         Scope scope(v4);
         ScopedObject obj(scope, scope.engine->newObject());
         ScopedObject proto(scope, ctor->get(scope.engine->id_prototype()));
@@ -73,17 +73,17 @@ ReturnedValue ObjectCtor::callAsConstructor(const Managed *m, CallData *callData
             obj->setPrototype(proto);
         return obj.asReturnedValue();
     } else {
-        return callData->args[0].toObject(v4)->asReturnedValue();
+        return argv[0].toObject(v4)->asReturnedValue();
     }
 }
 
-ReturnedValue ObjectCtor::call(const Managed *m, CallData *callData)
+ReturnedValue ObjectCtor::call(const FunctionObject *m, const Value *, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = m->engine();
-    if (!callData->argc() || callData->args[0].isUndefined() || callData->args[0].isNull()) {
+    if (!argc || argv[0].isUndefined() || argv[0].isNull()) {
         return v4->newObject()->asReturnedValue();
     } else {
-        return callData->args[0].toObject(v4)->asReturnedValue();
+        return argv[0].toObject(v4)->asReturnedValue();
     }
 }
 

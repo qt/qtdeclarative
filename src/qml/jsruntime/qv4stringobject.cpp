@@ -143,23 +143,23 @@ void Heap::StringCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("String"));
 }
 
-ReturnedValue StringCtor::callAsConstructor(const Managed *m, CallData *callData)
+ReturnedValue StringCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
-    ExecutionEngine *v4 = static_cast<const Object *>(m)->engine();
+    ExecutionEngine *v4 = static_cast<const Object *>(f)->engine();
     Scope scope(v4);
     ScopedString value(scope);
-    if (callData->argc())
-        value = callData->args[0].toString(v4);
+    if (argc)
+        value = argv[0].toString(v4);
     else
         value = v4->newString();
     return Encode(v4->newStringObject(value));
 }
 
-ReturnedValue StringCtor::call(const Managed *m, CallData *callData)
+ReturnedValue StringCtor::call(const FunctionObject *m, const Value *, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = m->engine();
-    if (callData->argc())
-        return callData->args[0].toString(v4)->asReturnedValue();
+    if (argc)
+        return argv[0].toString(v4)->asReturnedValue();
     else
         return v4->newString()->asReturnedValue();
 }
@@ -419,7 +419,7 @@ ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *
 
     if (!callData->args[0].as<RegExpObject>()) {
         // convert args[0] to a regexp
-        callData->args[0] = RegExpCtor::callAsConstructor(b, callData);
+        callData->args[0] = RegExpCtor::callAsConstructor(b, callData->args, callData->argc());
         if (v4->hasException)
             return Encode::undefined();
     }

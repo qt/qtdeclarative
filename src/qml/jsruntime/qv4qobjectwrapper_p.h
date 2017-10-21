@@ -237,9 +237,9 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     QV4::ReturnedValue method_toString(QV4::ExecutionEngine *engine) const;
     QV4::ReturnedValue method_destroy(QV4::ExecutionEngine *ctx, const Value *args, int argc) const;
 
-    static ReturnedValue call(const Managed *, CallData *callData);
+    static ReturnedValue call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    ReturnedValue callInternal(CallData *callData) const;
+    ReturnedValue callInternal(const Value *thisObject, const Value *argv, int argc) const;
 
     static QPair<QObject *, int> extractQtMethod(const QV4::FunctionObject *function);
 };
@@ -251,14 +251,14 @@ struct Q_QML_EXPORT QMetaObjectWrapper : public QV4::FunctionObject
     V4_NEEDS_DESTROY
 
     static ReturnedValue create(ExecutionEngine *engine, const QMetaObject* metaObject);
-    static ReturnedValue callAsConstructor(const Managed *, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
     static bool isEqualTo(Managed *a, Managed *b);
 
     const QMetaObject *metaObject() const { return d()->metaObject; }
 
 private:
     void init(ExecutionEngine *engine);
-    ReturnedValue constructInternal(CallData *callData) const;
+    ReturnedValue constructInternal(const Value *argv, int argc) const;
     ReturnedValue callConstructor(const QQmlPropertyData &data, QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const;
     ReturnedValue callOverloadedConstructor(QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const;
 

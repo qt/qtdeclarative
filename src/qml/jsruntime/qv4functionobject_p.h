@@ -164,8 +164,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const {
         return d()->jsCall(this, thisObject, argv, argc);
     }
-    static ReturnedValue callAsConstructor(const Managed *that, CallData *);
-    static ReturnedValue call(const Managed *that, CallData *d);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
 
@@ -186,8 +186,8 @@ struct FunctionCtor: FunctionObject
 {
     V4_OBJECT2(FunctionCtor, FunctionObject)
 
-    static ReturnedValue callAsConstructor(const Managed *that, CallData *callData);
-    static ReturnedValue call(const Managed *that, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct FunctionPrototype: FunctionObject
@@ -211,8 +211,8 @@ struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
         return scope->engine()->memoryManager->allocObject<BuiltinFunction>(scope, name, code);
     }
 
-    static ReturnedValue callAsConstructor(const Managed *, CallData *);
-    static ReturnedValue call(const Managed *that, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct IndexedBuiltinFunction: BuiltinFunction
@@ -233,8 +233,8 @@ struct ScriptFunction : FunctionObject {
     V4_OBJECT2(ScriptFunction, FunctionObject)
     V4_INTERNALCLASS(ScriptFunction)
 
-    static ReturnedValue callAsConstructor(const Managed *, CallData *callData);
-    static ReturnedValue call(const Managed *that, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     InternalClass *classForConstructor() const;
 };
@@ -252,8 +252,8 @@ struct BoundFunction: FunctionObject {
     Value boundThis() const { return d()->boundThis; }
     Heap::MemberData *boundArgs() const { return d()->boundArgs; }
 
-    static ReturnedValue callAsConstructor(const Managed *, CallData *d);
-    static ReturnedValue call(const Managed *that, CallData *dd);
+    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 }

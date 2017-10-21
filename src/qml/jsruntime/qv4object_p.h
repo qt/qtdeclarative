@@ -175,8 +175,8 @@ Q_STATIC_ASSERT(Object::markTable == ((2 << 2) | (2 << 4)));
 struct ObjectVTable
 {
     VTable vTable;
-    ReturnedValue (*call)(const Managed *, CallData *data);
-    ReturnedValue (*callAsConstructor)(const Managed *, CallData *data);
+    ReturnedValue (*call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    ReturnedValue (*callAsConstructor)(const FunctionObject *, const Value *argv, int argc);
     ReturnedValue (*get)(const Managed *, String *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
     bool (*put)(Managed *, String *name, const Value &value);
@@ -428,8 +428,8 @@ public:
     { return vtable()->instanceOf(this, var); }
 
 protected:
-    static ReturnedValue callAsConstructor(const Managed *m, CallData *);
-    static ReturnedValue call(const Managed *m, CallData *);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static bool put(Managed *m, String *name, const Value &value);

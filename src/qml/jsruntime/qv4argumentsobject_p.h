@@ -98,7 +98,7 @@ struct ArgumentsGetterFunction: FunctionObject
     V4_OBJECT2(ArgumentsGetterFunction, FunctionObject)
 
     uint index() const { return d()->index; }
-    static ReturnedValue call(const Managed *that, CallData *d);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 inline void
@@ -113,7 +113,7 @@ struct ArgumentsSetterFunction: FunctionObject
     V4_OBJECT2(ArgumentsSetterFunction, FunctionObject)
 
     uint index() const { return d()->index; }
-    static ReturnedValue call(const Managed *that, CallData *callData);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 inline void

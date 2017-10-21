@@ -70,8 +70,8 @@ struct ObjectCtor: FunctionObject
 {
     V4_OBJECT2(ObjectCtor, FunctionObject)
 
-    static ReturnedValue callAsConstructor(const Managed *that, CallData *callData);
-    static ReturnedValue call(const Managed *m, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *m, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct ObjectPrototype: Object

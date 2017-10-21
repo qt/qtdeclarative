@@ -1894,17 +1894,17 @@ QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionEngine *engine, c
     return Encode::undefined();
 }
 
-ReturnedValue QObjectMethod::call(const Managed *m, CallData *callData)
+ReturnedValue QObjectMethod::call(const FunctionObject *m, const Value *thisObject, const Value *argv, int argc)
 {
     const QObjectMethod *This = static_cast<const QObjectMethod*>(m);
-    return This->callInternal(callData);
+    return This->callInternal(thisObject, argv, argc);
 }
 
-ReturnedValue QObjectMethod::callInternal(CallData *callData) const
+ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *argv, int argc) const
 {
     ExecutionEngine *v4 = engine();
     if (d()->index == DestroyMethod)
-        return method_destroy(v4, callData->args, callData->argc());
+        return method_destroy(v4, argv, argc);
     else if (d()->index == ToStringMethod)
         return method_toString(v4);
 
@@ -1944,8 +1944,11 @@ ReturnedValue QObjectMethod::callInternal(CallData *callData) const
         }
     }
 
+    Scope scope(v4);
+    JSCallData cData(scope, argc, argv, thisObject);
+    CallData *callData = cData.callData();
+
     if (method.isV4Function()) {
-        Scope scope(v4);
         QV4::ScopedValue rv(scope, QV4::Primitive::undefinedValue());
         QQmlV4Function func(callData, rv, v4);
         QQmlV4Function *funcptr = &func;
@@ -2022,13 +2025,14 @@ void QMetaObjectWrapper::init(ExecutionEngine *) {
     }
 }
 
-ReturnedValue QMetaObjectWrapper::callAsConstructor(const Managed *m, CallData *callData)
+ReturnedValue QMetaObjectWrapper::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
-    const QMetaObjectWrapper *This = static_cast<const QMetaObjectWrapper*>(m);
-    return This->constructInternal(callData);
+    const QMetaObjectWrapper *This = static_cast<const QMetaObjectWrapper*>(f);
+    return This->constructInternal(argv, argc);
 }
 
-ReturnedValue QMetaObjectWrapper::constructInternal(CallData * callData) const {
+ReturnedValue QMetaObjectWrapper::constructInternal(const Value *argv, int argc) const
+{
 
     d()->ensureConstructorsCache();
 
@@ -2041,6 +2045,8 @@ ReturnedValue QMetaObjectWrapper::constructInternal(CallData * callData) const {
 
     Scope scope(v4);
     Scoped<QObjectWrapper> object(scope);
+    JSCallData cData(scope, argc, argv);
+    CallData *callData = cData.callData();
 
     if (d()->constructorCount == 1) {
         object = callConstructor(d()->constructors[0], v4, callData);
