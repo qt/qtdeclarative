@@ -36,6 +36,7 @@
 
 #include "qquicktooltip_p.h"
 #include "qquickpopup_p_p.h"
+#include "qquickpopupitem_p_p.h"
 #include "qquickcontrol_p_p.h"
 
 #include <QtCore/qbasictimer.h>
@@ -172,6 +173,7 @@ QQuickToolTip::QQuickToolTip(QQuickItem *parent)
     Q_D(QQuickToolTip);
     d->allowVerticalFlip = true;
     d->allowHorizontalFlip = true;
+    d->popupItem->setHoverEnabled(false); // QTBUG-63644
 }
 
 /*!

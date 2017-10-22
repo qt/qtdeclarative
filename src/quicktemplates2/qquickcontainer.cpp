@@ -324,6 +324,24 @@ void QQuickContainerPrivate::removeItem(int index, QQuickItem *item)
     updatingCurrent = false;
 }
 
+void QQuickContainerPrivate::reorderItems()
+{
+    Q_Q(QQuickContainer);
+    if (!contentItem)
+        return;
+
+    QList<QQuickItem *> siblings = effectiveContentItem(contentItem)->childItems();
+
+    int to = 0;
+    for (int i = 0; i < siblings.count(); ++i) {
+        QQuickItem* sibling = siblings.at(i);
+        if (QQuickItemPrivate::get(sibling)->isTransparentForPositioner())
+            continue;
+        int index = contentModel->indexOf(sibling, nullptr);
+        q->moveItem(index, to++);
+    }
+}
+
 void QQuickContainerPrivate::_q_currentIndexChanged()
 {
     Q_Q(QQuickContainer);
@@ -347,18 +365,11 @@ void QQuickContainerPrivate::itemParentChanged(QQuickItem *item, QQuickItem *par
 
 void QQuickContainerPrivate::itemSiblingOrderChanged(QQuickItem *)
 {
-    // reorder the restacked items (eg. by a Repeater)
-    Q_Q(QQuickContainer);
-    QList<QQuickItem *> siblings = effectiveContentItem(contentItem)->childItems();
+    if (!componentComplete)
+        return;
 
-    int to = 0;
-    for (int i = 0; i < siblings.count(); ++i) {
-        QQuickItem* sibling = siblings.at(i);
-        if (QQuickItemPrivate::get(sibling)->isTransparentForPositioner())
-            continue;
-        int index = contentModel->indexOf(sibling, nullptr);
-        q->moveItem(index, to++);
-    }
+    // reorder the restacked items (eg. by a Repeater)
+    reorderItems();
 }
 
 void QQuickContainerPrivate::itemDestroyed(QQuickItem *item)
@@ -735,6 +746,13 @@ QQuickItem *QQuickContainer::currentItem() const
 {
     Q_D(const QQuickContainer);
     return itemAt(d->currentIndex);
+}
+
+void QQuickContainer::componentComplete()
+{
+    Q_D(QQuickContainer);
+    QQuickControl::componentComplete();
+    d->reorderItems();
 }
 
 void QQuickContainer::itemChange(ItemChange change, const ItemChangeData &data)

@@ -100,6 +100,8 @@ Q_SIGNALS:
 protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);
 
+    void componentComplete() override;
+
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
