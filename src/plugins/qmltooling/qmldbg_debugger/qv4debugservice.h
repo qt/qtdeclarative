@@ -73,14 +73,14 @@ class QV4DebugServiceImpl : public QQmlConfigurableDebugService<QV4DebugService>
     Q_OBJECT
 public:
     explicit QV4DebugServiceImpl(QObject *parent = 0);
-    ~QV4DebugServiceImpl() Q_DECL_OVERRIDE;
+    ~QV4DebugServiceImpl() override;
 
-    void engineAdded(QJSEngine *engine) Q_DECL_OVERRIDE;
-    void engineAboutToBeRemoved(QJSEngine *engine) Q_DECL_OVERRIDE;
+    void engineAdded(QJSEngine *engine) override;
+    void engineAboutToBeRemoved(QJSEngine *engine) override;
 
-    void stateAboutToBeChanged(State state) Q_DECL_OVERRIDE;
+    void stateAboutToBeChanged(State state) override;
 
-    void signalEmitted(const QString &signal) Q_DECL_OVERRIDE;
+    void signalEmitted(const QString &signal) override;
     void send(QJsonObject v8Payload);
 
     int selectedFrame() const;
@@ -92,7 +92,7 @@ public:
     QV4DebuggerAgent debuggerAgent;
 
 protected:
-    void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
+    void messageReceived(const QByteArray &) override;
     void sendSomethingToSomebody(const char *type, int magicNumber = 1);
 
 private:

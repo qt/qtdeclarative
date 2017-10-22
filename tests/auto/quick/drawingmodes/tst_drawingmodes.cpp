@@ -149,6 +149,10 @@ void tst_drawingmodes::points()
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
 
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
 #ifdef Q_OS_WIN
     if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES)
         QSKIP("ANGLE cannot draw GL_POINTS.");
@@ -187,6 +191,11 @@ void tst_drawingmodes::lines()
     DrawingModeItem::drawingMode = GL_LINES;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QImage fb = runTest("DrawingModes.qml");
 
     QCOMPARE(fb.width(), 200);
@@ -213,6 +222,11 @@ void tst_drawingmodes::lineStrip()
     DrawingModeItem::drawingMode = GL_LINE_STRIP;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QImage fb = runTest("DrawingModes.qml");
 
     QCOMPARE(fb.width(), 200);
@@ -241,6 +255,11 @@ void tst_drawingmodes::lineLoop()
     DrawingModeItem::drawingMode = GL_LINE_LOOP;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QImage fb = runTest("DrawingModes.qml");
 
     QCOMPARE(fb.width(), 200);
@@ -269,6 +288,11 @@ void tst_drawingmodes::triangles()
     DrawingModeItem::drawingMode = GL_TRIANGLES;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QImage fb = runTest("DrawingModes.qml");
 
     QCOMPARE(fb.width(), 200);
@@ -293,6 +317,11 @@ void tst_drawingmodes::triangleStrip()
     DrawingModeItem::drawingMode = GL_TRIANGLE_STRIP;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QImage fb = runTest("DrawingModes.qml");
 
     QCOMPARE(fb.width(), 200);
@@ -316,6 +345,11 @@ void tst_drawingmodes::triangleFan()
     DrawingModeItem::drawingMode = GL_TRIANGLE_FAN;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QImage fb = runTest("DrawingModes.qml");
 
     QCOMPARE(fb.width(), 200);

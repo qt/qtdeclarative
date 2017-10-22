@@ -95,10 +95,10 @@ class QQuickGridMesh : public QQuickShaderEffectMesh
     Q_PROPERTY(QSize resolution READ resolution WRITE setResolution NOTIFY resolutionChanged)
 public:
     QQuickGridMesh(QObject *parent = 0);
-    bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) Q_DECL_OVERRIDE;
+    bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) override;
     QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
-                                const QRectF &srcRect, const QRectF &rect) Q_DECL_OVERRIDE;
-    QString log() const  Q_DECL_OVERRIDE { return m_log; }
+                                const QRectF &srcRect, const QRectF &rect) override;
+    QString log() const  override { return m_log; }
 
     void setResolution(const QSize &res);
     QSize resolution() const;

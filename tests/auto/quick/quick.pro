@@ -92,6 +92,9 @@ QUICKTESTS =  \
 
 SUBDIRS += $$PUBLICTESTS
 
+# Following tests are too slow on qemu + software backend
+boot2qt: QUICKTESTS -= qquickgridview qquicklistview qquickpositioners
+
 !qtConfig(accessibility):QUICKTESTS -= qquickaccessible
 
 qtConfig(private_tests) {

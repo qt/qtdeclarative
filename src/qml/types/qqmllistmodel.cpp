@@ -572,14 +572,20 @@ void ListModel::clear()
     elements.clear();
 }
 
-void ListModel::remove(int index, int count)
+QVector<std::function<void()>> ListModel::remove(int index, int count)
 {
+    QVector<std::function<void()>> toDestroy;
+    auto layout = m_layout;
     for (int i=0 ; i < count ; ++i) {
-        elements[index+i]->destroy(m_layout);
-        delete elements[index+i];
+        auto element = elements[index+i];
+        toDestroy.append([element, layout](){
+            element->destroy(layout);
+            delete element;
+        });
     }
     elements.remove(index, count);
     updateCacheIndices(index);
+    return toDestroy;
 }
 
 void ListModel::insert(int elementIndex, QV4::Object *object)
@@ -1394,7 +1400,10 @@ void ModelObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, u
         p->value = v4->fromVariant(value);
         return;
     }
-    QV4::QObjectWrapper::advanceIterator(m, it, name, index, p, attributes);
+    // Fall back to QV4::Object as opposed to QV4::QObjectWrapper otherwise it will add
+    // unnecessary entries that relate to the roles used. These just create extra work
+    // later on as they will just be ignored.
+    QV4::Object::advanceIterator(m, it, name, index, p, attributes);
 }
 
 DEFINE_OBJECT_VTABLE(ModelObject);
@@ -2059,15 +2068,22 @@ void QQmlListModel::remove(QQmlV4Function *args)
 
         emitItemsAboutToBeRemoved(index, removeCount);
 
+        QVector<std::function<void()>> toDestroy;
         if (m_dynamicRoles) {
-            for (int i=0 ; i < removeCount ; ++i)
-                delete m_modelObjects[index+i];
+            for (int i=0 ; i < removeCount ; ++i) {
+                auto modelObject = m_modelObjects[index+i];
+                toDestroy.append([modelObject](){
+                    delete modelObject;
+                });
+            }
             m_modelObjects.remove(index, removeCount);
         } else {
-            m_listModel->remove(index, removeCount);
+            toDestroy = m_listModel->remove(index, removeCount);
         }
 
         emitItemsRemoved(index, removeCount);
+        for (const auto &destroyer : toDestroy)
+            destroyer();
     } else {
         qmlWarning(this) << tr("remove: incorrect number of arguments");
     }

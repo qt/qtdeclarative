@@ -333,7 +333,7 @@ class QQuickWindowQObjectCleanupJob : public QRunnable
 {
 public:
     QQuickWindowQObjectCleanupJob(QObject *o) : object(o) { }
-    void run() Q_DECL_OVERRIDE { delete object; }
+    void run() override { delete object; }
     QObject *object;
     static void schedule(QQuickWindow *window, QObject *object) {
         Q_ASSERT(window);

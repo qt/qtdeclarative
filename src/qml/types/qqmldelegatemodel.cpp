@@ -268,7 +268,8 @@ QQmlDelegateModel::~QQmlDelegateModel()
             delete cacheItem->object;
 
             cacheItem->object = 0;
-            cacheItem->contextData->destroy();
+            cacheItem->contextData->invalidate();
+            Q_ASSERT(cacheItem->contextData->refCount == 1);
             cacheItem->contextData = 0;
             cacheItem->scriptRef -= 1;
         }
@@ -839,7 +840,8 @@ void QQDMIncubationTask::statusChanged(Status status)
         delete incubating->object;
         incubating->object = 0;
         if (incubating->contextData) {
-            incubating->contextData->destroy();
+            incubating->contextData->invalidate();
+            Q_ASSERT(incubating->contextData->refCount == 1);
             incubating->contextData = 0;
         }
         incubating->scriptRef = 0;
@@ -899,8 +901,10 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
         delete cacheItem->object;
         cacheItem->object = 0;
         cacheItem->scriptRef -= 1;
-        if (cacheItem->contextData)
-            cacheItem->contextData->destroy();
+        if (cacheItem->contextData) {
+            cacheItem->contextData->invalidate();
+            Q_ASSERT(cacheItem->contextData->refCount == 1);
+        }
         cacheItem->contextData = 0;
 
         if (!cacheItem->isReferenced()) {
@@ -982,7 +986,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
             if (QQmlAdaptorModelProxyInterface *proxy
                     = qobject_cast<QQmlAdaptorModelProxyInterface *>(cacheItem)) {
                 ctxt = new QQmlContextData;
-                ctxt->setParent(cacheItem->contextData, true);
+                ctxt->setParent(cacheItem->contextData);
                 ctxt->contextObject = proxy->proxiedObject();
             }
         }
@@ -1263,6 +1267,13 @@ void QQmlDelegateModel::_q_itemsInserted(int index, int count)
     d->emitChanges();
 }
 
+//### This method should be split in two. It will remove delegates, and it will re-render the list.
+// When e.g. QQmlListModel::remove is called, the removal of the delegates should be done on
+// QAbstractItemModel::rowsAboutToBeRemoved, and the re-rendering on
+// QAbstractItemModel::rowsRemoved. Currently both are done on the latter signal. The problem is
+// that the destruction of an item will emit a changed signal that ends up at the delegate, which
+// in turn will try to load the data from the model (which should have already freed it), resulting
+// in a use-after-free. See QTBUG-59256.
 void QQmlDelegateModelPrivate::itemsRemoved(
         const QVector<Compositor::Remove> &removes,
         QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedRemoves,
@@ -1940,8 +1951,11 @@ void QQmlDelegateModelItem::destroyObject()
 
     QQmlData *data = QQmlData::get(object);
     Q_ASSERT(data);
-    if (data->ownContext && data->context)
-        data->context->clearContext();
+    if (data->ownContext) {
+        data->ownContext->clearContext();
+        data->ownContext = 0;
+        data->context = 0;
+    }
     object->deleteLater();
 
     if (attached) {
@@ -1949,7 +1963,7 @@ void QQmlDelegateModelItem::destroyObject()
         attached = 0;
     }
 
-    contextData->destroy();
+    contextData->invalidate();
     contextData = 0;
     object = 0;
 }

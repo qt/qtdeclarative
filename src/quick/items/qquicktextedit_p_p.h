@@ -143,8 +143,8 @@ public:
     void relayoutDocument();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextEdit::HAlignment, bool forceAlign = false);
-    void mirrorChange() Q_DECL_OVERRIDE;
-    qreal getImplicitWidth() const Q_DECL_OVERRIDE;
+    void mirrorChange() override;
+    qreal getImplicitWidth() const override;
     Qt::LayoutDirection textDirection(const QString &text) const;
     bool isLinkHoveredConnected();
 

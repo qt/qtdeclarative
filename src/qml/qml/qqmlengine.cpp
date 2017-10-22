@@ -131,21 +131,21 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
         0,
         0,
         0,
-        Q_NULLPTR,
+        nullptr,
         reason,
 
         uri, versionMajor, versionMinor, qmlName, &staticMetaObject,
 
         QQmlAttachedPropertiesFunc(),
-        Q_NULLPTR,
+        nullptr,
 
         0,
         0,
         0,
 
-        Q_NULLPTR, Q_NULLPTR,
+        nullptr, nullptr,
 
-        Q_NULLPTR,
+        nullptr,
         0
     };
 
@@ -718,8 +718,13 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
     if (QQmlData *d = QQmlData::get(o)) {
-        if (d->ownContext && d->context) {
-            d->context->destroy();
+        if (d->ownContext) {
+            for (QQmlContextData *lc = d->ownContext->linkedContext; lc; lc = lc->linkedContext)
+                lc->invalidate();
+            d->ownContext->invalidate();
+            if (d->ownContext->contextObject == o)
+                d->ownContext->contextObject = nullptr;
+            d->ownContext = 0;
             d->context = 0;
         }
 
@@ -735,10 +740,10 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 }
 
 QQmlData::QQmlData()
-    : ownedByQml1(false), ownMemory(true), ownContext(false), indestructible(true), explicitIndestructibleSet(false),
+    : ownedByQml1(false), ownMemory(true), indestructible(true), explicitIndestructibleSet(false),
       hasTaintedV4Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
       hasInterceptorMetaObject(false), hasVMEMetaObject(false), parentFrozen(false),
-      bindingBitsSize(MaxInlineBits), bindingBitsValue(0), notifyList(0), context(0), outerContext(0),
+      bindingBitsSize(MaxInlineBits), bindingBitsValue(0), notifyList(0),
       bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0),
       lineNumber(0), columnNumber(0), jsEngineId(0), compilationUnit(0), deferredData(0),
       propertyCache(0), guards(0), extendedData(0)
@@ -888,8 +893,12 @@ void QQmlData::setQueuedForDeletion(QObject *object)
 {
     if (object) {
         if (QQmlData *ddata = QQmlData::get(object)) {
-            if (ddata->ownContext && ddata->context)
+            if (ddata->ownContext) {
+                Q_ASSERT(ddata->ownContext == ddata->context);
                 ddata->context->emitDestruction();
+                ddata->ownContext = 0;
+                ddata->context = 0;
+            }
             ddata->isQueuedForDeletion = true;
         }
     }
@@ -1786,8 +1795,7 @@ void QQmlData::destroyed(QObject *object)
     if (propertyCache)
         propertyCache->release();
 
-    if (ownContext && context)
-        context->destroy();
+    ownContext = 0;
 
     while (guards) {
         QQmlGuard<QObject> *guard = static_cast<QQmlGuard<QObject> *>(guards);

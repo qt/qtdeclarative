@@ -59,7 +59,7 @@ class QmlShapesPlugin : public QQmlExtensionPlugin
 
 public:
     QmlShapesPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
-    void registerTypes(const char *uri) Q_DECL_OVERRIDE
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QByteArray(uri) == QByteArray("QtQuick.Shapes"));
         qmlRegisterType<QQuickShape>(uri, 1, 0, "Shape");

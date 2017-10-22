@@ -398,7 +398,7 @@ bool QQuickViewTestUtil::testVisibleItems(const QQuickItemViewPrivate *priv, boo
     for (int i = 0; i < priv->visibleItems.count(); ++i) {
         FxViewItem *item = priv->visibleItems.at(i);
         if (!item) {
-            *failItem = Q_NULLPTR;
+            *failItem = nullptr;
             return false;
         }
 #if 0

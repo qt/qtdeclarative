@@ -85,7 +85,7 @@ protected:
                                      QQmlDebugConnector::instance()->blockingMode());
     }
 
-    void stateChanged(QQmlDebugService::State newState) Q_DECL_OVERRIDE
+    void stateChanged(QQmlDebugService::State newState) override
     {
         if (newState != QQmlDebugService::Enabled)
             stopWaiting();
@@ -93,7 +93,7 @@ protected:
             init();
     }
 
-    void engineAboutToBeAdded(QJSEngine *engine) Q_DECL_OVERRIDE
+    void engineAboutToBeAdded(QJSEngine *engine) override
     {
         QMutexLocker lock(&m_configMutex);
         if (m_waitingForConfiguration)

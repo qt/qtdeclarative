@@ -532,7 +532,7 @@ ReturnedValue QtObject::method_matrix4x4(const BuiltinFunction *b, CallData *cal
     QV4::Scope scope(b);
 
     if (callData->argc() == 0) {
-        return scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 0, Q_NULLPTR));
+        return scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 0, nullptr));
     }
 
     if (callData->argc() == 1 && callData->args[0].isObject()) {
@@ -1163,6 +1163,10 @@ ReturnedValue QtObject::method_createQmlObject(const BuiltinFunction *b, CallDat
 
     if (!component.isReady())
         THROW_GENERIC_ERROR("Qt.createQmlObject(): Component is not ready");
+
+    if (!effectiveContext->isValid()) {
+        THROW_GENERIC_ERROR("Qt.createQmlObject(): Cannot create a component in an invalid context");
+    }
 
     QObject *obj = component.beginCreate(effectiveContext);
     if (obj) {

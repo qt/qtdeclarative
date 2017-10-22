@@ -60,7 +60,7 @@ class RenderControl : public QQuickRenderControl
 {
 public:
     RenderControl(QWindow *w) : m_window(w) { }
-    QWindow *renderWindow(QPoint *offset) Q_DECL_OVERRIDE;
+    QWindow *renderWindow(QPoint *offset) override;
 
 private:
     QWindow *m_window;

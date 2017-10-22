@@ -180,7 +180,7 @@ public:
         rewindExpression = QQmlPropertyPrivate::signalExpression(property);
     }
 
-    bool override(QQuickStateActionEvent *other) override {
+    bool mayOverride(QQuickStateActionEvent *other) override {
         if (other == this)
             return true;
         if (other->type() != type())

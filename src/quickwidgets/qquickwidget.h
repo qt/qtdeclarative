@@ -64,9 +64,9 @@ class Q_QUICKWIDGETS_EXPORT QQuickWidget : public QWidget
     Q_PROPERTY(QUrl source READ source WRITE setSource DESIGNABLE true)
 
 public:
-    explicit QQuickWidget(QWidget *parent = Q_NULLPTR);
+    explicit QQuickWidget(QWidget *parent = nullptr);
     QQuickWidget(QQmlEngine* engine, QWidget *parent);
-    explicit QQuickWidget(const QUrl &source, QWidget *parent = Q_NULLPTR);
+    explicit QQuickWidget(const QUrl &source, QWidget *parent = nullptr);
     virtual ~QQuickWidget();
 
     QUrl source() const;

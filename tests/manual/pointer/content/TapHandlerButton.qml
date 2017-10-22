@@ -48,7 +48,7 @@ Item {
     property alias text: buttonLabel.text
     property alias label: buttonLabel
     signal clicked
-    property alias pressed: th.isPressed
+    property alias pressed: th.pressed
     implicitHeight: Math.max(Screen.pixelDensity * 7, buttonLabel.implicitHeight * 1.2)
     implicitWidth: Math.max(Screen.pixelDensity * 11, buttonLabel.implicitWidth * 1.3)
     height: implicitHeight

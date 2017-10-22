@@ -217,14 +217,14 @@ class RenderControl : public QQuickRenderControl
 {
 public:
     RenderControl(QWindow *w) : m_window(w) { }
-    QWindow *renderWindow(QPoint *offset) Q_DECL_OVERRIDE;
+    QWindow *renderWindow(QPoint *offset) override;
 
 private:
     QWindow *m_window;
 };
 
 WindowMultiThreaded::WindowMultiThreaded()
-    : m_qmlComponent(Q_NULLPTR),
+    : m_qmlComponent(nullptr),
       m_rootItem(0),
       m_quickInitialized(false),
       m_psrRequested(false)

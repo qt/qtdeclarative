@@ -70,7 +70,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public Q
     Q_PROPERTY(QObject *screen READ screen WRITE setScreen NOTIFY screenChanged REVISION 2)
 
 public:
-    QQuickWindowQmlImpl(QWindow *parent = Q_NULLPTR);
+    QQuickWindowQmlImpl(QWindow *parent = nullptr);
 
     void setVisible(bool visible);
     void setVisibility(Visibility visibility);
@@ -86,8 +86,8 @@ Q_SIGNALS:
     Q_REVISION(2) void screenChanged();
 
 protected:
-    void classBegin() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void classBegin() override;
+    void componentComplete() override;
 
 private Q_SLOTS:
     void setWindowVisibility();

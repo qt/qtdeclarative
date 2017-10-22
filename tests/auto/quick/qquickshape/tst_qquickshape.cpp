@@ -223,6 +223,10 @@ void tst_QQuickShape::render()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
+
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
 
@@ -239,6 +243,10 @@ void tst_QQuickShape::renderWithMultipleSp()
     window->setSource(testFileUrl("pathitem4.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -257,6 +265,10 @@ void tst_QQuickShape::radialGrad()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
+
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
 
@@ -273,6 +285,10 @@ void tst_QQuickShape::conicalGrad()
     window->setSource(testFileUrl("pathitem6.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());

@@ -143,7 +143,7 @@ public:
             qCDebug(QSG_LOG_INFO, "Animation Driver: using walltime");
     }
 
-    void start() Q_DECL_OVERRIDE
+    void start() override
     {
         m_time = 0;
         m_timer.start();
@@ -151,14 +151,14 @@ public:
         QAnimationDriver::start();
     }
 
-    qint64 elapsed() const Q_DECL_OVERRIDE
+    qint64 elapsed() const override
     {
         return m_mode == VSyncMode
                 ? qint64(m_time)
                 : qint64(m_time) + m_wallTime.elapsed();
     }
 
-    void advance() Q_DECL_OVERRIDE
+    void advance() override
     {
         qint64 delta = m_timer.restart();
 

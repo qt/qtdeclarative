@@ -4040,7 +4040,7 @@ class QQuickContext2DTextureCleanup : public QRunnable
 {
 public:
     QQuickContext2DTexture *texture;
-    void run() Q_DECL_OVERRIDE { delete texture; }
+    void run() override { delete texture; }
 };
 
 QMutex QQuickContext2D::mutex;

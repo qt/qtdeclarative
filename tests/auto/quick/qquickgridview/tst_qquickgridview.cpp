@@ -46,6 +46,8 @@
 #include <QtGui/qguiapplication.h>
 #include "qplatformdefs.h"
 
+#include <math.h>
+
 Q_DECLARE_METATYPE(QQuickGridView::Flow)
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
 Q_DECLARE_METATYPE(QQuickItemView::VerticalLayoutDirection)

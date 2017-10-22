@@ -212,15 +212,15 @@ public:
     FontSizeMode fontSizeMode() const;
     void setFontSizeMode(FontSizeMode mode);
 
-    void componentComplete() Q_DECL_OVERRIDE;
+    void componentComplete() override;
 
     int resourcesLoading() const; // mainly for testing
 
     qreal contentWidth() const;
     qreal contentHeight() const;
 
-    QRectF boundingRect() const Q_DECL_OVERRIDE;
-    QRectF clipRect() const Q_DECL_OVERRIDE;
+    QRectF boundingRect() const override;
+    QRectF clipRect() const override;
     Q_INVOKABLE void doLayout(); // ### Qt 6: remove
     Q_REVISION(9) Q_INVOKABLE void forceLayout();
 
@@ -291,18 +291,18 @@ Q_SIGNALS:
 protected:
     QQuickText(QQuickTextPrivate &dd, QQuickItem *parent = 0);
 
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
-    void itemChange(ItemChange change, const ItemChangeData &value) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
     void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+                                 const QRectF &oldGeometry) override;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
-    void updatePolish() Q_DECL_OVERRIDE;
+    void updatePolish() override;
 
-    void hoverEnterEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
-    void hoverMoveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
-    void hoverLeaveEvent(QHoverEvent *event) Q_DECL_OVERRIDE;
+    void hoverEnterEvent(QHoverEvent *event) override;
+    void hoverMoveEvent(QHoverEvent *event) override;
+    void hoverLeaveEvent(QHoverEvent *event) override;
     void invalidateFontCaches();
 
 private Q_SLOTS:

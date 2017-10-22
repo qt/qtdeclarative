@@ -87,7 +87,7 @@ public:
     ~QQuickWidgetPrivate();
 
     void execute();
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &oldGeometry) override;
     void initResize();
     void updateSize();
     void updatePosition();
@@ -100,8 +100,8 @@ public:
     void handleContextCreationFailure(const QSurfaceFormat &format, bool isEs);
 
 #if QT_CONFIG(opengl)
-    GLuint textureId() const Q_DECL_OVERRIDE;
-    QImage grabFramebuffer() Q_DECL_OVERRIDE;
+    GLuint textureId() const override;
+    QImage grabFramebuffer() override;
 #else
     QImage grabFramebuffer();
 #endif

@@ -179,6 +179,8 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(Bool, compareInstanceof, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     F(Bool, compareIn, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     \
+    F(ReturnedValue, regexpLiteral, (ExecutionEngine *engine, int id)) \
+    \
     /* qml */ \
     F(ReturnedValue, loadQmlContext, (NoThrowEngine *engine)) \
     F(ReturnedValue, loadQmlImportedScripts, (NoThrowEngine *engine)) \

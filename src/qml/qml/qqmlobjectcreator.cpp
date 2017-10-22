@@ -163,7 +163,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     int objectToCreate;
 
     if (subComponentIndex == -1) {
-        objectToCreate = qmlUnit->indexOfRootObject;
+        objectToCreate = /*root object*/0;
     } else {
         const QV4::CompiledData::Object *compObj = qmlUnit->objectAt(subComponentIndex);
         objectToCreate = compObj->bindingTable()->value.objectIndex;
@@ -1113,8 +1113,16 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                 return 0;
             }
         }
-        if (parent)
+        if (instance->isWidgetType()) {
+            if (parent && parent->isWidgetType()) {
+                QAbstractDeclarativeData::setWidgetParent(instance, parent);
+            } else {
+                // No parent! Layouts need to handle this through a default property that
+                // reparents accordingly. Otherwise the garbage collector will collect.
+            }
+        } else if (parent) {
             QQml_setParent_noEvent(instance, parent);
+        }
 
         ddata = QQmlData::get(instance, /*create*/true);
         ddata->lineNumber = obj->location.line;
@@ -1122,7 +1130,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     }
 
     ddata->setImplicitDestructible();
-    if (static_cast<quint32>(index) == qmlUnit->indexOfRootObject || ddata->rootObjectInCreation) {
+    if (static_cast<quint32>(index) == /*root object*/0 || ddata->rootObjectInCreation) {
         if (ddata->context) {
             Q_ASSERT(ddata->context != context);
             Q_ASSERT(ddata->outerContext);
@@ -1132,7 +1140,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             c->linkedContext = context;
         } else
             context->addObject(instance);
-        ddata->ownContext = true;
+        ddata->ownContext = ddata->context;
     } else if (!ddata->context)
         context->addObject(instance);
 

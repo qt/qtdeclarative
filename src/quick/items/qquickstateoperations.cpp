@@ -510,7 +510,7 @@ QQuickStateActionEvent::EventType QQuickParentChange::type() const
     return ParentChange;
 }
 
-bool QQuickParentChange::override(QQuickStateActionEvent*other)
+bool QQuickParentChange::mayOverride(QQuickStateActionEvent*other)
 {
     Q_D(QQuickParentChange);
     if (other->type() != ParentChange)
@@ -1302,7 +1302,7 @@ void QQuickAnchorChanges::clearBindings()
     }
 }
 
-bool QQuickAnchorChanges::override(QQuickStateActionEvent*other)
+bool QQuickAnchorChanges::mayOverride(QQuickStateActionEvent*other)
 {
     if (other->type() != AnchorChanges)
         return false;

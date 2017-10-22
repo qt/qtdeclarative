@@ -701,8 +701,7 @@ void QQmlDataBlob::notifyComplete(QQmlDataBlob *blob)
 {
     Q_ASSERT(m_waitingFor.contains(blob));
     Q_ASSERT(blob->status() == Error || blob->status() == Complete);
-    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(typeLoader()->engine())->profiler,
-                               blob);
+    QQmlCompilingProfiler prof(typeLoader()->profiler(), blob);
 
     m_inCallback = true;
 
@@ -963,6 +962,14 @@ void QQmlTypeLoader::invalidate()
     m_networkReplies.clear();
 #endif // qml_network
 }
+
+#ifndef QT_NO_QML_DEBUGGER
+void QQmlTypeLoader::setProfiler(QQmlProfiler *profiler)
+{
+    Q_ASSERT(!m_profiler);
+    m_profiler.reset(profiler);
+}
+#endif
 
 void QQmlTypeLoader::lock()
 {
@@ -1263,7 +1270,7 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QString &fileName)
 void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeData &d)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
-    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(engine())->profiler, blob);
+    QQmlCompilingProfiler prof(profiler(), blob);
 
     blob->m_inCallback = true;
 
@@ -1283,7 +1290,7 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeD
 void QQmlTypeLoader::setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
-    QQmlCompilingProfiler prof(QQmlEnginePrivate::get(engine())->profiler, blob);
+    QQmlCompilingProfiler prof(profiler(), blob);
 
     blob->m_inCallback = true;
 
@@ -2815,7 +2822,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
         effectiveCtxt = 0;
 
     // Create the script context if required
-    QQmlContextData *ctxt = new QQmlContextData;
+    QQmlContextDataRef ctxt(new QQmlContextData);
     ctxt->isInternal = true;
     ctxt->isJSContext = true;
     if (shared)
@@ -2835,7 +2842,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
     }
 
     if (effectiveCtxt) {
-        ctxt->setParent(effectiveCtxt, true);
+        ctxt->setParent(effectiveCtxt);
     } else {
         ctxt->engine = parentCtxt->engine; // Fix for QTBUG-21620
     }
@@ -2857,12 +2864,10 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
     if (!m_program) {
         if (shared)
             m_loaded = true;
-        ctxt->destroy();
         return QV4::Encode::undefined();
     }
 
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, 0));
-    qmlContext->takeContextOwnership();
 
     m_program->qmlContext.set(scope.engine, qmlContext);
     m_program->run();

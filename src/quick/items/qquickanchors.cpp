@@ -832,7 +832,7 @@ void QQuickAnchors::resetTop()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~TopAnchor;
     d->remDepend(d->topAnchorItem);
-    d->topAnchorItem = Q_NULLPTR;
+    d->topAnchorItem = nullptr;
     d->topAnchorLine = QQuickAnchors::InvalidAnchor;
     emit topChanged();
     d->updateVerticalAnchors();
@@ -872,7 +872,7 @@ void QQuickAnchors::resetBottom()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~BottomAnchor;
     d->remDepend(d->bottomAnchorItem);
-    d->bottomAnchorItem = Q_NULLPTR;
+    d->bottomAnchorItem = nullptr;
     d->bottomAnchorLine = QQuickAnchors::InvalidAnchor;
     emit bottomChanged();
     d->updateVerticalAnchors();
@@ -912,7 +912,7 @@ void QQuickAnchors::resetVerticalCenter()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~VCenterAnchor;
     d->remDepend(d->vCenterAnchorItem);
-    d->vCenterAnchorItem = Q_NULLPTR;
+    d->vCenterAnchorItem = nullptr;
     d->vCenterAnchorLine = QQuickAnchors::InvalidAnchor;
     emit verticalCenterChanged();
     d->updateVerticalAnchors();
@@ -952,7 +952,7 @@ void QQuickAnchors::resetBaseline()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~BaselineAnchor;
     d->remDepend(d->baselineAnchorItem);
-    d->baselineAnchorItem = Q_NULLPTR;
+    d->baselineAnchorItem = nullptr;
     d->baselineAnchorLine = QQuickAnchors::InvalidAnchor;
     emit baselineChanged();
     d->updateVerticalAnchors();
@@ -992,7 +992,7 @@ void QQuickAnchors::resetLeft()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~LeftAnchor;
     d->remDepend(d->leftAnchorItem);
-    d->leftAnchorItem = Q_NULLPTR;
+    d->leftAnchorItem = nullptr;
     d->leftAnchorLine = QQuickAnchors::InvalidAnchor;
     emit leftChanged();
     d->updateHorizontalAnchors();
@@ -1032,7 +1032,7 @@ void QQuickAnchors::resetRight()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~RightAnchor;
     d->remDepend(d->rightAnchorItem);
-    d->rightAnchorItem = Q_NULLPTR;
+    d->rightAnchorItem = nullptr;
     d->rightAnchorLine = QQuickAnchors::InvalidAnchor;
     emit rightChanged();
     d->updateHorizontalAnchors();
@@ -1072,7 +1072,7 @@ void QQuickAnchors::resetHorizontalCenter()
     Q_D(QQuickAnchors);
     d->usedAnchors &= ~HCenterAnchor;
     d->remDepend(d->hCenterAnchorItem);
-    d->hCenterAnchorItem = Q_NULLPTR;
+    d->hCenterAnchorItem = nullptr;
     d->hCenterAnchorLine = QQuickAnchors::InvalidAnchor;
     emit horizontalCenterChanged();
     d->updateHorizontalAnchors();

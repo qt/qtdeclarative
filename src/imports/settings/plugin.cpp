@@ -58,7 +58,7 @@ class QmlSettingsPlugin : public QQmlExtensionPlugin
 
 public:
     QmlSettingsPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
-    void registerTypes(const char *uri) Q_DECL_OVERRIDE
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QByteArray(uri) == QByteArray("Qt.labs.settings"));
         qmlRegisterType<QQmlSettings>(uri, 1, 0, "Settings");

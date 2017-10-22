@@ -69,56 +69,56 @@ public:
     QSGDefaultLayer(QSGRenderContext *context);
     ~QSGDefaultLayer();
 
-    bool updateTexture() Q_DECL_OVERRIDE;
+    bool updateTexture() override;
 
     // The item's "paint node", not effect node.
     QSGNode *item() const { return m_item; }
-    void setItem(QSGNode *item) Q_DECL_OVERRIDE;
+    void setItem(QSGNode *item) override;
 
     QRectF rect() const { return m_rect; }
-    void setRect(const QRectF &rect) Q_DECL_OVERRIDE;
+    void setRect(const QRectF &rect) override;
 
     QSize size() const { return m_size; }
-    void setSize(const QSize &size) Q_DECL_OVERRIDE;
+    void setSize(const QSize &size) override;
 
-    void setHasMipmaps(bool mipmap) Q_DECL_OVERRIDE;
+    void setHasMipmaps(bool mipmap) override;
 
-    void bind() Q_DECL_OVERRIDE;
+    void bind() override;
 
-    bool hasAlphaChannel() const Q_DECL_OVERRIDE;
-    bool hasMipmaps() const Q_DECL_OVERRIDE;
-    int textureId() const Q_DECL_OVERRIDE;
-    QSize textureSize() const Q_DECL_OVERRIDE { return m_size; }
+    bool hasAlphaChannel() const override;
+    bool hasMipmaps() const override;
+    int textureId() const override;
+    QSize textureSize() const override { return m_size; }
 
     GLenum format() const { return m_format; }
-    void setFormat(GLenum format) Q_DECL_OVERRIDE;
+    void setFormat(GLenum format) override;
 
     bool live() const { return bool(m_live); }
-    void setLive(bool live) Q_DECL_OVERRIDE;
+    void setLive(bool live) override;
 
     bool recursive() const { return bool(m_recursive); }
-    void setRecursive(bool recursive) Q_DECL_OVERRIDE;
+    void setRecursive(bool recursive) override;
 
-    void setDevicePixelRatio(qreal ratio) Q_DECL_OVERRIDE { m_device_pixel_ratio = ratio; }
+    void setDevicePixelRatio(qreal ratio) override { m_device_pixel_ratio = ratio; }
 
     bool mirrorHorizontal() const { return bool(m_mirrorHorizontal); }
-    void setMirrorHorizontal(bool mirror) Q_DECL_OVERRIDE;
+    void setMirrorHorizontal(bool mirror) override;
 
     bool mirrorVertical() const { return bool(m_mirrorVertical); }
-    void setMirrorVertical(bool mirror) Q_DECL_OVERRIDE;
+    void setMirrorVertical(bool mirror) override;
 
-    void scheduleUpdate() Q_DECL_OVERRIDE;
+    void scheduleUpdate() override;
 
-    QImage toImage() const Q_DECL_OVERRIDE;
+    QImage toImage() const override;
 
-    QRectF normalizedTextureSubRect() const Q_DECL_OVERRIDE;
+    QRectF normalizedTextureSubRect() const override;
 
     int samples() const { return m_samples; }
-    void setSamples(int samples) Q_DECL_OVERRIDE { m_samples = samples; }
+    void setSamples(int samples) override { m_samples = samples; }
 
 public Q_SLOTS:
-    void markDirtyTexture() Q_DECL_OVERRIDE;
-    void invalidated() Q_DECL_OVERRIDE;
+    void markDirtyTexture() override;
+    void invalidated() override;
 
 private:
     void grab();

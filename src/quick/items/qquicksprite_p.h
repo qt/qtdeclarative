@@ -161,7 +161,7 @@ public:
         return m_frameDurationVariation;
     }
 
-    int variedDuration() const Q_DECL_OVERRIDE;
+    int variedDuration() const override;
 
     bool frameSync() const
     {

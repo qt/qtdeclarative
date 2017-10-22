@@ -491,7 +491,7 @@ void QQuickMultiPointTouchArea::setMouseEnabled(bool arg)
     if (_mouseEnabled != arg) {
         _mouseEnabled = arg;
         if (_mouseTouchPoint && !arg)
-            _mouseTouchPoint = Q_NULLPTR;
+            _mouseTouchPoint = nullptr;
         emit mouseEnabledChanged();
     }
 }
@@ -835,7 +835,7 @@ void QQuickMultiPointTouchArea::mouseReleaseEvent(QMouseEvent *event)
         updateTouchData(event);
         _mouseTouchPoint->setInUse(false);
         _releasedTouchPoints.removeAll(_mouseTouchPoint);
-        _mouseTouchPoint = Q_NULLPTR;
+        _mouseTouchPoint = nullptr;
     }
 
     QQuickWindow *c = window();

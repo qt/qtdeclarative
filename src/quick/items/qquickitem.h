@@ -59,7 +59,7 @@ class Q_QUICK_EXPORT QQuickTransform : public QObject
 {
     Q_OBJECT
 public:
-    explicit QQuickTransform(QObject *parent = Q_NULLPTR);
+    explicit QQuickTransform(QObject *parent = nullptr);
     ~QQuickTransform();
 
     void appendToItem(QQuickItem *);
@@ -196,7 +196,7 @@ public:
     };
     Q_ENUM(TransformOrigin)
 
-    explicit QQuickItem(QQuickItem *parent = Q_NULLPTR);
+    explicit QQuickItem(QQuickItem *parent = nullptr);
     virtual ~QQuickItem();
 
     QQuickWindow *window() const;
@@ -392,7 +392,7 @@ Q_SIGNALS:
     void implicitHeightChanged();
 
 protected:
-    bool event(QEvent *) Q_DECL_OVERRIDE;
+    bool event(QEvent *) override;
 
     bool isComponentComplete() const;
     virtual void itemChange(ItemChange, const ItemChangeData &);
@@ -405,8 +405,8 @@ protected:
     bool heightValid() const; // ### better name?
     void setImplicitSize(qreal, qreal);
 
-    void classBegin() Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void classBegin() override;
+    void componentComplete() override;
 
     virtual void keyPressEvent(QKeyEvent *event);
     virtual void keyReleaseEvent(QKeyEvent *event);
@@ -445,7 +445,7 @@ protected:
     virtual void updatePolish();
 
 protected:
-    QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent = Q_NULLPTR);
+    QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent = nullptr);
 
 private:
     Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))

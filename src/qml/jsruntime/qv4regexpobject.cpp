@@ -72,15 +72,13 @@ void Heap::RegExpObject::init()
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
     value.set(scope.engine, QV4::RegExp::create(scope.engine, QString(), false, false));
-    global = false;
     o->initProperties();
 }
 
-void Heap::RegExpObject::init(QV4::RegExp *value, bool global)
+void Heap::RegExpObject::init(QV4::RegExp *value)
 {
     Object::init();
     Scope scope(internalClass->engine);
-    this->global = global;
     this->value.set(scope.engine, value->d());
     Scoped<QV4::RegExpObject> o(scope, this);
     o->initProperties();
@@ -92,7 +90,6 @@ void Heap::RegExpObject::init(QV4::RegExp *value, bool global)
 void Heap::RegExpObject::init(const QRegExp &re)
 {
     Object::init();
-    global = false;
 
     // Convert the pattern to a ECMAScript pattern.
     QString pattern = QT_PREPEND_NAMESPACE(qt_regexp_toCanonical)(re.pattern(), re.patternSyntax());
@@ -228,7 +225,7 @@ ReturnedValue RegExpCtor::construct(const Managed *m, CallData *callData)
             return scope.engine->throwTypeError();
 
         Scoped<RegExp> regexp(scope, re->value());
-        return Encode(scope.engine->newRegExpObject(regexp, re->global()));
+        return Encode(scope.engine->newRegExpObject(regexp));
     }
 
     QString pattern;
@@ -258,12 +255,12 @@ ReturnedValue RegExpCtor::construct(const Managed *m, CallData *callData)
         }
     }
 
-    Scoped<RegExp> regexp(scope, RegExp::create(scope.engine, pattern, ignoreCase, multiLine));
+    Scoped<RegExp> regexp(scope, RegExp::create(scope.engine, pattern, ignoreCase, multiLine, global));
     if (!regexp->isValid()) {
         return scope.engine->throwSyntaxError(QStringLiteral("Invalid regular expression"));
     }
 
-    return Encode(scope.engine->newRegExpObject(regexp, global));
+    return Encode(scope.engine->newRegExpObject(regexp));
 }
 
 ReturnedValue RegExpCtor::call(const Managed *that, CallData *callData)
@@ -445,8 +442,7 @@ ReturnedValue RegExpPrototype::method_compile(const BuiltinFunction *b, CallData
     Scoped<RegExpObject> re(scope, jsCall.callAsConstructor());
 
     r->d()->value.set(scope.engine, re->value());
-    r->d()->global = re->global();
-    RETURN_UNDEFINED();
+    return Encode::undefined();
 }
 
 template <int index>

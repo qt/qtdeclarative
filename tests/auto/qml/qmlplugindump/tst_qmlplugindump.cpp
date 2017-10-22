@@ -26,6 +26,8 @@
 **
 ****************************************************************************/
 
+#include "util.h"
+
 #include <qtest.h>
 #include <QLibraryInfo>
 #include <QDir>
@@ -33,7 +35,7 @@
 #include <QDebug>
 #include <cstdlib>
 
-class tst_qmlplugindump : public QObject
+class tst_qmlplugindump : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -54,6 +56,7 @@ tst_qmlplugindump::tst_qmlplugindump()
 
 void tst_qmlplugindump::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     qmlplugindumpPath = QLibraryInfo::location(QLibraryInfo::BinariesPath);
 
 #if defined(Q_OS_WIN)
@@ -102,9 +105,8 @@ void tst_qmlplugindump::singleton()
 {
     QProcess dumper;
     QStringList args;
-    auto dir = QFileInfo(QFINDTESTDATA("tests")).dir().path();
-    args << QLatin1String("tests.dumper.CompositeSingleton") << QLatin1String("1.0")
-         << dir;
+    args << QLatin1String("dumper.CompositeSingleton") << QLatin1String("1.0")
+         << testFile(".");
     dumper.start(qmlplugindumpPath, args);
     QVERIFY2(dumper.waitForStarted(), qPrintable(dumper.errorString()));
     QVERIFY2(dumper.waitForFinished(), qPrintable(dumper.errorString()));

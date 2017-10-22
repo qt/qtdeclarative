@@ -1270,6 +1270,10 @@ void tst_qquickwindow::grab_data()
 
 void tst_qquickwindow::grab()
 {
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
     QFETCH(bool, visible);
     QFETCH(bool, alpha);
 
@@ -2349,6 +2353,9 @@ void tst_qquickwindow::testRenderJob()
         window.scheduleRenderJob(new RenderJob(QQuickWindow::NoStage, &completedJobs),
                                  QQuickWindow::NoStage);
         QTRY_COMPARE(RenderJob::deleted, 1);
+        if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+            || (QGuiApplication::platformName() == QLatin1String("minimal")))
+            QEXPECT_FAIL("", "NoStage job fails on offscreen/minimimal platforms", Continue);
         QCOMPARE(completedJobs.size(), 1);
 
 #if QT_CONFIG(opengl)
@@ -2417,13 +2424,13 @@ public:
         m_childMouseEventFilterEventCount.clear();
     }
 protected:
-    bool childMouseEventFilter(QQuickItem *, QEvent *event) Q_DECL_OVERRIDE
+    bool childMouseEventFilter(QQuickItem *, QEvent *event) override
     {
         m_childMouseEventFilterEventCount[event->type()]++;
         return m_returnTrueForType.contains(event->type());
     }
 
-    bool event(QEvent *event) Q_DECL_OVERRIDE
+    bool event(QEvent *event) override
     {
         m_eventCount[event->type()]++;
         return QQuickRectangle::event(event);
@@ -2604,7 +2611,7 @@ public:
         return false;
     }
 
-    virtual bool contains(const QPointF &pos) const override {
+    bool contains(const QPointF &pos) const override {
         // returns true if the point is inside the the embedded circle inside the (square) rect
         const float radius = (float)width()/2;
         const QVector2D center(radius, radius);

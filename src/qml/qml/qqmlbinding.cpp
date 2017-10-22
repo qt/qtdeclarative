@@ -180,7 +180,7 @@ class QQmlBindingBinding: public QQmlBinding
 {
 protected:
     void doUpdate(const DeleteWatcher &,
-                  QQmlPropertyData::WriteFlags flags, QV4::Scope &) Q_DECL_OVERRIDE Q_DECL_FINAL
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &) override final
     {
         Q_ASSERT(!m_targetIndex.hasValueTypeIndex());
         QQmlPropertyData *pd = nullptr;
@@ -196,7 +196,7 @@ class QQmlNonbindingBinding: public QQmlBinding
 {
 protected:
     void doUpdate(const DeleteWatcher &watcher,
-                  QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) Q_DECL_OVERRIDE
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) override
     {
         auto ep = QQmlEnginePrivate::get(scope.engine);
         ep->referenceScarceResources();
@@ -237,7 +237,7 @@ class GenericBinding: public QQmlNonbindingBinding
 protected:
     // Returns true if successful, false if an error description was set on expression
     Q_ALWAYS_INLINE bool write(const QV4::Value &result, bool isUndefined,
-                               QQmlPropertyData::WriteFlags flags) Q_DECL_OVERRIDE Q_DECL_FINAL
+                               QQmlPropertyData::WriteFlags flags) override final
     {
         Q_ASSERT(targetObject());
 
@@ -306,7 +306,7 @@ public:
     }
 
     void doUpdate(const DeleteWatcher &watcher,
-                  QQmlPropertyData::WriteFlags flags, QV4::Scope &) Q_DECL_OVERRIDE Q_DECL_FINAL
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &) override final
     {
         if (watcher.wasDeleted())
             return;
@@ -620,7 +620,7 @@ public:
 
 protected:
     Q_ALWAYS_INLINE bool write(const QV4::Value &result, bool isUndefined,
-                               QQmlPropertyData::WriteFlags flags) Q_DECL_OVERRIDE Q_DECL_FINAL
+                               QQmlPropertyData::WriteFlags flags) override final
     {
         QQmlPropertyData *pd;
         QQmlPropertyData vtpd;

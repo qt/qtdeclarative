@@ -219,7 +219,7 @@ public:
         window->update();
     }
 
-    QSGTexture *texture() const Q_DECL_OVERRIDE
+    QSGTexture *texture() const override
     {
         return QSGSimpleTextureNode::texture();
     }

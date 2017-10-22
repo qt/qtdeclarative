@@ -101,10 +101,10 @@ public:
     void complete();
 
 protected:
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) Q_DECL_OVERRIDE;
-    void itemDestroyed(QQuickItem *item) Q_DECL_OVERRIDE;
-    void itemChildAdded(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
-    void itemChildRemoved(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) override;
+    void itemDestroyed(QQuickItem *item) override;
+    void itemChildAdded(QQuickItem *, QQuickItem *) override;
+    void itemChildRemoved(QQuickItem *, QQuickItem *) override;
     //void itemVisibilityChanged(QQuickItem *item)
 
 private:
@@ -194,11 +194,11 @@ public:
 
     QQuickShaderEffectSource *effectSource() const { return m_effectSource; }
 
-    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
-    void itemOpacityChanged(QQuickItem *) Q_DECL_OVERRIDE;
-    void itemParentChanged(QQuickItem *, QQuickItem *) Q_DECL_OVERRIDE;
-    void itemSiblingOrderChanged(QQuickItem *) Q_DECL_OVERRIDE;
-    void itemVisibilityChanged(QQuickItem *) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
+    void itemOpacityChanged(QQuickItem *) override;
+    void itemParentChanged(QQuickItem *, QQuickItem *) override;
+    void itemSiblingOrderChanged(QQuickItem *) override;
+    void itemVisibilityChanged(QQuickItem *) override;
 
     void updateMatrix();
     void updateGeometry();
@@ -712,8 +712,8 @@ Q_SIGNALS:
     void priorityChanged();
 
 private:
-    void keyPressed(QKeyEvent *event, bool post) Q_DECL_OVERRIDE;
-    void keyReleased(QKeyEvent *event, bool post) Q_DECL_OVERRIDE;
+    void keyPressed(QKeyEvent *event, bool post) override;
+    void keyReleased(QKeyEvent *event, bool post) override;
     void setFocusNavigation(QQuickItem *currentItem, const char *dir,
                             Qt::FocusReason reason = Qt::OtherFocusReason);
 };
@@ -749,7 +749,7 @@ class QQuickEnterKeyAttached : public QObject
     Q_PROPERTY(Qt::EnterKeyType type READ type WRITE setType NOTIFY typeChanged)
 
 public:
-    explicit QQuickEnterKeyAttached(QObject *parent = Q_NULLPTR);
+    explicit QQuickEnterKeyAttached(QObject *parent = nullptr);
 
     Qt::EnterKeyType type() const;
     void setType(Qt::EnterKeyType type);
@@ -817,7 +817,7 @@ public:
         return QQmlListProperty<QQuickItem>(this, d->targets);
     }
 
-    void componentComplete() Q_DECL_OVERRIDE;
+    void componentComplete() override;
 
     static QQuickKeysAttached *qmlAttachedProperties(QObject *);
 
@@ -869,11 +869,11 @@ Q_SIGNALS:
     void volumeDownPressed(QQuickKeyEvent *event);
 
 private:
-    void keyPressed(QKeyEvent *event, bool post) Q_DECL_OVERRIDE;
-    void keyReleased(QKeyEvent *event, bool post) Q_DECL_OVERRIDE;
+    void keyPressed(QKeyEvent *event, bool post) override;
+    void keyReleased(QKeyEvent *event, bool post) override;
 #if QT_CONFIG(im)
-    void inputMethodEvent(QInputMethodEvent *, bool post) Q_DECL_OVERRIDE;
-    QVariant inputMethodQuery(Qt::InputMethodQuery query) const Q_DECL_OVERRIDE;
+    void inputMethodEvent(QInputMethodEvent *, bool post) override;
+    QVariant inputMethodQuery(Qt::InputMethodQuery query) const override;
 #endif
     void shortcutOverride(QKeyEvent *event) override;
     static QByteArray keyToSignal(int key);

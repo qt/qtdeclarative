@@ -158,6 +158,7 @@ private slots:
 #endif
     void implicitSize_data();
     void implicitSize();
+    void implicitSize_QTBUG_63153();
     void contentSize();
     void boundingRect();
     void clipRect();
@@ -904,6 +905,10 @@ void tst_qquicktextedit::hAlignVisual()
     const int centeredSection3End = centeredSection3 + sectionWidth;
 
     {
+        if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+            || (QGuiApplication::platformName() == QLatin1String("minimal")))
+            QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
+
         // Left Align
         QImage image = view.grabWindow();
         const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
@@ -3386,6 +3391,18 @@ void tst_qquicktextedit::implicitSize()
     textObject->resetWidth();
     QCOMPARE(textObject->width(), textObject->implicitWidth());
     QCOMPARE(textObject->height(), textObject->implicitHeight());
+}
+
+void tst_qquicktextedit::implicitSize_QTBUG_63153()
+{
+    QString componentStr = "import QtQuick 2.0\nTextEdit { }";
+    QQmlComponent textComponent(&engine);
+    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
+    textObject->setText("short");
+    qreal shortImplicitWidth = textObject->implicitWidth();
+    textObject->setText("in contrast to short this is long");
+    QVERIFY2(shortImplicitWidth < textObject->implicitWidth(), qPrintable(QString("%1 < %2").arg(textObject->implicitWidth()).arg(shortImplicitWidth)));
 }
 
 void tst_qquicktextedit::contentSize()

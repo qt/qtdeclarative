@@ -44,6 +44,7 @@ private slots:
     void loadGeneratedFile();
     void translationExpressionSupport();
     void signalHandlerParameters();
+    void errorOnArgumentsInSignalHandler();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -68,15 +69,20 @@ public:
     }
 };
 
-static bool generateCache(const QString &qmlFileName)
+static bool generateCache(const QString &qmlFileName, QByteArray *capturedStderr = nullptr)
 {
     QProcess proc;
-    proc.setProcessChannelMode(QProcess::ForwardedChannels);
+    if (capturedStderr == nullptr)
+        proc.setProcessChannelMode(QProcess::ForwardedChannels);
     proc.setProgram(QLibraryInfo::location(QLibraryInfo::BinariesPath) + QDir::separator() + QLatin1String("qmlcachegen"));
     proc.setArguments(QStringList() << (QLatin1String("--target-architecture=") + QSysInfo::buildCpuArchitecture()) << (QLatin1String("--target-abi=") + QSysInfo::buildAbi()) << qmlFileName);
     proc.start();
     if (!proc.waitForFinished())
         return false;
+
+    if (capturedStderr)
+        *capturedStderr = proc.readAllStandardError();
+
     if (proc.exitStatus() != QProcess::NormalExit)
         return false;
     return proc.exitCode() == 0;
@@ -192,6 +198,31 @@ void tst_qmlcachegen::signalHandlerParameters()
     QVERIFY(!obj.isNull());
     QMetaObject::invokeMethod(obj.data(), "runTest");
     QCOMPARE(obj->property("result").toInt(), 42);
+}
+
+void tst_qmlcachegen::errorOnArgumentsInSignalHandler()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const auto writeTempFile = [&tempDir](const QString &fileName, const char *contents) {
+        QFile f(tempDir.path() + '/' + fileName);
+        const bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        Q_ASSERT(ok);
+        f.write(contents);
+        return f.fileName();
+    };
+
+    const QString testFilePath = writeTempFile("test.qml", "import QtQml 2.2\n"
+                                                           "QtObject {\n"
+                                                           "    signal mySignal(var arguments);\n"
+                                                           "    onMySignal: console.log(arguments);\n"
+                                                           "}");
+
+
+    QByteArray errorOutput;
+    QVERIFY(!generateCache(testFilePath, &errorOutput));
+    QVERIFY2(errorOutput.contains("error: The use of the arguments object in signal handlers is"), errorOutput);
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)

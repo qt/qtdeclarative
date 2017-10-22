@@ -86,8 +86,8 @@ public:
 
     bool isMirrored() const;
     void renderScene(const QSGBindable &bindable);
-    virtual void renderScene(uint fboId = 0) Q_DECL_OVERRIDE;
-    virtual void nodeChanged(QSGNode *node, QSGNode::DirtyState state) Q_DECL_OVERRIDE;
+    void renderScene(uint fboId = 0) override;
+    void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
 
     QSGNodeUpdater *nodeUpdater() const;
     void setNodeUpdater(QSGNodeUpdater *updater);

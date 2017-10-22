@@ -41,6 +41,9 @@
 #include <QtQuick/qsgsimpletexturenode.h>
 #include <QtQuick/private/qsgtexture_p.h>
 
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
+
 QT_BEGIN_NAMESPACE
 inline bool operator==(const QSGGeometry::TexturedPoint2D& l, const QSGGeometry::TexturedPoint2D& r)
 {
@@ -80,6 +83,9 @@ private:
 
 void NodesTest::initTestCase()
 {
+    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL))
+        QSKIP("OpenGL not supported by the platform");
+
     QSGRenderLoop *renderLoop = QSGRenderLoop::instance();
 
     surface = new QOffscreenSurface;

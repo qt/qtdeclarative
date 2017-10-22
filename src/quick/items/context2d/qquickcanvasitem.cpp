@@ -66,7 +66,7 @@ class QQuickCanvasTextureProvider : public QSGTextureProvider
 {
 public:
     QSGTexture *tex;
-    QSGTexture *texture() const Q_DECL_OVERRIDE { return tex; }
+    QSGTexture *texture() const override { return tex; }
     void fireTextureChanged() { emit textureChanged(); }
 };
 

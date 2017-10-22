@@ -151,7 +151,7 @@ public:
 
     QT_DEPRECATED void clearDirty() { }
     void markDirty(DirtyState bits);
-    QT_DEPRECATED DirtyState dirtyState() const { return Q_NULLPTR; }
+    QT_DEPRECATED DirtyState dirtyState() const { return nullptr; }
 
     virtual bool isSubtreeBlocked() const;
 

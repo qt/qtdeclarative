@@ -199,7 +199,7 @@ public:
     QQuickAnimationGroup *group;
     QAbstractAnimationJob* animationInstance;
 
-    static QQmlProperty createProperty(QObject *obj, const QString &str, QObject *infoObj, QString *errorMessage = Q_NULLPTR);
+    static QQmlProperty createProperty(QObject *obj, const QString &str, QObject *infoObj, QString *errorMessage = nullptr);
 };
 
 class QQuickPauseAnimationPrivate : public QQuickAbstractAnimationPrivate

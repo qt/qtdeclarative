@@ -1077,7 +1077,7 @@ private:
     void readEncoding();
 
     PersistentValue m_thisObject;
-    QQmlGuardedContextData m_qmlContext;
+    QQmlContextDataRef m_qmlContext;
 
     static void dispatchCallback(Object *thisObj, QQmlContextData *context);
     void dispatchCallback();

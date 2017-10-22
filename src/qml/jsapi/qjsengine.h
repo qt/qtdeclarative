@@ -119,7 +119,7 @@ private:
     friend inline bool qjsvalue_cast_helper(const QJSValue &, int, void *);
 
 protected:
-    QJSEngine(QJSEnginePrivate &dd, QObject *parent = Q_NULLPTR);
+    QJSEngine(QJSEnginePrivate &dd, QObject *parent = nullptr);
 
 private:
     QV8Engine *d;

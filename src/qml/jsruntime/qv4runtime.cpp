@@ -51,6 +51,8 @@
 #include "qv4lookup_p.h"
 #include "qv4function_p.h"
 #include "qv4numberobject_p.h"
+#include "qv4regexp_p.h"
+#include "qv4regexpobject_p.h"
 #include "private/qlocale_tools_p.h"
 #include "qv4scopedvalue_p.h"
 #include "qv4jscall_p.h"
@@ -1237,6 +1239,12 @@ QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine
 ReturnedValue Runtime::method_loadQmlContext(NoThrowEngine *engine)
 {
     return engine->qmlContext()->asReturnedValue();
+}
+
+ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)
+{
+    Heap::RegExpObject *ro = engine->newRegExpObject(engine->currentStackFrame->v4Function->compilationUnit->runtimeRegularExpressions[id].as<RegExp>());
+    return ro->asReturnedValue();
 }
 
 ReturnedValue Runtime::method_loadQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)

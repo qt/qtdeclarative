@@ -51,15 +51,15 @@ class QQmlInspectorServiceImpl : public QQmlInspectorService
 public:
     QQmlInspectorServiceImpl(QObject *parent = 0);
 
-    void addWindow(QQuickWindow *window) Q_DECL_OVERRIDE;
-    void setParentWindow(QQuickWindow *window, QWindow *parent) Q_DECL_OVERRIDE;
-    void removeWindow(QQuickWindow *window) Q_DECL_OVERRIDE;
+    void addWindow(QQuickWindow *window) override;
+    void setParentWindow(QQuickWindow *window, QWindow *parent) override;
+    void removeWindow(QQuickWindow *window) override;
 
 signals:
     void scheduleMessage(const QByteArray &message);
 
 protected:
-    virtual void messageReceived(const QByteArray &) Q_DECL_OVERRIDE;
+    void messageReceived(const QByteArray &) override;
 
 private:
     friend class QQmlInspectorServiceFactory;

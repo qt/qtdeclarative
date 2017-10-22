@@ -105,8 +105,8 @@ Q_SIGNALS:
     void asynchronousChanged();
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
-    void componentComplete() Q_DECL_OVERRIDE;
+    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void componentComplete() override;
 
 private:
     void setSource(const QUrl &sourceUrl, bool needsClear);

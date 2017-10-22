@@ -100,8 +100,8 @@ namespace {
         {
         }
 
-        void paint(QPainter *p) const Q_DECL_OVERRIDE { p->fillRect(m_rect, m_brush); }
-        QRectF boundingRect() const Q_DECL_OVERRIDE { return m_rect; }
+        void paint(QPainter *p) const override { p->fillRect(m_rect, m_brush); }
+        QRectF boundingRect() const override { return m_rect; }
 
     private:
         QRectF m_rect;
@@ -117,8 +117,8 @@ namespace {
         {
         }
 
-        void paint(QPainter *p) const Q_DECL_OVERRIDE { p->fillPath(m_path, m_brush); }
-        QRectF boundingRect() const Q_DECL_OVERRIDE { return m_path.boundingRect(); }
+        void paint(QPainter *p) const override { p->fillPath(m_path, m_brush); }
+        QRectF boundingRect() const override { return m_path.boundingRect(); }
 
     private:
         QPainterPath m_path;
@@ -134,9 +134,9 @@ namespace {
         {
         }
 
-        void paint(QPainter *p) const Q_DECL_OVERRIDE { p->strokePath(m_path, m_pen); }
+        void paint(QPainter *p) const override { p->strokePath(m_path, m_pen); }
 
-        QRectF boundingRect() const Q_DECL_OVERRIDE
+        QRectF boundingRect() const override
         {
             qreal d = qMax(qreal(1), m_pen.widthF());
             return m_path.boundingRect().adjusted(-d, -d, d, d);
@@ -156,9 +156,9 @@ namespace {
         {
         }
 
-        void paint(QPainter *p) const Q_DECL_OVERRIDE { p->drawImage(m_offset, m_image); }
+        void paint(QPainter *p) const override { p->drawImage(m_offset, m_image); }
 
-        QRectF boundingRect() const Q_DECL_OVERRIDE { return QRectF(m_image.rect()).translated(m_offset); }
+        QRectF boundingRect() const override { return QRectF(m_image.rect()).translated(m_offset); }
 
     private:
         QImage m_image;

@@ -63,7 +63,7 @@ class QtQmlStateMachinePlugin : public QQmlExtensionPlugin
 
 public:
     QtQmlStateMachinePlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
-    void registerTypes(const char *uri) Q_DECL_OVERRIDE
+    void registerTypes(const char *uri) override
     {
         qmlRegisterType<State>(uri, 1, 0, "State");
         qmlRegisterType<StateMachine>(uri, 1, 0, "StateMachine");

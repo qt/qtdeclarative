@@ -49,9 +49,9 @@ class QQuickLayoutStyleInfo : public QAbstractLayoutStyleInfo
 public:
     QQuickLayoutStyleInfo();
 
-    qreal spacing(Qt::Orientation orientation) const Q_DECL_OVERRIDE;
-    qreal windowMargin(Qt::Orientation orientation) const Q_DECL_OVERRIDE;
-    bool hasChangedCore() const Q_DECL_OVERRIDE;
+    qreal spacing(Qt::Orientation orientation) const override;
+    qreal windowMargin(Qt::Orientation orientation) const override;
+    bool hasChangedCore() const override;
 
 };
 

@@ -82,8 +82,8 @@ public:
     {
     }
 
-    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) Q_DECL_OVERRIDE;
-    void itemParentChanged(QQuickItem *, QQuickItem *parent) Q_DECL_OVERRIDE;
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
+    void itemParentChanged(QQuickItem *, QQuickItem *parent) override;
     void updatePosition();
     void restartDrag();
     void deliverEnterEvent();
@@ -772,6 +772,7 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
         drag->setPixmap(QPixmap::fromImage(pixmapLoader.image()));
     }
 
+    drag->setHotSpot(hotSpot.toPoint());
     emit q->dragStarted();
 
     Qt::DropAction dropAction = drag->exec(supportedActions);

@@ -50,6 +50,8 @@
 #include <private/qv4math_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4regexp_p.h>
+#include <private/qv4regexpobject_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4profiling_p.h>
 #include <private/qqmljavascriptexpression_p.h>
@@ -605,7 +607,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_END_INSTR(LoadRuntimeString)
 
     MOTH_BEGIN_INSTR(LoadRegExp)
-        acc = function->compilationUnit->runtimeRegularExpressions[regExpId].asReturnedValue();
+        acc = Runtime::method_regexpLiteral(engine, regExpId);
     MOTH_END_INSTR(LoadRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)

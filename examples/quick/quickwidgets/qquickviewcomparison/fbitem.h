@@ -54,9 +54,9 @@ class FbItemRenderer : public QQuickFramebufferObject::Renderer
 {
 public:
     FbItemRenderer(bool multisample);
-    void synchronize(QQuickFramebufferObject *item) Q_DECL_OVERRIDE;
-    void render() Q_DECL_OVERRIDE;
-    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) Q_DECL_OVERRIDE;
+    void synchronize(QQuickFramebufferObject *item) override;
+    void render() override;
+    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override;
 
 private:
     void ensureInit();
@@ -105,7 +105,7 @@ class FbItem : public QQuickFramebufferObject
 public:
     explicit FbItem(QQuickItem *parent = 0);
 
-    QQuickFramebufferObject::Renderer *createRenderer() const Q_DECL_OVERRIDE;
+    QQuickFramebufferObject::Renderer *createRenderer() const override;
 
     QVector3D eye() const { return m_eye; }
     void setEye(const QVector3D &v);

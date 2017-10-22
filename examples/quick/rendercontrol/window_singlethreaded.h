@@ -65,10 +65,10 @@ public:
     ~WindowSingleThreaded();
 
 protected:
-    void exposeEvent(QExposeEvent *e) Q_DECL_OVERRIDE;
-    void resizeEvent(QResizeEvent *e) Q_DECL_OVERRIDE;
-    void mousePressEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
-    void mouseReleaseEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
+    void exposeEvent(QExposeEvent *e) override;
+    void resizeEvent(QResizeEvent *e) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
 
 private slots:
     void run();

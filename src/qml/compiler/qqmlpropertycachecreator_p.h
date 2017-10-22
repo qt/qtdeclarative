@@ -108,7 +108,7 @@ template <typename ObjectContainer>
 inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
 {
     QQmlBindingInstantiationContext context;
-    return buildMetaObjectRecursively(objectContainer->rootObjectIndex(), context);
+    return buildMetaObjectRecursively(/*root object*/0, context);
 }
 
 template <typename ObjectContainer>
@@ -278,7 +278,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
 
     QByteArray newClassName;
 
-    if (objectIndex == objectContainer->rootObjectIndex()) {
+    if (objectIndex == /*root object*/0) {
         const QString path = objectContainer->url().path();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         if (lastSlash > -1) {
@@ -576,7 +576,9 @@ inline QQmlPropertyCacheAliasCreator<ObjectContainer>::QQmlPropertyCacheAliasCre
 template <typename ObjectContainer>
 inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertiesToMetaObjects()
 {
-    for (int i = 0; i < objectContainer->objectCount(); ++i) {
+    // skip the root object (index 0) as that one does not have a first object index originating
+    // from a binding.
+    for (int i = 1; i < objectContainer->objectCount(); ++i) {
         const CompiledObject &component = *objectContainer->objectAt(i);
         if (!(component.flags & QV4::CompiledData::Object::IsComponent))
             continue;
@@ -585,7 +587,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
         appendAliasPropertiesInMetaObjectsWithinComponent(component, rootBinding->value.objectIndex);
     }
 
-    const int rootObjectIndex = objectContainer->rootObjectIndex();
+    const int rootObjectIndex = 0;
     appendAliasPropertiesInMetaObjectsWithinComponent(*objectContainer->objectAt(rootObjectIndex), rootObjectIndex);
 }
 
@@ -648,7 +650,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAl
         objectsWithAliases->append(objectIndex);
 
     // Stop at Component boundary
-    if (object.flags & QV4::CompiledData::Object::IsComponent && objectIndex != objectContainer->rootObjectIndex())
+    if (object.flags & QV4::CompiledData::Object::IsComponent && objectIndex != /*root object*/0)
         return;
 
     auto binding = object.bindingsBegin();

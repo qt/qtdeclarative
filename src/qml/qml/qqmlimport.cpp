@@ -472,6 +472,17 @@ void findCompositeSingletons(const QQmlImportNamespace &set, QList<QQmlImports::
                 resultList.append(ref);
             }
         }
+
+        if (QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->majversion)) {
+            module->walkCompositeSingletons([&resultList, &set](const QQmlType &singleton) {
+                QQmlImports::CompositeSingletonReference ref;
+                ref.typeName = singleton.elementName();
+                ref.prefix = set.prefix;
+                ref.majorVersion = singleton.majorVersion();
+                ref.minorVersion = singleton.minorVersion();
+                resultList.append(ref);
+            });
+        }
     }
 }
 
@@ -1699,13 +1710,13 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 
     // env import paths
     if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QML2_IMPORT_PATH"))) {
-        const QByteArray envImportPath = qgetenv("QML2_IMPORT_PATH");
+        const QString envImportPath = qEnvironmentVariable("QML2_IMPORT_PATH");
 #if defined(Q_OS_WIN)
         QLatin1Char pathSep(';');
 #else
         QLatin1Char pathSep(':');
 #endif
-        QStringList paths = QString::fromLatin1(envImportPath).split(pathSep, QString::SkipEmptyParts);
+        QStringList paths = envImportPath.split(pathSep, QString::SkipEmptyParts);
         for (int ii = paths.count() - 1; ii >= 0; --ii)
             addImportPath(paths.at(ii));
     }

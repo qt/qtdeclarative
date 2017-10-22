@@ -60,7 +60,7 @@ namespace
     public:
         BindableFbo(QOpenGLFramebufferObject *fbo, QSGDepthStencilBuffer *depthStencil);
         virtual ~BindableFbo();
-        void bind() const Q_DECL_OVERRIDE;
+        void bind() const override;
     private:
         QOpenGLFramebufferObject *m_fbo;
         QSGDepthStencilBuffer *m_depthStencil;

@@ -169,8 +169,8 @@ protected Q_SLOTS:
     void reset();
 
 protected:
-    void componentComplete() Q_DECL_OVERRIDE;
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) Q_DECL_OVERRIDE;
+    void componentComplete() override;
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 private:
     void maybeUpdate();
     bool isCurrentFrameChangedConnected();

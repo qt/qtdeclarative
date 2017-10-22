@@ -58,6 +58,7 @@
 #include "qv4managed_p.h"
 #include "qv4property_p.h"
 #include "qv4objectiterator_p.h"
+#include "qv4regexp_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QHash>
@@ -72,14 +73,13 @@ namespace QV4 {
 namespace Heap {
 
 #define RegExpObjectMembers(class, Member) \
-    Member(class, Pointer, RegExp *, value) \
-    Member(class, NoMark, bool, global)
+    Member(class, Pointer, RegExp *, value)
 
 DECLARE_HEAP_OBJECT(RegExpObject, Object) {
     DECLARE_MARK_TABLE(RegExpObject);
 
     void init();
-    void init(QV4::RegExp *value, bool global);
+    void init(QV4::RegExp *value);
     void init(const QRegExp &re);
 };
 
@@ -122,7 +122,7 @@ struct RegExpObject: Object {
     };
 
     Heap::RegExp *value() const { return d()->value; }
-    bool global() const { return d()->global; }
+    bool global() const { return d()->value->global; }
 
     void initProperties();
 

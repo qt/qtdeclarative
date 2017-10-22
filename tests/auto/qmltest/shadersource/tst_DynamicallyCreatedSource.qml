@@ -67,6 +67,10 @@ Item {
         when: root.source != undefined
 
         function test_endresult() {
+            if ((Qt.platform.pluginName === "offscreen")
+                || (Qt.platform.pluginName === "minimal"))
+                skip("grabImage does not work on offscreen/minimal platforms");
+
             var image = grabImage(root);
             compare(image.red(0,0), 255);
             compare(image.green(0,0), 0);
