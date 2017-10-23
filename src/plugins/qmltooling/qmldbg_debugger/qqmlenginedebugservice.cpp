@@ -337,6 +337,9 @@ void QQmlEngineDebugServiceImpl::buildObjectList(QDataStream &message,
                                              QQmlContext *ctxt,
                                              const QList<QPointer<QObject> > &instances)
 {
+    if (!ctxt->isValid())
+        return;
+
     QQmlContextData *p = QQmlContextData::get(ctxt);
 
     QString ctxtName = ctxt->objectName();
@@ -399,11 +402,8 @@ QQmlEngineDebugServiceImpl::objectData(QObject *object)
     }
 
     QQmlContext *context = qmlContext(object);
-    if (context) {
-        QQmlContextData *cdata = QQmlContextData::get(context);
-        if (cdata)
-            rv.idString = cdata->findObjectId(object);
-    }
+    if (context && context->isValid())
+        rv.idString = QQmlContextData::get(context)->findObjectId(object);
 
     rv.objectName = object->objectName();
     rv.objectId = QQmlDebugService::idForObject(object);
@@ -564,14 +564,14 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
 
         QObject *object = QQmlDebugService::objectForId(objectId);
         QQmlContext *context = qmlContext(object);
-        if (!context) {
+        if (!context || !context->isValid()) {
             QQmlEngine *engine = qobject_cast<QQmlEngine *>(
                         QQmlDebugService::objectForId(engineId));
             if (engine && m_engines.contains(engine))
                 context = engine->rootContext();
         }
         QVariant result;
-        if (context) {
+        if (context && context->isValid()) {
             QQmlExpression exprObj(context, object, expr);
             bool undefined = false;
             QVariant value = exprObj.evaluate(&undefined);
@@ -632,7 +632,7 @@ bool QQmlEngineDebugServiceImpl::setBinding(int objectId,
     QObject *object = objectForId(objectId);
     QQmlContext *context = qmlContext(object);
 
-    if (object && context) {
+    if (object && context && context->isValid()) {
         QQmlProperty property(object, propertyName, context);
         if (property.isValid()) {
 
@@ -677,7 +677,7 @@ bool QQmlEngineDebugServiceImpl::resetBinding(int objectId, const QString &prope
     QObject *object = objectForId(objectId);
     QQmlContext *context = qmlContext(object);
 
-    if (object && context) {
+    if (object && context && context->isValid()) {
         QStringRef parentPropertyRef(&propertyName);
         const int idx = parentPropertyRef.indexOf(QLatin1Char('.'));
         if (idx != -1)
@@ -732,11 +732,9 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
 {
     QObject *object = objectForId(objectId);
     QQmlContext *context = qmlContext(object);
-    if (!object || !context || !context->engine())
+    if (!object || !context || !context->isValid())
         return false;
     QQmlContextData *contextData = QQmlContextData::get(context);
-    if (!contextData)
-        return false;
 
     QQmlPropertyData dummy;
     QQmlPropertyData *prop =
