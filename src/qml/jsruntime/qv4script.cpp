@@ -149,9 +149,6 @@ ReturnedValue Script::run()
     if (qmlContext.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        ContextStateSaver stateSaver(valueScope, context);
-        context->d()->v4Function = vmFunction;
-
         QV4::JSCallData jsCall(valueScope);
         jsCall->thisObject = engine->globalObject;
         QV4::CallData *cData = jsCall.callData();

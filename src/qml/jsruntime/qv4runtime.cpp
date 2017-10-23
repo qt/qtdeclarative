@@ -1222,7 +1222,8 @@ QV4::ReturnedValue Runtime::method_createMappedArgumentsObject(ExecutionEngine *
     Q_ASSERT(engine->currentContext()->d()->type == Heap::ExecutionContext::Type_CallContext);
     QV4::CallContext *c = static_cast<QV4::CallContext *>(&engine->currentStackFrame->jsFrame->context);
     QV4::InternalClass *ic = engine->internalClasses[EngineBase::Class_ArgumentsObject];
-    return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c, false)->asReturnedValue();
+    int nFormals = engine->currentStackFrame->v4Function->nFormals;
+    return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c, nFormals, false)->asReturnedValue();
 }
 
 QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine *engine)
@@ -1230,7 +1231,8 @@ QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine
     Q_ASSERT(engine->currentContext()->d()->type == Heap::ExecutionContext::Type_CallContext);
     QV4::CallContext *c = static_cast<QV4::CallContext *>(&engine->currentStackFrame->jsFrame->context);
     QV4::InternalClass *ic = engine->internalClasses[EngineBase::Class_StrictArgumentsObject];
-    return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c, true)->asReturnedValue();
+    int nFormals = engine->currentStackFrame->v4Function->nFormals;
+    return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), c, nFormals, true)->asReturnedValue();
 }
 
 ReturnedValue Runtime::method_loadQmlContext(NoThrowEngine *engine)

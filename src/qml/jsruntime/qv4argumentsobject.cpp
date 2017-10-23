@@ -47,13 +47,14 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ArgumentsObject);
 
-void Heap::ArgumentsObject::init(QV4::CallContext *context, bool strict)
+void Heap::ArgumentsObject::init(QV4::CallContext *context, int nFormals, bool strict)
 {
     ExecutionEngine *v4 = internalClass->engine;
 
     Object::init();
     fullyCreated = false;
     isStrict = strict;
+    this->nFormals = nFormals;
     this->context.set(v4, context->d());
     Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());
 
@@ -86,8 +87,8 @@ void ArgumentsObject::fullyCreate()
 
     Scope scope(engine());
 
-    uint argCount = context()->argc();
-    uint numAccessors = qMin(context()->formalParameterCount(), argCount);
+    int argCount = context()->argc();
+    uint numAccessors = qMin(d()->nFormals, argCount);
     ArrayData::realloc(this, Heap::ArrayData::Sparse, argCount, true);
     scope.engine->requireArgumentsAccessors(numAccessors);
 
@@ -100,7 +101,7 @@ void ArgumentsObject::fullyCreate()
         }
     }
     arrayPut(numAccessors, context()->args() + numAccessors, argCount - numAccessors);
-    for (uint i = numAccessors; i < argCount; ++i)
+    for (int i = int(numAccessors); i < argCount; ++i)
         setArrayAttributes(i, Attr_Data);
 
     d()->fullyCreated = true;
@@ -113,7 +114,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
     Scope scope(engine);
     ScopedProperty map(scope);
     PropertyAttributes mapAttrs;
-    uint numAccessors = qMin(context()->formalParameterCount(), static_cast<uint>(context()->argc()));
+    uint numAccessors = qMin(d()->nFormals, context()->argc());
     bool isMapped = false;
     if (arrayData() && index < numAccessors &&
         arrayData()->attributes(index).isAccessor() &&
@@ -196,7 +197,7 @@ PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
     if (args->fullyCreated())
         return Object::queryIndexed(m, index);
 
-    uint numAccessors = qMin((int)args->context()->formalParameterCount(), args->context()->argc());
+    uint numAccessors = qMin(args->d()->nFormals, args->context()->argc());
     uint argCount = args->context()->argc();
     if (index >= argCount)
         return PropertyAttributes();

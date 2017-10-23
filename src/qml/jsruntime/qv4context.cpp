@@ -65,8 +65,6 @@ Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *oute
     Heap::CallContext *c = v4->memoryManager->allocManaged<CallContext>(requiredMemory, function->internalClass);
     c->init();
 
-    c->v4Function = function;
-
     c->outer.set(v4, outer);
     c->function.set(v4, static_cast<Heap::FunctionObject *>(callData->function.m()));
 
@@ -88,8 +86,6 @@ Heap::ExecutionContext *ExecutionContext::newWithContext(Heap::Object *with)
     Heap::ExecutionContext *c = engine()->memoryManager->alloc<ExecutionContext>(Heap::ExecutionContext::Type_WithContext);
     c->outer.set(engine(), d());
     c->activation.set(engine(), with);
-
-    c->v4Function = d()->v4Function;
 
     return c;
 }
@@ -149,7 +145,6 @@ void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionV
 {
     Heap::ExecutionContext::init(Heap::ExecutionContext::Type_CatchContext);
     outer.set(internalClass->engine, outerContext);
-    v4Function = outer->v4Function;
 
     this->exceptionVarName.set(internalClass->engine, exceptionVarName);
     this->exceptionValue.set(internalClass->engine, exceptionValue);
@@ -193,7 +188,7 @@ bool ExecutionContext::deleteProperty(String *name)
         }
     }
 
-    return !d()->v4Function->isStrict();
+    return !engine()->currentStackFrame->v4Function->isStrict();
 }
 
 ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value &value)
@@ -226,12 +221,10 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
         }
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
-            if (c->v4Function) {
-                uint index = c->internalClass->find(id);
-                if (index < UINT_MAX) {
-                    static_cast<Heap::CallContext *>(c)->locals.set(v4, index, value);
-                    return NoError;
-                }
+            uint index = c->internalClass->find(id);
+            if (index < UINT_MAX) {
+                static_cast<Heap::CallContext *>(c)->locals.set(v4, index, value);
+                return NoError;
             }
         }
             Q_FALLTHROUGH();
@@ -352,24 +345,6 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
     }
     return engine()->throwReferenceError(*name);
 }
-
-Function *ExecutionContext::getFunction() const
-{
-    Scope scope(engine());
-    ScopedContext it(scope, this->d());
-    for (; it; it = it->d()->outer) {
-        if (const CallContext *callCtx = it->asCallContext())
-            return callCtx->d()->v4Function;
-        else if (it->d()->type == Heap::ExecutionContext::Type_CatchContext ||
-                 it->d()->type == Heap::ExecutionContext::Type_WithContext)
-            continue; // look in the parent context for a FunctionObject
-        else
-            break;
-    }
-
-    return 0;
-}
-
 
 void Heap::CallContext::setArg(uint index, Value v)
 {

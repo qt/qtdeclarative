@@ -79,7 +79,8 @@ DECLARE_HEAP_OBJECT(ArgumentsSetterFunction, FunctionObject) {
     Member(class, Pointer, CallContext *, context) \
     Member(class, Pointer, MemberData *, mappedArguments) \
     Member(class, NoMark, bool, fullyCreated) \
-    Member(class, NoMark, bool, isStrict)
+    Member(class, NoMark, bool, isStrict) \
+    Member(class, NoMark, int, nFormals)
 
 DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
     DECLARE_MARK_TABLE(ArgumentsObject);
@@ -88,7 +89,7 @@ DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
         CalleePropertyIndex = 1,
         CallerPropertyIndex = 3
     };
-    void init(QV4::CallContext *context, bool strict);
+    void init(QV4::CallContext *context, int nFormals, bool strict);
 };
 
 }

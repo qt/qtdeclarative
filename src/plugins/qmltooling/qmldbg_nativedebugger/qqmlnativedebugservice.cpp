@@ -656,9 +656,8 @@ void NativeDebugger::aboutToThrow()
 
 QV4::Function *NativeDebugger::getFunction() const
 {
-    QV4::ExecutionContext *context = m_engine->currentContext();
-    if (QV4::Function *function = context->getFunction())
-        return function;
+    if (m_engine->currentStackFrame)
+        return m_engine->currentStackFrame->v4Function;
     else
         return m_engine->globalCode;
 }

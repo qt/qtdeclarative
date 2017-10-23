@@ -117,8 +117,7 @@ struct QmlContext;
 
 #define ExecutionContextMembers(class, Member) \
     Member(class, Pointer, ExecutionContext *, outer) \
-    Member(class, Pointer, Object *, activation) \
-    Member(class, NoMark, QV4::Function *, v4Function) \
+    Member(class, Pointer, Object *, activation)
 
 DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
     DECLARE_MARK_TABLE(ExecutionContext);
@@ -150,7 +149,6 @@ Q_STATIC_ASSERT(sizeof(ExecutionContext) == sizeof(Base) + sizeof(ExecutionConte
 Q_STATIC_ASSERT(std::is_standard_layout<ExecutionContextData>::value);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == 0);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, activation) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, v4Function) == offsetof(ExecutionContextData, activation) + QT_POINTER_SIZE);
 
 #define CallContextMembers(class, Member) \
     Member(class, Pointer, FunctionObject *, function) \
@@ -171,8 +169,6 @@ DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
         return locals.data() + locals.size;
     }
     void setArg(uint index, Value v);
-
-    inline unsigned int formalParameterCount() const;
 };
 V4_ASSERT_IS_TRIVIAL(CallContext)
 Q_STATIC_ASSERT(std::is_standard_layout<CallContextData>::value);
@@ -228,9 +224,6 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
-
-    Function *getFunction() const;
-
 };
 
 struct Q_QML_EXPORT CallContext : public ExecutionContext

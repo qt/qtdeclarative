@@ -359,7 +359,7 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
         return argv[0].asReturnedValue();
 
     const QString code = scode->toQString();
-    bool inheritContext = !ctx->d()->v4Function->isStrict();
+    bool inheritContext = !isStrict;
 
     Script script(ctx, QV4::Compiler::EvalCode, code, QStringLiteral("eval code"));
     script.strictMode = (directCall && isStrict);
@@ -372,7 +372,7 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
     if (!function)
         return Encode::undefined();
 
-    if (function->isStrict() || (ctx->d()->v4Function->isStrict())) {
+    if (function->isStrict() || isStrict) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
         JSCallData jsCallData(scope, 0);
         if (directCall)
@@ -381,11 +381,6 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
             *jsCallData->thisObject = scope.engine->globalObject;
         return e->call(jsCallData);
     }
-
-    ContextStateSaver stateSaver(scope, ctx);
-
-    // set the correct v4 function for the context
-    ctx->d()->v4Function = function;
 
     JSCallData jsCallData(scope);
     *jsCallData->thisObject = scope.engine->currentStackFrame->thisObject();

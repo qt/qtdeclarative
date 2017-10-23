@@ -97,14 +97,6 @@ struct Q_QML_EXPORT Function {
     }
 };
 
-
-inline unsigned int Heap::CallContext::formalParameterCount() const
-{
-    Q_ASSERT(v4Function);
-    return v4Function->nFormals;
-}
-
-
 }
 
 QT_END_NAMESPACE

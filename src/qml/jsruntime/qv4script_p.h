@@ -64,30 +64,6 @@ class QQmlContextData;
 
 namespace QV4 {
 
-struct ContextStateSaver {
-    Value *savedContext;
-    QV4::Function *v4Function;
-
-    ContextStateSaver(const Scope &scope, ExecutionContext *context)
-        : savedContext(scope.alloc(1))
-        , v4Function(context->d()->v4Function)
-    {
-        savedContext->setM(context->d());
-    }
-    ContextStateSaver(const Scope &scope, Heap::ExecutionContext *context)
-        : savedContext(scope.alloc(1))
-        , v4Function(context->v4Function)
-    {
-        savedContext->setM(context);
-    }
-
-    ~ContextStateSaver()
-    {
-        Heap::ExecutionContext *ctx = static_cast<Heap::ExecutionContext *>(savedContext->m());
-        ctx->v4Function = v4Function;
-    }
-};
-
 struct Q_QML_EXPORT Script {
     Script(ExecutionContext *scope, QV4::Compiler::CompilationMode mode, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
