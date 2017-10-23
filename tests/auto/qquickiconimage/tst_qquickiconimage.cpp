@@ -35,6 +35,7 @@
 #include <QtQml/qqmlfileselector.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
+#include <QtQuick/qquickimageprovider.h>
 #include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/private/qquickimage_p.h>
 #include <QtQuickControls2/private/qquickiconimage_p.h>
@@ -67,6 +68,7 @@ private slots:
     void svgSourceBindingSourceSize();
     void color();
     void fileSelectors();
+    void imageProvider();
 
 private:
     void setTheme();
@@ -478,6 +480,43 @@ void tst_qquickiconimage::fileSelectors()
     QCOMPARE(iconImageWindowGrab, grabItemToImage(image));
 
     QCOMPARE(iconImageWindowGrab.pixelColor(iconImageWindowGrab.width() / 2, iconImageWindowGrab.height() / 2), QColor(Qt::blue));
+}
+
+class TestImageProvider : public QQuickImageProvider
+{
+public:
+    TestImageProvider() : QQuickImageProvider(QQuickImageProvider::Pixmap) { }
+
+    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
+    {
+        QSize defaultSize(32, 32);
+        if (size)
+            *size = defaultSize;
+
+        QPixmap pixmap(requestedSize.width() > 0 ? requestedSize.width() : defaultSize.width(),
+                       requestedSize.height() > 0 ? requestedSize.height() : defaultSize.height());
+        pixmap.fill(QColor(id).rgba());
+        return pixmap;
+    }
+};
+
+// don't crash (QTBUG-63959)
+void tst_qquickiconimage::imageProvider()
+{
+    QQuickView view;
+    view.engine()->addImageProvider("provider", new TestImageProvider);
+    view.setSource(testFileUrl("imageProvider.qml"));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+
+    QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject()->findChild<QQuickIconImage *>());
+    QVERIFY(iconImage);
+
+    QImage image = grabItemToImage(iconImage);
+    QVERIFY(!image.isNull());
+    QCOMPARE(image.pixelColor(image.width() / 2, image.height() / 2), QColor(Qt::red));
 }
 
 int main(int argc, char *argv[])

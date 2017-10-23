@@ -125,9 +125,7 @@ qreal QQuickIconImagePrivate::calculateDevicePixelRatio() const
 QQuickIconImage::QQuickIconImage(QQuickItem *parent)
     : QQuickImage(*(new QQuickIconImagePrivate), parent)
 {
-    Q_D(QQuickIconImage);
     setFillMode(Pad);
-    QObjectPrivate::connect(this, &QQuickImageBase::sourceSizeChanged, d, &QQuickIconImagePrivate::updateIcon);
 }
 
 QString QQuickIconImage::name() const
@@ -183,6 +181,7 @@ void QQuickIconImage::componentComplete()
     Q_D(QQuickIconImage);
     QQuickImage::componentComplete();
     d->updateIcon();
+    QObjectPrivate::connect(this, &QQuickImageBase::sourceSizeChanged, d, &QQuickIconImagePrivate::updateIcon);
 }
 
 void QQuickIconImage::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
