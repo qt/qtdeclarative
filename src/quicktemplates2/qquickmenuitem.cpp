@@ -57,8 +57,8 @@ QT_BEGIN_NAMESPACE
     example.
 
     MenuItem inherits its API from AbstractButton. For instance, you can set
-    \l {AbstractButton::text}{text} and \l [QML]{Button Icons}{icon} using the
-    AbstractButton API
+    \l {AbstractButton::text}{text} and \l {Icons in Qt Quick Controls 2}{icon}
+    using the AbstractButton API.
 
     \code
     Button {
