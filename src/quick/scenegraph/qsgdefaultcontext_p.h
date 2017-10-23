@@ -53,7 +53,7 @@
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
-#include "qsgrendererinterface.h"
+#include <qsgrendererinterface.h>
 
 QT_BEGIN_NAMESPACE
 
