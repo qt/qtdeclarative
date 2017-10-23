@@ -3205,7 +3205,7 @@ void tst_qquicktextedit::inputMethodUpdate()
     // programmatical selections trigger update
     platformInputContext.clear();
     edit->selectAll();
-    QCOMPARE(platformInputContext.m_updateCallCount, 1);
+    QVERIFY(platformInputContext.m_updateCallCount > 0);
 
     // font changes
     platformInputContext.clear();

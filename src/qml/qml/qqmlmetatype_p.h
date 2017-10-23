@@ -260,7 +260,8 @@ public:
         SingletonType = 1,
         InterfaceType = 2,
         CompositeType = 3,
-        CompositeSingletonType = 4
+        CompositeSingletonType = 4,
+        AnyRegistrationType = 255
     };
 
 private:

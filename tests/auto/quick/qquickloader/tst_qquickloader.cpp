@@ -35,6 +35,7 @@
 #include <private/qquickloader_p.h>
 #include "testhttpserver.h"
 #include "../../shared/util.h"
+#include "../shared/geometrytestutil.h"
 
 class SlowComponent : public QQmlComponent
 {
@@ -403,10 +404,16 @@ void tst_QQuickLoader::sizeItemToLoader()
     QCOMPARE(rect->height(), 80.0);
 
     // Check resize
-    loader->setWidth(180);
-    loader->setHeight(30);
-    QCOMPARE(rect->width(), 180.0);
-    QCOMPARE(rect->height(), 30.0);
+    QSizeChangeListener sizeListener(rect);
+    const QSizeF size(180, 30);
+    loader->setSize(size);
+    QVERIFY2(!sizeListener.isEmpty(), "There should be at least one signal about the size changed");
+    for (const QSizeF sizeOnGeometryChanged : sizeListener) {
+        // Check that we have the correct size on all signals
+        QCOMPARE(sizeOnGeometryChanged, size);
+    }
+    QCOMPARE(rect->width(), size.width());
+    QCOMPARE(rect->height(), size.height());
 
     // Switch mode
     loader->resetWidth(); // reset explicit size

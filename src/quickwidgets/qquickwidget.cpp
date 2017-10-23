@@ -201,6 +201,7 @@ QQuickWidgetPrivate::QQuickWidgetPrivate()
     , fakeHidden(false)
     , requestedSamples(0)
     , useSoftwareRenderer(false)
+    , forceFullUpdate(false)
 {
 }
 
@@ -306,6 +307,10 @@ void QQuickWidgetPrivate::render(bool needsSync)
         auto softwareRenderer = static_cast<QSGSoftwareRenderer*>(cd->renderer);
         if (softwareRenderer && !softwareImage.isNull()) {
             softwareRenderer->setCurrentPaintDevice(&softwareImage);
+            if (forceFullUpdate) {
+                softwareRenderer->markDirty();
+                forceFullUpdate = false;
+            }
             renderControl->render();
 
             updateRegion += softwareRenderer->flushRegion();
@@ -917,6 +922,7 @@ void QQuickWidget::createFramebufferObject()
         const QSize imageSize = size() * devicePixelRatioF();
         d->softwareImage = QImage(imageSize, QImage::Format_ARGB32_Premultiplied);
         d->softwareImage.setDevicePixelRatio(devicePixelRatioF());
+        d->forceFullUpdate = true;
         return;
     }
 
