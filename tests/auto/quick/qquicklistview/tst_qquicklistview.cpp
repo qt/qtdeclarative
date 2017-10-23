@@ -256,6 +256,7 @@ private slots:
     void keyNavigationEnabled();
     void QTBUG_61269_appendDuringScrollDown();
     void QTBUG_50097_stickyHeader_positionViewAtIndex();
+    void QTBUG_63974_stickyHeader_positionViewAtIndex_Contain();
     void itemFiltered();
     void releaseItems();
 
@@ -8559,6 +8560,46 @@ void tst_QQuickListView::QTBUG_50097_stickyHeader_positionViewAtIndex()
     QTRY_COMPARE(listview->contentY(), 400.0); // a full page of items down, sans the original negative header position
     listview->setProperty("currentPage", 1);
     QTRY_COMPARE(listview->contentY(), -100.0); // back to the same position: header visible, items not under the header.
+}
+
+void tst_QQuickListView::QTBUG_63974_stickyHeader_positionViewAtIndex_Contain()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("qtbug63974.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
+    QVERIFY(listview != 0);
+
+    const qreal headerSize = 20;
+    const qreal footerSize = 20;
+    const qreal itemSize = 20;
+    const int itemCount = 30;
+    const qreal contentHeight = itemCount * itemSize;
+
+    const qreal initialY = listview->contentY();
+    const qreal endPosition = contentHeight + footerSize - listview->height();
+
+    QVERIFY(qFuzzyCompare(initialY, -headerSize));
+
+    listview->positionViewAtIndex(itemCount - 1, QQuickListView::Contain);
+    QTRY_COMPARE(listview->contentY(), endPosition);
+
+    listview->positionViewAtIndex(0, QQuickListView::Contain);
+    QTRY_COMPARE(listview->contentY(), -headerSize);
+
+    listview->positionViewAtIndex(itemCount - 1, QQuickListView::Visible);
+    QTRY_COMPARE(listview->contentY(), endPosition);
+
+    listview->positionViewAtIndex(0, QQuickListView::Visible);
+    QTRY_COMPARE(listview->contentY(), -headerSize);
+
+    listview->positionViewAtIndex(itemCount - 1, QQuickListView::SnapPosition);
+    QTRY_COMPARE(listview->contentY(), endPosition);
+
+    listview->positionViewAtIndex(0, QQuickListView::SnapPosition);
+    QTRY_COMPARE(listview->contentY(), -headerSize);
 }
 
 void tst_QQuickListView::itemFiltered()
