@@ -121,6 +121,7 @@ void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
     \li \l Rotation
     \li \l Scale
     \li \l Translate
+    \li \l Matrix4x4
     \endlist
 
     The Transform types let you create and control advanced transformations that can be configured
