@@ -218,19 +218,18 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
         capture.guards.copyAndClearPrepend(activeGuards);
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
-    QV4::Scope scope(v4);
-    QV4::ScopedValue value(scope);
-    QV4::ScopedValue result(scope, QV4::Primitive::undefinedValue());
     callData->thisObject = v4->globalObject;
     if (scopeObject()) {
-         value = QV4::QObjectWrapper::wrap(v4, scopeObject());
-        if (value->isObject())
-            callData->thisObject = value;
+         QV4::ReturnedValue scope = QV4::QObjectWrapper::wrap(v4, scopeObject());
+        if (QV4::Value::fromReturnedValue(scope).isObject())
+            callData->thisObject = scope;
     }
 
     Q_ASSERT(m_qmlScope.valueRef());
     callData->context = *m_qmlScope.valueRef();
-    result = v4Function->call(callData);
+    QV4::ReturnedValue res = v4Function->call(callData);
+    QV4::Scope scope(v4);
+    QV4::ScopedValue result(scope, res);
     if (v4Function->hasQmlDependencies) {
         QV4::Heap::ExecutionContext *c = static_cast<QV4::Heap::ExecutionContext *>(callData->context.m());
         // CreateCallContext might have been executed, and that will push a CallContext on top of
