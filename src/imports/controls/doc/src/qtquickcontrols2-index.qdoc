@@ -113,6 +113,7 @@
     \list
       \li \l{Qt Quick Controls 2 Guidelines}{Guidelines}
       \li \l{Styling Qt Quick Controls 2}{Styling}
+      \li \l{Icons in Qt Quick Controls 2}{Icons}
       \li \l{Customizing Qt Quick Controls 2}{Customization}
       \li \l{High-DPI Support in Qt Quick Controls 2}{High-DPI Support}
       \li \l{Using File Selectors with Qt Quick Controls 2}{Using File Selectors}
