@@ -996,6 +996,7 @@ void QQuickStackView::componentComplete()
         element = QQuickStackElement::fromString(d->initialItem.toString(), this, &error);
     if (!error.isEmpty()) {
         d->warn(error);
+        delete element;
     } else if (d->pushElement(element)) {
         emit depthChanged();
         d->setCurrentItem(element);
