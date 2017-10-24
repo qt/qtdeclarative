@@ -96,6 +96,12 @@ void QQuickLoaderPrivate::clear()
     delete itemContext;
     itemContext = 0;
 
+    // Prevent any bindings from running while waiting for deletion. Without
+    // this we may get transient errors from use of 'parent', for example.
+    QQmlContext *context = qmlContext(object);
+    if (context)
+        QQmlContextData::get(context)->invalidate();
+
     if (loadingFromSource && component) {
         // disconnect since we deleteLater
         QObject::disconnect(component, SIGNAL(statusChanged(QQmlComponent::Status)),
@@ -350,6 +356,12 @@ void QQuickLoader::setActive(bool newVal)
             delete d->itemContext;
             d->itemContext = 0;
         }
+
+        // Prevent any bindings from running while waiting for deletion. Without
+        // this we may get transient errors from use of 'parent', for example.
+        QQmlContext *context = qmlContext(d->object);
+        if (context)
+            QQmlContextData::get(context)->invalidate();
 
         if (d->item) {
             QQuickItemPrivate *p = QQuickItemPrivate::get(d->item);

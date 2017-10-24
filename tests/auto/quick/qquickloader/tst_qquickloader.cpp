@@ -114,11 +114,17 @@ private slots:
     void QTBUG_30183();
 
     void sourceComponentGarbageCollection();
+
+    void bindings();
+    void parentErrors();
 };
+
+Q_DECLARE_METATYPE(QList<QQmlError>)
 
 tst_QQuickLoader::tst_QQuickLoader()
 {
     qmlRegisterType<SlowComponent>("LoaderTest", 1, 0, "SlowComponent");
+    qRegisterMetaType<QList<QQmlError>>();
 }
 
 void tst_QQuickLoader::sourceOrComponent()
@@ -1172,6 +1178,67 @@ void tst_QQuickLoader::sourceComponentGarbageCollection()
         QVERIFY(spy.wait());
 
     QCOMPARE(spy.count(), 1);
+}
+
+// QTBUG-51995
+void tst_QQuickLoader::bindings()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("bindings.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QQuickItem *game = object->property("game").value<QQuickItem*>();
+    QVERIFY(game);
+
+    QQuickLoader *loader = object->property("loader").value<QQuickLoader*>();
+    QVERIFY(loader);
+
+    QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QQmlError>)));
+
+    // Causes the Loader to become active
+    game->setState(QLatin1String("running"));
+    QTRY_VERIFY(loader->item());
+
+    // Causes the Loader to become inactive - should not cause binding errors
+    game->setState(QLatin1String("invalid"));
+    QTRY_VERIFY(!loader->item());
+
+    QString failureMessage;
+    if (!warningsSpy.isEmpty()) {
+        QDebug stream(&failureMessage);
+        stream << warningsSpy.first().first().value<QList<QQmlError>>();
+    }
+    QVERIFY2(warningsSpy.isEmpty(), qPrintable(failureMessage));
+}
+
+// QTBUG-47321
+void tst_QQuickLoader::parentErrors()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("parentErrors.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QQuickLoader *loader = object->property("loader").value<QQuickLoader*>();
+    QVERIFY(loader);
+
+    QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QQmlError>)));
+
+    // Give the loader a component
+    loader->setSourceComponent(object->property("component").value<QQmlComponent*>());
+    QTRY_VERIFY(loader->item());
+
+    // Clear the loader's component; should not cause binding errors
+    loader->setSourceComponent(nullptr);
+    QTRY_VERIFY(!loader->item());
+
+    QString failureMessage;
+    if (!warningsSpy.isEmpty()) {
+        QDebug stream(&failureMessage);
+        stream << warningsSpy.first().first().value<QList<QQmlError>>();
+    }
+    QVERIFY2(warningsSpy.isEmpty(), qPrintable(failureMessage));
 }
 
 QTEST_MAIN(tst_QQuickLoader)
