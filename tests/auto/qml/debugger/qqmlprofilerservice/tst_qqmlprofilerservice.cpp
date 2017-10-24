@@ -667,7 +667,6 @@ void tst_QQmlProfilerService::signalSourceLocation()
 
 void tst_QQmlProfilerService::javascript()
 {
-    QSKIP("fixme - the nesting is wrong: somthing is called _from_ onWidthChanged");
     QCOMPARE(connect(true, "javascript.qml"), ConnectSuccess);
 
     m_client->sendRecordingStatus(true);

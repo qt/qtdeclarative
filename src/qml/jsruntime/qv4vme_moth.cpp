@@ -504,7 +504,8 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
 
     ExecutionEngine *engine = function->internalClass->engine;
     CHECK_STACK_LIMITS(engine);
-    Profiling::FunctionCallProfiler(engine, function);
+    Profiling::FunctionCallProfiler profiler(engine, function);
+    Q_UNUSED(profiler)
 
     Value *jsStackTop = engine->jsStackTop;
 
