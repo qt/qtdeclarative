@@ -800,7 +800,7 @@ void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
         m_grabberIsHandler = false;
         m_sceneGrabPos = m_scenePos;
         if (oldGrabberHandler)
-            oldGrabberHandler->onGrabChanged(oldGrabberHandler, CancelGrabExclusive, this);
+            oldGrabberHandler->onGrabChanged(oldGrabberHandler, (grabber ? CancelGrabExclusive : UngrabExclusive), this);
         else if (oldGrabberItem && oldGrabberItem != grabber && grabber && pointerEvent()->asPointerTouchEvent())
             oldGrabberItem->touchUngrabEvent();
         for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers)
@@ -837,26 +837,24 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, b
     }
     if (exclusive) {
         if (grabber != m_exclusiveGrabber.data()) {
+            QQuickPointerHandler *oldGrabberHandler = grabberPointerHandler();
+            QQuickItem *oldGrabberItem = grabberItem();
+            m_exclusiveGrabber = QPointer<QObject>(grabber);
+            m_grabberIsHandler = true;
+            m_sceneGrabPos = m_scenePos;
             if (grabber) {
-                // set variables before notifying the new grabber
-                m_exclusiveGrabber = QPointer<QObject>(grabber);
-                m_grabberIsHandler = true;
-                m_sceneGrabPos = m_scenePos;
                 grabber->onGrabChanged(grabber, GrabExclusive, this);
                 for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers) {
                     if (passiveGrabber != grabber)
                         passiveGrabber->onGrabChanged(grabber, OverrideGrabPassive, this);
                 }
-            } else if (QQuickPointerHandler *oldGrabberPointerHandler = qmlobject_cast<QQuickPointerHandler *>(m_exclusiveGrabber.data())) {
-                oldGrabberPointerHandler->onGrabChanged(oldGrabberPointerHandler, UngrabExclusive, this);
-            } else if (!m_exclusiveGrabber.isNull()) {
-                // If there is a previous grabber and it's not a PointerHandler, it must be an Item.
-                QQuickItem *oldGrabberItem = static_cast<QQuickItem *>(m_exclusiveGrabber.data());
-                // If this point came from a touchscreen, notify that previous grabber Item that it's losing its touch grab.
-                if (pointerEvent()->asPointerTouchEvent())
-                    oldGrabberItem->touchUngrabEvent();
             }
-            // set variables after notifying the old grabber
+            if (oldGrabberHandler)
+                oldGrabberHandler->onGrabChanged(oldGrabberHandler, (grabber ? CancelGrabExclusive : UngrabExclusive), this);
+            else if (oldGrabberItem && pointerEvent()->asPointerTouchEvent())
+                oldGrabberItem->touchUngrabEvent();
+            // touchUngrabEvent() can result in the grabber being set to null (MPTA does that, for example).
+            // So set it again to ensure that final state is what we want.
             m_exclusiveGrabber = QPointer<QObject>(grabber);
             m_grabberIsHandler = true;
             m_sceneGrabPos = m_scenePos;

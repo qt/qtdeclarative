@@ -182,12 +182,12 @@ void tst_MptaInterop::touchesThenPinch()
         touch.move(1, p1).move(2, p2).commit();
     }
 
-    // Press a third touchpoint: PinchHandler grabs, MPTA doesn't
+    // Press a third touchpoint: PinchHandler grabs, MPTA loses its grabs
     QPoint p3 = mpta->mapToScene(QPointF(110, 200)).toPoint();
     touch.stationary(1).stationary(2).press(3, p3).commit();
     QQuickTouchUtils::flush(window);
-    QCOMPARE(tp.at(0)->property("pressed").toBool(), true);
-    QCOMPARE(tp.at(1)->property("pressed").toBool(), true);
+    QCOMPARE(tp.at(0)->property("pressed").toBool(), false);
+    QCOMPARE(tp.at(1)->property("pressed").toBool(), false);
     QCOMPARE(tp.at(2)->property("pressed").toBool(), false);
     QCOMPARE(mptaPressedSpy.count(), 1);
     QTRY_COMPARE(pointerEvent->point(2)->exclusiveGrabber(), pinch);
@@ -199,9 +199,9 @@ void tst_MptaInterop::touchesThenPinch()
         p2 += QPoint(4, 4);
         p3 += QPoint(-4, 4);
         touch.move(1, p1).move(2, p2).move(3, p3).commit();
-//        QTRY_COMPARE(tp.at(0)->property("pressed").toBool(), false); // TODO fails; MPTA doesn't know it lost its grabs
-//        QCOMPARE(tp.at(1)->property("pressed").toBool(), false);
-//        QCOMPARE(tp.at(2)->property("pressed").toBool(), false);
+        QTRY_COMPARE(tp.at(0)->property("pressed").toBool(), false);
+        QCOMPARE(tp.at(1)->property("pressed").toBool(), false);
+        QCOMPARE(tp.at(2)->property("pressed").toBool(), false);
     }
     qCDebug(lcPointerTests) << "scale" << pinch->scale() << "rot" << pinch->rotation();
     QTRY_VERIFY(pinch->rotation() > 10);
@@ -224,8 +224,8 @@ void tst_MptaInterop::touchesThenPinch()
 //        QCOMPARE(pointerEvent->point(1)->exclusiveGrabber(), nullptr);
 //        QCOMPARE(pointerEvent->point(2)->exclusiveGrabber(), nullptr);
 //        QCOMPARE(pointerEvent->point(3)->exclusiveGrabber(), mpta);
-        QCOMPARE(tp.at(0)->property("pressed").toBool(), true);
-        QCOMPARE(tp.at(1)->property("pressed").toBool(), true);
+//        QCOMPARE(tp.at(0)->property("pressed").toBool(), true);
+//        QCOMPARE(tp.at(1)->property("pressed").toBool(), true);
 //        QCOMPARE(tp.at(2)->property("pressed").toBool(), true);
 //        QCOMPARE(tp.at(3)->property("pressed").toBool(), true);
     }
