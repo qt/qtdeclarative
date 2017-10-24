@@ -203,6 +203,7 @@ void QV4Debugger::maybeBreakAtInstruction()
         pauseAndWait(PauseRequest);
     } else if (m_haveBreakPoints) {
         if (QV4::Function *f = getFunction()) {
+            // lineNumber will be negative for Ret instructions, so those won't match
             const int lineNumber = engine()->currentStackFrame->lineNumber();
             if (reallyHitTheBreakPoint(f->sourceFile(), lineNumber))
                 pauseAndWait(BreakPointHit);

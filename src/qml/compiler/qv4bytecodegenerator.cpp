@@ -181,7 +181,21 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
 }
 
 int BytecodeGenerator::addInstructionHelper(Instr::Type type, const Instr &i, int offsetOfOffset) {
-    int pos = instructions.size();
+    if (debugMode && type != Instr::Type::Debug) {
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // broken gcc warns about Instruction::Debug()
+        if (instructions.isEmpty() || currentLine != instructions.constLast().line) {
+            addInstruction(Instruction::Debug());
+        } else if (type == Instr::Type::Ret) {
+            currentLine = -currentLine;
+            addInstruction(Instruction::Debug());
+            currentLine = -currentLine;
+        }
+QT_WARNING_POP
+    }
+
+    const int pos = instructions.size();
+
     int s = Moth::InstrInfo::argumentCount[static_cast<int>(type)]*sizeof(int);
     if (offsetOfOffset != -1)
         offsetOfOffset += 1;

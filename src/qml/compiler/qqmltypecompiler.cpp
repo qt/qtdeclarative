@@ -491,7 +491,9 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             QQmlJS::AST::FunctionBody *body = new (pool) QQmlJS::AST::FunctionBody(elements);
 
             functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(compiler->newStringRef(stringAt(binding->propertyNameIndex)), paramList, body);
-            functionDeclaration->functionToken = foe->node->firstSourceLocation();
+            functionDeclaration->lbraceToken = functionDeclaration->functionToken
+                    = foe->node->firstSourceLocation();
+            functionDeclaration->rbraceToken = foe->node->lastSourceLocation();
         }
         foe->node = functionDeclaration;
         binding->propertyNameIndex = compiler->registerString(propertyName);

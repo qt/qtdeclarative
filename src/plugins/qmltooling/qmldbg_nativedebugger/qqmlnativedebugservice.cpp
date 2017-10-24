@@ -607,6 +607,7 @@ void NativeDebugger::maybeBreakAtInstruction()
 
     if (m_service->m_breakHandler->m_haveBreakPoints) {
         if (QV4::Function *function = getFunction()) {
+            // lineNumber will be negative for Ret instructions, so those won't match
             const int lineNumber = m_engine->currentStackFrame->lineNumber();
             if (reallyHitTheBreakPoint(function, lineNumber))
                 pauseAndWait();

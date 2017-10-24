@@ -855,7 +855,6 @@ void tst_QQmlDebugJS::disconnect()
 
 void tst_QQmlDebugJS::setBreakpointInScriptOnCompleted()
 {
-    QSKIP("fixme");
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
@@ -879,7 +878,6 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnCompleted()
 
 void tst_QQmlDebugJS::setBreakpointInScriptOnComponentCreated()
 {
-    QSKIP("fixme");
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
@@ -903,7 +901,6 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComponentCreated()
 
 void tst_QQmlDebugJS::setBreakpointInScriptOnTimerCallback()
 {
-    QSKIP("fixme");
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
     QFETCH(bool, namesAsObjects);
@@ -1001,7 +998,6 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnEmptyLine()
 
 void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
 {
-    QSKIP("fixme");
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
@@ -1065,7 +1061,6 @@ void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
 
 void tst_QQmlDebugJS::setBreakpointInScriptThatQuits()
 {
-    QSKIP("fixme");
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
     QFETCH(bool, namesAsObjects);
@@ -1109,7 +1104,6 @@ void tst_QQmlDebugJS::setBreakpointWhenAttaching()
 
 void tst_QQmlDebugJS::clearBreakpoint()
 {
-    QSKIP("fixme");
     //void clearBreakpoint(int breakpoint);
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
@@ -1173,7 +1167,6 @@ void tst_QQmlDebugJS::setExceptionBreak()
 
 void tst_QQmlDebugJS::stepNext()
 {
-    QSKIP("fixme");
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
@@ -1198,37 +1191,40 @@ void tst_QQmlDebugJS::stepNext()
     QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(STEPACTION_QMLFILE));
 }
 
+static QVariantMap responseBody(QJSDebugClient *client)
+{
+    const QString jsonString(client->response);
+    const QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString))
+            .toVariant().toMap();
+    return value.value("body").toMap();
+}
+
 void tst_QQmlDebugJS::stepIn()
 {
-    QSKIP("fixme");
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
     QFETCH(bool, namesAsObjects);
 
     int sourceLine = 41;
-    int actualLine = 37;
+    int actualLine = 36;
     QCOMPARE(init(qmlscene, STEPACTION_QMLFILE), ConnectSuccess);
 
     m_client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, 1, true);
     m_client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QCOMPARE(responseBody(m_client).value("sourceLine").toInt(), sourceLine);
 
     m_client->continueDebugging(QJSDebugClient::In);
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
 
-    QString jsonString(m_client->response);
-    QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
-
-    QVariantMap body = value.value("body").toMap();
-
+    const QVariantMap body = responseBody(m_client);
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
     QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(STEPACTION_QMLFILE));
 }
 
 void tst_QQmlDebugJS::stepOut()
 {
-    QSKIP("fixme");
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
@@ -1241,22 +1237,18 @@ void tst_QQmlDebugJS::stepOut()
     m_client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QCOMPARE(responseBody(m_client).value("sourceLine").toInt(), sourceLine);
 
     m_client->continueDebugging(QJSDebugClient::Out);
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
 
-    QString jsonString(m_client->response);
-    QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
-
-    QVariantMap body = value.value("body").toMap();
-
+    const QVariantMap body = responseBody(m_client);
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
     QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(STEPACTION_QMLFILE));
 }
 
 void tst_QQmlDebugJS::continueDebugging()
 {
-    QSKIP("fixme");
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
@@ -1285,7 +1277,6 @@ void tst_QQmlDebugJS::continueDebugging()
 
 void tst_QQmlDebugJS::backtrace()
 {
-    QSKIP("fixme");
     //void backtrace(int fromFrame = -1, int toFrame = -1, bool bottom = false);
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
@@ -1304,7 +1295,6 @@ void tst_QQmlDebugJS::backtrace()
 
 void tst_QQmlDebugJS::getFrameDetails()
 {
-    QSKIP("fixme");
     //void frame(int number = -1);
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
@@ -1323,7 +1313,6 @@ void tst_QQmlDebugJS::getFrameDetails()
 
 void tst_QQmlDebugJS::getScopeDetails()
 {
-    QSKIP("fixme");
     //void scope(int number = -1, int frameNumber = -1);
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
@@ -1362,7 +1351,6 @@ void tst_QQmlDebugJS::evaluateInGlobalScope()
 
 void tst_QQmlDebugJS::evaluateInLocalScope()
 {
-    QSKIP("fixme");
     //void evaluate(QString expr, bool global = false, bool disableBreak = false, int frame = -1, const QVariantMap &addContext = QVariantMap());
 
     QFETCH(bool, qmlscene);
@@ -1453,7 +1441,6 @@ void tst_QQmlDebugJS::evaluateInContext()
 
 void tst_QQmlDebugJS::getScripts()
 {
-    QSKIP("fixme");
     //void scripts(int types = -1, QList<int> ids = QList<int>(), bool includeSource = false, QVariant filter = QVariant());
 
     QFETCH(bool, qmlscene);

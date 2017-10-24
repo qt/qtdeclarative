@@ -809,7 +809,7 @@ StackTrace ExecutionEngine::stackTrace(int frameLimit) const
         QV4::StackFrame frame;
         frame.source = f->source();
         frame.function = f->function();
-        frame.line = f->lineNumber();
+        frame.line = qAbs(f->lineNumber());
         frame.column = -1;
         stack.append(frame);
         --frameLimit;

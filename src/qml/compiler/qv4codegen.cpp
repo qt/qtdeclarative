@@ -2027,7 +2027,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     // ### still needed?
     _context->maxNumberOfArguments = qMax(_context->maxNumberOfArguments, (int)QV4::Global::ReservedArgumentCount);
 
-    BytecodeGenerator bytecode(_context->line);
+    BytecodeGenerator bytecode(_context->line, _module->debugMode);
     BytecodeGenerator *savedBytecodeGenerator;
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;

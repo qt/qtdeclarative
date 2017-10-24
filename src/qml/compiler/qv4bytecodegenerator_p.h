@@ -65,8 +65,8 @@ namespace Moth {
 
 class BytecodeGenerator {
 public:
-    BytecodeGenerator(int line)
-        : startLine(line) {}
+    BytecodeGenerator(int line, bool debug)
+        : startLine(line), debugMode(debug) {}
 
     struct Label {
         enum LinkMode {
@@ -271,6 +271,7 @@ public:
 private:
     int startLine = 0;
     int currentLine = 0;
+    bool debugMode = false;
 };
 
 }

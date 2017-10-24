@@ -363,7 +363,6 @@ void tst_qv4debugger::cleanup()
 
 void tst_qv4debugger::breakAnywhere()
 {
-    QSKIP("fixme");
     QString script =
             "var i = 42;\n"
             "var j = i + 1\n"
@@ -375,7 +374,6 @@ void tst_qv4debugger::breakAnywhere()
 
 void tst_qv4debugger::pendingBreakpoint()
 {
-    QSKIP("fixme");
     QString script =
             "var i = 42;\n"
             "var j = i + 1\n"
@@ -391,7 +389,6 @@ void tst_qv4debugger::pendingBreakpoint()
 
 void tst_qv4debugger::liveBreakPoint()
 {
-    QSKIP("fixme");
     QString script =
             "var i = 42;\n"
             "var j = i + 1\n"
@@ -420,7 +417,6 @@ void tst_qv4debugger::removePendingBreakPoint()
 
 void tst_qv4debugger::addBreakPointWhilePaused()
 {
-    QSKIP("fixme");
     QString script =
             "var i = 42;\n"
             "var j = i + 1\n"
@@ -464,7 +460,6 @@ void tst_qv4debugger::removeBreakPointForNextInstruction()
 
 void tst_qv4debugger::conditionalBreakPoint()
 {
-    QSKIP("fixme");
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
             "function test() {\n"
@@ -484,6 +479,7 @@ void tst_qv4debugger::conditionalBreakPoint()
 
     QVERIFY(m_debuggerAgent->m_capturedScope.size() > 1);
     const TestAgent::NamedRefs &frame0 = m_debuggerAgent->m_capturedScope.at(0);
+    QSKIP("fixme: function 'test' ends up in frame0 but shouldn't.");
     QCOMPARE(frame0.size(), 2);
     QVERIFY(frame0.contains("i"));
     QCOMPARE(frame0.value("i").toInt(), 11);
@@ -491,7 +487,6 @@ void tst_qv4debugger::conditionalBreakPoint()
 
 void tst_qv4debugger::conditionalBreakPointInQml()
 {
-    QSKIP("fixme");
     QQmlEngine engine;
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
     QV4Debugger *v4Debugger = new QV4Debugger(v4);
@@ -722,7 +717,6 @@ void tst_qv4debugger::breakInCatch()
 
 void tst_qv4debugger::breakInWith()
 {
-    QSKIP("fixme");
     QString script =
             "with (42) {\n"
             "    console.log('give the answer');\n"
@@ -740,7 +734,6 @@ void tst_qv4debugger::breakInWith()
 
 void tst_qv4debugger::evaluateExpression()
 {
-    QSKIP("fixme");
     QFETCH(bool, redundantRefs);
     m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
 

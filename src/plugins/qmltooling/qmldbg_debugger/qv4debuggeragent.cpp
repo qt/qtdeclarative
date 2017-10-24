@@ -84,7 +84,7 @@ void QV4DebuggerAgent::debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseR
             break;
 
         body.insert(QStringLiteral("invocationText"), frame->function());
-        body.insert(QStringLiteral("sourceLine"), frame->lineNumber() - 1);
+        body.insert(QStringLiteral("sourceLine"), qAbs(frame->lineNumber()) - 1);
 //        if (frame->column > 0)
 //            body.insert(QStringLiteral("sourceColumn"), frame->column);
         QJsonArray breakPoints;

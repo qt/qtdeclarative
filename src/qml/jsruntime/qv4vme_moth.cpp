@@ -1294,6 +1294,7 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
 
 #ifndef QT_NO_QML_DEBUGGER
     MOTH_BEGIN_INSTR(Debug)
+        STORE_IP();
         debug_slowPath(engine);
     MOTH_END_INSTR(Debug)
 #endif // QT_NO_QML_DEBUGGER
