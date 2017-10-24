@@ -69,7 +69,7 @@ T.SpinBox {
     }
 
     contentItem: TextInput {
-        text: control.textFromValue(control.value, control.locale)
+        text: control.displayText
 
         font: control.font
         color: !enabled ? control.Universal.chromeDisabledLowColor :

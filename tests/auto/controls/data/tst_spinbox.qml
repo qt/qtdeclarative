@@ -565,4 +565,48 @@ TestCase {
         verify(control)
         compare(control.value, 1000)
     }
+
+    Component {
+        id: sizeBox
+        SpinBox {
+            from: 0
+            to: items.length - 1
+
+            property var items: ["Small", "Medium", "Large"]
+
+            validator: RegExpValidator {
+                regExp: new RegExp("(Small|Medium|Large)", "i")
+            }
+
+            textFromValue: function(value) {
+                return items[value];
+            }
+
+            valueFromText: function(text) {
+                for (var i = 0; i < items.length; ++i) {
+                    if (items[i].toLowerCase().indexOf(text.toLowerCase()) === 0)
+                        return i
+                }
+                return sb.value
+            }
+        }
+    }
+
+    function test_textFromValue_data() {
+        return [
+            { tag: "default", component: spinBox, values: [0, 10, 99], displayTexts: ["0", "10", "99"] },
+            { tag: "custom", component: sizeBox, values: [0, 1, 2], displayTexts: ["Small", "Medium", "Large"] }
+        ]
+    }
+
+    function test_textFromValue(data) {
+        var control = createTemporaryObject(data.component, testCase)
+        verify(control)
+
+        for (var i = 0; i < data.values.length; ++i) {
+            control.value = data.values[i]
+            compare(control.value, data.values[i])
+            compare(control.displayText, data.displayTexts[i])
+        }
+    }
 }

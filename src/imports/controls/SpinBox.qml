@@ -64,7 +64,7 @@ T.SpinBox {
 
     contentItem: TextInput {
         z: 2
-        text: control.textFromValue(control.value, control.locale)
+        text: control.displayText
 
         font: control.font
         color: control.palette.text

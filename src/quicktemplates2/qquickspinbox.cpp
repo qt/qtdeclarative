@@ -131,6 +131,9 @@ public:
 
     int effectiveStepSize() const;
 
+    void updateDisplayText();
+    void setDisplayText(const QString &displayText);
+
     bool upEnabled() const;
     void updateUpEnabled();
     bool downEnabled() const;
@@ -154,6 +157,7 @@ public:
     int stepSize;
     int delayTimer;
     int repeatTimer;
+    QString displayText;
     QQuickSpinButton *up;
     QQuickSpinButton *down;
     QValidator *validator;
@@ -184,13 +188,16 @@ void QQuickSpinBoxPrivate::updateValue()
     if (contentItem) {
         QVariant text = contentItem->property("text");
         if (text.isValid()) {
+            int val = 0;
             QQmlEngine *engine = qmlEngine(q);
-            if (engine) {
+            if (engine && valueFromText.isCallable()) {
                 QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
                 QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
-                QJSValue val = q->valueFromText().call(QJSValueList() << text.toString() << loc);
-                setValue(val.toInt(), /* modified = */ true, /* allowWrap = */ false);
+                val = valueFromText.call(QJSValueList() << text.toString() << loc).toInt();
+            } else {
+                val = locale.toInt(text.toString());
             }
+            setValue(val, /* modified = */ true, /* allowWrap = */ false);
         }
     }
 }
@@ -206,6 +213,7 @@ bool QQuickSpinBoxPrivate::setValue(int newValue, bool allowWrap, bool modified)
 
     value = newValue;
 
+    updateDisplayText();
     updateUpEnabled();
     updateDownEnabled();
 
@@ -233,6 +241,31 @@ void QQuickSpinBoxPrivate::decrease(bool modified)
 int QQuickSpinBoxPrivate::effectiveStepSize() const
 {
     return from > to ? -1 * stepSize : stepSize;
+}
+
+void QQuickSpinBoxPrivate::updateDisplayText()
+{
+    Q_Q(QQuickSpinBox);
+    QString text;
+    QQmlEngine *engine = qmlEngine(q);
+    if (engine && textFromValue.isCallable()) {
+        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
+        QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
+        text = textFromValue.call(QJSValueList() << value << loc).toString();
+    } else {
+        text = locale.toString(value);
+    }
+    setDisplayText(text);
+}
+
+void QQuickSpinBoxPrivate::setDisplayText(const QString &text)
+{
+    Q_Q(QQuickSpinBox);
+    if (displayText == text)
+        return;
+
+    displayText = text;
+    emit q->displayTextChanged();
 }
 
 bool QQuickSpinBoxPrivate::upEnabled() const
@@ -753,6 +786,27 @@ void QQuickSpinBox::setWrap(bool wrap)
 }
 
 /*!
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty string QtQuick.Controls::SpinBox::displayText
+    \readonly
+
+    This property holds the textual value of the spinbox.
+
+    The value of the property is based on \l textFromValue() and \l {Control::}
+    {locale}, and equal to:
+    \badcode
+    var text = spinBox.textFromValue(spinBox.value, spinBox.locale)
+    \endcode
+
+    \sa textFromValue
+*/
+QString QQuickSpinBox::displayText() const
+{
+    Q_D(const QQuickSpinBox);
+    return d->displayText;
+}
+
+/*!
     \qmlmethod void QtQuick.Controls::SpinBox::increase()
 
     Increases the value by \l stepSize, or \c 1 if stepSize is not defined.
@@ -885,6 +939,7 @@ void QQuickSpinBox::componentComplete()
     Q_D(QQuickSpinBox);
     QQuickControl::componentComplete();
     if (!d->setValue(d->value, /* modified = */ false, /* allowWrap = */ false)) {
+        d->updateDisplayText();
         d->updateUpEnabled();
         d->updateDownEnabled();
     }
@@ -914,6 +969,13 @@ void QQuickSpinBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
         if (QQuickTextInput *newInput = qobject_cast<QQuickTextInput *>(newItem))
             connect(newInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickSpinBox::inputMethodComposingChanged);
     }
+}
+
+void QQuickSpinBox::localeChange(const QLocale &newLocale, const QLocale &oldLocale)
+{
+    Q_D(QQuickSpinBox);
+    QQuickControl::localeChange(newLocale, oldLocale);
+    d->updateDisplayText();
 }
 
 QFont QQuickSpinBox::defaultFont() const

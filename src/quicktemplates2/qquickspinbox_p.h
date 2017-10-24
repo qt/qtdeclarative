@@ -74,6 +74,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION 2)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION 2)
     Q_PROPERTY(bool wrap READ wrap WRITE setWrap NOTIFY wrapChanged FINAL REVISION 3)
+    Q_PROPERTY(QString displayText READ displayText NOTIFY displayTextChanged FINAL REVISION 4)
 
 public:
     explicit QQuickSpinBox(QQuickItem *parent = nullptr);
@@ -113,6 +114,8 @@ public:
     bool wrap() const;
     void setWrap(bool wrap);
 
+    QString displayText() const;
+
 public Q_SLOTS:
     void increase();
     void decrease();
@@ -130,6 +133,7 @@ Q_SIGNALS:
     Q_REVISION(2) void inputMethodHintsChanged();
     Q_REVISION(2) void inputMethodComposingChanged();
     Q_REVISION(3) void wrapChanged();
+    Q_REVISION(4) void displayTextChanged();
 
 protected:
     void focusInEvent(QFocusEvent *event) override;
@@ -146,6 +150,7 @@ protected:
     void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData &value) override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
+    void localeChange(const QLocale &newLocale, const QLocale &oldLocale) override;
 
     QFont defaultFont() const override;
     QPalette defaultPalette() const override;

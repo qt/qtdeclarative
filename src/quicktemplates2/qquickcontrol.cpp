@@ -566,8 +566,8 @@ void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
     hasLocale = e;
     if (old != l) {
         bool wasMirrored = q->isMirrored();
-        q->localeChange(l, old);
         locale = l;
+        q->localeChange(l, old);
         QQuickControlPrivate::updateLocaleRecur(q, l);
         emit q->localeChanged();
         if (wasMirrored != q->isMirrored())
