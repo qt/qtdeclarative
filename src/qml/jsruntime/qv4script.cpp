@@ -149,17 +149,10 @@ ReturnedValue Script::run()
     if (qmlContext.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        QV4::JSCallData jsCall(valueScope);
-        jsCall->thisObject = engine->globalObject;
-        QV4::CallData *cData = jsCall.callData();
-        cData->context = *context;
-        return vmFunction->call(cData);
+        return vmFunction->call(engine->globalObject, 0, 0, context);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
-        JSCallData jsCall(valueScope);
-        QV4::CallData *cData = jsCall.callData();
-        cData->context = *qml;
-        return vmFunction->call(cData);
+        return vmFunction->call(0, 0, 0, qml);
     }
 }
 

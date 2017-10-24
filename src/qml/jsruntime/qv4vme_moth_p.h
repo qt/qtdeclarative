@@ -52,8 +52,6 @@
 //
 
 #include <private/qv4global_p.h>
-#include <private/qv4runtime_p.h>
-#include <private/qv4instr_moth_p.h>
 
 QT_REQUIRE_CONFIG(qml_interpreter);
 
@@ -65,7 +63,17 @@ namespace Moth {
 class VME
 {
 public:
-    static QV4::ReturnedValue exec(CallData *callData, QV4::Function *);
+    struct ExecData {
+        QV4::Function *function;
+        const QV4::ExecutionContext *scope;
+    };
+    static inline
+    QV4::ReturnedValue exec(Function *v4Function, const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context) {
+        ExecData data{v4Function, context};
+        quintptr d = reinterpret_cast<quintptr>(&data) | 0x1;
+        return exec(reinterpret_cast<const FunctionObject *>(d), thisObject, argv, argc);
+    }
+    static QV4::ReturnedValue exec(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc);
 };
 
 } // namespace Moth

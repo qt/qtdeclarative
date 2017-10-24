@@ -367,35 +367,21 @@ ReturnedValue ScriptFunction::callAsConstructor(const FunctionObject *fo, const 
     const ScriptFunction *f = static_cast<const ScriptFunction *>(fo);
 
     Scope scope(v4);
-    JSCallData callData(scope, argc, argv);
-    CallData *cData = callData.callData(f);
     InternalClass *ic = f->classForConstructor();
-    cData->context = f->scope();
-    cData->thisObject = v4->memoryManager->allocObject<Object>(ic);
+    ScopedValue thisObject(scope, v4->memoryManager->allocObject<Object>(ic));
 
-    QV4::Function *v4Function = f->function();
-    Q_ASSERT(v4Function);
-
-    ReturnedValue result = v4Function->call(cData);
+    ReturnedValue result = Moth::VME::exec(fo, thisObject, argv, argc);
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
     else if (!Value::fromReturnedValue(result).isObject())
-        return cData->thisObject.asReturnedValue();
+        return thisObject->asReturnedValue();
     return result;
 }
 
 ReturnedValue ScriptFunction::call(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
 {
-    const ScriptFunction *f = static_cast<const ScriptFunction *>(fo);
-    Scope scope(f->engine());
-    JSCallData callData(scope, argc, argv, thisObject);
-    CallData *cData = callData.callData(f);
-    cData->context = f->scope();
-
-    QV4::Function *v4Function = f->function();
-    Q_ASSERT(v4Function);
-    return v4Function->call(cData);
+    return Moth::VME::exec(fo, thisObject, argv, argc);
 }
 
 void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)

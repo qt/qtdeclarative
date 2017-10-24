@@ -54,6 +54,7 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qv4context_p.h>
+#include <private/qv4vme_moth_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -63,12 +64,11 @@ struct Q_QML_EXPORT Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
 
-    ReturnedValue call(CallData *callData) {
-        return code(callData, this);
+    ReturnedValue call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context) {
+        return Moth::VME::exec(this, thisObject, argv, argc, context);
     }
 
-
-    typedef ReturnedValue (*Code)(CallData *, Function *);
+    typedef ReturnedValue (*Code)(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc);
     Code code;
     const uchar *codeData;
 

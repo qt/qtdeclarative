@@ -374,20 +374,13 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
 
     if (function->isStrict() || isStrict) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
-        JSCallData jsCallData(scope, 0);
-        if (directCall)
-            *jsCallData->thisObject = scope.engine->currentStackFrame->thisObject();
-        else
-            *jsCallData->thisObject = scope.engine->globalObject;
-        return e->call(jsCallData);
+        ScopedValue thisObject(scope, directCall ? scope.engine->currentStackFrame->thisObject() : scope.engine->globalObject->asReturnedValue());
+        return e->call(thisObject, 0, 0);
     }
 
-    JSCallData jsCallData(scope);
-    *jsCallData->thisObject = scope.engine->currentStackFrame->thisObject();
-    CallData *cData = jsCallData.callData();
-    cData->context = *ctx;
+    ScopedValue thisObject(scope, scope.engine->currentStackFrame->thisObject());
 
-    return function->call(cData);
+    return function->call(thisObject, 0, 0, ctx);
 }
 
 

@@ -497,45 +497,65 @@ static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
         } \
     } while (false)
 
-QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
+QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
 {
     qt_v4ResolvePendingBreakpointsHook();
-
-    MOTH_JUMP_TABLE;
-
-    ExecutionEngine *engine = function->internalClass->engine;
-    CHECK_STACK_LIMITS(engine);
-    Profiling::FunctionCallProfiler profiler(engine, function);
-    Q_UNUSED(profiler)
-
-    Value *jsStackTop = engine->jsStackTop;
-
-    Q_ASSERT(engine->jsStackTop == callData->args + callData->argc());
-    Value *stack = reinterpret_cast<Value *>(callData);
-    int stackSpaceToAdd = int(function->compiledFunction->nRegisters) - callData->argc();
-    if (stackSpaceToAdd > 0) {
-        // clear out remaining arguments and local registers
-        for (int i = 0; i < stackSpaceToAdd; ++i)
-            engine->jsStackTop[i] = Encode::undefined();
-        engine->jsStackTop += stackSpaceToAdd;
-    }
-
+    ExecutionEngine *engine;
+    Value *stack;
     CppStackFrame frame;
-    frame.parent = engine->currentStackFrame;
-    frame.v4Function = function;
-    frame.instructionPointer = function->codeData;
-    frame.jsFrame = callData;
-    engine->currentStackFrame = &frame;
+    Function *function;
+
+    {
+        Heap::ExecutionContext *scope;
+
+        quintptr d = reinterpret_cast<quintptr>(fo);
+        if (d & 0x1) {
+            // we don't have a FunctionObject, but a ExecData
+            ExecData *data = reinterpret_cast<ExecData *>(d - 1);
+            function = data->function;
+            scope = data->scope->d();
+            fo = nullptr;
+        } else {
+            function = fo->function();
+            scope = fo->scope();
+        }
+
+        engine = function->internalClass->engine;
+
+        stack = engine->jsStackTop;
+        CallData *callData = reinterpret_cast<CallData *>(stack);
+        callData->function = fo ? fo->asReturnedValue() : Encode::undefined();
+        callData->context = scope;
+        callData->accumulator = Encode::undefined();
+        callData->thisObject = thisObject ? *thisObject : Primitive::undefinedValue();
+        callData->setArgc(argc);
+
+        int jsStackFrameSize = offsetof(CallData, args)/sizeof(Value) + function->compiledFunction->nRegisters;
+        engine->jsStackTop += jsStackFrameSize;
+        memcpy(callData->args, argv, argc*sizeof(Value)); // ### Fixme: only copy nFormals
+        for (Value *v = callData->args + argc; v < engine->jsStackTop; ++v)
+            *v = Encode::undefined();
+
+        frame.parent = engine->currentStackFrame;
+        frame.v4Function = function;
+        frame.instructionPointer = function->codeData;
+        frame.jsFrame = callData;
+        engine->currentStackFrame = &frame;
+    }
+    CHECK_STACK_LIMITS(engine);
+
+    Profiling::FunctionCallProfiler profiler(engine, function);
+    if (QV4::Debugging::Debugger *debugger = engine->debugger())
+        debugger->enteringFunction();
 
     const uchar *exceptionHandler = 0;
 
     QV4::Value &accumulator = frame.jsFrame->accumulator;
     QV4::ReturnedValue acc = Encode::undefined();
 
-    if (QV4::Debugging::Debugger *debugger = engine->debugger())
-        debugger->enteringFunction();
-
     const uchar *code = function->codeData;
+
+    MOTH_JUMP_TABLE;
 
     for (;;) {
     MOTH_DISPATCH()
@@ -1321,7 +1341,7 @@ functionExit:
     if (QV4::Debugging::Debugger *debugger = engine->debugger())
         debugger->leavingFunction(ACC.asReturnedValue());
     engine->currentStackFrame = frame.parent;
-    engine->jsStackTop = jsStackTop;
+    engine->jsStackTop = stack;
 
     return acc;
 }

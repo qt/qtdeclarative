@@ -226,17 +226,11 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
     }
 
     Q_ASSERT(m_qmlScope.valueRef());
-    callData->context = *m_qmlScope.valueRef();
-    QV4::ReturnedValue res = v4Function->call(callData);
+    QV4::ReturnedValue res = v4Function->call(&callData->thisObject, callData->args, callData->argc(), static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef()));
     QV4::Scope scope(v4);
     QV4::ScopedValue result(scope, res);
     if (v4Function->hasQmlDependencies) {
-        QV4::Heap::ExecutionContext *c = static_cast<QV4::Heap::ExecutionContext *>(callData->context.m());
-        // CreateCallContext might have been executed, and that will push a CallContext on top of
-        // the current one. So, search back to the original QMLContext.
-        while (c->type != QV4::Heap::ExecutionContext::Type_QmlContext)
-            c = c->outer;
-        QV4::Heap::QmlContext *qc = static_cast<QV4::Heap::QmlContext *>(c);
+        QV4::Heap::QmlContext *qc = m_qmlScope.as<QV4::QmlContext>()->d();
         QQmlPropertyCapture::registerQmlDependencies(qc, v4, v4Function->compiledFunction);
     }
 
