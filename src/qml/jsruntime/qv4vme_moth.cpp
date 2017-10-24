@@ -745,7 +745,12 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
     MOTH_BEGIN_INSTR(CallValue)
         STORE_IP();
         STORE_ACC();
-        acc = Runtime::method_callValue(engine, accumulator, stack + argv, argc);
+        Value func = Value::fromReturnedValue(acc);
+        if (Q_UNLIKELY(!func.isFunctionObject())) {
+            acc = engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
+            goto catchException;
+        }
+        acc = static_cast<const FunctionObject &>(func).call(nullptr, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallValue)
 
@@ -757,7 +762,16 @@ QV4::ReturnedValue VME::exec(CallData *callData, QV4::Function *function)
 
     MOTH_BEGIN_INSTR(CallPropertyLookup)
         STORE_IP();
-        acc = Runtime::method_callPropertyLookup(engine, stack + base, lookupIndex, stack + argv, argc);
+        Lookup *l = function->compilationUnit->runtimeLookups + lookupIndex;
+        // ok to have the value on the stack here
+        Value f = Value::fromReturnedValue(l->getter(l, engine, stack[base]));
+
+        if (Q_UNLIKELY(!f.isFunctionObject())) {
+            acc = engine->throwTypeError();
+            goto catchException;
+        }
+
+        acc = static_cast<FunctionObject &>(f).call(stack + base, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallPropertyLookup)
 
