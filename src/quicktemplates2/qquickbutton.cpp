@@ -99,24 +99,6 @@ QQuickButton::QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent)
 {
 }
 
-/*!
-    \qmlproperty bool QtQuick.Controls::Button::autoRepeat
-
-    This property holds whether the button repeats
-    \l {AbstractButton::}{pressed()}, \l {AbstractButton::}{released()}
-    and \l {AbstractButton::}{clicked()} signals while the button is pressed
-    and held down.
-
-    The default value is \c false.
-*/
-
-void QQuickButton::buttonChange(ButtonChange change)
-{
-    QQuickAbstractButton::buttonChange(change);
-    if (change == ButtonAutoRepeatChange)
-        emit autoRepeatChanged();
-}
-
 QFont QQuickButton::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::PushButtonFont);

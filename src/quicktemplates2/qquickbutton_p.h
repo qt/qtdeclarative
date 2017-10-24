@@ -57,7 +57,6 @@ class QQuickButtonPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButton : public QQuickAbstractButton
 {
     Q_OBJECT
-    Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
     Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
     Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL)
 
@@ -71,14 +70,11 @@ public:
     void setFlat(bool flat);
 
 Q_SIGNALS:
-    void autoRepeatChanged();
     void highlightedChanged();
     void flatChanged();
 
 protected:
     QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent);
-
-    void buttonChange(ButtonChange change) override;
 
     QFont defaultFont() const override;
     QPalette defaultPalette() const override;

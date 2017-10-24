@@ -65,6 +65,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
     Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
     Q_PROPERTY(bool autoExclusive READ autoExclusive WRITE setAutoExclusive NOTIFY autoExclusiveChanged FINAL)
+    Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 3)
     Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged FINAL REVISION 3)
@@ -138,6 +139,7 @@ Q_SIGNALS:
     void checkedChanged();
     void checkableChanged();
     void autoExclusiveChanged();
+    void autoRepeatChanged();
     void indicatorChanged();
     Q_REVISION(3) void iconChanged();
     Q_REVISION(3) void displayChanged();
@@ -157,7 +159,6 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value) override;
 
     enum ButtonChange {
-        ButtonAutoRepeatChange,
         ButtonCheckedChange,
         ButtonCheckableChange,
         ButtonPressedChanged,
