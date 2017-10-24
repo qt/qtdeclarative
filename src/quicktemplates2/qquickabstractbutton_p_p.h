@@ -107,6 +107,8 @@ public:
     int holdTimer;
     int delayTimer;
     int repeatTimer;
+    int repeatDelay;
+    int repeatInterval;
 #if QT_CONFIG(shortcut)
     int shortcutId;
     QKeySequence shortcut;

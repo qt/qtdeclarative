@@ -179,6 +179,8 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
       holdTimer(0),
       delayTimer(0),
       repeatTimer(0),
+      repeatDelay(AUTO_REPEAT_DELAY),
+      repeatInterval(AUTO_REPEAT_INTERVAL),
 #if QT_CONFIG(shortcut)
       shortcutId(0),
 #endif
@@ -286,14 +288,14 @@ void QQuickAbstractButtonPrivate::startRepeatDelay()
 {
     Q_Q(QQuickAbstractButton);
     stopPressRepeat();
-    delayTimer = q->startTimer(AUTO_REPEAT_DELAY);
+    delayTimer = q->startTimer(repeatDelay);
 }
 
 void QQuickAbstractButtonPrivate::startPressRepeat()
 {
     Q_Q(QQuickAbstractButton);
     stopPressRepeat();
-    repeatTimer = q->startTimer(AUTO_REPEAT_INTERVAL);
+    repeatTimer = q->startTimer(repeatInterval);
 }
 
 void QQuickAbstractButtonPrivate::stopPressRepeat()
@@ -637,6 +639,9 @@ void QQuickAbstractButton::setAutoExclusive(bool exclusive)
     and \l clicked() signals while the button is pressed and held down.
 
     The default value is \c false.
+
+    The initial delay and the repetition interval are defined in milliseconds
+    by \l autoRepeatDelay and \l autoRepeatInterval.
 */
 bool QQuickAbstractButton::autoRepeat() const
 {
@@ -816,6 +821,56 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
 
     d->action = action;
     emit actionChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty int QtQuick.Controls::AbstractButton::autoRepeatDelay
+
+    This property holds the initial delay of auto-repetition in milliseconds.
+    The default value is \c 300 ms.
+
+    \sa autoRepeat, autoRepeatInterval
+*/
+int QQuickAbstractButton::autoRepeatDelay() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->repeatDelay;
+}
+
+void QQuickAbstractButton::setAutoRepeatDelay(int delay)
+{
+    Q_D(QQuickAbstractButton);
+    if (d->repeatDelay == delay)
+        return;
+
+    d->repeatDelay = delay;
+    emit autoRepeatDelayChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty int QtQuick.Controls::AbstractButton::autoRepeatInterval
+
+    This property holds the interval of auto-repetition in milliseconds.
+    The default value is \c 100 ms.
+
+    \sa autoRepeat, autoRepeatDelay
+*/
+int QQuickAbstractButton::autoRepeatInterval() const
+{
+    Q_D(const QQuickAbstractButton);
+    return d->repeatInterval;
+}
+
+void QQuickAbstractButton::setAutoRepeatInterval(int interval)
+{
+    Q_D(QQuickAbstractButton);
+    if (d->repeatInterval == interval)
+        return;
+
+    d->repeatInterval = interval;
+    emit autoRepeatIntervalChanged();
 }
 
 #if QT_CONFIG(shortcut)

@@ -318,6 +318,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // make revisioned properties available to their subclasses (synced with Qt 5.10)
     qmlRegisterRevision<QQuickText, 10>(uri, 2, 3);
     qmlRegisterRevision<QQuickTextEdit, 10>(uri, 2, 3);
+
+    // QtQuick.Templates 2.4 (new types and revisions in Qt 5.11)
+    qmlRegisterType<QQuickAbstractButton, 4>(uri, 2, 4, "AbstractButton");
 }
 
 QT_END_NAMESPACE
