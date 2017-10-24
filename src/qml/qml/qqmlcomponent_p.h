@@ -121,8 +121,17 @@ public:
     };
     ConstructionState state;
 
-    static void beginDeferred(QQmlEnginePrivate *enginePriv, QObject *object,
-                              ConstructionState *state);
+    struct DeferredState {
+        ~DeferredState() {
+            qDeleteAll(constructionStates);
+            constructionStates.clear();
+        }
+        QVector<ConstructionState *> constructionStates;
+    };
+
+    static void beginDeferred(QQmlEnginePrivate *enginePriv, QObject *object, DeferredState* deferredState);
+    static void completeDeferred(QQmlEnginePrivate *enginePriv, DeferredState *deferredState);
+
     static void complete(QQmlEnginePrivate *enginePriv, ConstructionState *state);
 
     QQmlEngine *engine;

@@ -745,7 +745,7 @@ QQmlData::QQmlData()
       hasInterceptorMetaObject(false), hasVMEMetaObject(false), parentFrozen(false),
       bindingBitsSize(MaxInlineBits), bindingBitsValue(0), notifyList(0),
       bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0),
-      lineNumber(0), columnNumber(0), jsEngineId(0), compilationUnit(0), deferredData(0),
+      lineNumber(0), columnNumber(0), jsEngineId(0), compilationUnit(0),
       propertyCache(0), guards(0), extendedData(0)
 {
     init();
@@ -1502,18 +1502,16 @@ void qmlExecuteDeferred(QObject *object)
 {
     QQmlData *data = QQmlData::get(object);
 
-    if (data && data->deferredData && !data->wasDeleted(object)) {
+    if (data && !data->deferredData.isEmpty() && !data->wasDeleted(object)) {
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine);
 
-        QQmlComponentPrivate::ConstructionState state;
+        QQmlComponentPrivate::DeferredState state;
         QQmlComponentPrivate::beginDeferred(ep, object, &state);
 
         // Release the reference for the deferral action (we still have one from construction)
-        data->deferredData->compilationUnit->release();
-        delete data->deferredData;
-        data->deferredData = 0;
+        data->releaseDeferredData();
 
-        QQmlComponentPrivate::complete(ep, &state);
+        QQmlComponentPrivate::completeDeferred(ep, &state);
     }
 }
 
@@ -1671,6 +1669,15 @@ void QQmlData::NotifyList::layout()
     todo = 0;
 }
 
+void QQmlData::releaseDeferredData()
+{
+    for (DeferredData *deferData : qAsConst(deferredData)) {
+        deferData->compilationUnit->release();
+        delete deferData;
+    }
+    deferredData.clear();
+}
+
 void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)
 {
     if (!notifyList) {
@@ -1745,11 +1752,7 @@ void QQmlData::destroyed(QObject *object)
         compilationUnit = 0;
     }
 
-    if (deferredData) {
-        deferredData->compilationUnit->release();
-        delete deferredData;
-        deferredData = 0;
-    }
+    releaseDeferredData();
 
     QQmlBoundSignal *signalHandler = signalHandlers;
     while (signalHandler) {

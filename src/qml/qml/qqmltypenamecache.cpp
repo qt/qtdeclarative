@@ -154,7 +154,8 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, QQml
         QQmlImportNamespace *typeNamespace = 0;
         QList<QQmlError> errors;
         QQmlType t;
-        bool typeFound = m_imports.resolveType(typeName, &t, 0, 0, &typeNamespace, &errors, recursionRestriction);
+        bool typeFound = m_imports.resolveType(typeName, &t, 0, 0, &typeNamespace, &errors,
+                                               QQmlType::AnyRegistrationType, recursionRestriction);
         if (typeFound) {
             return Result(t);
         }
