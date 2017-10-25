@@ -47,6 +47,15 @@
 
 QT_BEGIN_NAMESPACE
 
+static const int DEFAULT_CACHE = 500;
+
+static inline int cacheSize()
+{
+    static bool ok = false;
+    static const int size = qEnvironmentVariableIntValue("QT_QUICK_CONTROLS_IMAGINE_CACHE", &ok);
+    return ok ? size : DEFAULT_CACHE;
+}
+
 Q_DECLARE_LOGGING_CATEGORY(lcQtQuickControlsImagine)
 
 // input: [focused, pressed]
@@ -90,12 +99,14 @@ static QString findFile(const QDir &dir, const QString &baseName, const QStringL
         if (QFile::exists(filePath))
             return QFileSelector().select(filePath);
     }
-    return QString();
+    // return an empty string to indicate that the lookup has been done
+    // even if no matching asset was found
+    return QLatin1String("");
 }
 
 QQuickImageSelector::QQuickImageSelector(QObject *parent)
     : QObject(parent),
-      m_cache(false),
+      m_cache(cacheSize() > 0),
       m_complete(false),
       m_separator(QLatin1String("-"))
 {
@@ -224,18 +235,20 @@ QString QQuickImageSelector::cacheKey() const
 
 void QQuickImageSelector::updateSource()
 {
-    static QCache<QString, QString> cache(200); // TODO: cost
+    static QCache<QString, QString> cache(cacheSize());
 
     const QString key = cacheKey();
 
     QString bestFilePath;
+
     if (m_cache) {
         QString *cachedPath = cache.object(key);
         if (cachedPath)
             bestFilePath = *cachedPath;
     }
 
-    if (bestFilePath.isEmpty()) {
+    // note: a cached file path may be empty
+    if (bestFilePath.isNull()) {
         QDir dir(m_path);
         int bestScore = -1;
 
