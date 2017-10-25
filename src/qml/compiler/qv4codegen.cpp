@@ -2126,6 +2126,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     sourceElements(body);
 
     if (hasError || !endsWithReturn(body)) {
+        bytecodeGenerator->setLocation(ast->lastSourceLocation());
         if (requiresReturnValue) {
             if (_returnAddress >= 0) {
                 Instruction::LoadReg load;

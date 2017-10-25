@@ -924,7 +924,6 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnTimerCallback()
 
 void tst_QQmlDebugJS::setBreakpointInScriptInDifferentFile()
 {
-    QSKIP("fixme");
     //void setBreakpoint(QString type, QString target, int line = -1, int column = -1, bool enabled = false, QString condition = QString(), int ignoreCount = -1)
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
