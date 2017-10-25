@@ -494,4 +494,51 @@ TestCase {
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
     }
+
+    Component {
+        id: nextCheckStateBox
+        CheckBox {
+            tristate: true
+            nextCheckState: function() {
+                if (checkState === Qt.Checked)
+                    return Qt.Unchecked
+                else
+                    return Qt.Checked
+            }
+        }
+    }
+
+    function test_nextCheckState_data() {
+        return [
+            { tag: "unchecked", checkState: Qt.Unchecked, expectedState: Qt.Checked },
+            { tag: "partially-checked", checkState: Qt.PartiallyChecked, expectedState: Qt.Checked },
+            { tag: "checked", checkState: Qt.Checked, expectedState: Qt.Unchecked }
+        ]
+    }
+
+    function test_nextCheckState(data) {
+        var control = createTemporaryObject(nextCheckStateBox, testCase)
+        verify(control)
+
+        // mouse
+        control.checkState = data.checkState
+        compare(control.checkState, data.checkState)
+        mouseClick(control)
+        compare(control.checkState, data.expectedState)
+
+        // touch
+        control.checkState = data.checkState
+        compare(control.checkState, data.checkState)
+        var touch = touchEvent(control)
+        touch.press(0, control).commit().release(0, control).commit()
+        compare(control.checkState, data.expectedState)
+
+        // keyboard
+        control.forceActiveFocus()
+        tryCompare(control, "activeFocus", true)
+        control.checkState = data.checkState
+        compare(control.checkState, data.checkState)
+        keyClick(Qt.Key_Space)
+        compare(control.checkState, data.expectedState)
+    }
 }

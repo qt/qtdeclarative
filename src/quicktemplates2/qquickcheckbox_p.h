@@ -59,6 +59,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickCheckBox : public QQuickAbstractBut
     Q_OBJECT
     Q_PROPERTY(bool tristate READ isTristate WRITE setTristate NOTIFY tristateChanged FINAL)
     Q_PROPERTY(Qt::CheckState checkState READ checkState WRITE setCheckState NOTIFY checkStateChanged FINAL)
+    Q_PRIVATE_PROPERTY(QQuickCheckBox::d_func(), QJSValue nextCheckState MEMBER nextCheckState WRITE setNextCheckState NOTIFY nextCheckStateChanged FINAL REVISION 4)
 
 public:
     explicit QQuickCheckBox(QQuickItem *parent = nullptr);
@@ -72,6 +73,7 @@ public:
 Q_SIGNALS:
     void tristateChanged();
     void checkStateChanged();
+    Q_REVISION(4) void nextCheckStateChanged();
 
 protected:
     QFont defaultFont() const override;

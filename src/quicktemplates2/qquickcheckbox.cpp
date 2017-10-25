@@ -38,6 +38,7 @@
 #include "qquickabstractbutton_p_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
+#include <QtQml/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -107,9 +108,19 @@ public:
     {
     }
 
+    void setNextCheckState(const QJSValue &callback);
+
     bool tristate;
     Qt::CheckState checkState;
+    QJSValue nextCheckState;
 };
+
+void QQuickCheckBoxPrivate::setNextCheckState(const QJSValue &callback)
+{
+    Q_Q(QQuickCheckBox);
+    nextCheckState = callback;
+    emit q->nextCheckStateChanged();
+}
 
 QQuickCheckBox::QQuickCheckBox(QQuickItem *parent)
     : QQuickAbstractButton(*(new QQuickCheckBoxPrivate), parent)
@@ -194,10 +205,45 @@ void QQuickCheckBox::buttonChange(ButtonChange change)
         QQuickAbstractButton::buttonChange(change);
 }
 
+/*!
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty function QtQuick.Controls::CheckBox::nextCheckState
+
+    This property holds a callback function that is called to determine
+    the next check state whenever the checkbox is interactively toggled
+    by the user via touch, mouse, or keyboard.
+
+    By default, a normal checkbox cycles between \c Qt.Unchecked and
+    \c Qt.Checked states, and a tri-state checkbox cycles between
+    \c Qt.Unchecked, \c Qt.PartiallyChecked, and \c Qt.Checked states.
+
+    The \c nextCheckState callback function can override the default behavior.
+    The following example implements a tri-state checkbox that can present
+    a partially checked state depending on external conditions, but never
+    cycles to the partially checked state when interactively toggled by
+    the user.
+
+    \code
+    CheckBox {
+        tristate: true
+        checkState: allChildrenChecked ? Qt.Checked :
+                       anyChildChecked ? Qt.PartiallyChecked : Qt.Unchecked
+
+        nextCheckState: function() {
+            if (checkState === Qt.Checked)
+                return Qt.Unchecked
+            else
+                return Qt.Checked
+        }
+    }
+    \endcode
+*/
 void QQuickCheckBox::nextCheckState()
 {
     Q_D(QQuickCheckBox);
-    if (d->tristate)
+    if (d->nextCheckState.isCallable())
+        setCheckState(static_cast<Qt::CheckState>(d->nextCheckState.call().toInt()));
+    else if (d->tristate)
         setCheckState(static_cast<Qt::CheckState>((d->checkState + 1) % 3));
     else
         QQuickAbstractButton::nextCheckState();
@@ -211,3 +257,5 @@ QAccessible::Role QQuickCheckBox::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcheckbox_p.cpp"
