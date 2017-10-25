@@ -197,8 +197,12 @@ void QQuickAnimatorProxyJob::windowChanged(QQuickWindow *window)
 void QQuickAnimatorProxyJob::setWindow(QQuickWindow *window)
 {
     if (!window) {
-        if (m_job && m_controller)
+        if (m_job && m_controller) {
+            disconnect(m_controller->window(), &QQuickWindow::sceneGraphInitialized,
+                       this, &QQuickAnimatorProxyJob::sceneGraphInitialized);
             m_controller->cancel(m_job);
+        }
+
         m_controller = nullptr;
         stop();
 
