@@ -1505,7 +1505,7 @@ void QQuickPopup::resetFont()
     }
     \endcode
 
-    \sa Control::palette, ApplicationWindow::palette
+    \sa Control::palette, ApplicationWindow::palette, {qtquickcontrols2-palette}{palette QML Basic Type}
 */
 QPalette QQuickPopup::palette() const
 {

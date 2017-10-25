@@ -718,7 +718,7 @@ void QQuickApplicationWindow::resetLocale()
     property on the window's palette, that property propagates to all child controls in the window,
     overriding any system defaults for that property.
 
-    \sa Control::palette
+    \sa Control::palette, Popup::palette, {qtquickcontrols2-palette}{palette QML Basic Type}
 */
 QPalette QQuickApplicationWindow::palette() const
 {
