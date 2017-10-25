@@ -714,8 +714,11 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
     if (QQmlData *d = QQmlData::get(o)) {
         if (d->ownContext) {
-            for (QQmlContextData *lc = d->ownContext->linkedContext; lc; lc = lc->linkedContext)
+            for (QQmlContextData *lc = d->ownContext->linkedContext; lc; lc = lc->linkedContext) {
                 lc->invalidate();
+                if (lc->contextObject == o)
+                    lc->contextObject = nullptr;
+            }
             d->ownContext->invalidate();
             if (d->ownContext->contextObject == o)
                 d->ownContext->contextObject = nullptr;
