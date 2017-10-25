@@ -86,6 +86,8 @@ Module {
         Property { name: "wheelEnabled"; type: "bool" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
+        Property { name: "palette"; revision: 3; type: "QPalette" }
+        Signal { name: "paletteChanged"; revision: 3 }
     }
     Component {
         name: "QQuickDayOfWeekRow"
