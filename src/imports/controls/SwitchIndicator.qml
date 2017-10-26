@@ -38,19 +38,17 @@ import QtQuick 2.10
 import QtQuick.Controls 2.3
 import QtQuick.Controls.impl 2.3
 
-Item {
+PaddedRectangle {
     implicitWidth: 56
     implicitHeight: 28
 
-    property Item control
+    property AbstractButton control
 
-    Rectangle {
-        y: parent.height / 2 - height / 2
-        width: 56
-        height: 16
-        radius: 8
-        color: control.checked ? control.palette.dark : control.palette.midlight
-    }
+    radius: 8
+    leftPadding: 0
+    rightPadding: 0
+    padding: (height - 16) / 2
+    color: control.checked ? control.palette.dark : control.palette.midlight
 
     Rectangle {
         x: Math.max(0, Math.min(parent.width - width, control.visualPosition * parent.width - (width / 2)))
