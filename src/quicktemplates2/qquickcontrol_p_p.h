@@ -89,10 +89,20 @@ public:
 
     void mirrorChange() override;
 
+    inline QMarginsF getPadding() const { return QMarginsF(getLeftPadding(), getTopPadding(), getRightPadding(), getBottomPadding()); }
+    inline qreal getTopPadding() const { return extra.isAllocated() && extra->hasTopPadding ? extra->topPadding : getVerticalPadding(); }
+    inline qreal getLeftPadding() const { return extra.isAllocated() && extra->hasLeftPadding ? extra->leftPadding : getHorizontalPadding(); }
+    inline qreal getRightPadding() const { return extra.isAllocated() && extra->hasRightPadding ? extra->rightPadding : getHorizontalPadding(); }
+    inline qreal getBottomPadding() const { return extra.isAllocated() && extra->hasBottomPadding ? extra->bottomPadding : getVerticalPadding(); }
+    inline qreal getHorizontalPadding() const { return hasHorizontalPadding ? horizontalPadding : padding; }
+    inline qreal getVerticalPadding() const { return hasVerticalPadding ? verticalPadding : padding; }
+
     void setTopPadding(qreal value, bool reset = false);
     void setLeftPadding(qreal value, bool reset = false);
     void setRightPadding(qreal value, bool reset = false);
     void setBottomPadding(qreal value, bool reset = false);
+    void setHorizontalPadding(qreal value, bool reset = false);
+    void setVerticalPadding(qreal value, bool reset = false);
 
     void resizeBackground();
     virtual void resizeContent();
@@ -148,15 +158,21 @@ public:
 
     struct ExtraData {
         ExtraData();
+        bool hasTopPadding;
+        bool hasLeftPadding;
+        bool hasRightPadding;
+        bool hasBottomPadding;
+        qreal topPadding;
+        qreal leftPadding;
+        qreal rightPadding;
+        qreal bottomPadding;
         QFont requestedFont;
         QPalette requestedPalette;
     };
     QLazilyAllocated<ExtraData> extra;
 
-    bool hasTopPadding;
-    bool hasLeftPadding;
-    bool hasRightPadding;
-    bool hasBottomPadding;
+    bool hasHorizontalPadding;
+    bool hasVerticalPadding;
     bool hasLocale;
     bool wheelEnabled;
 #if QT_CONFIG(quicktemplates2_hover)
@@ -165,10 +181,8 @@ public:
 #endif
     int touchId;
     qreal padding;
-    qreal topPadding;
-    qreal leftPadding;
-    qreal rightPadding;
-    qreal bottomPadding;
+    qreal horizontalPadding;
+    qreal verticalPadding;
     qreal spacing;
     QLocale locale;
     QFont resolvedFont;

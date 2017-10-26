@@ -85,11 +85,42 @@ TestCase {
         var control = createTemporaryObject(component, testCase)
         verify(control)
 
+        var paddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "paddingChanged"})
+        verify(paddingSpy.valid)
+
+        var topPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topPaddingChanged"})
+        verify(topPaddingSpy.valid)
+
+        var leftPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftPaddingChanged"})
+        verify(leftPaddingSpy.valid)
+
+        var rightPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightPaddingChanged"})
+        verify(rightPaddingSpy.valid)
+
+        var bottomPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomPaddingChanged"})
+        verify(bottomPaddingSpy.valid)
+
+        var horizontalPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "horizontalPaddingChanged"})
+        verify(horizontalPaddingSpy.valid)
+
+        var verticalPaddingSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "verticalPaddingChanged"})
+        verify(verticalPaddingSpy.valid)
+
+        var paddingChanges = 0
+        var topPaddingChanges = 0
+        var leftPaddingChanges = 0
+        var rightPaddingChanges = 0
+        var bottomPaddingChanges = 0
+        var horizontalPaddingChanges = 0
+        var verticalPaddingChanges = 0
+
         compare(control.padding, 0)
         compare(control.topPadding, 0)
         compare(control.leftPadding, 0)
         compare(control.rightPadding, 0)
         compare(control.bottomPadding, 0)
+        compare(control.horizontalPadding, 0)
+        compare(control.verticalPadding, 0)
         compare(control.availableWidth, 0)
         compare(control.availableHeight, 0)
 
@@ -102,6 +133,15 @@ TestCase {
         compare(control.leftPadding, 10)
         compare(control.rightPadding, 10)
         compare(control.bottomPadding, 10)
+        compare(control.horizontalPadding, 10)
+        compare(control.verticalPadding, 10)
+        compare(paddingSpy.count, ++paddingChanges)
+        compare(topPaddingSpy.count, ++topPaddingChanges)
+        compare(leftPaddingSpy.count, ++leftPaddingChanges)
+        compare(rightPaddingSpy.count, ++rightPaddingChanges)
+        compare(bottomPaddingSpy.count, ++bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, ++horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, ++verticalPaddingChanges)
 
         control.topPadding = 20
         compare(control.padding, 10)
@@ -109,6 +149,15 @@ TestCase {
         compare(control.leftPadding, 10)
         compare(control.rightPadding, 10)
         compare(control.bottomPadding, 10)
+        compare(control.horizontalPadding, 10)
+        compare(control.verticalPadding, 10)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, ++topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, verticalPaddingChanges)
 
         control.leftPadding = 30
         compare(control.padding, 10)
@@ -116,6 +165,15 @@ TestCase {
         compare(control.leftPadding, 30)
         compare(control.rightPadding, 10)
         compare(control.bottomPadding, 10)
+        compare(control.horizontalPadding, 10)
+        compare(control.verticalPadding, 10)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, ++leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, verticalPaddingChanges)
 
         control.rightPadding = 40
         compare(control.padding, 10)
@@ -123,6 +181,15 @@ TestCase {
         compare(control.leftPadding, 30)
         compare(control.rightPadding, 40)
         compare(control.bottomPadding, 10)
+        compare(control.horizontalPadding, 10)
+        compare(control.verticalPadding, 10)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, ++rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, verticalPaddingChanges)
 
         control.bottomPadding = 50
         compare(control.padding, 10)
@@ -130,6 +197,15 @@ TestCase {
         compare(control.leftPadding, 30)
         compare(control.rightPadding, 40)
         compare(control.bottomPadding, 50)
+        compare(control.horizontalPadding, 10)
+        compare(control.verticalPadding, 10)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, ++bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, verticalPaddingChanges)
 
         control.padding = 60
         compare(control.padding, 60)
@@ -137,6 +213,143 @@ TestCase {
         compare(control.leftPadding, 30)
         compare(control.rightPadding, 40)
         compare(control.bottomPadding, 50)
+        compare(control.horizontalPadding, 60)
+        compare(control.verticalPadding, 60)
+        compare(paddingSpy.count, ++paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, ++horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, ++verticalPaddingChanges)
+
+        control.horizontalPadding = 80
+        compare(control.padding, 60)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 30)
+        compare(control.rightPadding, 40)
+        compare(control.bottomPadding, 50)
+        compare(control.horizontalPadding, 80)
+        compare(control.verticalPadding, 60)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, ++horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, verticalPaddingChanges)
+
+        control.verticalPadding = 90
+        compare(control.padding, 60)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 30)
+        compare(control.rightPadding, 40)
+        compare(control.bottomPadding, 50)
+        compare(control.horizontalPadding, 80)
+        compare(control.verticalPadding, 90)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, ++verticalPaddingChanges)
+
+        control.leftPadding = undefined
+        compare(control.padding, 60)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 80)
+        compare(control.rightPadding, 40)
+        compare(control.bottomPadding, 50)
+        compare(control.horizontalPadding, 80)
+        compare(control.verticalPadding, 90)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, ++leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, verticalPaddingChanges)
+
+        control.rightPadding = undefined
+        compare(control.padding, 60)
+        compare(control.topPadding, 20)
+        compare(control.leftPadding, 80)
+        compare(control.rightPadding, 80)
+        compare(control.bottomPadding, 50)
+        compare(control.horizontalPadding, 80)
+        compare(control.verticalPadding, 90)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, ++rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, verticalPaddingChanges)
+
+        control.topPadding = undefined
+        compare(control.padding, 60)
+        compare(control.topPadding, 90)
+        compare(control.leftPadding, 80)
+        compare(control.rightPadding, 80)
+        compare(control.bottomPadding, 50)
+        compare(control.horizontalPadding, 80)
+        compare(control.verticalPadding, 90)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, ++topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, verticalPaddingChanges)
+
+        control.bottomPadding = undefined
+        compare(control.padding, 60)
+        compare(control.topPadding, 90)
+        compare(control.leftPadding, 80)
+        compare(control.rightPadding, 80)
+        compare(control.bottomPadding, 90)
+        compare(control.horizontalPadding, 80)
+        compare(control.verticalPadding, 90)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, ++bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, verticalPaddingChanges)
+
+        control.horizontalPadding = undefined
+        compare(control.padding, 60)
+        compare(control.topPadding, 90)
+        compare(control.leftPadding, 60)
+        compare(control.rightPadding, 60)
+        compare(control.bottomPadding, 90)
+        compare(control.horizontalPadding, 60)
+        compare(control.verticalPadding, 90)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, topPaddingChanges)
+        compare(leftPaddingSpy.count, ++leftPaddingChanges)
+        compare(rightPaddingSpy.count, ++rightPaddingChanges)
+        compare(bottomPaddingSpy.count, bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, ++horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, verticalPaddingChanges)
+
+        control.verticalPadding = undefined
+        compare(control.padding, 60)
+        compare(control.topPadding, 60)
+        compare(control.leftPadding, 60)
+        compare(control.rightPadding, 60)
+        compare(control.bottomPadding, 60)
+        compare(control.horizontalPadding, 60)
+        compare(control.verticalPadding, 60)
+        compare(paddingSpy.count, paddingChanges)
+        compare(topPaddingSpy.count, ++topPaddingChanges)
+        compare(leftPaddingSpy.count, leftPaddingChanges)
+        compare(rightPaddingSpy.count, rightPaddingChanges)
+        compare(bottomPaddingSpy.count, ++bottomPaddingChanges)
+        compare(horizontalPaddingSpy.count, horizontalPaddingChanges)
+        compare(verticalPaddingSpy.count, ++verticalPaddingChanges)
     }
 
     function test_availableSize() {

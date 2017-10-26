@@ -106,14 +106,20 @@ static bool isKeyFocusReason(Qt::FocusReason reason)
 }
 
 QQuickControlPrivate::ExtraData::ExtraData()
-{
-}
-
-QQuickControlPrivate::QQuickControlPrivate()
     : hasTopPadding(false),
       hasLeftPadding(false),
       hasRightPadding(false),
       hasBottomPadding(false),
+      topPadding(0),
+      leftPadding(0),
+      rightPadding(0),
+      bottomPadding(0)
+{
+}
+
+QQuickControlPrivate::QQuickControlPrivate()
+    : hasHorizontalPadding(false),
+      hasVerticalPadding(false),
       hasLocale(false),
       wheelEnabled(false),
 #if QT_CONFIG(quicktemplates2_hover)
@@ -122,10 +128,8 @@ QQuickControlPrivate::QQuickControlPrivate()
 #endif
       touchId(-1),
       padding(0),
-      topPadding(0),
-      leftPadding(0),
-      rightPadding(0),
-      bottomPadding(0),
+      horizontalPadding(0),
+      verticalPadding(0),
       spacing(0),
       focusPolicy(Qt::NoFocus),
       focusReason(Qt::OtherFocusReason),
@@ -199,56 +203,90 @@ void QQuickControlPrivate::mirrorChange()
 void QQuickControlPrivate::setTopPadding(qreal value, bool reset)
 {
     Q_Q(QQuickControl);
-    qreal oldPadding = q->topPadding();
-    topPadding = value;
-    hasTopPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    const QMarginsF oldPadding = getPadding();
+    extra.value().topPadding = value;
+    extra.value().hasTopPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding.top(), value)) || (reset && !qFuzzyCompare(oldPadding.top(), getVerticalPadding()))) {
         emit q->topPaddingChanged();
         emit q->availableHeightChanged();
-        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
-                         QMarginsF(leftPadding, oldPadding, rightPadding, bottomPadding));
+        q->paddingChange(getPadding(), oldPadding);
     }
 }
 
 void QQuickControlPrivate::setLeftPadding(qreal value, bool reset)
 {
     Q_Q(QQuickControl);
-    qreal oldPadding = q->leftPadding();
-    leftPadding = value;
-    hasLeftPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    const QMarginsF oldPadding = getPadding();
+    extra.value().leftPadding = value;
+    extra.value().hasLeftPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding.left(), value)) || (reset && !qFuzzyCompare(oldPadding.left(), getHorizontalPadding()))) {
         emit q->leftPaddingChanged();
         emit q->availableWidthChanged();
-        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
-                         QMarginsF(oldPadding, topPadding, rightPadding, bottomPadding));
+        q->paddingChange(getPadding(), oldPadding);
     }
 }
 
 void QQuickControlPrivate::setRightPadding(qreal value, bool reset)
 {
     Q_Q(QQuickControl);
-    qreal oldPadding = q->rightPadding();
-    rightPadding = value;
-    hasRightPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    const QMarginsF oldPadding = getPadding();
+    extra.value().rightPadding = value;
+    extra.value().hasRightPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding.right(), value)) || (reset && !qFuzzyCompare(oldPadding.right(), getHorizontalPadding()))) {
         emit q->rightPaddingChanged();
         emit q->availableWidthChanged();
-        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
-                         QMarginsF(leftPadding, topPadding, oldPadding, bottomPadding));
+        q->paddingChange(getPadding(), oldPadding);
     }
 }
 
 void QQuickControlPrivate::setBottomPadding(qreal value, bool reset)
 {
     Q_Q(QQuickControl);
-    qreal oldPadding = q->bottomPadding();
-    bottomPadding = value;
-    hasBottomPadding = !reset;
-    if ((!reset && !qFuzzyCompare(oldPadding, value)) || (reset && !qFuzzyCompare(oldPadding, padding))) {
+    const QMarginsF oldPadding = getPadding();
+    extra.value().bottomPadding = value;
+    extra.value().hasBottomPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldPadding.bottom(), value)) || (reset && !qFuzzyCompare(oldPadding.bottom(), getVerticalPadding()))) {
         emit q->bottomPaddingChanged();
         emit q->availableHeightChanged();
-        q->paddingChange(QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding),
-                         QMarginsF(leftPadding, topPadding, rightPadding, oldPadding));
+        q->paddingChange(getPadding(), oldPadding);
+    }
+}
+
+void QQuickControlPrivate::setHorizontalPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickControl);
+    const QMarginsF oldPadding = getPadding();
+    const qreal oldHorizontalPadding = getHorizontalPadding();
+    horizontalPadding = value;
+    hasHorizontalPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldHorizontalPadding, value)) || (reset && !qFuzzyCompare(oldHorizontalPadding, padding))) {
+        const QMarginsF newPadding = getPadding();
+        if (!qFuzzyCompare(newPadding.left(), oldPadding.left()))
+            emit q->leftPaddingChanged();
+        if (!qFuzzyCompare(newPadding.right(), oldPadding.right()))
+            emit q->rightPaddingChanged();
+        emit q->horizontalPaddingChanged();
+        emit q->availableWidthChanged();
+        q->paddingChange(newPadding, oldPadding);
+    }
+}
+
+void QQuickControlPrivate::setVerticalPadding(qreal value, bool reset)
+{
+    Q_Q(QQuickControl);
+    const QMarginsF oldPadding = getPadding();
+    const qreal oldVerticalPadding = getVerticalPadding();
+    verticalPadding = value;
+    hasVerticalPadding = !reset;
+    if ((!reset && !qFuzzyCompare(oldVerticalPadding, value)) || (reset && !qFuzzyCompare(oldVerticalPadding, padding))) {
+        const QMarginsF newPadding = getPadding();
+        if (!qFuzzyCompare(newPadding.top(), oldPadding.top()))
+            emit q->topPaddingChanged();
+        if (!qFuzzyCompare(newPadding.bottom(), oldPadding.bottom()))
+            emit q->bottomPaddingChanged();
+        emit q->verticalPaddingChanged();
+        emit q->availableHeightChanged();
+        q->paddingChange(newPadding, oldPadding);
     }
 }
 
@@ -858,10 +896,18 @@ void QQuickControl::setPadding(qreal padding)
     Q_D(QQuickControl);
     if (qFuzzyCompare(d->padding, padding))
         return;
-    QMarginsF oldPadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
+
+    const QMarginsF oldPadding = d->getPadding();
+    const qreal oldVerticalPadding = d->getVerticalPadding();
+    const qreal oldHorizontalPadding = d->getHorizontalPadding();
+
     d->padding = padding;
     emit paddingChanged();
-    QMarginsF newPadding(leftPadding(), topPadding(), rightPadding(), bottomPadding());
+
+    const QMarginsF newPadding = d->getPadding();
+    const qreal newVerticalPadding = d->getVerticalPadding();
+    const qreal newHorizontalPadding = d->getHorizontalPadding();
+
     if (!qFuzzyCompare(newPadding.top(), oldPadding.top()))
         emit topPaddingChanged();
     if (!qFuzzyCompare(newPadding.left(), oldPadding.left()))
@@ -870,10 +916,15 @@ void QQuickControl::setPadding(qreal padding)
         emit rightPaddingChanged();
     if (!qFuzzyCompare(newPadding.bottom(), oldPadding.bottom()))
         emit bottomPaddingChanged();
+    if (!qFuzzyCompare(newVerticalPadding, oldVerticalPadding))
+        emit verticalPaddingChanged();
+    if (!qFuzzyCompare(newHorizontalPadding, oldHorizontalPadding))
+        emit horizontalPaddingChanged();
     if (!qFuzzyCompare(newPadding.top(), oldPadding.top()) || !qFuzzyCompare(newPadding.bottom(), oldPadding.bottom()))
         emit availableHeightChanged();
     if (!qFuzzyCompare(newPadding.left(), oldPadding.left()) || !qFuzzyCompare(newPadding.right(), oldPadding.right()))
         emit availableWidthChanged();
+
     paddingChange(newPadding, oldPadding);
 }
 
@@ -885,16 +936,15 @@ void QQuickControl::resetPadding()
 /*!
     \qmlproperty real QtQuick.Controls::Control::topPadding
 
-    This property holds the top padding.
+    This property holds the top padding. Unless explicitly set, the value
+    is equal to \c verticalPadding.
 
-    \sa {Control Layout}, padding, bottomPadding, availableHeight
+    \sa {Control Layout}, padding, bottomPadding, verticalPadding, availableHeight
 */
 qreal QQuickControl::topPadding() const
 {
     Q_D(const QQuickControl);
-    if (d->hasTopPadding)
-        return d->topPadding;
-    return d->padding;
+    return d->getTopPadding();
 }
 
 void QQuickControl::setTopPadding(qreal padding)
@@ -912,16 +962,15 @@ void QQuickControl::resetTopPadding()
 /*!
     \qmlproperty real QtQuick.Controls::Control::leftPadding
 
-    This property holds the left padding.
+    This property holds the left padding. Unless explicitly set, the value
+    is equal to \c horizontalPadding.
 
-    \sa {Control Layout}, padding, rightPadding, availableWidth
+    \sa {Control Layout}, padding, rightPadding, horizontalPadding, availableWidth
 */
 qreal QQuickControl::leftPadding() const
 {
     Q_D(const QQuickControl);
-    if (d->hasLeftPadding)
-        return d->leftPadding;
-    return d->padding;
+    return d->getLeftPadding();
 }
 
 void QQuickControl::setLeftPadding(qreal padding)
@@ -939,16 +988,15 @@ void QQuickControl::resetLeftPadding()
 /*!
     \qmlproperty real QtQuick.Controls::Control::rightPadding
 
-    This property holds the right padding.
+    This property holds the right padding. Unless explicitly set, the value
+    is equal to \c horizontalPadding.
 
-    \sa {Control Layout}, padding, leftPadding, availableWidth
+    \sa {Control Layout}, padding, leftPadding, horizontalPadding, availableWidth
 */
 qreal QQuickControl::rightPadding() const
 {
     Q_D(const QQuickControl);
-    if (d->hasRightPadding)
-        return d->rightPadding;
-    return d->padding;
+    return d->getRightPadding();
 }
 
 void QQuickControl::setRightPadding(qreal padding)
@@ -966,16 +1014,15 @@ void QQuickControl::resetRightPadding()
 /*!
     \qmlproperty real QtQuick.Controls::Control::bottomPadding
 
-    This property holds the bottom padding.
+    This property holds the bottom padding. Unless explicitly set, the value
+    is equal to \c verticalPadding.
 
-    \sa {Control Layout}, padding, topPadding, availableHeight
+    \sa {Control Layout}, padding, topPadding, verticalPadding, availableHeight
 */
 qreal QQuickControl::bottomPadding() const
 {
     Q_D(const QQuickControl);
-    if (d->hasBottomPadding)
-        return d->bottomPadding;
-    return d->padding;
+    return d->getBottomPadding();
 }
 
 void QQuickControl::setBottomPadding(qreal padding)
@@ -1430,6 +1477,60 @@ void QQuickControl::setPalette(const QPalette &palette)
 void QQuickControl::resetPalette()
 {
     setPalette(QPalette());
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Control::horizontalPadding
+
+    This property holds the horizontal padding. Unless explicitly set, the value
+    is equal to \c padding.
+
+    \sa {Control Layout}, padding, leftPadding, rightPadding, verticalPadding
+*/
+qreal QQuickControl::horizontalPadding() const
+{
+    Q_D(const QQuickControl);
+    return d->getHorizontalPadding();
+}
+
+void QQuickControl::setHorizontalPadding(qreal padding)
+{
+    Q_D(QQuickControl);
+    d->setHorizontalPadding(padding);
+}
+
+void QQuickControl::resetHorizontalPadding()
+{
+    Q_D(QQuickControl);
+    d->setHorizontalPadding(0, true);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Control::verticalPadding
+
+    This property holds the vertical padding. Unless explicitly set, the value
+    is equal to \c padding.
+
+    \sa {Control Layout}, padding, topPadding, bottomPadding, horizontalPadding
+*/
+qreal QQuickControl::verticalPadding() const
+{
+    Q_D(const QQuickControl);
+    return d->getVerticalPadding();
+}
+
+void QQuickControl::setVerticalPadding(qreal padding)
+{
+    Q_D(QQuickControl);
+    d->setVerticalPadding(padding);
+}
+
+void QQuickControl::resetVerticalPadding()
+{
+    Q_D(QQuickControl);
+    d->setVerticalPadding(0, true);
 }
 
 void QQuickControl::classBegin()
