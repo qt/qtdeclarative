@@ -83,7 +83,17 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \sa {Customizing CheckBox}, {Button Controls}
+    Hierarchical checkbox groups can be managed with a non-exclusive
+    \l ButtonGroup.
+
+    \image qtquickcontrols2-checkbox-group.png
+
+    The following example illustrates how the combined check state of
+    children can be bound to the check state of the parent checkbox:
+
+    \snippet qtquickcontrols2-checkbox-group.qml 1
+
+    \sa {Customizing CheckBox}, ButtonGroup, {Button Controls}
 */
 
 class QQuickCheckBoxPrivate : public QQuickAbstractButtonPrivate
