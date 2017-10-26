@@ -1020,7 +1020,6 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
 
 void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
 {
-    QSKIP("fixme");
     QFETCH(bool, qmlscene);
     QFETCH(bool, redundantRefs);
     QFETCH(bool, namesAsObjects);
