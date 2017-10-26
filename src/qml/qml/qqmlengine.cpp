@@ -891,6 +891,8 @@ void QQmlData::setQueuedForDeletion(QObject *object)
             if (ddata->ownContext) {
                 Q_ASSERT(ddata->ownContext == ddata->context);
                 ddata->context->emitDestruction();
+                if (ddata->ownContext->contextObject == object)
+                    ddata->ownContext->contextObject = nullptr;
                 ddata->ownContext = 0;
                 ddata->context = 0;
             }
