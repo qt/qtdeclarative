@@ -387,12 +387,14 @@ TestCase {
         compare(container.cb2.checked, true)
         compare(container.cb2.checkState, Qt.PartiallyChecked)
 
-        compare(container.cb1.tristate, true)
-        compare(container.cb2.tristate, true)
+        // note: since Qt Quick Controls 2.4 (Qt 5.11), CheckBox does not
+        // force tristate when checkState is set to Qt.PartiallyChecked
+        compare(container.cb1.tristate, false)
+        compare(container.cb2.tristate, false)
     }
 
     function test_tristate() {
-        var control = createTemporaryObject(checkBox, testCase)
+        var control = createTemporaryObject(checkBox, testCase, {tristate: true})
 
         var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
@@ -400,14 +402,13 @@ TestCase {
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        compare(control.tristate, false)
+        compare(control.tristate, true)
         compare(control.checked, false)
         compare(control.checkState, Qt.Unchecked)
 
         sequenceSpy.expectedSequence = [["checkStateChanged", { "pressed": false, "checked": true, "checkState": Qt.PartiallyChecked }],
                                         ["checkedChanged", { "pressed": false, "checked": true, "checkState": Qt.PartiallyChecked }]]
         control.checkState = Qt.PartiallyChecked
-        compare(control.tristate, true)
         compare(control.checked, true)
         compare(control.checkState, Qt.PartiallyChecked)
         verify(sequenceSpy.success)

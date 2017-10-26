@@ -158,9 +158,6 @@ void QQuickCheckBox::setCheckState(Qt::CheckState state)
     if (d->checkState == state)
         return;
 
-    if (!d->tristate && state == Qt::PartiallyChecked)
-        setTristate(true);
-
     bool wasChecked = isChecked();
     d->checked = state != Qt::Unchecked;
     d->checkState = state;
