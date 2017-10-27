@@ -68,19 +68,30 @@ namespace
     {
         float x, y;
         Color4ub color;
-        void set(float nx, float ny, Color4ub ncolor)
+
+        void set(float primary, float secondary, Color4ub ncolor, bool vertical)
         {
-            x = nx; y = ny; color = ncolor;
+            if (vertical) {
+                x = secondary; y = primary;
+            } else {
+                x = primary; y = secondary;
+            }
+            color = ncolor;
         }
     };
 
     struct SmoothVertex : public Vertex
     {
         float dx, dy;
-        void set(float nx, float ny, Color4ub ncolor, float ndx, float ndy)
+
+        void set(float primary, float secondary, Color4ub ncolor, float dPrimary, float dSecondary, bool vertical)
         {
-            Vertex::set(nx, ny, ncolor);
-            dx = ndx; dy = ndy;
+            Vertex::set(primary, secondary, ncolor, vertical);
+            if (vertical) {
+                dx = dSecondary; dy = dPrimary;
+            } else {
+                dx = dPrimary; dy = dSecondary;
+            }
         }
     };
 
@@ -103,6 +114,7 @@ QSGBasicInternalRectangleNode::QSGBasicInternalRectangleNode()
     , m_antialiasing(false)
     , m_gradient_is_opaque(true)
     , m_dirty_geometry(false)
+    , m_gradient_is_vertical(true)
     , m_geometry(QSGGeometry::defaultAttributes_ColoredPoint2D(), 0)
 {
     setGeometry(&m_geometry);
@@ -159,6 +171,15 @@ void QSGBasicInternalRectangleNode::setGradientStops(const QGradientStops &stops
         m_gradient_is_opaque &= stops.at(i).second.alpha() == 0xff;
     m_dirty_geometry = true;
 }
+
+void QSGBasicInternalRectangleNode::setGradientVertical(bool vertical)
+{
+    if (vertical == m_gradient_is_vertical)
+        return;
+    m_gradient_is_vertical = vertical;
+    m_dirty_geometry = true;
+}
+
 
 void QSGBasicInternalRectangleNode::setRadius(qreal radius)
 {
@@ -230,12 +251,15 @@ void QSGBasicInternalRectangleNode::updateGeometry()
     Color4ub transparent = { 0, 0, 0, 0 };
     const QGradientStops &stops = m_gradient_stops;
 
+    float length = (m_gradient_is_vertical ? height : width);
+    float secondaryLength = (m_gradient_is_vertical ? width : height);
+
     int nextGradientStop = 0;
-    float gradientPos = penWidth / height;
+    float gradientPos = penWidth / length;
     while (nextGradientStop < stops.size() && stops.at(nextGradientStop).first <= gradientPos)
         ++nextGradientStop;
     int lastGradientStop = stops.size() - 1;
-    float lastGradientPos = 1.0f - penWidth / height;
+    float lastGradientPos = 1.0f - penWidth / length;
     while (lastGradientStop >= nextGradientStop && stops.at(lastGradientStop).first >= lastGradientPos)
         --lastGradientStop;
     int gradientIntersections = (lastGradientStop - nextGradientStop + 1);
@@ -319,40 +343,46 @@ void QSGBasicInternalRectangleNode::updateGeometry()
         quint16 *indices = g->indexDataAsUShort();
         quint16 index = 0;
 
-        float py = 0; // previous inner y-coordinate.
-        float plx = 0; // previous inner left x-coordinate.
-        float prx = 0; // previous inner right x-coordinate.
+        float pp = 0; // previous inner primary coordinate.
+        float pss = 0; // previous inner secondary start coordinate.
+        float pse = 0; // previous inner secondary end coordinate.
 
         float angle = 0.5f * float(M_PI) / segments;
         float cosStep = qFastCos(angle);
         float sinStep = qFastSin(angle);
 
+        float innerStart = (m_gradient_is_vertical ? innerRect.top() : innerRect.left());
+        float innerEnd = (m_gradient_is_vertical ? innerRect.bottom() : innerRect.right());
+        float innerLength = (m_gradient_is_vertical ? innerRect.height() : innerRect.width());
+        float innerSecondaryStart = (m_gradient_is_vertical ? innerRect.left() : innerRect.top());
+        float innerSecondaryEnd = (m_gradient_is_vertical ? innerRect.right() : innerRect.bottom());
+
         for (int part = 0; part < 2; ++part) {
             float c = 1 - part;
             float s = part;
             for (int i = 0; i <= segments; ++i) {
-                float y, lx, rx;
+                float p, ss, se;
                 if (innerRadius > 0) {
-                    y = (part ? innerRect.bottom() : innerRect.top()) - innerRadius * c; // current inner y-coordinate.
-                    lx = innerRect.left() - innerRadius * s; // current inner left x-coordinate.
-                    rx = innerRect.right() + innerRadius * s; // current inner right x-coordinate.
-                    gradientPos = ((part ? innerRect.height() : 0) + radius - innerRadius * c) / height;
+                    p = (part ? innerEnd : innerStart) - innerRadius * c; // current inner primary coordinate.
+                    ss = innerSecondaryStart - innerRadius * s; // current inner secondary start coordinate.
+                    se = innerSecondaryEnd + innerRadius * s; // current inner secondary end coordinate.
+                    gradientPos = ((part ? innerLength : 0) + radius - innerRadius * c) / length;
                 } else {
-                    y = (part ? innerRect.bottom() + innerRadius : innerRect.top() - innerRadius); // current inner y-coordinate.
-                    lx = innerRect.left() - innerRadius; // current inner left x-coordinate.
-                    rx = innerRect.right() + innerRadius; // current inner right x-coordinate.
-                    gradientPos = ((part ? innerRect.height() + innerRadius : -innerRadius) + radius) / height;
+                    p = (part ? innerEnd + innerRadius : innerStart - innerRadius); // current inner  primary coordinate.
+                    ss = innerSecondaryStart - innerRadius; // current inner secondary start coordinate.
+                    se = innerSecondaryEnd + innerRadius; // current inner secondary end coordinate.
+                    gradientPos = ((part ? innerLength + innerRadius : -innerRadius) + radius) / length;
                 }
-                float Y = (part ? innerRect.bottom() : innerRect.top()) - outerRadius * c; // current outer y-coordinate.
-                float lX = innerRect.left() - outerRadius * s; // current outer left x-coordinate.
-                float rX = innerRect.right() + outerRadius * s; // current outer right x-coordinate.
+                float outerEdge = (part ? innerEnd : innerStart) - outerRadius * c; // current outer primary coordinate.
+                float outerSecondaryStart = innerSecondaryStart - outerRadius * s; // current outer secondary start coordinate.
+                float outerSecondaryEnd = innerSecondaryEnd + outerRadius * s; // current outer secondary end coordinate.
 
                 while (nextGradientStop <= lastGradientStop && stops.at(nextGradientStop).first <= gradientPos) {
                     // Insert vertices at gradient stops.
-                    float gy = (innerRect.top() - radius) + stops.at(nextGradientStop).first * height;
-                    float t = (gy - py) / (y - py);
-                    float glx = plx * (1 - t) + t * lx;
-                    float grx = prx * (1 - t) + t * rx;
+                    float gp = (innerStart - radius) + stops.at(nextGradientStop).first * length;
+                    float t = (gp - pp) / (p - pp);
+                    float gis = pss * (1 - t) + t * ss; // gradient inner start
+                    float gie = pse * (1 - t) + t * se; // gradient inner end
 
                     fillColor = colorToColor4ub(stops.at(nextGradientStop).second);
 
@@ -377,23 +407,23 @@ void QSGBasicInternalRectangleNode::updateGeometry()
                         indices[innerAATail++] = index + 3;
 
                         bool lower = stops.at(nextGradientStop).first > 0.5f;
-                        float dy = lower ? qMin(0.0f, height - gy - delta) : qMax(0.0f, delta - gy);
-                        smoothVertices[index++].set(grx, gy, fillColor, width - grx - delta, dy);
-                        smoothVertices[index++].set(glx, gy, fillColor, delta - glx, dy);
+                        float dp = lower ? qMin(0.0f, length - gp - delta) : qMax(0.0f, delta - gp);
+                        smoothVertices[index++].set(gp, gie, fillColor, dp, secondaryLength - gie - delta, m_gradient_is_vertical);
+                        smoothVertices[index++].set(gp, gis, fillColor, dp, delta - gis, m_gradient_is_vertical);
                         if (penWidth) {
-                            smoothVertices[index++].set(grx, gy, borderColor, 0.49f * penWidth * s, -0.49f * penWidth * c);
-                            smoothVertices[index++].set(glx, gy, borderColor, -0.49f * penWidth * s, -0.49f * penWidth * c);
+                            smoothVertices[index++].set(gp, gie, borderColor, -0.49f * penWidth * c, 0.49f * penWidth * s, m_gradient_is_vertical);
+                            smoothVertices[index++].set(gp, gis, borderColor, -0.49f * penWidth * c, -0.49f * penWidth * s, m_gradient_is_vertical);
                         } else {
-                            dy = lower ? delta : -delta;
-                            smoothVertices[index++].set(grx, gy, transparent, delta, dy);
-                            smoothVertices[index++].set(glx, gy, transparent, -delta, dy);
+                            dp = lower ? delta : -delta;
+                            smoothVertices[index++].set(gp, gie, transparent, dp, delta, m_gradient_is_vertical);
+                            smoothVertices[index++].set(gp, gis, transparent, dp, -delta, m_gradient_is_vertical);
                         }
                     } else {
-                        vertices[index++].set(grx, gy, fillColor);
-                        vertices[index++].set(glx, gy, fillColor);
+                        vertices[index++].set(gp, gie, fillColor, m_gradient_is_vertical);
+                        vertices[index++].set(gp, gis, fillColor, m_gradient_is_vertical);
                         if (penWidth) {
-                            vertices[index++].set(grx, gy, borderColor);
-                            vertices[index++].set(glx, gy, borderColor);
+                            vertices[index++].set(gp, gie, borderColor, m_gradient_is_vertical);
+                            vertices[index++].set(gp, gis, borderColor, m_gradient_is_vertical);
                         }
                     }
                     ++nextGradientStop;
@@ -430,41 +460,41 @@ void QSGBasicInternalRectangleNode::updateGeometry()
                     indices[innerAATail++] = index + 1;
                     indices[innerAATail++] = index + 3;
 
-                    float dy = part ? qMin(0.0f, height - y - delta) : qMax(0.0f, delta - y);
-                    smoothVertices[index++].set(rx, y, fillColor, width - rx - delta, dy);
-                    smoothVertices[index++].set(lx, y, fillColor, delta - lx, dy);
+                    float dp = part ? qMin(0.0f, length - p - delta) : qMax(0.0f, delta - p);
+                    smoothVertices[index++].set(p, se, fillColor, dp, secondaryLength - se - delta, m_gradient_is_vertical);
+                    smoothVertices[index++].set(p, ss, fillColor, dp, delta - ss, m_gradient_is_vertical);
 
-                    dy = part ? delta : -delta;
+                    dp = part ? delta : -delta;
                     if (penWidth) {
-                        smoothVertices[index++].set(rx, y, borderColor, 0.49f * penWidth * s, -0.49f * penWidth * c);
-                        smoothVertices[index++].set(lx, y, borderColor, -0.49f * penWidth * s, -0.49f * penWidth * c);
-                        smoothVertices[index++].set(rX, Y, borderColor, -0.49f * penWidth * s, 0.49f * penWidth * c);
-                        smoothVertices[index++].set(lX, Y, borderColor, 0.49f * penWidth * s, 0.49f * penWidth * c);
-                        smoothVertices[index++].set(rX, Y, transparent, delta, dy);
-                        smoothVertices[index++].set(lX, Y, transparent, -delta, dy);
+                        smoothVertices[index++].set(p, se, borderColor, -0.49f * penWidth * c, 0.49f * penWidth * s, m_gradient_is_vertical);
+                        smoothVertices[index++].set(p, ss, borderColor, -0.49f * penWidth * c, -0.49f * penWidth * s, m_gradient_is_vertical);
+                        smoothVertices[index++].set(outerEdge, outerSecondaryEnd, borderColor, 0.49f * penWidth * c, -0.49f * penWidth * s, m_gradient_is_vertical);
+                        smoothVertices[index++].set(outerEdge, outerSecondaryStart, borderColor, 0.49f * penWidth * c, 0.49f * penWidth * s, m_gradient_is_vertical);
+                        smoothVertices[index++].set(outerEdge, outerSecondaryEnd, transparent, dp, delta, m_gradient_is_vertical);
+                        smoothVertices[index++].set(outerEdge, outerSecondaryStart, transparent, dp, -delta, m_gradient_is_vertical);
 
                         indices[--outerAAHead] = index - 2;
                         indices[--outerAAHead] = index - 4;
                         indices[outerAATail++] = index - 3;
                         indices[outerAATail++] = index - 1;
                     } else {
-                        smoothVertices[index++].set(rx, y, transparent, delta, dy);
-                        smoothVertices[index++].set(lx, y, transparent, -delta, dy);
+                        smoothVertices[index++].set(p, se, transparent, dp, delta, m_gradient_is_vertical);
+                        smoothVertices[index++].set(p, ss, transparent, dp, -delta, m_gradient_is_vertical);
                     }
                 } else {
-                    vertices[index++].set(rx, y, fillColor);
-                    vertices[index++].set(lx, y, fillColor);
+                    vertices[index++].set(p, se, fillColor, m_gradient_is_vertical);
+                    vertices[index++].set(p, ss, fillColor, m_gradient_is_vertical);
                     if (penWidth) {
-                        vertices[index++].set(rx, y, borderColor);
-                        vertices[index++].set(lx, y, borderColor);
-                        vertices[index++].set(rX, Y, borderColor);
-                        vertices[index++].set(lX, Y, borderColor);
+                        vertices[index++].set(p, se, borderColor, m_gradient_is_vertical);
+                        vertices[index++].set(p, ss, borderColor, m_gradient_is_vertical);
+                        vertices[index++].set(outerEdge, outerSecondaryEnd, borderColor, m_gradient_is_vertical);
+                        vertices[index++].set(outerEdge, outerSecondaryStart, borderColor, m_gradient_is_vertical);
                     }
                 }
 
-                py = y;
-                plx = lx;
-                prx = rx;
+                pp = p;
+                pss = ss;
+                pse = se;
 
                 // Rotate
                 qreal tmp = c;
@@ -543,19 +573,24 @@ void QSGBasicInternalRectangleNode::updateGeometry()
         quint16 *indices = g->indexDataAsUShort();
         quint16 index = 0;
 
-        float lx = innerRect.left();
-        float rx = innerRect.right();
-        float lX = outerRect.left();
-        float rX = outerRect.right();
+        float innerStart = (m_gradient_is_vertical ? innerRect.top() : innerRect.left());
+        float innerEnd = (m_gradient_is_vertical ? innerRect.bottom() : innerRect.right());
+        float outerStart = (m_gradient_is_vertical ? outerRect.top() : outerRect.left());
+        float outerEnd = (m_gradient_is_vertical ? outerRect.bottom() : outerRect.right());
+
+        float innerSecondaryStart = (m_gradient_is_vertical ? innerRect.left() : innerRect.top());
+        float innerSecondaryEnd = (m_gradient_is_vertical ? innerRect.right() : innerRect.bottom());
+        float outerSecondaryStart = (m_gradient_is_vertical ? outerRect.left() : outerRect.top());
+        float outerSecondaryEnd = (m_gradient_is_vertical ? outerRect.right() : outerRect.bottom());
 
         for (int part = -1; part <= 1; part += 2) {
-            float y = (part == 1 ? innerRect.bottom() : innerRect.top());
-            float Y = (part == 1 ? outerRect.bottom() : outerRect.top());
-            gradientPos = (y - innerRect.top() + penWidth) / height;
+            float innerEdge = (part == 1 ? innerEnd : innerStart);
+            float outerEdge = (part == 1 ? outerEnd : outerStart);
+            gradientPos = (innerEdge - innerStart + penWidth) / length;
 
             while (nextGradientStop <= lastGradientStop && stops.at(nextGradientStop).first <= gradientPos) {
                 // Insert vertices at gradient stops.
-                float gy = (innerRect.top() - penWidth) + stops.at(nextGradientStop).first * height;
+                float gp = (innerStart - penWidth) + stops.at(nextGradientStop).first * length;
 
                 fillColor = colorToColor4ub(stops.at(nextGradientStop).second);
 
@@ -580,22 +615,22 @@ void QSGBasicInternalRectangleNode::updateGeometry()
                     indices[innerAATail++] = index + 3;
 
                     bool lower = stops.at(nextGradientStop).first > 0.5f;
-                    float dy = lower ? qMin(0.0f, height - gy - delta) : qMax(0.0f, delta - gy);
-                    smoothVertices[index++].set(rx, gy, fillColor, width - rx - delta, dy);
-                    smoothVertices[index++].set(lx, gy, fillColor, delta - lx, dy);
+                    float dp = lower ? qMin(0.0f, length - gp - delta) : qMax(0.0f, delta - gp);
+                    smoothVertices[index++].set(gp, innerSecondaryEnd, fillColor, dp, secondaryLength - innerSecondaryEnd - delta, m_gradient_is_vertical);
+                    smoothVertices[index++].set(gp, innerSecondaryStart, fillColor, dp, delta - innerSecondaryStart, m_gradient_is_vertical);
                     if (penWidth) {
-                        smoothVertices[index++].set(rx, gy, borderColor, 0.49f * penWidth, (lower ? 0.49f : -0.49f) * penWidth);
-                        smoothVertices[index++].set(lx, gy, borderColor, -0.49f * penWidth, (lower ? 0.49f : -0.49f) * penWidth);
+                        smoothVertices[index++].set(gp, innerSecondaryEnd, borderColor, (lower ? 0.49f : -0.49f) * penWidth, 0.49f * penWidth, m_gradient_is_vertical);
+                        smoothVertices[index++].set(gp, innerSecondaryStart, borderColor, (lower ? 0.49f : -0.49f) * penWidth, -0.49f * penWidth, m_gradient_is_vertical);
                     } else {
-                        smoothVertices[index++].set(rx, gy, transparent, delta, lower ? delta : -delta);
-                        smoothVertices[index++].set(lx, gy, transparent, -delta, lower ? delta : -delta);
+                        smoothVertices[index++].set(gp, innerSecondaryEnd, transparent, lower ? delta : -delta, delta, m_gradient_is_vertical);
+                        smoothVertices[index++].set(gp, innerSecondaryStart, transparent, lower ? delta : -delta, -delta, m_gradient_is_vertical);
                     }
                 } else {
-                    vertices[index++].set(rx, gy, fillColor);
-                    vertices[index++].set(lx, gy, fillColor);
+                    vertices[index++].set(gp, innerSecondaryEnd, fillColor, m_gradient_is_vertical);
+                    vertices[index++].set(gp, innerSecondaryStart, fillColor, m_gradient_is_vertical);
                     if (penWidth) {
-                        vertices[index++].set(rx, gy, borderColor);
-                        vertices[index++].set(lx, gy, borderColor);
+                        vertices[index++].set(gp, innerSecondaryEnd, borderColor, m_gradient_is_vertical);
+                        vertices[index++].set(gp, innerSecondaryStart, borderColor, m_gradient_is_vertical);
                     }
                 }
                 ++nextGradientStop;
@@ -632,34 +667,34 @@ void QSGBasicInternalRectangleNode::updateGeometry()
                 indices[innerAATail++] = index + 1;
                 indices[innerAATail++] = index + 3;
 
-                float dy = part == 1 ? qMin(0.0f, height - y - delta) : qMax(0.0f, delta - y);
-                smoothVertices[index++].set(rx, y, fillColor, width - rx - delta, dy);
-                smoothVertices[index++].set(lx, y, fillColor, delta - lx, dy);
+                float dp = part == 1 ? qMin(0.0f, length - innerEdge - delta) : qMax(0.0f, delta - innerEdge);
+                smoothVertices[index++].set(innerEdge, innerSecondaryEnd, fillColor, dp, secondaryLength - innerSecondaryEnd - delta, m_gradient_is_vertical);
+                smoothVertices[index++].set(innerEdge, innerSecondaryStart, fillColor, dp, delta - innerSecondaryStart, m_gradient_is_vertical);
 
                 if (penWidth) {
-                    smoothVertices[index++].set(rx, y, borderColor, 0.49f * penWidth, 0.49f * penWidth * part);
-                    smoothVertices[index++].set(lx, y, borderColor, -0.49f * penWidth, 0.49f * penWidth * part);
-                    smoothVertices[index++].set(rX, Y, borderColor, -0.49f * penWidth, -0.49f * penWidth * part);
-                    smoothVertices[index++].set(lX, Y, borderColor, 0.49f * penWidth, -0.49f * penWidth * part);
-                    smoothVertices[index++].set(rX, Y, transparent, delta, delta * part);
-                    smoothVertices[index++].set(lX, Y, transparent, -delta, delta * part);
+                    smoothVertices[index++].set(innerEdge, innerSecondaryEnd, borderColor, 0.49f * penWidth * part, 0.49f * penWidth, m_gradient_is_vertical);
+                    smoothVertices[index++].set(innerEdge, innerSecondaryStart, borderColor, 0.49f * penWidth * part, -0.49f * penWidth, m_gradient_is_vertical);
+                    smoothVertices[index++].set(outerEdge, outerSecondaryEnd, borderColor, -0.49f * penWidth * part, -0.49f * penWidth, m_gradient_is_vertical);
+                    smoothVertices[index++].set(outerEdge, outerSecondaryStart, borderColor, -0.49f * penWidth * part, 0.49f * penWidth, m_gradient_is_vertical);
+                    smoothVertices[index++].set(outerEdge, outerSecondaryEnd, transparent, delta * part, delta, m_gradient_is_vertical);
+                    smoothVertices[index++].set(outerEdge, outerSecondaryStart, transparent, delta * part, -delta, m_gradient_is_vertical);
 
                     indices[--outerAAHead] = index - 2;
                     indices[--outerAAHead] = index - 4;
                     indices[outerAATail++] = index - 3;
                     indices[outerAATail++] = index - 1;
                 } else {
-                    smoothVertices[index++].set(rx, y, transparent, delta, delta * part);
-                    smoothVertices[index++].set(lx, y, transparent, -delta, delta * part);
+                    smoothVertices[index++].set(innerEdge, innerSecondaryEnd, transparent, delta * part, delta, m_gradient_is_vertical);
+                    smoothVertices[index++].set(innerEdge, innerSecondaryStart, transparent, delta * part, -delta, m_gradient_is_vertical);
                 }
             } else {
-                vertices[index++].set(rx, y, fillColor);
-                vertices[index++].set(lx, y, fillColor);
+                vertices[index++].set(innerEdge, innerSecondaryEnd, fillColor, m_gradient_is_vertical);
+                vertices[index++].set(innerEdge, innerSecondaryStart, fillColor, m_gradient_is_vertical);
                 if (penWidth) {
-                    vertices[index++].set(rx, y, borderColor);
-                    vertices[index++].set(lx, y, borderColor);
-                    vertices[index++].set(rX, Y, borderColor);
-                    vertices[index++].set(lX, Y, borderColor);
+                    vertices[index++].set(innerEdge, innerSecondaryEnd, borderColor, m_gradient_is_vertical);
+                    vertices[index++].set(innerEdge, innerSecondaryStart, borderColor, m_gradient_is_vertical);
+                    vertices[index++].set(outerEdge, outerSecondaryEnd, borderColor, m_gradient_is_vertical);
+                    vertices[index++].set(outerEdge, outerSecondaryStart, borderColor, m_gradient_is_vertical);
                 }
             }
         }

@@ -47,6 +47,7 @@ QT_BEGIN_NAMESPACE
 QSGSoftwareInternalRectangleNode::QSGSoftwareInternalRectangleNode()
     : m_penWidth(0)
     , m_radius(0)
+    , m_vertical(true)
     , m_cornerPixmapIsDirty(true)
     , m_devicePixelRatio(1)
 {
@@ -186,6 +187,15 @@ void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &st
     markDirty(DirtyMaterial);
 }
 
+void QSGSoftwareInternalRectangleNode::setGradientVertical(bool vertical)
+{
+    if (m_vertical != vertical) {
+        m_vertical = vertical;
+        m_cornerPixmapIsDirty = true;
+        markDirty(DirtyMaterial);
+    }
+}
+
 void QSGSoftwareInternalRectangleNode::setRadius(qreal radius)
 {
     if (m_radius != radius) {
@@ -209,7 +219,7 @@ void QSGSoftwareInternalRectangleNode::update()
     }
 
     if (!m_stops.isEmpty()) {
-        QLinearGradient gradient(QPoint(0,0), QPoint(0,1));
+        QLinearGradient gradient(QPoint(0,0), QPoint(m_vertical ? 0 : 1, m_vertical ? 1 : 0));
         gradient.setStops(m_stops);
         gradient.setCoordinateMode(QGradient::ObjectBoundingMode);
         m_brush = QBrush(gradient);

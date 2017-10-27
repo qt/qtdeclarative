@@ -136,6 +136,7 @@ public:
     virtual void setPenColor(const QColor &color) = 0;
     virtual void setPenWidth(qreal width) = 0;
     virtual void setGradientStops(const QGradientStops &stops) = 0;
+    virtual void setGradientVertical(bool vertical) = 0;
     virtual void setRadius(qreal radius) = 0;
     virtual void setAntialiasing(bool antialiasing) { Q_UNUSED(antialiasing) }
     virtual void setAligned(bool aligned) = 0;

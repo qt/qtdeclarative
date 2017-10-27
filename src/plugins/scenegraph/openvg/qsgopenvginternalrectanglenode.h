@@ -59,6 +59,7 @@ public:
     void setPenColor(const QColor &color) override;
     void setPenWidth(qreal width) override;
     void setGradientStops(const QGradientStops &stops) override;
+    void setGradientVertical(bool vertical) override;
     void setRadius(qreal radius) override;
     void setAligned(bool aligned) override;
     void update() override;
@@ -85,6 +86,7 @@ private:
     qreal m_penWidth = 0.0;
     qreal m_radius = 0.0;
     bool m_aligned = false;
+    bool m_vertical = true;
     QGradientStops m_gradientStops;
 
     VGPath m_rectanglePath;

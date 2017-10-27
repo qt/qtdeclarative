@@ -424,6 +424,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickItem, 11>(uri, 2, 11,"Item");
 
     qmlRegisterType<QQuickAnimatedSprite, 12>("QtQuick", 2, 12, "AnimatedSprite");
+    qmlRegisterType<QQuickGradient, 12>(uri, 2, 12, "Gradient");
 }
 
 static void initResources()

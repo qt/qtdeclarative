@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.12
 import QtTest 1.1
 
 Item {
@@ -78,6 +78,17 @@ Item {
         gradient: Gradient {
             GradientStop { position: 0.0; color: "red" }
             GradientStop { position: 0.5; color: "yellow" }
+            GradientStop { position: 1.0; color: "green" }
+        }
+    }
+
+    Rectangle {
+        id: horizontalGradient
+        width: 300
+        height: 100
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0.0; color: "red" }
             GradientStop { position: 1.0; color: "green" }
         }
     }
@@ -132,7 +143,17 @@ Item {
             compare(gstops[0].color.toString(), "#ff0000")
             compare(gstops[1].color.toString(), "#ffff00")
             compare(gstops[2].color.toString(), "#008000")
+            compare(grad.orientation, Gradient.Vertical)
         }
+
+        function test_horizontalGradient() {
+            var grad = horizontalGradient.gradient;
+            var gstops = grad.stops;
+            compare(gstops[0].color.toString(), "#ff0000")
+            compare(gstops[1].color.toString(), "#008000")
+            compare(grad.orientation, Gradient.Horizontal)
+        }
+
 
         function test_borders() {
             compare(rectangleborder.border.width, 1)

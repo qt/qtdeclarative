@@ -219,10 +219,11 @@ void QQuickGradientStop::updateGradient()
     of solid color fills or images. Consider using gradients for static items
     in a user interface.
 
-    In Qt 5.0, only vertical, linear gradients can be applied to items. If you
-    need to apply different orientations of gradients, a combination of rotation
-    and clipping will need to be applied to the relevant items. This can
-    introduce additional performance requirements for your application.
+    Since Qt 5.12, vertical and horizontal linear gradients can be applied to items.
+    If you need to apply angled gradients, a combination of rotation and clipping
+    can be applied to the relevant items. Alternatively, consider using
+    QtQuick.Shapes::LinearGradient or QtGraphicalEffects::LinearGradient. These
+    approaches can all introduce additional performance requirements for your application.
 
     The use of animations involving gradient stops may not give the desired
     result. An alternative way to animate gradients is to use pre-generated
@@ -253,6 +254,28 @@ QQuickGradient::~QQuickGradient()
 QQmlListProperty<QQuickGradientStop> QQuickGradient::stops()
 {
     return QQmlListProperty<QQuickGradientStop>(this, m_stops);
+}
+
+/*!
+    \qmlproperty enumeration QtQuick::Gradient::orientation
+    \since 5.12
+
+    Set this property to define the direction of the gradient.
+    \list
+    \li Gradient.Vertical - a vertical gradient
+    \li Gradient.Horizontal - a horizontal gradient
+    \endlist
+
+    The default is Gradient.Vertical.
+*/
+void QQuickGradient::setOrientation(Orientation orientation)
+{
+    if (m_orientation == orientation)
+        return;
+
+    m_orientation = orientation;
+    emit orientationChanged();
+    emit updated();
 }
 
 QGradientStops QQuickGradient::gradientStops() const
@@ -374,7 +397,7 @@ QQuickPen *QQuickRectangle::border()
 
     The gradient to use to fill the rectangle.
 
-    This property allows for the construction of simple vertical gradients.
+    This property allows for the construction of simple vertical or horizontal gradients.
     Other gradients may be formed by adding rotation to the rectangle.
 
     \div {class="float-left"}
@@ -510,10 +533,13 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     rectangle->setAntialiasing(antialiasing());
 
     QGradientStops stops;
+    bool vertical = true;
     if (d->gradient) {
         stops = d->gradient->gradientStops();
+        vertical = d->gradient->orientation() == QQuickGradient::Vertical;
     }
     rectangle->setGradientStops(stops);
+    rectangle->setGradientVertical(vertical);
 
     rectangle->update();
 

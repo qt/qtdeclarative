@@ -119,24 +119,34 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradient : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QQmlListProperty<QQuickGradientStop> stops READ stops)
+    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged REVISION 12)
     Q_CLASSINFO("DefaultProperty", "stops")
 
 public:
     QQuickGradient(QObject *parent=nullptr);
     ~QQuickGradient() override;
 
+    enum Orientation { Vertical = Qt::Vertical,
+                       Horizontal = Qt::Horizontal };
+    Q_ENUM(Orientation)
+
     QQmlListProperty<QQuickGradientStop> stops();
+
+    Orientation orientation() const { return m_orientation; }
+    void setOrientation(Orientation orientation);
 
     QGradientStops gradientStops() const;
 
 Q_SIGNALS:
     void updated();
+    void orientationChanged();
 
 private:
     void doUpdate();
 
 private:
     QList<QQuickGradientStop *> m_stops;
+    Orientation m_orientation = Vertical;
     friend class QQuickRectangle;
     friend class QQuickGradientStop;
 };
