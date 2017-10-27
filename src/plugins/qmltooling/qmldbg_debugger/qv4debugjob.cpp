@@ -64,15 +64,16 @@ void JavaScriptJob::run()
 {
     QV4::Scope scope(engine);
 
-    QV4::ScopedContext ctx(scope, engine->currentContext());
+    QV4::ScopedContext ctx(scope, engine->currentStackFrame ? engine->currentContext()
+                                                            : engine->rootContext());
     QObject scopeObject;
 
     QV4::CppStackFrame *frame = engine->currentStackFrame;
-    if (frameNr > 0) {
-        for (int i = 0; i < frameNr; ++i)
-            frame = frame->parent;
+
+    for (int i = 0; frame && i < frameNr; ++i)
+        frame = frame->parent;
+    if (frameNr > 0 && frame)
         ctx = static_cast<QV4::ExecutionContext *>(&frame->jsFrame->context);
-    }
 
     if (context >= 0) {
         QQmlContext *extraContext = qmlContext(QQmlDebugService::objectForId(context));
@@ -103,10 +104,9 @@ void JavaScriptJob::run()
     }
 
     QV4::Script script(ctx, QV4::Compiler::EvalCode, this->script);
-    if (QV4::Function *function = frame->v4Function)
+    if (const QV4::Function *function = frame ? frame->v4Function : engine->globalCode)
         script.strictMode = function->isStrict();
-    else if (engine->globalCode)
-        script.strictMode = engine->globalCode->isStrict();
+
     // In order for property lookups in QML to work, we need to disable fast v4 lookups. That
     // is a side-effect of inheritContext.
     script.inheritContext = true;

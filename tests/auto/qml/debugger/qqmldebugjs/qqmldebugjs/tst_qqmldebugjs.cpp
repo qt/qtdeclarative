@@ -1329,22 +1329,20 @@ void tst_QQmlDebugJS::getScopeDetails()
 
 void tst_QQmlDebugJS::evaluateInGlobalScope()
 {
-    QSKIP("fixme");
     //void evaluate(QString expr, int frame = -1);
     QCOMPARE(init(true), ConnectSuccess);
 
     m_client->connect();
 
-    do {
+    for (int i = 0; i < 10; ++i) {
         // The engine might not be initialized, yet. We just try until it shows up.
         m_client->evaluate(QLatin1String("console.log('Hello World')"));
-    } while (!QQmlDebugTest::waitForSignal(m_client, SIGNAL(result()), 500));
+        if (QQmlDebugTest::waitForSignal(m_client, SIGNAL(result()), 500))
+            break;
+    }
 
     //Verify the return value of 'console.log()', which is "undefined"
-    QString jsonString(m_client->response);
-    QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
-    QVariantMap body = value.value("body").toMap();
-    QCOMPARE(body.value("type").toString(),QLatin1String("undefined"));
+    QCOMPARE(responseBody(m_client).value("type").toString(), QLatin1String("undefined"));
 }
 
 void tst_QQmlDebugJS::evaluateInLocalScope()
@@ -1386,7 +1384,6 @@ void tst_QQmlDebugJS::evaluateInLocalScope()
 
 void tst_QQmlDebugJS::evaluateInContext()
 {
-    QSKIP("fixme");
     m_connection = new QQmlDebugConnection();
     m_process = new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath)
                                    + "/qmlscene", this);
@@ -1430,11 +1427,7 @@ void tst_QQmlDebugJS::evaluateInContext()
     m_client->evaluate(QLatin1String("a + 10"), -1, object.debugId);
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
 
-    QString jsonString = m_client->response;
-    QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
-
-    QVariantMap body = value.value("body").toMap();
-    QTRY_COMPARE(body.value("value").toInt(), 20);
+    QTRY_COMPARE(responseBody(m_client).value("value").toInt(), 20);
 }
 
 void tst_QQmlDebugJS::getScripts()

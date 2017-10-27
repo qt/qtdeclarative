@@ -249,13 +249,13 @@ QV4::ReturnedValue NativeDebugger::evaluateExpression(const QString &expression)
     QV4::Scope scope(m_engine);
     m_runningJob = true;
 
-    QV4::ExecutionContext *ctx = m_engine->currentContext();
+    QV4::ExecutionContext *ctx = m_engine->currentStackFrame ? m_engine->currentContext()
+                                                             : m_engine->rootContext();
 
     QV4::Script script(ctx, QV4::Compiler::EvalCode, expression);
-    if (QV4::Function *function = m_engine->currentStackFrame->v4Function)
+    if (const QV4::Function *function = m_engine->currentStackFrame
+            ? m_engine->currentStackFrame->v4Function : m_engine->globalCode)
         script.strictMode = function->isStrict();
-    else if (m_engine->globalCode)
-        script.strictMode = m_engine->globalCode->isStrict();
     // In order for property lookups in QML to work, we need to disable fast v4 lookups.
     // That is a side-effect of inheritContext.
     script.inheritContext = true;
