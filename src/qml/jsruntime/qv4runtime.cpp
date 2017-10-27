@@ -1318,7 +1318,7 @@ ReturnedValue Runtime::method_add(ExecutionEngine *engine, const Value &left, co
 {
     TRACE2(left, right);
 
-    if (Q_LIKELY(left.isInteger() && right.isInteger()))
+    if (Q_LIKELY(left.integerCompatible() && right.integerCompatible()))
         return add_int32(left.integerValue(), right.integerValue());
     if (left.isNumber() && right.isNumber())
         return Primitive::fromDouble(left.asDouble() + right.asDouble()).asReturnedValue();
@@ -1331,7 +1331,7 @@ ReturnedValue Runtime::method_sub(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    if (Q_LIKELY(left.isInteger() && right.isInteger()))
+    if (Q_LIKELY(left.integerCompatible() && right.integerCompatible()))
         return sub_int32(left.integerValue(), right.integerValue());
 
     double lval = left.isNumber() ? left.asDouble() : left.toNumberImpl();
@@ -1344,7 +1344,7 @@ ReturnedValue Runtime::method_mul(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    if (Q_LIKELY(left.isInteger() && right.isInteger()))
+    if (Q_LIKELY(left.integerCompatible() && right.integerCompatible()))
         return mul_int32(left.integerValue(), right.integerValue());
 
     double lval = left.isNumber() ? left.asDouble() : left.toNumberImpl();
