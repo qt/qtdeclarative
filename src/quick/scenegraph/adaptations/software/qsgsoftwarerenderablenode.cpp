@@ -155,8 +155,7 @@ void QSGSoftwareRenderableNode::update()
         boundingRect = m_handle.simpleTextureNode->rect();
         break;
     case QSGSoftwareRenderableNode::Image:
-        // There isn't a way to tell, so assume it's not
-        m_isOpaque = false;
+        m_isOpaque = !m_handle.imageNode->pixmap().hasAlphaChannel() && !m_transform.isRotating();
 
         boundingRect = m_handle.imageNode->rect().toRect();
         break;
