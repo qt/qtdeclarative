@@ -189,7 +189,7 @@ void QQuickSpinBoxPrivate::updateValue()
                 QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
                 QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
                 QJSValue val = q->valueFromText().call(QJSValueList() << text.toString() << loc);
-                setValue(val.toInt(), /* modified = */ true, /* allowWrap = */ false);
+                setValue(val.toInt(), /* allowWrap = */ false, /* modified = */ true);
             }
         }
     }
@@ -884,7 +884,7 @@ void QQuickSpinBox::componentComplete()
 {
     Q_D(QQuickSpinBox);
     QQuickControl::componentComplete();
-    if (!d->setValue(d->value, /* modified = */ false, /* allowWrap = */ false)) {
+    if (!d->setValue(d->value, /* allowWrap = */ false, /* modified = */ false)) {
         d->updateUpEnabled();
         d->updateDownEnabled();
     }
