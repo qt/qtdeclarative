@@ -82,13 +82,6 @@ void QSGSoftwarePixmapRenderer::render(QPaintDevice *target)
     setBackgroundSize(QSize(target->width(), target->height()));
     setBackgroundColor(clearColor());
 
-    QPainter painter(target);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setWindow(m_projectionRect);
-    auto rc = static_cast<QSGSoftwareRenderContext *>(context());
-    QPainter *prevPainter = rc->m_activePainter;
-    rc->m_activePainter = &painter;
-
     renderTimer.start();
     buildRenderList();
     qint64 buildRenderListTime = renderTimer.restart();
@@ -100,6 +93,19 @@ void QSGSoftwarePixmapRenderer::render(QPaintDevice *target)
     // different though is that everything should be marked as dirty on a resize.
     optimizeRenderList();
     qint64 optimizeRenderListTime = renderTimer.restart();
+
+    if (!isOpaque() && target->devType() == QInternal::Pixmap) {
+        // This fill here is wasteful, but necessary because it is the only way
+        // to force a QImage based pixmap to have an alpha channel.
+        static_cast<QPixmap *>(target)->fill(Qt::transparent);
+    }
+
+    QPainter painter(target);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setWindow(m_projectionRect);
+    auto rc = static_cast<QSGSoftwareRenderContext *>(context());
+    QPainter *prevPainter = rc->m_activePainter;
+    rc->m_activePainter = &painter;
 
     QRegion paintedRegion = renderNodes(&painter);
     qint64 renderTime = renderTimer.elapsed();
