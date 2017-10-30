@@ -36,6 +36,7 @@
 
 #include <QtCore/private/qfileselector_p.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControls2/private/qquickchecklabel_p.h>
 #include <QtQuickControls2/private/qquickcolor_p.h>
 #include <QtQuickControls2/private/qquickcolorimage_p.h>
 #include <QtQuickControls2/private/qquickiconimage_p.h>
@@ -201,6 +202,8 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");
     qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", colorSingleton);
     qmlRegisterType<QQuickIconLabel>(import, 2, 3, "IconLabel");
+    qmlRegisterType<QQuickCheckLabel>(import, 2, 3, "CheckLabel");
+    qmlRegisterRevision<QQuickText, 6>(import, 2, 3);
 }
 
 QString QtQuickControls2Plugin::name() const

@@ -34,36 +34,16 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.10
-import QtQuick.Controls 2.3
-import QtQuick.Controls.impl 2.3
-import QtQuick.Templates 2.3 as T
+#include "qquickchecklabel_p.h"
 
-T.RadioButton {
-    id: control
+QT_BEGIN_NAMESPACE
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
-    baselineOffset: contentItem.y + contentItem.baselineOffset
-
-    padding: 6
-    spacing: 6
-
-    indicator: RadioIndicator {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-        control: control
-    }
-
-    contentItem: CheckLabel {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
-
-        text: control.text
-        font: control.font
-        color: control.palette.windowText
-    }
+QQuickCheckLabel::QQuickCheckLabel(QQuickItem *parent) :
+    QQuickText(parent)
+{
+    setHAlign(AlignLeft);
+    setVAlign(AlignVCenter);
+    setElideMode(ElideRight);
 }
+
+QT_END_NAMESPACE

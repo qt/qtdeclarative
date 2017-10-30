@@ -34,36 +34,35 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.10
-import QtQuick.Controls 2.3
-import QtQuick.Controls.impl 2.3
-import QtQuick.Templates 2.3 as T
+#ifndef QQUICKCHECKLABEL_P_H
+#define QQUICKCHECKLABEL_P_H
 
-T.RadioButton {
-    id: control
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(contentItem.implicitHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
-    baselineOffset: contentItem.y + contentItem.baselineOffset
+#include <QtQuick/private/qquicktext_p.h>
+#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
-    padding: 6
-    spacing: 6
+QT_BEGIN_NAMESPACE
 
-    indicator: RadioIndicator {
-        x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-        control: control
-    }
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickCheckLabel : public QQuickText
+{
+    Q_OBJECT
 
-    contentItem: CheckLabel {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
+public:
+    explicit QQuickCheckLabel(QQuickItem *parent = nullptr);
+};
 
-        text: control.text
-        font: control.font
-        color: control.palette.windowText
-    }
-}
+QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickCheckLabel)
+
+#endif // QQUICKCHECKLABEL_P_H
