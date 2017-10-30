@@ -170,6 +170,27 @@ void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(const Bui
     defineDefaultProperty(name, function);
 }
 
+void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc), int argumentCount)
+{
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    ScopedString s(scope, e->newIdentifier(name));
+    ExecutionContext *global = e->rootContext();
+    ScopedFunctionObject function(scope, BuiltinFunction::create(global, s, code));
+    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    defineDefaultProperty(s, function);
+}
+
+void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc), int argumentCount)
+{
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    ExecutionContext *global = e->rootContext();
+    ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
+    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    defineDefaultProperty(name, function);
+}
+
 void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const BuiltinFunction *, CallData *),
                                     ReturnedValue (*setter)(const BuiltinFunction *, CallData *))
 {

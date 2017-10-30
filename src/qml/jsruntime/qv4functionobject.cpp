@@ -70,6 +70,20 @@ DEFINE_OBJECT_VTABLE(FunctionObject);
 
 Q_STATIC_ASSERT((Heap::FunctionObject::markTable & Heap::Object::markTable) == Heap::Object::markTable);
 
+void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
+                                ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc))
+{
+    jsCall = code;
+    jsConstruct = QV4::FunctionObject::callAsConstructor;
+
+    Object::init();
+    function = nullptr;
+    this->scope.set(scope->engine(), scope->d());
+    Scope s(scope->engine());
+    ScopedFunctionObject f(s, this);
+    f->init(name, false);
+}
+
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
 {
     jsCall = reinterpret_cast<const ObjectVTable *>(vtable())->call;
@@ -273,70 +287,62 @@ ReturnedValue FunctionPrototype::method_toString(const BuiltinFunction *b, CallD
     return Encode(v4->newString(QStringLiteral("function() { [code] }")));
 }
 
-ReturnedValue FunctionPrototype::method_apply(const BuiltinFunction *b, CallData *callData)
+ReturnedValue FunctionPrototype::method_apply(const QV4::FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    callData->function = callData->thisObject;
-    FunctionObject *o = callData->function.as<FunctionObject>();
-    if (!o)
+    const FunctionObject *f = thisObject->as<FunctionObject>();
+    if (!f)
         return v4->throwTypeError();
-    callData->thisObject = callData->argument(0);
-    callData->accumulator = callData->argument(1);
+    thisObject = argc ? argv : nullptr;
+    if (argc < 2 || argv[1].isNullOrUndefined())
+        return f->call(thisObject, argv, 0);
 
-    if (callData->accumulator.isObject()) {
-        Object *arr = static_cast<Object *>(&callData->accumulator);
-        uint len = arr->getLength();
-        callData->setArgc(len);
+    Object *arr = argv[1].objectValue();
+    if (!arr)
+        return v4->throwTypeError();
 
-        v4->jsStackTop = callData->args + len;
-        if (len) {
-            if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
-                QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();
-                int l = qMin(len, (uint)a->d()->context->argc());
-                memcpy(callData->args, a->d()->context->args(), l*sizeof(Value));
-                for (quint32 i = l; i < len; ++i)
-                    callData->args[i] = Primitive::undefinedValue();
-            } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
-                auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
-                uint alen = sad ? sad->values.size : 0;
-                if (alen > len)
-                    alen = len;
-                for (uint i = 0; i < alen; ++i)
-                    callData->args[i] = sad->data(i);
-                for (quint32 i = alen; i < len; ++i)
-                    callData->args[i] = Primitive::undefinedValue();
-            } else {
-                for (quint32 i = 0; i < len; ++i)
-                    callData->args[i] = arr->getIndexed(i);
-            }
+    uint len = arr->getLength();
+
+    Scope scope(v4);
+    Value *arguments = v4->jsAlloca(len);
+    if (len) {
+        if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
+            QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();
+            int l = qMin(len, (uint)a->d()->context->argc());
+            memcpy(arguments, a->d()->context->args(), l*sizeof(Value));
+            for (quint32 i = l; i < len; ++i)
+                arguments[i] = Primitive::undefinedValue();
+        } else if (arr->arrayType() == Heap::ArrayData::Simple && !arr->protoHasArray()) {
+            auto sad = static_cast<Heap::SimpleArrayData *>(arr->arrayData());
+            uint alen = sad ? sad->values.size : 0;
+            if (alen > len)
+                alen = len;
+            for (uint i = 0; i < alen; ++i)
+                arguments[i] = sad->data(i);
+            for (quint32 i = alen; i < len; ++i)
+                arguments[i] = Primitive::undefinedValue();
+        } else {
+            for (quint32 i = 0; i < len; ++i)
+                arguments[i] = arr->getIndexed(i);
         }
-    } else if (!callData->accumulator.isNullOrUndefined()) {
-        return v4->throwTypeError();
-    } else {
-        callData->setArgc(0);
-        v4->jsStackTop = callData->args;
     }
 
-    return o->call(&callData->thisObject, callData->args, callData->argc());
+    return f->call(thisObject, arguments, len);
 }
 
-ReturnedValue FunctionPrototype::method_call(const BuiltinFunction *b, CallData *callData)
+ReturnedValue FunctionPrototype::method_call(const QV4::FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    ExecutionEngine *engine = b->engine();
-    if (!callData->thisObject.isFunctionObject())
-        return engine->throwTypeError();
+    if (!thisObject->isFunctionObject())
+        return b->engine()->throwTypeError();
 
-    Q_ASSERT(engine->jsStackTop == callData->args + callData->argc());
+    const FunctionObject *f = static_cast<const FunctionObject *>(thisObject);
 
-    callData->function = callData->thisObject;
-    callData->thisObject = callData->argc() ? callData->args[0] : Primitive::undefinedValue();
-    if (callData->argc()) {
-        callData->setArgc(callData->argc() - 1);
-        for (int i = 0, ei = callData->argc(); i < ei; ++i)
-            callData->args[i] = callData->args[i + 1];
-        --engine->jsStackTop;
+    thisObject = argc ? argv : nullptr;
+    if (argc) {
+        ++argv;
+        --argc;
     }
-    return static_cast<FunctionObject &>(callData->function).call(&callData->thisObject, callData->args, callData->argc());
+    return f->call(thisObject, argv, argc);
 }
 
 ReturnedValue FunctionPrototype::method_bind(const BuiltinFunction *b, CallData *callData)

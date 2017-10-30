@@ -84,6 +84,7 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
         Index_ProtoConstructor = 0
     };
 
+    void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc));
     void init(QV4::ExecutionContext *scope, QV4::String *name = 0, bool createProto = false);
     void init(QV4::ExecutionContext *scope, QV4::Function *function, bool createProto = false);
     void init(QV4::ExecutionContext *scope, const QString &name, bool createProto = false);
@@ -197,8 +198,8 @@ struct FunctionPrototype: FunctionObject
     void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_apply(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_call(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_apply(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_bind(const BuiltinFunction *, CallData *callData);
 };
 
@@ -209,6 +210,11 @@ struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
     static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(const BuiltinFunction *, CallData *))
     {
         return scope->engine()->memoryManager->allocObject<BuiltinFunction>(scope, name, code);
+    }
+
+    static Heap::FunctionObject *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc))
+    {
+        return scope->engine()->memoryManager->allocObject<FunctionObject>(scope, name, code);
     }
 
     static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
