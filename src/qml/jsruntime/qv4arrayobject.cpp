@@ -317,10 +317,10 @@ ReturnedValue ArrayPrototype::method_join(const BuiltinFunction *b, CallData *ca
     return Encode(scope.engine->newString(R));
 }
 
-ReturnedValue ArrayPrototype::method_pop(const BuiltinFunction *b, CallData *callData)
+ReturnedValue ArrayPrototype::method_pop(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
-    ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
+    ScopedObject instance(scope, thisObject->toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
 
@@ -347,10 +347,10 @@ ReturnedValue ArrayPrototype::method_pop(const BuiltinFunction *b, CallData *cal
     return result->asReturnedValue();
 }
 
-ReturnedValue ArrayPrototype::method_push(const BuiltinFunction *b, CallData *callData)
+ReturnedValue ArrayPrototype::method_push(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
+    ScopedObject instance(scope, thisObject->toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
 
@@ -359,16 +359,16 @@ ReturnedValue ArrayPrototype::method_push(const BuiltinFunction *b, CallData *ca
 
     uint len = instance->getLength();
 
-    if (len + callData->argc() < len) {
+    if (len + argc < len) {
         // ughh... this goes beyond UINT_MAX
         double l = len;
         ScopedString s(scope);
-        for (int i = 0, ei = callData->argc(); i < ei; ++i) {
+        for (int i = 0, ei = argc; i < ei; ++i) {
             s = Primitive::fromDouble(l + i).toString(scope.engine);
-            if (!instance->put(s, callData->args[i]))
+            if (!instance->put(s, argv[i]))
                 return scope.engine->throwTypeError();
         }
-        double newLen = l + callData->argc();
+        double newLen = l + argc;
         if (!instance->isArrayObject()) {
             if (!instance->put(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(newLen))))
                 return scope.engine->throwTypeError();
@@ -379,17 +379,17 @@ ReturnedValue ArrayPrototype::method_push(const BuiltinFunction *b, CallData *ca
         return Encode(newLen);
     }
 
-    if (!callData->argc())
+    if (!argc)
         ;
     else if (!instance->protoHasArray() && instance->arrayData()->length() <= len && instance->arrayData()->type == Heap::ArrayData::Simple) {
-        instance->arrayData()->vtable()->putArray(instance, len, callData->args, callData->argc());
+        instance->arrayData()->vtable()->putArray(instance, len, argv, argc);
         len = instance->arrayData()->length();
     } else {
-        for (int i = 0, ei = callData->argc(); i < ei; ++i) {
-            if (!instance->putIndexed(len + i, callData->args[i]))
+        for (int i = 0, ei = argc; i < ei; ++i) {
+            if (!instance->putIndexed(len + i, argv[i]))
                 return scope.engine->throwTypeError();
         }
-        len += callData->argc();
+        len += argc;
     }
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(len);

@@ -85,8 +85,8 @@ struct ArrayPrototype: ArrayObject
     static ReturnedValue method_find(const BuiltinFunction *, CallData *callData);
     static ReturnedValue method_findIndex(const BuiltinFunction *, CallData *callData);
     static ReturnedValue method_join(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_pop(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_push(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_pop(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_push(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_reverse(const BuiltinFunction *, CallData *callData);
     static ReturnedValue method_shift(const BuiltinFunction *, CallData *callData);
     static ReturnedValue method_slice(const BuiltinFunction *, CallData *callData);
