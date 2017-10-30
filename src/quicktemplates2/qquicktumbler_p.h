@@ -124,6 +124,8 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_updateItemHeights())
     Q_PRIVATE_SLOT(d_func(), void _q_onViewCurrentIndexChanged())
     Q_PRIVATE_SLOT(d_func(), void _q_onViewCountChanged())
+    Q_PRIVATE_SLOT(d_func(), void _q_onViewOffsetChanged())
+    Q_PRIVATE_SLOT(d_func(), void _q_onViewContentYChanged())
 };
 
 class QQuickTumblerAttachedPrivate;
@@ -136,7 +138,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumblerAttached : public QObject
 
 public:
     explicit QQuickTumblerAttached(QObject *parent = nullptr);
-    ~QQuickTumblerAttached();
 
     QQuickTumbler *tumbler() const;
     qreal displacement() const;
@@ -147,8 +148,6 @@ Q_SIGNALS:
 private:
     Q_DISABLE_COPY(QQuickTumblerAttached)
     Q_DECLARE_PRIVATE(QQuickTumblerAttached)
-
-    Q_PRIVATE_SLOT(d_func(), void _q_calculateDisplacement())
 };
 
 QT_END_NAMESPACE
