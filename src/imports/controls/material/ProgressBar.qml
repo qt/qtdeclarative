@@ -59,9 +59,7 @@ T.ProgressBar {
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 4
-        x: control.leftPadding
-        y: control.topPadding + (control.availableHeight - height) / 2
-        width: control.availableWidth
+        y: (control.height - height) / 2
         height: 4
 
         color: Qt.rgba(control.Material.accentColor.r, control.Material.accentColor.g, control.Material.accentColor.b, 0.25)
