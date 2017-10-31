@@ -22,7 +22,6 @@ QML_CONTROLS = \
     $$PWD/ButtonGroup.qml \
     $$PWD/CheckBox.qml \
     $$PWD/CheckDelegate.qml \
-    $$PWD/CheckIndicator.qml \
     $$PWD/ComboBox.qml \
     $$PWD/Container.qml \
     $$PWD/Control.qml \
