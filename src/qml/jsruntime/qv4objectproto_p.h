@@ -78,33 +78,33 @@ struct ObjectPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_getPrototypeOf(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_getOwnPropertyDescriptor(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_getOwnPropertyNames(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_assign(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_create(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_defineProperty(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_defineProperties(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_seal(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_freeze(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_preventExtensions(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_isSealed(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_isFrozen(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_isExtensible(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_keys(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_getPrototypeOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getOwnPropertyDescriptor(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getOwnPropertyNames(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_assign(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_create(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_defineProperty(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_defineProperties(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_seal(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_freeze(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_preventExtensions(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isSealed(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isFrozen(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isExtensible(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_keys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_toLocaleString(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_valueOf(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_hasOwnProperty(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_isPrototypeOf(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_propertyIsEnumerable(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_hasOwnProperty(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isPrototypeOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_propertyIsEnumerable(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    static ReturnedValue method_defineGetter(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_defineSetter(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_defineGetter(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_defineSetter(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    static ReturnedValue method_get_proto(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_set_proto(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_proto(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_set_proto(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static void toPropertyDescriptor(ExecutionEngine *engine, const Value &v, Property *desc, PropertyAttributes *attrs);
     static ReturnedValue fromPropertyDescriptor(ExecutionEngine *engine, const Property *desc, PropertyAttributes attrs);

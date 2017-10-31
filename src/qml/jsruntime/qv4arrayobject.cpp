@@ -137,7 +137,7 @@ ReturnedValue ArrayPrototype::method_toString(const BuiltinFunction *builtin, Ca
     callData->function = static_cast<Object &>(callData->thisObject).get(static_cast<String *>(&callData->accumulator));
     if (callData->function.isFunctionObject())
         return static_cast<FunctionObject &>(callData->function).call(&callData->thisObject, callData->args, callData->argc());
-    return ObjectPrototype::method_toString(builtin, callData);
+    return ObjectPrototype::method_toString(builtin, &callData->thisObject, callData->args, callData->argc());
 }
 
 ReturnedValue ArrayPrototype::method_toLocaleString(const BuiltinFunction *builtin, CallData *callData)
