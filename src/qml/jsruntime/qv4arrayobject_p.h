@@ -78,30 +78,30 @@ struct ArrayPrototype: ArrayObject
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_isArray(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_toLocaleString(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_concat(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_find(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_findIndex(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_join(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_isArray(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_concat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_find(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_findIndex(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_join(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_pop(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_push(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_reverse(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_shift(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_slice(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_sort(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_splice(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_unshift(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_indexOf(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_lastIndexOf(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_every(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_some(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_forEach(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_map(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_filter(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_reduce(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_reduceRight(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_reverse(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_shift(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_slice(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_splice(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_unshift(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_indexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_lastIndexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_every(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_some(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_forEach(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_map(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_filter(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_reduce(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_reduceRight(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 
