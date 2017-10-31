@@ -73,30 +73,39 @@ void BooleanPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(engine->id_valueOf(), method_valueOf);
 }
 
-ReturnedValue BooleanPrototype::method_toString(const BuiltinFunction *b, CallData *callData)
+static bool value(const Value *thisObject, bool *exception)
 {
-    ExecutionEngine *v4 = b->engine();
-    bool result;
-    if (callData->thisObject.isBoolean()) {
-        result = callData->thisObject.booleanValue();
+    *exception = false;
+    if (thisObject->isBoolean()) {
+        return thisObject->booleanValue();
     } else {
-        const BooleanObject *thisObject = callData->thisObject.as<BooleanObject>();
-        if (!thisObject)
-            return v4->throwTypeError();
-        result = thisObject->value();
+        const BooleanObject *that = thisObject->as<BooleanObject>();
+        if (that)
+            return that->value();
     }
+    *exception = true;
+    return false;
+}
+
+ReturnedValue BooleanPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    bool exception;
+    bool result = ::value(thisObject, &exception);
+    ExecutionEngine *v4 = b->engine();
+    if (exception)
+        return v4->throwTypeError();
 
     return Encode(result ? v4->id_true() : v4->id_false());
 }
 
-ReturnedValue BooleanPrototype::method_valueOf(const BuiltinFunction *b, CallData *callData)
+ReturnedValue BooleanPrototype::method_valueOf(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    if (callData->thisObject.isBoolean())
-        return callData->thisObject.asReturnedValue();
+    bool exception;
+    bool result = ::value(thisObject, &exception);
+    if (exception) {
+        ExecutionEngine *v4 = b->engine();
+        return v4->throwTypeError();
+    }
 
-    const BooleanObject *thisObject = callData->thisObject.as<BooleanObject>();
-    if (!thisObject)
-        return b->engine()->throwTypeError();
-
-    return Encode(thisObject->value());
+    return Encode(result);
 }
