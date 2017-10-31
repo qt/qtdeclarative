@@ -447,15 +447,6 @@ Module {
         defaultProperty: "data"
     }
     Component {
-        prototype: "QQuickRectangle"
-        name: "QtQuick.Controls.impl/RadioIndicator 2.0"
-        exports: ["QtQuick.Controls.impl/RadioIndicator 2.0"]
-        exportMetaObjectRevisions: [0]
-        isComposite: true
-        defaultProperty: "data"
-        Property { name: "control"; type: "QQuickItem"; isPointer: true }
-    }
-    Component {
         prototype: "QQuickRangeSlider"
         name: "QtQuick.Controls/RangeSlider 2.0"
         exports: ["QtQuick.Controls/RangeSlider 2.0"]

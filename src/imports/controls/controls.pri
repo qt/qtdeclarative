@@ -46,7 +46,6 @@ QML_CONTROLS = \
     $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \
     $$PWD/RadioDelegate.qml \
-    $$PWD/RadioIndicator.qml \
     $$PWD/RangeSlider.qml \
     $$PWD/RoundButton.qml \
     $$PWD/ScrollBar.qml \

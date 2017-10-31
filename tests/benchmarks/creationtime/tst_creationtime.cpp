@@ -131,7 +131,7 @@ void tst_CreationTime::controls()
 void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRows(&engine, "controls", "QtQuick/Controls.2", QStringList() << "ApplicationWindow" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls", "QtQuick/Controls.2", QStringList() << "ApplicationWindow" << "SwitchIndicator");
 }
 
 void tst_CreationTime::fusion()

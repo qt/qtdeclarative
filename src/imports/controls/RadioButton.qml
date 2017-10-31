@@ -52,10 +52,28 @@ T.RadioButton {
     padding: 6
     spacing: 6
 
-    indicator: RadioIndicator {
+    // keep in sync with RadioDelegate.qml (shared RadioIndicator.qml was removed for performance reasons)
+    indicator: Rectangle {
+        implicitWidth: 28
+        implicitHeight: 28
+
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-        control: control
+
+        radius: width / 2
+        color: control.down ? control.palette.light : control.palette.base
+        border.width: control.visualFocus ? 2 : 1
+        border.color: control.visualFocus ? control.palette.highlight : control.palette.mid
+
+        Rectangle {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            width: 20
+            height: 20
+            radius: width / 2
+            color: control.palette.text
+            visible: control.checked
+        }
     }
 
     contentItem: CheckLabel {
