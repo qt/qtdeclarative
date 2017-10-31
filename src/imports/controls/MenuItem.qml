@@ -99,8 +99,8 @@ T.MenuItem {
         implicitHeight: 40
         x: 1
         y: 1
-        width: parent.width - 2
-        height: parent.height - 2
+        width: control.width - 2
+        height: control.height - 2
         color: control.down ? control.palette.midlight : control.highlighted ? control.palette.light : "transparent"
     }
 }
