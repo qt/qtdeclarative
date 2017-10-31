@@ -94,54 +94,54 @@ static Q_ALWAYS_INLINE double copySign(double x, double y)
     return ::copysign(x, y);
 }
 
-ReturnedValue MathObject::method_abs(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_abs(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    if (!callData->argc())
+    if (!argc)
         RETURN_RESULT(Encode(qt_qnan()));
 
-    if (callData->args[0].isInteger()) {
-        int i = callData->args[0].integerValue();
+    if (argv[0].isInteger()) {
+        int i = argv[0].integerValue();
         RETURN_RESULT(Encode(i < 0 ? - i : i));
     }
 
-    double v = callData->args[0].toNumber();
+    double v = argv[0].toNumber();
     if (v == 0) // 0 | -0
         RETURN_RESULT(Encode(0));
 
     RETURN_RESULT(Encode(v < 0 ? -v : v));
 }
 
-ReturnedValue MathObject::method_acos(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_acos(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : 2;
+    double v = argc ? argv[0].toNumber() : 2;
     if (v > 1)
         RETURN_RESULT(Encode(qt_qnan()));
 
     RETURN_RESULT(Encode(std::acos(v)));
 }
 
-ReturnedValue MathObject::method_asin(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_asin(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : 2;
+    double v = argc ? argv[0].toNumber() : 2;
     if (v > 1)
         RETURN_RESULT(Encode(qt_qnan()));
     else
         RETURN_RESULT(Encode(std::asin(v)));
 }
 
-ReturnedValue MathObject::method_atan(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_atan(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double v = argc ? argv[0].toNumber() : qt_qnan();
     if (v == 0.0)
         RETURN_RESULT(Encode(v));
     else
         RETURN_RESULT(Encode(std::atan(v)));
 }
 
-ReturnedValue MathObject::method_atan2(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_atan2(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v1 = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
-    double v2 = callData->argc() > 1 ? callData->args[1].toNumber() : qt_qnan();
+    double v1 = argc ? argv[0].toNumber() : qt_qnan();
+    double v2 = argc > 1 ? argv[1].toNumber() : qt_qnan();
 
     if ((v1 < 0) && qt_is_finite(v1) && qt_is_inf(v2) && (copySign(1.0, v2) == 1.0))
         RETURN_RESULT(Encode(copySign(0, -1.0)));
@@ -156,24 +156,24 @@ ReturnedValue MathObject::method_atan2(const BuiltinFunction *, CallData *callDa
     RETURN_RESULT(Encode(std::atan2(v1, v2)));
 }
 
-ReturnedValue MathObject::method_ceil(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_ceil(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double v = argc ? argv[0].toNumber() : qt_qnan();
     if (v < 0.0 && v > -1.0)
         RETURN_RESULT(Encode(copySign(0, -1.0)));
     else
         RETURN_RESULT(Encode(std::ceil(v)));
 }
 
-ReturnedValue MathObject::method_cos(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_cos(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double v = argc ? argv[0].toNumber() : qt_qnan();
     RETURN_RESULT(Encode(std::cos(v)));
 }
 
-ReturnedValue MathObject::method_exp(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_exp(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double v = argc ? argv[0].toNumber() : qt_qnan();
     if (qt_is_inf(v)) {
         if (copySign(1.0, v) == -1.0)
             RETURN_RESULT(Encode(0));
@@ -184,39 +184,39 @@ ReturnedValue MathObject::method_exp(const BuiltinFunction *, CallData *callData
     }
 }
 
-ReturnedValue MathObject::method_floor(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_floor(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double v = argc ? argv[0].toNumber() : qt_qnan();
     Value result = Primitive::fromDouble(std::floor(v));
     result.isInt32();
     RETURN_RESULT(result);
 }
 
-ReturnedValue MathObject::method_log(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_log(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double v = argc ? argv[0].toNumber() : qt_qnan();
     if (v < 0)
         RETURN_RESULT(Encode(qt_qnan()));
     else
         RETURN_RESULT(Encode(std::log(v)));
 }
 
-ReturnedValue MathObject::method_max(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_max(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
     double mx = -qt_inf();
-    for (int i = 0, ei = callData->argc(); i < ei; ++i) {
-        double x = callData->args[i].toNumber();
+    for (int i = 0, ei = argc; i < ei; ++i) {
+        double x = argv[i].toNumber();
         if (x > mx || std::isnan(x))
             mx = x;
     }
     RETURN_RESULT(Encode(mx));
 }
 
-ReturnedValue MathObject::method_min(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_min(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
     double mx = qt_inf();
-    for (int i = 0, ei = callData->argc(); i < ei; ++i) {
-        double x = callData->args[i].toNumber();
+    for (int i = 0, ei = argc; i < ei; ++i) {
+        double x = argv[i].toNumber();
         if ((x == 0 && mx == x && copySign(1.0, x) == -1.0)
                 || (x < mx) || std::isnan(x)) {
             mx = x;
@@ -225,10 +225,10 @@ ReturnedValue MathObject::method_min(const BuiltinFunction *, CallData *callData
     RETURN_RESULT(Encode(mx));
 }
 
-ReturnedValue MathObject::method_pow(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_pow(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double x = callData->argc() > 0 ? callData->args[0].toNumber() : qt_qnan();
-    double y = callData->argc() > 1 ? callData->args[1].toNumber() : qt_qnan();
+    double x = argc > 0 ? argv[0].toNumber() : qt_qnan();
+    double y = argc > 1 ? argv[1].toNumber() : qt_qnan();
 
     if (std::isnan(y))
         RETURN_RESULT(Encode(qt_qnan()));
@@ -275,21 +275,21 @@ ReturnedValue MathObject::method_pow(const BuiltinFunction *, CallData *callData
     RETURN_RESULT(Encode(qt_qnan()));
 }
 
-ReturnedValue MathObject::method_random(const BuiltinFunction *, CallData *)
+ReturnedValue MathObject::method_random(const FunctionObject *, const Value *, const Value *, int)
 {
     RETURN_RESULT(Encode(QRandomGenerator::getReal()));
 }
 
-ReturnedValue MathObject::method_round(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_round(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double v = argc ? argv[0].toNumber() : qt_qnan();
     v = copySign(std::floor(v + 0.5), v);
     RETURN_RESULT(Encode(v));
 }
 
-ReturnedValue MathObject::method_sign(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_sign(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double v = argc ? argv[0].toNumber() : qt_qnan();
 
     if (std::isnan(v))
         RETURN_RESULT(Encode(qt_qnan()));
@@ -300,21 +300,21 @@ ReturnedValue MathObject::method_sign(const BuiltinFunction *, CallData *callDat
     RETURN_RESULT(Encode(std::signbit(v) ? -1 : 1));
 }
 
-ReturnedValue MathObject::method_sin(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_sin(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double v = argc ? argv[0].toNumber() : qt_qnan();
     RETURN_RESULT(Encode(std::sin(v)));
 }
 
-ReturnedValue MathObject::method_sqrt(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_sqrt(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double v = argc ? argv[0].toNumber() : qt_qnan();
     RETURN_RESULT(Encode(std::sqrt(v)));
 }
 
-ReturnedValue MathObject::method_tan(const BuiltinFunction *, CallData *callData)
+ReturnedValue MathObject::method_tan(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    double v = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
+    double v = argc ? argv[0].toNumber() : qt_qnan();
     if (v == 0.0)
         RETURN_RESULT(Encode(v));
     else
