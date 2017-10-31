@@ -194,7 +194,6 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
 #endif
     qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", styleSingleton);
-    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 
     qmlRegisterType<QQuickColorImage>(import, 2, 3, "ColorImage");
     qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");

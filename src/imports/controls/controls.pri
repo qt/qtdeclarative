@@ -56,7 +56,6 @@ QML_CONTROLS = \
     $$PWD/StackView.qml \
     $$PWD/SwipeDelegate.qml \
     $$PWD/Switch.qml \
-    $$PWD/SwitchIndicator.qml \
     $$PWD/SwitchDelegate.qml \
     $$PWD/SwipeView.qml \
     $$PWD/TabBar.qml \

@@ -543,15 +543,6 @@ Module {
         defaultProperty: "data"
     }
     Component {
-        prototype: "QQuickItem"
-        name: "QtQuick.Controls.impl/SwitchIndicator 2.0"
-        exports: ["QtQuick.Controls.impl/SwitchIndicator 2.0"]
-        exportMetaObjectRevisions: [0]
-        isComposite: true
-        defaultProperty: "data"
-        Property { name: "control"; type: "QQuickItem"; isPointer: true }
-    }
-    Component {
         prototype: "QQuickTabBar"
         name: "QtQuick.Controls/TabBar 2.0"
         exports: ["QtQuick.Controls/TabBar 2.0"]
