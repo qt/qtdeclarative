@@ -90,11 +90,11 @@ ReturnedValue QQmlDateExtension::method_toLocaleString(const BuiltinFunction *b,
 {
     Scope scope(b);
     if (callData->argc() > 2)
-        return QV4::DatePrototype::method_toLocaleString(b, callData);
+        return QV4::DatePrototype::method_toLocaleString(b, &callData->thisObject, callData->args, callData->argc());
 
     QV4::DateObject *date = callData->thisObject.as<DateObject>();
     if (!date)
-        return QV4::DatePrototype::method_toLocaleString(b, callData);
+        return QV4::DatePrototype::method_toLocaleString(b, &callData->thisObject, callData->args, callData->argc());
 
     QDateTime dt = date->toQDateTime();
 
@@ -105,7 +105,7 @@ ReturnedValue QQmlDateExtension::method_toLocaleString(const BuiltinFunction *b,
     }
 
     if (!isLocaleObject(callData->args[0]))
-        return QV4::DatePrototype::method_toLocaleString(b, callData); // Use the default Date toLocaleString()
+        return QV4::DatePrototype::method_toLocaleString(b, &callData->thisObject, callData->args, callData->argc()); // Use the default Date toLocaleString()
 
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
 
@@ -133,11 +133,11 @@ ReturnedValue QQmlDateExtension::method_toLocaleTimeString(const BuiltinFunction
 {
     Scope scope(b);
     if (callData->argc() > 2)
-        return QV4::DatePrototype::method_toLocaleTimeString(b, callData);
+        return QV4::DatePrototype::method_toLocaleTimeString(b, &callData->thisObject, callData->args, callData->argc());
 
     QV4::DateObject *date = callData->thisObject.as<DateObject>();
     if (!date)
-        return QV4::DatePrototype::method_toLocaleTimeString(b, callData);
+        return QV4::DatePrototype::method_toLocaleTimeString(b, &callData->thisObject, callData->args, callData->argc());
 
     QDateTime dt = date->toQDateTime();
     QTime time = dt.time();
@@ -149,7 +149,7 @@ ReturnedValue QQmlDateExtension::method_toLocaleTimeString(const BuiltinFunction
     }
 
     if (!isLocaleObject(callData->args[0]))
-        return QV4::DatePrototype::method_toLocaleTimeString(b, callData); // Use the default Date toLocaleTimeString()
+        return QV4::DatePrototype::method_toLocaleTimeString(b, &callData->thisObject, callData->args, callData->argc()); // Use the default Date toLocaleTimeString()
 
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
 
@@ -177,11 +177,11 @@ ReturnedValue QQmlDateExtension::method_toLocaleDateString(const BuiltinFunction
 {
     Scope scope(b);
     if (callData->argc() > 2)
-        return QV4::DatePrototype::method_toLocaleDateString(b, callData);
+        return QV4::DatePrototype::method_toLocaleDateString(b, &callData->thisObject, callData->args, callData->argc());
 
     QV4::DateObject *dateObj = callData->thisObject.as<DateObject>();
     if (!dateObj)
-        return QV4::DatePrototype::method_toLocaleDateString(b, callData);
+        return QV4::DatePrototype::method_toLocaleDateString(b, &callData->thisObject, callData->args, callData->argc());
 
     QDateTime dt = dateObj->toQDateTime();
     QDate date = dt.date();
@@ -193,7 +193,7 @@ ReturnedValue QQmlDateExtension::method_toLocaleDateString(const BuiltinFunction
     }
 
     if (!isLocaleObject(callData->args[0]))
-        return QV4::DatePrototype::method_toLocaleDateString(b, callData); // Use the default Date toLocaleDateString()
+        return QV4::DatePrototype::method_toLocaleDateString(b, &callData->thisObject, callData->args, callData->argc()); // Use the default Date toLocaleDateString()
 
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
 
