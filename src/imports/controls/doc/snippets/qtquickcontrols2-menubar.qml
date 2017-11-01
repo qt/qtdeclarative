@@ -37,12 +37,12 @@ ApplicationWindow {
 
     //! [skipfrom]
     Component.onCompleted: {
-        header.itemAt(0).triggered()
-        header.itemAt(0).menu.itemAt(2).highlighted = true
+        menuBar.itemAt(0).triggered()
+        menuBar.itemAt(0).menu.itemAt(2).highlighted = true
     }
     //! [skipto]
 
-    header: MenuBar {
+    menuBar: MenuBar {
         Menu {
             title: qsTr("File")
             Action { text: qsTr("New...") }
