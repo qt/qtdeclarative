@@ -200,42 +200,41 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("trim"), method_trim);
 }
 
-static QString getThisString(ExecutionEngine *v4, CallData *callData)
+static QString getThisString(ExecutionEngine *v4, const Value *thisObject)
 {
-    Value *t = &callData->thisObject;
-    if (String *s = t->stringValue())
+    if (String *s = thisObject->stringValue())
         return s->toQString();
-    if (StringObject *thisString = t->as<StringObject>())
+    if (const StringObject *thisString = thisObject->as<StringObject>())
         return thisString->d()->string->toQString();
-    if (t->isUndefined() || t->isNull()) {
+    if (thisObject->isUndefined() || thisObject->isNull()) {
         v4->throwTypeError();
         return QString();
     }
-    return t->toQString();
+    return thisObject->toQString();
 }
 
-ReturnedValue StringPrototype::method_toString(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    if (callData->thisObject.isString())
-        RETURN_RESULT(callData->thisObject);
+    if (thisObject->isString())
+        return thisObject->asReturnedValue();
 
     ExecutionEngine *v4 = b->engine();
-    StringObject *o = callData->thisObject.as<StringObject>();
+    const StringObject *o = thisObject->as<StringObject>();
     if (!o)
         return v4->throwTypeError();
     return o->d()->string->asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_charAt(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_charAt(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString str = getThisString(v4, callData);
+    const QString str = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     int pos = 0;
-    if (callData->argc() > 0)
-        pos = (int) callData->args[0].toInteger();
+    if (argc > 0)
+        pos = (int) argv[0].toInteger();
 
     QString result;
     if (pos >= 0 && pos < str.length())
@@ -244,16 +243,16 @@ ReturnedValue StringPrototype::method_charAt(const BuiltinFunction *b, CallData 
     return Encode(v4->newString(result));
 }
 
-ReturnedValue StringPrototype::method_charCodeAt(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_charCodeAt(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString str = getThisString(v4, callData);
+    const QString str = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     int pos = 0;
-    if (callData->argc() > 0)
-        pos = (int) callData->args[0].toInteger();
+    if (argc > 0)
+        pos = (int) argv[0].toInteger();
 
 
     if (pos >= 0 && pos < str.length())
@@ -262,17 +261,17 @@ ReturnedValue StringPrototype::method_charCodeAt(const BuiltinFunction *b, CallD
     return Encode(qt_qnan());
 }
 
-ReturnedValue StringPrototype::method_concat(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_concat(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    QString value = getThisString(v4, callData);
+    QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     Scope scope(v4);
     ScopedString s(scope);
-    for (int i = 0; i < callData->argc(); ++i) {
-        s = callData->args[i].toString(scope.engine);
+    for (int i = 0; i < argc; ++i) {
+        s = argv[i].toString(scope.engine);
         if (v4->hasException)
             return QV4::Encode::undefined();
 
@@ -283,23 +282,23 @@ ReturnedValue StringPrototype::method_concat(const BuiltinFunction *b, CallData 
     return Encode(v4->newString(value));
 }
 
-ReturnedValue StringPrototype::method_endsWith(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_endsWith(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString value = getThisString(v4, callData);
+    const QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     QString searchString;
-    if (callData->argc()) {
-        if (callData->args[0].as<RegExpObject>())
+    if (argc) {
+        if (argv[0].as<RegExpObject>())
             return v4->throwTypeError();
-        searchString = callData->args[0].toQString();
+        searchString = argv[0].toQString();
     }
 
     int pos = value.length();
-    if (callData->argc() > 1)
-        pos = (int) callData->args[1].toInteger();
+    if (argc > 1)
+        pos = (int) argv[1].toInteger();
 
     if (pos == value.length())
         RETURN_RESULT(Encode(value.endsWith(searchString)));
@@ -308,20 +307,20 @@ ReturnedValue StringPrototype::method_endsWith(const BuiltinFunction *b, CallDat
     return Encode(stringToSearch.endsWith(searchString));
 }
 
-ReturnedValue StringPrototype::method_indexOf(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_indexOf(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString value = getThisString(v4, callData);
+    const QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     QString searchString;
-    if (callData->argc())
-        searchString = callData->args[0].toQString();
+    if (argc)
+        searchString = argv[0].toQString();
 
     int pos = 0;
-    if (callData->argc() > 1)
-        pos = (int) callData->args[1].toInteger();
+    if (argc > 1)
+        pos = (int) argv[1].toInteger();
 
     int index = -1;
     if (! value.isEmpty())
@@ -330,23 +329,23 @@ ReturnedValue StringPrototype::method_indexOf(const BuiltinFunction *b, CallData
     return Encode(index);
 }
 
-ReturnedValue StringPrototype::method_includes(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_includes(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString value = getThisString(v4, callData);
+    const QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     QString searchString;
-    if (callData->argc()) {
-        if (callData->args[0].as<RegExpObject>())
+    if (argc) {
+        if (argv[0].as<RegExpObject>())
             return v4->throwTypeError();
-        searchString = callData->args[0].toQString();
+        searchString = argv[0].toQString();
     }
 
     int pos = 0;
-    if (callData->argc() > 1) {
-        Value &posArg = callData->args[1];
+    if (argc > 1) {
+        const Value &posArg = argv[1];
         pos = (int) posArg.toInteger();
         if (!posArg.isInteger() && posArg.isNumber() && qIsInf(posArg.toNumber()))
             pos = value.length();
@@ -359,18 +358,18 @@ ReturnedValue StringPrototype::method_includes(const BuiltinFunction *b, CallDat
     return Encode(stringToSearch.contains(searchString));
 }
 
-ReturnedValue StringPrototype::method_lastIndexOf(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_lastIndexOf(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString value = getThisString(v4, callData);
+    const QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     QString searchString;
-    if (callData->argc())
-        searchString = callData->args[0].toQString();
+    if (argc)
+        searchString = argv[0].toQString();
 
-    double position = callData->argc() > 1 ? RuntimeHelpers::toNumber(callData->args[1]) : +qInf();
+    double position = argc > 1 ? RuntimeHelpers::toNumber(argv[1]) : +qInf();
     if (std::isnan(position))
         position = +qInf();
     else
@@ -385,66 +384,56 @@ ReturnedValue StringPrototype::method_lastIndexOf(const BuiltinFunction *b, Call
     return Encode(index);
 }
 
-ReturnedValue StringPrototype::method_localeCompare(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_localeCompare(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString value = getThisString(v4, callData);
+    const QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    if (callData->argc() < 1)
-        callData->args[0] = Encode::undefined();
-
-    const QString that = callData->args[0].toQString();
+    const QString that = (argc ? argv[0] : Primitive::undefinedValue()).toQString();
     return Encode(QString::localeAwareCompare(value, that));
 }
 
-ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_match(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    if (callData->thisObject.isNullOrUndefined())
+    if (thisObject->isNullOrUndefined())
         return v4->throwTypeError();
 
-    callData->thisObject = callData->thisObject.toString(v4);
+    Scope scope(v4);
+    ScopedString s(scope, thisObject->toString(v4));
     if (v4->hasException)
         return Encode::undefined();
 
-    Q_ASSERT(v4->jsStackTop == callData->args + callData->argc());
-    if (!callData->argc())
-        callData->args[0] = Encode::undefined();
-    callData->setArgc(1);
-    v4->jsStackTop = callData->args + 1;
-
-    Scope scope(v4);
-
-    if (!callData->args[0].as<RegExpObject>()) {
+    Scoped<RegExpObject> that(scope, argc ? argv[0] : Primitive::undefinedValue());
+    if (!that) {
         // convert args[0] to a regexp
-        callData->args[0] = RegExpCtor::callAsConstructor(b, callData->args, callData->argc());
+        that = RegExpCtor::callAsConstructor(b, argv, argc);
         if (v4->hasException)
             return Encode::undefined();
     }
+    Q_ASSERT(!!that);
 
-    bool global = static_cast<RegExpObject *>(&callData->args[0])->global();
+    bool global = that->global();
 
-    qSwap(callData->thisObject, callData->args[0]);
     if (!global)
-        return RegExpPrototype::method_exec(b, &callData->thisObject, callData->args, callData->argc());
+        return RegExpPrototype::method_exec(b, that, s, 1);
 
     // rx is now in thisObject
-    RegExpObject *rx = static_cast<RegExpObject *>(&callData->thisObject);
-    rx->setLastIndex(0);
+    that->setLastIndex(0);
     ScopedArrayObject a(scope, scope.engine->newArrayObject());
 
     int previousLastIndex = 0;
     uint n = 0;
     while (1) {
-        Value result = Primitive::fromReturnedValue(RegExpPrototype::execFirstMatch(b, &callData->thisObject, callData->args, callData->argc()));
+        Value result = Primitive::fromReturnedValue(RegExpPrototype::execFirstMatch(b, that, s, 1));
         if (result.isNull())
             break;
-        int index = rx->lastIndex();
+        int index = that->lastIndex();
         if (previousLastIndex == index) {
             previousLastIndex = index + 1;
-            rx->setLastIndex(previousLastIndex);
+            that->setLastIndex(previousLastIndex);
         } else {
             previousLastIndex = index;
         }
@@ -457,14 +446,14 @@ ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *
         return a.asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_repeat(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_repeat(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString value = getThisString(v4, callData);
+    const QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    double repeats = callData->args[0].toInteger();
+    double repeats = (argc ? argv[0] : Primitive::undefinedValue()).toInteger();
 
     if (repeats < 0 || qIsInf(repeats))
         return v4->throwRangeError(QLatin1String("Invalid count value"));
@@ -518,13 +507,13 @@ static void appendReplacementString(QString *result, const QString &input, const
     }
 }
 
-ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_replace(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     QString string;
-    if (StringObject *thisString = callData->thisObject.as<StringObject>())
+    if (const StringObject *thisString = thisObject->as<StringObject>())
         string = thisString->d()->string->toQString();
     else
-        string = callData->thisObject.toQString();
+        string = thisObject->toQString();
 
     int numCaptures = 0;
     int numStringMatches = 0;
@@ -534,7 +523,7 @@ ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData
     uint *matchOffsets = _matchOffsets;
 
     Scope scope(b);
-    ScopedValue searchValue(scope, callData->argument(0));
+    ScopedValue searchValue(scope, argc ? argv[0] : Primitive::undefinedValue());
     Scoped<RegExpObject> regExp(scope, searchValue);
     if (regExp) {
         uint offset = 0;
@@ -578,13 +567,12 @@ ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData
 
     QString result;
     ScopedValue replacement(scope);
-    ScopedValue replaceValue(scope, callData->argument(1));
+    ScopedValue replaceValue(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
     ScopedFunctionObject searchCallback(scope, replaceValue);
     if (!!searchCallback) {
         result.reserve(string.length() + 10*numStringMatches);
         ScopedValue entry(scope);
-        JSCallData jsCallData(scope, numCaptures + 2);
-        *jsCallData->thisObject = Primitive::undefinedValue();
+        Value *arguments = scope.alloc(numCaptures + 2);
         int lastEnd = 0;
         for (int i = 0; i < numStringMatches; ++i) {
             for (int k = 0; k < numCaptures; ++k) {
@@ -594,15 +582,16 @@ ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData
                 entry = Primitive::undefinedValue();
                 if (start != JSC::Yarr::offsetNoMatch && end != JSC::Yarr::offsetNoMatch)
                     entry = scope.engine->newString(string.mid(start, end - start));
-                jsCallData->args[k] = entry;
+                arguments[k] = entry;
             }
             uint matchStart = matchOffsets[i * numCaptures * 2];
             Q_ASSERT(matchStart >= static_cast<uint>(lastEnd));
             uint matchEnd = matchOffsets[i * numCaptures * 2 + 1];
-            jsCallData->args[numCaptures] = Primitive::fromUInt32(matchStart);
-            jsCallData->args[numCaptures + 1] = scope.engine->newString(string);
+            arguments[numCaptures] = Primitive::fromUInt32(matchStart);
+            arguments[numCaptures + 1] = scope.engine->newString(string);
 
-            replacement = searchCallback->call(jsCallData);
+            Value that = Primitive::undefinedValue();
+            replacement = searchCallback->call(&that, arguments, numCaptures + 2);
             result += string.midRef(lastEnd, matchStart - lastEnd);
             result += replacement->toQString();
             lastEnd = matchEnd;
@@ -633,24 +622,19 @@ ReturnedValue StringPrototype::method_replace(const BuiltinFunction *b, CallData
     return Encode(scope.engine->newString(result));
 }
 
-ReturnedValue StringPrototype::method_search(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_search(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedValue regExpObj(scope);
-    QString string = getThisString(scope.engine, callData);
-    regExpObj = callData->argument(0);
+    QString string = getThisString(scope.engine, thisObject);
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    RegExpObject *regExp = regExpObj->as<RegExpObject>();
+    Scoped<RegExpObject> regExp(scope, argc ? argv[0] : Primitive::undefinedValue());
     if (!regExp) {
-        JSCallData jsCallData(scope, 1);
-        jsCallData->args[0] = regExpObj;
-        regExpObj = scope.engine->regExpCtor()->callAsConstructor(jsCallData);
+        regExp = scope.engine->regExpCtor()->callAsConstructor(argv, 1);
         if (scope.engine->hasException)
             return QV4::Encode::undefined();
 
-        regExp = regExpObj->as<RegExpObject>();
         Q_ASSERT(regExp);
     }
     Scoped<RegExp> re(scope, regExp->value());
@@ -662,18 +646,18 @@ ReturnedValue StringPrototype::method_search(const BuiltinFunction *b, CallData 
         return Encode(result);
 }
 
-ReturnedValue StringPrototype::method_slice(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString text = getThisString(v4, callData);
+    const QString text = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     const double length = text.length();
 
-    double start = callData->argc() ? callData->args[0].toInteger() : 0;
-    double end = (callData->argc() < 2 || callData->args[1].isUndefined())
-            ? length : callData->args[1].toInteger();
+    double start = argc ? argv[0].toInteger() : 0;
+    double end = (argc < 2 || argv[1].isUndefined())
+            ? length : argv[1].toInteger();
 
     if (start < 0)
         start = qMax(length + start, 0.);
@@ -692,16 +676,16 @@ ReturnedValue StringPrototype::method_slice(const BuiltinFunction *b, CallData *
     return Encode(v4->newString(text.mid(intStart, count)));
 }
 
-ReturnedValue StringPrototype::method_split(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_split(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    QString text = getThisString(v4, callData);
+    QString text = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     Scope scope(v4);
-    ScopedValue separatorValue(scope, callData->argument(0));
-    ScopedValue limitValue(scope, callData->argument(1));
+    ScopedValue separatorValue(scope, argc ? argv[0] : Primitive::undefinedValue());
+    ScopedValue limitValue(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
 
     ScopedArrayObject array(scope, scope.engine->newArrayObject());
 
@@ -775,23 +759,23 @@ ReturnedValue StringPrototype::method_split(const BuiltinFunction *b, CallData *
     return array.asReturnedValue();
 }
 
-ReturnedValue StringPrototype::method_startsWith(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_startsWith(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString value = getThisString(v4, callData);
+    const QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     QString searchString;
-    if (callData->argc()) {
-        if (callData->args[0].as<RegExpObject>())
+    if (argc) {
+        if (argv[0].as<RegExpObject>())
             return v4->throwTypeError();
-        searchString = callData->args[0].toQString();
+        searchString = argv[0].toQString();
     }
 
     int pos = 0;
-    if (callData->argc() > 1)
-        pos = (int) callData->args[1].toInteger();
+    if (argc > 1)
+        pos = (int) argv[1].toInteger();
 
     if (pos == 0)
         return Encode(value.startsWith(searchString));
@@ -800,20 +784,20 @@ ReturnedValue StringPrototype::method_startsWith(const BuiltinFunction *b, CallD
     RETURN_RESULT(Encode(stringToSearch.startsWith(searchString)));
 }
 
-ReturnedValue StringPrototype::method_substr(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_substr(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString value = getThisString(v4, callData);
+    const QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     double start = 0;
-    if (callData->argc() > 0)
-        start = callData->args[0].toInteger();
+    if (argc > 0)
+        start = argv[0].toInteger();
 
     double length = +qInf();
-    if (callData->argc() > 1)
-        length = callData->args[1].toInteger();
+    if (argc > 1)
+        length = argv[1].toInteger();
 
     double count = value.length();
     if (start < 0)
@@ -826,10 +810,10 @@ ReturnedValue StringPrototype::method_substr(const BuiltinFunction *b, CallData 
     return Encode(v4->newString(value.mid(x, y)));
 }
 
-ReturnedValue StringPrototype::method_substring(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_substring(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString value = getThisString(v4, callData);
+    const QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
@@ -838,11 +822,11 @@ ReturnedValue StringPrototype::method_substring(const BuiltinFunction *b, CallDa
     double start = 0;
     double end = length;
 
-    if (callData->argc() > 0)
-        start = callData->args[0].toInteger();
+    if (argc > 0)
+        start = argv[0].toInteger();
 
-    if (callData->argc() > 1 && !callData->args[1].isUndefined())
-        end = callData->args[1].toInteger();
+    if (argc > 1 && !argv[1].isUndefined())
+        end = argv[1].toInteger();
 
     if (std::isnan(start) || start < 0)
         start = 0;
@@ -867,51 +851,51 @@ ReturnedValue StringPrototype::method_substring(const BuiltinFunction *b, CallDa
     return Encode(v4->newString(value.mid(x, y)));
 }
 
-ReturnedValue StringPrototype::method_toLowerCase(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_toLowerCase(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString value = getThisString(v4, callData);
+    const QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     return Encode(v4->newString(value.toLower()));
 }
 
-ReturnedValue StringPrototype::method_toLocaleLowerCase(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_toLocaleLowerCase(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    return method_toLowerCase(b, callData);
+    return method_toLowerCase(b, thisObject, argv, argc);
 }
 
-ReturnedValue StringPrototype::method_toUpperCase(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_toUpperCase(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString value = getThisString(v4, callData);
+    const QString value = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 
     return Encode(v4->newString(value.toUpper()));
 }
 
-ReturnedValue StringPrototype::method_toLocaleUpperCase(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_toLocaleUpperCase(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    return method_toUpperCase(b, callData);
+    return method_toUpperCase(b, thisObject, argv, argc);
 }
 
-ReturnedValue StringPrototype::method_fromCharCode(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_fromCharCode(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    QString str(callData->argc(), Qt::Uninitialized);
+    QString str(argc, Qt::Uninitialized);
     QChar *ch = str.data();
-    for (int i = 0, ei = callData->argc(); i < ei; ++i) {
-        *ch = QChar(callData->args[i].toUInt16());
+    for (int i = 0, ei = argc; i < ei; ++i) {
+        *ch = QChar(argv[i].toUInt16());
         ++ch;
     }
     return Encode(b->engine()->newString(str));
 }
 
-ReturnedValue StringPrototype::method_trim(const BuiltinFunction *b, CallData *callData)
+ReturnedValue StringPrototype::method_trim(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
-    QString s = getThisString(v4, callData);
+    QString s = getThisString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
 

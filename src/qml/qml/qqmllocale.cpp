@@ -840,10 +840,10 @@ void QQmlLocale::registerStringLocaleCompare(QV4::ExecutionEngine *engine)
 ReturnedValue QQmlLocale::method_localeCompare(const BuiltinFunction *b, CallData *callData)
 {
     if (callData->argc() != 1 || (!callData->args[0].isString() && !callData->args[0].as<StringObject>()))
-        return QV4::StringPrototype::method_localeCompare(b, callData);
+        return QV4::StringPrototype::method_localeCompare(b, &callData->thisObject, callData->args, callData->argc());
 
     if (!callData->thisObject.isString() && !callData->thisObject.as<StringObject>())
-        return QV4::StringPrototype::method_localeCompare(b, callData);
+        return QV4::StringPrototype::method_localeCompare(b, &callData->thisObject, callData->args, callData->argc());
 
     QString thisString = callData->thisObject.toQStringNoThrow();
     QString thatString = callData->args[0].toQStringNoThrow();
