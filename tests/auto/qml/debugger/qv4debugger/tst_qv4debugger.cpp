@@ -692,7 +692,6 @@ void tst_qv4debugger::pauseOnThrow()
 
 void tst_qv4debugger::breakInCatch()
 {
-    QSKIP("fixme");
     QString script =
             "try {\n"
             "    throw 'catch...'\n"
@@ -773,7 +772,6 @@ void tst_qv4debugger::evaluateExpression()
 
 void tst_qv4debugger::stepToEndOfScript()
 {
-    QSKIP("fixme");
     QFETCH(bool, redundantRefs);
     m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
 
