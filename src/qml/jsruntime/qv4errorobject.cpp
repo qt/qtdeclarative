@@ -152,10 +152,10 @@ const char *ErrorObject::className(Heap::ErrorObject::ErrorType t)
     Q_UNREACHABLE();
 }
 
-ReturnedValue ErrorObject::method_get_stack(const BuiltinFunction *b, CallData *callData)
+ReturnedValue ErrorObject::method_get_stack(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
-    ErrorObject *This = callData->thisObject.as<ErrorObject>();
+    const ErrorObject *This = thisObject->as<ErrorObject>();
     if (!This)
         return v4->throwTypeError();
     if (!This->d()->stack) {
@@ -323,10 +323,10 @@ void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj, He
     obj->defineDefaultProperty(engine->id_toString(), method_toString, 0);
 }
 
-ReturnedValue ErrorPrototype::method_toString(const BuiltinFunction *b, CallData *callData)
+ReturnedValue ErrorPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
-    Object *o = callData->thisObject.as<Object>();
+    const Object *o = thisObject->as<Object>();
     if (!o)
         return v4->throwTypeError();
 
