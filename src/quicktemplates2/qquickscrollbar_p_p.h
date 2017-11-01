@@ -68,6 +68,17 @@ public:
         return bar->d_func();
     }
 
+    struct VisualArea
+    {
+        VisualArea(qreal pos, qreal sz)
+            : position(pos), size(sz) { }
+        qreal position;
+        qreal size;
+    };
+    VisualArea visualArea() const;
+
+    qreal logicalPosition(qreal position) const;
+
     qreal snapPosition(qreal position) const;
     qreal positionAt(const QPointF &point) const;
     void setInteractive(bool interactive);
@@ -79,10 +90,13 @@ public:
     void handleRelease(const QPointF &point) override;
     void handleUngrab() override;
 
+    void visualAreaChange(const VisualArea &newVisualArea, const VisualArea &oldVisualArea);
+
     qreal size;
     qreal position;
     qreal stepSize;
     qreal offset;
+    qreal minimumSize;
     bool active;
     bool pressed;
     bool moving;

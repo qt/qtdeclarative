@@ -160,6 +160,7 @@ QQuickScrollBarPrivate::QQuickScrollBarPrivate()
       position(0),
       stepSize(0),
       offset(0),
+      minimumSize(0),
       active(false),
       pressed(false),
       moving(false),
@@ -169,6 +170,26 @@ QQuickScrollBarPrivate::QQuickScrollBarPrivate()
       snapMode(QQuickScrollBar::NoSnap),
       policy(QQuickScrollBar::AsNeeded)
 {
+}
+
+QQuickScrollBarPrivate::VisualArea QQuickScrollBarPrivate::visualArea() const
+{
+    qreal visualPos = position;
+    if (minimumSize > size)
+        visualPos = position / (1.0 - size) * (1.0 - minimumSize);
+
+    qreal visualSize = qBound<qreal>(0, qMax(size, minimumSize) + qMin<qreal>(0, visualPos), 1.0 - visualPos);
+
+    visualPos = qBound<qreal>(0, visualPos, 1.0 - visualSize);
+
+    return VisualArea(visualPos, visualSize);
+}
+
+qreal QQuickScrollBarPrivate::logicalPosition(qreal position) const
+{
+    if (minimumSize > size)
+        return position * (1.0 - size) / (1.0 - minimumSize);
+    return position;
 }
 
 qreal QQuickScrollBarPrivate::snapPosition(qreal position) const
@@ -184,9 +205,9 @@ qreal QQuickScrollBarPrivate::positionAt(const QPointF &point) const
 {
     Q_Q(const QQuickScrollBar);
     if (orientation == Qt::Horizontal)
-        return (point.x() - q->leftPadding()) / q->availableWidth();
+        return logicalPosition(point.x() - q->leftPadding()) / q->availableWidth();
     else
-        return (point.y() - q->topPadding()) / q->availableHeight();
+        return logicalPosition(point.y() - q->topPadding()) / q->availableHeight();
 }
 
 void QQuickScrollBarPrivate::setInteractive(bool enabled)
@@ -230,15 +251,14 @@ void QQuickScrollBarPrivate::resizeContent()
 
     // - negative overshoot (pos < 0): clamp the pos to 0, and deduct the overshoot from the size
     // - positive overshoot (pos + size > 1): clamp the size to 1-pos
-    const qreal clampedSize = qBound<qreal>(0, size + qMin<qreal>(0, position), 1.0 - position);
-    const qreal clampedPos = qBound<qreal>(0, position, 1.0 - clampedSize);
+    const VisualArea visual = visualArea();
 
     if (orientation == Qt::Horizontal) {
-        contentItem->setPosition(QPointF(q->leftPadding() + clampedPos * q->availableWidth(), q->topPadding()));
-        contentItem->setSize(QSizeF(q->availableWidth() * clampedSize, q->availableHeight()));
+        contentItem->setPosition(QPointF(q->leftPadding() + visual.position * q->availableWidth(), q->topPadding()));
+        contentItem->setSize(QSizeF(q->availableWidth() * visual.size, q->availableHeight()));
     } else {
-        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + clampedPos * q->availableHeight()));
-        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * clampedSize));
+        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + visual.position * q->availableHeight()));
+        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * visual.size));
     }
 }
 
@@ -247,8 +267,9 @@ void QQuickScrollBarPrivate::handlePress(const QPointF &point)
     Q_Q(QQuickScrollBar);
     QQuickControlPrivate::handlePress(point);
     offset = positionAt(point) - position;
-    if (offset < 0 || offset > size)
-        offset = size / 2;
+    qreal sz = qMax(size, logicalPosition(minimumSize));
+    if (offset < 0 || offset > sz)
+        offset = sz / 2;
     q->setPressed(true);
 }
 
@@ -282,6 +303,15 @@ void QQuickScrollBarPrivate::handleUngrab()
     q->setPressed(false);
 }
 
+void QQuickScrollBarPrivate::visualAreaChange(const VisualArea &newVisualArea, const VisualArea &oldVisualArea)
+{
+    Q_Q(QQuickScrollBar);
+    if (!qFuzzyCompare(newVisualArea.size, oldVisualArea.size))
+        emit q->visualSizeChanged();
+    if (!qFuzzyCompare(newVisualArea.position, oldVisualArea.position))
+        emit q->visualPositionChanged();
+}
+
 QQuickScrollBar::QQuickScrollBar(QQuickItem *parent)
     : QQuickControl(*(new QQuickScrollBarPrivate), parent)
 {
@@ -306,6 +336,8 @@ QQuickScrollBarAttached *QQuickScrollBar::qmlAttachedProperties(QObject *object)
 
     This property is automatically set when the scroll bar is
     \l {Attaching ScrollBar to a Flickable}{attached to a flickable}.
+
+    \sa minimumSize, visualSize
 */
 qreal QQuickScrollBar::size() const
 {
@@ -319,10 +351,12 @@ void QQuickScrollBar::setSize(qreal size)
     if (qFuzzyCompare(d->size, size))
         return;
 
+    auto oldVisualArea = d->visualArea();
     d->size = size;
     if (isComponentComplete())
         d->resizeContent();
     emit sizeChanged();
+    d->visualAreaChange(d->visualArea(), oldVisualArea);
 }
 
 /*!
@@ -334,6 +368,8 @@ void QQuickScrollBar::setSize(qreal size)
 
     This property is automatically set when the scroll bar is
     \l {Attaching ScrollBar to a Flickable}{attached to a flickable}.
+
+    \sa visualPosition
 */
 qreal QQuickScrollBar::position() const
 {
@@ -347,10 +383,12 @@ void QQuickScrollBar::setPosition(qreal position)
     if (qFuzzyCompare(d->position, position))
         return;
 
+    auto oldVisualArea = d->visualArea();
     d->position = position;
     if (isComponentComplete())
         d->resizeContent();
     emit positionChanged();
+    d->visualAreaChange(d->visualArea(), oldVisualArea);
 }
 
 /*!
@@ -591,6 +629,64 @@ bool QQuickScrollBar::isVertical() const
 }
 
 /*!
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty real QtQuick.Controls::ScrollBar::minimumSize
+
+    This property holds the minimum size of the scroll bar, scaled to \c {0.0 - 1.0}.
+
+    \sa size, visualSize, visualPosition
+*/
+qreal QQuickScrollBar::minimumSize() const
+{
+    Q_D(const QQuickScrollBar);
+    return d->minimumSize;
+}
+
+void QQuickScrollBar::setMinimumSize(qreal minimumSize)
+{
+    Q_D(QQuickScrollBar);
+    if (qFuzzyCompare(d->minimumSize, minimumSize))
+        return;
+
+    auto oldVisualArea = d->visualArea();
+    d->minimumSize = minimumSize;
+    if (isComponentComplete())
+        d->resizeContent();
+    emit minimumSizeChanged();
+    d->visualAreaChange(d->visualArea(), oldVisualArea);
+}
+
+/*!
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty real QtQuick.Controls::ScrollBar::visualSize
+
+    This property holds the effective visual size of the scroll bar,
+    which may be limited by the \l {minimumSize}{minimum size}.
+
+    \sa size, minimumSize
+*/
+qreal QQuickScrollBar::visualSize() const
+{
+    Q_D(const QQuickScrollBar);
+    return d->visualArea().size;
+}
+
+/*!
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty real QtQuick.Controls::ScrollBar::visualPosition
+
+    This property holds the effective visual position of the scroll bar,
+    which may be limited by the \l {minimumSize}{minimum size}.
+
+    \sa position, minimumSize
+*/
+qreal QQuickScrollBar::visualPosition() const
+{
+    Q_D(const QQuickScrollBar);
+    return d->visualArea().position;
+}
+
+/*!
     \qmlmethod void QtQuick.Controls::ScrollBar::increase()
 
     Increases the position by \l stepSize or \c 0.1 if stepSize is \c 0.0.
@@ -776,9 +872,9 @@ void QQuickScrollBarAttachedPrivate::scrollHorizontal()
 {
     QQuickFriendlyFlickable *f = reinterpret_cast<QQuickFriendlyFlickable *>(flickable);
 
-    const qreal viewwidth = f->width();
-    const qreal maxxextent = -f->maxXExtent() + f->minXExtent();
-    qreal cx = horizontal->position() * (maxxextent + viewwidth) - f->minXExtent();
+    const qreal extent = f->contentWidth() - f->minXExtent();
+    const qreal cx = horizontal->position() * extent;
+
     if (!qIsNaN(cx) && !qFuzzyCompare(cx, flickable->contentX()))
         flickable->setContentX(cx);
 }
@@ -787,9 +883,9 @@ void QQuickScrollBarAttachedPrivate::scrollVertical()
 {
     QQuickFriendlyFlickable *f = reinterpret_cast<QQuickFriendlyFlickable *>(flickable);
 
-    const qreal viewheight = f->height();
-    const qreal maxyextent = -f->maxYExtent() + f->minYExtent();
-    qreal cy = vertical->position() * (maxyextent + viewheight) - f->minYExtent();
+    const qreal extent = f->contentHeight() - f->minYExtent();
+    const qreal cy = vertical->position() * extent;
+
     if (!qIsNaN(cy) && !qFuzzyCompare(cy, flickable->contentY()))
         flickable->setContentY(cy);
 }
