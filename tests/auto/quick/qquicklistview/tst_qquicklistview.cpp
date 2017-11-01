@@ -254,6 +254,7 @@ private slots:
 
     void QTBUG_50105();
     void keyNavigationEnabled();
+    void QTBUG_61269_appendDuringScrollDown();
     void QTBUG_50097_stickyHeader_positionViewAtIndex();
     void itemFiltered();
     void releaseItems();
@@ -8466,6 +8467,37 @@ void tst_QQuickListView::keyNavigationEnabled()
     listView->setKeyNavigationEnabled(false);
     QTest::keyClick(window.data(), Qt::Key_Down);
     QCOMPARE(listView->currentIndex(), 1);
+}
+
+void tst_QQuickListView::QTBUG_61269_appendDuringScrollDown()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("appendDuringScrollDown.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickListView *listView = qobject_cast<QQuickListView *>(window->rootObject());
+    QQuickItem *highlightItem = listView->highlightItem();
+    QVERIFY(listView);
+    QCOMPARE(listView->isKeyNavigationEnabled(), true);
+    listView->setHighlightMoveVelocity(400);
+    listView->setHighlightMoveDuration(-1); // let it animate
+    listView->setFocus(true);
+    QVERIFY(listView->hasActiveFocus());
+    qreal highlightYLimit = listView->height() - highlightItem->height(); // should be 200
+
+    for (int i = 1; i < 15; ++i) {
+        QTest::keyClick(window.data(), Qt::Key_Down);
+
+        // Wait for the highlight movement animation to finish.
+        QTRY_COMPARE(highlightItem->y(), 40.0 * i);
+
+        // As we scroll down, the QML will append rows to its own model.
+        // Make sure the highlighted row and highlight item stay within the view.
+        // In QTBUG-62864 and QTBUG-61269, it would go off the bottom.
+        QVERIFY(highlightItem->y() - listView->contentY() <= highlightYLimit);
+    }
 }
 
 void tst_QQuickListView::QTBUG_48870_fastModelUpdates()
