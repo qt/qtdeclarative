@@ -81,7 +81,7 @@ struct ArrayBufferCtor: FunctionObject
     static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
-    static ReturnedValue method_isView(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_isView(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
 };
 
@@ -104,9 +104,9 @@ struct ArrayBufferPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_get_byteLength(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_slice(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_byteLength(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_slice(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 

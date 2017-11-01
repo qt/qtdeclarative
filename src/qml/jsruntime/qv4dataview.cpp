@@ -119,27 +119,27 @@ void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("setUInt32"), method_set<unsigned int>, 0);
 }
 
-ReturnedValue DataViewPrototype::method_get_buffer(const BuiltinFunction *b, CallData *callData)
+ReturnedValue DataViewPrototype::method_get_buffer(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    DataView *v = callData->thisObject.as<DataView>();
+    const DataView *v = thisObject->as<DataView>();
     if (!v)
         return b->engine()->throwTypeError();
 
     return v->d()->buffer->asReturnedValue();
 }
 
-ReturnedValue DataViewPrototype::method_get_byteLength(const BuiltinFunction *b, CallData *callData)
+ReturnedValue DataViewPrototype::method_get_byteLength(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    DataView *v = callData->thisObject.as<DataView>();
+    const DataView *v = thisObject->as<DataView>();
     if (!v)
         return b->engine()->throwTypeError();
 
     return Encode(v->d()->byteLength);
 }
 
-ReturnedValue DataViewPrototype::method_get_byteOffset(const BuiltinFunction *b, CallData *callData)
+ReturnedValue DataViewPrototype::method_get_byteOffset(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    DataView *v = callData->thisObject.as<DataView>();
+    const DataView *v = thisObject->as<DataView>();
     if (!v)
         return b->engine()->throwTypeError();
 
@@ -147,12 +147,12 @@ ReturnedValue DataViewPrototype::method_get_byteOffset(const BuiltinFunction *b,
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_getChar(const BuiltinFunction *b, CallData *callData)
+ReturnedValue DataViewPrototype::method_getChar(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    DataView *v = callData->thisObject.as<DataView>();
-    if (!v || callData->argc() < 1)
+    const DataView *v = thisObject->as<DataView>();
+    if (!v || argc < 1)
         return b->engine()->throwTypeError();
-    double l = callData->args[0].toNumber();
+    double l = argv[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
         return b->engine()->throwTypeError();
@@ -164,18 +164,18 @@ ReturnedValue DataViewPrototype::method_getChar(const BuiltinFunction *b, CallDa
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_get(const BuiltinFunction *b, CallData *callData)
+ReturnedValue DataViewPrototype::method_get(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    DataView *v = callData->thisObject.as<DataView>();
-    if (!v || callData->argc() < 1)
+    const DataView *v = thisObject->as<DataView>();
+    if (!v || argc < 1)
         return b->engine()->throwTypeError();
-    double l = callData->args[0].toNumber();
+    double l = argv[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
         return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
-    bool littleEndian = callData->argc() < 2 ? false : callData->args[1].toBoolean();
+    bool littleEndian = argc < 2 ? false : argv[1].toBoolean();
 
     T t = littleEndian
             ? qFromLittleEndian<T>((uchar *)v->d()->buffer->data->data() + idx)
@@ -185,18 +185,18 @@ ReturnedValue DataViewPrototype::method_get(const BuiltinFunction *b, CallData *
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_getFloat(const BuiltinFunction *b, CallData *callData)
+ReturnedValue DataViewPrototype::method_getFloat(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    DataView *v = callData->thisObject.as<DataView>();
-    if (!v || callData->argc() < 1)
+    const DataView *v = thisObject->as<DataView>();
+    if (!v || argc < 1)
         return b->engine()->throwTypeError();
-    double l = callData->args[0].toNumber();
+    double l = argv[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
         return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
-    bool littleEndian = callData->argc() < 2 ? false : callData->args[1].toBoolean();
+    bool littleEndian = argc < 2 ? false : argv[1].toBoolean();
 
     if (sizeof(T) == 4) {
         // float
@@ -222,38 +222,38 @@ ReturnedValue DataViewPrototype::method_getFloat(const BuiltinFunction *b, CallD
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_setChar(const BuiltinFunction *b, CallData *callData)
+ReturnedValue DataViewPrototype::method_setChar(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    DataView *v = callData->thisObject.as<DataView>();
-    if (!v || callData->argc() < 1)
+    const DataView *v = thisObject->as<DataView>();
+    if (!v || argc < 1)
         return b->engine()->throwTypeError();
-    double l = callData->args[0].toNumber();
+    double l = argv[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
         return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
-    int val = callData->argc() >= 2 ? callData->args[1].toInt32() : 0;
+    int val = argc >= 2 ? argv[1].toInt32() : 0;
     v->d()->buffer->data->data()[idx] = (char)val;
 
     RETURN_UNDEFINED();
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_set(const BuiltinFunction *b, CallData *callData)
+ReturnedValue DataViewPrototype::method_set(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    DataView *v = callData->thisObject.as<DataView>();
-    if (!v || callData->argc() < 1)
+    const DataView *v = thisObject->as<DataView>();
+    if (!v || argc < 1)
         return b->engine()->throwTypeError();
-    double l = callData->args[0].toNumber();
+    double l = argv[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
         return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
-    int val = callData->argc() >= 2 ? callData->args[1].toInt32() : 0;
+    int val = argc >= 2 ? argv[1].toInt32() : 0;
 
-    bool littleEndian = callData->argc() < 3 ? false : callData->args[2].toBoolean();
+    bool littleEndian = argc < 3 ? false : argv[2].toBoolean();
 
     if (littleEndian)
         qToLittleEndian<T>(val, (uchar *)v->d()->buffer->data->data() + idx);
@@ -264,19 +264,19 @@ ReturnedValue DataViewPrototype::method_set(const BuiltinFunction *b, CallData *
 }
 
 template <typename T>
-ReturnedValue DataViewPrototype::method_setFloat(const BuiltinFunction *b, CallData *callData)
+ReturnedValue DataViewPrototype::method_setFloat(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    DataView *v = callData->thisObject.as<DataView>();
-    if (!v || callData->argc() < 1)
+    const DataView *v = thisObject->as<DataView>();
+    if (!v || argc < 1)
         return b->engine()->throwTypeError();
-    double l = callData->args[0].toNumber();
+    double l = argv[0].toNumber();
     uint idx = (uint)l;
     if (l != idx || idx + sizeof(T) > v->d()->byteLength)
         return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
-    double val = callData->argc() >= 2 ? callData->args[1].toNumber() : qt_qnan();
-    bool littleEndian = callData->argc() < 3 ? false : callData->args[2].toBoolean();
+    double val = argc >= 2 ? argv[1].toNumber() : qt_qnan();
+    bool littleEndian = argc < 3 ? false : argv[2].toBoolean();
 
     if (sizeof(T) == 4) {
         // float

@@ -153,13 +153,13 @@ struct TypedArrayPrototype : Object
 
     void init(ExecutionEngine *engine, TypedArrayCtor *ctor);
 
-    static ReturnedValue method_get_buffer(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_get_byteLength(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_get_byteOffset(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_get_length(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_buffer(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_byteLength(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_byteOffset(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_length(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    static ReturnedValue method_set(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_subarray(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_subarray(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 inline void

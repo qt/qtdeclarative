@@ -93,21 +93,21 @@ struct DataViewPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_get_buffer(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_get_byteLength(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_get_byteOffset(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_buffer(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_byteLength(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_byteOffset(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static ReturnedValue method_getChar(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_getChar(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static ReturnedValue method_get(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static ReturnedValue method_getFloat(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_getFloat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static ReturnedValue method_setChar(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_setChar(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static ReturnedValue method_set(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     template <typename T>
-    static ReturnedValue method_setFloat(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_setFloat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 
