@@ -8,4 +8,5 @@ SUBDIRS += \
     swipetoremove \
     flatstyle \
     wearable \
-    imagine/automotive
+    imagine/automotive \
+    imagine/musicplayer
