@@ -197,10 +197,10 @@ struct FunctionPrototype: FunctionObject
 
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_apply(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_bind(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_bind(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct Q_QML_EXPORT BuiltinFunction : FunctionObject {

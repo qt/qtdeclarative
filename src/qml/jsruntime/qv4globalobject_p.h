@@ -76,16 +76,16 @@ struct Q_QML_EXPORT EvalFunction : FunctionObject
 
 struct GlobalFunctions
 {
-    static ReturnedValue method_parseInt(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_parseFloat(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_isNaN(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_isFinite(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_decodeURI(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_decodeURIComponent(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_encodeURI(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_encodeURIComponent(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_escape(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_unescape(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_parseInt(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_parseFloat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isNaN(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isFinite(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_decodeURI(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_decodeURIComponent(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_encodeURI(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_encodeURIComponent(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_escape(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_unescape(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 }

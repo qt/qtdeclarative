@@ -277,10 +277,10 @@ void FunctionPrototype::init(ExecutionEngine *engine, Object *ctor)
 
 }
 
-ReturnedValue FunctionPrototype::method_toString(const BuiltinFunction *b, CallData *callData)
+ReturnedValue FunctionPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
-    FunctionObject *fun = callData->thisObject.as<FunctionObject>();
+    const FunctionObject *fun = thisObject->as<FunctionObject>();
     if (!fun)
         return v4->throwTypeError();
 
@@ -345,20 +345,20 @@ ReturnedValue FunctionPrototype::method_call(const QV4::FunctionObject *b, const
     return f->call(thisObject, argv, argc);
 }
 
-ReturnedValue FunctionPrototype::method_bind(const BuiltinFunction *b, CallData *callData)
+ReturnedValue FunctionPrototype::method_bind(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     QV4::Scope scope(b);
-    FunctionObject *target = callData->thisObject.as<FunctionObject>();
+    ScopedFunctionObject target(scope, thisObject);
     if (!target)
         return scope.engine->throwTypeError();
 
-    ScopedValue boundThis(scope, callData->argument(0));
+    ScopedValue boundThis(scope, argc ? argv[0] : Primitive::undefinedValue());
     Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
-    if (callData->argc() > 1) {
-        boundArgs = MemberData::allocate(scope.engine, callData->argc() - 1);
-        boundArgs->d()->values.size = callData->argc() - 1;
-        for (uint i = 0, ei = static_cast<uint>(callData->argc() - 1); i < ei; ++i)
-            boundArgs->set(scope.engine, i, callData->args[i + 1]);
+    if (argc > 1) {
+        boundArgs = MemberData::allocate(scope.engine, argc - 1);
+        boundArgs->d()->values.size = argc - 1;
+        for (uint i = 0, ei = static_cast<uint>(argc - 1); i < ei; ++i)
+            boundArgs->set(scope.engine, i, argv[i + 1]);
     }
 
     ExecutionContext *global = scope.engine->rootContext();

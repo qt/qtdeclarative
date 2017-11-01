@@ -408,11 +408,11 @@ static inline int toInt(const QChar &qc, int R)
 }
 
 // parseInt [15.1.2.2]
-ReturnedValue GlobalFunctions::method_parseInt(const BuiltinFunction *b, CallData *callData)
+ReturnedValue GlobalFunctions::method_parseInt(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedValue inputString(scope, callData->argument(0));
-    ScopedValue radix(scope, callData->argument(1));
+    ScopedValue inputString(scope, argc ? argv[0] : Primitive::undefinedValue());
+    ScopedValue radix(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
     int R = radix->isUndefined() ? 0 : radix->toInt32();
 
     // [15.1.2.2] step by step:
@@ -489,11 +489,11 @@ ReturnedValue GlobalFunctions::method_parseInt(const BuiltinFunction *b, CallDat
 }
 
 // parseFloat [15.1.2.3]
-ReturnedValue GlobalFunctions::method_parseFloat(const BuiltinFunction *b, CallData *callData)
+ReturnedValue GlobalFunctions::method_parseFloat(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
     Scope scope(b);
     // [15.1.2.3] step by step:
-    ScopedString inputString(scope, callData->argument(0), ScopedString::Convert);
+    ScopedString inputString(scope, argc ? argv[0] : Primitive::undefinedValue(), ScopedString::Convert);
     CHECK_EXCEPTION();
 
     QString trimmed = inputString->toQString().trimmed(); // 2
@@ -516,41 +516,41 @@ ReturnedValue GlobalFunctions::method_parseFloat(const BuiltinFunction *b, CallD
 }
 
 /// isNaN [15.1.2.4]
-ReturnedValue GlobalFunctions::method_isNaN(const BuiltinFunction *, CallData *callData)
+ReturnedValue GlobalFunctions::method_isNaN(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    if (!callData->argc())
+    if (!argc)
         // undefined gets converted to NaN
         RETURN_RESULT(Encode(true));
 
-    if (callData->args[0].integerCompatible())
+    if (argv[0].integerCompatible())
         RETURN_RESULT(Encode(false));
 
-    double d = callData->args[0].toNumber();
+    double d = argv[0].toNumber();
     RETURN_RESULT(Encode((bool)std::isnan(d)));
 }
 
 /// isFinite [15.1.2.5]
-ReturnedValue GlobalFunctions::method_isFinite(const BuiltinFunction *, CallData *callData)
+ReturnedValue GlobalFunctions::method_isFinite(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    if (!callData->argc())
+    if (!argc)
         // undefined gets converted to NaN
         RETURN_RESULT(Encode(false));
 
-    if (callData->args[0].integerCompatible())
+    if (argv[0].integerCompatible())
         RETURN_RESULT(Encode(true));
 
-    double d = callData->args[0].toNumber();
+    double d = argv[0].toNumber();
     RETURN_RESULT(Encode((bool)std::isfinite(d)));
 }
 
 /// decodeURI [15.1.3.1]
-ReturnedValue GlobalFunctions::method_decodeURI(const BuiltinFunction *b, CallData *callData)
+ReturnedValue GlobalFunctions::method_decodeURI(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    if (callData->argc() == 0)
+    if (argc == 0)
         RETURN_UNDEFINED();
 
     ExecutionEngine *v4 = b->engine();
-    QString uriString = callData->args[0].toQString();
+    QString uriString = argv[0].toQString();
     bool ok;
     QString out = decode(uriString, DecodeNonReserved, &ok);
     if (!ok) {
@@ -563,13 +563,13 @@ ReturnedValue GlobalFunctions::method_decodeURI(const BuiltinFunction *b, CallDa
 }
 
 /// decodeURIComponent [15.1.3.2]
-ReturnedValue GlobalFunctions::method_decodeURIComponent(const BuiltinFunction *b, CallData *callData)
+ReturnedValue GlobalFunctions::method_decodeURIComponent(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    if (callData->argc() == 0)
+    if (argc == 0)
         RETURN_UNDEFINED();
 
     ExecutionEngine *v4 = b->engine();
-    QString uriString = callData->args[0].toQString();
+    QString uriString = argv[0].toQString();
     bool ok;
     QString out = decode(uriString, DecodeAll, &ok);
     if (!ok) {
@@ -582,13 +582,13 @@ ReturnedValue GlobalFunctions::method_decodeURIComponent(const BuiltinFunction *
 }
 
 /// encodeURI [15.1.3.3]
-ReturnedValue GlobalFunctions::method_encodeURI(const BuiltinFunction *b, CallData *callData)
+ReturnedValue GlobalFunctions::method_encodeURI(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    if (callData->argc() == 0)
+    if (argc == 0)
         RETURN_UNDEFINED();
 
     ExecutionEngine *v4 = b->engine();
-    QString uriString = callData->args[0].toQString();
+    QString uriString = argv[0].toQString();
     bool ok;
     QString out = encode(uriString, uriUnescapedReserved, &ok);
     if (!ok) {
@@ -601,13 +601,13 @@ ReturnedValue GlobalFunctions::method_encodeURI(const BuiltinFunction *b, CallDa
 }
 
 /// encodeURIComponent [15.1.3.4]
-ReturnedValue GlobalFunctions::method_encodeURIComponent(const BuiltinFunction *b, CallData *callData)
+ReturnedValue GlobalFunctions::method_encodeURIComponent(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    if (callData->argc() == 0)
+    if (argc == 0)
         RETURN_UNDEFINED();
 
     ExecutionEngine *v4 = b->engine();
-    QString uriString = callData->args[0].toQString();
+    QString uriString = argv[0].toQString();
     bool ok;
     QString out = encode(uriString, uriUnescaped, &ok);
     if (!ok) {
@@ -619,22 +619,22 @@ ReturnedValue GlobalFunctions::method_encodeURIComponent(const BuiltinFunction *
     RETURN_RESULT(v4->newString(out));
 }
 
-ReturnedValue GlobalFunctions::method_escape(const BuiltinFunction *b, CallData *callData)
+ReturnedValue GlobalFunctions::method_escape(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    if (!callData->argc())
+    if (!argc)
         RETURN_RESULT(v4->newString(QStringLiteral("undefined")));
 
-    QString str = callData->args[0].toQString();
+    QString str = argv[0].toQString();
     RETURN_RESULT(v4->newString(escape(str)));
 }
 
-ReturnedValue GlobalFunctions::method_unescape(const BuiltinFunction *b, CallData *callData)
+ReturnedValue GlobalFunctions::method_unescape(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    if (!callData->argc())
+    if (!argc)
         RETURN_RESULT(v4->newString(QStringLiteral("undefined")));
 
-    QString str = callData->args[0].toQString();
+    QString str = argv[0].toQString();
     RETURN_RESULT(v4->newString(unescape(str)));
 }
