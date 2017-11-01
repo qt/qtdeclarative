@@ -67,6 +67,27 @@ using namespace QV4;
 using namespace QV4::Compiler;
 using namespace QQmlJS::AST;
 
+static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGenerator,
+                                      const Statement *body, const SourceLocation &fallback)
+{
+    switch (body->kind) {
+    // Statements where we might never execute the last line.
+    // Use the fallback.
+    case Statement::Kind_ConditionalExpression:
+    case Statement::Kind_ForEachStatement:
+    case Statement::Kind_ForStatement:
+    case Statement::Kind_IfStatement:
+    case Statement::Kind_LocalForEachStatement:
+    case Statement::Kind_LocalForStatement:
+    case Statement::Kind_WhileStatement:
+        bytecodeGenerator->setLocation(fallback);
+        break;
+    default:
+        bytecodeGenerator->setLocation(body->lastSourceLocation());
+        break;
+    }
+}
+
 Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     : _module(0)
     , _returnAddress(0)
@@ -2261,6 +2282,7 @@ bool Codegen::visit(DoWhileStatement *ast)
     ControlFlowLoop flow(this, &end, &cond);
 
     statement(ast->statement);
+    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->semicolonToken);
 
     cond.link();
 
@@ -2329,6 +2351,7 @@ bool Codegen::visit(ForEachStatement *ast)
     BytecodeGenerator::Label body = bytecodeGenerator->label();
 
     statement(ast->statement);
+    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
 
     in.link();
 
@@ -2367,6 +2390,7 @@ bool Codegen::visit(ForStatement *ast)
 
     body.link();
     statement(ast->statement);
+    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
 
     step.link();
     statement(ast->expression);
@@ -2473,6 +2497,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
     Reference it = referenceForName(ast->declaration->name.toString(), true).asLValue();
     statement(ast->statement);
+    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
 
     in.link();
 
@@ -2509,6 +2534,7 @@ bool Codegen::visit(LocalForStatement *ast)
 
     body.link();
     statement(ast->statement);
+    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
 
     step.link();
     statement(ast->expression);
@@ -2729,6 +2755,7 @@ bool Codegen::visit(WhileStatement *ast)
 
     start.link();
     statement(ast->statement);
+    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->whileToken);
     bytecodeGenerator->jump().link(cond);
 
     end.link();

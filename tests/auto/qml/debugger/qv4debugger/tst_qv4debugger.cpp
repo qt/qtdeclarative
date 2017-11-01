@@ -811,13 +811,13 @@ void tst_qv4debugger::lastLineOfConditional_data()
     QTest::newRow("do..while {block}") << "do {\n"           << "} while (ret < 10);" << 4 << 7;
 
     QTest::newRow("if true {block}")       << "if (true) {\n"  << "}"
-                                           << 4 << 7;
+                                           << 4 << 8;
     QTest::newRow("if false {block}")      << "if (false) {\n" << "}"
                                            << 2 << 8;
     QTest::newRow("if true else {block}")  << "if (true) {\n"  << "} else {\n    ret += 8;\n}"
-                                           << 4 << 7;
+                                           << 4 << 10;
     QTest::newRow("if false else {block}") << "if (false) {\n" << "} else {\n    ret += 8;\n}"
-                                           << 8 << 9;
+                                           << 8 << 10;
 
     QTest::newRow("for statement")       << "for (var i = 0; i < 10; ++i)\n"   << "" << 4 << 2;
     QTest::newRow("for..in statement")   << "for (var i in [0, 1, 2, 3, 4])\n" << "" << 4 << 2;
@@ -826,17 +826,16 @@ void tst_qv4debugger::lastLineOfConditional_data()
 
     // For two nested if statements without blocks, we need to map the jump from the inner to the
     // outer one on the outer "if". There is just no better place.
-    QTest::newRow("if true statement")       << "if (true)\n"  << ""                    << 4 << 2;
+    QTest::newRow("if true statement")       << "if (true)\n"  << ""                    << 4 << 8;
     QTest::newRow("if false statement")      << "if (false)\n" << ""                    << 2 << 8;
 
     // Also two nested ifs without blocks.
-    QTest::newRow("if true else statement")  << "if (true)\n"  << "else\n    ret += 8;" << 4 << 2;
+    QTest::newRow("if true else statement")  << "if (true)\n"  << "else\n    ret += 8;" << 4 << 9;
     QTest::newRow("if false else statement") << "if (false)\n" << "else\n    ret += 8;" << 8 << 9;
 }
 
 void tst_qv4debugger::lastLineOfConditional()
 {
-    QSKIP("fixme");
     QFETCH(QString, head);
     QFETCH(QString, tail);
     QFETCH(int, breakPoint);
