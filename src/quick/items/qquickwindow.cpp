@@ -762,8 +762,11 @@ void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
         auto point = pointerEventInstance(touchMouseDevice)->pointById(touchMouseId);
         if (point) {
             auto originalEvent = pointerEventInstance(point->pointerEvent()->device());
-            for (int i = 0; i < originalEvent->pointCount(); ++i)
-                originalEvent->point(i)->cancelExclusiveGrab();
+            for (int i = 0; i < originalEvent->pointCount(); ++i) {
+                QQuickEventPoint *pt = originalEvent->point(i);
+                if (pt->exclusiveGrabber())
+                    pt->cancelExclusiveGrab();
+            }
             point->setGrabberItem(grabber);
             for (auto handler : point->passiveGrabbers())
                 point->cancelPassiveGrab(handler);
