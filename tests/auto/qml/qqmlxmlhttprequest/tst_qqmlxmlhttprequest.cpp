@@ -90,6 +90,8 @@ private slots:
     void sendFileRequestNoRead();
 #endif
 
+    void overrideMime();
+
     // WebDAV
     void sendPropfind();
     void sendPropfind_data();
@@ -1543,6 +1545,26 @@ void tst_qqmlxmlhttprequest::stateChangeCallingContext()
     component.completeCreate();
     server.sendDelayedItem();
     QTRY_VERIFY(object->property("success").toBool());
+}
+
+void tst_qqmlxmlhttprequest::overrideMime()
+{
+    // overrideMimeType.reply sets the Content-Type to text/plain
+    // overrideMimeType.qml overrides it to text/xml and checks the responseXML property.
+
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+    QVERIFY(server.wait(testFileUrl("text.expect"),
+                        testFileUrl("overrideMimeType.reply"),
+                        testFileUrl("text.xml")));
+
+    QQmlComponent component(engine.get(), testFileUrl("overrideMimeType.qml"));
+    QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
+    QVERIFY(!object.isNull());
+    object->setProperty("url", server.urlString("/text.xml"));
+    component.completeCreate();
+
+    QTRY_VERIFY(object->property("dataOK").toBool());
 }
 
 QTEST_MAIN(tst_qqmlxmlhttprequest)
