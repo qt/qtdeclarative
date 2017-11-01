@@ -88,16 +88,16 @@ struct NumberPrototype: NumberObject
     V4_PROTOTYPE(objectPrototype)
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_isFinite(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_isInteger(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_isSafeInteger(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_isNaN(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_toLocaleString(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_valueOf(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_toFixed(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_toExponential(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_toPrecision(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_isFinite(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isInteger(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isSafeInteger(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isNaN(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toFixed(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toExponential(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toPrecision(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 

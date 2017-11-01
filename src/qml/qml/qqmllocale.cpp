@@ -380,7 +380,7 @@ QV4::ReturnedValue QQmlNumberExtension::method_toLocaleString(const BuiltinFunct
     }
 
     if (!isLocaleObject(callData->args[0]))
-        return QV4::NumberPrototype::method_toLocaleString(b, callData); // Use the default Number toLocaleString()
+        return QV4::NumberPrototype::method_toLocaleString(b, &callData->thisObject, callData->args, callData->argc()); // Use the default Number toLocaleString()
 
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
 
