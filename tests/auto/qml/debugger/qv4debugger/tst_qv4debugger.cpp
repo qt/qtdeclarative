@@ -462,7 +462,7 @@ void tst_qv4debugger::conditionalBreakPoint()
 {
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
-            "function test() {\n"
+            "var test = function() {\n"
             "    for (var i = 0; i < 15; ++i) {\n"
             "        var x = i;\n"
             "    }\n"
@@ -479,7 +479,6 @@ void tst_qv4debugger::conditionalBreakPoint()
 
     QVERIFY(m_debuggerAgent->m_capturedScope.size() > 1);
     const TestAgent::NamedRefs &frame0 = m_debuggerAgent->m_capturedScope.at(0);
-    QSKIP("fixme: function 'test' ends up in frame0 but shouldn't.");
     QCOMPARE(frame0.size(), 2);
     QVERIFY(frame0.contains("i"));
     QCOMPARE(frame0.value("i").toInt(), 11);
@@ -524,13 +523,12 @@ void tst_qv4debugger::conditionalBreakPointInQml()
 
 void tst_qv4debugger::readArguments()
 {
-    QSKIP("fixme");
     QFETCH(bool, redundantRefs);
     m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
 
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
-            "function f(a, b, c, d) {\n"
+            "var f = function(a, b, c, d) {\n"
             "  return a === b\n"
             "}\n"
             "var four;\n"
@@ -551,13 +549,12 @@ void tst_qv4debugger::readArguments()
 
 void tst_qv4debugger::readLocals()
 {
-    QSKIP("fixme");
     QFETCH(bool, redundantRefs);
     m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
 
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
-            "function f(a, b) {\n"
+            "var f = function(a, b) {\n"
             "  var c = a + b\n"
             "  var d = a - b\n" // breakpoint, c should be set, d should be undefined
             "  return c === d\n"
@@ -578,13 +575,12 @@ void tst_qv4debugger::readLocals()
 
 void tst_qv4debugger::readObject()
 {
-    QSKIP("fixme");
     QFETCH(bool, redundantRefs);
     m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
 
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
-            "function f(a) {\n"
+            "var f = function(a) {\n"
             "  var b = a\n"
             "  return b\n"
             "}\n"
@@ -637,13 +633,12 @@ void tst_qv4debugger::readObject()
 
 void tst_qv4debugger::readContextInAllFrames()
 {
-    QSKIP("fixme");
     QFETCH(bool, redundantRefs);
     m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
 
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
-            "function fact(n) {\n"
+            "var fact = function(n) {\n"
             "  if (n > 1) {\n"
             "    var n_1 = n - 1;\n"
             "    n_1 = fact(n_1);\n"
