@@ -158,19 +158,19 @@ struct RegExpPrototype: RegExpObject
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_exec(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_test(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_compile(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_exec(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_test(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_compile(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     template <int index>
-    static ReturnedValue method_get_lastMatch_n(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_get_lastParen(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_get_input(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_get_leftContext(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_get_rightContext(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_lastMatch_n(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_lastParen(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_input(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_leftContext(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_rightContext(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    static ReturnedValue execFirstMatch(const BuiltinFunction *b, CallData *callData);
+    static ReturnedValue execFirstMatch(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 };
 
 }

@@ -298,6 +298,10 @@ struct Q_QML_EXPORT Object: Managed {
                                 ReturnedValue (*setter)(const BuiltinFunction *, CallData *));
     void defineAccessorProperty(String *name, ReturnedValue (*getter)(const BuiltinFunction *, CallData *),
                                 ReturnedValue (*setter)(const BuiltinFunction *, CallData *));
+    void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
+                                ReturnedValue (*setter)(const FunctionObject *, const Value *, const Value *, int));
+    void defineAccessorProperty(String *name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
+                                ReturnedValue (*setter)(const FunctionObject *, const Value *, const Value *, int));
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(const QString &name, const Value &value);
     void defineReadonlyProperty(String *name, const Value &value);

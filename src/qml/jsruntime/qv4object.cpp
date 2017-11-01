@@ -212,6 +212,29 @@ void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(const 
     insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 }
 
+void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
+                                    ReturnedValue (*setter)(const FunctionObject *, const Value *, const Value *, int))
+{
+    ExecutionEngine *e = engine();
+    Scope scope(e);
+    ScopedString s(scope, e->newIdentifier(name));
+    defineAccessorProperty(s, getter, setter);
+}
+
+void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
+                                    ReturnedValue (*setter)(const FunctionObject *, const Value *, const Value *, int))
+{
+    ExecutionEngine *v4 = engine();
+    QV4::Scope scope(v4);
+    ScopedProperty p(scope);
+    ExecutionContext *global = v4->rootContext();
+    p->setGetter(ScopedFunctionObject(scope, (getter ? BuiltinFunction::create(global, name, getter) : 0)));
+    p->setSetter(ScopedFunctionObject(scope, (setter ? BuiltinFunction::create(global, name, setter) : 0)));
+    insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+}
+
+
+
 void Object::defineReadonlyProperty(const QString &name, const Value &value)
 {
     QV4::ExecutionEngine *e = engine();

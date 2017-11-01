@@ -428,7 +428,7 @@ ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *
 
     qSwap(callData->thisObject, callData->args[0]);
     if (!global)
-        return RegExpPrototype::method_exec(b, callData);
+        return RegExpPrototype::method_exec(b, &callData->thisObject, callData->args, callData->argc());
 
     // rx is now in thisObject
     RegExpObject *rx = static_cast<RegExpObject *>(&callData->thisObject);
@@ -438,7 +438,7 @@ ReturnedValue StringPrototype::method_match(const BuiltinFunction *b, CallData *
     int previousLastIndex = 0;
     uint n = 0;
     while (1) {
-        Value result = Primitive::fromReturnedValue(RegExpPrototype::execFirstMatch(b, callData));
+        Value result = Primitive::fromReturnedValue(RegExpPrototype::execFirstMatch(b, &callData->thisObject, callData->args, callData->argc()));
         if (result.isNull())
             break;
         int index = rx->lastIndex();
