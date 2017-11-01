@@ -4684,29 +4684,24 @@ void tst_QQuickListView::indexAt_itemAt()
 void tst_QQuickListView::incrementalModel()
 {
     QScopedPointer<QQuickView> window(createView());
-    QSKIP("QTBUG-30716");
 
     IncrementalModel model;
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
     window->setSource(testFileUrl("displaylist.qml"));
-    qApp->processEvents();
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
-    listview->forceLayout();
 
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
-
-    listview->forceLayout();
-    QTRY_COMPARE(listview->count(), 20);
+    QTRY_COMPARE(listview->count(), 35);
 
     listview->positionViewAtIndex(10, QQuickListView::Beginning);
-
-    listview->forceLayout();
-    QTRY_COMPARE(listview->count(), 25);
+    QTRY_COMPARE(listview->count(), 45);
 }
 
 void tst_QQuickListView::onAdd()
