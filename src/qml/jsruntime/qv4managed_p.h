@@ -93,7 +93,6 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
             dptr->_checkIsInitialized(); \
             return dptr; \
         } \
-        static Q_CONSTEXPR quint64 markTable = QV4::Heap::DataClass::markTable; \
         V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass)
 
 #define V4_MANAGED(DataClass, superClass) \
@@ -132,7 +131,6 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 #define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
 {     \
     parentVTable, \
-    markTable, \
     (sizeof(classname::Data) + sizeof(QV4::Value) - 1)/sizeof(QV4::Value), \
     (sizeof(classname::Data) + (std::is_same<classname, Object>::value ? 2*sizeof(QV4::Value) : 0) + QV4::Chunk::SlotSize - 1)/QV4::Chunk::SlotSize*QV4::Chunk::SlotSize/sizeof(QV4::Value) \
         - (sizeof(classname::Data) + sizeof(QV4::Value) - 1)/sizeof(QV4::Value), \
@@ -146,9 +144,9 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
     classname::MyType,                          \
     #classname, \
     Q_VTABLE_FUNCTION(classname, destroy),                                    \
-    Q_VTABLE_FUNCTION(classname, markObjects),                                    \
+    classname::Data::markObjects,                                    \
     isEqualTo                                  \
-}
+} \
 
 #define DEFINE_MANAGED_VTABLE(classname) \
 QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
@@ -221,7 +219,6 @@ public:
     inline void mark(MarkStack *markStack);
 
     static void destroy(Heap::Base *) {}
-    static void markObjects(Heap::Base *, MarkStack *) {}
 
     Q_ALWAYS_INLINE Heap::Base *heapObject() const {
         return m();
@@ -240,6 +237,11 @@ private:
     friend struct ObjectIterator;
 };
 
+inline void Managed::mark(MarkStack *markStack)
+{
+    Q_ASSERT(m());
+    m()->mark(markStack);
+}
 
 template<>
 inline const Managed *Value::as() const {

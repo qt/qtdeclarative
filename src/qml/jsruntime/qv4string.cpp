@@ -52,16 +52,17 @@ using namespace QV4;
 
 #ifndef V4_BOOTSTRAP
 
-DEFINE_MANAGED_VTABLE(String);
-
-void String::markObjects(Heap::Base *that, MarkStack *markStack)
+void Heap::String::markObjects(Heap::Base *that, MarkStack *markStack)
 {
-    String::Data *s = static_cast<String::Data *>(that);
+    String *s = static_cast<String *>(that);
     if (s->largestSubLength) {
         s->left->mark(markStack);
         s->right->mark(markStack);
     }
 }
+
+DEFINE_MANAGED_VTABLE(String);
+
 
 bool String::isEqualTo(Managed *t, Managed *o)
 {

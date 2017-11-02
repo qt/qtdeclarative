@@ -1015,9 +1015,9 @@ static void markChildQObjectsRecursively(QObject *parent, QV4::MarkStack *markSt
     }
 }
 
-void QObjectWrapper::markObjects(Heap::Base *that, QV4::MarkStack *markStack)
+void Heap::QObjectWrapper::markObjects(Heap::Base *that, QV4::MarkStack *markStack)
 {
-    QObjectWrapper::Data *This = static_cast<QObjectWrapper::Data *>(that);
+    QObjectWrapper *This = static_cast<QObjectWrapper *>(that);
 
     if (QObject *o = This->object()) {
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
@@ -1032,7 +1032,7 @@ void QObjectWrapper::markObjects(Heap::Base *that, QV4::MarkStack *markStack)
             markChildQObjectsRecursively(o, markStack);
     }
 
-    QV4::Object::markObjects(that, markStack);
+    Object::markObjects(that, markStack);
 }
 
 void QObjectWrapper::destroyObject(bool lastCall)

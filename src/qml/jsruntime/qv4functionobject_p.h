@@ -78,7 +78,7 @@ namespace Heap {
     Member(class, NoMark, jsConstructFunction, jsConstruct)
 
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
-    DECLARE_MARK_TABLE(FunctionObject);
+    DECLARE_MARKOBJECTS(FunctionObject);
     enum {
         Index_Prototype = 0,
         Index_ProtoConstructor = 0
@@ -131,7 +131,7 @@ struct ScriptFunction : FunctionObject {
     Member(class, Pointer, MemberData *, boundArgs)
 
 DECLARE_HEAP_OBJECT(BoundFunction, FunctionObject) {
-    DECLARE_MARK_TABLE(BoundFunction);
+    DECLARE_MARKOBJECTS(BoundFunction);
 
     void init(QV4::ExecutionContext *scope, QV4::FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs);
 };

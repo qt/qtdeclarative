@@ -67,7 +67,7 @@ namespace Heap {
     Member(class, Pointer, String *, stack)
 
 DECLARE_HEAP_OBJECT(ErrorObject, Object) {
-    DECLARE_MARK_TABLE(ErrorObject);
+    DECLARE_MARKOBJECTS(ErrorObject);
     enum ErrorType {
         Error,
         EvalError,

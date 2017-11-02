@@ -63,7 +63,7 @@ namespace Heap {
     Member(class, ValueArray, ValueArray, values)
 
 DECLARE_HEAP_OBJECT(MemberData, Base) {
-    DECLARE_MARK_TABLE(MemberData);
+    DECLARE_MARKOBJECTS(MemberData);
 };
 V4_ASSERT_IS_TRIVIAL(MemberData)
 

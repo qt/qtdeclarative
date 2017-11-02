@@ -261,9 +261,18 @@ void Object::defineReadonlyConfigurableProperty(String *name, const Value &value
     insertMember(name, value, Attr_ReadOnly_ButConfigurable);
 }
 
-void Object::markObjects(Heap::Base *b, MarkStack *stack)
+void Object::markObjects(Heap::Base *base, MarkStack *stack)
 {
-    Heap::Object *o = static_cast<Heap::Object *>(b);
+    Heap::Object::markObjects(base, stack);
+}
+
+void Heap::Object::markObjects(Heap::Base *b, MarkStack *stack)
+{
+    Object *o = static_cast<Object *>(b);
+    if (o->memberData)
+        o->memberData->mark(stack);
+    if (o->arrayData)
+        o->arrayData->mark(stack);
     uint nInline = o->vtable()->nInlineProperties;
     Value *v = reinterpret_cast<Value *>(o) + o->vtable()->inlinePropertyOffset;
     const Value *end = v + nInline;

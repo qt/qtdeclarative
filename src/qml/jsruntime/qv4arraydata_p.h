@@ -99,7 +99,7 @@ namespace Heap {
     Member(class, ValueArray, ValueArray, values)
 
 DECLARE_HEAP_OBJECT(ArrayData, Base) {
-    DECLARE_MARK_TABLE(ArrayData);
+    DECLARE_MARKOBJECTS(ArrayData);
 
     enum Type { Simple = 0, Complex = 1, Sparse = 2, Custom = 3 };
 

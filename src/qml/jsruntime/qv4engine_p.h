@@ -498,35 +498,6 @@ inline void ExecutionEngine::setCurrentContext(Heap::ExecutionContext *context)
     currentStackFrame->jsFrame->context = context;
 }
 
-inline
-void Heap::Base::mark(QV4::MarkStack *markStack)
-{
-    Q_ASSERT(inUse());
-    const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
-    Chunk *c = h->chunk();
-    size_t index = h - c->realBase();
-    Q_ASSERT(!Chunk::testBit(c->extendsBitmap, index));
-    quintptr *bitmap = c->blackBitmap + Chunk::bitmapIndex(index);
-    quintptr bit = Chunk::bitForIndex(index);
-    if (!(*bitmap & bit)) {
-        *bitmap |= bit;
-        markStack->push(this);
-    }
-}
-
-inline void Value::mark(MarkStack *markStack)
-{
-    Heap::Base *o = heapObject();
-    if (o)
-        o->mark(markStack);
-}
-
-inline void Managed::mark(MarkStack *markStack)
-{
-    Q_ASSERT(m());
-    m()->mark(markStack);
-}
-
 #define CHECK_STACK_LIMITS(v4) if ((v4)->checkStackLimits()) return Encode::undefined(); \
     ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);
 

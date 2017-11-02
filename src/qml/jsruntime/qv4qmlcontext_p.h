@@ -79,7 +79,7 @@ struct QQmlContextWrapper : Object {
 #define QmlContextMembers(class, Member)
 
 DECLARE_HEAP_OBJECT(QmlContext, ExecutionContext) {
-    DECLARE_MARK_TABLE(QmlContext);
+    DECLARE_MARKOBJECTS(QmlContext);
 
     QQmlContextWrapper *qml() { return static_cast<QQmlContextWrapper *>(activation.get()); }
     void init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml);

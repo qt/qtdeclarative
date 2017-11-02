@@ -63,7 +63,7 @@ namespace Heap {
     Member(class, NoMark, uint, index)
 
 DECLARE_HEAP_OBJECT(ArgumentsGetterFunction, FunctionObject) {
-    DECLARE_MARK_TABLE(ArgumentsGetterFunction);
+    DECLARE_MARKOBJECTS(ArgumentsGetterFunction);
     inline void init(QV4::ExecutionContext *scope, uint index);
 };
 
@@ -71,7 +71,7 @@ DECLARE_HEAP_OBJECT(ArgumentsGetterFunction, FunctionObject) {
     Member(class, NoMark, uint, index)
 
 DECLARE_HEAP_OBJECT(ArgumentsSetterFunction, FunctionObject) {
-    DECLARE_MARK_TABLE(ArgumentsSetterFunction);
+    DECLARE_MARKOBJECTS(ArgumentsSetterFunction);
     inline void init(QV4::ExecutionContext *scope, uint index);
 };
 
@@ -83,7 +83,7 @@ DECLARE_HEAP_OBJECT(ArgumentsSetterFunction, FunctionObject) {
     Member(class, NoMark, int, nFormals)
 
 DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
-    DECLARE_MARK_TABLE(ArgumentsObject);
+    DECLARE_MARKOBJECTS(ArgumentsObject);
     enum {
         LengthPropertyIndex = 0,
         CalleePropertyIndex = 1,

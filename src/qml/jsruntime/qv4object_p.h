@@ -72,10 +72,9 @@ namespace Heap {
     Member(class, Pointer, MemberData *, memberData) \
     Member(class, Pointer, ArrayData *, arrayData)
 
-DECLARE_HEAP_OBJECT(Object, Base) {
-    DECLARE_MARK_TABLE(Object);
+DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
+    static void markObjects(Heap::Base *base, MarkStack *stack);
     void init() { Base::init(); }
-    void destroy() { Base::destroy(); }
 
     const Value *inlinePropertyData(uint index) const {
         Q_ASSERT(index < vtable()->nInlineProperties);
@@ -129,8 +128,6 @@ DECLARE_HEAP_OBJECT(Object, Base) {
     Heap::Object *prototype() const { return internalClass->prototype; }
 };
 
-Q_STATIC_ASSERT(Object::markTable == ((2 << 2) | (2 << 4)));
-
 }
 
 #define V4_OBJECT2(DataClass, superClass) \
@@ -150,8 +147,7 @@ Q_STATIC_ASSERT(Object::markTable == ((2 << 2) | (2 << 4)));
             dptr->_checkIsInitialized(); \
             return dptr; \
         } \
-        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass); \
-        static Q_CONSTEXPR quint64 markTable = QV4::Heap::DataClass::markTable;
+        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass);
 
 #define V4_PROTOTYPE(p) \
     static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \
@@ -308,6 +304,8 @@ struct Q_QML_EXPORT Object: Managed {
     // Array handling
 
 public:
+    static void markObjects(Heap::Base *base, MarkStack *stack);
+
     void copyArrayData(Object *other);
 
     bool setArrayLength(uint newLen);
@@ -436,7 +434,6 @@ protected:
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
-    static void markObjects(Heap::Base *, MarkStack *);
 
 private:
     ReturnedValue internalGet(String *name, bool *hasProperty) const;

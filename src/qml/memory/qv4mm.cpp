@@ -279,64 +279,6 @@ QString binary(quintptr) { return QString(); }
 #define SDUMP if (1) ; else qDebug
 #endif
 
-void Heap::Base::markChildren(MarkStack *markStack)
-{
-    if (vtable()->markObjects)
-        vtable()->markObjects(this, markStack);
-    if (quint64 m = vtable()->markTable) {
-//            qDebug() << "using mark table:" << hex << m << "for" << h;
-        void **mem = reinterpret_cast<void **>(this);
-        while (m) {
-            MarkFlags mark = static_cast<MarkFlags>(m & 3);
-            switch (mark) {
-            case Mark_NoMark:
-                break;
-            case Mark_Value:
-//                    qDebug() << "marking value at " << mem;
-                reinterpret_cast<Value *>(mem)->mark(markStack);
-                break;
-            case Mark_Pointer: {
-//                    qDebug() << "marking pointer at " << mem;
-                Heap::Base *p = *reinterpret_cast<Heap::Base **>(mem);
-                if (p)
-                    p->mark(markStack);
-                break;
-            }
-            case Mark_ValueArray: {
-                Q_ASSERT(m == Mark_ValueArray);
-//                    qDebug() << "marking Value Array at offset" << hex << (mem - reinterpret_cast<void **>(h));
-                ValueArray<0> *a = reinterpret_cast<ValueArray<0> *>(mem);
-                Value *v = a->values;
-                const Value *end = v + a->alloc;
-                if (a->alloc > 32*1024) {
-                    // drain from time to time to avoid overflows in the js stack
-                    Heap::Base **currentBase = markStack->top;
-                    while (v < end) {
-                        v->mark(markStack);
-                        ++v;
-                        if (markStack->top >= currentBase + 32*1024) {
-                            Heap::Base **oldBase = markStack->base;
-                            markStack->base = currentBase;
-                            markStack->drain();
-                            markStack->base = oldBase;
-                        }
-                    }
-                } else {
-                    while (v < end) {
-                        v->mark(markStack);
-                        ++v;
-                    }
-                }
-                break;
-            }
-            }
-
-            m >>= 2;
-            ++mem;
-        }
-    }
-}
-
 // Stores a classname -> freed count mapping.
 typedef QHash<const char*, int> MMStatsHash;
 Q_GLOBAL_STATIC(MMStatsHash, freedObjectStatsGlobal)

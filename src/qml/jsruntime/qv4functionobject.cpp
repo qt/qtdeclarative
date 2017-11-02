@@ -68,8 +68,6 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
-Q_STATIC_ASSERT((Heap::FunctionObject::markTable & Heap::Object::markTable) == Heap::Object::markTable);
-
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
                                 ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc))
 {

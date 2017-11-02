@@ -53,7 +53,6 @@ const QV4::VTable QV4::ArrayData::static_vtbl = {
     0,
     0,
     0,
-    0,
     QV4::ArrayData::IsExecutionContext,
     QV4::ArrayData::IsString,
     QV4::ArrayData::IsObject,
@@ -64,7 +63,7 @@ const QV4::VTable QV4::ArrayData::static_vtbl = {
     QV4::ArrayData::MyType,
     "ArrayData",
     Q_VTABLE_FUNCTION(QV4::ArrayData, destroy),
-    0,
+    ArrayData::Data::markObjects,
     isEqualTo
 };
 

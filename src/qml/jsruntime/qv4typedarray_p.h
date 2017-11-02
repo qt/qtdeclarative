@@ -80,7 +80,7 @@ namespace Heap {
     Member(class, NoMark, uint, arrayType)
 
 DECLARE_HEAP_OBJECT(TypedArray, Object) {
-    DECLARE_MARK_TABLE(TypedArray);
+    DECLARE_MARKOBJECTS(TypedArray);
     enum Type {
         Int8Array,
         UInt8Array,

@@ -114,8 +114,8 @@ namespace Heap {
 template <typename T, size_t o>
 struct Pointer {
     static Q_CONSTEXPR size_t offset = o;
-    T operator->() const { return ptr; }
-    operator T () const { return ptr; }
+    T operator->() const { return get(); }
+    operator T () const { return get(); }
 
     Heap::Base *base() {
         Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
@@ -124,16 +124,18 @@ struct Pointer {
     }
 
     void set(EngineBase *e, T newVal) {
-        WriteBarrier::write(e, base(), reinterpret_cast<Heap::Base **>(&ptr), reinterpret_cast<Heap::Base *>(newVal));
+        WriteBarrier::write(e, base(), &ptr, reinterpret_cast<Heap::Base *>(newVal));
     }
 
-    T get() { return ptr; }
+    T get() const { return reinterpret_cast<T>(ptr); }
 
     template <typename Type>
     Type *cast() { return static_cast<Type *>(ptr); }
 
+    Heap::Base *heapObject() const { return ptr; }
+
 private:
-    T ptr;
+    Heap::Base *ptr;
 };
 typedef Pointer<char *, 0> V4PointerCheck;
 V4_ASSERT_IS_TRIVIAL(V4PointerCheck)
@@ -192,6 +194,30 @@ struct ValueArray {
         Q_UNUSED(e);
         for (uint i = index; i < size - n; ++i) {
             values[i] = values[i + n];
+        }
+    }
+
+    void mark(MarkStack *markStack) {
+        Value *v = values;
+        const Value *end = v + alloc;
+        if (alloc > 32*1024) {
+            // drain from time to time to avoid overflows in the js stack
+            Heap::Base **currentBase = markStack->top;
+            while (v < end) {
+                v->mark(markStack);
+                ++v;
+                if (markStack->top >= currentBase + 32*1024) {
+                    Heap::Base **oldBase = markStack->base;
+                    markStack->base = currentBase;
+                    markStack->drain();
+                    markStack->base = oldBase;
+                }
+            }
+        } else {
+            while (v < end) {
+                v->mark(markStack);
+                ++v;
+            }
         }
     }
 };

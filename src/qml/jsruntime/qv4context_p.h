@@ -120,7 +120,7 @@ struct QmlContext;
     Member(class, Pointer, Object *, activation)
 
 DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
-    DECLARE_MARK_TABLE(ExecutionContext);
+    DECLARE_MARKOBJECTS(ExecutionContext);
 
     enum ContextType {
         Type_GlobalContext = 0x1,
@@ -155,7 +155,7 @@ Q_STATIC_ASSERT(offsetof(ExecutionContextData, activation) == offsetof(Execution
     Member(class, ValueArray, ValueArray, locals)
 
 DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
-    DECLARE_MARK_TABLE(CallContext);
+    DECLARE_MARKOBJECTS(CallContext);
 
     void init()
     {
@@ -186,7 +186,7 @@ Q_STATIC_ASSERT(offsetof(CallContextData, function) == 0);
     Member(class, HeapValue, HeapValue, exceptionValue)
 
 DECLARE_HEAP_OBJECT(CatchContext, ExecutionContext) {
-    DECLARE_MARK_TABLE(CatchContext);
+    DECLARE_MARKOBJECTS(CatchContext);
 
     void init(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue);
 };

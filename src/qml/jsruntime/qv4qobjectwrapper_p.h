@@ -90,6 +90,7 @@ struct Q_QML_EXPORT QObjectWrapper : Object {
     }
 
     QObject *object() const { return qObj.data(); }
+    static void markObjects(Heap::Base *that, MarkStack *markStack);
 
 private:
     QQmlQPointer<QObject> qObj;
@@ -102,7 +103,7 @@ private:
     Member(class, NoMark, int, index)
 
 DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
-    DECLARE_MARK_TABLE(QObjectMethod);
+    DECLARE_MARKOBJECTS(QObjectMethod);
 
     void init(QV4::ExecutionContext *scope);
     void destroy()
@@ -196,7 +197,6 @@ protected:
     static bool put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-    static void markObjects(Heap::Base *that, QV4::MarkStack *markStack);
 
     static ReturnedValue method_connect(const BuiltinFunction *, CallData *callData);
     static ReturnedValue method_disconnect(const BuiltinFunction *, CallData *callData);

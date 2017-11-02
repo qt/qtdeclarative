@@ -510,6 +510,13 @@ public:
 };
 V4_ASSERT_IS_TRIVIAL(Value)
 
+inline void Value::mark(MarkStack *markStack)
+{
+    Heap::Base *o = heapObject();
+    if (o)
+        o->mark(markStack);
+}
+
 inline bool Value::isString() const
 {
     Heap::Base *b = heapObject();
