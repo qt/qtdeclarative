@@ -133,21 +133,6 @@ Q_STATIC_ASSERT(Object::markTable == ((2 << 2) | (2 << 4)));
 
 }
 
-#define V4_OBJECT(superClass) \
-    public: \
-        Q_MANAGED_CHECK \
-        typedef superClass SuperClass; \
-        static const QV4::ObjectVTable static_vtbl; \
-        static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
-        V4_MANAGED_SIZE_TEST \
-        Data *d_unchecked() const { return static_cast<Data *>(m()); } \
-        Data *d() const { \
-            Data *dptr = d_unchecked(); \
-            dptr->_checkIsInitialized(); \
-            return dptr; \
-        } \
-        V4_ASSERT_IS_TRIVIAL(Data);
-
 #define V4_OBJECT2(DataClass, superClass) \
     private: \
         DataClass() Q_DECL_EQ_DELETE; \

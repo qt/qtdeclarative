@@ -267,22 +267,25 @@ QT_BEGIN_NAMESPACE
     The currentSize of the particle, interpolating between startSize and endSize based on the currentTime.
 */
 
-
+namespace QV4 {
+namespace Heap {
+struct QV4ParticleData : QV4::Object::Data {
+    void init(QQuickParticleData *datum, QQuickParticleSystem* particleSystem)
+    {
+        Object::init();
+        this->datum = datum;
+        this->particleSystem = particleSystem;
+    }
+    QQuickParticleData* datum;//TODO: Guard needed?
+    QQuickParticleSystem* particleSystem;
+};
+}
+}
 
 //### Particle data handles are not locked to within certain scopes like QQuickContext2D, but there's no way to reload either...
 struct QV4ParticleData : public QV4::Object
 {
-    struct Data : QV4::Object::Data {
-        void init(QQuickParticleData *datum, QQuickParticleSystem* particleSystem)
-        {
-            Object::init();
-            this->datum = datum;
-            this->particleSystem = particleSystem;
-        }
-        QQuickParticleData* datum;//TODO: Guard needed?
-        QQuickParticleSystem* particleSystem;
-    };
-    V4_OBJECT(QV4::Object)
+    V4_OBJECT2(QV4ParticleData, QV4::Object)
 };
 
 DEFINE_OBJECT_VTABLE(QV4ParticleData);
