@@ -416,4 +416,19 @@ TestCase {
         mouseClick(control, rect.x + rect.width / 2, rect.y + rect.height / 2)
         compare(control.selectedText, "Qt Quick Controls 2 TextArea")
     }
+
+    // QTBUG-64048
+    function test_rightClick() {
+        var control = createTemporaryObject(textField, testCase, {text: "TextField", selectByMouse: true})
+        verify(control)
+
+        control.selectAll()
+        compare(control.selectedText, "TextField")
+
+        mouseClick(control, control.width / 2, control.height / 2, Qt.RightButton)
+        compare(control.selectedText, "TextField")
+
+        mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton | Qt.RightButton)
+        compare(control.selectedText, "")
+    }
 }
