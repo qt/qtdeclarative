@@ -137,19 +137,53 @@ class QQuickScrollIndicatorPrivate : public QQuickControlPrivate
 public:
     QQuickScrollIndicatorPrivate()
         : size(0),
+          minimumSize(0),
           position(0),
           active(false),
           orientation(Qt::Vertical)
     {
     }
 
+    struct VisualArea
+    {
+        VisualArea(qreal pos, qreal sz)
+            : position(pos), size(sz) { }
+        qreal position;
+        qreal size;
+    };
+    VisualArea visualArea() const;
+    void visualAreaChange(const VisualArea &newVisualArea, const VisualArea &oldVisualArea);
+
     void resizeContent() override;
 
     qreal size;
+    qreal minimumSize;
     qreal position;
     bool active;
     Qt::Orientation orientation;
 };
+
+QQuickScrollIndicatorPrivate::VisualArea QQuickScrollIndicatorPrivate::visualArea() const
+{
+    qreal visualPos = position;
+    if (minimumSize > size)
+        visualPos = position / (1.0 - size) * (1.0 - minimumSize);
+
+    qreal visualSize = qBound<qreal>(0, qMax(size, minimumSize) + qMin<qreal>(0, visualPos), 1.0 - visualPos);
+
+    visualPos = qBound<qreal>(0, visualPos, 1.0 - visualSize);
+
+    return VisualArea(visualPos, visualSize);
+}
+
+void QQuickScrollIndicatorPrivate::visualAreaChange(const VisualArea &newVisualArea, const VisualArea &oldVisualArea)
+{
+    Q_Q(QQuickScrollIndicator);
+    if (!qFuzzyCompare(newVisualArea.size, oldVisualArea.size))
+        emit q->visualSizeChanged();
+    if (!qFuzzyCompare(newVisualArea.position, oldVisualArea.position))
+        emit q->visualPositionChanged();
+}
 
 void QQuickScrollIndicatorPrivate::resizeContent()
 {
@@ -159,15 +193,14 @@ void QQuickScrollIndicatorPrivate::resizeContent()
 
     // - negative overshoot (pos < 0): clamp the pos to 0, and deduct the overshoot from the size
     // - positive overshoot (pos + size > 1): clamp the size to 1-pos
-    const qreal clampedSize = qBound<qreal>(0, size + qMin<qreal>(0, position), 1.0 - position);
-    const qreal clampedPos = qBound<qreal>(0, position, 1.0 - clampedSize);
+    const VisualArea visual = visualArea();
 
     if (orientation == Qt::Horizontal) {
-        contentItem->setPosition(QPointF(q->leftPadding() + clampedPos * q->availableWidth(), q->topPadding()));
-        contentItem->setSize(QSizeF(q->availableWidth() * clampedSize, q->availableHeight()));
+        contentItem->setPosition(QPointF(q->leftPadding() + visual.position * q->availableWidth(), q->topPadding()));
+        contentItem->setSize(QSizeF(q->availableWidth() * visual.size, q->availableHeight()));
     } else {
-        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + clampedPos * q->availableHeight()));
-        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * clampedSize));
+        contentItem->setPosition(QPointF(q->leftPadding(), q->topPadding() + visual.position * q->availableHeight()));
+        contentItem->setSize(QSizeF(q->availableWidth(), q->availableHeight() * visual.size));
     }
 }
 
@@ -190,6 +223,8 @@ QQuickScrollIndicatorAttached *QQuickScrollIndicator::qmlAttachedProperties(QObj
 
     This property is automatically set when the scroll indicator is
     \l {Attaching ScrollIndicator to a Flickable}{attached to a flickable}.
+
+    \sa minimumSize, visualSize
 */
 qreal QQuickScrollIndicator::size() const
 {
@@ -203,10 +238,12 @@ void QQuickScrollIndicator::setSize(qreal size)
     if (qFuzzyCompare(d->size, size))
         return;
 
+    auto oldVisualArea = d->visualArea();
     d->size = size;
     if (isComponentComplete())
         d->resizeContent();
     emit sizeChanged();
+    d->visualAreaChange(d->visualArea(), oldVisualArea);
 }
 
 /*!
@@ -217,7 +254,7 @@ void QQuickScrollIndicator::setSize(qreal size)
     This property is automatically set when the scroll indicator is
     \l {Attaching ScrollIndicator to a Flickable}{attached to a flickable}.
 
-    \sa {Flickable::visibleArea.yPosition}{Flickable::visibleArea}
+    \sa {Flickable::visibleArea.yPosition}{Flickable::visibleArea}, visualPosition
 */
 qreal QQuickScrollIndicator::position() const
 {
@@ -231,10 +268,12 @@ void QQuickScrollIndicator::setPosition(qreal position)
     if (qFuzzyCompare(d->position, position))
         return;
 
+    auto oldVisualArea = d->visualArea();
     d->position = position;
     if (isComponentComplete())
         d->resizeContent();
     emit positionChanged();
+    d->visualAreaChange(d->visualArea(), oldVisualArea);
 }
 
 /*!
@@ -325,6 +364,64 @@ bool QQuickScrollIndicator::isVertical() const
 {
     Q_D(const QQuickScrollIndicator);
     return d->orientation == Qt::Vertical;
+}
+
+/*!
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty real QtQuick.Controls::ScrollIndicator::minimumSize
+
+    This property holds the minimum size of the indicator, scaled to \c {0.0 - 1.0}.
+
+    \sa size, visualSize, visualPosition
+*/
+qreal QQuickScrollIndicator::minimumSize() const
+{
+    Q_D(const QQuickScrollIndicator);
+    return d->minimumSize;
+}
+
+void QQuickScrollIndicator::setMinimumSize(qreal minimumSize)
+{
+    Q_D(QQuickScrollIndicator);
+    if (qFuzzyCompare(d->minimumSize, minimumSize))
+        return;
+
+    auto oldVisualArea = d->visualArea();
+    d->minimumSize = minimumSize;
+    if (isComponentComplete())
+        d->resizeContent();
+    emit minimumSizeChanged();
+    d->visualAreaChange(d->visualArea(), oldVisualArea);
+}
+
+/*!
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty real QtQuick.Controls::ScrollIndicator::visualSize
+
+    This property holds the effective visual size of the indicator,
+    which may be limited by the \l {minimumSize}{minimum size}.
+
+    \sa size, minimumSize
+*/
+qreal QQuickScrollIndicator::visualSize() const
+{
+    Q_D(const QQuickScrollIndicator);
+    return d->visualArea().size;
+}
+
+/*!
+    \since QtQuick.Controls 2.4 (Qt 5.11)
+    \qmlproperty real QtQuick.Controls::ScrollIndicator::visualPosition
+
+    This property holds the effective visual position of the indicator,
+    which may be limited by the \l {minimumSize}{minimum size}.
+
+    \sa position, minimumSize
+*/
+qreal QQuickScrollIndicator::visualPosition() const
+{
+    Q_D(const QQuickScrollIndicator);
+    return d->visualArea().position;
 }
 
 class QQuickScrollIndicatorAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener

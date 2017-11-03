@@ -258,4 +258,52 @@ TestCase {
         touch.release(0, control).commit()
         verify(!ma.pressed)
     }
+
+    function test_minimumSize() {
+        var container = createTemporaryObject(flickable, testCase)
+        verify(container)
+        waitForRendering(container)
+
+        var vertical = scrollIndicator.createObject(container, {minimumSize: 0.1})
+        container.ScrollIndicator.vertical = vertical
+
+        compare(container.visibleArea.heightRatio, 0.5)
+        compare(vertical.size, 0.5)
+        compare(vertical.visualSize, 0.5)
+        compare(vertical.contentItem.height, 0.5 * vertical.availableHeight)
+
+        container.contentHeight = 2000
+
+        compare(container.visibleArea.heightRatio, 0.05)
+        compare(vertical.size, 0.05)
+        compare(vertical.visualSize, 0.1)
+        compare(vertical.contentItem.height, 0.1 * vertical.availableHeight)
+
+        verify(container.atYBeginning)
+        compare(container.visibleArea.yPosition, 0.0)
+        compare(vertical.position, 0.0)
+        compare(vertical.visualPosition, 0.0)
+        compare(vertical.contentItem.y, vertical.topPadding)
+
+        container.contentY = 1900
+
+        verify(container.atYEnd)
+        compare(container.visibleArea.yPosition, 0.95)
+        compare(vertical.position, 0.95)
+        compare(vertical.visualPosition, 0.9)
+        compare(vertical.contentItem.y, vertical.topPadding + 0.9 * vertical.availableHeight)
+
+        container.contentHeight = 125
+
+        compare(container.visibleArea.heightRatio, 0.8)
+        compare(vertical.size, 0.8)
+        compare(vertical.visualSize, 0.8)
+        compare(vertical.contentItem.height, 0.8 * vertical.availableHeight)
+
+        verify(container.atYEnd)
+        compare(container.visibleArea.yPosition, 0.2)
+        compare(vertical.position, 0.2)
+        compare(vertical.visualPosition, 0.2)
+        compare(vertical.contentItem.y, vertical.topPadding + 0.2 * vertical.availableHeight)
+    }
 }
