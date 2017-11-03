@@ -704,7 +704,7 @@ TestCase {
     }
 
     function test_overshoot() {
-        var container = flickable.createObject(testCase)
+        var container = createTemporaryObject(flickable, testCase)
         verify(container)
         waitForRendering(container)
 
@@ -733,8 +733,6 @@ TestCase {
         horizontal.position = 0.8
         compare(horizontal.contentItem.x, horizontal.leftPadding + 0.8 * horizontal.availableWidth)
         compare(horizontal.contentItem.width, 0.2 * horizontal.availableWidth)
-
-        container.destroy()
     }
 
     function test_flashing() {
