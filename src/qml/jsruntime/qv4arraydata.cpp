@@ -111,6 +111,13 @@ static Q_ALWAYS_INLINE void storeValue(ReturnedValue *target, uint value)
     *target = v.asReturnedValue();
 }
 
+void Heap::ArrayData::markObjects(Heap::Base *base, MarkStack *stack)
+{
+    ArrayData *a = static_cast<ArrayData *>(base);
+    a->values.mark(stack);
+}
+
+
 void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAttributes)
 {
     Scope scope(o->engine());
@@ -161,6 +168,8 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     }
     newData->setAlloc(alloc);
     newData->setType(newType);
+    if (d)
+        newData->d()->needsMark = d->d()->needsMark;
     newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->d()->values.values + alloc) : 0);
     o->setArrayData(newData);
 
@@ -183,6 +192,8 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
         memcpy(newData->d()->values.values, d->d()->values.values + offset, sizeof(Value)*toCopy);
     }
 
+    if (newType != Heap::ArrayData::Simple)
+        newData->d()->needsMark = true;
     if (newType != Heap::ArrayData::Sparse)
         return;
 

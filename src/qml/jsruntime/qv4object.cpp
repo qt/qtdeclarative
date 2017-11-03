@@ -271,8 +271,11 @@ void Heap::Object::markObjects(Heap::Base *b, MarkStack *stack)
     Object *o = static_cast<Object *>(b);
     if (o->memberData)
         o->memberData->mark(stack);
-    if (o->arrayData)
-        o->arrayData->mark(stack);
+    if (o->arrayData) {
+        o->arrayData->setMarkBit();
+        if (o->arrayData->needsMark)
+            ArrayData::markObjects(o->arrayData, stack);
+    }
     uint nInline = o->vtable()->nInlineProperties;
     Value *v = reinterpret_cast<Value *>(o) + o->vtable()->inlinePropertyOffset;
     const Value *end = v + nInline;
