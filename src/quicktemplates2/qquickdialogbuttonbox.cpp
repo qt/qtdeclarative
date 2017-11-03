@@ -192,7 +192,7 @@ void QQuickDialogButtonBoxPrivate::resizeContent()
     const int valign = alignment & Qt::AlignVertical_Mask;
 
     const qreal cw = !halign ? q->availableWidth() : contentItem->implicitWidth();
-    const qreal ch = !valign ? q->availableHeight() : contentItem->implicitWidth();
+    const qreal ch = !valign ? q->availableHeight() : contentItem->implicitHeight();
 
     QRectF geometry = q->boundingRect().adjusted(q->leftPadding(), q->topPadding(), -q->rightPadding(), -q->bottomPadding());
     if (halign || valign)
