@@ -766,7 +766,6 @@ struct Encode {
     }
 
     explicit Encode(Heap::Base *o) {
-        Q_ASSERT(o);
         val = Value::fromHeapObject(o).asReturnedValue();
     }
 
