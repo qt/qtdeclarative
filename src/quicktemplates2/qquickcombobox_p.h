@@ -63,19 +63,21 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged FINAL)
     Q_PROPERTY(QQmlInstanceModel *delegateModel READ delegateModel NOTIFY delegateModelChanged FINAL)
-    Q_PROPERTY(bool editable READ isEditable WRITE setEditable NOTIFY editableChanged FINAL REVISION 2)
-    Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL REVISION 1)
-    Q_PROPERTY(bool down READ isDown WRITE setDown RESET resetDown NOTIFY downChanged FINAL REVISION 2)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL) // ### Qt 6: should not be writable
     Q_PROPERTY(int highlightedIndex READ highlightedIndex NOTIFY highlightedIndexChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
     Q_PROPERTY(QString currentText READ currentText NOTIFY currentTextChanged FINAL)
     Q_PROPERTY(QString displayText READ displayText WRITE setDisplayText RESET resetDisplayText NOTIFY displayTextChanged FINAL)
-    Q_PROPERTY(QString editText READ editText WRITE setEditText RESET resetEditText NOTIFY editTextChanged FINAL REVISION 2)
     Q_PROPERTY(QString textRole READ textRole WRITE setTextRole NOTIFY textRoleChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     Q_PROPERTY(QQuickPopup *popup READ popup WRITE setPopup NOTIFY popupChanged FINAL)
+    // 2.1 (Qt 5.8)
+    Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL REVISION 1)
+    // 2.2 (Qt 5.9)
+    Q_PROPERTY(bool down READ isDown WRITE setDown RESET resetDown NOTIFY downChanged FINAL REVISION 2)
+    Q_PROPERTY(bool editable READ isEditable WRITE setEditable NOTIFY editableChanged FINAL REVISION 2)
+    Q_PROPERTY(QString editText READ editText WRITE setEditText RESET resetEditText NOTIFY editTextChanged FINAL REVISION 2)
     Q_PROPERTY(QValidator *validator READ validator WRITE setValidator NOTIFY validatorChanged FINAL REVISION 2)
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION 2)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION 2)
@@ -91,16 +93,6 @@ public:
     void setModel(const QVariant &model);
     QQmlInstanceModel *delegateModel() const;
 
-    bool isEditable() const;
-    void setEditable(bool editable);
-
-    bool isFlat() const;
-    void setFlat(bool flat);
-
-    bool isDown() const;
-    void setDown(bool down);
-    void resetDown();
-
     bool isPressed() const;
     void setPressed(bool pressed);
 
@@ -115,10 +107,6 @@ public:
     void setDisplayText(const QString &text);
     void resetDisplayText();
 
-    QString editText() const;
-    void setEditText(const QString &text);
-    void resetEditText();
-
     QString textRole() const;
     void setTextRole(const QString &role);
 
@@ -131,6 +119,25 @@ public:
     QQuickPopup *popup() const;
     void setPopup(QQuickPopup *popup);
 
+    Q_INVOKABLE QString textAt(int index) const;
+    Q_INVOKABLE int find(const QString &text, Qt::MatchFlags flags = Qt::MatchExactly) const;
+
+    // 2.1 (Qt 5.8)
+    bool isFlat() const;
+    void setFlat(bool flat);
+
+    // 2.2 (Qt 5.9)
+    bool isDown() const;
+    void setDown(bool down);
+    void resetDown();
+
+    bool isEditable() const;
+    void setEditable(bool editable);
+
+    QString editText() const;
+    void setEditText(const QString &text);
+    void resetEditText();
+
     QValidator *validator() const;
     void setValidator(QValidator *validator);
 
@@ -140,39 +147,37 @@ public:
     bool isInputMethodComposing() const;
     bool hasAcceptableInput() const;
 
-    Q_INVOKABLE QString textAt(int index) const;
-    Q_INVOKABLE int find(const QString &text, Qt::MatchFlags flags = Qt::MatchExactly) const;
-
 public Q_SLOTS:
     void incrementCurrentIndex();
     void decrementCurrentIndex();
     Q_REVISION(2) void selectAll();
 
 Q_SIGNALS:
+    void activated(int index);
+    void highlighted(int index);
     void countChanged();
     void modelChanged();
     void delegateModelChanged();
-    Q_REVISION(2) void editableChanged();
-    Q_REVISION(1) void flatChanged();
-    Q_REVISION(2) void downChanged();
     void pressedChanged();
     void highlightedIndexChanged();
     void currentIndexChanged();
     void currentTextChanged();
     void displayTextChanged();
-    Q_REVISION(2) void editTextChanged();
     void textRoleChanged();
     void delegateChanged();
     void indicatorChanged();
     void popupChanged();
+    // 2.1 (Qt 5.8)
+    Q_REVISION(1) void flatChanged();
+    // 2.2 (Qt 5.9)
+    Q_REVISION(2) void accepted();
+    Q_REVISION(2) void downChanged();
+    Q_REVISION(2) void editableChanged();
+    Q_REVISION(2) void editTextChanged();
     Q_REVISION(2) void validatorChanged();
     Q_REVISION(2) void inputMethodHintsChanged();
     Q_REVISION(2) void inputMethodComposingChanged();
     Q_REVISION(2) void acceptableInputChanged();
-
-    void activated(int index);
-    void highlighted(int index);
-    Q_REVISION(2) void accepted();
 
 protected:
     bool eventFilter(QObject *object, QEvent *event) override;

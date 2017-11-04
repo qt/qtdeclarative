@@ -430,33 +430,6 @@ void QQuickSlider::setSnapMode(SnapMode mode)
 }
 
 /*!
-    \since QtQuick.Controls 2.2 (Qt 5.9)
-    \qmlproperty bool QtQuick.Controls::Slider::live
-
-    This property holds whether the slider provides live updates for the \l value
-    property while the handle is dragged.
-
-    The default value is \c true.
-
-    \sa value, valueAt()
-*/
-bool QQuickSlider::live() const
-{
-    Q_D(const QQuickSlider);
-    return d->live;
-}
-
-void QQuickSlider::setLive(bool live)
-{
-    Q_D(QQuickSlider);
-    if (d->live == live)
-        return;
-
-    d->live = live;
-    emit liveChanged();
-}
-
-/*!
     \qmlproperty bool QtQuick.Controls::Slider::pressed
 
     This property holds whether the slider is pressed.
@@ -544,6 +517,33 @@ qreal QQuickSlider::valueAt(qreal position) const
     if (qFuzzyIsNull(d->stepSize))
         return value;
     return qRound(value / d->stepSize) * d->stepSize;
+}
+
+/*!
+    \since QtQuick.Controls 2.2 (Qt 5.9)
+    \qmlproperty bool QtQuick.Controls::Slider::live
+
+    This property holds whether the slider provides live updates for the \l value
+    property while the handle is dragged.
+
+    The default value is \c true.
+
+    \sa value, valueAt()
+*/
+bool QQuickSlider::live() const
+{
+    Q_D(const QQuickSlider);
+    return d->live;
+}
+
+void QQuickSlider::setLive(bool live)
+{
+    Q_D(QQuickSlider);
+    if (d->live == live)
+        return;
+
+    d->live = live;
+    emit liveChanged();
 }
 
 /*!

@@ -514,6 +514,34 @@ void QQuickDial::setPressed(bool pressed)
 }
 
 /*!
+    \qmlproperty Item QtQuick.Controls::Dial::handle
+
+    This property holds the handle of the dial.
+
+    The handle acts as a visual indicator of the position of the dial.
+
+    \sa {Customizing Dial}
+*/
+QQuickItem *QQuickDial::handle() const
+{
+    Q_D(const QQuickDial);
+    return d->handle;
+}
+
+void QQuickDial::setHandle(QQuickItem *handle)
+{
+    Q_D(QQuickDial);
+    if (handle == d->handle)
+        return;
+
+    QQuickControlPrivate::destroyDelegate(d->handle, this);
+    d->handle = handle;
+    if (d->handle && !d->handle->parentItem())
+        d->handle->setParentItem(this);
+    emit handleChanged();
+}
+
+/*!
     \since QtQuick.Controls 2.2 (Qt 5.9)
     \qmlproperty bool QtQuick.Controls::Dial::live
 
@@ -566,34 +594,6 @@ void QQuickDial::decrease()
     Q_D(QQuickDial);
     qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
     setValue(d->value - step);
-}
-
-/*!
-    \qmlproperty Item QtQuick.Controls::Dial::handle
-
-    This property holds the handle of the dial.
-
-    The handle acts as a visual indicator of the position of the dial.
-
-    \sa {Customizing Dial}
-*/
-QQuickItem *QQuickDial::handle() const
-{
-    Q_D(const QQuickDial);
-    return d->handle;
-}
-
-void QQuickDial::setHandle(QQuickItem *handle)
-{
-    Q_D(QQuickDial);
-    if (handle == d->handle)
-        return;
-
-    QQuickControlPrivate::destroyDelegate(d->handle, this);
-    d->handle = handle;
-    if (d->handle && !d->handle->parentItem())
-        d->handle->setParentItem(this);
-    emit handleChanged();
 }
 
 void QQuickDial::keyPressEvent(QKeyEvent *event)

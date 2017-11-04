@@ -456,12 +456,6 @@ QQuickSwipeViewAttached::~QQuickSwipeViewAttached()
         QQuickItemPrivate::get(item)->removeItemChangeListener(d, QQuickItemPrivate::Parent | QQuickItemPrivate::Destroyed);
 }
 
-QQuickSwipeView *QQuickSwipeViewAttached::view() const
-{
-    Q_D(const QQuickSwipeViewAttached);
-    return d->swipeView;
-}
-
 int QQuickSwipeViewAttached::index() const
 {
     Q_D(const QQuickSwipeViewAttached);
@@ -472,6 +466,12 @@ bool QQuickSwipeViewAttached::isCurrentItem() const
 {
     Q_D(const QQuickSwipeViewAttached);
     return d->index != -1 && d->currentIndex != -1 && d->index == d->currentIndex;
+}
+
+QQuickSwipeView *QQuickSwipeViewAttached::view() const
+{
+    Q_D(const QQuickSwipeViewAttached);
+    return d->swipeView;
 }
 
 bool QQuickSwipeViewAttached::isNextItem() const

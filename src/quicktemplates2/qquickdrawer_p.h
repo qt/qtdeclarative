@@ -60,6 +60,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDrawer : public QQuickPopup
     Q_PROPERTY(Qt::Edge edge READ edge WRITE setEdge NOTIFY edgeChanged FINAL)
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
     Q_PROPERTY(qreal dragMargin READ dragMargin WRITE setDragMargin RESET resetDragMargin NOTIFY dragMarginChanged FINAL)
+    // 2.2 (Qt 5.9)
     Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL REVISION 2)
 
 public:
@@ -75,6 +76,7 @@ public:
     void setDragMargin(qreal margin);
     void resetDragMargin();
 
+    // 2.2 (Qt 5.9)
     bool isInteractive() const;
     void setInteractive(bool interactive);
 
@@ -82,6 +84,7 @@ Q_SIGNALS:
     void edgeChanged();
     void positionChanged();
     void dragMarginChanged();
+    // 2.2 (Qt 5.9)
     Q_REVISION(2) void interactiveChanged();
 
 protected:

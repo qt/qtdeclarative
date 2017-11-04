@@ -926,22 +926,6 @@ void QQuickSpinButton::setPressed(bool pressed)
     emit pressedChanged();
 }
 
-bool QQuickSpinButton::isHovered() const
-{
-    Q_D(const QQuickSpinButton);
-    return d->hovered;
-}
-
-void QQuickSpinButton::setHovered(bool hovered)
-{
-    Q_D(QQuickSpinButton);
-    if (d->hovered == hovered)
-        return;
-
-    d->hovered = hovered;
-    emit hoveredChanged();
-}
-
 QQuickItem *QQuickSpinButton::indicator() const
 {
     Q_D(const QQuickSpinButton);
@@ -962,6 +946,22 @@ void QQuickSpinButton::setIndicator(QQuickItem *indicator)
             indicator->setParentItem(static_cast<QQuickItem *>(parent()));
     }
     emit indicatorChanged();
+}
+
+bool QQuickSpinButton::isHovered() const
+{
+    Q_D(const QQuickSpinButton);
+    return d->hovered;
+}
+
+void QQuickSpinButton::setHovered(bool hovered)
+{
+    Q_D(QQuickSpinButton);
+    if (d->hovered == hovered)
+        return;
+
+    d->hovered = hovered;
+    emit hoveredChanged();
 }
 
 QT_END_NAMESPACE

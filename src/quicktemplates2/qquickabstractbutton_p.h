@@ -102,7 +102,6 @@ Q_SIGNALS:
     void released();
     void canceled();
     void clicked();
-    Q_REVISION(2) void toggled();
     void pressAndHold();
     void doubleClicked();
     void textChanged();
@@ -112,6 +111,8 @@ Q_SIGNALS:
     void checkableChanged();
     void autoExclusiveChanged();
     void indicatorChanged();
+    // 2.2 (Qt 5.9)
+    Q_REVISION(2) void toggled();
 
 protected:
     QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);

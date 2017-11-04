@@ -83,6 +83,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void checkedButtonChanged();
     void buttonsChanged();
+    // 2.1 (Qt 5.8)
     Q_REVISION(1) void clicked(QQuickAbstractButton *button);
 
 private:

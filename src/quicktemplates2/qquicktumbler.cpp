@@ -418,6 +418,11 @@ void QQuickTumbler::setVisibleItemCount(int visibleItemCount)
     emit visibleItemCountChanged();
 }
 
+QQuickTumblerAttached *QQuickTumbler::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickTumblerAttached(object);
+}
+
 /*!
     \qmlproperty bool QtQuick.Controls::Tumbler::wrap
     \since QtQuick.Controls 2.1 (Qt 5.8)
@@ -461,11 +466,6 @@ bool QQuickTumbler::isMoving() const
 {
     Q_D(const QQuickTumbler);
     return d->view && d->view->property("moving").toBool();
-}
-
-QQuickTumblerAttached *QQuickTumbler::qmlAttachedProperties(QObject *object)
-{
-    return new QQuickTumblerAttached(object);
 }
 
 void QQuickTumbler::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
