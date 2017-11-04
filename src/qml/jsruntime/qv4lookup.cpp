@@ -155,9 +155,10 @@ ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Va
         if (attrs.isData()) {
             if (l->level == 0) {
                 uint nInline = l->proto->vtable()->nInlineProperties;
-                if (l->index < nInline)
+                if (l->index < nInline) {
+                    l->index += l->proto->vtable()->inlinePropertyOffset;
                     l->getter = Lookup::primitiveGetter0Inline;
-                else {
+                } else {
                     l->index -= nInline;
                     l->getter = Lookup::primitiveGetter0MemberData;
                 }
@@ -258,7 +259,7 @@ ReturnedValue Lookup::getter0Inline(Lookup *l, ExecutionEngine *engine, const Va
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
     if (o) {
         if (l->classList[0] == o->internalClass)
-            return o->inlinePropertyData(l->index)->asReturnedValue();
+            return o->inlinePropertyDataWithOffset(l->index)->asReturnedValue();
     }
     return getterTwoClasses(l, engine, object);
 }
@@ -301,9 +302,9 @@ ReturnedValue Lookup::getter0Inlinegetter0Inline(Lookup *l, ExecutionEngine *eng
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
     if (o) {
         if (l->classList[0] == o->internalClass)
-            return o->inlinePropertyData(l->index)->asReturnedValue();
+            return o->inlinePropertyDataWithOffset(l->index)->asReturnedValue();
         if (l->classList[2] == o->internalClass)
-            return o->inlinePropertyData(l->index2)->asReturnedValue();
+            return o->inlinePropertyDataWithOffset(l->index2)->asReturnedValue();
     }
     l->getter = getterFallback;
     return getterFallback(l, engine, object);
@@ -316,7 +317,7 @@ ReturnedValue Lookup::getter0Inlinegetter0MemberData(Lookup *l, ExecutionEngine 
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
     if (o) {
         if (l->classList[0] == o->internalClass)
-            return o->inlinePropertyData(l->index)->asReturnedValue();
+            return o->inlinePropertyDataWithOffset(l->index)->asReturnedValue();
         if (l->classList[2] == o->internalClass)
             return o->memberData->values.data()[l->index2].asReturnedValue();
     }
@@ -346,7 +347,7 @@ ReturnedValue Lookup::getter0Inlinegetter1(Lookup *l, ExecutionEngine *engine, c
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
     if (o) {
         if (l->classList[0] == o->internalClass)
-            return o->inlinePropertyData(l->index)->asReturnedValue();
+            return o->inlinePropertyDataWithOffset(l->index)->asReturnedValue();
         if (l->classList[2] == o->internalClass && l->classList[3] == o->prototype()->internalClass)
             return o->prototype()->propertyData(l->index2)->asReturnedValue();
     }
@@ -463,7 +464,7 @@ ReturnedValue Lookup::primitiveGetter0Inline(Lookup *l, ExecutionEngine *engine,
     if (object.type() == l->type) {
         Heap::Object *o = l->proto;
         if (l->classList[0] == o->internalClass)
-            return o->inlinePropertyData(l->index)->asReturnedValue();
+            return o->inlinePropertyDataWithOffset(l->index)->asReturnedValue();
     }
     l->getter = getterGeneric;
     return getterGeneric(l, engine, object);
@@ -559,9 +560,10 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionEngine *engine)
         if (attrs.isData()) {
             if (l->level == 0) {
                 uint nInline = o->d()->vtable()->nInlineProperties;
-                if (l->index < nInline)
+                if (l->index < nInline) {
+                    l->index += o->d()->vtable()->inlinePropertyOffset;
                     l->globalGetter = globalGetter0Inline;
-                else {
+                } else {
                     l->index -= nInline;
                     l->globalGetter = globalGetter0MemberData;
                 }
@@ -589,7 +591,7 @@ ReturnedValue Lookup::globalGetter0Inline(Lookup *l, ExecutionEngine *engine)
 {
     Object *o = engine->globalObject;
     if (l->classList[0] == o->internalClass())
-        return o->d()->inlinePropertyData(l->index)->asReturnedValue();
+        return o->d()->inlinePropertyDataWithOffset(l->index)->asReturnedValue();
 
     l->globalGetter = globalGetterGeneric;
     return globalGetterGeneric(l, engine);

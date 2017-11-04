@@ -76,6 +76,10 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
     static void markObjects(Heap::Base *base, MarkStack *stack);
     void init() { Base::init(); }
 
+    const Value *inlinePropertyDataWithOffset(uint indexWithOffset) const {
+        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < vtable()->inlinePropertyOffset + vtable()->nInlineProperties);
+        return reinterpret_cast<const Value *>(this) + indexWithOffset;
+    }
     const Value *inlinePropertyData(uint index) const {
         Q_ASSERT(index < vtable()->nInlineProperties);
         return reinterpret_cast<const Value *>(this) + vtable()->inlinePropertyOffset + index;

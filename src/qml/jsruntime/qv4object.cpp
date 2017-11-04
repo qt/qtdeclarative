@@ -529,9 +529,10 @@ ReturnedValue Object::getLookup(const Managed *m, Lookup *l)
             Q_ASSERT(l->classList[0] == o->internalClass());
             if (l->level == 0) {
                 uint nInline = o->d()->vtable()->nInlineProperties;
-                if (l->index < nInline)
+                if (l->index < nInline) {
+                    l->index += o->d()->vtable()->inlinePropertyOffset;
                     l->getter = Lookup::getter0Inline;
-                else {
+                } else {
                     l->index -= nInline;
                     l->getter = Lookup::getter0MemberData;
                 }
