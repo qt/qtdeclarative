@@ -1394,6 +1394,28 @@ static Qt::WindowState resolveWindowState(Qt::WindowStates states)
     return Qt::WindowNoState;
 }
 
+static void remapInputMethodQueryEvent(QObject *object, QInputMethodQueryEvent *e)
+{
+    auto item = qobject_cast<QQuickItem *>(object);
+    if (!item)
+        return;
+
+    // Remap all QRectF values.
+    for (auto query : {Qt::ImCursorRectangle, Qt::ImAnchorRectangle, Qt::ImInputItemClipRectangle}) {
+        if (e->queries() & query) {
+            auto value = e->value(query);
+            if (value.canConvert<QRectF>())
+                e->setValue(query, item->mapRectToScene(value.toRectF()));
+        }
+    }
+    // Remap all QPointF values.
+    if (e->queries() & Qt::ImCursorPosition) {
+        auto value = e->value(Qt::ImCursorPosition);
+        if (value.canConvert<QPointF>())
+            e->setValue(Qt::ImCursorPosition, item->mapToScene(value.toPointF()));
+    }
+}
+
 /*! \reimp */
 bool QQuickWidget::event(QEvent *e)
 {
@@ -1410,8 +1432,17 @@ bool QQuickWidget::event(QEvent *e)
         return QCoreApplication::sendEvent(d->offscreenWindow, e);
 
     case QEvent::InputMethod:
-    case QEvent::InputMethodQuery:
         return QCoreApplication::sendEvent(d->offscreenWindow->focusObject(), e);
+    case QEvent::InputMethodQuery:
+        {
+            bool eventResult = QCoreApplication::sendEvent(d->offscreenWindow->focusObject(), e);
+            // The result in focusObject are based on offscreenWindow. But
+            // the inputMethodTransform won't get updated because the focus
+            // is on QQuickWidget. We need to remap the value based on the
+            // widget.
+            remapInputMethodQueryEvent(d->offscreenWindow->focusObject(), static_cast<QInputMethodQueryEvent *>(e));
+            return eventResult;
+        }
 
     case QEvent::WindowChangeInternal:
         d->handleWindowChange();
