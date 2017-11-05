@@ -1,2 +1,4 @@
 [contains:hollow square: testing points inside]
 xcb
+[ignoreButtonPressNotInAcceptedMouseButtons]
+osx
