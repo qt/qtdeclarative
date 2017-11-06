@@ -513,10 +513,10 @@ void QQuickSlider::setHandle(QQuickItem *handle)
 qreal QQuickSlider::valueAt(qreal position) const
 {
     Q_D(const QQuickSlider);
-    const qreal value = d->from + (d->to - d->from) * position;
+    const qreal value = (d->to - d->from) * position;
     if (qFuzzyIsNull(d->stepSize))
-        return value;
-    return qRound(value / d->stepSize) * d->stepSize;
+        return d->from + value;
+    return d->from + qRound(value / d->stepSize) * d->stepSize;
 }
 
 /*!
