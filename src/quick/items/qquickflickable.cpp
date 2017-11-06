@@ -739,7 +739,8 @@ void QQuickFlickable::setContentX(qreal pos)
     d->hData.explicitValue = true;
     d->resetTimeline(d->hData);
     d->hData.vTime = d->timeline.time();
-    movementEnding(true, false);
+    if (isMoving() || isFlicking())
+        movementEnding(true, false);
     if (-pos != d->hData.move.value())
         d->hData.move.setValue(-pos);
 }
@@ -756,7 +757,8 @@ void QQuickFlickable::setContentY(qreal pos)
     d->vData.explicitValue = true;
     d->resetTimeline(d->vData);
     d->vData.vTime = d->timeline.time();
-    movementEnding(false, true);
+    if (isMoving() || isFlicking())
+        movementEnding(false, true);
     if (-pos != d->vData.move.value())
         d->vData.move.setValue(-pos);
 }
@@ -2180,25 +2182,25 @@ qreal QQuickFlickable::originX() const
 void QQuickFlickable::resizeContent(qreal w, qreal h, QPointF center)
 {
     Q_D(QQuickFlickable);
-    if (w != d->hData.viewSize) {
-        qreal oldSize = d->hData.viewSize;
-        d->hData.viewSize = w;
-        d->contentItem->setWidth(w);
+    const qreal oldHSize = d->hData.viewSize;
+    const qreal oldVSize = d->vData.viewSize;
+    const bool needToUpdateWidth = w != oldHSize;
+    const bool needToUpdateHeight = h != oldVSize;
+    d->hData.viewSize = w;
+    d->vData.viewSize = h;
+    d->contentItem->setSize(QSizeF(w, h));
+    if (needToUpdateWidth)
         emit contentWidthChanged();
-        if (center.x() != 0) {
-            qreal pos = center.x() * w / oldSize;
-            setContentX(contentX() + pos - center.x());
-        }
-    }
-    if (h != d->vData.viewSize) {
-        qreal oldSize = d->vData.viewSize;
-        d->vData.viewSize = h;
-        d->contentItem->setHeight(h);
+    if (needToUpdateHeight)
         emit contentHeightChanged();
-        if (center.y() != 0) {
-            qreal pos = center.y() * h / oldSize;
-            setContentY(contentY() + pos - center.y());
-        }
+
+    if (center.x() != 0) {
+        qreal pos = center.x() * w / oldHSize;
+        setContentX(contentX() + pos - center.x());
+    }
+    if (center.y() != 0) {
+        qreal pos = center.y() * h / oldVSize;
+        setContentY(contentY() + pos - center.y());
     }
     d->updateBeginningEnd();
 }

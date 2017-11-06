@@ -133,6 +133,8 @@ public:
 
     QRectF bounds() const;
 
+    bool isOpaque() const { return !m_pixmap.hasAlphaChannel(); }
+
 private:
     QPixmap m_pixmap;
     QRectF m_bounds;
