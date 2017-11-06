@@ -810,63 +810,6 @@ void QQuickRangeSlider::setOrientation(Qt::Orientation orientation)
 }
 
 /*!
-    \since QtQuick.Controls 2.3 (Qt 5.10)
-    \qmlproperty bool QtQuick.Controls::RangeSlider::horizontal
-    \readonly
-
-    This property holds whether the slider is horizontal.
-
-    \sa orientation
-*/
-bool QQuickRangeSlider::isHorizontal() const
-{
-    Q_D(const QQuickRangeSlider);
-    return d->orientation == Qt::Horizontal;
-}
-
-/*!
-    \since QtQuick.Controls 2.3 (Qt 5.10)
-    \qmlproperty bool QtQuick.Controls::RangeSlider::vertical
-    \readonly
-
-    This property holds whether the slider is vertical.
-
-    \sa orientation
-*/
-bool QQuickRangeSlider::isVertical() const
-{
-    Q_D(const QQuickRangeSlider);
-    return d->orientation == Qt::Vertical;
-}
-
-/*!
-    \since QtQuick.Controls 2.2 (Qt 5.9)
-    \qmlproperty bool QtQuick.Controls::RangeSlider::live
-
-    This property holds whether the slider provides live updates for the \l first.value
-    and \l second.value properties while the respective handles are dragged.
-
-    The default value is \c true.
-
-    \sa first.value, second.value
-*/
-bool QQuickRangeSlider::live() const
-{
-    Q_D(const QQuickRangeSlider);
-    return d->live;
-}
-
-void QQuickRangeSlider::setLive(bool live)
-{
-    Q_D(QQuickRangeSlider);
-    if (d->live == live)
-        return;
-
-    d->live = live;
-    emit liveChanged();
-}
-
-/*!
     \qmlmethod void QtQuick.Controls::RangeSlider::setValues(real firstValue, real secondValue)
 
     Sets \l first.value and \l second.value with the given arguments.
@@ -921,6 +864,63 @@ void QQuickRangeSlider::setValues(qreal firstValue, qreal secondValue)
     // If we don't do this last, the positions may be incorrect.
     firstPrivate->updatePosition(true);
     secondPrivate->updatePosition();
+}
+
+/*!
+    \since QtQuick.Controls 2.2 (Qt 5.9)
+    \qmlproperty bool QtQuick.Controls::RangeSlider::live
+
+    This property holds whether the slider provides live updates for the \l first.value
+    and \l second.value properties while the respective handles are dragged.
+
+    The default value is \c true.
+
+    \sa first.value, second.value
+*/
+bool QQuickRangeSlider::live() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->live;
+}
+
+void QQuickRangeSlider::setLive(bool live)
+{
+    Q_D(QQuickRangeSlider);
+    if (d->live == live)
+        return;
+
+    d->live = live;
+    emit liveChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty bool QtQuick.Controls::RangeSlider::horizontal
+    \readonly
+
+    This property holds whether the slider is horizontal.
+
+    \sa orientation
+*/
+bool QQuickRangeSlider::isHorizontal() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->orientation == Qt::Horizontal;
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty bool QtQuick.Controls::RangeSlider::vertical
+    \readonly
+
+    This property holds whether the slider is vertical.
+
+    \sa orientation
+*/
+bool QQuickRangeSlider::isVertical() const
+{
+    Q_D(const QQuickRangeSlider);
+    return d->orientation == Qt::Vertical;
 }
 
 void QQuickRangeSlider::focusInEvent(QFocusEvent *event)

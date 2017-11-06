@@ -64,13 +64,14 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipe : public QObject
     Q_OBJECT
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
     Q_PROPERTY(bool complete READ isComplete NOTIFY completeChanged FINAL)
-    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL) // REVISION 2
     Q_PROPERTY(QQmlComponent *left READ left WRITE setLeft NOTIFY leftChanged FINAL)
     Q_PROPERTY(QQmlComponent *behind READ behind WRITE setBehind NOTIFY behindChanged FINAL)
     Q_PROPERTY(QQmlComponent *right READ right WRITE setRight NOTIFY rightChanged FINAL)
     Q_PROPERTY(QQuickItem *leftItem READ leftItem NOTIFY leftItemChanged FINAL)
     Q_PROPERTY(QQuickItem *behindItem READ behindItem NOTIFY behindItemChanged FINAL)
     Q_PROPERTY(QQuickItem *rightItem READ rightItem NOTIFY rightItemChanged FINAL)
+    // 2.2 (Qt 5.9)
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL) // REVISION 2
     Q_PROPERTY(QQuickTransition *transition READ transition WRITE setTransition NOTIFY transitionChanged FINAL) // REVISION 2
 
 public:
@@ -81,9 +82,6 @@ public:
 
     bool isComplete() const;
     void setComplete(bool complete);
-
-    bool isEnabled() const;
-    void setEnabled(bool enabled);
 
     QQmlComponent *left() const;
     void setLeft(QQmlComponent *left);
@@ -103,25 +101,33 @@ public:
     QQuickItem *rightItem() const;
     void setRightItem(QQuickItem *item);
 
+    // 2.1 (Qt 5.8)
+    Q_REVISION(1) Q_INVOKABLE void close();
+
+    // 2.2 (Qt 5.9)
+    bool isEnabled() const;
+    void setEnabled(bool enabled);
+
     QQuickTransition *transition() const;
     void setTransition(QQuickTransition *transition);
 
     Q_REVISION(2) Q_INVOKABLE void open(QQuickSwipeDelegate::Side side);
-    Q_REVISION(1) Q_INVOKABLE void close();
 
 Q_SIGNALS:
     void positionChanged();
     void completeChanged();
-    /*Q_REVISION(2)*/ void enabledChanged();
-    /*Q_REVISION(1)*/ void completed();
-    /*Q_REVISION(2)*/ void opened();
-    /*Q_REVISION(2)*/ void closed();
     void leftChanged();
     void behindChanged();
     void rightChanged();
     void leftItemChanged();
     void behindItemChanged();
     void rightItemChanged();
+    // 2.1 (Qt 5.8)
+    /*Q_REVISION(1)*/ void completed();
+    // 2.2 (Qt 5.9)
+    /*Q_REVISION(2)*/ void opened();
+    /*Q_REVISION(2)*/ void closed();
+    /*Q_REVISION(2)*/ void enabledChanged();
     /*Q_REVISION(2)*/ void transitionChanged();
 
 private:

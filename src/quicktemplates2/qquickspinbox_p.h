@@ -71,6 +71,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(QJSValue valueFromText READ valueFromText WRITE setValueFromText NOTIFY valueFromTextChanged FINAL)
     Q_PROPERTY(QQuickSpinButton *up READ up CONSTANT FINAL)
     Q_PROPERTY(QQuickSpinButton *down READ down CONSTANT FINAL)
+    // 2.2 (Qt 5.9)
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION 2)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION 2)
     Q_PROPERTY(bool wrap READ wrap WRITE setWrap NOTIFY wrapChanged FINAL REVISION 3)
@@ -105,6 +106,7 @@ public:
     QQuickSpinButton *up() const;
     QQuickSpinButton *down() const;
 
+    // 2.2 (Qt 5.9)
     Qt::InputMethodHints inputMethodHints() const;
     void setInputMethodHints(Qt::InputMethodHints hints);
 
@@ -126,6 +128,7 @@ Q_SIGNALS:
     void validatorChanged();
     void textFromValueChanged();
     void valueFromTextChanged();
+    // 2.2 (Qt 5.9)
     Q_REVISION(2) void valueModified();
     Q_REVISION(2) void inputMethodHintsChanged();
     Q_REVISION(2) void inputMethodComposingChanged();
@@ -164,8 +167,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinButton : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
-    Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION 1)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
+    // 2.1 (Qt 5.8)
+    Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION 1)
 
 public:
     explicit QQuickSpinButton(QQuickSpinBox *parent);
@@ -173,16 +177,18 @@ public:
     bool isPressed() const;
     void setPressed(bool pressed);
 
-    bool isHovered() const;
-    void setHovered(bool hovered);
-
     QQuickItem *indicator() const;
     void setIndicator(QQuickItem *indicator);
 
+    // 2.1 (Qt 5.8)
+    bool isHovered() const;
+    void setHovered(bool hovered);
+
 Q_SIGNALS:
     void pressedChanged();
-    Q_REVISION(1) void hoveredChanged();
     void indicatorChanged();
+    // 2.1 (Qt 5.8)
+    Q_REVISION(1) void hoveredChanged();
 
 private:
     Q_DISABLE_COPY(QQuickSpinButton)

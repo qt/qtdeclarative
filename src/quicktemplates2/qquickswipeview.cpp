@@ -415,12 +415,6 @@ QQuickSwipeViewAttached::QQuickSwipeViewAttached(QObject *parent)
         qmlWarning(parent) << "SwipeView: attached properties must be accessed from within a child item";
 }
 
-QQuickSwipeView *QQuickSwipeViewAttached::view() const
-{
-    Q_D(const QQuickSwipeViewAttached);
-    return d->swipeView;
-}
-
 int QQuickSwipeViewAttached::index() const
 {
     Q_D(const QQuickSwipeViewAttached);
@@ -431,6 +425,12 @@ bool QQuickSwipeViewAttached::isCurrentItem() const
 {
     Q_D(const QQuickSwipeViewAttached);
     return d->index != -1 && d->currentIndex != -1 && d->index == d->currentIndex;
+}
+
+QQuickSwipeView *QQuickSwipeViewAttached::view() const
+{
+    Q_D(const QQuickSwipeViewAttached);
+    return d->swipeView;
 }
 
 bool QQuickSwipeViewAttached::isNextItem() const

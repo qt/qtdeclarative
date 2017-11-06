@@ -61,10 +61,11 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPage : public QQuickControl
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL REVISION 1)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL REVISION 1)
     Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
     Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
+    // 2.1 (Qt 5.8)
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL REVISION 1)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL REVISION 1)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -79,22 +80,24 @@ public:
     QQuickItem *footer() const;
     void setFooter(QQuickItem *footer);
 
+    QQmlListProperty<QObject> contentData();
+    QQmlListProperty<QQuickItem> contentChildren();
+
+    // 2.1 (Qt 5.8)
     qreal contentWidth() const;
     void setContentWidth(qreal width);
 
     qreal contentHeight() const;
     void setContentHeight(qreal height);
 
-    QQmlListProperty<QObject> contentData();
-    QQmlListProperty<QQuickItem> contentChildren();
-
 Q_SIGNALS:
     void titleChanged();
     void headerChanged();
     void footerChanged();
+    void contentChildrenChanged();
+    // 2.1 (Qt 5.8)
     Q_REVISION(1) void contentWidthChanged();
     Q_REVISION(1) void contentHeightChanged();
-    void contentChildrenChanged();
 
 protected:
     void componentComplete() override;

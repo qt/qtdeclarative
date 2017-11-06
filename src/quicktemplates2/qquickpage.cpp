@@ -233,6 +233,51 @@ void QQuickPage::setFooter(QQuickItem *footer)
 }
 
 /*!
+    \qmlproperty list<Object> QtQuick.Controls::Page::contentData
+    \default
+
+    This property holds the list of content data.
+
+    The list contains all objects that have been declared in QML as children
+    of the container.
+
+    \note Unlike \c contentChildren, \c contentData does include non-visual QML
+    objects.
+
+    \sa Item::data, contentChildren
+*/
+QQmlListProperty<QObject> QQuickPage::contentData()
+{
+    return QQmlListProperty<QObject>(contentItem(), nullptr,
+                                     QQuickItemPrivate::data_append,
+                                     QQuickItemPrivate::data_count,
+                                     QQuickItemPrivate::data_at,
+                                     QQuickItemPrivate::data_clear);
+}
+
+/*!
+    \qmlproperty list<Item> QtQuick.Controls::Page::contentChildren
+
+    This property holds the list of content children.
+
+    The list contains all items that have been declared in QML as children
+    of the page.
+
+    \note Unlike \c contentData, \c contentChildren does not include non-visual
+    QML objects.
+
+    \sa Item::children, contentData
+*/
+QQmlListProperty<QQuickItem> QQuickPage::contentChildren()
+{
+    return QQmlListProperty<QQuickItem>(contentItem(), nullptr,
+                                        QQuickItemPrivate::children_append,
+                                        QQuickItemPrivate::children_count,
+                                        QQuickItemPrivate::children_at,
+                                        QQuickItemPrivate::children_clear);
+}
+
+/*!
     \qmlproperty real QtQuick.Controls::Page::contentWidth
     \since QtQuick.Controls 2.1 (Qt 5.8)
 
@@ -280,51 +325,6 @@ void QQuickPage::setContentHeight(qreal height)
 
     d->contentHeight = height;
     emit contentHeightChanged();
-}
-
-/*!
-    \qmlproperty list<Object> QtQuick.Controls::Page::contentData
-    \default
-
-    This property holds the list of content data.
-
-    The list contains all objects that have been declared in QML as children
-    of the container.
-
-    \note Unlike \c contentChildren, \c contentData does include non-visual QML
-    objects.
-
-    \sa Item::data, contentChildren
-*/
-QQmlListProperty<QObject> QQuickPage::contentData()
-{
-    return QQmlListProperty<QObject>(contentItem(), nullptr,
-                                     QQuickItemPrivate::data_append,
-                                     QQuickItemPrivate::data_count,
-                                     QQuickItemPrivate::data_at,
-                                     QQuickItemPrivate::data_clear);
-}
-
-/*!
-    \qmlproperty list<Item> QtQuick.Controls::Page::contentChildren
-
-    This property holds the list of content children.
-
-    The list contains all items that have been declared in QML as children
-    of the page.
-
-    \note Unlike \c contentData, \c contentChildren does not include non-visual
-    QML objects.
-
-    \sa Item::children, contentData
-*/
-QQmlListProperty<QQuickItem> QQuickPage::contentChildren()
-{
-    return QQmlListProperty<QQuickItem>(contentItem(), nullptr,
-                                        QQuickItemPrivate::children_append,
-                                        QQuickItemPrivate::children_count,
-                                        QQuickItemPrivate::children_at,
-                                        QQuickItemPrivate::children_clear);
 }
 
 void QQuickPage::componentComplete()

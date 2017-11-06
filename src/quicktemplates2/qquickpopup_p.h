@@ -85,7 +85,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
     Q_PROPERTY(qreal availableWidth READ availableWidth NOTIFY availableWidthChanged FINAL)
     Q_PROPERTY(qreal availableHeight READ availableHeight NOTIFY availableHeightChanged FINAL)
-    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL REVISION 1)
     Q_PROPERTY(qreal margins READ margins WRITE setMargins RESET resetMargins NOTIFY marginsChanged FINAL)
     Q_PROPERTY(qreal topMargin READ topMargin WRITE setTopMargin RESET resetTopMargin NOTIFY topMarginChanged FINAL)
     Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin RESET resetLeftMargin NOTIFY leftMarginChanged FINAL)
@@ -119,6 +118,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(TransformOrigin transformOrigin READ transformOrigin WRITE setTransformOrigin FINAL)
     Q_PROPERTY(QQuickTransition *enter READ enter WRITE setEnter NOTIFY enterChanged FINAL)
     Q_PROPERTY(QQuickTransition *exit READ exit WRITE setExit NOTIFY exitChanged FINAL)
+    // 2.1 (Qt 5.8)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL REVISION 1)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -159,10 +160,6 @@ public:
 
     qreal availableWidth() const;
     qreal availableHeight() const;
-
-    qreal spacing() const;
-    void setSpacing(qreal spacing);
-    void resetSpacing();
 
     qreal margins() const;
     void setMargins(qreal margins);
@@ -300,11 +297,20 @@ public:
 
     Q_INVOKABLE void forceActiveFocus(Qt::FocusReason reason = Qt::OtherFocusReason);
 
+    // 2.1 (Qt 5.8)
+    qreal spacing() const;
+    void setSpacing(qreal spacing);
+    void resetSpacing();
+
 public Q_SLOTS:
     void open();
     void close();
 
 Q_SIGNALS:
+    void opened();
+    void closed();
+    void aboutToShow();
+    void aboutToHide();
     void xChanged();
     void yChanged();
     void zChanged();
@@ -316,7 +322,6 @@ Q_SIGNALS:
     void contentHeightChanged();
     void availableWidthChanged();
     void availableHeightChanged();
-    Q_REVISION(1) void spacingChanged();
     void marginsChanged();
     void topMarginChanged();
     void leftMarginChanged();
@@ -349,11 +354,8 @@ Q_SIGNALS:
     void enterChanged();
     void exitChanged();
     void windowChanged(QQuickWindow *window);
-
-    void aboutToShow();
-    void aboutToHide();
-    void opened();
-    void closed();
+    // 2.1 (Qt 5.8)
+    Q_REVISION(1) void spacingChanged();
 
 protected:
     QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);

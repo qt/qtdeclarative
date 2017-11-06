@@ -153,6 +153,11 @@ QT_BEGIN_NAMESPACE
     If you would like the application's contents to stay where they are when
     the drawer is opened, don't apply a translation.
 
+    Drawer can be configured as a non-closable persistent side panel by
+    making the Drawer \l {Popup::modal}{non-modal} and \l {interactive}
+    {non-interactive}. See the \l {Qt Quick Controls 2 - Side Panel}{Side Panel}
+    example for more details.
+
     \note On some platforms, certain edges may be reserved for system
     gestures and therefore cannot be used with Drawer. For example, the
     top and bottom edges may be reserved for system notifications and

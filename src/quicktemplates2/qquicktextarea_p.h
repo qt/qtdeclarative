@@ -68,6 +68,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextArea : public QQuickTextEdit
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QString placeholderText READ placeholderText WRITE setPlaceholderText NOTIFY placeholderTextChanged FINAL)
     Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
+    // 2.1 (Qt 5.8)
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL REVISION 1)
     Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled RESET resetHoverEnabled NOTIFY hoverEnabledChanged FINAL REVISION 1)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
@@ -90,14 +91,15 @@ public:
     Qt::FocusReason focusReason() const;
     void setFocusReason(Qt::FocusReason reason);
 
+    bool contains(const QPointF &point) const override;
+
+    // 2.1 (Qt 5.8)
     bool isHovered() const;
     void setHovered(bool hovered);
 
     bool isHoverEnabled() const;
     void setHoverEnabled(bool enabled);
     void resetHoverEnabled();
-
-    bool contains(const QPointF &point) const override;
 
     QPalette palette() const;
     void setPalette(const QPalette &palette);
@@ -110,11 +112,12 @@ Q_SIGNALS:
     void backgroundChanged();
     void placeholderTextChanged();
     void focusReasonChanged();
-    Q_REVISION(1) void hoveredChanged();
-    Q_REVISION(1) void hoverEnabledChanged();
     void pressAndHold(QQuickMouseEvent *event);
+    // 2.1 (Qt 5.8)
     Q_REVISION(1) void pressed(QQuickMouseEvent *event);
     Q_REVISION(1) void released(QQuickMouseEvent *event);
+    Q_REVISION(1) void hoveredChanged();
+    Q_REVISION(1) void hoverEnabledChanged();
     Q_REVISION(3) void paletteChanged();
 
 protected:
