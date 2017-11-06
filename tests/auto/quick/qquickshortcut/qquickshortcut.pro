@@ -8,3 +8,6 @@ include (../../shared/util.pri)
 TESTDATA = data/*
 
 QT += core gui qml quick testlib
+qtHaveModule(widgets) {
+    QT += quickwidgets
+}
