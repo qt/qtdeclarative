@@ -530,11 +530,13 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         callData->context = scope;
         callData->accumulator = Encode::undefined();
         callData->thisObject = thisObject ? *thisObject : Primitive::undefinedValue();
+        if (argc > int(function->nFormals))
+            argc = int(function->nFormals);
         callData->setArgc(argc);
 
         int jsStackFrameSize = offsetof(CallData, args)/sizeof(Value) + function->compiledFunction->nRegisters;
         engine->jsStackTop += jsStackFrameSize;
-        memcpy(callData->args, argv, argc*sizeof(Value)); // ### Fixme: only copy nFormals
+        memcpy(callData->args, argv, argc*sizeof(Value));
         for (Value *v = callData->args + argc; v < engine->jsStackTop; ++v)
             *v = Encode::undefined();
 
@@ -849,8 +851,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
     MOTH_END_INSTR(PushCatchContext)
 
     MOTH_BEGIN_INSTR(CreateCallContext)
-        Heap::ExecutionContext *ctx = static_cast<Heap::ExecutionContext *>(stack[CallData::Context].m());
-        stack[CallData::Context] = ExecutionContext::newCallContext(ctx, function, reinterpret_cast<CallData *>(stack));
+        stack[CallData::Context] = ExecutionContext::newCallContext(&frame);
     MOTH_END_INSTR(CreateCallContext)
 
     MOTH_BEGIN_INSTR(PushWithContext)

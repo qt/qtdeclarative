@@ -55,9 +55,12 @@ DEFINE_MANAGED_VTABLE(ExecutionContext);
 DEFINE_MANAGED_VTABLE(CallContext);
 DEFINE_MANAGED_VTABLE(CatchContext);
 
-Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *outer, Function *function, CallData *callData)
+Heap::CallContext *ExecutionContext::newCallContext(CppStackFrame *frame)
 {
-    uint nFormals = qMax(static_cast<uint>(callData->argc()), function->nFormals);
+    Function *function = frame->v4Function;
+    Heap::ExecutionContext *outer = static_cast<Heap::ExecutionContext *>(frame->context()->m());
+
+    uint nFormals = qMax(static_cast<uint>(frame->originalArgumentsCount), function->nFormals);
     uint localsAndFormals = function->compiledFunction->nLocals + nFormals;
     size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * (localsAndFormals);
 
@@ -66,7 +69,7 @@ Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *oute
     c->init();
 
     c->outer.set(v4, outer);
-    c->function.set(v4, static_cast<Heap::FunctionObject *>(callData->function.m()));
+    c->function.set(v4, static_cast<Heap::FunctionObject *>(frame->jsFrame->function.m()));
 
     const CompiledData::Function *compiledFunction = function->compiledFunction;
     uint nLocals = compiledFunction->nLocals;
@@ -75,8 +78,11 @@ Heap::CallContext *ExecutionContext::newCallContext(Heap::ExecutionContext *oute
     // memory allocated from the JS heap is 0 initialized, so check if undefined is 0
     Q_ASSERT(Primitive::undefinedValue().asReturnedValue() == 0);
 
-    ::memcpy(c->locals.values + nLocals, &callData->args[0], nFormals * sizeof(Value));
-    c->nArgs = callData->argc();
+    Value *args = c->locals.values + nLocals;
+    ::memcpy(args, frame->originalArguments, frame->originalArgumentsCount * sizeof(Value));
+    c->nArgs = frame->originalArgumentsCount;
+    for (uint i = frame->originalArgumentsCount; i < function->nFormals; ++i)
+        args[i] = Encode::undefined();
 
     return c;
 }

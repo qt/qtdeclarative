@@ -204,7 +204,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     Q_MANAGED_TYPE(ExecutionContext)
     V4_INTERNALCLASS(ExecutionContext)
 
-    static Heap::CallContext *newCallContext(Heap::ExecutionContext *outer, Function *function, CallData *callData);
+    static Heap::CallContext *newCallContext(QV4::CppStackFrame *frame);
     Heap::ExecutionContext *newWithContext(Heap::Object *with);
     Heap::CatchContext *newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue);
 
