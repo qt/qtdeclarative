@@ -737,7 +737,6 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
         // so we correct it after calling the base class' mousePressEvent(), rather
         // than having to duplicate its code just so we can set the pressPoint.
         setPressPoint(item->mapToItem(q, event->pos()));
-        q->grabMouse();
         return true;
     }
 
@@ -754,7 +753,6 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
         attached->setPressed(true);
         // Stop the event from propagating, as QQuickItem explicitly ignores events.
         event->accept();
-        item->grabMouse();
         return true;
     }
 

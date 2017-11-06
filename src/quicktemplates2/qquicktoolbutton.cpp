@@ -58,9 +58,8 @@ QT_BEGIN_NAMESPACE
     \snippet qtquickcontrols2-toolbar.qml 1
 
     ToolButton inherits its API from AbstractButton. For instance, you can set
-    \l {AbstractButton::text}{text}, and react to \l {AbstractButton::clicked}{clicks}
-    using the AbstractButton API. In addition to displaying text, tool buttons
-    can also display an \l [QML]{Button Icons}{icon}.
+    \l {AbstractButton::text}{text}, display an \l {Icons in Qt Quick Controls 2}{icon},
+    and react to \l {AbstractButton::clicked}{clicks} using the AbstractButton API.
 
     \sa ToolBar, {Customizing ToolButton}, {Button Controls}
 */

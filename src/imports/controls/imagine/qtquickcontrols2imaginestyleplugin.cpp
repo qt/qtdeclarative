@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtQml/qqml.h>
 
 #include "qquickimageselector_p.h"
@@ -51,6 +52,8 @@ static inline void initResources()
 }
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcQtQuickControlsImagine, "qt.quick.controls.imagine")
 
 class QtQuickControls2ImagineStylePlugin: public QQuickStylePlugin
 {

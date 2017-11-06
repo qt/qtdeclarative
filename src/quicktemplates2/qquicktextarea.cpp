@@ -559,6 +559,14 @@ void QQuickTextArea::setFocusReason(Qt::FocusReason reason)
     emit focusReasonChanged();
 }
 
+bool QQuickTextArea::contains(const QPointF &point) const
+{
+    Q_D(const QQuickTextArea);
+    if (d->flickable && !d->flickable->contains(d->flickable->mapFromItem(this, point)))
+        return false;
+    return QQuickTextEdit::contains(point);
+}
+
 /*!
     \since QtQuick.Controls 2.1 (Qt 5.8)
     \qmlproperty bool QtQuick.Controls::TextArea::hovered
@@ -633,14 +641,6 @@ void QQuickTextArea::resetHoverEnabled()
     d->explicitHoverEnabled = false;
     d->updateHoverEnabled(QQuickControlPrivate::calcHoverEnabled(d->parentItem), false); // explicit=false
 #endif
-}
-
-bool QQuickTextArea::contains(const QPointF &point) const
-{
-    Q_D(const QQuickTextArea);
-    if (d->flickable && !d->flickable->contains(d->flickable->mapFromItem(this, point)))
-        return false;
-    return QQuickTextEdit::contains(point);
 }
 
 /*!

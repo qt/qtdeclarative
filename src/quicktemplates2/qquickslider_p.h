@@ -64,12 +64,13 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSlider : public QQuickControl
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
     Q_PROPERTY(qreal stepSize READ stepSize WRITE setStepSize NOTIFY stepSizeChanged FINAL)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
-    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION 2)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
-    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
-    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
+    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION 2)
+    // 2.3 (Qt 5.10)
+    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
+    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
 
 public:
     explicit QQuickSlider(QQuickItem *parent = nullptr);
@@ -99,14 +100,8 @@ public:
     SnapMode snapMode() const;
     void setSnapMode(SnapMode mode);
 
-    bool live() const;
-    void setLive(bool live);
-
     bool isPressed() const;
     void setPressed(bool pressed);
-
-    bool isHorizontal() const;
-    bool isVertical() const;
 
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
@@ -114,7 +109,16 @@ public:
     QQuickItem *handle() const;
     void setHandle(QQuickItem *handle);
 
+    // 2.1 (Qt 5.8)
     Q_REVISION(1) Q_INVOKABLE qreal valueAt(qreal position) const;
+
+    // 2.2 (Qt 5.9)
+    bool live() const;
+    void setLive(bool live);
+
+    // 2.3 (Qt 5.10)
+    bool isHorizontal() const;
+    bool isVertical() const;
 
 public Q_SLOTS:
     void increase();
@@ -128,11 +132,12 @@ Q_SIGNALS:
     void visualPositionChanged();
     void stepSizeChanged();
     void snapModeChanged();
-    Q_REVISION(2) void liveChanged();
     void pressedChanged();
     void orientationChanged();
     void handleChanged();
+    // 2.2 (Qt 5.9)
     Q_REVISION(2) void moved();
+    Q_REVISION(2) void liveChanged();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

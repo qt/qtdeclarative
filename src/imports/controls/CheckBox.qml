@@ -52,22 +52,43 @@ T.CheckBox {
     padding: 6
     spacing: 6
 
-    indicator: CheckIndicator {
+    // keep in sync with CheckDelegate.qml (shared CheckIndicator.qml was removed for performance reasons)
+    indicator: Rectangle {
+        implicitWidth: 28
+        implicitHeight: 28
+
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
-        control: control
+
+        color: control.down ? control.palette.light : control.palette.base
+        border.width: control.visualFocus ? 2 : 1
+        border.color: control.visualFocus ? control.palette.highlight : control.palette.mid
+
+        ColorImage {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            defaultColor: "#353637"
+            color: control.palette.text
+            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
+            visible: control.checkState === Qt.Checked
+        }
+
+        Rectangle {
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            width: 16
+            height: 3
+            color: control.palette.text
+            visible: control.checkState === Qt.PartiallyChecked
+        }
     }
 
-    contentItem: Text {
+    contentItem: CheckLabel {
         leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
         color: control.palette.windowText
-        elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
-        verticalAlignment: Text.AlignVCenter
     }
 }

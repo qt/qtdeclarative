@@ -36,9 +36,11 @@
 
 #include <QtCore/private/qfileselector_p.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControls2/private/qquickchecklabel_p.h>
 #include <QtQuickControls2/private/qquickcolor_p.h>
 #include <QtQuickControls2/private/qquickcolorimage_p.h>
 #include <QtQuickControls2/private/qquickiconimage_p.h>
+#include <QtQuickControls2/private/qquickmnemoniclabel_p.h>
 #include <QtQuickControls2/private/qquickpaddedrectangle_p.h>
 #include <QtQuickControls2/private/qquickplaceholdertext_p.h>
 #include <QtQuickControls2/private/qquickiconlabel_p.h>
@@ -193,14 +195,14 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
 #endif
     qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", styleSingleton);
-    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
-    qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");
-    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 
     qmlRegisterType<QQuickColorImage>(import, 2, 3, "ColorImage");
     qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");
     qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", colorSingleton);
     qmlRegisterType<QQuickIconLabel>(import, 2, 3, "IconLabel");
+    qmlRegisterType<QQuickCheckLabel>(import, 2, 3, "CheckLabel");
+    qmlRegisterType<QQuickMnemonicLabel>(import, 2, 3, "MnemonicLabel");
+    qmlRegisterRevision<QQuickText, 6>(import, 2, 3);
 }
 
 QString QtQuickControls2Plugin::name() const

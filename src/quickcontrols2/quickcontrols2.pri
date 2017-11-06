@@ -1,12 +1,14 @@
 HEADERS += \
     $$PWD/qquickanimatednode_p.h \
     $$PWD/qquickattachedobject_p.h \
+    $$PWD/qquickchecklabel_p.h \
     $$PWD/qquickcolor_p.h \
     $$PWD/qquickcolorimage_p.h \
     $$PWD/qquickiconimage_p.h \
     $$PWD/qquickiconimage_p_p.h \
     $$PWD/qquickiconlabel_p.h \
     $$PWD/qquickiconlabel_p_p.h \
+    $$PWD/qquickmnemoniclabel_p.h \
     $$PWD/qquickpaddedrectangle_p.h \
     $$PWD/qquickplaceholdertext_p.h \
     $$PWD/qquickproxytheme_p.h \
@@ -20,10 +22,12 @@ HEADERS += \
 SOURCES += \
     $$PWD/qquickanimatednode.cpp \
     $$PWD/qquickattachedobject.cpp \
+    $$PWD/qquickchecklabel.cpp \
     $$PWD/qquickcolor.cpp \
     $$PWD/qquickcolorimage.cpp \
     $$PWD/qquickiconimage.cpp \
     $$PWD/qquickiconlabel.cpp \
+    $$PWD/qquickmnemoniclabel.cpp \
     $$PWD/qquickpaddedrectangle.cpp \
     $$PWD/qquickplaceholdertext.cpp \
     $$PWD/qquickproxytheme.cpp \

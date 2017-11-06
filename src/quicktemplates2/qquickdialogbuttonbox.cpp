@@ -217,7 +217,7 @@ void QQuickDialogButtonBoxPrivate::resizeContent()
     const int valign = alignment & Qt::AlignVertical_Mask;
 
     const qreal cw = !halign ? q->availableWidth() : contentItem->implicitWidth();
-    const qreal ch = !valign ? q->availableHeight() : contentItem->implicitWidth();
+    const qreal ch = !valign ? q->availableHeight() : contentItem->implicitHeight();
 
     QRectF geometry = q->boundingRect().adjusted(q->leftPadding(), q->topPadding(), -q->rightPadding(), -q->bottomPadding());
     if (halign || valign)
@@ -238,8 +238,8 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
     const int valign = alignment & Qt::AlignVertical_Mask;
 
     QVector<QQuickAbstractButton *> buttons;
-    const qreal maxItemWidth = (contentItem->width() - qMax(0, count - 1) * spacing) / count;
-    const qreal maxItemHeight = contentItem->height();
+    const qreal maxItemWidth = ((contentItem ? contentItem->width() : q->availableWidth()) - qMax(0, count - 1) * spacing) / count;
+    const qreal maxItemHeight = contentItem ? contentItem->height() : q->availableHeight();
 
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = q->itemAt(i);

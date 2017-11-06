@@ -617,24 +617,6 @@
         \row
             \li
             \li background
-            \li highlighted, checkable, hovered
-            \li \image imagine/images/button-background-highlighted-checkable-hovered.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li highlighted, checkable, pressed
-            \li \image imagine/images/button-background-highlighted-checkable-pressed.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li highlighted, checkable, checked
-            \li \image imagine/images/button-background-highlighted-checkable-checked.9.png
-            \li
-        \row
-            \li
-            \li background
             \li hovered
             \li \image imagine/images/button-background-hovered.9.png
             \li
@@ -667,48 +649,6 @@
             \li background
             \li flat, checked
             \li \image imagine/images/button-background-flat-checked.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li flat, checkable
-            \li \image imagine/images/button-background-flat-checkable.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li flat, checkable, hovered
-            \li \image imagine/images/button-background-flat-checkable-hovered.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li flat, checkable, pressed
-            \li \image imagine/images/button-background-flat-checkable-pressed.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li flat, checkable, checked, pressed
-            \li \image imagine/images/button-background-flat-checkable-checked-pressed.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li flat, checkable, highlighted
-            \li \image imagine/images/button-background-flat-checkable-highlighted.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li flat, checkable, highlighted, pressed
-            \li \image imagine/images/button-background-flat-checkable-highlighted-pressed.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li flat, checkable, highlighted, checked
-            \li \image imagine/images/button-background-flat-checkable-highlighted-checked.9.png
             \li
         \row
             \li \l CheckBox
@@ -805,12 +745,6 @@
             \li background
             \li pressed
             \li \image imagine/images/checkdelegate-background-pressed.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li checked
-            \li \image imagine/images/checkdelegate-background-checked.9.png
             \li
         \row
             \li
@@ -1389,12 +1323,6 @@
             \li \image imagine/images/pageindicator-delegate-current.png
             \li
         \row
-            \li
-            \li delegate
-            \li mirrored
-            \li \image imagine/images/pageindicator-delegate-mirrored.png
-            \li
-        \row
             \li \l Pane
             \li background
             \li
@@ -1507,12 +1435,6 @@
             \li background
             \li pressed
             \li \image imagine/images/radiodelegate-background-pressed.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li checked
-            \li \image imagine/images/radiodelegate-background-checked.9.png
             \li
         \row
             \li
@@ -2135,12 +2057,6 @@
         \row
             \li
             \li background
-            \li checked
-            \li \image imagine/images/switchdelegate-background-checked.9.png
-            \li
-        \row
-            \li
-            \li background
             \li focused
             \li \image imagine/images/switchdelegate-background-focused.9.png
             \li
@@ -2273,12 +2189,6 @@
         \row
             \li
             \li background
-            \li pressed
-            \li \image imagine/images/textarea-background-pressed.9.png
-            \li
-        \row
-            \li
-            \li background
             \li focused
             \li \image imagine/images/textarea-background-focused.9.png
             \li
@@ -2293,12 +2203,6 @@
             \li background
             \li disabled
             \li \image imagine/images/textfield-background-disabled.9.png
-            \li
-        \row
-            \li
-            \li background
-            \li pressed
-            \li \image imagine/images/textfield-background-pressed.9.png
             \li
         \row
             \li

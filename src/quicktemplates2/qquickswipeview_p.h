@@ -58,27 +58,35 @@ class QQuickSwipeViewPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeView : public QQuickContainer
 {
     Q_OBJECT
+    // 2.1 (Qt 5.8)
     Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL REVISION 1)
+    // 2.2 (Qt 5.9)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL REVISION 2)
+    // 2.3 (Qt 5.10)
     Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
     Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
 
 public:
     explicit QQuickSwipeView(QQuickItem *parent = nullptr);
 
+    static QQuickSwipeViewAttached *qmlAttachedProperties(QObject *object);
+
+    // 2.1 (Qt 5.8)
     bool isInteractive() const;
     void setInteractive(bool interactive);
 
+    // 2.2 (Qt 5.9)
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
 
+    // 2.3 (Qt 5.10)
     bool isHorizontal() const;
     bool isVertical() const;
 
-    static QQuickSwipeViewAttached *qmlAttachedProperties(QObject *object);
-
 Q_SIGNALS:
+    // 2.1 (Qt 5.8)
     Q_REVISION(1) void interactiveChanged();
+    // 2.2 (Qt 5.9)
     Q_REVISION(2) void orientationChanged();
 
 protected:
@@ -103,25 +111,29 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeViewAttached : public QObject
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
     Q_PROPERTY(bool isCurrentItem READ isCurrentItem NOTIFY isCurrentItemChanged FINAL)
+    Q_PROPERTY(QQuickSwipeView *view READ view NOTIFY viewChanged FINAL)
+    // 2.1 (Qt 5.8)
     Q_PROPERTY(bool isNextItem READ isNextItem NOTIFY isNextItemChanged FINAL REVISION 1)
     Q_PROPERTY(bool isPreviousItem READ isPreviousItem NOTIFY isPreviousItemChanged FINAL REVISION 1)
-    Q_PROPERTY(QQuickSwipeView *view READ view NOTIFY viewChanged FINAL)
 
 public:
     explicit QQuickSwipeViewAttached(QObject *parent = nullptr);
 
     int index() const;
     bool isCurrentItem() const;
+    QQuickSwipeView *view() const;
+
+    // 2.1 (Qt 5.8)
     bool isNextItem() const;
     bool isPreviousItem() const;
-    QQuickSwipeView *view() const;
 
 Q_SIGNALS:
     void indexChanged();
     void isCurrentItemChanged();
+    void viewChanged();
+    // 2.1 (Qt 5.8)
     /*Q_REVISION(1)*/ void isNextItemChanged();
     /*Q_REVISION(1)*/ void isPreviousItemChanged();
-    void viewChanged();
 
 private:
     Q_DISABLE_COPY(QQuickSwipeViewAttached)

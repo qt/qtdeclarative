@@ -77,6 +77,7 @@ public:
     Q_INVOKABLE void moveItem(int from, int to);
     Q_INVOKABLE void removeItem(const QVariant &item); // ### Qt 6: remove
     void removeItem(QQuickItem *item); // ### Qt 6: Q_INVOKABLE
+    // 2.3 (Qt 5.10)
     Q_REVISION(3) Q_INVOKABLE QQuickItem *takeItem(int index);
 
     QVariant contentModel() const;
@@ -88,6 +89,7 @@ public:
 
 public Q_SLOTS:
     void setCurrentIndex(int index);
+    // 2.1 (Qt 5.8)
     Q_REVISION(1) void incrementCurrentIndex();
     Q_REVISION(1) void decrementCurrentIndex();
 
@@ -99,6 +101,8 @@ Q_SIGNALS:
 
 protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);
+
+    void componentComplete() override;
 
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;

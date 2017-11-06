@@ -7,4 +7,6 @@ SUBDIRS += \
     sidepanel \
     swipetoremove \
     flatstyle \
-    wearable
+    wearable \
+    imagine/automotive \
+    imagine/musicplayer

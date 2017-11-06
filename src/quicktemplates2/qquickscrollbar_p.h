@@ -64,9 +64,11 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollBar : public QQuickControl
     Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
+    // 2.2 (Qt 5.9)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL REVISION 2)
     Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive RESET resetInteractive NOTIFY interactiveChanged FINAL REVISION 2)
     Q_PROPERTY(Policy policy READ policy WRITE setPolicy NOTIFY policyChanged FINAL REVISION 2)
+    // 2.3 (Qt 5.10)
     Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
     Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
     Q_PROPERTY(qreal minimumSize READ minimumSize WRITE setMinimumSize NOTIFY minimumSizeChanged FINAL REVISION 4)
@@ -93,6 +95,7 @@ public:
     Qt::Orientation orientation() const;
     void setOrientation(Qt::Orientation orientation);
 
+    // 2.2 (Qt 5.9)
     enum SnapMode {
         NoSnap,
         SnapAlways,
@@ -117,6 +120,7 @@ public:
     Policy policy() const;
     void setPolicy(Policy policy);
 
+    // 2.3 (Qt 5.10)
     bool isHorizontal() const;
     bool isVertical() const;
 
@@ -139,6 +143,7 @@ Q_SIGNALS:
     void activeChanged();
     void pressedChanged();
     void orientationChanged();
+    // 2.2 (Qt 5.9)
     Q_REVISION(2) void snapModeChanged();
     Q_REVISION(2) void interactiveChanged();
     Q_REVISION(2) void policyChanged();

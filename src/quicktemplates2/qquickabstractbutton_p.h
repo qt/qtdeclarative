@@ -67,6 +67,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(bool autoExclusive READ autoExclusive WRITE setAutoExclusive NOTIFY autoExclusiveChanged FINAL)
     Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
+    // 2.3 (Qt 5.10)
     Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 3)
     Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged FINAL REVISION 3)
     Q_PROPERTY(QQuickAction *action READ action WRITE setAction NOTIFY actionChanged FINAL REVISION 3)
@@ -104,6 +105,7 @@ public:
     QQuickItem *indicator() const;
     void setIndicator(QQuickItem *indicator);
 
+    // 2.3 (Qt 5.10)
     QQuickIcon icon() const;
     void setIcon(const QQuickIcon &icon);
 
@@ -143,7 +145,6 @@ Q_SIGNALS:
     void released();
     void canceled();
     void clicked();
-    Q_REVISION(2) void toggled();
     void pressAndHold();
     void doubleClicked();
     void textChanged();
@@ -154,6 +155,9 @@ Q_SIGNALS:
     void autoExclusiveChanged();
     void autoRepeatChanged();
     void indicatorChanged();
+    // 2.2 (Qt 5.9)
+    Q_REVISION(2) void toggled();
+    // 2.3 (Qt 5.10)
     Q_REVISION(3) void iconChanged();
     Q_REVISION(3) void displayChanged();
     Q_REVISION(3) void actionChanged();

@@ -68,56 +68,6 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     radio buttons and check boxes. As an abstract control, it has no delegate
     implementations, leaving them to the types that derive from it.
 
-    \section2 Button Icons
-
-    AbstractButton provides the following properties through which icons can
-    be set:
-
-    \list
-    \li \l icon.name
-    \li \l icon.source
-    \li \l icon.width
-    \li \l icon.height
-    \li \l icon.color
-    \endlist
-
-    For applications that target platforms that support both
-    \l {QIcon::fromTheme()}{theme icons} and regular icons,
-    both \l icon.name and \l icon.source can be set to ensure that an icon will
-    always be found. If the icon is found in the theme, it will always be used;
-    even if \l icon.source is also set. If the icon is not found,
-    \l icon.source will be used instead.
-
-    \code
-    Button {
-        icon.name: "edit-cut"
-        icon.source: "qrc:/icons/edit-cut.png"
-    }
-    \endcode
-
-    Each \l {Styling Qt Quick Controls 2}{style} sets a default icon size and
-    color according to their guidelines, but it is possible to override these
-    by setting the \l icon.width, \l icon.height, and \l icon.color properties.
-
-    The image that is loaded by an icon whose \c width and \c height are not set
-    depends on the type of icon in use. For theme icons, the closest available
-    size will be chosen. For regular icons, the behavior is the same as the
-    \l {Image::}{sourceSize} property of \l Image.
-
-    The icon color is specified by default so that it matches the text color in
-    different states. In order to use an icon with the original colors, set the
-    color to \c "transparent".
-
-    \code
-    Button {
-        icon.color: "transparent"
-        icon.source: "qrc:/icons/logo.png"
-    }
-    \endcode
-
-    The \l display property can be used to control how the icon and text are
-    displayed within the button.
-
     \sa ButtonGroup, {Button Controls}
 */
 
@@ -463,7 +413,7 @@ QQuickAbstractButton::~QQuickAbstractButton()
     \note The text is used for accessibility purposes, so it makes sense to
           set a textual description even if the content item is an image.
 
-    \sa {Control::contentItem}{contentItem}
+    \sa icon, display, {Control::contentItem}{contentItem}
 */
 QString QQuickAbstractButton::text() const
 {
@@ -481,7 +431,7 @@ void QQuickAbstractButton::setText(const QString &text)
     setShortcut(QKeySequence::mnemonic(text));
 #endif
 
-    d->text = QPlatformTheme::removeMnemonics(text); // ### TODO: visualize mnemonics
+    d->text = text;
     setAccessibleName(d->text);
     buttonChange(ButtonTextChange);
     emit textChanged();
@@ -719,7 +669,7 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
 
     \include qquickicon.qdocinc grouped-properties
 
-    \sa {Button Icons}
+    \sa text, display, {Icons in Qt Quick Controls 2}
 */
 
 QQuickIcon QQuickAbstractButton::icon() const

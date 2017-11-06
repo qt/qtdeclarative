@@ -37,6 +37,7 @@
 #include "qquickiconlabel_p.h"
 #include "qquickiconlabel_p_p.h"
 #include "qquickiconimage_p.h"
+#include "qquickmnemoniclabel_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -147,7 +148,7 @@ bool QQuickIconLabelPrivate::createLabel()
     if (label)
         return false;
 
-    label = new QQuickText(q);
+    label = new QQuickMnemonicLabel(q);
     watchChanges(label);
     beginClass(label);
     label->setObjectName(QStringLiteral("label"));

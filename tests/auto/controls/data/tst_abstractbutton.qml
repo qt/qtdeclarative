@@ -410,7 +410,7 @@ TestCase {
         verify(control)
 
         control.text = "&Hello"
-        compare(control.text, "Hello") // ### TODO: visualize mnemonics
+        compare(control.text, "&Hello")
 
         var clickSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickSpy.valid)
@@ -427,7 +427,7 @@ TestCase {
         compare(clickSpy.count, 2)
 
         control.text = "Te&st"
-        compare(control.text, "Test") // ### TODO: visualize mnemonics
+        compare(control.text, "Te&st")
 
         keyClick(Qt.Key_H, Qt.AltModifier)
         compare(clickSpy.count, 2)

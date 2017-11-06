@@ -1361,6 +1361,8 @@ void QQuickControl::setContentItem(QQuickItem *item)
         }
     }
     \endcode
+
+    \sa ApplicationWindow::palette, Popup::palette, {qtquickcontrols2-palette}{palette QML Basic Type}
 */
 QPalette QQuickControl::palette() const
 {

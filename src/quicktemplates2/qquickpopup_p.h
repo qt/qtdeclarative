@@ -85,7 +85,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
     Q_PROPERTY(qreal availableWidth READ availableWidth NOTIFY availableWidthChanged FINAL)
     Q_PROPERTY(qreal availableHeight READ availableHeight NOTIFY availableHeightChanged FINAL)
-    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL REVISION 1)
     Q_PROPERTY(qreal margins READ margins WRITE setMargins RESET resetMargins NOTIFY marginsChanged FINAL)
     Q_PROPERTY(qreal topMargin READ topMargin WRITE setTopMargin RESET resetTopMargin NOTIFY topMarginChanged FINAL)
     Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin RESET resetLeftMargin NOTIFY leftMarginChanged FINAL)
@@ -97,9 +96,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged FINAL)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
-    Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL REVISION 3)
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
-    Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
     Q_PROPERTY(QQuickItem *parent READ parentItem WRITE setParentItem RESET resetParentItem NOTIFY parentChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
@@ -111,14 +108,19 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(bool modal READ isModal WRITE setModal NOTIFY modalChanged FINAL)
     Q_PROPERTY(bool dim READ dim WRITE setDim RESET resetDim NOTIFY dimChanged FINAL)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
-    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL REVISION 3)
-    Q_PROPERTY(bool opened READ isOpened NOTIFY openedChanged FINAL REVISION 3)
     Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity NOTIFY opacityChanged FINAL)
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged FINAL)
     Q_PROPERTY(ClosePolicy closePolicy READ closePolicy WRITE setClosePolicy RESET resetClosePolicy NOTIFY closePolicyChanged FINAL)
     Q_PROPERTY(TransformOrigin transformOrigin READ transformOrigin WRITE setTransformOrigin FINAL)
     Q_PROPERTY(QQuickTransition *enter READ enter WRITE setEnter NOTIFY enterChanged FINAL)
     Q_PROPERTY(QQuickTransition *exit READ exit WRITE setExit NOTIFY exitChanged FINAL)
+    // 2.1 (Qt 5.8)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL REVISION 1)
+    // 2.3 (Qt 5.10)
+    Q_PROPERTY(bool opened READ isOpened NOTIFY openedChanged FINAL REVISION 3)
+    Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL REVISION 3)
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL REVISION 3)
+    Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -159,10 +161,6 @@ public:
 
     qreal availableWidth() const;
     qreal availableHeight() const;
-
-    qreal spacing() const;
-    void setSpacing(qreal spacing);
-    void resetSpacing();
 
     qreal margins() const;
     void setMargins(qreal margins);
@@ -208,15 +206,9 @@ public:
     void setLocale(const QLocale &locale);
     void resetLocale();
 
-    bool isMirrored() const;
-
     QFont font() const;
     void setFont(const QFont &font);
     void resetFont();
-
-    QPalette palette() const;
-    void setPalette(const QPalette &palette);
-    void resetPalette();
 
     QQuickWindow *window() const;
     QQuickItem *popupItem() const;
@@ -251,11 +243,6 @@ public:
 
     bool isVisible() const;
     virtual void setVisible(bool visible);
-
-    bool isEnabled() const;
-    void setEnabled(bool enabled);
-
-    bool isOpened() const;
 
     qreal opacity() const;
     void setOpacity(qreal opacity);
@@ -300,11 +287,31 @@ public:
 
     Q_INVOKABLE void forceActiveFocus(Qt::FocusReason reason = Qt::OtherFocusReason);
 
+    // 2.1 (Qt 5.8)
+    qreal spacing() const;
+    void setSpacing(qreal spacing);
+    void resetSpacing();
+
+    // 2.3 (Qt 5.10)
+    bool isOpened() const;
+    bool isMirrored() const;
+
+    bool isEnabled() const;
+    void setEnabled(bool enabled);
+
+    QPalette palette() const;
+    void setPalette(const QPalette &palette);
+    void resetPalette();
+
 public Q_SLOTS:
     void open();
     void close();
 
 Q_SIGNALS:
+    void opened();
+    void closed();
+    void aboutToShow();
+    void aboutToHide();
     void xChanged();
     void yChanged();
     void zChanged();
@@ -316,7 +323,6 @@ Q_SIGNALS:
     void contentHeightChanged();
     void availableWidthChanged();
     void availableHeightChanged();
-    Q_REVISION(1) void spacingChanged();
     void marginsChanged();
     void topMarginChanged();
     void leftMarginChanged();
@@ -329,8 +335,6 @@ Q_SIGNALS:
     void bottomPaddingChanged();
     void fontChanged();
     void localeChanged();
-    Q_REVISION(3) void mirroredChanged();
-    Q_REVISION(3) void paletteChanged();
     void parentChanged();
     void backgroundChanged();
     void contentItemChanged();
@@ -341,19 +345,19 @@ Q_SIGNALS:
     void modalChanged();
     void dimChanged();
     void visibleChanged();
-    Q_REVISION(3) void enabledChanged();
-    Q_REVISION(3) void openedChanged();
     void opacityChanged();
     void scaleChanged();
     void closePolicyChanged();
     void enterChanged();
     void exitChanged();
     void windowChanged(QQuickWindow *window);
-
-    void aboutToShow();
-    void aboutToHide();
-    void opened();
-    void closed();
+    // 2.1 (Qt 5.8)
+    Q_REVISION(1) void spacingChanged();
+    // 2.3 (Qt 5.10)
+    Q_REVISION(3) void openedChanged();
+    Q_REVISION(3) void mirroredChanged();
+    Q_REVISION(3) void enabledChanged();
+    Q_REVISION(3) void paletteChanged();
 
 protected:
     QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);

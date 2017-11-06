@@ -139,7 +139,7 @@ private:
 void tst_Sanity::initTestCase()
 {
     QDirIterator it(QQC2_IMPORT_PATH, QStringList() << "*.qml" << "*.js", QDir::Files, QDirIterator::Subdirectories);
-    const QStringList excludeDirs = QStringList() << QStringLiteral("snippets") << QStringLiteral("designer");
+    const QStringList excludeDirs = QStringList() << QStringLiteral("snippets") << QStringLiteral("designer") << QStringLiteral("Sketch");
     while (it.hasNext()) {
         it.next();
         QFileInfo info = it.fileInfo();
@@ -280,9 +280,12 @@ static void addTestRows(QQmlEngine *engine, const QString &sourcePath, const QSt
                 if (QFile::exists(filePath)) {
                     QTest::newRow(qPrintable(name)) << QUrl::fromLocalFile(filePath);
                     break;
-                } else if (QFile::exists(QQmlFile::urlToLocalFileOrQrc(filePath))) {
-                    QTest::newRow(qPrintable(name)) << QUrl(filePath);
-                    break;
+                } else {
+                    filePath = QQmlFile::urlToLocalFileOrQrc(filePath);
+                    if (!filePath.isEmpty() && QFile::exists(filePath)) {
+                        QTest::newRow(qPrintable(name)) << QUrl(filePath);
+                        break;
+                    }
                 }
             }
         }
@@ -313,7 +316,7 @@ void tst_Sanity::attachedObjects_data()
 {
     QTest::addColumn<QUrl>("url");
     addTestRows(&engine, "calendar", "Qt/labs/calendar");
-    addTestRows(&engine, "controls", "QtQuick/Controls.2", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRows(&engine, "controls", "QtQuick/Controls.2");
     addTestRows(&engine, "controls/fusion", "QtQuick/Controls.2", QStringList() << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
     addTestRows(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
     addTestRows(&engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");

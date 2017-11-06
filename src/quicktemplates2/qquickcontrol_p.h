@@ -79,6 +79,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(bool wheelEnabled READ isWheelEnabled WRITE setWheelEnabled NOTIFY wheelEnabledChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
+    // 2.3 (Qt 5.10)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
 
 public:
@@ -145,6 +146,7 @@ public:
     QQuickItem *contentItem() const;
     void setContentItem(QQuickItem *item);
 
+    // 2.3 (Qt 5.10)
     QPalette palette() const;
     void setPalette(const QPalette &palette);
     void resetPalette();
@@ -169,6 +171,7 @@ Q_SIGNALS:
     void wheelEnabledChanged();
     void backgroundChanged();
     void contentItemChanged();
+    // 2.3 (Qt 5.10)
     Q_REVISION(3) void paletteChanged();
 
 protected:

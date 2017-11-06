@@ -66,7 +66,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumbler : public QQuickControl
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     Q_PROPERTY(int visibleItemCount READ visibleItemCount WRITE setVisibleItemCount NOTIFY visibleItemCountChanged FINAL)
+    // 2.1 (Qt 5.8)
     Q_PROPERTY(bool wrap READ wrap WRITE setWrap RESET resetWrap NOTIFY wrapChanged FINAL REVISION 1)
+    // 2.2 (Qt 5.9)
     Q_PROPERTY(bool moving READ isMoving NOTIFY movingChanged FINAL REVISION 2)
 
 public:
@@ -88,13 +90,15 @@ public:
     int visibleItemCount() const;
     void setVisibleItemCount(int visibleItemCount);
 
+    static QQuickTumblerAttached *qmlAttachedProperties(QObject *object);
+
+    // 2.1 (Qt 5.8)
     bool wrap() const;
     void setWrap(bool wrap);
     void resetWrap();
 
+    // 2.2 (Qt 5.9)
     bool isMoving() const;
-
-    static QQuickTumblerAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
     void modelChanged();
@@ -103,7 +107,9 @@ Q_SIGNALS:
     void currentItemChanged();
     void delegateChanged();
     void visibleItemCountChanged();
+    // 2.1 (Qt 5.8)
     Q_REVISION(1) void wrapChanged();
+    // 2.2 (Qt 5.9)
     Q_REVISION(2) void movingChanged();
 
 protected:
@@ -124,6 +130,8 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_updateItemHeights())
     Q_PRIVATE_SLOT(d_func(), void _q_onViewCurrentIndexChanged())
     Q_PRIVATE_SLOT(d_func(), void _q_onViewCountChanged())
+    Q_PRIVATE_SLOT(d_func(), void _q_onViewOffsetChanged())
+    Q_PRIVATE_SLOT(d_func(), void _q_onViewContentYChanged())
 };
 
 class QQuickTumblerAttachedPrivate;
@@ -136,7 +144,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumblerAttached : public QObject
 
 public:
     explicit QQuickTumblerAttached(QObject *parent = nullptr);
-    ~QQuickTumblerAttached();
 
     QQuickTumbler *tumbler() const;
     qreal displacement() const;
@@ -147,8 +154,6 @@ Q_SIGNALS:
 private:
     Q_DISABLE_COPY(QQuickTumblerAttached)
     Q_DECLARE_PRIVATE(QQuickTumblerAttached)
-
-    Q_PRIVATE_SLOT(d_func(), void _q_calculateDisplacement())
 };
 
 QT_END_NAMESPACE

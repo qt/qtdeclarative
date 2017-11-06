@@ -94,16 +94,13 @@ T.MenuItem {
         defaultColor: "#353637"
     }
 
-    background: Item {
+    background: Rectangle {
         implicitWidth: 200
         implicitHeight: 40
-
-        Rectangle {
-            x: 1
-            y: 1
-            width: parent.width - 2
-            height: parent.height - 2
-            color: control.down ? control.palette.midlight : control.highlighted ? control.palette.light : "transparent"
-        }
+        x: 1
+        y: 1
+        width: control.width - 2
+        height: control.height - 2
+        color: control.down ? control.palette.midlight : control.highlighted ? control.palette.light : "transparent"
     }
 }

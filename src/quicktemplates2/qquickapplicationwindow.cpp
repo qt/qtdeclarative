@@ -349,6 +349,11 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
     d_ptr.reset(); // QTBUG-52731
 }
 
+QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickApplicationWindowAttached(object);
+}
+
 /*!
     \qmlproperty Item QtQuick.Controls::ApplicationWindow::background
 
@@ -718,7 +723,7 @@ void QQuickApplicationWindow::resetLocale()
     property on the window's palette, that property propagates to all child controls in the window,
     overriding any system defaults for that property.
 
-    \sa Control::palette
+    \sa Control::palette, Popup::palette, {qtquickcontrols2-palette}{palette QML Basic Type}
 */
 QPalette QQuickApplicationWindow::palette() const
 {
@@ -786,11 +791,6 @@ void QQuickApplicationWindow::setMenuBar(QQuickItem *menuBar)
     if (isComponentComplete())
         d->relayout();
     emit menuBarChanged();
-}
-
-QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(QObject *object)
-{
-    return new QQuickApplicationWindowAttached(object);
 }
 
 bool QQuickApplicationWindow::isComponentComplete() const

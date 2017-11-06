@@ -367,6 +367,9 @@ TestCase {
         var control = createTemporaryObject(spinBox, testCase)
         verify(control)
 
+        var valueModifiedSpy = signalSpy.createObject(control, {target: control, signalName: "valueModified"})
+        verify(valueModifiedSpy.valid)
+
         control.contentItem.forceActiveFocus()
         compare(control.contentItem.activeFocus, true)
 
@@ -375,6 +378,7 @@ TestCase {
         keyClick(Qt.Key_5)
         keyClick(Qt.Key_Return)
         compare(control.value, 0)
+        compare(valueModifiedSpy.count, 0)
 
         control.editable = true
         compare(control.editable, true)
@@ -382,6 +386,7 @@ TestCase {
         keyClick(Qt.Key_5)
         keyClick(Qt.Key_Return)
         compare(control.value, 5)
+        compare(valueModifiedSpy.count, 1)
     }
 
     function test_wheel_data() {

@@ -792,124 +792,6 @@ QQmlInstanceModel *QQuickComboBox::delegateModel() const
     return d->delegateModel;
 }
 
-/*!
-    \since QtQuick.Controls 2.2 (Qt 5.9)
-    \qmlproperty bool QtQuick.Controls::ComboBox::editable
-
-    This property holds whether the combo box is editable.
-
-    The default value is \c false.
-
-    \sa validator
-*/
-bool QQuickComboBox::isEditable() const
-{
-    Q_D(const QQuickComboBox);
-    return d->extra.isAllocated() && d->extra->editable;
-}
-
-void QQuickComboBox::setEditable(bool editable)
-{
-    Q_D(QQuickComboBox);
-    if (editable == isEditable())
-        return;
-
-    if (d->contentItem) {
-        if (editable) {
-            d->contentItem->installEventFilter(this);
-            if (QQuickTextInput *input = qobject_cast<QQuickTextInput *>(d->contentItem)) {
-                QObjectPrivate::connect(input, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
-                QObjectPrivate::connect(input, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
-            }
-#if QT_CONFIG(cursor)
-            d->contentItem->setCursor(Qt::IBeamCursor);
-#endif
-        } else {
-            d->contentItem->removeEventFilter(this);
-            if (QQuickTextInput *input = qobject_cast<QQuickTextInput *>(d->contentItem)) {
-                QObjectPrivate::disconnect(input, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
-                QObjectPrivate::disconnect(input, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
-            }
-#if QT_CONFIG(cursor)
-            d->contentItem->unsetCursor();
-#endif
-        }
-    }
-
-    d->extra.value().editable = editable;
-    setAccessibleProperty("editable", editable);
-    emit editableChanged();
-}
-
-/*!
-    \since QtQuick.Controls 2.1 (Qt 5.8)
-    \qmlproperty bool QtQuick.Controls::ComboBox::flat
-
-    This property holds whether the combo box button is flat.
-
-    A flat combo box button does not draw a background unless it is interacted
-    with. In comparison to normal combo boxes, flat combo boxes provide looks
-    that make them stand out less from the rest of the UI. For instance, when
-    placing a combo box into a tool bar, it may be desirable to make the combo
-    box flat so it matches better with the flat looks of tool buttons.
-
-    The default value is \c false.
-*/
-bool QQuickComboBox::isFlat() const
-{
-    Q_D(const QQuickComboBox);
-    return d->flat;
-}
-
-void QQuickComboBox::setFlat(bool flat)
-{
-    Q_D(QQuickComboBox);
-    if (d->flat == flat)
-        return;
-
-    d->flat = flat;
-    emit flatChanged();
-}
-
-/*!
-    \since QtQuick.Controls 2.2 (Qt 5.9)
-    \qmlproperty bool QtQuick.Controls::ComboBox::down
-
-    This property holds whether the combo box button is visually down.
-
-    Unless explicitly set, this property is \c true when either \c pressed
-    or \c popup.visible is \c true. To return to the default value, set this
-    property to \c undefined.
-
-    \sa pressed, popup
-*/
-bool QQuickComboBox::isDown() const
-{
-    Q_D(const QQuickComboBox);
-    return d->down;
-}
-
-void QQuickComboBox::setDown(bool down)
-{
-    Q_D(QQuickComboBox);
-    d->hasDown = true;
-
-    if (d->down == down)
-        return;
-
-    d->down = down;
-    emit downChanged();
-}
-
-void QQuickComboBox::resetDown()
-{
-    Q_D(QQuickComboBox);
-    if (!d->hasDown)
-        return;
-
-    setDown(d->pressed || d->isPopupVisible());
-    d->hasDown = false;
-}
 
 /*!
     \qmlproperty bool QtQuick.Controls::ComboBox::pressed
@@ -1039,34 +921,6 @@ void QQuickComboBox::resetDisplayText()
     d->updateCurrentText();
 }
 
-/*!
-    \since QtQuick.Controls 2.2 (Qt 5.9)
-    \qmlproperty string QtQuick.Controls::ComboBox::editText
-
-    This property holds the text in the text field of an editable combo box.
-
-    \sa editable
-*/
-QString QQuickComboBox::editText() const
-{
-    Q_D(const QQuickComboBox);
-    return d->extra.isAllocated() ? d->extra->editText : QString();
-}
-
-void QQuickComboBox::setEditText(const QString &text)
-{
-    Q_D(QQuickComboBox);
-    if (text == editText())
-        return;
-
-    d->extra.value().editText = text;
-    emit editTextChanged();
-}
-
-void QQuickComboBox::resetEditText()
-{
-    setEditText(QString());
-}
 
 /*!
     \qmlproperty string QtQuick.Controls::ComboBox::textRole
@@ -1206,6 +1060,154 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
     }
     d->popup = popup;
     emit popupChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.1 (Qt 5.8)
+    \qmlproperty bool QtQuick.Controls::ComboBox::flat
+
+    This property holds whether the combo box button is flat.
+
+    A flat combo box button does not draw a background unless it is interacted
+    with. In comparison to normal combo boxes, flat combo boxes provide looks
+    that make them stand out less from the rest of the UI. For instance, when
+    placing a combo box into a tool bar, it may be desirable to make the combo
+    box flat so it matches better with the flat looks of tool buttons.
+
+    The default value is \c false.
+*/
+bool QQuickComboBox::isFlat() const
+{
+    Q_D(const QQuickComboBox);
+    return d->flat;
+}
+
+void QQuickComboBox::setFlat(bool flat)
+{
+    Q_D(QQuickComboBox);
+    if (d->flat == flat)
+        return;
+
+    d->flat = flat;
+    emit flatChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.2 (Qt 5.9)
+    \qmlproperty bool QtQuick.Controls::ComboBox::down
+
+    This property holds whether the combo box button is visually down.
+
+    Unless explicitly set, this property is \c true when either \c pressed
+    or \c popup.visible is \c true. To return to the default value, set this
+    property to \c undefined.
+
+    \sa pressed, popup
+*/
+bool QQuickComboBox::isDown() const
+{
+    Q_D(const QQuickComboBox);
+    return d->down;
+}
+
+void QQuickComboBox::setDown(bool down)
+{
+    Q_D(QQuickComboBox);
+    d->hasDown = true;
+
+    if (d->down == down)
+        return;
+
+    d->down = down;
+    emit downChanged();
+}
+
+void QQuickComboBox::resetDown()
+{
+    Q_D(QQuickComboBox);
+    if (!d->hasDown)
+        return;
+
+    setDown(d->pressed || d->isPopupVisible());
+    d->hasDown = false;
+}
+
+/*!
+    \since QtQuick.Controls 2.2 (Qt 5.9)
+    \qmlproperty bool QtQuick.Controls::ComboBox::editable
+
+    This property holds whether the combo box is editable.
+
+    The default value is \c false.
+
+    \sa validator
+*/
+bool QQuickComboBox::isEditable() const
+{
+    Q_D(const QQuickComboBox);
+    return d->extra.isAllocated() && d->extra->editable;
+}
+
+void QQuickComboBox::setEditable(bool editable)
+{
+    Q_D(QQuickComboBox);
+    if (editable == isEditable())
+        return;
+
+    if (d->contentItem) {
+        if (editable) {
+            d->contentItem->installEventFilter(this);
+            if (QQuickTextInput *input = qobject_cast<QQuickTextInput *>(d->contentItem)) {
+                QObjectPrivate::connect(input, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
+                QObjectPrivate::connect(input, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
+            }
+#if QT_CONFIG(cursor)
+            d->contentItem->setCursor(Qt::IBeamCursor);
+#endif
+        } else {
+            d->contentItem->removeEventFilter(this);
+            if (QQuickTextInput *input = qobject_cast<QQuickTextInput *>(d->contentItem)) {
+                QObjectPrivate::disconnect(input, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
+                QObjectPrivate::disconnect(input, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
+            }
+#if QT_CONFIG(cursor)
+            d->contentItem->unsetCursor();
+#endif
+        }
+    }
+
+    d->extra.value().editable = editable;
+    setAccessibleProperty("editable", editable);
+    emit editableChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.2 (Qt 5.9)
+    \qmlproperty string QtQuick.Controls::ComboBox::editText
+
+    This property holds the text in the text field of an editable combo box.
+
+    \sa editable
+*/
+QString QQuickComboBox::editText() const
+{
+    Q_D(const QQuickComboBox);
+    return d->extra.isAllocated() ? d->extra->editText : QString();
+}
+
+void QQuickComboBox::setEditText(const QString &text)
+{
+    Q_D(QQuickComboBox);
+    if (text == editText())
+        return;
+
+    d->extra.value().editText = text;
+    emit editTextChanged();
+}
+
+void QQuickComboBox::resetEditText()
+{
+    setEditText(QString());
 }
 
 /*!

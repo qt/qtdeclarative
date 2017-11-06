@@ -60,6 +60,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTabBar : public QQuickContainer
 {
     Q_OBJECT
     Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)
+    // 2.2 (Qt 5.9)
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth RESET resetContentWidth NOTIFY contentWidthChanged FINAL REVISION 2)
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight RESET resetContentHeight NOTIFY contentHeightChanged FINAL REVISION 2)
 
@@ -75,6 +76,7 @@ public:
     Position position() const;
     void setPosition(Position position);
 
+    // 2.2 (Qt 5.9)
     qreal contentWidth() const;
     void setContentWidth(qreal width);
     void resetContentWidth();
@@ -87,6 +89,7 @@ public:
 
 Q_SIGNALS:
     void positionChanged();
+    // 2.2 (Qt 5.9)
     Q_REVISION(2) void contentWidthChanged();
     Q_REVISION(2) void contentHeightChanged();
 

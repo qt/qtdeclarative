@@ -39,6 +39,7 @@
 #include <QVBoxLayout>
 #include <QDebug>
 #include <QDesktopWidget>
+#include <QDir>
 #include <QGroupBox>
 #include <QQmlApplicationEngine>
 #include <QQmlError>
@@ -66,8 +67,9 @@ int main(int argc, char *argv[])
     }
     hLayout->addWidget(groupBox);
 
-    const QUrl gallerySource(QLatin1String("qrc:/gallery.qml"));
-    QQmlApplicationEngine engine(gallerySource);
+    const QString gallerySource =
+        QDir::cleanPath(QLatin1String(SRCDIR"../../../examples/quickcontrols2/gallery/gallery.qml"));
+    QQmlApplicationEngine engine(QUrl::fromLocalFile(gallerySource));
     QObject *root = engine.rootObjects().value(0, nullptr);
     if (!root || !root->isWindowType()) {
         qWarning() << "Load error" << gallerySource;

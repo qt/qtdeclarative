@@ -103,8 +103,8 @@ void tst_Snippets::verify()
     QUrl url = QUrl::fromLocalFile(input);
     component.loadUrl(url);
 
-    QObject *root = component.create();
-    QVERIFY(root);
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(!root.isNull(), qPrintable(component.errorString()));
 
     QCOMPARE(component.status(), QQmlComponent::Ready);
     QVERIFY(component.errors().isEmpty());
@@ -132,10 +132,10 @@ void tst_Snippets::verify()
                 output.insert(index, "-" + applicationStyle.toLower());
         }
 
-        QQuickWindow *window = qobject_cast<QQuickWindow *>(root);
+        QQuickWindow *window = qobject_cast<QQuickWindow *>(root.data());
         if (!window) {
             QQuickView *view = new QQuickView;
-            view->setContent(url, &component, root);
+            view->setContent(url, &component, root.data());
             window = view;
         }
 

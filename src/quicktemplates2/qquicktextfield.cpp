@@ -637,7 +637,8 @@ void QQuickTextField::mousePressEvent(QMouseEvent *event)
             QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
             d->pressHandler.clearDelayedMouseEvent();
         }
-        QQuickTextInput::mousePressEvent(event);
+        if (event->buttons() != Qt::RightButton)
+            QQuickTextInput::mousePressEvent(event);
     }
 }
 
@@ -650,7 +651,8 @@ void QQuickTextField::mouseMoveEvent(QMouseEvent *event)
             QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
             d->pressHandler.clearDelayedMouseEvent();
         }
-        QQuickTextInput::mouseMoveEvent(event);
+        if (event->buttons() != Qt::RightButton)
+            QQuickTextInput::mouseMoveEvent(event);
     }
 }
 
@@ -663,7 +665,8 @@ void QQuickTextField::mouseReleaseEvent(QMouseEvent *event)
             QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
             d->pressHandler.clearDelayedMouseEvent();
         }
-        QQuickTextInput::mouseReleaseEvent(event);
+        if (event->buttons() != Qt::RightButton)
+            QQuickTextInput::mouseReleaseEvent(event);
     }
 }
 
@@ -674,7 +677,8 @@ void QQuickTextField::mouseDoubleClickEvent(QMouseEvent *event)
         QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
         d->pressHandler.clearDelayedMouseEvent();
     }
-    QQuickTextInput::mouseDoubleClickEvent(event);
+    if (event->buttons() != Qt::RightButton)
+        QQuickTextInput::mouseDoubleClickEvent(event);
 }
 
 void QQuickTextField::timerEvent(QTimerEvent *event)

@@ -59,10 +59,7 @@ T.ProgressBar {
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 10
-
-        x: control.leftPadding
-        y: control.topPadding + (control.availableHeight - height) / 2
-        width: control.availableWidth
+        y: (control.height - height) / 2
         height: 10
 
         visible: !control.indeterminate

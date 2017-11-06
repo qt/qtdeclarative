@@ -22,7 +22,6 @@ QML_CONTROLS = \
     $$PWD/ButtonGroup.qml \
     $$PWD/CheckBox.qml \
     $$PWD/CheckDelegate.qml \
-    $$PWD/CheckIndicator.qml \
     $$PWD/ComboBox.qml \
     $$PWD/Container.qml \
     $$PWD/Control.qml \
@@ -47,7 +46,6 @@ QML_CONTROLS = \
     $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \
     $$PWD/RadioDelegate.qml \
-    $$PWD/RadioIndicator.qml \
     $$PWD/RangeSlider.qml \
     $$PWD/RoundButton.qml \
     $$PWD/ScrollBar.qml \
@@ -58,7 +56,6 @@ QML_CONTROLS = \
     $$PWD/StackView.qml \
     $$PWD/SwipeDelegate.qml \
     $$PWD/Switch.qml \
-    $$PWD/SwitchIndicator.qml \
     $$PWD/SwitchDelegate.qml \
     $$PWD/SwipeView.qml \
     $$PWD/TabBar.qml \

@@ -54,8 +54,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickText;
 class QQuickIconImage;
+class QQuickMnemonicLabel;
 
 class QQuickIconLabelPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
@@ -105,7 +105,7 @@ public:
     QString text;
     QQuickIcon icon;
     QQuickIconImage *image;
-    QQuickText *label;
+    QQuickMnemonicLabel *label;
 };
 
 QT_END_NAMESPACE
