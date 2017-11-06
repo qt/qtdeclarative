@@ -41,9 +41,9 @@ Module {
         Signal { name: "released" }
         Signal { name: "canceled" }
         Signal { name: "clicked" }
-        Signal { name: "toggled"; revision: 2 }
         Signal { name: "pressAndHold" }
         Signal { name: "doubleClicked" }
+        Signal { name: "toggled"; revision: 2 }
         Signal { name: "iconChanged"; revision: 3 }
         Signal { name: "displayChanged"; revision: 3 }
         Signal { name: "actionChanged"; revision: 3 }
@@ -200,12 +200,12 @@ Module {
         Property { name: "checkedButton"; type: "QQuickAbstractButton"; isPointer: true }
         Property { name: "buttons"; type: "QQuickAbstractButton"; isList: true; isReadonly: true }
         Property { name: "exclusive"; revision: 3; type: "bool" }
-        Signal { name: "exclusiveChanged"; revision: 3 }
         Signal {
             name: "clicked"
             revision: 1
             Parameter { name: "button"; type: "QQuickAbstractButton"; isPointer: true }
         }
+        Signal { name: "exclusiveChanged"; revision: 3 }
         Method {
             name: "addButton"
             Parameter { name: "button"; type: "QQuickAbstractButton"; isPointer: true }
@@ -251,31 +251,23 @@ Module {
         Property { name: "count"; type: "int"; isReadonly: true }
         Property { name: "model"; type: "QVariant" }
         Property { name: "delegateModel"; type: "QQmlInstanceModel"; isReadonly: true; isPointer: true }
-        Property { name: "editable"; revision: 2; type: "bool" }
-        Property { name: "flat"; revision: 1; type: "bool" }
-        Property { name: "down"; revision: 2; type: "bool" }
         Property { name: "pressed"; type: "bool" }
         Property { name: "highlightedIndex"; type: "int"; isReadonly: true }
         Property { name: "currentIndex"; type: "int" }
         Property { name: "currentText"; type: "string"; isReadonly: true }
         Property { name: "displayText"; type: "string" }
-        Property { name: "editText"; revision: 2; type: "string" }
         Property { name: "textRole"; type: "string" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
         Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
         Property { name: "popup"; type: "QQuickPopup"; isPointer: true }
+        Property { name: "flat"; revision: 1; type: "bool" }
+        Property { name: "down"; revision: 2; type: "bool" }
+        Property { name: "editable"; revision: 2; type: "bool" }
+        Property { name: "editText"; revision: 2; type: "string" }
         Property { name: "validator"; revision: 2; type: "QValidator"; isPointer: true }
         Property { name: "inputMethodHints"; revision: 2; type: "Qt::InputMethodHints" }
         Property { name: "inputMethodComposing"; revision: 2; type: "bool"; isReadonly: true }
         Property { name: "acceptableInput"; revision: 2; type: "bool"; isReadonly: true }
-        Signal { name: "editableChanged"; revision: 2 }
-        Signal { name: "flatChanged"; revision: 1 }
-        Signal { name: "downChanged"; revision: 2 }
-        Signal { name: "editTextChanged"; revision: 2 }
-        Signal { name: "validatorChanged"; revision: 2 }
-        Signal { name: "inputMethodHintsChanged"; revision: 2 }
-        Signal { name: "inputMethodComposingChanged"; revision: 2 }
-        Signal { name: "acceptableInputChanged"; revision: 2 }
         Signal {
             name: "activated"
             Parameter { name: "index"; type: "int" }
@@ -284,7 +276,15 @@ Module {
             name: "highlighted"
             Parameter { name: "index"; type: "int" }
         }
+        Signal { name: "flatChanged"; revision: 1 }
         Signal { name: "accepted"; revision: 2 }
+        Signal { name: "downChanged"; revision: 2 }
+        Signal { name: "editableChanged"; revision: 2 }
+        Signal { name: "editTextChanged"; revision: 2 }
+        Signal { name: "validatorChanged"; revision: 2 }
+        Signal { name: "inputMethodHintsChanged"; revision: 2 }
+        Signal { name: "inputMethodComposingChanged"; revision: 2 }
+        Signal { name: "acceptableInputChanged"; revision: 2 }
         Method { name: "incrementCurrentIndex" }
         Method { name: "decrementCurrentIndex" }
         Method { name: "selectAll"; revision: 2 }
@@ -422,10 +422,10 @@ Module {
         Property { name: "snapMode"; type: "SnapMode" }
         Property { name: "wrap"; type: "bool" }
         Property { name: "pressed"; type: "bool"; isReadonly: true }
-        Property { name: "live"; revision: 2; type: "bool" }
         Property { name: "handle"; type: "QQuickItem"; isPointer: true }
-        Signal { name: "liveChanged"; revision: 2 }
+        Property { name: "live"; revision: 2; type: "bool" }
         Signal { name: "moved"; revision: 2 }
+        Signal { name: "liveChanged"; revision: 2 }
         Method { name: "increase" }
         Method { name: "decrease" }
     }
@@ -478,7 +478,7 @@ Module {
             "QtQuick.Templates/DialogButtonBox 2.1",
             "QtQuick.Templates/DialogButtonBox 2.3"
         ]
-        exportMetaObjectRevisions: [0, 0]
+        exportMetaObjectRevisions: [0, 3]
         attachedType: "QQuickDialogButtonBoxAttached"
         Enum {
             name: "Position"
@@ -784,10 +784,10 @@ Module {
         Property { name: "title"; type: "string" }
         Property { name: "header"; type: "QQuickItem"; isPointer: true }
         Property { name: "footer"; type: "QQuickItem"; isPointer: true }
-        Property { name: "contentWidth"; revision: 1; type: "double" }
-        Property { name: "contentHeight"; revision: 1; type: "double" }
         Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
+        Property { name: "contentWidth"; revision: 1; type: "double" }
+        Property { name: "contentHeight"; revision: 1; type: "double" }
         Signal { name: "contentWidthChanged"; revision: 1 }
         Signal { name: "contentHeightChanged"; revision: 1 }
     }
@@ -859,7 +859,6 @@ Module {
         Property { name: "contentHeight"; type: "double" }
         Property { name: "availableWidth"; type: "double"; isReadonly: true }
         Property { name: "availableHeight"; type: "double"; isReadonly: true }
-        Property { name: "spacing"; revision: 1; type: "double" }
         Property { name: "margins"; type: "double" }
         Property { name: "topMargin"; type: "double" }
         Property { name: "leftMargin"; type: "double" }
@@ -893,7 +892,11 @@ Module {
         Property { name: "transformOrigin"; type: "TransformOrigin" }
         Property { name: "enter"; type: "QQuickTransition"; isPointer: true }
         Property { name: "exit"; type: "QQuickTransition"; isPointer: true }
-        Signal { name: "spacingChanged"; revision: 1 }
+        Property { name: "spacing"; revision: 1; type: "double" }
+        Signal { name: "opened" }
+        Signal { name: "closed" }
+        Signal { name: "aboutToShow" }
+        Signal { name: "aboutToHide" }
         Signal { name: "mirroredChanged"; revision: 3 }
         Signal { name: "paletteChanged"; revision: 3 }
         Signal { name: "enabledChanged"; revision: 3 }
@@ -902,10 +905,7 @@ Module {
             name: "windowChanged"
             Parameter { name: "window"; type: "QQuickWindow"; isPointer: true }
         }
-        Signal { name: "aboutToShow" }
-        Signal { name: "aboutToHide" }
-        Signal { name: "opened" }
-        Signal { name: "closed" }
+        Signal { name: "spacingChanged"; revision: 1 }
         Method { name: "open" }
         Method { name: "close" }
         Method {
@@ -967,9 +967,9 @@ Module {
         Property { name: "stepSize"; type: "double" }
         Property { name: "snapMode"; type: "SnapMode" }
         Property { name: "orientation"; type: "Qt::Orientation" }
+        Property { name: "live"; revision: 2; type: "bool" }
         Property { name: "horizontal"; revision: 3; type: "bool"; isReadonly: true }
         Property { name: "vertical"; revision: 3; type: "bool"; isReadonly: true }
-        Property { name: "live"; revision: 2; type: "bool" }
         Signal { name: "liveChanged"; revision: 2 }
         Method {
             name: "setValues"
@@ -1124,14 +1124,14 @@ Module {
         Property { name: "visualPosition"; type: "double"; isReadonly: true }
         Property { name: "stepSize"; type: "double" }
         Property { name: "snapMode"; type: "SnapMode" }
-        Property { name: "live"; revision: 2; type: "bool" }
         Property { name: "pressed"; type: "bool" }
         Property { name: "horizontal"; revision: 3; type: "bool"; isReadonly: true }
         Property { name: "vertical"; revision: 3; type: "bool"; isReadonly: true }
         Property { name: "orientation"; type: "Qt::Orientation" }
         Property { name: "handle"; type: "QQuickItem"; isPointer: true }
-        Signal { name: "liveChanged"; revision: 2 }
+        Property { name: "live"; revision: 2; type: "bool" }
         Signal { name: "moved"; revision: 2 }
+        Signal { name: "liveChanged"; revision: 2 }
         Method { name: "increase" }
         Method { name: "decrease" }
         Method {
@@ -1176,8 +1176,8 @@ Module {
         name: "QQuickSpinButton"
         prototype: "QObject"
         Property { name: "pressed"; type: "bool" }
-        Property { name: "hovered"; revision: 1; type: "bool" }
         Property { name: "indicator"; type: "QQuickItem"; isPointer: true }
+        Property { name: "hovered"; revision: 1; type: "bool" }
         Signal { name: "hoveredChanged"; revision: 1 }
     }
     Component {
@@ -1286,23 +1286,23 @@ Module {
         prototype: "QObject"
         Property { name: "position"; type: "double" }
         Property { name: "complete"; type: "bool"; isReadonly: true }
-        Property { name: "enabled"; type: "bool" }
         Property { name: "left"; type: "QQmlComponent"; isPointer: true }
         Property { name: "behind"; type: "QQmlComponent"; isPointer: true }
         Property { name: "right"; type: "QQmlComponent"; isPointer: true }
         Property { name: "leftItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "behindItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
         Property { name: "rightItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
+        Property { name: "enabled"; type: "bool" }
         Property { name: "transition"; type: "QQuickTransition"; isPointer: true }
         Signal { name: "completed" }
         Signal { name: "opened" }
         Signal { name: "closed" }
+        Method { name: "close"; revision: 1 }
         Method {
             name: "open"
             revision: 2
             Parameter { name: "side"; type: "QQuickSwipeDelegate::Side" }
         }
-        Method { name: "close"; revision: 1 }
     }
     Component {
         name: "QQuickSwipeDelegate"
@@ -1353,9 +1353,9 @@ Module {
         prototype: "QObject"
         Property { name: "index"; type: "int"; isReadonly: true }
         Property { name: "isCurrentItem"; type: "bool"; isReadonly: true }
+        Property { name: "view"; type: "QQuickSwipeView"; isReadonly: true; isPointer: true }
         Property { name: "isNextItem"; revision: 1; type: "bool"; isReadonly: true }
         Property { name: "isPreviousItem"; revision: 1; type: "bool"; isReadonly: true }
-        Property { name: "view"; type: "QQuickSwipeView"; isReadonly: true; isPointer: true }
     }
     Component {
         name: "QQuickSwitch"
@@ -1433,8 +1433,6 @@ Module {
         Property { name: "palette"; revision: 3; type: "QPalette" }
         Signal { name: "implicitWidthChanged3" }
         Signal { name: "implicitHeightChanged3" }
-        Signal { name: "hoveredChanged"; revision: 1 }
-        Signal { name: "hoverEnabledChanged"; revision: 1 }
         Signal {
             name: "pressAndHold"
             Parameter { name: "event"; type: "QQuickMouseEvent"; isPointer: true }
@@ -1449,6 +1447,8 @@ Module {
             revision: 1
             Parameter { name: "event"; type: "QQuickMouseEvent"; isPointer: true }
         }
+        Signal { name: "hoveredChanged"; revision: 1 }
+        Signal { name: "hoverEnabledChanged"; revision: 1 }
         Signal { name: "paletteChanged"; revision: 3 }
     }
     Component {
@@ -1476,8 +1476,6 @@ Module {
         Property { name: "palette"; revision: 3; type: "QPalette" }
         Signal { name: "implicitWidthChanged3" }
         Signal { name: "implicitHeightChanged3" }
-        Signal { name: "hoveredChanged"; revision: 1 }
-        Signal { name: "hoverEnabledChanged"; revision: 1 }
         Signal {
             name: "pressAndHold"
             Parameter { name: "event"; type: "QQuickMouseEvent"; isPointer: true }
@@ -1492,6 +1490,8 @@ Module {
             revision: 1
             Parameter { name: "event"; type: "QQuickMouseEvent"; isPointer: true }
         }
+        Signal { name: "hoveredChanged"; revision: 1 }
+        Signal { name: "hoverEnabledChanged"; revision: 1 }
         Signal { name: "paletteChanged"; revision: 3 }
     }
     Component {
