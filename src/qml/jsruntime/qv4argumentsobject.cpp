@@ -46,38 +46,48 @@
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ArgumentsObject);
+DEFINE_OBJECT_VTABLE(StrictArgumentsObject);
 
-void Heap::ArgumentsObject::init(QV4::CallContext *context, int nFormals, bool strict)
+void Heap::ArgumentsObject::init(QV4::CppStackFrame *frame)
 {
     ExecutionEngine *v4 = internalClass->engine;
 
+    int nFormals = frame->v4Function->nFormals;
+    QV4::CallContext *context = static_cast<QV4::CallContext *>(frame->context());
+
     Object::init();
     fullyCreated = false;
-    isStrict = strict;
     this->nFormals = nFormals;
     this->context.set(v4, context->d());
     Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());
 
+    Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()));
+    setProperty(v4, CalleePropertyIndex, context->d()->function);
+    Q_ASSERT(LengthPropertyIndex == internalClass->find(v4->id_length()));
+    setProperty(v4, LengthPropertyIndex, Primitive::fromInt32(context->argc()));
+}
+
+void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
+{
+    Q_ASSERT(vtable() == QV4::StrictArgumentsObject::staticVTable());
+    ExecutionEngine *v4 = internalClass->engine;
+
+    Object::init();
+
+    Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()));
+    Q_ASSERT(CallerPropertyIndex == internalClass->find(v4->id_caller()));
+    setProperty(v4, CalleePropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
+    setProperty(v4, CalleePropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
+    setProperty(v4, CallerPropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
+    setProperty(v4, CallerPropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
+
     Scope scope(v4);
-    Scoped<QV4::ArgumentsObject> args(scope, this);
+    Scoped<QV4::StrictArgumentsObject> args(scope, this);
+    args->arrayReserve(frame->originalArgumentsCount);
+    args->arrayPut(0, frame->originalArguments, frame->originalArgumentsCount);
 
-    if (isStrict) {
-        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(v4->id_callee()));
-        Q_ASSERT(CallerPropertyIndex == args->internalClass()->find(v4->id_caller()));
-        args->setProperty(CalleePropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
-        args->setProperty(CalleePropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
-        args->setProperty(CallerPropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
-        args->setProperty(CallerPropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
-
-        args->arrayReserve(context->argc());
-        args->arrayPut(0, context->args(), context->argc());
-        args->d()->fullyCreated = true;
-    } else {
-        Q_ASSERT(CalleePropertyIndex == args->internalClass()->find(v4->id_callee()));
-        args->setProperty(CalleePropertyIndex, context->d()->function);
-    }
     Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(v4->id_length()));
-    args->setProperty(LengthPropertyIndex, Primitive::fromInt32(context->argc()));
+    setProperty(v4, LengthPropertyIndex, Primitive::fromInt32(frame->originalArgumentsCount));
 }
 
 void ArgumentsObject::fullyCreate()
@@ -132,8 +142,6 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
 
     bool result = Object::defineOwnProperty2(scope.engine, index, desc, attrs);
     if (!result) {
-        if (d()->isStrict)
-            return engine->throwTypeError();
         return false;
     }
 

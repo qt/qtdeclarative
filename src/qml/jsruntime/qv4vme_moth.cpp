@@ -503,6 +503,8 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
     ExecutionEngine *engine;
     Value *stack;
     CppStackFrame frame;
+    frame.originalArguments = argv;
+    frame.originalArgumentsCount = argc;
     Function *function;
 
     {

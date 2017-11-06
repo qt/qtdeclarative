@@ -79,17 +79,26 @@ DECLARE_HEAP_OBJECT(ArgumentsSetterFunction, FunctionObject) {
     Member(class, Pointer, CallContext *, context) \
     Member(class, Pointer, MemberData *, mappedArguments) \
     Member(class, NoMark, bool, fullyCreated) \
-    Member(class, NoMark, bool, isStrict) \
     Member(class, NoMark, int, nFormals)
 
 DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
     DECLARE_MARKOBJECTS(ArgumentsObject);
     enum {
         LengthPropertyIndex = 0,
+        CalleePropertyIndex = 1
+    };
+    void init(CppStackFrame *frame);
+};
+
+#define StrictArgumentsObjectMembers(class, Member)
+
+DECLARE_HEAP_OBJECT(StrictArgumentsObject, Object) {
+    enum {
+        LengthPropertyIndex = 0,
         CalleePropertyIndex = 1,
         CallerPropertyIndex = 3
     };
-    void init(QV4::CallContext *context, int nFormals, bool strict);
+    void init(CppStackFrame *frame);
 };
 
 }
@@ -133,8 +142,7 @@ struct ArgumentsObject: Object {
     bool fullyCreated() const { return d()->fullyCreated; }
 
     static bool isNonStrictArgumentsObject(Managed *m) {
-        return m->d()->vtable()->type == Type_ArgumentsObject &&
-                !static_cast<ArgumentsObject *>(m)->d()->isStrict;
+        return m->d()->vtable() == staticVTable();
     }
 
     bool defineOwnProperty(ExecutionEngine *engine, uint index, const Property *desc, PropertyAttributes attrs);
@@ -146,6 +154,11 @@ struct ArgumentsObject: Object {
 
     void fullyCreate();
 
+};
+
+struct StrictArgumentsObject : Object {
+    V4_OBJECT2(StrictArgumentsObject, Object)
+    Q_MANAGED_TYPE(ArgumentsObject)
 };
 
 }

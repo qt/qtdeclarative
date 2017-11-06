@@ -92,6 +92,8 @@ struct Q_QML_EXPORT CppStackFrame {
     CppStackFrame *parent;
     Function *v4Function;
     CallData *jsFrame;
+    const Value *originalArguments;
+    int originalArgumentsCount;
     const uchar *instructionPointer;
 
     QString source() const;

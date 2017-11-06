@@ -242,6 +242,8 @@ ExecutionEngine::ExecutionEngine()
     InternalClass *argsClass = newInternalClass(ArgumentsObject::staticVTable(), objectPrototype());
     argsClass = argsClass->addMember(id_length(), Attr_NotEnumerable);
     internalClasses[EngineBase::Class_ArgumentsObject] = argsClass->addMember(id_callee(), Attr_Data|Attr_NotEnumerable);
+    argsClass = newInternalClass(StrictArgumentsObject::staticVTable(), objectPrototype());
+    argsClass = argsClass->addMember(id_length(), Attr_NotEnumerable);
     argsClass = argsClass->addMember(id_callee(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
     internalClasses[EngineBase::Class_StrictArgumentsObject] = argsClass->addMember(id_caller(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 
