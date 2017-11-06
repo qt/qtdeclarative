@@ -261,7 +261,7 @@ public:
     void connectModel(QQmlAdaptorModel *model);
 
     void requestMoreIfNecessary();
-    QObject *object(Compositor::Group group, int index, bool asynchronous);
+    QObject *object(Compositor::Group group, int index, QQmlIncubator::IncubationMode incubationMode);
     QQmlDelegateModel::ReleaseFlags release(QObject *object);
     QString stringValue(Compositor::Group group, int index, const QString &name);
     void emitCreatedPackage(QQDMIncubationTask *incubationTask, QQuickPackage *package);
@@ -357,7 +357,7 @@ public:
 
     int count() const override;
     bool isValid() const override;
-    QObject *object(int index, bool asynchronous = false) override;
+    QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
     ReleaseFlags release(QObject *item) override;
     QString stringValue(int index, const QString &role) override;
     QList<QByteArray> watchedRoles() const { return m_watchedRoles; }

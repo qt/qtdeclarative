@@ -1729,7 +1729,7 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
     FxViewItem *oldCurrentItem = currentItem;
     int oldCurrentIndex = currentIndex;
     currentIndex = modelIndex;
-    currentItem = createItem(modelIndex, false);
+    currentItem = createItem(modelIndex, QQmlIncubator::AsynchronousIfNested);
     if (oldCurrentItem && oldCurrentItem->attached && (!currentItem || oldCurrentItem->item != currentItem->item))
         oldCurrentItem->attached->setIsCurrentItem(false);
     if (currentItem) {
@@ -2325,11 +2325,11 @@ void QQuickItemViewPrivate::viewItemTransitionFinished(QQuickItemViewTransitiona
   When the item becomes available, refill() will be called and the item
   will be returned on the next call to createItem().
 */
-FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
+FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, QQmlIncubator::IncubationMode incubationMode)
 {
     Q_Q(QQuickItemView);
 
-    if (requestedIndex == modelIndex && asynchronous)
+    if (requestedIndex == modelIndex && incubationMode == QQmlIncubator::Asynchronous)
         return 0;
 
     for (int i=0; i<releasePendingTransition.count(); i++) {
@@ -2340,11 +2340,11 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, bool asynchronous)
         }
     }
 
-    if (asynchronous)
+    if (incubationMode == QQmlIncubator::Asynchronous)
         requestedIndex = modelIndex;
     inRequest = true;
 
-    QObject* object = model->object(modelIndex, asynchronous);
+    QObject* object = model->object(modelIndex, incubationMode);
     QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
     if (!item) {
         if (object) {

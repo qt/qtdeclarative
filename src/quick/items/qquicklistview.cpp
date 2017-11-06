@@ -669,11 +669,13 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         }
     }
 
+    QQmlIncubator::IncubationMode incubationMode = doBuffer ? QQmlIncubator::Asynchronous : QQmlIncubator::AsynchronousIfNested;
+
     bool changed = false;
     FxListItemSG *item = 0;
     qreal pos = itemEnd;
     while (modelIndex < model->count() && pos <= fillTo) {
-        if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, doBuffer))))
+        if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, incubationMode))))
             break;
         qCDebug(lcItemViewDelegateLifecycle) << "refill: append item" << modelIndex << "pos" << pos << "buffer" << doBuffer << "item" << (QObject *)(item->item);
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
@@ -690,7 +692,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         return changed;
 
     while (visibleIndex > 0 && visibleIndex <= model->count() && visiblePos > fillFrom) {
-        if (!(item = static_cast<FxListItemSG*>(createItem(visibleIndex-1, doBuffer))))
+        if (!(item = static_cast<FxListItemSG*>(createItem(visibleIndex-1, incubationMode))))
             break;
         qCDebug(lcItemViewDelegateLifecycle) << "refill: prepend item" << visibleIndex-1 << "current top pos" << visiblePos << "buffer" << doBuffer << "item" << (QObject *)(item->item);
         --visibleIndex;

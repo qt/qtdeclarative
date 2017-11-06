@@ -129,7 +129,7 @@ QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool async)
     requestedIndex = modelIndex;
     requestedZ = z;
     inRequest = true;
-    QObject *object = model->object(modelIndex, async);
+    QObject *object = model->object(modelIndex, async ? QQmlIncubator::Asynchronous : QQmlIncubator::AsynchronousIfNested);
     QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
     if (!item) {
         if (object) {

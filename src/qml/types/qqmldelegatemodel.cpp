@@ -931,7 +931,7 @@ void QQmlDelegateModelPrivate::setInitialState(QQDMIncubationTask *incubationTas
         emitInitItem(incubationTask, cacheItem->object);
 }
 
-QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bool asynchronous)
+QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQmlIncubator::IncubationMode incubationMode)
 {
     if (!m_delegate || index < 0 || index >= m_compositor.count(group)) {
         qWarning() << "DelegateModel::item: index out range" << index << m_compositor.count(group);
@@ -962,7 +962,8 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
     cacheItem->referenceObject();
 
     if (cacheItem->incubationTask) {
-        if (!asynchronous && cacheItem->incubationTask->incubationMode() == QQmlIncubator::Asynchronous) {
+        bool sync = (incubationMode == QQmlIncubator::Synchronous || incubationMode == QQmlIncubator::AsynchronousIfNested);
+        if (sync && cacheItem->incubationTask->incubationMode() == QQmlIncubator::Asynchronous) {
             // previously requested async - now needed immediately
             cacheItem->incubationTask->forceCompletion();
         }
@@ -971,7 +972,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
 
         cacheItem->scriptRef += 1;
 
-        cacheItem->incubationTask = new QQDMIncubationTask(this, asynchronous ? QQmlIncubator::Asynchronous : QQmlIncubator::AsynchronousIfNested);
+        cacheItem->incubationTask = new QQDMIncubationTask(this, incubationMode);
         cacheItem->incubationTask->incubating = cacheItem;
         cacheItem->incubationTask->clear();
 
@@ -1024,7 +1025,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, bo
   to ensure a reference is held.  Any call to item() which returns a valid item
   must be matched by a call to release() in order to destroy the item.
 */
-QObject *QQmlDelegateModel::object(int index, bool asynchronous)
+QObject *QQmlDelegateModel::object(int index, QQmlIncubator::IncubationMode incubationMode)
 {
     Q_D(QQmlDelegateModel);
     if (!d->m_delegate || index < 0 || index >= d->m_compositor.count(d->m_compositorGroup)) {
@@ -1032,11 +1033,7 @@ QObject *QQmlDelegateModel::object(int index, bool asynchronous)
         return 0;
     }
 
-    QObject *object = d->object(d->m_compositorGroup, index, asynchronous);
-    if (!object)
-        return 0;
-
-    return object;
+    return d->object(d->m_compositorGroup, index, incubationMode);
 }
 
 QString QQmlDelegateModelPrivate::stringValue(Compositor::Group group, int index, const QString &name)
@@ -2659,7 +2656,7 @@ void QQmlDelegateModelGroup::create(QQmlV4Function *args)
         return;
     }
 
-    QObject *object = model->object(group, index, false);
+    QObject *object = model->object(group, index, QQmlIncubator::AsynchronousIfNested);
     if (object) {
         QVector<Compositor::Insert> inserts;
         Compositor::iterator it = model->m_compositor.find(group, index);
@@ -3147,7 +3144,7 @@ bool QQmlPartsModel::isValid() const
     return m_model->isValid();
 }
 
-QObject *QQmlPartsModel::object(int index, bool asynchronous)
+QObject *QQmlPartsModel::object(int index, QQmlIncubator::IncubationMode incubationMode)
 {
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(m_model);
 
@@ -3156,7 +3153,7 @@ QObject *QQmlPartsModel::object(int index, bool asynchronous)
         return 0;
     }
 
-    QObject *object = model->object(m_compositorGroup, index, asynchronous);
+    QObject *object = model->object(m_compositorGroup, index, incubationMode);
 
     if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(object)) {
         QObject *part = package->part(m_part);
