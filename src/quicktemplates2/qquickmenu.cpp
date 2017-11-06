@@ -661,19 +661,6 @@ QQuickMenu::QQuickMenu(QObject *parent)
 }
 
 /*!
-    \since QtQuick.Controls 2.3 (Qt 5.10)
-    \qmlproperty int QtQuick.Controls::Menu::count
-    \readonly
-
-    This property holds the number of items.
-*/
-int QQuickMenu::count() const
-{
-    Q_D(const QQuickMenu);
-    return d->contentModel->count();
-}
-
-/*!
     \qmlmethod Item QtQuick.Controls::Menu::itemAt(int index)
 
     Returns the item at \a index, or \c null if it does not exist.
@@ -1179,6 +1166,19 @@ void QQuickMenu::setCurrentIndex(int index)
 {
     Q_D(QQuickMenu);
     d->setCurrentIndex(index, Qt::OtherFocusReason);
+}
+
+/*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
+    \qmlproperty int QtQuick.Controls::Menu::count
+    \readonly
+
+    This property holds the number of items.
+*/
+int QQuickMenu::count() const
+{
+    Q_D(const QQuickMenu);
+    return d->contentModel->count();
 }
 
 void QQuickMenu::popup(QQuickItem *menuItem)

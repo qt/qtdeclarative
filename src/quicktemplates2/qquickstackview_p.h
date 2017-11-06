@@ -72,6 +72,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackView : public QQuickControl
     Q_PROPERTY(QQuickTransition *pushExit READ pushExit WRITE setPushExit NOTIFY pushExitChanged FINAL)
     Q_PROPERTY(QQuickTransition *replaceEnter READ replaceEnter WRITE setReplaceEnter NOTIFY replaceEnterChanged FINAL)
     Q_PROPERTY(QQuickTransition *replaceExit READ replaceExit WRITE setReplaceExit NOTIFY replaceExitChanged FINAL)
+    // 2.3 (Qt 5.10)
     Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged FINAL REVISION 3)
 
 public:
@@ -135,6 +136,7 @@ public:
     Q_INVOKABLE void pop(QQmlV4Function *args);
     Q_INVOKABLE void replace(QQmlV4Function *args);
 
+    // 2.3 (Qt 5.10)
     bool isEmpty() const;
 
 public Q_SLOTS:
@@ -150,6 +152,7 @@ Q_SIGNALS:
     void pushExitChanged();
     void replaceEnterChanged();
     void replaceExitChanged();
+    // 2.3 (Qt 5.10)
     Q_REVISION(3) void emptyChanged();
 
 protected:

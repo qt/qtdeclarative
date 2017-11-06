@@ -349,6 +349,11 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
     d_ptr.reset(); // QTBUG-52731
 }
 
+QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(QObject *object)
+{
+    return new QQuickApplicationWindowAttached(object);
+}
+
 /*!
     \qmlproperty Item QtQuick.Controls::ApplicationWindow::background
 
@@ -786,11 +791,6 @@ void QQuickApplicationWindow::setMenuBar(QQuickItem *menuBar)
     if (isComponentComplete())
         d->relayout();
     emit menuBarChanged();
-}
-
-QQuickApplicationWindowAttached *QQuickApplicationWindow::qmlAttachedProperties(QObject *object)
-{
-    return new QQuickApplicationWindowAttached(object);
 }
 
 bool QQuickApplicationWindow::isComponentComplete() const

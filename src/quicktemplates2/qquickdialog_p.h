@@ -63,6 +63,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialog : public QQuickPopup
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
     Q_PROPERTY(QPlatformDialogHelper::StandardButtons standardButtons READ standardButtons WRITE setStandardButtons NOTIFY standardButtonsChanged FINAL)
+    // 2.3 (Qt 5.10)
     Q_PROPERTY(int result READ result WRITE setResult NOTIFY resultChanged FINAL REVISION 3)
     Q_FLAGS(QPlatformDialogHelper::StandardButtons)
 
@@ -82,6 +83,7 @@ public:
     void setStandardButtons(QPlatformDialogHelper::StandardButtons buttons);
     Q_REVISION(3) Q_INVOKABLE QQuickAbstractButton *standardButton(QPlatformDialogHelper::StandardButton button) const;
 
+    // 2.3 (Qt 5.10)
     enum StandardCode { Rejected, Accepted };
     Q_ENUM(StandardCode)
 
@@ -96,15 +98,15 @@ public Q_SLOTS:
 Q_SIGNALS:
     void accepted();
     void rejected();
-    Q_REVISION(3) void applied();
-    Q_REVISION(3) void reset();
-    Q_REVISION(3) void discarded();
-    Q_REVISION(3) void helpRequested();
-
     void titleChanged();
     void headerChanged();
     void footerChanged();
     void standardButtonsChanged();
+    // 2.3 (Qt 5.10)
+    Q_REVISION(3) void applied();
+    Q_REVISION(3) void reset();
+    Q_REVISION(3) void discarded();
+    Q_REVISION(3) void helpRequested();
     Q_REVISION(3) void resultChanged();
 
 protected:

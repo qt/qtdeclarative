@@ -64,6 +64,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButtonGroup : public QObject
     Q_OBJECT
     Q_PROPERTY(QQuickAbstractButton *checkedButton READ checkedButton WRITE setCheckedButton NOTIFY checkedButtonChanged FINAL)
     Q_PROPERTY(QQmlListProperty<QQuickAbstractButton> buttons READ buttons NOTIFY buttonsChanged FINAL)
+    // 2.3 (Qt 5.10)
     Q_PROPERTY(bool exclusive READ isExclusive WRITE setExclusive NOTIFY exclusiveChanged FINAL REVISION 3)
 
 public:
@@ -89,6 +90,7 @@ Q_SIGNALS:
     void buttonsChanged();
     // 2.1 (Qt 5.8)
     Q_REVISION(1) void clicked(QQuickAbstractButton *button);
+    // 2.3 (Qt 5.10)
     Q_REVISION(3) void exclusiveChanged();
 
 private:
