@@ -47,18 +47,18 @@ static bool compareItems(QQmlObjectModel *model, const QObjectList &items)
     return true;
 }
 
-static bool verifyChangeSet(const QQmlChangeSet &changeSet, int expectedInserts, int expectedRemoves, bool isMove)
+static bool verifyChangeSet(const QQmlChangeSet &changeSet, int expectedInserts, int expectedRemoves, bool isMove, int moveId = -1)
 {
     int actualRemoves = 0;
     for (const QQmlChangeSet::Change &r : changeSet.removes()) {
-        if (r.isMove() != isMove)
+        if (r.isMove() != isMove && (!isMove || moveId == r.moveId))
             return false;
         actualRemoves += r.count;
     }
 
     int actualInserts = 0;
     for (const QQmlChangeSet::Change &i : changeSet.inserts()) {
-        if (i.isMove() != isMove)
+        if (i.isMove() != isMove && (!isMove || moveId == i.moveId))
             return false;
         actualInserts += i.count;
     }
@@ -129,7 +129,7 @@ void tst_QQmlObjectModel::changes()
     QCOMPARE(countSpy.count(), countSignals);
     QCOMPARE(childrenSpy.count(), ++childrenSignals);
     QCOMPARE(modelUpdateSpy.count(), ++modelUpdateSignals);
-    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 1, 1, true));
+    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 1, 1, true, 1));
 
     // move(3, 2) -> [item0, item1, item2, item3]
     model.move(3, 2); items.move(3, 2);
@@ -138,7 +138,7 @@ void tst_QQmlObjectModel::changes()
     QCOMPARE(countSpy.count(), countSignals);
     QCOMPARE(childrenSpy.count(), ++childrenSignals);
     QCOMPARE(modelUpdateSpy.count(), ++modelUpdateSignals);
-    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 1, 1, true));
+    QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 1, 1, true, 2));
 
     // remove(0) -> [item1, item2, item3]
     model.remove(0); items.removeAt(0);

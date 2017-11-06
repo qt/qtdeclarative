@@ -45,10 +45,19 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    An intermediate class (not registered as a QML type)
-    for handlers which allow filtering based on device type,
-    pointer type, or device-specific buttons (such as mouse or stylus buttons).
- */
+    \qmltype PointerDeviceHandler
+    \qmlabstract
+    \since 5.10
+    \preliminary
+    \instantiates QQuickPointerDeviceHandler
+    \inherits PointerHandler
+    \inqmlmodule Qt.labs.handlers
+    \ingroup qtquick-handlers
+    \brief Abstract handler for pointer events with device-specific constraints.
+
+    An intermediate class (not registered as a QML type) for handlers which
+    allow filtering based on device type, pointer type, or keyboard modifiers.
+*/
 QQuickPointerDeviceHandler::QQuickPointerDeviceHandler(QObject *parent)
     : QQuickPointerHandler(parent)
     , m_acceptedDevices(QQuickPointerDevice::AllDevices)
@@ -61,6 +70,31 @@ QQuickPointerDeviceHandler::~QQuickPointerDeviceHandler()
 {
 }
 
+/*!
+    \qmlproperty int PointerDeviceHandler::acceptedDevices
+
+    The types of pointing devices that can activate this Pointer Handler.
+
+    By default, this property is set to \l PointerDevice.AllDevices.
+    If you set it to an OR combination of device types, it will ignore events
+    from non-matching devices.
+
+    For example, a control could be made to respond to mouse and stylus clicks
+    in one way, and touchscreen taps in another way, with two handlers:
+
+    \qml
+    Item {
+       TapHandler {
+           acceptedDevices: PointerDevice.Mouse | PointerDevice.Stylus
+           onTapped: console.log("clicked")
+       }
+       TapHandler {
+           acceptedDevices: PointerDevice.TouchScreen
+           onTapped: console.log("tapped")
+       }
+    }
+    \endqml
+*/
 void QQuickPointerDeviceHandler::setAcceptedDevices(QQuickPointerDevice::DeviceTypes acceptedDevices)
 {
     if (m_acceptedDevices == acceptedDevices)
@@ -70,6 +104,34 @@ void QQuickPointerDeviceHandler::setAcceptedDevices(QQuickPointerDevice::DeviceT
     emit acceptedDevicesChanged();
 }
 
+/*!
+    \qmlproperty int PointerDeviceHandler::acceptedPointerTypes
+
+    The types of pointing instruments (finger, stylus, eraser, etc.)
+    that can activate this Pointer Handler.
+
+    By default, this property is set to \l PointerDevice.AllPointerTypes.
+    If you set it to an OR combination of device types, it will ignore events
+    from non-matching events.
+
+    For example, a control could be made to respond to mouse, touch, and stylus clicks
+    in some way, but delete itself if tapped with an eraser tool on a graphics tablet,
+    with two handlers:
+
+    \qml
+    Rectangle {
+       id: rect
+       TapHandler {
+           acceptedPointerTypes: PointerDevice.GenericPointer | PointerDevice.Finger | PointerDevice.Pen
+           onTapped: console.log("clicked")
+       }
+       TapHandler {
+           acceptedPointerTypes: PointerDevice.Eraser
+           onTapped: rect.destroy()
+       }
+    }
+    \endqml
+*/
 void QQuickPointerDeviceHandler::setAcceptedPointerTypes(QQuickPointerDevice::PointerTypes acceptedPointerTypes)
 {
     if (m_acceptedPointerTypes == acceptedPointerTypes)
@@ -80,30 +142,30 @@ void QQuickPointerDeviceHandler::setAcceptedPointerTypes(QQuickPointerDevice::Po
 }
 
 /*!
-     \qmlproperty int PointerDeviceHandler::acceptedModifiers
+    \qmlproperty int PointerDeviceHandler::acceptedModifiers
 
-     If this property is set, it will require the given keyboard modifiers to
-     be pressed in order to react to pointer events, and otherwise ignore them.
+    If this property is set, it will require the given keyboard modifiers to
+    be pressed in order to react to pointer events, and otherwise ignore them.
 
-     If this property is set to \c Qt.KeyboardModifierMask (the default value),
-     then the PointerHandler ignores the modifier keys.
+    If this property is set to \c Qt.KeyboardModifierMask (the default value),
+    then the PointerHandler ignores the modifier keys.
 
-     For example, an \l [QML] Item could have two handlers of the same type,
-     one of which is enabled only if the required keyboard modifiers are
-     pressed:
+    For example, an \l [QML] Item could have two handlers of the same type,
+    one of which is enabled only if the required keyboard modifiers are
+    pressed:
 
-     \qml
-     Item {
-        TapHandler {
-            acceptedModifiers: Qt.ControlModifier
-            onTapped: console.log("control-tapped")
-        }
-        TapHandler {
-            acceptedModifiers: Qt.NoModifier
-            onTapped: console.log("tapped")
-        }
-     }
-     \endqml
+    \qml
+    Item {
+       TapHandler {
+           acceptedModifiers: Qt.ControlModifier
+           onTapped: console.log("control-tapped")
+       }
+       TapHandler {
+           acceptedModifiers: Qt.NoModifier
+           onTapped: console.log("tapped")
+       }
+    }
+    \endqml
 */
 void QQuickPointerDeviceHandler::setAcceptedModifiers(Qt::KeyboardModifiers acceptedModifiers)
 {

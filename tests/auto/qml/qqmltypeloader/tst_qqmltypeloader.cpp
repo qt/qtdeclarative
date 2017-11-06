@@ -43,6 +43,8 @@ private slots:
     void loadComponentSynchronously();
     void trimCache();
     void trimCache2();
+    void keepSingleton();
+    void keepRegistrations();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -118,6 +120,76 @@ void tst_QQMLTypeLoader::trimCache2()
     QTest::qWait(1);    // force event loop
     window->engine()->trimComponentCache();
     QCOMPARE(loader.isTypeLoaded(testFileUrl("MyComponent2.qml")), false);
+}
+
+static void checkSingleton(const QString &dataDirectory)
+{
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory);
+    QQmlComponent component(&engine);
+    component.setData("import ClusterDemo 1.0\n"
+                      "import QtQuick 2.6\n"
+                      "import \"..\"\n"
+                      "Item { property int t: ValueSource.something }",
+                      QUrl::fromLocalFile(dataDirectory + "/abc/Xyz.qml"));
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o.data());
+    QCOMPARE(o->property("t").toInt(), 10);
+}
+
+void tst_QQMLTypeLoader::keepSingleton()
+{
+    qmlRegisterSingletonType(testFileUrl("ValueSource.qml"), "ClusterDemo", 1, 0, "ValueSource");
+    checkSingleton(dataDirectory());
+    QQmlMetaType::freeUnusedTypesAndCaches();
+    checkSingleton(dataDirectory());
+}
+
+class TestObject : public QObject
+{
+    Q_OBJECT
+public:
+    TestObject(QObject *parent = 0) : QObject(parent) {}
+};
+
+QML_DECLARE_TYPE(TestObject)
+
+static void verifyTypes(bool shouldHaveTestObject, bool shouldHaveFast)
+{
+    bool hasTestObject = false;
+    bool hasFast = false;
+    for (const QQmlType &type : QQmlMetaType::qmlAllTypes()) {
+        if (type.elementName() == QLatin1String("Fast"))
+            hasFast = true;
+        else if (type.elementName() == QLatin1String("TestObject"))
+            hasTestObject = true;
+    }
+    QCOMPARE(hasTestObject, shouldHaveTestObject);
+    QCOMPARE(hasFast, shouldHaveFast);
+}
+
+void tst_QQMLTypeLoader::keepRegistrations()
+{
+    verifyTypes(false, false);
+    qmlRegisterType<TestObject>("Test", 1, 0, "TestObject");
+    verifyTypes(true, false);
+
+    {
+        QQmlEngine engine;
+        engine.addImportPath(dataDirectory());
+        QQmlComponent component(&engine);
+        component.setData("import Fast 1.0\nFast {}", QUrl());
+        QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8().constData());
+        QCOMPARE(component.status(), QQmlComponent::Ready);
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY(o.data());
+        verifyTypes(true, true);
+    }
+
+    verifyTypes(true, false); // Fast is gone again, even though an event was still scheduled.
+    QQmlMetaType::freeUnusedTypesAndCaches();
+    verifyTypes(true, false); // qmlRegisterType creates an undeletable type.
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

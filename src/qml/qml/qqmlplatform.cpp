@@ -72,6 +72,8 @@ QString QQmlPlatform::os()
     return QStringLiteral("windows");
 #elif defined(Q_OS_LINUX)
     return QStringLiteral("linux");
+#elif defined(Q_OS_QNX)
+    return QStringLiteral("qnx");
 #elif defined(Q_OS_UNIX)
     return QStringLiteral("unix");
 #else

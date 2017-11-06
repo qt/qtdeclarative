@@ -213,7 +213,9 @@ void NumberPrototype::method_isNaN(const BuiltinFunction *, Scope &scope, CallDa
     }
 
     double v = callData->args[0].toNumber();
-    scope.result = Encode(std::isnan(v));
+    // cast to bool explicitly as std::isnan() may give us ::isnan(), which
+    // sometimes returns an int and we don't want the Encode(int) overload.
+    scope.result = Encode(bool(std::isnan(v)));
 }
 
 void NumberPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)

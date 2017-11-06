@@ -393,6 +393,8 @@ QImage QQuickRenderControl::grab()
 #endif
     } else if (d->window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software) {
         QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
+        cd->polishItems();
+        cd->syncSceneGraph();
         QSGSoftwareRenderer *softwareRenderer = static_cast<QSGSoftwareRenderer *>(cd->renderer);
         if (softwareRenderer) {
             const qreal dpr = d->window->effectiveDevicePixelRatio();
@@ -402,8 +404,6 @@ QImage QQuickRenderControl::grab()
             QPaintDevice *prevDev = softwareRenderer->currentPaintDevice();
             softwareRenderer->setCurrentPaintDevice(&grabContent);
             softwareRenderer->markDirty();
-            cd->polishItems();
-            cd->syncSceneGraph();
             d->rc->endSync();
             render();
             softwareRenderer->setCurrentPaintDevice(prevDev);

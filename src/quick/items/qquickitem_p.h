@@ -279,6 +279,8 @@ public:
 
     QQuickItemLayer *layer() const;
 
+    bool hasPointerHandlers() const;
+
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);
     static int data_count(QQmlListProperty<QObject> *);

@@ -71,6 +71,10 @@ private slots:
     void touchDragFlickableBehindSlider();
     void mouseDragSlider();
     void mouseDragFlickableBehindSlider();
+    void touchDragFlickableBehindItemWithHandlers_data();
+    void touchDragFlickableBehindItemWithHandlers();
+    void mouseDragFlickableBehindItemWithHandlers_data();
+    void mouseDragFlickableBehindItemWithHandlers();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -467,6 +471,79 @@ void tst_FlickableInterop::mouseDragFlickableBehindSlider()
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QCOMPARE(tappedSpy.count(), 0);
     QCOMPARE(translationChangedSpy.count(), 0);
+}
+
+void tst_FlickableInterop::touchDragFlickableBehindItemWithHandlers_data()
+{
+    QTest::addColumn<QByteArray>("nameOfRectangleToDrag");
+    QTest::addColumn<bool>("expectedFlickableMoving");
+    QTest::newRow("drag") << QByteArray("drag") << false;
+    QTest::newRow("tap") << QByteArray("tap") << true;
+    QTest::newRow("dragAndTap") << QByteArray("dragAndTap") << false;
+    QTest::newRow("tapAndDrag") << QByteArray("tapAndDrag") << false;
+}
+
+void tst_FlickableInterop::touchDragFlickableBehindItemWithHandlers()
+{
+    QFETCH(bool, expectedFlickableMoving);
+    QFETCH(QByteArray, nameOfRectangleToDrag);
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "flickableWithHandlers.qml");
+    QQuickView * window = windowPtr.data();
+    QQuickItem *rect = window->rootObject()->findChild<QQuickItem*>(nameOfRectangleToDrag);
+    QVERIFY(rect);
+    QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>();
+    QVERIFY(flickable);
+    QPoint p1 = rect->mapToScene(rect->clipRect().center()).toPoint();
+    QPoint originP1 = p1;
+
+    QTest::touchEvent(window, touchDevice).press(1, p1, window);
+    QQuickTouchUtils::flush(window);
+    for (int i = 0; i < dragThreshold * 3; ++i) {
+        p1 = originP1;
+        p1.rx() += i;
+        QTest::touchEvent(window, touchDevice).move(1, p1, window);
+        QQuickTouchUtils::flush(window);
+    }
+    QCOMPARE(flickable->isMoving(), expectedFlickableMoving);
+    if (!expectedFlickableMoving) {
+        QVERIFY(rect->mapToScene(rect->clipRect().center()).toPoint().x() > originP1.x());
+    }
+    QTest::touchEvent(window, touchDevice).release(1, p1, window);
+    QQuickTouchUtils::flush(window);
+}
+
+void tst_FlickableInterop::mouseDragFlickableBehindItemWithHandlers_data()
+{
+    touchDragFlickableBehindItemWithHandlers_data();
+}
+
+void tst_FlickableInterop::mouseDragFlickableBehindItemWithHandlers()
+{
+    QFETCH(bool, expectedFlickableMoving);
+    QFETCH(QByteArray, nameOfRectangleToDrag);
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "flickableWithHandlers.qml");
+    QQuickView * window = windowPtr.data();
+    QQuickItem *rect = window->rootObject()->findChild<QQuickItem*>(nameOfRectangleToDrag);
+    QVERIFY(rect);
+    QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>();
+    QVERIFY(flickable);
+    QPoint p1 = rect->mapToScene(rect->clipRect().center()).toPoint();
+    QPoint originP1 = p1;
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    for (int i = 0; i < 3; ++i) {
+        p1 += QPoint(dragThreshold, 0);
+        QTest::mouseMove(window, p1);
+        QQuickTouchUtils::flush(window);
+    }
+    QCOMPARE(flickable->isMoving(), expectedFlickableMoving);
+    if (!expectedFlickableMoving) {
+        QCOMPARE(originP1 + QPoint(3*dragThreshold, 0), p1);
+    }
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
 }
 
 QTEST_MAIN(tst_FlickableInterop)

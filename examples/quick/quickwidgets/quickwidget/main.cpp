@@ -1,12 +1,22 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -44,6 +54,9 @@
 #include <QtWidgets>
 #include "fbitem.h"
 
+static bool optMultipleSample = false;
+static bool optCoreProfile = false;
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
@@ -65,11 +78,11 @@ MainWindow::MainWindow()
    : m_quickWidget(new QQuickWidget)
 {
     QSurfaceFormat format;
-    if (QCoreApplication::arguments().contains(QStringLiteral("--coreprofile"))) {
+    if (optCoreProfile) {
         format.setVersion(4, 4);
         format.setProfile(QSurfaceFormat::CoreProfile);
     }
-    if (QCoreApplication::arguments().contains(QStringLiteral("--multisample")))
+    if (optMultipleSample)
         format.setSamples(4);
     m_quickWidget->setFormat(format);
 
@@ -183,6 +196,23 @@ void MainWindow::grabToImage()
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
+
+    QCoreApplication::setApplicationName("Qt QQuickWidget Example");
+    QCoreApplication::setOrganizationName("QtProject");
+    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
+    QCommandLineParser parser;
+    parser.setApplicationDescription(QCoreApplication::applicationName());
+    parser.addHelpOption();
+    parser.addVersionOption();
+    QCommandLineOption multipleSampleOption("multisample", "Multisampling");
+    parser.addOption(multipleSampleOption);
+    QCommandLineOption coreProfileOption("coreprofile", "Use core profile");
+    parser.addOption(coreProfileOption);
+
+    parser.process(app);
+
+    optMultipleSample = parser.isSet(multipleSampleOption);
+    optCoreProfile = parser.isSet(coreProfileOption);
 
     qmlRegisterType<FbItem>("QuickWidgetExample", 1, 0, "FbItem");
 

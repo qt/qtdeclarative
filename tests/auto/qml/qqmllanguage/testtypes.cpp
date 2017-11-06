@@ -105,6 +105,7 @@ void registerTypes()
     qmlRegisterType<MyArrayBufferTestClass>("Test", 1, 0, "MyArrayBufferTestClass");
 
     qmlRegisterType<LazyDeferredSubObject>("Test", 1, 0, "LazyDeferredSubObject");
+    qmlRegisterType<DeferredProperties>("Test", 1, 0, "DeferredProperties");
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

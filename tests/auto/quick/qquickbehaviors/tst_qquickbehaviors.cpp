@@ -72,6 +72,7 @@ private slots:
     void currentValue();
     void disabledWriteWhileRunning();
     void aliasedProperty();
+    void innerBehaviorOverwritten();
 };
 
 void tst_qquickbehaviors::simpleBehavior()
@@ -587,6 +588,14 @@ void tst_qquickbehaviors::aliasedProperty()
     QTRY_VERIFY(acc->property("value").toDouble() < 400);
     QTRY_VERIFY(range->width() < 400);
     //i.e. the behavior has been triggered
+}
+
+void tst_qquickbehaviors::innerBehaviorOverwritten()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("overwrittenbehavior.qml"));
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(c.create()));
+    QVERIFY(item->property("behaviorTriggered").toBool());
 }
 
 QTEST_MAIN(tst_qquickbehaviors)

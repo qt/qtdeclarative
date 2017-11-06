@@ -852,6 +852,7 @@ qreal QQuickLoader::progress() const
 \qmlproperty bool QtQuick::Loader::asynchronous
 
 This property holds whether the component will be instantiated asynchronously.
+By default it is \c false.
 
 When used in conjunction with the \l source property, loading and compilation
 will also be performed in a background thread.
@@ -915,9 +916,14 @@ void QQuickLoaderPrivate::_q_updateSize(bool loaderGeometryChanged)
     if (!item)
         return;
 
-    if (loaderGeometryChanged && q->widthValid())
+    const bool needToUpdateWidth = loaderGeometryChanged && q->widthValid();
+    const bool needToUpdateHeight = loaderGeometryChanged && q->heightValid();
+
+    if (needToUpdateWidth && needToUpdateHeight)
+        item->setSize(QSizeF(q->width(), q->height()));
+    else if (needToUpdateWidth)
         item->setWidth(q->width());
-    if (loaderGeometryChanged && q->heightValid())
+    else if (needToUpdateHeight)
         item->setHeight(q->height());
 
     if (updatingSize)

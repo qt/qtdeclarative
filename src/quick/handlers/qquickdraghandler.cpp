@@ -46,11 +46,29 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype DragHandler
     \instantiates QQuickDragHandler
-    \inqmlmodule QtQuick
+    \inherits SinglePointHandler
+    \inqmlmodule Qt.labs.handlers
     \ingroup qtquick-handlers
     \brief Handler for dragging
 
     DragHandler is a handler that is used to interactively move an Item.
+    Like other Pointer Handlers, by default it is fully functional, and
+    manipulates its \l target.
+
+    \snippet pointerHandlers/dragHandler.qml 0
+
+    It has properties to restrict the range of dragging.
+
+    If it is declared within one Item but is assigned a different \l target,
+    then it handles events within the bounds of the \l parent Item but
+    manipulates the \c target Item instead:
+
+    \snippet pointerHandlers/dragHandlerDifferentTarget.qml 0
+
+    A third way to use it is to set \l target to \c null and react to property
+    changes in some other way:
+
+    \snippet pointerHandlers/dragHandlerNullTarget.qml 0
 
     At this time, drag-and-drop is not yet supported.
 
@@ -103,7 +121,7 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
         if (!m_yAxis.enabled())
             delta.setY(0);
         if (active()) {
-            setTranslation(delta);
+            setTranslation(QVector2D(delta));
             if (target() && target()->parentItem()) {
                 QPointF pos = target()->parentItem()->mapFromScene(m_targetStartPos + delta);
                 enforceAxisConstraints(&pos);
@@ -164,7 +182,7 @@ void QQuickDragHandler::initializeTargetStartPos(QQuickEventPoint *point)
     }
 }
 
-void QQuickDragHandler::setTranslation(const QPointF &trans)
+void QQuickDragHandler::setTranslation(const QVector2D &trans)
 {
     if (trans == m_translation) // fuzzy compare?
         return;
@@ -172,7 +190,25 @@ void QQuickDragHandler::setTranslation(const QPointF &trans)
     emit translationChanged();
 }
 
+/*!
+    \qmlpropertygroup QtQuick::DragHandler::xAxis
+    \qmlpropertygroup QtQuick::DragHandler::yAxis
+    \qmlproperty real QtQuick::DragHandler::DragAxis::minimum
+    \qmlproperty real QtQuick::DragHandler::DragAxis::maximum
+    \qmlproperty real QtQuick::DragHandler::DragAxis::enabled
 
+    \c xAxis and yAxis control the constraints for horizontal and vertical
+    dragging, respectively.
+
+    \value minimum
+        The minimum acceptable value of \l {Item::x}{x} or \l {Item::y}{y}
+        to be applied to the \l target
+    \value maximum
+        The maximum acceptable value of \l {Item::x}{x} or \l {Item::y}{y}
+        to be applied to the \l target
+    \value enabled
+        Whether dragging in this direction is allowed at all
+*/
 QQuickDragAxis::QQuickDragAxis()
   : m_minimum(-DBL_MAX)
   , m_maximum(DBL_MAX)
@@ -206,5 +242,12 @@ void QQuickDragAxis::setEnabled(bool enabled)
     m_enabled = enabled;
     emit enabledChanged();
 }
+
+/*!
+    \readonly
+    \qmlproperty QVector2D QtQuick::DragHandler::translation
+
+    The translation since the gesture began.
+*/
 
 QT_END_NAMESPACE
