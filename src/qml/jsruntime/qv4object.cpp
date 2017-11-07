@@ -696,14 +696,13 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty) const
     name->makeIdentifier();
     Identifier *id = name->identifier();
 
-    Scope scope(engine());
-    ScopedObject o(scope, this);
+    Heap::Object *o = d();
     while (o) {
-        uint idx = o->internalClass()->find(id);
+        uint idx = o->internalClass->find(id);
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
-            return getValue(*o->propertyData(idx), o->internalClass()->propertyData.at(idx));
+            return getValue(*o->propertyData(idx), o->internalClass->propertyData.at(idx));
         }
 
         o = o->prototype();
