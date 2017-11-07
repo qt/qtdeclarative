@@ -121,6 +121,8 @@ struct RegExpObject: Object {
         Index_ArrayInput = Index_ArrayIndex + 1
     };
 
+    enum { NInlineProperties = 5 };
+
     Heap::RegExp *value() const { return d()->value; }
     bool global() const { return d()->value->global; }
 
