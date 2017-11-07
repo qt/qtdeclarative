@@ -822,6 +822,23 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
 
         return done;
     }
+
+    Jump unopIntPath(std::function<Jump(void)> fastPath)
+    {
+        urshift64(AccumulatorRegister, TrustedImm32(32), ScratchRegister);
+        Jump accNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), ScratchRegister);
+
+        // both integer
+        Jump failure = fastPath();
+        Jump done = jump();
+
+        // all other cases
+        if (failure.isSet())
+            failure.link(this);
+        accNotInt.link(this);
+
+        return done;
+    }
 };
 
 typedef PlatformAssembler64 PlatformAssembler;
@@ -1098,6 +1115,22 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
 
         return done;
     }
+
+    Jump unopIntPath(std::function<Jump(void)> fastPath)
+    {
+        Jump accNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), AccumulatorRegisterTag);
+
+        // both integer
+        Jump failure = fastPath();
+        Jump done = jump();
+
+        // all other cases
+        if (failure.isSet())
+            failure.link(this);
+        accNotInt.link(this);
+
+        return done;
+    }
 };
 
 typedef PlatformAssembler32 PlatformAssembler;
@@ -1300,7 +1333,14 @@ static ReturnedValue incHelper(const Value &v)
 
 void Assembler::inc()
 {
-//    auto done = pasm()->incFastPath();
+    auto done = pasm()->unopIntPath([this](){
+        auto overflowed = pasm()->branchAdd32(PlatformAssembler::Overflow,
+                                              PlatformAssembler::AccumulatorRegisterValue,
+                                              TrustedImm32(1),
+                                              PlatformAssembler::ScratchRegister);
+        pasm()->setAccumulatorTag(IntegerTag, PlatformAssembler::ScratchRegister);
+        return overflowed;
+    });
 
     // slow path:
     saveAccumulatorInFrame();
@@ -1310,7 +1350,7 @@ void Assembler::inc()
     checkException();
 
     // done.
-//    done.link(pasm());
+    done.link(pasm());
 }
 
 static ReturnedValue decHelper(const Value &v)
@@ -1320,7 +1360,14 @@ static ReturnedValue decHelper(const Value &v)
 
 void Assembler::dec()
 {
-//    auto done = pasm()->decFastPath();
+    auto done = pasm()->unopIntPath([this](){
+        auto overflowed = pasm()->branchSub32(PlatformAssembler::Overflow,
+                                              PlatformAssembler::AccumulatorRegisterValue,
+                                              TrustedImm32(1),
+                                              PlatformAssembler::ScratchRegister);
+        pasm()->setAccumulatorTag(IntegerTag, PlatformAssembler::ScratchRegister);
+        return overflowed;
+    });
 
     // slow path:
     saveAccumulatorInFrame();
@@ -1330,7 +1377,7 @@ void Assembler::dec()
     checkException();
 
     // done.
-//    done.link(pasm());
+    done.link(pasm());
 }
 
 void Assembler::unot()
