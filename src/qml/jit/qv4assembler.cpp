@@ -69,6 +69,8 @@ namespace JIT {
 
 #define callHelper(x) PlatformAssemblerCommon::callRuntime(#x, reinterpret_cast<void *>(&x))
 
+const QV4::Value::ValueTypeInternal IntegerTag = QV4::Value::ValueTypeInternal::Integer;
+
 static ReturnedValue toNumberHelper(ReturnedValue v)
 {
     return Encode(Value::fromReturnedValue(v).toNumber());
@@ -1237,7 +1239,7 @@ void Assembler::ucompl()
 {
     pasm()->toInt32();
     pasm()->xor32(TrustedImm32(-1), PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
 }
 
 static ReturnedValue incHelper(const Value &v)
@@ -1323,7 +1325,7 @@ void Assembler::bitAnd(int lhs)
     pasm()->toInt32();
     pasm()->popAligned(PlatformAssembler::ScratchRegister);
     pasm()->and32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::bitOr(int lhs)
@@ -1334,7 +1336,7 @@ void Assembler::bitOr(int lhs)
     pasm()->toInt32();
     pasm()->popAligned(PlatformAssembler::ScratchRegister);
     pasm()->or32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::bitXor(int lhs)
@@ -1345,7 +1347,7 @@ void Assembler::bitXor(int lhs)
     pasm()->toInt32();
     pasm()->popAligned(PlatformAssembler::ScratchRegister);
     pasm()->xor32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::ushr(int lhs)
@@ -1361,7 +1363,7 @@ void Assembler::ushr(int lhs)
     auto doubleEncode = pasm()->branch32(PlatformAssembler::LessThan,
                                          PlatformAssembler::AccumulatorRegisterValue,
                                          TrustedImm32(0));
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
     auto done = pasm()->jump();
 
     doubleEncode.link(pasm());
@@ -1382,7 +1384,7 @@ void Assembler::shr(int lhs)
                   PlatformAssembler::ScratchRegister);
     pasm()->popAligned(PlatformAssembler::AccumulatorRegisterValue);
     pasm()->rshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::shl(int lhs)
@@ -1395,28 +1397,28 @@ void Assembler::shl(int lhs)
                   PlatformAssembler::ScratchRegister);
     pasm()->popAligned(PlatformAssembler::AccumulatorRegisterValue);
     pasm()->lshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::bitAndConst(int rhs)
 {
     pasm()->toInt32();
     pasm()->and32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::bitOrConst(int rhs)
 {
     pasm()->toInt32();
     pasm()->or32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::bitXorConst(int rhs)
 {
     pasm()->toInt32();
     pasm()->xor32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::ushrConst(int rhs)
@@ -1428,7 +1430,7 @@ void Assembler::ushrConst(int rhs)
     auto doubleEncode = pasm()->branch32(PlatformAssembler::LessThan,
                                          PlatformAssembler::AccumulatorRegisterValue,
                                          TrustedImm32(0));
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
     auto done = pasm()->jump();
 
     doubleEncode.link(pasm());
@@ -1445,7 +1447,7 @@ void Assembler::shrConst(int rhs)
     pasm()->toInt32();
     if (rhs) // shift with 0 can act weird
         pasm()->rshift32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::shlConst(int rhs)
@@ -1454,7 +1456,7 @@ void Assembler::shlConst(int rhs)
     pasm()->toInt32();
     if (rhs) // shift with 0 can act weird
         pasm()->lshift32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Integer);
+    pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::mul(int lhs)
