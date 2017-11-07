@@ -3073,8 +3073,6 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         qmlNotifyIndex = other.qmlNotifyIndex;
         captureRequired = other.captureRequired;
         break;
-    case This:
-        break;
     }
 
     // keep loaded reference
@@ -3111,8 +3109,6 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     case QmlContextObject:
         return qmlCoreIndex == other.qmlCoreIndex && qmlNotifyIndex == other.qmlNotifyIndex
                 && captureRequired == other.captureRequired;
-    case This:
-        return true;
     }
     return true;
 }
@@ -3218,7 +3214,6 @@ bool Codegen::Reference::storeWipesAccumulator() const
     switch (type) {
     default:
     case Invalid:
-    case This:
     case Const:
     case Accumulator:
         Q_UNREACHABLE();
@@ -3303,7 +3298,6 @@ void Codegen::Reference::storeAccumulator() const
     case Invalid:
     case Accumulator:
     case Const:
-    case This:
         break;
     }
 
@@ -3456,11 +3450,6 @@ QT_WARNING_POP
         codegen->bytecodeGenerator->addInstruction(load);
         if (!captureRequired)
             codegen->_context->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
-    } return;
-    case This: {
-        Instruction::LoadReg load;
-        load.reg = Moth::StackSlot::createRegister(CallData::This);
-        codegen->bytecodeGenerator->addInstruction(load);
     } return;
     case Invalid:
         break;

@@ -184,8 +184,7 @@ public:
             QmlScopeObject,
             QmlContextObject,
             LastLValue = QmlContextObject,
-            Const,
-            This
+            Const
         } type = Invalid;
 
         bool isLValue() const { return !isReadonly; }
@@ -284,7 +283,7 @@ public:
             return r;
         }
         static Reference fromThis(Codegen *cg) {
-            Reference r(cg, This);
+            Reference r = fromStackSlot(cg, CallData::This);
             r.isReadonly = true;
             return r;
         }
