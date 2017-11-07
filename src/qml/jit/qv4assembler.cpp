@@ -92,6 +92,7 @@ struct PlatformAssembler_X86_64_SysV : JSC::MacroAssembler<JSC::MacroAssemblerX8
     static const RegisterID AccumulatorRegister   = RegisterID::eax;
     static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
     static const RegisterID ScratchRegister       = RegisterID::r10;
+    static const RegisterID ScratchRegister2      = RegisterID::r9; // Note: overlaps with Arg5Reg, so do not use while setting up a call!
     static const RegisterID JSStackFrameRegister  = RegisterID::r12;
     static const RegisterID CppStackFrameRegister = RegisterID::r13;
     static const RegisterID EngineRegister        = RegisterID::r14;
@@ -169,6 +170,7 @@ struct PlatformAssembler_Win64 : JSC::MacroAssembler<JSC::MacroAssemblerX86_64>
     static const RegisterID AccumulatorRegister   = RegisterID::eax;
     static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
     static const RegisterID ScratchRegister       = RegisterID::r10;
+    static const RegisterID ScratchRegister2      = RegisterID::r9; // Note: overlaps with Arg3Reg, so do not use while setting up a call!
     static const RegisterID JSStackFrameRegister  = RegisterID::r12;
     static const RegisterID CppStackFrameRegister = RegisterID::r13;
     static const RegisterID EngineRegister        = RegisterID::r14;
@@ -329,6 +331,7 @@ struct PlatformAssembler_ARM64 : JSC::MacroAssembler<JSC::MacroAssemblerARM64>
     static const RegisterID AccumulatorRegister   = JSC::ARM64Registers::x9;
     static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
     static const RegisterID ScratchRegister       = JSC::ARM64Registers::x10;
+    static const RegisterID ScratchRegister2      = JSC::ARM64Registers::x7; // Note: overlaps with Arg7Reg, so do not use while setting up a call!
     static const RegisterID JSStackFrameRegister  = JSC::ARM64Registers::x19;
     static const RegisterID CppStackFrameRegister = JSC::ARM64Registers::x20;
     static const RegisterID EngineRegister        = JSC::ARM64Registers::x21;
@@ -767,9 +770,12 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         patches.push_back({ notEqual, offset });
     }
 
-    void setAccumulatorTag(QV4::Value::ValueTypeInternal tag)
+    void setAccumulatorTag(QV4::Value::ValueTypeInternal tag, RegisterID sourceReg = NoRegister)
     {
-        or64(TrustedImm64(int64_t(tag) << 32), AccumulatorRegister);
+        if (sourceReg == NoRegister)
+            or64(TrustedImm64(int64_t(tag) << 32), AccumulatorRegister);
+        else
+            or64(TrustedImm64(int64_t(tag) << 32), sourceReg, AccumulatorRegister);
     }
 
     void encodeDoubleIntoAccumulator(FPRegisterID src)
@@ -794,6 +800,27 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
     void popValueAligned()
     {
         addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+    }
+
+    Jump binopBothIntPath(Address lhsAddr, std::function<Jump(void)> fastPath)
+    {
+        urshift64(AccumulatorRegister, TrustedImm32(32), ScratchRegister);
+        Jump accNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), ScratchRegister);
+        load64(lhsAddr, ScratchRegister);
+        urshift64(ScratchRegister, TrustedImm32(32), ScratchRegister2);
+        Jump lhsNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), ScratchRegister2);
+
+        // both integer
+        Jump failure = fastPath();
+        Jump done = jump();
+
+        // all other cases
+        if (failure.isSet())
+            failure.link(this);
+        accNotInt.link(this);
+        lhsNotInt.link(this);
+
+        return done;
     }
 };
 
@@ -1027,8 +1054,10 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
         notUndefValue.link(this);
     }
 
-    void setAccumulatorTag(QV4::Value::ValueTypeInternal tag)
+    void setAccumulatorTag(QV4::Value::ValueTypeInternal tag, RegisterID sourceReg = NoRegister)
     {
+        if (sourceReg != NoRegister)
+            move(sourceReg, AccumulatorRegisterValue);
         move(TrustedImm32(int(tag)), AccumulatorRegisterTag);
     }
 
@@ -1046,6 +1075,28 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
     void popValueAligned()
     {
         popValue();
+    }
+
+    Jump binopBothIntPath(Address lhsAddr, std::function<Jump(void)> fastPath)
+    {
+        Jump accNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), AccumulatorRegisterTag);
+        Address lhsAddrTag = lhsAddr; lhsAddrTag.offset += Value::tagOffset();
+        load32(lhsAddrTag, ScratchRegister);
+        Jump lhsNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), ScratchRegister);
+
+        // both integer
+        Address lhsAddrValue = lhsAddr; lhsAddrValue.offset += Value::valueOffset();
+        load32(lhsAddrValue, ScratchRegister);
+        Jump failure = fastPath();
+        Jump done = jump();
+
+        // all other cases
+        if (failure.isSet())
+            failure.link(this);
+        accNotInt.link(this);
+        lhsNotInt.link(this);
+
+        return done;
     }
 };
 
@@ -1293,16 +1344,14 @@ void Assembler::unot()
 
 void Assembler::add(int lhs)
 {
-//    PlatformAssembler::Address lhsAddr(PlatformAssembler::JSStackFrameRegister,
-//                                      lhs * int(sizeof(QV4::Value)));
-//    auto done = pasm()->binopFastPath(lhsAddr, [this](){
-//        auto overflowed = pasm()->branchAdd32(PlatformAssembler::Overflow,
-//                                              PlatformAssembler::AccumulatorRegister,
-//                                              PlatformAssembler::ScratchRegister);
-//        pasm()->or64(PlatformAssembler::TrustedImm64(int64_t(QV4::Value::ValueTypeInternal::Integer) << 32),
-//                     PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegister);
-//        return overflowed;
-//    });
+    auto done = pasm()->binopBothIntPath(regAddr(lhs), [this](){
+        auto overflowed = pasm()->branchAdd32(PlatformAssembler::Overflow,
+                                              PlatformAssembler::AccumulatorRegisterValue,
+                                              PlatformAssembler::ScratchRegister);
+        pasm()->setAccumulatorTag(IntegerTag,
+                                  PlatformAssembler::ScratchRegister);
+        return overflowed;
+    });
 
     // slow path:
     saveAccumulatorInFrame();
@@ -1314,7 +1363,7 @@ void Assembler::add(int lhs)
     checkException();
 
     // done.
-//    done.link(pasm());
+    done.link(pasm());
 }
 
 void Assembler::bitAnd(int lhs)
@@ -1461,15 +1510,14 @@ void Assembler::shlConst(int rhs)
 
 void Assembler::mul(int lhs)
 {
-//    PlatformAssembler::Address lhsAddr(PlatformAssembler::JSStackFrameRegister, lhs * int(sizeof(QV4::Value)));
-//    auto done = pasm()->binopFastPath(lhsAddr, [this](){
-//        auto overflowed = pasm()->branchMul32(PlatformAssembler::Overflow,
-//                                              PlatformAssembler::AccumulatorRegister,
-//                                              PlatformAssembler::ScratchRegister);
-//        pasm()->or64(PlatformAssembler::TrustedImm64(int64_t(QV4::Value::ValueTypeInternal::Integer) << 32),
-//                     PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegister);
-//        return overflowed;
-//    });
+    auto done = pasm()->binopBothIntPath(regAddr(lhs), [this](){
+        auto overflowed = pasm()->branchMul32(PlatformAssembler::Overflow,
+                                              PlatformAssembler::AccumulatorRegisterValue,
+                                              PlatformAssembler::ScratchRegister);
+        pasm()->setAccumulatorTag(IntegerTag,
+                                  PlatformAssembler::ScratchRegister);
+        return overflowed;
+    });
 
     // slow path:
     saveAccumulatorInFrame();
@@ -1480,7 +1528,7 @@ void Assembler::mul(int lhs)
     checkException();
 
     // done.
-    //    done.link(pasm());
+    done.link(pasm());
 }
 
 void Assembler::div(int lhs)
@@ -1505,15 +1553,14 @@ void Assembler::mod(int lhs)
 
 void Assembler::sub(int lhs)
 {
-//    PlatformAssembler::Address lhsAddr(PlatformAssembler::JSStackFrameRegister, lhs * int(sizeof(QV4::Value)));
-//    auto done = pasm()->binopFastPath(lhsAddr, [this](){
-//        auto overflowed = pasm()->branchSub32(PlatformAssembler::Overflow,
-//                                              PlatformAssembler::AccumulatorRegister,
-//                                              PlatformAssembler::ScratchRegister);
-//        pasm()->or64(PlatformAssembler::TrustedImm64(int64_t(QV4::Value::ValueTypeInternal::Integer) << 32),
-//                     PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegister);
-//        return overflowed;
-//    });
+    auto done = pasm()->binopBothIntPath(regAddr(lhs), [this](){
+        auto overflowed = pasm()->branchSub32(PlatformAssembler::Overflow,
+                                              PlatformAssembler::AccumulatorRegisterValue,
+                                              PlatformAssembler::ScratchRegister);
+        pasm()->setAccumulatorTag(IntegerTag,
+                                  PlatformAssembler::ScratchRegister);
+        return overflowed;
+    });
 
     // slow path:
     saveAccumulatorInFrame();
@@ -1524,7 +1571,7 @@ void Assembler::sub(int lhs)
     checkException();
 
     // done.
-//    done.link(pasm());
+    done.link(pasm());
 }
 
 void Assembler::cmpeqNull()
