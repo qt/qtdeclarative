@@ -238,15 +238,11 @@ bool Value::sameValue(Value other) const {
 #ifndef V4_BOOTSTRAP
 Heap::String *Value::toString(ExecutionEngine *e, Value val)
 {
-    if (String *s = val.stringValue())
-        return s->d();
     return RuntimeHelpers::convertToString(e, val);
 }
 
 Heap::Object *Value::toObject(ExecutionEngine *e, Value val)
 {
-    if (Object *o = val.objectValue())
-        return o->d();
     return RuntimeHelpers::convertToObject(e, val);
 }
 

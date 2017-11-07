@@ -428,10 +428,14 @@ public:
     QString toQStringNoThrow() const;
     QString toQString() const;
     Heap::String *toString(ExecutionEngine *e) const {
+        if (isString())
+            return reinterpret_cast<Heap::String *>(m());
         return toString(e, *this);
     }
     static Heap::String *toString(ExecutionEngine *e, Value val);
     Heap::Object *toObject(ExecutionEngine *e) const {
+        if (isObject())
+            return reinterpret_cast<Heap::Object *>(m());
         return toObject(e, *this);
     }
     static Heap::Object *toObject(ExecutionEngine *e, Value val);
