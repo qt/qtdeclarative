@@ -1226,7 +1226,6 @@ QV4::ReturnedValue Runtime::method_createMappedArgumentsObject(ExecutionEngine *
 
 QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine *engine)
 {
-    Q_ASSERT(engine->currentContext()->d()->type == Heap::ExecutionContext::Type_CallContext);
     QV4::InternalClass *ic = engine->internalClasses[EngineBase::Class_StrictArgumentsObject];
     return engine->memoryManager->allocObject<StrictArgumentsObject>(ic, engine->objectPrototype(), engine->currentStackFrame)->asReturnedValue();
 }

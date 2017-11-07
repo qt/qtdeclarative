@@ -218,7 +218,7 @@ struct Context {
         return nestedContexts.isEmpty() &&
                locals.isEmpty() &&
                !hasTry && !hasWith &&
-               usesArgumentsObject == ArgumentsObjectNotUsed && !hasDirectEval;
+               (usesArgumentsObject == ArgumentsObjectNotUsed || isStrict) && !hasDirectEval;
     }
 
     int findArgument(const QString &name)

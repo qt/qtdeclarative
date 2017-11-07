@@ -1503,7 +1503,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
         }
         const int argIdx = c->findArgument(name);
         if (argIdx != -1) {
-            Q_ASSERT(!c->argumentsCanEscape && c->usesArgumentsObject != Context::ArgumentsObjectUsed);
+            Q_ASSERT(!c->argumentsCanEscape && (c->usesArgumentsObject != Context::ArgumentsObjectUsed || c->isStrict));
             return Reference::fromArgument(this, argIdx, _volataleMemoryLocations.isVolatile(name));
         }
         c = c->parent;
@@ -2074,7 +2074,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     bool allVarsEscape = _context->hasWith || _context->hasTry || _context->hasDirectEval;
     if (_context->compilationMode == QmlBinding // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
-            || (!_context->canUseSimpleCall() && _context->compilationMode != GlobalCode && (_context->compilationMode != EvalCode || _context->isStrict))) {
+            || (!_context->canUseSimpleCall() && _context->compilationMode != GlobalCode &&
+                (_context->compilationMode != EvalCode || _context->isStrict))) {
         Instruction::CreateCallContext createContext;
         bytecodeGenerator->addInstruction(createContext);
     }
