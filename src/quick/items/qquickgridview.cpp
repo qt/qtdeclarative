@@ -2417,7 +2417,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                     item->index = modelIndex + i;
                 if (!item)
-                    item = createItem(modelIndex + i);
+                    item = createItem(modelIndex + i, QQmlIncubator::Synchronous);
                 if (!item)
                     return false;
 
@@ -2470,7 +2470,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 item->index = modelIndex + i;
             bool newItem = !item;
             if (!item)
-                item = createItem(modelIndex + i);
+                item = createItem(modelIndex + i, QQmlIncubator::Synchronous);
             if (!item)
                 return false;
 
