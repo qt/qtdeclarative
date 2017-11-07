@@ -214,6 +214,8 @@ struct Q_QML_EXPORT Object: Managed {
     V4_INTERNALCLASS(Object)
     V4_PROTOTYPE(objectPrototype)
 
+    enum { NInlineProperties = 2 };
+
     enum {
         IsObject = true,
         GetterOffset = 0,

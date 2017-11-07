@@ -147,6 +147,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     V4_INTERNALCLASS(FunctionObject)
     V4_PROTOTYPE(functionPrototype)
     V4_NEEDS_DESTROY
+    enum { NInlineProperties = 1 };
 
     Heap::ExecutionContext *scope() const { return d()->scope; }
     Function *function() const { return d()->function; }
@@ -238,6 +239,7 @@ void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index
 struct ScriptFunction : FunctionObject {
     V4_OBJECT2(ScriptFunction, FunctionObject)
     V4_INTERNALCLASS(ScriptFunction)
+    enum { NInlineProperties = 3 };
 
     static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
