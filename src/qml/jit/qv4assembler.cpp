@@ -1664,10 +1664,16 @@ void Assembler::cmpneInt(int lhs)
     pasm()->popValueAligned();
 }
 
-void Assembler::cmp(int /*cond*/, CmpFunc function, const char *functionName, int lhs)
+void Assembler::cmp(int cond, CmpFunc function, const char *functionName, int lhs)
 {
-//    PlatformAssembler::Address lhsAddr(PlatformAssembler::JSStackFrameRegister, lhs * int(sizeof(QV4::Value)));
-//    auto done = pasm()->cmpFastPath(static_cast<PlatformAssembler::RelationalCondition>(cond), lhsAddr);
+    auto c = static_cast<PlatformAssembler::RelationalCondition>(cond);
+    auto done = pasm()->binopBothIntPath(regAddr(lhs), [this, c](){
+        pasm()->compare32(c, PlatformAssembler::ScratchRegister,
+                          PlatformAssembler::AccumulatorRegisterValue,
+                          PlatformAssembler::AccumulatorRegisterValue);
+        pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+        return PlatformAssembler::Jump();
+    });
 
     // slow path:
     saveAccumulatorInFrame();
@@ -1680,7 +1686,7 @@ void Assembler::cmp(int /*cond*/, CmpFunc function, const char *functionName, in
     pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
 
     // done.
-//    done.link(pasm());
+    done.link(pasm());
 }
 
 void Assembler::cmpeq(int lhs)
@@ -1721,21 +1727,14 @@ void Assembler::cmple(int lhs)
 
 void Assembler::cmpStrictEqual(int lhs)
 {
-    saveAccumulatorInFrame();
-    prepareCallWithArgCount(2);
-    passAccumulatorAsArg(1);
-    passRegAsArg(lhs, 0);
-    IN_JIT_GENERATE_RUNTIME_CALL(RuntimeHelpers::strictEqual, ResultInAccumulator);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+    cmp(PlatformAssembler::Equal, &RuntimeHelpers::strictEqual,
+        "RuntimeHelpers::strictEqual", lhs);
 }
 
 void Assembler::cmpStrictNotEqual(int lhs)
 {
-    saveAccumulatorInFrame();
-    prepareCallWithArgCount(2);
-    passAccumulatorAsArg(1);
-    passRegAsArg(lhs, 0);
-    IN_JIT_GENERATE_RUNTIME_CALL(RuntimeHelpers::strictEqual, ResultInAccumulator);
+    cmp(PlatformAssembler::Equal, &RuntimeHelpers::strictEqual,
+        "RuntimeHelpers::strictEqual", lhs);
     pasm()->xor32(TrustedImm32(1), PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
 }
