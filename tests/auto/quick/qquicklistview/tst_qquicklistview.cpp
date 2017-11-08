@@ -8658,9 +8658,9 @@ void tst_QQuickListView::QTBUG_34576_velocityZero()
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
-    QTRY_VERIFY(listview != 0);
+    QVERIFY(listview);
     QQuickItem *contentItem = listview->contentItem();
-    QTRY_VERIFY(contentItem != 0);
+    QVERIFY(contentItem);
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     QSignalSpy horizontalVelocitySpy(listview, SIGNAL(horizontalVelocityChanged()));
@@ -8672,20 +8672,21 @@ void tst_QQuickListView::QTBUG_34576_velocityZero()
     window->rootObject()->setProperty("horizontalVelocityZeroCount", QVariant(0));
     listview->setCurrentIndex(2);
     QTRY_COMPARE(window->rootObject()->property("current").toInt(), 2);
-    QTRY_COMPARE(horizontalVelocitySpy.count(), 0);
-    QTRY_COMPARE(window->rootObject()->property("horizontalVelocityZeroCount").toInt(), 0);
+    QCOMPARE(horizontalVelocitySpy.count(), 0);
+    QCOMPARE(window->rootObject()->property("horizontalVelocityZeroCount").toInt(), 0);
+
+    QSignalSpy currentIndexChangedSpy(listview, SIGNAL(currentIndexChanged()));
 
     // click button which increases currentIndex
     QTest::mousePress(window, Qt::LeftButton, 0, QPoint(295,215));
     QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(295,215));
 
     // verify that currentIndexChanged is triggered
-    QVERIFY(horizontalVelocitySpy.wait());
+    QTRY_VERIFY(currentIndexChangedSpy.count() > 0);
 
-    // set currentIndex to item out of view to cause listview scroll
+    // since we have set currentIndex to an item out of view, the listview will scroll
     QTRY_COMPARE(window->rootObject()->property("current").toInt(), 3);
-    QTRY_COMPARE(horizontalVelocitySpy.count() > 0, true);
-    QVERIFY(horizontalVelocitySpy.wait(1000));
+    QTRY_VERIFY(horizontalVelocitySpy.count() > 0);
 
     // velocity should be always > 0.0
     QTRY_COMPARE(window->rootObject()->property("horizontalVelocityZeroCount").toInt(), 0);
