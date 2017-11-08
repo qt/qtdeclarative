@@ -1036,6 +1036,16 @@ QObject *QQmlDelegateModel::object(int index, QQmlIncubator::IncubationMode incu
     return d->object(d->m_compositorGroup, index, incubationMode);
 }
 
+QQmlIncubator::Status QQmlDelegateModel::incubationStatus(int index)
+{
+    Q_D(QQmlDelegateModel);
+    Compositor::iterator it = d->m_compositor.find(d->m_compositorGroup, index);
+    if (!it->inCache())
+        return QQmlIncubator::Null;
+
+    return d->m_cache.at(it.cacheIndex)->incubationTask->status();
+}
+
 QString QQmlDelegateModelPrivate::stringValue(Compositor::Group group, int index, const QString &name)
 {
     Compositor::iterator it = m_compositor.find(group, index);
@@ -3201,6 +3211,16 @@ void QQmlPartsModel::setWatchedRoles(const QList<QByteArray> &roles)
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(m_model);
     model->m_adaptorModel.replaceWatchedRoles(m_watchedRoles, roles);
     m_watchedRoles = roles;
+}
+
+QQmlIncubator::Status QQmlPartsModel::incubationStatus(int index)
+{
+    QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(m_model);
+    Compositor::iterator it = model->m_compositor.find(model->m_compositorGroup, index);
+    if (!it->inCache())
+        return QQmlIncubator::Null;
+
+    return model->m_cache.at(it.cacheIndex)->incubationTask->status();
 }
 
 int QQmlPartsModel::indexOf(QObject *item, QObject *) const

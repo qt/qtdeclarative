@@ -298,6 +298,11 @@ QString QQmlObjectModel::stringValue(int index, const QString &name)
     return QQmlEngine::contextForObject(d->children.at(index).item)->contextProperty(name).toString();
 }
 
+QQmlIncubator::Status QQmlObjectModel::incubationStatus(int)
+{
+    return QQmlIncubator::Ready;
+}
+
 int QQmlObjectModel::indexOf(QObject *item, QObject *) const
 {
     Q_D(const QQmlObjectModel);

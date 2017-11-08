@@ -115,6 +115,7 @@ public:
     void cancel(int index) override;
     QString stringValue(int index, const QString &role) override;
     void setWatchedRoles(const QList<QByteArray> &roles) override;
+    QQmlIncubator::Status incubationStatus(int index) override;
 
     int indexOf(QObject *object, QObject *objectContext) const override;
 

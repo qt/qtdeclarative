@@ -80,6 +80,7 @@ public:
     virtual void cancel(int) {}
     virtual QString stringValue(int, const QString &) = 0;
     virtual void setWatchedRoles(const QList<QByteArray> &roles) = 0;
+    virtual QQmlIncubator::Status incubationStatus(int index) = 0;
 
     virtual int indexOf(QObject *object, QObject *objectContext) const = 0;
 
@@ -118,6 +119,7 @@ public:
     ReleaseFlags release(QObject *object) override;
     QString stringValue(int index, const QString &role) override;
     void setWatchedRoles(const QList<QByteArray> &) override {}
+    QQmlIncubator::Status incubationStatus(int index) override;
 
     int indexOf(QObject *object, QObject *objectContext) const override;
 

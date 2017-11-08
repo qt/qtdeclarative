@@ -2340,14 +2340,20 @@ FxViewItem *QQuickItemViewPrivate::createItem(int modelIndex, QQmlIncubator::Inc
         }
     }
 
-    if (incubationMode == QQmlIncubator::Asynchronous)
-        requestedIndex = modelIndex;
     inRequest = true;
 
     QObject* object = model->object(modelIndex, incubationMode);
     QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
+
     if (!item) {
-        if (object) {
+        if (!object) {
+            if (requestedIndex == -1 && model->incubationStatus(modelIndex) == QQmlIncubator::Loading) {
+                // The reason we didn't receive an item is because it's incubating async. We keep track
+                // of this by assigning the index we're waiting for to 'requestedIndex'. This will e.g. let
+                // the view avoid unnecessary layout calls until the item has been loaded.
+                requestedIndex = modelIndex;
+            }
+        } else {
             model->release(object);
             if (!delegateValidated) {
                 delegateValidated = true;

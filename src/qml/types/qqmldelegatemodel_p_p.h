@@ -362,6 +362,7 @@ public:
     QString stringValue(int index, const QString &role) override;
     QList<QByteArray> watchedRoles() const { return m_watchedRoles; }
     void setWatchedRoles(const QList<QByteArray> &roles) override;
+    QQmlIncubator::Status incubationStatus(int index) override;
 
     int indexOf(QObject *item, QObject *objectContext) const override;
 
