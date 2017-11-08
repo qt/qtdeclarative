@@ -323,6 +323,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickAbstractButton, 4>(uri, 2, 4, "AbstractButton");
     qmlRegisterType<QQuickButtonGroup, 4>(uri, 2, 4, "ButtonGroup");
     qmlRegisterType<QQuickCheckBox, 4>(uri, 2, 4, "CheckBox");
+    qmlRegisterType<QQuickCheckDelegate, 4>(uri, 2, 4, "CheckDelegate");
     qmlRegisterType<QQuickScrollBar, 4>(uri, 2, 4, "ScrollBar");
     qmlRegisterType<QQuickScrollIndicator, 4>(uri, 2, 4, "ScrollIndicator");
     qmlRegisterType<QQuickSpinBox, 4>(uri, 2, 4, "SpinBox");
