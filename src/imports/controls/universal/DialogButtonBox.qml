@@ -58,7 +58,7 @@ T.DialogButtonBox {
     }
 
     contentItem: ListView {
-        implicitWidth: contentWidth
+        implicitWidth: control.count === 1 ? 200 : contentWidth
         implicitHeight: 32
 
         model: control.contentModel

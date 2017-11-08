@@ -195,4 +195,32 @@ TestCase {
         compare(clickedSpy.signalArguments[0][0], button)
         compare(roleSpy.count, 1)
     }
+
+    function test_implicitSize_data() {
+        return [
+            { tag: "Ok", standardButtons: DialogButtonBox.Ok },
+            { tag: "Yes|No", standardButtons: DialogButtonBox.Yes | DialogButtonBox.No }
+        ]
+    }
+
+    // QTBUG-59719
+    function test_implicitSize(data) {
+        var control = createTemporaryObject(buttonBox, testCase, {standardButtons: data.standardButtons})
+        verify(control)
+
+        var listView = control.contentItem
+        verify(listView && listView.hasOwnProperty("contentWidth"))
+        waitForRendering(listView)
+
+        var implicitContentWidth = control.leftPadding + control.rightPadding
+        for (var i = 0; i < listView.contentItem.children.length; ++i) {
+            var button = listView.contentItem.children[i]
+            if (!button.hasOwnProperty("text"))
+                continue
+            implicitContentWidth += button.implicitWidth
+        }
+
+        verify(implicitContentWidth > control.leftPadding + control.rightPadding)
+        verify(control.implicitWidth >= implicitContentWidth, qsTr("implicit width (%1) is less than content width (%2)").arg(control.implicitWidth).arg(implicitContentWidth))
+    }
 }
