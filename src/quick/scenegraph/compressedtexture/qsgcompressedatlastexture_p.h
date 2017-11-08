@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGDEFAULTRENDERCONTEXT_H
-#define QSGDEFAULTRENDERCONTEXT_H
+#ifndef QSGCOMPRESSEDATLASTEXTURE_P_H
+#define QSGCOMPRESSEDATLASTEXTURE_P_H
 
 //
 //  W A R N I N G
@@ -51,65 +51,69 @@
 // We mean it.
 //
 
-#include <QtQuick/private/qsgcontext_p.h>
-#include <QtQuick/private/qsgdepthstencilbuffer_p.h>
+#include <QtCore/QSize>
+
+#include <QtGui/qopengl.h>
+
+#include <QtQuick/QSGTexture>
+#include <QtQuick/private/qsgareaallocator_p.h>
+#include <QtQuick/private/qsgatlastexture_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLContext;
-class QSGMaterialShader;
-class QOpenGLFramebufferObject;
+class QSGCompressedTextureFactory;
 
-namespace QSGAtlasTexture {
-    class Manager;
-}
+namespace QSGCompressedAtlasTexture {
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultRenderContext : public QSGRenderContext
+class Texture;
+
+class Atlas : public QSGAtlasTexture::AtlasBase
+{
+public:
+    Atlas(const QSize &size, uint format);
+    ~Atlas();
+
+    void generateTexture() override;
+    void uploadPendingTexture(int i) override;
+
+    Texture *create(const QByteArray &data, int dataLength, int dataOffset, const QSize &size, const QSize &paddedSize);
+
+    uint format() const { return m_format; }
+
+private:
+    uint m_format;
+};
+
+class Texture : public QSGAtlasTexture::TextureBase
 {
     Q_OBJECT
 public:
-    QSGDefaultRenderContext(QSGContext *context);
+    Texture(Atlas *atlas, const QRect &textureRect, const QByteArray &data, int dataLength, int dataOffset, const QSize &size);
+    ~Texture();
 
-    QOpenGLContext *openglContext() const { return m_gl; }
-    bool isValid() const override { return m_gl; }
+    QSize textureSize() const override { return m_size; }
+    bool hasAlphaChannel() const override;
+    bool hasMipmaps() const override { return false; }
 
-    void initialize(void *context) override;
-    void invalidate() override;
-    void renderNextFrame(QSGRenderer *renderer, uint fboId) override;
+    QRectF normalizedTextureSubRect() const override { return m_texture_coords_rect; }
 
-    QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font) override;
+    QSGTexture *removedFromAtlas() const override;
 
-    virtual QSharedPointer<QSGDepthStencilBuffer> depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo);
-    QSGDepthStencilBufferManager *depthStencilBufferManager();
+    const QByteArray &data() const { return m_data; }
+    int sizeInBytes() const { return m_dataLength; }
+    int dataOffset() const { return m_dataOffset; }
 
-    QSGTexture *createTexture(const QImage &image, uint flags) const override;
-    QSGRenderer *createRenderer() override;
-    QSGTexture *compressedTextureForFactory(const QSGCompressedTextureFactory *factory) const override;
-
-    virtual void compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = 0, const char *fragmentCode = 0);
-    virtual void initializeShader(QSGMaterialShader *shader);
-
-    void setAttachToGraphicsContext(bool attach) override;
-
-    static QSGDefaultRenderContext *from(QOpenGLContext *context);
-
-    bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
-    int maxTextureSize() const override { return m_maxTextureSize; }
-
-protected:
-    static QString fontKey(const QRawFont &font);
-
-    QOpenGLContext *m_gl;
-    QSGDepthStencilBufferManager *m_depthStencilManager;
-    int m_maxTextureSize;
-    bool m_brokenIBOs;
-    bool m_serializedRender;
-    bool m_attachToGLContext;
-    QSGAtlasTexture::Manager *m_atlasManager;
-
-
+private:
+    QRectF m_texture_coords_rect;
+    mutable QSGTexture *m_nonatlas_texture;
+    QByteArray m_data;
+    QSize m_size;
+    int m_dataLength;
+    int m_dataOffset;
 };
+
+}
 
 QT_END_NAMESPACE
 
-#endif // QSGDEFAULTRENDERCONTEXT_H
+#endif

@@ -78,6 +78,7 @@ class QSGMaterial;
 class QSGRenderLoop;
 class QSGLayer;
 class QQuickTextureFactory;
+class QSGCompressedTextureFactory;
 class QSGContext;
 class QQuickPaintedItem;
 class QSGRendererInterface;
@@ -173,6 +174,7 @@ public:
 
     virtual QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const = 0;
     virtual QSGRenderer *createRenderer() = 0;
+    virtual QSGTexture *compressedTextureForFactory(const QSGCompressedTextureFactory *) const;
 
     virtual void setAttachToGraphicsContext(bool attach) { Q_UNUSED(attach); }
 

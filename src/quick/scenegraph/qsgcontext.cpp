@@ -404,6 +404,20 @@ void QSGRenderContext::textureFactoryDestroyed(QObject *o)
     m_mutex.unlock();
 }
 
+/*!
+    Return the texture corresponding to a texture factory.
+
+    This may optionally manipulate the texture in some way; for example by returning
+    an atlased texture.
+
+    This function is not a replacement for textureForFactory; both should be used
+    for a single texture (this might atlas, while the other might cache).
+*/
+QSGTexture *QSGRenderContext::compressedTextureForFactory(const QSGCompressedTextureFactory *) const
+{
+    return nullptr;
+}
+
 #include "qsgcontext.moc"
 #include "moc_qsgcontext_p.cpp"
 

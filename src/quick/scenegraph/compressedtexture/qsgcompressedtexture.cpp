@@ -43,6 +43,7 @@
 #include <QOpenGLTexture>
 #include <QOpenGLFunctions>
 #include <QDebug>
+#include <QtQuick/private/qquickwindow_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -215,10 +216,16 @@ QSGCompressedTextureFactory::QSGCompressedTextureFactory(const QSGCompressedText
 {
 }
 
-QSGTexture *QSGCompressedTextureFactory::createTexture(QQuickWindow *) const
+QSGTexture *QSGCompressedTextureFactory::createTexture(QQuickWindow *window) const
 {
     if (!m_textureData || !m_textureData->isValid())
         return nullptr;
+
+    // attempt to atlas the texture
+    QSGRenderContext *context = QQuickWindowPrivate::get(window)->context;
+    QSGTexture *t = context->compressedTextureForFactory(this);
+    if (t)
+        return t;
 
     return new QSGCompressedTexture(m_textureData);
 }

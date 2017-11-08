@@ -44,6 +44,7 @@
 #include <QtQuick/private/qsgbatchrenderer_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgatlastexture_p.h>
+#include <QtQuick/private/qsgcompressedtexture_p.h>
 #include <QtQuick/private/qsgdefaultdistancefieldglyphcache_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -241,6 +242,14 @@ QSGTexture *QSGDefaultRenderContext::createTexture(const QImage &image, uint fla
 QSGRenderer *QSGDefaultRenderContext::createRenderer()
 {
     return new QSGBatchRenderer::Renderer(this);
+}
+
+QSGTexture *QSGDefaultRenderContext::compressedTextureForFactory(const QSGCompressedTextureFactory *factory) const
+{
+    // The atlas implementation is only supported from the render thread
+    if (openglContext() && QThread::currentThread() == openglContext()->thread())
+        return m_atlasManager->create(factory);
+    return nullptr;
 }
 
 /*!

@@ -103,6 +103,9 @@ protected:
     bool m_uploaded = false;
 };
 
+namespace QSGAtlasTexture {
+    class Manager;
+}
 
 class Q_QUICK_PRIVATE_EXPORT QSGCompressedTextureFactory : public QQuickTextureFactory
 {
@@ -114,6 +117,8 @@ public:
 
 protected:
     QSGCompressedTexture::DataPtr m_textureData;
+private:
+    friend class QSGAtlasTexture::Manager;
 };
 
 QT_END_NAMESPACE
