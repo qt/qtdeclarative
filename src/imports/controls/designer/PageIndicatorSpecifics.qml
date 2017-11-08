@@ -43,7 +43,7 @@ Column {
 
     Section {
         width: parent.width
-        caption: qsTr("Indicator")
+        caption: qsTr("PageIndicator")
 
         SectionLayout {
             Label {

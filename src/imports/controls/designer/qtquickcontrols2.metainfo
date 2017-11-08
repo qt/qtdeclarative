@@ -71,6 +71,21 @@ MetaInfo {
     }
 
     Type {
+        name: "QtQuick.Controls.DelayButton"
+        icon: "images/button-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Delay Button"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/delaybutton-icon.png"
+            version: "2.2"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Delay Button\")" }
+        }
+    }
+
+    Type {
         name: "QtQuick.Controls.Dial"
         icon: "images/dial-icon16.png"
 
@@ -255,6 +270,20 @@ MetaInfo {
     }
 
     Type {
+        name: "QtQuick.Controls.RoundButton"
+        icon: "images/roundbutton-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Round Button"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/roundbutton-icon.png"
+            version: "2.1"
+            requiredImport: "QtQuick.Controls"
+            Property { name: "text"; type: "string"; value: "+" }
+        }
+    }
+
+    Type {
         name: "QtQuick.Controls.Slider"
         icon: "images/slider-icon16.png"
 
@@ -283,6 +312,38 @@ MetaInfo {
     }
 
     Type {
+        name: "QtQuick.Controls.ScrollView"
+        icon: "images/scrollview-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Scroll View"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/scrollview-icon.png"
+            version: "2.2"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "width"; type: "int"; value: 200 }
+            Property { name: "height"; type: "int"; value: 200 }
+        }
+    }
+
+    Type {
+        name: "QtQuick.Controls.StackView"
+        icon: "images/stackview-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Stack View"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/stackview-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "width"; type: "int"; value: 200 }
+            Property { name: "height"; type: "int"; value: 200 }
+        }
+    }
+
+    Type {
         name: "QtQuick.Controls.SwipeDelegate"
         icon: "images/itemdelegate-icon16.png"
 
@@ -294,6 +355,22 @@ MetaInfo {
             requiredImport: "QtQuick.Controls"
 
             Property { name: "text"; type: "binding"; value: "qsTr(\"Swipe Delegate\")" }
+        }
+    }
+
+    Type {
+        name: "QtQuick.Controls.SwipeView"
+        icon: "images/swipeview-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Swipe View"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/swipeview-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "width"; type: "int"; value: 200 }
+            Property { name: "height"; type: "int"; value: 200 }
         }
     }
 
@@ -328,6 +405,34 @@ MetaInfo {
     }
 
     Type {
+        name: "QtQuick.Controls.TabBar"
+        icon: "images/toolbar-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Tab Bar"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/toolbar-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+            Property { name: "width"; type: "int"; value: 240 }
+        }
+    }
+
+    Type {
+        name: "QtQuick.Controls.TabButton"
+        icon: "images/toolbutton-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Tab Button"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/toolbutton-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Tab Button\")" }
+        }
+    }
+
+    Type {
         name: "QtQuick.Controls.TextArea"
         icon: "images/textarea-icon16.png"
 
@@ -358,21 +463,6 @@ MetaInfo {
     }
 
     Type {
-        name: "QtQuick.Controls.ToolButton"
-        icon: "images/toolbutton-icon16.png"
-
-        ItemLibraryEntry {
-            name: "Tool Button"
-            category: "Qt Quick - Controls 2"
-            libraryIcon: "images/toolbutton-icon.png"
-            version: "2.0"
-            requiredImport: "QtQuick.Controls"
-
-            Property { name: "text"; type: "binding"; value: "qsTr(\"Tool Button\")" }
-        }
-    }
-
-    Type {
         name: "QtQuick.Controls.ToolBar"
         icon: "images/toolbar-icon16.png"
 
@@ -388,11 +478,26 @@ MetaInfo {
     }
 
     Type {
+        name: "QtQuick.Controls.ToolButton"
+        icon: "images/toolbutton-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Tool Button"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/toolbutton-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+
+            Property { name: "text"; type: "binding"; value: "qsTr(\"Tool Button\")" }
+        }
+    }
+
+    Type {
         name: "QtQuick.Controls.ToolSeparator"
         icon: "images/toolseparator-icon16.png"
 
         ItemLibraryEntry {
-            name: "ToolSeparator"
+            name: "Tool Separator"
             category: "Qt Quick - Controls 2"
             libraryIcon: "images/toolseparator-icon.png"
             version: "2.1"
@@ -412,96 +517,6 @@ MetaInfo {
             requiredImport: "QtQuick.Controls"
 
             Property { name: "model"; type: "int"; value: "10" }
-        }
-    }
-
-    Type {
-        name: "QtQuick.Controls.TabBar"
-        icon: "images/toolbar-icon16.png"
-
-        ItemLibraryEntry {
-            name: "Tab Bar"
-            category: "Qt Quick - Controls 2"
-            libraryIcon: "images/toolbar-icon.png"
-            version: "2.0"
-            requiredImport: "QtQuick.Controls"
-            Property { name: "width"; type: "int"; value: 240 }
-        }
-    }
-
-    Type {
-        name: "QtQuick.Controls.TabButton"
-        icon: "images/toolbutton-icon16.png"
-
-        ItemLibraryEntry {
-            name: "Tab Button"
-            category: "Qt Quick - Controls 2"
-            libraryIcon: "images/toolbutton-icon.png"
-            version: "2.0"
-            requiredImport: "QtQuick.Controls"
-            Property { name: "text"; type: "binding"; value: "qsTr(\"Tab Button\")" }
-        }
-    }
-
-    Type {
-        name: "QtQuick.Controls.RoundButton"
-        icon: "images/roundbutton-icon16.png"
-
-        ItemLibraryEntry {
-            name: "Round Button"
-            category: "Qt Quick - Controls 2"
-            libraryIcon: "images/roundbutton-icon.png"
-            version: "2.1"
-            requiredImport: "QtQuick.Controls"
-            Property { name: "text"; type: "string"; value: "+" }
-        }
-    }
-
-    Type {
-        name: "QtQuick.Controls.StackView"
-        icon: "images/stackview-icon16.png"
-
-        ItemLibraryEntry {
-            name: "Stack View"
-            category: "Qt Quick - Views"
-            libraryIcon: "images/stackview-icon.png"
-            version: "2.1"
-            requiredImport: "QtQuick.Controls"
-
-            Property { name: "width"; type: "int"; value: 200 }
-            Property { name: "height"; type: "int"; value: 200 }
-        }
-    }
-
-    Type {
-        name: "QtQuick.Controls.SwipeView"
-        icon: "images/swipeview-icon16.png"
-
-        ItemLibraryEntry {
-            name: "Swipe View"
-            category: "Qt Quick - Views"
-            libraryIcon: "images/swipeview-icon.png"
-            version: "2.0"
-            requiredImport: "QtQuick.Controls"
-
-            Property { name: "width"; type: "int"; value: 200 }
-            Property { name: "height"; type: "int"; value: 200 }
-        }
-    }
-
-    Type {
-        name: "QtQuick.Controls.ScrollView"
-        icon: "images/scrollview-icon16.png"
-
-        ItemLibraryEntry {
-            name: "Scroll View"
-            category: "Qt Quick - Views"
-            libraryIcon: "images/scrollview-icon.png"
-            version: "2.2"
-            requiredImport: "QtQuick.Controls"
-
-            Property { name: "width"; type: "int"; value: 200 }
-            Property { name: "height"; type: "int"; value: 200 }
         }
     }
 }

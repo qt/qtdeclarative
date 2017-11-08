@@ -43,49 +43,38 @@ Column {
 
     Section {
         width: parent.width
-        caption: qsTr("Tumbler")
+        caption: qsTr("SwipeView")
 
         SectionLayout {
             Label {
-                text: qsTr("Visible Count")
-                tooltip: qsTr("The count of visible items.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    decimals: 0
-                    backendValue: backendValues.visibleItemCount
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Current")
-                tooltip: qsTr("The index of the current item.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    decimals: 0
-                    backendValue: backendValues.currentIndex
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Wrap")
-                tooltip: qsTr("Whether the tumbler wrap.")
+                text: qsTr("Interactive")
+                tooltip: qsTr("Whether the view is interactive.")
             }
             SecondColumnLayout {
                 CheckBox {
-                    text: backendValues.wrap.valueToString
-                    backendValue: backendValues.wrap
+                    text: backendValues.interactive.valueToString
+                    backendValue: backendValues.interactive
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Orientation")
+                tooltip: qsTr("Orientation of the view.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    backendValue: backendValues.orientation
+                    model: [ "Horizontal", "Vertical" ]
+                    scope: "Qt"
                     Layout.fillWidth: true
                 }
             }
         }
+    }
+
+    ContainerSection {
+        width: parent.width
     }
 
     ControlSection {

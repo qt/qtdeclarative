@@ -41,6 +41,25 @@ import QtQuick.Layouts 1.0
 Column {
     width: parent.width
 
+    Section {
+        width: parent.width
+        caption: qsTr("TextField")
+
+        SectionLayout {
+            Label {
+                text: qsTr("Placeholder")
+                tooltip: qsTr("Placeholder text displayed when the editor is empty.")
+            }
+            SecondColumnLayout {
+                LineEdit {
+                    backendValue: backendValues.placeholderText
+                    Layout.fillWidth: true
+                }
+
+            }
+        }
+    }
+
     StandardTextSection {
         width: parent.width
     }
