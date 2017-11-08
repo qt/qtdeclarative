@@ -81,6 +81,7 @@ struct QQmlImportInstance
     int majversion; // the major version imported
     int minversion; // the minor version imported
     bool isLibrary; // true means that this is not a file import
+    bool implicitlyImported = false;
     QQmlDirComponents qmlDirComponents; // a copy of the components listed in the qmldir
     QQmlDirScripts qmlDirScripts; // a copy of the scripts in the qmldir
 
@@ -92,6 +93,7 @@ struct QQmlImportInstance
     bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
                      int *vmajor, int *vminor, QQmlType* type_return,
                      QString *base = 0, bool *typeRecursionDetected = 0,
+                     QQmlType::RegistrationType = QQmlType::AnyRegistrationType,
                      QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion) const;
 };
 
@@ -108,6 +110,7 @@ public:
     bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef& type,
                      int *vmajor, int *vminor, QQmlType* type_return,
                      QString *base = 0, QList<QQmlError> *errors = 0,
+                     QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
                      QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion);
 
     // Prefix when used as a qualified import.  Otherwise empty.
@@ -135,10 +138,14 @@ public:
                      int *version_major, int *version_minor,
                      QQmlImportNamespace **ns_return,
                      QList<QQmlError> *errors = 0,
-                     QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion) const;
+                     QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
+                     QQmlImport::RecursionRestriction recursionRestriction
+                     = QQmlImport::PreventRecursion) const;
     bool resolveType(QQmlImportNamespace *,
                      const QHashedStringRef& type,
-                     QQmlType *type_return, int *version_major, int *version_minor) const;
+                     QQmlType *type_return, int *version_major, int *version_minor,
+                     QQmlType::RegistrationType registrationType
+                     = QQmlType::AnyRegistrationType) const;
 
     bool addImplicitImport(QQmlImportDatabase *importDb, QList<QQmlError> *errors);
 

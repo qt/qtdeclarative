@@ -6,12 +6,8 @@ SOURCES += \
     $$PWD/qqmlnativedebugservice.cpp
 
 HEADERS += \
-    $$PWD/../shared/qqmldebugpacket.h \
     $$PWD/qqmlnativedebugservicefactory.h \
     $$PWD/qqmlnativedebugservice.h \
-
-INCLUDEPATH += $$PWD \
-    $$PWD/../shared
 
 OTHER_FILES += \
     $$PWD/qqmlnativedebugservice.json

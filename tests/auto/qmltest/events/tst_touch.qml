@@ -183,10 +183,10 @@ MultiPointTouchArea {
 
         function test_simpleChain() {
             var first = 1;
-            touchEvent(touchArea).press(first).commit().release(first).commit();
-            compare(touchUpdatedSpy.count, 2);
-            var touchPoint =  touchUpdatedSpy.signalArguments[0][0][0];
-            verify(comparePoint(touchPoint, first, touchArea.width / 2, touchArea.height / 2));
+            touchEvent(interior).press(first).commit().release(first).commit();
+            compare(interiorSpy.count, 2);
+            var touchPoint =  interiorSpy.signalArguments[0][0][0];
+            verify(comparePoint(touchPoint, first, interior.width / 2, interior.height / 2));
         }
     }
 }

@@ -38,7 +38,8 @@
 ****************************************************************************/
 
 #include "qtcpserverconnectionfactory.h"
-#include "qqmldebugserver.h"
+
+#include <private/qqmldebugserver_p.h>
 
 #include <QtCore/qplugin.h>
 #include <QtNetwork/qtcpserver.h>

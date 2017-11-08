@@ -37,12 +37,13 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGPACKET_P_H
-#define QQMLDEBUGPACKET_P_H
+#ifndef QQMLDEBUGSERVER_P_H
+#define QQMLDEBUGSERVER_P_H
 
-#include <QtCore/qbuffer.h>
-#include <QtQml/private/qqmldebugconnector_p.h>
-#include <QtPacketProtocol/private/qpacket_p.h>
+#include "qqmldebugconnector_p.h"
+
+#include <private/qtqmlglobal_p.h>
+#include <QtCore/QIODevice>
 
 //
 //  W A R N I N G
@@ -57,14 +58,13 @@
 
 QT_BEGIN_NAMESPACE
 
-// QPacket with a fixed data stream version, centrally set by QQmlDebugServer
-class QQmlDebugPacket : public QPacket
+class Q_QML_PRIVATE_EXPORT QQmlDebugServer : public QQmlDebugConnector
 {
+    Q_OBJECT
 public:
-    QQmlDebugPacket() : QPacket(QQmlDebugConnector::dataStreamVersion()) {}
-    QQmlDebugPacket(const QByteArray &ba) : QPacket(QQmlDebugConnector::dataStreamVersion(), ba) {}
+    virtual void setDevice(QIODevice *socket) = 0;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQMLDEBUGPACKET_P_H
+#endif // QQMLDEBUGSERVER_P_H

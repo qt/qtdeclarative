@@ -97,7 +97,7 @@ void tst_DragHandler::defaultPropertyValues()
     QVERIFY(dragHandler);
 
     QCOMPARE(dragHandler->acceptedButtons(), Qt::LeftButton);
-    QCOMPARE(dragHandler->translation(), QPointF());
+    QCOMPARE(dragHandler->translation(), QVector2D());
     QCOMPARE(dragHandler->point().position(), QPointF());
     QCOMPARE(dragHandler->point().scenePosition(), QPointF());
     QCOMPARE(dragHandler->point().pressPosition(), QPointF());

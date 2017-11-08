@@ -37,13 +37,11 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGSERVER_H
-#define QQMLDEBUGSERVER_H
+#ifndef QQMLDEBUGSERVERCONNECTION_P_H
+#define QQMLDEBUGSERVERCONNECTION_P_H
 
-#include <private/qqmldebugconnector_p.h>
 #include <private/qtqmlglobal_p.h>
-
-#include <QtCore/QIODevice>
+#include <QtCore/qobject.h>
 
 //
 //  W A R N I N G
@@ -58,13 +56,32 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlDebugServer : public QQmlDebugConnector
+class QQmlDebugServer;
+class Q_QML_PRIVATE_EXPORT QQmlDebugServerConnection : public QObject
 {
     Q_OBJECT
 public:
-    virtual void setDevice(QIODevice *socket) = 0;
+    QQmlDebugServerConnection(QObject *parent = 0) : QObject(parent) {}
+
+    virtual void setServer(QQmlDebugServer *server) = 0;
+    virtual bool setPortRange(int portFrom, int portTo, bool block, const QString &hostaddress) = 0;
+    virtual bool setFileName(const QString &fileName, bool block) = 0;
+    virtual bool isConnected() const = 0;
+    virtual void disconnect() = 0;
+    virtual void waitForConnection() = 0;
+    virtual void flush() = 0;
 };
+
+class Q_QML_PRIVATE_EXPORT QQmlDebugServerConnectionFactory : public QObject
+{
+    Q_OBJECT
+public:
+    virtual QQmlDebugServerConnection *create(const QString &key) = 0;
+};
+
+#define QQmlDebugServerConnectionFactory_iid "org.qt-project.Qt.QQmlDebugServerConnectionFactory"
+Q_DECLARE_INTERFACE(QQmlDebugServerConnectionFactory, QQmlDebugServerConnectionFactory_iid)
 
 QT_END_NAMESPACE
 
-#endif // QQMLDEBUGSERVER_H
+#endif // QQMLDEBUGSERVERCONNECTION_H

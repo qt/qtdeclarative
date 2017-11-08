@@ -197,7 +197,9 @@ ReturnedValue NumberPrototype::method_isNaN(const BuiltinFunction *, CallData *c
         return Encode(false);
 
     double v = callData->args[0].toNumber();
-    return Encode(std::isnan(v));
+    // cast to bool explicitly as std::isnan() may give us ::isnan(), which
+    // sometimes returns an int and we don't want the Encode(int) overload.
+    return Encode(bool(std::isnan(v)));
 }
 
 ReturnedValue NumberPrototype::method_toString(const BuiltinFunction *b, CallData *callData)

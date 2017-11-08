@@ -1074,6 +1074,8 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
                 // If it wasn't a translation binding, a normal script binding will be generated
                 // below.
             }
+        } else if (QQmlJS::AST::cast<QQmlJS::AST::FunctionExpression *>(expr)) {
+            binding->flags |= QV4::CompiledData::Binding::IsFunctionExpression;
         } else if (QQmlJS::AST::UnaryMinusExpression *unaryMinus = QQmlJS::AST::cast<QQmlJS::AST::UnaryMinusExpression *>(expr)) {
             if (QQmlJS::AST::NumericLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(unaryMinus->expression)) {
                 binding->type = QV4::CompiledData::Binding::Type_Number;

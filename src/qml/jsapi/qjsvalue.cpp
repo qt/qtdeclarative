@@ -120,6 +120,13 @@
     \value NullValue A null value.
 */
 
+/*!
+    \typedef QJSValueList
+    \relates QJSValue
+
+    This is a typedef for a QList<QJSValue>.
+*/
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;

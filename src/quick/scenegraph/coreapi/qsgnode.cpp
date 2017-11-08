@@ -1079,6 +1079,7 @@ void QSGGeometryNode::setInheritedOpacity(qreal opacity)
 
 QSGClipNode::QSGClipNode()
     : QSGBasicGeometryNode(ClipNodeType)
+    , m_is_rectangular(false)
 {
     Q_UNUSED(m_reserved);
 }
@@ -1114,6 +1115,8 @@ QSGClipNode::~QSGClipNode()
 
     When this hint is set and it is applicable, the clip region will be
     generated from clipRect() rather than geometry().
+
+    By default this property is \c false.
  */
 
 void QSGClipNode::setIsRectangular(bool rectHint)

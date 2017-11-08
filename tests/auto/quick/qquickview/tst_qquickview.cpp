@@ -36,29 +36,7 @@
 #include <QtCore/QDebug>
 #include <QtQml/qqmlengine.h>
 
-class SizeChangesListener : public QObject, public QVector<QSize>
-{
-    Q_OBJECT
-public:
-    explicit SizeChangesListener(QQuickItem *item);
-private slots:
-    void onSizeChanged();
-private:
-    QQuickItem *item;
-
-};
-
-SizeChangesListener::SizeChangesListener(QQuickItem *item) :
-    item(item)
-{
-    connect(item, &QQuickItem::widthChanged, this, &SizeChangesListener::onSizeChanged);
-    connect(item, &QQuickItem::heightChanged, this, &SizeChangesListener::onSizeChanged);
-}
-
-void SizeChangesListener::onSizeChanged()
-{
-    append(QSize(item->width(), item->height()));
-}
+#include "../shared/geometrytestutil.h"
 
 class tst_QQuickView : public QQmlDataTest
 {
@@ -164,7 +142,7 @@ void tst_QQuickView::resizemodeitem()
 
     // size update from view
     QCoreApplication::processEvents(); // make sure the last resize events are gone
-    SizeChangesListener sizeListener(item);
+    QSizeChangeListener sizeListener(item);
     view->resize(QSize(200,300));
     QTRY_COMPARE(item->width(), 200.0);
 

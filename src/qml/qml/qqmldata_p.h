@@ -57,6 +57,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4persistent_p.h>
 #include <qjsengine.h>
+#include <qvector.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -219,7 +220,9 @@ public:
         QQmlContextData *context;//Could be either context or outerContext
     };
     QV4::CompiledData::CompilationUnit *compilationUnit;
-    DeferredData *deferredData;
+    QVector<DeferredData *> deferredData;
+
+    void releaseDeferredData();
 
     QV4::WeakValue jsWrapper;
 

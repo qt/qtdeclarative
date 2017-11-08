@@ -33,7 +33,6 @@
                 "features.commandlineparser",
                 "features.localserver",
                 "features.process",
-                "features.qml-debug",
                 "features.qml-network",
                 "features.xmlstreamwriter"
             ],

@@ -41,9 +41,9 @@
 #include "qv4profileradapter.h"
 #include "qqmlprofileradapter.h"
 #include "qqmlprofilerservicefactory.h"
-#include "qqmldebugpacket.h"
 
 #include <private/qjsengine_p.h>
+#include <private/qqmldebugpacket_p.h>
 #include <private/qqmldebugpluginmanager_p.h>
 
 #include <QtCore/qurl.h>

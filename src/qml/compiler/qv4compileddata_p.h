@@ -66,6 +66,7 @@
 #ifndef V4_BOOTSTRAP
 #include <private/qqmltypenamecache_p.h>
 #include <private/qqmlpropertycache_p.h>
+#include "private/qintrusivelist_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -312,6 +313,7 @@ struct Q_QML_PRIVATE_EXPORT Binding
         IsBindingToAlias = 0x40,
         IsDeferredBinding = 0x80,
         IsCustomParserBinding = 0x100,
+        IsFunctionExpression = 0x200
     };
 
     union {
@@ -378,6 +380,8 @@ struct Q_QML_PRIVATE_EXPORT Binding
         }
         return false;
     }
+
+    bool isFunctionExpression() const { return (flags & IsFunctionExpression); }
 
     static QString escapedString(const QString &string);
 
@@ -912,6 +916,7 @@ public:
     QV4::CompiledData::Unit *createUnitData(QmlIR::Document *irDocument);
 
 #ifndef V4_BOOTSTRAP
+    QIntrusiveListNode nextCompilationUnit;
     ExecutionEngine *engine = nullptr;
     QQmlEnginePrivate *qmlEngine = nullptr; // only used in QML environment for composite types, not in plain QJSEngine case.
 

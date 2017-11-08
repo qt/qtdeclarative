@@ -37,17 +37,17 @@
 **
 ****************************************************************************/
 
-#include "qqmldebugserver.h"
 #include "qqmldebugserverfactory.h"
-#include "qqmldebugserverconnection.h"
-#include "qqmldebugpacket.h"
 
+#include <private/qqmldebugserver_p.h>
+#include <private/qqmldebugserverconnection_p.h>
 #include <private/qqmldebugservice_p.h>
 #include <private/qjsengine_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmldebugpluginmanager_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qpacketprotocol_p.h>
+#include <private/qqmldebugpacket_p.h>
 
 #include <QtCore/QAtomicInt>
 #include <QtCore/QDir>
@@ -767,4 +767,3 @@ QQmlDebugConnector *QQmlDebugServerFactory::create(const QString &key)
 QT_END_NAMESPACE
 
 #include "qqmldebugserver.moc"
-#include "moc_qqmldebugserver.cpp"

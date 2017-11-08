@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qqmlnativedebugservice.h"
-#include "qqmldebugpacket.h"
 
 #include <private/qqmldebugconnector_p.h>
 #include <private/qv4debugging_p.h>
@@ -50,6 +49,7 @@
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4identifier_p.h>
 #include <private/qv4runtime_p.h>
+#include <private/qqmldebugpacket_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 
 #include <QtQml/qjsengine.h>

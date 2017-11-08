@@ -41,6 +41,7 @@ public:
 
 private slots:
     void arc();
+    void angleArc();
     void catmullromCurve();
     void closedCatmullromCurve();
     void svg();
@@ -80,6 +81,45 @@ void tst_QuickPath::arc()
     QCOMPARE(pos.toPoint(), QPoint(92,61)); //fuzzy compare
     pos = obj->pointAt(1);
     QCOMPARE(pos, QPointF(100,100));
+}
+
+void tst_QuickPath::angleArc()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("anglearc.qml"));
+    QQuickPath *obj = qobject_cast<QQuickPath*>(c.create());
+    QVERIFY(obj != 0);
+
+    QQmlListReference list(obj, "pathElements");
+    QCOMPARE(list.count(), 1);
+
+    QQuickPathAngleArc* arc = qobject_cast<QQuickPathAngleArc*>(list.at(0));
+    QVERIFY(arc != 0);
+    QCOMPARE(arc->centerX(), 100.);
+    QCOMPARE(arc->centerY(), 100.);
+    QCOMPARE(arc->radiusX(), 50.);
+    QCOMPARE(arc->radiusY(), 50.);
+    QCOMPARE(arc->startAngle(), 45.);
+    QCOMPARE(arc->sweepAngle(), 90.);
+    QCOMPARE(arc->moveToStart(), true);
+
+    QPainterPath path = obj->path();
+    QVERIFY(path != QPainterPath());
+
+    // using QPoint to do fuzzy compare
+    QPointF pos = obj->pointAt(0);
+    QCOMPARE(pos.toPoint(), QPoint(135,135));
+    pos = obj->pointAt(.25);
+    QCOMPARE(pos.toPoint(), QPoint(119,146));
+    pos = obj->pointAt(.75);
+    QCOMPARE(pos.toPoint(), QPoint(81,146));
+    pos = obj->pointAt(1);
+    QCOMPARE(pos.toPoint(), QPoint(65,135));
+
+    // if moveToStart is false, we should have a line starting from startX/Y
+    arc->setMoveToStart(false);
+    pos = obj->pointAt(0);
+    QCOMPARE(pos, QPointF(0,0));
 }
 
 void tst_QuickPath::catmullromCurve()

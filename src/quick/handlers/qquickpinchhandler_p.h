@@ -116,7 +116,6 @@ public:
     void setMaximumY(qreal maxY);
 
 signals:
-    void requiredPointCountChanged();
     void minimumScaleChanged();
     void maximumScaleChanged();
     void minimumRotationChanged();
@@ -129,6 +128,7 @@ signals:
     void updated();
 
 protected:
+    bool wantsPointerEvent(QQuickPointerEvent *event) override;
     void onActiveChanged() override;
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
 

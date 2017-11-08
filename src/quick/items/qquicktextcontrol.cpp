@@ -432,6 +432,7 @@ void QQuickTextControlPrivate::selectionChanged(bool forceEmitSelectionChanged /
 #endif
         emit q->selectionChanged();
     }
+    q->updateCursorRectangle(true);
 }
 
 void QQuickTextControlPrivate::_q_updateCurrentCharFormatAndSelection()
@@ -1150,7 +1151,6 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
         if (interactionFlags & Qt::TextEditable) {
             if (cursor.position() != oldCursorPos) {
                 emit q->cursorPositionChanged();
-                q->updateCursorRectangle(true);
             }
             _q_updateCurrentCharFormatAndSelection();
 #if QT_CONFIG(im)
@@ -1159,7 +1159,6 @@ void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mou
 #endif
         } else if (cursor.position() != oldCursorPos) {
             emit q->cursorPositionChanged();
-            q->updateCursorRectangle(true);
         }
         selectionChanged(true);
         repaintOldAndNewSelection(oldSelection);

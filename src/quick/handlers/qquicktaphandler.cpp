@@ -54,6 +54,7 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
 /*!
     \qmltype TapHandler
     \instantiates QQuickTapHandler
+    \inherits SinglePointHandler
     \inqmlmodule Qt.labs.handlers
     \ingroup qtquick-handlers
     \brief Handler for taps and clicks.
@@ -326,6 +327,7 @@ void QQuickTapHandler::updateTimeHeld()
 
 /*!
     \qmlproperty int TapHandler::tapCount
+    \readonly
 
     The number of taps which have occurred within the time and space
     constraints to be considered a single gesture.  For example, to detect
@@ -345,6 +347,7 @@ void QQuickTapHandler::updateTimeHeld()
 
 /*!
     \qmlproperty real TapHandler::timeHeld
+    \readonly
 
     The amount of time in seconds that a pressed point has been held, without
     moving beyond the drag threshold. It will be updated at least once per

@@ -40,12 +40,12 @@
 #include "qv4debugservice.h"
 #include "qv4debugjob.h"
 #include "qqmlengine.h"
-#include "qqmldebugpacket.h"
 
 #include <private/qv4engine_p.h>
 #include <private/qv4function_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qv8engine_p.h>
+#include <private/qqmldebugpacket_p.h>
 
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>

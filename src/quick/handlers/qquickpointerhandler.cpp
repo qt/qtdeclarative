@@ -46,13 +46,16 @@ Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
 
 /*!
     \qmltype PointerHandler
-    //! \instantiates QQuickPointerHandler
-    \inqmlmodule QtQuick
+    \qmlabstract
+    \since 5.10
+    \preliminary
+    \instantiates QQuickPointerHandler
+    \inqmlmodule Qt.labs.handlers
     \ingroup qtquick-handlers
-    \brief Handler for pointer events.
+    \brief Abstract handler for pointer events.
 
-    PointerHandler is a handler for pointer events regardless of source.
-    They may represent events from a touch, mouse or tablet device.
+    PointerHandler is the base class handler (not registered as a QML type) for
+    pointer events without regard to source (touch, mouse or graphics tablet).
 */
 
 QQuickPointerHandler::QQuickPointerHandler(QObject *parent)
@@ -79,7 +82,7 @@ QQuickPointerHandler::~QQuickPointerHandler()
 /*!
     Notification that the grab has changed in some way which is relevant to this handler.
     The \a grabber (subject) will be the PointerHandler whose state is changing,
-    or null if the state change regards an Item. (TODO do we have any such cases?)
+    or null if the state change regards an Item.
     The \a stateChange (verb) tells what happened.
     The \a point (object) is the point that was grabbed or ungrabbed.
     EventPoint has the sole responsibility to call this function.
@@ -95,7 +98,6 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
     Q_ASSERT(point);
     if (grabber == this) {
         bool wasCanceled = false;
-        emit grabChanged(point);
         switch (stateChange) {
         case QQuickEventPoint::GrabPassive:
         case QQuickEventPoint::GrabExclusive:
@@ -112,6 +114,7 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
                 par->setKeepMouseGrab(m_hadKeepMouseGrab);
                 par->setKeepTouchGrab(m_hadKeepTouchGrab);
             }
+            break;
         case QQuickEventPoint::OverrideGrabPassive:
             // Passive grab is still there, but we won't receive point updates right now.
             // No need to notify about this.
@@ -124,6 +127,22 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
     }
 }
 
+/*!
+    \internal
+    Acquire or give up a passive grab of the given \a point, according to the \a grab state.
+
+    Unlike the exclusive grab, multiple PointerHandlers can have passive grabs
+    simultaneously. This means that each of them will receive further events
+    when the \a point moves, and when it is finally released. Typically a
+    PointerHandler should acquire a passive grab as soon as a point is pressed,
+    if the handler's constraints do not clearly rule out any interest in that
+    point. For example, DragHandler needs a passive grab in order to watch the
+    movement of a point to see whether it will be dragged past the drag
+    threshold. When a handler is actively manipulating its \l target (that is,
+    when \l active is true), it may be able to do its work with only a passive
+    grab, or it may acquire an exclusive grab if the gesture clearly must not
+    be interpreted in another way by another handler.
+*/
 void QQuickPointerHandler::setPassiveGrab(QQuickEventPoint *point, bool grab)
 {
     qCDebug(lcPointerHandlerDispatch) << point << grab;
@@ -144,6 +163,10 @@ void QQuickPointerHandler::setExclusiveGrab(QQuickEventPoint *point, bool grab)
     point->setGrabberPointerHandler(grab ? this : nullptr, true);
 }
 
+/*!
+    \internal
+    Cancel any existing grab of the given \a point.
+*/
 void QQuickPointerHandler::cancelAllGrabs(QQuickEventPoint *point)
 {
     qCDebug(lcPointerHandlerDispatch) << point;
@@ -165,13 +188,10 @@ bool QQuickPointerHandler::parentContains(const QQuickEventPoint *point) const
 }
 
 /*!
-     \qmlproperty bool PointerHandler::enabled
+     \qmlproperty bool QtQuick::PointerHandler::enabled
 
      If a PointerHandler is disabled, it will reject all events
      and no signals will be emitted.
-
-     TODO is it too extreme not even to emit pressed/updated/released?
-     or should we disable only the higher-level interpretation, in subclasses?
 */
 void QQuickPointerHandler::setEnabled(bool enabled)
 {
@@ -182,6 +202,17 @@ void QQuickPointerHandler::setEnabled(bool enabled)
     emit enabledChanged();
 }
 
+/*!
+    \qmlproperty Item QtQuick::PointerHandler::target
+
+    The Item which this handler will manipulate.
+
+    By default, it is the same as the \l parent: the Item within which
+    the handler is declared. However, it can sometimes be useful to set the
+    target to a different Item, in order to handle events within one item
+    but manipulate another; or to \c null, to disable the default behavior
+    and do something else instead.
+*/
 void QQuickPointerHandler::setTarget(QQuickItem *target)
 {
     m_targetExplicitlySet = true;
@@ -225,6 +256,16 @@ bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
     return m_enabled;
 }
 
+/*!
+    \readonly
+    \qmlproperty bool QtQuick::PointerHandler::active
+
+    This holds true whenever this PointerHandler has taken sole responsibility
+    for handing one or more EventPoints, by successfully taking an exclusive
+    grab of those points. This means that it is keeping its properties
+    up-to-date according to the movements of those Event Points and actively
+    manipulating its \l target (if any).
+*/
 void QQuickPointerHandler::setActive(bool active)
 {
     if (m_active != active) {
@@ -241,7 +282,8 @@ void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 }
 
 /*!
-    \qmlproperty Item PointerHandler::parent
+    \readonly
+    \qmlproperty Item QtQuick::PointerHandler::parent
 
     The \l Item which is the scope of the handler; the Item in which it was declared.
     The handler will handle events on behalf of this Item, which means a
@@ -249,7 +291,21 @@ void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     the Item's interior.  Initially \l target() is the same, but target()
     can be reassigned.
 
-    \sa QQuickPointerHandler::target(), QObject::parent()
+    \sa QQuick::PointerHandler::target(), QObject::parent()
+*/
+
+/*!
+    \qmlsignal QtQuick::PointerHandler::grabChanged(EventPoint point)
+
+    This signal is emitted when this handler has acquired or relinquished a
+    passive or exclusive grab of the given \a point.
+*/
+
+/*!
+    \qmlsignal QtQuick::PointerHandler::canceled(EventPoint point)
+
+    If this handler has already grabbed the given \a point, this signal is
+    emitted when the grab is stolen by a different Pointer Handler or Item.
 */
 
 QT_END_NAMESPACE

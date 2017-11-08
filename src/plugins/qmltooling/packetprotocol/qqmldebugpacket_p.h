@@ -37,11 +37,13 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGSERVERCONNECTION_H
-#define QQMLDEBUGSERVERCONNECTION_H
+#ifndef QQMLDEBUGPACKET_P_H
+#define QQMLDEBUGPACKET_P_H
 
-#include <private/qtqmlglobal_p.h>
-#include <QtCore/qobject.h>
+#include "qpacket_p.h"
+
+#include <QtCore/qbuffer.h>
+#include <QtQml/private/qqmldebugconnector_p.h>
 
 //
 //  W A R N I N G
@@ -56,33 +58,14 @@
 
 QT_BEGIN_NAMESPACE
 
-
-class QQmlDebugServer;
-class QQmlDebugServerConnection : public QObject
+// QPacket with a fixed data stream version, centrally set by QQmlDebugServer
+class QQmlDebugPacket : public QPacket
 {
-    Q_OBJECT
 public:
-    QQmlDebugServerConnection(QObject *parent = 0) : QObject(parent) {}
-
-    virtual void setServer(QQmlDebugServer *server) = 0;
-    virtual bool setPortRange(int portFrom, int portTo, bool block, const QString &hostaddress) = 0;
-    virtual bool setFileName(const QString &fileName, bool block) = 0;
-    virtual bool isConnected() const = 0;
-    virtual void disconnect() = 0;
-    virtual void waitForConnection() = 0;
-    virtual void flush() = 0;
+    QQmlDebugPacket() : QPacket(QQmlDebugConnector::dataStreamVersion()) {}
+    QQmlDebugPacket(const QByteArray &ba) : QPacket(QQmlDebugConnector::dataStreamVersion(), ba) {}
 };
-
-class QQmlDebugServerConnectionFactory : public QObject
-{
-    Q_OBJECT
-public:
-    virtual QQmlDebugServerConnection *create(const QString &key) = 0;
-};
-
-#define QQmlDebugServerConnectionFactory_iid "org.qt-project.Qt.QQmlDebugServerConnectionFactory"
-Q_DECLARE_INTERFACE(QQmlDebugServerConnectionFactory, QQmlDebugServerConnectionFactory_iid)
 
 QT_END_NAMESPACE
 
-#endif // QQMLDEBUGSERVERCONNECTION_H
+#endif // QQMLDEBUGPACKET_P_H

@@ -467,6 +467,7 @@ public:
     \instantiates QQuickMatrix4x4
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
+    \since 5.3
     \brief Provides a way to apply a 4x4 tranformation matrix to an \l Item
 
     The Matrix4x4 type provides a way to apply a transformation to an

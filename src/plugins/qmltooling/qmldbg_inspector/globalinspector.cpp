@@ -40,11 +40,11 @@
 #include "globalinspector.h"
 #include "highlight.h"
 #include "inspecttool.h"
-#include "qqmldebugpacket.h"
 
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qabstractanimation_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmldebugpacket_p.h>
 
 #include <QtGui/qwindow.h>
 

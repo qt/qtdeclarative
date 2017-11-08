@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
+import QtQuick 2.11
 import QtQuick.Shapes 1.0
 
 Rectangle {
@@ -100,11 +100,15 @@ Rectangle {
             strokeWidth: 20
             capStyle: ShapePath.RoundCap
 
-            startX: 20; startY: 50
-            PathArc {
-                x: 20; y: 90
+            PathAngleArc {
+                centerX: 65; centerY: 95
                 radiusX: 45; radiusY: 45
-                useLargeArc: true
+                startAngle: -180
+                SequentialAnimation on sweepAngle {
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 360; duration: 2000 }
+                    NumberAnimation { to: 0; duration: 2000 }
+                }
             }
         }
     }

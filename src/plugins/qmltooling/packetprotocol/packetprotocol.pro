@@ -4,7 +4,8 @@ CONFIG += static internal_module
 
 HEADERS = \
     qpacketprotocol_p.h \
-    qpacket_p.h
+    qpacket_p.h \
+    qqmldebugpacket_p.h
 
 SOURCES = \
     qpacketprotocol.cpp \

@@ -8,6 +8,7 @@ SOURCES += tst_qquickloader.cpp \
            ../../shared/testhttpserver.cpp
 
 include (../../shared/util.pri)
+include (../shared/util.pri)
 
 TESTDATA = data/*
 

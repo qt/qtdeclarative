@@ -38,9 +38,9 @@
 ****************************************************************************/
 
 #include "qqmlnativedebugconnector.h"
-#include "qqmldebugpacket.h"
 
 #include <private/qhooks_p.h>
+#include <private/qqmldebugpacket_p.h>
 
 #include <QtQml/qjsengine.h>
 #include <QtCore/qdebug.h>

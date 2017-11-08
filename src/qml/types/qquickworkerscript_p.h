@@ -51,7 +51,7 @@
 // We mean it.
 //
 
-#include "qqml.h"
+#include <qqml.h>
 
 #include <QtQml/qqmlparserstatus.h>
 #include <QtCore/qthread.h>

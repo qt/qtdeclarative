@@ -165,6 +165,8 @@ private:
     void emitItemsInserted(int index, int count);
     void emitItemsAboutToBeMoved(int from, int to, int n);
     void emitItemsMoved(int from, int to, int n);
+
+    void removeElements(int index, int removeCount);
 };
 
 // ### FIXME
@@ -193,7 +195,7 @@ public:
 private:
     bool verifyProperty(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding);
     // returns true if a role was set
-    bool applyProperty(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex);
+    bool applyProperty(QV4::CompiledData::CompilationUnit *compilationUnit, const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex);
 
     static bool definesEmptyList(const QString &);
 

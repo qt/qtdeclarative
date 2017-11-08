@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qqmlenginecontrolservice.h"
-#include "qqmldebugpacket.h"
+#include <private/qqmldebugpacket_p.h>
 #include <QJSEngine>
 
 QT_BEGIN_NAMESPACE
@@ -53,8 +53,8 @@ void QQmlEngineControlServiceImpl::messageReceived(const QByteArray &message)
 {
     QMutexLocker lock(&dataMutex);
     QQmlDebugPacket d(message);
-    int command;
-    int engineId;
+    qint32 command;
+    qint32 engineId;
     d >> command >> engineId;
     QJSEngine *engine = qobject_cast<QJSEngine *>(objectForId(engineId));
     if (command == StartWaitingEngine && startingEngines.contains(engine)) {
@@ -112,10 +112,11 @@ void QQmlEngineControlServiceImpl::engineRemoved(QJSEngine *engine)
     }
 }
 
-void QQmlEngineControlServiceImpl::sendMessage(QQmlEngineControlServiceImpl::MessageType type, QJSEngine *engine)
+void QQmlEngineControlServiceImpl::sendMessage(QQmlEngineControlServiceImpl::MessageType type,
+                                               QJSEngine *engine)
 {
     QQmlDebugPacket d;
-    d << int(type) << idForObject(engine);
+    d << static_cast<qint32>(type) << idForObject(engine);
     emit messageToClient(name(), d.data());
 }
 

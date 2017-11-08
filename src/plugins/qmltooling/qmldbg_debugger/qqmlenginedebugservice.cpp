@@ -39,7 +39,6 @@
 
 #include "qqmlenginedebugservice.h"
 #include "qqmlwatcher.h"
-#include "qqmldebugpacket.h"
 
 #include <private/qqmldebugstatesdelegate_p.h>
 #include <private/qqmlboundsignal_p.h>
@@ -57,6 +56,7 @@
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qfileinfo.h>
 #include <private/qmetaobject_p.h>
+#include <private/qqmldebugpacket_p.h>
 
 QT_BEGIN_NAMESPACE
 

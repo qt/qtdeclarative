@@ -40,7 +40,7 @@
 #ifndef QLOCALCLIENTCONNECTIONFACTORY_H
 #define QLOCALCLIENTCONNECTIONFACTORY_H
 
-#include "qqmldebugserverconnection.h"
+#include <private/qqmldebugserverconnection_p.h>
 
 QT_BEGIN_NAMESPACE
 

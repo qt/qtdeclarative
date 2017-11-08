@@ -71,6 +71,14 @@ examples.fileextensions        += "*.qm"
 manifestmeta.thumbnail.names += "QtQuick/Threaded ListModel Example" \
                                 "QtQuick/QML Dynamic View Ordering Tutorial*"
 
+manifestmeta.highlighted.names = "QtQuick/Qt Quick Demo - Same Game" \
+                                 "QtQuick/Qt Quick Demo - Photo Surface" \
+                                 "QtQuick/Qt Quick Demo - Tweet Search" \
+                                 "QtQuick/Qt Quick Demo - Calqlatr" \
+                                 "QtQuick/Qt Quick Demo - StocQt" \
+                                 "QtQuick/Qt Quick Demo - Clocks" \
+                                 "QtQuick/Qt Quick Examples - Shader Effects"
+
 navigation.landingpage = "Qt Quick"
 navigation.cppclassespage = "Qt Quick C++ Classes"
 navigation.qmltypespage = "Qt Quick QML Types"

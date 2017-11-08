@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -11,8 +11,8 @@
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU Free Documentation License Usage
 ** Alternatively, this file may be used under the terms of the GNU Free
@@ -20,7 +20,7 @@
 ** Foundation and appearing in the file included in the packaging of
 ** this file. Please review the following information to ensure
 ** the GNU Free Documentation License version 1.3 requirements
-** will be met: http://www.gnu.org/copyleft/fdl.html.
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -150,6 +150,10 @@ Now we can build and run the application:
       cannot update the binding if the \c name value changes. This is addressed in
       the following chapters.
 
+The source code from the following files are referred to in this chapter:
+\noautolist
+\generatelist examplefiles .*chapter1.*
+
 \section1 Chapter 2: Connecting to C++ Methods and Signals
 \c extending-qml/chapter2-methods
 
@@ -188,6 +192,9 @@ disappears, and the application outputs:
 \badcode
     qml: The chart has been cleared
 \endcode
+
+The source code from the following files are referred to in this chapter:
+\generatelist examplefiles .*chapter2.*
 
 \section1 Chapter 3: Adding Property Bindings
 \c extending-qml/chapter3-bindings
@@ -236,6 +243,9 @@ properties can be used in bindings. Properties that cannot be bound cannot be
 automatically updated and cannot be used as flexibly in QML. Also, since
 bindings are invoked so often and relied upon in QML usage, users of your
 custom QML types may see unexpected behavior if bindings are not implemented.
+
+The source code from the following files are referred to in this chapter:
+\generatelist examplefiles .*chapter3.*
 
 \section1 Chapter 4: Using Custom Property Types
 
@@ -314,6 +324,9 @@ type to the "Charts" type namespace, version 1.0:
 \dots
 \snippet tutorials/extending-qml/chapter4-customPropertyTypes/main.cpp 2
 
+The source code from the following files are referred to in this chapter:
+\generatelist examplefiles .*chapter4.*
+
 \section1 Chapter 5: Using List Property Types
 \c extending-qml/chapter5-listproperties
 
@@ -355,6 +368,9 @@ the item that is to be appended.
 The \c PieSlice class has also been modified to include \c fromAngle and \c angleSpan
 properties and to draw the slice according to these values. This is a straightforward
 modification if you have read the previous pages in this tutorial, so the code is not shown here.
+
+The source code from the following files are referred to in this chapter:
+\generatelist examplefiles .*chapter5.*
 
 \section1 Chapter 6: Writing an Extension Plugin
 
@@ -428,6 +444,9 @@ import path to the current directory so that it finds the \c qmldir file:
 
 The module "Charts" will be loaded by the QML engine, and the types provided by that
 module will be available for use in any QML document which imports it.
+
+The source code from the following files are referred to in this chapter:
+\generatelist examplefiles .*chapter6.*
 
 \section1 Chapter 7: Summary
 

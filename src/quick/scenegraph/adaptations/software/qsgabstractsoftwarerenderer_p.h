@@ -63,7 +63,7 @@ class QSGSimpleRectNode;
 class QSGSoftwareRenderableNode;
 class QSGSoftwareRenderableNodeUpdater;
 
-class QSGAbstractSoftwareRenderer : public QSGRenderer
+class Q_QUICK_PRIVATE_EXPORT QSGAbstractSoftwareRenderer : public QSGRenderer
 {
 public:
     QSGAbstractSoftwareRenderer(QSGRenderContext *context);

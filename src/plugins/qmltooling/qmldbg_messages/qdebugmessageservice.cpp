@@ -38,8 +38,9 @@
 ****************************************************************************/
 
 #include "qdebugmessageservice.h"
-#include "qqmldebugpacket.h"
+
 #include <private/qqmldebugconnector_p.h>
+#include <private/qqmldebugpacket_p.h>
 
 QT_BEGIN_NAMESPACE
 
