@@ -76,6 +76,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION 2)
     // 2.3 (Qt 5.10)
     Q_PROPERTY(bool wrap READ wrap WRITE setWrap NOTIFY wrapChanged FINAL REVISION 3)
+    // 2.4 (Qt 5.11)
     Q_PROPERTY(QString displayText READ displayText NOTIFY displayTextChanged FINAL REVISION 4)
 
 public:
@@ -118,6 +119,7 @@ public:
     bool wrap() const;
     void setWrap(bool wrap);
 
+    // 2.4 (Qt 5.11)
     QString displayText() const;
 
 public Q_SLOTS:
@@ -139,6 +141,7 @@ Q_SIGNALS:
     Q_REVISION(2) void inputMethodComposingChanged();
     // 2.3 (Qt 5.10)
     Q_REVISION(3) void wrapChanged();
+    // 2.4 (Qt 5.11)
     Q_REVISION(4) void displayTextChanged();
 
 protected:

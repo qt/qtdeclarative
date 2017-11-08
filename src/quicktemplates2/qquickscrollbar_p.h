@@ -71,6 +71,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollBar : public QQuickControl
     // 2.3 (Qt 5.10)
     Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
     Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
+    // 2.4 (Qt 5.11)
     Q_PROPERTY(qreal minimumSize READ minimumSize WRITE setMinimumSize NOTIFY minimumSizeChanged FINAL REVISION 4)
     Q_PROPERTY(qreal visualSize READ visualSize NOTIFY visualSizeChanged FINAL REVISION 4)
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL REVISION 4)
@@ -124,6 +125,7 @@ public:
     bool isHorizontal() const;
     bool isVertical() const;
 
+    // 2.4 (Qt 5.11)
     qreal minimumSize() const;
     void setMinimumSize(qreal minimumSize);
 
@@ -147,6 +149,7 @@ Q_SIGNALS:
     Q_REVISION(2) void snapModeChanged();
     Q_REVISION(2) void interactiveChanged();
     Q_REVISION(2) void policyChanged();
+    // 2.4 (Qt 5.11)
     Q_REVISION(4) void minimumSizeChanged();
     Q_REVISION(4) void visualSizeChanged();
     Q_REVISION(4) void visualPositionChanged();

@@ -71,6 +71,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 3)
     Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged FINAL REVISION 3)
     Q_PROPERTY(QQuickAction *action READ action WRITE setAction NOTIFY actionChanged FINAL REVISION 3)
+    // 2.4 (Qt 5.11)
     Q_PROPERTY(int autoRepeatDelay READ autoRepeatDelay WRITE setAutoRepeatDelay NOTIFY autoRepeatDelayChanged FINAL REVISION 4)
     Q_PROPERTY(int autoRepeatInterval READ autoRepeatInterval WRITE setAutoRepeatInterval NOTIFY autoRepeatIntervalChanged FINAL REVISION 4)
     Q_PROPERTY(qreal pressX READ pressX NOTIFY pressXChanged FINAL REVISION 4)
@@ -128,6 +129,7 @@ public:
     void setShortcut(const QKeySequence &shortcut);
 #endif
 
+    // 2.4 (Qt 5.11)
     int autoRepeatDelay() const;
     void setAutoRepeatDelay(int delay);
 
@@ -161,6 +163,7 @@ Q_SIGNALS:
     Q_REVISION(3) void iconChanged();
     Q_REVISION(3) void displayChanged();
     Q_REVISION(3) void actionChanged();
+    // 2.4 (Qt 5.11)
     Q_REVISION(4) void autoRepeatDelayChanged();
     Q_REVISION(4) void autoRepeatIntervalChanged();
     Q_REVISION(4) void pressXChanged();

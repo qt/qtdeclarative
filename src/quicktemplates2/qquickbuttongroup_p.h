@@ -67,6 +67,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButtonGroup : public QObject, publi
     Q_PROPERTY(QQmlListProperty<QQuickAbstractButton> buttons READ buttons NOTIFY buttonsChanged FINAL)
     // 2.3 (Qt 5.10)
     Q_PROPERTY(bool exclusive READ isExclusive WRITE setExclusive NOTIFY exclusiveChanged FINAL REVISION 3)
+    // 2.4 (Qt 5.11)
     Q_PROPERTY(Qt::CheckState checkState READ checkState WRITE setCheckState NOTIFY checkStateChanged FINAL REVISION 4)
     Q_INTERFACES(QQmlParserStatus)
 
@@ -84,6 +85,7 @@ public:
     bool isExclusive() const;
     void setExclusive(bool exclusive);
 
+    // 2.4 (Qt 5.11)
     Qt::CheckState checkState() const;
     void setCheckState(Qt::CheckState state);
 
@@ -98,6 +100,7 @@ Q_SIGNALS:
     Q_REVISION(1) void clicked(QQuickAbstractButton *button);
     // 2.3 (Qt 5.10)
     Q_REVISION(3) void exclusiveChanged();
+    // 2.4 (Qt 5.11)
     Q_REVISION(4) void checkStateChanged();
 
 protected:
