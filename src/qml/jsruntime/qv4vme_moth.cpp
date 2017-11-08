@@ -973,17 +973,23 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
     MOTH_END_INSTR(Jump)
 
     MOTH_BEGIN_INSTR(JumpTrue)
-        //### store a type hint, and if the input is a bool, do:
-        //  ((acc & 1) == 1)
-        // because if(1) will end up here with an integer in the accumulator
-        if ((ACC.integerCompatible() && ACC.int_32()) || ACC.toBoolean())
-            code += offset;
+        if (Q_LIKELY(ACC.integerCompatible())) {
+            if (ACC.int_32())
+                code += offset;
+        } else {
+            if (ACC.toBoolean())
+                code += offset;
+        }
     MOTH_END_INSTR(JumpTrue)
 
     MOTH_BEGIN_INSTR(JumpFalse)
-        //### see comment for JumpTrue
-        if ((ACC.integerCompatible() && !ACC.int_32()) || !ACC.toBoolean())
-            code += offset;
+        if (Q_LIKELY(ACC.integerCompatible())) {
+            if (!ACC.int_32())
+                code += offset;
+        } else {
+            if (!ACC.toBoolean())
+                code += offset;
+        }
     MOTH_END_INSTR(JumpFalse)
 
     MOTH_BEGIN_INSTR(CmpEqNull)
