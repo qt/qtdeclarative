@@ -765,10 +765,12 @@ QObject *QQuickEventPoint::exclusiveGrabber() const
 */
 void QQuickEventPoint::setExclusiveGrabber(QObject *grabber)
 {
-    if (QQuickPointerHandler *phGrabber = qmlobject_cast<QQuickPointerHandler *>(grabber))
+    if (QQuickPointerHandler *phGrabber = qmlobject_cast<QQuickPointerHandler *>(grabber)) {
         setGrabberPointerHandler(phGrabber, true);
-    else
-        setGrabberItem(static_cast<QQuickItem *>(grabber));
+    } else if (QQuickPointerHandler *existingPhGrabber = grabberPointerHandler()) {
+        if (existingPhGrabber->approveGrabTransition(this, grabber))
+            setGrabberItem(static_cast<QQuickItem *>(grabber));
+    }
 }
 
 /*!
