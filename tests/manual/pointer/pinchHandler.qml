@@ -55,84 +55,127 @@ Rectangle {
         + "\nrect.position: " + "(" + item.x.toFixed(2) + "," + item.y.toFixed(2) + ")"
     }
 
+    function activePincher() {
+        if (grandparentPinch.active)
+            return grandparentPinch
+        else if (parentPinch.active)
+            return parentPinch
+        else if (pinch2.active)
+            return pinch2
+        return pinch3       // always return a pinch handler, even when its inactive. The indicator will be invisble anyway.
+    }
+
     Rectangle {
-        // Purpose of this item is just to make sure the rectangles are transformed into
-        // a coordinate system that is different from the scene coordinate system.
-        anchors.fill: parent
-        anchors.margins: 50
-        color: "#ffe0e0e0"
+        width: parent.width - 100; height: parent.height - 100; x: 50; y: 50
+        color: "beige"
+        border.width: grandparentPinch.active ? 2 : 0
+        border.color: border.width > 0 ? "red" : "transparent"
+        antialiasing: true
 
-        Rectangle {
-            id: rect2
-            width: 400
-            height: 300
-            color: "lightsteelblue"
-            antialiasing: true
-            x: 100
-            y: 200
-            rotation: 30
-            transformOrigin: Item.TopRight
-            border.width: pinch2.active ? 2 : 0
-            border.color: pinch2.active ? "red" : "transparent"
+        PinchHandler {
+            id: grandparentPinch
+            objectName: "grandparent pinch"
+            minimumScale: 0.5
+            maximumScale: 3
+            minimumPointCount: 3
+        }
 
-            Text {
-                anchors.centerIn: parent
-                text: "Pinch with 2 fingers to scale, rotate and translate"
-                    + getTransformationDetails(rect2, pinch2)
-            }
-
-            PinchHandler {
-                id: pinch2
-                objectName: "2-finger pinch"
-                minimumRotation: -45
-                maximumRotation: 45
-                minimumScale: 0.5
-                maximumScale: 3
-                minimumX: 0
-                maximumX: 600
-                pointDistanceThreshold: 0
-                // acceptedModifiers: Qt.ControlModifier
-            }
+        Text {
+            text: "Pinch with 3 fingers to scale, rotate and translate"
+                  + getTransformationDetails(parent, grandparentPinch)
         }
 
         Rectangle {
-            id: rect3
-            x: 500
-            width: 400
-            height: 300
-            color: "wheat"
+            width: parent.width - 100; height: parent.height - 100; x: 50; y: 50
+            color: "#ffe0e0e0"
             antialiasing: true
-            border.width: (dragHandler.active || pinch3.active) ? 2 : 0
-            border.color: border.width > 0 ? "red" : "transparent"
-
-            Text {
-                anchors.centerIn: parent
-                text: "Pinch with 3 fingers to scale, rotate and translate\nDrag with 1 finger"
-                    + getTransformationDetails(rect3, pinch3)
-            }
-            DragHandler {
-                id: dragHandler
-                objectName: "DragHandler"
-            }
 
             PinchHandler {
-                id: pinch3
-                objectName: "3-finger pinch"
-                minimumPointCount: 3
-                minimumScale: 0.1
-                maximumScale: 10
-                onActiveChanged: {
-                    if (!active)
-                        anim.restart(centroidVelocity)
-                }
+                id: parentPinch
+                objectName: "parent pinch"
+                minimumScale: 0.5
+                maximumScale: 3
             }
 
-            MomentumAnimation { id: anim; target: rect3 }
+            Text {
+                text: "Pinch with 2 fingers to scale, rotate and translate"
+                      + getTransformationDetails(parent, parentPinch)
+            }
+
+            Rectangle {
+                id: rect2
+                width: 400
+                height: 300
+                color: "lightsteelblue"
+                antialiasing: true
+                x: 100
+                y: 200
+                rotation: 30
+                transformOrigin: Item.TopRight
+                border.width: (lsbDragHandler.active || pinch2.active) ? 2 : 0
+                border.color: border.width > 0 ? "red" : "transparent"
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "Pinch with 2 fingers to scale, rotate and translate\nDrag with 1 finger"
+                          + getTransformationDetails(rect2, pinch2) + "\nz " + rect2.z
+                }
+                DragHandler {
+                    id: lsbDragHandler
+                    objectName: "lightsteelblue drag"
+                }
+                PinchHandler {
+                    id: pinch2
+                    objectName: "lightsteelblue pinch"
+                    minimumRotation: -45
+                    maximumRotation: 45
+                    minimumScale: 0.5
+                    maximumScale: 3
+                    minimumX: 0
+                    maximumX: 600
+                    // acceptedModifiers: Qt.ControlModifier
+                }
+                TapHandler { gesturePolicy: TapHandler.DragThreshold; onTapped: rect2.z = rect3.z + 1 }
+            }
+
+            Rectangle {
+                id: rect3
+                x: 500
+                width: 400
+                height: 300
+                color: "wheat"
+                antialiasing: true
+                border.width: (wheatDragHandler.active || pinch3.active) ? 2 : 0
+                border.color: border.width > 0 ? "red" : "transparent"
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "Pinch with 3 fingers to scale, rotate and translate\nDrag with 1 finger"
+                          + getTransformationDetails(rect3, pinch3) + "\nz " + rect3.z
+                }
+                DragHandler {
+                    id: wheatDragHandler
+                    objectName: "wheat drag"
+                }
+                PinchHandler {
+                    id: pinch3
+                    objectName: "wheat 3-finger pinch"
+                    minimumPointCount: 3
+                    minimumScale: 0.1
+                    maximumScale: 10
+                    onActiveChanged: {
+                        if (!active)
+                            anim.restart(centroidVelocity)
+                    }
+                }
+                TapHandler { gesturePolicy: TapHandler.DragThreshold; onTapped: rect3.z = rect2.z + 1 }
+                MomentumAnimation { id: anim; target: rect3 }
+            }
         }
     }
     Rectangle {
         id: centroidIndicator
-        property QtObject pincher: pinch2.active ? pinch2 : pinch3
+        property QtObject pincher: activePincher()
         x: pincher.centroid.x - radius
         y: pincher.centroid.y - radius
         z: 1
