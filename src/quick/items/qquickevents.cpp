@@ -765,12 +765,10 @@ QObject *QQuickEventPoint::exclusiveGrabber() const
 */
 void QQuickEventPoint::setExclusiveGrabber(QObject *grabber)
 {
-    if (QQuickPointerHandler *phGrabber = qmlobject_cast<QQuickPointerHandler *>(grabber)) {
+    if (QQuickPointerHandler *phGrabber = qmlobject_cast<QQuickPointerHandler *>(grabber))
         setGrabberPointerHandler(phGrabber, true);
-    } else if (QQuickPointerHandler *existingPhGrabber = grabberPointerHandler()) {
-        if (existingPhGrabber->approveGrabTransition(this, grabber))
-            setGrabberItem(static_cast<QQuickItem *>(grabber));
-    }
+    else
+        setGrabberItem(static_cast<QQuickItem *>(grabber));
 }
 
 /*!
@@ -792,15 +790,17 @@ QQuickItem *QQuickEventPoint::grabberItem() const
 void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
 {
     if (grabber != m_exclusiveGrabber.data()) {
+        QQuickPointerHandler *oldGrabberHandler = grabberPointerHandler();
+        if (oldGrabberHandler && !oldGrabberHandler->approveGrabTransition(this, grabber))
+            return;
         if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
             qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this)
                                    << ": grab" << m_exclusiveGrabber << "->" << grabber;
         }
-        QQuickPointerHandler *oldGrabberHandler = grabberPointerHandler();
-        QQuickItem *oldGrabberItem = grabberItem();
         m_exclusiveGrabber = QPointer<QObject>(grabber);
         m_grabberIsHandler = false;
         m_sceneGrabPos = m_scenePos;
+        QQuickItem *oldGrabberItem = grabberItem();
         if (oldGrabberHandler)
             oldGrabberHandler->onGrabChanged(oldGrabberHandler, (grabber ? CancelGrabExclusive : UngrabExclusive), this);
         else if (oldGrabberItem && oldGrabberItem != grabber && grabber && pointerEvent()->asPointerTouchEvent())
