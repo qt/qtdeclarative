@@ -404,7 +404,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickText, 10>(uri, 2, 10, "Text");
 
 #if QT_CONFIG(quick_path)
-    qmlRegisterType<QQuickPathAngleArc, 2>(uri, 2, 11, "PathAngleArc");
+    qmlRegisterType<QQuickPathAngleArc>(uri, 2, 11, "PathAngleArc");
 #endif
 }
 
