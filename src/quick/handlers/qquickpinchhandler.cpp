@@ -248,8 +248,8 @@ bool QQuickPinchHandler::wantsPointerEvent(QQuickPointerEvent *event)
     if (!QQuickMultiPointHandler::wantsPointerEvent(event))
         return false;
 
-    if (minimumPointCount() == 2) {
-        if (const auto gesture = event->asPointerNativeGestureEvent()) {
+    if (const auto gesture = event->asPointerNativeGestureEvent()) {
+        if (minimumPointCount() == 2) {
             switch (gesture->type()) {
             case Qt::BeginNativeGesture:
             case Qt::EndNativeGesture:
@@ -259,6 +259,8 @@ bool QQuickPinchHandler::wantsPointerEvent(QQuickPointerEvent *event)
             default:
                 return false;
             }
+        } else {
+            return false;
         }
     }
 

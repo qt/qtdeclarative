@@ -1938,7 +1938,8 @@ bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGes
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
-    if ((itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) && !item->contains(event->localPos()))
+    QPointF p = item->mapFromScene(event->windowPos());
+    if ((itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) && !item->contains(p))
         return false;
 
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
@@ -1961,7 +1962,6 @@ bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGes
     }
 
     // If still not accepted, try direct delivery to the item
-    QPointF p = item->mapFromScene(event->localPos());
     if (item->contains(p)) {
         QNativeGestureEvent copy(event->gestureType(), event->device(), p, event->windowPos(), event->screenPos(),
                                  event->value(), 0L, 0L); // TODO can't copy things I can't access
