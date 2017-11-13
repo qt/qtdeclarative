@@ -172,7 +172,6 @@ struct ObjectVTable
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, String *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
-    ReturnedValue (*getLookup)(const Managed *m, Lookup *l);
     bool (*setLookup)(Managed *m, Lookup *l, const Value &v);
     uint (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
@@ -193,7 +192,6 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     queryIndexed,                               \
     deleteProperty,                             \
     deleteIndexedProperty,                      \
-    getLookup,                                  \
     setLookup,                                  \
     getLength,                                  \
     advanceIterator,                            \
@@ -416,8 +414,6 @@ public:
     { return vtable()->deleteProperty(this, name); }
     bool deleteIndexedProperty(uint index)
     { return vtable()->deleteIndexedProperty(this, index); }
-    ReturnedValue getLookup(Lookup *l) const
-    { return vtable()->getLookup(this, l); }
     bool setLookup(Lookup *l, const Value &v)
     { return vtable()->setLookup(this, l, v); }
     void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
@@ -437,7 +433,6 @@ protected:
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, String *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
-    static ReturnedValue getLookup(const Managed *m, Lookup *l);
     static bool setLookup(Managed *m, Lookup *l, const Value &v);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
@@ -521,7 +516,6 @@ struct ArrayObject: Object {
 
     void init(ExecutionEngine *engine);
 
-    static ReturnedValue getLookup(const Managed *m, Lookup *l);
     using Object::getLength;
     static uint getLength(const Managed *m);
 

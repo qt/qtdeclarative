@@ -72,6 +72,27 @@ struct Lookup {
         bool (*setter)(Lookup *l, ExecutionEngine *engine, Value &object, const Value &v);
     };
     union {
+        struct {
+            InternalClass *ic;
+            int offset;
+        } objectLookup;
+        struct {
+            const Value *data;
+            int icIdentifier;
+        } protoLookup;
+        struct {
+            InternalClass *ic;
+            InternalClass *ic2;
+            int offset;
+            int offset2;
+        } objectLookupTwoClasses;
+        struct {
+            const Value *data;
+            const Value *data2;
+            int icIdentifier;
+            int icIdentifier2;
+        } protoLookupTwoClasses;
+
         InternalClass *classList[Size];
         struct {
             void *dummy0;
@@ -88,23 +109,22 @@ struct Lookup {
     uint index;
     uint nameIndex;
 
+    ReturnedValue resolveGetter(ExecutionEngine *engine, const Object *object);
+
     static ReturnedValue getterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterFallback(Lookup *l, ExecutionEngine *engine, const Value &object);
 
     static ReturnedValue getter0MemberData(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getter0Inline(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getter1(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getter2(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterProto(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getter0Inlinegetter0Inline(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getter0Inlinegetter0MemberData(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getter0MemberDatagetter0MemberData(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getter0Inlinegetter1(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getter0MemberDatagetter1(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getter1getter1(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterAccessor0(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterAccessor1(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterAccessor2(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterProtoTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterProtoAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterProtoAccessorTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
 
     static ReturnedValue primitiveGetter0Inline(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue primitiveGetter0MemberData(Lookup *l, ExecutionEngine *engine, const Value &object);

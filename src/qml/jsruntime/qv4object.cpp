@@ -528,47 +528,6 @@ bool Object::deleteIndexedProperty(Managed *m, uint index)
     return static_cast<Object *>(m)->internalDeleteIndexedProperty(index);
 }
 
-ReturnedValue Object::getLookup(const Managed *m, Lookup *l)
-{
-    const Object *o = static_cast<const Object *>(m);
-    PropertyAttributes attrs;
-    ReturnedValue v = l->lookup(o, &attrs);
-    if (v != Primitive::emptyValue().asReturnedValue()) {
-        l->proto = l->classList[0]->prototype;
-        if (attrs.isData()) {
-            Q_ASSERT(l->classList[0] == o->internalClass());
-            if (l->level == 0) {
-                uint nInline = o->d()->vtable()->nInlineProperties;
-                if (l->index < nInline) {
-                    l->index += o->d()->vtable()->inlinePropertyOffset;
-                    l->getter = Lookup::getter0Inline;
-                } else {
-                    l->index -= nInline;
-                    l->getter = Lookup::getter0MemberData;
-                }
-                }
-            else if (l->level == 1)
-                l->getter = Lookup::getter1;
-            else if (l->level == 2)
-                l->getter = Lookup::getter2;
-            else
-                l->getter = Lookup::getterFallback;
-            return v;
-        } else {
-            if (l->level == 0)
-                l->getter = Lookup::getterAccessor0;
-            else if (l->level == 1)
-                l->getter = Lookup::getterAccessor1;
-            else if (l->level == 2)
-                l->getter = Lookup::getterAccessor2;
-            else
-                l->getter = Lookup::getterFallback;
-            return v;
-        }
-    }
-    return Encode::undefined();
-}
-
 bool Object::setLookup(Managed *m, Lookup *l, const Value &value)
 {
     Scope scope(static_cast<Object *>(m)->engine());
@@ -1278,19 +1237,6 @@ void Heap::ArrayObject::init(const QStringList &list)
     for (int ii = 0; ii < len; ++ii)
         a->arrayPut(ii, (v = scope.engine->newString(list.at(ii))));
     a->setArrayLengthUnchecked(len);
-}
-
-ReturnedValue ArrayObject::getLookup(const Managed *m, Lookup *l)
-{
-    Scope scope(static_cast<const Object *>(m)->engine());
-    ScopedString name(scope, scope.engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-    if (name->equals(scope.engine->id_length())) {
-        // special case, as the property is on the object itself
-        l->getter = Lookup::arrayLengthGetter;
-        const ArrayObject *a = static_cast<const ArrayObject *>(m);
-        return a->propertyData(Heap::ArrayObject::LengthPropertyIndex)->asReturnedValue();
-    }
-    return Object::getLookup(m, l);
 }
 
 uint ArrayObject::getLength(const Managed *m)
