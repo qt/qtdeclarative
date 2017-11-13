@@ -366,6 +366,8 @@ public:
     // bookkeeping.
     MultiplyWrappedQObjectMap *m_multiplyWrappedQObjects;
 
+    int internalClassIdCount = 0;
+
     ExecutionEngine();
     ~ExecutionEngine();
 
@@ -387,6 +389,8 @@ public:
     ExecutionContext *currentContext() const {
         return static_cast<ExecutionContext *>(&currentStackFrame->jsFrame->context);
     }
+
+    int newInternalClassId() { return ++internalClassIdCount; }
 
     InternalClass *newInternalClass(const VTable *vtable, Object *prototype);
 

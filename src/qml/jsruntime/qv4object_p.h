@@ -129,6 +129,8 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
         memberData->values.set(e, index, b);
     }
 
+    void setUsedAsProto();
+
     Heap::Object *prototype() const { return internalClass->prototype; }
 };
 

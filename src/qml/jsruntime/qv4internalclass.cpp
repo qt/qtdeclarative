@@ -112,6 +112,7 @@ InternalClass::InternalClass(ExecutionEngine *engine)
     , size(0)
     , extensible(true)
 {
+    id = engine->newInternalClassId();
 }
 
 
@@ -127,8 +128,9 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
     , m_frozen(0)
     , size(other.size)
     , extensible(other.extensible)
+    , isUsedAsProto(other.isUsedAsProto)
 {
-    Q_ASSERT(extensible);
+    id = engine->newInternalClassId();
 }
 
 static void insertHoleIntoPropertyData(Object *object, int idx)
@@ -213,7 +215,10 @@ InternalClass *InternalClass::changeMember(Identifier *identifier, PropertyAttri
 
 InternalClass *InternalClass::changePrototypeImpl(Heap::Object *proto)
 {
+    if (proto)
+        proto->setUsedAsProto();
     Q_ASSERT(prototype != proto);
+    Q_ASSERT(!proto || proto->internalClass->isUsedAsProto);
 
     Transition temp = { { nullptr }, 0, Transition::PrototypeChange };
     temp.prototype = proto;
@@ -237,6 +242,7 @@ InternalClass *InternalClass::changePrototypeImpl(Heap::Object *proto)
     }
 
     t.lookup = newClass;
+
     return newClass;
 }
 
@@ -389,7 +395,7 @@ void InternalClass::removeMember(Object *object, Identifier *id)
     Q_ASSERT(t.lookup);
 }
 
-uint QV4::InternalClass::find(const String *string)
+uint InternalClass::find(const String *string)
 {
     engine->identifierTable->identifier(string);
     const Identifier *id = string->d()->identifier;
@@ -449,6 +455,24 @@ InternalClass *InternalClass::propertiesFrozen() const
     return frozen;
 }
 
+InternalClass *InternalClass::asProtoClass()
+{
+    if (isUsedAsProto)
+        return this;
+
+    Transition temp = { { nullptr }, nullptr, Transition::ProtoClass };
+    Transition &t = lookupOrInsertTransition(temp);
+    if (t.lookup)
+        return t.lookup;
+
+    InternalClass *newClass = engine->newClass(*this);
+    newClass->isUsedAsProto = true;
+
+    t.lookup = newClass;
+    Q_ASSERT(t.lookup);
+    return newClass;
+}
+
 void InternalClass::destroy()
 {
     std::vector<InternalClass *> destroyStack;
@@ -477,6 +501,40 @@ void InternalClass::destroy()
         next->transitions.~vector<Transition>();
     }
 }
+
+void InternalClass::updateProtoUsage(Heap::Object *o)
+{
+    Q_ASSERT(isUsedAsProto);
+    InternalClass *ic = engine->internalClasses[EngineBase::Class_Empty];
+    Q_ASSERT(!ic->prototype);
+
+    // only need to go two levels into the IC hierarchy, as prototype changes
+    // can only happen there
+    for (auto &t : ic->transitions) {
+        Q_ASSERT(t.lookup);
+        if (t.flags == InternalClassTransition::VTableChange) {
+            InternalClass *ic2 = t.lookup;
+            for (auto &t2 : ic2->transitions) {
+                if (t2.flags == InternalClassTransition::PrototypeChange &&
+                    t2.lookup->prototype == o)
+                    ic2->updateInternalClassIdRecursive();
+            }
+        } else if (t.flags == InternalClassTransition::PrototypeChange && t.lookup->prototype == o) {
+            ic->updateInternalClassIdRecursive();
+        }
+    }
+}
+
+void InternalClass::updateInternalClassIdRecursive()
+{
+    id = engine->newInternalClassId();
+    for (auto &t : transitions) {
+        Q_ASSERT(t.lookup);
+        t.lookup->updateInternalClassIdRecursive();
+    }
+}
+
+
 
 void InternalClassPool::markObjects(MarkStack *markStack)
 {

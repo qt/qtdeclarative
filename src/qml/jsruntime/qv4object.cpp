@@ -60,6 +60,8 @@ DEFINE_OBJECT_VTABLE(Object);
 void Object::setInternalClass(InternalClass *ic)
 {
     d()->internalClass = ic;
+    if (ic->isUsedAsProto)
+        ic->updateProtoUsage(d());
     Q_ASSERT(ic && ic->vtable);
     uint nInline = d()->vtable()->nInlineProperties;
     if (ic->size <= nInline)
@@ -83,6 +85,11 @@ void Object::setProperty(uint index, const Property *p)
     setProperty(index, p->value);
     if (internalClass()->propertyData.at(index).isAccessor())
         setProperty(index + SetterOffset, p->set);
+}
+
+void Heap::Object::setUsedAsProto()
+{
+    internalClass = internalClass->asProtoClass();
 }
 
 bool Object::setPrototype(Object *proto)

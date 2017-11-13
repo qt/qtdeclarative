@@ -232,7 +232,8 @@ struct InternalClassTransition
         // range 0-0xff is reserved for attribute changes
         NotExtensible = 0x100,
         VTableChange = 0x200,
-        PrototypeChange = 0x201
+        PrototypeChange = 0x201,
+        ProtoClass = 0x202
     };
 
     bool operator==(const InternalClassTransition &other) const
@@ -243,6 +244,7 @@ struct InternalClassTransition
 };
 
 struct InternalClass : public QQmlJS::Managed {
+    int id = 0; // unique across the engine, gets changed also when proto chain changes
     ExecutionEngine *engine;
     const VTable *vtable;
     Heap::Object *prototype;
@@ -260,6 +262,7 @@ struct InternalClass : public QQmlJS::Managed {
 
     uint size;
     bool extensible;
+    bool isUsedAsProto = false;
 
     Q_REQUIRED_RESULT InternalClass *nonExtensible();
     Q_REQUIRED_RESULT InternalClass *changeVTable(const VTable *vt) {
@@ -293,12 +296,17 @@ struct InternalClass : public QQmlJS::Managed {
     Q_REQUIRED_RESULT InternalClass *frozen();
     Q_REQUIRED_RESULT InternalClass *propertiesFrozen() const;
 
+    Q_REQUIRED_RESULT InternalClass *asProtoClass();
+
     void destroy();
+
+    void updateProtoUsage(Heap::Object *o);
 
 private:
     Q_QML_EXPORT InternalClass *changeVTableImpl(const VTable *vt);
     Q_QML_EXPORT InternalClass *changePrototypeImpl(Heap::Object *proto);
     InternalClass *addMemberImpl(Identifier *identifier, PropertyAttributes data, uint *index);
+    void updateInternalClassIdRecursive();
     friend struct ExecutionEngine;
     InternalClass(ExecutionEngine *engine);
     InternalClass(const InternalClass &other);
