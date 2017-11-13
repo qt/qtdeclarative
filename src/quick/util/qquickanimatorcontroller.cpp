@@ -123,8 +123,10 @@ static void qquickanimator_sync_before_start(QAbstractAnimationJob *job)
 
 void QQuickAnimatorController::beforeNodeSync()
 {
-    for (const QSharedPointer<QAbstractAnimationJob> &toStop : qAsConst(m_rootsPendingStop))
+    for (const QSharedPointer<QAbstractAnimationJob> &toStop : qAsConst(m_rootsPendingStop)) {
         toStop->stop();
+        m_animationRoots.remove(toStop.data());
+    }
     m_rootsPendingStop.clear();
 
 

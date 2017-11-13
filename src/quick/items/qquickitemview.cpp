@@ -952,11 +952,16 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
         item = visibleItem(idx);
     }
     if (item) {
+        const bool stickyHeader = hasStickyHeader();
+        const bool stickyFooter = hasStickyFooter();
+        const qreal stickyHeaderSize = stickyHeader ? headerSize() : 0;
+        const qreal stickyFooterSize = stickyFooter ? footerSize() : 0;
+
         const qreal itemPos = item->position();
         switch (mode) {
         case QQuickItemView::Beginning:
             pos = itemPos;
-            if (header && (index < 0 || hasStickyHeader()))
+            if (header && (index < 0 || stickyHeader))
                 pos -= headerSize();
             break;
         case QQuickItemView::Center:
@@ -964,23 +969,23 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
             break;
         case QQuickItemView::End:
             pos = itemPos - viewSize + item->size();
-            if (footer && (index >= modelCount || hasStickyFooter()))
+            if (footer && (index >= modelCount || stickyFooter))
                 pos += footerSize();
             break;
         case QQuickItemView::Visible:
-            if (itemPos > pos + viewSize)
-                pos = itemPos - viewSize + item->size();
-            else if (item->endPosition() <= pos)
-                pos = itemPos;
+            if (itemPos > pos + viewSize - stickyFooterSize)
+                pos = item->endPosition() - viewSize + stickyFooterSize;
+            else if (item->endPosition() <= pos - stickyHeaderSize)
+                pos = itemPos - stickyHeaderSize;
             break;
         case QQuickItemView::Contain:
-            if (item->endPosition() >= pos + viewSize)
-                pos = itemPos - viewSize + item->size();
-            if (itemPos < pos)
-                pos = itemPos;
+            if (item->endPosition() >= pos + viewSize + stickyFooterSize)
+                pos = itemPos - viewSize + item->size() + stickyFooterSize;
+            if (itemPos - stickyHeaderSize < pos)
+                pos = itemPos - stickyHeaderSize;
             break;
         case QQuickItemView::SnapPosition:
-            pos = itemPos - highlightRangeStart;
+            pos = itemPos - highlightRangeStart - stickyHeaderSize;
             break;
         }
         pos = qMin(pos, maxExtent);
