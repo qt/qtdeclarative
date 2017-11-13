@@ -92,24 +92,26 @@ struct Lookup {
             int icIdentifier;
             int icIdentifier2;
         } protoLookupTwoClasses;
+        struct {
+            // Make sure the next two values are in sync with protoLookup
+            const Value *data;
+            int icIdentifier;
+            unsigned type;
+            Heap::Object *proto;
+        } primitiveLookup;
 
         InternalClass *classList[Size];
-        struct {
-            void *dummy0;
-            void *dummy1;
-            void *dummy2;
-            Heap::Object *proto;
-        };
     };
     union {
         int level;
         uint index2;
-        unsigned type;
     };
     uint index;
     uint nameIndex;
 
     ReturnedValue resolveGetter(ExecutionEngine *engine, const Object *object);
+    ReturnedValue resolvePrimitiveGetter(ExecutionEngine *engine, const Value &object);
+    void resolveProtoGetter(Identifier *name, const Heap::Object *proto);
 
     static ReturnedValue getterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -126,13 +128,9 @@ struct Lookup {
     static ReturnedValue getterProtoAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterProtoAccessorTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
 
-    static ReturnedValue primitiveGetter0Inline(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue primitiveGetter0MemberData(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue primitiveGetter1(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue primitiveGetterAccessor0(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue primitiveGetterAccessor1(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue primitiveGetterAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue stringLengthGetter(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue arrayLengthGetter(Lookup *l, ExecutionEngine *engine, const Value &object);
 
     static ReturnedValue globalGetterGeneric(Lookup *l, ExecutionEngine *engine);
     static ReturnedValue globalGetter0Inline(Lookup *l, ExecutionEngine *engine);
@@ -155,7 +153,6 @@ struct Lookup {
 
     ReturnedValue lookup(const Value &thisObject, Object *obj, PropertyAttributes *attrs);
     ReturnedValue lookup(const Object *obj, PropertyAttributes *attrs);
-
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<Lookup>::value);
