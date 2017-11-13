@@ -316,7 +316,8 @@ Returns true if the status is WaitingForDependencies.
 */
 bool QQmlDataBlob::isWaiting() const
 {
-    return status() == WaitingForDependencies;
+    return status() == WaitingForDependencies ||
+            status() == ResolvingDependencies;
 }
 
 /*!
@@ -608,6 +609,7 @@ The default implementation does nothing.
 */
 void QQmlDataBlob::allDependenciesDone()
 {
+    m_data.setStatus(QQmlDataBlob::ResolvingDependencies);
 }
 
 /*!
@@ -2499,6 +2501,8 @@ void QQmlTypeData::continueLoadFromIR()
 
 void QQmlTypeData::allDependenciesDone()
 {
+    QQmlTypeLoader::Blob::allDependenciesDone();
+
     if (!m_typesResolved) {
         // Check that all imports were resolved
         QList<QQmlError> errors;
@@ -2618,6 +2622,10 @@ void QQmlTypeData::resolveTypes()
 
         if (ref.type.isCompositeSingleton()) {
             ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
+            if (ref.typeData->status() == QQmlDataBlob::ResolvingDependencies) {
+                // TODO: give an error message? If so, we should record and show the path of the cycle.
+                continue;
+            }
             addDependency(ref.typeData);
             ref.prefix = csRef.prefix;
 

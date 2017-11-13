@@ -104,7 +104,7 @@ private:
 
     QRegion m_dirtyRegion;
     QRegion m_obscuredRegion;
-    bool m_isOpaque;
+    bool m_isOpaque = false;
 
     QSGSoftwareRenderableNodeUpdater *m_nodeUpdater;
 };

@@ -725,7 +725,19 @@ QQuickFlickable::~QQuickFlickable()
 
     These properties hold the surface coordinate currently at the top-left
     corner of the Flickable. For example, if you flick an image up 100 pixels,
-    \c contentY will be 100.
+    \c contentY will increase by 100.
+
+    \note If you flick back to the origin (the top-left corner), after the
+    rebound animation, \c contentX will settle to the same value as \c originX,
+    and \c contentY to \c originY. These are usually (0,0), however ListView
+    and GridView may have an arbitrary origin due to delegate size variation,
+    or item insertion/removal outside the visible region. So if you want to
+    implement something like a vertical scrollbar, one way is to use
+    \c {y: (contentY - originY) * (height / contentHeight)}
+    for the position; another way is to use the normalized values in
+    \l {QtQuick::Flickable::visibleArea}{visibleArea}.
+
+    \sa originX, originY
 */
 qreal QQuickFlickable::contentX() const
 {
@@ -2152,6 +2164,8 @@ void QQuickFlickable::setRightMargin(qreal m)
     This is usually (0,0), however ListView and GridView may have an arbitrary
     origin due to delegate size variation, or item insertion/removal outside
     the visible region.
+
+    \sa contentX, contentY
 */
 
 qreal QQuickFlickable::originY() const

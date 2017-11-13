@@ -52,8 +52,8 @@ public:
     int signalsConnected = 0;
 
 protected:
-    void connectNotify(const QMetaMethod &) { ++signalsConnected; }
-    void disconnectNotify(const QMetaMethod &) { --signalsConnected; }
+    void connectNotify(const QMetaMethod &) override { ++signalsConnected; }
+    void disconnectNotify(const QMetaMethod &) override { --signalsConnected; }
 
 signals:
     void dummyChanged();
@@ -257,7 +257,7 @@ void tst_qquickshadereffect::lookThroughShaderCode()
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0\nimport ShaderEffectTest 1.0\nTestShaderEffect {}", QUrl());
     QScopedPointer<TestShaderEffect> item(qobject_cast<TestShaderEffect*>(component.create()));
-    QCOMPARE(item->signalsConnected, 1);
+    QCOMPARE(item->signalsConnected, 0);
 
     QString expected;
     if ((presenceFlags & VertexPresent) == 0)
@@ -274,7 +274,7 @@ void tst_qquickshadereffect::lookThroughShaderCode()
     QCOMPARE(item->parseLog(), expected);
 
     // If the uniform was successfully parsed, the notify signal has been connected to an update slot.
-    QCOMPARE(item->signalsConnected, (presenceFlags & SourcePresent) ? 2 : 1);
+    QCOMPARE(item->signalsConnected, (presenceFlags & SourcePresent) ? 1 : 0);
 }
 
 void tst_qquickshadereffect::deleteSourceItem()
