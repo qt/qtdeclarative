@@ -207,6 +207,26 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
     return getter(this, engine, object);
 }
 
+ReturnedValue Lookup::resolveGlobalGetter(ExecutionEngine *engine)
+{
+    Object *o = engine->globalObject;
+    Identifier *name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    protoLookup.icIdentifier = o->internalClass()->id;
+    resolveProtoGetter(name, o->d());
+
+    if (getter == getterProto)
+        globalGetter = globalGetterProto;
+    else if (getter == getterProtoAccessor)
+        globalGetter = globalGetterProtoAccessor;
+    else {
+        globalGetter = globalGetterGeneric;
+        Scope scope(engine);
+        ScopedString n(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+        return engine->throwReferenceError(n);
+    }
+    return globalGetter(this, engine);
+}
+
 ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
     if (const Object *o = object.as<Object>())
@@ -462,137 +482,27 @@ ReturnedValue Lookup::stringLengthGetter(Lookup *l, ExecutionEngine *engine, con
 
 ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionEngine *engine)
 {
-    Object *o = engine->globalObject;
-    PropertyAttributes attrs;
-    ReturnedValue v = l->lookup(o, &attrs);
-    if (v != Primitive::emptyValue().asReturnedValue()) {
-        if (attrs.isData()) {
-            if (l->level == 0) {
-                uint nInline = o->d()->vtable()->nInlineProperties;
-                if (l->index < nInline) {
-                    l->index += o->d()->vtable()->inlinePropertyOffset;
-                    l->globalGetter = globalGetter0Inline;
-                } else {
-                    l->index -= nInline;
-                    l->globalGetter = globalGetter0MemberData;
-                }
-            } else if (l->level == 1)
-                l->globalGetter = globalGetter1;
-            else if (l->level == 2)
-                l->globalGetter = globalGetter2;
-            return v;
-        } else {
-            if (l->level == 0)
-                l->globalGetter = globalGetterAccessor0;
-            else if (l->level == 1)
-                l->globalGetter = globalGetterAccessor1;
-            else if (l->level == 2)
-                l->globalGetter = globalGetterAccessor2;
-            return v;
-        }
-    }
-    Scope scope(engine);
-    ScopedString n(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-    return engine->throwReferenceError(n);
+    return l->resolveGlobalGetter(engine);
 }
 
-ReturnedValue Lookup::globalGetter0Inline(Lookup *l, ExecutionEngine *engine)
-{
-    Object *o = engine->globalObject;
-    if (l->classList[0] == o->internalClass())
-        return o->d()->inlinePropertyDataWithOffset(l->index)->asReturnedValue();
-
-    l->globalGetter = globalGetterGeneric;
-    return globalGetterGeneric(l, engine);
-}
-
-ReturnedValue Lookup::globalGetter0MemberData(Lookup *l, ExecutionEngine *engine)
-{
-    Object *o = engine->globalObject;
-    if (l->classList[0] == o->internalClass())
-        return o->d()->memberData->values.data()[l->index].asReturnedValue();
-
-    l->globalGetter = globalGetterGeneric;
-    return globalGetterGeneric(l, engine);
-}
-
-ReturnedValue Lookup::globalGetter1(Lookup *l, ExecutionEngine *engine)
-{
-    Object *o = engine->globalObject;
-    if (l->classList[0] == o->internalClass() &&
-        l->classList[1] == o->prototype()->internalClass)
-        return o->prototype()->propertyData(l->index)->asReturnedValue();
-
-    l->globalGetter = globalGetterGeneric;
-    return globalGetterGeneric(l, engine);
-}
-
-ReturnedValue Lookup::globalGetter2(Lookup *l, ExecutionEngine *engine)
+ReturnedValue Lookup::globalGetterProto(Lookup *l, ExecutionEngine *engine)
 {
     Heap::Object *o = engine->globalObject->d();
-    if (l->classList[0] == o->internalClass) {
-        o = o->prototype();
-        if (l->classList[1] == o->internalClass) {
-            o = o->prototype();
-            if (l->classList[2] == o->internalClass) {
-                return o->prototype()->propertyData(l->index)->asReturnedValue();
-            }
-        }
-    }
+    if (l->protoLookup.icIdentifier == o->internalClass->id)
+        return l->protoLookup.data->asReturnedValue();
     l->globalGetter = globalGetterGeneric;
     return globalGetterGeneric(l, engine);
 }
 
-ReturnedValue Lookup::globalGetterAccessor0(Lookup *l, ExecutionEngine *engine)
-{
-    Object *o = engine->globalObject;
-    if (l->classList[0] == o->internalClass()) {
-        Scope scope(o->engine());
-        ScopedFunctionObject getter(scope, o->propertyData(l->index + Object::GetterOffset));
-        if (!getter)
-            return Encode::undefined();
-
-        JSCallData jsCallData(scope);
-        return getter->call(jsCallData);
-    }
-    l->globalGetter = globalGetterGeneric;
-    return globalGetterGeneric(l, engine);
-}
-
-ReturnedValue Lookup::globalGetterAccessor1(Lookup *l, ExecutionEngine *engine)
-{
-    Object *o = engine->globalObject;
-    if (l->classList[0] == o->internalClass() &&
-        l->classList[1] == o->prototype()->internalClass) {
-        Scope scope(o->engine());
-        ScopedFunctionObject getter(scope, o->prototype()->propertyData(l->index + Object::GetterOffset));
-        if (!getter)
-            return Encode::undefined();
-
-        JSCallData jsCallData(scope);
-        return getter->call(jsCallData);
-    }
-    l->globalGetter = globalGetterGeneric;
-    return globalGetterGeneric(l, engine);
-}
-
-ReturnedValue Lookup::globalGetterAccessor2(Lookup *l, ExecutionEngine *engine)
+ReturnedValue Lookup::globalGetterProtoAccessor(Lookup *l, ExecutionEngine *engine)
 {
     Heap::Object *o = engine->globalObject->d();
-    if (l->classList[0] == o->internalClass) {
-        o = o->prototype();
-        if (l->classList[1] == o->internalClass) {
-            o = o->prototype();
-            if (l->classList[2] == o->internalClass) {
-                Scope scope(o->internalClass->engine);
-                ScopedFunctionObject getter(scope, o->propertyData(l->index + Object::GetterOffset));
-                if (!getter)
-                    return Encode::undefined();
+    if (l->protoLookup.icIdentifier == o->internalClass->id) {
+        const Value *getter = l->protoLookup.data;
+        if (!getter->isFunctionObject()) // ### catch at resolve time
+            return Encode::undefined();
 
-                JSCallData jsCallData(scope);
-                return getter->call(jsCallData);
-            }
-        }
+        return static_cast<const FunctionObject *>(getter)->call(engine->globalObject, nullptr, 0);
     }
     l->globalGetter = globalGetterGeneric;
     return globalGetterGeneric(l, engine);

@@ -111,6 +111,7 @@ struct Lookup {
 
     ReturnedValue resolveGetter(ExecutionEngine *engine, const Object *object);
     ReturnedValue resolvePrimitiveGetter(ExecutionEngine *engine, const Value &object);
+    ReturnedValue resolveGlobalGetter(ExecutionEngine *engine);
     void resolveProtoGetter(Identifier *name, const Heap::Object *proto);
 
     static ReturnedValue getterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -133,13 +134,8 @@ struct Lookup {
     static ReturnedValue stringLengthGetter(Lookup *l, ExecutionEngine *engine, const Value &object);
 
     static ReturnedValue globalGetterGeneric(Lookup *l, ExecutionEngine *engine);
-    static ReturnedValue globalGetter0Inline(Lookup *l, ExecutionEngine *engine);
-    static ReturnedValue globalGetter0MemberData(Lookup *l, ExecutionEngine *engine);
-    static ReturnedValue globalGetter1(Lookup *l, ExecutionEngine *engine);
-    static ReturnedValue globalGetter2(Lookup *l, ExecutionEngine *engine);
-    static ReturnedValue globalGetterAccessor0(Lookup *l, ExecutionEngine *engine);
-    static ReturnedValue globalGetterAccessor1(Lookup *l, ExecutionEngine *engine);
-    static ReturnedValue globalGetterAccessor2(Lookup *l, ExecutionEngine *engine);
+    static ReturnedValue globalGetterProto(Lookup *l, ExecutionEngine *engine);
+    static ReturnedValue globalGetterProtoAccessor(Lookup *l, ExecutionEngine *engine);
 
     static bool setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
