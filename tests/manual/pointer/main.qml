@@ -68,5 +68,7 @@ Window {
         TouchpointFeedbackSprite { }
         TouchpointFeedbackSprite { }
         TouchpointFeedbackSprite { }
+
+        MouseFeedbackSprite { }
     }
 }
