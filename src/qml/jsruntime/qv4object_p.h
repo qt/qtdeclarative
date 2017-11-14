@@ -172,7 +172,6 @@ struct ObjectVTable
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, String *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
-    bool (*setLookup)(Managed *m, Lookup *l, const Value &v);
     uint (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     ReturnedValue (*instanceOf)(const Object *typeObject, const Value &var);
@@ -192,7 +191,6 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     queryIndexed,                               \
     deleteProperty,                             \
     deleteIndexedProperty,                      \
-    setLookup,                                  \
     getLength,                                  \
     advanceIterator,                            \
     instanceOf                                  \
@@ -414,8 +412,6 @@ public:
     { return vtable()->deleteProperty(this, name); }
     bool deleteIndexedProperty(uint index)
     { return vtable()->deleteIndexedProperty(this, index); }
-    bool setLookup(Lookup *l, const Value &v)
-    { return vtable()->setLookup(this, l, v); }
     void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
     uint getLength() const { return vtable()->getLength(this); }
@@ -433,7 +429,6 @@ protected:
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, String *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
-    static bool setLookup(Managed *m, Lookup *l, const Value &v);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static uint getLength(const Managed *m);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);

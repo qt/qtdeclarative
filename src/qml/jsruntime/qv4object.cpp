@@ -528,60 +528,6 @@ bool Object::deleteIndexedProperty(Managed *m, uint index)
     return static_cast<Object *>(m)->internalDeleteIndexedProperty(index);
 }
 
-bool Object::setLookup(Managed *m, Lookup *l, const Value &value)
-{
-    Scope scope(static_cast<Object *>(m)->engine());
-    ScopedObject o(scope, static_cast<Object *>(m));
-    ScopedString name(scope, scope.engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-
-    InternalClass *c = o->internalClass();
-    uint idx = c->find(name);
-    if (!o->isArrayObject() || idx != Heap::ArrayObject::LengthPropertyIndex) {
-        if (idx != UINT_MAX && o->internalClass()->propertyData[idx].isData() && o->internalClass()->propertyData[idx].isWritable()) {
-            l->classList[0] = o->internalClass();
-            l->index = idx;
-            l->setter = idx < o->d()->vtable()->nInlineProperties ? Lookup::setter0Inline : Lookup::setter0;
-            o->setProperty(idx, value);
-            return true;
-        }
-
-        if (idx != UINT_MAX)
-            return o->putValue(idx, value);
-    }
-
-    if (!o->put(name, value)) {
-        l->setter = Lookup::setterFallback;
-        return false;
-    }
-
-    if (o->internalClass() == c)
-        return true;
-    idx = o->internalClass()->find(name);
-    if (idx == UINT_MAX) // ### can this even happen?
-        return false;
-    l->classList[0] = c;
-    l->classList[3] = o->internalClass();
-    l->index = idx;
-    if (!o->prototype()) {
-        l->setter = Lookup::setterInsert0;
-        return true;
-    }
-    o = o->prototype();
-    l->classList[1] = o->internalClass();
-    if (!o->prototype()) {
-        l->setter = Lookup::setterInsert1;
-        return true;
-    }
-    o = o->prototype();
-    l->classList[2] = o->internalClass();
-    if (!o->prototype()) {
-        l->setter = Lookup::setterInsert2;
-        return true;
-    }
-    l->setter = Lookup::setterGeneric;
-    return true;
-}
-
 void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
     Object *o = static_cast<Object *>(m);

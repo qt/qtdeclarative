@@ -99,6 +99,11 @@ struct Lookup {
             unsigned type;
             Heap::Object *proto;
         } primitiveLookup;
+        struct {
+            InternalClass *newClass;
+            int icIdentifier;
+            int offset;
+        } insertionLookup;
 
         InternalClass *classList[Size];
     };
@@ -137,15 +142,15 @@ struct Lookup {
     static ReturnedValue globalGetterProto(Lookup *l, ExecutionEngine *engine);
     static ReturnedValue globalGetterProtoAccessor(Lookup *l, ExecutionEngine *engine);
 
+    bool resolveSetter(ExecutionEngine *engine, Object *object, const Value &value);
     static bool setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setter0Inline(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setterInsert(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool arrayLengthSetter(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
 
     ReturnedValue lookup(const Value &thisObject, Object *obj, PropertyAttributes *attrs);
     ReturnedValue lookup(const Object *obj, PropertyAttributes *attrs);

@@ -508,32 +508,81 @@ ReturnedValue Lookup::globalGetterProtoAccessor(Lookup *l, ExecutionEngine *engi
     return globalGetterGeneric(l, engine);
 }
 
-bool Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::resolveSetter(ExecutionEngine *engine, Object *object, const Value &value)
 {
     Scope scope(engine);
-    ScopedObject o(scope, object);
-    if (!o) {
-        o = RuntimeHelpers::convertToObject(scope.engine, object);
-        if (!o) // type error
-            return false;
-        ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
-        return o->put(name, value);
+    ScopedString name(scope, scope.engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+
+    InternalClass *c = object->internalClass();
+    uint idx = c->find(name);
+    if (idx != UINT_MAX) {
+        if (object->isArrayObject() && idx == Heap::ArrayObject::LengthPropertyIndex) {
+            setter = arrayLengthSetter;
+            return setter(this, engine, *object, value);
+        } else if (object->internalClass()->propertyData[idx].isData() && object->internalClass()->propertyData[idx].isWritable()) {
+            objectLookup.ic = object->internalClass();
+            objectLookup.offset = idx;
+            setter = idx < object->d()->vtable()->nInlineProperties ? Lookup::setter0Inline : Lookup::setter0;
+            return setter(this, engine, *object, value);
+        } else {
+            // ### handle setter
+            setter = setterFallback;
+        }
+        return setter(this, engine, *object, value);
     }
-    return o->setLookup(l, value);
+
+    insertionLookup.icIdentifier = c->id;
+    if (!object->put(name, value)) {
+        setter = Lookup::setterFallback;
+        return false;
+    }
+
+    if (object->internalClass() == c) {
+        // ### setter in the prototype, should handle this
+        setter = setterFallback;
+        return true;
+    }
+    idx = object->internalClass()->find(name);
+    if (idx == UINT_MAX) { // ### can this even happen?
+        setter = setterFallback;
+        return false;
+    }
+    insertionLookup.newClass = object->internalClass();
+    insertionLookup.offset = idx;
+    setter = setterInsert;
+    return true;
+}
+
+bool Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+{
+    if (object.isObject())
+        return l->resolveSetter(engine, static_cast<Object *>(&object), value);
+
+    Scope scope(engine);
+    ScopedObject o(scope, RuntimeHelpers::convertToObject(scope.engine, object));
+    if (!o) // type error
+        return false;
+    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
+    return o->put(name, value);
 }
 
 bool Lookup::setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Lookup l1 = *l;
+    Lookup first = *l;
+    Lookup second = *l;
 
-    if (Object *o = object.as<Object>()) {
-        if (!o->setLookup(l, value))
+    if (object.isObject()) {
+        if (!l->resolveSetter(engine, static_cast<Object *>(&object), value)) {
+            l->setter = setterFallback;
             return false;
+        }
 
         if (l->setter == Lookup::setter0 || l->setter == Lookup::setter0Inline) {
+            l->objectLookupTwoClasses.ic = first.objectLookup.ic;
+            l->objectLookupTwoClasses.ic2 = second.objectLookup.ic;
+            l->objectLookupTwoClasses.offset = first.objectLookup.offset;
+            l->objectLookupTwoClasses.offset2 = second.objectLookup.offset;
             l->setter = setter0setter0;
-            l->classList[1] = l1.classList[0];
-            l->index2 = l1.index;
             return true;
         }
     }
@@ -555,9 +604,9 @@ bool Lookup::setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, c
 
 bool Lookup::setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = static_cast<Object *>(object.managed());
-    if (o && o->internalClass() == l->classList[0]) {
-        o->setProperty(engine, l->index, value);
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o && o->internalClass == l->objectLookup.ic) {
+        o->setProperty(engine, l->objectLookup.offset, value);
         return true;
     }
 
@@ -566,22 +615,39 @@ bool Lookup::setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Va
 
 bool Lookup::setter0Inline(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = static_cast<Object *>(object.managed());
-    if (o && o->internalClass() == l->classList[0]) {
-        o->d()->setInlineProperty(engine, l->index, value);
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o && o->internalClass == l->objectLookup.ic) {
+        o->setInlineProperty(engine, l->objectLookup.offset, value);
         return true;
     }
 
     return setterTwoClasses(l, engine, object, value);
 }
 
-bool Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+{
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (o) {
+        if (o->internalClass == l->objectLookupTwoClasses.ic) {
+            o->setProperty(engine, l->objectLookupTwoClasses.offset, value);
+            return true;
+        }
+        if (o->internalClass == l->objectLookupTwoClasses.ic2) {
+            o->setProperty(engine, l->objectLookupTwoClasses.offset2, value);
+            return true;
+        }
+    }
+
+    l->setter = setterFallback;
+    return setterFallback(l, engine, object, value);
+}
+
+bool Lookup::setterInsert(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Object *o = static_cast<Object *>(object.managed());
-    if (o && o->internalClass() == l->classList[0]) {
-        Q_ASSERT(!o->prototype());
-        o->setInternalClass(l->classList[3]);
-        o->setProperty(l->index, value);
+    if (o && o->internalClass()->id == l->insertionLookup.icIdentifier) {
+        o->setInternalClass(l->insertionLookup.newClass);
+        o->d()->setProperty(engine, l->insertionLookup.offset, value);
         return true;
     }
 
@@ -589,62 +655,19 @@ bool Lookup::setterInsert0(Lookup *l, ExecutionEngine *engine, Value &object, co
     return setterFallback(l, engine, object, value);
 }
 
-bool Lookup::setterInsert1(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+bool Lookup::arrayLengthSetter(Lookup *, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Object *o = static_cast<Object *>(object.managed());
-    if (o && o->internalClass() == l->classList[0]) {
-        Heap::Object *p = o->prototype();
-        Q_ASSERT(p);
-        if (p->internalClass == l->classList[1]) {
-            Q_ASSERT(!p->prototype());
-            o->setInternalClass(l->classList[3]);
-            o->setProperty(l->index, value);
-            return true;
-        }
+    Q_ASSERT(object.isObject() && static_cast<Object &>(object).isArrayObject());
+    bool ok;
+    uint len = value.asArrayLength(&ok);
+    if (!ok) {
+        engine->throwRangeError(value);
+        return false;
     }
-
-    l->setter = setterFallback;
-    return setterFallback(l, engine, object, value);
-}
-
-bool Lookup::setterInsert2(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
-{
-    Object *o = static_cast<Object *>(object.managed());
-    if (o && o->internalClass() == l->classList[0]) {
-        Heap::Object *p = o->prototype();
-        Q_ASSERT(p);
-        if (p->internalClass == l->classList[1]) {
-            p = p->prototype();
-            Q_ASSERT(p);
-            if (p->internalClass == l->classList[2]) {
-                Q_ASSERT(!p->prototype());
-                o->setInternalClass(l->classList[3]);
-                o->setProperty(l->index, value);
-                return true;
-            }
-        }
-    }
-
-    l->setter = setterFallback;
-    return setterFallback(l, engine, object, value);
-}
-
-bool Lookup::setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
-{
-    Object *o = static_cast<Object *>(object.managed());
-    if (o) {
-        if (o->internalClass() == l->classList[0]) {
-            o->setProperty(l->index, value);
-            return true;
-        }
-        if (o->internalClass() == l->classList[1]) {
-            o->setProperty(l->index2, value);
-            return true;
-        }
-    }
-
-    l->setter = setterFallback;
-    return setterFallback(l, engine, object, value);
+    ok = static_cast<Object &>(object).setArrayLength(len);
+    if (!ok)
+        return false;
+    return true;
 }
 
 QT_END_NAMESPACE
