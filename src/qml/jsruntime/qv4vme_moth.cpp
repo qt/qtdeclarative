@@ -60,6 +60,8 @@
 
 #include "qv4alloca_p.h"
 
+#include <private/qv4jit_p.h>
+
 #undef COUNT_INSTRUCTIONS
 
 extern "C" {
@@ -477,7 +479,7 @@ static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
     }
 }
 
-#define STORE_IP() frame.instructionPointer = code;
+#define STORE_IP() frame.instructionPointer = int(code - codeStart);
 #define STORE_ACC() accumulator = acc;
 #define ACC Primitive::fromReturnedValue(acc)
 #define VALUE_TO_INT(i, val) \
@@ -542,22 +544,37 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
 
         frame.parent = engine->currentStackFrame;
         frame.v4Function = function;
-        frame.instructionPointer = function->codeData;
+        frame.instructionPointer = 0;
         frame.jsFrame = callData;
         engine->currentStackFrame = &frame;
     }
     CHECK_STACK_LIMITS(engine);
 
-    Profiling::FunctionCallProfiler profiler(engine, function);
-    if (QV4::Debugging::Debugger *debugger = engine->debugger())
-        debugger->enteringFunction();
+    Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
+    QV4::Debugging::Debugger *debugger = engine->debugger();
 
     const uchar *exceptionHandler = 0;
 
     QV4::Value &accumulator = frame.jsFrame->accumulator;
     QV4::ReturnedValue acc = Encode::undefined();
 
+#ifdef V4_ENABLE_JIT
+    static const bool forceInterpreter = qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER");
+    if (function->jittedCode == nullptr) {
+        if (ExecutionEngine::canJIT() && debugger == nullptr && !forceInterpreter)
+            QV4::JIT::BaselineJIT(function).generate();
+    }
+#endif // V4_ENABLE_JIT
+
+    if (debugger)
+        debugger->enteringFunction();
+
+    if (function->jittedCode != nullptr && debugger == nullptr) {
+        acc = function->jittedCode(&frame, engine);
+    } else {
+    // interpreter
     const uchar *code = function->codeData;
+    const uchar *codeStart = code;
 
     MOTH_JUMP_TABLE;
 
@@ -660,7 +677,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         STORE_ACC();
         Runtime::method_storeNameStrict(engine, name, accumulator);
         CHECK_EXCEPTION;
-    MOTH_END_INSTR(StoreNameSloppy)
+    MOTH_END_INSTR(StoreNameStrict)
 
     MOTH_BEGIN_INSTR(StoreNameSloppy)
         STORE_IP();
@@ -835,7 +852,8 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
     MOTH_END_INSTR(ThrowException)
 
     MOTH_BEGIN_INSTR(GetException)
-        acc = engine->hasException ? engine->exceptionValue->asReturnedValue() : Primitive::emptyValue().asReturnedValue();
+        acc = engine->hasException ? engine->exceptionValue->asReturnedValue()
+                                   : Primitive::emptyValue().asReturnedValue();
         engine->hasException = false;
     MOTH_END_INSTR(HasException)
 
@@ -1351,6 +1369,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
             goto functionExit;
         }
         code = exceptionHandler;
+    }
     }
 
 functionExit:

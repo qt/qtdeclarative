@@ -46,6 +46,7 @@
 #include "qv4lookup_p.h"
 #include <private/qv4mm_p.h>
 #include <private/qv4identifiertable_p.h>
+#include <assembler/MacroAssemblerCodeRef.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,6 +57,8 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
         , compilationUnit(unit)
         , code(codePtr)
         , codeData(function->code())
+        , jittedCode(nullptr)
+        , codeRef(nullptr)
         , hasQmlDependencies(function->hasQmlDependencies())
 {
     Q_UNUSED(engine);
@@ -76,6 +79,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
 
 Function::~Function()
 {
+    delete codeRef;
 }
 
 void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters)

@@ -136,7 +136,9 @@ int main(int argc, char *argv[])
                         std::cout << "Error saving JS cache file: " << qPrintable(saveError) << std::endl;
                     }
                 }
+//                QElapsedTimer t; t.start();
                 result = script->run();
+//                std::cout << t.elapsed() << " ms. elapsed" << std::endl;
             }
             if (scope.engine->hasException) {
                 QV4::StackTrace trace;

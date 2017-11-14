@@ -56,6 +56,10 @@
 #include <private/qv4context_p.h>
 #include <private/qv4vme_moth_p.h>
 
+namespace JSC {
+class MacroAssemblerCodeRef;
+}
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -71,6 +75,10 @@ struct Q_QML_EXPORT Function {
     typedef ReturnedValue (*Code)(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc);
     Code code;
     const uchar *codeData;
+
+    typedef ReturnedValue (*JittedCode)(CppStackFrame *, ExecutionEngine *);
+    JittedCode jittedCode;
+    JSC::MacroAssemblerCodeRef *codeRef;
 
     // first nArguments names in internalClass are the actual arguments
     InternalClass *internalClass;

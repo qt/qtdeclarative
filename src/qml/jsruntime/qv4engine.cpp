@@ -793,7 +793,7 @@ int CppStackFrame::lineNumber() const
     };
 
     const QV4::CompiledData::Function *cf = v4Function->compiledFunction;
-    uint offset = static_cast<uint>(instructionPointer - v4Function->codeData);
+    uint offset = instructionPointer;
     const CompiledData::CodeOffsetToLine *lineNumbers = cf->lineNumberTable();
     uint nLineNumbers = cf->nLineNumbers;
     const CompiledData::CodeOffsetToLine *line = std::lower_bound(lineNumbers, lineNumbers + nLineNumbers, offset, findLine) - 1;
@@ -1543,6 +1543,15 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     }
     Q_UNREACHABLE();
     return 0;
+}
+
+bool ExecutionEngine::canJIT()
+{
+#ifdef V4_ENABLE_JIT
+    return true;
+#else
+    return false;
+#endif
 }
 
 // Converts a JS value to a meta-type.

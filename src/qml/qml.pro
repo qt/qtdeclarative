@@ -58,6 +58,7 @@ include(parser/parser.pri)
 include(compiler/compiler.pri)
 include(jsapi/jsapi.pri)
 include(jsruntime/jsruntime.pri)
+include(jit/jit.pri)
 include(qml/qml.pri)
 include(debugger/debugger.pri)
 qtConfig(animation) {

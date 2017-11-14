@@ -94,7 +94,7 @@ struct Q_QML_EXPORT CppStackFrame {
     CallData *jsFrame;
     const Value *originalArguments;
     int originalArgumentsCount;
-    const uchar *instructionPointer;
+    int instructionPointer;
 
     QString source() const;
     QString function() const;
@@ -476,6 +476,8 @@ public:
     QV4::ReturnedValue metaTypeToJS(int type, const void *data);
 
     bool checkStackLimits();
+
+    static bool canJIT();
 
 private:
 #ifndef QT_NO_QML_DEBUGGER
