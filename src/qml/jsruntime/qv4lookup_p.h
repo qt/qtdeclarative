@@ -104,14 +104,7 @@ struct Lookup {
             int icIdentifier;
             int offset;
         } insertionLookup;
-
-        InternalClass *classList[Size];
     };
-    union {
-        int level;
-        uint index2;
-    };
-    uint index;
     uint nameIndex;
 
     ReturnedValue resolveGetter(ExecutionEngine *engine, const Object *object);
@@ -151,9 +144,6 @@ struct Lookup {
     static bool setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setterInsert(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool arrayLengthSetter(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-
-    ReturnedValue lookup(const Value &thisObject, Object *obj, PropertyAttributes *attrs);
-    ReturnedValue lookup(const Object *obj, PropertyAttributes *attrs);
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<Lookup>::value);

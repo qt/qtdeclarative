@@ -150,11 +150,6 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
                 l->setter = QV4::Lookup::setterGeneric;
             else if (type == CompiledData::Lookup::Type_GlobalGetter)
                 l->globalGetter = QV4::Lookup::globalGetterGeneric;
-
-            for (int j = 0; j < QV4::Lookup::Size; ++j)
-                l->classList[j] = 0;
-            l->level = -1;
-            l->index = UINT_MAX;
             l->nameIndex = compiledLookups[i].nameIndex;
         }
     }
