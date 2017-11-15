@@ -56,9 +56,6 @@
 # include "qquickplatformsystemtrayicon_p.h"
 #endif
 
-Q_DECLARE_METATYPE(QStandardPaths::StandardLocation)
-Q_DECLARE_METATYPE(QStandardPaths::LocateOptions)
-
 static inline void initResources()
 {
 #ifdef QT_STATIC
@@ -102,6 +99,7 @@ void QtLabsPlatformPlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickPlatformMenuItem>(uri, 1, 0, "MenuItem");
     qmlRegisterType<QQuickPlatformMenuItemGroup>(uri, 1, 0, "MenuItemGroup");
     qmlRegisterType<QQuickPlatformMenuSeparator>(uri, 1, 0, "MenuSeparator");
+    qRegisterMetaType<QPlatformMenu::MenuType>();
 
     qmlRegisterUncreatableType<QPlatformDialogHelper>(uri, 1, 0, "StandardButton", QQuickPlatformDialog::tr("Cannot create an instance of StandardButton"));
     qmlRegisterSingletonType<QQuickPlatformStandardPaths>(uri, 1, 0, "StandardPaths", QQuickPlatformStandardPaths::create);
@@ -110,6 +108,8 @@ void QtLabsPlatformPlugin::registerTypes(const char *uri)
 
 #if QT_CONFIG(systemtrayicon)
     qmlRegisterType<QQuickPlatformSystemTrayIcon>(uri, 1, 0, "SystemTrayIcon");
+    qRegisterMetaType<QPlatformSystemTrayIcon::ActivationReason>();
+    qRegisterMetaType<QPlatformSystemTrayIcon::MessageIcon>();
 #endif
 }
 

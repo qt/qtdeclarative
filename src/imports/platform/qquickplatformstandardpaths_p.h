@@ -86,5 +86,7 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickPlatformStandardPaths)
+Q_DECLARE_METATYPE(QStandardPaths::StandardLocation)
+Q_DECLARE_METATYPE(QStandardPaths::LocateOptions)
 
 #endif // QQUICKPLATFORMSTANDARDPATHS_P_H
