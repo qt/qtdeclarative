@@ -292,7 +292,6 @@ public:
     inline bool isNullOrUndefined() const { return isNull() || isUndefined(); }
     inline bool isNumber() const { return quickType() >= QT_Int; }
 
-#if /*QT_POINTER_SIZE ==*/ 8 // TODO: check if we need specialized versions for 32bit
     inline bool isUndefined() const { return _val == 0; }
     inline bool isDouble() const { return (_val >> IsDouble_Shift); }
     inline bool isManaged() const { return _val && ((_val >> IsManagedOrUndefined_Shift) == 0); }
@@ -313,46 +312,18 @@ public:
         return a.isDouble() && b.isDouble();
     }
     inline bool isNaN() const { return (tag() & 0x7ffc0000  ) == 0x00040000; }
-#else
-    inline bool isUndefined() const { return tag() == Managed_Type_Internal && value() == 0; }
-    inline bool isDouble() const { return (tag() & NotDouble_Mask) != NotDouble_Mask; }
-    inline bool isManaged() const { return tag() == Managed_Type_Internal && !isUndefined(); }
-    inline bool isManagedOrUndefined() const { return tag() == Managed_Type_Internal; }
-    inline bool integerCompatible() const {
-        Q_ASSERT(!isEmpty());
-        return (tag() >> (IsIntegerConvertible_Shift - 32)) == 1;
-    }
-    inline bool isIntOrBool() const {
-        return (tag() >> (IsIntegerOrBool_Shift - 32)) == 3;
-    }
 
-    static inline bool integerCompatible(Value a, Value b) {
-        return a.integerCompatible() && b.integerCompatible();
-    }
-    static inline bool bothDouble(Value a, Value b) {
-        return ((a.tag() | b.tag()) & NotDouble_Mask) != NotDouble_Mask;
-    }
-    inline bool isNaN() const { return (tag() & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
-#endif
     QML_NEARLY_ALWAYS_INLINE double doubleValue() const {
         Q_ASSERT(isDouble());
         double d;
         Value v = *this;
-#if QT_POINTER_SIZE == 8
         v._val ^= NaNEncodeMask;
-#else
-       v.setTag(v.tag() ^ (NaNEncodeMask >> 32));
-#endif
         memcpy(&d, &v._val, 8);
         return d;
     }
     QML_NEARLY_ALWAYS_INLINE void setDouble(double d) {
         memcpy(&_val, &d, 8);
-#if QT_POINTER_SIZE == 8
         _val ^= NaNEncodeMask;
-#else
-       setTag(tag() ^ (NaNEncodeMask >> 32));
-#endif
         Q_ASSERT(isDouble());
     }
     inline bool isString() const;
