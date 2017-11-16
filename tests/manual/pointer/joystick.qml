@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -26,38 +26,51 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.8
+import QtQuick 2.10
 import Qt.labs.handlers 1.0
 
-Rectangle {
-    width: 480
-    height: 480
-    color: "black"
-
+Item {
+    width: image.implicitWidth; height: image.implicitHeight
     Image {
-        id: knob
-        source: "resources/redball.png"
-        anchors {
-            horizontalCenter: parent.horizontalCenter
-            verticalCenter: parent.verticalCenter
-        }
-        DragHandler {
-            id: dragHandler
-        }
-        states: [
-            State {
-                when: dragHandler.active
-                AnchorChanges {
-                    target: knob
-                    anchors.horizontalCenter: undefined
-                    anchors.verticalCenter: undefined
+        id: image
+        anchors.centerIn: parent
+        source: "resources/joystick-outer-case-pov.jpg"
+        property real margin: 50
+
+        Image {
+            id: knob
+            source: "resources/redball.png"
+            DragHandler {
+                id: dragHandler
+                xAxis {
+                    minimum: image.margin
+                    maximum: image.width - image.margin - knob.width
+                }
+                yAxis {
+                    minimum: image.margin
+                    maximum: image.height - image.margin - knob.height
                 }
             }
-        ]
-        transitions: [
-            Transition {
-                AnchorAnimation { easing.type: Easing.OutElastic }
+
+            anchors {
+                horizontalCenter: parent.horizontalCenter
+                verticalCenter: parent.verticalCenter
             }
-        ]
+            states: [
+                State {
+                    when: dragHandler.active
+                    AnchorChanges {
+                        target: knob
+                        anchors.horizontalCenter: undefined
+                        anchors.verticalCenter: undefined
+                    }
+                }
+            ]
+            transitions: [
+                Transition {
+                    AnchorAnimation { easing.type: Easing.OutElastic }
+                }
+            ]
+        }
     }
 }
