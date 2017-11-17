@@ -431,6 +431,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickAnimatedImage, 11>(uri, 2, 11,"AnimatedImage");
 #endif
     qmlRegisterType<QQuickItem, 11>(uri, 2, 11,"Item");
+    qmlRegisterType<QQuickFlickable, 12>(uri, 2, 12, "Flickable");
 
     // classes related to Input Handlers which are newly exposed since 5.12
     qmlRegisterUncreatableType<QQuickPointerEvent>(uri, 2, 12, "PointerEvent",

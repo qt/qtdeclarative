@@ -1919,6 +1919,10 @@ void tst_qquickflickable::stopAtBounds()
     else
         QCOMPARE(transpose ? flickable->isAtYBeginning() : flickable->isAtXBeginning(), true);
 
+    QSignalSpy atXBeginningChangedSpy(flickable, &QQuickFlickable::atXBeginningChanged);
+    QSignalSpy atYBeginningChangedSpy(flickable, &QQuickFlickable::atYBeginningChanged);
+    QSignalSpy atXEndChangedSpy(flickable, &QQuickFlickable::atXEndChanged);
+    QSignalSpy atYEndChangedSpy(flickable, &QQuickFlickable::atYEndChanged);
     // drag back towards boundary
     for (int i = 0; i < 24; ++i) {
         axis += invert ? threshold / 3 : -threshold / 3;
@@ -1929,6 +1933,11 @@ void tst_qquickflickable::stopAtBounds()
         QCOMPARE(transpose ? flickable->isAtYEnd() : flickable->isAtXEnd(), false);
     else
         QCOMPARE(transpose ? flickable->isAtYBeginning() : flickable->isAtXBeginning(), false);
+
+    QCOMPARE(atXBeginningChangedSpy.count(), (!transpose && !invert) ? 1 : 0);
+    QCOMPARE(atYBeginningChangedSpy.count(), ( transpose && !invert) ? 1 : 0);
+    QCOMPARE(atXEndChangedSpy.count(),       (!transpose &&  invert) ? 1 : 0);
+    QCOMPARE(atYEndChangedSpy.count(),       ( transpose &&  invert) ? 1 : 0);
 
     // Drag away from the aligned boundary again.
     // None of the mouse movements will position the view at the boundary exactly,

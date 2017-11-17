@@ -509,7 +509,8 @@ static bool fuzzyLessThanOrEqualTo(qreal a, qreal b)
 void QQuickFlickablePrivate::updateBeginningEnd()
 {
     Q_Q(QQuickFlickable);
-    bool atBoundaryChange = false;
+    bool atXBeginningChange = false, atXEndChange = false;
+    bool atYBeginningChange = false, atYEndChange = false;
 
     // Vertical
     const qreal maxyextent = -q->maxYExtent();
@@ -520,11 +521,11 @@ void QQuickFlickablePrivate::updateBeginningEnd()
 
     if (atBeginning != vData.atBeginning) {
         vData.atBeginning = atBeginning;
-        atBoundaryChange = true;
+        atYBeginningChange = true;
     }
     if (atEnd != vData.atEnd) {
         vData.atEnd = atEnd;
-        atBoundaryChange = true;
+        atYEndChange = true;
     }
 
     // Horizontal
@@ -536,11 +537,11 @@ void QQuickFlickablePrivate::updateBeginningEnd()
 
     if (atBeginning != hData.atBeginning) {
         hData.atBeginning = atBeginning;
-        atBoundaryChange = true;
+        atXBeginningChange = true;
     }
     if (atEnd != hData.atEnd) {
         hData.atEnd = atEnd;
-        atBoundaryChange = true;
+        atXEndChange = true;
     }
 
     if (vData.extentsChanged) {
@@ -561,8 +562,16 @@ void QQuickFlickablePrivate::updateBeginningEnd()
         }
     }
 
-    if (atBoundaryChange)
+    if (atXEndChange || atYEndChange || atXBeginningChange || atYBeginningChange)
         emit q->isAtBoundaryChanged();
+    if (atXEndChange)
+        emit q->atXEndChanged();
+    if (atXBeginningChange)
+        emit q->atXBeginningChanged();
+    if (atYEndChange)
+        emit q->atYEndChanged();
+    if (atYBeginningChange)
+        emit q->atYBeginningChanged();
 
     if (visibleArea)
         visibleArea->updateVisible();

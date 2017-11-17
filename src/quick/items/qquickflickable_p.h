@@ -98,10 +98,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
     Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged)
     Q_PROPERTY(int pressDelay READ pressDelay WRITE setPressDelay NOTIFY pressDelayChanged)
 
-    Q_PROPERTY(bool atXEnd READ isAtXEnd NOTIFY isAtBoundaryChanged)
-    Q_PROPERTY(bool atYEnd READ isAtYEnd NOTIFY isAtBoundaryChanged)
-    Q_PROPERTY(bool atXBeginning READ isAtXBeginning NOTIFY isAtBoundaryChanged)
-    Q_PROPERTY(bool atYBeginning READ isAtYBeginning NOTIFY isAtBoundaryChanged)
+    Q_PROPERTY(bool atXEnd READ isAtXEnd NOTIFY atXEndChanged)
+    Q_PROPERTY(bool atYEnd READ isAtYEnd NOTIFY atYEndChanged)
+    Q_PROPERTY(bool atXBeginning READ isAtXBeginning NOTIFY atXBeginningChanged)
+    Q_PROPERTY(bool atYBeginning READ isAtYBeginning NOTIFY atYBeginningChanged)
 
     Q_PROPERTY(QQuickFlickableVisibleArea *visibleArea READ visibleArea CONSTANT)
 
@@ -266,6 +266,11 @@ Q_SIGNALS:
     Q_REVISION(12) void synchronousDragChanged();
     Q_REVISION(9) void horizontalOvershootChanged();
     Q_REVISION(9) void verticalOvershootChanged();
+
+    Q_REVISION(12) void atXEndChanged();
+    Q_REVISION(12) void atYEndChanged();
+    Q_REVISION(12) void atXBeginningChanged();
+    Q_REVISION(12) void atYBeginningChanged();
 
 protected:
     bool childMouseEventFilter(QQuickItem *, QEvent *) override;
