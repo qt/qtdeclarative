@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGABSTRACTSOFTWARERENDERER_H
-#define QSGABSTRACTSOFTWARERENDERER_H
+#ifndef QQUICKPONTHANDLER_H
+#define QQUICKPONTHANDLER_H
 
 //
 //  W A R N I N G
@@ -51,64 +51,31 @@
 // We mean it.
 //
 
-#include <private/qsgrenderer_p.h>
-
-#include <QtCore/QHash>
-#include <QtCore/QLinkedList>
+#include "qquicksinglepointhandler_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGSimpleRectNode;
-
-class QSGSoftwareRenderableNode;
-class QSGSoftwareRenderableNodeUpdater;
-
-class Q_QUICK_PRIVATE_EXPORT QSGAbstractSoftwareRenderer : public QSGRenderer
+class Q_AUTOTEST_EXPORT QQuickPointHandler : public QQuickSinglePointHandler
 {
+    Q_OBJECT
+    Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
+
 public:
-    QSGAbstractSoftwareRenderer(QSGRenderContext *context);
-    virtual ~QSGAbstractSoftwareRenderer();
+    explicit QQuickPointHandler(QObject *parent = 0);
+    ~QQuickPointHandler();
 
-    QSGSoftwareRenderableNode *renderableNode(QSGNode *node) const;
-    void addNodeMapping(QSGNode *node, QSGSoftwareRenderableNode *renderableNode);
-    void appendRenderableNode(QSGSoftwareRenderableNode *node);
+    QVector2D translation() const;
 
-    void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
-
-    void markDirty();
+Q_SIGNALS:
+    void translationChanged();
 
 protected:
-    QRegion renderNodes(QPainter *painter);
-    void buildRenderList();
-    QRegion optimizeRenderList();
-
-    void setBackgroundColor(const QColor &color);
-    void setBackgroundSize(const QSize &size);
-    QColor backgroundColor();
-    QSize backgroundSize();
-    // only known after calling optimizeRenderList()
-    bool isOpaque() const { return m_isOpaque; }
-
-private:
-    void nodeAdded(QSGNode *node);
-    void nodeRemoved(QSGNode *node);
-    void nodeGeometryUpdated(QSGNode *node);
-    void nodeMaterialUpdated(QSGNode *node);
-    void nodeMatrixUpdated(QSGNode *node);
-    void nodeOpacityUpdated(QSGNode *node);
-
-    QHash<QSGNode*, QSGSoftwareRenderableNode*> m_nodes;
-    QLinkedList<QSGSoftwareRenderableNode*> m_renderableNodes;
-
-    QSGSimpleRectNode *m_background;
-
-    QRegion m_dirtyRegion;
-    QRegion m_obscuredRegion;
-    bool m_isOpaque = false;
-
-    QSGSoftwareRenderableNodeUpdater *m_nodeUpdater;
+    bool wantsEventPoint(QQuickEventPoint *pt) override;
+    void handleEventPoint(QQuickEventPoint *point) override;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGABSTRACTSOFTWARERENDERER_H
+QML_DECLARE_TYPE(QQuickPointHandler)
+
+#endif // QQUICKPONTHANDLER_H

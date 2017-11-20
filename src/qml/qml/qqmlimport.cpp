@@ -1539,7 +1539,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     if (isImplicitImport) {
         for (QList<QQmlImportInstance *>::const_iterator it = nameSpace->imports.constBegin();
              it != nameSpace->imports.constEnd(); ++it) {
-            if ((*it)->uri == importUri) {
+            if ((*it)->url == url) {
                 (*it)->implicitlyImported = true;
                 return true;
             }

@@ -192,7 +192,8 @@ void tst_QQuickFramebufferObject::testThatStuffWorks()
     item->setMsaa(msaa);
 
     view.show();
-    QTest::qWaitForWindowExposed(&view);
+    view.requestActivate();
+    QTest::qWaitForWindowActive(&view);
 
     QImage result = view.grabWindow();
 
@@ -231,7 +232,8 @@ void tst_QQuickFramebufferObject::testInvalidate()
     item->setTextureSize(QSize(200, 200));
 
     view.show();
-    QTest::qWaitForWindowExposed(&view);
+    view.requestActivate();
+    QTest::qWaitForWindowActive(&view);
 
     QCOMPARE(frameInfo.fboSize, QSize(200, 200));
 
