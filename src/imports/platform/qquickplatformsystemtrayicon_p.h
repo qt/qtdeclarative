@@ -137,5 +137,7 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickPlatformSystemTrayIcon)
+Q_DECLARE_METATYPE(QPlatformSystemTrayIcon::ActivationReason)
+Q_DECLARE_METATYPE(QPlatformSystemTrayIcon::MessageIcon)
 
 #endif // QQUICKPLATFORMSYSTEMTRAYICON_P_H

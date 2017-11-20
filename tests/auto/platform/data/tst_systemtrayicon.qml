@@ -97,4 +97,36 @@ TestCase {
         spy.clear()
         icon.destroy()
     }
+
+    function test_messageIcon() {
+        // Q_ENUMS(QPlatformSystemTrayIcon::ActivationReason)
+        compare(SystemTrayIcon.NoIcon, 0)
+        compare(SystemTrayIcon.Information, 1)
+        compare(SystemTrayIcon.Warning, 2)
+        compare(SystemTrayIcon.Critical, 3)
+    }
+
+    function test_activationReason() {
+        // Q_ENUMS(QPlatformSystemTrayIcon::ActivationReason)
+        compare(SystemTrayIcon.Unknown, 0)
+        compare(SystemTrayIcon.Context, 1)
+        compare(SystemTrayIcon.DoubleClick, 2)
+        compare(SystemTrayIcon.Trigger, 3)
+        compare(SystemTrayIcon.MiddleClick, 4)
+    }
+
+    function test_activated() {
+        var icon = systemTrayIcon.createObject(testCase)
+        verify(icon)
+
+        spy.target = icon
+        spy.signalName = "activated"
+
+        icon.activated(SystemTrayIcon.Trigger)
+        compare(spy.count, 1)
+        compare(spy.signalArguments[0][0], SystemTrayIcon.Trigger)
+
+        spy.clear()
+        icon.destroy()
+    }
 }

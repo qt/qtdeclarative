@@ -209,5 +209,6 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickPlatformMenu)
+Q_DECLARE_METATYPE(QPlatformMenu::MenuType)
 
 #endif // QQUICKPLATFORMMENU_P_H
