@@ -255,6 +255,7 @@ private slots:
     void QTBUG_50105();
     void keyNavigationEnabled();
     void QTBUG_61269_appendDuringScrollDown();
+    void QTBUG_61269_appendDuringScrollDown_data();
     void QTBUG_50097_stickyHeader_positionViewAtIndex();
     void QTBUG_63974_stickyHeader_positionViewAtIndex_Contain();
     void itemFiltered();
@@ -8468,8 +8469,19 @@ void tst_QQuickListView::keyNavigationEnabled()
     QCOMPARE(listView->currentIndex(), 1);
 }
 
-void tst_QQuickListView::QTBUG_61269_appendDuringScrollDown()
+void tst_QQuickListView::QTBUG_61269_appendDuringScrollDown_data()
 {
+    QTest::addColumn<QQuickListView::SnapMode>("snapMode");
+
+    QTest::newRow("NoSnap") << QQuickListView::NoSnap;
+    QTest::newRow("SnapToItem") << QQuickListView::SnapToItem;
+    QTest::newRow("SnapOneItem") << QQuickListView::SnapOneItem;
+}
+
+void tst_QQuickListView::QTBUG_61269_appendDuringScrollDown() // AKA QTBUG-62864
+{
+    QFETCH(QQuickListView::SnapMode, snapMode);
+
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("appendDuringScrollDown.qml"));
     window->show();
@@ -8477,6 +8489,7 @@ void tst_QQuickListView::QTBUG_61269_appendDuringScrollDown()
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickListView *listView = qobject_cast<QQuickListView *>(window->rootObject());
+    listView->setSnapMode(snapMode);
     QQuickItem *highlightItem = listView->highlightItem();
     QVERIFY(listView);
     QCOMPARE(listView->isKeyNavigationEnabled(), true);

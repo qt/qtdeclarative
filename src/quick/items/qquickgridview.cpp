@@ -895,7 +895,6 @@ void QQuickGridViewPrivate::initializeCurrentItem()
 
 void QQuickGridViewPrivate::fixupPosition()
 {
-    moveReason = Other;
     if (flow == QQuickGridView::FlowLeftToRight)
         fixupY();
     else
