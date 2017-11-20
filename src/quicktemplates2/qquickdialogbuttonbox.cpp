@@ -197,13 +197,13 @@ static QRectF alignedRect(Qt::LayoutDirection direction, Qt::Alignment alignment
     qreal w = size.width();
     qreal h = size.height();
     if ((alignment & Qt::AlignVCenter) == Qt::AlignVCenter)
-        y += rectangle.size().height() / 2 - h / 2;
+        y += (rectangle.size().height() - h) / 2;
     else if ((alignment & Qt::AlignBottom) == Qt::AlignBottom)
         y += rectangle.size().height() - h;
     if ((alignment & Qt::AlignRight) == Qt::AlignRight)
         x += rectangle.size().width() - w;
     else if ((alignment & Qt::AlignHCenter) == Qt::AlignHCenter)
-        x += rectangle.size().width() / 2 - w / 2;
+        x += (rectangle.size().width() - w) / 2;
     return QRectF(x, y, w, h);
 }
 
@@ -213,15 +213,12 @@ void QQuickDialogButtonBoxPrivate::resizeContent()
     if (!contentItem)
         return;
 
-    const int halign = alignment & Qt::AlignHorizontal_Mask;
-    const int valign = alignment & Qt::AlignVertical_Mask;
-
-    const qreal cw = !halign ? q->availableWidth() : contentItem->implicitWidth();
-    const qreal ch = !valign ? q->availableHeight() : contentItem->implicitHeight();
-
     QRectF geometry = q->boundingRect().adjusted(q->leftPadding(), q->topPadding(), -q->rightPadding(), -q->bottomPadding());
-    if (halign || valign)
+    if (alignment != 0) {
+        qreal cw = (alignment & Qt::AlignHorizontal_Mask) == 0 ? q->availableWidth() : contentItem->implicitWidth();
+        qreal ch = (alignment & Qt::AlignVertical_Mask) == 0 ? q->availableHeight() : contentItem->implicitHeight();
         geometry = alignedRect(q->isMirrored() ? Qt::RightToLeft : Qt::LeftToRight, alignment, QSizeF(cw, ch), geometry);
+    }
 
     contentItem->setPosition(geometry.topLeft());
     contentItem->setSize(geometry.size());
