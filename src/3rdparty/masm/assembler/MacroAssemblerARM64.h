@@ -718,15 +718,20 @@ public:
     
     void or64(TrustedImm64 imm, RegisterID dest)
     {
+        or64(imm, dest, dest);
+    }
+
+    void or64(TrustedImm64 imm, RegisterID src, RegisterID dest)
+    {
         LogicalImmediate logicalImm = LogicalImmediate::create64(static_cast<intptr_t>(static_cast<int64_t>(imm.m_value)));
 
         if (logicalImm.isValid()) {
-            m_assembler.orr<64>(dest, dest, logicalImm);
+            m_assembler.orr<64>(dest, src, logicalImm);
             return;
         }
 
         move(imm, getCachedDataTempRegisterIDAndInvalidate());
-        m_assembler.orr<64>(dest, dest, dataTempRegister);
+        m_assembler.orr<64>(dest, src, dataTempRegister);
     }
 
     void rotateRight64(TrustedImm32 imm, RegisterID srcDst)

@@ -91,7 +91,8 @@ struct ArrayVTable
 namespace Heap {
 
 #define ArrayDataMembers(class, Member) \
-    Member(class, NoMark, uint, type) \
+    Member(class, NoMark, ushort, type) \
+    Member(class, NoMark, ushort, needsMark) \
     Member(class, NoMark, uint, offset) \
     Member(class, NoMark, PropertyAttributes *, attrs) \
     Member(class, NoMark, ReturnedValue, freeList) \
@@ -99,7 +100,7 @@ namespace Heap {
     Member(class, ValueArray, ValueArray, values)
 
 DECLARE_HEAP_OBJECT(ArrayData, Base) {
-    DECLARE_MARK_TABLE(ArrayData);
+    static void markObjects(Heap::Base *base, MarkStack *stack);
 
     enum Type { Simple = 0, Complex = 1, Sparse = 2, Custom = 3 };
 
@@ -144,9 +145,11 @@ DECLARE_HEAP_OBJECT(ArrayData, Base) {
 V4_ASSERT_IS_TRIVIAL(ArrayData)
 
 struct SimpleArrayData : public ArrayData {
-    uint mappedIndex(uint index) const { return (index + offset) % values.alloc; }
+    uint mappedIndex(uint index) const { index += offset; if (index >= values.alloc) index -= values.alloc; return index; }
     const Value &data(uint index) const { return values[mappedIndex(index)]; }
     void setData(EngineBase *e, uint index, Value newVal) {
+        if (newVal.isManaged())
+            needsMark = true;
         values.set(e, mappedIndex(index), newVal);
     }
 

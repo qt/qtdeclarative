@@ -51,8 +51,11 @@
 //
 
 #include <QtCore/qstring.h>
-#include "qv4jsir_p.h"
-#include <private/qendian_p.h>
+#include <QtCore/qhash.h>
+#include <QtCore/qstringlist.h>
+#include <private/qv4global_p.h>
+#include <private/qqmljsastfwd_p.h>
+#include <private/qv4compileddata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -90,23 +93,31 @@ private:
 };
 
 struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
-    JSUnitGenerator(IR::Module *module);
+    struct MemberInfo {
+        QString name;
+        bool isAccessor;
+    };
+
+    JSUnitGenerator(Module *module);
 
     int registerString(const QString &str) { return stringTable.registerString(str); }
     int getStringId(const QString &string) const { return stringTable.getStringId(string); }
     QString stringForIndex(int index) const { return stringTable.stringForIndex(index); }
 
-    uint registerGetterLookup(const QString &name);
-    uint registerSetterLookup(const QString &name);
-    uint registerGlobalGetterLookup(const QString &name);
-    uint registerIndexedGetterLookup();
-    uint registerIndexedSetterLookup();
+    int registerGetterLookup(const QString &name);
+    int registerGetterLookup(int nameIndex);
+    int registerSetterLookup(const QString &name);
+    int registerSetterLookup(int nameIndex);
+    int registerGlobalGetterLookup(const QString &name);
+    int registerGlobalGetterLookup(int nameIndex);
 
-    int registerRegExp(IR::RegExp *regexp);
+    int registerRegExp(QQmlJS::AST::RegExpLiteral *regexp);
 
     int registerConstant(ReturnedValue v);
+    ReturnedValue constant(int idx);
 
-    int registerJSClass(int count, IR::ExprList *args);
+    int registerJSClass(const QVector<MemberInfo> &members);
+    int registerJSClass(int count, CompiledData::JSClassMember *members);
 
     enum GeneratorOption {
         GenerateWithStringTable,
@@ -115,14 +126,14 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
 
     QV4::CompiledData::Unit *generateUnit(GeneratorOption option = GenerateWithStringTable);
     // Returns bytes written
-    void writeFunction(char *f, IR::Function *irFunction) const;
+    void writeFunction(char *f, Context *irFunction) const;
 
     StringTableGenerator stringTable;
     QString codeGeneratorName;
 private:
     CompiledData::Unit generateHeader(GeneratorOption option, quint32_le *functionOffsets, uint *jsClassDataOffset);
 
-    IR::Module *irModule;
+    Module *module;
 
     QList<CompiledData::Lookup> lookups;
     QVector<CompiledData::RegExp> regexps;

@@ -116,8 +116,8 @@ namespace QV4 {
 class QQmlV4Function
 {
 public:
-    int length() const { return callData->argc; }
-    QV4::ReturnedValue operator[](int idx) const { return (idx < callData->argc ? callData->args[idx].asReturnedValue() : QV4::Encode::undefined()); }
+    int length() const { return callData->argc(); }
+    QV4::ReturnedValue operator[](int idx) const { return (idx < callData->argc() ? callData->args[idx].asReturnedValue() : QV4::Encode::undefined()); }
     void setReturnValue(QV4::ReturnedValue rv) { *retVal = rv; }
     QV4::ExecutionEngine *v4engine() const { return e; }
 private:

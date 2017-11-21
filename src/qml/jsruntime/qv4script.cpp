@@ -45,6 +45,7 @@
 #include "qv4debugging_p.h"
 #include "qv4profiling_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4jscall_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -52,8 +53,7 @@
 #include <private/qqmljsast_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4profiling_p.h>
-#include <qv4jsir_p.h>
-#include <qv4codegen_p.h>
+#include <qv4runtimecodegen_p.h>
 
 #include <QtCore/QDebug>
 #include <QtCore/QString>
@@ -61,7 +61,7 @@
 using namespace QV4;
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
-    : line(0), column(0), scope(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
+    : line(1), column(0), context(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
     , compilationUnit(compilationUnit), vmFunction(0), parseAsBinding(true)
 {
     if (qml)
@@ -81,16 +81,16 @@ void Script::parse()
     if (parsed)
         return;
 
-    using namespace QQmlJS;
+    using namespace QV4::Compiler;
 
     parsed = true;
 
-    ExecutionEngine *v4 = scope->engine();
+    ExecutionEngine *v4 = context->engine();
     Scope valueScope(v4);
 
-    IR::Module module(v4->debugger() != 0);
+    Module module(v4->debugger() != 0);
 
-    QQmlJS::Engine ee, *engine = &ee;
+    Engine ee, *engine = &ee;
     Lexer lexer(engine);
     lexer.setCode(sourceCode, line, parseAsBinding);
     Parser parser(engine);
@@ -98,7 +98,7 @@ void Script::parse()
     const bool parsed = parser.parseProgram();
 
     const auto diagnosticMessages = parser.diagnosticMessages();
-    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
+    for (const DiagnosticMessage &m : diagnosticMessages) {
         if (m.isError()) {
             valueScope.engine->throwSyntaxError(m.message, sourceFile, m.loc.startLine, m.loc.startColumn);
             return;
@@ -117,25 +117,15 @@ void Script::parse()
             return;
         }
 
-        QStringList inheritedLocals;
-        if (inheritContext) {
-            Scoped<CallContext> ctx(valueScope, scope);
-            if (ctx) {
-                for (Identifier * const *i = ctx->variables(), * const *ei = i + ctx->variableCount(); i < ei; ++i)
-                    inheritedLocals.append(*i ? (*i)->string : QString());
-            }
-        }
-
-        RuntimeCodegen cg(v4, strictMode);
-        cg.generateFromProgram(sourceFile, sourceCode, program, &module, QQmlJS::Codegen::EvalCode, inheritedLocals);
+        QV4::Compiler::JSUnitGenerator jsGenerator(&module);
+        RuntimeCodegen cg(v4, &jsGenerator, strictMode);
+        if (inheritContext)
+            cg.setUseFastLookups(false);
+        cg.generateFromProgram(sourceFile, sourceCode, program, &module, compilationMode);
         if (v4->hasException)
             return;
 
-        QV4::Compiler::JSUnitGenerator jsGenerator(&module);
-        QScopedPointer<EvalInstructionSelection> isel(v4->iselFactory->create(QQmlEnginePrivate::get(v4), v4->executableAllocator, &module, &jsGenerator));
-        if (inheritContext)
-            isel->setUseFastLookups(false);
-        compilationUnit = isel->compile();
+        compilationUnit = cg.generateCompilationUnit();
         vmFunction = compilationUnit->linkToEngine(v4);
     }
 
@@ -153,29 +143,16 @@ ReturnedValue Script::run()
     if (!vmFunction)
         return Encode::undefined();
 
-    QV4::ExecutionEngine *engine = scope->engine();
+    QV4::ExecutionEngine *engine = context->engine();
     QV4::Scope valueScope(engine);
 
     if (qmlContext.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        ExecutionContextSaver ctxSaver(valueScope);
-        ContextStateSaver stateSaver(valueScope, scope);
-        scope->d()->strictMode = vmFunction->isStrict();
-        scope->d()->lookups = vmFunction->compilationUnit->runtimeLookups;
-        scope->d()->constantTable = vmFunction->compilationUnit->constants;
-        scope->d()->compilationUnit = vmFunction->compilationUnit;
-
-        return Q_V4_PROFILE(engine, vmFunction);
+        return vmFunction->call(engine->globalObject, 0, 0, context);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
-        ScopedCallData callData(valueScope);
-        callData->thisObject = Primitive::undefinedValue();
-        if (vmFunction->canUseSimpleFunction())
-            qml->simpleCall(valueScope, callData, vmFunction);
-        else
-            qml->call(valueScope, callData, vmFunction);
-        return valueScope.result.asReturnedValue();
+        return vmFunction->call(0, 0, 0, qml);
     }
 }
 
@@ -186,24 +163,26 @@ Function *Script::function()
     return vmFunction;
 }
 
-QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors, QQmlJS::Directives *directivesCollector)
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compiler::Module *module, Compiler::JSUnitGenerator *unitGenerator,
+                                                                      const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors,
+                                                                      Directives *directivesCollector)
 {
-    using namespace QQmlJS;
+    using namespace QV4::Compiler;
     using namespace QQmlJS::AST;
 
-    QQmlJS::Engine ee;
+    Engine ee;
     if (directivesCollector)
         ee.setDirectives(directivesCollector);
-    QQmlJS::Lexer lexer(&ee);
+    Lexer lexer(&ee);
     lexer.setCode(source, /*line*/1, /*qml mode*/false);
-    QQmlJS::Parser parser(&ee);
+    Parser parser(&ee);
 
     parser.parseProgram();
 
     QList<QQmlError> errors;
 
     const auto diagnosticMessages = parser.diagnosticMessages();
-    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
+    for (const DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
             qWarning("%s:%d : %s", qPrintable(url.toString()), m.loc.startLine, qPrintable(m.message));
             continue;
@@ -230,8 +209,9 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module
         return 0;
     }
 
-    QQmlJS::Codegen cg(/*strict mode*/false);
-    cg.generateFromProgram(url.toString(), source, program, module, QQmlJS::Codegen::EvalCode);
+    Codegen cg(unitGenerator, /*strict mode*/false);
+    cg.setUseFastLookups(false);
+    cg.generateFromProgram(url.toString(), source, program, module, GlobalCode);
     errors = cg.qmlErrors();
     if (!errors.isEmpty()) {
         if (reportedErrors)
@@ -239,9 +219,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(IR::Module
         return 0;
     }
 
-    QScopedPointer<EvalInstructionSelection> isel(engine->iselFactory->create(QQmlEnginePrivate::get(engine), engine->executableAllocator, module, unitGenerator));
-    isel->setUseFastLookups(false);
-    return isel->compile(/*generate unit data*/false);
+    return cg.generateCompilationUnit(/*generate unit data*/false);
 }
 
 QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext)

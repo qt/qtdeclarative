@@ -69,25 +69,25 @@ struct MathObject: Object
     V4_OBJECT2(MathObject, Object)
     Q_MANAGED_TYPE(MathObject)
 
-    static void method_abs(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_acos(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_asin(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_atan(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_atan2(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_ceil(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_cos(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_exp(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_floor(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_log(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_max(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_min(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_pow(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_random(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_round(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_sign(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_sin(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_sqrt(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_tan(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_abs(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_acos(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_asin(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_atan(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_atan2(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_ceil(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_cos(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_exp(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_floor(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_log(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_max(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_min(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_pow(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_random(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_round(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_sign(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_sin(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_sqrt(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_tan(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 }

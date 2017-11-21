@@ -51,14 +51,11 @@
 //
 
 #include <limits.h>
+#include <cmath>
 
 #include <QtCore/QString>
 #include "qv4global_p.h"
 #include <private/qv4heap_p.h>
-
-#if QT_POINTER_SIZE == 8
-#define QV4_USE_64_BIT_VALUE_ENCODING
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -72,9 +69,7 @@ struct Q_QML_PRIVATE_EXPORT Value
 {
 private:
     /*
-        We use two different ways of encoding JS values. One for 32bit and one for 64bit systems.
-
-        In both cases, we use 8 bytes for a value and a different variant of NaN boxing. A Double
+        We use 8 bytes for a value and a different variant of NaN boxing. A Double
         NaN (actually -qNaN) is indicated by a number that has the top 13 bits set, and for a
         signalling NaN it is the top 14 bits. The other values are usually set to 0 by the
         processor, and are thus free for us to store other data. We keep pointers in there for
@@ -83,26 +78,20 @@ private:
         only have 48 bits of addressable memory. (Note: we do leave the lower 49 bits available for
         pointers.)
 
-        On 32bit, we store doubles as doubles. All other values, have the high 32bits set to a value
-        that will make the number a NaN. The Masks below are used for encoding the other types.
-
-        On 64 bit, we xor Doubles with (0xffff8000 << 32). That has the effect that no doubles will
+        We xor Doubles with (0xffff8000 << 32). That has the effect that no doubles will
         get encoded with bits 63-49 all set to 0. We then use bit 48 to distinguish between
         managed/undefined (0), or Null/Int/Bool/Empty (1). So, storing a 49 bit pointer will leave
         the top 15 bits 0, which is exactly the 'natural' representation of pointers. If bit 49 is
         set, bit 48 indicates Empty (0) or integer-convertible (1). Then the 3 bit below that are
         used to encode Null/Int/Bool.
 
-        On both 32bit and 64bit, Undefined is encoded as a managed pointer with value 0. This is
-        the same as a nullptr.
+        Undefined is encoded as a managed pointer with value 0. This is the same as a nullptr.
 
         Specific bit-sequences:
         0 = always 0
         1 = always 1
         x = stored value
         a,b,c,d = specific bit values, see notes
-
-        64bit:
 
         32109876 54321098 76543210 98765432 10987654 32109876 54321098 76543210 |
         66665555 55555544 44444444 33333333 33222222 22221111 11111100 00000000 | JS Value
@@ -112,9 +101,9 @@ private:
         a0000000 0000bc00 00000000 00000000 00000000 00000000 00000000 00000000 | NaN/Inf
         dddddddd ddddddxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | double
         00000000 00000010 00000000 00000000 00000000 00000000 00000000 00000000 | empty (non-sparse array hole)
-        00000000 00000011 10000000 00000000 00000000 00000000 00000000 00000000 | Null
-        00000000 00000011 01000000 00000000 00000000 00000000 00000000 0000000x | Bool
-        00000000 00000011 00100000 00000000 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Int
+        00000000 00000010 10000000 00000000 00000000 00000000 00000000 00000000 | Null
+        00000000 00000011 00000000 00000000 00000000 00000000 00000000 0000000x | Bool
+        00000000 00000011 10000000 00000000 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Int
 
         Notes:
         - a: xor-ed signbit, always 1 for NaN
@@ -128,31 +117,8 @@ private:
         - Null, Bool, and Int have bit 48 set, indicating integer-convertible
         - xoring _val with NaNEncodeMask will convert to a double in "natural" representation, where
           any non double results in a NaN
-
-        32bit:
-
-        32109876 54321098 76543210 98765432 10987654 32109876 54321098 76543210 |
-        66665555 55555544 44444444 33333333 33222222 22221111 11111100 00000000 | JS Value
-        ------------------------------------------------------------------------+--------------
-        01111111 11111100 00000000 00000000 00000000 00000000 00000000 00000000 | Undefined
-        01111111 11111100 00000000 00000000 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Managed (heap pointer)
-        a1111111 1111bc00 00000000 00000000 00000000 00000000 00000000 00000000 | NaN/Inf
-        xddddddd ddddddxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | double
-        01111111 11111110 00000000 00000000 00000000 00000000 00000000 00000000 | empty (non-sparse array hole)
-        01111111 11111111 10000000 00000000 00000000 00000000 00000000 00000000 | Null
-        01111111 11111111 01000000 00000000 00000000 00000000 00000000 0000000x | Bool
-        01111111 11111111 00100000 00000000 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx | Int
-
-        Notes:
-        - the upper 32 bits are the tag, the lower 32 bits the value
-        - Undefined has a nullptr in the value, Managed has a non-nullptr stored in the value
-        - a: sign bit, always 0 for NaN
-        - b,c: 00=inf, 01 = sNaN, 10 = qNaN, 11 = boxed value
-        - d: stored double value, as long as not *all* of them are 1, because that's a boxed value
-          (see above)
-        - empty, Null, Bool, and Int have bit 63 set to 0, bits 62-50 set to 1 (same as undefined
-          and managed), and bit 49 set to 1 (where undefined and managed have it set to 0)
-        - Null, Bool, and Int have bit 48 set, indicating integer-convertible
+        - on 32bit we can use the fact that addresses are 32bits wide, so the tag part (bits 32 to
+          63) are zero. No need to shift.
     */
 
     quint64 _val;
@@ -172,8 +138,9 @@ public:
     QML_NEARLY_ALWAYS_INLINE void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
     QML_NEARLY_ALWAYS_INLINE quint32 value() const { return _val & quint64(~quint32(0)); }
     QML_NEARLY_ALWAYS_INLINE quint32 tag() const { return _val >> 32; }
+    QML_NEARLY_ALWAYS_INLINE void setTag(quint32 tag) { setTagValue(tag, value()); }
 
-#if defined(QV4_USE_64_BIT_VALUE_ENCODING)
+#if QT_POINTER_SIZE == 8
     QML_NEARLY_ALWAYS_INLINE Heap::Base *m() const
     {
         Heap::Base *b;
@@ -184,7 +151,7 @@ public:
     {
         memcpy(&_val, &b, 8);
     }
-#else // !QV4_USE_64_BIT_VALUE_ENCODING
+#elif QT_POINTER_SIZE == 4
     QML_NEARLY_ALWAYS_INLINE Heap::Base *m() const
     {
         Q_STATIC_ASSERT(sizeof(Heap::Base*) == sizeof(quint32));
@@ -199,6 +166,8 @@ public:
         memcpy(&v, &b, 4);
         setTagValue(Managed_Type_Internal, v);
     }
+#else
+#  error "unsupported pointer size"
 #endif
 
     QML_NEARLY_ALWAYS_INLINE int int_32() const
@@ -232,24 +201,37 @@ public:
         return quint32(value());
     }
 
+    // ### Fix for 32 bit (easiest solution is to set highest bit to 1 for mananged/undefined/integercompatible
+    // and use negative numbers here
+    enum QuickType {
+        QT_ManagedOrUndefined = 0,
+        QT_ManagedOrUndefined1 = 1,
+        QT_ManagedOrUndefined2 = 2,
+        QT_ManagedOrUndefined3 = 3,
+        QT_Empty = 4,
+        QT_Null = 5,
+        QT_Bool = 6,
+        QT_Int = 7
+        // all other values are doubles
+    };
+
     enum Type {
-        Undefined_Type,
-        Managed_Type,
-        Empty_Type,
-        Integer_Type,
-        Boolean_Type,
-        Null_Type,
-        Double_Type
+        Undefined_Type = 0,
+        Managed_Type = 1,
+        Empty_Type = 4,
+        Null_Type = 5,
+        Boolean_Type = 6,
+        Integer_Type = 7,
+        Double_Type = 8
     };
 
     inline Type type() const {
-        if (isUndefined()) return Undefined_Type;
-        if (isManaged()) return Managed_Type;
-        if (isEmpty()) return Empty_Type;
-        if (isInteger()) return Integer_Type;
-        if (isBoolean()) return Boolean_Type;
-        if (isNull()) return Null_Type;
-        Q_ASSERT(isDouble()); return Double_Type;
+        int t = quickType();
+        if (t < QT_Empty)
+            return _val ? Managed_Type : Undefined_Type;
+        if (t > QT_Int)
+            return Double_Type;
+        return static_cast<Type>(t);
     }
 
     // Shared between 32-bit and 64-bit encoding
@@ -262,19 +244,18 @@ public:
     enum {
         IsDouble_Shift = 64-14,
         IsManagedOrUndefined_Shift = 64-15,
-        IsIntegerConvertible_Shift = 64-16,
-        IsDoubleTag_Shift = IsDouble_Shift - Tag_Shift,
-        Managed_Type_Internal_64 = 0
+        IsIntegerConvertible_Shift = 64-15,
+        IsIntegerOrBool_Shift = 64-16,
+        QuickType_Shift = 64 - 17
     };
 
     static const quint64 Immediate_Mask_64 = 0x00020000u; // bit 49
 
     enum class ValueTypeInternal_64 {
-        Empty            = Immediate_Mask_64| 0,
-        ConvertibleToInt = Immediate_Mask_64| 0x10000u, // bit 48
-        Null             = ConvertibleToInt | 0x08000u,
-        Boolean          = ConvertibleToInt | 0x04000u,
-        Integer          = ConvertibleToInt | 0x02000u
+        Empty            = Immediate_Mask_64 | 0,
+        Null             = Immediate_Mask_64 | 0x08000u,
+        Boolean          = Immediate_Mask_64 | 0x10000u,
+        Integer          = Immediate_Mask_64 | 0x18000u
     };
 
     // Used only by 32-bit encoding
@@ -285,33 +266,23 @@ public:
     static const quint64 Immediate_Mask_32 = NotDouble_Mask | 0x00020000u | SilentNaNBit;
 
     enum class ValueTypeInternal_32 {
-        Empty            = Immediate_Mask_32| 0,
-        ConvertibleToInt = Immediate_Mask_32| 0x10000u, // bit 48
-        Null             = ConvertibleToInt | 0x08000u,
-        Boolean          = ConvertibleToInt | 0x04000u,
-        Integer          = ConvertibleToInt | 0x02000u
+        Empty            = Immediate_Mask_32 | 0,
+        Null             = Immediate_Mask_32 | 0x08000u,
+        Boolean          = Immediate_Mask_32 | 0x10000u,
+        Integer          = Immediate_Mask_32 | 0x18000u
     };
 
     enum {
-        Managed_Type_Internal_32  = NotDouble_Mask
+        Managed_Type_Internal = 0
     };
 
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    enum {
-        Managed_Type_Internal  = Managed_Type_Internal_64
-    };
-    static const quint64 Immediate_Mask = Immediate_Mask_64;
     using ValueTypeInternal = ValueTypeInternal_64;
-#else
-    enum {
-        Managed_Type_Internal  = Managed_Type_Internal_32
-    };
-    static const quint64 Immediate_Mask = Immediate_Mask_32;
-    using ValueTypeInternal = ValueTypeInternal_32;
-#endif
+
     enum {
         NaN_Mask = 0x7ff80000,
     };
+
+    inline quint64 quickType() const { return (_val >> QuickType_Shift); }
 
     // used internally in property
     inline bool isEmpty() const { return tag() == quint32(ValueTypeInternal::Empty); }
@@ -319,16 +290,20 @@ public:
     inline bool isBoolean() const { return tag() == quint32(ValueTypeInternal::Boolean); }
     inline bool isInteger() const { return tag() == quint32(ValueTypeInternal::Integer); }
     inline bool isNullOrUndefined() const { return isNull() || isUndefined(); }
-    inline bool isNumber() const { return isDouble() || isInteger(); }
+    inline bool isNumber() const { return quickType() >= QT_Int; }
 
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     inline bool isUndefined() const { return _val == 0; }
     inline bool isDouble() const { return (_val >> IsDouble_Shift); }
-    inline bool isManaged() const { return !isUndefined() && ((_val >> IsManagedOrUndefined_Shift) == 0); }
+    inline bool isManaged() const { return _val && ((_val >> IsManagedOrUndefined_Shift) == 0); }
     inline bool isManagedOrUndefined() const { return ((_val >> IsManagedOrUndefined_Shift) == 0); }
 
+    inline bool isIntOrBool() const {
+        return (_val >> IsIntegerOrBool_Shift) == 3;
+    }
+
     inline bool integerCompatible() const {
-        return (_val >> IsIntegerConvertible_Shift) == 3;
+        Q_ASSERT(!isEmpty());
+        return (_val >> IsIntegerConvertible_Shift) == 1;
     }
     static inline bool integerCompatible(Value a, Value b) {
         return a.integerCompatible() && b.integerCompatible();
@@ -337,39 +312,23 @@ public:
         return a.isDouble() && b.isDouble();
     }
     inline bool isNaN() const { return (tag() & 0x7ffc0000  ) == 0x00040000; }
-#else
-    inline bool isUndefined() const { return tag() == Managed_Type_Internal && value() == 0; }
-    inline bool isDouble() const { return (tag() & NotDouble_Mask) != NotDouble_Mask; }
-    inline bool isManaged() const { return tag() == Managed_Type_Internal && !isUndefined(); }
-    inline bool isManagedOrUndefined() const { return tag() == Managed_Type_Internal; }
-    inline bool integerCompatible() const { return (tag() & quint32(ValueTypeInternal::ConvertibleToInt)) == quint32(ValueTypeInternal::ConvertibleToInt); }
-    static inline bool integerCompatible(Value a, Value b) {
-        return ((a.tag() & b.tag()) & quint32(ValueTypeInternal::ConvertibleToInt)) == quint32(ValueTypeInternal::ConvertibleToInt);
-    }
-    static inline bool bothDouble(Value a, Value b) {
-        return ((a.tag() | b.tag()) & NotDouble_Mask) != NotDouble_Mask;
-    }
-    inline bool isNaN() const { return (tag() & QV4::Value::NotDouble_Mask) == QV4::Value::NaN_Mask; }
-#endif
+
     QML_NEARLY_ALWAYS_INLINE double doubleValue() const {
         Q_ASSERT(isDouble());
         double d;
-        quint64 v = _val;
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-        v ^= NaNEncodeMask;
-#endif
-        memcpy(&d, &v, 8);
+        Value v = *this;
+        v._val ^= NaNEncodeMask;
+        memcpy(&d, &v._val, 8);
         return d;
     }
     QML_NEARLY_ALWAYS_INLINE void setDouble(double d) {
         memcpy(&_val, &d, 8);
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
         _val ^= NaNEncodeMask;
-#endif
         Q_ASSERT(isDouble());
     }
     inline bool isString() const;
     inline bool isObject() const;
+    inline bool isFunctionObject() const;
     inline bool isInt32() {
         if (tag() == quint32(ValueTypeInternal::Integer))
             return true;
@@ -426,14 +385,31 @@ public:
     inline int toInt32() const;
     inline unsigned int toUInt32() const;
 
-    bool toBoolean() const;
+    bool toBoolean() const {
+        if (integerCompatible())
+            return static_cast<bool>(int_32());
+
+        return toBooleanImpl(*this);
+    }
+    static bool toBooleanImpl(Value val);
     double toInteger() const;
     inline double toNumber() const;
-    double toNumberImpl() const;
+    static double toNumberImpl(Value v);
+    double toNumberImpl() const { return toNumberImpl(*this); }
     QString toQStringNoThrow() const;
     QString toQString() const;
-    Heap::String *toString(ExecutionEngine *e) const;
-    Heap::Object *toObject(ExecutionEngine *e) const;
+    Heap::String *toString(ExecutionEngine *e) const {
+        if (isString())
+            return reinterpret_cast<Heap::String *>(m());
+        return toString(e, *this);
+    }
+    static Heap::String *toString(ExecutionEngine *e, Value val);
+    Heap::Object *toObject(ExecutionEngine *e) const {
+        if (isObject())
+            return reinterpret_cast<Heap::Object *>(m());
+        return toObject(e, *this);
+    }
+    static Heap::Object *toObject(ExecutionEngine *e, Value val);
 
     inline bool isPrimitive() const;
     inline bool tryIntegerConversion() {
@@ -509,6 +485,13 @@ public:
 };
 V4_ASSERT_IS_TRIVIAL(Value)
 
+inline void Value::mark(MarkStack *markStack)
+{
+    Heap::Base *o = heapObject();
+    if (o)
+        o->mark(markStack);
+}
+
 inline bool Value::isString() const
 {
     Heap::Base *b = heapObject();
@@ -518,6 +501,12 @@ inline bool Value::isObject() const
 {
     Heap::Base *b = heapObject();
     return b && b->vtable()->isObject;
+}
+
+inline bool Value::isFunctionObject() const
+{
+    Heap::Base *b = heapObject();
+    return b && b->vtable()->isFunctionObject;
 }
 
 inline bool Value::isPrimitive() const
@@ -538,7 +527,7 @@ inline double Value::toNumber() const
 #ifndef V4_BOOTSTRAP
 inline uint Value::asArrayIndex() const
 {
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
+#if QT_POINTER_SIZE == 8
     if (!isNumber())
         return UINT_MAX;
     if (isInteger())
@@ -558,8 +547,8 @@ inline uint Value::asArrayIndex() const
 
 inline bool Value::asArrayIndex(uint &idx) const
 {
-    if (!isDouble()) {
-        if (isInteger() && int_32() >= 0) {
+    if (Q_LIKELY(!isDouble())) {
+        if (Q_LIKELY(isInteger() && int_32() >= 0)) {
             idx = (uint)int_32();
             return true;
         }
@@ -593,9 +582,9 @@ struct Q_QML_PRIVATE_EXPORT Primitive : public Value
     using Value::toInt32;
     using Value::toUInt32;
 
-    static double toInteger(double fromNumber);
-    static int toInt32(double value);
-    static unsigned int toUInt32(double value);
+    static double toInteger(double d);
+    static int toInt32(double d);
+    static unsigned int toUInt32(double d);
 };
 
 inline Primitive Primitive::undefinedValue()
@@ -658,6 +647,72 @@ inline Primitive Primitive::fromUInt32(uint i)
     return v;
 }
 
+struct Double {
+    quint64 d;
+
+    Double(double dbl) {
+        memcpy(&d, &dbl, sizeof(double));
+    }
+
+    int sign() const {
+        return (d >> 63) ? -1 : 1;
+    }
+
+    bool isDenormal() const {
+        return static_cast<int>((d << 1) >> 53) == 0;
+    }
+
+    int exponent() const {
+        return static_cast<int>((d << 1) >> 53) - 1023;
+    }
+
+    quint64 significant() const {
+        quint64 m = (d << 12) >> 12;
+        if (!isDenormal())
+            m |= (static_cast<quint64>(1) << 52);
+        return m;
+    }
+
+    static int toInt32(double d) {
+        int i = static_cast<int>(d);
+        if (i == d)
+                return i;
+        return Double(d).toInt32();
+    }
+
+    int toInt32() {
+        int e = exponent() - 52;
+        if (e < 0) {
+            if (e <= -53)
+                return 0;
+            return sign() * static_cast<int>(significant() >> -e);
+        } else {
+            if (e > 31)
+                return 0;
+            return sign() * (static_cast<int>(significant()) << e);
+        }
+    }
+};
+
+inline double Primitive::toInteger(double d)
+{
+    if (std::isnan(d))
+        return +0;
+    else if (!d || std::isinf(d))
+        return d;
+    return d >= 0 ? std::floor(d) : std::ceil(d);
+}
+
+inline int Primitive::toInt32(double value)
+{
+    return Double::toInt32(value);
+}
+
+inline unsigned int Primitive::toUInt32(double d)
+{
+    return static_cast<uint>(toInt32(d));
+}
+
 struct Encode {
     static ReturnedValue undefined() {
         return Primitive::undefinedValue().rawValue();
@@ -666,25 +721,39 @@ struct Encode {
         return Primitive::nullValue().rawValue();
     }
 
-    Encode(bool b) {
+    explicit Encode(bool b) {
         val = Primitive::fromBoolean(b).rawValue();
     }
-    Encode(double d) {
+    explicit Encode(double d) {
         val = Primitive::fromDouble(d).rawValue();
     }
-    Encode(int i) {
+    explicit Encode(int i) {
         val = Primitive::fromInt32(i).rawValue();
     }
-    Encode(uint i) {
+    explicit Encode(uint i) {
         val = Primitive::fromUInt32(i).rawValue();
     }
-    Encode(ReturnedValue v) {
+    explicit Encode(ReturnedValue v) {
         val = v;
     }
+    Encode(Value v) {
+        val = v.rawValue();
+    }
 
-    Encode(Heap::Base *o) {
-        Q_ASSERT(o);
+    explicit Encode(Heap::Base *o) {
         val = Value::fromHeapObject(o).asReturnedValue();
+    }
+
+    explicit Encode(Value *o) {
+        Q_ASSERT(o);
+        val = o->asReturnedValue();
+    }
+
+    static ReturnedValue smallestNumber(double d) {
+        if (static_cast<int>(d) == d && !(d == 0. && std::signbit(d)))
+            return Encode(static_cast<int>(d));
+        else
+            return Encode(d);
     }
 
     operator ReturnedValue() const {
@@ -692,7 +761,7 @@ struct Encode {
     }
     quint64 val;
 private:
-    Encode(void *);
+    explicit Encode(void *);
 };
 
 template<typename T>
@@ -700,23 +769,28 @@ ReturnedValue value_convert(ExecutionEngine *e, const Value &v);
 
 inline int Value::toInt32() const
 {
-    if (isInteger())
+    if (Q_LIKELY(integerCompatible()))
         return int_32();
-    double d = isNumber() ? doubleValue() : toNumberImpl();
 
-    const double D32 = 4294967296.0;
-    const double D31 = D32 / 2.0;
+    if (Q_LIKELY(isDouble()))
+        return Double::toInt32(doubleValue());
 
-    if ((d >= -D31 && d < D31))
-        return static_cast<int>(d);
-
-    return Primitive::toInt32(d);
+    return Double::toInt32(toNumberImpl());
 }
 
 inline unsigned int Value::toUInt32() const
 {
-    return (unsigned int)toInt32();
+    return static_cast<unsigned int>(toInt32());
 }
+
+inline double Value::toInteger() const
+{
+    if (integerCompatible())
+        return int_32();
+
+    return Primitive::toInteger(isDouble() ? doubleValue() : toNumberImpl());
+}
+
 
 }
 

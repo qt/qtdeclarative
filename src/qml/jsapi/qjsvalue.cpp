@@ -53,7 +53,7 @@
 #include "qv4errorobject_p.h"
 #include "private/qv8engine_p.h"
 #include <private/qv4mm_p.h>
-#include <private/qv4scopedvalue_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
 /*!
@@ -664,21 +664,21 @@ QJSValue QJSValue::call(const QJSValueList &args)
     Q_ASSERT(engine);
 
     Scope scope(engine);
-    ScopedCallData callData(scope, args.length());
-    callData->thisObject = engine->globalObject;
+    JSCallData jsCallData(scope, args.length());
+    *jsCallData->thisObject = engine->globalObject;
     for (int i = 0; i < args.size(); ++i) {
         if (!QJSValuePrivate::checkEngine(engine, args.at(i))) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
             return QJSValue();
         }
-        callData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
+        jsCallData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
     }
 
-    f->call(scope, callData);
+    ScopedValue result(scope, f->call(jsCallData));
     if (engine->hasException)
-        scope.result = engine->catchException();
+        result = engine->catchException();
 
-    return QJSValue(engine, scope.result.asReturnedValue());
+    return QJSValue(engine, result->asReturnedValue());
 }
 
 /*!
@@ -720,21 +720,21 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
         return QJSValue();
     }
 
-    ScopedCallData callData(scope, args.size());
-    callData->thisObject = QJSValuePrivate::convertedToValue(engine, instance);
+    JSCallData jsCallData(scope, args.size());
+    *jsCallData->thisObject = QJSValuePrivate::convertedToValue(engine, instance);
     for (int i = 0; i < args.size(); ++i) {
         if (!QJSValuePrivate::checkEngine(engine, args.at(i))) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
             return QJSValue();
         }
-        callData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
+        jsCallData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
     }
 
-    f->call(scope, callData);
+    ScopedValue result(scope, f->call(jsCallData));
     if (engine->hasException)
-        scope.result = engine->catchException();
+        result = engine->catchException();
 
-    return QJSValue(engine, scope.result.asReturnedValue());
+    return QJSValue(engine, result->asReturnedValue());
 }
 
 /*!
@@ -769,20 +769,20 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args)
     Q_ASSERT(engine);
 
     Scope scope(engine);
-    ScopedCallData callData(scope, args.size());
+    JSCallData jsCallData(scope, args.size());
     for (int i = 0; i < args.size(); ++i) {
         if (!QJSValuePrivate::checkEngine(engine, args.at(i))) {
             qWarning("QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
             return QJSValue();
         }
-        callData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
+        jsCallData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
     }
 
-    f->construct(scope, callData);
+    ScopedValue result(scope, f->callAsConstructor(jsCallData));
     if (engine->hasException)
-        scope.result = engine->catchException();
+        result = engine->catchException();
 
-    return QJSValue(engine, scope.result.asReturnedValue());
+    return QJSValue(engine, result->asReturnedValue());
 }
 
 #ifdef QT_DEPRECATED
@@ -1173,10 +1173,7 @@ bool QJSValue::deleteProperty(const QString &name)
         return false;
 
     ScopedString s(scope, engine->newString(name));
-    bool b = o->deleteProperty(s);
-    if (engine->hasException)
-        engine->catchException();
-    return b;
+    return o->deleteProperty(s);
 }
 
 /*!

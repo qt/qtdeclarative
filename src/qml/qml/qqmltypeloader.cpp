@@ -44,6 +44,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlthread_p.h>
+#include <private/qv4codegen_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
@@ -2080,10 +2081,10 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     if (!v4)
         return false;
 
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
     {
         QString error;
-        if (!unit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), v4->iselFactory.data(), &error)) {
+        if (!unit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), &error)) {
             qCDebug(DBG_DISK_CACHE) << "Error loading" << url().toString() << "from disk cache:" << error;
             return false;
         }
@@ -2447,7 +2448,7 @@ void QQmlTypeData::restoreIR(QQmlRefPointer<QV4::CompiledData::CompilationUnit> 
     m_document.reset(new QmlIR::Document(isDebugging()));
     QmlIR::IRLoader loader(unit->data, m_document.data());
     loader.load();
-    m_document->jsModule.setFileName(finalUrlString());
+    m_document->jsModule.fileName = finalUrlString();
     m_document->javaScriptCompilationUnit = unit;
     continueLoadFromIR();
 }
@@ -2564,7 +2565,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
         QString errorString;
         if (m_compiledData->saveToDisk(url(), &errorString)) {
             QString error;
-            if (!m_compiledData->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), enginePrivate->v4engine()->iselFactory.data(), &error)) {
+            if (!m_compiledData->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), &error)) {
                 // ignore error, keep using the in-memory compilation unit.
             }
         } else {
@@ -2881,7 +2882,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
             ep->warning(error);
     }
 
-    QV4::ScopedValue retval(scope, qmlContext->d()->qml);
+    QV4::ScopedValue retval(scope, qmlContext->d()->qml());
     if (shared) {
         m_value.set(scope.engine, retval);
         m_loaded = true;
@@ -2923,19 +2924,12 @@ QQmlScriptData *QQmlScriptBlob::scriptData() const
     return m_scriptData;
 }
 
-struct EmptyCompilationUnit : public QV4::CompiledData::CompilationUnit
-{
-    void linkBackendToEngine(QV4::ExecutionEngine *) override {}
-};
-
 void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_typeLoader->engine());
-
     if (!disableDiskCache() || forceDiskCache()) {
-        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = v4->iselFactory->createUnitForLoading();
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
         QString error;
-        if (unit->loadFromDisk(url(), data.sourceTimeStamp(), v4->iselFactory.data(), &error)) {
+        if (unit->loadFromDisk(url(), data.sourceTimeStamp(), &error)) {
             initializeFromCompilationUnit(unit);
             return;
         } else {
@@ -2957,7 +2951,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
     QmlIR::ScriptDirectivesCollector collector(&irUnit.jsParserEngine, &irUnit.jsGenerator);
 
     QList<QQmlError> errors;
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Script::precompile(&irUnit.jsModule, &irUnit.jsGenerator, v4, finalUrl(), source, &errors, &collector);
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Script::precompile(&irUnit.jsModule, &irUnit.jsGenerator, finalUrl(), source, &errors, &collector);
     // No need to addref on unit, it's initial refcount is 1
     source.clear();
     if (!errors.isEmpty()) {
@@ -2965,7 +2959,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         return;
     }
     if (!unit) {
-        unit.adopt(new EmptyCompilationUnit);
+        unit.adopt(new QV4::CompiledData::CompilationUnit);
     }
     irUnit.javaScriptCompilationUnit = unit;
     irUnit.imports = collector.imports;

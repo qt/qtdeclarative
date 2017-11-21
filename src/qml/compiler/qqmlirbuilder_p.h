@@ -453,7 +453,7 @@ struct Q_QML_PRIVATE_EXPORT Document
     Document(bool debugMode);
     QString code;
     QQmlJS::Engine jsParserEngine;
-    QV4::IR::Module jsModule;
+    QV4::Compiler::Module jsModule;
     QList<const QV4::CompiledData::Import *> imports;
     QList<Pragma*> pragmas;
     QQmlJS::AST::UiProgram *program;
@@ -527,6 +527,7 @@ public:
                          const QQmlJS::AST::SourceLocation &last) const;
 
     void setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement);
+    void tryGeneratingTranslationBinding(const QStringRef &base, QQmlJS::AST::ArgumentList *args, QV4::CompiledData::Binding *binding);
 
     void appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value);
     void appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment = false);
@@ -606,9 +607,9 @@ struct Q_QML_EXPORT PropertyResolver
 };
 #endif
 
-struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QQmlJS::Codegen
+struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 {
-    JSCodeGen(const QString &fileName, const QString &sourceCode, QV4::IR::Module *jsModule,
+    JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator, QV4::Compiler::Module *jsModule,
               QQmlJS::Engine *jsEngine, QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports,
               const QV4::Compiler::StringTableGenerator *stringPool);
 
@@ -626,12 +627,17 @@ struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QQmlJS::Codegen
     // Returns mapping from input functions to index in IR::Module::functions / compiledData->runtimeFunctions
     QVector<int> generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions);
 
+    int defineFunction(const QString &name, AST::Node *ast,
+                       AST::FormalParameterList *formals,
+                       AST::SourceElements *body) override;
+
 protected:
     void beginFunctionBodyHook() override;
-    QV4::IR::Expr *fallbackNameLookup(const QString &name, int line, int col) override;
+    Reference fallbackNameLookup(const QString &name) override;
 
 private:
-    QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name, bool *propertyExistsButForceNameLookup = 0);
+    // returns nullptr if lookup needs to happen by name
+    QQmlPropertyData *lookupQmlCompliantProperty(QQmlPropertyCache *cache, const QString &name);
 
     QString sourceCode;
     QQmlJS::Engine *jsEngine; // needed for memory pool
@@ -643,8 +649,8 @@ private:
     ObjectIdMapping _idObjects;
     QQmlPropertyCache *_contextObject;
     QQmlPropertyCache *_scopeObject;
-    int _qmlContextTemp;
-    int _importedScriptsTemp;
+    int _qmlContextSlot;
+    int _importedScriptsSlot;
 };
 
 struct Q_QML_PRIVATE_EXPORT IRLoader {

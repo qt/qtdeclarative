@@ -44,6 +44,7 @@
 #include <private/qv4qmlcontext_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmldebugservice_p.h>
+#include <private/qv4jscall_p.h>
 
 #include <QtQml/qqmlengine.h>
 
@@ -63,26 +64,21 @@ void JavaScriptJob::run()
 {
     QV4::Scope scope(engine);
 
-    QV4::ExecutionContextSaver saver(scope);
-
-    QV4::ExecutionContext *ctx = engine->currentContext;
+    QV4::ScopedContext ctx(scope, engine->currentStackFrame ? engine->currentContext()
+                                                            : engine->rootContext());
     QObject scopeObject;
 
-    if (frameNr > 0) {
-        for (int i = 0; i < frameNr; ++i) {
-            ctx = engine->parentContext(ctx);
-        }
-        engine->pushContext(ctx);
-        ctx = engine->currentContext;
-    }
+    QV4::CppStackFrame *frame = engine->currentStackFrame;
+
+    for (int i = 0; frame && i < frameNr; ++i)
+        frame = frame->parent;
+    if (frameNr > 0 && frame)
+        ctx = static_cast<QV4::ExecutionContext *>(&frame->jsFrame->context);
 
     if (context >= 0) {
         QQmlContext *extraContext = qmlContext(QQmlDebugService::objectForId(context));
-        if (extraContext) {
-            engine->pushContext(QV4::QmlContext::create(ctx, QQmlContextData::get(extraContext),
-                                                        &scopeObject));
-            ctx = engine->currentContext;
-        }
+        if (extraContext)
+            ctx = QV4::QmlContext::create(ctx, QQmlContextData::get(extraContext), &scopeObject);
     } else if (frameNr < 0) { // Use QML context if available
         QQmlEngine *qmlEngine = engine->qmlEngine();
         if (qmlEngine) {
@@ -102,18 +98,15 @@ void JavaScriptJob::run()
                     }
                 }
             }
-            if (!engine->qmlContext()) {
-                engine->pushContext(QV4::QmlContext::create(ctx, QQmlContextData::get(qmlRootContext),
-                                                       &scopeObject));
-                ctx = engine->currentContext;
-            }
-            engine->pushContext(ctx->newWithContext(withContext->toObject(engine)));
-            ctx = engine->currentContext;
+            if (!engine->qmlContext())
+                ctx = QV4::QmlContext::create(ctx, QQmlContextData::get(qmlRootContext), &scopeObject);
         }
     }
 
-    QV4::Script script(ctx, this->script);
-    script.strictMode = ctx->d()->strictMode;
+    QV4::Script script(ctx, QV4::Compiler::EvalCode, this->script);
+    if (const QV4::Function *function = frame ? frame->v4Function : engine->globalCode)
+        script.strictMode = function->isStrict();
+
     // In order for property lookups in QML to work, we need to disable fast v4 lookups. That
     // is a side-effect of inheritContext.
     script.inheritContext = true;
@@ -214,12 +207,15 @@ void ValueLookupJob::run()
     // set if the engine is currently executing QML code.
     QScopedPointer<QObject> scopeObject;
     QV4::ExecutionEngine *engine = collector->engine();
+    QV4::Scope scope(engine);
+    QV4::Heap::ExecutionContext *qmlContext = 0;
     if (engine->qmlEngine() && !engine->qmlContext()) {
         scopeObject.reset(new QObject);
-        engine->pushContext(QV4::QmlContext::create(engine->currentContext,
+        qmlContext = QV4::QmlContext::create(engine->currentContext(),
                                 QQmlContextData::get(engine->qmlEngine()->rootContext()),
-                                scopeObject.data()));
+                                scopeObject.data());
     }
+    QV4::ScopedStackFrame frame(scope, qmlContext);
     for (const QJsonValue &handle : handles) {
         QV4DataCollector::Ref ref = handle.toInt();
         if (!collector->isValidRef(ref)) {
@@ -229,8 +225,6 @@ void ValueLookupJob::run()
         result[QString::number(ref)] = collector->lookupRef(ref, true);
     }
     flushRedundantRefs();
-    if (scopeObject)
-        engine->popContext();
 }
 
 const QString &ValueLookupJob::exceptionMessage() const

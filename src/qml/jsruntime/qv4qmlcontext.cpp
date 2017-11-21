@@ -296,13 +296,8 @@ void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContex
 {
     Heap::ExecutionContext::init(Heap::ExecutionContext::Type_QmlContext);
     outer.set(internalClass->engine, outerContext->d());
-    strictMode = false;
-    callData = outer->callData;
-    lookups = outer->lookups;
-    constantTable = outer->constantTable;
-    compilationUnit = outer->compilationUnit;
 
-    this->qml.set(internalClass->engine, qml->d());
+    this->activation.set(internalClass->engine, qml->d());
 }
 
 Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, const QUrl &source, Value *sendFunction)

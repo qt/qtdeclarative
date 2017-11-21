@@ -35,7 +35,6 @@ PUBLICTESTS += \
 PRIVATETESTS += \
     qqmlcpputils \
     qqmldirparser \
-    v4misc \
     qmlcachegen
 
 PRIVATETESTS += \
@@ -77,7 +76,7 @@ qtHaveModule(widgets) {
     PUBLICTESTS += \
         qjsengine \
         qjsvalue \
-        qwidgetsinqml
+#        qwidgetsinqml
 }
 
 SUBDIRS += $$PUBLICTESTS

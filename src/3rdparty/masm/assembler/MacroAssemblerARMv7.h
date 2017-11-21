@@ -815,6 +815,17 @@ public:
         store8(src, setupArmAddress(address));
     }
     
+    void store8(RegisterID src, Address address)
+    {
+        store8(src, setupArmAddress(address));
+    }
+
+    void store8(TrustedImm32 imm, Address address)
+    {
+        move(imm, dataTempRegister);
+        store8(dataTempRegister, address);
+    }
+
 #if !defined(V4_BOOTSTRAP)
     void store8(RegisterID src, void* address)
     {

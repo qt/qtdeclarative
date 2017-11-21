@@ -57,6 +57,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -728,13 +729,14 @@ void QQuickCanvasItem::updatePolish()
 
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
         QV4::Scope scope(v4);
-        QV4::ScopedCallData callData(scope, 1);
-        callData->thisObject = QV4::QObjectWrapper::wrap(v4, this);
+        QV4::ScopedFunctionObject function(scope);
+        QV4::JSCallData jsCall(scope, 1);
+        *jsCall->thisObject = QV4::QObjectWrapper::wrap(v4, this);
 
         for (auto it = animationCallbacks.cbegin(), end = animationCallbacks.cend(); it != end; ++it) {
-            QV4::ScopedFunctionObject f(scope, it.value().value());
-            callData->args[0] = QV4::Primitive::fromUInt32(QDateTime::currentMSecsSinceEpoch() / 1000);
-            f->call(scope, callData);
+            function = it.value().value();
+            jsCall->args[0] = QV4::Primitive::fromUInt32(QDateTime::currentMSecsSinceEpoch() / 1000);
+            function->call(jsCall);
         }
     }
     else {

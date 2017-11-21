@@ -279,64 +279,6 @@ QString binary(quintptr) { return QString(); }
 #define SDUMP if (1) ; else qDebug
 #endif
 
-void Heap::Base::markChildren(MarkStack *markStack)
-{
-    if (vtable()->markObjects)
-        vtable()->markObjects(this, markStack);
-    if (quint64 m = vtable()->markTable) {
-//            qDebug() << "using mark table:" << hex << m << "for" << h;
-        void **mem = reinterpret_cast<void **>(this);
-        while (m) {
-            MarkFlags mark = static_cast<MarkFlags>(m & 3);
-            switch (mark) {
-            case Mark_NoMark:
-                break;
-            case Mark_Value:
-//                    qDebug() << "marking value at " << mem;
-                reinterpret_cast<Value *>(mem)->mark(markStack);
-                break;
-            case Mark_Pointer: {
-//                    qDebug() << "marking pointer at " << mem;
-                Heap::Base *p = *reinterpret_cast<Heap::Base **>(mem);
-                if (p)
-                    p->mark(markStack);
-                break;
-            }
-            case Mark_ValueArray: {
-                Q_ASSERT(m == Mark_ValueArray);
-//                    qDebug() << "marking Value Array at offset" << hex << (mem - reinterpret_cast<void **>(h));
-                ValueArray<0> *a = reinterpret_cast<ValueArray<0> *>(mem);
-                Value *v = a->values;
-                const Value *end = v + a->alloc;
-                if (a->alloc > 32*1024) {
-                    // drain from time to time to avoid overflows in the js stack
-                    Heap::Base **currentBase = markStack->top;
-                    while (v < end) {
-                        v->mark(markStack);
-                        ++v;
-                        if (markStack->top >= currentBase + 32*1024) {
-                            Heap::Base **oldBase = markStack->base;
-                            markStack->base = currentBase;
-                            markStack->drain();
-                            markStack->base = oldBase;
-                        }
-                    }
-                } else {
-                    while (v < end) {
-                        v->mark(markStack);
-                        ++v;
-                    }
-                }
-                break;
-            }
-            }
-
-            m >>= 2;
-            ++mem;
-        }
-    }
-}
-
 // Stores a classname -> freed count mapping.
 typedef QHash<const char*, int> MMStatsHash;
 Q_GLOBAL_STATIC(MMStatsHash, freedObjectStatsGlobal)
@@ -552,51 +494,6 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
     Q_ASSERT(freeSlots + allocatedSlots == (EntriesInBitmap - start) * 8 * sizeof(quintptr));
 #endif
 }
-
-
-template<typename T>
-StackAllocator<T>::StackAllocator(ChunkAllocator *chunkAlloc)
-    : chunkAllocator(chunkAlloc)
-{
-    chunks.push_back(chunkAllocator->allocate());
-    firstInChunk = chunks.back()->first();
-    nextFree = firstInChunk;
-    lastInChunk = firstInChunk + (Chunk::AvailableSlots - 1)/requiredSlots*requiredSlots;
-}
-
-template<typename T>
-void StackAllocator<T>::freeAll()
-{
-    for (auto c : chunks)
-        chunkAllocator->free(c);
-}
-
-template<typename T>
-void StackAllocator<T>::nextChunk() {
-    Q_ASSERT(nextFree == lastInChunk);
-    ++currentChunk;
-    if (currentChunk >= chunks.size()) {
-        Chunk *newChunk = chunkAllocator->allocate();
-        chunks.push_back(newChunk);
-    }
-    firstInChunk = chunks.at(currentChunk)->first();
-    nextFree = firstInChunk;
-    lastInChunk = firstInChunk + (Chunk::AvailableSlots - 1)/requiredSlots*requiredSlots;
-}
-
-template<typename T>
-void QV4::StackAllocator<T>::prevChunk() {
-    Q_ASSERT(nextFree == firstInChunk);
-    Q_ASSERT(chunks.at(currentChunk) == nextFree->chunk());
-    Q_ASSERT(currentChunk > 0);
-    --currentChunk;
-    firstInChunk = chunks.at(currentChunk)->first();
-    lastInChunk = firstInChunk + (Chunk::AvailableSlots - 1)/requiredSlots*requiredSlots;
-    nextFree = lastInChunk;
-}
-
-template struct StackAllocator<Heap::CallContext>;
-
 
 HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
     Q_ASSERT((size % Chunk::SlotSize) == 0);
@@ -836,7 +733,6 @@ void HugeItemAllocator::freeAll()
 MemoryManager::MemoryManager(ExecutionEngine *engine)
     : engine(engine)
     , chunkAllocator(new ChunkAllocator)
-    , stackAllocator(chunkAllocator)
     , blockAllocator(chunkAllocator)
     , hugeItemAllocator(chunkAllocator)
     , m_persistentValues(new PersistentValueStorage(engine))
@@ -1261,7 +1157,6 @@ MemoryManager::~MemoryManager()
     sweep(/*lastSweep*/true);
     blockAllocator.freeAll();
     hugeItemAllocator.freeAll();
-    stackAllocator.freeAll();
 
     delete m_weakValues;
 #ifdef V4_USE_VALGRIND
@@ -1303,9 +1198,11 @@ void MemoryManager::collectFromJSStack(MarkStack *markStack) const
     Value *top = engine->jsStackTop;
     while (v < top) {
         Managed *m = v->managed();
-        if (m && m->inUse())
+        if (m) {
+            Q_ASSERT(m->inUse());
             // Skip pointers to already freed objects, they are bogus as well
             m->mark(markStack);
+        }
         ++v;
     }
 }

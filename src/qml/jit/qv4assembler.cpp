@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,510 +37,1105 @@
 **
 ****************************************************************************/
 
-#include "qv4isel_masm_p.h"
-#include "qv4runtime_p.h"
-#include "qv4ssa_p.h"
-#include "qv4regalloc_p.h"
-#include "qv4assembler_p.h"
+#include <QBuffer>
 
+#include "qv4engine_p.h"
+#include "qv4assembler_p.h"
+#include <private/qv4function_p.h>
+#include <private/qv4runtime_p.h>
+
+#include <wtf/Vector.h>
+#include <assembler/MacroAssembler.h>
+#include <assembler/MacroAssemblerCodeRef.h>
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>
 
-#if !defined(V4_BOOTSTRAP)
-#include "qv4function_p.h"
+#undef ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES
+
+#ifdef Q_STATIC_ASSERT_FOR_SANE_COMPILERS
+#  undef Q_STATIC_ASSERT_FOR_SANE_COMPILERS
+#endif
+#if defined(Q_CC_MSVC) && _MSC_VER < 1900
+#  define Q_STATIC_ASSERT_FOR_SANE_COMPILERS(x) // insane
+#else
+#  define Q_STATIC_ASSERT_FOR_SANE_COMPILERS(x) Q_STATIC_ASSERT(x)
 #endif
 
-#include <iostream>
-#include <QBuffer>
-#include <QCoreApplication>
+#ifdef V4_ENABLE_JIT
 
-#if ENABLE(ASSEMBLER)
+QT_BEGIN_NAMESPACE
+namespace QV4 {
+namespace JIT {
 
-#if USE(UDIS86)
-#  include <udis86.h>
+#define callHelper(x) PlatformAssemblerCommon::callRuntime(#x, reinterpret_cast<void *>(&x))
+
+const QV4::Value::ValueTypeInternal IntegerTag = QV4::Value::ValueTypeInternal::Integer;
+
+static ReturnedValue toNumberHelper(ReturnedValue v)
+{
+    return Encode(Value::fromReturnedValue(v).toNumber());
+}
+
+static ReturnedValue toInt32Helper(ReturnedValue v)
+{
+    return Encode(Value::fromReturnedValue(v).toInt32());
+}
+
+#if defined(Q_PROCESSOR_X86_64) || defined(ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES)
+#if defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_FREEBSD) || defined(Q_OS_DARWIN)
+
+struct PlatformAssembler_X86_64_SysV : JSC::MacroAssembler<JSC::MacroAssemblerX86_64>
+{
+    static const RegisterID NoRegister = RegisterID(-1);
+
+    static const RegisterID ReturnValueRegister   = RegisterID::eax;
+    static const RegisterID AccumulatorRegister   = RegisterID::eax;
+    static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
+    static const RegisterID ScratchRegister       = RegisterID::r10;
+    static const RegisterID ScratchRegister2      = RegisterID::r9; // Note: overlaps with Arg5Reg, so do not use while setting up a call!
+    static const RegisterID JSStackFrameRegister  = RegisterID::r12;
+    static const RegisterID CppStackFrameRegister = RegisterID::r13;
+    static const RegisterID EngineRegister        = RegisterID::r14;
+    static const RegisterID StackPointerRegister  = RegisterID::esp;
+    static const RegisterID FramePointerRegister  = RegisterID::ebp;
+    static const FPRegisterID FPScratchRegister   = FPRegisterID::xmm1;
+
+    static const RegisterID Arg0Reg = RegisterID::edi;
+    static const RegisterID Arg1Reg = RegisterID::esi;
+    static const RegisterID Arg2Reg = RegisterID::edx;
+    static const RegisterID Arg3Reg = RegisterID::ecx;
+    static const RegisterID Arg4Reg = RegisterID::r8;
+    static const RegisterID Arg5Reg = RegisterID::r9;
+    static const RegisterID Arg6Reg = NoRegister;
+    static const RegisterID Arg7Reg = NoRegister;
+    static const int ArgInRegCount = 6;
+
+    void popValue()
+    {
+        addPtr(TrustedImmPtr(sizeof(ReturnedValue)), StackPointerRegister);
+    }
+
+    void generatePlatformFunctionEntry()
+    {
+        push(RegisterID::ebp);
+        move(RegisterID::esp, RegisterID::ebp);
+        move(TrustedImmPtr(nullptr), AccumulatorRegister); push(AccumulatorRegister); // exceptionHandler
+        push(JSStackFrameRegister);
+        push(CppStackFrameRegister);
+        push(EngineRegister);
+        move(Arg0Reg, CppStackFrameRegister);
+        move(Arg1Reg, EngineRegister);
+        loadPtr(Address(CppStackFrameRegister, offsetof(CppStackFrame, jsFrame)), JSStackFrameRegister);
+    }
+
+    void generatePlatformFunctionExit()
+    {
+        pop(EngineRegister);
+        pop(CppStackFrameRegister);
+        pop(JSStackFrameRegister);
+        pop(); // exceptionHandler
+        pop(RegisterID::ebp);
+        ret();
+    }
+
+    void callAbsolute(const void *funcPtr)
+    {
+        move(TrustedImmPtr(funcPtr), ScratchRegister);
+        call(ScratchRegister);
+    }
+
+    void pushAligned(RegisterID reg)
+    {
+        subPtr(TrustedImm32(PointerSize), StackPointerRegister);
+        push(reg);
+    }
+
+    void popAligned(RegisterID reg)
+    {
+        pop(reg);
+        addPtr(TrustedImm32(PointerSize), StackPointerRegister);
+    }
+};
+
+typedef PlatformAssembler_X86_64_SysV PlatformAssemblerBase;
+
+#endif
+#if defined(Q_OS_WIN)
+
+struct PlatformAssembler_Win64 : JSC::MacroAssembler<JSC::MacroAssemblerX86_64>
+{
+    static const RegisterID NoRegister = RegisterID(-1);
+
+    static const RegisterID ReturnValueRegister   = RegisterID::eax;
+    static const RegisterID AccumulatorRegister   = RegisterID::eax;
+    static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
+    static const RegisterID ScratchRegister       = RegisterID::r10;
+    static const RegisterID ScratchRegister2      = RegisterID::r9; // Note: overlaps with Arg3Reg, so do not use while setting up a call!
+    static const RegisterID JSStackFrameRegister  = RegisterID::r12;
+    static const RegisterID CppStackFrameRegister = RegisterID::r13;
+    static const RegisterID EngineRegister        = RegisterID::r14;
+    static const RegisterID StackPointerRegister  = RegisterID::esp;
+    static const RegisterID FramePointerRegister  = RegisterID::ebp;
+    static const FPRegisterID FPScratchRegister   = FPRegisterID::xmm1;
+
+    static const RegisterID Arg0Reg = RegisterID::ecx;
+    static const RegisterID Arg1Reg = RegisterID::edx;
+    static const RegisterID Arg2Reg = RegisterID::r8;
+    static const RegisterID Arg3Reg = RegisterID::r9;
+    static const RegisterID Arg4Reg = NoRegister;
+    static const RegisterID Arg5Reg = NoRegister;
+    static const RegisterID Arg6Reg = NoRegister;
+    static const RegisterID Arg7Reg = NoRegister;
+    static const int ArgInRegCount = 4;
+
+    void popValue()
+    {
+        addPtr(TrustedImmPtr(sizeof(ReturnedValue)), StackPointerRegister);
+    }
+
+    void generatePlatformFunctionEntry()
+    {
+        push(RegisterID::ebp);
+        move(RegisterID::esp, RegisterID::ebp);
+        move(TrustedImmPtr(nullptr), AccumulatorRegister); push(AccumulatorRegister); // exceptionHandler
+        push(JSStackFrameRegister);
+        push(CppStackFrameRegister);
+        push(EngineRegister);
+        move(Arg0Reg, CppStackFrameRegister);
+        move(Arg1Reg, EngineRegister);
+        loadPtr(Address(CppStackFrameRegister, offsetof(CppStackFrame, jsFrame)), JSStackFrameRegister);
+    }
+
+    void generatePlatformFunctionExit()
+    {
+        pop(EngineRegister);
+        pop(CppStackFrameRegister);
+        pop(JSStackFrameRegister);
+        pop(); // exceptionHandler
+        pop(RegisterID::ebp);
+        ret();
+    }
+
+    void callAbsolute(const void *funcPtr)
+    {
+        move(TrustedImmPtr(funcPtr), ScratchRegister);
+        subPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
+        call(ScratchRegister);
+        addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
+    }
+
+    void pushAligned(RegisterID reg)
+    {
+        subPtr(TrustedImm32(PointerSize), StackPointerRegister);
+        push(reg);
+    }
+
+    void popAligned(RegisterID reg)
+    {
+        pop(reg);
+        addPtr(TrustedImm32(PointerSize), StackPointerRegister);
+    }
+};
+
+typedef PlatformAssembler_Win64 PlatformAssemblerBase;
+
+#endif
 #endif
 
-using namespace QV4;
-using namespace QV4::JIT;
+#if (defined(Q_PROCESSOR_X86) && !defined(Q_PROCESSOR_X86_64)) || defined(ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES)
 
-CompilationUnit::~CompilationUnit()
+struct PlatformAssembler_X86_All : JSC::MacroAssembler<JSC::MacroAssemblerX86>
 {
-}
+    static const RegisterID NoRegister = RegisterID(-1);
 
-#if !defined(V4_BOOTSTRAP)
+    static const RegisterID ReturnValueRegisterValue = RegisterID::eax;
+    static const RegisterID ReturnValueRegisterTag   = RegisterID::edx;
+    static const RegisterID ScratchRegister          = RegisterID::ecx;
+    static const RegisterID AccumulatorRegisterValue = ReturnValueRegisterValue;
+    static const RegisterID AccumulatorRegisterTag   = ReturnValueRegisterTag;
+    static const RegisterID JSStackFrameRegister  = RegisterID::ebx;
+    static const RegisterID CppStackFrameRegister = RegisterID::esi;
+    static const RegisterID EngineRegister        = RegisterID::edi;
+    static const RegisterID StackPointerRegister  = RegisterID::esp;
+    static const RegisterID FramePointerRegister  = RegisterID::ebp;
+    static const FPRegisterID FPScratchRegister   = FPRegisterID::xmm1;
 
-void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
-{
-    runtimeFunctions.resize(data->functionTableSize);
-    runtimeFunctions.fill(0);
-    for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
-        const CompiledData::Function *compiledFunction = data->functionAt(i);
+    static const RegisterID Arg0Reg = NoRegister;
+    static const RegisterID Arg1Reg = NoRegister;
+    static const RegisterID Arg2Reg = NoRegister;
+    static const RegisterID Arg3Reg = NoRegister;
+    static const RegisterID Arg4Reg = NoRegister;
+    static const RegisterID Arg5Reg = NoRegister;
+    static const RegisterID Arg6Reg = NoRegister;
+    static const RegisterID Arg7Reg = NoRegister;
+    static const int ArgInRegCount = 0;
 
-        QV4::Function *runtimeFunction = new QV4::Function(engine, this, compiledFunction,
-                                                           (ReturnedValue (*)(QV4::ExecutionEngine *, const uchar *)) codeRefs[i].code().executableAddress());
-        runtimeFunctions[i] = runtimeFunction;
+    void popValue()
+    {
+        addPtr(TrustedImmPtr(sizeof(ReturnedValue)), StackPointerRegister);
     }
-}
 
-bool CompilationUnit::memoryMapCode(QString *errorString)
+    void generatePlatformFunctionEntry()
+    {
+        push(RegisterID::ebp);
+        move(RegisterID::esp, RegisterID::ebp);
+        move(TrustedImmPtr(nullptr), AccumulatorRegisterValue); push(AccumulatorRegisterValue); // exceptionHandler
+        push(JSStackFrameRegister);
+        push(CppStackFrameRegister);
+        push(EngineRegister);
+        loadPtr(Address(FramePointerRegister, 2 * PointerSize), CppStackFrameRegister);
+        loadPtr(Address(FramePointerRegister, 3 * PointerSize), EngineRegister);
+        loadPtr(Address(CppStackFrameRegister, offsetof(CppStackFrame, jsFrame)), JSStackFrameRegister);
+    }
+
+    void generatePlatformFunctionExit()
+    {
+        pop(EngineRegister);
+        pop(CppStackFrameRegister);
+        pop(JSStackFrameRegister);
+        pop(); // exceptionHandler
+        pop(RegisterID::ebp);
+        ret();
+    }
+
+    void callAbsolute(const void *funcPtr)
+    {
+        move(TrustedImmPtr(funcPtr), ScratchRegister);
+        call(ScratchRegister);
+    }
+
+    void pushAligned(RegisterID reg)
+    {
+        subPtr(TrustedImm32(PointerSize), StackPointerRegister);
+        push(reg);
+    }
+
+    void popAligned(RegisterID reg)
+    {
+        pop(reg);
+        addPtr(TrustedImm32(PointerSize), StackPointerRegister);
+    }
+};
+
+typedef PlatformAssembler_X86_All PlatformAssemblerBase;
+
+#endif
+
+#if defined(Q_PROCESSOR_ARM_64) || defined(ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES)
+
+struct PlatformAssembler_ARM64 : JSC::MacroAssembler<JSC::MacroAssemblerARM64>
 {
-    Q_UNUSED(errorString);
-    codeRefs.resize(data->functionTableSize);
+    static const RegisterID NoRegister = RegisterID(-1);
 
-    const char *basePtr = reinterpret_cast<const char *>(data);
+    static const RegisterID ReturnValueRegister   = JSC::ARM64Registers::x0;
+    static const RegisterID AccumulatorRegister   = JSC::ARM64Registers::x9;
+    static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
+    static const RegisterID ScratchRegister       = JSC::ARM64Registers::x10;
+    static const RegisterID ScratchRegister2      = JSC::ARM64Registers::x7; // Note: overlaps with Arg7Reg, so do not use while setting up a call!
+    static const RegisterID JSStackFrameRegister  = JSC::ARM64Registers::x19;
+    static const RegisterID CppStackFrameRegister = JSC::ARM64Registers::x20;
+    static const RegisterID EngineRegister        = JSC::ARM64Registers::x21;
+    static const RegisterID StackPointerRegister  = JSC::ARM64Registers::sp;
+    static const RegisterID FramePointerRegister  = JSC::ARM64Registers::fp;
+    static const FPRegisterID FPScratchRegister   = JSC::ARM64Registers::q1;
 
-    for (uint i = 0; i < data->functionTableSize; ++i) {
-        const CompiledData::Function *compiledFunction = data->functionAt(i);
-        void *codePtr = const_cast<void *>(reinterpret_cast<const void *>(basePtr + compiledFunction->codeOffset));
-        JSC::MacroAssemblerCodeRef codeRef = JSC::MacroAssemblerCodeRef::createSelfManagedCodeRef(JSC::MacroAssemblerCodePtr(codePtr));
-        JSC::ExecutableAllocator::makeExecutable(codePtr, compiledFunction->codeSize);
-        codeRefs[i] = codeRef;
+    static const RegisterID Arg0Reg = JSC::ARM64Registers::x0;
+    static const RegisterID Arg1Reg = JSC::ARM64Registers::x1;
+    static const RegisterID Arg2Reg = JSC::ARM64Registers::x2;
+    static const RegisterID Arg3Reg = JSC::ARM64Registers::x3;
+    static const RegisterID Arg4Reg = JSC::ARM64Registers::x4;
+    static const RegisterID Arg5Reg = JSC::ARM64Registers::x5;
+    static const RegisterID Arg6Reg = JSC::ARM64Registers::x6;
+    static const RegisterID Arg7Reg = JSC::ARM64Registers::x7;
+    static const int ArgInRegCount = 8;
 
-        static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_ASM");
-        if (showCode) {
-            WTF::dataLogF("Mapped JIT code for %s\n", qPrintable(stringAt(compiledFunction->nameIndex)));
-            disassemble(codeRef.code(), compiledFunction->codeSize, "    ", WTF::dataFile());
+    void push(RegisterID src)
+    {
+        pushToSave(src);
+    }
+
+    void pop(RegisterID dest)
+    {
+        popToRestore(dest);
+    }
+
+    void pop()
+    {
+        add64(TrustedImm32(16), stackPointerRegister);
+    }
+
+    void popValue()
+    {
+        pop();
+    }
+
+    void generatePlatformFunctionEntry()
+    {
+        pushPair(JSC::ARM64Registers::fp, JSC::ARM64Registers::lr);
+        move(RegisterID::sp, RegisterID::fp);
+        move(TrustedImmPtr(nullptr), AccumulatorRegister); // exceptionHandler
+        pushPair(JSStackFrameRegister, AccumulatorRegister);
+        pushPair(EngineRegister, CppStackFrameRegister);
+        move(Arg0Reg, CppStackFrameRegister);
+        move(Arg1Reg, EngineRegister);
+    }
+
+    void generatePlatformFunctionExit()
+    {
+        move(AccumulatorRegister, ReturnValueRegister);
+        popPair(EngineRegister, CppStackFrameRegister);
+        popPair(JSStackFrameRegister, AccumulatorRegister);
+        popPair(JSC::ARM64Registers::fp, JSC::ARM64Registers::lr);
+        ret();
+    }
+
+    void callAbsolute(const void *funcPtr)
+    {
+        move(TrustedImmPtr(funcPtr), ScratchRegister);
+        call(ScratchRegister);
+    }
+
+    void pushAligned(RegisterID reg)
+    {
+        pushToSave(reg);
+    }
+
+    void popAligned(RegisterID reg)
+    {
+        popToRestore(reg);
+    }
+};
+
+typedef PlatformAssembler_ARM64 PlatformAssemblerBase;
+
+#endif
+
+#if defined(Q_PROCESSOR_ARM_32) || defined(ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES)
+
+struct PlatformAssembler_ARM32 : JSC::MacroAssembler<JSC::MacroAssemblerARMv7>
+{
+    static const RegisterID NoRegister = RegisterID(-1);
+
+    static const RegisterID ReturnValueRegisterValue = JSC::ARMRegisters::r0;
+    static const RegisterID ReturnValueRegisterTag   = JSC::ARMRegisters::r1;
+    static const RegisterID ScratchRegister          = JSC::ARMRegisters::r2;
+    static const RegisterID AccumulatorRegisterValue = JSC::ARMRegisters::r4;
+    static const RegisterID AccumulatorRegisterTag   = JSC::ARMRegisters::r5;
+    // r6 is used by MacroAssemblerARMv7
+    static const RegisterID JSStackFrameRegister     = JSC::ARMRegisters::r8;
+    static const RegisterID CppStackFrameRegister    = JSC::ARMRegisters::r10;
+#if CPU(ARM_THUMB2) || defined(V4_BOOTSTRAP)
+    static const RegisterID FramePointerRegister     = JSC::ARMRegisters::r7;
+    static const RegisterID EngineRegister           = JSC::ARMRegisters::r11;
+#else // Thumbs down
+    static const RegisterID FramePointerRegister     = JSC::ARMRegisters::r11;
+    static const RegisterID EngineRegister           = JSC::ARMRegisters::r7;
+#endif
+    static const RegisterID StackPointerRegister     = JSC::ARMRegisters::r13;
+    static const FPRegisterID FPScratchRegister      = JSC::ARMRegisters::d1;
+
+    static const RegisterID Arg0Reg = JSC::ARMRegisters::r0;
+    static const RegisterID Arg1Reg = JSC::ARMRegisters::r1;
+    static const RegisterID Arg2Reg = JSC::ARMRegisters::r2;
+    static const RegisterID Arg3Reg = JSC::ARMRegisters::r3;
+    static const RegisterID Arg4Reg = NoRegister;
+    static const RegisterID Arg5Reg = NoRegister;
+    static const RegisterID Arg6Reg = NoRegister;
+    static const RegisterID Arg7Reg = NoRegister;
+    static const int ArgInRegCount = 4;
+
+    void popValue()
+    {
+        addPtr(TrustedImm32(sizeof(ReturnedValue)), StackPointerRegister);
+    }
+
+    void generatePlatformFunctionEntry()
+    {
+        push(JSC::ARMRegisters::lr);
+        push(FramePointerRegister);
+        move(StackPointerRegister, FramePointerRegister);
+        push(TrustedImm32(0)); // exceptionHandler
+        push(AccumulatorRegisterValue);
+        push(AccumulatorRegisterTag);
+        push(addressTempRegister);
+        push(JSStackFrameRegister);
+        push(CppStackFrameRegister);
+        push(EngineRegister);
+        subPtr(TrustedImm32(4), StackPointerRegister); // stack alignment
+        move(Arg0Reg, CppStackFrameRegister);
+        move(Arg1Reg, EngineRegister);
+    }
+
+    void generatePlatformFunctionExit()
+    {
+        move(AccumulatorRegisterValue, ReturnValueRegisterValue);
+        move(AccumulatorRegisterTag, ReturnValueRegisterTag);
+        addPtr(TrustedImm32(4), StackPointerRegister); // stack alignment
+        pop(EngineRegister);
+        pop(CppStackFrameRegister);
+        pop(JSStackFrameRegister);
+        pop(addressTempRegister);
+        pop(AccumulatorRegisterTag);
+        pop(AccumulatorRegisterValue);
+        pop(); // exceptionHandler
+        pop(FramePointerRegister);
+        pop(JSC::ARMRegisters::lr);
+        ret();
+    }
+
+    void callAbsolute(const void *funcPtr)
+    {
+        move(TrustedImmPtr(funcPtr), dataTempRegister);
+        call(dataTempRegister);
+    }
+
+    void pushAligned(RegisterID reg)
+    {
+        subPtr(TrustedImm32(PointerSize), StackPointerRegister);
+        push(reg);
+    }
+
+    void popAligned(RegisterID reg)
+    {
+        pop(reg);
+        addPtr(TrustedImm32(PointerSize), StackPointerRegister);
+    }
+};
+
+typedef PlatformAssembler_ARM32 PlatformAssemblerBase;
+
+#endif
+
+struct PlatformAssemblerCommon : PlatformAssemblerBase
+{
+    const Value* constantTable;
+    struct JumpTarget { JSC::MacroAssemblerBase::Jump jump; int offset; };
+    std::vector<JumpTarget> patches;
+    struct ExceptionHanlderTarget { JSC::MacroAssemblerBase::DataLabelPtr label; int offset; };
+    std::vector<ExceptionHanlderTarget> ehTargets;
+    QHash<int, JSC::MacroAssemblerBase::Label> labelsByOffset;
+    QHash<const void *, const char *> functions;
+    std::vector<Jump> catchyJumps;
+    Label functionExit;
+
+    Address exceptionHandlerAddress() const
+    {
+        return Address(FramePointerRegister, -1 * PointerSize);
+    }
+
+    Address contextAddress() const
+    {
+        return Address(JSStackFrameRegister, offsetof(CallData, context));
+    }
+
+    RegisterID registerForArg(int arg) const
+    {
+        Q_ASSERT(arg >= 0);
+        Q_ASSERT(arg < ArgInRegCount);
+        switch (arg) {
+        case 0: return Arg0Reg;
+        case 1: return Arg1Reg;
+        case 2: return Arg2Reg;
+        case 3: return Arg3Reg;
+        case 4: return Arg4Reg;
+        case 5: return Arg5Reg;
+        case 6: return Arg6Reg;
+        case 7: return Arg7Reg;
+        default:
+            Q_UNIMPLEMENTED();
+            Q_UNREACHABLE();
         }
     }
 
-    return true;
-}
-
-#endif // !defined(V4_BOOTSTRAP)
-
-void CompilationUnit::prepareCodeOffsetsForDiskStorage(CompiledData::Unit *unit)
-{
-    const int codeAlignment = 16;
-    quint64 offset = WTF::roundUpToMultipleOf(codeAlignment, unit->unitSize);
-    Q_ASSERT(int(unit->functionTableSize) == codeRefs.size());
-    for (int i = 0; i < codeRefs.size(); ++i) {
-        CompiledData::Function *compiledFunction = const_cast<CompiledData::Function *>(unit->functionAt(i));
-        compiledFunction->codeOffset = offset;
-        compiledFunction->codeSize = codeRefs.at(i).size();
-        offset = WTF::roundUpToMultipleOf(codeAlignment, offset + compiledFunction->codeSize);
+    void callRuntime(const char *functionName, const void *funcPtr)
+    {
+        functions.insert(funcPtr, functionName);
+        callAbsolute(funcPtr);
     }
-}
 
-bool CompilationUnit::saveCodeToDisk(QIODevice *device, const CompiledData::Unit *unit, QString *errorString)
-{
-    Q_ASSERT(device->pos() == unit->unitSize);
-    Q_ASSERT(device->atEnd());
-    Q_ASSERT(int(unit->functionTableSize) == codeRefs.size());
+    Address loadFunctionPtr(RegisterID target)
+    {
+        Address addr(CppStackFrameRegister, offsetof(CppStackFrame, v4Function));
+        loadPtr(addr, target);
+        return Address(target);
+    }
 
-    QByteArray padding;
+    Address loadCompilationUnitPtr(RegisterID target)
+    {
+        Address addr = loadFunctionPtr(target);
+        addr.offset = offsetof(QV4::Function, compilationUnit);
+        loadPtr(addr, target);
+        return Address(target);
+    }
 
-    for (int i = 0; i < codeRefs.size(); ++i) {
-        const CompiledData::Function *compiledFunction = unit->functionAt(i);
+    Address loadConstAddress(int constIndex, RegisterID baseReg = ScratchRegister)
+    {
+        Address addr = loadCompilationUnitPtr(baseReg);
+        addr.offset = offsetof(QV4::CompiledData::CompilationUnitBase, constants);
+        loadPtr(addr, baseReg);
+        addr.offset = constIndex * int(sizeof(QV4::Value));
+        return addr;
+    }
 
-        if (device->pos() > qint64(compiledFunction->codeOffset)) {
-            *errorString = QStringLiteral("Invalid state of cache file to write.");
-            return false;
+    Address loadStringAddress(int stringId)
+    {
+        Address addr = loadCompilationUnitPtr(ScratchRegister);
+        addr.offset = offsetof(QV4::CompiledData::CompilationUnitBase, runtimeStrings);
+        loadPtr(addr, ScratchRegister);
+        return Address(ScratchRegister, stringId * PointerSize);
+    }
+
+    void passAsArg(RegisterID src, int arg)
+    {
+        move(src, registerForArg(arg));
+    }
+
+    void generateCatchTrampoline(std::function<void()> loadUndefined)
+    {
+        for (Jump j : catchyJumps)
+            j.link(this);
+
+        loadPtr(exceptionHandlerAddress(), ScratchRegister);
+        Jump exitFunction = branchPtr(Equal, ScratchRegister, TrustedImmPtr(0));
+        jump(ScratchRegister);
+        exitFunction.link(this);
+        loadUndefined();
+
+        if (functionExit.isSet())
+            jump(functionExit);
+        else
+            generateFunctionExit();
+    }
+
+    void addCatchyJump(Jump j)
+    {
+        Q_ASSERT(j.isSet());
+        catchyJumps.push_back(j);
+    }
+
+    void generateFunctionEntry()
+    {
+        generatePlatformFunctionEntry();
+        loadPtr(Address(CppStackFrameRegister, offsetof(CppStackFrame, jsFrame)), JSStackFrameRegister);
+    }
+
+    void generateFunctionExit()
+    {
+        if (functionExit.isSet()) {
+            jump(functionExit);
+            return;
         }
 
-        const quint64 paddingSize = compiledFunction->codeOffset - device->pos();
-        padding.fill(0, paddingSize);
-        qint64 written = device->write(padding);
-        if (written != padding.size()) {
-            *errorString = device->errorString();
-            return false;
-        }
-
-        const void *undecoratedCodePtr = codeRefs.at(i).code().dataLocation();
-        written = device->write(reinterpret_cast<const char *>(undecoratedCodePtr), compiledFunction->codeSize);
-        if (written != qint64(compiledFunction->codeSize)) {
-            *errorString = device->errorString();
-            return false;
-        }
+        functionExit = label();
+        generatePlatformFunctionExit();
     }
-    return true;
-}
+};
 
-template <typename TargetConfiguration>
-Assembler<TargetConfiguration>::Assembler(QV4::Compiler::JSUnitGenerator *jsGenerator, IR::Function* function, QV4::ExecutableAllocator *executableAllocator)
-    : _function(function)
-    , _nextBlock(0)
-    , _executableAllocator(executableAllocator)
-    , _jsGenerator(jsGenerator)
+#if QT_POINTER_SIZE == 8 || defined(ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES)
+struct PlatformAssembler64 : PlatformAssemblerCommon
 {
-    _addrs.resize(_function->basicBlockCount());
-    _patches.resize(_function->basicBlockCount());
-    _labelPatches.resize(_function->basicBlockCount());
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::registerBlock(IR::BasicBlock* block, IR::BasicBlock *nextBlock)
-{
-    _addrs[block->index()] = label();
-    catchBlock = block->catchBlock;
-    _nextBlock = nextBlock;
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::jumpToBlock(IR::BasicBlock* current, IR::BasicBlock *target)
-{
-    Q_UNUSED(current);
-
-    if (target != _nextBlock)
-        _patches[target->index()].push_back(jump());
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::addPatch(IR::BasicBlock* targetBlock, Jump targetJump)
-{
-    _patches[targetBlock->index()].push_back(targetJump);
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::addPatch(DataLabelPtr patch, Label target)
-{
-    DataLabelPatch p;
-    p.dataLabel = patch;
-    p.target = target;
-    _dataLabelPatches.push_back(p);
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::addPatch(DataLabelPtr patch, IR::BasicBlock *target)
-{
-    _labelPatches[target->index()].push_back(patch);
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::generateCJumpOnNonZero(RegisterID reg, IR::BasicBlock *currentBlock,
-                                       IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock)
-{
-    generateCJumpOnCompare(RelationalCondition::NotEqual, reg, TrustedImm32(0), currentBlock, trueBlock, falseBlock);
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::generateCJumpOnCompare(RelationalCondition cond,
-                                       RegisterID left,
-                                       TrustedImm32 right,
-                                       IR::BasicBlock *currentBlock,
-                                       IR::BasicBlock *trueBlock,
-                                       IR::BasicBlock *falseBlock)
-{
-    if (trueBlock == _nextBlock) {
-        Jump target = branch32(invert(cond), left, right);
-        addPatch(falseBlock, target);
-    } else {
-        Jump target = branch32(cond, left, right);
-        addPatch(trueBlock, target);
-        jumpToBlock(currentBlock, falseBlock);
+    void callRuntime(const char *functionName, const void *funcPtr,
+                     Assembler::CallResultDestination dest)
+    {
+        PlatformAssemblerCommon::callRuntime(functionName, funcPtr);
+        if (dest == Assembler::ResultInAccumulator)
+            move(ReturnValueRegister, AccumulatorRegister);
     }
-}
 
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::generateCJumpOnCompare(RelationalCondition cond,
-                                       RegisterID left,
-                                       RegisterID right,
-                                       IR::BasicBlock *currentBlock,
-                                       IR::BasicBlock *trueBlock,
-                                       IR::BasicBlock *falseBlock)
-{
-    if (trueBlock == _nextBlock) {
-        Jump target = branch32(invert(cond), left, right);
-        addPatch(falseBlock, target);
-    } else {
-        Jump target = branch32(cond, left, right);
-        addPatch(trueBlock, target);
-        jumpToBlock(currentBlock, falseBlock);
+    void loadUndefined(RegisterID dest = AccumulatorRegister)
+    {
+        move(TrustedImm64(0), dest);
     }
-}
 
-template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Pointer
-Assembler<TargetConfiguration>::loadAddressForWriting(RegisterID tmp, IR::Expr *e, WriteBarrier::Type *barrier)
-{
-    if (barrier)
-        *barrier = WriteBarrier::NoBarrier;
-    IR::Temp *t = e->asTemp();
-    if (t)
-        return loadTempAddress(t);
-    else
-        return loadArgLocalAddressForWriting(tmp, e->asArgLocal(), barrier);
-}
-
-template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>::loadTempAddress(IR::Temp *t)
-{
-    if (t->kind == IR::Temp::StackSlot)
-        return stackSlotPointer(t);
-    else
-        Q_UNREACHABLE();
-}
-
-template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Pointer
-Assembler<TargetConfiguration>::loadArgLocalAddressForWriting(RegisterID baseReg, IR::ArgLocal *al, WriteBarrier::Type *barrier)
-{
-    if (barrier)
-        *barrier = _function->argLocalRequiresWriteBarrier(al) ? WriteBarrier::Barrier : WriteBarrier::NoBarrier;
-
-    int32_t offset = 0;
-    int scope = al->scope;
-    loadPtr(Address(EngineRegister, targetStructureOffset(offsetof(EngineBase, current))), baseReg);
-
-    const qint32 outerOffset = targetStructureOffset(Heap::ExecutionContextData::baseOffset + offsetof(Heap::ExecutionContextData, outer));
-    const qint32 localsOffset = targetStructureOffset(Heap::CallContextData::baseOffset + offsetof(Heap::CallContextData, function))
-                                + 8 // locals is always 8 bytes away from function, regardless of pointer size.
-                                + offsetof(ValueArray<0>, values);
-
-    while (scope) {
-        loadPtr(Address(baseReg, outerOffset), baseReg);
-        --scope;
-    }
-    switch (al->kind) {
-    case IR::ArgLocal::Formal:
-    case IR::ArgLocal::ScopedFormal: {
-        if (barrier && *barrier == WriteBarrier::Barrier) {
-            // if we need a barrier, the baseReg has to point to the ExecutionContext
-            // callData comes directly after locals, calculate the offset using that
-            offset = localsOffset + _function->localsCountForScope(al) * sizeof(Value);
-            offset += sizeof(CallData) + (al->index - 1) * sizeof(Value);
+    void copyConst(int constIndex, Address dest)
+    {
+        //###
+        if (constantTable[constIndex].isUndefined()) {
+            loadUndefined(ScratchRegister);
         } else {
-            const qint32 callDataOffset = targetStructureOffset(Heap::ExecutionContextData::baseOffset + offsetof(Heap::ExecutionContextData, callData));
-            loadPtr(Address(baseReg, callDataOffset), baseReg);
-            offset = sizeof(CallData) + (al->index - 1) * sizeof(Value);
+            load64(loadConstAddress(constIndex, ScratchRegister), ScratchRegister);
         }
-    } break;
-    case IR::ArgLocal::Local:
-    case IR::ArgLocal::ScopedLocal: {
-        offset = localsOffset + al->index * sizeof(Value);
-    } break;
-    default:
-        Q_UNREACHABLE();
-    }
-    return Pointer(baseReg, offset);
-}
-
-template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Pointer Assembler<TargetConfiguration>::loadStringAddress(RegisterID reg, const QString &string)
-{
-    loadPtr(Address(Assembler::EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), Assembler::ScratchRegister);
-    loadPtr(Address(Assembler::ScratchRegister, targetStructureOffset(Heap::ExecutionContextData::baseOffset + offsetof(Heap::ExecutionContextData, compilationUnit))), Assembler::ScratchRegister);
-    loadPtr(Address(Assembler::ScratchRegister, offsetof(CompiledData::CompilationUnitBase, runtimeStrings)), reg);
-    const int id = _jsGenerator->registerString(string);
-    return Pointer(reg, id * RegisterSize);
-}
-
-template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Address Assembler<TargetConfiguration>::loadConstant(IR::Const *c, RegisterID baseReg)
-{
-    return loadConstant(convertToValue<TargetPrimitive>(c), baseReg);
-}
-
-template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Address Assembler<TargetConfiguration>::loadConstant(const TargetPrimitive &v, RegisterID baseReg)
-{
-    loadPtr(Address(Assembler::EngineRegister, targetStructureOffset(offsetof(QV4::EngineBase, current))), baseReg);
-    loadPtr(Address(baseReg, targetStructureOffset(Heap::ExecutionContextData::baseOffset + offsetof(Heap::ExecutionContextData, constantTable))), baseReg);
-    const int index = _jsGenerator->registerConstant(v.rawValue());
-    return Address(baseReg, index * sizeof(QV4::Value));
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::loadStringRef(RegisterID reg, const QString &string)
-{
-    const int id = _jsGenerator->registerString(string);
-    move(TrustedImm32(id), reg);
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::storeValue(TargetPrimitive value, IR::Expr *destination)
-{
-    WriteBarrier::Type barrier;
-    Address addr = loadAddressForWriting(ScratchRegister, destination, &barrier);
-    storeValue(value, addr, barrier);
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::enterStandardStackFrame(const RegisterInformation &regularRegistersToSave,
-                                        const RegisterInformation &fpRegistersToSave)
-{
-    platformEnterStandardStackFrame(this);
-
-    move(StackPointerRegister, JITTargetPlatform::FramePointerRegister);
-
-    const int frameSize = _stackLayout->calculateStackFrameSize();
-    subPtr(TrustedImm32(frameSize), StackPointerRegister);
-
-    Address slotAddr(JITTargetPlatform::FramePointerRegister, 0);
-    for (int i = 0, ei = fpRegistersToSave.size(); i < ei; ++i) {
-        Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
-        slotAddr.offset -= sizeof(double);
-        TargetConfiguration::MacroAssembler::storeDouble(fpRegistersToSave.at(i).reg<FPRegisterID>(), slotAddr);
-    }
-    for (int i = 0, ei = regularRegistersToSave.size(); i < ei; ++i) {
-        Q_ASSERT(regularRegistersToSave.at(i).isRegularRegister());
-        slotAddr.offset -= RegisterSize;
-        storePtr(regularRegistersToSave.at(i).reg<RegisterID>(), slotAddr);
+        store64(ScratchRegister, dest);
     }
 
-    platformFinishEnteringStandardStackFrame(this);
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::leaveStandardStackFrame(const RegisterInformation &regularRegistersToSave,
-                                        const RegisterInformation &fpRegistersToSave)
-{
-    Address slotAddr(JITTargetPlatform::FramePointerRegister, -regularRegistersToSave.size() * RegisterSize - fpRegistersToSave.size() * sizeof(double));
-
-    // restore the callee saved registers
-    for (int i = regularRegistersToSave.size() - 1; i >= 0; --i) {
-        Q_ASSERT(regularRegistersToSave.at(i).isRegularRegister());
-        loadPtr(slotAddr, regularRegistersToSave.at(i).reg<RegisterID>());
-        slotAddr.offset += RegisterSize;
-    }
-    for (int i = fpRegistersToSave.size() - 1; i >= 0; --i) {
-        Q_ASSERT(fpRegistersToSave.at(i).isFloatingPoint());
-        TargetConfiguration::MacroAssembler::loadDouble(slotAddr, fpRegistersToSave.at(i).reg<FPRegisterID>());
-        slotAddr.offset += sizeof(double);
+    void copyReg(Address src, Address dst)
+    {
+        loadReg(src, ScratchRegister);
+        store64(ScratchRegister, dst);
     }
 
-    Q_ASSERT(slotAddr.offset == 0);
-
-    const int frameSize = _stackLayout->calculateStackFrameSize();
-    platformLeaveStandardStackFrame(this, frameSize);
-}
-
-
-
-
-// Try to load the source expression into the destination FP register. This assumes that two
-// general purpose (integer) registers are available: the ScratchRegister and the
-// ReturnValueRegister. It returns a Jump if no conversion can be performed.
-template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Jump Assembler<TargetConfiguration>::genTryDoubleConversion(IR::Expr *src, FPRegisterID dest)
-{
-    switch (src->type) {
-    case IR::DoubleType:
-        moveDouble(toDoubleRegister(src, dest), dest);
-        return Assembler::Jump();
-    case IR::SInt32Type:
-        convertInt32ToDouble(toInt32Register(src, Assembler::ScratchRegister),
-                                  dest);
-        return Assembler::Jump();
-    case IR::UInt32Type:
-        convertUInt32ToDouble(toUInt32Register(src, Assembler::ScratchRegister),
-                                   dest, Assembler::ReturnValueRegister);
-        return Assembler::Jump();
-    case IR::NullType:
-    case IR::UndefinedType:
-    case IR::BoolType:
-        // TODO?
-    case IR::StringType:
-        return jump();
-    default:
-        break;
+    void loadReg(Address addr, RegisterID dest = AccumulatorRegister)
+    {
+        load64(addr, dest);
     }
 
-    Q_ASSERT(src->asTemp() || src->asArgLocal());
-
-    // It's not a number type, so it cannot be in a register.
-    Q_ASSERT(src->asArgLocal() || src->asTemp()->kind != IR::Temp::PhysicalRegister || src->type == IR::BoolType);
-
-    Assembler::Pointer tagAddr = loadAddressForReading(Assembler::ScratchRegister, src);
-    tagAddr.offset += 4;
-    load32(tagAddr, Assembler::ScratchRegister);
-
-    // check if it's an int32:
-    Assembler::Jump isNoInt = branch32(Assembler::NotEqual, Assembler::ScratchRegister,
-                                       Assembler::TrustedImm32(quint32(ValueTypeInternal::Integer)));
-    convertInt32ToDouble(toInt32Register(src, Assembler::ScratchRegister), dest);
-    Assembler::Jump intDone = jump();
-
-    // not an int, check if it's a double:
-    isNoInt.link(this);
-    Assembler::Jump isNoDbl = RegisterSizeDependentOps::checkIfTagRegisterIsDouble(this, ScratchRegister);
-    toDoubleRegister(src, dest);
-    intDone.link(this);
-
-    return isNoDbl;
-}
-
-template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Jump Assembler<TargetConfiguration>::branchDouble(bool invertCondition, IR::AluOp op,
-                                                   IR::Expr *left, IR::Expr *right)
-{
-    DoubleCondition cond;
-    switch (op) {
-    case IR::OpGt: cond = Assembler::DoubleGreaterThan; break;
-    case IR::OpLt: cond = Assembler::DoubleLessThan; break;
-    case IR::OpGe: cond = Assembler::DoubleGreaterThanOrEqual; break;
-    case IR::OpLe: cond = Assembler::DoubleLessThanOrEqual; break;
-    case IR::OpEqual:
-    case IR::OpStrictEqual: cond = Assembler::DoubleEqual; break;
-    case IR::OpNotEqual:
-    case IR::OpStrictNotEqual: cond = Assembler::DoubleNotEqualOrUnordered; break; // No, the inversion of DoubleEqual is NOT DoubleNotEqual.
-    default:
-        Q_UNREACHABLE();
-    }
-    if (invertCondition)
-        cond = TargetConfiguration::MacroAssembler::invert(cond);
-
-    return TargetConfiguration::MacroAssembler::branchDouble(cond, toDoubleRegister(left, FPGpr0), toDoubleRegister(right, JITTargetPlatform::FPGpr1));
-}
-
-template <typename TargetConfiguration>
-typename Assembler<TargetConfiguration>::Jump Assembler<TargetConfiguration>::branchInt32(bool invertCondition, IR::AluOp op, IR::Expr *left, IR::Expr *right)
-{
-    Assembler::RelationalCondition cond;
-    switch (op) {
-    case IR::OpGt: cond = Assembler::GreaterThan; break;
-    case IR::OpLt: cond = Assembler::LessThan; break;
-    case IR::OpGe: cond = Assembler::GreaterThanOrEqual; break;
-    case IR::OpLe: cond = Assembler::LessThanOrEqual; break;
-    case IR::OpEqual:
-    case IR::OpStrictEqual: cond = Assembler::Equal; break;
-    case IR::OpNotEqual:
-    case IR::OpStrictNotEqual: cond = Assembler::NotEqual; break;
-    default:
-        Q_UNREACHABLE();
-    }
-    if (invertCondition)
-        cond = TargetConfiguration::MacroAssembler::invert(cond);
-
-    return TargetConfiguration::MacroAssembler::branch32(cond,
-                                                         toInt32Register(left, Assembler::ScratchRegister),
-                                                         toInt32Register(right, Assembler::ReturnValueRegister));
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::setStackLayout(int maxArgCountForBuiltins, int regularRegistersToSave, int fpRegistersToSave)
-{
-    _stackLayout.reset(new StackLayout(_function, maxArgCountForBuiltins, regularRegistersToSave, fpRegistersToSave));
-}
-
-template <typename TargetConfiguration>
-void Assembler<TargetConfiguration>::returnFromFunction(IR::Ret *s, RegisterInformation regularRegistersToSave, RegisterInformation fpRegistersToSave)
-{
-    if (!s) {
-        // this only happens if the method doesn't have a return statement and can
-        // only exit through an exception
-    } else if (IR::Temp *t = s->expr->asTemp()) {
-        RegisterSizeDependentOps::setFunctionReturnValueFromTemp(this, t);
-    } else if (IR::Const *c = s->expr->asConst()) {
-        auto retVal = convertToValue<TargetPrimitive>(c);
-        RegisterSizeDependentOps::setFunctionReturnValueFromConst(this, retVal);
-    } else {
-        Q_UNREACHABLE();
-        Q_UNUSED(s);
+    void loadAccumulator(Address addr)
+    {
+        load64(addr, AccumulatorRegister);
     }
 
-    Label leaveStackFrame = label();
+    void storeAccumulator(Address addr)
+    {
+        store64(AccumulatorRegister, addr);
+    }
 
-    const int locals = stackLayout().calculateJSStackFrameSize();
-    subPtr(TrustedImm32(sizeof(QV4::Value)*locals), JITTargetPlatform::LocalsRegister);
-    storePtr(JITTargetPlatform::LocalsRegister, Address(JITTargetPlatform::EngineRegister, targetStructureOffset(offsetof(EngineBase, jsStackTop))));
+    void loadString(int stringId)
+    {
+        loadAccumulator(loadStringAddress(stringId));
+    }
 
-    leaveStandardStackFrame(regularRegistersToSave, fpRegistersToSave);
-    ret();
+    void loadValue(ReturnedValue value)
+    {
+        move(TrustedImm64(value), AccumulatorRegister);
+    }
 
-    exceptionReturnLabel = label();
-    auto retVal = TargetPrimitive::undefinedValue();
-    RegisterSizeDependentOps::setFunctionReturnValueFromConst(this, retVal);
-    jump(leaveStackFrame);
+    void generateCatchTrampoline()
+    {
+        PlatformAssemblerCommon::generateCatchTrampoline([this](){loadUndefined();});
+    }
+
+    void toBoolean(std::function<void(RegisterID)> continuation)
+    {
+        urshift64(AccumulatorRegister, TrustedImm32(Value::IsIntegerConvertible_Shift), ScratchRegister);
+        auto needsConversion = branch32(NotEqual, TrustedImm32(1), ScratchRegister);
+        continuation(AccumulatorRegister);
+        Jump done = jump();
+
+        // slow path:
+        needsConversion.link(this);
+        push(AccumulatorRegister);
+        move(AccumulatorRegister, registerForArg(0));
+        callHelper(Value::toBooleanImpl);
+        and32(TrustedImm32(1), ReturnValueRegister, ScratchRegister);
+        pop(AccumulatorRegister);
+        continuation(ScratchRegister);
+
+        done.link(this);
+    }
+
+    void toNumber()
+    {
+        move(AccumulatorRegister, registerForArg(0));
+        callHelper(toNumberHelper);
+        move(ReturnValueRegister, AccumulatorRegister);
+    }
+
+    void toInt32()
+    {
+        move(AccumulatorRegister, registerForArg(0));
+        callRuntime("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper),
+                    Assembler::ResultInAccumulator);
+    }
+
+    void regToInt32(Address srcReg, RegisterID targetReg)
+    {
+        pushAligned(AccumulatorRegister);
+        load64(srcReg, registerForArg(0));
+        callHelper(toInt32Helper);
+        move(ReturnValueRegister, targetReg);
+        popAligned(AccumulatorRegister);
+    }
+
+    void isNullOrUndefined()
+    {
+        move(AccumulatorRegister, ScratchRegister);
+        compare64(Equal, ScratchRegister, TrustedImm32(0), AccumulatorRegister);
+        Jump isUndef = branch32(NotEqual, TrustedImm32(0), AccumulatorRegister);
+
+        // not undefined
+        rshift64(TrustedImm32(32), ScratchRegister);
+        compare32(Equal, ScratchRegister, TrustedImm32(int(QV4::Value::ValueTypeInternal::Null)),
+                  AccumulatorRegister);
+
+        isUndef.link(this);
+    }
+
+    void jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset)
+    {
+        Address lhsAddr(JSStackFrameRegister, lhs * int(sizeof(Value)));
+        load64(lhsAddr, ScratchRegister);
+        Jump isUndef = branch64(Equal, ScratchRegister, TrustedImm64(0));
+        Jump equal = branch32(Equal, TrustedImm32(rhs), ScratchRegister);
+        patches.push_back({ equal, offset });
+        isUndef.link(this);
+    }
+
+    void jumpStrictNotEqualStackSlotInt(int lhs, int rhs, int offset)
+    {
+        Address lhsAddr(JSStackFrameRegister, lhs * int(sizeof(Value)));
+        load64(lhsAddr, ScratchRegister);
+        Jump isUndef = branch64(Equal, ScratchRegister, TrustedImm64(0));
+        patches.push_back({ isUndef, offset });
+        Jump notEqual = branch32(NotEqual, TrustedImm32(rhs), ScratchRegister);
+        patches.push_back({ notEqual, offset });
+    }
+
+    void setAccumulatorTag(QV4::Value::ValueTypeInternal tag, RegisterID sourceReg = NoRegister)
+    {
+        if (sourceReg == NoRegister)
+            or64(TrustedImm64(int64_t(tag) << 32), AccumulatorRegister);
+        else
+            or64(TrustedImm64(int64_t(tag) << 32), sourceReg, AccumulatorRegister);
+    }
+
+    void encodeDoubleIntoAccumulator(FPRegisterID src)
+    {
+        moveDoubleTo64(src, AccumulatorRegister);
+        move(TrustedImm64(Value::NaNEncodeMask), ScratchRegister);
+        xor64(ScratchRegister, AccumulatorRegister);
+    }
+
+    void pushValue(ReturnedValue v)
+    {
+        loadValue(v);
+        push(AccumulatorRegister);
+    }
+
+    void pushValueAligned(ReturnedValue v)
+    {
+        subPtr(TrustedImm32(PointerSize), StackPointerRegister);
+        pushValue(v);
+    }
+
+    void popValueAligned()
+    {
+        addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+    }
+
+    Jump binopBothIntPath(Address lhsAddr, std::function<Jump(void)> fastPath)
+    {
+        urshift64(AccumulatorRegister, TrustedImm32(32), ScratchRegister);
+        Jump accNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), ScratchRegister);
+        load64(lhsAddr, ScratchRegister);
+        urshift64(ScratchRegister, TrustedImm32(32), ScratchRegister2);
+        Jump lhsNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), ScratchRegister2);
+
+        // both integer
+        Jump failure = fastPath();
+        Jump done = jump();
+
+        // all other cases
+        if (failure.isSet())
+            failure.link(this);
+        accNotInt.link(this);
+        lhsNotInt.link(this);
+
+        return done;
+    }
+};
+
+typedef PlatformAssembler64 PlatformAssembler;
+#endif
+
+#if QT_POINTER_SIZE == 4 || defined(ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES)
+struct PlatformAssembler32 : PlatformAssemblerCommon
+{
+    void callRuntime(const char *functionName, const void *funcPtr,
+                     Assembler::CallResultDestination dest)
+    {
+        PlatformAssemblerCommon::callRuntime(functionName, funcPtr);
+        if (dest == Assembler::ResultInAccumulator) {
+            move(ReturnValueRegisterValue, AccumulatorRegisterValue);
+            move(ReturnValueRegisterTag, AccumulatorRegisterTag);
+        }
+    }
+
+    void loadUndefined()
+    {
+        move(TrustedImm32(0), AccumulatorRegisterValue);
+        move(TrustedImm32(0), AccumulatorRegisterTag);
+    }
+
+    void copyConst(int constIndex, Address destRegAddr)
+    {
+        //###
+        if (constantTable[constIndex].isUndefined()) {
+            move(TrustedImm32(0), ScratchRegister);
+            store32(ScratchRegister, destRegAddr);
+            destRegAddr.offset += 4;
+            store32(ScratchRegister, destRegAddr);
+        } else {
+            Address src = loadConstAddress(constIndex);
+            loadDouble(src, FPScratchRegister);
+            storeDouble(FPScratchRegister, destRegAddr);
+        }
+    }
+
+    void copyReg(Address src, Address dest)
+    {
+        loadDouble(src, FPScratchRegister);
+        storeDouble(FPScratchRegister, dest);
+    }
+
+    void loadReg(Address addr)
+    {
+        load32(addr, AccumulatorRegisterValue);
+        addr.offset += 4;
+        load32(addr, AccumulatorRegisterTag);
+    }
+
+    void loadAccumulator(Address src)
+    {
+        load32(src, AccumulatorRegisterValue);
+        src.offset += 4;
+        load32(src, AccumulatorRegisterTag);
+    }
+
+    void storeAccumulator(Address addr)
+    {
+        store32(AccumulatorRegisterValue, addr);
+        addr.offset += 4;
+        store32(AccumulatorRegisterTag, addr);
+    }
+
+    void loadString(int stringId)
+    {
+        load32(loadStringAddress(stringId), AccumulatorRegisterValue);
+        move(TrustedImm32(0), AccumulatorRegisterTag);
+    }
+
+    void loadValue(ReturnedValue value)
+    {
+        move(TrustedImm32(Value::fromReturnedValue(value).value()), AccumulatorRegisterValue);
+        move(TrustedImm32(Value::fromReturnedValue(value).tag()), AccumulatorRegisterTag);
+    }
+
+    void generateCatchTrampoline()
+    {
+        PlatformAssemblerCommon::generateCatchTrampoline([this](){loadUndefined();});
+    }
+
+    void toNumber()
+    {
+        if (ArgInRegCount < 2) {
+            push(AccumulatorRegisterTag);
+            push(AccumulatorRegisterValue);
+        } else {
+            move(AccumulatorRegisterValue, registerForArg(0));
+            move(AccumulatorRegisterTag, registerForArg(1));
+        }
+        callRuntime("toNumberHelper", reinterpret_cast<void *>(&toNumberHelper),
+                    Assembler::ResultInAccumulator);
+        move(ReturnValueRegisterValue, AccumulatorRegisterValue);
+        move(ReturnValueRegisterTag, AccumulatorRegisterTag);
+        if (ArgInRegCount < 2)
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+    }
+
+    void toInt32()
+    {
+        if (ArgInRegCount < 2) {
+            push(AccumulatorRegisterTag);
+            push(AccumulatorRegisterValue);
+        } else {
+            move(AccumulatorRegisterValue, registerForArg(0));
+            move(AccumulatorRegisterTag, registerForArg(1));
+        }
+        callRuntime("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper),
+                    Assembler::ResultInAccumulator);
+        if (ArgInRegCount < 2)
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+    }
+
+    void regToInt32(Address srcReg, RegisterID targetReg)
+    {
+        bool accumulatorNeedsSaving = AccumulatorRegisterValue == ReturnValueRegisterValue
+                || AccumulatorRegisterTag == ReturnValueRegisterTag;
+        if (accumulatorNeedsSaving) {
+            push(AccumulatorRegisterTag);
+            push(AccumulatorRegisterValue);
+        }
+        if (ArgInRegCount < 2) {
+            srcReg.offset += 4;
+            load32(srcReg, targetReg);
+            push(targetReg);
+            srcReg.offset -= 4;
+            load32(srcReg, targetReg);
+            push(targetReg);
+        } else {
+            load32(srcReg, registerForArg(0));
+            srcReg.offset += 4;
+            load32(srcReg, registerForArg(1));
+        }
+        callHelper(toInt32Helper);
+        move(ReturnValueRegisterValue, targetReg);
+        if (ArgInRegCount < 2)
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+        if (accumulatorNeedsSaving) {
+            pop(AccumulatorRegisterValue);
+            pop(AccumulatorRegisterTag);
+        }
+    }
+
+    void isNullOrUndefined()
+    {
+        Jump notUndefOrPtr = branch32(NotEqual, TrustedImm32(0), AccumulatorRegisterTag);
+        compare32(Equal, AccumulatorRegisterValue, TrustedImm32(0), AccumulatorRegisterValue);
+        auto done = jump();
+
+        // not undefined or managed
+        notUndefOrPtr.link(this);
+        compare32(Equal, AccumulatorRegisterTag, TrustedImm32(int(QV4::Value::ValueTypeInternal::Null)),
+                  AccumulatorRegisterValue);
+
+        done.link(this);
+    }
+
+    void pushValue(ReturnedValue v)
+    {
+        push(TrustedImm32(v >> 32));
+        push(TrustedImm32(v));
+    }
+
+    void toBoolean(std::function<void(RegisterID)> continuation)
+    {
+        urshift32(AccumulatorRegisterTag, TrustedImm32(Value::IsIntegerConvertible_Shift - 32),
+                  ScratchRegister);
+        auto needsConversion = branch32(NotEqual, TrustedImm32(1), ScratchRegister);
+        continuation(AccumulatorRegisterValue);
+        Jump done = jump();
+
+        // slow path:
+        needsConversion.link(this);
+
+        bool accumulatorNeedsSaving = AccumulatorRegisterValue == ReturnValueRegisterValue
+                || AccumulatorRegisterTag == ReturnValueRegisterTag;
+        if (accumulatorNeedsSaving) {
+            push(AccumulatorRegisterTag);
+            push(AccumulatorRegisterValue);
+        }
+
+        if (ArgInRegCount < 2) {
+            push(AccumulatorRegisterTag);
+            push(AccumulatorRegisterValue);
+        } else {
+            move(AccumulatorRegisterValue, registerForArg(0));
+            move(AccumulatorRegisterTag, registerForArg(1));
+        }
+        callHelper(Value::toBooleanImpl);
+        if (ArgInRegCount < 2)
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+
+        and32(TrustedImm32(1), ReturnValueRegisterValue, ScratchRegister);
+        if (accumulatorNeedsSaving) {
+            pop(AccumulatorRegisterValue);
+            pop(AccumulatorRegisterTag);
+        }
+        continuation(ScratchRegister);
+
+        done.link(this);
+    }
+
+    void jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset)
+    {
+        Address lhsAddr(JSStackFrameRegister, lhs * int(sizeof(Value)));
+        load32(lhsAddr, ScratchRegister);
+        Jump notEqInt = branch32(NotEqual, ScratchRegister, TrustedImm32(rhs));
+        Jump notEqUndefVal = branch32(NotEqual, ScratchRegister, TrustedImm32(0));
+        patches.push_back({ notEqUndefVal, offset });
+        lhsAddr.offset += 4;
+        load32(lhsAddr, ScratchRegister);
+        Jump notEqUndefTag = branch32(NotEqual, ScratchRegister, TrustedImm32(0));
+        patches.push_back({ notEqUndefTag, offset });
+        notEqInt.link(this);
+    }
+
+    void jumpStrictNotEqualStackSlotInt(int lhs, int rhs, int offset)
+    {
+        Address lhsAddr(JSStackFrameRegister, lhs * int(sizeof(Value)));
+        load32(lhsAddr, ScratchRegister);
+        Jump notEqual = branch32(NotEqual, TrustedImm32(rhs), ScratchRegister);
+        patches.push_back({ notEqual, offset });
+        Jump notUndefValue = branch32(NotEqual, TrustedImm32(0), ScratchRegister);
+        lhsAddr.offset += 4;
+        load32(lhsAddr, ScratchRegister);
+        Jump equalUndef = branch32(Equal, TrustedImm32(0), ScratchRegister);
+        patches.push_back({ equalUndef, offset });
+        notUndefValue.link(this);
+    }
+
+    void setAccumulatorTag(QV4::Value::ValueTypeInternal tag, RegisterID sourceReg = NoRegister)
+    {
+        if (sourceReg != NoRegister)
+            move(sourceReg, AccumulatorRegisterValue);
+        move(TrustedImm32(int(tag)), AccumulatorRegisterTag);
+    }
+
+    void encodeDoubleIntoAccumulator(FPRegisterID src)
+    {
+        moveDoubleToInts(src, AccumulatorRegisterValue, AccumulatorRegisterTag);
+        xor32(TrustedImm32(Value::NaNEncodeMask >> 32), AccumulatorRegisterTag);
+    }
+
+    void pushValueAligned(ReturnedValue v)
+    {
+        pushValue(v);
+    }
+
+    void popValueAligned()
+    {
+        popValue();
+    }
+
+    Jump binopBothIntPath(Address lhsAddr, std::function<Jump(void)> fastPath)
+    {
+        Jump accNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), AccumulatorRegisterTag);
+        Address lhsAddrTag = lhsAddr; lhsAddrTag.offset += Value::tagOffset();
+        load32(lhsAddrTag, ScratchRegister);
+        Jump lhsNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), ScratchRegister);
+
+        // both integer
+        Address lhsAddrValue = lhsAddr; lhsAddrValue.offset += Value::valueOffset();
+        load32(lhsAddrValue, ScratchRegister);
+        Jump failure = fastPath();
+        Jump done = jump();
+
+        // all other cases
+        if (failure.isSet())
+            failure.link(this);
+        accNotInt.link(this);
+        lhsNotInt.link(this);
+
+        return done;
+    }
+};
+
+typedef PlatformAssembler32 PlatformAssembler;
+#endif
+
+typedef PlatformAssembler::TrustedImmPtr TrustedImmPtr;
+typedef PlatformAssembler::TrustedImm32 TrustedImm32;
+typedef PlatformAssembler::TrustedImm64 TrustedImm64;
+typedef PlatformAssembler::Address Address;
+typedef PlatformAssembler::RegisterID RegisterID;
+typedef PlatformAssembler::FPRegisterID FPRegisterID;
+
+#define pasm() reinterpret_cast<PlatformAssembler *>(this->d)
+
+static Address regAddr(int reg)
+{
+    return Address(PlatformAssembler::JSStackFrameRegister, reg * int(sizeof(QV4::Value)));
+}
+
+Assembler::Assembler(const Value *constantTable)
+    : d(new PlatformAssembler)
+{
+    pasm()->constantTable = constantTable;
+}
+
+Assembler::~Assembler()
+{
+    delete pasm();
+}
+
+void Assembler::generatePrologue()
+{
+    pasm()->generateFunctionEntry();
+}
+
+void Assembler::generateEpilogue()
+{
+    pasm()->generateCatchTrampoline();
 }
 
 namespace {
@@ -560,7 +1155,7 @@ public:
     ~QIODevicePrintStream()
     {}
 
-    void vprintf(const char* format, va_list argList) override WTF_ATTRIBUTE_PRINTF(2, 0)
+    void vprintf(const char* format, va_list argList) WTF_ATTRIBUTE_PRINTF(2, 0)
     {
         const int written = qvsnprintf(buf.data(), buf.size(), format, argList);
         if (written > 0)
@@ -568,7 +1163,7 @@ public:
         memset(buf.data(), 0, qMin(written, buf.size()));
     }
 
-    void flush() override
+    void flush()
     {}
 
 private:
@@ -577,150 +1172,792 @@ private:
 };
 } // anonymous namespace
 
-static void printDisassembledOutputWithCalls(QByteArray processedOutput, const QHash<void*, const char*>& functions)
+static void printDisassembledOutputWithCalls(QByteArray processedOutput,
+                                             const QHash<const void*, const char*>& functions)
 {
-    for (QHash<void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
+    for (QHash<const void*, const char*>::ConstIterator it = functions.begin(), end = functions.end();
          it != end; ++it) {
         const QByteArray ptrString = "0x" + QByteArray::number(quintptr(it.key()), 16);
-        int idx = processedOutput.indexOf(ptrString);
-        if (idx < 0)
-            continue;
-        idx = processedOutput.lastIndexOf('\n', idx);
-        if (idx < 0)
-            continue;
-        processedOutput = processedOutput.insert(idx, QByteArrayLiteral("                          ; call ") + it.value());
+        int idx = 0;
+        while (idx >= 0) {
+            idx = processedOutput.indexOf(ptrString, idx);
+            if (idx < 0)
+                break;
+            idx = processedOutput.indexOf('\n', idx);
+            if (idx < 0)
+                break;
+            processedOutput = processedOutput.insert(idx, QByteArrayLiteral("                          ; ") + it.value());
+        }
     }
 
     qDebug("%s", processedOutput.constData());
 }
 
-#if defined(Q_OS_LINUX)
-static FILE *pmap;
-
-static void qt_closePmap()
+void Assembler::link(Function *function)
 {
-    if (pmap) {
-        fclose(pmap);
-        pmap = 0;
+    for (const auto &jumpTarget : pasm()->patches)
+        jumpTarget.jump.linkTo(pasm()->labelsByOffset[jumpTarget.offset], pasm());
+
+    JSC::JSGlobalData dummy(function->internalClass->engine->executableAllocator);
+    JSC::LinkBuffer<PlatformAssembler::MacroAssembler> linkBuffer(dummy, pasm(), 0);
+
+    for (const auto &ehTarget : pasm()->ehTargets) {
+        auto targetLabel = pasm()->labelsByOffset.value(ehTarget.offset);
+        linkBuffer.patch(ehTarget.label, linkBuffer.locationOf(targetLabel));
     }
-}
-
-#endif
-
-template <typename TargetConfiguration>
-JSC::MacroAssemblerCodeRef Assembler<TargetConfiguration>::link(int *codeSize)
-{
-    Label endOfCode = label();
-
-    {
-        for (size_t i = 0, ei = _patches.size(); i != ei; ++i) {
-            Label target = _addrs.at(i);
-            Q_ASSERT(target.isSet());
-            for (Jump jump : qAsConst(_patches.at(i)))
-                jump.linkTo(target, this);
-        }
-    }
-
-    JSC::JSGlobalData dummy(_executableAllocator);
-    JSC::LinkBuffer<typename TargetConfiguration::MacroAssembler> linkBuffer(dummy, this, 0);
-
-    for (const DataLabelPatch &p : qAsConst(_dataLabelPatches))
-        linkBuffer.patch(p.dataLabel, linkBuffer.locationOf(p.target));
-
-    // link exception handlers
-    for (Jump jump : qAsConst(exceptionPropagationJumps))
-        linkBuffer.link(jump, linkBuffer.locationOf(exceptionReturnLabel));
-
-    {
-        for (size_t i = 0, ei = _labelPatches.size(); i != ei; ++i) {
-            Label target = _addrs.at(i);
-            Q_ASSERT(target.isSet());
-            for (DataLabelPtr label : _labelPatches.at(i))
-                linkBuffer.patch(label, linkBuffer.locationOf(target));
-        }
-    }
-
-    *codeSize = linkBuffer.offsetOf(endOfCode);
-
-    QByteArray name;
 
     JSC::MacroAssemblerCodeRef codeRef;
 
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_ASM");
     if (showCode) {
-        QHash<void*, const char*> functions;
-#ifndef QT_NO_DEBUG
-        for (CallInfo call : qAsConst(_callInfos))
-            functions[linkBuffer.locationOf(call.label).dataLocation()] = call.functionName;
-#endif
-
         QBuffer buf;
         buf.open(QIODevice::WriteOnly);
         WTF::setDataFile(new QIODevicePrintStream(&buf));
 
-        name = _function->name->toUtf8();
-        if (name.isEmpty())
-            name = "IR::Function(0x" + QByteArray::number(quintptr(_function), 16) + ')';
+        QByteArray name = function->name()->toQString().toUtf8();
+        if (name.isEmpty()) {
+            name = QByteArray::number(quintptr(function), 16);
+            name.prepend("QV4::Function(0x");
+            name.append(')');
+        }
         codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
         WTF::setDataFile(stderr);
-        printDisassembledOutputWithCalls(buf.data(), functions);
+        printDisassembledOutputWithCalls(buf.data(), pasm()->functions);
     } else {
         codeRef = linkBuffer.finalizeCodeWithoutDisassembly();
     }
 
-#if defined(Q_OS_LINUX)
-    // This implements writing of JIT'd addresses so that perf can find the
-    // symbol names.
-    //
-    // Perf expects the mapping to be in a certain place and have certain
-    // content, for more information, see:
-    // https://github.com/torvalds/linux/blob/master/tools/perf/Documentation/jit-interface.txt
-    static bool doProfile = !qEnvironmentVariableIsEmpty("QV4_PROFILE_WRITE_PERF_MAP");
-    static bool profileInitialized = false;
-    if (doProfile && !profileInitialized) {
-        profileInitialized = true;
-
-        char pname[PATH_MAX];
-        snprintf(pname, PATH_MAX - 1, "/tmp/perf-%lu.map",
-                                      (unsigned long)QCoreApplication::applicationPid());
-
-        pmap = fopen(pname, "w");
-        if (!pmap)
-            qWarning("QV4: Can't write %s, call stacks will not contain JavaScript function names", pname);
-
-        // make sure we clean up nicely
-        std::atexit(qt_closePmap);
-    }
-
-    if (pmap) {
-        // this may have been pre-populated, if QV4_SHOW_ASM was on
-        if (name.isEmpty()) {
-            name = _function->name->toUtf8();
-            if (name.isEmpty())
-                name = "IR::Function(0x" + QByteArray::number(quintptr(_function), 16) + ')';
-        }
-
-        fprintf(pmap, "%llx %x %.*s\n",
-                      (long long unsigned int)codeRef.code().executableAddress(),
-                      *codeSize,
-                      name.length(),
-                      name.constData());
-        fflush(pmap);
-    }
-#endif
-
-    return codeRef;
+    function->codeRef = new JSC::MacroAssemblerCodeRef(codeRef);
+    function->jittedCode = reinterpret_cast<Function::JittedCode>(function->codeRef->code().executableAddress());
 }
 
-template class QV4::JIT::Assembler<DefaultAssemblerTargetConfiguration>;
-#if defined(V4_BOOTSTRAP)
-#if !CPU(ARM_THUMB2)
-template class QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARMv7, NoOperatingSystemSpecialization>>;
-#endif
-#if !CPU(ARM64)
-template class QV4::JIT::Assembler<AssemblerTargetConfiguration<JSC::MacroAssemblerARM64, NoOperatingSystemSpecialization>>;
-#endif
+void Assembler::addLabel(int offset)
+{
+    pasm()->labelsByOffset[offset] = pasm()->label();
+}
+
+void Assembler::loadConst(int constIndex)
+{
+    //###
+    if (pasm()->constantTable[constIndex].isUndefined()) {
+        pasm()->loadUndefined();
+    } else {
+        pasm()->loadAccumulator(pasm()->loadConstAddress(constIndex));
+    }
+}
+
+void Assembler::copyConst(int constIndex, int destReg)
+{
+    pasm()->copyConst(constIndex, regAddr(destReg));
+}
+
+void Assembler::loadReg(int reg)
+{
+    pasm()->loadReg(regAddr(reg));
+}
+
+void Assembler::storeReg(int reg)
+{
+    pasm()->storeAccumulator(regAddr(reg));
+}
+
+void Assembler::loadString(int stringId)
+{
+    pasm()->loadString(stringId);
+}
+
+void Assembler::loadValue(ReturnedValue value)
+{
+    pasm()->loadValue(value);
+}
+
+void Assembler::toNumber()
+{
+    pasm()->toNumber();
+}
+
+void Assembler::uminus()
+{
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(1);
+    passAccumulatorAsArg(0);
+    IN_JIT_GENERATE_RUNTIME_CALL(Runtime::method_uMinus, ResultInAccumulator);
+    checkException();
+}
+
+void Assembler::ucompl()
+{
+    pasm()->toInt32();
+    pasm()->xor32(TrustedImm32(-1), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(IntegerTag);
+}
+
+static ReturnedValue incHelper(const Value &v)
+{
+    return Encode(v.toNumber() + 1.);
+}
+
+void Assembler::inc()
+{
+//    auto done = pasm()->incFastPath();
+
+    // slow path:
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(1);
+    passAccumulatorAsArg(0);
+    IN_JIT_GENERATE_RUNTIME_CALL(incHelper, ResultInAccumulator);
+    checkException();
+
+    // done.
+//    done.link(pasm());
+}
+
+static ReturnedValue decHelper(const Value &v)
+{
+    return Encode(v.toNumber() - 1.);
+}
+
+void Assembler::dec()
+{
+//    auto done = pasm()->decFastPath();
+
+    // slow path:
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(1);
+    passAccumulatorAsArg(0);
+    IN_JIT_GENERATE_RUNTIME_CALL(decHelper, ResultInAccumulator);
+    checkException();
+
+    // done.
+//    done.link(pasm());
+}
+
+void Assembler::unot()
+{
+    pasm()->toBoolean([this](PlatformAssembler::RegisterID resultReg){
+        pasm()->compare32(PlatformAssembler::Equal, resultReg,
+                          TrustedImm32(0), PlatformAssembler::AccumulatorRegisterValue);
+        pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+    });
+}
+
+void Assembler::add(int lhs)
+{
+    auto done = pasm()->binopBothIntPath(regAddr(lhs), [this](){
+        auto overflowed = pasm()->branchAdd32(PlatformAssembler::Overflow,
+                                              PlatformAssembler::AccumulatorRegisterValue,
+                                              PlatformAssembler::ScratchRegister);
+        pasm()->setAccumulatorTag(IntegerTag,
+                                  PlatformAssembler::ScratchRegister);
+        return overflowed;
+    });
+
+    // slow path:
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(3);
+    passAccumulatorAsArg(2);
+    passRegAsArg(lhs, 1);
+    passEngineAsArg(0);
+    IN_JIT_GENERATE_RUNTIME_CALL(Runtime::method_add, ResultInAccumulator);
+    checkException();
+
+    // done.
+    done.link(pasm());
+}
+
+void Assembler::bitAnd(int lhs)
+{
+    PlatformAssembler::Address lhsAddr = regAddr(lhs);
+    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32();
+    pasm()->popAligned(PlatformAssembler::ScratchRegister);
+    pasm()->and32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(IntegerTag);
+}
+
+void Assembler::bitOr(int lhs)
+{
+    PlatformAssembler::Address lhsAddr = regAddr(lhs);
+    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32();
+    pasm()->popAligned(PlatformAssembler::ScratchRegister);
+    pasm()->or32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(IntegerTag);
+}
+
+void Assembler::bitXor(int lhs)
+{
+    PlatformAssembler::Address lhsAddr = regAddr(lhs);
+    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32();
+    pasm()->popAligned(PlatformAssembler::ScratchRegister);
+    pasm()->xor32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(IntegerTag);
+}
+
+void Assembler::ushr(int lhs)
+{
+    PlatformAssembler::Address lhsAddr = regAddr(lhs);
+    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32();
+    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue,
+                  PlatformAssembler::ScratchRegister);
+    pasm()->popAligned(PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->urshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    auto doubleEncode = pasm()->branch32(PlatformAssembler::LessThan,
+                                         PlatformAssembler::AccumulatorRegisterValue,
+                                         TrustedImm32(0));
+    pasm()->setAccumulatorTag(IntegerTag);
+    auto done = pasm()->jump();
+
+    doubleEncode.link(pasm());
+    pasm()->convertUInt32ToDouble(PlatformAssembler::AccumulatorRegisterValue,
+                                  PlatformAssembler::FPScratchRegister,
+                                  PlatformAssembler::ScratchRegister);
+    pasm()->encodeDoubleIntoAccumulator(PlatformAssembler::FPScratchRegister);
+    done.link(pasm());
+}
+
+void Assembler::shr(int lhs)
+{
+    PlatformAssembler::Address lhsAddr = regAddr(lhs);
+    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32();
+    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue,
+                  PlatformAssembler::ScratchRegister);
+    pasm()->popAligned(PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->rshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(IntegerTag);
+}
+
+void Assembler::shl(int lhs)
+{
+    PlatformAssembler::Address lhsAddr = regAddr(lhs);
+    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32();
+    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue,
+                  PlatformAssembler::ScratchRegister);
+    pasm()->popAligned(PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->lshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(IntegerTag);
+}
+
+void Assembler::bitAndConst(int rhs)
+{
+    pasm()->toInt32();
+    pasm()->and32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(IntegerTag);
+}
+
+void Assembler::bitOrConst(int rhs)
+{
+    pasm()->toInt32();
+    pasm()->or32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(IntegerTag);
+}
+
+void Assembler::bitXorConst(int rhs)
+{
+    pasm()->toInt32();
+    pasm()->xor32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(IntegerTag);
+}
+
+void Assembler::ushrConst(int rhs)
+{
+    rhs &= 0x1f;
+    pasm()->toInt32();
+    if (rhs) // shift with 0 can act weird
+        pasm()->urshift32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
+    auto doubleEncode = pasm()->branch32(PlatformAssembler::LessThan,
+                                         PlatformAssembler::AccumulatorRegisterValue,
+                                         TrustedImm32(0));
+    pasm()->setAccumulatorTag(IntegerTag);
+    auto done = pasm()->jump();
+
+    doubleEncode.link(pasm());
+    pasm()->convertUInt32ToDouble(PlatformAssembler::AccumulatorRegisterValue,
+                                  PlatformAssembler::FPScratchRegister,
+                                  PlatformAssembler::ScratchRegister);
+    pasm()->encodeDoubleIntoAccumulator(PlatformAssembler::FPScratchRegister);
+    done.link(pasm());
+}
+
+void Assembler::shrConst(int rhs)
+{
+    rhs &= 0x1f;
+    pasm()->toInt32();
+    if (rhs) // shift with 0 can act weird
+        pasm()->rshift32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(IntegerTag);
+}
+
+void Assembler::shlConst(int rhs)
+{
+    rhs &= 0x1f;
+    pasm()->toInt32();
+    if (rhs) // shift with 0 can act weird
+        pasm()->lshift32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(IntegerTag);
+}
+
+void Assembler::mul(int lhs)
+{
+    auto done = pasm()->binopBothIntPath(regAddr(lhs), [this](){
+        auto overflowed = pasm()->branchMul32(PlatformAssembler::Overflow,
+                                              PlatformAssembler::AccumulatorRegisterValue,
+                                              PlatformAssembler::ScratchRegister);
+        pasm()->setAccumulatorTag(IntegerTag,
+                                  PlatformAssembler::ScratchRegister);
+        return overflowed;
+    });
+
+    // slow path:
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(2);
+    passAccumulatorAsArg(1);
+    passRegAsArg(lhs, 0);
+    IN_JIT_GENERATE_RUNTIME_CALL(Runtime::method_mul, ResultInAccumulator);
+    checkException();
+
+    // done.
+    done.link(pasm());
+}
+
+void Assembler::div(int lhs)
+{
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(2);
+    passAccumulatorAsArg(1);
+    passRegAsArg(lhs, 0);
+    IN_JIT_GENERATE_RUNTIME_CALL(Runtime::method_div, ResultInAccumulator);
+    checkException();
+}
+
+void Assembler::mod(int lhs)
+{
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(2);
+    passAccumulatorAsArg(1);
+    passRegAsArg(lhs, 0);
+    IN_JIT_GENERATE_RUNTIME_CALL(Runtime::method_mod, ResultInAccumulator);
+    checkException();
+}
+
+void Assembler::sub(int lhs)
+{
+    auto done = pasm()->binopBothIntPath(regAddr(lhs), [this](){
+        auto overflowed = pasm()->branchSub32(PlatformAssembler::Overflow,
+                                              PlatformAssembler::AccumulatorRegisterValue,
+                                              PlatformAssembler::ScratchRegister);
+        pasm()->setAccumulatorTag(IntegerTag,
+                                  PlatformAssembler::ScratchRegister);
+        return overflowed;
+    });
+
+    // slow path:
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(2);
+    passAccumulatorAsArg(1);
+    passRegAsArg(lhs, 0);
+    IN_JIT_GENERATE_RUNTIME_CALL(Runtime::method_sub, ResultInAccumulator);
+    checkException();
+
+    // done.
+    done.link(pasm());
+}
+
+void Assembler::cmpeqNull()
+{
+    pasm()->isNullOrUndefined();
+    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+}
+
+void Assembler::cmpneNull()
+{
+    pasm()->isNullOrUndefined();
+    pasm()->xor32(TrustedImm32(1), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+}
+
+void Assembler::cmpeqInt(int lhs)
+{
+    saveAccumulatorInFrame();
+    pasm()->pushValueAligned(Encode(lhs));
+    if (PlatformAssembler::ArgInRegCount < 2)
+        pasm()->push(PlatformAssembler::StackPointerRegister);
+    else
+        pasm()->move(PlatformAssembler::StackPointerRegister, pasm()->registerForArg(1));
+    passAccumulatorAsArg_internal(0, true);
+    pasm()->callRuntime("Runtime::method_equal", (void*)Runtime::method_equal, ResultInAccumulator);
+    if (PlatformAssembler::ArgInRegCount < 2)
+        pasm()->addPtr(TrustedImm32(2 * PlatformAssembler::PointerSize), PlatformAssembler::StackPointerRegister);
+    pasm()->popValueAligned();
+}
+
+void Assembler::cmpneInt(int lhs)
+{
+    saveAccumulatorInFrame();
+    pasm()->pushValueAligned(Encode(lhs));
+    if (PlatformAssembler::ArgInRegCount < 2)
+        pasm()->push(PlatformAssembler::StackPointerRegister);
+    else
+        pasm()->move(PlatformAssembler::StackPointerRegister, pasm()->registerForArg(1));
+    passAccumulatorAsArg_internal(0, true);
+    pasm()->callRuntime("Runtime::method_notEqual", (void*)Runtime::method_notEqual, ResultInAccumulator);
+    if (PlatformAssembler::ArgInRegCount < 2)
+        pasm()->addPtr(TrustedImm32(2 * PlatformAssembler::PointerSize), PlatformAssembler::StackPointerRegister);
+    pasm()->popValueAligned();
+}
+
+void Assembler::cmp(int /*cond*/, CmpFunc function, const char *functionName, int lhs)
+{
+//    PlatformAssembler::Address lhsAddr(PlatformAssembler::JSStackFrameRegister, lhs * int(sizeof(QV4::Value)));
+//    auto done = pasm()->cmpFastPath(static_cast<PlatformAssembler::RelationalCondition>(cond), lhsAddr);
+
+    // slow path:
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(2);
+    passAccumulatorAsArg(1);
+    passRegAsArg(lhs, 0);
+
+    callRuntime(functionName, reinterpret_cast<void*>(function), ResultInAccumulator);
+    checkException();
+    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+
+    // done.
+//    done.link(pasm());
+}
+
+void Assembler::cmpeq(int lhs)
+{
+    cmp(PlatformAssembler::Equal, &Runtime::method_compareEqual,
+        "Runtime::method_compareEqual", lhs);
+}
+
+void Assembler::cmpne(int lhs)
+{
+    cmp(PlatformAssembler::NotEqual, &Runtime::method_compareNotEqual,
+        "Runtime::method_compareNotEqual", lhs);
+}
+
+void Assembler::cmpgt(int lhs)
+{
+    cmp(PlatformAssembler::GreaterThan, &Runtime::method_compareGreaterThan,
+        "Runtime::method_compareGreaterThan", lhs);
+}
+
+void Assembler::cmpge(int lhs)
+{
+    cmp(PlatformAssembler::GreaterThanOrEqual, &Runtime::method_compareGreaterEqual,
+        "Runtime::method_compareGreaterEqual", lhs);
+}
+
+void Assembler::cmplt(int lhs)
+{
+    cmp(PlatformAssembler::LessThan, &Runtime::method_compareLessThan,
+        "Runtime::method_compareLessThan", lhs);
+}
+
+void Assembler::cmple(int lhs)
+{
+    cmp(PlatformAssembler::LessThanOrEqual, &Runtime::method_compareLessEqual,
+        "Runtime::method_compareLessEqual", lhs);
+}
+
+void Assembler::cmpStrictEqual(int lhs)
+{
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(2);
+    passAccumulatorAsArg(1);
+    passRegAsArg(lhs, 0);
+    IN_JIT_GENERATE_RUNTIME_CALL(RuntimeHelpers::strictEqual, ResultInAccumulator);
+    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+}
+
+void Assembler::cmpStrictNotEqual(int lhs)
+{
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(2);
+    passAccumulatorAsArg(1);
+    passRegAsArg(lhs, 0);
+    IN_JIT_GENERATE_RUNTIME_CALL(RuntimeHelpers::strictEqual, ResultInAccumulator);
+    pasm()->xor32(TrustedImm32(1), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+}
+
+void Assembler::jump(int offset)
+{
+    pasm()->patches.push_back({ pasm()->jump(), offset });
+}
+
+void Assembler::jumpTrue(int offset)
+{
+    pasm()->toBoolean([this, offset](PlatformAssembler::RegisterID resultReg) {
+        auto jump = pasm()->branch32(PlatformAssembler::NotEqual, TrustedImm32(0), resultReg);
+        pasm()->patches.push_back({ jump, offset });
+    });
+}
+
+void Assembler::jumpFalse(int offset)
+{
+    pasm()->toBoolean([this, offset](PlatformAssembler::RegisterID resultReg) {
+        auto jump = pasm()->branch32(PlatformAssembler::Equal, TrustedImm32(0), resultReg);
+        pasm()->patches.push_back({ jump, offset });
+    });
+}
+
+void Assembler::jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset)
+{
+    pasm()->jumpStrictEqualStackSlotInt(lhs, rhs, offset);
+}
+
+void Assembler::jumpStrictNotEqualStackSlotInt(int lhs, int rhs, int offset)
+{
+    pasm()->jumpStrictNotEqualStackSlotInt(lhs, rhs, offset);
+}
+
+void Assembler::prepareCallWithArgCount(int argc)
+{
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(remainingArgcForCall == NoCall);
+    remainingArgcForCall = argc;
 #endif
 
+    if (argc > PlatformAssembler::ArgInRegCount) {
+        argcOnStackForCall = int(WTF::roundUpToMultipleOf(16, size_t(argc - PlatformAssembler::ArgInRegCount) * PlatformAssembler::PointerSize));
+        pasm()->subPtr(TrustedImm32(argcOnStackForCall), PlatformAssembler::StackPointerRegister);
+    }
+}
+
+void Assembler::storeInstructionPointer(int instructionOffset)
+{
+    PlatformAssembler::Address addr(PlatformAssembler::CppStackFrameRegister,
+                                    offsetof(QV4::CppStackFrame, instructionPointer));
+    pasm()->store32(TrustedImm32(instructionOffset), addr);
+}
+
+Address argStackAddress(int arg)
+{
+    int offset = arg - PlatformAssembler::ArgInRegCount;
+    Q_ASSERT(offset >= 0);
+    return Address(PlatformAssembler::StackPointerRegister, offset * PlatformAssembler::PointerSize);
+}
+
+void Assembler::passAccumulatorAsArg(int arg)
+{
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(arg < remainingArgcForCall);
+    --remainingArgcForCall;
 #endif
+
+    passAccumulatorAsArg_internal(arg, false);
+}
+
+void Assembler::passAccumulatorAsArg_internal(int arg, bool push)
+{
+    if (arg < PlatformAssembler::ArgInRegCount) {
+        pasm()->addPtr(TrustedImm32(offsetof(CallData, accumulator)),
+                       PlatformAssembler::JSStackFrameRegister,
+                       pasm()->registerForArg(arg));
+    } else {
+        pasm()->addPtr(TrustedImm32(offsetof(CallData, accumulator)),
+                       PlatformAssembler::JSStackFrameRegister,
+                       PlatformAssembler::ScratchRegister);
+        if (push)
+            pasm()->push(PlatformAssembler::ScratchRegister);
+        else
+            pasm()->storePtr(PlatformAssembler::ScratchRegister,
+                             argStackAddress(arg));
+    }
+}
+
+void Assembler::passFunctionAsArg(int arg)
+{
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(arg < remainingArgcForCall);
+    --remainingArgcForCall;
+#endif
+
+    if (arg < PlatformAssembler::ArgInRegCount) {
+        pasm()->loadFunctionPtr(pasm()->registerForArg(arg));
+    } else {
+        pasm()->loadFunctionPtr(PlatformAssembler::ScratchRegister);
+        pasm()->storePtr(PlatformAssembler::ScratchRegister,
+                         argStackAddress(arg));
+    }
+}
+
+void Assembler::passEngineAsArg(int arg)
+{
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(arg < remainingArgcForCall);
+    --remainingArgcForCall;
+#endif
+
+    if (arg < PlatformAssembler::ArgInRegCount) {
+        pasm()->move(PlatformAssembler::EngineRegister, pasm()->registerForArg(arg));
+    } else {
+        pasm()->storePtr(PlatformAssembler::EngineRegister, argStackAddress(arg));
+    }
+}
+
+void Assembler::passRegAsArg(int reg, int arg)
+{
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(arg < remainingArgcForCall);
+    --remainingArgcForCall;
+#endif
+
+    if (arg < PlatformAssembler::ArgInRegCount) {
+        pasm()->addPtr(TrustedImm32(reg * int(sizeof(QV4::Value))),
+                       PlatformAssembler::JSStackFrameRegister,
+                       pasm()->registerForArg(arg));
+    } else {
+        pasm()->addPtr(TrustedImm32(reg * int(sizeof(QV4::Value))),
+                       PlatformAssembler::JSStackFrameRegister,
+                       PlatformAssembler::ScratchRegister);
+        pasm()->storePtr(PlatformAssembler::ScratchRegister,
+                         argStackAddress(arg));
+    }
+}
+
+void JIT::Assembler::passCppFrameAsArg(int arg)
+{
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(arg < remainingArgcForCall);
+    --remainingArgcForCall;
+#endif
+
+    if (arg < PlatformAssembler::ArgInRegCount) {
+        pasm()->move(PlatformAssembler::CppStackFrameRegister, pasm()->registerForArg(arg));
+    } else {
+        pasm()->store32(PlatformAssembler::CppStackFrameRegister, argStackAddress(arg));
+    }
+}
+
+void Assembler::passInt32AsArg(int value, int arg)
+{
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(arg < remainingArgcForCall);
+    --remainingArgcForCall;
+#endif
+
+    if (arg < PlatformAssembler::ArgInRegCount) {
+        pasm()->move(TrustedImm32(value), pasm()->registerForArg(arg));
+    } else {
+        pasm()->store32(TrustedImm32(value), argStackAddress(arg));
+    }
+}
+
+void Assembler::callRuntime(const char *functionName, const void *funcPtr,
+                            Assembler::CallResultDestination dest)
+{
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(remainingArgcForCall == 0);
+    remainingArgcForCall = NoCall;
+#endif
+    pasm()->callRuntime(functionName, funcPtr, dest);
+    if (argcOnStackForCall > 0) {
+        pasm()->addPtr(TrustedImm32(argcOnStackForCall), PlatformAssembler::StackPointerRegister);
+        argcOnStackForCall = 0;
+    }
+}
+
+void Assembler::saveAccumulatorInFrame()
+{
+    pasm()->storeAccumulator(PlatformAssembler::Address(PlatformAssembler::JSStackFrameRegister,
+                                                       offsetof(CallData, accumulator)));
+}
+
+void Assembler::checkException()
+{
+    pasm()->addCatchyJump(
+                pasm()->branch32(
+                    PlatformAssembler::NotEqual,
+                    PlatformAssembler::Address(PlatformAssembler::EngineRegister,
+                                               offsetof(EngineBase, hasException)),
+                    TrustedImm32(0)));
+}
+
+void Assembler::gotoCatchException()
+{
+    pasm()->addCatchyJump(pasm()->jump());
+}
+
+void Assembler::getException()
+{
+    Q_STATIC_ASSERT_FOR_SANE_COMPILERS(sizeof(QV4::EngineBase::hasException) == 1);
+
+    Address hasExceptionAddr(PlatformAssembler::EngineRegister,
+                             offsetof(EngineBase, hasException));
+    PlatformAssembler::Jump nope = pasm()->branch8(PlatformAssembler::Equal,
+                                                  hasExceptionAddr,
+                                                  TrustedImm32(0));
+    pasm()->loadPtr(Address(PlatformAssembler::EngineRegister,
+                            offsetof(EngineBase, exceptionValue)),
+                    PlatformAssembler::ScratchRegister);
+    pasm()->loadAccumulator(Address(PlatformAssembler::ScratchRegister));
+    pasm()->store8(TrustedImm32(0), hasExceptionAddr);
+    auto done = pasm()->jump();
+    nope.link(pasm());
+    pasm()->loadValue(Primitive::emptyValue().asReturnedValue());
+
+    done.link(pasm());
+}
+
+void Assembler::setException()
+{
+    Address addr(PlatformAssembler::EngineRegister, offsetof(EngineBase, exceptionValue));
+    pasm()->loadPtr(addr, PlatformAssembler::ScratchRegister);
+    pasm()->storeAccumulator(Address(PlatformAssembler::ScratchRegister));
+    addr.offset = offsetof(EngineBase, hasException);
+    Q_STATIC_ASSERT_FOR_SANE_COMPILERS(sizeof(QV4::EngineBase::hasException) == 1);
+    pasm()->store8(TrustedImm32(1), addr);
+}
+
+void Assembler::setExceptionHandler(int offset)
+{
+    auto l = pasm()->storePtrWithPatch(TrustedImmPtr(nullptr), pasm()->exceptionHandlerAddress());
+    pasm()->ehTargets.push_back({ l, offset });
+}
+
+
+void Assembler::clearExceptionHandler()
+{
+    pasm()->storePtr(TrustedImmPtr(nullptr), pasm()->exceptionHandlerAddress());
+}
+
+void Assembler::pushCatchContext(int name, int reg)
+{
+    pasm()->copyReg(pasm()->contextAddress(), regAddr(reg));
+    prepareCallWithArgCount(2);
+    passInt32AsArg(name, 1);
+    passRegAsArg(CallData::Context, 0);
+    IN_JIT_GENERATE_RUNTIME_CALL(Runtime::method_createCatchContext, ResultInAccumulator);
+    pasm()->storeAccumulator(pasm()->contextAddress());
+}
+
+void Assembler::popContext(int reg)
+{
+    pasm()->copyReg(regAddr(reg), pasm()->contextAddress());
+}
+
+void Assembler::ret()
+{
+    pasm()->generateFunctionExit();
+}
+
+} // JIT namespace
+} // QV4 namepsace
+
+QT_END_NAMESPACE
+
+#endif // V4_ENABLE_JIT

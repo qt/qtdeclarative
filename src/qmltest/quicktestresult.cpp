@@ -57,6 +57,7 @@
 #include <QtCore/qmap.h>
 #include <QtCore/qbytearray.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qdatetime.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/QUrl>
 #include <QtCore/QDir>

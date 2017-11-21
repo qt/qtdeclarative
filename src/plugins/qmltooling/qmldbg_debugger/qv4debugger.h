@@ -150,7 +150,7 @@ private:
     void runJobUnpaused();
 
     QV4::ExecutionEngine *m_engine;
-    QV4::PersistentValue m_currentContext;
+    QV4::CppStackFrame *m_currentFrame = 0;
     QMutex m_lock;
     QWaitCondition m_runningCondition;
     State m_state;

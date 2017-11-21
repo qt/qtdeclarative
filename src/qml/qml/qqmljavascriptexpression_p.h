@@ -103,7 +103,8 @@ public:
     virtual QString expressionIdentifier() const = 0;
     virtual void expressionChanged() = 0;
 
-    void evaluate(QV4::CallData *callData, bool *isUndefined, QV4::Scope &scope);
+    QV4::ReturnedValue evaluate(bool *isUndefined);
+    QV4::ReturnedValue evaluate(QV4::CallData *callData, bool *isUndefined);
 
     inline bool notifyOnValueChanged() const;
 
@@ -204,7 +205,7 @@ public:
         Permanently
     };
 
-    static void registerQmlDependencies(const QV4::CompiledData::Function *compiledFunction, const QV4::Scope &scope);
+    static void registerQmlDependencies(QV4::Heap::QmlContext *context, const QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction);
     void captureProperty(QQmlNotifier *, Duration duration = OnlyOnce);
     void captureProperty(QObject *, int, int, Duration duration = OnlyOnce, bool doNotify = true);
 

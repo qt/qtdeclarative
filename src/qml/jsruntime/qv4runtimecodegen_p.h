@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -36,9 +36,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-#ifndef QV4REGISTERINFO_P_H
-#define QV4REGISTERINFO_P_H
+#ifndef QV4RUNTIMECODEGEN_P_H
+#define QV4RUNTIMECODEGEN_P_H
 
 //
 //  W A R N I N G
@@ -51,62 +50,33 @@
 // We mean it.
 //
 
-#include <QtCore/QString>
+#include <private/qv4codegen_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-namespace JIT {
 
-class RegisterInfo
+class RuntimeCodegen : public Compiler::Codegen
 {
 public:
-    enum { InvalidRegister = (1 << 29) - 1 };
-    enum SavedBy { CallerSaved, CalleeSaved };
-    enum RegisterType { RegularRegister, FloatingPointRegister };
-    enum Usage { Predefined, RegAlloc };
-
-public:
-    RegisterInfo()
-        : _savedBy(CallerSaved)
-        , _usage(Predefined)
-        , _type(RegularRegister)
-        , _reg(InvalidRegister)
+    RuntimeCodegen(ExecutionEngine *engine, Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
+        : Codegen(jsUnitGenerator, strict)
+        , engine(engine)
     {}
 
-    RegisterInfo(int reg, const QString &prettyName, RegisterType type, SavedBy savedBy, Usage usage)
-        : _prettyName(prettyName)
-        , _savedBy(savedBy)
-        , _usage(usage)
-        , _type(type)
-        , _reg(reg)
-    {}
+    void generateFromFunctionExpression(const QString &fileName,
+                                        const QString &sourceCode,
+                                        AST::FunctionExpression *ast,
+                                        Compiler::Module *module);
 
-    bool operator==(const RegisterInfo &other) const
-    { return _type == other._type && _reg == other._reg; }
-
-    bool isValid() const { return _reg != InvalidRegister; }
-    template <typename T> T reg() const { return static_cast<T>(_reg); }
-    QString prettyName() const { return _prettyName; }
-    bool isCallerSaved() const { return _savedBy == CallerSaved; }
-    bool isCalleeSaved() const { return _savedBy == CalleeSaved; }
-    bool isFloatingPoint() const { return _type == FloatingPointRegister; }
-    bool isRegularRegister() const { return _type == RegularRegister; }
-    bool useForRegAlloc() const { return _usage == RegAlloc; }
-    bool isPredefined() const { return _usage == Predefined; }
-
+    void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail) override;
+    void throwReferenceError(const AST::SourceLocation &loc, const QString &detail) override;
 private:
-    QString _prettyName;
-    unsigned _savedBy : 1;
-    unsigned _usage   : 1;
-    unsigned _type    : 1;
-    unsigned _reg     : 29;
+    ExecutionEngine *engine;
 };
-typedef QVector<RegisterInfo> RegisterInformation;
 
-} // JIT namespace
-} // QV4 namespace
+}
 
 QT_END_NAMESPACE
 
-#endif // QV4REGISTERINFO_P_H
+#endif // QV4CODEGEN_P_H

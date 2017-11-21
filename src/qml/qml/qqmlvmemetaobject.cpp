@@ -55,6 +55,7 @@
 #include <private/qv4variantobject_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -949,20 +950,20 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 }
 
                 const unsigned int parameterCount = function->formalParameterCount();
-                QV4::ScopedCallData callData(scope, parameterCount);
-                callData->thisObject = ep->v8engine()->global();
+                QV4::JSCallData jsCallData(scope, parameterCount);
+                *jsCallData->thisObject = ep->v8engine()->global();
 
                 for (uint ii = 0; ii < parameterCount; ++ii)
-                    callData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);
+                    jsCallData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);
 
-                function->call(scope, callData);
+                QV4::ScopedValue result(scope, function->call(jsCallData));
                 if (scope.hasException()) {
                     QQmlError error = scope.engine->catchExceptionAsQmlError();
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) *(QVariant *)a[0] = QVariant();
                 } else {
-                    if (a[0]) *(QVariant *)a[0] = scope.engine->toVariant(scope.result, 0);
+                    if (a[0]) *(QVariant *)a[0] = scope.engine->toVariant(result, 0);
                 }
 
                 ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.

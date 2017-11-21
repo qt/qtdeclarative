@@ -67,7 +67,7 @@ namespace Heap {
     Member(class, Pointer, String *, stack)
 
 DECLARE_HEAP_OBJECT(ErrorObject, Object) {
-    DECLARE_MARK_TABLE(ErrorObject);
+    DECLARE_MARKOBJECTS(ErrorObject);
     enum ErrorType {
         Error,
         EvalError,
@@ -175,7 +175,7 @@ struct ErrorObject: Object {
 
     static const char *className(Heap::ErrorObject::ErrorType t);
 
-    static void method_get_stack(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_get_stack(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 template<>
@@ -229,50 +229,50 @@ struct ErrorCtor: FunctionObject
 {
     V4_OBJECT2(ErrorCtor, FunctionObject)
 
-    static void construct(const Managed *, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct EvalErrorCtor: ErrorCtor
 {
     V4_OBJECT2(EvalErrorCtor, ErrorCtor)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
 };
 
 struct RangeErrorCtor: ErrorCtor
 {
     V4_OBJECT2(RangeErrorCtor, ErrorCtor)
 
-    static void construct(const Managed *, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
 };
 
 struct ReferenceErrorCtor: ErrorCtor
 {
     V4_OBJECT2(ReferenceErrorCtor, ErrorCtor)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
 };
 
 struct SyntaxErrorCtor: ErrorCtor
 {
     V4_OBJECT2(SyntaxErrorCtor, ErrorCtor)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
 };
 
 struct TypeErrorCtor: ErrorCtor
 {
     V4_OBJECT2(TypeErrorCtor, ErrorCtor)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
 };
 
 struct URIErrorCtor: ErrorCtor
 {
     V4_OBJECT2(URIErrorCtor, ErrorCtor)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
 };
 
 
@@ -286,7 +286,7 @@ struct ErrorPrototype : ErrorObject
     void init(ExecutionEngine *engine, Object *ctor) { init(engine, ctor, this, Heap::ErrorObject::Error); }
 
     static void init(ExecutionEngine *engine, Object *ctor, Object *obj, Heap::ErrorObject::ErrorType t);
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct EvalErrorPrototype : ErrorObject

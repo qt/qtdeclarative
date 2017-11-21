@@ -1189,6 +1189,14 @@ void tst_QQmlDebugJS::stepNext()
     QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(STEPACTION_QMLFILE));
 }
 
+static QVariantMap responseBody(QJSDebugClient *client)
+{
+    const QString jsonString(client->response);
+    const QVariantMap value = client->parser.call(QJSValueList() << QJSValue(jsonString))
+            .toVariant().toMap();
+    return value.value("body").toMap();
+}
+
 void tst_QQmlDebugJS::stepIn()
 {
     //void continueDebugging(StepAction stepAction, int stepCount = 1);
@@ -1197,21 +1205,18 @@ void tst_QQmlDebugJS::stepIn()
     QFETCH(bool, namesAsObjects);
 
     int sourceLine = 41;
-    int actualLine = 37;
+    int actualLine = 36;
     QCOMPARE(init(qmlscene, STEPACTION_QMLFILE), ConnectSuccess);
 
     m_client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, 1, true);
     m_client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QCOMPARE(responseBody(m_client).value("sourceLine").toInt(), sourceLine);
 
     m_client->continueDebugging(QJSDebugClient::In);
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
 
-    QString jsonString(m_client->response);
-    QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
-
-    QVariantMap body = value.value("body").toMap();
-
+    const QVariantMap body = responseBody(m_client);
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
     QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(STEPACTION_QMLFILE));
 }
@@ -1230,15 +1235,12 @@ void tst_QQmlDebugJS::stepOut()
     m_client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QCOMPARE(responseBody(m_client).value("sourceLine").toInt(), sourceLine);
 
     m_client->continueDebugging(QJSDebugClient::Out);
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
 
-    QString jsonString(m_client->response);
-    QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
-
-    QVariantMap body = value.value("body").toMap();
-
+    const QVariantMap body = responseBody(m_client);
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
     QCOMPARE(QFileInfo(body.value("script").toMap().value("name").toString()).fileName(), QLatin1String(STEPACTION_QMLFILE));
 }
@@ -1332,16 +1334,15 @@ void tst_QQmlDebugJS::evaluateInGlobalScope()
 
     m_client->connect();
 
-    do {
+    for (int i = 0; i < 10; ++i) {
         // The engine might not be initialized, yet. We just try until it shows up.
         m_client->evaluate(QLatin1String("console.log('Hello World')"));
-    } while (!QQmlDebugTest::waitForSignal(m_client, SIGNAL(result()), 500));
+        if (QQmlDebugTest::waitForSignal(m_client, SIGNAL(result()), 500))
+            break;
+    }
 
     //Verify the return value of 'console.log()', which is "undefined"
-    QString jsonString(m_client->response);
-    QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
-    QVariantMap body = value.value("body").toMap();
-    QCOMPARE(body.value("type").toString(),QLatin1String("undefined"));
+    QCOMPARE(responseBody(m_client).value("type").toString(), QLatin1String("undefined"));
 }
 
 void tst_QQmlDebugJS::evaluateInLocalScope()
@@ -1426,11 +1427,7 @@ void tst_QQmlDebugJS::evaluateInContext()
     m_client->evaluate(QLatin1String("a + 10"), -1, object.debugId);
     QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
 
-    QString jsonString = m_client->response;
-    QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
-
-    QVariantMap body = value.value("body").toMap();
-    QTRY_COMPARE(body.value("value").toInt(), 20);
+    QTRY_COMPARE(responseBody(m_client).value("value").toInt(), 20);
 }
 
 void tst_QQmlDebugJS::getScripts()

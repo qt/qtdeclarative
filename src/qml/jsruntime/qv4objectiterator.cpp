@@ -177,9 +177,9 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
 
 DEFINE_OBJECT_VTABLE(ForEachIteratorObject);
 
-void ForEachIteratorObject::markObjects(Heap::Base *that, MarkStack *markStack)
+void Heap::ForEachIteratorObject::markObjects(Heap::Base *that, MarkStack *markStack)
 {
-    ForEachIteratorObject::Data *o = static_cast<ForEachIteratorObject::Data *>(that);
+    ForEachIteratorObject *o = static_cast<ForEachIteratorObject *>(that);
     o->workArea[0].mark(markStack);
     o->workArea[1].mark(markStack);
     Object::markObjects(that, markStack);

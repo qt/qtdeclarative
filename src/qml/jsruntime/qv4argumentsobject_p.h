@@ -63,7 +63,7 @@ namespace Heap {
     Member(class, NoMark, uint, index)
 
 DECLARE_HEAP_OBJECT(ArgumentsGetterFunction, FunctionObject) {
-    DECLARE_MARK_TABLE(ArgumentsGetterFunction);
+    DECLARE_MARKOBJECTS(ArgumentsGetterFunction);
     inline void init(QV4::ExecutionContext *scope, uint index);
 };
 
@@ -71,23 +71,34 @@ DECLARE_HEAP_OBJECT(ArgumentsGetterFunction, FunctionObject) {
     Member(class, NoMark, uint, index)
 
 DECLARE_HEAP_OBJECT(ArgumentsSetterFunction, FunctionObject) {
-    DECLARE_MARK_TABLE(ArgumentsSetterFunction);
+    DECLARE_MARKOBJECTS(ArgumentsSetterFunction);
     inline void init(QV4::ExecutionContext *scope, uint index);
 };
 
 #define ArgumentsObjectMembers(class, Member) \
     Member(class, Pointer, CallContext *, context) \
     Member(class, Pointer, MemberData *, mappedArguments) \
-    Member(class, NoMark, bool, fullyCreated)
+    Member(class, NoMark, bool, fullyCreated) \
+    Member(class, NoMark, int, nFormals)
 
 DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
-    DECLARE_MARK_TABLE(ArgumentsObject);
+    DECLARE_MARKOBJECTS(ArgumentsObject);
+    enum {
+        LengthPropertyIndex = 0,
+        CalleePropertyIndex = 1
+    };
+    void init(CppStackFrame *frame);
+};
+
+#define StrictArgumentsObjectMembers(class, Member)
+
+DECLARE_HEAP_OBJECT(StrictArgumentsObject, Object) {
     enum {
         LengthPropertyIndex = 0,
         CalleePropertyIndex = 1,
         CallerPropertyIndex = 3
     };
-    void init(QV4::CallContext *context);
+    void init(CppStackFrame *frame);
 };
 
 }
@@ -97,7 +108,7 @@ struct ArgumentsGetterFunction: FunctionObject
     V4_OBJECT2(ArgumentsGetterFunction, FunctionObject)
 
     uint index() const { return d()->index; }
-    static void call(const Managed *that, Scope &scope, CallData *d);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 inline void
@@ -112,7 +123,7 @@ struct ArgumentsSetterFunction: FunctionObject
     V4_OBJECT2(ArgumentsSetterFunction, FunctionObject)
 
     uint index() const { return d()->index; }
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 inline void
@@ -131,8 +142,7 @@ struct ArgumentsObject: Object {
     bool fullyCreated() const { return d()->fullyCreated; }
 
     static bool isNonStrictArgumentsObject(Managed *m) {
-        return m->d()->vtable()->type == Type_ArgumentsObject &&
-                !static_cast<ArgumentsObject *>(m)->context()->strictMode;
+        return m->d()->vtable() == staticVTable();
     }
 
     bool defineOwnProperty(ExecutionEngine *engine, uint index, const Property *desc, PropertyAttributes attrs);
@@ -144,6 +154,11 @@ struct ArgumentsObject: Object {
 
     void fullyCreate();
 
+};
+
+struct StrictArgumentsObject : Object {
+    V4_OBJECT2(StrictArgumentsObject, Object)
+    Q_MANAGED_TYPE(ArgumentsObject)
 };
 
 }

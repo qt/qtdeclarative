@@ -76,12 +76,12 @@ struct QQmlContextWrapper : Object {
     QQmlQPointer<QObject> scopeObject;
 };
 
-#define QmlContextMembers(class, Member) \
-    Member(class, Pointer, QQmlContextWrapper *, qml)
+#define QmlContextMembers(class, Member)
 
 DECLARE_HEAP_OBJECT(QmlContext, ExecutionContext) {
-    DECLARE_MARK_TABLE(QmlContext);
+    DECLARE_MARKOBJECTS(QmlContext);
 
+    QQmlContextWrapper *qml() { return static_cast<QQmlContextWrapper *>(activation.get()); }
     void init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml);
 };
 
@@ -109,10 +109,10 @@ struct Q_QML_EXPORT QmlContext : public ExecutionContext
     static Heap::QmlContext *create(QV4::ExecutionContext *parent, QQmlContextData *context, QObject *scopeObject);
 
     QObject *qmlScope() const {
-        return d()->qml->scopeObject;
+        return d()->qml()->scopeObject;
     }
     QQmlContextData *qmlContext() const {
-        return *d()->qml->context;
+        return *d()->qml()->context;
     }
 };
 

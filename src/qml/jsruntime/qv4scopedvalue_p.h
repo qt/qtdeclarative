@@ -52,7 +52,6 @@
 
 #include "qv4engine_p.h"
 #include "qv4value_p.h"
-#include "qv4persistent_p.h"
 #include "qv4property_p.h"
 
 #ifdef V4_USE_VALGRIND
@@ -71,56 +70,45 @@ struct ScopedValue;
 #define CHECK_EXCEPTION() \
     do { \
         if (scope.hasException()) { \
-            scope.result = QV4::Encode::undefined(); \
-            return; \
+            return QV4::Encode::undefined(); \
         } \
     } while (false)
 
 #define RETURN_UNDEFINED() \
-    do { \
-        scope.result = QV4::Encode::undefined(); \
-        return; \
-    } while (false)
+    return QV4::Encode::undefined()
 
 #define RETURN_RESULT(r) \
-    do { \
-        scope.result = r; \
-        return; \
-    } while (false)
+    return QV4::Encode(r)
 
 #define THROW_TYPE_ERROR() \
-    do { \
-        scope.result = scope.engine->throwTypeError(); \
-        return; \
-    } while (false)
+    return scope.engine->throwTypeError()
 
 #define THROW_GENERIC_ERROR(str) \
-    do { \
-        scope.result = scope.engine->throwError(QString::fromUtf8(str)); \
-        return; \
-    } while (false)
+    return scope.engine->throwError(QString::fromUtf8(str))
 
 struct Scope {
-    inline Scope(ExecutionContext *ctx)
+    explicit Scope(ExecutionContext *ctx)
         : engine(ctx->engine())
         , mark(engine->jsStackTop)
-        , result(*engine->jsAlloca(1))
     {
-        result = Encode::undefined();
     }
 
     explicit Scope(ExecutionEngine *e)
         : engine(e)
         , mark(engine->jsStackTop)
-        , result(*engine->jsAlloca(1))
     {
-        result = Encode::undefined();
+    }
+
+    explicit Scope(const Managed *m)
+        : engine(m->engine())
+        , mark(engine->jsStackTop)
+    {
     }
 
     ~Scope() {
 #ifndef QT_NO_DEBUG
         Q_ASSERT(engine->jsStackTop >= mark);
-        Q_ASSERT(engine->currentContext < mark);
+//        Q_ASSERT(engine->currentContext < mark);
         memset(mark, 0, (engine->jsStackTop - mark)*sizeof(Value));
 #endif
 #ifdef V4_USE_VALGRIND
@@ -139,7 +127,6 @@ struct Scope {
 
     ExecutionEngine *engine;
     Value *mark;
-    Value &result;
 
 private:
     Q_DISABLE_COPY(Scope)
@@ -363,27 +350,6 @@ struct Scoped
     Value *ptr;
 };
 
-struct ScopedCallData {
-    ScopedCallData(const Scope &scope, int argc = 0)
-    {
-        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + qMax(argc , int(QV4::Global::ReservedArgumentCount));
-        ptr = reinterpret_cast<CallData *>(scope.alloc(size));
-        ptr->tag = quint32(QV4::Value::ValueTypeInternal::Integer);
-        ptr->argc = argc;
-    }
-
-    CallData *operator->() {
-        return ptr;
-    }
-
-    operator CallData *() const {
-        return ptr;
-    }
-
-    CallData *ptr;
-};
-
-
 inline Value &Value::operator =(const ScopedValue &v)
 {
     _val = v.ptr->rawValue();
@@ -410,25 +376,6 @@ struct ScopedProperty
 
     Property *property;
 };
-
-struct ExecutionContextSaver
-{
-    Scope scope; // this makes sure that a reference to context on the JS stack goes out of scope as soon as the context is not used anymore.
-    ExecutionContext *savedContext;
-
-    ExecutionContextSaver(const Scope &scope)
-        : scope(scope.engine)
-    {
-        savedContext = scope.engine->currentContext;
-    }
-    ~ExecutionContextSaver()
-    {
-        Q_ASSERT(scope.engine->jsStackTop > scope.engine->currentContext);
-        scope.engine->currentContext = savedContext;
-        scope.engine->current = savedContext->d();
-    }
-};
-
 
 }
 

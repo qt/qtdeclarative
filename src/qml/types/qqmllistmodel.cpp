@@ -2591,14 +2591,10 @@ bool QQmlListModelParser::applyProperty(QV4::CompiledData::CompilationUnit *comp
                 QV4::ScopedContext context(scope, QV4::QmlContext::create(v4->rootContext(), QQmlContextData::get(qmlContext(model->m_modelCache)), nullptr));
                 QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::createScriptFunction(context, compilationUnit->runtimeFunctions[id]));
 
-                // ### we need the inner function declaration (at this point the function has been wrapped)
-                const unsigned int parameterCount = function->formalParameterCount();
-                QV4::ScopedCallData callData(scope, parameterCount);
-                callData->thisObject = v4->globalObject;
-                function->call(scope, callData);
+                QV4::ReturnedValue result = function->call(v4->globalObject, nullptr, 0);
 
                 QJSValue v;
-                QJSValuePrivate::setValue(&v, v4, scope.result);
+                QJSValuePrivate::setValue(&v, v4, result);
                 value.setValue<QJSValue>(v);
             } else {
                 QByteArray script = scriptStr.toUtf8();

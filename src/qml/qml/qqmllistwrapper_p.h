@@ -103,7 +103,7 @@ struct PropertyListPrototype : Object
 {
     void init(ExecutionEngine *engine);
 
-    static void method_push(const BuiltinFunction *, Scope &, CallData *callData);
+    static ReturnedValue method_push(const BuiltinFunction *, CallData *callData);
 };
 
 }

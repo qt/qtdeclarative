@@ -46,6 +46,7 @@
 #include <qv4runtime_p.h>
 #include <qv4variantobject_p.h>
 #include "qv4string_p.h"
+#include "qv4jscall_p.h"
 
 #include <qstack.h>
 #include <qstringlist.h>
@@ -689,57 +690,57 @@ static QString quote(const QString &str)
 QString Stringify::Str(const QString &key, const Value &v)
 {
     Scope scope(v4);
-    scope.result = v;
 
-    ScopedObject o(scope, scope.result);
+    ScopedValue value(scope, v);
+    ScopedObject o(scope, value);
     if (o) {
         ScopedString s(scope, v4->newString(QStringLiteral("toJSON")));
         ScopedFunctionObject toJSON(scope, o->get(s));
         if (!!toJSON) {
-            ScopedCallData callData(scope, 1);
-            callData->thisObject = scope.result;
-            callData->args[0] = v4->newString(key);
-            toJSON->call(scope, callData);
+            JSCallData jsCallData(scope, 1);
+            *jsCallData->thisObject = value;
+            jsCallData->args[0] = v4->newString(key);
+            value = toJSON->call(jsCallData);
         }
     }
 
     if (replacerFunction) {
         ScopedObject holder(scope, v4->newObject());
-        holder->put(scope.engine->id_empty(), scope.result);
-        ScopedCallData callData(scope, 2);
-        callData->args[0] = v4->newString(key);
-        callData->args[1] = scope.result;
-        callData->thisObject = holder;
-        replacerFunction->call(scope, callData);
+        holder->put(scope.engine->id_empty(), value);
+        JSCallData jsCallData(scope, 2);
+        jsCallData->args[0] = v4->newString(key);
+        jsCallData->args[1] = value;
+        *jsCallData->thisObject = holder;
+        value = replacerFunction->call(jsCallData);
     }
 
-    o = scope.result.asReturnedValue();
+    o = value->asReturnedValue();
     if (o) {
         if (NumberObject *n = o->as<NumberObject>())
-            scope.result = Encode(n->value());
+            value = Encode(n->value());
         else if (StringObject *so = o->as<StringObject>())
-            scope.result = so->d()->string;
+            value = so->d()->string;
         else if (BooleanObject *b = o->as<BooleanObject>())
-            scope.result = Encode(b->value());
+            value = Encode(b->value());
     }
 
-    if (scope.result.isNull())
+    if (value->isNull())
         return QStringLiteral("null");
-    if (scope.result.isBoolean())
-        return scope.result.booleanValue() ? QStringLiteral("true") : QStringLiteral("false");
-    if (String *s = scope.result.stringValue())
-        return quote(s->toQString());
+    if (value->isBoolean())
+        return value->booleanValue() ? QStringLiteral("true") : QStringLiteral("false");
+    if (value->isString())
+        return quote(value->stringValue()->toQString());
 
-    if (scope.result.isNumber()) {
-        double d = scope.result.toNumber();
-        return std::isfinite(d) ? scope.result.toQString() : QStringLiteral("null");
+    if (value->isNumber()) {
+        double d = value->toNumber();
+        return std::isfinite(d) ? value->toQString() : QStringLiteral("null");
     }
 
-    if (const QV4::VariantObject *v = scope.result.as<QV4::VariantObject>()) {
+    if (const QV4::VariantObject *v = value->as<QV4::VariantObject>()) {
         return v->d()->data().toString();
     }
 
-    o = scope.result.asReturnedValue();
+    o = value->asReturnedValue();
     if (o) {
         if (!o->as<FunctionObject>()) {
             if (o->as<ArrayObject>()) {
@@ -883,25 +884,28 @@ void Heap::JsonObject::init()
 }
 
 
-void JsonObject::method_parse(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue JsonObject::method_parse(const BuiltinFunction *b, CallData *callData)
 {
-    ScopedValue v(scope, callData->argument(0));
-    QString jtext = v->toQString();
+    ExecutionEngine *v4 = b->engine();
+    QString jtext;
+    if (callData->argc() > 0)
+        jtext = callData->args[0].toQString();
 
     DEBUG << "parsing source = " << jtext;
-    JsonParser parser(scope.engine, jtext.constData(), jtext.length());
+    JsonParser parser(v4, jtext.constData(), jtext.length());
     QJsonParseError error;
-    ScopedValue result(scope, parser.parse(&error));
+    ReturnedValue result = parser.parse(&error);
     if (error.error != QJsonParseError::NoError) {
         DEBUG << "parse error" << error.errorString();
-        RETURN_RESULT(scope.engine->throwSyntaxError(QStringLiteral("JSON.parse: Parse error")));
+        RETURN_RESULT(v4->throwSyntaxError(QStringLiteral("JSON.parse: Parse error")));
     }
 
-    scope.result = result;
+    return result;
 }
 
-void JsonObject::method_stringify(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue JsonObject::method_stringify(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     Stringify stringify(scope.engine);
 
     ScopedObject o(scope, callData->argument(1));
@@ -946,7 +950,7 @@ void JsonObject::method_stringify(const BuiltinFunction *, Scope &scope, CallDat
     QString result = stringify.Str(QString(), arg0);
     if (result.isEmpty() || scope.engine->hasException)
         RETURN_UNDEFINED();
-    scope.result = scope.engine->newString(result);
+    return Encode(scope.engine->newString(result));
 }
 
 

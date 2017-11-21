@@ -44,10 +44,9 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlcomponent_p.h>
-#include <private/qv4ssa_p.h>
 
 #include "qqmlpropertycachecreator_p.h"
-#include "qv4jssimplifier_p.h"
+//#include "qv4jssimplifier_p.h"
 
 #define COMPILE_EXCEPTION(token, desc) \
     { \
@@ -140,19 +139,15 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
             sss.scan();
         }
 
-        QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsModule, &document->jsParserEngine, document->program, typeNameCache, &document->jsGenerator.stringTable);
+        document->jsModule.fileName = typeData->finalUrlString();
+        QmlIR::JSCodeGen v4CodeGenerator(document->code, &document->jsGenerator, &document->jsModule, &document->jsParserEngine, document->program, typeNameCache, &document->jsGenerator.stringTable);
+        v4CodeGenerator.setUseFastLookups(false);
+        // ###        v4CodeGenerator.setUseTypeInference(true);
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
             return nullptr;
 
-        QQmlJavaScriptBindingExpressionSimplificationPass pass(document->objects, &document->jsModule, &document->jsGenerator);
-        pass.reduceTranslationBindings();
-
-        QV4::ExecutionEngine *v4 = engine->v4engine();
-        QScopedPointer<QV4::EvalInstructionSelection> isel(v4->iselFactory->create(engine, v4->executableAllocator, &document->jsModule, &document->jsGenerator));
-        isel->setUseFastLookups(false);
-        isel->setUseTypeInference(true);
-        document->javaScriptCompilationUnit = isel->compile(/*generated unit data*/false);
+        document->javaScriptCompilationUnit = v4CodeGenerator.generateCompilationUnit(/*generated unit data*/false);
     }
 
     // Generate QML compiled type data structures
@@ -206,11 +201,6 @@ QString QQmlTypeCompiler::stringAt(int idx) const
 int QQmlTypeCompiler::registerString(const QString &str)
 {
     return document->jsGenerator.registerString(str);
-}
-
-QV4::IR::Module *QQmlTypeCompiler::jsIRModule() const
-{
-    return &document->jsModule;
 }
 
 const QV4::CompiledData::Unit *QQmlTypeCompiler::qmlUnit() const
@@ -501,7 +491,9 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             QQmlJS::AST::FunctionBody *body = new (pool) QQmlJS::AST::FunctionBody(elements);
 
             functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(compiler->newStringRef(stringAt(binding->propertyNameIndex)), paramList, body);
-            functionDeclaration->functionToken = foe->node->firstSourceLocation();
+            functionDeclaration->lbraceToken = functionDeclaration->functionToken
+                    = foe->node->firstSourceLocation();
+            functionDeclaration->rbraceToken = foe->node->lastSourceLocation();
         }
         foe->node = functionDeclaration;
         binding->propertyNameIndex = compiler->registerString(propertyName);

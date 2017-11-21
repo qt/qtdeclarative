@@ -43,13 +43,13 @@
 #include "qv4runtime_p.h"
 #include "qv4argumentsobject_p.h"
 #include "qv4string_p.h"
+#include "qv4jscall_p.h"
 
 using namespace QV4;
 
 QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON
 
 const QV4::VTable QV4::ArrayData::static_vtbl = {
-    0,
     0,
     0,
     0,
@@ -63,7 +63,7 @@ const QV4::VTable QV4::ArrayData::static_vtbl = {
     QV4::ArrayData::MyType,
     "ArrayData",
     Q_VTABLE_FUNCTION(QV4::ArrayData, destroy),
-    0,
+    ArrayData::Data::markObjects,
     isEqualTo
 };
 
@@ -110,6 +110,13 @@ static Q_ALWAYS_INLINE void storeValue(ReturnedValue *target, uint value)
     v.setEmpty(value);
     *target = v.asReturnedValue();
 }
+
+void Heap::ArrayData::markObjects(Heap::Base *base, MarkStack *stack)
+{
+    ArrayData *a = static_cast<ArrayData *>(base);
+    a->values.mark(stack);
+}
+
 
 void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAttributes)
 {
@@ -161,6 +168,8 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     }
     newData->setAlloc(alloc);
     newData->setType(newType);
+    if (d)
+        newData->d()->needsMark = d->d()->needsMark;
     newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->d()->values.values + alloc) : 0);
     o->setArrayData(newData);
 
@@ -183,6 +192,8 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
         memcpy(newData->d()->values.values, d->d()->values.values + offset, sizeof(Value)*toCopy);
     }
 
+    if (newType != Heap::ArrayData::Simple)
+        newData->d()->needsMark = true;
     if (newType != Heap::ArrayData::Sparse)
         return;
 
@@ -672,15 +683,14 @@ bool ArrayElementLessThan::operator()(Value v1, Value v2) const
         return false;
     if (v2.isUndefined() || v2.isEmpty())
         return true;
-    ScopedObject o(scope, m_comparefn);
+    ScopedFunctionObject o(scope, m_comparefn);
     if (o) {
         Scope scope(o->engine());
         ScopedValue result(scope);
-        ScopedCallData callData(scope, 2);
-        callData->thisObject = Primitive::undefinedValue();
-        callData->args[0] = v1;
-        callData->args[1] = v2;
-        result = QV4::Runtime::method_callValue(scope.engine, m_comparefn, callData);
+        JSCallData jsCallData(scope, 2);
+        jsCallData->args[0] = v1;
+        jsCallData->args[1] = v2;
+        result = o->call(jsCallData);
 
         return result->toNumber() < 0;
     }
@@ -754,7 +764,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
     if (!arrayData || !arrayData->length())
         return;
 
-    if (!(comparefn.isUndefined() || comparefn.as<Object>())) {
+    if (!comparefn.isUndefined() && !comparefn.isFunctionObject()) {
         engine->throwTypeError();
         return;
     }
@@ -833,7 +843,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
     }
 
 
-    ArrayElementLessThan lessThan(engine, thisObject, comparefn);
+    ArrayElementLessThan lessThan(engine, thisObject, static_cast<const FunctionObject &>(comparefn));
 
     Value *begin = thisObject->arrayData()->values.values;
     sortHelper(begin, begin + len, *begin, lessThan);

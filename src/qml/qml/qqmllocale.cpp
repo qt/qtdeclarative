@@ -58,8 +58,7 @@ DEFINE_OBJECT_VTABLE(QQmlLocaleData);
 
 #define THROW_ERROR(string) \
     do { \
-        scope.result = scope.engine->throwError(QString::fromUtf8(string)); \
-        return; \
+        return scope.engine->throwError(QString::fromUtf8(string)); \
     } while (false)
 
 
@@ -87,37 +86,32 @@ void QQmlDateExtension::registerExtension(QV4::ExecutionEngine *engine)
     engine->dateCtor()->defineDefaultProperty(QStringLiteral("timeZoneUpdated"), method_timeZoneUpdated);
 }
 
-void QQmlDateExtension::method_toLocaleString(const BuiltinFunction *b, Scope &scope, CallData *callData)
+ReturnedValue QQmlDateExtension::method_toLocaleString(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc > 2) {
-        QV4::DatePrototype::method_toLocaleString(b, scope, callData);
-        return;
-    }
+    Scope scope(b);
+    if (callData->argc() > 2)
+        return QV4::DatePrototype::method_toLocaleString(b, &callData->thisObject, callData->args, callData->argc());
 
     QV4::DateObject *date = callData->thisObject.as<DateObject>();
-    if (!date) {
-        QV4::DatePrototype::method_toLocaleString(b, scope, callData);
-        return;
-    }
+    if (!date)
+        return QV4::DatePrototype::method_toLocaleString(b, &callData->thisObject, callData->args, callData->argc());
 
     QDateTime dt = date->toQDateTime();
 
-    if (callData->argc == 0) {
+    if (callData->argc() == 0) {
         // Use QLocale for standard toLocaleString() function
         QLocale locale;
         RETURN_RESULT(scope.engine->newString(locale.toString(dt)));
     }
 
-    if (!isLocaleObject(callData->args[0])) {
-        QV4::DatePrototype::method_toLocaleString(b, scope, callData); // Use the default Date toLocaleString()
-        return;
-    }
+    if (!isLocaleObject(callData->args[0]))
+        return QV4::DatePrototype::method_toLocaleString(b, &callData->thisObject, callData->args, callData->argc()); // Use the default Date toLocaleString()
 
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
 
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QString formattedDt;
-    if (callData->argc == 2) {
+    if (callData->argc() == 2) {
         if (String *s = callData->args[1].stringValue()) {
             QString format = s->toQString();
             formattedDt = r->d()->locale->toString(dt, format);
@@ -132,39 +126,36 @@ void QQmlDateExtension::method_toLocaleString(const BuiltinFunction *b, Scope &s
          formattedDt = r->d()->locale->toString(dt, enumFormat);
     }
 
-    scope.result = scope.engine->newString(formattedDt);
+    RETURN_RESULT(scope.engine->newString(formattedDt));
 }
 
-void QQmlDateExtension::method_toLocaleTimeString(const BuiltinFunction *b, Scope &scope, CallData *callData)
+ReturnedValue QQmlDateExtension::method_toLocaleTimeString(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc > 2) {
-        QV4::DatePrototype::method_toLocaleTimeString(b, scope, callData);
-        return;
-    }
+    Scope scope(b);
+    if (callData->argc() > 2)
+        return QV4::DatePrototype::method_toLocaleTimeString(b, &callData->thisObject, callData->args, callData->argc());
 
     QV4::DateObject *date = callData->thisObject.as<DateObject>();
-    if (!date) {
-        QV4::DatePrototype::method_toLocaleTimeString(b, scope, callData);
-        return;
-    }
+    if (!date)
+        return QV4::DatePrototype::method_toLocaleTimeString(b, &callData->thisObject, callData->args, callData->argc());
 
     QDateTime dt = date->toQDateTime();
     QTime time = dt.time();
 
-    if (callData->argc == 0) {
+    if (callData->argc() == 0) {
         // Use QLocale for standard toLocaleString() function
         QLocale locale;
         RETURN_RESULT(scope.engine->newString(locale.toString(time)));
     }
 
     if (!isLocaleObject(callData->args[0]))
-        return QV4::DatePrototype::method_toLocaleTimeString(b, scope, callData); // Use the default Date toLocaleTimeString()
+        return QV4::DatePrototype::method_toLocaleTimeString(b, &callData->thisObject, callData->args, callData->argc()); // Use the default Date toLocaleTimeString()
 
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
 
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QString formattedTime;
-    if (callData->argc == 2) {
+    if (callData->argc() == 2) {
         if (String *s = callData->args[1].stringValue()) {
             QString format = s->toQString();
             formattedTime = r->d()->locale->toString(time, format);
@@ -179,39 +170,36 @@ void QQmlDateExtension::method_toLocaleTimeString(const BuiltinFunction *b, Scop
          formattedTime = r->d()->locale->toString(time, enumFormat);
     }
 
-    scope.result = scope.engine->newString(formattedTime);
+    RETURN_RESULT(scope.engine->newString(formattedTime));
 }
 
-void QQmlDateExtension::method_toLocaleDateString(const BuiltinFunction *b, Scope &scope, CallData *callData)
+ReturnedValue QQmlDateExtension::method_toLocaleDateString(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc > 2) {
-        QV4::DatePrototype::method_toLocaleDateString(b, scope, callData);
-        return;
-    }
+    Scope scope(b);
+    if (callData->argc() > 2)
+        return QV4::DatePrototype::method_toLocaleDateString(b, &callData->thisObject, callData->args, callData->argc());
 
     QV4::DateObject *dateObj = callData->thisObject.as<DateObject>();
-    if (!dateObj) {
-        QV4::DatePrototype::method_toLocaleDateString(b, scope, callData);
-        return;
-    }
+    if (!dateObj)
+        return QV4::DatePrototype::method_toLocaleDateString(b, &callData->thisObject, callData->args, callData->argc());
 
     QDateTime dt = dateObj->toQDateTime();
     QDate date = dt.date();
 
-    if (callData->argc == 0) {
+    if (callData->argc() == 0) {
         // Use QLocale for standard toLocaleString() function
         QLocale locale;
         RETURN_RESULT(scope.engine->newString(locale.toString(date)));
     }
 
     if (!isLocaleObject(callData->args[0]))
-        return QV4::DatePrototype::method_toLocaleDateString(b, scope, callData); // Use the default Date toLocaleDateString()
+        return QV4::DatePrototype::method_toLocaleDateString(b, &callData->thisObject, callData->args, callData->argc()); // Use the default Date toLocaleDateString()
 
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
 
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QString formattedDate;
-    if (callData->argc == 2) {
+    if (callData->argc() == 2) {
         if (String *s = callData->args[1].stringValue()) {
             QString format = s->toQString();
             formattedDate = r->d()->locale->toString(date, format);
@@ -226,13 +214,14 @@ void QQmlDateExtension::method_toLocaleDateString(const BuiltinFunction *b, Scop
          formattedDate = r->d()->locale->toString(date, enumFormat);
     }
 
-    scope.result = scope.engine->newString(formattedDate);
+    RETURN_RESULT(scope.engine->newString(formattedDate));
 }
 
-void QQmlDateExtension::method_fromLocaleString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlDateExtension::method_fromLocaleString(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::ExecutionEngine * const engine = scope.engine;
-    if (callData->argc == 1) {
+    if (callData->argc() == 1) {
         if (String *s = callData->args[0].stringValue()) {
             QLocale locale;
             QString dateString = s->toQString();
@@ -241,7 +230,7 @@ void QQmlDateExtension::method_fromLocaleString(const BuiltinFunction *, Scope &
         }
     }
 
-    if (callData->argc < 1 || callData->argc > 3 || !isLocaleObject(callData->args[0]))
+    if (callData->argc() < 1 || callData->argc() > 3 || !isLocaleObject(callData->args[0]))
         THROW_ERROR("Locale: Date.fromLocaleString(): Invalid arguments");
 
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
@@ -249,7 +238,7 @@ void QQmlDateExtension::method_fromLocaleString(const BuiltinFunction *, Scope &
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QDateTime dt;
     QString dateString = callData->args[1].toQStringNoThrow();
-    if (callData->argc == 3) {
+    if (callData->argc() == 3) {
         if (String *s = callData->args[2].stringValue()) {
             QString format = s->toQString();
             dt = r->d()->locale->toDateTime(dateString, format);
@@ -264,14 +253,15 @@ void QQmlDateExtension::method_fromLocaleString(const BuiltinFunction *, Scope &
         dt = r->d()->locale->toDateTime(dateString, enumFormat);
     }
 
-    scope.result = engine->newDateObject(dt);
+    RETURN_RESULT(engine->newDateObject(dt));
 }
 
-void QQmlDateExtension::method_fromLocaleTimeString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlDateExtension::method_fromLocaleTimeString(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::ExecutionEngine * const engine = scope.engine;
 
-    if (callData->argc == 1) {
+    if (callData->argc() == 1) {
         if (String *s = callData->args[0].stringValue()) {
             QLocale locale;
             QString timeString = s->toQString();
@@ -282,7 +272,7 @@ void QQmlDateExtension::method_fromLocaleTimeString(const BuiltinFunction *, Sco
         }
     }
 
-    if (callData->argc < 1 || callData->argc > 3 || !isLocaleObject(callData->args[0]))
+    if (callData->argc() < 1 || callData->argc() > 3 || !isLocaleObject(callData->args[0]))
         THROW_ERROR("Locale: Date.fromLocaleTimeString(): Invalid arguments");
 
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
@@ -290,7 +280,7 @@ void QQmlDateExtension::method_fromLocaleTimeString(const BuiltinFunction *, Sco
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QTime tm;
     QString dateString = callData->args[1].toQStringNoThrow();
-    if (callData->argc == 3) {
+    if (callData->argc() == 3) {
         if (String *s = callData->args[2].stringValue()) {
             QString format = s->toQString();
             tm = r->d()->locale->toTime(dateString, format);
@@ -314,11 +304,12 @@ void QQmlDateExtension::method_fromLocaleTimeString(const BuiltinFunction *, Sco
     RETURN_RESULT(engine->newDateObject(dt));
 }
 
-void QQmlDateExtension::method_fromLocaleDateString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlDateExtension::method_fromLocaleDateString(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::ExecutionEngine * const engine = scope.engine;
 
-    if (callData->argc == 1) {
+    if (callData->argc() == 1) {
         if (String *s = callData->args[0].stringValue()) {
             QLocale locale;
             QString dateString = s->toQString();
@@ -327,7 +318,7 @@ void QQmlDateExtension::method_fromLocaleDateString(const BuiltinFunction *, Sco
         }
     }
 
-    if (callData->argc < 1 || callData->argc > 3 || !isLocaleObject(callData->args[0]))
+    if (callData->argc() < 1 || callData->argc() > 3 || !isLocaleObject(callData->args[0]))
         THROW_ERROR("Locale: Date.fromLocaleDateString(): Invalid arguments");
 
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
@@ -335,7 +326,7 @@ void QQmlDateExtension::method_fromLocaleDateString(const BuiltinFunction *, Sco
     QLocale::FormatType enumFormat = QLocale::LongFormat;
     QDate dt;
     QString dateString = callData->args[1].toQStringNoThrow();
-    if (callData->argc == 3) {
+    if (callData->argc() == 3) {
         if (String *s = callData->args[2].stringValue()) {
             QString format = s->toQString();
             dt = r->d()->locale->toDate(dateString, format);
@@ -353,9 +344,10 @@ void QQmlDateExtension::method_fromLocaleDateString(const BuiltinFunction *, Sco
     RETURN_RESULT(engine->newDateObject(QDateTime(dt)));
 }
 
-void QQmlDateExtension::method_timeZoneUpdated(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlDateExtension::method_timeZoneUpdated(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc != 0)
+    QV4::Scope scope(b);
+    if (callData->argc() != 0)
         THROW_ERROR("Locale: Date.timeZoneUpdated(): Invalid arguments");
 
     QV4::DatePrototype::timezoneUpdated();
@@ -373,28 +365,27 @@ void QQmlNumberExtension::registerExtension(QV4::ExecutionEngine *engine)
     engine->numberCtor()->defineDefaultProperty(QStringLiteral("fromLocaleString"), method_fromLocaleString);
 }
 
-void QQmlNumberExtension::method_toLocaleString(const BuiltinFunction *b, Scope &scope, CallData *callData)
+QV4::ReturnedValue QQmlNumberExtension::method_toLocaleString(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc > 3)
+    QV4::Scope scope(b);
+    if (callData->argc() > 3)
         THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
 
     double number = callData->thisObject.toNumber();
 
-    if (callData->argc == 0) {
+    if (callData->argc() == 0) {
         // Use QLocale for standard toLocaleString() function
         QLocale locale;
         RETURN_RESULT(scope.engine->newString(locale.toString(number)));
     }
 
-    if (!isLocaleObject(callData->args[0])) {
-        QV4::NumberPrototype::method_toLocaleString(b, scope, callData); // Use the default Number toLocaleString()
-        return;
-    }
+    if (!isLocaleObject(callData->args[0]))
+        return QV4::NumberPrototype::method_toLocaleString(b, &callData->thisObject, callData->args, callData->argc()); // Use the default Number toLocaleString()
 
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
 
     quint16 format = 'f';
-    if (callData->argc > 1) {
+    if (callData->argc() > 1) {
         if (!callData->args[1].isString())
             THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
         QString fs = callData->args[1].toQString();
@@ -402,23 +393,24 @@ void QQmlNumberExtension::method_toLocaleString(const BuiltinFunction *b, Scope 
             format = fs.at(0).unicode();
     }
     int prec = 2;
-    if (callData->argc > 2) {
+    if (callData->argc() > 2) {
         if (!callData->args[2].isNumber())
             THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
          prec = callData->args[2].toInt32();
     }
 
-    scope.result = scope.engine->newString(r->d()->locale->toString(number, (char)format, prec));
+    RETURN_RESULT(scope.engine->newString(r->d()->locale->toString(number, (char)format, prec)));
 }
 
-void QQmlNumberExtension::method_toLocaleCurrencyString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlNumberExtension::method_toLocaleCurrencyString(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc > 2)
+    QV4::Scope scope(b);
+    if (callData->argc() > 2)
         THROW_ERROR("Locale: Number.toLocaleCurrencyString(): Invalid arguments");
 
     double number = callData->thisObject.toNumber();
 
-    if (callData->argc == 0) {
+    if (callData->argc() == 0) {
         // Use QLocale for standard toLocaleString() function
         QLocale locale;
         RETURN_RESULT(scope.engine->newString(locale.toString(number)));
@@ -430,7 +422,7 @@ void QQmlNumberExtension::method_toLocaleCurrencyString(const BuiltinFunction *,
     GET_LOCALE_DATA_RESOURCE(callData->args[0]);
 
     QString symbol;
-    if (callData->argc > 1) {
+    if (callData->argc() > 1) {
         if (!callData->args[1].isString())
             THROW_ERROR("Locale: Number.toLocaleString(): Invalid arguments");
         symbol = callData->args[1].toQStringNoThrow();
@@ -439,15 +431,16 @@ void QQmlNumberExtension::method_toLocaleCurrencyString(const BuiltinFunction *,
     RETURN_RESULT(scope.engine->newString(r->d()->locale->toCurrencyString(number, symbol)));
 }
 
-void QQmlNumberExtension::method_fromLocaleString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlNumberExtension::method_fromLocaleString(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc < 1 || callData->argc > 2)
+    QV4::Scope scope(b);
+    if (callData->argc() < 1 || callData->argc() > 2)
         THROW_ERROR("Locale: Number.fromLocaleString(): Invalid arguments");
 
     int numberIdx = 0;
     QLocale locale;
 
-    if (callData->argc == 2) {
+    if (callData->argc() == 2) {
         if (!isLocaleObject(callData->args[0]))
             THROW_ERROR("Locale: Number.fromLocaleString(): Invalid arguments");
 
@@ -467,45 +460,49 @@ void QQmlNumberExtension::method_fromLocaleString(const BuiltinFunction *, Scope
     if (!ok)
         THROW_ERROR("Locale: Number.fromLocaleString(): Invalid format");
 
-    scope.result = QV4::Encode(val);
+    RETURN_RESULT(QV4::Encode(val));
 }
 
 //--------------
 // Locale object
 
-void QQmlLocaleData::method_get_firstDayOfWeek(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlLocaleData::method_get_firstDayOfWeek(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QLocale *locale = getThisLocale(scope, callData);
     if (!locale)
-        return;
+        return Encode::undefined();
     int fdow = int(locale->firstDayOfWeek());
     if (fdow == 7)
         fdow = 0; // Qt::Sunday = 7, but Sunday is 0 in JS Date
-    scope.result = QV4::Encode(fdow);
+    RETURN_RESULT(fdow);
 }
 
-void QQmlLocaleData::method_get_measurementSystem(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlLocaleData::method_get_measurementSystem(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QLocale *locale = getThisLocale(scope, callData);
     if (!locale)
-        return;
-    scope.result = QV4::Encode(locale->measurementSystem());
+        return Encode::undefined();
+    return QV4::Encode(locale->measurementSystem());
 }
 
-void QQmlLocaleData::method_get_textDirection(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlLocaleData::method_get_textDirection(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QLocale *locale = getThisLocale(scope, callData);
     if (!locale)
-        return;
+        return Encode::undefined();
 
-    scope.result = QV4::Encode(locale->textDirection());
+    return QV4::Encode(locale->textDirection());
 }
 
-void QQmlLocaleData::method_get_weekDays(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlLocaleData::method_get_weekDays(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QLocale *locale = getThisLocale(scope, callData);
     if (!locale)
-        return;
+        return Encode::undefined();
 
     QList<Qt::DayOfWeek> days = locale->weekdays();
 
@@ -519,14 +516,15 @@ void QQmlLocaleData::method_get_weekDays(const BuiltinFunction *, Scope &scope, 
     }
     result->setArrayLengthUnchecked(days.size());
 
-    scope.result = result.asReturnedValue();
+    return result.asReturnedValue();
 }
 
-void QQmlLocaleData::method_get_uiLanguages(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlLocaleData::method_get_uiLanguages(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QLocale *locale = getThisLocale(scope, callData);
     if (!locale)
-        return;
+        return Encode::undefined();
 
     QStringList langs = locale->uiLanguages();
     QV4::ScopedArrayObject result(scope, scope.engine->newArrayObject());
@@ -537,40 +535,42 @@ void QQmlLocaleData::method_get_uiLanguages(const BuiltinFunction *, Scope &scop
 
     result->setArrayLengthUnchecked(langs.size());
 
-    scope.result = result.asReturnedValue();
+    return result.asReturnedValue();
 }
 
-void QQmlLocaleData::method_currencySymbol(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue QQmlLocaleData::method_currencySymbol(const BuiltinFunction *b, CallData *callData)
 {
+    QV4::Scope scope(b);
     QLocale *locale = getThisLocale(scope, callData);
     if (!locale)
-        return;
+        return Encode::undefined();
 
-    if (callData->argc > 1)
+    if (callData->argc() > 1)
         THROW_ERROR("Locale: currencySymbol(): Invalid arguments");
 
     QLocale::CurrencySymbolFormat format = QLocale::CurrencySymbol;
-    if (callData->argc == 1) {
+    if (callData->argc() == 1) {
         quint32 intFormat = callData->args[0].toNumber();
         format = QLocale::CurrencySymbolFormat(intFormat);
     }
 
-    scope.result = scope.engine->newString(locale->currencySymbol(format));
+    RETURN_RESULT(scope.engine->newString(locale->currencySymbol(format)));
 }
 
 #define LOCALE_FORMAT(FUNC) \
-void QQmlLocaleData::method_ ##FUNC (const BuiltinFunction *, Scope &scope, CallData *callData) { \
+ReturnedValue QQmlLocaleData::method_ ##FUNC (const BuiltinFunction *b, CallData *callData) { \
+    QV4::Scope scope(b); \
     QLocale *locale = getThisLocale(scope, callData); \
     if (!locale) \
-        return; \
-    if (callData->argc > 1) \
+        return Encode::undefined(); \
+    if (callData->argc() > 1) \
         THROW_ERROR("Locale: " #FUNC "(): Invalid arguments"); \
     QLocale::FormatType format = QLocale::LongFormat;\
-    if (callData->argc == 1) { \
+    if (callData->argc() == 1) { \
         quint32 intFormat = callData->args[0].toUInt32(); \
         format = QLocale::FormatType(intFormat); \
     } \
-    scope.result = scope.engine->newString(locale-> FUNC (format)); \
+    RETURN_RESULT(scope.engine->newString(locale-> FUNC (format))); \
 }
 
 LOCALE_FORMAT(dateTimeFormat)
@@ -579,18 +579,19 @@ LOCALE_FORMAT(dateFormat)
 
 // +1 added to idx because JS is 0-based, whereas QLocale months begin at 1.
 #define LOCALE_FORMATTED_MONTHNAME(VARIABLE) \
-void QQmlLocaleData::method_ ## VARIABLE (const BuiltinFunction *, Scope &scope, CallData *callData) {\
+ReturnedValue QQmlLocaleData::method_ ## VARIABLE (const BuiltinFunction *b, CallData *callData) {\
+    Scope scope(b); \
     QLocale *locale = getThisLocale(scope, callData); \
     if (!locale) \
-        return; \
-    if (callData->argc < 1 || callData->argc > 2) \
+        return Encode::undefined(); \
+    if (callData->argc() < 1 || callData->argc() > 2) \
         THROW_ERROR("Locale: " #VARIABLE "(): Invalid arguments"); \
     QLocale::FormatType enumFormat = QLocale::LongFormat; \
     int idx = callData->args[0].toInt32() + 1; \
     if (idx < 1 || idx > 12) \
         THROW_ERROR("Locale: Invalid month"); \
     QString name; \
-    if (callData->argc == 2) { \
+    if (callData->argc() == 2) { \
         if (callData->args[1].isNumber()) { \
             quint32 intFormat = callData->args[1].toUInt32(); \
             QLocale::FormatType format = QLocale::FormatType(intFormat); \
@@ -601,16 +602,17 @@ void QQmlLocaleData::method_ ## VARIABLE (const BuiltinFunction *, Scope &scope,
     } else { \
         name = locale-> VARIABLE(idx, enumFormat); \
     } \
-    scope.result = scope.engine->newString(name); \
+    RETURN_RESULT(scope.engine->newString(name)); \
 }
 
 // 0 -> 7 as Qt::Sunday is 7, but Sunday is 0 in JS Date
 #define LOCALE_FORMATTED_DAYNAME(VARIABLE) \
-void QQmlLocaleData::method_ ## VARIABLE (const BuiltinFunction *, Scope &scope, CallData *callData) {\
+ReturnedValue QQmlLocaleData::method_ ## VARIABLE (const BuiltinFunction *b, CallData *callData) {\
+    Scope scope(b); \
     QLocale *locale = getThisLocale(scope, callData); \
     if (!locale) \
-        return; \
-    if (callData->argc < 1 || callData->argc > 2) \
+        return Encode::undefined(); \
+    if (callData->argc() < 1 || callData->argc() > 2) \
         THROW_ERROR("Locale: " #VARIABLE "(): Invalid arguments"); \
     QLocale::FormatType enumFormat = QLocale::LongFormat; \
     int idx = callData->args[0].toInt32(); \
@@ -618,7 +620,7 @@ void QQmlLocaleData::method_ ## VARIABLE (const BuiltinFunction *, Scope &scope,
         THROW_ERROR("Locale: Invalid day"); \
     if (idx == 0) idx = 7; \
     QString name; \
-    if (callData->argc == 2) { \
+    if (callData->argc() == 2) { \
         if (callData->args[1].isNumber()) { \
             quint32 intFormat = callData->args[1].toUInt32(); \
             QLocale::FormatType format = QLocale::FormatType(intFormat); \
@@ -629,7 +631,7 @@ void QQmlLocaleData::method_ ## VARIABLE (const BuiltinFunction *, Scope &scope,
     } else { \
         name = locale-> VARIABLE(idx, enumFormat); \
     } \
-    scope.result = scope.engine->newString(name); \
+    RETURN_RESULT(scope.engine->newString(name)); \
 }
 
 LOCALE_FORMATTED_MONTHNAME(monthName)
@@ -637,12 +639,14 @@ LOCALE_FORMATTED_MONTHNAME(standaloneMonthName)
 LOCALE_FORMATTED_DAYNAME(dayName)
 LOCALE_FORMATTED_DAYNAME(standaloneDayName)
 
-#define LOCALE_STRING_PROPERTY(VARIABLE) void QQmlLocaleData::method_get_ ## VARIABLE (const BuiltinFunction *, Scope &scope, CallData *callData) \
+#define LOCALE_STRING_PROPERTY(VARIABLE) \
+ReturnedValue QQmlLocaleData::method_get_ ## VARIABLE (const BuiltinFunction *b, CallData *callData) \
 { \
+    Scope scope(b); \
     QLocale *locale = getThisLocale(scope, callData); \
     if (!locale) \
-        return; \
-    scope.result = scope.engine->newString(locale-> VARIABLE());\
+        return Encode::undefined(); \
+    RETURN_RESULT(scope.engine->newString(locale-> VARIABLE()));\
 }
 
 LOCALE_STRING_PROPERTY(name)
@@ -833,22 +837,18 @@ void QQmlLocale::registerStringLocaleCompare(QV4::ExecutionEngine *engine)
     engine->stringPrototype()->defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare);
 }
 
-void QQmlLocale::method_localeCompare(const BuiltinFunction *b, Scope &scope, CallData *callData)
+ReturnedValue QQmlLocale::method_localeCompare(const BuiltinFunction *b, CallData *callData)
 {
-    if (callData->argc != 1 || (!callData->args[0].isString() && !callData->args[0].as<StringObject>())) {
-        QV4::StringPrototype::method_localeCompare(b, scope, callData);
-        return;
-    }
+    if (callData->argc() != 1 || (!callData->args[0].isString() && !callData->args[0].as<StringObject>()))
+        return QV4::StringPrototype::method_localeCompare(b, &callData->thisObject, callData->args, callData->argc());
 
-    if (!callData->thisObject.isString() && !callData->thisObject.as<StringObject>()) {
-        QV4::StringPrototype::method_localeCompare(b, scope, callData);
-        return;
-    }
+    if (!callData->thisObject.isString() && !callData->thisObject.as<StringObject>())
+        return QV4::StringPrototype::method_localeCompare(b, &callData->thisObject, callData->args, callData->argc());
 
     QString thisString = callData->thisObject.toQStringNoThrow();
     QString thatString = callData->args[0].toQStringNoThrow();
 
-    scope.result = QV4::Encode(QString::localeAwareCompare(thisString, thatString));
+    return QV4::Encode(QString::localeAwareCompare(thisString, thatString));
 }
 
 /*!

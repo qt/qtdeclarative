@@ -75,7 +75,6 @@ struct InternalClass;
 struct VTable
 {
     const VTable * const parent;
-    const quint64 markTable;
     uint inlinePropertyOffset : 16;
     uint nInlineProperties : 16;
     uint isExecutionContext : 1;
@@ -97,7 +96,7 @@ namespace Heap {
 struct Q_QML_EXPORT Base {
     void *operator new(size_t) = delete;
 
-    static Q_CONSTEXPR quint64 markTable = 0;
+    static void markObjects(Heap::Base *, MarkStack *) {}
 
     InternalClass *internalClass;
 
@@ -131,7 +130,9 @@ struct Q_QML_EXPORT Base {
         return Chunk::testBit(c->objectBitmap, h - c->realBase());
     }
 
-    inline void markChildren(MarkStack *markStack);
+    inline void markChildren(MarkStack *markStack) {
+        vtable()->markObjects(this, markStack);
+    }
 
     void *operator new(size_t, Managed *m) { return m; }
     void *operator new(size_t, Heap::Base *m) { return m; }
@@ -182,6 +183,22 @@ Q_STATIC_ASSERT(std::is_standard_layout<Base>::value);
 Q_STATIC_ASSERT(offsetof(Base, internalClass) == 0);
 Q_STATIC_ASSERT(sizeof(Base) == QT_POINTER_SIZE);
 
+}
+
+inline
+void Heap::Base::mark(QV4::MarkStack *markStack)
+{
+    Q_ASSERT(inUse());
+    const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
+    Chunk *c = h->chunk();
+    size_t index = h - c->realBase();
+    Q_ASSERT(!Chunk::testBit(c->extendsBitmap, index));
+    quintptr *bitmap = c->blackBitmap + Chunk::bitmapIndex(index);
+    quintptr bit = Chunk::bitForIndex(index);
+    if (!(*bitmap & bit)) {
+        *bitmap |= bit;
+        markStack->push(this);
+    }
 }
 
 #ifdef QT_NO_QOBJECT

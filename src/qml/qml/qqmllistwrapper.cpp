@@ -171,8 +171,9 @@ void PropertyListPrototype::init(ExecutionEngine *)
     defineDefaultProperty(QStringLiteral("push"), method_push, 1);
 }
 
-void PropertyListPrototype::method_push(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue PropertyListPrototype::method_push(const BuiltinFunction *b, CallData *callData)
 {
+    Scope scope(b);
     ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
@@ -183,12 +184,13 @@ void PropertyListPrototype::method_push(const BuiltinFunction *, Scope &scope, C
         THROW_GENERIC_ERROR("List doesn't define an Append function");
 
     QV4::ScopedObject so(scope);
-    for (int i = 0; i < callData->argc; ++i)
+    for (int i = 0, ei = callData->argc(); i < ei; ++i)
     {
         so = callData->args[i].toObject(scope.engine);
         if (QV4::QObjectWrapper *wrapper = so->as<QV4::QObjectWrapper>())
             w->d()->property().append(&w->d()->property(), wrapper->object() );
     }
+    return Encode::undefined();
 }
 
 QT_END_NAMESPACE

@@ -60,6 +60,9 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlTypeNameCache;
+class QQmlType;
+class QQmlTypePrivate;
+struct QQmlImportRef;
 
 namespace QV4 {
 

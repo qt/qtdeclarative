@@ -93,45 +93,45 @@ struct QtObject : Object
     static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
-    static void method_isQtObject(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_rgba(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_hsla(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_hsva(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_colorEqual(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_font(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_rect(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_point(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_size(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_vector2d(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_vector3d(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_vector4d(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_quaternion(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_matrix4x4(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_lighter(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_darker(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_tint(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_formatDate(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_formatTime(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_formatDateTime(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_openUrlExternally(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_fontFamilies(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_md5(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_btoa(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_atob(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_quit(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_exit(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_resolvedUrl(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_createQmlObject(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_createComponent(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_locale(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_binding(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_isQtObject(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_rgba(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_hsla(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_hsva(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_colorEqual(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_font(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_rect(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_point(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_size(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_vector2d(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_vector3d(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_vector4d(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_quaternion(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_matrix4x4(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_lighter(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_darker(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_tint(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_formatDate(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_formatTime(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_formatDateTime(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_openUrlExternally(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_fontFamilies(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_md5(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_btoa(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_atob(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_quit(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_exit(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_resolvedUrl(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_createQmlObject(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_createComponent(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_locale(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_binding(const BuiltinFunction *, CallData *callData);
 
-    static void method_get_platform(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_application(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_inputMethod(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_styleHints(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_get_platform(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_application(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_inputMethod(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_styleHints(const BuiltinFunction *, CallData *callData);
 
-    static void method_callLater(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_callLater(const BuiltinFunction *, CallData *callData);
 
 private:
     void addAll();
@@ -142,18 +142,18 @@ struct ConsoleObject : Object
 {
     V4_OBJECT2(ConsoleObject, Object)
 
-    static void method_error(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_log(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_info(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_profile(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_profileEnd(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_time(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_timeEnd(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_count(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_trace(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_warn(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_assert(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_exception(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_error(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_log(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_info(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_profile(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_profileEnd(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_time(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_timeEnd(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_count(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_trace(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_warn(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_assert(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_exception(const BuiltinFunction *, CallData *callData);
 
 };
 
@@ -161,17 +161,17 @@ struct Q_QML_PRIVATE_EXPORT GlobalExtensions {
     static void init(Object *globalObject, QJSEngine::Extensions extensions);
 
 #if QT_CONFIG(translation)
-    static void method_qsTranslate(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_qsTranslateNoOp(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_qsTr(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_qsTrNoOp(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_qsTrId(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_qsTrIdNoOp(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_qsTranslate(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_qsTranslateNoOp(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_qsTr(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_qsTrNoOp(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_qsTrId(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_qsTrIdNoOp(const BuiltinFunction *, CallData *callData);
 #endif
-    static void method_gc(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_gc(const BuiltinFunction *, CallData *callData);
 
     // on String:prototype
-    static void method_string_arg(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_string_arg(const BuiltinFunction *, CallData *callData);
 
 };
 

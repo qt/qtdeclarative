@@ -62,20 +62,29 @@ struct QQmlSourceLocation;
 namespace QV4 {
 
 struct BuiltinFunction;
+struct IndexedBuiltinFunction;
+struct JSCallData;
+
+typedef ReturnedValue (*jsCallFunction)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+typedef ReturnedValue (*jsConstructFunction)(const FunctionObject *, const Value *argv, int argc);
 
 namespace Heap {
 
+
 #define FunctionObjectMembers(class, Member) \
     Member(class, Pointer, ExecutionContext *, scope) \
-    Member(class, NoMark, Function *, function)
+    Member(class, NoMark, Function *, function) \
+    Member(class, NoMark, jsCallFunction, jsCall) \
+    Member(class, NoMark, jsConstructFunction, jsConstruct)
 
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
-    DECLARE_MARK_TABLE(FunctionObject);
+    DECLARE_MARKOBJECTS(FunctionObject);
     enum {
         Index_Prototype = 0,
         Index_ProtoConstructor = 0
     };
 
+    void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc));
     void init(QV4::ExecutionContext *scope, QV4::String *name = 0, bool createProto = false);
     void init(QV4::ExecutionContext *scope, QV4::Function *function, bool createProto = false);
     void init(QV4::ExecutionContext *scope, const QString &name, bool createProto = false);
@@ -96,19 +105,13 @@ struct FunctionPrototype : FunctionObject {
     void init();
 };
 
-struct Q_QML_EXPORT OldBuiltinFunction : FunctionObject {
-    void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(QV4::CallContext *));
-    ReturnedValue (*code)(QV4::CallContext *);
-};
-
 struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
-    void init(QV4::ExecutionContext *scope, QV4::String *name, void (*code)(const QV4::BuiltinFunction *, Scope &, CallData *));
-    void (*code)(const QV4::BuiltinFunction *, Scope &, CallData *);
+    void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *));
+    ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *);
 };
 
-struct IndexedBuiltinFunction : FunctionObject {
-    inline void init(QV4::ExecutionContext *scope, uint index, ReturnedValue (*code)(QV4::CallContext *ctx, uint index));
-    ReturnedValue (*code)(QV4::CallContext *, uint index);
+struct IndexedBuiltinFunction : BuiltinFunction {
+    inline void init(QV4::ExecutionContext *scope, uint index, ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *));
     uint index;
 };
 
@@ -128,7 +131,7 @@ struct ScriptFunction : FunctionObject {
     Member(class, Pointer, MemberData *, boundArgs)
 
 DECLARE_HEAP_OBJECT(BoundFunction, FunctionObject) {
-    DECLARE_MARK_TABLE(BoundFunction);
+    DECLARE_MARKOBJECTS(BoundFunction);
 
     void init(QV4::ExecutionContext *scope, QV4::FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs);
 };
@@ -144,6 +147,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     V4_INTERNALCLASS(FunctionObject)
     V4_PROTOTYPE(functionPrototype)
     V4_NEEDS_DESTROY
+    enum { NInlineProperties = 1 };
 
     Heap::ExecutionContext *scope() const { return d()->scope; }
     Function *function() const { return d()->function; }
@@ -154,10 +158,16 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     void init(String *name, bool createProto);
 
-    using Object::construct;
-    using Object::call;
-    static void construct(const Managed *that, Scope &scope, CallData *);
-    static void call(const Managed *that, Scope &scope, CallData *d);
+    inline ReturnedValue callAsConstructor(const JSCallData &data) const;
+    ReturnedValue callAsConstructor(const Value *argv, int argc) const {
+        return d()->jsConstruct(this, argv, argc);
+    }
+    inline ReturnedValue call(const JSCallData &data) const;
+    ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const {
+        return d()->jsCall(this, thisObject, argv, argc);
+    }
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
 
@@ -178,8 +188,8 @@ struct FunctionCtor: FunctionObject
 {
     V4_OBJECT2(FunctionCtor, FunctionObject)
 
-    static void construct(const Managed *that, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct FunctionPrototype: FunctionObject
@@ -188,52 +198,51 @@ struct FunctionPrototype: FunctionObject
 
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static void method_toString(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_apply(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_call(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_bind(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_apply(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_bind(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
     V4_OBJECT2(BuiltinFunction, FunctionObject)
     V4_INTERNALCLASS(BuiltinFunction)
 
-    static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, void (*code)(const BuiltinFunction *, Scope &, CallData *))
+    static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(const BuiltinFunction *, CallData *))
     {
         return scope->engine()->memoryManager->allocObject<BuiltinFunction>(scope, name, code);
     }
 
-    static void construct(const Managed *, Scope &scope, CallData *);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
-};
-
-struct IndexedBuiltinFunction: FunctionObject
-{
-    V4_OBJECT2(IndexedBuiltinFunction, FunctionObject)
-
-    static void construct(const Managed *m, Scope &scope, CallData *)
+    static Heap::FunctionObject *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc))
     {
-        scope.result = static_cast<const IndexedBuiltinFunction *>(m)->engine()->throwTypeError();
+        return scope->engine()->memoryManager->allocObject<FunctionObject>(scope, name, code);
     }
 
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct IndexedBuiltinFunction: BuiltinFunction
+{
+    V4_OBJECT2(IndexedBuiltinFunction, BuiltinFunction)
 };
 
 void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index,
-                                        ReturnedValue (*code)(QV4::CallContext *ctx, uint index))
+                                        ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *))
 {
     Heap::FunctionObject::init(scope);
-    this->index = index;
     this->code = code;
+    this->index = index;
 }
 
 
 struct ScriptFunction : FunctionObject {
     V4_OBJECT2(ScriptFunction, FunctionObject)
     V4_INTERNALCLASS(ScriptFunction)
+    enum { NInlineProperties = 3 };
 
-    static void construct(const Managed *, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     InternalClass *classForConstructor() const;
 };
@@ -251,8 +260,8 @@ struct BoundFunction: FunctionObject {
     Value boundThis() const { return d()->boundThis; }
     Heap::MemberData *boundArgs() const { return d()->boundArgs; }
 
-    static void construct(const Managed *, Scope &scope, CallData *d);
-    static void call(const Managed *that, Scope &scope, CallData *dd);
+    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 }

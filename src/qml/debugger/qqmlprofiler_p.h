@@ -151,40 +151,6 @@ class Q_QML_PRIVATE_EXPORT QQmlProfiler : public QObject, public QQmlProfilerDef
     Q_OBJECT
 public:
 
-    class FunctionRefCount : public QQmlRefCount {
-    public:
-        FunctionRefCount(QV4::Function *function):
-            m_function(function)
-        {
-            m_function->compilationUnit->addref();
-        }
-
-        FunctionRefCount(const FunctionRefCount &other) :
-            QQmlRefCount(other), m_function(other.m_function)
-        {
-            m_function->compilationUnit->addref();
-        }
-
-        FunctionRefCount &operator=(const FunctionRefCount &other)
-        {
-            if (this != &other) {
-                QQmlRefCount::operator=(other);
-                other.m_function->compilationUnit->addref();
-                m_function->compilationUnit->release();
-                m_function = other.m_function;
-            }
-            return *this;
-        }
-
-        ~FunctionRefCount()
-        {
-            m_function->compilationUnit->release();
-        }
-
-    private:
-        QV4::Function *m_function;
-    };
-
     struct Location {
         Location(const QQmlSourceLocation &location = QQmlSourceLocation(),
                  const QUrl &url = QUrl()) :
@@ -196,29 +162,109 @@ public:
     // Unfortunately we have to resolve the locations right away because the QML context might not
     // be available anymore when we send the data.
     struct RefLocation : public Location {
-        RefLocation() : Location(), locationType(MaximumRangeType), ref(nullptr), sent(false)
-        {}
+        RefLocation()
+            : Location(), locationType(MaximumRangeType), sent(false)
+        {
+            function = nullptr;
+        }
 
-        RefLocation(QV4::Function *function) :
-            Location(function->sourceLocation()), locationType(Binding),
-            ref(new FunctionRefCount(function),
-                QQmlRefPointer<QQmlRefCount>::Adopt), sent(false)
-        {}
+        RefLocation(QV4::Function *ref)
+            : Location(ref->sourceLocation()), locationType(Binding), sent(false)
+        {
+            function = ref;
+            function->compilationUnit->addref();
+        }
 
-        RefLocation(QV4::CompiledData::CompilationUnit *ref, const QUrl &url, const QV4::CompiledData::Object *obj,
-                    const QString &type) :
-            Location(QQmlSourceLocation(type, obj->location.line, obj->location.column), url),
-            locationType(Creating), ref(ref), sent(false)
-        {}
+        RefLocation(QV4::CompiledData::CompilationUnit *ref, const QUrl &url, const QV4::CompiledData::Object *obj, const QString &type)
+            : Location(QQmlSourceLocation(type, obj->location.line, obj->location.column), url),
+              locationType(Creating), sent(false)
+        {
+            unit = ref;
+            unit->addref();
+        }
 
-        RefLocation(QQmlBoundSignalExpression *ref) :
-            Location(ref->sourceLocation()), locationType(HandlingSignal), ref(ref), sent(false)
-        {}
+        RefLocation(QQmlBoundSignalExpression *ref)
+            : Location(ref->sourceLocation()), locationType(HandlingSignal), sent(false)
+        {
+            boundSignal = ref;
+            boundSignal->addref();
+        }
 
-        RefLocation(QQmlDataBlob *ref) :
-            Location(QQmlSourceLocation(), ref->url()), locationType(Compiling), ref(ref),
-            sent(false)
-        {}
+        RefLocation(QQmlDataBlob *ref)
+            : Location(QQmlSourceLocation()), locationType(Compiling), sent(false)
+        {
+            blob = ref;
+            blob->addref();
+        }
+
+        RefLocation(const RefLocation &other)
+            : Location(other),
+              locationType(other.locationType),
+              function(other.function),
+              sent(other.sent)
+        {
+            addref();
+        }
+
+        RefLocation &operator=(const RefLocation &other)
+        {
+            if (this != &other) {
+                release();
+                Location::operator=(other);
+                locationType = other.locationType;
+                function = other.function;
+                sent = other.sent;
+                addref();
+            }
+            return *this;
+        }
+
+        ~RefLocation()
+        {
+            release();
+        }
+
+        void addref()
+        {
+            switch (locationType) {
+            case Binding:
+                function->compilationUnit->addref();
+                break;
+            case Creating:
+                unit->addref();
+                break;
+            case HandlingSignal:
+                boundSignal->addref();
+                break;
+            case Compiling:
+                blob->addref();
+                break;
+            default:
+                Q_ASSERT(locationType == MaximumRangeType);
+                break;
+            }
+        }
+
+        void release()
+        {
+            switch (locationType) {
+            case Binding:
+                function->compilationUnit->release();
+                break;
+            case Creating:
+                unit->release();
+                break;
+            case HandlingSignal:
+                boundSignal->release();
+                break;
+            case Compiling:
+                blob->release();
+                break;
+            default:
+                Q_ASSERT(locationType == MaximumRangeType);
+                break;
+            }
+        }
 
         bool isValid() const
         {
@@ -226,7 +272,12 @@ public:
         }
 
         RangeType locationType;
-        QQmlRefPointer<QQmlRefCount> ref;
+        union {
+            QV4::Function *function;
+            QV4::CompiledData::CompilationUnit *unit;
+            QQmlBoundSignalExpression *boundSignal;
+            QQmlDataBlob *blob;
+        };
         bool sent;
     };
 

@@ -49,7 +49,6 @@
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4identifier_p.h>
 #include <private/qv4runtime_p.h>
-#include <private/qv4isel_moth_p.h>
 #include <private/qqmldebugpacket_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 
@@ -208,7 +207,7 @@ private:
 
     void handleDebuggerDeleted(QObject *debugger);
 
-    void evaluateExpression(QV4::Scope &scope, const QString &expression);
+    QV4::ReturnedValue evaluateExpression(const QString &expression);
     bool checkCondition(const QString &expression);
 
     QStringList breakOnSignals;
@@ -230,7 +229,7 @@ private:
 
     QV4::ExecutionEngine *m_engine;
     QQmlNativeDebugServiceImpl *m_service;
-    QV4::PersistentValue m_currentContext;
+    QV4::CppStackFrame *m_currentFrame = 0;
     Speed m_stepping;
     bool m_pauseRequested;
     bool m_runningJob;
@@ -241,29 +240,31 @@ private:
 bool NativeDebugger::checkCondition(const QString &expression)
 {
     QV4::Scope scope(m_engine);
-    evaluateExpression(scope, expression);
-    return scope.result.booleanValue();
+    QV4::ScopedValue r(scope, evaluateExpression(expression));
+    return r->booleanValue();
 }
 
-void NativeDebugger::evaluateExpression(QV4::Scope &scope, const QString &expression)
+QV4::ReturnedValue NativeDebugger::evaluateExpression(const QString &expression)
 {
+    QV4::Scope scope(m_engine);
     m_runningJob = true;
 
-    QV4::ExecutionContextSaver saver(scope);
+    QV4::ExecutionContext *ctx = m_engine->currentStackFrame ? m_engine->currentContext()
+                                                             : m_engine->rootContext();
 
-    QV4::ExecutionContext *ctx = m_engine->currentContext;
-    m_engine->pushContext(ctx);
-
-    QV4::Script script(ctx, expression);
-    script.strictMode = ctx->d()->strictMode;
+    QV4::Script script(ctx, QV4::Compiler::EvalCode, expression);
+    if (const QV4::Function *function = m_engine->currentStackFrame
+            ? m_engine->currentStackFrame->v4Function : m_engine->globalCode)
+        script.strictMode = function->isStrict();
     // In order for property lookups in QML to work, we need to disable fast v4 lookups.
     // That is a side-effect of inheritContext.
     script.inheritContext = true;
     script.parse();
     if (!m_engine->hasException)
-        scope.result = script.run();
+        return script.run();
 
     m_runningJob = false;
+    return QV4::Encode::undefined();
 }
 
 NativeDebugger::NativeDebugger(QQmlNativeDebugServiceImpl *service, QV4::ExecutionEngine *engine)
@@ -314,19 +315,19 @@ void NativeDebugger::handleCommand(QJsonObject *response, const QString &cmd,
         handleContinue(response, NotStepping);
 }
 
-static QString encodeContext(QV4::ExecutionContext *executionContext)
+static QString encodeFrame(QV4::CppStackFrame *f)
 {
     QQmlDebugPacket ds;
-    ds << quintptr(executionContext);
+    ds << quintptr(f);
     return QString::fromLatin1(ds.data().toHex());
 }
 
-static void decodeContext(const QString &context, QV4::ExecutionContext **executionContext)
+static void decodeFrame(const QString &f, QV4::CppStackFrame **frame)
 {
-    quintptr rawContext;
-    QQmlDebugPacket ds(QByteArray::fromHex(context.toLatin1()));
-    ds >> rawContext;
-    *executionContext = reinterpret_cast<QV4::ExecutionContext *>(rawContext);
+    quintptr rawFrame;
+    QQmlDebugPacket ds(QByteArray::fromHex(f.toLatin1()));
+    ds >> rawFrame;
+    *frame = reinterpret_cast<QV4::CppStackFrame *>(rawFrame);
 }
 
 void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &arguments)
@@ -334,25 +335,24 @@ void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &a
     int limit = arguments.value(QLatin1String("limit")).toInt(0);
 
     QJsonArray frameArray;
-    QV4::ExecutionContext *executionContext = m_engine->currentContext;
-    for (int i  = 0; i < limit && executionContext; ++i) {
-        if (QV4::Function *function = executionContext->getFunction()) {
+    QV4::CppStackFrame *f= m_engine->currentStackFrame;
+    for (int i  = 0; i < limit && f; ++i) {
+        QV4::Function *function = f->v4Function;
 
-            QJsonObject frame;
-            frame.insert(QStringLiteral("language"), QStringLiteral("js"));
-            frame.insert(QStringLiteral("context"), encodeContext(executionContext));
+        QJsonObject frame;
+        frame.insert(QStringLiteral("language"), QStringLiteral("js"));
+        frame.insert(QStringLiteral("context"), encodeFrame(f));
 
-            if (QV4::Heap::String *functionName = function->name())
-                frame.insert(QStringLiteral("function"), functionName->toQString());
-            frame.insert(QStringLiteral("file"), function->sourceFile());
+        if (QV4::Heap::String *functionName = function->name())
+            frame.insert(QStringLiteral("function"), functionName->toQString());
+        frame.insert(QStringLiteral("file"), function->sourceFile());
 
-            int line = executionContext->d()->lineNumber;
-            frame.insert(QStringLiteral("line"), (line < 0 ? -line : line));
+        int line = f->lineNumber();
+        frame.insert(QStringLiteral("line"), (line < 0 ? -line : line));
 
-            frameArray.push_back(frame);
-        }
+        frameArray.push_back(frame);
 
-        executionContext = m_engine->parentContext(executionContext);
+        f = f->parent;
     }
 
     response->insert(QStringLiteral("frames"), frameArray);
@@ -457,15 +457,15 @@ void Collector::collect(QJsonArray *out, const QString &parentIName, const QStri
 void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &arguments)
 {
     TRACE_PROTOCOL("Build variables");
-    QV4::ExecutionContext *executionContext = 0;
-    decodeContext(arguments.value(QLatin1String("context")).toString(), &executionContext);
-    if (!executionContext) {
-        setError(response, QStringLiteral("No execution context passed"));
+    QV4::CppStackFrame *frame = 0;
+    decodeFrame(arguments.value(QLatin1String("context")).toString(), &frame);
+    if (!frame) {
+        setError(response, QStringLiteral("No stack frame passed"));
         return;
     }
-    TRACE_PROTOCOL("Context: " << executionContext);
+    TRACE_PROTOCOL("Context: " << frame);
 
-    QV4::ExecutionEngine *engine = executionContext->engine();
+    QV4::ExecutionEngine *engine = frame->v4Function->internalClass->engine;
     if (!engine) {
         setError(response, QStringLiteral("No execution engine passed"));
         return;
@@ -481,28 +481,16 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
     QJsonArray output;
     QV4::Scope scope(engine);
 
-    if (QV4::SimpleCallContext *callContext = executionContext->asSimpleCallContext()) {
-        QV4::Value thisObject = callContext->thisObject();
-        collector.collect(&output, QString(), QStringLiteral("this"), thisObject);
-        QV4::Identifier *const *variables = callContext->variables();
-        QV4::Identifier *const *formals = callContext->formals();
-        if (callContext->d()->type == QV4::Heap::ExecutionContext::Type_CallContext) {
-            QV4::CallContext *ctx = static_cast<QV4::CallContext *>(callContext);
-            for (unsigned i = 0, ei = ctx->variableCount(); i != ei; ++i) {
-                QString qName;
-                if (QV4::Identifier *name = variables[i])
-                    qName = name->string;
-                QV4::Value val = ctx->d()->locals[i];
-                collector.collect(&output, QString(), qName, val);
-            }
-        }
-        for (unsigned i = 0, ei = callContext->formalCount(); i != ei; ++i) {
-            QString qName;
-            if (QV4::Identifier *name = formals[i])
-                qName = name->string;
-            QV4::ReturnedValue rval = callContext->argument(i);
-            QV4::ScopedValue sval(scope, rval);
-            collector.collect(&output, QString(), qName, *sval);
+    QV4::ScopedValue thisObject(scope, frame->thisObject());
+    collector.collect(&output, QString(), QStringLiteral("this"), thisObject);
+    QV4::Scoped<QV4::CallContext> callContext(scope, frame->callContext());
+    if (callContext) {
+        QV4::InternalClass *ic = callContext->internalClass();
+        QV4::ScopedValue v(scope);
+        for (uint i = 0; i < ic->size; ++i) {
+            QString name = ic->nameMap[i]->string;
+            v = callContext->d()->locals[i];
+            collector.collect(&output, QString(), name, v);
         }
     }
 
@@ -512,15 +500,15 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
 void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject &arguments)
 {
     TRACE_PROTOCOL("Evaluate expressions");
-    QV4::ExecutionContext *executionContext = 0;
-    decodeContext(arguments.value(QLatin1String("context")).toString(), &executionContext);
-    if (!executionContext) {
-        setError(response, QStringLiteral("No execution context passed"));
+    QV4::CppStackFrame *frame = 0;
+    decodeFrame(arguments.value(QLatin1String("context")).toString(), &frame);
+    if (!frame) {
+        setError(response, QStringLiteral("No stack frame passed"));
         return;
     }
     TRACE_PROTOCOL("Context: " << executionContext);
 
-    QV4::ExecutionEngine *engine = executionContext->engine();
+    QV4::ExecutionEngine *engine = frame->v4Function->internalClass->engine;
     if (!engine) {
         setError(response, QStringLiteral("No execution engine passed"));
         return;
@@ -543,8 +531,7 @@ void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject 
         TRACE_PROTOCOL("Evaluate expression: " << expression);
         m_runningJob = true;
 
-        evaluateExpression(scope, expression);
-        QV4::ScopedValue result(scope, scope.result);
+        QV4::ScopedValue result(scope, evaluateExpression(expression));
 
         m_runningJob = false;
         if (result->isUndefined()) {
@@ -595,7 +582,7 @@ void NativeDebugger::handleContinue(QJsonObject *response, Speed speed)
     if (!m_returnedValue.isUndefined())
         m_returnedValue.set(m_engine, QV4::Encode::undefined());
 
-    m_currentContext.set(m_engine, *m_engine->currentContext);
+    m_currentFrame = m_engine->currentStackFrame;
     m_stepping = speed;
 }
 
@@ -605,7 +592,7 @@ void NativeDebugger::maybeBreakAtInstruction()
         return;
 
     if (m_stepping == StepOver) {
-        if (m_currentContext.asManaged()->d() == m_engine->current)
+        if (m_currentFrame == m_engine->currentStackFrame)
             pauseAndWait();
         return;
     }
@@ -623,7 +610,8 @@ void NativeDebugger::maybeBreakAtInstruction()
 
     if (m_service->m_breakHandler->m_haveBreakPoints) {
         if (QV4::Function *function = getFunction()) {
-            const int lineNumber = m_engine->current->lineNumber;
+            // lineNumber will be negative for Ret instructions, so those won't match
+            const int lineNumber = m_engine->currentStackFrame->lineNumber();
             if (reallyHitTheBreakPoint(function, lineNumber))
                 pauseAndWait();
         }
@@ -636,7 +624,7 @@ void NativeDebugger::enteringFunction()
         return;
 
     if (m_stepping == StepIn) {
-        m_currentContext.set(m_engine, *m_engine->currentContext);
+        m_currentFrame = m_engine->currentStackFrame;
     }
 }
 
@@ -645,8 +633,8 @@ void NativeDebugger::leavingFunction(const QV4::ReturnedValue &retVal)
     if (m_runningJob)
         return;
 
-    if (m_stepping != NotStepping && m_currentContext.asManaged()->d() == m_engine->current) {
-        m_currentContext.set(m_engine, *m_engine->parentContext(m_engine->currentContext));
+    if (m_stepping != NotStepping && m_currentFrame == m_engine->currentStackFrame) {
+        m_currentFrame = m_currentFrame->parent;
         m_stepping = StepOver;
         m_returnedValue.set(m_engine, retVal);
     }
@@ -668,9 +656,8 @@ void NativeDebugger::aboutToThrow()
 
 QV4::Function *NativeDebugger::getFunction() const
 {
-    QV4::ExecutionContext *context = m_engine->currentContext;
-    if (QV4::Function *function = context->getFunction())
-        return function;
+    if (m_engine->currentStackFrame)
+        return m_engine->currentStackFrame->v4Function;
     else
         return m_engine->globalCode;
 }
@@ -681,12 +668,11 @@ void NativeDebugger::pauseAndWait()
 
     event.insert(QStringLiteral("event"), QStringLiteral("break"));
     event.insert(QStringLiteral("language"), QStringLiteral("js"));
-    if (QV4::ExecutionContext *executionContext = m_engine->currentContext) {
-        if (QV4::Function *function = executionContext->getFunction()) {
-            event.insert(QStringLiteral("file"), function->sourceFile());
-            int line = executionContext->d()->lineNumber;
-            event.insert(QStringLiteral("line"), (line < 0 ? -line : line));
-        }
+    if (QV4::CppStackFrame *frame = m_engine->currentStackFrame) {
+        QV4::Function *function = frame->v4Function;
+        event.insert(QStringLiteral("file"), function->sourceFile());
+        int line = frame->lineNumber();
+        event.insert(QStringLiteral("line"), (line < 0 ? -line : line));
     }
 
     m_service->emitAsynchronousMessageToClient(event);
@@ -731,7 +717,6 @@ void QQmlNativeDebugServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
         TRACE_PROTOCOL("Adding execution engine" << ee);
         if (ee) {
             NativeDebugger *debugger = new NativeDebugger(this, ee);
-            ee->iselFactory.reset(new QV4::Moth::ISelFactory);
             if (state() == Enabled)
                 ee->setDebugger(debugger);
             m_debuggers.append(QPointer<NativeDebugger>(debugger));

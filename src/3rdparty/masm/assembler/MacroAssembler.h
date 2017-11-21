@@ -810,7 +810,7 @@ public:
 
     Jump branchPtr(RelationalCondition cond, RegisterID left, TrustedImmPtr right)
     {
-        return branch64(cond, left, TrustedImm64(right));
+        return this->branch64(cond, left, TrustedImm64(right));
     }
     
     Jump branchPtr(RelationalCondition cond, RegisterID left, Address right)

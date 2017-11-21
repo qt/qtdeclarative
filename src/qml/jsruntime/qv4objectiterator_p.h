@@ -116,6 +116,7 @@ struct ForEachIteratorObject : Object {
     ObjectIterator &it() { return *reinterpret_cast<ObjectIterator*>(&itData); }
     Value workArea[2];
 
+    static void markObjects(Heap::Base *that, MarkStack *markStack);
 private:
     ObjectIteratorData itData;
 };
@@ -127,9 +128,6 @@ struct ForEachIteratorObject: Object {
     Q_MANAGED_TYPE(ForeachIteratorObject)
 
     ReturnedValue nextPropertyName() { return d()->it().nextPropertyNameAsString(); }
-
-protected:
-    static void markObjects(Heap::Base *that, MarkStack *markStack);
 };
 
 inline

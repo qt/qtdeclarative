@@ -54,6 +54,11 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qv4context_p.h>
+#include <private/qv4vme_moth_p.h>
+
+namespace JSC {
+class MacroAssemblerCodeRef;
+}
 
 QT_BEGIN_NAMESPACE
 
@@ -63,17 +68,24 @@ struct Q_QML_EXPORT Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
 
-    ReturnedValue (*code)(ExecutionEngine *, const uchar *);
+    ReturnedValue call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context) {
+        return Moth::VME::exec(this, thisObject, argv, argc, context);
+    }
+
+    typedef ReturnedValue (*Code)(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc);
+    Code code;
     const uchar *codeData;
+
+    typedef ReturnedValue (*JittedCode)(CppStackFrame *, ExecutionEngine *);
+    JittedCode jittedCode;
+    JSC::MacroAssemblerCodeRef *codeRef;
 
     // first nArguments names in internalClass are the actual arguments
     InternalClass *internalClass;
     uint nFormals;
     bool hasQmlDependencies;
-    bool canUseSimpleCall;
 
-    Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function,
-             ReturnedValue (*codePtr)(ExecutionEngine *, const uchar *));
+    Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function, Code codePtr);
     ~Function();
 
     // used when dynamically assigning signal handlers (QQmlConnection)
@@ -86,23 +98,12 @@ struct Q_QML_EXPORT Function {
 
     inline bool usesArgumentsObject() const { return compiledFunction->flags & CompiledData::Function::UsesArgumentsObject; }
     inline bool isStrict() const { return compiledFunction->flags & CompiledData::Function::IsStrict; }
-    inline bool isNamedExpression() const { return compiledFunction->flags & CompiledData::Function::IsNamedExpression; }
-
-    inline bool canUseSimpleFunction() const { return canUseSimpleCall; }
 
     QQmlSourceLocation sourceLocation() const
     {
         return QQmlSourceLocation(sourceFile(), compiledFunction->location.line, compiledFunction->location.column);
     }
-
 };
-
-
-inline unsigned int Heap::SimpleCallContext::formalParameterCount() const
-{
-    return v4Function ? v4Function->nFormals : 0;
-}
-
 
 }
 

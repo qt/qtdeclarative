@@ -58,6 +58,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qv4objectiterator_p.h>
 
 static void initResources()
@@ -164,8 +165,9 @@ DEFINE_OBJECT_VTABLE(QV4::QQmlSqlDatabaseWrapper);
 
 
 
-static void qmlsqldatabase_version(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_version(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
@@ -173,8 +175,9 @@ static void qmlsqldatabase_version(const QV4::BuiltinFunction *, QV4::Scope &sco
     RETURN_RESULT(Encode(scope.engine->newString(*r->d()->version)));
 }
 
-static void qmlsqldatabase_rows_length(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_rows_length(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
@@ -191,20 +194,22 @@ static void qmlsqldatabase_rows_length(const QV4::BuiltinFunction *, QV4::Scope 
     RETURN_RESULT(Encode(s));
 }
 
-static void qmlsqldatabase_rows_forwardOnly(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_rows_forwardOnly(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
     RETURN_RESULT(Encode(r->d()->sqlQuery->isForwardOnly()));
 }
 
-static void qmlsqldatabase_rows_setForwardOnly(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_rows_setForwardOnly(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
-    if (callData->argc < 1)
+    if (callData->argc() < 1)
         RETURN_RESULT(scope.engine->throwTypeError());
 
     r->d()->sqlQuery->setForwardOnly(callData->args[0].toBoolean());
@@ -249,13 +254,14 @@ ReturnedValue QQmlSqlDatabaseWrapper::getIndexed(const Managed *m, uint index, b
     return qmlsqldatabase_rows_index(r, r->engine(), index, hasProperty);
 }
 
-static void qmlsqldatabase_rows_item(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_rows_item(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
         V4THROW_REFERENCE("Not a SQLDatabase::Rows object");
 
-    RETURN_RESULT(qmlsqldatabase_rows_index(r, scope.engine, callData->argc ? callData->args[0].toUInt32() : 0));
+    RETURN_RESULT(qmlsqldatabase_rows_index(r, scope.engine, callData->argc() ? callData->args[0].toUInt32() : 0));
 }
 
 static QVariant toSqlVariant(QV4::ExecutionEngine *engine, const QV4::ScopedValue &value)
@@ -267,8 +273,9 @@ static QVariant toSqlVariant(QV4::ExecutionEngine *engine, const QV4::ScopedValu
     return engine->toVariant(value, /*typehint*/-1);
 }
 
-static void qmlsqldatabase_executeSql(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_executeSql(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Query)
         V4THROW_REFERENCE("Not a SQLDatabase::Query object");
@@ -278,7 +285,7 @@ static void qmlsqldatabase_executeSql(const QV4::BuiltinFunction *, QV4::Scope &
 
     QSqlDatabase db = *r->d()->database;
 
-    QString sql = callData->argc ? callData->args[0].toQString() : QString();
+    QString sql = callData->argc() ? callData->args[0].toQString() : QString();
 
     if (r->d()->readonly && !sql.startsWith(QLatin1String("SELECT"),Qt::CaseInsensitive)) {
         V4THROW_SQL(SQLEXCEPTION_SYNTAX_ERR, QQmlEngine::tr("Read-only Transaction"));
@@ -290,7 +297,7 @@ static void qmlsqldatabase_executeSql(const QV4::BuiltinFunction *, QV4::Scope &
     ScopedValue result(scope, Primitive::undefinedValue());
 
     if (query.prepare(sql)) {
-        if (callData->argc > 1) {
+        if (callData->argc() > 1) {
             ScopedValue values(scope, callData->args[1]);
             if (values->as<ArrayObject>()) {
                 ScopedArrayObject array(scope, values);
@@ -377,9 +384,10 @@ struct TransactionRollback {
 };
 
 
-static void qmlsqldatabase_changeVersion(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_changeVersion(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
-    if (callData->argc < 2)
+    Scope scope(b);
+    if (callData->argc() < 2)
         RETURN_UNDEFINED();
 
     Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject);
@@ -389,7 +397,7 @@ static void qmlsqldatabase_changeVersion(const QV4::BuiltinFunction *, QV4::Scop
     QSqlDatabase db = *r->d()->database;
     QString from_version = callData->args[0].toQString();
     QString to_version = callData->args[1].toQString();
-    ScopedFunctionObject callback(scope, callData->argc > 2 ? callData->args[2] : Primitive::undefinedValue());
+    ScopedFunctionObject callback(scope, callData->argc() > 2 ? callData->args[2] : Primitive::undefinedValue());
 
     if (from_version != *r->d()->version)
         V4THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(*r->d()->version));
@@ -406,12 +414,12 @@ static void qmlsqldatabase_changeVersion(const QV4::BuiltinFunction *, QV4::Scop
         ok = false;
         db.transaction();
 
-        ScopedCallData callData(scope, 1);
-        callData->thisObject = scope.engine->globalObject;
-        callData->args[0] = w;
+        JSCallData jsCall(scope, 1);
+        *jsCall->thisObject = scope.engine->globalObject;
+        jsCall->args[0] = w;
 
         TransactionRollback rollbackOnException(&db, &w->d()->inTransaction);
-        callback->call(scope, callData);
+        callback->call(jsCall);
         rollbackOnException.clear();
         if (!db.commit()) {
             db.rollback();
@@ -433,13 +441,14 @@ static void qmlsqldatabase_changeVersion(const QV4::BuiltinFunction *, QV4::Scop
     RETURN_UNDEFINED();
 }
 
-static void qmlsqldatabase_transaction_shared(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData, bool readOnly)
+static ReturnedValue qmlsqldatabase_transaction_shared(const QV4::BuiltinFunction *b, QV4::CallData *callData, bool readOnly)
 {
+    Scope scope(b);
     QV4::Scoped<QQmlSqlDatabaseWrapper> r(scope, callData->thisObject.as<QQmlSqlDatabaseWrapper>());
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
 
-    const FunctionObject *callback = callData->argc ? callData->args[0].as<FunctionObject>() : 0;
+    const FunctionObject *callback = callData->argc() ? callData->args[0].as<FunctionObject>() : 0;
     if (!callback)
         V4THROW_SQL(SQLEXCEPTION_UNKNOWN_ERR, QQmlEngine::tr("transaction: missing callback"));
 
@@ -455,11 +464,11 @@ static void qmlsqldatabase_transaction_shared(const QV4::BuiltinFunction *, QV4:
 
     db.transaction();
     if (callback) {
-        ScopedCallData callData(scope, 1);
-        callData->thisObject = scope.engine->globalObject;
-        callData->args[0] = w;
+        JSCallData jsCall(scope, 1);
+        *jsCall->thisObject = scope.engine->globalObject;
+        jsCall->args[0] = w;
         TransactionRollback rollbackOnException(&db, &w->d()->inTransaction);
-        callback->call(scope, callData);
+        callback->call(jsCall);
         rollbackOnException.clear();
 
         if (!db.commit())
@@ -469,14 +478,14 @@ static void qmlsqldatabase_transaction_shared(const QV4::BuiltinFunction *, QV4:
     RETURN_UNDEFINED();
 }
 
-static void qmlsqldatabase_transaction(const QV4::BuiltinFunction *f, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_transaction(const QV4::BuiltinFunction *f, QV4::CallData *callData)
 {
-    qmlsqldatabase_transaction_shared(f, scope, callData, false);
+    return qmlsqldatabase_transaction_shared(f, callData, false);
 }
 
-static void qmlsqldatabase_read_transaction(const QV4::BuiltinFunction *f, QV4::Scope &scope, QV4::CallData *callData)
+static ReturnedValue qmlsqldatabase_read_transaction(const QV4::BuiltinFunction *f, QV4::CallData *callData)
 {
-    qmlsqldatabase_transaction_shared(f, scope, callData, true);
+    return qmlsqldatabase_transaction_shared(f, callData, true);
 }
 
 QQmlSqlDatabaseData::QQmlSqlDatabaseData(ExecutionEngine *v4)
@@ -754,10 +763,10 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
     *db->d()->version = version;
 
     if (created && dbcreationCallback) {
-        ScopedCallData callData(scope, 1);
-        callData->thisObject = scope.engine->globalObject;
-        callData->args[0] = db;
-        dbcreationCallback->call(scope, callData);
+        JSCallData jsCall(scope, 1);
+        *jsCall->thisObject = scope.engine->globalObject;
+        jsCall->args[0] = db;
+        dbcreationCallback->call(jsCall);
     }
 
     args->setReturnValue(db.asReturnedValue());

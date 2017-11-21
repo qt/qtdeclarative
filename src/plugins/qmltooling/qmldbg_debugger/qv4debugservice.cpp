@@ -42,7 +42,6 @@
 #include "qqmlengine.h"
 
 #include <private/qv4engine_p.h>
-#include <private/qv4isel_moth_p.h>
 #include <private/qv4function_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qv8engine_p.h>
@@ -706,7 +705,6 @@ void QV4DebugServiceImpl::engineAdded(QJSEngine *engine)
         QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
         if (QQmlDebugConnector *server = QQmlDebugConnector::instance()) {
             if (ee) {
-                ee->iselFactory.reset(new QV4::Moth::ISelFactory);
                 QV4Debugger *debugger = new QV4Debugger(ee);
                 if (state() == Enabled)
                     ee->setDebugger(debugger);

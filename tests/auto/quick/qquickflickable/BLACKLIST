@@ -1,7 +1,7 @@
 # QTBUG-36804
 osx-10.10
 [rebound]
-osx-10.10
+osx
 [movingAndFlicking:vertical]
 osx-10.10
 [movingAndFlicking:both]

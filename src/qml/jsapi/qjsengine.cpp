@@ -443,15 +443,14 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 {
     QV4::ExecutionEngine *v4 = d->m_v4Engine;
     QV4::Scope scope(v4);
-    QV4::ExecutionContextSaver saver(scope);
-
-    QV4::ExecutionContext *ctx = v4->currentContext;
-    if (ctx->d() != v4->rootContext()->d())
-        ctx = v4->pushGlobalContext();
     QV4::ScopedValue result(scope);
 
-    QV4::Script script(ctx, program, fileName, lineNumber);
-    script.strictMode = ctx->d()->strictMode;
+    QV4::Script script(v4->rootContext(), QV4::Compiler::EvalCode, program, fileName, lineNumber);
+    script.strictMode = false;
+    if (v4->currentStackFrame)
+        script.strictMode = v4->currentStackFrame->v4Function->isStrict();
+    else if (v4->globalCode)
+        script.strictMode = v4->globalCode->isStrict();
     script.inheritContext = true;
     script.parse();
     if (!scope.engine->hasException)
@@ -459,7 +458,9 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     if (scope.engine->hasException)
         result = v4->catchException();
 
-    return QJSValue(v4, result->asReturnedValue());
+    QJSValue retval(v4, result->asReturnedValue());
+
+    return retval;
 }
 
 /*!

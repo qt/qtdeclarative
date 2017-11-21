@@ -39,6 +39,7 @@
 
 #include "qv4include_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4jscall_p.h"
 
 #include <QtQml/qjsengine.h>
 #if QT_CONFIG(qml_network)
@@ -118,10 +119,10 @@ void QV4Include::callback(const QV4::Value &callback, const QV4::Value &status)
     if (!f)
         return;
 
-    QV4::ScopedCallData callData(scope, 1);
-    callData->thisObject = v4->globalObject->asReturnedValue();
-    callData->args[0] = status;
-    f->call(scope, callData);
+    QV4::JSCallData jsCallData(scope, 1);
+    *jsCallData->thisObject = v4->globalObject->asReturnedValue();
+    jsCallData->args[0] = status;
+    f->call(jsCallData);
     if (scope.hasException())
         scope.engine->catchException();
 }
@@ -195,9 +196,10 @@ void QV4Include::finished()
 /*
     Documented in qv8engine.cpp
 */
-void QV4Include::method_include(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QV4Include::method_include(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
-    if (!callData->argc)
+    QV4::Scope scope(b);
+    if (!callData->argc())
         RETURN_UNDEFINED();
 
     QQmlContextData *context = scope.engine->callingQmlContext();
@@ -206,7 +208,7 @@ void QV4Include::method_include(const QV4::BuiltinFunction *, QV4::Scope &scope,
         RETURN_RESULT(scope.engine->throwError(QString::fromUtf8("Qt.include(): Can only be called from JavaScript files")));
 
     QV4::ScopedValue callbackFunction(scope, QV4::Primitive::undefinedValue());
-    if (callData->argc >= 2 && callData->args[1].as<QV4::FunctionObject>())
+    if (callData->argc() >= 2 && callData->args[1].as<QV4::FunctionObject>())
         callbackFunction = callData->args[1];
 
 #if QT_CONFIG(qml_network)
@@ -260,13 +262,13 @@ void QV4Include::method_include(const QV4::BuiltinFunction *, QV4::Scope &scope,
         callback(callbackFunction, result);
     }
 
-    scope.result = result;
 #else
     QV4::ScopedValue result(scope);
     result = resultValue(scope.engine, NetworkError);
     callback(callbackFunction, result);
-    scope.result = result;
 #endif
+
+    return result->asReturnedValue();
 }
 
 QT_END_NAMESPACE

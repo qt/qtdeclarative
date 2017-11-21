@@ -292,6 +292,12 @@ public:
         or64(imm, dest);
     }
     
+    void or64(TrustedImm64 imm, RegisterID src, RegisterID dest)
+    {
+        move(src, dest);
+        or64(imm, dest);
+    }
+
     void rotateRight64(TrustedImm32 imm, RegisterID srcDst)
     {
         m_assembler.rorq_i8r(imm.m_value, srcDst);
@@ -364,6 +370,13 @@ public:
             m_assembler.sarq_CLr(dest == X86Registers::ecx ? src : dest);
             swap(src, X86Registers::ecx);
         }
+    }
+
+    void urshift64(RegisterID src, TrustedImm32 imm, RegisterID dest)
+    {
+        if (src != dest)
+            move(src, dest);
+        urshift64(imm, dest);
     }
 
     void urshift64(TrustedImm32 imm, RegisterID dest)

@@ -80,7 +80,7 @@ namespace Heap {
     Member(class, NoMark, uint, arrayType)
 
 DECLARE_HEAP_OBJECT(TypedArray, Object) {
-    DECLARE_MARK_TABLE(TypedArray);
+    DECLARE_MARKOBJECTS(TypedArray);
     enum Type {
         Int8Array,
         UInt8Array,
@@ -141,8 +141,8 @@ struct TypedArrayCtor: FunctionObject
 {
     V4_OBJECT2(TypedArrayCtor, FunctionObject)
 
-    static void construct(const Managed *m, Scope &scope, CallData *callData);
-    static void call(const Managed *that, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 
@@ -153,13 +153,13 @@ struct TypedArrayPrototype : Object
 
     void init(ExecutionEngine *engine, TypedArrayCtor *ctor);
 
-    static void method_get_buffer(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_byteLength(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_byteOffset(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_get_length(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_get_buffer(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_byteLength(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_byteOffset(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_length(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    static void method_set(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_subarray(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_subarray(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 inline void

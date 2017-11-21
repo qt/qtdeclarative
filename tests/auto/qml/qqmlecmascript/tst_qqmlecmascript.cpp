@@ -43,6 +43,7 @@
 #include "../../shared/util.h"
 #include <private/qv4functionobject_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qv4alloca_p.h>
 #include <private/qv4runtime_p.h>
 #include <private/qv4object_p.h>
@@ -342,6 +343,8 @@ private slots:
     void freeze_empty_object();
     void singleBlockLoops();
     void qtbug_60547();
+    void delayLoadingArgs();
+    void manyArguments();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -2346,7 +2349,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::Scope scope(QV8Engine::getV4(engine));
-    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), functionSource);
+    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), QV4::Compiler::EvalCode, functionSource);
     program.inheritContext = true;
 
     QV4::ScopedFunctionObject function(scope, program.run());
@@ -2354,10 +2357,10 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
         scope.engine->catchException();
         return true;
     }
-    QV4::ScopedCallData d(scope, 1);
-    d->args[0] = o;
-    d->thisObject = engine->global();
-    function->call(scope, d);
+    QV4::JSCallData jsCallData(scope, 1);
+    jsCallData->args[0] = o;
+    *jsCallData->thisObject = engine->global();
+    function->call(jsCallData);
     if (scope.engine->hasException) {
         scope.engine->catchException();
         return true;
@@ -2372,7 +2375,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
                              QLatin1String(source) + QLatin1String(" })");
 
     QV4::Scope scope(QV8Engine::getV4(engine));
-    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), functionSource);
+    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), QV4::Compiler::EvalCode, functionSource);
     program.inheritContext = true;
 
     QV4::ScopedFunctionObject function(scope, program.run());
@@ -2383,15 +2386,16 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
     if (!function)
         return false;
 
-    QV4::ScopedCallData d(scope, 1);
-    d->args[0] = o;
-    d->thisObject = engine->global();
-    function->call(scope, d);
+    QV4::ScopedValue value(scope);
+    QV4::JSCallData jsCallData(scope, 1);
+    jsCallData->args[0] = o;
+    *jsCallData->thisObject = engine->global();
+    value = function->call(jsCallData);
     if (scope.engine->hasException) {
         scope.engine->catchException();
         return false;
     }
-    return QV4::Runtime::method_strictEqual(scope.result, result);
+    return QV4::Runtime::method_strictEqual(value, result);
 }
 
 static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::Value &o,
@@ -2402,7 +2406,7 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::Value &o
 
     QV4::Scope scope(QV8Engine::getV4(engine));
 
-    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), functionSource);
+    QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), QV4::Compiler::EvalCode, functionSource);
     program.inheritContext = true;
 
     QV4::ScopedFunctionObject function(scope, program.run());
@@ -2412,15 +2416,15 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::Value &o
     }
     if (!function)
         return QV4::Encode::undefined();
-    QV4::ScopedCallData d(scope, 1);
-    d->args[0] = o;
-    d->thisObject = engine->global();
-    function->call(scope, d);
+    QV4::JSCallData jsCallData(scope, 1);
+    jsCallData->args[0] = o;
+    *jsCallData->thisObject = engine->global();
+    QV4::ScopedValue result(scope, function->call(jsCallData));
     if (scope.engine->hasException) {
         scope.engine->catchException();
         return QV4::Encode::undefined();
     }
-    return scope.result.asReturnedValue();
+    return result->asReturnedValue();
 }
 
 #define EVALUATE_ERROR(source) evaluate_error(engine, object, source)
@@ -8372,6 +8376,24 @@ void tst_qqmlecmascript::qtbug_60547()
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
     QCOMPARE(object->property("counter"), QVariant(int(1)));
 }
+
+void tst_qqmlecmascript::delayLoadingArgs()
+{
+    QJSEngine engine;
+    QJSValue ret = engine.evaluate("(function(x){return x + (x+=2)})(20)");
+    QCOMPARE(ret.toInt(), 42); // esp. not 44.
+}
+
+void tst_qqmlecmascript::manyArguments()
+{
+    const char *testCase =
+            "function x() { var sum; for (var i = 0; i < arguments.length; ++i) sum += arguments[i][0]; }"
+            "x([0],[1],[2],[3],[4],[5],[6],[7],[8],[9], [0],[1],[2],[3],[4],[5],[6],[7],[8],[9], [0],[1],[2],[3],[4],[5],[6],[7],[8],[9])";
+
+    QJSEngine engine;
+    engine.evaluate(testCase);
+}
+
 
 QTEST_MAIN(tst_qqmlecmascript)
 

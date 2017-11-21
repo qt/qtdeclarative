@@ -111,8 +111,6 @@ public:
 
     int registerString(const QString &str);
 
-    QV4::IR::Module *jsIRModule() const;
-
     const QV4::CompiledData::Unit *qmlUnit() const;
 
     QUrl url() const { return typeData->finalUrl(); }

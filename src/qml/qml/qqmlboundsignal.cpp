@@ -55,6 +55,7 @@
 
 #include <private/qjsvalue_p.h>
 #include <private/qv4value_p.h>
+#include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
 #include <QtCore/qdebug.h>
@@ -192,35 +193,35 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, 0);
     int argCount = argsTypes ? *argsTypes : 0;
 
-    QV4::ScopedCallData callData(scope, argCount);
+    QV4::JSCallData jsCall(scope, argCount);
     for (int ii = 0; ii < argCount; ++ii) {
         int type = argsTypes[ii + 1];
         //### ideally we would use metaTypeToJS, however it currently gives different results
         //    for several cases (such as QVariant type and QObject-derived types)
         //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
         if (type == qMetaTypeId<QJSValue>()) {
-            if (QV4::Value *v4Value = QJSValuePrivate::valueForData(reinterpret_cast<QJSValue *>(a[ii + 1]), &callData->args[ii]))
-                callData->args[ii] = *v4Value;
+            if (QV4::Value *v4Value = QJSValuePrivate::valueForData(reinterpret_cast<QJSValue *>(a[ii + 1]), &jsCall->args[ii]))
+                jsCall->args[ii] = *v4Value;
             else
-                callData->args[ii] = QV4::Encode::undefined();
+                jsCall->args[ii] = QV4::Encode::undefined();
         } else if (type == QMetaType::QVariant) {
-            callData->args[ii] = scope.engine->fromVariant(*((QVariant *)a[ii + 1]));
+            jsCall->args[ii] = scope.engine->fromVariant(*((QVariant *)a[ii + 1]));
         } else if (type == QMetaType::Int) {
             //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
-            callData->args[ii] = QV4::Primitive::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
+            jsCall->args[ii] = QV4::Primitive::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
         } else if (type == qMetaTypeId<QQmlV4Handle>()) {
-            callData->args[ii] = *reinterpret_cast<QQmlV4Handle *>(a[ii + 1]);
+            jsCall->args[ii] = *reinterpret_cast<QQmlV4Handle *>(a[ii + 1]);
         } else if (ep->isQObject(type)) {
             if (!*reinterpret_cast<void* const *>(a[ii + 1]))
-                callData->args[ii] = QV4::Primitive::nullValue();
+                jsCall->args[ii] = QV4::Primitive::nullValue();
             else
-                callData->args[ii] = QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1]));
+                jsCall->args[ii] = QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1]));
         } else {
-            callData->args[ii] = scope.engine->fromVariant(QVariant(type, a[ii + 1]));
+            jsCall->args[ii] = scope.engine->fromVariant(QVariant(type, a[ii + 1]));
         }
     }
 
-    QQmlJavaScriptExpression::evaluate(callData, 0, scope);
+    QQmlJavaScriptExpression::evaluate(jsCall.callData(), 0);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
@@ -237,12 +238,12 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
-    QV4::ScopedCallData callData(scope, args.count());
+    QV4::JSCallData jsCall(scope, args.count());
     for (int ii = 0; ii < args.count(); ++ii) {
-        callData->args[ii] = scope.engine->fromVariant(args[ii]);
+        jsCall->args[ii] = scope.engine->fromVariant(args[ii]);
     }
 
-    QQmlJavaScriptExpression::evaluate(callData, 0, scope);
+    QQmlJavaScriptExpression::evaluate(jsCall.callData(), 0);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }

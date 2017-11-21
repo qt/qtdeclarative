@@ -45,6 +45,7 @@
 #include <private/qv4arrayobject_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qv4jscall_p.h>
 #include "qv4runtime_p.h"
 #include "qv4objectiterator_p.h"
 #include <private/qqmlvaluetypewrapper_p.h>
@@ -66,10 +67,10 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
     QQmlError retn;
     retn.setDescription(description);
 
-    QV4::StackFrame frame = v4->currentStackFrame();
+    QV4::CppStackFrame *stackFrame = v4->currentStackFrame;
 
-    retn.setLine(frame.line);
-    retn.setUrl(QUrl(frame.source));
+    retn.setLine(stackFrame->lineNumber());
+    retn.setUrl(QUrl(stackFrame->source()));
     QQmlEnginePrivate::warning(engine, retn);
 }
 
@@ -416,13 +417,15 @@ public:
         bool operator()(typename Container::value_type lhs, typename Container::value_type rhs)
         {
             QV4::Scope scope(m_v4);
-            ScopedObject compare(scope, m_compareFn);
-            ScopedCallData callData(scope, 2);
-            callData->args[0] = convertElementToValue(m_v4, lhs);
-            callData->args[1] = convertElementToValue(m_v4, rhs);
-            callData->thisObject = m_v4->globalObject;
-            compare->call(scope, callData);
-            return scope.result.toNumber() < 0;
+            ScopedFunctionObject compare(scope, m_compareFn);
+            if (!compare)
+                return m_v4->throwTypeError();
+            JSCallData jsCallData(scope, 2);
+            jsCallData->args[0] = convertElementToValue(m_v4, lhs);
+            jsCallData->args[1] = convertElementToValue(m_v4, rhs);
+            *jsCallData->thisObject = m_v4->globalObject;
+            QV4::ScopedValue result(scope, compare->call(jsCallData));
+            return result->toNumber() < 0;
         }
 
     private:
@@ -438,7 +441,7 @@ public:
             loadReference();
         }
 
-        if (callData->argc == 1 && callData->args[0].as<FunctionObject>()) {
+        if (callData->argc() == 1 && callData->args[0].as<FunctionObject>()) {
             CompareFunctor cf(scope.engine, callData->args[0]);
             std::sort(d()->container->begin(), d()->container->end(), cf);
         } else {
@@ -450,8 +453,9 @@ public:
             storeReference();
     }
 
-    static void method_get_length(const BuiltinFunction *, Scope &scope, CallData *callData)
+    static QV4::ReturnedValue method_get_length(const BuiltinFunction *b, CallData *callData)
     {
+        QV4::Scope scope(b);
         QV4::Scoped<QQmlSequence<Container> > This(scope, callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
             THROW_TYPE_ERROR();
@@ -464,8 +468,9 @@ public:
         RETURN_RESULT(Encode(qint32(This->d()->container->size())));
     }
 
-    static void method_set_length(const BuiltinFunction *, Scope &scope, CallData *callData)
+    static QV4::ReturnedValue method_set_length(const BuiltinFunction *b, CallData *callData)
     {
+        QV4::Scope scope(b);
         QV4::Scoped<QQmlSequence<Container> > This(scope, callData->thisObject.as<QQmlSequence<Container> >());
         if (!This)
             THROW_TYPE_ERROR();
@@ -647,14 +652,20 @@ void SequencePrototype::init()
 }
 #undef REGISTER_QML_SEQUENCE_METATYPE
 
-void SequencePrototype::method_sort(const BuiltinFunction *b, Scope &scope, CallData *callData)
+ReturnedValue SequencePrototype::method_valueOf(const BuiltinFunction *f, CallData *callData)
 {
+    return Encode(callData->thisObject.toString(f->engine()));
+}
+
+ReturnedValue SequencePrototype::method_sort(const BuiltinFunction *b, CallData *callData)
+{
+    Scope scope(b);
     QV4::ScopedObject o(scope, callData->thisObject);
     if (!o || !o->isListType())
         THROW_TYPE_ERROR();
 
-    if (callData->argc >= 2)
-        RETURN_RESULT(o);
+    if (callData->argc() >= 2)
+        return o.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
         if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
@@ -665,7 +676,7 @@ void SequencePrototype::method_sort(const BuiltinFunction *b, Scope &scope, Call
 
 #undef CALL_SORT
         {}
-    RETURN_RESULT(o);
+    return o.asReturnedValue();
 }
 
 #define IS_SEQUENCE(unused1, unused2, SequenceType, unused3) \

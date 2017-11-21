@@ -90,6 +90,7 @@ struct Q_QML_EXPORT QObjectWrapper : Object {
     }
 
     QObject *object() const { return qObj.data(); }
+    static void markObjects(Heap::Base *that, MarkStack *markStack);
 
 private:
     QQmlQPointer<QObject> qObj;
@@ -102,7 +103,7 @@ private:
     Member(class, NoMark, int, index)
 
 DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
-    DECLARE_MARK_TABLE(QObjectMethod);
+    DECLARE_MARKOBJECTS(QObjectMethod);
 
     void init(QV4::ExecutionContext *scope);
     void destroy()
@@ -196,10 +197,9 @@ protected:
     static bool put(Managed *m, String *name, const Value &value);
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-    static void markObjects(Heap::Base *that, QV4::MarkStack *markStack);
 
-    static void method_connect(const BuiltinFunction *, Scope &scope, CallData *callData);
-    static void method_disconnect(const BuiltinFunction *, Scope &scope, CallData *callData);
+    static ReturnedValue method_connect(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_disconnect(const BuiltinFunction *, CallData *callData);
 
 private:
     Q_NEVER_INLINE static ReturnedValue wrap_slowPath(ExecutionEngine *engine, QObject *object);
@@ -234,12 +234,12 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     int methodIndex() const { return d()->index; }
     QObject *object() const { return d()->object(); }
 
-    QV4::ReturnedValue method_toString(QV4::ExecutionContext *ctx) const;
-    QV4::ReturnedValue method_destroy(QV4::ExecutionContext *ctx, const Value *args, int argc) const;
+    QV4::ReturnedValue method_toString(QV4::ExecutionEngine *engine) const;
+    QV4::ReturnedValue method_destroy(QV4::ExecutionEngine *ctx, const Value *args, int argc) const;
 
-    static void call(const Managed *, Scope &scope, CallData *callData);
+    static ReturnedValue call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    void callInternal(CallData *callData, Scope &scope) const;
+    ReturnedValue callInternal(const Value *thisObject, const Value *argv, int argc) const;
 
     static QPair<QObject *, int> extractQtMethod(const QV4::FunctionObject *function);
 };
@@ -251,14 +251,14 @@ struct Q_QML_EXPORT QMetaObjectWrapper : public QV4::FunctionObject
     V4_NEEDS_DESTROY
 
     static ReturnedValue create(ExecutionEngine *engine, const QMetaObject* metaObject);
-    static void construct(const Managed *, Scope &scope, CallData *callData);
+    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
     static bool isEqualTo(Managed *a, Managed *b);
 
     const QMetaObject *metaObject() const { return d()->metaObject; }
 
 private:
     void init(ExecutionEngine *engine);
-    ReturnedValue constructInternal(CallData *callData) const;
+    ReturnedValue constructInternal(const Value *argv, int argc) const;
     ReturnedValue callConstructor(const QQmlPropertyData &data, QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const;
     ReturnedValue callOverloadedConstructor(QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const;
 

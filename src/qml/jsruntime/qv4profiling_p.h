@@ -59,9 +59,6 @@
 
 #if !QT_CONFIG(qml_debug)
 
-#define Q_V4_PROFILE_ALLOC(engine, size, type) (!engine)
-#define Q_V4_PROFILE_DEALLOC(engine, size, type) (!engine)
-#define Q_V4_PROFILE(engine, function) (function->code(engine, function->codeData))
 
 QT_BEGIN_NAMESPACE
 
@@ -74,22 +71,6 @@ class Profiler {};
 QT_END_NAMESPACE
 
 #else
-
-#define Q_V4_PROFILE_ALLOC(engine, size, type)\
-    (engine->profiler() &&\
-            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
-        engine->profiler()->trackAlloc(size, type) : false)
-
-#define Q_V4_PROFILE_DEALLOC(engine, size, type) \
-    (engine->profiler() &&\
-            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
-        engine->profiler()->trackDealloc(size, type) : false)
-
-#define Q_V4_PROFILE(engine, function)\
-    (Q_UNLIKELY(engine->profiler()) &&\
-            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureFunctionCall)) ?\
-        Profiling::FunctionCallProfiler::profileCall(engine->profiler(), engine, function) :\
-        function->code(engine, function->codeData))
 
 QT_BEGIN_NAMESPACE
 
@@ -270,19 +251,21 @@ public:
 
     // It's enough to ref() the function in the destructor as it will probably not disappear while
     // it's executing ...
-    FunctionCallProfiler(Profiler *profiler, Function *function) :
-        profiler(profiler), function(function), startTime(profiler->m_timer.nsecsElapsed())
-    {}
+    FunctionCallProfiler(ExecutionEngine *engine, Function *f)
+        : profiler(0)
+    {
+        Profiler *p = engine->profiler();
+        if (Q_UNLIKELY(p) && (p->featuresEnabled & (1 << Profiling::FeatureFunctionCall))) {
+            profiler = p;
+            function = f;
+            startTime = profiler->m_timer.nsecsElapsed();
+        }
+    }
 
     ~FunctionCallProfiler()
     {
-        profiler->m_data.append(FunctionCall(function, startTime, profiler->m_timer.nsecsElapsed()));
-    }
-
-    static ReturnedValue profileCall(Profiler *profiler, ExecutionEngine *engine, Function *function)
-    {
-        FunctionCallProfiler callProfiler(profiler, function);
-        return function->code(engine, function->codeData);
+        if (profiler)
+            profiler->m_data.append(FunctionCall(function, startTime, profiler->m_timer.nsecsElapsed()));
     }
 
     Profiler *profiler;

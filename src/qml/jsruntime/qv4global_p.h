@@ -107,8 +107,8 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #  if defined(Q_OS_LINUX)
 #    define V4_ENABLE_JIT
 #  endif
-#elif defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
-#  define V4_ENABLE_JIT
+//#elif defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
+//#  define V4_ENABLE_JIT
 #endif
 
 // Black list some platforms
@@ -147,6 +147,12 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+namespace Compiler {
+    struct Module;
+    struct Context;
+    struct JSUnitGenerator;
+}
+
 namespace Heap {
     struct Base;
     struct MemberData;
@@ -157,7 +163,6 @@ namespace Heap {
     struct ObjectPrototype;
 
     struct ExecutionContext;
-    struct GlobalContext;
     struct CallContext;
     struct ScriptFunction;
 
@@ -182,12 +187,12 @@ namespace Heap {
 }
 
 class MemoryManager;
+class ExecutableAllocator;
 struct String;
 struct Object;
 struct ObjectPrototype;
 struct ObjectIterator;
 struct ExecutionContext;
-struct GlobalContext;
 struct CallContext;
 struct ScriptFunction;
 struct InternalClass;
@@ -242,12 +247,6 @@ class WeakValue;
 struct IdentifierTable;
 class RegExpCache;
 class MultiplyWrappedQObjectMap;
-
-namespace Global {
-    enum {
-        ReservedArgumentCount = 6
-    };
-}
 
 enum PropertyFlag {
     Attr_Data = 0,
@@ -349,11 +348,11 @@ struct PropertyAttributes
     }
 };
 
-struct StackFrame {
+struct Q_QML_EXPORT StackFrame {
     QString source;
     QString function;
-    int line;
-    int column;
+    int line = -1;
+    int column = -1;
 };
 typedef QVector<StackFrame> StackTrace;
 

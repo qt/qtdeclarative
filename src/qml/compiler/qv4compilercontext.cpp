@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -36,57 +36,47 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4UNOP_P_H
-#define QV4UNOP_P_H
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "qv4compilercontext_p.h"
+#include "qv4compilercontrolflow_p.h"
 
-#include <qv4jsir_p.h>
-#include <qv4isel_masm_p.h>
+QT_USE_NAMESPACE
+using namespace QV4;
+using namespace QV4::Compiler;
+using namespace QQmlJS::AST;
 
 QT_BEGIN_NAMESPACE
 
-#if ENABLE(ASSEMBLER)
+Context *Module::newContext(Node *node, Context *parent, CompilationMode compilationMode)
+{
+    Context *c = new Context(parent, compilationMode);
+    if (node) {
+        SourceLocation loc = node->firstSourceLocation();
+        c->line = loc.startLine;
+        c->column = loc.startColumn;
+    }
 
-namespace QV4 {
-namespace JIT {
+    contextMap.insert(node, c);
 
-template <typename JITAssembler>
-struct Unop {
-    Unop(JITAssembler *assembler, IR::AluOp operation)
-        : _as(assembler)
-        , op(operation)
-    {}
+    if (!parent)
+        rootContext = c;
+    else {
+        parent->nestedContexts.append(c);
+        c->isStrict = parent->isStrict;
+    }
 
-    using RelationalCondition = typename JITAssembler::RelationalCondition;
-    using PointerToValue = typename JITAssembler::PointerToValue;
-    using RuntimeCall = typename JITAssembler::RuntimeCall;
-    using TrustedImm32 = typename JITAssembler::TrustedImm32;
-
-    void generate(IR::Expr *source, IR::Expr *target);
-
-    void generateUMinus(IR::Expr *source, IR::Expr *target);
-    void generateNot(IR::Expr *source, IR::Expr *target);
-    void generateCompl(IR::Expr *source, IR::Expr *target);
-
-    JITAssembler *_as;
-    IR::AluOp op;
-};
-
-}
+    return c;
 }
 
-#endif
+bool Context::forceLookupByName()
+{
+    ControlFlow *flow = controlFlow;
+    while (flow) {
+        if (flow->needsLookupByName)
+            return true;
+        flow = flow->parent;
+    }
+    return false;
+}
 
 QT_END_NAMESPACE
-
-#endif

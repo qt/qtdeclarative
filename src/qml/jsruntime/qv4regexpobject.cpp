@@ -38,20 +38,17 @@
 ****************************************************************************/
 
 #include "qv4regexpobject_p.h"
-#include "qv4jsir_p.h"
-#include "qv4isel_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4regexp_p.h"
 #include "qv4stringobject_p.h"
 #include <private/qv4mm_p.h>
 #include "qv4scopedvalue_p.h"
+#include "qv4jscall_p.h"
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
-#include <qv4jsir_p.h>
-#include <qv4codegen_p.h>
 #include "private/qlocale_tools_p.h"
 
 #include <QtCore/QDebug>
@@ -217,39 +214,33 @@ void Heap::RegExpCtor::clearLastMatch()
     lastMatchEnd = 0;
 }
 
-void RegExpCtor::construct(const Managed *, Scope &scope, CallData *callData)
+ReturnedValue RegExpCtor::callAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
 {
-    ScopedValue r(scope, callData->argument(0));
-    ScopedValue f(scope, callData->argument(1));
+    Scope scope(fo->engine());
+    ScopedValue r(scope, argc ? argv[0] : Primitive::undefinedValue());
+    ScopedValue f(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
     Scoped<RegExpObject> re(scope, r);
     if (re) {
-        if (!f->isUndefined()) {
-            scope.result = scope.engine->throwTypeError();
-            return;
-        }
+        if (!f->isUndefined())
+            return scope.engine->throwTypeError();
 
         Scoped<RegExp> regexp(scope, re->value());
-        scope.result = Encode(scope.engine->newRegExpObject(regexp));
-        return;
+        return Encode(scope.engine->newRegExpObject(regexp));
     }
 
     QString pattern;
     if (!r->isUndefined())
         pattern = r->toQString();
-    if (scope.hasException()) {
-        scope.result = Encode::undefined();
-        return;
-    }
+    if (scope.hasException())
+        return Encode::undefined();
 
     bool global = false;
     bool ignoreCase = false;
     bool multiLine = false;
     if (!f->isUndefined()) {
         ScopedString s(scope, f->toString(scope.engine));
-        if (scope.hasException()) {
-            scope.result = Encode::undefined();
-            return;
-        }
+        if (scope.hasException())
+            return Encode::undefined();
         QString str = s->toQString();
         for (int i = 0; i < str.length(); ++i) {
             if (str.at(i) == QLatin1Char('g') && !global) {
@@ -259,31 +250,27 @@ void RegExpCtor::construct(const Managed *, Scope &scope, CallData *callData)
             } else if (str.at(i) == QLatin1Char('m') && !multiLine) {
                 multiLine = true;
             } else {
-                scope.result = scope.engine->throwSyntaxError(QStringLiteral("Invalid flags supplied to RegExp constructor"));
-                return;
+                return scope.engine->throwSyntaxError(QStringLiteral("Invalid flags supplied to RegExp constructor"));
             }
         }
     }
 
     Scoped<RegExp> regexp(scope, RegExp::create(scope.engine, pattern, ignoreCase, multiLine, global));
     if (!regexp->isValid()) {
-        scope.result = scope.engine->throwSyntaxError(QStringLiteral("Invalid regular expression"));
-        return;
+        return scope.engine->throwSyntaxError(QStringLiteral("Invalid regular expression"));
     }
 
-    scope.result = Encode(scope.engine->newRegExpObject(regexp));
+    return Encode(scope.engine->newRegExpObject(regexp));
 }
 
-void RegExpCtor::call(const Managed *that, Scope &scope, CallData *callData)
+ReturnedValue RegExpCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    if (callData->argc > 0 && callData->args[0].as<RegExpObject>()) {
-        if (callData->argc == 1 || callData->args[1].isUndefined()) {
-            scope.result = callData->args[0];
-            return;
-        }
+    if (argc > 0 && argv[0].as<RegExpObject>()) {
+        if (argc == 1 || argv[1].isUndefined())
+            return Encode(argv[0]);
     }
 
-    construct(that, scope, callData);
+    return callAsConstructor(f, argv, argc);
 }
 
 void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
@@ -323,13 +310,60 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     defineDefaultProperty(QStringLiteral("compile"), method_compile, 2);
 }
 
-void RegExpPrototype::method_exec(const BuiltinFunction *, Scope &scope, CallData *callData)
+/* used by String.match */
+ReturnedValue RegExpPrototype::execFirstMatch(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    Scoped<RegExpObject> r(scope, callData->thisObject.as<RegExpObject>());
-    if (!r)
-        THROW_TYPE_ERROR();
+    Scope scope(b);
+    Scoped<RegExpObject> r(scope, thisObject->as<RegExpObject>());
+    Q_ASSERT(r && r->global());
 
-    ScopedValue arg(scope, callData->argument(0));
+    ScopedString str(scope, argc ? argv[0] : Primitive::undefinedValue());
+    Q_ASSERT(str);
+    QString s = str->toQString();
+
+    int offset = r->lastIndex();
+    if (offset < 0 || offset > s.length()) {
+        r->setLastIndex(0);
+        RETURN_RESULT(Encode::null());
+    }
+
+    Q_ALLOCA_VAR(uint, matchOffsets, r->value()->captureCount() * 2 * sizeof(uint));
+    const int result = Scoped<RegExp>(scope, r->value())->match(s, offset, matchOffsets);
+
+    RegExpCtor *regExpCtor = static_cast<RegExpCtor *>(scope.engine->regExpCtor());
+    regExpCtor->d()->clearLastMatch();
+
+    if (result == -1) {
+        r->setLastIndex(0);
+        RETURN_RESULT(Encode::null());
+    }
+
+    ReturnedValue retVal = Encode::undefined();
+    // return first match
+    if (r->value()->captureCount()) {
+        int start = matchOffsets[0];
+        int end = matchOffsets[1];
+        retVal = (start != -1) ? scope.engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
+    }
+
+    RegExpCtor::Data *dd = regExpCtor->d();
+    dd->lastInput.set(scope.engine, str->d());
+    dd->lastMatchStart = matchOffsets[0];
+    dd->lastMatchEnd = matchOffsets[1];
+
+    r->setLastIndex(matchOffsets[1]);
+
+    return retVal;
+}
+
+ReturnedValue RegExpPrototype::method_exec(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<RegExpObject> r(scope, thisObject->as<RegExpObject>());
+    if (!r)
+        return scope.engine->throwTypeError();
+
+    ScopedValue arg(scope, argc ? argv[0]: Primitive::undefinedValue());
     ScopedString str(scope, arg->toString(scope.engine));
     if (scope.hasException())
         RETURN_UNDEFINED();
@@ -344,7 +378,7 @@ void RegExpPrototype::method_exec(const BuiltinFunction *, Scope &scope, CallDat
     Q_ALLOCA_VAR(uint, matchOffsets, r->value()->captureCount() * 2 * sizeof(uint));
     const int result = Scoped<RegExp>(scope, r->value())->match(s, offset, matchOffsets);
 
-    Scoped<RegExpCtor> regExpCtor(scope, scope.engine->regExpCtor());
+    RegExpCtor *regExpCtor = static_cast<RegExpCtor *>(scope.engine->regExpCtor());
     regExpCtor->d()->clearLastMatch();
 
     if (result == -1) {
@@ -376,73 +410,78 @@ void RegExpPrototype::method_exec(const BuiltinFunction *, Scope &scope, CallDat
     if (r->global())
         r->setLastIndex(matchOffsets[1]);
 
-    scope.result = array;
+    return array.asReturnedValue();
 }
 
-void RegExpPrototype::method_test(const BuiltinFunction *b, Scope &scope, CallData *callData)
+ReturnedValue RegExpPrototype::method_test(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    method_exec(b, scope, callData);
-    scope.result = Encode(!scope.result.isNull());
+    Value res = Value::fromReturnedValue(method_exec(b, thisObject, argv, argc));
+    return Encode(!res.isNull());
 }
 
-void RegExpPrototype::method_toString(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue RegExpPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    Scoped<RegExpObject> r(scope, callData->thisObject.as<RegExpObject>());
+    ExecutionEngine *v4 = b->engine();
+    const RegExpObject *r = thisObject->as<RegExpObject>();
     if (!r)
-        THROW_TYPE_ERROR();
+        return v4->throwTypeError();
 
-    scope.result = scope.engine->newString(r->toString());
+    return Encode(v4->newString(r->toString()));
 }
 
-void RegExpPrototype::method_compile(const BuiltinFunction *, Scope &scope, CallData *callData)
+ReturnedValue RegExpPrototype::method_compile(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    Scoped<RegExpObject> r(scope, callData->thisObject.as<RegExpObject>());
+    Scope scope(b);
+    Scoped<RegExpObject> r(scope, thisObject->as<RegExpObject>());
     if (!r)
-        THROW_TYPE_ERROR();
+        return scope.engine->throwTypeError();
 
-    ScopedCallData cData(scope, callData->argc);
-    memcpy(cData->args, callData->args, callData->argc*sizeof(Value));
-
-    scope.engine->regExpCtor()->as<FunctionObject>()->construct(scope, cData);
-    Scoped<RegExpObject> re(scope, scope.result.asReturnedValue());
+    Scoped<RegExpObject> re(scope, scope.engine->regExpCtor()->callAsConstructor(argv, argc));
 
     r->d()->value.set(scope.engine, re->value());
+    return Encode::undefined();
 }
 
 template <int index>
-void RegExpPrototype::method_get_lastMatch_n(const BuiltinFunction *, Scope &scope, CallData *)
+ReturnedValue RegExpPrototype::method_get_lastMatch_n(const FunctionObject *b, const Value *, const Value *, int)
 {
+    Scope scope(b);
     ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(scope.engine->regExpCtor())->lastMatch());
-    scope.result = lastMatch ? lastMatch->getIndexed(index) : Encode::undefined();
-    if (scope.result.isUndefined())
-        scope.result = scope.engine->newString();
+    ScopedValue res(scope, lastMatch ? lastMatch->getIndexed(index) : Encode::undefined());
+    if (res->isUndefined())
+        res = scope.engine->newString();
+    return res->asReturnedValue();
 }
 
-void RegExpPrototype::method_get_lastParen(const BuiltinFunction *, Scope &scope, CallData *)
+ReturnedValue RegExpPrototype::method_get_lastParen(const FunctionObject *b, const Value *, const Value *, int)
 {
+    Scope scope(b);
     ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(scope.engine->regExpCtor())->lastMatch());
-    scope.result = lastMatch ? lastMatch->getIndexed(lastMatch->getLength() - 1) : Encode::undefined();
-    if (scope.result.isUndefined())
-        scope.result = scope.engine->newString();
+    ScopedValue res(scope, lastMatch ? lastMatch->getIndexed(lastMatch->getLength() - 1) : Encode::undefined());
+    if (res->isUndefined())
+        res = scope.engine->newString();
+    return res->asReturnedValue();
 }
 
-void RegExpPrototype::method_get_input(const BuiltinFunction *, Scope &scope, CallData *)
+ReturnedValue RegExpPrototype::method_get_input(const FunctionObject *b, const Value *, const Value *, int)
 {
-    scope.result = static_cast<RegExpCtor*>(scope.engine->regExpCtor())->lastInput();
+    return static_cast<RegExpCtor*>(b->engine()->regExpCtor())->lastInput()->asReturnedValue();
 }
 
-void RegExpPrototype::method_get_leftContext(const BuiltinFunction *, Scope &scope, CallData *)
+ReturnedValue  RegExpPrototype::method_get_leftContext(const FunctionObject *b, const Value *, const Value *, int)
 {
+    Scope scope(b);
     Scoped<RegExpCtor> regExpCtor(scope, scope.engine->regExpCtor());
     QString lastInput = regExpCtor->lastInput()->toQString();
-    scope.result = scope.engine->newString(lastInput.left(regExpCtor->lastMatchStart()));
+    return Encode(scope.engine->newString(lastInput.left(regExpCtor->lastMatchStart())));
 }
 
-void RegExpPrototype::method_get_rightContext(const BuiltinFunction *, Scope &scope, CallData *)
+ReturnedValue  RegExpPrototype::method_get_rightContext(const FunctionObject *b, const Value *, const Value *, int)
 {
+    Scope scope(b);
     Scoped<RegExpCtor> regExpCtor(scope, scope.engine->regExpCtor());
     QString lastInput = regExpCtor->lastInput()->toQString();
-    scope.result = scope.engine->newString(lastInput.mid(regExpCtor->lastMatchEnd()));
+    return Encode(scope.engine->newString(lastInput.mid(regExpCtor->lastMatchEnd())));
 }
 
 QT_END_NAMESPACE

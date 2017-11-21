@@ -247,15 +247,14 @@ void QQmlExpression::setExpression(const QString &expression)
 }
 
 // Must be called with a valid handle scope
-void QQmlExpressionPrivate::v4value(bool *isUndefined, QV4::Scope &scope)
+QV4::ReturnedValue QQmlExpressionPrivate::v4value(bool *isUndefined)
 {
     if (!expressionFunctionValid) {
         createQmlBinding(context(), scopeObject(), expression, url, line);
         expressionFunctionValid = true;
     }
 
-    QV4::ScopedCallData callData(scope);
-    evaluate(callData, isUndefined, scope);
+    return evaluate(isUndefined);
 }
 
 QVariant QQmlExpressionPrivate::value(bool *isUndefined)
@@ -274,9 +273,9 @@ QVariant QQmlExpressionPrivate::value(bool *isUndefined)
 
     {
         QV4::Scope scope(QV8Engine::getV4(ep->v8engine()));
-        v4value(isUndefined, scope);
+        QV4::ScopedValue result(scope, v4value(isUndefined));
         if (!hasError())
-            rv = scope.engine->toVariant(scope.result, -1);
+            rv = scope.engine->toVariant(result, -1);
     }
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.

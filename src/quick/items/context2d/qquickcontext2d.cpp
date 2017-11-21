@@ -529,6 +529,11 @@ struct QQuickJSContext2DPixelData : Object {
 struct QQuickJSContext2DImageData : Object {
     void init();
 
+    static void markObjects(QV4::Heap::Base *that, QV4::MarkStack *markStack) {
+        static_cast<QQuickJSContext2DImageData *>(that)->pixelData.mark(markStack);
+        Object::markObjects(that, markStack);
+    }
+
     QV4::Value pixelData;
 };
 
@@ -539,46 +544,46 @@ struct QQuickJSContext2D : public QV4::Object
 {
     V4_OBJECT2(QQuickJSContext2D, QV4::Object)
 
-    static void method_get_globalAlpha(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_globalAlpha(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_globalCompositeOperation(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_globalCompositeOperation(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_fillStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_fillStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_fillRule(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_fillRule(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_strokeStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_strokeStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_globalAlpha(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_globalAlpha(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_globalCompositeOperation(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_globalCompositeOperation(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_fillStyle(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_fillStyle(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_fillRule(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_fillRule(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_strokeStyle(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_strokeStyle(const QV4::BuiltinFunction *b, QV4::CallData *callData);
 
-    static void method_get_lineCap(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_lineCap(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_lineJoin(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_lineJoin(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_lineWidth(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_lineWidth(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_miterLimit(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_miterLimit(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_lineCap(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_lineCap(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_lineJoin(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_lineJoin(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_lineWidth(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_lineWidth(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_miterLimit(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_miterLimit(const QV4::BuiltinFunction *b, QV4::CallData *callData);
 
-    static void method_get_shadowBlur(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_shadowBlur(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_shadowColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_shadowColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_shadowOffsetX(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_shadowOffsetX(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_shadowOffsetY(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_shadowOffsetY(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_shadowBlur(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_shadowBlur(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_shadowColor(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_shadowColor(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_shadowOffsetX(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_shadowOffsetX(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_shadowOffsetY(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_shadowOffsetY(const QV4::BuiltinFunction *b, QV4::CallData *callData);
 
     // should these two be on the proto?
 #if QT_CONFIG(quick_path)
-    static void method_get_path(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_path(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_path(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_path(const QV4::BuiltinFunction *b, QV4::CallData *callData);
 #endif
-    static void method_get_font(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_font(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_textAlign(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_textAlign(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_textBaseline(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_set_textBaseline(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_font(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_font(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_textAlign(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_textAlign(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_textBaseline(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_set_textBaseline(const QV4::BuiltinFunction *b, QV4::CallData *callData);
 };
 
 DEFINE_OBJECT_VTABLE(QQuickJSContext2D);
@@ -641,50 +646,50 @@ public:
         return o->d();
     }
 
-    static void method_get_canvas(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_restore(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_reset(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_save(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_rotate(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_scale(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_translate(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_setTransform(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_transform(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_resetTransform(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_shear(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_createLinearGradient(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_createRadialGradient(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_createConicalGradient(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_createPattern(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_clearRect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_fillRect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_strokeRect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_arc(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_arcTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_beginPath(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_bezierCurveTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_clip(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_closePath(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_fill(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_lineTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_moveTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_quadraticCurveTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_rect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_roundedRect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_ellipse(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_text(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_stroke(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_isPointInPath(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_drawFocusRing(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_setCaretSelectionRect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_caretBlinkRate(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_fillText(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_strokeText(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_measureText(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_drawImage(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_createImageData(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_getImageData(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_putImageData(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_canvas(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_restore(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_reset(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_save(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_rotate(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_scale(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_translate(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_setTransform(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_transform(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_resetTransform(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_shear(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_createLinearGradient(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_createRadialGradient(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_createConicalGradient(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_createPattern(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_clearRect(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_fillRect(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_strokeRect(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_arc(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_arcTo(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_beginPath(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_bezierCurveTo(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_clip(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_closePath(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_fill(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_lineTo(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_moveTo(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_quadraticCurveTo(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_rect(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_roundedRect(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_ellipse(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_text(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_stroke(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_isPointInPath(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_drawFocusRing(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_setCaretSelectionRect(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_caretBlinkRate(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_fillText(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_strokeText(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_measureText(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_drawImage(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_createImageData(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_getImageData(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_putImageData(const QV4::BuiltinFunction *b, QV4::CallData *callData);
 
 };
 
@@ -696,7 +701,7 @@ struct QQuickContext2DStyle : public QV4::Object
     V4_OBJECT2(QQuickContext2DStyle, QV4::Object)
     V4_NEEDS_DESTROY
 
-    static void gradient_proto_addColorStop(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static QV4::ReturnedValue gradient_proto_addColorStop(const QV4::BuiltinFunction *b, QV4::CallData *callData);
 };
 
 
@@ -906,7 +911,7 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     static QV4::ReturnedValue getIndexed(const QV4::Managed *m, uint index, bool *hasProperty);
     static bool putIndexed(QV4::Managed *m, uint index, const QV4::Value &value);
 
-    static void proto_get_length(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static QV4::ReturnedValue proto_get_length(const QV4::BuiltinFunction *b, QV4::CallData *callData);
 };
 
 void QV4::Heap::QQuickJSContext2DPixelData::init()
@@ -924,14 +929,10 @@ struct QQuickJSContext2DImageData : public QV4::Object
 {
     V4_OBJECT2(QQuickJSContext2DImageData, QV4::Object)
 
-    static void method_get_width(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_height(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
-    static void method_get_data(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_width(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_height(const QV4::BuiltinFunction *b, QV4::CallData *callData);
+    static QV4::ReturnedValue method_get_data(const QV4::BuiltinFunction *b, QV4::CallData *callData);
 
-    static void markObjects(QV4::Heap::Base *that, QV4::MarkStack *markStack) {
-        static_cast<QQuickJSContext2DImageData::Data *>(that)->pixelData.mark(markStack);
-        QV4::Object::markObjects(that, markStack);
-    }
 };
 
 void QV4::Heap::QQuickJSContext2DImageData::init()
@@ -978,12 +979,13 @@ static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV4::ExecutionE
 
      This property is read only.
 */
-void QQuickJSContext2DPrototype::method_get_canvas(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_get_canvas(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    scope.result = QV4::QObjectWrapper::wrap(scope.engine, r->d()->context->canvas());
+    RETURN_RESULT(QV4::QObjectWrapper::wrap(scope.engine, r->d()->context->canvas()));
 }
 
 /*!
@@ -992,27 +994,29 @@ void QQuickJSContext2DPrototype::method_get_canvas(const QV4::BuiltinFunction *,
 
     \sa save()
 */
-void QQuickJSContext2DPrototype::method_restore(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_restore(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
     r->d()->context->popState();
-    scope.result = callData->thisObject.asReturnedValue();
+    RETURN_RESULT(callData->thisObject.asReturnedValue());
 }
 
 /*!
     \qmlmethod object QtQuick::Context2D::reset()
     Resets the context state and properties to the default values.
 */
-void QQuickJSContext2DPrototype::method_reset(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_reset(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
     r->d()->context->reset();
 
-    scope.result = callData->thisObject.asReturnedValue();
+    RETURN_RESULT(callData->thisObject.asReturnedValue());
 }
 
 /*!
@@ -1045,14 +1049,15 @@ void QQuickJSContext2DPrototype::method_reset(const QV4::BuiltinFunction *, QV4:
     The current path is NOT part of the drawing state. The path can be reset by
     invoking the beginPath() method.
 */
-void QQuickJSContext2DPrototype::method_save(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_save(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
     r->d()->context->pushState();
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 }
 
 // transformations
@@ -1073,14 +1078,15 @@ void QQuickJSContext2DPrototype::method_save(const QV4::BuiltinFunction *, QV4::
     where the \a angle of rotation is in radians.
 
 */
-void QQuickJSContext2DPrototype::method_rotate(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_rotate(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 1)
+    if (callData->argc() >= 1)
         r->d()->context->rotate(callData->args[0].toNumber());
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 }
 
 /*!
@@ -1100,15 +1106,16 @@ void QQuickJSContext2DPrototype::method_rotate(const QV4::BuiltinFunction *, QV4
 
     \image qml-item-canvas-scale.png
 */
-void QQuickJSContext2DPrototype::method_scale(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_scale(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
 
-    if (callData->argc >= 2)
+    if (callData->argc() >= 2)
         r->d()->context->scale(callData->args[0].toNumber(), callData->args[1].toNumber());
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -1146,13 +1153,14 @@ void QQuickJSContext2DPrototype::method_scale(const QV4::BuiltinFunction *, QV4:
 
     \sa transform()
 */
-void QQuickJSContext2DPrototype::method_setTransform(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_setTransform(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
 
-    if (callData->argc >= 6)
+    if (callData->argc() >= 6)
         r->d()->context->setTransform( callData->args[0].toNumber()
                                                         , callData->args[1].toNumber()
                                                         , callData->args[2].toNumber()
@@ -1160,7 +1168,7 @@ void QQuickJSContext2DPrototype::method_setTransform(const QV4::BuiltinFunction 
                                                         , callData->args[4].toNumber()
                                                         , callData->args[5].toNumber());
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -1175,12 +1183,13 @@ void QQuickJSContext2DPrototype::method_setTransform(const QV4::BuiltinFunction 
 
     \sa setTransform()
 */
-void QQuickJSContext2DPrototype::method_transform(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_transform(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 6)
+    if (callData->argc() >= 6)
         r->d()->context->transform( callData->args[0].toNumber()
                                                   , callData->args[1].toNumber()
                                                   , callData->args[2].toNumber()
@@ -1188,7 +1197,7 @@ void QQuickJSContext2DPrototype::method_transform(const QV4::BuiltinFunction *, 
                                                   , callData->args[4].toNumber()
                                                   , callData->args[5].toNumber());
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -1201,14 +1210,15 @@ void QQuickJSContext2DPrototype::method_transform(const QV4::BuiltinFunction *, 
     Translating the origin enables you to draw patterns of different objects on the canvas
     without having to measure the coordinates manually for each shape.
 */
-void QQuickJSContext2DPrototype::method_translate(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_translate(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 2)
+    if (callData->argc() >= 2)
             r->d()->context->translate(callData->args[0].toNumber(), callData->args[1].toNumber());
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -1221,14 +1231,15 @@ void QQuickJSContext2DPrototype::method_translate(const QV4::BuiltinFunction *, 
 
     \sa transform(), setTransform(), reset()
 */
-void QQuickJSContext2DPrototype::method_resetTransform(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_resetTransform(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
     r->d()->context->setTransform(1, 0, 0, 1, 0, 0);
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -1239,15 +1250,16 @@ void QQuickJSContext2DPrototype::method_resetTransform(const QV4::BuiltinFunctio
     Shears the transformation matrix by \a sh in the horizontal direction and
     \a sv in the vertical direction.
 */
-void QQuickJSContext2DPrototype::method_shear(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_shear(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 2)
+    if (callData->argc() >= 2)
             r->d()->context->shear(callData->args[0].toNumber(), callData->args[1].toNumber());
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 // compositing
@@ -1259,30 +1271,32 @@ void QQuickJSContext2DPrototype::method_shear(const QV4::BuiltinFunction *, QV4:
      The value must be in the range from \c 0.0 (fully transparent) to \c 1.0 (fully opaque).
      The default value is \c 1.0.
 */
-void QQuickJSContext2D::method_get_globalAlpha(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_globalAlpha(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    scope.result = QV4::Encode(r->d()->context->state.globalAlpha);
+    RETURN_RESULT(QV4::Encode(r->d()->context->state.globalAlpha));
 }
 
-void QQuickJSContext2D::method_set_globalAlpha(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_globalAlpha(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT_SETTER(r)
 
-    double globalAlpha = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    double globalAlpha = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
 
-    scope.result = QV4::Encode::undefined();
 
     if (!qt_is_finite(globalAlpha))
-        return;
+        RETURN_UNDEFINED();
 
     if (globalAlpha >= 0.0 && globalAlpha <= 1.0 && r->d()->context->state.globalAlpha != globalAlpha) {
         r->d()->context->state.globalAlpha = globalAlpha;
         r->d()->context->buffer()->setGlobalAlpha(r->d()->context->state.globalAlpha);
     }
+    RETURN_UNDEFINED();
 }
 
 /*!
@@ -1311,33 +1325,35 @@ void QQuickJSContext2D::method_set_globalAlpha(const QV4::BuiltinFunction *, QV4
      extension composition modes are provided as "vendorName-operationName" syntax, for example: QPainter::CompositionMode_Exclusion is provided as
      "qt-exclusion".
 */
-void QQuickJSContext2D::method_get_globalCompositeOperation(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_globalCompositeOperation(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    scope.result = scope.engine->newString(qt_composite_mode_to_string(r->d()->context->state.globalCompositeOperation));
+    RETURN_RESULT(scope.engine->newString(qt_composite_mode_to_string(r->d()->context->state.globalCompositeOperation)));
 }
 
-void QQuickJSContext2D::method_set_globalCompositeOperation(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_globalCompositeOperation(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT_SETTER(r)
 
-    if (!callData->argc)
+    if (!callData->argc())
         THROW_TYPE_ERROR();
-
-    scope.result = QV4::Encode::undefined();
 
     QString mode = callData->args[0].toQString();
     QPainter::CompositionMode cm = qt_composite_mode_from_string(mode);
     if (cm == QPainter::CompositionMode_SourceOver && mode != QLatin1String("source-over"))
-        return;
+        RETURN_UNDEFINED();
 
     if (cm != r->d()->context->state.globalCompositeOperation) {
         r->d()->context->state.globalCompositeOperation = cm;
         r->d()->context->buffer()->setGlobalCompositeOperation(cm);
     }
+
+    RETURN_UNDEFINED();
 }
 
 // colors and styles
@@ -1363,8 +1379,9 @@ void QQuickJSContext2D::method_set_globalCompositeOperation(const QV4::BuiltinFu
      \sa createPattern()
      \sa strokeStyle
  */
-void QQuickJSContext2D::method_get_fillStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_fillStyle(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
@@ -1380,11 +1397,12 @@ void QQuickJSContext2D::method_get_fillStyle(const QV4::BuiltinFunction *, QV4::
         QString str = QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString);
         RETURN_RESULT(scope.engine->newString(str));
     }
-    scope.result = r->d()->context->m_fillStyle.value();
+    RETURN_RESULT(r->d()->context->m_fillStyle.value());
 }
 
-void QQuickJSContext2D::method_set_fillStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_fillStyle(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT_SETTER(r)
 
@@ -1414,7 +1432,7 @@ void QQuickJSContext2D::method_set_fillStyle(const QV4::BuiltinFunction *, QV4::
             r->d()->context->m_fillStyle.set(scope.engine, value);
        }
    }
-   scope.result = QV4::Encode::undefined();
+   RETURN_UNDEFINED();
 }
 /*!
     \qmlproperty enumeration QtQuick::Context2D::fillRule
@@ -1428,16 +1446,18 @@ void QQuickJSContext2D::method_set_fillStyle(const QV4::BuiltinFunction *, QV4::
 
      \sa fillStyle
  */
-void QQuickJSContext2D::method_get_fillRule(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_fillRule(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    scope.result = scope.engine->fromVariant(r->d()->context->state.fillRule);
+    RETURN_RESULT(scope.engine->fromVariant(r->d()->context->state.fillRule));
 }
 
-void QQuickJSContext2D::method_set_fillRule(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_fillRule(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT_SETTER(r)
 
@@ -1453,7 +1473,7 @@ void QQuickJSContext2D::method_set_fillRule(const QV4::BuiltinFunction *, QV4::S
         //error
     }
     r->d()->context->m_path.setFillRule(r->d()->context->state.fillRule);
-    scope.result = QV4::Encode::undefined();
+    RETURN_UNDEFINED();
 }
 /*!
     \qmlproperty variant QtQuick::Context2D::strokeStyle
@@ -1468,8 +1488,9 @@ void QQuickJSContext2D::method_set_fillRule(const QV4::BuiltinFunction *, QV4::S
      \sa createPattern()
      \sa fillStyle
  */
-void QQuickJSContext2D::method_get_strokeStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_strokeStyle(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
@@ -1485,11 +1506,12 @@ void QQuickJSContext2D::method_get_strokeStyle(const QV4::BuiltinFunction *, QV4
         QString str = QString::fromLatin1("rgba(%1, %2, %3, %4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(alphaString);
         RETURN_RESULT(scope.engine->newString(str));
     }
-    scope.result = r->d()->context->m_strokeStyle.value();
+    RETURN_RESULT(r->d()->context->m_strokeStyle.value());
 }
 
-void QQuickJSContext2D::method_set_strokeStyle(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_strokeStyle(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT_SETTER(r)
 
@@ -1520,7 +1542,7 @@ void QQuickJSContext2D::method_set_strokeStyle(const QV4::BuiltinFunction *, QV4
              r->d()->context->m_strokeStyle.set(scope.engine, value);
         }
     }
-    scope.result = QV4::Encode::undefined();
+    RETURN_UNDEFINED();
 }
 
 /*!
@@ -1540,12 +1562,13 @@ void QQuickJSContext2D::method_set_strokeStyle(const QV4::BuiltinFunction *, QV4
     \sa strokeStyle
   */
 
-void QQuickJSContext2DPrototype::method_createLinearGradient(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_createLinearGradient(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 4) {
+    if (callData->argc() >= 4) {
         qreal x0 = callData->args[0].toNumber();
         qreal y0 = callData->args[1].toNumber();
         qreal x1 = callData->args[2].toNumber();
@@ -1563,10 +1586,10 @@ void QQuickJSContext2DPrototype::method_createLinearGradient(const QV4::BuiltinF
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p);
         *gradient->d()->brush = QLinearGradient(x0, y0, x1, y1);
-        RETURN_RESULT(gradient);
+        RETURN_RESULT(*gradient);
     }
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -1583,12 +1606,13 @@ void QQuickJSContext2DPrototype::method_createLinearGradient(const QV4::BuiltinF
     \sa strokeStyle
   */
 
-void QQuickJSContext2DPrototype::method_createRadialGradient(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_createRadialGradient(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 6) {
+    if (callData->argc() >= 6) {
         qreal x0 = callData->args[0].toNumber();
         qreal y0 = callData->args[1].toNumber();
         qreal r0 = callData->args[2].toNumber();
@@ -1614,10 +1638,10 @@ void QQuickJSContext2DPrototype::method_createRadialGradient(const QV4::BuiltinF
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p);
         *gradient->d()->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
-        RETURN_RESULT(gradient);
+        RETURN_RESULT(*gradient);
     }
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -1634,12 +1658,13 @@ void QQuickJSContext2DPrototype::method_createRadialGradient(const QV4::BuiltinF
     \sa strokeStyle
   */
 
-void QQuickJSContext2DPrototype::method_createConicalGradient(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 3) {
+    if (callData->argc() >= 3) {
         qreal x = callData->args[0].toNumber();
         qreal y = callData->args[1].toNumber();
         qreal angle = qRadiansToDegrees(callData->args[2].toNumber());
@@ -1657,10 +1682,10 @@ void QQuickJSContext2DPrototype::method_createConicalGradient(const QV4::Builtin
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p);
         *gradient->d()->brush = QConicalGradient(x, y, angle);
-        RETURN_RESULT(gradient);
+        RETURN_RESULT(*gradient);
     }
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 /*!
@@ -1706,12 +1731,13 @@ void QQuickJSContext2DPrototype::method_createConicalGradient(const QV4::Builtin
   \sa strokeStyle
   \sa fillStyle
   */
-void QQuickJSContext2DPrototype::method_createPattern(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 2) {
+    if (callData->argc() >= 2) {
         QV4::Scoped<QQuickContext2DStyle> pattern(scope, scope.engine->memoryManager->allocObject<QQuickContext2DStyle>());
 
         QColor color = scope.engine->toVariant(callData->args[0], qMetaTypeId<QColor>()).value<QColor>();
@@ -1758,10 +1784,10 @@ void QQuickJSContext2DPrototype::method_createPattern(const QV4::BuiltinFunction
             }
         }
 
-        RETURN_RESULT(pattern);
+        RETURN_RESULT(*pattern);
 
     }
-    scope.result = QV4::Encode::undefined();
+    RETURN_UNDEFINED();
 }
 
 // line styles
@@ -1776,8 +1802,9 @@ void QQuickJSContext2DPrototype::method_createPattern(const QV4::BuiltinFunction
     \endlist
     Other values are ignored.
 */
-void QQuickJSContext2D::method_get_lineCap(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_lineCap(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
@@ -1793,8 +1820,10 @@ void QQuickJSContext2D::method_get_lineCap(const QV4::BuiltinFunction *, QV4::Sc
     RETURN_RESULT(scope.engine->newString(QStringLiteral("butt")));
 }
 
-void QQuickJSContext2D::method_set_lineCap(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_lineCap(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
 
@@ -1830,8 +1859,9 @@ void QQuickJSContext2D::method_set_lineCap(const QV4::BuiltinFunction *, QV4::Sc
     \endlist
     Other values are ignored.
 */
-void QQuickJSContext2D::method_get_lineJoin(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_lineJoin(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
@@ -1847,12 +1877,13 @@ void QQuickJSContext2D::method_get_lineJoin(const QV4::BuiltinFunction *, QV4::S
     RETURN_RESULT(scope.engine->newString(QStringLiteral("miter")));
 }
 
-void QQuickJSContext2D::method_set_lineJoin(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_lineJoin(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
 
-    if (!callData->argc)
+    if (!callData->argc())
         THROW_TYPE_ERROR();
 
     QString lineJoin = callData->args[0].toQString();
@@ -1877,20 +1908,22 @@ void QQuickJSContext2D::method_set_lineJoin(const QV4::BuiltinFunction *, QV4::S
     \qmlproperty real QtQuick::Context2D::lineWidth
      Holds the current line width. Values that are not finite values greater than zero are ignored.
  */
-void QQuickJSContext2D::method_get_lineWidth(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_lineWidth(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
     RETURN_RESULT(QV4::Encode(r->d()->context->state.lineWidth));
 }
 
-void QQuickJSContext2D::method_set_lineWidth(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_lineWidth(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
 
-    qreal w = callData->argc ? callData->args[0].toNumber() : -1;
+    qreal w = callData->argc() ? callData->args[0].toNumber() : -1;
 
     if (w > 0 && qt_is_finite(w) && w != r->d()->context->state.lineWidth) {
         r->d()->context->state.lineWidth = w;
@@ -1904,20 +1937,22 @@ void QQuickJSContext2D::method_set_lineWidth(const QV4::BuiltinFunction *, QV4::
      Holds the current miter limit ratio.
      The default miter limit value is 10.0.
  */
-void QQuickJSContext2D::method_get_miterLimit(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_miterLimit(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
     RETURN_RESULT(QV4::Encode(r->d()->context->state.miterLimit));
 }
 
-void QQuickJSContext2D::method_set_miterLimit(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_miterLimit(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
 
-    qreal ml = callData->argc ? callData->args[0].toNumber() : -1;
+    qreal ml = callData->argc() ? callData->args[0].toNumber() : -1;
 
     if (ml > 0 && qt_is_finite(ml) && ml != r->d()->context->state.miterLimit) {
         r->d()->context->state.miterLimit = ml;
@@ -1931,20 +1966,22 @@ void QQuickJSContext2D::method_set_miterLimit(const QV4::BuiltinFunction *, QV4:
     \qmlproperty real QtQuick::Context2D::shadowBlur
      Holds the current level of blur applied to shadows
  */
-void QQuickJSContext2D::method_get_shadowBlur(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_shadowBlur(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
     RETURN_RESULT(QV4::Encode(r->d()->context->state.shadowBlur));
 }
 
-void QQuickJSContext2D::method_set_shadowBlur(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_shadowBlur(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
 
-    qreal blur = callData->argc ? callData->args[0].toNumber() : -1;
+    qreal blur = callData->argc() ? callData->args[0].toNumber() : -1;
 
     if (blur > 0 && qt_is_finite(blur) && blur != r->d()->context->state.shadowBlur) {
         r->d()->context->state.shadowBlur = blur;
@@ -1957,21 +1994,23 @@ void QQuickJSContext2D::method_set_shadowBlur(const QV4::BuiltinFunction *, QV4:
     \qmlproperty string QtQuick::Context2D::shadowColor
      Holds the current shadow color.
  */
-void QQuickJSContext2D::method_get_shadowColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_shadowColor(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
     RETURN_RESULT(scope.engine->newString(r->d()->context->state.shadowColor.name()));
 }
 
-void QQuickJSContext2D::method_set_shadowColor(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_shadowColor(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
 
     QColor color;
-    if (callData->argc)
+    if (callData->argc())
         color = qt_color_from_string(callData->args[0]);
 
     if (color.isValid() && color != r->d()->context->state.shadowColor) {
@@ -1988,20 +2027,22 @@ void QQuickJSContext2D::method_set_shadowColor(const QV4::BuiltinFunction *, QV4
 
      \sa shadowOffsetY
  */
-void QQuickJSContext2D::method_get_shadowOffsetX(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_shadowOffsetX(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
     RETURN_RESULT(QV4::Encode(r->d()->context->state.shadowOffsetX));
 }
 
-void QQuickJSContext2D::method_set_shadowOffsetX(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_shadowOffsetX(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
 
-    qreal offsetX = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    qreal offsetX = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (qt_is_finite(offsetX) && offsetX != r->d()->context->state.shadowOffsetX) {
         r->d()->context->state.shadowOffsetX = offsetX;
         r->d()->context->buffer()->setShadowOffsetX(offsetX);
@@ -2014,20 +2055,22 @@ void QQuickJSContext2D::method_set_shadowOffsetX(const QV4::BuiltinFunction *, Q
 
      \sa shadowOffsetX
  */
-void QQuickJSContext2D::method_get_shadowOffsetY(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_shadowOffsetY(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
     RETURN_RESULT(QV4::Encode(r->d()->context->state.shadowOffsetY));
 }
 
-void QQuickJSContext2D::method_set_shadowOffsetY(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_shadowOffsetY(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
 
-    qreal offsetY = callData->argc ? callData->args[0].toNumber() : qt_qnan();
+    qreal offsetY = callData->argc() ? callData->args[0].toNumber() : qt_qnan();
     if (qt_is_finite(offsetY) && offsetY != r->d()->context->state.shadowOffsetY) {
         r->d()->context->state.shadowOffsetY = offsetY;
         r->d()->context->buffer()->setShadowOffsetY(offsetY);
@@ -2036,16 +2079,18 @@ void QQuickJSContext2D::method_set_shadowOffsetY(const QV4::BuiltinFunction *, Q
 }
 
 #if QT_CONFIG(quick_path)
-void QQuickJSContext2D::method_get_path(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_path(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    scope.result = r->d()->context->m_v4path.value();
+    RETURN_RESULT(r->d()->context->m_v4path.value());
 }
 
-void QQuickJSContext2D::method_set_path(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_path(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
 
@@ -2069,19 +2114,20 @@ void QQuickJSContext2D::method_set_path(const QV4::BuiltinFunction *, QV4::Scope
   \qmlmethod object QtQuick::Context2D::clearRect(real x, real y, real w, real h)
   Clears all pixels on the canvas in the given rectangle to transparent black.
   */
-void QQuickJSContext2DPrototype::method_clearRect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_clearRect(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
 
-    if (callData->argc >= 4)
+    if (callData->argc() >= 4)
         r->d()->context->clearRect(callData->args[0].toNumber(),
                               callData->args[1].toNumber(),
                               callData->args[2].toNumber(),
                               callData->args[3].toNumber());
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 /*!
@@ -2090,14 +2136,15 @@ void QQuickJSContext2DPrototype::method_clearRect(const QV4::BuiltinFunction *, 
 
    \sa fillStyle
   */
-void QQuickJSContext2DPrototype::method_fillRect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_fillRect(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 4)
+    if (callData->argc() >= 4)
         r->d()->context->fillRect(callData->args[0].toNumber(), callData->args[1].toNumber(), callData->args[2].toNumber(), callData->args[3].toNumber());
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -2111,15 +2158,16 @@ void QQuickJSContext2DPrototype::method_fillRect(const QV4::BuiltinFunction *, Q
    \sa lineJoin
    \sa miterLimit
   */
-void QQuickJSContext2DPrototype::method_strokeRect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeRect(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 4)
+    if (callData->argc() >= 4)
         r->d()->context->strokeRect(callData->args[0].toNumber(), callData->args[1].toNumber(), callData->args[2].toNumber(), callData->args[3].toNumber());
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -2144,15 +2192,16 @@ void QQuickJSContext2DPrototype::method_strokeRect(const QV4::BuiltinFunction *,
     \sa arcTo, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arc}{W3C's 2D
     Context Standard for arc()}
 */
-void QQuickJSContext2DPrototype::method_arc(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_arc(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 5) {
+    if (callData->argc() >= 5) {
         bool antiClockwise = false;
 
-        if (callData->argc == 6)
+        if (callData->argc() == 6)
             antiClockwise = callData->args[5].toBoolean();
 
         qreal radius = callData->args[2].toNumber();
@@ -2168,7 +2217,7 @@ void QQuickJSContext2DPrototype::method_arc(const QV4::BuiltinFunction *, QV4::S
                         antiClockwise);
     }
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -2195,12 +2244,13 @@ void QQuickJSContext2DPrototype::method_arc(const QV4::BuiltinFunction *, QV4::S
     \sa arc, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C's 2D
     Context Standard for arcTo()}
 */
-void QQuickJSContext2DPrototype::method_arcTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_arcTo(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 5) {
+    if (callData->argc() >= 5) {
         qreal radius = callData->args[4].toNumber();
 
         if (qt_is_finite(radius) && radius < 0)
@@ -2213,7 +2263,7 @@ void QQuickJSContext2DPrototype::method_arcTo(const QV4::BuiltinFunction *, QV4:
                           radius);
     }
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -2222,14 +2272,15 @@ void QQuickJSContext2DPrototype::method_arcTo(const QV4::BuiltinFunction *, QV4:
 
    Resets the current path to a new path.
   */
-void QQuickJSContext2DPrototype::method_beginPath(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_beginPath(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
     r->d()->context->beginPath();
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -2252,14 +2303,13 @@ void QQuickJSContext2DPrototype::method_beginPath(const QV4::BuiltinFunction *, 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-beziercurveto}{W3C 2d context standard for bezierCurveTo}
   \sa {http://www.openrise.com/lab/FlowerPower/}{The beautiful flower demo by using bezierCurveTo}
   */
-void QQuickJSContext2DPrototype::method_bezierCurveTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_bezierCurveTo(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    scope.result = callData->thisObject;
-
-    if (callData->argc >= 6) {
+    if (callData->argc() >= 6) {
         qreal cp1x = callData->args[0].toNumber();
         qreal cp1y = callData->args[1].toNumber();
         qreal cp2x = callData->args[2].toNumber();
@@ -2268,10 +2318,11 @@ void QQuickJSContext2DPrototype::method_bezierCurveTo(const QV4::BuiltinFunction
         qreal y = callData->args[5].toNumber();
 
         if (!qt_is_finite(cp1x) || !qt_is_finite(cp1y) || !qt_is_finite(cp2x) || !qt_is_finite(cp2y) || !qt_is_finite(x) || !qt_is_finite(y))
-            return;
+            RETURN_UNDEFINED();
 
         r->d()->context->bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
     }
+    RETURN_RESULT(callData->thisObject);
 }
 
 /*!
@@ -2298,13 +2349,14 @@ void QQuickJSContext2DPrototype::method_bezierCurveTo(const QV4::BuiltinFunction
     \sa fill()
    \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-clip}{W3C 2d context standard for clip}
   */
-void QQuickJSContext2DPrototype::method_clip(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_clip(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
     r->d()->context->clip();
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 }
 
 /*!
@@ -2314,15 +2366,15 @@ void QQuickJSContext2DPrototype::method_clip(const QV4::BuiltinFunction *, QV4::
 
    \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-closepath}{W3C 2d context standard for closePath}
   */
-void QQuickJSContext2DPrototype::method_closePath(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_closePath(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-
     r->d()->context->closePath();
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 }
 
 /*!
@@ -2334,12 +2386,13 @@ void QQuickJSContext2DPrototype::method_closePath(const QV4::BuiltinFunction *, 
 
    \sa fillStyle
   */
-void QQuickJSContext2DPrototype::method_fill(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_fill(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r);
     r->d()->context->fill();
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 }
 
 /*!
@@ -2347,22 +2400,23 @@ void QQuickJSContext2DPrototype::method_fill(const QV4::BuiltinFunction *, QV4::
 
    Draws a line from the current position to the point (x, y).
  */
-void QQuickJSContext2DPrototype::method_lineTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_lineTo(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    scope.result = callData->thisObject;
-
-    if (callData->argc >= 2) {
+    if (callData->argc() >= 2) {
         qreal x = callData->args[0].toNumber();
         qreal y = callData->args[1].toNumber();
 
         if (!qt_is_finite(x) || !qt_is_finite(y))
-            return;
+            RETURN_UNDEFINED();
 
         r->d()->context->lineTo(x, y);
     }
+
+    RETURN_RESULT(callData->thisObject);
 }
 
 /*!
@@ -2370,21 +2424,22 @@ void QQuickJSContext2DPrototype::method_lineTo(const QV4::BuiltinFunction *, QV4
 
    Creates a new subpath with the given point.
  */
-void QQuickJSContext2DPrototype::method_moveTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_moveTo(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    scope.result = callData->thisObject;
-
-    if (callData->argc >= 2) {
+    if (callData->argc() >= 2) {
         qreal x = callData->args[0].toNumber();
         qreal y = callData->args[1].toNumber();
 
         if (!qt_is_finite(x) || !qt_is_finite(y))
-            return;
+            RETURN_UNDEFINED();
         r->d()->context->moveTo(x, y);
     }
+
+    RETURN_RESULT(callData->thisObject);
 }
 
 /*!
@@ -2394,24 +2449,25 @@ void QQuickJSContext2DPrototype::method_moveTo(const QV4::BuiltinFunction *, QV4
 
    See \l{http://www.w3.org/TR/2dcontext/#dom-context-2d-quadraticcurveto}{W3C 2d context standard for quadraticCurveTo}
  */
-void QQuickJSContext2DPrototype::method_quadraticCurveTo(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_quadraticCurveTo(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    scope.result = callData->thisObject;
-
-    if (callData->argc >= 4) {
+    if (callData->argc() >= 4) {
         qreal cpx = callData->args[0].toNumber();
         qreal cpy = callData->args[1].toNumber();
         qreal x = callData->args[2].toNumber();
         qreal y = callData->args[3].toNumber();
 
         if (!qt_is_finite(cpx) || !qt_is_finite(cpy) || !qt_is_finite(x) || !qt_is_finite(y))
-            return;
+            RETURN_UNDEFINED();
 
         r->d()->context->quadraticCurveTo(cpx, cpy, x, y);
     }
+
+    RETURN_RESULT(callData->thisObject);
 }
 
 /*!
@@ -2419,14 +2475,15 @@ void QQuickJSContext2DPrototype::method_quadraticCurveTo(const QV4::BuiltinFunct
 
    Adds a rectangle at position (\c x, \c y), with the given width \c w and height \c h, as a closed subpath.
  */
-void QQuickJSContext2DPrototype::method_rect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_rect(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 4)
+    if (callData->argc() >= 4)
         r->d()->context->rect(callData->args[0].toNumber(), callData->args[1].toNumber(), callData->args[2].toNumber(), callData->args[3].toNumber());
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -2436,19 +2493,20 @@ void QQuickJSContext2DPrototype::method_rect(const QV4::BuiltinFunction *, QV4::
    Adds the given rectangle rect with rounded corners to the path. The \c xRadius and \c yRadius arguments specify the radius of the
    ellipses defining the corners of the rounded rectangle.
  */
-void QQuickJSContext2DPrototype::method_roundedRect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_roundedRect(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 6)
+    if (callData->argc() >= 6)
         r->d()->context->roundedRect(callData->args[0].toNumber()
                               , callData->args[1].toNumber()
                               , callData->args[2].toNumber()
                               , callData->args[3].toNumber()
                               , callData->args[4].toNumber()
                               , callData->args[5].toNumber());
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -2460,16 +2518,16 @@ void QQuickJSContext2DPrototype::method_roundedRect(const QV4::BuiltinFunction *
 
   The ellipse is composed of a clockwise curve, starting and finishing at zero degrees (the 3 o'clock position).
  */
-void QQuickJSContext2DPrototype::method_ellipse(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_ellipse(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-
-    if (callData->argc >= 4)
+    if (callData->argc() >= 4)
         r->d()->context->ellipse(callData->args[0].toNumber(), callData->args[1].toNumber(), callData->args[2].toNumber(), callData->args[3].toNumber());
 
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -2479,22 +2537,22 @@ void QQuickJSContext2DPrototype::method_ellipse(const QV4::BuiltinFunction *, QV
   Adds the given \c text to the path as a set of closed subpaths created from the current context font supplied.
   The subpaths are positioned so that the left end of the text's baseline lies at the point specified by (\c x, \c y).
  */
-void QQuickJSContext2DPrototype::method_text(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_text(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    scope.result = callData->thisObject;
-
-    if (callData->argc >= 3) {
+    if (callData->argc() >= 3) {
         qreal x = callData->args[1].toNumber();
         qreal y = callData->args[2].toNumber();
 
         if (!qt_is_finite(x) || !qt_is_finite(y))
-            return;
+            RETURN_UNDEFINED();
         r->d()->context->text(callData->args[0].toQStringNoThrow(), x, y);
     }
 
+    RETURN_RESULT(callData->thisObject);
 }
 
 /*!
@@ -2506,13 +2564,14 @@ void QQuickJSContext2DPrototype::method_text(const QV4::BuiltinFunction *, QV4::
 
    \sa strokeStyle
   */
-void QQuickJSContext2DPrototype::method_stroke(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_stroke(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
     r->d()->context->stroke();
-    scope.result = callData->thisObject;
+    RETURN_RESULT(callData->thisObject);
 
 }
 
@@ -2523,29 +2582,33 @@ void QQuickJSContext2DPrototype::method_stroke(const QV4::BuiltinFunction *, QV4
 
    \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-ispointinpath}{W3C 2d context standard for isPointInPath}
   */
-void QQuickJSContext2DPrototype::method_isPointInPath(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_isPointInPath(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
     bool pointInPath = false;
-    if (callData->argc >= 2)
+    if (callData->argc() >= 2)
         pointInPath = r->d()->context->isPointInPath(callData->args[0].toNumber(), callData->args[1].toNumber());
-    scope.result = QV4::Primitive::fromBoolean(pointInPath).asReturnedValue();
+    RETURN_RESULT(QV4::Primitive::fromBoolean(pointInPath).asReturnedValue());
 }
 
-void QQuickJSContext2DPrototype::method_drawFocusRing(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawFocusRing(const QV4::BuiltinFunction *b, QV4::CallData *)
 {
+    QV4::Scope scope(b);
     THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::drawFocusRing is not supported");
 }
 
-void QQuickJSContext2DPrototype::method_setCaretSelectionRect(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_setCaretSelectionRect(const QV4::BuiltinFunction *b, QV4::CallData *)
 {
+    QV4::Scope scope(b);
     THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::setCaretSelectionRect is not supported");
 }
 
-void QQuickJSContext2DPrototype::method_caretBlinkRate(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_caretBlinkRate(const QV4::BuiltinFunction *b, QV4::CallData *)
 {
+    QV4::Scope scope(b);
     THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "Context2D::caretBlinkRate is not supported");
 }
 
@@ -2572,16 +2635,18 @@ void QQuickJSContext2DPrototype::method_caretBlinkRate(const QV4::BuiltinFunctio
 
     The default font value is "10px sans-serif".
   */
-void QQuickJSContext2D::method_get_font(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_font(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
     RETURN_RESULT(scope.engine->newString(r->d()->context->state.font.toString()));
 }
 
-void QQuickJSContext2D::method_set_font(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_font(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
 
@@ -2609,8 +2674,9 @@ void QQuickJSContext2D::method_set_font(const QV4::BuiltinFunction *, QV4::Scope
   \endlist
   Other values are ignored. The default value is "start".
   */
-void QQuickJSContext2D::method_get_textAlign(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_textAlign(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
@@ -2630,8 +2696,9 @@ void QQuickJSContext2D::method_get_textAlign(const QV4::BuiltinFunction *, QV4::
     RETURN_RESULT(scope.engine->newString(QStringLiteral("start")));
 }
 
-void QQuickJSContext2D::method_set_textAlign(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_textAlign(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
 
@@ -2675,8 +2742,9 @@ void QQuickJSContext2D::method_set_textAlign(const QV4::BuiltinFunction *, QV4::
   \endlist
   Other values are ignored. The default value is "alphabetic".
   */
-void QQuickJSContext2D::method_get_textBaseline(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_get_textBaseline(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
@@ -2696,8 +2764,9 @@ void QQuickJSContext2D::method_get_textBaseline(const QV4::BuiltinFunction *, QV
     RETURN_RESULT(scope.engine->newString(QStringLiteral("alphabetic")));
 }
 
-void QQuickJSContext2D::method_set_textBaseline(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2D::method_set_textBaseline(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT_SETTER(r)
     QV4::ScopedString s(scope, callData->argument(0), QV4::ScopedString::Convert);
@@ -2733,21 +2802,22 @@ void QQuickJSContext2D::method_set_textBaseline(const QV4::BuiltinFunction *, QV
   \sa textBaseline
   \sa strokeText
   */
-void QQuickJSContext2DPrototype::method_fillText(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_fillText(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    scope.result = callData->thisObject;
-
-    if (callData->argc >= 3) {
+    if (callData->argc() >= 3) {
         qreal x = callData->args[1].toNumber();
         qreal y = callData->args[2].toNumber();
         if (!qt_is_finite(x) || !qt_is_finite(y))
-            return;
+            RETURN_UNDEFINED();
         QPainterPath textPath = r->d()->context->createTextGlyphs(x, y, callData->args[0].toQStringNoThrow());
         r->d()->context->buffer()->fill(textPath);
     }
+
+    RETURN_RESULT(callData->thisObject);
 }
 /*!
   \qmlmethod object QtQuick::Context2D::strokeText(text, x, y)
@@ -2757,15 +2827,16 @@ void QQuickJSContext2DPrototype::method_fillText(const QV4::BuiltinFunction *, Q
   \sa textBaseline
   \sa fillText
   */
-void QQuickJSContext2DPrototype::method_strokeText(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeText(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 3)
+    if (callData->argc() >= 3)
         r->d()->context->drawText(callData->args[0].toQStringNoThrow(), callData->args[1].toNumber(), callData->args[2].toNumber(), false);
-    scope.result = callData->thisObject;
 
+    RETURN_RESULT(callData->thisObject);
 }
 
 /*!
@@ -2774,18 +2845,19 @@ void QQuickJSContext2DPrototype::method_strokeText(const QV4::BuiltinFunction *,
   Returns an object with a \c width property, whose value is equivalent to
   calling \l {QFontMetrics::width()} with the given \a text in the current font.
   */
-void QQuickJSContext2DPrototype::method_measureText(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 1) {
+    if (callData->argc() >= 1) {
         QFontMetrics fm(r->d()->context->state.font);
         uint width = fm.width(callData->args[0].toQStringNoThrow());
         QV4::ScopedObject tm(scope, scope.engine->newObject());
         tm->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("width"))).getPointer(),
                 QV4::ScopedValue(scope, QV4::Primitive::fromDouble(width)));
-        RETURN_RESULT(tm);
+        RETURN_RESULT(*tm);
     }
     RETURN_UNDEFINED();
 }
@@ -2849,21 +2921,20 @@ void QQuickJSContext2DPrototype::method_measureText(const QV4::BuiltinFunction *
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
 */
-void QQuickJSContext2DPrototype::method_drawImage(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawImage(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject);
     CHECK_CONTEXT(r)
 
-    scope.result = callData->thisObject;
-
     qreal sx, sy, sw, sh, dx, dy, dw, dh;
 
-    if (!callData->argc)
-        return;
+    if (!callData->argc())
+        RETURN_UNDEFINED();
 
     //FIXME:This function should be moved to QQuickContext2D::drawImage(...)
     if (!r->d()->context->state.invertibleCTM)
-        return;
+        RETURN_UNDEFINED();
 
     QQmlRefPointer<QQuickCanvasPixmap> pixmap;
 
@@ -2908,9 +2979,9 @@ void QQuickJSContext2DPrototype::method_drawImage(const QV4::BuiltinFunction *, 
     }
 
     if (pixmap.isNull() || !pixmap->isValid())
-        return;
+        RETURN_UNDEFINED();
 
-    if (callData->argc >= 9) {
+    if (callData->argc() >= 9) {
         sx = callData->args[1].toNumber();
         sy = callData->args[2].toNumber();
         sw = callData->args[3].toNumber();
@@ -2919,7 +2990,7 @@ void QQuickJSContext2DPrototype::method_drawImage(const QV4::BuiltinFunction *, 
         dy = callData->args[6].toNumber();
         dw = callData->args[7].toNumber();
         dh = callData->args[8].toNumber();
-    } else if (callData->argc >= 5) {
+    } else if (callData->argc() >= 5) {
         sx = 0;
         sy = 0;
         sw = pixmap->width();
@@ -2928,7 +2999,7 @@ void QQuickJSContext2DPrototype::method_drawImage(const QV4::BuiltinFunction *, 
         dy = callData->args[2].toNumber();
         dw = callData->args[3].toNumber();
         dh = callData->args[4].toNumber();
-    } else if (callData->argc >= 3) {
+    } else if (callData->argc() >= 3) {
         dx = callData->args[1].toNumber();
         dy = callData->args[2].toNumber();
         sx = 0;
@@ -2938,7 +3009,7 @@ void QQuickJSContext2DPrototype::method_drawImage(const QV4::BuiltinFunction *, 
         dw = sw;
         dh = sh;
     } else {
-        return;
+        RETURN_UNDEFINED();
     }
 
     if (!qt_is_finite(sx)
@@ -2949,7 +3020,7 @@ void QQuickJSContext2DPrototype::method_drawImage(const QV4::BuiltinFunction *, 
      || !qt_is_finite(dy)
      || !qt_is_finite(dw)
      || !qt_is_finite(dh))
-        return;
+        RETURN_UNDEFINED();
 
     if (sx < 0
     || sy < 0
@@ -2962,6 +3033,8 @@ void QQuickJSContext2DPrototype::method_drawImage(const QV4::BuiltinFunction *, 
     }
 
     r->d()->context->buffer()->drawPixmap(pixmap, QRectF(sx, sy, sw, sh), QRectF(dx, dy, dw, dh));
+
+    RETURN_RESULT(callData->thisObject);
 }
 
 // pixel manipulation
@@ -2988,40 +3061,43 @@ void QQuickJSContext2DPrototype::method_drawImage(const QV4::BuiltinFunction *, 
   \qmlproperty int QtQuick::CanvasImageData::width
   Holds the actual width dimension of the data in the ImageData object, in device pixels.
  */
-void QQuickJSContext2DImageData::method_get_width(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DImageData::method_get_width(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, callData->thisObject);
     if (!imageData)
         THROW_TYPE_ERROR();
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, imageData->d()->pixelData.as<QQuickJSContext2DPixelData>());
     int width = r ? r->d()->image->width() : 0;
-    scope.result = QV4::Encode(width);
+    RETURN_RESULT(QV4::Encode(width));
 }
 
 /*!
   \qmlproperty int QtQuick::CanvasImageData::height
   Holds the actual height dimension of the data in the ImageData object, in device pixels.
   */
-void QQuickJSContext2DImageData::method_get_height(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DImageData::method_get_height(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, callData->thisObject);
     if (!imageData)
         THROW_TYPE_ERROR();
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, imageData->d()->pixelData.as<QQuickJSContext2DPixelData>());
     int height = r ? r->d()->image->height() : 0;
-    scope.result = QV4::Encode(height);
+    RETURN_RESULT(QV4::Encode(height));
 }
 
 /*!
   \qmlproperty object QtQuick::CanvasImageData::data
   Holds the one-dimensional array containing the data in RGBA order, as integers in the range 0 to 255.
  */
-void QQuickJSContext2DImageData::method_get_data(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DImageData::method_get_data(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, callData->thisObject);
     if (!imageData)
         THROW_TYPE_ERROR();
-    scope.result = imageData->d()->pixelData;
+    RETURN_RESULT(imageData->d()->pixelData);
 }
 
 /*!
@@ -3042,8 +3118,9 @@ void QQuickJSContext2DImageData::method_get_data(const QV4::BuiltinFunction *, Q
   The length attribute of a CanvasPixelArray object must return this h×w×4 number value.
   This property is read only.
 */
-void QQuickJSContext2DPixelData::proto_get_length(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPixelData::proto_get_length(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2DPixelData> r(scope, callData->thisObject.as<QQuickJSContext2DPixelData>());
     if (!r || r->d()->image->isNull())
         RETURN_UNDEFINED();
@@ -3140,12 +3217,13 @@ bool QQuickJSContext2DPixelData::putIndexed(QV4::Managed *m, uint index, const Q
     \sa Canvas::loadImage(), QtQuick::Canvas::unloadImage(),
         QtQuick::Canvas::isImageLoaded
   */
-void QQuickJSContext2DPrototype::method_createImageData(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_createImageData(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    if (callData->argc == 1) {
+    if (callData->argc() == 1) {
         QV4::ScopedValue arg0(scope, callData->args[0]);
         QV4::Scoped<QQuickJSContext2DImageData> imgData(scope, arg0);
         if (!!imgData) {
@@ -3159,7 +3237,7 @@ void QQuickJSContext2DPrototype::method_createImageData(const QV4::BuiltinFuncti
             QImage image = r->d()->context->createPixmap(QUrl(arg0->toQStringNoThrow()))->image();
             RETURN_RESULT(qt_create_image_data(image.width(), image.height(), scope.engine, image));
         }
-    } else if (callData->argc == 2) {
+    } else if (callData->argc() == 2) {
         qreal w = callData->args[0].toNumber();
         qreal h = callData->args[1].toNumber();
 
@@ -3178,12 +3256,13 @@ void QQuickJSContext2DPrototype::method_createImageData(const QV4::BuiltinFuncti
   \qmlmethod CanvasImageData QtQuick::Context2D::getImageData(real sx, real sy, real sw, real sh)
   Returns an CanvasImageData object containing the image data for the given rectangle of the canvas.
   */
-void QQuickJSContext2DPrototype::method_getImageData(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_getImageData(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
 
-    if (callData->argc >= 4) {
+    if (callData->argc() >= 4) {
         qreal x = callData->args[0].toNumber();
         qreal y = callData->args[1].toNumber();
         qreal w = callData->args[2].toNumber();
@@ -3197,18 +3276,19 @@ void QQuickJSContext2DPrototype::method_getImageData(const QV4::BuiltinFunction 
         QImage image = r->d()->context->canvas()->toImage(QRectF(x, y, w, h));
         RETURN_RESULT(qt_create_image_data(w, h, scope.engine, image));
     }
-    scope.result = QV4::Encode::null();
+    RETURN_RESULT(QV4::Encode::null());
 }
 
 /*!
   \qmlmethod object QtQuick::Context2D::putImageData(CanvasImageData imageData, real dx, real dy, real dirtyX, real dirtyY, real dirtyWidth, real dirtyHeight)
   Paints the data from the given ImageData object onto the canvas. If a dirty rectangle (\a dirtyX, \a dirtyY, \a dirtyWidth, \a dirtyHeight) is provided, only the pixels from that rectangle are painted.
   */
-void QQuickJSContext2DPrototype::method_putImageData(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, callData->thisObject.as<QQuickJSContext2D>());
     CHECK_CONTEXT(r)
-    if (callData->argc < 7)
+    if (callData->argc() < 7)
         RETURN_UNDEFINED();
 
     QV4::ScopedValue arg0(scope, callData->args[0]);
@@ -3222,18 +3302,16 @@ void QQuickJSContext2DPrototype::method_putImageData(const QV4::BuiltinFunction 
     if (!qt_is_finite(dx) || !qt_is_finite(dy))
         THROW_DOM(DOMEXCEPTION_NOT_SUPPORTED_ERR, "putImageData() : Invalid arguments");
 
-    scope.result = callData->thisObject;
-
     QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, arg0);
     if (!imageData)
-        return;
+        RETURN_UNDEFINED();
 
     QV4::Scoped<QQuickJSContext2DPixelData> pixelArray(scope, imageData->d()->pixelData.as<QQuickJSContext2DPixelData>());
     if (pixelArray) {
         w = pixelArray->d()->image->width();
         h = pixelArray->d()->image->height();
 
-        if (callData->argc == 7) {
+        if (callData->argc() == 7) {
             dirtyX = callData->args[3].toNumber();
             dirtyY = callData->args[4].toNumber();
             dirtyWidth = callData->args[5].toNumber();
@@ -3272,7 +3350,7 @@ void QQuickJSContext2DPrototype::method_putImageData(const QV4::BuiltinFunction 
             }
 
             if (dirtyWidth <=0 || dirtyHeight <= 0)
-                return;
+                RETURN_UNDEFINED();
         } else {
             dirtyX = 0;
             dirtyY = 0;
@@ -3283,6 +3361,8 @@ void QQuickJSContext2DPrototype::method_putImageData(const QV4::BuiltinFunction 
         QImage image = pixelArray->d()->image->copy(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
         r->d()->context->buffer()->drawImage(image, QRectF(dirtyX, dirtyY, dirtyWidth, dirtyHeight), QRectF(dx, dy, dirtyWidth, dirtyHeight));
     }
+
+    RETURN_RESULT(callData->thisObject);
 }
 
 /*!
@@ -3305,13 +3385,14 @@ void QQuickJSContext2DPrototype::method_putImageData(const QV4::BuiltinFunction 
   gradient.addColorStop(0.7, 'rgba(0, 255, 255, 1');
   \endcode
   */
-void QQuickContext2DStyle::gradient_proto_addColorStop(const QV4::BuiltinFunction *, QV4::Scope &scope, QV4::CallData *callData)
+QV4::ReturnedValue QQuickContext2DStyle::gradient_proto_addColorStop(const QV4::BuiltinFunction *b, QV4::CallData *callData)
 {
+    QV4::Scope scope(b);
     QV4::Scoped<QQuickContext2DStyle> style(scope, callData->thisObject.as<QQuickContext2DStyle>());
     if (!style)
         THROW_GENERIC_ERROR("Not a CanvasGradient object");
 
-    if (callData->argc == 2) {
+    if (callData->argc() == 2) {
 
         if (!style->d()->brush->gradient())
             THROW_GENERIC_ERROR("Not a valid CanvasGradient object, can't get the gradient information");
@@ -3336,7 +3417,7 @@ void QQuickContext2DStyle::gradient_proto_addColorStop(const QV4::BuiltinFunctio
         *style->d()->brush = gradient;
     }
 
-    scope.result = callData->thisObject;
+    return callData->thisObject.asReturnedValue();
 }
 
 void QQuickContext2D::scale(qreal x,  qreal y)

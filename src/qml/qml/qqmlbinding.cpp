@@ -203,12 +203,11 @@ protected:
 
         bool isUndefined = false;
 
-        QV4::ScopedCallData callData(scope);
-        QQmlJavaScriptExpression::evaluate(callData, &isUndefined, scope);
+        QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
 
         bool error = false;
         if (!watcher.wasDeleted() && isAddedToObject() && !hasError())
-            error = !write(scope.result, isUndefined, flags);
+            error = !write(result, isUndefined, flags);
 
         if (!watcher.wasDeleted()) {
 
@@ -457,12 +456,11 @@ QVariant QQmlBinding::evaluate()
     bool isUndefined = false;
 
     QV4::Scope scope(ep->v4engine());
-    QV4::ScopedCallData callData(scope);
-    QQmlJavaScriptExpression::evaluate(callData, &isUndefined, scope);
+    QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
 
     ep->dereferenceScarceResources();
 
-    return scope.engine->toVariant(scope.result, qMetaTypeId<QList<QObject*> >());
+    return scope.engine->toVariant(result, qMetaTypeId<QList<QObject*> >());
 }
 
 QString QQmlBinding::expressionIdentifier() const
