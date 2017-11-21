@@ -38,65 +38,31 @@ import QtQuick 2.1
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.0
 
-Column {
-    width: parent.width
-
-    Section {
-        width: parent.width
-        caption: qsTr("Tumbler")
-
-        SectionLayout {
-            Label {
-                text: qsTr("Visible Count")
-                tooltip: qsTr("The count of visible items.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    decimals: 0
-                    backendValue: backendValues.visibleItemCount
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Current")
-                tooltip: qsTr("The index of the current item.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    decimals: 0
-                    backendValue: backendValues.currentIndex
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Wrap")
-                tooltip: qsTr("Whether the tumbler wrap.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.wrap.valueToString
-                    backendValue: backendValues.wrap
-                    Layout.fillWidth: true
-                }
+Section {
+    SectionLayout {
+        Label {
+            text: qsTr("Check State")
+            tooltip: qsTr("The current check state.")
+        }
+        SecondColumnLayout {
+            ComboBox {
+                backendValue: backendValues.checkState
+                model: [ "Unchecked", "PartiallyChecked", "Checked" ]
+                scope: "Qt"
+                Layout.fillWidth: true
             }
         }
-    }
 
-    ControlSection {
-        width: parent.width
-    }
-
-    FontSection {
-        width: parent.width
-    }
-
-    PaddingSection {
-        width: parent.width
+        Label {
+            text: qsTr("Tri-state")
+            tooltip: qsTr("Whether the checkbox has three states.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.tristate.valueToString
+                backendValue: backendValues.tristate
+                Layout.fillWidth: true
+            }
+        }
     }
 }

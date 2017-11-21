@@ -38,65 +38,22 @@ import QtQuick 2.1
 import HelperWidgets 2.0
 import QtQuick.Layouts 1.0
 
-Column {
-    width: parent.width
+Section {
+    caption: qsTr("Container")
 
-    Section {
-        width: parent.width
-        caption: qsTr("Tumbler")
-
-        SectionLayout {
-            Label {
-                text: qsTr("Visible Count")
-                tooltip: qsTr("The count of visible items.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    decimals: 0
-                    backendValue: backendValues.visibleItemCount
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Current")
-                tooltip: qsTr("The index of the current item.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    decimals: 0
-                    backendValue: backendValues.currentIndex
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Wrap")
-                tooltip: qsTr("Whether the tumbler wrap.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.wrap.valueToString
-                    backendValue: backendValues.wrap
-                    Layout.fillWidth: true
-                }
+    SectionLayout {
+        Label {
+            text: qsTr("Current")
+            tooltip: qsTr("The index of the current item.")
+        }
+        SecondColumnLayout {
+            SpinBox {
+                maximumValue: 9999999
+                minimumValue: -9999999
+                decimals: 0
+                backendValue: backendValues.currentIndex
+                Layout.fillWidth: true
             }
         }
-    }
-
-    ControlSection {
-        width: parent.width
-    }
-
-    FontSection {
-        width: parent.width
-    }
-
-    PaddingSection {
-        width: parent.width
     }
 }

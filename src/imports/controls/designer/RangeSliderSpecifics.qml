@@ -43,32 +43,49 @@ Column {
 
     Section {
         width: parent.width
-        caption: qsTr("SpinBox")
+        caption: qsTr("RangeSlider")
 
         SectionLayout {
             Label {
-                text: qsTr("Value")
-                tooltip: qsTr("The current value of the spinbox.")
+                text: qsTr("First Value")
+                tooltip: qsTr("The value of the first range slider handle.")
             }
             SecondColumnLayout {
                 SpinBox {
                     minimumValue: Math.min(backendValues.from.value, backendValues.to.value)
                     maximumValue: Math.max(backendValues.from.value, backendValues.to.value)
                     decimals: 2
-                    backendValue: backendValues.value
+                    stepSize: 0.1
+                    backendValue: backendValues.first_value
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Second Value")
+                tooltip: qsTr("The value of the second range slider handle.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: Math.min(backendValues.from.value, backendValues.to.value)
+                    maximumValue: Math.max(backendValues.from.value, backendValues.to.value)
+                    decimals: 2
+                    stepSize: 0.1
+                    backendValue: backendValues.second_value
                     Layout.fillWidth: true
                 }
             }
 
             Label {
                 text: qsTr("From")
-                tooltip: qsTr("The starting value of the spinbox range.")
+                tooltip: qsTr("The starting value of the range slider range.")
             }
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.from
                     Layout.fillWidth: true
                 }
@@ -76,13 +93,14 @@ Column {
 
             Label {
                 text: qsTr("To")
-                tooltip: qsTr("The ending value of the spinbox range.")
+                tooltip: qsTr("The ending value of the range slider range.")
             }
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.to
                     Layout.fillWidth: true
                 }
@@ -90,26 +108,53 @@ Column {
 
             Label {
                 text: qsTr("Step Size")
-                tooltip: qsTr("The step size of the spinbox.")
+                tooltip: qsTr("The step size of the range slider.")
             }
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.stepSize
                     Layout.fillWidth: true
                 }
             }
 
             Label {
-                text: qsTr("Editable")
-                tooltip: qsTr("Whether the spinbox is editable.")
+                text: qsTr("Snap Mode")
+                tooltip: qsTr("The snap mode of the range slider.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    backendValue: backendValues.orientation
+                    model: [ "NoSnap", "SnapOnRelease", "SnapAlways" ]
+                    scope: "RangeSlider"
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Orientation")
+                tooltip: qsTr("The orientation of the range slider.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    backendValue: backendValues.orientation
+                    model: [ "Horizontal", "Vertical" ]
+                    scope: "Qt"
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Live")
+                tooltip: qsTr("Whether the range slider provides live value updates.")
             }
             SecondColumnLayout {
                 CheckBox {
-                    text: backendValues.editable.valueToString
-                    backendValue: backendValues.editable
+                    text: backendValues.live.valueToString
+                    backendValue: backendValues.live
                     Layout.fillWidth: true
                 }
             }

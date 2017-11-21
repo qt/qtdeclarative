@@ -41,8 +41,12 @@ import QtQuick.Layouts 1.0
 Column {
     width: parent.width
 
-    ButtonSection {
-        caption: qsTr("Check Box")
+    CheckSection {
+        width: parent.width
+        caption: qsTr("CheckBox")
+    }
+
+    AbstractButtonSection {
         width: parent.width
     }
 
