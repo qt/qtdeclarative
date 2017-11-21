@@ -89,7 +89,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadScopedLocal(op) INSTRUCTION(op, LoadScopedLocal, 2, scope, index)
 #define INSTR_StoreScopedLocal(op) INSTRUCTION(op, StoreScopedLocal, 2, scope, index)
 #define INSTR_LoadRuntimeString(op) INSTRUCTION(op, LoadRuntimeString, 1, stringId)
-#define INSTR_LoadRegExp(op) INSTRUCTION(op, LoadRegExp, 1, regExpId)
+#define INSTR_MoveRegExp(op) INSTRUCTION(op, MoveRegExp, 2, regExpId, destReg)
 #define INSTR_LoadClosure(op) INSTRUCTION(op, LoadClosure, 1, value)
 #define INSTR_LoadName(op) INSTRUCTION(op, LoadName, 1, name)
 #define INSTR_LoadGlobalLookup(op) INSTRUCTION(op, LoadGlobalLookup, 1, index)
@@ -205,7 +205,7 @@ QT_BEGIN_NAMESPACE
     F(LoadScopedLocal) \
     F(StoreScopedLocal) \
     F(LoadRuntimeString) \
-    F(LoadRegExp) \
+    F(MoveRegExp) \
     F(LoadClosure) \
     F(LoadName) \
     F(LoadGlobalLookup) \

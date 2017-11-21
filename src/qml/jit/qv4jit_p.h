@@ -137,7 +137,7 @@ public:
     void generate_LoadScopedLocal(int scope, int index) Q_DECL_OVERRIDE;
     void generate_StoreScopedLocal(int scope, int index) Q_DECL_OVERRIDE;
     void generate_LoadRuntimeString(int stringId) Q_DECL_OVERRIDE;
-    void generate_LoadRegExp(int regExpId) Q_DECL_OVERRIDE;
+    void generate_MoveRegExp(int regExpId, int destReg) Q_DECL_OVERRIDE;
     void generate_LoadClosure(int value) Q_DECL_OVERRIDE;
     void generate_LoadName(int name) Q_DECL_OVERRIDE;
     void generate_LoadGlobalLookup(int index) Q_DECL_OVERRIDE;

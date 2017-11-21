@@ -1885,12 +1885,13 @@ bool Codegen::visit(RegExpLiteral *ast)
     if (hasError)
         return false;
 
-    auto r = Reference::fromAccumulator(this);
+    auto r = Reference::fromStackSlot(this);
     r.isReadonly = true;
     _expr.setResult(r);
 
-    Instruction::LoadRegExp instr;
+    Instruction::MoveRegExp instr;
     instr.regExpId = jsUnitGenerator->registerRegExp(ast);
+    instr.destReg = r.stackSlot();
     bytecodeGenerator->addInstruction(instr);
     return false;
 }

@@ -255,12 +255,13 @@ void BaselineJIT::generate_LoadRuntimeString(int stringId)
     as->loadString(stringId);
 }
 
-void BaselineJIT::generate_LoadRegExp(int regExpId)
+void BaselineJIT::generate_MoveRegExp(int regExpId, int destReg)
 {
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(regExpId, 1);
     as->passEngineAsArg(0);
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_regexpLiteral, Assembler::ResultInAccumulator);
+    as->storeReg(destReg);
 }
 
 void BaselineJIT::generate_LoadClosure(int value)
@@ -1062,8 +1063,8 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_BEGIN_INSTR(LoadRuntimeString)
         MOTH_END_INSTR(LoadRuntimeString)
 
-        MOTH_BEGIN_INSTR(LoadRegExp)
-        MOTH_END_INSTR(LoadRegExp)
+        MOTH_BEGIN_INSTR(MoveRegExp)
+        MOTH_END_INSTR(MoveRegExp)
 
         MOTH_BEGIN_INSTR(LoadClosure)
         MOTH_END_INSTR(LoadClosure)

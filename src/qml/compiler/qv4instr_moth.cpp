@@ -261,9 +261,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << stringId;
         MOTH_END_INSTR(LoadRuntimeString)
 
-        MOTH_BEGIN_INSTR(LoadRegExp)
-            d << regExpId;
-        MOTH_END_INSTR(LoadRegExp)
+        MOTH_BEGIN_INSTR(MoveRegExp)
+            d << dumpRegister(destReg, nFormals) << ", " <<regExpId;
+        MOTH_END_INSTR(MoveRegExp)
 
         MOTH_BEGIN_INSTR(LoadClosure)
             d << value;

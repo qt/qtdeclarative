@@ -652,9 +652,9 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         acc = function->compilationUnit->runtimeStrings[stringId]->asReturnedValue();
     MOTH_END_INSTR(LoadRuntimeString)
 
-    MOTH_BEGIN_INSTR(LoadRegExp)
-        acc = Runtime::method_regexpLiteral(engine, regExpId);
-    MOTH_END_INSTR(LoadRegExp)
+    MOTH_BEGIN_INSTR(MoveRegExp)
+        STACK_VALUE(destReg) = Runtime::method_regexpLiteral(engine, regExpId);
+    MOTH_END_INSTR(MoveRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)
         acc = Runtime::method_closure(engine, value);
