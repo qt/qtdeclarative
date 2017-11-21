@@ -6143,9 +6143,17 @@ void tst_qquicktextinput::keypress_inputMask_withValidator_data()
         KeyList keys;
         // inserting '1111.11' then two backspaces
         keys << Qt::Key_Home << "1111.11" << Qt::Key_Backspace << Qt::Key_Backspace;
-        QTest::newRow("backspaceWithRegExp") << QString("9999.99;_") << 0.0 << 0.0 << 0
+        QTest::newRow("backspaceWithRegExp") << QString("9999;_") << 0.0 << 0.0 << 0
                                              << QString("/^[-]?((\\.\\d+)|(\\d+(\\.\\d+)?))$/")
-                                             << keys << QString("1111.") << QString("1111.__");
+                                             << keys << QString("11") << QString("11__");
+    }
+    {
+        KeyList keys;
+        // inserting '99' - QTBUG-64616
+        keys << Qt::Key_Home << "99";
+        QTest::newRow("invalidTextWithRegExp") << QString("X9;_") << 0.0 << 0.0 << 0
+                                               << QString("/[+-][0+9]/")
+                                               << keys << QString("") << QString("__");
     }
 }
 

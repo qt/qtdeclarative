@@ -1077,7 +1077,8 @@ void QQuickTextInputPrivate::checkIsValid()
     Q_Q(QQuickTextInput);
 
     ValidatorState state = hasAcceptableInput(m_text);
-    m_validInput = state != InvalidInput;
+    if (!m_maskData)
+        m_validInput = state != InvalidInput;
     if (state != AcceptableInput) {
         if (m_acceptableInput) {
             m_acceptableInput = false;
@@ -3530,11 +3531,15 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 #if QT_CONFIG(validator)
         if (m_validator) {
             QString textCopy = m_text;
+            if (m_maskData)
+                textCopy = maskString(0, m_text, true);
             int cursorCopy = m_cursor;
             QValidator::State state = m_validator->validate(textCopy, cursorCopy);
+            if (m_maskData)
+                textCopy = m_text;
             m_validInput = state != QValidator::Invalid;
             m_acceptableInput = state == QValidator::Acceptable;
-            if (m_validInput) {
+            if (m_validInput && !m_maskData) {
                 if (m_text != textCopy) {
                     internalSetText(textCopy, cursorCopy);
                     return true;
@@ -3543,31 +3548,8 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
             }
         }
 #endif
-
-        if (m_maskData) {
-            m_validInput = true;
-            if (m_text.length() != m_maxLength) {
-                m_validInput = false;
-                m_acceptableInput = false;
-            } else {
-                for (int i = 0; i < m_maxLength; ++i) {
-                    if (m_maskData[i].separator) {
-                        if (m_text.at(i) != m_maskData[i].maskChar) {
-                            m_validInput = false;
-                            m_acceptableInput = false;
-                            break;
-                        }
-                    } else {
-                        if (!isValidInput(m_text.at(i), m_maskData[i].maskChar)) {
-                            m_acceptableInput = false;
-                            if (m_text.at(i) != m_blank)
-                                m_validInput = false;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
+        if (m_maskData)
+            checkIsValid();
 
         if (validateFromState >= 0 && wasValidInput && !m_validInput) {
             if (m_transactions.count())
