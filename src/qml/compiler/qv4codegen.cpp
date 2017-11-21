@@ -1315,9 +1315,9 @@ bool Codegen::visit(CallExpression *ast)
             bytecodeGenerator->addInstruction(call);
         }
     } else {
-        base.loadInAccumulator();
-
+        Q_ASSERT(base.isStackSlot());
         Instruction::CallValue call;
+        call.name = base.stackSlot();
         call.argc = calldata.argc;
         call.argv = calldata.argv;
         bytecodeGenerator->addInstruction(call);

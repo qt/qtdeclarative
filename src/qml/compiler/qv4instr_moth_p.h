@@ -109,7 +109,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadElement(op) INSTRUCTION(op, LoadElement, 2, base, index)
 #define INSTR_LoadElementA(op) INSTRUCTION(op, LoadElementA, 1, base)
 #define INSTR_StoreElement(op) INSTRUCTION(op, StoreElement, 2, base, index)
-#define INSTR_CallValue(op) INSTRUCTION(op, CallValue, 2, argc, argv)
+#define INSTR_CallValue(op) INSTRUCTION(op, CallValue, 3, name, argc, argv)
 #define INSTR_CallProperty(op) INSTRUCTION(op, CallProperty, 4, name, base, argc, argv)
 #define INSTR_CallPropertyLookup(op) INSTRUCTION(op, CallPropertyLookup, 4, lookupIndex, base, argc, argv)
 #define INSTR_CallElement(op) INSTRUCTION(op, CallElement, 4, base, index, argc, argv)

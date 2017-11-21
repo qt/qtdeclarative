@@ -785,8 +785,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
 
     MOTH_BEGIN_INSTR(CallValue)
         STORE_IP();
-        STORE_ACC();
-        Value func = Value::fromReturnedValue(acc);
+        Value func = STACK_VALUE(name);
         if (Q_UNLIKELY(!func.isFunctionObject())) {
             acc = engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
             goto catchException;

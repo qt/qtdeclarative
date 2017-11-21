@@ -161,7 +161,7 @@ public:
     void generate_LoadContextObjectProperty(int propertyIndex, int base,
                                             int captureRequired) Q_DECL_OVERRIDE;
     void generate_LoadIdObject(int index, int base) Q_DECL_OVERRIDE;
-    void generate_CallValue(int argc, int argv) Q_DECL_OVERRIDE;
+    void generate_CallValue(int name, int argc, int argv) Q_DECL_OVERRIDE;
     void generate_CallProperty(int name, int base, int argc, int argv) Q_DECL_OVERRIDE;
     void generate_CallPropertyLookup(int lookupIndex, int base, int argc, int argv) Q_DECL_OVERRIDE;
     void generate_CallElement(int base, int index, int argc, int argv) Q_DECL_OVERRIDE;

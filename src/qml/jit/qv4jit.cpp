@@ -518,14 +518,13 @@ void BaselineJIT::generate_LoadIdObject(int index, int base)
     as->checkException();
 }
 
-void BaselineJIT::generate_CallValue(int argc, int argv)
+void BaselineJIT::generate_CallValue(int name, int argc, int argv)
 {
     STORE_IP();
-    STORE_ACC();
     as->prepareCallWithArgCount(4);
     as->passInt32AsArg(argc, 3);
     as->passRegAsArg(argv, 2);
-    as->passAccumulatorAsArg(1);
+    as->passRegAsArg(name, 1);
     as->passEngineAsArg(0);
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_callValue, Assembler::ResultInAccumulator);
     as->checkException();
