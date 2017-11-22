@@ -744,8 +744,7 @@ void QQuickGridViewPrivate::updateHighlight()
         // auto-update highlight
         highlightXAnimator->to = currentItem->itemX();
         highlightYAnimator->to = currentItem->itemY();
-        highlight->item->setWidth(currentItem->item->width());
-        highlight->item->setHeight(currentItem->item->height());
+        highlight->item->setSize(currentItem->item->size());
 
         highlightXAnimator->restart();
         highlightYAnimator->restart();
