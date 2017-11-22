@@ -8484,10 +8484,8 @@ void QQuickItemLayer::updateGeometry()
     QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
     Q_ASSERT(l);
     QRectF bounds = m_item->clipRect();
-    l->setWidth(bounds.width());
-    l->setHeight(bounds.height());
-    l->setX(bounds.x() + m_item->x());
-    l->setY(bounds.y() + m_item->y());
+    l->setSize(bounds.size());
+    l->setPosition(bounds.topLeft() + m_item->position());
 }
 
 void QQuickItemLayer::updateMatrix()
