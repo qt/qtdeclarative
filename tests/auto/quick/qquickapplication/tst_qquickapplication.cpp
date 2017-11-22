@@ -67,7 +67,7 @@ void tst_qquickapplication::cleanup()
 {
     if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ApplicationState)) {
         QWindowSystemInterface::handleApplicationStateChanged(Qt::ApplicationInactive);
-        QTest::waitForEvents();
+        QCoreApplication::processEvents();
     }
 }
 
