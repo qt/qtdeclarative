@@ -90,6 +90,11 @@ Rectangle {
             // In order to get the touchpoints first, it has to be on top of the Z order: i.e. come last in paintOrderChildItems().
             // This is the opposite situation as with filtersChildMouseEvents: e.g. PinchArea would have wanted to be the parent,
             // if it even knew that trick (which it doesn't).
+            DragHandler {
+                id: dragHandler
+                objectName: "DragHandler"
+                target: container
+            }
             PinchHandler {
                 id: pinch3
                 objectName: "3-finger pinch"
@@ -97,11 +102,6 @@ Rectangle {
                 minimumPointCount: 3
                 minimumScale: 0.1
                 maximumScale: 10
-            }
-            DragHandler {
-                id: dragHandler
-                objectName: "DragHandler"
-                target: container
             }
         }
     }
