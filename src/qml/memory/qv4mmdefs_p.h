@@ -179,8 +179,8 @@ struct Chunk {
         return usedSlots;
     }
 
-    bool sweep();
-    void freeAll();
+    bool sweep(ExecutionEngine *engine);
+    void freeAll(ExecutionEngine *engine);
 
     void sortIntoBins(HeapItem **bins, uint nBins);
 };

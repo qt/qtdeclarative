@@ -21,4 +21,5 @@ OTHER_FILES += \
     data/TestImage_2x2.png \
     data/signalSourceLocation.qml \
     data/javascript.qml \
-    data/timer.qml
+    data/timer.qml \
+    data/memory.qml

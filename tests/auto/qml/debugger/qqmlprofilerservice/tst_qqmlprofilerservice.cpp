@@ -312,6 +312,7 @@ private slots:
     void signalSourceLocation();
     void javascript();
     void flushInterval();
+    void memory();
 };
 
 #define VERIFY(type, position, expected, checks) QVERIFY(verify(type, position, expected, checks))
@@ -754,6 +755,26 @@ void tst_QQmlProfilerService::flushInterval()
     m_client->sendRecordingStatus(false);
     checkTraceReceived();
     checkJsHeap();
+}
+
+void tst_QQmlProfilerService::memory()
+{
+    connect(true, "memory.qml");
+    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
+        return;
+
+    m_client->sendRecordingStatus(true);
+
+    checkTraceReceived();
+    checkJsHeap();
+
+    int smallItems = 0;
+    for (auto message : m_client->jsHeapMessages) {
+        if (message.detailType == QV4::Profiling::SmallItem)
+            ++smallItems;
+    }
+
+    QVERIFY(smallItems > 5);
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)
