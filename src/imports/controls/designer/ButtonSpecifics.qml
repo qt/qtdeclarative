@@ -42,7 +42,10 @@ Column {
     width: parent.width
 
     ButtonSection {
-        caption: qsTr("Button")
+        width: parent.width
+    }
+
+    AbstractButtonSection {
         width: parent.width
     }
 

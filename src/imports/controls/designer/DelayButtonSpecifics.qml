@@ -43,49 +43,28 @@ Column {
 
     Section {
         width: parent.width
-        caption: qsTr("Tumbler")
+        caption: qsTr("DelayButton")
 
         SectionLayout {
             Label {
-                text: qsTr("Visible Count")
-                tooltip: qsTr("The count of visible items.")
+                text: qsTr("Delay")
+                tooltip: qsTr("The delay in milliseconds.")
             }
             SecondColumnLayout {
                 SpinBox {
+                    minimumValue: 0
                     maximumValue: 9999999
-                    minimumValue: -9999999
                     decimals: 0
-                    backendValue: backendValues.visibleItemCount
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Current")
-                tooltip: qsTr("The index of the current item.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    decimals: 0
-                    backendValue: backendValues.currentIndex
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Wrap")
-                tooltip: qsTr("Whether the tumbler wrap.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.wrap.valueToString
-                    backendValue: backendValues.wrap
+                    stepSize: 1
+                    backendValue: backendValues.delay
                     Layout.fillWidth: true
                 }
             }
         }
+    }
+
+    AbstractButtonSection {
+        width: parent.width
     }
 
     ControlSection {

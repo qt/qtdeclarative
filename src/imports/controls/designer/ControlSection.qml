@@ -55,6 +55,31 @@ Section {
         }
 
         Label {
+            text: qsTr("Focus Policy")
+            tooltip: qsTr("Focus policy of the control.")
+        }
+        SecondColumnLayout {
+            ComboBox {
+                backendValue: backendValues.focusPolicy
+                model: [ "TabFocus", "ClickFocus", "StrongFocus", "WheelFocus", "NoFocus" ]
+                scope: "Qt"
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Hover")
+            tooltip: qsTr("Whether control accepts hover evets.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.hoverEnabled.valueToString
+                backendValue: backendValues.hoverEnabled
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
             text: qsTr("Spacing")
             tooltip: qsTr("Spacing between internal elements of the control.")
         }
@@ -64,6 +89,18 @@ Section {
                 minimumValue: -9999999
                 decimals: 0
                 backendValue: backendValues.spacing
+                Layout.fillWidth: true
+            }
+        }
+
+        Label {
+            text: qsTr("Wheel")
+            tooltip: qsTr("Whether control accepts wheel evets.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.wheelEnabled.valueToString
+                backendValue: backendValues.wheelEnabled
                 Layout.fillWidth: true
             }
         }

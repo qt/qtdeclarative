@@ -43,45 +43,33 @@ Column {
 
     Section {
         width: parent.width
-        caption: qsTr("Tumbler")
+        caption: qsTr("ScrollView")
 
         SectionLayout {
             Label {
-                text: qsTr("Visible Count")
-                tooltip: qsTr("The count of visible items.")
+                text: qsTr("Content Width")
+                tooltip: qsTr("Content height used for calculating the total implicit width.")
             }
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
                     decimals: 0
-                    backendValue: backendValues.visibleItemCount
+                    backendValue: backendValues.contentWidth
                     Layout.fillWidth: true
                 }
             }
 
             Label {
-                text: qsTr("Current")
-                tooltip: qsTr("The index of the current item.")
+                text: qsTr("Content Height")
+                tooltip: qsTr("Content height used for calculating the total implicit height.")
             }
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
                     decimals: 0
-                    backendValue: backendValues.currentIndex
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Wrap")
-                tooltip: qsTr("Whether the tumbler wrap.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.wrap.valueToString
-                    backendValue: backendValues.wrap
+                    backendValue: backendValues.contentHeight
                     Layout.fillWidth: true
                 }
             }

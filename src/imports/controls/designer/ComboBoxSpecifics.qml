@@ -43,7 +43,7 @@ Column {
 
     Section {
         width: parent.width
-        caption: qsTr("Combo Box")
+        caption: qsTr("ComboBox")
 
         SectionLayout {
             Label {

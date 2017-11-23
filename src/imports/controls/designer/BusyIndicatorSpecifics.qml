@@ -43,7 +43,7 @@ Column {
 
     Section {
         width: parent.width
-        caption: qsTr("Busy Indicator")
+        caption: qsTr("BusyIndicator")
 
         SectionLayout {
             Label {

@@ -42,50 +42,31 @@ Column {
     width: parent.width
 
     Section {
-        width: parent.width
-        caption: qsTr("Tumbler")
+        caption: qsTr("RoundButton")
 
         SectionLayout {
             Label {
-                text: qsTr("Visible Count")
-                tooltip: qsTr("The count of visible items.")
+                text: qsTr("Radius")
+                tooltip: qsTr("Radius of the button.")
             }
             SecondColumnLayout {
                 SpinBox {
                     maximumValue: 9999999
                     minimumValue: -9999999
                     decimals: 0
-                    backendValue: backendValues.visibleItemCount
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Current")
-                tooltip: qsTr("The index of the current item.")
-            }
-            SecondColumnLayout {
-                SpinBox {
-                    maximumValue: 9999999
-                    minimumValue: -9999999
-                    decimals: 0
-                    backendValue: backendValues.currentIndex
-                    Layout.fillWidth: true
-                }
-            }
-
-            Label {
-                text: qsTr("Wrap")
-                tooltip: qsTr("Whether the tumbler wrap.")
-            }
-            SecondColumnLayout {
-                CheckBox {
-                    text: backendValues.wrap.valueToString
-                    backendValue: backendValues.wrap
+                    backendValue: backendValues.radius
                     Layout.fillWidth: true
                 }
             }
         }
+    }
+
+    ButtonSection {
+        width: parent.width
+    }
+
+    AbstractButtonSection {
+        width: parent.width
     }
 
     ControlSection {
