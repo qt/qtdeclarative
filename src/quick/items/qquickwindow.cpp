@@ -567,11 +567,19 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
     QObject::connect(q, SIGNAL(focusObjectChanged(QObject*)), q, SIGNAL(activeFocusItemChanged()));
     QObject::connect(q, SIGNAL(screenChanged(QScreen*)), q, SLOT(handleScreenChanged(QScreen*)));
-
+    QObject::connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
+                     q, SLOT(handleApplicationStateChanged(Qt::ApplicationState)));
     QObject::connect(q, SIGNAL(frameSwapped()), q, SLOT(runJobsAfterSwap()), Qt::DirectConnection);
 
     if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
         service->addWindow(q);
+}
+
+void QQuickWindow::handleApplicationStateChanged(Qt::ApplicationState state)
+{
+    Q_D(QQuickWindow);
+    if (state != Qt::ApplicationActive && d->contentItem)
+        d->contentItem->windowDeactivateEvent();
 }
 
 /*!

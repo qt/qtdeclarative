@@ -221,7 +221,7 @@ private Q_SLOTS:
     void handleScreenChanged(QScreen *screen);
     void setTransientParent_helper(QQuickWindow *window);
     void runJobsAfterSwap();
-
+    void handleApplicationStateChanged(Qt::ApplicationState state);
 private:
     friend class QQuickItem;
     friend class QQuickWidget;
