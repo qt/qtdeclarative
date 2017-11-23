@@ -168,6 +168,15 @@ ExecutionEngine::ExecutionEngine()
                                              /* writable */ true, /* executable */ false,
                                              /* includesGuardPages */ true);
 
+    {
+        bool ok = false;
+        jitCallCountThreshold = qEnvironmentVariableIntValue("QV4_JIT_CALL_THRESHOLD", &ok);
+        if (!ok)
+            jitCallCountThreshold = 3;
+        if (qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER"))
+            jitCallCountThreshold = std::numeric_limits<int>::max();
+    }
+
     exceptionValue = jsAlloca(1);
     globalObject = static_cast<Object *>(jsAlloca(1));
     jsObjects = jsAlloca(NJSObjects);
@@ -1543,15 +1552,6 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     }
     Q_UNREACHABLE();
     return 0;
-}
-
-bool ExecutionEngine::canJIT()
-{
-#ifdef V4_ENABLE_JIT
-    return true;
-#else
-    return false;
-#endif
 }
 
 // Converts a JS value to a meta-type.

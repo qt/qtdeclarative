@@ -56,7 +56,9 @@
 #include <private/qintrusivelist_p.h>
 #include "qv4enginebase_p.h"
 
+
 #ifndef V4_BOOTSTRAP
+#  include "qv4function_p.h"
 #  include <private/qv8engine_p.h>
 #  include <private/qv4compileddata_p.h>
 #endif
@@ -85,6 +87,7 @@ namespace CompiledData {
 struct CompilationUnit;
 }
 
+struct Function;
 struct InternalClass;
 struct InternalClassPool;
 
@@ -481,13 +484,22 @@ public:
 
     bool checkStackLimits();
 
-    static bool canJIT();
+    bool canJIT(Function *f)
+    {
+#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
+        return f->interpreterCallCount > jitCallCountThreshold;
+#else
+        Q_UNUSED(f);
+        return false;
+#endif
+    }
 
 private:
 #if QT_CONFIG(qml_debug)
     QScopedPointer<QV4::Debugging::Debugger> m_debugger;
     QScopedPointer<QV4::Profiling::Profiler> m_profiler;
 #endif
+    int jitCallCountThreshold;
 };
 
 // This is a trick to tell the code generators that functions taking a NoThrowContext won't

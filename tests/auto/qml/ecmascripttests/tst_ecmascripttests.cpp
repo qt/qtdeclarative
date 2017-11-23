@@ -34,17 +34,28 @@
 class tst_EcmaScriptTests : public QObject
 {
     Q_OBJECT
+
+    void runTests(bool interpret);
+
 private slots:
-    void runTests();
+    void runInterpreted();
+    void runJitted();
 };
 
-void tst_EcmaScriptTests::runTests()
+void tst_EcmaScriptTests::runTests(bool interpret)
 {
 #if defined(Q_OS_LINUX) && defined(Q_PROCESSOR_X86_64)
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    if (interpret)
+        env.insert("QV4_FORCE_INTERPRETER", "1");
+    else
+        env.insert("QV4_JIT_CALL_THRESHOLD", "0");
+
     QProcess process;
     process.setProcessChannelMode(QProcess::ForwardedChannels);
     process.setWorkingDirectory(QLatin1String(SRCDIR));
     process.setProgram("python");
+    process.setProcessEnvironment(env);
     process.setArguments(QStringList() << "test262.py" << "--command=" + QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmljs" << "--parallel" << "--with-test-expectations");
 
     qDebug() << "Going to run" << process.program() << process.arguments() << "in" << process.workingDirectory();
@@ -58,6 +69,16 @@ void tst_EcmaScriptTests::runTests()
 #else
     QSKIP("Currently the ecmascript tests are only run on Linux/x86-64");
 #endif
+}
+
+void tst_EcmaScriptTests::runInterpreted()
+{
+    runTests(true);
+}
+
+void tst_EcmaScriptTests::runJitted()
+{
+    runTests(false);
 }
 
 QTEST_GUILESS_MAIN(tst_EcmaScriptTests)

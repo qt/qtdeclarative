@@ -552,17 +552,17 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
 
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
     QV4::Debugging::Debugger *debugger = engine->debugger();
-
     const uchar *exceptionHandler = 0;
 
     QV4::Value &accumulator = frame.jsFrame->accumulator;
     QV4::ReturnedValue acc = Encode::undefined();
 
 #ifdef V4_ENABLE_JIT
-    static const bool forceInterpreter = qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER");
-    if (function->jittedCode == nullptr) {
-        if (ExecutionEngine::canJIT() && debugger == nullptr && !forceInterpreter)
+    if (function->jittedCode == nullptr && debugger == nullptr) {
+        if (engine->canJIT(function))
             QV4::JIT::BaselineJIT(function).generate();
+        else
+            ++function->interpreterCallCount;
     }
 #endif // V4_ENABLE_JIT
 

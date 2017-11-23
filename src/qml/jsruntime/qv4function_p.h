@@ -83,6 +83,7 @@ struct Q_QML_EXPORT Function {
     // first nArguments names in internalClass are the actual arguments
     InternalClass *internalClass;
     uint nFormals;
+    int interpreterCallCount = 0;
     bool hasQmlDependencies;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function, Code codePtr);
