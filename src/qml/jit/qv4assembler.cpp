@@ -785,16 +785,10 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         xor64(ScratchRegister, AccumulatorRegister);
     }
 
-    void pushValue(ReturnedValue v)
-    {
-        loadValue(v);
-        push(AccumulatorRegister);
-    }
-
     void pushValueAligned(ReturnedValue v)
     {
-        subPtr(TrustedImm32(PointerSize), StackPointerRegister);
-        pushValue(v);
+        loadValue(v);
+        pushAligned(AccumulatorRegister);
     }
 
     void popValueAligned()
