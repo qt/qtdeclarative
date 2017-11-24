@@ -652,6 +652,7 @@ void QQuickGridLayout::insertLayoutItems()
     QSizeF sizeHints[Qt::NSizeHints];
     const auto items = childItems();
     for (QQuickItem *child : items) {
+        checkAnchors(child);
         QQuickLayoutAttached *info = 0;
 
         // Will skip all items with effective maximum width/height == 0
@@ -826,6 +827,7 @@ void QQuickLinearLayout::insertLayoutItems()
     const auto items = childItems();
     for (QQuickItem *child : items) {
         Q_ASSERT(child);
+        checkAnchors(child);
         QQuickLayoutAttached *info = 0;
 
         // Will skip all items with effective maximum width/height == 0

@@ -288,8 +288,11 @@ void QQuickStackLayout::updateLayoutItems()
         d->count = count;
         emit countChanged();
     }
-    for (int i = 0; i < count; ++i)
-        itemAt(i)->setVisible(d->currentIndex == i);
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *child = itemAt(i);
+        checkAnchors(child);
+        child->setVisible(d->currentIndex == i);
+    }
 
     invalidate();
 }

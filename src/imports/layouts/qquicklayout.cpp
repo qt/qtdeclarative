@@ -769,6 +769,12 @@ bool QQuickLayout::shouldIgnoreItem(QQuickItem *child, QQuickLayoutAttached *&in
     return ignoreItem;
 }
 
+void QQuickLayout::checkAnchors(QQuickItem *item) const
+{
+    if (QQuickItemPrivate::get(item)->_anchors)
+        qmlWarning(item) << "Detected anchors on an item that is part of a layout. This is undefined behavior.";
+}
+
 void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == ItemChildAddedChange) {
