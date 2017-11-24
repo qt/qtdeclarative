@@ -62,6 +62,7 @@
 #include <QtGui/QGuiApplication>
 #include <QtCore/QTranslator>
 #include <QtTest/QSignalSpy>
+#include <QtQml/QQmlFileSelector>
 
 #include <private/qqmlcomponent_p.h>
 
@@ -354,10 +355,12 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     //      -plugins dir        Specify a directory where to search for plugins.
     //      -input dir          Specify the input directory for test cases.
     //      -translation file   Specify the translation file.
+    //      -file-selector      Specify a file selector
     QStringList imports;
     QStringList pluginPaths;
     QString testPath;
     QString translationFile;
+    QStringList fileSelectors;
     int index = 1;
     QScopedArrayPointer<char *> testArgV(new char *[argc + 1]);
     testArgV[0] = argv[0];
@@ -381,6 +384,9 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
 #endif
         } else if (strcmp(argv[index], "-translation") == 0 && (index + 1) < argc) {
             translationFile = stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
+            index += 2;
+        } else if (strcmp(argv[index], "-file-selector") == 0 && (index + 1) < argc) {
+            fileSelectors += stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
             index += 2;
         } else {
             testArgV[testArgC++] = argv[index++];
@@ -473,6 +479,11 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
             engine.addImportPath(path);
         for (const QString &path : qAsConst(pluginPaths))
             engine.addPluginPath(path);
+
+        if (!fileSelectors.isEmpty()) {
+            QQmlFileSelector* const qmlFileSelector = new QQmlFileSelector(&engine, &engine);
+            qmlFileSelector->setExtraSelectors(fileSelectors);
+        }
 
         TestCaseCollector testCaseCollector(fi, &engine);
         if (!testCaseCollector.errors().isEmpty()) {
