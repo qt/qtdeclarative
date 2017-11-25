@@ -1979,6 +1979,8 @@ void QQmlDelegateModelItem::destroyObject()
     Q_ASSERT(data);
     if (data->ownContext) {
         data->ownContext->clearContext();
+        if (data->ownContext->contextObject == object)
+            data->ownContext->contextObject = nullptr;
         data->ownContext = 0;
         data->context = 0;
     }
