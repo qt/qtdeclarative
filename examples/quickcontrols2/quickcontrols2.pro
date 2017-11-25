@@ -6,5 +6,6 @@ SUBDIRS += \
     contactlist \
     sidepanel \
     swipetoremove \
-    flatstyle \
     wearable
+
+qtHaveModule(widgets): SUBDIRS += flatstyle
