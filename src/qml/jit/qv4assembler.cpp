@@ -723,25 +723,41 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
 
     void toNumber()
     {
+        urshift64(AccumulatorRegister, TrustedImm32(Value::QuickType_Shift), ScratchRegister);
+        auto isNumber = branch32(GreaterThanOrEqual, ScratchRegister, TrustedImm32(Value::QT_Int));
+
         move(AccumulatorRegister, registerForArg(0));
         callHelper(toNumberHelper);
         move(ReturnValueRegister, AccumulatorRegister);
+
+        isNumber.link(this);
     }
 
     void toInt32()
     {
+        urshift64(AccumulatorRegister, TrustedImm32(Value::QuickType_Shift), ScratchRegister);
+        auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister);
+
         move(AccumulatorRegister, registerForArg(0));
         callRuntime("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper),
                     Assembler::ResultInAccumulator);
+
+        isInt.link(this);
     }
 
     void regToInt32(Address srcReg, RegisterID targetReg)
     {
+        load64(srcReg, targetReg);
+        urshift64(targetReg, TrustedImm32(Value::QuickType_Shift), ScratchRegister2);
+        auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister2);
+
         pushAligned(AccumulatorRegister);
-        load64(srcReg, registerForArg(0));
+        move(targetReg, registerForArg(0));
         callHelper(toInt32Helper);
         move(ReturnValueRegister, targetReg);
         popAligned(AccumulatorRegister);
+
+        isInt.link(this);
     }
 
     void isNullOrUndefined()
@@ -932,6 +948,9 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
 
     void toNumber()
     {
+        urshift32(AccumulatorRegisterTag, TrustedImm32(Value::QuickType_Shift - 32), ScratchRegister);
+        auto isNumber = branch32(GreaterThanOrEqual, ScratchRegister, TrustedImm32(Value::QT_Int));
+
         if (ArgInRegCount < 2) {
             push(AccumulatorRegisterTag);
             push(AccumulatorRegisterValue);
@@ -945,10 +964,15 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
         move(ReturnValueRegisterTag, AccumulatorRegisterTag);
         if (ArgInRegCount < 2)
             addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+
+        isNumber.link(this);
     }
 
     void toInt32()
     {
+        urshift32(AccumulatorRegisterTag, TrustedImm32(Value::QuickType_Shift - 32), ScratchRegister);
+        auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister);
+
         if (ArgInRegCount < 2) {
             push(AccumulatorRegisterTag);
             push(AccumulatorRegisterValue);
@@ -960,6 +984,8 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
                     Assembler::ResultInAccumulator);
         if (ArgInRegCount < 2)
             addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+
+        isInt.link(this);
     }
 
     void regToInt32(Address srcReg, RegisterID targetReg)
