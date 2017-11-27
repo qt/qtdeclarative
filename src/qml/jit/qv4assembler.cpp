@@ -730,10 +730,35 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         isNumber.link(this);
     }
 
+    void toInt32LhsAcc(Address lhs, RegisterID lhsTarget)
+    {
+        load64(lhs, lhsTarget);
+        urshift64(lhsTarget, TrustedImm32(Value::QuickType_Shift), ScratchRegister2);
+        auto lhsIsInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister2);
+
+        pushAligned(AccumulatorRegister);
+        move(lhsTarget, registerForArg(0));
+        callHelper(toInt32Helper);
+        move(ReturnValueRegister, lhsTarget);
+        popAligned(AccumulatorRegister);
+
+        lhsIsInt.link(this);
+        urshift64(AccumulatorRegister, TrustedImm32(Value::QuickType_Shift), ScratchRegister2);
+        auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister2);
+
+        pushAligned(lhsTarget);
+        move(AccumulatorRegister, registerForArg(0));
+        callHelper(toInt32Helper);
+        move(ReturnValueRegister, AccumulatorRegister);
+        popAligned(lhsTarget);
+
+        isInt.link(this);
+    }
+
     void toInt32()
     {
-        urshift64(AccumulatorRegister, TrustedImm32(Value::QuickType_Shift), ScratchRegister);
-        auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister);
+        urshift64(AccumulatorRegister, TrustedImm32(Value::QuickType_Shift), ScratchRegister2);
+        auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister2);
 
         move(AccumulatorRegister, registerForArg(0));
         callRuntime("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper),
@@ -963,6 +988,59 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
             addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
 
         isNumber.link(this);
+    }
+
+    void toInt32LhsAcc(Address lhs, RegisterID lhsTarget)
+    {
+        bool accumulatorNeedsSaving = AccumulatorRegisterValue == ReturnValueRegisterValue
+                || AccumulatorRegisterTag == ReturnValueRegisterTag;
+        lhs.offset += 4;
+        load32(lhs, lhsTarget);
+        lhs.offset -= 4;
+        auto lhsIsNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), lhsTarget);
+        load32(lhs, lhsTarget);
+        auto lhsIsInt = jump();
+
+        lhsIsNotInt.link(this);
+        if (accumulatorNeedsSaving) {
+            push(AccumulatorRegisterTag);
+            push(AccumulatorRegisterValue);
+        }
+        if (ArgInRegCount < 2) {
+            push(lhsTarget);
+            load32(lhs, lhsTarget);
+            push(lhsTarget);
+        } else {
+            move(lhsTarget, registerForArg(1));
+            load32(lhs, registerForArg(0));
+        }
+        callHelper(toInt32Helper);
+        move(ReturnValueRegisterValue, lhsTarget);
+        if (ArgInRegCount < 2)
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+        if (accumulatorNeedsSaving) {
+            pop(AccumulatorRegisterValue);
+            pop(AccumulatorRegisterTag);
+        }
+        lhsIsInt.link(this);
+
+        auto rhsIsInt = branch32(Equal, TrustedImm32(int(IntegerTag)), AccumulatorRegisterTag);
+
+        pushAligned(lhsTarget);
+        if (ArgInRegCount < 2) {
+            push(AccumulatorRegisterTag);
+            push(AccumulatorRegisterValue);
+        } else {
+            move(AccumulatorRegisterValue, registerForArg(0));
+            move(AccumulatorRegisterTag, registerForArg(1));
+        }
+        callRuntime("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper),
+                    Assembler::ResultInAccumulator);
+        if (ArgInRegCount < 2)
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+        popAligned(lhsTarget);
+
+        rhsIsInt.link(this);
     }
 
     void toInt32()
@@ -1476,10 +1554,7 @@ void Assembler::add(int lhs)
 void Assembler::bitAnd(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->popAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
     pasm()->and32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
@@ -1487,10 +1562,7 @@ void Assembler::bitAnd(int lhs)
 void Assembler::bitOr(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->popAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
     pasm()->or32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
@@ -1498,10 +1570,7 @@ void Assembler::bitOr(int lhs)
 void Assembler::bitXor(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->popAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
     pasm()->xor32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
