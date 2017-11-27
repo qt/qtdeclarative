@@ -796,6 +796,12 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         isUndef.link(this);
     }
 
+    Jump isIntOrBool()
+    {
+        urshift64(AccumulatorRegister, TrustedImm32(Value::IsIntegerOrBool_Shift), ScratchRegister);
+        return branch32(Equal, TrustedImm32(3), ScratchRegister);
+    }
+
     void jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset)
     {
         Address lhsAddr(JSStackFrameRegister, lhs * int(sizeof(Value)));
@@ -1105,6 +1111,12 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
                   AccumulatorRegisterValue);
 
         done.link(this);
+    }
+
+    Jump isIntOrBool()
+    {
+        urshift32(AccumulatorRegisterTag, TrustedImm32(Value::IsIntegerOrBool_Shift - 32), ScratchRegister);
+        return branch32(Equal, TrustedImm32(3), ScratchRegister);
     }
 
     void pushValue(ReturnedValue v)
@@ -1761,6 +1773,7 @@ void Assembler::cmpneNull()
 
 void Assembler::cmpeqInt(int lhs)
 {
+    auto isIntOrBool = pasm()->isIntOrBool();
     saveAccumulatorInFrame();
     pasm()->pushValueAligned(Encode(lhs));
     if (PlatformAssembler::ArgInRegCount < 2)
@@ -1772,10 +1785,18 @@ void Assembler::cmpeqInt(int lhs)
     if (PlatformAssembler::ArgInRegCount < 2)
         pasm()->addPtr(TrustedImm32(2 * PlatformAssembler::PointerSize), PlatformAssembler::StackPointerRegister);
     pasm()->popValueAligned();
+    auto done = pasm()->jump();
+    isIntOrBool.link(pasm());
+    pasm()->compare32(PlatformAssembler::Equal, PlatformAssembler::AccumulatorRegisterValue,
+                      TrustedImm32(lhs),
+                      PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+    done.link(pasm());
 }
 
 void Assembler::cmpneInt(int lhs)
 {
+    auto isIntOrBool = pasm()->isIntOrBool();
     saveAccumulatorInFrame();
     pasm()->pushValueAligned(Encode(lhs));
     if (PlatformAssembler::ArgInRegCount < 2)
@@ -1787,6 +1808,13 @@ void Assembler::cmpneInt(int lhs)
     if (PlatformAssembler::ArgInRegCount < 2)
         pasm()->addPtr(TrustedImm32(2 * PlatformAssembler::PointerSize), PlatformAssembler::StackPointerRegister);
     pasm()->popValueAligned();
+    auto done = pasm()->jump();
+    isIntOrBool.link(pasm());
+    pasm()->compare32(PlatformAssembler::NotEqual, PlatformAssembler::AccumulatorRegisterValue,
+                      TrustedImm32(lhs),
+                      PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+    done.link(pasm());
 }
 
 void Assembler::cmp(int cond, CmpFunc function, const char *functionName, int lhs)
