@@ -61,6 +61,7 @@ namespace JIT {
 #define callHelper(x) PlatformAssemblerCommon::callRuntime(#x, reinterpret_cast<void *>(&x))
 
 const QV4::Value::ValueTypeInternal IntegerTag = QV4::Value::ValueTypeInternal::Integer;
+const int IsIntegerConvertible_Shift = QV4::Value::IsIntegerConvertible_Shift;
 
 static ReturnedValue toNumberHelper(ReturnedValue v)
 {
@@ -630,7 +631,12 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
     {
         PlatformAssemblerCommon::callRuntime(functionName, funcPtr);
         if (dest == Assembler::ResultInAccumulator)
-            move(ReturnValueRegister, AccumulatorRegister);
+            saveReturnValueInAccumulator();
+    }
+
+    void saveReturnValueInAccumulator()
+    {
+        move(ReturnValueRegister, AccumulatorRegister);
     }
 
     void loadUndefined(RegisterID dest = AccumulatorRegister)
@@ -716,7 +722,7 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
 
         move(AccumulatorRegister, registerForArg(0));
         callHelper(toNumberHelper);
-        move(ReturnValueRegister, AccumulatorRegister);
+        saveReturnValueInAccumulator();
 
         isNumber.link(this);
     }
@@ -740,7 +746,7 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         pushAligned(lhsTarget);
         move(AccumulatorRegister, registerForArg(0));
         callHelper(toInt32Helper);
-        move(ReturnValueRegister, AccumulatorRegister);
+        saveReturnValueInAccumulator();
         popAligned(lhsTarget);
 
         isInt.link(this);
@@ -862,8 +868,8 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
 
     Jump unopIntPath(std::function<Jump(void)> fastPath)
     {
-        urshift64(AccumulatorRegister, TrustedImm32(32), ScratchRegister);
-        Jump accNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), ScratchRegister);
+        urshift64(AccumulatorRegister, TrustedImm32(IsIntegerConvertible_Shift), ScratchRegister);
+        Jump accNotIntConvertible = branch32(NotEqual, TrustedImm32(1), ScratchRegister);
 
         // both integer
         Jump failure = fastPath();
@@ -872,9 +878,15 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         // all other cases
         if (failure.isSet())
             failure.link(this);
-        accNotInt.link(this);
+        accNotIntConvertible.link(this);
 
         return done;
+    }
+
+    void callWithAccumulatorByValueAsFirstArgument(std::function<void()> doCall)
+    {
+        passAsArg(AccumulatorRegister, 0);
+        doCall();
     }
 };
 
@@ -888,10 +900,14 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
                      Assembler::CallResultDestination dest)
     {
         PlatformAssemblerCommon::callRuntime(functionName, funcPtr);
-        if (dest == Assembler::ResultInAccumulator) {
-            move(ReturnValueRegisterValue, AccumulatorRegisterValue);
-            move(ReturnValueRegisterTag, AccumulatorRegisterTag);
-        }
+        if (dest == Assembler::ResultInAccumulator)
+            saveReturnValueInAccumulator();
+    }
+
+    void saveReturnValueInAccumulator()
+    {
+        move(ReturnValueRegisterValue, AccumulatorRegisterValue);
+        move(ReturnValueRegisterTag, AccumulatorRegisterTag);
     }
 
     void loadUndefined()
@@ -979,8 +995,7 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
         }
         callRuntime("toNumberHelper", reinterpret_cast<void *>(&toNumberHelper),
                     Assembler::ResultInAccumulator);
-        move(ReturnValueRegisterValue, AccumulatorRegisterValue);
-        move(ReturnValueRegisterTag, AccumulatorRegisterTag);
+        saveReturnValueInAccumulator();
         if (ArgInRegCount < 2)
             addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
 
@@ -1243,6 +1258,20 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
 
         return done;
     }
+
+    void callWithAccumulatorByValueAsFirstArgument(std::function<void()> doCall)
+    {
+        if (ArgInRegCount < 2) {
+            push(AccumulatorRegisterTag);
+            push(AccumulatorRegisterValue);
+        } else {
+            move(AccumulatorRegisterValue, registerForArg(0));
+            move(AccumulatorRegisterTag, registerForArg(1));
+        }
+        doCall();
+        if (ArgInRegCount < 2)
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+    }
 };
 
 typedef PlatformAssembler32 PlatformAssembler;
@@ -1467,9 +1496,14 @@ void Assembler::ucompl()
     pasm()->setAccumulatorTag(IntegerTag);
 }
 
-static ReturnedValue incHelper(const Value &v)
+static ReturnedValue incHelper(const Value v)
 {
-    return Encode(v.toNumber() + 1.);
+    double d;
+    if (Q_LIKELY(v.isDouble()))
+        d =  v.doubleValue();
+    else
+        d = v.toNumberImpl();
+    return Encode(d + 1.);
 }
 
 void Assembler::inc()
@@ -1484,19 +1518,24 @@ void Assembler::inc()
     });
 
     // slow path:
-    saveAccumulatorInFrame();
-    prepareCallWithArgCount(1);
-    passAccumulatorAsArg(0);
-    IN_JIT_GENERATE_RUNTIME_CALL(incHelper, ResultInAccumulator);
+    pasm()->callWithAccumulatorByValueAsFirstArgument([this]() {
+        pasm()->callHelper(incHelper);
+        pasm()->saveReturnValueInAccumulator();
+    });
     checkException();
 
     // done.
     done.link(pasm());
 }
 
-static ReturnedValue decHelper(const Value &v)
+static ReturnedValue decHelper(const Value v)
 {
-    return Encode(v.toNumber() - 1.);
+    double d;
+    if (Q_LIKELY(v.isDouble()))
+        d =  v.doubleValue();
+    else
+        d = v.toNumberImpl();
+    return Encode(d - 1.);
 }
 
 void Assembler::dec()
@@ -1511,10 +1550,10 @@ void Assembler::dec()
     });
 
     // slow path:
-    saveAccumulatorInFrame();
-    prepareCallWithArgCount(1);
-    passAccumulatorAsArg(0);
-    IN_JIT_GENERATE_RUNTIME_CALL(decHelper, ResultInAccumulator);
+    pasm()->callWithAccumulatorByValueAsFirstArgument([this]() {
+        pasm()->callHelper(decHelper);
+        pasm()->saveReturnValueInAccumulator();
+    });
     checkException();
 
     // done.
