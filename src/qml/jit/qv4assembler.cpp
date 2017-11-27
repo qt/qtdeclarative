@@ -1578,13 +1578,10 @@ void Assembler::bitXor(int lhs)
 void Assembler::ushr(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue,
-                  PlatformAssembler::ScratchRegister);
-    pasm()->popAligned(PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->urshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->urshift32(PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::ScratchRegister);
+    pasm()->move(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     auto doubleEncode = pasm()->branch32(PlatformAssembler::LessThan,
                                          PlatformAssembler::AccumulatorRegisterValue,
                                          TrustedImm32(0));
@@ -1602,26 +1599,20 @@ void Assembler::ushr(int lhs)
 void Assembler::shr(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue,
-                  PlatformAssembler::ScratchRegister);
-    pasm()->popAligned(PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->rshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->rshift32(PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::ScratchRegister);
+    pasm()->move(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::shl(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue,
-                  PlatformAssembler::ScratchRegister);
-    pasm()->popAligned(PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->lshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->lshift32(PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::ScratchRegister);
+    pasm()->move(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
 
