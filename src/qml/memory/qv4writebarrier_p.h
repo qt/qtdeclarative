@@ -142,8 +142,9 @@ V4_ASSERT_IS_TRIVIAL(V4PointerCheck)
 
 }
 
-template <size_t offset>
+template <size_t o>
 struct HeapValue : Value {
+    static Q_CONSTEXPR size_t offset = o;
     Heap::Base *base() {
         Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
         Q_ASSERT(base->inUse());
@@ -158,8 +159,9 @@ struct HeapValue : Value {
     }
 };
 
-template <size_t offset>
+template <size_t o>
 struct ValueArray {
+    static Q_CONSTEXPR size_t offset = o;
     uint size;
     uint alloc;
     Value values[1];

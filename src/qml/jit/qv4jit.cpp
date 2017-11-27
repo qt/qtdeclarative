@@ -172,82 +172,26 @@ void BaselineJIT::generate_MoveReg(int srcReg, int destReg)
     as->storeReg(destReg);
 }
 
-static ReturnedValue loadLocalHelper(const Value &context, int index)
-{
-    auto cc = static_cast<Heap::CallContext *>(context.m());
-    return cc->locals[uint(index)].asReturnedValue();
-}
-
 void BaselineJIT::generate_LoadLocal(int index)
 {
-    as->prepareCallWithArgCount(2);
-    as->passInt32AsArg(index, 1);
-    as->passRegAsArg(CallData::Context, 0);
-    JIT_GENERATE_RUNTIME_CALL(loadLocalHelper, Assembler::ResultInAccumulator);
-}
-
-static void storeLocalHelper(ExecutionEngine *engine, const Value &context, int index, const Value &acc)
-{
-    auto cc = static_cast<Heap::CallContext *>(context.m());
-    QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, acc);
+    as->loadLocal(index);
 }
 
 void BaselineJIT::generate_StoreLocal(int index)
 {
     as->checkException();
-    as->prepareCallWithArgCount(4);
-    STORE_ACC();
-    as->passAccumulatorAsArg(3);
-    as->passInt32AsArg(index, 2);
-    as->passRegAsArg(CallData::Context, 1);
-    as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(storeLocalHelper, Assembler::IgnoreResult);
-}
-
-static inline Heap::CallContext *getScope(Value *stack, int level)
-{
-    Heap::ExecutionContext *scope = static_cast<ExecutionContext &>(stack[CallData::Context]).d();
-    while (level > 0) {
-        --level;
-        scope = scope->outer;
-    }
-    Q_ASSERT(scope);
-    return static_cast<Heap::CallContext *>(scope);
-}
-
-static ReturnedValue loadScopedLocalHelper(Value *stack, int scope, int index)
-{
-    auto cc = getScope(stack, scope);
-    return cc->locals[uint(index)].asReturnedValue();
+    as->storeLocal(index);
 }
 
 void BaselineJIT::generate_LoadScopedLocal(int scope, int index)
 {
-    as->prepareCallWithArgCount(3);
-    as->passInt32AsArg(index, 2);
-    as->passInt32AsArg(scope, 1);
-    as->passRegAsArg(0, 0);
-    JIT_GENERATE_RUNTIME_CALL(loadScopedLocalHelper, Assembler::ResultInAccumulator);
-}
-
-static void storeScopedLocalHelper(ExecutionEngine *engine, Value *stack, int scope, int index,
-                                   const Value &acc)
-{
-    auto cc = getScope(stack, scope);
-    QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, acc);
+    as->loadLocal(index, scope);
 }
 
 void BaselineJIT::generate_StoreScopedLocal(int scope, int index)
 {
     as->checkException();
-    as->prepareCallWithArgCount(5);
-    STORE_ACC();
-    as->passAccumulatorAsArg(4);
-    as->passInt32AsArg(index, 3);
-    as->passInt32AsArg(scope, 2);
-    as->passRegAsArg(0, 1);
-    as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(storeScopedLocalHelper, Assembler::IgnoreResult);
+    as->storeLocal(index, scope);
 }
 
 void BaselineJIT::generate_LoadRuntimeString(int stringId)

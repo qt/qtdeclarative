@@ -91,6 +91,8 @@ public:
     void copyConst(int constIndex, int destReg);
     void loadReg(int reg);
     void storeReg(int reg);
+    void loadLocal(int index, int level = 0);
+    void storeLocal(int index, int level = 0);
     void loadString(int stringId);
     void loadValue(ReturnedValue value);
 

@@ -660,11 +660,11 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
 
     void copyReg(Address src, Address dst)
     {
-        loadReg(src, ScratchRegister);
+        load64(src, ScratchRegister);
         store64(ScratchRegister, dst);
     }
 
-    void loadReg(Address addr, RegisterID dest = AccumulatorRegister)
+    void loadPointerFromValue(Address addr, RegisterID dest = AccumulatorRegister)
     {
         load64(addr, dest);
     }
@@ -878,11 +878,9 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
         storeDouble(FPScratchRegister, dest);
     }
 
-    void loadReg(Address addr)
+    void loadPointerFromValue(Address addr, RegisterID dest = AccumulatorRegisterValue)
     {
-        load32(addr, AccumulatorRegisterValue);
-        addr.offset += 4;
-        load32(addr, AccumulatorRegisterTag);
+        load32(addr, dest);
     }
 
     void loadAccumulator(Address src)
@@ -1281,12 +1279,36 @@ void Assembler::copyConst(int constIndex, int destReg)
 
 void Assembler::loadReg(int reg)
 {
-    pasm()->loadReg(regAddr(reg));
+    pasm()->loadAccumulator(regAddr(reg));
 }
 
 void Assembler::storeReg(int reg)
 {
     pasm()->storeAccumulator(regAddr(reg));
+}
+
+void Assembler::loadLocal(int index, int level)
+{
+    Heap::CallContext ctx;
+    Q_UNUSED(ctx)
+    pasm()->loadPointerFromValue(regAddr(CallData::Context), PlatformAssembler::ScratchRegister);
+    while (level) {
+        pasm()->loadPtr(Address(PlatformAssembler::ScratchRegister, ctx.outer.offset), PlatformAssembler::ScratchRegister);
+        --level;
+    }
+    pasm()->loadAccumulator(Address(PlatformAssembler::ScratchRegister, ctx.locals.offset + offsetof(ValueArray<0>, values) + sizeof(Value)*index));
+}
+
+void Assembler::storeLocal(int index, int level)
+{
+    Heap::CallContext ctx;
+    Q_UNUSED(ctx)
+    pasm()->loadPtr(regAddr(CallData::Context), PlatformAssembler::ScratchRegister);
+    while (level) {
+        pasm()->loadPtr(Address(PlatformAssembler::ScratchRegister, ctx.outer.offset), PlatformAssembler::ScratchRegister);
+        --level;
+    }
+    pasm()->storeAccumulator(Address(PlatformAssembler::ScratchRegister, ctx.locals.offset + offsetof(ValueArray<0>, values) + sizeof(Value)*index));
 }
 
 void Assembler::loadString(int stringId)
