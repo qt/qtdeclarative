@@ -126,7 +126,6 @@ struct PlatformAssembler_X86_64_SysV : JSC::MacroAssembler<JSC::MacroAssemblerX8
         push(EngineRegister);
         move(Arg0Reg, CppStackFrameRegister);
         move(Arg1Reg, EngineRegister);
-        loadPtr(Address(CppStackFrameRegister, offsetof(CppStackFrame, jsFrame)), JSStackFrameRegister);
     }
 
     void generatePlatformFunctionExit()
@@ -205,7 +204,6 @@ struct PlatformAssembler_Win64 : JSC::MacroAssembler<JSC::MacroAssemblerX86_64>
         push(EngineRegister);
         move(Arg0Reg, CppStackFrameRegister);
         move(Arg1Reg, EngineRegister);
-        loadPtr(Address(CppStackFrameRegister, offsetof(CppStackFrame, jsFrame)), JSStackFrameRegister);
     }
 
     void generatePlatformFunctionExit()
@@ -287,7 +285,6 @@ struct PlatformAssembler_X86_All : JSC::MacroAssembler<JSC::MacroAssemblerX86>
         push(EngineRegister);
         loadPtr(Address(FramePointerRegister, 2 * PointerSize), CppStackFrameRegister);
         loadPtr(Address(FramePointerRegister, 3 * PointerSize), EngineRegister);
-        loadPtr(Address(CppStackFrameRegister, offsetof(CppStackFrame, jsFrame)), JSStackFrameRegister);
     }
 
     void generatePlatformFunctionExit()
