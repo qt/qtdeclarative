@@ -95,6 +95,7 @@ public:
     void storeLocal(int index, int level = 0);
     void loadString(int stringId);
     void loadValue(ReturnedValue value);
+    void storeHeapObject(int reg);
 
     // numeric ops
     void unot();

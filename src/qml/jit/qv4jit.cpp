@@ -570,17 +570,12 @@ void BaselineJIT::generate_ThrowException()
 void BaselineJIT::generate_GetException() { as->getException(); }
 void BaselineJIT::generate_SetException() { as->setException(); }
 
-static void createCallContextHelper(Value *stack, CppStackFrame *frame)
-{
-    stack[CallData::Context] = ExecutionContext::newCallContext(frame);
-}
-
 void BaselineJIT::generate_CreateCallContext()
 {
-    as->prepareCallWithArgCount(2);
-    as->passCppFrameAsArg(1);
-    as->passRegAsArg(0, 0);
-    JIT_GENERATE_RUNTIME_CALL(createCallContextHelper, Assembler::IgnoreResult);
+    as->prepareCallWithArgCount(1);
+    as->passCppFrameAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(ExecutionContext::newCallContext, Assembler::IgnoreResult); // keeps result in return value register
+    as->storeHeapObject(CallData::Context);
 }
 
 void BaselineJIT::generate_PushCatchContext(int name, int reg) { as->pushCatchContext(name, reg); }

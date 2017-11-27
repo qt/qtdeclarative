@@ -89,6 +89,7 @@ struct PlatformAssembler_X86_64_SysV : JSC::MacroAssembler<JSC::MacroAssemblerX8
     static const RegisterID NoRegister = RegisterID(-1);
 
     static const RegisterID ReturnValueRegister   = RegisterID::eax;
+    static const RegisterID ReturnValueRegisterValue = ReturnValueRegister;
     static const RegisterID AccumulatorRegister   = RegisterID::eax;
     static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
     static const RegisterID ScratchRegister       = RegisterID::r10;
@@ -167,6 +168,7 @@ struct PlatformAssembler_Win64 : JSC::MacroAssembler<JSC::MacroAssemblerX86_64>
     static const RegisterID NoRegister = RegisterID(-1);
 
     static const RegisterID ReturnValueRegister   = RegisterID::eax;
+    static const RegisterID ReturnValueRegisterValue = ReturnValueRegister;
     static const RegisterID AccumulatorRegister   = RegisterID::eax;
     static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
     static const RegisterID ScratchRegister       = RegisterID::r10;
@@ -328,6 +330,7 @@ struct PlatformAssembler_ARM64 : JSC::MacroAssembler<JSC::MacroAssemblerARM64>
     static const RegisterID NoRegister = RegisterID(-1);
 
     static const RegisterID ReturnValueRegister   = JSC::ARM64Registers::x0;
+    static const RegisterID ReturnValueRegisterValue = ReturnValueRegister;
     static const RegisterID AccumulatorRegister   = JSC::ARM64Registers::x9;
     static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
     static const RegisterID ScratchRegister       = JSC::ARM64Registers::x10;
@@ -689,6 +692,11 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         move(TrustedImm64(value), AccumulatorRegister);
     }
 
+    void storeHeapObject(RegisterID source, Address addr)
+    {
+        store64(source, addr);
+    }
+
     void generateCatchTrampoline()
     {
         PlatformAssemblerCommon::generateCatchTrampoline([this](){loadUndefined();});
@@ -908,6 +916,14 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
         move(TrustedImm32(Value::fromReturnedValue(value).value()), AccumulatorRegisterValue);
         move(TrustedImm32(Value::fromReturnedValue(value).tag()), AccumulatorRegisterTag);
     }
+
+    void storeHeapObject(RegisterID source, Address addr)
+    {
+        store32(source, addr);
+        addr.offset += 4;
+        store32(TrustedImm32(0), addr);
+    }
+
 
     void generateCatchTrampoline()
     {
@@ -1319,6 +1335,11 @@ void Assembler::loadString(int stringId)
 void Assembler::loadValue(ReturnedValue value)
 {
     pasm()->loadValue(value);
+}
+
+void JIT::Assembler::storeHeapObject(int reg)
+{
+    pasm()->storeHeapObject(PlatformAssembler::ReturnValueRegisterValue, regAddr(reg));
 }
 
 void Assembler::toNumber()
