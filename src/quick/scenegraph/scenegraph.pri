@@ -230,8 +230,11 @@ SOURCES += \
 
 qtConfig(opengl(es1|es2)?) {
     HEADERS += \
+        $$PWD/compressedtexture/qsgcompressedtexture_p.h \
+        $$PWD/compressedtexture/qsgtexturefilehandler_p.h \
         $$PWD/compressedtexture/qsgpkmhandler_p.h
 
     SOURCES += \
+        $$PWD/compressedtexture/qsgcompressedtexture.cpp \
         $$PWD/compressedtexture/qsgpkmhandler.cpp
 }

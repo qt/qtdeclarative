@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGPKMHANDLER_H
-#define QSGPKMHANDLER_H
+#ifndef QSGCOMPRESSEDTEXTURE_P_H
+#define QSGCOMPRESSEDTEXTURE_P_H
 
 //
 //  W A R N I N G
@@ -51,20 +51,71 @@
 // We mean it.
 //
 
-#include "qsgtexturefilehandler_p.h"
+#include <QSGTexture>
+#include <QtQuick/private/qsgcontext_p.h>
+#include <QQuickTextureFactory>
+#include <QOpenGLFunctions>
 
 QT_BEGIN_NAMESPACE
 
-class QSGPkmHandler : public QSGTextureFileHandler
+struct Q_QUICK_PRIVATE_EXPORT QSGCompressedTextureData
+{
+    QByteArray logName;
+    QByteArray data;
+    QSize size;
+    uint format = 0;
+    int dataOffset = 0;
+    int dataLength = 0;
+    bool hasAlpha = false;
+
+    bool isValid() const;
+    int sizeInBytes() const;
+};
+
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug, const QSGCompressedTextureData *);
+
+
+class Q_QUICK_PRIVATE_EXPORT QSGCompressedTexture : public QSGTexture
+{
+    Q_OBJECT
+public:
+    typedef QSharedPointer<QSGCompressedTextureData> DataPtr;
+
+    QSGCompressedTexture(const DataPtr& texData);
+    virtual ~QSGCompressedTexture();
+
+    int textureId() const override;
+    QSize textureSize() const override;
+    bool hasAlphaChannel() const override;
+    bool hasMipmaps() const override;
+
+    void bind() override;
+
+    const QSGCompressedTextureData *textureData();
+
+    static bool formatIsOpaque(quint32 glTextureFormat);
+
+protected:
+    DataPtr m_textureData;
+    QSize m_size;
+    mutable uint m_textureId = 0;
+    bool m_hasAlpha = false;
+    bool m_uploaded = false;
+};
+
+
+class Q_QUICK_PRIVATE_EXPORT QSGCompressedTextureFactory : public QQuickTextureFactory
 {
 public:
-    using QSGTextureFileHandler::QSGTextureFileHandler;
+    QSGCompressedTextureFactory(const QSGCompressedTexture::DataPtr& texData);
+    QSGTexture *createTexture(QQuickWindow *) const override;
+    int textureByteCount() const override;
+    QSize textureSize() const override;
 
-    static bool canRead(const QByteArray &suffix, const QByteArray &block);
-
-    QQuickTextureFactory *read() override;
+protected:
+    QSGCompressedTexture::DataPtr m_textureData;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGPKMHANDLER_H
+#endif // QSGCOMPRESSEDTEXTURE_P_H

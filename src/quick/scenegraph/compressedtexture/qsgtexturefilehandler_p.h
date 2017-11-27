@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QSGPKMHANDLER_H
-#define QSGPKMHANDLER_H
+#ifndef QSGTEXTUREFILEHANDLER_P_H
+#define QSGTEXTUREFILEHANDLER_P_H
 
 //
 //  W A R N I N G
@@ -51,20 +51,32 @@
 // We mean it.
 //
 
-#include "qsgtexturefilehandler_p.h"
+#include <QLoggingCategory>
 
 QT_BEGIN_NAMESPACE
 
-class QSGPkmHandler : public QSGTextureFileHandler
+Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TEXTUREIO)
+
+class QQuickTextureFactory;
+
+class QSGTextureFileHandler
 {
 public:
-    using QSGTextureFileHandler::QSGTextureFileHandler;
+    QSGTextureFileHandler(QIODevice *device, const QByteArray &logName = QByteArray())
+        : m_device(device)
+    {
+        m_logName = !logName.isEmpty() ? logName : QByteArrayLiteral("(unknown)");
+    }
 
-    static bool canRead(const QByteArray &suffix, const QByteArray &block);
+    virtual QQuickTextureFactory *read() = 0;
+    QIODevice *device() const { return m_device; }
+    QByteArray logName() const { return m_logName; }
 
-    QQuickTextureFactory *read() override;
+private:
+    QIODevice *m_device = nullptr;
+    QByteArray m_logName;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGPKMHANDLER_H
+#endif // QSGTEXTUREFILEHANDLER_P_H

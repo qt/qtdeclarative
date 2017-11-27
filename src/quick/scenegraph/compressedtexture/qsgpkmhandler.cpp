@@ -38,172 +38,82 @@
 ****************************************************************************/
 
 #include "qsgpkmhandler_p.h"
+#include "qsgcompressedtexture_p.h"
 
 #include <QFile>
 #include <QDebug>
 #include <qendian.h>
 #include <qopenglfunctions.h>
 #include <qqmlfile.h>
+#include <QOpenGLTexture>
 
 //#define ETC_DEBUG
-
-#ifndef GL_ETC1_RGB8_OES
-    #define GL_ETC1_RGB8_OES 0x8d64
-#endif
-
-#ifndef GL_COMPRESSED_RGB8_ETC2
-    #define GL_COMPRESSED_RGB8_ETC2 0x9274
-#endif
-
-#ifndef GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2
-    #define GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2 0x9276
-#endif
-
-#ifndef GL_COMPRESSED_RGBA8_ETC2_EAC
-    #define GL_COMPRESSED_RGBA8_ETC2_EAC 0x9278
-#endif
 
 QT_BEGIN_NAMESPACE
 
 static const int headerSize = 16;
 
 static unsigned int typeMap[5] = {
-    GL_ETC1_RGB8_OES,
-    GL_COMPRESSED_RGB8_ETC2,
-    0, // unused
-    GL_COMPRESSED_RGBA8_ETC2_EAC,
-    GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2
+    QOpenGLTexture::RGB8_ETC1,                     // GL_ETC1_RGB8_OES,
+    QOpenGLTexture::RGB8_ETC2,                     // GL_COMPRESSED_RGB8_ETC2,
+    0,                                             // unused (obsolete)
+    QOpenGLTexture::RGBA8_ETC2_EAC,                // GL_COMPRESSED_RGBA8_ETC2_EAC,
+    QOpenGLTexture::RGB8_PunchThrough_Alpha1_ETC2  // GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2
 };
 
-QEtcTexture::QEtcTexture()
-    : m_texture_id(0), m_uploaded(false)
+bool QSGPkmHandler::canRead(const QByteArray &suffix, const QByteArray &block)
 {
-    initializeOpenGLFunctions();
+    Q_UNUSED(suffix)
+
+    return block.startsWith("PKM ");
 }
 
-QEtcTexture::~QEtcTexture()
+QQuickTextureFactory *QSGPkmHandler::read()
 {
-    if (m_texture_id)
-        glDeleteTextures(1, &m_texture_id);
-}
-
-int QEtcTexture::textureId() const
-{
-    if (m_texture_id == 0) {
-        QEtcTexture *texture = const_cast<QEtcTexture*>(this);
-        texture->glGenTextures(1, &texture->m_texture_id);
-    }
-    return m_texture_id;
-}
-
-bool QEtcTexture::hasAlphaChannel() const
-{
-    return m_type == GL_COMPRESSED_RGBA8_ETC2_EAC ||
-           m_type == GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2;
-}
-
-
-void QEtcTexture::bind()
-{
-    if (m_uploaded && m_texture_id) {
-        glBindTexture(GL_TEXTURE_2D, m_texture_id);
-        return;
-    }
-
-    if (m_texture_id == 0)
-        glGenTextures(1, &m_texture_id);
-    glBindTexture(GL_TEXTURE_2D, m_texture_id);
-
-#ifdef ETC_DEBUG
-    qDebug() << "glCompressedTexImage2D, width: " << m_size.width() << "height" << m_size.height() <<
-                "paddedWidth: " << m_paddedSize.width() << "paddedHeight: " << m_paddedSize.height();
-#endif
-
-#ifndef QT_NO_DEBUG
-    while (glGetError() != GL_NO_ERROR) { }
-#endif
-
-    QOpenGLContext *ctx = QOpenGLContext::currentContext();
-    Q_ASSERT(ctx != 0);
-    ctx->functions()->glCompressedTexImage2D(GL_TEXTURE_2D, 0, m_type,
-                                             m_size.width(), m_size.height(), 0,
-                                             (m_paddedSize.width() * m_paddedSize.height()) / 2,
-                                             m_data.data() + headerSize);
-
-#ifndef QT_NO_DEBUG
-    // Gracefully fail in case of an error...
-    GLuint error = glGetError();
-    if (error != GL_NO_ERROR) {
-        qDebug () << "glCompressedTexImage2D for compressed texture failed, error: " << error;
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glDeleteTextures(1, &m_texture_id);
-        m_texture_id = 0;
-        return;
-    }
-#endif
-
-    m_uploaded = true;
-    updateBindOptions(true);
-}
-
-class QEtcTextureFactory : public QQuickTextureFactory
-{
-public:
-    QByteArray m_data;
-    QSize m_size;
-    QSize m_paddedSize;
-    unsigned int m_type;
-
-    QSize textureSize() const { return m_size; }
-    int textureByteCount() const { return m_data.size(); }
-
-    QSGTexture *createTexture(QQuickWindow *) const {
-        QEtcTexture *texture = new QEtcTexture;
-        texture->m_data = m_data;
-        texture->m_size = m_size;
-        texture->m_paddedSize = m_paddedSize;
-        texture->m_type = m_type;
-        return texture;
-    }
-};
-
-QQuickTextureFactory *QSGPkmHandler::read(QIODevice *device)
-{
-    QScopedPointer<QEtcTextureFactory> ret(new QEtcTextureFactory);
-    ret->m_data = device->readAll();
-    if (ret->m_data.isEmpty() || ret->m_data.size() < headerSize)
+    if (!device())
         return nullptr;
 
-    const char *rawData = ret->m_data.constData();
+    QSGCompressedTexture::DataPtr texData(QSGCompressedTexture::DataPtr::create());
 
-    // magic number
-    if (qstrncmp(rawData, "PKM ", 4) != 0)
+    texData->data = device()->readAll();
+    if (texData->data.size() < headerSize || !canRead(QByteArray(), texData->data)) {
+        qCDebug(QSG_LOG_TEXTUREIO, "Invalid PKM file %s", logName().constData());
         return nullptr;
+    }
 
-    // currently ignore version (rawData + 4)
+    const char *rawData = texData->data.constData();
+
+    // ignore version (rawData + 4 & 5)
 
     // texture type
     quint16 type = qFromBigEndian<quint16>(rawData + 6);
-    static int typeCount = sizeof(typeMap)/sizeof(typeMap[0]);
-    if (type >= typeCount)
+    if (type > sizeof(typeMap)/sizeof(typeMap[0])) {
+        qCDebug(QSG_LOG_TEXTUREIO, "Unknown compression format in PKM file %s", logName().constData());
         return nullptr;
-    ret->m_type = typeMap[type];
+    }
+    texData->format = typeMap[type];
+    texData->hasAlpha = !QSGCompressedTexture::formatIsOpaque(texData->format);
 
     // texture size
-    ret->m_paddedSize.setWidth(qFromBigEndian<quint16>(rawData + 8));
-    ret->m_paddedSize.setHeight(qFromBigEndian<quint16>(rawData + 10));
-    if ((ret->m_paddedSize.width() * ret->m_paddedSize.height()) / 2 > ret->m_data.size() - headerSize)
-        return nullptr;
-    ret->m_size.setWidth(qFromBigEndian<quint16>(rawData + 12));
-    ret->m_size.setHeight(qFromBigEndian<quint16>(rawData + 14));
-    if (ret->m_size.isEmpty())
-        return nullptr;
+    /* Actual data length depends on format; for now just use 0, i.e. rest-of-file
+    QSize paddedSize(qFromBigEndian<quint16>(rawData + 8), qFromBigEndian<quint16>(rawData + 10));
+    texData->dataLength = (paddedSize.width() / 4) * (paddedSize.height() / 4) * 8;
+    */
+    QSize texSize(qFromBigEndian<quint16>(rawData + 12), qFromBigEndian<quint16>(rawData + 14));
+    texData->size = texSize;
 
+    texData->dataOffset = headerSize;
+
+    if (!texData->isValid()) {
+        qCDebug(QSG_LOG_TEXTUREIO, "Invalid values in header of PKM file %s", logName().constData());
+        return nullptr;
+    }
+
+    texData->logName = logName();
 #ifdef ETC_DEBUG
-    qDebug() << "requestTexture returning: " << ret->m_data.length() << "bytes; width: " << ret->m_size.width() << ", height: " << ret->m_size.height();
+    qDebug() << "PKM file handler read" << texData.data();
 #endif
-
-    return ret.take();
+    return new QSGCompressedTextureFactory(texData);
 }
 
 QT_END_NAMESPACE

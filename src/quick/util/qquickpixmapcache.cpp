@@ -772,11 +772,9 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             QFile f(localFile);
             QSize readSize;
             if (f.open(QIODevice::ReadOnly)) {
-
-                // for now, purely use suffix information to determine whether we are working with a compressed texture
-                QByteArray suffix = QFileInfo(f).suffix().toLower().toLatin1();
-                if (QSGTextureReader::isTexture(&f, suffix)) {
-                    QQuickTextureFactory *factory = QSGTextureReader::read(&f, suffix);
+                QSGTextureReader texReader(&f, localFile);
+                if (texReader.isTexture()) {
+                    QQuickTextureFactory *factory = texReader.read();
                     if (factory) {
                         readSize = factory->textureSize();
                     } else {
@@ -1252,13 +1250,12 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
     QString errorString;
 
     if (f.open(QIODevice::ReadOnly)) {
-        // for now, purely use suffix information to determine whether we are working with a compressed texture
-        QByteArray suffix = QFileInfo(f).suffix().toLower().toLatin1();
-        if (QSGTextureReader::isTexture(&f, suffix)) {
-            QQuickTextureFactory *factory = QSGTextureReader::read(&f, suffix);
+        QSGTextureReader texReader(&f, localFile);
+        if (texReader.isTexture()) {
+            QQuickTextureFactory *factory = texReader.read();
             if (factory) {
                 *ok = true;
-                return new QQuickPixmapData(declarativePixmap, factory);
+                return new QQuickPixmapData(declarativePixmap, url, factory, factory->textureSize(), requestSize, providerOptions, QQuickImageProviderOptions::UsePluginDefaultTransform);
             } else {
                 errorString = QQuickPixmap::tr("Error decoding: %1").arg(url.toString());
             }
