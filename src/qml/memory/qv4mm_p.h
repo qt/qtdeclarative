@@ -58,8 +58,6 @@
 #include <private/qv4mmdefs_p.h>
 #include <QVector>
 
-//#define DETAILED_MM_STATS
-
 #define QV4_MM_MAXBLOCK_SHIFT "QV4_MM_MAXBLOCK_SHIFT"
 #define QV4_MM_MAX_CHUNK_SIZE "QV4_MM_MAX_CHUNK_SIZE"
 #define QV4_MM_STATS "QV4_MM_STATS"
@@ -121,9 +119,6 @@ struct BlockAllocator {
         : chunkAllocator(chunkAllocator), engine(engine)
     {
         memset(freeBins, 0, sizeof(freeBins));
-#if MM_DEBUG
-        memset(allocations, 0, sizeof(allocations));
-#endif
     }
 
     enum { NumBins = 8 };
@@ -131,10 +126,6 @@ struct BlockAllocator {
     static inline size_t binForSlots(size_t nSlots) {
         return nSlots >= NumBins ? NumBins - 1 : nSlots;
     }
-
-#if MM_DEBUG
-    void stats();
-#endif
 
     HeapItem *allocate(size_t size, bool forceAllocation = false);
 
@@ -163,9 +154,7 @@ struct BlockAllocator {
     ChunkAllocator *chunkAllocator;
     ExecutionEngine *engine;
     std::vector<Chunk *> chunks;
-#if MM_DEBUG
-    uint allocations[NumBins];
-#endif
+    uint *allocationStats = nullptr;
 };
 
 struct HugeItemAllocator {
@@ -449,10 +438,6 @@ protected:
     Heap::Base *allocData(std::size_t size);
     Heap::Object *allocObjectWithMemberData(const QV4::VTable *vtable, uint nMembers);
 
-#ifdef DETAILED_MM_STATS
-    void willAllocate(std::size_t size);
-#endif // DETAILED_MM_STATS
-
 private:
     void collectFromJSStack() const;
     void mark();
@@ -475,6 +460,14 @@ public:
     bool gcBlocked = false;
     bool aggressiveGC = false;
     bool gcStats = false;
+    bool gcCollectorStats = false;
+
+    struct {
+        size_t maxReservedMem = 0;
+        size_t maxAllocatedMem = 0;
+        size_t maxUsedMem = 0;
+        uint allocations[BlockAllocator::NumBins];
+    } statistics;
 };
 
 }
