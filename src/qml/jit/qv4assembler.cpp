@@ -1641,27 +1641,32 @@ void Assembler::ushrConst(int rhs)
 {
     rhs &= 0x1f;
     pasm()->toInt32();
-    if (rhs) // shift with 0 can act weird
+    if (rhs) {
+        // a non zero shift will always give a number encodable as an int
         pasm()->urshift32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
-    auto doubleEncode = pasm()->branch32(PlatformAssembler::LessThan,
-                                         PlatformAssembler::AccumulatorRegisterValue,
-                                         TrustedImm32(0));
-    pasm()->setAccumulatorTag(IntegerTag);
-    auto done = pasm()->jump();
+        pasm()->setAccumulatorTag(IntegerTag);
+    } else {
+        // shift with 0 can lead to a negative result
+        auto doubleEncode = pasm()->branch32(PlatformAssembler::LessThan,
+                                             PlatformAssembler::AccumulatorRegisterValue,
+                                             TrustedImm32(0));
+        pasm()->setAccumulatorTag(IntegerTag);
+        auto done = pasm()->jump();
 
-    doubleEncode.link(pasm());
-    pasm()->convertUInt32ToDouble(PlatformAssembler::AccumulatorRegisterValue,
-                                  PlatformAssembler::FPScratchRegister,
-                                  PlatformAssembler::ScratchRegister);
-    pasm()->encodeDoubleIntoAccumulator(PlatformAssembler::FPScratchRegister);
-    done.link(pasm());
+        doubleEncode.link(pasm());
+        pasm()->convertUInt32ToDouble(PlatformAssembler::AccumulatorRegisterValue,
+                                      PlatformAssembler::FPScratchRegister,
+                                      PlatformAssembler::ScratchRegister);
+        pasm()->encodeDoubleIntoAccumulator(PlatformAssembler::FPScratchRegister);
+        done.link(pasm());
+    }
 }
 
 void Assembler::shrConst(int rhs)
 {
     rhs &= 0x1f;
     pasm()->toInt32();
-    if (rhs) // shift with 0 can act weird
+    if (rhs)
         pasm()->rshift32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
@@ -1670,7 +1675,7 @@ void Assembler::shlConst(int rhs)
 {
     rhs &= 0x1f;
     pasm()->toInt32();
-    if (rhs) // shift with 0 can act weird
+    if (rhs)
         pasm()->lshift32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
