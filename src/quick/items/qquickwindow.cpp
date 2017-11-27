@@ -1656,6 +1656,9 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
     auto point = pointerEvent->point(0);
     lastMousePosition = point->scenePos();
     QQuickItem *grabber = point->grabber();
+    if (!grabber && touchMouseId != -1 && touchMouseDevice)
+        grabber = q->mouseGrabberItem();
+
     if (grabber) {
         // if the update consists of changing button state, then don't accept it
         // unless the button is one in which the item is interested

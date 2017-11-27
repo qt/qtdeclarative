@@ -7330,7 +7330,7 @@ void QQuickItem::ungrabMouse()
     if (!d->window)
         return;
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-    windowPriv->removeGrabber(this, true, false);
+    windowPriv->removeGrabber(this, true, (windowPriv->touchMouseId != -1 && windowPriv->touchMouseDevice));
 }
 
 
