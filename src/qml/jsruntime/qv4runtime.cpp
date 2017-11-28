@@ -606,7 +606,7 @@ static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, 
 
 ReturnedValue Runtime::method_loadElement(ExecutionEngine *engine, const Value &object, const Value &index)
 {
-    uint idx;
+    uint idx = 0;
     if (index.asArrayIndex(idx)) {
         if (Heap::Base *b = object.heapObject()) {
             if (b->vtable()->isObject) {
@@ -632,7 +632,7 @@ static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Val
     if (engine->hasException)
         return false;
 
-    uint idx;
+    uint idx = 0;
     if (index.asArrayIndex(idx)) {
         if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
             Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
@@ -650,7 +650,7 @@ static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Val
 
 bool Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
 {
-    uint idx;
+    uint idx = 0;
     if (index.asArrayIndex(idx)) {
         if (Heap::Base *b = object.heapObject()) {
             if (b->vtable()->isObject) {
