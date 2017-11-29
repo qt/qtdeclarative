@@ -1968,10 +1968,10 @@ ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine
 
     for (int i = 0; i < numberOfConstructors; i++) {
         const QQmlPropertyData & attempt = d()->constructors[i];
+        QQmlMetaObject::ArgTypeStorage storage;
         int methodArgumentCount = 0;
         int *methodArgTypes = 0;
         if (attempt.hasArguments()) {
-            QQmlMetaObject::ArgTypeStorage storage;
             int *args = object.constructorParameterTypes(attempt.coreIndex(), &storage, 0);
             if (!args) // Must be an unknown argument
                 continue;
