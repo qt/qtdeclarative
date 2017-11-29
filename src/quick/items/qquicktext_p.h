@@ -79,10 +79,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
 
     Q_PROPERTY(TextFormat textFormat READ textFormat WRITE setTextFormat NOTIFY textFormatChanged)
     Q_PROPERTY(TextElideMode elide READ elideMode WRITE setElideMode NOTIFY elideModeChanged) //### elideMode?
-    Q_PROPERTY(qreal contentWidth READ contentWidth NOTIFY contentSizeChanged)
-    Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentSizeChanged)
-    Q_PROPERTY(qreal paintedWidth READ contentWidth NOTIFY contentSizeChanged)  // Compatibility
-    Q_PROPERTY(qreal paintedHeight READ contentHeight NOTIFY contentSizeChanged)
+    Q_PROPERTY(qreal contentWidth READ contentWidth NOTIFY contentWidthChanged)
+    Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentHeightChanged)
+    Q_PROPERTY(qreal paintedWidth READ contentWidth NOTIFY contentWidthChanged)  // Compatibility
+    Q_PROPERTY(qreal paintedHeight READ contentHeight NOTIFY contentHeightChanged)
     Q_PROPERTY(qreal lineHeight READ lineHeight WRITE setLineHeight NOTIFY lineHeightChanged)
     Q_PROPERTY(LineHeightMode lineHeightMode READ lineHeightMode WRITE setLineHeightMode NOTIFY lineHeightModeChanged)
     Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
@@ -272,6 +272,8 @@ Q_SIGNALS:
     void textFormatChanged(QQuickText::TextFormat textFormat);
     void elideModeChanged(QQuickText::TextElideMode mode);
     void contentSizeChanged();
+    Q_REVISION(12) void contentWidthChanged(qreal contentWidth);
+    Q_REVISION(12) void contentHeightChanged(qreal contentHeight);
     void lineHeightChanged(qreal lineHeight);
     void lineHeightModeChanged(LineHeightMode mode);
     void fontSizeModeChanged();

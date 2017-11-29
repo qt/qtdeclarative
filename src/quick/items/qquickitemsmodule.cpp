@@ -463,6 +463,7 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickAnimatedSprite, 12>("QtQuick", 2, 12, "AnimatedSprite");
     qmlRegisterType<QQuickGradient, 12>(uri, 2, 12, "Gradient");
     qmlRegisterType<QQuickFlickable, 12>(uri, 2, 12, "Flickable");
+    qmlRegisterType<QQuickText, 12>(uri, 2, 12, "Text");
 }
 
 static void initResources()

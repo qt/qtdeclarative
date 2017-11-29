@@ -486,6 +486,10 @@ void QQuickTextPrivate::updateSize()
 
     if (layedOutTextRect.size() != previousSize)
         emit q->contentSizeChanged();
+    if (layedOutTextRect.width() != previousSize.width())
+        emit q->contentWidthChanged(layedOutTextRect.width());
+    if (layedOutTextRect.height() != previousSize.height())
+        emit q->contentHeightChanged(layedOutTextRect.height());
     updateType = UpdatePaintNode;
     q->update();
 }

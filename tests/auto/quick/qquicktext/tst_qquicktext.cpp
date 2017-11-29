@@ -2384,23 +2384,31 @@ void tst_qquicktext::contentSize()
     QScopedPointer<QObject> object(textComponent.create());
     QQuickText *textObject = qobject_cast<QQuickText *>(object.data());
 
-    QSignalSpy spy(textObject, SIGNAL(contentSizeChanged()));
+    QSignalSpy spySize(textObject, SIGNAL(contentSizeChanged()));
+    QSignalSpy spyWidth(textObject, SIGNAL(contentWidthChanged(qreal)));
+    QSignalSpy spyHeight(textObject, SIGNAL(contentHeightChanged(qreal)));
 
     textObject->setText("The quick red fox jumped over the lazy brown dog");
 
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() < textObject->height());
-    QCOMPARE(spy.count(), 1);
+    QCOMPARE(spySize.count(), 1);
+    QCOMPARE(spyWidth.count(), 1);
+    QCOMPARE(spyHeight.count(), 0);
 
     textObject->setWrapMode(QQuickText::WordWrap);
     QVERIFY(textObject->contentWidth() <= textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spySize.count(), 2);
+    QCOMPARE(spyWidth.count(), 2);
+    QCOMPARE(spyHeight.count(), 1);
 
     textObject->setElideMode(QQuickText::ElideRight);
     QVERIFY(textObject->contentWidth() <= textObject->width());
     QVERIFY(textObject->contentHeight() < textObject->height());
-    QCOMPARE(spy.count(), 3);
+    QCOMPARE(spySize.count(), 3);
+    QCOMPARE(spyWidth.count(), 3);
+    QCOMPARE(spyHeight.count(), 2);
     int spyCount = 3;
     qreal elidedWidth = textObject->contentWidth();
 
@@ -2409,14 +2417,16 @@ void tst_qquicktext::contentSize()
     QVERIFY(textObject->contentHeight() < textObject->height());
     // this text probably won't have the same elided width, but it's not guaranteed.
     if (textObject->contentWidth() != elidedWidth)
-        QCOMPARE(spy.count(), ++spyCount);
+        QCOMPARE(spySize.count(), ++spyCount);
     else
-        QCOMPARE(spy.count(), spyCount);
+        QCOMPARE(spySize.count(), spyCount);
 
     textObject->setElideMode(QQuickText::ElideNone);
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
-    QCOMPARE(spy.count(), ++spyCount);
+    QCOMPARE(spySize.count(), ++spyCount);
+    QCOMPARE(spyWidth.count(), spyCount);
+    QCOMPARE(spyHeight.count(), 3);
 }
 
 void tst_qquicktext::geometryChanged()
