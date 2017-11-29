@@ -55,7 +55,6 @@ Item {
                 borderBlink.start()
             }
             onTapped: { // 'point' is an implicit parameter referencing to a QQuickEventPoint instance
-                console.log("tapped @ " + point.pos + " button(s) " + point.event.button + " tapCount " + tapCount)
                 if (tapCount > 1) {
                     tapCountLabel.text = tapCount
                     flashAnimation.start()
