@@ -130,6 +130,8 @@ private slots:
     void notPressedAfterStolenGrab();
     void pressAndHold_data();
     void pressAndHold();
+    void pressOneAndTapAnother_data();
+    void pressOneAndTapAnother();
 
 private:
     int startDragDistance() const {
@@ -2171,6 +2173,73 @@ void tst_QQuickMouseArea::pressAndHold()
     // should be off by no more than 20% of waitTime
     QVERIFY(qAbs(t.elapsed() - waitTime) < (waitTime * 0.2));
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
+}
+
+void tst_QQuickMouseArea::pressOneAndTapAnother_data()
+{
+    QTest::addColumn<bool>("pressMouseFirst");
+    QTest::addColumn<bool>("releaseMouseFirst");
+
+    QTest::newRow("press mouse, tap touch, release mouse") << true << false; // QTBUG-64249 as written
+    QTest::newRow("press touch, press mouse, release touch, release mouse") << false << false;
+    QTest::newRow("press mouse, press touch, release mouse, release touch") << true << true;
+    QTest::newRow("press touch, click mouse, release touch") << false << true;
+}
+
+void tst_QQuickMouseArea::pressOneAndTapAnother()
+{
+    QFETCH(bool, pressMouseFirst);
+    QFETCH(bool, releaseMouseFirst);
+
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(initView(window, testFileUrl("twoMouseAreas.qml"), true, &errorMessage), errorMessage.constData());
+    window.show();
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root);
+    QQuickMouseArea *bottomMA = window.rootObject()->findChild<QQuickMouseArea*>("bottom");
+    QVERIFY(bottomMA);
+    QQuickMouseArea *topMA = window.rootObject()->findChild<QQuickMouseArea*>("top");
+    QVERIFY(topMA);
+
+    QPoint upper(32, 32);
+    QPoint lower(32, window.height() - 32);
+
+    // press them both
+    if (pressMouseFirst) {
+        QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, lower);
+        QTRY_COMPARE(bottomMA->pressed(), true);
+
+        QTest::touchEvent(&window, device).press(0, lower, &window);
+        QQuickTouchUtils::flush(&window);
+        QTRY_COMPARE(bottomMA->pressed(), true);
+    } else {
+        QTest::touchEvent(&window, device).press(0, lower, &window);
+        QQuickTouchUtils::flush(&window);
+        QTRY_COMPARE(bottomMA->pressed(), true);
+
+        QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, lower);
+        QTRY_COMPARE(bottomMA->pressed(), true);
+    }
+
+    // release them both and make sure neither one gets stuck
+    if (releaseMouseFirst) {
+        QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, lower);
+        QTRY_COMPARE(bottomMA->pressed(), false);
+
+        QTest::touchEvent(&window, device).release(0, upper, &window);
+        QQuickTouchUtils::flush(&window);
+        QTRY_COMPARE(topMA->pressed(), false);
+    } else {
+        QTest::touchEvent(&window, device).release(0, upper, &window);
+        QQuickTouchUtils::flush(&window);
+
+        QTRY_COMPARE(topMA->pressed(), false);
+        QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, lower);
+        QTRY_COMPARE(bottomMA->pressed(), false);
+    }
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)
