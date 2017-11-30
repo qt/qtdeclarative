@@ -2828,32 +2828,49 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
             for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem))
                 QCoreApplication::sendEvent(**grabItem, &leaveEvent);
             return;
-        } else for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem)) {
+        } else {
             QDragMoveEvent *moveEvent = static_cast<QDragMoveEvent *>(event);
-            if (deliverDragEvent(grabber, **grabItem, moveEvent)) {
-                for (++grabItem; grabItem != grabber->end();) {
-                    QPointF p = (**grabItem)->mapFromScene(moveEvent->pos());
-                    if ((**grabItem)->contains(p)) {
-                        QDragMoveEvent translatedEvent(
-                                p.toPoint(),
-                                moveEvent->possibleActions(),
-                                moveEvent->mimeData(),
-                                moveEvent->mouseButtons(),
-                                moveEvent->keyboardModifiers());
-                        QQuickDropEventEx::copyActions(&translatedEvent, *moveEvent);
-                        QCoreApplication::sendEvent(**grabItem, &translatedEvent);
-                        ++grabItem;
-                    } else {
-                        QDragLeaveEvent leaveEvent;
-                        QCoreApplication::sendEvent(**grabItem, &leaveEvent);
-                        grabItem = grabber->release(grabItem);
-                    }
+
+            // Used to ensure we don't send DragEnterEvents to current drop targets,
+            // and to detect which current drop targets we have left
+            QVarLengthArray<QQuickItem*, 64> currentGrabItems;
+            for (; grabItem != grabber->end(); grabItem = grabber->release(grabItem))
+                currentGrabItems.append(**grabItem);
+
+            // Look for any other potential drop targets that are higher than the current ones
+            QDragEnterEvent enterEvent(
+                    moveEvent->pos(),
+                    moveEvent->possibleActions(),
+                    moveEvent->mimeData(),
+                    moveEvent->mouseButtons(),
+                    moveEvent->keyboardModifiers());
+            QQuickDropEventEx::copyActions(&enterEvent, *moveEvent);
+            event->setAccepted(deliverDragEvent(grabber, contentItem, &enterEvent, &currentGrabItems));
+
+            for (grabItem = grabber->begin(); grabItem != grabber->end(); ++grabItem) {
+                int i = currentGrabItems.indexOf(**grabItem);
+                if (i >= 0) {
+                    currentGrabItems.remove(i);
+                    // Still grabbed: send move event
+                    QDragMoveEvent translatedEvent(
+                            (**grabItem)->mapFromScene(moveEvent->pos()).toPoint(),
+                            moveEvent->possibleActions(),
+                            moveEvent->mimeData(),
+                            moveEvent->mouseButtons(),
+                            moveEvent->keyboardModifiers());
+                    QQuickDropEventEx::copyActions(&translatedEvent, *moveEvent);
+                    QCoreApplication::sendEvent(**grabItem, &translatedEvent);
+                    event->setAccepted(translatedEvent.isAccepted());
+                    QQuickDropEventEx::copyActions(moveEvent, translatedEvent);
                 }
-                return;
-            } else {
-                QDragLeaveEvent leaveEvent;
-                QCoreApplication::sendEvent(**grabItem, &leaveEvent);
             }
+
+            // Anything left in currentGrabItems is no longer a drop target and should be sent a DragLeaveEvent
+            QDragLeaveEvent leaveEvent;
+            for (QQuickItem *i : currentGrabItems)
+                QCoreApplication::sendEvent(i, &leaveEvent);
+
+            return;
         }
     }
     if (event->type() == QEvent::DragEnter || event->type() == QEvent::DragMove) {
@@ -2869,9 +2886,8 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
     }
 }
 
-bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickItem *item, QDragMoveEvent *event)
+bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickItem *item, QDragMoveEvent *event, QVarLengthArray<QQuickItem*, 64> *currentGrabItems)
 {
-    bool accepted = false;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (!item->isVisible() || !item->isEnabled() || QQuickItemPrivate::get(item)->culled)
         return false;
@@ -2890,12 +2906,24 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
             event->keyboardModifiers());
     QQuickDropEventEx::copyActions(&enterEvent, *event);
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
+
+    // Check children in front of this item first
     for (int ii = children.count() - 1; ii >= 0; --ii) {
-        if (deliverDragEvent(grabber, children.at(ii), &enterEvent))
+        if (children.at(ii)->z() < 0)
+            continue;
+        if (deliverDragEvent(grabber, children.at(ii), &enterEvent, currentGrabItems))
             return true;
     }
 
     if (itemContained) {
+        // If this item is currently grabbed, don't send it another DragEnter,
+        // just grab it again if it's still contained.
+        if (currentGrabItems && currentGrabItems->contains(item)) {
+            grabber->grab(item);
+            grabber->setTarget(item);
+            return true;
+        }
+
         if (event->type() == QEvent::DragMove || itemPrivate->flags & QQuickItem::ItemAcceptsDrops) {
             QDragMoveEvent translatedEvent(
                     p.toPoint(),
@@ -2912,15 +2940,24 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
             if (event->type() == QEvent::DragEnter) {
                 if (translatedEvent.isAccepted()) {
                     grabber->grab(item);
-                    accepted = true;
+                    grabber->setTarget(item);
+                    return true;
                 }
             } else {
-                accepted = true;
+                return true;
             }
         }
     }
 
-    return accepted;
+    // Check children behind this item if this item or any higher children have not accepted
+    for (int ii = children.count() - 1; ii >= 0; --ii) {
+        if (children.at(ii)->z() >= 0)
+            continue;
+        if (deliverDragEvent(grabber, children.at(ii), &enterEvent, currentGrabItems))
+            return true;
+    }
+
+    return false;
 }
 #endif // quick_draganddrop
 
