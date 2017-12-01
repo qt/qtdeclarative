@@ -153,12 +153,10 @@ private:
 
 class QML_PARSER_EXPORT Managed
 {
-    Managed(const Managed &other);
-    void operator = (const Managed &other);
-
+    Q_DISABLE_COPY(Managed)
 public:
-    Managed() {}
-    ~Managed() {}
+    Managed() = default;
+    ~Managed() = default;
 
     void *operator new(size_t size, MemoryPool *pool) { return pool->allocate(size); }
     void operator delete(void *) {}
