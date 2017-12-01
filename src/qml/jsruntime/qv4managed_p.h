@@ -141,8 +141,8 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
     classname::IsErrorObject,   \
     classname::IsArrayData,   \
     classname::IsStringOrSymbol,   \
-    0,                                          \
     classname::MyType,                          \
+    { 0, 0, 0, 0 },                                          \
     #classname, \
     Q_VTABLE_FUNCTION(classname, destroy),                                    \
     classname::Data::markObjects,                                    \

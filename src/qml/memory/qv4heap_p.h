@@ -67,17 +67,17 @@ namespace QV4 {
 struct VTable
 {
     const VTable * const parent;
-    uint inlinePropertyOffset : 16;
-    uint nInlineProperties : 16;
-    uint isExecutionContext : 1;
-    uint isString : 1;
-    uint isObject : 1;
-    uint isFunctionObject : 1;
-    uint isErrorObject : 1;
-    uint isArrayData : 1;
-    uint isStringOrSymbol : 1;
-    uint unused : 17;
-    uint type : 8;
+    quint32 inlinePropertyOffset : 16;
+    quint32 nInlineProperties : 16;
+    quint8 isExecutionContext;
+    quint8 isString;
+    quint8 isObject;
+    quint8 isFunctionObject;
+    quint8 isErrorObject;
+    quint8 isArrayData;
+    quint8 isStringOrSymbol;
+    quint8 type;
+    quint8 unused[4];
     const char *className;
     void (*destroy)(Heap::Base *);
     void (*markObjects)(Heap::Base *, MarkStack *markStack);
