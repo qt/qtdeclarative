@@ -22,7 +22,6 @@ SUBDIRS += \
     rectangle \
     selftests \
     shadersource \
-    shortcut \
     stability \
     statemachine \
     text \
