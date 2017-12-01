@@ -1619,12 +1619,12 @@ void QQuickWidget::paintEvent(QPaintEvent *event)
             QTransform transform;
             transform.scale(devicePixelRatioF(), devicePixelRatioF());
             //Paint only the updated areas
-            const auto rects = d->updateRegion.rects();
-            for (auto targetRect : rects) {
+            QRegion targetRegion;
+            d->updateRegion.swap(targetRegion);
+            for (auto targetRect : targetRegion) {
                 auto sourceRect = transform.mapRect(QRectF(targetRect));
                 painter.drawImage(targetRect, d->softwareImage, sourceRect);
             }
-            d->updateRegion = QRegion();
         }
     }
 }
