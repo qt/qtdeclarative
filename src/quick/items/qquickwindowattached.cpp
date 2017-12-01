@@ -116,7 +116,6 @@ void QQuickWindowAttached::windowChange(QQuickWindow *window)
 
         if (!window)
             return;
-
         // QQuickWindowQmlImpl::visibilityChanged also exists, and window might even
         // be QQuickWindowQmlImpl, but that's not what we are connecting to.
         // So this is actual window state rather than a buffered or as-requested one.

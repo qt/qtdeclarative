@@ -105,6 +105,9 @@ void QQmlThreadPrivate::triggerMainEvent()
 {
     Q_ASSERT(q->isThisThread());
     QCoreApplication::postEvent(&m_mainObject, new QEvent(QEvent::User));
+#ifdef Q_OS_HTML5
+        QCoreApplication::processEvents();
+#endif
 }
 
 // Trigger even in thread.  Must be called from main thread.
@@ -112,6 +115,9 @@ void QQmlThreadPrivate::triggerThreadEvent()
 {
     Q_ASSERT(!q->isThisThread());
     QCoreApplication::postEvent(this, new QEvent(QEvent::User));
+#ifdef Q_OS_HTML5
+    QCoreApplication::processEvents();
+#endif
 }
 
 bool QQmlThreadPrivate::MainObject::event(QEvent *e)
@@ -316,11 +322,16 @@ void QQmlThread::internalCallMethodInThread(Message *message)
 
     bool wasEmpty = d->threadList.isEmpty();
     d->threadList.append(message);
+
+#ifdef Q_OS_HTML5
+    d->mainSync = message;
+#endif
     if (wasEmpty && d->m_threadProcessing == false)
         d->triggerThreadEvent();
 
-    d->m_mainThreadWaiting = true;
 
+#ifndef Q_OS_HTML5
+    d->m_mainThreadWaiting = true;
     do {
         if (d->mainSync) {
             QQmlThread::Message *message = d->mainSync;
@@ -334,7 +345,7 @@ void QQmlThread::internalCallMethodInThread(Message *message)
             d->wait();
         }
     } while (d->mainSync || !d->threadList.isEmpty());
-
+#endif
     d->m_mainThreadWaiting = false;
     d->unlock();
 }
@@ -396,8 +407,10 @@ void QQmlThread::waitForNextMessage()
     d->lock();
     Q_ASSERT(d->m_mainThreadWaiting == false);
 
+#ifdef Q_OS_HTML5
+            d->triggerThreadEvent();
+#endif
     d->m_mainThreadWaiting = true;
-
     if (d->mainSync || !d->threadList.isEmpty()) {
         if (d->mainSync) {
             QQmlThread::Message *message = d->mainSync;

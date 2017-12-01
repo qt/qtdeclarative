@@ -26,7 +26,7 @@ qtConfig(commandlineparser): SUBDIRS += qmlcachegen
         }
         qtHaveModule(widgets): SUBDIRS += qmleasing
     }
-    qtHaveModule(qmltest): SUBDIRS += qmltestrunner
+    !emscripten:qtHaveModule(qmltest): SUBDIRS += qmltestrunner
     qtConfig(private_tests): SUBDIRS += qmljs
 }
 

@@ -201,6 +201,8 @@ QSGRenderLoop *QSGRenderLoop::instance()
                 loopType = ThreadedRenderLoop;
             else
                 loopType = WindowsRenderLoop;
+#elif defined(Q_OS_HTML5)
+            loopType = BasicRenderLoop;
 #else
             if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
                 loopType = ThreadedRenderLoop;
@@ -406,7 +408,6 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     if (profileFrames)
         renderTimer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishFrame);
-
     cd->polishItems();
 
     if (profileFrames)

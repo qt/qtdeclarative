@@ -78,7 +78,8 @@ QQmlAnimationTimer *QQmlAnimationTimer::instance(bool create)
         inst = animationTimer() ? animationTimer()->localData() : 0;
     }
 #else
-    static QAnimationTimer unifiedTimer;
+    Q_UNUSED(create)
+    static QQmlAnimationTimer unifiedTimer;
     inst = &unifiedTimer;
 #endif
     return inst;

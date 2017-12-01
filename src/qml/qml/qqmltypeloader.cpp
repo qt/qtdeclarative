@@ -484,8 +484,9 @@ The setError() method may only be called from within a QQmlDataBlob callback.
 */
 void QQmlDataBlob::addDependency(QQmlDataBlob *blob)
 {
+#ifndef Q_OS_HTML5
     ASSERT_CALLBACK();
-
+#endif
     Q_ASSERT(status() != Null);
 
     if (!blob ||
@@ -1039,8 +1040,8 @@ void QQmlTypeLoader::doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode)
     qWarning("QQmlTypeLoader::doLoad(%s): %s thread", qPrintable(blob->m_url.toString()),
              m_thread->isThisThread()?"Compile":"Engine");
 #endif
-    blob->startLoading();
 
+    blob->startLoading();
     if (m_thread->isThisThread()) {
         unlock();
         loader.loadThread(this, blob);
@@ -1048,7 +1049,12 @@ void QQmlTypeLoader::doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode)
     } else if (mode == Asynchronous) {
         blob->m_data.setIsAsync(true);
         unlock();
+
+#ifndef Q_OS_HTML5
+        loader.loadThread(this, blob);
+#else
         loader.loadAsync(this, blob);
+#endif
         lock();
     } else {
         unlock();
@@ -1723,10 +1729,14 @@ Returns a QQmlQmldirData for \a url.  The QQmlQmldirData may be cached.
 */
 QQmlQmldirData *QQmlTypeLoader::getQmldir(const QUrl &url)
 {
+#ifdef Q_OS_HTML5
+        // ###  asserts here on urls like "qml/QtQuick.2.1/qmldir",
+        // which are relative urls we want to load over the network.
+#else
     Q_ASSERT(!url.isRelative() &&
             (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
-
+#endif
     LockHolder<QQmlTypeLoader> holder(this);
 
     QQmlQmldirData *qmldirData = m_qmldirCache.value(url);
@@ -2387,10 +2397,10 @@ bool QQmlTypeData::loadImplicitImport()
 void QQmlTypeData::dataReceived(const SourceCodeData &data)
 {
     m_backupSourceCode = data;
-
+#ifndef Q_OS_HTML5
     if (tryLoadFromDiskCache())
         return;
-
+#endif
     if (isError())
         return;
 

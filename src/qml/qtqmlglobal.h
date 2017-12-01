@@ -51,7 +51,9 @@
 #    include <QtNetwork/qtnetworkglobal.h>
 #  endif
 #else
+//#ifndef QT_FEATURE_qml_debug
 #  define QT_FEATURE_qml_debug -1
+//#endif
 #endif
 
 QT_BEGIN_NAMESPACE
