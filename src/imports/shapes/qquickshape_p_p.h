@@ -171,6 +171,7 @@ public:
     static void asyncShapeReady(void *data);
 
     bool spChanged;
+    int effectRefCount;
     QQuickShape::RendererType rendererType;
     bool async;
     QQuickShape::Status status;
