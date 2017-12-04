@@ -46,8 +46,11 @@
 #include <private/qquicksvgparser_p.h>
 #include <QtGui/private/qdrawhelper_p.h>
 #include <QOpenGLFunctions>
+#include <QLoggingCategory>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
 
 /*!
     \qmlmodule QtQuick.Shapes 1.0
@@ -968,18 +971,26 @@ QSGNode *QQuickShapePrivate::createNode()
     return node;
 }
 
-static void q_asyncShapeReady(void *data)
+void QQuickShapePrivate::asyncShapeReady(void *data)
 {
     QQuickShapePrivate *self = static_cast<QQuickShapePrivate *>(data);
     self->setStatus(QQuickShape::Ready);
+    if (self->syncTimingActive)
+        qDebug("[Shape %p] [%d] [dirty=0x%x] async update took %lld ms",
+               self->q_func(), self->syncTimeCounter, self->syncTimingTotalDirty, self->syncTimer.elapsed());
 }
 
 void QQuickShapePrivate::sync()
 {
+    syncTimingTotalDirty = 0;
+    syncTimingActive = QQSHAPE_LOG_TIME_DIRTY_SYNC().isDebugEnabled();
+    if (syncTimingActive)
+        syncTimer.start();
+
     const bool useAsync = async && renderer->flags().testFlag(QQuickAbstractPathRenderer::SupportsAsync);
     if (useAsync) {
         setStatus(QQuickShape::Processing);
-        renderer->setAsyncCallback(q_asyncShapeReady, this);
+        renderer->setAsyncCallback(asyncShapeReady, this);
     }
 
     const int count = sp.count();
@@ -988,6 +999,7 @@ void QQuickShapePrivate::sync()
     for (int i = 0; i < count; ++i) {
         QQuickShapePath *p = sp[i];
         int &dirty(QQuickShapePathPrivate::get(p)->dirty);
+        syncTimingTotalDirty |= dirty;
 
         if (dirty & QQuickShapePathPrivate::DirtyPath)
             renderer->setPath(i, p);
@@ -1011,10 +1023,19 @@ void QQuickShapePrivate::sync()
         dirty = 0;
     }
 
+    if (syncTimingTotalDirty)
+        ++syncTimeCounter;
+    else
+        syncTimingActive = false;
+
     renderer->endSync(useAsync);
 
-    if (!useAsync)
+    if (!useAsync) {
         setStatus(QQuickShape::Ready);
+        if (syncTimingActive)
+            qDebug("[Shape %p] [%d] [dirty=0x%x] update took %lld ms",
+                   q_func(), syncTimeCounter, syncTimingTotalDirty, syncTimer.elapsed());
+    }
 }
 
 // ***** gradient support *****
