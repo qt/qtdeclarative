@@ -113,17 +113,17 @@ void VariantPrototype::init()
     defineDefaultProperty(engine()->id_toString(), method_toString, 0);
 }
 
-ReturnedValue VariantPrototype::method_preserve(const BuiltinFunction *, CallData *callData)
+ReturnedValue VariantPrototype::method_preserve(const FunctionObject *, const Value *thisObject, const Value *, int)
 {
-    VariantObject *o = callData->thisObject.as<QV4::VariantObject>();
+    const VariantObject *o = thisObject->as<QV4::VariantObject>();
     if (o && o->d()->isScarce())
         o->d()->addVmePropertyReference();
     RETURN_UNDEFINED();
 }
 
-ReturnedValue VariantPrototype::method_destroy(const BuiltinFunction *, CallData *callData)
+ReturnedValue VariantPrototype::method_destroy(const FunctionObject *, const Value *thisObject, const Value *, int)
 {
-    VariantObject *o = callData->thisObject.as<QV4::VariantObject>();
+    const VariantObject *o = thisObject->as<QV4::VariantObject>();
     if (o) {
         if (o->d()->isScarce())
             o->d()->addVmePropertyReference();
@@ -132,10 +132,10 @@ ReturnedValue VariantPrototype::method_destroy(const BuiltinFunction *, CallData
     RETURN_UNDEFINED();
 }
 
-ReturnedValue VariantPrototype::method_toString(const BuiltinFunction *b, CallData *callData)
+ReturnedValue VariantPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
-    VariantObject *o = callData->thisObject.as<QV4::VariantObject>();
+    const VariantObject *o = thisObject->as<QV4::VariantObject>();
     if (!o)
         RETURN_UNDEFINED();
     QString result = o->d()->data().toString();
@@ -147,9 +147,9 @@ ReturnedValue VariantPrototype::method_toString(const BuiltinFunction *b, CallDa
     return Encode(v4->newString(result));
 }
 
-ReturnedValue VariantPrototype::method_valueOf(const BuiltinFunction *b, CallData *callData)
+ReturnedValue VariantPrototype::method_valueOf(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    VariantObject *o = callData->thisObject.as<QV4::VariantObject>();
+    const VariantObject *o = thisObject->as<QV4::VariantObject>();
     if (o) {
         QVariant v = o->d()->data();
         switch (v.type()) {
@@ -170,7 +170,7 @@ ReturnedValue VariantPrototype::method_valueOf(const BuiltinFunction *b, CallDat
             break;
         }
     }
-    return callData->thisObject.asReturnedValue();
+    return thisObject->asReturnedValue();
 }
 
 QT_END_NAMESPACE

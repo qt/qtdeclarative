@@ -131,7 +131,7 @@ struct QtObject : Object
     static ReturnedValue method_get_inputMethod(const BuiltinFunction *, CallData *callData);
     static ReturnedValue method_get_styleHints(const BuiltinFunction *, CallData *callData);
 
-    static ReturnedValue method_callLater(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_callLater(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
 private:
     void addAll();

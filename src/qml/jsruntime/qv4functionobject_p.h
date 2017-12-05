@@ -110,8 +110,8 @@ struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
     ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *);
 };
 
-struct IndexedBuiltinFunction : BuiltinFunction {
-    inline void init(QV4::ExecutionContext *scope, uint index, ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *));
+struct IndexedBuiltinFunction : FunctionObject {
+    inline void init(QV4::ExecutionContext *scope, uint index, ReturnedValue (*code)(const QV4::FunctionObject *, const Value *, const Value *, int));
     uint index;
 };
 
@@ -222,16 +222,16 @@ struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct IndexedBuiltinFunction: BuiltinFunction
+struct IndexedBuiltinFunction : FunctionObject
 {
-    V4_OBJECT2(IndexedBuiltinFunction, BuiltinFunction)
+    V4_OBJECT2(IndexedBuiltinFunction, FunctionObject)
 };
 
 void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index,
-                                        ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *))
+                                        ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc))
 {
     Heap::FunctionObject::init(scope);
-    this->code = code;
+    this->jsCall = code;
     this->index = index;
 }
 

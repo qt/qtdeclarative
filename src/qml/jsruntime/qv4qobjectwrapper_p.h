@@ -198,8 +198,8 @@ protected:
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
-    static ReturnedValue method_connect(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_disconnect(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_connect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_disconnect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
 private:
     Q_NEVER_INLINE static ReturnedValue wrap_slowPath(ExecutionEngine *engine, QObject *object);

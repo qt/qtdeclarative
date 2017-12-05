@@ -186,7 +186,7 @@ public:
 
     int m_nextId;
 
-    static QV4::ReturnedValue method_sendMessage(const QV4::BuiltinFunction *, QV4::CallData *callData);
+    static QV4::ReturnedValue method_sendMessage(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 
 signals:
     void stopThread();
@@ -293,15 +293,15 @@ QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *eng
 {
 }
 
-QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(const QV4::BuiltinFunction *b,
-                                                                       QV4::CallData *callData)
+QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(const QV4::FunctionObject *b,
+                                                                       const QV4::Value *, const QV4::Value *argv, int argc)
 {
     QV4::Scope scope(b);
-    WorkerEngine *engine = (WorkerEngine*)scope.engine->v8Engine;
+    WorkerEngine *engine = static_cast<WorkerEngine *>(scope.engine->v8Engine);
 
-    int id = callData->argc() > 1 ? callData->args[1].toInt32() : 0;
+    int id = argc > 1 ? argv[1].toInt32() : 0;
 
-    QV4::ScopedValue v(scope, callData->argument(2));
+    QV4::ScopedValue v(scope, argc > 2 ? argv[2] : QV4::Primitive::undefinedValue());
     QByteArray data = QV4::Serialize::serialize(v, scope.engine);
 
     QMutexLocker locker(&engine->p->m_lock);

@@ -2098,10 +2098,10 @@ be passed on to the function invoked. Note that if redundant calls
 are eliminated, then only the last set of arguments will be passed to the
 function.
 */
-ReturnedValue QtObject::method_callLater(const BuiltinFunction *b, CallData *callData)
+ReturnedValue QtObject::method_callLater(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     QV8Engine *v8engine = b->engine()->v8Engine;
-    return v8engine->delayedCallQueue()->addUniquelyAndExecuteLater(b, callData);
+    return v8engine->delayedCallQueue()->addUniquelyAndExecuteLater(b, thisObject, argv, argc);
 }
 
 QT_END_NAMESPACE

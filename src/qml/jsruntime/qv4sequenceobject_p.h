@@ -68,8 +68,8 @@ struct SequencePrototype : public QV4::Object
     V4_PROTOTYPE(arrayPrototype)
     void init();
 
-    static ReturnedValue method_valueOf(const BuiltinFunction *f, CallData *callData);
-    static ReturnedValue method_sort(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static bool isSequenceType(int sequenceTypeId);
     static ReturnedValue newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);

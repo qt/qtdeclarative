@@ -70,7 +70,7 @@ public:
 
     void init(QV4::ExecutionEngine *);
 
-    QV4::ReturnedValue addUniquelyAndExecuteLater(const QV4::BuiltinFunction *, QV4::CallData *callData);
+    QV4::ReturnedValue addUniquelyAndExecuteLater(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 
 public Q_SLOTS:
     void ticked();
@@ -90,7 +90,7 @@ private:
         bool m_guarded;
     };
 
-    void storeAnyArguments(DelayedFunctionCall& dfc, const QV4::CallData *callData, int offset, QV4::ExecutionEngine *engine);
+    void storeAnyArguments(DelayedFunctionCall& dfc, const QV4::Value *argv, int argc, int offset, QV4::ExecutionEngine *engine);
     void executeAllExpired_Later();
 
     QV4::ExecutionEngine *m_engine;

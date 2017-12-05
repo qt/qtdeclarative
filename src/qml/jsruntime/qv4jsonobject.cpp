@@ -884,12 +884,12 @@ void Heap::JsonObject::init()
 }
 
 
-ReturnedValue JsonObject::method_parse(const BuiltinFunction *b, CallData *callData)
+ReturnedValue JsonObject::method_parse(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
     QString jtext;
-    if (callData->argc() > 0)
-        jtext = callData->args[0].toQString();
+    if (argc > 0)
+        jtext = argv[0].toQString();
 
     DEBUG << "parsing source = " << jtext;
     JsonParser parser(v4, jtext.constData(), jtext.length());
@@ -903,12 +903,12 @@ ReturnedValue JsonObject::method_parse(const BuiltinFunction *b, CallData *callD
     return result;
 }
 
-ReturnedValue JsonObject::method_stringify(const BuiltinFunction *b, CallData *callData)
+ReturnedValue JsonObject::method_stringify(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
     Scope scope(b);
     Stringify stringify(scope.engine);
 
-    ScopedObject o(scope, callData->argument(1));
+    ScopedObject o(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
     if (o) {
         stringify.replacerFunction = o->as<FunctionObject>();
         if (o->isArrayObject()) {
@@ -933,7 +933,7 @@ ReturnedValue JsonObject::method_stringify(const BuiltinFunction *b, CallData *c
         }
     }
 
-    ScopedValue s(scope, callData->argument(2));
+    ScopedValue s(scope, argc > 2 ? argv[2] : Primitive::undefinedValue());
     if (NumberObject *n = s->as<NumberObject>())
         s = Encode(n->value());
     else if (StringObject *so = s->as<StringObject>())
@@ -946,7 +946,7 @@ ReturnedValue JsonObject::method_stringify(const BuiltinFunction *b, CallData *c
     }
 
 
-    ScopedValue arg0(scope, callData->argument(0));
+    ScopedValue arg0(scope, argc ? argv[0] : Primitive::undefinedValue());
     QString result = stringify.Str(QString(), arg0);
     if (result.isEmpty() || scope.engine->hasException)
         RETURN_UNDEFINED();

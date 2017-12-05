@@ -316,17 +316,16 @@ bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
     return true;
 }
 
-ReturnedValue QQmlValueTypeWrapper::method_toString(const BuiltinFunction *b, CallData *callData)
+ReturnedValue QQmlValueTypeWrapper::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    Scope scope(b);
-    Object *o = callData->thisObject.as<Object>();
+    const Object *o = thisObject->as<Object>();
     if (!o)
-        THROW_TYPE_ERROR();
-    QQmlValueTypeWrapper *w = o->as<QQmlValueTypeWrapper>();
+        return b->engine()->throwTypeError();
+    const QQmlValueTypeWrapper *w = o->as<QQmlValueTypeWrapper>();
     if (!w)
-        THROW_TYPE_ERROR();
+        return b->engine()->throwTypeError();
 
-    if (QQmlValueTypeReference *ref = w->as<QQmlValueTypeReference>())
+    if (const QQmlValueTypeReference *ref = w->as<QQmlValueTypeReference>())
         if (!ref->readReferenceValue())
             RETURN_UNDEFINED();
 
@@ -351,7 +350,7 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(const BuiltinFunction *b, Ca
         }
         result += QLatin1Char(')');
     }
-    return Encode(scope.engine->newString(result));
+    return Encode(b->engine()->newString(result));
 }
 
 ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *hasProperty)

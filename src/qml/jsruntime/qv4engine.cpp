@@ -101,7 +101,7 @@ using namespace QV4;
 
 static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 
-ReturnedValue throwTypeError(const BuiltinFunction *b, CallData *)
+ReturnedValue throwTypeError(const FunctionObject *b, const QV4::Value *, const QV4::Value *, int)
 {
     return b->engine()->throwTypeError();
 }

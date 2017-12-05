@@ -77,7 +77,7 @@ public:
         Exception = 3
     };
 
-    static QV4::ReturnedValue method_include(const QV4::BuiltinFunction *, QV4::CallData *callData);
+    static QV4::ReturnedValue method_include(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 
 private Q_SLOTS:
     void finished();

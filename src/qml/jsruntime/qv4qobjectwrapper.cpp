@@ -900,14 +900,14 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 
 } // namespace QV4
 
-ReturnedValue QObjectWrapper::method_connect(const BuiltinFunction *b, CallData *callData)
+ReturnedValue QObjectWrapper::method_connect(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     QV4::Scope scope(b);
 
-    if (callData->argc() == 0)
+    if (argc == 0)
         THROW_GENERIC_ERROR("Function.prototype.connect: no arguments given");
 
-    QPair<QObject *, int> signalInfo = extractQtSignal(callData->thisObject);
+    QPair<QObject *, int> signalInfo = extractQtSignal(*thisObject);
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second; // in method range, not signal range!
 
@@ -921,25 +921,25 @@ ReturnedValue QObjectWrapper::method_connect(const BuiltinFunction *b, CallData 
         THROW_GENERIC_ERROR("Function.prototype.connect: this object is not a signal");
 
     QV4::ScopedFunctionObject f(scope);
-    QV4::ScopedValue thisObject (scope, QV4::Encode::undefined());
+    QV4::ScopedValue object (scope, QV4::Encode::undefined());
 
-    if (callData->argc() == 1) {
-        f = callData->args[0];
-    } else if (callData->argc() >= 2) {
-        thisObject = callData->args[0];
-        f = callData->args[1];
+    if (argc == 1) {
+        f = argv[0];
+    } else if (argc >= 2) {
+        object = argv[0];
+        f = argv[1];
     }
 
     if (!f)
         THROW_GENERIC_ERROR("Function.prototype.connect: target is not a function");
 
-    if (!thisObject->isUndefined() && !thisObject->isObject())
+    if (!object->isUndefined() && !object->isObject())
         THROW_GENERIC_ERROR("Function.prototype.connect: target this is not an object");
 
     QV4::QObjectSlotDispatcher *slot = new QV4::QObjectSlotDispatcher;
     slot->signalIndex = signalIndex;
 
-    slot->thisObject.set(scope.engine, thisObject);
+    slot->thisObject.set(scope.engine, object);
     slot->function.set(scope.engine, f);
 
     if (QQmlData *ddata = QQmlData::get(signalObject)) {
@@ -952,14 +952,14 @@ ReturnedValue QObjectWrapper::method_connect(const BuiltinFunction *b, CallData 
     RETURN_UNDEFINED();
 }
 
-ReturnedValue QObjectWrapper::method_disconnect(const BuiltinFunction *b, CallData *callData)
+ReturnedValue QObjectWrapper::method_disconnect(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     QV4::Scope scope(b);
 
-    if (callData->argc() == 0)
+    if (argc == 0)
         THROW_GENERIC_ERROR("Function.prototype.disconnect: no arguments given");
 
-    QPair<QObject *, int> signalInfo = extractQtSignal(callData->thisObject);
+    QPair<QObject *, int> signalInfo = extractQtSignal(*thisObject);
     QObject *signalObject = signalInfo.first;
     int signalIndex = signalInfo.second;
 
@@ -975,11 +975,11 @@ ReturnedValue QObjectWrapper::method_disconnect(const BuiltinFunction *b, CallDa
     QV4::ScopedFunctionObject functionValue(scope);
     QV4::ScopedValue functionThisValue(scope, QV4::Encode::undefined());
 
-    if (callData->argc() == 1) {
-        functionValue = callData->args[0];
-    } else if (callData->argc() >= 2) {
-        functionThisValue = callData->args[0];
-        functionValue = callData->args[1];
+    if (argc == 1) {
+        functionValue = argv[0];
+    } else if (argc >= 2) {
+        functionThisValue = argv[0];
+        functionValue = argv[1];
     }
 
     if (!functionValue)
