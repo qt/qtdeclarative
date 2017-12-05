@@ -121,8 +121,8 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
 
     ExecutionContext *global = v4->rootContext();
     ScopedProperty p(scope);
-    p->value = BuiltinFunction::create(global, v4->id___proto__(), method_get_proto);
-    p->set = BuiltinFunction::create(global, v4->id___proto__(), method_set_proto);
+    p->value = FunctionObject::createBuiltinFunction(global, v4->id___proto__(), method_get_proto);
+    p->set = FunctionObject::createBuiltinFunction(global, v4->id___proto__(), method_set_proto);
     insertMember(v4->id___proto__(), p, Attr_Accessor|Attr_NotEnumerable);
 }
 

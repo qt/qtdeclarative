@@ -61,7 +61,6 @@ struct QQmlSourceLocation;
 
 namespace QV4 {
 
-struct BuiltinFunction;
 struct IndexedBuiltinFunction;
 struct JSCallData;
 
@@ -84,7 +83,7 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
         Index_ProtoConstructor = 0
     };
 
-    void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc));
+    Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc));
     void init(QV4::ExecutionContext *scope, QV4::String *name = 0, bool createProto = false);
     void init(QV4::ExecutionContext *scope, QV4::Function *function, bool createProto = false);
     void init(QV4::ExecutionContext *scope, const QString &name, bool createProto = false);
@@ -103,11 +102,6 @@ struct FunctionCtor : FunctionObject {
 
 struct FunctionPrototype : FunctionObject {
     void init();
-};
-
-struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
-    void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *));
-    ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *);
 };
 
 struct IndexedBuiltinFunction : FunctionObject {
@@ -170,6 +164,11 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
+    static Heap::FunctionObject *createBuiltinFunction(ExecutionContext *scope, String *name,
+                                                       ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc))
+    {
+        return scope->engine()->memoryManager->allocObject<FunctionObject>(scope, name, code);
+    }
 
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
     bool isBinding() const;
@@ -202,24 +201,6 @@ struct FunctionPrototype: FunctionObject
     static ReturnedValue method_apply(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_bind(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-};
-
-struct Q_QML_EXPORT BuiltinFunction : FunctionObject {
-    V4_OBJECT2(BuiltinFunction, FunctionObject)
-    V4_INTERNALCLASS(BuiltinFunction)
-
-    static Heap::BuiltinFunction *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(const BuiltinFunction *, CallData *))
-    {
-        return scope->engine()->memoryManager->allocObject<BuiltinFunction>(scope, name, code);
-    }
-
-    static Heap::FunctionObject *create(ExecutionContext *scope, String *name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc))
-    {
-        return scope->engine()->memoryManager->allocObject<FunctionObject>(scope, name, code);
-    }
-
-    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct IndexedBuiltinFunction : FunctionObject

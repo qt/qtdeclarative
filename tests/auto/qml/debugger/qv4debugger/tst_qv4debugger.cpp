@@ -45,7 +45,7 @@
 using namespace QV4;
 using namespace QV4::Debugging;
 
-typedef QV4::ReturnedValue (*InjectedFunction)(const QV4::BuiltinFunction *, QV4::CallData *callData);
+typedef QV4::ReturnedValue (*InjectedFunction)(const FunctionObject *b, const QV4::Value *, const QV4::Value *, int);
 Q_DECLARE_METATYPE(InjectedFunction)
 
 static bool waitForSignal(QObject* obj, const char* signal, int timeout = 10000)
@@ -87,7 +87,7 @@ public:
 
         QV4::ScopedString name(scope, v4->newString(functionName));
         QV4::ScopedContext ctx(scope, v4->rootContext());
-        QV4::ScopedValue function(scope, BuiltinFunction::create(ctx, name, injectedFunction));
+        QV4::ScopedValue function(scope, FunctionObject::createBuiltinFunction(ctx, name, injectedFunction));
         v4->globalObject->put(name, function);
     }
 
@@ -436,7 +436,7 @@ void tst_qv4debugger::addBreakPointWhilePaused()
     QCOMPARE(state.lineNumber, 2);
 }
 
-static QV4::ReturnedValue someCall(const QV4::BuiltinFunction *function, QV4::CallData *)
+static QV4::ReturnedValue someCall(const FunctionObject *function, const QV4::Value *, const QV4::Value *, int)
 {
     static_cast<QV4Debugger *>(function->engine()->debugger())
             ->removeBreakPoint("removeBreakPointForNextInstruction", 2);

@@ -430,27 +430,6 @@ InternalClass *ScriptFunction::classForConstructor() const
     return ic;
 }
 
-DEFINE_OBJECT_VTABLE(BuiltinFunction);
-
-void Heap::BuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *))
-{
-    Heap::FunctionObject::init(scope, name);
-    this->code = code;
-}
-
-ReturnedValue BuiltinFunction::callAsConstructor(const QV4::FunctionObject *f, const Value *, int)
-{
-    return f->engine()->throwTypeError();
-}
-
-ReturnedValue BuiltinFunction::call(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
-{
-    const BuiltinFunction *f = static_cast<const BuiltinFunction *>(fo);
-    Scope scope(f->engine());
-    JSCallData callData(scope, argc, argv, thisObject);
-    return f->d()->code(f, callData.callData());
-}
-
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
 
 DEFINE_OBJECT_VTABLE(BoundFunction);
