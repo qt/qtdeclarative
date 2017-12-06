@@ -95,7 +95,6 @@ namespace Heap {
     Member(class, NoMark, ushort, needsMark) \
     Member(class, NoMark, uint, offset) \
     Member(class, NoMark, PropertyAttributes *, attrs) \
-    Member(class, NoMark, ReturnedValue, freeList) \
     Member(class, NoMark, SparseArray *, sparse) \
     Member(class, ValueArray, ValueArray, values)
 
@@ -264,8 +263,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     V4_INTERNALCLASS(SparseArrayData)
     V4_NEEDS_DESTROY
 
-    ReturnedValue &freeList() { return d()->freeList; }
-    ReturnedValue freeList() const { return d()->freeList; }
     SparseArray *sparse() const { return d()->sparse; }
     void setSparse(SparseArray *s) { d()->sparse = s; }
 

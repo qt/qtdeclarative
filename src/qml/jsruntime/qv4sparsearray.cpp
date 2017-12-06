@@ -410,6 +410,7 @@ SparseArray::SparseArray(const SparseArray &other)
         header.left->setParent(&header);
         recalcMostLeftNode();
     }
+    freeList = other.freeList;
 }
 
 SparseArrayNode *SparseArray::insert(uint akey)

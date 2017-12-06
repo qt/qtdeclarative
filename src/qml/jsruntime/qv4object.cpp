@@ -1027,7 +1027,6 @@ void Object::copyArrayData(Object *other)
             Heap::ArrayData *od = other->d()->arrayData;
             Heap::ArrayData *dd = d()->arrayData;
             dd->sparse = new SparseArray(*od->sparse);
-            dd->freeList = od->freeList;
         } else {
             Heap::ArrayData *dd = d()->arrayData;
             dd->values.size = other->d()->arrayData->values.size;
