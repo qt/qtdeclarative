@@ -127,6 +127,11 @@ Item {
         source: "logo.pkm"
     }
 
+    Image {
+        id: ktxImage
+        source: "car.ktx"
+    }
+
     TestCase {
         name: "Image"
 
@@ -230,6 +235,11 @@ Item {
         function test_pkmImage() {
             compare(pkmImage.width, 256)
             compare(pkmImage.height, 256)
+        }
+
+        function test_ktxImage() {
+            compare(ktxImage.width, 146)
+            compare(ktxImage.height, 80)
         }
     }
 }

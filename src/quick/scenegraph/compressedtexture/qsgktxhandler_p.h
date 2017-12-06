@@ -37,66 +37,42 @@
 **
 ****************************************************************************/
 
-#include "qsgtexturereader_p.h"
+#ifndef QSGKTXHANDLER_H
+#define QSGKTXHANDLER_H
 
-#include <private/qtquickglobal_p.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#if QT_CONFIG(opengl)
-#include <private/qsgpkmhandler_p.h>
-#include <private/qsgktxhandler_p.h>
-#endif
-
-#include <QFileInfo>
+#include "qsgtexturefilehandler_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QSGTextureReader::QSGTextureReader(QIODevice *device, const QString &fileName)
-    : m_device(device), m_fileInfo(fileName)
+struct KTXHeader;
+
+class QSGKtxHandler : public QSGTextureFileHandler
 {
-}
+public:
+    using QSGTextureFileHandler::QSGTextureFileHandler;
 
-QQuickTextureFactory *QSGTextureReader::read()
-{
-#if QT_CONFIG(opengl)
-    if (!isTexture())
-        return nullptr;
-    return m_handler->read();
-#else
-    return nullptr;
-#endif
-}
+    static bool canRead(const QByteArray &suffix, const QByteArray &block);
 
-bool QSGTextureReader::isTexture()
-{
-#if QT_CONFIG(opengl)
-    if (!checked) {
-        checked = true;
-        if (!init())
-            return false;
+    QQuickTextureFactory *read() override;
 
-        QByteArray headerBlock = m_device->peek(64);
-        QByteArray suffix = m_fileInfo.suffix().toLower().toLatin1();
-        QByteArray logName = m_fileInfo.fileName().toUtf8();
+private:
+    bool checkHeader(const KTXHeader &header);
+    quint32 decode(quint32 val);
 
-        // Currently the handlers are hardcoded; later maybe a list of plugins
-        if (QSGPkmHandler::canRead(suffix, headerBlock)) {
-            m_handler = new QSGPkmHandler(m_device, logName);
-        } else if (QSGKtxHandler::canRead(suffix, headerBlock)) {
-            m_handler = new QSGKtxHandler(m_device, logName);
-        }
-        // else if OtherHandler::canRead() ...etc.
-    }
-    return (m_handler != nullptr);
-#else
-    return false;
-#endif
-}
-
-bool QSGTextureReader::init()
-{
-    if (!m_device)
-        return false;
-    return m_device->isReadable();
-}
+    bool inverseEndian = false;
+};
 
 QT_END_NAMESPACE
+
+#endif // QSGKTXHANDLER_H
