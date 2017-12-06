@@ -38,14 +38,15 @@ Item {
         color: "aqua"
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
-        width: image.implicitWidth
-        height: image.implicitHeight
+        width: image.width
+        height: image.height
 
         Image {
             id: image
             anchors.centerIn: parent
             fillMode: Image.PreserveAspectFit
             source: "resources/map.svgz"
+            Component.onCompleted: { width = implicitWidth; height = implicitHeight }
         }
     }
 
@@ -54,9 +55,17 @@ Item {
         target: map
         minimumScale: 0.1
         maximumScale: 10
+        onActiveChanged: if (!active) reRenderIfNecessary()
     }
 
     DragHandler {
         target: map
+    }
+
+    function reRenderIfNecessary() {
+        var newSourceWidth = image.sourceSize.width * pinch.scale
+        var ratio = newSourceWidth / image.sourceSize.width
+        if (ratio > 1.1 || ratio < 0.9)
+            image.sourceSize.width = newSourceWidth
     }
 }
