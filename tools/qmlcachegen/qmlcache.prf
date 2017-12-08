@@ -20,11 +20,6 @@ else:QML_CACHEGEN_ABI=$$QT_BUILDABI
 
 QML_CACHEGEN_ARGS=--target-architecture=$$QML_CACHEGEN_ARCH --target-abi=$$QML_CACHEGEN_ABI
 
-!system($$QML_CACHEGEN_ARCH_CHECK $$QML_CACHEGEN_ARGS --check-if-supported) {
-    message("QML cache generation requested but target architecture $$QML_CACHEGEN_ARCH is not supported.")
-    return()
-}
-
 load(qt_build_paths)
 
 prefix_build: QMLCACHE_DESTDIR = $$MODULE_BASE_OUTDIR/qml/$$TARGETPATH

@@ -345,12 +345,10 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-//    if (parser.isSet(checkIfSupportedOption)) {
-//        if (isel.isNull())
-//            return EXIT_FAILURE;
-//        else
-//            return EXIT_SUCCESS;
-//    }
+    // Since we're now storing bytecode in the cache, the --check-if-supported option
+    // doesn't make sense anymore. Return EXIT_SUCCESS for backwards compatibility.
+    if (parser.isSet(checkIfSupportedOption))
+        return EXIT_SUCCESS;
 
     const QStringList sources = parser.positionalArguments();
     if (sources.isEmpty()){
