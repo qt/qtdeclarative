@@ -43,7 +43,7 @@ Column {
 
     Section {
         width: parent.width
-        caption: qsTr("Group Box")
+        caption: qsTr("GroupBox")
 
         SectionLayout {
             Label {
@@ -57,6 +57,10 @@ Column {
                 }
             }
         }
+    }
+
+    PaneSection {
+        width: parent.width
     }
 
     ControlSection {

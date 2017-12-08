@@ -128,6 +128,10 @@ void QQuickIconLabelPrivate::syncImage()
     image->setSource(icon.source());
     image->setSourceSize(QSize(icon.width(), icon.height()));
     image->setColor(icon.color());
+    const int valign = alignment & Qt::AlignVertical_Mask;
+    image->setVerticalAlignment(static_cast<QQuickImage::VAlignment>(valign));
+    const int halign = alignment & Qt::AlignHorizontal_Mask;
+    image->setHorizontalAlignment(static_cast<QQuickImage::HAlignment>(halign));
 }
 
 void QQuickIconLabelPrivate::updateOrSyncImage()
@@ -155,6 +159,10 @@ bool QQuickIconLabelPrivate::createLabel()
     label->setFont(font);
     label->setColor(color);
     label->setElideMode(QQuickText::ElideRight);
+    const int valign = alignment & Qt::AlignVertical_Mask;
+    label->setVAlign(static_cast<QQuickText::VAlignment>(valign));
+    const int halign = alignment & Qt::AlignHorizontal_Mask;
+    label->setHAlign(static_cast<QQuickText::HAlignment>(halign));
     label->setText(text);
     if (componentComplete)
         completeComponent(label);
@@ -523,6 +531,14 @@ void QQuickIconLabel::setAlignment(Qt::Alignment alignment)
         return;
 
     d->alignment = static_cast<Qt::Alignment>(align);
+    if (d->label) {
+        d->label->setVAlign(static_cast<QQuickText::VAlignment>(valign));
+        d->label->setHAlign(static_cast<QQuickText::HAlignment>(halign));
+    }
+    if (d->image) {
+        d->image->setVerticalAlignment(static_cast<QQuickImage::VAlignment>(valign));
+        d->image->setHorizontalAlignment(static_cast<QQuickImage::HAlignment>(halign));
+    }
     d->layout();
 }
 

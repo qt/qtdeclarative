@@ -43,7 +43,7 @@ Column {
 
     Section {
         width: parent.width
-        caption: qsTr("Progress Bar")
+        caption: qsTr("ProgressBar")
 
         SectionLayout {
             Label {
@@ -67,6 +67,7 @@ Column {
                     minimumValue: Math.min(backendValues.from.value, backendValues.to.value)
                     maximumValue: Math.max(backendValues.from.value, backendValues.to.value)
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.value
                     Layout.fillWidth: true
                 }
@@ -81,6 +82,7 @@ Column {
                     maximumValue: 9999999
                     minimumValue: -9999999
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.from
                     Layout.fillWidth: true
                 }
@@ -95,6 +97,7 @@ Column {
                     maximumValue: 9999999
                     minimumValue: -9999999
                     decimals: 2
+                    stepSize: 0.1
                     backendValue: backendValues.to
                     Layout.fillWidth: true
                 }

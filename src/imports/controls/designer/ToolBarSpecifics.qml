@@ -41,6 +41,30 @@ import QtQuick.Layouts 1.0
 Column {
     width: parent.width
 
+    Section {
+        width: parent.width
+        caption: qsTr("ToolBar")
+
+        SectionLayout {
+            Label {
+                text: qsTr("Position")
+                tooltip: qsTr("Position of the toolbar.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    backendValue: backendValues.position
+                    model: [ "Header", "Footer" ]
+                    scope: "ToolBar"
+                    Layout.fillWidth: true
+                }
+            }
+        }
+    }
+
+    PaneSection {
+        width: parent.width
+    }
+
     ControlSection {
         width: parent.width
     }
