@@ -298,6 +298,7 @@ private slots:
     void signalSourceLocation();
     void javascript();
     void flushInterval();
+    void translationBinding();
 };
 
 #define VERIFY(type, position, expected, checks) QVERIFY(verify(type, position, expected, checks))
@@ -703,6 +704,25 @@ void tst_QQmlProfilerService::flushInterval()
     m_client->sendRecordingStatus(false);
     checkTraceReceived();
     checkJsHeap();
+}
+
+void tst_QQmlProfilerService::translationBinding()
+{
+    QCOMPARE(connect(true, "qstr.qml"), ConnectSuccess);
+
+    m_client->sendRecordingStatus(true);
+
+    checkTraceReceived();
+    checkJsHeap();
+
+    QQmlProfilerData expected(0, QQmlProfilerDefinitions::RangeStart,
+                              QQmlProfilerDefinitions::Binding);
+    VERIFY(MessageListQML, 8, expected,
+           CheckDetailType | CheckMessageType);
+
+    expected.messageType = QQmlProfilerDefinitions::RangeEnd;
+    VERIFY(MessageListQML, 10, expected,
+           CheckDetailType | CheckMessageType);
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)

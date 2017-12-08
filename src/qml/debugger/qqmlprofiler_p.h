@@ -237,14 +237,19 @@ public:
         // Add 1 to the ID, to make it different from the IDs the V4 profiler produces. The +1 makes
         // the pointer point into the middle of the QV4::Function. Thus it still points to valid
         // memory but we cannot accidentally create a duplicate key from another object.
-        quintptr locationId(id(function) + 1);
+        // If there is no function, use a static but valid address: The profiler itself.
+        quintptr locationId = function ? id(function) + 1 : id(this);
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
                                        (1 << RangeStart | 1 << RangeLocation), Binding,
                                        locationId));
 
         RefLocation &location = m_locations[locationId];
-        if (!location.isValid())
-            location = RefLocation(function);
+        if (!location.isValid()) {
+            if (function)
+                location = RefLocation(function);
+            else // Make it valid without actually providing a location
+                location.locationType = Binding;
+        }
     }
 
     // Have toByteArrays() construct another RangeData event from the same QString later.

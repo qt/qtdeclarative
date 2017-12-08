@@ -274,8 +274,10 @@ void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
         QQmlData::ensurePropertyCache(e, o);
     } else if (!url.isEmpty() && !qobjectApi(e)) {
         QQmlComponent component(e, url, QQmlComponent::PreferSynchronous);
-        QObject *o = component.create();
+        QObject *o = component.beginCreate(e->rootContext());
         setQObjectApi(e, o);
+        if (o)
+            component.completeCreate();
     }
     v4->popContext();
 }

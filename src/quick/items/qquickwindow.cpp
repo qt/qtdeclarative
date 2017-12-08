@@ -1712,24 +1712,27 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
 
     if (point->exclusiveGrabber()) {
         if (auto grabber = point->grabberItem()) {
+            bool handled = false;
             if (sendFilteredPointerEvent(pointerEvent, grabber))
-                return;
+                handled = true;
             // if the grabber is an Item:
             // if the update consists of changing button state, don't accept it unless
             // the button is one in which the grabber is interested
             Qt::MouseButtons acceptedButtons = grabber->acceptedMouseButtons();
-            if (pointerEvent->button() != Qt::NoButton && acceptedButtons
+            if (!handled && pointerEvent->button() != Qt::NoButton && acceptedButtons
                     && !(acceptedButtons & pointerEvent->button())) {
                 pointerEvent->setAccepted(false);
-                return;
+                handled = true;
             }
 
             // send update
-            QPointF localPos = grabber->mapFromScene(lastMousePosition);
-            auto me = pointerEvent->asMouseEvent(localPos);
-            me->accept();
-            QCoreApplication::sendEvent(grabber, me);
-            point->setAccepted(me->isAccepted());
+            if (!handled) {
+                QPointF localPos = grabber->mapFromScene(lastMousePosition);
+                auto me = pointerEvent->asMouseEvent(localPos);
+                me->accept();
+                QCoreApplication::sendEvent(grabber, me);
+                point->setAccepted(me->isAccepted());
+            }
 
             // release event: ungrab if no buttons are pressed anymore
             if (mouseIsReleased)
