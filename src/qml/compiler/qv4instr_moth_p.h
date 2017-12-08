@@ -301,7 +301,10 @@ QT_BEGIN_NAMESPACE
     F(LoadQmlSingleton)
 #define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::LoadQmlSingleton) + 1)
 
-#if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
+#if defined(Q_CC_GNU) && !defined(Q_CC_INTEL)
+// icc before version 1200 doesn't support computed goto, and at least up to version 18.0.0 the
+// current use results in an internal compiler error. We could enable this if/when it gets fixed
+// in a later version.
 #  define MOTH_COMPUTED_GOTO
 #endif
 
