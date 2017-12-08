@@ -249,7 +249,8 @@ public:
         IsManagedOrUndefined_Shift = 64-15,
         IsIntegerConvertible_Shift = 64-15,
         IsIntegerOrBool_Shift = 64-16,
-        QuickType_Shift = 64 - 17
+        QuickType_Shift = 64 - 17,
+        IsPositiveIntShift = 31
     };
 
     static const quint64 Immediate_Mask_64 = 0x00020000u; // bit 49
@@ -315,6 +316,14 @@ public:
         return a.isDouble() && b.isDouble();
     }
     inline bool isNaN() const { return (tag() & 0x7ffc0000  ) == 0x00040000; }
+
+    inline bool isPositiveInt() const {
+#if QT_POINTER_SIZE == 4
+        return isInteger() && int_32() >= 0;
+#else
+        return (_val >> IsPositiveIntShift) == (quint64(ValueTypeInternal::Integer) << 1);
+#endif
+    }
 
     QML_NEARLY_ALWAYS_INLINE double doubleValue() const {
         Q_ASSERT(isDouble());
@@ -566,33 +575,26 @@ inline double Value::toNumber() const
 #ifndef V4_BOOTSTRAP
 inline uint Value::asArrayIndex() const
 {
-#if QT_POINTER_SIZE == 8
-    if (!isNumber())
-        return UINT_MAX;
-    if (isInteger())
-        return int_32() >= 0 ? (uint)int_32() : UINT_MAX;
-#else
-    if (isInteger() && int_32() >= 0)
+    if (Q_LIKELY(isPositiveInt())) {
         return (uint)int_32();
-    if (!isDouble())
+    }
+    if (Q_UNLIKELY(!isDouble()))
         return UINT_MAX;
-#endif
     double d = doubleValue();
     uint idx = (uint)d;
-    if (idx != d)
-        return UINT_MAX;
-    return idx;
+    if (idx == d)
+        return idx;
+    return UINT_MAX;
 }
 
 inline bool Value::asArrayIndex(uint &idx) const
 {
-    if (Q_LIKELY(!isDouble())) {
-        if (Q_LIKELY(isInteger() && int_32() >= 0)) {
-            idx = (uint)int_32();
-            return true;
-        }
-        return false;
+    if (Q_LIKELY(isPositiveInt())) {
+        idx = (uint)int_32();
+        return true;
     }
+    if (Q_UNLIKELY(!isDouble()))
+        return false;
     double d = doubleValue();
     idx = (uint)d;
     return (idx == d && idx != UINT_MAX);
