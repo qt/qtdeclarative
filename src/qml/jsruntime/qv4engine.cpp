@@ -884,14 +884,14 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     while (c) {
         CallContext *callCtx = c->asCallContext();
         if (callCtx && callCtx->d()->v4Function) {
-            base.setUrl(callCtx->d()->v4Function->sourceFile());
+            base = callCtx->d()->v4Function->finalUrl();
             break;
         }
         c = parentContext(c);
     }
 
     if (base.isEmpty() && globalCode)
-        base.setUrl(globalCode->sourceFile());
+        base = globalCode->finalUrl();
 
     if (base.isEmpty())
         return src;

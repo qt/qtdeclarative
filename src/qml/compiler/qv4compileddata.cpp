@@ -502,6 +502,7 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
     if (jsUnit->sourceFileIndex == quint32(0) || jsUnit->stringAt(jsUnit->sourceFileIndex) != irDocument->jsModule.fileName) {
         ensureWritableUnit();
         jsUnit->sourceFileIndex = stringTable.registerString(irDocument->jsModule.fileName);
+        jsUnit->finalUrlIndex = stringTable.registerString(irDocument->jsModule.finalUrl);
     }
 
     // Collect signals that have had a change in signature (from onClicked to onClicked(mouse) for example)

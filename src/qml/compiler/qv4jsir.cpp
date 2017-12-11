@@ -351,6 +351,11 @@ void Module::setFileName(const QString &name)
     fileName = name;
 }
 
+void Module::setFinalUrl(const QString &url)
+{
+    finalUrl = url;
+}
+
 Function::Function(Module *module, Function *outer, const QString &name)
     : module(module)
     , pool(&module->pool)

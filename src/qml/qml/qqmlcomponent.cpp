@@ -561,7 +561,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::CompiledData::CompilationU
     Q_D(QQmlComponent);
     d->compilationUnit = compilationUnit;
     d->start = start;
-    d->url = compilationUnit->url();
+    d->url = compilationUnit->finalUrl();
     d->progress = 1.0;
 }
 

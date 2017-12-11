@@ -8,6 +8,7 @@ PUBLICTESTS += \
     qjsvalueiterator \
     qjsonbinding \
     qqmlfile \
+    qqmlfileselector
 
 !boot2qt {
 PUBLICTESTS += \

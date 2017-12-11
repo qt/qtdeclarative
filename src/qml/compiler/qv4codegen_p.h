@@ -86,15 +86,17 @@ public:
     };
 
     void generateFromProgram(const QString &fileName,
+                             const QString &finalUrl,
                              const QString &sourceCode,
                              AST::Program *ast,
                              QV4::IR::Module *module,
                              CompilationMode mode = GlobalCode,
                              const QStringList &inheritedLocals = QStringList());
     void generateFromFunctionExpression(const QString &fileName,
-                             const QString &sourceCode,
-                             AST::FunctionExpression *ast,
-                             QV4::IR::Module *module);
+                                        const QString &finalUrl,
+                                        const QString &sourceCode,
+                                        AST::FunctionExpression *ast,
+                                        QV4::IR::Module *module);
 
 protected:
     enum Format { ex, cx, nx };

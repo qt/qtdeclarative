@@ -272,7 +272,7 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
     if (!compilationUnit)
         return;
 
-    QML_MEMORY_SCOPE_URL(compilationUnit->url());
+    QML_MEMORY_SCOPE_URL(compilationUnit->finalUrl());
 
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> protectThis(this);
 

@@ -445,7 +445,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         QString string = binding->valueAsString(qmlUnit);
         // Encoded dir-separators defeat QUrl processing - decode them first
         string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
-        QUrl value = string.isEmpty() ? QUrl() : compilationUnit->url().resolved(QUrl(string));
+        QUrl value = string.isEmpty() ? QUrl() : compilationUnit->finalUrl().resolved(QUrl(string));
         // Apply URL interceptor
         if (engine->urlInterceptor())
             value = engine->urlInterceptor()->intercept(value, QQmlAbstractUrlInterceptor::UrlString);
@@ -643,7 +643,8 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         } else if (property->propType() == qMetaTypeId<QList<QUrl> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
             QString urlString = binding->valueAsString(qmlUnit);
-            QUrl u = urlString.isEmpty() ? QUrl() : compilationUnit->url().resolved(QUrl(urlString));
+            QUrl u = urlString.isEmpty() ? QUrl()
+                                         : compilationUnit->finalUrl().resolved(QUrl(urlString));
             QList<QUrl> value;
             value.append(u);
             property->writeProperty(_qobject, &value, propertyWriteFlags);

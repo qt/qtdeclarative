@@ -229,7 +229,7 @@ void FunctionCtor::construct(const Managed *that, Scope &scope, CallData *callDa
     IR::Module module(scope.engine->debugger() != 0);
 
     QQmlJS::RuntimeCodegen cg(scope.engine, f->strictMode());
-    cg.generateFromFunctionExpression(QString(), function, fe, &module);
+    cg.generateFromFunctionExpression(QString(), QString(), function, fe, &module);
 
     Compiler::JSUnitGenerator jsGenerator(&module);
     QScopedPointer<EvalInstructionSelection> isel(scope.engine->iselFactory->create(QQmlEnginePrivate::get(scope.engine), scope.engine->executableAllocator, &module, &jsGenerator));

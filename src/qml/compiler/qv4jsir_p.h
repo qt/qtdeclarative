@@ -952,6 +952,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
     QVector<Function *> functions;
     Function *rootFunction;
     QString fileName;
+    QString finalUrl;
     QDateTime sourceTimeStamp;
     bool isQmlModule; // implies rootFunction is always 0
     uint unitFlags; // flags merged into CompiledData::Unit::flags
@@ -977,6 +978,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
     ~Module();
 
     void setFileName(const QString &name);
+    void setFinalUrl(const QString &url);
 };
 
 struct BasicBlock {
