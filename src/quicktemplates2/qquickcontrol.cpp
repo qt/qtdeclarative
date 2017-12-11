@@ -724,9 +724,14 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
 
     The default font depends on the system environment. ApplicationWindow maintains a system/theme
     font which serves as a default for all controls. There may also be special font defaults for
-    certain types of controls. You can also set the default font for controls by passing a custom
-    font to QGuiApplication::setFont(), before loading the QML. Finally, the font is matched
-    against Qt's font database to find the best match.
+    certain types of controls. You can also set the default font for controls by either:
+
+    \list
+    \li passing a custom font to QGuiApplication::setFont(), before loading the QML; or
+    \li specifying the fonts in the \l {Qt Quick Controls 2 Configuration File}{qtquickcontrols2.conf file}.
+    \endlist
+
+    Finally, the font is matched against Qt's font database to find the best match.
 
     Control propagates explicit font properties from parent to children. If you change a specific
     property on a control's font, that property propagates to all of the control's children,
@@ -747,6 +752,9 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
         }
     }
     \endcode
+
+    For the full list of available font properties, see the
+    \l [QtQuick]{font}{font QML Basic Type} documentation.
 */
 QFont QQuickControl::font() const
 {
