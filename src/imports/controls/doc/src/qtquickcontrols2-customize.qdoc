@@ -458,7 +458,7 @@
 
         ComboBox consists of \l {Control::background}{background},
         \l {Control::contentItem}{content item}, \l {ComboBox::popup}{popup},
-        and \l {ComboBox::delegate}{delegate}.
+        \l {ComboBox::indicator}{indicator}, and \l {ComboBox::delegate}{delegate}.
 
         \image qtquickcontrols2-combobox-custom.png
 
