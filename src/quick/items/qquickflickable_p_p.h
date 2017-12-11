@@ -106,9 +106,10 @@ public:
             , continuousFlickVelocity(0), velocityTime(), vTime(0)
             , smoothVelocity(fp), atEnd(false), atBeginning(true)
             , transitionToSet(false)
-            , fixingUp(false), inOvershoot(false), moving(false), flicking(false)
+            , fixingUp(false), inOvershoot(false), inRebound(false), moving(false), flicking(false)
             , dragging(false), extentsChanged(false)
             , explicitValue(false), minExtentDirty(true), maxExtentDirty(true)
+            , unused(0)
         {}
 
         ~AxisData();
@@ -168,6 +169,7 @@ public:
         bool explicitValue : 1;
         mutable bool minExtentDirty : 1;
         mutable bool maxExtentDirty : 1;
+        uint unused : 19;
     };
 
     bool flickX(qreal velocity);
