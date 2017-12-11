@@ -133,8 +133,9 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
 
 QQuickItem *QQuickAbstractButtonPrivate::getContentItem()
 {
-    executeContentItem();
-    return QQuickControlPrivate::getContentItem();
+    if (!contentItem)
+        executeContentItem();
+    return contentItem;
 }
 
 void QQuickAbstractButtonPrivate::handlePress(const QPointF &point)
@@ -265,10 +266,18 @@ void QQuickAbstractButtonPrivate::toggle(bool value)
         emit q->toggled();
 }
 
-void QQuickAbstractButtonPrivate::executeIndicator()
+static inline QString indicatorName() { return QStringLiteral("indicator"); }
+
+void QQuickAbstractButtonPrivate::executeIndicator(bool complete)
 {
-    Q_Q(QQuickAbstractButton);
-    quickExecuteDeferred(q, QStringLiteral("indicator"), indicator);
+    Q_Q(QQuickControl);
+    if (indicator.wasExecuted())
+        return;
+
+    if (!indicator)
+        quickBeginDeferred(q, indicatorName(), indicator);
+    if (complete)
+        quickCompleteDeferred(q, indicatorName(), indicator);
 }
 
 QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
@@ -559,7 +568,8 @@ void QQuickAbstractButton::setAutoRepeat(bool repeat)
 QQuickItem *QQuickAbstractButton::indicator() const
 {
     QQuickAbstractButtonPrivate *d = const_cast<QQuickAbstractButtonPrivate *>(d_func());
-    d->executeIndicator();
+    if (!d->indicator)
+        d->executeIndicator();
     return d->indicator;
 }
 
@@ -594,9 +604,9 @@ void QQuickAbstractButton::toggle()
 void QQuickAbstractButton::componentComplete()
 {
     Q_D(QQuickAbstractButton);
-    d->executeIndicator();
-    d->executeBackground();
-    d->executeContentItem();
+    d->executeIndicator(true);
+    d->executeBackground(true);
+    d->executeContentItem(true);
     QQuickControl::componentComplete();
 }
 

@@ -87,7 +87,7 @@ public:
 
     void toggle(bool value);
 
-    void executeIndicator();
+    void executeIndicator(bool complete = false);
 
     QString text;
     bool down;

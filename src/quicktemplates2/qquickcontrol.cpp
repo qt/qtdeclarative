@@ -934,16 +934,32 @@ QLocale QQuickControlPrivate::calcLocale(const QQuickItem *item)
     return QLocale();
 }
 
-void QQuickControlPrivate::executeContentItem()
+static inline QString contentItemName() { return QStringLiteral("contentItem"); }
+
+void QQuickControlPrivate::executeContentItem(bool complete)
 {
     Q_Q(QQuickControl);
-    quickExecuteDeferred(q, QStringLiteral("contentItem"), contentItem);
+    if (contentItem.wasExecuted())
+        return;
+
+    if (!contentItem)
+        quickBeginDeferred(q, contentItemName(), contentItem);
+    if (complete)
+        quickCompleteDeferred(q, contentItemName(), contentItem);
 }
 
-void QQuickControlPrivate::executeBackground()
+static inline QString backgroundName() { return QStringLiteral("background"); }
+
+void QQuickControlPrivate::executeBackground(bool complete)
 {
     Q_Q(QQuickControl);
-    quickExecuteDeferred(q, QStringLiteral("background"), background);
+    if (background.wasExecuted())
+        return;
+
+    if (!background)
+        quickBeginDeferred(q, backgroundName(), background);
+    if (complete)
+        quickCompleteDeferred(q, backgroundName(), background);
 }
 
 /*
@@ -1228,7 +1244,8 @@ void QQuickControl::setWheelEnabled(bool enabled)
 QQuickItem *QQuickControl::background() const
 {
     QQuickControlPrivate *d = const_cast<QQuickControlPrivate *>(d_func());
-    d->executeBackground();
+    if (!d->background)
+        d->executeBackground();
     return d->background;
 }
 

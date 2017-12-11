@@ -57,21 +57,27 @@ class QString;
 class QObject;
 
 namespace QtQuickPrivate {
-    void executeDeferred(QObject *object, const QString &property);
+    void beginDeferred(QObject *object, const QString &property);
+    void completeDeferred(QObject *object, const QString &property);
 }
 
 template<typename T>
-void quickExecuteDeferred(QObject *object, const QString &property, QQuickDeferredPointer<T> &delegate)
+void quickBeginDeferred(QObject *object, const QString &property, QQuickDeferredPointer<T> &delegate)
 {
-    if (!delegate.isNull() || delegate.wasExecuted())
-        return;
-
+    Q_ASSERT(delegate.isNull());
     delegate.setExecuting(true);
-    QtQuickPrivate::executeDeferred(object, property);
+    QtQuickPrivate::beginDeferred(object, property);
     delegate.setExecuting(false);
+}
 
-    if (!delegate.isNull())
-        delegate.setExecuted();
+template<typename T>
+void quickCompleteDeferred(QObject *object, const QString &property, QQuickDeferredPointer<T> &delegate)
+{
+    Q_ASSERT(!delegate.wasExecuted());
+    delegate.setExecuting(true);
+    QtQuickPrivate::completeDeferred(object, property);
+    delegate.setExecuting(false);
+    delegate.setExecuted();
 }
 
 QT_END_NAMESPACE

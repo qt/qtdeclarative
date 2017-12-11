@@ -36,6 +36,7 @@
 
 #include "qquickdeferredexecute_p_p.h"
 
+#include <QtCore/qhash.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/private/qqmldata_p.h>
 #include <QtQml/private/qqmlcomponent_p.h>
@@ -44,6 +45,15 @@
 QT_BEGIN_NAMESPACE
 
 namespace QtQuickPrivate {
+
+typedef QHash<uint, QQmlComponentPrivate::DeferredState *> DeferredStates;
+
+static inline uint qHash(QObject *object, const QString &propertyName)
+{
+    return ::qHash(object) + ::qHash(propertyName);
+}
+
+Q_GLOBAL_STATIC(DeferredStates, deferredStates)
 
 static void beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &property, QQmlComponentPrivate::DeferredState *deferredState)
 {
@@ -89,20 +99,31 @@ static void beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
     }
 }
 
-void executeDeferred(QObject *object, const QString &property)
+void beginDeferred(QObject *object, const QString &property)
 {
     QQmlData *data = QQmlData::get(object);
     if (data && !data->deferredData.isEmpty() && !data->wasDeleted(object)) {
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine);
 
-        QQmlComponentPrivate::DeferredState state;
-        beginDeferred(ep, QQmlProperty(object, property), &state);
+        QQmlComponentPrivate::DeferredState *state = new QQmlComponentPrivate::DeferredState;
+        beginDeferred(ep, QQmlProperty(object, property), state);
 
         // Release deferred data for those compilation units that no longer have deferred bindings
         data->releaseDeferredData();
 
-        QQmlComponentPrivate::completeDeferred(ep, &state);
+        deferredStates()->insert(qHash(object, property), state);
     }
+}
+
+void completeDeferred(QObject *object, const QString &property)
+{
+    QQmlData *data = QQmlData::get(object);
+    QQmlComponentPrivate::DeferredState *state = deferredStates()->take(qHash(object, property));
+    if (data && state && !data->wasDeleted(object)) {
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine);
+        QQmlComponentPrivate::completeDeferred(ep, state);
+    }
+    delete state;
 }
 
 } // QtQuickPrivate
