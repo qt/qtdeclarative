@@ -115,7 +115,10 @@ QObject* tst_customization::createControl(const QString &name)
 {
     QQmlComponent component(engine);
     component.setData("import QtQuick.Controls 2.2; " + name.toUtf8() + " { }", QUrl());
-    return component.create();
+    QObject *obj = component.create();
+    if (!obj)
+        qDebug() << component.errorString();
+    return obj;
 }
 
 void tst_customization::creation_data()
@@ -128,6 +131,7 @@ void tst_customization::creation_data()
     QTest::newRow("empty:Button") << "empty" << "Button"<< (QStringList() << "button-empty");
     QTest::newRow("empty:CheckBox") << "empty" << "CheckBox" << (QStringList() << "checkbox-empty");
     QTest::newRow("empty:Dial") << "empty" << "Dial" << (QStringList() << "dial-empty");
+    QTest::newRow("empty:Label") << "empty" << "Label"<< (QStringList() << "label-empty");
     QTest::newRow("empty:RadioButton") << "empty" << "RadioButton" << (QStringList() << "radiobutton-empty");
     QTest::newRow("empty:Slider") << "empty" << "Slider" << (QStringList() << "slider-empty");
 
@@ -142,6 +146,7 @@ void tst_customization::creation_data()
     QTest::newRow("simple:Button") << "simple" << "Button" << (QStringList() << "button-simple" << "button-background-simple" << "button-contentItem-simple");
     QTest::newRow("simple:CheckBox") << "simple" << "CheckBox" << (QStringList() << "checkbox-simple" << "checkbox-contentItem-simple" << "checkbox-indicator-simple");
     QTest::newRow("simple:Dial") << "simple" << "Dial" << (QStringList() << "dial-simple" << "dial-background-simple" << "dial-handle-simple");
+    QTest::newRow("simple:Label") << "simple" << "Label" << (QStringList() << "label-simple" << "label-background-simple");
     QTest::newRow("simple:RadioButton") << "simple" << "RadioButton" << (QStringList() << "radiobutton-simple" << "radiobutton-contentItem-simple" << "radiobutton-indicator-simple");
     QTest::newRow("simple:Slider") << "simple" << "Slider" << (QStringList() << "slider-simple" << "slider-background-simple" << "slider-handle-simple");
 
@@ -149,6 +154,7 @@ void tst_customization::creation_data()
     QTest::newRow("override:Button") << "override" << "Button" << (QStringList() << "button-override" << "button-background-override" << "button-contentItem-override" << "button-empty"); // overrides "empty"
     QTest::newRow("override:CheckBox") << "override" << "CheckBox" << (QStringList() << "checkbox-override" << "checkbox-background-override" << "checkbox-contentItem-incomplete" << "checkbox-incomplete"); // overrides "incomplete"
     QTest::newRow("override:Dial") << "override" << "Dial" << (QStringList() << "dial-override"  << "dial-background-override" << "dial-handle-override" << "dial-incomplete"); // overrides "incomplete"
+    QTest::newRow("override:Label") << "override" << "Label" << (QStringList() << "label-override" << "label-background-override" << "label-simple"); // overrides "simple"
     QTest::newRow("override:RadioButton") << "override" << "RadioButton" << (QStringList() << "radiobutton-override"  << "radiobutton-background-override" << "radiobutton-contentItem-simple" << "radiobutton-indicator-override" << "radiobutton-simple"); // overrides "simple"
     QTest::newRow("override:Slider") << "override" << "Slider" << (QStringList() << "slider-override"  << "slider-background-override" << "slider-handle-override" << "slider-incomplete"); // overrides "incomplete"
 }

@@ -49,6 +49,7 @@
 //
 
 #include <QtQuick/private/qquicktext_p_p.h>
+#include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
 
 #if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
@@ -84,8 +85,10 @@ public:
     QAccessible::Role accessibleRole() const override;
 #endif
 
+    void executeBackground(bool complete = false);
+
     QFont font;
-    QQuickItem *background;
+    QQuickDeferredPointer<QQuickItem> background;
     QQuickAccessibleAttached *accessibleAttached;
 };
 

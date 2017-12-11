@@ -60,6 +60,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickLabel : public QQuickText
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
+    Q_CLASSINFO("DeferredPropertyNames", "background")
 
 public:
     explicit QQuickLabel(QQuickItem *parent = nullptr);
