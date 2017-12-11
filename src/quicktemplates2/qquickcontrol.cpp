@@ -1339,8 +1339,12 @@ void QQuickControl::setContentItem(QQuickItem *item)
 
     The default palette depends on the system environment. ApplicationWindow maintains a system/theme
     palette which serves as a default for all controls. There may also be special palette defaults for
-    certain types of controls. You can also set the default palette for controls by passing a custom
-    palette to QGuiApplication::setPalette(), before loading any QML.
+    certain types of controls. You can also set the default palette for controls by either:
+
+    \list
+    \li passing a custom palette to QGuiApplication::setPalette(), before loading any QML; or
+    \li specifying the colors in the \l {Qt Quick Controls 2 Configuration File}{qtquickcontrols2.conf file}.
+    \endlist
 
     Control propagates explicit palette properties from parent to children. If you change a specific
     property on a control's palette, that property propagates to all of the control's children,
@@ -1362,7 +1366,10 @@ void QQuickControl::setContentItem(QQuickItem *item)
     }
     \endcode
 
-    \sa ApplicationWindow::palette, Popup::palette, {qtquickcontrols2-palette}{palette QML Basic Type}
+    For the full list of available palette colors, see the
+    \l {qtquickcontrols2-palette}{palette QML Basic Type} documentation.
+
+    \sa ApplicationWindow::palette, Popup::palette
 */
 QPalette QQuickControl::palette() const
 {
