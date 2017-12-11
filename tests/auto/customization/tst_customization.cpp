@@ -133,6 +133,7 @@ void tst_customization::creation_data()
     QTest::newRow("empty:Dial") << "empty" << "Dial" << (QStringList() << "dial-empty");
     QTest::newRow("empty:Label") << "empty" << "Label"<< (QStringList() << "label-empty");
     QTest::newRow("empty:RadioButton") << "empty" << "RadioButton" << (QStringList() << "radiobutton-empty");
+    QTest::newRow("empty:RangeSlider") << "empty" << "RangeSlider" << (QStringList() << "rangeslider-empty");
     QTest::newRow("empty:Slider") << "empty" << "Slider" << (QStringList() << "slider-empty");
     QTest::newRow("empty:TextField") << "empty" << "TextField"<< (QStringList() << "textfield-empty");
     QTest::newRow("empty:TextArea") << "empty" << "TextArea"<< (QStringList() << "textarea-empty");
@@ -142,6 +143,7 @@ void tst_customization::creation_data()
     QTest::newRow("incomplete:CheckBox") << "incomplete" << "CheckBox" << (QStringList() << "checkbox-incomplete" << "checkbox-contentItem-incomplete");
     QTest::newRow("incomplete:Dial") << "incomplete" << "Dial" << (QStringList() << "dial-incomplete" << "dial-handle-incomplete");
     QTest::newRow("incomplete:RadioButton") << "incomplete" << "RadioButton" << (QStringList() << "radiobutton-incomplete" << "radiobutton-indicator-incomplete");
+    QTest::newRow("incomplete:RangeSlider") << "incomplete" << "RangeSlider" << (QStringList() << "rangeslider-incomplete" << "rangeslider-first-handle-incomplete" << "rangeslider-second-handle-incomplete");
     QTest::newRow("incomplete:Slider") << "incomplete" << "Slider" << (QStringList() << "slider-incomplete" << "slider-handle-incomplete");
 
     // the "simple" style simulates a proper style and contains most delegates
@@ -150,6 +152,7 @@ void tst_customization::creation_data()
     QTest::newRow("simple:Dial") << "simple" << "Dial" << (QStringList() << "dial-simple" << "dial-background-simple" << "dial-handle-simple");
     QTest::newRow("simple:Label") << "simple" << "Label" << (QStringList() << "label-simple" << "label-background-simple");
     QTest::newRow("simple:RadioButton") << "simple" << "RadioButton" << (QStringList() << "radiobutton-simple" << "radiobutton-contentItem-simple" << "radiobutton-indicator-simple");
+    QTest::newRow("simple:RangeSlider") << "simple" << "RangeSlider" << (QStringList() << "rangeslider-simple" << "rangeslider-background-simple" << "rangeslider-first-handle-simple" << "rangeslider-second-handle-simple");
     QTest::newRow("simple:Slider") << "simple" << "Slider" << (QStringList() << "slider-simple" << "slider-background-simple" << "slider-handle-simple");
     QTest::newRow("simple:TextField") << "simple" << "TextField" << (QStringList() << "textfield-simple" << "textfield-background-simple");
     QTest::newRow("simple:TextArea") << "simple" << "TextArea" << (QStringList() << "textarea-simple" << "textarea-background-simple");
@@ -160,6 +163,7 @@ void tst_customization::creation_data()
     QTest::newRow("override:Dial") << "override" << "Dial" << (QStringList() << "dial-override"  << "dial-background-override" << "dial-handle-override" << "dial-incomplete"); // overrides "incomplete"
     QTest::newRow("override:Label") << "override" << "Label" << (QStringList() << "label-override" << "label-background-override" << "label-simple"); // overrides "simple"
     QTest::newRow("override:RadioButton") << "override" << "RadioButton" << (QStringList() << "radiobutton-override"  << "radiobutton-background-override" << "radiobutton-contentItem-simple" << "radiobutton-indicator-override" << "radiobutton-simple"); // overrides "simple"
+    QTest::newRow("override:RangeSlider") << "override" << "RangeSlider" << (QStringList() << "rangeslider-override"  << "rangeslider-background-override" << "rangeslider-first-handle-override" << "rangeslider-second-handle-override" << "rangeslider-incomplete"); // overrides "incomplete"
     QTest::newRow("override:Slider") << "override" << "Slider" << (QStringList() << "slider-override"  << "slider-background-override" << "slider-handle-override" << "slider-incomplete"); // overrides "incomplete"
     QTest::newRow("override:TextField") << "override" << "TextField" << (QStringList() << "textfield-override" << "textfield-background-override" << "textfield-simple"); // overrides "simple"
     QTest::newRow("override:TextArea") << "override" << "TextArea" << (QStringList() << "textarea-override" << "textarea-background-override" << "textarea-simple"); // overrides "simple"
