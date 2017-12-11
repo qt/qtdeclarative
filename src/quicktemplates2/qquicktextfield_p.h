@@ -69,6 +69,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextField : public QQuickTextInput
     // 2.1 (Qt 5.8)
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL REVISION 1)
     Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled RESET resetHoverEnabled NOTIFY hoverEnabledChanged FINAL REVISION 1)
+    Q_CLASSINFO("DeferredPropertyNames", "background")
 
 public:
     explicit QQuickTextField(QQuickItem *parent = nullptr);

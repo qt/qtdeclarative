@@ -50,6 +50,7 @@
 
 #include <QtQuick/private/qquicktextinput_p_p.h>
 #include <QtQuickTemplates2/private/qquickpresshandler_p_p.h>
+#include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
 
 #include "qquicktextfield_p.h"
 
@@ -97,12 +98,14 @@ public:
     QAccessible::Role accessibleRole() const override;
 #endif
 
+    void executeBackground(bool complete = false);
+
 #if QT_CONFIG(quicktemplates2_hover)
     bool hovered;
     bool explicitHoverEnabled;
 #endif
     QFont font;
-    QQuickItem *background;
+    QQuickDeferredPointer<QQuickItem> background;
     QString placeholder;
     Qt::FocusReason focusReason;
     QQuickPressHandler pressHandler;
