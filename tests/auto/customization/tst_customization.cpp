@@ -128,21 +128,25 @@ void tst_customization::creation_data()
     QTest::newRow("empty:Button") << "empty" << "Button"<< (QStringList() << "button-empty");
     QTest::newRow("empty:CheckBox") << "empty" << "CheckBox" << (QStringList() << "checkbox-empty");
     QTest::newRow("empty:RadioButton") << "empty" << "RadioButton" << (QStringList() << "radiobutton-empty");
+    QTest::newRow("empty:Slider") << "empty" << "Slider" << (QStringList() << "slider-empty");
 
     // the "incomplete" style is missing most delegates
     QTest::newRow("incomplete:Button") << "incomplete" << "Button" << (QStringList() << "button-incomplete" << "button-background-incomplete");
     QTest::newRow("incomplete:CheckBox") << "incomplete" << "CheckBox" << (QStringList() << "checkbox-incomplete" << "checkbox-contentItem-incomplete");
     QTest::newRow("incomplete:RadioButton") << "incomplete" << "RadioButton" << (QStringList() << "radiobutton-incomplete" << "radiobutton-indicator-incomplete");
+    QTest::newRow("incomplete:Slider") << "incomplete" << "Slider" << (QStringList() << "slider-incomplete" << "slider-handle-incomplete");
 
     // the "simple" style simulates a proper style and contains most delegates
     QTest::newRow("simple:Button") << "simple" << "Button" << (QStringList() << "button-simple" << "button-background-simple" << "button-contentItem-simple");
     QTest::newRow("simple:CheckBox") << "simple" << "CheckBox" << (QStringList() << "checkbox-simple" << "checkbox-contentItem-simple" << "checkbox-indicator-simple");
     QTest::newRow("simple:RadioButton") << "simple" << "RadioButton" << (QStringList() << "radiobutton-simple" << "radiobutton-contentItem-simple" << "radiobutton-indicator-simple");
+    QTest::newRow("simple:Slider") << "simple" << "Slider" << (QStringList() << "slider-simple" << "slider-background-simple" << "slider-handle-simple");
 
     // the "override" style overrides various delegates in the above styles
     QTest::newRow("override:Button") << "override" << "Button" << (QStringList() << "button-override" << "button-background-override" << "button-contentItem-override" << "button-empty"); // overrides "empty"
     QTest::newRow("override:CheckBox") << "override" << "CheckBox" << (QStringList() << "checkbox-override" << "checkbox-background-override" << "checkbox-contentItem-incomplete" << "checkbox-incomplete"); // overrides "incomplete"
     QTest::newRow("override:RadioButton") << "override" << "RadioButton" << (QStringList() << "radiobutton-override"  << "radiobutton-background-override" << "radiobutton-contentItem-simple" << "radiobutton-indicator-override" << "radiobutton-simple"); // overrides "simple"
+    QTest::newRow("override:Slider") << "override" << "Slider" << (QStringList() << "slider-override"  << "slider-background-override" << "slider-handle-override" << "slider-incomplete"); // overrides "incomplete"
 }
 
 void tst_customization::creation()
