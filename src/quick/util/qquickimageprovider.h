@@ -56,6 +56,7 @@ class QQuickWindow;
 
 class Q_QUICK_EXPORT QQuickTextureFactory : public QObject
 {
+    Q_OBJECT
 public:
     QQuickTextureFactory();
     virtual ~QQuickTextureFactory();
