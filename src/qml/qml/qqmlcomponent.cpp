@@ -496,8 +496,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QObject *parent)
     Create a QQmlComponent from the given \a url and give it the
     specified \a parent and \a engine.
 
-    Ensure that the URL provided is full and correct, in particular, use
-    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+    \include qqmlcomponent.qdoc url-note
 
     \sa loadUrl()
 */
@@ -511,8 +510,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, QObject *paren
     specified \a parent and \a engine. If \a mode is \l Asynchronous,
     the component will be loaded and compiled asynchronously.
 
-    Ensure that the URL provided is full and correct, in particular, use
-    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+    \include qqmlcomponent.qdoc url-note
 
     \sa loadUrl()
 */
@@ -548,7 +546,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
     : QQmlComponent(engine, parent)
 {
     Q_D(QQmlComponent);
-    const QUrl url = QDir::isAbsolutePath(fileName) ? QUrl::fromLocalFile(fileName) : d->engine->baseUrl().resolved(QUrl(fileName));
+    const QUrl url = QDir::isAbsolutePath(fileName) ? QUrl::fromLocalFile(fileName) : QUrl(fileName);
     d->loadUrl(url, mode);
 }
 
@@ -608,8 +606,7 @@ QQmlContext *QQmlComponent::creationContext() const
 /*!
     Load the QQmlComponent from the provided \a url.
 
-    Ensure that the URL provided is full and correct, in particular, use
-    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+    \include qqmlcomponent.qdoc url-note
 */
 void QQmlComponent::loadUrl(const QUrl &url)
 {
@@ -621,8 +618,7 @@ void QQmlComponent::loadUrl(const QUrl &url)
     Load the QQmlComponent from the provided \a url.
     If \a mode is \l Asynchronous, the component will be loaded and compiled asynchronously.
 
-    Ensure that the URL provided is full and correct, in particular, use
-    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+    \include qqmlcomponent.qdoc url-note
 */
 void QQmlComponent::loadUrl(const QUrl &url, QQmlComponent::CompilationMode mode)
 {
@@ -635,11 +631,21 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
     Q_Q(QQmlComponent);
     clear();
 
-    if ((newUrl.isRelative() && !newUrl.isEmpty())
-    || newUrl.scheme() == QLatin1String("file")) // Workaround QTBUG-11929
-        url = engine->baseUrl().resolved(newUrl);
-    else
+    if (newUrl.isRelative()) {
+        // The new URL is a relative URL like QUrl("main.qml").
+        url = engine->baseUrl().resolved(QUrl(newUrl.toString()));
+    } else if (engine->baseUrl().isLocalFile() && newUrl.isLocalFile() && !QDir::isAbsolutePath(newUrl.toLocalFile())) {
+        // The new URL is a file on disk but it's a relative path; e.g.:
+        // QUrl::fromLocalFile("main.qml") or QUrl("file:main.qml")
+        // We need to remove the scheme so that it becomes a relative URL with a relative path:
+        QUrl fixedUrl(newUrl);
+        fixedUrl.setScheme(QString());
+        // Then, turn it into an absolute URL with an absolute path by resolving it against the engine's baseUrl().
+        // This is a compatibility hack for QTBUG-58837.
+        url = engine->baseUrl().resolved(fixedUrl);
+    } else {
         url = newUrl;
+    }
 
     if (newUrl.isEmpty()) {
         QQmlError error;

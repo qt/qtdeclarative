@@ -117,6 +117,8 @@ private slots:
     void recursion();
     void recursionContinuation();
     void callingContextForInitialProperties();
+    void relativeUrl_data();
+    void relativeUrl();
 
 private:
     QQmlEngine engine;
@@ -579,6 +581,28 @@ void tst_qqmlcomponent::callingContextForInitialProperties()
 
     QVERIFY(!checker->scopeObject.isNull());
     QVERIFY(checker->scopeObject->metaObject()->indexOfProperty("incubatedObject") != -1);
+}
+
+void tst_qqmlcomponent::relativeUrl_data()
+{
+    QTest::addColumn<QUrl>("url");
+
+    QTest::addRow("fromLocalFile") << QUrl::fromLocalFile("data/QtObjectComponent.qml");
+    QTest::addRow("fromLocalFileHash") << QUrl::fromLocalFile("data/QtObjectComponent#2.qml");
+    QTest::addRow("constructor") << QUrl("data/QtObjectComponent.qml");
+    QTest::addRow("absolute") << QUrl::fromLocalFile(QFINDTESTDATA("data/QtObjectComponent.qml"));
+    QTest::addRow("qrc") << QUrl("qrc:/data/QtObjectComponent.qml");
+}
+
+void tst_qqmlcomponent::relativeUrl()
+{
+    QFETCH(QUrl, url);
+
+    QQmlComponent component(&engine);
+    // Shouldn't assert in QQmlTypeLoader; we want QQmlComponent to assume that
+    // data/QtObjectComponent.qml refers to the data/QtObjectComponent.qml in the current working directory.
+    component.loadUrl(url);
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
