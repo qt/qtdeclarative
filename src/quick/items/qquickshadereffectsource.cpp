@@ -344,6 +344,7 @@ void QQuickShaderEffectSource::setSourceItem(QQuickItem *item)
             d->refFromEffectItem(m_hideSource);
             d->addItemChangeListener(this, QQuickItemPrivate::Geometry);
             connect(m_sourceItem, SIGNAL(destroyed(QObject*)), this, SLOT(sourceItemDestroyed(QObject*)));
+            connect(m_sourceItem, SIGNAL(parentChanged(QQuickItem*)), this, SLOT(sourceItemParentChanged(QQuickItem*)));
         } else {
             qWarning("ShaderEffectSource: sourceItem and ShaderEffectSource must both be children of the same window.");
             m_sourceItem = nullptr;
@@ -360,6 +361,13 @@ void QQuickShaderEffectSource::sourceItemDestroyed(QObject *item)
     m_sourceItem = nullptr;
     update();
     emit sourceItemChanged();
+}
+
+
+void QQuickShaderEffectSource::sourceItemParentChanged(QQuickItem *parent)
+{
+    if (!parent && m_texture)
+        m_texture->setItem(0);
 }
 
 
