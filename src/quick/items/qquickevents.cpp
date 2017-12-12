@@ -326,6 +326,18 @@ Item {
 */
 
 /*!
+    \qmlproperty int QtQuick::MouseEvent::flags
+    \since 5.11
+
+    This property holds the flags that provide additional information about the
+    mouse event.
+
+    \value Qt.MouseEventCreatedDoubleClick Indicates that Qt has created a
+    double click event from this event. This flag is set in the event originating
+    from a button press, and not in the resulting double click event.
+*/
+
+/*!
     \qmltype WheelEvent
     \instantiates QQuickWheelEvent
     \inqmlmodule QtQuick

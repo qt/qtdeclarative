@@ -99,6 +99,7 @@ void QQuickMouseAreaPrivate::saveEvent(QMouseEvent *event)
     lastButton = event->button();
     lastButtons = event->buttons();
     lastModifiers = event->modifiers();
+    lastFlags = event->flags();
 }
 
 bool QQuickMouseAreaPrivate::isPressAndHoldConnected()
@@ -784,7 +785,7 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
 #endif
 
     QQuickMouseEvent &me = d->quickMouseEvent;
-    me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
+    me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress, event->flags());
     me.setSource(event->source());
     emit mouseXChanged(&me);
     me.setPosition(d->lastPos);
@@ -827,7 +828,8 @@ void QQuickMouseArea::mouseDoubleClickEvent(QMouseEvent *event)
     if (d->enabled) {
         d->saveEvent(event);
         QQuickMouseEvent &me = d->quickMouseEvent;
-        me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, true, false);
+        me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, true,
+                 false, event->flags());
         me.setSource(event->source());
         me.setAccepted(d->isDoubleClickConnected());
         emit this->doubleClicked(&me);
@@ -1028,7 +1030,7 @@ void QQuickMouseArea::timerEvent(QTimerEvent *event)
         if (d->pressed && dragged == false && d->hovered == true) {
             d->longPress = true;
             QQuickMouseEvent &me = d->quickMouseEvent;
-            me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress);
+            me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, false, d->longPress, d->lastFlags);
             me.setSource(Qt::MouseEventSynthesizedByQt);
             me.setAccepted(d->isPressAndHoldConnected());
             emit pressAndHold(&me);
@@ -1207,7 +1209,7 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p, Qt::MouseEventS
 
     if (wasPressed != p) {
         QQuickMouseEvent &me = d->quickMouseEvent;
-        me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, isclick, d->longPress);
+        me.reset(d->lastPos.x(), d->lastPos.y(), d->lastButton, d->lastButtons, d->lastModifiers, isclick, d->longPress, d->lastFlags);
         me.setSource(source);
         if (p) {
             d->pressed |= button;

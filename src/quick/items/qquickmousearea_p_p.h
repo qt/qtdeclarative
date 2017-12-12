@@ -112,6 +112,7 @@ public:
 #endif
     QQuickMouseEvent quickMouseEvent;
     QQuickWheelEvent quickWheelEvent;
+    Qt::MouseEventFlags lastFlags;
 };
 
 QT_END_NAMESPACE

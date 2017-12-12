@@ -131,15 +131,18 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(bool wasHeld READ wasHeld)
     Q_PROPERTY(bool isClick READ isClick)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+    Q_REVISION(11) Q_PROPERTY(int flags READ flags)
 
 public:
     QQuickMouseEvent()
       : _x(0), _y(0), _button(Qt::NoButton), _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
       , _source(Qt::MouseEventNotSynthesized), _wasHeld(false), _isClick(false), _accepted(false)
+      , _flags(Qt::MouseEventFlags(0))
     {}
 
     void reset(qreal x, qreal y, Qt::MouseButton button, Qt::MouseButtons buttons,
-               Qt::KeyboardModifiers modifiers, bool isClick = false, bool wasHeld = false)
+               Qt::KeyboardModifiers modifiers, bool isClick = false, bool wasHeld = false,
+               Qt::MouseEventFlags flags = 0)
     {
         _x = x;
         _y = y;
@@ -150,6 +153,7 @@ public:
         _wasHeld = wasHeld;
         _isClick = isClick;
         _accepted = true;
+        _flags = flags;
     }
 
     qreal x() const { return _x; }
@@ -169,7 +173,7 @@ public:
 
     bool isAccepted() { return _accepted; }
     void setAccepted(bool accepted) { _accepted = accepted; }
-
+    int flags() const { return _flags; }
 private:
     qreal _x;
     qreal _y;
@@ -180,6 +184,7 @@ private:
     bool _wasHeld : 1;
     bool _isClick : 1;
     bool _accepted : 1;
+    Qt::MouseEventFlags _flags;
 };
 
 class QQuickWheelEvent : public QObject
