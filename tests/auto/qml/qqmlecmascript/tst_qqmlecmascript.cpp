@@ -345,6 +345,8 @@ private slots:
     void qtbug_60547();
     void delayLoadingArgs();
     void manyArguments();
+    void forInIterator();
+    void localForInIterator();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8392,6 +8394,37 @@ void tst_qqmlecmascript::manyArguments()
 
     QJSEngine engine;
     engine.evaluate(testCase);
+}
+
+void tst_qqmlecmascript::forInIterator()
+{
+    auto testCase =
+            "(function(){\n"
+            "var x = 'yoyo'\n"
+            "var i\n"
+            "for (i in x) {\n"
+            "}\n"
+            "return i\n"
+            "})()";
+    QJSEngine engine;
+    QJSValue ret = engine.evaluate(testCase);
+    QVERIFY(ret.isString());
+    QCOMPARE(ret.toString(), QStringLiteral("3"));
+}
+
+void tst_qqmlecmascript::localForInIterator()
+{
+    auto testCase =
+            "(function(){\n"
+            "var x = 'yoyo'\n"
+            "for (var i in x) {\n"
+            "}\n"
+            "return i\n"
+            "})()";
+    QJSEngine engine;
+    QJSValue ret = engine.evaluate(testCase);
+    QVERIFY(ret.isString());
+    QCOMPARE(ret.toString(), QStringLiteral("3"));
 }
 
 
