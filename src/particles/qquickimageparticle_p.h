@@ -379,6 +379,7 @@ private:
     QColor m_color;
     qreal m_color_variation;
 
+    QSGNode *m_outgoingNode;
     QHash<int, QSGGeometryNode *> m_nodes;
     QHash<int, int> m_idxStarts;//TODO: Proper resizing will lead to needing a spriteEngine per particle - do this after sprite engine gains transparent sharing?
     QList<QPair<int, int> > m_startsIdx;//Same data, optimized for alternate retrieval
