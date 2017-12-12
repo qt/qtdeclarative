@@ -896,7 +896,8 @@ void tst_QQmlEngineDebugService::queryObjectWithNonStreamableTypes()
     QmlDebugObjectReference obj = m_dbg->object();
     QVERIFY(!obj.className.isEmpty());
 
-    QCOMPARE(findProperty(obj.properties, "modelIndex").value, QVariant());
+    QCOMPARE(findProperty(obj.properties, "modelIndex").value,
+             QVariant(QLatin1String("QModelIndex()")));
 }
 
 
