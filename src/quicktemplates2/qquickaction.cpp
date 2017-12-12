@@ -523,16 +523,26 @@ void QQuickAction::toggle(QObject *source)
 void QQuickAction::trigger(QObject *source)
 {
     Q_D(QQuickAction);
-    if (!d->enabled)
+    d->trigger(source, true);
+}
+
+void QQuickActionPrivate::trigger(QObject* source, bool doToggle)
+{
+    Q_Q(QQuickAction);
+    if (!enabled)
         return;
 
-    QPointer<QObject> guard = this;
+    QPointer<QObject> guard = q;
     // the checked action of an exclusive group cannot be unchecked
-    if (d->checkable && (!d->checked || !d->group || !d->group->isExclusive() || d->group->checkedAction() != this))
-        toggle(source);
+    if (checkable && (!checked || !group || !group->isExclusive() || group->checkedAction() != q)) {
+        if (doToggle)
+            q->toggle(source);
+        else
+            emit q->toggled(source);
+    }
 
     if (!guard.isNull())
-        emit triggered(source);
+        emit q->triggered(source);
 }
 
 bool QQuickAction::event(QEvent *event)

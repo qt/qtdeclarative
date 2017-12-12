@@ -262,6 +262,69 @@ TestCase {
         compare(control.action.enabled, true) // does NOT propagate
     }
 
+    Component {
+        id: checkableButton
+        AbstractButton {
+            checkable: true
+            action: Action {}
+        }
+    }
+
+    function test_checkable_button() {
+        var control = createTemporaryObject(checkableButton, testCase)
+        verify(control)
+        control.checked = false
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+        verify(!control.checked)
+        verify(!control.action.checked)
+
+        keyPress(Qt.Key_Space)
+        keyRelease(Qt.Key_Space)
+
+        compare(control.action.checked, true)
+        compare(control.checked, true)
+
+        keyPress(Qt.Key_Space)
+
+        compare(control.action.checked, true)
+        compare(control.checked, true)
+
+        keyRelease(Qt.Key_Space)
+
+        compare(control.action.checked, false)
+        compare(control.checked, false)
+
+        var checkedSpy = signalSpy.createObject(control, {target: control.action, signalName: "checkedChanged"})
+        var toggledSpy = signalSpy.createObject(control, {target: control, signalName: "toggled"})
+        var actionToggledSpy = signalSpy.createObject(control, {target: control.action, signalName: "toggled"})
+
+        verify(checkedSpy.valid)
+        verify(toggledSpy.valid)
+        verify(actionToggledSpy.valid)
+
+        mousePress(control)
+
+        compare(control.action.checked, false)
+        compare(control.checked, false)
+
+        mouseRelease(control)
+
+        checkedSpy.wait()
+        compare(checkedSpy.count, 1)
+        compare(actionToggledSpy.count, 1)
+        compare(toggledSpy.count, 1)
+
+        compare(control.action.checked, true)
+        compare(control.checked, true)
+
+        mousePress(control)
+        mouseRelease(control)
+
+        compare(control.checked, false)
+        compare(control.action.checked, false)
+    }
+
     function test_trigger_data() {
         return [
             {tag: "click", click: true, button: true, action: true, clicked: true, triggered: true},
