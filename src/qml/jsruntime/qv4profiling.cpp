@@ -120,7 +120,8 @@ void Profiler::startProfiling(quint64 features)
         if (features & (1 << FeatureMemoryAllocation)) {
             qint64 timestamp = m_timer.nsecsElapsed();
             MemoryAllocationProperties heap = {timestamp,
-                                               (qint64)m_engine->memoryManager->getAllocatedMem(),
+                                               (qint64)m_engine->memoryManager->getAllocatedMem() -
+                                               (qint64)m_engine->memoryManager->getLargeItemsMem(),
                                                HeapPage};
             m_memory_data.append(heap);
             MemoryAllocationProperties small = {timestamp,

@@ -7409,10 +7409,18 @@ void QQuickItem::unsetCursor()
 void QQuickItem::grabMouse()
 {
     Q_D(QQuickItem);
-    if (!d->window)
+    if (!d->window || d->window->mouseGrabberItem() == this)
         return;
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-    windowPriv->setMouseGrabber(this);
+    bool fromTouch = windowPriv->isDeliveringTouchAsMouse();
+    auto point = fromTouch ?
+        windowPriv->pointerEventInstance(windowPriv->touchMouseDevice)->pointById(windowPriv->touchMouseId) :
+        windowPriv->pointerEventInstance(QQuickPointerDevice::genericMouseDevice())->point(0);
+    if (point) {
+        QQuickItem *oldGrabber = point->grabberItem();
+        point->setGrabberItem(this);
+        windowPriv->sendUngrabEvent(oldGrabber, fromTouch);
+    }
 }
 
 /*!
@@ -7430,7 +7438,7 @@ void QQuickItem::ungrabMouse()
     if (!d->window)
         return;
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-    windowPriv->removeGrabber(this, true, false);
+    windowPriv->removeGrabber(this, true, windowPriv->isDeliveringTouchAsMouse());
 }
 
 

@@ -230,16 +230,24 @@ public:
 
     bool trackAlloc(size_t size, MemoryType type)
     {
-        MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), (qint64)size, type};
-        m_memory_data.append(allocation);
-        return true;
+        if (size) {
+            MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), (qint64)size, type};
+            m_memory_data.append(allocation);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     bool trackDealloc(size_t size, MemoryType type)
     {
-        MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), -(qint64)size, type};
-        m_memory_data.append(allocation);
-        return true;
+        if (size) {
+            MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), -(qint64)size, type};
+            m_memory_data.append(allocation);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     quint64 featuresEnabled;

@@ -75,6 +75,8 @@ class QQmlCompiledData;
 
 namespace QV4 { struct String; }
 
+void Q_QML_PRIVATE_EXPORT qmlUnregisterType(int type);
+
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
 public:

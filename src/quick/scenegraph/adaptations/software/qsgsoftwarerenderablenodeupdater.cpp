@@ -83,7 +83,7 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGTransformNode *)
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGClipNode *node)
 {
     // Make sure to translate the clip rect into world coordinates
-    if (m_clipState.count() == 0 || m_clipState.top().isNull()) {
+    if (m_clipState.count() == 0 || (m_clipState.count() == 1 && m_clipState.top().isNull())) {
         m_clipState.push(m_transformState.top().map(QRegion(node->clipRect().toRect())));
         m_hasClip = true;
     } else {
@@ -97,7 +97,7 @@ bool QSGSoftwareRenderableNodeUpdater::visit(QSGClipNode *node)
 void QSGSoftwareRenderableNodeUpdater::endVisit(QSGClipNode *)
 {
     m_clipState.pop();
-    if (m_clipState.count() == 0 || m_clipState.top().isNull())
+    if (m_clipState.count() == 0 || (m_clipState.count() == 1 && m_clipState.top().isNull()))
         m_hasClip = false;
 }
 

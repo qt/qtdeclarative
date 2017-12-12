@@ -54,6 +54,7 @@
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmllistcompositor_p.h>
 #include <private/qqmlobjectmodel_p.h>
+#include <private/qqmlincubator_p.h>
 
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qstringlist.h>
@@ -109,11 +110,12 @@ public:
 
     int count() const override;
     bool isValid() const override { return delegate() != 0; }
-    QObject *object(int index, bool asynchronous = false) override;
+    QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
     ReleaseFlags release(QObject *object) override;
     void cancel(int index) override;
     QString stringValue(int index, const QString &role) override;
     void setWatchedRoles(const QList<QByteArray> &roles) override;
+    QQmlIncubator::Status incubationStatus(int index) override;
 
     int indexOf(QObject *object, QObject *objectContext) const override;
 

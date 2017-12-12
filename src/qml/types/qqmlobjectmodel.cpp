@@ -267,7 +267,7 @@ bool QQmlObjectModel::isValid() const
     return true;
 }
 
-QObject *QQmlObjectModel::object(int index, bool)
+QObject *QQmlObjectModel::object(int index, QQmlIncubator::IncubationMode)
 {
     Q_D(QQmlObjectModel);
     QQmlObjectModelPrivate::Item &item = d->children[index];
@@ -296,6 +296,11 @@ QString QQmlObjectModel::stringValue(int index, const QString &name)
     if (index < 0 || index >= d->children.count())
         return QString();
     return QQmlEngine::contextForObject(d->children.at(index).item)->contextProperty(name).toString();
+}
+
+QQmlIncubator::Status QQmlObjectModel::incubationStatus(int)
+{
+    return QQmlIncubator::Ready;
 }
 
 int QQmlObjectModel::indexOf(QObject *item, QObject *) const

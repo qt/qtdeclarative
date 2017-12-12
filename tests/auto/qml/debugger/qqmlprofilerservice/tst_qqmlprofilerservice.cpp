@@ -33,6 +33,7 @@
 #include <private/qqmldebugconnection_p.h>
 
 #include <QtTest/qtest.h>
+#include <private/qtestresult_p.h>
 #include <QtCore/qlibraryinfo.h>
 
 struct QQmlProfilerData
@@ -299,6 +300,7 @@ private slots:
     void javascript();
     void flushInterval();
     void translationBinding();
+    void memory();
 };
 
 #define VERIFY(type, position, expected, checks) QVERIFY(verify(type, position, expected, checks))
@@ -723,6 +725,26 @@ void tst_QQmlProfilerService::translationBinding()
     expected.messageType = QQmlProfilerDefinitions::RangeEnd;
     VERIFY(MessageListQML, 10, expected,
            CheckDetailType | CheckMessageType);
+}
+
+void tst_QQmlProfilerService::memory()
+{
+    connect(true, "memory.qml");
+    if (QTest::currentTestFailed() || QTestResult::skipCurrentTest())
+        return;
+
+    m_client->sendRecordingStatus(true);
+
+    checkTraceReceived();
+    checkJsHeap();
+
+    int smallItems = 0;
+    for (auto message : m_client->jsHeapMessages) {
+        if (message.detailType == QV4::Profiling::SmallItem)
+            ++smallItems;
+    }
+
+    QVERIFY(smallItems > 5);
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)

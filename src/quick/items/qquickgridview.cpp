@@ -511,9 +511,11 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     FxGridItemSG *item = 0;
     bool changed = false;
 
+    QQmlIncubator::IncubationMode incubationMode = doBuffer ? QQmlIncubator::Asynchronous : QQmlIncubator::AsynchronousIfNested;
+
     while (modelIndex < model->count() && rowPos <= fillTo + rowSize()*(columns - colNum)/(columns+1)) {
         qCDebug(lcItemViewDelegateLifecycle) << "refill: append item" << modelIndex << colPos << rowPos;
-        if (!(item = static_cast<FxGridItemSG*>(createItem(modelIndex, doBuffer))))
+        if (!(item = static_cast<FxGridItemSG*>(createItem(modelIndex, incubationMode))))
             break;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
             item->setPosition(colPos, rowPos, true);
@@ -548,7 +550,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     colPos = colNum * colSize();
     while (visibleIndex > 0 && rowPos + rowSize() - 1 >= fillFrom - rowSize()*(colNum+1)/(columns+1)){
         qCDebug(lcItemViewDelegateLifecycle) << "refill: prepend item" << visibleIndex-1 << "top pos" << rowPos << colPos;
-        if (!(item = static_cast<FxGridItemSG*>(createItem(visibleIndex-1, doBuffer))))
+        if (!(item = static_cast<FxGridItemSG*>(createItem(visibleIndex-1, incubationMode))))
             break;
         --visibleIndex;
         if (!transitioner || !transitioner->canTransition(QQuickItemViewTransitioner::PopulateTransition, true)) // pos will be set by layoutVisibleItems()
@@ -2415,7 +2417,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                     item->index = modelIndex + i;
                 if (!item)
-                    item = createItem(modelIndex + i);
+                    item = createItem(modelIndex + i, QQmlIncubator::Synchronous);
                 if (!item)
                     return false;
 
@@ -2468,7 +2470,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 item->index = modelIndex + i;
             bool newItem = !item;
             if (!item)
-                item = createItem(modelIndex + i);
+                item = createItem(modelIndex + i, QQmlIncubator::Synchronous);
             if (!item)
                 return false;
 
