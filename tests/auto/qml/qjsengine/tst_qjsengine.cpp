@@ -201,6 +201,8 @@ private slots:
 
     void malformedExpression();
 
+    void scriptScopes();
+
 signals:
     void testSignal();
 };
@@ -4116,6 +4118,22 @@ void tst_QJSEngine::malformedExpression()
 {
     QJSEngine engine;
     engine.evaluate("5%55555&&5555555\n7-0");
+}
+
+void tst_QJSEngine::scriptScopes()
+{
+    QJSEngine engine;
+
+    QJSValue def = engine.evaluate("'use strict'; function foo() { return 42 }");
+    QVERIFY(!def.isError());
+    QJSValue globalObject = engine.globalObject();
+    QJSValue foo = globalObject.property("foo");
+    QVERIFY(foo.isObject());
+    QVERIFY(foo.isCallable());
+
+    QJSValue use = engine.evaluate("'use strict'; foo()");
+    QVERIFY(use.isNumber());
+    QCOMPARE(use.toInt(), 42);
 }
 
 QTEST_MAIN(tst_QJSEngine)
