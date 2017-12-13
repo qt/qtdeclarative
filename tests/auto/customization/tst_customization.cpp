@@ -128,6 +128,7 @@ void tst_customization::creation_data()
     QTest::addColumn<QStringList>("delegates");
 
     // the "empty" style does not contain any delegates
+    QTest::newRow("empty:ApplicationWindow") << "empty" << "ApplicationWindow"<< (QStringList() << "applicationwindow-empty");
     QTest::newRow("empty:Button") << "empty" << "Button"<< (QStringList() << "button-empty");
     QTest::newRow("empty:CheckBox") << "empty" << "CheckBox" << (QStringList() << "checkbox-empty");
     QTest::newRow("empty:Dial") << "empty" << "Dial" << (QStringList() << "dial-empty");
@@ -147,6 +148,7 @@ void tst_customization::creation_data()
     QTest::newRow("incomplete:Slider") << "incomplete" << "Slider" << (QStringList() << "slider-incomplete" << "slider-handle-incomplete");
 
     // the "simple" style simulates a proper style and contains most delegates
+    QTest::newRow("simple:ApplicationWindow") << "simple" << "ApplicationWindow" << (QStringList() << "applicationwindow-simple" << "applicationwindow-background-simple");
     QTest::newRow("simple:Button") << "simple" << "Button" << (QStringList() << "button-simple" << "button-background-simple" << "button-contentItem-simple");
     QTest::newRow("simple:CheckBox") << "simple" << "CheckBox" << (QStringList() << "checkbox-simple" << "checkbox-contentItem-simple" << "checkbox-indicator-simple");
     QTest::newRow("simple:Dial") << "simple" << "Dial" << (QStringList() << "dial-simple" << "dial-background-simple" << "dial-handle-simple");
@@ -158,6 +160,7 @@ void tst_customization::creation_data()
     QTest::newRow("simple:TextArea") << "simple" << "TextArea" << (QStringList() << "textarea-simple" << "textarea-background-simple");
 
     // the "override" style overrides various delegates in the above styles
+    QTest::newRow("override:ApplicationWindow") << "override" << "ApplicationWindow" << (QStringList() << "applicationwindow-override" << "applicationwindow-background-override" << "applicationwindow-simple"); // overrides "simple"
     QTest::newRow("override:Button") << "override" << "Button" << (QStringList() << "button-override" << "button-background-override" << "button-contentItem-override" << "button-empty"); // overrides "empty"
     QTest::newRow("override:CheckBox") << "override" << "CheckBox" << (QStringList() << "checkbox-override" << "checkbox-background-override" << "checkbox-contentItem-incomplete" << "checkbox-incomplete"); // overrides "incomplete"
     QTest::newRow("override:Dial") << "override" << "Dial" << (QStringList() << "dial-override"  << "dial-background-override" << "dial-handle-override" << "dial-incomplete"); // overrides "incomplete"

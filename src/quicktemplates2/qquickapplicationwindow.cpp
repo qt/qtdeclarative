@@ -43,6 +43,8 @@
 #include "qquicktoolbar_p.h"
 #include "qquicktabbar_p.h"
 #include "qquickdialogbuttonbox_p.h"
+#include "qquickdeferredexecute_p_p.h"
+#include "qquickdeferredpointer_p_p.h"
 
 #include <QtCore/private/qobject_p.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -173,8 +175,10 @@ public:
 
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
 
+    void executeBackground(bool complete = false);
+
     bool complete;
-    QQuickItem *background;
+    QQuickDeferredPointer<QQuickItem> background;
     QQuickItem *contentItem;
     QQuickItem *header;
     QQuickItem *footer;
@@ -295,6 +299,20 @@ void QQuickApplicationWindowPrivate::contentData_append(QQmlListProperty<QObject
         QQuickPopupPrivate::get(popup)->setWindow(static_cast<QQuickApplicationWindow *>(prop->data));
 }
 
+static inline QString backgroundName() { return QStringLiteral("background"); }
+
+void QQuickApplicationWindowPrivate::executeBackground(bool complete)
+{
+    Q_Q(QQuickApplicationWindow);
+    if (background.wasExecuted())
+        return;
+
+    if (!background)
+        quickBeginDeferred(q, backgroundName(), background);
+    if (complete)
+        quickCompleteDeferred(q, backgroundName(), background);
+}
+
 QQuickApplicationWindow::QQuickApplicationWindow(QWindow *parent)
     : QQuickWindowQmlImpl(parent), d_ptr(new QQuickApplicationWindowPrivate)
 {
@@ -336,7 +354,9 @@ QQuickApplicationWindow::~QQuickApplicationWindow()
 */
 QQuickItem *QQuickApplicationWindow::background() const
 {
-    Q_D(const QQuickApplicationWindow);
+    QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
+    if (!d->background)
+        d->executeBackground();
     return d->background;
 }
 
@@ -346,7 +366,7 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    QQuickControlPrivate::destroyDelegate(d->background, this);
+    delete d->background;
     d->background = background;
     if (background) {
         background->setParentItem(QQuickWindow::contentItem());
@@ -355,7 +375,8 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
         if (isComponentComplete())
             d->relayout();
     }
-    emit backgroundChanged();
+    if (!d->background.isExecuting())
+        emit backgroundChanged();
 }
 
 /*!
@@ -716,6 +737,7 @@ void QQuickApplicationWindow::componentComplete()
 {
     Q_D(QQuickApplicationWindow);
     d->complete = true;
+    d->executeBackground(true);
     QQuickWindowQmlImpl::componentComplete();
 }
 
