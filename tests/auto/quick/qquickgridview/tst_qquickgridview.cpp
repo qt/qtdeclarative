@@ -210,6 +210,7 @@ private slots:
     void contentHeightWithDelayRemove();
 
     void QTBUG_45640();
+    void QTBUG_49218();
     void QTBUG_48870_fastModelUpdates();
 
     void keyNavigationEnabled();
@@ -6626,6 +6627,36 @@ void tst_QQuickGridView::QTBUG_45640()
 
     QTRY_VERIFY(gridview->contentY() > qreal(-50.0) && gridview->contentY() < qreal(0.0));
 
+    delete window;
+}
+
+void tst_QQuickGridView::QTBUG_49218()
+{
+    QQuickView *window = createView();
+    window->setSource(testFileUrl("qtbug49218.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem*>(window->rootObject());
+    QQuickGridView *gridview = qobject_cast<QQuickGridView *>(rootItem->childItems().first());
+    QVERIFY(gridview != 0);
+
+    auto processEventsAndForceLayout = [&gridview] () {
+        for (int pass = 0; pass < 2; ++pass) {
+            QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+            gridview->forceLayout();
+        }
+    };
+    QMetaObject::invokeMethod(rootItem, "scrollToTop");
+    processEventsAndForceLayout();
+    QMetaObject::invokeMethod(rootItem, "changeModel");
+    processEventsAndForceLayout();
+    QMetaObject::invokeMethod(rootItem, "changeModel");
+    processEventsAndForceLayout();
+    QMetaObject::invokeMethod(rootItem, "scrollToTop");
+    processEventsAndForceLayout();
+
+    QCOMPARE(gridview->indexAt(gridview->cellWidth() - 10, gridview->cellHeight() - 10), 0);
     delete window;
 }
 
