@@ -211,7 +211,7 @@ struct QQuickStyleSpec
                 for (const QString &path : stylePaths) {
                     QString stylePath = findStyle(path, style);
                     if (!stylePath.isEmpty()) {
-                        custom = !stylePath.startsWith(baseUrl.toLocalFile());
+                        custom = !stylePath.startsWith(QQmlFile::urlToLocalFileOrQrc(baseUrl));
                         style = stylePath;
                         resolved = true;
                         break;
@@ -292,7 +292,7 @@ void QQuickStylePrivate::init(const QUrl &baseUrl)
     spec->resolve(baseUrl);
 
     if (!spec->fallbackStyle.isEmpty()) {
-        QString fallbackStyle = spec->findStyle(baseUrl.toLocalFile(), spec->fallbackStyle);
+        QString fallbackStyle = spec->findStyle(QQmlFile::urlToLocalFileOrQrc(baseUrl), spec->fallbackStyle);
         if (fallbackStyle.isEmpty()) {
             if (spec->fallbackStyle.compare(QStringLiteral("Default")) != 0) {
                 qWarning() << "ERROR: unable to locate fallback style" << spec->fallbackStyle;
