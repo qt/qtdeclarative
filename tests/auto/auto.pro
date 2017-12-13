@@ -24,7 +24,7 @@ SUBDIRS += \
     snippets
 
 # QTBUG-60268
-boot2qt: SUBDIRS -= qquickapplicationwindow calendar controls cursor \
+boot2qt: SUBDIRS -= qquickapplicationwindow calendar controls cursor customization \
                     qquickdrawer focus font qquickmenu platform qquickpopup qquickmaterialstyle \
                     qquickmaterialstyleconf qquickuniversalstyle \
                     qquickuniversalstyleconf snippets

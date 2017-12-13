@@ -1466,7 +1466,6 @@ TestCase {
         var control = createTemporaryObject(comboBox, testCase, { model: 1 })
         verify(control)
         compare(control.popup.implicitHeight, 0)
-        compare(control.popup.height, 0)
 
         // Ensure that it's open so that the popup's implicitHeight changes when we increase the model count.
         control.popup.open()
