@@ -264,6 +264,8 @@ private slots:
     void QTBUG_34576_velocityZero();
     void QTBUG_61537_modelChangesAsync();
 
+    void addOnCompleted();
+
 private:
     template <class T> void items(const QUrl &source);
     template <class T> void changed(const QUrl &source);
@@ -8733,6 +8735,36 @@ void tst_QQuickListView::QTBUG_61537_modelChangesAsync()
     int reportedCount = listView->count();
     int actualCount = findItems<QQuickItem>(listView, "delegate").count();
     QCOMPARE(reportedCount, actualCount);
+}
+
+void tst_QQuickListView::addOnCompleted()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("addoncompleted.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "view");
+    QTRY_VERIFY(listview != 0);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    qreal y = -1;
+    for (char name = 'a'; name <= 'j'; ++name) {
+        for (int num = 9; num >= 0; --num) {
+            const QString objName = QString::fromLatin1("%1%2").arg(name).arg(num);
+            QQuickItem *item = findItem<QQuickItem>(contentItem, objName);
+            if (!item) {
+                QVERIFY(name >= 'd');
+                y = 9999999;
+            } else {
+                const qreal newY = item->y();
+                QVERIFY2(newY > y, objName.toUtf8().constData());
+                y = newY;
+            }
+        }
+    }
 }
 
 QTEST_MAIN(tst_QQuickListView)
