@@ -137,12 +137,16 @@ void tst_customization::creation_data()
     QTest::newRow("empty:CheckBox") << "empty" << "CheckBox" << (QStringList() << "checkbox-empty");
     QTest::newRow("empty:ComboBox") << "empty" << "ComboBox" << (QStringList() << "combobox-empty");
     QTest::newRow("empty:Dial") << "empty" << "Dial" << (QStringList() << "dial-empty");
+    QTest::newRow("empty:Frame") << "empty" << "Frame"<< (QStringList() << "frame-empty");
+    QTest::newRow("empty:GroupBox") << "empty" << "GroupBox"<< (QStringList() << "groupbox-empty");
     QTest::newRow("empty:Label") << "empty" << "Label"<< (QStringList() << "label-empty");
+    QTest::newRow("empty:Pane") << "empty" << "Pane"<< (QStringList() << "pane-empty");
     QTest::newRow("empty:RadioButton") << "empty" << "RadioButton" << (QStringList() << "radiobutton-empty");
     QTest::newRow("empty:RangeSlider") << "empty" << "RangeSlider" << (QStringList() << "rangeslider-empty");
     QTest::newRow("empty:Slider") << "empty" << "Slider" << (QStringList() << "slider-empty");
     QTest::newRow("empty:TextField") << "empty" << "TextField"<< (QStringList() << "textfield-empty");
     QTest::newRow("empty:TextArea") << "empty" << "TextArea"<< (QStringList() << "textarea-empty");
+    QTest::newRow("empty:ToolBar") << "empty" << "ToolBar"<< (QStringList() << "toolbar-empty");
 
     // the "incomplete" style is missing most delegates
     QTest::newRow("incomplete:Button") << "incomplete" << "Button" << (QStringList() << "button-incomplete" << "button-background-incomplete");
@@ -159,12 +163,16 @@ void tst_customization::creation_data()
     QTest::newRow("simple:CheckBox") << "simple" << "CheckBox" << (QStringList() << "checkbox-simple" << "checkbox-contentItem-simple" << "checkbox-indicator-simple");
     QTest::newRow("simple:ComboBox") << "simple" << "ComboBox" << (QStringList() << "combobox-simple" << "combobox-background-simple" << "combobox-contentItem-simple" << "combobox-indicator-simple");
     QTest::newRow("simple:Dial") << "simple" << "Dial" << (QStringList() << "dial-simple" << "dial-background-simple" << "dial-handle-simple");
+    QTest::newRow("simple:Frame") << "simple" << "Frame" << (QStringList() << "frame-simple" << "frame-background-simple");
+    QTest::newRow("simple:GroupBox") << "simple" << "GroupBox" << (QStringList() << "groupbox-simple" << "groupbox-background-simple");
     QTest::newRow("simple:Label") << "simple" << "Label" << (QStringList() << "label-simple" << "label-background-simple");
+    QTest::newRow("simple:Pane") << "simple" << "Pane" << (QStringList() << "pane-simple" << "pane-background-simple");
     QTest::newRow("simple:RadioButton") << "simple" << "RadioButton" << (QStringList() << "radiobutton-simple" << "radiobutton-contentItem-simple" << "radiobutton-indicator-simple");
     QTest::newRow("simple:RangeSlider") << "simple" << "RangeSlider" << (QStringList() << "rangeslider-simple" << "rangeslider-background-simple" << "rangeslider-first-handle-simple" << "rangeslider-second-handle-simple");
     QTest::newRow("simple:Slider") << "simple" << "Slider" << (QStringList() << "slider-simple" << "slider-background-simple" << "slider-handle-simple");
     QTest::newRow("simple:TextField") << "simple" << "TextField" << (QStringList() << "textfield-simple" << "textfield-background-simple");
     QTest::newRow("simple:TextArea") << "simple" << "TextArea" << (QStringList() << "textarea-simple" << "textarea-background-simple");
+    QTest::newRow("simple:ToolBar") << "simple" << "ToolBar" << (QStringList() << "toolbar-simple" << "toolbar-background-simple");
 
     // the "override" style overrides various delegates in the above styles
     QTest::newRow("override:ApplicationWindow") << "override" << "ApplicationWindow" << (QStringList() << "applicationwindow-override" << "applicationwindow-background-override" << "applicationwindow-simple"); // overrides "simple"
@@ -172,12 +180,16 @@ void tst_customization::creation_data()
     QTest::newRow("override:CheckBox") << "override" << "CheckBox" << (QStringList() << "checkbox-override" << "checkbox-background-override" << "checkbox-contentItem-incomplete" << "checkbox-incomplete"); // overrides "incomplete"
     QTest::newRow("override:ComboBox") << "override" << "ComboBox" << (QStringList() << "combobox-override" << "combobox-background-override" << "combobox-contentItem-simple"  << "combobox-indicator-simple" << "combobox-simple"); // overrides "simple"
     QTest::newRow("override:Dial") << "override" << "Dial" << (QStringList() << "dial-override"  << "dial-background-override" << "dial-handle-override" << "dial-incomplete"); // overrides "incomplete"
+    QTest::newRow("override:Frame") << "override" << "Frame" << (QStringList() << "frame-override" << "frame-background-override" << "frame-simple"); // overrides "simple"
+    QTest::newRow("override:GroupBox") << "override" << "GroupBox" << (QStringList() << "groupbox-override" << "groupbox-background-override" << "groupbox-simple"); // overrides "simple"
     QTest::newRow("override:Label") << "override" << "Label" << (QStringList() << "label-override" << "label-background-override" << "label-simple"); // overrides "simple"
+    QTest::newRow("override:Pane") << "override" << "Pane" << (QStringList() << "pane-override" << "pane-background-override" << "pane-simple"); // overrides "simple"
     QTest::newRow("override:RadioButton") << "override" << "RadioButton" << (QStringList() << "radiobutton-override"  << "radiobutton-background-override" << "radiobutton-contentItem-simple" << "radiobutton-indicator-override" << "radiobutton-simple"); // overrides "simple"
     QTest::newRow("override:RangeSlider") << "override" << "RangeSlider" << (QStringList() << "rangeslider-override"  << "rangeslider-background-override" << "rangeslider-first-handle-override" << "rangeslider-second-handle-override" << "rangeslider-incomplete"); // overrides "incomplete"
     QTest::newRow("override:Slider") << "override" << "Slider" << (QStringList() << "slider-override"  << "slider-background-override" << "slider-handle-override" << "slider-incomplete"); // overrides "incomplete"
     QTest::newRow("override:TextField") << "override" << "TextField" << (QStringList() << "textfield-override" << "textfield-background-override" << "textfield-simple"); // overrides "simple"
     QTest::newRow("override:TextArea") << "override" << "TextArea" << (QStringList() << "textarea-override" << "textarea-background-override" << "textarea-simple"); // overrides "simple"
+    QTest::newRow("override:ToolBar") << "override" << "ToolBar" << (QStringList() << "toolbar-override" << "toolbar-background-override" << "toolbar-simple"); // overrides "simple"
 }
 
 void tst_customization::creation()
@@ -194,7 +206,12 @@ void tst_customization::creation()
     for (const QString &delegate : delegates)
         QVERIFY2(qt_createdQObjects()->removeOne(delegate), qPrintable(delegate + " was not created as expected"));
 
+    QEXPECT_FAIL("simple:GroupBox", "TODO: defer GroupBox::label execution", Continue);
+    QEXPECT_FAIL("override:GroupBox", "TODO: defer GroupBox::label execution", Continue);
+
     QVERIFY2(qt_createdQObjects()->isEmpty(), qPrintable("unexpectedly created: " + qt_createdQObjects->join(", ")));
+
+    QEXPECT_FAIL("override:GroupBox", "TODO: defer GroupBox::label execution", Continue);
     QVERIFY2(qt_destroyedQObjects()->isEmpty(), qPrintable("unexpectedly destroyed: " + qt_destroyedQObjects->join(", ") + " were unexpectedly destroyed"));
 }
 
