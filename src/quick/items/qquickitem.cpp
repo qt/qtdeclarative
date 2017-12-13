@@ -5771,19 +5771,24 @@ bool QQuickItem::isVisible() const
     return d->effectiveVisible;
 }
 
+void QQuickItemPrivate::setVisible(bool visible)
+{
+    if (visible == explicitVisible)
+        return;
+
+    explicitVisible = visible;
+    if (!visible)
+        dirty(QQuickItemPrivate::Visible);
+
+    const bool childVisibilityChanged = setEffectiveVisibleRecur(calcEffectiveVisible());
+    if (childVisibilityChanged && parentItem)
+        emit parentItem->visibleChildrenChanged();   // signal the parent, not this!
+}
+
 void QQuickItem::setVisible(bool v)
 {
     Q_D(QQuickItem);
-    if (v == d->explicitVisible)
-        return;
-
-    d->explicitVisible = v;
-    if (!v)
-        d->dirty(QQuickItemPrivate::Visible);
-
-    const bool childVisibilityChanged = d->setEffectiveVisibleRecur(d->calcEffectiveVisible());
-    if (childVisibilityChanged && d->parentItem)
-        emit d->parentItem->visibleChildrenChanged();   // signal the parent, not this!
+    d->setVisible(v);
 }
 
 /*!

@@ -560,6 +560,8 @@ public:
 #endif
     void deliverShortcutOverrideEvent(QKeyEvent *);
 
+    virtual void setVisible(bool visible);
+
     bool isTransparentForPositioner() const;
     void setTransparentForPositioner(bool trans);
 
