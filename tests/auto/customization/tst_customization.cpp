@@ -64,11 +64,13 @@ private:
     void addHooks();
     void removeHooks();
 
-    QObject* createControl(const QString &type);
+    QObject* createControl(const QString &type, QString *error);
 
     QQmlEngine *engine = nullptr;
 };
 
+typedef QHash<QObject *, QString> QObjectNameHash;
+Q_GLOBAL_STATIC(QObjectNameHash, qt_objectNames)
 Q_GLOBAL_STATIC(QStringList, qt_createdQObjects)
 Q_GLOBAL_STATIC(QStringList, qt_destroyedQObjects)
 
@@ -76,8 +78,13 @@ extern "C" Q_DECL_EXPORT void qt_addQObject(QObject *object)
 {
     // objectName is not set at construction time
     QObject::connect(object, &QObject::objectNameChanged, [object](const QString &objectName) {
-        if (!objectName.isEmpty())
+        QString oldObjectName = qt_objectNames()->value(object);
+        if (!oldObjectName.isEmpty())
+            qt_createdQObjects()->removeOne(oldObjectName);
+        if (!objectName.isEmpty()) {
             qt_createdQObjects()->append(objectName);
+            qt_objectNames()->insert(object, objectName);
+        }
     });
 }
 
@@ -86,6 +93,7 @@ extern "C" Q_DECL_EXPORT void qt_removeQObject(QObject *object)
     QString objectName = object->objectName();
     if (!objectName.isEmpty())
         qt_destroyedQObjects()->append(objectName);
+    qt_objectNames()->remove(object);
 }
 
 void tst_customization::init()
@@ -115,13 +123,13 @@ void tst_customization::reset()
     qt_destroyedQObjects()->clear();
 }
 
-QObject* tst_customization::createControl(const QString &name)
+QObject* tst_customization::createControl(const QString &name, QString *error)
 {
     QQmlComponent component(engine);
     component.setData("import QtQuick.Controls 2.2; " + name.toUtf8() + " { }", QUrl());
     QObject *obj = component.create();
     if (!obj)
-        qDebug() << component.errorString();
+        *error = component.errorString();
     return obj;
 }
 
@@ -175,21 +183,21 @@ void tst_customization::creation_data()
     QTest::newRow("simple:ToolBar") << "simple" << "ToolBar" << (QStringList() << "toolbar-simple" << "toolbar-background-simple");
 
     // the "override" style overrides various delegates in the above styles
-    QTest::newRow("override:ApplicationWindow") << "override" << "ApplicationWindow" << (QStringList() << "applicationwindow-override" << "applicationwindow-background-override" << "applicationwindow-simple"); // overrides "simple"
-    QTest::newRow("override:Button") << "override" << "Button" << (QStringList() << "button-override" << "button-background-override" << "button-contentItem-override" << "button-empty"); // overrides "empty"
-    QTest::newRow("override:CheckBox") << "override" << "CheckBox" << (QStringList() << "checkbox-override" << "checkbox-background-override" << "checkbox-contentItem-incomplete" << "checkbox-incomplete"); // overrides "incomplete"
-    QTest::newRow("override:ComboBox") << "override" << "ComboBox" << (QStringList() << "combobox-override" << "combobox-background-override" << "combobox-contentItem-simple"  << "combobox-indicator-simple" << "combobox-simple"); // overrides "simple"
-    QTest::newRow("override:Dial") << "override" << "Dial" << (QStringList() << "dial-override"  << "dial-background-override" << "dial-handle-override" << "dial-incomplete"); // overrides "incomplete"
-    QTest::newRow("override:Frame") << "override" << "Frame" << (QStringList() << "frame-override" << "frame-background-override" << "frame-simple"); // overrides "simple"
-    QTest::newRow("override:GroupBox") << "override" << "GroupBox" << (QStringList() << "groupbox-override" << "groupbox-background-override" << "groupbox-simple"); // overrides "simple"
-    QTest::newRow("override:Label") << "override" << "Label" << (QStringList() << "label-override" << "label-background-override" << "label-simple"); // overrides "simple"
-    QTest::newRow("override:Pane") << "override" << "Pane" << (QStringList() << "pane-override" << "pane-background-override" << "pane-simple"); // overrides "simple"
-    QTest::newRow("override:RadioButton") << "override" << "RadioButton" << (QStringList() << "radiobutton-override"  << "radiobutton-background-override" << "radiobutton-contentItem-simple" << "radiobutton-indicator-override" << "radiobutton-simple"); // overrides "simple"
-    QTest::newRow("override:RangeSlider") << "override" << "RangeSlider" << (QStringList() << "rangeslider-override"  << "rangeslider-background-override" << "rangeslider-first-handle-override" << "rangeslider-second-handle-override" << "rangeslider-incomplete"); // overrides "incomplete"
-    QTest::newRow("override:Slider") << "override" << "Slider" << (QStringList() << "slider-override"  << "slider-background-override" << "slider-handle-override" << "slider-incomplete"); // overrides "incomplete"
-    QTest::newRow("override:TextField") << "override" << "TextField" << (QStringList() << "textfield-override" << "textfield-background-override" << "textfield-simple"); // overrides "simple"
-    QTest::newRow("override:TextArea") << "override" << "TextArea" << (QStringList() << "textarea-override" << "textarea-background-override" << "textarea-simple"); // overrides "simple"
-    QTest::newRow("override:ToolBar") << "override" << "ToolBar" << (QStringList() << "toolbar-override" << "toolbar-background-override" << "toolbar-simple"); // overrides "simple"
+    QTest::newRow("override:ApplicationWindow") << "override" << "ApplicationWindow" << (QStringList() << "applicationwindow-override" << "applicationwindow-background-override");
+    QTest::newRow("override:Button") << "override" << "Button" << (QStringList() << "button-override" << "button-background-override" << "button-contentItem-override");
+    QTest::newRow("override:CheckBox") << "override" << "CheckBox" << (QStringList() << "checkbox-override" << "checkbox-background-override" << "checkbox-contentItem-incomplete");
+    QTest::newRow("override:ComboBox") << "override" << "ComboBox" << (QStringList() << "combobox-override" << "combobox-background-override" << "combobox-contentItem-simple"  << "combobox-indicator-simple");
+    QTest::newRow("override:Dial") << "override" << "Dial" << (QStringList() << "dial-override"  << "dial-background-override" << "dial-handle-override");
+    QTest::newRow("override:Frame") << "override" << "Frame" << (QStringList() << "frame-override" << "frame-background-override");
+    QTest::newRow("override:GroupBox") << "override" << "GroupBox" << (QStringList() << "groupbox-override" << "groupbox-background-override");
+    QTest::newRow("override:Label") << "override" << "Label" << (QStringList() << "label-override" << "label-background-override");
+    QTest::newRow("override:Pane") << "override" << "Pane" << (QStringList() << "pane-override" << "pane-background-override");
+    QTest::newRow("override:RadioButton") << "override" << "RadioButton" << (QStringList() << "radiobutton-override"  << "radiobutton-background-override" << "radiobutton-contentItem-simple" << "radiobutton-indicator-override");
+    QTest::newRow("override:RangeSlider") << "override" << "RangeSlider" << (QStringList() << "rangeslider-override"  << "rangeslider-background-override" << "rangeslider-first-handle-override" << "rangeslider-second-handle-override");
+    QTest::newRow("override:Slider") << "override" << "Slider" << (QStringList() << "slider-override"  << "slider-background-override" << "slider-handle-override");
+    QTest::newRow("override:TextField") << "override" << "TextField" << (QStringList() << "textfield-override" << "textfield-background-override");
+    QTest::newRow("override:TextArea") << "override" << "TextArea" << (QStringList() << "textarea-override" << "textarea-background-override");
+    QTest::newRow("override:ToolBar") << "override" << "ToolBar" << (QStringList() << "toolbar-override" << "toolbar-background-override");
 }
 
 void tst_customization::creation()
@@ -200,8 +208,12 @@ void tst_customization::creation()
 
     QQuickStyle::setStyle(testFile("styles/" + style));
 
-    QScopedPointer<QObject> control(createControl(type));
-    QVERIFY(control);
+    QString error;
+    QScopedPointer<QObject> control(createControl(type, &error));
+    QVERIFY2(control, qPrintable(error));
+
+    QByteArray templateType = "QQuick" + type.toUtf8();
+    QVERIFY2(control->inherits(templateType), qPrintable(type + " does not inherit " + templateType + " (" + control->metaObject()->className() + ")"));
 
     for (const QString &delegate : delegates)
         QVERIFY2(qt_createdQObjects()->removeOne(delegate), qPrintable(delegate + " was not created as expected"));
