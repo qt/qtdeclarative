@@ -41,6 +41,11 @@
 #include "../shared/viewtestutil.h"
 #include <QSignalSpy>
 
+#ifdef TEST_QTBUG_60123
+#include <QWidget>
+#include <QMainWindow>
+#endif
+
 class TestItem : public QQuickItem
 {
 Q_OBJECT
@@ -187,6 +192,10 @@ private slots:
     void ignoreButtonPressNotInAcceptedMouseButtons();
 
     void shortcutOverride();
+
+#ifdef TEST_QTBUG_60123
+    void qtBug60123();
+#endif
 
 private:
 
@@ -2091,6 +2100,49 @@ void tst_qquickitem::shortcutOverride()
     QCOMPARE(view.rootObject()->property("escapeHandlerActivationCount").toInt(), 1);
     QCOMPARE(view.rootObject()->property("shortcutActivationCount").toInt(), 1);
 }
+
+#ifdef TEST_QTBUG_60123
+void tst_qquickitem::qtBug60123()
+{
+    QMainWindow main;
+
+    QQuickView window;
+    QQuickView window2;
+    window.setSource(testFileUrl("mainWindowQtBug60123.qml"));
+    window2.setSource(testFileUrl("mainWindowQtBug60123.qml"));
+
+    QWidget *baseWidget = new QWidget(&main);
+    main.resize(400, 200);
+    baseWidget->resize(400, 200);
+    baseWidget->setMaximumHeight(200);
+    baseWidget->setMaximumWidth(400);
+
+    // Create container widgets for both windows
+    QWidget *containers = QWidget::createWindowContainer(&window, baseWidget);
+    containers->setGeometry(0, 0, 400, 200);
+    QWidget* containers2 = QWidget::createWindowContainer(&window2, baseWidget);
+    containers2->setGeometry(50, 50, 300, 150);
+
+    // Show and activate the main window
+    main.show();
+    QTest::qWaitForWindowActive(&main);
+
+    // Activate window, test press and release events
+    auto activateWindowAndTestPress = [] (QQuickView* testWindow) {
+        testWindow->requestActivate();
+        QTest::qWaitForWindowActive(testWindow);
+        QTest::mousePress(testWindow, Qt::LeftButton, 0, QPoint(10, 10));
+        QCOMPARE(testWindow->rootObject()->property("lastEvent").toString(), QString("pressed"));
+        QTest::mouseRelease(testWindow, Qt::LeftButton, 0, QPoint(10, 10));
+        QCOMPARE(testWindow->rootObject()->property("lastEvent").toString(), QString("released"));
+    };
+
+    // First press after switching focus window resulted in cancelled event
+    activateWindowAndTestPress(&window);
+    activateWindowAndTestPress(&window2);
+    activateWindowAndTestPress(&window);
+}
+#endif
 
 QTEST_MAIN(tst_qquickitem)
 
