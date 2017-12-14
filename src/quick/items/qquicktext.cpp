@@ -88,6 +88,7 @@ QQuickTextPrivate::QQuickTextPrivate()
     , truncated(false), hAlignImplicit(true), rightToLeftText(false)
     , layoutTextElided(false), textHasChanged(true), needToUpdateLayout(false), formatModifiesFontSize(false)
     , polishSize(false)
+    , updateSizeRecursionGuard(false)
 {
     implicitAntialiasing = true;
 }
@@ -442,6 +443,7 @@ void QQuickTextPrivate::updateSize()
 
         //### need to confirm cost of always setting these for richText
         internalWidthUpdate = true;
+        qreal oldWidth = q->width();
         qreal iWidth = -1;
         if (!q->widthValid())
             iWidth = size.width();
@@ -449,24 +451,35 @@ void QQuickTextPrivate::updateSize()
             q->setImplicitSize(iWidth + hPadding, size.height() + vPadding);
         internalWidthUpdate = false;
 
-        if (iWidth == -1)
-            q->setImplicitHeight(size.height() + vPadding);
-
-        QTextBlock firstBlock = extra->doc->firstBlock();
-        while (firstBlock.layout()->lineCount() == 0)
-            firstBlock = firstBlock.next();
-
-        QTextBlock lastBlock = extra->doc->lastBlock();
-        while (lastBlock.layout()->lineCount() == 0)
-            lastBlock = lastBlock.previous();
-
-        if (firstBlock.lineCount() > 0 && lastBlock.lineCount() > 0) {
-            QTextLine firstLine = firstBlock.layout()->lineAt(0);
-            QTextLine lastLine = lastBlock.layout()->lineAt(lastBlock.layout()->lineCount() - 1);
-            advance = QSizeF(lastLine.horizontalAdvance(),
-                             (lastLine.y() + lastBlock.layout()->position().y()) - (firstLine.y() + firstBlock.layout()->position().y()));
+        // If the implicit width update caused a recursive change of the width,
+        // we will have skipped integral parts of the layout due to the
+        // internalWidthUpdate recursion guard. To make sure everything is up
+        // to date, we need to run a second pass over the layout when updateSize()
+        // is done.
+        if (!qFuzzyCompare(q->width(), oldWidth) && !updateSizeRecursionGuard) {
+            updateSizeRecursionGuard = true;
+            updateSize();
+            updateSizeRecursionGuard = false;
         } else {
-            advance = QSizeF();
+            if (iWidth == -1)
+                q->setImplicitHeight(size.height() + vPadding);
+
+            QTextBlock firstBlock = extra->doc->firstBlock();
+            while (firstBlock.layout()->lineCount() == 0)
+                firstBlock = firstBlock.next();
+
+            QTextBlock lastBlock = extra->doc->lastBlock();
+            while (lastBlock.layout()->lineCount() == 0)
+                lastBlock = lastBlock.previous();
+
+            if (firstBlock.lineCount() > 0 && lastBlock.lineCount() > 0) {
+                QTextLine firstLine = firstBlock.layout()->lineAt(0);
+                QTextLine lastLine = lastBlock.layout()->lineAt(lastBlock.layout()->lineCount() - 1);
+                advance = QSizeF(lastLine.horizontalAdvance(),
+                                 (lastLine.y() + lastBlock.layout()->position().y()) - (firstLine.y() + firstBlock.layout()->position().y()));
+            } else {
+                advance = QSizeF();
+            }
         }
     }
 

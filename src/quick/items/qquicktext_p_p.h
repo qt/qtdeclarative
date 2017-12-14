@@ -174,6 +174,7 @@ public:
     bool needToUpdateLayout:1;
     bool formatModifiesFontSize:1;
     bool polishSize:1; // Workaround for problem with polish called after updateSize (QTBUG-42636)
+    bool updateSizeRecursionGuard:1;
 
     static const QChar elideChar;
 

@@ -105,6 +105,7 @@ private slots:
 
     void implicitSize_data();
     void implicitSize();
+    void implicitSizeChangeRewrap();
     void dependentImplicitSizes();
     void contentSize();
     void implicitSizeBinding_data();
@@ -4367,6 +4368,23 @@ void tst_qquicktext::fontInfo()
     QVERIFY(copy);
     QCOMPARE(copy->font().family(), QFontInfo(QFont()).family());
     QVERIFY(copy->font().pixelSize() < 1000);
+}
+
+void tst_qquicktext::implicitSizeChangeRewrap()
+{
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("implicitSizeChangeRewrap.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QObject *root = window->rootObject();
+
+    QQuickText *text = root->findChild<QQuickText *>("text");
+    QVERIFY(text != nullptr);
+
+    QVERIFY(text->contentWidth() < window->width());
 }
 
 QTEST_MAIN(tst_qquicktext)
