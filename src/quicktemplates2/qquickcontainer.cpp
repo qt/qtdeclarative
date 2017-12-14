@@ -578,6 +578,8 @@ QVariant QQuickContainer::contentModel() const
 QQmlListProperty<QObject> QQuickContainer::contentData()
 {
     Q_D(QQuickContainer);
+    if (!d->contentItem)
+        d->executeContentItem();
     return QQmlListProperty<QObject>(this, d,
                                      QQuickContainerPrivate::contentData_append,
                                      QQuickContainerPrivate::contentData_count,

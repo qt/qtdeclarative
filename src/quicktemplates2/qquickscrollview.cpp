@@ -146,6 +146,8 @@ QQuickScrollViewPrivate::QQuickScrollViewPrivate()
 
 QQuickItem *QQuickScrollViewPrivate::getContentItem()
 {
+    if (!contentItem)
+        executeContentItem();
     return ensureFlickable(false);
 }
 

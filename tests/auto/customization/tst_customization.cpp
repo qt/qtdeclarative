@@ -350,20 +350,6 @@ void tst_customization::creation()
         QVERIFY2(qt_createdQObjects()->removeOne(delegate), qPrintable(delegate + " was not created as expected"));
     }
 
-    QEXPECT_FAIL("override:BusyIndicator", "TODO", Abort);
-    QEXPECT_FAIL("override:Container", "TODO", Abort);
-    QEXPECT_FAIL("override:Control", "TODO", Abort);
-    QEXPECT_FAIL("override:DialogButtonBox", "TODO", Abort);
-    QEXPECT_FAIL("override:MenuSeparator", "TODO", Abort);
-    QEXPECT_FAIL("override:PageIndicator", "TODO", Abort);
-    QEXPECT_FAIL("override:ProgressBar", "TODO", Abort);
-    QEXPECT_FAIL("override:ScrollBar", "TODO", Abort);
-    QEXPECT_FAIL("override:ScrollIndicator", "TODO", Abort);
-    QEXPECT_FAIL("override:ScrollView", "TODO", Abort);
-    QEXPECT_FAIL("override:StackView", "TODO", Abort);
-    QEXPECT_FAIL("override:SwipeView", "TODO", Abort);
-    QEXPECT_FAIL("override:TabBar", "TODO", Abort);
-    QEXPECT_FAIL("override:ToolSeparator", "TODO", Abort);
     QEXPECT_FAIL("override:Tumbler", "TODO", Abort);
 
     QVERIFY2(qt_createdQObjects()->isEmpty(), qPrintable("unexpectedly created: " + qt_createdQObjects->join(", ")));

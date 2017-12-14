@@ -66,7 +66,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPage : public QQuickControl
     // 2.1 (Qt 5.8)
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL REVISION 1)
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL REVISION 1)
-    Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:

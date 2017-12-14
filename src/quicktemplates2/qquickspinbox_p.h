@@ -74,7 +74,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
     // 2.2 (Qt 5.9)
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION 2)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION 2)
-    Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
 
 public:
     explicit QQuickSpinBox(QQuickItem *parent = nullptr);

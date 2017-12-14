@@ -145,8 +145,6 @@ public:
     void handleRelease(const QPointF &point) override;
     void handleUngrab() override;
 
-    QQuickItem *getContentItem() override;
-
     bool editable;
     int from;
     int to;
@@ -372,13 +370,6 @@ void QQuickSpinBoxPrivate::handleUngrab()
 
     q->setAccessibleProperty("pressed", false);
     stopPressRepeat();
-}
-
-QQuickItem *QQuickSpinBoxPrivate::getContentItem()
-{
-    if (!contentItem)
-        executeContentItem();
-    return contentItem;
 }
 
 QQuickSpinBox::QQuickSpinBox(QQuickItem *parent)
@@ -884,7 +875,6 @@ void QQuickSpinBox::componentComplete()
     Q_D(QQuickSpinBox);
     QQuickSpinButtonPrivate::get(d->up)->executeIndicator(true);
     QQuickSpinButtonPrivate::get(d->down)->executeIndicator(true);
-    d->executeContentItem(true);
 
     QQuickControl::componentComplete();
     if (!d->setValue(d->value, false)) {

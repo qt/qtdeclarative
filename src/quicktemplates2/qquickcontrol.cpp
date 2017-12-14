@@ -281,6 +281,8 @@ void QQuickControlPrivate::resizeContent()
 
 QQuickItem *QQuickControlPrivate::getContentItem()
 {
+    if (!contentItem)
+        executeContentItem();
     return contentItem;
 }
 
@@ -1321,6 +1323,7 @@ void QQuickControl::componentComplete()
 {
     Q_D(QQuickControl);
     d->executeBackground(true);
+    d->executeContentItem(true);
     QQuickItem::componentComplete();
     d->resizeContent();
     if (!d->hasLocale)

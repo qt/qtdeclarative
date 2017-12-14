@@ -131,13 +131,6 @@ QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
 {
 }
 
-QQuickItem *QQuickAbstractButtonPrivate::getContentItem()
-{
-    if (!contentItem)
-        executeContentItem();
-    return contentItem;
-}
-
 void QQuickAbstractButtonPrivate::handlePress(const QPointF &point)
 {
     Q_Q(QQuickAbstractButton);
@@ -605,7 +598,6 @@ void QQuickAbstractButton::componentComplete()
 {
     Q_D(QQuickAbstractButton);
     d->executeIndicator(true);
-    d->executeContentItem(true);
     QQuickControl::componentComplete();
 }
 

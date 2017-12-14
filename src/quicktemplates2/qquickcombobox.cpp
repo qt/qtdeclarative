@@ -253,8 +253,6 @@ public:
     void handleRelease(const QPointF &point) override;
     void handleUngrab() override;
 
-    QQuickItem *getContentItem() override;
-
     void executeIndicator(bool complete = false);
     void executePopup(bool complete = false);
 
@@ -669,13 +667,6 @@ void QQuickComboBoxPrivate::handleUngrab()
     Q_Q(QQuickComboBox);
     QQuickControlPrivate::handleUngrab();
     q->setPressed(false);
-}
-
-QQuickItem *QQuickComboBoxPrivate::getContentItem()
-{
-    if (!contentItem)
-        executeContentItem();
-    return contentItem;
 }
 
 static inline QString indicatorName() { return QStringLiteral("indicator"); }
@@ -1591,7 +1582,6 @@ void QQuickComboBox::componentComplete()
 {
     Q_D(QQuickComboBox);
     d->executeIndicator(true);
-    d->executeContentItem(true);
     if (d->popup)
         d->executePopup(true);
     QQuickControl::componentComplete();

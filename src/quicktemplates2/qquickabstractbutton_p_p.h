@@ -67,8 +67,6 @@ public:
         return button->d_func();
     }
 
-    QQuickItem *getContentItem() override;
-
     void handlePress(const QPointF &point) override;
     void handleMove(const QPointF &point) override;
     void handleRelease(const QPointF &point) override;

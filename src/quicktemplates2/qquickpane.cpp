@@ -113,11 +113,9 @@ QQuickPanePrivate::QQuickPanePrivate()
 QQuickItem *QQuickPanePrivate::getContentItem()
 {
     Q_Q(QQuickPane);
-    if (!contentItem)
-        executeContentItem();
-    if (!contentItem)
-        return new QQuickItem(q);
-    return contentItem;
+    if (QQuickItem *item = QQuickControlPrivate::getContentItem())
+        return item;
+    return new QQuickItem(q);
 }
 
 QQuickPane::QQuickPane(QQuickItem *parent)
@@ -235,13 +233,6 @@ QQmlListProperty<QQuickItem> QQuickPane::contentChildren()
                                         QQuickItemPrivate::children_count,
                                         QQuickItemPrivate::children_at,
                                         QQuickItemPrivate::children_clear);
-}
-
-void QQuickPane::componentComplete()
-{
-    Q_D(QQuickPane);
-    d->executeContentItem(true);
-    QQuickControl::componentComplete();
 }
 
 void QQuickPane::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
