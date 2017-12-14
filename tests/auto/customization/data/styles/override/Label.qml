@@ -55,7 +55,7 @@ Simple.Label {
     id: control
     objectName: "label-override"
 
-    background: Rectangle {
+    background: Item {
         objectName: "label-background-override"
     }
 }

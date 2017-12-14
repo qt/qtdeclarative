@@ -55,7 +55,7 @@ Simple.ApplicationWindow {
     id: control
     objectName: "applicationwindow-override"
 
-    background: Rectangle {
+    background: Item {
         objectName: "applicationwindow-background-override"
     }
 }

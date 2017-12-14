@@ -55,6 +55,9 @@ T.ApplicationWindow {
     id: control
     objectName: "applicationwindow-simple"
 
+    minimumWidth: background.implicitWidth
+    minimumHeight: background.implicitHeight
+
     background: Rectangle {
         objectName: "applicationwindow-background-simple"
         implicitWidth: 20

@@ -49,17 +49,21 @@
 ****************************************************************************/
 
 import QtQuick 2.9
-import "../incomplete" as Incomplete
+import "../simple" as Simple
 
-Incomplete.Slider {
+Simple.Slider {
     id: control
     objectName: "slider-override"
 
-    handle: Rectangle {
+    handle: Item {
         objectName: "slider-handle-override"
     }
 
-    background: Rectangle {
+    contentItem: Item {
+        objectName: "slider-contentItem-override"
+    }
+
+    background: Item {
         objectName: "slider-background-override"
     }
 }

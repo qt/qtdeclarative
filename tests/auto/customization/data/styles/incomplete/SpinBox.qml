@@ -56,10 +56,18 @@ T.SpinBox {
     objectName: "spinbox-incomplete"
 
     up.indicator: Item {
-        objectName: "spinbox-up-indicator-incomplete"
+        objectName: "spinbox-up.indicator-incomplete"
     }
 
     down.indicator: Item {
-        objectName: "spinbox-down-indicator-incomplete"
+        objectName: "spinbox-down.indicator-incomplete"
+    }
+
+    contentItem: Item {
+        objectName: "spinbox-contentItem-incomplete"
+    }
+
+    background: Item {
+        objectName: "spinbox-background-incomplete"
     }
 }

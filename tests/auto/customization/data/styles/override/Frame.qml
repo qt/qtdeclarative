@@ -55,7 +55,11 @@ Simple.Frame {
     id: control
     objectName: "frame-override"
 
-    background: Rectangle {
+    contentItem: Item {
+        objectName: "frame-contentItem-override"
+    }
+
+    background: Item {
         objectName: "frame-background-override"
     }
 }

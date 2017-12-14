@@ -59,12 +59,12 @@ T.RangeSlider {
     implicitHeight: Math.max(control.first.handle.implicitHeight, control.second.handle.implicitHeight, background.implicitHeight)
 
     first.handle: Rectangle {
-        objectName: "rangeslider-first-handle-simple"
+        objectName: "rangeslider-first.handle-simple"
         color: control.first.pressed ? "red" : "green"
     }
 
     second.handle: Rectangle {
-        objectName: "rangeslider-second-handle-simple"
+        objectName: "rangeslider-second.handle-simple"
         color: control.second.pressed ? "red" : "green"
     }
 

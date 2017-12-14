@@ -55,7 +55,7 @@ Simple.TextArea {
     id: control
     objectName: "textarea-override"
 
-    background: Rectangle {
+    background: Item {
         objectName: "textarea-background-override"
     }
 }

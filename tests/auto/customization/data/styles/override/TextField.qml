@@ -55,7 +55,7 @@ Simple.TextField {
     id: control
     objectName: "textfield-override"
 
-    background: Rectangle {
+    background: Item {
         objectName: "textfield-background-override"
     }
 }

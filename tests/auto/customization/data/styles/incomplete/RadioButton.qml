@@ -58,4 +58,12 @@ T.RadioButton {
     indicator: Item {
         objectName: "radiobutton-indicator-incomplete"
     }
+
+    contentItem: Item {
+        objectName: "radiobutton-contentItem-incomplete"
+    }
+
+    background: Item {
+        objectName: "radiobutton-background-incomplete"
+    }
 }

@@ -49,13 +49,26 @@
 ****************************************************************************/
 
 import QtQuick 2.9
+import QtQuick.Templates 2.2 as T
 import "../simple" as Simple
 
 Simple.ComboBox {
     id: control
     objectName: "combobox-override"
 
-    background: Rectangle {
+    indicator: Item {
+        objectName: "combobox-indicator-override"
+    }
+
+    contentItem: Item {
+        objectName: "combobox-contentItem-override"
+    }
+
+    background: Item {
         objectName: "combobox-background-override"
+    }
+
+    popup: T.Popup {
+        objectName: "combobox-popup-override"
     }
 }

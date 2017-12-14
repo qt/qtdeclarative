@@ -55,11 +55,15 @@ Simple.GroupBox {
     id: control
     objectName: "groupbox-override"
 
-    background: Rectangle {
-        objectName: "groupbox-background-override"
-    }
-
     label: Text {
         objectName: "groupbox-label-override"
+    }
+
+    contentItem: Item {
+        objectName: "groupbox-contentItem-override"
+    }
+
+    background: Item {
+        objectName: "groupbox-background-override"
     }
 }

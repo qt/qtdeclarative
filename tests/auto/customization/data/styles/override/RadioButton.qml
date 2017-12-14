@@ -55,11 +55,15 @@ Simple.RadioButton {
     id: control
     objectName: "radiobutton-override"
 
-    background: Rectangle {
-        objectName: "radiobutton-background-override"
+    indicator: Item {
+        objectName: "radiobutton-indicator-override"
     }
 
-    indicator: Rectangle {
-        objectName: "radiobutton-indicator-override"
+    contentItem: Item {
+        objectName: "radiobutton-contentItem-override"
+    }
+
+    background: Item {
+        objectName: "radiobutton-background-override"
     }
 }

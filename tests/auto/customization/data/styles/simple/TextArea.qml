@@ -55,6 +55,9 @@ T.TextArea {
     id: control
     objectName: "textarea-simple"
 
+    implicitWidth: Math.max(contentWidth, background.implicitWidth)
+    implicitHeight: Math.max(contentHeight, background.implicitHeight)
+
     background: Rectangle {
         objectName: "textarea-background-simple"
         implicitWidth: 20

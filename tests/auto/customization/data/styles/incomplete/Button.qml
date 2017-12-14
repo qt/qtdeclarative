@@ -55,6 +55,10 @@ T.Button {
     id: control
     objectName: "button-incomplete"
 
+    contentItem: Item {
+        objectName: "button-contentItem-incomplete"
+    }
+
     background: Item {
         objectName: "button-background-incomplete"
     }

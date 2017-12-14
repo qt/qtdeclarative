@@ -56,10 +56,18 @@ T.RangeSlider {
     objectName: "rangeslider-incomplete"
 
     first.handle: Item {
-        objectName: "rangeslider-first-handle-incomplete"
+        objectName: "rangeslider-first.handle-incomplete"
     }
 
     second.handle: Item {
-        objectName: "rangeslider-second-handle-incomplete"
+        objectName: "rangeslider-second.handle-incomplete"
+    }
+
+    contentItem: Item {
+        objectName: "rangeslider-contentItem-incomplete"
+    }
+
+    background: Item {
+        objectName: "rangeslider-background-incomplete"
     }
 }

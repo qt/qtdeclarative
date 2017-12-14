@@ -55,7 +55,11 @@ Simple.ToolBar {
     id: control
     objectName: "toolbar-override"
 
-    background: Rectangle {
+    contentItem: Item {
+        objectName: "toolbar-contentItem-override"
+    }
+
+    background: Item {
         objectName: "toolbar-background-override"
     }
 }

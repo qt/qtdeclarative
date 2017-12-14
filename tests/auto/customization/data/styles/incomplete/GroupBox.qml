@@ -58,4 +58,12 @@ T.GroupBox {
     label: Text {
         objectName: "groupbox-label-incomplete"
     }
+
+    contentItem: Item {
+        objectName: "groupbox-contentItem-incomplete"
+    }
+
+    background: Item {
+        objectName: "groupbox-background-incomplete"
+    }
 }

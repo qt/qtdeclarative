@@ -49,21 +49,25 @@
 ****************************************************************************/
 
 import QtQuick 2.9
-import "../incomplete" as Incomplete
+import "../simple" as Simple
 
-Incomplete.RangeSlider {
+Simple.RangeSlider {
     id: control
     objectName: "rangeslider-override"
 
-    first.handle: Rectangle {
-        objectName: "rangeslider-first-handle-override"
+    first.handle: Item {
+        objectName: "rangeslider-first.handle-override"
     }
 
-    second.handle: Rectangle {
-        objectName: "rangeslider-second-handle-override"
+    second.handle: Item {
+        objectName: "rangeslider-second.handle-override"
     }
 
-    background: Rectangle {
+    contentItem: Item {
+        objectName: "rangeslider-contentItem-override"
+    }
+
+    background: Item {
         objectName: "rangeslider-background-override"
     }
 }

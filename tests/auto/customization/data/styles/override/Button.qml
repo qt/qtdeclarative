@@ -49,17 +49,17 @@
 ****************************************************************************/
 
 import QtQuick 2.9
-import "../empty" as Empty
+import "../simple" as Simple
 
-Empty.Button {
+Simple.Button {
     id: control
     objectName: "button-override"
 
-    contentItem: Rectangle {
+    contentItem: Item {
         objectName: "button-contentItem-override"
     }
 
-    background: Rectangle {
+    background: Item {
         objectName: "button-background-override"
     }
 }

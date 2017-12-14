@@ -49,17 +49,21 @@
 ****************************************************************************/
 
 import QtQuick 2.9
-import "../incomplete" as Incomplete
+import "../simple" as Simple
 
-Incomplete.Dial {
+Simple.Dial {
     id: control
     objectName: "dial-override"
 
-    handle: Rectangle {
+    handle: Item {
         objectName: "dial-handle-override"
     }
 
-    background: Rectangle {
+    contentItem: Item {
+        objectName: "dial-contentItem-override"
+    }
+
+    background: Item {
         objectName: "dial-background-override"
     }
 }

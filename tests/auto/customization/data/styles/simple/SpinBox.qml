@@ -59,12 +59,12 @@ T.SpinBox {
     implicitHeight: Math.max(contentItem.implicitHeight, up.indicator.implicitHeight, down.indicator.implicitHeight, background.implicitHeight)
 
     up.indicator: Rectangle {
-        objectName: "spinbox-up-indicator-simple"
+        objectName: "spinbox-up.indicator-simple"
         color: control.up.pressed ? "red" : "green"
     }
 
     down.indicator: Rectangle {
-        objectName: "spinbox-down-indicator-simple"
+        objectName: "spinbox-down.indicator-simple"
         color: control.down.pressed ? "red" : "green"
     }
 

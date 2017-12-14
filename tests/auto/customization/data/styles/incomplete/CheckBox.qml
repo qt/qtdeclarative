@@ -55,7 +55,15 @@ T.CheckBox {
     id: control
     objectName: "checkbox-incomplete"
 
+    indicator: Item {
+        objectName: "checkbox-indicator-incomplete"
+    }
+
     contentItem: Item {
         objectName: "checkbox-contentItem-incomplete"
+    }
+
+    background: Item {
+        objectName: "checkbox-background-incomplete"
     }
 }

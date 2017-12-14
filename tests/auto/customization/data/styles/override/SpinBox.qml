@@ -55,15 +55,19 @@ Simple.SpinBox {
     id: control
     objectName: "spinbox-override"
 
-    up.indicator: Rectangle {
-        objectName: "spinbox-up-indicator-override"
+    up.indicator: Item {
+        objectName: "spinbox-up.indicator-override"
     }
 
-    down.indicator: Rectangle {
-        objectName: "spinbox-down-indicator-override"
+    down.indicator: Item {
+        objectName: "spinbox-down.indicator-override"
     }
 
-    background: Rectangle {
+    contentItem: Item {
+        objectName: "spinbox-contentItem-override"
+    }
+
+    background: Item {
         objectName: "spinbox-background-override"
     }
 }

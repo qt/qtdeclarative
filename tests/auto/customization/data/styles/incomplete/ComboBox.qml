@@ -55,7 +55,19 @@ T.ComboBox {
     id: control
     objectName: "combobox-incomplete"
 
+    indicator: Item {
+        objectName: "combobox-indicator-incomplete"
+    }
+
     contentItem: Item {
         objectName: "combobox-contentItem-incomplete"
+    }
+
+    background: Item {
+        objectName: "combobox-background-incomplete"
+    }
+
+    popup: T.Popup {
+        objectName: "combobox-popup-incomplete"
     }
 }

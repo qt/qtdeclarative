@@ -55,7 +55,11 @@ Simple.Pane {
     id: control
     objectName: "pane-override"
 
-    background: Rectangle {
+    contentItem: Item {
+        objectName: "pane-contentItem-override"
+    }
+
+    background: Item {
         objectName: "pane-background-override"
     }
 }

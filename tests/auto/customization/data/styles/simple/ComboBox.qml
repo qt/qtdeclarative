@@ -55,8 +55,8 @@ T.ComboBox {
     id: control
     objectName: "combobox-simple"
 
-    implicitWidth: Math.max(contentItem.implicitWidth, background.implicitWidth)
-    implicitHeight: Math.max(contentItem.implicitHeight, background.implicitHeight)
+    implicitWidth: Math.max(contentItem.implicitWidth + indicator.implicitWidth, background.implicitWidth)
+    implicitHeight: Math.max(contentItem.implicitHeight, indicator.implicitHeight, background.implicitHeight)
 
     indicator: Text {
         objectName: "combobox-indicator-simple"

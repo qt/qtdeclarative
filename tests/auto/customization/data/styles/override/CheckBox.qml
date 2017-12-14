@@ -49,15 +49,21 @@
 ****************************************************************************/
 
 import QtQuick 2.9
-import "../incomplete" as Incomplete
+import "../simple" as Simple
 
-Incomplete.CheckBox {
+Simple.CheckBox {
     id: control
     objectName: "checkbox-override"
 
-    contentItem.visible: false
+    indicator: Item {
+        objectName: "checkbox-indicator-override"
+    }
 
-    background: Rectangle {
+    contentItem: Item {
+        objectName: "checkbox-contentItem-override"
+    }
+
+    background: Item {
         objectName: "checkbox-background-override"
     }
 }
