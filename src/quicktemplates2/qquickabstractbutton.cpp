@@ -605,7 +605,6 @@ void QQuickAbstractButton::componentComplete()
 {
     Q_D(QQuickAbstractButton);
     d->executeIndicator(true);
-    d->executeBackground(true);
     d->executeContentItem(true);
     QQuickControl::componentComplete();
 }

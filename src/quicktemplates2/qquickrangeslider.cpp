@@ -1084,7 +1084,6 @@ void QQuickRangeSlider::componentComplete()
     QQuickRangeSliderNodePrivate *secondPrivate = QQuickRangeSliderNodePrivate::get(d->second);
     firstPrivate->executeHandle(true);
     secondPrivate->executeHandle(true);
-    d->executeBackground(true);
 
     QQuickControl::componentComplete();
 

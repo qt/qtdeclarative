@@ -1320,6 +1320,7 @@ void QQuickControl::classBegin()
 void QQuickControl::componentComplete()
 {
     Q_D(QQuickControl);
+    d->executeBackground(true);
     QQuickItem::componentComplete();
     d->resizeContent();
     if (!d->hasLocale)

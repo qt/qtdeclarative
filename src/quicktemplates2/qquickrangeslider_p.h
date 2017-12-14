@@ -67,7 +67,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSlider : public QQuickControl
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     // 2.2 (Qt 5.9)
     Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION 2)
-    Q_CLASSINFO("DeferredPropertyNames", "background")
 
 public:
     explicit QQuickRangeSlider(QQuickItem *parent = nullptr);

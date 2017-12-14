@@ -725,7 +725,6 @@ void QQuickSlider::componentComplete()
 {
     Q_D(QQuickSlider);
     d->executeHandle(true);
-    d->executeBackground(true);
     QQuickControl::componentComplete();
     setValue(d->value);
     d->updatePosition();

@@ -240,7 +240,6 @@ QQmlListProperty<QQuickItem> QQuickPane::contentChildren()
 void QQuickPane::componentComplete()
 {
     Q_D(QQuickPane);
-    d->executeBackground(true);
     d->executeContentItem(true);
     QQuickControl::componentComplete();
 }

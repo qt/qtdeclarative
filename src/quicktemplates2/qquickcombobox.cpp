@@ -1591,7 +1591,6 @@ void QQuickComboBox::componentComplete()
 {
     Q_D(QQuickComboBox);
     d->executeIndicator(true);
-    d->executeBackground(true);
     d->executeContentItem(true);
     if (d->popup)
         d->executePopup(true);

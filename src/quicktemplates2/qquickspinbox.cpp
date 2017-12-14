@@ -884,7 +884,6 @@ void QQuickSpinBox::componentComplete()
     Q_D(QQuickSpinBox);
     QQuickSpinButtonPrivate::get(d->up)->executeIndicator(true);
     QQuickSpinButtonPrivate::get(d->down)->executeIndicator(true);
-    d->executeBackground(true);
     d->executeContentItem(true);
 
     QQuickControl::componentComplete();

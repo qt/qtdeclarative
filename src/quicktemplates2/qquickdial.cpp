@@ -751,7 +751,6 @@ void QQuickDial::componentComplete()
 {
     Q_D(QQuickDial);
     d->executeHandle(true);
-    d->executeBackground(true);
     QQuickControl::componentComplete();
     setValue(d->value);
     d->updatePosition();

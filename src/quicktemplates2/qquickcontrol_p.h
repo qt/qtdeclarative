@@ -78,6 +78,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(bool wheelEnabled READ isWheelEnabled WRITE setWheelEnabled NOTIFY wheelEnabledChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
+    Q_CLASSINFO("DeferredPropertyNames", "background")
 
 public:
     explicit QQuickControl(QQuickItem *parent = nullptr);
