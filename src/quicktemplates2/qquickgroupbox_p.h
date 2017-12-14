@@ -59,6 +59,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickGroupBox : public QQuickFrame
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QQuickItem *label READ label WRITE setLabel NOTIFY labelChanged FINAL)
+    Q_CLASSINFO("DeferredPropertyNames", "background,contentItem,label")
 
 public:
     explicit QQuickGroupBox(QQuickItem *parent = nullptr);
@@ -74,6 +75,8 @@ Q_SIGNALS:
     void labelChanged();
 
 protected:
+    void componentComplete() override;
+
     QFont defaultFont() const override;
 
 #if QT_CONFIG(accessibility)

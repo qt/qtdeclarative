@@ -161,6 +161,7 @@ void tst_customization::creation_data()
     QTest::newRow("incomplete:CheckBox") << "incomplete" << "CheckBox" << (QStringList() << "checkbox-incomplete" << "checkbox-contentItem-incomplete");
     QTest::newRow("incomplete:ComboBox") << "incomplete" << "ComboBox" << (QStringList() << "combobox-incomplete" << "combobox-contentItem-incomplete");
     QTest::newRow("incomplete:Dial") << "incomplete" << "Dial" << (QStringList() << "dial-incomplete" << "dial-handle-incomplete");
+    QTest::newRow("incomplete:GroupBox") << "incomplete" << "GroupBox"<< (QStringList() << "groupbox-incomplete" << "groupbox-label-incomplete");
     QTest::newRow("incomplete:RadioButton") << "incomplete" << "RadioButton" << (QStringList() << "radiobutton-incomplete" << "radiobutton-indicator-incomplete");
     QTest::newRow("incomplete:RangeSlider") << "incomplete" << "RangeSlider" << (QStringList() << "rangeslider-incomplete" << "rangeslider-first-handle-incomplete" << "rangeslider-second-handle-incomplete");
     QTest::newRow("incomplete:Slider") << "incomplete" << "Slider" << (QStringList() << "slider-incomplete" << "slider-handle-incomplete");
@@ -172,7 +173,7 @@ void tst_customization::creation_data()
     QTest::newRow("simple:ComboBox") << "simple" << "ComboBox" << (QStringList() << "combobox-simple" << "combobox-background-simple" << "combobox-contentItem-simple" << "combobox-indicator-simple");
     QTest::newRow("simple:Dial") << "simple" << "Dial" << (QStringList() << "dial-simple" << "dial-background-simple" << "dial-handle-simple");
     QTest::newRow("simple:Frame") << "simple" << "Frame" << (QStringList() << "frame-simple" << "frame-background-simple");
-    QTest::newRow("simple:GroupBox") << "simple" << "GroupBox" << (QStringList() << "groupbox-simple" << "groupbox-background-simple");
+    QTest::newRow("simple:GroupBox") << "simple" << "GroupBox" << (QStringList() << "groupbox-simple" << "groupbox-background-simple" << "groupbox-label-simple");
     QTest::newRow("simple:Label") << "simple" << "Label" << (QStringList() << "label-simple" << "label-background-simple");
     QTest::newRow("simple:Pane") << "simple" << "Pane" << (QStringList() << "pane-simple" << "pane-background-simple");
     QTest::newRow("simple:RadioButton") << "simple" << "RadioButton" << (QStringList() << "radiobutton-simple" << "radiobutton-contentItem-simple" << "radiobutton-indicator-simple");
@@ -189,7 +190,7 @@ void tst_customization::creation_data()
     QTest::newRow("override:ComboBox") << "override" << "ComboBox" << (QStringList() << "combobox-override" << "combobox-background-override" << "combobox-contentItem-simple"  << "combobox-indicator-simple");
     QTest::newRow("override:Dial") << "override" << "Dial" << (QStringList() << "dial-override"  << "dial-background-override" << "dial-handle-override");
     QTest::newRow("override:Frame") << "override" << "Frame" << (QStringList() << "frame-override" << "frame-background-override");
-    QTest::newRow("override:GroupBox") << "override" << "GroupBox" << (QStringList() << "groupbox-override" << "groupbox-background-override");
+    QTest::newRow("override:GroupBox") << "override" << "GroupBox" << (QStringList() << "groupbox-override" << "groupbox-background-override" << "groupbox-label-override");
     QTest::newRow("override:Label") << "override" << "Label" << (QStringList() << "label-override" << "label-background-override");
     QTest::newRow("override:Pane") << "override" << "Pane" << (QStringList() << "pane-override" << "pane-background-override");
     QTest::newRow("override:RadioButton") << "override" << "RadioButton" << (QStringList() << "radiobutton-override"  << "radiobutton-background-override" << "radiobutton-contentItem-simple" << "radiobutton-indicator-override");
@@ -218,12 +219,7 @@ void tst_customization::creation()
     for (const QString &delegate : delegates)
         QVERIFY2(qt_createdQObjects()->removeOne(delegate), qPrintable(delegate + " was not created as expected"));
 
-    QEXPECT_FAIL("simple:GroupBox", "TODO: defer GroupBox::label execution", Continue);
-    QEXPECT_FAIL("override:GroupBox", "TODO: defer GroupBox::label execution", Continue);
-
     QVERIFY2(qt_createdQObjects()->isEmpty(), qPrintable("unexpectedly created: " + qt_createdQObjects->join(", ")));
-
-    QEXPECT_FAIL("override:GroupBox", "TODO: defer GroupBox::label execution", Continue);
     QVERIFY2(qt_destroyedQObjects()->isEmpty(), qPrintable("unexpectedly destroyed: " + qt_destroyedQObjects->join(", ") + " were unexpectedly destroyed"));
 }
 

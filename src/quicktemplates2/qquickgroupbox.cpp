@@ -36,6 +36,7 @@
 
 #include "qquickgroupbox_p.h"
 #include "qquickframe_p_p.h"
+#include "qquickdeferredexecute_p_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
 
@@ -85,12 +86,30 @@ QT_BEGIN_NAMESPACE
 
 class QQuickGroupBoxPrivate : public QQuickFramePrivate
 {
+    Q_DECLARE_PUBLIC(QQuickGroupBox)
+
 public:
     QQuickGroupBoxPrivate() : label(nullptr) { }
 
+    void executeLabel(bool complete = false);
+
     QString title;
-    QQuickItem *label;
+    QQuickDeferredPointer<QQuickItem> label;
 };
+
+static inline QString labelName() { return QStringLiteral("label"); }
+
+void QQuickGroupBoxPrivate::executeLabel(bool complete)
+{
+    Q_Q(QQuickGroupBox);
+    if (label.wasExecuted())
+        return;
+
+    if (!label)
+        quickBeginDeferred(q, labelName(), label);
+    if (complete)
+        quickCompleteDeferred(q, labelName(), label);
+}
 
 QQuickGroupBox::QQuickGroupBox(QQuickItem *parent)
     : QQuickFrame(*(new QQuickGroupBoxPrivate), parent)
@@ -131,7 +150,9 @@ void QQuickGroupBox::setTitle(const QString &title)
 */
 QQuickItem *QQuickGroupBox::label() const
 {
-    Q_D(const QQuickGroupBox);
+    QQuickGroupBoxPrivate *d = const_cast<QQuickGroupBoxPrivate *>(d_func());
+    if (!d->label)
+        d->executeLabel();
     return d->label;
 }
 
@@ -141,11 +162,19 @@ void QQuickGroupBox::setLabel(QQuickItem *label)
     if (d->label == label)
         return;
 
-    QQuickControlPrivate::destroyDelegate(d->label, this);
+    delete d->label;
     d->label = label;
     if (label && !label->parentItem())
         label->setParentItem(this);
-    emit labelChanged();
+    if (!d->label.isExecuting())
+        emit labelChanged();
+}
+
+void QQuickGroupBox::componentComplete()
+{
+    Q_D(QQuickGroupBox);
+    d->executeLabel(true);
+    QQuickFrame::componentComplete();
 }
 
 QFont QQuickGroupBox::defaultFont() const
