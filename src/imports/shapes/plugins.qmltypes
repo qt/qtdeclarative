@@ -36,6 +36,17 @@ Module {
         Property { name: "vendorExtensionsEnabled"; type: "bool" }
         Property { name: "status"; type: "Status"; isReadonly: true }
         Property { name: "data"; type: "QObject"; isList: true; isReadonly: true }
+        Signal { name: "rendererChanged" }
+    }
+    Component {
+        name: "QQuickShapeConicalGradient"
+        defaultProperty: "stops"
+        prototype: "QQuickShapeGradient"
+        exports: ["QtQuick.Shapes/ConicalGradient 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "centerX"; type: "double" }
+        Property { name: "centerY"; type: "double" }
+        Property { name: "angle"; type: "double" }
     }
     Component {
         name: "QQuickShapeGradient"
@@ -113,5 +124,18 @@ Module {
         Property { name: "dashPattern"; type: "QVector<qreal>" }
         Property { name: "fillGradient"; type: "QQuickShapeGradient"; isPointer: true }
         Signal { name: "shapePathChanged" }
+    }
+    Component {
+        name: "QQuickShapeRadialGradient"
+        defaultProperty: "stops"
+        prototype: "QQuickShapeGradient"
+        exports: ["QtQuick.Shapes/RadialGradient 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "centerX"; type: "double" }
+        Property { name: "centerY"; type: "double" }
+        Property { name: "centerRadius"; type: "double" }
+        Property { name: "focalX"; type: "double" }
+        Property { name: "focalY"; type: "double" }
+        Property { name: "focalRadius"; type: "double" }
     }
 }

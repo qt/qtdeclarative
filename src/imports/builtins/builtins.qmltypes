@@ -461,7 +461,10 @@ Module {
                 "AA_CompressHighFrequencyEvents": 25,
                 "AA_DontCheckOpenGLContextThreadAffinity": 26,
                 "AA_DisableShaderDiskCache": 27,
-                "AA_AttributeCount": 28
+                "AA_DontShowShortcutsInContextMenus": 28,
+                "AA_CompressTabletEvents": 29,
+                "AA_DisableWindowContextHelpButton": 30,
+                "AA_AttributeCount": 31
             }
         }
         Enum {
