@@ -107,6 +107,8 @@ QQuickItem *QQuickPagePrivate::getContentItem()
 {
     Q_Q(QQuickPage);
     if (!contentItem)
+        executeContentItem();
+    if (!contentItem)
         return new QQuickItem(q);
     return contentItem;
 }
@@ -330,6 +332,8 @@ void QQuickPage::setContentHeight(qreal height)
 void QQuickPage::componentComplete()
 {
     Q_D(QQuickPage);
+    d->executeBackground(true);
+    d->executeContentItem(true);
     QQuickControl::componentComplete();
     d->layout->update();
 }

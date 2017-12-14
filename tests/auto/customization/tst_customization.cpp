@@ -355,7 +355,6 @@ void tst_customization::creation()
     QEXPECT_FAIL("override:Control", "TODO", Abort);
     QEXPECT_FAIL("override:DialogButtonBox", "TODO", Abort);
     QEXPECT_FAIL("override:MenuSeparator", "TODO", Abort);
-    QEXPECT_FAIL("override:Page", "TODO", Abort);
     QEXPECT_FAIL("override:PageIndicator", "TODO", Abort);
     QEXPECT_FAIL("override:ProgressBar", "TODO", Abort);
     QEXPECT_FAIL("override:ScrollBar", "TODO", Abort);
