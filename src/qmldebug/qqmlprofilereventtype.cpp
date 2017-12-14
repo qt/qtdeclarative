@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,68 +37,56 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLPROFILERCLIENT_P_H
-#define QQMLPROFILERCLIENT_P_H
+#include "qqmlprofilereventtype_p.h"
 
-#include "qqmldebugclient_p.h"
-#include "qqmlprofilereventlocation_p.h"
-#include "qqmlprofilereventreceiver_p.h"
-
-#include <private/qqmlprofilerdefinitions_p.h>
-#include <private/qpacket_p.h>
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtCore/qdatastream.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlProfilerClientPrivate;
-class QQmlProfilerClient : public QQmlDebugClient, public QQmlProfilerDefinitions
+QDataStream &operator>>(QDataStream &stream, QQmlProfilerEventType &type)
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QQmlProfilerClient)
-    Q_PROPERTY(bool recording READ isRecording WRITE setRecording NOTIFY recordingChanged)
+    quint8 message;
+    quint8 rangeType;
+    stream >> type.m_displayName >> type.m_data >> type.m_location >> message >> rangeType
+           >> type.m_detailType;
+    type.m_message = static_cast<QQmlProfilerDefinitions::Message>(message);
+    type.m_rangeType = static_cast<QQmlProfilerDefinitions::RangeType>(rangeType);
+    return stream;
+}
 
-public:
-    QQmlProfilerClient(QQmlDebugConnection *connection, QQmlProfilerEventReceiver *eventReceiver,
-                       quint64 features = std::numeric_limits<quint64>::max());
-    ~QQmlProfilerClient();
+QDataStream &operator<<(QDataStream &stream, const QQmlProfilerEventType &type)
+{
+    return stream << type.m_displayName << type.m_data << type.m_location
+                  << static_cast<quint8>(type.m_message) << static_cast<quint8>(type.m_rangeType)
+                  << type.m_detailType;
+}
 
-    bool isRecording() const;
-    void setRecording(bool);
-    quint64 recordedFeatures() const;
-    virtual void messageReceived(const QByteArray &) override;
-    virtual void stateChanged(State status) override;
+QQmlProfilerDefinitions::ProfileFeature QQmlProfilerEventType::feature() const
+{
+    switch (m_message) {
+    case Event: {
+        switch (m_detailType) {
+        case Mouse:
+        case Key:
+            return ProfileInputEvents;
+        case AnimationFrame:
+            return ProfileAnimations;
+        default:
+            return MaximumProfileFeature;
+        }
+    }
+    case PixmapCacheEvent:
+        return ProfilePixmapCache;
+    case SceneGraphFrame:
+        return ProfileSceneGraph;
+    case MemoryAllocation:
+        return ProfileMemory;
+    case DebugMessage:
+        return ProfileDebugMessages;
+    default:
+        return featureFromRangeType(m_rangeType);
+    }
+}
 
-    void clearEvents();
-    void clearAll();
-
-    void sendRecordingStatus(int engineId = -1);
-    void setRequestedFeatures(quint64 features);
-    void setFlushInterval(quint32 flushInterval);
-
-protected:
-    QQmlProfilerClient(QQmlProfilerClientPrivate &dd);
-
-signals:
-    void complete(qint64 maximumTime);
-    void traceFinished(qint64 timestamp, const QList<int> &engineIds);
-    void traceStarted(qint64 timestamp, const QList<int> &engineIds);
-
-    void recordingChanged(bool arg);
-    void recordedFeaturesChanged(quint64 features);
-
-    void cleared();
-};
 
 QT_END_NAMESPACE
-
-#endif // QQMLPROFILERCLIENT_P_H

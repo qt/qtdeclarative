@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,15 +37,13 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLPROFILERCLIENT_P_H
-#define QQMLPROFILERCLIENT_P_H
+#ifndef QQMLPROFILERTYPEDEVENT_P_H
+#define QQMLPROFILERTYPEDEVENT_P_H
 
-#include "qqmldebugclient_p.h"
-#include "qqmlprofilereventlocation_p.h"
-#include "qqmlprofilereventreceiver_p.h"
+#include "qqmlprofilerevent_p.h"
+#include "qqmlprofilereventtype_p.h"
 
-#include <private/qqmlprofilerdefinitions_p.h>
-#include <private/qpacket_p.h>
+#include <QtCore/qdatastream.h>
 
 //
 //  W A R N I N G
@@ -60,45 +58,19 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlProfilerClientPrivate;
-class QQmlProfilerClient : public QQmlDebugClient, public QQmlProfilerDefinitions
+struct QQmlProfilerTypedEvent
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QQmlProfilerClient)
-    Q_PROPERTY(bool recording READ isRecording WRITE setRecording NOTIFY recordingChanged)
-
-public:
-    QQmlProfilerClient(QQmlDebugConnection *connection, QQmlProfilerEventReceiver *eventReceiver,
-                       quint64 features = std::numeric_limits<quint64>::max());
-    ~QQmlProfilerClient();
-
-    bool isRecording() const;
-    void setRecording(bool);
-    quint64 recordedFeatures() const;
-    virtual void messageReceived(const QByteArray &) override;
-    virtual void stateChanged(State status) override;
-
-    void clearEvents();
-    void clearAll();
-
-    void sendRecordingStatus(int engineId = -1);
-    void setRequestedFeatures(quint64 features);
-    void setFlushInterval(quint32 flushInterval);
-
-protected:
-    QQmlProfilerClient(QQmlProfilerClientPrivate &dd);
-
-signals:
-    void complete(qint64 maximumTime);
-    void traceFinished(qint64 timestamp, const QList<int> &engineIds);
-    void traceStarted(qint64 timestamp, const QList<int> &engineIds);
-
-    void recordingChanged(bool arg);
-    void recordedFeaturesChanged(quint64 features);
-
-    void cleared();
+    QQmlProfilerEvent event;
+    QQmlProfilerEventType type;
+    qint64 serverTypeId = 0;
 };
+
+QDataStream &operator>>(QDataStream &stream, QQmlProfilerTypedEvent &event);
+
+Q_DECLARE_TYPEINFO(QQmlProfilerTypedEvent, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQMLPROFILERCLIENT_P_H
+Q_DECLARE_METATYPE(QQmlProfilerTypedEvent)
+
+#endif // QQMLPROFILERTYPEDEVENT_P_H

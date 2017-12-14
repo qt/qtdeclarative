@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,68 +37,20 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLPROFILERCLIENT_P_H
-#define QQMLPROFILERCLIENT_P_H
-
-#include "qqmldebugclient_p.h"
 #include "qqmlprofilereventlocation_p.h"
-#include "qqmlprofilereventreceiver_p.h"
 
-#include <private/qqmlprofilerdefinitions_p.h>
-#include <private/qpacket_p.h>
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtCore/qdatastream.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlProfilerClientPrivate;
-class QQmlProfilerClient : public QQmlDebugClient, public QQmlProfilerDefinitions
+QDataStream &operator>>(QDataStream &stream, QQmlProfilerEventLocation &location)
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QQmlProfilerClient)
-    Q_PROPERTY(bool recording READ isRecording WRITE setRecording NOTIFY recordingChanged)
+    return stream >> location.m_filename >> location.m_line >> location.m_column;
+}
 
-public:
-    QQmlProfilerClient(QQmlDebugConnection *connection, QQmlProfilerEventReceiver *eventReceiver,
-                       quint64 features = std::numeric_limits<quint64>::max());
-    ~QQmlProfilerClient();
-
-    bool isRecording() const;
-    void setRecording(bool);
-    quint64 recordedFeatures() const;
-    virtual void messageReceived(const QByteArray &) override;
-    virtual void stateChanged(State status) override;
-
-    void clearEvents();
-    void clearAll();
-
-    void sendRecordingStatus(int engineId = -1);
-    void setRequestedFeatures(quint64 features);
-    void setFlushInterval(quint32 flushInterval);
-
-protected:
-    QQmlProfilerClient(QQmlProfilerClientPrivate &dd);
-
-signals:
-    void complete(qint64 maximumTime);
-    void traceFinished(qint64 timestamp, const QList<int> &engineIds);
-    void traceStarted(qint64 timestamp, const QList<int> &engineIds);
-
-    void recordingChanged(bool arg);
-    void recordedFeaturesChanged(quint64 features);
-
-    void cleared();
-};
+QDataStream &operator<<(QDataStream &stream, const QQmlProfilerEventLocation &location)
+{
+    return stream << location.m_filename << location.m_line << location.m_column;
+}
 
 QT_END_NAMESPACE
-
-#endif // QQMLPROFILERCLIENT_P_H

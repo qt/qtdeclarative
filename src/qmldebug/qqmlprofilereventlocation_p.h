@@ -37,10 +37,12 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLEVENTLOCATION_P_H
-#define QQMLEVENTLOCATION_P_H
+#ifndef QQMLPROFILEREVENTLOCATION_P_H
+#define QQMLPROFILEREVENTLOCATION_P_H
 
 #include <QtCore/qstring.h>
+#include <QtCore/qhash.h>
+#include <QtCore/qdatastream.h>
 
 //
 //  W A R N I N G
@@ -55,19 +57,65 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QQmlEventLocation
+class QQmlProfilerEventLocation
 {
-    QQmlEventLocation() : line(-1), column(-1) {}
-    QQmlEventLocation(const QString &file, int lineNumber, int columnNumber) :
-        filename(file), line(lineNumber), column(columnNumber) {}
+public:
+    QQmlProfilerEventLocation() : m_line(-1),m_column(-1) {}
+    QQmlProfilerEventLocation(const QString &file, int lineNumber, int columnNumber) :
+        m_filename(file), m_line(lineNumber), m_column(columnNumber)
+    {}
 
-    QString filename;
-    int line;
-    int column;
+    void clear()
+    {
+        m_filename.clear();
+        m_line = m_column = -1;
+    }
+
+    bool isValid() const
+    {
+        return !m_filename.isEmpty();
+    }
+
+    QString filename() const { return m_filename; }
+    int line() const { return m_line; }
+    int column() const { return m_column; }
+
+private:
+    friend QDataStream &operator>>(QDataStream &stream, QQmlProfilerEventLocation &location);
+    friend QDataStream &operator<<(QDataStream &stream, const QQmlProfilerEventLocation &location);
+
+    QString m_filename;
+    int m_line;
+    int m_column;
 };
 
-Q_DECLARE_TYPEINFO(QQmlEventLocation, Q_MOVABLE_TYPE);
+inline bool operator==(const QQmlProfilerEventLocation &location1,
+                       const QQmlProfilerEventLocation &location2)
+{
+    // compare filename last as it's expensive.
+    return location1.line() == location2.line() && location1.column() == location2.column()
+            && location1.filename() == location2.filename();
+}
+
+inline bool operator!=(const QQmlProfilerEventLocation &location1,
+                       const QQmlProfilerEventLocation &location2)
+{
+    return !(location1 == location2);
+}
+
+inline uint qHash(const QQmlProfilerEventLocation &location)
+{
+    return qHash(location.filename())
+            ^ ((location.line() & 0xfff)                   // 12 bits of line number
+               | ((location.column() << 16) & 0xff0000));  // 8 bits of column
+
+}
+
+QDataStream &operator>>(QDataStream &stream, QQmlProfilerEventLocation &location);
+QDataStream &operator<<(QDataStream &stream, const QQmlProfilerEventLocation &location);
+
+Q_DECLARE_TYPEINFO(QQmlProfilerEventLocation, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QQMLEVENTLOCATION_P_H
+#endif // QQMLPROFILEREVENTLOCATION_P_H

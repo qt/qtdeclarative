@@ -105,9 +105,9 @@ private:
     bool m_recording;
     bool m_interactive;
 
-    QQmlDebugConnection m_connection;
-    QmlProfilerClient m_qmlProfilerClient;
-    QmlProfilerData m_profilerData;
+    QScopedPointer<QQmlDebugConnection> m_connection;
+    QScopedPointer<QmlProfilerClient> m_qmlProfilerClient;
+    QScopedPointer<QmlProfilerData> m_profilerData;
     QTimer m_connectTimer;
     uint m_connectionAttempts;
 };

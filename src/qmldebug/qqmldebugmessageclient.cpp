@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,68 +37,59 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLPROFILERCLIENT_P_H
-#define QQMLPROFILERCLIENT_P_H
+#include "qqmldebugmessageclient_p.h"
 
-#include "qqmldebugclient_p.h"
-#include "qqmlprofilereventlocation_p.h"
-#include "qqmlprofilereventreceiver_p.h"
-
-#include <private/qqmlprofilerdefinitions_p.h>
-#include <private/qpacket_p.h>
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtCore/qdatastream.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlProfilerClientPrivate;
-class QQmlProfilerClient : public QQmlDebugClient, public QQmlProfilerDefinitions
+/*!
+  \class QQmlDebugMessageClient
+  \internal
+
+  \brief Client for the debug message service
+
+  The QQmlDebugMessageClient receives debug messages routed through the QML
+  debug connection via QDebugMessageService.
+ */
+
+QQmlDebugMessageClient::QQmlDebugMessageClient(QQmlDebugConnection *client)
+    : QQmlDebugClient(QLatin1String("DebugMessages"), client)
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QQmlProfilerClient)
-    Q_PROPERTY(bool recording READ isRecording WRITE setRecording NOTIFY recordingChanged)
+}
 
-public:
-    QQmlProfilerClient(QQmlDebugConnection *connection, QQmlProfilerEventReceiver *eventReceiver,
-                       quint64 features = std::numeric_limits<quint64>::max());
-    ~QQmlProfilerClient();
+void QQmlDebugMessageClient::stateChanged(State state)
+{
+    emit newState(state);
+}
 
-    bool isRecording() const;
-    void setRecording(bool);
-    quint64 recordedFeatures() const;
-    virtual void messageReceived(const QByteArray &) override;
-    virtual void stateChanged(State status) override;
+void QQmlDebugMessageClient::messageReceived(const QByteArray &data)
+{
+    QDataStream ds(data);
+    QByteArray command;
+    ds >> command;
 
-    void clearEvents();
-    void clearAll();
-
-    void sendRecordingStatus(int engineId = -1);
-    void setRequestedFeatures(quint64 features);
-    void setFlushInterval(quint32 flushInterval);
-
-protected:
-    QQmlProfilerClient(QQmlProfilerClientPrivate &dd);
-
-signals:
-    void complete(qint64 maximumTime);
-    void traceFinished(qint64 timestamp, const QList<int> &engineIds);
-    void traceStarted(qint64 timestamp, const QList<int> &engineIds);
-
-    void recordingChanged(bool arg);
-    void recordedFeaturesChanged(quint64 features);
-
-    void cleared();
-};
+    if (command == "MESSAGE") {
+        int type;
+        int line;
+        QByteArray debugMessage;
+        QByteArray file;
+        QByteArray function;
+        ds >> type >> debugMessage >> file >> line >> function;
+        QQmlDebugContextInfo info;
+        info.line = line;
+        info.file = QString::fromUtf8(file);
+        info.function = QString::fromUtf8(function);
+        info.timestamp = -1;
+        if (!ds.atEnd()) {
+            QByteArray category;
+            ds >> category;
+            info.category = QString::fromUtf8(category);
+            if (!ds.atEnd())
+                ds >> info.timestamp;
+        }
+        emit message(QtMsgType(type), QString::fromUtf8(debugMessage), info);
+    }
+}
 
 QT_END_NAMESPACE
-
-#endif // QQMLPROFILERCLIENT_P_H
