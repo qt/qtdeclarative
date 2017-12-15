@@ -86,6 +86,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(DBG_MOUSE_TARGET)
 Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
+Q_DECLARE_LOGGING_CATEGORY(lcTransient)
 
 void debugFocusTree(QQuickItem *item, QQuickItem *scope = 0, int depth = 1)
 {
@@ -3248,11 +3249,13 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
             }
 
             if (thisWindow) {
-                if (itemWindow)
+                if (itemWindow) {
+                    qCDebug(lcTransient) << thisWindow << "is transient for" << itemWindow;
                     thisWindow->setTransientParent(itemWindow);
-                else
+                } else {
                     QObject::connect(item, SIGNAL(windowChanged(QQuickWindow*)),
                                      thisWindow, SLOT(setTransientParent_helper(QQuickWindow*)));
+                }
             }
             o->setParent(that);
         }

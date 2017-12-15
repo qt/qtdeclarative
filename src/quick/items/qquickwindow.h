@@ -230,6 +230,10 @@ private:
     Q_DISABLE_COPY(QQuickWindow)
 };
 
+#ifndef QT_NO_DEBUG_STREAM
+QDebug Q_QUICK_EXPORT operator<<(QDebug debug, const QQuickWindow *item);
+#endif
+
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QQuickWindow *)
