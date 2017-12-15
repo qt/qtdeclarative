@@ -107,6 +107,7 @@ Q_SIGNALS:
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) Q_DECL_OVERRIDE;
     void componentComplete() Q_DECL_OVERRIDE;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
 private:
     void setSource(const QUrl &sourceUrl, bool needsClear);
