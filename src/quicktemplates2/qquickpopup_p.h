@@ -115,6 +115,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(QQuickTransition *exit READ exit WRITE setExit NOTIFY exitChanged FINAL)
     // 2.1 (Qt 5.8)
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL REVISION 1)
+    Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:

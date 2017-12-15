@@ -151,16 +151,20 @@ void tst_customization::creation_data()
     QTest::newRow("empty:Control") << "empty" << "Control"<< QStringList();
     QTest::newRow("empty:DelayButton") << "empty" << "DelayButton"<< QStringList();
     QTest::newRow("empty:Dial") << "empty" << "Dial" << QStringList();
+    QTest::newRow("empty:Dialog") << "empty" << "Dialog" << QStringList();
     QTest::newRow("empty:DialogButtonBox") << "empty" << "DialogButtonBox" << QStringList();
+    QTest::newRow("empty:Drawer") << "empty" << "Drawer" << QStringList();
     QTest::newRow("empty:Frame") << "empty" << "Frame"<< QStringList();
     QTest::newRow("empty:GroupBox") << "empty" << "GroupBox"<< QStringList();
     QTest::newRow("empty:ItemDelegate") << "empty" << "ItemDelegate" << QStringList();
     QTest::newRow("empty:Label") << "empty" << "Label"<< QStringList();
+    QTest::newRow("empty:Menu") << "empty" << "Menu" << QStringList();
     QTest::newRow("empty:MenuItem") << "empty" << "MenuItem"<< QStringList();
     QTest::newRow("empty:MenuSeparator") << "empty" << "MenuSeparator"<< QStringList();
     QTest::newRow("empty:Page") << "empty" << "Page"<< QStringList();
     QTest::newRow("empty:PageIndicator") << "empty" << "PageIndicator"<< QStringList();
     QTest::newRow("empty:Pane") << "empty" << "Pane"<< QStringList();
+    QTest::newRow("empty:Popup") << "empty" << "Popup" << QStringList();
     QTest::newRow("empty:ProgressBar") << "empty" << "ProgressBar"<< QStringList();
     QTest::newRow("empty:RadioButton") << "empty" << "RadioButton" << QStringList();
     QTest::newRow("empty:RadioDelegate") << "empty" << "RadioDelegate" << QStringList();
@@ -183,6 +187,7 @@ void tst_customization::creation_data()
     QTest::newRow("empty:ToolBar") << "empty" << "ToolBar"<< QStringList();
     QTest::newRow("empty:ToolButton") << "empty" << "ToolButton"<< QStringList();
     QTest::newRow("empty:ToolSeparator") << "empty" << "ToolSeparator"<< QStringList();
+    QTest::newRow("empty:ToolTip") << "empty" << "ToolTip"<< QStringList();
     // QTest::newRow("empty:Tumbler") << "empty" << "Tumbler"<< QStringList(); // ### TODO: fix crash with contentItem-less Tumbler
 
     // the "incomplete" style is missing bindings to the delegates (must be created regardless)
@@ -197,16 +202,20 @@ void tst_customization::creation_data()
     QTest::newRow("incomplete:Control") << "incomplete" << "Control" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:DelayButton") << "incomplete" << "DelayButton" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:Dial") << "incomplete" << "Dial" << (QStringList() << "background" << "contentItem" << "handle");
+    QTest::newRow("incomplete:Dialog") << "incomplete" << "Dialog" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:DialogButtonBox") << "incomplete" << "DialogButtonBox" << (QStringList() << "background" << "contentItem");
+    QTest::newRow("incomplete:Drawer") << "incomplete" << "Drawer" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:Frame") << "incomplete" << "Frame"<< (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:GroupBox") << "incomplete" << "GroupBox"<< (QStringList() << "background" << "contentItem" << "label");
     QTest::newRow("incomplete:ItemDelegate") << "incomplete" << "ItemDelegate" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:Label") << "incomplete" << "Label" << (QStringList() << "background");
+    QTest::newRow("incomplete:Menu") << "incomplete" << "Menu" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:MenuItem") << "incomplete" << "MenuItem" << (QStringList() << "background" << "contentItem" << "indicator");
     QTest::newRow("incomplete:MenuSeparator") << "incomplete" << "MenuSeparator" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:Page") << "incomplete" << "Page" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:PageIndicator") << "incomplete" << "PageIndicator" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:Pane") << "incomplete" << "Pane" << (QStringList() << "background" << "contentItem");
+    QTest::newRow("incomplete:Popup") << "incomplete" << "Popup" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:ProgressBar") << "incomplete" << "ProgressBar" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:RadioButton") << "incomplete" << "RadioButton" << (QStringList() << "background" << "contentItem" << "indicator");
     QTest::newRow("incomplete:RadioDelegate") << "incomplete" << "RadioDelegate" << (QStringList() << "background" << "contentItem" << "indicator");
@@ -229,6 +238,7 @@ void tst_customization::creation_data()
     QTest::newRow("incomplete:ToolBar") << "incomplete" << "ToolBar"<< (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:ToolButton") << "incomplete" << "ToolButton"<< (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:ToolSeparator") << "incomplete" << "ToolSeparator"<< (QStringList() << "background" << "contentItem");
+    QTest::newRow("incomplete:ToolTip") << "incomplete" << "ToolTip" << (QStringList() << "background" << "contentItem");
     QTest::newRow("incomplete:Tumbler") << "incomplete" << "Tumbler"<< (QStringList() << "background" << "contentItem");
 
     // the "simple" style simulates a proper style and contains bindings to/in delegates
@@ -243,16 +253,20 @@ void tst_customization::creation_data()
     QTest::newRow("simple:Control") << "simple" << "Control" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:DelayButton") << "simple" << "DelayButton" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:Dial") << "simple" << "Dial" << (QStringList() << "background" << "handle");
+    QTest::newRow("simple:Dialog") << "simple" << "Dialog" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:DialogButtonBox") << "simple" << "DialogButtonBox" << (QStringList() << "background" << "contentItem");
+    QTest::newRow("simple:Drawer") << "simple" << "Drawer" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:Frame") << "simple" << "Frame"<< (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:GroupBox") << "simple" << "GroupBox"<< (QStringList() << "background" << "contentItem" << "label");
     QTest::newRow("simple:ItemDelegate") << "simple" << "ItemDelegate" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:Label") << "simple" << "Label" << (QStringList() << "background");
+    QTest::newRow("simple:Menu") << "simple" << "Menu" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:MenuItem") << "simple" << "MenuItem" << (QStringList() << "background" << "contentItem" << "indicator");
     QTest::newRow("simple:MenuSeparator") << "simple" << "MenuSeparator" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:Page") << "simple" << "Page" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:PageIndicator") << "simple" << "PageIndicator" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:Pane") << "simple" << "Pane" << (QStringList() << "background" << "contentItem");
+    QTest::newRow("simple:Popup") << "simple" << "Popup" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:ProgressBar") << "simple" << "ProgressBar" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:RadioButton") << "simple" << "RadioButton" << (QStringList() << "contentItem" << "indicator");
     QTest::newRow("simple:RadioDelegate") << "simple" << "RadioDelegate" << (QStringList() << "background" << "contentItem" << "indicator");
@@ -275,6 +289,7 @@ void tst_customization::creation_data()
     QTest::newRow("simple:ToolBar") << "simple" << "ToolBar"<< (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:ToolButton") << "simple" << "ToolButton"<< (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:ToolSeparator") << "simple" << "ToolSeparator"<< (QStringList() << "background" << "contentItem");
+    QTest::newRow("simple:ToolTip") << "simple" << "ToolTip" << (QStringList() << "background" << "contentItem");
     QTest::newRow("simple:Tumbler") << "simple" << "Tumbler"<< (QStringList() << "background" << "contentItem");
 
     // the "override" style overrides all delegates in the "simple" style
@@ -289,16 +304,20 @@ void tst_customization::creation_data()
     QTest::newRow("override:Control") << "override" << "Control" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:DelayButton") << "override" << "DelayButton" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:Dial") << "override" << "Dial" << (QStringList() << "background" << "contentItem" << "handle");
+    QTest::newRow("override:Dialog") << "override" << "Dialog" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:DialogButtonBox") << "override" << "DialogButtonBox" << (QStringList() << "background" << "contentItem");
+    QTest::newRow("override:Drawer") << "override" << "Drawer" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:Frame") << "override" << "Frame"<< (QStringList() << "background" << "contentItem");
     QTest::newRow("override:GroupBox") << "override" << "GroupBox"<< (QStringList() << "background" << "contentItem" << "label");
     QTest::newRow("override:ItemDelegate") << "override" << "ItemDelegate" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:Label") << "override" << "Label" << (QStringList() << "background");
+    QTest::newRow("override:Menu") << "override" << "Menu" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:MenuItem") << "override" << "MenuItem" << (QStringList() << "background" << "contentItem" << "indicator");
     QTest::newRow("override:MenuSeparator") << "override" << "MenuSeparator" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:Page") << "override" << "Page" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:PageIndicator") << "override" << "PageIndicator" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:Pane") << "override" << "Pane" << (QStringList() << "background" << "contentItem");
+    QTest::newRow("override:Popup") << "override" << "Popup" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:ProgressBar") << "override" << "ProgressBar" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:RadioButton") << "override" << "RadioButton" << (QStringList() << "background" << "contentItem" << "indicator");
     QTest::newRow("override:RadioDelegate") << "override" << "RadioDelegate" << (QStringList() << "background" << "contentItem" << "indicator");
@@ -321,6 +340,7 @@ void tst_customization::creation_data()
     QTest::newRow("override:ToolBar") << "override" << "ToolBar"<< (QStringList() << "background" << "contentItem");
     QTest::newRow("override:ToolButton") << "override" << "ToolButton"<< (QStringList() << "background" << "contentItem");
     QTest::newRow("override:ToolSeparator") << "override" << "ToolSeparator"<< (QStringList() << "background" << "contentItem");
+    QTest::newRow("override:ToolTip") << "override" << "ToolTip" << (QStringList() << "background" << "contentItem");
     QTest::newRow("override:Tumbler") << "override" << "Tumbler"<< (QStringList() << "background" << "contentItem");
 }
 

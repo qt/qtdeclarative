@@ -38,6 +38,7 @@
 #include "qquickmenu_p_p.h"
 #include "qquickmenuitem_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickpopupitem_p_p.h"
 
 #include <QtGui/qevent.h>
 #include <QtQml/private/qqmlobjectmodel_p.h>
@@ -449,6 +450,8 @@ QVariant QQuickMenu::contentModel() const
 QQmlListProperty<QObject> QQuickMenu::contentData()
 {
     Q_D(QQuickMenu);
+    if (!d->contentItem)
+        QQuickControlPrivate::get(d->popupItem)->executeContentItem();
     return QQmlListProperty<QObject>(this, d,
         QQuickMenuPrivate::contentData_append,
         QQuickMenuPrivate::contentData_count,

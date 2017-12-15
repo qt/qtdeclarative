@@ -127,8 +127,8 @@ public:
     static bool calcHoverEnabled(const QQuickItem *item);
 #endif
 
-    void executeContentItem(bool complete = false);
-    void executeBackground(bool complete = false);
+    virtual void executeContentItem(bool complete = false);
+    virtual void executeBackground(bool complete = false);
 
     static void destroyDelegate(QObject *object, QObject *parent);
 
