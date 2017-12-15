@@ -50,6 +50,7 @@
 
 #include <QtQml/private/qlazilyallocated_p.h>
 #include <QtQuick/private/qquicktext_p_p.h>
+#include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
 
 #if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
@@ -98,6 +99,8 @@ public:
     QAccessible::Role accessibleRole() const override;
 #endif
 
+    void executeBackground(bool complete = false);
+
     struct ExtraData {
         QFont requestedFont;
         QPalette requestedPalette;
@@ -105,7 +108,7 @@ public:
     QLazilyAllocated<ExtraData> extra;
 
     QPalette resolvedPalette;
-    QQuickItem *background;
+    QQuickDeferredPointer<QQuickItem> background;
 };
 
 QT_END_NAMESPACE

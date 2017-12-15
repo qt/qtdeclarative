@@ -36,6 +36,7 @@
 
 #include "qquickrangeslider_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickdeferredexecute_p_p.h"
 
 #include <QtCore/qscopedpointer.h>
 #include <QtQuick/private/qquickwindow_p.h>
@@ -109,13 +110,15 @@ public:
     void setPosition(qreal position, bool ignoreOtherPosition = false);
     void updatePosition(bool ignoreOtherPosition = false);
 
+    void executeHandle(bool complete = false);
+
     static QQuickRangeSliderNodePrivate *get(QQuickRangeSliderNode *node);
 
     qreal value;
     bool isPendingValue;
     qreal pendingValue;
     qreal position;
-    QQuickItem *handle;
+    QQuickDeferredPointer<QQuickItem> handle;
     QQuickRangeSlider *slider;
     bool pressed;
     bool hovered;
@@ -147,6 +150,20 @@ void QQuickRangeSliderNodePrivate::updatePosition(bool ignoreOtherPosition)
     if (!qFuzzyCompare(slider->from(), slider->to()))
         pos = (value - slider->from()) / (slider->to() - slider->from());
     setPosition(pos, ignoreOtherPosition);
+}
+
+static inline QString handleName() { return QStringLiteral("handle"); }
+
+void QQuickRangeSliderNodePrivate::executeHandle(bool complete)
+{
+    Q_Q(QQuickRangeSliderNode);
+    if (handle.wasExecuted())
+        return;
+
+    if (!handle)
+        quickBeginDeferred(q, handleName(), handle);
+    if (complete)
+        quickCompleteDeferred(q, handleName(), handle);
 }
 
 QQuickRangeSliderNodePrivate *QQuickRangeSliderNodePrivate::get(QQuickRangeSliderNode *node)
@@ -227,7 +244,9 @@ qreal QQuickRangeSliderNode::visualPosition() const
 
 QQuickItem *QQuickRangeSliderNode::handle() const
 {
-    Q_D(const QQuickRangeSliderNode);
+    QQuickRangeSliderNodePrivate *d = const_cast<QQuickRangeSliderNodePrivate *>(d_func());
+    if (!d->handle)
+        d->executeHandle();
     return d->handle;
 }
 
@@ -237,7 +256,7 @@ void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
     if (d->handle == handle)
         return;
 
-    QQuickControlPrivate::destroyDelegate(d->handle, d->slider);
+    delete d->handle;
     d->handle = handle;
     if (handle) {
         if (!handle->parentItem())
@@ -263,7 +282,8 @@ void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
 
         handle->setActiveFocusOnTab(true);
     }
-    emit handleChanged();
+    if (!d->handle.isExecuting())
+        emit handleChanged();
 }
 
 bool QQuickRangeSliderNode::isPressed() const
@@ -1077,13 +1097,27 @@ void QQuickRangeSlider::mirrorChange()
     emit d->second->visualPositionChanged();
 }
 
+void QQuickRangeSlider::classBegin()
+{
+    Q_D(QQuickRangeSlider);
+    QQuickControl::classBegin();
+
+    QQmlContext *context = qmlContext(this);
+    if (context) {
+        QQmlEngine::setContextForObject(d->first, context);
+        QQmlEngine::setContextForObject(d->second, context);
+    }
+}
+
 void QQuickRangeSlider::componentComplete()
 {
     Q_D(QQuickRangeSlider);
-    QQuickControl::componentComplete();
-
     QQuickRangeSliderNodePrivate *firstPrivate = QQuickRangeSliderNodePrivate::get(d->first);
     QQuickRangeSliderNodePrivate *secondPrivate = QQuickRangeSliderNodePrivate::get(d->second);
+    firstPrivate->executeHandle(true);
+    secondPrivate->executeHandle(true);
+
+    QQuickControl::componentComplete();
 
     if (firstPrivate->isPendingValue || secondPrivate->isPendingValue
         || !qFuzzyCompare(d->from, defaultFrom) || !qFuzzyCompare(d->to, defaultTo)) {

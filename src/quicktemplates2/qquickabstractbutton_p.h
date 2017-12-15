@@ -70,6 +70,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 3)
     Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged FINAL REVISION 3)
     Q_PROPERTY(QQuickAction *action READ action WRITE setAction NOTIFY actionChanged FINAL REVISION 3)
+    Q_CLASSINFO("DeferredPropertyNames", "background,contentItem,indicator")
 
 public:
     explicit QQuickAbstractButton(QQuickItem *parent = nullptr);
@@ -149,6 +150,8 @@ Q_SIGNALS:
 
 protected:
     QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);
+
+    void componentComplete() override;
 
     bool event(QEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;

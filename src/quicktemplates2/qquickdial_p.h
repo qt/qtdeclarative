@@ -72,6 +72,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDial : public QQuickControl
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
     // 2.2 (Qt 5.9)
     Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION 2)
+    Q_CLASSINFO("DeferredPropertyNames", "background,handle")
 
 public:
     explicit QQuickDial(QQuickItem *parent = nullptr);

@@ -38,6 +38,7 @@
 #include "qquicktextfield_p_p.h"
 #include "qquickcontrol_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickdeferredexecute_p_p.h"
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
@@ -311,6 +312,20 @@ QAccessible::Role QQuickTextFieldPrivate::accessibleRole() const
 }
 #endif
 
+static inline QString backgroundName() { return QStringLiteral("background"); }
+
+void QQuickTextFieldPrivate::executeBackground(bool complete)
+{
+    Q_Q(QQuickTextField);
+    if (background.wasExecuted())
+        return;
+
+    if (!background)
+        quickBeginDeferred(q, backgroundName(), background);
+    if (complete)
+        quickCompleteDeferred(q, backgroundName(), background);
+}
+
 QQuickTextField::QQuickTextField(QQuickItem *parent)
     : QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
@@ -352,7 +367,9 @@ void QQuickTextField::setFont(const QFont &font)
 */
 QQuickItem *QQuickTextField::background() const
 {
-    Q_D(const QQuickTextField);
+    QQuickTextFieldPrivate *d = const_cast<QQuickTextFieldPrivate *>(d_func());
+    if (!d->background)
+        d->executeBackground();
     return d->background;
 }
 
@@ -362,7 +379,7 @@ void QQuickTextField::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    QQuickControlPrivate::destroyDelegate(d->background, this);
+    delete d->background;
     d->background = background;
     if (background) {
         background->setParentItem(this);
@@ -371,7 +388,8 @@ void QQuickTextField::setBackground(QQuickItem *background)
         if (isComponentComplete())
             d->resizeBackground();
     }
-    emit backgroundChanged();
+    if (!d->background.isExecuting())
+        emit backgroundChanged();
 }
 
 /*!
@@ -540,6 +558,7 @@ void QQuickTextField::classBegin()
 void QQuickTextField::componentComplete()
 {
     Q_D(QQuickTextField);
+    d->executeBackground(true);
     QQuickTextInput::componentComplete();
 #if QT_CONFIG(quicktemplates2_hover)
     if (!d->explicitHoverEnabled)

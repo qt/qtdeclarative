@@ -131,6 +131,7 @@ protected:
     void touchEvent(QTouchEvent *event) override;
 #endif
     void mirrorChange() override;
+    void classBegin() override;
     void componentComplete() override;
 
 #if QT_CONFIG(accessibility)
@@ -156,6 +157,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSliderNode : public QObject
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     // 2.1 (Qt 5.8)
     Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION 1)
+    Q_CLASSINFO("DeferredPropertyNames", "handle")
 
 public:
     explicit QQuickRangeSliderNode(qreal value, QQuickRangeSlider *slider);

@@ -104,9 +104,9 @@ void QQuickPopupItemPrivate::resolvePalette()
 QQuickItem *QQuickPopupItemPrivate::getContentItem()
 {
     Q_Q(QQuickPopupItem);
-    if (!contentItem)
-        return new QQuickItem(q);
-    return contentItem;
+    if (QQuickItem *item = QQuickControlPrivate::getContentItem())
+        return item;
+    return new QQuickItem(q);
 }
 
 QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)

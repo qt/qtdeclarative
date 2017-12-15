@@ -94,6 +94,8 @@ public:
     void trigger();
     void toggle(bool value);
 
+    void executeIndicator(bool complete = false);
+
     QString text;
     bool down;
     bool explicitDown;
@@ -114,7 +116,7 @@ public:
     QQuickIcon icon;
     QPointF pressPoint;
     Qt::MouseButtons pressButtons;
-    QQuickItem *indicator;
+    QQuickDeferredPointer<QQuickItem> indicator;
     QQuickButtonGroup *group;
     QQuickAbstractButton::Display display;
     QPointer<QQuickAction> action;

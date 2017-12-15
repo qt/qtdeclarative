@@ -40,6 +40,7 @@
 #include "qquickaction_p.h"
 #include "qquickaction_p_p.h"
 #include "qquickshortcutcontext_p_p.h"
+#include "qquickdeferredexecute_p_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
@@ -306,6 +307,20 @@ void QQuickAbstractButtonPrivate::toggle(bool value)
     q->setChecked(value);
     if (wasChecked != checked)
         emit q->toggled();
+}
+
+static inline QString indicatorName() { return QStringLiteral("indicator"); }
+
+void QQuickAbstractButtonPrivate::executeIndicator(bool complete)
+{
+    Q_Q(QQuickControl);
+    if (indicator.wasExecuted())
+        return;
+
+    if (!indicator)
+        quickBeginDeferred(q, indicatorName(), indicator);
+    if (complete)
+        quickCompleteDeferred(q, indicatorName(), indicator);
 }
 
 QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
@@ -604,7 +619,9 @@ void QQuickAbstractButton::setAutoRepeat(bool repeat)
 */
 QQuickItem *QQuickAbstractButton::indicator() const
 {
-    Q_D(const QQuickAbstractButton);
+    QQuickAbstractButtonPrivate *d = const_cast<QQuickAbstractButtonPrivate *>(d_func());
+    if (!d->indicator)
+        d->executeIndicator();
     return d->indicator;
 }
 
@@ -614,14 +631,15 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
     if (d->indicator == indicator)
         return;
 
-    QQuickControlPrivate::destroyDelegate(d->indicator, this);
+    delete d->indicator;
     d->indicator = indicator;
     if (indicator) {
         if (!indicator->parentItem())
             indicator->setParentItem(this);
         indicator->setAcceptedMouseButtons(Qt::LeftButton);
     }
-    emit indicatorChanged();
+    if (!d->indicator.isExecuting())
+        emit indicatorChanged();
 }
 
 /*!
@@ -789,6 +807,13 @@ void QQuickAbstractButton::toggle()
 {
     Q_D(QQuickAbstractButton);
     setChecked(!d->checked);
+}
+
+void QQuickAbstractButton::componentComplete()
+{
+    Q_D(QQuickAbstractButton);
+    d->executeIndicator(true);
+    QQuickControl::componentComplete();
 }
 
 bool QQuickAbstractButton::event(QEvent *event)
