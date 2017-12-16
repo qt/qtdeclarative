@@ -142,6 +142,8 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
 QQuickShapePathPrivate::QQuickShapePathPrivate()
     : dirty(DirtyAll)
 {
+    // Set this QQuickPath to be a ShapePath
+    isShapePath = true;
 }
 
 QQuickShapePath::QQuickShapePath(QObject *parent)

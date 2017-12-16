@@ -522,6 +522,7 @@ private:
 
 public:
     QPainterPath createPath(const QPointF &startPoint, const QPointF &endPoint, const QStringList &attributes, qreal &pathLength, QList<AttributePoint> &attributePoints, bool *closed = 0);
+    QPainterPath createShapePath(const QPointF &startPoint, const QPointF &endPoint, qreal &pathLength, bool *closed = 0);
     static QPointF sequentialPointAt(const QPainterPath &path, const qreal &pathLength, const QList<AttributePoint> &attributePoints, QQuickCachedBezier &prevBez, qreal p, qreal *angle = 0);
 };
 

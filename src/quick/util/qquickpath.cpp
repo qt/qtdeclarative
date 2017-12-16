@@ -397,7 +397,12 @@ void QQuickPath::processPath()
     d->_pointCache.clear();
     d->prevBez.isValid = false;
 
-    d->_path = createPath(QPointF(), QPointF(), d->_attributes, d->pathLength, d->_attributePoints, &d->closed);
+    if (d->isShapePath) {
+        // This path is a ShapePath, so avoid extra overhead
+        d->_path = createShapePath(QPointF(), QPointF(), d->pathLength, &d->closed);
+    } else {
+        d->_path = createPath(QPointF(), QPointF(), d->_attributes, d->pathLength, d->_attributePoints, &d->closed);
+    }
 
     emit changed();
 }
@@ -489,6 +494,42 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
         *closed = length > 0 && startX == end.x() && startY == end.y();
     }
     pathLength = length;
+
+    return path;
+}
+
+QPainterPath QQuickPath::createShapePath(const QPointF &startPoint, const QPointF &endPoint, qreal &pathLength, bool *closed)
+{
+    Q_D(QQuickPath);
+
+    if (!d->componentComplete)
+        return QPainterPath();
+
+    QPainterPath path;
+
+    qreal startX = d->startX.isValid() ? d->startX.value : startPoint.x();
+    qreal startY = d->startY.isValid() ? d->startY.value : startPoint.y();
+    path.moveTo(startX, startY);
+
+    int index = 0;
+    for (QQuickCurve *curve : qAsConst(d->_pathCurves)) {
+        QQuickPathData data;
+        data.index = index;
+        data.endPoint = endPoint;
+        data.curves = d->_pathCurves;
+        curve->addToPath(path, data);
+        ++index;
+    }
+
+    if (closed) {
+        QPointF end = path.currentPosition();
+        *closed = startX == end.x() && startY == end.y();
+    }
+
+    // Note: Length of paths inside ShapePath is not used, so currently
+    // length is always 0. This avoids potentially heavy path.length()
+    //pathLength = path.length();
+    pathLength = 0;
 
     return path;
 }
