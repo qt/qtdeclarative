@@ -63,7 +63,11 @@
 #include "qv4debugging_p.h"
 #include "qv4profiling_p.h"
 #include "qv4executableallocator_p.h"
+
+#if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
+#endif
+
 #include "qv4qobjectwrapper_p.h"
 #include "qv4memberdata_p.h"
 #include "qv4arraybuffer_p.h"
@@ -344,8 +348,10 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[VariantProto] = memoryManager->allocObject<VariantPrototype>();
     Q_ASSERT(variantPrototype()->prototype() == objectPrototype()->d());
 
+#if QT_CONFIG(qml_sequence_object)
     ic = newInternalClass(SequencePrototype::staticVTable(), SequencePrototype::defaultPrototype(this));
     jsObjects[SequenceProto] = ScopedValue(scope, memoryManager->allocObject<SequencePrototype>(ic, SequencePrototype::defaultPrototype(this)));
+#endif
 
     ExecutionContext *global = rootContext();
     jsObjects[Object_Ctor] = memoryManager->allocObject<ObjectCtor>(global);
@@ -380,10 +386,11 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     static_cast<SyntaxErrorPrototype *>(syntaxErrorPrototype())->init(this, syntaxErrorCtor());
     static_cast<TypeErrorPrototype *>(typeErrorPrototype())->init(this, typeErrorCtor());
     static_cast<URIErrorPrototype *>(uRIErrorPrototype())->init(this, uRIErrorCtor());
-
     static_cast<VariantPrototype *>(variantPrototype())->init();
-    sequencePrototype()->cast<SequencePrototype>()->init();
 
+#if QT_CONFIG(qml_sequence_object)
+    sequencePrototype()->cast<SequencePrototype>()->init();
+#endif
 
     // typed arrays
 
@@ -1139,8 +1146,11 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
             return v->toVariant();
         } else if (QV4::QmlListWrapper *l = object->as<QV4::QmlListWrapper>()) {
             return l->toVariant();
-        } else if (object->isListType())
+#if QT_CONFIG(qml_sequence_object)
+        } else if (object->isListType()) {
             return QV4::SequencePrototype::toVariant(object);
+#endif
+        }
     }
 
     if (value.as<ArrayObject>()) {
@@ -1163,10 +1173,12 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
             return QVariant::fromValue(QV4::JsonObject::toJsonArray(a));
         }
 
+#if QT_CONFIG(qml_sequence_object)
         bool succeeded = false;
         QVariant retn = QV4::SequencePrototype::toVariant(value, typeHint, &succeeded);
         if (succeeded)
             return retn;
+#endif
     }
 
     if (value.isUndefined())
@@ -1343,6 +1355,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 return QV4::Encode(newRegExpObject(*reinterpret_cast<const QRegExp *>(ptr)));
             case QMetaType::QObjectStar:
                 return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
+#if QT_CONFIG(qml_sequence_object)
             case QMetaType::QStringList:
                 {
                 bool succeeded = false;
@@ -1352,6 +1365,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                     return retn->asReturnedValue();
                 return QV4::Encode(newArrayObject(*reinterpret_cast<const QStringList *>(ptr)));
                 }
+#endif
             case QMetaType::QVariantList:
                 return arrayFromVariantList(this, *reinterpret_cast<const QVariantList *>(ptr));
             case QMetaType::QVariantMap:
@@ -1403,10 +1417,12 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
         if (objOk)
             return QV4::QObjectWrapper::wrap(this, obj);
 
+#if QT_CONFIG(qml_sequence_object)
         bool succeeded = false;
         QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromVariant(this, variant, &succeeded));
         if (succeeded)
             return retn->asReturnedValue();
+#endif
 
         if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(type))
             return QV4::QQmlValueTypeWrapper::create(this, variant, vtmo, type);

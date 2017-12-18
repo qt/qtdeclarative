@@ -39,7 +39,10 @@
 
 #include "qv8engine_p.h"
 
+#if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
+#endif
+
 #include "private/qjsengine_p.h"
 
 #include <private/qqmlbuiltinfunctions_p.h>

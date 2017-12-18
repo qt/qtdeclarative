@@ -52,6 +52,7 @@
 #  endif
 #else
 #  define QT_FEATURE_qml_debug -1
+#  define QT_FEATURE_qml_sequence_object 1
 #endif
 
 QT_BEGIN_NAMESPACE

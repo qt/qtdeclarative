@@ -178,7 +178,9 @@ public:
         TypeErrorProto,
         URIErrorProto,
         VariantProto,
+#if QT_CONFIG(qml_sequence_object)
         SequenceProto,
+#endif
         ArrayBufferProto,
         DataViewProto,
         ValueTypeProto,
@@ -247,7 +249,9 @@ public:
     Object *typeErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + TypeErrorProto); }
     Object *uRIErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + URIErrorProto); }
     Object *variantPrototype() const { return reinterpret_cast<Object *>(jsObjects + VariantProto); }
+#if QT_CONFIG(qml_sequence_object)
     Object *sequencePrototype() const { return reinterpret_cast<Object *>(jsObjects + SequenceProto); }
+#endif
 
     Object *arrayBufferPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayBufferProto); }
     Object *dataViewPrototype() const { return reinterpret_cast<Object *>(jsObjects + DataViewProto); }

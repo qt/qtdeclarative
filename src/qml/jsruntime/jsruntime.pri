@@ -36,7 +36,6 @@ SOURCES += \
     $$PWD/qv4runtimecodegen.cpp \
     $$PWD/qv4serialize.cpp \
     $$PWD/qv4script.cpp \
-    $$PWD/qv4sequenceobject.cpp \
     $$PWD/qv4include.cpp \
     $$PWD/qv4qobjectwrapper.cpp \
     $$PWD/qv4arraybuffer.cpp \
@@ -89,7 +88,6 @@ HEADERS += \
     $$PWD/qv4script_p.h \
     $$PWD/qv4scopedvalue_p.h \
     $$PWD/qv4executableallocator_p.h \
-    $$PWD/qv4sequenceobject_p.h \
     $$PWD/qv4include_p.h \
     $$PWD/qv4qobjectwrapper_p.h \
     $$PWD/qv4profiling_p.h \
@@ -97,6 +95,14 @@ HEADERS += \
     $$PWD/qv4typedarray_p.h \
     $$PWD/qv4dataview_p.h \
     $$PWD/qv4vme_moth_p.h
+
+qtConfig(qml-sequence-object) {
+    HEADERS += \
+        $$PWD/qv4sequenceobject_p.h
+
+    SOURCES += \
+        $$PWD/qv4sequenceobject.cpp
+}
 
 }
 

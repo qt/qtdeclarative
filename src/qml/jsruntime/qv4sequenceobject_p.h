@@ -59,6 +59,8 @@
 #include "qv4context_p.h"
 #include "qv4string_p.h"
 
+QT_REQUIRE_CONFIG(qml_sequence_object);
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {

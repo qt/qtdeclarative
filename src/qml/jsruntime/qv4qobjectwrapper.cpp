@@ -56,7 +56,11 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4runtime_p.h>
 #include <private/qv4variantobject_p.h>
+
+#if QT_CONFIG(qml_sequence_object)
 #include <private/qv4sequenceobject_p.h>
+#endif
+
 #include <private/qv4objectproto_p.h>
 #include <private/qv4jsonobject_p.h>
 #include <private/qv4regexpobject_p.h>
@@ -181,11 +185,13 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
         if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property.propType()))
             return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex(), valueTypeMetaObject, property.propType());
     } else {
+#if QT_CONFIG(qml_sequence_object)
         // see if it's a sequence type
         bool succeeded = false;
         QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(v4, property.propType(), object, property.coreIndex(), &succeeded));
         if (succeeded)
             return retn->asReturnedValue();
+#endif
     }
 
     if (property.propType() == QMetaType::UnknownType) {
@@ -1611,6 +1617,7 @@ void CallArgument::initAsType(int callType)
     }
 }
 
+#if QT_CONFIG(qml_sequence_object)
 template <class T, class M>
 void CallArgument::fromContainerValue(const QV4::Object *object, int callType, M CallArgument::*member, bool &queryEngine)
 {
@@ -1623,6 +1630,7 @@ void CallArgument::fromContainerValue(const QV4::Object *object, int callType, M
     }
   }
 }
+#endif
 
 void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const QV4::Value &value)
 {
@@ -1705,6 +1713,7 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
         type = callType;
     } else if (callType == QMetaType::Void) {
         *qvariantPtr = QVariant();
+#if QT_CONFIG(qml_sequence_object)
     } else if (callType == qMetaTypeId<std::vector<int>>()
                || callType == qMetaTypeId<std::vector<qreal>>()
                || callType == qMetaTypeId<std::vector<bool>>()
@@ -1732,6 +1741,7 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
             stdVectorQModelIndexPtr = nullptr;
             fromContainerValue<std::vector<QModelIndex>>(object, callType, &CallArgument::stdVectorQModelIndexPtr, queryEngine);
         }
+#endif
     } else {
         queryEngine = true;
     }

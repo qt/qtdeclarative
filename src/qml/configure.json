@@ -45,6 +45,12 @@
             "purpose": "Provides the QmlDevtools library and various utilities.",
             "section": "QML",
             "output": [ "privateFeature" ]
+        },
+        "qml-sequence-object": {
+            "label": "QML sequence object",
+            "purpose": "Supports mapping sequence types into QML.",
+            "section": "QML",
+            "output": [ "privateFeature" ]
         }
     },
 
@@ -53,7 +59,8 @@
             "section": "Qt QML",
             "entries": [
                 "qml-network",
-                "qml-debug"
+                "qml-debug",
+                "qml-sequence-object"
             ]
         }
     ]
