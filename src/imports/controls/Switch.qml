@@ -66,8 +66,6 @@ T.Switch {
         font: control.font
         color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
         elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
 }

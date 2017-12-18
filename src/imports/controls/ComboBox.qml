@@ -88,7 +88,6 @@ T.ComboBox {
         color: !control.editable && control.visualFocus ? Default.focusColor : Default.textColor
         selectionColor: Default.focusColor
         selectedTextColor: Default.textLightColor
-        horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         opacity: control.enabled ? 1 : 0.3
 

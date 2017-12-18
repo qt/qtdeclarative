@@ -62,7 +62,6 @@ T.GroupBox {
         font: control.font
         color: control.enabled ? Default.textColor : Default.textDisabledColor
         elide: Text.ElideRight
-        horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
 
