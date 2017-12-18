@@ -44,7 +44,9 @@
 #include <QtQml/QQmlInfo>
 #include <QtQml/QQmlError>
 #include <QtQml/private/qqmlobjectmodel_p.h>
+#if QT_CONFIG(qml_delegate_model)
 #include <QtQml/private/qqmldelegatemodel_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -53,7 +55,9 @@ QQmlInstantiatorPrivate::QQmlInstantiatorPrivate()
     , effectiveReset(false)
     , active(true)
     , async(false)
+#if QT_CONFIG(qml_delegate_model)
     , ownModel(false)
+#endif
     , requestedIndex(-1)
     , model(QVariant(1))
     , instanceModel(nullptr)
@@ -198,6 +202,7 @@ void QQmlInstantiatorPrivate::_q_modelUpdated(const QQmlChangeSet &changeSet, bo
         q->countChanged();
 }
 
+#if QT_CONFIG(qml_delegate_model)
 void QQmlInstantiatorPrivate::makeModel()
 {
     Q_Q(QQmlInstantiator);
@@ -209,6 +214,7 @@ void QQmlInstantiatorPrivate::makeModel()
     if (componentComplete)
         delegateModel->componentComplete();
 }
+#endif
 
 
 /*!
@@ -349,6 +355,7 @@ void QQmlInstantiator::setDelegate(QQmlComponent* c)
     d->delegate = c;
     emit delegateChanged();
 
+#if QT_CONFIG(qml_delegate_model)
     if (!d->ownModel)
         return;
 
@@ -356,6 +363,7 @@ void QQmlInstantiator::setDelegate(QQmlComponent* c)
         dModel->setDelegate(c);
     if (d->componentComplete)
         d->regenerate();
+#endif
 }
 
 /*!
@@ -398,12 +406,15 @@ void QQmlInstantiator::setModel(const QVariant &v)
     QObject *object = qvariant_cast<QObject*>(v);
     QQmlInstanceModel *vim = nullptr;
     if (object && (vim = qobject_cast<QQmlInstanceModel *>(object))) {
+#if QT_CONFIG(qml_delegate_model)
         if (d->ownModel) {
             delete d->instanceModel;
             prevModel = nullptr;
             d->ownModel = false;
         }
+#endif
         d->instanceModel = vim;
+#if QT_CONFIG(qml_delegate_model)
     } else if (v != QVariant(0)){
         if (!d->ownModel)
             d->makeModel();
@@ -413,6 +424,7 @@ void QQmlInstantiator::setModel(const QVariant &v)
             dataModel->setModel(v);
             d->effectiveReset = false;
         }
+#endif
     }
 
     if (d->instanceModel != prevModel) {
@@ -423,10 +435,12 @@ void QQmlInstantiator::setModel(const QVariant &v)
             //disconnect(prevModel, SIGNAL(initItem(int,QObject*)), this, SLOT(initItem(int,QObject*)));
         }
 
-        connect(d->instanceModel, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
-                this, SLOT(_q_modelUpdated(QQmlChangeSet,bool)));
-        connect(d->instanceModel, SIGNAL(createdItem(int,QObject*)), this, SLOT(_q_createdItem(int,QObject*)));
-        //connect(d->instanceModel, SIGNAL(initItem(int,QObject*)), this, SLOT(initItem(int,QObject*)));
+        if (d->instanceModel) {
+            connect(d->instanceModel, SIGNAL(modelUpdated(QQmlChangeSet,bool)),
+                    this, SLOT(_q_modelUpdated(QQmlChangeSet,bool)));
+            connect(d->instanceModel, SIGNAL(createdItem(int,QObject*)), this, SLOT(_q_createdItem(int,QObject*)));
+            //connect(d->instanceModel, SIGNAL(initItem(int,QObject*)), this, SLOT(initItem(int,QObject*)));
+        }
     }
 
     d->regenerate();
@@ -476,10 +490,13 @@ void QQmlInstantiator::componentComplete()
 {
     Q_D(QQmlInstantiator);
     d->componentComplete = true;
+#if QT_CONFIG(qml_delegate_model)
     if (d->ownModel) {
         static_cast<QQmlDelegateModel*>(d->instanceModel)->componentComplete();
         d->regenerate();
-    } else {
+    } else
+#endif
+    {
         QVariant realModel = d->model;
         d->model = QVariant(0);
         setModel(realModel); //If realModel == d->model this won't do anything, but that's fine since the model's 0

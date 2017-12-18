@@ -40,7 +40,9 @@
 #include "qqmlmodelsmodule_p.h"
 #include <QtCore/qitemselectionmodel.h>
 #include <private/qqmllistmodel_p.h>
+#if QT_CONFIG(qml_delegate_model)
 #include <private/qqmldelegatemodel_p.h>
+#endif
 #include <private/qqmlobjectmodel_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -51,8 +53,10 @@ void QQmlModelsModule::defineModule()
 
     qmlRegisterType<QQmlListElement>(uri, 2, 1, "ListElement");
     qmlRegisterCustomType<QQmlListModel>(uri, 2, 1, "ListModel", new QQmlListModelParser);
+#if QT_CONFIG(qml_delegate_model)
     qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 1, "DelegateModelGroup");
+#endif
     qmlRegisterType<QQmlObjectModel>(uri, 2, 1, "ObjectModel");
     qmlRegisterType<QQmlObjectModel,3>(uri, 2, 3, "ObjectModel");
 

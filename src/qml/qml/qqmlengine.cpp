@@ -88,7 +88,9 @@
 #include <private/qqmllistmodel_p.h>
 #include <private/qqmlplatform_p.h>
 #include <private/qquickpackage_p.h>
+#if QT_CONFIG(qml_delegate_model)
 #include <private/qqmldelegatemodel_p.h>
+#endif
 #include <private/qqmlobjectmodel_p.h>
 #include <private/qquickworkerscript_p.h>
 #include <private/qqmlinstantiator_p.h>
@@ -240,8 +242,10 @@ void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor,
     qmlRegisterCustomType<QQmlListModel>(uri, versionMajor, versionMinor, "ListModel", new QQmlListModelParser); // Now in QtQml.Models, here for compatibility
     qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
     qmlRegisterType<QQuickPackage>(uri, versionMajor, versionMinor, "Package");
+#if QT_CONFIG(qml_delegate_model)
     qmlRegisterType<QQmlDelegateModel>(uri, versionMajor, versionMinor, "VisualDataModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, versionMajor, versionMinor, "VisualDataGroup");
+#endif
     qmlRegisterType<QQmlObjectModel>(uri, versionMajor, versionMinor, "VisualItemModel");
 }
 

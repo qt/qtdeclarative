@@ -39,6 +39,12 @@
                 "features.xmlstreamwriter"
             ],
             "output": [ "privateFeature" ]
+        },
+        "qml-delegate-model": {
+            "label": "QML delegate model",
+            "purpose": "Provides the DelegateModel QML type.",
+            "section": "QML",
+            "output": [ "privateFeature" ]
         }
     },
 
@@ -47,7 +53,8 @@
             "section": "Qt QML",
             "entries": [
                 "qml-network",
-                "qml-debug"
+                "qml-debug",
+                "qml-delegate-model"
             ]
         }
     ]
