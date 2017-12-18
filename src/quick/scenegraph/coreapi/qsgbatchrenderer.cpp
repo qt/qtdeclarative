@@ -2318,7 +2318,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
         setActiveShader(program, sms);
 
     m_current_opacity = gn->inheritedOpacity();
-    if (sms->lastOpacity != m_current_opacity) {
+    if (!qFuzzyCompare(sms->lastOpacity, float(m_current_opacity))) {
         dirty |= QSGMaterialShader::RenderState::DirtyOpacity;
         sms->lastOpacity = m_current_opacity;
     }
