@@ -53,6 +53,10 @@
 
 #include "qquickitem.h"
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_repeater);
+
 QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;

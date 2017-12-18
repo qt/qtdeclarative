@@ -74,7 +74,9 @@
 #if QT_CONFIG(quick_positioners)
 #include "qquickpositioners_p.h"
 #endif
+#if QT_CONFIG(quick_repeater)
 #include "qquickrepeater_p.h"
+#endif
 #include "qquickloader_p.h"
 #if QT_CONFIG(quick_animatedimage)
 #include "qquickanimatedimage_p.h"
@@ -207,7 +209,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPathView>(uri,major,minor,"PathView");
 #endif
     qmlRegisterType<QQuickRectangle>(uri,major,minor,"Rectangle");
+#if QT_CONFIG(quick_repeater)
     qmlRegisterType<QQuickRepeater>(uri,major,minor,"Repeater");
+#endif
     qmlRegisterType<QQuickTranslate>(uri,major,minor,"Translate");
     qmlRegisterType<QQuickRotation>(uri,major,minor,"Rotation");
     qmlRegisterType<QQuickScale>(uri,major,minor,"Scale");

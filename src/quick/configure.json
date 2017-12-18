@@ -139,6 +139,14 @@
                 "privateFeature"
             ]
         },
+        "quick-repeater": {
+            "label": "Repeater item",
+            "purpose": "Provides the Repeater item.",
+            "section": "Qt Quick",
+            "output": [
+                "privateFeature"
+            ]
+        },
         "quick-shadereffect": {
             "label": "ShaderEffect item",
             "purpose": "Provides Shader effects.",
@@ -171,6 +179,7 @@
                 "quick-path",
                 "quick-pathview",
                 "quick-positioners",
+                "quick-repeater",
                 "quick-shadereffect",
                 "quick-sprite"
             ]
