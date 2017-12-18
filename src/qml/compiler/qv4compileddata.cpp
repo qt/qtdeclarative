@@ -747,7 +747,7 @@ static QByteArray ownLibraryChecksum()
     // the cache files may end up being re-used. To avoid that we also add the checksum of
     // the QtQml library.
     Dl_info libInfo;
-    if (dladdr(reinterpret_cast<const void *>(&ownLibraryChecksum), &libInfo) != 0) {
+    if (dladdr(reinterpret_cast<void *>(&ownLibraryChecksum), &libInfo) != 0) {
         QFile library(QFile::decodeName(libInfo.dli_fname));
         if (library.open(QIODevice::ReadOnly)) {
             QCryptographicHash hash(QCryptographicHash::Md5);
