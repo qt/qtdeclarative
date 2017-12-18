@@ -39,7 +39,9 @@
 
 #include "qqmlmodelsmodule_p.h"
 #include <QtCore/qitemselectionmodel.h>
+#if QT_CONFIG(qml_list_model)
 #include <private/qqmllistmodel_p.h>
+#endif
 #include <private/qqmldelegatemodel_p.h>
 #include <private/qqmlobjectmodel_p.h>
 
@@ -49,8 +51,10 @@ void QQmlModelsModule::defineModule()
 {
     const char uri[] = "QtQml.Models";
 
+#if QT_CONFIG(qml_list_model)
     qmlRegisterType<QQmlListElement>(uri, 2, 1, "ListElement");
     qmlRegisterCustomType<QQmlListModel>(uri, 2, 1, "ListModel", new QQmlListModelParser);
+#endif
     qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
     qmlRegisterType<QQmlDelegateModel,12>(uri, 2, 9, "DelegateModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 1, "DelegateModelGroup");

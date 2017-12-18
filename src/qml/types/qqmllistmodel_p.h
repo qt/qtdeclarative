@@ -64,6 +64,8 @@
 #include <private/qv4engine_p.h>
 #include <private/qpodvector_p.h>
 
+QT_REQUIRE_CONFIG(qml_list_model);
+
 QT_BEGIN_NAMESPACE
 
 

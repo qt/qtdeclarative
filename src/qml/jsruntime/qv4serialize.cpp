@@ -40,8 +40,10 @@
 #include "qv4serialize_p.h"
 
 #include <private/qv8engine_p.h>
+#if QT_CONFIG(qml_list_model)
 #include <private/qqmllistmodel_p.h>
 #include <private/qqmllistmodelworkeragent_p.h>
+#endif
 
 #include <private/qv4value_p.h>
 #include <private/qv4dateobject_p.h>
@@ -84,7 +86,9 @@ enum Type {
     WorkerNumber,
     WorkerDate,
     WorkerRegexp,
+#if QT_CONFIG(qml_list_model)
     WorkerListModel,
+#endif
 #if QT_CONFIG(qml_sequence_object)
     WorkerSequence
 #endif
@@ -232,6 +236,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
     } else if (const QObjectWrapper *qobjectWrapper = v.as<QV4::QObjectWrapper>()) {
         // XXX TODO: Generalize passing objects between the main thread and worker scripts so
         // that others can trivially plug in their elements.
+#if QT_CONFIG(qml_list_model)
         QQmlListModel *lm = qobject_cast<QQmlListModel *>(qobjectWrapper->object());
         if (lm && lm->agent()) {
             QQmlListModelWorkerAgent *agent = lm->agent();
@@ -240,6 +245,9 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
             push(data, (void *)agent);
             return;
         }
+#else
+        Q_UNUSED(qobjectWrapper);
+#endif
         // No other QObject's are allowed to be sent
         push(data, valueheader(WorkerUndefined));
     } else if (const Object *o = v.as<Object>()) {
@@ -359,6 +367,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         data += ALIGN(length * sizeof(quint16));
         return Encode(engine->newRegExpObject(pattern, flags));
     }
+#if QT_CONFIG(qml_list_model)
     case WorkerListModel:
     {
         void *ptr = popPtr(data);
@@ -375,6 +384,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         agent->setEngine(engine);
         return rv->asReturnedValue();
     }
+#endif
 #if QT_CONFIG(qml_sequence_object)
     case WorkerSequence:
     {

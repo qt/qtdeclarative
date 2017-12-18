@@ -85,7 +85,9 @@
 #if QT_CONFIG(animation)
 #include <private/qqmltimer_p.h>
 #endif
+#if QT_CONFIG(qml_list_model)
 #include <private/qqmllistmodel_p.h>
+#endif
 #include <private/qqmlplatform_p.h>
 #include <private/qquickpackage_p.h>
 #include <private/qqmldelegatemodel_p.h>
@@ -236,8 +238,10 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
 // These QtQuick types' implementation resides in the QtQml module
 void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor, int versionMinor)
 {
+#if QT_CONFIG(qml_list_model)
     qmlRegisterType<QQmlListElement>(uri, versionMajor, versionMinor, "ListElement"); // Now in QtQml.Models, here for compatibility
     qmlRegisterCustomType<QQmlListModel>(uri, versionMajor, versionMinor, "ListModel", new QQmlListModelParser); // Now in QtQml.Models, here for compatibility
+#endif
     qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
     qmlRegisterType<QQuickPackage>(uri, versionMajor, versionMinor, "Package");
     qmlRegisterType<QQmlDelegateModel>(uri, versionMajor, versionMinor, "VisualDataModel");

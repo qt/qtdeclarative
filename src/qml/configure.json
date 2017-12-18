@@ -51,6 +51,12 @@
             "purpose": "Supports mapping sequence types into QML.",
             "section": "QML",
             "output": [ "privateFeature" ]
+        },
+        "qml-list-model": {
+            "label": "QML list model",
+            "purpose": "Provides the ListModel QML type.",
+            "section": "QML",
+            "output": [ "privateFeature" ]
         }
     },
 
@@ -60,7 +66,8 @@
             "entries": [
                 "qml-network",
                 "qml-debug",
-                "qml-sequence-object"
+                "qml-sequence-object",
+                "qml-list-model"
             ]
         }
     ]

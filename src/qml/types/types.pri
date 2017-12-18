@@ -2,8 +2,6 @@ SOURCES += \
     $$PWD/qqmlbind.cpp \
     $$PWD/qqmlconnections.cpp \
     $$PWD/qqmldelegatemodel.cpp \
-    $$PWD/qqmllistmodel.cpp \
-    $$PWD/qqmllistmodelworkeragent.cpp \
     $$PWD/qqmlmodelsmodule.cpp \
     $$PWD/qqmlmodelindexvaluetype.cpp \
     $$PWD/qqmlobjectmodel.cpp \
@@ -16,9 +14,6 @@ HEADERS += \
     $$PWD/qqmlconnections_p.h \
     $$PWD/qqmldelegatemodel_p.h \
     $$PWD/qqmldelegatemodel_p_p.h \
-    $$PWD/qqmllistmodel_p.h \
-    $$PWD/qqmllistmodel_p_p.h \
-    $$PWD/qqmllistmodelworkeragent_p.h \
     $$PWD/qqmlmodelsmodule_p.h \
     $$PWD/qqmlmodelindexvaluetype_p.h \
     $$PWD/qqmlobjectmodel_p.h \
@@ -26,6 +21,17 @@ HEADERS += \
     $$PWD/qquickworkerscript_p.h \
     $$PWD/qqmlinstantiator_p.h \
     $$PWD/qqmlinstantiator_p_p.h
+
+qtConfig(qml-list-model) {
+    SOURCES += \
+        $$PWD/qqmllistmodel.cpp \
+        $$PWD/qqmllistmodelworkeragent.cpp
+
+    HEADERS += \
+        $$PWD/qqmllistmodel_p.h \
+        $$PWD/qqmllistmodel_p_p.h \
+        $$PWD/qqmllistmodelworkeragent_p.h
+}
 
 qtConfig(animation) {
     SOURCES += \

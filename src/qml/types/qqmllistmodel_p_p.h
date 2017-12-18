@@ -57,6 +57,8 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <qqml.h>
 
+QT_REQUIRE_CONFIG(qml_list_model);
+
 QT_BEGIN_NAMESPACE
 
 
