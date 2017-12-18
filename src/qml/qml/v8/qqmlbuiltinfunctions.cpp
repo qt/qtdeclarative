@@ -44,7 +44,9 @@
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlloggingcategory_p.h>
 #include <private/qqmlstringconverters_p.h>
+#if QT_CONFIG(qml_locale)
 #include <private/qqmllocale_p.h>
+#endif
 #include <private/qv8engine_p.h>
 #include <private/qqmldelayedcallqueue_p.h>
 #include <QFileInfo>
@@ -138,7 +140,9 @@ void Heap::QtObject::init(QQmlEngine *qmlEngine)
     o->defineDefaultProperty(QStringLiteral("btoa"), QV4::QtObject::method_btoa);
     o->defineDefaultProperty(QStringLiteral("atob"), QV4::QtObject::method_atob);
     o->defineDefaultProperty(QStringLiteral("resolvedUrl"), QV4::QtObject::method_resolvedUrl);
+#if QT_CONFIG(qml_locale)
     o->defineDefaultProperty(QStringLiteral("locale"), QV4::QtObject::method_locale);
+#endif
     o->defineDefaultProperty(QStringLiteral("binding"), QV4::QtObject::method_binding);
 
     if (qmlEngine) {
@@ -1299,6 +1303,7 @@ ReturnedValue QtObject::method_createComponent(const FunctionObject *b, const Va
     return QV4::QObjectWrapper::wrap(scope.engine, c);
 }
 
+#if QT_CONFIG(qml_locale)
 /*!
     \qmlmethod Qt::locale(name)
 
@@ -1333,6 +1338,7 @@ ReturnedValue QtObject::method_locale(const FunctionObject *b, const Value *, co
 
     return QQmlLocale::locale(scope.engine, code);
 }
+#endif
 
 void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *originalFunction)
 {

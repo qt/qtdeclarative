@@ -30,7 +30,6 @@ SOURCES += \
     $$PWD/qqmlextensionplugin.cpp \
     $$PWD/qqmlimport.cpp \
     $$PWD/qqmllist.cpp \
-    $$PWD/qqmllocale.cpp \
     $$PWD/qqmljavascriptexpression.cpp \
     $$PWD/qqmlabstractbinding.cpp \
     $$PWD/qqmlvaluetypeproxybinding.cpp \
@@ -97,7 +96,6 @@ HEADERS += \
     $$PWD/qqmlimport_p.h \
     $$PWD/qqmlextensionplugin.h \
     $$PWD/qqmlscriptstring_p.h \
-    $$PWD/qqmllocale_p.h \
     $$PWD/qqmlcomponentattached_p.h \
     $$PWD/qqmljavascriptexpression_p.h \
     $$PWD/qqmlabstractbinding_p.h \
@@ -125,6 +123,14 @@ qtConfig(qml-xml-http-request) {
     SOURCES += \
         $$PWD/qqmlxmlhttprequest.cpp
 
+}
+
+qtConfig(qml-locale) {
+    HEADERS += \
+        $$PWD/qqmllocale_p.h
+
+    SOURCES += \
+        $$PWD/qqmllocale.cpp
 }
 
 include(ftw/ftw.pri)

@@ -80,7 +80,9 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmllistwrapper_p.h>
 #include <private/qqmllist_p.h>
+#if QT_CONFIG(qml_locale)
 #include <private/qqmllocale_p.h>
+#endif
 
 #include <QtCore/QTextStream>
 #include <QDateTime>
@@ -1201,8 +1203,10 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
             return str.at(0);
         return str;
     }
+#if QT_CONFIG(qml_locale)
     if (const QV4::QQmlLocaleData *ld = value.as<QV4::QQmlLocaleData>())
         return *ld->d()->locale;
+#endif
     if (const QV4::DateObject *d = value.as<DateObject>())
         return d->toQDateTime();
     if (const ArrayBuffer *d = value.as<ArrayBuffer>())
@@ -1379,8 +1383,10 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 return QV4::JsonObject::fromJsonObject(this, *reinterpret_cast<const QJsonObject *>(ptr));
             case QMetaType::QJsonArray:
                 return QV4::JsonObject::fromJsonArray(this, *reinterpret_cast<const QJsonArray *>(ptr));
+#if QT_CONFIG(qml_locale)
             case QMetaType::QLocale:
                 return QQmlLocale::wrap(this, *reinterpret_cast<const QLocale*>(ptr));
+#endif
             default:
                 break;
         }

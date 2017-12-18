@@ -58,6 +58,8 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qv4object_p.h>
 
+QT_REQUIRE_CONFIG(qml_locale);
+
 QT_BEGIN_NAMESPACE
 
 

@@ -78,7 +78,9 @@
 
 #include <private/qobject_p.h>
 #include <private/qmetaobject_p.h>
+#if QT_CONFIG(qml_locale)
 #include <private/qqmllocale_p.h>
+#endif
 #include <private/qqmlbind_p.h>
 #include <private/qqmlconnections_p.h>
 #if QT_CONFIG(animation)
@@ -255,7 +257,9 @@ void QQmlEnginePrivate::defineQtQuick2Module()
 
     // register the QtQuick2 types which are implemented in the QtQml module.
     registerQtQuick2Types("QtQuick",2,0);
+#if QT_CONFIG(qml_locale)
     qmlRegisterUncreatableType<QQmlLocale>("QtQuick", 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
+#endif
 }
 
 bool QQmlEnginePrivate::designerMode()
@@ -941,7 +945,9 @@ void QQmlEnginePrivate::init()
     if (baseModulesUninitialized) {
         qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component"); // required for the Compiler.
         registerBaseTypes("QtQml", 2, 0); // import which provides language building blocks.
+#if QT_CONFIG(qml_locale)
         qmlRegisterUncreatableType<QQmlLocale>("QtQml", 2, 2, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
+#endif
 
         QQmlData::init();
         baseModulesUninitialized = false;

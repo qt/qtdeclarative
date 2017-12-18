@@ -67,6 +67,12 @@
                 "features.qml-network"
             ],
             "output": [ "privateFeature" ]
+        },
+        "qml-locale": {
+            "label": "QML Locale",
+            "purpose": "Provides support for locales in QML.",
+            "section": "QML",
+            "output": [ "privateFeature" ]
         }
     },
 
@@ -78,7 +84,8 @@
                 "qml-debug",
                 "qml-sequence-object",
                 "qml-list-model",
-                "qml-xml-http-request"
+                "qml-xml-http-request",
+                "qml-locale"
             ]
         }
     ]

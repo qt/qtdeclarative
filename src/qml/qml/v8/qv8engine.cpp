@@ -51,7 +51,9 @@
 #if QT_CONFIG(qml_xml_http_request)
 #include <private/qqmlxmlhttprequest_p.h>
 #endif
+#if QT_CONFIG(qml_locale)
 #include <private/qqmllocale_p.h>
+#endif
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
 #include <private/qqmlplatform_p.h>
@@ -189,9 +191,11 @@ void QV8Engine::initializeGlobal()
     QV4::ScopedObject qt(scope, m_v4Engine->memoryManager->allocObject<QV4::QtObject>(m_engine));
     m_v4Engine->globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
 
+#if QT_CONFIG(qml_locale)
     QQmlLocale::registerStringLocaleCompare(m_v4Engine);
     QQmlDateExtension::registerExtension(m_v4Engine);
     QQmlNumberExtension::registerExtension(m_v4Engine);
+#endif
 
 #if QT_CONFIG(qml_xml_http_request)
     qt_add_domexceptions(m_v4Engine);
