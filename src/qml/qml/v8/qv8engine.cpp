@@ -127,7 +127,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
     : q(qq)
     , m_engine(0)
     , m_xmlHttpRequestData(0)
-    , m_listModelData(0)
 {
 #ifdef Q_PROCESSOR_X86_32
     if (!qCpuHasFeature(SSE2)) {
@@ -163,9 +162,6 @@ QV8Engine::~QV8Engine()
     qt_rem_qmlxmlhttprequest(m_v4Engine, m_xmlHttpRequestData);
     m_xmlHttpRequestData = 0;
 #endif
-
-    delete m_listModelData;
-    m_listModelData = 0;
 
     delete m_v4Engine;
 }

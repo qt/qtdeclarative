@@ -77,12 +77,6 @@ namespace QV4 {
     struct QObjectMethod;
 }
 
-#define V4THROW_ERROR(string) \
-    return ctx->engine()->throwError(QString::fromUtf8(string));
-
-#define V4THROW_TYPE(string) \
-    return ctx->engine()->throwTypeError(QStringLiteral(string));
-
 #define V4_DEFINE_EXTENSION(dataclass, datafunction) \
     static inline dataclass *datafunction(QV4::ExecutionEngine *engine) \
     { \
@@ -183,9 +177,6 @@ public:
 
     void *xmlHttpRequestData() const { return m_xmlHttpRequestData; }
 
-    Deletable *listModelData() const { return m_listModelData; }
-    void setListModelData(Deletable *d) { if (m_listModelData) delete m_listModelData; m_listModelData = d; }
-
     void freezeObject(const QV4::Value &value);
 
 #if QT_CONFIG(qml_network)
@@ -222,7 +213,6 @@ protected:
     void *m_xmlHttpRequestData;
 
     QVector<Deletable *> m_extensionData;
-    Deletable *m_listModelData;
 
     QSet<QString> m_illegalNames;
 
