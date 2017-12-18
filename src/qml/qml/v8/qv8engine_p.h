@@ -171,7 +171,9 @@ public:
     QQmlEngine *engine() { return m_engine; }
     QQmlDelayedCallQueue *delayedCallQueue() { return &m_delayedCallQueue; }
 
+#if QT_CONFIG(qml_xml_http_request)
     void *xmlHttpRequestData() const { return m_xmlHttpRequestData; }
+#endif
 
     void freezeObject(const QV4::Value &value);
 
@@ -205,7 +207,9 @@ protected:
 
     QV4::ExecutionEngine *m_v4Engine;
 
+#if QT_CONFIG(qml_xml_http_request)
     void *m_xmlHttpRequestData;
+#endif
 
     QVector<Deletable *> m_extensionData;
 

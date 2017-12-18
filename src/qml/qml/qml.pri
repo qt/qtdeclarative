@@ -20,7 +20,6 @@ SOURCES += \
     $$PWD/qqmlinfo.cpp \
     $$PWD/qqmlerror.cpp \
     $$PWD/qqmlvaluetype.cpp \
-    $$PWD/qqmlxmlhttprequest.cpp \
     $$PWD/qqmlcleanup.cpp \
     $$PWD/qqmlpropertycache.cpp \
     $$PWD/qqmlnotifier.cpp \
@@ -85,7 +84,6 @@ HEADERS += \
     $$PWD/qqmldata_p.h \
     $$PWD/qqmlerror.h \
     $$PWD/qqmlvaluetype_p.h \
-    $$PWD/qqmlxmlhttprequest_p.h \
     $$PWD/qqmlcleanup_p.h \
     $$PWD/qqmlpropertycache_p.h \
     $$PWD/qqmlpropertyindex_p.h \
@@ -119,6 +117,15 @@ HEADERS += \
     $$PWD/qqmldirparser_p.h \
     $$PWD/qqmldelayedcallqueue_p.h \
     $$PWD/qqmlloggingcategory_p.h
+
+qtConfig(qml-xml-http-request) {
+    HEADERS += \
+        $$PWD/qqmlxmlhttprequest_p.h
+
+    SOURCES += \
+        $$PWD/qqmlxmlhttprequest.cpp
+
+}
 
 include(ftw/ftw.pri)
 include(v8/v8.pri)

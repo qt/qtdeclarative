@@ -48,7 +48,6 @@
 #include "qqmlcomponent.h"
 #include "qqmlvme_p.h"
 #include "qqmlstringconverters_p.h"
-#include "qqmlxmlhttprequest_p.h"
 #include "qqmlscriptstring.h"
 #include "qqmlglobal_p.h"
 #include "qqmlcomponent_p.h"

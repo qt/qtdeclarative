@@ -57,6 +57,16 @@
             "purpose": "Provides the ListModel QML type.",
             "section": "QML",
             "output": [ "privateFeature" ]
+        },
+        "qml-xml-http-request": {
+            "label": "QML XML http request",
+            "purpose": "Provides support for sending XML http requests.",
+            "section": "QML",
+            "condition": [
+                "features.xmlstreamreader",
+                "features.qml-network"
+            ],
+            "output": [ "privateFeature" ]
         }
     },
 
@@ -67,7 +77,8 @@
                 "qml-network",
                 "qml-debug",
                 "qml-sequence-object",
-                "qml-list-model"
+                "qml-list-model",
+                "qml-xml-http-request"
             ]
         }
     ]

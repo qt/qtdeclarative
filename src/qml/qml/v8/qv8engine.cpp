@@ -48,7 +48,9 @@
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmllist_p.h>
 #include <private/qqmlengine_p.h>
+#if QT_CONFIG(qml_xml_http_request)
 #include <private/qqmlxmlhttprequest_p.h>
+#endif
 #include <private/qqmllocale_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlmemoryprofiler_p.h>
@@ -129,7 +131,9 @@ static void restoreJSValue(QDataStream &stream, void *data)
 QV8Engine::QV8Engine(QV4::ExecutionEngine *v4)
     : m_engine(0)
     , m_v4Engine(v4)
+#if QT_CONFIG(qml_xml_http_request)
     , m_xmlHttpRequestData(0)
+#endif
 {
 #ifdef Q_PROCESSOR_X86_32
     if (!qCpuHasFeature(SSE2)) {
@@ -159,7 +163,7 @@ QV8Engine::~QV8Engine()
     qDeleteAll(m_extensionData);
     m_extensionData.clear();
 
-#if QT_CONFIG(xmlstreamreader) && QT_CONFIG(qml_network)
+#if QT_CONFIG(qml_xml_http_request)
     qt_rem_qmlxmlhttprequest(m_v4Engine, m_xmlHttpRequestData);
     m_xmlHttpRequestData = 0;
 #endif
@@ -189,7 +193,7 @@ void QV8Engine::initializeGlobal()
     QQmlDateExtension::registerExtension(m_v4Engine);
     QQmlNumberExtension::registerExtension(m_v4Engine);
 
-#if QT_CONFIG(xmlstreamreader) && QT_CONFIG(qml_network)
+#if QT_CONFIG(qml_xml_http_request)
     qt_add_domexceptions(m_v4Engine);
     m_xmlHttpRequestData = qt_add_qmlxmlhttprequest(m_v4Engine);
 #endif
