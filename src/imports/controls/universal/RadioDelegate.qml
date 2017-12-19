@@ -68,8 +68,6 @@ T.RadioDelegate {
         text: control.text
         font: control.font
         elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
 
         opacity: enabled ? 1.0 : 0.2

@@ -61,8 +61,6 @@ T.MenuItem {
         font: control.font
         color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
         elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
 
