@@ -110,7 +110,7 @@ ReturnedValue throwTypeError(const FunctionObject *b, const QV4::Value *, const 
 #ifdef V4_BOOTSTRAP
 QJSEngine *ExecutionEngine::jsEngine() const
 {
-    return v8Engine->publicEngine();
+    return publicEngine;
 }
 
 QQmlEngine *ExecutionEngine::qmlEngine() const
@@ -121,7 +121,7 @@ QQmlEngine *ExecutionEngine::qmlEngine() const
 
 qint32 ExecutionEngine::maxCallDepth = -1;
 
-ExecutionEngine::ExecutionEngine()
+ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     : executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
@@ -129,6 +129,7 @@ ExecutionEngine::ExecutionEngine()
     , gcStack(new WTF::PageAllocation)
     , globalCode(0)
     , v8Engine(0)
+    , publicEngine(jsEngine)
     , argumentsAccessors(0)
     , nArgumentsAccessors(0)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))

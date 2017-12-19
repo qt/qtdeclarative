@@ -201,7 +201,7 @@ private:
 };
 
 QQuickWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QQuickWorkerScriptEnginePrivate *parent)
-    : QV8Engine(nullptr, new QV4::ExecutionEngine), p(parent)
+    : QV8Engine(new QV4::ExecutionEngine), p(parent)
 #if QT_CONFIG(qml_network)
 , accessManager(0)
 #endif

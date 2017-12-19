@@ -290,9 +290,9 @@ QJSEngine::QJSEngine()
 
 QJSEngine::QJSEngine(QObject *parent)
     : QObject(*new QJSEnginePrivate, parent)
-    , m_v4Engine(new QV4::ExecutionEngine)
+    , m_v4Engine(new QV4::ExecutionEngine(this))
 {
-    m_v4Engine->v8Engine = new QV8Engine(this, m_v4Engine);
+    m_v4Engine->v8Engine = new QV8Engine(m_v4Engine);
     checkForApplicationInstance();
 
     QJSEnginePrivate::addToDebugServer(this);
@@ -303,9 +303,9 @@ QJSEngine::QJSEngine(QObject *parent)
 */
 QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
     : QObject(dd, parent)
-    , m_v4Engine(new QV4::ExecutionEngine)
+    , m_v4Engine(new QV4::ExecutionEngine(this))
 {
-    m_v4Engine->v8Engine = new QV8Engine(this, m_v4Engine);
+    m_v4Engine->v8Engine = new QV8Engine(m_v4Engine);
     checkForApplicationInstance();
 }
 

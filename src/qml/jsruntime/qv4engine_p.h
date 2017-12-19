@@ -153,10 +153,11 @@ public:
     QJSEngine *jsEngine() const;
     QQmlEngine *qmlEngine() const;
 #else // !V4_BOOTSTRAP
-    QJSEngine *jsEngine() const { return v8Engine->publicEngine(); }
-    QQmlEngine *qmlEngine() const { return v8Engine ? v8Engine->engine() : nullptr; }
+    QJSEngine *jsEngine() const { return publicEngine; }
+    QQmlEngine *qmlEngine() const { return v8Engine->engine(); }
 #endif // V4_BOOTSTRAP
     QV8Engine *v8Engine;
+    QJSEngine *publicEngine;
 
     enum JSObjects {
         RootContext,
@@ -371,7 +372,7 @@ public:
 
     int internalClassIdCount = 0;
 
-    ExecutionEngine();
+    ExecutionEngine(QJSEngine *jsEngine = nullptr);
     ~ExecutionEngine();
 
 #if !QT_CONFIG(qml_debug)

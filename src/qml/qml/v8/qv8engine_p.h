@@ -154,10 +154,9 @@ class Q_QML_PRIVATE_EXPORT QV8Engine
     friend class QJSEngine;
 public:
 //    static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
-    static QV4::ExecutionEngine *getV4(QJSEngine *q) { return q->handle(); }
     static QV4::ExecutionEngine *getV4(QV8Engine *d) { return d->m_v4Engine; }
 
-    QV8Engine(QJSEngine* qq, QV4::ExecutionEngine *v4);
+    QV8Engine(QV4::ExecutionEngine *v4);
     virtual ~QV8Engine();
 
     // This enum should be in sync with QQmlEngine::ObjectOwnership
@@ -170,7 +169,6 @@ public:
     void initQmlGlobalObject();
     void setEngine(QQmlEngine *engine);
     QQmlEngine *engine() { return m_engine; }
-    QJSEngine *publicEngine() { return q; }
     QQmlDelayedCallQueue *delayedCallQueue() { return &m_delayedCallQueue; }
 
     void *xmlHttpRequestData() const { return m_xmlHttpRequestData; }
@@ -202,7 +200,6 @@ public:
     int consoleCountHelper(const QString &file, quint16 line, quint16 column);
 
 protected:
-    QJSEngine* q;
     QQmlEngine *m_engine;
     QQmlDelayedCallQueue m_delayedCallQueue;
 

@@ -123,9 +123,8 @@ static void restoreJSValue(QDataStream &stream, void *data)
     }
 }
 
-QV8Engine::QV8Engine(QJSEngine *qq, QV4::ExecutionEngine *v4)
-    : q(qq)
-    , m_engine(0)
+QV8Engine::QV8Engine(QV4::ExecutionEngine *v4)
+    : m_engine(0)
     , m_v4Engine(v4)
     , m_xmlHttpRequestData(0)
 {
