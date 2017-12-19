@@ -126,8 +126,13 @@ public:
     QQuickItem *m_item;
 private:
     mutable QSizeF cachedSizeHints[Qt::NSizeHints];
+#ifndef QT_NO_BITFIELDS
     mutable unsigned sizeHintCacheDirty : 1;
     mutable unsigned useFallbackToWidthOrHeight : 1;
+#else
+    mutable unsigned sizeHintCacheDirty  = 1;
+    mutable unsigned useFallbackToWidthOrHeight = 1;
+#endif
 };
 
 class QQuickGridLayoutEngine : public QGridLayoutEngine {

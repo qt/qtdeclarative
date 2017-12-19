@@ -117,10 +117,16 @@ public:
 
     QQuickGridLayoutEngine engine;
     Qt::Orientation orientation;
+#ifndef QT_NO_BITFIELDS
     unsigned m_rearranging : 1;
     unsigned m_updateAfterRearrange : 1;
-    QVector<QQuickItem *> m_invalidateAfterRearrange;
     Qt::LayoutDirection m_layoutDirection : 2;
+#else
+    unsigned m_rearranging = 1;
+    unsigned m_updateAfterRearrange = 1;
+    Qt::LayoutDirection m_layoutDirection;
+#endif
+    QVector<QQuickItem *> m_invalidateAfterRearrange;
 
     QQuickLayoutStyleInfo *styleInfo;
 };

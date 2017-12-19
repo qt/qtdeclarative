@@ -101,8 +101,13 @@ private:
         QQuickWindow *window;
         QSGRenderThread *thread;
         QSurfaceFormat actualWindowFormat;
+#ifndef QT_NO_BITFIELDS
         uint updateDuringSync : 1;
         uint forceRenderPass : 1;
+#else
+        uint updateDuringSync = 1;
+        uint forceRenderPass = 1;
+#endif
     };
 
     friend class QSGRenderThread;

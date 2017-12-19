@@ -258,7 +258,7 @@ public:
     QQuickCustomRenderStage *customRenderStage;
 
     QColor clearColor;
-
+#ifndef QT_NO_BITFIELDS
     uint clearBeforeRendering : 1;
 
     uint persistentGLContext : 1;
@@ -269,6 +269,18 @@ public:
 
     bool allowChildEventFiltering : 1;
     bool allowDoubleClick : 1;
+#else
+    uint clearBeforeRendering = 1;
+
+    uint persistentGLContext = 1;
+    uint persistentSceneGraph = 1;
+
+    uint lastWheelEventAccepted = 1;
+    bool componentCompleted = 1;
+
+    bool allowChildEventFiltering = 1;
+    bool allowDoubleClick = 1;
+#endif
 
     Qt::FocusReason lastFocusReason;
 

@@ -214,9 +214,15 @@ private:
     // List of QQmlDataBlob's that I am waiting for to complete.
     QList<QQmlDataBlob *> m_waitingFor;
 
+#ifndef QT_NO_BITFIELDS
     int m_redirectCount:30;
     bool m_inCallback:1;
     bool m_isDone:1;
+#else
+    int m_redirectCount = 30;
+    bool m_inCallback = 1;
+    bool m_isDone =1;
+#endif
 };
 
 class QQmlTypeLoaderThread;

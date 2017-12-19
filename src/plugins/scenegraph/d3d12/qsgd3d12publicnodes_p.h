@@ -107,8 +107,13 @@ private:
     QRectF m_rect;
     QRectF m_sourceRect;
     TextureCoordinatesTransformMode m_texCoordMode;
+#ifndef QT_NO_BITFIELDS
     uint m_isAtlasTexture : 1;
     uint m_ownsTexture : 1;
+#else
+    uint m_isAtlasTexture = 1;
+    uint m_ownsTexture = 1;
+#endif
 };
 
 class QSGD3D12NinePatchNode : public QSGNinePatchNode

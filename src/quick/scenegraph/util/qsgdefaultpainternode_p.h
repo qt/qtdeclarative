@@ -155,6 +155,7 @@ private:
 #endif
     qreal m_contentsScale;
 
+#ifndef QT_NO_BITFIELDS
     bool m_dirtyContents : 1;
     bool m_opaquePainting : 1;
     bool m_linear_filtering : 1;
@@ -166,6 +167,20 @@ private:
     bool m_dirtyGeometry : 1;
     bool m_dirtyRenderTarget : 1;
     bool m_dirtyTexture : 1;
+#else
+    bool m_dirtyContents = 1;
+    bool m_opaquePainting = 1;
+    bool m_linear_filtering = 1;
+    bool m_mipmapping = 1;
+    bool m_smoothPainting = 1;
+    bool m_extensionsChecked = 1;
+    bool m_multisamplingSupported = 1;
+    bool m_fastFBOResizing = 1;
+    bool m_dirtyGeometry = 1;
+    bool m_dirtyRenderTarget = 1;
+    bool m_dirtyTexture = 1;
+#endif
+
 };
 
 QT_END_NAMESPACE

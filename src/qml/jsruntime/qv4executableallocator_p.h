@@ -104,8 +104,13 @@ public:
         bool mergePrevious(ExecutableAllocator *allocator);
 
         quintptr addr;
+#ifndef QT_NO_BITFIELDS
         uint size : 31; // More than 2GB of function code? nah :)
         uint free : 1;
+#else
+        uint size = 31; // More than 2GB of function code? nah :)
+        uint free = 1;
+#endif
         Allocation *next;
         Allocation *prev;
     };

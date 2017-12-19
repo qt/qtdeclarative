@@ -271,6 +271,7 @@ struct PropertyAttributes
             uchar m_mask : 4;
         };
         struct {
+#ifndef QT_NO_BITFIELDS
             uchar m_type : 1;
             uchar m_writable : 1;
             uchar m_enumerable : 1;
@@ -279,6 +280,16 @@ struct PropertyAttributes
             uchar writable_set : 1;
             uchar enumerable_set : 1;
             uchar configurable_set : 1;
+#else
+            uchar m_type = 1;
+            uchar m_writable = 1;
+            uchar m_enumerable = 1;
+            uchar m_configurable = 1;
+            uchar type_set = 1;
+            uchar writable_set = 1;
+            uchar enumerable_set = 1;
+            uchar configurable_set = 1;
+#endif
         };
     };
 

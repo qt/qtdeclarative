@@ -108,6 +108,7 @@ public:
         enum { BitsLeftInFlags = 10 };
         unsigned _otherBits       : BitsLeftInFlags; // align to 32 bits
 
+#ifndef QT_NO_BITFIELDS
         // Can apply to all properties, except IsFunction
         unsigned isConstant       : 1; // Has CONST flag
         unsigned isWritable       : 1; // Has WRITE function
@@ -133,7 +134,33 @@ public:
         // Internal QQmlPropertyCache flags
         unsigned notFullyResolved : 1; // True if the type data is to be lazily resolved
         unsigned overrideIndexIsProperty: 1;
+#else
+        unsigned isConstant       = 1; // Has CONST flag
+        unsigned isWritable       = 1; // Has WRITE function
+        unsigned isResettable     = 1; // Has RESET function
+        unsigned isAlias          = 1; // Is a QML alias to another property
+        unsigned isFinal          = 1; // Has FINAL flag
+        unsigned isOverridden     = 1; // Is overridden by a extension property
+        unsigned isDirect         = 1; // Exists on a C++ QMetaObject
 
+        unsigned type             = 4; // stores an entry of Types
+
+        // Apply only to IsFunctions
+        unsigned isVMEFunction    = 1; // Function was added by QML
+        unsigned hasArguments     = 1; // Function takes arguments
+        unsigned isSignal         = 1; // Function is a signal
+        unsigned isVMESignal      = 1; // Signal was added by QML
+        unsigned isV4Function     = 1; // Function takes QQmlV4Function* args
+        unsigned isSignalHandler  = 1; // Function is a signal handler
+        unsigned isOverload       = 1; // Function is an overload of another function
+        unsigned isCloned         = 1; // The function was marked as cloned
+        unsigned isConstructor    = 1; // The function was marked is a constructor
+
+        // Internal QQmlPropertyCache flags
+        unsigned notFullyResolved = 1; // True if the type data is to be lazily resolved
+        unsigned overrideIndexIsProperty = 1;
+
+#endif
         inline Flags();
         inline bool operator==(const Flags &other) const;
         inline void copyPropertyTypeFlags(Flags from);

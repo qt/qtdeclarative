@@ -76,8 +76,13 @@ public:
     QSGRenderContext *createRenderContext(QSGContext *) const override;
 
     struct WindowData {
+#ifndef QT_NO_BITFIELDS
         bool updatePending : 1;
         bool grabOnly : 1;
+#else
+        bool updatePending = 1;
+        bool grabOnly = 1;
+#endif
     };
 
     QHash<QQuickWindow *, WindowData> m_windows;

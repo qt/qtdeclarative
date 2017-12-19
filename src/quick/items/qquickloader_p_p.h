@@ -109,11 +109,17 @@ public:
     QQuickLoaderIncubator *incubator;
     QV4::PersistentValue initialPropertyValues;
     QV4::PersistentValue qmlCallingContext;
+#ifndef QT_NO_BITFIELDS
     bool updatingSize: 1;
     bool active : 1;
     bool loadingFromSource : 1;
     bool asynchronous : 1;
-
+#else
+    bool updatingSize = 1;
+    bool active = 1;
+    bool loadingFromSource = 1;
+    bool asynchronous = 1;
+#endif
     void _q_sourceLoaded();
     void _q_updateSize(bool loaderGeometryChanged = true);
 };

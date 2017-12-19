@@ -111,8 +111,13 @@ private:
     QSGGeometry m_geometry;
     QSGD3D12TextureMaterial m_material;
 
+#ifndef QT_NO_BITFIELDS
     uint m_dirtyGeometry : 1;
     uint m_dirtyContents : 1;
+#else
+    uint m_dirtyGeometry = 1;
+    uint m_dirtyContents = 1;
+#endif
 };
 
 QT_END_NAMESPACE

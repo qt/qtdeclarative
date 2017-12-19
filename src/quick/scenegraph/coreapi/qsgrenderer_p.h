@@ -123,9 +123,15 @@ private:
 
     const QSGBindable *m_bindable;
 
+#ifndef QT_NO_BITFIELDS
     uint m_changed_emitted : 1;
     uint m_is_rendering : 1;
     uint m_is_preprocessing : 1;
+#else
+    uint m_changed_emitted = 1;
+    uint m_is_rendering = 1;
+    uint m_is_preprocessing = 1;
+#endif
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGBindable

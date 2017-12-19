@@ -134,9 +134,16 @@ public:
     QQuickLayoutPrivate() : m_isReady(false), m_disableRearrange(true) {}
 
 protected:
+#ifndef QT_NO_BITFIELDS
     unsigned m_isReady : 1;
     unsigned m_disableRearrange : 1;
     unsigned m_hasItemChangeListeners : 1;      // if false, we don't need to remove its item change listeners...
+#else
+    unsigned m_isReady =1 ;
+    unsigned m_disableRearrange = 1;
+    unsigned m_hasItemChangeListeners = 1;
+
+#endif
     mutable QSet<QQuickItem *> m_ignoredItems;
 };
 
@@ -304,6 +311,7 @@ private:
     int m_rowSpan;
     int m_columnSpan;
 
+#ifndef QT_NO_BITFIELDS
     unsigned m_fillWidth : 1;
     unsigned m_fillHeight : 1;
     unsigned m_isFillWidthSet : 1;
@@ -319,6 +327,23 @@ private:
     unsigned m_isTopMarginSet : 1;
     unsigned m_isRightMarginSet : 1;
     unsigned m_isBottomMarginSet : 1;
+#else
+    unsigned m_fillWidth = 1;
+    unsigned m_fillHeight = 1;
+    unsigned m_isFillWidthSet = 1;
+    unsigned m_isFillHeightSet = 1;
+    unsigned m_isMinimumWidthSet = 1;
+    unsigned m_isMinimumHeightSet = 1;
+    // preferredWidth and preferredHeight are always explicit, since
+    // their implicit equivalent is implicitWidth and implicitHeight
+    unsigned m_isMaximumWidthSet = 1;
+    unsigned m_isMaximumHeightSet = 1;
+    unsigned m_changesNotificationEnabled = 1;
+    unsigned m_isLeftMarginSet = 1;
+    unsigned m_isTopMarginSet = 1;
+    unsigned m_isRightMarginSet = 1;
+    unsigned m_isBottomMarginSet = 1;
+#endif
     Qt::Alignment m_alignment;
     friend class QQuickLayout;
 };

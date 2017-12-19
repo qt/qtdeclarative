@@ -178,6 +178,7 @@ private:
 
     QQuickOpenGLShaderEffectCommon m_common;
 
+#ifndef QT_NO_BITFIELDS
     uint m_blending : 1;
     uint m_dirtyUniforms : 1;
     uint m_dirtyUniformValues : 1;
@@ -190,6 +191,20 @@ private:
     uint m_supportsAtlasTextures : 1;
     uint m_vertNeedsUpdate : 1;
     uint m_fragNeedsUpdate : 1;
+#else
+    uint m_blending = 1;
+    uint m_dirtyUniforms = 1;
+    uint m_dirtyUniformValues = 1;
+    uint m_dirtyTextureProviders = 1;
+    uint m_dirtyProgram = 1;
+    uint m_dirtyParseLog = 1;
+    uint m_dirtyMesh = 1;
+    uint m_dirtyGeometry = 1;
+    uint m_customVertexShader = 1;
+    uint m_supportsAtlasTextures = 1;
+    uint m_vertNeedsUpdate = 1;
+    uint m_fragNeedsUpdate = 1;
+#endif
 };
 
 QT_END_NAMESPACE

@@ -104,8 +104,13 @@ private:
     struct WindowData {
         QQuickWindow *window;
         QSGD3D12RenderThread *thread;
+#ifndef QT_NO_BITFIELDS
         uint updateDuringSync : 1;
         uint forceRenderPass : 1;
+#else
+        uint updateDuringSync = 1;
+        uint forceRenderPass = 1;
+#endif
     };
 
     void startOrStopAnimationTimer();
