@@ -113,6 +113,7 @@ public:
     void handleRelease(const QPointF &point) override;
     void handleUngrab() override;
 
+    void cancelHandle();
     void executeHandle(bool complete = false);
 
     qreal from;
@@ -240,13 +241,19 @@ void QQuickSliderPrivate::handleUngrab()
 
 static inline QString handleName() { return QStringLiteral("handle"); }
 
+void QQuickSliderPrivate::cancelHandle()
+{
+    Q_Q(QQuickSlider);
+    quickCancelDeferred(q, handleName());
+}
+
 void QQuickSliderPrivate::executeHandle(bool complete)
 {
     Q_Q(QQuickSlider);
     if (handle.wasExecuted())
         return;
 
-    if (!handle)
+    if (!handle || complete)
         quickBeginDeferred(q, handleName(), handle);
     if (complete)
         quickCompleteDeferred(q, handleName(), handle);
@@ -513,6 +520,9 @@ void QQuickSlider::setHandle(QQuickItem *handle)
     Q_D(QQuickSlider);
     if (d->handle == handle)
         return;
+
+    if (!d->handle.isExecuting())
+        d->cancelHandle();
 
     delete d->handle;
     d->handle = handle;

@@ -85,6 +85,7 @@ public:
     QAccessible::Role accessibleRole() const override;
 #endif
 
+    void cancelBackground();
     void executeBackground(bool complete = false);
 
     QFont font;

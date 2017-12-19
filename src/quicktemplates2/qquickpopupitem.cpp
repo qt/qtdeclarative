@@ -60,7 +60,10 @@ public:
 
     QQuickItem *getContentItem() override;
 
+    void cancelContentItem() override;
     void executeContentItem(bool complete = false) override;
+
+    void cancelBackground() override;
     void executeBackground(bool complete = false) override;
 
     int backId;
@@ -106,12 +109,17 @@ QQuickItem *QQuickPopupItemPrivate::getContentItem()
 
 static inline QString contentItemName() { return QStringLiteral("contentItem"); }
 
+void QQuickPopupItemPrivate::cancelContentItem()
+{
+    quickCancelDeferred(popup, contentItemName());
+}
+
 void QQuickPopupItemPrivate::executeContentItem(bool complete)
 {
     if (contentItem.wasExecuted())
         return;
 
-    if (!contentItem)
+    if (!contentItem || complete)
         quickBeginDeferred(popup, contentItemName(), contentItem);
     if (complete)
         quickCompleteDeferred(popup, contentItemName(), contentItem);
@@ -119,12 +127,17 @@ void QQuickPopupItemPrivate::executeContentItem(bool complete)
 
 static inline QString backgroundName() { return QStringLiteral("background"); }
 
+void QQuickPopupItemPrivate::cancelBackground()
+{
+    quickCancelDeferred(popup, backgroundName());
+}
+
 void QQuickPopupItemPrivate::executeBackground(bool complete)
 {
     if (background.wasExecuted())
         return;
 
-    if (!background)
+    if (!background || complete)
         quickBeginDeferred(popup, backgroundName(), background);
     if (complete)
         quickCompleteDeferred(popup, backgroundName(), background);

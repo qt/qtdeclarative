@@ -268,13 +268,19 @@ QAccessible::Role QQuickTextFieldPrivate::accessibleRole() const
 
 static inline QString backgroundName() { return QStringLiteral("background"); }
 
+void QQuickTextFieldPrivate::cancelBackground()
+{
+    Q_Q(QQuickTextField);
+    quickCancelDeferred(q, backgroundName());
+}
+
 void QQuickTextFieldPrivate::executeBackground(bool complete)
 {
     Q_Q(QQuickTextField);
     if (background.wasExecuted())
         return;
 
-    if (!background)
+    if (!background || complete)
         quickBeginDeferred(q, backgroundName(), background);
     if (complete)
         quickCompleteDeferred(q, backgroundName(), background);
@@ -332,6 +338,9 @@ void QQuickTextField::setBackground(QQuickItem *background)
     Q_D(QQuickTextField);
     if (d->background == background)
         return;
+
+    if (!d->background.isExecuting())
+        d->cancelBackground();
 
     delete d->background;
     d->background = background;

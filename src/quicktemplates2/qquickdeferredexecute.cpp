@@ -55,13 +55,24 @@ static inline uint qHash(QObject *object, const QString &propertyName)
 
 Q_GLOBAL_STATIC(DeferredStates, deferredStates)
 
-static void beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &property, QQmlComponentPrivate::DeferredState *deferredState)
+static void cancelDeferred(QObject *object, int propertyIndex)
+{
+    QQmlData *ddata = QQmlData::get(object);
+    auto dit = ddata->deferredData.rbegin();
+    while (dit != ddata->deferredData.rend()) {
+        (*dit)->bindings.remove(propertyIndex);
+        ++dit;
+    }
+}
+
+static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &property, QQmlComponentPrivate::DeferredState *deferredState)
 {
     QObject *object = property.object();
     QQmlData *ddata = QQmlData::get(object);
     Q_ASSERT(!ddata->deferredData.isEmpty());
 
     int propertyIndex = property.index();
+    int wasInProgress = enginePriv->inProgressCreations;
 
     for (auto dit = ddata->deferredData.rbegin(); dit != ddata->deferredData.rend(); ++dit) {
         QQmlData::DeferredData *deferData = *dit;
@@ -91,12 +102,11 @@ static void beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
 
         // Cleanup any remaining deferred bindings for this property, also in inner contexts,
         // to avoid executing them later and overriding the property that was just populated.
-        while (dit != ddata->deferredData.rend()) {
-            (*dit)->bindings.remove(propertyIndex);
-            ++dit;
-        }
+        cancelDeferred(object, propertyIndex);
         break;
     }
+
+    return enginePriv->inProgressCreations > wasInProgress;
 }
 
 void beginDeferred(QObject *object, const QString &property)
@@ -106,13 +116,19 @@ void beginDeferred(QObject *object, const QString &property)
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine);
 
         QQmlComponentPrivate::DeferredState *state = new QQmlComponentPrivate::DeferredState;
-        beginDeferred(ep, QQmlProperty(object, property), state);
+        if (beginDeferred(ep, QQmlProperty(object, property), state))
+            deferredStates()->insert(qHash(object, property), state);
+        else
+            delete state;
 
         // Release deferred data for those compilation units that no longer have deferred bindings
         data->releaseDeferredData();
-
-        deferredStates()->insert(qHash(object, property), state);
     }
+}
+
+void cancelDeferred(QObject *object, const QString &property)
+{
+    cancelDeferred(object, QQmlProperty(object, property).index());
 }
 
 void completeDeferred(QObject *object, const QString &property)
