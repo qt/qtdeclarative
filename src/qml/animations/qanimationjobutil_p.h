@@ -51,6 +51,8 @@
 // We mean it.
 //
 
+QT_REQUIRE_CONFIG(qml_animation);
+
 #define RETURN_IF_DELETED(func) \
 { \
     bool *prevWasDeleted = m_wasDeleted; \

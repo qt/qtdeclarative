@@ -1,4 +1,4 @@
-QT = qml core-private
+QT = qml-private core-private
 qtHaveModule(gui): QT += gui
 qtHaveModule(widgets): QT += widgets
 

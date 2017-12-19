@@ -54,6 +54,8 @@
 #include "private/qabstractanimationjob_p.h"
 #include <QtCore/qdebug.h>
 
+QT_REQUIRE_CONFIG(qml_animation);
+
 QT_BEGIN_NAMESPACE
 
 class Q_QML_PRIVATE_EXPORT QAnimationGroupJob : public QAbstractAnimationJob

@@ -33,7 +33,7 @@ qtConfig(qml-list-model) {
         $$PWD/qqmllistmodelworkeragent_p.h
 }
 
-qtConfig(animation) {
+qtConfig(qml-animation) {
     SOURCES += \
         $$PWD/qqmltimer.cpp
 

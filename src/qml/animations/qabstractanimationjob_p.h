@@ -56,6 +56,8 @@
 #include <QtCore/private/qabstractanimation_p.h>
 #include <vector>
 
+QT_REQUIRE_CONFIG(qml_animation);
+
 QT_BEGIN_NAMESPACE
 
 class QAnimationGroupJob;

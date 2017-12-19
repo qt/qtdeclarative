@@ -73,6 +73,13 @@
             "purpose": "Provides support for locales in QML.",
             "section": "QML",
             "output": [ "privateFeature" ]
+        },
+        "qml-animation": {
+            "label": "QML Animations",
+            "purpose": "Provides support for animations and timers in QML.",
+            "section": "QML",
+            "condition": "features.animation",
+            "output": [ "privateFeature" ]
         }
     },
 

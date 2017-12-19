@@ -53,6 +53,8 @@
 
 #include <private/qanimationgroupjob_p.h>
 
+QT_REQUIRE_CONFIG(qml_animation);
+
 QT_BEGIN_NAMESPACE
 
 class QPauseAnimationJob;

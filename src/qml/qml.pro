@@ -61,7 +61,7 @@ include(jsruntime/jsruntime.pri)
 include(jit/jit.pri)
 include(qml/qml.pri)
 include(debugger/debugger.pri)
-qtConfig(animation) {
+qtConfig(qml-animation) {
     include(animations/animations.pri)
 }
 include(types/types.pri)

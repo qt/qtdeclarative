@@ -6,7 +6,7 @@ QT_FOR_CONFIG += qml qml-private quick-private
 SUBDIRS += \
     qml
 
-qtHaveModule(gui):qtConfig(animation) {
+qtConfig(qml-animation) {
     SUBDIRS += \
         quick \
         qmltest

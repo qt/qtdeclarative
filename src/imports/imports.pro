@@ -1,7 +1,5 @@
 TEMPLATE = subdirs
 
-QT_FOR_CONFIG += quick-private
-
 SUBDIRS += \
     builtins \
     qtqml \
@@ -13,6 +11,8 @@ qtConfig(settings): SUBDIRS += settings
 qtConfig(statemachine): SUBDIRS += statemachine
 
 qtHaveModule(quick) {
+    QT_FOR_CONFIG += quick-private
+
     SUBDIRS += \
         handlers \
         layouts \
