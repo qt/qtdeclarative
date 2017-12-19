@@ -8232,7 +8232,7 @@ void tst_qqmlecmascript::instanceof()
     QJSEngine engine;
     QJSValue ret = engine.evaluate(setupCode + ";\n" + QTest::currentDataTag());
 
-    if (expectedValue.type() == QMetaType::Bool) {
+    if (expectedValue.type() == QVariant::Bool) {
         bool returnValue = ret.toBool();
         QVERIFY2(!ret.isError(), qPrintable(ret.toString()));
         QCOMPARE(returnValue, expectedValue.toBool());
