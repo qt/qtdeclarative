@@ -22,18 +22,14 @@ qtConfig(qml-network) {
 # Services
 SUBDIRS += \
     qmldbg_messages \
-    qmldbg_profiler
+    qmldbg_profiler \
+    qmldbg_debugger \
+    qmldbg_nativedebugger
+
 qmldbg_messages.depends = packetprotocol
 qmldbg_profiler.depends = packetprotocol
-
-qtConfig(qml-interpreter) {
-    SUBDIRS += \
-        qmldbg_debugger \
-        qmldbg_nativedebugger
-
-    qmldbg_debugger.depends = packetprotocol
-    qmldbg_nativedebugger.depends = packetprotocol
-}
+qmldbg_debugger.depends = packetprotocol
+qmldbg_nativedebugger.depends = packetprotocol
 
 qtHaveModule(quick) {
     SUBDIRS += \
