@@ -67,6 +67,10 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Profiling {
 class Profiler {};
+class FunctionCallProfiler {
+public:
+    FunctionCallProfiler(ExecutionEngine *, Function *) {}
+};
 }
 }
 

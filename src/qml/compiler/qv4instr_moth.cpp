@@ -616,10 +616,8 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(Ret)
         MOTH_END_INSTR(Ret)
 
-#ifndef QT_NO_QML_DEBUGGER
         MOTH_BEGIN_INSTR(Debug)
         MOTH_END_INSTR(Debug)
-#endif // QT_NO_QML_DEBUGGER
 
         MOTH_BEGIN_INSTR(LoadQmlContext)
             d << dumpRegister(result, nFormals);

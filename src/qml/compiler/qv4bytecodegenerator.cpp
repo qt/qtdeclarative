@@ -185,6 +185,7 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
 }
 
 int BytecodeGenerator::addInstructionHelper(Instr::Type type, const Instr &i, int offsetOfOffset) {
+#if QT_CONFIG(qml_debug)
     if (debugMode && type != Instr::Type::Debug) {
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // broken gcc warns about Instruction::Debug()
@@ -197,6 +198,7 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // broken gcc warns about Instru
         }
 QT_WARNING_POP
     }
+#endif
 
     const int pos = instructions.size();
 

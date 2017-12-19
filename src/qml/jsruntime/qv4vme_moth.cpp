@@ -1341,12 +1341,12 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         goto functionExit;
     MOTH_END_INSTR(Ret)
 
-#if QT_CONFIG(qml_debug)
     MOTH_BEGIN_INSTR(Debug)
+#if QT_CONFIG(qml_debug)
         STORE_IP();
         debug_slowPath(engine);
-    MOTH_END_INSTR(Debug)
 #endif // QT_CONFIG(qml_debug)
+    MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(LoadQmlContext)
         STACK_VALUE(result) = Runtime::method_loadQmlContext(static_cast<QV4::NoThrowEngine*>(engine));

@@ -56,13 +56,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#if !QT_CONFIG(qml_debug)
-#define MOTH_DEBUG_INSTR(F)
-#else
-#define MOTH_DEBUG_INSTR(F) \
-    F(Debug)
-#endif
-
 #define INSTRUCTION(op, name, nargs, ...) \
     op##_INSTRUCTION(name, nargs, __VA_ARGS__)
 
