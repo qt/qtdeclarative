@@ -93,6 +93,9 @@ public:
 #if QT_CONFIG(texthtmlparser)
     QString toHtml() const;
 #endif
+#if QT_CONFIG(textmarkdownwriter)
+    QString toMarkdown() const;
+#endif
 
     bool hasImState() const;
     bool overwriteMode() const;
@@ -107,6 +110,7 @@ public:
 
     QString hoveredLink() const;
     QString anchorAt(const QPointF &pos) const;
+    QTextBlock blockWithMarkerAt(const QPointF &pos) const;
 
     void setCursorWidth(int width);
 
@@ -128,6 +132,7 @@ public:
 
 public Q_SLOTS:
     void setPlainText(const QString &text);
+    void setMarkdownText(const QString &text);
     void setHtml(const QString &text);
 
 #if QT_CONFIG(clipboard)
@@ -160,6 +165,8 @@ Q_SIGNALS:
     void cursorRectangleChanged();
     void linkActivated(const QString &link);
     void linkHovered(const QString &link);
+    void markerClicked();
+    void markerHovered(bool marker);
 
 public:
     virtual void processEvent(QEvent *e, const QMatrix &matrix);

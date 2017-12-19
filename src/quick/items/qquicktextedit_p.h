@@ -134,7 +134,8 @@ public:
     enum TextFormat {
         PlainText = Qt::PlainText,
         RichText = Qt::RichText,
-        AutoText = Qt::AutoText
+        AutoText = Qt::AutoText,
+        MarkdownText = Qt::MarkdownText
     };
     Q_ENUM(TextFormat)
 
@@ -375,6 +376,7 @@ private Q_SLOTS:
     void invalidateBlock(const QTextBlock &block);
     void updateCursor();
     void q_linkHovered(const QString &link);
+    void q_markerHovered(bool hovered);
     void q_updateAlignment();
     void updateSize();
     void triggerPreprocess();
