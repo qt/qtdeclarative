@@ -39,8 +39,6 @@ ItemDelegate {
         font: control.font
         color: control.enabled ? (control.down ? "#17a81a" : "#21be2b") : "#bdbebf"
         elide: Text.ElideRight
-        visible: control.text
-        horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
 

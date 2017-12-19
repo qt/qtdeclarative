@@ -41,7 +41,6 @@ SwitchDelegate {
         opacity: enabled ? 1.0 : 0.3
         color: control.down ? "#17a81a" : "#21be2b"
         elide: Text.ElideRight
-        horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
 
