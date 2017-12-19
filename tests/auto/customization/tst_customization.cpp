@@ -257,8 +257,6 @@ void tst_customization::creation()
     QVERIFY2(qt_createdQObjects()->isEmpty(), qPrintable("unexpectedly created: " + qt_createdQObjects->join(", ")));
     QVERIFY2(qt_destroyedQObjects()->isEmpty(), qPrintable("unexpectedly destroyed: " + qt_destroyedQObjects->join(", ") + " were unexpectedly destroyed"));
 
-    QEXPECT_FAIL("Default:DelayButton", "TODO: remove internal IDs", Abort);
-
     QVERIFY2(qt_destroyedParentQObjects()->isEmpty(), qPrintable("delegates/children of: " + qt_destroyedParentQObjects->join(", ") + " were unexpectedly destroyed"));
 }
 

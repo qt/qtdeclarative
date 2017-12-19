@@ -44,6 +44,8 @@
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 #endif
+#include <QtQuickControls2/private/qquickclippedtext_p.h>
+#include <QtQuickControls2/private/qquickitemgroup_p.h>
 
 #include "qquickdefaultbusyindicator_p.h"
 #include "qquickdefaultprogressbar_p.h"
@@ -164,8 +166,10 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
 
     qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
+    qmlRegisterType<QQuickClippedText>(import, 2, 2, "ClippedText");
     qmlRegisterType<QQuickDefaultProgressBar>(import, 2, 0, "ProgressBarImpl");
     qmlRegisterType<QQuickDialRing>(import, 2, 0, "DialRing");
+    qmlRegisterType<QQuickItemGroup>(import, 2, 2, "ItemGroup");
     qmlRegisterType<QQuickPlaceholderText>(import, 2, 2, "PlaceholderText");
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
