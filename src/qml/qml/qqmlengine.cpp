@@ -2080,7 +2080,7 @@ void QQmlEnginePrivate::cleanupScarceResources()
     // note that the actual SRD is owned by the JS engine,
     // so we cannot delete the SRD; but we can free the
     // memory used by the variant in the SRD.
-    QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine());
+    QV4::ExecutionEngine *engine = v4engine();
     while (QV4::ExecutionEngine::ScarceResourceData *sr = engine->scarceResources.first()) {
         sr->data = QVariant();
         engine->scarceResources.remove(sr);

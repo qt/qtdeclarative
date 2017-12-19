@@ -2346,12 +2346,12 @@ void tst_qqmlecmascript::regExpBug()
     }
 }
 
-static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const char *source)
+static inline bool evaluate_error(QV4::ExecutionEngine *v4, const QV4::Value &o, const char *source)
 {
     QString functionSource = QLatin1String("(function(object) { return ") +
                              QLatin1String(source) + QLatin1String(" })");
 
-    QV4::Scope scope(QV8Engine::getV4(engine));
+    QV4::Scope scope(v4);
     QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), QV4::Compiler::EvalCode, functionSource);
     program.inheritContext = true;
 
@@ -2362,7 +2362,7 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
     }
     QV4::JSCallData jsCallData(scope, 1);
     jsCallData->args[0] = o;
-    *jsCallData->thisObject = engine->global();
+    *jsCallData->thisObject = v4->global();
     function->call(jsCallData);
     if (scope.engine->hasException) {
         scope.engine->catchException();
@@ -2371,13 +2371,13 @@ static inline bool evaluate_error(QV8Engine *engine, const QV4::Value &o, const 
     return false;
 }
 
-static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
+static inline bool evaluate_value(QV4::ExecutionEngine *v4, const QV4::Value &o,
                                   const char *source, const QV4::Value &result)
 {
     QString functionSource = QLatin1String("(function(object) { return ") +
                              QLatin1String(source) + QLatin1String(" })");
 
-    QV4::Scope scope(QV8Engine::getV4(engine));
+    QV4::Scope scope(v4);
     QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), QV4::Compiler::EvalCode, functionSource);
     program.inheritContext = true;
 
@@ -2392,7 +2392,7 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
     QV4::ScopedValue value(scope);
     QV4::JSCallData jsCallData(scope, 1);
     jsCallData->args[0] = o;
-    *jsCallData->thisObject = engine->global();
+    *jsCallData->thisObject = v4->global();
     value = function->call(jsCallData);
     if (scope.engine->hasException) {
         scope.engine->catchException();
@@ -2401,13 +2401,13 @@ static inline bool evaluate_value(QV8Engine *engine, const QV4::Value &o,
     return QV4::Runtime::method_strictEqual(value, result);
 }
 
-static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::Value &o,
-                                             const char *source)
+static inline QV4::ReturnedValue evaluate(QV4::ExecutionEngine *v4, const QV4::Value &o,
+                                          const char *source)
 {
     QString functionSource = QLatin1String("(function(object) { return ") +
                              QLatin1String(source) + QLatin1String(" })");
 
-    QV4::Scope scope(QV8Engine::getV4(engine));
+    QV4::Scope scope(v4);
 
     QV4::Script program(QV4::ScopedContext(scope, scope.engine->rootContext()), QV4::Compiler::EvalCode, functionSource);
     program.inheritContext = true;
@@ -2421,7 +2421,7 @@ static inline QV4::ReturnedValue evaluate(QV8Engine *engine, const QV4::Value &o
         return QV4::Encode::undefined();
     QV4::JSCallData jsCallData(scope, 1);
     jsCallData->args[0] = o;
-    *jsCallData->thisObject = engine->global();
+    *jsCallData->thisObject = v4->global();
     QV4::ScopedValue result(scope, function->call(jsCallData));
     if (scope.engine->hasException) {
         scope.engine->catchException();
@@ -2441,12 +2441,11 @@ void tst_qqmlecmascript::callQtInvokables()
     MyInvokableObject *o = new MyInvokableObject();
 
     QQmlEngine qmlengine;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&qmlengine);
 
-    QV8Engine *engine = ep->v8engine();
-    QV4::Scope scope(QV8Engine::getV4(engine));
+    QV4::ExecutionEngine *engine = qmlengine.handle();
+    QV4::Scope scope(engine);
 
-    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), o));
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
 
     // Non-existent methods
     o->reset();
@@ -3014,9 +3013,8 @@ void tst_qqmlecmascript::resolveClashingProperties()
 {
     ClashingNames *o = new ClashingNames();
     QQmlEngine qmlengine;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&qmlengine);
 
-    QV4::ExecutionEngine *engine = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionEngine *engine = qmlengine.handle();
     QV4::Scope scope(engine);
 
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
@@ -4046,8 +4044,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
     QQmlContextData *childCtxt = ctxt->childContexts;
 
     if (!ctxt->importedScripts.isNullOrUndefined()) {
-        QV8Engine *engine = QV8Engine::get(ctxt->engine);
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
+        QV4::ExecutionEngine *v4 = ctxt->engine->handle();
         QV4::Scope scope(v4);
         QV4::ScopedArrayObject scripts(scope, ctxt->importedScripts.value());
         QV4::Scoped<QV4::QQmlContextWrapper> qml(scope);
@@ -4059,7 +4056,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
             qml = QV4::Encode::undefined();
 
             {
-                QV4::Scope scope(QV8Engine::getV4((engine)));
+                QV4::Scope scope(v4);
                 QV4::ScopedContext temporaryScope(scope, QV4::QmlContext::create(scope.engine->rootContext(), scriptContext, 0));
                 Q_UNUSED(temporaryScope)
             }
@@ -4376,8 +4373,7 @@ void tst_qqmlecmascript::scarceResources_other()
     QPixmap origPixmap(100, 100);
     origPixmap.fill(Qt::blue);
     QString srp_name, expectedWarning;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&engine);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionEngine *v4 = engine.handle();
     ScarceResourceObject *eo = 0;
     QObject *srsc = 0;
     QObject *object = 0;
@@ -4748,8 +4744,7 @@ void tst_qqmlecmascript::scarceResources()
     QFETCH(QVariantList, expectedValues);
     QFETCH(QStringList, expectedErrors);
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(&engine);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionEngine *v4 = engine.handle();
     ScarceResourceObject *eo = 0;
     QObject *object = 0;
 
@@ -5189,9 +5184,9 @@ void tst_qqmlecmascript::propertyVarInheritance()
         // XXX NOTE: this is very implementation dependent.  QDVMEMO->vmeProperty() is the only
         // public function which can return us a handle to something in the varProperties array.
         QV4::ReturnedValue tmp = icovmemo->vmeProperty(ico5->metaObject()->indexOfProperty("circ"));
-        icoCanaryHandle.set(QQmlEnginePrivate::getV4Engine(&engine), tmp);
+        icoCanaryHandle.set(engine.handle(), tmp);
         tmp = ccovmemo->vmeProperty(cco5->metaObject()->indexOfProperty("circ"));
-        ccoCanaryHandle.set(QQmlEnginePrivate::getV4Engine(&engine), tmp);
+        ccoCanaryHandle.set(engine.handle(), tmp);
         tmp = QV4::Encode::null();
         QVERIFY(!icoCanaryHandle.isUndefined());
         QVERIFY(!ccoCanaryHandle.isUndefined());
@@ -5229,7 +5224,7 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     QV4::WeakValue childObjectVarArrayValueHandle;
     {
-        childObjectVarArrayValueHandle.set(QQmlEnginePrivate::getV4Engine(&engine),
+        childObjectVarArrayValueHandle.set(engine.handle(),
                                            QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
         QVERIFY(!childObjectVarArrayValueHandle.isUndefined());
         gc(engine);
@@ -5317,7 +5312,6 @@ void tst_qqmlecmascript::handleReferenceManagement()
         QObject *object = component.create();
         QVERIFY(object != 0);
         CircularReferenceObject *cro = object->findChild<CircularReferenceObject*>("cro");
-        cro->setEngine(&hrmEngine);
         cro->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object, "createReference");
         gc(hrmEngine);
@@ -5337,7 +5331,6 @@ void tst_qqmlecmascript::handleReferenceManagement()
         QObject *object = component.create();
         QVERIFY(object != 0);
         CircularReferenceObject *cro = object->findChild<CircularReferenceObject*>("cro");
-        cro->setEngine(&hrmEngine);
         cro->setDtorCount(&dtorCount);
         QMetaObject::invokeMethod(object, "circularReference");
         gc(hrmEngine);
@@ -7312,7 +7305,7 @@ private slots:
         *resultPtr = weakRef->valueRef() && weakRef->isNullOrUndefined();
         if (!*resultPtr)
             return;
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine(this));
+        QV4::ExecutionEngine *v4 = qmlEngine(this)->handle();
         weakRef->set(v4, v4->newObject());
         *resultPtr = weakRef->valueRef() && !weakRef->isNullOrUndefined();
     }
@@ -7362,7 +7355,7 @@ void tst_qqmlecmascript::onDestructionViaGC()
     qmlRegisterType<WeakReferenceMutator>("Test", 1, 0, "WeakReferenceMutator");
 
     QQmlEngine engine;
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
+    QV4::ExecutionEngine *v4 =engine.handle();
 
     QQmlComponent component(&engine, testFileUrl("DestructionHelper.qml"));
 

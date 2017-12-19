@@ -150,8 +150,8 @@ public:
     QQmlDelayedError *erroredBindings;
     int inProgressCreations;
 
-    QV8Engine *v8engine() const { return q_func()->handle(); }
-    QV4::ExecutionEngine *v4engine() const { return QV8Engine::getV4(q_func()->handle()); }
+    QV8Engine *v8engine() const { return q_func()->handle()->v8Engine; }
+    QV4::ExecutionEngine *v4engine() const { return q_func()->handle(); }
 
     QQuickWorkerScriptEngine *getWorkerScriptEngine();
     QQuickWorkerScriptEngine *workerScriptEngine;
@@ -295,7 +295,7 @@ inline void QQmlEnginePrivate::dereferenceScarceResources()
     // expression must have completed.  We can safely release the
     // scarce resources.
     if (Q_LIKELY(scarceResourcesRefCount == 0)) {
-        QV4::ExecutionEngine *engine = QV8Engine::getV4(v8engine());
+        QV4::ExecutionEngine *engine = v4engine();
         if (Q_UNLIKELY(!engine->scarceResources.isEmpty())) {
             cleanupScarceResources();
         }
@@ -385,14 +385,14 @@ QV8Engine *QQmlEnginePrivate::getV8Engine(QQmlEngine *e)
 {
     Q_ASSERT(e);
 
-    return e->d_func()->v8engine();
+    return e->handle()->v8Engine;
 }
 
 QV4::ExecutionEngine *QQmlEnginePrivate::getV4Engine(QQmlEngine *e)
 {
     Q_ASSERT(e);
 
-    return e->d_func()->v4engine();
+    return e->handle();
 }
 
 QQmlEnginePrivate *QQmlEnginePrivate::get(QQmlEngine *e)
@@ -428,9 +428,7 @@ QQmlEngine *QQmlEnginePrivate::get(QQmlEnginePrivate *p)
 
 QQmlEnginePrivate *QQmlEnginePrivate::get(QV4::ExecutionEngine *e)
 {
-    if (!e->v8Engine)
-        return 0;
-    QQmlEngine *qmlEngine = e->v8Engine->engine();
+    QQmlEngine *qmlEngine = e->qmlEngine();
     if (!qmlEngine)
         return 0;
     return get(qmlEngine);

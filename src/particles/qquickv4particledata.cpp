@@ -510,12 +510,12 @@ QV4ParticleDataDeletable::~QV4ParticleDataDeletable()
 V4_DEFINE_EXTENSION(QV4ParticleDataDeletable, particleV4Data);
 
 
-QQuickV4ParticleData::QQuickV4ParticleData(QV8Engine* engine, QQuickParticleData* datum, QQuickParticleSystem *system)
+QQuickV4ParticleData::QQuickV4ParticleData(QV4::ExecutionEngine* v4, QQuickParticleData* datum,
+                                           QQuickParticleSystem *system)
 {
-    if (!engine || !datum)
+    if (!v4 || !datum)
         return;
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine);
     QV4::Scope scope(v4);
     QV4ParticleDataDeletable *d = particleV4Data(scope.engine);
     QV4::ScopedObject o(scope, v4->memoryManager->allocObject<QV4ParticleData>(datum, system));

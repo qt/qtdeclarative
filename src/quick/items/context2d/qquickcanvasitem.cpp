@@ -727,7 +727,7 @@ void QQuickCanvasItem::updatePolish()
         QMap<int, QV4::PersistentValue> animationCallbacks = d->animationCallbacks;
         d->animationCallbacks.clear();
 
-        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
+        QV4::ExecutionEngine *v4 = qmlEngine(this)->handle();
         QV4::Scope scope(v4);
         QV4::ScopedFunctionObject function(scope);
         QV4::JSCallData jsCall(scope, 1);
@@ -1210,7 +1210,7 @@ void QQuickCanvasItem::initializeContext(QQuickCanvasContext *context, const QVa
 
     d->context = context;
     d->context->init(this, args);
-    d->context->setV4Engine(QQmlEnginePrivate::get(qmlEngine(this))->v4engine());
+    d->context->setV4Engine(qmlEngine(this)->handle());
     connect(d->context, SIGNAL(textureChanged()), SLOT(update()));
     connect(d->context, SIGNAL(textureChanged()), SIGNAL(painted()));
     emit contextChanged();

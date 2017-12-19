@@ -126,7 +126,7 @@ void QQmlProfilerServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
                 = new QQmlProfilerAdapter(this, &(enginePrivate->typeLoader));
         addEngineProfiler(compileAdapter, engine);
     }
-    QV4ProfilerAdapter *v4Adapter = new QV4ProfilerAdapter(this, QV8Engine::getV4(engine->handle()));
+    QV4ProfilerAdapter *v4Adapter = new QV4ProfilerAdapter(this, engine->handle());
     addEngineProfiler(v4Adapter, engine);
     QQmlConfigurableDebugService<QQmlProfilerService>::engineAboutToBeAdded(engine);
 }

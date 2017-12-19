@@ -123,9 +123,10 @@ static void restoreJSValue(QDataStream &stream, void *data)
     }
 }
 
-QV8Engine::QV8Engine(QJSEngine* qq)
+QV8Engine::QV8Engine(QJSEngine *qq, QV4::ExecutionEngine *v4)
     : q(qq)
     , m_engine(0)
+    , m_v4Engine(v4)
     , m_xmlHttpRequestData(0)
 {
 #ifdef Q_PROCESSOR_X86_32
@@ -146,8 +147,6 @@ QV8Engine::QV8Engine(QJSEngine* qq)
         QMetaType::registerConverter<QJSValue, QStringList>(convertJSValueToVariantType<QStringList>);
     QMetaType::registerStreamOperators(qMetaTypeId<QJSValue>(), saveJSValue, restoreJSValue);
 
-    m_v4Engine = new QV4::ExecutionEngine;
-    m_v4Engine->v8Engine = this;
     m_delayedCallQueue.init(m_v4Engine);
 
     QV4::QObjectWrapper::initializeBindings(m_v4Engine);
@@ -162,8 +161,6 @@ QV8Engine::~QV8Engine()
     qt_rem_qmlxmlhttprequest(m_v4Engine, m_xmlHttpRequestData);
     m_xmlHttpRequestData = 0;
 #endif
-
-    delete m_v4Engine;
 }
 
 #if QT_CONFIG(qml_network)
@@ -286,11 +283,6 @@ void QV8Engine::setEngine(QQmlEngine *engine)
 {
     m_engine = engine;
     initQmlGlobalObject();
-}
-
-QV4::ReturnedValue QV8Engine::global()
-{
-    return m_v4Engine->globalObject->asReturnedValue();
 }
 
 void QV8Engine::startTimer(const QString &timerName)

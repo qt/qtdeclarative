@@ -201,7 +201,7 @@ private:
 };
 
 QQuickWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QQuickWorkerScriptEnginePrivate *parent)
-: QV8Engine(0), p(parent)
+    : QV8Engine(nullptr, new QV4::ExecutionEngine), p(parent)
 #if QT_CONFIG(qml_network)
 , accessManager(0)
 #endif
@@ -214,6 +214,7 @@ QQuickWorkerScriptEnginePrivate::WorkerEngine::~WorkerEngine()
 #if QT_CONFIG(qml_network)
     delete accessManager;
 #endif
+    delete m_v4Engine;
 }
 
 void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
@@ -250,7 +251,7 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
                                                                                 QQuickWorkerScriptEnginePrivate::method_sendMessage));
     QV4::JSCallData jsCallData(scope, 1);
     jsCallData->args[0] = function;
-    *jsCallData->thisObject = global();
+    *jsCallData->thisObject = m_v4Engine->global();
     createsend.set(scope.engine, createsendconstructor->call(jsCallData));
 }
 
@@ -267,7 +268,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(i
     QV4::ScopedValue v(scope);
     QV4::JSCallData jsCallData(scope, 1);
     jsCallData->args[0] = QV4::Primitive::fromInt32(id);
-    *jsCallData->thisObject = global();
+    *jsCallData->thisObject = m_v4Engine->global();
     v = f->call(jsCallData);
     if (scope.hasException())
         v = scope.engine->catchException();
@@ -367,7 +368,7 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     Q_ASSERT(!!qmlContext);
 
     QV4::JSCallData jsCallData(scope, 2);
-    *jsCallData->thisObject = workerEngine->global();
+    *jsCallData->thisObject = v4->global();
     jsCallData->args[0] = qmlContext->d()->qml(); // ###
     jsCallData->args[1] = value;
     f->call(jsCallData);
@@ -730,8 +731,7 @@ bool QQuickWorkerScript::event(QEvent *event)
         QQmlEngine *engine = qmlEngine(this);
         if (engine) {
             WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
-            QV8Engine *v8engine = QQmlEnginePrivate::get(engine)->v8engine();
-            QV4::Scope scope(QV8Engine::getV4(v8engine));
+            QV4::Scope scope(engine->handle());
             QV4::ScopedValue value(scope, QV4::Serialize::deserialize(workerEvent->data(), scope.engine));
             emit message(QQmlV4Handle(value));
         }

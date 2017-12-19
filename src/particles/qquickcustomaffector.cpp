@@ -148,7 +148,7 @@ void QQuickCustomAffector::affectSystem(qreal dt)
         dt = 1.0;
 
     QQmlEngine *qmlEngine = ::qmlEngine(this);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine->handle());
+    QV4::ExecutionEngine *v4 = qmlEngine->handle();
 
     QV4::Scope scope(v4);
     QV4::ScopedArrayObject array(scope, v4->newArrayObject(toAffect.size()));

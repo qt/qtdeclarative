@@ -267,7 +267,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
 
         if (isEmitConnected() || isEmitFollowConnected()) {
             QQmlEngine *qmlEngine = ::qmlEngine(this);
-            QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine->handle());
+            QV4::ExecutionEngine *v4 = qmlEngine->handle();
 
             QV4::Scope scope(v4);
             QV4::ScopedArrayObject array(scope, v4->newArrayObject(toEmit.size()));

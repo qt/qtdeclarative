@@ -1552,6 +1552,11 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     return 0;
 }
 
+ReturnedValue ExecutionEngine::global()
+{
+    return globalObject->asReturnedValue();
+}
+
 // Converts a JS value to a meta-type.
 // data must point to a place that can store a value of the given type.
 // Returns true if conversion succeeded, false otherwise.

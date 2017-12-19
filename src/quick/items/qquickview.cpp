@@ -70,7 +70,7 @@ void QQuickViewPrivate::init(QQmlEngine* e)
     {
         // The content item has CppOwnership policy (set in QQuickWindow). Ensure the presence of a JS
         // wrapper so that the garbage collector can see the policy.
-        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine.data());
+        QV4::ExecutionEngine *v4 = engine.data()->handle();
         QV4::QObjectWrapper::wrap(v4, contentItem);
     }
 }

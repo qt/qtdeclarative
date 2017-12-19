@@ -486,7 +486,7 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
 
     if (isEmitConnected()) {
         QQmlEngine *qmlEngine = ::qmlEngine(this);
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine->handle());
+        QV4::ExecutionEngine *v4 = qmlEngine->handle();
         QV4::Scope scope(v4);
 
         //Done after emitParticle so that the Painter::load is done first, this allows you to customize its static variables

@@ -702,7 +702,7 @@ void QV4DebugServiceImpl::engineAdded(QJSEngine *engine)
 {
     QMutexLocker lock(&m_configMutex);
     if (engine) {
-        QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
+        QV4::ExecutionEngine *ee = engine->handle();
         if (QQmlDebugConnector *server = QQmlDebugConnector::instance()) {
             if (ee) {
                 QV4Debugger *debugger = new QV4Debugger(ee);
@@ -720,7 +720,7 @@ void QV4DebugServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 {
     QMutexLocker lock(&m_configMutex);
     if (engine){
-        const QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
+        const QV4::ExecutionEngine *ee = engine->handle();
         if (ee) {
             QV4Debugger *debugger = qobject_cast<QV4Debugger *>(ee->debugger());
             if (debugger)

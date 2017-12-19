@@ -526,7 +526,7 @@ void QQuickParticleData::clone(const QQuickParticleData& other)
 QQmlV4Handle QQuickParticleData::v4Value(QQuickParticleSystem* particleSystem)
 {
     if (!v8Datum)
-        v8Datum = new QQuickV4ParticleData(QQmlEnginePrivate::getV8Engine(qmlEngine(particleSystem)), this, particleSystem);
+        v8Datum = new QQuickV4ParticleData(qmlEngine(particleSystem)->handle(), this, particleSystem);
     return v8Datum->v4Value();
 }
 

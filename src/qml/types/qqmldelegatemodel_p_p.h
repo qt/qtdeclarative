@@ -69,7 +69,7 @@ class QQmlDelegateModelAttachedMetaObject;
 class QQmlDelegateModelItemMetaType : public QQmlRefCount
 {
 public:
-    QQmlDelegateModelItemMetaType(QV8Engine *engine, QQmlDelegateModel *model, const QStringList &groupNames);
+    QQmlDelegateModelItemMetaType(QV4::ExecutionEngine *engine, QQmlDelegateModel *model, const QStringList &groupNames);
     ~QQmlDelegateModelItemMetaType();
 
     void initializeMetaObject();
@@ -80,7 +80,7 @@ public:
 
     QPointer<QQmlDelegateModel> model;
     const int groupCount;
-    QV8Engine * const v8Engine;
+    QV4::ExecutionEngine * const v4Engine;
     QQmlDelegateModelAttachedMetaObject *metaObject;
     const QStringList groupNames;
     QV4::PersistentValue modelItemProto;
@@ -220,7 +220,7 @@ public:
 
     void setModel(QQmlDelegateModel *model, Compositor::Group group);
     bool isChangedConnected();
-    void emitChanges(QV8Engine *engine);
+    void emitChanges(QV4::ExecutionEngine *engine);
     void emitModelUpdated(bool reset);
 
     void createdPackage(int index, QQuickPackage *package);

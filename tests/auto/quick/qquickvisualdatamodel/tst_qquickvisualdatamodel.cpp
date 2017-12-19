@@ -2038,9 +2038,6 @@ void tst_qquickvisualdatamodel::get()
     QQmlDelegateModelGroup *selectedItems = visualModel->findChild<QQmlDelegateModelGroup *>("selectedItems");
     QVERIFY(selectedItems);
 
-    QV8Engine *v8Engine = QQmlEnginePrivate::getV8Engine(ctxt->engine());
-    QVERIFY(v8Engine);
-
     const bool f = false;
     const bool t = true;
 

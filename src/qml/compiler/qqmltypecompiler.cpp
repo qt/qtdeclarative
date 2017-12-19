@@ -295,7 +295,7 @@ SignalHandlerConverter::SignalHandlerConverter(QQmlTypeCompiler *typeCompiler)
     , imports(typeCompiler->imports())
     , customParsers(typeCompiler->customParserCache())
     , resolvedTypes(typeCompiler->resolvedTypes)
-    , illegalNames(QV8Engine::get(QQmlEnginePrivate::get(typeCompiler->enginePrivate()))->illegalNames())
+    , illegalNames(typeCompiler->enginePrivate()->v8engine()->illegalNames())
     , propertyCaches(typeCompiler->propertyCaches())
 {
 }

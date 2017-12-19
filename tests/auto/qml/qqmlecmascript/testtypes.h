@@ -1262,7 +1262,6 @@ public:
     {
         CircularReferenceObject *retn = new CircularReferenceObject(parent);
         retn->m_dtorCount = m_dtorCount;
-        retn->m_engine = m_engine;
         return retn;
     }
 
@@ -1283,14 +1282,8 @@ public:
         thisObject->defineDefaultProperty(QStringLiteral("autoTestStrongRef"), v);
     }
 
-    void setEngine(QQmlEngine* declarativeEngine)
-    {
-        m_engine = QQmlEnginePrivate::get(declarativeEngine)->v8engine();
-    }
-
 private:
     int *m_dtorCount;
-    QV8Engine* m_engine;
 };
 Q_DECLARE_METATYPE(CircularReferenceObject*)
 

@@ -114,7 +114,7 @@ void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
 {
     parentContext = providedParentContext;
     engine = parentContext->engine;
-    v4 = QV8Engine::getV4(engine);
+    v4 = engine->handle();
 
     if (compilationUnit && !compilationUnit->engine)
         compilationUnit->linkToEngine(v4);
@@ -1024,7 +1024,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         } else if (property->propType() == QMetaType::QVariant) {
             if (property->isVarProperty()) {
                 QV4::Scope scope(v4);
-                QV4::ScopedValue wrappedObject(scope, QV4::QObjectWrapper::wrap(QV8Engine::getV4(engine), createdSubObject));
+                QV4::ScopedValue wrappedObject(scope, QV4::QObjectWrapper::wrap(engine->handle(), createdSubObject));
                 _vmeMetaObject->setVMEProperty(property->coreIndex(), wrappedObject);
             } else {
                 QVariant value = QVariant::fromValue(createdSubObject);

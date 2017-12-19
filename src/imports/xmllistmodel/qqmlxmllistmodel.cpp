@@ -923,8 +923,7 @@ QQmlV4Handle QQuickXmlListModel::get(int index) const
         return QQmlV4Handle(Encode::undefined());
 
     QQmlEngine *engine = qmlContext(this)->engine();
-    QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
-    ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
+    ExecutionEngine *v4engine = engine->handle();
     Scope scope(v4engine);
     Scoped<Object> o(scope, v4engine->newObject());
     ScopedString name(scope);

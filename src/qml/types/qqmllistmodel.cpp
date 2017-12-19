@@ -1865,7 +1865,7 @@ QQmlListModel *QQmlListModel::createWithOwner(QQmlListModel *newOwner)
 QV4::ExecutionEngine *QQmlListModel::engine() const
 {
     if (m_engine == 0) {
-        m_engine  = QQmlEnginePrivate::get(qmlEngine(this))->v4engine();
+        m_engine  = qmlEngine(this)->handle();
     }
 
     return m_engine;
@@ -2682,7 +2682,7 @@ void QQmlListModelParser::applyBindings(QObject *obj, QV4::CompiledData::Compila
 {
     QQmlListModel *rv = static_cast<QQmlListModel *>(obj);
 
-    rv->m_engine = QV8Engine::getV4(qmlEngine(rv));
+    rv->m_engine = qmlEngine(rv)->handle();
 
     const QV4::CompiledData::Unit *qmlUnit = compilationUnit->data;
 

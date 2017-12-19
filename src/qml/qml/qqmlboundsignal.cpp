@@ -74,8 +74,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 {
     init(ctxt, scope);
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
-    QV4::ExecutionEngine *v4 = ep->v4engine();
+    QV4::ExecutionEngine *v4 = engine()->handle();
 
     QString function;
 
@@ -123,7 +122,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     // It's important to call init first, because m_index gets remapped in case of cloned signals.
     init(ctxt, scope);
 
-    QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
+    QV4::ExecutionEngine *engine = ctxt->engine->handle();
 
     QList<QByteArray> signalParameters = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).parameterNames();
     if (!signalParameters.isEmpty()) {
@@ -182,8 +181,10 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     if (!expressionFunctionValid())
         return;
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
-    QV4::Scope scope(ep->v4engine());
+    QQmlEngine *qmlengine = engine();
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlengine);
+    QV4::ExecutionEngine *v4 = qmlengine->handle();
+    QV4::Scope scope(v4);
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
@@ -215,7 +216,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             if (!*reinterpret_cast<void* const *>(a[ii + 1]))
                 jsCall->args[ii] = QV4::Primitive::nullValue();
             else
-                jsCall->args[ii] = QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1]));
+                jsCall->args[ii] = QV4::QObjectWrapper::wrap(v4, *reinterpret_cast<QObject* const *>(a[ii + 1]));
         } else {
             jsCall->args[ii] = scope.engine->fromVariant(QVariant(type, a[ii + 1]));
         }
@@ -233,8 +234,9 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
     if (!expressionFunctionValid())
         return;
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
-    QV4::Scope scope(ep->v4engine());
+    QQmlEngine *qmlengine = engine();
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlengine);
+    QV4::Scope scope(qmlengine->handle());
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 

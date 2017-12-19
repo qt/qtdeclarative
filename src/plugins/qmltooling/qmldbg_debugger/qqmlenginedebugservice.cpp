@@ -758,7 +758,7 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
     QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(object);
     Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine(object)->handle());
+    QV4::ExecutionEngine *v4 = qmlEngine(object)->handle();
     QV4::Scope scope(v4);
 
     int lineNumber = 0;

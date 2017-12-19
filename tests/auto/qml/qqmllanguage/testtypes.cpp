@@ -136,7 +136,7 @@ void CustomBinding::componentComplete()
         QQmlContextData *context = QQmlContextData::get(qmlContext(this));
 
         QQmlProperty property(m_target, name, qmlContext(this));
-        QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
+        QV4::Scope scope(qmlEngine(this)->handle());
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(scope.engine->rootContext(), context, m_target));
         QQmlBinding *qmlBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
                                                       compilationUnit->runtimeFunctions[bindingId], m_target, context, qmlContext);

@@ -494,6 +494,8 @@ public:
 #endif
     }
 
+    QV4::ReturnedValue global();
+
 private:
 #if QT_CONFIG(qml_debug)
     QScopedPointer<QV4::Debugging::Debugger> m_debugger;

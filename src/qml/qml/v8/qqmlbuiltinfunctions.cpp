@@ -1116,8 +1116,7 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
         }
     };
 
-    QV8Engine *v8engine = scope.engine->v8Engine;
-    QQmlEngine *engine = v8engine->engine();
+    QQmlEngine *engine = scope.engine->qmlEngine();
 
     QQmlContextData *context = scope.engine->callingQmlContext();
     Q_ASSERT(context);
@@ -1244,8 +1243,7 @@ ReturnedValue QtObject::method_createComponent(const FunctionObject *b, const Va
     if (argc < 1 || argc > 3)
         THROW_GENERIC_ERROR("Qt.createComponent(): Invalid arguments");
 
-    QV8Engine *v8engine = scope.engine->v8Engine;
-    QQmlEngine *engine = v8engine->engine();
+    QQmlEngine *engine = scope.engine->qmlEngine();
 
     QQmlContextData *context = scope.engine->callingQmlContext();
     Q_ASSERT(context);

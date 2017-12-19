@@ -290,8 +290,9 @@ QJSEngine::QJSEngine()
 
 QJSEngine::QJSEngine(QObject *parent)
     : QObject(*new QJSEnginePrivate, parent)
-    , d(new QV8Engine(this))
+    , m_v4Engine(new QV4::ExecutionEngine)
 {
+    m_v4Engine->v8Engine = new QV8Engine(this, m_v4Engine);
     checkForApplicationInstance();
 
     QJSEnginePrivate::addToDebugServer(this);
@@ -302,8 +303,9 @@ QJSEngine::QJSEngine(QObject *parent)
 */
 QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
     : QObject(dd, parent)
-    , d(new QV8Engine(this))
+    , m_v4Engine(new QV4::ExecutionEngine)
 {
+    m_v4Engine->v8Engine = new QV8Engine(this, m_v4Engine);
     checkForApplicationInstance();
 }
 
@@ -317,11 +319,12 @@ QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
 QJSEngine::~QJSEngine()
 {
     QJSEnginePrivate::removeFromDebugServer(this);
-    delete d;
+    delete m_v4Engine->v8Engine;
+    delete m_v4Engine;
 }
 
 /*!
-    \fn QV8Engine *QJSEngine::handle() const
+    \fn QV4::ExecutionEngine *QJSEngine::handle() const
     \internal
 */
 
@@ -338,7 +341,7 @@ QJSEngine::~QJSEngine()
 */
 void QJSEngine::collectGarbage()
 {
-    d->m_v4Engine->memoryManager->runGC();
+    m_v4Engine->memoryManager->runGC();
 }
 
 #if QT_DEPRECATED_SINCE(5, 6)
@@ -395,12 +398,12 @@ void QJSEngine::installTranslatorFunctions(const QJSValue &object)
 void QJSEngine::installExtensions(QJSEngine::Extensions extensions, const QJSValue &object)
 {
     QV4::ExecutionEngine *otherEngine = QJSValuePrivate::engine(&object);
-    if (otherEngine && otherEngine != d->m_v4Engine) {
+    if (otherEngine && otherEngine != m_v4Engine) {
         qWarning("QJSEngine: Trying to install extensions from a different engine");
         return;
     }
 
-    QV4::Scope scope(d->m_v4Engine);
+    QV4::Scope scope(m_v4Engine);
     QV4::ScopedObject obj(scope);
     QV4::Value *val = QJSValuePrivate::getValue(&object);
     if (val)
@@ -441,7 +444,7 @@ void QJSEngine::installExtensions(QJSEngine::Extensions extensions, const QJSVal
 */
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
-    QV4::ExecutionEngine *v4 = d->m_v4Engine;
+    QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
     QV4::ScopedValue result(scope);
 
@@ -473,9 +476,9 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 */
 QJSValue QJSEngine::newObject()
 {
-    QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedValue v(scope, d->m_v4Engine->newObject());
-    return QJSValue(d->m_v4Engine, v->asReturnedValue());
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedValue v(scope, m_v4Engine->newObject());
+    return QJSValue(m_v4Engine, v->asReturnedValue());
 }
 
 /*!
@@ -485,12 +488,12 @@ QJSValue QJSEngine::newObject()
 */
 QJSValue QJSEngine::newArray(uint length)
 {
-    QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedArrayObject array(scope, d->m_v4Engine->newArrayObject());
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedArrayObject array(scope, m_v4Engine->newArrayObject());
     if (length < 0x1000)
         array->arrayReserve(length);
     array->setArrayLengthUnchecked(length);
-    return QJSValue(d->m_v4Engine, array.asReturnedValue());
+    return QJSValue(m_v4Engine, array.asReturnedValue());
 }
 
 /*!
@@ -516,7 +519,7 @@ QJSValue QJSEngine::newArray(uint length)
 QJSValue QJSEngine::newQObject(QObject *object)
 {
     Q_D(QJSEngine);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(d);
+    QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
     if (object) {
         QQmlData *ddata = QQmlData::get(object, true);
@@ -543,7 +546,7 @@ QJSValue QJSEngine::newQObject(QObject *object)
 
 QJSValue QJSEngine::newQMetaObject(const QMetaObject* metaObject) {
     Q_D(QJSEngine);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(d);
+    QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
     QV4::ScopedValue v(scope, QV4::QMetaObjectWrapper::create(v4, metaObject));
     return QJSValue(v4, v->asReturnedValue());
@@ -571,10 +574,9 @@ QJSValue QJSEngine::newQMetaObject(const QMetaObject* metaObject) {
 */
 QJSValue QJSEngine::globalObject() const
 {
-    Q_D(const QJSEngine);
-    QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedValue v(scope, d->m_v4Engine->globalObject);
-    return QJSValue(d->m_v4Engine, v->asReturnedValue());
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedValue v(scope, m_v4Engine->globalObject);
+    return QJSValue(m_v4Engine, v->asReturnedValue());
 }
 
 /*!
@@ -583,10 +585,9 @@ QJSValue QJSEngine::globalObject() const
  */
 QJSValue QJSEngine::create(int type, const void *ptr)
 {
-    Q_D(QJSEngine);
-    QV4::Scope scope(d->m_v4Engine);
+    QV4::Scope scope(m_v4Engine);
     QV4::ScopedValue v(scope, scope.engine->metaTypeToJS(type, ptr));
-    return QJSValue(d->m_v4Engine, v->asReturnedValue());
+    return QJSValue(m_v4Engine, v->asReturnedValue());
 }
 
 /*!
@@ -726,7 +727,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 
 QJSEnginePrivate *QJSEnginePrivate::get(QV4::ExecutionEngine *e)
 {
-    return e->v8Engine->publicEngine()->d_func();
+    return e->jsEngine()->d_func();
 }
 
 QJSEnginePrivate::~QJSEnginePrivate()

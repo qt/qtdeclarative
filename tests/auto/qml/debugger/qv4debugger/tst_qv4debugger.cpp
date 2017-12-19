@@ -78,7 +78,7 @@ public:
         emit evaluateFinished();
     }
 
-    QV4::ExecutionEngine *v4Engine() { return QV8Engine::getV4(this); }
+    QV4::ExecutionEngine *v4Engine() { return handle(); }
 
     Q_INVOKABLE void injectFunction(const QString &functionName, InjectedFunction injectedFunction)
     {
@@ -487,7 +487,7 @@ void tst_qv4debugger::conditionalBreakPoint()
 void tst_qv4debugger::conditionalBreakPointInQml()
 {
     QQmlEngine engine;
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(&engine);
+    QV4::ExecutionEngine *v4 = engine.handle();
     QV4Debugger *v4Debugger = new QV4Debugger(v4);
     v4->setDebugger(v4Debugger);
 

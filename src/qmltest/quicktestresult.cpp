@@ -143,7 +143,7 @@ public Q_SLOTS:
         QImageWriter writer(filePath);
         if (!writer.write(m_image)) {
             QQmlEngine *engine = qmlContext(this)->engine();
-            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
+            QV4::ExecutionEngine *v4 = engine->handle();
             v4->throwError(QStringLiteral("Can't save to %1: %2").arg(filePath, writer.errorString()));
         }
     }

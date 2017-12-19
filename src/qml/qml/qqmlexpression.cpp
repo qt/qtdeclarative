@@ -74,7 +74,7 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, const QString &expr, QOb
 void QQmlExpressionPrivate::init(QQmlContextData *ctxt, QV4::Function *runtimeFunction, QObject *me)
 {
     expressionFunctionValid = true;
-    QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
+    QV4::ExecutionEngine *engine = ctxt->engine->handle();
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(engine->rootContext(), ctxt, me));
     setupFunction(qmlContext, runtimeFunction);
@@ -266,13 +266,14 @@ QVariant QQmlExpressionPrivate::value(bool *isUndefined)
         return QVariant();
     }
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(q->engine());
+    QQmlEngine *engine = q->engine();
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     QVariant rv;
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
     {
-        QV4::Scope scope(QV8Engine::getV4(ep->v8engine()));
+        QV4::Scope scope(engine->handle());
         QV4::ScopedValue result(scope, v4value(isUndefined));
         if (!hasError())
             rv = scope.engine->toVariant(result, -1);

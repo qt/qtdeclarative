@@ -1524,7 +1524,7 @@ void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
 
 bool QQmlTypeLoader::Blob::isDebugging() const
 {
-    return QV8Engine::getV4(typeLoader()->engine())->debugger() != 0;
+    return typeLoader()->engine()->handle()->debugger() != 0;
 }
 
 bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlError> *errors)
@@ -2097,7 +2097,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     if (isDebugging())
         return false;
 
-    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(typeLoader()->engine());
+    QV4::ExecutionEngine *v4 = typeLoader()->engine()->handle();
     if (!v4)
         return false;
 
@@ -2440,7 +2440,7 @@ bool QQmlTypeData::loadFromSource()
     m_document.reset(new QmlIR::Document(isDebugging()));
     m_document->jsModule.sourceTimeStamp = m_backupSourceCode.sourceTimeStamp();
     QQmlEngine *qmlEngine = typeLoader()->engine();
-    QmlIR::IRBuilder compiler(QV8Engine::get(qmlEngine)->illegalNames());
+    QmlIR::IRBuilder compiler(qmlEngine->handle()->v8Engine->illegalNames());
 
     QString sourceError;
     const QString source = m_backupSourceCode.readAll(&sourceError);
@@ -2828,9 +2828,7 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
     Q_ASSERT(engine);
     Q_ASSERT(!hasEngine());
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-    QV8Engine *v8engine = ep->v8engine();
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(v8engine);
+    QV4::ExecutionEngine *v4 = engine->handle();
 
     m_program = new QV4::Script(v4, 0, m_precompiledScript);
 
@@ -2846,7 +2844,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
 
     Q_ASSERT(parentCtxt && parentCtxt->engine);
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(parentCtxt->engine);
+    QV4::ExecutionEngine *v4 = parentCtxt->engine->handle();
     QV4::Scope scope(v4);
 
     bool shared = m_precompiledScript->data->flags & QV4::CompiledData::Unit::IsSharedLibrary;

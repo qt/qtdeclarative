@@ -837,7 +837,7 @@ const QV4::IdentifierHash &QQmlContextData::propertyNames() const
         if (typeCompilationUnit)
             propertyNameCache = typeCompilationUnit->namedObjectsPerComponent(componentObjectIndex);
         else
-            propertyNameCache = QV4::IdentifierHash(QV8Engine::getV4(engine));
+            propertyNameCache = QV4::IdentifierHash(engine->handle());
     }
     return propertyNameCache;
 }

@@ -713,7 +713,7 @@ void QQmlNativeDebugServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
 {
     TRACE_PROTOCOL("Adding engine" << engine);
     if (engine) {
-        QV4::ExecutionEngine *ee = QV8Engine::getV4(engine->handle());
+        QV4::ExecutionEngine *ee = engine->handle();
         TRACE_PROTOCOL("Adding execution engine" << ee);
         if (ee) {
             NativeDebugger *debugger = new NativeDebugger(this, ee);
@@ -729,7 +729,7 @@ void QQmlNativeDebugServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 {
     TRACE_PROTOCOL("Removing engine" << engine);
     if (engine) {
-        QV4::ExecutionEngine *executionEngine = QV8Engine::getV4(engine->handle());
+        QV4::ExecutionEngine *executionEngine = engine->handle();
         const auto debuggersCopy = m_debuggers;
         for (NativeDebugger *debugger : debuggersCopy) {
             if (debugger->engine() == executionEngine)

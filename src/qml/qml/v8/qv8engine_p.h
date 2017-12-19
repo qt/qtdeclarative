@@ -153,12 +153,11 @@ class Q_QML_PRIVATE_EXPORT QV8Engine
 {
     friend class QJSEngine;
 public:
-    static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }
 //    static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
-    static QV4::ExecutionEngine *getV4(QJSEngine *q) { return q->handle()->m_v4Engine; }
+    static QV4::ExecutionEngine *getV4(QJSEngine *q) { return q->handle(); }
     static QV4::ExecutionEngine *getV4(QV8Engine *d) { return d->m_v4Engine; }
 
-    QV8Engine(QJSEngine* qq);
+    QV8Engine(QJSEngine* qq, QV4::ExecutionEngine *v4);
     virtual ~QV8Engine();
 
     // This enum should be in sync with QQmlEngine::ObjectOwnership
@@ -172,7 +171,6 @@ public:
     void setEngine(QQmlEngine *engine);
     QQmlEngine *engine() { return m_engine; }
     QJSEngine *publicEngine() { return q; }
-    QV4::ReturnedValue global();
     QQmlDelayedCallQueue *delayedCallQueue() { return &m_delayedCallQueue; }
 
     void *xmlHttpRequestData() const { return m_xmlHttpRequestData; }

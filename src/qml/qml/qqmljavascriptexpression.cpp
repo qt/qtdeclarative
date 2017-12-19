@@ -183,7 +183,7 @@ void QQmlJavaScriptExpression::refresh()
 
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(bool *isUndefined)
 {
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(m_context->engine);
+    QV4::ExecutionEngine *v4 = m_context->engine->handle();
     QV4::Scope scope(v4);
     QV4::JSCallData jsCall(scope);
 
@@ -217,7 +217,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
     if (notifyOnValueChanged())
         capture.guards.copyAndClearPrepend(activeGuards);
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionEngine *v4 = m_context->engine->handle();
     callData->thisObject = v4->globalObject;
     if (scopeObject()) {
          QV4::ReturnedValue scope = QV4::QObjectWrapper::wrap(v4, scopeObject());
@@ -414,7 +414,7 @@ QQmlJavaScriptExpression::evalFunction(QQmlContextData *ctxt, QObject *scopeObje
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionEngine *v4 = engine->handle();
     QV4::Scope scope(v4);
 
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, scopeObject));
@@ -444,7 +444,7 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
     QQmlEngine *engine = ctxt->engine;
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionEngine *v4 = engine->handle();
     QV4::Scope scope(v4);
 
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, qmlScope));

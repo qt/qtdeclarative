@@ -60,7 +60,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QV8Engine;
 class QQmlDelayedCallQueue : public QObject
 {
     Q_OBJECT

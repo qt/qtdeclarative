@@ -926,12 +926,14 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
             id -= plainSignals;
 
             if (id < methodCount) {
-                if (!ctxt->engine)
+                QQmlEngine *engine = ctxt->engine;
+                if (!engine)
                     return -1; // We can't run the method
 
-                QQmlEnginePrivate *ep = QQmlEnginePrivate::get(ctxt->engine);
+                QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+                QV4::ExecutionEngine *v4 = engine->handle();
                 ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
-                QV4::Scope scope(ep->v4engine());
+                QV4::Scope scope(v4);
 
 
                 QV4::ScopedFunctionObject function(scope, method(id));
@@ -951,7 +953,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 
                 const unsigned int parameterCount = function->formalParameterCount();
                 QV4::JSCallData jsCallData(scope, parameterCount);
-                *jsCallData->thisObject = ep->v8engine()->global();
+                *jsCallData->thisObject = v4->global();
 
                 for (uint ii = 0; ii < parameterCount; ++ii)
                     jsCallData->args[ii] = scope.engine->fromVariant(*(QVariant *)a[ii + 1]);

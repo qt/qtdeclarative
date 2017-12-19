@@ -1436,8 +1436,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 // XXX used by QSGLoader
 void QQmlComponentPrivate::initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate)
 {
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-    QV4::ExecutionEngine *v4engine = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionEngine *v4engine = engine->handle();
     QV4::Scope scope(v4engine);
 
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));

@@ -542,7 +542,7 @@ public:
         QJSEngine *jsEngine = qjsEngine(this);
         if (!jsEngine)
             return;
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(jsEngine);
+        QV4::ExecutionEngine *v4 = jsEngine->handle();
         if (!v4)
             return;
         QV4::Scope scope(v4);

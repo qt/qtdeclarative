@@ -109,7 +109,7 @@ void SignalTransition::setSignal(const QJSValue &signal)
 
     m_signal = signal;
 
-    QV4::ExecutionEngine *jsEngine = QV8Engine::getV4(QQmlEngine::contextForObject(this)->engine());
+    QV4::ExecutionEngine *jsEngine = QQmlEngine::contextForObject(this)->engine()->handle();
     QV4::Scope scope(jsEngine);
 
     QObject *sender;
@@ -169,7 +169,7 @@ void SignalTransition::connectTriggered()
     const QV4::CompiledData::Binding *binding = m_bindings.at(0);
     Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Script);
 
-    QV4::ExecutionEngine *jsEngine = QV8Engine::getV4(QQmlEngine::contextForObject(this)->engine());
+    QV4::ExecutionEngine *jsEngine = QQmlEngine::contextForObject(this)->engine()->handle();
     QV4::Scope scope(jsEngine);
     QV4::Scoped<QV4::QObjectMethod> qobjectSignal(scope, QJSValuePrivate::convertedToValue(jsEngine, m_signal));
     Q_ASSERT(qobjectSignal);
