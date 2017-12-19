@@ -55,9 +55,13 @@ QT_BEGIN_NAMESPACE
 class QQuickDefaultBusyIndicator : public QQuickItem
 {
     Q_OBJECT
+    Q_PROPERTY(bool running READ isRunning WRITE setRunning)
 
 public:
     explicit QQuickDefaultBusyIndicator(QQuickItem *parent = nullptr);
+
+    bool isRunning() const;
+    void setRunning(bool running);
 
     int elapsed() const;
 

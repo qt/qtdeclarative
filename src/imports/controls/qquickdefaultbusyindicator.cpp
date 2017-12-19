@@ -136,6 +136,17 @@ QQuickDefaultBusyIndicator::QQuickDefaultBusyIndicator(QQuickItem *parent) :
     setFlag(ItemHasContents);
 }
 
+bool QQuickDefaultBusyIndicator::isRunning() const
+{
+    return isVisible();
+}
+
+void QQuickDefaultBusyIndicator::setRunning(bool running)
+{
+    if (running)
+        setVisible(true);
+}
+
 int QQuickDefaultBusyIndicator::elapsed() const
 {
     return m_elapsed;
@@ -144,14 +155,23 @@ int QQuickDefaultBusyIndicator::elapsed() const
 void QQuickDefaultBusyIndicator::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
 {
     QQuickItem::itemChange(change, data);
-    if (change == ItemVisibleHasChanged)
+    switch (change) {
+    case ItemOpacityHasChanged:
+        if (qFuzzyIsNull(data.realValue))
+            setVisible(false);
+        break;
+    case ItemVisibleHasChanged:
         update();
+        break;
+    default:
+        break;
+    }
 }
 
 QSGNode *QQuickDefaultBusyIndicator::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *)
 {
     QQuickDefaultBusyIndicatorNode *node = static_cast<QQuickDefaultBusyIndicatorNode *>(oldNode);
-    if (isVisible() && width() > 0 && height() > 0) {
+    if (isRunning() && width() > 0 && height() > 0) {
         if (!node) {
             node = new QQuickDefaultBusyIndicatorNode(this);
             node->start();
