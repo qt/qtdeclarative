@@ -1035,6 +1035,13 @@ bool QQuickStackView::childMouseEventFilter(QQuickItem *item, QEvent *event)
     return window && !window->mouseGrabberItem();
 }
 
+#if QT_CONFIG(quicktemplates2_multitouch)
+void QQuickStackView::touchEvent(QTouchEvent *event)
+{
+    event->ignore(); // QTBUG-65084
+}
+#endif
+
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickStackView::accessibleRole() const
 {

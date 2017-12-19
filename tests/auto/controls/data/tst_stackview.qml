@@ -1137,4 +1137,26 @@ TestCase {
         compare(control.depth, 1)
         verify(item)
     }
+
+    // QTBUG-65084
+    function test_mouseArea() {
+        var ma = createTemporaryObject(mouseArea, testCase, {width: testCase.width, height: testCase.height})
+        verify(ma)
+
+        var control = stackView.createObject(ma, {width: testCase.width, height: testCase.height})
+        verify(control)
+
+        mousePress(control)
+        verify(ma.pressed)
+
+        mouseRelease(control)
+        verify(!ma.pressed)
+
+        var touch = touchEvent(control)
+        touch.press(0, control).commit()
+        verify(ma.pressed)
+
+        touch.release(0, control).commit()
+        verify(!ma.pressed)
+    }
 }
