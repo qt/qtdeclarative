@@ -144,7 +144,9 @@ public Q_SLOTS:
     void reload();
 
 private Q_SLOTS:
+#if QT_CONFIG(qml_network)
     void requestFinished();
+#endif
     void requestProgress(qint64,qint64);
     void dataCleared();
     void queryCompleted(const QQuickXmlQueryResult &);

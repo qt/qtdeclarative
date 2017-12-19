@@ -354,7 +354,7 @@ void tst_qquickxmllistmodel::xml()
 
     QSignalSpy spy(model, SIGNAL(statusChanged(QQuickXmlListModel::Status)));
     QVERIFY(errorString(model).isEmpty());
-    QCOMPARE(model->property("progress").toDouble(), qreal(0.0));
+    QCOMPARE(model->property("progress").toDouble(), qreal(1.0));
     QCOMPARE(qvariant_cast<QQuickXmlListModel::Status>(model->property("status")),
              QQuickXmlListModel::Loading);
     QTRY_COMPARE(spy.count(), 1); spy.clear();
@@ -410,6 +410,13 @@ void tst_qquickxmllistmodel::headers()
     QTRY_COMPARE(qvariant_cast<QQuickXmlListModel::Status>(model->property("status")),
                  QQuickXmlListModel::Ready);
 
+    // It doesn't do a network request for a local file
+    QCOMPARE(factory.lastSentHeaders.count(), 0);
+
+    model->setProperty("source", QUrl("http://localhost/filethatdoesnotexist.xml"));
+    QTRY_COMPARE(qvariant_cast<QQuickXmlListModel::Status>(model->property("status")),
+                 QQuickXmlListModel::Error);
+
     QVariantMap expectedHeaders;
     expectedHeaders["Accept"] = "application/xml,*/*";
 
@@ -433,7 +440,7 @@ void tst_qquickxmllistmodel::source()
     QSignalSpy spy(model, SIGNAL(statusChanged(QQuickXmlListModel::Status)));
 
     QVERIFY(errorString(model).isEmpty());
-    QCOMPARE(model->property("progress").toDouble(), qreal(0.0));
+    QCOMPARE(model->property("progress").toDouble(), qreal(1.0));
     QCOMPARE(qvariant_cast<QQuickXmlListModel::Status>(model->property("status")),
              QQuickXmlListModel::Loading);
     QTRY_COMPARE(spy.count(), 1); spy.clear();
@@ -447,7 +454,7 @@ void tst_qquickxmllistmodel::source()
     if (model->property("source").toString().isEmpty())
         QCOMPARE(qvariant_cast<QQuickXmlListModel::Status>(model->property("status")),
                  QQuickXmlListModel::Null);
-    QCOMPARE(model->property("progress").toDouble(), qreal(0.0));
+    QCOMPARE(model->property("progress").toDouble(), qreal(source.isLocalFile() ? 1.0 : 0.0));
     QTRY_COMPARE(spy.count(), 1); spy.clear();
     QCOMPARE(qvariant_cast<QQuickXmlListModel::Status>(model->property("status")),
              QQuickXmlListModel::Loading);

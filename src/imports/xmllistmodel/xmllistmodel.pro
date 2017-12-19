@@ -3,7 +3,8 @@ TARGET  = qmlxmllistmodelplugin
 TARGETPATH = QtQuick/XmlListModel
 IMPORT_VERSION = 2.0
 
-QT = network xmlpatterns qml-private  core-private
+QT = xmlpatterns qml-private  core-private
+qtConfig(qml-network): QT += network
 
 SOURCES += qqmlxmllistmodel.cpp plugin.cpp
 HEADERS += qqmlxmllistmodel_p.h

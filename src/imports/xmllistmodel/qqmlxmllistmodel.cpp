@@ -54,8 +54,10 @@
 #include <QXmlResultItems>
 #include <QXmlNodeModelIndex>
 #include <QBuffer>
+#if QT_CONFIG(qml_network)
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#endif
 #include <QTimer>
 #include <QMutex>
 
@@ -542,7 +544,10 @@ class QQuickXmlListModelPrivate : public QAbstractItemModelPrivate
 public:
     QQuickXmlListModelPrivate()
         : isComponentComplete(true), size(0), highestRole(Qt::UserRole)
-        , reply(0), status(QQuickXmlListModel::Null), progress(0.0)
+#if QT_CONFIG(qml_network)
+        , reply(0)
+#endif
+        , status(QQuickXmlListModel::Null), progress(0.0)
         , queryId(-1), roleObjects(), redirectCount(0) {}
 
 
@@ -555,6 +560,7 @@ public:
         emit q->statusChanged(status);
     }
 
+#if QT_CONFIG(qml_network)
     void deleteReply() {
         Q_Q(QQuickXmlListModel);
         if (reply) {
@@ -563,6 +569,7 @@ public:
             reply = 0;
         }
     }
+#endif
 
     bool isComponentComplete;
     QUrl src;
@@ -574,7 +581,9 @@ public:
     QStringList roleNames;
     int highestRole;
 
+#if QT_CONFIG(qml_network)
     QNetworkReply *reply;
+#endif
     QQuickXmlListModel::Status status;
     QString errorString;
     qreal progress;
@@ -1036,10 +1045,12 @@ void QQuickXmlListModel::reload()
     if (d->size < 0)
         d->size = 0;
 
+#if QT_CONFIG(qml_network)
     if (d->reply) {
         d->reply->abort();
         d->deleteReply();
     }
+#endif
 
     if (!d->xml.isEmpty()) {
         d->queryId = QQuickXmlQueryEngine::instance(qmlEngine(this))->doQuery(d->query, d->namespaces, d->xml.toUtf8(), &d->roleObjects, d->keyRoleResultsCache);
@@ -1050,7 +1061,19 @@ void QQuickXmlListModel::reload()
         d->notifyQueryStarted(false);
         QTimer::singleShot(0, this, SLOT(dataCleared()));
 
+    } else if (QQmlFile::isLocalFile(d->src)) {
+        QFile file(QQmlFile::urlToLocalFileOrQrc(d->src));
+        QByteArray data = file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray();
+        d->notifyQueryStarted(false);
+        if (data.isEmpty()) {
+            d->queryId = XMLLISTMODEL_CLEAR_ID;
+            QTimer::singleShot(0, this, SLOT(dataCleared()));
+        } else {
+            d->queryId = QQuickXmlQueryEngine::instance(qmlEngine(this))->doQuery(
+                        d->query, d->namespaces, data, &d->roleObjects, d->keyRoleResultsCache);
+        }
     } else {
+#if QT_CONFIG(qml_network)
         d->notifyQueryStarted(true);
         QNetworkRequest req(d->src);
         req.setRawHeader("Accept", "application/xml,*/*");
@@ -1058,11 +1081,17 @@ void QQuickXmlListModel::reload()
         QObject::connect(d->reply, SIGNAL(finished()), this, SLOT(requestFinished()));
         QObject::connect(d->reply, SIGNAL(downloadProgress(qint64,qint64)),
                          this, SLOT(requestProgress(qint64,qint64)));
+#else
+        d->queryId = XMLLISTMODEL_CLEAR_ID;
+        d->notifyQueryStarted(false);
+        QTimer::singleShot(0, this, SLOT(dataCleared()));
+#endif
     }
 }
 
 #define XMLLISTMODEL_MAX_REDIRECT 16
 
+#if QT_CONFIG(qml_network)
 void QQuickXmlListModel::requestFinished()
 {
     Q_D(QQuickXmlListModel);
@@ -1108,6 +1137,7 @@ void QQuickXmlListModel::requestFinished()
         emit progressChanged(d->progress);
     }
 }
+#endif
 
 void QQuickXmlListModel::requestProgress(qint64 received, qint64 total)
 {
