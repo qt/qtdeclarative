@@ -59,10 +59,6 @@ T.Dial {
         objectName: "dial-handle-incomplete"
     }
 
-    contentItem: Item {
-        objectName: "dial-contentItem-incomplete"
-    }
-
     background: Item {
         objectName: "dial-background-incomplete"
     }

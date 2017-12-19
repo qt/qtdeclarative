@@ -59,10 +59,6 @@ Simple.Dial {
         objectName: "dial-handle-override"
     }
 
-    contentItem: Item {
-        objectName: "dial-contentItem-override"
-    }
-
     background: Item {
         objectName: "dial-background-override"
     }
