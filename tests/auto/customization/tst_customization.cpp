@@ -131,6 +131,7 @@ typedef QHash<QObject *, QString> QObjectNameHash;
 Q_GLOBAL_STATIC(QObjectNameHash, qt_objectNames)
 Q_GLOBAL_STATIC(QStringList, qt_createdQObjects)
 Q_GLOBAL_STATIC(QStringList, qt_destroyedQObjects)
+Q_GLOBAL_STATIC(QStringList, qt_destroyedParentQObjects)
 
 extern "C" Q_DECL_EXPORT void qt_addQObject(QObject *object)
 {
@@ -152,6 +153,13 @@ extern "C" Q_DECL_EXPORT void qt_removeQObject(QObject *object)
     if (!objectName.isEmpty())
         qt_destroyedQObjects()->append(objectName);
     qt_objectNames()->remove(object);
+
+    QObject *parent = object->parent();
+    if (parent) {
+        QString parentName = parent->objectName();
+        if (!parentName.isEmpty())
+            qt_destroyedParentQObjects()->append(parentName);
+    }
 }
 
 void tst_customization::init()
@@ -179,6 +187,7 @@ void tst_customization::reset()
 {
     qt_createdQObjects()->clear();
     qt_destroyedQObjects()->clear();
+    qt_destroyedParentQObjects()->clear();
 }
 
 QObject* tst_customization::createControl(const QString &name, QString *error)
@@ -247,6 +256,11 @@ void tst_customization::creation()
 
     QVERIFY2(qt_createdQObjects()->isEmpty(), qPrintable("unexpectedly created: " + qt_createdQObjects->join(", ")));
     QVERIFY2(qt_destroyedQObjects()->isEmpty(), qPrintable("unexpectedly destroyed: " + qt_destroyedQObjects->join(", ") + " were unexpectedly destroyed"));
+
+    QEXPECT_FAIL("Default:BusyIndicator", "TODO: remove internal IDs", Abort);
+    QEXPECT_FAIL("Default:DelayButton", "TODO: remove internal IDs", Abort);
+
+    QVERIFY2(qt_destroyedParentQObjects()->isEmpty(), qPrintable("delegates/children of: " + qt_destroyedParentQObjects->join(", ") + " were unexpectedly destroyed"));
 }
 
 void tst_customization::comboPopup()

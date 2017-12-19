@@ -54,7 +54,6 @@ T.Dial {
     }
 
     handle: Image {
-        id: handleItem
         x: background.x + background.width / 2 - handle.width / 2
         y: background.y + background.height / 2 - handle.height / 2
         width: 14
