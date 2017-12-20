@@ -227,6 +227,9 @@ TestCase {
         compare(control.checked, true)
         compare(control.enabled, false)
 
+        var textSpy = signalSpy.createObject(control, { target: control, signalName: "textChanged" })
+        verify(textSpy.valid)
+
         // changes via action
         control.action.text = "Action"
         control.action.icon.name = "action"
@@ -240,6 +243,7 @@ TestCase {
         compare(control.checkable, false) // propagates
         compare(control.checked, false) // propagates
         compare(control.enabled, true) // propagates
+        compare(textSpy.count, 1)
 
         // changes via button
         control.text = "Button"
@@ -260,6 +264,27 @@ TestCase {
         compare(control.action.checkable, true) // propagates
         compare(control.action.checked, true) // propagates
         compare(control.action.enabled, true) // does NOT propagate
+        compare(textSpy.count, 2)
+
+        // remove the action so that only the button's text is left
+        control.action = null
+        compare(control.text, "Button")
+        compare(textSpy.count, 2)
+
+        // setting an action while button has text shouldn't cause a change in the button's effective text
+        var secondAction = createTemporaryObject(action, testCase)
+        verify(secondAction)
+        secondAction.text = "SecondAction"
+        control.action = secondAction
+        compare(control.text, "Button")
+        compare(textSpy.count, 2)
+
+        // test setting an action with empty text
+        var thirdAction = createTemporaryObject(action, testCase)
+        verify(thirdAction)
+        control.action = thirdAction
+        compare(control.text, "Button")
+        compare(textSpy.count, 2)
     }
 
     Component {
@@ -400,6 +425,7 @@ TestCase {
         keyClick(Qt.Key_H, Qt.AltModifier)
         compare(clickSpy.count, 4)
 
+        control.text = undefined
         control.action = action.createObject(control, {text: "&Action"})
 
         var actionSpy = signalSpy.createObject(control, {target: control.action, signalName: "triggered"})

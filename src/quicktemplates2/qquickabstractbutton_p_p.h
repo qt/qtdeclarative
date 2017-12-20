@@ -90,11 +90,15 @@ public:
     QQuickAbstractButton *findCheckedButton() const;
     QList<QQuickAbstractButton *> findExclusiveButtons() const;
 
+    void actionTextChange();
+    void setText(const QString &text, bool isExplicit);
+
     void click();
     void trigger();
     void toggle(bool value);
 
     QString text;
+    bool explicitText;
     bool down;
     bool explicitDown;
     bool pressed;
