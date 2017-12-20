@@ -24,6 +24,7 @@
             "label": "QML network support",
             "purpose": "Provides network transparency.",
             "section": "QML",
+            "condition": "features.network",
             "output": [ "publicFeature" ]
         },
         "qml-debug": {
