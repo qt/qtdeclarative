@@ -94,6 +94,8 @@ public Q_SLOTS:
     bool keyReleaseChar(const QString &character, int modifiers, int delay);
     bool keyClickChar(const QString &character, int modifiers, int delay);
 
+    Q_REVISION(2) bool keySequence(const QVariant &keySequence);
+
     bool mousePress(QObject *item, qreal x, qreal y, int button,
                     int modifiers, int delay);
     bool mouseRelease(QObject *item, qreal x, qreal y, int button,

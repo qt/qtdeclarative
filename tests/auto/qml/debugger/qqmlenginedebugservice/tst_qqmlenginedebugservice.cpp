@@ -99,6 +99,8 @@ private:
                              const QmlDebugObjectReference &oref,
                              bool recursive) const;
 
+    void getContexts();
+
     QQmlDebugConnection *m_conn;
     QQmlEngineDebugClient *m_dbg;
     QQmlEngine *m_engine;
@@ -138,6 +140,7 @@ private slots:
     void regression_QTCREATORBUG_7451();
     void queryObjectWithNonStreamableTypes();
     void asynchronousCreate();
+    void invalidContexts();
 };
 
 QmlDebugObjectReference tst_QQmlEngineDebugService::findRootObject(
@@ -246,6 +249,22 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
 
         QVERIFY(pmeta.isValid());
     }
+}
+
+void tst_QQmlEngineDebugService::getContexts()
+{
+    bool success = false;
+
+    m_dbg->queryAvailableEngines(&success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+
+    QList<QmlDebugEngineReference> engines = m_dbg->engines();
+    QCOMPARE(engines.count(), 1);
+    m_dbg->queryRootContexts(engines.first().debugId, &success);
+
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 }
 
 void tst_QQmlEngineDebugService::initTestCase()
@@ -1287,6 +1306,26 @@ void tst_QQmlEngineDebugService::asynchronousCreate() {
     QVERIFY(success);
 
     QTRY_COMPARE(m_dbg->object().idString, QLatin1String("asyncRect"));
+}
+
+void tst_QQmlEngineDebugService::invalidContexts()
+{
+    getContexts();
+    const int base = m_dbg->rootContext().contexts.count();
+    QQmlContext context(m_engine);
+    getContexts();
+    QCOMPARE(m_dbg->rootContext().contexts.count(), base + 1);
+    QQmlContextData *contextData = QQmlContextData::get(&context);
+    contextData->invalidate();
+    getContexts();
+    QCOMPARE(m_dbg->rootContext().contexts.count(), base);
+    QQmlContextData *rootData = QQmlContextData::get(m_engine->rootContext());
+    rootData->invalidate();
+    getContexts();
+    QCOMPARE(m_dbg->rootContext().contexts.count(), 0);
+    contextData->setParent(rootData); // makes context valid again, but not root.
+    getContexts();
+    QCOMPARE(m_dbg->rootContext().contexts.count(), 0);
 }
 
 int main(int argc, char *argv[])

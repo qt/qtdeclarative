@@ -1808,6 +1808,7 @@ Module {
         Property { name: "wordSpacing"; type: "double" }
         Property { name: "hintingPreference"; type: "HintingPreference" }
         Property { name: "kerning"; type: "bool" }
+        Property { name: "preferShaping"; type: "bool" }
         Method { name: "toString"; type: "string" }
     }
     Component {
@@ -3994,12 +3995,13 @@ Module {
         prototype: "QQuickImplicitSizeItem"
         exports: [
             "QtQuick/Text 2.0",
+            "QtQuick/Text 2.10",
             "QtQuick/Text 2.2",
             "QtQuick/Text 2.3",
             "QtQuick/Text 2.6",
             "QtQuick/Text 2.9"
         ]
-        exportMetaObjectRevisions: [0, 2, 3, 6, 9]
+        exportMetaObjectRevisions: [0, 10, 2, 3, 6, 9]
         Enum {
             name: "HAlignment"
             values: {
@@ -4185,12 +4187,13 @@ Module {
         exports: [
             "QtQuick/TextEdit 2.0",
             "QtQuick/TextEdit 2.1",
+            "QtQuick/TextEdit 2.10",
             "QtQuick/TextEdit 2.2",
             "QtQuick/TextEdit 2.3",
             "QtQuick/TextEdit 2.6",
             "QtQuick/TextEdit 2.7"
         ]
-        exportMetaObjectRevisions: [0, 1, 2, 3, 6, 7]
+        exportMetaObjectRevisions: [0, 1, 10, 2, 3, 6, 7]
         Enum {
             name: "HAlignment"
             values: {
@@ -4292,6 +4295,7 @@ Module {
         Property { name: "rightPadding"; revision: 6; type: "double" }
         Property { name: "bottomPadding"; revision: 6; type: "double" }
         Property { name: "preeditText"; revision: 7; type: "string"; isReadonly: true }
+        Property { name: "tabStopDistance"; revision: 10; type: "double" }
         Signal { name: "preeditTextChanged"; revision: 7 }
         Signal { name: "contentSizeChanged" }
         Signal {
@@ -4374,6 +4378,11 @@ Module {
         Signal { name: "leftPaddingChanged"; revision: 6 }
         Signal { name: "rightPaddingChanged"; revision: 6 }
         Signal { name: "bottomPaddingChanged"; revision: 6 }
+        Signal {
+            name: "tabStopDistanceChanged"
+            revision: 10
+            Parameter { name: "distance"; type: "double" }
+        }
         Method { name: "selectAll" }
         Method { name: "selectWord" }
         Method {

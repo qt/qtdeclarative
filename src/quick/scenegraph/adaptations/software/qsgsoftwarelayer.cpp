@@ -229,9 +229,6 @@ void QSGSoftwareLayer::grab()
     if (m_pixmap.size() != m_size) {
         m_pixmap = QPixmap(m_size);
         m_pixmap.setDevicePixelRatio(m_device_pixel_ratio);
-        // This fill here is wasteful, but necessary because it is the only way
-        // to force a QImage based pixmap to have an alpha channel.
-        m_pixmap.fill(Qt::transparent);
     }
 
     // Render texture.

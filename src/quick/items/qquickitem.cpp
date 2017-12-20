@@ -3253,7 +3253,7 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
             // because there can be multiple handlers...
             that->setAcceptedMouseButtons(Qt::AllButtons);
             QQuickItemPrivate *p = QQuickItemPrivate::get(that);
-            p->extra.value().pointerHandlers.append(pointerHandler);
+            p->extra.value().pointerHandlers.prepend(pointerHandler);
         } else {
             QQuickWindow *thisWindow = qmlobject_cast<QQuickWindow *>(o);
             QQuickItem *item = that;

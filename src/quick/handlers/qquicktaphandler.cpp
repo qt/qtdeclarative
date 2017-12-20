@@ -301,6 +301,8 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
             // on release, ungrab after emitting changed signals
             setExclusiveGrab(point, press);
         }
+        if (cancel)
+            emit canceled(point);
     }
 }
 

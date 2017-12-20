@@ -56,6 +56,7 @@
 #include <QPainterPath>
 #include <QColor>
 #include <QBrush>
+#include <QElapsedTimer>
 #include <private/qopenglcontext_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -167,6 +168,8 @@ public:
 
     static QQuickShapePrivate *get(QQuickShape *item) { return item->d_func(); }
 
+    static void asyncShapeReady(void *data);
+
     bool spChanged;
     QQuickShape::RendererType rendererType;
     bool async;
@@ -174,6 +177,10 @@ public:
     QQuickAbstractPathRenderer *renderer;
     QVector<QQuickShapePath *> sp;
     bool enableVendorExts;
+    bool syncTimingActive = false;
+    int syncTimingTotalDirty;
+    int syncTimeCounter = 0;
+    QElapsedTimer syncTimer;
 };
 
 #if QT_CONFIG(opengl)

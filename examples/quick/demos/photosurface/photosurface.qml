@@ -181,7 +181,7 @@ Window {
         radius: 2
         antialiasing: true
         height: flick.height * (flick.height / flick.contentHeight) - (width - anchors.margins) * 2
-        y:  flick.contentY * (flick.height / flick.contentHeight)
+        y: (flick.contentY - flick.originY) * (flick.height / flick.contentHeight)
         NumberAnimation on opacity { id: vfade; to: 0; duration: 500 }
         onYChanged: { opacity = 1.0; scrollFadeTimer.restart() }
     }
@@ -197,7 +197,7 @@ Window {
         radius: 2
         antialiasing: true
         width: flick.width * (flick.width / flick.contentWidth) - (height - anchors.margins) * 2
-        x:  flick.contentX * (flick.width / flick.contentWidth)
+        x: (flick.contentX - flick.originY) * (flick.width / flick.contentWidth)
         NumberAnimation on opacity { id: hfade; to: 0; duration: 500 }
         onXChanged: { opacity = 1.0; scrollFadeTimer.restart() }
     }

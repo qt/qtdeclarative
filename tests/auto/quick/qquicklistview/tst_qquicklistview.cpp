@@ -254,9 +254,13 @@ private slots:
 
     void QTBUG_50105();
     void keyNavigationEnabled();
+    void QTBUG_61269_appendDuringScrollDown();
     void QTBUG_50097_stickyHeader_positionViewAtIndex();
+    void QTBUG_63974_stickyHeader_positionViewAtIndex_Contain();
     void itemFiltered();
     void releaseItems();
+
+    void QTBUG_34576_velocityZero();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -4681,29 +4685,24 @@ void tst_QQuickListView::indexAt_itemAt()
 void tst_QQuickListView::incrementalModel()
 {
     QScopedPointer<QQuickView> window(createView());
-    QSKIP("QTBUG-30716");
 
     IncrementalModel model;
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("testModel", &model);
 
     window->setSource(testFileUrl("displaylist.qml"));
-    qApp->processEvents();
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
-    listview->forceLayout();
 
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != 0);
-
-    listview->forceLayout();
-    QTRY_COMPARE(listview->count(), 20);
+    QTRY_COMPARE(listview->count(), 35);
 
     listview->positionViewAtIndex(10, QQuickListView::Beginning);
-
-    listview->forceLayout();
-    QTRY_COMPARE(listview->count(), 25);
+    QTRY_COMPARE(listview->count(), 45);
 }
 
 void tst_QQuickListView::onAdd()
@@ -8468,6 +8467,37 @@ void tst_QQuickListView::keyNavigationEnabled()
     QCOMPARE(listView->currentIndex(), 1);
 }
 
+void tst_QQuickListView::QTBUG_61269_appendDuringScrollDown()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("appendDuringScrollDown.qml"));
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickListView *listView = qobject_cast<QQuickListView *>(window->rootObject());
+    QQuickItem *highlightItem = listView->highlightItem();
+    QVERIFY(listView);
+    QCOMPARE(listView->isKeyNavigationEnabled(), true);
+    listView->setHighlightMoveVelocity(400);
+    listView->setHighlightMoveDuration(-1); // let it animate
+    listView->setFocus(true);
+    QVERIFY(listView->hasActiveFocus());
+    qreal highlightYLimit = listView->height() - highlightItem->height(); // should be 200
+
+    for (int i = 1; i < 15; ++i) {
+        QTest::keyClick(window.data(), Qt::Key_Down);
+
+        // Wait for the highlight movement animation to finish.
+        QTRY_COMPARE(highlightItem->y(), 40.0 * i);
+
+        // As we scroll down, the QML will append rows to its own model.
+        // Make sure the highlighted row and highlight item stay within the view.
+        // In QTBUG-62864 and QTBUG-61269, it would go off the bottom.
+        QVERIFY(highlightItem->y() - listView->contentY() <= highlightYLimit);
+    }
+}
+
 void tst_QQuickListView::QTBUG_48870_fastModelUpdates()
 {
     StressTestModel model;
@@ -8532,6 +8562,46 @@ void tst_QQuickListView::QTBUG_50097_stickyHeader_positionViewAtIndex()
     QTRY_COMPARE(listview->contentY(), -100.0); // back to the same position: header visible, items not under the header.
 }
 
+void tst_QQuickListView::QTBUG_63974_stickyHeader_positionViewAtIndex_Contain()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("qtbug63974.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
+    QVERIFY(listview != 0);
+
+    const qreal headerSize = 20;
+    const qreal footerSize = 20;
+    const qreal itemSize = 20;
+    const int itemCount = 30;
+    const qreal contentHeight = itemCount * itemSize;
+
+    const qreal initialY = listview->contentY();
+    const qreal endPosition = contentHeight + footerSize - listview->height();
+
+    QVERIFY(qFuzzyCompare(initialY, -headerSize));
+
+    listview->positionViewAtIndex(itemCount - 1, QQuickListView::Contain);
+    QTRY_COMPARE(listview->contentY(), endPosition);
+
+    listview->positionViewAtIndex(0, QQuickListView::Contain);
+    QTRY_COMPARE(listview->contentY(), -headerSize);
+
+    listview->positionViewAtIndex(itemCount - 1, QQuickListView::Visible);
+    QTRY_COMPARE(listview->contentY(), endPosition);
+
+    listview->positionViewAtIndex(0, QQuickListView::Visible);
+    QTRY_COMPARE(listview->contentY(), -headerSize);
+
+    listview->positionViewAtIndex(itemCount - 1, QQuickListView::SnapPosition);
+    QTRY_COMPARE(listview->contentY(), endPosition);
+
+    listview->positionViewAtIndex(0, QQuickListView::SnapPosition);
+    QTRY_COMPARE(listview->contentY(), -headerSize);
+}
+
 void tst_QQuickListView::itemFiltered()
 {
     QStringListModel model(QStringList() << "one" << "two" << "three" << "four" << "five" << "six");
@@ -8573,6 +8643,55 @@ void tst_QQuickListView::releaseItems()
 
     // don't crash (QTBUG-61294)
     listview->setModel(123);
+}
+
+void tst_QQuickListView::QTBUG_34576_velocityZero()
+{
+    QQuickView *window = new QQuickView(0);
+    window->setGeometry(0,0,240,320);
+
+    QQmlContext *ctxt = window->rootContext();
+
+    QString filename(testFile("qtbug34576.qml"));
+    window->setSource(QUrl::fromLocalFile(filename));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QVERIFY(listview);
+    QQuickItem *contentItem = listview->contentItem();
+    QVERIFY(contentItem);
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+
+    QSignalSpy horizontalVelocitySpy(listview, SIGNAL(horizontalVelocityChanged()));
+
+    // currentIndex is initialized to 0
+    QCOMPARE(listview->currentIndex(), 0);
+
+    // set currentIndex to last item currently visible item
+    window->rootObject()->setProperty("horizontalVelocityZeroCount", QVariant(0));
+    listview->setCurrentIndex(2);
+    QTRY_COMPARE(window->rootObject()->property("current").toInt(), 2);
+    QCOMPARE(horizontalVelocitySpy.count(), 0);
+    QCOMPARE(window->rootObject()->property("horizontalVelocityZeroCount").toInt(), 0);
+
+    QSignalSpy currentIndexChangedSpy(listview, SIGNAL(currentIndexChanged()));
+
+    // click button which increases currentIndex
+    QTest::mousePress(window, Qt::LeftButton, 0, QPoint(295,215));
+    QTest::mouseRelease(window, Qt::LeftButton, 0, QPoint(295,215));
+
+    // verify that currentIndexChanged is triggered
+    QTRY_VERIFY(currentIndexChangedSpy.count() > 0);
+
+    // since we have set currentIndex to an item out of view, the listview will scroll
+    QTRY_COMPARE(window->rootObject()->property("current").toInt(), 3);
+    QTRY_VERIFY(horizontalVelocitySpy.count() > 0);
+
+    // velocity should be always > 0.0
+    QTRY_COMPARE(window->rootObject()->property("horizontalVelocityZeroCount").toInt(), 0);
+
+    delete window;
 }
 
 QTEST_MAIN(tst_QQuickListView)

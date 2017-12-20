@@ -121,6 +121,23 @@ bool QuickTestEvent::keyClickChar(const QString &character, int modifiers, int d
     return true;
 }
 
+// valueToKeySequence() is copied from qquickshortcut.cpp
+static QKeySequence valueToKeySequence(const QVariant &value)
+{
+    if (value.type() == QVariant::Int)
+        return QKeySequence(static_cast<QKeySequence::StandardKey>(value.toInt()));
+    return QKeySequence::fromString(value.toString());
+}
+
+bool QuickTestEvent::keySequence(const QVariant &keySequence)
+{
+    QWindow *window = activeWindow();
+    if (!window)
+        return false;
+    QTest::keySequence(window, valueToKeySequence(keySequence));
+    return true;
+}
+
 namespace QtQuickTest
 {
     enum MouseAction { MousePress, MouseRelease, MouseClick, MouseDoubleClick, MouseMove, MouseDoubleClickSequence };

@@ -93,8 +93,9 @@ bool QQuickDragHandler::wantsEventPoint(QQuickEventPoint *point)
 
 void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
-    if (grabber == this && stateChange == QQuickEventPoint::GrabExclusive)
-        // In case the grab got handled over from another grabber, we might not get the Press
+    if (grabber == this && stateChange == QQuickEventPoint::GrabExclusive && m_targetStartPos.isNull())
+        // In case the grab got handled over from another grabber, we might not get the Press.
+        // Therefore, prefer the m_targetStartPos we got when it got Pressed.
         initializeTargetStartPos(point);
     enforceConstraints();
     QQuickSinglePointHandler::onGrabChanged(grabber, stateChange, point);
@@ -167,7 +168,7 @@ void QQuickDragHandler::enforceAxisConstraints(QPointF *localPos)
 
 void QQuickDragHandler::initializeTargetStartPos(QQuickEventPoint *point)
 {
-    if (target() && target()->parentItem() && m_targetStartPos.isNull()) {    // prefer the m_targetStartPos we got when it got Pressed.
+    if (target() && target()->parentItem()) {
         m_targetStartPos = target()->parentItem()->mapToScene(target()->position());
         if (!target()->contains(point->position())) {
             // If pressed outside of target item, move the target item so that the touchpoint is in its center,

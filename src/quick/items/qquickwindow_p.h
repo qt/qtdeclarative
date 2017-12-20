@@ -167,6 +167,7 @@ public:
 
     // the device-specific event instances which are reused during event delivery
     mutable QVector<QQuickPointerEvent *> pointerEventInstances;
+    QQuickPointerEvent *queryPointerEventInstance(QQuickPointerDevice *device, QEvent::Type eventType = QEvent::None) const;
     QQuickPointerEvent *pointerEventInstance(QQuickPointerDevice *device, QEvent::Type eventType = QEvent::None) const;
 
     // delivery of pointer events:

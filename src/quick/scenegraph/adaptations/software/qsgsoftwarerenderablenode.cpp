@@ -134,73 +134,58 @@ void QSGSoftwareRenderableNode::update()
 {
     // Update the Node properties
     m_isDirty = true;
+    m_isOpaque = false;
 
     QRectF boundingRect;
 
     switch (m_nodeType) {
     case QSGSoftwareRenderableNode::SimpleRect:
-        if (m_handle.simpleRectNode->color().alpha() == 255 && !m_transform.isRotating())
+        if (m_handle.simpleRectNode->color().alpha() == 255)
             m_isOpaque = true;
-        else
-            m_isOpaque = false;
 
         boundingRect = m_handle.simpleRectNode->rect();
         break;
     case QSGSoftwareRenderableNode::SimpleTexture:
-        if (!m_handle.simpleTextureNode->texture()->hasAlphaChannel() && !m_transform.isRotating())
+        if (!m_handle.simpleTextureNode->texture()->hasAlphaChannel())
             m_isOpaque = true;
-        else
-            m_isOpaque = false;
 
         boundingRect = m_handle.simpleTextureNode->rect();
         break;
     case QSGSoftwareRenderableNode::Image:
-        // There isn't a way to tell, so assume it's not
-        m_isOpaque = false;
+        m_isOpaque = !m_handle.imageNode->pixmap().hasAlphaChannel();
 
         boundingRect = m_handle.imageNode->rect().toRect();
         break;
     case QSGSoftwareRenderableNode::Painter:
-        if (m_handle.painterNode->opaquePainting() && !m_transform.isRotating())
+        if (m_handle.painterNode->opaquePainting())
             m_isOpaque = true;
-        else
-            m_isOpaque = false;
 
         boundingRect = QRectF(0, 0, m_handle.painterNode->size().width(), m_handle.painterNode->size().height());
         break;
     case QSGSoftwareRenderableNode::Rectangle:
-        if (m_handle.rectangleNode->isOpaque() && !m_transform.isRotating())
+        if (m_handle.rectangleNode->isOpaque())
             m_isOpaque = true;
-        else
-            m_isOpaque = false;
 
         boundingRect = m_handle.rectangleNode->rect();
         break;
     case QSGSoftwareRenderableNode::Glyph:
         // Always has alpha
-        m_isOpaque = false;
-
         boundingRect = m_handle.glpyhNode->boundingRect();
         break;
     case QSGSoftwareRenderableNode::NinePatch:
-        // Difficult to tell, assume non-opaque
-        m_isOpaque = false;
+        m_isOpaque = m_handle.ninePatchNode->isOpaque();
 
         boundingRect = m_handle.ninePatchNode->bounds();
         break;
     case QSGSoftwareRenderableNode::SimpleRectangle:
-        if (m_handle.simpleRectangleNode->color().alpha() == 255 && !m_transform.isRotating())
+        if (m_handle.simpleRectangleNode->color().alpha() == 255)
             m_isOpaque = true;
-        else
-            m_isOpaque = false;
 
         boundingRect = m_handle.simpleRectangleNode->rect();
         break;
     case QSGSoftwareRenderableNode::SimpleImage:
-        if (!m_handle.simpleImageNode->texture()->hasAlphaChannel() && !m_transform.isRotating())
+        if (!m_handle.simpleImageNode->texture()->hasAlphaChannel())
             m_isOpaque = true;
-        else
-            m_isOpaque = false;
 
         boundingRect = m_handle.simpleImageNode->rect();
         break;
@@ -211,16 +196,17 @@ void QSGSoftwareRenderableNode::update()
         break;
 #endif
     case QSGSoftwareRenderableNode::RenderNode:
-        if (m_handle.renderNode->flags().testFlag(QSGRenderNode::OpaqueRendering) && !m_transform.isRotating())
+        if (m_handle.renderNode->flags().testFlag(QSGRenderNode::OpaqueRendering))
             m_isOpaque = true;
-        else
-            m_isOpaque = false;
 
         boundingRect = m_handle.renderNode->rect();
         break;
     default:
         break;
     }
+
+    if (m_transform.isRotating())
+        m_isOpaque = false;
 
     const QRectF transformedRect = m_transform.mapRect(boundingRect);
     m_boundingRectMin = toRectMin(transformedRect);

@@ -1231,10 +1231,12 @@ QString QQmlImportsPrivate::resolvedUri(const QString &dir_arg, QQmlImportDataba
     stableRelativePath.replace(Backslash, Slash);
 
     // remove optional versioning in dot notation from uri
-    int lastSlash = stableRelativePath.lastIndexOf(Slash);
-    if (lastSlash >= 0) {
-        int versionDot = stableRelativePath.indexOf(Dot, lastSlash);
-        if (versionDot >= 0)
+    int versionDot = stableRelativePath.lastIndexOf(Dot);
+    if (versionDot >= 0) {
+        int nextSlash = stableRelativePath.indexOf(Slash, versionDot);
+        if (nextSlash >= 0)
+            stableRelativePath.remove(versionDot, nextSlash - versionDot);
+        else
             stableRelativePath = stableRelativePath.left(versionDot);
     }
 
@@ -1539,7 +1541,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     if (isImplicitImport) {
         for (QList<QQmlImportInstance *>::const_iterator it = nameSpace->imports.constBegin();
              it != nameSpace->imports.constEnd(); ++it) {
-            if ((*it)->uri == importUri) {
+            if ((*it)->url == url) {
                 (*it)->implicitlyImported = true;
                 return true;
             }

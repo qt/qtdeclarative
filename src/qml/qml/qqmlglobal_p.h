@@ -193,16 +193,6 @@ do { \
     return QObjectPrivate::get(sender)->isSignalConnected(signalIdx); \
 } while (0)
 
-struct QQmlGraphics_DerivedObject : public QObject
-{
-    void setParent_noEvent(QObject *parent) {
-        bool sce = d_ptr->sendChildEvents;
-        d_ptr->sendChildEvents = false;
-        setParent(parent);
-        d_ptr->sendChildEvents = sce;
-    }
-};
-
 /*!
     Returns true if the case of \a fileName is equivalent to the file case of
     \a fileName on disk, and false otherwise.
@@ -230,7 +220,11 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int length = -1);
 */
 inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
 {
-    static_cast<QQmlGraphics_DerivedObject *>(object)->setParent_noEvent(parent);
+    QObjectPrivate *d_ptr = QObjectPrivate::get(object);
+    bool sce = d_ptr->sendChildEvents;
+    d_ptr->sendChildEvents = false;
+    object->setParent(parent);
+    d_ptr->sendChildEvents = sce;
 }
 
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeProvider

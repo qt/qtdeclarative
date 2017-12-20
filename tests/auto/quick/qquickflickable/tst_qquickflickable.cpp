@@ -38,6 +38,7 @@
 #include <private/qqmlvaluetype_p.h>
 #include <math.h>
 #include "../../shared/util.h"
+#include "../shared/geometrytestutil.h"
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
 
@@ -790,7 +791,14 @@ void tst_qquickflickable::resizeContent()
     QCOMPARE(obj->contentWidth(), 300.);
     QCOMPARE(obj->contentHeight(), 300.);
 
+    QQuickFlickablePrivate *fp = QQuickFlickablePrivate::get(obj);
+    QSizeChangeListener sizeListener(fp->contentItem);
+
     QMetaObject::invokeMethod(root, "resizeContent");
+    for (const QSize sizeOnGeometryChanged : sizeListener) {
+        // Check that we have the correct size on all signals
+        QCOMPARE(sizeOnGeometryChanged, QSize(600, 600));
+    }
 
     QCOMPARE(obj->contentX(), 100.);
     QCOMPARE(obj->contentY(), 100.);
