@@ -970,7 +970,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
         Keys.onEscapePressed: {
             console.log("escapeItem is handling escape");
-            event.accepted = true;
+            // event.accepted is set to true by default for the specific key handlers
         }
     }
 
