@@ -2,7 +2,7 @@ TEMPLATE = subdirs
 CONFIG += ordered
 include($$OUT_PWD/qml/qtqml-config.pri)
 include($$OUT_PWD/quick/qtquick-config.pri)
-QT_FOR_CONFIG += qml quick-private
+QT_FOR_CONFIG += qml qml-private quick-private
 SUBDIRS += \
     qml
 
@@ -18,8 +18,9 @@ qtHaveModule(gui):qtConfig(animation) {
 
 SUBDIRS += \
     plugins \
-    imports \
-    qmldevtools
+    imports
+
+qtConfig(qml-devtools): SUBDIRS += qmldevtools
 
 qtConfig(qml-network) {
     QT_FOR_CONFIG += network
