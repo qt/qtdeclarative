@@ -1969,7 +1969,6 @@ void QQmlDelegateModelItem::incubateObject(
     QQmlComponentPrivate *componentPriv = QQmlComponentPrivate::get(component);
 
     incubatorPriv->compilationUnit = componentPriv->compilationUnit;
-    incubatorPriv->compilationUnit->addref();
     incubatorPriv->enginePriv = enginePriv;
     incubatorPriv->creator.reset(new QQmlObjectCreator(context, componentPriv->compilationUnit, componentPriv->creationContext));
     incubatorPriv->subComponentToCreate = componentPriv->start;
