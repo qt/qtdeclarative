@@ -109,6 +109,9 @@ class tst_customization : public QQmlDataTest
     Q_OBJECT
 
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
+
     void init();
     void cleanup();
 
@@ -135,6 +138,38 @@ Q_GLOBAL_STATIC(QObjectNameHash, qt_objectNames)
 Q_GLOBAL_STATIC(QStringList, qt_createdQObjects)
 Q_GLOBAL_STATIC(QStringList, qt_destroyedQObjects)
 Q_GLOBAL_STATIC(QStringList, qt_destroyedParentQObjects)
+static int qt_unparentedItemCount = 0;
+
+class ItemParentListener : public QQuickItem
+{
+    Q_OBJECT
+
+public:
+    ItemParentListener()
+    {
+        m_slotIndex = metaObject()->indexOfSlot("onParentChanged()");
+        m_signalIndex = QMetaObjectPrivate::signalIndex(QMetaMethod::fromSignal(&QQuickItem::parentChanged));
+    }
+
+    int signalIndex() const { return m_signalIndex; }
+    int slotIndex() const { return m_slotIndex; }
+
+public slots:
+    void onParentChanged()
+    {
+        const QQuickItem *item = qobject_cast<QQuickItem *>(sender());
+        if (!item)
+            return;
+
+        if (!item->parentItem())
+            ++qt_unparentedItemCount;
+    }
+
+private:
+    int m_slotIndex;
+    int m_signalIndex;
+};
+static ItemParentListener *qt_itemParentListener = nullptr;
 
 extern "C" Q_DECL_EXPORT void qt_addQObject(QObject *object)
 {
@@ -148,6 +183,12 @@ extern "C" Q_DECL_EXPORT void qt_addQObject(QObject *object)
             qt_objectNames()->insert(object, objectName);
         }
     });
+
+    if (qt_itemParentListener) {
+        static const int signalIndex = qt_itemParentListener->signalIndex();
+        static const int slotIndex = qt_itemParentListener->slotIndex();
+        QMetaObject::connect(object, signalIndex, qt_itemParentListener, slotIndex);
+    }
 }
 
 extern "C" Q_DECL_EXPORT void qt_removeQObject(QObject *object)
@@ -163,6 +204,19 @@ extern "C" Q_DECL_EXPORT void qt_removeQObject(QObject *object)
         if (!parentName.isEmpty())
             qt_destroyedParentQObjects()->append(parentName);
     }
+}
+
+void tst_customization::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+
+    qt_itemParentListener = new ItemParentListener;
+}
+
+void tst_customization::cleanupTestCase()
+{
+    delete qt_itemParentListener;
+    qt_itemParentListener = nullptr;
 }
 
 void tst_customization::init()
@@ -188,6 +242,7 @@ void tst_customization::cleanup()
 
 void tst_customization::reset()
 {
+    qt_unparentedItemCount = 0;
     qt_createdQObjects()->clear();
     qt_destroyedQObjects()->clear();
     qt_destroyedParentQObjects()->clear();
@@ -320,7 +375,11 @@ void tst_customization::override()
     QFETCH(QString, nonDeferred);
     QFETCH(bool, identify);
 
-    QQuickStyle::setStyle(testFile("styles/" + style));
+    const QString testStyle = testFile("styles/" + style);
+    if (QDir(testStyle).exists())
+        QQuickStyle::setStyle(testStyle);
+    else
+        QQuickStyle::setStyle(style);
 
     QString qml;
     qml += QString("objectName: '%1-%2-override'; ").arg(type.toLower()).arg(style);
@@ -332,6 +391,15 @@ void tst_customization::override()
     QString error;
     QScopedPointer<QObject> control(createControl(type, qml, &error));
     QVERIFY2(control, qPrintable(error));
+
+    // If there are no intentional IDs in the default delegates nor in the overridden custom
+    // delegates, no item should get un-parented during the creation process. An item being
+    // unparented means that a delegate got destroyed, so there must be an internal ID in one
+    // of the delegates in the tested style.
+    if (!identify && nonDeferred.isEmpty()) {
+        QEXPECT_FAIL("Default:Tumbler", "TODO: remove internal ID", Continue);
+        QCOMPARE(qt_unparentedItemCount, 0);
+    }
 
     // <control>-<style>-override
     QString controlName = type.toLower() + "-" + style + "-override";
