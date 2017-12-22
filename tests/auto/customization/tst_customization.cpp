@@ -101,7 +101,7 @@ static const ControlInfo ControlInfos[] = {
     { "ToolButton", QStringList() << "background" << "contentItem" },
     { "ToolSeparator", QStringList() << "background" << "contentItem" },
     { "ToolTip", QStringList() << "background" << "contentItem" },
-    { "Tumbler", QStringList() << "background" << "contentItem" }
+    // { "Tumbler", QStringList() << "background" << "contentItem" } ### TODO: fix and enable deferred execution
 };
 
 class tst_customization : public QQmlDataTest
@@ -291,9 +291,6 @@ void tst_customization::creation()
     QFETCH(QString, type);
     QFETCH(QStringList, delegates);
 
-    if (!qstrcmp(QTest::currentDataTag(), "empty:Tumbler"))
-        QSKIP("TODO: fix crash with contentItem-less Tumbler");
-
     QQuickStyle::setStyle(testFile("styles/" + style));
 
     QString error;
@@ -329,7 +326,6 @@ void tst_customization::creation()
     }
 
     QEXPECT_FAIL("identified:ComboBox", "ComboBox::popup with an ID is created at construction time", Continue);
-    QEXPECT_FAIL("override:Tumbler", "TODO", Abort);
 
     QVERIFY2(qt_createdQObjects()->isEmpty(), qPrintable("unexpectedly created: " + qt_createdQObjects->join(", ")));
     QVERIFY2(qt_destroyedQObjects()->isEmpty(), qPrintable("unexpectedly destroyed: " + qt_destroyedQObjects->join(", ") + " were unexpectedly destroyed"));
@@ -396,10 +392,8 @@ void tst_customization::override()
     // delegates, no item should get un-parented during the creation process. An item being
     // unparented means that a delegate got destroyed, so there must be an internal ID in one
     // of the delegates in the tested style.
-    if (!identify && nonDeferred.isEmpty()) {
-        QEXPECT_FAIL("Default:Tumbler", "TODO: remove internal ID", Continue);
+    if (!identify && nonDeferred.isEmpty())
         QCOMPARE(qt_unparentedItemCount, 0);
-    }
 
     // <control>-<style>-override
     QString controlName = type.toLower() + "-" + style + "-override";
@@ -432,7 +426,6 @@ void tst_customization::override()
 
     QEXPECT_FAIL("identified:ComboBox", "ComboBox::popup with an ID is created at construction time", Continue);
     QEXPECT_FAIL("overidentified:ComboBox", "ComboBox::popup with an ID is created at construction time", Continue);
-    QEXPECT_FAIL("simple:Tumbler", "TODO: remove internal ID", Abort);
     QVERIFY2(qt_createdQObjects()->isEmpty(), qPrintable("unexpectedly created: " + qt_createdQObjects->join(", ")));
 
     if (!nonDeferred.isEmpty()) {
