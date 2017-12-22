@@ -393,7 +393,6 @@ void tst_customization::override()
     // unparented means that a delegate got destroyed, so there must be an internal ID in one
     // of the delegates in the tested style.
     if (!identify && nonDeferred.isEmpty()) {
-        QEXPECT_FAIL("Material:BusyIndicator", "TODO: remove internal ID in the OpacityAnimator", Continue);
         QEXPECT_FAIL("Universal:ApplicationWindow", "ApplicationWindow.qml contains an intentionally unparented FocusRectangle", Continue);
         QCOMPARE(qt_unparentedItemCount, 0);
     }

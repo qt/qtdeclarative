@@ -197,6 +197,17 @@ void QQuickMaterialBusyIndicator::setColor(QColor color)
     update();
 }
 
+bool QQuickMaterialBusyIndicator::isRunning() const
+{
+    return isVisible();
+}
+
+void QQuickMaterialBusyIndicator::setRunning(bool running)
+{
+    if (running)
+        setVisible(true);
+}
+
 int QQuickMaterialBusyIndicator::elapsed() const
 {
     return m_elapsed;
@@ -205,14 +216,23 @@ int QQuickMaterialBusyIndicator::elapsed() const
 void QQuickMaterialBusyIndicator::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
 {
     QQuickItem::itemChange(change, data);
-    if (change == ItemVisibleHasChanged)
+    switch (change) {
+    case ItemOpacityHasChanged:
+        if (qFuzzyIsNull(data.realValue))
+            setVisible(false);
+        break;
+    case ItemVisibleHasChanged:
         update();
+        break;
+    default:
+        break;
+    }
 }
 
 QSGNode *QQuickMaterialBusyIndicator::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     QQuickMaterialBusyIndicatorNode *node = static_cast<QQuickMaterialBusyIndicatorNode *>(oldNode);
-    if (isVisible() && width() > 0 && height() > 0) {
+    if (isRunning() && width() > 0 && height() > 0) {
         if (!node) {
             node = new QQuickMaterialBusyIndicatorNode(this);
             node->start();
