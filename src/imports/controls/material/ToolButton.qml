@@ -64,7 +64,7 @@ T.ToolButton {
         implicitWidth: 48
         implicitHeight: 48
 
-        readonly property bool square: control.contentItem.implicitWidth <= control.contentItem.implicitHeight
+        readonly property bool square: control.contentItem.width <= control.contentItem.height
 
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2
