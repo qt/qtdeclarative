@@ -251,7 +251,7 @@ void tst_customization::reset()
 QObject* tst_customization::createControl(const QString &name, const QString &qml, QString *error)
 {
     QQmlComponent component(engine);
-    component.setData("import QtQuick 2.9; import QtQuick.Controls 2.2; " + name.toUtf8() + " { " + qml.toUtf8() + " }", QUrl());
+    component.setData("import QtQuick 2.9; import QtQuick.Window 2.2; import QtQuick.Controls 2.2; " + name.toUtf8() + " { " + qml.toUtf8() + " }", QUrl());
     QObject *obj = component.create();
     if (!obj)
         *error = component.errorString();
@@ -356,7 +356,7 @@ void tst_customization::override_data()
         QTest::newRow(qPrintable("overidentified:" + control.type)) << "identified" << control.type << control.delegates << "identified" << true;
 
     // test that the built-in styles don't have undesired IDs in their delegates
-    const QStringList styles = QStringList() << "Default"; // ### TODO: QQuickStyle::availableStyles();
+    const QStringList styles = QStringList() << "Default" << "Material" << "Universal"; // ### TODO: QQuickStyle::availableStyles();
     for (const QString &style : styles) {
         for (const ControlInfo &control : ControlInfos)
             QTest::newRow(qPrintable(style + ":" + control.type)) << style << control.type << control.delegates << "" << false;
@@ -392,8 +392,11 @@ void tst_customization::override()
     // delegates, no item should get un-parented during the creation process. An item being
     // unparented means that a delegate got destroyed, so there must be an internal ID in one
     // of the delegates in the tested style.
-    if (!identify && nonDeferred.isEmpty())
+    if (!identify && nonDeferred.isEmpty()) {
+        QEXPECT_FAIL("Material:BusyIndicator", "TODO: remove internal ID in the OpacityAnimator", Continue);
+        QEXPECT_FAIL("Universal:ApplicationWindow", "ApplicationWindow.qml contains an intentionally unparented FocusRectangle", Continue);
         QCOMPARE(qt_unparentedItemCount, 0);
+    }
 
     // <control>-<style>-override
     QString controlName = type.toLower() + "-" + style + "-override";
