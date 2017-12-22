@@ -201,6 +201,90 @@ TestCase {
         compare(iconSpy.count, 5)
     }
 
+    function test_action_data() {
+        return [
+            { tag: "implicit text", property: "text",
+                                    initButton: undefined, initAction: "Action",
+                                    assignExpected: "Action", assignChanged: true,
+                                    resetExpected: "", resetChanged: true },
+            { tag: "explicit text", property: "text",
+                                    initButton: "Button", initAction: "Action",
+                                    assignExpected: "Button", assignChanged: false,
+                                    resetExpected: "Button", resetChanged: false },
+            { tag: "empty button text", property: "text",
+                                    initButton: "", initAction: "Action",
+                                    assignExpected: "", assignChanged: false,
+                                    resetExpected: "", resetChanged: false },
+            { tag: "empty action text", property: "text",
+                                    initButton: "Button", initAction: "",
+                                    assignExpected: "Button", assignChanged: false,
+                                    resetExpected: "Button", resetChanged: false },
+            { tag: "empty both text", property: "text",
+                                    initButton: undefined, initAction: "",
+                                    assignExpected: "", assignChanged: false,
+                                    resetExpected: "", resetChanged: false },
+
+            { tag: "modify button text", property: "text",
+                                    initButton: undefined, initAction: "Action",
+                                    assignExpected: "Action", assignChanged: true,
+                                    modifyButton: "Button2",
+                                    modifyButtonExpected: "Button2", modifyButtonChanged: true,
+                                    resetExpected: "Button2", resetChanged: false },
+            { tag: "modify implicit action text", property: "text",
+                                    initButton: undefined, initAction: "Action",
+                                    assignExpected: "Action", assignChanged: true,
+                                    modifyAction: "Action2",
+                                    modifyActionExpected: "Action2", modifyActionChanged: true,
+                                    resetExpected: "", resetChanged: true },
+            { tag: "modify explicit action text", property: "text",
+                                    initButton: "Button", initAction: "Action",
+                                    assignExpected: "Button", assignChanged: false,
+                                    modifyAction: "Action2",
+                                    modifyActionExpected: "Button", modifyActionChanged: false,
+                                    resetExpected: "Button", resetChanged: false },
+        ]
+    }
+
+    function test_action(data) {
+        var control = createTemporaryObject(button, testCase)
+        verify(control)
+        control[data.property] = data.initButton
+
+        var act = action.createObject(control)
+        act[data.property] = data.initAction
+
+        var spy = signalSpy.createObject(control, {target: control, signalName: data.property + "Changed"})
+        verify(spy.valid)
+
+        // assign action
+        spy.clear()
+        control.action = act
+        compare(control[data.property], data.assignExpected)
+        compare(spy.count, data.assignChanged ? 1 : 0)
+
+        // modify button
+        if (data.hasOwnProperty("modifyButton")) {
+            spy.clear()
+            control[data.property] = data.modifyButton
+            compare(control[data.property], data.modifyButtonExpected)
+            compare(spy.count, data.modifyButtonChanged ? 1 : 0)
+        }
+
+        // modify action
+        if (data.hasOwnProperty("modifyAction")) {
+            spy.clear()
+            act[data.property] = data.modifyAction
+            compare(control[data.property], data.modifyActionExpected)
+            compare(spy.count, data.modifyActionChanged ? 1 : 0)
+        }
+
+        // reset action
+        spy.clear()
+        control.action = null
+        compare(control[data.property], data.resetExpected)
+        compare(spy.count, data.resetChanged ? 1 : 0)
+    }
+
     Component {
         id: actionButton
         AbstractButton {
@@ -215,7 +299,7 @@ TestCase {
         }
     }
 
-    function test_action() {
+    function test_actionButton() {
         var control = createTemporaryObject(actionButton, testCase)
         verify(control)
 
