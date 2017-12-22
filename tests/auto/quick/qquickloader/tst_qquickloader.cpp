@@ -75,8 +75,6 @@ public:
     tst_QQuickLoader();
 
 private slots:
-    void cleanup();
-
     void sourceOrComponent();
     void sourceOrComponent_data();
     void clear();
@@ -116,16 +114,7 @@ private slots:
     void QTBUG_30183();
 
     void sourceComponentGarbageCollection();
-
-private:
-    QQmlEngine engine;
 };
-
-void tst_QQuickLoader::cleanup()
-{
-    // clear components. otherwise we even bypass the test server by using the cache.
-    engine.clearComponentCache();
-}
 
 tst_QQuickLoader::tst_QQuickLoader()
 {
@@ -143,6 +132,7 @@ void tst_QQuickLoader::sourceOrComponent()
     if (error)
         QTest::ignoreMessage(QtWarningMsg, errorString.toUtf8().constData());
 
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray(
             "import QtQuick 2.0\n"
@@ -219,6 +209,8 @@ void tst_QQuickLoader::sourceOrComponent_data()
 
 void tst_QQuickLoader::clear()
 {
+    QQmlEngine engine;
+
     {
         QQmlComponent component(&engine);
         component.setData(QByteArray(
@@ -285,6 +277,7 @@ void tst_QQuickLoader::clear()
 
 void tst_QQuickLoader::urlToComponent()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQuick 2.0\n"
                 "Loader {\n"
@@ -308,6 +301,7 @@ void tst_QQuickLoader::urlToComponent()
 
 void tst_QQuickLoader::componentToUrl()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/SetSourceComponent.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
@@ -330,6 +324,7 @@ void tst_QQuickLoader::componentToUrl()
 
 void tst_QQuickLoader::anchoredLoader()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/AnchoredLoader.qml"));
     QQuickItem *rootItem = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(rootItem != 0);
@@ -351,6 +346,7 @@ void tst_QQuickLoader::anchoredLoader()
 
 void tst_QQuickLoader::sizeLoaderToItem()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/SizeToItem.qml"));
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader != 0);
@@ -392,6 +388,7 @@ void tst_QQuickLoader::sizeLoaderToItem()
 
 void tst_QQuickLoader::sizeItemToLoader()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/SizeToLoader.qml"));
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader != 0);
@@ -428,6 +425,7 @@ void tst_QQuickLoader::sizeItemToLoader()
 
 void tst_QQuickLoader::noResize()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/NoResize.qml"));
     QQuickItem* item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item != 0);
@@ -441,6 +439,7 @@ void tst_QQuickLoader::networkRequestUrl()
 {
     ThreadedTestHTTPServer server(dataDirectory());
 
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     const QString qml = "import QtQuick 2.0\nLoader { property int signalCount : 0; source: \"" + server.baseUrl().toString() + "/Rect120x60.qml\"; onLoaded: signalCount += 1 }";
     component.setData(qml.toUtf8(), testFileUrl("../dummy.qml"));
@@ -464,6 +463,7 @@ void tst_QQuickLoader::networkComponent()
 {
     ThreadedTestHTTPServer server(dataDirectory(), TestHTTPServer::Delay);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     const QString qml = "import QtQuick 2.0\n"
                         "import \"" + server.baseUrl().toString() + "/\" as NW\n"
@@ -496,6 +496,7 @@ void tst_QQuickLoader::failNetworkRequest()
 
     QTest::ignoreMessage(QtWarningMsg, QString(server.baseUrl().toString() + "/IDontExist.qml: File not found").toUtf8());
 
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     const QString qml = "import QtQuick 2.0\nLoader { property int did_load: 123; source: \"" + server.baseUrl().toString() + "/IDontExist.qml\"; onLoaded: did_load=456 }";
     component.setData(qml.toUtf8(), server.url("/dummy.qml"));
@@ -515,6 +516,8 @@ void tst_QQuickLoader::failNetworkRequest()
 
 void tst_QQuickLoader::active()
 {
+    QQmlEngine engine;
+
     // check that the item isn't instantiated until active is set to true
     {
         QQmlComponent component(&engine, testFileUrl("active.1.qml"));
@@ -711,6 +714,7 @@ void tst_QQuickLoader::initialPropertyValues()
     foreach (const QString &warning, expectedWarnings)
         QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
     QObject *object = component.beginCreate(engine.rootContext());
     QVERIFY(object != 0);
@@ -735,6 +739,7 @@ void tst_QQuickLoader::initialPropertyValues()
 
 void tst_QQuickLoader::initialPropertyValuesBinding()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("initialPropertyValues.binding.qml"));
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -772,6 +777,7 @@ void tst_QQuickLoader::initialPropertyValuesError()
     foreach (const QString &warning, expectedWarnings)
         QTest::ignoreMessage(QtWarningMsg, warning.toUtf8().constData());
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
     QObject *object = component.create();
     QVERIFY(object != 0);
@@ -784,6 +790,7 @@ void tst_QQuickLoader::initialPropertyValuesError()
 // QTBUG-9241
 void tst_QQuickLoader::deleteComponentCrash()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("crash.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
@@ -806,6 +813,7 @@ void tst_QQuickLoader::deleteComponentCrash()
 
 void tst_QQuickLoader::nonItem()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("nonItem.qml"));
 
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
@@ -824,6 +832,7 @@ void tst_QQuickLoader::nonItem()
 
 void tst_QQuickLoader::vmeErrors()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("vmeErrors.qml"));
     QString err = testFileUrl("VmeError.qml").toString() + ":6:26: Cannot assign object type QObject with no default method";
     QTest::ignoreMessage(QtWarningMsg, err.toLatin1().constData());
@@ -837,6 +846,7 @@ void tst_QQuickLoader::vmeErrors()
 // QTBUG-13481
 void tst_QQuickLoader::creationContext()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("creationContext.qml"));
 
     QObject *o = component.create();
@@ -849,6 +859,7 @@ void tst_QQuickLoader::creationContext()
 
 void tst_QQuickLoader::QTBUG_16928()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("QTBUG_16928.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
@@ -861,6 +872,7 @@ void tst_QQuickLoader::QTBUG_16928()
 
 void tst_QQuickLoader::implicitSize()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("implicitSize.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
@@ -888,6 +900,7 @@ void tst_QQuickLoader::implicitSize()
 
 void tst_QQuickLoader::QTBUG_17114()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("QTBUG_17114.qml"));
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(item);
@@ -918,6 +931,7 @@ void tst_QQuickLoader::asynchronous()
     QFETCH(QUrl, qmlFile);
     QFETCH(QStringList, expectedWarnings);
 
+    QQmlEngine engine;
     PeriodicIncubationController *controller = new PeriodicIncubationController;
     QQmlIncubationController *previous = engine.incubationController();
     engine.setIncubationController(controller);
@@ -958,6 +972,7 @@ void tst_QQuickLoader::asynchronous()
 
 void tst_QQuickLoader::asynchronous_clear()
 {
+    QQmlEngine engine;
     PeriodicIncubationController *controller = new PeriodicIncubationController;
     QQmlIncubationController *previous = engine.incubationController();
     engine.setIncubationController(controller);
@@ -1007,6 +1022,7 @@ void tst_QQuickLoader::asynchronous_clear()
 
 void tst_QQuickLoader::simultaneousSyncAsync()
 {
+    QQmlEngine engine;
     PeriodicIncubationController *controller = new PeriodicIncubationController;
     QQmlIncubationController *previous = engine.incubationController();
     engine.setIncubationController(controller);
@@ -1074,6 +1090,7 @@ void tst_QQuickLoader::asyncToSync1()
 
 void tst_QQuickLoader::asyncToSync2()
 {
+    QQmlEngine engine;
     PeriodicIncubationController *controller = new PeriodicIncubationController;
     QQmlIncubationController *previous = engine.incubationController();
     engine.setIncubationController(controller);
@@ -1107,6 +1124,7 @@ void tst_QQuickLoader::asyncToSync2()
 
 void tst_QQuickLoader::loadedSignal()
 {
+    QQmlEngine engine;
     PeriodicIncubationController *controller = new PeriodicIncubationController;
     QQmlIncubationController *previous = engine.incubationController();
     engine.setIncubationController(controller);
@@ -1154,6 +1172,7 @@ void tst_QQuickLoader::loadedSignal()
 
 void tst_QQuickLoader::parented()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("parented.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(root);
@@ -1171,6 +1190,7 @@ void tst_QQuickLoader::parented()
 
 void tst_QQuickLoader::sizeBound()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("sizebound.qml"));
     QQuickItem *root = qobject_cast<QQuickItem*>(component.create());
     QVERIFY(root);
@@ -1192,6 +1212,7 @@ void tst_QQuickLoader::sizeBound()
 
 void tst_QQuickLoader::QTBUG_30183()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("/QTBUG_30183.qml"));
     QQuickLoader *loader = qobject_cast<QQuickLoader*>(component.create());
     QVERIFY(loader != 0);
@@ -1209,6 +1230,7 @@ void tst_QQuickLoader::QTBUG_30183()
 
 void tst_QQuickLoader::sourceComponentGarbageCollection()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("sourceComponentGarbageCollection.qml"));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
