@@ -47,23 +47,70 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+import QtQuick 2.11
+import Qt.labs.handlers 1.0
+import "../shared" as Examples
 
-import QtQuick 2.0
-import "../shared"
-
-Item {
-    height: 480
+Column {
     width: 320
-    LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("BorderImage", "An image with scaled borders",  Qt.resolvedUrl("borderimage.qml"));
-            addExample("Image", "A showcase of the options available to Image", Qt.resolvedUrl("image.qml"));
-            addExample("Shadows", "Rectangles with a drop-shadow effect", Qt.resolvedUrl("shadows.qml"));
-            addExample("AnimatedImage", "An image which plays animated formats", Qt.resolvedUrl("animatedimage.qml"));
-            addExample("AnimatedSprite", "A simple sprite-based animation", Qt.resolvedUrl("animatedsprite.qml"));
-            addExample("SpriteSequence", "A sprite-based animation with complex transitions", Qt.resolvedUrl("spritesequence.qml"));
+    height: 480
+    spacing: 6
+    y: 12
+
+//! [image]
+    AnimatedImage {
+        id: animation
+        source: "content/Uniflow_steam_engine.gif"
+        anchors.horizontalCenter: parent.horizontalCenter
+        speed: speedSlider.value
+        TapHandler {
+            onTapped: animation.playing = !animation.playing
+        }
+    }
+//! [image]
+
+    Rectangle {
+        id: timeline
+        color: "steelblue"
+        width: animation.width
+        height: 1
+        x: animation.x
+        y: animation.height + 12
+        visible: animation.playing
+
+        Rectangle {
+            property int frames: animation.frameCount
+            width: 4; height: 8
+            x: (animation.width - width) * animation.currentFrame / frames
+            y: -4
+            color: "red"
+        }
+    }
+
+    Examples.Slider {
+        id: speedSlider
+        name: "Speed"
+        min: 0.05
+        max: 5
+        init: 1
+        width: 240
+        x: animation.x
+        Text {
+            font.pointSize: 12
+            text: Math.round(animation.speed * 100) + "%"
+            x: animation.width - width
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.margins: 6
+        }
+    }
+
+    Examples.Button {
+        text: "Reset"
+        enabled: speedSlider.value !== 1
+        anchors.horizontalCenter: parent.horizontalCenter
+        onClicked: {
+            speedSlider.setValue(1)
+            animation.playing = true
         }
     }
 }
