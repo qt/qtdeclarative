@@ -91,8 +91,6 @@ public:
     }
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const {
-        if (!fetched)
-            qFatal("%s: rowCount should not be called before fetching", Q_FUNC_INFO);
         if ((parent.column() > 0) || (level(parent) > levels)
             || (alternateChildlessRows && parent.row() > 0 && (parent.row() & 1)))
             return 0;

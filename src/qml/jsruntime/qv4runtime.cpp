@@ -604,6 +604,14 @@ static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, 
     return o->get(name);
 }
 
+/* load element:
+
+  Managed *m = object.heapObject();
+  if (m)
+     return m->internalClass->getIndexed(m, index);
+  return getIndexedFallback(object, index);
+*/
+
 ReturnedValue Runtime::method_loadElement(ExecutionEngine *engine, const Value &object, const Value &index)
 {
     uint idx = 0;

@@ -108,7 +108,7 @@ public:
         return m_uid;
     }
 
-    static void sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target, QHash<int, QQmlListModel *> *targetModelHash);
+    static QVector<int> sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target);
 
 private:
     QQmlListModel *m_owner;
@@ -261,7 +261,7 @@ public:
     ListElement(int existingUid);
     ~ListElement();
 
-    static void sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout, QHash<int, ListModel *> *targetModelHash);
+    static QVector<int> sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout);
 
     enum
     {
@@ -379,7 +379,7 @@ public:
 
     int getUid() const { return m_uid; }
 
-    static void sync(ListModel *src, ListModel *target, QHash<int, ListModel *> *srcModelHash);
+    static bool sync(ListModel *src, ListModel *target);
 
     QObject *getOrCreateModelObject(QQmlListModel *model, int elementIndex);
 
@@ -392,10 +392,11 @@ private:
 
     struct ElementSync
     {
-        ElementSync() : src(0), target(0) {}
-
-        ListElement *src;
-        ListElement *target;
+        ListElement *src = nullptr;
+        ListElement *target = nullptr;
+        int srcIndex = -1;
+        int targetIndex = -1;
+        QVector<int> changedRoles;
     };
 
     void newElement(int index);

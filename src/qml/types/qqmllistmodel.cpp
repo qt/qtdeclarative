@@ -271,23 +271,24 @@ QObject *ListModel::getOrCreateModelObject(QQmlListModel *model, int elementInde
     return e->m_objectCache;
 }
 
-void ListModel::sync(ListModel *src, ListModel *target, QHash<int, ListModel *> *targetModelHash)
+bool ListModel::sync(ListModel *src, ListModel *target)
 {
     // Sanity check
     target->m_uid = src->m_uid;
-    if (targetModelHash)
-        targetModelHash->insert(target->m_uid, target);
+
+    bool hasChanges = false;
 
     // Build hash of elements <-> uid for each of the lists
     QHash<int, ElementSync> elementHash;
-    for (int i=0 ; i < target->elements.count() ; ++i) {
+    for (int i = 0; i < target->elements.count(); ++i) {
         ListElement *e = target->elements.at(i);
         int uid = e->getUid();
         ElementSync sync;
         sync.target = e;
+        sync.targetIndex = i;
         elementHash.insert(uid, sync);
     }
-    for (int i=0 ; i < src->elements.count() ; ++i) {
+    for (int i = 0; i < src->elements.count(); ++i) {
         ListElement *e = src->elements.at(i);
         int uid = e->getUid();
 
@@ -295,24 +296,39 @@ void ListModel::sync(ListModel *src, ListModel *target, QHash<int, ListModel *> 
         if (it == elementHash.end()) {
             ElementSync sync;
             sync.src = e;
+            sync.srcIndex = i;
             elementHash.insert(uid, sync);
         } else {
             ElementSync &sync = it.value();
             sync.src = e;
+            sync.srcIndex = i;
         }
     }
 
+    QQmlListModel *targetModel = target->m_modelCache;
+
     // Get list of elements that are in the target but no longer in the source. These get deleted first.
-    QHash<int, ElementSync>::iterator it = elementHash.begin();
-    QHash<int, ElementSync>::iterator end = elementHash.end();
-    while (it != end) {
-        const ElementSync &s = it.value();
-        if (s.src == 0) {
+    int rowsRemoved = 0;
+    for (int i = 0 ; i < target->elements.count() ; ++i) {
+        ListElement *element = target->elements.at(i);
+        ElementSync &s = elementHash.find(element->getUid()).value();
+        Q_ASSERT(s.targetIndex >= 0);
+        // need to update the targetIndex, to keep it correct after removals
+        s.targetIndex -= rowsRemoved;
+        if (s.src == nullptr) {
+            Q_ASSERT(s.targetIndex == i);
+            hasChanges = true;
+            if (targetModel)
+                targetModel->beginRemoveRows(QModelIndex(), i, i);
             s.target->destroy(target->m_layout);
             target->elements.removeOne(s.target);
             delete s.target;
+            if (targetModel)
+                targetModel->endRemoveRows();
+            ++rowsRemoved;
+            --i;
+            continue;
         }
-        ++it;
     }
 
     // Sync the layouts
@@ -320,15 +336,15 @@ void ListModel::sync(ListModel *src, ListModel *target, QHash<int, ListModel *> 
 
     // Clear the target list, and append in correct order from the source
     target->elements.clear();
-    for (int i=0 ; i < src->elements.count() ; ++i) {
+    for (int i = 0; i < src->elements.count(); ++i) {
         ListElement *srcElement = src->elements.at(i);
-        it = elementHash.find(srcElement->getUid());
-        const ElementSync &s = it.value();
+        ElementSync &s = elementHash.find(srcElement->getUid()).value();
+        Q_ASSERT(s.srcIndex >= 0);
         ListElement *targetElement = s.target;
-        if (targetElement == 0) {
+        if (targetElement == nullptr) {
             targetElement = new ListElement(srcElement->getUid());
         }
-        ListElement::sync(srcElement, src->m_layout, targetElement, target->m_layout, targetModelHash);
+        s.changedRoles = ListElement::sync(srcElement, src->m_layout, targetElement, target->m_layout);
         target->elements.append(targetElement);
     }
 
@@ -340,6 +356,39 @@ void ListModel::sync(ListModel *src, ListModel *target, QHash<int, ListModel *> 
         if (ModelNodeMetaObject *mo = e->objectCache())
             mo->updateValues();
     }
+
+    // now emit the change notifications required. This can be safely done, as we're only emitting changes, moves and inserts,
+    // so the model indices can't be out of bounds
+    //
+    // to ensure things are kept in the correct order, emit inserts and moves first. This shouls ensure all persistent
+    // model indices are updated correctly
+    int rowsInserted = 0;
+    for (int i = 0 ; i < target->elements.count() ; ++i) {
+        ListElement *element = target->elements.at(i);
+        ElementSync &s = elementHash.find(element->getUid()).value();
+        Q_ASSERT(s.srcIndex >= 0);
+        s.srcIndex += rowsInserted;
+        if (s.srcIndex != s.targetIndex) {
+            if (targetModel) {
+                if (s.targetIndex == -1) {
+                    targetModel->beginInsertRows(QModelIndex(), i, i);
+                    targetModel->endInsertRows();
+                } else {
+                    targetModel->beginMoveRows(QModelIndex(), i, i, QModelIndex(), s.srcIndex);
+                    targetModel->endMoveRows();
+                }
+            }
+            hasChanges = true;
+            ++rowsInserted;
+        }
+        if (s.targetIndex != -1 && !s.changedRoles.isEmpty()) {
+            QModelIndex idx = targetModel->createIndex(i, 0);
+            if (targetModel)
+                targetModel->dataChanged(idx, idx, s.changedRoles);
+            hasChanges = true;
+        }
+    }
+    return hasChanges;
 }
 
 ListModel::ListModel(ListLayout *layout, QQmlListModel *modelCache, int uid) : m_layout(layout), m_modelCache(modelCache)
@@ -949,7 +998,11 @@ int ListElement::setVariantMapProperty(const ListLayout::Role &role, QVariantMap
         char *mem = getPropertyMemory(role);
         if (isMemoryUsed<QVariantMap>(mem)) {
             QVariantMap *map = reinterpret_cast<QVariantMap *>(mem);
+            if (m && map->isSharedWith(*m))
+                return roleIndex;
             map->~QMap();
+        } else if (!m) {
+            return roleIndex;
         }
         if (m)
             new (mem) QVariantMap(*m);
@@ -1101,12 +1154,14 @@ ListElement::~ListElement()
     delete next;
 }
 
-void ListElement::sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout, QHash<int, ListModel *> *targetModelHash)
+QVector<int> ListElement::sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout)
 {
+    QVector<int> changedRoles;
     for (int i=0 ; i < srcLayout->roleCount() ; ++i) {
         const ListLayout::Role &srcRole = srcLayout->getExistingRole(i);
         const ListLayout::Role &targetRole = targetLayout->getExistingRole(i);
 
+        int roleIndex = -1;
         switch (srcRole.type) {
             case ListLayout::Role::List:
                 {
@@ -1118,14 +1173,15 @@ void ListElement::sync(ListElement *src, ListLayout *srcLayout, ListElement *tar
                             targetSubModel = new ListModel(targetRole.subLayout, 0, srcSubModel->getUid());
                             target->setListPropertyFast(targetRole, targetSubModel);
                         }
-                        ListModel::sync(srcSubModel, targetSubModel, targetModelHash);
+                        if (ListModel::sync(srcSubModel, targetSubModel))
+                            roleIndex = targetRole.index;
                     }
                 }
                 break;
             case ListLayout::Role::QObject:
                 {
                     QObject *object = src->getQObjectProperty(srcRole);
-                    target->setQObjectProperty(targetRole, object);
+                    roleIndex = target->setQObjectProperty(targetRole, object);
                 }
                 break;
             case ListLayout::Role::String:
@@ -1135,20 +1191,23 @@ void ListElement::sync(ListElement *src, ListLayout *srcLayout, ListElement *tar
             case ListLayout::Role::Function:
                 {
                     QVariant v = src->getProperty(srcRole, 0, 0);
-                    target->setVariantProperty(targetRole, v);
+                    roleIndex = target->setVariantProperty(targetRole, v);
                 }
                 break;
             case ListLayout::Role::VariantMap:
                 {
                     QVariantMap *map = src->getVariantMapProperty(srcRole);
-                    target->setVariantMapProperty(targetRole, map);
+                    roleIndex = target->setVariantMapProperty(targetRole, map);
                 }
                 break;
             default:
                 break;
         }
+        if (roleIndex >= 0)
+            changedRoles << roleIndex;
     }
 
+    return changedRoles;
 }
 
 void ListElement::destroy(ListLayout *layout)
@@ -1493,20 +1552,22 @@ DynamicRoleModelNode *DynamicRoleModelNode::create(const QVariantMap &obj, QQmlL
     return object;
 }
 
-void DynamicRoleModelNode::sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target, QHash<int, QQmlListModel *> *targetModelHash)
+QVector<int> DynamicRoleModelNode::sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target)
 {
-    for (int i=0 ; i < src->m_meta->count() ; ++i) {
+    QVector<int> changedRoles;
+    for (int i = 0; i < src->m_meta->count(); ++i) {
         const QByteArray &name = src->m_meta->name(i);
         QVariant value = src->m_meta->value(i);
 
         QQmlListModel *srcModel = qobject_cast<QQmlListModel *>(value.value<QObject *>());
         QQmlListModel *targetModel = qobject_cast<QQmlListModel *>(target->m_meta->value(i).value<QObject *>());
 
+        bool modelHasChanges = false;
         if (srcModel) {
             if (targetModel == 0)
                 targetModel = QQmlListModel::createWithOwner(target->m_owner);
 
-            QQmlListModel::sync(srcModel, targetModel, targetModelHash);
+            modelHasChanges = QQmlListModel::sync(srcModel, targetModel);
 
             QObject *targetModelObject = targetModel;
             value = QVariant::fromValue(targetModelObject);
@@ -1514,8 +1575,10 @@ void DynamicRoleModelNode::sync(DynamicRoleModelNode *src, DynamicRoleModelNode 
             delete targetModel;
         }
 
-        target->setValue(name, value);
+        if (target->setValue(name, value) || modelHasChanges)
+            changedRoles << target->m_owner->m_roles.indexOf(QString::fromUtf8(name));
     }
+    return changedRoles;
 }
 
 void DynamicRoleModelNode::updateValues(const QVariantMap &object, QVector<int> &roles)
@@ -1761,9 +1824,9 @@ QQmlListModel::QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agen
     m_listModel = new ListModel(m_layout, this, orig->m_listModel->getUid());
 
     if (m_dynamicRoles)
-        sync(orig, this, 0);
+        sync(orig, this);
     else
-        ListModel::sync(orig->m_listModel, m_listModel, 0);
+        ListModel::sync(orig->m_listModel, m_listModel);
 
     m_engine = 0;
 }
@@ -1814,25 +1877,26 @@ QV4::ExecutionEngine *QQmlListModel::engine() const
     return m_engine;
 }
 
-void QQmlListModel::sync(QQmlListModel *src, QQmlListModel *target, QHash<int, QQmlListModel *> *targetModelHash)
+bool QQmlListModel::sync(QQmlListModel *src, QQmlListModel *target)
 {
     Q_ASSERT(src->m_dynamicRoles && target->m_dynamicRoles);
 
+    bool hasChanges = false;
+
     target->m_uid = src->m_uid;
-    if (targetModelHash)
-        targetModelHash->insert(target->m_uid, target);
     target->m_roles = src->m_roles;
 
     // Build hash of elements <-> uid for each of the lists
     QHash<int, ElementSync> elementHash;
-    for (int i=0 ; i < target->m_modelObjects.count() ; ++i) {
+    for (int i = 0 ; i < target->m_modelObjects.count(); ++i) {
         DynamicRoleModelNode *e = target->m_modelObjects.at(i);
         int uid = e->getUid();
         ElementSync sync;
         sync.target = e;
+        sync.targetIndex = i;
         elementHash.insert(uid, sync);
     }
-    for (int i=0 ; i < src->m_modelObjects.count() ; ++i) {
+    for (int i = 0 ; i < src->m_modelObjects.count(); ++i) {
         DynamicRoleModelNode *e = src->m_modelObjects.at(i);
         int uid = e->getUid();
 
@@ -1840,39 +1904,79 @@ void QQmlListModel::sync(QQmlListModel *src, QQmlListModel *target, QHash<int, Q
         if (it == elementHash.end()) {
             ElementSync sync;
             sync.src = e;
+            sync.srcIndex = i;
             elementHash.insert(uid, sync);
         } else {
             ElementSync &sync = it.value();
             sync.src = e;
+            sync.srcIndex = i;
         }
     }
 
     // Get list of elements that are in the target but no longer in the source. These get deleted first.
-    QHash<int, ElementSync>::iterator it = elementHash.begin();
-    QHash<int, ElementSync>::iterator end = elementHash.end();
-    while (it != end) {
-        const ElementSync &s = it.value();
-        if (s.src == 0) {
-            int targetIndex = target->m_modelObjects.indexOf(s.target);
-            target->m_modelObjects.remove(targetIndex, 1);
+    int rowsRemoved = 0;
+    for (int i = 0 ; i < target->m_modelObjects.count() ; ++i) {
+        DynamicRoleModelNode *element = target->m_modelObjects.at(i);
+        ElementSync &s = elementHash.find(element->getUid()).value();
+        Q_ASSERT(s.targetIndex >= 0);
+        // need to update the targetIndex, to keep it correct after removals
+        s.targetIndex -= rowsRemoved;
+        if (s.src == nullptr) {
+            Q_ASSERT(s.targetIndex == i);
+            hasChanges = true;
+            target->beginRemoveRows(QModelIndex(), i, i);
+            target->m_modelObjects.remove(i, 1);
+            target->endRemoveRows();
             delete s.target;
+            ++rowsRemoved;
+            --i;
+            continue;
         }
-        ++it;
     }
 
     // Clear the target list, and append in correct order from the source
     target->m_modelObjects.clear();
-    for (int i=0 ; i < src->m_modelObjects.count() ; ++i) {
-        DynamicRoleModelNode *srcElement = src->m_modelObjects.at(i);
-        it = elementHash.find(srcElement->getUid());
-        const ElementSync &s = it.value();
+    for (int i = 0 ; i < src->m_modelObjects.count() ; ++i) {
+        DynamicRoleModelNode *element = src->m_modelObjects.at(i);
+        ElementSync &s = elementHash.find(element->getUid()).value();
+        Q_ASSERT(s.srcIndex >= 0);
         DynamicRoleModelNode *targetElement = s.target;
         if (targetElement == 0) {
-            targetElement = new DynamicRoleModelNode(target, srcElement->getUid());
+            targetElement = new DynamicRoleModelNode(target, element->getUid());
         }
-        DynamicRoleModelNode::sync(srcElement, targetElement, targetModelHash);
+        s.changedRoles = DynamicRoleModelNode::sync(element, targetElement);
         target->m_modelObjects.append(targetElement);
     }
+
+    // now emit the change notifications required. This can be safely done, as we're only emitting changes, moves and inserts,
+    // so the model indices can't be out of bounds
+    //
+    // to ensure things are kept in the correct order, emit inserts and moves first. This shouls ensure all persistent
+    // model indices are updated correctly
+    int rowsInserted = 0;
+    for (int i = 0 ; i < target->m_modelObjects.count() ; ++i) {
+        DynamicRoleModelNode *element = target->m_modelObjects.at(i);
+        ElementSync &s = elementHash.find(element->getUid()).value();
+        Q_ASSERT(s.srcIndex >= 0);
+        s.srcIndex += rowsInserted;
+        if (s.srcIndex != s.targetIndex) {
+            if (s.targetIndex == -1) {
+                target->beginInsertRows(QModelIndex(), i, i);
+                target->endInsertRows();
+            } else {
+                target->beginMoveRows(QModelIndex(), i, i, QModelIndex(), s.srcIndex);
+                target->endMoveRows();
+            }
+            hasChanges = true;
+            ++rowsInserted;
+        }
+        if (s.targetIndex != -1 && !s.changedRoles.isEmpty()) {
+            QModelIndex idx = target->createIndex(i, 0);
+            emit target->dataChanged(idx, idx, s.changedRoles);
+            hasChanges = true;
+        }
+    }
+    return hasChanges;
 }
 
 void QQmlListModel::emitItemsChanged(int index, int count, const QVector<int> &roles)
@@ -1880,78 +1984,22 @@ void QQmlListModel::emitItemsChanged(int index, int count, const QVector<int> &r
     if (count <= 0)
         return;
 
-    if (m_mainThread) {
+    if (m_mainThread)
         emit dataChanged(createIndex(index, 0), createIndex(index + count - 1, 0), roles);;
-    } else {
-        int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
-        m_agent->data.changedChange(uid, index, count, roles);
-    }
-}
-
-void QQmlListModel::emitItemsAboutToBeRemoved(int index, int count)
-{
-    if (count <= 0 || !m_mainThread)
-        return;
-
-    beginRemoveRows(QModelIndex(), index, index + count - 1);
-}
-
-void QQmlListModel::emitItemsRemoved(int index, int count)
-{
-    if (count <= 0)
-        return;
-
-    if (m_mainThread) {
-            endRemoveRows();
-            emit countChanged();
-    } else {
-        int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
-        if (index == 0 && count == this->count())
-            m_agent->data.clearChange(uid);
-        m_agent->data.removeChange(uid, index, count);
-    }
 }
 
 void QQmlListModel::emitItemsAboutToBeInserted(int index, int count)
 {
-    if (count <= 0 || !m_mainThread)
-        return;
-
-    beginInsertRows(QModelIndex(), index, index + count - 1);
+    Q_ASSERT(index >= 0 && count >= 0);
+    if (m_mainThread)
+        beginInsertRows(QModelIndex(), index, index + count - 1);
 }
 
-void QQmlListModel::emitItemsInserted(int index, int count)
+void QQmlListModel::emitItemsInserted()
 {
-    if (count <= 0)
-        return;
-
     if (m_mainThread) {
         endInsertRows();
         emit countChanged();
-    } else {
-        int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
-        m_agent->data.insertChange(uid, index, count);
-    }
-}
-
-void QQmlListModel::emitItemsAboutToBeMoved(int from, int to, int n)
-{
-    if (n <= 0 || !m_mainThread)
-        return;
-
-    beginMoveRows(QModelIndex(), from, from + n - 1, QModelIndex(), to > from ? to + n : to);
-}
-
-void QQmlListModel::emitItemsMoved(int from, int to, int n)
-{
-    if (n <= 0)
-        return;
-
-    if (m_mainThread) {
-        endMoveRows();
-    } else {
-        int uid = m_dynamicRoles ? getUid() : m_listModel->getUid();
-        m_agent->data.moveChange(uid, from, n, to);
     }
 }
 
@@ -2133,7 +2181,13 @@ void QQmlListModel::remove(QQmlV4Function *args)
 
 void QQmlListModel::removeElements(int index, int removeCount)
 {
-    emitItemsAboutToBeRemoved(index, removeCount);
+    Q_ASSERT(index >= 0 && removeCount >= 0);
+
+    if (!removeCount)
+        return;
+
+    if (m_mainThread)
+        beginRemoveRows(QModelIndex(), index, index + removeCount - 1);
 
     QVector<std::function<void()>> toDestroy;
     if (m_dynamicRoles) {
@@ -2148,7 +2202,10 @@ void QQmlListModel::removeElements(int index, int removeCount)
         toDestroy = m_listModel->remove(index, removeCount);
     }
 
-    emitItemsRemoved(index, removeCount);
+    if (m_mainThread) {
+        endRemoveRows();
+        emit countChanged();
+    }
     for (const auto &destroyer : toDestroy)
         destroyer();
 }
@@ -2197,7 +2254,7 @@ void QQmlListModel::insert(QQmlV4Function *args)
                     m_listModel->insert(index+i, argObject);
                 }
             }
-            emitItemsInserted(index, objectArrayLength);
+            emitItemsInserted();
         } else if (argObject) {
             emitItemsAboutToBeInserted(index, 1);
 
@@ -2207,7 +2264,7 @@ void QQmlListModel::insert(QQmlV4Function *args)
                 m_listModel->insert(index, argObject);
             }
 
-            emitItemsInserted(index, 1);
+            emitItemsInserted();
         } else {
             qmlWarning(this) << tr("insert: value is not an object");
         }
@@ -2232,14 +2289,15 @@ void QQmlListModel::insert(QQmlV4Function *args)
 */
 void QQmlListModel::move(int from, int to, int n)
 {
-    if (n==0 || from==to)
+    if (n == 0 || from == to)
         return;
     if (!canMove(from, to, n)) {
         qmlWarning(this) << tr("move: out of range");
         return;
     }
 
-    emitItemsAboutToBeMoved(from, to, n);
+    if (m_mainThread)
+        beginMoveRows(QModelIndex(), from, from + n - 1, QModelIndex(), to > from ? to + n : to);
 
     if (m_dynamicRoles) {
 
@@ -2268,7 +2326,8 @@ void QQmlListModel::move(int from, int to, int n)
         m_listModel->move(from, to, n);
     }
 
-    emitItemsMoved(from, to, n);
+    if (m_mainThread)
+        endMoveRows();
 }
 
 /*!
@@ -2308,7 +2367,7 @@ void QQmlListModel::append(QQmlV4Function *args)
                 }
             }
 
-            emitItemsInserted(index, objectArrayLength);
+            emitItemsInserted();
         } else if (argObject) {
             int index;
 
@@ -2322,7 +2381,7 @@ void QQmlListModel::append(QQmlV4Function *args)
                 m_listModel->append(argObject);
             }
 
-            emitItemsInserted(index, 1);
+            emitItemsInserted();
         } else {
             qmlWarning(this) << tr("append: value is not an object");
         }
@@ -2424,7 +2483,7 @@ void QQmlListModel::set(int index, const QQmlV4Handle &handle)
             m_listModel->insert(index, object);
         }
 
-        emitItemsInserted(index, 1);
+        emitItemsInserted();
     } else {
 
         QVector<int> roles;

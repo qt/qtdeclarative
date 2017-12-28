@@ -147,24 +147,21 @@ private:
 
     struct ElementSync
     {
-        ElementSync() : src(0), target(0) {}
-
-        DynamicRoleModelNode *src;
-        DynamicRoleModelNode *target;
+        DynamicRoleModelNode *src = nullptr;
+        DynamicRoleModelNode *target = nullptr;
+        int srcIndex = -1;
+        int targetIndex = -1;
+        QVector<int> changedRoles;
     };
 
     int getUid() const { return m_uid; }
 
-    static void sync(QQmlListModel *src, QQmlListModel *target, QHash<int, QQmlListModel *> *targetModelHash);
+    static bool sync(QQmlListModel *src, QQmlListModel *target);
     static QQmlListModel *createWithOwner(QQmlListModel *newOwner);
 
     void emitItemsChanged(int index, int count, const QVector<int> &roles);
-    void emitItemsAboutToBeRemoved(int index, int count);
-    void emitItemsRemoved(int index, int count);
     void emitItemsAboutToBeInserted(int index, int count);
-    void emitItemsInserted(int index, int count);
-    void emitItemsAboutToBeMoved(int from, int to, int n);
-    void emitItemsMoved(int from, int to, int n);
+    void emitItemsInserted();
 
     void removeElements(int index, int removeCount);
 };
