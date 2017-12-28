@@ -331,7 +331,9 @@ void QQuickPointerHandler::setTarget(QQuickItem *target)
     if (m_target == target)
         return;
 
+    QQuickItem *oldTarget = m_target;
     m_target = target;
+    onTargetChanged(oldTarget);
     emit targetChanged();
 }
 
