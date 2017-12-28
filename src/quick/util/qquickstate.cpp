@@ -372,10 +372,7 @@ bool QQuickState::containsPropertyInRevertList(QObject *target, const QString &n
     Q_D(const QQuickState);
 
     if (isStateActive()) {
-        QListIterator<QQuickSimpleAction> revertListIterator(d->revertList);
-
-        while (revertListIterator.hasNext()) {
-            const QQuickSimpleAction &simpleAction = revertListIterator.next();
+        for (const QQuickSimpleAction &simpleAction : d->revertList) {
             if (simpleAction.specifiedObject() == target && simpleAction.specifiedProperty() == name)
                 return true;
         }
@@ -389,10 +386,7 @@ bool QQuickState::changeValueInRevertList(QObject *target, const QString &name, 
     Q_D(QQuickState);
 
     if (isStateActive()) {
-        QMutableListIterator<QQuickSimpleAction> revertListIterator(d->revertList);
-
-        while (revertListIterator.hasNext()) {
-            QQuickSimpleAction &simpleAction = revertListIterator.next();
+        for (QQuickSimpleAction &simpleAction : d->revertList) {
             if (simpleAction.specifiedObject() == target && simpleAction.specifiedProperty() == name) {
                     simpleAction.setValue(revertValue);
                     return true;
@@ -408,10 +402,7 @@ bool QQuickState::changeBindingInRevertList(QObject *target, const QString &name
     Q_D(QQuickState);
 
     if (isStateActive()) {
-        QMutableListIterator<QQuickSimpleAction> revertListIterator(d->revertList);
-
-        while (revertListIterator.hasNext()) {
-            QQuickSimpleAction &simpleAction = revertListIterator.next();
+        for (QQuickSimpleAction &simpleAction : d->revertList) {
             if (simpleAction.specifiedObject() == target && simpleAction.specifiedProperty() == name) {
                 simpleAction.setBinding(binding);
                 return true;
@@ -485,9 +476,7 @@ void QQuickState::addEntriesToRevertList(const QList<QQuickStateAction> &actionL
         QList<QQuickSimpleAction> simpleActionList;
         simpleActionList.reserve(actionList.count());
 
-        QListIterator<QQuickStateAction> actionListIterator(actionList);
-        while(actionListIterator.hasNext()) {
-            const QQuickStateAction &action = actionListIterator.next();
+        for (const QQuickStateAction &action : actionList) {
             QQuickSimpleAction simpleAction(action);
             action.property.write(action.toValue);
             if (action.toBinding)
@@ -505,10 +494,7 @@ QVariant QQuickState::valueInRevertList(QObject *target, const QString &name) co
     Q_D(const QQuickState);
 
     if (isStateActive()) {
-        QListIterator<QQuickSimpleAction> revertListIterator(d->revertList);
-
-        while (revertListIterator.hasNext()) {
-            const QQuickSimpleAction &simpleAction = revertListIterator.next();
+        for (const QQuickSimpleAction &simpleAction : d->revertList) {
             if (simpleAction.specifiedObject() == target && simpleAction.specifiedProperty() == name)
                 return simpleAction.value();
         }
@@ -522,10 +508,7 @@ QQmlAbstractBinding *QQuickState::bindingInRevertList(QObject *target, const QSt
     Q_D(const QQuickState);
 
     if (isStateActive()) {
-        QListIterator<QQuickSimpleAction> revertListIterator(d->revertList);
-
-        while (revertListIterator.hasNext()) {
-            const QQuickSimpleAction &simpleAction = revertListIterator.next();
+        for (const QQuickSimpleAction &simpleAction : d->revertList) {
             if (simpleAction.specifiedObject() == target && simpleAction.specifiedProperty() == name)
                 return simpleAction.binding();
         }
