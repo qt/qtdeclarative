@@ -1141,7 +1141,7 @@ void tst_QQuickGridView::removed_defaultLayout_data()
     QTest::newRow("remove multiple, after visible, content not at start")
             << 2.0     // show 6-23
             << 16+4 << 5
-               << 15+10 << 7
+               << 15 << 7
             << 0.0 << "Item6" << "Item10";
 
     QTest::newRow("remove multiple, mix of items from within and after visible items")
