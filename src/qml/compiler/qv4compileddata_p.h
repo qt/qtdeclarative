@@ -941,8 +941,8 @@ public:
 
     // mapping from component object index (CompiledData::Unit object index that points to component) to identifier hash of named objects
     // this is initialized on-demand by QQmlContextData
-    QHash<int, IdentifierHash<int>> namedObjectsPerComponentCache;
-    IdentifierHash<int> namedObjectsPerComponent(int componentObjectIndex);
+    QHash<int, IdentifierHash> namedObjectsPerComponentCache;
+    IdentifierHash namedObjectsPerComponent(int componentObjectIndex);
 
     void finalizeCompositeType(QQmlEnginePrivate *qmlEngine);
 

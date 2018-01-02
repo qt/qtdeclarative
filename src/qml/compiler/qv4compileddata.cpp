@@ -251,11 +251,11 @@ void CompilationUnit::markObjects(QV4::MarkStack *markStack)
     }
 }
 
-IdentifierHash<int> CompilationUnit::namedObjectsPerComponent(int componentObjectIndex)
+IdentifierHash CompilationUnit::namedObjectsPerComponent(int componentObjectIndex)
 {
     auto it = namedObjectsPerComponentCache.find(componentObjectIndex);
     if (it == namedObjectsPerComponentCache.end()) {
-        IdentifierHash<int> namedObjectCache(engine);
+        IdentifierHash namedObjectCache(engine);
         const CompiledData::Object *component = data->objectAt(componentObjectIndex);
         const quint32_le *namedObjectIndexPtr = component->namedObjectsInComponentTable();
         for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {

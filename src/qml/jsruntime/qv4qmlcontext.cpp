@@ -154,7 +154,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
 
     while (context) {
         // Search context properties
-        const QV4::IdentifierHash<int> &properties = context->propertyNames();
+        const QV4::IdentifierHash &properties = context->propertyNames();
         if (properties.count()) {
             int propertyIdx = properties.value(name);
 
@@ -261,7 +261,7 @@ bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
     QObject *scopeObject = wrapper->getScopeObject();
 
     while (context) {
-        const QV4::IdentifierHash<int> &properties = context->propertyNames();
+        const QV4::IdentifierHash &properties = context->propertyNames();
         // Search context properties
         if (properties.count() && properties.value(name) != -1)
             return false;

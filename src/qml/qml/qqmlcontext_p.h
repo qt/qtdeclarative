@@ -158,9 +158,9 @@ public:
     void initFromTypeCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit, int subComponentIndex);
 
     // flag indicates whether the context owns the cache (after mutation) or not.
-    mutable QV4::IdentifierHash<int> propertyNameCache;
-    const QV4::IdentifierHash<int> &propertyNames() const;
-    QV4::IdentifierHash<int> &detachedPropertyNames();
+    mutable QV4::IdentifierHash propertyNameCache;
+    const QV4::IdentifierHash &propertyNames() const;
+    QV4::IdentifierHash &detachedPropertyNames();
 
     // Context object
     QObject *contextObject;

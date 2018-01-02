@@ -75,13 +75,13 @@ IdentifierHashData::IdentifierHashData(IdentifierHashData *other)
     memcpy(entries, other->entries, alloc*sizeof(IdentifierHashEntry));
 }
 
-IdentifierHashBase::IdentifierHashBase(ExecutionEngine *engine)
+IdentifierHash::IdentifierHash(ExecutionEngine *engine)
 {
     d = new IdentifierHashData(3);
     d->identifierTable = engine->identifierTable;
 }
 
-void IdentifierHashBase::detach()
+void IdentifierHash::detach()
 {
     if (!d || d->refCount == 1)
         return;
@@ -92,7 +92,7 @@ void IdentifierHashBase::detach()
 }
 
 
-IdentifierHashEntry *IdentifierHashBase::addEntry(const Identifier *identifier)
+IdentifierHashEntry *IdentifierHash::addEntry(const Identifier *identifier)
 {
     // fill up to max 50%
     bool grow = (d->alloc <= d->size*2);
@@ -129,7 +129,7 @@ IdentifierHashEntry *IdentifierHashBase::addEntry(const Identifier *identifier)
     return d->entries + idx;
 }
 
-const IdentifierHashEntry *IdentifierHashBase::lookup(const Identifier *identifier) const
+const IdentifierHashEntry *IdentifierHash::lookup(const Identifier *identifier) const
 {
     if (!d)
         return 0;
@@ -146,7 +146,7 @@ const IdentifierHashEntry *IdentifierHashBase::lookup(const Identifier *identifi
     }
 }
 
-const IdentifierHashEntry *IdentifierHashBase::lookup(const QString &str) const
+const IdentifierHashEntry *IdentifierHash::lookup(const QString &str) const
 {
     if (!d)
         return 0;
@@ -164,7 +164,7 @@ const IdentifierHashEntry *IdentifierHashBase::lookup(const QString &str) const
     }
 }
 
-const IdentifierHashEntry *IdentifierHashBase::lookup(String *str) const
+const IdentifierHashEntry *IdentifierHash::lookup(String *str) const
 {
     if (!d)
         return 0;
@@ -173,13 +173,13 @@ const IdentifierHashEntry *IdentifierHashBase::lookup(String *str) const
     return lookup(str->toQString());
 }
 
-const Identifier *IdentifierHashBase::toIdentifier(const QString &str) const
+const Identifier *IdentifierHash::toIdentifier(const QString &str) const
 {
     Q_ASSERT(d);
     return d->identifierTable->identifier(str);
 }
 
-const Identifier *IdentifierHashBase::toIdentifier(Heap::String *str) const
+const Identifier *IdentifierHash::toIdentifier(Heap::String *str) const
 {
     Q_ASSERT(d);
     return d->identifierTable->identifier(str);
