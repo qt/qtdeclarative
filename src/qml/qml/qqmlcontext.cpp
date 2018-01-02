@@ -306,15 +306,6 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         return;
     }
 
-    if (data->engine) {
-        bool ok;
-        QObject *o = QQmlEnginePrivate::get(data->engine)->toQObject(value, &ok);
-        if (ok) {
-            setContextProperty(name, o);
-            return;
-        }
-    }
-
     QV4::IdentifierHash<int> &properties = data->detachedPropertyNames();
     int idx = properties.value(name);
     if (idx == -1) {
@@ -335,34 +326,7 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
 */
 void QQmlContext::setContextProperty(const QString &name, QObject *value)
 {
-    Q_D(QQmlContext);
-    if (d->notifyIndex == -1)
-        d->notifyIndex = QMetaObjectPrivate::absoluteSignalCount(&QQmlContext::staticMetaObject);
-
-    QQmlContextData *data = d->data;
-
-    if (data->isInternal) {
-        qWarning("QQmlContext: Cannot set property on internal context.");
-        return;
-    }
-
-    if (!isValid()) {
-        qWarning("QQmlContext: Cannot set property on invalid context.");
-        return;
-    }
-
-    QV4::IdentifierHash<int> &properties = data->detachedPropertyNames();
-    int idx = properties.value(name);
-
-    if (idx == -1) {
-        properties.add(name, data->idValueCount + d->propertyValues.count());
-        d->propertyValues.append(QVariant::fromValue(value));
-
-        data->refreshExpressions();
-    } else {
-        d->propertyValues[idx] = QVariant::fromValue(value);
-        QMetaObject::activate(this, d->notifyIndex, idx, 0);
-    }
+    setContextProperty(name, QVariant::fromValue(value));
 }
 
 /*!
