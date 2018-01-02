@@ -74,6 +74,8 @@ private slots:
     void anchors_data();
     void attachedObjects();
     void attachedObjects_data();
+    void ids();
+    void ids_data();
 
 private:
     QQmlEngine engine;
@@ -253,6 +255,71 @@ void tst_Sanity::anchors()
 }
 
 void tst_Sanity::anchors_data()
+{
+    QTest::addColumn<QString>("control");
+    QTest::addColumn<QString>("filePath");
+
+    QMap<QString, QString>::const_iterator it;
+    for (it = files.constBegin(); it != files.constEnd(); ++it)
+        QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
+}
+
+class IdValidator : public BaseValidator
+{
+public:
+    IdValidator() : m_depth(0) { }
+
+protected:
+    bool visit(QQmlJS::AST::UiObjectBinding *) override
+    {
+        ++m_depth;
+        return true;
+    }
+
+    void endVisit(QQmlJS::AST::UiObjectBinding *) override
+    {
+        --m_depth;
+    }
+
+    bool visit(QQmlJS::AST::UiScriptBinding *node) override
+    {
+        if (m_depth == 0)
+            return true;
+
+        QQmlJS::AST::UiQualifiedId *id = node->qualifiedId;
+        if (id && id->name ==  QStringLiteral("id"))
+            addError(QString("Internal IDs are not allowed (%1)").arg(extractName(node->statement)), node);
+        return true;
+    }
+
+private:
+    QString extractName(QQmlJS::AST::Statement *statement)
+    {
+        QQmlJS::AST::ExpressionStatement *expressionStatement = static_cast<QQmlJS::AST::ExpressionStatement *>(statement);
+        if (!expressionStatement)
+            return QString();
+
+        QQmlJS::AST::IdentifierExpression *expression = static_cast<QQmlJS::AST::IdentifierExpression *>(expressionStatement->expression);
+        if (!expression)
+            return QString();
+
+        return expression->name.toString();
+    }
+
+    int m_depth;
+};
+
+void tst_Sanity::ids()
+{
+    QFETCH(QString, control);
+    QFETCH(QString, filePath);
+
+    IdValidator validator;
+    if (!validator.validate(filePath))
+        QFAIL(qPrintable(validator.errors()));
+}
+
+void tst_Sanity::ids_data()
 {
     QTest::addColumn<QString>("control");
     QTest::addColumn<QString>("filePath");

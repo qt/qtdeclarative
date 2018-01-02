@@ -2,3 +2,9 @@
 *
 [attachedObjects:material/SwitchDelegate.qml]
 *
+[ids:controls/Tumbler.qml]
+*
+[ids:material/Tumbler.qml]
+*
+[ids:universal/Tumbler.qml]
+*
