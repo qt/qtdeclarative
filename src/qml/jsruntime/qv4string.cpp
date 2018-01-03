@@ -55,10 +55,12 @@ using namespace QV4;
 void Heap::String::markObjects(Heap::Base *that, MarkStack *markStack)
 {
     String *s = static_cast<String *>(that);
-    if (s->largestSubLength) {
-        s->left->mark(markStack);
-        s->right->mark(markStack);
-    }
+    if (s->subtype < StringType_Complex)
+        return;
+
+    ComplexString *cs = static_cast<ComplexString *>(s);
+    cs->left->mark(markStack);
+    cs->right->mark(markStack);
 }
 
 DEFINE_MANAGED_VTABLE(String);
@@ -84,29 +86,25 @@ void Heap::String::init(const QString &t)
 
     text = const_cast<QString &>(t).data_ptr();
     text->ref.ref();
-    identifier = 0;
-    stringHash = UINT_MAX;
-    largestSubLength = 0;
-    len = text->size;
 }
 
-void Heap::String::init(String *l, String *r)
+void Heap::ComplexString::init(String *l, String *r)
 {
     Base::init();
 
-    subtype = String::StringType_Unknown;
+    subtype = String::StringType_AddedString;
 
     left = l;
     right = r;
-    stringHash = UINT_MAX;
-    largestSubLength = qMax(l->largestSubLength, r->largestSubLength);
-    len = l->len + r->len;
-    Q_ASSERT(largestSubLength <= len);
-
-    if (!l->largestSubLength && l->len > largestSubLength)
-        largestSubLength = l->len;
-    if (!r->largestSubLength && r->len > largestSubLength)
-        largestSubLength = r->len;
+    len = left->length() + right->length();
+    if (left->subtype >= StringType_Complex)
+        largestSubLength = static_cast<ComplexString *>(left)->largestSubLength;
+    else
+        largestSubLength = left->length();
+    if (right->subtype >= StringType_Complex)
+        largestSubLength = qMax(largestSubLength, static_cast<ComplexString *>(right)->largestSubLength);
+    else
+        largestSubLength = qMax(largestSubLength, right->length());
 
     // make sure we don't get excessive depth in our strings
     if (len > 256 && len >= 2*largestSubLength)
@@ -114,7 +112,7 @@ void Heap::String::init(String *l, String *r)
 }
 
 void Heap::String::destroy() {
-    if (!largestSubLength) {
+    if (text) {
         internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(qptrdiff(-text->size) * (int)sizeof(QChar));
         if (!text->ref.deref())
             QStringData::deallocate(text);
@@ -142,15 +140,15 @@ uint String::toUInt(bool *ok) const
 
 void String::makeIdentifierImpl() const
 {
-    if (d()->largestSubLength)
+    if (!d()->text)
         d()->simplifyString();
-    Q_ASSERT(!d()->largestSubLength);
+    Q_ASSERT(d()->text);
     engine()->identifierTable->identifier(this);
 }
 
 void Heap::String::simplifyString() const
 {
-    Q_ASSERT(largestSubLength);
+    Q_ASSERT(!text);
 
     int l = length();
     QString result(l, Qt::Uninitialized);
@@ -159,8 +157,8 @@ void Heap::String::simplifyString() const
     text = result.data_ptr();
     text->ref.ref();
     identifier = 0;
-    largestSubLength = 0;
     internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(qptrdiff(text->size) * (qptrdiff)sizeof(QChar));
+    subtype = StringType_Unknown;
 }
 
 void Heap::String::append(const String *data, QChar *ch)
@@ -173,9 +171,10 @@ void Heap::String::append(const String *data, QChar *ch)
         const String *item = worklist.back();
         worklist.pop_back();
 
-        if (item->largestSubLength) {
-            worklist.push_back(item->right);
-            worklist.push_back(item->left);
+        if (item->subtype >= StringType_Complex) {
+            const ComplexString *cs = static_cast<const ComplexString *>(item);
+            worklist.push_back(cs->right);
+            worklist.push_back(cs->left);
         } else {
             memcpy(ch, item->text->data(), item->text->size * sizeof(QChar));
             ch += item->text->size;
@@ -185,9 +184,9 @@ void Heap::String::append(const String *data, QChar *ch)
 
 void Heap::String::createHashValue() const
 {
-    if (largestSubLength)
+    if (!text)
         simplifyString();
-    Q_ASSERT(!largestSubLength);
+    Q_ASSERT(text);
     const QChar *ch = reinterpret_cast<const QChar *>(text->data());
     const QChar *end = ch + text->size;
     stringHash = QV4::String::calculateHashValue(ch, end, &subtype);
