@@ -216,7 +216,7 @@ public:
 
 private:
     static inline uint toUInt(const QChar *ch) { return ch->unicode(); }
-    static inline uint toUInt(const char *ch) { return *ch; }
+    static inline uint toUInt(const char *ch) { return static_cast<unsigned char>(*ch); }
 
     template <typename T>
     static inline uint toArrayIndex(const T *ch, const T *end)
