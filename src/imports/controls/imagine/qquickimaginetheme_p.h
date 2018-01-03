@@ -61,16 +61,7 @@ public:
     const QPalette *palette(Palette type = SystemPalette) const override;
 
 private:
-    QFont buttonFont;
-    QFont checkBoxFont;
-    QFont editorFont;
-    QFont groupBoxFont;
-    QFont labelFont;
-    QFont itemViewFont;
-    QFont menuItemFont;
     QFont systemFont;
-    QFont toolTipFont;
-
     QPalette systemPalette;
 };
 
