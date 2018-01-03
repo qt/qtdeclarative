@@ -71,6 +71,7 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
         StringType_ArrayIndex,
         StringType_Unknown,
         StringType_AddedString,
+        StringType_SubString,
         StringType_Complex = StringType_AddedString
     };
 
@@ -124,10 +125,13 @@ Q_STATIC_ASSERT(std::is_trivial< String >::value);
 #ifndef V4_BOOTSTRAP
 struct ComplexString : String {
     void init(String *l, String *n);
-    mutable uint nestingLevel;
+    void init(String *ref, int from, int len);
     mutable String *left;
     mutable String *right;
-    mutable int largestSubLength;
+    union {
+        mutable int largestSubLength;
+        int from;
+    };
     int len;
 };
 Q_STATIC_ASSERT(std::is_trivial< ComplexString >::value);
@@ -172,7 +176,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         return d()->hashValue();
     }
     uint asArrayIndex() const {
-        if (subtype() == Heap::String::StringType_Unknown)
+        if (subtype() >= Heap::String::StringType_Unknown)
             d()->createHashValue();
         Q_ASSERT(d()->subtype < Heap::String::StringType_Complex);
         if (subtype() == Heap::String::StringType_ArrayIndex)

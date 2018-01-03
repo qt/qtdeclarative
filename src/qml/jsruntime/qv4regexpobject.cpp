@@ -343,7 +343,7 @@ ReturnedValue RegExpPrototype::execFirstMatch(const FunctionObject *b, const Val
     if (r->value()->captureCount()) {
         int start = matchOffsets[0];
         int end = matchOffsets[1];
-        retVal = (start != -1) ? scope.engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
+        retVal = (start != -1) ? scope.engine->memoryManager->alloc<ComplexString>(str->d(), start, end - start)->asReturnedValue() : Encode::undefined();
     }
 
     RegExpCtor::Data *dd = regExpCtor->d();
@@ -394,7 +394,7 @@ ReturnedValue RegExpPrototype::method_exec(const FunctionObject *b, const Value 
     for (int i = 0; i < len; ++i) {
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];
-        v = (start != -1) ? scope.engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
+        v = (start != -1) ? scope.engine->memoryManager->alloc<ComplexString>(str->d(), start, end - start)->asReturnedValue() : Encode::undefined();
         array->arrayPut(i, v);
     }
     array->setArrayLengthUnchecked(len);

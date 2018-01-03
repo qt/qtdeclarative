@@ -200,6 +200,15 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("trim"), method_trim);
 }
 
+static Heap::String *thisAsString(ExecutionEngine *v4, const Value *thisObject)
+{
+    if (String *s = thisObject->stringValue())
+        return s->d();
+    if (const StringObject *thisString = thisObject->as<StringObject>())
+        return thisString->d()->string;
+    return thisObject->toString(v4);
+}
+
 static QString getThisString(ExecutionEngine *v4, const Value *thisObject)
 {
     if (String *s = thisObject->stringValue())
@@ -649,11 +658,12 @@ ReturnedValue StringPrototype::method_search(const FunctionObject *b, const Valu
 ReturnedValue StringPrototype::method_slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString text = getThisString(v4, thisObject);
+    Heap::String *s = thisAsString(v4, thisObject);
     if (v4->hasException)
         return QV4::Encode::undefined();
+    Q_ASSERT(s);
 
-    const double length = text.length();
+    const double length = s->length();
 
     double start = argc ? argv[0].toInteger() : 0;
     double end = (argc < 2 || argv[1].isUndefined())
@@ -673,7 +683,7 @@ ReturnedValue StringPrototype::method_slice(const FunctionObject *b, const Value
     const int intEnd = int(end);
 
     int count = qMax(0, intEnd - intStart);
-    return Encode(v4->newString(text.mid(intStart, count)));
+    return Encode(v4->memoryManager->alloc<ComplexString>(s, intStart, count));
 }
 
 ReturnedValue StringPrototype::method_split(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

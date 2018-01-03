@@ -59,8 +59,13 @@ void Heap::String::markObjects(Heap::Base *that, MarkStack *markStack)
         return;
 
     ComplexString *cs = static_cast<ComplexString *>(s);
-    cs->left->mark(markStack);
-    cs->right->mark(markStack);
+    if (cs->subtype == StringType_AddedString) {
+        cs->left->mark(markStack);
+        cs->right->mark(markStack);
+    } else {
+        Q_ASSERT(cs->subtype == StringType_SubString);
+        cs->left->mark(markStack);
+    }
 }
 
 DEFINE_MANAGED_VTABLE(String);
@@ -111,6 +116,18 @@ void Heap::ComplexString::init(String *l, String *r)
         simplifyString();
 }
 
+void Heap::ComplexString::init(Heap::String *ref, int from, int len)
+{
+    Q_ASSERT(ref->length() >= from + len);
+    Base::init();
+
+    subtype = String::StringType_SubString;
+
+    left = ref;
+    this->from = from;
+    this->len = len;
+}
+
 void Heap::String::destroy() {
     if (text) {
         internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(qptrdiff(-text->size) * (int)sizeof(QChar));
@@ -124,7 +141,7 @@ uint String::toUInt(bool *ok) const
 {
     *ok = true;
 
-    if (subtype() == Heap::String::StringType_Unknown)
+    if (subtype() >= Heap::String::StringType_Unknown)
         d()->createHashValue();
     if (subtype() == Heap::String::StringType_ArrayIndex)
         return d()->stringHash;
@@ -156,7 +173,10 @@ void Heap::String::simplifyString() const
     append(this, ch);
     text = result.data_ptr();
     text->ref.ref();
+    const ComplexString *cs = static_cast<const ComplexString *>(this);
     identifier = 0;
+    cs->left = cs->right = nullptr;
+
     internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(qptrdiff(text->size) * (qptrdiff)sizeof(QChar));
     subtype = StringType_Unknown;
 }
@@ -171,10 +191,14 @@ void Heap::String::append(const String *data, QChar *ch)
         const String *item = worklist.back();
         worklist.pop_back();
 
-        if (item->subtype >= StringType_Complex) {
+        if (item->subtype == StringType_AddedString) {
             const ComplexString *cs = static_cast<const ComplexString *>(item);
             worklist.push_back(cs->right);
             worklist.push_back(cs->left);
+        } else if (item->subtype == StringType_SubString) {
+            const ComplexString *cs = static_cast<const ComplexString *>(item);
+            memcpy(ch, cs->left->toQString().constData() + cs->from, cs->len*sizeof(QChar));
+            ch += cs->len;
         } else {
             memcpy(ch, item->text->data(), item->text->size * sizeof(QChar));
             ch += item->text->size;
