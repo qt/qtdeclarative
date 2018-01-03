@@ -343,6 +343,8 @@ QString QQuickStyle::path()
 
     \note The style must be configured \b before loading QML that imports Qt Quick Controls 2.
           It is not possible to change the style after the QML types have been registered.
+
+    \sa setFallbackStyle(), {Using Styles in Qt Quick Controls 2}
 */
 void QQuickStyle::setStyle(const QString &style)
 {
@@ -365,6 +367,8 @@ void QQuickStyle::setStyle(const QString &style)
 
     The fallback style can be also specified by setting the \c QT_QUICK_CONTROLS_FALLBACK_STYLE
     \l {Supported Environment Variables in Qt Quick Controls 2}{environment variable}.
+
+    \sa setStyle(), {Using Styles in Qt Quick Controls 2}
 */
 void QQuickStyle::setFallbackStyle(const QString &style)
 {

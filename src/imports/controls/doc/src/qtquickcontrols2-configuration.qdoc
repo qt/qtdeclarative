@@ -53,15 +53,42 @@
     Primary=BlueGrey
     \endcode
 
-    \l {Material style} specific values that can be specified in a \c Material
+    \section1 Controls Section
+
+    The following values can be specified in a \c Controls section of the
+    configuration file:
+
+    \table
+        \header
+            \li Variable
+            \li Description
+        \row
+            \li \c Style
+            \li Specifies the style to run the application with.
+                The value can be the name of one of the \l {Available Styles}{built-in styles}
+                or a \l {Creating a Custom Style}{custom style}.
+        \row
+            \li \c FallbackStyle
+            \li Specifies the style to use for controls that are not implemented.
+                The style must be one of the \l {Available Styles}{built-in styles}.
+                By default, the \l {Default Style}{Default} style is used.
+    \endtable
+
+    \section1 Material Section
+
+    The following \l {Material style} specific values can be specified in a \c Material
     section of the configuration file:
 
     \include qquickmaterialstyle.qdocinc conf
 
-    \l {Universal style} specific values that can be specified in a \c Universal
+    \section1 Universal Section
+
+    The following \l {Universal style} specific values can be specified in a \c Universal
     section of the configuration file:
 
     \include qquickuniversalstyle.qdocinc conf
+
+    \section1 Using the Configuration File in a Project
 
     In order to make it possible for Qt Quick Controls 2 to find the configuration file,
     it must be built into application's resources using the \l {The Qt Resource System}.
