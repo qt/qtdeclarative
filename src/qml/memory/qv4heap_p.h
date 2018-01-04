@@ -65,8 +65,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct InternalClass;
-
 struct VTable
 {
     const VTable * const parent;

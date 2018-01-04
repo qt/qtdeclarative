@@ -88,7 +88,6 @@ struct CompilationUnit;
 }
 
 struct Function;
-struct InternalClass;
 struct InternalClassPool;
 
 struct Q_QML_EXPORT CppStackFrame {
