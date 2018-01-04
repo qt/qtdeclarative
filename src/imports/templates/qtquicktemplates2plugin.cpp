@@ -226,7 +226,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickPage, 1>(uri, 2, 1, "Page");
     qmlRegisterType<QQuickPopup, 1>(uri, 2, 1, "Popup");
     qmlRegisterType<QQuickRangeSlider, 1>(uri, 2, 1, "RangeSlider");
-    qmlRegisterType<QQuickRoundButton, 1>(uri, 2, 1, "RoundButton");
+    qmlRegisterType<QQuickRoundButton>(uri, 2, 1, "RoundButton");
     qmlRegisterType<QQuickSlider, 1>(uri, 2, 1, "Slider");
     qmlRegisterType<QQuickSpinBox, 1>(uri, 2, 1, "SpinBox");
     qmlRegisterType<QQuickStackView, 1>(uri, 2, 1, "StackView");
