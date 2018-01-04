@@ -226,11 +226,6 @@ void Object::defineReadonlyConfigurableProperty(String *name, const Value &value
     insertMember(name, value, Attr_ReadOnly_ButConfigurable);
 }
 
-void Object::markObjects(Heap::Base *base, MarkStack *stack)
-{
-    Heap::Object::markObjects(base, stack);
-}
-
 void Heap::Object::markObjects(Heap::Base *b, MarkStack *stack)
 {
     Object *o = static_cast<Object *>(b);

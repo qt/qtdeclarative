@@ -298,8 +298,6 @@ struct Q_QML_EXPORT Object: Managed {
     // Array handling
 
 public:
-    static void markObjects(Heap::Base *base, MarkStack *stack);
-
     void copyArrayData(Object *other);
 
     bool setArrayLength(uint newLen);
