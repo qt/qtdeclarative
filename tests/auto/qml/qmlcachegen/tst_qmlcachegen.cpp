@@ -45,6 +45,7 @@ private slots:
     void translationExpressionSupport();
     void signalHandlerParameters();
     void errorOnArgumentsInSignalHandler();
+    void aheadOfTimeCompilation();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -223,6 +224,39 @@ void tst_qmlcachegen::errorOnArgumentsInSignalHandler()
     QByteArray errorOutput;
     QVERIFY(!generateCache(testFilePath, &errorOutput));
     QVERIFY2(errorOutput.contains("error: The use of the arguments object in signal handlers is"), errorOutput);
+}
+
+void tst_qmlcachegen::aheadOfTimeCompilation()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const auto writeTempFile = [&tempDir](const QString &fileName, const char *contents) {
+        QFile f(tempDir.path() + '/' + fileName);
+        const bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        Q_ASSERT(ok);
+        f.write(contents);
+        return f.fileName();
+    };
+
+    const QString testFilePath = writeTempFile("test.qml", "import QtQml 2.0\n"
+                                                           "QtObject {\n"
+                                                           "    function runTest() { var x = 0; while (x < 42) { ++x }; return x; }\n"
+                                                           "}");
+
+    QVERIFY(generateCache(testFilePath));
+
+    const QString cacheFilePath = testFilePath + QLatin1Char('c');
+    QVERIFY(QFile::exists(cacheFilePath));
+    QVERIFY(QFile::remove(testFilePath));
+
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QVariant result;
+    QMetaObject::invokeMethod(obj.data(), "runTest", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toInt(), 42);
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)

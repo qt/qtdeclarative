@@ -82,7 +82,7 @@ void BytecodeGenerator::packInstruction(I &i)
         Wide
     } width = Normal;
     for (int n = 0; n < nMembers; ++n) {
-        if (width == Normal && (static_cast<char>(instructionsAsInts[n]) != instructionsAsInts[n]))
+        if (width == Normal && (static_cast<qint8>(instructionsAsInts[n]) != instructionsAsInts[n]))
             width = Wide;
     }
     char *code = i.packed;
@@ -91,7 +91,7 @@ void BytecodeGenerator::packInstruction(I &i)
         *reinterpret_cast<uchar *>(code) = type;
         ++code;
         for (int n = 0; n < nMembers; ++n) {
-            char v = static_cast<char>(instructionsAsInts[n]);
+            qint8 v = static_cast<qint8>(instructionsAsInts[n]);
             memcpy(code, &v, 1);
             code += 1;
         }
@@ -113,7 +113,7 @@ void BytecodeGenerator::adjustJumpOffsets()
             continue;
         Q_ASSERT(i.linkedLabel != -1 && labels.at(i.linkedLabel) != -1);
         const auto &linkedInstruction = instructions.at(labels.at(i.linkedLabel));
-        char *c = i.packed + i.offsetForJump;
+        qint8 *c = reinterpret_cast<qint8*>(i.packed + i.offsetForJump);
         int jumpOffset = linkedInstruction.position - (i.position + i.size);
 //        qDebug() << "adjusting jump offset for instruction" << index << i.position << i.size << "offsetForJump" << i.offsetForJump << "target"
 //                 << labels.at(i.linkedLabel) << linkedInstruction.position << "jumpOffset" << jumpOffset;
@@ -123,7 +123,7 @@ void BytecodeGenerator::adjustJumpOffsets()
             memcpy(c, &jumpOffset, sizeof(int));
         } else {
             Q_ASSERT(i.offsetForJump == i.size - 1);
-            char o = jumpOffset;
+            qint8 o = jumpOffset;
             Q_ASSERT(o == jumpOffset);
             *c = o;
         }

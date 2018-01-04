@@ -366,9 +366,9 @@ QT_BEGIN_NAMESPACE
         MOTH_ADJUST_CODE(int, nargs); \
         MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
         goto op_main_##name; \
-    op_char_##name: \
-        MOTH_ADJUST_CODE(char, nargs); \
-        MOTH_DECODE_ARGS(name, char, nargs, __VA_ARGS__) \
+    op_byte_##name: \
+        MOTH_ADJUST_CODE(qint8, nargs); \
+        MOTH_DECODE_ARGS(name, qint8, nargs, __VA_ARGS__) \
     op_main_##name: \
         ; \
 
@@ -380,10 +380,10 @@ QT_BEGIN_NAMESPACE
         MOTH_ADJUST_CODE(int, nargs); \
         MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
         goto op_main_##name; \
-    op_char_##name: \
+    op_byte_##name: \
         base_ptr = code; \
-        MOTH_ADJUST_CODE(char, nargs); \
-        MOTH_DECODE_ARGS(name, char, nargs, __VA_ARGS__) \
+        MOTH_ADJUST_CODE(qint8, nargs); \
+        MOTH_DECODE_ARGS(name, qint8, nargs, __VA_ARGS__) \
     op_main_##name: \
         ; \
 
@@ -408,7 +408,7 @@ QT_BEGIN_NAMESPACE
 #define COLLECT_LABELS(instr) \
     INSTR_##instr(GET_LABEL)
 #define GET_LABEL_INSTRUCTION(name, ...) \
-    &&op_char_##name,
+    &&op_byte_##name,
 #define COLLECT_LABELS_WIDE(instr) \
     INSTR_##instr(GET_LABEL_WIDE)
 #define GET_LABEL_WIDE_INSTRUCTION(name, ...) \
@@ -428,7 +428,7 @@ QT_BEGIN_NAMESPACE
 #define MOTH_INSTR_CASE_AND_JUMP(instr) \
     INSTR_##instr(GET_CASE_AND_JUMP)
 #define GET_CASE_AND_JUMP_INSTRUCTION(name, ...) \
-    case static_cast<uchar>(Instr::Type::name): goto op_char_##name;
+    case static_cast<uchar>(Instr::Type::name): goto op_byte_##name;
 #define MOTH_INSTR_CASE_AND_JUMP_WIDE(instr) \
     INSTR_##instr(GET_CASE_AND_JUMP_WIDE)
 #define GET_CASE_AND_JUMP_WIDE_INSTRUCTION(name, ...) \

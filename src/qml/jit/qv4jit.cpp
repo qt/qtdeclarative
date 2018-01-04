@@ -946,6 +946,11 @@ void BaselineJIT::collectLabelsInBytecode()
 {
     MOTH_JUMP_TABLE;
 
+    const auto addLabel = [&](int offset) {
+        Q_ASSERT(offset >= 0 && offset < static_cast<int>(function->compiledFunction->codeSize));
+        labels.push_back(offset);
+    };
+
     const char *code = reinterpret_cast<const char *>(function->codeData);
     const char *start = code;
     const char *end = code + function->compiledFunction->codeSize;
@@ -1083,7 +1088,7 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_END_INSTR(CallGlobalLookup)
 
         MOTH_BEGIN_INSTR(SetExceptionHandler)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(SetExceptionHandler)
 
         MOTH_BEGIN_INSTR(ThrowException)
@@ -1150,15 +1155,15 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_END_INSTR(Construct)
 
         MOTH_BEGIN_INSTR(Jump)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(Jump)
 
         MOTH_BEGIN_INSTR(JumpTrue)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(JumpTrue)
 
         MOTH_BEGIN_INSTR(JumpFalse)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(JumpFalse)
 
         MOTH_BEGIN_INSTR(CmpEqNull)
@@ -1204,11 +1209,11 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_END_INSTR(CmpInstanceOf)
 
         MOTH_BEGIN_INSTR(JumpStrictEqualStackSlotInt)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(JumpStrictEqualStackSlotInt)
 
         MOTH_BEGIN_INSTR(JumpStrictNotEqualStackSlotInt)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(JumpStrictNotEqualStackSlotInt)
 
         MOTH_BEGIN_INSTR(UNot)
