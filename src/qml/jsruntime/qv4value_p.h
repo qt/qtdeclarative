@@ -457,6 +457,7 @@ public:
     uint asArrayLength(bool *ok) const;
 #endif
 
+    ReturnedValue *data_ptr() { return &_val; }
     ReturnedValue asReturnedValue() const { return _val; }
     static Value fromReturnedValue(ReturnedValue val) { Value v; v._val = val; return v; }
 
@@ -790,6 +791,94 @@ inline double Value::toInteger() const
 
     return Primitive::toInteger(isDouble() ? doubleValue() : toNumberImpl());
 }
+
+
+template <size_t o>
+struct HeapValue : Value {
+    static Q_CONSTEXPR size_t offset = o;
+    Heap::Base *base() {
+        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
+        Q_ASSERT(base->inUse());
+        return base;
+    }
+
+    void set(EngineBase *e, const Value &newVal) {
+        WriteBarrier::write(e, base(), data_ptr(), newVal.asReturnedValue());
+    }
+    void set(EngineBase *e, Heap::Base *b) {
+        WriteBarrier::write(e, base(), data_ptr(), b->asReturnedValue());
+    }
+};
+
+template <size_t o>
+struct ValueArray {
+    static Q_CONSTEXPR size_t offset = o;
+    uint size;
+    uint alloc;
+    Value values[1];
+
+    Heap::Base *base() {
+        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
+        Q_ASSERT(base->inUse());
+        return base;
+    }
+
+    void set(EngineBase *e, uint index, Value v) {
+        WriteBarrier::write(e, base(), values[index].data_ptr(), v.asReturnedValue());
+    }
+    void set(EngineBase *e, uint index, Heap::Base *b) {
+        WriteBarrier::write(e, base(), values[index].data_ptr(), b->asReturnedValue());
+    }
+    inline const Value &operator[] (uint index) const {
+        Q_ASSERT(index < alloc);
+        return values[index];
+    }
+    inline const Value *data() const {
+        return values;
+    }
+
+    void insertData(EngineBase *e, uint index, Value v) {
+        for (uint i = size - 1; i > index; --i) {
+            values[i] = values[i - 1];
+        }
+        set(e, index, v);
+    }
+    void removeData(EngineBase *e, uint index, int n = 1) {
+        Q_UNUSED(e);
+        for (uint i = index; i < size - n; ++i) {
+            values[i] = values[i + n];
+        }
+    }
+
+    void mark(MarkStack *markStack) {
+        Value *v = values;
+        const Value *end = v + alloc;
+        if (alloc > 32*1024) {
+            // drain from time to time to avoid overflows in the js stack
+            Heap::Base **currentBase = markStack->top;
+            while (v < end) {
+                v->mark(markStack);
+                ++v;
+                if (markStack->top >= currentBase + 32*1024) {
+                    Heap::Base **oldBase = markStack->base;
+                    markStack->base = currentBase;
+                    markStack->drain();
+                    markStack->base = oldBase;
+                }
+            }
+        } else {
+            while (v < end) {
+                v->mark(markStack);
+                ++v;
+            }
+        }
+    }
+};
+
+// It's really important that the offset of values in this structure is
+// constant across all architecture,  otherwise JIT cross-compiled code will
+// have wrong offsets between host and target.
+Q_STATIC_ASSERT(offsetof(ValueArray<0>, values) == 8);
 
 
 }

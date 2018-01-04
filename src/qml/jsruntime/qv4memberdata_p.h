@@ -79,7 +79,7 @@ struct MemberData : Managed
         Value *slot;
 
         void set(EngineBase *e, Value newVal) {
-            WriteBarrier::write(e, base, slot, newVal);
+            WriteBarrier::write(e, base, slot->data_ptr(), newVal.asReturnedValue());
         }
         const Value *operator->() const { return slot; }
         const Value &operator*() const { return *slot; }

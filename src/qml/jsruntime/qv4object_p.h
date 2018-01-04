@@ -85,12 +85,12 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
     void setInlineProperty(ExecutionEngine *e, uint index, Value v) {
         Q_ASSERT(index < vtable()->nInlineProperties);
         Value *prop = reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
-        WriteBarrier::write(e, this, prop, v);
+        WriteBarrier::write(e, this, prop->data_ptr(), v.asReturnedValue());
     }
     void setInlineProperty(ExecutionEngine *e, uint index, Heap::Base *b) {
         Q_ASSERT(index < vtable()->nInlineProperties);
         Value *prop = reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
-        WriteBarrier::write(e, this, prop, b);
+        WriteBarrier::write(e, this, prop->data_ptr(), b->asReturnedValue());
     }
 
     QV4::MemberData::Index writablePropertyData(uint index) {

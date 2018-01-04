@@ -53,6 +53,7 @@
 #include <QtCore/QString>
 #include <private/qv4global_p.h>
 #include <private/qv4mmdefs_p.h>
+#include <private/qv4writebarrier_p.h>
 #include <private/qv4internalclass_p.h>
 #include <QSharedPointer>
 
@@ -193,6 +194,39 @@ void Heap::Base::mark(QV4::MarkStack *markStack)
         *bitmap |= bit;
         markStack->push(this);
     }
+}
+
+namespace Heap {
+
+template <typename T, size_t o>
+struct Pointer {
+    static Q_CONSTEXPR size_t offset = o;
+    T operator->() const { return get(); }
+    operator T () const { return get(); }
+
+    Heap::Base *base() {
+        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
+        Q_ASSERT(base->inUse());
+        return base;
+    }
+
+    void set(EngineBase *e, T newVal) {
+        WriteBarrier::write(e, base(), &ptr, reinterpret_cast<Heap::Base *>(newVal));
+    }
+
+    T get() const { return reinterpret_cast<T>(ptr); }
+
+    template <typename Type>
+    Type *cast() { return static_cast<Type *>(ptr); }
+
+    Heap::Base *heapObject() const { return ptr; }
+
+private:
+    Heap::Base *ptr;
+};
+typedef Pointer<char *, 0> V4PointerCheck;
+Q_STATIC_ASSERT(std::is_trivial< V4PointerCheck >::value);
+
 }
 
 #ifdef QT_NO_QOBJECT
