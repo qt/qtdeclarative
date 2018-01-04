@@ -79,12 +79,12 @@ struct PropertyHash
     inline PropertyHash();
     inline PropertyHash(const PropertyHash &other);
     inline ~PropertyHash();
+    PropertyHash &operator=(const PropertyHash &other);
 
     void addEntry(const Entry &entry, int classSize);
     uint lookup(const Identifier *identifier) const;
-
-private:
-    PropertyHash &operator=(const PropertyHash &other);
+    int removeIdentifier(Identifier *identifier, int classSize);
+    void detach(bool grow, int classSize);
 };
 
 struct PropertyHashData
@@ -117,6 +117,17 @@ inline PropertyHash::~PropertyHash()
     if (!--d->refCount)
         delete d;
 }
+
+inline PropertyHash &PropertyHash::operator=(const PropertyHash &other)
+{
+    ++other.d->refCount;
+    if (!--d->refCount)
+        delete d;
+    d = other.d;
+    return *this;
+}
+
+
 
 inline uint PropertyHash::lookup(const Identifier *identifier) const
 {
@@ -162,6 +173,13 @@ struct SharedInternalClassData {
     inline ~SharedInternalClassData() {
         if (!--d->refcount)
             delete d;
+    }
+    SharedInternalClassData &operator=(const SharedInternalClassData &other) {
+        ++other.d->refcount;
+        if (!--d->refcount)
+            delete d;
+        d = other.d;
+        return *this;
     }
 
     void add(uint pos, T value) {
@@ -214,9 +232,6 @@ struct SharedInternalClassData {
         Q_ASSERT(i < d->size);
         return d->data[i];
     }
-
-private:
-    SharedInternalClassData &operator=(const SharedInternalClassData &other);
 };
 
 struct InternalClassTransition
@@ -233,7 +248,8 @@ struct InternalClassTransition
         NotExtensible = 0x100,
         VTableChange = 0x200,
         PrototypeChange = 0x201,
-        ProtoClass = 0x202
+        ProtoClass = 0x202,
+        RemoveMember = -1
     };
 
     bool operator==(const InternalClassTransition &other) const
@@ -248,6 +264,7 @@ struct InternalClass : public QQmlJS::Managed {
     ExecutionEngine *engine;
     const VTable *vtable;
     Heap::Object *prototype;
+    InternalClass *parent = nullptr;
 
     PropertyHash propertyTable; // id to valueIndex
     SharedInternalClassData<Identifier *> nameMap;
@@ -309,7 +326,7 @@ private:
     void updateInternalClassIdRecursive();
     friend struct ExecutionEngine;
     InternalClass(ExecutionEngine *engine);
-    InternalClass(const InternalClass &other);
+    InternalClass(InternalClass *other);
 };
 
 struct InternalClassPool : public QQmlJS::MemoryPool

@@ -451,7 +451,7 @@ public:
 
     void initRootContext();
 
-    InternalClass *newClass(const InternalClass &other);
+    InternalClass *newClass(InternalClass *other);
 
     StackTrace exceptionStackTrace;
 

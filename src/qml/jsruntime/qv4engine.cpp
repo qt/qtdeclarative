@@ -522,7 +522,7 @@ void ExecutionEngine::initRootContext()
     jsObjects[IntegerNull] = Encode((int)0);
 }
 
-InternalClass *ExecutionEngine::newClass(const InternalClass &other)
+InternalClass *ExecutionEngine::newClass(InternalClass *other)
 {
     return new (classPool) InternalClass(other);
 }
