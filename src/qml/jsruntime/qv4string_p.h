@@ -131,7 +131,7 @@ private:
     static void append(const String *data, QChar *ch);
 #endif
 };
-V4_ASSERT_IS_TRIVIAL(String)
+Q_STATIC_ASSERT(std::is_trivial< String >::value);
 
 }
 

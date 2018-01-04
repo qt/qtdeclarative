@@ -100,7 +100,7 @@ struct RegExp : Base {
 
     int captureCount() const { return subPatternCount + 1; }
 };
-V4_ASSERT_IS_TRIVIAL(RegExp)
+Q_STATIC_ASSERT(std::is_trivial< RegExp >::value);
 
 }
 

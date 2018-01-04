@@ -65,7 +65,7 @@ namespace Heap {
 DECLARE_HEAP_OBJECT(MemberData, Base) {
     DECLARE_MARKOBJECTS(MemberData);
 };
-V4_ASSERT_IS_TRIVIAL(MemberData)
+Q_STATIC_ASSERT(std::is_trivial< MemberData >::value);
 
 }
 

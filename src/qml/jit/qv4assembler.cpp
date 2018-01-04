@@ -52,15 +52,6 @@
 
 #undef ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES
 
-#ifdef Q_STATIC_ASSERT_FOR_SANE_COMPILERS
-#  undef Q_STATIC_ASSERT_FOR_SANE_COMPILERS
-#endif
-#if defined(Q_CC_MSVC) && _MSC_VER < 1900
-#  define Q_STATIC_ASSERT_FOR_SANE_COMPILERS(x) // insane
-#else
-#  define Q_STATIC_ASSERT_FOR_SANE_COMPILERS(x) Q_STATIC_ASSERT(x)
-#endif
-
 #ifdef V4_ENABLE_JIT
 
 QT_BEGIN_NAMESPACE
@@ -2093,7 +2084,7 @@ void Assembler::gotoCatchException()
 
 void Assembler::getException()
 {
-    Q_STATIC_ASSERT_FOR_SANE_COMPILERS(sizeof(QV4::EngineBase::hasException) == 1);
+    Q_STATIC_ASSERT(sizeof(QV4::EngineBase::hasException) == 1);
 
     Address hasExceptionAddr(PlatformAssembler::EngineRegister,
                              offsetof(EngineBase, hasException));
@@ -2118,7 +2109,7 @@ void Assembler::setException()
     pasm()->loadPtr(addr, PlatformAssembler::ScratchRegister);
     pasm()->storeAccumulator(Address(PlatformAssembler::ScratchRegister));
     addr.offset = offsetof(EngineBase, hasException);
-    Q_STATIC_ASSERT_FOR_SANE_COMPILERS(sizeof(QV4::EngineBase::hasException) == 1);
+    Q_STATIC_ASSERT(sizeof(QV4::EngineBase::hasException) == 1);
     pasm()->store8(TrustedImm32(1), addr);
 }
 

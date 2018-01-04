@@ -153,7 +153,7 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
             dptr->_checkIsInitialized(); \
             return dptr; \
         } \
-        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass);
+        Q_STATIC_ASSERT(std::is_trivial< QV4::Heap::DataClass >::value);
 
 #define V4_PROTOTYPE(p) \
     static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \

@@ -328,7 +328,7 @@ static inline double DaylightSavingTA(double t) // t is a UTC time
 static inline double DaylightSavingTA(double t)
 {
     struct tm tmtm;
-#if defined(_MSC_VER) && _MSC_VER >= 1400
+#if defined(Q_CC_MSVC)
     __time64_t  tt = (__time64_t)(t / msPerSecond);
     // _localtime_64_s returns non-zero on failure
     if (_localtime64_s(&tmtm, &tt) != 0)

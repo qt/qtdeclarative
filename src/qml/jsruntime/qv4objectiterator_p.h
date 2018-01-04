@@ -73,7 +73,7 @@ struct Q_QML_EXPORT ObjectIteratorData
     uint memberIndex;
     uint flags;
 };
-V4_ASSERT_IS_TRIVIAL(ObjectIteratorData)
+Q_STATIC_ASSERT(std::is_trivial< ObjectIteratorData >::value);
 
 struct Q_QML_EXPORT ObjectIterator: ObjectIteratorData
 {

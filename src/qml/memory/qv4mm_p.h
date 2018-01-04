@@ -169,7 +169,7 @@ public:
     template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size)
     {
-        V4_ASSERT_IS_TRIVIAL(typename ManagedType::Data)
+        Q_STATIC_ASSERT(std::is_trivial< typename ManagedType::Data >::value);
         size = align(size);
         Heap::Base *o = allocData(size);
         InternalClass *ic = ManagedType::defaultInternalClass(engine);
@@ -182,7 +182,7 @@ public:
     template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size, InternalClass *ic)
     {
-        V4_ASSERT_IS_TRIVIAL(typename ManagedType::Data)
+        Q_STATIC_ASSERT(std::is_trivial< typename ManagedType::Data >::value);
         size = align(size);
         Heap::Base *o = allocData(size);
         o->internalClass = ic;

@@ -483,7 +483,7 @@ public:
     template<typename T>
     Value &operator=(const Scoped<T> &t);
 };
-V4_ASSERT_IS_TRIVIAL(Value)
+Q_STATIC_ASSERT(std::is_trivial< Value >::value);
 
 inline void Value::mark(MarkStack *markStack)
 {

@@ -138,7 +138,7 @@ private:
     Heap::Base *ptr;
 };
 typedef Pointer<char *, 0> V4PointerCheck;
-V4_ASSERT_IS_TRIVIAL(V4PointerCheck)
+Q_STATIC_ASSERT(std::is_trivial< V4PointerCheck >::value);
 
 }
 

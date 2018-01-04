@@ -6249,10 +6249,6 @@ void tst_qqmlecmascript::include()
 
 void tst_qqmlecmascript::includeRemoteSuccess()
 {
-#if defined(Q_CC_MSVC) && _MSC_VER == 1700
-    QSKIP("This test does not work reliably with MSVC2012 on Win8 64-bit in release mode.");
-#endif
-
     // Remote - success
     TestHTTPServer server;
     QVERIFY2(server.listen(), qPrintable(server.errorString()));

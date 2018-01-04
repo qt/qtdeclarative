@@ -60,12 +60,6 @@
 // parent's init all up the inheritance chain), define QML_CHECK_INIT_DESTROY_CALLS below.
 #undef QML_CHECK_INIT_DESTROY_CALLS
 
-#if defined(_MSC_VER) && (_MSC_VER < 1900) // broken compilers:
-#  define V4_ASSERT_IS_TRIVIAL(x)
-#else // working compilers:
-#  define V4_ASSERT_IS_TRIVIAL(x) Q_STATIC_ASSERT(std::is_trivial< x >::value);
-#endif
-
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -175,7 +169,7 @@ struct Q_QML_EXPORT Base {
     Q_ALWAYS_INLINE void _setDestroyed() {}
 #endif
 };
-V4_ASSERT_IS_TRIVIAL(Base)
+Q_STATIC_ASSERT(std::is_trivial< Base >::value);
 // This class needs to consist only of pointer sized members to allow
 // for a size/offset translation when cross-compiling between 32- and
 // 64-bit.
@@ -253,7 +247,7 @@ private:
     QtSharedPointer::ExternalRefCountData *d;
     QObject *qObject;
 };
-V4_ASSERT_IS_TRIVIAL(QQmlQPointer<QObject>)
+Q_STATIC_ASSERT(std::is_trivial< QQmlQPointer<QObject> >::value);
 #endif
 
 }

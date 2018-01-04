@@ -970,10 +970,6 @@ void tst_QJSValue::toUInt()
     QCOMPARE(qjsvalue_cast<quint32>(inv), quint32(0));
 }
 
-#if defined Q_CC_MSVC && _MSC_VER < 1300
-Q_DECLARE_METATYPE(QVariant)
-#endif
-
 void tst_QJSValue::toVariant()
 {
     QJSEngine eng;
