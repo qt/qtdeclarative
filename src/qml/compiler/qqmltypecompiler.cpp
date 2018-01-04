@@ -1080,7 +1080,11 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
             alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
         } else {
             QQmlPropertyCache *targetCache = propertyCaches.at(targetObjectIndex);
-            Q_ASSERT(targetCache);
+            if (!targetCache) {
+                *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(property.toString()));
+                break;
+            }
+
             QmlIR::PropertyResolver resolver(targetCache);
 
             QQmlPropertyData *targetProperty = resolver.property(property.toString());
