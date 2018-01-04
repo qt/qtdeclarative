@@ -448,13 +448,38 @@ right-hand-side of the property declaration must be a valid alias reference:
 [default] property alias <name>: <alias reference>
 \endcode
 
-Unlike an ordinary property, an alias can only refer to an object, or the
-property of an object, that is within the scope of the \l{QML Object Types}
-{type} within which the alias is declared. It cannot contain arbitrary
-JavaScript expressions and it cannot refer to objects declared outside of
-the scope of its type. Also note the \e {alias reference} is not optional,
-unlike the optional default value for an ordinary property; the alias reference
-must be provided when the alias is first declared.
+Unlike an ordinary property, an alias has the following restrictions:
+
+\list
+\li It can only refer to an object, or the
+    property of an object, that is within the scope of the \l{QML Object Types}
+    {type} within which the alias is declared.
+\li It cannot contain arbitrary
+    JavaScript expressions
+\li It cannot refer to objects declared outside of
+    the scope of its type.
+\li The \e {alias reference} is not optional,
+    unlike the optional default value for an ordinary property; the alias reference
+    must be provided when the alias is first declared.
+\li It cannot refer to grouped properties; the following code will not work:
+    \code
+    property alias color: rectangle.border.color
+
+    Rectangle {
+        id: rectangle
+    }
+    \endcode
+
+    However, aliases to \l {QML Basic Types}{value type} properties do work:
+    \code
+    property alias rectX: object.rectProperty.x
+
+    Item {
+        id: object
+        property rect rectProperty
+    }
+    \endcode
+\endlist
 
 For example, below is a \c Button type with a \c buttonText aliased property
 which is connected to the \c text object of the \l Text child:
