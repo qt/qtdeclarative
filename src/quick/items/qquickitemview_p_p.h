@@ -206,7 +206,7 @@ public:
     void refill(qreal from, qreal to);
     void mirrorChange() override;
 
-    FxViewItem *createItem(int modelIndex, bool asynchronous = false);
+    FxViewItem *createItem(int modelIndex,QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested);
     virtual bool releaseItem(FxViewItem *item);
 
     QQuickItem *createHighlightItem() const;

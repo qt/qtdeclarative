@@ -1276,11 +1276,20 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
 
     QQmlTypeLoader &typeLoader = QQmlEnginePrivate::get(database->engine)->typeLoader;
 
-    QStringList localImportPaths = database->importPathList(QQmlImportDatabase::Local);
+    // Interceptor might redirect remote files to local ones.
+    QQmlAbstractUrlInterceptor *interceptor = typeLoader.engine()->urlInterceptor();
+    QStringList localImportPaths = database->importPathList(
+                interceptor ? QQmlImportDatabase::LocalOrRemote : QQmlImportDatabase::Local);
 
     // Search local import paths for a matching version
     const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(uri, localImportPaths, vmaj, vmin);
-    for (const QString &qmldirPath : qmlDirPaths) {
+    for (QString qmldirPath : qmlDirPaths) {
+        if (interceptor) {
+            qmldirPath = QQmlFile::urlToLocalFileOrQrc(
+                        interceptor->intercept(QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
+                                               QQmlAbstractUrlInterceptor::QmldirFile));
+        }
+
         QString absoluteFilePath = typeLoader.absoluteFilePath(qmldirPath);
         if (!absoluteFilePath.isEmpty()) {
             QString url;
@@ -1489,6 +1498,10 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     QString qmldirUrl = resolveLocalUrl(base, importUri + (importUri.endsWith(Slash)
                                                            ? String_qmldir
                                                            : Slash_qmldir));
+    if (QQmlAbstractUrlInterceptor *interceptor = typeLoader->engine()->urlInterceptor()) {
+        qmldirUrl = interceptor->intercept(QUrl(qmldirUrl),
+                                           QQmlAbstractUrlInterceptor::QmldirFile).toString();
+    }
     QString qmldirIdentifier;
 
     if (QQmlFile::isLocalFile(qmldirUrl)) {
@@ -1588,8 +1601,8 @@ bool QQmlImportsPrivate::updateQmldirContent(const QString &uri, const QString &
 
             if (import->setQmldirContent(qmldirUrl, qmldir, nameSpace, errors)) {
                 if (import->qmlDirComponents.isEmpty() && import->qmlDirScripts.isEmpty()) {
-                    // The implicit import qmldir can be empty
-                    if (uri != QLatin1String(".")) {
+                    // The implicit import qmldir can be empty, and plugins have no extra versions
+                    if (uri != QLatin1String(".") && !QQmlMetaType::isModule(uri, vmaj, vmin)) {
                         QQmlError error;
                         if (QQmlMetaType::isAnyModule(uri))
                             error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri).arg(vmaj).arg(vmin));
@@ -1715,6 +1728,16 @@ bool QQmlImports::isLocal(const QString &url)
 bool QQmlImports::isLocal(const QUrl &url)
 {
     return !QQmlFile::urlToLocalFileOrQrc(url).isEmpty();
+}
+
+QUrl QQmlImports::urlFromLocalFileOrQrcOrUrl(const QString &file)
+{
+    QUrl url(QLatin1String(file.at(0) == Colon ? "qrc" : "") + file);
+
+    // We don't support single character schemes as those conflict with windows drive letters.
+    if (url.scheme().length() < 2)
+        return QUrl::fromLocalFile(file);
+    return url;
 }
 
 void QQmlImports::setDesignerSupportRequired(bool b)

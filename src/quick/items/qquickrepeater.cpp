@@ -401,7 +401,7 @@ void QQuickRepeater::regenerate()
 void QQuickRepeaterPrivate::requestItems()
 {
     for (int i = 0; i < itemCount; i++) {
-        QObject *object = model->object(i, false);
+        QObject *object = model->object(i, QQmlIncubator::AsynchronousIfNested);
         if (object)
             model->release(object);
     }
@@ -410,7 +410,7 @@ void QQuickRepeaterPrivate::requestItems()
 void QQuickRepeater::createdItem(int index, QObject *)
 {
     Q_D(QQuickRepeater);
-    QObject *object = d->model->object(index, false);
+    QObject *object = d->model->object(index, QQmlIncubator::AsynchronousIfNested);
     QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
     emit itemAdded(index, item);
 }
@@ -495,13 +495,20 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
             QQuickItem *stackBefore = index + items.count() < d->deletables.count()
                     ? d->deletables.at(index + items.count())
                     : this;
-            for (int i = index; i < index + items.count(); ++i)
-                d->deletables.at(i)->stackBefore(stackBefore);
+            if (stackBefore) {
+                for (int i = index; i < index + items.count(); ++i) {
+                    if (i < d->deletables.count()) {
+                        QPointer<QQuickItem> item = d->deletables.at(i);
+                        if (item)
+                            item->stackBefore(stackBefore);
+                    }
+                }
+            }
         } else for (int i = 0; i < insert.count; ++i) {
             int modelIndex = index + i;
             ++d->itemCount;
             d->deletables.insert(modelIndex, 0);
-            QObject *object = d->model->object(modelIndex, false);
+            QObject *object = d->model->object(modelIndex, QQmlIncubator::AsynchronousIfNested);
             if (object)
                 d->model->release(object);
         }

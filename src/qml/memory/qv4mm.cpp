@@ -348,7 +348,8 @@ static void increaseFreedCountForClass(const char *className)
     (*freedObjectStatsGlobal())[className]++;
 }
 
-bool Chunk::sweep(ClassDestroyStatsCallback classCountPtr)
+//bool Chunk::sweep(ClassDestroyStatsCallback classCountPtr)
+bool Chunk::sweep(ExecutionEngine *engine)
 {
     bool hasUsedSlots = false;
     SDUMP() << "sweeping chunk" << this;
@@ -387,13 +388,16 @@ bool Chunk::sweep(ClassDestroyStatsCallback classCountPtr)
             HeapItem *itemToFree = o + index;
             Heap::Base *b = *itemToFree;
             const VTable *v = b->vtable();
-            if (Q_UNLIKELY(classCountPtr))
-                classCountPtr(v->className);
+//            if (Q_UNLIKELY(classCountPtr))
+//                classCountPtr(v->className);
             if (v->destroy) {
                 v->destroy(b);
                 b->_checkIsDestroyed();
             }
         }
+        Q_V4_PROFILE_DEALLOC(engine, qPopulationCount((objectBitmap[i] | extendsBitmap[i])
+                                                      - (blackBitmap[i] | e)) * Chunk::SlotSize,
+                             Profiling::SmallItem);
         objectBitmap[i] = blackBitmap[i];
         grayBitmap[i] = 0;
         hasUsedSlots |= (blackBitmap[i] != 0);
@@ -408,7 +412,7 @@ bool Chunk::sweep(ClassDestroyStatsCallback classCountPtr)
     return hasUsedSlots;
 }
 
-void Chunk::freeAll()
+void Chunk::freeAll(ExecutionEngine *engine)
 {
     //    DEBUG << "sweeping chunk" << this << (*freeList);
     HeapItem *o = realBase();
@@ -439,6 +443,8 @@ void Chunk::freeAll()
                 b->_checkIsDestroyed();
             }
         }
+        Q_V4_PROFILE_DEALLOC(engine, (qPopulationCount(objectBitmap[i]|extendsBitmap[i])
+                             - qPopulationCount(e)) * Chunk::SlotSize, Profiling::SmallItem);
         objectBitmap[i] = 0;
         grayBitmap[i] = 0;
         extendsBitmap[i] = e;
@@ -681,6 +687,7 @@ HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
         if (!forceAllocation)
             return 0;
         Chunk *newChunk = chunkAllocator->allocate();
+        Q_V4_PROFILE_ALLOC(engine, Chunk::DataSize, Profiling::HeapPage);
         chunks.push_back(newChunk);
         nextFree = newChunk->first();
         nFree = Chunk::AvailableSlots;
@@ -691,11 +698,12 @@ HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
 
 done:
     m->setAllocatedSlots(slotsRequired);
+    Q_V4_PROFILE_ALLOC(engine, slotsRequired * Chunk::SlotSize, Profiling::SmallItem);
     //        DEBUG << "   " << hex << m->chunk() << m->chunk()->objectBitmap[0] << m->chunk()->extendsBitmap[0] << (m - m->chunk()->realBase());
     return m;
 }
 
-void BlockAllocator::sweep(ClassDestroyStatsCallback classCountPtr)
+void BlockAllocator::sweep()
 {
     nextFree = 0;
     nFree = 0;
@@ -704,13 +712,14 @@ void BlockAllocator::sweep(ClassDestroyStatsCallback classCountPtr)
 //    qDebug() << "BlockAlloc: sweep";
     usedSlotsAfterLastSweep = 0;
 
-    auto isFree = [this, classCountPtr] (Chunk *c) {
-        bool isUsed = c->sweep(classCountPtr);
+    auto isFree = [this] (Chunk *c) {
+        bool isUsed = c->sweep(engine);
 
         if (isUsed) {
             c->sortIntoBins(freeBins, NumBins);
             usedSlotsAfterLastSweep += c->nUsedSlots();
         } else {
+            Q_V4_PROFILE_DEALLOC(engine, Chunk::DataSize, Profiling::HeapPage);
             chunkAllocator->free(c);
         }
         return !isUsed;
@@ -723,7 +732,8 @@ void BlockAllocator::sweep(ClassDestroyStatsCallback classCountPtr)
 void BlockAllocator::freeAll()
 {
     for (auto c : chunks) {
-        c->freeAll();
+        c->freeAll(engine);
+        Q_V4_PROFILE_DEALLOC(engine, Chunk::DataSize, Profiling::HeapPage);
         chunkAllocator->free(c);
     }
 }
@@ -776,6 +786,7 @@ HeapItem *HugeItemAllocator::allocate(size_t size) {
     Chunk *c = chunkAllocator->allocate(size);
     chunks.push_back(HugeChunk{c, size});
     Chunk::setBit(c->objectBitmap, c->first() - c->realBase());
+    Q_V4_PROFILE_ALLOC(engine, size, Profiling::LargeItem);
     return c->first();
 }
 
@@ -798,8 +809,11 @@ void HugeItemAllocator::sweep(ClassDestroyStatsCallback classCountPtr)
 {
     auto isBlack = [this, classCountPtr] (const HugeChunk &c) {
         bool b = c.chunk->first()->isBlack();
-        if (!b)
+        Chunk::clearBit(c.chunk->blackBitmap, c.chunk->first() - c.chunk->realBase());
+        if (!b) {
+            Q_V4_PROFILE_DEALLOC(engine, c.size, Profiling::LargeItem);
             freeHugeChunk(chunkAllocator, c, classCountPtr);
+        }
         return !b;
     };
 
@@ -828,6 +842,7 @@ void HugeItemAllocator::collectGrayItems(MarkStack *markStack)
 void HugeItemAllocator::freeAll()
 {
     for (auto &c : chunks) {
+        Q_V4_PROFILE_DEALLOC(engine, c.size, Profiling::LargeItem);
         freeHugeChunk(chunkAllocator, c, nullptr);
     }
 }
@@ -837,8 +852,8 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
     : engine(engine)
     , chunkAllocator(new ChunkAllocator)
     , stackAllocator(chunkAllocator)
-    , blockAllocator(chunkAllocator)
-    , hugeItemAllocator(chunkAllocator)
+    , blockAllocator(chunkAllocator, engine)
+    , hugeItemAllocator(chunkAllocator, engine)
     , m_persistentValues(new PersistentValueStorage(engine))
     , m_weakValues(new PersistentValueStorage(engine))
     , unmanagedHeapSizeGCLimit(MIN_UNMANAGED_HEAPSIZE_GC_LIMIT)
@@ -1096,7 +1111,7 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
         }
     }
 
-    blockAllocator.sweep(classCountPtr);
+    blockAllocator.sweep();
     hugeItemAllocator.sweep(classCountPtr);
 }
 

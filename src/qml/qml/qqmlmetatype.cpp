@@ -2402,6 +2402,27 @@ QQmlPropertyCache *QQmlMetaType::propertyCache(const QQmlType &type, int minorVe
     return data->propertyCache(type, minorVersion);
 }
 
+void qmlUnregisterType(int typeIndex)
+{
+    QMutexLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+    {
+        const QQmlTypePrivate *d = data->types.value(typeIndex).priv();
+        if (d) {
+            removeQQmlTypePrivate(data->idToType, d);
+            removeQQmlTypePrivate(data->nameToType, d);
+            removeQQmlTypePrivate(data->urlToType, d);
+            removeQQmlTypePrivate(data->urlToNonFileImportType, d);
+            removeQQmlTypePrivate(data->metaObjectToType, d);
+            for (QQmlMetaTypeData::TypeModules::Iterator module = data->uriToModule.begin(); module != data->uriToModule.end(); ++module) {
+                 QQmlTypeModulePrivate *modulePrivate = (*module)->priv();
+                 modulePrivate->remove(d);
+            }
+            data->types[typeIndex] = QQmlType();
+        }
+    }
+}
+
 void QQmlMetaType::freeUnusedTypesAndCaches()
 {
     QMutexLocker lock(metaTypeDataLock());

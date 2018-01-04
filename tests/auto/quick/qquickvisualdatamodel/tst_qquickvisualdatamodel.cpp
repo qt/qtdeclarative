@@ -4013,7 +4013,7 @@ void tst_qquickvisualdatamodel::asynchronousInsert()
     connect(visualModel, SIGNAL(createdItem(int,QObject*)), &requester, SLOT(createdItem(int,QObject*)));
     connect(visualModel, SIGNAL(destroyingItem(QObject*)), &requester, SLOT(destroyingItem(QObject*)));
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, QQmlIncubator::Asynchronous));
     QVERIFY(!item);
 
     QVERIFY(!requester.itemInitialized);
@@ -4025,7 +4025,7 @@ void tst_qquickvisualdatamodel::asynchronousInsert()
         newItems.append(qMakePair(QLatin1String("New item") + QString::number(i), QString(QLatin1String(""))));
     model.insertItems(insertIndex, newItems);
 
-    item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex, false));
+    item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex));
     QVERIFY(item);
 
     QCOMPARE(requester.itemInitialized, item);
@@ -4078,7 +4078,7 @@ void tst_qquickvisualdatamodel::asynchronousRemove()
     connect(visualModel, SIGNAL(createdItem(int,QObject*)), &requester, SLOT(createdItem(int,QObject*)));
     connect(visualModel, SIGNAL(destroyingItem(QObject*)), &requester, SLOT(destroyingItem(QObject*)));
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, QQmlIncubator::Asynchronous));
     QVERIFY(!item);
 
     QVERIFY(!requester.itemInitialized);
@@ -4099,7 +4099,7 @@ void tst_qquickvisualdatamodel::asynchronousRemove()
         QVERIFY(!requester.itemCreated);
         QVERIFY(!requester.itemDestroyed);
     } else {
-        item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex, false));
+        item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex));
         QVERIFY(item);
 
         QCOMPARE(requester.itemInitialized, item);
@@ -4157,7 +4157,7 @@ void tst_qquickvisualdatamodel::asynchronousMove()
     connect(visualModel, SIGNAL(createdItem(int,QObject*)), &requester, SLOT(createdItem(int,QObject*)));
     connect(visualModel, SIGNAL(destroyingItem(QObject*)), &requester, SLOT(destroyingItem(QObject*)));
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, QQmlIncubator::Asynchronous));
     QVERIFY(!item);
 
     QVERIFY(!requester.itemInitialized);
@@ -4166,7 +4166,7 @@ void tst_qquickvisualdatamodel::asynchronousMove()
 
     model.moveItems(from, to, count);
 
-    item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex, false));
+    item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex));
     QVERIFY(item);
 
 
@@ -4200,7 +4200,7 @@ void tst_qquickvisualdatamodel::asynchronousCancel()
     QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create());
     QVERIFY(visualModel);
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, QQmlIncubator::Asynchronous));
     QVERIFY(!item);
     QCOMPARE(controller.incubatingObjectCount(), 1);
 
@@ -4225,7 +4225,7 @@ void tst_qquickvisualdatamodel::invalidContext()
     QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create(context.data()));
     QVERIFY(visualModel);
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(4, false));
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(4));
     QVERIFY(item);
     visualModel->release(item);
 
@@ -4233,7 +4233,7 @@ void tst_qquickvisualdatamodel::invalidContext()
 
     model.insertItem(4, "new item", "");
 
-    item = qobject_cast<QQuickItem*>(visualModel->object(4, false));
+    item = qobject_cast<QQuickItem*>(visualModel->object(4));
     QVERIFY(!item);
 }
 

@@ -285,6 +285,43 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
     emit uniqueIdChanged();
 }
 
+
+/*!
+    \qmltype GestureEvent
+    \instantiates QQuickGrabGestureEvent
+    \inqmlmodule QtQuick
+    \ingroup qtquick-input-events
+    \brief The parameter given with the gestureStarted signal
+
+    The GestureEvent object has the current touch points, which you may choose
+    to interpret as a gesture, and an invokable method to grab the involved
+    points exclusively.
+*/
+
+/*!
+    \qmlproperty real QtQuick::GestureEvent::dragThreshold
+
+    This property holds the system setting for the distance a finger must move
+    before it is interpreted as a drag. It comes from
+    QStyleHints::startDragDistance().
+*/
+
+/*!
+    \qmlproperty list<TouchPoint> QtQuick::GestureEvent::touchPoints
+
+    This property holds the set of current touch points.
+*/
+
+/*!
+    \qmlmethod QtQuick::GestureEvent::grab()
+
+    Acquires an exclusive grab of the mouse and all the \l touchPoints, and
+    calls \l {QQuickItem::setKeepTouchGrab()}{setKeepTouchGrab()} and
+    \l {QQuickItem::setKeepMouseGrab()}{setKeepMouseGrab()} so that any
+    parent Item that \l {QQuickItem::filtersChildMouseEvents()}{filters} its
+    children's events will not be allowed to take over the grabs.
+*/
+
 /*!
     \qmltype MultiPointTouchArea
     \instantiates QQuickMultiPointTouchArea

@@ -747,44 +747,6 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
     return false;
 }
 
-void QQuickWindowPrivate::setMouseGrabber(QQuickItem *grabber)
-{
-    Q_Q(QQuickWindow);
-    if (q->mouseGrabberItem() == grabber)
-        return;
-
-    QQuickItem *oldGrabber = q->mouseGrabberItem();
-    qCDebug(DBG_MOUSE_TARGET) << "grabber" << oldGrabber << "->" << grabber;
-
-    if (grabber && touchMouseId != -1 && touchMouseDevice) {
-        // update the touch item for mouse touch id to the new grabber
-        qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << hex << touchMouseId << "->" << q->mouseGrabberItem();
-        auto point = pointerEventInstance(touchMouseDevice)->pointById(touchMouseId);
-        if (point) {
-            auto originalEvent = pointerEventInstance(point->pointerEvent()->device());
-            for (int i = 0; i < originalEvent->pointCount(); ++i) {
-                QQuickEventPoint *pt = originalEvent->point(i);
-                if (pt->exclusiveGrabber())
-                    pt->cancelExclusiveGrab();
-            }
-            point->setGrabberItem(grabber);
-        }
-    } else {
-        QQuickPointerEvent *event = pointerEventInstance(QQuickPointerDevice::genericMouseDevice());
-        Q_ASSERT(event->pointCount() == 1);
-        auto point = event->point(0);
-        point->setGrabberItem(grabber);
-    }
-
-
-    if (oldGrabber) {
-        QEvent e(QEvent::UngrabMouse);
-        hasFiltered.clear();
-        if (!sendFilteredMouseEvent(&e, oldGrabber, oldGrabber->parentItem()))
-            oldGrabber->mouseUngrabEvent();
-    }
-}
-
 void QQuickWindowPrivate::grabTouchPoints(QObject *grabber, const QVector<int> &ids)
 {
     for (int i = 0; i < ids.count(); ++i) {
@@ -832,8 +794,14 @@ void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool to
 {
     Q_Q(QQuickWindow);
     if (Q_LIKELY(mouse) && q->mouseGrabberItem() == grabber) {
-        qCDebug(DBG_MOUSE_TARGET) << "removeGrabber" << q->mouseGrabberItem() << "-> null";
-        setMouseGrabber(nullptr);
+        bool fromTouch = isDeliveringTouchAsMouse();
+        auto point = fromTouch ?
+            pointerEventInstance(touchMouseDevice)->pointById(touchMouseId) :
+            pointerEventInstance(QQuickPointerDevice::genericMouseDevice())->point(0);
+        QQuickItem *oldGrabber = point->grabberItem();
+        qCDebug(DBG_MOUSE_TARGET) << "removeGrabber" << oldGrabber << "-> null";
+        point->setGrabberItem(nullptr);
+        sendUngrabEvent(oldGrabber, fromTouch);
     }
     if (Q_LIKELY(touch)) {
         bool ungrab = false;
@@ -849,6 +817,19 @@ void QQuickWindowPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool to
             }
         }
         if (ungrab)
+            grabber->touchUngrabEvent();
+    }
+}
+
+void QQuickWindowPrivate::sendUngrabEvent(QQuickItem *grabber, bool touch)
+{
+    if (!grabber)
+        return;
+    QEvent e(QEvent::UngrabMouse);
+    hasFiltered.clear();
+    if (!sendFilteredMouseEvent(&e, grabber, grabber->parentItem())) {
+        grabber->mouseUngrabEvent();
+        if (touch)
             grabber->touchUngrabEvent();
     }
 }
@@ -1511,7 +1492,7 @@ QQuickItem *QQuickWindow::mouseGrabberItem() const
 {
     Q_D(const QQuickWindow);
 
-    if (d->touchMouseId != -1 && d->touchMouseDevice) {
+    if (d->isDeliveringTouchAsMouse()) {
         if (QQuickPointerEvent *event = d->queryPointerEventInstance(d->touchMouseDevice)) {
             auto point = event->pointById(d->touchMouseId);
             return point ? point->grabberItem() : nullptr;
@@ -1736,7 +1717,7 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
 
             // release event: ungrab if no buttons are pressed anymore
             if (mouseIsReleased)
-                setMouseGrabber(nullptr);
+                removeGrabber(grabber, true, isDeliveringTouchAsMouse());
         } else {
             // if the grabber is not an Item, it must be a PointerHandler
             auto handler = point->grabberPointerHandler();

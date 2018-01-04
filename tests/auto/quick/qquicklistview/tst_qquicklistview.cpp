@@ -261,6 +261,7 @@ private slots:
     void releaseItems();
 
     void QTBUG_34576_velocityZero();
+    void QTBUG_61537_modelChangesAsync();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -8692,6 +8693,33 @@ void tst_QQuickListView::QTBUG_34576_velocityZero()
     QTRY_COMPARE(window->rootObject()->property("horizontalVelocityZeroCount").toInt(), 0);
 
     delete window;
+}
+
+void tst_QQuickListView::QTBUG_61537_modelChangesAsync()
+{
+    // The purpose of this test if to check that any model changes that happens
+    // during start-up, while a loader higher up in the chain is still incubating
+    // async, will not fail.
+    QQuickView window;
+    window.setGeometry(0,0,640,480);
+
+    QString filename(testFile("qtbug61537_modelChangesAsync.qml"));
+    window.setSource(QUrl::fromLocalFile(filename));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    // The qml file will assign the listview to the 'listView' property once the
+    // loader is ready with async incubation. So we need to wait for it.
+    QObject *root = window.rootObject();
+    QTRY_VERIFY(root->property("listView").value<QQuickListView *>());
+    QQuickListView *listView = root->property("listView").value<QQuickListView *>();
+    QVERIFY(listView);
+
+    // Check that the number of delegates we expect to be visible in
+    // the listview matches the number of items we find if we count.
+    int reportedCount = listView->count();
+    int actualCount = findItems<QQuickItem>(listView, "delegate").count();
+    QCOMPARE(reportedCount, actualCount);
 }
 
 QTEST_MAIN(tst_QQuickListView)

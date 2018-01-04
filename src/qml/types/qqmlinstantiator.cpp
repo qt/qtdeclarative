@@ -85,7 +85,7 @@ void QQmlInstantiatorPrivate::clear()
 QObject *QQmlInstantiatorPrivate::modelObject(int index, bool async)
 {
     requestedIndex = index;
-    QObject *o = instanceModel->object(index, async);
+    QObject *o = instanceModel->object(index, async ? QQmlIncubator::Asynchronous : QQmlIncubator::AsynchronousIfNested);
     requestedIndex = -1;
     return o;
 }
@@ -123,7 +123,7 @@ void QQmlInstantiatorPrivate::_q_createdItem(int idx, QObject* item)
     if (objects.contains(item)) //Case when it was created synchronously in regenerate
         return;
     if (requestedIndex != idx) // Asynchronous creation, reference the object
-        (void)instanceModel->object(idx, false);
+        (void)instanceModel->object(idx);
     item->setParent(q);
     if (objects.size() < idx + 1) {
         int modelCount = instanceModel->count();

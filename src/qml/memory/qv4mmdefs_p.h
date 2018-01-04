@@ -190,6 +190,8 @@ struct Chunk {
     void freeAll();
     void resetBlackBits();
     void collectGrayItems(QV4::MarkStack *markStack);
+    bool sweep(ExecutionEngine *engine);
+    void freeAll(ExecutionEngine *engine);
 
     void sortIntoBins(HeapItem **bins, uint nBins);
 };
