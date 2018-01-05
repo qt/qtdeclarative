@@ -86,17 +86,42 @@ struct VTable
 
 namespace Heap {
 
+template <typename T, size_t o>
+struct Pointer {
+    static Q_CONSTEXPR size_t offset = o;
+    T operator->() const { return get(); }
+    operator T () const { return get(); }
+
+    Base *base();
+
+    void set(EngineBase *e, T newVal) {
+        WriteBarrier::write(e, base(), &ptr, reinterpret_cast<Base *>(newVal));
+    }
+
+    T get() const { return reinterpret_cast<T>(ptr); }
+
+    template <typename Type>
+    Type *cast() { return static_cast<Type *>(ptr); }
+
+    Base *heapObject() const { return ptr; }
+
+private:
+    Base *ptr;
+};
+typedef Pointer<char *, 0> V4PointerCheck;
+Q_STATIC_ASSERT(std::is_trivial< V4PointerCheck >::value);
+
 struct Q_QML_EXPORT Base {
     void *operator new(size_t) = delete;
 
-    static void markObjects(Heap::Base *, MarkStack *) {}
+    static void markObjects(Base *, MarkStack *) {}
 
     InternalClass *internalClass;
 
     inline ReturnedValue asReturnedValue() const;
     inline void mark(QV4::MarkStack *markStack);
 
-    const VTable *vtable() const { return internalClass->vtable; }
+    inline const VTable *vtable() const;
     inline bool isMarked() const {
         const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
         Chunk *c = h->chunk();
@@ -128,8 +153,8 @@ struct Q_QML_EXPORT Base {
     }
 
     void *operator new(size_t, Managed *m) { return m; }
-    void *operator new(size_t, Heap::Base *m) { return m; }
-    void operator delete(void *, Heap::Base *) {}
+    void *operator new(size_t, Base *m) { return m; }
+    void operator delete(void *, Base *) {}
 
     void init() { _setInitialized(); }
     void destroy() { _setDestroyed(); }
@@ -176,10 +201,9 @@ Q_STATIC_ASSERT(std::is_standard_layout<Base>::value);
 Q_STATIC_ASSERT(offsetof(Base, internalClass) == 0);
 Q_STATIC_ASSERT(sizeof(Base) == QT_POINTER_SIZE);
 
-}
 
 inline
-void Heap::Base::mark(QV4::MarkStack *markStack)
+void Base::mark(QV4::MarkStack *markStack)
 {
     Q_ASSERT(inUse());
     const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
@@ -194,36 +218,18 @@ void Heap::Base::mark(QV4::MarkStack *markStack)
     }
 }
 
-namespace Heap {
+inline
+const VTable *Base::vtable() const
+{
+    return internalClass->vtable;
+}
 
-template <typename T, size_t o>
-struct Pointer {
-    static Q_CONSTEXPR size_t offset = o;
-    T operator->() const { return get(); }
-    operator T () const { return get(); }
-
-    Heap::Base *base() {
-        Heap::Base *base = reinterpret_cast<Heap::Base *>(this) - (offset/sizeof(Heap::Base));
-        Q_ASSERT(base->inUse());
-        return base;
-    }
-
-    void set(EngineBase *e, T newVal) {
-        WriteBarrier::write(e, base(), &ptr, reinterpret_cast<Heap::Base *>(newVal));
-    }
-
-    T get() const { return reinterpret_cast<T>(ptr); }
-
-    template <typename Type>
-    Type *cast() { return static_cast<Type *>(ptr); }
-
-    Heap::Base *heapObject() const { return ptr; }
-
-private:
-    Heap::Base *ptr;
-};
-typedef Pointer<char *, 0> V4PointerCheck;
-Q_STATIC_ASSERT(std::is_trivial< V4PointerCheck >::value);
+template<typename T, size_t o>
+Base *Pointer<T, o>::base() {
+    Base *base = reinterpret_cast<Base *>(this) - (offset/sizeof(Base *));
+    Q_ASSERT(base->inUse());
+    return base;
+}
 
 }
 
