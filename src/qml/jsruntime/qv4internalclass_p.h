@@ -248,6 +248,8 @@ struct InternalClassTransition
         VTableChange = 0x200,
         PrototypeChange = 0x201,
         ProtoClass = 0x202,
+        Sealed = 0x203,
+        Frozen = 0x204,
         RemoveMember = -1
     };
 
@@ -273,11 +275,10 @@ struct InternalClass {
     std::vector<Transition> transitions;
     InternalClassTransition &lookupOrInsertTransition(const InternalClassTransition &t);
 
-    InternalClass *m_sealed;
-    InternalClass *m_frozen;
-
     uint size;
     bool extensible;
+    bool isSealed;
+    bool isFrozen;
     bool isUsedAsProto = false;
 
     Q_REQUIRED_RESULT InternalClass *nonExtensible();

@@ -132,10 +132,10 @@ InternalClass::InternalClass(ExecutionEngine *engine)
     , vtable(nullptr)
     , prototype(nullptr)
     , parent(nullptr)
-    , m_sealed(nullptr)
-    , m_frozen(nullptr)
     , size(0)
     , extensible(true)
+    , isSealed(false)
+    , isFrozen(false)
 {
     id = engine->newInternalClassId();
 }
@@ -149,12 +149,13 @@ InternalClass::InternalClass(QV4::InternalClass *other)
     , propertyTable(other->propertyTable)
     , nameMap(other->nameMap)
     , propertyData(other->propertyData)
-    , m_sealed(nullptr)
-    , m_frozen(nullptr)
     , size(other->size)
     , extensible(other->extensible)
+    , isSealed(other->isSealed)
+    , isFrozen(other->isFrozen)
     , isUsedAsProto(other->isUsedAsProto)
 {
+    Q_ASSERT(!isFrozen);
     id = engine->newInternalClassId();
 }
 
@@ -430,8 +431,8 @@ uint InternalClass::find(const String *string)
 
 InternalClass *InternalClass::sealed()
 {
-    if (m_sealed)
-        return m_sealed;
+    if (isSealed)
+        return this;
 
     bool alreadySealed = !extensible;
     for (uint i = 0; i < size; ++i) {
@@ -445,29 +446,38 @@ InternalClass *InternalClass::sealed()
     }
 
     if (alreadySealed) {
-        m_sealed = this;
+        isSealed = true;
         return this;
     }
 
-    m_sealed = engine->newClass(this);
+    Transition temp = { { nullptr }, nullptr, InternalClassTransition::Sealed };
+    Transition &t = lookupOrInsertTransition(temp);
+
+    if (t.lookup) {
+        Q_ASSERT(t.lookup && t.lookup->isSealed);
+        return t.lookup;
+    }
+
+    InternalClass *s = engine->newClass(this);
 
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
         if (attrs.isEmpty())
             continue;
         attrs.setConfigurable(false);
-        m_sealed->propertyData.set(i, attrs);
+        s->propertyData.set(i, attrs);
     }
-    m_sealed->extensible = false;
+    s->extensible = false;
+    s->isSealed = true;
 
-    m_sealed->m_sealed = m_sealed;
-    return m_sealed;
+    t.lookup = s;
+    return s;
 }
 
 InternalClass *InternalClass::frozen()
 {
-    if (m_frozen)
-        return m_frozen;
+    if (isFrozen)
+        return this;
 
     bool alreadyFrozen = !extensible;
     for (uint i = 0; i < size; ++i) {
@@ -481,12 +491,20 @@ InternalClass *InternalClass::frozen()
     }
 
     if (alreadyFrozen) {
-        m_frozen = this;
-        m_sealed = this;
+        isSealed = true;
+        isFrozen = true;
         return this;
     }
 
-    m_frozen = engine->newClass(this);
+    Transition temp = { { nullptr }, nullptr, InternalClassTransition::Frozen };
+    Transition &t = lookupOrInsertTransition(temp);
+
+    if (t.lookup) {
+        Q_ASSERT(t.lookup && t.lookup->isSealed && t.lookup->isFrozen);
+        return t.lookup;
+    }
+
+    InternalClass *f = engine->newClass(this);
 
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
@@ -495,13 +513,14 @@ InternalClass *InternalClass::frozen()
         if (attrs.isData())
             attrs.setWritable(false);
         attrs.setConfigurable(false);
-        m_frozen->propertyData.set(i, attrs);
+        f->propertyData.set(i, attrs);
     }
-    m_frozen->extensible = false;
+    f->extensible = false;
+    f->isSealed = true;
+    f->isFrozen = true;
 
-    m_frozen->m_frozen = m_frozen;
-    m_frozen->m_sealed = m_frozen;
-    return m_frozen;
+    t.lookup = f;
+    return f;
 }
 
 InternalClass *InternalClass::propertiesFrozen() const
@@ -548,10 +567,6 @@ void InternalClass::destroyAll()
         destroyStack.pop_back();
         Q_ASSERT(next->engine);
         next->engine = nullptr;
-        if (next->m_sealed && next->m_sealed != next)
-            destroyStack.push_back(next->m_sealed);
-        if (next->m_frozen && next->m_frozen != next)
-            destroyStack.push_back(next->m_frozen);
 
         for (size_t i = 0; i < next->transitions.size(); ++i) {
             Q_ASSERT(next->transitions.at(i).lookup);
@@ -600,10 +615,6 @@ void InternalClass::markObjects(InternalClass *ic, MarkStack *stack)
         Q_ASSERT(t.lookup);
         markObjects(t.lookup, stack);
     }
-    if (ic->m_frozen)
-        markObjects(ic->m_frozen, stack);
-    if (ic->m_sealed)
-        markObjects(ic->m_sealed, stack);
 }
 
 QT_END_NAMESPACE
