@@ -82,8 +82,10 @@ void BytecodeGenerator::packInstruction(I &i)
         Wide
     } width = Normal;
     for (int n = 0; n < nMembers; ++n) {
-        if (width == Normal && (static_cast<qint8>(instructionsAsInts[n]) != instructionsAsInts[n]))
+        if (width == Normal && (static_cast<qint8>(instructionsAsInts[n]) != instructionsAsInts[n])) {
             width = Wide;
+            break;
+        }
     }
     char *code = i.packed;
     switch (width) {
