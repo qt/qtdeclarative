@@ -53,7 +53,6 @@
 #include "qv4global_p.h"
 
 #include <QHash>
-#include <private/qqmljsmemorypool_p.h>
 #include <private/qv4identifier_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -259,7 +258,7 @@ struct InternalClassTransition
     { return id < other.id || (id == other.id && flags < other.flags); }
 };
 
-struct InternalClass : public QQmlJS::Managed {
+struct InternalClass {
     int id = 0; // unique across the engine, gets changed also when proto chain changes
     ExecutionEngine *engine;
     const VTable *vtable;
@@ -315,9 +314,12 @@ struct InternalClass : public QQmlJS::Managed {
 
     Q_REQUIRED_RESULT InternalClass *asProtoClass();
 
-    void destroy();
+    void destroyAll();
 
     void updateProtoUsage(Heap::Object *o);
+
+    static void markObjects(InternalClass *ic, MarkStack *stack);
+
 
 private:
     Q_QML_EXPORT InternalClass *changeVTableImpl(const VTable *vt);
@@ -327,11 +329,6 @@ private:
     friend struct ExecutionEngine;
     InternalClass(ExecutionEngine *engine);
     InternalClass(InternalClass *other);
-};
-
-struct InternalClassPool : public QQmlJS::MemoryPool
-{
-    void markObjects(MarkStack *markStack);
 };
 
 }

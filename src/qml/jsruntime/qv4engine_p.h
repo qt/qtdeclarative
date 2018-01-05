@@ -88,7 +88,6 @@ struct CompilationUnit;
 }
 
 struct Function;
-struct InternalClassPool;
 
 struct Q_QML_EXPORT CppStackFrame {
     CppStackFrame *parent;
@@ -260,7 +259,6 @@ public:
     Object *valueTypeWrapperPrototype() const { return reinterpret_cast<Object *>(jsObjects + ValueTypeProto); }
     Object *signalHandlerPrototype() const { return reinterpret_cast<Object *>(jsObjects + SignalHandlerProto); }
 
-    InternalClassPool *classPool;
     EvalFunction *evalFunction() const { return reinterpret_cast<EvalFunction *>(jsObjects + Eval_Function); }
     FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
     FunctionObject *thrower() const { return reinterpret_cast<FunctionObject *>(jsObjects + ThrowerObject); }

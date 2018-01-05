@@ -199,9 +199,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     identifierTable = new IdentifierTable(this);
 
-    classPool = new InternalClassPool;
-
-    internalClasses[Class_Empty] =  new (classPool) InternalClass(this);
+    internalClasses[Class_Empty] =  new InternalClass(this);
     internalClasses[Class_String] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::String::staticVTable());
     internalClasses[Class_MemberData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::MemberData::staticVTable());
     internalClasses[Class_SimpleArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SimpleArrayData::staticVTable());
@@ -497,8 +495,7 @@ ExecutionEngine::~ExecutionEngine()
     while (!compilationUnits.isEmpty())
         (*compilationUnits.begin())->unlink();
 
-    internalClasses[Class_Empty]->destroy();
-    delete classPool;
+    internalClasses[Class_Empty]->destroyAll();
     delete bumperPointerAllocator;
     delete regExpCache;
     delete regExpAllocator;
@@ -536,7 +533,7 @@ void ExecutionEngine::initRootContext()
 
 InternalClass *ExecutionEngine::newClass(InternalClass *other)
 {
-    return new (classPool) InternalClass(other);
+    return new InternalClass(other);
 }
 
 InternalClass *ExecutionEngine::newInternalClass(const VTable *vtable, Object *prototype)
@@ -922,7 +919,7 @@ void ExecutionEngine::markObjects(MarkStack *markStack)
             setter->mark(markStack);
     }
 
-    classPool->markObjects(markStack);
+    InternalClass::markObjects(internalClasses[EngineBase::Class_Empty], markStack);
     markStack->drain();
 
     for (auto compilationUnit: compilationUnits) {

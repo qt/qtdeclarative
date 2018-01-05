@@ -142,8 +142,7 @@ InternalClass::InternalClass(ExecutionEngine *engine)
 
 
 InternalClass::InternalClass(QV4::InternalClass *other)
-    : QQmlJS::Managed()
-    , engine(other->engine)
+    : engine(other->engine)
     , vtable(other->vtable)
     , prototype(other->prototype)
     , parent(other)
@@ -538,7 +537,7 @@ InternalClass *InternalClass::asProtoClass()
     return newClass;
 }
 
-void InternalClass::destroy()
+void InternalClass::destroyAll()
 {
     std::vector<InternalClass *> destroyStack;
     destroyStack.reserve(64);
@@ -547,15 +546,11 @@ void InternalClass::destroy()
     while (!destroyStack.empty()) {
         InternalClass *next = destroyStack.back();
         destroyStack.pop_back();
-        if (!next->engine)
-            continue;
+        Q_ASSERT(next->engine);
         next->engine = nullptr;
-        next->propertyTable.~PropertyHash();
-        next->nameMap.~SharedInternalClassData<Identifier *>();
-        next->propertyData.~SharedInternalClassData<PropertyAttributes>();
-        if (next->m_sealed)
+        if (next->m_sealed && next->m_sealed != next)
             destroyStack.push_back(next->m_sealed);
-        if (next->m_frozen)
+        if (next->m_frozen && next->m_frozen != next)
             destroyStack.push_back(next->m_frozen);
 
         for (size_t i = 0; i < next->transitions.size(); ++i) {
@@ -563,7 +558,7 @@ void InternalClass::destroy()
             destroyStack.push_back(next->transitions.at(i).lookup);
         }
 
-        next->transitions.~vector<Transition>();
+        delete next;
     }
 }
 
@@ -596,24 +591,19 @@ void InternalClass::updateInternalClassIdRecursive()
     }
 }
 
-
-static void markChildren(MarkStack *markStack, InternalClass *ic)
+void InternalClass::markObjects(InternalClass *ic, MarkStack *stack)
 {
     if (ic->prototype)
-        ic->prototype->mark(markStack);
+        ic->prototype->mark(stack);
 
     for (auto &t : ic->transitions) {
         Q_ASSERT(t.lookup);
-        markChildren(markStack, t.lookup);
+        markObjects(t.lookup, stack);
     }
-}
-
-
-void InternalClassPool::markObjects(MarkStack *markStack)
-{
-    InternalClass *ic = markStack->engine->internalClasses[EngineBase::Class_Empty];
-    Q_ASSERT(!ic->prototype);
-    ::markChildren(markStack, ic);
+    if (ic->m_frozen)
+        markObjects(ic->m_frozen, stack);
+    if (ic->m_sealed)
+        markObjects(ic->m_sealed, stack);
 }
 
 QT_END_NAMESPACE
