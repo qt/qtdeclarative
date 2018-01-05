@@ -491,7 +491,7 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
     collector.collect(&output, QString(), QStringLiteral("this"), thisObject);
     QV4::Scoped<QV4::CallContext> callContext(scope, frame->callContext());
     if (callContext) {
-        QV4::InternalClass *ic = callContext->internalClass();
+        QV4::Heap::InternalClass *ic = callContext->internalClass();
         QV4::ScopedValue v(scope);
         for (uint i = 0; i < ic->size; ++i) {
             QString name = ic->nameMap[i]->string;

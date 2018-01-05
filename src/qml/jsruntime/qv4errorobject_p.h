@@ -329,27 +329,25 @@ inline SyntaxErrorObject *ErrorObject::asSyntaxError()
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const Value &message) {
     EngineBase::InternalClassType klass = message.isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage;
-    InternalClass *ic = e->internalClasses(klass);
-    ic = ic->changePrototype(T::defaultPrototype(e)->d());
-    return e->memoryManager->allocObject<T>(ic, message);
+    Scope scope(e);
+    Scoped<InternalClass> ic(scope, e->internalClasses(klass)->changePrototype(T::defaultPrototype(e)->d()));
+    return e->memoryManager->allocObject<T>(ic->d(), message);
 }
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message) {
     Scope scope(e);
     ScopedValue v(scope, message.isEmpty() ? Encode::undefined() : e->newString(message)->asReturnedValue());
     EngineBase::InternalClassType klass = v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage;
-    InternalClass *ic = e->internalClasses(klass);
-    ic = ic->changePrototype(T::defaultPrototype(e)->d());
-    return e->memoryManager->allocObject<T>(ic, v);
+    Scoped<InternalClass> ic(scope, e->internalClasses(klass)->changePrototype(T::defaultPrototype(e)->d()));
+    return e->memoryManager->allocObject<T>(ic->d(), v);
 }
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message, const QString &filename, int line, int column) {
     Scope scope(e);
     ScopedValue v(scope, message.isEmpty() ? Encode::undefined() : e->newString(message)->asReturnedValue());
     EngineBase::InternalClassType klass = v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage;
-    InternalClass *ic = e->internalClasses(klass);
-    ic = ic->changePrototype(T::defaultPrototype(e)->d());
-    return e->memoryManager->allocObject<T>(ic, v, filename, line, column);
+    Scoped<InternalClass> ic(scope, e->internalClasses(klass)->changePrototype(T::defaultPrototype(e)->d()));
+    return e->memoryManager->allocObject<T>(ic->d(), v, filename, line, column);
 }
 
 

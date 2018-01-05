@@ -113,9 +113,9 @@ Q_STATIC_ASSERT(std::is_trivial< V4PointerCheck >::value);
 struct Q_QML_EXPORT Base {
     void *operator new(size_t) = delete;
 
-    static void markObjects(Base *, MarkStack *) {}
+    static void markObjects(Base *, MarkStack *);
 
-    InternalClass *internalClass;
+    Pointer<InternalClass *, 0> internalClass;
 
     inline ReturnedValue asReturnedValue() const;
     inline void mark(QV4::MarkStack *markStack);
@@ -194,7 +194,6 @@ Q_STATIC_ASSERT(std::is_trivial< Base >::value);
 Q_STATIC_ASSERT(std::is_standard_layout<Base>::value);
 Q_STATIC_ASSERT(offsetof(Base, internalClass) == 0);
 Q_STATIC_ASSERT(sizeof(Base) == QT_POINTER_SIZE);
-
 
 inline
 void Base::mark(QV4::MarkStack *markStack)

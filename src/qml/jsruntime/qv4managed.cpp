@@ -63,6 +63,8 @@ const VTable Managed::static_vtbl =
     isEqualTo
 };
 
+DEFINE_MANAGED_VTABLE(InternalClass);
+
 
 QString Managed::className() const
 {
@@ -113,6 +115,9 @@ QString Managed::className() const
         break;
     case Type_ForeachIteratorObject:
         s = "__ForeachIterator";
+        break;
+    case Type_InternalClass:
+        s = "__InternalClass";
         break;
     case Type_RegExp:
         s = "__RegExp";

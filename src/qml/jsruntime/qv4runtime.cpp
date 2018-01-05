@@ -1217,8 +1217,8 @@ ReturnedValue Runtime::method_arrayLiteral(ExecutionEngine *engine, Value *value
 ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags)
 {
     Scope scope(engine);
-    QV4::InternalClass *klass = static_cast<CompiledData::CompilationUnit*>(engine->currentStackFrame->v4Function->compilationUnit)->runtimeClasses[classId];
-    ScopedObject o(scope, engine->newObject(klass));
+    Scoped<InternalClass> klass(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeClasses[classId]);
+    ScopedObject o(scope, engine->newObject(klass->d()));
 
     {
         bool needSparseArray = arrayGetterSetterCountAndFlags >> 30;
@@ -1226,7 +1226,7 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, const QV4::
             o->initSparseArray();
     }
 
-    for (uint i = 0; i < klass->size; ++i)
+    for (uint i = 0; i < klass->d()->size; ++i)
         o->setProperty(i, *args++);
 
     if (arrayValueCount > 0) {
@@ -1259,13 +1259,13 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, const QV4::
 QV4::ReturnedValue Runtime::method_createMappedArgumentsObject(ExecutionEngine *engine)
 {
     Q_ASSERT(engine->currentContext()->d()->type == Heap::ExecutionContext::Type_CallContext);
-    QV4::InternalClass *ic = engine->internalClasses(EngineBase::Class_ArgumentsObject);
+    Heap::InternalClass *ic = engine->internalClasses(EngineBase::Class_ArgumentsObject);
     return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->currentStackFrame)->asReturnedValue();
 }
 
 QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine *engine)
 {
-    QV4::InternalClass *ic = engine->internalClasses(EngineBase::Class_StrictArgumentsObject);
+    Heap::InternalClass *ic = engine->internalClasses(EngineBase::Class_StrictArgumentsObject);
     return engine->memoryManager->allocObject<StrictArgumentsObject>(ic, engine->currentStackFrame)->asReturnedValue();
 }
 

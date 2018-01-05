@@ -81,7 +81,7 @@ struct Q_QML_EXPORT Function {
     JSC::MacroAssemblerCodeRef *codeRef;
 
     // first nArguments names in internalClass are the actual arguments
-    InternalClass *internalClass;
+    Heap::InternalClass *internalClass;
     uint nFormals;
     int interpreterCallCount = 0;
     bool hasQmlDependencies;

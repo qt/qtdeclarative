@@ -96,8 +96,9 @@ static QString cacheFilePath(const QUrl &url)
 #endif
 
 CompilationUnit::CompilationUnit(const Unit *unitData)
-    : data(unitData)
-{}
+{
+    data = unitData;
+}
 
 #ifndef V4_BOOTSTRAP
 CompilationUnit::~CompilationUnit()
@@ -157,15 +158,15 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     }
 
     if (data->jsClassTableSize) {
-        runtimeClasses = (QV4::InternalClass**)malloc(data->jsClassTableSize * sizeof(QV4::InternalClass*));
+        runtimeClasses = (QV4::Heap::InternalClass **)malloc(data->jsClassTableSize * sizeof(QV4::Heap::InternalClass *));
+        // memset the regexps to 0 in case a GC run happens while we're within the loop below
+        memset(runtimeClasses, 0, data->jsClassTableSize * sizeof(QV4::Heap::InternalClass *));
         for (uint i = 0; i < data->jsClassTableSize; ++i) {
             int memberCount = 0;
             const CompiledData::JSClassMember *member = data->jsClassAt(i, &memberCount);
-            QV4::InternalClass *klass = engine->internalClasses(QV4::ExecutionEngine::Class_Object);
+            runtimeClasses[i] = engine->internalClasses(QV4::ExecutionEngine::Class_Object);
             for (int j = 0; j < memberCount; ++j, ++member)
-                klass = klass->addMember(engine->identifierTable->identifier(runtimeStrings[member->nameOffset]), member->isAccessor ? QV4::Attr_Accessor : QV4::Attr_Data);
-
-            runtimeClasses[i] = klass;
+                runtimeClasses[i] = runtimeClasses[i]->addMember(engine->identifierTable->identifier(runtimeStrings[member->nameOffset]), member->isAccessor ? QV4::Attr_Accessor : QV4::Attr_Data);
         }
     }
 
@@ -244,12 +245,27 @@ void CompilationUnit::unlink()
 
 void CompilationUnit::markObjects(QV4::MarkStack *markStack)
 {
-    for (uint i = 0; i < data->stringTableSize; ++i)
-        if (runtimeStrings[i])
-            runtimeStrings[i]->mark(markStack);
+    if (runtimeStrings) {
+        for (uint i = 0; i < data->stringTableSize; ++i)
+            if (runtimeStrings[i])
+                runtimeStrings[i]->mark(markStack);
+    }
     if (runtimeRegularExpressions) {
         for (uint i = 0; i < data->regexpTableSize; ++i)
             runtimeRegularExpressions[i].mark(markStack);
+    }
+    if (runtimeClasses) {
+        for (uint i = 0; i < data->jsClassTableSize; ++i)
+            if (runtimeClasses[i])
+                runtimeClasses[i]->mark(markStack);
+    }
+    for (QV4::Function *f : qAsConst(runtimeFunctions))
+        if (f && f->internalClass)
+            f->internalClass->mark(markStack);
+
+    if (runtimeLookups) {
+        for (uint i = 0; i < data->lookupTableSize; ++i)
+            runtimeLookups[i].markObjects(markStack);
     }
 }
 

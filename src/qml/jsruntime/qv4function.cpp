@@ -61,18 +61,18 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
         , codeRef(nullptr)
         , hasQmlDependencies(function->hasQmlDependencies())
 {
-    Q_UNUSED(engine);
-
-    internalClass = engine->internalClasses(EngineBase::Class_CallContext);
+    Scope scope(engine);
+    Scoped<InternalClass> ic(scope, engine->internalClasses(EngineBase::Class_CallContext));
 
     // first locals
     const quint32_le *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
-        internalClass = internalClass->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
+        ic = ic->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
     const quint32_le *formalsIndices = compiledFunction->formalsTable();
     for (quint32 i = 0; i < compiledFunction->nFormals; ++i)
-        internalClass = internalClass->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[formalsIndices[i]]), Attr_NotConfigurable);
+        ic = ic->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[formalsIndices[i]]), Attr_NotConfigurable);
+    internalClass = ic->d();
 
     nFormals = compiledFunction->nFormals;
 }

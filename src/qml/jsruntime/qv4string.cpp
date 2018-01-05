@@ -54,6 +54,7 @@ using namespace QV4;
 
 void Heap::String::markObjects(Heap::Base *that, MarkStack *markStack)
 {
+    Base::markObjects(that, markStack);
     String *s = static_cast<String *>(that);
     if (s->subtype < StringType_Complex)
         return;

@@ -881,6 +881,8 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnitBase
     QV4::Heap::String **runtimeStrings = nullptr; // Array
     const Value* constants = nullptr;
     QV4::Value *runtimeRegularExpressions = nullptr;
+    const Unit *data = nullptr;
+    QV4::Heap::InternalClass **runtimeClasses = nullptr;
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<CompilationUnitBase>::value);
@@ -915,8 +917,6 @@ public:
         return refCount.load();
     }
 
-    const Unit *data = nullptr;
-
     // Called only when building QML, when we build the header for JS first and append QML data
     QV4::CompiledData::Unit *createUnitData(QmlIR::Document *irDocument);
 
@@ -943,7 +943,6 @@ public:
     }
 
     QV4::Lookup *runtimeLookups = nullptr;
-    QV4::InternalClass **runtimeClasses = nullptr;
     QVector<QV4::Function *> runtimeFunctions;
     mutable QQmlNullableValue<QUrl> m_url;
     mutable QQmlNullableValue<QUrl> m_finalUrl;

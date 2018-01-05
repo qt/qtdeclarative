@@ -115,8 +115,8 @@ struct Q_QML_EXPORT EngineBase {
         Class_QmlContextWrapper,
         NClasses
     };
-    InternalClass *classes[NClasses];
-    InternalClass *internalClasses(InternalClassType icType) { return classes[icType]; }
+    Heap::InternalClass *classes[NClasses];
+    Heap::InternalClass *internalClasses(InternalClassType icType) { return classes[icType]; }
 };
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(pop)

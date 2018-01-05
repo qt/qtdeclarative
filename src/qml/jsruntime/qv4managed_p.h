@@ -92,14 +92,14 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
             QV4::Heap::DataClass *dptr = d_unchecked(); \
             dptr->_checkIsInitialized(); \
             return dptr; \
-        } \
-        Q_STATIC_ASSERT(std::is_trivial< QV4::Heap::DataClass >::value);
+        }
 
 #define V4_MANAGED(DataClass, superClass) \
     private: \
         DataClass() Q_DECL_EQ_DELETE; \
         Q_DISABLE_COPY(DataClass) \
-        V4_MANAGED_ITSELF(DataClass, superClass)
+        V4_MANAGED_ITSELF(DataClass, superClass) \
+        Q_STATIC_ASSERT(std::is_trivial< QV4::Heap::DataClass >::value);
 
 #define Q_MANAGED_TYPE(type) \
     public: \
@@ -154,7 +154,7 @@ const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 
 QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 
 #define V4_INTERNALCLASS(c) \
-    static QV4::InternalClass *defaultInternalClass(QV4::EngineBase *e) \
+    static Heap::InternalClass *defaultInternalClass(QV4::EngineBase *e) \
         { return e->internalClasses(QV4::EngineBase::Class_##c); }
 
 struct Q_QML_PRIVATE_EXPORT Managed : Value
@@ -193,6 +193,7 @@ public:
         Type_MathObject,
 
         Type_ExecutionContext,
+        Type_InternalClass,
         Type_ForeachIteratorObject,
         Type_RegExp,
 
@@ -200,7 +201,7 @@ public:
     };
     Q_MANAGED_TYPE(Invalid)
 
-    InternalClass *internalClass() const { return d()->internalClass; }
+    Heap::InternalClass *internalClass() const { return d()->internalClass; }
     const VTable *vtable() const { return d()->internalClass->vtable; }
     inline ExecutionEngine *engine() const { return internalClass()->engine; }
 
@@ -254,6 +255,32 @@ template<>
 inline const Object *Value::as() const {
     return objectValue();
 }
+
+
+struct InternalClass : Managed
+{
+    V4_MANAGED_ITSELF(InternalClass, Managed)
+    Q_MANAGED_TYPE(InternalClass)
+    V4_INTERNALCLASS(Empty)
+    V4_NEEDS_DESTROY
+
+    Q_REQUIRED_RESULT Heap::InternalClass *changeVTable(const VTable *vt) {
+        return d()->changeVTable(vt);
+    }
+    Q_REQUIRED_RESULT Heap::InternalClass *changePrototype(Heap::Object *proto) {
+        return d()->changePrototype(proto);
+    }
+    Q_REQUIRED_RESULT Heap::InternalClass *addMember(QV4::String *string, PropertyAttributes data, uint *index = 0) {
+        return d()->addMember(string, data, index);
+    }
+    Q_REQUIRED_RESULT Heap::InternalClass *addMember(Identifier *identifier, PropertyAttributes data, uint *index = 0) {
+        return d()->addMember(identifier, data, index);
+    }
+
+    void operator =(Heap::InternalClass *ic) {
+        Value::operator=(ic);
+    }
+};
 
 }
 

@@ -643,8 +643,9 @@ void BlockAllocator::sweep()
 
 void BlockAllocator::freeAll()
 {
-    for (auto c : chunks) {
+    for (auto c : chunks)
         c->freeAll(engine);
+    for (auto c : chunks) {
         Q_V4_PROFILE_DEALLOC(engine, Chunk::DataSize, Profiling::HeapPage);
         chunkAllocator->free(c);
     }
@@ -758,6 +759,7 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
     : engine(engine)
     , chunkAllocator(new ChunkAllocator)
     , blockAllocator(chunkAllocator, engine)
+    , icAllocator(chunkAllocator, engine)
     , hugeItemAllocator(chunkAllocator, engine)
     , m_persistentValues(new PersistentValueStorage(engine))
     , m_weakValues(new PersistentValueStorage(engine))
@@ -884,7 +886,7 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(const QV4::VTable *vtable
             Chunk::clearBit(c->extendsBitmap, index);
         }
         o->memberData.set(engine, m);
-        m->internalClass = engine->internalClasses(EngineBase::Class_MemberData);
+        m->internalClass.set(engine, engine->internalClasses(EngineBase::Class_MemberData));
         Q_ASSERT(o->memberData->internalClass);
         m->values.alloc = static_cast<uint>((memberSize - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
         m->values.size = o->memberData->values.alloc;
@@ -1017,8 +1019,11 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
         }
     }
 
-    blockAllocator.sweep();
-    hugeItemAllocator.sweep(classCountPtr);
+    if (!lastSweep) {
+        blockAllocator.sweep(/*classCountPtr*/);
+        hugeItemAllocator.sweep(classCountPtr);
+        icAllocator.sweep(/*classCountPtr*/);
+    }
 }
 
 bool MemoryManager::shouldRunGC() const
@@ -1167,6 +1172,7 @@ void MemoryManager::runGC()
     // reset all black bits
     blockAllocator.resetBlackBits();
     hugeItemAllocator.resetBlackBits();
+    icAllocator.resetBlackBits();
 }
 
 size_t MemoryManager::getUsedMem() const
@@ -1193,6 +1199,7 @@ MemoryManager::~MemoryManager()
     sweep(/*lastSweep*/true);
     blockAllocator.freeAll();
     hugeItemAllocator.freeAll();
+    icAllocator.freeAll();
 
     delete m_weakValues;
 #ifdef V4_USE_VALGRIND

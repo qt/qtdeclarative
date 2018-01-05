@@ -231,7 +231,7 @@ static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
     if (!instanceOfObject)
         return;
 
-    QV4::InternalClass *frozen = object->internalClass()->propertiesFrozen();
+    QV4::Heap::InternalClass *frozen = object->internalClass()->propertiesFrozen();
     if (object->internalClass() == frozen)
         return;
     object->setInternalClass(frozen);

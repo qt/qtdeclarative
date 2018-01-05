@@ -57,9 +57,9 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(Object);
 
-void Object::setInternalClass(InternalClass *ic)
+void Object::setInternalClass(Heap::InternalClass *ic)
 {
-    d()->internalClass = ic;
+    d()->internalClass.set(engine(), ic);
     if (ic->isUsedAsProto)
         ic->updateProtoUsage(d());
     Q_ASSERT(ic && ic->vtable);
@@ -89,7 +89,7 @@ void Object::setProperty(uint index, const Property *p)
 
 void Heap::Object::setUsedAsProto()
 {
-    internalClass = internalClass->asProtoClass();
+    internalClass.set(internalClass->engine, internalClass->asProtoClass());
 }
 
 bool Object::setPrototype(Object *proto)
@@ -121,7 +121,7 @@ ReturnedValue Object::getValue(const Value &thisObject, const Value &v, Property
 
 bool Object::putValue(uint memberIndex, const Value &value)
 {
-    QV4::InternalClass *ic = internalClass();
+    Heap::InternalClass *ic = internalClass();
     if (ic->engine->hasException)
         return false;
 
@@ -228,6 +228,7 @@ void Object::defineReadonlyConfigurableProperty(String *name, const Value &value
 
 void Heap::Object::markObjects(Heap::Base *b, MarkStack *stack)
 {
+    Base::markObjects(b, stack);
     Object *o = static_cast<Object *>(b);
     if (o->memberData)
         o->memberData->mark(stack);
@@ -248,7 +249,7 @@ void Heap::Object::markObjects(Heap::Base *b, MarkStack *stack)
 void Object::insertMember(String *s, const Property *p, PropertyAttributes attributes)
 {
     uint idx;
-    InternalClass::addMember(this, s, attributes, &idx);
+    Heap::InternalClass::addMember(this, s, attributes, &idx);
 
     if (attributes.isAccessor()) {
         setProperty(idx + GetterOffset, p->value);
@@ -776,7 +777,7 @@ bool Object::internalDeleteProperty(String *name)
     uint memberIdx = internalClass()->find(name->identifier());
     if (memberIdx != UINT_MAX) {
         if (internalClass()->propertyData[memberIdx].isConfigurable()) {
-            InternalClass::removeMember(this, name->identifier());
+            Heap::InternalClass::removeMember(this, name->identifier());
             return true;
         }
         return false;
@@ -832,7 +833,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
         }
         if (attrs.hasWritable() && !attrs.isWritable()) {
             cattrs.setWritable(false);
-            InternalClass::changeMember(this, engine->id_length(), cattrs);
+            Heap::InternalClass::changeMember(this, engine->id_length(), cattrs);
         }
         if (!succeeded)
             return false;
@@ -980,7 +981,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
 
     current->merge(cattrs, p, attrs);
     if (member) {
-        InternalClass::changeMember(this, member, cattrs);
+        Heap::InternalClass::changeMember(this, member, cattrs);
         setProperty(index, current);
     } else {
         setArrayAttributes(index, cattrs);

@@ -371,8 +371,7 @@ ReturnedValue ScriptFunction::callAsConstructor(const FunctionObject *fo, const 
     const ScriptFunction *f = static_cast<const ScriptFunction *>(fo);
 
     Scope scope(v4);
-    InternalClass *ic = f->classForConstructor();
-    ScopedValue thisObject(scope, v4->memoryManager->allocObject<Object>(ic));
+    ScopedValue thisObject(scope, v4->memoryManager->allocObject<Object>(f->classForConstructor()));
 
     ReturnedValue result = Moth::VME::exec(fo, thisObject, argv, argc);
 
@@ -415,19 +414,19 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     }
 }
 
-InternalClass *ScriptFunction::classForConstructor() const
+Heap::InternalClass *ScriptFunction::classForConstructor() const
 {
     const Object *o = d()->protoProperty();
-    InternalClass *ic = d()->cachedClassForConstructor;
-    if (ic && ic->prototype == o->d())
-        return ic;
+    if (d()->cachedClassForConstructor && d()->cachedClassForConstructor->prototype == o->d())
+        return d()->cachedClassForConstructor;
 
-    ic = engine()->internalClasses(EngineBase::Class_Object);
+    Scope scope(engine());
+    Scoped<InternalClass> ic(scope, engine()->internalClasses(EngineBase::Class_Object));
     if (o)
         ic = ic->changePrototype(o->d());
-    d()->cachedClassForConstructor = ic;
+    d()->cachedClassForConstructor.set(scope.engine, ic->d());
 
-    return ic;
+    return ic->d();
 }
 
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);

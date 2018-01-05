@@ -109,14 +109,16 @@ struct IndexedBuiltinFunction : FunctionObject {
     uint index;
 };
 
-struct ScriptFunction : FunctionObject {
+#define ScriptFunctionMembers(class, Member) \
+    Member(class, Pointer, InternalClass *, cachedClassForConstructor)
+
+DECLARE_HEAP_OBJECT(ScriptFunction, FunctionObject) {
+    DECLARE_MARKOBJECTS(ScriptFunction)
     enum {
         Index_Name = FunctionObject::Index_Prototype + 1,
         Index_Length
     };
     void init(QV4::ExecutionContext *scope, Function *function);
-
-    QV4::InternalClass *cachedClassForConstructor;
 };
 
 #define BoundFunctionMembers(class, Member) \
@@ -225,7 +227,7 @@ struct ScriptFunction : FunctionObject {
     static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
-    InternalClass *classForConstructor() const;
+    Heap::InternalClass *classForConstructor() const;
 };
 
 

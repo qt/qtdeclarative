@@ -347,7 +347,6 @@ ReturnedValue Lookup::getterProtoAccessor(Lookup *l, ExecutionEngine *engine, co
 
         return static_cast<const FunctionObject *>(getter)->call(&object, nullptr, 0);
     }
-    l->getter = getterTwoClasses;
     return getterTwoClasses(l, engine, object);
 }
 
@@ -442,7 +441,7 @@ bool Lookup::resolveSetter(ExecutionEngine *engine, Object *object, const Value 
     Scope scope(engine);
     ScopedString name(scope, scope.engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
 
-    InternalClass *c = object->internalClass();
+    Heap::InternalClass *c = object->internalClass();
     uint idx = c->find(name);
     if (idx != UINT_MAX) {
         if (object->isArrayObject() && idx == Heap::ArrayObject::LengthPropertyIndex) {
@@ -597,6 +596,55 @@ bool Lookup::arrayLengthSetter(Lookup *, ExecutionEngine *engine, Value &object,
     if (!ok)
         return false;
     return true;
+}
+
+void Lookup::markObjects(MarkStack *stack)
+{
+    if (getter == getterGeneric ||
+        getter == getterTwoClasses ||
+        getter == getterFallback) {
+        ;
+    } else if (getter == getter0MemberData ||
+               getter == getter0Inline ||
+               getter == getterAccessor) {
+        objectLookup.ic->mark(stack);
+    } else if (getter == getterProto) {
+        ;
+    } else if (getter == getter0Inlinegetter0Inline ||
+               getter == getter0Inlinegetter0MemberData ||
+               getter == getter0MemberDatagetter0MemberData) {
+        objectLookupTwoClasses.ic->mark(stack);
+        objectLookupTwoClasses.ic2->mark(stack);
+    } else if (getter == getterProtoTwoClasses ||
+               getter == getterProtoAccessor ||
+               getter == getterProtoAccessorTwoClasses) {
+
+    } else if (getter == primitiveGetterProto ||
+               getter == primitiveGetterAccessor) {
+        primitiveLookup.proto->mark(stack);
+    } else if (getter == stringLengthGetter) {
+        ;
+
+    } else if (globalGetter == globalGetterGeneric ||
+               globalGetter == globalGetterProto ||
+               globalGetter == globalGetterProtoAccessor) {
+        ;
+
+    } else if (setter == setterGeneric ||
+               setter == setterTwoClasses ||
+               setter == setterFallback) {
+        ;
+    } else if (setter == setter0 ||
+               setter == setter0Inline) {
+        objectLookup.ic->mark(stack);
+    } else if (setter == setter0setter0) {
+        objectLookupTwoClasses.ic->mark(stack);
+        objectLookupTwoClasses.ic2->mark(stack);
+    } else if (setter == setterInsert) {
+        insertionLookup.newClass->mark(stack);
+    } else if (setter == arrayLengthSetter) {
+        ;
+    }
 }
 
 QT_END_NAMESPACE

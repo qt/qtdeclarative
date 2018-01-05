@@ -73,7 +73,7 @@ struct Lookup {
     };
     union {
         struct {
-            InternalClass *ic;
+            Heap::InternalClass *ic;
             int offset;
         } objectLookup;
         struct {
@@ -81,8 +81,8 @@ struct Lookup {
             int icIdentifier;
         } protoLookup;
         struct {
-            InternalClass *ic;
-            InternalClass *ic2;
+            Heap::InternalClass *ic;
+            Heap::InternalClass *ic2;
             int offset;
             int offset2;
         } objectLookupTwoClasses;
@@ -100,7 +100,7 @@ struct Lookup {
             Heap::Object *proto;
         } primitiveLookup;
         struct {
-            InternalClass *newClass;
+            Heap::InternalClass *newClass;
             int icIdentifier;
             int offset;
         } insertionLookup;
@@ -144,6 +144,8 @@ struct Lookup {
     static bool setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setterInsert(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool arrayLengthSetter(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+
+    void markObjects(MarkStack *stack);
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<Lookup>::value);

@@ -222,7 +222,7 @@ struct Q_QML_EXPORT Object: Managed {
         SetterOffset = 1
     };
 
-    void setInternalClass(InternalClass *ic);
+    void setInternalClass(Heap::InternalClass *ic);
 
     const Value *propertyData(uint index) const { return d()->propertyData(index); }
 

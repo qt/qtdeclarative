@@ -54,6 +54,7 @@
 
 #include <QHash>
 #include <private/qv4identifier_p.h>
+#include <private/qv4heap_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -240,7 +241,7 @@ struct InternalClassTransition
         const VTable *vtable;
         Heap::Object *prototype;
     };
-    InternalClass *lookup;
+    Heap::InternalClass *lookup;
     int flags;
     enum {
         // range 0-0xff is reserved for attribute changes
@@ -260,12 +261,14 @@ struct InternalClassTransition
     { return id < other.id || (id == other.id && flags < other.flags); }
 };
 
-struct InternalClass {
-    int id = 0; // unique across the engine, gets changed also when proto chain changes
+namespace Heap {
+
+struct InternalClass : Base {
+    int id; // unique across the engine, gets changed also when proto chain changes
     ExecutionEngine *engine;
     const VTable *vtable;
     Heap::Object *prototype;
-    InternalClass *parent = nullptr;
+    InternalClass *parent;
 
     PropertyHash propertyTable; // id to valueIndex
     SharedInternalClassData<Identifier *> nameMap;
@@ -279,27 +282,21 @@ struct InternalClass {
     bool extensible;
     bool isSealed;
     bool isFrozen;
-    bool isUsedAsProto = false;
+    bool isUsedAsProto;
+
+    void init(ExecutionEngine *engine);
+    void init(InternalClass *other);
+    void destroy();
 
     Q_REQUIRED_RESULT InternalClass *nonExtensible();
-    Q_REQUIRED_RESULT InternalClass *changeVTable(const VTable *vt) {
-        if (vtable == vt)
-            return this;
-        return changeVTableImpl(vt);
-    }
-    Q_REQUIRED_RESULT InternalClass *changePrototype(Heap::Object *proto) {
-        if (prototype == proto)
-            return this;
-        return changePrototypeImpl(proto);
-    }
 
-    static void addMember(Object *object, String *string, PropertyAttributes data, uint *index);
-    Q_REQUIRED_RESULT InternalClass *addMember(String *string, PropertyAttributes data, uint *index = nullptr);
+    static void addMember(QV4::Object *object, QV4::String *string, PropertyAttributes data, uint *index);
+    Q_REQUIRED_RESULT InternalClass *addMember(QV4::String *string, PropertyAttributes data, uint *index = nullptr);
     Q_REQUIRED_RESULT InternalClass *addMember(Identifier *identifier, PropertyAttributes data, uint *index = nullptr);
     Q_REQUIRED_RESULT InternalClass *changeMember(Identifier *identifier, PropertyAttributes data, uint *index = nullptr);
-    static void changeMember(Object *object, String *string, PropertyAttributes data, uint *index = nullptr);
-    static void removeMember(Object *object, Identifier *id);
-    uint find(const String *string);
+    static void changeMember(QV4::Object *object, QV4::String *string, PropertyAttributes data, uint *index = nullptr);
+    static void removeMember(QV4::Object *object, Identifier *id);
+    uint find(const QV4::String *string);
     uint find(const Identifier *id)
     {
         uint index = propertyTable.lookup(id);
@@ -315,22 +312,37 @@ struct InternalClass {
 
     Q_REQUIRED_RESULT InternalClass *asProtoClass();
 
-    void destroyAll();
+    Q_REQUIRED_RESULT InternalClass *changeVTable(const VTable *vt) {
+        if (vtable == vt)
+            return this;
+        return changeVTableImpl(vt);
+    }
+    Q_REQUIRED_RESULT InternalClass *changePrototype(Heap::Object *proto) {
+        if (prototype == proto)
+            return this;
+        return changePrototypeImpl(proto);
+    }
 
     void updateProtoUsage(Heap::Object *o);
 
-    static void markObjects(InternalClass *ic, MarkStack *stack);
-
+    static void markObjects(Heap::Base *ic, MarkStack *stack);
 
 private:
     Q_QML_EXPORT InternalClass *changeVTableImpl(const VTable *vt);
     Q_QML_EXPORT InternalClass *changePrototypeImpl(Heap::Object *proto);
     InternalClass *addMemberImpl(Identifier *identifier, PropertyAttributes data, uint *index);
-    void updateInternalClassIdRecursive();
+
+    void removeChildEntry(InternalClass *child);
     friend struct ExecutionEngine;
-    InternalClass(ExecutionEngine *engine);
-    InternalClass(InternalClass *other);
 };
+
+inline
+void Base::markObjects(Base *b, MarkStack *stack)
+{
+    b->internalClass->mark(stack);
+}
+
+}
 
 }
 

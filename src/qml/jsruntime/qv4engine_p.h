@@ -400,10 +400,10 @@ public:
 
     int newInternalClassId() { return ++internalClassIdCount; }
 
-    InternalClass *newInternalClass(const VTable *vtable, Object *prototype);
+    Heap::InternalClass *newInternalClass(const VTable *vtable, Object *prototype);
 
     Heap::Object *newObject();
-    Heap::Object *newObject(InternalClass *internalClass);
+    Heap::Object *newObject(Heap::InternalClass *internalClass);
 
     Heap::String *newString(const QString &s = QString());
     Heap::String *newIdentifier(const QString &text);
@@ -415,7 +415,7 @@ public:
     Heap::ArrayObject *newArrayObject(int count = 0);
     Heap::ArrayObject *newArrayObject(const Value *values, int length);
     Heap::ArrayObject *newArrayObject(const QStringList &list);
-    Heap::ArrayObject *newArrayObject(InternalClass *ic);
+    Heap::ArrayObject *newArrayObject(Heap::InternalClass *ic);
 
     Heap::ArrayBuffer *newArrayBuffer(const QByteArray &array);
     Heap::ArrayBuffer *newArrayBuffer(size_t length);
@@ -455,7 +455,7 @@ public:
 
     void initRootContext();
 
-    InternalClass *newClass(InternalClass *other);
+    Heap::InternalClass *newClass(Heap::InternalClass *other);
 
     StackTrace exceptionStackTrace;
 

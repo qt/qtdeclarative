@@ -160,37 +160,52 @@ public:
     { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
 
     template<typename ManagedType>
-    inline typename ManagedType::Data *allocManaged(std::size_t size, InternalClass *ic)
+    inline typename ManagedType::Data *allocManaged(std::size_t size, Heap::InternalClass *ic)
     {
         Q_STATIC_ASSERT(std::is_trivial< typename ManagedType::Data >::value);
         size = align(size);
-        Heap::Base *o = allocData(size);
-        o->internalClass = ic;
-        Q_ASSERT(o->internalClass && o->internalClass->vtable);
+        typename ManagedType::Data *d = static_cast<typename ManagedType::Data *>(allocData(size));
+        d->internalClass.set(engine, ic);
+        Q_ASSERT(d->internalClass && d->internalClass->vtable);
         Q_ASSERT(ic->vtable == ManagedType::staticVTable());
-        return static_cast<typename ManagedType::Data *>(o);
+        return d;
+    }
+
+    template<typename ManagedType>
+    inline typename ManagedType::Data *allocManaged(std::size_t size, InternalClass *ic)
+    {
+        return allocManaged<ManagedType>(size, ic->d());
     }
 
     template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size)
     {
-        return allocManaged<ManagedType>(size, ManagedType::defaultInternalClass(engine));
+        Scope scope(engine);
+        Scoped<InternalClass> ic(scope, ManagedType::defaultInternalClass(engine));
+        return allocManaged<ManagedType>(size, ic);
+    }
+
+    template <typename ObjectType>
+    typename ObjectType::Data *allocateObject(Heap::InternalClass *ic)
+    {
+        Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
+        o->internalClass.set(engine, ic);
+        Q_ASSERT(o->internalClass.get() && o->vtable());
+        Q_ASSERT(o->vtable() == ObjectType::staticVTable());
+        return static_cast<typename ObjectType::Data *>(o);
     }
 
     template <typename ObjectType>
     typename ObjectType::Data *allocateObject(InternalClass *ic)
     {
-        Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
-        o->internalClass = ic;
-        Q_ASSERT(o->internalClass && o->internalClass->vtable);
-        Q_ASSERT(ic->vtable == ObjectType::staticVTable());
-        return static_cast<typename ObjectType::Data *>(o);
+        return allocateObject<ObjectType>(ic->d());
     }
 
     template <typename ObjectType>
     typename ObjectType::Data *allocateObject()
     {
-        InternalClass *ic = ObjectType::defaultInternalClass(engine);
+        Scope scope(engine);
+        Scoped<InternalClass> ic(scope,  ObjectType::defaultInternalClass(engine));
         ic = ic->changeVTable(ObjectType::staticVTable());
         ic = ic->changePrototype(ObjectType::defaultPrototype(engine)->d());
         return allocateObject<ObjectType>(ic);
@@ -200,18 +215,18 @@ public:
     typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
     {
         typename ManagedType::Data *o = reinterpret_cast<typename ManagedType::Data *>(allocString(unmanagedSize));
-        o->internalClass = ManagedType::defaultInternalClass(engine);
+        o->internalClass.set(engine, ManagedType::defaultInternalClass(engine));
         Q_ASSERT(o->internalClass && o->internalClass->vtable);
         o->init(arg1);
         return o;
     }
 
-    template <typename ObjectType>
-    typename ObjectType::Data *allocObject(InternalClass *ic)
+    template <typename ObjectType, typename... Args>
+    typename ObjectType::Data *allocObject(Heap::InternalClass *ic, Args... args)
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->init();
+        t->d_unchecked()->init(args...);
         return t->d();
     }
 
@@ -253,6 +268,14 @@ public:
     // called when a JS object grows itself. Specifically: Heap::String::append
     void changeUnmanagedHeapSizeUsage(qptrdiff delta) { unmanagedHeapSize += delta; }
 
+    template<typename ManagedType>
+    typename ManagedType::Data *allocIC()
+    {
+        size_t size = align(sizeof(typename ManagedType::Data));
+        Heap::Base *b = *icAllocator.allocate(size, true);
+        return static_cast<typename ManagedType::Data *>(b);
+    }
+
 protected:
     /// expects size to be aligned
     Heap::Base *allocString(std::size_t unmanagedSize);
@@ -270,6 +293,7 @@ public:
     QV4::ExecutionEngine *engine;
     ChunkAllocator *chunkAllocator;
     BlockAllocator blockAllocator;
+    BlockAllocator icAllocator;
     HugeItemAllocator hugeItemAllocator;
     PersistentValueStorage *m_persistentValues;
     PersistentValueStorage *m_weakValues;
