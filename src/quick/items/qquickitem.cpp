@@ -3654,8 +3654,9 @@ QQmlListProperty<QObject> QQuickItemPrivate::data()
     \qmlproperty real QtQuick::Item::childrenRect.y
     \qmlproperty real QtQuick::Item::childrenRect.width
     \qmlproperty real QtQuick::Item::childrenRect.height
+    \readonly
 
-    This property holds the collective position and size of the item's
+    This read-only property holds the collective position and size of the item's
     children.
 
     This property is useful if you need to access the collective geometry
