@@ -356,7 +356,7 @@ QT_BEGIN_NAMESPACE
     nargs,
 
 #define MOTH_DECODE_ARG(arg, type, nargs, offset) \
-    arg = reinterpret_cast<const type *>(code)[-nargs + offset];
+    arg = qFromLittleEndian<type>(reinterpret_cast<const type *>(code)[-nargs + offset]);
 #define MOTH_ADJUST_CODE(type, nargs) \
     code += static_cast<quintptr>(nargs*sizeof(type) + 1)
 
@@ -486,6 +486,8 @@ union Instr
     FOR_EACH_MOTH_INSTR(MOTH_EMIT_STRUCTS)
 
     FOR_EACH_MOTH_INSTR(MOTH_EMIT_INSTR_MEMBERS)
+
+    int argumentsAsInts[4];
 };
 
 struct InstrInfo

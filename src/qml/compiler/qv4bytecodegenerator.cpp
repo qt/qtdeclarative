@@ -76,7 +76,9 @@ void BytecodeGenerator::packInstruction(I &i)
         type -= MOTH_NUM_INSTRUCTIONS();
     int instructionsAsInts[sizeof(Instr)/sizeof(int)];
     int nMembers = Moth::InstrInfo::argumentCount[static_cast<int>(i.type)];
-    memcpy(instructionsAsInts, i.packed + 1, nMembers*sizeof(int));
+    for (int j = 0; j < nMembers; ++j) {
+        instructionsAsInts[j] = qFromLittleEndian<qint32>(i.packed + 1 + j * sizeof(int));
+    }
     enum {
         Normal,
         Wide
@@ -122,7 +124,7 @@ void BytecodeGenerator::adjustJumpOffsets()
         uchar type = *reinterpret_cast<const uchar *>(i.packed);
         if (type >= MOTH_NUM_INSTRUCTIONS()) {
             Q_ASSERT(i.offsetForJump == i.size - 4);
-            memcpy(c, &jumpOffset, sizeof(int));
+            qToLittleEndian<qint32>(jumpOffset, c);
         } else {
             Q_ASSERT(i.offsetForJump == i.size - 1);
             qint8 o = jumpOffset;
@@ -198,7 +200,8 @@ QT_WARNING_POP
 
     const int pos = instructions.size();
 
-    int s = Moth::InstrInfo::argumentCount[static_cast<int>(type)]*sizeof(int);
+    const int argCount = Moth::InstrInfo::argumentCount[static_cast<int>(type)];
+    int s = argCount*sizeof(int);
     if (offsetOfOffset != -1)
         offsetOfOffset += 1;
     I instr{type, static_cast<short>(s + 1), 0, currentLine, offsetOfOffset, -1, "\0\0" };
@@ -206,7 +209,12 @@ QT_WARNING_POP
     *reinterpret_cast<uchar *>(code) = static_cast<uchar>(MOTH_NUM_INSTRUCTIONS() + static_cast<int>(type));
     ++code;
     Q_ASSERT(MOTH_NUM_INSTRUCTIONS() + static_cast<int>(type) < 256);
-    memcpy(code, &i, s);
+
+    for (int j = 0; j < argCount; ++j) {
+        qToLittleEndian<qint32>(i.argumentsAsInts[j], code);
+        code += sizeof(int);
+    }
+
     instructions.append(instr);
 
     return pos;
