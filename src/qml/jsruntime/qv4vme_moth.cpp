@@ -982,7 +982,10 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
 
     MOTH_BEGIN_INSTR(Construct)
         STORE_IP();
-        acc = Runtime::method_construct(engine, STACK_VALUE(func), stack + argv, argc);
+#ifndef Q_OS_HTML5
+    // this causes exception on webassembly
+    acc = Runtime::method_construct(engine, STACK_VALUE(func), stack + argv, argc);
+#endif
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Construct)
 

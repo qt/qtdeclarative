@@ -1003,7 +1003,12 @@ struct StaticLoader {
 
     void loadThread(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
     {
+#ifdef Q_OS_HTML5
+        loader->m_thread->loadWithStaticDataAsync(blob, data);
+        return;
+#else
         loader->loadWithStaticDataThread(blob, data);
+#endif
     }
     void load(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
     {
@@ -1040,8 +1045,9 @@ void QQmlTypeLoader::doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode)
     qWarning("QQmlTypeLoader::doLoad(%s): %s thread", qPrintable(blob->m_url.toString()),
              m_thread->isThisThread()?"Compile":"Engine");
 #endif
-
-    blob->startLoading();
+#ifdef Q_OS_HTML5
+    mode = Asynchronous;
+#endif
     if (m_thread->isThisThread()) {
         unlock();
         loader.loadThread(this, blob);
@@ -1049,12 +1055,7 @@ void QQmlTypeLoader::doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode)
     } else if (mode == Asynchronous) {
         blob->m_data.setIsAsync(true);
         unlock();
-
-#ifndef Q_OS_HTML5
-        loader.loadThread(this, blob);
-#else
         loader.loadAsync(this, blob);
-#endif
         lock();
     } else {
         unlock();
@@ -1663,7 +1664,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
     } else if ((mode == PreferSynchronous || mode == Synchronous) && QQmlFile::isSynchronous(url)) {
         // this was started Asynchronous, but we need to force Synchronous
         // completion now (if at all possible with this type of URL).
-
+#ifndef Q_OS_HTML5
         if (!m_thread->isThisThread()) {
             // this only works when called directly from the UI thread, but not
             // when recursively called on the QML thread via resolveTypes()
@@ -1674,6 +1675,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
                 lock();
             }
         }
+#endif
     }
 
     typeData->addref();
@@ -1687,6 +1689,9 @@ QQmlTypeData will not be cached.
 */
 QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url, Mode mode)
 {
+#ifdef Q_OS_HTML5
+    mode = Asynchronous;
+#endif
     LockHolder<QQmlTypeLoader> holder(this);
 
     QQmlTypeData *typeData = new QQmlTypeData(url, this);
