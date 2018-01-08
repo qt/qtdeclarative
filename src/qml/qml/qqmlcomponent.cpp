@@ -1132,22 +1132,23 @@ class QQmlComponentIncubator : public QQmlIncubator
 public:
     QQmlComponentIncubator(QV4::Heap::QmlIncubatorObject *inc, IncubationMode mode)
         : QQmlIncubator(mode)
-        , incubatorObject(inc)
-    {}
+    {
+        incubatorObject.set(inc->internalClass->engine, inc);
+    }
 
     void statusChanged(Status s) override {
-        QV4::Scope scope(incubatorObject->internalClass->engine);
-        QV4::Scoped<QV4::QmlIncubatorObject> i(scope, incubatorObject);
+        QV4::Scope scope(incubatorObject.engine());
+        QV4::Scoped<QV4::QmlIncubatorObject> i(scope, incubatorObject.as<QV4::QmlIncubatorObject>());
         i->statusChanged(s);
     }
 
     void setInitialState(QObject *o) override {
-        QV4::Scope scope(incubatorObject->internalClass->engine);
-        QV4::Scoped<QV4::QmlIncubatorObject> i(scope, incubatorObject);
+        QV4::Scope scope(incubatorObject.engine());
+        QV4::Scoped<QV4::QmlIncubatorObject> i(scope, incubatorObject.as<QV4::QmlIncubatorObject>());
         i->setInitialState(o);
     }
 
-    QV4::Heap::QmlIncubatorObject *incubatorObject;
+    QV4::PersistentValue incubatorObject; // keep a strong internal reference while incubating
 };
 
 
@@ -1571,6 +1572,9 @@ void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
             QQmlEnginePrivate::warning(QQmlEnginePrivate::get(scope.engine->qmlEngine()), error);
         }
     }
+
+    if (s != QQmlIncubator::Loading)
+        d()->incubator->incubatorObject.clear();
 }
 
 #undef INITIALPROPERTIES_SOURCE
