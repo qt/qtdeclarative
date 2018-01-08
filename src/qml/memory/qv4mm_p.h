@@ -160,19 +160,6 @@ public:
     { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
 
     template<typename ManagedType>
-    inline typename ManagedType::Data *allocManaged(std::size_t size)
-    {
-        Q_STATIC_ASSERT(std::is_trivial< typename ManagedType::Data >::value);
-        size = align(size);
-        Heap::Base *o = allocData(size);
-        InternalClass *ic = ManagedType::defaultInternalClass(engine);
-        ic = ic->changeVTable(ManagedType::staticVTable());
-        o->internalClass = ic;
-        Q_ASSERT(o->internalClass && o->internalClass->vtable);
-        return static_cast<typename ManagedType::Data *>(o);
-    }
-
-    template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size, InternalClass *ic)
     {
         Q_STATIC_ASSERT(std::is_trivial< typename ManagedType::Data >::value);
@@ -182,6 +169,15 @@ public:
         Q_ASSERT(o->internalClass && o->internalClass->vtable);
         Q_ASSERT(ic->vtable == ManagedType::staticVTable());
         return static_cast<typename ManagedType::Data *>(o);
+    }
+
+    template<typename ManagedType>
+    inline typename ManagedType::Data *allocManaged(std::size_t size)
+    {
+        Q_STATIC_ASSERT(std::is_trivial< typename ManagedType::Data >::value);
+        InternalClass *ic = ManagedType::defaultInternalClass(engine);
+        ic = ic->changeVTable(ManagedType::staticVTable());
+        return allocManaged<ManagedType>(size, ic);
     }
 
     template <typename ObjectType>
@@ -200,11 +196,7 @@ public:
         InternalClass *ic = ObjectType::defaultInternalClass(engine);
         ic = ic->changeVTable(ObjectType::staticVTable());
         ic = ic->changePrototype(ObjectType::defaultPrototype(engine)->d());
-        Heap::Object *o = allocObjectWithMemberData(ObjectType::staticVTable(), ic->size);
-        o->internalClass = ic;
-        Q_ASSERT(o->internalClass && o->internalClass->vtable);
-        Q_ASSERT(o->internalClass->prototype == ObjectType::defaultPrototype(engine)->d());
-        return static_cast<typename ObjectType::Data *>(o);
+        return allocateObject<ObjectType>(ic);
     }
 
     template <typename ManagedType, typename Arg1>
@@ -226,158 +218,32 @@ public:
         return t->d();
     }
 
-    template <typename ObjectType>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype)
+    template <typename ObjectType, typename... Args>
+    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Args... args)
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
         Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : nullptr));
         Q_UNUSED(prototype);
-        t->d_unchecked()->init();
+        t->d_unchecked()->init(args...);
         return t->d();
     }
 
-    template <typename ObjectType, typename Arg1>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : nullptr));
-        Q_UNUSED(prototype);
-        t->d_unchecked()->init(arg1);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1, Arg2 arg2)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : nullptr));
-        Q_UNUSED(prototype);
-        t->d_unchecked()->init(arg1, arg2);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2, typename Arg3>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1, Arg2 arg2, Arg3 arg3)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : nullptr));
-        Q_UNUSED(prototype);
-        t->d_unchecked()->init(arg1, arg2, arg3);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : nullptr));
-        Q_UNUSED(prototype);
-        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
-        return t->d();
-    }
-
-    template <typename ObjectType>
-    typename ObjectType::Data *allocObject()
+    template <typename ObjectType, typename... Args>
+    typename ObjectType::Data *allocObject(Args... args)
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init();
+        t->d_unchecked()->init(args...);
         return t->d();
     }
 
-    template <typename ObjectType, typename Arg1>
-    typename ObjectType::Data *allocObject(Arg1 arg1)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init(arg1);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2>
-    typename ObjectType::Data *allocObject(Arg1 arg1, Arg2 arg2)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init(arg1, arg2);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2, typename Arg3>
-    typename ObjectType::Data *allocObject(Arg1 arg1, Arg2 arg2, Arg3 arg3)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init(arg1, arg2, arg3);
-        return t->d();
-    }
-
-    template <typename ObjectType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    typename ObjectType::Data *allocObject(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-    {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
-        return t->d();
-    }
-
-
-    template <typename ManagedType>
-    typename ManagedType::Data *alloc()
+    template <typename ManagedType, typename... Args>
+    typename ManagedType::Data *alloc(Args... args)
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init();
-        return t->d();
-    }
-
-    template <typename ManagedType, typename Arg1>
-    typename ManagedType::Data *alloc(Arg1 arg1)
-    {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init(arg1);
-        return t->d();
-    }
-
-    template <typename ManagedType, typename Arg1, typename Arg2>
-    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2)
-    {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init(arg1, arg2);
-        return t->d();
-    }
-
-    template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3>
-    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3)
-    {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init(arg1, arg2, arg3);
-        return t->d();
-    }
-
-    template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-    {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init(arg1, arg2, arg3, arg4);
-        return t->d();
-    }
-
-    template <typename ManagedType, typename Arg1, typename Arg2, typename Arg3, typename Arg4, typename Arg5>
-    typename ManagedType::Data *alloc(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
-    {
-        Scope scope(engine);
-        Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init(arg1, arg2, arg3, arg4, arg5);
+        t->d_unchecked()->init(args...);
         return t->d();
     }
 
