@@ -166,6 +166,7 @@ public:
 
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
 
+    void cancelBackground();
     void executeBackground(bool complete = false);
 
     bool complete;
@@ -334,13 +335,19 @@ void QQuickApplicationWindowPrivate::contentData_append(QQmlListProperty<QObject
 
 static inline QString backgroundName() { return QStringLiteral("background"); }
 
+void QQuickApplicationWindowPrivate::cancelBackground()
+{
+    Q_Q(QQuickApplicationWindow);
+    quickCancelDeferred(q, backgroundName());
+}
+
 void QQuickApplicationWindowPrivate::executeBackground(bool complete)
 {
     Q_Q(QQuickApplicationWindow);
     if (background.wasExecuted())
         return;
 
-    if (!background)
+    if (!background || complete)
         quickBeginDeferred(q, backgroundName(), background);
     if (complete)
         quickCompleteDeferred(q, backgroundName(), background);
@@ -403,6 +410,9 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
     Q_D(QQuickApplicationWindow);
     if (d->background == background)
         return;
+
+    if (!d->background.isExecuting())
+        d->cancelBackground();
 
     delete d->background;
     d->background = background;

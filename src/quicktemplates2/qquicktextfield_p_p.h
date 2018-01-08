@@ -113,6 +113,7 @@ public:
     QAccessible::Role accessibleRole() const override;
 #endif
 
+    void cancelBackground();
     void executeBackground(bool complete = false);
 
 #if QT_CONFIG(quicktemplates2_hover)

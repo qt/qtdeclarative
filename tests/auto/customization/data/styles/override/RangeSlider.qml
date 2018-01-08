@@ -63,10 +63,6 @@ Simple.RangeSlider {
         objectName: "rangeslider-second.handle-override"
     }
 
-    contentItem: Item {
-        objectName: "rangeslider-contentItem-override"
-    }
-
     background: Item {
         objectName: "rangeslider-background-override"
     }

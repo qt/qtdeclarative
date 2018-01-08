@@ -350,8 +350,8 @@ TestCase {
         verify(firstItem);
         // Test QTBUG-40298.
         actualPos = testCase.mapFromItem(firstItem, 0, 0);
-        compare(actualPos.x, tumbler.leftPadding);
-        compare(actualPos.y, tumbler.topPadding);
+        fuzzyCompare(actualPos.x, tumbler.leftPadding, 0.0001);
+        fuzzyCompare(actualPos.y, tumbler.topPadding, 0.0001);
 
         var secondItemCenterPos = itemCenterPos(1);
         var secondItem = tumblerView.itemAt(secondItemCenterPos.x, secondItemCenterPos.y);

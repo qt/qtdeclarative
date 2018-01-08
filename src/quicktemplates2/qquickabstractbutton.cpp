@@ -333,13 +333,19 @@ void QQuickAbstractButtonPrivate::toggle(bool value)
 
 static inline QString indicatorName() { return QStringLiteral("indicator"); }
 
+void QQuickAbstractButtonPrivate::cancelIndicator()
+{
+    Q_Q(QQuickAbstractButton);
+    quickCancelDeferred(q, indicatorName());
+}
+
 void QQuickAbstractButtonPrivate::executeIndicator(bool complete)
 {
-    Q_Q(QQuickControl);
+    Q_Q(QQuickAbstractButton);
     if (indicator.wasExecuted())
         return;
 
-    if (!indicator)
+    if (!indicator || complete)
         quickBeginDeferred(q, indicatorName(), indicator);
     if (complete)
         quickCompleteDeferred(q, indicatorName(), indicator);
@@ -648,6 +654,9 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
     Q_D(QQuickAbstractButton);
     if (d->indicator == indicator)
         return;
+
+    if (!d->indicator.isExecuting())
+        d->cancelIndicator();
 
     delete d->indicator;
     d->indicator = indicator;

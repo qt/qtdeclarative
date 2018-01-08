@@ -97,6 +97,7 @@ public:
     void trigger();
     void toggle(bool value);
 
+    void cancelIndicator();
     void executeIndicator(bool complete = false);
 
     QString text;

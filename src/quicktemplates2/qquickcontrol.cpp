@@ -291,6 +291,9 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
     if (contentItem == item)
         return;
 
+    if (!contentItem.isExecuting())
+        cancelContentItem();
+
     q->contentItemChange(item, contentItem);
     delete contentItem;
     contentItem = item;
@@ -649,13 +652,19 @@ bool QQuickControlPrivate::calcHoverEnabled(const QQuickItem *item)
 
 static inline QString contentItemName() { return QStringLiteral("contentItem"); }
 
+void QQuickControlPrivate::cancelContentItem()
+{
+    Q_Q(QQuickControl);
+    quickCancelDeferred(q, contentItemName());
+}
+
 void QQuickControlPrivate::executeContentItem(bool complete)
 {
     Q_Q(QQuickControl);
     if (contentItem.wasExecuted())
         return;
 
-    if (!contentItem)
+    if (!contentItem || complete)
         quickBeginDeferred(q, contentItemName(), contentItem);
     if (complete)
         quickCompleteDeferred(q, contentItemName(), contentItem);
@@ -663,13 +672,19 @@ void QQuickControlPrivate::executeContentItem(bool complete)
 
 static inline QString backgroundName() { return QStringLiteral("background"); }
 
+void QQuickControlPrivate::cancelBackground()
+{
+    Q_Q(QQuickControl);
+    quickCancelDeferred(q, backgroundName());
+}
+
 void QQuickControlPrivate::executeBackground(bool complete)
 {
     Q_Q(QQuickControl);
     if (background.wasExecuted())
         return;
 
-    if (!background)
+    if (!background || complete)
         quickBeginDeferred(q, backgroundName(), background);
     if (complete)
         quickCompleteDeferred(q, backgroundName(), background);
@@ -1312,6 +1327,9 @@ void QQuickControl::setBackground(QQuickItem *background)
     Q_D(QQuickControl);
     if (d->background == background)
         return;
+
+    if (!d->background.isExecuting())
+        d->cancelBackground();
 
     delete d->background;
     d->background = background;

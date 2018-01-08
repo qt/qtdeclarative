@@ -110,6 +110,7 @@ public:
     void setPosition(qreal position, bool ignoreOtherPosition = false);
     void updatePosition(bool ignoreOtherPosition = false);
 
+    void cancelHandle();
     void executeHandle(bool complete = false);
 
     static QQuickRangeSliderNodePrivate *get(QQuickRangeSliderNode *node);
@@ -154,13 +155,19 @@ void QQuickRangeSliderNodePrivate::updatePosition(bool ignoreOtherPosition)
 
 static inline QString handleName() { return QStringLiteral("handle"); }
 
+void QQuickRangeSliderNodePrivate::cancelHandle()
+{
+    Q_Q(QQuickRangeSliderNode);
+    quickCancelDeferred(q, handleName());
+}
+
 void QQuickRangeSliderNodePrivate::executeHandle(bool complete)
 {
     Q_Q(QQuickRangeSliderNode);
     if (handle.wasExecuted())
         return;
 
-    if (!handle)
+    if (!handle || complete)
         quickBeginDeferred(q, handleName(), handle);
     if (complete)
         quickCompleteDeferred(q, handleName(), handle);
@@ -256,14 +263,17 @@ void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
     if (d->handle == handle)
         return;
 
+    if (!d->handle.isExecuting())
+        d->cancelHandle();
+
     delete d->handle;
     d->handle = handle;
     if (handle) {
         if (!handle->parentItem())
             handle->setParentItem(d->slider);
 
-        QQuickItem *firstHandle = d->slider->first()->handle();
-        QQuickItem *secondHandle = d->slider->second()->handle();
+        QQuickItem *firstHandle = QQuickRangeSliderNodePrivate::get(d->slider->first())->handle;
+        QQuickItem *secondHandle = QQuickRangeSliderNodePrivate::get(d->slider->second())->handle;
         if (firstHandle && secondHandle) {
             // The order of property assignments in QML is undefined,
             // but we need the first handle to be before the second due

@@ -62,8 +62,4 @@ Simple.Switch {
     contentItem: Item {
         objectName: "switch-contentItem-override"
     }
-
-    background: Item {
-        objectName: "switch-background-override"
-    }
 }

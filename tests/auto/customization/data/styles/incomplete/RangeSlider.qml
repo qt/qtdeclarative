@@ -63,10 +63,6 @@ T.RangeSlider {
         objectName: "rangeslider-second.handle-incomplete"
     }
 
-    contentItem: Item {
-        objectName: "rangeslider-contentItem-incomplete"
-    }
-
     background: Item {
         objectName: "rangeslider-background-incomplete"
     }
