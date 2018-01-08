@@ -307,7 +307,7 @@ public:
     }
 
     void doUpdate(const DeleteWatcher &watcher,
-                  QQmlPropertyData::WriteFlags flags, QV4::Scope &) Q_DECL_OVERRIDE Q_DECL_FINAL
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) Q_DECL_OVERRIDE Q_DECL_FINAL
     {
         if (watcher.wasDeleted())
             return;
@@ -323,7 +323,12 @@ public:
         QQmlPropertyData vpd;
         getPropertyData(&pd, &vpd);
         Q_ASSERT(pd);
-        doStore(result, pd, flags);
+        if (pd->propType() == QMetaType::QString) {
+            doStore(result, pd, flags);
+        } else {
+            QV4::ScopedString value(scope, scope.engine->newString(result));
+            slowWrite(*pd, vpd, value, /*isUndefined*/false, flags);
+        }
     }
 
 private:
