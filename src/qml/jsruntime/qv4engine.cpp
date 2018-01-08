@@ -207,6 +207,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     internalClasses[Class_ExecutionContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::ExecutionContext::staticVTable());
     internalClasses[Class_QmlContext] = internalClasses[EngineBase::Class_ExecutionContext]->changeVTable(QV4::QmlContext::staticVTable());
     internalClasses[Class_CallContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::CallContext::staticVTable());
+    internalClasses[Class_CatchContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::CatchContext::staticVTable());
+    internalClasses[Class_QmlContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::QmlContext::staticVTable());
 
     jsStrings[String_Empty] = newIdentifier(QString());
     jsStrings[String_undefined] = newIdentifier(QStringLiteral("undefined"));

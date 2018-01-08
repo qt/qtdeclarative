@@ -174,10 +174,7 @@ public:
     template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size)
     {
-        Q_STATIC_ASSERT(std::is_trivial< typename ManagedType::Data >::value);
-        InternalClass *ic = ManagedType::defaultInternalClass(engine);
-        ic = ic->changeVTable(ManagedType::staticVTable());
-        return allocManaged<ManagedType>(size, ic);
+        return allocManaged<ManagedType>(size, ManagedType::defaultInternalClass(engine));
     }
 
     template <typename ObjectType>

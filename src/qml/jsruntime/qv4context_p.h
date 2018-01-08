@@ -55,22 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QObject;
-class QQmlContextData;
-
 namespace QV4 {
-
-namespace CompiledData {
-struct CompilationUnitBase;
-struct Function;
-}
-
-struct Function;
-struct Identifier;
-struct CallContext;
-struct CatchContext;
-struct QmlContext;
-struct QQmlContextWrapper;
 
 struct CallData
 {
@@ -112,8 +97,6 @@ Q_STATIC_ASSERT(offsetof(CallData, thisObject) == CallData::This*sizeof(Value));
 Q_STATIC_ASSERT(offsetof(CallData, args) == 5*sizeof(Value));
 
 namespace Heap {
-
-struct QmlContext;
 
 #define ExecutionContextMembers(class, Member) \
     Member(class, Pointer, ExecutionContext *, outer) \
@@ -242,6 +225,7 @@ struct Q_QML_EXPORT CallContext : public ExecutionContext
 struct CatchContext : public ExecutionContext
 {
     V4_MANAGED(CatchContext, ExecutionContext)
+    V4_INTERNALCLASS(CatchContext)
 };
 
 inline CallContext *ExecutionContext::asCallContext()

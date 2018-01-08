@@ -166,6 +166,7 @@ namespace Heap {
 
     struct ExecutionContext;
     struct CallContext;
+    struct QmlContext;
     struct ScriptFunction;
 
     struct BooleanObject;
@@ -196,6 +197,7 @@ struct ObjectPrototype;
 struct ObjectIterator;
 struct ExecutionContext;
 struct CallContext;
+struct QmlContext;
 struct ScriptFunction;
 struct InternalClass;
 struct Property;
