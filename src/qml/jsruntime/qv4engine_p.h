@@ -403,7 +403,7 @@ public:
     InternalClass *newInternalClass(const VTable *vtable, Object *prototype);
 
     Heap::Object *newObject();
-    Heap::Object *newObject(InternalClass *internalClass, Object *prototype);
+    Heap::Object *newObject(InternalClass *internalClass);
 
     Heap::String *newString(const QString &s = QString());
     Heap::String *newIdentifier(const QString &text);
@@ -415,7 +415,7 @@ public:
     Heap::ArrayObject *newArrayObject(int count = 0);
     Heap::ArrayObject *newArrayObject(const Value *values, int length);
     Heap::ArrayObject *newArrayObject(const QStringList &list);
-    Heap::ArrayObject *newArrayObject(InternalClass *ic, Object *prototype);
+    Heap::ArrayObject *newArrayObject(InternalClass *ic);
 
     Heap::ArrayBuffer *newArrayBuffer(const QByteArray &array);
     Heap::ArrayBuffer *newArrayBuffer(size_t length);

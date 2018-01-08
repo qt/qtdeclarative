@@ -548,9 +548,8 @@ Heap::Object *ExecutionEngine::newObject()
     return memoryManager->allocate<Object>();
 }
 
-Heap::Object *ExecutionEngine::newObject(InternalClass *internalClass, QV4::Object *prototype)
+Heap::Object *ExecutionEngine::newObject(InternalClass *internalClass)
 {
-    Q_UNUSED(prototype);
     return memoryManager->allocObject<Object>(internalClass);
 }
 
@@ -623,17 +622,12 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int leng
 
 Heap::ArrayObject *ExecutionEngine::newArrayObject(const QStringList &list)
 {
-    Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->allocate<ArrayObject>(list));
-    return object->d();
+    return memoryManager->allocate<ArrayObject>(list);
 }
 
-Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *internalClass, Object *prototype)
+Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *internalClass)
 {
-    Q_UNUSED(prototype);
-    Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>(internalClass));
-    return object->d();
+    return memoryManager->allocObject<ArrayObject>(internalClass);
 }
 
 Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(const QByteArray &array)
