@@ -397,13 +397,13 @@ static bool compareEqual(Value lhs, Value rhs)
             Heap::Base *r = rhs.m();
             Q_ASSERT(l);
             Q_ASSERT(r);
-            if (l->vtable()->isString == r->vtable()->isString)
+            if (l->internalClass->vtable->isString == r->internalClass->vtable->isString)
                 return static_cast<QV4::Managed &>(lhs).isEqualTo(&static_cast<QV4::Managed &>(rhs));
-            if (l->vtable()->isString) {
+            if (l->internalClass->vtable->isString) {
                 rhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(rhs), PREFERREDTYPE_HINT));
                 break;
             } else {
-                Q_ASSERT(r->vtable()->isString);
+                Q_ASSERT(r->internalClass->vtable->isString);
                 lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
                 break;
             }
@@ -418,7 +418,7 @@ static bool compareEqual(Value lhs, Value rhs)
             rhs = Primitive::fromDouble(rhs.int_32());
             // fall through
         default: // double
-            if (lhs.m()->vtable()->isString)
+            if (lhs.m()->internalClass->vtable->isString)
                 return RuntimeHelpers::toNumber(lhs) == rhs.doubleValue();
             else
                 lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
@@ -462,7 +462,7 @@ static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
     case Value::QT_ManagedOrUndefined2:
     case Value::QT_ManagedOrUndefined3:
         // LHS: Managed
-        if (lhs.m()->vtable()->isString)
+        if (lhs.m()->internalClass->vtable->isString)
             return RuntimeHelpers::stringToNumber(static_cast<String &>(lhs).toQString()) == rhs;
         accumulator = lhs;
         lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(accumulator), PREFERREDTYPE_HINT));

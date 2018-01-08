@@ -76,7 +76,7 @@ bool String::isEqualTo(Managed *t, Managed *o)
     if (t == o)
         return true;
 
-    if (!o->d()->vtable()->isString)
+    if (!o->vtable()->isString)
         return false;
 
     return static_cast<String *>(t)->isEqualTo(static_cast<String *>(o));

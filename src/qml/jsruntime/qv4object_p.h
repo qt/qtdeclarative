@@ -74,6 +74,10 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
     static void markObjects(Heap::Base *base, MarkStack *stack);
     void init() { Base::init(); }
 
+    const VTable *vtable() const {
+        return internalClass->vtable;
+    }
+
     const Value *inlinePropertyDataWithOffset(uint indexWithOffset) const {
         Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < vtable()->inlinePropertyOffset + vtable()->nInlineProperties);
         return reinterpret_cast<const Value *>(this) + indexWithOffset;
@@ -551,7 +555,7 @@ inline void Object::arraySet(uint index, const Value &value)
 
 template<>
 inline const ArrayObject *Value::as() const {
-    return isManaged() && m()->vtable()->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : nullptr;
+    return isManaged() && m()->internalClass->vtable->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : nullptr;
 }
 
 #ifndef V4_BOOTSTRAP

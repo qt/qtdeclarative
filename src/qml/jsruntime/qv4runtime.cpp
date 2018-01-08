@@ -617,7 +617,7 @@ ReturnedValue Runtime::method_loadElement(ExecutionEngine *engine, const Value &
     uint idx = 0;
     if (index.asArrayIndex(idx)) {
         if (Heap::Base *b = object.heapObject()) {
-            if (b->vtable()->isObject) {
+            if (b->internalClass->vtable->isObject) {
                 Heap::Object *o = static_cast<Heap::Object *>(b);
                 if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
                     Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
@@ -661,7 +661,7 @@ bool Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, 
     uint idx = 0;
     if (index.asArrayIndex(idx)) {
         if (Heap::Base *b = object.heapObject()) {
-            if (b->vtable()->isObject) {
+            if (b->internalClass->vtable->isObject) {
                 Heap::Object *o = static_cast<Heap::Object *>(b);
                 if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
                     Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();

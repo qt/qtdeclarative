@@ -180,7 +180,7 @@ struct ErrorObject: Object {
 
 template<>
 inline const ErrorObject *Value::as() const {
-    return isManaged() && m()->vtable()->isErrorObject ? reinterpret_cast<const ErrorObject *>(this) : nullptr;
+    return isManaged() && m()->internalClass->vtable->isErrorObject ? reinterpret_cast<const ErrorObject *>(this) : nullptr;
 }
 
 struct EvalErrorObject: ErrorObject {

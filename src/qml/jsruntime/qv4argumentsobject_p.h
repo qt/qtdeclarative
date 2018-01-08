@@ -142,7 +142,7 @@ struct ArgumentsObject: Object {
     bool fullyCreated() const { return d()->fullyCreated; }
 
     static bool isNonStrictArgumentsObject(Managed *m) {
-        return m->d()->vtable() == staticVTable();
+        return m->vtable() == staticVTable();
     }
 
     bool defineOwnProperty(ExecutionEngine *engine, uint index, const Property *desc, PropertyAttributes attrs);

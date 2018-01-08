@@ -84,7 +84,7 @@ bool Value::toBooleanImpl(Value val)
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
 #else
-        if (b->vtable()->isString)
+        if (b->internalClass->vtable->isString)
             return static_cast<Heap::String *>(b)->length() > 0;
 #endif
         return true;

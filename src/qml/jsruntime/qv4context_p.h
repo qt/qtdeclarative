@@ -120,6 +120,10 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
         type = t;
     }
 
+    const VTable *vtable() const {
+        return internalClass->vtable;
+    }
+
     quint32 type : 8;
     quint32 nArgs : 24;
 #if QT_POINTER_SIZE == 8

@@ -335,7 +335,7 @@ bool Chunk::sweep(ExecutionEngine *engine)
 
             HeapItem *itemToFree = o + index;
             Heap::Base *b = *itemToFree;
-            const VTable *v = b->vtable();
+            const VTable *v = b->internalClass->vtable;
 //            if (Q_UNLIKELY(classCountPtr))
 //                classCountPtr(v->className);
             if (v->destroy) {
@@ -389,8 +389,8 @@ void Chunk::freeAll(ExecutionEngine *engine)
 
             HeapItem *itemToFree = o + index;
             Heap::Base *b = *itemToFree;
-            if (b->vtable()->destroy) {
-                b->vtable()->destroy(b);
+            if (b->internalClass->vtable->destroy) {
+                b->internalClass->vtable->destroy(b);
                 b->_checkIsDestroyed();
             }
 #ifdef V4_USE_HEAPTRACK
@@ -691,7 +691,7 @@ static void freeHugeChunk(ChunkAllocator *chunkAllocator, const HugeItemAllocato
 {
     HeapItem *itemToFree = c.chunk->first();
     Heap::Base *b = *itemToFree;
-    const VTable *v = b->vtable();
+    const VTable *v = b->internalClass->vtable;
     if (Q_UNLIKELY(classCountPtr))
         classCountPtr(v->className);
 
@@ -911,7 +911,7 @@ void MarkStack::drain()
         Heap::Base *h = pop();
         ++markStackSize;
         Q_ASSERT(h); // at this point we should only have Heap::Base objects in this area on the stack. If not, weird things might happen.
-        h->markChildren(this);
+        h->internalClass->vtable->markObjects(h, this);
     }
 }
 

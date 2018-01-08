@@ -56,6 +56,7 @@
 #include <QtCore/QString>
 #include "qv4global_p.h"
 #include <private/qv4heap_p.h>
+#include <private/qv4internalclass_p.h>
 
 #include <private/qnumeric_p.h>
 
@@ -428,11 +429,11 @@ public:
         if (!isManaged())
             return nullptr;
 
-        Q_ASSERT(m()->vtable());
+        Q_ASSERT(m()->internalClass->vtable);
 #if !defined(QT_NO_QOBJECT_CHECK)
         static_cast<const T *>(this)->qt_check_for_QMANAGED_macro(static_cast<const T *>(this));
 #endif
-        const VTable *vt = m()->vtable();
+        const VTable *vt = m()->internalClass->vtable;
         while (vt) {
             if (vt == T::staticVTable())
                 return static_cast<const T *>(this);
@@ -500,18 +501,18 @@ inline void Value::mark(MarkStack *markStack)
 inline bool Value::isString() const
 {
     Heap::Base *b = heapObject();
-    return b && b->vtable()->isString;
+    return b && b->internalClass->vtable->isString;
 }
 inline bool Value::isObject() const
 {
     Heap::Base *b = heapObject();
-    return b && b->vtable()->isObject;
+    return b && b->internalClass->vtable->isObject;
 }
 
 inline bool Value::isFunctionObject() const
 {
     Heap::Base *b = heapObject();
-    return b && b->vtable()->isFunctionObject;
+    return b && b->internalClass->vtable->isFunctionObject;
 }
 
 inline bool Value::isPrimitive() const

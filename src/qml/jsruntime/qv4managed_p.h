@@ -201,17 +201,18 @@ public:
     Q_MANAGED_TYPE(Invalid)
 
     InternalClass *internalClass() const { return d()->internalClass; }
+    const VTable *vtable() const { return d()->internalClass->vtable; }
     inline ExecutionEngine *engine() const { return internalClass()->engine; }
 
-    bool isListType() const { return d()->vtable()->type == Type_QmlSequence; }
+    bool isListType() const { return d()->internalClass->vtable->type == Type_QmlSequence; }
 
-    bool isArrayObject() const { return d()->vtable()->type == Type_ArrayObject; }
-    bool isStringObject() const { return d()->vtable()->type == Type_StringObject; }
+    bool isArrayObject() const { return d()->internalClass->vtable->type == Type_ArrayObject; }
+    bool isStringObject() const { return d()->internalClass->vtable->type == Type_StringObject; }
 
     QString className() const;
 
     bool isEqualTo(const Managed *other) const
-    { return d()->vtable()->isEqualTo(const_cast<Managed *>(this), const_cast<Managed *>(other)); }
+    { return d()->internalClass->vtable->isEqualTo(const_cast<Managed *>(this), const_cast<Managed *>(other)); }
 
     static bool isEqualTo(Managed *m, Managed *other);
 

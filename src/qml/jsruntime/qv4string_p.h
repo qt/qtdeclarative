@@ -76,6 +76,10 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     };
 
 #ifndef V4_BOOTSTRAP
+    const VTable *vtable() const {
+        return internalClass->vtable;
+    }
+
     void init(const QString &text);
     void destroy();
     void simplifyString() const;
@@ -282,7 +286,7 @@ struct ComplexString : String {
 
 template<>
 inline const String *Value::as() const {
-    return isManaged() && m()->vtable()->isString ? static_cast<const String *>(this) : nullptr;
+    return isManaged() && m()->internalClass->vtable->isString ? static_cast<const String *>(this) : nullptr;
 }
 
 template<>

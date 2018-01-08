@@ -54,7 +54,6 @@
 #include <private/qv4global_p.h>
 #include <private/qv4mmdefs_p.h>
 #include <private/qv4writebarrier_p.h>
-#include <private/qv4internalclass_p.h>
 #include <QSharedPointer>
 
 // To check if Heap::Base::init is called (meaning, all subclasses did their init and called their
@@ -121,7 +120,6 @@ struct Q_QML_EXPORT Base {
     inline ReturnedValue asReturnedValue() const;
     inline void mark(QV4::MarkStack *markStack);
 
-    inline const VTable *vtable() const;
     inline bool isMarked() const {
         const HeapItem *h = reinterpret_cast<const HeapItem *>(this);
         Chunk *c = h->chunk();
@@ -146,10 +144,6 @@ struct Q_QML_EXPORT Base {
         Chunk *c = h->chunk();
         Q_ASSERT(!Chunk::testBit(c->extendsBitmap, h - c->realBase()));
         return Chunk::testBit(c->objectBitmap, h - c->realBase());
-    }
-
-    inline void markChildren(MarkStack *markStack) {
-        vtable()->markObjects(this, markStack);
     }
 
     void *operator new(size_t, Managed *m) { return m; }
@@ -216,12 +210,6 @@ void Base::mark(QV4::MarkStack *markStack)
         *bitmap |= bit;
         markStack->push(this);
     }
-}
-
-inline
-const VTable *Base::vtable() const
-{
-    return internalClass->vtable;
 }
 
 template<typename T, size_t o>
