@@ -163,9 +163,8 @@ public:
     // be available anymore when we send the data.
     struct RefLocation : public Location {
         RefLocation()
-            : Location(), locationType(MaximumRangeType), sent(false)
+            : Location(), locationType(MaximumRangeType), something(nullptr), sent(false)
         {
-            function = nullptr;
         }
 
         RefLocation(QV4::Function *ref)
@@ -226,6 +225,9 @@ public:
 
         void addref()
         {
+            if (isNull())
+                return;
+
             switch (locationType) {
             case Binding:
                 function->compilationUnit->addref();
@@ -247,6 +249,9 @@ public:
 
         void release()
         {
+            if (isNull())
+                return;
+
             switch (locationType) {
             case Binding:
                 function->compilationUnit->release();
@@ -271,12 +276,18 @@ public:
             return locationType != MaximumRangeType;
         }
 
+        bool isNull() const
+        {
+            return !something;
+        }
+
         RangeType locationType;
         union {
             QV4::Function *function;
             QV4::CompiledData::CompilationUnit *unit;
             QQmlBoundSignalExpression *boundSignal;
             QQmlDataBlob *blob;
+            void *something;
         };
         bool sent;
     };
