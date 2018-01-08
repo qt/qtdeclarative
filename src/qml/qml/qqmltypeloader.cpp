@@ -317,7 +317,8 @@ Returns true if the status is WaitingForDependencies.
 */
 bool QQmlDataBlob::isWaiting() const
 {
-    return status() == WaitingForDependencies;
+    return status() == WaitingForDependencies ||
+            status() == ResolvingDependencies;
 }
 
 /*!
@@ -609,6 +610,7 @@ The default implementation does nothing.
 */
 void QQmlDataBlob::allDependenciesDone()
 {
+    m_data.setStatus(QQmlDataBlob::ResolvingDependencies);
 }
 
 /*!
@@ -2408,7 +2410,15 @@ void QQmlTypeData::dataReceived(const SourceCodeData &data)
 void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
 {
     m_document.reset(new QmlIR::Document(isDebugging()));
-    unit->loadIR(m_document.data(), unit);
+    if (unit->loadIR) {
+        // old code path for older generated code
+        unit->loadIR(m_document.data(), unit);
+    } else {
+        // new code path
+        QmlIR::IRLoader loader(unit->qmlData, m_document.data());
+        loader.load();
+        m_document->javaScriptCompilationUnit.adopt(unit->createCompilationUnit());
+    }
     continueLoadFromIR();
 }
 
@@ -2500,6 +2510,8 @@ void QQmlTypeData::continueLoadFromIR()
 
 void QQmlTypeData::allDependenciesDone()
 {
+    QQmlTypeLoader::Blob::allDependenciesDone();
+
     if (!m_typesResolved) {
         // Check that all imports were resolved
         QList<QQmlError> errors;
@@ -2619,6 +2631,10 @@ void QQmlTypeData::resolveTypes()
 
         if (ref.type.isCompositeSingleton()) {
             ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
+            if (ref.typeData->status() == QQmlDataBlob::ResolvingDependencies) {
+                // TODO: give an error message? If so, we should record and show the path of the cycle.
+                continue;
+            }
             addDependency(ref.typeData);
             ref.prefix = csRef.prefix;
 

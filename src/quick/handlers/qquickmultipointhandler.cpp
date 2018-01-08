@@ -298,17 +298,18 @@ void QQuickMultiPointHandler::acceptPoints(const QVector<QQuickEventPoint *> &po
 
 bool QQuickMultiPointHandler::grabPoints(QVector<QQuickEventPoint *> points)
 {
-    bool canGrab = true;
+    bool allowed = true;
     for (QQuickEventPoint* point : points) {
-        auto grabber = point->grabberItem();
-        if (grabber && (grabber->keepMouseGrab() || grabber->keepTouchGrab()))
-            canGrab = false;
+        if (!canGrab(point)) {
+            allowed = false;
+            break;
+        }
     }
-    if (canGrab) {
+    if (allowed) {
         for (QQuickEventPoint* point : points)
             setExclusiveGrab(point);
     }
-    return canGrab;
+    return allowed;
 }
 
 QT_END_NAMESPACE

@@ -190,6 +190,8 @@ invoke their methods and receive their signal notifications. This is possible du
 all QML object types are implemented using QObject-derived classes, enabling the QML engine to
 dynamically load and introspect objects through the Qt meta object system.
 
+\include warning.qdocinc
+
 For more information on accessing QML objects from C++, see the documentation on
 \l{qtqml-cppintegration-interactqmlfromcpp.html}{Interacting with QML Objects from C++}.
 

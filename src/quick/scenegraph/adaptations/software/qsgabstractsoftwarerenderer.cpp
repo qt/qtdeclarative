@@ -193,6 +193,12 @@ QRegion QSGAbstractSoftwareRenderer::optimizeRenderList()
         }
     }
 
+    if (m_obscuredRegion.contains(m_background->rect().toAlignedRect())) {
+        m_isOpaque = true;
+    } else {
+        m_isOpaque = false;
+    }
+
     // Empty dirtyRegion (for second pass)
     m_dirtyRegion = QRegion();
     m_obscuredRegion = QRegion();

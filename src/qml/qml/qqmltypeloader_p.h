@@ -98,6 +98,7 @@ public:
         Null,                    // Prior to QQmlTypeLoader::load()
         Loading,                 // Prior to data being received and dataReceived() being called
         WaitingForDependencies,  // While there are outstanding addDependency()s
+        ResolvingDependencies,   // While resolving outstanding dependencies, to detect cycles
         Complete,                // Finished
         Error                    // Error
     };

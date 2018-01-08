@@ -68,6 +68,7 @@ private slots:
     void touchLongPress();
     void mouseLongPress();
     void buttonsMultiTouch();
+    void componentUserBehavioralOverride();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -583,6 +584,41 @@ void tst_TapHandler::buttonsMultiTouch()
     QTRY_VERIFY(buttonDragThreshold->property("pressed").toBool());
     QVERIFY(buttonWithinBounds->property("pressed").toBool());
     QVERIFY(buttonReleaseWithinBounds->property("pressed").toBool());
+}
+
+void tst_TapHandler::componentUserBehavioralOverride()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "buttonOverrideHandler.qml");
+    QQuickView * window = windowPtr.data();
+
+    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>("Overridden");
+    QVERIFY(button);
+    QQuickTapHandler *innerTapHandler = button->findChild<QQuickTapHandler*>("Overridden");
+    QVERIFY(innerTapHandler);
+    QQuickTapHandler *userTapHandler = button->findChild<QQuickTapHandler*>("override");
+    QVERIFY(userTapHandler);
+    QSignalSpy tappedSpy(button, SIGNAL(tapped()));
+    QSignalSpy innerGrabChangedSpy(innerTapHandler, SIGNAL(grabChanged(QQuickEventPoint *)));
+    QSignalSpy userGrabChangedSpy(userTapHandler, SIGNAL(grabChanged(QQuickEventPoint *)));
+    QSignalSpy innerPressedChangedSpy(innerTapHandler, SIGNAL(pressedChanged()));
+    QSignalSpy userPressedChangedSpy(userTapHandler, SIGNAL(pressedChanged()));
+
+    // Press
+    QPoint p1 = button->mapToScene(button->clipRect().center()).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(userPressedChangedSpy.count(), 1);
+    QCOMPARE(innerPressedChangedSpy.count(), 0);
+    QCOMPARE(innerGrabChangedSpy.count(), 0);
+    QCOMPARE(userGrabChangedSpy.count(), 1);
+
+    // Release
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(userPressedChangedSpy.count(), 2);
+    QCOMPARE(innerPressedChangedSpy.count(), 0);
+    QCOMPARE(tappedSpy.count(), 1); // only because the override handler makes that happen
+    QCOMPARE(innerGrabChangedSpy.count(), 0);
+    QCOMPARE(userGrabChangedSpy.count(), 2);
 }
 
 QTEST_MAIN(tst_TapHandler)

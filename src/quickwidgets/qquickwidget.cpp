@@ -1399,6 +1399,7 @@ bool QQuickWidget::event(QEvent *e)
 
     switch (e->type()) {
 
+    case QEvent::Leave:
     case QEvent::TouchBegin:
     case QEvent::TouchEnd:
     case QEvent::TouchUpdate:
@@ -1452,6 +1453,14 @@ bool QQuickWidget::event(QEvent *e)
     case QEvent::ShortcutOverride:
         return QCoreApplication::sendEvent(d->offscreenWindow, e);
 
+    case QEvent::Enter: {
+        QEnterEvent *enterEvent = static_cast<QEnterEvent *>(e);
+        QEnterEvent mappedEvent(enterEvent->localPos(), enterEvent->windowPos(),
+                                enterEvent->screenPos());
+        const bool ret = QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
+        e->setAccepted(mappedEvent.isAccepted());
+        return ret;
+    }
     default:
         break;
     }

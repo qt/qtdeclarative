@@ -1,5 +1,6 @@
 # QTBUG-36804
 osx-10.10
+# QTBUG-26696
 [rebound]
 osx
 [movingAndFlicking:vertical]

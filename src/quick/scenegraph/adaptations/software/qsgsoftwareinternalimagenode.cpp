@@ -490,12 +490,13 @@ QRectF QSGSoftwareInternalImageNode::rect() const
 
 const QPixmap &QSGSoftwareInternalImageNode::pixmap() const
 {
-    if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture*>(m_texture)) {
+    if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture*>(m_texture))
         return pt->pixmap();
-    } else {
-        QSGSoftwareLayer *layer = qobject_cast<QSGSoftwareLayer*>(m_texture);
+    if (QSGSoftwareLayer *layer = qobject_cast<QSGSoftwareLayer*>(m_texture))
         return layer->pixmap();
-    }
+    Q_ASSERT(m_texture == 0);
+    static const QPixmap nullPixmap;
+    return nullPixmap;
 }
 
 QT_END_NAMESPACE

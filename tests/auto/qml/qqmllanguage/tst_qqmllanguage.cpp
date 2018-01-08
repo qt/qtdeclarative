@@ -240,6 +240,7 @@ private slots:
     void compositeSingletonJavaScriptPragma();
     void compositeSingletonSelectors();
     void compositeSingletonRegistered();
+    void compositeSingletonCircular();
 
     void customParserBindingScopes();
     void customParserEvaluateEnum();
@@ -4209,6 +4210,22 @@ void tst_qqmllanguage::compositeSingletonRegistered()
     QVERIFY(o != 0);
 
     verifyCompositeSingletonPropertyValues(o, "value1", 925, "value2", 755);
+}
+
+void tst_qqmllanguage::compositeSingletonCircular()
+{
+    QQmlComponent component(&engine, testFile("circularSingleton.qml"));
+    VERIFY_ERRORS(0);
+
+    QQmlTestMessageHandler messageHandler;
+
+    QObject *o = component.create();
+    QVERIFY(o != 0);
+
+    // ensure we aren't hitting the recursion warning
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
+
+    QCOMPARE(o->property("value").toInt(), 2);
 }
 
 void tst_qqmllanguage::customParserBindingScopes()

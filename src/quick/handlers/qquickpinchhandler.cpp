@@ -248,8 +248,8 @@ bool QQuickPinchHandler::wantsPointerEvent(QQuickPointerEvent *event)
     if (!QQuickMultiPointHandler::wantsPointerEvent(event))
         return false;
 
-    if (minimumPointCount() == 2) {
-        if (const auto gesture = event->asPointerNativeGestureEvent()) {
+    if (const auto gesture = event->asPointerNativeGestureEvent()) {
+        if (minimumPointCount() == 2) {
             switch (gesture->type()) {
             case Qt::BeginNativeGesture:
             case Qt::EndNativeGesture:
@@ -259,6 +259,8 @@ bool QQuickPinchHandler::wantsPointerEvent(QQuickPointerEvent *event)
             default:
                 return false;
             }
+        } else {
+            return false;
         }
     }
 
@@ -349,13 +351,18 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         }
     } else {
         bool containsReleasedPoints = event->isReleaseEvent();
-        if (!active() && !containsReleasedPoints) {
+        if (!active()) {
             // Verify that at least one of the points has moved beyond threshold needed to activate the handler
             for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
-                if (QQuickWindowPrivate::dragOverThreshold(point)) {
-                    if (grabPoints(m_currentPoints))
-                        setActive(true);
+                if (!containsReleasedPoints && QQuickWindowPrivate::dragOverThreshold(point) && grabPoints(m_currentPoints)) {
+                    setActive(true);
                     break;
+                } else {
+                    setPassiveGrab(point);
+                }
+                if (point->state() == QQuickEventPoint::Pressed) {
+                    point->setAccepted(false); // don't stop propagation
+                    setPassiveGrab(point);
                 }
             }
             if (!active())

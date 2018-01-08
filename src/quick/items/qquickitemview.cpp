@@ -926,7 +926,6 @@ void QQuickItemView::setDisplacedTransition(QQuickTransition *transition)
 
 void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
 {
-    Q_Q(QQuickItemView);
     if (!isValid())
         return;
     if (mode < QQuickItemView::Beginning || mode > QQuickItemView::SnapPosition)
@@ -953,11 +952,16 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
         item = visibleItem(idx);
     }
     if (item) {
+        const bool stickyHeader = hasStickyHeader();
+        const bool stickyFooter = hasStickyFooter();
+        const qreal stickyHeaderSize = stickyHeader ? headerSize() : 0;
+        const qreal stickyFooterSize = stickyFooter ? footerSize() : 0;
+
         const qreal itemPos = item->position();
         switch (mode) {
         case QQuickItemView::Beginning:
             pos = itemPos;
-            if (header && (index < 0 || hasStickyHeader()))
+            if (header && (index < 0 || stickyHeader))
                 pos -= headerSize();
             break;
         case QQuickItemView::Center:
@@ -965,30 +969,29 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
             break;
         case QQuickItemView::End:
             pos = itemPos - viewSize + item->size();
-            if (footer && (index >= modelCount || hasStickyFooter()))
+            if (footer && (index >= modelCount || stickyFooter))
                 pos += footerSize();
             break;
         case QQuickItemView::Visible:
-            if (itemPos > pos + viewSize)
-                pos = itemPos - viewSize + item->size();
-            else if (item->endPosition() <= pos)
-                pos = itemPos;
+            if (itemPos > pos + viewSize - stickyFooterSize)
+                pos = item->endPosition() - viewSize + stickyFooterSize;
+            else if (item->endPosition() <= pos - stickyHeaderSize)
+                pos = itemPos - stickyHeaderSize;
             break;
         case QQuickItemView::Contain:
-            if (item->endPosition() >= pos + viewSize)
-                pos = itemPos - viewSize + item->size();
-            if (itemPos < pos)
-                pos = itemPos;
+            if (item->endPosition() >= pos + viewSize + stickyFooterSize)
+                pos = itemPos - viewSize + item->size() + stickyFooterSize;
+            if (itemPos - stickyHeaderSize < pos)
+                pos = itemPos - stickyHeaderSize;
             break;
         case QQuickItemView::SnapPosition:
-            pos = itemPos - highlightRangeStart;
+            pos = itemPos - highlightRangeStart - stickyHeaderSize;
             break;
         }
         pos = qMin(pos, maxExtent);
         qreal minExtent = calculatedMinExtent();
         pos = qMax(pos, minExtent);
         moveReason = QQuickItemViewPrivate::Other;
-        q->cancelFlick();
         setPosition(pos);
 
         if (highlight) {
@@ -1246,16 +1249,26 @@ void QQuickItemViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometry
 void QQuickItemView::destroyRemoved()
 {
     Q_D(QQuickItemView);
+
+    bool hasRemoveTransition = false;
+    bool hasRemoveTransitionAsTarget = false;
+    if (d->transitioner) {
+        hasRemoveTransition = d->transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, false);
+        hasRemoveTransitionAsTarget = d->transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, true);
+    }
+
     for (QList<FxViewItem*>::Iterator it = d->visibleItems.begin();
             it != d->visibleItems.end();) {
         FxViewItem *item = *it;
         if (item->index == -1 && (!item->attached || item->attached->delayRemove() == false)) {
-            if (d->transitioner && d->transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, true)) {
+            if (hasRemoveTransitionAsTarget) {
                 // don't remove from visibleItems until next layout()
                 d->runDelayedRemoveTransition = true;
                 QObject::disconnect(item->attached, SIGNAL(delayRemoveChanged()), this, SLOT(destroyRemoved()));
                 ++it;
             } else {
+                if (hasRemoveTransition)
+                    d->runDelayedRemoveTransition = true;
                 d->releaseItem(item);
                 it = d->visibleItems.erase(it);
             }
@@ -1384,7 +1397,6 @@ void QQuickItemView::trackedPositionChanged()
                 pos = qMax(trackedPos, toItemPos);
         }
         if (viewPos != pos) {
-            cancelFlick();
             d->calcVelocity = true;
             d->setPosition(pos);
             d->calcVelocity = false;
@@ -1934,8 +1946,9 @@ void QQuickItemViewPrivate::layout()
     if (transitioner) {
         // items added in the last refill() may need to be transitioned in - e.g. a remove
         // causes items to slide up into view
-        if (transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, false)
-                || transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, false)) {
+        if (lastIndexInView != -1 &&
+            (transitioner->canTransition(QQuickItemViewTransitioner::MoveTransition, false)
+                || transitioner->canTransition(QQuickItemViewTransitioner::RemoveTransition, false))) {
             translateAndTransitionItemsAfter(lastIndexInView, insertionPosChanges, removalPosChanges);
         }
 
@@ -1978,7 +1991,6 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     }
 
     updateUnrequestedIndexes();
-    moveReason = QQuickItemViewPrivate::Other;
 
     FxViewItem *prevVisibleItemsFirst = visibleItems.count() ? *visibleItems.constBegin() : 0;
     int prevItemCount = itemCount;

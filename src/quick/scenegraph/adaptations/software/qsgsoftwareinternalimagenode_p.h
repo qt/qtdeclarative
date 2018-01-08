@@ -124,8 +124,8 @@ public:
 
     QRectF rect() const;
 
-private:
     const QPixmap &pixmap() const;
+private:
 
     QRectF m_targetRect;
     QRectF m_innerTargetRect;
