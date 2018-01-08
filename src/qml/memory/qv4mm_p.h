@@ -216,12 +216,10 @@ public:
     }
 
     template <typename ObjectType, typename... Args>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Object *prototype, Args... args)
+    typename ObjectType::Data *allocObject(InternalClass *ic, Args... args)
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : nullptr));
-        Q_UNUSED(prototype);
         t->d_unchecked()->init(args...);
         return t->d();
     }

@@ -330,7 +330,7 @@ template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const Value &message) {
     InternalClass *ic = e->internalClasses[message.isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
     ic = ic->changePrototype(T::defaultPrototype(e)->d());
-    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), message);
+    return e->memoryManager->allocObject<T>(ic, message);
 }
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message) {
@@ -338,7 +338,7 @@ Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message) {
     ScopedValue v(scope, message.isEmpty() ? Encode::undefined() : e->newString(message)->asReturnedValue());
     InternalClass *ic = e->internalClasses[v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
     ic = ic->changePrototype(T::defaultPrototype(e)->d());
-    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), v);
+    return e->memoryManager->allocObject<T>(ic, v);
 }
 template <typename T>
 Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message, const QString &filename, int line, int column) {
@@ -346,7 +346,7 @@ Heap::Object *ErrorObject::create(ExecutionEngine *e, const QString &message, co
     ScopedValue v(scope, message.isEmpty() ? Encode::undefined() : e->newString(message)->asReturnedValue());
     InternalClass *ic = e->internalClasses[v->isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage];
     ic = ic->changePrototype(T::defaultPrototype(e)->d());
-    return e->memoryManager->allocObject<T>(ic, T::defaultPrototype(e), v, filename, line, column);
+    return e->memoryManager->allocObject<T>(ic, v, filename, line, column);
 }
 
 

@@ -1260,13 +1260,13 @@ QV4::ReturnedValue Runtime::method_createMappedArgumentsObject(ExecutionEngine *
 {
     Q_ASSERT(engine->currentContext()->d()->type == Heap::ExecutionContext::Type_CallContext);
     QV4::InternalClass *ic = engine->internalClasses[EngineBase::Class_ArgumentsObject];
-    return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->objectPrototype(), engine->currentStackFrame)->asReturnedValue();
+    return engine->memoryManager->allocObject<ArgumentsObject>(ic, engine->currentStackFrame)->asReturnedValue();
 }
 
 QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine *engine)
 {
     QV4::InternalClass *ic = engine->internalClasses[EngineBase::Class_StrictArgumentsObject];
-    return engine->memoryManager->allocObject<StrictArgumentsObject>(ic, engine->objectPrototype(), engine->currentStackFrame)->asReturnedValue();
+    return engine->memoryManager->allocObject<StrictArgumentsObject>(ic, engine->currentStackFrame)->asReturnedValue();
 }
 
 ReturnedValue Runtime::method_loadQmlContext(NoThrowEngine *engine)
