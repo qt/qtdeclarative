@@ -1169,7 +1169,7 @@ TestCase {
 
     function test_mouseHighlight() {
         if ((Qt.platform.pluginName === "offscreen")
-            || (Qt.platform.pluginName === "minimal"))
+            || (Qt.platform.pluginName === "minimal"))
             skip("Mouse highlight not functional on offscreen/minimal platforms")
         var control = createTemporaryObject(comboBox, testCase, {model: 20})
         verify(control)
@@ -1508,7 +1508,6 @@ TestCase {
         var control = createTemporaryObject(comboBox, testCase, { model: 1 })
         verify(control)
         compare(control.popup.implicitHeight, 0)
-        compare(control.popup.height, control.popup.topPadding + control.popup.bottomPadding)
 
         // Ensure that it's open so that the popup's implicitHeight changes when we increase the model count.
         control.popup.open()

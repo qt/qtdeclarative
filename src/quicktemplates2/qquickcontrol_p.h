@@ -81,6 +81,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
     // 2.3 (Qt 5.10)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
+    Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
 
 public:
     explicit QQuickControl(QQuickItem *parent = nullptr);

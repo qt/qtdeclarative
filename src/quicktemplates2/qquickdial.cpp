@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickdial_p.h"
+#include "qquickdeferredexecute_p_p.h"
 
 #include <QtCore/qmath.h>
 #include <QtQuick/private/qquickflickable_p.h>
@@ -122,6 +123,8 @@ public:
     void handleRelease(const QPointF &point) override;
     void handleUngrab() override;
 
+    void executeHandle(bool complete = false);
+
     qreal from;
     qreal to;
     qreal value;
@@ -133,7 +136,7 @@ public:
     QQuickDial::SnapMode snapMode;
     bool wrap;
     bool live;
-    QQuickItem *handle;
+    QQuickDeferredPointer<QQuickItem> handle;
 };
 
 qreal QQuickDialPrivate::valueAt(qreal position) const
@@ -251,6 +254,20 @@ void QQuickDialPrivate::handleUngrab()
     QQuickControlPrivate::handleUngrab();
     pressPoint = QPointF();
     q->setPressed(false);
+}
+
+static inline QString handleName() { return QStringLiteral("handle"); }
+
+void QQuickDialPrivate::executeHandle(bool complete)
+{
+    Q_Q(QQuickDial);
+    if (handle.wasExecuted())
+        return;
+
+    if (!handle)
+        quickBeginDeferred(q, handleName(), handle);
+    if (complete)
+        quickCompleteDeferred(q, handleName(), handle);
 }
 
 QQuickDial::QQuickDial(QQuickItem *parent)
@@ -524,7 +541,9 @@ void QQuickDial::setPressed(bool pressed)
 */
 QQuickItem *QQuickDial::handle() const
 {
-    Q_D(const QQuickDial);
+    QQuickDialPrivate *d = const_cast<QQuickDialPrivate *>(d_func());
+    if (!d->handle)
+        d->executeHandle();
     return d->handle;
 }
 
@@ -534,11 +553,12 @@ void QQuickDial::setHandle(QQuickItem *handle)
     if (handle == d->handle)
         return;
 
-    QQuickControlPrivate::destroyDelegate(d->handle, this);
+    delete d->handle;
     d->handle = handle;
     if (d->handle && !d->handle->parentItem())
         d->handle->setParentItem(this);
-    emit handleChanged();
+    if (!d->handle.isExecuting())
+        emit handleChanged();
 }
 
 /*!
@@ -730,6 +750,7 @@ void QQuickDial::mirrorChange()
 void QQuickDial::componentComplete()
 {
     Q_D(QQuickDial);
+    d->executeHandle(true);
     QQuickControl::componentComplete();
     setValue(d->value);
     d->updatePosition();
