@@ -59,6 +59,8 @@
 
 #if !QT_CONFIG(qml_debug)
 
+#define Q_V4_PROFILE_ALLOC(engine, size, type) (!engine)
+#define Q_V4_PROFILE_DEALLOC(engine, size, type) (!engine)
 
 QT_BEGIN_NAMESPACE
 
@@ -71,6 +73,16 @@ class Profiler {};
 QT_END_NAMESPACE
 
 #else
+
+#define Q_V4_PROFILE_ALLOC(engine, size, type)\
+    (engine->profiler() &&\
+            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
+        engine->profiler()->trackAlloc(size, type) : false)
+
+#define Q_V4_PROFILE_DEALLOC(engine, size, type) \
+    (engine->profiler() &&\
+            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
+        engine->profiler()->trackDealloc(size, type) : false)
 
 QT_BEGIN_NAMESPACE
 
