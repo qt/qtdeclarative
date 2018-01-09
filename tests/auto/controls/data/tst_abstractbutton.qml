@@ -308,6 +308,90 @@ TestCase {
         compare(iconSpy.count, 5)
     }
 
+    function test_action_data() {
+        return [
+            { tag: "implicit text", property: "text",
+                                    initButton: undefined, initAction: "Action",
+                                    assignExpected: "Action", assignChanged: true,
+                                    resetExpected: "", resetChanged: true },
+            { tag: "explicit text", property: "text",
+                                    initButton: "Button", initAction: "Action",
+                                    assignExpected: "Button", assignChanged: false,
+                                    resetExpected: "Button", resetChanged: false },
+            { tag: "empty button text", property: "text",
+                                    initButton: "", initAction: "Action",
+                                    assignExpected: "", assignChanged: false,
+                                    resetExpected: "", resetChanged: false },
+            { tag: "empty action text", property: "text",
+                                    initButton: "Button", initAction: "",
+                                    assignExpected: "Button", assignChanged: false,
+                                    resetExpected: "Button", resetChanged: false },
+            { tag: "empty both text", property: "text",
+                                    initButton: undefined, initAction: "",
+                                    assignExpected: "", assignChanged: false,
+                                    resetExpected: "", resetChanged: false },
+
+            { tag: "modify button text", property: "text",
+                                    initButton: undefined, initAction: "Action",
+                                    assignExpected: "Action", assignChanged: true,
+                                    modifyButton: "Button2",
+                                    modifyButtonExpected: "Button2", modifyButtonChanged: true,
+                                    resetExpected: "Button2", resetChanged: false },
+            { tag: "modify implicit action text", property: "text",
+                                    initButton: undefined, initAction: "Action",
+                                    assignExpected: "Action", assignChanged: true,
+                                    modifyAction: "Action2",
+                                    modifyActionExpected: "Action2", modifyActionChanged: true,
+                                    resetExpected: "", resetChanged: true },
+            { tag: "modify explicit action text", property: "text",
+                                    initButton: "Button", initAction: "Action",
+                                    assignExpected: "Button", assignChanged: false,
+                                    modifyAction: "Action2",
+                                    modifyActionExpected: "Button", modifyActionChanged: false,
+                                    resetExpected: "Button", resetChanged: false },
+        ]
+    }
+
+    function test_action(data) {
+        var control = createTemporaryObject(button, testCase)
+        verify(control)
+        control[data.property] = data.initButton
+
+        var act = action.createObject(control)
+        act[data.property] = data.initAction
+
+        var spy = signalSpy.createObject(control, {target: control, signalName: data.property + "Changed"})
+        verify(spy.valid)
+
+        // assign action
+        spy.clear()
+        control.action = act
+        compare(control[data.property], data.assignExpected)
+        compare(spy.count, data.assignChanged ? 1 : 0)
+
+        // modify button
+        if (data.hasOwnProperty("modifyButton")) {
+            spy.clear()
+            control[data.property] = data.modifyButton
+            compare(control[data.property], data.modifyButtonExpected)
+            compare(spy.count, data.modifyButtonChanged ? 1 : 0)
+        }
+
+        // modify action
+        if (data.hasOwnProperty("modifyAction")) {
+            spy.clear()
+            act[data.property] = data.modifyAction
+            compare(control[data.property], data.modifyActionExpected)
+            compare(spy.count, data.modifyActionChanged ? 1 : 0)
+        }
+
+        // reset action
+        spy.clear()
+        control.action = null
+        compare(control[data.property], data.resetExpected)
+        compare(spy.count, data.resetChanged ? 1 : 0)
+    }
+
     Component {
         id: actionButton
         AbstractButton {
@@ -322,7 +406,7 @@ TestCase {
         }
     }
 
-    function test_action() {
+    function test_actionButton() {
         var control = createTemporaryObject(actionButton, testCase)
         verify(control)
 
@@ -333,6 +417,9 @@ TestCase {
         compare(control.checkable, true)
         compare(control.checked, true)
         compare(control.enabled, false)
+
+        var textSpy = signalSpy.createObject(control, { target: control, signalName: "textChanged" })
+        verify(textSpy.valid)
 
         // changes via action
         control.action.text = "Action"
@@ -347,6 +434,7 @@ TestCase {
         compare(control.checkable, false) // propagates
         compare(control.checked, false) // propagates
         compare(control.enabled, true) // propagates
+        compare(textSpy.count, 1)
 
         // changes via button
         control.text = "Button"
@@ -367,6 +455,90 @@ TestCase {
         compare(control.action.checkable, true) // propagates
         compare(control.action.checked, true) // propagates
         compare(control.action.enabled, true) // does NOT propagate
+        compare(textSpy.count, 2)
+
+        // remove the action so that only the button's text is left
+        control.action = null
+        compare(control.text, "Button")
+        compare(textSpy.count, 2)
+
+        // setting an action while button has text shouldn't cause a change in the button's effective text
+        var secondAction = createTemporaryObject(action, testCase)
+        verify(secondAction)
+        secondAction.text = "SecondAction"
+        control.action = secondAction
+        compare(control.text, "Button")
+        compare(textSpy.count, 2)
+
+        // test setting an action with empty text
+        var thirdAction = createTemporaryObject(action, testCase)
+        verify(thirdAction)
+        control.action = thirdAction
+        compare(control.text, "Button")
+        compare(textSpy.count, 2)
+    }
+
+    Component {
+        id: checkableButton
+        AbstractButton {
+            checkable: true
+            action: Action {}
+        }
+    }
+
+    function test_checkable_button() {
+        var control = createTemporaryObject(checkableButton, testCase)
+        verify(control)
+        control.checked = false
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+        verify(!control.checked)
+        verify(!control.action.checked)
+
+        keyPress(Qt.Key_Space)
+        keyRelease(Qt.Key_Space)
+
+        compare(control.action.checked, true)
+        compare(control.checked, true)
+
+        keyPress(Qt.Key_Space)
+
+        compare(control.action.checked, true)
+        compare(control.checked, true)
+
+        keyRelease(Qt.Key_Space)
+
+        compare(control.action.checked, false)
+        compare(control.checked, false)
+
+        var checkedSpy = signalSpy.createObject(control, {target: control.action, signalName: "checkedChanged"})
+        var toggledSpy = signalSpy.createObject(control, {target: control, signalName: "toggled"})
+        var actionToggledSpy = signalSpy.createObject(control, {target: control.action, signalName: "toggled"})
+
+        verify(checkedSpy.valid)
+        verify(toggledSpy.valid)
+        verify(actionToggledSpy.valid)
+
+        mousePress(control)
+
+        compare(control.action.checked, false)
+        compare(control.checked, false)
+
+        mouseRelease(control)
+
+        checkedSpy.wait()
+        compare(checkedSpy.count, 1)
+        compare(actionToggledSpy.count, 1)
+        compare(toggledSpy.count, 1)
+
+        compare(control.action.checked, true)
+        compare(control.checked, true)
+
+        mousePress(control)
+        mouseRelease(control)
+
+        compare(control.checked, false)
+        compare(control.action.checked, false)
     }
 
     function test_trigger_data() {
@@ -444,6 +616,7 @@ TestCase {
         keyClick(Qt.Key_H, Qt.AltModifier)
         compare(clickSpy.count, 4)
 
+        control.text = undefined
         control.action = action.createObject(control, {text: "&Action"})
 
         var actionSpy = signalSpy.createObject(control, {target: control.action, signalName: "triggered"})

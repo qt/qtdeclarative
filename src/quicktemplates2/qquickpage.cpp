@@ -106,9 +106,9 @@ QQuickPagePrivate::QQuickPagePrivate()
 QQuickItem *QQuickPagePrivate::getContentItem()
 {
     Q_Q(QQuickPage);
-    if (!contentItem)
-        return new QQuickItem(q);
-    return contentItem;
+    if (QQuickItem *item = QQuickControlPrivate::getContentItem())
+        return item;
+    return new QQuickItem(q);
 }
 
 QQuickPage::QQuickPage(QQuickItem *parent)

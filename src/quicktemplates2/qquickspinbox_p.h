@@ -156,6 +156,7 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
 #endif
 
+    void classBegin() override;
     void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData &value) override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
@@ -181,6 +182,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinButton : public QObject
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     // 2.1 (Qt 5.8)
     Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION 1)
+    Q_CLASSINFO("DeferredPropertyNames", "indicator")
 
 public:
     explicit QQuickSpinButton(QQuickSpinBox *parent);

@@ -40,6 +40,7 @@
 #include "qquickaction_p.h"
 #include "qquickaction_p_p.h"
 #include "qquickshortcutcontext_p_p.h"
+#include "qquickdeferredexecute_p_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
@@ -117,7 +118,8 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 */
 
 QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
-    : down(false),
+    : explicitText(false),
+      down(false),
       explicitDown(false),
       pressed(false),
       keepPressed(false),
@@ -305,6 +307,27 @@ void QQuickAbstractButtonPrivate::ungrabShortcut()
 }
 #endif
 
+void QQuickAbstractButtonPrivate::actionTextChange()
+{
+    Q_Q(QQuickAbstractButton);
+    if (explicitText)
+        return;
+
+    q->buttonChange(QQuickAbstractButton::ButtonTextChange);
+}
+
+void QQuickAbstractButtonPrivate::setText(const QString &newText, bool isExplicit)
+{
+    Q_Q(QQuickAbstractButton);
+    const QString oldText = q->text();
+    explicitText = isExplicit;
+    text = newText;
+    if (oldText == q->text())
+        return;
+
+    q->buttonChange(QQuickAbstractButton::ButtonTextChange);
+}
+
 void QQuickAbstractButtonPrivate::click()
 {
     Q_Q(QQuickAbstractButton);
@@ -316,7 +339,7 @@ void QQuickAbstractButtonPrivate::trigger()
 {
     Q_Q(QQuickAbstractButton);
     if (action && action->isEnabled())
-        action->trigger(q); // -> click()
+        QQuickActionPrivate::get(action)->trigger(q, false);
     else if (effectiveEnable)
         emit q->clicked();
 }
@@ -328,6 +351,20 @@ void QQuickAbstractButtonPrivate::toggle(bool value)
     q->setChecked(value);
     if (wasChecked != checked)
         emit q->toggled();
+}
+
+static inline QString indicatorName() { return QStringLiteral("indicator"); }
+
+void QQuickAbstractButtonPrivate::executeIndicator(bool complete)
+{
+    Q_Q(QQuickControl);
+    if (indicator.wasExecuted())
+        return;
+
+    if (!indicator)
+        quickBeginDeferred(q, indicatorName(), indicator);
+    if (complete)
+        quickCompleteDeferred(q, indicatorName(), indicator);
 }
 
 QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
@@ -418,23 +455,19 @@ QQuickAbstractButton::~QQuickAbstractButton()
 QString QQuickAbstractButton::text() const
 {
     Q_D(const QQuickAbstractButton);
-    return d->text;
+    return d->explicitText || !d->action ? d->text : d->action->text();
 }
 
 void QQuickAbstractButton::setText(const QString &text)
 {
     Q_D(QQuickAbstractButton);
-    if (d->text == text)
-        return;
+    d->setText(text, true);
+}
 
-#if QT_CONFIG(shortcut)
-    setShortcut(QKeySequence::mnemonic(text));
-#endif
-
-    d->text = text;
-    setAccessibleName(d->text);
-    buttonChange(ButtonTextChange);
-    emit textChanged();
+void QQuickAbstractButton::resetText()
+{
+    Q_D(QQuickAbstractButton);
+    d->setText(QString(), false);
 }
 
 /*!
@@ -637,7 +670,9 @@ void QQuickAbstractButton::setAutoRepeat(bool repeat)
 */
 QQuickItem *QQuickAbstractButton::indicator() const
 {
-    Q_D(const QQuickAbstractButton);
+    QQuickAbstractButtonPrivate *d = const_cast<QQuickAbstractButtonPrivate *>(d_func());
+    if (!d->indicator)
+        d->executeIndicator();
     return d->indicator;
 }
 
@@ -647,14 +682,15 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
     if (d->indicator == indicator)
         return;
 
-    QQuickControlPrivate::destroyDelegate(d->indicator, this);
+    delete d->indicator;
     d->indicator = indicator;
     if (indicator) {
         if (!indicator->parentItem())
             indicator->setParentItem(this);
         indicator->setAcceptedMouseButtons(Qt::LeftButton);
     }
-    emit indicatorChanged();
+    if (!d->indicator.isExecuting())
+        emit indicatorChanged();
 }
 
 /*!
@@ -740,11 +776,13 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
     if (d->action == action)
         return;
 
+    const QString oldText = text();
+
     if (QQuickAction *oldAction = d->action.data()) {
         QQuickActionPrivate::get(oldAction)->unregisterItem(this);
         QObjectPrivate::disconnect(oldAction, &QQuickAction::triggered, d, &QQuickAbstractButtonPrivate::click);
+        QObjectPrivate::disconnect(oldAction, &QQuickAction::textChanged, d, &QQuickAbstractButtonPrivate::actionTextChange);
 
-        disconnect(oldAction, &QQuickAction::textChanged, this, &QQuickAbstractButton::setText);
         disconnect(oldAction, &QQuickAction::iconChanged, this, &QQuickAbstractButton::setIcon);
         disconnect(oldAction, &QQuickAction::checkedChanged, this, &QQuickAbstractButton::setChecked);
         disconnect(oldAction, &QQuickAction::checkableChanged, this, &QQuickAbstractButton::setCheckable);
@@ -754,8 +792,8 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
     if (action) {
         QQuickActionPrivate::get(action)->registerItem(this);
         QObjectPrivate::connect(action, &QQuickAction::triggered, d, &QQuickAbstractButtonPrivate::click);
+        QObjectPrivate::connect(action, &QQuickAction::textChanged, d, &QQuickAbstractButtonPrivate::actionTextChange);
 
-        connect(action, &QQuickAction::textChanged, this, &QQuickAbstractButton::setText);
         connect(action, &QQuickAction::iconChanged, this, &QQuickAbstractButton::setIcon);
         connect(action, &QQuickAction::checkedChanged, this, &QQuickAbstractButton::setChecked);
         connect(action, &QQuickAction::checkableChanged, this, &QQuickAbstractButton::setCheckable);
@@ -783,13 +821,16 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
         if (color != Qt::transparent)
             d->icon.setColor(color);
 
-        setText(action->text());
         setChecked(action->isChecked());
         setCheckable(action->isCheckable());
         setEnabled(action->isEnabled());
     }
 
     d->action = action;
+
+    if (oldText != text())
+        buttonChange(ButtonTextChange);
+
     emit actionChanged();
 }
 
@@ -908,6 +949,13 @@ void QQuickAbstractButton::toggle()
     setChecked(!d->checked);
 }
 
+void QQuickAbstractButton::componentComplete()
+{
+    Q_D(QQuickAbstractButton);
+    d->executeIndicator(true);
+    QQuickControl::componentComplete();
+}
+
 bool QQuickAbstractButton::event(QEvent *event)
 {
     Q_D(QQuickAbstractButton);
@@ -1019,6 +1067,15 @@ void QQuickAbstractButton::buttonChange(ButtonChange change)
                 button->setChecked(false);
         }
         break;
+    case ButtonTextChange: {
+        const QString txt = text();
+        setAccessibleName(txt);
+#if QT_CONFIG(shortcut)
+        setShortcut(QKeySequence::mnemonic(txt));
+#endif
+        emit textChanged();
+        break;
+    }
     default:
         break;
     }
@@ -1038,7 +1095,7 @@ void QQuickAbstractButton::accessibilityActiveChanged(bool active)
 
     Q_D(QQuickAbstractButton);
     if (active) {
-        setAccessibleName(d->text);
+        setAccessibleName(text());
         setAccessibleProperty("pressed", d->pressed);
         setAccessibleProperty("checked", d->checked);
         setAccessibleProperty("checkable", d->checkable);

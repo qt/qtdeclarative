@@ -71,6 +71,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSlider : public QQuickControl
     // 2.3 (Qt 5.10)
     Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
     Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
+    Q_CLASSINFO("DeferredPropertyNames", "background,handle")
 
 public:
     explicit QQuickSlider(QQuickItem *parent = nullptr);

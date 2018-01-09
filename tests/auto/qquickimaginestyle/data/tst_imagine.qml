@@ -64,6 +64,11 @@ TestCase {
     name: "Imagine"
 
     Component {
+        id: buttonComponent
+        Button {}
+    }
+
+    Component {
         id: implicitQrcButtonComponent
         Button {
             Imagine.path: ":/control-assets"
@@ -93,5 +98,11 @@ TestCase {
         compare(control.Imagine.path, data.tag)
         var image = grabImage(control)
         compare(image.pixel(control.width / 2, control.height / 2), "#ff0000")
+    }
+
+    function test_fontFromConfigFile() {
+        var control = createTemporaryObject(buttonComponent, testCase)
+        verify(control)
+        compare(control.font.pixelSize, 80)
     }
 }

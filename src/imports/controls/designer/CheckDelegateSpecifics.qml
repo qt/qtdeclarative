@@ -41,8 +41,16 @@ import QtQuick.Layouts 1.0
 Column {
     width: parent.width
 
-    ButtonSection {
-        caption: qsTr("Check Delegate")
+    CheckSection {
+        width: parent.width
+        caption: qsTr("CheckDelegate")
+    }
+
+    ItemDelegateSection {
+        width: parent.width
+    }
+
+    AbstractButtonSection {
         width: parent.width
     }
 

@@ -43,20 +43,8 @@ QT_BEGIN_NAMESPACE
 QQuickImagineTheme::QQuickImagineTheme()
     : QQuickTheme(QStringLiteral("Imagine"))
 {
-    QFont font;
-    font.setFamily(QLatin1String("Open Sans"));
-    const QString family = QFontInfo(font).family();
-    if (family == QLatin1String("Open Sans")) {
-        buttonFont.setFamily(family);
-        checkBoxFont.setFamily(family);
-        editorFont.setFamily(family);
-        groupBoxFont.setFamily(family);
-        labelFont.setFamily(family);
-        itemViewFont.setFamily(family);
-        menuItemFont.setFamily(family);
-        systemFont.setFamily(family);
-        toolTipFont.setFamily(family);
-    }
+    systemFont.setFamily(QLatin1String("Open Sans"));
+    systemFont = resolveFont(systemFont);
 
     const QColor accentColor = QColor::fromRgb(0x4fc1e9);
     const QColor windowTextColor = QColor::fromRgb(0x434a54);
@@ -76,29 +64,8 @@ QQuickImagineTheme::QQuickImagineTheme()
 
 const QFont *QQuickImagineTheme::font(QPlatformTheme::Font type) const
 {
-    switch (type) {
-    case QPlatformTheme::TabButtonFont:
-    case QPlatformTheme::PushButtonFont:
-    case QPlatformTheme::ToolButtonFont:
-        return &buttonFont;
-    case QPlatformTheme::CheckBoxFont:
-        return &checkBoxFont;
-    case QPlatformTheme::GroupBoxTitleFont:
-        return &groupBoxFont;
-    case QPlatformTheme::LabelFont:
-        return &labelFont;
-    case QPlatformTheme::TipLabelFont:
-        return &toolTipFont;
-    case QPlatformTheme::ItemViewFont:
-        return &itemViewFont;
-    case QPlatformTheme::MenuItemFont:
-    case QPlatformTheme::ComboMenuItemFont:
-        return &menuItemFont;
-    case QPlatformTheme::EditorFont:
-        return &editorFont;
-    default:
-        return &systemFont;
-    }
+    Q_UNUSED(type);
+    return &systemFont;
 }
 
 const QPalette *QQuickImagineTheme::palette(QPlatformTheme::Palette type) const

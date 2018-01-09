@@ -87,6 +87,8 @@ public:
 
     bool handleShortcutEvent(QObject *object, QShortcutEvent *event);
 
+    void trigger(QObject*, bool doToggle);
+
     class ShortcutEntry
     {
     public:

@@ -73,6 +73,18 @@ Column {
                     Layout.fillWidth: true
                 }
             }
+
+            Label {
+                text: qsTr("Wrap")
+                tooltip: qsTr("Whether the tumbler wrap.")
+            }
+            SecondColumnLayout {
+                CheckBox {
+                    text: backendValues.wrap.valueToString
+                    backendValue: backendValues.wrap
+                    Layout.fillWidth: true
+                }
+            }
         }
     }
 

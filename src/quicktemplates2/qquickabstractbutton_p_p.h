@@ -93,11 +93,17 @@ public:
     QQuickAbstractButton *findCheckedButton() const;
     QList<QQuickAbstractButton *> findExclusiveButtons() const;
 
+    void actionTextChange();
+    void setText(const QString &text, bool isExplicit);
+
     void click();
     void trigger();
     void toggle(bool value);
 
+    void executeIndicator(bool complete = false);
+
     QString text;
+    bool explicitText;
     bool down;
     bool explicitDown;
     bool pressed;
@@ -120,7 +126,7 @@ public:
     QPointF pressPoint;
     QPointF movePoint;
     Qt::MouseButtons pressButtons;
-    QQuickItem *indicator;
+    QQuickDeferredPointer<QQuickItem> indicator;
     QQuickButtonGroup *group;
     QQuickAbstractButton::Display display;
     QPointer<QQuickAction> action;

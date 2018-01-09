@@ -48,6 +48,7 @@
 #include "qquickpopup_p.h"
 #include "qquickpopupitem_p_p.h"
 #include "qquickapplicationwindow_p.h"
+#include "qquickdeferredexecute_p_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
@@ -279,6 +280,8 @@ void QQuickControlPrivate::resizeContent()
 
 QQuickItem *QQuickControlPrivate::getContentItem()
 {
+    if (!contentItem)
+        executeContentItem();
     return contentItem;
 }
 
@@ -289,7 +292,7 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
         return;
 
     q->contentItemChange(item, contentItem);
-    destroyDelegate(contentItem, q);
+    delete contentItem;
     contentItem = item;
 
     if (item) {
@@ -299,7 +302,7 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
             resizeContent();
     }
 
-    if (notify)
+    if (notify && !contentItem.isExecuting())
         emit q->contentItemChanged();
 }
 
@@ -644,6 +647,34 @@ bool QQuickControlPrivate::calcHoverEnabled(const QQuickItem *item)
 }
 #endif
 
+static inline QString contentItemName() { return QStringLiteral("contentItem"); }
+
+void QQuickControlPrivate::executeContentItem(bool complete)
+{
+    Q_Q(QQuickControl);
+    if (contentItem.wasExecuted())
+        return;
+
+    if (!contentItem)
+        quickBeginDeferred(q, contentItemName(), contentItem);
+    if (complete)
+        quickCompleteDeferred(q, contentItemName(), contentItem);
+}
+
+static inline QString backgroundName() { return QStringLiteral("background"); }
+
+void QQuickControlPrivate::executeBackground(bool complete)
+{
+    Q_Q(QQuickControl);
+    if (background.wasExecuted())
+        return;
+
+    if (!background)
+        quickBeginDeferred(q, backgroundName(), background);
+    if (complete)
+        quickCompleteDeferred(q, backgroundName(), background);
+}
+
 /*
     Cancels incubation recursively to avoid "Object destroyed during incubation" (QTBUG-50992)
 */
@@ -724,9 +755,14 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
 
     The default font depends on the system environment. ApplicationWindow maintains a system/theme
     font which serves as a default for all controls. There may also be special font defaults for
-    certain types of controls. You can also set the default font for controls by passing a custom
-    font to QGuiApplication::setFont(), before loading the QML. Finally, the font is matched
-    against Qt's font database to find the best match.
+    certain types of controls. You can also set the default font for controls by either:
+
+    \list
+    \li passing a custom font to QGuiApplication::setFont(), before loading the QML; or
+    \li specifying the fonts in the \l {Qt Quick Controls 2 Configuration File}{qtquickcontrols2.conf file}.
+    \endlist
+
+    Finally, the font is matched against Qt's font database to find the best match.
 
     Control propagates explicit font properties from parent to children. If you change a specific
     property on a control's font, that property propagates to all of the control's children,
@@ -747,6 +783,9 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
         }
     }
     \endcode
+
+    For the full list of available font properties, see the
+    \l [QtQuick]{font}{font QML Basic Type} documentation.
 */
 QFont QQuickControl::font() const
 {
@@ -1262,7 +1301,9 @@ void QQuickControl::setWheelEnabled(bool enabled)
 */
 QQuickItem *QQuickControl::background() const
 {
-    Q_D(const QQuickControl);
+    QQuickControlPrivate *d = const_cast<QQuickControlPrivate *>(d_func());
+    if (!d->background)
+        d->executeBackground();
     return d->background;
 }
 
@@ -1272,7 +1313,7 @@ void QQuickControl::setBackground(QQuickItem *background)
     if (d->background == background)
         return;
 
-    QQuickControlPrivate::destroyDelegate(d->background, this);
+    delete d->background;
     d->background = background;
     if (background) {
         background->setParentItem(this);
@@ -1281,7 +1322,8 @@ void QQuickControl::setBackground(QQuickItem *background)
         if (isComponentComplete())
             d->resizeBackground();
     }
-    emit backgroundChanged();
+    if (!d->background.isExecuting())
+        emit backgroundChanged();
 }
 
 /*!
@@ -1339,8 +1381,12 @@ void QQuickControl::setContentItem(QQuickItem *item)
 
     The default palette depends on the system environment. ApplicationWindow maintains a system/theme
     palette which serves as a default for all controls. There may also be special palette defaults for
-    certain types of controls. You can also set the default palette for controls by passing a custom
-    palette to QGuiApplication::setPalette(), before loading any QML.
+    certain types of controls. You can also set the default palette for controls by either:
+
+    \list
+    \li passing a custom palette to QGuiApplication::setPalette(), before loading any QML; or
+    \li specifying the colors in the \l {Qt Quick Controls 2 Configuration File}{qtquickcontrols2.conf file}.
+    \endlist
 
     Control propagates explicit palette properties from parent to children. If you change a specific
     property on a control's palette, that property propagates to all of the control's children,
@@ -1362,7 +1408,10 @@ void QQuickControl::setContentItem(QQuickItem *item)
     }
     \endcode
 
-    \sa ApplicationWindow::palette, Popup::palette, {qtquickcontrols2-palette}{palette QML Basic Type}
+    For the full list of available palette colors, see the
+    \l {qtquickcontrols2-palette}{palette QML Basic Type} documentation.
+
+    \sa ApplicationWindow::palette, Popup::palette
 */
 QPalette QQuickControl::palette() const
 {
@@ -1399,6 +1448,8 @@ void QQuickControl::classBegin()
 void QQuickControl::componentComplete()
 {
     Q_D(QQuickControl);
+    d->executeBackground(true);
+    d->executeContentItem(true);
     QQuickItem::componentComplete();
     d->resizeContent();
     if (!d->hasLocale)

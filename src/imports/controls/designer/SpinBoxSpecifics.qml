@@ -43,7 +43,7 @@ Column {
 
     Section {
         width: parent.width
-        caption: qsTr("Spin Box")
+        caption: qsTr("SpinBox")
 
         SectionLayout {
             Label {
@@ -98,6 +98,18 @@ Column {
                     minimumValue: -9999999
                     decimals: 2
                     backendValue: backendValues.stepSize
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Editable")
+                tooltip: qsTr("Whether the spinbox is editable.")
+            }
+            SecondColumnLayout {
+                CheckBox {
+                    text: backendValues.editable.valueToString
+                    backendValue: backendValues.editable
                     Layout.fillWidth: true
                 }
             }

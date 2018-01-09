@@ -112,8 +112,14 @@ void QQuickAnimatedNode::start(int duration)
     m_timer.restart();
     if (duration > 0)
         m_duration = duration;
-    connect(m_window, &QQuickWindow::beforeRendering, this, &QQuickAnimatedNode::advance);
-    connect(m_window, &QQuickWindow::frameSwapped, this, &QQuickAnimatedNode::update);
+
+    connect(m_window, &QQuickWindow::beforeRendering, this, &QQuickAnimatedNode::advance, Qt::DirectConnection);
+    connect(m_window, &QQuickWindow::frameSwapped, this, &QQuickAnimatedNode::update, Qt::DirectConnection);
+
+    // If we're inside a QQuickWidget, this call is necessary to ensure the widget
+    // gets updated for the first time.
+    m_window->update();
+
     emit started();
 }
 
@@ -152,6 +158,9 @@ void QQuickAnimatedNode::advance()
         }
     }
     updateCurrentTime(time);
+
+    // If we're inside a QQuickWidget, this call is necessary to ensure the widget gets updated.
+    m_window->update();
 }
 
 void QQuickAnimatedNode::update()

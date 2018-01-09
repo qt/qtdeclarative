@@ -41,8 +41,11 @@ import QtQuick.Layouts 1.0
 Column {
     width: parent.width
 
-    ButtonSection {
-        caption: qsTr("Radio Delegate")
+    ItemDelegateSection {
+        width: parent.width
+    }
+
+    AbstractButtonSection {
         width: parent.width
     }
 

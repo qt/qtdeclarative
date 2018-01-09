@@ -36,6 +36,7 @@
 
 #include "qquickslider_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickdeferredexecute_p_p.h"
 
 #include <QtQuick/private/qquickwindow_p.h>
 
@@ -112,6 +113,8 @@ public:
     void handleRelease(const QPointF &point) override;
     void handleUngrab() override;
 
+    void executeHandle(bool complete = false);
+
     qreal from;
     qreal to;
     qreal value;
@@ -122,7 +125,7 @@ public:
     QPointF pressPoint;
     Qt::Orientation orientation;
     QQuickSlider::SnapMode snapMode;
-    QQuickItem *handle;
+    QQuickDeferredPointer<QQuickItem> handle;
 };
 
 qreal QQuickSliderPrivate::snapPosition(qreal position) const
@@ -233,6 +236,20 @@ void QQuickSliderPrivate::handleUngrab()
     QQuickControlPrivate::handleUngrab();
     pressPoint = QPointF();
     q->setPressed(false);
+}
+
+static inline QString handleName() { return QStringLiteral("handle"); }
+
+void QQuickSliderPrivate::executeHandle(bool complete)
+{
+    Q_Q(QQuickSlider);
+    if (handle.wasExecuted())
+        return;
+
+    if (!handle)
+        quickBeginDeferred(q, handleName(), handle);
+    if (complete)
+        quickCompleteDeferred(q, handleName(), handle);
 }
 
 QQuickSlider::QQuickSlider(QQuickItem *parent)
@@ -517,7 +534,9 @@ void QQuickSlider::setOrientation(Qt::Orientation orientation)
 */
 QQuickItem *QQuickSlider::handle() const
 {
-    Q_D(const QQuickSlider);
+    QQuickSliderPrivate *d = const_cast<QQuickSliderPrivate *>(d_func());
+    if (!d->handle)
+        d->executeHandle();
     return d->handle;
 }
 
@@ -527,11 +546,12 @@ void QQuickSlider::setHandle(QQuickItem *handle)
     if (d->handle == handle)
         return;
 
-    QQuickControlPrivate::destroyDelegate(d->handle, this);
+    delete d->handle;
     d->handle = handle;
     if (handle && !handle->parentItem())
         handle->setParentItem(this);
-    emit handleChanged();
+    if (!d->handle.isExecuting())
+        emit handleChanged();
 }
 
 /*!
@@ -736,6 +756,7 @@ void QQuickSlider::mirrorChange()
 void QQuickSlider::componentComplete()
 {
     Q_D(QQuickSlider);
+    d->executeHandle(true);
     QQuickControl::componentComplete();
     setValue(d->value);
     d->updatePosition();

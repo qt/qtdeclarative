@@ -59,7 +59,7 @@ class QQuickAbstractButtonPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickControl
 {
     Q_OBJECT
-    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
+    Q_PROPERTY(QString text READ text WRITE setText RESET resetText NOTIFY textChanged FINAL)
     Q_PROPERTY(bool down READ isDown WRITE setDown NOTIFY downChanged RESET resetDown FINAL)
     Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
@@ -76,6 +76,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(int autoRepeatInterval READ autoRepeatInterval WRITE setAutoRepeatInterval NOTIFY autoRepeatIntervalChanged FINAL REVISION 4)
     Q_PROPERTY(qreal pressX READ pressX NOTIFY pressXChanged FINAL REVISION 4)
     Q_PROPERTY(qreal pressY READ pressY NOTIFY pressYChanged FINAL REVISION 4)
+    Q_CLASSINFO("DeferredPropertyNames", "background,contentItem,indicator")
 
 public:
     explicit QQuickAbstractButton(QQuickItem *parent = nullptr);
@@ -83,6 +84,7 @@ public:
 
     QString text() const;
     void setText(const QString &text);
+    void resetText();
 
     bool isDown() const;
     void setDown(bool down);
@@ -171,6 +173,8 @@ Q_SIGNALS:
 
 protected:
     QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);
+
+    void componentComplete() override;
 
     bool event(QEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
