@@ -169,13 +169,29 @@ bool QQuickWindowInspector::eventFilter(QObject *obj, QEvent *event)
     return QObject::eventFilter(obj, event);
 }
 
+static Qt::WindowFlags fixFlags(Qt::WindowFlags flags)
+{
+    // If only the type flag is given, some other window flags are automatically assumed. When we
+    // add a flag, we need to make those explicit.
+    switch (flags) {
+    case Qt::Window:
+        return flags | Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint
+                | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint;
+    case Qt::Dialog:
+    case Qt::Tool:
+        return flags | Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint;
+    default:
+        return flags;
+    }
+}
+
 void QQuickWindowInspector::setShowAppOnTop(bool appOnTop)
 {
     if (!m_parentWindow)
         return;
 
     Qt::WindowFlags flags = m_parentWindow->flags();
-    Qt::WindowFlags newFlags = appOnTop ? (flags | Qt::WindowStaysOnTopHint) :
+    Qt::WindowFlags newFlags = appOnTop ? (fixFlags(flags) | Qt::WindowStaysOnTopHint) :
                                           (flags & ~Qt::WindowStaysOnTopHint);
     if (newFlags != flags)
         m_parentWindow->setFlags(newFlags);

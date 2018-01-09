@@ -290,7 +290,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickMultiPointTouchArea>("QtQuick", 2, 0, "MultiPointTouchArea");
     qmlRegisterType<QQuickTouchPoint>("QtQuick", 2, 0, "TouchPoint");
-    qmlRegisterType<QQuickGrabGestureEvent>();
+    qmlRegisterUncreatableType<QQuickGrabGestureEvent>(uri,major,minor, "GestureEvent",
+        QQuickMouseEvent::tr("GestureEvent is only available in the context of handling the gestureStarted signal from MultiPointTouchArea"));
 
 #if QT_CONFIG(accessibility)
     qmlRegisterUncreatableType<QQuickAccessibleAttached>("QtQuick", 2, 0, "Accessible",QQuickAccessibleAttached::tr("Accessible is only available via attached properties"));

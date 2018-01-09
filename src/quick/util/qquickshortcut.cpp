@@ -41,6 +41,7 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtQuick/qquickrendercontrol.h>
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 
@@ -102,6 +103,8 @@ static bool qQuickShortcutContextMatcher(QObject *obj, Qt::ShortcutContext conte
             if (QQuickItem *item = qobject_cast<QQuickItem *>(obj))
                 obj = item->window();
         }
+        if (QWindow *renderWindow = QQuickRenderControl::renderWindowFor(qobject_cast<QQuickWindow *>(obj)))
+            obj = renderWindow;
         return obj && obj == QGuiApplication::focusWindow();
     default:
         return false;

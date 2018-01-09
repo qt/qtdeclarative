@@ -720,8 +720,11 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
     if (QQmlData *d = QQmlData::get(o)) {
         if (d->ownContext) {
-            for (QQmlContextData *lc = d->ownContext->linkedContext; lc; lc = lc->linkedContext)
+            for (QQmlContextData *lc = d->ownContext->linkedContext; lc; lc = lc->linkedContext) {
                 lc->invalidate();
+                if (lc->contextObject == o)
+                    lc->contextObject = nullptr;
+            }
             d->ownContext->invalidate();
             if (d->ownContext->contextObject == o)
                 d->ownContext->contextObject = nullptr;
@@ -1672,13 +1675,40 @@ void QQmlData::NotifyList::layout()
     todo = 0;
 }
 
+void QQmlData::deferData(int objectIndex, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlContextData *context)
+{
+    QQmlData::DeferredData *deferData = new QQmlData::DeferredData;
+    deferData->deferredIdx = objectIndex;
+    deferData->compilationUnit = compilationUnit;
+    deferData->compilationUnit->addref();
+    deferData->context = context;
+
+    const QV4::CompiledData::Object *compiledObject = compilationUnit->objectAt(objectIndex);
+    const QV4::CompiledData::BindingPropertyData &propertyData = compilationUnit->bindingPropertyDataPerObject.at(objectIndex);
+
+    const QV4::CompiledData::Binding *binding = compiledObject->bindingTable();
+    for (quint32 i = 0; i < compiledObject->nBindings; ++i, ++binding) {
+        const QQmlPropertyData *property = propertyData.at(i);
+        if (property && binding->flags & QV4::CompiledData::Binding::IsDeferredBinding)
+            deferData->bindings.insert(property->coreIndex(), binding);
+    }
+
+    deferredData.append(deferData);
+}
+
 void QQmlData::releaseDeferredData()
 {
-    for (DeferredData *deferData : qAsConst(deferredData)) {
-        deferData->compilationUnit->release();
-        delete deferData;
+    auto it = deferredData.begin();
+    while (it != deferredData.end()) {
+        DeferredData *deferData = *it;
+        if (deferData->bindings.isEmpty()) {
+            deferData->compilationUnit->release();
+            delete deferData;
+            it = deferredData.erase(it);
+        } else {
+            ++it;
+        }
     }
-    deferredData.clear();
 }
 
 void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)

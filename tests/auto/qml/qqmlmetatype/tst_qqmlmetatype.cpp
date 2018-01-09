@@ -60,6 +60,8 @@ private slots:
     void isList();
 
     void defaultObject();
+    void unregisterCustomType();
+    void unregisterCustomSingletonType();
 };
 
 class TestType : public QObject
@@ -328,6 +330,197 @@ void tst_qqmlmetatype::externalEnums()
     QCOMPARE(b.type(), QVariant::Int);
     QCOMPARE(b.toInt(), int(QStandardPaths::DocumentsLocation));
 
+}
+
+class Controller1 : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString string MEMBER m_string)
+    Q_PROPERTY(Controller1Enum enumVal MEMBER m_enumVal)
+public:
+    enum Controller1Enum {
+        ENUM_VALUE_1 = 1,
+        ENUM_VALUE_2 = 2
+    };
+    Q_ENUMS(Controller1Enum)
+
+    Controller1(QObject *parent = nullptr) : QObject(parent), m_string("Controller #1"),
+        m_enumVal(ENUM_VALUE_1)
+    {}
+private:
+    QString m_string;
+    Controller1Enum m_enumVal;
+};
+
+class Controller2 : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString string MEMBER m_string)
+    Q_PROPERTY(Controller2Enum enumVal MEMBER m_enumVal)
+public:
+    enum Controller2Enum {
+        ENUM_VALUE_1 = 111,
+        ENUM_VALUE_2 = 222
+    };
+    Q_ENUMS(Controller2Enum)
+
+    Controller2(QObject *parent = nullptr) : QObject(parent), m_string("Controller #2"),
+        m_enumVal(ENUM_VALUE_1)
+    {}
+private:
+    QString m_string;
+    Controller2Enum m_enumVal;
+};
+
+void tst_qqmlmetatype::unregisterCustomType()
+{
+    int controllerId = 0;
+    {
+        QQmlEngine engine;
+        QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        QVERIFY(!type.isValid());
+        controllerId = qmlRegisterType<Controller1>("mytypes", 1, 0, "Controller");
+        type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        QVERIFY(type.isValid());
+        QVERIFY(!type.isInterface());
+        QVERIFY(!type.isSingleton());
+        QVERIFY(!type.isComposite());
+        QQmlComponent c(&engine, testFileUrl("testUnregisterCustomType.qml"));
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj);
+        QObject *controller = obj->findChild<QObject *>("controller");
+        QVERIFY(qobject_cast<Controller1 *>(controller));
+        QVariant stringVal = controller->property("string");
+        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.toString(), QStringLiteral("Controller #1"));
+        QVariant enumVal = controller->property("enumVal");
+        QCOMPARE(enumVal.type(), QVariant::Int);
+        QCOMPARE(enumVal.toInt(), 1);
+    }
+    qmlUnregisterType(controllerId);
+    {
+        QQmlEngine engine;
+        QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        QVERIFY(!type.isValid());
+        controllerId = qmlRegisterType<Controller2>("mytypes", 1, 0, "Controller");
+        type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        QVERIFY(type.isValid());
+        QVERIFY(!type.isInterface());
+        QVERIFY(!type.isSingleton());
+        QVERIFY(!type.isComposite());
+        QQmlComponent c(&engine, testFileUrl("testUnregisterCustomType.qml"));
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj);
+        QObject *controller = obj->findChild<QObject *>("controller");
+        QVERIFY(qobject_cast<Controller2 *>(controller));
+        QVariant stringVal = controller->property("string");
+        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.toString(), QStringLiteral("Controller #2"));
+        QVariant enumVal = controller->property("enumVal");
+        QCOMPARE(enumVal.type(), QVariant::Int);
+        QCOMPARE(enumVal.toInt(), 111);
+    }
+    qmlUnregisterType(controllerId);
+    {
+        QQmlEngine engine;
+        QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        QVERIFY(!type.isValid());
+        controllerId = qmlRegisterType<Controller1>("mytypes", 1, 0, "Controller");
+        type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
+        QVERIFY(type.isValid());
+        QVERIFY(!type.isInterface());
+        QVERIFY(!type.isSingleton());
+        QVERIFY(!type.isComposite());
+        QQmlComponent c(&engine, testFileUrl("testUnregisterCustomType.qml"));
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj);
+        QObject *controller = obj->findChild<QObject *>("controller");
+        QVERIFY(qobject_cast<Controller1 *>(controller));
+        QVariant stringVal = controller->property("string");
+        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.toString(), QStringLiteral("Controller #1"));
+        QVariant enumVal = controller->property("enumVal");
+        QCOMPARE(enumVal.type(), QVariant::Int);
+        QCOMPARE(enumVal.toInt(), 1);
+    }
+}
+
+class StaticProvider1 : public QObject
+{
+    Q_OBJECT
+public:
+    StaticProvider1(QObject *parent = nullptr) : QObject(parent) {}
+    Q_INVOKABLE QString singletonGetString() { return "StaticProvider #1"; }
+};
+
+static QObject* createStaticProvider1(QQmlEngine *, QJSEngine *)
+{
+    return new StaticProvider1;
+}
+
+class StaticProvider2 : public QObject
+{
+    Q_OBJECT
+public:
+    StaticProvider2(QObject *parent = nullptr) : QObject(parent) {}
+    Q_INVOKABLE QString singletonGetString() { return "StaticProvider #2"; }
+};
+
+static QObject* createStaticProvider2(QQmlEngine *, QJSEngine *)
+{
+    return new StaticProvider2;
+}
+
+void tst_qqmlmetatype::unregisterCustomSingletonType()
+{
+    int staticProviderId = 0;
+    {
+        QQmlEngine engine;
+        staticProviderId = qmlRegisterSingletonType<StaticProvider1>("mytypes", 1, 0, "StaticProvider", createStaticProvider1);
+        QQmlType type = QQmlMetaType::qmlType(QString("StaticProvider"), QString("mytypes"), 1, 0);
+        QVERIFY(type.isValid());
+        QVERIFY(!type.isInterface());
+        QVERIFY(type.isSingleton());
+        QVERIFY(!type.isComposite());
+        QQmlComponent c(&engine, testFileUrl("testUnregisterCustomSingletonType.qml"));
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj.data());
+        QVariant stringVal = obj->property("text");
+        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #1"));
+    }
+    qmlUnregisterType(staticProviderId);
+    {
+        QQmlEngine engine;
+        staticProviderId = qmlRegisterSingletonType<StaticProvider2>("mytypes", 1, 0, "StaticProvider", createStaticProvider2);
+        QQmlType type = QQmlMetaType::qmlType(QString("StaticProvider"), QString("mytypes"), 1, 0);
+        QVERIFY(type.isValid());
+        QVERIFY(!type.isInterface());
+        QVERIFY(type.isSingleton());
+        QVERIFY(!type.isComposite());
+        QQmlComponent c(&engine, testFileUrl("testUnregisterCustomSingletonType.qml"));
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj.data());
+        QVariant stringVal = obj->property("text");
+        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #2"));
+    }
+    qmlUnregisterType(staticProviderId);
+    {
+        QQmlEngine engine;
+        staticProviderId = qmlRegisterSingletonType<StaticProvider1>("mytypes", 1, 0, "StaticProvider", createStaticProvider1);
+        QQmlType type = QQmlMetaType::qmlType(QString("StaticProvider"), QString("mytypes"), 1, 0);
+        QVERIFY(type.isValid());
+        QVERIFY(!type.isInterface());
+        QVERIFY(type.isSingleton());
+        QVERIFY(!type.isComposite());
+        QQmlComponent c(&engine, testFileUrl("testUnregisterCustomSingletonType.qml"));
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj.data());
+        QVariant stringVal = obj->property("text");
+        QCOMPARE(stringVal.type(), QVariant::String);
+        QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #1"));
+    }
 }
 
 QTEST_MAIN(tst_qqmlmetatype)

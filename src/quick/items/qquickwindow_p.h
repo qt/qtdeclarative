@@ -141,10 +141,11 @@ public:
     // Mouse positions are saved in widget coordinates
     QPointF lastMousePosition;
     bool deliverTouchAsMouse(QQuickItem *item, QQuickPointerEvent *pointerEvent);
+    bool isDeliveringTouchAsMouse() const { return touchMouseId != -1 && touchMouseDevice; }
     void translateTouchEvent(QTouchEvent *touchEvent);
-    void setMouseGrabber(QQuickItem *grabber);
     void grabTouchPoints(QObject *grabber, const QVector<int> &ids);
     void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true);
+    void sendUngrabEvent(QQuickItem *grabber, bool touch);
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
     void deliverToPassiveGrabbers(const QVector<QPointer <QQuickPointerHandler> > &passiveGrabbers, QQuickPointerEvent *pointerEvent);
     void deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent);

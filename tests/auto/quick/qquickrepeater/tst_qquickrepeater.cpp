@@ -75,6 +75,7 @@ private slots:
     void destroyCount();
     void stackingOrder();
     void objectModel();
+    void QTBUG54859_asynchronousMove();
 };
 
 class TestObject : public QObject
@@ -987,6 +988,30 @@ void tst_QQuickRepeater::objectModel()
     QCOMPARE(repeater->count(), 0);
 
     delete positioner;
+}
+
+class Ctrl : public QObject
+{
+    Q_OBJECT
+public:
+
+    Q_INVOKABLE void wait()
+    {
+        QTest::qWait(200);
+    }
+};
+
+void tst_QQuickRepeater::QTBUG54859_asynchronousMove()
+{
+    Ctrl ctrl;
+    QQuickView* view = createView();
+    view->rootContext()->setContextProperty("ctrl", &ctrl);
+    view->setSource(testFileUrl("asynchronousMove.qml"));
+    view->show();
+    QQuickItem* item = view->rootObject();
+
+
+    QTRY_COMPARE(item->property("finished"), QVariant(true));
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

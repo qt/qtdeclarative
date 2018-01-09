@@ -73,8 +73,8 @@ namespace QV4 {
 struct ChunkAllocator;
 
 struct BlockAllocator {
-    BlockAllocator(ChunkAllocator *chunkAllocator)
-        : chunkAllocator(chunkAllocator)
+    BlockAllocator(ChunkAllocator *chunkAllocator, ExecutionEngine *engine)
+        : chunkAllocator(chunkAllocator), engine(engine)
     {
         memset(freeBins, 0, sizeof(freeBins));
 #if MM_DEBUG
@@ -108,7 +108,7 @@ struct BlockAllocator {
         return used;
     }
 
-    void sweep(ClassDestroyStatsCallback classCountPtr);
+    void sweep();
     void freeAll();
     void resetBlackBits();
     void collectGrayItems(MarkStack *markStack);
@@ -119,6 +119,7 @@ struct BlockAllocator {
     size_t usedSlotsAfterLastSweep = 0;
     HeapItem *freeBins[NumBins];
     ChunkAllocator *chunkAllocator;
+    ExecutionEngine *engine;
     std::vector<Chunk *> chunks;
 #if MM_DEBUG
     uint allocations[NumBins];
@@ -126,8 +127,8 @@ struct BlockAllocator {
 };
 
 struct HugeItemAllocator {
-    HugeItemAllocator(ChunkAllocator *chunkAllocator)
-        : chunkAllocator(chunkAllocator)
+    HugeItemAllocator(ChunkAllocator *chunkAllocator, ExecutionEngine *engine)
+        : chunkAllocator(chunkAllocator), engine(engine)
     {}
 
     HeapItem *allocate(size_t size);
@@ -144,6 +145,7 @@ struct HugeItemAllocator {
     }
 
     ChunkAllocator *chunkAllocator;
+    ExecutionEngine *engine;
     struct HugeChunk {
         Chunk *chunk;
         size_t size;
