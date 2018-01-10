@@ -92,7 +92,7 @@ ReturnedValue Lookup::resolveGetter(ExecutionEngine *engine, const Object *objec
         return getter(this, engine, *object);
     }
 
-    protoLookup.icIdentifier = obj->internalClass->id;
+    protoLookup.protoId = obj->internalClass->protoId;
     resolveProtoGetter(name, obj->prototype());
     return getter(this, engine, *object);
 }
@@ -126,7 +126,7 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
     }
 
     Identifier *name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    protoLookup.icIdentifier = primitiveLookup.proto->internalClass->id;
+    protoLookup.protoId = primitiveLookup.proto->internalClass->protoId;
     resolveProtoGetter(name, primitiveLookup.proto);
 
     if (getter == getterProto)
@@ -140,7 +140,7 @@ ReturnedValue Lookup::resolveGlobalGetter(ExecutionEngine *engine)
 {
     Object *o = engine->globalObject;
     Identifier *name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    protoLookup.icIdentifier = o->internalClass()->id;
+    protoLookup.protoId = o->internalClass()->protoId;
     resolveProtoGetter(name, o->d());
 
     if (getter == getterProto)
@@ -188,16 +188,16 @@ ReturnedValue Lookup::getterTwoClasses(Lookup *l, ExecutionEngine *engine, const
             return result;
         }
         if (first.getter == getterProto && second.getter == getterProto) {
-            l->protoLookupTwoClasses.icIdentifier = first.protoLookup.icIdentifier;
-            l->protoLookupTwoClasses.icIdentifier2 = second.protoLookup.icIdentifier;
+            l->protoLookupTwoClasses.protoId = first.protoLookup.protoId;
+            l->protoLookupTwoClasses.protoId2 = second.protoLookup.protoId;
             l->protoLookupTwoClasses.data = first.protoLookup.data;
             l->protoLookupTwoClasses.data2 = second.protoLookup.data;
             l->getter = getterProtoTwoClasses;
             return result;
         }
         if (first.getter == getterProtoAccessor && second.getter == getterProtoAccessor) {
-            l->protoLookupTwoClasses.icIdentifier = first.protoLookup.icIdentifier;
-            l->protoLookupTwoClasses.icIdentifier2 = second.protoLookup.icIdentifier;
+            l->protoLookupTwoClasses.protoId = first.protoLookup.protoId;
+            l->protoLookupTwoClasses.protoId2 = second.protoLookup.protoId;
             l->protoLookupTwoClasses.data = first.protoLookup.data;
             l->protoLookupTwoClasses.data2 = second.protoLookup.data;
             l->getter = getterProtoAccessorTwoClasses;
@@ -250,7 +250,7 @@ ReturnedValue Lookup::getterProto(Lookup *l, ExecutionEngine *engine, const Valu
     // the internal class won't match
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
     if (o) {
-        if (l->protoLookup.icIdentifier == o->internalClass->id)
+        if (l->protoLookup.protoId == o->internalClass->protoId)
             return l->protoLookup.data->asReturnedValue();
     }
     return getterTwoClasses(l, engine, object);
@@ -307,9 +307,9 @@ ReturnedValue Lookup::getterProtoTwoClasses(Lookup *l, ExecutionEngine *engine, 
     // the internal class won't match
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
     if (o) {
-        if (l->protoLookupTwoClasses.icIdentifier == o->internalClass->id)
+        if (l->protoLookupTwoClasses.protoId == o->internalClass->protoId)
             return l->protoLookupTwoClasses.data->asReturnedValue();
-        if (l->protoLookupTwoClasses.icIdentifier2 == o->internalClass->id)
+        if (l->protoLookupTwoClasses.protoId2 == o->internalClass->protoId)
             return l->protoLookupTwoClasses.data2->asReturnedValue();
         return getterFallback(l, engine, object);
     }
@@ -340,7 +340,7 @@ ReturnedValue Lookup::getterProtoAccessor(Lookup *l, ExecutionEngine *engine, co
     // we can safely cast to a QV4::Object here. If object is actually a string,
     // the internal class won't match
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
-    if (o && l->protoLookup.icIdentifier == o->internalClass->id) {
+    if (o && l->protoLookup.protoId == o->internalClass->protoId) {
         const Value *getter = l->protoLookup.data;
         if (!getter->isFunctionObject()) // ### catch at resolve time
             return Encode::undefined();
@@ -357,9 +357,9 @@ ReturnedValue Lookup::getterProtoAccessorTwoClasses(Lookup *l, ExecutionEngine *
     Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
     if (o) {
         const Value *getter = nullptr;
-        if (l->protoLookupTwoClasses.icIdentifier == o->internalClass->id)
+        if (l->protoLookupTwoClasses.protoId == o->internalClass->protoId)
             getter = l->protoLookupTwoClasses.data;
-        else if (l->protoLookupTwoClasses.icIdentifier2 == o->internalClass->id)
+        else if (l->protoLookupTwoClasses.protoId2 == o->internalClass->protoId)
             getter = l->protoLookupTwoClasses.data2;
         if (getter) {
             if (!getter->isFunctionObject()) // ### catch at resolve time
@@ -376,7 +376,7 @@ ReturnedValue Lookup::primitiveGetterProto(Lookup *l, ExecutionEngine *engine, c
 {
     if (object.type() == l->primitiveLookup.type) {
         Heap::Object *o = l->primitiveLookup.proto;
-        if (l->primitiveLookup.icIdentifier == o->internalClass->id)
+        if (l->primitiveLookup.protoId == o->internalClass->protoId)
             return l->primitiveLookup.data->asReturnedValue();
     }
     l->getter = getterGeneric;
@@ -387,7 +387,7 @@ ReturnedValue Lookup::primitiveGetterAccessor(Lookup *l, ExecutionEngine *engine
 {
     if (object.type() == l->primitiveLookup.type) {
         Heap::Object *o = l->primitiveLookup.proto;
-        if (l->primitiveLookup.icIdentifier == o->internalClass->id) {
+        if (l->primitiveLookup.protoId == o->internalClass->protoId) {
             const Value *getter = l->primitiveLookup.data;
             if (!getter->isFunctionObject()) // ### catch at resolve time
                 return Encode::undefined();
@@ -416,7 +416,7 @@ ReturnedValue Lookup::globalGetterGeneric(Lookup *l, ExecutionEngine *engine)
 ReturnedValue Lookup::globalGetterProto(Lookup *l, ExecutionEngine *engine)
 {
     Heap::Object *o = engine->globalObject->d();
-    if (l->protoLookup.icIdentifier == o->internalClass->id)
+    if (l->protoLookup.protoId == o->internalClass->protoId)
         return l->protoLookup.data->asReturnedValue();
     l->globalGetter = globalGetterGeneric;
     return globalGetterGeneric(l, engine);
@@ -425,7 +425,7 @@ ReturnedValue Lookup::globalGetterProto(Lookup *l, ExecutionEngine *engine)
 ReturnedValue Lookup::globalGetterProtoAccessor(Lookup *l, ExecutionEngine *engine)
 {
     Heap::Object *o = engine->globalObject->d();
-    if (l->protoLookup.icIdentifier == o->internalClass->id) {
+    if (l->protoLookup.protoId == o->internalClass->protoId) {
         const Value *getter = l->protoLookup.data;
         if (!getter->isFunctionObject()) // ### catch at resolve time
             return Encode::undefined();
@@ -459,7 +459,7 @@ bool Lookup::resolveSetter(ExecutionEngine *engine, Object *object, const Value 
         return setter(this, engine, *object, value);
     }
 
-    insertionLookup.icIdentifier = c->id;
+    insertionLookup.protoId = c->protoId;
     if (!object->put(name, value)) {
         setter = Lookup::setterFallback;
         return false;
@@ -573,7 +573,7 @@ bool Lookup::setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, c
 bool Lookup::setterInsert(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
     Object *o = static_cast<Object *>(object.managed());
-    if (o && o->internalClass()->id == l->insertionLookup.icIdentifier) {
+    if (o && o->internalClass()->protoId == l->insertionLookup.protoId) {
         o->setInternalClass(l->insertionLookup.newClass);
         o->d()->setProperty(engine, l->insertionLookup.offset, value);
         return true;

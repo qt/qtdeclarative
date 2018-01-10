@@ -145,7 +145,7 @@ void InternalClass::init(ExecutionEngine *engine)
     isFrozen = false;
     isSealed = false;
     isUsedAsProto = false;
-    id = engine->newInternalClassId();
+    protoId = engine->newInternalClassId();
 
     // Also internal classes need an internal class pointer. Simply make it point to itself
     internalClass.set(engine, this);
@@ -170,7 +170,7 @@ void InternalClass::init(Heap::InternalClass *other)
     isSealed = other->isSealed;
     isFrozen = other->isFrozen;
     isUsedAsProto = other->isUsedAsProto;
-    id = engine->newInternalClassId();
+    protoId = engine->newInternalClassId();
 
     internalClass.set(engine, other->internalClass);
 }
@@ -444,19 +444,19 @@ void InternalClass::removeChildEntry(InternalClass *child)
 
 }
 
-void InternalClass::removeMember(QV4::Object *object, Identifier *id)
+void InternalClass::removeMember(QV4::Object *object, Identifier *identifier)
 {
     Heap::InternalClass *oldClass = object->internalClass();
-    Q_ASSERT(oldClass->propertyTable.lookup(id) < oldClass->size);
+    Q_ASSERT(oldClass->propertyTable.lookup(identifier) < oldClass->size);
 
-    Transition temp = { { id }, nullptr, Transition::RemoveMember };
+    Transition temp = { { identifier }, nullptr, Transition::RemoveMember };
     Transition &t = object->internalClass()->lookupOrInsertTransition(temp);
 
     if (!t.lookup) {
         // create a new class and add it to the tree
         Heap::InternalClass *newClass = oldClass->engine->newClass(oldClass);
         // simply make the entry inaccessible
-        int idx = newClass->propertyTable.removeIdentifier(id, oldClass->size);
+        int idx = newClass->propertyTable.removeIdentifier(identifier, oldClass->size);
         newClass->nameMap.set(idx, nullptr);
         newClass->propertyData.set(idx, PropertyAttributes());
         t.lookup = newClass;
@@ -611,7 +611,7 @@ Heap::InternalClass *InternalClass::asProtoClass()
 static void updateProtoUsage(Heap::Object *o, Heap::InternalClass *ic)
 {
     if (ic->prototype == o)
-        ic->id = ic->engine->newInternalClassId();
+        ic->protoId = ic->engine->newInternalClassId();
     for (auto &t : ic->transitions) {
         if (t.lookup)
             updateProtoUsage(o, t.lookup);

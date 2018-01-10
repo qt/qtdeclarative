@@ -78,7 +78,7 @@ struct Lookup {
         } objectLookup;
         struct {
             const Value *data;
-            int icIdentifier;
+            int protoId;
         } protoLookup;
         struct {
             Heap::InternalClass *ic;
@@ -89,19 +89,19 @@ struct Lookup {
         struct {
             const Value *data;
             const Value *data2;
-            int icIdentifier;
-            int icIdentifier2;
+            int protoId;
+            int protoId2;
         } protoLookupTwoClasses;
         struct {
             // Make sure the next two values are in sync with protoLookup
             const Value *data;
-            int icIdentifier;
+            int protoId;
             unsigned type;
             Heap::Object *proto;
         } primitiveLookup;
         struct {
             Heap::InternalClass *newClass;
-            int icIdentifier;
+            int protoId;
             int offset;
         } insertionLookup;
     };

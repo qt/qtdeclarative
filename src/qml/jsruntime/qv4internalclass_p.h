@@ -264,7 +264,7 @@ struct InternalClassTransition
 namespace Heap {
 
 struct InternalClass : Base {
-    int id; // unique across the engine, gets changed also when proto chain changes
+    int protoId; // unique across the engine, gets changed whenever the proto chain changes
     ExecutionEngine *engine;
     const VTable *vtable;
     Heap::Object *prototype;
@@ -295,7 +295,7 @@ struct InternalClass : Base {
     Q_REQUIRED_RESULT InternalClass *addMember(Identifier *identifier, PropertyAttributes data, uint *index = nullptr);
     Q_REQUIRED_RESULT InternalClass *changeMember(Identifier *identifier, PropertyAttributes data, uint *index = nullptr);
     static void changeMember(QV4::Object *object, QV4::String *string, PropertyAttributes data, uint *index = nullptr);
-    static void removeMember(QV4::Object *object, Identifier *id);
+    static void removeMember(QV4::Object *object, Identifier *identifier);
     uint find(const QV4::String *string);
     uint find(const Identifier *id)
     {
