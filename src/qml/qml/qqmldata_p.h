@@ -259,7 +259,7 @@ public:
     bool hasExtendedData() const { return extendedData != 0; }
     QHash<int, QObject *> *attachedProperties() const;
 
-    static inline bool wasDeleted(QObject *);
+    static inline bool wasDeleted(const QObject *);
 
     static void markAsDeleted(QObject *);
     static void setQueuedForDeletion(QObject *);
@@ -296,16 +296,16 @@ private:
     }
 };
 
-bool QQmlData::wasDeleted(QObject *object)
+bool QQmlData::wasDeleted(const QObject *object)
 {
     if (!object)
         return true;
 
-    QObjectPrivate *priv = QObjectPrivate::get(object);
+    const QObjectPrivate *priv = QObjectPrivate::get(object);
     if (!priv || priv->wasDeleted)
         return true;
 
-    QQmlData *ddata = QQmlData::get(object);
+    const QQmlData *ddata = QQmlData::get(object);
     return ddata && ddata->isQueuedForDeletion;
 }
 
