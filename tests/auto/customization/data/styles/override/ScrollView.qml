@@ -55,10 +55,6 @@ Simple.ScrollView {
     id: control
     objectName: "scrollview-override"
 
-    contentItem: Flickable {
-        objectName: "scrollview-contentItem-override"
-    }
-
     background: Item {
         objectName: "scrollview-background-override"
     }

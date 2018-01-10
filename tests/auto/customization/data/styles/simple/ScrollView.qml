@@ -58,10 +58,6 @@ T.ScrollView {
     implicitWidth: Math.max(contentItem.implicitWidth, background.implicitWidth)
     implicitHeight: Math.max(contentItem.implicitHeight, background.implicitHeight)
 
-    contentItem: Flickable {
-        objectName: "scrollview-contentItem-simple"
-    }
-
     background: Rectangle {
         objectName: "scrollview-background-simple"
     }

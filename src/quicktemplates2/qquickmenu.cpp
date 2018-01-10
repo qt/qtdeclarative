@@ -1013,6 +1013,9 @@ QVariant QQuickMenu::contentModel() const
 */
 QQmlListProperty<QObject> QQuickMenu::contentData()
 {
+    Q_D(QQuickMenu);
+    if (!d->contentItem)
+        QQuickControlPrivate::get(d->popupItem)->executeContentItem();
     return QQmlListProperty<QObject>(this, nullptr,
         QQuickMenuPrivate::contentData_append,
         QQuickMenuPrivate::contentData_count,

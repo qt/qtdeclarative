@@ -256,7 +256,10 @@ public:
     void handleRelease(const QPointF &point) override;
     void handleUngrab() override;
 
+    void cancelIndicator();
     void executeIndicator(bool complete = false);
+
+    void cancelPopup();
     void executePopup(bool complete = false);
 
     bool flat;
@@ -704,13 +707,19 @@ void QQuickComboBoxPrivate::handleUngrab()
 
 static inline QString indicatorName() { return QStringLiteral("indicator"); }
 
+void QQuickComboBoxPrivate::cancelIndicator()
+{
+    Q_Q(QQuickComboBox);
+    quickCancelDeferred(q, indicatorName());
+}
+
 void QQuickComboBoxPrivate::executeIndicator(bool complete)
 {
     Q_Q(QQuickComboBox);
     if (indicator.wasExecuted())
         return;
 
-    if (!indicator)
+    if (!indicator || complete)
         quickBeginDeferred(q, indicatorName(), indicator);
     if (complete)
         quickCompleteDeferred(q, indicatorName(), indicator);
@@ -718,13 +727,19 @@ void QQuickComboBoxPrivate::executeIndicator(bool complete)
 
 static inline QString popupName() { return QStringLiteral("popup"); }
 
+void QQuickComboBoxPrivate::cancelPopup()
+{
+    Q_Q(QQuickComboBox);
+    quickCancelDeferred(q, popupName());
+}
+
 void QQuickComboBoxPrivate::executePopup(bool complete)
 {
     Q_Q(QQuickComboBox);
     if (popup.wasExecuted())
         return;
 
-    if (!popup)
+    if (!popup || complete)
         quickBeginDeferred(q, popupName(), popup);
     if (complete)
         quickCompleteDeferred(q, popupName(), popup);
@@ -1048,6 +1063,9 @@ void QQuickComboBox::setIndicator(QQuickItem *indicator)
     if (d->indicator == indicator)
         return;
 
+    if (!d->indicator.isExecuting())
+        d->cancelIndicator();
+
     delete d->indicator;
     d->indicator = indicator;
     if (indicator) {
@@ -1084,6 +1102,9 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
     Q_D(QQuickComboBox);
     if (d->popup == popup)
         return;
+
+    if (!d->popup.isExecuting())
+        d->cancelPopup();
 
     if (d->popup) {
         QObjectPrivate::disconnect(d->popup.data(), &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);

@@ -121,6 +121,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL REVISION 3)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL REVISION 3)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
+    Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:

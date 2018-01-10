@@ -53,21 +53,42 @@
     Primary=BlueGrey
     \endcode
 
-    \section1 Imagine Style Configuration
+    \section1 Controls Section
+
+    The following values can be specified in a \c Controls section of the
+    configuration file:
+
+    \table
+        \header
+            \li Variable
+            \li Description
+        \row
+            \li \c Style
+            \li Specifies the style to run the application with.
+                The value can be the name of one of the \l {Available Styles}{built-in styles}
+                or a \l {Creating a Custom Style}{custom style}.
+        \row
+            \li \c FallbackStyle
+            \li Specifies the style to use for controls that are not implemented.
+                The style must be one of the \l {Available Styles}{built-in styles}.
+                By default, the \l {Default Style}{Default} style is used.
+    \endtable
+
+    \section1 Imagine Section
 
     The following table lists values that can be used to configure the
     \l {Imagine style} in an \c Imagine section of the configuration file:
 
     \include qquickimaginestyle.qdocinc conf
 
-    \section1 Material Style Configuration
+    \section1 Material Section
 
     The following table lists values that can be used to configure the
     \l {Material style} in a \c Material section of the configuration file:
 
     \include qquickmaterialstyle.qdocinc conf
 
-    \section1 Universal Style Configuration
+    \section1 Universal Section
 
     The following table lists values that can be used to configure the
     \l {Universal style} in a \c Universal section of the configuration file:

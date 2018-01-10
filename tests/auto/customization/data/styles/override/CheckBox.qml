@@ -62,8 +62,4 @@ Simple.CheckBox {
     contentItem: Item {
         objectName: "checkbox-contentItem-override"
     }
-
-    background: Item {
-        objectName: "checkbox-background-override"
-    }
 }

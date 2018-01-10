@@ -76,7 +76,6 @@ ComboBox {
         text: control.displayText
         font: control.font
         color: control.pressed ? "#17a81a" : "#21be2b"
-        horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }

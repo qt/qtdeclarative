@@ -52,8 +52,8 @@ T.BusyIndicator {
         implicitHeight: 48
         color: control.Material.accentColor
 
+        running: control.running
         opacity: control.running ? 1 : 0
-        visible: control.running || animator.running
-        Behavior on opacity { OpacityAnimator { id: animator; duration: 250 } }
+        Behavior on opacity { OpacityAnimator { duration: 250 } }
     }
 }

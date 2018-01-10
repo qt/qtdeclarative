@@ -205,13 +205,19 @@ QAccessible::Role QQuickLabelPrivate::accessibleRole() const
 
 static inline QString backgroundName() { return QStringLiteral("background"); }
 
+void QQuickLabelPrivate::cancelBackground()
+{
+    Q_Q(QQuickLabel);
+    quickCancelDeferred(q, backgroundName());
+}
+
 void QQuickLabelPrivate::executeBackground(bool complete)
 {
     Q_Q(QQuickLabel);
     if (background.wasExecuted())
         return;
 
-    if (!background)
+    if (!background || complete)
         quickBeginDeferred(q, backgroundName(), background);
     if (complete)
         quickCompleteDeferred(q, backgroundName(), background);
@@ -263,6 +269,9 @@ void QQuickLabel::setBackground(QQuickItem *background)
     Q_D(QQuickLabel);
     if (d->background == background)
         return;
+
+    if (!d->background.isExecuting())
+        d->cancelBackground();
 
     delete d->background;
     d->background = background;

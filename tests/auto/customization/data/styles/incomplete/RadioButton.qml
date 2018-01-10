@@ -62,8 +62,4 @@ T.RadioButton {
     contentItem: Item {
         objectName: "radiobutton-contentItem-incomplete"
     }
-
-    background: Item {
-        objectName: "radiobutton-background-incomplete"
-    }
 }

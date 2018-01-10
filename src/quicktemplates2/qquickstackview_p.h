@@ -160,6 +160,10 @@ protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     bool childMouseEventFilter(QQuickItem *, QEvent *) override;
 
+#if QT_CONFIG(quicktemplates2_multitouch)
+    void touchEvent(QTouchEvent *event) override;
+#endif
+
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif

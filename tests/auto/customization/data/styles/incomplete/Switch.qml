@@ -62,8 +62,4 @@ T.Switch {
     contentItem: Item {
         objectName: "switch-contentItem-incomplete"
     }
-
-    background: Item {
-        objectName: "switch-background-incomplete"
-    }
 }
