@@ -374,7 +374,7 @@ public:
     const bool m_canAllocateExecutableMemory;
 #endif
 
-    int internalClassIdCount = 0;
+    quintptr protoIdCount = 1;
 
     ExecutionEngine(QJSEngine *jsEngine = nullptr);
     ~ExecutionEngine();
@@ -398,7 +398,8 @@ public:
         return static_cast<ExecutionContext *>(&currentStackFrame->jsFrame->context);
     }
 
-    int newInternalClassId() { return ++internalClassIdCount; }
+    // ensure we always get odd prototype IDs. This helps make marking in QV4::Lookup fast
+    quintptr newProtoId() { return (protoIdCount += 2); }
 
     Heap::InternalClass *newInternalClass(const VTable *vtable, Object *prototype);
 

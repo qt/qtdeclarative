@@ -145,7 +145,7 @@ void InternalClass::init(ExecutionEngine *engine)
     isFrozen = false;
     isSealed = false;
     isUsedAsProto = false;
-    protoId = engine->newInternalClassId();
+    protoId = engine->newProtoId();
 
     // Also internal classes need an internal class pointer. Simply make it point to itself
     internalClass.set(engine, this);
@@ -170,7 +170,7 @@ void InternalClass::init(Heap::InternalClass *other)
     isSealed = other->isSealed;
     isFrozen = other->isFrozen;
     isUsedAsProto = other->isUsedAsProto;
-    protoId = engine->newInternalClassId();
+    protoId = engine->newProtoId();
 
     internalClass.set(engine, other->internalClass);
 }
@@ -611,7 +611,7 @@ Heap::InternalClass *InternalClass::asProtoClass()
 static void updateProtoUsage(Heap::Object *o, Heap::InternalClass *ic)
 {
     if (ic->prototype == o)
-        ic->protoId = ic->engine->newInternalClassId();
+        ic->protoId = ic->engine->newProtoId();
     for (auto &t : ic->transitions) {
         if (t.lookup)
             updateProtoUsage(o, t.lookup);

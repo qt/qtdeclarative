@@ -65,7 +65,6 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct Lookup {
-    enum { Size = 4 };
     union {
         ReturnedValue (*getter)(Lookup *l, ExecutionEngine *engine, const Value &object);
         ReturnedValue (*globalGetter)(Lookup *l, ExecutionEngine *engine);
@@ -73,12 +72,20 @@ struct Lookup {
     };
     union {
         struct {
+            Heap::Base *h1;
+            Heap::Base *h2;
+            quintptr unused;
+            quintptr unused2;
+        } markDef;
+        struct {
             Heap::InternalClass *ic;
+            quintptr _unused;
             int offset;
         } objectLookup;
         struct {
+            quintptr protoId;
+            quintptr _unused;
             const Value *data;
-            int protoId;
         } protoLookup;
         struct {
             Heap::InternalClass *ic;
@@ -87,21 +94,21 @@ struct Lookup {
             int offset2;
         } objectLookupTwoClasses;
         struct {
+            quintptr protoId;
+            quintptr protoId2;
             const Value *data;
             const Value *data2;
-            int protoId;
-            int protoId2;
         } protoLookupTwoClasses;
         struct {
             // Make sure the next two values are in sync with protoLookup
-            const Value *data;
-            int protoId;
-            unsigned type;
+            quintptr protoId;
             Heap::Object *proto;
+            const Value *data;
+            quintptr type;
         } primitiveLookup;
         struct {
             Heap::InternalClass *newClass;
-            int protoId;
+            quintptr protoId;
             int offset;
         } insertionLookup;
     };
@@ -145,7 +152,16 @@ struct Lookup {
     static bool setterInsert(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool arrayLengthSetter(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
 
-    void markObjects(MarkStack *stack);
+    void markObjects(MarkStack *stack) {
+        if (markDef.h1 && !(reinterpret_cast<quintptr>(markDef.h1) & 1))
+            markDef.h1->mark(stack);
+        if (markDef.h2 && !(reinterpret_cast<quintptr>(markDef.h2) & 1))
+            markDef.h2->mark(stack);
+    }
+
+    void clear() {
+        memset(&markDef, 0, sizeof(markDef));
+    }
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<Lookup>::value);

@@ -264,9 +264,9 @@ struct InternalClassTransition
 namespace Heap {
 
 struct InternalClass : Base {
-    int protoId; // unique across the engine, gets changed whenever the proto chain changes
     ExecutionEngine *engine;
     const VTable *vtable;
+    quintptr protoId; // unique across the engine, gets changed whenever the proto chain changes
     Heap::Object *prototype;
     InternalClass *parent;
 
