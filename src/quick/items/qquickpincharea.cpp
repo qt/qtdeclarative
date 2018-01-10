@@ -644,7 +644,8 @@ bool QQuickPinchArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
         return QQuickItem::childMouseEventFilter(i, e);
     switch (e->type()) {
     case QEvent::TouchBegin:
-        clearPinch(); // fall through
+        clearPinch();
+        Q_FALLTHROUGH();
     case QEvent::TouchUpdate: {
              QTouchEvent *touch = static_cast<QTouchEvent*>(e);
             d->touchPoints.clear();

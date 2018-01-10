@@ -139,7 +139,7 @@ namespace {
                         expected = TypeIdentifier;
                         break;
                     }
-                    // Fall through.
+                    Q_FALLTHROUGH();
                 case TypeIdentifier:
                     typeIndex = idIndex;
                     typeLength = idLength;

@@ -189,7 +189,7 @@ void QV4Debugger::maybeBreakAtInstruction()
     case StepOver:
         if (m_currentFrame != m_engine->currentStackFrame)
             break;
-        // fall through
+        Q_FALLTHROUGH();
     case StepIn:
         pauseAndWait(Step);
         return;
