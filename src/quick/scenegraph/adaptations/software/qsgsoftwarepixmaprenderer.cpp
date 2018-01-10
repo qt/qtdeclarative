@@ -79,7 +79,7 @@ void QSGSoftwarePixmapRenderer::render(QPaintDevice *target)
     QElapsedTimer renderTimer;
 
     // Setup background item
-    setBackgroundSize(QSize(target->width(), target->height()));
+    setBackgroundRect(m_projectionRect);
     setBackgroundColor(clearColor());
 
     renderTimer.start();
