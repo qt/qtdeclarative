@@ -130,13 +130,15 @@ void ScanFunctions::checkName(const QStringRef &name, const SourceLocation &loc)
         }
     }
 }
-void ScanFunctions::checkForArguments(AST::FormalParameterList *parameters)
+
+bool ScanFunctions::formalsContainName(AST::FormalParameterList *parameters, const QString &name)
 {
     while (parameters) {
-        if (parameters->name == QLatin1String("arguments"))
-            _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
+        if (parameters->name == name)
+            return true;
         parameters = parameters->next;
     }
+    return false;
 }
 
 bool ScanFunctions::visit(Program *ast)
@@ -398,9 +400,11 @@ void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
     }
 
     enterEnvironment(ast, FunctionCode);
-    checkForArguments(formals);
+    if (formalsContainName(formals, QStringLiteral("arguments")))
+        _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
 
-    if (!name.isEmpty())
+
+    if (!name.isEmpty() && !formalsContainName(formals, name))
         _context->addLocalVar(name, Context::ThisFunctionName, QQmlJS::AST::VariableDeclaration::FunctionScope);
     _context->formals = formals;
 

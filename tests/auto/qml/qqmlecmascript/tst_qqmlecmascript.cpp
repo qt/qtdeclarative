@@ -347,6 +347,7 @@ private slots:
     void manyArguments();
     void forInIterator();
     void localForInIterator();
+    void shadowedFunctionName();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8422,6 +8423,20 @@ void tst_qqmlecmascript::localForInIterator()
     QVERIFY(ret.isString());
     QCOMPARE(ret.toString(), QStringLiteral("3"));
 }
+
+void tst_qqmlecmascript::shadowedFunctionName()
+{
+    // verify that arguments shadow the function name
+    QJSEngine engine;
+    QJSValue v = engine.evaluate(QString::fromLatin1(
+            "function f(f) { return f; }\n"
+            "f(true)\n"
+                        ));
+    QVERIFY(!v.isError());
+    QVERIFY(v.isBool());
+    QCOMPARE(v.toBool(), true);
+}
+
 
 
 QTEST_MAIN(tst_qqmlecmascript)
