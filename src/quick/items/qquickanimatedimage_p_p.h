@@ -70,8 +70,8 @@ class QQuickAnimatedImagePrivate : public QQuickImagePrivate
 
 public:
     QQuickAnimatedImagePrivate()
-      : playing(true), paused(false), oldPlaying(false), presetCurrentFrame(0)
-      , currentSourceSize(0, 0), movie(nullptr)
+      : playing(true), paused(false), oldPlaying(false), padding(0)
+      , presetCurrentFrame(0) , currentSourceSize(0, 0), movie(nullptr)
 #if QT_CONFIG(qml_network)
       , reply(nullptr), redirectCount(0)
 #endif
