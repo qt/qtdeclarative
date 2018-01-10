@@ -487,7 +487,7 @@ public:
     bool canJIT(Function *f)
     {
 #if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
-        return f->interpreterCallCount > jitCallCountThreshold;
+        return f->interpreterCallCount >= jitCallCountThreshold;
 #else
         Q_UNUSED(f);
         return false;
