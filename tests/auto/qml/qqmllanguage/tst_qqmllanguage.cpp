@@ -269,6 +269,8 @@ private slots:
 
     void concurrentLoadQmlDir();
 
+    void accessDeletedObject();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -4569,6 +4571,28 @@ void tst_qqmllanguage::concurrentLoadQmlDir()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
     engine.setImportPathList(defaultImportPathList);
+}
+
+// Test that deleting an object and then accessing it doesn't crash.
+// QTBUG-44153
+class ObjectCreator : public QObject
+{
+    Q_OBJECT
+public slots:
+    QObject *create() { return (new ObjectCreator); }
+    void del() { delete this; }
+};
+
+void tst_qqmllanguage::accessDeletedObject()
+{
+    QQmlEngine engine;
+
+    engine.rootContext()->setContextProperty("objectCreator", new ObjectCreator);
+    QQmlComponent component(&engine, testFileUrl("accessDeletedObject.qml"));
+    VERIFY_ERRORS(0);
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

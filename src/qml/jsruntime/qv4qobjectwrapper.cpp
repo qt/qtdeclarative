@@ -651,6 +651,10 @@ void QObjectWrapper::put(Managed *m, String *name, const Value &value)
 PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
 {
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
+    const QObject *thatObject = that->d()->object();
+    if (QQmlData::wasDeleted(thatObject))
+        return QV4::Object::query(m, name);
+
     ExecutionEngine *engine = that->engine();
     QQmlContextData *qmlContext = engine->callingQmlContext();
     QQmlPropertyData local;
