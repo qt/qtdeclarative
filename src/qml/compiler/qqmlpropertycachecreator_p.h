@@ -536,11 +536,11 @@ public:
 
     void appendAliasPropertiesToMetaObjects();
 
-    void appendAliasesToPropertyCache(const CompiledObject &component, int objectIndex);
+    QQmlCompileError appendAliasesToPropertyCache(const CompiledObject &component, int objectIndex);
 
 private:
     void appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex);
-    void propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, QQmlPropertyRawData::Flags *propertyFlags);
+    QQmlCompileError propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, QQmlPropertyRawData::Flags *propertyFlags);
 
     void collectObjectsWithAliasesRecursively(int objectIndex, QVector<int> *objectsWithAliases) const;
 
@@ -651,7 +651,7 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAl
 }
 
 template <typename ObjectContainer>
-inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(
+inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(
         const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type,
         QQmlPropertyData::Flags *propertyFlags)
 {
@@ -670,12 +670,16 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias
         auto targetAlias = targetObject.aliasesBegin();
         for (uint i = 0; i < alias.localAliasIndex; ++i)
             ++targetAlias;
-        propertyDataForAlias(component, *targetAlias, type, propertyFlags);
-        return;
+        return propertyDataForAlias(component, *targetAlias, type, propertyFlags);
     } else if (alias.encodedMetaPropertyIndex == -1) {
         Q_ASSERT(alias.flags & QV4::CompiledData::Alias::AliasPointsToPointerObject);
         auto *typeRef = objectContainer->resolvedTypes.value(targetObject.inheritedTypeNameIndex);
-        Q_ASSERT(typeRef);
+        if (!typeRef) {
+            // Can be caused by the alias target not being a valid id or property. E.g.:
+            // property alias dataValue: dataVal
+            // invalidAliasComponent { id: dataVal }
+            return QQmlCompileError(targetObject.location, QQmlPropertyCacheCreatorBase::tr("Invalid alias target"));
+        }
 
         if (typeRef->type.isValid())
             *type = typeRef->type.typeId();
@@ -718,15 +722,16 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias
 
     propertyFlags->isWritable = !(alias.flags & QV4::CompiledData::Property::IsReadOnly) && writable;
     propertyFlags->isResettable = resettable;
+    return QQmlCompileError();
 }
 
 template <typename ObjectContainer>
-inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPropertyCache(
+inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPropertyCache(
         const CompiledObject &component, int objectIndex)
 {
     const CompiledObject &object = *objectContainer->objectAt(objectIndex);
     if (!object.aliasCount())
-        return;
+        return QQmlCompileError();
 
     QQmlPropertyCache *propertyCache = propertyCaches->at(objectIndex);
     Q_ASSERT(propertyCache);
@@ -742,7 +747,9 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPrope
 
         int type = 0;
         QQmlPropertyData::Flags propertyFlags;
-        propertyDataForAlias(component, *alias, &type, &propertyFlags);
+        QQmlCompileError error = propertyDataForAlias(component, *alias, &type, &propertyFlags);
+        if (error.isSet())
+            return error;
 
         const QString propertyName = objectContainer->stringAt(alias->nameIndex);
 
@@ -752,6 +759,8 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesToPrope
         propertyCache->appendProperty(propertyName, propertyFlags, effectivePropertyIndex++,
                                       type, effectiveSignalIndex++);
     }
+
+    return QQmlCompileError();
 }
 
 template <typename ObjectContainer>
