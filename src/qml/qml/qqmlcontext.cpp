@@ -330,6 +330,49 @@ void QQmlContext::setContextProperty(const QString &name, QObject *value)
 }
 
 /*!
+    \since 5.11
+
+    Set a batch of \a properties on this context.
+
+    Setting all properties in one batch avoids unnecessary
+    refreshing  expressions, and is therefore recommended
+    instead of calling \l setContextProperty() for each individual property.
+
+    \sa QQmlContext::setContextProperty()
+*/
+void QQmlContext::setContextProperties(const QVector<PropertyPair> &properties)
+{
+    Q_D(const QQmlContext);
+
+    QQmlContextData *data = d->data;
+
+    QQmlJavaScriptExpression *expressions = data->expressions;
+    QQmlContextData *childContexts = data->childContexts;
+
+    data->expressions = 0;
+    data->childContexts = 0;
+
+    for (auto property : properties)
+        setContextProperty(property.name, property.value);
+
+    data->expressions = expressions;
+    data->childContexts = childContexts;
+
+    data->refreshExpressions();
+}
+
+/*!
+    \since 5.11
+
+    \class QQmlContext::PropertyPair
+
+    This struct contains a property name and a property value.
+    It is used as a parameter for the \c setContextProperties function.
+
+    \sa QQQmlContext::setContextProperties()
+*/
+
+/*!
   Returns the value of the \a name property for this context
   as a QVariant.
  */

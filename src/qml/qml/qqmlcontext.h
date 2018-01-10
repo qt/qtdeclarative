@@ -42,6 +42,8 @@
 
 #include <QtCore/qurl.h>
 #include <QtCore/qobject.h>
+#include <QtCore/qlist.h>
+#include <QtCore/qpair.h>
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qmetatype.h>
 #include <QtCore/qvariant.h>
@@ -62,6 +64,8 @@ class Q_QML_EXPORT QQmlContext : public QObject
     Q_DECLARE_PRIVATE(QQmlContext)
 
 public:
+    struct PropertyPair { QString name; QVariant value; };
+
     QQmlContext(QQmlEngine *parent, QObject *objParent = nullptr);
     QQmlContext(QQmlContext *parent, QObject *objParent = nullptr);
     virtual ~QQmlContext();
@@ -77,6 +81,7 @@ public:
     QVariant contextProperty(const QString &) const;
     void setContextProperty(const QString &, QObject *);
     void setContextProperty(const QString &, const QVariant &);
+    void setContextProperties(const QVector<PropertyPair> &properties);
 
     // ### Qt 6: no need for a mutable object, this should become a const QObject pointer
     QString nameForObject(QObject *) const;

@@ -47,6 +47,7 @@ private slots:
     void engineMethod();
     void parentContext();
     void setContextProperty();
+    void setContextProperties();
     void setContextObject();
     void destruction();
     void idAsContextProperty();
@@ -361,6 +362,32 @@ void tst_qqmlcontext::setContextProperty()
 
         delete obj;
     }
+}
+
+void tst_qqmlcontext::setContextProperties()
+{
+    QQmlContext ctxt(&engine);
+
+    TestObject obj1;
+    obj1.setA(3345);
+    TestObject obj2;
+    obj2.setA(-19);
+
+    QVector<QQmlContext::PropertyPair> properties;
+
+    properties.append({QString("a"), QVariant(10)});
+    properties.append({QString("b"), QVariant(19)});
+    properties.append({QString("d"), QVariant::fromValue<TestObject*>(&obj2)});
+    properties.append({QString("c"), QVariant(QString("Hello World!"))});
+    properties.append({QString("e"), QVariant::fromValue<TestObject*>(&obj1)});
+
+    ctxt.setContextProperties(properties);
+
+    TEST_CONTEXT_PROPERTY(&ctxt, a, QVariant(10));
+    TEST_CONTEXT_PROPERTY(&ctxt, b, QVariant(19));
+    TEST_CONTEXT_PROPERTY(&ctxt, c, QVariant(QString("Hello World!")));
+    TEST_CONTEXT_PROPERTY(&ctxt, d.a, QVariant(-19));
+    TEST_CONTEXT_PROPERTY(&ctxt, e.a, QVariant(3345));
 }
 
 void tst_qqmlcontext::setContextObject()
