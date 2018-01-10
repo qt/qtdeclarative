@@ -222,8 +222,10 @@ void FileInfoThread::run()
         if (abort) {
             return;
         }
-        if (currentPath.isEmpty() || !needUpdate)
+        if (currentPath.isEmpty() || !needUpdate) {
+            emit statusChanged(currentPath.isEmpty() ? QQuickFolderListModel::Null : QQuickFolderListModel::Ready);
             condition.wait(&mutex);
+        }
 
         if (abort) {
             return;
@@ -231,6 +233,7 @@ void FileInfoThread::run()
 
         if (!currentPath.isEmpty()) {
             updateFiles = true;
+            emit statusChanged(QQuickFolderListModel::Loading);
         }
         if (updateFiles)
             getFileInfos(currentPath);

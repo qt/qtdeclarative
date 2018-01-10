@@ -42,6 +42,7 @@
 // From qquickfolderlistmodel.h
 const int FileNameRole = Qt::UserRole+1;
 enum SortField { Unsorted, Name, Time, Size, Type };
+enum Status { Null, Ready, Loading };
 
 class tst_qquickfolderlistmodel : public QQmlDataTest
 {
@@ -58,6 +59,7 @@ public slots:
 private slots:
     void initTestCase();
     void basicProperties();
+    void status();
     void showFiles();
     void resetFiltering();
     void nameFilters();
@@ -139,6 +141,20 @@ void tst_qquickfolderlistmodel::basicProperties()
 
     flm->setProperty("folder",QUrl::fromLocalFile(""));
     QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(""));
+}
+
+void tst_qquickfolderlistmodel::status()
+{
+    QQmlComponent component(&engine, testFileUrl("basic.qml"));
+    checkNoErrors(component);
+
+    QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
+    QVERIFY(flm != 0);
+    QTRY_COMPARE(flm->property("status").toInt(), int(Ready));
+    flm->setProperty("folder", QUrl::fromLocalFile(""));
+    QTRY_COMPARE(flm->property("status").toInt(), int(Null));
+    flm->setProperty("folder", QUrl::fromLocalFile(QDir::currentPath()));
+    QTRY_COMPARE(flm->property("status").toInt(), int(Ready));
 }
 
 void tst_qquickfolderlistmodel::showFiles()
