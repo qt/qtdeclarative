@@ -42,6 +42,7 @@
 #include <QtQml/private/qqmljsparser_p.h>
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>
+#include <QtQml/private/qqmlmetatype_p.h>
 
 Q_GLOBAL_STATIC(QObjectList, qt_qobjects)
 
@@ -138,12 +139,17 @@ private:
 
 void tst_Sanity::initTestCase()
 {
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QString("import QtQuick.Templates 2.%1; Control { }").arg(QT_VERSION_MINOR - 7).toUtf8(), QUrl());
+
+    const QStringList qmlTypeNames = QQmlMetaType::qmlTypeNames();
+
     QDirIterator it(QQC2_IMPORT_PATH, QStringList() << "*.qml" << "*.js", QDir::Files, QDirIterator::Subdirectories);
-    const QStringList excludeDirs = QStringList() << QStringLiteral("snippets") << QStringLiteral("designer");
     while (it.hasNext()) {
         it.next();
         QFileInfo info = it.fileInfo();
-        if (!excludeDirs.contains(info.dir().dirName()))
+        if (qmlTypeNames.contains(QStringLiteral("QtQuick.Templates/") + info.baseName()))
             files.insert(info.dir().dirName() + "/" + info.fileName(), info.filePath());
     }
 }
