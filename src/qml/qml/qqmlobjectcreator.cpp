@@ -1349,21 +1349,6 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     return sharedState->rootContext;
 }
 
-void QQmlObjectCreator::cancel(QObject *object)
-{
-    int last = sharedState->allCreatedObjects.count() - 1;
-    int i = last;
-    while (i >= 0) {
-        if (sharedState->allCreatedObjects.at(i) == object) {
-            if (i < last)
-                qSwap(sharedState->allCreatedObjects[i], sharedState->allCreatedObjects[last]);
-            sharedState->allCreatedObjects.pop();
-            break;
-        }
-        --i;
-    }
-}
-
 void QQmlObjectCreator::clear()
 {
     if (phase == Done || phase == Finalizing || phase == Startup)

@@ -377,23 +377,6 @@ finishIncubate:
     }
 }
 
-void QQmlIncubatorPrivate::cancel(QObject *object, QQmlContext *context)
-{
-    if (!context)
-        context = qmlContext(object);
-    if (!context)
-        return;
-
-    QQmlContextData *data = QQmlContextData::get(context);
-    QQmlIncubatorPrivate *p = data->incubator;
-    if (!p)
-        return;
-
-    p->vmeGuard.unguard(object);
-    if (!p->creator.isNull())
-        p->creator->cancel(object);
-}
-
 /*!
 Incubate objects for \a msecs, or until there are no more objects to incubate.
 */

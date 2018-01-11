@@ -92,7 +92,6 @@ public:
     bool populateDeferredProperties(QObject *instance, QQmlData::DeferredData *deferredData);
     bool populateDeferredBinding(const QQmlProperty &qmlProperty, QQmlData::DeferredData *deferredData, const QV4::CompiledData::Binding *binding);
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
-    void cancel(QObject *object);
     void clear();
 
     QQmlComponentAttached **componentAttachment() const { return &sharedState->componentAttached; }
