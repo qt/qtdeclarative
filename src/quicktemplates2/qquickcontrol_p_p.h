@@ -133,8 +133,6 @@ public:
     virtual void cancelBackground();
     virtual void executeBackground(bool complete = false);
 
-    static void destroyDelegate(QObject *object, QObject *parent);
-
     struct ExtraData {
         ExtraData();
         QFont font;

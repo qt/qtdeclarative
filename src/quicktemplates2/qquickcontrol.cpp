@@ -52,7 +52,6 @@
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
-#include <QtQml/private/qqmlincubator_p.h>
 
 #if QT_CONFIG(accessibility)
 #include <QtQuick/private/qquickaccessibleattached_p.h>
@@ -977,28 +976,6 @@ void QQuickControlPrivate::executeBackground(bool complete)
         quickBeginDeferred(q, backgroundName(), background);
     if (complete)
         quickCompleteDeferred(q, backgroundName(), background);
-}
-
-/*
-    Cancels incubation recursively to avoid "Object destroyed during incubation" (QTBUG-50992)
-*/
-static void cancelIncubation(QObject *object, QQmlContext *context)
-{
-    const auto children = object->children();
-    for (QObject *child : children)
-        cancelIncubation(child, context);
-    QQmlIncubatorPrivate::cancel(object, context);
-}
-
-void QQuickControlPrivate::destroyDelegate(QObject *delegate, QObject *parent)
-{
-    if (!delegate)
-        return;
-
-    QQmlContext *context = parent ? qmlContext(parent) : nullptr;
-    if (context)
-        cancelIncubation(delegate, context);
-    delete delegate;
 }
 
 void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
