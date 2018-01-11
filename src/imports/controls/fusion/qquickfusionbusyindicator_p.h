@@ -57,6 +57,7 @@ class QQuickFusionBusyIndicator : public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
+    Q_PROPERTY(bool running READ isRunning WRITE setRunning)
 
 public:
     explicit QQuickFusionBusyIndicator(QQuickItem *parent = nullptr);
@@ -64,7 +65,13 @@ public:
     QColor color() const;
     void setColor(const QColor &color);
 
+    bool isRunning() const;
+    void setRunning(bool running);
+
     void paint(QPainter *painter) override;
+
+protected:
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
 
 private:
     QColor m_color;

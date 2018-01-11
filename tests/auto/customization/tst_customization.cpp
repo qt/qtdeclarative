@@ -360,7 +360,7 @@ void tst_customization::override_data()
 #ifndef Q_OS_MACOS // QTBUG-65671
 
     // test that the built-in styles don't have undesired IDs in their delegates
-    const QStringList styles = QStringList() << "Default" << "Material" << "Universal"; // ### TODO: QQuickStyle::availableStyles();
+    const QStringList styles = QStringList() << "Default" << "Fusion" << "Material" << "Universal"; // ### TODO: QQuickStyle::availableStyles();
     for (const QString &style : styles) {
         for (const ControlInfo &control : ControlInfos)
             QTest::newRow(qPrintable(style + ":" + control.type)) << style << control.type << control.delegates << "" << false;

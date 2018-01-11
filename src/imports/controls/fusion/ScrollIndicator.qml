@@ -52,8 +52,6 @@ T.ScrollIndicator {
     padding: 2
 
     contentItem: Rectangle {
-        id: indicator
-
         implicitWidth: 2
         implicitHeight: 2
 
@@ -64,7 +62,7 @@ T.ScrollIndicator {
         states: State {
             name: "active"
             when: control.active
-            PropertyChanges { target: indicator; opacity: 0.75 }
+            PropertyChanges { target: control.contentItem; opacity: 0.75 }
         }
 
         transitions: [
@@ -72,7 +70,7 @@ T.ScrollIndicator {
                 from: "active"
                 SequentialAnimation {
                     PauseAnimation { duration: 450 }
-                    NumberAnimation { target: indicator; duration: 200; property: "opacity"; to: 0.0 }
+                    NumberAnimation { target: control.contentItem; duration: 200; property: "opacity"; to: 0.0 }
                 }
             }
         ]

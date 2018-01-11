@@ -58,53 +58,33 @@ T.DelayButton {
         }
     }
 
-    contentItem: Item {
-        implicitWidth: label.implicitWidth
-        implicitHeight: label.implicitHeight
-
-        Item {
-            x: -control.leftPadding + (control.mirrored ? 0 : control.progress * control.width)
-            width: control.width
-            height: parent.height
-
+    contentItem: ItemGroup {
+        ClippedText {
             clip: control.progress > 0
+            clipX: -control.leftPadding + (control.mirrored ? 0 : control.progress * control.width)
+            clipWidth: control.width
             visible: control.mirrored ? control.progress > 0 : control.progress < 1
 
-            Text {
-                id: label
-                x: -parent.x
-                width: control.availableWidth
-                height: parent.height
-
-                text: control.text
-                font: control.font
-                color: control.mirrored ? control.palette.brightText : control.palette.buttonText
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                elide: Text.ElideRight
-            }
+            text: control.text
+            font: control.font
+            color: control.mirrored ? control.palette.brightText : control.palette.buttonText
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
         }
 
-        Item {
-            x: -control.leftPadding
-            width: (control.mirrored ? 1.0 - control.progress : control.progress) * control.width
-            height: parent.height
-
+        ClippedText {
             clip: control.progress > 0
+            clipX: -control.leftPadding
+            clipWidth: (control.mirrored ? 1.0 - control.progress : control.progress) * control.width
             visible: control.mirrored ? control.progress < 1 : control.progress > 0
 
-            Text {
-                x: -parent.x
-                width: control.availableWidth
-                height: parent.height
-
-                text: control.text
-                font: control.font
-                color: control.mirrored ? control.palette.buttonText : control.palette.brightText
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                elide: Text.ElideRight
-            }
+            text: control.text
+            font: control.font
+            color: control.mirrored ? control.palette.buttonText : control.palette.brightText
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
         }
     }
 
