@@ -74,7 +74,7 @@ static const ControlInfo ControlInfos[] = {
     { "Menu", QStringList() << "background" << "contentItem" },
     { "MenuBar", QStringList() << "background" << "contentItem" },
     { "MenuBarItem", QStringList() << "background" << "contentItem" },
-    { "MenuItem", QStringList() << "background" << "contentItem" << "indicator" },
+    { "MenuItem", QStringList() << "arrow" << "background" << "contentItem" << "indicator" },
     { "MenuSeparator", QStringList() << "background" << "contentItem" },
     { "Page", QStringList() << "background" << "contentItem" },
     { "PageIndicator", QStringList() << "background" << "contentItem" },

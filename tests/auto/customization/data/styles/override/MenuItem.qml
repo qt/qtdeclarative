@@ -55,6 +55,10 @@ Simple.MenuItem {
     id: control
     objectName: "menuitem-override"
 
+    arrow: Item {
+        objectName: "menuitem-arrow-override"
+    }
+
     indicator: Item {
         objectName: "menuitem-indicator-override"
     }

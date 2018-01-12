@@ -37,6 +37,7 @@
 #include "qquickmenuitem_p.h"
 #include "qquickmenuitem_p_p.h"
 #include "qquickmenu_p.h"
+#include "qquickdeferredexecute_p_p.h"
 
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/private/qquickevents_p_p.h>
@@ -134,6 +135,26 @@ void QQuickMenuItemPrivate::updateEnabled()
     q->setEnabled(subMenu && subMenu->isEnabled());
 }
 
+static inline QString arrowName() { return QStringLiteral("arrow"); }
+
+void QQuickMenuItemPrivate::cancelArrow()
+{
+    Q_Q(QQuickAbstractButton);
+    quickCancelDeferred(q, arrowName());
+}
+
+void QQuickMenuItemPrivate::executeArrow(bool complete)
+{
+    Q_Q(QQuickMenuItem);
+    if (arrow.wasExecuted())
+        return;
+
+    if (!arrow || complete)
+        quickBeginDeferred(q, arrowName(), arrow);
+    if (complete)
+        quickCompleteDeferred(q, arrowName(), arrow);
+}
+
 /*!
     \qmlsignal void QtQuick.Controls::MenuItem::triggered()
 
@@ -183,7 +204,9 @@ void QQuickMenuItem::setHighlighted(bool highlighted)
 */
 QQuickItem *QQuickMenuItem::arrow() const
 {
-    Q_D(const QQuickMenuItem);
+    QQuickMenuItemPrivate *d = const_cast<QQuickMenuItemPrivate *>(d_func());
+    if (!d->arrow)
+        d->executeArrow();
     return d->arrow;
 }
 
@@ -193,11 +216,15 @@ void QQuickMenuItem::setArrow(QQuickItem *arrow)
     if (d->arrow == arrow)
         return;
 
-    QQuickControlPrivate::destroyDelegate(d->arrow, this);
+    if (!d->arrow.isExecuting())
+        d->cancelArrow();
+
+    delete d->arrow;
     d->arrow = arrow;
     if (arrow && !arrow->parentItem())
         arrow->setParentItem(this);
-    emit arrowChanged();
+    if (!d->arrow.isExecuting())
+        emit arrowChanged();
 }
 
 /*!
@@ -226,6 +253,13 @@ QQuickMenu *QQuickMenuItem::subMenu() const
 {
     Q_D(const QQuickMenuItem);
     return d->subMenu;
+}
+
+void QQuickMenuItem::componentComplete()
+{
+    Q_D(QQuickMenuItem);
+    d->executeArrow(true);
+    QQuickAbstractButton::componentComplete();
 }
 
 QFont QQuickMenuItem::defaultFont() const

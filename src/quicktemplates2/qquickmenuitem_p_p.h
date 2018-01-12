@@ -72,8 +72,11 @@ public:
 
     void updateEnabled();
 
+    void cancelArrow();
+    void executeArrow(bool complete = false);
+
     bool highlighted;
-    QQuickItem *arrow;
+    QQuickDeferredPointer<QQuickItem> arrow;
     QQuickMenu *menu;
     QQuickMenu *subMenu;
 };

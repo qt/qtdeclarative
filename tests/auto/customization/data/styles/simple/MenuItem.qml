@@ -49,7 +49,7 @@
 ****************************************************************************/
 
 import QtQuick 2.9
-import QtQuick.Templates 2.2 as T
+import QtQuick.Templates 2.3 as T
 
 T.MenuItem {
     id: control
@@ -57,6 +57,11 @@ T.MenuItem {
 
     implicitWidth: Math.max(contentItem.implicitWidth + indicator.implicitWidth, background.implicitWidth)
     implicitHeight: Math.max(contentItem.implicitHeight, indicator.implicitHeight, background.implicitHeight)
+
+    arrow: Text {
+        objectName: "menuitem-arrow-simple"
+        text: control.mirrored ? "<" : ">"
+    }
 
     indicator: Text {
         objectName: "menuitem-indicator-simple"
