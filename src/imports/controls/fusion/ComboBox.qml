@@ -81,7 +81,7 @@ T.ComboBox {
 
         enabled: control.editable
         autoScroll: control.editable
-        readOnly: control.popup.visible
+        readOnly: control.down
         inputMethodHints: control.inputMethodHints
         validator: control.validator
 
@@ -140,7 +140,6 @@ T.ComboBox {
     }
 
     popup: T.Popup {
-        id: popup
         width: control.width
         height: Math.min(contentItem.implicitHeight + 2, control.Window.height - topMargin - bottomMargin)
         topMargin: 6
@@ -151,7 +150,7 @@ T.ComboBox {
         contentItem: ListView {
             clip: true
             implicitHeight: contentHeight
-            model: control.popup.visible ? control.delegateModel : null
+            model: control.delegateModel
             currentIndex: control.highlightedIndex
             highlightRangeMode: ListView.ApplyRange
             highlightMoveDuration: 0

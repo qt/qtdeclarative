@@ -2,8 +2,6 @@
 *
 [attachedObjects:material/SwitchDelegate.qml]
 *
-[ids:fusion/ComboBox.qml]
-*
 [ids:imagine/BusyIndicator.qml]
 *
 [ids:imagine/DelayButton.qml]
