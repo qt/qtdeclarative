@@ -4,8 +4,6 @@
 *
 [ids:fusion/ComboBox.qml]
 *
-[ids:fusion/Tumbler.qml]
-*
 [ids:imagine/BusyIndicator.qml]
 *
 [ids:imagine/DelayButton.qml]
@@ -21,6 +19,4 @@
 [ids:imagine/Switch.qml]
 *
 [ids:imagine/SwitchDelegate.qml]
-*
-[ids:imagine/Tumbler.qml]
 *
