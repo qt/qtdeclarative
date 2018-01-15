@@ -864,7 +864,7 @@ void QQmlDelegateModelPrivate::releaseIncubator(QQDMIncubationTask *incubationTa
 
 void QQmlDelegateModelPrivate::removeCacheItem(QQmlDelegateModelItem *cacheItem)
 {
-    int cidx = m_cache.indexOf(cacheItem);
+    int cidx = m_cache.lastIndexOf(cacheItem);
     if (cidx >= 0) {
         m_compositor.clearFlags(Compositor::Cache, cidx, 1, Compositor::CacheFlag);
         m_cache.removeAt(cidx);
