@@ -56,13 +56,14 @@ Rectangle {
     width: 120
     height: 120
     color: th.pressed ? "steelBlue" : "lightGray"
+    containsMask: ctr
+
+    TapHandler { id: th }
 
     Shape {
         id: ctr
         anchors.fill: parent
         containsMode: Shape.FillContains
-
-        TapHandler { id: th }
 
         ShapePath {
             strokeColor: "red"
