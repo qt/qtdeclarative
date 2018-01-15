@@ -170,17 +170,17 @@ public:
 
     static void asyncShapeReady(void *data);
 
-    bool spChanged;
-    QQuickShape::RendererType rendererType;
-    bool async;
-    QQuickShape::Status status;
-    QQuickAbstractPathRenderer *renderer;
     QVector<QQuickShapePath *> sp;
-    bool enableVendorExts;
-    bool syncTimingActive = false;
-    int syncTimingTotalDirty;
-    int syncTimeCounter = 0;
     QElapsedTimer syncTimer;
+    QQuickAbstractPathRenderer *renderer = nullptr;
+    int syncTimingTotalDirty = 0;
+    int syncTimeCounter = 0;
+    QQuickShape::Status status = QQuickShape::Null;
+    QQuickShape::RendererType rendererType = QQuickShape::UnknownRenderer;
+    bool spChanged = false;
+    bool async = false;
+    bool enableVendorExts = true;
+    bool syncTimingActive = false;
 };
 
 #if QT_CONFIG(opengl)
