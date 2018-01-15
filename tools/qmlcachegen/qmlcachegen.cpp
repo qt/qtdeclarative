@@ -47,6 +47,23 @@ Q_QML_EXPORT QV4::EvalISelFactory *createISelForArchitecture(const QString &arch
 
 QT_END_NAMESPACE
 
+QSet<QString> illegalNames;
+
+void setupIllegalNames()
+{
+    // #### this in incomplete
+    illegalNames.insert(QStringLiteral("Math"));
+    illegalNames.insert(QStringLiteral("Array"));
+    illegalNames.insert(QStringLiteral("String"));
+    illegalNames.insert(QStringLiteral("Function"));
+    illegalNames.insert(QStringLiteral("Boolean"));
+    illegalNames.insert(QStringLiteral("Number"));
+    illegalNames.insert(QStringLiteral("Date"));
+    illegalNames.insert(QStringLiteral("RegExp"));
+    illegalNames.insert(QStringLiteral("Error"));
+    illegalNames.insert(QStringLiteral("Object"));
+}
+
 struct Error
 {
     QString message;
@@ -165,7 +182,6 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
     }
 
     {
-        QSet<QString> illegalNames; // ####
         QmlIR::IRBuilder irBuilder(illegalNames);
         if (!irBuilder.generateFromQml(sourceCode, inputFileName, &irDocument)) {
             for (const QQmlJS::DiagnosticMessage &parseError: qAsConst(irBuilder.errors)) {
@@ -183,7 +199,7 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
         QmlIR::JSCodeGen v4CodeGen(/*empty input file name*/QString(), QString(), irDocument.code,
                                    &irDocument.jsModule, &irDocument.jsParserEngine,
                                    irDocument.program, /*import cache*/0,
-                                   &irDocument.jsGenerator.stringTable);
+                                   &irDocument.jsGenerator.stringTable, illegalNames);
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0)
                 continue;
@@ -295,7 +311,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &outputFil
         QmlIR::JSCodeGen v4CodeGen(inputFileName, inputFileName,
                                    irDocument.code, &irDocument.jsModule,
                                    &irDocument.jsParserEngine, irDocument.program,
-                                   /*import cache*/0, &irDocument.jsGenerator.stringTable);
+                                   /*import cache*/0, &irDocument.jsGenerator.stringTable, illegalNames);
         v4CodeGen.generateFromProgram(/*empty input file name*/QString(), QString(), sourceCode,
                                       program, &irDocument.jsModule, QQmlJS::Codegen::GlobalCode);
         QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();

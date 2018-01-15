@@ -243,11 +243,12 @@ private:
     }
 };
 
-void Name::initGlobal(const QString *id, quint32 line, quint32 column)
+void Name::initGlobal(const QString *id, quint32 line, quint32 column, bool forceLookup)
 {
     this->id = id;
     this->builtin = builtin_invalid;
     this->global = true;
+    this->forceLookup = forceLookup;
     this->qmlSingleton = false;
     this->freeOfSideEffects = false;
     this->line = line;
@@ -259,6 +260,7 @@ void Name::init(const QString *id, quint32 line, quint32 column)
     this->id = id;
     this->builtin = builtin_invalid;
     this->global = false;
+    this->forceLookup = false;
     this->qmlSingleton = false;
     this->freeOfSideEffects = false;
     this->line = line;
@@ -270,6 +272,7 @@ void Name::init(Builtin builtin, quint32 line, quint32 column)
     this->id = 0;
     this->builtin = builtin;
     this->global = false;
+    this->forceLookup = false;
     this->qmlSingleton = false;
     this->freeOfSideEffects = false;
     this->line = line;

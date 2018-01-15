@@ -168,7 +168,7 @@ void InstructionSelection<JITAssembler>::callBuiltinInvalid(IR::Name *func, IR::
 {
     prepareCallData(args, 0);
 
-    if (useFastLookups && func->global) {
+    if ((useFastLookups || func->forceLookup) && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
         generateRuntimeCall(_as, result, callGlobalLookup,
                              JITTargetPlatform::EngineRegister,
@@ -517,7 +517,7 @@ void InstructionSelection<JITAssembler>::loadRegexp(IR::RegExp *sourceRegexp, IR
 template <typename JITAssembler>
 void InstructionSelection<JITAssembler>::getActivationProperty(const IR::Name *name, IR::Expr *target)
 {
-    if (useFastLookups && name->global) {
+    if ((useFastLookups || name->forceLookup) && name->global) {
         uint index = registerGlobalGetterLookup(*name->id);
         generateLookupCall(target, index, offsetof(QV4::Lookup, globalGetter), JITTargetPlatform::EngineRegister, JITAssembler::Void);
         return;
@@ -1128,7 +1128,7 @@ void InstructionSelection<JITAssembler>::constructActivationProperty(IR::Name *f
     Q_ASSERT(func != 0);
     prepareCallData(args, 0);
 
-    if (useFastLookups && func->global) {
+    if ((useFastLookups || func->forceLookup) && func->global) {
         uint index = registerGlobalGetterLookup(*func->id);
         generateRuntimeCall(_as, result, constructGlobalLookup,
                              JITTargetPlatform::EngineRegister,
