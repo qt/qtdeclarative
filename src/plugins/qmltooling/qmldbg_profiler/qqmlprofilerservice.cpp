@@ -296,10 +296,11 @@ void QQmlProfilerServiceImpl::stopProfiling(QJSEngine *engine)
     for (QMultiHash<QJSEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
             i != m_engineProfilers.end(); ++i) {
         if (i.value()->isRunning()) {
+            m_startTimes.insert(-1, i.value());
             if (engine == 0 || i.key() == engine) {
-                m_startTimes.insert(-1, i.value());
                 stopping << i.value();
             } else {
+                reporting << i.value();
                 stillRunning = true;
             }
         }
@@ -368,25 +369,32 @@ void QQmlProfilerServiceImpl::sendMessages()
         }
     }
 
+    bool stillRunning = false;
+    for (const QQmlAbstractProfilerAdapter *profiler : qAsConst(m_engineProfilers)) {
+        if (profiler->isRunning()) {
+            stillRunning = true;
+            break;
+        }
+    }
+
     if (m_waitingForStop) {
-        //indicate completion
+        // EndTrace can be sent multiple times, as it's engine specific.
         messages << traceEnd.data();
 
-        QQmlDebugPacket ds;
-        ds << (qint64)-1 << (int)Complete;
-        messages << ds.data();
-        m_waitingForStop = false;
+        if (!stillRunning) {
+            // Complete is only sent once, when no engines are running anymore.
+            QQmlDebugPacket ds;
+            ds << (qint64)-1 << (int)Complete;
+            messages << ds.data();
+            m_waitingForStop = false;
+        }
     }
 
     emit messagesToClient(name(), messages);
 
     // Restart flushing if any profilers are still running
-    for (const QQmlAbstractProfilerAdapter *profiler : qAsConst(m_engineProfilers)) {
-        if (profiler->isRunning()) {
-            emit startFlushTimer();
-            break;
-        }
-    }
+    if (stillRunning)
+        emit startFlushTimer();
 }
 
 void QQmlProfilerServiceImpl::stateAboutToBeChanged(QQmlDebugService::State newState)
