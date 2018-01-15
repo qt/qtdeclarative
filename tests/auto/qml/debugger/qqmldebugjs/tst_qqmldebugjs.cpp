@@ -28,8 +28,8 @@
 
 #include "debugutil_p.h"
 #include "qqmldebugprocess_p.h"
-#include "../../shared/qqmlenginedebugclient.h"
-#include "../../../../shared/util.h"
+#include "../shared/qqmlenginedebugclient.h"
+#include "../../../shared/util.h"
 
 #include <private/qqmldebugclient_p.h>
 #include <private/qqmldebugconnection_p.h>
@@ -770,7 +770,7 @@ QQmlDebugTest::ConnectResult tst_QQmlDebugJS::init(bool qmlscene, const QString 
 {
     const QString executable = qmlscene
             ? QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene"
-            : QCoreApplication::applicationDirPath() + QLatin1String("/qqmldebugjsserver");
+            : debugJsServerPath("qqmldebugjs");
     return QQmlDebugTest::connect(
                 executable, restrictServices ? QStringLiteral("V8Debugger") : QString(),
                 testFile(qmlFile), blockMode);

@@ -34,6 +34,7 @@
 #include <private/qqmldebugconnection_p.h>
 
 #include <QtTest/qtest.h>
+#include <QtTest/qsignalspy.h>
 #include <QtCore/qlibraryinfo.h>
 
 #include <QtGui/private/qguiapplication_p.h>
@@ -195,7 +196,9 @@ private:
     };
 
     ConnectResult connect(bool block, const QString &testFile, bool recordFromStart = true,
-                          uint flushInterval = 0, bool restrictServices = true);
+                          uint flushInterval = 0, bool restrictServices = true,
+                          const QString &executable
+            = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
     void checkProcessTerminated();
     void checkTraceReceived();
     void checkJsHeap();
@@ -221,6 +224,7 @@ private slots:
     void translationBinding();
     void memory();
     void compile();
+    void multiEngine();
 
 private:
     bool m_recordFromStart = true;
@@ -237,7 +241,7 @@ private:
 
 QQmlDebugTest::ConnectResult tst_QQmlProfilerService::connect(
         bool block, const QString &file, bool recordFromStart, uint flushInterval,
-        bool restrictServices)
+        bool restrictServices, const QString &executable)
 {
     m_recordFromStart = recordFromStart;
     m_flushInterval = flushInterval;
@@ -245,7 +249,7 @@ QQmlDebugTest::ConnectResult tst_QQmlProfilerService::connect(
 
     // ### Still using qmlscene due to QTBUG-33377
     return QQmlDebugTest::connect(
-                QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
+                executable,
                 restrictServices ? "CanvasFrameRate,EngineControl,DebugMessages" : QString(),
                 testFile(file), block);
 }
@@ -804,6 +808,22 @@ void tst_QQmlProfilerService::compile()
     }
 
     QCOMPARE(rangeStage, RangeEnd);
+}
+
+void tst_QQmlProfilerService::multiEngine()
+{
+    QCOMPARE(connect(true, "quit.qml", true, 0, false, debugJsServerPath("qqmlprofilerservice")),
+             ConnectSuccess);
+
+    QSignalSpy spy(m_client->client, SIGNAL(complete(qint64)));
+
+    checkTraceReceived();
+    checkJsHeap();
+
+    QTRY_COMPARE(m_process->state(), QProcess::NotRunning);
+    QCOMPARE(m_process->exitStatus(), QProcess::NormalExit);
+
+    QCOMPARE(spy.count(), 1);
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)

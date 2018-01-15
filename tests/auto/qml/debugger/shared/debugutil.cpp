@@ -252,3 +252,12 @@ void ClientStateHandler::checkStates()
     m_othersAsExpected = true;
     emit allOk();
 }
+
+QString debugJsServerPath(const QString &selfPath)
+{
+    static const char *debugserver = "qqmldebugjsserver";
+    QString appPath = QCoreApplication::applicationDirPath();
+    const int position = appPath.lastIndexOf(selfPath);
+    return (position == -1 ? appPath : appPath.replace(position, selfPath.length(), debugserver))
+            + "/" + debugserver;
+}

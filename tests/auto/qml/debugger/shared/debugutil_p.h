@@ -141,4 +141,6 @@ private:
     bool m_othersAsExpected = false;
 };
 
+QString debugJsServerPath(const QString &selfPath);
+
 #endif // DEBUGUTIL_P_H
