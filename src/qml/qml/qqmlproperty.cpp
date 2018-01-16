@@ -223,6 +223,22 @@ QQmlProperty::QQmlProperty(QObject *obj, const QString &name, QQmlEngine *engine
     if (!isValid()) { d->object = 0; d->context = 0; d->engine = 0; }
 }
 
+QQmlProperty QQmlPropertyPrivate::create(QObject *target, const QString &propertyName, QQmlContextData *context)
+{
+    QQmlProperty result;
+    auto d = new QQmlPropertyPrivate;
+    result.d = d;
+    d->context = context;
+    d->engine = context->engine;
+    d->initProperty(target, propertyName);
+    if (!result.isValid()) {
+        d->object = nullptr;
+        d->context = nullptr;
+        d->engine = nullptr;
+    }
+    return result;
+}
+
 QQmlPropertyPrivate::QQmlPropertyPrivate()
 : context(0), engine(0), object(0), isNameCached(false)
 {
