@@ -214,6 +214,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     internalClasses[Class_SimpleArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SimpleArrayData::staticVTable());
     internalClasses[Class_SparseArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SparseArrayData::staticVTable());
     internalClasses[Class_ExecutionContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::ExecutionContext::staticVTable());
+    internalClasses[EngineBase::Class_QmlContext] = internalClasses[EngineBase::Class_ExecutionContext]->changeVTable(QV4::QmlContext::staticVTable());
     internalClasses[Class_CallContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::CallContext::staticVTable());
 
     jsStrings[String_Empty] = newIdentifier(QString());
@@ -256,6 +257,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     InternalClass *ic = internalClasses[Class_Empty]->changeVTable(QV4::Object::staticVTable());
     jsObjects[ObjectProto] = memoryManager->allocObject<ObjectPrototype>(ic);
     internalClasses[Class_Object] = ic->changePrototype(objectPrototype()->d());
+    internalClasses[EngineBase::Class_QmlContextWrapper] = internalClasses[Class_Object]->changeVTable(QV4::QmlContextWrapper::staticVTable());
 
     ic = newInternalClass(ArrayPrototype::staticVTable(), objectPrototype());
     Q_ASSERT(ic->prototype);

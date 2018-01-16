@@ -88,6 +88,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 {
     V4_OBJECT2(QmlContextWrapper, Object)
     V4_NEEDS_DESTROY
+    V4_INTERNALCLASS(QmlContextWrapper)
 
     inline QObject *getScopeObject() const { return d()->scopeObject; }
     inline QQmlContextData *getContext() const { return *d()->context; }
@@ -101,6 +102,7 @@ struct Q_QML_EXPORT QmlContextWrapper : Object
 struct Q_QML_EXPORT QmlContext : public ExecutionContext
 {
     V4_MANAGED(QmlContext, ExecutionContext)
+    V4_INTERNALCLASS(QmlContext)
 
     static Heap::QmlContext *createWorkerContext(QV4::ExecutionContext *parent, const QUrl &source, Value *sendFunction);
     static Heap::QmlContext *create(QV4::ExecutionContext *parent, QQmlContextData *context, QObject *scopeObject);
