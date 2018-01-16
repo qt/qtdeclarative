@@ -64,6 +64,7 @@ public:
     ~QQuickTumblerPrivate();
 
     enum ContentItemType {
+        NoContentItem,
         UnsupportedContentItemType,
         PathViewContentItem,
         ListViewContentItem
@@ -107,6 +108,34 @@ public:
 
     void itemChildAdded(QQuickItem *, QQuickItem *) override;
     void itemChildRemoved(QQuickItem *, QQuickItem *) override;
+};
+
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumblerAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
+{
+    Q_DECLARE_PUBLIC(QQuickTumblerAttached)
+
+public:
+    QQuickTumblerAttachedPrivate();
+
+    void init(QQuickItem *delegateItem);
+
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
+    void itemChildAdded(QQuickItem *, QQuickItem *) override;
+    void itemChildRemoved(QQuickItem *, QQuickItem *) override;
+
+    void _q_calculateDisplacement();
+    void emitIfDisplacementChanged(qreal oldDisplacement, qreal newDisplacement);
+
+    void viewDataSetUp();
+
+    static QQuickTumblerAttachedPrivate *get(QQuickTumblerAttached *attached);
+
+    // The Tumbler that contains the delegate. Required to calculated the displacement.
+    QPointer<QQuickTumbler> tumbler;
+    // The index of the delegate. Used to calculate the displacement.
+    int index;
+    // The displacement for our delegate.
+    qreal displacement;
 };
 
 QT_END_NAMESPACE
