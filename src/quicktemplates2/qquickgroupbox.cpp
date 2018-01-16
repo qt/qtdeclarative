@@ -91,6 +91,7 @@ class QQuickGroupBoxPrivate : public QQuickFramePrivate
 public:
     QQuickGroupBoxPrivate() : label(nullptr) { }
 
+    void cancelLabel();
     void executeLabel(bool complete = false);
 
     QString title;
@@ -99,13 +100,19 @@ public:
 
 static inline QString labelName() { return QStringLiteral("label"); }
 
+void QQuickGroupBoxPrivate::cancelLabel()
+{
+    Q_Q(QQuickGroupBox);
+    quickCancelDeferred(q, labelName());
+}
+
 void QQuickGroupBoxPrivate::executeLabel(bool complete)
 {
     Q_Q(QQuickGroupBox);
     if (label.wasExecuted())
         return;
 
-    if (!label)
+    if (!label || complete)
         quickBeginDeferred(q, labelName(), label);
     if (complete)
         quickCompleteDeferred(q, labelName(), label);
@@ -161,6 +168,9 @@ void QQuickGroupBox::setLabel(QQuickItem *label)
     Q_D(QQuickGroupBox);
     if (d->label == label)
         return;
+
+    if (!d->label.isExecuting())
+        d->cancelLabel();
 
     delete d->label;
     d->label = label;

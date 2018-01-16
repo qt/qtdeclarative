@@ -51,6 +51,8 @@
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 #endif
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#include <QtQuickControls2/private/qquickclippedtext_p.h>
+#include <QtQuickControls2/private/qquickitemgroup_p.h>
 
 #include "qquickdefaultbusyindicator_p.h"
 #include "qquickdefaultdial_p.h"
@@ -186,16 +188,24 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     const QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
 
+    // QtQuick.Controls.impl 2.0 (Qt 5.7)
     qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
     qmlRegisterType<QQuickDefaultDial>(import, 2, 0, "DialImpl");
     qmlRegisterType<QQuickPaddedRectangle>(import, 2, 0, "PaddedRectangle");
     qmlRegisterType<QQuickDefaultProgressBar>(import, 2, 0, "ProgressBarImpl");
-    qmlRegisterType<QQuickPlaceholderText>(import, 2, 2, "PlaceholderText");
+
+    // QtQuick.Controls.impl 2.1 (Qt 5.8)
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
 #endif
     qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", styleSingleton);
 
+    // QtQuick.Controls.impl 2.2 (Qt 5.9)
+    qmlRegisterType<QQuickClippedText>(import, 2, 2, "ClippedText");
+    qmlRegisterType<QQuickItemGroup>(import, 2, 2, "ItemGroup");
+    qmlRegisterType<QQuickPlaceholderText>(import, 2, 2, "PlaceholderText");
+
+    // QtQuick.Controls.impl 2.3 (Qt 5.10)
     qmlRegisterType<QQuickColorImage>(import, 2, 3, "ColorImage");
     qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");
     qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", colorSingleton);

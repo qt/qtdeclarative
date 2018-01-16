@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKTEMPLATES2VALUETYPEPROVIDER_P_H
-#define QQUICKTEMPLATES2VALUETYPEPROVIDER_P_H
+#ifndef QQUICKPALETTEPROVIDER_P_H
+#define QQUICKPALETTEPROVIDER_P_H
 
 //
 //  W A R N I N G
@@ -48,13 +48,17 @@
 // We mean it.
 //
 
+#include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 #include <QtQml/private/qqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickTemplates2ValueTypeProvider : public QQmlValueTypeProvider
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPaletteProvider : public QQmlValueTypeProvider
 {
 public:
+    static void init();
+    static void cleanup();
+
     const QMetaObject *getMetaObjectForMetaType(int type) override;
     bool init(int type, QVariant& dst) override;
     bool equal(int type, const void *lhs, const QVariant &rhs) override;

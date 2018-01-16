@@ -34,12 +34,28 @@
 **
 ****************************************************************************/
 
-#include "qquicktemplates2valuetypeprovider_p.h"
+#include "qquickpaletteprovider_p.h"
+#include "qquickpalette_p.h"
 
 #include <QtQml/private/qqmlvaluetype_p.h>
-#include <QtQuickTemplates2/private/qquickpalette_p.h>
 
 QT_BEGIN_NAMESPACE
+
+static QQmlValueTypeProvider *instance()
+{
+    static QQuickPaletteProvider provider;
+    return &provider;
+}
+
+void QQuickPaletteProvider::init()
+{
+    QQml_addValueTypeProvider(instance());
+}
+
+void QQuickPaletteProvider::cleanup()
+{
+    QQml_removeValueTypeProvider(instance());
+}
 
 #if defined(QT_NO_DEBUG) && !defined(QT_FORCE_ASSERTS)
     #define ASSERT_VALID_SIZE(size, min) Q_UNUSED(size)
@@ -47,7 +63,7 @@ QT_BEGIN_NAMESPACE
     #define ASSERT_VALID_SIZE(size, min) Q_ASSERT(size >= min)
 #endif
 
-const QMetaObject *QQuickTemplates2ValueTypeProvider::getMetaObjectForMetaType(int type)
+const QMetaObject *QQuickPaletteProvider::getMetaObjectForMetaType(int type)
 {
     switch (type) {
     case QMetaType::QPalette:
@@ -59,7 +75,7 @@ const QMetaObject *QQuickTemplates2ValueTypeProvider::getMetaObjectForMetaType(i
     return nullptr;
 }
 
-bool QQuickTemplates2ValueTypeProvider::init(int type, QVariant& dst)
+bool QQuickPaletteProvider::init(int type, QVariant& dst)
 {
     switch (type) {
     case QMetaType::QPalette:
@@ -77,7 +93,7 @@ bool typedEqual(const void *lhs, const QVariant& rhs)
     return (*(reinterpret_cast<const T *>(lhs)) == rhs.value<T>());
 }
 
-bool QQuickTemplates2ValueTypeProvider::equal(int type, const void *lhs, const QVariant &rhs)
+bool QQuickPaletteProvider::equal(int type, const void *lhs, const QVariant &rhs)
 {
     switch (type) {
     case QMetaType::QPalette:
@@ -98,7 +114,7 @@ bool typedStore(const void *src, void *dst, size_t dstSize)
     return true;
 }
 
-bool QQuickTemplates2ValueTypeProvider::store(int type, const void *src, void *dst, size_t dstSize)
+bool QQuickPaletteProvider::store(int type, const void *src, void *dst, size_t dstSize)
 {
     switch (type) {
     case QMetaType::QPalette:
@@ -121,7 +137,7 @@ bool typedRead(const QVariant& src, int dstType, void *dst)
     return true;
 }
 
-bool QQuickTemplates2ValueTypeProvider::read(const QVariant &src, void *dst, int dstType)
+bool QQuickPaletteProvider::read(const QVariant &src, void *dst, int dstType)
 {
     switch (dstType) {
     case QMetaType::QPalette:
@@ -143,7 +159,7 @@ bool typedWrite(const void *src, QVariant& dst)
     return false;
 }
 
-bool QQuickTemplates2ValueTypeProvider::write(int type, const void *src, QVariant& dst)
+bool QQuickPaletteProvider::write(int type, const void *src, QVariant& dst)
 {
     switch (type) {
     case QMetaType::QPalette:

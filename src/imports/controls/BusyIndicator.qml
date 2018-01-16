@@ -53,8 +53,9 @@ T.BusyIndicator {
 
         pen: control.palette.dark
         fill: control.palette.dark
+
+        running: control.running
         opacity: control.running ? 1 : 0
-        visible: control.running || animator.running
-        Behavior on opacity { OpacityAnimator { id: animator; duration: 250 } }
+        Behavior on opacity { OpacityAnimator { duration: 250 } }
     }
 }

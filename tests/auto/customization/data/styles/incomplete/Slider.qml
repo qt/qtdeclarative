@@ -59,10 +59,6 @@ T.Slider {
         objectName: "slider-handle-incomplete"
     }
 
-    contentItem: Item {
-        objectName: "slider-contentItem-incomplete"
-    }
-
     background: Item {
         objectName: "slider-background-incomplete"
     }

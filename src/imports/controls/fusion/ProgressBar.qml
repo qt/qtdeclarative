@@ -80,7 +80,6 @@ T.ProgressBar {
             clip: true
 
             ColorImage {
-                id: mask
                 width: Math.ceil(parent.width / implicitWidth + 1) * implicitWidth
                 height: parent.height
 
@@ -92,7 +91,7 @@ T.ProgressBar {
                 visible: control.indeterminate
                 NumberAnimation on x {
                     running: control.indeterminate && control.visible
-                    from: -mask.implicitWidth
+                    from: -31 // progressmask.png width
                     to: 0
                     loops: Animation.Infinite
                     duration: 750

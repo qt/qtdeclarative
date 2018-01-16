@@ -123,6 +123,7 @@ public:
     void handleRelease(const QPointF &point) override;
     void handleUngrab() override;
 
+    void cancelHandle();
     void executeHandle(bool complete = false);
 
     qreal from;
@@ -258,13 +259,19 @@ void QQuickDialPrivate::handleUngrab()
 
 static inline QString handleName() { return QStringLiteral("handle"); }
 
+void QQuickDialPrivate::cancelHandle()
+{
+    Q_Q(QQuickDial);
+    quickCancelDeferred(q, handleName());
+}
+
 void QQuickDialPrivate::executeHandle(bool complete)
 {
     Q_Q(QQuickDial);
     if (handle.wasExecuted())
         return;
 
-    if (!handle)
+    if (!handle || complete)
         quickBeginDeferred(q, handleName(), handle);
     if (complete)
         quickCompleteDeferred(q, handleName(), handle);
@@ -552,6 +559,9 @@ void QQuickDial::setHandle(QQuickItem *handle)
     Q_D(QQuickDial);
     if (handle == d->handle)
         return;
+
+    if (!d->handle.isExecuting())
+        d->cancelHandle();
 
     delete d->handle;
     d->handle = handle;

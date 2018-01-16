@@ -58,6 +58,7 @@ class QQuickDefaultBusyIndicator : public QQuickItem
     Q_OBJECT
     Q_PROPERTY(QColor pen READ pen WRITE setPen FINAL)
     Q_PROPERTY(QColor fill READ fill WRITE setFill FINAL)
+    Q_PROPERTY(bool running READ isRunning WRITE setRunning)
 
 public:
     explicit QQuickDefaultBusyIndicator(QQuickItem *parent = nullptr);
@@ -67,6 +68,9 @@ public:
 
     QColor fill() const;
     void setFill(const QColor &fill);
+
+    bool isRunning() const;
+    void setRunning(bool running);
 
     int elapsed() const;
 

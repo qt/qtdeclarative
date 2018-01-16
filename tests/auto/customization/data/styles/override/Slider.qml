@@ -59,10 +59,6 @@ Simple.Slider {
         objectName: "slider-handle-override"
     }
 
-    contentItem: Item {
-        objectName: "slider-contentItem-override"
-    }
-
     background: Item {
         objectName: "slider-background-override"
     }

@@ -55,10 +55,6 @@ T.ScrollView {
     id: control
     objectName: "scrollview-incomplete"
 
-    contentItem: Flickable {
-        objectName: "scrollview-contentItem-incomplete"
-    }
-
     background: Item {
         objectName: "scrollview-background-incomplete"
     }

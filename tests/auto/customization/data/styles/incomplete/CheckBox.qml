@@ -62,8 +62,4 @@ T.CheckBox {
     contentItem: Item {
         objectName: "checkbox-contentItem-incomplete"
     }
-
-    background: Item {
-        objectName: "checkbox-background-incomplete"
-    }
 }

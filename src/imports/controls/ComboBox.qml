@@ -88,7 +88,6 @@ T.ComboBox {
         color: control.editable ? control.palette.text : control.palette.buttonText
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
-        horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
 
         background: Rectangle {

@@ -71,7 +71,7 @@ T.ComboBox {
                 {"disabled": !control.enabled},
                 {"pressed": control.pressed},
                 {"editable": control.editable},
-                {"open": control.popup.visible},
+                {"open": control.down},
                 {"focused": control.visualFocus},
                 {"mirrored": control.mirrored},
                 {"hovered": control.hovered},
@@ -90,7 +90,7 @@ T.ComboBox {
 
         enabled: control.editable
         autoScroll: control.editable
-        readOnly: control.popup.visible
+        readOnly: control.down
         inputMethodHints: control.inputMethodHints
         validator: control.validator
 
@@ -112,7 +112,7 @@ T.ComboBox {
                 {"disabled": !control.enabled},
                 {"pressed": control.pressed},
                 {"editable": control.editable},
-                {"open": control.popup.visible},
+                {"open": control.down},
                 {"focused": control.visualFocus || (control.editable && control.activeFocus)},
                 {"mirrored": control.mirrored},
                 {"hovered": control.hovered},
@@ -142,7 +142,7 @@ T.ComboBox {
         contentItem: ListView {
             clip: true
             implicitHeight: contentHeight
-            model: control.popup.visible ? control.delegateModel : null
+            model: control.delegateModel
             currentIndex: control.highlightedIndex
             highlightMoveDuration: 0
 

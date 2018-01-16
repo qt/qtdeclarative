@@ -57,12 +57,16 @@ class QQuickMaterialBusyIndicator : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor FINAL)
+    Q_PROPERTY(bool running READ isRunning WRITE setRunning FINAL)
 
 public:
     explicit QQuickMaterialBusyIndicator(QQuickItem *parent = nullptr);
 
     QColor color() const;
     void setColor(QColor color);
+
+    bool isRunning() const;
+    void setRunning(bool running);
 
     int elapsed() const;
 

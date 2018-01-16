@@ -140,10 +140,11 @@ public:
     static bool calcHoverEnabled(const QQuickItem *item);
 #endif
 
-    void executeContentItem(bool complete = false);
-    void executeBackground(bool complete = false);
+    virtual void cancelContentItem();
+    virtual void executeContentItem(bool complete = false);
 
-    static void destroyDelegate(QObject *object, QObject *parent);
+    virtual void cancelBackground();
+    virtual void executeBackground(bool complete = false);
 
     struct ExtraData {
         ExtraData();

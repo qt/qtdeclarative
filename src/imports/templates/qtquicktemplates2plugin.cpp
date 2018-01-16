@@ -67,6 +67,7 @@
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickpage_p.h>
 #include <QtQuickTemplates2/private/qquickpageindicator_p.h>
+#include <QtQuickTemplates2/private/qquickpaletteprovider_p.h>
 #include <QtQuickTemplates2/private/qquickpane_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquickprogressbar_p.h>
@@ -98,8 +99,6 @@
 #include <QtQuickTemplates2/private/qquicktumbler_p.h>
 #endif
 
-#include "qquicktemplates2valuetypeprovider_p.h"
-
 static inline void initResources()
 {
 #ifdef QT_STATIC
@@ -116,20 +115,14 @@ extern void qt_quick_set_shortcut_context_matcher(ShortcutContextMatcher matcher
 
 QT_BEGIN_NAMESPACE
 
-static QQmlValueTypeProvider *valueTypeProvider()
-{
-    static QQuickTemplates2ValueTypeProvider provider;
-    return &provider;
-}
-
 static void initProviders()
 {
-    QQml_addValueTypeProvider(valueTypeProvider());
+    QQuickPaletteProvider::init();
 }
 
 static void cleanupProviders()
 {
-    QQml_removeValueTypeProvider(valueTypeProvider());
+    QQuickPaletteProvider::cleanup();
 }
 
 class QtQuickTemplates2Plugin: public QQmlExtensionPlugin
@@ -144,15 +137,16 @@ public:
     void registerTypes(const char *uri) override;
 
 private:
+    bool registered;
 #if QT_CONFIG(shortcut)
     ShortcutContextMatcher originalContextMatcher;
 #endif
 };
 
-QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent) : QQmlExtensionPlugin(parent)
+QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent)
+    : QQmlExtensionPlugin(parent), registered(false)
 {
     initResources();
-    initProviders();
 
 #if QT_CONFIG(shortcut)
     originalContextMatcher = qt_quick_shortcut_context_matcher();
@@ -162,7 +156,8 @@ QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent) : QQmlExtensio
 
 QtQuickTemplates2Plugin::~QtQuickTemplates2Plugin()
 {
-    cleanupProviders();
+    if (registered)
+        cleanupProviders();
 
 #if QT_CONFIG(shortcut)
     qt_quick_set_shortcut_context_matcher(originalContextMatcher);
@@ -171,6 +166,9 @@ QtQuickTemplates2Plugin::~QtQuickTemplates2Plugin()
 
 void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 {
+    registered = true;
+    initProviders();
+
     qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
 
     // QtQuick.Templates 2.0 (originally introduced in Qt 5.7)
@@ -253,7 +251,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickPage, 1>(uri, 2, 1, "Page");
     qmlRegisterType<QQuickPopup, 1>(uri, 2, 1, "Popup");
     qmlRegisterType<QQuickRangeSlider, 1>(uri, 2, 1, "RangeSlider");
-    qmlRegisterType<QQuickRoundButton, 1>(uri, 2, 1, "RoundButton");
+    qmlRegisterType<QQuickRoundButton>(uri, 2, 1, "RoundButton");
     qmlRegisterType<QQuickSlider, 1>(uri, 2, 1, "Slider");
     qmlRegisterType<QQuickSpinBox, 1>(uri, 2, 1, "SpinBox");
     qmlRegisterType<QQuickStackView, 1>(uri, 2, 1, "StackView");

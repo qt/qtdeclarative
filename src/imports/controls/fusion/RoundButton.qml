@@ -72,18 +72,16 @@ T.RoundButton {
         implicitHeight: 32
         visible: !control.flat || control.down || control.checked
 
-        color: Fusion.buttonColor(control.palette, control.highlighted, control.down || control.checked, control.hovered)
-        gradient: control.down || control.checked ? null : buttonGradient
-
-        Gradient {
-            id: buttonGradient
+        gradient: Gradient {
             GradientStop {
                 position: 0
-                color: Fusion.gradientStart(Fusion.buttonColor(control.palette, control.highlighted, control.down, control.hovered))
+                color: control.down || control.checked ? Fusion.buttonColor(control.palette, control.highlighted, control.down || control.checked, control.hovered)
+                                                       : Fusion.gradientStart(Fusion.buttonColor(control.palette, control.highlighted, control.down, control.hovered))
             }
             GradientStop {
                 position: 1
-                color: Fusion.gradientStop(Fusion.buttonColor(control.palette, control.highlighted, control.down, control.hovered))
+                color: control.down || control.checked ? Fusion.buttonColor(control.palette, control.highlighted, control.down || control.checked, control.hovered)
+                                                       : Fusion.gradientStop(Fusion.buttonColor(control.palette, control.highlighted, control.down, control.hovered))
             }
         }
 

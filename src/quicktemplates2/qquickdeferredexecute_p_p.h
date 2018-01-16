@@ -58,25 +58,28 @@ class QObject;
 
 namespace QtQuickPrivate {
     void beginDeferred(QObject *object, const QString &property);
+    void cancelDeferred(QObject *object, const QString &property);
     void completeDeferred(QObject *object, const QString &property);
 }
 
 template<typename T>
 void quickBeginDeferred(QObject *object, const QString &property, QQuickDeferredPointer<T> &delegate)
 {
-    Q_ASSERT(delegate.isNull());
     delegate.setExecuting(true);
     QtQuickPrivate::beginDeferred(object, property);
     delegate.setExecuting(false);
+}
+
+inline void quickCancelDeferred(QObject *object, const QString &property)
+{
+    QtQuickPrivate::cancelDeferred(object, property);
 }
 
 template<typename T>
 void quickCompleteDeferred(QObject *object, const QString &property, QQuickDeferredPointer<T> &delegate)
 {
     Q_ASSERT(!delegate.wasExecuted());
-    delegate.setExecuting(true);
     QtQuickPrivate::completeDeferred(object, property);
-    delegate.setExecuting(false);
     delegate.setExecuted();
 }
 

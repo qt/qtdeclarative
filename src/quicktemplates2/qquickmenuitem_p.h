@@ -63,6 +63,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuItem : public QQuickAbstractBut
     Q_PROPERTY(QQuickItem *arrow READ arrow WRITE setArrow NOTIFY arrowChanged FINAL REVISION 3)
     Q_PROPERTY(QQuickMenu *menu READ menu NOTIFY menuChanged FINAL REVISION 3)
     Q_PROPERTY(QQuickMenu *subMenu READ subMenu NOTIFY subMenuChanged FINAL REVISION 3)
+    Q_CLASSINFO("DeferredPropertyNames", "arrow,background,contentItem,indicator")
 
 public:
     explicit QQuickMenuItem(QQuickItem *parent = nullptr);
@@ -86,6 +87,8 @@ Q_SIGNALS:
     Q_REVISION(3) void subMenuChanged();
 
 protected:
+    void componentComplete() override;
+
     QFont defaultFont() const override;
     QPalette defaultPalette() const override;
 

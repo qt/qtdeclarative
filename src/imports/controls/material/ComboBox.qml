@@ -92,7 +92,6 @@ T.ComboBox {
         color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
         selectionColor: control.Material.accentColor
         selectedTextColor: control.Material.primaryHighlightedTextColor
-        horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
 
         cursorDelegate: CursorDelegate { }

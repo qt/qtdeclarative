@@ -184,6 +184,7 @@ public:
         return button->d_func();
     }
 
+    void cancelIndicator();
     void executeIndicator(bool complete = false);
 
     bool pressed;
@@ -1048,13 +1049,19 @@ void QQuickSpinBox::accessibilityActiveChanged(bool active)
 
 static inline QString indicatorName() { return QStringLiteral("indicator"); }
 
+void QQuickSpinButtonPrivate::cancelIndicator()
+{
+    Q_Q(QQuickSpinButton);
+    quickCancelDeferred(q, indicatorName());
+}
+
 void QQuickSpinButtonPrivate::executeIndicator(bool complete)
 {
     Q_Q(QQuickSpinButton);
     if (indicator.wasExecuted())
         return;
 
-    if (!indicator)
+    if (!indicator || complete)
         quickBeginDeferred(q, indicatorName(), indicator);
     if (complete)
         quickCompleteDeferred(q, indicatorName(), indicator);
@@ -1094,6 +1101,9 @@ void QQuickSpinButton::setIndicator(QQuickItem *indicator)
     Q_D(QQuickSpinButton);
     if (d->indicator == indicator)
         return;
+
+    if (!d->indicator.isExecuting())
+        d->cancelIndicator();
 
     delete d->indicator;
     d->indicator = indicator;

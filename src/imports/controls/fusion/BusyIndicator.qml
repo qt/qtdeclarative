@@ -54,12 +54,12 @@ T.BusyIndicator {
         implicitHeight: 28
         color: control.palette.text
 
+        running: control.running
         opacity: control.running ? 1 : 0
-        visible: control.running || opacityAnimator.running
-        Behavior on opacity { OpacityAnimator { id: opacityAnimator; duration: 250 } }
+        Behavior on opacity { OpacityAnimator { duration: 250 } }
 
         RotationAnimator on rotation {
-            running: control.running || opacityAnimator.running
+            running: control.running || contentItem.visible
             from: 0
             to: 360
             duration: 1000

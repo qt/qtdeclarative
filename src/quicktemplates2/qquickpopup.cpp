@@ -265,6 +265,7 @@ void QQuickPopupPrivate::init()
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
     QObject::connect(popupItem, &QQuickItem::enabledChanged, q, &QQuickPopup::enabledChanged);
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
+    QObject::connect(popupItem, &QQuickControl::backgroundChanged, q, &QQuickPopup::backgroundChanged);
     QObject::connect(popupItem, &QQuickControl::contentItemChanged, q, &QQuickPopup::contentItemChanged);
     positioner = new QQuickPopupPositioner(q);
 }
@@ -1605,11 +1606,7 @@ QQuickItem *QQuickPopup::background() const
 void QQuickPopup::setBackground(QQuickItem *background)
 {
     Q_D(QQuickPopup);
-    if (d->popupItem->background() == background)
-        return;
-
     d->popupItem->setBackground(background);
-    emit backgroundChanged();
 }
 
 /*!
@@ -1662,6 +1659,9 @@ void QQuickPopup::setContentItem(QQuickItem *item)
 QQmlListProperty<QObject> QQuickPopup::contentData()
 {
     Q_D(QQuickPopup);
+    QQuickControlPrivate *p = QQuickControlPrivate::get(d->popupItem);
+    if (!p->contentItem)
+        p->executeContentItem();
     return QQmlListProperty<QObject>(d->popupItem->contentItem(), nullptr,
                                      QQuickItemPrivate::data_append,
                                      QQuickItemPrivate::data_count,
@@ -2110,6 +2110,9 @@ void QQuickPopup::classBegin()
 {
     Q_D(QQuickPopup);
     d->complete = false;
+    QQmlContext *context = qmlContext(this);
+    if (context)
+        QQmlEngine::setContextForObject(d->popupItem, context);
     d->popupItem->classBegin();
 }
 

@@ -36,6 +36,7 @@
 
 #include "qquickpagelayout_p_p.h"
 #include "qquickcontrol_p.h"
+#include "qquickcontrol_p_p.h"
 #include "qquicktoolbar_p.h"
 #include "qquicktabbar_p.h"
 #include "qquickdialogbuttonbox_p.h"
@@ -140,17 +141,19 @@ bool QQuickPageLayout::setFooter(QQuickItem *footer)
 
 void QQuickPageLayout::update()
 {
-    QQuickItem *content = m_control->contentItem();
+    QQuickItem *content = QQuickControlPrivate::get(m_control)->contentItem;
 
     const qreal hh = m_header && m_header->isVisible() ? m_header->height() : 0;
     const qreal fh = m_footer && m_footer->isVisible() ? m_footer->height() : 0;
     const qreal hsp = hh > 0 ? m_control->spacing() : 0;
     const qreal fsp = fh > 0 ? m_control->spacing() : 0;
 
-    content->setY(m_control->topPadding() + hh + hsp);
-    content->setX(m_control->leftPadding());
-    content->setWidth(m_control->availableWidth());
-    content->setHeight(m_control->availableHeight() - hh - fh - hsp - fsp);
+    if (content) {
+        content->setY(m_control->topPadding() + hh + hsp);
+        content->setX(m_control->leftPadding());
+        content->setWidth(m_control->availableWidth());
+        content->setHeight(m_control->availableHeight() - hh - fh - hsp - fsp);
+    }
 
     if (m_header)
         m_header->setWidth(m_control->width());

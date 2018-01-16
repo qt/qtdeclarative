@@ -50,8 +50,6 @@ T.ScrollBar {
     visible: control.policy !== T.ScrollBar.AlwaysOff
 
     contentItem: Rectangle {
-        id: handle
-
         implicitWidth: control.interactive ? 13 : 4
         implicitHeight: control.interactive ? 13 : 4
 

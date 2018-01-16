@@ -62,8 +62,4 @@ Simple.RadioButton {
     contentItem: Item {
         objectName: "radiobutton-contentItem-override"
     }
-
-    background: Item {
-        objectName: "radiobutton-background-override"
-    }
 }

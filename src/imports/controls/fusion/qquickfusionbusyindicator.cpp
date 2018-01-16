@@ -59,11 +59,22 @@ void QQuickFusionBusyIndicator::setColor(const QColor &color)
     update();
 }
 
+bool QQuickFusionBusyIndicator::isRunning() const
+{
+    return isVisible();
+}
+
+void QQuickFusionBusyIndicator::setRunning(bool running)
+{
+    if (running)
+        setVisible(true);
+}
+
 void QQuickFusionBusyIndicator::paint(QPainter *painter)
 {
     const qreal w = width();
     const qreal h = height();
-    if (w <= 0 || h <= 0 || !isVisible())
+    if (w <= 0 || h <= 0 || !isRunning())
         return;
 
     const qreal sz = qMin(w, h);
@@ -85,6 +96,14 @@ void QQuickFusionBusyIndicator::paint(QPainter *painter)
     painter->drawArc(bounds, 0, 360 * 16);
     painter->setPen(QPen(m_color, pw, Qt::SolidLine, Qt::RoundCap));
     painter->drawArc(bounds, 0, 20 * 16);
+}
+
+void QQuickFusionBusyIndicator::itemChange(ItemChange change, const ItemChangeData &data)
+{
+    QQuickPaintedItem::itemChange(change, data);
+
+    if (change == ItemOpacityHasChanged && qFuzzyIsNull(data.realValue))
+        setVisible(false);
 }
 
 QT_END_NAMESPACE
