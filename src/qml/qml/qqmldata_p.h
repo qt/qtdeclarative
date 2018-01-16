@@ -156,18 +156,21 @@ public:
     quint32 hasInterceptorMetaObject:1;
     quint32 hasVMEMetaObject:1;
     quint32 parentFrozen:1;
-    quint32 dummy:22;
+    quint32 dummy:6;
 
     // When bindingBitsSize < sizeof(ptr), we store the binding bit flags inside
     // bindingBitsValue. When we need more than sizeof(ptr) bits, we allocated
     // sufficient space and use bindingBits to point to it.
-    int bindingBitsSize;
+    quint32 bindingBitsArraySize : 16;
     typedef quintptr BindingBitsType;
+    enum {
+        BitsPerType = sizeof(BindingBitsType) * 8,
+        InlineBindingArraySize = 2
+    };
     union {
         BindingBitsType *bindingBits;
-        BindingBitsType bindingBitsValue;
+        BindingBitsType bindingBitsValue[InlineBindingArraySize];
     };
-    enum { MaxInlineBits = sizeof(BindingBitsType) * 8 };
 
     struct NotifyList {
         quint64 connectionMask;
@@ -275,6 +278,9 @@ public:
         return createPropertyCache(engine, object);
     }
 
+    Q_ALWAYS_INLINE static uint offsetForBit(int bit) { return static_cast<uint>(bit) / BitsPerType; }
+    Q_ALWAYS_INLINE static BindingBitsType bitFlagForBit(int bit) { return BindingBitsType(1) << (static_cast<uint>(bit) & (BitsPerType - 1)); }
+
 private:
     // For attachedProperties
     mutable QQmlDataExtended *extendedData;
@@ -286,13 +292,12 @@ private:
 
     Q_ALWAYS_INLINE bool hasBitSet(int bit) const
     {
-        if (bindingBitsSize <= bit)
+        uint offset = offsetForBit(bit);
+        if (bindingBitsArraySize <= offset)
             return false;
 
-        if (bindingBitsSize == MaxInlineBits)
-            return bindingBitsValue & (BindingBitsType(1) << bit);
-        else
-            return bindingBits[bit / MaxInlineBits] & (BindingBitsType(1) << (bit % MaxInlineBits));
+        const BindingBitsType *bits = (bindingBitsArraySize == InlineBindingArraySize) ? bindingBitsValue : bindingBits;
+        return bits[offset] & bitFlagForBit(bit);
     }
 };
 
