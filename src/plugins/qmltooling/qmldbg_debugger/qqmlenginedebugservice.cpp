@@ -214,6 +214,8 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
         case QMetaType::QRectF:
         case QMetaType::QPoint:
         case QMetaType::QPointF:
+        case QMetaType::QSize:
+        case QMetaType::QSizeF:
         case QMetaType::QFont:
             // Don't call the toString() method on those. The stream operators are better.
             return value;
