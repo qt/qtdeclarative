@@ -879,7 +879,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         QQmlPropertyPrivate::removeBinding(_bindingTarget, QQmlPropertyIndex(property->coreIndex()));
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-        QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
+        QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions.at(binding->value.compiledScriptIndex);
 
         QV4::Scope scope(v4);
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, currentQmlContext());
