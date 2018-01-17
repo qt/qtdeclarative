@@ -12,8 +12,6 @@
 *
 [ids:imagine/ProgressBar.qml]
 *
-[ids:imagine/SpinBox.qml]
-*
 [ids:imagine/Switch.qml]
 *
 [ids:imagine/SwitchDelegate.qml]

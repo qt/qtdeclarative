@@ -98,7 +98,6 @@ T.SpinBox {
     }
 
     up.indicator: NinePatchImage {
-        id: upIndicator
         x: control.mirrored ? 0 : parent.width - width
         height: parent.height
 
@@ -106,7 +105,7 @@ T.SpinBox {
         NinePatchImageSelector on source {
             states: [
                 {"up": true},
-                {"disabled": !upIndicator.enabled},
+                {"disabled": !control.up.indicator.enabled},
                 {"editable": control.editable},
                 {"pressed": control.up.pressed},
                 {"focused": control.activeFocus},
@@ -117,7 +116,6 @@ T.SpinBox {
     }
 
     down.indicator: NinePatchImage {
-        id: downIndicator
         x: control.mirrored ? parent.width - width : 0
         height: parent.height
 
@@ -125,7 +123,7 @@ T.SpinBox {
         NinePatchImageSelector on source {
             states: [
                 {"down": true},
-                {"disabled": !downIndicator.enabled},
+                {"disabled": !control.down.indicator.enabled},
                 {"editable": control.editable},
                 {"pressed": control.down.pressed},
                 {"focused": control.activeFocus},
