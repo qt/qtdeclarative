@@ -123,7 +123,8 @@ private:
 
     void registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const;
 
-    QV4::Heap::QmlContext *currentQmlContext();
+    inline QV4::Heap::QmlContext *currentQmlContext();
+    Q_NEVER_INLINE void createQmlContext();
 
     enum Phase {
         Startup,
@@ -172,6 +173,14 @@ private:
     QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
     QRecursionWatcher<QQmlObjectCreatorSharedState, &QQmlObjectCreatorSharedState::recursionNode> watcher;
 };
+
+QV4::Heap::QmlContext *QQmlObjectCreator::currentQmlContext()
+{
+    if (Q_UNLIKELY(!_qmlContext->isManaged()))
+        createQmlContext(); // less common slow path
+
+    return _qmlContext->d();
+}
 
 QT_END_NAMESPACE
 

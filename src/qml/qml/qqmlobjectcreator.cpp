@@ -1103,12 +1103,9 @@ void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::O
         context->setIdProperty(object->id, instance);
 }
 
-QV4::Heap::QmlContext *QQmlObjectCreator::currentQmlContext()
+void QQmlObjectCreator::createQmlContext()
 {
-    if (!_qmlContext->isManaged())
-        _qmlContext->setM(QV4::QmlContext::create(v4->rootContext(), context, _scopeObject));
-
-    return _qmlContext->d();
+    _qmlContext->setM(QV4::QmlContext::create(v4->rootContext(), context, _scopeObject));
 }
 
 QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
