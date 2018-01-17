@@ -56,7 +56,7 @@ Tumbler {
         font: control.font
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        opacity: 1.0 - Math.abs(Tumbler.displacement) / (visibleItemCount / 2)
+        opacity: 1.0 - Math.abs(Tumbler.displacement) / (control.visibleItemCount / 2)
     }
 
     Rectangle {
