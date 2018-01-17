@@ -111,12 +111,6 @@ Q_DECLARE_METATYPE(QQmlProperty)
 
 QT_BEGIN_NAMESPACE
 
-typedef QQmlData::BindingBitsType BindingBitsType;
-enum {
-    BitsPerType = QQmlData::BitsPerType,
-    InlineBindingArraySize = QQmlData::InlineBindingArraySize
-};
-
 void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 {
     QQmlEnginePrivate::registerBaseTypes(uri, versionMajor, versionMinor);
@@ -1896,66 +1890,27 @@ void QQmlData::parentChanged(QObject *object, QObject *parent)
     }
 }
 
-static void QQmlData_setBit(QQmlData *data, QObject *obj, int bit)
+QQmlData::BindingBitsType *QQmlData::growBits(QObject *obj, int bit)
 {
-    uint offset = QQmlData::offsetForBit(bit);
-    BindingBitsType *bits = (data->bindingBitsArraySize == InlineBindingArraySize) ? data->bindingBitsValue : data->bindingBits;
-    if (Q_UNLIKELY(data->bindingBitsArraySize <= offset)) {
-        int props = QQmlMetaObject(obj).propertyCount();
-        Q_ASSERT(bit < 2 * props);
+    BindingBitsType *bits = (bindingBitsArraySize == InlineBindingArraySize) ? bindingBitsValue : bindingBits;
+    int props = QQmlMetaObject(obj).propertyCount();
+    Q_ASSERT(bit < 2 * props);
+    Q_UNUSED(bit); // .. for Q_NO_DEBUG mode when the assert above expands to empty
 
-        uint arraySize = (2 * static_cast<uint>(props) + BitsPerType - 1) / BitsPerType;
-        Q_ASSERT(arraySize > InlineBindingArraySize && arraySize > data->bindingBitsArraySize);
+    uint arraySize = (2 * static_cast<uint>(props) + BitsPerType - 1) / BitsPerType;
+    Q_ASSERT(arraySize > 1);
+    Q_ASSERT(arraySize <= 0xffff); // max for bindingBitsArraySize
 
-        BindingBitsType *newBits = static_cast<BindingBitsType *>(malloc(arraySize*sizeof(BindingBitsType)));
-        memcpy(newBits, bits, data->bindingBitsArraySize * sizeof(BindingBitsType));
-        memset(newBits + data->bindingBitsArraySize, 0, sizeof(BindingBitsType) * (arraySize - data->bindingBitsArraySize));
+    BindingBitsType *newBits = static_cast<BindingBitsType *>(malloc(arraySize*sizeof(BindingBitsType)));
+    memcpy(newBits, bits, bindingBitsArraySize * sizeof(BindingBitsType));
+    memset(newBits + bindingBitsArraySize, 0, sizeof(BindingBitsType) * (arraySize - bindingBitsArraySize));
 
-        if (data->bindingBitsArraySize > InlineBindingArraySize)
-            free(bits);
-        data->bindingBits = newBits;
-        bits = newBits;
-        data->bindingBitsArraySize = arraySize;
-    }
-    Q_ASSERT(offset < data->bindingBitsArraySize);
-    bits[offset] |= QQmlData::bitFlagForBit(bit);
-}
-
-static void QQmlData_clearBit(QQmlData *data, int bit)
-{
-    uint offset = QQmlData::offsetForBit(bit);
-    if (data->bindingBitsArraySize > offset) {
-        BindingBitsType *bits = (data->bindingBitsArraySize == InlineBindingArraySize) ? data->bindingBitsValue : data->bindingBits;
-        bits[offset] &= ~QQmlData::bitFlagForBit(bit);
-    }
-}
-
-void QQmlData::clearBindingBit(int coreIndex)
-{
-    Q_ASSERT(coreIndex >= 0);
-    Q_ASSERT(coreIndex <= 0xffff);
-    QQmlData_clearBit(this, coreIndex * 2);
-}
-
-void QQmlData::setBindingBit(QObject *obj, int coreIndex)
-{
-    Q_ASSERT(coreIndex >= 0);
-    Q_ASSERT(coreIndex <= 0xffff);
-    QQmlData_setBit(this, obj, coreIndex * 2);
-}
-
-void QQmlData::clearPendingBindingBit(int coreIndex)
-{
-    Q_ASSERT(coreIndex >= 0);
-    Q_ASSERT(coreIndex <= 0xffff);
-    QQmlData_clearBit(this, coreIndex * 2 + 1);
-}
-
-void QQmlData::setPendingBindingBit(QObject *obj, int coreIndex)
-{
-    Q_ASSERT(coreIndex >= 0);
-    Q_ASSERT(coreIndex <= 0xffff);
-    QQmlData_setBit(this, obj, coreIndex * 2 + 1);
+    if (bindingBitsArraySize > InlineBindingArraySize)
+        free(bits);
+    bindingBits = newBits;
+    bits = newBits;
+    bindingBitsArraySize = arraySize;
+    return bits;
 }
 
 QQmlData *QQmlData::createQQmlData(QObjectPrivate *priv)
