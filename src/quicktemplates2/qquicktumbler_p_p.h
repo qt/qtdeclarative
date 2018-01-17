@@ -95,6 +95,7 @@ public:
     void _q_updateItemWidths();
     void _q_onViewCurrentIndexChanged();
     void _q_onViewCountChanged();
+    void _q_calculateAttachedDisplacements();
 
     void disconnectFromView();
     void setupViewData(QQuickItem *newControlContentItem);
@@ -119,14 +120,8 @@ public:
 
     void init(QQuickItem *delegateItem);
 
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
-    void itemChildAdded(QQuickItem *, QQuickItem *) override;
-    void itemChildRemoved(QQuickItem *, QQuickItem *) override;
-
     void _q_calculateDisplacement();
     void emitIfDisplacementChanged(qreal oldDisplacement, qreal newDisplacement);
-
-    void viewDataSetUp();
 
     static QQuickTumblerAttachedPrivate *get(QQuickTumblerAttached *attached);
 

@@ -127,6 +127,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_updateItemHeights())
     Q_PRIVATE_SLOT(d_func(), void _q_onViewCurrentIndexChanged())
     Q_PRIVATE_SLOT(d_func(), void _q_onViewCountChanged())
+    Q_PRIVATE_SLOT(d_func(), void _q_calculateAttachedDisplacements())
 };
 
 class QQuickTumblerAttachedPrivate;

@@ -119,6 +119,7 @@ namespace {
 */
 QQuickItem *QQuickTumblerPrivate::determineViewType(QQuickItem *contentItem)
 {
+    Q_Q(QQuickTumbler);
     if (!contentItem) {
         resetViewData();
         return nullptr;
@@ -128,11 +129,17 @@ QQuickItem *QQuickTumblerPrivate::determineViewType(QQuickItem *contentItem)
         view = contentItem;
         viewContentItem = contentItem;
         viewContentItemType = PathViewContentItem;
+
+        QObject::connect(view, SIGNAL(offsetChanged()), q, SLOT(_q_calculateAttachedDisplacements()));
+
         return contentItem;
     } else if (contentItem->inherits("QQuickListView")) {
         view = contentItem;
         viewContentItem = qobject_cast<QQuickFlickable*>(contentItem)->contentItem();
         viewContentItemType = ListViewContentItem;
+
+        QObject::connect(view, SIGNAL(contentYChanged()), q, SLOT(_q_calculateAttachedDisplacements()));
+
         return contentItem;
     } else {
         const auto childItems = contentItem->childItems();
@@ -231,6 +238,19 @@ void QQuickTumblerPrivate::_q_onViewCountChanged()
         }
     } else {
         q->setCurrentIndex(-1);
+    }
+}
+
+void QQuickTumblerPrivate::_q_calculateAttachedDisplacements()
+{
+    const auto items = viewContentItemChildItems();
+    for (QQuickItem *childItem : items) {
+        QQuickTumblerAttached *attached = qobject_cast<QQuickTumblerAttached *>(
+            qmlAttachedPropertiesObject<QQuickTumbler>(childItem, false));
+        if (attached) {
+            QQuickTumblerAttachedPrivate *attachedPrivate = QQuickTumblerAttachedPrivate::get(attached);
+            attachedPrivate->_q_calculateDisplacement();
+        }
     }
 }
 
@@ -550,7 +570,7 @@ void QQuickTumblerPrivate::disconnectFromView()
     QObject::disconnect(view, SIGNAL(movingChanged()), q, SIGNAL(movingChanged()));
 
     QQuickItemPrivate *oldViewContentItemPrivate = QQuickItemPrivate::get(viewContentItem);
-    oldViewContentItemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Children);
+    oldViewContentItemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Children);
 
     resetViewData();
 }
@@ -578,20 +598,12 @@ void QQuickTumblerPrivate::setupViewData(QQuickItem *newControlContentItem)
     QObject::connect(view, SIGNAL(movingChanged()), q, SIGNAL(movingChanged()));
 
     QQuickItemPrivate *viewContentItemPrivate = QQuickItemPrivate::get(viewContentItem);
-    viewContentItemPrivate->addItemChangeListener(this, QQuickItemPrivate::Children);
+    viewContentItemPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Children);
 
     // Sync the view's currentIndex with ours.
     syncCurrentIndex();
 
-    const auto items = viewContentItemChildItems();
-    for (QQuickItem *childItem : items) {
-        QQuickTumblerAttached *attached = qobject_cast<QQuickTumblerAttached *>(
-            qmlAttachedPropertiesObject<QQuickTumbler>(childItem, false));
-        if (attached) {
-            QQuickTumblerAttachedPrivate *attachedPrivate = QQuickTumblerAttachedPrivate::get(attached);
-            attachedPrivate->viewDataSetUp();
-        }
-    }
+    _q_calculateAttachedDisplacements();
 }
 
 void QQuickTumblerPrivate::syncCurrentIndex()
@@ -769,32 +781,6 @@ void QQuickTumblerAttachedPrivate::init(QQuickItem *delegateItem)
     }
 }
 
-void QQuickTumblerAttachedPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
-{
-    _q_calculateDisplacement();
-}
-
-void QQuickTumblerAttachedPrivate::itemChildAdded(QQuickItem *, QQuickItem *)
-{
-    _q_calculateDisplacement();
-}
-
-void QQuickTumblerAttachedPrivate::itemChildRemoved(QQuickItem *item, QQuickItem *child)
-{
-    _q_calculateDisplacement();
-
-    if (parent == child) {
-        // The child that was removed from the contentItem was the delegate
-        // that our properties are attached to. If we don't remove the change
-        // listener, the contentItem will attempt to notify a destroyed
-        // listener, causing a crash.
-
-        // item is the "actual content item" of Tumbler's contentItem, i.e. a PathView or ListView.contentItem
-        QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-        p->removeItemChangeListener(this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Children);
-    }
-}
-
 void QQuickTumblerAttachedPrivate::_q_calculateDisplacement()
 {
     const int previousDisplacement = displacement;
@@ -852,23 +838,6 @@ void QQuickTumblerAttachedPrivate::emitIfDisplacementChanged(qreal oldDisplaceme
         emit q->displacementChanged();
 }
 
-void QQuickTumblerAttachedPrivate::viewDataSetUp()
-{
-    Q_Q(QQuickTumblerAttached);
-    QQuickTumblerPrivate *tumblerPrivate = QQuickTumblerPrivate::get(tumbler);
-    if (!tumblerPrivate->viewContentItem)
-        return;
-
-    QQuickItemPrivate *viewContentItemPrivate = QQuickItemPrivate::get(tumblerPrivate->viewContentItem);
-    viewContentItemPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry | QQuickItemPrivate::Children);
-
-    const char *contentItemSignal = tumblerPrivate->viewContentItemType == QQuickTumblerPrivate::PathViewContentItem
-        ? SIGNAL(offsetChanged()) : SIGNAL(contentYChanged());
-    QObject::connect(tumblerPrivate->view, contentItemSignal, q, SLOT(_q_calculateDisplacement()));
-
-    _q_calculateDisplacement();
-}
-
 QQuickTumblerAttachedPrivate *QQuickTumblerAttachedPrivate::get(QQuickTumblerAttached *attached)
 {
     return attached->d_func();
@@ -893,39 +862,17 @@ QQuickTumblerAttached::QQuickTumblerAttached(QObject *parent)
         QQuickTumblerPrivate *tumblerPrivate = QQuickTumblerPrivate::get(d->tumbler);
         tumblerPrivate->setupViewData(tumblerPrivate->contentItem);
 
-        // When creating a custom contentItem with e.g. Component's createObject() function,
-        // the item is created and *then* assigned to Tumbler's contentItem property,
-        // meaning that, at this point, the tumbler's contentItem is still its old one,
-        // as the delegates and their attached objects are created before the contentItem is assigned.
-        // That's why setupViewData() calls viewDataSetUp() on each attached object:
-        // we have to be notified whenever the contentItem changes, as otherwise
-        // we may never end up using the correct view data, and end up calculating incorrect displacements.
-
         if (delegateItem->parentItem() == tumblerPrivate->viewContentItem) {
             // This item belongs to the "new" view, meaning that the tumbler's contentItem
-            // was probably assigned declaratively. If the contentItem was instead created
-            // dynamically and then assigned (as mentioned above), these two won't
-            // be equal and we'll have to wait until viewDataSetUp() is called before
-            // connecting signals to our slots. Since viewDataSetUp() is only called once
-            // for each contentItem, and every attached object after the first one that is
-            // created would miss the chance for it to be called, we call the slot manually here.
-            d->viewDataSetUp();
+            // was probably assigned declaratively. If they're not equal, calling
+            // _q_calculateDisplacement() would use the old contentItem data, which is bad.
+            d->_q_calculateDisplacement();
         }
     }
 }
 
 QQuickTumblerAttached::~QQuickTumblerAttached()
 {
-    Q_D(QQuickTumblerAttached);
-    if (!d->tumbler)
-        return;
-
-    QQuickTumblerPrivate *tumblerPrivate = QQuickTumblerPrivate::get(d->tumbler);
-    if (!tumblerPrivate->viewContentItem)
-        return;
-
-    QQuickItemPrivate *viewContentItemPrivate = QQuickItemPrivate::get(tumblerPrivate->viewContentItem);
-    viewContentItemPrivate->removeItemChangeListener(d, QQuickItemPrivate::Geometry | QQuickItemPrivate::Children);
 }
 
 /*!
