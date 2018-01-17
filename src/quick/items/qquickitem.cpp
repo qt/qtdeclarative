@@ -2375,8 +2375,9 @@ QQuickItem::~QQuickItem()
     else if (d->window)
         d->derefWindow();
 
+    // XXX todo - optimize
     while (!d->childItems.isEmpty())
-        d->childItems.constLast()->setParentItem(0);
+        d->childItems.constFirst()->setParentItem(0);
 
     if (!d->changeListeners.isEmpty()) {
         const auto listeners = d->changeListeners; // NOTE: intentional copy (QTBUG-54732)
@@ -2952,8 +2953,7 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
 
     Q_ASSERT(child);
     Q_ASSERT(childItems.contains(child));
-    int idx = childItems.lastIndexOf(child);
-    childItems.removeAt(idx);
+    childItems.removeOne(child);
     Q_ASSERT(!childItems.contains(child));
 
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
