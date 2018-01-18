@@ -143,7 +143,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
 
     QSGMaterialShader *s = material->createShader();
-    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    QOpenGLContext *ctx = context->openglContext();
     QSurfaceFormat::OpenGLContextProfile profile = ctx->format().profile();
 
     QOpenGLShaderProgram *p = s->program();
@@ -2031,7 +2031,7 @@ Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
     int vboSize = 0;
 
     bool useVBO = false;
-    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    QOpenGLContext *ctx = m_context->openglContext();
     QSurfaceFormat::OpenGLContextProfile profile = ctx->format().profile();
 
     if (!ctx->isOpenGLES() && profile == QSurfaceFormat::CoreProfile) {
@@ -2493,18 +2493,21 @@ void Renderer::updateLineWidth(QSGGeometry *g)
     if (g->drawingMode() == GL_LINE_STRIP || g->drawingMode() == GL_LINE_LOOP || g->drawingMode() == GL_LINES)
         glLineWidth(g->lineWidth());
 #if !defined(QT_OPENGL_ES_2)
-    else if (!QOpenGLContext::currentContext()->isOpenGLES() && g->drawingMode() == GL_POINTS) {
-        QOpenGLFunctions_1_0 *gl1funcs = 0;
-        QOpenGLFunctions_3_2_Core *gl3funcs = 0;
-        if (QOpenGLContext::currentContext()->format().profile() == QSurfaceFormat::CoreProfile)
-            gl3funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_2_Core>();
-        else
-            gl1funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_1_0>();
-        Q_ASSERT(gl1funcs || gl3funcs);
-        if (gl1funcs)
-            gl1funcs->glPointSize(g->lineWidth());
-        else
-            gl3funcs->glPointSize(g->lineWidth());
+    else {
+        QOpenGLContext *ctx = m_context->openglContext();
+        if (!ctx->isOpenGLES() && g->drawingMode() == GL_POINTS) {
+            QOpenGLFunctions_1_0 *gl1funcs = 0;
+            QOpenGLFunctions_3_2_Core *gl3funcs = 0;
+            if (ctx->format().profile() == QSurfaceFormat::CoreProfile)
+                gl3funcs = ctx->versionFunctions<QOpenGLFunctions_3_2_Core>();
+            else
+                gl1funcs = ctx->versionFunctions<QOpenGLFunctions_1_0>();
+            Q_ASSERT(gl1funcs || gl3funcs);
+            if (gl1funcs)
+                gl1funcs->glPointSize(g->lineWidth());
+            else
+                gl3funcs->glPointSize(g->lineWidth());
+        }
     }
 #endif
 }
@@ -2610,6 +2613,8 @@ void Renderer::deleteRemovedElements()
 
 void Renderer::render()
 {
+    Q_ASSERT(m_context->openglContext() == QOpenGLContext::currentContext());
+
     if (Q_UNLIKELY(debug_dump())) {
         qDebug("\n");
         QSGNodeDumper::dump(rootNode());
@@ -3152,7 +3157,7 @@ void Renderer::visualizeOverdraw()
     visualizeOverdraw_helper(m_nodes.value(rootNode()));
 
     // Animate the view...
-    QSurface *surface = QOpenGLContext::currentContext()->surface();
+    QSurface *surface = m_context->openglContext()->surface();
     if (surface->surfaceClass() == QSurface::Window)
         if (QQuickWindow *window = qobject_cast<QQuickWindow *>(static_cast<QWindow *>(surface)))
             window->update();
