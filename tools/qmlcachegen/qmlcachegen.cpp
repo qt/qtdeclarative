@@ -413,6 +413,8 @@ int main(int argc, char **argv)
     if (parser.isSet(outputFileOption))
         outputFileName = parser.value(outputFileOption);
 
+    setupIllegalNames();
+
     const QString targetABI = parser.value(targetABIOption);
 
     if (inputFile.endsWith(QLatin1String(".qml"))) {
