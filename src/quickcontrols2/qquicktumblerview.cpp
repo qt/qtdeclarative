@@ -173,14 +173,19 @@ void QQuickTumblerView::createView()
             m_listView->setParentItem(this);
             m_listView->setSnapMode(QQuickListView::SnapToItem);
             m_listView->setHighlightRangeMode(QQuickListView::StrictlyEnforceRange);
-            m_listView->setHighlightMoveDuration(1000);
             m_listView->setClip(true);
-            m_listView->setDelegate(m_delegate);
 
             // Give the view a size.
             updateView();
             // Set the model.
             updateModel();
+
+            // Set these after the model is set so that the currentItem animation
+            // happens instantly on startup/after switching models. If we set them too early,
+            // the view animates any potential currentIndex change over one second,
+            // which we don't want when the contentItem has just been created.
+            m_listView->setDelegate(m_delegate);
+            m_listView->setHighlightMoveDuration(1000);
         }
     }
 }
