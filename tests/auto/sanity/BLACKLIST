@@ -4,10 +4,6 @@
 *
 [ids:imagine/DelayButton.qml]
 *
-[ids:imagine/ProgressBar.qml]
-*
-[ids:imagine/ProgressBar.qml]
-*
 [ids:imagine/Switch.qml]
 *
 [ids:imagine/SwitchDelegate.qml]
