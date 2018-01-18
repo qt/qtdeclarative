@@ -29,7 +29,13 @@ QtQml
  - [QTBUG-56521][QTBUG-56532] Added private qmlUnregisterType(int) for
    advanced use cases such as re-registering an enum, or cleaning up
    when a plugin is unloaded
- - [QTBUG-61209] Fixed handling of QML cache files during URL interception
+ - [QTBUG-61209] Fixed handling of QML cache files during URL interception.
+   This changes the semantics of URL redirects. Previously a redirected URL
+   was used as the base URL for further URL resolution. This doesn't work
+   because redirection occurs after interception and interception should
+   not influence the resolution of further URLs. We now use the original
+   URL as base URL for resolution of further URLs and rely on the server to
+   redirect those, too.
  - [QTBUG-63844] Fixed a crash in QMetaObject::activate() when using
    a Loader to load items with animations
 
