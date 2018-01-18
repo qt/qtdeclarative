@@ -74,11 +74,12 @@ T.Switch {
             ]
         }
 
-        NinePatchImage {
-            id: handle
+        property NinePatchImage handle: NinePatchImage {
             readonly property real minPos: parent.leftPadding - leftPadding
             readonly property real maxPos: parent.width - width + rightPadding - parent.rightPadding
             readonly property real dragPos: control.visualPosition * parent.width - (width / 2)
+
+            parent: control.indicator
 
             x: Math.max(minPos, Math.min(maxPos, control.visualPosition * parent.width - (width / 2)))
             y: (parent.height - height) / 2
