@@ -2,8 +2,6 @@
 *
 [attachedObjects:material/SwitchDelegate.qml]
 *
-[ids:imagine/DelayButton.qml]
-*
 [ids:imagine/Switch.qml]
 *
 [ids:imagine/SwitchDelegate.qml]

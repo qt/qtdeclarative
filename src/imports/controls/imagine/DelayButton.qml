@@ -86,8 +86,8 @@ T.DelayButton {
             ]
         }
 
-        NinePatchImage {
-            id: progress
+        readonly property NinePatchImage progress: NinePatchImage {
+            parent: control.background
             width: control.progress * parent.width
             height: parent.height
             visible: false
@@ -105,10 +105,9 @@ T.DelayButton {
             }
         }
 
-        NinePatchImage {
-            id: mask
-            width: parent.width
-            height: parent.height
+        readonly property NinePatchImage mask: NinePatchImage {
+            width: control.background.width
+            height: control.background.height
             visible: false
 
             source: Imagine.url + "delaybutton-mask"
@@ -124,15 +123,15 @@ T.DelayButton {
             }
         }
 
-        OpacityMask {
-            id: effect
+        readonly property OpacityMask effect: OpacityMask {
+            parent: control.background
             width: source.width
             height: source.height
-            source: progress
+            source: control.background.progress
 
             maskSource: ShaderEffectSource {
-                sourceItem: mask
-                sourceRect: Qt.rect(0, 0, effect.width, effect.height)
+                sourceItem: control.background.mask
+                sourceRect: Qt.rect(0, 0, control.background.effect.width, control.background.effect.height)
             }
         }
     }
