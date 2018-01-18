@@ -88,6 +88,7 @@ protected:
     QRect backgroundRect();
     // only known after calling optimizeRenderList()
     bool isOpaque() const { return m_isOpaque; }
+    const QLinkedList<QSGSoftwareRenderableNode*> &renderableNodes() const;
 
 private:
     void nodeAdded(QSGNode *node);
