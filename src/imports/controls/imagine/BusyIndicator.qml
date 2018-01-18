@@ -53,10 +53,10 @@ T.BusyIndicator {
     bottomPadding: background ? background.bottomPadding : 0
 
     contentItem: AnimatedImage {
-        playing: control.running
         opacity: control.running ? 1 : 0
-        visible: control.running || animator.running
-        Behavior on opacity { OpacityAnimator { id: animator; duration: 250 } }
+        playing: control.running || opacity > 0
+        visible: control.running || opacity > 0
+        Behavior on opacity { OpacityAnimator { duration: 250 } }
 
         source: Imagine.url + "busyindicator-animation"
         AnimatedImageSelector on source {
