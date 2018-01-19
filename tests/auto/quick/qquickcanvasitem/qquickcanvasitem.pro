@@ -5,6 +5,8 @@ TARGET=tst_qquickcanvasitem
 CONFIG += qmltestcase
 SOURCES += tst_qquickcanvasitem.cpp
 
+exists($$[QT_INSTALL_PLUGINS]/imageformats): DEFINES += HAS_IMAGE_FORMATS
+
 TESTDATA = data/*
 
 OTHER_FILES += \
