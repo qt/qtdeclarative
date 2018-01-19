@@ -1,5 +1,7 @@
 TARGET     = QtQuickTest
 
+QMAKE_DOCS = $$PWD/doc/qtqmltest.qdocconf
+
 DEFINES += QT_NO_URL_CAST_FROM_STRING QT_NO_FOREACH
 QT = core testlib-private
 QT_PRIVATE = quick qml-private  gui core-private gui-private

@@ -260,7 +260,7 @@ import Qt.test.qtestroot 1.0
     For objects that are created via the \l {Component::}{createObject()} function
     of \l Component, the \l createTemporaryObject() function can be used.
 
-    \sa {QtTest::SignalSpy}{SignalSpy}, {Qt Quick Test Reference Documentation}
+    \sa {QtTest::SignalSpy}{SignalSpy}, {Qt Quick Test}
 */
 
 
