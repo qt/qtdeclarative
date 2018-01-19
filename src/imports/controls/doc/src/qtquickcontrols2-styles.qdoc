@@ -122,6 +122,7 @@
     \li \l {Default Style}
     \li \l {Material Style}
     \li \l {Universal Style}
+    \li \l {Customizing Qt Quick Controls 2}
     \li \l {Using File Selectors with Qt Quick Controls 2}
     \li \l {Deploying Qt Quick Controls 2 Applications}
     \li \l {Qt Quick Controls 2 Configuration File}
