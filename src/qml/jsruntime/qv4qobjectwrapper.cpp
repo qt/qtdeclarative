@@ -714,6 +714,10 @@ bool QObjectWrapper::put(Managed *m, String *name, const Value &value)
 PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
 {
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
+    const QObject *thatObject = that->d()->object();
+    if (QQmlData::wasDeleted(thatObject))
+        return QV4::Object::query(m, name);
+
     ExecutionEngine *engine = that->engine();
     QQmlContextData *qmlContext = engine->callingQmlContext();
     QQmlPropertyData local;
@@ -2083,10 +2087,10 @@ ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine
 
     for (int i = 0; i < numberOfConstructors; i++) {
         const QQmlPropertyData & attempt = d()->constructors[i];
+        QQmlMetaObject::ArgTypeStorage storage;
         int methodArgumentCount = 0;
         int *methodArgTypes = 0;
         if (attempt.hasArguments()) {
-            QQmlMetaObject::ArgTypeStorage storage;
             int *args = object.constructorParameterTypes(attempt.coreIndex(), &storage, 0);
             if (!args) // Must be an unknown argument
                 continue;

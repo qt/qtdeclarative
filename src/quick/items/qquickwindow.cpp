@@ -78,6 +78,9 @@
 # include <private/qopenglvertexarrayobject_p.h>
 # include <private/qsgdefaultrendercontext_p.h>
 #endif
+#ifndef QT_NO_DEBUG_STREAM
+#include <private/qdebug_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -88,6 +91,7 @@ Q_LOGGING_CATEGORY(DBG_MOUSE_TARGET, "qt.quick.mouse.target")
 Q_LOGGING_CATEGORY(DBG_HOVER_TRACE, "qt.quick.hover.trace")
 Q_LOGGING_CATEGORY(DBG_FOCUS, "qt.quick.focus")
 Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty")
+Q_LOGGING_CATEGORY(lcTransient, "qt.quick.window.transient")
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
@@ -576,11 +580,19 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
     QObject::connect(q, SIGNAL(focusObjectChanged(QObject*)), q, SIGNAL(activeFocusItemChanged()));
     QObject::connect(q, SIGNAL(screenChanged(QScreen*)), q, SLOT(handleScreenChanged(QScreen*)));
-
+    QObject::connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
+                     q, SLOT(handleApplicationStateChanged(Qt::ApplicationState)));
     QObject::connect(q, SIGNAL(frameSwapped()), q, SLOT(runJobsAfterSwap()), Qt::DirectConnection);
 
     if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
         service->addWindow(q);
+}
+
+void QQuickWindow::handleApplicationStateChanged(Qt::ApplicationState state)
+{
+    Q_D(QQuickWindow);
+    if (state != Qt::ApplicationActive && d->contentItem)
+        d->contentItem->windowDeactivateEvent();
 }
 
 /*!
@@ -2953,8 +2965,10 @@ void QQuickWindowPrivate::data_append(QQmlListProperty<QObject> *property, QObje
     if (!o)
         return;
     QQuickWindow *that = static_cast<QQuickWindow *>(property->object);
-    if (QQuickWindow *window = qmlobject_cast<QQuickWindow *>(o))
+    if (QQuickWindow *window = qmlobject_cast<QQuickWindow *>(o)) {
+        qCDebug(lcTransient) << window << "is transient for" << that;
         window->setTransientParent(that);
+    }
     QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(that->contentItem())->data();
     itemProperty.append(&itemProperty, o);
 }
@@ -3485,6 +3499,7 @@ void QQuickWindow::cleanupSceneGraph()
 
 void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
 {
+    qCDebug(lcTransient) << this << "is transient for" << window;
     setTransientParent(window);
     disconnect(sender(), SIGNAL(windowChanged(QQuickWindow*)),
                this, SLOT(setTransientParent_helper(QQuickWindow*)));
@@ -4926,6 +4941,37 @@ void QQuickWindow::setTextRenderType(QQuickWindow::TextRenderType renderType)
 {
     QQuickWindowPrivate::textRenderType = renderType;
 }
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug operator<<(QDebug debug, const QQuickWindow *win)
+{
+    QDebugStateSaver saver(debug);
+    debug.nospace();
+    if (!win) {
+        debug << "QQuickWindow(0)";
+        return debug;
+    }
+
+    debug << win->metaObject()->className() << '(' << static_cast<const void *>(win);
+    if (win->isActive())
+        debug << " active";
+    if (win->isExposed())
+        debug << " exposed";
+    debug << ", visibility=" << win->visibility() << ", flags=" << win->flags();
+    if (!win->title().isEmpty())
+        debug << ", title=" << win->title();
+    if (!win->objectName().isEmpty())
+        debug << ", name=" << win->objectName();
+    if (win->parent())
+        debug << ", parent=" << static_cast<const void *>(win->parent());
+    if (win->transientParent())
+        debug << ", transientParent=" << static_cast<const void *>(win->transientParent());
+    debug << ", geometry=";
+    QtDebugUtils::formatQRect(debug, win->geometry());
+    debug << ')';
+    return debug;
+}
+#endif
 
 #include "moc_qquickwindow.cpp"
 

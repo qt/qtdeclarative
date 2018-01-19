@@ -1751,6 +1751,7 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
 void QQuickItemViewPrivate::clear()
 {
     currentChanges.reset();
+    bufferedChanges.reset();
     timeline.clear();
 
     releaseVisibleItems();
@@ -1808,51 +1809,56 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
     if (!isValid() || !q->isComponentComplete())
         return;
 
-    bufferPause.stop();
-    currentChanges.reset();
-
-    int prevCount = itemCount;
-    itemCount = model->count();
-    qreal bufferFrom = from - buffer;
-    qreal bufferTo = to + buffer;
-    qreal fillFrom = from;
-    qreal fillTo = to;
-
-    bool added = addVisibleItems(fillFrom, fillTo, bufferFrom, bufferTo, false);
-    bool removed = removeNonVisibleItems(bufferFrom, bufferTo);
-
-    if (requestedIndex == -1 && buffer && bufferMode != NoBuffer) {
-        if (added) {
-            // We've already created a new delegate this frame.
-            // Just schedule a buffer refill.
-            bufferPause.start();
-        } else {
-            if (bufferMode & BufferAfter)
-                fillTo = bufferTo;
-            if (bufferMode & BufferBefore)
-                fillFrom = bufferFrom;
-            added |= addVisibleItems(fillFrom, fillTo, bufferFrom, bufferTo, true);
+    do {
+        bufferPause.stop();
+        if (currentChanges.hasPendingChanges() || bufferedChanges.hasPendingChanges()) {
+            currentChanges.reset();
+            bufferedChanges.reset();
+            releaseVisibleItems();
         }
-    }
 
-    if (added || removed) {
-        markExtentsDirty();
-        updateBeginningEnd();
-        visibleItemsChanged();
-        updateHeader();
-        updateFooter();
-        updateViewport();
-    }
+        int prevCount = itemCount;
+        itemCount = model->count();
+        qreal bufferFrom = from - buffer;
+        qreal bufferTo = to + buffer;
+        qreal fillFrom = from;
+        qreal fillTo = to;
 
-    if (prevCount != itemCount)
-        emit q->countChanged();
+        bool added = addVisibleItems(fillFrom, fillTo, bufferFrom, bufferTo, false);
+        bool removed = removeNonVisibleItems(bufferFrom, bufferTo);
+
+        if (requestedIndex == -1 && buffer && bufferMode != NoBuffer) {
+            if (added) {
+                // We've already created a new delegate this frame.
+                // Just schedule a buffer refill.
+                bufferPause.start();
+            } else {
+                if (bufferMode & BufferAfter)
+                    fillTo = bufferTo;
+                if (bufferMode & BufferBefore)
+                    fillFrom = bufferFrom;
+                added |= addVisibleItems(fillFrom, fillTo, bufferFrom, bufferTo, true);
+            }
+        }
+
+        if (added || removed) {
+            markExtentsDirty();
+            updateBeginningEnd();
+            visibleItemsChanged();
+            updateHeader();
+            updateFooter();
+            updateViewport();
+        }
+
+        if (prevCount != itemCount)
+            emit q->countChanged();
+    } while (currentChanges.hasPendingChanges() || bufferedChanges.hasPendingChanges());
 }
 
 void QQuickItemViewPrivate::regenerate(bool orientationChanged)
 {
     Q_Q(QQuickItemView);
     if (q->isComponentComplete()) {
-        currentChanges.reset();
         if (orientationChanged) {
             delete header;
             header = 0;

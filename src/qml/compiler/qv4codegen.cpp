@@ -501,6 +501,7 @@ Codegen::Codegen(bool strict)
 }
 
 void Codegen::generateFromProgram(const QString &fileName,
+                                  const QString &finalUrl,
                                   const QString &sourceCode,
                                   Program *node,
                                   QV4::IR::Module *module,
@@ -513,6 +514,7 @@ void Codegen::generateFromProgram(const QString &fileName,
     _variableEnvironment = 0;
 
     _module->setFileName(fileName);
+    _module->setFinalUrl(finalUrl);
 
     ScanFunctions scan(this, sourceCode, mode);
     scan(node);
@@ -523,12 +525,14 @@ void Codegen::generateFromProgram(const QString &fileName,
 }
 
 void Codegen::generateFromFunctionExpression(const QString &fileName,
+                                             const QString &finalUrl,
                                              const QString &sourceCode,
                                              AST::FunctionExpression *ast,
                                              QV4::IR::Module *module)
 {
     _module = module;
     _module->setFileName(fileName);
+    _module->setFinalUrl(finalUrl);
     _variableEnvironment = 0;
 
     ScanFunctions scan(this, sourceCode, GlobalCode);

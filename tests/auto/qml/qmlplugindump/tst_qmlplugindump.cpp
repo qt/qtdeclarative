@@ -103,7 +103,7 @@ void tst_qmlplugindump::singleton()
     QProcess dumper;
     QStringList args;
     args << QLatin1String("tests.dumper.CompositeSingleton") << QLatin1String("1.0")
-         << QLatin1String(".");
+         << QLatin1String(QT_QMLTEST_DIR);
     dumper.start(qmlplugindumpPath, args);
     QVERIFY2(dumper.waitForStarted(), qPrintable(dumper.errorString()));
     QVERIFY2(dumper.waitForFinished(), qPrintable(dumper.errorString()));

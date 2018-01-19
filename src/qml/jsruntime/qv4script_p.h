@@ -139,8 +139,10 @@ struct Q_QML_EXPORT Script {
 
     Function *function();
 
-    static QQmlRefPointer<CompiledData::CompilationUnit> precompile(IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine, const QUrl &url, const QString &source,
-                                                                    QList<QQmlError> *reportedErrors = 0, QQmlJS::Directives *directivesCollector = 0);
+    static QQmlRefPointer<CompiledData::CompilationUnit> precompile(
+            IR::Module *module, Compiler::JSUnitGenerator *unitGenerator, ExecutionEngine *engine,
+            const QString &fileName, const QString &finalUrl, const QString &source,
+            QList<QQmlError> *reportedErrors = 0, QQmlJS::Directives *directivesCollector = 0);
 
     static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext);
 };

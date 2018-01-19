@@ -140,7 +140,10 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
             sss.scan();
         }
 
-        QmlIR::JSCodeGen v4CodeGenerator(typeData->finalUrlString(), document->code, &document->jsModule, &document->jsParserEngine, document->program, typeNameCache, &document->jsGenerator.stringTable);
+        QmlIR::JSCodeGen v4CodeGenerator(typeData->urlString(), typeData->finalUrlString(),
+                                         document->code, &document->jsModule,
+                                         &document->jsParserEngine, document->program,
+                                         typeNameCache, &document->jsGenerator.stringTable, engine->v8engine()->illegalNames());
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
             return nullptr;
@@ -1100,7 +1103,11 @@ QQmlComponentAndAliasResolver::AliasResolutionResult QQmlComponentAndAliasResolv
             alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
         } else {
             QQmlPropertyCache *targetCache = propertyCaches.at(targetObjectIndex);
-            Q_ASSERT(targetCache);
+            if (!targetCache) {
+                *error = QQmlCompileError(alias->referenceLocation, tr("Invalid alias target location: %1").arg(property.toString()));
+                break;
+            }
+
             QmlIR::PropertyResolver resolver(targetCache);
 
             QQmlPropertyData *targetProperty = resolver.property(property.toString());

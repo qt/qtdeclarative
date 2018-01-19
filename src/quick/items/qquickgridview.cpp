@@ -537,13 +537,12 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     if (visibleItems.count()) {
         FxGridItemSG *firstItem = static_cast<FxGridItemSG*>(visibleItems.constFirst());
         rowPos = firstItem->rowPos();
-        colNum = qFloor((firstItem->colPos()+colSize()/2) / colSize());
-        if (--colNum < 0) {
-            colNum = columns - 1;
-            rowPos -= rowSize();
-        }
-    } else {
-        colNum = qFloor((colPos+colSize()/2) / colSize());
+        colPos = firstItem->colPos();
+    }
+    colNum = qFloor((colPos+colSize()/2) / colSize());
+    if (--colNum < 0) {
+        colNum = columns - 1;
+        rowPos -= rowSize();
     }
 
     // Prepend
@@ -895,7 +894,6 @@ void QQuickGridViewPrivate::initializeCurrentItem()
 
 void QQuickGridViewPrivate::fixupPosition()
 {
-    moveReason = Other;
     if (flow == QQuickGridView::FlowLeftToRight)
         fixupY();
     else

@@ -219,6 +219,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     internalClasses[Class_SimpleArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SimpleArrayData::staticVTable());
     internalClasses[Class_SparseArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SparseArrayData::staticVTable());
     internalClasses[Class_ExecutionContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::ExecutionContext::staticVTable());
+    internalClasses[EngineBase::Class_QmlContext] = internalClasses[EngineBase::Class_ExecutionContext]->changeVTable(QV4::QmlContext::staticVTable());
     internalClasses[Class_SimpleCallContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::CallContext::staticVTable());
 
     jsStrings[String_Empty] = newIdentifier(QString());
@@ -261,6 +262,7 @@ ExecutionEngine::ExecutionEngine(EvalISelFactory *factory)
     InternalClass *ic = internalClasses[Class_Empty]->changeVTable(QV4::Object::staticVTable());
     jsObjects[ObjectProto] = memoryManager->allocObject<ObjectPrototype>(ic);
     internalClasses[Class_Object] = ic->changePrototype(objectPrototype()->d());
+    internalClasses[EngineBase::Class_QmlContextWrapper] = internalClasses[Class_Object]->changeVTable(QV4::QQmlContextWrapper::staticVTable());
 
     ic = newInternalClass(ArrayPrototype::staticVTable(), objectPrototype());
     Q_ASSERT(ic->prototype);
@@ -912,14 +914,14 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     while (c) {
         SimpleCallContext *callCtx = c->asSimpleCallContext();
         if (callCtx && callCtx->d()->v4Function) {
-            base.setUrl(callCtx->d()->v4Function->sourceFile());
+            base = callCtx->d()->v4Function->finalUrl();
             break;
         }
         c = parentContext(c);
     }
 
     if (base.isEmpty() && globalCode)
-        base.setUrl(globalCode->sourceFile());
+        base = globalCode->finalUrl();
 
     if (base.isEmpty())
         return src;

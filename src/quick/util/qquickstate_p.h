@@ -69,8 +69,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStateAction
 public:
     QQuickStateAction();
     QQuickStateAction(QObject *, const QString &, const QVariant &);
-    QQuickStateAction(QObject *, const QString &,
-                       QQmlContext *, const QVariant &);
+    QQuickStateAction(QObject *, const QQmlProperty &property, const QString &,
+                      const QVariant &);
 
     bool restore:1;
     bool actionDone:1;

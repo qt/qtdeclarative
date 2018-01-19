@@ -44,6 +44,7 @@ private slots:
     void loadComponentSynchronously();
     void trimCache();
     void trimCache2();
+    void trimCache3();
     void keepSingleton();
     void keepRegistrations();
     void intercept();
@@ -122,6 +123,26 @@ void tst_QQMLTypeLoader::trimCache2()
     QTest::qWait(1);    // force event loop
     window->engine()->trimComponentCache();
     QCOMPARE(loader.isTypeLoaded(testFileUrl("MyComponent2.qml")), false);
+}
+
+// test trimming the cache of an item that contains sub-items created via incubation
+void tst_QQMLTypeLoader::trimCache3()
+{
+    QScopedPointer<QQuickView> window(new QQuickView());
+    window->setSource(testFileUrl("trim_cache3.qml"));
+    QQmlTypeLoader &loader = QQmlEnginePrivate::get(window->engine())->typeLoader;
+    QCOMPARE(loader.isTypeLoaded(testFileUrl("ComponentWithIncubator.qml")), true);
+
+    QQmlProperty::write(window->rootObject(), "source", QString());
+
+    // handle our deleteLater and cleanup
+    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+    window->engine()->collectGarbage();
+
+    window->engine()->trimComponentCache();
+
+    QCOMPARE(loader.isTypeLoaded(testFileUrl("ComponentWithIncubator.qml")), false);
 }
 
 static void checkSingleton(const QString &dataDirectory)

@@ -445,7 +445,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         QString string = binding->valueAsString(qmlUnit);
         // Encoded dir-separators defeat QUrl processing - decode them first
         string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
-        QUrl value = string.isEmpty() ? QUrl() : compilationUnit->url().resolved(QUrl(string));
+        QUrl value = string.isEmpty() ? QUrl() : compilationUnit->finalUrl().resolved(QUrl(string));
         // Apply URL interceptor
         if (engine->urlInterceptor())
             value = engine->urlInterceptor()->intercept(value, QQmlAbstractUrlInterceptor::UrlString);
@@ -643,7 +643,8 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         } else if (property->propType() == qMetaTypeId<QList<QUrl> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
             QString urlString = binding->valueAsString(qmlUnit);
-            QUrl u = urlString.isEmpty() ? QUrl() : compilationUnit->url().resolved(QUrl(urlString));
+            QUrl u = urlString.isEmpty() ? QUrl()
+                                         : compilationUnit->finalUrl().resolved(QUrl(urlString));
             QList<QUrl> value;
             value.append(u);
             property->writeProperty(_qobject, &value, propertyWriteFlags);
@@ -1103,12 +1104,9 @@ void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::O
         context->setIdProperty(object->id, instance);
 }
 
-QV4::QmlContext *QQmlObjectCreator::currentQmlContext()
+void QQmlObjectCreator::createQmlContext()
 {
-    if (!_qmlContext->isManaged())
-        _qmlContext->setM(QV4::QmlContext::create(v4->rootContext(), context, _scopeObject));
-
-    return _qmlContext;
+    _qmlContext->setM(QV4::QmlContext::create(v4->rootContext(), context, _scopeObject));
 }
 
 QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
@@ -1347,21 +1345,6 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
     phase = Done;
 
     return sharedState->rootContext;
-}
-
-void QQmlObjectCreator::cancel(QObject *object)
-{
-    int last = sharedState->allCreatedObjects.count() - 1;
-    int i = last;
-    while (i >= 0) {
-        if (sharedState->allCreatedObjects.at(i) == object) {
-            if (i < last)
-                qSwap(sharedState->allCreatedObjects[i], sharedState->allCreatedObjects[last]);
-            sharedState->allCreatedObjects.pop();
-            break;
-        }
-        --i;
-    }
 }
 
 void QQmlObjectCreator::clear()

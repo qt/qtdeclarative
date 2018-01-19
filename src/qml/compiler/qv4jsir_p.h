@@ -480,6 +480,7 @@ struct Name: Expr {
     const QString *id;
     Builtin builtin;
     bool global : 1;
+    bool forceLookup : 1;
     bool qmlSingleton : 1;
     bool freeOfSideEffects : 1;
     quint32 line;
@@ -487,7 +488,7 @@ struct Name: Expr {
 
     Name(): Expr(NameExpr) {}
 
-    void initGlobal(const QString *id, quint32 line, quint32 column);
+    void initGlobal(const QString *id, quint32 line, quint32 column, bool forceLookup = false);
     void init(const QString *id, quint32 line, quint32 column);
     void init(Builtin builtin, quint32 line, quint32 column);
 
@@ -952,6 +953,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
     QVector<Function *> functions;
     Function *rootFunction;
     QString fileName;
+    QString finalUrl;
     QDateTime sourceTimeStamp;
     bool isQmlModule; // implies rootFunction is always 0
     uint unitFlags; // flags merged into CompiledData::Unit::flags
@@ -977,6 +979,7 @@ struct Q_QML_PRIVATE_EXPORT Module {
     ~Module();
 
     void setFileName(const QString &name);
+    void setFinalUrl(const QString &url);
 };
 
 struct BasicBlock {
@@ -1139,7 +1142,7 @@ public:
     Name *NAME(const QString &id, quint32 line, quint32 column);
     Name *NAME(Name::Builtin builtin, quint32 line, quint32 column);
 
-    Name *GLOBALNAME(const QString &id, quint32 line, quint32 column);
+    Name *GLOBALNAME(const QString &id, quint32 line, quint32 column, bool forceLookup = false);
 
     Closure *CLOSURE(int functionInModule);
 
@@ -1607,11 +1610,11 @@ inline Name *BasicBlock::NAME(const QString &id, quint32 line, quint32 column)
     return e;
 }
 
-inline Name *BasicBlock::GLOBALNAME(const QString &id, quint32 line, quint32 column)
+inline Name *BasicBlock::GLOBALNAME(const QString &id, quint32 line, quint32 column, bool forceLookup)
 {
     Q_ASSERT(!isRemoved());
     Name *e = function->New<Name>();
-    e->initGlobal(function->newString(id), line, column);
+    e->initGlobal(function->newString(id), line, column, forceLookup);
     return e;
 }
 

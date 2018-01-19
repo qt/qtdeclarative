@@ -386,7 +386,7 @@ void InstructionSelection::constructActivationProperty(IR::Name *func,
                                                        IR::ExprList *args,
                                                        IR::Expr *target)
 {
-    if (useFastLookups && func->global) {
+    if ((useFastLookups || func->forceLookup) && func->global) {
         Instruction::ConstructGlobalLookup call;
         call.index = registerGlobalGetterLookup(*func->id);
         prepareCallArgs(args, call.argc);
@@ -491,7 +491,7 @@ void InstructionSelection::loadRegexp(IR::RegExp *sourceRegexp, IR::Expr *target
 
 void InstructionSelection::getActivationProperty(const IR::Name *name, IR::Expr *target)
 {
-    if (useFastLookups && name->global) {
+    if ((useFastLookups || name->forceLookup) && name->global) {
         Instruction::GetGlobalLookup load;
         load.index = registerGlobalGetterLookup(*name->id);
         load.result = getResultParam(target);
@@ -1015,7 +1015,7 @@ void InstructionSelection::visitRet(IR::Ret *s)
 
 void InstructionSelection::callBuiltinInvalid(IR::Name *func, IR::ExprList *args, IR::Expr *result)
 {
-    if (useFastLookups && func->global) {
+    if ((useFastLookups || func->forceLookup) && func->global) {
         Instruction::CallGlobalLookup call;
         call.index = registerGlobalGetterLookup(*func->id);
         prepareCallArgs(args, call.argc);

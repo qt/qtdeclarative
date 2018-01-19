@@ -200,8 +200,6 @@ int main(int argc, char *argv[])
                 return EXIT_FAILURE;
             }
         }
-
-        vm.memoryManager->dumpStats();
     } return EXIT_SUCCESS;
     } // switch (mode)
 }
