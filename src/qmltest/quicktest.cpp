@@ -327,6 +327,11 @@ private:
 
 int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir)
 {
+    return quick_test_main_with_setup(argc, argv, name, sourceDir, nullptr);
+}
+
+int quick_test_main_with_setup(int argc, char **argv, const char *name, const char *sourceDir, QObject *setup)
+{
     // Peek at arguments to check for '-widgets' argument
 #ifdef QT_QMLTEST_WITH_WIDGETS
     bool withWidgets = false;
@@ -515,6 +520,14 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
                          &eventLoop, SLOT(quit()));
         view.rootContext()->setContextProperty
             (QLatin1String("qtest"), QTestRootObject::instance()); // Deprecated. Use QTestRootObject from Qt.test.qtestroot instead
+
+        // Do this down here so that import paths, plugin paths,
+        // file selectors, etc. are available in case the user needs access to them.
+        if (setup) {
+            // Don't check the return value; it's OK if it doesn't exist.
+            // If we add more callbacks in the future, it makes sense if the user only implements one of them.
+            QMetaObject::invokeMethod(setup, "qmlEngineAvailable", Q_ARG(QQmlEngine*, view.engine()));
+        }
 
         view.setObjectName(fi.baseName());
         view.setTitle(view.objectName());
