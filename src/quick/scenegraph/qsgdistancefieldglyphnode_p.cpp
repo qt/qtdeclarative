@@ -181,7 +181,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
         updateTextureScale(QVector2D(1.0 / material->textureSize().width(),
                                      1.0 / material->textureSize().height()));
 
-        QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
+        QOpenGLFunctions *funcs = state.context()->functions();
         funcs->glBindTexture(GL_TEXTURE_2D, material->texture()->textureId);
 
         if (updated) {
