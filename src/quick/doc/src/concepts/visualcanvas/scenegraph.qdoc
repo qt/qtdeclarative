@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -176,8 +176,8 @@ attach application code. This can be used to add custom scene graph
 content or render raw OpenGL content. The integration points are
 defined by the render loop.
 
-For detailed description of how the scene graph renderer works, see
-\l {Qt Quick Scene Graph Renderer}.
+For detailed description of how the scene graph renderer for OpenGL
+works, see \l {Qt Quick Scene Graph OpenGL Renderer}.
 
 There are three render loop variants available: \c basic, \c windows,
 and \c threaded. Out of these, \c basic and \c windows are
@@ -413,10 +413,11 @@ with multiple windows.
 */
 
 /*!
-  \title Qt Quick Scene Graph Renderer
+  \title Qt Quick Scene Graph OpenGL Renderer
   \page qtquick-visualcanvas-scenegraph-renderer.html
 
-  This document explains how the scene graph renderer works internally
+  This document explains how the scene graph renderer for OpenGL
+  works internally
   so that one can write code that uses it in an optimal fashion, both
   performance-wise and feature-wise.
 
