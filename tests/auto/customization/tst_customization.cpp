@@ -103,7 +103,7 @@ static const ControlInfo ControlInfos[] = {
     { "ToolButton", QStringList() << "background" << "contentItem" },
     { "ToolSeparator", QStringList() << "background" << "contentItem" },
     { "ToolTip", QStringList() << "background" << "contentItem" },
-    // { "Tumbler", QStringList() << "background" << "contentItem" } ### TODO: fix and enable deferred execution
+    { "Tumbler", QStringList() << "background" << "contentItem" }
 };
 
 class tst_customization : public QQmlDataTest

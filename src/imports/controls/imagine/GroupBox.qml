@@ -60,10 +60,10 @@ T.GroupBox {
     label: Label {
         width: control.width
 
-        topPadding: header.topPadding
-        leftPadding: header.leftPadding
-        rightPadding: header.rightPadding
-        bottomPadding: header.bottomPadding
+        topPadding: background.topPadding
+        leftPadding: background.leftPadding
+        rightPadding: background.rightPadding
+        bottomPadding: background.bottomPadding
 
         text: control.title
         font: control.font
@@ -73,7 +73,6 @@ T.GroupBox {
         color: control.palette.windowText
 
         background: NinePatchImage {
-            id: header
             width: parent.width
             height: parent.height
 

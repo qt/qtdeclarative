@@ -63,6 +63,7 @@ public:
     ~QQuickTumblerPrivate();
 
     enum ContentItemType {
+        NoContentItem,
         UnsupportedContentItemType,
         PathViewContentItem,
         ListViewContentItem

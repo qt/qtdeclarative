@@ -49,16 +49,23 @@
 ****************************************************************************/
 
 import QtQuick 2.6
+import QtQuick.Controls 2.2
 
 PathView {
     id: pathView
-    model: parent.model
-    delegate: parent.delegate
     clip: true
     pathItemCount: parent.visibleItemCount + 1
     preferredHighlightBegin: 0.5
     preferredHighlightEnd: 0.5
     dragMargin: width / 2
+    model: parent.model
+    delegate: Text {
+        objectName: text
+        text: "Custom" + modelData
+        opacity: 1.0 - Math.abs(Tumbler.displacement) / (Tumbler.tumbler.visibleItemCount / 2)
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+    }
 
     path: Path {
         startX: pathView.width / 2
