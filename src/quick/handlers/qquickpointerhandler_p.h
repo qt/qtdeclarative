@@ -117,6 +117,7 @@ protected:
     virtual bool wantsPointerEvent(QQuickPointerEvent *event);
     virtual void handlePointerEventImpl(QQuickPointerEvent *event);
     void setActive(bool active);
+    virtual void onTargetChanged(QQuickItem *oldTarget) { Q_UNUSED(oldTarget); }
     virtual void onActiveChanged() { }
     virtual void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point);
     virtual bool canGrab(QQuickEventPoint *point);
