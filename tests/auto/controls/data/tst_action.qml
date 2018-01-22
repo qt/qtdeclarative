@@ -137,4 +137,32 @@ TestCase {
         keyClick(Qt.Key_B, Qt.ControlModifier)
         compare(container.lastSource, container.action)
     }
+
+    Component {
+        id: actionAndRepeater
+        Item {
+            property alias action: testAction
+            Action {
+                id: testAction
+                shortcut: "Ctrl+A"
+            }
+            Repeater {
+                model: 1
+                Button {
+                    action: testAction
+                }
+            }
+        }
+    }
+
+    function test_repeater() {
+        var container = createTemporaryObject(actionAndRepeater, testCase)
+        verify(container)
+
+        var spy = signalSpy.createObject(container, {target: container.action, signalName: "triggered"})
+        verify(spy.valid)
+
+        keyClick(Qt.Key_A, Qt.ControlModifier)
+        compare(spy.count, 1)
+    }
 }
