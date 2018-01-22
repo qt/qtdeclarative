@@ -872,8 +872,9 @@ void QQuickScrollBarAttachedPrivate::scrollHorizontal()
 {
     QQuickFriendlyFlickable *f = reinterpret_cast<QQuickFriendlyFlickable *>(flickable);
 
-    const qreal extent = f->contentWidth() - f->minXExtent();
-    const qreal cx = horizontal->position() * extent;
+    const qreal viewwidth = f->width();
+    const qreal maxxextent = -f->maxXExtent() + f->minXExtent();
+    const qreal cx = horizontal->position() * (maxxextent + viewwidth) - f->minXExtent();
 
     if (!qIsNaN(cx) && !qFuzzyCompare(cx, flickable->contentX()))
         flickable->setContentX(cx);
@@ -883,8 +884,9 @@ void QQuickScrollBarAttachedPrivate::scrollVertical()
 {
     QQuickFriendlyFlickable *f = reinterpret_cast<QQuickFriendlyFlickable *>(flickable);
 
-    const qreal extent = f->contentHeight() - f->minYExtent();
-    const qreal cy = vertical->position() * extent;
+    const qreal viewheight = f->height();
+    const qreal maxyextent = -f->maxYExtent() + f->minYExtent();
+    const qreal cy = vertical->position() * (maxyextent + viewheight) - f->minYExtent();
 
     if (!qIsNaN(cy) && !qFuzzyCompare(cy, flickable->contentY()))
         flickable->setContentY(cy);
