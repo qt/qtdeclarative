@@ -187,7 +187,6 @@ struct Chunk {
     }
 
     bool sweep(ClassDestroyStatsCallback classCountPtr);
-    void freeAll();
     void resetBlackBits();
     void collectGrayItems(QV4::MarkStack *markStack);
     bool sweep(ExecutionEngine *engine);
