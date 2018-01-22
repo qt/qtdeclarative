@@ -452,7 +452,12 @@ private:
     QQmlProfiler *profiler;
 };
 
+#endif // QT_NO_QML_DEBUGGER
+
 QT_END_NAMESPACE
+
+#ifndef QT_NO_QML_DEBUGGER
+
 Q_DECLARE_METATYPE(QVector<QQmlProfilerData>)
 Q_DECLARE_METATYPE(QQmlProfiler::LocationHash)
 
