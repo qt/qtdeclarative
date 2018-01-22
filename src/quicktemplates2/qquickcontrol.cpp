@@ -1320,6 +1320,7 @@ void QQuickControl::componentComplete()
     d->executeBackground(true);
     d->executeContentItem(true);
     QQuickItem::componentComplete();
+    d->resizeBackground();
     d->resizeContent();
     if (!d->hasLocale)
         d->locale = QQuickControlPrivate::calcLocale(d->parentItem);

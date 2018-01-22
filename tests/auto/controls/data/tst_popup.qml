@@ -1253,4 +1253,12 @@ TestCase {
         control.open()
         verify(control.visible)
     }
+
+    function test_deferredBackgroundSize() {
+        var control = createTemporaryObject(popupControl, testCase, {width: 200, height: 100})
+        verify(control)
+
+        compare(control.background.width, 200)
+        compare(control.background.height, 100)
+    }
 }
