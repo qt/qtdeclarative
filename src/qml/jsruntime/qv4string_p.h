@@ -112,6 +112,8 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
         return toQString() == other->toQString();
     }
 
+    bool startsWithUpper() const;
+
     mutable QStringData *text;
     mutable Identifier *identifier;
     mutable uint subtype;
@@ -206,10 +208,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
         return calculateHashValue(ch, end, subtype);
     }
 
-    bool startsWithUpper() const {
-        Q_ASSERT(d()->subtype < Heap::String::StringType_Complex);
-        return d()->text->size && QChar::isUpper(d()->text->data()[0]);
-    }
+    bool startsWithUpper() const { return d()->startsWithUpper(); }
 
     Identifier *identifier() const { return d()->identifier; }
 

@@ -181,6 +181,27 @@ void Heap::String::simplifyString() const
     subtype = StringType_Unknown;
 }
 
+bool Heap::String::startsWithUpper() const
+{
+    if (subtype == StringType_AddedString)
+        return static_cast<const Heap::ComplexString *>(this)->left->startsWithUpper();
+
+    const Heap::String *str = this;
+    int offset = 0;
+    if (subtype == StringType_SubString) {
+        const ComplexString *cs = static_cast<const Heap::ComplexString *>(this);
+        if (!cs->len)
+            return false;
+        // simplification here is not ideal, but hopefully not a common case.
+        if (cs->left->subtype >= Heap::String::StringType_Complex)
+            cs->left->simplifyString();
+        str = cs->left;
+        offset = cs->from;
+    }
+    Q_ASSERT(str->subtype < Heap::String::StringType_Complex);
+    return str->text->size > offset && QChar::isUpper(str->text->data()[offset]);
+}
+
 void Heap::String::append(const String *data, QChar *ch)
 {
     std::vector<const String *> worklist;
