@@ -224,19 +224,17 @@ public:
     template <typename ObjectType, typename... Args>
     typename ObjectType::Data *allocObject(Heap::InternalClass *ic, Args... args)
     {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->init(args...);
-        return t->d();
+        typename ObjectType::Data *d = allocateObject<ObjectType>(ic);
+        d->init(args...);
+        return d;
     }
 
     template <typename ObjectType, typename... Args>
     typename ObjectType::Data *allocObject(InternalClass *ic, Args... args)
     {
-        Scope scope(engine);
-        Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        t->d_unchecked()->init(args...);
-        return t->d();
+        typename ObjectType::Data *d = allocateObject<ObjectType>(ic);
+        d->init(args...);
+        return d;
     }
 
     template <typename ObjectType, typename... Args>
