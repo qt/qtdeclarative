@@ -84,6 +84,10 @@ Q_SIGNALS:
     void delayChanged();
     void timeoutChanged();
 
+public Q_SLOTS:
+    Q_REVISION(5) void show(const QString &text, int ms = -1);
+    Q_REVISION(5) void hide();
+
 protected:
     QFont defaultFont() const override;
     QPalette defaultPalette() const override;

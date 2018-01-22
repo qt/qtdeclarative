@@ -276,6 +276,31 @@ QQuickToolTipAttached *QQuickToolTip::qmlAttachedProperties(QObject *object)
     return new QQuickToolTipAttached(object);
 }
 
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlmethod void QtQuick.Controls::ToolTip::show(string text, int timeout = -1)
+
+    This method shows the tooltip with \a text and \a timeout (milliseconds).
+*/
+void QQuickToolTip::show(const QString &text, int ms)
+{
+    if (ms >= 0)
+        setTimeout(ms);
+    setText(text);
+    open();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlmethod void QtQuick.Controls::ToolTip::hide()
+
+    This method hides the tooltip.
+*/
+void QQuickToolTip::hide()
+{
+    close();
+}
+
 QFont QQuickToolTip::defaultFont() const
 {
     return QQuickControlPrivate::themeFont(QPlatformTheme::TipLabelFont);
@@ -520,10 +545,8 @@ void QQuickToolTipAttached::show(const QString &text, int ms)
     tip->resetWidth();
     tip->resetHeight();
     tip->setParentItem(qobject_cast<QQuickItem *>(parent()));
-    tip->setTimeout(ms >= 0 ? ms : d->timeout);
     tip->setDelay(d->delay);
-    tip->setText(text);
-    tip->open();
+    tip->show(text, ms >= 0 ? ms : d->timeout);
 }
 
 /*!

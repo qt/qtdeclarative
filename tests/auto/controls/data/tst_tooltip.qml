@@ -329,4 +329,22 @@ TestCase {
             verify(tooltip.visible)
         }
     }
+
+    Component {
+        id: nonAttachedToolTipComponent
+        ToolTip { }
+    }
+
+    function test_nonAttachedToolTipShowAndHide() {
+        var tip = createTemporaryObject(nonAttachedToolTipComponent, testCase)
+        verify(tip)
+        tip.show("hello");
+        verify(tip.visible)
+        verify(tip.text === "hello")
+        tip.hide()
+        tryCompare(tip, "visible", false)
+        tip.show("delay", 200)
+        verify(tip.visible)
+        tryCompare(tip, "visible", false)
+    }
 }

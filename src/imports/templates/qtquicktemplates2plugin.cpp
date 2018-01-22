@@ -325,6 +325,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickScrollBar, 4>(uri, 2, 4, "ScrollBar");
     qmlRegisterType<QQuickScrollIndicator, 4>(uri, 2, 4, "ScrollIndicator");
     qmlRegisterType<QQuickSpinBox, 4>(uri, 2, 4, "SpinBox");
+
+    // QtQuick.Templates 2.5 (new types and revisions in Qt 5.12)
+    qmlRegisterType<QQuickToolTip, 5>(uri, 2, 5, "ToolTip");
 }
 
 QT_END_NAMESPACE
