@@ -658,12 +658,13 @@ ReturnedValue StringPrototype::method_search(const FunctionObject *b, const Valu
 ReturnedValue StringPrototype::method_slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    Heap::String *s = thisAsString(v4, thisObject);
+    Scope scope(v4);
+    ScopedString s(scope, thisAsString(v4, thisObject));
     if (v4->hasException)
         return QV4::Encode::undefined();
     Q_ASSERT(s);
 
-    const double length = s->length();
+    const double length = s->d()->length();
 
     double start = argc ? argv[0].toInteger() : 0;
     double end = (argc < 2 || argv[1].isUndefined())
@@ -683,7 +684,7 @@ ReturnedValue StringPrototype::method_slice(const FunctionObject *b, const Value
     const int intEnd = int(end);
 
     int count = qMax(0, intEnd - intStart);
-    return Encode(v4->memoryManager->alloc<ComplexString>(s, intStart, count));
+    return Encode(v4->memoryManager->alloc<ComplexString>(s->d(), intStart, count));
 }
 
 ReturnedValue StringPrototype::method_split(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

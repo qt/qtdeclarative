@@ -492,6 +492,7 @@ static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
             if (val.isDouble()) \
                 d = val.doubleValue(); \
             else { \
+                STORE_ACC(); \
                 d = val.toNumberImpl(); \
                 CHECK_EXCEPTION; \
             } \
@@ -1290,9 +1291,9 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
     MOTH_END_INSTR(BitXor)
 
     MOTH_BEGIN_INSTR(UShr)
-        uint l = STACK_VALUE(lhs).toUInt32();
+        VALUE_TO_INT(l, STACK_VALUE(lhs));
         VALUE_TO_INT(a, ACC);
-        acc = Encode(l >> uint(a & 0x1f));
+        acc = Encode(static_cast<uint>(l) >> uint(a & 0x1f));
     MOTH_END_INSTR(UShr)
 
     MOTH_BEGIN_INSTR(Shr)
