@@ -95,7 +95,6 @@ struct Module {
     QDateTime sourceTimeStamp;
     uint unitFlags = 0; // flags merged into CompiledData::Unit::flags
     bool debugMode = false;
-    QString targetABI; // ### seems unused currently
 };
 
 

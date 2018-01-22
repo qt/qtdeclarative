@@ -135,10 +135,9 @@ static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc, 
     return true;
 }
 
-static bool compileQmlFile(const QString &inputFileName, const QString &outputFileName, const QString &targetABI, Error *error)
+static bool compileQmlFile(const QString &inputFileName, const QString &outputFileName, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
-    irDocument.jsModule.targetABI = targetABI;
 
     QString sourceCode;
     {
@@ -218,10 +217,9 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
     return true;
 }
 
-static bool compileJSFile(const QString &inputFileName, const QString &outputFileName, const QString &targetABI, Error *error)
+static bool compileJSFile(const QString &inputFileName, const QString &outputFileName, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
-    irDocument.jsModule.targetABI = targetABI;
 
     QString sourceCode;
     {
@@ -322,12 +320,6 @@ int main(int argc, char **argv)
     parser.addHelpOption();
     parser.addVersionOption();
 
-    QCommandLineOption targetArchitectureOption(QStringLiteral("target-architecture"), QCoreApplication::translate("main", "Target architecture"), QCoreApplication::translate("main", "architecture"));
-    parser.addOption(targetArchitectureOption);
-
-    QCommandLineOption targetABIOption(QStringLiteral("target-abi"), QCoreApplication::translate("main", "Target architecture binary interface"), QCoreApplication::translate("main", "abi"));
-    parser.addOption(targetABIOption);
-
     QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);
 
@@ -338,17 +330,6 @@ int main(int argc, char **argv)
             QStringLiteral("QML source file to generate cache for."));
 
     parser.process(app);
-
-    if (!parser.isSet(targetArchitectureOption)) {
-        fprintf(stderr, "Target architecture not specified. Please specify with --target-architecture=<arch>\n");
-        parser.showHelp();
-        return EXIT_FAILURE;
-    }
-
-    // Since we're now storing bytecode in the cache, the --check-if-supported option
-    // doesn't make sense anymore. Return EXIT_SUCCESS for backwards compatibility.
-    if (parser.isSet(checkIfSupportedOption))
-        return EXIT_SUCCESS;
 
     const QStringList sources = parser.positionalArguments();
     if (sources.isEmpty()){
@@ -365,15 +346,13 @@ int main(int argc, char **argv)
     if (parser.isSet(outputFileOption))
         outputFileName = parser.value(outputFileOption);
 
-    const QString targetABI = parser.value(targetABIOption);
-
     if (inputFile.endsWith(QLatin1String(".qml"))) {
-        if (!compileQmlFile(inputFile, outputFileName, targetABI, &error)) {
+        if (!compileQmlFile(inputFile, outputFileName, &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
     } else if (inputFile.endsWith(QLatin1String(".js"))) {
-        if (!compileJSFile(inputFile, outputFileName, targetABI, &error)) {
+        if (!compileJSFile(inputFile, outputFileName, &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
