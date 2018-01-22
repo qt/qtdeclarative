@@ -2428,15 +2428,10 @@ void QQmlTypeData::dataReceived(const SourceCodeData &data)
 void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
 {
     m_document.reset(new QmlIR::Document(isDebugging()));
-    if (unit->loadIR) {
-        // old code path for older generated code
-        unit->loadIR(m_document.data(), unit);
-    } else {
-        // new code path
-        QmlIR::IRLoader loader(unit->qmlData, m_document.data());
-        loader.load();
-        m_document->javaScriptCompilationUnit.adopt(unit->createCompilationUnit());
-    }
+    QmlIR::IRLoader loader(unit->qmlData, m_document.data());
+    loader.load();
+    m_document->jsModule.fileName = finalUrlString();
+    m_document->javaScriptCompilationUnit.adopt(unit->createCompilationUnit());
     continueLoadFromIR();
 }
 

@@ -33,9 +33,16 @@
 #include <QFileInfo>
 #include <QDateTime>
 #include <QHashFunctions>
+#include <QSaveFile>
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsparser_p.h>
+
+#include "resourcefilemapper.h"
+
+int filterResourceFile(const QString &input, const QString &output);
+bool generateLoader(const QStringList &compiledFiles, const QString &output, const QStringList &resourceFileMappings, QString *errorString);
+QString symbolNamespaceForPath(const QString &relativePath);
 
 struct Error
 {
@@ -135,7 +142,9 @@ static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc, 
     return true;
 }
 
-static bool compileQmlFile(const QString &inputFileName, const QString &outputFileName, Error *error)
+using SaveFunction = std::function<bool (QV4::CompiledData::CompilationUnit *, QString *)>;
+
+static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFunction, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
 
@@ -209,7 +218,7 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
         unit->flags |= QV4::CompiledData::Unit::PendingTypeCompilation;
         irDocument.javaScriptCompilationUnit->data = unit;
 
-        if (!irDocument.javaScriptCompilationUnit->saveToDisk(outputFileName, &error->message))
+        if (!saveFunction(irDocument.javaScriptCompilationUnit, &error->message))
             return false;
 
         free(unit);
@@ -217,7 +226,7 @@ static bool compileQmlFile(const QString &inputFileName, const QString &outputFi
     return true;
 }
 
-static bool compileJSFile(const QString &inputFileName, const QString &outputFileName, Error *error)
+static bool compileJSFile(const QString &inputFileName, const QString &inputFileUrl, SaveFunction saveFunction, Error *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
 
@@ -271,13 +280,12 @@ static bool compileJSFile(const QString &inputFileName, const QString &outputFil
     }
 
     {
-        irDocument.jsModule.fileName = inputFileName;
         QmlIR::JSCodeGen v4CodeGen(irDocument.code, &irDocument.jsGenerator,
                                    &irDocument.jsModule, &irDocument.jsParserEngine,
                                    irDocument.program, /*import cache*/0,
                                    &irDocument.jsGenerator.stringTable);
         v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
-        v4CodeGen.generateFromProgram(inputFileName, sourceCode, program, &irDocument.jsModule, QV4::Compiler::GlobalCode);
+        v4CodeGen.generateFromProgram(inputFileUrl, sourceCode, program, &irDocument.jsModule, QV4::Compiler::GlobalCode);
         QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
         if (!jsErrors.isEmpty()) {
             for (const QQmlJS::DiagnosticMessage &e: qAsConst(jsErrors)) {
@@ -296,7 +304,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &outputFil
         unit->flags |= QV4::CompiledData::Unit::StaticData;
         irDocument.javaScriptCompilationUnit->data = unit;
 
-        if (!irDocument.javaScriptCompilationUnit->saveToDisk(outputFileName, &error->message)) {
+        if (!saveFunction(irDocument.javaScriptCompilationUnit, &error->message)) {
             engine->setDirectives(oldDirs);
             return false;
         }
@@ -304,6 +312,81 @@ static bool compileJSFile(const QString &inputFileName, const QString &outputFil
         free(unit);
     }
     engine->setDirectives(oldDirs);
+    return true;
+}
+
+static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFileName, QV4::CompiledData::CompilationUnit *unit, QString *errorString)
+{
+    QSaveFile f(outputFileName);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        *errorString = f.errorString();
+        return false;
+    }
+
+    auto writeStr = [&f, errorString](const QByteArray &data) {
+        if (f.write(data) != data.size()) {
+            *errorString = f.errorString();
+            return false;
+        }
+        return true;
+    };
+
+    if (!writeStr("// "))
+        return false;
+
+    if (!writeStr(inputFileName.toUtf8()))
+        return false;
+
+    if (!writeStr("\n"))
+        return false;
+
+    if (!writeStr(QByteArrayLiteral("namespace QmlCacheGeneratedCode {\nnamespace ")))
+        return false;
+
+    if (!writeStr(symbolNamespaceForPath(inputFileName).toUtf8()))
+        return false;
+
+    if (!writeStr(QByteArrayLiteral(" {\nextern const unsigned char qmlData alignas(16) [] = {\n")))
+        return false;
+
+    QByteArray hexifiedData;
+    {
+        QByteArray modifiedUnit;
+        modifiedUnit.resize(unit->data->unitSize);
+        memcpy(modifiedUnit.data(), unit->data, unit->data->unitSize);
+        const char *dataPtr = modifiedUnit.data();
+        QV4::CompiledData::Unit *unitPtr;
+        memcpy(&unitPtr, &dataPtr, sizeof(unitPtr));
+        unitPtr->flags |= QV4::CompiledData::Unit::StaticData;
+
+        QTextStream stream(&hexifiedData);
+        const uchar *begin = reinterpret_cast<const uchar *>(modifiedUnit.constData());
+        const uchar *end = begin + unit->data->unitSize;
+        stream << hex;
+        int col = 0;
+        for (const uchar *data = begin; data < end; ++data, ++col) {
+            if (data > begin)
+                stream << ',';
+            if (col % 8 == 0) {
+                stream << '\n';
+                col = 0;
+            }
+            stream << "0x" << *data;
+        }
+        stream << '\n';
+    };
+
+    if (!writeStr(hexifiedData))
+        return false;
+
+    if (!writeStr("};\n}\n}\n"))
+        return false;
+
+    if (!f.commit()) {
+        *errorString = f.errorString();
+        return false;
+    }
+
     return true;
 }
 
@@ -320,6 +403,15 @@ int main(int argc, char **argv)
     parser.addHelpOption();
     parser.addVersionOption();
 
+    QCommandLineOption filterResourceFileOption(QStringLiteral("filter-resource-file"), QCoreApplication::translate("main", "Filter out QML/JS files from a resource file that can be cached ahead of time instead"));
+    parser.addOption(filterResourceFileOption);
+    QCommandLineOption resourceFileMappingOption(QStringLiteral("resource-file-mapping"), QCoreApplication::translate("main", "Path from original resource file to new one"), QCoreApplication::translate("main", "old-name:new-name"));
+    parser.addOption(resourceFileMappingOption);
+    QCommandLineOption resourceOption(QStringLiteral("resource"), QCoreApplication::translate("main", "Qt resource file that might later contain one of the compiled files"), QCoreApplication::translate("main", "resource-file-name"));
+    parser.addOption(resourceOption);
+    QCommandLineOption resourcePathOption(QStringLiteral("resource-path"), QCoreApplication::translate("main", "Qt resource file path corresponding to the file being compiled"), QCoreApplication::translate("main", "resource-path"));
+    parser.addOption(resourcePathOption);
+
     QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);
 
@@ -328,6 +420,8 @@ int main(int argc, char **argv)
 
     parser.addPositionalArgument(QStringLiteral("[qml file]"),
             QStringLiteral("QML source file to generate cache for."));
+
+    parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
 
     parser.process(app);
 
@@ -346,13 +440,76 @@ int main(int argc, char **argv)
     if (parser.isSet(outputFileOption))
         outputFileName = parser.value(outputFileOption);
 
+    if (parser.isSet(filterResourceFileOption)) {
+        return filterResourceFile(inputFile, outputFileName);
+    }
+
+    if (outputFileName.endsWith(QLatin1String("qmlcache_loader.cpp"))) {
+        ResourceFileMapper mapper(inputFile);
+
+        if (!generateLoader(mapper.qmlCompilerFiles(), outputFileName, parser.values(resourceFileMappingOption), &error.message)) {
+            error.augment(QLatin1String("Error generating loader stub: ")).print();
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
+    }
+
+    QString inputFileUrl = inputFile;
+
+    SaveFunction saveFunction;
+    if (outputFileName.endsWith(QLatin1String(".cpp"))) {
+        ResourceFileMapper fileMapper(parser.values(resourceOption));
+        QString inputResourcePath = parser.value(resourcePathOption);
+
+        if (!inputResourcePath.isEmpty() && !fileMapper.isEmpty()) {
+            fprintf(stderr, "--%s and --%s are mutually exclusive.\n",
+                    qPrintable(resourcePathOption.names().first()),
+                    qPrintable(resourceOption.names().first()));
+            return EXIT_FAILURE;
+        }
+
+        // If the user didn't specify the resource path corresponding to the file on disk being
+        // compiled, try to determine it from the resource file, if one was supplied.
+        if (inputResourcePath.isEmpty()) {
+            const QStringList resourcePaths = fileMapper.resourcePaths(inputFile);
+            if (resourcePaths.isEmpty()) {
+                fprintf(stderr, "No resource path for file: %s\n", qPrintable(inputFile));
+                return EXIT_FAILURE;
+            }
+
+            if (resourcePaths.size() != 1) {
+                fprintf(stderr, "Multiple resource paths for file %s. "
+                                "Use the --%s option to disambiguate:\n",
+                        qPrintable(inputFile),
+                        qPrintable(resourcePathOption.names().first()));
+                for (const QString &resourcePath: resourcePaths)
+                    fprintf(stderr, "\t%s\n", qPrintable(resourcePath));
+                return EXIT_FAILURE;
+            }
+
+            inputResourcePath = resourcePaths.first();
+        }
+
+        inputFileUrl = QStringLiteral("qrc://") + inputResourcePath;
+
+        saveFunction = [inputResourcePath, outputFileName](QV4::CompiledData::CompilationUnit *unit, QString *errorString) {
+            return saveUnitAsCpp(inputResourcePath, outputFileName, unit, errorString);
+        };
+
+    } else {
+        saveFunction = [outputFileName](QV4::CompiledData::CompilationUnit *unit, QString *errorString) {
+            return unit->saveToDisk(outputFileName, errorString);
+        };
+    }
+
+
     if (inputFile.endsWith(QLatin1String(".qml"))) {
-        if (!compileQmlFile(inputFile, outputFileName, &error)) {
+        if (!compileQmlFile(inputFile, saveFunction, &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
     } else if (inputFile.endsWith(QLatin1String(".js"))) {
-        if (!compileJSFile(inputFile, outputFileName, &error)) {
+        if (!compileJSFile(inputFile, inputFileUrl, saveFunction, &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }

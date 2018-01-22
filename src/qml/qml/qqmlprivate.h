@@ -285,7 +285,7 @@ namespace QQmlPrivate
     struct CachedQmlUnit {
         const QV4::CompiledData::Unit *qmlData;
         QV4::CompilationUnitFactoryFunction createCompilationUnit;
-        QmlIR::IRLoaderFunction loadIR;
+        void *unused;
     };
 
     typedef const CachedQmlUnit *(*QmlUnitCacheLookupFunction)(const QUrl &url);

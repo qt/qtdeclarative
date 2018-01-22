@@ -46,6 +46,8 @@ private slots:
     void signalHandlerParameters();
     void errorOnArgumentsInSignalHandler();
     void aheadOfTimeCompilation();
+
+    void workerScripts();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -257,6 +259,19 @@ void tst_qmlcachegen::aheadOfTimeCompilation()
     QVariant result;
     QMetaObject::invokeMethod(obj.data(), "runTest", Q_RETURN_ARG(QVariant, result));
     QCOMPARE(result.toInt(), 42);
+}
+
+void tst_qmlcachegen::workerScripts()
+{
+    QVERIFY(QFile::exists(":/workerscripts/worker.js"));
+    QVERIFY(QFile::exists(":/workerscripts/worker.qml"));
+    QCOMPARE(QFileInfo(":/workerscripts/worker.js").size(), 0);
+
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl("qrc:///workerscripts/worker.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QTRY_VERIFY(obj->property("success").toBool());
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)
