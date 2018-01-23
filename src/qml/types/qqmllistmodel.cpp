@@ -274,7 +274,6 @@ QObject *ListModel::getOrCreateModelObject(QQmlListModel *model, int elementInde
 bool ListModel::sync(ListModel *src, ListModel *target)
 {
     // Sanity check
-    target->m_uid = src->m_uid;
 
     bool hasChanges = false;
 
@@ -391,11 +390,8 @@ bool ListModel::sync(ListModel *src, ListModel *target)
     return hasChanges;
 }
 
-ListModel::ListModel(ListLayout *layout, QQmlListModel *modelCache, int uid) : m_layout(layout), m_modelCache(modelCache)
+ListModel::ListModel(ListLayout *layout, QQmlListModel *modelCache) : m_layout(layout), m_modelCache(modelCache)
 {
-    if (uid == -1)
-        uid = uidCounter.fetchAndAddOrdered(1);
-    m_uid = uid;
 }
 
 void ListModel::destroy()
@@ -403,7 +399,6 @@ void ListModel::destroy()
     for (const auto &destroyer : remove(0, elements.count()))
         destroyer();
 
-    m_uid = -1;
     m_layout = 0;
     if (m_modelCache && m_modelCache->m_primary == false)
         delete m_modelCache;
@@ -508,7 +503,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
             roleIndex = e->setDoubleProperty(r, propertyValue->asDouble());
         } else if (QV4::ArrayObject *a = propertyValue->as<QV4::ArrayObject>()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
-            ListModel *subModel = new ListModel(r.subLayout, 0, -1);
+            ListModel *subModel = new ListModel(r.subLayout, 0);
 
             int arrayLength = a->getLength();
             for (int j=0 ; j < arrayLength ; ++j) {
@@ -589,7 +584,7 @@ void ListModel::set(int elementIndex, QV4::Object *object)
         } else if (QV4::ArrayObject *a = propertyValue->as<QV4::ArrayObject>()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
             if (r.type == ListLayout::Role::List) {
-                ListModel *subModel = new ListModel(r.subLayout, 0, -1);
+                ListModel *subModel = new ListModel(r.subLayout, 0);
 
                 int arrayLength = a->getLength();
                 for (int j=0 ; j < arrayLength ; ++j) {
@@ -1170,7 +1165,7 @@ QVector<int> ListElement::sync(ListElement *src, ListLayout *srcLayout, ListElem
 
                     if (srcSubModel) {
                         if (targetSubModel == 0) {
-                            targetSubModel = new ListModel(targetRole.subLayout, 0, srcSubModel->getUid());
+                            targetSubModel = new ListModel(targetRole.subLayout, 0);
                             target->setListPropertyFast(targetRole, targetSubModel);
                         }
                         if (ListModel::sync(srcSubModel, targetSubModel))
@@ -1329,7 +1324,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
             QV4::Scope scope(a->engine());
             QV4::ScopedObject o(scope);
 
-            ListModel *subModel = new ListModel(role.subLayout, 0, -1);
+            ListModel *subModel = new ListModel(role.subLayout, 0);
             int arrayLength = a->getLength();
             for (int j=0 ; j < arrayLength ; ++j) {
                 o = a->getIndexed(j);
@@ -1788,11 +1783,10 @@ QQmlListModel::QQmlListModel(QObject *parent)
     m_mainThread = true;
     m_primary = true;
     m_agent = 0;
-    m_uid = uidCounter.fetchAndAddOrdered(1);
     m_dynamicRoles = false;
 
     m_layout = new ListLayout;
-    m_listModel = new ListModel(m_layout, this, -1);
+    m_listModel = new ListModel(m_layout, this);
 
     m_engine = 0;
 }
@@ -1821,7 +1815,7 @@ QQmlListModel::QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agen
     m_dynamicRoles = orig->m_dynamicRoles;
 
     m_layout = new ListLayout(orig->m_layout);
-    m_listModel = new ListModel(m_layout, this, orig->m_listModel->getUid());
+    m_listModel = new ListModel(m_layout, this);
 
     if (m_dynamicRoles)
         sync(orig, this);
@@ -1883,7 +1877,6 @@ bool QQmlListModel::sync(QQmlListModel *src, QQmlListModel *target)
 
     bool hasChanges = false;
 
-    target->m_uid = src->m_uid;
     target->m_roles = src->m_roles;
 
     // Build hash of elements <-> uid for each of the lists
@@ -2611,7 +2604,7 @@ bool QQmlListModelParser::applyProperty(QV4::CompiledData::CompilationUnit *comp
             if (role.type == ListLayout::Role::List) {
                 subModel = model->getListProperty(outterElementIndex, role);
                 if (subModel == 0) {
-                    subModel = new ListModel(role.subLayout, 0, -1);
+                    subModel = new ListModel(role.subLayout, 0);
                     QVariant vModel = QVariant::fromValue(subModel);
                     model->setOrCreateProperty(outterElementIndex, elementName, vModel);
                 }
@@ -2638,7 +2631,7 @@ bool QQmlListModelParser::applyProperty(QV4::CompiledData::CompilationUnit *comp
             QString scriptStr = binding->valueAsScriptString(qmlUnit);
             if (definesEmptyList(scriptStr)) {
                 const ListLayout::Role &role = model->getOrCreateListRole(elementName);
-                ListModel *emptyModel = new ListModel(role.subLayout, 0, -1);
+                ListModel *emptyModel = new ListModel(role.subLayout, 0);
                 value = QVariant::fromValue(emptyModel);
             } else if (binding->isFunctionExpression()) {
                 QQmlBinding::Identifier id = binding->value.compiledScriptIndex;

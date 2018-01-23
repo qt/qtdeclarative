@@ -143,7 +143,6 @@ private:
 
     QVector<class DynamicRoleModelNode *> m_modelObjects;
     QVector<QString> m_roles;
-    int m_uid;
 
     struct ElementSync
     {
@@ -153,8 +152,6 @@ private:
         int targetIndex = -1;
         QVector<int> changedRoles;
     };
-
-    int getUid() const { return m_uid; }
 
     static bool sync(QQmlListModel *src, QQmlListModel *target);
     static QQmlListModel *createWithOwner(QQmlListModel *newOwner);

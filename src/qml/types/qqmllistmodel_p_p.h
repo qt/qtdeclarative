@@ -328,7 +328,7 @@ class ListModel
 {
 public:
 
-    ListModel(ListLayout *layout, QQmlListModel *modelCache, int uid);
+    ListModel(ListLayout *layout, QQmlListModel *modelCache);
     ~ListModel() {}
 
     void destroy();
@@ -377,8 +377,6 @@ public:
 
     void move(int from, int to, int n);
 
-    int getUid() const { return m_uid; }
-
     static bool sync(ListModel *src, ListModel *target);
 
     QObject *getOrCreateModelObject(QQmlListModel *model, int elementIndex);
@@ -386,7 +384,6 @@ public:
 private:
     QPODVector<ListElement *, 4> elements;
     ListLayout *m_layout;
-    int m_uid;
 
     QQmlListModel *m_modelCache;
 
