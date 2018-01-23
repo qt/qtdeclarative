@@ -67,7 +67,7 @@
 
   QJSValue supports the types defined in the \l{ECMA-262}
   standard: The primitive types, which are Undefined, Null, Boolean,
-  Number, and String; and the Object type. Additionally, built-in
+  Number, and String; and the Object and Array types. Additionally, built-in
   support is provided for Qt/C++ types such as QVariant and QObject.
 
   For the object-based types (including Date and RegExp), use the
@@ -108,6 +108,38 @@
   script code, or QJSValueIterator in C++.
 
   \sa QJSEngine, QJSValueIterator
+
+  \section1 Working With Arrays
+
+  To create an array using QJSValue, use \l QJSEngine::newArray():
+
+  \code
+  // Assumes that this class was declared in QML.
+  QJSValue jsArray = engine->newArray(3);
+  \endcode
+
+  To set individual elements in the array, use
+  the \l {QJSValue::}{setProperty(quint32 arrayIndex, const QJSValue &value)}
+  overload. For example, to fill the array above with integers:
+
+  \code
+  for (int i = 0; i < 3; ++i) {
+      jsArray.setProperty(i, QRandomGenerator::global().generate());
+  }
+  \endcode
+
+  To determine the length of the array, access the \c "length" property.
+  To access array elements, use the
+  \l {QJSValue::}{property(quint32 arrayIndex)} overload. The following code
+  reads the array we created above back into a list:
+
+  \code
+  QVector<int> integers;
+  const int length = jsArray.property("length").toInt();
+  for (int i = 0; i < length; ++i) {
+      integers.append(jsArray.property(i).toInt());
+  }
+  \endcode
 */
 
 /*!
@@ -1001,6 +1033,10 @@ bool QJSValue::strictlyEquals(const QJSValue& other) const
   occurred, property() returns the value that was thrown (typically
   an \c{Error} object).
 
+  To access array elements, use the
+  \l {QJSValue::}{setProperty(quint32 arrayIndex, const QJSValue &value)}
+  overload instead.
+
   \sa setProperty(), hasProperty(), QJSValueIterator
 */
 QJSValue QJSValue::property(const QString& name) const
@@ -1032,8 +1068,25 @@ QJSValue QJSValue::property(const QString& name) const
 
   Returns the property at the given \a arrayIndex.
 
-  This function is provided for convenience and performance when
-  working with array objects.
+  It is possible to access elements in an array in two ways. The first is to
+  use the array index as the property name:
+
+  \code
+  qDebug() << jsValueArray.property(QLatin1String("4")).toString();
+  \endcode
+
+  The second is to use the overload that takes an index:
+
+  \code
+  qDebug() << jsValueArray.property(4).toString();
+  \endcode
+
+  Both of these approaches achieve the same result, except that the latter:
+
+  \list
+  \li Is easier to use (can use an integer directly)
+  \li Is faster (no conversion to integer)
+  \endlist
 
   If this QJSValue is not an Array object, this function behaves
   as if property() was called with the string representation of \a
@@ -1064,6 +1117,10 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
 
   If this QJSValue does not already have a property with name \a name,
   a new property is created.
+
+  To modify array elements, use the
+  \l {QJSValue::}{setProperty(quint32 arrayIndex, const QJSValue &value)}
+  overload instead.
 
   \sa property(), deleteProperty()
 */
@@ -1102,12 +1159,31 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
 
   Sets the property at the given \a arrayIndex to the given \a value.
 
-  This function is provided for convenience and performance when
-  working with array objects.
+  It is possible to modify elements in an array in two ways. The first is to
+  use the array index as the property name:
+
+  \code
+  jsValueArray.setProperty(QLatin1String("4"), value);
+  \endcode
+
+  The second is to use the overload that takes an index:
+
+  \code
+  jsValueArray.setProperty(4, value);
+  \endcode
+
+  Both of these approaches achieve the same result, except that the latter:
+
+  \list
+  \li Is easier to use (can use an integer directly)
+  \li Is faster (no conversion to integer)
+  \endlist
 
   If this QJSValue is not an Array object, this function behaves
   as if setProperty() was called with the string representation of \a
   arrayIndex.
+
+  \sa {QJSValue::}{property(quint32 arrayIndex)}, {Working With Arrays}
 */
 void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
 {
