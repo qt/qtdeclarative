@@ -156,8 +156,8 @@ public:
     void loadAsync(QQmlDataBlob *b);
     void loadWithStaticData(QQmlDataBlob *b, const QByteArray &);
     void loadWithStaticDataAsync(QQmlDataBlob *b, const QByteArray &);
-    void loadWithCachedUnit(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit);
-    void loadWithCachedUnitAsync(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit);
+    void loadWithCachedUnit(QQmlDataBlob *b, const QV4::CompiledData::Unit *unit);
+    void loadWithCachedUnitAsync(QQmlDataBlob *b, const QV4::CompiledData::Unit *unit);
     void callCompleted(QQmlDataBlob *b);
     void callDownloadProgressChanged(QQmlDataBlob *b, qreal p);
     void initializeEngine(QQmlExtensionInterface *, const char *);
@@ -168,7 +168,7 @@ protected:
 private:
     void loadThread(QQmlDataBlob *b);
     void loadWithStaticDataThread(QQmlDataBlob *b, const QByteArray &);
-    void loadWithCachedUnitThread(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit);
+    void loadWithCachedUnitThread(QQmlDataBlob *b, const QV4::CompiledData::Unit *unit);
     void callCompletedMain(QQmlDataBlob *b);
     void callDownloadProgressChangedMain(QQmlDataBlob *b, qreal p);
     void initializeEngineMain(QQmlExtensionInterface *iface, const char *uri);
@@ -832,13 +832,13 @@ void QQmlTypeLoaderThread::loadWithStaticDataAsync(QQmlDataBlob *b, const QByteA
     postMethodToThread(&This::loadWithStaticDataThread, b, d);
 }
 
-void QQmlTypeLoaderThread::loadWithCachedUnit(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit)
+void QQmlTypeLoaderThread::loadWithCachedUnit(QQmlDataBlob *b, const QV4::CompiledData::Unit *unit)
 {
     b->addref();
     callMethodInThread(&This::loadWithCachedUnitThread, b, unit);
 }
 
-void QQmlTypeLoaderThread::loadWithCachedUnitAsync(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit)
+void QQmlTypeLoaderThread::loadWithCachedUnitAsync(QQmlDataBlob *b, const QV4::CompiledData::Unit *unit)
 {
     b->addref();
     postMethodToThread(&This::loadWithCachedUnitThread, b, unit);
@@ -884,7 +884,7 @@ void QQmlTypeLoaderThread::loadWithStaticDataThread(QQmlDataBlob *b, const QByte
     b->release();
 }
 
-void QQmlTypeLoaderThread::loadWithCachedUnitThread(QQmlDataBlob *b, const QQmlPrivate::CachedQmlUnit *unit)
+void QQmlTypeLoaderThread::loadWithCachedUnitThread(QQmlDataBlob *b, const QV4::CompiledData::Unit *unit)
 {
     m_loader->loadWithCachedUnitThread(b, unit);
     b->release();
@@ -1017,8 +1017,8 @@ struct StaticLoader {
 };
 
 struct CachedLoader {
-    const QQmlPrivate::CachedQmlUnit *unit;
-    CachedLoader(const QQmlPrivate::CachedQmlUnit *unit) :  unit(unit) {}
+    const QV4::CompiledData::Unit *unit;
+    CachedLoader(const QV4::CompiledData::Unit *unit) :  unit(unit) {}
 
     void loadThread(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
     {
@@ -1090,7 +1090,7 @@ void QQmlTypeLoader::loadWithStaticData(QQmlDataBlob *blob, const QByteArray &da
     doLoad(StaticLoader(data), blob, mode);
 }
 
-void QQmlTypeLoader::loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit, Mode mode)
+void QQmlTypeLoader::loadWithCachedUnit(QQmlDataBlob *blob, const QV4::CompiledData::Unit *unit, Mode mode)
 {
     doLoad(CachedLoader(unit), blob, mode);
 }
@@ -1102,7 +1102,7 @@ void QQmlTypeLoader::loadWithStaticDataThread(QQmlDataBlob *blob, const QByteArr
     setData(blob, data);
 }
 
-void QQmlTypeLoader::loadWithCachedUnitThread(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit)
+void QQmlTypeLoader::loadWithCachedUnitThread(QQmlDataBlob *blob, const QV4::CompiledData::Unit *unit)
 {
     ASSERT_LOADTHREAD();
 
@@ -1289,7 +1289,7 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QQmlDataBlob::SourceCodeD
     blob->tryDone();
 }
 
-void QQmlTypeLoader::setCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit)
+void QQmlTypeLoader::setCachedUnit(QQmlDataBlob *blob, const QV4::CompiledData::Unit *unit)
 {
     QML_MEMORY_SCOPE_URL(blob->url());
     QQmlCompilingProfiler prof(profiler(), blob);
@@ -1666,7 +1666,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
         typeData = new QQmlTypeData(url, this);
         // TODO: if (compiledData == 0), is it safe to omit this insertion?
         m_typeCache.insert(url, typeData);
-        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(typeData->url())) {
+        if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(typeData->url())) {
             QQmlTypeLoader::loadWithCachedUnit(typeData, cachedUnit, mode);
         } else {
             QQmlTypeLoader::load(typeData, mode);
@@ -1723,7 +1723,7 @@ QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &url)
         scriptBlob = new QQmlScriptBlob(url, this);
         m_scriptCache.insert(url, scriptBlob);
 
-        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(scriptBlob->url())) {
+        if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(scriptBlob->url())) {
             QQmlTypeLoader::loadWithCachedUnit(scriptBlob, cachedUnit);
         } else {
             QQmlTypeLoader::load(scriptBlob);
@@ -2425,13 +2425,13 @@ void QQmlTypeData::dataReceived(const SourceCodeData &data)
     continueLoadFromIR();
 }
 
-void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
+void QQmlTypeData::initializeFromCachedUnit(const QV4::CompiledData::Unit *unit)
 {
     m_document.reset(new QmlIR::Document(isDebugging()));
-    QmlIR::IRLoader loader(unit->qmlData, m_document.data());
+    QmlIR::IRLoader loader(unit, m_document.data());
     loader.load();
     m_document->jsModule.fileName = finalUrlString();
-    m_document->javaScriptCompilationUnit.adopt(new QV4::CompiledData::CompilationUnit(unit->qmlData));
+    m_document->javaScriptCompilationUnit.adopt(new QV4::CompiledData::CompilationUnit(unit));
     continueLoadFromIR();
 }
 
@@ -3011,10 +3011,10 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
     initializeFromCompilationUnit(unit);
 }
 
-void QQmlScriptBlob::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
+void QQmlScriptBlob::initializeFromCachedUnit(const QV4::CompiledData::Unit *unit)
 {
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
-    compilationUnit.adopt(new QV4::CompiledData::CompilationUnit(unit->qmlData));
+    compilationUnit.adopt(new QV4::CompiledData::CompilationUnit(unit));
     initializeFromCompilationUnit(compilationUnit);
 }
 
@@ -3153,7 +3153,7 @@ void QQmlQmldirData::dataReceived(const SourceCodeData &data)
     }
 }
 
-void QQmlQmldirData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *)
+void QQmlQmldirData::initializeFromCachedUnit(const QV4::CompiledData::Unit *)
 {
     Q_UNIMPLEMENTED();
 }

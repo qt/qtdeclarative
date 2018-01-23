@@ -133,7 +133,7 @@ public:
 
     static QList<QQmlPrivate::AutoParentFunction> parentFunctions();
 
-    static const QQmlPrivate::CachedQmlUnit *findCachedCompilationUnit(const QUrl &uri);
+    static const QV4::CompiledData::Unit *findCachedCompilationUnit(const QUrl &uri);
 
     static bool namespaceContainsRegistrations(const QString &, int majorVersion);
 

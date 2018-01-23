@@ -2538,16 +2538,16 @@ QList<QQmlType> QQmlMetaType::qmlSingletonTypes()
     return retn;
 }
 
-const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const QUrl &uri)
+const QV4::CompiledData::Unit *QQmlMetaType::findCachedCompilationUnit(const QUrl &uri)
 {
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     for (const auto lookup : qAsConst(data->lookupCachedQmlUnit)) {
         if (const QQmlPrivate::CachedQmlUnit *unit = lookup(uri))
-            return unit;
+            return unit->qmlData;
     }
-    return 0;
+    return nullptr;
 }
 
 /*!
