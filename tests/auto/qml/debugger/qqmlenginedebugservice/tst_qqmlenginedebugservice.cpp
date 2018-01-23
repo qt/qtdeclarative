@@ -229,9 +229,13 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
 
         QCOMPARE(p.name, QString::fromUtf8(pmeta.name()));
 
-        if (pmeta.type() < QVariant::UserType && pmeta.userType() !=
-                QMetaType::QVariant) // TODO test complex types
-            QCOMPARE(p.value , pmeta.read(o));
+        // TODO test complex types
+        if (pmeta.type() < QVariant::UserType && pmeta.userType() != QMetaType::QVariant) {
+            const QVariant expected = pmeta.read(o);
+            QVERIFY2(p.value == expected, QString::fromLatin1("%1 != %2. Details: %3/%4/%5/%6")
+                     .arg(QTest::toString(p.value)).arg(QTest::toString(expected)).arg(p.name)
+                     .arg(p.valueTypeName).arg(pmeta.type()).arg(pmeta.userType()).toUtf8());
+        }
 
         if (p.name == "parent")
             QVERIFY(p.valueTypeName == "QGraphicsObject*" ||
