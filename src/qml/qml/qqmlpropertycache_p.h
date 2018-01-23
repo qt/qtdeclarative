@@ -221,7 +221,6 @@ public:
     quint8 revision() const { return _revision; }
     void setRevision(quint8 rev)
     {
-        Q_ASSERT(rev >= std::numeric_limits<quint8>::min());
         Q_ASSERT(rev <= std::numeric_limits<quint8>::max());
         _revision = quint8(rev);
     }
@@ -247,7 +246,6 @@ public:
     quint8 typeMinorVersion() const { return _typeMinorVersion; }
     void setTypeMinorVersion(quint8 rev)
     {
-        Q_ASSERT(rev >= std::numeric_limits<quint8>::min());
         Q_ASSERT(rev <= std::numeric_limits<quint8>::max());
         _typeMinorVersion = quint8(rev);
     }
