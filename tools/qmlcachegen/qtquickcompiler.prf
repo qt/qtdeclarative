@@ -53,10 +53,6 @@ for(res, QMLCACHE_RESOURCE_FILES) {
     QMLCACHE_RESOURCE_FLAGS += --resource=$$res
 }
 
-!isEmpty(QMLCACHE_FILES) {
-    QT_PRIVATE *= core-private qml-private
-}
-
 defineReplace(qmlCacheOutputName) {
     name = $$absolute_path($$1, $$OUT_PWD)
     name = $$relative_path($$name, $$_PRO_FILE_PWD_)

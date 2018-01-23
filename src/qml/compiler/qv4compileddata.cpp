@@ -94,7 +94,8 @@ static QString cacheFilePath(const QUrl &url)
 }
 #endif
 
-CompilationUnit::CompilationUnit()
+CompilationUnit::CompilationUnit(const Unit *unitData)
+    : data(unitData)
 {}
 
 #ifndef V4_BOOTSTRAP

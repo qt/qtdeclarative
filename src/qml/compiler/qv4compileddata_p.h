@@ -884,7 +884,7 @@ Q_STATIC_ASSERT(offsetof(CompilationUnitBase, runtimeRegularExpressions) == offs
 struct Q_QML_PRIVATE_EXPORT CompilationUnit final : public CompilationUnitBase
 {
 public:
-    CompilationUnit();
+    CompilationUnit(const Unit *unitData = nullptr);
 #ifdef V4_BOOTSTRAP
     ~CompilationUnit() {}
 #else

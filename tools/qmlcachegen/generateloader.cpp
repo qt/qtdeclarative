@@ -293,7 +293,6 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
     {
         QTextStream stream(&generatedLoaderCode);
         stream << "#include <QtQml/qqmlprivate.h>\n";
-        stream << "#include <private/qv4compileddata_p.h>\n";
         stream << "#include <QtCore/qdir.h>\n";
         stream << "#include <QtCore/qurl.h>\n";
         stream << "\n";
@@ -306,13 +305,8 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
             const QString ns = symbolNamespaceForPath(compiledFile);
             stream << "namespace " << symbolNamespaceForPath(compiledFile) << " { \n";
             stream << "    extern const unsigned char qmlData[];\n";
-            stream << "    QV4::CompiledData::CompilationUnit *createCompilationUnit() {\n";
-            stream << "        QV4::CompiledData::CompilationUnit *unit = new QV4::CompiledData::CompilationUnit;\n";
-            stream << "        unit->data = reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData);\n";
-            stream << "        return unit;\n";
-            stream << "    }\n";
             stream << "    const QQmlPrivate::CachedQmlUnit unit = {\n";
-            stream << "        reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData), &createCompilationUnit, nullptr\n";
+            stream << "        reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData), nullptr, nullptr\n";
             stream << "    };\n";
             stream << "}\n";
         }

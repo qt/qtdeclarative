@@ -2431,7 +2431,7 @@ void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *un
     QmlIR::IRLoader loader(unit->qmlData, m_document.data());
     loader.load();
     m_document->jsModule.fileName = finalUrlString();
-    m_document->javaScriptCompilationUnit.adopt(unit->createCompilationUnit());
+    m_document->javaScriptCompilationUnit.adopt(new QV4::CompiledData::CompilationUnit(unit->qmlData));
     continueLoadFromIR();
 }
 
@@ -3013,7 +3013,9 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 
 void QQmlScriptBlob::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
 {
-    initializeFromCompilationUnit(unit->createCompilationUnit());
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
+    compilationUnit.adopt(new QV4::CompiledData::CompilationUnit(unit->qmlData));
+    initializeFromCompilationUnit(compilationUnit);
 }
 
 void QQmlScriptBlob::done()
@@ -3075,7 +3077,7 @@ void QQmlScriptBlob::scriptImported(QQmlScriptBlob *blob, const QV4::CompiledDat
     m_scripts << ref;
 }
 
-void QQmlScriptBlob::initializeFromCompilationUnit(QV4::CompiledData::CompilationUnit *unit)
+void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit)
 {
     Q_ASSERT(!m_scriptData);
     m_scriptData = new QQmlScriptData();

@@ -226,7 +226,7 @@ Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlCo
 {
     if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(originalUrl)) {
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> jsUnit;
-        jsUnit.adopt(cachedUnit->createCompilationUnit());
+        jsUnit.adopt(new QV4::CompiledData::CompilationUnit(cachedUnit->qmlData));
         return new QV4::Script(engine, qmlContext, jsUnit);
     }
 

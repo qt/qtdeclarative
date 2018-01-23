@@ -69,7 +69,6 @@ namespace CompiledData {
 struct Unit;
 struct CompilationUnit;
 }
-typedef CompiledData::CompilationUnit *(*CompilationUnitFactoryFunction)();
 }
 namespace QmlIR {
 struct Document;
@@ -284,8 +283,8 @@ namespace QQmlPrivate
 
     struct CachedQmlUnit {
         const QV4::CompiledData::Unit *qmlData;
-        QV4::CompilationUnitFactoryFunction createCompilationUnit;
-        void *unused;
+        void *unused1;
+        void *unused2;
     };
 
     typedef const CachedQmlUnit *(*QmlUnitCacheLookupFunction)(const QUrl &url);
