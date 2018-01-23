@@ -396,22 +396,10 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, getWorker(script));
     Q_ASSERT(!!qmlContext);
 
-    if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url)) {
-        QV4::CompiledData::CompilationUnit *jsUnit = cachedUnit->createCompilationUnit();
-        program.reset(new QV4::Script(v4, qmlContext, jsUnit));
-    } else {
-        QFile f(fileName);
-        if (!f.open(QIODevice::ReadOnly)) {
-            qWarning().nospace() << "WorkerScript: Cannot find source file " << url.toString();
-            return;
-        }
-
-        QByteArray data = f.readAll();
-        QString sourceCode = QString::fromUtf8(data);
-        QmlIR::Document::removeScriptPragmas(sourceCode);
-
-        program.reset(new QV4::Script(v4, qmlContext, sourceCode, url.toString()));
-        program->parse();
+    program.reset(QV4::Script::createFromFileOrCache(v4, qmlContext, fileName, url));
+    if (program.isNull()) {
+        qWarning().nospace() << "WorkerScript: Cannot find source file " << url.toString();
+        return;
     }
 
     if (!v4->hasException)

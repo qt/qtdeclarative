@@ -222,6 +222,26 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
     return cg.generateCompilationUnit(/*generate unit data*/false);
 }
 
+Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl)
+{
+    if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(originalUrl)) {
+        QV4::CompiledData::CompilationUnit *jsUnit = cachedUnit->createCompilationUnit();
+        return new QV4::Script(engine, qmlContext, jsUnit);
+    }
+
+    QFile f(fileName);
+    if (!f.open(QIODevice::ReadOnly))
+        return nullptr;
+
+    QByteArray data = f.readAll();
+    QString sourceCode = QString::fromUtf8(data);
+    QmlIR::Document::removeScriptPragmas(sourceCode);
+
+    auto result = new QV4::Script(engine, qmlContext, sourceCode, originalUrl.toString());
+    result->parse();
+    return result;
+}
+
 QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext)
 {
     QV4::Scope scope(engine);

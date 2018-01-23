@@ -227,21 +227,7 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, cons
 
     } else {
         QScopedPointer<QV4::Script> script;
-
-        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url)) {
-            QV4::CompiledData::CompilationUnit *jsUnit = cachedUnit->createCompilationUnit();
-            script.reset(new QV4::Script(scope.engine, qmlcontext, jsUnit));
-        } else {
-            QFile f(localFile);
-
-            if (f.open(QIODevice::ReadOnly)) {
-                QByteArray data = f.readAll();
-                QString code = QString::fromUtf8(data);
-                QmlIR::Document::removeScriptPragmas(code);
-
-                script.reset(new QV4::Script(scope.engine, qmlcontext, code, url.toString()));
-            }
-        }
+        script.reset(QV4::Script::createFromFileOrCache(scope.engine, qmlcontext, localFile, url));
 
         if (!script.isNull()) {
             script->parse();
