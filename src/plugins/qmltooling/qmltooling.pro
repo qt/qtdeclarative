@@ -14,8 +14,9 @@ qmldbg_native.depends = packetprotocol
 qmldbg_server.depends = packetprotocol
 
 qtConfig(qml-network) {
+    qtConfig(localserver): SUBDIRS += qmldbg_local
+
     SUBDIRS += \
-        qmldbg_local \
         qmldbg_tcp
 }
 
