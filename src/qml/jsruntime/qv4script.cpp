@@ -225,7 +225,8 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
 Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl)
 {
     if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(originalUrl)) {
-        QV4::CompiledData::CompilationUnit *jsUnit = cachedUnit->createCompilationUnit();
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> jsUnit;
+        jsUnit.adopt(cachedUnit->createCompilationUnit());
         return new QV4::Script(engine, qmlContext, jsUnit);
     }
 
