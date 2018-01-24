@@ -90,7 +90,7 @@ Column {
     Examples.Slider {
         id: speedSlider
         name: "Speed"
-        min: 0.05
+        min: 0
         max: 5
         init: 1
         width: 240
