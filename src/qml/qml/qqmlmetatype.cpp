@@ -1405,6 +1405,12 @@ QString registrationTypeString(QQmlType::RegistrationType typeType)
 bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *data, const char *uri, const QString &typeName, int majorVersion = -1)
 {
     if (!typeName.isEmpty()) {
+        if (typeName.at(0).isLower()) {
+            QString failure(QCoreApplication::translate("qmlRegisterType", "Invalid QML %1 name \"%2\"; type names must begin with an uppercase letter"));
+            data->typeRegistrationFailures.append(failure.arg(registrationTypeString(typeType)).arg(typeName));
+            return false;
+        }
+
         int typeNameLen = typeName.length();
         for (int ii = 0; ii < typeNameLen; ++ii) {
             if (!(typeName.at(ii).isLetterOrNumber() || typeName.at(ii) == '_')) {
@@ -1648,6 +1654,9 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
     else if (type == CompositeSingletonRegistration)
         dtype = QQmlMetaType::registerCompositeSingletonType(*reinterpret_cast<RegisterCompositeSingletonType *>(data));
     else
+        return -1;
+
+    if (!dtype.isValid())
         return -1;
 
     QMutexLocker lock(metaTypeDataLock());
