@@ -481,6 +481,20 @@ void tst_customization::comboPopup()
         QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
         QVERIFY(qt_createdQObjects()->contains("combobox-popup-simple"));
     }
+
+    reset();
+
+    {
+        // test that ComboBox::popup is completed upon component completion (if appropriate)
+        QQmlComponent component(engine);
+        component.setData("import QtQuick 2.9; import QtQuick.Controls 2.2; ComboBox { id: control; contentItem: Item { visible: !control.popup.visible } popup: Popup { property bool wasCompleted: false; Component.onCompleted: wasCompleted = true } }", QUrl());
+        QScopedPointer<QQuickItem> comboBox(qobject_cast<QQuickItem *>(component.create()));
+        QVERIFY(comboBox);
+
+        QObject *popup = comboBox->property("popup").value<QObject *>();
+        QVERIFY(popup);
+        QCOMPARE(popup->property("wasCompleted"), QVariant(true));
+    }
 }
 
 QTEST_MAIN(tst_customization)

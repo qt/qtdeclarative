@@ -1603,9 +1603,9 @@ void QQuickComboBox::componentComplete()
 {
     Q_D(QQuickComboBox);
     d->executeIndicator(true);
+    QQuickControl::componentComplete();
     if (d->popup)
         d->executePopup(true);
-    QQuickControl::componentComplete();
 
     if (d->delegateModel && d->ownModel)
         static_cast<QQmlDelegateModel *>(d->delegateModel)->componentComplete();
