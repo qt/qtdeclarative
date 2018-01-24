@@ -60,6 +60,8 @@ QT_BEGIN_NAMESPACE
 
 class QAnimationGroupJob;
 class QAnimationJobChangeListener;
+class QQmlAnimationTimer;
+
 class Q_QML_PRIVATE_EXPORT QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QAbstractAnimationJob)
@@ -168,6 +170,7 @@ protected:
 
     QAbstractAnimationJob *m_nextSibling;
     QAbstractAnimationJob *m_previousSibling;
+    QQmlAnimationTimer *m_timer = nullptr;
 
     bool *m_wasDeleted;
     bool m_hasRegisteredTimer:1;
@@ -203,20 +206,20 @@ public:
     static QQmlAnimationTimer *instance();
     static QQmlAnimationTimer *instance(bool create);
 
-    static void registerAnimation(QAbstractAnimationJob *animation, bool isTopLevel);
-    static void unregisterAnimation(QAbstractAnimationJob *animation);
+    void registerAnimation(QAbstractAnimationJob *animation, bool isTopLevel);
+    void unregisterAnimation(QAbstractAnimationJob *animation);
 
     /*
         this is used for updating the currentTime of all animations in case the pause
         timer is active or, otherwise, only of the animation passed as parameter.
     */
-    static void ensureTimerUpdate();
+    void ensureTimerUpdate();
 
     /*
         this will evaluate the need of restarting the pause timer in case there is still
         some pause animations running.
     */
-    static void updateAnimationTimer();
+    void updateAnimationTimer();
 
     void restartAnimationTimer() override;
     void updateAnimationsTime(qint64 timeStep) override;
