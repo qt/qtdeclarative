@@ -229,8 +229,18 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
 
         QCOMPARE(p.name, QString::fromUtf8(pmeta.name()));
 
-        // TODO test complex types
-        if (pmeta.type() < QVariant::UserType && pmeta.userType() != QMetaType::QVariant) {
+        if (pmeta.userType() == QMetaType::QObjectStar) {
+            const QmlDebugObjectReference ref = qvariant_cast<QmlDebugObjectReference>(p.value);
+            QObject *pobj = qvariant_cast<QObject *>(pmeta.read(o));
+            if (pobj) {
+                if (pobj->objectName().isEmpty())
+                    QCOMPARE(ref.name, QString("<unnamed object>"));
+                else
+                    QCOMPARE(ref.name, pobj->objectName());
+            } else {
+                QCOMPARE(ref.name, QString("<unknown value>"));
+            }
+        } else if (pmeta.type() < QVariant::UserType && pmeta.userType() != QMetaType::QVariant) {
             const QVariant expected = pmeta.read(o);
             QVERIFY2(p.value == expected, QString::fromLatin1("%1 != %2. Details: %3/%4/%5/%6")
                      .arg(QTest::toString(p.value)).arg(QTest::toString(expected)).arg(p.name)
@@ -1262,7 +1272,8 @@ void tst_QQmlEngineDebugService::queryObjectTree()
 
     QmlDebugObjectReference targetReference = qvariant_cast<QmlDebugObjectReference>(propertyChangeTarget.value);
     QVERIFY(!targetReference.className.isEmpty());
-    QVERIFY(targetReference.debugId != -1);
+    QCOMPARE(targetReference.debugId, -1);
+    QCOMPARE(targetReference.name, QString("<unnamed object>"));
 
     // check transition
     QmlDebugObjectReference transition = obj.children[0];
@@ -1280,7 +1291,8 @@ void tst_QQmlEngineDebugService::queryObjectTree()
 
     targetReference = qvariant_cast<QmlDebugObjectReference>(animationTarget.value);
     QVERIFY(!targetReference.className.isEmpty());
-    QVERIFY(targetReference.debugId != -1);
+    QCOMPARE(targetReference.debugId, -1);
+    QCOMPARE(targetReference.name, QString("<unnamed object>"));
 
     QCOMPARE(findProperty(animation.properties,"property").value.toString(), QString("width"));
     QCOMPARE(findProperty(animation.properties,"duration").value.toInt(), 100);
