@@ -125,9 +125,10 @@ void QEtcTexture::bind()
 
     QOpenGLContext *ctx = QOpenGLContext::currentContext();
     Q_ASSERT(ctx != 0);
+    const int compFactor = m_type == GL_COMPRESSED_RGBA8_ETC2_EAC ? 1 : 2;
     ctx->functions()->glCompressedTexImage2D(GL_TEXTURE_2D, 0, m_type,
                                              m_size.width(), m_size.height(), 0,
-                                             (m_paddedSize.width() * m_paddedSize.height()) / 2,
+                                             (m_paddedSize.width() * m_paddedSize.height()) / compFactor,
                                              m_data.data() + headerSize);
 
 #ifndef QT_NO_DEBUG
