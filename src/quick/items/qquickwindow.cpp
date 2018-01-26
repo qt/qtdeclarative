@@ -2284,6 +2284,7 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event) con
 
 void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
 {
+    Q_Q(QQuickWindow);
     // If users spin the eventloop as a result of event delivery, we disable
     // event compression and send events directly. This is because we consider
     // the usecase a bit evil, but we at least don't want to lose events.
@@ -2293,8 +2294,11 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     if (event->asPointerMouseEvent()) {
         deliverMouseEvent(event->asPointerMouseEvent());
         // failsafe: never allow any kind of grab to persist after release
-        if (event->isReleaseEvent() && event->buttons() == Qt::NoButton)
+        QQuickItem *grabber = q->mouseGrabberItem();
+        if (event->isReleaseEvent() && event->buttons() == Qt::NoButton && grabber) {
             event->clearGrabbers();
+            sendUngrabEvent(grabber, false);
+        }
     } else if (event->asPointerTouchEvent()) {
         deliverTouchEvent(event->asPointerTouchEvent());
     } else {
