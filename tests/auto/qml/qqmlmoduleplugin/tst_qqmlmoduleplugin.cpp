@@ -29,6 +29,9 @@
 #include <qdir.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtCore/qjsondocument.h>
+#include <QtCore/qjsonarray.h>
 #include <QDebug>
 
 #if defined(Q_OS_MAC)
@@ -73,10 +76,78 @@ private slots:
     void importsChildPlugin();
     void importsChildPlugin2();
     void importsChildPlugin21();
+    void parallelPluginImport();
 
 private:
     QString m_importsDirectory;
     QString m_dataImportsDirectory;
+};
+
+class PluginThatWaits : public QQmlExtensionPlugin
+{
+public:
+    static QByteArray metaData;
+
+    static QMutex initializeEngineEntered;
+    static QWaitCondition waitingForInitializeEngineEntry;
+    static QMutex leavingInitializeEngine;
+    static QWaitCondition waitingForInitializeEngineLeave;
+
+    void registerTypes(const char *uri) override
+    {
+        qmlRegisterModule(uri, 1, 0);
+    }
+
+    void initializeEngine(QQmlEngine *engine, const char *uri) override
+    {
+        initializeEngineEntered.lock();
+        leavingInitializeEngine.lock();
+        waitingForInitializeEngineEntry.wakeOne();
+        initializeEngineEntered.unlock();
+        waitingForInitializeEngineLeave.wait(&leavingInitializeEngine);
+        leavingInitializeEngine.unlock();
+    }
+};
+QByteArray PluginThatWaits::metaData;
+QMutex PluginThatWaits::initializeEngineEntered;
+QWaitCondition PluginThatWaits::waitingForInitializeEngineEntry;
+QMutex PluginThatWaits::leavingInitializeEngine;
+QWaitCondition PluginThatWaits::waitingForInitializeEngineLeave;
+
+class SecondStaticPlugin : public QQmlExtensionPlugin
+{
+public:
+    static QByteArray metaData;
+
+    void registerTypes(const char *uri) override
+    {
+        qmlRegisterModule(uri, 1, 0);
+    }
+};
+QByteArray SecondStaticPlugin::metaData;
+
+template <typename PluginType>
+void registerStaticPlugin(const char *uri)
+{
+    QStaticPlugin plugin;
+    plugin.instance = []() {
+        static PluginType plugin;
+        return static_cast<QObject*>(&plugin);
+    };
+
+    QJsonObject md;
+    md.insert(QStringLiteral("IID"), QQmlExtensionInterface_iid);
+    QJsonArray uris;
+    uris.append(uri);
+    md.insert(QStringLiteral("uri"), uris);
+
+    PluginType::metaData.append(QLatin1String("QTMETADATA  "));
+    PluginType::metaData.append(QJsonDocument(md).toBinaryData());
+
+    plugin.rawMetaData = []() {
+        return PluginType::metaData.constData();
+    };
+    qRegisterStaticPluginFunction(plugin);
 };
 
 void tst_qqmlmoduleplugin::initTestCase()
@@ -88,6 +159,9 @@ void tst_qqmlmoduleplugin::initTestCase()
     m_dataImportsDirectory = directory() + QStringLiteral("/imports");
     QVERIFY2(QFileInfo(m_dataImportsDirectory).isDir(),
              qPrintable(QString::fromLatin1("Imports directory '%1' does not exist.").arg(m_dataImportsDirectory)));
+
+    registerStaticPlugin<PluginThatWaits>("moduleWithWaitingPlugin");
+    registerStaticPlugin<SecondStaticPlugin>("moduleWithStaticPlugin");
 }
 
 #define VERIFY_ERRORS(errorfile) \
@@ -633,6 +707,51 @@ void tst_qqmlmoduleplugin::importsChildPlugin21()
     QVERIFY(object != 0);
     QCOMPARE(object->property("value").toInt(),123);
     delete object;
+}
+
+void tst_qqmlmoduleplugin::parallelPluginImport()
+{
+    QMutexLocker locker(&PluginThatWaits::initializeEngineEntered);
+
+    QThread worker;
+    QObject::connect(&worker, &QThread::started, [&worker](){
+        // Engines in separate threads are tricky, but as long as we do not create a graphical
+        // object and move objects created by the engines across thread boundaries, this is safe.
+        // At the same time this allows us to place the engine's loader thread into the position
+        // where, without the fix for this bug, the global lock is acquired.
+        QQmlEngine engineInThread;
+
+        QQmlComponent component(&engineInThread);
+        component.setData("import moduleWithWaitingPlugin 1.0\nimport QtQml 2.0\nQtObject {}",
+                          QUrl());
+
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+
+        worker.quit();
+    });
+    worker.start();
+
+    PluginThatWaits::waitingForInitializeEngineEntry.wait(&PluginThatWaits::initializeEngineEntered);
+
+    {
+        // After acquiring this lock, the engine in the other thread as well as its type loader
+        // thread are blocked. However they should not hold the global plugin lock
+        // qmlEnginePluginsWithRegisteredTypes()->mutex in qqmllimports.cpp, allowing for the load
+        // of a component in a different engine with its own plugin to proceed.
+        QMutexLocker continuationLock(&PluginThatWaits::leavingInitializeEngine);
+
+        QQmlEngine secondEngine;
+        QQmlComponent secondComponent(&secondEngine);
+        secondComponent.setData("import moduleWithStaticPlugin 1.0\nimport QtQml 2.0\nQtObject {}",
+                                QUrl());
+        QScopedPointer<QObject> o(secondComponent.create());
+        QVERIFY(!o.isNull());
+
+        PluginThatWaits::waitingForInitializeEngineLeave.wakeOne();
+    }
+
+    worker.wait();
 }
 
 QTEST_MAIN(tst_qqmlmoduleplugin)
