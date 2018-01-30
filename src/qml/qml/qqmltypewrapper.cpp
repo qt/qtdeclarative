@@ -133,11 +133,11 @@ ReturnedValue QmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, Q
 }
 
 static int enumForSingleton(QV4::ExecutionEngine *v4, String *name, QObject *qobjectSingleton,
-                            const QQmlType &type)
+                            const QQmlType &type, bool *ok)
 {
-    bool ok;
-    int value = type.enumValue(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
-    if (ok)
+    Q_ASSERT(ok != nullptr);
+    int value = type.enumValue(QQmlEnginePrivate::get(v4->qmlEngine()), name, ok);
+    if (*ok)
         return value;
 
     // ### Optimize
@@ -145,10 +145,11 @@ static int enumForSingleton(QV4::ExecutionEngine *v4, String *name, QObject *qob
     const QMetaObject *metaObject = qobjectSingleton->metaObject();
     for (int ii = metaObject->enumeratorCount() - 1; ii >= 0; --ii) {
         QMetaEnum e = metaObject->enumerator(ii);
-        value = e.keyToValue(enumName.constData(), &ok);
-        if (ok)
+        value = e.keyToValue(enumName.constData(), ok);
+        if (*ok)
             return value;
     }
+    *ok = false;
     return -1;
 }
 
@@ -191,8 +192,9 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
                 // check for enum value
                 const bool includeEnums = w->d()->mode == Heap::QmlTypeWrapper::IncludeEnums;
                 if (includeEnums && name->startsWithUpper()) {
-                    const int value = enumForSingleton(v4, name, qobjectSingleton, type);
-                    if (value != -1)
+                    bool ok = false;
+                    const int value = enumForSingleton(v4, name, qobjectSingleton, type, &ok);
+                    if (ok)
                         return QV4::Primitive::fromInt32(value).asReturnedValue();
                 }
 
@@ -204,8 +206,8 @@ ReturnedValue QmlTypeWrapper::get(const Managed *m, String *name, bool *hasPrope
 
                 // Warn when attempting to access a lowercased enum value, singleton case
                 if (!ok && includeEnums && !name->startsWithUpper()) {
-                    const int value = enumForSingleton(v4, name, qobjectSingleton, type);
-                    if (value != -1)
+                    enumForSingleton(v4, name, qobjectSingleton, type, &ok);
+                    if (ok)
                         return throwLowercaseEnumError(v4, name, type);
                 }
 
