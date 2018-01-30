@@ -66,6 +66,7 @@ private slots:
     void keyEvents();
     void shortcuts();
     void enterLeave();
+    void mouseEventWindowPos();
 };
 
 
@@ -472,6 +473,34 @@ void tst_qquickwidget::enterLeave()
     // Now check the leave
     QCursor::setPos(view.pos() - QPoint(50, 50));
     QTRY_VERIFY(!rootItem->property("hasMouse").toBool());
+}
+
+void tst_qquickwidget::mouseEventWindowPos()
+{
+    QWidget widget;
+    widget.resize(100, 100);
+    QQuickWidget *quick = new QQuickWidget(&widget);
+    quick->setSource(testFileUrl("mouse.qml"));
+    quick->move(50, 50);
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget, 5000));
+    QQuickItem *rootItem = quick->rootObject();
+    QVERIFY(rootItem);
+
+    QVERIFY(!rootItem->property("wasClicked").toBool());
+    QVERIFY(!rootItem->property("wasDoubleClicked").toBool());
+    QVERIFY(!rootItem->property("wasMoved").toBool());
+
+    QWindow *window = widget.windowHandle();
+    QVERIFY(window);
+
+    QTest::mouseMove(window, QPoint(60, 60));
+    QTest::mouseClick(window, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(60, 60));
+    QTRY_VERIFY(rootItem->property("wasClicked").toBool());
+    QTest::mouseDClick(window, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(60, 60));
+    QTRY_VERIFY(rootItem->property("wasDoubleClicked").toBool());
+    QTest::mouseMove(window, QPoint(70, 70));
+    QTRY_VERIFY(rootItem->property("wasMoved").toBool());
 }
 
 QTEST_MAIN(tst_qquickwidget)

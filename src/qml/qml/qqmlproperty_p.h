@@ -144,6 +144,8 @@ public:
     static void flushSignal(const QObject *sender, int signal_index);
 
     static QVariant resolvedUrlSequence(const QVariant &value, QQmlContextData *context);
+    static QQmlProperty create(QObject *target, const QString &propertyName, QQmlContextData *context);
+
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlPropertyPrivate::BindingFlags)

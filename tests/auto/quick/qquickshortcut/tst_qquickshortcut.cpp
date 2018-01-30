@@ -29,6 +29,11 @@
 #include <QtTest/qtest.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQml/qqmlapplicationengine.h>
+#include <QtQuick/qquickitem.h>
+#include <QtTest/qsignalspy.h>
+#ifdef QT_QUICKWIDGETS_LIB
+#include <QtQuickWidgets/qquickwidget.h>
+#endif
 
 #include "../../shared/util.h"
 
@@ -47,6 +52,10 @@ private slots:
     void matcher();
     void multiple_data();
     void multiple();
+#ifdef QT_QUICKWIDGETS_LIB
+    void renderControlShortcuts_data();
+    void renderControlShortcuts();
+#endif
 };
 
 Q_DECLARE_METATYPE(Qt::Key)
@@ -452,6 +461,121 @@ void tst_QQuickShortcut::multiple()
 
     QCOMPARE(window->property("activated").toBool(), activated);
 }
+
+#ifdef QT_QUICKWIDGETS_LIB
+void tst_QQuickShortcut::renderControlShortcuts_data()
+{
+    QTest::addColumn<QVariantList>("shortcuts");
+    QTest::addColumn<Qt::Key>("key");
+    QTest::addColumn<Qt::KeyboardModifiers>("modifiers");
+    QTest::addColumn<QString>("activatedShortcut");
+    QTest::addColumn<QString>("ambiguousShortcut");
+
+    QVariantList shortcuts;
+    shortcuts << shortcutMap("M")
+              << shortcutMap("Alt+M")
+              << shortcutMap("Ctrl+M")
+              << shortcutMap("Shift+M")
+              << shortcutMap("Ctrl+Alt+M")
+              << shortcutMap("+")
+              << shortcutMap("F1")
+              << shortcutMap("Shift+F1");
+
+    QTest::newRow("M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::NoModifier) << "M" << "";
+    QTest::newRow("Alt+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::AltModifier) << "Alt+M" << "";
+    QTest::newRow("Ctrl+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ControlModifier) << "Ctrl+M" << "";
+    QTest::newRow("Shift+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ShiftModifier) << "Shift+M" << "";
+    QTest::newRow("Ctrl+Alt+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ControlModifier|Qt::AltModifier) << "Ctrl+Alt+M" << "";
+    QTest::newRow("+") << shortcuts << Qt::Key_Plus << Qt::KeyboardModifiers(Qt::NoModifier) << "+" << "";
+    QTest::newRow("F1") << shortcuts << Qt::Key_F1 << Qt::KeyboardModifiers(Qt::NoModifier) << "F1" << "";
+    QTest::newRow("Shift+F1") << shortcuts << Qt::Key_F1 << Qt::KeyboardModifiers(Qt::ShiftModifier) << "Shift+F1" << "";
+
+    // ambiguous
+    shortcuts << shortcutMap("M")
+              << shortcutMap("Alt+M")
+              << shortcutMap("Ctrl+M")
+              << shortcutMap("Shift+M")
+              << shortcutMap("Ctrl+Alt+M")
+              << shortcutMap("+")
+              << shortcutMap("F1")
+              << shortcutMap("Shift+F1");
+
+    QTest::newRow("?M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::NoModifier) << "" << "M";
+    QTest::newRow("?Alt+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::AltModifier) << "" << "Alt+M";
+    QTest::newRow("?Ctrl+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ControlModifier) << "" << "Ctrl+M";
+    QTest::newRow("?Shift+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ShiftModifier) << "" << "Shift+M";
+    QTest::newRow("?Ctrl+Alt+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ControlModifier|Qt::AltModifier) << "" << "Ctrl+Alt+M";
+    QTest::newRow("?+") << shortcuts << Qt::Key_Plus << Qt::KeyboardModifiers(Qt::NoModifier) << "" << "+";
+    QTest::newRow("?F1") << shortcuts << Qt::Key_F1 << Qt::KeyboardModifiers(Qt::NoModifier) << "" << "F1";
+    QTest::newRow("?Shift+F1") << shortcuts << Qt::Key_F1 << Qt::KeyboardModifiers(Qt::ShiftModifier) << "" << "Shift+F1";
+
+    // disabled
+    shortcuts.clear();
+    shortcuts << shortcutMap("M", DisabledShortcut)
+              << shortcutMap("Alt+M", DisabledShortcut)
+              << shortcutMap("Ctrl+M", DisabledShortcut)
+              << shortcutMap("Shift+M", DisabledShortcut)
+              << shortcutMap("Ctrl+Alt+M", DisabledShortcut)
+              << shortcutMap("+", DisabledShortcut)
+              << shortcutMap("F1", DisabledShortcut)
+              << shortcutMap("Shift+F1", DisabledShortcut);
+
+    QTest::newRow("!M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::NoModifier) << "" << "";
+    QTest::newRow("!Alt+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::AltModifier) << "" << "";
+    QTest::newRow("!Ctrl+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ControlModifier) << "" << "";
+    QTest::newRow("!Shift+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ShiftModifier) << "" << "";
+    QTest::newRow("!Ctrl+Alt+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ControlModifier|Qt::AltModifier) << "" << "";
+    QTest::newRow("!+") << shortcuts << Qt::Key_Plus << Qt::KeyboardModifiers(Qt::NoModifier) << "" << "";
+    QTest::newRow("!F1") << shortcuts << Qt::Key_F1 << Qt::KeyboardModifiers(Qt::NoModifier) << "" << "";
+    QTest::newRow("!Shift+F1") << shortcuts << Qt::Key_F1 << Qt::KeyboardModifiers(Qt::ShiftModifier) << "" << "";
+
+    // unambigous because others disabled
+    shortcuts << shortcutMap("M")
+              << shortcutMap("Alt+M")
+              << shortcutMap("Ctrl+M")
+              << shortcutMap("Shift+M")
+              << shortcutMap("Ctrl+Alt+M")
+              << shortcutMap("+")
+              << shortcutMap("F1")
+              << shortcutMap("Shift+F1");
+
+    QTest::newRow("/M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::NoModifier) << "M" << "";
+    QTest::newRow("/Alt+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::AltModifier) << "Alt+M" << "";
+    QTest::newRow("/Ctrl+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ControlModifier) << "Ctrl+M" << "";
+    QTest::newRow("/Shift+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ShiftModifier) << "Shift+M" << "";
+    QTest::newRow("/Ctrl+Alt+M") << shortcuts << Qt::Key_M << Qt::KeyboardModifiers(Qt::ControlModifier|Qt::AltModifier) << "Ctrl+Alt+M" << "";
+    QTest::newRow("/+") << shortcuts << Qt::Key_Plus << Qt::KeyboardModifiers(Qt::NoModifier) << "+" << "";
+    QTest::newRow("/F1") << shortcuts << Qt::Key_F1 << Qt::KeyboardModifiers(Qt::NoModifier) << "F1" << "";
+    QTest::newRow("/Shift+F1") << shortcuts << Qt::Key_F1 << Qt::KeyboardModifiers(Qt::ShiftModifier) << "Shift+F1" << "";
+}
+
+void tst_QQuickShortcut::renderControlShortcuts()
+{
+    QFETCH(QVariantList, shortcuts);
+    QFETCH(Qt::Key, key);
+    QFETCH(Qt::KeyboardModifiers, modifiers);
+    QFETCH(QString, activatedShortcut);
+    QFETCH(QString, ambiguousShortcut);
+
+    QScopedPointer<QQuickWidget> quickWidget(new QQuickWidget);
+    quickWidget->resize(300,300);
+
+    QSignalSpy spy(qApp, &QGuiApplication::focusObjectChanged);
+
+    quickWidget->setSource(testFileUrl("shortcutsRect.qml"));
+    quickWidget->show();
+
+    spy.wait();
+
+    QVERIFY(qobject_cast<QQuickWidget*>(qApp->focusObject()) == quickWidget.data());
+
+    QQuickItem* item = quickWidget->rootObject();
+    item->setProperty("shortcuts", shortcuts);
+    QTest::keyPress(quickWidget->quickWindow(), key, modifiers, 1500);
+    QCOMPARE(item->property("activatedShortcut").toString(), activatedShortcut);
+    QCOMPARE(item->property("ambiguousShortcut").toString(), ambiguousShortcut);
+}
+#endif // QT_QUICKWIDGETS_LIB
 
 QTEST_MAIN(tst_QQuickShortcut)
 

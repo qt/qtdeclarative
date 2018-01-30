@@ -1435,17 +1435,23 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
     case Qt::ScrollUpdate:
         if (d->scrollingPhase)
             d->pressed = true;
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
+        // TODO eliminate this timer when ScrollMomentum has been added
         d->movementEndingTimer.start(MovementEndingTimerInterval, this);
 #endif
         break;
     case Qt::ScrollEnd:
+        // TODO most of this should be done at transition to ScrollMomentum phase,
+        // then do what the movementEndingTimer triggers at transition to ScrollEnd phase
         d->pressed = false;
         d->scrollingPhase = false;
         d->draggingEnding();
         event->accept();
         returnToBounds();
         d->lastPosTime = -1;
+#ifdef Q_OS_MACOS
+        d->movementEndingTimer.start(MovementEndingTimerInterval, this);
+#endif
         return;
     }
 
@@ -2670,13 +2676,15 @@ void QQuickFlickable::movementEnding(bool hMovementEnding, bool vMovementEnding)
     if (hMovementEnding && d->hData.moving
             && (!d->pressed && !d->stealMouse)) {
         d->hData.moving = false;
-        d->hMoved = false;
+        if (!d->scrollingPhase)
+            d->hMoved = false;
         emit movingHorizontallyChanged();
     }
     if (vMovementEnding && d->vData.moving
             && (!d->pressed && !d->stealMouse)) {
         d->vData.moving = false;
-        d->vMoved = false;
+        if (!d->scrollingPhase)
+            d->vMoved = false;
         emit movingVerticallyChanged();
     }
     if (wasMoving && !isMoving()) {

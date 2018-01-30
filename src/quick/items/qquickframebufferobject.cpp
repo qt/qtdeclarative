@@ -313,6 +313,7 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
     desiredFboSize *= n->devicePixelRatio;
 
     if (n->fbo && ((d->followsItemSize && n->fbo->size() != desiredFboSize) || n->invalidatePending)) {
+        delete n->texture();
         delete n->fbo;
         n->fbo = 0;
         delete n->msDisplayFbo;

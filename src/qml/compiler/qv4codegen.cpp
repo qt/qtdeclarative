@@ -102,6 +102,7 @@ Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
 }
 
 void Codegen::generateFromProgram(const QString &fileName,
+                                  const QString &finalUrl,
                                   const QString &sourceCode,
                                   Program *node,
                                   Module *module,
@@ -112,7 +113,9 @@ void Codegen::generateFromProgram(const QString &fileName,
     _module = module;
     _context = 0;
 
+    // ### should be set on the module outside of this method
     _module->fileName = fileName;
+    _module->finalUrl = finalUrl;
 
     ScanFunctions scan(this, sourceCode, mode);
     scan(node);

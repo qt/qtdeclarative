@@ -121,7 +121,7 @@ void Script::parse()
         RuntimeCodegen cg(v4, &jsGenerator, strictMode);
         if (inheritContext)
             cg.setUseFastLookups(false);
-        cg.generateFromProgram(sourceFile, sourceCode, program, &module, compilationMode);
+        cg.generateFromProgram(sourceFile, sourceFile, sourceCode, program, &module, compilationMode);
         if (v4->hasException)
             return;
 
@@ -164,8 +164,8 @@ Function *Script::function()
 }
 
 QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compiler::Module *module, Compiler::JSUnitGenerator *unitGenerator,
-                                                                      const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors,
-                                                                      Directives *directivesCollector)
+                                                                      const QString &fileName, const QString &finalUrl, const QString &source,
+                                                                      QList<QQmlError> *reportedErrors, Directives *directivesCollector)
 {
     using namespace QV4::Compiler;
     using namespace QQmlJS::AST;
@@ -184,12 +184,12 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
     const auto diagnosticMessages = parser.diagnosticMessages();
     for (const DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
-            qWarning("%s:%d : %s", qPrintable(url.toString()), m.loc.startLine, qPrintable(m.message));
+            qWarning("%s:%d : %s", qPrintable(fileName), m.loc.startLine, qPrintable(m.message));
             continue;
         }
 
         QQmlError error;
-        error.setUrl(url);
+        error.setUrl(QUrl(fileName));
         error.setDescription(m.message);
         error.setLine(m.loc.startLine);
         error.setColumn(m.loc.startColumn);
@@ -211,7 +211,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
 
     Codegen cg(unitGenerator, /*strict mode*/false);
     cg.setUseFastLookups(false);
-    cg.generateFromProgram(url.toString(), source, program, module, GlobalCode);
+    cg.generateFromProgram(fileName, finalUrl, source, program, module, GlobalCode);
     errors = cg.qmlErrors();
     if (!errors.isEmpty()) {
         if (reportedErrors)

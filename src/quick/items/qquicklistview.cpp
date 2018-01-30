@@ -1468,9 +1468,6 @@ void QQuickListViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometry
 
 void QQuickListViewPrivate::fixupPosition()
 {
-    if ((haveHighlightRange && highlightRange == QQuickListView::StrictlyEnforceRange)
-        || snapMode != QQuickListView::NoSnap)
-        moveReason = Other;
     if (orient == QQuickListView::Vertical)
         fixupY();
     else

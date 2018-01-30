@@ -107,7 +107,6 @@ private slots:
 
     void typeResolution_data();
     void typeResolution();
-
 };
 
 tst_holistic::tst_holistic()
@@ -240,7 +239,6 @@ void tst_holistic::compilation_data()
 
 void tst_holistic::compilation()
 {
-    QQmlEngine engine;
     // This function benchmarks the cost of loading and compiling specified QML files.
     // If "repetitions" is non-zero, each file from "files" will be compiled "repetitions"
     // times, without clearing the engine's component cache between compilations.
@@ -249,6 +247,8 @@ void tst_holistic::compilation()
     QFETCH(int, repetitions);
     Q_ASSERT(files.size() > 0);
     Q_ASSERT(repetitions > 0);
+
+    QQmlEngine engine;
 
     QBENCHMARK {
         engine.clearComponentCache();
@@ -262,7 +262,6 @@ void tst_holistic::compilation()
 
 void tst_holistic::instantiation()
 {
-    QQmlEngine engine;
     // This function benchmarks the cost of instantiating components compiled from specified QML files.
     // If "repetitions" is non-zero, each component compiled from "files" will be instantiated "repetitions"
     // times, without clearing the component's instantiation cache between instantiations.
@@ -271,6 +270,8 @@ void tst_holistic::instantiation()
     QFETCH(int, repetitions);
     Q_ASSERT(files.size() > 0);
     Q_ASSERT(repetitions > 0);
+
+    QQmlEngine engine;
 
     QList<QQmlComponent*> components;
     for (int i = 0; i < files.size(); ++i) {
@@ -297,7 +298,6 @@ void tst_holistic::instantiation()
 
 void tst_holistic::creation()
 {
-    QQmlEngine engine;
     // This function benchmarks the cost of loading, compiling  and instantiating specified QML files.
     // If "repetitions" is non-zero, each file from "files" will be created "repetitions"
     // times, without clearing the engine's component cache between component creation.
@@ -306,6 +306,8 @@ void tst_holistic::creation()
     QFETCH(int, repetitions);
     Q_ASSERT(files.size() > 0);
     Q_ASSERT(repetitions > 0);
+
+    QQmlEngine engine;
 
     QBENCHMARK {
         engine.clearComponentCache();
@@ -360,7 +362,6 @@ void tst_holistic::dynamicity_data()
 
 void tst_holistic::dynamicity()
 {
-    QQmlEngine engine;
     // This function benchmarks the cost of "continued operation" - signal invocation,
     // updating bindings, etc.  Note that we take two different writeValues in order
     // to force updates to occur, and we read to force lazy evaluation to occur.
@@ -371,6 +372,7 @@ void tst_holistic::dynamicity()
     QFETCH(QVariant, writeValueTwo);
     QFETCH(QString, readProperty);
 
+    QQmlEngine engine;
     QQmlComponent c(&engine, file);
     QObject *obj = c.create();
 
@@ -474,13 +476,13 @@ void tst_holistic::cppToJsDirect_data()
 
 void tst_holistic::cppToJsDirect()
 {
-    QQmlEngine engine;
     // This function benchmarks the cost of calling from CPP scope to JS scope
     // (and possibly vice versa, if the invoked js method then calls to cpp).
 
     QFETCH(QString, file);
     QFETCH(QString, methodName);
 
+    QQmlEngine engine;
     QQmlComponent c(&engine, file);
     QObject *obj = c.create();
 
@@ -494,13 +496,13 @@ void tst_holistic::cppToJsDirect()
 
 void tst_holistic::cppToJsIndirect()
 {
-    QQmlEngine engine;
     // This function benchmarks the cost of binding scarce resources
     // to properties of a QML component.  The engine should automatically release such
     // resources when they are no longer used.
     // The benchmark deliberately causes change signals to be emitted (and
     // modifies the scarce resources) so that the properties are updated.
 
+    QQmlEngine engine;
     QQmlComponent c(&engine, QString(SRCDIR + QLatin1String("/data/scopeSwitching/ScarceTwo.qml")));
     QObject *obj = c.create();
 
@@ -548,7 +550,6 @@ void tst_holistic::typeResolution_data()
 
 void tst_holistic::typeResolution()
 {
-    QQmlEngine engine;
     // This function benchmarks the cost of "continued operation" (signal invocation,
     // updating bindings, etc) where the component has lots of nested items with
     // lots of resolving required.  Note that we take two different writeValues in order
@@ -565,6 +566,7 @@ void tst_holistic::typeResolution()
     Q_ASSERT(propertyNameTwo.size() == propertyValueTwo.size());
     Q_ASSERT(repetitions > 0);
 
+    QQmlEngine engine;
     QQmlComponent c(&engine, file);
     QObject *obj = c.create();
 

@@ -156,6 +156,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    vm.memoryManager->dumpStats();
     return EXIT_SUCCESS;
 }

@@ -374,8 +374,11 @@ void QQuickRepeater::clear()
                 if (complete)
                     emit itemRemoved(i, item);
                 d->model->release(item);
-                item->setParentItem(0);
             }
+        }
+        for (QQuickItem *item : qAsConst(d->deletables)) {
+            if (item)
+                item->setParentItem(0);
         }
     }
     d->deletables.clear();

@@ -610,8 +610,8 @@ struct Q_QML_EXPORT PropertyResolver
 struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 {
     JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator, QV4::Compiler::Module *jsModule,
-              QQmlJS::Engine *jsEngine, QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports,
-              const QV4::Compiler::StringTableGenerator *stringPool);
+              QQmlJS::Engine *jsEngine, QQmlJS::AST::UiProgram *qmlRoot,
+              QQmlTypeNameCache *imports, const QV4::Compiler::StringTableGenerator *stringPool, const QSet<QString> &globalNames);
 
     struct IdMapping
     {
@@ -651,6 +651,7 @@ private:
     QQmlPropertyCache *_scopeObject;
     int _qmlContextSlot;
     int _importedScriptsSlot;
+    QSet<QString> m_globalNames;
 };
 
 struct Q_QML_PRIVATE_EXPORT IRLoader {

@@ -3032,6 +3032,13 @@ public:
             linuxPageFlush(current, current + page);
 
         linuxPageFlush(current, end);
+#elif OS(QNX)
+#if !ENABLE(ASSEMBLER_WX_EXCLUSIVE)
+        msync(code, size, MS_INVALIDATE_ICACHE);
+#else
+        UNUSED_PARAM(code);
+        UNUSED_PARAM(size);
+#endif
 #else
 #error "The cacheFlush support is missing on this platform."
 #endif

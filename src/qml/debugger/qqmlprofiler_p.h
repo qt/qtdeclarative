@@ -298,9 +298,10 @@ public:
     {
         // Use the QV4::Function as ID, as that is common among different instances of the same
         // component. QQmlBinding is per instance.
-        // Add 1 to the ID, to make it different from the IDs the V4 profiler produces. The +1 makes
-        // the pointer point into the middle of the QV4::Function. Thus it still points to valid
-        // memory but we cannot accidentally create a duplicate key from another object.
+        // Add 1 to the ID, to make it different from the IDs the V4 and signal handling profilers
+        // produce. The +1 makes the pointer point into the middle of the QV4::Function. Thus it
+        // still points to valid memory but we cannot accidentally create a duplicate key from
+        // another object.
         // If there is no function, use a static but valid address: The profiler itself.
         quintptr locationId = function ? id(function) + 1 : id(this);
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
@@ -332,7 +333,12 @@ public:
 
     void startHandlingSignal(QQmlBoundSignalExpression *expression)
     {
-        quintptr locationId(id(expression));
+        // Use the QV4::Function as ID, as that is common among different instances of the same
+        // component. QQmlBoundSignalExpression is per instance.
+        // Add 2 to the ID, to make it different from the IDs the V4 and binding profilers produce.
+        // The +2 makes the pointer point into the middle of the QV4::Function. Thus it still points
+        // to valid memory but we cannot accidentally create a duplicate key from another object.
+        quintptr locationId(id(expression->function()) + 2);
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
                                        (1 << RangeStart | 1 << RangeLocation), HandlingSignal,
                                        locationId));
@@ -515,7 +521,12 @@ private:
     QQmlProfiler *profiler;
 };
 
+#endif // QT_NO_QML_DEBUGGER
+
 QT_END_NAMESPACE
+
+#ifndef QT_NO_QML_DEBUGGER
+
 Q_DECLARE_METATYPE(QVector<QQmlProfilerData>)
 Q_DECLARE_METATYPE(QQmlProfiler::LocationHash)
 

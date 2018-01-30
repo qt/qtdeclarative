@@ -1770,7 +1770,8 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, Binding
 
 JSCodeGen::JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
                      QV4::Compiler::Module *jsModule, QQmlJS::Engine *jsEngine,
-                     QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports, const QV4::Compiler::StringTableGenerator *stringPool)
+                     QQmlJS::AST::UiProgram *qmlRoot, QQmlTypeNameCache *imports,
+                     const QV4::Compiler::StringTableGenerator *stringPool, const QSet<QString> &globalNames)
     : QV4::Compiler::Codegen(jsUnitGenerator, /*strict mode*/false)
     , sourceCode(sourceCode)
     , jsEngine(jsEngine)
@@ -1782,6 +1783,7 @@ JSCodeGen::JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *
     , _scopeObject(0)
     , _qmlContextSlot(-1)
     , _importedScriptsSlot(-1)
+    , m_globalNames(globalNames)
 {
     _module = jsModule;
     _fileNameIsUrl = true;
@@ -2240,6 +2242,12 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
         bool captureRequired = !data->isConstant() && !data->isQmlBinding();
         return Reference::fromQmlContextObject(base, data->coreIndex(), data->notifyIndex(),
                                                captureRequired);
+    }
+
+    if (m_globalNames.contains(name)) {
+        Reference r = Reference::fromName(this, name);
+        r.global = true;
+        return r;
     }
 #else
     Q_UNUSED(name)

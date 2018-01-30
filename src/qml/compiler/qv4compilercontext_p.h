@@ -92,6 +92,7 @@ struct Module {
     QList<Context *> functions;
     Context *rootContext;
     QString fileName;
+    QString finalUrl;
     QDateTime sourceTimeStamp;
     uint unitFlags = 0; // flags merged into CompiledData::Unit::flags
     bool debugMode = false;

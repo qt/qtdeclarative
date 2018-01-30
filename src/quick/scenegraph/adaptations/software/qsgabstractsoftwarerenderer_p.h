@@ -83,9 +83,9 @@ protected:
     QRegion optimizeRenderList();
 
     void setBackgroundColor(const QColor &color);
-    void setBackgroundSize(const QSize &size);
+    void setBackgroundRect(const QRect &rect);
     QColor backgroundColor();
-    QSize backgroundSize();
+    QRect backgroundRect();
     // only known after calling optimizeRenderList()
     bool isOpaque() const { return m_isOpaque; }
 

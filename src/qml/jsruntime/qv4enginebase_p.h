@@ -110,6 +110,8 @@ struct Q_QML_EXPORT EngineBase {
         Class_ErrorObject,
         Class_ErrorObjectWithMessage,
         Class_ErrorProto,
+        Class_QmlContextWrapper,
+        Class_QmlContext,
         NClasses
     };
     InternalClass *internalClasses[NClasses];

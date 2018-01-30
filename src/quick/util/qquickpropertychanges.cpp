@@ -281,15 +281,19 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         return;
     }
 
-    QQmlProperty prop = property(propertyName);      //### better way to check for signal property?
-
-    if (prop.type() & QQmlProperty::SignalProperty) {
-        QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
-        handler->property = prop;
-        handler->expression.take(new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(prop)->signalIndex(),
-                                                               QQmlContextData::get(qmlContext(q)), object, compilationUnit->runtimeFunctions.at(binding->value.compiledScriptIndex)));
-        signalReplacements << handler;
-        return;
+    if (propertyName.count() >= 3 &&
+        propertyName.at(0) == QLatin1Char('o') &&
+        propertyName.at(1) == QLatin1Char('n') &&
+        propertyName.at(2).isUpper()) {
+        QQmlProperty prop = property(propertyName);
+        if (prop.isSignalProperty()) {
+            QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
+            handler->property = prop;
+            handler->expression.take(new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(prop)->signalIndex(),
+                                                                   QQmlContextData::get(qmlContext(q)), object, compilationUnit->runtimeFunctions.at(binding->value.compiledScriptIndex)));
+            signalReplacements << handler;
+            return;
+        }
     }
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script) {
@@ -395,7 +399,10 @@ QQmlProperty
 QQuickPropertyChangesPrivate::property(const QString &property)
 {
     Q_Q(QQuickPropertyChanges);
-    QQmlProperty prop(object, property, qmlContext(q));
+    QQmlContextData *context = nullptr;
+    if (QQmlData *ddata = QQmlData::get(q))
+        context = ddata->outerContext;
+    QQmlProperty prop = QQmlPropertyPrivate::create(object, property, context);
     if (!prop.isValid()) {
         qmlWarning(q) << QQuickPropertyChanges::tr("Cannot assign to non-existent property \"%1\"").arg(property);
         return QQmlProperty();
@@ -415,9 +422,10 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
     ActionList list;
 
     for (int ii = 0; ii < d->properties.count(); ++ii) {
+        QQmlProperty prop = d->property(d->properties.at(ii).first);
 
-        QQuickStateAction a(d->object, d->properties.at(ii).first,
-                 qmlContext(this), d->properties.at(ii).second);
+        QQuickStateAction a(d->object, prop, d->properties.at(ii).first,
+                            d->properties.at(ii).second);
 
         if (a.property.isValid()) {
             a.restore = restoreEntryValues();
@@ -426,7 +434,6 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
     }
 
     for (int ii = 0; ii < d->signalReplacements.count(); ++ii) {
-
         QQuickReplaceSignalHandler *handler = d->signalReplacements.at(ii);
 
         if (handler->property.isValid()) {

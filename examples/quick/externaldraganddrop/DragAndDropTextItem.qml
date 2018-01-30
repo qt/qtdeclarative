@@ -49,32 +49,36 @@
 ****************************************************************************/
 
 import QtQuick 2.2
+import "../shared" as Examples
 
 Rectangle {
     id: item
     property string display
-    color: "#EEE"
+    property alias dropEnabled: acceptDropCB.checked
+    color: dropArea.containsDrag ? "#CFC" : "#EEE"
+    ColorAnimation on color {
+        id: rejectAnimation
+        from: "#FCC"
+        to: "#EEE"
+        duration: 1000
+    }
     Text {
         anchors.fill: parent
         text: item.display
         wrapMode: Text.WordWrap
     }
     DropArea {
+        id: dropArea
         anchors.fill: parent
         keys: ["text/plain"]
-        onEntered: {
-            item.color = "#FCC"
+        onEntered: if (!acceptDropCB.checked) {
+            drag.accepted = false
+            rejectAnimation.start()
         }
-        onExited: {
-            item.color = "#EEE"
-        }
-        onDropped: {
-            item.color = "#EEE"
-            if (drop.hasText) {
-                if (drop.proposedAction == Qt.MoveAction || drop.proposedAction == Qt.CopyAction) {
-                    item.display = drop.text
-                    drop.acceptProposedAction()
-                }
+        onDropped: if (drop.hasText && acceptDropCB.checked) {
+            if (drop.proposedAction == Qt.MoveAction || drop.proposedAction == Qt.CopyAction) {
+                item.display = drop.text
+                drop.acceptProposedAction()
             }
         }
     }
@@ -91,12 +95,12 @@ Rectangle {
         Drag.hotSpot.y: 0
         Drag.mimeData: { "text/plain": item.display }
         Drag.dragType: Drag.Automatic
-        Drag.onDragStarted: {
-        }
-        Drag.onDragFinished: {
-            if (dropAction == Qt.MoveAction) {
-                item.display = ""
-            }
-        }
-    } // Item
+        Drag.onDragFinished: if (dropAction == Qt.MoveAction) item.display = ""
+    }
+    Examples.CheckBox {
+        id: acceptDropCB
+        anchors.right: parent.right
+        checked: true
+        text: "accept drop"
+    }
 }

@@ -9,6 +9,7 @@ PUBLICTESTS += \
     qjsvalueiterator \
     qjsonbinding \
     qqmlfile \
+    qqmlfileselector
 
 PUBLICTESTS += \
     qmlmin \

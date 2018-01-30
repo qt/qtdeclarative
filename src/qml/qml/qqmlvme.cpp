@@ -120,18 +120,6 @@ void QQmlVMEGuard::guard(QQmlObjectCreator *creator)
     m_contexts[0] = creator->parentContextData();
 }
 
-void QQmlVMEGuard::unguard(QObject *object)
-{
-    for (int ii = 0; ii < m_objectCount; ++ii) {
-        if (m_objects[ii] == object) {
-            if (ii < m_objectCount - 1)
-                ::memmove((void *) m_objects[ii], (void *) m_objects[ii + 1], sizeof(QPointer<QObject> *));
-            delete m_objects[--m_objectCount];
-            break;
-        }
-    }
-}
-
 void QQmlVMEGuard::clear()
 {
     delete [] m_objects;
