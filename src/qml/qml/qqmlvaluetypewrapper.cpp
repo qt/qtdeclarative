@@ -96,6 +96,8 @@ void Heap::QQmlValueTypeWrapper::destroy()
         valueType->metaType.destruct(gadgetPtr);
         ::operator delete(gadgetPtr);
     }
+    if (_propertyCache)
+        _propertyCache->release();
     Object::destroy();
 }
 
