@@ -2809,7 +2809,8 @@ void QQuickItem::stackBefore(const QQuickItem *sibling)
 {
     Q_D(QQuickItem);
     if (!sibling || sibling == this || !d->parentItem || d->parentItem != QQuickItemPrivate::get(sibling)->parentItem) {
-        qWarning("QQuickItem::stackBefore: Cannot stack before %p, which must be a sibling", sibling);
+        qWarning().nospace() << "QQuickItem::stackBefore: Cannot stack "
+            << this << " before " << sibling << ", which must be a sibling";
         return;
     }
 
@@ -2853,7 +2854,8 @@ void QQuickItem::stackAfter(const QQuickItem *sibling)
 {
     Q_D(QQuickItem);
     if (!sibling || sibling == this || !d->parentItem || d->parentItem != QQuickItemPrivate::get(sibling)->parentItem) {
-        qWarning("QQuickItem::stackAfter: Cannot stack after %p, which must be a sibling", sibling);
+        qWarning().nospace() << "QQuickItem::stackAfter: Cannot stack "
+            << this << " after " << sibling << ", which must be a sibling";
         return;
     }
 
