@@ -176,6 +176,7 @@ public:
 private slots:
     void initTestCase();
 
+    void simpleTouchEvent_data();
     void simpleTouchEvent();
     void testEventFilter();
     void mouse();
@@ -226,15 +227,22 @@ QQuickView *tst_TouchMouse::createView()
 
 void tst_TouchMouse::initTestCase()
 {
-    // This test assumes that we don't get synthesized mouse events from QGuiApplication
-    qApp->setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, false);
-
     QQmlDataTest::initTestCase();
     qmlRegisterType<EventItem>("Qt.test", 1, 0, "EventItem");
 }
 
+void tst_TouchMouse::simpleTouchEvent_data()
+{
+    QTest::addColumn<bool>("synthMouse"); // AA_SynthesizeMouseForUnhandledTouchEvents
+    QTest::newRow("no synth") << false;
+    QTest::newRow("synth") << true;
+}
+
 void tst_TouchMouse::simpleTouchEvent()
 {
+    QFETCH(bool, synthMouse);
+    qApp->setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, synthMouse);
+
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("singleitem.qml"));
     window->show();
@@ -251,16 +259,16 @@ void tst_TouchMouse::simpleTouchEvent()
     QTest::touchEvent(window.data(), device).press(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
     // Get a touch and then mouse event offered
-    QCOMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 2 : 1);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window.data(), device).move(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
     // Not accepted, no updates
-    QCOMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 2 : 1);
     QTest::touchEvent(window.data(), device).release(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
-    QCOMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 2 : 1);
     eventItem1->eventList.clear();
 
     // Accept touch
@@ -288,10 +296,11 @@ void tst_TouchMouse::simpleTouchEvent()
     p1 = QPoint(20, 20);
     QTest::touchEvent(window.data(), device).press(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
-    QCOMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 2 : 1);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
-    QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
-    QCOMPARE(window->mouseGrabberItem(), eventItem1);
+    if (synthMouse)
+        QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
+    QCOMPARE(window->mouseGrabberItem(), synthMouse ? eventItem1 : nullptr);
 
     QPoint localPos = eventItem1->mapFromScene(p1).toPoint();
     QPoint globalPos = window->mapToGlobal(p1);
@@ -299,21 +308,31 @@ void tst_TouchMouse::simpleTouchEvent()
     QCOMPARE(eventItem1->eventList.at(0).points.at(0).pos().toPoint(), localPos);
     QCOMPARE(eventItem1->eventList.at(0).points.at(0).scenePos().toPoint(), scenePos);
     QCOMPARE(eventItem1->eventList.at(0).points.at(0).screenPos().toPoint(), globalPos);
-    QCOMPARE(eventItem1->eventList.at(1).mousePos, localPos);
-    QCOMPARE(eventItem1->eventList.at(1).mousePosGlobal, globalPos);
+    if (synthMouse) {
+        QCOMPARE(eventItem1->eventList.at(1).mousePos, localPos);
+        QCOMPARE(eventItem1->eventList.at(1).mousePosGlobal, globalPos);
+    }
 
     p1 += QPoint(10, 0);
     QTest::touchEvent(window.data(), device).move(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
-    QCOMPARE(eventItem1->eventList.size(), 4);
-    QCOMPARE(eventItem1->eventList.at(2).type, QEvent::TouchUpdate);
-    QCOMPARE(eventItem1->eventList.at(3).type, QEvent::MouseMove);
+    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 4 : 1);
+    if (synthMouse) {
+        QCOMPARE(eventItem1->eventList.at(2).type, QEvent::TouchUpdate);
+        QCOMPARE(eventItem1->eventList.at(3).type, QEvent::MouseMove);
+    }
+    // else, if there was no synth-mouse and we didn't accept the touch,
+    // TouchUpdate was not sent to eventItem1 either.
     QTest::touchEvent(window.data(), device).release(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
-    QCOMPARE(eventItem1->eventList.size(), 7);
-    QCOMPARE(eventItem1->eventList.at(4).type, QEvent::TouchEnd);
-    QCOMPARE(eventItem1->eventList.at(5).type, QEvent::MouseButtonRelease);
-    QCOMPARE(eventItem1->eventList.at(6).type, QEvent::UngrabMouse);
+    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 7 : 1);
+    if (synthMouse) {
+        QCOMPARE(eventItem1->eventList.at(4).type, QEvent::TouchEnd);
+        QCOMPARE(eventItem1->eventList.at(5).type, QEvent::MouseButtonRelease);
+        QCOMPARE(eventItem1->eventList.at(6).type, QEvent::UngrabMouse);
+    }
+    // else, if there was no synth-mouse and we didn't accept the touch,
+    // TouchEnd was not sent to eventItem1 either.
     eventItem1->eventList.clear();
 
     // wait to avoid getting a double click event
@@ -326,16 +345,17 @@ void tst_TouchMouse::simpleTouchEvent()
     p1 = QPoint(20, 20);
     QTest::touchEvent(window.data(), device).press(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
-    QCOMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 2 : 1);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
-    QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
+    if (synthMouse)
+        QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window.data(), device).move(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
-    QCOMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 2 : 1);
     QTest::touchEvent(window.data(), device).release(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
-    QCOMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 2 : 1);
     eventItem1->eventList.clear();
 
     // wait to avoid getting a double click event

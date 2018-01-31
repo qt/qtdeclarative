@@ -57,8 +57,6 @@ public:
     {}
 
 private slots:
-    void initTestCase();
-
     void touchTapButton_data();
     void touchTapButton();
     void touchDragFlickableBehindButton_data();
@@ -94,14 +92,6 @@ void tst_FlickableInterop::createView(QScopedPointer<QQuickView> &window, const 
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
-}
-
-void tst_FlickableInterop::initTestCase()
-{
-    // This test assumes that we don't get synthesized mouse events from QGuiApplication
-    qApp->setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, false);
-
-    QQmlDataTest::initTestCase();
 }
 
 void tst_FlickableInterop::touchTapButton_data()

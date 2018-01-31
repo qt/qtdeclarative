@@ -1234,8 +1234,8 @@ void tst_qquickwindow::synthMouseFromTouch()
     QTest::touchEvent(window.data(), touchDevice).move(0, p2, window.data());
     QTest::touchEvent(window.data(), touchDevice).release(0, p2, window.data());
 
-    QCOMPARE(item->m_touchEvents.count(), 3);
-    QCOMPARE(item->m_mouseEvents.count(), acceptTouch ? 0 : 3);
+    QCOMPARE(item->m_touchEvents.count(), !synthMouse && !acceptTouch ? 1 : 3);
+    QCOMPARE(item->m_mouseEvents.count(), (acceptTouch || !synthMouse) ? 0 : 3);
     QCOMPARE(window->m_mouseEvents.count(), 0);
     for (const QMouseEvent &ev : item->m_mouseEvents)
         QCOMPARE(ev.source(), Qt::MouseEventSynthesizedByQt);

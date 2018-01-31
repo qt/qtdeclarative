@@ -615,6 +615,7 @@ QQmlListProperty<QObject> QQuickWindowPrivate::data()
 
 static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::TouchPoint &p, QTouchEvent *event, QQuickItem *item, bool transformNeeded = true)
 {
+    Q_ASSERT(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents));
     // The touch point local position and velocity are not yet transformed.
     QMouseEvent *me = new QMouseEvent(type, transformNeeded ? item->mapFromScene(p.scenePos()) : p.pos(), p.scenePos(), p.screenPos(),
                                       Qt::LeftButton, (type == QEvent::MouseButtonRelease ? Qt::NoButton : Qt::LeftButton), event->modifiers());
@@ -656,6 +657,7 @@ bool QQuickWindowPrivate::checkIfDoubleClicked(ulong newPressEventTimestamp)
 
 bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEvent *pointerEvent)
 {
+    Q_ASSERT(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents));
     Q_Q(QQuickWindow);
     auto device = pointerEvent->device();
 
@@ -2622,10 +2624,12 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     eventAccepted = touchEvent->isAccepted();
 
     // If the touch event wasn't accepted, synthesize a mouse event and see if the item wants it.
-    if (!eventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
-        //  send mouse event
-        if (deliverTouchAsMouse(item, ptEvent))
-            eventAccepted = true;
+    if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
+        if (!eventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
+            //  send mouse event
+            if (deliverTouchAsMouse(item, ptEvent))
+                eventAccepted = true;
+        }
     }
 
     if (eventAccepted) {
@@ -2886,7 +2890,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                             pt->setGrabberItem(filteringParent);
                         }
                         return true;
-                    } else {
+                    } else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
                         // filteringParent didn't filter the touch event.  Give it a chance to filter a synthetic mouse event.
                         for (int i = 0; i < filteringParentTouchEvent->touchPoints().size(); ++i) {
                             const QTouchEvent::TouchPoint &tp = filteringParentTouchEvent->touchPoints().at(i);
