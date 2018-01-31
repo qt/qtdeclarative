@@ -1670,7 +1670,8 @@ class SingletonWithEnum : public QObject
     Q_ENUMS(TestEnum)
 public:
     enum TestEnum {
-        TestValue = 42
+        TestValue = 42,
+        TestValue_MinusOne = -1
     };
 };
 

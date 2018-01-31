@@ -7918,6 +7918,15 @@ void tst_qqmlecmascript::singletonWithEnum()
     QVariant prop = obj->property("testValue");
     QCOMPARE(prop.type(), QVariant::Int);
     QCOMPARE(prop.toInt(), int(SingletonWithEnum::TestValue));
+
+    {
+        QQmlExpression expr(qmlContext(obj.data()), obj.data(), "SingletonWithEnum.TestValue_MinusOne");
+        bool valueUndefined = false;
+        QVariant result = expr.evaluate(&valueUndefined);
+        QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
+        QVERIFY(!valueUndefined);
+        QCOMPARE(result.toInt(), -1);
+    }
 }
 
 void tst_qqmlecmascript::lazyBindingEvaluation()
