@@ -122,6 +122,9 @@
     their actual counterparts in the Qt Quick Controls 2 module. You can repeat
     this process for any control that you wish to add.
 
+    An added benefit of these three methods is that it's not necessary to
+    implement the template from scratch.
+
     \section1 Creating a Custom Style
 
     There are several ways to go about creating your own styles. Below, we'll
@@ -130,12 +133,19 @@
     \section2 Definition of a Style
 
     In Qt Quick Controls 2, a style is essentially an interchangeable set of
-    QML files within a single directory. There are two requirements for a style
+    QML files within a single directory. There are three requirements for a style
     to be \l {Using Styles in Qt Quick Controls 2}{usable}:
 
     \list
     \li At least one QML file whose name matches a control (for example,
         \c Button.qml) must exist.
+    \li Each QML file must contain the relevant type from the \l {Qt Quick Templates 2}
+        {QtQuick.Templates} import as the root item. For example,
+        Button.qml must contain a Button template as its root item.
+
+        If we instead used the corresponding type from the \l {Qt Quick Controls 2}
+        {QtQuick.Controls} import as we did in the previous section, it would not work:
+        the control we were defining would try to derive from itself.
     \li The files must be in a directory in the filesystem or in the
         \l {The Qt Resource System}{resource system}.
 
