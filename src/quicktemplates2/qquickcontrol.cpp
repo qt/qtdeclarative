@@ -160,11 +160,19 @@ bool QQuickControlPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
 }
 #endif
 
+static void setActiveFocus(QQuickControl *control, Qt::FocusReason reason)
+{
+    QQuickControlPrivate *d = QQuickControlPrivate::get(control);
+    if (d->subFocusItem && d->window && d->flags & QQuickItem::ItemIsFocusScope)
+        QQuickWindowPrivate::get(d->window)->clearFocusInScope(control, d->subFocusItem, reason);
+    control->forceActiveFocus(reason);
+}
+
 void QQuickControlPrivate::handlePress(const QPointF &)
 {
     Q_Q(QQuickControl);
     if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && !QGuiApplication::styleHints()->setFocusOnTouchRelease())
-        q->forceActiveFocus(Qt::MouseFocusReason);
+        setActiveFocus(q, Qt::MouseFocusReason);
 }
 
 void QQuickControlPrivate::handleMove(const QPointF &point)
@@ -181,7 +189,7 @@ void QQuickControlPrivate::handleRelease(const QPointF &)
 {
     Q_Q(QQuickControl);
     if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease())
-        q->forceActiveFocus(Qt::MouseFocusReason);
+        setActiveFocus(q, Qt::MouseFocusReason);
     touchId = -1;
 }
 
