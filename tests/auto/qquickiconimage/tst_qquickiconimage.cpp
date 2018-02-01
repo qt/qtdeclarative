@@ -406,6 +406,9 @@ void tst_qquickiconimage::color()
 {
     SKIP_IF_DPR_TOO_HIGH();
 
+    if (QGuiApplication::platformName() == QLatin1String("offscreen"))
+        QSKIP("grabToImage() doesn't work on the \"offscreen\" platform plugin (QTBUG-63185)");
+
     QQuickView view(testFileUrl("color.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
@@ -461,6 +464,9 @@ void tst_qquickiconimage::fileSelectors()
 {
     SKIP_IF_DPR_TOO_HIGH();
 
+    if (QGuiApplication::platformName() == QLatin1String("offscreen"))
+        QSKIP("grabToImage() doesn't work on the \"offscreen\" platform plugin (QTBUG-63185)");
+
     QQuickView view;
     QQmlFileSelector* fileSelector = new QQmlFileSelector(view.engine());
     fileSelector->setExtraSelectors(QStringList() << "testselector");
@@ -503,6 +509,9 @@ public:
 // don't crash (QTBUG-63959)
 void tst_qquickiconimage::imageProvider()
 {
+    if (QGuiApplication::platformName() == QLatin1String("offscreen"))
+        QSKIP("grabToImage() doesn't work on the \"offscreen\" platform plugin (QTBUG-63185)");
+
     QQuickView view;
     view.engine()->addImageProvider("provider", new TestImageProvider);
     view.setSource(testFileUrl("imageProvider.qml"));
