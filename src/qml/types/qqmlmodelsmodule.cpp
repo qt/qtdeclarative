@@ -52,6 +52,7 @@ void QQmlModelsModule::defineModule()
     qmlRegisterType<QQmlListElement>(uri, 2, 1, "ListElement");
     qmlRegisterCustomType<QQmlListModel>(uri, 2, 1, "ListModel", new QQmlListModelParser);
     qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
+    qmlRegisterType<QQmlDelegateModel,12>(uri, 2, 9, "DelegateModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 1, "DelegateModelGroup");
     qmlRegisterType<QQmlObjectModel>(uri, 2, 1, "ObjectModel");
     qmlRegisterType<QQmlObjectModel,3>(uri, 2, 3, "ObjectModel");
