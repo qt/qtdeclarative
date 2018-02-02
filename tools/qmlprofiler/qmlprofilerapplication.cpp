@@ -119,6 +119,10 @@ QmlProfilerApplication::~QmlProfilerApplication()
         logStatus("Killing process ...");
         m_process->kill();
     }
+    if (isInteractive()) {
+        QTextStream err(stderr);
+        err << endl;
+    }
     delete m_process;
 }
 
@@ -365,7 +369,7 @@ void QmlProfilerApplication::userCommand(const QString &command)
             m_pendingRequest = REQUEST_NONE;
             prompt();
         } else {
-            prompt(tr("The application is still generating data. Really quit (y/n)?"));
+            prompt(tr("Really quit (y/n)?"));
         }
         return;
     }
