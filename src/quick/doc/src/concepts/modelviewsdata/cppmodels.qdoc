@@ -41,6 +41,10 @@ QObjectList or a \l QAbstractItemModel. The first three are useful for exposing
 simpler datasets, while QAbstractItemModel provides a more flexible solution for
 more complex models.
 
+For a video tutorial that takes you through the whole process of exposing a C++
+model to QML, see the
+\l {https://youtu.be/9BcAYDlpuT8}{Using C++ Models in QML Tutorial}.
+
 \section2 QStringList-based Model
 
 A model may be a simple \l QStringList, which provides the contents of the list

@@ -279,6 +279,8 @@ private slots:
 
     void accessDeletedObject();
 
+    void lowercaseTypeNames();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -4901,6 +4903,12 @@ void tst_qqmllanguage::accessDeletedObject()
 
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::lowercaseTypeNames()
+{
+    QCOMPARE(qmlRegisterType<QObject>("Test", 1, 0, "lowerCaseTypeName"), -1);
+    QCOMPARE(qmlRegisterSingletonType<QObject>("Test", 1, 0, "lowerCaseTypeName", nullptr), -1);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
