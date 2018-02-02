@@ -1459,7 +1459,7 @@ void QQuickControl::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickControl);
     if ((d->focusPolicy & Qt::WheelFocus) == Qt::WheelFocus)
-        forceActiveFocus(Qt::MouseFocusReason);
+        setActiveFocus(this, Qt::MouseFocusReason);
 
     event->setAccepted(d->wheelEnabled);
 }

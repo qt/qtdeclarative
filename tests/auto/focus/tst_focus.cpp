@@ -396,6 +396,17 @@ void tst_focus::scope()
     QTest::touchEvent(window.data(), device.data()).release(0, QPoint(control->width() / 2, control->height() / 2));
     QVERIFY(!child->hasActiveFocus());
     QVERIFY(control->hasActiveFocus());
+
+    // reset
+    child->forceActiveFocus();
+    QVERIFY(child->hasActiveFocus());
+    QVERIFY(control->hasActiveFocus());
+
+    // Qt::WheelFocus
+    QWheelEvent wheelEvent(QPoint(control->width() / 2, control->height() / 2), 10, Qt::NoButton, Qt::NoModifier);
+    QGuiApplication::sendEvent(control, &wheelEvent);
+    QVERIFY(!child->hasActiveFocus());
+    QVERIFY(control->hasActiveFocus());
 }
 
 QTEST_MAIN(tst_focus)
