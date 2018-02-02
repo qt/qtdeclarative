@@ -119,7 +119,7 @@ public:
     int groupIndex(Compositor::Group group);
 
     int modelIndex() const { return index; }
-    void setModelIndex(int idx) { index = idx; Q_EMIT modelIndexChanged(); }
+    virtual void setModelIndex(int idx) { index = idx; Q_EMIT modelIndexChanged(); }
 
     virtual QV4::ReturnedValue get() { return QV4::QObjectWrapper::wrap(v4, this); }
 
