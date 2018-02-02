@@ -35,7 +35,6 @@
 struct ResourceFileMapper
 {
     ResourceFileMapper(const QStringList &resourceFiles);
-    ResourceFileMapper(const QString &resourceFile);
 
     bool isEmpty() const;
 
