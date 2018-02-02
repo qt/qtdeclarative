@@ -78,7 +78,6 @@ class QtQuickControls2Plugin: public QQuickStylePlugin
 public:
     QtQuickControls2Plugin(QObject *parent = nullptr);
     void registerTypes(const char *uri) override;
-    void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
     QString name() const override;
     QQuickProxyTheme *createTheme() const override;
@@ -165,25 +164,6 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(selector.select(QStringLiteral("MenuBar.qml")), uri, 2, 3, "MenuBar");
     qmlRegisterType(selector.select(QStringLiteral("MenuBarItem.qml")), uri, 2, 3, "MenuBarItem");
     qmlRegisterUncreatableType<QQuickOverlay>(uri, 2, 3, "Overlay", QStringLiteral("Overlay is only available as an attached property."));
-}
-
-static QObject *styleSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
-{
-    Q_UNUSED(engine);
-    Q_UNUSED(scriptEngine);
-    return new QQuickDefaultStyle;
-}
-
-static QObject *colorSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
-{
-    Q_UNUSED(engine);
-    Q_UNUSED(scriptEngine);
-    return new QQuickColor;
-}
-
-void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
-{
-    QQuickStylePlugin::initializeEngine(engine, uri);
 
     const QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
@@ -198,7 +178,11 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
 #endif
-    qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", styleSingleton);
+    qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
+            Q_UNUSED(engine);
+            Q_UNUSED(scriptEngine);
+            return new QQuickDefaultStyle;
+    });
 
     // QtQuick.Controls.impl 2.2 (Qt 5.9)
     qmlRegisterType<QQuickClippedText>(import, 2, 2, "ClippedText");
@@ -208,7 +192,11 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
     // QtQuick.Controls.impl 2.3 (Qt 5.10)
     qmlRegisterType<QQuickColorImage>(import, 2, 3, "ColorImage");
     qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");
-    qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", colorSingleton);
+    qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
+            Q_UNUSED(engine);
+            Q_UNUSED(scriptEngine);
+            return new QQuickColor;
+    });
     qmlRegisterType<QQuickIconLabel>(import, 2, 3, "IconLabel");
     qmlRegisterType<QQuickCheckLabel>(import, 2, 3, "CheckLabel");
     qmlRegisterType<QQuickMnemonicLabel>(import, 2, 3, "MnemonicLabel");

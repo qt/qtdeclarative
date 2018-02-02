@@ -61,7 +61,6 @@ public:
     QtQuickControls2UniversalStylePlugin(QObject *parent = nullptr);
 
     void registerTypes(const char *uri) override;
-    void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
     QString name() const override;
     QQuickProxyTheme *createTheme() const override;
@@ -76,11 +75,6 @@ void QtQuickControls2UniversalStylePlugin::registerTypes(const char *uri)
 {
     qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
     qmlRegisterUncreatableType<QQuickUniversalStyle>(uri, 2, 0, "Universal", tr("Universal is an attached property"));
-}
-
-void QtQuickControls2UniversalStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
-{
-    QQuickStylePlugin::initializeEngine(engine, uri);
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
