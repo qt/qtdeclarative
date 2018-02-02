@@ -506,12 +506,6 @@ void tst_qqmlmoduleplugin::importStrictModule_data()
         << QString()
         << QString();
 
-    QTest::newRow("wrong target")
-        << "import org.qtproject.InvalidStrictModule 1.0\n"
-           "MyPluginType {}"
-        << QString()
-        << ":1:1: plugin cannot be loaded for module \"org.qtproject.InvalidStrictModule\": Cannot install element 'MyPluginType' into unregistered namespace 'org.qtproject.SomeOtherModule'";
-
     QTest::newRow("non-strict clash")
         << "import org.qtproject.NonstrictModule 1.0\n"
            "MyPluginType {}"

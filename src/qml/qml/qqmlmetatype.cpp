@@ -1579,15 +1579,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
     if (uri && !typeName.isEmpty()) {
         QString nameSpace = QString::fromUtf8(uri);
 
-        if (!data->typeRegistrationNamespace.isEmpty()) {
-            // We can only install types into the registered namespace
-            if (nameSpace != data->typeRegistrationNamespace) {
-                QString failure(QCoreApplication::translate("qmlRegisterType",
-                                                            "Cannot install %1 '%2' into unregistered namespace '%3'"));
-                data->typeRegistrationFailures.append(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace));
-                return false;
-            }
-        } else if (data->typeRegistrationNamespace != nameSpace) {
+        if (data->typeRegistrationNamespace.isEmpty() && !nameSpace.isEmpty()) {
             // Is the target namespace protected against further registrations?
             if (data->protectedNamespaces.contains(nameSpace)) {
                 QString failure(QCoreApplication::translate("qmlRegisterType",
