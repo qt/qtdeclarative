@@ -1044,7 +1044,10 @@ QQmlIncubator::Status QQmlDelegateModel::incubationStatus(int index)
     if (!it->inCache())
         return QQmlIncubator::Null;
 
-    return d->m_cache.at(it.cacheIndex)->incubationTask->status();
+    if (auto incubationTask = d->m_cache.at(it.cacheIndex)->incubationTask)
+        return incubationTask->status();
+
+    return QQmlIncubator::Ready;
 }
 
 QString QQmlDelegateModelPrivate::stringValue(Compositor::Group group, int index, const QString &name)
@@ -3194,7 +3197,10 @@ QQmlIncubator::Status QQmlPartsModel::incubationStatus(int index)
     if (!it->inCache())
         return QQmlIncubator::Null;
 
-    return model->m_cache.at(it.cacheIndex)->incubationTask->status();
+    if (auto incubationTask = model->m_cache.at(it.cacheIndex)->incubationTask)
+        return incubationTask->status();
+
+    return QQmlIncubator::Ready;
 }
 
 int QQmlPartsModel::indexOf(QObject *item, QObject *) const
