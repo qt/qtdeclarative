@@ -2294,10 +2294,9 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     if (event->asPointerMouseEvent()) {
         deliverMouseEvent(event->asPointerMouseEvent());
         // failsafe: never allow any kind of grab to persist after release
-        QQuickItem *grabber = q->mouseGrabberItem();
-        if (event->isReleaseEvent() && event->buttons() == Qt::NoButton && grabber) {
+        if (event->isReleaseEvent() && event->buttons() == Qt::NoButton) {
             event->clearGrabbers();
-            sendUngrabEvent(grabber, false);
+            sendUngrabEvent(q->mouseGrabberItem(), false);
         }
     } else if (event->asPointerTouchEvent()) {
         deliverTouchEvent(event->asPointerTouchEvent());
