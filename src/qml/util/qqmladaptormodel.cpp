@@ -458,6 +458,16 @@ public:
         return model.aim()->rowCount(model.rootIndex);
     }
 
+    int rowCount(const QQmlAdaptorModel &model) const override
+    {
+        return model.aim()->rowCount(model.rootIndex);
+    }
+
+    int columnCount(const QQmlAdaptorModel &model) const override
+    {
+        return model.aim()->columnCount(model.rootIndex);
+    }
+
     void cleanup(QQmlAdaptorModel &model, QQmlDelegateModel *vdm) const override
     {
         QAbstractItemModel * const aim = model.aim();
@@ -658,6 +668,16 @@ public:
         return model.list.count();
     }
 
+    int rowCount(const QQmlAdaptorModel &model) const override
+    {
+        return model.list.count();
+    }
+
+    int columnCount(const QQmlAdaptorModel &) const override
+    {
+        return 1;
+    }
+
     QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const override
     {
         return role == QLatin1String("modelData")
@@ -740,6 +760,16 @@ public:
     int count(const QQmlAdaptorModel &model) const override
     {
         return model.list.count();
+    }
+
+    int rowCount(const QQmlAdaptorModel &model) const override
+    {
+        return model.list.count();
+    }
+
+    int columnCount(const QQmlAdaptorModel &) const override
+    {
+        return 1;
     }
 
     QVariant value(const QQmlAdaptorModel &model, int index, const QString &role) const override
