@@ -985,7 +985,38 @@ void QQmlAdaptorModel::invalidateModel(QQmlDelegateModel *vdm)
 
 bool QQmlAdaptorModel::isValid() const
 {
-    return accessors != &qt_vdm_null_accessors;
+    return accessors != &qt_vdm_null_accessors || rows.isValid();
+}
+
+int QQmlAdaptorModel::count() const
+{
+    return rowCount() * columnCount();
+}
+
+int QQmlAdaptorModel::rowCount() const
+{
+    if (rows.isValid())
+        return rows.value;
+    return qMax(0, accessors->rowCount(*this));
+}
+
+int QQmlAdaptorModel::columnCount() const
+{
+    if (columns.isValid())
+        return columns.value;
+    return qMax(isValid() ? 1 : 0, accessors->columnCount(*this));
+}
+
+int QQmlAdaptorModel::rowAt(int index) const
+{
+    int count = rowCount();
+    return count <= 0 ? -1 : index % count;
+}
+
+int QQmlAdaptorModel::columnAt(int index) const
+{
+    int count = rowCount();
+    return count <= 0 ? -1 : index / count;
 }
 
 void QQmlAdaptorModel::objectDestroyed(QObject *)

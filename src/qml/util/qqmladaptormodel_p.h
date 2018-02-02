@@ -56,6 +56,7 @@
 #include "private/qqmllistaccessor_p.h"
 
 #include <private/qqmlguard_p.h>
+#include <private/qqmlnullablevalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -104,6 +105,8 @@ public:
         virtual void fetchMore(QQmlAdaptorModel &) const {}
     };
 
+    QQmlNullableValue<int> rows;
+    QQmlNullableValue<int> columns;
     const Accessors *accessors;
     QPersistentModelIndex rootIndex;
     QQmlListAccessor list;
@@ -116,11 +119,15 @@ public:
     void invalidateModel(QQmlDelegateModel *vdm);
 
     bool isValid() const;
+    int count() const;
+    int rowCount() const;
+    int columnCount() const;
+    int rowAt(int index) const;
+    int columnAt(int index) const;
 
     inline QAbstractItemModel *aim() { return static_cast<QAbstractItemModel *>(object()); }
     inline const QAbstractItemModel *aim() const { return static_cast<const QAbstractItemModel *>(object()); }
 
-    inline int count() const { return qMax(0, accessors->count(*this)); }
     inline QVariant value(int index, const QString &role) const {
         return accessors->value(*this, index, role); }
     inline QQmlDelegateModelItem *createItem(QQmlDelegateModelItemMetaType *metaType, int index) {
