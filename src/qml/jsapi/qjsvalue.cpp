@@ -232,7 +232,7 @@ QJSValue::QJSValue(const QJSValue& other)
 */
 
 /*!
-    \fn QJSValue &operator=(QJSValue && other)
+    \fn QJSValue &QJSValue::operator=(QJSValue && other)
 
     Move-assigns \a other to this QJSValue object.
 */

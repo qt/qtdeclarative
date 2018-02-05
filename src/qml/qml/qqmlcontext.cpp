@@ -365,6 +365,7 @@ void QQmlContext::setContextProperties(const QVector<PropertyPair> &properties)
     \since 5.11
 
     \class QQmlContext::PropertyPair
+    \inmodule QtQml
 
     This struct contains a property name and a property value.
     It is used as a parameter for the \c setContextProperties function.

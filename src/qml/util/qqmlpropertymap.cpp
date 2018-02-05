@@ -355,7 +355,7 @@ QQmlPropertyMap::QQmlPropertyMap(const QMetaObject *staticMetaObject, QObject *p
 */
 
 /*!
-    \fn QQmlPropertyMap::QQmlPropertyMap(DerivedType *derived, QObject *parent)
+    \fn template<class DerivedType> QQmlPropertyMap::QQmlPropertyMap(DerivedType *derived, QObject *parent)
 
     Constructs a bindable map with parent object \a parent.  Use this constructor
     in classes derived from QQmlPropertyMap.

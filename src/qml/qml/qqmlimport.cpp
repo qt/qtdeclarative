@@ -981,7 +981,7 @@ QQmlImportNamespace *QQmlImportsPrivate::findQualifiedNamespace(const QHashedStr
     return 0;
 }
 
-/*!
+/*
     Returns the list of possible versioned URI combinations. For example, if \a uri is
     QtQml.Models, \a vmaj is 2, and \a vmin is 0, this method returns the following:
     [QtQml.Models.2.0, QtQml.2.0.Models, QtQml.Models.2, QtQml.2.Models, QtQml.Models]
@@ -1017,7 +1017,7 @@ static QVector<QStaticPlugin> makePlugins()
     return plugins;
 }
 
-/*!
+/*
     Get all static plugins that are QML plugins and has a meta data URI that matches with one of
     \a versionUris, which is a list of all possible versioned URI combinations - see versionUriList()
     above.
@@ -1059,7 +1059,7 @@ static inline QString msgCannotLoadPlugin(const QString &uri, const QString &why
 }
 #endif
 
-/*!
+/*
 Import an extension defined by a qmldir file.
 
 \a qmldirFilePath is a raw file path.
