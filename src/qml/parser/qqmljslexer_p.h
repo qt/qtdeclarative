@@ -166,10 +166,7 @@ public:
     int tokenLength() const { return _tokenLength; }
 
     int tokenStartLine() const { return _tokenLine; }
-    int tokenStartColumn() const { return _tokenStartPtr - _tokenLinePtr + 1; }
-
-    int tokenEndLine() const;
-    int tokenEndColumn() const;
+    int tokenStartColumn() const { return _tokenColumn; }
 
     inline QStringRef tokenSpell() const { return _tokenSpell; }
     double tokenValue() const { return _tokenValue; }
@@ -218,14 +215,13 @@ private:
 
     const QChar *_codePtr;
     const QChar *_endPtr;
-    const QChar *_lastLinePtr;
-    const QChar *_tokenLinePtr;
     const QChar *_tokenStartPtr;
 
     QChar _char;
     Error _errorCode;
 
     int _currentLineNumber;
+    int _currentColumnNumber;
     double _tokenValue;
 
     // parentheses state
@@ -238,6 +234,7 @@ private:
     int _tokenKind;
     int _tokenLength;
     int _tokenLine;
+    int _tokenColumn;
 
     bool _validTokenText;
     bool _prohibitAutomaticSemicolon;

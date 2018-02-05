@@ -87,12 +87,11 @@ Lexer::Lexer(Engine *engine)
     : _engine(engine)
     , _codePtr(0)
     , _endPtr(0)
-    , _lastLinePtr(0)
-    , _tokenLinePtr(0)
     , _tokenStartPtr(0)
     , _char(QLatin1Char('\n'))
     , _errorCode(NoError)
     , _currentLineNumber(0)
+    , _currentColumnNumber(0)
     , _tokenValue(0)
     , _parenthesesState(IgnoreParentheses)
     , _parenthesesCount(0)
@@ -101,6 +100,7 @@ Lexer::Lexer(Engine *engine)
     , _tokenKind(0)
     , _tokenLength(0)
     , _tokenLine(0)
+    , _tokenColumn(0)
     , _validTokenText(false)
     , _prohibitAutomaticSemicolon(false)
     , _restrictedKeyword(false)
@@ -137,14 +137,13 @@ void Lexer::setCode(const QString &code, int lineno, bool qmlMode)
 
     _codePtr = code.unicode();
     _endPtr = _codePtr + code.length();
-    _lastLinePtr = _codePtr;
-    _tokenLinePtr = _codePtr;
     _tokenStartPtr = _codePtr;
 
     _char = QLatin1Char('\n');
     _errorCode = NoError;
 
     _currentLineNumber = lineno;
+    _currentColumnNumber = 0;
     _tokenValue = 0;
 
     // parentheses state
@@ -156,6 +155,7 @@ void Lexer::setCode(const QString &code, int lineno, bool qmlMode)
     _patternFlags = 0;
     _tokenLength = 0;
     _tokenLine = lineno;
+    _tokenColumn = 0;
 
     _validTokenText = false;
     _prohibitAutomaticSemicolon = false;
@@ -172,9 +172,10 @@ void Lexer::scanChar()
     if (sequenceLength == 2)
         _char = *_codePtr++;
 
-    if (unsigned sequenceLength = isLineTerminatorSequence()) {
-        _lastLinePtr = _codePtr + sequenceLength - 1; // points to the first character after the newline
+    ++_currentColumnNumber;
+    if (isLineTerminator()) {
         ++_currentLineNumber;
+        _currentColumnNumber = 0;
     }
 }
 
@@ -416,15 +417,13 @@ int Lexer::scanToken()
 
 again:
     _validTokenText = false;
-    _tokenLinePtr = _lastLinePtr;
 
     while (_char.isSpace()) {
-        if (unsigned sequenceLength = isLineTerminatorSequence()) {
-            _tokenLinePtr = _codePtr + sequenceLength - 1;
-
+        if (isLineTerminator()) {
             if (_restrictedKeyword) {
                 // automatic semicolon insertion
                 _tokenLine = _currentLineNumber;
+                _tokenColumn = _currentColumnNumber;
                 _tokenStartPtr = _codePtr - 1;
                 return T_SEMICOLON;
             } else {
@@ -438,6 +437,7 @@ again:
 
     _tokenStartPtr = _codePtr - 1;
     _tokenLine = _currentLineNumber;
+    _tokenColumn = _currentColumnNumber;
 
     if (_codePtr > _endPtr)
         return EOF_SYMBOL;
@@ -1172,16 +1172,6 @@ bool Lexer::isHexDigit(QChar c)
 bool Lexer::isOctalDigit(ushort c)
 {
     return (c >= '0' && c <= '7');
-}
-
-int Lexer::tokenEndLine() const
-{
-    return _currentLineNumber;
-}
-
-int Lexer::tokenEndColumn() const
-{
-    return _codePtr - _lastLinePtr;
 }
 
 QString Lexer::tokenText() const
