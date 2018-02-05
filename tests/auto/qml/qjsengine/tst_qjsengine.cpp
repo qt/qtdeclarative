@@ -203,6 +203,9 @@ private slots:
 
     void scriptScopes();
 
+    void binaryNumbers();
+    void octalNumbers();
+
 signals:
     void testSignal();
 };
@@ -4134,6 +4137,38 @@ void tst_QJSEngine::scriptScopes()
     QJSValue use = engine.evaluate("'use strict'; foo()");
     QVERIFY(use.isNumber());
     QCOMPARE(use.toInt(), 42);
+}
+
+void tst_QJSEngine::binaryNumbers()
+{
+    QJSEngine engine;
+
+    QJSValue result = engine.evaluate("0b1001");
+    QVERIFY(result.isNumber());
+    QVERIFY(result.toNumber() == 9);
+
+    result = engine.evaluate("0B1001");
+    QVERIFY(result.isNumber());
+    QVERIFY(result.toNumber() == 9);
+
+    result = engine.evaluate("0b2");
+    QVERIFY(result.isError());
+}
+
+void tst_QJSEngine::octalNumbers()
+{
+    QJSEngine engine;
+
+    QJSValue result = engine.evaluate("0o11");
+    QVERIFY(result.isNumber());
+    QVERIFY(result.toNumber() == 9);
+
+    result = engine.evaluate("0O11");
+    QVERIFY(result.isNumber());
+    QVERIFY(result.toNumber() == 9);
+
+    result = engine.evaluate("0o9");
+    QVERIFY(result.isError());
 }
 
 QTEST_MAIN(tst_QJSEngine)

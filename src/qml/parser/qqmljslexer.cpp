@@ -223,6 +223,25 @@ inline bool isBinop(int tok)
         return false;
     }
 }
+
+int hexDigit(QChar c)
+{
+    if (c >= QLatin1Char('0') && c <= QLatin1Char('9'))
+        return c.unicode() - '0';
+    if (c >= QLatin1Char('a') && c <= QLatin1Char('f'))
+        return c.unicode() - 'a' + 10;
+    if (c >= QLatin1Char('A') && c <= QLatin1Char('F'))
+        return c.unicode() - 'A' + 10;
+    return -1;
+}
+
+int octalDigit(QChar c)
+{
+    if (c >= QLatin1Char('0') && c <= QLatin1Char('7'))
+        return c.unicode() - '0';
+    return -1;
+}
+
 } // anonymous namespace
 
 int Lexer::lex()
@@ -557,51 +576,8 @@ again:
         return T_DIVIDE_;
 
     case '.':
-        if (_char.isDigit()) {
-            QVarLengthArray<char,32> chars;
-
-            chars.append(ch.unicode()); // append the `.'
-
-            while (_char.isDigit()) {
-                chars.append(_char.unicode());
-                scanChar();
-            }
-
-            if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
-                if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
-                                              _codePtr[1].isDigit())) {
-
-                    chars.append(_char.unicode());
-                    scanChar(); // consume `e'
-
-                    if (_char == QLatin1Char('+') || _char == QLatin1Char('-')) {
-                        chars.append(_char.unicode());
-                        scanChar(); // consume the sign
-                    }
-
-                    while (_char.isDigit()) {
-                        chars.append(_char.unicode());
-                        scanChar();
-                    }
-                }
-            }
-
-            chars.append('\0');
-
-            const char *begin = chars.constData();
-            const char *end = 0;
-            bool ok = false;
-
-            _tokenValue = qstrtod(begin, &end, &ok);
-
-            if (end - begin != chars.size() - 1) {
-                _errorCode = IllegalExponentIndicator;
-                _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal syntax for exponential number");
-                return T_ERROR;
-            }
-
-            return T_NUMERIC_LITERAL;
-        }
+        if (isDecimalDigit(_char.unicode()))
+            return scanNumber(ch);
         return T_DOT;
 
     case '-':
@@ -898,91 +874,110 @@ again:
 
 int Lexer::scanNumber(QChar ch)
 {
-    if (ch != QLatin1Char('0')) {
-        QVarLengthArray<char, 64> buf;
-        buf += ch.toLatin1();
+    if (ch == QLatin1Char('0')) {
+        if (_char == QLatin1Char('x') || _char == QLatin1Char('X')) {
+            ch = _char; // remember the x or X to use it in the error message below.
 
-        QChar n = _char;
-        const QChar *code = _codePtr;
-        while (n.isDigit()) {
-            buf += n.toLatin1();
-            n = *code++;
-        }
+            // parse hex integer literal
+            scanChar(); // consume 'x'
 
-        if (n != QLatin1Char('.') && n != QLatin1Char('e') && n != QLatin1Char('E')) {
-            if (code != _codePtr) {
-                _codePtr = code - 1;
+            if (!isHexDigit(_char)) {
+                _errorCode = IllegalNumber;
+                _errorMessage = QCoreApplication::translate("QQmlParser", "At least one hexadecimal digit is required after '0%1'").arg(ch);
+                return T_ERROR;
+            }
+
+            double d = 0.;
+            while (1) {
+                int digit = ::hexDigit(_char);
+                if (digit < 0)
+                    break;
+                d *= 16;
+                d += digit;
                 scanChar();
             }
-            buf.append('\0');
-            _tokenValue = strtod(buf.constData(), 0);
+
+            _tokenValue = d;
             return T_NUMERIC_LITERAL;
-        }
-    } else if (_char.isDigit() && !qmlMode()) {
-        _errorCode = IllegalCharacter;
-        _errorMessage = QCoreApplication::translate("QQmlParser", "Decimal numbers can't start with '0'");
-        return T_ERROR;
-    }
+        } else if (_char == QLatin1Char('o') || _char == QLatin1Char('O')) {
+            ch = _char; // remember the o or O to use it in the error message below.
 
-    QVarLengthArray<char,32> chars;
-    chars.append(ch.unicode());
+            // parse octal integer literal
+            scanChar(); // consume 'o'
 
-    if (ch == QLatin1Char('0') && (_char == QLatin1Char('x') || _char == QLatin1Char('X'))) {
-        ch = _char; // remember the x or X to use it in the error message below.
+            if (!isOctalDigit(_char.unicode())) {
+                _errorCode = IllegalNumber;
+                _errorMessage = QCoreApplication::translate("QQmlParser", "At least one octal digit is required after '0%1'").arg(ch);
+                return T_ERROR;
+            }
 
-        // parse hex integer literal
-        chars.append(_char.unicode());
-        scanChar(); // consume `x'
+            double d = 0.;
+            while (1) {
+                int digit = ::octalDigit(_char);
+                if (digit < 0)
+                    break;
+                d *= 8;
+                d += digit;
+                scanChar();
+            }
 
-        while (isHexDigit(_char)) {
-            chars.append(_char.unicode());
-            scanChar();
-        }
+            _tokenValue = d;
+            return T_NUMERIC_LITERAL;
+        } else if (_char == QLatin1Char('b') || _char == QLatin1Char('B')) {
+            ch = _char; // remember the b or B to use it in the error message below.
 
-        if (chars.size() < 3) {
-            _errorCode = IllegalHexNumber;
-            _errorMessage = QCoreApplication::translate("QQmlParser", "At least one hexadecimal digit is required after '0%1'").arg(ch);
+            // parse binary integer literal
+            scanChar(); // consume 'b'
+
+            if (_char.unicode() != '0' && _char.unicode() != '1') {
+                _errorCode = IllegalNumber;
+                _errorMessage = QCoreApplication::translate("QQmlParser", "At least one binary digit is required after '0%1'").arg(ch);
+                return T_ERROR;
+            }
+
+            double d = 0.;
+            while (1) {
+                int digit = 0;
+                if (_char.unicode() == '1')
+                    digit = 1;
+                else if (_char.unicode() != '0')
+                    break;
+                d *= 2;
+                d += digit;
+                scanChar();
+            }
+
+            _tokenValue = d;
+            return T_NUMERIC_LITERAL;
+        } else if (_char.isDigit() && !qmlMode()) {
+            _errorCode = IllegalCharacter;
+            _errorMessage = QCoreApplication::translate("QQmlParser", "Decimal numbers can't start with '0'");
             return T_ERROR;
         }
-
-        _tokenValue = integerFromString(chars.constData(), chars.size(), 16);
-        return T_NUMERIC_LITERAL;
     }
 
     // decimal integer literal
-    while (_char.isDigit()) {
-        chars.append(_char.unicode());
-        scanChar(); // consume the digit
-    }
+    QVarLengthArray<char,32> chars;
+    chars.append(ch.unicode());
 
-    if (_char == QLatin1Char('.')) {
-        chars.append(_char.unicode());
-        scanChar(); // consume `.'
-
+    if (ch != QLatin1Char('.')) {
         while (_char.isDigit()) {
             chars.append(_char.unicode());
-            scanChar();
+            scanChar(); // consume the digit
         }
 
-        if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
-            if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
-                                          _codePtr[1].isDigit())) {
-
-                chars.append(_char.unicode());
-                scanChar(); // consume `e'
-
-                if (_char == QLatin1Char('+') || _char == QLatin1Char('-')) {
-                    chars.append(_char.unicode());
-                    scanChar(); // consume the sign
-                }
-
-                while (_char.isDigit()) {
-                    chars.append(_char.unicode());
-                    scanChar();
-                }
-            }
+        if (_char == QLatin1Char('.')) {
+            chars.append(_char.unicode());
+            scanChar(); // consume `.'
         }
-    } else if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
+    }
+
+    while (_char.isDigit()) {
+        chars.append(_char.unicode());
+        scanChar();
+    }
+
+    if (_char == QLatin1Char('e') || _char == QLatin1Char('E')) {
         if (_codePtr[0].isDigit() || ((_codePtr[0] == QLatin1Char('+') || _codePtr[0] == QLatin1Char('-')) &&
                                       _codePtr[1].isDigit())) {
 
@@ -999,12 +994,6 @@ int Lexer::scanNumber(QChar ch)
                 scanChar();
             }
         }
-    }
-
-    if (chars.length() == 1) {
-        // if we ended up with a single digit, then it was a '0'
-        _tokenValue = 0;
-        return T_NUMERIC_LITERAL;
     }
 
     chars.append('\0');

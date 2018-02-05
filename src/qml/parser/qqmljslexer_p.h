@@ -124,7 +124,7 @@ public:
     enum Error {
         NoError,
         IllegalCharacter,
-        IllegalHexNumber,
+        IllegalNumber,
         UnclosedStringLiteral,
         IllegalEscapeSequence,
         IllegalUnicodeEscapeSequence,

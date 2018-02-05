@@ -112,13 +112,6 @@ double integerFromString(const char *buf, int size, int radix)
     return result;
 }
 
-double integerFromString(const QString &str, int radix)
-{
-    QByteArray ba = QStringRef(&str).trimmed().toLatin1();
-    return integerFromString(ba.constData(), ba.size(), radix);
-}
-
-
 Engine::Engine()
     : _lexer(0), _directives(0)
 { }
