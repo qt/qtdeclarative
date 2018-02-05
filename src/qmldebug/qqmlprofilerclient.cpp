@@ -43,6 +43,10 @@
 
 QT_BEGIN_NAMESPACE
 
+QQmlProfilerClientPrivate::~QQmlProfilerClientPrivate()
+{
+}
+
 int QQmlProfilerClientPrivate::resolveType(const QQmlProfilerTypedEvent &event)
 {
     int typeIndex = -1;

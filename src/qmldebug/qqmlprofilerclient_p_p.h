@@ -79,7 +79,7 @@ public:
     {
     }
 
-    virtual ~QQmlProfilerClientPrivate() override {}
+    virtual ~QQmlProfilerClientPrivate() override;
 
     void sendRecordingStatus(int engineId);
     bool updateFeatures(ProfileFeature feature);
@@ -110,4 +110,3 @@ public:
 QT_END_NAMESPACE
 
 #endif // QQMLPROFILERCLIENT_P_P_H
-
