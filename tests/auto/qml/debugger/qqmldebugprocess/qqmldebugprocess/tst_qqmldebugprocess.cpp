@@ -118,7 +118,7 @@ void tst_QQmlDebugProcess::sessionStart()
         QTimer::singleShot(delay, process.data(), wait);
 
     QTRY_VERIFY(done);
-    QVERIFY(process->state().startsWith("not running"));
+    QCOMPARE(process->state(), QProcess::NotRunning);
 }
 
 QTEST_MAIN(tst_QQmlDebugProcess)

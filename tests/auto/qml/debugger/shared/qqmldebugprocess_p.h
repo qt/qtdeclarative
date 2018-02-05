@@ -52,7 +52,7 @@ public:
     QQmlDebugProcess(const QString &executable, QObject *parent = 0);
     ~QQmlDebugProcess();
 
-    QString state();
+    QString stateString() const;
 
     void addEnvironment(const QString &environment);
 
@@ -61,6 +61,7 @@ public:
     int debugPort() const;
 
     bool waitForFinished();
+    QProcess::ProcessState state() const;
     QProcess::ExitStatus exitStatus() const;
 
     QString output() const;

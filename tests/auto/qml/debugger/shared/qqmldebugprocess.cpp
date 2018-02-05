@@ -61,7 +61,7 @@ QQmlDebugProcess::~QQmlDebugProcess()
     stop();
 }
 
-QString QQmlDebugProcess::state()
+QString QQmlDebugProcess::stateString() const
 {
     QString stateStr;
     switch (m_process.state()) {
@@ -155,6 +155,11 @@ int QQmlDebugProcess::debugPort() const
 bool QQmlDebugProcess::waitForFinished()
 {
     return m_process.waitForFinished();
+}
+
+QProcess::ProcessState QQmlDebugProcess::state() const
+{
+    return m_process.state();
 }
 
 QProcess::ExitStatus QQmlDebugProcess::exitStatus() const

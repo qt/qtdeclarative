@@ -125,7 +125,7 @@ void tst_QQmlDebuggingEnabler::qmlscene()
                          QQmlDebugClient::Enabled : QQmlDebugClient::Unavailable);
     }
 
-    QCOMPARE(m_process->state(), QLatin1String("running"));
+    QCOMPARE(m_process->state(), QProcess::Running);
     if (!blockMode)
         QTRY_VERIFY(m_process->output().contains(QLatin1String("qml: Component.onCompleted")));
 }
@@ -170,7 +170,7 @@ void tst_QQmlDebuggingEnabler::custom()
                          QQmlDebugClient::Enabled : QQmlDebugClient::Unavailable);
     }
 
-    QCOMPARE(m_process->state(), QLatin1String("running"));
+    QCOMPARE(m_process->state(), QProcess::Running);
     if (!blockMode)
         QTRY_VERIFY(m_process->output().contains(QLatin1String("QQmlEngine created")));
 }

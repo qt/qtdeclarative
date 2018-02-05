@@ -205,7 +205,7 @@ void QQmlDebugTest::cleanup()
     if (QTest::currentTestFailed()) {
         const QString null = QStringLiteral("null");
 
-        qDebug() << "Process State:" << (m_process ? m_process->state() : null);
+        qDebug() << "Process State:" << (m_process ? m_process->stateString() : null);
         qDebug() << "Application Output:" << (m_process ? m_process->output() : null);
         qDebug() << "Connection State:" << QQmlDebugTest::connectionStateString(m_connection);
         for (QQmlDebugClient *client : m_clients) {
