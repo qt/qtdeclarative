@@ -199,7 +199,6 @@ private:
     static bool isDecimalDigit(ushort c);
     static bool isHexDigit(QChar c);
     static bool isOctalDigit(ushort c);
-    static bool isUnicodeEscapeSequence(const QChar *chars);
 
     void syncProhibitAutomaticSemicolon();
     QChar decodeUnicodeEscapeCharacter(bool *ok);

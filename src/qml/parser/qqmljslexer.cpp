@@ -315,36 +315,52 @@ int Lexer::lex()
     return _tokenKind;
 }
 
-bool Lexer::isUnicodeEscapeSequence(const QChar *chars)
-{
-    if (isHexDigit(chars[0]) && isHexDigit(chars[1]) && isHexDigit(chars[2]) && isHexDigit(chars[3]))
-        return true;
-
-    return false;
-}
-
 QChar Lexer::decodeUnicodeEscapeCharacter(bool *ok)
 {
-    if (_char == QLatin1Char('u') && isUnicodeEscapeSequence(&_codePtr[0])) {
-        scanChar(); // skip u
-
-        const QChar c1 = _char;
-        scanChar();
-
-        const QChar c2 = _char;
-        scanChar();
-
-        const QChar c3 = _char;
-        scanChar();
-
-        const QChar c4 = _char;
-        scanChar();
+    Q_ASSERT(_char == QLatin1Char('u'));
+    scanChar(); // skip u
+    if (_codePtr + 4 <= _endPtr && isHexDigit(_char)) {
+        ushort codePoint = 0;
+        for (int i = 0; i < 4; ++i) {
+            int digit = hexDigit(_char);
+            if (digit < 0)
+                goto error;
+            codePoint *= 16;
+            codePoint += digit;
+            scanChar();
+        }
 
         *ok = true;
+        return QChar(codePoint);
+    } else if (_codePtr < _endPtr && _char == QLatin1Char('{')) {
+        scanChar(); // skip '{'
+        uint codePoint = 0;
+        if (!isHexDigit(_char))
+            // need at least one hex digit
+            goto error;
 
-        return convertUnicode(c1, c2, c3, c4);
+        while (_codePtr <= _endPtr) {
+            int digit = hexDigit(_char);
+            if (digit < 0)
+                break;
+            codePoint *= 16;
+            codePoint += digit;
+            if (codePoint > 0x10ffff)
+                goto error;
+            scanChar();
+        }
+
+        if (_char != QLatin1Char('}'))
+            goto error;
+
+        scanChar(); // skip '}'
+
+
+        *ok = true;
+        return QChar(codePoint);
     }
 
+  error:
     _errorCode = IllegalUnicodeEscapeSequence;
     _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
 
