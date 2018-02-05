@@ -69,6 +69,7 @@ private:
     void run();
     void tryToConnect();
     void connected();
+    void disconnected();
     void processHasOutput();
     void processFinished();
 

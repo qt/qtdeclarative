@@ -91,6 +91,8 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
 
     connect(&m_connection, &QQmlDebugConnection::connected,
             this, &QmlProfilerApplication::connected);
+    connect(&m_connection, &QQmlDebugConnection::disconnected,
+            this, &QmlProfilerApplication::disconnected);
 
     connect(&m_qmlProfilerClient, &QmlProfilerClient::enabledChanged,
             this, &QmlProfilerApplication::traceClientEnabledChanged);
@@ -510,6 +512,22 @@ void QmlProfilerApplication::connected()
     prompt(tr("Connected to %1. Wait for profile data or type a command (type 'help' to show list "
               "of commands).\nRecording Status: %2")
            .arg(endpoint).arg(m_recording ? tr("on") : tr("off")));
+}
+
+void QmlProfilerApplication::disconnected()
+{
+    if (m_runMode == AttachMode) {
+        int exitCode = 0;
+        if (m_recording) {
+            logError("Connection dropped while recording, last trace is damaged!");
+            exitCode = 2;
+        }
+
+        if (!m_interactive )
+            exit(exitCode);
+        else
+            m_qmlProfilerClient.clearPendingData();
+    }
 }
 
 void QmlProfilerApplication::processHasOutput()
