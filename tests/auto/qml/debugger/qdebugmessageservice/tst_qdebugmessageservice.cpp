@@ -89,20 +89,11 @@ public:
 
 protected:
     //inherited from QQmlDebugClient
-    void stateChanged(State state);
     void messageReceived(const QByteArray &data);
 
 signals:
-    void enabled();
     void debugOutput();
 };
-
-void QQmlDebugMsgClient::stateChanged(State state)
-{
-    if (state == Enabled) {
-        emit enabled();
-    }
-}
 
 void QQmlDebugMsgClient::messageReceived(const QByteArray &data)
 {

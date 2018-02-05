@@ -71,15 +71,10 @@ class QQmlDebugMessageClient : public QQmlDebugClient
 public:
     explicit QQmlDebugMessageClient(QQmlDebugConnection *client);
 
-    virtual void stateChanged(State state) override;
     virtual void messageReceived(const QByteArray &) override;
 
 signals:
-    void newState(QQmlDebugClient::State);
     void message(QtMsgType, const QString &, const QQmlDebugContextInfo &);
-
-private:
-    Q_DISABLE_COPY(QQmlDebugMessageClient)
 };
 
 QT_END_NAMESPACE

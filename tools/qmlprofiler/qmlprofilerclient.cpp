@@ -57,6 +57,8 @@ QmlProfilerClient::QmlProfilerClient(QQmlDebugConnection *connection, QmlProfile
 {
     Q_D(QmlProfilerClient);
     setRequestedFeatures(std::numeric_limits<quint64>::max());
+    connect(this, &QQmlDebugClient::stateChanged,
+            this, &QmlProfilerClient::onStateChanged);
     connect(this, &QQmlProfilerClient::traceStarted,
             d->data, &QmlProfilerData::setTraceStartTime);
     connect(this, &QQmlProfilerClient::traceFinished,
@@ -65,7 +67,7 @@ QmlProfilerClient::QmlProfilerClient(QQmlDebugConnection *connection, QmlProfile
             d->data, &QmlProfilerData::complete);
 }
 
-void QmlProfilerClient::stateChanged(State state)
+void QmlProfilerClient::onStateChanged(State state)
 {
     Q_D(QmlProfilerClient);
     if ((d->enabled && state != Enabled) || (!d->enabled && state == Enabled)) {

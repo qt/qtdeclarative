@@ -251,6 +251,8 @@ public:
     {
         parser = jsEngine.evaluate(QLatin1String("JSON.parse"));
         stringify = jsEngine.evaluate(QLatin1String("JSON.stringify"));
+        QObject::connect(this, &QQmlDebugClient::stateChanged,
+                         this, &QJSDebugClient::onStateChanged);
     }
 
     void connect(bool redundantRefs = false, bool namesAsObjects = false);
@@ -272,7 +274,7 @@ public:
 
 protected:
     //inherited from QQmlDebugClient
-    void stateChanged(State state);
+    void onStateChanged(State state);
     void messageReceived(const QByteArray &data);
 
 signals:
@@ -660,7 +662,7 @@ void QJSDebugClient::disconnect()
     sendMessage(packMessage(DISCONNECT, json.toString().toUtf8()));
 }
 
-void QJSDebugClient::stateChanged(State state)
+void QJSDebugClient::onStateChanged(State state)
 {
     if (state == Enabled)
         flushSendBuffer();

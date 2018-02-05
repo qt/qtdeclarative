@@ -259,7 +259,7 @@ QQmlDebugConnection::~QQmlDebugConnection()
     Q_D(QQmlDebugConnection);
     QHash<QString, QQmlDebugClient*>::iterator iter = d->plugins.begin();
     for (; iter != d->plugins.end(); ++iter)
-        iter.value()->stateChanged(QQmlDebugClient::NotConnected);
+        emit iter.value()->stateChanged(QQmlDebugClient::NotConnected);
 }
 
 int QQmlDebugConnection::currentDataStreamVersion() const
@@ -295,7 +295,7 @@ void QQmlDebugConnection::close()
 
         QHash<QString, QQmlDebugClient*>::iterator iter = d->plugins.begin();
         for (; iter != d->plugins.end(); ++iter)
-            iter.value()->stateChanged(QQmlDebugClient::NotConnected);
+            emit iter.value()->stateChanged(QQmlDebugClient::NotConnected);
     }
 
     if (d->device) {

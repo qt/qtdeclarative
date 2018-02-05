@@ -117,11 +117,6 @@ QQmlDebugConnection *QQmlDebugClient::connection() const
     return d->connection;
 }
 
-void QQmlDebugClient::stateChanged(QQmlDebugClient::State state)
-{
-    Q_UNUSED(state);
-}
-
 void QQmlDebugClient::messageReceived(const QByteArray &message)
 {
     Q_UNUSED(message);

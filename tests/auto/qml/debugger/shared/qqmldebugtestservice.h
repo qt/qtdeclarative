@@ -38,9 +38,6 @@ class QQmlDebugTestService : public QQmlDebugService
 public:
     QQmlDebugTestService(const QString &s, float version = 1, QObject *parent = 0);
 
-signals:
-    void stateHasChanged();
-
 protected:
     virtual void messageReceived(const QByteArray &ba);
     virtual void stateAboutToBeChanged(State state);

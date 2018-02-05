@@ -76,7 +76,6 @@ public:
     void setRecording(bool);
     quint64 recordedFeatures() const;
     virtual void messageReceived(const QByteArray &) override;
-    virtual void stateChanged(State status) override;
 
     void clearEvents();
     void clearAll();
@@ -87,6 +86,7 @@ public:
 
 protected:
     QQmlProfilerClient(QQmlProfilerClientPrivate &dd);
+    void onStateChanged(State status);
 
 signals:
     void complete(qint64 maximumTime);

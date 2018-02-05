@@ -88,11 +88,9 @@ public:
     QByteArray waitForResponse();
 
 signals:
-    void stateHasChanged();
     void serverMessage(const QByteArray &);
 
 protected:
-    virtual void stateChanged(State state);
     virtual void messageReceived(const QByteArray &ba);
 
 private:

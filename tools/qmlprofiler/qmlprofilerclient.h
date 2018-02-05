@@ -48,7 +48,7 @@ signals:
     void error(const QString &error);
 
 private:
-    void stateChanged(State state) override;
+    void onStateChanged(State state);
 };
 
 #endif // QMLPROFILERCLIENT_H

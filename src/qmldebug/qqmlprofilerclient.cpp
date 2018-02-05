@@ -170,6 +170,7 @@ QQmlProfilerClient::QQmlProfilerClient(QQmlDebugConnection *connection,
 {
     Q_D(QQmlProfilerClient);
     setRequestedFeatures(features);
+    connect(this, &QQmlDebugClient::stateChanged, this, &QQmlProfilerClient::onStateChanged);
     connect(d->engineControl.data(), &QQmlEngineControlClient::engineAboutToBeAdded,
             this, &QQmlProfilerClient::sendRecordingStatus);
     connect(d->engineControl.data(), &QQmlEngineControlClient::engineAboutToBeRemoved,
@@ -319,7 +320,7 @@ bool QQmlProfilerClientPrivate::updateFeatures(ProfileFeature feature)
     return true;
 }
 
-void QQmlProfilerClient::stateChanged(State status)
+void QQmlProfilerClient::onStateChanged(State status)
 {
     if (status == Enabled) {
         sendRecordingStatus(-1);

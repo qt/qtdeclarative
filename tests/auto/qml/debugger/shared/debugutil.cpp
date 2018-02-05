@@ -92,6 +92,9 @@ QString QQmlDebugTest::connectionStateString(const QQmlDebugConnection *connecti
 QQmlDebugTestClient::QQmlDebugTestClient(const QString &s, QQmlDebugConnection *c)
     : QQmlDebugClient(s, c)
 {
+    connect(this, &QQmlDebugClient::stateChanged, this, [this](QQmlDebugClient::State newState) {
+        QCOMPARE(newState, state());
+    });
 }
 
 QByteArray QQmlDebugTestClient::waitForResponse()
@@ -103,12 +106,6 @@ QByteArray QQmlDebugTestClient::waitForResponse()
         return QByteArray();
     }
     return lastMsg;
-}
-
-void QQmlDebugTestClient::stateChanged(State stat)
-{
-    QCOMPARE(stat, state());
-    emit stateHasChanged();
 }
 
 void QQmlDebugTestClient::messageReceived(const QByteArray &ba)

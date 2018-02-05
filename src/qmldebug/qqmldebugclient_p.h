@@ -76,13 +76,14 @@ public:
 
     QQmlDebugConnection *connection() const;
 
+signals:
+    void stateChanged(State state);
+
 protected:
     QQmlDebugClient(QQmlDebugClientPrivate &dd);
 
 private:
     friend class QQmlDebugConnection;
-
-    virtual void stateChanged(State state);
     virtual void messageReceived(const QByteArray &message);
 };
 

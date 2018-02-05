@@ -58,11 +58,6 @@ QQmlDebugMessageClient::QQmlDebugMessageClient(QQmlDebugConnection *client)
 {
 }
 
-void QQmlDebugMessageClient::stateChanged(State state)
-{
-    emit newState(state);
-}
-
 void QQmlDebugMessageClient::messageReceived(const QByteArray &data)
 {
     QDataStream ds(data);
