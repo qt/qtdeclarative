@@ -521,6 +521,16 @@ void tst_QQuickPopup::activeFocusOnClose1()
     nonFocusedPopup->close();
     QVERIFY(!nonFocusedPopup->isVisible());
     QVERIFY(focusedPopup->hasActiveFocus());
+
+    // QTBUG-66113: force active focus on a popup that did not request focus
+    nonFocusedPopup->open();
+    nonFocusedPopup->forceActiveFocus();
+    QVERIFY(nonFocusedPopup->isVisible());
+    QVERIFY(nonFocusedPopup->hasActiveFocus());
+
+    nonFocusedPopup->close();
+    QVERIFY(!nonFocusedPopup->isVisible());
+    QVERIFY(focusedPopup->hasActiveFocus());
 }
 
 void tst_QQuickPopup::activeFocusOnClose2()
