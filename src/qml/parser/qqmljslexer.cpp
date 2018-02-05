@@ -340,11 +340,13 @@ QChar Lexer::decodeUnicodeEscapeCharacter(bool *ok)
         const QChar c4 = _char;
         scanChar();
 
-        if (ok)
-            *ok = true;
+        *ok = true;
 
         return convertUnicode(c1, c2, c3, c4);
     }
+
+    _errorCode = IllegalUnicodeEscapeSequence;
+    _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
 
     *ok = false;
     return QChar();
@@ -714,11 +716,8 @@ again:
                 case 'u': {
                     bool ok = false;
                     u = decodeUnicodeEscapeCharacter(&ok);
-                    if (! ok) {
-                        _errorCode = IllegalUnicodeEscapeSequence;
-                        _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
+                    if (!ok)
                         return T_ERROR;
-                    }
                 } break;
 
                 // hex escape sequence
@@ -806,11 +805,8 @@ again:
             identifierWithEscapeChars = true;
             bool ok = false;
             c = decodeUnicodeEscapeCharacter(&ok);
-            if (! ok) {
-                _errorCode = IllegalUnicodeEscapeSequence;
-                _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
+            if (!ok)
                 return T_ERROR;
-            }
         }
         if (isIdentifierStart(c)) {
             if (identifierWithEscapeChars) {
@@ -831,11 +827,8 @@ again:
                     scanChar(); // skip '\\'
                     bool ok = false;
                     c = decodeUnicodeEscapeCharacter(&ok);
-                    if (! ok) {
-                        _errorCode = IllegalUnicodeEscapeSequence;
-                        _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
+                    if (!ok)
                         return T_ERROR;
-                    }
                     if (isIdentifierPart(c))
                         _tokenText += c;
                     continue;
