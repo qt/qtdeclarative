@@ -3,7 +3,7 @@
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
+** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,48 +34,36 @@
 **
 ****************************************************************************/
 
-#include "qquicktheme_p.h"
+#ifndef QQUICKTHEME_P_P_H
+#define QQUICKTHEME_P_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QQuickTheme::QQuickTheme()
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickThemePrivate
 {
-}
+public:
+    static QQuickThemePrivate *get(QQuickTheme *theme)
+    {
+        return theme->d_func();
+    }
 
-const QFont *QQuickTheme::font(Font type) const
-{
-    Q_UNUSED(type);
-    return m_defaultFont.data();
-}
-
-const QPalette *QQuickTheme::palette(Palette type) const
-{
-    Q_UNUSED(type);
-    return m_defaultPalette.data();
-}
-
-void QQuickTheme::setDefaultFont(const QFont *defaultFont)
-{
-    m_defaultFont.reset(defaultFont);
-    if (defaultFont)
-        resolveFonts(*defaultFont);
-}
-
-void QQuickTheme::setDefaultPalette(const QPalette *defaultPalette)
-{
-    m_defaultPalette.reset(defaultPalette);
-    if (defaultPalette)
-        resolvePalettes(*defaultPalette);
-}
-
-void QQuickTheme::resolveFonts(const QFont &defaultFont)
-{
-    Q_UNUSED(defaultFont)
-}
-
-void QQuickTheme::resolvePalettes(const QPalette &defaultPalette)
-{
-    Q_UNUSED(defaultPalette)
-}
+    QScopedPointer<const QFont> defaultFont;
+    QScopedPointer<const QPalette> defaultPalette;
+};
 
 QT_END_NAMESPACE
+
+#endif // QQUICKTHEME_P_P_H

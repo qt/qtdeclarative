@@ -3,7 +3,7 @@
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
+** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,47 +34,58 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKTHEME_P_H
-#define QQUICKTHEME_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtQuickControls2/private/qquickproxytheme_p.h>
-#include <QtCore/qscopedpointer.h>
-#include <QtGui/qfont.h>
-#include <QtGui/qpalette.h>
+#include "qquicktheme_p.h"
+#include "qquicktheme_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickTheme :  public QQuickProxyTheme
+QQuickTheme::QQuickTheme()
+    : d_ptr(new QQuickThemePrivate)
 {
-public:
-    QQuickTheme();
+}
 
-    const QFont *font(Font type = SystemFont) const override;
-    const QPalette *palette(Palette type = SystemPalette) const override;
+QQuickTheme::~QQuickTheme()
+{
+}
 
-    void setDefaultFont(const QFont *defaultFont);
-    void setDefaultPalette(const QPalette *defaultPalette);
+const QFont *QQuickTheme::font(Font type) const
+{
+    Q_D(const QQuickTheme);
+    Q_UNUSED(type)
+    return d->defaultFont.data();
+}
 
-protected:
-    virtual void resolveFonts(const QFont &defaultFont);
-    virtual void resolvePalettes(const QPalette &defaultPalette);
+const QPalette *QQuickTheme::palette(Palette type) const
+{
+    Q_D(const QQuickTheme);
+    Q_UNUSED(type)
+    return d->defaultPalette.data();
+}
 
-private:
-    QScopedPointer<const QFont> m_defaultFont;
-    QScopedPointer<const QPalette> m_defaultPalette;
-};
+void QQuickTheme::setDefaultFont(const QFont *defaultFont)
+{
+    Q_D(QQuickTheme);
+    d->defaultFont.reset(defaultFont);
+    if (defaultFont)
+        resolveFonts(*defaultFont);
+}
+
+void QQuickTheme::setDefaultPalette(const QPalette *defaultPalette)
+{
+    Q_D(QQuickTheme);
+    d->defaultPalette.reset(defaultPalette);
+    if (defaultPalette)
+        resolvePalettes(*defaultPalette);
+}
+
+void QQuickTheme::resolveFonts(const QFont &defaultFont)
+{
+    Q_UNUSED(defaultFont)
+}
+
+void QQuickTheme::resolvePalettes(const QPalette &defaultPalette)
+{
+    Q_UNUSED(defaultPalette)
+}
 
 QT_END_NAMESPACE
-
-#endif // QQUICKTHEME_P_H

@@ -59,6 +59,7 @@ HEADERS += \
     $$PWD/qquickpopuppositioner_p_p.h \
     $$PWD/qquickpresshandler_p_p.h \
     $$PWD/qquickprogressbar_p.h \
+    $$PWD/qquickproxytheme_p.h \
     $$PWD/qquickradiobutton_p.h \
     $$PWD/qquickradiodelegate_p.h \
     $$PWD/qquickrangeslider_p.h \
@@ -86,6 +87,8 @@ HEADERS += \
     $$PWD/qquicktextarea_p_p.h \
     $$PWD/qquicktextfield_p.h \
     $$PWD/qquicktextfield_p_p.h \
+    $$PWD/qquicktheme_p.h \
+    $$PWD/qquicktheme_p_p.h \
     $$PWD/qquicktoolbar_p.h \
     $$PWD/qquicktoolbutton_p.h \
     $$PWD/qquicktoolseparator_p.h \
@@ -133,6 +136,7 @@ SOURCES += \
     $$PWD/qquickpopuppositioner.cpp \
     $$PWD/qquickpresshandler.cpp \
     $$PWD/qquickprogressbar.cpp \
+    $$PWD/qquickproxytheme.cpp \
     $$PWD/qquickradiobutton.cpp \
     $$PWD/qquickradiodelegate.cpp \
     $$PWD/qquickrangeslider.cpp \
@@ -155,6 +159,7 @@ SOURCES += \
     $$PWD/qquicktabbutton.cpp \
     $$PWD/qquicktextarea.cpp \
     $$PWD/qquicktextfield.cpp \
+    $$PWD/qquicktheme.cpp \
     $$PWD/qquicktoolbar.cpp \
     $$PWD/qquicktoolbutton.cpp \
     $$PWD/qquicktoolseparator.cpp \

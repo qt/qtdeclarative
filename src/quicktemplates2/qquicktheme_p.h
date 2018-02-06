@@ -3,7 +3,7 @@
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
+** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPROXYTHEME_P_H
-#define QQUICKPROXYTHEME_P_H
+#ifndef QQUICKTHEME_P_H
+#define QQUICKTHEME_P_H
 
 //
 //  W A R N I N G
@@ -48,52 +48,37 @@
 // We mean it.
 //
 
-#include <QtGui/qpa/qplatformtheme.h>
-#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
+#include <QtQuickTemplates2/private/qquickproxytheme_p.h>
+#include <QtCore/qscopedpointer.h>
+#include <QtGui/qfont.h>
+#include <QtGui/qpalette.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickProxyTheme : public QPlatformTheme
+class QQuickThemePrivate;
+
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTheme : public QQuickProxyTheme
 {
 public:
-    explicit QQuickProxyTheme(QPlatformTheme *theme = nullptr);
-    ~QQuickProxyTheme();
-
-    QPlatformTheme* theme() const;
-
-    QPlatformMenuItem* createPlatformMenuItem() const override;
-    QPlatformMenu* createPlatformMenu() const override;
-    QPlatformMenuBar* createPlatformMenuBar() const override;
-    void showPlatformMenuBar() override;
-
-    bool usePlatformNativeDialog(DialogType type) const override;
-    QPlatformDialogHelper *createPlatformDialogHelper(DialogType type) const override;
-
-#ifndef QT_NO_SYSTEMTRAYICON
-    QPlatformSystemTrayIcon *createPlatformSystemTrayIcon() const override;
-#endif
-
-    const QPalette *palette(Palette type = SystemPalette) const override;
+    QQuickTheme();
+    ~QQuickTheme();
 
     const QFont *font(Font type = SystemFont) const override;
+    const QPalette *palette(Palette type = SystemPalette) const override;
 
-    QVariant themeHint(ThemeHint hint) const override;
+    void setDefaultFont(const QFont *defaultFont);
+    void setDefaultPalette(const QPalette *defaultPalette);
 
-    QPixmap standardPixmap(StandardPixmap sp, const QSizeF &size) const override;
-    QIcon fileIcon(const QFileInfo &fileInfo, QPlatformTheme::IconOptions iconOptions = 0) const override;
-
-    QIconEngine *createIconEngine(const QString &iconName) const override;
-
-#if QT_CONFIG(shortcut)
-    QList<QKeySequence> keyBindings(QKeySequence::StandardKey key) const override;
-#endif
-
-    QString standardButtonText(int button) const override;
+protected:
+    virtual void resolveFonts(const QFont &defaultFont);
+    virtual void resolvePalettes(const QPalette &defaultPalette);
 
 private:
-    QPlatformTheme *m_theme;
+    Q_DISABLE_COPY(QQuickTheme)
+    Q_DECLARE_PRIVATE(QQuickTheme)
+    QScopedPointer<QQuickThemePrivate> d_ptr;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKPROXYTHEME_P_H
+#endif // QQUICKTHEME_P_H

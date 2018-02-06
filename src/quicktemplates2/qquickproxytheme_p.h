@@ -3,7 +3,7 @@
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
+** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDEFAULTTHEME_P_H
-#define QQUICKDEFAULTTHEME_P_H
+#ifndef QQUICKPROXYTHEME_P_H
+#define QQUICKPROXYTHEME_P_H
 
 //
 //  W A R N I N G
@@ -48,24 +48,52 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
+#include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDefaultTheme : public QQuickTheme
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickProxyTheme : public QPlatformTheme
 {
 public:
-    explicit QQuickDefaultTheme();
+    explicit QQuickProxyTheme(QPlatformTheme *theme = nullptr);
+    ~QQuickProxyTheme();
 
-    const QPalette *palette(Palette type) const override;
+    QPlatformTheme* theme() const;
 
-protected:
-    void resolvePalettes(const QPalette &defaultPalette) override;
+    QPlatformMenuItem* createPlatformMenuItem() const override;
+    QPlatformMenu* createPlatformMenu() const override;
+    QPlatformMenuBar* createPlatformMenuBar() const override;
+    void showPlatformMenuBar() override;
+
+    bool usePlatformNativeDialog(DialogType type) const override;
+    QPlatformDialogHelper *createPlatformDialogHelper(DialogType type) const override;
+
+#ifndef QT_NO_SYSTEMTRAYICON
+    QPlatformSystemTrayIcon *createPlatformSystemTrayIcon() const override;
+#endif
+
+    const QPalette *palette(Palette type = SystemPalette) const override;
+
+    const QFont *font(Font type = SystemFont) const override;
+
+    QVariant themeHint(ThemeHint hint) const override;
+
+    QPixmap standardPixmap(StandardPixmap sp, const QSizeF &size) const override;
+    QIcon fileIcon(const QFileInfo &fileInfo, QPlatformTheme::IconOptions iconOptions = 0) const override;
+
+    QIconEngine *createIconEngine(const QString &iconName) const override;
+
+#if QT_CONFIG(shortcut)
+    QList<QKeySequence> keyBindings(QKeySequence::StandardKey key) const override;
+#endif
+
+    QString standardButtonText(int button) const override;
 
 private:
-    QPalette systemPalette;
+    QPlatformTheme *m_theme;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDEFAULTTHEME_P_H
+#endif // QQUICKPROXYTHEME_P_H

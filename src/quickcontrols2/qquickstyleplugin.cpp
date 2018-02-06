@@ -35,13 +35,13 @@
 ****************************************************************************/
 
 #include "qquickstyleplugin_p.h"
-#include "qquicktheme_p.h"
 #include "qquickstyle.h"
 #include "qquickstyle_p.h"
 
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qsettings.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 #include <functional>
 

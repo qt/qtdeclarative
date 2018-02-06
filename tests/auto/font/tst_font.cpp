@@ -45,7 +45,7 @@
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
-#include <QtQuickControls2/private/qquickproxytheme_p.h>
+#include <QtQuickTemplates2/private/qquickproxytheme_p.h>
 
 using namespace QQuickVisualTestUtil;
 
