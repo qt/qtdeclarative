@@ -272,7 +272,7 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
     if (!compilationUnit)
         return;
 
-    QML_MEMORY_SCOPE_URL(compilationUnit->url());
+    QML_MEMORY_SCOPE_URL(compilationUnit->finalUrl());
 
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> protectThis(this);
 
@@ -375,23 +375,6 @@ finishIncubate:
     } else if (!creator.isNull()) {
         vmeGuard.guard(creator.data());
     }
-}
-
-void QQmlIncubatorPrivate::cancel(QObject *object, QQmlContext *context)
-{
-    if (!context)
-        context = qmlContext(object);
-    if (!context)
-        return;
-
-    QQmlContextData *data = QQmlContextData::get(context);
-    QQmlIncubatorPrivate *p = data->incubator;
-    if (!p)
-        return;
-
-    p->vmeGuard.unguard(object);
-    if (!p->creator.isNull())
-        p->creator->cancel(object);
 }
 
 /*!

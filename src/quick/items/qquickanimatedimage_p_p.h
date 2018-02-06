@@ -70,29 +70,30 @@ class QQuickAnimatedImagePrivate : public QQuickImagePrivate
 
 public:
     QQuickAnimatedImagePrivate()
-      : playing(true), paused(false), speed(1.0), preset_currentframe(0), _movie(0), oldPlaying(false)
+      : playing(true), paused(false), oldPlaying(false), padding(0)
+      , presetCurrentFrame(0), speed(1.0), currentSourceSize(0, 0), movie(nullptr)
 #if QT_CONFIG(qml_network)
-        , reply(0), redirectCount(0)
+      , reply(nullptr), redirectCount(0)
 #endif
-        , currentSourceSize(0, 0)
     {
     }
 
     QQuickPixmap *infoForCurrentFrame(QQmlEngine *engine);
+    void setMovie(QMovie *movie);
 
-    bool playing;
-    bool paused;
+    bool playing : 1;
+    bool paused : 1;
+    bool oldPlaying : 1;
+    unsigned padding: 29;
+    int presetCurrentFrame;
     qreal speed;
-    int preset_currentframe;
-    QMovie *_movie;
-    bool oldPlaying;
+    QSize currentSourceSize;
+    QMovie *movie;
 #if QT_CONFIG(qml_network)
     QNetworkReply *reply;
     int redirectCount;
 #endif
     QMap<int, QQuickPixmap *> frameMap;
-    QSize currentSourceSize;
-    void setMovie(QMovie *movie);
 };
 
 QT_END_NAMESPACE

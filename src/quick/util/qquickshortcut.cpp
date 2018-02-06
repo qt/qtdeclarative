@@ -122,7 +122,8 @@ Q_QUICK_PRIVATE_EXPORT ContextMatcher qt_quick_shortcut_context_matcher()
 
 Q_QUICK_PRIVATE_EXPORT void qt_quick_set_shortcut_context_matcher(ContextMatcher matcher)
 {
-    *ctxMatcher() = matcher;
+    if (!ctxMatcher.isDestroyed())
+        *ctxMatcher() = matcher;
 }
 
 QT_BEGIN_NAMESPACE

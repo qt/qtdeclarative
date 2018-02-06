@@ -852,14 +852,14 @@ QV4::IdentifierHash &QQmlContextData::detachedPropertyNames()
 QUrl QQmlContextData::url() const
 {
     if (typeCompilationUnit)
-        return typeCompilationUnit->url();
+        return typeCompilationUnit->finalUrl();
     return baseUrl;
 }
 
 QString QQmlContextData::urlString() const
 {
     if (typeCompilationUnit)
-        return typeCompilationUnit->fileName();
+        return typeCompilationUnit->finalUrlString();
     return baseUrlString;
 }
 

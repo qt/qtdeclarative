@@ -222,6 +222,7 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, CompiledData::JSC
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorOption option)
 {
     registerString(module->fileName);
+    registerString(module->finalUrl);
     for (Context *f : qAsConst(module->functions)) {
         registerString(f->name);
         for (int i = 0; i < f->arguments.size(); ++i)
@@ -446,6 +447,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     }
     unit.indexOfRootFunction = -1;
     unit.sourceFileIndex = getStringId(module->fileName);
+    unit.finalUrlIndex = getStringId(module->finalUrl);
     unit.sourceTimeStamp = module->sourceTimeStamp.isValid() ? module->sourceTimeStamp.toMSecsSinceEpoch() : 0;
     unit.nImports = 0;
     unit.offsetToImports = 0;

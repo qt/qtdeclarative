@@ -223,7 +223,7 @@ void QQuickAnimationController::updateProgress()
 
     d->animationInstance->setDisableUserControl();
     d->animationInstance->start();
-    QQmlAnimationTimer::unregisterAnimation(d->animationInstance);
+    QQmlAnimationTimer::instance()->unregisterAnimation(d->animationInstance);
     d->animationInstance->setCurrentTime(d->progress * d->animationInstance->duration());
 }
 

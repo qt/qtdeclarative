@@ -255,6 +255,7 @@ private slots:
     void QTBUG_50105();
     void keyNavigationEnabled();
     void QTBUG_61269_appendDuringScrollDown();
+    void QTBUG_61269_appendDuringScrollDown_data();
     void QTBUG_50097_stickyHeader_positionViewAtIndex();
     void QTBUG_63974_stickyHeader_positionViewAtIndex_Contain();
     void itemFiltered();
@@ -262,6 +263,8 @@ private slots:
 
     void QTBUG_34576_velocityZero();
     void QTBUG_61537_modelChangesAsync();
+
+    void addOnCompleted();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -8468,8 +8471,19 @@ void tst_QQuickListView::keyNavigationEnabled()
     QCOMPARE(listView->currentIndex(), 1);
 }
 
-void tst_QQuickListView::QTBUG_61269_appendDuringScrollDown()
+void tst_QQuickListView::QTBUG_61269_appendDuringScrollDown_data()
 {
+    QTest::addColumn<QQuickListView::SnapMode>("snapMode");
+
+    QTest::newRow("NoSnap") << QQuickListView::NoSnap;
+    QTest::newRow("SnapToItem") << QQuickListView::SnapToItem;
+    QTest::newRow("SnapOneItem") << QQuickListView::SnapOneItem;
+}
+
+void tst_QQuickListView::QTBUG_61269_appendDuringScrollDown() // AKA QTBUG-62864
+{
+    QFETCH(QQuickListView::SnapMode, snapMode);
+
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("appendDuringScrollDown.qml"));
     window->show();
@@ -8477,6 +8491,7 @@ void tst_QQuickListView::QTBUG_61269_appendDuringScrollDown()
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickListView *listView = qobject_cast<QQuickListView *>(window->rootObject());
+    listView->setSnapMode(snapMode);
     QQuickItem *highlightItem = listView->highlightItem();
     QVERIFY(listView);
     QCOMPARE(listView->isKeyNavigationEnabled(), true);
@@ -8720,6 +8735,36 @@ void tst_QQuickListView::QTBUG_61537_modelChangesAsync()
     int reportedCount = listView->count();
     int actualCount = findItems<QQuickItem>(listView, "delegate").count();
     QCOMPARE(reportedCount, actualCount);
+}
+
+void tst_QQuickListView::addOnCompleted()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("addoncompleted.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "view");
+    QTRY_VERIFY(listview != 0);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != 0);
+
+    qreal y = -1;
+    for (char name = 'a'; name <= 'j'; ++name) {
+        for (int num = 9; num >= 0; --num) {
+            const QString objName = QString::fromLatin1("%1%2").arg(name).arg(num);
+            QQuickItem *item = findItem<QQuickItem>(contentItem, objName);
+            if (!item) {
+                QVERIFY(name >= 'd');
+                y = 9999999;
+            } else {
+                const qreal newY = item->y();
+                QVERIFY2(newY > y, objName.toUtf8().constData());
+                y = newY;
+            }
+        }
+    }
 }
 
 QTEST_MAIN(tst_QQuickListView)

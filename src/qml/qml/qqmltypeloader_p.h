@@ -129,6 +129,7 @@ public:
     qreal progress() const;
 
     QUrl url() const;
+    QString urlString() const;
     QUrl finalUrl() const;
     QString finalUrlString() const;
 
@@ -207,6 +208,7 @@ private:
 
     QUrl m_url;
     QUrl m_finalUrl;
+    mutable QString m_urlString;
     mutable QString m_finalUrlString;
 
     // List of QQmlDataBlob's that are waiting for me to complete.

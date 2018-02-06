@@ -49,6 +49,7 @@ void RuntimeCodegen::generateFromFunctionExpression(const QString &fileName,
 {
     _module = module;
     _module->fileName = fileName;
+    _module->finalUrl = fileName;
     _context = 0;
 
     Compiler::ScanFunctions scan(this, sourceCode, Compiler::GlobalCode);

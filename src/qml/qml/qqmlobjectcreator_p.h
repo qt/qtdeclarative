@@ -92,7 +92,6 @@ public:
     bool populateDeferredProperties(QObject *instance, QQmlData::DeferredData *deferredData);
     bool populateDeferredBinding(const QQmlProperty &qmlProperty, QQmlData::DeferredData *deferredData, const QV4::CompiledData::Binding *binding);
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
-    void cancel(QObject *object);
     void clear();
 
     QQmlComponentAttached **componentAttachment() const { return &sharedState->componentAttached; }
@@ -124,7 +123,8 @@ private:
 
     void registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const;
 
-    QV4::QmlContext *currentQmlContext();
+    inline QV4::QmlContext *currentQmlContext();
+    Q_NEVER_INLINE void createQmlContext();
 
     enum Phase {
         Startup,
@@ -173,6 +173,14 @@ private:
     QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
     QRecursionWatcher<QQmlObjectCreatorSharedState, &QQmlObjectCreatorSharedState::recursionNode> watcher;
 };
+
+QV4::QmlContext *QQmlObjectCreator::currentQmlContext()
+{
+    if (!_qmlContext->isManaged())
+        _qmlContext->setM(QV4::QmlContext::create(v4->rootContext(), context, _scopeObject));
+
+    return _qmlContext;
+}
 
 QT_END_NAMESPACE
 

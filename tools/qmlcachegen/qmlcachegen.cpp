@@ -44,6 +44,23 @@ int filterResourceFile(const QString &input, const QString &output);
 bool generateLoader(const QStringList &compiledFiles, const QString &output, const QStringList &resourceFileMappings, QString *errorString);
 QString symbolNamespaceForPath(const QString &relativePath);
 
+QSet<QString> illegalNames;
+
+void setupIllegalNames()
+{
+    // #### this in incomplete
+    illegalNames.insert(QStringLiteral("Math"));
+    illegalNames.insert(QStringLiteral("Array"));
+    illegalNames.insert(QStringLiteral("String"));
+    illegalNames.insert(QStringLiteral("Function"));
+    illegalNames.insert(QStringLiteral("Boolean"));
+    illegalNames.insert(QStringLiteral("Number"));
+    illegalNames.insert(QStringLiteral("Date"));
+    illegalNames.insert(QStringLiteral("RegExp"));
+    illegalNames.insert(QStringLiteral("Error"));
+    illegalNames.insert(QStringLiteral("Object"));
+}
+
 struct Error
 {
     QString message;
@@ -163,7 +180,6 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
     }
 
     {
-        QSet<QString> illegalNames; // ####
         QmlIR::IRBuilder irBuilder(illegalNames);
         if (!irBuilder.generateFromQml(sourceCode, inputFileName, &irDocument)) {
             for (const QQmlJS::DiagnosticMessage &parseError: qAsConst(irBuilder.errors)) {
@@ -181,7 +197,7 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
         QmlIR::JSCodeGen v4CodeGen(irDocument.code,
                                    &irDocument.jsGenerator, &irDocument.jsModule,
                                    &irDocument.jsParserEngine, irDocument.program,
-                                   /*import cache*/0, &irDocument.jsGenerator.stringTable);
+                                   /*import cache*/0, &irDocument.jsGenerator.stringTable, illegalNames);
         v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0)
@@ -283,9 +299,10 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
         QmlIR::JSCodeGen v4CodeGen(irDocument.code, &irDocument.jsGenerator,
                                    &irDocument.jsModule, &irDocument.jsParserEngine,
                                    irDocument.program, /*import cache*/0,
-                                   &irDocument.jsGenerator.stringTable);
+                                   &irDocument.jsGenerator.stringTable, illegalNames);
         v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
-        v4CodeGen.generateFromProgram(inputFileUrl, sourceCode, program, &irDocument.jsModule, QV4::Compiler::GlobalCode);
+        v4CodeGen.generateFromProgram(inputFileName, inputFileUrl, sourceCode, program,
+                                      &irDocument.jsModule, QV4::Compiler::GlobalCode);
         QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
         if (!jsErrors.isEmpty()) {
             for (const QQmlJS::DiagnosticMessage &e: qAsConst(jsErrors)) {
@@ -501,6 +518,8 @@ int main(int argc, char **argv)
             return unit->saveToDisk(outputFileName, errorString);
         };
     }
+
+    setupIllegalNames();
 
 
     if (inputFile.endsWith(QLatin1String(".qml"))) {

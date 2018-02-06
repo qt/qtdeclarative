@@ -97,6 +97,7 @@ public:
 
 
     void generateFromProgram(const QString &fileName,
+                             const QString &finalUrl,
                              const QString &sourceCode,
                              AST::Program *ast,
                              Module *module,

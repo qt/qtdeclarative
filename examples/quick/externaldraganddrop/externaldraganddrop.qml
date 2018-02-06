@@ -82,8 +82,8 @@ Item {
         DragAndDropTextItem {
             Layout.fillWidth: true
             height: 142
+            dropEnabled: false
             display: "Drag out into other applications."
         }
-
     }
 }
