@@ -1756,6 +1756,8 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
                 QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point->scenePosition(), false, false);
                 for (QQuickItem *item : targetItems) {
                     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+                    if (!itemPrivate->extra.isAllocated() || itemPrivate->extra->pointerHandlers.isEmpty())
+                        continue;
                     pointerEvent->localize(item);
                     if (!sendFilteredPointerEvent(pointerEvent, item)) {
                         if (itemPrivate->handlePointerEvent(pointerEvent, true)) // avoid re-delivering to grabbers
