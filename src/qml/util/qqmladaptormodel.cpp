@@ -495,9 +495,9 @@ public:
     {
         QHash<QByteArray, int>::const_iterator it = roleNames.find(role.toUtf8());
         if (it != roleNames.end()) {
-            return model.aim()->index(index, 0, model.rootIndex).data(*it);
+            return model.aim()->index(model.rowAt(index), model.columnAt(index), model.rootIndex).data(*it);
         } else if (role == QLatin1String("hasModelChildren")) {
-            return QVariant(model.aim()->hasChildren(model.aim()->index(index, 0, model.rootIndex)));
+            return QVariant(model.aim()->hasChildren(model.aim()->index(model.rowAt(index), model.columnAt(index), model.rootIndex)));
         } else {
             return QVariant();
         }
@@ -513,7 +513,7 @@ public:
     QVariant modelIndex(const QQmlAdaptorModel &model, int index) const override
     {
         return model
-                ? QVariant::fromValue(model.aim()->index(index, 0, model.rootIndex))
+                ? QVariant::fromValue(model.aim()->index(model.rowAt(index), model.columnAt(index), model.rootIndex))
                 : QVariant();
     }
 
