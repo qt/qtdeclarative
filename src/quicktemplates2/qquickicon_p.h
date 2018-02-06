@@ -62,10 +62,10 @@ class QQuickIconPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickIcon
 {
     Q_GADGET
-    Q_PROPERTY(QString name READ name WRITE setName RESET name FINAL)
-    Q_PROPERTY(QUrl source READ source WRITE setSource RESET source FINAL)
-    Q_PROPERTY(int width READ width WRITE setWidth RESET width FINAL)
-    Q_PROPERTY(int height READ height WRITE setHeight RESET height FINAL)
+    Q_PROPERTY(QString name READ name WRITE setName RESET resetName FINAL)
+    Q_PROPERTY(QUrl source READ source WRITE setSource RESET resetSource FINAL)
+    Q_PROPERTY(int width READ width WRITE setWidth RESET resetWidth FINAL)
+    Q_PROPERTY(int height READ height WRITE setHeight RESET resetHeight FINAL)
     Q_PROPERTY(QColor color READ color WRITE setColor RESET resetColor FINAL)
 
 public:
