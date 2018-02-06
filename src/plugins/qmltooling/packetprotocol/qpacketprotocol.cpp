@@ -106,6 +106,9 @@ class QPacketProtocolPrivate : public QObjectPrivate
 public:
     QPacketProtocolPrivate(QIODevice *dev);
 
+    bool writeToDevice(const char *bytes, qint64 size);
+    bool readFromDevice(char *buffer, qint64 size);
+
     QList<qint64> sendingPackets;
     QList<QByteArray> packets;
     QByteArray inProgress;
@@ -140,15 +143,14 @@ void QPacketProtocol::send(const QByteArray &data)
 
     if (data.isEmpty())
         return; // We don't send empty packets
-    qint64 sendSize = data.size() + sizeof(qint32);
+    const qint32 sendSize = data.size() + static_cast<qint32>(sizeof(qint32));
 
     d->sendingPackets.append(sendSize);
-    qint32 sendSize32 = sendSize;
-    qint64 writeBytes = d->dev->write((char *)&sendSize32, sizeof(qint32));
-    Q_UNUSED(writeBytes);
-    Q_ASSERT(writeBytes == sizeof(qint32));
-    writeBytes = d->dev->write(data);
-    Q_ASSERT(writeBytes == data.size());
+    if (!d->writeToDevice((const char *)&sendSize, sizeof(qint32))
+            || !d->writeToDevice(data.data(), data.size())) {
+        emit error();
+        return;
+    }
 }
 
 /*!
@@ -234,13 +236,14 @@ void QPacketProtocol::readyToRead()
         // Need to get trailing data
         if (-1 == d->inProgressSize) {
             // We need a size header of sizeof(qint32)
-            if (sizeof(qint32) > (uint)d->dev->bytesAvailable())
+            if (static_cast<qint64>(sizeof(qint32)) > d->dev->bytesAvailable())
                 return;
 
             // Read size header
-            int read = d->dev->read((char *)&d->inProgressSize, sizeof(qint32));
-            Q_ASSERT(read == sizeof(qint32));
-            Q_UNUSED(read);
+            if (!d->readFromDevice((char *)&d->inProgressSize, sizeof(qint32))) {
+                emit error();
+                return;
+            }
 
             // Check sizing constraints
             if (d->inProgressSize > MAX_PACKET_SIZE) {
@@ -248,14 +251,24 @@ void QPacketProtocol::readyToRead()
                 disconnect(d->dev, &QIODevice::aboutToClose, this, &QPacketProtocol::aboutToClose);
                 disconnect(d->dev, &QIODevice::bytesWritten, this, &QPacketProtocol::bytesWritten);
                 d->dev = nullptr;
-                emit invalidPacket();
+                emit error();
                 return;
             }
 
             d->inProgressSize -= sizeof(qint32);
         } else {
-            d->inProgress.append(d->dev->read(d->inProgressSize - d->inProgress.size()));
 
+            const int bytesToRead = static_cast<int>(
+                        qMin(d->dev->bytesAvailable(),
+                             static_cast<qint64>(d->inProgressSize - d->inProgress.size())));
+
+            QByteArray toRead(bytesToRead, Qt::Uninitialized);
+            if (!d->readFromDevice(toRead.data(), toRead.length())) {
+                emit error();
+                return;
+            }
+
+            d->inProgress.append(toRead);
             if (d->inProgressSize == d->inProgress.size()) {
                 // Packet has arrived!
                 d->packets.append(d->inProgress);
@@ -273,6 +286,30 @@ void QPacketProtocol::readyToRead()
 QPacketProtocolPrivate::QPacketProtocolPrivate(QIODevice *dev) :
     inProgressSize(-1), waitingForPacket(false), dev(dev)
 {
+}
+
+bool QPacketProtocolPrivate::writeToDevice(const char *bytes, qint64 size)
+{
+    qint64 totalWritten = 0;
+    while (totalWritten < size) {
+        const qint64 chunkSize = dev->write(bytes + totalWritten, size - totalWritten);
+        if (chunkSize < 0)
+            return false;
+        totalWritten += chunkSize;
+    }
+    return totalWritten == size;
+}
+
+bool QPacketProtocolPrivate::readFromDevice(char *buffer, qint64 size)
+{
+    qint64 totalRead = 0;
+    while (totalRead < size) {
+        const qint64 chunkSize = dev->read(buffer + totalRead, size - totalRead);
+        if (chunkSize < 0)
+            return false;
+        totalRead += chunkSize;
+    }
+    return totalRead == size;
 }
 
 /*!

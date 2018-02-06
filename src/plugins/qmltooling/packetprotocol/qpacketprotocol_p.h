@@ -72,7 +72,7 @@ public:
 
 Q_SIGNALS:
     void readyRead();
-    void invalidPacket();
+    void error();
 
 private:
     void aboutToClose();

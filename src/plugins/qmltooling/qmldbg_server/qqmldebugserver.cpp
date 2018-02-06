@@ -176,7 +176,7 @@ private:
     void changeServiceState(const QString &serviceName, QQmlDebugService::State state);
     void removeThread();
     void receiveMessage();
-    void invalidPacket();
+    void protocolError();
 
     QQmlDebugServerConnection *m_connection;
     QHash<QString, QQmlDebugService *> m_plugins;
@@ -521,7 +521,7 @@ void QQmlDebugServerImpl::receiveMessage()
 
         } else {
             qWarning("QML Debugger: Invalid control message %d.", op);
-            invalidPacket();
+            protocolError();
             return;
         }
 
@@ -736,16 +736,16 @@ void QQmlDebugServerImpl::setDevice(QIODevice *socket)
     m_protocol = new QPacketProtocol(socket, this);
     QObject::connect(m_protocol, &QPacketProtocol::readyRead,
                      this, &QQmlDebugServerImpl::receiveMessage);
-    QObject::connect(m_protocol, &QPacketProtocol::invalidPacket,
-                     this, &QQmlDebugServerImpl::invalidPacket);
+    QObject::connect(m_protocol, &QPacketProtocol::error,
+                     this, &QQmlDebugServerImpl::protocolError);
 
     if (blockingMode())
         m_protocol->waitForReadyRead(-1);
 }
 
-void QQmlDebugServerImpl::invalidPacket()
+void QQmlDebugServerImpl::protocolError()
 {
-    qWarning("QML Debugger: Received a corrupted packet! Giving up ...");
+    qWarning("QML Debugger: A protocol error has occurred! Giving up ...");
     m_connection->disconnect();
     // protocol might still be processing packages at this point
     m_protocol->deleteLater();
