@@ -1,0 +1,10 @@
+# QTBUG-66230
+[profileOnExit]
+osx
+windows
+[translationBinding]
+osx
+windows
+[memory]
+osx
+windows
