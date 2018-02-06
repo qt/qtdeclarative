@@ -74,7 +74,6 @@ public:
     public:
         inline Accessors() {}
         virtual ~Accessors();
-        virtual int count(const QQmlAdaptorModel &) const { return 0; }
         virtual int rowCount(const QQmlAdaptorModel &) const { return 0; }
         virtual int columnCount(const QQmlAdaptorModel &) const { return 0; }
         virtual void cleanup(QQmlAdaptorModel &, QQmlDelegateModel * = 0) const {}

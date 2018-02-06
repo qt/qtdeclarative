@@ -453,11 +453,6 @@ public:
     {
     }
 
-    int count(const QQmlAdaptorModel &model) const override
-    {
-        return model.aim()->rowCount(model.rootIndex);
-    }
-
     int rowCount(const QQmlAdaptorModel &model) const override
     {
         return model.aim()->rowCount(model.rootIndex);
@@ -663,11 +658,6 @@ class VDMListDelegateDataType : public QQmlAdaptorModel::Accessors
 public:
     inline VDMListDelegateDataType() {}
 
-    int count(const QQmlAdaptorModel &model) const override
-    {
-        return model.list.count();
-    }
-
     int rowCount(const QQmlAdaptorModel &model) const override
     {
         return model.list.count();
@@ -755,11 +745,6 @@ public:
     ~VDMObjectDelegateDataType()
     {
         free(metaObject);
-    }
-
-    int count(const QQmlAdaptorModel &model) const override
-    {
-        return model.list.count();
     }
 
     int rowCount(const QQmlAdaptorModel &model) const override
