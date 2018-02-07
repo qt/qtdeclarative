@@ -153,7 +153,7 @@ public:
     QQmlEngine *qmlEngine() const;
 #else // !V4_BOOTSTRAP
     QJSEngine *jsEngine() const { return publicEngine; }
-    QQmlEngine *qmlEngine() const { return v8Engine->engine(); }
+    QQmlEngine *qmlEngine() const { return v8Engine ? v8Engine->engine() : nullptr; }
 #endif // V4_BOOTSTRAP
     QV8Engine *v8Engine;
     QJSEngine *publicEngine;
