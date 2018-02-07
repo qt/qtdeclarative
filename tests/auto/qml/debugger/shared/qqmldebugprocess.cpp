@@ -51,6 +51,7 @@ QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
             this, [this]() {
         m_timer.stop();
         m_eventLoop.quit();
+        emit finished();
     });
     connect(&m_timer, &QTimer::timeout,
             this, &QQmlDebugProcess::timeout);

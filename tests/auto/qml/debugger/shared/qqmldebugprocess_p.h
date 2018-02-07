@@ -70,6 +70,7 @@ public:
 
 signals:
     void readyReadStandardOutput();
+    void finished();
 
 private slots:
     void timeout();
