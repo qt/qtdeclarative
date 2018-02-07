@@ -435,4 +435,21 @@ TestCase {
         mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton | Qt.RightButton)
         compare(control.selectedText, "")
     }
+
+    // QTBUG-66260
+    function test_placeholderTextColor() {
+        var control = createTemporaryObject(textField, testCase)
+        verify(control)
+
+        // usually default value should not be pure opacue black
+        verify(control.placeholderTextColor !== "#ff000000")
+        control.placeholderTextColor = "#12345678"
+        compare(control.placeholderTextColor, "#12345678")
+
+        for (var i = 0; i < control.children.length; ++i) {
+            if (control.children[i].hasOwnProperty("text"))
+                compare(control.children[i].color, control.placeholderTextColor) // placeholder.color
+        }
+
+    }
 }

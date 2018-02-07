@@ -332,6 +332,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     // QtQuick.Templates 2.5 (new types and revisions in Qt 5.12)
     qmlRegisterType<QQuickControl, 5>(uri, 2, 5, "Control");
     qmlRegisterType<QQuickPopup, 5>(uri, 2, 5, "Popup");
+    qmlRegisterType<QQuickTextField, 5>(uri, 2, 5, "TextField");
     qmlRegisterType<QQuickToolTip, 5>(uri, 2, 5, "ToolTip");
 }
 

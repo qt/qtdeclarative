@@ -73,6 +73,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextField : public QQuickTextInput
     // 2.3 (Qt 5.10)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
     Q_CLASSINFO("DeferredPropertyNames", "background")
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(QColor placeholderTextColor READ placeholderTextColor WRITE setPlaceholderTextColor NOTIFY placeholderTextColorChanged FINAL REVISION 5)
 
 public:
     explicit QQuickTextField(QQuickItem *parent = nullptr);
@@ -101,6 +103,9 @@ public:
     QPalette palette() const;
     void setPalette(const QPalette &palette);
     void resetPalette();
+    // 2.5 (Qt 5.12)
+    QColor placeholderTextColor() const;
+    void setPlaceholderTextColor(const QColor &color);
 
 Q_SIGNALS:
     void fontChanged();
@@ -117,6 +122,8 @@ Q_SIGNALS:
     Q_REVISION(1) void hoverEnabledChanged();
     // 2.3 (Qt 5.10)
     Q_REVISION(3) void paletteChanged();
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) void placeholderTextColorChanged();
 
 protected:
     void classBegin() override;

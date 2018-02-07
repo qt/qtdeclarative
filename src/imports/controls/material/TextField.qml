@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.11
-import QtQuick.Templates 2.4 as T
+import QtQuick.Templates 2.5 as T
 import QtQuick.Controls 2.4
 import QtQuick.Controls.impl 2.4
 import QtQuick.Controls.Material 2.4
@@ -57,6 +57,7 @@ T.TextField {
     color: enabled ? Material.foreground : Material.hintTextColor
     selectionColor: Material.accentColor
     selectedTextColor: Material.primaryHighlightedTextColor
+    placeholderTextColor: Material.hintTextColor
     verticalAlignment: TextInput.AlignVCenter
 
     cursorDelegate: CursorDelegate { }
@@ -69,7 +70,7 @@ T.TextField {
         height: control.height - (control.topPadding + control.bottomPadding)
         text: control.placeholderText
         font: control.font
-        color: control.Material.hintTextColor
+        color: control.placeholderTextColor
         verticalAlignment: control.verticalAlignment
         elide: Text.ElideRight
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
