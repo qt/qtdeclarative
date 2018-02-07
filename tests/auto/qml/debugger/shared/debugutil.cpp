@@ -120,19 +120,6 @@ void QQmlDebugTestClient::messageReceived(const QByteArray &ba)
     emit serverMessage(ba);
 }
 
-template<typename F>
-struct Finalizer {
-    F m_lambda;
-    Finalizer(F &&lambda) : m_lambda(std::forward<F>(lambda)) {}
-    ~Finalizer() { m_lambda(); }
-};
-
-template<typename F>
-static Finalizer<F> defer(F &&lambda)
-{
-    return Finalizer<F>(std::forward<F>(lambda));
-}
-
 QQmlDebugTest::ConnectResult QQmlDebugTest::connect(
         const QString &executable, const QString &services, const QString &extraArgs,
         bool block)
@@ -159,31 +146,27 @@ QQmlDebugTest::ConnectResult QQmlDebugTest::connect(
     if (m_clients.contains(nullptr))
         return ClientsFailed;
 
-    auto allEnabled = [this]() {
-        for (QQmlDebugClient *client : m_clients) {
-            if (client->state() != QQmlDebugClient::Enabled)
-                return false;
-        }
-        return true;
-    };
+    ClientStateHandler stateHandler(m_clients, createOtherClients(m_connection), services.isEmpty()
+                                    ? QQmlDebugClient::Enabled : QQmlDebugClient::Unavailable);
 
-    QList<QQmlDebugClient *> others = createOtherClients(m_connection);
-    auto deleter = defer([&others]() { qDeleteAll(others); });
-    Q_UNUSED(deleter);
 
     const int port = m_process->debugPort();
     m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
-    for (int tries = 0; tries < 100 && !allEnabled(); ++tries)
-        QTest::qWait(50);
-    if (!allEnabled())
+
+    QEventLoop loop;
+    QTimer timer;
+    QObject::connect(&stateHandler, &ClientStateHandler::allOk, &loop, &QEventLoop::quit);
+    QObject::connect(m_connection, &QQmlDebugConnection::disconnected, &loop, &QEventLoop::quit);
+    QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+
+    timer.start(5000);
+    loop.exec();
+
+    if (!stateHandler.allEnabled())
         return EnableFailed;
 
-    const QQmlDebugClient::State expectedState = services.isEmpty() ? QQmlDebugClient::Enabled
-                                                                    : QQmlDebugClient::Unavailable;
-    for (QQmlDebugClient *other : others) {
-        if (other->state() != expectedState)
-            return RestrictFailed;
-    }
+    if (!stateHandler.othersAsExpected())
+        return RestrictFailed;
 
     return ConnectSuccess;
 }
@@ -230,4 +213,42 @@ void QQmlDebugTest::cleanup()
         delete m_process;
         m_process = nullptr;
     }
+}
+
+ClientStateHandler::ClientStateHandler(const QList<QQmlDebugClient *> &clients,
+                                       const QList<QQmlDebugClient *> &others,
+                                       QQmlDebugClient::State expectedOthers) :
+    m_clients(clients), m_others(others), m_expectedOthers(expectedOthers)
+{
+    for (QQmlDebugClient *client : m_clients) {
+        QObject::connect(client, &QQmlDebugClient::stateChanged,
+                         this, &ClientStateHandler::checkStates);
+    }
+    for (QQmlDebugClient *client : m_others) {
+        QObject::connect(client, &QQmlDebugClient::stateChanged,
+                         this, &ClientStateHandler::checkStates);
+    }
+}
+
+ClientStateHandler::~ClientStateHandler()
+{
+    qDeleteAll(m_others);
+}
+
+void ClientStateHandler::checkStates()
+{
+    for (QQmlDebugClient *client : m_clients) {
+        if (client->state() != QQmlDebugClient::Enabled)
+            return;
+    }
+
+    m_allEnabled = true;
+
+    for (QQmlDebugClient *other : m_others) {
+        if (other->state() != m_expectedOthers)
+            return;
+    }
+
+    m_othersAsExpected = true;
+    emit allOk();
 }

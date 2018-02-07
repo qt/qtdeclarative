@@ -114,4 +114,31 @@ public:
     }
 };
 
+class ClientStateHandler : public QObject
+{
+    Q_OBJECT
+public:
+    ClientStateHandler(const QList<QQmlDebugClient *> &clients,
+                       const QList<QQmlDebugClient *> &others,
+                       QQmlDebugClient::State expectedOthers);
+
+    ~ClientStateHandler();
+
+    bool allEnabled() const { return m_allEnabled; }
+    bool othersAsExpected() const { return m_othersAsExpected; }
+
+signals:
+    void allOk();
+
+private:
+    void checkStates();
+
+    const QList<QQmlDebugClient *> m_clients;
+    const QList<QQmlDebugClient *> m_others;
+    const QQmlDebugClient::State m_expectedOthers;
+
+    bool m_allEnabled = false;
+    bool m_othersAsExpected = false;
+};
+
 #endif // DEBUGUTIL_P_H

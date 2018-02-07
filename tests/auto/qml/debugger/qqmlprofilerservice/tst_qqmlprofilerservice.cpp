@@ -631,7 +631,7 @@ void tst_QQmlProfilerService::scenegraphData()
 
 void tst_QQmlProfilerService::profileOnExit()
 {
-    connect(true, "exit.qml");
+    QCOMPARE(connect(true, "exit.qml"), ConnectSuccess);
     checkProcessTerminated();
 
     checkTraceReceived();
@@ -713,7 +713,7 @@ void tst_QQmlProfilerService::flushInterval()
 
 void tst_QQmlProfilerService::translationBinding()
 {
-    connect(true, "qstr.qml");
+    QCOMPARE(connect(true, "qstr.qml"), ConnectSuccess);
     checkProcessTerminated();
 
     checkTraceReceived();
@@ -729,7 +729,7 @@ void tst_QQmlProfilerService::translationBinding()
 
 void tst_QQmlProfilerService::memory()
 {
-    connect(true, "memory.qml");
+    QCOMPARE(connect(true, "memory.qml"), ConnectSuccess);
     checkProcessTerminated();
 
     checkTraceReceived();
