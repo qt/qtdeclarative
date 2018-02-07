@@ -400,6 +400,9 @@ bool Chunk::sweep(ExecutionEngine *engine)
                 v->destroy(b);
                 b->_checkIsDestroyed();
             }
+#ifdef V4_USE_HEAPTRACK
+            heaptrack_report_free(itemToFree);
+#endif
         }
         Q_V4_PROFILE_DEALLOC(engine, qPopulationCount((objectBitmap[i] | extendsBitmap[i])
                                                       - (blackBitmap[i] | e)) * Chunk::SlotSize,
@@ -448,6 +451,9 @@ void Chunk::freeAll(ExecutionEngine *engine)
                 b->vtable()->destroy(b);
                 b->_checkIsDestroyed();
             }
+#ifdef V4_USE_HEAPTRACK
+            heaptrack_report_free(itemToFree);
+#endif
         }
         Q_V4_PROFILE_DEALLOC(engine, (qPopulationCount(objectBitmap[i]|extendsBitmap[i])
                              - qPopulationCount(e)) * Chunk::SlotSize, Profiling::SmallItem);
@@ -705,6 +711,9 @@ HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
 done:
     m->setAllocatedSlots(slotsRequired);
     Q_V4_PROFILE_ALLOC(engine, slotsRequired * Chunk::SlotSize, Profiling::SmallItem);
+#ifdef V4_USE_HEAPTRACK
+    heaptrack_report_alloc(m, slotsRequired * Chunk::SlotSize);
+#endif
     //        DEBUG << "   " << hex << m->chunk() << m->chunk()->objectBitmap[0] << m->chunk()->extendsBitmap[0] << (m - m->chunk()->realBase());
     return m;
 }
@@ -762,6 +771,9 @@ HeapItem *HugeItemAllocator::allocate(size_t size) {
     chunks.push_back(HugeChunk{c, size});
     Chunk::setBit(c->objectBitmap, c->first() - c->realBase());
     Q_V4_PROFILE_ALLOC(engine, size, Profiling::LargeItem);
+#ifdef V4_USE_HEAPTRACK
+    heaptrack_report_alloc(c, size);
+#endif
     return c->first();
 }
 
@@ -778,6 +790,9 @@ static void freeHugeChunk(ChunkAllocator *chunkAllocator, const HugeItemAllocato
         b->_checkIsDestroyed();
     }
     chunkAllocator->free(c.chunk, c.size);
+#ifdef V4_USE_HEAPTRACK
+    heaptrack_report_free(c.chunk);
+#endif
 }
 
 void HugeItemAllocator::sweep(ClassDestroyStatsCallback classCountPtr)

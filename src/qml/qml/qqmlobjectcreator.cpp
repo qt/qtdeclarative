@@ -203,10 +203,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     if (instance) {
         QQmlData *ddata = QQmlData::get(instance);
         Q_ASSERT(ddata);
-        if (ddata->compilationUnit)
-            ddata->compilationUnit->release();
         ddata->compilationUnit = compilationUnit;
-        ddata->compilationUnit->addref();
     }
 
     if (topLevelCreator)

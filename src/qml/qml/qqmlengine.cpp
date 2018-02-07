@@ -752,11 +752,15 @@ QQmlData::QQmlData()
       hasInterceptorMetaObject(false), hasVMEMetaObject(false), parentFrozen(false),
       bindingBitsArraySize(InlineBindingArraySize), notifyList(0),
       bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0),
-      lineNumber(0), columnNumber(0), jsEngineId(0), compilationUnit(0),
+      lineNumber(0), columnNumber(0), jsEngineId(0),
       propertyCache(0), guards(0), extendedData(0)
 {
     memset(bindingBitsValue, 0, sizeof(bindingBitsValue));
     init();
+}
+
+QQmlData::~QQmlData()
+{
 }
 
 void QQmlData::destroyed(QAbstractDeclarativeData *d, QObject *o)
@@ -928,6 +932,14 @@ void QQmlData::flushPendingBindingImpl(QQmlPropertyIndex index)
             !b->targetPropertyIndex().hasValueTypeIndex())
         b->setEnabled(true, QQmlPropertyData::BypassInterceptor |
                             QQmlPropertyData::DontRemoveBinding);
+}
+
+QQmlData::DeferredData::DeferredData()
+{
+}
+
+QQmlData::DeferredData::~DeferredData()
+{
 }
 
 bool QQmlEnginePrivate::baseModulesUninitialized = true;
@@ -1684,7 +1696,6 @@ void QQmlData::deferData(int objectIndex, QV4::CompiledData::CompilationUnit *co
     QQmlData::DeferredData *deferData = new QQmlData::DeferredData;
     deferData->deferredIdx = objectIndex;
     deferData->compilationUnit = compilationUnit;
-    deferData->compilationUnit->addref();
     deferData->context = context;
 
     const QV4::CompiledData::Object *compiledObject = compilationUnit->objectAt(objectIndex);
@@ -1706,7 +1717,6 @@ void QQmlData::releaseDeferredData()
     while (it != deferredData.end()) {
         DeferredData *deferData = *it;
         if (deferData->bindings.isEmpty()) {
-            deferData->compilationUnit->release();
             delete deferData;
             it = deferredData.erase(it);
         } else {
@@ -1784,12 +1794,10 @@ void QQmlData::destroyed(QObject *object)
     if (bindings && !bindings->ref.deref())
         delete bindings;
 
-    if (compilationUnit) {
-        compilationUnit->release();
-        compilationUnit = 0;
-    }
+    compilationUnit = nullptr;
 
-    releaseDeferredData();
+    qDeleteAll(deferredData);
+    deferredData.clear();
 
     QQmlBoundSignal *signalHandler = signalHandlers;
     while (signalHandler) {
