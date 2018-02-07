@@ -108,31 +108,36 @@ void QQmlEngineControlClient::messageReceived(const QByteArray &data)
     if (!stream.atEnd())
         stream >> name;
 
-    QQmlEngineControlClientPrivate::EngineState &state = d->blockedEngines[id];
-    Q_ASSERT(state.blockers == 0);
-    Q_ASSERT(state.releaseCommand == QQmlEngineControlClientPrivate::InvalidCommand);
+    auto handleWaiting = [&](
+            QQmlEngineControlClientPrivate::CommandType command, std::function<void()> emitter) {
+        QQmlEngineControlClientPrivate::EngineState &state = d->blockedEngines[id];
+        Q_ASSERT(state.blockers == 0);
+        Q_ASSERT(state.releaseCommand == QQmlEngineControlClientPrivate::InvalidCommand);
+        state.releaseCommand = command;
+        emitter();
+        if (state.blockers == 0) {
+            d->sendCommand(state.releaseCommand, id);
+            d->blockedEngines.remove(id);
+        }
+    };
 
     switch (message) {
     case QQmlEngineControlClientPrivate::EngineAboutToBeAdded:
-        state.releaseCommand = QQmlEngineControlClientPrivate::StartWaitingEngine;
-        emit engineAboutToBeAdded(id, name);
+        handleWaiting(QQmlEngineControlClientPrivate::StartWaitingEngine, [&](){
+            emit engineAboutToBeAdded(id, name);
+        });
         break;
     case QQmlEngineControlClientPrivate::EngineAdded:
         emit engineAdded(id, name);
         break;
     case QQmlEngineControlClientPrivate::EngineAboutToBeRemoved:
-        state.releaseCommand = QQmlEngineControlClientPrivate::StopWaitingEngine;
-        emit engineAboutToBeRemoved(id, name);
+        handleWaiting(QQmlEngineControlClientPrivate::StopWaitingEngine, [&](){
+            emit engineAboutToBeRemoved(id, name);
+        });
         break;
     case QQmlEngineControlClientPrivate::EngineRemoved:
         emit engineRemoved(id, name);
         break;
-    }
-
-    if (state.blockers == 0 &&
-            state.releaseCommand != QQmlEngineControlClientPrivate::InvalidCommand) {
-        d->sendCommand(state.releaseCommand, id);
-        d->blockedEngines.remove(id);
     }
 }
 
