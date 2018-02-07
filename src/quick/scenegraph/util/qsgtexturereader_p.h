@@ -71,6 +71,8 @@ public:
     // TBD access function to params
     // TBD ask for identified fmt
 
+    static QList<QByteArray> supportedFileFormats();
+
 private:
     bool init();
     QIODevice *m_device = nullptr;

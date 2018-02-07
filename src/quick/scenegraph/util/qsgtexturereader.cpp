@@ -92,6 +92,12 @@ bool QSGTextureReader::isTexture()
 #endif
 }
 
+QList<QByteArray> QSGTextureReader::supportedFileFormats()
+{
+    // Hardcoded for now
+    return {QByteArrayLiteral("pkm"), QByteArrayLiteral("ktx")};
+}
+
 bool QSGTextureReader::init()
 {
     if (!m_device)

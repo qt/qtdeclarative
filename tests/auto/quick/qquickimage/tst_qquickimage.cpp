@@ -152,6 +152,14 @@ void tst_qquickimage::imageSource_data()
         QTest::newRow("remote svgz") << "/heart.svgz" << 595.0 << 841.0 << true << false << false << "";
     QTest::newRow("remote not found") << "/no-such-file.png" << 0.0 << 0.0 << true
         << false << true << "<Unknown File>:2:1: QML Image: Error transferring {{ServerBaseUrl}}/no-such-file.png - server replied: Not found";
+    QTest::newRow("extless") << testFileUrl("colors").toString() << 120.0 << 120.0 << false << false << true << "";
+    QTest::newRow("extless no cache") << testFileUrl("colors").toString() << 120.0 << 120.0 << false << false << false << "";
+    QTest::newRow("extless async") << testFileUrl("colors1").toString() << 120.0 << 120.0 << false << true << true << "";
+    QTest::newRow("extless not found") << testFileUrl("no-such-file").toString() << 0.0 << 0.0 << false
+        << false << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file").toString();
+    // Test that pkm is preferred over png. As pattern.pkm has different size than pattern.png, these tests verify that the right file has been loaded
+    QTest::newRow("extless prefer-tex") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << false << true << "";
+    QTest::newRow("extless prefer-tex async") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << true << true << "";
 
 }
 

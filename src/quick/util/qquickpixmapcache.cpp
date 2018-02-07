@@ -414,6 +414,34 @@ static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *e
     }
 }
 
+static QStringList fromLatin1List(const QList<QByteArray> &list)
+{
+    QStringList res;
+    res.reserve(list.size());
+    for (const QByteArray &item : list)
+        res.append(QString::fromLatin1(item));
+    return res;
+}
+
+static QString existingImageFileForPath(const QString &localFile)
+{
+    // Do nothing if given filepath exists or already has a suffix
+    QFileInfo fi(localFile);
+    if (!fi.suffix().isEmpty() || fi.exists())
+        return localFile;
+
+    static const QStringList suffixes = fromLatin1List(QSGTextureReader::supportedFileFormats() +
+                                                       QImageReader::supportedImageFormats());
+    QString tryFile = localFile + QStringLiteral(".xxxx");
+    const int suffixIdx = localFile.length() + 1;
+    for (const QString &suffix : suffixes) {
+        tryFile.replace(suffixIdx, 10, suffix);
+        if (QFileInfo::exists(tryFile))
+            return tryFile;
+    }
+    return localFile;
+}
+
 QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
 : QThread(eng), engine(eng), threadObject(0)
 #if QT_CONFIG(qml_network)
@@ -769,7 +797,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             QImage image;
             QQuickPixmapReply::ReadError errorCode = QQuickPixmapReply::NoError;
             QString errorStr;
-            QFile f(localFile);
+            QFile f(existingImageFileForPath(localFile));
             QSize readSize;
             if (f.open(QIODevice::ReadOnly)) {
                 QSGTextureReader texReader(&f, localFile);
@@ -779,6 +807,8 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                         readSize = factory->textureSize();
                     } else {
                         errorStr = QQuickPixmap::tr("Error decoding: %1").arg(url.toString());
+                        if (f.fileName() != localFile)
+                            errorStr += QString::fromLatin1(" (%1)").arg(f.fileName());
                         errorCode = QQuickPixmapReply::Decoding;
                     }
                     mutex.lock();
@@ -787,8 +817,11 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                     mutex.unlock();
                     return;
                 } else {
-                    if (!readImage(url, &f, &image, &errorStr, &readSize, runningJob->requestSize, runningJob->providerOptions))
+                    if (!readImage(url, &f, &image, &errorStr, &readSize, runningJob->requestSize, runningJob->providerOptions)) {
                         errorCode = QQuickPixmapReply::Loading;
+                        if (f.fileName() != localFile)
+                            errorStr += QString::fromLatin1(" (%1)").arg(f.fileName());
+                    }
                 }
             } else {
                 errorStr = QQuickPixmap::tr("Cannot open: %1").arg(url.toString());
@@ -1245,7 +1278,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
     if (localFile.isEmpty())
         return 0;
 
-    QFile f(localFile);
+    QFile f(existingImageFileForPath(localFile));
     QSize readSize;
     QString errorString;
 
@@ -1258,6 +1291,8 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
                 return new QQuickPixmapData(declarativePixmap, url, factory, factory->textureSize(), requestSize, providerOptions, QQuickImageProviderOptions::UsePluginDefaultTransform);
             } else {
                 errorString = QQuickPixmap::tr("Error decoding: %1").arg(url.toString());
+                if (f.fileName() != localFile)
+                    errorString += QString::fromLatin1(" (%1)").arg(f.fileName());
             }
         } else {
             QImage image;
@@ -1265,6 +1300,8 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
             if (readImage(url, &f, &image, &errorString, &readSize, requestSize, providerOptions, &appliedTransform)) {
                 *ok = true;
                 return new QQuickPixmapData(declarativePixmap, url, QQuickTextureFactory::textureFactoryForImage(image), readSize, requestSize, providerOptions, appliedTransform);
+            } else if (f.fileName() != localFile) {
+                errorString += QString::fromLatin1(" (%1)").arg(f.fileName());
             }
         }
     } else {
