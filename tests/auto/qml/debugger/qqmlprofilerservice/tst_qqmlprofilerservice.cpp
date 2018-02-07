@@ -244,9 +244,10 @@ QQmlDebugTest::ConnectResult tst_QQmlProfilerService::connect(
     m_isComplete = false;
 
     // ### Still using qmlscene due to QTBUG-33377
-    return QQmlDebugTest::connect(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
-                                  restrictServices ? QStringLiteral("CanvasFrameRate") : QString(),
-                                  testFile(file), block);
+    return QQmlDebugTest::connect(
+                QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
+                restrictServices ? QQmlDebuggingEnabler::profilerServices().join(',') : QString(),
+                testFile(file), block);
 }
 
 void tst_QQmlProfilerService::checkProcessTerminated()

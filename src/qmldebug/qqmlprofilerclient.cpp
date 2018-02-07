@@ -168,6 +168,22 @@ QQmlProfilerClient::QQmlProfilerClient(QQmlDebugConnection *connection,
     setRequestedFeatures(features);
     connect(d->engineControl.data(), &QQmlEngineControlClient::engineAboutToBeAdded,
             this, &QQmlProfilerClient::sendRecordingStatus);
+    connect(d->engineControl.data(), &QQmlEngineControlClient::engineAboutToBeRemoved,
+            this, [d](int engineId) {
+        // We may already be done with that engine. Then we don't need to block it.
+        if (d->trackedEngines.contains(engineId))
+            d->engineControl->blockEngine(engineId);
+    });
+    connect(this, &QQmlProfilerClient::traceFinished,
+            d->engineControl.data(), [d](qint64 timestamp, const QList<int> &engineIds) {
+        Q_UNUSED(timestamp);
+        // The engines might not be blocked because the trace can get finished before engine control
+        // sees them.
+        for (int blocked : d->engineControl->blockedEngines()) {
+            if (engineIds.contains(blocked))
+                d->engineControl->releaseEngine(blocked);
+        }
+    });
 }
 
 QQmlProfilerClient::~QQmlProfilerClient()
@@ -322,12 +338,15 @@ void QQmlProfilerClient::messageReceived(const QByteArray &data)
         emit complete(d->maximumTime);
     } else if (d->currentEvent.type.message() == Event
                && d->currentEvent.type.detailType() == StartTrace) {
-        emit traceStarted(d->currentEvent.event.timestamp(),
-                          d->currentEvent.event.numbers<QList<int>, qint32>());
+        const QList<int> engineIds = d->currentEvent.event.numbers<QList<int>, qint32>();
+        d->trackedEngines.append(engineIds);
+        emit traceStarted(d->currentEvent.event.timestamp(), engineIds);
     } else if (d->currentEvent.type.message() == Event
                && d->currentEvent.type.detailType() == EndTrace) {
-        emit traceFinished(d->currentEvent.event.timestamp(),
-                           d->currentEvent.event.numbers<QList<int>, qint32>());
+        const QList<int> engineIds = d->currentEvent.event.numbers<QList<int>, qint32>();
+        for (int engineId : engineIds)
+            d->trackedEngines.removeAll(engineId);
+        emit traceFinished(d->currentEvent.event.timestamp(), engineIds);
     } else if (d->updateFeatures(d->currentEvent.type.feature())) {
         d->processCurrentEvent();
     }
