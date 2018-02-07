@@ -811,7 +811,7 @@ void tst_qquickflickable::returnToBounds()
     window->rootContext()->setContextProperty("setRebound", setRebound);
     window->setSource(testFileUrl("resize.qml"));
     window->show();
-    QTest::qWaitForWindowActive(window.data());
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != 0);
     QQuickFlickable *obj = findItem<QQuickFlickable>(window->rootObject(), "flick");
 
