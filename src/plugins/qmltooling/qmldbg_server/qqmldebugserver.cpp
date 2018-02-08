@@ -183,7 +183,6 @@ private:
     QStringList m_clientPlugins;
     bool m_gotHello;
     bool m_blockingMode;
-    bool m_clientSupportsMultiPackets;
 
     QHash<QJSEngine *, EngineCondition> m_engineConditions;
 
@@ -276,8 +275,7 @@ static void cleanupOnShutdown()
 QQmlDebugServerImpl::QQmlDebugServerImpl() :
     m_connection(nullptr),
     m_gotHello(false),
-    m_blockingMode(false),
-    m_clientSupportsMultiPackets(false)
+    m_blockingMode(false)
 {
     static bool postRoutineAdded = false;
     if (!postRoutineAdded) {
@@ -463,10 +461,9 @@ void QQmlDebugServerImpl::receiveMessage()
                     s_dataStreamVersion = QDataStream::Qt_DefaultCompiledVersion;
             }
 
+            bool clientSupportsMultiPackets = false;
             if (!in.atEnd())
-                in >> m_clientSupportsMultiPackets;
-            else
-                m_clientSupportsMultiPackets = false;
+                in >> clientSupportsMultiPackets;
 
             // Send the hello answer immediately, since it needs to arrive before
             // the plugins below start sending messages.
@@ -474,13 +471,15 @@ void QQmlDebugServerImpl::receiveMessage()
             QQmlDebugPacket out;
             QStringList pluginNames;
             QList<float> pluginVersions;
-            const int count = m_plugins.count();
-            pluginNames.reserve(count);
-            pluginVersions.reserve(count);
-            for (QHash<QString, QQmlDebugService *>::ConstIterator i = m_plugins.constBegin();
-                 i != m_plugins.constEnd(); ++i) {
-                pluginNames << i.key();
-                pluginVersions << i.value()->version();
+            if (clientSupportsMultiPackets) { // otherwise, disable all plugins
+                const int count = m_plugins.count();
+                pluginNames.reserve(count);
+                pluginVersions.reserve(count);
+                for (QHash<QString, QQmlDebugService *>::ConstIterator i = m_plugins.constBegin();
+                     i != m_plugins.constEnd(); ++i) {
+                    pluginNames << i.key();
+                    pluginVersions << i.value()->version();
+                }
             }
 
             out << QString(QStringLiteral("QDeclarativeDebugClient")) << 0 << protocolVersion
@@ -700,16 +699,11 @@ void QQmlDebugServerImpl::sendMessage(const QString &name, const QByteArray &mes
 void QQmlDebugServerImpl::sendMessages(const QString &name, const QList<QByteArray> &messages)
 {
     if (canSendMessage(name)) {
-        if (m_clientSupportsMultiPackets) {
-            QQmlDebugPacket out;
-            out << name;
-            for (const QByteArray &message : messages)
-                out << message;
-            m_protocol->send(out.data());
-        } else {
-            for (const QByteArray &message : messages)
-                doSendMessage(name, message);
-        }
+        QQmlDebugPacket out;
+        out << name;
+        for (const QByteArray &message : messages)
+            out << message;
+        m_protocol->send(out.data());
         m_connection->flush();
     }
 }
