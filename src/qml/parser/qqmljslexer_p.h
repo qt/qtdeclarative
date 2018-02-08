@@ -201,7 +201,7 @@ private:
     static bool isOctalDigit(ushort c);
 
     void syncProhibitAutomaticSemicolon();
-    QChar decodeUnicodeEscapeCharacter(bool *ok);
+    uint decodeUnicodeEscapeCharacter(bool *ok);
     QChar decodeHexEscapeCharacter(bool *ok);
 
 private:

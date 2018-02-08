@@ -315,12 +315,12 @@ int Lexer::lex()
     return _tokenKind;
 }
 
-QChar Lexer::decodeUnicodeEscapeCharacter(bool *ok)
+uint Lexer::decodeUnicodeEscapeCharacter(bool *ok)
 {
     Q_ASSERT(_char == QLatin1Char('u'));
     scanChar(); // skip u
     if (_codePtr + 4 <= _endPtr && isHexDigit(_char)) {
-        ushort codePoint = 0;
+        uint codePoint = 0;
         for (int i = 0; i < 4; ++i) {
             int digit = hexDigit(_char);
             if (digit < 0)
@@ -331,7 +331,7 @@ QChar Lexer::decodeUnicodeEscapeCharacter(bool *ok)
         }
 
         *ok = true;
-        return QChar(codePoint);
+        return codePoint;
     } else if (_codePtr < _endPtr && _char == QLatin1Char('{')) {
         scanChar(); // skip '{'
         uint codePoint = 0;
@@ -357,7 +357,7 @@ QChar Lexer::decodeUnicodeEscapeCharacter(bool *ok)
 
 
         *ok = true;
-        return QChar(codePoint);
+        return codePoint;
     }
 
   error:
@@ -365,7 +365,7 @@ QChar Lexer::decodeUnicodeEscapeCharacter(bool *ok)
     _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal unicode escape sequence");
 
     *ok = false;
-    return QChar();
+    return 0;
 }
 
 QChar Lexer::decodeHexEscapeCharacter(bool *ok)
@@ -389,15 +389,15 @@ QChar Lexer::decodeHexEscapeCharacter(bool *ok)
     return QChar();
 }
 
-static inline bool isIdentifierStart(QChar ch)
+static inline bool isIdentifierStart(uint ch)
 {
     // fast path for ascii
-    if ((ch.unicode() >= 'a' && ch.unicode() <= 'z') ||
-        (ch.unicode() >= 'A' && ch.unicode() <= 'Z') ||
+    if ((ch >= 'a' && ch <= 'z') ||
+        (ch >= 'A' && ch <= 'Z') ||
         ch == '$' || ch == '_')
         return true;
 
-    switch (ch.category()) {
+    switch (QChar::category(ch)) {
     case QChar::Number_Letter:
     case QChar::Letter_Uppercase:
     case QChar::Letter_Lowercase:
@@ -411,17 +411,17 @@ static inline bool isIdentifierStart(QChar ch)
     return false;
 }
 
-static bool isIdentifierPart(QChar ch)
+static bool isIdentifierPart(uint ch)
 {
     // fast path for ascii
-    if ((ch.unicode() >= 'a' && ch.unicode() <= 'z') ||
-        (ch.unicode() >= 'A' && ch.unicode() <= 'Z') ||
-        (ch.unicode() >= '0' && ch.unicode() <= '9') ||
+    if ((ch >= 'a' && ch <= 'z') ||
+        (ch >= 'A' && ch <= 'Z') ||
+        (ch >= '0' && ch <= '9') ||
         ch == '$' || ch == '_' ||
-        ch.unicode() == 0x200c /* ZWNJ */ || ch.unicode() == 0x200d /* ZWJ */)
+        ch == 0x200c /* ZWNJ */ || ch == 0x200d /* ZWJ */)
         return true;
 
-    switch (ch.category()) {
+    switch (QChar::category(ch)) {
     case QChar::Mark_NonSpacing:
     case QChar::Mark_SpacingCombining:
 
@@ -731,9 +731,16 @@ again:
                 // unicode escape sequence
                 case 'u': {
                     bool ok = false;
-                    u = decodeUnicodeEscapeCharacter(&ok);
+                    uint codePoint = decodeUnicodeEscapeCharacter(&ok);
                     if (!ok)
                         return T_ERROR;
+                    if (QChar::requiresSurrogates(codePoint)) {
+                        // need to use a surrogate pair
+                        _tokenText += QChar(QChar::highSurrogate(codePoint));
+                        u = QChar::lowSurrogate(codePoint);
+                    } else {
+                        u = codePoint;
+                    }
                 } break;
 
                 // hex escape sequence
@@ -815,9 +822,12 @@ again:
         return scanNumber(ch);
 
     default: {
-        QChar c = ch;
+        uint c = ch.unicode();
         bool identifierWithEscapeChars = false;
-        if (c == QLatin1Char('\\') && _char == QLatin1Char('u')) {
+        if (QChar::isHighSurrogate(c) && QChar::isLowSurrogate(_char.unicode())) {
+            c = QChar::surrogateToUcs4(ushort(c), _char.unicode());
+            scanChar();
+        } else if (c == '\\' && _char == QLatin1Char('u')) {
             identifierWithEscapeChars = true;
             bool ok = false;
             c = decodeUnicodeEscapeCharacter(&ok);
@@ -827,13 +837,21 @@ again:
         if (isIdentifierStart(c)) {
             if (identifierWithEscapeChars) {
                 _tokenText.resize(0);
-                _tokenText += c;
+                if (QChar::requiresSurrogates(c)) {
+                    _tokenText += QChar(QChar::highSurrogate(c));
+                    _tokenText += QChar(QChar::lowSurrogate(c));
+                } else {
+                    _tokenText += QChar(c);
+                }
                 _validTokenText = true;
             }
-            while (true) {
-                c = _char;
-                if (_char == QLatin1Char('\\') && _codePtr[0] == QLatin1Char('u')) {
-                    if (! identifierWithEscapeChars) {
+            while (_codePtr <= _endPtr) {
+                c = _char.unicode();
+                if (QChar::isHighSurrogate(c) && QChar::isLowSurrogate(_codePtr->unicode())) {
+                    scanChar();
+                    c = QChar::surrogateToUcs4(ushort(c), _char.unicode());
+                } else if (_char == QLatin1Char('\\') && _codePtr[0] == QLatin1Char('u')) {
+                    if (!identifierWithEscapeChars) {
                         identifierWithEscapeChars = true;
                         _tokenText.resize(0);
                         _tokenText.insert(0, _tokenStartPtr, _codePtr - _tokenStartPtr - 1);
@@ -845,33 +863,50 @@ again:
                     c = decodeUnicodeEscapeCharacter(&ok);
                     if (!ok)
                         return T_ERROR;
-                    if (isIdentifierPart(c))
-                        _tokenText += c;
-                    continue;
-                } else if (isIdentifierPart(c)) {
-                    if (identifierWithEscapeChars)
-                        _tokenText += c;
 
-                    scanChar();
+                    if (!isIdentifierPart(c))
+                        break;
+
+                    if (identifierWithEscapeChars) {
+                        if (QChar::requiresSurrogates(c)) {
+                            _tokenText += QChar(QChar::highSurrogate(c));
+                            _tokenText += QChar(QChar::lowSurrogate(c));
+                        } else {
+                            _tokenText += QChar(c);
+                        }
+                    }
                     continue;
                 }
 
-                _tokenLength = _codePtr - _tokenStartPtr - 1;
+                if (!isIdentifierPart(c))
+                    break;
 
-                int kind = T_IDENTIFIER;
-
-                if (! identifierWithEscapeChars)
-                    kind = classify(_tokenStartPtr, _tokenLength, _qmlMode);
-
-                if (_engine) {
-                    if (kind == T_IDENTIFIER && identifierWithEscapeChars)
-                        _tokenSpell = _engine->newStringRef(_tokenText);
-                    else
-                        _tokenSpell = _engine->midRef(_tokenStartPtr - _code.unicode(), _tokenLength);
+                if (identifierWithEscapeChars) {
+                    if (QChar::requiresSurrogates(c)) {
+                        _tokenText += QChar(QChar::highSurrogate(c));
+                        _tokenText += QChar(QChar::lowSurrogate(c));
+                    } else {
+                        _tokenText += QChar(c);
+                    }
                 }
-
-                return kind;
+                scanChar();
             }
+
+            _tokenLength = _codePtr - _tokenStartPtr - 1;
+
+            int kind = T_IDENTIFIER;
+
+            if (!identifierWithEscapeChars)
+                kind = classify(_tokenStartPtr, _tokenLength, _qmlMode);
+
+            if (_engine) {
+                if (kind == T_IDENTIFIER && identifierWithEscapeChars)
+                    _tokenSpell = _engine->newStringRef(_tokenText);
+                else
+                    _tokenSpell = _engine->midRef(_tokenStartPtr - _code.unicode(), _tokenLength);
+            }
+
+            return kind;
         }
         }
 
