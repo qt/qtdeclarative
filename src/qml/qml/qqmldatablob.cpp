@@ -359,6 +359,12 @@ void QQmlDataBlob::addDependency(QQmlDataBlob *blob)
 
     m_waitingFor.append(blob);
     blob->m_waitingOnMe.append(this);
+
+    // Check circular dependency
+    if (m_waitingOnMe.indexOf(blob) >= 0) {
+        qWarning() << "Cyclic dependency detected between" << this->url().toString() << "and" << blob->url().toString();
+        m_data.setStatus(Error);
+    }
 }
 
 /*!
