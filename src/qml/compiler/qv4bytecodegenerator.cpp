@@ -198,6 +198,8 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // broken gcc warns about Instru
         }
 QT_WARNING_POP
     }
+#else
+    Q_UNUSED(debugMode);
 #endif
 
     const int pos = instructions.size();

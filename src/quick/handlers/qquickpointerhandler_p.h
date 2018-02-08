@@ -60,9 +60,11 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcPointerHandlerDispatch)
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
+
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
     Q_PROPERTY(QQuickItem * target READ target WRITE setTarget NOTIFY targetChanged)
@@ -103,6 +105,9 @@ public:
 
     GrabPermissions grabPermissions() const { return static_cast<GrabPermissions>(m_grabPermissions); }
     void setGrabPermissions(GrabPermissions grabPermissions);
+
+    void classBegin() override { }
+    void componentComplete() override { }
 
 Q_SIGNALS:
     void enabledChanged();

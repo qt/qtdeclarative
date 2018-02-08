@@ -422,8 +422,9 @@ void QQuickOpenGLShaderEffectCommon::updateShader(QQuickItem *item,
             d.specialType = UniformData::Opacity;
             uniformData[Key::FragmentShader].append(d);
             signalMappers[Key::FragmentShader].append(0);
-            const int mappedId = 1 | (Key::FragmentShader << 16);
-            auto mapper = new QtPrivate::MappedSlotObject([this, mappedId](){mappedPropertyChanged(mappedId);});
+            auto mapper = new QtPrivate::MappedSlotObject([this](){
+                mappedPropertyChanged(1 | (Key::FragmentShader << 16));
+            });
             const char *sourceName = "source";
             d.name = sourceName;
             d.setValueFromProperty(item, itemMetaObject);
