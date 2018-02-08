@@ -212,6 +212,7 @@ void QQmlProfilerClient::clearAll()
     Q_D(QQmlProfilerClient);
     d->serverTypeIds.clear();
     d->eventTypeIds.clear();
+    d->trackedEngines.clear();
     clearEvents();
 }
 
