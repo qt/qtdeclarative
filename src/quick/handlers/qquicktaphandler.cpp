@@ -310,6 +310,10 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
                 qCDebug(lcTapHandler) << objectName() << "tapped" << m_tapCount << "times";
                 emit tapped();
                 emit tapCountChanged();
+                if (m_tapCount == 1)
+                    emit singleTapped();
+                else if (m_tapCount == 2)
+                    emit doubleTapped();
                 m_lastTapTimestamp = ts;
                 m_lastTapPos = point->scenePosition();
             } else {
@@ -353,15 +357,15 @@ void QQuickTapHandler::updateTimeHeld()
 
     The number of taps which have occurred within the time and space
     constraints to be considered a single gesture.  For example, to detect
-    a double-tap, you can write:
+    a triple-tap, you can write:
 
     \qml
     Rectangle {
         width: 100; height: 30
-        signal doubleTap
+        signal tripleTap
         TapHandler {
             acceptedButtons: Qt.AllButtons
-            onTapped: if (tapCount == 2) doubleTap()
+            onTapped: if (tapCount == 3) tripleTap()
         }
     }
     \endqml
@@ -382,4 +386,24 @@ void QQuickTapHandler::updateTimeHeld()
     handler's \l [QML] Item.
 */
 
+/*!
+    \qmlsignal TapHandler::singleTapped
+    \since 5.11
+
+    This signal is emitted when the \l target is tapped once. After an amount
+    of time greater than QStyleHints::mouseDoubleClickInterval, it can be
+    tapped again; but if the time until the next tap is less, \l tapCount
+    will increase.
+*/
+
+/*!
+    \qmlsignal TapHandler::doubleTapped
+    \since 5.11
+
+    This signal is emitted when the \l target is tapped twice within a short
+    span of time (QStyleHints::mouseDoubleClickInterval) and distance
+    (QPlatformTheme::MouseDoubleClickDistance or
+    QPlatformTheme::TouchDoubleTapDistance).  This signal always occurs
+    after singleTapped, tapped and tapCountChanged.
+*/
 QT_END_NAMESPACE
