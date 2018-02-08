@@ -79,10 +79,8 @@ qmlcache_loader.dependency_type = TYPE_C
 qmlcache_loader.CONFIG = combine
 
 unix:!no_qmlcache_depend {
-    compiler_bin = $$[QT_HOST_BINS]/qmlcachegen
-    contains(QMAKE_HOST.os, Windows): compiler_bin = $${compiler_bin}.exe
-    qmlcache.depends += $$compiler_bin
-    qmlcache_loader.depends += $$compiler_bin
+    qmlcache.depends += $$QML_CACHEGEN
+    qmlcache_loader.depends += $$QML_CACHEGEN
 }
 
 QMAKE_EXTRA_COMPILERS += qmlcache qmlcache_loader
