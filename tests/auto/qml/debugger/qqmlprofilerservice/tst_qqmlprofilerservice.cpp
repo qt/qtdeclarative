@@ -257,7 +257,10 @@ void tst_QQmlProfilerService::checkProcessTerminated()
     // cleanly here.
 
     // Wait for the process to finish by itself, if that hasn't happened already
+    QVERIFY(m_client);
+    QVERIFY(m_client->client);
     QTRY_COMPARE(m_client->client->state(), QQmlDebugClient::NotConnected);
+    QVERIFY(m_process);
     QTRY_COMPARE(m_process->exitStatus(), QProcess::NormalExit);
 }
 
