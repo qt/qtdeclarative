@@ -1507,9 +1507,9 @@ QQuickText::~QQuickText()
     \qmlproperty bool QtQuick::Text::font.kerning
     \since 5.10
 
-    Enables or disables the kerning OpenType feature when shaping the text. This may improve performance
-    when creating or changing the text, at the expense of some cosmetic features. The default value
-    is true.
+    Enables or disables the kerning OpenType feature when shaping the text. Disabling this may
+    improve performance when creating or changing the text, at the expense of some cosmetic
+    features. The default value is true.
 
     \qml
     Text { text: "OATS FLAVOUR WAY"; font.kerning: false }

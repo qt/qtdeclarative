@@ -42,14 +42,6 @@ ResourceFileMapper::ResourceFileMapper(const QStringList &resourceFiles)
     }
 }
 
-ResourceFileMapper::ResourceFileMapper(const QString &resourceFile)
-{
-    QFile f(resourceFile);
-    if (!f.open(QIODevice::ReadOnly))
-        return;
-    populateFromQrcFile(f);
-}
-
 bool ResourceFileMapper::isEmpty() const
 {
     return qrcPathToFileSystemPath.isEmpty();

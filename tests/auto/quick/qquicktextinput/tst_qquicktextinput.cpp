@@ -2677,7 +2677,7 @@ void tst_qquicktextinput::copyAndPaste()
             QCOMPARE(clipboard->text(), QString("My password"));
             clipboard->clear();
         } else {
-            QVERIFY(clipboard->text().isEmpty());
+            QVERIFY(!clipboard->ownsSelection() || clipboard->text().isEmpty());
         }
         index++;
     }
@@ -2745,7 +2745,7 @@ void tst_qquicktextinput::copyAndPasteKeySequence()
             QCOMPARE(clipboard->text(), QString("My password"));
             clipboard->clear();
         } else {
-            QVERIFY(clipboard->text().isEmpty());
+            QVERIFY(!clipboard->ownsClipboard() || clipboard->text().isEmpty());
         }
         index++;
     }

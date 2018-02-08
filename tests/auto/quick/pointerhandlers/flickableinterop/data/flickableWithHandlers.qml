@@ -31,7 +31,7 @@ import Qt.labs.handlers 1.0
 
 Rectangle {
     id: root
-    width: 500
+    width: 800
     height: 480
     objectName: "root"
     color: "#222222"
@@ -41,7 +41,7 @@ Rectangle {
         anchors.margins: 10
         anchors.topMargin: 40
         contentHeight: 600
-        contentWidth: 600
+        contentWidth: 1000
 //        pressDelay: TODO
 
         Row {

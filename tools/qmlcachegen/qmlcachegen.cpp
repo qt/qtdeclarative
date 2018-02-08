@@ -442,28 +442,42 @@ int main(int argc, char **argv)
 
     parser.process(app);
 
+    enum Output {
+        GenerateCpp,
+        GenerateCacheFile,
+        GenerateLoader
+    } target = GenerateCacheFile;
+
+    QString outputFileName;
+    if (parser.isSet(outputFileOption))
+        outputFileName = parser.value(outputFileOption);
+
+    if (outputFileName.endsWith(QLatin1String(".cpp"))) {
+        target = GenerateCpp;
+        if (outputFileName.endsWith(QLatin1String("qmlcache_loader.cpp")))
+            target = GenerateLoader;
+    }
+
     const QStringList sources = parser.positionalArguments();
     if (sources.isEmpty()){
         parser.showHelp();
-    } else if (sources.count() > 1) {
+    } else if (sources.count() > 1 && target != GenerateLoader) {
         fprintf(stderr, "%s\n", qPrintable(QStringLiteral("Too many input files specified: '") + sources.join(QStringLiteral("' '")) + QLatin1Char('\'')));
         return EXIT_FAILURE;
     }
+
     const QString inputFile = sources.first();
-
-    Error error;
-
-    QString outputFileName = inputFile + QLatin1Char('c');
-    if (parser.isSet(outputFileOption))
-        outputFileName = parser.value(outputFileOption);
+    if (outputFileName.isEmpty())
+        outputFileName = inputFile + QLatin1Char('c');
 
     if (parser.isSet(filterResourceFileOption)) {
         return filterResourceFile(inputFile, outputFileName);
     }
 
-    if (outputFileName.endsWith(QLatin1String("qmlcache_loader.cpp"))) {
-        ResourceFileMapper mapper(inputFile);
+    if (target == GenerateLoader) {
+        ResourceFileMapper mapper(sources);
 
+        Error error;
         if (!generateLoader(mapper.qmlCompilerFiles(), outputFileName, parser.values(resourceFileMappingOption), &error.message)) {
             error.augment(QLatin1String("Error generating loader stub: ")).print();
             return EXIT_FAILURE;
@@ -474,7 +488,7 @@ int main(int argc, char **argv)
     QString inputFileUrl = inputFile;
 
     SaveFunction saveFunction;
-    if (outputFileName.endsWith(QLatin1String(".cpp"))) {
+    if (target == GenerateCpp) {
         ResourceFileMapper fileMapper(parser.values(resourceOption));
         QString inputResourcePath = parser.value(resourcePathOption);
 
@@ -523,18 +537,20 @@ int main(int argc, char **argv)
 
 
     if (inputFile.endsWith(QLatin1String(".qml"))) {
+        Error error;
         if (!compileQmlFile(inputFile, saveFunction, &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
     } else if (inputFile.endsWith(QLatin1String(".js"))) {
+        Error error;
         if (!compileJSFile(inputFile, inputFileUrl, saveFunction, &error)) {
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
     } else {
-        fprintf(stderr, "Ignoring %s input file as it is not QML source code - maybe remove from QML_FILES?\n", qPrintable(inputFile));    }
-
+        fprintf(stderr, "Ignoring %s input file as it is not QML source code - maybe remove from QML_FILES?\n", qPrintable(inputFile));
+    }
 
     return EXIT_SUCCESS;
 }

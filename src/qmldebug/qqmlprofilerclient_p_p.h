@@ -105,6 +105,8 @@ public:
     QStack<QQmlProfilerTypedEvent> rangesInProgress;
     QQueue<QQmlProfilerEvent> pendingMessages;
     QQueue<QQmlProfilerEvent> pendingDebugMessages;
+
+    QList<int> trackedEngines;
 };
 
 QT_END_NAMESPACE
