@@ -579,6 +579,8 @@ void QQmlContextData::invalidate()
         prevChild = 0;
     }
 
+    importedScripts.clear();
+
     engine = 0;
     parent = 0;
 }

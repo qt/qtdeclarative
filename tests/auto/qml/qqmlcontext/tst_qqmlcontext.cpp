@@ -33,6 +33,8 @@
 #include <QQmlComponent>
 #include <QQmlExpression>
 #include <private/qqmlcontext_p.h>
+#include <private/qv4qmlcontext_p.h>
+#include <private/qv4object_p.h>
 #include "../../shared/util.h"
 
 class tst_qqmlcontext : public QQmlDataTest
@@ -63,6 +65,7 @@ private slots:
     void qobjectDerived();
     void qtbug_49232();
     void contextViaClosureAfterDestruction();
+    void contextLeak();
 
 private:
     QQmlEngine engine;
@@ -749,6 +752,40 @@ void tst_qqmlcontext::contextViaClosureAfterDestruction()
     QJSValue subObject = componentFactoryClosure.callWithInstance(componentFactoryClosure, QJSValueList() << parentWrapper);
     QVERIFY(subObject.isError());
     QCOMPARE(subObject.toString(), QLatin1String("Error: Qt.createQmlObject(): Cannot create a component in an invalid context"));
+}
+
+void tst_qqmlcontext::contextLeak()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("contextLeak.qml"));
+
+    QQmlGuardedContextData scriptContext;
+
+    {
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 42);
+
+        QQmlData *ddata = QQmlData::get(obj.data());
+        QVERIFY(ddata);
+        QQmlContextData *context = ddata->context;
+        QVERIFY(context);
+        QVERIFY(!context->importedScripts.isNullOrUndefined());
+        QCOMPARE(int(context->importedScripts.valueRef()->as<QV4::Object>()->getLength()), 1);
+
+        {
+            QV4::Scope scope(ddata->jsWrapper.engine());
+            QV4::ScopedValue scriptContextWrapper(scope);
+            scriptContextWrapper = context->importedScripts.valueRef()->as<QV4::Object>()->getIndexed(0);
+            scriptContext = scriptContextWrapper->as<QV4::QmlContextWrapper>()->getContext();
+        }
+    }
+
+    engine.collectGarbage();
+
+    // Each time a JS file (non-pragma-shared) is imported, we create a QQmlContext(Data) for it.
+    // Make sure that context does not leak.
+    QVERIFY(scriptContext.isNull());
 }
 
 QTEST_MAIN(tst_qqmlcontext)

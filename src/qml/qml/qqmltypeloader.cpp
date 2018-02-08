@@ -2917,6 +2917,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
 
     m_program->qmlContext.set(scope.engine, qmlContext);
     m_program->run();
+    m_program->qmlContext.clear();
     if (scope.engine->hasException) {
         QQmlError error = scope.engine->catchExceptionAsQmlError();
         if (error.isValid())
