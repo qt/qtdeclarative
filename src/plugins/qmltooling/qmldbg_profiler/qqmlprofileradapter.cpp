@@ -80,8 +80,7 @@ void QQmlProfilerAdapter::init(QQmlProfilerService *service, QQmlProfiler *profi
 // convert to QByteArrays that can be sent to the debug client
 static void qQmlProfilerDataToByteArrays(const QQmlProfilerData &d,
                                          QQmlProfiler::LocationHash &locations,
-                                         QList<QByteArray> &messages,
-                                         bool trackLocations)
+                                         QList<QByteArray> &messages)
 {
     QQmlDebugPacket ds;
     Q_ASSERT_X((d.messageType & (1 << 31)) == 0, Q_FUNC_INFO,
@@ -96,7 +95,7 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData &d,
         if (decodedMessageType == QQmlProfilerDefinitions::RangeEnd
                 || decodedMessageType == QQmlProfilerDefinitions::RangeStart) {
             ds << d.time << decodedMessageType << static_cast<quint32>(d.detailType);
-            if (trackLocations && d.locationId != 0)
+            if (d.locationId != 0)
                 ds << static_cast<qint64>(d.locationId);
         } else {
             auto i = locations.find(d.locationId);
@@ -107,8 +106,7 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData &d,
                    << static_cast<qint32>(i->location.column);
                 if (d.messageType & (1 << QQmlProfilerDefinitions::RangeData)) {
                     // Send both, location and data ...
-                    if (trackLocations)
-                        ds << static_cast<qint64>(d.locationId);
+                    ds << static_cast<qint64>(d.locationId);
                     messages.append(ds.squeezedData());
                     ds.clear();
                     ds << d.time << int(QQmlProfilerDefinitions::RangeData)
@@ -116,10 +114,8 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData &d,
                        << (i->location.sourceFile.isEmpty() ? i->url.toString() :
                                                               i->location.sourceFile);
                 }
-                if (trackLocations) {
-                    ds << static_cast<qint64>(d.locationId);
-                    locations.erase(i); // ... so that we can erase here without missing anything.
-                }
+                ds << static_cast<qint64>(d.locationId);
+                locations.erase(i); // ... so that we can erase here without missing anything.
             } else {
                 // Skip RangeData and RangeLocation: We've already sent them
                 continue;
@@ -130,14 +126,13 @@ static void qQmlProfilerDataToByteArrays(const QQmlProfilerData &d,
     }
 }
 
-qint64 QQmlProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages,
-                                         bool trackLocations)
+qint64 QQmlProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
     while (next != data.length()) {
         const QQmlProfilerData &nextData = data.at(next);
         if (nextData.time > until || messages.length() > s_numMessagesPerBatch)
             return nextData.time;
-        qQmlProfilerDataToByteArrays(nextData, locations, messages, trackLocations);
+        qQmlProfilerDataToByteArrays(nextData, locations, messages);
         ++next;
     }
 

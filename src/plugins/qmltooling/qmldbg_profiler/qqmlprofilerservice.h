@@ -114,7 +114,6 @@ private:
     QElapsedTimer m_timer;
     QTimer m_flushTimer;
     bool m_waitingForStop;
-    bool m_useMessageTypes;
 
     QList<QQmlAbstractProfilerAdapter *> m_globalProfilers;
     QMultiHash<QJSEngine *, QQmlAbstractProfilerAdapter *> m_engineProfilers;

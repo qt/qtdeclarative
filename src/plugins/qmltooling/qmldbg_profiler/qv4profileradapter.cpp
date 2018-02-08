@@ -104,8 +104,7 @@ qint64 QV4ProfilerAdapter::finalizeMessages(qint64 until, QList<QByteArray> &mes
     return callNext == -1 ? memoryNext : qMin(callNext, memoryNext);
 }
 
-qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages,
-                                        bool trackLocations)
+qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
     QQmlDebugPacket d;
 
@@ -134,24 +133,17 @@ qint64 QV4ProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &message
             appendMemoryEvents(props.start, messages, d);
             auto location = m_functionLocations.find(props.id);
 
-            d << props.start << int(RangeStart) << int(Javascript);
-            if (trackLocations)
-                d << static_cast<qint64>(props.id);
+            d << props.start << int(RangeStart) << int(Javascript) << static_cast<qint64>(props.id);
             if (location != m_functionLocations.end()) {
                 messages.push_back(d.squeezedData());
                 d.clear();
                 d << props.start << int(RangeLocation) << int(Javascript) << location->file << location->line
-                  << location->column;
-                if (trackLocations)
-                    d << static_cast<qint64>(props.id);
+                  << location->column << static_cast<qint64>(props.id);
                 messages.push_back(d.squeezedData());
                 d.clear();
-                d << props.start << int(RangeData) << int(Javascript) << location->name;
-
-                if (trackLocations) {
-                    d << static_cast<qint64>(props.id);
-                    m_functionLocations.erase(location);
-                }
+                d << props.start << int(RangeData) << int(Javascript) << location->name
+                  << static_cast<qint64>(props.id);
+                m_functionLocations.erase(location);
             }
             messages.push_back(d.squeezedData());
             d.clear();

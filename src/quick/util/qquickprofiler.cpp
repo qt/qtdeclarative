@@ -116,9 +116,8 @@ void QQuickProfiler::stopProfilingImpl()
     m_data.clear();
 }
 
-void QQuickProfiler::reportDataImpl(bool trackLocations)
+void QQuickProfiler::reportDataImpl()
 {
-    Q_UNUSED(trackLocations);
     QMutexLocker lock(&m_dataMutex);
     emit dataReady(m_data);
     m_data.clear();

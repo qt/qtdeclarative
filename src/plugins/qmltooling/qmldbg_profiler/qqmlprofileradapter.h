@@ -61,8 +61,7 @@ class QQmlProfilerAdapter : public QQmlAbstractProfilerAdapter {
 public:
     QQmlProfilerAdapter(QQmlProfilerService *service, QQmlEnginePrivate *engine);
     QQmlProfilerAdapter(QQmlProfilerService *service, QQmlTypeLoader *loader);
-    qint64 sendMessages(qint64 until, QList<QByteArray> &messages,
-                        bool trackLocations) override;
+    qint64 sendMessages(qint64 until, QList<QByteArray> &messages) override;
 
     void receiveData(const QVector<QQmlProfilerData> &new_data,
                      const QQmlProfiler::LocationHash &locations);

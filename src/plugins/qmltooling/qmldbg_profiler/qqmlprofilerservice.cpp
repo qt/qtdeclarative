@@ -59,7 +59,7 @@ Q_QML_DEBUG_PLUGIN_LOADER(QQmlAbstractProfilerAdapter)
 
 QQmlProfilerServiceImpl::QQmlProfilerServiceImpl(QObject *parent) :
     QQmlConfigurableDebugService<QQmlProfilerService>(1, parent),
-    m_waitingForStop(false), m_useMessageTypes(false)
+    m_waitingForStop(false)
 {
     m_timer.start();
     QQmlAbstractProfilerAdapter *quickAdapter =
@@ -324,7 +324,7 @@ void QQmlProfilerServiceImpl::stopProfiling(QJSEngine *engine)
     m_waitingForStop = true;
 
     for (QQmlAbstractProfilerAdapter *profiler : qAsConst(reporting))
-        profiler->reportData(m_useMessageTypes);
+        profiler->reportData();
 
     for (QQmlAbstractProfilerAdapter *profiler : qAsConst(stopping))
         profiler->stopProfiling();
@@ -359,8 +359,7 @@ void QQmlProfilerServiceImpl::sendMessages()
         m_startTimes.erase(m_startTimes.begin());
         qint64 next = first->sendMessages(m_startTimes.isEmpty() ?
                                               std::numeric_limits<qint64>::max() :
-                                              m_startTimes.begin().key(), messages,
-                                          m_useMessageTypes);
+                                              m_startTimes.begin().key(), messages);
         if (next != -1)
             m_startTimes.insert(next, first);
 
@@ -446,13 +445,15 @@ void QQmlProfilerServiceImpl::messageReceived(const QByteArray &message)
                        &m_flushTimer, &QTimer::stop);
         }
     }
+
+    bool useMessageTypes = false;
     if (!stream.atEnd())
-        stream >> m_useMessageTypes;
+        stream >> useMessageTypes;
 
     // If engineId == -1 objectForId() and then the cast will return 0.
-    if (enabled)
+    if (enabled && useMessageTypes) // If the client doesn't support message types don't profile.
         startProfiling(qobject_cast<QJSEngine *>(objectForId(engineId)), features);
-    else
+    else if (!enabled)              // On stopProfiling the client doesn't repeat useMessageTypes.
         stopProfiling(qobject_cast<QJSEngine *>(objectForId(engineId)));
 
     stopWaiting();
@@ -478,7 +479,7 @@ void QQmlProfilerServiceImpl::flush()
     }
 
     for (QQmlAbstractProfilerAdapter *profiler : qAsConst(reporting))
-        profiler->reportData(m_useMessageTypes);
+        profiler->reportData();
 }
 
 QT_END_NAMESPACE

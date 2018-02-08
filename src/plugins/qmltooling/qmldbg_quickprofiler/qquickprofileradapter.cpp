@@ -149,10 +149,8 @@ static void qQuickProfilerDataToByteArrays(const QQuickProfilerData &data,
     }
 }
 
-qint64 QQuickProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages,
-                                           bool trackLocations)
+qint64 QQuickProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messages)
 {
-    Q_UNUSED(trackLocations);
     while (next < m_data.size()) {
         if (m_data[next].time <= until && messages.length() <= s_numMessagesPerBatch)
             qQuickProfilerDataToByteArrays(m_data[next++], messages);

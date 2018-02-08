@@ -251,7 +251,7 @@ public:
 
     void stopProfiling();
     void startProfiling(quint64 features);
-    void reportData(bool trackLocations);
+    void reportData();
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 
 signals:

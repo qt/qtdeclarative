@@ -357,7 +357,7 @@ protected:
 
     void startProfilingImpl(quint64 features);
     void stopProfilingImpl();
-    void reportDataImpl(bool trackLocations);
+    void reportDataImpl();
     void setTimer(const QElapsedTimer &t);
 };
 
