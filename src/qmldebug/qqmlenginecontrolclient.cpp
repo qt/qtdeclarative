@@ -99,8 +99,8 @@ void QQmlEngineControlClient::messageReceived(const QByteArray &data)
 {
     Q_D(QQmlEngineControlClient);
     QPacket stream(d->connection->currentDataStreamVersion(), data);
-    int message;
-    int id;
+    qint32 message;
+    qint32 id;
     QString name;
 
     stream >> message >> id;
@@ -146,7 +146,7 @@ void QQmlEngineControlClientPrivate::sendCommand(
 {
     Q_Q(QQmlEngineControlClient);
     QPacket stream(connection->currentDataStreamVersion());
-    stream << int(command) << engineId;
+    stream << static_cast<qint32>(command) << engineId;
     q->sendMessage(stream.data());
 }
 
