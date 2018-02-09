@@ -330,9 +330,8 @@ bool QQmlDMCachedModelData::resolveIndex(const QQmlAdaptorModel &, int idx)
 {
     if (index == -1) {
         Q_ASSERT(idx >= 0);
-        setModelIndex(idx);
         cachedData.clear();
-        emit modelIndexChanged();
+        setModelIndex(idx);
         const QMetaObject *meta = metaObject();
         const int propertyCount = type->propertyRoles.count();
         for (int i = 0; i < propertyCount; ++i)
