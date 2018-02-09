@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qquickitemview_p_p.h"
+#include "qquickitemviewfxitem_p_p.h"
 #include <QtQuick/private/qquicktransition_p.h>
 #include <QtQml/QQmlInfo>
 #include "qplatformdefs.h"
@@ -52,116 +53,13 @@ Q_LOGGING_CATEGORY(lcItemViewDelegateLifecycle, "qt.quick.itemview.lifecycle")
 #endif
 
 FxViewItem::FxViewItem(QQuickItem *i, QQuickItemView *v, bool own, QQuickItemViewAttached *attached)
-    : item(i)
+    : QQuickItemViewFxItem(i, own, QQuickItemViewPrivate::get(v))
     , view(v)
-    , transitionableItem(nullptr)
     , attached(attached)
-    , ownItem(own)
-    , releaseAfterTransition(false)
-    , trackGeom(false)
 {
     if (attached) // can be null for default components (see createComponentItem)
         attached->setView(view);
 }
-
-FxViewItem::~FxViewItem()
-{
-    delete transitionableItem;
-    if (ownItem && item) {
-        trackGeometry(false);
-        item->setParentItem(nullptr);
-        item->deleteLater();
-        item = nullptr;
-    }
-}
-
-qreal FxViewItem::itemX() const
-{
-    return transitionableItem ? transitionableItem->itemX() : (item ? item->x() : 0);
-}
-
-qreal FxViewItem::itemY() const
-{
-    return transitionableItem ? transitionableItem->itemY() : (item ? item->y() : 0);
-}
-
-void FxViewItem::moveTo(const QPointF &pos, bool immediate)
-{
-    if (transitionableItem)
-        transitionableItem->moveTo(pos, immediate);
-    else if (item)
-        item->setPosition(pos);
-}
-
-void FxViewItem::setVisible(bool visible)
-{
-    if (!visible && transitionableItem && transitionableItem->transitionScheduledOrRunning())
-        return;
-    if (item)
-        QQuickItemPrivate::get(item)->setCulled(!visible);
-}
-
-void FxViewItem::trackGeometry(bool track)
-{
-    if (track) {
-        if (!trackGeom) {
-            if (item) {
-                QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-                itemPrivate->addItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
-            }
-            trackGeom = true;
-        }
-    } else {
-        if (trackGeom) {
-            if (item) {
-                QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-                itemPrivate->removeItemChangeListener(QQuickItemViewPrivate::get(view), QQuickItemPrivate::Geometry);
-            }
-            trackGeom = false;
-        }
-    }
-}
-
-QQuickItemViewTransitioner::TransitionType FxViewItem::scheduledTransitionType() const
-{
-    return transitionableItem ? transitionableItem->nextTransitionType : QQuickItemViewTransitioner::NoTransition;
-}
-
-bool FxViewItem::transitionScheduledOrRunning() const
-{
-    return transitionableItem ? transitionableItem->transitionScheduledOrRunning() : false;
-}
-
-bool FxViewItem::transitionRunning() const
-{
-    return transitionableItem ? transitionableItem->transitionRunning() : false;
-}
-
-bool FxViewItem::isPendingRemoval() const
-{
-    return transitionableItem ? transitionableItem->isPendingRemoval() : false;
-}
-
-void FxViewItem::transitionNextReposition(QQuickItemViewTransitioner *transitioner, QQuickItemViewTransitioner::TransitionType type, bool asTarget)
-{
-    if (!transitioner)
-        return;
-    if (!transitionableItem)
-        transitionableItem = new QQuickItemViewTransitionableItem(item);
-    transitioner->transitionNextReposition(transitionableItem, type, asTarget);
-}
-
-bool FxViewItem::prepareTransition(QQuickItemViewTransitioner *transitioner, const QRectF &viewBounds)
-{
-    return transitionableItem ? transitionableItem->prepareTransition(transitioner, index, viewBounds) : false;
-}
-
-void FxViewItem::startTransition(QQuickItemViewTransitioner *transitioner)
-{
-    if (transitionableItem)
-        transitionableItem->startTransition(transitioner, index);
-}
-
 
 QQuickItemViewChangeSet::QQuickItemViewChangeSet()
     : active(false)
