@@ -189,6 +189,7 @@ public:
         Kind_StringLiteralPropertyName,
         Kind_SwitchStatement,
         Kind_TemplateLiteral,
+        Kind_TaggedTemplate,
         Kind_ThisExpression,
         Kind_ThrowStatement,
         Kind_TildeExpression,
@@ -836,6 +837,28 @@ public:
     QStringRef name;
     SourceLocation dotToken;
     SourceLocation identifierToken;
+};
+
+class QML_PARSER_EXPORT TaggedTemplate : public ExpressionNode
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(TaggedTemplate)
+
+    TaggedTemplate(ExpressionNode *b, TemplateLiteral *t)
+        : base (b), templateLiteral(t)
+    { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return base->firstSourceLocation(); }
+
+    SourceLocation lastSourceLocation() const override
+    { return templateLiteral->lastSourceLocation(); }
+
+    // attributes
+    ExpressionNode *base;
+    TemplateLiteral *templateLiteral;
 };
 
 class QML_PARSER_EXPORT NewMemberExpression: public ExpressionNode

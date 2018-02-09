@@ -158,6 +158,8 @@ void StringLiteral::accept0(Visitor *visitor)
 void TemplateLiteral::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        if (next)
+            accept(next, visitor);
     }
 
     visitor->endVisit(this);
@@ -987,6 +989,15 @@ void UiEnumDeclaration::accept0(Visitor *visitor)
 void UiEnumMemberList::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+    }
+
+    visitor->endVisit(this);
+}
+
+void TaggedTemplate::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(templateLiteral, visitor);
     }
 
     visitor->endVisit(this);

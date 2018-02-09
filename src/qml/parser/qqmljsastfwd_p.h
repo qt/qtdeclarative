@@ -106,6 +106,7 @@ class StringLiteralPropertyName;
 class NumericLiteralPropertyName;
 class ArrayMemberExpression;
 class FieldMemberExpression;
+class TaggedTemplate;
 class NewMemberExpression;
 class NewExpression;
 class CallExpression;

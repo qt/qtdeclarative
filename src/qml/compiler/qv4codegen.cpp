@@ -1279,6 +1279,12 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError)
         return false;
 
+    handleCall(base, calldata);
+    return false;
+}
+
+void Codegen::handleCall(Reference &base, Arguments calldata)
+{
     //### Do we really need all these call instructions? can's we load the callee in a temp?
     if (base.type == Reference::QmlScopeObject) {
         Instruction::CallScopeObjectProperty call;
@@ -1346,7 +1352,6 @@ bool Codegen::visit(CallExpression *ast)
     }
 
     _expr.setResult(Reference::fromAccumulator(this));
-    return false;
 }
 
 Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
@@ -1371,6 +1376,30 @@ Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
             if (e.isStackSlot())
                 return { 1, e.stackSlot() };
         }
+        (void) e.storeOnStack(calldata + argc);
+        ++argc;
+    }
+
+    return { argc, calldata };
+}
+
+Codegen::Arguments Codegen::pushTemplateArgs(TemplateLiteral *args)
+{
+    int argc = 0;
+    for (TemplateLiteral *it = args; it; it = it->next)
+        ++argc;
+
+    if (!argc)
+        return { 0, 0 };
+
+    int calldata = bytecodeGenerator->newRegisterArray(argc);
+
+    argc = 0;
+    for (TemplateLiteral *it = args; it && it->expression; it = it->next) {
+        RegisterScope scope(this);
+        Reference e = expression(it->expression);
+        if (hasError)
+            break;
         (void) e.storeOnStack(calldata + argc);
         ++argc;
     }
@@ -1488,6 +1517,86 @@ bool Codegen::visit(FieldMemberExpression *ast)
         return false;
     _expr.setResult(Reference::fromMember(base, ast->name.toString()));
     return false;
+}
+
+bool Codegen::visit(TaggedTemplate *ast)
+{
+    if (hasError)
+        return false;
+
+    RegisterScope scope(this);
+
+    Reference base = expression(ast->base);
+    if (hasError)
+        return false;
+    switch (base.type) {
+    case Reference::Member:
+    case Reference::Subscript:
+        base = base.asLValue();
+        break;
+    case Reference::Name:
+        break;
+    default:
+        base = base.storeOnStack();
+        break;
+    }
+
+    int arrayTemp = createTemplateArray(ast->templateLiteral);
+    Q_UNUSED(arrayTemp);
+    auto calldata = pushTemplateArgs(ast->templateLiteral);
+    if (hasError)
+        return false;
+    ++calldata.argc;
+    Q_ASSERT(calldata.argv == arrayTemp + 1);
+    --calldata.argv;
+
+    handleCall(base, calldata);
+    return false;
+
+
+    return false;
+}
+
+int Codegen::createTemplateArray(TemplateLiteral *t)
+{
+    int arrayTemp = bytecodeGenerator->newRegister();
+
+    RegisterScope scope(this);
+
+    int argc = 0;
+    int args = -1;
+    auto push = [this, &argc, &args](const QStringRef &arg) {
+        int temp = bytecodeGenerator->newRegister();
+        if (args == -1)
+            args = temp;
+        Instruction::LoadRuntimeString instr;
+        instr.stringId = registerString(arg.toString());
+        bytecodeGenerator->addInstruction(instr);
+        Instruction::StoreReg store;
+        store.reg = temp;
+        bytecodeGenerator->addInstruction(store);
+
+        ++argc;
+    };
+
+    for (TemplateLiteral *it = t; it; it = it->next)
+        push(it->value);
+
+    if (args == -1) {
+        Q_ASSERT(argc == 0);
+        args = 0;
+    }
+
+    Instruction::DefineArray call;
+    call.argc = argc;
+    call.args = Moth::StackSlot::createRegister(args);
+    bytecodeGenerator->addInstruction(call);
+
+    Instruction::StoreReg store;
+    store.reg = arrayTemp;
+    bytecodeGenerator->addInstruction(store);
+
+    return arrayTemp;
 }
 
 bool Codegen::visit(FunctionExpression *ast)

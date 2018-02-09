@@ -1748,6 +1748,17 @@ case $rule_number: {
 } break;
 ./
 
+CallExpression: CallExpression TemplateLiteral;
+/. case $rule_number: ./
+
+MemberExpression: MemberExpression TemplateLiteral ;
+/.
+case $rule_number: {
+    AST::TaggedTemplate *node = new (pool) AST::TaggedTemplate(sym(1).Expression, sym(2).Template);
+    sym(1).Node = node;
+} break;
+./
+
 MemberExpression: T_NEW MemberExpression T_LPAREN ArgumentListOpt T_RPAREN ;
 /.
 case $rule_number: {
@@ -1756,13 +1767,6 @@ case $rule_number: {
   node->lparenToken = loc(3);
   node->rparenToken = loc(5);
   sym(1).Node = node;
-} break;
-./
-
-MemberExpression: MemberExpression TemplateLiteral ;
-/.
-case $rule_number: {
-    qWarning() << "Template member expression implemented";
 } break;
 ./
 
@@ -1814,12 +1818,6 @@ case $rule_number: {
   node->dotToken = loc(2);
   node->identifierToken = loc(3);
   sym(1).Node = node;
-} break;
-./
-
-CallExpression: CallExpression TemplateLiteral;
-/. case $rule_number: {
-  qWarning() << "Template calling not implemented";
 } break;
 ./
 

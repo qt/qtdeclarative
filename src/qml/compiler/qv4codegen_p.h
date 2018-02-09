@@ -561,6 +561,7 @@ protected:
     bool visit(AST::DeleteExpression *ast) override;
     bool visit(AST::FalseLiteral *ast) override;
     bool visit(AST::FieldMemberExpression *ast) override;
+    bool visit(AST::TaggedTemplate *ast) override;
     bool visit(AST::FunctionExpression *ast) override;
     bool visit(AST::IdentifierExpression *ast) override;
     bool visit(AST::NestedExpression *ast) override;
@@ -634,6 +635,10 @@ public:
     Reference jumpBinop(QSOperator::Op oper, Reference &left, Reference &right);
     struct Arguments { int argc; int argv; };
     Arguments pushArgs(AST::ArgumentList *args);
+    void handleCall(Reference &base, Arguments calldata);
+
+    Arguments pushTemplateArgs(AST::TemplateLiteral *args);
+    int createTemplateArray(AST::TemplateLiteral *t);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
 

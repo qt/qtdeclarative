@@ -173,6 +173,9 @@ public:
     virtual bool visit(FieldMemberExpression *) { return true; }
     virtual void endVisit(FieldMemberExpression *) {}
 
+    virtual bool visit(TaggedTemplate *) { return true; }
+    virtual void endVisit(TaggedTemplate *) {}
+
     virtual bool visit(NewMemberExpression *) { return true; }
     virtual void endVisit(NewMemberExpression *) {}
 
