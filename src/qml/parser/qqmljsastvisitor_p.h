@@ -125,6 +125,9 @@ public:
     virtual bool visit(StringLiteral *) { return true; }
     virtual void endVisit(StringLiteral *) {}
 
+    virtual bool visit(TemplateLiteral *) { return true; }
+    virtual void endVisit(TemplateLiteral *) {}
+
     virtual bool visit(NumericLiteral *) { return true; }
     virtual void endVisit(NumericLiteral *) {}
 

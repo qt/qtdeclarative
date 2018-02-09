@@ -91,6 +91,7 @@ class TrueLiteral;
 class FalseLiteral;
 class NumericLiteral;
 class StringLiteral;
+class TemplateLiteral;
 class RegExpLiteral;
 class ArrayLiteral;
 class ObjectLiteral;

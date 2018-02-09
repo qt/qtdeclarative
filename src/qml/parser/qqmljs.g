@@ -79,6 +79,12 @@
 %token T_COMPATIBILITY_SEMICOLON
 %token T_ENUM "enum"
 
+--- template strings
+%token T_NO_SUBSTITUTION_TEMPLATE
+%token T_TEMPLATE_HEAD
+%token T_TEMPLATE_MIDDLE
+%token T_TEMPLATE_TAIL
+
 --- context keywords.
 %token T_PUBLIC "public"
 %token T_IMPORT "import"
@@ -250,6 +256,7 @@ public:
       AST::ElementList *ElementList;
       AST::Elision *Elision;
       AST::ExpressionNode *Expression;
+      AST::TemplateLiteral *Template;
       AST::Finally *Finally;
       AST::FormalParameterList *FormalParameterList;
       AST::FunctionBody *FunctionBody;
@@ -1342,6 +1349,37 @@ case $rule_number: {
 } break;
 ./
 
+PrimaryExpression: TemplateLiteral ;
+/.
+case $rule_number:
+    // nothing that needs to be done here
+    break;
+./
+
+TemplateLiteral: T_NO_SUBSTITUTION_TEMPLATE ;
+/. case $rule_number: ./
+
+TemplateSpans: T_TEMPLATE_TAIL ;
+/.
+case $rule_number: {
+    AST::TemplateLiteral *node = new (pool) AST::TemplateLiteral(stringRef(1), nullptr);
+    node->literalToken = loc(1);
+    sym(1).Node = node;
+} break;
+./
+
+TemplateSpans: T_TEMPLATE_MIDDLE Expression TemplateSpans;
+/. case $rule_number: ./
+
+TemplateLiteral: T_TEMPLATE_HEAD Expression TemplateSpans ;
+/. case $rule_number: {
+  AST::TemplateLiteral *node = new (pool) AST::TemplateLiteral(stringRef(1), sym(2).Expression);
+  node->next = sym(3).Template;
+  node->literalToken = loc(1);
+  sym(1).Node = node;
+} break;
+./
+
 PrimaryExpression: T_DIVIDE_ ;
 /:
 #define J_SCRIPT_REGEXPLITERAL_RULE1 $rule_number
@@ -1721,6 +1759,13 @@ case $rule_number: {
 } break;
 ./
 
+MemberExpression: MemberExpression TemplateLiteral ;
+/.
+case $rule_number: {
+    qWarning() << "Template member expression implemented";
+} break;
+./
+
 NewExpression: MemberExpression ;
 
 NewExpression: T_NEW NewExpression ;
@@ -1769,6 +1814,12 @@ case $rule_number: {
   node->dotToken = loc(2);
   node->identifierToken = loc(3);
   sym(1).Node = node;
+} break;
+./
+
+CallExpression: CallExpression TemplateLiteral;
+/. case $rule_number: {
+  qWarning() << "Template calling not implemented";
 } break;
 ./
 

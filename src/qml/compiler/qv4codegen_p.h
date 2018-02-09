@@ -576,6 +576,7 @@ protected:
     bool visit(AST::PreIncrementExpression *ast) override;
     bool visit(AST::RegExpLiteral *ast) override;
     bool visit(AST::StringLiteral *ast) override;
+    bool visit(AST::TemplateLiteral *ast) override;
     bool visit(AST::ThisExpression *ast) override;
     bool visit(AST::TildeExpression *ast) override;
     bool visit(AST::TrueLiteral *ast) override;

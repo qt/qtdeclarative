@@ -257,6 +257,17 @@ bool ScanFunctions::visit(FunctionExpression *ast)
     return true;
 }
 
+bool ScanFunctions::visit(TemplateLiteral *ast)
+{
+    while (ast) {
+        if (ast->expression)
+            Node::accept(ast->expression, this);
+        ast = ast->next;
+    }
+    return true;
+
+}
+
 void ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
 {
     if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))

@@ -1933,6 +1933,49 @@ bool Codegen::visit(StringLiteral *ast)
     return false;
 }
 
+bool Codegen::visit(TemplateLiteral *ast)
+{
+    if (hasError)
+        return false;
+
+    Instruction::LoadRuntimeString instr;
+    instr.stringId = registerString(ast->value.toString());
+    bytecodeGenerator->addInstruction(instr);
+
+    if (ast->expression) {
+        RegisterScope scope(this);
+        int temp = bytecodeGenerator->newRegister();
+        Instruction::StoreReg store;
+        store.reg = temp;
+        bytecodeGenerator->addInstruction(store);
+
+        Reference expr = expression(ast->expression);
+
+        if (ast->next) {
+            int temp2 = bytecodeGenerator->newRegister();
+            expr.storeOnStack(temp2);
+            visit(ast->next);
+
+            Instruction::Add instr;
+            instr.lhs = temp2;
+            bytecodeGenerator->addInstruction(instr);
+        } else {
+            expr.loadInAccumulator();
+        }
+
+        Instruction::Add instr;
+        instr.lhs = temp;
+        bytecodeGenerator->addInstruction(instr);
+    }
+
+    auto r = Reference::fromAccumulator(this);
+    r.isReadonly = true;
+
+    _expr.setResult(r);
+    return false;
+
+}
+
 bool Codegen::visit(ThisExpression *)
 {
     if (hasError)

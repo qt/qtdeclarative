@@ -55,6 +55,7 @@
 #include <private/qqmljsgrammar_p.h>
 
 #include <QtCore/qstring.h>
+#include <QtCore/qstack.h>
 
 QT_QML_BEGIN_NAMESPACE
 
@@ -167,6 +168,13 @@ private:
     inline void scanChar();
     int scanToken();
     int scanNumber(QChar ch);
+    enum ScanStringMode {
+        SingleQuote = '\'',
+        DoubleQuote = '"',
+        TemplateHead = '`',
+        TemplateContinuation = 0
+    };
+    int scanString(ScanStringMode mode);
 
     bool isLineTerminator() const;
     unsigned isLineTerminatorSequence() const;
@@ -201,6 +209,10 @@ private:
     // parentheses state
     ParenthesesState _parenthesesState;
     int _parenthesesCount;
+
+    // template string stack
+    QStack<int> _outerTemplateBraceCount;
+    int _bracesCount = -1;
 
     int _stackToken;
 

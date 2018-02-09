@@ -50,6 +50,9 @@ private slots:
     void qmlParser();
 #endif
     void invalidEscapeSequence();
+    void stringLiteral();
+    void noSubstitutionTemplateLiteral();
+    void templateLiteral();
 
 private:
     QStringList excludedDirs;
@@ -202,6 +205,67 @@ void tst_qqmlparser::invalidEscapeSequence()
     lexer.setCode(QLatin1String("\"\\"), 1);
     Parser parser(&engine);
     parser.parse();
+}
+
+void tst_qqmlparser::stringLiteral()
+{
+    using namespace QQmlJS;
+
+    Engine engine;
+    Lexer lexer(&engine);
+    QLatin1String code("'hello string'");
+    lexer.setCode(code , 1);
+    Parser parser(&engine);
+    QVERIFY(parser.parseExpression());
+    AST::ExpressionNode *expression = parser.expression();
+    QVERIFY(expression);
+    auto *literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(expression);
+    QVERIFY(literal);
+    QCOMPARE(literal->value, "hello string");
+    QCOMPARE(literal->firstSourceLocation().begin(), 0);
+    QCOMPARE(literal->lastSourceLocation().end(), code.size());
+}
+
+void tst_qqmlparser::noSubstitutionTemplateLiteral()
+{
+    using namespace QQmlJS;
+
+    Engine engine;
+    Lexer lexer(&engine);
+    QLatin1String code("`hello template`");
+    lexer.setCode(code, 1);
+    Parser parser(&engine);
+    QVERIFY(parser.parseExpression());
+    AST::ExpressionNode *expression = parser.expression();
+    QVERIFY(expression);
+
+    auto *literal = QQmlJS::AST::cast<QQmlJS::AST::TemplateLiteral *>(expression);
+    QVERIFY(literal);
+
+    QCOMPARE(literal->value, "hello template");
+    QCOMPARE(literal->firstSourceLocation().begin(), 0);
+    QCOMPARE(literal->lastSourceLocation().end(), code.size());
+}
+
+void tst_qqmlparser::templateLiteral()
+{
+    using namespace QQmlJS;
+
+    Engine engine;
+    Lexer lexer(&engine);
+    QLatin1String code("`one plus one equals ${1+1}!`");
+    lexer.setCode(code, 1);
+    Parser parser(&engine);
+    QVERIFY(parser.parseExpression());
+    AST::ExpressionNode *expression = parser.expression();
+    QVERIFY(expression);
+
+    auto *templateLiteral = QQmlJS::AST::cast<QQmlJS::AST::TemplateLiteral *>(expression);
+    QVERIFY(templateLiteral);
+
+    QCOMPARE(templateLiteral->firstSourceLocation().begin(), 0);
+    auto *e = templateLiteral->expression;
+    QVERIFY(e);
 }
 
 QTEST_MAIN(tst_qqmlparser)

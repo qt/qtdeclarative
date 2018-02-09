@@ -110,6 +110,7 @@ protected:
     bool visit(AST::IdentifierExpression *ast) override;
     bool visit(AST::ExpressionStatement *ast) override;
     bool visit(AST::FunctionExpression *ast) override;
+    bool visit(AST::TemplateLiteral *ast) override;
 
     void enterFunction(AST::FunctionExpression *ast, bool enterName);
 
