@@ -450,12 +450,11 @@ bool QQuickPopupPrivate::prepareExitTransition()
         return false;
 
     if (transitionState != ExitTransition) {
-        if (focus) {
-            // The setFocus(false) call below removes any active focus before we're
-            // able to check it in finalizeExitTransition.
-            hadActiveFocusBeforeExitTransition = popupItem->hasActiveFocus();
+        // The setFocus(false) call below removes any active focus before we're
+        // able to check it in finalizeExitTransition.
+        hadActiveFocusBeforeExitTransition = popupItem->hasActiveFocus();
+        if (focus)
             popupItem->setFocus(false);
-        }
         transitionState = ExitTransition;
         hideOverlay();
         emit q->aboutToHide();
