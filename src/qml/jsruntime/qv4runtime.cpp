@@ -1269,6 +1269,16 @@ QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine
     return engine->memoryManager->allocObject<StrictArgumentsObject>(ic, engine->currentStackFrame)->asReturnedValue();
 }
 
+QV4::ReturnedValue Runtime::method_createRestParameter(ExecutionEngine *engine, int argIndex)
+{
+    const Value *values = engine->currentStackFrame->originalArguments + argIndex;
+    int nValues = engine->currentStackFrame->originalArgumentsCount - argIndex;
+    if (nValues <= 0)
+        return engine->newArrayObject(0)->asReturnedValue();
+    return engine->newArrayObject(values, nValues)->asReturnedValue();
+}
+
+
 ReturnedValue Runtime::method_loadQmlContext(NoThrowEngine *engine)
 {
     Heap::QmlContext *ctx = engine->qmlContext();

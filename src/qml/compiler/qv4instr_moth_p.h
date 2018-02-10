@@ -128,6 +128,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_DefineObjectLiteral(op) INSTRUCTION(op, DefineObjectLiteral, 4, internalClassId, arrayValueCount, arrayGetterSetterCountAndFlags, args)
 #define INSTR_CreateMappedArgumentsObject(op) INSTRUCTION(op, CreateMappedArgumentsObject, 0)
 #define INSTR_CreateUnmappedArgumentsObject(op) INSTRUCTION(op, CreateUnmappedArgumentsObject, 0)
+#define INSTR_CreateRestParameter(op) INSTRUCTION(op, CreateRestParameter, 1, argIndex)
 #define INSTR_ConvertThisToObject(op) INSTRUCTION(op, ConvertThisToObject, 0)
 #define INSTR_Construct(op) INSTRUCTION(op, Construct, 3, func, argc, argv)
 #define INSTR_Jump(op) INSTRUCTION(op, Jump, 1, offset)
@@ -245,6 +246,7 @@ QT_BEGIN_NAMESPACE
     F(DefineObjectLiteral) \
     F(CreateMappedArgumentsObject) \
     F(CreateUnmappedArgumentsObject) \
+    F(CreateRestParameter) \
     F(ConvertThisToObject) \
     F(Construct) \
     F(Jump) \

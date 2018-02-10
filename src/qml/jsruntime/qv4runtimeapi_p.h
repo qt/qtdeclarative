@@ -134,6 +134,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(void, declareVar, (ExecutionEngine *engine, bool deletable, int nameIndex)) \
     F(ReturnedValue, createMappedArgumentsObject, (ExecutionEngine *engine)) \
     F(ReturnedValue, createUnmappedArgumentsObject, (ExecutionEngine *engine)) \
+    F(ReturnedValue, createRestParameter, (ExecutionEngine *engine, int argIndex)) \
     \
     /* literals */ \
     F(ReturnedValue, arrayLiteral, (ExecutionEngine *engine, Value *values, uint length)) \

@@ -454,6 +454,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(CreateUnmappedArgumentsObject)
         MOTH_END_INSTR(CreateUnmappedArgumentsObject)
 
+        MOTH_BEGIN_INSTR(CreateRestParameter)
+            d << argIndex;
+        MOTH_END_INSTR(CreateRestParameter)
+
         MOTH_BEGIN_INSTR(ConvertThisToObject)
         MOTH_END_INSTR(ConvertThisToObject)
 

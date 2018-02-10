@@ -781,6 +781,14 @@ void BaselineJIT::generate_CreateUnmappedArgumentsObject()
                               Assembler::ResultInAccumulator);
 }
 
+void BaselineJIT::generate_CreateRestParameter(int argIndex)
+{
+    as->prepareCallWithArgCount(2);
+    as->passInt32AsArg(argIndex, 1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_createRestParameter, Assembler::ResultInAccumulator);
+}
+
 static void convertThisToObjectHelper(ExecutionEngine *engine, Value *t)
 {
     if (!t->isObject()) {
@@ -1172,6 +1180,9 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(CreateUnmappedArgumentsObject)
         MOTH_END_INSTR(CreateUnmappedArgumentsObject)
+
+        MOTH_BEGIN_INSTR(CreateRestParameter)
+        MOTH_END_INSTR(CreateRestParameter)
 
         MOTH_BEGIN_INSTR(ConvertThisToObject)
         MOTH_END_INSTR(ConvertThisToObject)

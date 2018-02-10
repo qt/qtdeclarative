@@ -2339,10 +2339,15 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         bytecodeGenerator->addInstruction(convert);
     }
 
+    int argc = 0;
     while (formals) {
         if (formals->isRest) {
-            // #### implement me
-            throwSyntaxError(formals->firstSourceLocation(), QString::fromLatin1("Support for rest parameters not implemented!"));
+            Q_ASSERT(!formals->next);
+            Instruction::CreateRestParameter rest;
+            rest.argIndex = argc;
+            bytecodeGenerator->addInstruction(rest);
+            Reference f = referenceForName(formals->name.toString(), true);
+            f.storeConsumeAccumulator();
         }
         if (formals->defaultExpression) {
             RegisterScope scope(this);
@@ -2354,6 +2359,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             jump.link();
         }
         formals = formals->next;
+        ++argc;
     }
 
     beginFunctionBodyHook();

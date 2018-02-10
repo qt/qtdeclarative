@@ -192,6 +192,7 @@ public:
                                       int args) override;
     void generate_CreateMappedArgumentsObject() override;
     void generate_CreateUnmappedArgumentsObject() override;
+    void generate_CreateRestParameter(int argIndex) override;
     void generate_ConvertThisToObject() override;
     void generate_Construct(int func, int argc, int argv) override;
     void generate_Jump(int offset) override;

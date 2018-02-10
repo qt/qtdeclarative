@@ -981,6 +981,10 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         acc = Runtime::method_createUnmappedArgumentsObject(engine);
     MOTH_END_INSTR(CreateUnmappedArgumentsObject)
 
+    MOTH_BEGIN_INSTR(CreateRestParameter)
+        acc = Runtime::method_createRestParameter(engine, argIndex);
+    MOTH_END_INSTR(CreateRestParameter)
+
     MOTH_BEGIN_INSTR(ConvertThisToObject)
         Value *t = &stack[CallData::This];
         if (!t->isObject()) {
