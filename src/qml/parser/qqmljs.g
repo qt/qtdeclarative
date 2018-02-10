@@ -2659,7 +2659,7 @@ case $rule_number: {
 } break;
 ./
 
-VariableDeclaration: JsIdentifier InitialiserOpt ;
+VariableDeclaration: JsIdentifier InitializerOpt ;
 /.
 case $rule_number: {
   AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
@@ -2669,7 +2669,7 @@ case $rule_number: {
 } break;
 ./
 
-VariableDeclarationNotIn: JsIdentifier InitialiserNotInOpt ;
+VariableDeclarationNotIn: JsIdentifier InitializerNotInOpt ;
 /.
 case $rule_number: {
   AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
@@ -2679,7 +2679,7 @@ case $rule_number: {
 } break;
 ./
 
-Initialiser: T_EQ AssignmentExpression ;
+Initializer: T_EQ AssignmentExpression ;
 /.
 case $rule_number: {
   // ### TODO: AST for initializer
@@ -2687,16 +2687,16 @@ case $rule_number: {
 } break;
 ./
 
-InitialiserOpt: ;
+InitializerOpt: ;
 /.
 case $rule_number: {
   sym(1).Node = 0;
 } break;
 ./
 
-InitialiserOpt: Initialiser ;
+InitializerOpt: Initializer ;
 
-InitialiserNotIn: T_EQ AssignmentExpressionNotIn ;
+InitializerNotIn: T_EQ AssignmentExpressionNotIn ;
 /.
 case $rule_number: {
   // ### TODO: AST for initializer
@@ -2704,14 +2704,14 @@ case $rule_number: {
 } break;
 ./
 
-InitialiserNotInOpt: ;
+InitializerNotInOpt: ;
 /.
 case $rule_number: {
   sym(1).Node = 0;
 } break;
 ./
 
-InitialiserNotInOpt: InitialiserNotIn ;
+InitializerNotInOpt: InitializerNotIn ;
 
 EmptyStatement: T_SEMICOLON ;
 /.
@@ -3158,17 +3158,17 @@ case $rule_number: {
 ./
 
 BindingElement: SingleNameBinding ;
--- BindingElement: BindingPattern InitialiserOpt ;
+-- BindingElement: BindingPattern InitializerOpt ;
 
 -- BindingPattern: ObjectBindingPattern ;
 -- BindingPattern: ArrayBindingPattern ;
 
-SingleNameBinding: BindingIdentifier InitialiserOpt ;
+SingleNameBinding: BindingIdentifier InitializerOpt ;
 /.
 case $rule_number: {
   AST::FormalParameterList *node = new (pool) AST::FormalParameterList(stringRef(1));
   node->identifierToken = loc(1);
-  node->defaultExpression = sym(2).Expression;
+  node->initializer = sym(2).Expression;
   sym(1).Node = node;
 } break;
 ./

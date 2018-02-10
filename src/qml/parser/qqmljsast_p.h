@@ -2103,7 +2103,7 @@ public:
     {
         AST::FormalParameterList *formals = this;
         while (formals) {
-            if (formals->isRest || formals->defaultExpression)
+            if (formals->isRest || formals->initializer)
                 return false;
             formals = formals->next;
         }
@@ -2129,7 +2129,7 @@ public:
 // attributes
     QStringRef name;
     bool isRest = false;
-    ExpressionNode *defaultExpression = nullptr;
+    ExpressionNode *initializer = nullptr;
     FormalParameterList *next;
     SourceLocation identifierToken;
 };

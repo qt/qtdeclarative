@@ -2342,12 +2342,12 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             Reference f = referenceForName(formals->name.toString(), true);
             f.storeConsumeAccumulator();
         }
-        if (formals->defaultExpression) {
+        if (formals->initializer) {
             RegisterScope scope(this);
             Reference f = referenceForName(formals->name.toString(), true);
             f.loadInAccumulator();
             BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
-            expression(formals->defaultExpression).loadInAccumulator();
+            expression(formals->initializer).loadInAccumulator();
             f.storeConsumeAccumulator();
             jump.link();
         }
