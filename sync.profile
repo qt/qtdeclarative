@@ -7,3 +7,6 @@
     "QtPacketProtocol" => "$basedir/src/plugins/qmltooling/packetprotocol",
     "QtQmlDebug" => "$basedir/src/qmldebug",
 );
+%inject_headers = (
+    "$basedir/src/qml" => [ "^qqmljsgrammar_p.h", "^qqmljsparser_p.h" ],
+);

@@ -51,8 +51,8 @@
 // We mean it.
 //
 
-#include "qqmljsglobal_p.h"
-#include "qqmljsgrammar_p.h"
+#include <private/qqmljsglobal_p.h>
+#include <private/qqmljsgrammar_p.h>
 
 #include <QtCore/qstring.h>
 

@@ -143,10 +143,10 @@
 **
 ****************************************************************************/
 
-#include "qqmljsengine_p.h"
-#include "qqmljslexer_p.h"
-#include "qqmljsast_p.h"
-#include "qqmljsmemorypool_p.h"
+#include <private/qqmljsengine_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsast_p.h>
+#include <private/qqmljsmemorypool_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qcoreapplication.h>
@@ -221,10 +221,10 @@
 #ifndef QQMLJSPARSER_P_H
 #define QQMLJSPARSER_P_H
 
-#include "qqmljsglobal_p.h"
-#include "qqmljsgrammar_p.h"
-#include "qqmljsast_p.h"
-#include "qqmljsengine_p.h"
+#include <private/qqmljsglobal_p.h>
+#include <private/qqmljsgrammar_p.h>
+#include <private/qqmljsast_p.h>
+#include <private/qqmljsengine_p.h>
 
 #include <QtCore/qlist.h>
 #include <QtCore/qstring.h>
