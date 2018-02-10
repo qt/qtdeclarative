@@ -120,6 +120,9 @@ void Codegen::generateFromProgram(const QString &fileName,
     ScanFunctions scan(this, sourceCode, mode);
     scan(node);
 
+    if (hasError)
+        return;
+
     defineFunction(QStringLiteral("%entry"), node, nullptr, node->elements);
 }
 
@@ -2210,16 +2213,6 @@ static bool endsWithReturn(Node *node)
     return false;
 }
 
-static bool isSimpleParameterList(AST::FormalParameterList *formals)
-{
-    while (formals) {
-        if (formals->isRest || formals->defaultExpression)
-            return false;
-        formals = formals->next;
-    }
-    return true;
-}
-
 int Codegen::defineFunction(const QString &name, AST::Node *ast,
                             AST::FormalParameterList *formals,
                             AST::SourceElements *body)
@@ -2324,7 +2317,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     }
     if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-        if (_context->isStrict || !isSimpleParameterList(formals)) {
+        if (_context->isStrict || !formals->isSimpleParameterList()) {
             Instruction::CreateUnmappedArgumentsObject setup;
             bytecodeGenerator->addInstruction(setup);
         } else {

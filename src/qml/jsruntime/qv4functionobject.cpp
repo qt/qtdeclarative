@@ -240,6 +240,9 @@ ReturnedValue FunctionCtor::callAsConstructor(const FunctionObject *f, const Val
     RuntimeCodegen cg(scope.engine, &jsGenerator, false);
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
+    if (scope.hasException())
+        return Encode::undefined();
+
     QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = cg.generateCompilationUnit();
     Function *vmf = compilationUnit->linkToEngine(scope.engine);
 

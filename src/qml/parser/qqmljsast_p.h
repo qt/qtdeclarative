@@ -2099,6 +2099,18 @@ public:
         return n;
     }
 
+    bool isSimpleParameterList()
+    {
+        AST::FormalParameterList *formals = this;
+        while (formals) {
+            if (formals->isRest || formals->defaultExpression)
+                return false;
+            formals = formals->next;
+        }
+        return true;
+    }
+
+
     void accept0(Visitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override

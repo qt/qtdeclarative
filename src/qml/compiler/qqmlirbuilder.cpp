@@ -1824,6 +1824,9 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     }
     scan.leaveEnvironment();
 
+    if (hasError)
+        return QVector<int>();
+
     _context = nullptr;
 
     for (int i = 0; i < functions.count(); ++i) {
