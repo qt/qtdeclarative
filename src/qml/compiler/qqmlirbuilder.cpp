@@ -983,14 +983,15 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
         f->index = index;
         f->nameIndex = registerString(funDecl->name.toString());
 
-        int formalsCount = 0;
-        for (QQmlJS::AST::FormalParameterList *it = funDecl->formals; it; it = it->next)
-            ++formalsCount;
+        const QStringList formals = funDecl->formals->formals();
+        int formalsCount = formals.size();
         f->formals.allocate(pool, formalsCount);
 
         int i = 0;
-        for (QQmlJS::AST::FormalParameterList *it = funDecl->formals; it; it = it->next, ++i)
-            f->formals[i] = registerString(it->name.toString());
+        for (const QString &arg : formals) {
+            f->formals[i] = registerString(arg);
+            ++i;
+        }
 
         _object->appendFunction(f);
     } else {

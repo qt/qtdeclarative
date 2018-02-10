@@ -427,6 +427,56 @@ void Codegen::variableDeclarationList(VariableDeclarationList *ast)
     }
 }
 
+void Codegen::initializeAndDestructureBindingElement(AST::BindingElement *e, const Codegen::Reference &baseRef)
+{
+    RegisterScope scope(this);
+    Reference varToStore = referenceForName(e->name, true);
+    if (e->initializer && baseRef == varToStore) {
+        baseRef.loadInAccumulator();
+        BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
+        expression(e->initializer).loadInAccumulator();
+        varToStore.storeConsumeAccumulator();
+        jump.link();
+    } else if (e->initializer) {
+        baseRef.loadInAccumulator();
+        BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
+        expression(e->initializer).loadInAccumulator();
+        jump.link();
+        varToStore.storeConsumeAccumulator();
+    } else if (baseRef != varToStore) {
+        baseRef.loadInAccumulator();
+        varToStore.storeConsumeAccumulator();
+    }
+    if (BindingElementList *l = e->elementList()) {
+        destructureElementList(varToStore, l);
+    } else if (BindingPropertyList *p = e->propertyList()) {
+        destructurePropertyList(varToStore, p);
+    }
+}
+
+void Codegen::destructurePropertyList(const Codegen::Reference &object, BindingPropertyList *bindingList)
+{
+    Q_UNUSED(object);
+    Q_UNUSED(bindingList);
+
+    RegisterScope scope(this);
+
+    for (BindingPropertyList *p = bindingList; p; p = p->next) {
+        RegisterScope scope(this);
+        QString propertyName = p->propertyName->asString();
+        Reference property = Reference::fromMember(object, propertyName);
+        initializeAndDestructureBindingElement(p->binding, property);
+    }
+
+}
+
+void Codegen::destructureElementList(const Codegen::Reference &array, BindingElementList *bindingList)
+{
+    Q_UNUSED(array);
+    // #### implement me
+    throwSyntaxError(bindingList->firstSourceLocation(), QString::fromLatin1("Support for binding element lists not implemented!"));
+}
+
 
 bool Codegen::visit(ArgumentList *)
 {
@@ -2334,22 +2384,18 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     int argc = 0;
     while (formals) {
-        if (formals->isRest) {
+        if (AST::BindingRestElement *r = formals->bindingRestElement()) {
             Q_ASSERT(!formals->next);
             Instruction::CreateRestParameter rest;
             rest.argIndex = argc;
             bytecodeGenerator->addInstruction(rest);
-            Reference f = referenceForName(formals->name.toString(), true);
+            Reference f = referenceForName(r->name.toString(), true);
             f.storeConsumeAccumulator();
-        }
-        if (formals->initializer) {
-            RegisterScope scope(this);
-            Reference f = referenceForName(formals->name.toString(), true);
-            f.loadInAccumulator();
-            BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
-            expression(formals->initializer).loadInAccumulator();
-            f.storeConsumeAccumulator();
-            jump.link();
+        } else if (BindingElement *e = formals->bindingElement()) {
+            Reference arg = referenceForName(e->name, true);
+            initializeAndDestructureBindingElement(e, arg);
+        } else {
+            Q_UNREACHABLE();
         }
         formals = formals->next;
         ++argc;

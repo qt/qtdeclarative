@@ -263,9 +263,8 @@ struct Context {
             return true;
 
         if (type != FunctionDefinition) {
-            for (QQmlJS::AST::FormalParameterList *it = formals; it; it = it->next)
-                if (it->name == name)
-                    return (scope == QQmlJS::AST::VariableDeclaration::FunctionScope);
+            if (formals->containsName(name))
+                return (scope == QQmlJS::AST::VariableDeclaration::FunctionScope);
         }
         MemberMap::iterator it = members.find(name);
         if (it != members.end()) {

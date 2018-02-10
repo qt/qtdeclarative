@@ -205,6 +205,10 @@ public:
         Kind_WhileStatement,
         Kind_WithStatement,
         Kind_NestedExpression,
+        Kind_BindingElement,
+        Kind_BindingElementList,
+        Kind_BindingPropertyList,
+        Kind_BindingRestElement,
 
         Kind_UiArrayBinding,
         Kind_UiImport,
@@ -2064,6 +2068,119 @@ public:
     SourceLocation rbraceToken;
 };
 
+class QML_PARSER_EXPORT BindingRestElement : public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(BindingRestElement)
+
+    BindingRestElement(const QStringRef &n)
+        : name(n)
+    { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return identifierToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return identifierToken; }
+
+// attributes
+    SourceLocation identifierToken;
+    QStringRef name;
+};
+
+class QML_PARSER_EXPORT BindingElement : public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(BindingElement)
+
+    BindingElement(const QStringRef &n, ExpressionNode *i = nullptr)
+        : name(n.toString()), initializer(i)
+    { kind = K; }
+
+    BindingElement(Node *binding, ExpressionNode *i = nullptr)
+        : binding(binding), initializer(i)
+    { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return identifierToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return initializer ? initializer->lastSourceLocation() : (binding ? binding->lastSourceLocation() : identifierToken); }
+
+    BindingElementList *elementList() const { return cast<BindingElementList *>(binding); }
+    BindingPropertyList *propertyList() const { return cast<BindingPropertyList *>(binding); }
+
+    void boundNames(QStringList *names);
+
+// attributes
+    SourceLocation identifierToken;
+    Node *binding = nullptr;
+    QString name;
+    ExpressionNode *initializer = nullptr;
+};
+
+class QML_PARSER_EXPORT BindingElementList : public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(BindingElementList)
+
+    BindingElementList()
+    { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    void boundNames(QStringList *names);
+
+    SourceLocation firstSourceLocation() const override
+    { return loc; }
+
+    SourceLocation lastSourceLocation() const override
+    { return loc; }
+
+    SourceLocation loc;
+};
+
+class QML_PARSER_EXPORT BindingPropertyList : public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(BindingPropertyList)
+
+    BindingPropertyList(PropertyName *n, BindingElement *e)
+        : propertyName(n), binding(e), next(this)
+    { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    void boundNames(QStringList *names);
+
+    BindingPropertyList *append(BindingPropertyList *n) {
+        n->next = next;
+        next = n;
+        return n;
+    }
+
+    inline BindingPropertyList *finish ()
+    {
+        BindingPropertyList *front = next;
+        next = 0;
+        return front;
+    }
+
+    SourceLocation firstSourceLocation() const override
+    { return propertyName->firstSourceLocation(); }
+
+    SourceLocation lastSourceLocation() const override
+    { return next ? next->lastSourceLocation() : binding->lastSourceLocation(); }
+
+    PropertyName *propertyName;
+    BindingElement *binding;
+    BindingPropertyList *next;
+};
+
 class QML_PARSER_EXPORT FunctionDeclaration: public FunctionExpression
 {
 public:
@@ -2081,16 +2198,16 @@ class QML_PARSER_EXPORT FormalParameterList: public Node
 public:
     QQMLJS_DECLARE_AST_NODE(FormalParameterList)
 
-    FormalParameterList(const QStringRef &n)
-        : name(n), next(this)
-        { kind = K; }
-
-    FormalParameterList(FormalParameterList *previous, const QStringRef &n):
-        name (n)
+    FormalParameterList(FormalParameterList *previous, Node *p)
+        : param(p)
     {
         kind = K;
-        next = previous->next;
-        previous->next = this;
+        if (previous) {
+            next = previous->next;
+            previous->next = this;
+        } else {
+            next = this;
+        }
     }
 
     FormalParameterList *append(FormalParameterList *n) {
@@ -2099,39 +2216,60 @@ public:
         return n;
     }
 
+    BindingRestElement *bindingRestElement() const {
+        return cast<BindingRestElement *>(param);
+    }
+
+    BindingElement *bindingElement() const {
+        return cast<BindingElement *>(param);
+    }
+
     bool isSimpleParameterList()
     {
         AST::FormalParameterList *formals = this;
         while (formals) {
-            if (formals->isRest || formals->initializer)
+            if (formals->bindingRestElement())
+                return false;
+            BindingElement *e = formals->bindingElement();
+            Q_ASSERT(e);
+            if (e->initializer || e->binding)
                 return false;
             formals = formals->next;
         }
         return true;
     }
 
+    bool containsName(const QString &name) const {
+        for (const FormalParameterList *it = this; it; it = it->next) {
+            if (QQmlJS::AST::BindingElement *b = it->bindingElement()) {
+                // ### handle binding patterns
+                if (b->name == name)
+                    return true;
+            } else if (QQmlJS::AST::BindingRestElement *r = it->bindingRestElement()) {
+                if (r->name == name)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    QStringList formals() const;
+
+    QStringList boundNames() const;
 
     void accept0(Visitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
-    { return identifierToken; }
+    { return param->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : identifierToken; }
+    { return next ? next->lastSourceLocation() : param->lastSourceLocation(); }
 
-    inline FormalParameterList *finish ()
-    {
-        FormalParameterList *front = next;
-        next = nullptr;
-        return front;
-    }
+    FormalParameterList *finish();
 
 // attributes
-    QStringRef name;
-    bool isRest = false;
-    ExpressionNode *initializer = nullptr;
+    Node *param = nullptr;
     FormalParameterList *next;
-    SourceLocation identifierToken;
 };
 
 class QML_PARSER_EXPORT SourceElement: public Node

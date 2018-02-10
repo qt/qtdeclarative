@@ -273,6 +273,8 @@ public:
       AST::Block *Block;
       AST::VariableDeclaration *VariableDeclaration;
       AST::VariableDeclarationList *VariableDeclarationList;
+      AST::BindingElement *BindingElement;
+      AST::BindingPropertyList *BindingPropertyList;
 
       AST::UiProgram *UiProgram;
       AST::UiHeaderItemList *UiHeaderItemList;
@@ -1598,6 +1600,15 @@ case $rule_number: {
 } break;
 ./
 
+ElisionOpt: ;
+/.
+case $rule_number: {
+  sym(1).Node = nullptr;
+} break;
+./
+
+ElisionOpt: Elision ;
+
 PropertyAssignment: PropertyName T_COLON AssignmentExpression ;
 /.
 case $rule_number: {
@@ -2669,6 +2680,8 @@ case $rule_number: {
 } break;
 ./
 
+-- VariableDeclaration: BindingPattern InitializerOpt ;
+
 VariableDeclarationNotIn: JsIdentifier InitializerNotInOpt ;
 /.
 case $rule_number: {
@@ -2678,6 +2691,8 @@ case $rule_number: {
   sym(1).Node = node;
 } break;
 ./
+
+-- VariableDeclarationNotIn: BindingPattern InitializerNotInOpt ;
 
 Initializer: T_EQ AssignmentExpression ;
 /.
@@ -3128,48 +3143,120 @@ case $rule_number: {
 } break;
 ./
 
-FormalParameterList: FunctionRestParameter ;
-
-FormalParameterList: FormalsList ;
-
-FormalsList: FormalParameter ;
-
-FormalParameterList: FormalsList T_COMMA FunctionRestParameter ;
+FormalsList: BindingElement ;
 /. case $rule_number: ./
 
-FormalsList: FormalsList T_COMMA FormalParameter ;
+FormalParameterList: BindingRestElement ;
 /.
 case $rule_number: {
-    sym(1).FormalParameterList = sym(1).FormalParameterList->append(sym(3).FormalParameterList);
+    AST::FormalParameterList *node = new (pool) AST::FormalParameterList(nullptr, sym(1).Node);
+    sym(1).Node = node;
 } break;
 ./
 
-FunctionRestParameter: BindingRestElement ;
-FormalParameter: BindingElement ;
+FormalParameterList: FormalsList ;
+
+FormalParameterList: FormalsList T_COMMA BindingRestElement ;
+/. case $rule_number: ./
+
+FormalsList: FormalsList T_COMMA BindingElement ;
+/.
+case $rule_number: {
+    AST::FormalParameterList *node = new (pool) AST::FormalParameterList(sym(1).FormalParameterList, sym(3).Node);
+    sym(1).Node = node;
+} break;
+./
 
 BindingRestElement: T_ELLIPSIS BindingIdentifier ;
 /.
 case $rule_number: {
-  AST::FormalParameterList *node = new (pool) AST::FormalParameterList(stringRef(2));
+  AST::BindingRestElement *node = new (pool) AST::BindingRestElement(stringRef(2));
   node->identifierToken = loc(2);
-  node->isRest = true;
   sym(1).Node = node;
 } break;
 ./
 
-BindingElement: SingleNameBinding ;
--- BindingElement: BindingPattern InitializerOpt ;
+BindingRestElementOpt: ;
+BindingRestElementOpt: BindingRestElement ;
 
--- BindingPattern: ObjectBindingPattern ;
--- BindingPattern: ArrayBindingPattern ;
-
-SingleNameBinding: BindingIdentifier InitializerOpt ;
+BindingElement: BindingIdentifier InitializerOpt ;
 /.
 case $rule_number: {
-  AST::FormalParameterList *node = new (pool) AST::FormalParameterList(stringRef(1));
+  AST::BindingElement *node = new (pool) AST::BindingElement(stringRef(1), sym(2).Expression);
   node->identifierToken = loc(1);
-  node->initializer = sym(2).Expression;
   sym(1).Node = node;
+} break;
+./
+
+BindingElement: BindingPattern InitializerOpt ;
+/.
+case $rule_number: {
+    AST::BindingElement *node = new (pool) AST::BindingElement(sym(1).Node, sym(2).Expression);
+    node->identifierToken = loc(1);
+    sym(1).Node = node;
+} break;
+./
+
+BindingPattern: ObjectBindingPattern ;
+
+BindingPattern: ArrayBindingPattern ;
+/.
+case $rule_number: {
+    AST::BindingElementList *node = new (pool) AST::BindingElementList();
+    node->loc = loc(1);
+    sym(1).Node = node;
+} break;
+./
+
+ObjectBindingPattern: T_LBRACE T_RBRACE ;
+/.
+case $rule_number: {
+    sym(1).Node = nullptr;
+} break;
+./
+
+ObjectBindingPattern: T_LBRACE BindingPropertyList T_RBRACE ;
+/. case $rule_number: ./
+ObjectBindingPattern: T_LBRACE BindingPropertyList T_COMMA T_RBRACE ;
+/.
+case $rule_number: {
+    sym(1).Node = sym(2).BindingPropertyList->finish();
+} break;
+./
+
+ArrayBindingPattern: T_LBRACKET ElisionOpt BindingRestElementOpt T_RBRACKET ;
+ArrayBindingPattern: T_LBRACKET BindingElementList T_RBRACKET ;
+ArrayBindingPattern: T_LBRACKET BindingElementList T_COMMA ElisionOpt BindingRestElementOpt T_RBRACKET ;
+
+BindingPropertyList: BindingProperty ;
+
+BindingPropertyList: BindingPropertyList T_COMMA BindingProperty ;
+/.
+case $rule_number: {
+    sym(1).Node = sym(1).BindingPropertyList->append(sym(3).BindingPropertyList);
+} break;
+./
+
+BindingElementList: BindingElisionElement ;
+BindingElementList: BindingElementList T_COMMA BindingElisionElement ;
+
+BindingElisionElement: ElisionOpt BindingElement ;
+
+BindingProperty: BindingIdentifier InitializerOpt ;
+/.
+case $rule_number: {
+    AST::StringLiteralPropertyName *name = new (pool) AST::StringLiteralPropertyName(stringRef(1));
+    AST::BindingElement *e = new (pool) AST::BindingElement(stringRef(1), sym(2).Expression);
+    AST::BindingPropertyList *node = new (pool) AST::BindingPropertyList(name, e);
+    sym(1).Node = node;
+} break;
+./
+
+BindingProperty: PropertyName T_COLON BindingElement ;
+/.
+case $rule_number: {
+    AST::BindingPropertyList *node = new (pool) AST::BindingPropertyList(sym(1).PropertyName, sym(3).BindingElement);
+    sym(1).Node = node;
 } break;
 ./
 

@@ -762,6 +762,41 @@ void FunctionExpression::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+QStringList FormalParameterList::formals() const
+{
+    QStringList formals;
+    int i = 0;
+    for (const FormalParameterList *it = this; it; it = it->next) {
+        QString name;
+        if (QQmlJS::AST::BindingElement *b = it->bindingElement()) {
+            name = b->name;
+        } else if (QQmlJS::AST::BindingRestElement *r = it->bindingRestElement()) {
+            name = r->name.toString();
+        }
+        int duplicateIndex = formals.indexOf(name);
+        if (duplicateIndex >= 0) {
+            // change the name of the earlier argument to enforce the lookup semantics from the spec
+            formals[duplicateIndex] += QLatin1String("#") + QString::number(i);
+        }
+        formals += name;
+        ++i;
+    }
+    return formals;
+}
+
+QStringList FormalParameterList::boundNames() const
+{
+    QStringList names;
+    for (const FormalParameterList *it = this; it; it = it->next) {
+        if (QQmlJS::AST::BindingElement *b = it->bindingElement()) {
+            b->boundNames(&names);
+        } else if (QQmlJS::AST::BindingRestElement *r = it->bindingRestElement()) {
+            names += r->name.toString();
+        }
+    }
+    return names;
+}
+
 void FormalParameterList::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
@@ -769,6 +804,23 @@ void FormalParameterList::accept0(Visitor *visitor)
     }
 
     visitor->endVisit(this);
+}
+
+FormalParameterList *FormalParameterList::finish()
+{
+    FormalParameterList *front = next;
+    next = nullptr;
+
+    int i = 0;
+    for (const FormalParameterList *it = this; it; it = it->next) {
+        QString name;
+        if (QQmlJS::AST::BindingElement *b = it->bindingElement()) {
+            if (b->name.isEmpty())
+                name = QLatin1String("arg#") + QString::number(i);
+        }
+        ++i;
+    }
+    return front;
 }
 
 void FunctionBody::accept0(Visitor *visitor)
@@ -1001,6 +1053,63 @@ void TaggedTemplate::accept0(Visitor *visitor)
     }
 
     visitor->endVisit(this);
+}
+
+void BindingRestElement::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+    }
+
+    visitor->endVisit(this);
+}
+
+void BindingElement::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(initializer, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void BindingElement::boundNames(QStringList *names)
+{
+    if (binding) {
+        if (BindingElementList *e = elementList())
+            e->boundNames(names);
+        else if (BindingPropertyList *p = propertyList())
+            p->boundNames(names);
+    } else
+        names->append(name);
+}
+
+void BindingElementList::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+    }
+
+    visitor->endVisit(this);
+}
+
+void BindingElementList::boundNames(QStringList *names)
+{
+    // ###
+    Q_UNUSED(names);
+
+}
+
+void BindingPropertyList::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+    }
+
+    visitor->endVisit(this);
+}
+
+void BindingPropertyList::boundNames(QStringList *names)
+{
+    for (BindingPropertyList *it = this; it; it = it->next)
+        it->binding->boundNames(names);
 }
 
 } } // namespace QQmlJS::AST

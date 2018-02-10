@@ -164,6 +164,11 @@ class FunctionSourceElement;
 class StatementSourceElement;
 class DebuggerStatement;
 class NestedExpression;
+class BindingElement;
+class BindingElementList;
+class BindingPropertyList;
+class BindingElement;
+class BindingRestElement;
 
 // ui elements
 class UiProgram;

@@ -320,6 +320,18 @@ public:
     virtual bool visit(FunctionExpression *) { return true; }
     virtual void endVisit(FunctionExpression *) {}
 
+    virtual bool visit(BindingElement *) { return true; }
+    virtual void endVisit(BindingElement *) {}
+
+    virtual bool visit(BindingElementList *) { return true; }
+    virtual void endVisit(BindingElementList *) {}
+
+    virtual bool visit(BindingPropertyList *) { return true; }
+    virtual void endVisit(BindingPropertyList *) {}
+
+    virtual bool visit(BindingRestElement *) { return true; }
+    virtual void endVisit(BindingRestElement *) {}
+
     virtual bool visit(FormalParameterList *) { return true; }
     virtual void endVisit(FormalParameterList *) {}
 

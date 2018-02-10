@@ -138,16 +138,6 @@ void ScanFunctions::checkName(const QStringRef &name, const SourceLocation &loc)
     }
 }
 
-bool ScanFunctions::formalsContainName(AST::FormalParameterList *parameters, const QString &name)
-{
-    while (parameters) {
-        if (parameters->name == name)
-            return true;
-        parameters = parameters->next;
-    }
-    return false;
-}
-
 bool ScanFunctions::visit(Program *ast)
 {
     enterEnvironment(ast, defaultProgramMode);
@@ -420,11 +410,11 @@ void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
             outerContext->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     }
 
-    if (formalsContainName(formals, QStringLiteral("arguments")))
+    if (formals->containsName(QStringLiteral("arguments")))
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
 
 
-    if (!name.isEmpty() && !formalsContainName(formals, name))
+    if (!name.isEmpty() && !formals->containsName(name))
         _context->addLocalVar(name, Context::ThisFunctionName, QQmlJS::AST::VariableDeclaration::FunctionScope);
     _context->formals = formals;
 
@@ -433,28 +423,26 @@ void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
 
     bool isSimpleParameterList = formals->isSimpleParameterList();
 
-    for (FormalParameterList *it = formals; it; it = it->next) {
-        QString arg = it->name.toString();
-        int duplicateIndex = _context->arguments.indexOf(arg);
-        if (duplicateIndex != -1) {
-            if (_context->isStrict || !isSimpleParameterList) {
-                _cg->throwSyntaxError(it->identifierToken, QStringLiteral("Duplicate parameter name '%1' is not allowed.").arg(arg));
+    _context->arguments = formals->formals();
+
+    const QStringList boundNames = formals->boundNames();
+    for (int i = 0; i < boundNames.size(); ++i) {
+        const QString &arg = boundNames.at(i);
+        if (_context->isStrict || !isSimpleParameterList) {
+            bool duplicate = (boundNames.indexOf(arg, i + 1) != -1);
+            if (duplicate) {
+                _cg->throwSyntaxError(formals->firstSourceLocation(), QStringLiteral("Duplicate parameter name '%1' is not allowed.").arg(arg));
                 return;
-            } else {
-                // change the name of the earlier argument to enforce the specified lookup semantics
-                QString modified = arg;
-                while (_context->arguments.contains(modified))
-                    modified += QString(0xfffe);
-                _context->arguments[duplicateIndex] = modified;
             }
         }
         if (_context->isStrict) {
             if (arg == QLatin1String("eval") || arg == QLatin1String("arguments")) {
-                _cg->throwSyntaxError(it->identifierToken, QStringLiteral("'%1' cannot be used as parameter name in strict mode").arg(arg));
+                _cg->throwSyntaxError(formals->firstSourceLocation(), QStringLiteral("'%1' cannot be used as parameter name in strict mode").arg(arg));
                 return;
             }
         }
-        _context->arguments += arg;
+        if (!_context->arguments.contains(arg))
+            _context->addLocalVar(arg, Context::VariableDefinition, QQmlJS::AST::VariableDeclaration::FunctionScope);
     }
 }
 

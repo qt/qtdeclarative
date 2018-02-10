@@ -466,10 +466,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         for (const QString &param : qAsConst(parameters)) {
             QStringRef paramNameRef = compiler->newStringRef(param);
 
-            if (paramList)
-                paramList = new (pool) QQmlJS::AST::FormalParameterList(paramList, paramNameRef);
-            else
-                paramList = new (pool) QQmlJS::AST::FormalParameterList(paramNameRef);
+            QQmlJS::AST::BindingElement *b = new (pool) QQmlJS::AST::BindingElement(paramNameRef, nullptr);
+            paramList = new (pool) QQmlJS::AST::FormalParameterList(paramList, b);
         }
 
         if (paramList)

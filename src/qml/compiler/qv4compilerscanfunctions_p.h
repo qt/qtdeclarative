@@ -98,7 +98,6 @@ protected:
     void checkDirectivePrologue(AST::SourceElements *ast);
 
     void checkName(const QStringRef &name, const AST::SourceLocation &loc);
-    bool formalsContainName(AST::FormalParameterList *parameters, const QString &name);
 
     bool visit(AST::Program *ast) override;
     void endVisit(AST::Program *) override;

@@ -197,6 +197,8 @@ public:
         Reference &operator =(const Reference &other);
 
         bool operator==(const Reference &other) const;
+        bool operator!=(const Reference &other) const
+        { return !(*this == other); }
 
         bool isValid() const { return type != Invalid; }
         bool loadTriggersSideEffect() const {
@@ -511,6 +513,10 @@ protected:
     void statementList(AST::StatementList *ast);
     void variableDeclaration(AST::VariableDeclaration *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
+
+    void initializeAndDestructureBindingElement(AST::BindingElement *e, const Reference &baseRef);
+    void destructurePropertyList(const Reference &object, AST::BindingPropertyList *bindingList);
+    void destructureElementList(const Reference &array, AST::BindingElementList *bindingList);
 
     Reference referenceForName(const QString &name, bool lhs);
 
