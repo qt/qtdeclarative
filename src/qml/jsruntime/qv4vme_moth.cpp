@@ -1023,6 +1023,11 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         }
     MOTH_END_INSTR(JumpFalse)
 
+    MOTH_BEGIN_INSTR(JumpNotUndefined)
+        if (Q_LIKELY(acc != QV4::Encode::undefined()))
+            code += offset;
+    MOTH_END_INSTR(JumpNotUndefined)
+
     MOTH_BEGIN_INSTR(CmpEqNull)
         acc = Encode(ACC.isNullOrUndefined());
     MOTH_END_INSTR(CmpEqNull)

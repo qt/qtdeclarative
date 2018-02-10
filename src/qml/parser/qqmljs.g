@@ -78,6 +78,7 @@
 %token T_COMMENT "comment"
 %token T_COMPATIBILITY_SEMICOLON
 %token T_ENUM "enum"
+%token T_ELLIPSIS "..."
 
 --- template strings
 %token T_NO_SUBSTITUTION_TEMPLATE
@@ -1621,7 +1622,7 @@ case $rule_number: {
 } break;
 ./
 
-PropertyAssignment: T_SET PropertyName T_LPAREN FormalParameterListOpt T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
+PropertyAssignment: T_SET PropertyName T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
 /.
 case $rule_number: {
   AST::PropertyGetterSetter *node = new (pool) AST::PropertyGetterSetter(
@@ -3071,7 +3072,7 @@ case $rule_number: {
 -- declaration.
 Function: T_FUNCTION %prec REDUCE_HERE ;
 
-FunctionDeclaration: Function JsIdentifier T_LPAREN FormalParameterListOpt T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
+FunctionDeclaration: Function JsIdentifier T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
 /.
 case $rule_number: {
   AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(2), sym(4).FormalParameterList, sym(7).FunctionBody);
@@ -3085,7 +3086,7 @@ case $rule_number: {
 } break;
 ./
 
-FunctionExpression: T_FUNCTION JsIdentifier T_LPAREN FormalParameterListOpt T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
+FunctionExpression: T_FUNCTION JsIdentifier T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
 /.
 case $rule_number: {
   AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).FunctionBody);
@@ -3100,7 +3101,7 @@ case $rule_number: {
 } break;
 ./
 
-FunctionExpression: T_FUNCTION T_LPAREN FormalParameterListOpt T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
+FunctionExpression: T_FUNCTION T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
 /.
 case $rule_number: {
   AST::FunctionExpression *node = new (pool) AST::FunctionExpression(QStringRef(), sym(3).FormalParameterList, sym(6).FunctionBody);
@@ -3113,38 +3114,66 @@ case $rule_number: {
 } break;
 ./
 
-FormalParameterList: JsIdentifier ;
-/.
-case $rule_number: {
-  AST::FormalParameterList *node = new (pool) AST::FormalParameterList(stringRef(1));
-  node->identifierToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-FormalParameterList: FormalParameterList T_COMMA JsIdentifier ;
-/.
-case $rule_number: {
-  AST::FormalParameterList *node = new (pool) AST::FormalParameterList(sym(1).FormalParameterList, stringRef(3));
-  node->commaToken = loc(2);
-  node->identifierToken = loc(3);
-  sym(1).Node = node;
-} break;
-./
-
-FormalParameterListOpt: ;
+FormalParameters : ;
 /.
 case $rule_number: {
   sym(1).Node = 0;
 } break;
 ./
 
-FormalParameterListOpt: FormalParameterList ;
+FormalParameters: FormalParameterList ;
 /.
 case $rule_number: {
   sym(1).Node = sym(1).FormalParameterList->finish ();
 } break;
 ./
+
+FormalParameterList: FunctionRestParameter ;
+
+FormalParameterList: FormalsList ;
+
+FormalsList: FormalParameter ;
+
+FormalParameterList: FormalsList T_COMMA FunctionRestParameter ;
+/. case $rule_number: ./
+
+FormalsList: FormalsList T_COMMA FormalParameter ;
+/.
+case $rule_number: {
+    sym(1).FormalParameterList = sym(1).FormalParameterList->append(sym(3).FormalParameterList);
+} break;
+./
+
+FunctionRestParameter: BindingRestElement ;
+FormalParameter: BindingElement ;
+
+BindingRestElement: T_ELLIPSIS BindingIdentifier ;
+/.
+case $rule_number: {
+  AST::FormalParameterList *node = new (pool) AST::FormalParameterList(stringRef(2));
+  node->identifierToken = loc(2);
+  node->isRest = true;
+  sym(1).Node = node;
+} break;
+./
+
+BindingElement: SingleNameBinding ;
+-- BindingElement: BindingPattern InitialiserOpt ;
+
+-- BindingPattern: ObjectBindingPattern ;
+-- BindingPattern: ArrayBindingPattern ;
+
+SingleNameBinding: BindingIdentifier InitialiserOpt ;
+/.
+case $rule_number: {
+  AST::FormalParameterList *node = new (pool) AST::FormalParameterList(stringRef(1));
+  node->identifierToken = loc(1);
+  node->defaultExpression = sym(2).Expression;
+  sym(1).Node = node;
+} break;
+./
+
+BindingIdentifier: JsIdentifier;
 
 FunctionBodyOpt: ;
 /.

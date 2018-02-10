@@ -701,6 +701,12 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         PlatformAssemblerCommon::generateCatchTrampoline([this](){loadUndefined();});
     }
 
+    void jumpNotUndefined(int offset)
+    {
+        auto jump = branch64(NotEqual, AccumulatorRegister, TrustedImm64(0));
+        patches.push_back({ jump, offset });
+    }
+
     void toBoolean(std::function<void(RegisterID)> continuation)
     {
         urshift64(AccumulatorRegister, TrustedImm32(Value::IsIntegerConvertible_Shift), ScratchRegister);
@@ -1134,6 +1140,14 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
     {
         push(TrustedImm32(v >> 32));
         push(TrustedImm32(v));
+    }
+
+    void jumpNotUndefined(int offset)
+    {
+        move(AccumulatorRegisterTag, ScratchRegister);
+        or32(AccumulatorRegisterValue, ScratchRegister);
+        auto jump = branch32(NotEqual, ScratchRegister, TrustedImm32(0));
+        patches.push_back({ jump, offset });
     }
 
     void toBoolean(std::function<void(RegisterID)> continuation)
@@ -1980,6 +1994,11 @@ void Assembler::jumpFalse(int offset)
         auto jump = pasm()->branch32(PlatformAssembler::Equal, TrustedImm32(0), resultReg);
         pasm()->patches.push_back({ jump, offset });
     });
+}
+
+void Assembler::jumpNotUndefined(int offset)
+{
+    pasm()->jumpNotUndefined(offset);
 }
 
 void Assembler::jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset)

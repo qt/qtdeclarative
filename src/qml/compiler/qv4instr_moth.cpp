@@ -473,6 +473,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(JumpFalse)
 
+        MOTH_BEGIN_INSTR(JumpNotUndefined)
+            d << ABSOLUTE_OFFSET();
+        MOTH_END_INSTR(JumpNotUndefined)
+
         MOTH_BEGIN_INSTR(CmpEqNull)
         MOTH_END_INSTR(CmpEqNull)
 

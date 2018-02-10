@@ -181,6 +181,12 @@ public:
         return addJumpInstruction(data);
     }
 
+    Q_REQUIRED_RESULT Jump jumpNotUndefined()
+    {
+        Instruction::JumpNotUndefined data;
+        return addJumpInstruction(data);
+    }
+
     void jumpStrictEqual(const StackSlot &lhs, const Label &target)
     {
         Instruction::CmpStrictEqual cmp;

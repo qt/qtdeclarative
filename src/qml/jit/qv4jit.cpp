@@ -816,6 +816,7 @@ void BaselineJIT::generate_Construct(int func, int argc, int argv)
 void BaselineJIT::generate_Jump(int offset) { as->jump(instructionOffset() + offset); }
 void BaselineJIT::generate_JumpTrue(int offset) { as->jumpTrue(instructionOffset() + offset); }
 void BaselineJIT::generate_JumpFalse(int offset) { as->jumpFalse(instructionOffset() + offset); }
+void BaselineJIT::generate_JumpNotUndefined(int offset) { as->jumpNotUndefined(instructionOffset() + offset); }
 
 void BaselineJIT::generate_CmpEqNull() { as->cmpeqNull(); }
 void BaselineJIT::generate_CmpNeNull() { as->cmpneNull(); }
@@ -1189,6 +1190,10 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_BEGIN_INSTR(JumpFalse)
             addLabel(code - start + offset);
         MOTH_END_INSTR(JumpFalse)
+
+        MOTH_BEGIN_INSTR(JumpNotUndefined)
+            addLabel(code - start + offset);
+        MOTH_END_INSTR(JumpUndefined)
 
         MOTH_BEGIN_INSTR(CmpEqNull)
         MOTH_END_INSTR(CmpEqNull)

@@ -2210,12 +2210,20 @@ static bool endsWithReturn(Node *node)
     return false;
 }
 
+static bool isSimpleParameterList(AST::FormalParameterList *formals)
+{
+    while (formals) {
+        if (formals->isRest || formals->defaultExpression)
+            return false;
+        formals = formals->next;
+    }
+    return true;
+}
+
 int Codegen::defineFunction(const QString &name, AST::Node *ast,
                             AST::FormalParameterList *formals,
                             AST::SourceElements *body)
 {
-    Q_UNUSED(formals);
-
     enterContext(ast);
 
     if (_context->functionIndex >= 0)
@@ -2316,7 +2324,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     }
     if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-        if (_context->isStrict) {
+        if (_context->isStrict || !isSimpleParameterList(formals)) {
             Instruction::CreateUnmappedArgumentsObject setup;
             bytecodeGenerator->addInstruction(setup);
         } else {
@@ -2329,6 +2337,23 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         // make sure we convert this to an object
         Instruction::ConvertThisToObject convert;
         bytecodeGenerator->addInstruction(convert);
+    }
+
+    while (formals) {
+        if (formals->isRest) {
+            // #### implement me
+            throwSyntaxError(formals->firstSourceLocation(), QString::fromLatin1("Support for rest parameters not implemented!"));
+        }
+        if (formals->defaultExpression) {
+            RegisterScope scope(this);
+            Reference f = referenceForName(formals->name.toString(), true);
+            f.loadInAccumulator();
+            BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
+            expression(formals->defaultExpression).loadInAccumulator();
+            f.storeConsumeAccumulator();
+            jump.link();
+        }
+        formals = formals->next;
     }
 
     beginFunctionBodyHook();

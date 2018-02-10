@@ -605,6 +605,17 @@ again:
     case '.':
         if (isDecimalDigit(_char.unicode()))
             return scanNumber(ch);
+        if (_char == QLatin1Char('.')) {
+            scanChar();
+            if (_char == QLatin1Char('.')) {
+                scanChar();
+                return T_ELLIPSIS;
+            } else {
+                _errorCode = IllegalCharacter;
+                _errorMessage = QCoreApplication::translate("QQmlParser", "Unexpected token '.'");
+                return T_ERROR;
+            }
+        }
         return T_DOT;
 
     case '-':

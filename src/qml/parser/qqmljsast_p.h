@@ -2081,8 +2081,8 @@ class QML_PARSER_EXPORT FormalParameterList: public Node
 public:
     QQMLJS_DECLARE_AST_NODE(FormalParameterList)
 
-    FormalParameterList(const QStringRef &n):
-        name (n), next (this)
+    FormalParameterList(const QStringRef &n)
+        : name(n), next(this)
         { kind = K; }
 
     FormalParameterList(FormalParameterList *previous, const QStringRef &n):
@@ -2091,6 +2091,12 @@ public:
         kind = K;
         next = previous->next;
         previous->next = this;
+    }
+
+    FormalParameterList *append(FormalParameterList *n) {
+        n->next = next;
+        next = n;
+        return n;
     }
 
     void accept0(Visitor *visitor) override;
@@ -2110,8 +2116,9 @@ public:
 
 // attributes
     QStringRef name;
+    bool isRest = false;
+    ExpressionNode *defaultExpression = nullptr;
     FormalParameterList *next;
-    SourceLocation commaToken;
     SourceLocation identifierToken;
 };
 
