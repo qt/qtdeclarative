@@ -1894,6 +1894,9 @@ void QQuickItemViewPrivate::layout()
 
     inLayout = true;
 
+    // viewBounds contains bounds before any add/remove/move operation to the view
+    QRectF viewBounds(q->contentX(),  q->contentY(), q->width(), q->height());
+
     if (!isValid() && !visibleItems.count()) {
         clear();
         setPosition(contentStartOffset());
@@ -1960,7 +1963,6 @@ void QQuickItemViewPrivate::layout()
 
         prepareVisibleItemTransitions();
 
-        QRectF viewBounds(q->contentX(),  q->contentY(), q->width(), q->height());
         for (QList<FxViewItem*>::Iterator it = releasePendingTransition.begin();
              it != releasePendingTransition.end(); ) {
             FxViewItem *item = *it;

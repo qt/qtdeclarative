@@ -348,6 +348,7 @@ private slots:
     void forInIterator();
     void localForInIterator();
     void shadowedFunctionName();
+    void anotherNaN();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -7922,6 +7923,15 @@ void tst_qqmlecmascript::singletonWithEnum()
     QVariant prop = obj->property("testValue");
     QCOMPARE(prop.type(), QVariant::Int);
     QCOMPARE(prop.toInt(), int(SingletonWithEnum::TestValue));
+
+    {
+        QQmlExpression expr(qmlContext(obj.data()), obj.data(), "SingletonWithEnum.TestValue_MinusOne");
+        bool valueUndefined = false;
+        QVariant result = expr.evaluate(&valueUndefined);
+        QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
+        QVERIFY(!valueUndefined);
+        QCOMPARE(result.toInt(), -1);
+    }
 }
 
 void tst_qqmlecmascript::lazyBindingEvaluation()
@@ -8367,6 +8377,20 @@ void tst_qqmlecmascript::qtbug_60547()
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
     QCOMPARE(object->property("counter"), QVariant(int(1)));
+}
+
+void tst_qqmlecmascript::anotherNaN()
+{
+    QQmlComponent component(&engine, testFileUrl("nans.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+    object->setProperty("prop", std::numeric_limits<double>::quiet_NaN()); // don't crash
+
+    std::uint64_t anotherNaN = 0xFFFFFF01000000F7ul;
+    double d;
+    std::memcpy(&d, &anotherNaN, sizeof(d));
+    QVERIFY(std::isnan(d));
+    object->setProperty("prop", d);  // don't crash
 }
 
 void tst_qqmlecmascript::delayLoadingArgs()

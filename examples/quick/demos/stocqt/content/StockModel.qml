@@ -49,12 +49,13 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "stocqt.js" as JSLibrary
 
 ListModel {
     id: model
     property string stockId: ""
     property string stockName: ""
+    property var newest
+    property var oldest
     property bool ready: false
     property real stockPrice: 0.0
     property real stockPriceChanged: 0.0
@@ -65,11 +66,10 @@ ListModel {
         if (model.count == 0)
             return -1;
 
-        var newest = new Date(model.get(0).date);
-        var oldest = new Date(model.get(model.count - 1).date);
-
         if (newest <= date)
-            return -1;
+            date = new Date(newest.getYear(),
+                            newest.getMonth(),
+                            newest.getDate() - 7);
 
         if (oldest >= date)
             return model.count - 1;
@@ -87,13 +87,12 @@ ListModel {
             if (currDiff > bestDiff)
                 return retval;
         }
-
         return -1;
     }
 
     function createStockPrice(r) {
         return {
-                "date": JSLibrary.parseDate(r[0]),
+                "date": r[0],
                 "open":r[1],
                 "high":r[2],
                 "low":r[3],
@@ -109,7 +108,7 @@ ListModel {
         var startDate = new Date(2011, 4, 25);
         var endDate = new Date(); //today
 
-        var req = JSLibrary.requestUrl(stockId, startDate, endDate);
+        var req = "data/" + stockId + ".csv"
         if (!req)
             return;
 
@@ -125,7 +124,7 @@ ListModel {
                 var records = xhr.responseText.split('\n');
                 for (;i < records.length; i++ ) {
                     var r = records[i].split(',');
-                    if (r.length === 6)
+                    if (r.length >= 6)
                         model.append(createStockPrice(r));
                 }
 
@@ -134,6 +133,8 @@ ListModel {
                         model.ready = true;
                         model.stockPrice = model.get(0).close;
                         model.stockPriceChanged = model.count > 1 ? (Math.round((model.stockPrice - model.get(1).close) * 100) / 100) : 0;
+                        newest = new Date(model.get(0).date);
+                        oldest = new Date(model.get(model.count - 1).date);
                     } else {
                         model.stockPrice = 0;
                         model.stockPriceChanged = 0;
