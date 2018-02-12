@@ -83,8 +83,8 @@ T.SpinBox {
 
     up.indicator: Item {
         x: control.mirrored ? 0 : parent.width - width
-        implicitWidth: 48
-        implicitHeight: 48
+        implicitWidth: control.Material.buttonHeight
+        implicitHeight: control.Material.buttonHeight
         height: parent.height
         width: height
 
@@ -117,8 +117,8 @@ T.SpinBox {
 
     down.indicator: Item {
         x: control.mirrored ? parent.width - width : 0
-        implicitWidth: 48
-        implicitHeight: 48
+        implicitWidth: control.Material.buttonHeight
+        implicitHeight: control.Material.buttonHeight
         height: parent.height
         width: height
 
@@ -144,7 +144,7 @@ T.SpinBox {
 
     background: Item {
         implicitWidth: 192
-        implicitHeight: 48
+        implicitHeight: control.Material.buttonHeight
 
         Rectangle {
             x: parent.width / 2 - width / 2

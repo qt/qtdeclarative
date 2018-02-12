@@ -98,11 +98,26 @@ class QQuickMaterialStyle : public QQuickAttachedObject
     Q_PROPERTY(QColor toolTextColor READ toolTextColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor spinBoxDisabledIconColor READ spinBoxDisabledIconColor NOTIFY paletteChanged FINAL)
 
+    Q_PROPERTY(int buttonHeight READ buttonHeight CONSTANT FINAL)
+    Q_PROPERTY(int delegateHeight READ delegateHeight CONSTANT FINAL)
+    Q_PROPERTY(int dialogButtonBoxHeight READ dialogButtonBoxHeight CONSTANT FINAL)
+    Q_PROPERTY(int frameVerticalPadding READ frameVerticalPadding CONSTANT FINAL)
+    Q_PROPERTY(int itemDelegateVerticalPadding READ itemDelegateVerticalPadding CONSTANT FINAL)
+    Q_PROPERTY(int menuItemHeight READ menuItemHeight CONSTANT FINAL)
+    Q_PROPERTY(int menuItemVerticalPadding READ menuItemVerticalPadding CONSTANT FINAL)
+    Q_PROPERTY(int switchDelegateVerticalPadding READ switchDelegateVerticalPadding CONSTANT FINAL)
+    Q_PROPERTY(int tooltipHeight READ tooltipHeight CONSTANT FINAL)
+
 public:
     enum Theme {
         Light,
         Dark,
         System
+    };
+
+    enum Variant {
+        Normal,
+        Dense
     };
 
     enum Color {
@@ -145,6 +160,7 @@ public:
     };
 
     Q_ENUM(Theme)
+    Q_ENUM(Variant)
     Q_ENUM(Color)
     Q_ENUM(Shade)
 
@@ -225,7 +241,19 @@ public:
     Q_INVOKABLE QColor color(Color color, Shade shade = Shade500) const;
     Q_INVOKABLE QColor shade(const QColor &color, Shade shade) const;
 
+    int buttonHeight() const;
+    int delegateHeight() const;
+    int dialogButtonBoxHeight() const;
+    int frameVerticalPadding() const;
+    int itemDelegateVerticalPadding() const;
+    int menuItemHeight() const;
+    int menuItemVerticalPadding() const;
+    int switchDelegateVerticalPadding() const;
+    int tooltipHeight() const;
+
     static void initGlobals();
+
+    static Variant variant();
 
 Q_SIGNALS:
     void themeChanged();

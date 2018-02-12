@@ -62,7 +62,7 @@ T.DialogButtonBox {
 
     contentItem: ListView {
         implicitWidth: contentWidth
-        implicitHeight: 48
+        implicitHeight: control.Material.buttonHeight
 
         model: control.contentModel
         spacing: control.spacing
@@ -72,7 +72,7 @@ T.DialogButtonBox {
     }
 
     background: PaddedRectangle {
-        implicitHeight: 52
+        implicitHeight: control.Material.dialogButtonBoxHeight
         radius: 2
         color: control.Material.dialogColor
         // Rounded corners should be only at the top or at the bottom

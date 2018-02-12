@@ -75,7 +75,7 @@ T.DelayButton {
     // TODO: Add a proper ripple/ink effect for mouse/touch input and focus state
     background: Rectangle {
         implicitWidth: 64
-        implicitHeight: 48
+        implicitHeight: control.Material.buttonHeight
 
         // external vertical padding is 6 (to increase touch area)
         y: 6

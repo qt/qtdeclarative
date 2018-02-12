@@ -52,7 +52,8 @@ T.GroupBox {
 
     spacing: 6
     padding: 12
-    topPadding: padding + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
+    topPadding: Material.frameVerticalPadding + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
+    bottomPadding: Material.frameVerticalPadding
 
     label: Text {
         x: control.leftPadding

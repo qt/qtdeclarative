@@ -36,6 +36,7 @@
 
 #include <qtest.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuickControls2/private/qquickstyle_p.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
@@ -49,6 +50,8 @@ public:
 
 private slots:
     void conf();
+    void variants_data();
+    void variants();
 };
 
 void tst_qquickmaterialstyleconf::conf()
@@ -71,6 +74,45 @@ void tst_qquickmaterialstyleconf::conf()
     QVERIFY(label);
     QCOMPARE(label->property("color").value<QColor>(), QColor("#F44336"));
     QCOMPARE(label->property("font").value<QFont>(), customFont);
+}
+
+void tst_qquickmaterialstyleconf::variants_data()
+{
+    QTest::addColumn<QByteArray>("confPath");
+    QTest::addColumn<int>("expectedButtonHeight");
+    // Just to ensure that the correct conf is loaded.
+    QTest::addColumn<QColor>("expectedColor");
+
+    // (36 button height + 12 touchable area)
+    QTest::newRow("normal") << QByteArray(":/variant-normal.conf") << 48 << QColor::fromRgb(0x123456);
+    // We specified a custom variant (dense), so the button should be small.
+    // (32 button height + 12 touchable area)
+    QTest::newRow("dense") << QByteArray(":/variant-dense.conf") << 44 << QColor::fromRgb(0x789abc);
+}
+
+void tst_qquickmaterialstyleconf::variants()
+{
+    QFETCH(QByteArray, confPath);
+    QFETCH(int, expectedButtonHeight);
+    QFETCH(QColor, expectedColor);
+
+    qmlClearTypeRegistrations();
+    QQuickStylePrivate::reset();
+    qputenv("QT_QUICK_CONTROLS_CONF", confPath);
+
+    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickItem *label = window->property("label").value<QQuickItem*>();
+    QVERIFY(label);
+    QCOMPARE(label->property("color").value<QColor>(), expectedColor);
+
+    QQuickItem *button = window->property("button").value<QQuickItem*>();
+    QVERIFY(button);
+    QCOMPARE(button->height(), expectedButtonHeight);
 }
 
 QTEST_MAIN(tst_qquickmaterialstyleconf)

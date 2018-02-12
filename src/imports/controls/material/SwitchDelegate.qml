@@ -52,8 +52,8 @@ T.SwitchDelegate {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 16
-    topPadding: 8
-    bottomPadding: 8
+    topPadding: Material.switchDelegateVerticalPadding
+    bottomPadding: Material.switchDelegateVerticalPadding
     spacing: 16
 
     icon.width: 24
@@ -82,7 +82,7 @@ T.SwitchDelegate {
     }
 
     background: Rectangle {
-        implicitHeight: 48
+        implicitHeight: control.Material.delegateHeight
 
         color: control.highlighted ? control.Material.listHighlightColor : "transparent"
 

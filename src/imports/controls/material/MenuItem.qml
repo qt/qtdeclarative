@@ -52,8 +52,8 @@ T.MenuItem {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 16
-    topPadding: 12
-    bottomPadding: 12
+    topPadding: Material.menuItemVerticalPadding
+    bottomPadding: Material.menuItemVerticalPadding
     spacing: 16
 
     icon.width: 24
@@ -96,7 +96,7 @@ T.MenuItem {
 
     background: Rectangle {
         implicitWidth: 200
-        implicitHeight: 48
+        implicitHeight: control.Material.menuItemHeight
         color: control.highlighted ? control.Material.listHighlightColor : "transparent"
 
         Ripple {

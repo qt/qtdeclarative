@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickmaterialtheme_p.h"
+#include "qquickmaterialstyle_p.h"
 
 #include <QtGui/qpa/qplatformdialoghelper.h>
 #include <QtGui/qfont.h>
@@ -67,29 +68,33 @@ void QQuickMaterialTheme::resolveFonts(const QFont &defaultFont)
         editorFont.setFamily(family);
     }
 
-    systemFont.setPixelSize(14);
+    const bool dense = QQuickMaterialStyle::variant() == QQuickMaterialStyle::Dense;
+    systemFont.setPixelSize(dense ? 13 : 14);
     systemFont = defaultFont.resolve(systemFont);
 
-    buttonFont.setPixelSize(14);
+    // https://material.io/guidelines/components/buttons.html#buttons-style
+    buttonFont.setPixelSize(dense ? 13 : 14);
     buttonFont.setCapitalization(QFont::AllUppercase);
     buttonFont.setWeight(QFont::Medium);
     buttonFont = defaultFont.resolve(buttonFont);
 
-    toolTipFont.setPixelSize(14);
+    // https://material.io/guidelines/components/tooltips.html
+    toolTipFont.setPixelSize(dense ? 10 : 14);
     toolTipFont.setWeight(QFont::Medium);
     toolTipFont = defaultFont.resolve(toolTipFont);
 
-    itemViewFont.setPixelSize(14);
+    itemViewFont.setPixelSize(dense ? 13 : 14);
     itemViewFont.setWeight(QFont::Medium);
     itemViewFont = defaultFont.resolve(itemViewFont);
 
-    listViewFont.setPixelSize(16);
+    // https://material.io/guidelines/components/lists.html#lists-specs
+    listViewFont.setPixelSize(dense ? 13 : 16);
     listViewFont = defaultFont.resolve(listViewFont);
 
-    menuItemFont.setPixelSize(16);
+    menuItemFont.setPixelSize(dense ? 13 : 16);
     menuItemFont = defaultFont.resolve(menuItemFont);
 
-    editorFont.setPixelSize(16);
+    editorFont.setPixelSize(dense ? 13 : 16);
     editorFont = defaultFont.resolve(editorFont);
 }
 

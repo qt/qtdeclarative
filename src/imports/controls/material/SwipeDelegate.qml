@@ -75,7 +75,7 @@ T.SwipeDelegate {
     }
 
     background: Rectangle {
-        implicitHeight: 48
+        implicitHeight: control.Material.delegateHeight
 
         color: control.Material.backgroundColor
 

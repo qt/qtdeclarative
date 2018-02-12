@@ -57,8 +57,13 @@ ApplicationWindow {
     height: 400
 
     property alias label: label
+    property alias button: button
 
     Label {
         id: label
+    }
+
+    Button {
+        id: button
     }
 }

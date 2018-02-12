@@ -76,7 +76,7 @@ T.ToolTip {
     }
 
     background: Rectangle {
-        implicitHeight: 32
+        implicitHeight: control.Material.tooltipHeight
         color: control.Material.tooltipColor
         opacity: 0.9
         radius: 2

@@ -84,7 +84,7 @@ T.Menu {
 
     background: Rectangle {
         implicitWidth: 200
-        implicitHeight: 48
+        implicitHeight: control.Material.menuItemHeight
 
         radius: 3
         color: control.Material.dialogColor

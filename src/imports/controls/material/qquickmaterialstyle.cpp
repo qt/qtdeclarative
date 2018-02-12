@@ -387,6 +387,10 @@ static bool globalPrimaryCustom = false;
 static bool globalAccentCustom = false;
 static bool globalForegroundCustom = true;
 static bool globalBackgroundCustom = true;
+// This is global because:
+// 1) The theme needs access to it to determine font sizes.
+// 2) There can only be one variant used for the whole application.
+static QQuickMaterialStyle::Variant globalVariant = QQuickMaterialStyle::Normal;
 
 static const QRgb backgroundColorLight = 0xFFFAFAFA;
 static const QRgb backgroundColorDark = 0xFF303030;
@@ -445,7 +449,7 @@ QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickAttachedObject
     m_background(globalBackground),
     m_elevation(0)
 {
-    init();
+    QQuickAttachedObject::init();
 }
 
 QQuickMaterialStyle *QQuickMaterialStyle::qmlAttachedProperties(QObject *object)
@@ -1135,17 +1139,60 @@ QColor QQuickMaterialStyle::shade(const QColor &color, Shade shade) const
     }
 }
 
-void QQuickMaterialStyle::attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent)
+int QQuickMaterialStyle::buttonHeight() const
 {
-    Q_UNUSED(oldParent);
-    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(newParent);
-    if (material) {
-        inheritPrimary(material->m_primary, material->m_customPrimary);
-        inheritAccent(material->m_accent, material->m_customAccent);
-        inheritForeground(material->m_foreground, material->m_customForeground, material->m_hasForeground);
-        inheritBackground(material->m_background, material->m_customBackground, material->m_hasBackground);
-        inheritTheme(material->theme());
-    }
+    // https://material.io/guidelines/components/buttons.html#buttons-style
+    return globalVariant == Dense ? 44 : 48;
+}
+
+int QQuickMaterialStyle::delegateHeight() const
+{
+    // https://material.io/guidelines/components/lists.html#lists-specs
+    return globalVariant == Dense ? 40 : 48;
+}
+
+int QQuickMaterialStyle::dialogButtonBoxHeight() const
+{
+    return globalVariant == Dense ? 48 : 52;
+}
+
+int QQuickMaterialStyle::frameVerticalPadding() const
+{
+    return globalVariant == Dense ? 8 : 12;
+}
+
+int QQuickMaterialStyle::itemDelegateVerticalPadding() const
+{
+    return globalVariant == Dense ? 12 : 16;
+}
+
+int QQuickMaterialStyle::menuItemHeight() const
+{
+    // https://material.io/guidelines/components/menus.html#menus-simple-menus
+    return globalVariant == Dense ? 32 : 48;
+}
+
+int QQuickMaterialStyle::menuItemVerticalPadding() const
+{
+    return globalVariant == Dense ? 8 : 12;
+}
+
+int QQuickMaterialStyle::switchDelegateVerticalPadding() const
+{
+    // SwitchDelegate's indicator is much larger than the others due to the shadow,
+    // so we must reduce its padding to ensure its implicitHeight is 40 when dense.
+    return globalVariant == Dense ? 4 : 8;
+}
+
+int QQuickMaterialStyle::tooltipHeight() const
+{
+    // https://material.io/guidelines/components/tooltips.html
+    return globalVariant == Dense ? 22 : 32;
+}
+
+QQuickMaterialStyle::Variant QQuickMaterialStyle::variant()
+{
+    return globalVariant;
 }
 
 template <typename Enum>
@@ -1176,6 +1223,13 @@ void QQuickMaterialStyle::initGlobals()
         globalTheme = effectiveTheme(themeEnum);
     else if (!themeValue.isEmpty())
         qWarning().nospace().noquote() << "Material: unknown theme value: " << themeValue;
+
+    QByteArray variantValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_VARIANT", settings, QStringLiteral("Variant"));
+    Variant variantEnum = toEnumValue<Variant>(variantValue, &ok);
+    if (ok)
+        globalVariant = variantEnum;
+    else if (!variantValue.isEmpty())
+        qWarning().nospace().noquote() << "Material: unknown variant value: " << variantValue;
 
     QByteArray primaryValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_PRIMARY", settings, QStringLiteral("Primary"));
     Color primaryEnum = toEnumValue<Color>(primaryValue, &ok);
@@ -1239,6 +1293,19 @@ void QQuickMaterialStyle::initGlobals()
         } else {
             qWarning().nospace().noquote() << "Material: unknown background value: " << backgroundValue;
         }
+    }
+}
+
+void QQuickMaterialStyle::attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent)
+{
+    Q_UNUSED(oldParent);
+    QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(newParent);
+    if (material) {
+        inheritPrimary(material->m_primary, material->m_customPrimary);
+        inheritAccent(material->m_accent, material->m_customAccent);
+        inheritForeground(material->m_foreground, material->m_customForeground, material->m_hasForeground);
+        inheritBackground(material->m_background, material->m_customBackground, material->m_hasBackground);
+        inheritTheme(material->theme());
     }
 }
 

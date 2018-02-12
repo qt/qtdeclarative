@@ -51,7 +51,7 @@ T.ItemDelegate {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    padding: 16
+    padding: control.Material.itemDelegateVerticalPadding
     spacing: 16
 
     icon.width: 24
@@ -71,7 +71,7 @@ T.ItemDelegate {
     }
 
     background: Rectangle {
-        implicitHeight: 48
+        implicitHeight: control.Material.delegateHeight
 
         color: control.highlighted ? control.Material.listHighlightColor : "transparent"
 

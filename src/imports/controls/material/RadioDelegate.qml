@@ -82,7 +82,7 @@ T.RadioDelegate {
     }
 
     background: Rectangle {
-        implicitHeight: 48
+        implicitHeight: control.Material.delegateHeight
 
         color: control.highlighted ? control.Material.listHighlightColor : "transparent"
 
