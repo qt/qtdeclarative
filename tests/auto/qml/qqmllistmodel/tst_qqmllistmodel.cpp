@@ -128,6 +128,7 @@ private slots:
     void about_to_be_signals();
     void modify_through_delegate();
     void bindingsOnGetResult();
+    void qobjectTrackerForDynamicModelObjects();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1485,6 +1486,33 @@ void tst_qqmllistmodel::bindingsOnGetResult()
     QVERIFY(!obj.isNull());
 
     QVERIFY(obj->property("success").toBool());
+}
+
+void tst_qqmllistmodel::qobjectTrackerForDynamicModelObjects()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+                      "import QtQuick 2.0\n"
+                      "Item {\n"
+                      "   ListModel {\n"
+                      "       id: testModel\n"
+                      "       objectName: \"testModel\"\n"
+                      "       ListElement { name: \"Joe\"; age: 22 }\n"
+                      "   }\n"
+                      "}\n", QUrl());
+    QScopedPointer<QObject> scene(component.create());
+    QQmlListModel *model = scene->findChild<QQmlListModel*>("testModel");
+    QQmlExpression expr(engine.rootContext(), model, "get(0);");
+    QVariant v = expr.evaluate();
+    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+
+    QObject *obj = v.value<QObject*>();
+    QVERIFY(obj);
+
+    QQmlData *ddata = QQmlData::get(obj, /*create*/false);
+    QVERIFY(ddata);
+    QVERIFY(!ddata->jsWrapper.isNullOrUndefined());
 }
 
 QTEST_MAIN(tst_qqmllistmodel)
