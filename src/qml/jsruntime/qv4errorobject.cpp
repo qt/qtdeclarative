@@ -47,10 +47,6 @@
 
 #include "qv4string_p.h"
 #include <private/qv4mm_p.h>
-#include <private/qqmljsengine_p.h>
-#include <private/qqmljslexer_p.h>
-#include <private/qqmljsparser_p.h>
-#include <private/qqmljsast_p.h>
 #include <qv4codegen_p.h>
 
 #ifndef Q_OS_WIN

@@ -45,10 +45,6 @@
 #include "qv4scopedvalue_p.h"
 #include "qv4jscall_p.h"
 
-#include <private/qqmljsengine_p.h>
-#include <private/qqmljslexer_p.h>
-#include <private/qqmljsparser_p.h>
-#include <private/qqmljsast_p.h>
 #include "private/qlocale_tools_p.h"
 
 #include <QtCore/QDebug>
