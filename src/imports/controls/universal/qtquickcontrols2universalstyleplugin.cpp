@@ -69,6 +69,7 @@ public:
 QtQuickControls2UniversalStylePlugin::QtQuickControls2UniversalStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
     initResources();
+    QQuickUniversalStyle::initGlobals();
 }
 
 void QtQuickControls2UniversalStylePlugin::registerTypes(const char *uri)
