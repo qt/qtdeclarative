@@ -255,7 +255,12 @@ QObject *ListModel::getOrCreateModelObject(QQmlListModel *model, int elementInde
 {
     ListElement *e = elements[elementIndex];
     if (e->m_objectCache == 0) {
-        e->m_objectCache = new QObject;
+        void *memory = operator new(sizeof(QObject) + sizeof(QQmlData));
+        void *ddataMemory = ((char *)memory) + sizeof(QObject);
+        e->m_objectCache = new (memory) QObject;
+        QQmlData *ddata = new (ddataMemory) QQmlData;
+        ddata->ownMemory = false;
+        QObjectPrivate::get(e->m_objectCache)->declarativeData = ddata;
         (void)new ModelNodeMetaObject(e->m_objectCache, model, elementIndex);
     }
     return e->m_objectCache;
@@ -2292,8 +2297,7 @@ QQmlV4Handle QQmlListModel::get(int index) const
             QObject *object = m_listModel->getOrCreateModelObject(const_cast<QQmlListModel *>(this), index);
             result = scope.engine->memoryManager->allocObject<QV4::ModelObject>(object, const_cast<QQmlListModel *>(this), index);
             // Keep track of the QObjectWrapper in persistent value storage
-            QV4::Value *val = scope.engine->memoryManager->m_weakValues->allocate();
-            *val = result;
+            QQmlData::get(object)->jsWrapper.set(scope.engine, result);
         }
     }
 
