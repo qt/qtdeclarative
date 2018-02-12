@@ -63,8 +63,34 @@ QT_QML_BEGIN_NAMESPACE
 namespace QQmlJS {
 
 class Lexer;
-class Directives;
 class MemoryPool;
+
+class QML_PARSER_EXPORT Directives {
+public:
+    virtual ~Directives() {}
+
+    virtual void pragmaLibrary()
+    {
+    }
+
+    virtual void importFile(const QString &jsfile, const QString &module, int line, int column)
+    {
+        Q_UNUSED(jsfile);
+        Q_UNUSED(module);
+        Q_UNUSED(line);
+        Q_UNUSED(column);
+    }
+
+    virtual void importModule(const QString &uri, const QString &version, const QString &module, int line, int column)
+    {
+        Q_UNUSED(uri);
+        Q_UNUSED(version);
+        Q_UNUSED(module);
+        Q_UNUSED(line);
+        Q_UNUSED(column);
+    }
+};
+
 
 class QML_PARSER_EXPORT DiagnosticMessage
 {

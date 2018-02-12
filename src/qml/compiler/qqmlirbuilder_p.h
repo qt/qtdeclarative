@@ -57,7 +57,6 @@
 #include <private/qqmljsmemorypool_p.h>
 #include <private/qv4codegen_p.h>
 #include <private/qv4compiler_p.h>
-#include <private/qqmljslexer_p.h>
 #include <QTextStream>
 #include <QCoreApplication>
 
