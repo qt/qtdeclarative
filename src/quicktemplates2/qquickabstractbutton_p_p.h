@@ -96,6 +96,8 @@ public:
     void actionTextChange();
     void setText(const QString &text, bool isExplicit);
 
+    void updateEffectiveIcon();
+
     void click();
     void trigger();
     void toggle(bool value);
@@ -124,6 +126,7 @@ public:
     QKeySequence shortcut;
 #endif
     QQuickIcon icon;
+    QQuickIcon effectiveIcon;
     QPointF pressPoint;
     QPointF movePoint;
     Qt::MouseButtons pressButtons;

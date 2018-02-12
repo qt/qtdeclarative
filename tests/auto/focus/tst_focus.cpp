@@ -67,6 +67,9 @@ private slots:
     void reason();
 
     void visualFocus();
+
+    void scope_data();
+    void scope();
 };
 
 void tst_focus::initTestCase()
@@ -324,6 +327,86 @@ void tst_focus::visualFocus()
     QVERIFY(!button->hasActiveFocus());
     QVERIFY(!button->hasVisualFocus());
     QVERIFY(!button->property("showFocus").toBool());
+}
+
+void tst_focus::scope_data()
+{
+    QTest::addColumn<QString>("name");
+
+    QTest::newRow("Frame") << "Frame";
+    QTest::newRow("GroupBox") << "Frame";
+    QTest::newRow("Page") << "Page";
+    QTest::newRow("Pane") << "Pane";
+    QTest::newRow("StackView") << "StackView";
+}
+
+void tst_focus::scope()
+{
+    QFETCH(QString, name);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QString("import QtQuick 2.9; import QtQuick.Controls 2.2; ApplicationWindow { property alias child: child; width: 100; height: 100; %1 { anchors.fill: parent; Item { id: child; width: 10; height: 10 } } }").arg(name).toUtf8(), QUrl());
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
+    QVERIFY2(window, qPrintable(component.errorString()));
+
+    QQuickControl *control = qobject_cast<QQuickControl *>(window->contentItem()->childItems().first());
+    QVERIFY(control);
+
+    control->setFocusPolicy(Qt::WheelFocus);
+    control->setAcceptedMouseButtons(Qt::LeftButton);
+
+    QQuickItem *child = window->property("child").value<QQuickItem *>();
+    QVERIFY(child);
+
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    struct TouchDeviceDeleter
+    {
+        static inline void cleanup(QTouchDevice *device)
+        {
+            QWindowSystemInterface::unregisterTouchDevice(device);
+            delete device;
+        }
+    };
+
+    QScopedPointer<QTouchDevice, TouchDeviceDeleter> device(new QTouchDevice);
+    device->setType(QTouchDevice::TouchScreen);
+    QWindowSystemInterface::registerTouchDevice(device.data());
+
+    child->forceActiveFocus();
+    QVERIFY(child->hasActiveFocus());
+    QVERIFY(control->hasActiveFocus());
+
+    // Qt::ClickFocus (mouse)
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(control->width() / 2, control->height() / 2));
+    QVERIFY(!child->hasActiveFocus());
+    QVERIFY(control->hasActiveFocus());
+
+    // reset
+    child->forceActiveFocus();
+    QVERIFY(child->hasActiveFocus());
+    QVERIFY(control->hasActiveFocus());
+
+    // Qt::ClickFocus (touch)
+    QTest::touchEvent(window.data(), device.data()).press(0, QPoint(control->width() / 2, control->height() / 2));
+    QTest::touchEvent(window.data(), device.data()).release(0, QPoint(control->width() / 2, control->height() / 2));
+    QVERIFY(!child->hasActiveFocus());
+    QVERIFY(control->hasActiveFocus());
+
+    // reset
+    child->forceActiveFocus();
+    QVERIFY(child->hasActiveFocus());
+    QVERIFY(control->hasActiveFocus());
+
+    // Qt::WheelFocus
+    QWheelEvent wheelEvent(QPoint(control->width() / 2, control->height() / 2), 10, Qt::NoButton, Qt::NoModifier);
+    QGuiApplication::sendEvent(control, &wheelEvent);
+    QVERIFY(!child->hasActiveFocus());
+    QVERIFY(control->hasActiveFocus());
 }
 
 QTEST_MAIN(tst_focus)
