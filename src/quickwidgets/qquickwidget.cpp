@@ -489,7 +489,8 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
 */
 
 
-/*! \fn void QQuickWidget::statusChanged(QQuickWidget::Status status)
+/*!
+    \fn void QQuickWidget::statusChanged(QQuickWidget::Status status)
     This signal is emitted when the component's current \a status changes.
 */
 
@@ -1649,6 +1650,9 @@ QQuickWindow *QQuickWidget::quickWindow() const
     return d->offscreenWindow;
 }
 
+/*!
+  \reimp
+ */
 void QQuickWidget::paintEvent(QPaintEvent *event)
 {
     Q_D(QQuickWidget);

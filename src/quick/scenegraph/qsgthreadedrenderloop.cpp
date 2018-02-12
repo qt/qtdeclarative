@@ -530,7 +530,7 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
     }
 }
 
-/*!
+/*
     Enters the mutex lock to make sure GUI is blocking and performs
     sync, then wakes GUI.
  */
@@ -870,7 +870,7 @@ void QSGThreadedRenderLoop::hide(QQuickWindow *window)
 }
 
 
-/*!
+/*
     If the window is first hide it, then perform a complete cleanup
     with releaseResources which will take down the GL context and
     exit the rendering thread.
@@ -920,7 +920,7 @@ void QSGThreadedRenderLoop::exposureChanged(QQuickWindow *window)
     }
 }
 
-/*!
+/*
     Will post an event to the render thread that this window should
     start to render.
  */
@@ -1007,7 +1007,7 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
     startOrStopAnimationTimer();
 }
 
-/*!
+/*
     This function posts an event to the render thread to remove the window
     from the list of windowses to render.
 
@@ -1042,7 +1042,7 @@ void QSGThreadedRenderLoop::maybeUpdate(QQuickWindow *window)
         maybeUpdate(w);
 }
 
-/*!
+/*
     Called whenever the QML scene has changed. Will post an event to
     ourselves that a sync is needed.
  */
@@ -1073,7 +1073,7 @@ void QSGThreadedRenderLoop::maybeUpdate(Window *w)
     maybePostPolishRequest(w);
 }
 
-/*!
+/*
     Called when the QQuickWindow should be explicitly repainted. This function
     can also be called on the render thread when the GUI thread is blocked to
     keep render thread animations alive.
@@ -1105,7 +1105,7 @@ void QSGThreadedRenderLoop::releaseResources(QQuickWindow *window)
         releaseResources(w, false);
 }
 
-/*!
+/*
  * Release resources will post an event to the render thread to
  * free up the SG and GL resources and exists the render thread.
  */
@@ -1304,7 +1304,7 @@ QImage QSGThreadedRenderLoop::grab(QQuickWindow *window)
     return result;
 }
 
-/*!
+/*
  * Posts a new job event to the render thread.
  * Returns true if posting succeeded.
  */

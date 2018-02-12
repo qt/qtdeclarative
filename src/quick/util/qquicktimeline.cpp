@@ -854,7 +854,7 @@ void QQuickTimeLine::remove(QQuickTimeLineObject *v)
     if (d->ops.isEmpty()) {
         stop();
         d->clockRunning = false;
-    } else if (/*!GfxClock::isActive()*/ state() != Running) {
+    } else if (state() != Running) { // was !GfxClock::isActive()
         stop();
         d->prevTime = 0;
         d->clockRunning = true;
