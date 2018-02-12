@@ -38,6 +38,7 @@
 #include <QtTest/qsignalspy.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
+#include "../shared/qtest_quickcontrols.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qtouchdevice.h>
@@ -1219,6 +1220,6 @@ void tst_QQuickDrawer::nonModal()
     QVERIFY(closedSpy.wait());
 }
 
-QTEST_MAIN(tst_QQuickDrawer)
+QTEST_QUICKCONTROLS_MAIN(tst_QQuickDrawer)
 
 #include "tst_qquickdrawer.moc"
