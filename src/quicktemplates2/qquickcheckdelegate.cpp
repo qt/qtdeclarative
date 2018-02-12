@@ -167,7 +167,7 @@ void QQuickCheckDelegate::setCheckState(Qt::CheckState state)
         return;
 
     bool wasChecked = isChecked();
-    d->checked = state != Qt::Unchecked;
+    d->checked = state == Qt::Checked;
     d->checkState = state;
     emit checkStateChanged();
     if (d->checked != wasChecked)
