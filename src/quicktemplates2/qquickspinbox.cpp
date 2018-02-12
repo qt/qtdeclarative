@@ -818,7 +818,7 @@ void QQuickSpinBox::setWrap(bool wrap)
 
     This property holds the textual value of the spinbox.
 
-    The value of the property is based on \l textFromValue() and \l {Control::}
+    The value of the property is based on \l textFromValue and \l {Control::}
     {locale}, and equal to:
     \badcode
     var text = spinBox.textFromValue(spinBox.value, spinBox.locale)
