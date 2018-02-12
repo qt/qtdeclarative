@@ -17,9 +17,9 @@ qtHaveModule(quick) {
         handlers \
         layouts \
         qtquick2 \
-        window \
-        testlib
+        window
 
+    qtHaveModule(testlib): SUBDIRS += testlib
     qtConfig(systemsemaphore): SUBDIRS += sharedimage
     qtConfig(quick-particles): \
         SUBDIRS += particles
