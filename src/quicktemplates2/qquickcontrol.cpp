@@ -76,15 +76,48 @@ QT_BEGIN_NAMESPACE
 
     The \l {Item::}{implicitWidth} and \l {Item::}{implicitHeight} of a control
     are typically based on the implicit sizes of the background and the content
-    item plus any \l {Control::}{padding}. These properties determine how large
+    item plus any insets and paddings. These properties determine how large
     the control will be when no explicit \l {Item::}{width} or
     \l {Item::}{height} is specified.
 
-    The \l {Control::}{background} item fills the entire width and height of the
-    control, unless an explicit size has been given for it.
+    The geometry of the \l {Control::}{contentItem} is determined by the padding.
+    The following example reserves 10px padding between the boundaries of the
+    control and its content:
 
-    The geometry of the \l {Control::}{contentItem} is determined by the
-    padding.
+    \code
+    Control {
+        padding: 10
+
+        contentItem: Text {
+            text: "Content"
+        }
+    }
+    \endcode
+
+    The \l {Control::}{background} item fills the entire width and height of the
+    control, unless insets or an explicit size have been given for it. Background
+    insets are useful for extending the touchable/interactive area of a control
+    without affecting its visual size. This is often used on touch devices to
+    ensure that a control is not too small to be interacted with by the user.
+    Insets affect the size of the control, and hence will affect how much space
+    they take up in a layout, for example.
+
+    Negative insets can be used to make the background larger than the control.
+    The following example uses negative insets to place a shadow outside the
+    control's boundaries:
+
+    \code
+    Control {
+        topInset: -2
+        leftInset: -2
+        rightInset: -6
+        bottomInset: -6
+
+        background: BorderImage {
+            source: ":/images/shadowed-background.png"
+        }
+    }
+    \endcode
 
     \section1 Event Handling
 
@@ -110,10 +143,18 @@ QQuickControlPrivate::ExtraData::ExtraData()
       hasRightPadding(false),
       hasBottomPadding(false),
       hasBaselineOffset(false),
+      hasTopInset(false),
+      hasLeftInset(false),
+      hasRightInset(false),
+      hasBottomInset(false),
       topPadding(0),
       leftPadding(0),
       rightPadding(0),
-      bottomPadding(0)
+      bottomPadding(0),
+      topInset(0),
+      leftInset(0),
+      rightInset(0),
+      bottomInset(0)
 {
 }
 
@@ -306,19 +347,71 @@ void QQuickControlPrivate::setVerticalPadding(qreal value, bool reset)
     }
 }
 
-void QQuickControlPrivate::resizeBackground()
+void QQuickControlPrivate::setTopInset(qreal value, bool reset)
 {
     Q_Q(QQuickControl);
-    if (background) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-        if (!p->widthValid && qFuzzyIsNull(background->x())) {
-            background->setWidth(q->width());
-            p->widthValid = false;
-        }
-        if (!p->heightValid && qFuzzyIsNull(background->y())) {
-            background->setHeight(q->height());
-            p->heightValid = false;
-        }
+    const QMarginsF oldInset = getInset();
+    extra.value().topInset = value;
+    extra.value().hasTopInset = !reset;
+    if (!qFuzzyCompare(oldInset.top(), value)) {
+        emit q->topInsetChanged();
+        q->insetChange(getInset(), oldInset);
+    }
+}
+
+void QQuickControlPrivate::setLeftInset(qreal value, bool reset)
+{
+    Q_Q(QQuickControl);
+    const QMarginsF oldInset = getInset();
+    extra.value().leftInset = value;
+    extra.value().hasLeftInset = !reset;
+    if (!qFuzzyCompare(oldInset.left(), value)) {
+        emit q->leftInsetChanged();
+        q->insetChange(getInset(), oldInset);
+    }
+}
+
+void QQuickControlPrivate::setRightInset(qreal value, bool reset)
+{
+    Q_Q(QQuickControl);
+    const QMarginsF oldInset = getInset();
+    extra.value().rightInset = value;
+    extra.value().hasRightInset = !reset;
+    if (!qFuzzyCompare(oldInset.right(), value)) {
+        emit q->rightInsetChanged();
+        q->insetChange(getInset(), oldInset);
+    }
+}
+
+void QQuickControlPrivate::setBottomInset(qreal value, bool reset)
+{
+    Q_Q(QQuickControl);
+    const QMarginsF oldInset = getInset();
+    extra.value().bottomInset = value;
+    extra.value().hasBottomInset = !reset;
+    if (!qFuzzyCompare(oldInset.bottom(), value)) {
+        emit q->bottomInsetChanged();
+        q->insetChange(getInset(), oldInset);
+    }
+}
+
+void QQuickControlPrivate::resizeBackground()
+{
+    if (!background)
+        return;
+
+    QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+    if ((!p->widthValid && qFuzzyIsNull(background->x()))
+            || (extra.isAllocated() && (extra->hasLeftInset || extra->hasRightInset))) {
+        background->setX(getLeftInset());
+        background->setWidth(width - getLeftInset() - getRightInset());
+        p->widthValid = false;
+    }
+    if ((!p->heightValid && qFuzzyIsNull(background->y()))
+            || (extra.isAllocated() && (extra->hasTopInset || extra->hasBottomInset))) {
+        background->setY(getTopInset());
+        background->setHeight(height - getTopInset() - getBottomInset());
+        p->heightValid = false;
     }
 }
 
@@ -1691,7 +1784,8 @@ void QQuickControl::resetVerticalPadding()
 
     \code
     Control {
-        implicitWidth: Math.max(implicitBackgroundWidth, implicitContentWidth + leftPadding + rightPadding)
+        implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                                implicitContentWidth + leftPadding + rightPadding)
     }
     \endcode
 
@@ -1718,7 +1812,8 @@ qreal QQuickControl::implicitContentWidth() const
 
     \code
     Control {
-        implicitHeight: Math.max(implicitBackgroundHeight, implicitContentHeight + topPadding + bottomPadding)
+        implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                                 implicitContentHeight + topPadding + bottomPadding)
     }
     \endcode
 
@@ -1744,7 +1839,8 @@ qreal QQuickControl::implicitContentHeight() const
 
     \code
     Control {
-        implicitWidth: Math.max(implicitBackgroundWidth, implicitContentWidth + leftPadding + rightPadding)
+        implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                                implicitContentWidth + leftPadding + rightPadding)
     }
     \endcode
 
@@ -1772,7 +1868,8 @@ qreal QQuickControl::implicitBackgroundWidth() const
 
     \code
     Control {
-        implicitHeight: Math.max(implicitBackgroundHeight, implicitContentHeight + topPadding + bottomPadding)
+        implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                                 implicitContentHeight + topPadding + bottomPadding)
     }
     \endcode
 
@@ -1784,6 +1881,110 @@ qreal QQuickControl::implicitBackgroundHeight() const
     if (!d->background)
         return 0;
     return d->background->implicitHeight();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Control::topInset
+
+    This property holds the top inset for the background.
+
+    \sa {Control Layout}, bottomInset
+*/
+qreal QQuickControl::topInset() const
+{
+    Q_D(const QQuickControl);
+    return d->getTopInset();
+}
+
+void QQuickControl::setTopInset(qreal inset)
+{
+    Q_D(QQuickControl);
+    d->setTopInset(inset);
+}
+
+void QQuickControl::resetTopInset()
+{
+    Q_D(QQuickControl);
+    d->setTopInset(0, true);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Control::leftInset
+
+    This property holds the left inset for the background.
+
+    \sa {Control Layout}, rightInset
+*/
+qreal QQuickControl::leftInset() const
+{
+    Q_D(const QQuickControl);
+    return d->getLeftInset();
+}
+
+void QQuickControl::setLeftInset(qreal inset)
+{
+    Q_D(QQuickControl);
+    d->setLeftInset(inset);
+}
+
+void QQuickControl::resetLeftInset()
+{
+    Q_D(QQuickControl);
+    d->setLeftInset(0, true);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Control::rightInset
+
+    This property holds the right inset for the background.
+
+    \sa {Control Layout}, leftInset
+*/
+qreal QQuickControl::rightInset() const
+{
+    Q_D(const QQuickControl);
+    return d->getRightInset();
+}
+
+void QQuickControl::setRightInset(qreal inset)
+{
+    Q_D(QQuickControl);
+    d->setRightInset(inset);
+}
+
+void QQuickControl::resetRightInset()
+{
+    Q_D(QQuickControl);
+    d->setRightInset(0, true);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Control::bottomInset
+
+    This property holds the bottom inset for the background.
+
+    \sa {Control Layout}, topInset
+*/
+qreal QQuickControl::bottomInset() const
+{
+    Q_D(const QQuickControl);
+    return d->getBottomInset();
+}
+
+void QQuickControl::setBottomInset(qreal inset)
+{
+    Q_D(QQuickControl);
+    d->setBottomInset(inset);
+}
+
+void QQuickControl::resetBottomInset()
+{
+    Q_D(QQuickControl);
+    d->setBottomInset(0, true);
 }
 
 void QQuickControl::classBegin()
@@ -2003,6 +2204,14 @@ void QQuickControl::paletteChange(const QPalette &newPalette, const QPalette &ol
 {
     Q_UNUSED(newPalette);
     Q_UNUSED(oldPalette);
+}
+
+void QQuickControl::insetChange(const QMarginsF &newInset, const QMarginsF &oldInset)
+{
+    Q_D(QQuickControl);
+    Q_UNUSED(newInset);
+    Q_UNUSED(oldInset);
+    d->resizeBackground();
 }
 
 #if QT_CONFIG(accessibility)

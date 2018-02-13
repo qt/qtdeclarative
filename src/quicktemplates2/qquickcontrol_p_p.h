@@ -107,6 +107,17 @@ public:
     void setHorizontalPadding(qreal value, bool reset = false);
     void setVerticalPadding(qreal value, bool reset = false);
 
+    inline QMarginsF getInset() const { return QMarginsF(getLeftInset(), getTopInset(), getRightInset(), getBottomInset()); }
+    inline qreal getTopInset() const { return extra.isAllocated() ? extra->topInset : 0; }
+    inline qreal getLeftInset() const { return extra.isAllocated() ? extra->leftInset : 0; }
+    inline qreal getRightInset() const { return extra.isAllocated() ? extra->rightInset : 0; }
+    inline qreal getBottomInset() const { return extra.isAllocated() ? extra->bottomInset : 0; }
+
+    void setTopInset(qreal value, bool reset = false);
+    void setLeftInset(qreal value, bool reset = false);
+    void setRightInset(qreal value, bool reset = false);
+    void setBottomInset(qreal value, bool reset = false);
+
     void resizeBackground();
     virtual void resizeContent();
 
@@ -180,10 +191,18 @@ public:
         bool hasRightPadding;
         bool hasBottomPadding;
         bool hasBaselineOffset;
+        bool hasTopInset;
+        bool hasLeftInset;
+        bool hasRightInset;
+        bool hasBottomInset;
         qreal topPadding;
         qreal leftPadding;
         qreal rightPadding;
         qreal bottomPadding;
+        qreal topInset;
+        qreal leftInset;
+        qreal rightInset;
+        qreal bottomInset;
         QFont requestedFont;
         QPalette requestedPalette;
     };

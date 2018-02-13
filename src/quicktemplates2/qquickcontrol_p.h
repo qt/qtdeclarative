@@ -89,6 +89,10 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(qreal implicitContentHeight READ implicitContentHeight NOTIFY implicitContentHeightChanged FINAL REVISION 5)
     Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION 5)
     Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal topInset READ topInset WRITE setTopInset RESET resetTopInset NOTIFY topInsetChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal leftInset READ leftInset WRITE setLeftInset RESET resetLeftInset NOTIFY leftInsetChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal rightInset READ rightInset WRITE setRightInset RESET resetRightInset NOTIFY rightInsetChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal bottomInset READ bottomInset WRITE setBottomInset RESET resetBottomInset NOTIFY bottomInsetChanged FINAL REVISION 5)
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
 
 public:
@@ -180,6 +184,22 @@ public:
     qreal implicitBackgroundWidth() const;
     qreal implicitBackgroundHeight() const;
 
+    qreal topInset() const;
+    void setTopInset(qreal inset);
+    void resetTopInset();
+
+    qreal leftInset() const;
+    void setLeftInset(qreal inset);
+    void resetLeftInset();
+
+    qreal rightInset() const;
+    void setRightInset(qreal inset);
+    void resetRightInset();
+
+    qreal bottomInset() const;
+    void setBottomInset(qreal inset);
+    void resetBottomInset();
+
 Q_SIGNALS:
     void fontChanged();
     void availableWidthChanged();
@@ -210,6 +230,10 @@ Q_SIGNALS:
     Q_REVISION(5) void implicitContentHeightChanged();
     Q_REVISION(5) void implicitBackgroundWidthChanged();
     Q_REVISION(5) void implicitBackgroundHeightChanged();
+    Q_REVISION(5) void topInsetChanged();
+    Q_REVISION(5) void leftInsetChanged();
+    Q_REVISION(5) void rightInsetChanged();
+    Q_REVISION(5) void bottomInsetChanged();
 
 protected:
     virtual QFont defaultFont() const;
@@ -253,6 +277,7 @@ protected:
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void localeChange(const QLocale &newLocale, const QLocale &oldLocale);
     virtual void paletteChange(const QPalette &newPalette, const QPalette &oldPalette);
+    virtual void insetChange(const QMarginsF &newInset, const QMarginsF &oldInset);
 
 #if QT_CONFIG(accessibility)
     virtual QAccessible::Role accessibleRole() const;
