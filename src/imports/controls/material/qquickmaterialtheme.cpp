@@ -43,7 +43,10 @@
 QT_BEGIN_NAMESPACE
 
 QQuickMaterialTheme::QQuickMaterialTheme()
-    : QQuickTheme(QStringLiteral("Material"))
+{
+}
+
+void QQuickMaterialTheme::resolveFonts(const QFont &defaultFont)
 {
     QFont font;
     font.setFamily(QLatin1String("Roboto"));
@@ -65,29 +68,29 @@ QQuickMaterialTheme::QQuickMaterialTheme()
     }
 
     systemFont.setPixelSize(14);
-    systemFont = resolveFont(systemFont);
+    systemFont = defaultFont.resolve(systemFont);
 
     buttonFont.setPixelSize(14);
     buttonFont.setCapitalization(QFont::AllUppercase);
     buttonFont.setWeight(QFont::Medium);
-    buttonFont = resolveFont(buttonFont);
+    buttonFont = defaultFont.resolve(buttonFont);
 
     toolTipFont.setPixelSize(14);
     toolTipFont.setWeight(QFont::Medium);
-    toolTipFont = resolveFont(toolTipFont);
+    toolTipFont = defaultFont.resolve(toolTipFont);
 
     itemViewFont.setPixelSize(14);
     itemViewFont.setWeight(QFont::Medium);
-    itemViewFont = resolveFont(itemViewFont);
+    itemViewFont = defaultFont.resolve(itemViewFont);
 
     listViewFont.setPixelSize(16);
-    listViewFont = resolveFont(listViewFont);
+    listViewFont = defaultFont.resolve(listViewFont);
 
     menuItemFont.setPixelSize(16);
-    menuItemFont = resolveFont(menuItemFont);
+    menuItemFont = defaultFont.resolve(menuItemFont);
 
     editorFont.setPixelSize(16);
-    editorFont = resolveFont(editorFont);
+    editorFont = defaultFont.resolve(editorFont);
 }
 
 const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const

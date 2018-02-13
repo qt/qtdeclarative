@@ -42,7 +42,10 @@
 QT_BEGIN_NAMESPACE
 
 QQuickUniversalTheme::QQuickUniversalTheme()
-    : QQuickTheme(QStringLiteral("Universal"))
+{
+}
+
+void QQuickUniversalTheme::resolveFonts(const QFont &defaultFont)
 {
     const QFont font(QLatin1String("Segoe UI"));
     if (QFontInfo(font).family() == QLatin1String("Segoe UI")) {
@@ -53,15 +56,15 @@ QQuickUniversalTheme::QQuickUniversalTheme()
     }
 
     systemFont.setPixelSize(15);
-    systemFont = resolveFont(systemFont);
+    systemFont = defaultFont.resolve(systemFont);
 
     groupBoxTitleFont.setPixelSize(15);
     groupBoxTitleFont.setWeight(QFont::DemiBold);
-    groupBoxTitleFont = resolveFont(groupBoxTitleFont);
+    groupBoxTitleFont = defaultFont.resolve(groupBoxTitleFont);
 
     tabButtonFont.setPixelSize(24);
     tabButtonFont.setWeight(QFont::Light);
-    tabButtonFont = resolveFont(tabButtonFont);
+    tabButtonFont = defaultFont.resolve(tabButtonFont);
 }
 
 const QFont *QQuickUniversalTheme::font(QPlatformTheme::Font type) const

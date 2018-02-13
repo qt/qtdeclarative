@@ -59,6 +59,9 @@ public:
 
     const QPalette *palette(Palette type) const override;
 
+protected:
+    void resolvePalettes(const QPalette &defaultPalette) override;
+
 private:
     QPalette systemPalette;
 };

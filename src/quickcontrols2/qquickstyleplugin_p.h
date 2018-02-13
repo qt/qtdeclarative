@@ -54,7 +54,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickProxyTheme;
+class QQuickTheme;
 
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStylePlugin : public QQmlExtensionPlugin
 {
@@ -69,12 +69,12 @@ public:
 
     bool isCurrent() const;
     virtual QString name() const;
-    virtual QQuickProxyTheme *createTheme() const;
+    virtual QQuickTheme *createTheme() const;
 
     QUrl typeUrl(const QString &name = QString()) const;
 
 private:
-    QScopedPointer<QQuickProxyTheme> m_theme;
+    QScopedPointer<QQuickTheme> m_theme;
 };
 
 QT_END_NAMESPACE

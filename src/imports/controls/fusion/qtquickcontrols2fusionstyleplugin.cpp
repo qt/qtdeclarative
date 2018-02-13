@@ -72,7 +72,7 @@ public:
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
     QString name() const override;
-    QQuickProxyTheme *createTheme() const override;
+    QQuickTheme *createTheme() const override;
 };
 
 QtQuickControls2FusionStylePlugin::QtQuickControls2FusionStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -109,10 +109,10 @@ void QtQuickControls2FusionStylePlugin::initializeEngine(QQmlEngine *engine, con
 
 QString QtQuickControls2FusionStylePlugin::name() const
 {
-    return QStringLiteral("fusion");
+    return QStringLiteral("Fusion");
 }
 
-QQuickProxyTheme *QtQuickControls2FusionStylePlugin::createTheme() const
+QQuickTheme *QtQuickControls2FusionStylePlugin::createTheme() const
 {
     return new QQuickFusionTheme;
 }

@@ -41,11 +41,17 @@
 QT_BEGIN_NAMESPACE
 
 QQuickImagineTheme::QQuickImagineTheme()
-    : QQuickTheme(QStringLiteral("Imagine"))
+{
+}
+
+void QQuickImagineTheme::resolveFonts(const QFont &defaultFont)
 {
     systemFont.setFamily(QLatin1String("Open Sans"));
-    systemFont = resolveFont(systemFont);
+    systemFont = defaultFont.resolve(systemFont);
+}
 
+void QQuickImagineTheme::resolvePalettes(const QPalette &defaultPalette)
+{
     const QColor accentColor = QColor::fromRgb(0x4fc1e9);
     const QColor windowTextColor = QColor::fromRgb(0x434a54);
     const QColor disabledWindowTextColor = QColor::fromRgb(0xccd1d9);
@@ -59,7 +65,7 @@ QQuickImagineTheme::QQuickImagineTheme()
     systemPalette.setColor(QPalette::WindowText, windowTextColor);
     systemPalette.setColor(QPalette::Disabled, QPalette::Text, disabledWindowTextColor);
     systemPalette.setColor(QPalette::Disabled, QPalette::WindowText, disabledWindowTextColor);
-    systemPalette = resolvePalette(systemPalette);
+    systemPalette = defaultPalette.resolve(systemPalette);
 }
 
 const QFont *QQuickImagineTheme::font(QPlatformTheme::Font type) const

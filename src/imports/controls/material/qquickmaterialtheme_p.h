@@ -63,6 +63,9 @@ public:
 
     QVariant themeHint(ThemeHint hint) const override;
 
+protected:
+    void resolveFonts(const QFont &defaultFont) override;
+
 private:
     QFont systemFont;
     QFont buttonFont;

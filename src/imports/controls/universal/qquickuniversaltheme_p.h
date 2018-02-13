@@ -60,6 +60,9 @@ public:
 
     const QFont *font(Font type = SystemFont) const override;
 
+protected:
+    void resolveFonts(const QFont &defaultFont) override;
+
 private:
     QFont systemFont;
     QFont groupBoxTitleFont;

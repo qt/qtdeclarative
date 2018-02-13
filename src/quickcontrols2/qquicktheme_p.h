@@ -58,18 +58,21 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickTheme :  public QQuickProxyTheme
 {
 public:
-    QQuickTheme(const QString &name);
+    QQuickTheme();
 
     const QFont *font(Font type = SystemFont) const override;
     const QPalette *palette(Palette type = SystemPalette) const override;
 
+    void setDefaultFont(const QFont *defaultFont);
+    void setDefaultPalette(const QPalette *defaultPalette);
+
 protected:
-    QFont resolveFont(const QFont &font) const;
-    QPalette resolvePalette(const QPalette &palette) const;
+    virtual void resolveFonts(const QFont &defaultFont);
+    virtual void resolvePalettes(const QPalette &defaultPalette);
 
 private:
-    QScopedPointer<QFont> m_styleFont;
-    QScopedPointer<QPalette> m_stylePalette;
+    QScopedPointer<const QFont> m_defaultFont;
+    QScopedPointer<const QPalette> m_defaultPalette;
 };
 
 QT_END_NAMESPACE

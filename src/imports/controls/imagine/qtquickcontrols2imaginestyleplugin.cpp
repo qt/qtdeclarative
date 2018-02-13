@@ -67,7 +67,7 @@ public:
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
     QString name() const override;
-    QQuickProxyTheme *createTheme() const override;
+    QQuickTheme *createTheme() const override;
 };
 
 QtQuickControls2ImagineStylePlugin::QtQuickControls2ImagineStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -96,10 +96,10 @@ void QtQuickControls2ImagineStylePlugin::initializeEngine(QQmlEngine *engine, co
 
 QString QtQuickControls2ImagineStylePlugin::name() const
 {
-    return QStringLiteral("imagine");
+    return QStringLiteral("Imagine");
 }
 
-QQuickProxyTheme *QtQuickControls2ImagineStylePlugin::createTheme() const
+QQuickTheme *QtQuickControls2ImagineStylePlugin::createTheme() const
 {
     return new QQuickImagineTheme;
 }

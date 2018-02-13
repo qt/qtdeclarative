@@ -67,7 +67,7 @@ public:
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
     QString name() const override;
-    QQuickProxyTheme *createTheme() const override;
+    QQuickTheme *createTheme() const override;
 };
 
 QtQuickControls2MaterialStylePlugin::QtQuickControls2MaterialStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -103,10 +103,10 @@ void QtQuickControls2MaterialStylePlugin::initializeEngine(QQmlEngine *engine, c
 
 QString QtQuickControls2MaterialStylePlugin::name() const
 {
-    return QStringLiteral("material");
+    return QStringLiteral("Material");
 }
 
-QQuickProxyTheme *QtQuickControls2MaterialStylePlugin::createTheme() const
+QQuickTheme *QtQuickControls2MaterialStylePlugin::createTheme() const
 {
     return new QQuickMaterialTheme;
 }

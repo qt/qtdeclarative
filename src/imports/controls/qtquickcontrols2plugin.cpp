@@ -81,7 +81,7 @@ public:
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
     QString name() const override;
-    QQuickProxyTheme *createTheme() const override;
+    QQuickTheme *createTheme() const override;
 };
 
 QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -217,10 +217,10 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *ur
 
 QString QtQuickControls2Plugin::name() const
 {
-    return QStringLiteral("default");
+    return QStringLiteral("Default");
 }
 
-QQuickProxyTheme *QtQuickControls2Plugin::createTheme() const
+QQuickTheme *QtQuickControls2Plugin::createTheme() const
 {
     return new QQuickDefaultTheme;
 }

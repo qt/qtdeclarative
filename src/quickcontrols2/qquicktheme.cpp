@@ -35,129 +35,47 @@
 ****************************************************************************/
 
 #include "qquicktheme_p.h"
-#include "qquickstyle_p.h"
-
-#include <QtCore/qmetaobject.h>
-#include <QtCore/qsettings.h>
-
-#include <functional>
 
 QT_BEGIN_NAMESPACE
 
-#if QT_CONFIG(settings)
-static void readValue(const QSharedPointer<QSettings> &settings, const QString &name, std::function<void(const QVariant &)> setValue)
+QQuickTheme::QQuickTheme()
 {
-    const QVariant var = settings->value(name);
-    if (var.isValid())
-        setValue(var);
-}
-
-template <typename Enum>
-static Enum toEnumValue(const QVariant &var)
-{
-    // ### TODO: expose QFont enums to the meta object system using Q_ENUM
-    //QMetaEnum enumeration = QMetaEnum::fromType<Enum>();
-    //bool ok = false;
-    //int value = enumeration.keyToValue(var.toByteArray(), &ok);
-    //if (!ok)
-    //    value = var.toInt();
-    //return static_cast<Enum>(value);
-
-    return static_cast<Enum>(var.toInt());
-}
-
-QFont *readFont(const QSharedPointer<QSettings> &settings)
-{
-    const QVariant var = settings->value(QStringLiteral("Font"));
-    if (var.isValid())
-        return new QFont(var.value<QFont>());
-
-    QFont f;
-    settings->beginGroup(QStringLiteral("Font"));
-    readValue(settings, QStringLiteral("Family"), [&f](const QVariant &var) { f.setFamily(var.toString()); });
-    readValue(settings, QStringLiteral("PointSize"), [&f](const QVariant &var) { f.setPointSizeF(var.toReal()); });
-    readValue(settings, QStringLiteral("PixelSize"), [&f](const QVariant &var) { f.setPixelSize(var.toInt()); });
-    readValue(settings, QStringLiteral("StyleHint"), [&f](const QVariant &var) { f.setStyleHint(toEnumValue<QFont::StyleHint>(var.toInt())); });
-    readValue(settings, QStringLiteral("Weight"), [&f](const QVariant &var) { f.setWeight(toEnumValue<QFont::Weight>(var)); });
-    readValue(settings, QStringLiteral("Style"), [&f](const QVariant &var) { f.setStyle(toEnumValue<QFont::Style>(var.toInt())); });
-    settings->endGroup();
-    return new QFont(f);
-}
-
-static void readColorGroup(const QSharedPointer<QSettings> &settings, QPalette::ColorGroup group, QPalette *palette)
-{
-    const QStringList keys = settings->childKeys();
-    if (keys.isEmpty())
-        return;
-
-    static const int index = QPalette::staticMetaObject.indexOfEnumerator("ColorRole");
-    Q_ASSERT(index != -1);
-    QMetaEnum metaEnum = QPalette::staticMetaObject.enumerator(index);
-
-    for (const QString &key : keys) {
-        bool ok = false;
-        int role = metaEnum.keyToValue(key.toUtf8(), &ok);
-        if (ok)
-            palette->setColor(group, static_cast<QPalette::ColorRole>(role), settings->value(key).value<QColor>());
-    }
-}
-
-static QPalette *readPalette(const QSharedPointer<QSettings> &settings)
-{
-    QPalette p;
-    settings->beginGroup(QStringLiteral("Palette"));
-    readColorGroup(settings, QPalette::All, &p);
-
-    settings->beginGroup(QStringLiteral("Normal"));
-    readColorGroup(settings, QPalette::Normal, &p);
-    settings->endGroup();
-
-    settings->beginGroup(QStringLiteral("Disabled"));
-    readColorGroup(settings, QPalette::Disabled, &p);
-    settings->endGroup();
-    return new QPalette(p);
-}
-
-#endif // QT_CONFIG(settings)
-
-QQuickTheme::QQuickTheme(const QString &style)
-    : QQuickProxyTheme()
-{
-#if QT_CONFIG(settings)
-    QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(style);
-    if (settings) {
-        m_styleFont.reset(readFont(settings));
-        m_stylePalette.reset(readPalette(settings));
-    }
-#endif
 }
 
 const QFont *QQuickTheme::font(Font type) const
 {
     Q_UNUSED(type);
-    return m_styleFont.data();
+    return m_defaultFont.data();
 }
 
 const QPalette *QQuickTheme::palette(Palette type) const
 {
     Q_UNUSED(type);
-    return m_stylePalette.data();
+    return m_defaultPalette.data();
 }
 
-QFont QQuickTheme::resolveFont(const QFont &font) const
+void QQuickTheme::setDefaultFont(const QFont *defaultFont)
 {
-    if (!m_styleFont)
-        return font;
-
-    return m_styleFont->resolve(font);
+    m_defaultFont.reset(defaultFont);
+    if (defaultFont)
+        resolveFonts(*defaultFont);
 }
 
-QPalette QQuickTheme::resolvePalette(const QPalette &palette) const
+void QQuickTheme::setDefaultPalette(const QPalette *defaultPalette)
 {
-    if (!m_stylePalette)
-        return palette;
+    m_defaultPalette.reset(defaultPalette);
+    if (defaultPalette)
+        resolvePalettes(*defaultPalette);
+}
 
-    return m_stylePalette->resolve(palette);
+void QQuickTheme::resolveFonts(const QFont &defaultFont)
+{
+    Q_UNUSED(defaultFont)
+}
+
+void QQuickTheme::resolvePalettes(const QPalette &defaultPalette)
+{
+    Q_UNUSED(defaultPalette)
 }
 
 QT_END_NAMESPACE

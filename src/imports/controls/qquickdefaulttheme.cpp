@@ -39,7 +39,10 @@
 QT_BEGIN_NAMESPACE
 
 QQuickDefaultTheme::QQuickDefaultTheme()
-    : QQuickTheme(QStringLiteral("Default"))
+{
+}
+
+void QQuickDefaultTheme::resolvePalettes(const QPalette &defaultPalette)
 {
     systemPalette.setColor(QPalette::Base, QColor::fromRgba(0xFFFFFFFF));
     systemPalette.setColor(QPalette::Disabled, QPalette::Base, QColor::fromRgba(0xFFD6D6D6));
@@ -80,7 +83,7 @@ QQuickDefaultTheme::QQuickDefaultTheme()
     systemPalette.setColor(QPalette::WindowText, QColor::fromRgba(0xFF26282A));
     systemPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor::fromRgba(0xFFBDBEBF));
 
-    systemPalette = resolvePalette(systemPalette);
+    systemPalette = defaultPalette.resolve(systemPalette);
 }
 
 const QPalette *QQuickDefaultTheme::palette(QPlatformTheme::Palette type) const

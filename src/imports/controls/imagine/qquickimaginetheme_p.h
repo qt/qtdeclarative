@@ -60,6 +60,10 @@ public:
     const QFont *font(Font type = SystemFont) const override;
     const QPalette *palette(Palette type = SystemPalette) const override;
 
+protected:
+    void resolveFonts(const QFont &defaultFont) override;
+    void resolvePalettes(const QPalette &defaultPalette) override;
+
 private:
     QFont systemFont;
     QPalette systemPalette;

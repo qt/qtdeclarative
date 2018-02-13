@@ -64,7 +64,7 @@ public:
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
     QString name() const override;
-    QQuickProxyTheme *createTheme() const override;
+    QQuickTheme *createTheme() const override;
 };
 
 QtQuickControls2UniversalStylePlugin::QtQuickControls2UniversalStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -96,10 +96,10 @@ void QtQuickControls2UniversalStylePlugin::initializeEngine(QQmlEngine *engine, 
 
 QString QtQuickControls2UniversalStylePlugin::name() const
 {
-    return QStringLiteral("universal");
+    return QStringLiteral("Universal");
 }
 
-QQuickProxyTheme *QtQuickControls2UniversalStylePlugin::createTheme() const
+QQuickTheme *QtQuickControls2UniversalStylePlugin::createTheme() const
 {
     return new QQuickUniversalTheme;
 }

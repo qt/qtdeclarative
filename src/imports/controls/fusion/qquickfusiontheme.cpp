@@ -39,7 +39,6 @@
 QT_BEGIN_NAMESPACE
 
 QQuickFusionTheme::QQuickFusionTheme()
-    : QQuickTheme(QStringLiteral("Fusion"))
 {
 }
 
