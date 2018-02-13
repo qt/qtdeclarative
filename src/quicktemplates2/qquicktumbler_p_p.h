@@ -105,6 +105,7 @@ public:
 
     void disconnectFromView();
     void setupViewData(QQuickItem *newControlContentItem);
+    void warnAboutIncorrectContentItem();
     void syncCurrentIndex();
 
     void setCount(int newCount);

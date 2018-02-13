@@ -70,7 +70,8 @@ QT_BEGIN_NAMESPACE
 
     The API is similar to that of views like \l ListView and \l PathView; a
     \l model and \l delegate can be set, and the \l count and \l currentItem
-    properties provide read-only access to information about the view.
+    properties provide read-only access to information about the view. To
+    position the view at a certain index, use \l positionViewAtIndex().
 
     Unlike views like \l PathView and \l ListView, however, there is always a
     current item (when the model isn't empty). This means that when \l count is
@@ -350,6 +351,8 @@ int QQuickTumbler::count() const
 
     The value of this property is \c -1 when \l count is equal to \c 0. In all
     other cases, it will be greater than or equal to \c 0.
+
+    \sa currentItem, positionViewAtIndex()
 */
 int QQuickTumbler::currentIndex() const
 {
@@ -410,6 +413,8 @@ void QQuickTumbler::setCurrentIndex(int currentIndex)
     \readonly
 
     This property holds the item at the current index.
+
+    \sa currentIndex, positionViewAtIndex()
 */
 QQuickItem *QQuickTumbler::currentItem() const
 {
@@ -511,6 +516,41 @@ bool QQuickTumbler::isMoving() const
     return d->view && d->view->property("moving").toBool();
 }
 
+/*!
+    \qmlmethod void QtQuick.Controls::Tumbler::positionViewAtIndex(int index, PositionMode mode)
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+
+    Positions the view so that the \a index is at the position specified by \a mode.
+
+    For example:
+
+    \code
+    positionViewAtIndex(10, Tumbler.Center)
+    \endcode
+
+    If \l wrap is true (the default), the modes available to \l {PathView}'s
+    \l {PathView::}{positionViewAtIndex()} function
+    are available, otherwise the modes available to \l {ListView}'s
+    \l {ListView::}{positionViewAtIndex()} function
+    are available.
+
+    \note There is a known limitation that using \c Tumbler.Beginning when \l
+    wrap is \c true will result in the wrong item being positioned at the top
+    of view. As a workaround, pass \c {index - 1}.
+
+    \sa currentIndex
+*/
+void QQuickTumbler::positionViewAtIndex(int index, QQuickTumbler::PositionMode mode)
+{
+    Q_D(QQuickTumbler);
+    if (!d->view) {
+        d->warnAboutIncorrectContentItem();
+        return;
+    }
+
+    QMetaObject::invokeMethod(d->view, "positionViewAtIndex", Q_ARG(int, index), Q_ARG(int, mode));
+}
+
 void QQuickTumbler::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickTumbler);
@@ -609,7 +649,7 @@ void QQuickTumblerPrivate::setupViewData(QQuickItem *newControlContentItem)
         return;
 
     if (viewContentItemType == QQuickTumblerPrivate::UnsupportedContentItemType) {
-        qWarning() << "Tumbler: contentItem must contain either a PathView or a ListView";
+        warnAboutIncorrectContentItem();
         return;
     }
 
@@ -634,6 +674,12 @@ void QQuickTumblerPrivate::setupViewData(QQuickItem *newControlContentItem)
     syncCurrentIndex();
 
     calculateDisplacements();
+}
+
+void QQuickTumblerPrivate::warnAboutIncorrectContentItem()
+{
+    Q_Q(QQuickTumbler);
+    qmlWarning(q) << "Tumbler: contentItem must contain either a PathView or a ListView";
 }
 
 void QQuickTumblerPrivate::syncCurrentIndex()

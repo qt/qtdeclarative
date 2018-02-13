@@ -100,6 +100,19 @@ public:
     // 2.2 (Qt 5.9)
     bool isMoving() const;
 
+    enum PositionMode {
+        Beginning,
+        Center,
+        End,
+        Visible, // ListView-only
+        Contain,
+        SnapPosition
+    };
+    Q_ENUM(PositionMode)
+
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) Q_INVOKABLE void positionViewAtIndex(int index, PositionMode mode);
+
 Q_SIGNALS:
     void modelChanged();
     void countChanged();
