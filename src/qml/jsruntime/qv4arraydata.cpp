@@ -235,18 +235,39 @@ void ArrayData::ensureAttributes(Object *o)
     ArrayData::realloc(o, Heap::ArrayData::Simple, 0, true);
 }
 
+// Note: This function, and the calls from SimpleArrayData::markObjects, is a partial backport
+// of the functionality of ValueArray in 5.11. It prevents huge arrays to overflow the JS stack
+// during the mark phase by draining it while marking the array contents.
+static void drainMarkStack(QV4::ExecutionEngine *engine, Value *markBase)
+{
+    while (engine->jsStackTop > markBase) {
+        Heap::Base *h = engine->popForGC();
+        Q_ASSERT(h); // at this point we should only have Heap::Base objects in this area on the stack. If not, weird things might happen.
+        Q_ASSERT (h->vtable()->markObjects);
+        h->vtable()->markObjects(h, engine);
+    }
+}
 
 void SimpleArrayData::markObjects(Heap::Base *d, ExecutionEngine *e)
 {
+    Value *markBase = e->jsStackTop;
+    const auto *maxMarkStack = markBase + 32 * 1024;
+
     Heap::SimpleArrayData *dd = static_cast<Heap::SimpleArrayData *>(d);
     uint end = dd->offset + dd->len;
     if (end > dd->alloc) {
-        for (uint i = 0; i < end - dd->alloc; ++i)
+        for (uint i = 0; i < end - dd->alloc; ++i) {
+            if (e->jsStackTop > maxMarkStack)
+                drainMarkStack(e, markBase);
             dd->arrayData[i].mark(e);
+        }
         end = dd->alloc;
     }
-    for (uint i = dd->offset; i < end; ++i)
+    for (uint i = dd->offset; i < end; ++i) {
+        if (e->jsStackTop > maxMarkStack)
+            drainMarkStack(e, markBase);
         dd->arrayData[i].mark(e);
+    }
 }
 
 ReturnedValue SimpleArrayData::get(const Heap::ArrayData *d, uint index)
