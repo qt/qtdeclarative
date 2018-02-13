@@ -149,6 +149,9 @@ static void removeFromPropertyData(Object *object, int idx, bool accessor = fals
     int size = o->internalClass->size;
     for (int i = idx; i < size; ++i)
         o->setProperty(v4, i, *o->propertyData(i + (accessor ? 2 : 1)));
+    o->setProperty(v4, size, Primitive::undefinedValue());
+    if (accessor)
+        o->setProperty(v4, size + 1, Primitive::undefinedValue());
 }
 
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)
