@@ -84,8 +84,10 @@ static QString cacheFilePath(const QUrl &url)
 {
     const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
     const QString localCachePath = localSourcePath + QLatin1Char('c');
+#ifndef Q_OS_ANDROID
     if (QFile::exists(localCachePath) || QFileInfo(QFileInfo(localSourcePath).dir().absolutePath()).isWritable())
         return localCachePath;
+#endif
     QCryptographicHash fileNameHash(QCryptographicHash::Sha1);
     fileNameHash.addData(localSourcePath.toUtf8());
     QString directory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/qmlcache/");
