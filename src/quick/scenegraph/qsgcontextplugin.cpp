@@ -139,7 +139,7 @@ QSGAdaptationBackendData *contextFactory()
         }
 
         if (!requestedBackend.isEmpty()) {
-            qCDebug(QSG_LOG_INFO) << "Loading backend" << requestedBackend;
+            qCDebug(QSG_LOG_INFO, "Loading backend %s", qUtf8Printable(requestedBackend));
 
             // First look for a built-in adaptation.
             for (QSGContextFactoryInterface *builtInBackend : qAsConst(backendData->builtIns)) {

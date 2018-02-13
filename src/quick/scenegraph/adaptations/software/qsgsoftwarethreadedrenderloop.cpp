@@ -523,7 +523,7 @@ void QSGSoftwareRenderThread::syncAndRender()
         // rate of the current screen the window is on.
         int blockTime = vsyncDelta - (int) renderThrottleTimer.elapsed();
         if (blockTime > 0) {
-            qCDebug(QSG_RASTER_LOG_RENDERLOOP) <<  "RT - blocking for " << blockTime << "ms";
+            qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - blocking for %d ms", blockTime);
             msleep(blockTime);
         }
         renderThrottleTimer.restart();

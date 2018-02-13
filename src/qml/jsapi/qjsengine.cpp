@@ -552,7 +552,7 @@ QJSValue QJSEngine::newQMetaObject(const QMetaObject* metaObject) {
     return QJSValue(v4, v->asReturnedValue());
 }
 
-/*! \fn QJSValue QJSEngine::newQMetaObject<T>()
+/*! \fn template <typename T> QJSValue QJSEngine::newQMetaObject()
 
   \since 5.8
   Creates a JavaScript object that wraps the static QMetaObject associated
@@ -710,14 +710,14 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     }
 }
 
-/*! \fn QJSValue QJSEngine::toScriptValue(const T &value)
+/*! \fn template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)
 
     Creates a QJSValue with the given \a value.
 
     \sa fromScriptValue()
 */
 
-/*! \fn T QJSEngine::fromScriptValue(const QJSValue &value)
+/*! \fn template <typename T> T QJSEngine::fromScriptValue(const QJSValue &value)
 
     Returns the given \a value converted to the template type \c{T}.
 

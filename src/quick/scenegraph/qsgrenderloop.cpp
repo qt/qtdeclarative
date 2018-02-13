@@ -327,7 +327,7 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
         current = gl->makeCurrent(surface);
     }
     if (Q_UNLIKELY(!current))
-        qCDebug(QSG_LOG_RENDERLOOP) << "cleanup without an OpenGL context";
+        qCDebug(QSG_LOG_RENDERLOOP, "cleanup without an OpenGL context");
 
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
     QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();

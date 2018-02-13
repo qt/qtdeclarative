@@ -374,12 +374,12 @@ The \l {Qt Quick 1} version of this class is named QDeclarativeListProperty.
 */
 
 /*!
-\fn QQmlListProperty::QQmlListProperty()
+\fn template<typename T> QQmlListProperty<T>::QQmlListProperty()
 \internal
 */
 
 /*!
-\fn QQmlListProperty::QQmlListProperty(QObject *object, QList<T *> &list)
+\fn template<typename T> QQmlListProperty<T>::QQmlListProperty(QObject *object, QList<T *> &list)
 
 Convenience constructor for making a QQmlListProperty value from an existing
 QList \a list.  The \a list reference must remain valid for as long as \a object
@@ -391,7 +391,7 @@ can be very useful while prototyping.
 */
 
 /*!
-\fn QQmlListProperty::QQmlListProperty(QObject *object, void *data,
+\fn template<typename T> QQmlListProperty<T>::QQmlListProperty(QObject *object, void *data,
                                     CountFunction count, AtFunction at)
 
 Construct a readonly QQmlListProperty from a set of operation functions
@@ -401,7 +401,7 @@ remains valid while \a object exists.
 */
 
 /*!
-\fn QQmlListProperty::QQmlListProperty(QObject *object, void *data, AppendFunction append,
+\fn template<typename T> QQmlListProperty<T>::QQmlListProperty(QObject *object, void *data, AppendFunction append,
                                      CountFunction count, AtFunction at,
                                      ClearFunction clear)
 
@@ -432,7 +432,7 @@ Return the number of elements in the list \a property.
 */
 
 /*!
-\fn bool QQmlListProperty::operator==(const QQmlListProperty &other) const
+\fn template<typename T> bool QQmlListProperty<T>::operator==(const QQmlListProperty &other) const
 
 Returns true if this QQmlListProperty is equal to \a other, otherwise false.
 */

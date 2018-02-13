@@ -501,9 +501,10 @@ void Atlas::uploadPendingTexture(int i)
             textureSize.height() > m_atlas_transient_image_threshold)
         t->releaseImage();
 
-    qCDebug(QSG_LOG_TIME_TEXTURE).nospace() << "atlastexture uploaded in: " << qsg_renderer_timer.elapsed()
-                                            << "ms (" << t->textureSize().width() << "x"
-                                            << t->textureSize().height() << ")";
+    qCDebug(QSG_LOG_TIME_TEXTURE, "atlastexture uploaded in: %lldms (%dx%d)",
+            qsg_renderer_timer.elapsed(),
+            t->textureSize().width(),
+            t->textureSize().height());
 }
 
 TextureBase::TextureBase(AtlasBase *atlas, const QRect &textureRect)

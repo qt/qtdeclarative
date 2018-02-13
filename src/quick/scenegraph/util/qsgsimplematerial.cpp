@@ -173,17 +173,17 @@
 
 
 /*!
-    \fn char const *const *QSGSimpleMaterialShader::attributeNames() const
+    \fn template <typename State> char const *const *QSGSimpleMaterialShader<State>::attributeNames() const
     \internal
  */
 
 /*!
-    \fn void QSGSimpleMaterialShader::initialize()
+    \fn template <typename State> void QSGSimpleMaterialShader<State>::initialize()
     \internal
  */
 
 /*!
-    \fn void QSGSimpleMaterialShader::resolveUniforms()
+    \fn template <typename State> void QSGSimpleMaterialShader<State>::resolveUniforms()
 
     Reimplement this function to resolve the location of named uniforms
     in the shader program.
@@ -192,34 +192,34 @@
  */
 
 /*!
-    \fn const char *QSGSimpleMaterialShader::uniformMatrixName() const
+    \fn template <typename State> const char *QSGSimpleMaterialShader<State>::uniformMatrixName() const
 
     Returns the name for the transform matrix uniform of this item.
     The default value is \c qt_Matrix.
  */
 
 /*!
-    \fn const char *QSGSimpleMaterialShader::uniformOpacityName() const
+    \fn template <typename State> const char *QSGSimpleMaterialShader<State>::uniformOpacityName() const
 
     Returns the name for the opacity uniform of this item.
     The default value is \c qt_Opacity.
  */
 
 /*!
-    \fn void QSGSimpleMaterialShader::updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+    \fn template <typename State> void QSGSimpleMaterialShader<State>::updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
     \internal
  */
 
 
 /*!
-    \fn QList<QByteArray> QSGSimpleMaterialShader::attributes() const
+    \fn template <typename State> QList<QByteArray> QSGSimpleMaterialShader<State>::attributes() const
 
     Returns a list of names, declaring the vertex attributes in the
     vertex shader.
 */
 
 /*!
-    \fn void QSGSimpleMaterialShader::updateState(const State *newState, const State *oldState)
+    \fn template <typename State> void QSGSimpleMaterialShader<State>::updateState(const State *newState, const State *oldState)
 
     Called whenever the state of this shader should be updated from
     \a oldState to \a newState, typical for each new set of

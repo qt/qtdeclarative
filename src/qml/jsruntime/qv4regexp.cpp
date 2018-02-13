@@ -82,7 +82,7 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
         return result->d();
 
     Scope scope(engine);
-    Scoped<RegExp> result(scope, engine->memoryManager->alloc<RegExp>(pattern, ignoreCase, multiline, global));
+    Scoped<RegExp> result(scope, engine->memoryManager->alloc<RegExp>(engine, pattern, ignoreCase, multiline, global));
 
     result->d()->cache = cache;
     cachedValue.set(engine, result);
@@ -90,7 +90,7 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
     return result->d();
 }
 
-void Heap::RegExp::init(const QString &pattern, bool ignoreCase, bool multiline, bool global)
+void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, bool ignoreCase, bool multiline, bool global)
 {
     Base::init();
     this->pattern = new QString(pattern);
@@ -106,7 +106,7 @@ void Heap::RegExp::init(const QString &pattern, bool ignoreCase, bool multiline,
         return;
     subPatternCount = yarrPattern.m_numSubpatterns;
 #if ENABLE(YARR_JIT)
-    if (!yarrPattern.m_containsBackreferences) {
+    if (!yarrPattern.m_containsBackreferences && engine->canJIT()) {
         jitCode = new JSC::Yarr::YarrCodeBlock;
         JSC::JSGlobalData dummy(internalClass->engine->regExpAllocator);
         JSC::Yarr::jitCompile(yarrPattern, JSC::Yarr::Char16, &dummy, *jitCode);

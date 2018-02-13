@@ -1194,7 +1194,7 @@ static QV4::ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index
     }
 }
 
-/*!
+/*
     Returns the match score for converting \a actual to be of type \a conversionType.  A
     zero score means "perfect match" whereas a higher score is worse.
 
@@ -1351,7 +1351,7 @@ static inline int QMetaObject_methods(const QMetaObject *metaObject)
     return reinterpret_cast<const Private *>(metaObject->d.data)->methodCount;
 }
 
-/*!
+/*
 Returns the next related method, if one, or 0.
 */
 static const QQmlPropertyData * RelatedMethod(const QQmlObjectOrGadget &object,
@@ -1441,7 +1441,7 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
     }
 }
 
-/*!
+/*
 Resolve the overloaded method to call.  The algorithm works conceptually like this:
     1.  Resolve the set of overloads it is *possible* to call.
         Impossible overloads include those that have too many parameters or have parameters

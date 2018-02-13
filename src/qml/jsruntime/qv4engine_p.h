@@ -488,10 +488,14 @@ public:
 
     bool checkStackLimits();
 
-    bool canJIT(Function *f)
+    bool canJIT(Function *f = nullptr)
     {
 #if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
-        return f->interpreterCallCount >= jitCallCountThreshold;
+        if (!canAllocateExecutableMemory)
+            return false;
+        if (f)
+            return f->interpreterCallCount >= jitCallCountThreshold;
+        return true;
 #else
         Q_UNUSED(f);
         return false;
@@ -506,6 +510,9 @@ private:
     QScopedPointer<QV4::Profiling::Profiler> m_profiler;
 #endif
     int jitCallCountThreshold;
+#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
+    static const bool canAllocateExecutableMemory;
+#endif
 };
 
 // This is a trick to tell the code generators that functions taking a NoThrowContext won't
