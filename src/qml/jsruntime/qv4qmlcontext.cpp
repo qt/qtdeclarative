@@ -108,8 +108,8 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
         return result->asReturnedValue();
     }
 
-    // Its possible we could delay the calculation of the "actual" context (in the case
-    // of sub contexts) until it is definately needed.
+    // It's possible we could delay the calculation of the "actual" context (in the case
+    // of sub contexts) until it is definitely needed.
     QQmlContextData *context = resource->getContext();
     QQmlContextData *expressionContext = context;
 
@@ -248,8 +248,8 @@ bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
         return Object::put(m, name, value);
     }
 
-    // Its possible we could delay the calculation of the "actual" context (in the case
-    // of sub contexts) until it is definately needed.
+    // It's possible we could delay the calculation of the "actual" context (in the case
+    // of sub contexts) until it is definitely needed.
     QQmlContextData *context = wrapper->getContext();
     QQmlContextData *expressionContext = context;
 
