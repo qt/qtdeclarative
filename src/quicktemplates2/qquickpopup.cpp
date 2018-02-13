@@ -1285,11 +1285,12 @@ void QQuickPopup::resetPadding()
 /*!
     \qmlproperty real QtQuick.Controls::Popup::topPadding
 
-    This property holds the top padding.
+    This property holds the top padding. Unless explicitly set, the value
+    is equal to \c verticalPadding.
 
     \include qquickpopup-padding.qdocinc
 
-    \sa padding, bottomPadding, availableHeight
+    \sa padding, bottomPadding, verticalPadding, availableHeight
 */
 qreal QQuickPopup::topPadding() const
 {
@@ -1312,11 +1313,12 @@ void QQuickPopup::resetTopPadding()
 /*!
     \qmlproperty real QtQuick.Controls::Popup::leftPadding
 
-    This property holds the left padding.
+    This property holds the left padding. Unless explicitly set, the value
+    is equal to \c horizontalPadding.
 
     \include qquickpopup-padding.qdocinc
 
-    \sa padding, rightPadding, availableWidth
+    \sa padding, rightPadding, horizontalPadding, availableWidth
 */
 qreal QQuickPopup::leftPadding() const
 {
@@ -1339,11 +1341,12 @@ void QQuickPopup::resetLeftPadding()
 /*!
     \qmlproperty real QtQuick.Controls::Popup::rightPadding
 
-    This property holds the right padding.
+    This property holds the right padding. Unless explicitly set, the value
+    is equal to \c horizontalPadding.
 
     \include qquickpopup-padding.qdocinc
 
-    \sa padding, leftPadding, availableWidth
+    \sa padding, leftPadding, horizontalPadding, availableWidth
 */
 qreal QQuickPopup::rightPadding() const
 {
@@ -1366,11 +1369,12 @@ void QQuickPopup::resetRightPadding()
 /*!
     \qmlproperty real QtQuick.Controls::Popup::bottomPadding
 
-    This property holds the bottom padding.
+    This property holds the bottom padding. Unless explicitly set, the value
+    is equal to \c verticalPadding.
 
     \include qquickpopup-padding.qdocinc
 
-    \sa padding, topPadding, availableHeight
+    \sa padding, topPadding, verticalPadding, availableHeight
 */
 qreal QQuickPopup::bottomPadding() const
 {
@@ -2078,6 +2082,64 @@ void QQuickPopup::setExit(QQuickTransition *transition)
     emit exitChanged();
 }
 
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Popup::horizontalPadding
+
+    This property holds the horizontal padding. Unless explicitly set, the value
+    is equal to \c padding.
+
+    \include qquickpopup-padding.qdocinc
+
+    \sa padding, leftPadding, rightPadding, verticalPadding
+*/
+qreal QQuickPopup::horizontalPadding() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->horizontalPadding();
+}
+
+void QQuickPopup::setHorizontalPadding(qreal padding)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setHorizontalPadding(padding);
+}
+
+void QQuickPopup::resetHorizontalPadding()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetHorizontalPadding();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Popup::verticalPadding
+
+    This property holds the vertical padding. Unless explicitly set, the value
+    is equal to \c padding.
+
+    \include qquickpopup-padding.qdocinc
+
+    \sa padding, topPadding, bottomPadding, horizontalPadding
+*/
+qreal QQuickPopup::verticalPadding() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->verticalPadding();
+}
+
+void QQuickPopup::setVerticalPadding(qreal padding)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setVerticalPadding(padding);
+}
+
+void QQuickPopup::resetVerticalPadding()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetVerticalPadding();
+}
+
 bool QQuickPopup::filtersChildMouseEvents() const
 {
     Q_D(const QQuickPopup);
@@ -2328,10 +2390,14 @@ void QQuickPopup::paddingChange(const QMarginsF &newPadding, const QMarginsF &ol
     if (bp)
         emit bottomPaddingChanged();
 
-    if (lp || rp)
+    if (lp || rp) {
+        emit horizontalPaddingChanged();
         emit availableWidthChanged();
-    if (tp || bp)
+    }
+    if (tp || bp) {
+        emit verticalPaddingChanged();
         emit availableHeightChanged();
+    }
 }
 
 void QQuickPopup::paletteChange(const QPalette &newPalette, const QPalette &oldPalette)

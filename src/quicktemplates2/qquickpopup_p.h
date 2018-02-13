@@ -121,6 +121,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL REVISION 3)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL REVISION 3)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(qreal horizontalPadding READ horizontalPadding WRITE setHorizontalPadding RESET resetHorizontalPadding NOTIFY horizontalPaddingChanged FINAL)
+    Q_PROPERTY(qreal verticalPadding READ verticalPadding WRITE setVerticalPadding RESET resetVerticalPadding NOTIFY verticalPaddingChanged FINAL)
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
     Q_CLASSINFO("DefaultProperty", "contentData")
 
@@ -304,6 +307,15 @@ public:
     void setPalette(const QPalette &palette);
     void resetPalette();
 
+    // 2.5 (Qt 5.12)
+    qreal horizontalPadding() const;
+    void setHorizontalPadding(qreal padding);
+    void resetHorizontalPadding();
+
+    qreal verticalPadding() const;
+    void setVerticalPadding(qreal padding);
+    void resetVerticalPadding();
+
 public Q_SLOTS:
     void open();
     void close();
@@ -359,6 +371,9 @@ Q_SIGNALS:
     Q_REVISION(3) void mirroredChanged();
     Q_REVISION(3) void enabledChanged();
     Q_REVISION(3) void paletteChanged();
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) void horizontalPaddingChanged();
+    Q_REVISION(5) void verticalPaddingChanged();
 
 protected:
     QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);
