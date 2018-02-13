@@ -56,8 +56,8 @@ T.Dial {
     }
 
     handle: Rectangle {
-        implicitWidth: 20
-        implicitHeight: 20
+        implicitWidth: 14
+        implicitHeight: 14
 
         x: background.x + background.width / 2 - handle.width / 2
         y: background.y + background.height / 2 - handle.height / 2
