@@ -96,23 +96,24 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, cons
     declarationsOverride = nullptr;
 }
 
-QString Object::sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation)
+QString IRBuilder::sanityCheckFunctionNames(Object *obj, const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation)
 {
     QSet<int> functionNames;
-    for (Function *f = functions->first; f; f = f->next) {
-        QQmlJS::AST::FunctionDeclaration *function = f->functionDeclaration;
-        Q_ASSERT(function);
-        *errorLocation = function->identifierToken;
+    for (auto functionit = obj->functionsBegin(); functionit != obj->functionsEnd(); ++functionit) {
+        Function *f = functionit.ptr;
+        errorLocation->startLine = f->location.line;
+        errorLocation->startColumn = f->location.column;
         if (functionNames.contains(f->nameIndex))
             return tr("Duplicate method name");
         functionNames.insert(f->nameIndex);
 
-        for (QmlIR::Signal *s = qmlSignals->first; s; s = s->next) {
+        for (auto signalit = obj->signalsBegin(); signalit != obj->signalsEnd(); ++signalit) {
+            QmlIR::Signal *s = signalit.ptr;
             if (s->nameIndex == f->nameIndex)
                 return tr("Duplicate method name");
         }
 
-        const QString name = function->name.toString();
+        const QString name = stringAt(f->nameIndex);
         if (name.at(0).isUpper())
             return tr("Method names cannot begin with an upper case letter");
         if (illegalNames.contains(name))
@@ -601,7 +602,7 @@ bool IRBuilder::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qu
         return false;
 
     QQmlJS::AST::SourceLocation loc;
-    QString error = obj->sanityCheckFunctionNames(illegalNames, &loc);
+    QString error = sanityCheckFunctionNames(obj, illegalNames, &loc);
     if (!error.isEmpty()) {
         recordError(loc, error);
         return false;
@@ -976,7 +977,6 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
         const int index = _object->functionsAndExpressions->append(foe);
 
         Function *f = New<Function>();
-        f->functionDeclaration = funDecl;
         QQmlJS::AST::SourceLocation loc = funDecl->identifierToken;
         f->location.line = loc.startLine;
         f->location.column = loc.startColumn;
@@ -2433,8 +2433,6 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
         }
     }
 
-    QQmlJS::Engine *jsParserEngine = &output->jsParserEngine;
-
     const quint32_le *functionIdx = serializedObject->functionOffsetTable();
     for (uint i = 0; i < serializedObject->nFunctions; ++i, ++functionIdx) {
         QmlIR::Function *f = pool->New<QmlIR::Function>();
@@ -2445,26 +2443,10 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
         f->location = compiledFunction->location;
         f->nameIndex = compiledFunction->nameIndex;
 
-        QQmlJS::AST::FormalParameterList *paramList = nullptr;
-        const quint32_le *formalNameIdx = compiledFunction->formalsTable();
-        for (uint i = 0; i < compiledFunction->nFormals; ++i, ++formalNameIdx) {
-            const QString formal = unit->stringAt(*formalNameIdx);
-            QStringRef paramNameRef = jsParserEngine->newStringRef(formal);
-
-            if (paramList)
-                paramList = new (pool) QQmlJS::AST::FormalParameterList(paramList, paramNameRef);
-            else
-                paramList = new (pool) QQmlJS::AST::FormalParameterList(paramNameRef);
-        }
-
-        if (paramList)
-            paramList = paramList->finish();
-
         const QString name = unit->stringAt(compiledFunction->nameIndex);
-        f->functionDeclaration = new(pool) QQmlJS::AST::FunctionDeclaration(jsParserEngine->newStringRef(name), paramList, /*body*/nullptr);
 
         f->formals.allocate(pool, int(compiledFunction->nFormals));
-        formalNameIdx = compiledFunction->formalsTable();
+        const quint32_le *formalNameIdx = compiledFunction->formalsTable();
         for (uint i = 0; i < compiledFunction->nFormals; ++i, ++formalNameIdx)
             f->formals[i] = *formalNameIdx;
 

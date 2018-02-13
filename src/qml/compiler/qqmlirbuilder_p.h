@@ -324,7 +324,6 @@ struct Alias : public QV4::CompiledData::Alias
 
 struct Function
 {
-    QQmlJS::AST::FunctionDeclaration *functionDeclaration;
     QV4::CompiledData::Location location;
     int nameIndex;
     quint32 index; // index in parsedQML::functions
@@ -398,8 +397,6 @@ public:
     Object *declarationsOverride;
 
     void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::AST::SourceLocation &location = QQmlJS::AST::SourceLocation());
-
-    QString sanityCheckFunctionNames(const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation);
 
     QString appendEnum(Enum *enumeration);
     QString appendSignal(Signal *signal);
@@ -546,6 +543,8 @@ public:
 
     static bool isStatementNodeScript(QQmlJS::AST::Statement *statement);
     static bool isRedundantNullInitializerForPropertyDeclaration(Property *property, QQmlJS::AST::Statement *statement);
+
+    QString sanityCheckFunctionNames(Object *obj, const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation);
 
     QList<QQmlJS::DiagnosticMessage> errors;
 
