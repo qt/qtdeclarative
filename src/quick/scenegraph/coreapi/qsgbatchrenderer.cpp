@@ -226,7 +226,7 @@ void qsg_dumpShadowRoots(BatchRootInfo *i, int indent)
     QByteArray ind(indent + extraIndent + 10, ' ');
 
     if (!i) {
-        qDebug() << ind.constData() << "- no info";
+        qDebug("%s - no info", ind.constData());
     } else {
         qDebug() << ind.constData() << "- parent:" << i->parentRoot << "orders" << i->firstOrder << "->" << i->lastOrder << ", avail:" << i->availableOrders;
         for (QSet<Node *>::const_iterator it = i->subRoots.constBegin();
@@ -293,15 +293,15 @@ void Updater::updateStates(QSGNode *n)
         qsg_dumpShadowRoots(sn);
 
     if (Q_UNLIKELY(debug_build())) {
-        qDebug() << "Updater::updateStates()";
+        qDebug("Updater::updateStates()");
         if (sn->dirtyState & (QSGNode::DirtyNodeAdded << 16))
-            qDebug() << " - nodes have been added";
+            qDebug(" - nodes have been added");
         if (sn->dirtyState & (QSGNode::DirtyMatrix << 16))
-            qDebug() << " - transforms have changed";
+            qDebug(" - transforms have changed");
         if (sn->dirtyState & (QSGNode::DirtyOpacity << 16))
-            qDebug() << " - opacity has changed";
+            qDebug(" - opacity has changed");
         if (uint(sn->dirtyState) & uint(QSGNode::DirtyForceUpdate << 16))
-            qDebug() << " - forceupdate";
+            qDebug(" - forceupdate");
     }
 
     if (Q_UNLIKELY(renderer->m_visualizeMode == Renderer::VisualizeChanges))
@@ -805,8 +805,11 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx)
     m_batchVertexThreshold = qt_sg_envInt("QSG_RENDERER_BATCH_VERTEX_THRESHOLD", 1024);
 
     if (Q_UNLIKELY(debug_build() || debug_render())) {
-        qDebug() << "Batch thresholds: nodes:" << m_batchNodeThreshold << " vertices:" << m_batchVertexThreshold;
-        qDebug() << "Using buffer strategy:" << (m_bufferStrategy == GL_STATIC_DRAW ? "static" : (m_bufferStrategy == GL_DYNAMIC_DRAW ? "dynamic" : "stream"));
+        qDebug("Batch thresholds: nodes: %d vertices: %d",
+               m_batchNodeThreshold, m_batchVertexThreshold);
+        qDebug("Using buffer strategy: %s",
+               (m_bufferStrategy == GL_STATIC_DRAW
+                ? "static" : (m_bufferStrategy == GL_DYNAMIC_DRAW ? "dynamic" : "stream")));
     }
 
     // If rendering with an OpenGL Core profile context, we need to create a VAO
@@ -1112,7 +1115,7 @@ void Renderer::nodeWasRemoved(Node *node)
 
 void Renderer::turnNodeIntoBatchRoot(Node *node)
 {
-    if (Q_UNLIKELY(debug_change())) qDebug() << " - new batch root";
+    if (Q_UNLIKELY(debug_change())) qDebug(" - new batch root");
     m_rebuild |= FullRebuild;
     node->isBatchRoot = true;
     node->becameBatchRoot = true;
@@ -2328,7 +2331,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
 
 #ifndef QT_NO_DEBUG
     if (qsg_test_and_clear_material_failure()) {
-        qDebug() << "QSGMaterial::updateState triggered an error (merged), batch will be skipped:";
+        qDebug("QSGMaterial::updateState triggered an error (merged), batch will be skipped:");
         Element *ee = e;
         while (ee) {
             qDebug() << "   -" << ee->node;
@@ -2449,7 +2452,7 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
 
 #ifndef QT_NO_DEBUG
     if (qsg_test_and_clear_material_failure()) {
-        qDebug() << "QSGMaterial::updateState() triggered an error (unmerged), batch will be skipped:";
+        qDebug("QSGMaterial::updateState() triggered an error (unmerged), batch will be skipped:");
         qDebug() << "   - offending node is" << e->node;
         QSGNodeDumper::dump(rootNode());
         qFatal("Aborting: scene graph is invalid...");
@@ -2655,12 +2658,12 @@ void Renderer::render()
         m_rebuild |= BuildBatches;
 
         if (Q_UNLIKELY(debug_build())) {
-            qDebug() << "Opaque render lists" << (complete ? "(complete)" : "(partial)") << ":";
+            qDebug("Opaque render lists %s:", (complete ? "(complete)" : "(partial)"));
             for (int i=0; i<m_opaqueRenderList.size(); ++i) {
                 Element *e = m_opaqueRenderList.at(i);
                 qDebug() << " - element:" << e << " batch:" << e->batch << " node:" << e->node << " order:" << e->order;
             }
-            qDebug() << "Alpha render list:" << (complete ? "(complete)" : "(partial)") << ":";
+            qDebug("Alpha render list %s:", complete ? "(complete)" : "(partial)");
             for (int i=0; i<m_alphaRenderList.size(); ++i) {
                 Element *e = m_alphaRenderList.at(i);
                 qDebug() << " - element:" << e << " batch:" << e->batch << " node:" << e->node << " order:" << e->order;
@@ -2685,7 +2688,7 @@ void Renderer::render()
         if (Q_UNLIKELY(debug_render())) timePrepareAlpha = timer.restart();
 
         if (Q_UNLIKELY(debug_build())) {
-            qDebug() << "Opaque Batches:";
+            qDebug("Opaque Batches:");
             for (int i=0; i<m_opaqueBatches.size(); ++i) {
                 Batch *b = m_opaqueBatches.at(i);
                 qDebug() << " - Batch " << i << b << (b->needsUpload ? "upload" : "") << " root:" << b->root;
@@ -2693,7 +2696,7 @@ void Renderer::render()
                     qDebug() << "   - element:" << e << " node:" << e->node << e->order;
                 }
             }
-            qDebug() << "Alpha Batches:";
+            qDebug("Alpha Batches:");
             for (int i=0; i<m_alphaBatches.size(); ++i) {
                 Batch *b = m_alphaBatches.at(i);
                 qDebug() << " - Batch " << i << b << (b->needsUpload ? "upload" : "") << " root:" << b->root;
@@ -2731,7 +2734,7 @@ void Renderer::render()
     int largestIBO = 0;
 #endif
 
-    if (Q_UNLIKELY(debug_upload())) qDebug() << "Uploading Opaque Batches:";
+    if (Q_UNLIKELY(debug_upload())) qDebug("Uploading Opaque Batches:");
     for (int i=0; i<m_opaqueBatches.size(); ++i) {
         Batch *b = m_opaqueBatches.at(i);
         largestVBO = qMax(b->vbo.size, largestVBO);
@@ -2743,7 +2746,7 @@ void Renderer::render()
     if (Q_UNLIKELY(debug_render())) timeUploadOpaque = timer.restart();
 
 
-    if (Q_UNLIKELY(debug_upload())) qDebug() << "Uploading Alpha Batches:";
+    if (Q_UNLIKELY(debug_upload())) qDebug("Uploading Alpha Batches:");
     for (int i=0; i<m_alphaBatches.size(); ++i) {
         Batch *b = m_alphaBatches.at(i);
         uploadBatch(b);

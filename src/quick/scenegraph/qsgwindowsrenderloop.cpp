@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
 
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
-#define RLDEBUG(x) qCDebug(QSG_LOG_RENDERLOOP) << x;
+#define RLDEBUG(x) qCDebug(QSG_LOG_RENDERLOOP, x)
 
 static QElapsedTimer qsg_render_timer;
 #define QSG_LOG_TIME_SAMPLE(sampleName) \
@@ -243,7 +243,7 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
         current = m_gl->makeCurrent(surface);
     }
     if (Q_UNLIKELY(!current))
-        qCDebug(QSG_LOG_RENDERLOOP) << "cleanup without an OpenGL context";
+        RLDEBUG("cleanup without an OpenGL context");
 
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
     QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
