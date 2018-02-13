@@ -768,6 +768,19 @@ void QSGGeometry::updateColoredRectGeometry(QSGGeometry *g, const QRectF &rect)
     v[3].y = rect.bottom();
 }
 
+/*!
+  \enum QSGGeometry::AttributeType
+
+  This enum identifies several attribute types.
+
+  \value UnknownAttribute    Don't care
+  \value PositionAttribute   Position
+  \value ColorAttribute      Color
+  \value TexCoordAttribute   Texture coordinate
+  \value TexCoord1Attribute  Texture coordinate 1
+  \value TexCoord2Attribute  Texture coordinate 2
+
+ */
 
 /*!
     \enum QSGGeometry::DataPattern

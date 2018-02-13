@@ -443,7 +443,12 @@ void QSGMaterialShader::compile()
     otherwise returns \c false.
  */
 
+/*!
+  \fn bool QSGMaterialShader::RenderState::isCachedMaterialDataDirty() const
 
+  Returns \c true if the dirtyStates() contains the dirty cached material state,
+  otherwise returns \c false.
+ */
 
 /*!
     \fn QSGMaterialShader::RenderState::DirtyStates QSGMaterialShader::RenderState::dirtyStates() const
