@@ -18,7 +18,8 @@ qtHaveModule(quick) {
         layouts \
         qtquick2 \
         window \
-        testlib
+        testlib \
+        tableview
 
     qtConfig(systemsemaphore): SUBDIRS += sharedimage
     qtConfig(quick-particles): \
