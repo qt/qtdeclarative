@@ -1058,7 +1058,8 @@ Item {
         {
             var fullPath = Qt.resolvedUrl("tst_rowlayout.qml")
             for (var i = 0; i < 7; ++i) {
-                ignoreWarning(fullPath + ":" + (1013 + 5*i) +":17: QML Item: Detected anchors on an item that is part of a layout. This is undefined behavior.")
+                ignoreWarning(fullPath + ":" + (1013 + 5*i) +":17: QML Item: Detected anchors on an item that is managed by a layout. "
+                    + "This is undefined behavior; use Layout.alignment instead.")
             }
             var layout = itemsWithAnchorsLayout_Component.createObject(container)
             waitForRendering(layout)

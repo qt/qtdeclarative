@@ -773,7 +773,7 @@ void QQuickLayout::checkAnchors(QQuickItem *item) const
 {
     QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors;
     if (anchors && anchors->activeDirections())
-        qmlWarning(item) << "Detected anchors on an item that is part of a layout. This is undefined behavior.";
+        qmlWarning(item) << "Detected anchors on an item that is managed by a layout. This is undefined behavior; use Layout.alignment instead.";
 }
 
 void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
