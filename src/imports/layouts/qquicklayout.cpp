@@ -405,7 +405,11 @@ void QQuickLayoutAttached::setColumn(int column)
 
     This property allows you to specify the alignment of an item within the cell(s) it occupies.
 
-    The default value is \c 0, which means it will be \c{Qt.AlignVCenter | Qt.AlignLeft}
+    The default value is \c 0, which means it will be \c{Qt.AlignVCenter | Qt.AlignLeft}.
+    These defaults also apply if only a horizontal or vertical flag is specified:
+    if only a horizontal flag is specified, the default vertical flag will be
+    \c Qt.AlignVCenter, and if only a vertical flag is specified, the default
+    horizontal flag will be \c Qt.AlignLeft.
 
     A valid alignment is a combination of the following flags:
     \list
