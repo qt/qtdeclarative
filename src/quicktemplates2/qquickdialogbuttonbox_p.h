@@ -66,6 +66,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBox : public QQuickCont
     Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment RESET resetAlignment NOTIFY alignmentChanged FINAL)
     Q_PROPERTY(QPlatformDialogHelper::StandardButtons standardButtons READ standardButtons WRITE setStandardButtons NOTIFY standardButtonsChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(ButtonLayout buttonLayout READ buttonLayout WRITE setButtonLayout RESET resetButtonLayout NOTIFY buttonLayoutChanged FINAL REVISION 5)
     Q_FLAGS(QPlatformDialogHelper::StandardButtons)
 
 public:
@@ -94,6 +96,24 @@ public:
 
     static QQuickDialogButtonBoxAttached *qmlAttachedProperties(QObject *object);
 
+    // 2.5 (Qt 5.12)
+
+    // ### TODO: use Q_ENUMS(QPlatformDialogHelper::ButtonLayout)
+    enum ButtonLayout {
+        UnknownLayout = -1,
+        WinLayout,
+        MacLayout,
+        KdeLayout,
+        GnomeLayout,
+        MacModelessLayout,
+        AndroidLayout
+    };
+    Q_ENUM(ButtonLayout)
+
+    ButtonLayout buttonLayout() const;
+    void setButtonLayout(ButtonLayout layout);
+    void resetButtonLayout();
+
 Q_SIGNALS:
     void accepted();
     void rejected();
@@ -107,6 +127,8 @@ Q_SIGNALS:
     Q_REVISION(3) void applied();
     Q_REVISION(3) void reset();
     Q_REVISION(3) void discarded();
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) void buttonLayoutChanged();
 
 protected:
     void updatePolish() override;

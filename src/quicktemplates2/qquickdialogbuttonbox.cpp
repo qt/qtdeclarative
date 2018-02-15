@@ -168,10 +168,16 @@ QT_BEGIN_NAMESPACE
     \sa accepted(), rejected(), helpRequested()
 */
 
+static QQuickDialogButtonBox::ButtonLayout platformButtonLayout()
+{
+    return QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::DialogButtonBoxLayout).value<QQuickDialogButtonBox::ButtonLayout>();
+}
+
 QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate()
     : alignment(0),
       position(QQuickDialogButtonBox::Footer),
       standardButtons(QPlatformDialogHelper::NoButton),
+      buttonLayout(platformButtonLayout()),
       delegate(nullptr)
 {
 }
@@ -258,6 +264,11 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
     }
 
     struct ButtonLayout {
+        ButtonLayout(QPlatformDialogHelper::ButtonLayout layout)
+            : m_layout(QPlatformDialogHelper::buttonLayout(Qt::Horizontal, layout))
+        {
+        }
+
         bool operator()(QQuickAbstractButton *first, QQuickAbstractButton *second)
         {
             const QPlatformDialogHelper::ButtonRole firstRole = QQuickDialogPrivate::buttonRole(first);
@@ -280,15 +291,10 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
 
             return firstRole != QPlatformDialogHelper::InvalidRole;
         }
-        static const int *themeButtonLayout()
-        {
-            const int hint = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::DialogButtonBoxLayout).toInt();
-            return QPlatformDialogHelper::buttonLayout(Qt::Horizontal, static_cast<QPlatformDialogHelper::ButtonLayout>(hint));
-        }
-        const int *m_layout = themeButtonLayout();
+        const int *m_layout;
     };
 
-    std::sort(buttons.begin(), buttons.end(), ButtonLayout());
+    std::sort(buttons.begin(), buttons.end(), ButtonLayout(static_cast<QPlatformDialogHelper::ButtonLayout>(buttonLayout)));
 
     for (int i = 0; i < buttons.count() - 1; ++i)
         q->insertItem(i, buttons.at(i));
@@ -578,6 +584,43 @@ void QQuickDialogButtonBox::setDelegate(QQmlComponent* delegate)
 QQuickDialogButtonBoxAttached *QQuickDialogButtonBox::qmlAttachedProperties(QObject *object)
 {
     return new QQuickDialogButtonBoxAttached(object);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty enumeration QtQuick.Controls::DialogButtonBox::buttonLayout
+
+    This property holds the button layout policy to be used when arranging the buttons contained in the button box.
+    The default value is platform-specific.
+
+    Available values:
+    \value DialogButtonBox.WinLayout Use a policy appropriate for applications on Windows.
+    \value DialogButtonBox.MacLayout Use a policy appropriate for applications on macOS.
+    \value DialogButtonBox.KdeLayout Use a policy appropriate for applications on KDE.
+    \value DialogButtonBox.GnomeLayout Use a policy appropriate for applications on GNOME.
+    \value DialogButtonBox.AndroidLayout Use a policy appropriate for applications on Android.
+*/
+QQuickDialogButtonBox::ButtonLayout QQuickDialogButtonBox::buttonLayout() const
+{
+    Q_D(const QQuickDialogButtonBox);
+    return d->buttonLayout;
+}
+
+void QQuickDialogButtonBox::setButtonLayout(ButtonLayout layout)
+{
+    Q_D(QQuickDialogButtonBox);
+    if (d->buttonLayout == layout)
+        return;
+
+    d->buttonLayout = layout;
+    if (isComponentComplete())
+        d->updateLayout();
+    emit buttonLayoutChanged();
+}
+
+void QQuickDialogButtonBox::resetButtonLayout()
+{
+    setButtonLayout(platformButtonLayout());
 }
 
 void QQuickDialogButtonBox::updatePolish()

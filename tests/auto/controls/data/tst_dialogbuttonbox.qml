@@ -195,4 +195,29 @@ TestCase {
         compare(clickedSpy.signalArguments[0][0], button)
         compare(roleSpy.count, 1)
     }
+
+    function test_buttonLayout_data() {
+        return [
+            { tag: "WinLayout", buttonLayout: DialogButtonBox.WinLayout, button1Role: DialogButtonBox.AcceptRole, button2Role: DialogButtonBox.RejectRole },
+            { tag: "MacLayout", buttonLayout: DialogButtonBox.MacLayout, button1Role: DialogButtonBox.RejectRole, button2Role: DialogButtonBox.AcceptRole },
+            { tag: "KdeLayout", buttonLayout: DialogButtonBox.KdeLayout, button1Role: DialogButtonBox.AcceptRole, button2Role: DialogButtonBox.RejectRole },
+            { tag: "GnomeLayout", buttonLayout: DialogButtonBox.GnomeLayout, button1Role: DialogButtonBox.RejectRole, button2Role: DialogButtonBox.AcceptRole },
+            { tag: "AndroidLayout", buttonLayout: DialogButtonBox.AndroidLayout, button1Role: DialogButtonBox.RejectRole, button2Role: DialogButtonBox.AcceptRole }
+        ]
+    }
+
+    function test_buttonLayout(data) {
+        var control = createTemporaryObject(buttonBox, testCase, {buttonLayout: data.buttonLayout, standardButtons: DialogButtonBox.Ok|DialogButtonBox.Cancel})
+        verify(control)
+
+        compare(control.count, 2)
+
+        var button1 = control.itemAt(0)
+        verify(button1)
+        compare(button1.DialogButtonBox.buttonRole, data.button1Role)
+
+        var button2 = control.itemAt(1)
+        verify(button2)
+        compare(button2.DialogButtonBox.buttonRole, data.button2Role)
+    }
 }

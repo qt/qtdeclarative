@@ -78,6 +78,7 @@ public:
     Qt::Alignment alignment;
     QQuickDialogButtonBox::Position position;
     QPlatformDialogHelper::StandardButtons standardButtons;
+    QQuickDialogButtonBox::ButtonLayout buttonLayout;
     QQmlComponent *delegate;
 };
 
