@@ -771,7 +771,8 @@ bool QQuickLayout::shouldIgnoreItem(QQuickItem *child, QQuickLayoutAttached *&in
 
 void QQuickLayout::checkAnchors(QQuickItem *item) const
 {
-    if (QQuickItemPrivate::get(item)->_anchors)
+    QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors;
+    if (anchors && anchors->activeDirections())
         qmlWarning(item) << "Detected anchors on an item that is part of a layout. This is undefined behavior.";
 }
 

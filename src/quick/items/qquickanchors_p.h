@@ -174,6 +174,7 @@ public:
     void resetCenterIn();
 
     Anchors usedAnchors() const;
+    Qt::Orientations activeDirections() const;
 
     bool mirrored();
 
