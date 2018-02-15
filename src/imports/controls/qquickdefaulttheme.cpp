@@ -86,7 +86,7 @@ void QQuickDefaultTheme::resolvePalettes(const QPalette &defaultPalette)
     systemPalette = defaultPalette.resolve(systemPalette);
 }
 
-const QPalette *QQuickDefaultTheme::palette(QPlatformTheme::Palette type) const
+const QPalette *QQuickDefaultTheme::palette(Palette type) const
 {
     Q_UNUSED(type);
     return &systemPalette;

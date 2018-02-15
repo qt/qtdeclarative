@@ -68,13 +68,13 @@ void QQuickImagineTheme::resolvePalettes(const QPalette &defaultPalette)
     systemPalette = defaultPalette.resolve(systemPalette);
 }
 
-const QFont *QQuickImagineTheme::font(QPlatformTheme::Font type) const
+const QFont *QQuickImagineTheme::font(Font type) const
 {
     Q_UNUSED(type);
     return &systemFont;
 }
 
-const QPalette *QQuickImagineTheme::palette(QPlatformTheme::Palette type) const
+const QPalette *QQuickImagineTheme::palette(Palette type) const
 {
     Q_UNUSED(type);
     return &systemPalette;

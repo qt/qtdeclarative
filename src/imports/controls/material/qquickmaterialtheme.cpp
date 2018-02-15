@@ -93,24 +93,24 @@ void QQuickMaterialTheme::resolveFonts(const QFont &defaultFont)
     editorFont = defaultFont.resolve(editorFont);
 }
 
-const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
+const QFont *QQuickMaterialTheme::font(Font type) const
 {
     switch (type) {
-    case QPlatformTheme::TabButtonFont:
-    case QPlatformTheme::PushButtonFont:
-    case QPlatformTheme::ToolButtonFont:
+    case TabButtonFont:
+    case PushButtonFont:
+    case ToolButtonFont:
         return &buttonFont;
-    case QPlatformTheme::TipLabelFont:
+    case TipLabelFont:
         return &toolTipFont;
-    case QPlatformTheme::ItemViewFont:
+    case ItemViewFont:
         return &itemViewFont;
-    case QPlatformTheme::ListViewFont:
+    case ListViewFont:
         return &listViewFont;
-    case QPlatformTheme::MenuBarFont:
-    case QPlatformTheme::MenuItemFont:
-    case QPlatformTheme::ComboMenuItemFont:
+    case MenuBarFont:
+    case MenuItemFont:
+    case ComboMenuItemFont:
         return &menuItemFont;
-    case QPlatformTheme::EditorFont:
+    case EditorFont:
         return &editorFont;
     default:
         return &systemFont;
@@ -120,10 +120,10 @@ const QFont *QQuickMaterialTheme::font(QPlatformTheme::Font type) const
 QVariant QQuickMaterialTheme::themeHint(ThemeHint hint) const
 {
     switch (hint) {
-    case QPlatformTheme::DialogButtonBoxLayout:
+    case DialogButtonBoxLayout:
         return QVariant(QPlatformDialogHelper::AndroidLayout);
     default:
-        return QQuickProxyTheme::themeHint(hint);
+        return QQuickTheme::themeHint(hint);
     }
 }
 
