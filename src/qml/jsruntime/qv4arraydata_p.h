@@ -156,6 +156,10 @@ struct SimpleArrayData : public ArrayData {
 V4_ASSERT_IS_TRIVIAL(SimpleArrayData)
 
 struct SparseArrayData : public ArrayData {
+    void init() {
+        ArrayData::init();
+        freeList = Primitive::emptyValue(UINT_MAX).asReturnedValue();
+    }
     void destroy() {
         delete sparse;
         ArrayData::destroy();

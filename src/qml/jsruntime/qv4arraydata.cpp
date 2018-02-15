@@ -214,8 +214,8 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
             sparse->arrayData[i].setEmpty();
             lastFree = &sparse->arrayData[i].rawValueRef();
         }
-        storeValue(lastFree, UINT_MAX);
     }
+    storeValue(lastFree, UINT_MAX);
 
     Q_ASSERT(Value::fromReturnedValue(sparse->freeList).isEmpty());
     // ### Could explicitly free the old data
