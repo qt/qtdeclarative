@@ -1263,6 +1263,8 @@ bool Codegen::visit(CallExpression *ast)
     switch (base.type) {
     case Reference::Member:
     case Reference::Subscript:
+    case Reference::QmlScopeObject:
+    case Reference::QmlContextObject:
         base = base.asLValue();
         break;
     case Reference::Name:
@@ -1277,7 +1279,21 @@ bool Codegen::visit(CallExpression *ast)
         return false;
 
     //### Do we really need all these call instructions? can's we load the callee in a temp?
-    if (base.type == Reference::Member) {
+    if (base.type == Reference::QmlScopeObject) {
+        Instruction::CallScopeObjectProperty call;
+        call.base = base.qmlBase.stackSlot();
+        call.name = base.qmlCoreIndex;
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(call);
+    } else if (base.type == Reference::QmlContextObject) {
+        Instruction::CallContextObjectProperty call;
+        call.base = base.qmlBase.stackSlot();
+        call.name = base.qmlCoreIndex;
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(call);
+    } else if (base.type == Reference::Member) {
         if (useFastLookups) {
             Instruction::CallPropertyLookup call;
             call.base = base.propertyBase.stackSlot();

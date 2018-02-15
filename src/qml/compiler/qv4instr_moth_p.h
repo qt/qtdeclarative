@@ -105,6 +105,8 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CallName(op) INSTRUCTION(op, CallName, 3, name, argc, argv)
 #define INSTR_CallPossiblyDirectEval(op) INSTRUCTION(op, CallPossiblyDirectEval, 2, argc, argv)
 #define INSTR_CallGlobalLookup(op) INSTRUCTION(op, CallGlobalLookup, 3, index, argc, argv)
+#define INSTR_CallScopeObjectProperty(op) INSTRUCTION(op, CallScopeObjectProperty, 4, name, base, argc, argv)
+#define INSTR_CallContextObjectProperty(op) INSTRUCTION(op, CallContextObjectProperty, 4, name, base, argc, argv)
 #define INSTR_SetExceptionHandler(op) INSTRUCTION(op, SetExceptionHandler, 1, offset)
 #define INSTR_ThrowException(op) INSTRUCTION(op, ThrowException, 0)
 #define INSTR_GetException(op) INSTRUCTION(op, GetException, 0)
@@ -221,6 +223,8 @@ QT_BEGIN_NAMESPACE
     F(CallName) \
     F(CallPossiblyDirectEval) \
     F(CallGlobalLookup) \
+    F(CallScopeObjectProperty) \
+    F(CallContextObjectProperty) \
     F(SetExceptionHandler) \
     F(ThrowException) \
     F(GetException) \

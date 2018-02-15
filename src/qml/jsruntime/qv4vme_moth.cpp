@@ -840,6 +840,18 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallGlobalLookup)
 
+    MOTH_BEGIN_INSTR(CallScopeObjectProperty)
+        STORE_IP();
+        acc = Runtime::method_callQmlScopeObjectProperty(engine, stack + base, name, stack + argv, argc);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(CallScopeObjectProperty)
+
+    MOTH_BEGIN_INSTR(CallContextObjectProperty)
+        STORE_IP();
+        acc = Runtime::method_callQmlContextObjectProperty(engine, stack + base, name, stack + argv, argc);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(CallContextObjectProperty)
+
     MOTH_BEGIN_INSTR(SetExceptionHandler)
         exceptionHandler = offset ? code + offset : nullptr;
     MOTH_END_INSTR(SetExceptionHandler)

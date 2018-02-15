@@ -548,6 +548,32 @@ void BaselineJIT::generate_CallGlobalLookup(int index, int argc, int argv)
     as->checkException();
 }
 
+void BaselineJIT::generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv)
+{
+    STORE_IP();
+    as->prepareCallWithArgCount(5);
+    as->passInt32AsArg(argc, 4);
+    as->passRegAsArg(argv, 3);
+    as->passInt32AsArg(propIdx, 2);
+    as->passRegAsArg(base, 1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callQmlScopeObjectProperty, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
+void BaselineJIT::generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv)
+{
+    STORE_IP();
+    as->prepareCallWithArgCount(5);
+    as->passInt32AsArg(argc, 4);
+    as->passRegAsArg(argv, 3);
+    as->passInt32AsArg(propIdx, 2);
+    as->passRegAsArg(base, 1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callQmlContextObjectProperty, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
 void BaselineJIT::generate_SetExceptionHandler(int offset)
 {
     if (offset)
@@ -1086,6 +1112,12 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(CallGlobalLookup)
         MOTH_END_INSTR(CallGlobalLookup)
+
+        MOTH_BEGIN_INSTR(CallScopeObjectProperty)
+        MOTH_END_INSTR(CallScopeObjectProperty)
+
+        MOTH_BEGIN_INSTR(CallContextObjectProperty)
+        MOTH_END_INSTR(CallContextObjectProperty)
 
         MOTH_BEGIN_INSTR(SetExceptionHandler)
             addLabel(code - start + offset);
