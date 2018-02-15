@@ -328,6 +328,21 @@ void QQuickAbstractButtonPrivate::setText(const QString &newText, bool isExplici
     q->buttonChange(QQuickAbstractButton::ButtonTextChange);
 }
 
+void QQuickAbstractButtonPrivate::updateEffectiveIcon()
+{
+    Q_Q(QQuickAbstractButton);
+    // We store effectiveIcon because we need to be able to tell if the icon has actually changed.
+    // If we only stored our icon and the action's icon, and resolved in the getter, we'd have
+    // no way of knowing what the old value was here. As an added benefit, we only resolve when
+    // something has changed, as opposed to doing it unconditionally in the icon() getter.
+    const QQuickIcon newEffectiveIcon = action ? icon.resolve(action->icon()) : icon;
+    if (newEffectiveIcon == effectiveIcon)
+        return;
+
+    effectiveIcon = newEffectiveIcon;
+    emit q->iconChanged();
+}
+
 void QQuickAbstractButtonPrivate::click()
 {
     Q_Q(QQuickAbstractButton);
@@ -720,17 +735,14 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
 QQuickIcon QQuickAbstractButton::icon() const
 {
     Q_D(const QQuickAbstractButton);
-    return d->icon;
+    return d->effectiveIcon;
 }
 
 void QQuickAbstractButton::setIcon(const QQuickIcon &icon)
 {
     Q_D(QQuickAbstractButton);
-    if (d->icon == icon)
-        return;
-
     d->icon = icon;
-    emit iconChanged();
+    d->updateEffectiveIcon();
 }
 
 /*!
@@ -792,7 +804,7 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
         QObjectPrivate::disconnect(oldAction, &QQuickAction::triggered, d, &QQuickAbstractButtonPrivate::click);
         QObjectPrivate::disconnect(oldAction, &QQuickAction::textChanged, d, &QQuickAbstractButtonPrivate::actionTextChange);
 
-        disconnect(oldAction, &QQuickAction::iconChanged, this, &QQuickAbstractButton::setIcon);
+        QObjectPrivate::disconnect(oldAction, &QQuickAction::iconChanged, d, &QQuickAbstractButtonPrivate::updateEffectiveIcon);
         disconnect(oldAction, &QQuickAction::checkedChanged, this, &QQuickAbstractButton::setChecked);
         disconnect(oldAction, &QQuickAction::checkableChanged, this, &QQuickAbstractButton::setCheckable);
         disconnect(oldAction, &QQuickAction::enabledChanged, this, &QQuickItem::setEnabled);
@@ -803,32 +815,10 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
         QObjectPrivate::connect(action, &QQuickAction::triggered, d, &QQuickAbstractButtonPrivate::click);
         QObjectPrivate::connect(action, &QQuickAction::textChanged, d, &QQuickAbstractButtonPrivate::actionTextChange);
 
-        connect(action, &QQuickAction::iconChanged, this, &QQuickAbstractButton::setIcon);
+        QObjectPrivate::connect(action, &QQuickAction::iconChanged, d, &QQuickAbstractButtonPrivate::updateEffectiveIcon);
         connect(action, &QQuickAction::checkedChanged, this, &QQuickAbstractButton::setChecked);
         connect(action, &QQuickAction::checkableChanged, this, &QQuickAbstractButton::setCheckable);
         connect(action, &QQuickAction::enabledChanged, this, &QQuickItem::setEnabled);
-
-        QQuickIcon actionIcon = action->icon();
-
-        QString name = actionIcon.name();
-        if (!name.isEmpty())
-            d->icon.setName(name);
-
-        QUrl source = actionIcon.source();
-        if (!source.isEmpty())
-            d->icon.setSource(source);
-
-        int width = actionIcon.width();
-        if (width > 0)
-            d->icon.setWidth(width);
-
-        int height = actionIcon.height();
-        if (height)
-            d->icon.setHeight(height);
-
-        QColor color = actionIcon.color();
-        if (color != Qt::transparent)
-            d->icon.setColor(color);
 
         setChecked(action->isChecked());
         setCheckable(action->isCheckable());
@@ -839,6 +829,8 @@ void QQuickAbstractButton::setAction(QQuickAction *action)
 
     if (oldText != text())
         buttonChange(ButtonTextChange);
+
+    d->updateEffectiveIcon();
 
     emit actionChanged();
 }

@@ -536,66 +536,59 @@ static QByteArray resolveSetting(const QByteArray &env, const QSharedPointer<QSe
     return value;
 }
 
-void QQuickUniversalStyle::init()
+void QQuickUniversalStyle::initGlobals()
 {
-    static bool globalsInitialized = false;
-    if (!globalsInitialized) {
-        QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(QStringLiteral("Universal"));
+    QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(QStringLiteral("Universal"));
 
-        bool ok = false;
-        QByteArray themeValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_THEME", settings, QStringLiteral("Theme"));
-        Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
-        if (ok)
-            GlobalTheme = m_theme = qquickuniversal_effective_theme(themeEnum);
-        else if (!themeValue.isEmpty())
-            qWarning().nospace().noquote() << "Universal: unknown theme value: " << themeValue;
+    bool ok = false;
+    QByteArray themeValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_THEME", settings, QStringLiteral("Theme"));
+    Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
+    if (ok)
+        GlobalTheme = qquickuniversal_effective_theme(themeEnum);
+    else if (!themeValue.isEmpty())
+        qWarning().nospace().noquote() << "Universal: unknown theme value: " << themeValue;
 
-        QByteArray accentValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_ACCENT", settings, QStringLiteral("Accent"));
-        Color accentEnum = toEnumValue<Color>(accentValue, &ok);
-        if (ok) {
-            GlobalAccent = m_accent = qquickuniversal_accent_color(accentEnum);
-        } else if (!accentValue.isEmpty()) {
-            QColor color(accentValue.constData());
-            if (color.isValid())
-                GlobalAccent = m_accent = color.rgba();
-            else
-                qWarning().nospace().noquote() << "Universal: unknown accent value: " << accentValue;
-        }
-
-        QByteArray foregroundValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_FOREGROUND", settings, QStringLiteral("Foreground"));
-        Color foregroundEnum = toEnumValue<Color>(foregroundValue, &ok);
-        if (ok) {
-            GlobalForeground = m_foreground = qquickuniversal_accent_color(foregroundEnum);
-            HasGlobalForeground = m_hasForeground = true;
-        } else if (!foregroundValue.isEmpty()) {
-            QColor color(foregroundValue.constData());
-            if (color.isValid()) {
-                GlobalForeground = m_foreground = color.rgba();
-                HasGlobalForeground = m_hasForeground = true;
-            } else {
-                qWarning().nospace().noquote() << "Universal: unknown foreground value: " << foregroundValue;
-            }
-        }
-
-        QByteArray backgroundValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_BACKGROUND", settings, QStringLiteral("Background"));
-        Color backgroundEnum = toEnumValue<Color>(backgroundValue, &ok);
-        if (ok) {
-            GlobalBackground = m_background = qquickuniversal_accent_color(backgroundEnum);
-            HasGlobalBackground = m_hasBackground = true;
-        } else if (!backgroundValue.isEmpty()) {
-            QColor color(backgroundValue.constData());
-            if (color.isValid()) {
-                GlobalBackground = m_background = color.rgba();
-                HasGlobalBackground = m_hasBackground = true;
-            } else {
-                qWarning().nospace().noquote() << "Universal: unknown background value: " << backgroundValue;
-            }
-        }
-
-        globalsInitialized = true;
+    QByteArray accentValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_ACCENT", settings, QStringLiteral("Accent"));
+    Color accentEnum = toEnumValue<Color>(accentValue, &ok);
+    if (ok) {
+        GlobalAccent = qquickuniversal_accent_color(accentEnum);
+    } else if (!accentValue.isEmpty()) {
+        QColor color(accentValue.constData());
+        if (color.isValid())
+            GlobalAccent = color.rgba();
+        else
+            qWarning().nospace().noquote() << "Universal: unknown accent value: " << accentValue;
     }
 
-    QQuickAttachedObject::init(); // TODO: lazy init?
+    QByteArray foregroundValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_FOREGROUND", settings, QStringLiteral("Foreground"));
+    Color foregroundEnum = toEnumValue<Color>(foregroundValue, &ok);
+    if (ok) {
+        GlobalForeground = qquickuniversal_accent_color(foregroundEnum);
+        HasGlobalForeground = true;
+    } else if (!foregroundValue.isEmpty()) {
+        QColor color(foregroundValue.constData());
+        if (color.isValid()) {
+            GlobalForeground = color.rgba();
+            HasGlobalForeground = true;
+        } else {
+            qWarning().nospace().noquote() << "Universal: unknown foreground value: " << foregroundValue;
+        }
+    }
+
+    QByteArray backgroundValue = resolveSetting("QT_QUICK_CONTROLS_UNIVERSAL_BACKGROUND", settings, QStringLiteral("Background"));
+    Color backgroundEnum = toEnumValue<Color>(backgroundValue, &ok);
+    if (ok) {
+        GlobalBackground = qquickuniversal_accent_color(backgroundEnum);
+        HasGlobalBackground = true;
+    } else if (!backgroundValue.isEmpty()) {
+        QColor color(backgroundValue.constData());
+        if (color.isValid()) {
+            GlobalBackground = color.rgba();
+            HasGlobalBackground = true;
+        } else {
+            qWarning().nospace().noquote() << "Universal: unknown background value: " << backgroundValue;
+        }
+    }
 }
 
 bool QQuickUniversalStyle::variantToRgba(const QVariant &var, const char *name, QRgb *rgba) const

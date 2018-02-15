@@ -58,23 +58,18 @@ QtObject {
         ["pressed"],
         ["checked"],
         ["checked", "disabled"],
-        ["checked", "hovered"],
+        ["checked"],
         ["highlighted"],
         ["highlighted", "disabled"],
-        ["highlighted", "hovered"],
         ["highlighted", "pressed"],
         ["highlighted", "checked"],
-        ["highlighted", "checkable", "hovered"],
         ["highlighted", "checkable", "pressed"],
         ["highlighted", "checkable", "checked"],
-        ["hovered"],
         ["flat"],
         ["flat", "disabled"],
-        ["flat", "hovered"],
         ["flat", "pressed"],
         ["flat", "checked"],
         ["flat", "checkable"],
-        ["flat", "checkable", "hovered"],
         ["flat", "checkable", "pressed"],
         ["flat", "checkable", "checked", "pressed"],
         ["flat", "checkable", "highlighted"],
@@ -87,6 +82,7 @@ QtObject {
         enabled: !is("disabled")
         flat: is("flat")
         checkable: is("checkable")
+        checked: is("checked")
         // Only set it if it's pressed, or the non-pressed examples will have no press effects
         down: is("pressed") ? true : undefined
         highlighted: is("highlighted")

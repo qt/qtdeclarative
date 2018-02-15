@@ -73,6 +73,8 @@ void QQuickStackViewPrivate::setCurrentItem(QQuickStackElement *element)
     currentItem = item;
     if (element)
         element->setVisible(true);
+    if (item)
+        item->setFocus(true);
     emit q->currentItemChanged();
 }
 

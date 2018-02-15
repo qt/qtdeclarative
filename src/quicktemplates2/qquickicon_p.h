@@ -62,10 +62,10 @@ class QQuickIconPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickIcon
 {
     Q_GADGET
-    Q_PROPERTY(QString name READ name WRITE setName FINAL)
-    Q_PROPERTY(QUrl source READ source WRITE setSource FINAL)
-    Q_PROPERTY(int width READ width WRITE setWidth FINAL)
-    Q_PROPERTY(int height READ height WRITE setHeight FINAL)
+    Q_PROPERTY(QString name READ name WRITE setName RESET resetName FINAL)
+    Q_PROPERTY(QUrl source READ source WRITE setSource RESET resetSource FINAL)
+    Q_PROPERTY(int width READ width WRITE setWidth RESET resetWidth FINAL)
+    Q_PROPERTY(int height READ height WRITE setHeight RESET resetHeight FINAL)
     Q_PROPERTY(QColor color READ color WRITE setColor RESET resetColor FINAL)
 
 public:
@@ -81,19 +81,25 @@ public:
 
     QString name() const;
     void setName(const QString &name);
+    void resetName();
 
     QUrl source() const;
     void setSource(const QUrl &source);
+    void resetSource();
 
     int width() const;
     void setWidth(int width);
+    void resetWidth();
 
     int height() const;
     void setHeight(int height);
+    void resetHeight();
 
     QColor color() const;
     void setColor(const QColor &color);
     void resetColor();
+
+    QQuickIcon resolve(const QQuickIcon &other) const;
 
 private:
     QSharedDataPointer<QQuickIconPrivate> d;

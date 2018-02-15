@@ -200,6 +200,8 @@ public:
 
     QColor systemColor(SystemColor role) const;
 
+    static void initGlobals();
+
 Q_SIGNALS:
     void themeChanged();
     void accentChanged();
@@ -211,7 +213,6 @@ protected:
     void attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent) override;
 
 private:
-    void init();
     bool variantToRgba(const QVariant &var, const char *name, QRgb *rgba) const;
 
     // These reflect whether a color value was explicitly set on the specific

@@ -69,8 +69,8 @@ T.Dial {
                 origin.y: handle.height / 2
             }
         ]
-        implicitWidth: 14
-        implicitHeight: 14
+        implicitWidth: 10
+        implicitHeight: 10
 
         value: control.value
         handleHasFocus: control.visualFocus

@@ -299,6 +299,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickDialog, 3>(uri, 2, 3, "Dialog");
     qmlRegisterType<QQuickDialogButtonBox, 3>(uri, 2, 3, "DialogButtonBox");
     qRegisterMetaType<QQuickIcon>();
+    qmlRegisterType<QQuickLabel, 3>(uri, 2, 3, "Label");
     qmlRegisterType<QQuickMenu, 3>(uri, 2, 3, "Menu");
     qmlRegisterType<QQuickMenuBar>(uri, 2, 3, "MenuBar");
     qmlRegisterType<QQuickMenuBarItem>(uri, 2, 3, "MenuBarItem");
@@ -311,6 +312,8 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickScrollIndicator, 3>(uri, 2, 3, "ScrollIndicator");
     qmlRegisterType<QQuickSlider, 3>(uri, 2, 3, "Slider");
     qmlRegisterType<QQuickSpinBox, 3>(uri, 2, 3, "SpinBox");
+    qmlRegisterType<QQuickTextArea, 3>(uri, 2, 3, "TextArea");
+    qmlRegisterType<QQuickTextField, 3>(uri, 2, 3, "TextField");
 
     // NOTE: register the latest revisions of all template/control base classes to
     // make revisioned properties available to their subclasses (synced with Qt 5.10)

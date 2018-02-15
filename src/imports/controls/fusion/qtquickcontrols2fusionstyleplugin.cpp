@@ -69,7 +69,6 @@ public:
     QtQuickControls2FusionStylePlugin(QObject *parent = nullptr);
 
     void registerTypes(const char *uri) override;
-    void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
     QString name() const override;
     QQuickTheme *createTheme() const override;
@@ -84,11 +83,6 @@ void QtQuickControls2FusionStylePlugin::registerTypes(const char *uri)
 {
     qmlRegisterModule(uri, 2, 3); // Qt 5.10->2.3
     qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.11->2.4, 5.12->2.5...
-}
-
-void QtQuickControls2FusionStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
-{
-    QQuickStylePlugin::initializeEngine(engine, uri);
 
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.11->2.4, 5.12->2.5...

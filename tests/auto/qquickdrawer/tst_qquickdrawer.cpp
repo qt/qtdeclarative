@@ -38,6 +38,7 @@
 #include <QtTest/qsignalspy.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
+#include "../shared/qtest_quickcontrols.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/qtouchdevice.h>
@@ -60,6 +61,9 @@ class tst_QQuickDrawer : public QQmlDataTest
 
 private slots:
     void initTestCase();
+
+    void defaults();
+    void invalidEdge();
 
     void visible_data();
     void visible();
@@ -124,6 +128,40 @@ void tst_QQuickDrawer::initTestCase()
     touchDevice.reset(new QTouchDevice);
     touchDevice->setType(QTouchDevice::TouchScreen);
     QWindowSystemInterface::registerTouchDevice(touchDevice.data());
+}
+
+void tst_QQuickDrawer::defaults()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("window.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(!root.isNull(), qPrintable(component.errorString()));
+
+    QQuickDrawer *drawer = root->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+    QCOMPARE(drawer->edge(), Qt::LeftEdge);
+    QCOMPARE(drawer->position(), 0.0);
+    QCOMPARE(drawer->dragMargin(), qGuiApp->styleHints()->startDragDistance());
+}
+
+void tst_QQuickDrawer::invalidEdge()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("window.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(!root.isNull(), qPrintable(component.errorString()));
+
+    QQuickDrawer *drawer = root->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+
+    // Test an invalid value - it should warn and ignore it.
+    QTest::ignoreMessage(QtWarningMsg, qUtf8Printable(testFileUrl("window.qml").toString() + ":61:5: QML Drawer: invalid edge value - valid values are: Qt.TopEdge, Qt.LeftEdge, Qt.RightEdge, Qt.BottomEdge"));
+    drawer->setEdge(static_cast<Qt::Edge>(QQuickDrawer::Right));
+    QCOMPARE(drawer->edge(), Qt::LeftEdge);
 }
 
 void tst_QQuickDrawer::visible_data()
@@ -1219,6 +1257,6 @@ void tst_QQuickDrawer::nonModal()
     QVERIFY(closedSpy.wait());
 }
 
-QTEST_MAIN(tst_QQuickDrawer)
+QTEST_QUICKCONTROLS_MAIN(tst_QQuickDrawer)
 
 #include "tst_qquickdrawer.moc"

@@ -70,7 +70,7 @@ T.TextField {
 
         text: control.placeholderText
         font: control.font
-        color: control.palette.text
+        color: control.color
         verticalAlignment: control.verticalAlignment
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight

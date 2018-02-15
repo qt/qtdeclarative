@@ -61,7 +61,7 @@ TestCase {
     name: "StackView"
 
     Item { id: item }
-    TextField { id: textField }
+    Component { id: textField; TextField { } }
     Component { id: component; Item { } }
 
     Component {
@@ -323,22 +323,33 @@ TestCase {
         compare(item.height, control.height)
     }
 
-    function test_focus() {
+    function test_focus_data() {
+        return [
+            { tag: "true", focus: true, forceActiveFocus: false },
+            { tag: "false", focus: false, forceActiveFocus: false },
+            { tag: "forceActiveFocus()", focus: false, forceActiveFocus: true },
+        ]
+    }
+
+    function test_focus(data) {
         var control = createTemporaryObject(stackView, testCase, {initialItem: item, width: 200, height: 200})
         verify(control)
 
-        control.forceActiveFocus()
-        verify(control.activeFocus)
+        if (data.focus)
+            control.focus = true
+        if (data.forceActiveFocus)
+            control.forceActiveFocus()
+        compare(control.activeFocus, data.focus || data.forceActiveFocus)
 
-        control.push(textField, StackView.Immediate)
-        compare(control.currentItem, textField)
-        textField.forceActiveFocus()
-        verify(textField.activeFocus)
+        var page = control.push(textField, StackView.Immediate)
+        verify(page)
+        compare(control.currentItem, page)
+        compare(page.activeFocus, control.activeFocus)
 
         control.pop(StackView.Immediate)
         compare(control.currentItem, item)
-        verify(control.activeFocus)
-        verify(!textField.activeFocus)
+        compare(item.activeFocus, data.focus || data.forceActiveFocus)
+        verify(!page.activeFocus)
     }
 
     function test_find() {
