@@ -137,7 +137,7 @@ private:
 
     QQmlEngine *engine;
     QV4::ExecutionEngine *v4;
-    QV4::CompiledData::CompilationUnit *compilationUnit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
     const QV4::CompiledData::Unit *qmlUnit;
     QQmlGuardedContextData parentContext;
     QQmlContextData *context;

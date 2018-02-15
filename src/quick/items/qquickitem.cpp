@@ -2809,7 +2809,8 @@ void QQuickItem::stackBefore(const QQuickItem *sibling)
 {
     Q_D(QQuickItem);
     if (!sibling || sibling == this || !d->parentItem || d->parentItem != QQuickItemPrivate::get(sibling)->parentItem) {
-        qWarning("QQuickItem::stackBefore: Cannot stack before %p, which must be a sibling", sibling);
+        qWarning().nospace() << "QQuickItem::stackBefore: Cannot stack "
+            << this << " before " << sibling << ", which must be a sibling";
         return;
     }
 
@@ -2853,7 +2854,8 @@ void QQuickItem::stackAfter(const QQuickItem *sibling)
 {
     Q_D(QQuickItem);
     if (!sibling || sibling == this || !d->parentItem || d->parentItem != QQuickItemPrivate::get(sibling)->parentItem) {
-        qWarning("QQuickItem::stackAfter: Cannot stack after %p, which must be a sibling", sibling);
+        qWarning().nospace() << "QQuickItem::stackAfter: Cannot stack "
+            << this << " after " << sibling << ", which must be a sibling";
         return;
     }
 
@@ -2943,6 +2945,7 @@ void QQuickItemPrivate::addChild(QQuickItem *child)
     if (childPrivate->subtreeHoverEnabled && !subtreeHoverEnabled)
         setHasHoverInChild(true);
 
+    childPrivate->recursiveRefFromEffectItem(extra.value().recursiveEffectRefCount);
     markSortedChildrenDirty(child);
     dirty(QQuickItemPrivate::ChildrenChanged);
 
@@ -2971,6 +2974,7 @@ void QQuickItemPrivate::removeChild(QQuickItem *child)
     if (childPrivate->subtreeHoverEnabled && subtreeHoverEnabled)
         setHasHoverInChild(false);
 
+    childPrivate->recursiveRefFromEffectItem(-extra.value().recursiveEffectRefCount);
     markSortedChildrenDirty(child);
     dirty(QQuickItemPrivate::ChildrenChanged);
 
@@ -6071,28 +6075,48 @@ void QQuickItemPrivate::removeFromDirtyList()
 void QQuickItemPrivate::refFromEffectItem(bool hide)
 {
     ++extra.value().effectRefCount;
-    if (1 == extra->effectRefCount) {
+    if (extra->effectRefCount == 1) {
         dirty(EffectReference);
-        if (parentItem) QQuickItemPrivate::get(parentItem)->dirty(ChildrenStackingChanged);
+        if (parentItem)
+            QQuickItemPrivate::get(parentItem)->dirty(ChildrenStackingChanged);
     }
     if (hide) {
         if (++extra->hideRefCount == 1)
             dirty(HideReference);
     }
+    recursiveRefFromEffectItem(1);
+}
+
+void QQuickItemPrivate::recursiveRefFromEffectItem(int refs)
+{
+    Q_Q(QQuickItem);
+    if (!refs)
+        return;
+    extra.value().recursiveEffectRefCount += refs;
+    for (int ii = 0; ii < childItems.count(); ++ii) {
+        QQuickItem *child = childItems.at(ii);
+        QQuickItemPrivate::get(child)->recursiveRefFromEffectItem(refs);
+    }
+    // Polish may rely on the effect ref count so trigger one, if item is not visible
+    // (if visible, it will be triggered automatically).
+    if (!effectiveVisible && refs > 0 && extra.value().recursiveEffectRefCount == 1) // it wasn't referenced, now it's referenced
+        q->polish();
 }
 
 void QQuickItemPrivate::derefFromEffectItem(bool unhide)
 {
     Q_ASSERT(extra->effectRefCount);
     --extra->effectRefCount;
-    if (0 == extra->effectRefCount) {
+    if (extra->effectRefCount == 0) {
         dirty(EffectReference);
-        if (parentItem) QQuickItemPrivate::get(parentItem)->dirty(ChildrenStackingChanged);
+        if (parentItem)
+            QQuickItemPrivate::get(parentItem)->dirty(ChildrenStackingChanged);
     }
     if (unhide) {
         if (--extra->hideRefCount == 0)
             dirty(HideReference);
     }
+    recursiveRefFromEffectItem(-1);
 }
 
 void QQuickItemPrivate::setCulled(bool cull)
@@ -8598,6 +8622,7 @@ QQuickItemPrivate::ExtraData::ExtraData()
   layer(0),
 #endif
   effectRefCount(0), hideRefCount(0),
+  recursiveEffectRefCount(0),
   opacityNode(0), clipNode(0), rootNode(0),
   acceptedMouseButtons(0), origin(QQuickItem::Center),
   transparentForPositioner(false)

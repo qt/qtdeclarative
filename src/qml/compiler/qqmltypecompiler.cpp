@@ -1023,7 +1023,11 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
             }
 
             if (result == AllAliasesResolved) {
-                aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex);
+                QQmlCompileError error = aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex);
+                if (error.isSet()) {
+                    recordError(error);
+                    return false;
+                }
                 atLeastOneAliasResolved = true;
             } else if (result == SomeAliasesResolved) {
                 atLeastOneAliasResolved = true;

@@ -57,6 +57,8 @@
 #include "qv4global_p.h"
 #include <private/qv4heap_p.h>
 
+#include <private/qnumeric_p.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -322,6 +324,8 @@ public:
         return d;
     }
     QML_NEARLY_ALWAYS_INLINE void setDouble(double d) {
+        if (qt_is_nan(d))
+            d = qt_qnan();
         memcpy(&_val, &d, 8);
         _val ^= NaNEncodeMask;
         Q_ASSERT(isDouble());

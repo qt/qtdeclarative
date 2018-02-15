@@ -170,6 +170,7 @@ public:
 
     static void asyncShapeReady(void *data);
 
+    int effectRefCount;
     QVector<QQuickShapePath *> sp;
     QElapsedTimer syncTimer;
     QQuickAbstractPathRenderer *renderer = nullptr;

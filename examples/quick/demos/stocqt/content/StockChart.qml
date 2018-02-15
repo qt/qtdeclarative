@@ -64,40 +64,30 @@ Rectangle {
     property real gridStep: gridSize ? (canvas.width - canvas.tickMargin) / gridSize : canvas.xGridStep
 
     function update() {
-        endDate = new Date();
-        if (chart.activeChart === "year") {
-            chart.startDate = new Date(chart.endDate.getFullYear() - 1,
-                                       chart.endDate.getMonth(),
-                                       chart.endDate.getDate());
-            chart.gridSize = 12;
-        }
-        else if (chart.activeChart === "month") {
-            chart.startDate = new Date(chart.endDate.getFullYear(),
-                                       chart.endDate.getMonth() - 1,
-                                       chart.endDate.getDate());
+        endDate = new Date(stockModel.newest);
+        if (chart.activeChart === "month") {
+            chart.startDate = new Date(stockModel.newest.getFullYear(),
+                                       stockModel.newest.getMonth() - 1,
+                                       stockModel.newest.getDate());
             gridSize = 4;
-        }
-        else if (chart.activeChart === "week") {
-            chart.startDate = new Date(chart.endDate.getFullYear(),
-                                       chart.endDate.getMonth(),
-                                       chart.endDate.getDate() - 7);
-            gridSize = 0;
-        }
-        else if (chart.activeChart === "halfyear") {
-            chart.startDate = new Date(chart.endDate.getFullYear(),
-                                       chart.endDate.getMonth() - 6,
-                                       chart.endDate.getDate());
-            gridSize = 6;
         }
         else if (chart.activeChart === "quarter") {
-            chart.startDate = new Date(chart.endDate.getFullYear(),
-                                       chart.endDate.getMonth() - 3,
-                                       chart.endDate.getDate());
+            chart.startDate = new Date(stockModel.newest.getFullYear(),
+                                       stockModel.newest.getMonth() - 3,
+                                       stockModel.newest.getDate());
             gridSize = 3;
         }
+        else if (chart.activeChart === "halfyear") {
+            chart.startDate = new Date(stockModel.newest.getFullYear(),
+                                       stockModel.newest.getMonth() - 6,
+                                       stockModel.newest.getDate());
+            gridSize = 6;
+        }
         else {
-            chart.startDate = new Date(2011, 4, 25);
-            gridSize = 4;
+            chart.startDate = new Date(stockModel.newest.getFullYear(),
+                                       stockModel.newest.getMonth(),
+                                       stockModel.newest.getDate() - 7);
+            gridSize = 0;
         }
 
         canvas.requestPaint();
@@ -130,7 +120,7 @@ Rectangle {
 
         Button {
             id: quarterlyButton
-            text: "3M"
+            text: "3 Months"
             buttonEnabled: chart.activeChart === "quarter"
             onClicked: {
                 chart.activeChart = "quarter";
@@ -140,28 +130,10 @@ Rectangle {
 
         Button {
             id: halfYearlyButton
-            text: "6M"
+            text: "6 Months"
             buttonEnabled: chart.activeChart === "halfyear"
             onClicked: {
                 chart.activeChart = "halfyear";
-                chart.update();
-            }
-        }
-        Button {
-            id: yearButton
-            text: "Year"
-            buttonEnabled: chart.activeChart === "year"
-            onClicked: {
-                chart.activeChart = "year";
-                chart.update();
-            }
-        }
-        Button {
-            id: maxButton
-            text: "Max"
-            buttonEnabled: chart.activeChart === "max"
-            onClicked: {
-                chart.activeChart = "max";
                 chart.update();
             }
         }
