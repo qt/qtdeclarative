@@ -168,6 +168,15 @@ QT_BEGIN_NAMESPACE
      }
     \endcode
 
+    \section1 Popup Positioning
+
+    Similar to items in Qt Quick, Popup's \l x and \l y coordinates are
+    relative to its parent. This means that opening a popup that is a
+    child of a \l Button, for example, will cause the popup to be positioned
+    relative to the button.
+
+    \include qquickoverlay-popup-parent.qdocinc
+
     \sa {Popup Controls}, {Customizing Popup}, ApplicationWindow
 */
 
