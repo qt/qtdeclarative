@@ -38,7 +38,6 @@
 #include "../shared/visualtestutil.h"
 
 #include <QtGui/qpalette.h>
-#include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -222,56 +221,56 @@ class TestTheme : public QQuickProxyTheme
 public:
     TestTheme(QPlatformTheme *theme) : QQuickProxyTheme(theme)
     {
-        std::fill(palettes, palettes + QPlatformTheme::NPalettes, static_cast<QPalette *>(0));
+        std::fill(palettes, palettes + QQuickTheme::NPalettes, static_cast<QPalette *>(0));
 
         QPalette palette = QPalette();
         palette.setColor(QPalette::Window, Qt::gray);
-        palettes[QPlatformTheme::SystemPalette] = new QPalette(palette);
+        palettes[QQuickTheme::SystemPalette] = new QPalette(palette);
 
         palette.setColor(QPalette::ToolTipBase, Qt::yellow);
-        palettes[QPlatformTheme::ToolTipPalette] = new QPalette(palette);
+        palettes[QQuickTheme::ToolTipPalette] = new QPalette(palette);
 
         palette.setColor(QPalette::ButtonText, Qt::blue);
-        palettes[QPlatformTheme::ToolButtonPalette] = new QPalette(palette);
+        palettes[QQuickTheme::ToolButtonPalette] = new QPalette(palette);
 
         palette.setColor(QPalette::Button, Qt::red);
-        palettes[QPlatformTheme::ButtonPalette] = new QPalette(palette);
+        palettes[QQuickTheme::ButtonPalette] = new QPalette(palette);
 
         palette.setColor(QPalette::Text, Qt::green);
-        palettes[QPlatformTheme::CheckBoxPalette] = new QPalette(palette);
+        palettes[QQuickTheme::CheckBoxPalette] = new QPalette(palette);
 
         palette.setColor(QPalette::Text, Qt::blue);
-        palettes[QPlatformTheme::RadioButtonPalette] = new QPalette(palette);
+        palettes[QQuickTheme::RadioButtonPalette] = new QPalette(palette);
 
         // HeaderPalette unused
 
         palette.setColor(QPalette::Base, Qt::darkGray);
-        palettes[QPlatformTheme::ComboBoxPalette] = new QPalette(palette);
+        palettes[QQuickTheme::ComboBoxPalette] = new QPalette(palette);
 
         palette.setColor(QPalette::Base, Qt::lightGray);
-        palettes[QPlatformTheme::ItemViewPalette] = new QPalette(palette);
+        palettes[QQuickTheme::ItemViewPalette] = new QPalette(palette);
 
         // MessageBoxLabelPalette unused
 
         palette.setColor(QPalette::ButtonText, Qt::white);
-        palettes[QPlatformTheme::TabBarPalette] = new QPalette(palette);
+        palettes[QQuickTheme::TabBarPalette] = new QPalette(palette);
 
         palette.setColor(QPalette::WindowText, Qt::darkGray);
-        palettes[QPlatformTheme::LabelPalette] = new QPalette(palette);
+        palettes[QQuickTheme::LabelPalette] = new QPalette(palette);
 
         palette.setColor(QPalette::Mid, Qt::gray);
-        palettes[QPlatformTheme::GroupBoxPalette] = new QPalette(palette);
+        palettes[QQuickTheme::GroupBoxPalette] = new QPalette(palette);
 
         palette.setColor(QPalette::Shadow, Qt::darkYellow);
-        palettes[QPlatformTheme::MenuPalette] = new QPalette(palette);
+        palettes[QQuickTheme::MenuPalette] = new QPalette(palette);
 
         // MenuBarPalette unused
 
         palette.setColor(QPalette::Base, Qt::cyan);
-        palettes[QPlatformTheme::TextEditPalette] = new QPalette(palette);
+        palettes[QQuickTheme::TextEditPalette] = new QPalette(palette);
 
         palette.setColor(QPalette::Base, Qt::magenta);
-        palettes[QPlatformTheme::TextLineEditPalette] = new QPalette(palette);
+        palettes[QQuickTheme::TextLineEditPalette] = new QPalette(palette);
 
         QGuiApplicationPrivate::platform_theme = this;
     }
@@ -282,65 +281,65 @@ public:
     }
 
 private:
-    QPalette *palettes[QPlatformTheme::NPalettes];
+    QPalette *palettes[QQuickTheme::NPalettes];
 };
 
-Q_DECLARE_METATYPE(QPlatformTheme::Palette)
+Q_DECLARE_METATYPE(QQuickTheme::Palette)
 
 void tst_palette::defaultPalette_data()
 {
     QTest::addColumn<QString>("control");
-    QTest::addColumn<QPlatformTheme::Palette>("paletteType");
+    QTest::addColumn<QQuickTheme::Palette>("paletteType");
 
-    QTest::newRow("AbstractButton") << "AbstractButton" << QPlatformTheme::SystemPalette;
-    QTest::newRow("ApplicationWindow") << "ApplicationWindow" << QPlatformTheme::SystemPalette;
-    QTest::newRow("Button") << "Button" << QPlatformTheme::ButtonPalette;
-    QTest::newRow("CheckBox") << "CheckBox" << QPlatformTheme::CheckBoxPalette;
-    QTest::newRow("CheckDelegate") << "CheckDelegate" << QPlatformTheme::ItemViewPalette;
-    QTest::newRow("ComboBox") << "ComboBox" << QPlatformTheme::ComboBoxPalette;
-    QTest::newRow("Container") << "Container" << QPlatformTheme::SystemPalette;
-    QTest::newRow("Control") << "Control" << QPlatformTheme::SystemPalette;
-    QTest::newRow("Dial") << "Dial" << QPlatformTheme::SystemPalette;
-    QTest::newRow("Dialog") << "Dialog" << QPlatformTheme::SystemPalette;
-    QTest::newRow("DialogButtonBox") << "DialogButtonBox" << QPlatformTheme::SystemPalette;
-    QTest::newRow("Drawer") << "Drawer" << QPlatformTheme::SystemPalette;
-    QTest::newRow("Frame") << "Frame" << QPlatformTheme::SystemPalette;
-    QTest::newRow("GroupBox") << "GroupBox" << QPlatformTheme::GroupBoxPalette;
-    QTest::newRow("ItemDelegate") << "ItemDelegate" << QPlatformTheme::ItemViewPalette;
-    QTest::newRow("Label") << "Label" << QPlatformTheme::LabelPalette;
-    QTest::newRow("Menu") << "Menu" << QPlatformTheme::MenuPalette;
-    QTest::newRow("MenuItem") << "MenuItem" << QPlatformTheme::MenuPalette;
-    QTest::newRow("MenuSeparator") << "MenuSeparator" << QPlatformTheme::MenuPalette;
-    QTest::newRow("Page") << "Page" << QPlatformTheme::SystemPalette;
-    QTest::newRow("Pane") << "Pane" << QPlatformTheme::SystemPalette;
-    QTest::newRow("Popup") << "Popup" << QPlatformTheme::SystemPalette;
-    QTest::newRow("ProgressBar") << "ProgressBar" << QPlatformTheme::SystemPalette;
-    QTest::newRow("RadioButton") << "RadioButton" << QPlatformTheme::RadioButtonPalette;
-    QTest::newRow("RadioDelegate") << "RadioDelegate" << QPlatformTheme::ItemViewPalette;
-    QTest::newRow("RangeSlider") << "RangeSlider" << QPlatformTheme::SystemPalette;
-    QTest::newRow("RoundButton") << "RoundButton" << QPlatformTheme::ButtonPalette;
-    QTest::newRow("ScrollBar") << "ScrollBar" << QPlatformTheme::SystemPalette;
-    QTest::newRow("ScrollIndicator") << "ScrollIndicator" << QPlatformTheme::SystemPalette;
-    QTest::newRow("Slider") << "Slider" << QPlatformTheme::SystemPalette;
-    QTest::newRow("SpinBox") << "SpinBox" << QPlatformTheme::TextLineEditPalette;
-    QTest::newRow("SwipeDelegate") << "SwipeDelegate" << QPlatformTheme::ItemViewPalette;
-    QTest::newRow("Switch") << "Switch" << QPlatformTheme::CheckBoxPalette; // ### TODO: add QPlatformTheme::SwitchPalette
-    QTest::newRow("SwitchDelegate") << "SwitchDelegate" << QPlatformTheme::ItemViewPalette;
-    QTest::newRow("TabBar") << "TabBar" << QPlatformTheme::TabBarPalette;
-    QTest::newRow("TabButton") << "TabButton" << QPlatformTheme::TabBarPalette;
-    QTest::newRow("TextArea") << "TextArea" << QPlatformTheme::TextEditPalette;
-    QTest::newRow("TextField") << "TextField" << QPlatformTheme::TextLineEditPalette;
-    QTest::newRow("ToolBar") << "ToolBar" << QPlatformTheme::ToolButtonPalette;
-    QTest::newRow("ToolButton") << "ToolButton" << QPlatformTheme::ToolButtonPalette;
-    QTest::newRow("ToolSeparator") << "ToolSeparator" << QPlatformTheme::ToolButtonPalette;
-    QTest::newRow("ToolTip") << "ToolTip" << QPlatformTheme::ToolTipPalette;
-    QTest::newRow("Tumbler") << "Tumbler" << QPlatformTheme::ItemViewPalette;
+    QTest::newRow("AbstractButton") << "AbstractButton" << QQuickTheme::SystemPalette;
+    QTest::newRow("ApplicationWindow") << "ApplicationWindow" << QQuickTheme::SystemPalette;
+    QTest::newRow("Button") << "Button" << QQuickTheme::ButtonPalette;
+    QTest::newRow("CheckBox") << "CheckBox" << QQuickTheme::CheckBoxPalette;
+    QTest::newRow("CheckDelegate") << "CheckDelegate" << QQuickTheme::ItemViewPalette;
+    QTest::newRow("ComboBox") << "ComboBox" << QQuickTheme::ComboBoxPalette;
+    QTest::newRow("Container") << "Container" << QQuickTheme::SystemPalette;
+    QTest::newRow("Control") << "Control" << QQuickTheme::SystemPalette;
+    QTest::newRow("Dial") << "Dial" << QQuickTheme::SystemPalette;
+    QTest::newRow("Dialog") << "Dialog" << QQuickTheme::SystemPalette;
+    QTest::newRow("DialogButtonBox") << "DialogButtonBox" << QQuickTheme::SystemPalette;
+    QTest::newRow("Drawer") << "Drawer" << QQuickTheme::SystemPalette;
+    QTest::newRow("Frame") << "Frame" << QQuickTheme::SystemPalette;
+    QTest::newRow("GroupBox") << "GroupBox" << QQuickTheme::GroupBoxPalette;
+    QTest::newRow("ItemDelegate") << "ItemDelegate" << QQuickTheme::ItemViewPalette;
+    QTest::newRow("Label") << "Label" << QQuickTheme::LabelPalette;
+    QTest::newRow("Menu") << "Menu" << QQuickTheme::MenuPalette;
+    QTest::newRow("MenuItem") << "MenuItem" << QQuickTheme::MenuPalette;
+    QTest::newRow("MenuSeparator") << "MenuSeparator" << QQuickTheme::MenuPalette;
+    QTest::newRow("Page") << "Page" << QQuickTheme::SystemPalette;
+    QTest::newRow("Pane") << "Pane" << QQuickTheme::SystemPalette;
+    QTest::newRow("Popup") << "Popup" << QQuickTheme::SystemPalette;
+    QTest::newRow("ProgressBar") << "ProgressBar" << QQuickTheme::SystemPalette;
+    QTest::newRow("RadioButton") << "RadioButton" << QQuickTheme::RadioButtonPalette;
+    QTest::newRow("RadioDelegate") << "RadioDelegate" << QQuickTheme::ItemViewPalette;
+    QTest::newRow("RangeSlider") << "RangeSlider" << QQuickTheme::SystemPalette;
+    QTest::newRow("RoundButton") << "RoundButton" << QQuickTheme::ButtonPalette;
+    QTest::newRow("ScrollBar") << "ScrollBar" << QQuickTheme::SystemPalette;
+    QTest::newRow("ScrollIndicator") << "ScrollIndicator" << QQuickTheme::SystemPalette;
+    QTest::newRow("Slider") << "Slider" << QQuickTheme::SystemPalette;
+    QTest::newRow("SpinBox") << "SpinBox" << QQuickTheme::TextLineEditPalette;
+    QTest::newRow("SwipeDelegate") << "SwipeDelegate" << QQuickTheme::ItemViewPalette;
+    QTest::newRow("Switch") << "Switch" << QQuickTheme::CheckBoxPalette; // ### TODO: add QQuickTheme::SwitchPalette
+    QTest::newRow("SwitchDelegate") << "SwitchDelegate" << QQuickTheme::ItemViewPalette;
+    QTest::newRow("TabBar") << "TabBar" << QQuickTheme::TabBarPalette;
+    QTest::newRow("TabButton") << "TabButton" << QQuickTheme::TabBarPalette;
+    QTest::newRow("TextArea") << "TextArea" << QQuickTheme::TextEditPalette;
+    QTest::newRow("TextField") << "TextField" << QQuickTheme::TextLineEditPalette;
+    QTest::newRow("ToolBar") << "ToolBar" << QQuickTheme::ToolButtonPalette;
+    QTest::newRow("ToolButton") << "ToolButton" << QQuickTheme::ToolButtonPalette;
+    QTest::newRow("ToolSeparator") << "ToolSeparator" << QQuickTheme::ToolButtonPalette;
+    QTest::newRow("ToolTip") << "ToolTip" << QQuickTheme::ToolTipPalette;
+    QTest::newRow("Tumbler") << "Tumbler" << QQuickTheme::ItemViewPalette;
 }
 
 void tst_palette::defaultPalette()
 {
     QFETCH(QString, control);
-    QFETCH(QPlatformTheme::Palette, paletteType);
+    QFETCH(QQuickTheme::Palette, paletteType);
 
     TestTheme theme(QGuiApplicationPrivate::platform_theme);
 
