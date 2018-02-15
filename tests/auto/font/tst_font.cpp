@@ -54,6 +54,8 @@ class tst_font : public QQmlDataTest
     Q_OBJECT
 
 private slots:
+    void systemFont();
+
     void font_data();
     void font();
 
@@ -66,6 +68,40 @@ private slots:
     void listView_data();
     void listView();
 };
+
+static QFont testFont()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0; import QtQuick.Controls 2.0; Text { }", QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+    Q_ASSERT_X(!object.isNull(), "testFont", qPrintable(component.errorString()));
+
+    QVariant var = object->property("font");
+    Q_ASSERT_X(var.isValid(), "testFont", var.typeName());
+    return var.value<QFont>();
+}
+
+void tst_font::systemFont()
+{
+    const QFont *originalSystemFont = QGuiApplicationPrivate::platformTheme()->font(QPlatformTheme::SystemFont);
+    if (!originalSystemFont)
+        QSKIP("Cannot test the system font on a minimal platform");
+
+    const QFont fontBefore = testFont();
+    QCOMPARE(fontBefore, *originalSystemFont);
+
+    qmlClearTypeRegistrations();
+    delete QGuiApplicationPrivate::app_font;
+    QGuiApplicationPrivate::app_font = nullptr;
+
+    const QFont appFont = QGuiApplication::font();
+    QCOMPARE(appFont, *originalSystemFont);
+
+    const QFont fontAfter = testFont();
+    QCOMPARE(fontAfter, *originalSystemFont);
+}
 
 void tst_font::font_data()
 {

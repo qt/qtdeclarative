@@ -134,14 +134,16 @@ QQuickTheme::QQuickTheme(const QString &style)
 
 const QFont *QQuickTheme::font(Font type) const
 {
-    Q_UNUSED(type);
-    return m_styleFont.data();
+    if (m_styleFont)
+        return m_styleFont.data();
+    return QQuickProxyTheme::font(type);
 }
 
 const QPalette *QQuickTheme::palette(Palette type) const
 {
-    Q_UNUSED(type);
-    return m_stylePalette.data();
+    if (m_stylePalette)
+        return m_stylePalette.data();
+    return QQuickProxyTheme::palette(type);
 }
 
 QFont QQuickTheme::resolveFont(const QFont &font) const
