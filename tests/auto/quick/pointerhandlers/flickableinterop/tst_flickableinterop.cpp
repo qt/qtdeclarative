@@ -544,6 +544,20 @@ void tst_FlickableInterop::mouseDragFlickableBehindItemWithHandlers()
         QCOMPARE(originP1 + QPoint(3*dragThreshold, 0), p1);
     }
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
+    // wait until flickable stops
+    QTRY_COMPARE(flickable->isMoving(), false);
+
+    // After the mouse button has been released, move the mouse and ensure that nothing is moving
+    // because of that (this tests if all grabs are released when the mouse button is released).
+    p1 = rect->mapToScene(rect->clipRect().center()).toPoint();
+    originP1 = p1;
+    for (int i = 0; i < 3; ++i) {
+        p1 += QPoint(dragThreshold, 0);
+        QTest::mouseMove(window, p1);
+        QQuickTouchUtils::flush(window);
+    }
+    QCOMPARE(flickable->isMoving(), false);
+    QCOMPARE(originP1, rect->mapToScene(rect->clipRect().center()).toPoint());
 }
 
 QTEST_MAIN(tst_FlickableInterop)
