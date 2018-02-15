@@ -151,7 +151,7 @@ struct Q_QML_EXPORT SparseArray
 
     SparseArray(const SparseArray &other);
 
-    ReturnedValue freeList = 0;
+    ReturnedValue freeList;
 private:
     SparseArray &operator=(const SparseArray &other);
 
