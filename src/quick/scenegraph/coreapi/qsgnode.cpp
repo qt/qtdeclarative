@@ -114,6 +114,10 @@ static void qt_print_node_count()
     \value DirtyOpacity The opacity of a QSGOpacityNode has changed.
     \value DirtySubtreeBlocked The subtree has been blocked.
 
+    \omitvalue DirtyForceUpdate
+    \omitvalue DirtyUsePreprocess
+    \omitvalue DirtyPropagationMask
+
     \sa QSGNode::markDirty()
  */
 
@@ -135,6 +139,8 @@ static void qt_print_node_count()
     ownership over the opaque material and will delete it when the node is
     destroyed or a material is assigned.
     \value InternalReserved Reserved for internal use.
+
+    \omitvalue IsVisitableNode
  */
 
 /*!
@@ -148,6 +154,8 @@ static void qt_print_node_count()
     \value ClipNodeType The type of QSGClipNode
     \value OpacityNodeType The type of QSGOpacityNode
     \value RenderNodeType The type of QSGRenderNode
+
+    \omitvalue RootNodeType
 
     \sa type()
  */

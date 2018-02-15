@@ -268,7 +268,7 @@ QtMsgType QQmlError::messageType() const
     \since 5.9
 
     Sets the \a messageType for this message. The message type determines which
-    QDebug handlers are responsible for recieving the message.
+    QDebug handlers are responsible for receiving the message.
  */
 void QQmlError::setMessageType(QtMsgType messageType)
 {

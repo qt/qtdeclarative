@@ -38,6 +38,7 @@ Item {
         label: "Overridden"
         x: 10; y: 10; width: parent.width - 20; height: 40
         TapHandler {
+            gesturePolicy: TapHandler.ReleaseWithinBounds
             objectName: "override"
             onTapped: button.tapped()
         }

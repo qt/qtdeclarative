@@ -138,7 +138,7 @@ template <typename State>
 class QSGSimpleMaterial : public QSGMaterial
 {
 public:
-#ifndef qdoc
+#ifndef Q_CLANG_QDOC
     QSGSimpleMaterial(const State &aState, PtrShaderCreateFunc func)
         : m_state(aState)
         , m_func(func)

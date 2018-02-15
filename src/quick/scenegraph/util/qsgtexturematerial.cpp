@@ -304,7 +304,17 @@ void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)
      The default vertical wrap mode is \c QSGTexture::ClampToEdge.
   */
 
+/*!
+  \fn void QSGOpaqueTextureMaterial::setAnisotropyLevel(QSGTexture::AnisotropyLevel level)
 
+  Sets this material's anistropy level to \a level.
+*/
+
+/*!
+  \fn QSGTexture::AnisotropyLevel QSGOpaqueTextureMaterial::anisotropyLevel() const
+
+  Returns this material's anistropy level.
+*/
 
 /*!
     \internal

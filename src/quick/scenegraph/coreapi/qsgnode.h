@@ -77,9 +77,7 @@ public:
         TransformNodeType,
         ClipNodeType,
         OpacityNodeType,
-#ifndef qdoc
         RootNodeType,
-#endif
         RenderNodeType
     };
 
@@ -96,9 +94,8 @@ public:
         OwnsOpaqueMaterial          = 0x00040000,
 
         // Uppermost 8 bits are reserved for internal use.
-#ifndef qdoc
         IsVisitableNode             = 0x01000000
-#else
+#ifdef Q_CLANG_QDOC
         InternalReserved            = 0x01000000
 #endif
     };
@@ -113,7 +110,6 @@ public:
         DirtyMaterial               = 0x2000,
         DirtyOpacity                = 0x4000,
 
-#ifndef qdoc
         DirtyForceUpdate            = 0x8000,
 
         DirtyUsePreprocess          = UsePreprocess,
@@ -122,7 +118,6 @@ public:
                                       | DirtyNodeAdded
                                       | DirtyOpacity
                                       | DirtyForceUpdate
-#endif
 
     };
     Q_DECLARE_FLAGS(DirtyState, DirtyStateBit)

@@ -2080,29 +2080,38 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
     // Dynamic plugins are differentiated by their filepath. For static plugins we
     // don't have that information so we use their address as key instead.
     const QString uniquePluginID = QString::asprintf("%p", instance);
-    StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
-    QMutexLocker lock(&plugins->mutex);
+    {
+        StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
+        QMutexLocker lock(&plugins->mutex);
 
-    // Plugin types are global across all engines and should only be
-    // registered once. But each engine still needs to be initialized.
-    bool typesRegistered = plugins->contains(uniquePluginID);
-    bool engineInitialized = initializedPlugins.contains(uniquePluginID);
+        // Plugin types are global across all engines and should only be
+        // registered once. But each engine still needs to be initialized.
+        bool typesRegistered = plugins->contains(uniquePluginID);
 
-    if (typesRegistered) {
-        Q_ASSERT_X(plugins->value(uniquePluginID).uri == uri,
-                   "QQmlImportDatabase::importStaticPlugin",
-                   "Internal error: Static plugin imported previously with different uri");
-    } else {
-        RegisteredPlugin plugin;
-        plugin.uri = uri;
-        plugin.loader = 0;
-        plugins->insert(uniquePluginID, plugin);
+        if (typesRegistered) {
+            Q_ASSERT_X(plugins->value(uniquePluginID).uri == uri,
+                       "QQmlImportDatabase::importStaticPlugin",
+                       "Internal error: Static plugin imported previously with different uri");
+        } else {
+            RegisteredPlugin plugin;
+            plugin.uri = uri;
+            plugin.loader = 0;
+            plugins->insert(uniquePluginID, plugin);
 
-        if (!registerPluginTypes(instance, basePath, uri, typeNamespace, vmaj, errors))
-            return false;
+            if (!registerPluginTypes(instance, basePath, uri, typeNamespace, vmaj, errors))
+                return false;
+        }
+
+        // Release the lock on plugins early as we're done with the global part. Releasing the lock
+        // also allows other QML loader threads to acquire the lock while this thread is blocking
+        // in the initializeEngine call to the gui thread (which in turn may be busy waiting for
+        // other QML loader threads and thus not process the initializeEngine call).
     }
 
-    if (!engineInitialized) {
+    // The plugin's per-engine initialization does not need lock protection, as this function is
+    // only called from the engine specific loader thread and importDynamicPlugin as well as
+    // importStaticPlugin are the only places of access.
+    if (!initializedPlugins.contains(uniquePluginID)) {
         initializedPlugins.insert(uniquePluginID);
 
         if (QQmlExtensionInterface *eiface = qobject_cast<QQmlExtensionInterface *>(instance)) {
@@ -2124,68 +2133,77 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
     QFileInfo fileInfo(filePath);
     const QString absoluteFilePath = fileInfo.absoluteFilePath();
 
+    QObject *instance = nullptr;
     bool engineInitialized = initializedPlugins.contains(absoluteFilePath);
-    StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
-    QMutexLocker lock(&plugins->mutex);
-    bool typesRegistered = plugins->contains(absoluteFilePath);
+    {
+        StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
+        QMutexLocker lock(&plugins->mutex);
+        bool typesRegistered = plugins->contains(absoluteFilePath);
 
-    if (typesRegistered) {
-        Q_ASSERT_X(plugins->value(absoluteFilePath).uri == uri,
-                   "QQmlImportDatabase::importDynamicPlugin",
-                   "Internal error: Plugin imported previously with different uri");
-    }
-
-    if (!engineInitialized || !typesRegistered) {
-        if (!QQml_isFileCaseCorrect(absoluteFilePath)) {
-            if (errors) {
-                QQmlError error;
-                error.setDescription(tr("File name case mismatch for \"%1\"").arg(absoluteFilePath));
-                errors->prepend(error);
-            }
-            return false;
+        if (typesRegistered) {
+            Q_ASSERT_X(plugins->value(absoluteFilePath).uri == uri,
+                       "QQmlImportDatabase::importDynamicPlugin",
+                       "Internal error: Plugin imported previously with different uri");
         }
 
-        QPluginLoader* loader = 0;
-        if (!typesRegistered) {
-            loader = new QPluginLoader(absoluteFilePath);
-
-            if (!loader->load()) {
+        if (!engineInitialized || !typesRegistered) {
+            if (!QQml_isFileCaseCorrect(absoluteFilePath)) {
                 if (errors) {
                     QQmlError error;
-                    error.setDescription(loader->errorString());
+                    error.setDescription(tr("File name case mismatch for \"%1\"").arg(absoluteFilePath));
                     errors->prepend(error);
                 }
-                delete loader;
                 return false;
             }
-        } else {
-            loader = plugins->value(absoluteFilePath).loader;
+
+            QPluginLoader* loader = 0;
+            if (!typesRegistered) {
+                loader = new QPluginLoader(absoluteFilePath);
+
+                if (!loader->load()) {
+                    if (errors) {
+                        QQmlError error;
+                        error.setDescription(loader->errorString());
+                        errors->prepend(error);
+                    }
+                    delete loader;
+                    return false;
+                }
+            } else {
+                loader = plugins->value(absoluteFilePath).loader;
+            }
+
+            instance = loader->instance();
+
+            if (!typesRegistered) {
+                RegisteredPlugin plugin;
+                plugin.uri = uri;
+                plugin.loader = loader;
+                plugins->insert(absoluteFilePath, plugin);
+
+                // Continue with shared code path for dynamic and static plugins:
+                if (!registerPluginTypes(instance, fileInfo.absolutePath(), uri, typeNamespace, vmaj, errors))
+                    return false;
+            }
         }
 
-       QObject *instance = loader->instance();
+    // Release the lock on plugins early as we're done with the global part. Releasing the lock
+    // also allows other QML loader threads to acquire the lock while this thread is blocking
+    // in the initializeEngine call to the gui thread (which in turn may be busy waiting for
+    // other QML loader threads and thus not process the initializeEngine call).
+    }
 
-        if (!typesRegistered) {
-            RegisteredPlugin plugin;
-            plugin.uri = uri;
-            plugin.loader = loader;
-            plugins->insert(absoluteFilePath, plugin);
 
-            // Continue with shared code path for dynamic and static plugins:
-            if (!registerPluginTypes(instance, fileInfo.absolutePath(), uri, typeNamespace, vmaj, errors))
-                return false;
+    if (!engineInitialized) {
+        // The plugin's per-engine initialization does not need lock protection, as this function is
+        // only called from the engine specific loader thread and importDynamicPlugin as well as
+        // importStaticPlugin are the only places of access.
+        initializedPlugins.insert(absoluteFilePath);
+
+        if (QQmlExtensionInterface *eiface = qobject_cast<QQmlExtensionInterface *>(instance)) {
+            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+            ep->typeLoader.initializeEngine(eiface, uri.toUtf8().constData());
         }
-
-        if (!engineInitialized) {
-             // things on the engine (eg. adding new global objects) have to be done for every
-             // engine.
-             // XXX protect against double initialization
-             initializedPlugins.insert(absoluteFilePath);
-
-             if (QQmlExtensionInterface *eiface = qobject_cast<QQmlExtensionInterface *>(instance)) {
-                 QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-                 ep->typeLoader.initializeEngine(eiface, uri.toUtf8().constData());
-             }
-         }
     }
 
     return true;

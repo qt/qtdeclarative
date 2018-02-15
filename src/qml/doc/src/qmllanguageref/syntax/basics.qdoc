@@ -38,6 +38,8 @@ imperative code, in the case where complex custom application behavior is needed
 
 QML source code is generally loaded by the engine through QML \e documents, which are
 standalone documents of QML code. These can be used to define \l {QML Object Types}{QML object types} that can then be reused throughout an application.
+Note that type names must begin with an uppercase letter in order
+to be declared as QML object types in a QML file.
 
 
 \section1 Import Statements

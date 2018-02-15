@@ -633,6 +633,7 @@ void QQuickShapePath::resetFillGradient()
 */
 
 QQuickShapePrivate::QQuickShapePrivate()
+      : effectRefCount(0)
 {
 }
 
@@ -910,10 +911,12 @@ void QQuickShape::updatePolish()
 {
     Q_D(QQuickShape);
 
-    if (!d->spChanged)
+    const int currentEffectRefCount = d->extra.isAllocated() ? d->extra->recursiveEffectRefCount : 0;
+    if (!d->spChanged && currentEffectRefCount <= d->effectRefCount)
         return;
 
     d->spChanged = false;
+    d->effectRefCount = currentEffectRefCount;
 
     if (!d->renderer) {
         d->createRenderer();
@@ -925,7 +928,7 @@ void QQuickShape::updatePolish()
     // endSync() is where expensive calculations may happen (or get kicked off
     // on worker threads), depending on the backend. Therefore do this only
     // when the item is visible.
-    if (isVisible())
+    if (isVisible() || d->effectRefCount > 0)
         d->sync();
 
     update();

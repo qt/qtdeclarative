@@ -10,4 +10,12 @@ include (../../shared/util.pri)
 
 TESTDATA = data/* imports/* $$OUT_PWD/imports/*
 
+waitingPlugin.files = moduleWithWaitingPlugin
+waitingPlugin.prefix = /qt-project.org/imports/
+RESOURCES += waitingPlugin
+
+staticPlugin.files = moduleWithStaticPlugin
+staticPlugin.prefix = /qt-project.org/imports/
+RESOURCES += staticPlugin
+
 QT += core-private gui-private qml-private network testlib
