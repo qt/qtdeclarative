@@ -273,6 +273,8 @@ private slots:
 
     void lowercaseTypeNames();
 
+    void thisInQmlScope();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -4602,6 +4604,19 @@ void tst_qqmllanguage::lowercaseTypeNames()
 {
     QCOMPARE(qmlRegisterType<QObject>("Test", 1, 0, "lowerCaseTypeName"), -1);
     QCOMPARE(qmlRegisterSingletonType<QObject>("Test", 1, 0, "lowerCaseTypeName", nullptr), -1);
+}
+
+void tst_qqmllanguage::thisInQmlScope()
+{
+    QQmlEngine engine;
+
+    QQmlComponent component(&engine, testFileUrl("thisInQmlScope.qml"));
+    QTRY_VERIFY(component.isReady());
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("x"), QVariant(42));
+    QCOMPARE(o->property("y"), QVariant(42));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

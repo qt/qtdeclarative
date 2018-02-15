@@ -1064,6 +1064,8 @@ ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine
         return engine->throwTypeError(error);
     }
 
+    auto scopeObj = static_cast<const QmlContext &>(callData->thisObject).d()->qml->scopeObject;
+    callData->thisObject = QObjectWrapper::wrap(engine, scopeObj);
     o->call(scope, callData);
     return scope.result.asReturnedValue();
 }
@@ -1077,6 +1079,8 @@ ReturnedValue Runtime::method_callQmlContextObjectProperty(ExecutionEngine *engi
         return engine->throwTypeError(error);
     }
 
+    auto scopeObj = static_cast<const QmlContext &>(callData->thisObject).d()->qml->context->contextData()->contextObject;
+    callData->thisObject = QObjectWrapper::wrap(engine, scopeObj);
     o->call(scope, callData);
     return scope.result.asReturnedValue();
 }
