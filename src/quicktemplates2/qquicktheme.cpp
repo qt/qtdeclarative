@@ -37,6 +37,8 @@
 #include "qquicktheme_p.h"
 #include "qquicktheme_p_p.h"
 
+#include <QtGui/private/qguiapplication_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QQuickTheme::QQuickTheme()
@@ -46,6 +48,38 @@ QQuickTheme::QQuickTheme()
 
 QQuickTheme::~QQuickTheme()
 {
+}
+
+QFont QQuickTheme::themeFont(Font type)
+{
+    const QFont *font = nullptr;
+    if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
+        font = theme->font(type);
+
+    if (font) {
+        QFont f = *font;
+        if (type == QPlatformTheme::SystemFont)
+            f.resolve(0);
+        return f;
+    }
+
+    return QFont();
+}
+
+QPalette QQuickTheme::themePalette(Palette type)
+{
+    const QPalette *palette = nullptr;
+    if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
+        palette = theme->palette(type);
+
+    if (palette) {
+        QPalette f = *palette;
+        if (type == QPlatformTheme::SystemPalette)
+            f.resolve(0);
+        return f;
+    }
+
+    return QPalette();
 }
 
 const QFont *QQuickTheme::font(Font type) const

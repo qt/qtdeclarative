@@ -194,7 +194,7 @@ void QQuickTextAreaPrivate::inheritFont(const QFont &font)
     QFont parentFont = extra.isAllocated() ? extra->requestedFont.resolve(font) : font;
     parentFont.resolve(extra.isAllocated() ? extra->requestedFont.resolve() | font.resolve() : font.resolve());
 
-    const QFont defaultFont = QQuickControlPrivate::themeFont(QPlatformTheme::EditorFont);
+    const QFont defaultFont = QQuickTheme::themeFont(QQuickTheme::EditorFont);
     const QFont resolvedFont = parentFont.resolve(defaultFont);
 
     setFont_helper(resolvedFont);
@@ -236,7 +236,7 @@ void QQuickTextAreaPrivate::inheritPalette(const QPalette &palette)
     QPalette parentPalette = extra.isAllocated() ? extra->requestedPalette.resolve(palette) : palette;
     parentPalette.resolve(extra.isAllocated() ? extra->requestedPalette.resolve() | palette.resolve() : palette.resolve());
 
-    const QPalette defaultPalette = QQuickControlPrivate::themePalette(QPlatformTheme::TextEditPalette);
+    const QPalette defaultPalette = QQuickTheme::themePalette(QQuickTheme::TextEditPalette);
     const QPalette resolvedPalette = parentPalette.resolve(defaultPalette);
 
     setPalette_helper(resolvedPalette);

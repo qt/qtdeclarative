@@ -1699,12 +1699,12 @@ void QQuickComboBox::localeChange(const QLocale &newLocale, const QLocale &oldLo
 
 QFont QQuickComboBox::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::ComboMenuItemFont);
+    return QQuickTheme::themeFont(QQuickTheme::ComboMenuItemFont);
 }
 
 QPalette QQuickComboBox::defaultPalette() const
 {
-    return QQuickControlPrivate::themePalette(QPlatformTheme::ComboBoxPalette);
+    return QQuickTheme::themePalette(QQuickTheme::ComboBoxPalette);
 }
 
 #if QT_CONFIG(accessibility)

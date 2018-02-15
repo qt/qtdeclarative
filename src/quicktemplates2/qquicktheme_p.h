@@ -63,6 +63,9 @@ public:
     QQuickTheme();
     ~QQuickTheme();
 
+    static QFont themeFont(Font type);
+    static QPalette themePalette(Palette type);
+
     const QFont *font(Font type = SystemFont) const override;
     const QPalette *palette(Palette type = SystemPalette) const override;
 

@@ -441,7 +441,7 @@ void QQuickTabBar::itemRemoved(int index, QQuickItem *item)
 
 QPalette QQuickTabBar::defaultPalette() const
 {
-    return QQuickControlPrivate::themePalette(QPlatformTheme::TabBarPalette);
+    return QQuickTheme::themePalette(QQuickTheme::TabBarPalette);
 }
 
 #if QT_CONFIG(accessibility)

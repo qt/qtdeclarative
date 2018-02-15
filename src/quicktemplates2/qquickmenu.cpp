@@ -1432,12 +1432,12 @@ void QQuickMenu::timerEvent(QTimerEvent *event)
 
 QFont QQuickMenu::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::MenuFont);
+    return QQuickTheme::themeFont(QQuickTheme::MenuFont);
 }
 
 QPalette QQuickMenu::defaultPalette() const
 {
-    return QQuickControlPrivate::themePalette(QPlatformTheme::MenuPalette);
+    return QQuickTheme::themePalette(QQuickTheme::MenuPalette);
 }
 
 #if QT_CONFIG(accessibility)

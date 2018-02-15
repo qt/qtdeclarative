@@ -303,12 +303,12 @@ void QQuickToolTip::hide()
 
 QFont QQuickToolTip::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::TipLabelFont);
+    return QQuickTheme::themeFont(QQuickTheme::TipLabelFont);
 }
 
 QPalette QQuickToolTip::defaultPalette() const
 {
-    return QQuickControlPrivate::themePalette(QPlatformTheme::ToolTipPalette);
+    return QQuickTheme::themePalette(QQuickTheme::ToolTipPalette);
 }
 
 void QQuickToolTip::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)

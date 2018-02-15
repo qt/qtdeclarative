@@ -50,9 +50,6 @@
 #include "qquickapplicationwindow_p.h"
 #include "qquickdeferredexecute_p_p.h"
 
-#include <QtGui/private/qguiapplication_p.h>
-#include <QtGui/qpa/qplatformtheme.h>
-
 #if QT_CONFIG(accessibility)
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
@@ -400,21 +397,7 @@ QFont QQuickControlPrivate::parentFont(const QQuickItem *item)
     if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
         return window->font();
 
-    return themeFont(QPlatformTheme::SystemFont);
-}
-
-QFont QQuickControlPrivate::themeFont(QPlatformTheme::Font type)
-{
-    if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme()) {
-        if (const QFont *font = theme->font(type)) {
-            QFont f = *font;
-            if (type == QPlatformTheme::SystemFont)
-                f.resolve(0);
-            return f;
-        }
-    }
-
-    return QFont();
+    return QQuickTheme::themeFont(QQuickTheme::SystemFont);
 }
 
 /*!
@@ -505,21 +488,7 @@ QPalette QQuickControlPrivate::parentPalette(const QQuickItem *item)
     if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
         return window->palette();
 
-    return themePalette(QPlatformTheme::SystemPalette);
-}
-
-QPalette QQuickControlPrivate::themePalette(QPlatformTheme::Palette type)
-{
-    if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme()) {
-        if (const QPalette *palette = theme->palette(type)) {
-            QPalette p = *palette;
-            if (type == QPlatformTheme::SystemPalette)
-                p.resolve(0);
-            return p;
-        }
-    }
-
-    return QPalette();
+    return QQuickTheme::themePalette(QQuickTheme::SystemPalette);
 }
 
 /*!
@@ -1571,12 +1540,12 @@ void QQuickControl::componentComplete()
 
 QFont QQuickControl::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
+    return QQuickTheme::themeFont(QQuickTheme::SystemFont);
 }
 
 QPalette QQuickControl::defaultPalette() const
 {
-    return QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette);
+    return QQuickTheme::themePalette(QQuickTheme::SystemPalette);
 }
 
 void QQuickControl::focusInEvent(QFocusEvent *event)

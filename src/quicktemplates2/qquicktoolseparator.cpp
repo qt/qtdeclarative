@@ -135,7 +135,7 @@ bool QQuickToolSeparator::isVertical() const
 
 QPalette QQuickToolSeparator::defaultPalette() const
 {
-    return QQuickControlPrivate::themePalette(QPlatformTheme::ToolButtonPalette);
+    return QQuickTheme::themePalette(QQuickTheme::ToolButtonPalette);
 }
 
 #if QT_CONFIG(accessibility)

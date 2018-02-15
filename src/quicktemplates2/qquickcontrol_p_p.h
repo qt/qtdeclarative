@@ -50,10 +50,10 @@
 
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQml/private/qlazilyallocated_p.h>
-#include <qpa/qplatformtheme.h>
 
 #if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
@@ -126,7 +126,6 @@ public:
         updateFont(font);
     }
     static QFont parentFont(const QQuickItem *item);
-    static QFont themeFont(QPlatformTheme::Font type);
 
     virtual void resolvePalette();
     void inheritPalette(const QPalette &palette);
@@ -138,7 +137,6 @@ public:
         updatePalette(palette);
     }
     static QPalette parentPalette(const QQuickItem *item);
-    static QPalette themePalette(QPlatformTheme::Palette type);
 
     void updateLocale(const QLocale &l, bool e);
     static void updateLocaleRecur(QQuickItem *item, const QLocale &l);

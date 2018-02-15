@@ -73,7 +73,7 @@ QQuickMenuSeparator::QQuickMenuSeparator(QQuickItem *parent)
 
 QPalette QQuickMenuSeparator::defaultPalette() const
 {
-    return QQuickControlPrivate::themePalette(QPlatformTheme::MenuPalette);
+    return QQuickTheme::themePalette(QQuickTheme::MenuPalette);
 }
 
 #if QT_CONFIG(accessibility)

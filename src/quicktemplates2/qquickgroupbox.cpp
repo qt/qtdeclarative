@@ -189,12 +189,12 @@ void QQuickGroupBox::componentComplete()
 
 QFont QQuickGroupBox::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::GroupBoxTitleFont);
+    return QQuickTheme::themeFont(QQuickTheme::GroupBoxTitleFont);
 }
 
 QPalette QQuickGroupBox::defaultPalette() const
 {
-    return QQuickControlPrivate::themePalette(QPlatformTheme::GroupBoxPalette);
+    return QQuickTheme::themePalette(QQuickTheme::GroupBoxPalette);
 }
 
 #if QT_CONFIG(accessibility)

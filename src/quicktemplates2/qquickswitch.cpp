@@ -234,7 +234,7 @@ void QQuickSwitch::buttonChange(ButtonChange change)
 QPalette QQuickSwitch::defaultPalette() const
 {
     // ### TODO: add QPlatformTheme::SwitchPalette
-    return QQuickControlPrivate::themePalette(QPlatformTheme::CheckBoxPalette);
+    return QQuickTheme::themePalette(QQuickTheme::CheckBoxPalette);
 }
 
 QT_END_NAMESPACE

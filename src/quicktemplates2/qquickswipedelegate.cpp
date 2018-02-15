@@ -1230,7 +1230,7 @@ void QQuickSwipeDelegate::geometryChanged(const QRectF &newGeometry, const QRect
 
 QFont QQuickSwipeDelegate::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::ListViewFont);
+    return QQuickTheme::themeFont(QQuickTheme::ListViewFont);
 }
 
 #if QT_CONFIG(accessibility)

@@ -100,7 +100,7 @@ QQuickRadioDelegate::QQuickRadioDelegate(QQuickItem *parent)
 
 QFont QQuickRadioDelegate::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::ListViewFont);
+    return QQuickTheme::themeFont(QQuickTheme::ListViewFont);
 }
 
 #if QT_CONFIG(accessibility)

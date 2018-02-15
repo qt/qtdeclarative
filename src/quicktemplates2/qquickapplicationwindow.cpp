@@ -272,7 +272,7 @@ void QQuickApplicationWindowPrivate::updateFont(const QFont &f)
 
 void QQuickApplicationWindowPrivate::resolveFont()
 {
-    QFont resolvedFont = font.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
+    QFont resolvedFont = font.resolve(QQuickTheme::themeFont(QQuickTheme::SystemFont));
     setFont_helper(resolvedFont);
 }
 
@@ -294,7 +294,7 @@ void QQuickApplicationWindowPrivate::updatePalette(const QPalette &p)
 
 void QQuickApplicationWindowPrivate::resolvePalette()
 {
-    QPalette resolvedPalette = palette.resolve(QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette));
+    QPalette resolvedPalette = palette.resolve(QQuickTheme::themePalette(QQuickTheme::SystemPalette));
     setPalette_helper(resolvedPalette);
 }
 
@@ -689,7 +689,7 @@ void QQuickApplicationWindow::setFont(const QFont &font)
     if (d->font.resolve() == font.resolve() && d->font == font)
         return;
 
-    QFont resolvedFont = font.resolve(QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont));
+    QFont resolvedFont = font.resolve(QQuickTheme::themeFont(QQuickTheme::SystemFont));
     d->setFont_helper(resolvedFont);
 }
 
@@ -768,7 +768,7 @@ void QQuickApplicationWindow::setPalette(const QPalette &palette)
     if (d->palette.resolve() == palette.resolve() && d->palette == palette)
         return;
 
-    QPalette resolvedPalette = palette.resolve(QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette));
+    QPalette resolvedPalette = palette.resolve(QQuickTheme::themePalette(QQuickTheme::SystemPalette));
     d->setPalette_helper(resolvedPalette);
 }
 

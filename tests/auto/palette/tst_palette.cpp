@@ -46,7 +46,7 @@
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
-#include <QtQuickTemplates2/private/qquickproxytheme_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -88,7 +88,7 @@ void tst_palette::palette_data()
     QTest::addColumn<QString>("testFile");
     QTest::addColumn<QPalette>("expectedPalette");
 
-    QPalette defaultPalette = QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette);
+    QPalette defaultPalette = QQuickTheme::themePalette(QQuickTheme::SystemPalette);
     defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
     defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 
@@ -172,7 +172,7 @@ void tst_palette::inheritance()
     QObject *grandChild = window->property("grandChild").value<QObject *>();
     QVERIFY(control && child && grandChild);
 
-    QPalette defaultPalette = QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette);
+    QPalette defaultPalette = QQuickTheme::themePalette(QQuickTheme::SystemPalette);
     defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
     defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 

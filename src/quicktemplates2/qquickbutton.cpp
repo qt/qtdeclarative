@@ -102,12 +102,12 @@ QQuickButton::QQuickButton(QQuickButtonPrivate &dd, QQuickItem *parent)
 
 QFont QQuickButton::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::PushButtonFont);
+    return QQuickTheme::themeFont(QQuickTheme::PushButtonFont);
 }
 
 QPalette QQuickButton::defaultPalette() const
 {
-    return QQuickControlPrivate::themePalette(QPlatformTheme::ButtonPalette);
+    return QQuickTheme::themePalette(QQuickTheme::ButtonPalette);
 }
 
 /*!

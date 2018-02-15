@@ -2415,12 +2415,12 @@ void QQuickPopup::spacingChange(qreal newSpacing, qreal oldSpacing)
 
 QFont QQuickPopup::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::SystemFont);
+    return QQuickTheme::themeFont(QQuickTheme::SystemFont);
 }
 
 QPalette QQuickPopup::defaultPalette() const
 {
-    return QQuickControlPrivate::themePalette(QPlatformTheme::SystemPalette);
+    return QQuickTheme::themePalette(QQuickTheme::SystemPalette);
 }
 
 #if QT_CONFIG(accessibility)

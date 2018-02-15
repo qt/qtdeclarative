@@ -784,12 +784,12 @@ void QQuickTumbler::updatePolish()
 
 QFont QQuickTumbler::defaultFont() const
 {
-    return QQuickControlPrivate::themeFont(QPlatformTheme::ItemViewFont);
+    return QQuickTheme::themeFont(QQuickTheme::ItemViewFont);
 }
 
 QPalette QQuickTumbler::defaultPalette() const
 {
-    return QQuickControlPrivate::themePalette(QPlatformTheme::ItemViewPalette);
+    return QQuickTheme::themePalette(QQuickTheme::ItemViewPalette);
 }
 
 QQuickTumblerAttachedPrivate::QQuickTumblerAttachedPrivate()
