@@ -956,6 +956,9 @@ ReturnedValue Runtime::callQmlScopeObjectProperty(ExecutionEngine *engine, int p
         QString error = QStringLiteral("Property '%1' of scope object is not a function").arg(propertyIndex);
         return engine->throwTypeError(error);
     }
+
+    QObject *scopeObj = static_cast<const QmlContext &>(callData->thisObject).d()->qml->scopeObject;
+    callData->thisObject = QObjectWrapper::wrap(engine, scopeObj);
     return o->call(callData);
 }
 
@@ -968,6 +971,8 @@ ReturnedValue Runtime::callQmlContextObjectProperty(ExecutionEngine *engine, int
         return engine->throwTypeError(error);
     }
 
+    QObject *contextObject = static_cast<const QmlContext &>(callData->thisObject).d()->qml->context->contextObject;
+    callData->thisObject = QObjectWrapper::wrap(engine, contextObject);
     return o->call(callData);
 }
 

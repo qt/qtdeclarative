@@ -258,6 +258,8 @@ private slots:
 
     void valueTypeGroupPropertiesInBehavior();
 
+    void thisInQmlScope();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -4169,6 +4171,19 @@ void tst_qqmllanguage::valueTypeGroupPropertiesInBehavior()
     QVERIFY(animation);
 
     QCOMPARE(animation->property("easing").value<QEasingCurve>().type(), QEasingCurve::InOutQuad);
+}
+
+void tst_qqmllanguage::thisInQmlScope()
+{
+    QQmlEngine engine;
+
+    QQmlComponent component(&engine, testFileUrl("thisInQmlScope.qml"));
+    QTRY_VERIFY(component.isReady());
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("x"), QVariant(42));
+    QCOMPARE(o->property("y"), QVariant(42));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
