@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -1764,6 +1764,8 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
                 QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point->scenePosition(), false, false);
                 for (QQuickItem *item : targetItems) {
                     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+                    if (!itemPrivate->extra.isAllocated() || itemPrivate->extra->pointerHandlers.isEmpty())
+                        continue;
                     pointerEvent->localize(item);
                     if (!sendFilteredPointerEvent(pointerEvent, item)) {
                         if (itemPrivate->handlePointerEvent(pointerEvent, true)) // avoid re-delivering to grabbers
@@ -2302,10 +2304,9 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     if (event->asPointerMouseEvent()) {
         deliverMouseEvent(event->asPointerMouseEvent());
         // failsafe: never allow any kind of grab to persist after release
-        QQuickItem *grabber = q->mouseGrabberItem();
-        if (event->isReleaseEvent() && event->buttons() == Qt::NoButton && grabber) {
+        if (event->isReleaseEvent() && event->buttons() == Qt::NoButton) {
             event->clearGrabbers();
-            sendUngrabEvent(grabber, false);
+            sendUngrabEvent(q->mouseGrabberItem(), false);
         }
     } else if (event->asPointerTouchEvent()) {
         deliverTouchEvent(event->asPointerTouchEvent());
@@ -2430,8 +2431,6 @@ void QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
                 done = true;
             event->localize(receiver);
             handler->handlePointerEvent(event);
-            if (event->allPointsAccepted())
-                done = true;
         }
         if (done)
             break;
@@ -2532,8 +2531,6 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     }
     if (handlersOnly)
         return;
-    if (pointerEvent->allPointsAccepted() && !pointerEvent->isReleaseEvent())
-        return;
 
     // If all points are released and the item is not the grabber, it doesn't get the event.
     // But if at least one point is still pressed, we might be in a potential gesture-takeover scenario.
@@ -2545,8 +2542,6 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     auto event = pointerEvent->asPointerMouseEvent();
     if (event && item->acceptedMouseButtons() & event->button()) {
             auto point = event->point(0);
-            if (point->isAccepted())
-                return;
             // The only reason to already have a mouse grabber here is
             // synthetic events - flickable sends one when setPressDelay is used.
             auto oldMouseGrabber = q->mouseGrabberItem();

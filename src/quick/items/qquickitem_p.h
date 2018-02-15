@@ -360,8 +360,11 @@ public:
 #endif
         QPointF userTransformOriginPoint;
 
+        // these do not include child items
         int effectRefCount;
         int hideRefCount;
+        // updated recursively for child items as well
+        int recursiveEffectRefCount;
 
         QSGOpacityNode *opacityNode;
         QQuickDefaultClipNode *clipNode;
@@ -614,6 +617,7 @@ public:
     // A reference from an effect item means that this item is used by the effect, so
     // it should insert a root node.
     void refFromEffectItem(bool hide);
+    void recursiveRefFromEffectItem(int refs);
     void derefFromEffectItem(bool unhide);
 
     void itemChange(QQuickItem::ItemChange, const QQuickItem::ItemChangeData &);

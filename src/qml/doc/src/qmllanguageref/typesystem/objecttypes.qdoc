@@ -45,6 +45,8 @@ type, as discussed in \l {qtqml-documents-definetypes.html}
 {Documents as QML object type definitions}, or by defining a QML type from C++
 and registering the type with the QML engine, as discussed in
 \l{qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}.
+Note that in both cases, the type name must begin with an uppercase letter in
+order to be declared as a QML object type in a QML file.
 
 
 \section1 Defining Object Types from QML

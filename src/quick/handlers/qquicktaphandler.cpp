@@ -61,14 +61,20 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
 
     TapHandler is a handler for taps on a touchscreen or clicks on a mouse.
 
-    Detection of a valid tap gesture depends on \l gesturePolicy.
+    Detection of a valid tap gesture depends on \l gesturePolicy.  The default
+    value is DragThreshold, which requires the press and release to be close
+    together in both space and time.  In this case, DragHandler is able to
+    function using only a passive grab, and therefore does not interfere with
+    event delivery to any other Items or Pointer Handlers.  So the default
+    gesturePolicy is useful when you want to modify behavior of an existing
+    control or Item by adding a TapHandler with bindings and/or JavaScript
+    callbacks.
+
     Note that buttons (such as QPushButton) are often implemented not to care
     whether the press and release occur close together: if you press the button
     and then change your mind, you need to drag all the way off the edge of the
-    button in order to cancel the click.  Therefore the default
-    \l gesturePolicy is \c TapHandler.ReleaseWithinBounds.  If you want to require
-    that the press and release are close together in both space and time,
-    set it to \c TapHandler.DragThreshold.
+    button in order to cancel the click.  For this use case, set the
+    \l gesturePolicy to \c TapHandler.ReleaseWithinBounds.
 
     For multi-tap gestures (double-tap, triple-tap etc.), the distance moved
     must not exceed QPlatformTheme::MouseDoubleClickDistance with mouse and
@@ -81,7 +87,7 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
 QQuickTapHandler::QQuickTapHandler(QObject *parent)
     : QQuickSinglePointHandler(parent)
     , m_pressed(false)
-    , m_gesturePolicy(ReleaseWithinBounds)
+    , m_gesturePolicy(DragThreshold)
     , m_tapCount(0)
     , m_longPressThreshold(-1)
     , m_lastTapTimestamp(0.0)

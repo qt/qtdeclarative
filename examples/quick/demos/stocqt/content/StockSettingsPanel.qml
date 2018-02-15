@@ -56,10 +56,10 @@ Rectangle {
     id: root
     color: "transparent"
 
-    property bool drawOpenPrice: openButton.buttonEnabled
-    property bool drawClosePrice: closeButton.buttonEnabled
-    property bool drawHighPrice: highButton.buttonEnabled
-    property bool drawLowPrice: lowButton.buttonEnabled
+    property bool drawOpenPrice: false
+    property bool drawClosePrice: false
+    property bool drawHighPrice: true
+    property bool drawLowPrice: true
 
     property string openColor: "#face20"
     property string closeColor: "#14aaff"
@@ -95,6 +95,7 @@ Rectangle {
         CheckBox {
             id: openButton
             buttonEnabled: false
+            onButtonEnabledChanged: drawOpenPrice = buttonEnabled
             Layout.rightMargin: 10
         }
 
@@ -114,6 +115,7 @@ Rectangle {
         CheckBox {
             id: closeButton
             buttonEnabled: false
+            onButtonEnabledChanged: drawClosePrice = buttonEnabled
             Layout.rightMargin: 10
         }
 
@@ -133,6 +135,7 @@ Rectangle {
         CheckBox {
             id: highButton
             buttonEnabled: true
+            onButtonEnabledChanged: drawHighPrice = buttonEnabled
             Layout.rightMargin: 10
         }
 
@@ -153,6 +156,7 @@ Rectangle {
         CheckBox {
             id: lowButton
             buttonEnabled: true
+            onButtonEnabledChanged: drawLowPrice = buttonEnabled
             Layout.rightMargin: 10
         }
     }

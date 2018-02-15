@@ -30,19 +30,18 @@
     \ingroup qtquickdemos
     \example demos/stocqt
     \brief A configurable stock chart for the NASDAQ-100.
-    \image qtquick-demo-stocqt.png
+    \borderedimage qtquick-demo-stocqt.png
 
     The \e{StocQt} application presents a trend chart for the first stock in
-    the list of NASDAQ-100 stocks maintained by it. It allows the user to
-    choose another stock from the list, and fetches the required data for
-    the selected stock by sending an \c XMLHttpRequest to
-    http://finance.yahoo.com.
+    the list of NASDAQ-100 stocks. It allows the user to choose another stock
+    from the list, and fetches the required data from the offline dataset
+    using \c XMLHttpRequest.
 
     The application uses several custom types such as Button, CheckBox,
     StockChart, StockInfo, StockView, and so on. These types are used to
     present the stock data in a readable form and also let the user customize
-    the trend chart. For example, the user can choose to view the yearly,
-    monthly, or daily trends in the stock price.
+    the trend chart. For example, the user can choose to view the weekly,
+    monthly, quarterly, or half yearly trends in the stock price.
 
     The application uses the ObjectModel type to access the two visual data
     models that it depends on.

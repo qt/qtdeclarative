@@ -324,6 +324,19 @@
    qmlRegisterSingletonType("Qt.example.qjsvalueApi", 1, 0, "MyApi", example_qjsvalue_singletontype_provider);
    \endcode
 
+   Alternatively, you can use a C++11 lambda:
+
+   \code
+   qmlRegisterSingletonType("Qt.example.qjsvalueApi", 1, 0, "MyApi", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QJSValue {
+       Q_UNUSED(engine)
+
+       static int seedValue = 5;
+       QJSValue example = scriptEngine->newObject();
+       example.setProperty("someProperty", seedValue++);
+       return example;
+   });
+   \endcode
+
    In order to use the registered singleton type in QML, you must import the singleton type.
    \qml
    import QtQuick 2.0
@@ -421,6 +434,18 @@
 
    // Third, register the singleton type provider with QML by calling this function in an initialization function.
    qmlRegisterSingletonType<SingletonTypeExample>("Qt.example.qobjectSingleton", 1, 0, "MyApi", example_qobject_singletontype_provider);
+   \endcode
+
+   Alternatively, you can use a C++11 lambda:
+
+   \code
+   qmlRegisterSingletonType<SingletonTypeExample>("Qt.example.qjsvalueApi", 1, 0, "MyApi", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject * {
+       Q_UNUSED(engine)
+       Q_UNUSED(scriptEngine)
+
+       SingletonTypeExample *example = new SingletonTypeExample();
+       return example;
+   });
    \endcode
 
    In order to use the registered singleton type in QML, you must import the singleton type.

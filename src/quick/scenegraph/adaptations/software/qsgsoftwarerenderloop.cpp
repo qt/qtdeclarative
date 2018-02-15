@@ -97,7 +97,6 @@ void QSGSoftwareRenderLoop::windowDestroyed(QQuickWindow *window)
 
     if (m_windows.size() == 0) {
         rc->invalidate();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     }
 }
 
