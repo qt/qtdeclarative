@@ -117,14 +117,4 @@ const QFont *QQuickMaterialTheme::font(Font type) const
     }
 }
 
-QVariant QQuickMaterialTheme::themeHint(ThemeHint hint) const
-{
-    switch (hint) {
-    case DialogButtonBoxLayout:
-        return QVariant(QPlatformDialogHelper::AndroidLayout);
-    default:
-        return QQuickTheme::themeHint(hint);
-    }
-}
-
 QT_END_NAMESPACE

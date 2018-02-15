@@ -61,8 +61,6 @@ public:
 
     const QFont *font(Font type = SystemFont) const override;
 
-    QVariant themeHint(ThemeHint hint) const override;
-
 protected:
     void resolveFonts(const QFont &defaultFont) override;
 

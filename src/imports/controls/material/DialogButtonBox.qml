@@ -54,6 +54,7 @@ T.DialogButtonBox {
     topPadding: 2
     bottomPadding: 2
     alignment: Qt.AlignRight
+    buttonLayout: DialogButtonBox.AndroidLayout
 
     Material.foreground: Material.accent
 
