@@ -3087,7 +3087,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         qmlBase = other.qmlBase;
         qmlCoreIndex = other.qmlCoreIndex;
         qmlNotifyIndex = other.qmlNotifyIndex;
-        captureRequired = other.captureRequired;
+        capturePolicy = other.capturePolicy;
         break;
     }
 
@@ -3124,7 +3124,7 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     case QmlScopeObject:
     case QmlContextObject:
         return qmlCoreIndex == other.qmlCoreIndex && qmlNotifyIndex == other.qmlNotifyIndex
-                && captureRequired == other.captureRequired;
+                && capturePolicy == other.capturePolicy;
     }
     return true;
 }
@@ -3453,18 +3453,18 @@ QT_WARNING_POP
         Instruction::LoadScopeObjectProperty load;
         load.base = qmlBase;
         load.propertyIndex = qmlCoreIndex;
-        load.captureRequired = captureRequired;
+        load.captureRequired = capturePolicy == CaptureAtRuntime;
         codegen->bytecodeGenerator->addInstruction(load);
-        if (!captureRequired)
+        if (capturePolicy == CaptureAheadOfTime)
             codegen->_context->scopeObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } return;
     case QmlContextObject: {
         Instruction::LoadContextObjectProperty load;
         load.base = qmlBase;
         load.propertyIndex = qmlCoreIndex;
-        load.captureRequired = captureRequired;
+        load.captureRequired = capturePolicy == CaptureAtRuntime;
         codegen->bytecodeGenerator->addInstruction(load);
-        if (!captureRequired)
+        if (capturePolicy == CaptureAheadOfTime)
             codegen->_context->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } return;
     case Invalid:
