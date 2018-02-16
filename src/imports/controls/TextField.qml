@@ -55,7 +55,7 @@ T.TextField {
     color: control.palette.text
     selectionColor: control.palette.highlight
     selectedTextColor: control.palette.highlightedText
-    placeholderTextColor: Color.transparent(control.palette.text, 0.5)
+    placeholderTextColor: Color.transparent(control.color, 0.5)
     verticalAlignment: TextInput.AlignVCenter
 
     PlaceholderText {
