@@ -21,6 +21,8 @@ SUBDIRS += \
     imports \
     qmldevtools
 
+qmldevtools.depends = qml
+
 qtConfig(qml-network) {
     QT_FOR_CONFIG += network
     qtConfig(localserver):qtConfig(qml-debug): SUBDIRS += qmldebug

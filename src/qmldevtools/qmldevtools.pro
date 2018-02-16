@@ -4,6 +4,7 @@ QT         = core-private
 CONFIG    += minimal_syncqt internal_module qmldevtools_build
 
 MODULE_INCNAME = QtQml
+INCLUDEPATH += $$OUT_PWD/../qml
 
 # 2415: variable "xx" of static storage duration was declared but never referenced
 # unused variable 'xx' [-Werror,-Wunused-const-variable]
