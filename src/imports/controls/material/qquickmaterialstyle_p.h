@@ -225,6 +225,8 @@ public:
     Q_INVOKABLE QColor color(Color color, Shade shade = Shade500) const;
     Q_INVOKABLE QColor shade(const QColor &color, Shade shade) const;
 
+    static void initGlobals();
+
 Q_SIGNALS:
     void themeChanged();
     void primaryChanged();

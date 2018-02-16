@@ -72,6 +72,7 @@ public:
 QtQuickControls2MaterialStylePlugin::QtQuickControls2MaterialStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
     initResources();
+    QQuickMaterialStyle::initGlobals();
 }
 
 void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
