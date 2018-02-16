@@ -52,6 +52,7 @@
 #include <QtGui/QWindow>
 #include <QtGui/qpa/qplatformnativeinterface.h>
 
+#include <private/qqmlglobal_p.h>
 #include <private/qsgtexture_p.h>
 #include <private/qsgcompressedtexture_p.h>
 #include <private/qsgcompressedatlastexture_p.h>

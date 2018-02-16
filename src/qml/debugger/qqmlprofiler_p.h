@@ -521,11 +521,11 @@ private:
     QQmlProfiler *profiler;
 };
 
-#endif // QT_NO_QML_DEBUGGER
+#endif // QT_CONFIG(qml_debug)
 
 QT_END_NAMESPACE
 
-#ifndef QT_NO_QML_DEBUGGER
+#if QT_CONFIG(qml_debug)
 
 Q_DECLARE_METATYPE(QVector<QQmlProfilerData>)
 Q_DECLARE_METATYPE(QQmlProfiler::LocationHash)

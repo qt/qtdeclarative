@@ -1288,10 +1288,8 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_BEGIN_INSTR(Ret)
         MOTH_END_INSTR(Ret)
 
-#ifndef QT_NO_QML_DEBUGGER
         MOTH_BEGIN_INSTR(Debug)
         MOTH_END_INSTR(Debug)
-#endif // QT_NO_QML_DEBUGGER
 
         MOTH_BEGIN_INSTR(LoadQmlContext)
         MOTH_END_INSTR(LoadQmlContext)
