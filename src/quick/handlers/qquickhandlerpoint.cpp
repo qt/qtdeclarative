@@ -103,16 +103,20 @@ void QQuickHandlerPoint::reset(const QQuickEventPoint *point)
     switch (point->state()) {
     case QQuickEventPoint::Pressed:
         m_pressPosition = point->position();
+        m_scenePressPosition = point->scenePosition();
         m_pressedButtons = event->buttons();
         break;
     case QQuickEventPoint::Released:
-        reset();
-        return;
+        if (event->buttons() == Qt::NoButton) {
+            reset();
+            return;
+        }
+        break;
     default:
-        m_pressedButtons = event->buttons();
         break;
     }
     m_scenePressPosition = point->scenePressPosition();
+    m_pressedButtons = event->buttons();
     m_pressedModifiers = event->modifiers();
     if (event->asPointerTouchEvent()) {
         const QQuickEventTouchPoint *tp = static_cast<const QQuickEventTouchPoint *>(point);

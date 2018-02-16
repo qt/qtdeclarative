@@ -5,6 +5,7 @@ qtConfig(private_tests) {
         flickableinterop \
         multipointtoucharea_interop \
         qquickpointerhandler \
+        qquickpointhandler \
         qquickdraghandler \
         qquicktaphandler \
 }

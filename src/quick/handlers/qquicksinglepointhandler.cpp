@@ -129,17 +129,13 @@ void QQuickSinglePointHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     QQuickPointerDeviceHandler::handlePointerEventImpl(event);
     QQuickEventPoint *currentPoint = event->pointById(m_pointInfo.m_id);
     Q_ASSERT(currentPoint);
-    if (!m_pointInfo.m_id || !currentPoint->isAccepted()) {
+    m_pointInfo.reset(currentPoint);
+    handleEventPoint(currentPoint);
+    if (currentPoint->state() == QQuickEventPoint::Released && (event->buttons() & acceptedButtons()) == Qt::NoButton) {
+        setExclusiveGrab(currentPoint, false);
         reset();
-    } else {
-        m_pointInfo.reset(currentPoint);
-        handleEventPoint(currentPoint);
-        if (currentPoint->state() == QQuickEventPoint::Released) {
-            setExclusiveGrab(currentPoint, false);
-            reset();
-        }
-        emit pointChanged();
     }
+    emit pointChanged();
 }
 
 void QQuickSinglePointHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)

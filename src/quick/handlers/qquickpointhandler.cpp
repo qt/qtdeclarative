@@ -139,11 +139,14 @@ void QQuickPointHandler::handleEventPoint(QQuickEventPoint *point)
 {
     switch (point->state()) {
     case QQuickEventPoint::Pressed:
-        setPassiveGrab(point);
-        setActive(true);
+        if ((point->pointerEvent()->buttons() & acceptedButtons()) != Qt::NoButton) {
+            setPassiveGrab(point);
+            setActive(true);
+        }
         break;
     case QQuickEventPoint::Released:
-        setActive(false);
+        if ((point->pointerEvent()->buttons() & acceptedButtons()) == Qt::NoButton)
+            setActive(false);
         break;
     default:
         break;
