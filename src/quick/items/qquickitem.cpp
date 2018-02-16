@@ -1544,6 +1544,13 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     mirroring is not the desired behavior, or if the child item already implements mirroring in
     some custom way.
 
+    To set the layout direction based on the \l {Default Layout Direction}{default layout direction}
+    of the application, use the following code:
+
+    \code
+    LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
+    \endcode
+
     See \l {Right-to-left User Interfaces} for further details on using \c LayoutMirroring and
     other related features to implement right-to-left support for an application.
 */
