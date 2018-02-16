@@ -68,9 +68,9 @@ T.GroupBox {
     }
 
     background: Rectangle {
-        y: control.topPadding - control.padding
+        y: control.topPadding - control.bottomPadding
         width: parent.width
-        height: parent.height - control.topPadding + control.padding
+        height: parent.height - control.topPadding + control.bottomPadding
 
         radius: 2
         color: Color.transparent("black", 3 / 255)

@@ -88,7 +88,7 @@ T.GroupBox {
 
     background: NinePatchImage {
         x: -leftInset
-        y: control.topPadding - control.padding - topInset
+        y: control.topPadding - control.bottomPadding - topInset
         width: control.width + leftInset + rightInset
         height: control.height + topInset + bottomInset - control.topPadding + control.padding
 
