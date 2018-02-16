@@ -188,15 +188,14 @@ ApplicationWindow {
             }
 
             Dial {
-                anchors.horizontalCenter: parent.horizontalCenter
-
+                Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 50
             }
 
             Label {
                 text: "Volume"
-                anchors.horizontalCenter: parent.horizontalCenter
 
+                Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 12
             }
         }
