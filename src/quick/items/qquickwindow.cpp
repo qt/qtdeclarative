@@ -1764,6 +1764,8 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
                 QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point->scenePosition(), false, false);
                 for (QQuickItem *item : targetItems) {
                     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+                    if (!itemPrivate->extra.isAllocated() || itemPrivate->extra->pointerHandlers.isEmpty())
+                        continue;
                     pointerEvent->localize(item);
                     if (!sendFilteredPointerEvent(pointerEvent, item)) {
                         if (itemPrivate->handlePointerEvent(pointerEvent, true)) // avoid re-delivering to grabbers
@@ -2302,10 +2304,9 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     if (event->asPointerMouseEvent()) {
         deliverMouseEvent(event->asPointerMouseEvent());
         // failsafe: never allow any kind of grab to persist after release
-        QQuickItem *grabber = q->mouseGrabberItem();
-        if (event->isReleaseEvent() && event->buttons() == Qt::NoButton && grabber) {
+        if (event->isReleaseEvent() && event->buttons() == Qt::NoButton) {
             event->clearGrabbers();
-            sendUngrabEvent(grabber, false);
+            sendUngrabEvent(q->mouseGrabberItem(), false);
         }
     } else if (event->asPointerTouchEvent()) {
         deliverTouchEvent(event->asPointerTouchEvent());

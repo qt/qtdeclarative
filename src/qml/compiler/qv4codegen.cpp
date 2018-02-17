@@ -202,6 +202,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         } else {
             // intentionally fall-through: the result is never used, so it's equivalent to
             // "expr += 1", which is what a pre-increment does as well.
+            Q_FALLTHROUGH();
         }
     case PreIncrement: {
         Reference e = expr.asLValue();
@@ -227,6 +228,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         } else {
             // intentionally fall-through: the result is never used, so it's equivalent to
             // "expr -= 1", which is what a pre-decrement does as well.
+            Q_FALLTHROUGH();
         }
     case PreDecrement: {
         Reference e = expr.asLValue();
