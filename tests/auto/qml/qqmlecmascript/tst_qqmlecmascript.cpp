@@ -261,6 +261,7 @@ private slots:
     void doubleEvaluate();
     void forInLoop();
     void nonNotifyable();
+    void nonNotifyableConstant();
     void deleteWhileBindingRunning();
     void callQtInvokables();
     void resolveClashingProperties();
@@ -6887,6 +6888,18 @@ void tst_qqmlecmascript::nonNotifyable()
     QCOMPARE(messageHandler.messages().at(1), expected2);
 
     delete object;
+}
+
+void tst_qqmlecmascript::nonNotifyableConstant()
+{
+    QQmlComponent component(&engine, testFileUrl("nonNotifyableConstant.qml"));
+    QQmlTestMessageHandler messageHandler;
+
+    // Shouldn't produce an error message about non-NOTIFYable properties,
+    // as the property has the CONSTANT attribute.
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+    QCOMPARE(messageHandler.messages().size(), 0);
 }
 
 void tst_qqmlecmascript::forInLoop()

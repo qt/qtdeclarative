@@ -138,7 +138,9 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
                 *hasProperty = true;
             if (r.scriptIndex != -1) {
                 QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
-                return scripts->getIndexed(r.scriptIndex);
+                if (scripts)
+                    return scripts->getIndexed(r.scriptIndex);
+                return QV4::Encode::null();
             } else if (r.type.isValid()) {
                 return QQmlTypeWrapper::create(v4, scopeObject, r.type);
             } else if (r.importNamespace) {
