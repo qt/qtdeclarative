@@ -53,6 +53,10 @@
     Primary=BlueGrey
     \endcode
 
+    It is possible to specify a custom location for the configuration file with
+    the \l {Supported Environment Variables in Qt Quick Controls 2}
+    {QT_QUICK_CONTROLS_CONF} environment variable.
+
     \section1 Controls Section
 
     The following values can be specified in a \c Controls section of the
