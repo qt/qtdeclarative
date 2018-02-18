@@ -75,7 +75,6 @@ public:
 
     virtual int count() const = 0;
     virtual bool isValid() const = 0;
-    QObject *object(int index, bool async) { return object(index, async ? QQmlIncubator::Asynchronous : QQmlIncubator::AsynchronousIfNested); }
     virtual QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) = 0;
     virtual ReleaseFlags release(QObject *object) = 0;
     virtual void cancel(int) {}
