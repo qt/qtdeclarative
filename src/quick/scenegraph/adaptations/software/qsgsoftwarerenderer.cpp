@@ -156,6 +156,7 @@ void QSGSoftwareRenderer::render()
     m_flushRegion = renderNodes(&painter);
     qint64 renderTime = renderTimer.elapsed();
 
+    painter.end();
     if (m_backingStore != nullptr)
         m_backingStore->endPaint();
 
