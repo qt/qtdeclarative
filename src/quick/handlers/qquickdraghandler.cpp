@@ -59,14 +59,15 @@ QT_BEGIN_NAMESPACE
 
     It has properties to restrict the range of dragging.
 
-    If it is declared within one Item but is assigned a different \l target,
-    then it handles events within the bounds of the \l parent Item but
+    If it is declared within one Item but is assigned a different
+    \l {PointerHandler::target}, then it handles events within the
+    bounds of the \l {PointerHandler::parent} Item but
     manipulates the \c target Item instead:
 
     \snippet pointerHandlers/dragHandlerDifferentTarget.qml 0
 
-    A third way to use it is to set \l target to \c null and react to property
-    changes in some other way:
+    A third way to use it is to set \l {PointerHandler::target} to
+    \c null and react to property changes in some other way:
 
     \snippet pointerHandlers/dragHandlerNullTarget.qml 0
 

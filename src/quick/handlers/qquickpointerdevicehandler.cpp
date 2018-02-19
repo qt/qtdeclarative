@@ -75,7 +75,8 @@ QQuickPointerDeviceHandler::~QQuickPointerDeviceHandler()
 
     The types of pointing devices that can activate this Pointer Handler.
 
-    By default, this property is set to \l PointerDevice.AllDevices.
+    By default, this property is set to
+    \l{QtQuick::PointerDevice::type} {PointerDevice.AllDevices}.
     If you set it to an OR combination of device types, it will ignore events
     from non-matching devices.
 
@@ -110,7 +111,8 @@ void QQuickPointerDeviceHandler::setAcceptedDevices(QQuickPointerDevice::DeviceT
     The types of pointing instruments (finger, stylus, eraser, etc.)
     that can activate this Pointer Handler.
 
-    By default, this property is set to \l PointerDevice.AllPointerTypes.
+    By default, this property is set to
+    \l {QtQuick::PointerDevice::pointerType} {PointerDevice.AllPointerTypes}.
     If you set it to an OR combination of device types, it will ignore events
     from non-matching events.
 

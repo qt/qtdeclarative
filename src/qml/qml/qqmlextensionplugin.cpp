@@ -121,7 +121,9 @@ void QQmlExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
   \class QQmlExtensionInterface
   \internal
   \inmodule QtQml
+*/
 
+/*!
   \class QQmlTypesExtensionInterface
   \internal
   \inmodule QtQml

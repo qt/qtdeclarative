@@ -134,13 +134,13 @@ Item {
 
     It contains a bitwise combination of:
     \list
-    \li Qt.NoModifier - No modifier key is pressed.
-    \li Qt.ShiftModifier - A Shift key on the keyboard is pressed.
-    \li Qt.ControlModifier - A Ctrl key on the keyboard is pressed.
-    \li Qt.AltModifier - An Alt key on the keyboard is pressed.
-    \li Qt.MetaModifier - A Meta key on the keyboard is pressed.
-    \li Qt.KeypadModifier - A keypad button is pressed.
-    \li Qt.GroupSwitchModifier - X11 only. A Mode_switch key on the keyboard is pressed.
+    \li \l {Qt::NoModifier} {Qt.NoModifier} - No modifier key is pressed.
+    \li \l {Qt::ShiftModifier} {Qt.ShiftModifier} - A Shift key on the keyboard is pressed.
+    \li \l {Qt::ControlModifier} {Qt.ControlModifier} - A Ctrl key on the keyboard is pressed.
+    \li \l {Qt::AltModifier} {Qt.AltModifier} - An Alt key on the keyboard is pressed.
+    \li \l {Qt::MetaModifier} {Qt.MetaModifier} - A Meta key on the keyboard is pressed.
+    \li \l {Qt::KeypadModifier} {Qt.KeypadModifier} - A keypad button is pressed.
+    \li \l {Qt::GroupSwitchModifier} {Qt.GroupSwitchModifier} - X11 only. A Mode_switch key on the keyboard is pressed.
     \endlist
 
     For example, to react to a Shift key + Enter key combination:
@@ -184,7 +184,7 @@ Item {
 
     \brief Provides information about a mouse event
 
-    The position of the mouse can be found via the \l x and \l y properties.
+    The position of the mouse can be found via the \l {Item::x} {x} and \l {Item::y} {y} properties.
     The button that caused the event is available via the \l button property.
 
     \sa MouseArea
@@ -218,17 +218,17 @@ Item {
 
     This property holds the button that caused the event.  It can be one of:
     \list
-    \li Qt.LeftButton
-    \li Qt.RightButton
-    \li Qt.MiddleButton
+    \li \l {Qt::LeftButton} {Qt.LeftButton}
+    \li \l {Qt::RightButton} {Qt.RightButton}
+    \li \l {Qt::MiddleButton} {Qt.MiddleButton}
     \endlist
 */
 
 /*!
     \qmlproperty bool QtQuick::MouseEvent::wasHeld
 
-    This property is true if the mouse button has been held pressed longer the
-    threshold (800ms).
+    This property is true if the mouse button has been held pressed longer
+    than the threshold (800ms).
 */
 
 /*!
@@ -241,9 +241,9 @@ Item {
 
     It contains a bitwise combination of:
     \list
-    \li Qt.LeftButton
-    \li Qt.RightButton
-    \li Qt.MiddleButton
+    \li \l {Qt::LeftButton} {Qt.LeftButton}
+    \li \l {Qt::RightButton} {Qt.RightButton}
+    \li \l {Qt::MiddleButton} {Qt.MiddleButton}
     \endlist
 */
 
@@ -255,12 +255,12 @@ Item {
 
     It contains a bitwise combination of:
     \list
-    \li Qt.NoModifier - No modifier key is pressed.
-    \li Qt.ShiftModifier - A Shift key on the keyboard is pressed.
-    \li Qt.ControlModifier - A Ctrl key on the keyboard is pressed.
-    \li Qt.AltModifier - An Alt key on the keyboard is pressed.
-    \li Qt.MetaModifier - A Meta key on the keyboard is pressed.
-    \li Qt.KeypadModifier - A keypad button is pressed.
+    \li \l {Qt::NoModifier} {Qt.NoModifier} - No modifier key is pressed.
+    \li \l {Qt::ShiftModifier} {Qt.ShiftModifier} - A Shift key on the keyboard is pressed.
+    \li \l {Qt::ControlModifier} {Qt.ControlModifier} - A Ctrl key on the keyboard is pressed.
+    \li \l {Qt::AltModifier} {Qt.AltModifier} - An Alt key on the keyboard is pressed.
+    \li \l {Qt::MetaModifier} {Qt.MetaModifier} - A Meta key on the keyboard is pressed.
+    \li \l {Qt::KeypadModifier} {Qt.KeypadModifier} - A keypad button is pressed.
     \endlist
 
     For example, to react to a Shift key + Left mouse button click:
@@ -288,20 +288,24 @@ Item {
 
     The value can be one of:
 
-    \value Qt.MouseEventNotSynthesized The most common value. On platforms where
-    such information is available, this value indicates that the event
-    represents a genuine mouse event from the system.
+    \list
+    \li \l{Qt::MouseEventNotSynthesized} {Qt.MouseEventNotSynthesized}
+    - The most common value. On platforms where such information is
+    available, this value indicates that the event represents a genuine
+    mouse event from the system.
 
-    \value Qt.MouseEventSynthesizedBySystem Indicates that the mouse event was
+    \li \l{Qt::MouseEventSynthesizedBySystem} {Qt.MouseEventSynthesizedBySystem} - Indicates that the mouse event was
     synthesized from a touch or tablet event by the platform.
 
-    \value Qt.MouseEventSynthesizedByQt Indicates that the mouse event was
-    synthesized from an unhandled touch or tablet event by Qt.
+    \li \l{Qt::MouseEventSynthesizedByQt} {Qt.MouseEventSynthesizedByQt}
+    - Indicates that the mouse event was synthesized from an unhandled
+    touch or tablet event by Qt.
 
-    \value Qt.MouseEventSynthesizedByApplication Indicates that the mouse event
-    was synthesized by the application. This allows distinguishing
-    application-generated mouse events from the ones that are coming from the
-    system or are synthesized by Qt.
+    \li \l{Qt::MouseEventSynthesizedByApplication} {Qt.MouseEventSynthesizedByApplication}
+    - Indicates that the mouse event was synthesized by the application.
+    This allows distinguishing application-generated mouse events from
+    the ones that are coming from the system or are synthesized by Qt.
+    \endlist
 
     For example, to react only to events which come from an actual mouse:
     \qml
@@ -332,9 +336,12 @@ Item {
     This property holds the flags that provide additional information about the
     mouse event.
 
-    \value Qt.MouseEventCreatedDoubleClick Indicates that Qt has created a
-    double click event from this event. This flag is set in the event originating
-    from a button press, and not in the resulting double click event.
+    \list
+    \li \l {Qt::MouseEventCreatedDoubleClick} {Qt.MouseEventCreatedDoubleClick}
+    - Indicates that Qt has created a double click event from this event.
+    This flag is set in the event originating from a button press, and not
+    in the resulting double click event.
+    \endlist
 */
 
 /*!
@@ -344,7 +351,8 @@ Item {
     \ingroup qtquick-input-events
     \brief Provides information about a mouse wheel event
 
-    The position of the mouse can be found via the \l x and \l y properties.
+    The position of the mouse can be found via the
+    \l {Item::x} {x} and \l {Item::y} {y} properties.
 
     \sa MouseArea
 */
@@ -378,9 +386,9 @@ Item {
 
     It contains a bitwise combination of:
     \list
-    \li Qt.LeftButton
-    \li Qt.RightButton
-    \li Qt.MiddleButton
+    \li \l {Qt::LeftButton} {Qt.LeftButton}
+    \li \l {Qt::RightButton} {Qt.RightButton}
+    \li \l {Qt::MiddleButton} {Qt.MiddleButton}
     \endlist
 */
 
@@ -418,12 +426,12 @@ Item {
 
     It contains a bitwise combination of:
     \list
-    \li Qt.NoModifier - No modifier key is pressed.
-    \li Qt.ShiftModifier - A Shift key on the keyboard is pressed.
-    \li Qt.ControlModifier - A Ctrl key on the keyboard is pressed.
-    \li Qt.AltModifier - An Alt key on the keyboard is pressed.
-    \li Qt.MetaModifier - A Meta key on the keyboard is pressed.
-    \li Qt.KeypadModifier - A keypad button is pressed.
+    \li \l {Qt::NoModifier} {Qt.NoModifier} - No modifier key is pressed.
+    \li \l {Qt::ShiftModifier} {Qt.ShiftModifier} - A Shift key on the keyboard is pressed.
+    \li \l {Qt::ControlModifier} {Qt.ControlModifier} - A Ctrl key on the keyboard is pressed.
+    \li \l {Qt::AltModifier} {Qt.AltModifier} - An Alt key on the keyboard is pressed.
+    \li \l {Qt::MetaModifier} {Qt.MetaModifier} - A Meta key on the keyboard is pressed.
+    \li \l {Qt::KeypadModifier} {Qt.KeypadModifier} - A keypad button is pressed.
     \endlist
 
     For example, to react to a Control key pressed during the wheel event:
@@ -497,10 +505,43 @@ Item {
         \l {QTabletEvent::tangentialPressure}{tangentialPressure}
     \value DeviceType.Puck
         a device that is similar to a flat mouse with a
-        transparent circle with cross-hairs (same as \l QTabletEvent::Puck)
+        transparent circle with cross-hairs
+        (same as \l {QTabletEvent::Puck} {Puck})
+    \value DeviceType.AllDevices
+        any of the above; used as a default value for construction
 
     \sa QTouchDevice::DeviceType
 */
+
+/*!
+    \readonly
+    \qmlproperty enumeration QtQuick::PointerDevice::pointerType
+
+    This property holds a value indicating what is interacting with
+    the device. Think of the device as having a planar 2D surface, and
+    the value of this property as identifying what interacts with the
+    device.
+
+    There is some redundancy between this property and \l {PointerDevice::type}.
+    If a tocuchscreen is used, then the device is TouchScreen and
+    pointerType is Finger (always).
+
+    Valid values are:
+
+    \value PointerDevice.GenericPointer
+        a mouse or something acting like a mouse (the core pointer on X11)
+    \value PointerDevice.Finger
+        the user's finger
+    \value PointerDevice.Pen
+        the drawing end of a stylus
+    \value PointerDevice.Eraser
+        the other end of the stylus (if it has a virtual eraser on the other end)
+    \value PointerDevice.Cursor
+        a cursor in the pre-computer sense of the word
+    \value PointerDevice.AllPointerTypes
+        any of the above (used as a default value in constructors)
+*/
+
 
 /*!
     \readonly

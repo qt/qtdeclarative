@@ -52,7 +52,7 @@
 Ensure that the URL provided is full and correct, in particular, use
 \l QUrl::fromLocalFile() when loading a file from the local filesystem.
 
-Relative paths will be resolved against the engine's
-\l {QQmlEngine::baseUrl}{baseUrl()}, which is the current working directory
+Relative paths will be resolved against
+\l {QQmlEngine::baseUrl}{QQmlEngine::baseUrl()}, which is the current working directory
 unless specified.
 //! [url-note]

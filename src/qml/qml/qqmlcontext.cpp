@@ -370,7 +370,7 @@ void QQmlContext::setContextProperties(const QVector<PropertyPair> &properties)
     This struct contains a property name and a property value.
     It is used as a parameter for the \c setContextProperties function.
 
-    \sa QQQmlContext::setContextProperties()
+    \sa QQmlContext::setContextProperties()
 */
 
 /*!
