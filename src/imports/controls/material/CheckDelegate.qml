@@ -52,8 +52,8 @@ T.CheckDelegate {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 16
-    topPadding: 14
-    bottomPadding: 14
+    topPadding: 8
+    bottomPadding: 8
     spacing: 16
 
     icon.width: 24

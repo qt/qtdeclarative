@@ -60,26 +60,9 @@ QT_BEGIN_NAMESPACE
     \l {Popup::dim}{dimmed} popup is visible.
 
     The overlay is an ordinary Item that covers the entire window. It can be used
-    as a visual parent to position a popup in scene coordinates. The following
-    example uses the attached \c overlay property to position a popup to the center
-    of the window, despite the position of the button that opens the popup.
+    as a visual parent to position a popup in scene coordinates.
 
-    \code
-    Button {
-        onClicked: popup.open()
-
-        Popup {
-            id: popup
-
-            parent: Overlay.overlay
-
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: 100
-            height: 100
-        }
-    }
-    \endcode
+    \include qquickoverlay-popup-parent.qdocinc
 
     \sa ApplicationWindow
 */

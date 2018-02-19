@@ -201,8 +201,8 @@ ApplicationWindow {
                         value: 42
                         to: 100
                         stepSize: 1
-                        anchors.horizontalCenter: parent.horizontalCenter
 
+                        Layout.alignment: Qt.AlignHCenter
                         Layout.minimumWidth: 64
                         Layout.minimumHeight: 64
                         Layout.preferredWidth: 128
@@ -241,8 +241,8 @@ ApplicationWindow {
                             font.pixelSize: fontSizeMedium * 0.8
                             horizontalAlignment: Label.AlignHCenter
                             glowEnabled: false
-                            anchors.bottom: radioOption.bottom
 
+                            Layout.alignment: Qt.AlignBottom
                             Layout.fillWidth: true
                         }
                         GlowingLabel {
@@ -251,8 +251,8 @@ ApplicationWindow {
                             font.pixelSize: fontSizeMedium * 0.6
                             horizontalAlignment: Label.AlignRight
                             glowEnabled: false
-                            anchors.bottom: radioOption.bottom
 
+                            Layout.alignment: Qt.AlignBottom
                             Layout.fillWidth: true
                         }
                     }
