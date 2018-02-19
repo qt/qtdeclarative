@@ -46,19 +46,39 @@ class tst_QQuickStyle : public QObject
     Q_OBJECT
 
 private slots:
-    void init();
+    void cleanup();
     void lookup();
     void commandLineArgument();
     void environmentVariables();
     void availableStyles();
+
+private:
+    void loadControls();
+    void unloadControls();
 };
 
-void tst_QQuickStyle::init()
+void tst_QQuickStyle::cleanup()
 {
-    QQuickStylePrivate::reset();
+    unloadControls();
+
     QGuiApplicationPrivate::styleOverride.clear();
     qunsetenv("QT_QUICK_CONTROLS_STYLE");
     qunsetenv("QT_QUICK_CONTROLS_FALLBACK_STYLE");
+}
+
+void tst_QQuickStyle::loadControls()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0; import QtQuick.Controls 2.1; Control { }", QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+}
+
+void tst_QQuickStyle::unloadControls()
+{
+    qmlClearTypeRegistrations();
 }
 
 void tst_QQuickStyle::lookup()
@@ -70,12 +90,7 @@ void tst_QQuickStyle::lookup()
     QCOMPARE(QQuickStyle::name(), QString("Material"));
     QVERIFY(!QQuickStyle::path().isEmpty());
 
-    QQmlEngine engine;
-    QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; import QtQuick.Controls 2.1; Control { }", QUrl());
-
-    QScopedPointer<QObject> object(component.create());
-    QVERIFY(!object.isNull());
+    loadControls();
 
     QCOMPARE(QQuickStyle::name(), QString("Material"));
     QVERIFY(!QQuickStyle::path().isEmpty());
@@ -84,6 +99,9 @@ void tst_QQuickStyle::lookup()
 void tst_QQuickStyle::commandLineArgument()
 {
     QGuiApplicationPrivate::styleOverride = "CmdLineArgStyle";
+
+    loadControls();
+
     QCOMPARE(QQuickStyle::name(), QString("CmdLineArgStyle"));
 }
 
