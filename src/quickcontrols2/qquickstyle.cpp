@@ -233,6 +233,7 @@ struct QQuickStyleSpec
         style.clear();
         fallbackStyle.clear();
         fallbackMethod.clear();
+        configFilePath.clear();
     }
 
     QString resolveConfigFilePath()
