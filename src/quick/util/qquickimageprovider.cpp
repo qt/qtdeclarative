@@ -684,7 +684,7 @@ QSize QQuickImageProviderWithOptions::loadSize(const QSize &originalSize, const 
 
     const bool preserveAspectCropOrFit = options.preserveAspectRatioCrop() || options.preserveAspectRatioFit();
 
-    if (!preserveAspectCropOrFit && (format == "svg" || format == "svgz"))
+    if (!preserveAspectCropOrFit && (format == "svg" || format == "svgz") && !requestedSize.isEmpty())
         return requestedSize;
 
     qreal ratio = 0.0;
