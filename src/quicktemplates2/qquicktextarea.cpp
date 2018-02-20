@@ -566,6 +566,30 @@ void QQuickTextArea::setPlaceholderText(const QString &text)
 }
 
 /*!
+    \qmlproperty color QtQuick.Controls::TextArea::placeholderTextColor
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+
+    This property holds the color of placeholderText.
+
+    \sa placeholderText
+*/
+QColor QQuickTextArea::placeholderTextColor() const
+{
+    Q_D(const QQuickTextArea);
+    return d->placeholderColor;
+}
+
+void QQuickTextArea::setPlaceholderTextColor(const QColor &color)
+{
+    Q_D(QQuickTextArea);
+    if (d->placeholderColor == color)
+        return;
+
+    d->placeholderColor = color;
+    emit placeholderTextColorChanged();
+}
+
+/*!
     \qmlproperty enumeration QtQuick.Controls::TextArea::focusReason
 
     \include qquickcontrol-focusreason.qdocinc

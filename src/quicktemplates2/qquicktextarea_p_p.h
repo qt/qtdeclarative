@@ -142,6 +142,7 @@ public:
     QPalette resolvedPalette;
     QQuickDeferredPointer<QQuickItem> background;
     QString placeholder;
+    QColor placeholderColor;
     Qt::FocusReason focusReason;
     QQuickPressHandler pressHandler;
     QQuickFlickable *flickable;

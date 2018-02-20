@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.11
-import QtQuick.Templates 2.4 as T
+import QtQuick.Templates 2.5 as T
 import QtQuick.Controls 2.4
 import QtQuick.Controls.impl 2.4
 import QtQuick.Controls.Imagine 2.4
@@ -60,6 +60,7 @@ T.TextArea {
     selectionColor: control.palette.highlight
     selectedTextColor: control.palette.highlightedText
     verticalAlignment: Qt.AlignVCenter
+    placeholderTextColor: Color.transparent(control.color, 0.5)
 
     PlaceholderText {
         id: placeholder
@@ -70,11 +71,10 @@ T.TextArea {
 
         text: control.placeholderText
         font: control.font
-        color: control.color
+        color: control.placeholderTextColor
         verticalAlignment: control.verticalAlignment
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight
-        opacity: 0.5
     }
 
     background: NinePatchImage {

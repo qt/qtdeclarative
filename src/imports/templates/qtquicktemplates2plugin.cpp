@@ -333,8 +333,10 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickDialogButtonBox, 5>(uri, 2, 5, "DialogButtonBox");
     qmlRegisterType<QQuickControl, 5>(uri, 2, 5, "Control");
     qmlRegisterType<QQuickPopup, 5>(uri, 2, 5, "Popup");
+    qmlRegisterType<QQuickTextArea, 5>(uri, 2, 5, "TextArea");
     qmlRegisterType<QQuickTextField, 5>(uri, 2, 5, "TextField");
     qmlRegisterType<QQuickToolTip, 5>(uri, 2, 5, "ToolTip");
+
 }
 
 QT_END_NAMESPACE
