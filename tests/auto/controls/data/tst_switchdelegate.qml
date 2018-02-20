@@ -194,15 +194,15 @@ TestCase {
         // release in the middle
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        mousePress(control.indicator, 0, 0, Qt.LeftButton)
+        mousePress(control, 0, 0, Qt.LeftButton)
         compare(control.pressed, true)
         verify(spy.success)
-        mouseMove(control.indicator, control.indicator.width / 2 - 1, 0)
+        mouseMove(control, control.width / 2, control.height / 2, 0, Qt.LeftButton)
         compare(control.pressed, true)
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
                                 "released",
                                 "clicked"]
-        mouseRelease(control.indicator, control.indicator.width / 2 - 1, 0, Qt.LeftButton)
+        mouseRelease(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.checked, false)
         compare(control.pressed, false)
         tryCompare(control, "position", 0) // QTBUG-57944
@@ -297,15 +297,15 @@ TestCase {
         // release in the middle
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        touch.press(0, control.indicator, 0, 0).commit()
+        touch.press(0, control, 0, 0).commit()
         compare(control.pressed, true)
         verify(spy.success)
-        touch.move(0, control.indicator, control.indicator.width / 2 - 1).commit()
+        touch.move(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         spy.expectedSequence = [["pressedChanged", { "pressed": false, "checked": false }],
                                 "released",
                                 "clicked"]
-        touch.release(0, control.indicator, control.indicator.width / 2 - 1, 0).commit()
+        touch.release(0, control, control.width / 2, control.height / 2).commit()
         compare(control.checked, false)
         compare(control.pressed, false)
         tryCompare(control, "position", 0) // QTBUG-57944
