@@ -1004,5 +1004,67 @@ Item {
 
             // Shouldn't crash upon destroying containerUser.
         }
+
+
+        Component {
+            id: itemsWithAnchorsLayout_Component
+            RowLayout {
+                spacing: 2
+                Item {
+                    anchors.fill: parent
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.centerIn: parent
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.left: parent.left
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.right: parent.right
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.top: parent.top
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.bottom: parent.bottom
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter: parent.verticalCenter
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.margins: 42     // although silly, it should not cause a warning from the Layouts POV
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+            }
+        }
+
+        function test_warnAboutLayoutItemsWithAnchors()
+        {
+            var fullPath = Qt.resolvedUrl("tst_rowlayout.qml")
+            for (var i = 0; i < 7; ++i) {
+                ignoreWarning(fullPath + ":" + (1013 + 5*i) +":17: QML Item: Detected anchors on an item that is managed by a layout. "
+                    + "This is undefined behavior; use Layout.alignment instead.")
+            }
+            var layout = itemsWithAnchorsLayout_Component.createObject(container)
+            waitForRendering(layout)
+            layout.destroy()
+        }
+
     }
 }

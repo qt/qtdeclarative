@@ -369,6 +369,14 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << index << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallGlobalLookup)
 
+        MOTH_BEGIN_INSTR(CallScopeObjectProperty)
+            d << dumpRegister(base, nFormals) << "." << name << dumpArguments(argc, argv, nFormals);
+        MOTH_END_INSTR(CallScopeObjectProperty)
+
+        MOTH_BEGIN_INSTR(CallContextObjectProperty)
+            d << dumpRegister(base, nFormals) << "." << name << dumpArguments(argc, argv, nFormals);
+        MOTH_END_INSTR(CallContextObjectProperty)
+
         MOTH_BEGIN_INSTR(SetExceptionHandler)
             if (offset)
                 d << ABSOLUTE_OFFSET();

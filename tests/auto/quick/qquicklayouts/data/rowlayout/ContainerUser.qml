@@ -57,7 +57,6 @@ Container {
     Text {
         objectName: "qtbug51927-text"
         text: qsTr("Hello World")
-        anchors.centerIn: parent
         renderType: Text.QtRendering
     }
 }

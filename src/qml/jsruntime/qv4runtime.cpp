@@ -1098,6 +1098,37 @@ ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &fu
     return static_cast<const FunctionObject &>(func).call(nullptr, argv, argc);
 }
 
+ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine, Value *base,
+                                                         int propertyIndex, Value *argv, int argc)
+{
+    Scope scope(engine);
+    ScopedFunctionObject fo(scope, method_loadQmlScopeObjectProperty(engine, *base, propertyIndex,
+                                                                     /*captureRequired*/true));
+    if (!fo) {
+        QString error = QStringLiteral("Property '%1' of scope object is not a function").arg(propertyIndex);
+        return engine->throwTypeError(error);
+    }
+
+    QObject *qmlScopeObj = static_cast<QmlContext *>(base)->d()->qml()->scopeObject;
+    ScopedValue qmlScopeValue(scope, QObjectWrapper::wrap(engine, qmlScopeObj));
+    return fo->call(qmlScopeValue, argv, argc);
+}
+
+ReturnedValue Runtime::method_callQmlContextObjectProperty(ExecutionEngine *engine, Value *base,
+                                                           int propertyIndex, Value *argv, int argc)
+{
+    Scope scope(engine);
+    ScopedFunctionObject fo(scope, method_loadQmlContextObjectProperty(engine, *base, propertyIndex,
+                                                                       /*captureRequired*/true));
+    if (!fo) {
+        QString error = QStringLiteral("Property '%1' of context object is not a function").arg(propertyIndex);
+        return engine->throwTypeError(error);
+    }
+
+    QObject *qmlContextObj = static_cast<QmlContext *>(base)->d()->qml()->context->contextData()->contextObject;
+    ScopedValue qmlContextValue(scope, QObjectWrapper::wrap(engine, qmlContextObj));
+    return fo->call(qmlContextValue, argv, argc);
+}
 
 ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &function, Value *argv, int argc)
 {

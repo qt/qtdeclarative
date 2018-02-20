@@ -1324,6 +1324,19 @@ QQuickAnchors::Anchors QQuickAnchors::usedAnchors() const
     return static_cast<QQuickAnchors::Anchors>(d->usedAnchors);
 }
 
+Qt::Orientations QQuickAnchors::activeDirections() const
+{
+    Q_D(const QQuickAnchors);
+    if (d->fill || d->centerIn)
+        return Qt::Horizontal | Qt::Vertical;
+    Qt::Orientations o;
+    if (d->usedAnchors & QQuickAnchors::Horizontal_Mask)
+        o |= Qt::Horizontal;
+    if (d->usedAnchors & QQuickAnchors::Vertical_Mask)
+        o |= Qt::Vertical;
+    return o;
+}
+
 bool QQuickAnchorsPrivate::checkHValid() const
 {
     if (usedAnchors & QQuickAnchors::LeftAnchor &&

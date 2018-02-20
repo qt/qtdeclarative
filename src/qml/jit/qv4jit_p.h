@@ -168,6 +168,8 @@ public:
     void generate_CallName(int name, int argc, int argv) Q_DECL_OVERRIDE;
     void generate_CallPossiblyDirectEval(int argc, int argv) Q_DECL_OVERRIDE;
     void generate_CallGlobalLookup(int index, int argc, int argv) Q_DECL_OVERRIDE;
+    void generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv) Q_DECL_OVERRIDE;
+    void generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv) Q_DECL_OVERRIDE;
     void generate_SetExceptionHandler(int offset) Q_DECL_OVERRIDE;
     void generate_ThrowException() Q_DECL_OVERRIDE;
     void generate_GetException() Q_DECL_OVERRIDE;

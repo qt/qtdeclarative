@@ -545,7 +545,7 @@ int main(int argc, char **argv)
     } else if (inputFile.endsWith(QLatin1String(".js"))) {
         Error error;
         if (!compileJSFile(inputFile, inputFileUrl, saveFunction, &error)) {
-            error.augment(QLatin1String("Error compiling qml file: ")).print();
+            error.augment(QLatin1String("Error compiling js file: ")).print();
             return EXIT_FAILURE;
         }
     } else {
