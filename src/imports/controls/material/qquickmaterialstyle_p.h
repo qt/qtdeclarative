@@ -102,7 +102,6 @@ class QQuickMaterialStyle : public QQuickAttachedObject
     Q_PROPERTY(int delegateHeight READ delegateHeight CONSTANT FINAL)
     Q_PROPERTY(int dialogButtonBoxHeight READ dialogButtonBoxHeight CONSTANT FINAL)
     Q_PROPERTY(int frameVerticalPadding READ frameVerticalPadding CONSTANT FINAL)
-    Q_PROPERTY(int itemDelegateVerticalPadding READ itemDelegateVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int menuItemHeight READ menuItemHeight CONSTANT FINAL)
     Q_PROPERTY(int menuItemVerticalPadding READ menuItemVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int switchDelegateVerticalPadding READ switchDelegateVerticalPadding CONSTANT FINAL)
@@ -245,7 +244,6 @@ public:
     int delegateHeight() const;
     int dialogButtonBoxHeight() const;
     int frameVerticalPadding() const;
-    int itemDelegateVerticalPadding() const;
     int menuItemHeight() const;
     int menuItemVerticalPadding() const;
     int switchDelegateVerticalPadding() const;

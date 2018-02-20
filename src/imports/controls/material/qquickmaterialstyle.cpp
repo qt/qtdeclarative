@@ -1161,11 +1161,6 @@ int QQuickMaterialStyle::frameVerticalPadding() const
     return globalVariant == Dense ? 8 : 12;
 }
 
-int QQuickMaterialStyle::itemDelegateVerticalPadding() const
-{
-    return globalVariant == Dense ? 12 : 16;
-}
-
 int QQuickMaterialStyle::menuItemHeight() const
 {
     // https://material.io/guidelines/components/menus.html#menus-simple-menus

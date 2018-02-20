@@ -51,7 +51,9 @@ T.ItemDelegate {
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
-    padding: control.Material.itemDelegateVerticalPadding
+    padding: 16
+    topPadding: 8
+    bottomPadding: 8
     spacing: 16
 
     icon.width: 24
