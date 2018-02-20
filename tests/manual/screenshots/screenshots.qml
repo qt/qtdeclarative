@@ -58,7 +58,7 @@ ApplicationWindow {
     title: "Qt Quick Controls 2 - Screenshots"
     visible: true
     width: Math.max(600, loader.implicitWidth)
-    height: Math.max(600, loader.implicitHeight)
+    height: Math.max(600, loader.implicitHeight + header.implicitHeight + footer.implicitHeight)
 
     property string currentFilePath
     property url lastSaveUrl
