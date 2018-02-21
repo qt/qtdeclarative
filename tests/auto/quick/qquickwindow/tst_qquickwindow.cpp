@@ -73,10 +73,10 @@ static QTouchEvent::TouchPoint makeTouchPoint(QQuickItem *item, const QPointF &p
     return tp;
 }
 
-static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPointStates states = 0,
+static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPointStates states = nullptr,
                                     const QList<QTouchEvent::TouchPoint>& touchPoints = QList<QTouchEvent::TouchPoint>())
 {
-    TouchEventData d = { type, 0, w, states, touchPoints };
+    TouchEventData d = { type, nullptr, w, states, touchPoints };
     return d;
 }
 static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPointStates states, const QTouchEvent::TouchPoint &touchPoint)
@@ -114,7 +114,7 @@ class RootItemAccessor : public QQuickItem
 public:
     RootItemAccessor()
         : m_rootItemDestroyed(false)
-        , m_rootItem(0)
+        , m_rootItem(nullptr)
     {
     }
     Q_INVOKABLE QQuickItem *contentItem()
@@ -141,7 +141,7 @@ class TestTouchItem : public QQuickRectangle
 {
     Q_OBJECT
 public:
-    TestTouchItem(QQuickItem *parent = 0)
+    TestTouchItem(QQuickItem *parent = nullptr)
         : QQuickRectangle(parent), acceptTouchEvents(true), acceptMouseEvents(true),
           mousePressCount(0), mouseMoveCount(0),
           spinLoopWhenPressed(false), touchEventCount(0),
@@ -157,7 +157,7 @@ public:
         setEnabled(true);
         setVisible(true);
 
-        lastEvent = makeTouchData(QEvent::None, window(), 0, QList<QTouchEvent::TouchPoint>());//CHECK_VALID
+        lastEvent = makeTouchData(QEvent::None, window(), nullptr, QList<QTouchEvent::TouchPoint>());//CHECK_VALID
 
         lastVelocity = lastVelocityFromMouseMove = QVector2D();
         lastMousePos = QPointF();
@@ -281,14 +281,14 @@ class ConstantUpdateItem : public QQuickItem
 {
 Q_OBJECT
 public:
-    ConstantUpdateItem(QQuickItem *parent = 0) : QQuickItem(parent), iterations(0) {setFlag(ItemHasContents);}
+    ConstantUpdateItem(QQuickItem *parent = nullptr) : QQuickItem(parent), iterations(0) {setFlag(ItemHasContents);}
 
     int iterations;
 protected:
     QSGNode* updatePaintNode(QSGNode *, UpdatePaintNodeData *){
         iterations++;
         update();
-        return 0;
+        return nullptr;
     }
 };
 
@@ -896,7 +896,7 @@ void tst_qquickwindow::touchEvent_cancel()
     COMPARE_TOUCH_DATA(item->lastEvent, d);
     item->reset();
 
-    QWindowSystemInterface::handleTouchCancelEvent(0, touchDevice);
+    QWindowSystemInterface::handleTouchCancelEvent(nullptr, touchDevice);
     QCoreApplication::processEvents();
     d = makeTouchData(QEvent::TouchCancel, window);
     COMPARE_TOUCH_DATA(item->lastEvent, d);
@@ -930,7 +930,7 @@ void tst_qquickwindow::touchEvent_cancelClearsMouseGrab()
     QTRY_COMPARE(item->mousePressCount, 1);
     QTRY_COMPARE(item->mouseUngrabEventCount, 0);
 
-    QWindowSystemInterface::handleTouchCancelEvent(0, touchDevice);
+    QWindowSystemInterface::handleTouchCancelEvent(nullptr, touchDevice);
     QCoreApplication::processEvents();
 
     QTRY_COMPARE(item->mouseUngrabEventCount, 1);
@@ -1283,7 +1283,7 @@ void tst_qquickwindow::mouseFiltering()
 
     QPoint pos(100, 100);
 
-    QTest::mousePress(window, Qt::LeftButton, 0, pos);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, pos);
 
     // Mouse filtering propagates down the stack, so the
     // correct order is
@@ -1295,7 +1295,7 @@ void tst_qquickwindow::mouseFiltering()
     QTRY_COMPARE(topItem->mousePressCount, 3);
     QCOMPARE(siblingItem->mousePressCount, 0);
 
-    QTest::mouseRelease(window, Qt::LeftButton, 0, pos);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, pos);
     topItem->clearMouseEventCounters();
     middleItem->clearMouseEventCounters();
     bottomItem->clearMouseEventCounters();
@@ -1304,7 +1304,7 @@ void tst_qquickwindow::mouseFiltering()
     // Repeat, but this time have the top item accept the press
     topItem->acceptMouseEvents = true;
 
-    QTest::mousePress(window, Qt::LeftButton, 0, pos);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, pos);
 
     // Mouse filtering propagates down the stack, so the
     // correct order is
@@ -1327,7 +1327,7 @@ void tst_qquickwindow::mouseFiltering()
     QCOMPARE(siblingItem->mouseMoveCount, 0);
 
     // clean up mouse press state for the next tests
-    QTest::mouseRelease(window, Qt::LeftButton, 0, pos);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, pos);
 }
 
 void tst_qquickwindow::qmlCreation()
@@ -1752,7 +1752,7 @@ void tst_qquickwindow::ownershipRootItem()
     QVERIFY(accessor);
     engine.collectGarbage();
 
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
     QVERIFY(!accessor->isRootItemDestroyed());
 }
@@ -1859,7 +1859,7 @@ void tst_qquickwindow::cursor()
     QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
 
     // Try with the mouse pressed.
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(100, 100));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 100));
     QTest::mouseMove(&window, QPoint(20, 20));
     QCOMPARE(window.cursor().shape(), Qt::IBeamCursor);
     QTest::mouseMove(&window, QPoint(125, 125));
@@ -1870,12 +1870,12 @@ void tst_qquickwindow::cursor()
     QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
     QTest::mouseMove(&window, QPoint(100, 100));
     QCOMPARE(window.cursor().shape(), Qt::WaitCursor);
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(100, 100));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 100));
 
     // Remove the cursor item from the scene. Theoretically this should make parentItem the
     // cursorItem, but given the situation will correct itself after the next mouse move it
     // simply unsets the window cursor for now.
-    childItem.setParentItem(0);
+    childItem.setParentItem(nullptr);
     QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
 
     parentItem.setCursor(Qt::SizeAllCursor);
@@ -1891,7 +1891,7 @@ void tst_qquickwindow::cursor()
     QCOMPARE(childItem.cursor().shape(), Qt::ArrowCursor);
     QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
 
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(100, 101));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(100, 101));
     QCOMPARE(window.cursor().shape(), Qt::SizeAllCursor);
 }
 #endif
@@ -1912,8 +1912,8 @@ void tst_qquickwindow::hideThenDelete()
     QFETCH(bool, persistentSG);
     QFETCH(bool, persistentGL);
 
-    QSignalSpy *openglDestroyed = 0;
-    QSignalSpy *sgInvalidated = 0;
+    QSignalSpy *openglDestroyed = nullptr;
+    QSignalSpy *sgInvalidated = nullptr;
 
     {
         QQuickWindow window;
@@ -2051,7 +2051,7 @@ void tst_qquickwindow::requestActivate()
         QString warning = QString::fromLatin1("Mouse event MousePress not accepted by receiving window");
         QWARN(warning.toLatin1().data());
     }
-    me = QMouseEvent(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, 0, Qt::NoModifier);
+    me = QMouseEvent(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, nullptr, Qt::NoModifier);
     QSpontaneKeyEvent::setSpontaneous(&me);
     if (!qApp->notify(window1.data(), &me)) {
         QString warning = QString::fromLatin1("Mouse event MouseRelease not accepted by receiving window");
@@ -2412,7 +2412,7 @@ void tst_qquickwindow::attachedProperty()
     QCOMPARE(text->property("windowHeight").toInt(), innerWindow->height());
     QCOMPARE(text->property("window").value<QQuickWindow*>(), innerWindow);
 
-    text->setParentItem(0);
+    text->setParentItem(nullptr);
     QVERIFY(!text->property("contentItem").value<QQuickItem*>());
     QCOMPARE(text->property("windowWidth").toInt(), 0);
     QCOMPARE(text->property("windowHeight").toInt(), 0);
@@ -2435,7 +2435,7 @@ public:
 class GlRenderJob : public QRunnable
 {
 public:
-    GlRenderJob(GLubyte *buf) : readPixel(buf), mutex(0), condition(0) {}
+    GlRenderJob(GLubyte *buf) : readPixel(buf), mutex(nullptr), condition(nullptr) {}
     ~GlRenderJob() {}
     void run() {
         QOpenGLContext::currentContext()->functions()->glClearColor(1.0f, 0, 0, 1.0f);
@@ -2546,7 +2546,7 @@ void tst_qquickwindow::testRenderJob()
 class EventCounter : public QQuickRectangle
 {
 public:
-    EventCounter(QQuickItem *parent = 0)
+    EventCounter(QQuickItem *parent = nullptr)
         : QQuickRectangle(parent)
     { }
 
@@ -2654,7 +2654,7 @@ class HoverTimestampConsumer : public QQuickItem
 {
     Q_OBJECT
 public:
-    HoverTimestampConsumer(QQuickItem *parent = 0)
+    HoverTimestampConsumer(QQuickItem *parent = nullptr)
         : QQuickItem(parent)
     {
         setAcceptHoverEvents(true);
@@ -2737,7 +2737,7 @@ void tst_qquickwindow::testHoverTimestamp()
 class CircleItem : public QQuickRectangle
 {
 public:
-    CircleItem(QQuickItem *parent = 0) : QQuickRectangle(parent) { }
+    CircleItem(QQuickItem *parent = nullptr) : QQuickRectangle(parent) { }
 
     void setRadius(qreal radius) {
         const qreal diameter = radius*2;
@@ -2883,7 +2883,7 @@ class TestDropTarget : public QQuickItem
 {
     Q_OBJECT
 public:
-    TestDropTarget(QQuickItem *parent = 0)
+    TestDropTarget(QQuickItem *parent = nullptr)
         : QQuickItem(parent)
         , enterDropAction(Qt::CopyAction)
         , moveDropAction(Qt::CopyAction)
@@ -2944,10 +2944,10 @@ public:
     ~DragEventTester() {
         qDeleteAll(events);
         events.clear();
-        enterEvent = 0;
-        moveEvent = 0;
-        dropEvent = 0;
-        leaveEvent = 0;
+        enterEvent = nullptr;
+        moveEvent = nullptr;
+        dropEvent = nullptr;
+        leaveEvent = nullptr;
     }
 
     void addEnterEvent()
@@ -3494,7 +3494,7 @@ void tst_qquickwindow::testChildMouseEventFilter()
 
     DeliveryRecordVector &actualDeliveryOrder = EventItem::deliveryList();
     actualDeliveryOrder.clear();
-    QTest::mousePress(&window, Qt::LeftButton, 0, mousePos);
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, mousePos);
 
     // Check if event got delivered to the root item. If so, append it to the list of items the event got delivered to
     if (rootFilter->events.contains(QEvent::MouseButtonPress))
@@ -3511,7 +3511,7 @@ void tst_qquickwindow::testChildMouseEventFilter()
     }
 
     // "restore" mouse state
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, mousePos);
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, mousePos);
 }
 
 

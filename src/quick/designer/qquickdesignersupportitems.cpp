@@ -55,11 +55,11 @@
 
 QT_BEGIN_NAMESPACE
 
-static void (*fixResourcePathsForObjectCallBack)(QObject*) = 0;
+static void (*fixResourcePathsForObjectCallBack)(QObject*) = nullptr;
 
 static void stopAnimation(QObject *object)
 {
-    if (object == 0)
+    if (object == nullptr)
         return;
 
     QQuickTransition *transition = qobject_cast<QQuickTransition*>(object);
@@ -203,7 +203,7 @@ QObject *QQuickDesignerSupportItems::createPrimitive(const QString &typeName, in
 
     Q_UNUSED(disableComponentComplete)
 
-    QObject *object = 0;
+    QObject *object = nullptr;
     QQmlType type = QQmlMetaType::qmlType(typeName, majorNumber, minorNumber);
 
     if (isCrashingType(type)) {
@@ -214,7 +214,7 @@ QObject *QQuickDesignerSupportItems::createPrimitive(const QString &typeName, in
         } else
         {
             if (type.typeName() == "QQmlComponent") {
-                object = new QQmlComponent(context->engine(), 0);
+                object = new QQmlComponent(context->engine(), nullptr);
             } else  {
                 object = type.create();
             }
@@ -235,7 +235,7 @@ QObject *QQuickDesignerSupportItems::createPrimitive(const QString &typeName, in
 
     tweakObjects(object);
 
-    if (object && QQmlEngine::contextForObject(object) == 0)
+    if (object && QQmlEngine::contextForObject(object) == nullptr)
         QQmlEngine::setContextForObject(object, context);
 
     QQmlEngine::setObjectOwnership(object, QQmlEngine::CppOwnership);

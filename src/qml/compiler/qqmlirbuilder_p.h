@@ -80,8 +80,8 @@ template <typename T>
 struct PoolList
 {
     PoolList()
-        : first(0)
-        , last(0)
+        : first(nullptr)
+        , last(nullptr)
         , count(0)
     {}
 
@@ -90,7 +90,7 @@ struct PoolList
     int count;
 
     int append(T *item) {
-        item->next = 0;
+        item->next = nullptr;
         if (last)
             last->next = item;
         else
@@ -110,7 +110,7 @@ struct PoolList
     template <typename Sortable, typename Base, Sortable Base::*sortMember>
     T *findSortedInsertionPoint(T *item) const
     {
-        T *insertPos = 0;
+        T *insertPos = nullptr;
 
         for (T *it = first; it; it = it->next) {
             if (!(it->*sortMember <= item->*sortMember))
@@ -208,7 +208,7 @@ public:
     int count;
 
     FixedPoolArray()
-        : data(0)
+        : data(nullptr)
         , count(0)
     {}
 
@@ -343,16 +343,16 @@ struct Function
 struct Q_QML_PRIVATE_EXPORT CompiledFunctionOrExpression
 {
     CompiledFunctionOrExpression()
-        : node(0)
+        : node(nullptr)
         , nameIndex(0)
         , disableAcceleratedLookups(false)
-        , next(0)
+        , next(nullptr)
     {}
     CompiledFunctionOrExpression(QQmlJS::AST::Node *n)
         : node(n)
         , nameIndex(0)
         , disableAcceleratedLookups(false)
-        , next(0)
+        , next(nullptr)
     {}
     QQmlJS::AST::Node *node; // FunctionDeclaration, Statement or Expression
     quint32 nameIndex;
@@ -514,8 +514,8 @@ public:
     void accept(QQmlJS::AST::Node *node);
 
     // returns index in _objects
-    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride = 0);
-    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiObjectDefinition *node, Object *declarationsOverride = 0)
+    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride = nullptr);
+    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiObjectDefinition *node, Object *declarationsOverride = nullptr)
     { return defineQMLObject(objectIndex, node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, declarationsOverride); }
 
     static QString asString(QQmlJS::AST::UiQualifiedId *node);
@@ -598,7 +598,7 @@ struct Q_QML_EXPORT PropertyResolver
         IgnoreRevision
     };
 
-    QQmlPropertyData *property(const QString &name, bool *notInRevision = 0, RevisionCheck check = CheckRevision) const;
+    QQmlPropertyData *property(const QString &name, bool *notInRevision = nullptr, RevisionCheck check = CheckRevision) const;
 
     // This code must match the semantics of QQmlPropertyPrivate::findSignalByName
     QQmlPropertyData *signal(const QString &name, bool *notInRevision) const;

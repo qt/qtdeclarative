@@ -72,8 +72,8 @@ struct QSGAreaAllocatorNode
 
 QSGAreaAllocatorNode::QSGAreaAllocatorNode(QSGAreaAllocatorNode *parent)
     : parent(parent)
-    , left(0)
-    , right(0)
+    , left(nullptr)
+    , right(nullptr)
     , isOccupied(false)
 {
 }
@@ -86,14 +86,14 @@ QSGAreaAllocatorNode::~QSGAreaAllocatorNode()
 
 bool QSGAreaAllocatorNode::isLeaf()
 {
-    Q_ASSERT((left != 0) == (right != 0));
+    Q_ASSERT((left != nullptr) == (right != nullptr));
     return !left;
 }
 
 
 QSGAreaAllocator::QSGAreaAllocator(const QSize &size) : m_size(size)
 {
-    m_root = new QSGAreaAllocatorNode(0);
+    m_root = new QSGAreaAllocatorNode(nullptr);
 }
 
 QSGAreaAllocator::~QSGAreaAllocator()
@@ -179,13 +179,13 @@ bool QSGAreaAllocator::deallocateInNode(const QPoint &pos, QSGAreaAllocatorNode 
 void QSGAreaAllocator::mergeNodeWithNeighbors(QSGAreaAllocatorNode *node)
 {
     bool done = false;
-    QSGAreaAllocatorNode *parent = 0;
-    QSGAreaAllocatorNode *current = 0;
+    QSGAreaAllocatorNode *parent = nullptr;
+    QSGAreaAllocatorNode *current = nullptr;
     QSGAreaAllocatorNode *sibling;
     while (!done) {
         Q_ASSERT(node->isLeaf());
         Q_ASSERT(!node->isOccupied);
-        if (node->parent == 0)
+        if (node->parent == nullptr)
             return; // No neighbours.
 
         SplitType splitType = SplitType(node->parent->splitType);
@@ -238,7 +238,7 @@ void QSGAreaAllocator::mergeNodeWithNeighbors(QSGAreaAllocatorNode *node)
                 }
                 sibling->parent = parent->parent;
                 *nodeRef = sibling;
-                parent->left = parent->right = 0;
+                parent->left = parent->right = nullptr;
                 delete parent;
                 delete neighbor;
                 done = false;
@@ -276,7 +276,7 @@ void QSGAreaAllocator::mergeNodeWithNeighbors(QSGAreaAllocatorNode *node)
                 }
                 sibling->parent = parent->parent;
                 *nodeRef = sibling;
-                parent->left = parent->right = 0;
+                parent->left = parent->right = nullptr;
                 delete parent;
                 delete neighbor;
                 done = false;

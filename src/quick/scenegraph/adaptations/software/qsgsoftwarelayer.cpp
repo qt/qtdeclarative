@@ -45,9 +45,9 @@
 QT_BEGIN_NAMESPACE
 
 QSGSoftwareLayer::QSGSoftwareLayer(QSGRenderContext *renderContext)
-    : m_item(0)
+    : m_item(nullptr)
     , m_context(renderContext)
-    , m_renderer(0)
+    , m_renderer(nullptr)
     , m_device_pixel_ratio(1)
     , m_mirrorHorizontal(false)
     , m_mirrorVertical(true)
@@ -203,7 +203,7 @@ void QSGSoftwareLayer::markDirtyTexture()
 void QSGSoftwareLayer::invalidated()
 {
     delete m_renderer;
-    m_renderer = 0;
+    m_renderer = nullptr;
 }
 
 void QSGSoftwareLayer::grab()

@@ -58,7 +58,7 @@ void tst_qquicktextdocument::textDocumentWriter()
     QVERIFY(edit);
 
     QQuickTextDocument* quickDocument = qobject_cast<QQuickTextDocument*>(edit->property("textDocument").value<QObject*>());
-    QVERIFY(quickDocument->textDocument() != 0);
+    QVERIFY(quickDocument->textDocument() != nullptr);
 
     QBuffer output;
     output.open(QBuffer::ReadWrite);
@@ -73,7 +73,7 @@ void tst_qquicktextdocument::textDocumentWriter()
 
 void tst_qquicktextdocument::textDocumentWithImage()
 {
-    QQuickTextDocumentWithImageResources document(0);
+    QQuickTextDocumentWithImageResources document(nullptr);
     QImage image(1, 1, QImage::Format_Mono);
     image.fill(1);
 

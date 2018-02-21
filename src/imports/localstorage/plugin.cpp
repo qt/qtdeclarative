@@ -220,7 +220,7 @@ QQmlSqlDatabaseData::~QQmlSqlDatabaseData()
 {
 }
 
-static ReturnedValue qmlsqldatabase_rows_index(const QQmlSqlDatabaseWrapper *r, ExecutionEngine *v4, quint32 index, bool *hasProperty = 0)
+static ReturnedValue qmlsqldatabase_rows_index(const QQmlSqlDatabaseWrapper *r, ExecutionEngine *v4, quint32 index, bool *hasProperty = nullptr)
 {
     Scope scope(v4);
 
@@ -376,10 +376,10 @@ struct TransactionRollback {
     }
 
     void clear() {
-        db = 0;
+        db = nullptr;
         if (inTransactionFlag)
             *inTransactionFlag = false;
-        inTransactionFlag = 0;
+        inTransactionFlag = nullptr;
     }
 };
 
@@ -448,7 +448,7 @@ static ReturnedValue qmlsqldatabase_transaction_shared(const FunctionObject *b, 
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Database)
         V4THROW_REFERENCE("Not a SQLDatabase object");
 
-    const FunctionObject *callback = argc ? argv[0].as<FunctionObject>() : 0;
+    const FunctionObject *callback = argc ? argv[0].as<FunctionObject>() : nullptr;
     if (!callback)
         V4THROW_SQL(SQLEXCEPTION_UNKNOWN_ERR, QQmlEngine::tr("transaction: missing callback"));
 
@@ -495,7 +495,7 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(ExecutionEngine *v4)
         ScopedObject proto(scope, v4->newObject());
         proto->defineDefaultProperty(QStringLiteral("transaction"), qmlsqldatabase_transaction);
         proto->defineDefaultProperty(QStringLiteral("readTransaction"), qmlsqldatabase_read_transaction);
-        proto->defineAccessorProperty(QStringLiteral("version"), qmlsqldatabase_version, 0);
+        proto->defineAccessorProperty(QStringLiteral("version"), qmlsqldatabase_version, nullptr);
         proto->defineDefaultProperty(QStringLiteral("changeVersion"), qmlsqldatabase_changeVersion);
         databaseProto = proto;
     }
@@ -508,7 +508,7 @@ QQmlSqlDatabaseData::QQmlSqlDatabaseData(ExecutionEngine *v4)
     {
         ScopedObject proto(scope, v4->newObject());
         proto->defineDefaultProperty(QStringLiteral("item"), qmlsqldatabase_rows_item);
-        proto->defineAccessorProperty(QStringLiteral("length"), qmlsqldatabase_rows_length, 0);
+        proto->defineAccessorProperty(QStringLiteral("length"), qmlsqldatabase_rows_length, nullptr);
         proto->defineAccessorProperty(QStringLiteral("forwardOnly"),
                                       qmlsqldatabase_rows_forwardOnly, qmlsqldatabase_rows_setForwardOnly);
         rowsProto = proto;
@@ -690,7 +690,7 @@ class QQuickLocalStorage : public QObject
 {
     Q_OBJECT
 public:
-    QQuickLocalStorage(QObject *parent=0) : QObject(parent)
+    QQuickLocalStorage(QObject *parent=nullptr) : QObject(parent)
     {
     }
     ~QQuickLocalStorage() {
@@ -790,7 +790,7 @@ class QQmlLocalStoragePlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    QQmlLocalStoragePlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent)
+    QQmlLocalStoragePlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent)
     {
         initResources();
     }

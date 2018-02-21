@@ -152,7 +152,7 @@ void tst_qqmllocale::addPropertyData(const QString &l)
         LOCALE_PROP(QString,exponential),
         LOCALE_PROP(int,measurementSystem),
         LOCALE_PROP(int,textDirection),
-        { 0, QVariant() }
+        { nullptr, QVariant() }
     };
 
     int i = 0;
@@ -663,7 +663,7 @@ void tst_qqmllocale::addDateTimeFormatData(const QString &l)
         "h:m:sap ddd MMMM d yy",
         "'The date and time is: 'H:mm:ss:zzz dd/MM/yy",
         "MMM d yyyy HH:mm t",
-        0
+        nullptr
     };
     QByteArray locale = l.toLatin1();
     int i = 0;
@@ -751,7 +751,7 @@ void tst_qqmllocale::addDateFormatData(const QString &l)
         "ddd MMMM d yy",
         "'The date is: 'dd/MM/yy",
         "MMM d yyyy",
-        0
+        nullptr
     };
     QByteArray locale = l.toLatin1();
     int i = 0;
@@ -839,7 +839,7 @@ void tst_qqmllocale::addTimeFormatData(const QString &l)
         "h:m:sap",
         "'The time is: 'H:mm:ss:zzz",
         "HH:mm t",
-        0
+        nullptr
     };
     QByteArray locale = l.toLatin1();
     int i = 0;

@@ -139,7 +139,7 @@ struct MemoryAllocationProperties {
 class FunctionCall {
 public:
 
-    FunctionCall() : m_function(0), m_start(0), m_end(0)
+    FunctionCall() : m_function(nullptr), m_start(0), m_end(0)
     { Q_ASSERT_X(false, Q_FUNC_INFO, "Cannot construct a function call without function"); }
 
     FunctionCall(Function *function, qint64 start, qint64 end) :
@@ -276,7 +276,7 @@ public:
     // It's enough to ref() the function in the destructor as it will probably not disappear while
     // it's executing ...
     FunctionCallProfiler(ExecutionEngine *engine, Function *f)
-        : profiler(0)
+        : profiler(nullptr)
     {
         Profiler *p = engine->profiler();
         if (Q_UNLIKELY(p) && (p->featuresEnabled & (1 << Profiling::FeatureFunctionCall))) {

@@ -98,7 +98,7 @@ struct VirtualDirectoryEntry
 
 struct DataStream
 {
-    DataStream(QVector<unsigned char > *data = 0)
+    DataStream(QVector<unsigned char > *data = nullptr)
         : data(data)
     {}
 

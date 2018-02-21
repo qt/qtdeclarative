@@ -56,7 +56,7 @@ class AbstractExtensionObject : public QObject
     Q_PROPERTY(int abstractProperty READ abstractProperty WRITE setAbstractProperty NOTIFY abstractPropertyChanged)
 public:
 
-    AbstractExtensionObject(QObject *parent = 0) : QObject(parent), m_abstractProperty(-1) {}
+    AbstractExtensionObject(QObject *parent = nullptr) : QObject(parent), m_abstractProperty(-1) {}
 
     void setAbstractProperty(int abstractProperty) { m_abstractProperty = abstractProperty; emit abstractPropertyChanged(); }
     int abstractProperty() const { return m_abstractProperty; }
@@ -75,7 +75,7 @@ class ImplementedExtensionObject : public AbstractExtensionObject
     Q_OBJECT
     Q_PROPERTY(int implementedProperty READ implementedProperty WRITE setImplementedProperty NOTIFY implementedPropertyChanged)
 public:
-    ImplementedExtensionObject(QObject *parent = 0) : AbstractExtensionObject(parent), m_implementedProperty(883) {}
+    ImplementedExtensionObject(QObject *parent = nullptr) : AbstractExtensionObject(parent), m_implementedProperty(883) {}
     void shouldBeImplemented() {}
 
     void setImplementedProperty(int implementedProperty) { m_implementedProperty = implementedProperty; emit implementedPropertyChanged(); }
@@ -340,7 +340,7 @@ public:
     }
 };
 
-static MyInheritedQmlObject *theSingletonObject = 0;
+static MyInheritedQmlObject *theSingletonObject = nullptr;
 
 static QObject *inheritedQmlObject_provider(QQmlEngine* /* engine */, QJSEngine* /* scriptEngine */)
 {
@@ -382,7 +382,7 @@ private:
         static int a = 0;
         static int *ptr = &a;
         *ptr = 1;
-        ptr = 0;
+        ptr = nullptr;
     }
 };
 
@@ -401,13 +401,13 @@ static QObject *create_singletonWithEnum(QQmlEngine *, QJSEngine *)
 }
 
 QObjectContainer::QObjectContainer()
-    : widgetParent(0)
+    : widgetParent(nullptr)
     , gcOnAppend(false)
 {}
 
 QQmlListProperty<QObject> QObjectContainer::data()
 {
-    return QQmlListProperty<QObject>(this, 0, children_append, children_count, children_at, children_clear);
+    return QQmlListProperty<QObject>(this, nullptr, children_append, children_count, children_at, children_clear);
 }
 
 void QObjectContainer::children_append(QQmlListProperty<QObject> *prop, QObject *o)
@@ -419,7 +419,7 @@ void QObjectContainer::children_append(QQmlListProperty<QObject> *prop, QObject 
     if (that->gcOnAppend) {
         QQmlEngine *engine = qmlEngine(that);
         engine->collectGarbage();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         QCoreApplication::processEvents();
     }
 }
@@ -448,7 +448,7 @@ void QObjectContainer::childDestroyed(QObject *child) {
 
 void FloatingQObject::classBegin()
 {
-    setParent(0);
+    setParent(nullptr);
 }
 
 void FloatingQObject::componentComplete()

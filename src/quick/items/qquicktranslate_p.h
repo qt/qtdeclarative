@@ -66,7 +66,7 @@ class Q_AUTOTEST_EXPORT QQuickTranslate : public QQuickTransform
     Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged)
 
 public:
-    QQuickTranslate(QObject *parent = 0);
+    QQuickTranslate(QObject *parent = nullptr);
     ~QQuickTranslate();
 
     qreal x() const;
@@ -96,7 +96,7 @@ class Q_AUTOTEST_EXPORT QQuickScale : public QQuickTransform
     Q_PROPERTY(qreal yScale READ yScale WRITE setYScale NOTIFY yScaleChanged)
     Q_PROPERTY(qreal zScale READ zScale WRITE setZScale NOTIFY zScaleChanged)
 public:
-    QQuickScale(QObject *parent = 0);
+    QQuickScale(QObject *parent = nullptr);
     ~QQuickScale();
 
     QVector3D origin() const;
@@ -133,7 +133,7 @@ class Q_AUTOTEST_EXPORT QQuickRotation : public QQuickTransform
     Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged)
     Q_PROPERTY(QVector3D axis READ axis WRITE setAxis NOTIFY axisChanged)
 public:
-    QQuickRotation(QObject *parent = 0);
+    QQuickRotation(QObject *parent = nullptr);
     ~QQuickRotation();
 
     QVector3D origin() const;
@@ -164,7 +164,7 @@ class Q_AUTOTEST_EXPORT QQuickMatrix4x4 : public QQuickTransform
 
     Q_PROPERTY(QMatrix4x4 matrix READ matrix WRITE setMatrix NOTIFY matrixChanged)
 public:
-    QQuickMatrix4x4(QObject *parent = 0);
+    QQuickMatrix4x4(QObject *parent = nullptr);
     ~QQuickMatrix4x4();
 
     QMatrix4x4 matrix() const;

@@ -114,7 +114,7 @@ QQuickLayoutAttached::QQuickLayoutAttached(QObject *parent)
       m_isTopMarginSet(false),
       m_isRightMarginSet(false),
       m_isBottomMarginSet(false),
-      m_alignment(0)
+      m_alignment(nullptr)
 {
 
 }
@@ -683,7 +683,7 @@ QQuickLayout *QQuickLayoutAttached::parentLayout() const
     } else {
         qmlWarning(parent()) << "Layout must be attached to Item elements";
     }
-    return 0;
+    return nullptr;
 }
 
 QQuickItem *QQuickLayoutAttached::item() const

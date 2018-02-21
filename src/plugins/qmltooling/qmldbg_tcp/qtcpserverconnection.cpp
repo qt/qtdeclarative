@@ -83,9 +83,9 @@ QTcpServerConnection::QTcpServerConnection() :
     m_portFrom(0),
     m_portTo(0),
     m_block(false),
-    m_socket(0),
-    m_tcpServer(0),
-    m_debugServer(0)
+    m_socket(nullptr),
+    m_tcpServer(nullptr),
+    m_debugServer(nullptr)
 {
 }
 
@@ -116,7 +116,7 @@ void QTcpServerConnection::disconnect()
     }
 
     m_socket->deleteLater();
-    m_socket = 0;
+    m_socket = nullptr;
 }
 
 bool QTcpServerConnection::setPortRange(int portFrom, int portTo, bool block,
@@ -199,7 +199,7 @@ void QTcpServerConnection::newConnection()
 
 QQmlDebugServerConnection *QTcpServerConnectionFactory::create(const QString &key)
 {
-    return (key == QLatin1String("QTcpServerConnection") ? new QTcpServerConnection : 0);
+    return (key == QLatin1String("QTcpServerConnection") ? new QTcpServerConnection : nullptr);
 }
 
 QT_END_NAMESPACE

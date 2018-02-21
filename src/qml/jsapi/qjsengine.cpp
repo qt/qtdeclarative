@@ -783,7 +783,7 @@ QJSEngine *qjsEngine(const QObject *object)
 {
     QQmlData *data = QQmlData::get(object, false);
     if (!data || data->jsWrapper.isNullOrUndefined())
-        return 0;
+        return nullptr;
     return data->jsWrapper.engine()->jsEngine();
 }
 

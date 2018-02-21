@@ -142,7 +142,7 @@ Identifier *IdentifierTable::identifierImpl(const Heap::String *str)
         return str->identifier;
     uint hash = str->hashValue();
     if (str->subtype == Heap::String::StringType_ArrayIndex)
-        return 0;
+        return nullptr;
 
     uint idx = hash % alloc;
     while (Heap::String *e = entries[idx]) {
@@ -161,7 +161,7 @@ Identifier *IdentifierTable::identifierImpl(const Heap::String *str)
 Heap::String *IdentifierTable::stringFromIdentifier(Identifier *i)
 {
     if (!i)
-        return 0;
+        return nullptr;
 
     uint idx = i->hashValue % alloc;
     while (1) {

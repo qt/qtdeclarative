@@ -82,7 +82,7 @@ public:
 };
 
 QQuickSpriteMaterial::QQuickSpriteMaterial()
-    : texture(0)
+    : texture(nullptr)
     , animT(0.0f)
     , animX1(0.0f)
     , animY1(0.0f)
@@ -133,7 +133,7 @@ public:
         static const char *attr[] = {
            "vPos",
            "vTex",
-            0
+            nullptr
         };
         return attr;
     }

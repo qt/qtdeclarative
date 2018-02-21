@@ -90,7 +90,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDelegateModel : public QQmlInstanceModel, public 
     Q_INTERFACES(QQmlParserStatus)
 public:
     QQmlDelegateModel();
-    QQmlDelegateModel(QQmlContext *, QObject *parent=0);
+    QQmlDelegateModel(QQmlContext *, QObject *parent=nullptr);
     ~QQmlDelegateModel();
 
     void classBegin() override;
@@ -109,7 +109,7 @@ public:
     Q_INVOKABLE QVariant parentModelIndex() const;
 
     int count() const override;
-    bool isValid() const override { return delegate() != 0; }
+    bool isValid() const override { return delegate() != nullptr; }
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
     ReleaseFlags release(QObject *object) override;
     void cancel(int index) override;
@@ -164,8 +164,8 @@ class Q_QML_PRIVATE_EXPORT QQmlDelegateModelGroup : public QObject
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(bool includeByDefault READ defaultInclude WRITE setDefaultInclude NOTIFY defaultIncludeChanged)
 public:
-    QQmlDelegateModelGroup(QObject *parent = 0);
-    QQmlDelegateModelGroup(const QString &name, QQmlDelegateModel *model, int compositorType, QObject *parent = 0);
+    QQmlDelegateModelGroup(QObject *parent = nullptr);
+    QQmlDelegateModelGroup(const QString &name, QQmlDelegateModel *model, int compositorType, QObject *parent = nullptr);
     ~QQmlDelegateModelGroup();
 
     QString name() const;

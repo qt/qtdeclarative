@@ -77,7 +77,7 @@ void QQmlDebugClientPrivate::addToConnection()
     Q_Q(QQmlDebugClient);
     if (connection && !connection->addClient(name, q)) {
         qWarning() << "QQmlDebugClient: Conflicting plugin name" << name;
-        connection = 0;
+        connection = nullptr;
     }
 }
 

@@ -59,7 +59,7 @@ using namespace QQmlJS::AST;
 ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode)
     : _cg(cg)
     , _sourceCode(sourceCode)
-    , _context(0)
+    , _context(nullptr)
     , _allowFuncDecls(true)
     , defaultProgramMode(defaultProgramMode)
 {
@@ -208,7 +208,7 @@ bool ScanFunctions::visit(VariableDeclaration *ast)
         return false;
     }
     QString name = ast->name.toString();
-    const Context::Member *m = 0;
+    const Context::Member *m = nullptr;
     if (_context->memberInfo(name, &m)) {
         if (m->isLexicallyScoped() || ast->isLexicallyScoped()) {
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
@@ -258,7 +258,7 @@ void ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
 {
     if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
         _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Function name may not be eval or arguments in strict mode"));
-    enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : 0);
+    enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : nullptr);
 }
 
 void ScanFunctions::endVisit(FunctionExpression *)
@@ -287,7 +287,7 @@ bool ScanFunctions::visit(ObjectLiteral *ast)
 bool ScanFunctions::visit(PropertyGetterSetter *ast)
 {
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
-    enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/0);
+    enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/nullptr);
     return true;
 }
 

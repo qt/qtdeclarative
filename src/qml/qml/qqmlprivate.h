@@ -167,8 +167,8 @@ namespace QQmlPrivate
     class AttachedPropertySelector
     {
     public:
-        static inline QQmlAttachedPropertiesFunc func() { return 0; }
-        static inline const QMetaObject *metaObject() { return 0; }
+        static inline QQmlAttachedPropertiesFunc func() { return nullptr; }
+        static inline const QMetaObject *metaObject() { return nullptr; }
     };
     template<typename T>
     class AttachedPropertySelector<T, 1>

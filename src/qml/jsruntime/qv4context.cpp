@@ -302,7 +302,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
 
 ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
 {
-    base->setM(0);
+    base->setM(nullptr);
     name->makeIdentifier();
 
     Heap::ExecutionContext *ctx = d();

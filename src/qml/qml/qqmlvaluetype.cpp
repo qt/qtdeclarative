@@ -68,7 +68,7 @@ struct QQmlValueTypeFactoryImpl
 QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 {
     for (unsigned int ii = 0; ii < QVariant::UserType; ++ii)
-        valueTypes[ii] = 0;
+        valueTypes[ii] = nullptr;
 
     // See types wrapped in qqmlmodelindexvaluetype_p.h
     qRegisterMetaType<QItemSelectionRange>();
@@ -83,7 +83,7 @@ QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
 bool QQmlValueTypeFactoryImpl::isValueType(int idx)
 {
     if (idx >= (int)QVariant::UserType) {
-        return (valueType(idx) != 0);
+        return (valueType(idx) != nullptr);
     } else if (idx >= 0
             && idx != QVariant::StringList
             && idx != QMetaType::QObjectStar
@@ -130,7 +130,7 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
     QMetaType metaType(t);
     if (metaType.flags() & QMetaType::IsGadget)
         return metaType.metaObject();
-    return 0;
+    return nullptr;
 }
 
 QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
@@ -141,7 +141,7 @@ QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
 
         QHash<int, QQmlValueType *>::iterator it = userTypes.find(idx);
         if (it == userTypes.end()) {
-            QQmlValueType *vt = 0;
+            QQmlValueType *vt = nullptr;
             if (const QMetaObject *mo = metaObjectForMetaType(idx))
                 vt = new QQmlValueType(idx, mo);
             it = userTypes.insert(idx, vt);
@@ -209,14 +209,14 @@ QQmlValueType::~QQmlValueType()
 {
     QObjectPrivate *op = QObjectPrivate::get(this);
     Q_ASSERT(op->metaObject == this);
-    op->metaObject = 0;
+    op->metaObject = nullptr;
     ::free(const_cast<QMetaObject *>(_metaObject));
     metaType.destroy(gadgetPtr);
 }
 
 void QQmlValueType::read(QObject *obj, int idx)
 {
-    void *a[] = { gadgetPtr, 0 };
+    void *a[] = { gadgetPtr, nullptr };
     QMetaObject::metacall(obj, QMetaObject::ReadProperty, idx, a);
 }
 
@@ -224,7 +224,7 @@ void QQmlValueType::write(QObject *obj, int idx, QQmlPropertyData::WriteFlags fl
 {
     Q_ASSERT(gadgetPtr);
     int status = -1;
-    void *a[] = { gadgetPtr, 0, &status, &flags };
+    void *a[] = { gadgetPtr, nullptr, &status, &flags };
     QMetaObject::metacall(obj, QMetaObject::WriteProperty, idx, a);
 }
 

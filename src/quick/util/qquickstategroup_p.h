@@ -67,7 +67,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStateGroup : public QObject, public QQmlParse
     Q_PROPERTY(QQmlListProperty<QQuickTransition> transitions READ transitionsProperty DESIGNABLE false)
 
 public:
-    QQuickStateGroup(QObject * = 0);
+    QQuickStateGroup(QObject * = nullptr);
     virtual ~QQuickStateGroup();
 
     QString state() const;

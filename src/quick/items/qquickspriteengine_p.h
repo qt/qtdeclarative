@@ -81,7 +81,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStochasticState : public QObject //Currently 
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 
 public:
-    QQuickStochasticState(QObject* parent = 0)
+    QQuickStochasticState(QObject* parent = nullptr)
         : QObject(parent)
         , m_duration(-1)
         , m_durationVariation(0)
@@ -193,8 +193,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStochasticEngine : public QObject
     Q_PROPERTY(QString globalGoal READ globalGoal WRITE setGlobalGoal NOTIFY globalGoalChanged)
     Q_PROPERTY(QQmlListProperty<QQuickStochasticState> states READ states)
 public:
-    explicit QQuickStochasticEngine(QObject *parent = 0);
-    QQuickStochasticEngine(const QList<QQuickStochasticState*> &states, QObject *parent = 0);
+    explicit QQuickStochasticEngine(QObject *parent = nullptr);
+    QQuickStochasticEngine(const QList<QQuickStochasticState*> &states, QObject *parent = nullptr);
     ~QQuickStochasticEngine();
 
     QQmlListProperty<QQuickStochasticState> states()
@@ -270,8 +270,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickSpriteEngine : public QQuickStochasticEngine
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)
 public:
-    explicit QQuickSpriteEngine(QObject *parent = 0);
-    QQuickSpriteEngine(const QList<QQuickSprite*> &sprites, QObject *parent = 0);
+    explicit QQuickSpriteEngine(QObject *parent = nullptr);
+    QQuickSpriteEngine(const QList<QQuickSprite*> &sprites, QObject *parent = nullptr);
     ~QQuickSpriteEngine();
     QQmlListProperty<QQuickSprite> sprites()
     {
@@ -303,7 +303,7 @@ public:
     QImage assembledImage(int maxSize = 2048);
 
 private:
-    int pseudospriteProgress(int, int, int *rd = 0) const;
+    int pseudospriteProgress(int, int, int *rd = nullptr) const;
     QList<QQuickSprite*> m_sprites;
     bool m_startedImageAssembly;
     bool m_loaded;

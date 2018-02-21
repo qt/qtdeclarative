@@ -142,7 +142,7 @@ class tst_qqmlnotifier : public QQmlDataTest
     Q_OBJECT
 public:
     tst_qqmlnotifier()
-        : root(0), exportedClass(0), exportedObject(0)
+        : root(nullptr), exportedClass(nullptr), exportedObject(nullptr)
     {}
 
 private slots:
@@ -180,28 +180,28 @@ void tst_qqmlnotifier::initTestCase()
 void tst_qqmlnotifier::createObjects()
 {
     delete root;
-    root = 0;
-    exportedClass = exportedObject = 0;
+    root = nullptr;
+    exportedClass = exportedObject = nullptr;
 
     QQmlComponent component(&engine, testFileUrl("connectnotify.qml"));
     exportedObject = new ExportedClass();
     exportedObject->setObjectName("exportedObject");
     engine.rootContext()->setContextProperty("_exportedObject", exportedObject);
     root = component.create();
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
 
     exportedClass = qobject_cast<ExportedClass *>(
                 root->findChild<ExportedClass*>("exportedClass"));
-    QVERIFY(exportedClass != 0);
+    QVERIFY(exportedClass != nullptr);
     exportedClass->verifyReceiverCount();
 }
 
 void tst_qqmlnotifier::cleanupTestCase()
 {
     delete root;
-    root = 0;
+    root = nullptr;
     delete exportedObject;
-    exportedObject = 0;
+    exportedObject = nullptr;
 }
 
 void tst_qqmlnotifier::testConnectNotify()
@@ -303,7 +303,7 @@ void tst_qqmlnotifier::disconnectOnDestroy()
     // Deleting a QML object should remove all connections. For exportedClass, this is tested in
     // the destructor, and for exportedObject, it is tested below.
     delete root;
-    root = 0;
+    root = nullptr;
     QCOMPARE(exportedObject->cppObjectPropConnections, 0);
     exportedObject->verifyReceiverCount();
 }

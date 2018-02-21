@@ -411,7 +411,7 @@ class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 public:
     struct TypeReference
     {
-        TypeReference() : majorVersion(0), minorVersion(0), typeData(0), needsCreation(true) {}
+        TypeReference() : majorVersion(0), minorVersion(0), typeData(nullptr), needsCreation(true) {}
 
         QV4::CompiledData::Location location;
         QQmlType type;
@@ -425,7 +425,7 @@ public:
 
     struct ScriptReference
     {
-        ScriptReference() : script(0) {}
+        ScriptReference() : script(nullptr) {}
 
         QV4::CompiledData::Location location;
         QString qualifier;
@@ -558,7 +558,7 @@ public:
 
     struct ScriptReference
     {
-        ScriptReference() : script(0) {}
+        ScriptReference() : script(nullptr) {}
 
         QV4::CompiledData::Location location;
         QString qualifier;

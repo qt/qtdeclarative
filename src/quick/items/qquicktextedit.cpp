@@ -139,7 +139,7 @@ namespace {
     class RootNode : public QSGTransformNode
     {
     public:
-        RootNode() : cursorNode(0), frameDecorationsNode(0)
+        RootNode() : cursorNode(nullptr), frameDecorationsNode(nullptr)
         { }
 
         void resetFrameDecorations(QQuickTextNode* newNode)
@@ -1991,12 +1991,12 @@ static inline void updateNodeTransform(QQuickTextNode* node, const QPointF &topL
 void QQuickTextEdit::invalidateFontCaches()
 {
     Q_D(QQuickTextEdit);
-    if (d->document == 0)
+    if (d->document == nullptr)
         return;
 
     QTextBlock block;
     for (block = d->document->firstBlock(); block.isValid(); block = block.next()) {
-        if (block.layout() != 0 && block.layout()->engine() != 0)
+        if (block.layout() != nullptr && block.layout()->engine() != nullptr)
             block.layout()->engine()->resetFontEngineCache();
     }
 }
@@ -2014,7 +2014,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     Q_UNUSED(updatePaintNodeData);
     Q_D(QQuickTextEdit);
 
-    if (d->updateType != QQuickTextEditPrivate::UpdatePaintNode && oldNode != 0) {
+    if (d->updateType != QQuickTextEditPrivate::UpdatePaintNode && oldNode != nullptr) {
         // Update done in preprocess() in the nodes
         d->updateType = QQuickTextEditPrivate::UpdateNone;
         return oldNode;
@@ -2055,7 +2055,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         rootNode->resetFrameDecorations(d->createTextNode());
         resetEngine(&frameDecorationsEngine, d->color, d->selectedTextColor, d->selectionColor);
 
-        QQuickTextNode *node = 0;
+        QQuickTextNode *node = nullptr;
 
         int currentNodeSize = 0;
         int nodeStart = firstDirtyPos;
@@ -2159,8 +2159,8 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         std::sort(d->textNodeMap.begin(), d->textNodeMap.end());
     }
 
-    if (d->cursorComponent == 0) {
-        QSGInternalRectangleNode* cursor = 0;
+    if (d->cursorComponent == nullptr) {
+        QSGInternalRectangleNode* cursor = nullptr;
         if (!isReadOnly() && d->cursorVisible && d->control->cursorOn())
             cursor = d->sceneGraphContext()->createInternalRectangleNode(d->control->cursorRect(), d->color);
         rootNode->resetCursorNode(cursor);

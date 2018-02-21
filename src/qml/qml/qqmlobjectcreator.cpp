@@ -82,13 +82,13 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::Compil
 {
     init(parentContext);
 
-    sharedState->componentAttached = 0;
+    sharedState->componentAttached = nullptr;
     sharedState->allCreatedBindings.allocate(compilationUnit->totalBindingsCount);
     sharedState->allParserStatusCallbacks.allocate(compilationUnit->totalParserStatusCount);
     sharedState->allCreatedObjects.allocate(compilationUnit->totalObjectCount);
-    sharedState->allJavaScriptObjects = 0;
+    sharedState->allJavaScriptObjects = nullptr;
     sharedState->creationContext = creationContext;
-    sharedState->rootContext = 0;
+    sharedState->rootContext = nullptr;
 
     if (auto profiler = QQmlEnginePrivate::get(engine)->profiler) {
         Q_QML_PROFILE_IF_ENABLED(QQmlProfilerDefinitions::ProfileCreating, profiler,
@@ -105,7 +105,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::Compil
     , propertyCaches(&compilationUnit->propertyCaches)
     , sharedState(inheritedSharedState)
     , topLevelCreator(false)
-    , incubator(0)
+    , incubator(nullptr)
 {
     init(parentContext);
 }
@@ -120,17 +120,17 @@ void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
         compilationUnit->linkToEngine(v4);
 
     qmlUnit = compilationUnit->data;
-    context = 0;
-    _qobject = 0;
-    _scopeObject = 0;
-    _bindingTarget = 0;
-    _valueTypeProperty = 0;
-    _compiledObject = 0;
+    context = nullptr;
+    _qobject = nullptr;
+    _scopeObject = nullptr;
+    _bindingTarget = nullptr;
+    _valueTypeProperty = nullptr;
+    _compiledObject = nullptr;
     _compiledObjectIndex = -1;
-    _ddata = 0;
-    _propertyCache = 0;
-    _vmeMetaObject = 0;
-    _qmlContext = 0;
+    _ddata = nullptr;
+    _propertyCache = nullptr;
+    _vmeMetaObject = nullptr;
+    _qmlContext = nullptr;
 }
 
 QQmlObjectCreator::~QQmlObjectCreator()
@@ -142,7 +142,7 @@ QQmlObjectCreator::~QQmlObjectCreator()
         for (int i = 0; i < sharedState->allParserStatusCallbacks.count(); ++i) {
             QQmlParserStatus *ps = sharedState->allParserStatusCallbacks.at(i);
             if (ps)
-                ps->d = 0;
+                ps->d = nullptr;
         }
         while (sharedState->componentAttached) {
             QQmlComponentAttached *a = sharedState->componentAttached;
@@ -207,12 +207,12 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     }
 
     if (topLevelCreator)
-        sharedState->allJavaScriptObjects = 0;
+        sharedState->allJavaScriptObjects = nullptr;
 
     phase = CreatingObjectsPhase2;
 
     if (interrupt && interrupt->shouldInterrupt())
-        return 0;
+        return nullptr;
 
     phase = ObjectsCreated;
 
@@ -796,7 +796,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         }
         const int id = attachedType.attachedPropertiesId(QQmlEnginePrivate::get(engine));
         QObject *qmlObject = qmlAttachedPropertiesObjectById(id, _qobject);
-        if (!populateInstance(binding->value.objectIndex, qmlObject, qmlObject, /*value type property*/0))
+        if (!populateInstance(binding->value.objectIndex, qmlObject, qmlObject, /*value type property*/nullptr))
             return false;
         return true;
     }
@@ -814,12 +814,12 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         QQmlPropertyData::WriteFlags propertyWriteFlags = QQmlPropertyData::BypassInterceptor |
                                                             QQmlPropertyData::RemoveBindingOnAliasWrite;
         int propertyWriteStatus = -1;
-        void *argv[] = { &ss, 0, &propertyWriteStatus, &propertyWriteFlags };
+        void *argv[] = { &ss, nullptr, &propertyWriteStatus, &propertyWriteFlags };
         QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, property->coreIndex(), argv);
         return true;
     }
 
-    QObject *createdSubObject = 0;
+    QObject *createdSubObject = nullptr;
     if (binding->type == QV4::CompiledData::Binding::Type_Object) {
         createdSubObject = createInstance(binding->value.objectIndex, _bindingTarget);
         if (!createdSubObject)
@@ -833,9 +833,9 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(binding->value.objectIndex);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
 
-            QObject *groupObject = 0;
-            QQmlValueType *valueType = 0;
-            const QQmlPropertyData *valueTypeProperty = 0;
+            QObject *groupObject = nullptr;
+            QQmlValueType *valueType = nullptr;
+            const QQmlPropertyData *valueTypeProperty = nullptr;
             QObject *bindingTarget = _bindingTarget;
 
             if (QQmlValueTypeFactory::isValueType(property->propType())) {
@@ -1008,7 +1008,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
         QQmlPropertyData::WriteFlags propertyWriteFlags = QQmlPropertyData::BypassInterceptor |
                                                             QQmlPropertyData::RemoveBindingOnAliasWrite;
         int propertyWriteStatus = -1;
-        void *argv[] = { 0, 0, &propertyWriteStatus, &propertyWriteFlags };
+        void *argv[] = { nullptr, nullptr, &propertyWriteStatus, &propertyWriteFlags };
 
         if (const char *iid = QQmlMetaType::interfaceIId(property->propType())) {
             void *ptr = createdSubObject->qt_metacast(iid);
@@ -1034,7 +1034,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *property, con
 
             void *itemToAdd = createdSubObject;
 
-            const char *iid = 0;
+            const char *iid = nullptr;
             int listItemType = QQmlEnginePrivate::get(engine)->listType(property->propType());
             if (listItemType != -1)
                 iid = QQmlMetaType::interfaceIId(listItemType);
@@ -1114,10 +1114,10 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
 
     bool isComponent = false;
-    QObject *instance = 0;
-    QQmlData *ddata = 0;
-    QQmlCustomParser *customParser = 0;
-    QQmlParserStatus *parserStatus = 0;
+    QObject *instance = nullptr;
+    QQmlData *ddata = nullptr;
+    QQmlCustomParser *customParser = nullptr;
+    QQmlParserStatus *parserStatus = nullptr;
     bool installPropertyCache = true;
 
     if (obj->flags & QV4::CompiledData::Object::IsComponent) {
@@ -1137,11 +1137,11 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
                                  compilationUnit, obj, type.qmlTypeName(), context->url()));
 
-            void *ddataMemory = 0;
+            void *ddataMemory = nullptr;
             type.create(&instance, &ddataMemory, sizeof(QQmlData));
             if (!instance) {
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
-                return 0;
+                return nullptr;
             }
 
             {
@@ -1173,14 +1173,14 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             if (typeRef->compilationUnit->data->isSingleton())
             {
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
-                return 0;
+                return nullptr;
             }
 
             QQmlObjectCreator subCreator(context, typeRef->compilationUnit, sharedState.data());
             instance = subCreator.create();
             if (!instance) {
                 errors += subCreator.errors;
-                return 0;
+                return nullptr;
             }
         }
         if (instance->isWidgetType()) {
@@ -1244,8 +1244,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         }
         customParser->applyBindings(instance, compilationUnit, bindings);
 
-        customParser->engine = 0;
-        customParser->imports = (QQmlTypeNameCache*)0;
+        customParser->engine = nullptr;
+        customParser->imports = (QQmlTypeNameCache*)nullptr;
     }
 
     if (isComponent) {
@@ -1274,12 +1274,12 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     qSwap(_qmlContext, qmlContext);
 
-    bool result = populateInstance(index, instance, /*binding target*/instance, /*value type property*/0);
+    bool result = populateInstance(index, instance, /*binding target*/instance, /*value type property*/nullptr);
 
     qSwap(_qmlContext, qmlContext);
     qSwap(_scopeObject, scopeObject);
 
-    return result ? instance : 0;
+    return result ? instance : nullptr;
 }
 
 QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
@@ -1303,7 +1303,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
                       QQmlPropertyData::DontRemoveBinding);
 
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
-            return 0;
+            return nullptr;
     }
 
     if (QQmlVME::componentCompleteEnabled()) { // the qml designer does the component complete later
@@ -1312,12 +1312,12 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
             QQmlParserStatus *status = sharedState->allParserStatusCallbacks.pop();
 
             if (status && status->d) {
-                status->d = 0;
+                status->d = nullptr;
                 status->componentComplete();
             }
 
             if (watcher.hasRecursed() || interrupt.shouldInterrupt())
-                return 0;
+                return nullptr;
         }
     }
 
@@ -1325,11 +1325,11 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
         QQmlEnginePrivate::FinalizeCallback callback = sharedState->finalizeCallbacks.at(ii);
         QObject *obj = callback.first;
         if (obj) {
-            void *args[] = { 0 };
+            void *args[] = { nullptr };
             QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, callback.second, args);
         }
         if (watcher.hasRecursed())
-            return 0;
+            return nullptr;
     }
     sharedState->finalizeCallbacks.clear();
 
@@ -1344,7 +1344,7 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
             emit a->completed();
 
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
-            return 0;
+            return nullptr;
     }
 
     phase = Done;
@@ -1386,7 +1386,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
 
     QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches->at(_compiledObjectIndex);
 
-    QQmlVMEMetaObject *vmeMetaObject = 0;
+    QQmlVMEMetaObject *vmeMetaObject = nullptr;
     if (propertyCaches->needsVMEMetaObject(_compiledObjectIndex)) {
         Q_ASSERT(!cache.isNull());
         // install on _object

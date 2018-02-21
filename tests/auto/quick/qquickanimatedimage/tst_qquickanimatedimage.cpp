@@ -334,7 +334,7 @@ void tst_qquickanimatedimage::sourceSizeChanges()
     QQmlContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("srcImage", "");
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage*>(component.create());
-    QVERIFY(anim != 0);
+    QVERIFY(anim != nullptr);
 
     QSignalSpy sourceSizeSpy(anim, SIGNAL(sourceSizeChanged()));
 
@@ -397,7 +397,7 @@ void tst_qquickanimatedimage::sourceSizeChanges_intermediate()
     ctxt->setContextProperty("srcImage", "");
 
     QScopedPointer<QQuickAnimatedImage> anim(qobject_cast<QQuickAnimatedImage*>(component.create()));
-    QVERIFY(anim != 0);
+    QVERIFY(anim != nullptr);
 
     ctxt->setContextProperty("srcImage", testFileUrl("hearts.gif"));
     QTRY_COMPARE(anim->status(), QQuickAnimatedImage::Ready);
@@ -422,7 +422,7 @@ void tst_qquickanimatedimage::qtbug_16520()
     QQuickRectangle *root = qobject_cast<QQuickRectangle *>(component.create());
     QVERIFY(root);
     QQuickAnimatedImage *anim = root->findChild<QQuickAnimatedImage*>("anim");
-    QVERIFY(anim != 0);
+    QVERIFY(anim != nullptr);
 
     anim->setProperty("source", server.urlString("/stickman.gif"));
     QTRY_COMPARE(anim->opacity(), qreal(0));
@@ -445,7 +445,7 @@ void tst_qquickanimatedimage::progressAndStatusChanges()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickImage::Ready);
     QTRY_COMPARE(obj->progress(), 1.0);
 
@@ -499,7 +499,7 @@ void tst_qquickanimatedimage::playingAndPausedChanges()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickAnimatedImage *obj = qobject_cast<QQuickAnimatedImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickAnimatedImage::Null);
     QTRY_VERIFY(obj->isPlaying());
     QTRY_VERIFY(!obj->isPaused());

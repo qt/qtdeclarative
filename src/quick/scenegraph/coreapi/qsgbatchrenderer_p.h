@@ -306,10 +306,10 @@ struct Buffer {
 struct Element {
 
     Element()
-        : node(0)
-        , batch(0)
-        , nextInBatch(0)
-        , root(0)
+        : node(nullptr)
+        , batch(nullptr)
+        , nextInBatch(nullptr)
+        , root(nullptr)
         , order(0)
         , boundsComputed(false)
         , boundsOutsideFloatRange(false)
@@ -362,7 +362,7 @@ struct RenderNodeElement : public Element {
 };
 
 struct BatchRootInfo {
-    BatchRootInfo() : parentRoot(0), lastOrder(-1), firstOrder(-1), availableOrders(0) { }
+    BatchRootInfo() : parentRoot(nullptr), lastOrder(-1), firstOrder(-1), availableOrders(0) { }
     QSet<Node *> subRoots;
     Node *parentRoot;
     int lastOrder;
@@ -410,8 +410,8 @@ struct Batch
 
     // pseudo-constructor...
     void init() {
-        first = 0;
-        root = 0;
+        first = nullptr;
+        root = nullptr;
         vertexCount = 0;
         indexCount = 0;
         isOpaque = false;
@@ -463,9 +463,9 @@ struct Node
     void append(Node *child) {
         Q_ASSERT(child);
         Q_ASSERT(!hasChild(child));
-        Q_ASSERT(child->m_parent == 0);
-        Q_ASSERT(child->m_next == 0);
-        Q_ASSERT(child->m_prev == 0);
+        Q_ASSERT(child->m_parent == nullptr);
+        Q_ASSERT(child->m_next == nullptr);
+        Q_ASSERT(child->m_prev == nullptr);
 
         if (!m_child) {
             child->m_next = child;
@@ -486,27 +486,27 @@ struct Node
 
         // only child..
         if (child->m_next == child) {
-            m_child = 0;
+            m_child = nullptr;
         } else {
             if (m_child == child)
                 m_child = child->m_next;
             child->m_next->m_prev = child->m_prev;
             child->m_prev->m_next = child->m_next;
         }
-        child->m_next = 0;
-        child->m_prev = 0;
-        child->setParent(0);
+        child->m_next = nullptr;
+        child->m_prev = nullptr;
+        child->setParent(nullptr);
     }
 
     Node *firstChild() const { return m_child; }
 
     Node *sibling() const {
         Q_ASSERT(m_parent);
-        return m_next == m_parent->m_child ? 0 : m_next;
+        return m_next == m_parent->m_child ? nullptr : m_next;
     }
 
     void setParent(Node *p) {
-        Q_ASSERT(m_parent == 0 || p == 0);
+        Q_ASSERT(m_parent == nullptr || p == nullptr);
         m_parent = p;
     }
 
@@ -591,7 +591,7 @@ public:
         float lastOpacity;
     };
 
-    ShaderManager(QSGDefaultRenderContext *ctx) : visualizeProgram(0), blitProgram(0), context(ctx) { }
+    ShaderManager(QSGDefaultRenderContext *ctx) : visualizeProgram(nullptr), blitProgram(nullptr), context(ctx) { }
     ~ShaderManager() {
         qDeleteAll(rewrittenShaders);
         qDeleteAll(stockShaders);

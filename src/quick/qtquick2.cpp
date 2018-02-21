@@ -140,7 +140,7 @@ void QQmlQtQuick2DebugStatesDelegate::updateBinding(QQmlContext *context,
             if (state->isStateActive() && state->containsPropertyInRevertList(object, propertyName)) {
                 *inBaseState = false;
 
-                QQmlBinding *newBinding = 0;
+                QQmlBinding *newBinding = nullptr;
                 if (!isLiteralValue) {
                     newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
                                                      expression.toString(), object,

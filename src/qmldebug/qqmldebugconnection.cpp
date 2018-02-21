@@ -82,7 +82,7 @@ public:
 };
 
 QQmlDebugConnectionPrivate::QQmlDebugConnectionPrivate() :
-    protocol(0), device(0), server(0), gotHello(false),
+    protocol(nullptr), device(nullptr), server(nullptr), gotHello(false),
     currentDataStreamVersion(QDataStream::Qt_4_7),
     maximumDataStreamVersion(QDataStream::Qt_DefaultCompiledVersion)
 {
@@ -303,7 +303,7 @@ void QQmlDebugConnection::close()
 
     if (d->device) {
         d->device->deleteLater();
-        d->device = 0;
+        d->device = nullptr;
     }
 }
 

@@ -256,7 +256,7 @@ bool QQuickPath::isClosed() const
 QQmlListProperty<QQuickPathElement> QQuickPath::pathElements()
 {
     return QQmlListProperty<QQuickPathElement>(this,
-                                               0,
+                                               nullptr,
                                                pathElements_append,
                                                pathElements_count,
                                                pathElements_at,

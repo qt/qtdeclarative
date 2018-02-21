@@ -64,7 +64,7 @@ public:
     QQmlCleanup(QQmlEngine *);
     virtual ~QQmlCleanup();
 
-    bool hasEngine() const { return prev != 0; }
+    bool hasEngine() const { return prev != nullptr; }
     void addToEngine(QQmlEngine *);
 protected:
     virtual void clear() = 0;

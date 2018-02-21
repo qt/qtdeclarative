@@ -56,8 +56,8 @@ QQmlInstantiatorPrivate::QQmlInstantiatorPrivate()
     , ownModel(false)
     , requestedIndex(-1)
     , model(QVariant(1))
-    , instanceModel(0)
-    , delegate(0)
+    , instanceModel(nullptr)
+    , delegate(nullptr)
 {
 }
 
@@ -183,7 +183,7 @@ void QQmlInstantiatorPrivate::_q_modelUpdated(const QQmlChangeSet &changeSet, bo
             objects = objects.mid(0, index) + movedObjects + objects.mid(index);
         } else {
             if (insert.index <= objects.size())
-                objects.insert(insert.index, insert.count, 0);
+                objects.insert(insert.index, insert.count, nullptr);
             for (int i = 0; i < insert.count; ++i) {
                 int modelIndex = index + i;
                 QObject* obj = modelObject(modelIndex, async);
@@ -396,11 +396,11 @@ void QQmlInstantiator::setModel(const QVariant &v)
 
     QQmlInstanceModel *prevModel = d->instanceModel;
     QObject *object = qvariant_cast<QObject*>(v);
-    QQmlInstanceModel *vim = 0;
+    QQmlInstanceModel *vim = nullptr;
     if (object && (vim = qobject_cast<QQmlInstanceModel *>(object))) {
         if (d->ownModel) {
             delete d->instanceModel;
-            prevModel = 0;
+            prevModel = nullptr;
             d->ownModel = false;
         }
         d->instanceModel = vim;
@@ -444,7 +444,7 @@ QObject *QQmlInstantiator::object() const
     Q_D(const QQmlInstantiator);
     if (d->objects.count())
         return d->objects[0];
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -457,7 +457,7 @@ QObject *QQmlInstantiator::objectAt(int index) const
     Q_D(const QQmlInstantiator);
     if (index >= 0 && index < d->objects.count())
         return d->objects[index];
-    return 0;
+    return nullptr;
 }
 
 /*!

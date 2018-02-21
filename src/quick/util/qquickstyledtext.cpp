@@ -695,7 +695,7 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
                     image->size = image->pix->implicitSize();
                 } else {
                     delete image->pix;
-                    image->pix = 0;
+                    image->pix = nullptr;
                 }
             }
         }

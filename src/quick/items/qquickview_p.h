@@ -93,7 +93,7 @@ public:
     void updateSize();
     void setRootObject(QObject *);
 
-    void init(QQmlEngine* e = 0);
+    void init(QQmlEngine* e = nullptr);
 
     QSize rootObjectSize() const;
 

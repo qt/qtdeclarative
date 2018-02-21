@@ -114,7 +114,7 @@ public:
     };
     Q_ENUM(RenderStrategy)
 
-    QQuickCanvasItem(QQuickItem *parent = 0);
+    QQuickCanvasItem(QQuickItem *parent = nullptr);
     ~QQuickCanvasItem();
 
     bool isAvailable() const;

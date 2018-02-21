@@ -85,8 +85,8 @@ public:
             : addr(0)
             , size(0)
             , free(true)
-            , next(0)
-            , prev(0)
+            , next(nullptr)
+            , prev(nullptr)
         {}
 
         void *start() const;
@@ -117,8 +117,8 @@ public:
     struct ChunkOfPages
     {
         ChunkOfPages()
-            : pages(0)
-            , firstAllocation(0)
+            : pages(nullptr)
+            , firstAllocation(nullptr)
         {}
         ~ChunkOfPages();
 

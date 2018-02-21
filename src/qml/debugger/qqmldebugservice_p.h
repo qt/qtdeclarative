@@ -93,7 +93,7 @@ public:
     static QObject *objectForId(int id) { return objectsForIds().value(id); }
 
 protected:
-    explicit QQmlDebugService(const QString &, float version, QObject *parent = 0);
+    explicit QQmlDebugService(const QString &, float version, QObject *parent = nullptr);
 
 signals:
     void attachedToEngine(QJSEngine *);

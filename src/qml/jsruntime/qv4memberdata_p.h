@@ -93,7 +93,7 @@ struct MemberData : Managed
 
     inline uint size() const { return d()->values.size; }
 
-    static Heap::MemberData *allocate(QV4::ExecutionEngine *e, uint n, Heap::MemberData *old = 0);
+    static Heap::MemberData *allocate(QV4::ExecutionEngine *e, uint n, Heap::MemberData *old = nullptr);
 };
 
 }

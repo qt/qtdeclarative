@@ -157,14 +157,14 @@ void QSGDefaultRenderContext::invalidate()
     m_fontEnginesToClean.clear();
 
     delete m_depthStencilManager;
-    m_depthStencilManager = 0;
+    m_depthStencilManager = nullptr;
 
     qDeleteAll(m_glyphCaches);
     m_glyphCaches.clear();
 
     if (m_gl->property(QSG_RENDERCONTEXT_PROPERTY) == QVariant::fromValue(this))
         m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant());
-    m_gl = 0;
+    m_gl = nullptr;
 
     if (m_sg)
         m_sg->renderContextInvalidated(this);
@@ -211,7 +211,7 @@ QSharedPointer<QSGDepthStencilBuffer> QSGDefaultRenderContext::depthStencilBuffe
 QSGDepthStencilBufferManager *QSGDefaultRenderContext::depthStencilBufferManager()
 {
     if (!m_gl)
-        return 0;
+        return nullptr;
     if (!m_depthStencilManager)
         m_depthStencilManager = new QSGDepthStencilBufferManager(m_gl);
     return m_depthStencilManager;

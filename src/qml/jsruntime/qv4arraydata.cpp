@@ -50,7 +50,7 @@ using namespace QV4;
 QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON
 
 const QV4::VTable QV4::ArrayData::static_vtbl = {
-    0,
+    nullptr,
     0,
     0,
     QV4::ArrayData::IsExecutionContext,
@@ -69,7 +69,7 @@ const QV4::VTable QV4::ArrayData::static_vtbl = {
 
 const ArrayVTable SimpleArrayData::static_vtbl =
 {
-    DEFINE_MANAGED_VTABLE_INT(SimpleArrayData, 0),
+    DEFINE_MANAGED_VTABLE_INT(SimpleArrayData, nullptr),
     Heap::ArrayData::Simple,
     SimpleArrayData::reallocate,
     SimpleArrayData::get,
@@ -85,7 +85,7 @@ const ArrayVTable SimpleArrayData::static_vtbl =
 
 const ArrayVTable SparseArrayData::static_vtbl =
 {
-    DEFINE_MANAGED_VTABLE_INT(SparseArrayData, 0),
+    DEFINE_MANAGED_VTABLE_INT(SparseArrayData, nullptr),
     Heap::ArrayData::Sparse,
     SparseArrayData::reallocate,
     SparseArrayData::get,
@@ -170,7 +170,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     newData->setType(newType);
     if (d)
         newData->d()->needsMark = d->d()->needsMark;
-    newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->d()->values.values + alloc) : 0);
+    newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->d()->values.values + alloc) : nullptr);
     o->setArrayData(newData);
 
     if (d) {
@@ -203,7 +203,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     if (d && d->type() == Heap::ArrayData::Sparse) {
         Heap::SparseArrayData *old = static_cast<Heap::SparseArrayData *>(d->d());
         sparse->sparse = old->sparse;
-        old->sparse = 0;
+        old->sparse = nullptr;
         lastFree = &sparse->sparse->freeList;
     } else {
         sparse->sparse = new SparseArray;
@@ -779,7 +779,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
         if (!sparse->sparse()->nEntries())
             return;
 
-        thisObject->setArrayData(0);
+        thisObject->setArrayData(nullptr);
         ArrayData::realloc(thisObject, Heap::ArrayData::Simple, sparse->sparse()->nEntries(), sparse->attrs() ? true : false);
         Heap::SimpleArrayData *d = thisObject->d()->arrayData.cast<Heap::SimpleArrayData>();
 

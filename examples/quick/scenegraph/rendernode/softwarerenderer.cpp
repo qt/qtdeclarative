@@ -98,7 +98,7 @@ void SoftwareRenderNode::render(const RenderState *renderState)
 
 QSGRenderNode::StateFlags SoftwareRenderNode::changedStates() const
 {
-    return 0;
+    return nullptr;
 }
 
 QSGRenderNode::RenderingFlags SoftwareRenderNode::flags() const

@@ -74,8 +74,8 @@ QSGRenderNode::~QSGRenderNode()
 }
 
 QSGRenderNodePrivate::QSGRenderNodePrivate()
-    : m_matrix(0)
-    , m_clip_list(0)
+    : m_matrix(nullptr)
+    , m_clip_list(nullptr)
     , m_opacity(1)
 {
 }
@@ -119,7 +119,7 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
   */
 QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
 {
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -267,7 +267,7 @@ void QSGRenderNode::releaseResources()
  */
 QSGRenderNode::RenderingFlags QSGRenderNode::flags() const
 {
-    return 0;
+    return nullptr;
 }
 
 /*!

@@ -76,7 +76,7 @@ class QQuickShaderEffectMesh : public QObject
 {
     Q_OBJECT
 public:
-    QQuickShaderEffectMesh(QObject *parent = 0);
+    QQuickShaderEffectMesh(QObject *parent = nullptr);
     virtual bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) = 0;
     // If 'geometry' != 0, 'attrCount' is the same as last time the function was called.
     virtual QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
@@ -94,7 +94,7 @@ class QQuickGridMesh : public QQuickShaderEffectMesh
     Q_OBJECT
     Q_PROPERTY(QSize resolution READ resolution WRITE setResolution NOTIFY resolutionChanged)
 public:
-    QQuickGridMesh(QObject *parent = 0);
+    QQuickGridMesh(QObject *parent = nullptr);
     bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) override;
     QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
                                 const QRectF &srcRect, const QRectF &rect) override;
@@ -121,7 +121,7 @@ class QQuickBorderImageMesh : public QQuickShaderEffectMesh
     Q_PROPERTY(TileMode horizontalTileMode READ horizontalTileMode WRITE setHorizontalTileMode NOTIFY horizontalTileModeChanged)
     Q_PROPERTY(TileMode verticalTileMode READ verticalTileMode WRITE setVerticalTileMode NOTIFY verticalTileModeChanged)
 public:
-    QQuickBorderImageMesh(QObject *parent = 0);
+    QQuickBorderImageMesh(QObject *parent = nullptr);
 
     bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) override;
     QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,

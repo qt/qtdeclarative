@@ -430,9 +430,9 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
     , m_index_count(0)
     , m_index_type(indexType)
     , m_attributes(attributes)
-    , m_data(0)
+    , m_data(nullptr)
     , m_index_data_offset(-1)
-    , m_server_data(0)
+    , m_server_data(nullptr)
     , m_owns_data(false)
     , m_index_usage_pattern(AlwaysUploadPattern)
     , m_vertex_usage_pattern(AlwaysUploadPattern)
@@ -529,7 +529,7 @@ QSGGeometry::~QSGGeometry()
 void *QSGGeometry::indexData()
 {
     return m_index_data_offset < 0
-            ? 0
+            ? nullptr
             : ((char *) m_data + m_index_data_offset);
 }
 
@@ -541,7 +541,7 @@ void *QSGGeometry::indexData()
 const void *QSGGeometry::indexData() const
 {
     return m_index_data_offset < 0
-            ? 0
+            ? nullptr
             : ((char *) m_data + m_index_data_offset);
 }
 

@@ -414,7 +414,7 @@ void QQuickRectangle::setGradient(QQuickGradient *gradient)
 
 void QQuickRectangle::resetGradient()
 {
-    setGradient(0);
+    setGradient(nullptr);
 }
 
 /*!
@@ -489,7 +489,7 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     if (width() <= 0 || height() <= 0
             || (d->color.alpha() == 0 && (!d->pen || d->pen->width() == 0 || d->pen->color().alpha() == 0))) {
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
     QSGInternalRectangleNode *rectangle = static_cast<QSGInternalRectangleNode *>(oldNode);

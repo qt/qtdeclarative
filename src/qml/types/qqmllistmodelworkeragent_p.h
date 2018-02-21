@@ -91,7 +91,7 @@ public:
 
     struct VariantRef
     {
-        VariantRef() : a(0) {}
+        VariantRef() : a(nullptr) {}
         VariantRef(const VariantRef &r) : a(r.a) { if (a) a->addref(); }
         VariantRef(QQmlListModelWorkerAgent *_a) : a(_a) { if (a) a->addref(); }
         ~VariantRef() { if (a) a->release(); }

@@ -87,7 +87,7 @@ public:
         AnyThread
     };
 
-    QQuickAbstractAnimation(QObject *parent=0);
+    QQuickAbstractAnimation(QObject *parent=nullptr);
     virtual ~QQuickAbstractAnimation();
 
     enum Loops { Infinite = -2 };
@@ -144,7 +144,7 @@ public:
     virtual QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0);
+                            QObject *defaultTarget = nullptr);
     QAbstractAnimationJob* qtAnimation();
 
 private Q_SLOTS:
@@ -166,7 +166,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPauseAnimation : public QQuickAbstractAnimati
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
 
 public:
-    QQuickPauseAnimation(QObject *parent=0);
+    QQuickPauseAnimation(QObject *parent=nullptr);
     virtual ~QQuickPauseAnimation();
 
     int duration() const;
@@ -179,7 +179,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                                           QQmlProperties &modified,
                                           TransitionDirection direction,
-                                          QObject *defaultTarget = 0) override;
+                                          QObject *defaultTarget = nullptr) override;
 };
 
 class QQuickScriptActionPrivate;
@@ -192,7 +192,7 @@ class QQuickScriptAction : public QQuickAbstractAnimation
     Q_PROPERTY(QString scriptName READ stateChangeScriptName WRITE setStateChangeScriptName)
 
 public:
-    QQuickScriptAction(QObject *parent=0);
+    QQuickScriptAction(QObject *parent=nullptr);
     virtual ~QQuickScriptAction();
 
     QQmlScriptString script() const;
@@ -205,7 +205,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) override;
+                            QObject *defaultTarget = nullptr) override;
 };
 
 class QQuickPropertyActionPrivate;
@@ -222,7 +222,7 @@ class QQuickPropertyAction : public QQuickAbstractAnimation
     Q_PROPERTY(QVariant value READ value WRITE setValue NOTIFY valueChanged)
 
 public:
-    QQuickPropertyAction(QObject *parent=0);
+    QQuickPropertyAction(QObject *parent=nullptr);
     virtual ~QQuickPropertyAction();
 
     QObject *target() const;
@@ -250,7 +250,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) override;
+                            QObject *defaultTarget = nullptr) override;
 };
 
 class QQuickPropertyAnimationPrivate;
@@ -270,7 +270,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPropertyAnimation : public QQuickAbstractAnim
     Q_PROPERTY(QQmlListProperty<QObject> exclude READ exclude)
 
 public:
-    QQuickPropertyAnimation(QObject *parent=0);
+    QQuickPropertyAnimation(QObject *parent=nullptr);
     virtual ~QQuickPropertyAnimation();
 
     virtual int duration() const;
@@ -300,13 +300,13 @@ public:
 protected:
     QQuickStateActions createTransitionActions(QQuickStateActions &actions,
                                                      QQmlProperties &modified,
-                                                     QObject *defaultTarget = 0);
+                                                     QObject *defaultTarget = nullptr);
 
     QQuickPropertyAnimation(QQuickPropertyAnimationPrivate &dd, QObject *parent);
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) override;
+                            QObject *defaultTarget = nullptr) override;
 Q_SIGNALS:
     void durationChanged(int);
     void fromChanged();
@@ -325,7 +325,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickColorAnimation : public QQuickPropertyAnimati
     Q_PROPERTY(QColor to READ to WRITE setTo)
 
 public:
-    QQuickColorAnimation(QObject *parent=0);
+    QQuickColorAnimation(QObject *parent=nullptr);
     virtual ~QQuickColorAnimation();
 
     QColor from() const;
@@ -344,7 +344,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickNumberAnimation : public QQuickPropertyAnimat
     Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged)
 
 public:
-    QQuickNumberAnimation(QObject *parent=0);
+    QQuickNumberAnimation(QObject *parent=nullptr);
     virtual ~QQuickNumberAnimation();
 
     qreal from() const;
@@ -369,7 +369,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickVector3dAnimation : public QQuickPropertyAnim
     Q_PROPERTY(QVector3D to READ to WRITE setTo NOTIFY toChanged)
 
 public:
-    QQuickVector3dAnimation(QObject *parent=0);
+    QQuickVector3dAnimation(QObject *parent=nullptr);
     virtual ~QQuickVector3dAnimation();
 
     QVector3D from() const;
@@ -390,7 +390,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimation : public QQuickPropertyAnim
     Q_PROPERTY(RotationDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
 
 public:
-    QQuickRotationAnimation(QObject *parent=0);
+    QQuickRotationAnimation(QObject *parent=nullptr);
     virtual ~QQuickRotationAnimation();
 
     qreal from() const;
@@ -434,7 +434,7 @@ class QQuickSequentialAnimation : public QQuickAnimationGroup
     Q_DECLARE_PRIVATE(QQuickAnimationGroup)
 
 public:
-    QQuickSequentialAnimation(QObject *parent=0);
+    QQuickSequentialAnimation(QObject *parent=nullptr);
     virtual ~QQuickSequentialAnimation();
 
 protected:
@@ -442,7 +442,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) override;
+                            QObject *defaultTarget = nullptr) override;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickParallelAnimation : public QQuickAnimationGroup
@@ -451,7 +451,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickParallelAnimation : public QQuickAnimationGro
     Q_DECLARE_PRIVATE(QQuickAnimationGroup)
 
 public:
-    QQuickParallelAnimation(QObject *parent=0);
+    QQuickParallelAnimation(QObject *parent=nullptr);
     virtual ~QQuickParallelAnimation();
 
 protected:
@@ -459,7 +459,7 @@ protected:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) override;
+                            QObject *defaultTarget = nullptr) override;
 };
 
 

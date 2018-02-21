@@ -58,7 +58,7 @@ class QQmlBoundSignalExpression;
 class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpressionPointer
 {
 public:
-    inline QQmlBoundSignalExpressionPointer() : o(0) {}
+    inline QQmlBoundSignalExpressionPointer() : o(nullptr) {}
     QQmlBoundSignalExpressionPointer(QQmlBoundSignalExpression *);
     QQmlBoundSignalExpressionPointer(const QQmlBoundSignalExpressionPointer &);
     ~QQmlBoundSignalExpressionPointer();

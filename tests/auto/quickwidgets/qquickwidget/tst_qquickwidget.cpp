@@ -354,8 +354,8 @@ void tst_qquickwidget::errors()
 void tst_qquickwidget::engine()
 {
     QScopedPointer<QQmlEngine> engine(new QQmlEngine);
-    QScopedPointer<QQuickWidget> view(new QQuickWidget(engine.data(), 0));
-    QScopedPointer<QQuickWidget> view2(new QQuickWidget(view->engine(), 0));
+    QScopedPointer<QQuickWidget> view(new QQuickWidget(engine.data(), nullptr));
+    QScopedPointer<QQuickWidget> view2(new QQuickWidget(view->engine(), nullptr));
 
     QVERIFY(view->engine());
     QVERIFY(view2->engine());

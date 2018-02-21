@@ -84,7 +84,7 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     };
 
     Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc));
-    void init(QV4::ExecutionContext *scope, QV4::String *name = 0, bool createProto = false);
+    void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr, bool createProto = false);
     void init(QV4::ExecutionContext *scope, QV4::Function *function, bool createProto = false);
     void init(QV4::ExecutionContext *scope, const QString &name, bool createProto = false);
     void init();
@@ -179,7 +179,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
 template<>
 inline const FunctionObject *Value::as() const {
-    return isManaged() && m()->vtable()->isFunctionObject ? reinterpret_cast<const FunctionObject *>(this) : 0;
+    return isManaged() && m()->vtable()->isFunctionObject ? reinterpret_cast<const FunctionObject *>(this) : nullptr;
 }
 
 

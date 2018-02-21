@@ -68,7 +68,7 @@ class Q_AUTOTEST_EXPORT QQuickStyledTextImgTag
 {
 public:
     QQuickStyledTextImgTag()
-        : position(0), offset(0.0), align(QQuickStyledTextImgTag::Bottom), pix(0)
+        : position(0), offset(0.0), align(QQuickStyledTextImgTag::Bottom), pix(nullptr)
     { }
 
     ~QQuickStyledTextImgTag() { delete pix; }

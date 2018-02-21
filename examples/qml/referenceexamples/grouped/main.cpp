@@ -76,7 +76,7 @@ int main(int argc, char ** argv)
         else
             qWarning() << "She is inviting:";
 
-        Person *bestShoe = 0;
+        Person *bestShoe = nullptr;
         for (int ii = 0; ii < party->guestCount(); ++ii) {
             Person *guest = party->guest(ii);
             qWarning() << "   " << guest->name();

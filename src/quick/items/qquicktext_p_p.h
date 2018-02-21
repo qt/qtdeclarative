@@ -83,7 +83,7 @@ public:
     void setLineGeometry(QTextLine &line, qreal lineWidth, qreal &height);
 
     int lineHeightOffset() const;
-    QString elidedText(qreal lineWidth, const QTextLine &line, QTextLine *nextLine = 0) const;
+    QString elidedText(qreal lineWidth, const QTextLine &line, QTextLine *nextLine = nullptr) const;
     void elideFormats(int start, int length, int offset, QVector<QTextLayout::FormatRange> *elidedFormats);
     void clearFormats();
 

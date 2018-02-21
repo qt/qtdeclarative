@@ -72,7 +72,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlP
     Q_PROPERTY(GrabPermissions grabPermissions READ grabPermissions WRITE setGrabPermissions NOTIFY grabPermissionChanged)
 
 public:
-    explicit QQuickPointerHandler(QObject *parent = 0);
+    explicit QQuickPointerHandler(QObject *parent = nullptr);
     virtual ~QQuickPointerHandler();
 
     enum GrabPermission {

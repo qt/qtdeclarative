@@ -323,7 +323,7 @@ class Q_QML_PRIVATE_EXPORT QQmlApplication : public QObject
     Q_PROPERTY(QString organization READ organization WRITE setOrganization NOTIFY organizationChanged)
     Q_PROPERTY(QString domain READ domain WRITE setDomain NOTIFY domainChanged)
 public:
-    QQmlApplication(QObject* parent=0);
+    QQmlApplication(QObject* parent=nullptr);
 
     QStringList args();
 
@@ -347,7 +347,7 @@ Q_SIGNALS:
     void domainChanged();
 
 protected:
-    QQmlApplication(QQmlApplicationPrivate &dd, QObject* parent=0);
+    QQmlApplication(QQmlApplicationPrivate &dd, QObject* parent=nullptr);
 
 private:
     Q_DISABLE_COPY(QQmlApplication)

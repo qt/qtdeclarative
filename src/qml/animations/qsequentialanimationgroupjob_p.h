@@ -77,7 +77,7 @@ protected:
 private:
     struct AnimationIndex
     {
-        AnimationIndex() : afterCurrent(false), timeOffset(0), animation(0) {}
+        AnimationIndex() : afterCurrent(false), timeOffset(0), animation(nullptr) {}
         // AnimationIndex points to the animation at timeOffset, skipping 0 duration animations.
         // Note that the index semantic is slightly different depending on the direction.
         bool afterCurrent;  //whether animation is before or after m_currentAnimation   //TODO: make enum Before/After/Same

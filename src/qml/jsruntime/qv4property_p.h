@@ -84,7 +84,7 @@ struct Property {
     inline Heap::FunctionObject *getter() const { return reinterpret_cast<Heap::FunctionObject *>(value.heapObject()); }
     inline Heap::FunctionObject *setter() const { return reinterpret_cast<Heap::FunctionObject *>(set.heapObject()); }
     inline void setGetter(FunctionObject *g) { value = reinterpret_cast<Managed *>(g); }
-    inline void setSetter(FunctionObject *s) { set = (s ? reinterpret_cast<Managed *>(s) : 0); }
+    inline void setSetter(FunctionObject *s) { set = (s ? reinterpret_cast<Managed *>(s) : nullptr); }
 
     void copy(const Property *other, PropertyAttributes attrs) {
         value = other->value;
@@ -92,7 +92,7 @@ struct Property {
             set = other->set;
     }
 
-    explicit Property()  { value = Encode::undefined(); set = Value::fromHeapObject(0); }
+    explicit Property()  { value = Encode::undefined(); set = Value::fromHeapObject(nullptr); }
     Property(Heap::FunctionObject *getter, Heap::FunctionObject *setter) {
         value.setM(reinterpret_cast<Heap::Base *>(getter));
         set.setM(reinterpret_cast<Heap::Base *>(setter));

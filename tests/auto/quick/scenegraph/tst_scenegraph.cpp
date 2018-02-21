@@ -116,7 +116,7 @@ private slots:
 
 private:
     bool m_brokenMipmapSupport;
-    QQuickView *createView(const QString &file, QWindow *parent = 0, int x = -1, int y = -1, int w = -1, int h = -1);
+    QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
     bool isRunningOnOpenGL();
 };
 
@@ -231,7 +231,7 @@ void tst_SceneGraph::manyWindows_data()
 #if QT_CONFIG(opengl)
 struct ShareContextResetter {
 public:
-    ~ShareContextResetter() { qt_gl_set_global_share_context(0); }
+    ~ShareContextResetter() { qt_gl_set_global_share_context(nullptr); }
 };
 #endif
 

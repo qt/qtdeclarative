@@ -180,7 +180,7 @@ struct ErrorObject: Object {
 
 template<>
 inline const ErrorObject *Value::as() const {
-    return isManaged() && m()->vtable()->isErrorObject ? reinterpret_cast<const ErrorObject *>(this) : 0;
+    return isManaged() && m()->vtable()->isErrorObject ? reinterpret_cast<const ErrorObject *>(this) : nullptr;
 }
 
 struct EvalErrorObject: ErrorObject {
@@ -322,7 +322,7 @@ struct URIErrorPrototype : ErrorObject
 
 inline SyntaxErrorObject *ErrorObject::asSyntaxError()
 {
-    return d()->errorType == QV4::Heap::ErrorObject::SyntaxError ? static_cast<SyntaxErrorObject *>(this) : 0;
+    return d()->errorType == QV4::Heap::ErrorObject::SyntaxError ? static_cast<SyntaxErrorObject *>(this) : nullptr;
 }
 
 

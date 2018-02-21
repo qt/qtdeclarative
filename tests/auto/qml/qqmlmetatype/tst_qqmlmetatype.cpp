@@ -271,7 +271,7 @@ void tst_qqmlmetatype::defaultObject()
     TestType t;
     ParserStatusTestType p;
 
-    QVERIFY(QQmlMetaType::defaultProperty((QObject *)0).name() == 0);
+    QVERIFY(QQmlMetaType::defaultProperty((QObject *)nullptr).name() == nullptr);
     QVERIFY(!QQmlMetaType::defaultProperty(&o).name());
     QVERIFY(!QQmlMetaType::defaultProperty(&p).name());
     QCOMPARE(QString(QQmlMetaType::defaultProperty(&t).name()), QString("foo"));

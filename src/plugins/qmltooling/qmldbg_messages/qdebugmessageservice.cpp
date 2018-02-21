@@ -51,7 +51,7 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext &ctxt,
 }
 
 QDebugMessageServiceImpl::QDebugMessageServiceImpl(QObject *parent) :
-    QDebugMessageService(2, parent), oldMsgHandler(0),
+    QDebugMessageService(2, parent), oldMsgHandler(nullptr),
     prevState(QQmlDebugService::NotConnected)
 {
     // don't execute stateChanged() in parallel

@@ -247,7 +247,7 @@ void QPacketProtocol::readyToRead()
                 disconnect(d->dev, &QIODevice::readyRead, this, &QPacketProtocol::readyToRead);
                 disconnect(d->dev, &QIODevice::aboutToClose, this, &QPacketProtocol::aboutToClose);
                 disconnect(d->dev, &QIODevice::bytesWritten, this, &QPacketProtocol::bytesWritten);
-                d->dev = 0;
+                d->dev = nullptr;
                 emit invalidPacket();
                 return;
             }

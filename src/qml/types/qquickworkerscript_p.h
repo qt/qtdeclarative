@@ -67,7 +67,7 @@ class QQuickWorkerScriptEngine : public QThread
 {
 Q_OBJECT
 public:
-    QQuickWorkerScriptEngine(QQmlEngine *parent = 0);
+    QQuickWorkerScriptEngine(QQmlEngine *parent = nullptr);
     ~QQuickWorkerScriptEngine();
 
     int registerWorkerScript(QQuickWorkerScript *);
@@ -91,7 +91,7 @@ class Q_AUTOTEST_EXPORT QQuickWorkerScript : public QObject, public QQmlParserSt
 
     Q_INTERFACES(QQmlParserStatus)
 public:
-    QQuickWorkerScript(QObject *parent = 0);
+    QQuickWorkerScript(QObject *parent = nullptr);
     ~QQuickWorkerScript();
 
     QUrl source() const;

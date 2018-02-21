@@ -84,7 +84,7 @@ class QQuickKeyEvent : public QObject
 
 public:
     QQuickKeyEvent()
-        : event(QEvent::None, 0, 0)
+        : event(QEvent::None, 0, nullptr)
     {}
 
     void reset(QEvent::Type type, int key, Qt::KeyboardModifiers modifiers,
@@ -137,12 +137,12 @@ public:
     QQuickMouseEvent()
       : _x(0), _y(0), _button(Qt::NoButton), _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
       , _source(Qt::MouseEventNotSynthesized), _wasHeld(false), _isClick(false), _accepted(false)
-      , _flags(Qt::MouseEventFlags(0))
+      , _flags(Qt::MouseEventFlags(nullptr))
     {}
 
     void reset(qreal x, qreal y, Qt::MouseButton button, Qt::MouseButtons buttons,
                Qt::KeyboardModifiers modifiers, bool isClick = false, bool wasHeld = false,
-               Qt::MouseEventFlags flags = 0)
+               Qt::MouseEventFlags flags = nullptr)
     {
         _x = x;
         _y = y;

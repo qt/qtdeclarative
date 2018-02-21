@@ -246,12 +246,12 @@ struct CatchContext : public ExecutionContext
 
 inline CallContext *ExecutionContext::asCallContext()
 {
-    return d()->type == Heap::ExecutionContext::Type_CallContext ? static_cast<CallContext *>(this) : 0;
+    return d()->type == Heap::ExecutionContext::Type_CallContext ? static_cast<CallContext *>(this) : nullptr;
 }
 
 inline const CallContext *ExecutionContext::asCallContext() const
 {
-    return d()->type == Heap::ExecutionContext::Type_CallContext ? static_cast<const CallContext *>(this) : 0;
+    return d()->type == Heap::ExecutionContext::Type_CallContext ? static_cast<const CallContext *>(this) : nullptr;
 }
 
 } // namespace QV4

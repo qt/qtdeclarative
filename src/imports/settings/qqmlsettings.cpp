@@ -263,7 +263,7 @@ public:
 };
 
 QQmlSettingsPrivate::QQmlSettingsPrivate()
-    : q_ptr(0), timerId(0), initialized(false)
+    : q_ptr(nullptr), timerId(0), initialized(false)
 {
 }
 

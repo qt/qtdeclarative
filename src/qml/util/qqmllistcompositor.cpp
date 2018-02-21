@@ -1253,7 +1253,7 @@ void QQmlListCompositor::listItemsRemoved(
 
     QVector<QQmlChangeSet::Change> removals;
     removals.append(QQmlChangeSet::Change(index, count));
-    listItemsRemoved(translatedRemovals, list, &removals, 0, 0);
+    listItemsRemoved(translatedRemovals, list, &removals, nullptr, nullptr);
 }
 
 /*!

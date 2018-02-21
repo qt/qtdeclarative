@@ -182,7 +182,7 @@ class QQDMIncubationTask : public QQmlIncubator
 public:
     QQDMIncubationTask(QQmlDelegateModelPrivate *l, IncubationMode mode)
         : QQmlIncubator(mode)
-        , incubating(0)
+        , incubating(nullptr)
         , vdm(l) {}
 
     void statusChanged(Status) override;
@@ -278,12 +278,12 @@ public:
     void itemsInserted(
             const QVector<Compositor::Insert> &inserts,
             QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedInserts,
-            QHash<int, QList<QQmlDelegateModelItem *> > *movedItems = 0);
+            QHash<int, QList<QQmlDelegateModelItem *> > *movedItems = nullptr);
     void itemsInserted(const QVector<Compositor::Insert> &inserts);
     void itemsRemoved(
             const QVector<Compositor::Remove> &removes,
             QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedRemoves,
-            QHash<int, QList<QQmlDelegateModelItem *> > *movedItems = 0);
+            QHash<int, QList<QQmlDelegateModelItem *> > *movedItems = nullptr);
     void itemsRemoved(const QVector<Compositor::Remove> &removes);
     void itemsMoved(
             const QVector<Compositor::Remove> &removes, const QVector<Compositor::Insert> &inserts);
@@ -341,7 +341,7 @@ class QQmlPartsModel : public QQmlInstanceModel, public QQmlDelegateModelGroupEm
     Q_OBJECT
     Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup)
 public:
-    QQmlPartsModel(QQmlDelegateModel *model, const QString &part, QObject *parent = 0);
+    QQmlPartsModel(QQmlDelegateModel *model, const QString &part, QObject *parent = nullptr);
     ~QQmlPartsModel();
 
     QString filterGroup() const;

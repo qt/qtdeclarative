@@ -86,7 +86,7 @@ void tst_qqmlstatemachine::tst_cppObjectSignal()
     QQmlContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("_cppObject", &cppObject);
     QScopedPointer<QObject> rootObject(component.create());
-    QVERIFY(rootObject != 0);
+    QVERIFY(rootObject != nullptr);
 
     // wait for state machine to start
     QTRY_VERIFY(rootObject->property("running").toBool());

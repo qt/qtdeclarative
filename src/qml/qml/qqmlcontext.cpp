@@ -56,7 +56,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlContextPrivate::QQmlContextPrivate()
-: data(0), notifyIndex(-1)
+: data(nullptr), notifyIndex(-1)
 {
 }
 
@@ -177,7 +177,7 @@ QQmlContext::QQmlContext(QQmlEngine *engine, QObject *parent)
     d->data = new QQmlContextData(this);
     ++d->data->refCount;
 
-    d->data->setParent(engine?QQmlContextData::get(engine->rootContext()):0);
+    d->data->setParent(engine?QQmlContextData::get(engine->rootContext()):nullptr);
 }
 
 /*!
@@ -191,14 +191,14 @@ QQmlContext::QQmlContext(QQmlContext *parentContext, QObject *parent)
     d->data = new QQmlContextData(this);
     ++d->data->refCount;
 
-    d->data->setParent(parentContext?QQmlContextData::get(parentContext):0);
+    d->data->setParent(parentContext?QQmlContextData::get(parentContext):nullptr);
 }
 
 /*!
     \internal
 */
 QQmlContext::QQmlContext(QQmlContextData *data)
-: QObject(*(new QQmlContextPrivate), 0)
+: QObject(*(new QQmlContextPrivate), nullptr)
 {
     Q_D(QQmlContext);
     d->data = data;
@@ -216,7 +216,7 @@ QQmlContext::~QQmlContext()
 {
     Q_D(QQmlContext);
 
-    d->data->publicContext = 0;
+    d->data->publicContext = nullptr;
     if (!--d->data->refCount)
         d->data->destroy();
 }
@@ -250,7 +250,7 @@ QQmlEngine *QQmlContext::engine() const
 QQmlContext *QQmlContext::parentContext() const
 {
     Q_D(const QQmlContext);
-    return d->data->parent?d->data->parent->asQQmlContext():0;
+    return d->data->parent?d->data->parent->asQQmlContext():nullptr;
 }
 
 /*!
@@ -315,7 +315,7 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         data->refreshExpressions();
     } else {
         d->propertyValues[idx] = value;
-        QMetaObject::activate(this, d->notifyIndex, idx, 0);
+        QMetaObject::activate(this, d->notifyIndex, idx, nullptr);
     }
 }
 
@@ -349,8 +349,8 @@ void QQmlContext::setContextProperties(const QVector<PropertyPair> &properties)
     QQmlJavaScriptExpression *expressions = data->expressions;
     QQmlContextData *childContexts = data->childContexts;
 
-    data->expressions = 0;
-    data->childContexts = 0;
+    data->expressions = nullptr;
+    data->childContexts = nullptr;
 
     for (auto property : properties)
         setContextProperty(property.name, property.value);
@@ -521,7 +521,7 @@ QObject *QQmlContextPrivate::context_at(QQmlListProperty<QObject> *prop, int ind
     int contextProperty = (int)(quintptr)prop->data;
 
     if (d->propertyValues.at(contextProperty).userType() != qMetaTypeId<QList<QObject*> >()) {
-        return 0;
+        return nullptr;
     } else {
         return ((const QList<QObject*> *)d->propertyValues.at(contextProperty).constData())->at(index);
     }
@@ -534,12 +534,12 @@ QQmlContextData::QQmlContextData()
 }
 
 QQmlContextData::QQmlContextData(QQmlContext *ctxt)
-    : engine(0), isInternal(false), isJSContext(false),
+    : engine(nullptr), isInternal(false), isJSContext(false),
       isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false), isRootObjectInCreation(false),
-      publicContext(ctxt), incubator(0), componentObjectIndex(-1),
-      contextObject(0), nextChild(0), prevChild(0),
-      expressions(0), contextObjects(0), idValues(0), idValueCount(0),
-      componentAttached(0)
+      publicContext(ctxt), incubator(nullptr), componentObjectIndex(-1),
+      contextObject(nullptr), nextChild(nullptr), prevChild(nullptr),
+      expressions(nullptr), contextObjects(nullptr), idValues(nullptr), idValueCount(0),
+      componentAttached(nullptr)
 {
 }
 
@@ -556,8 +556,8 @@ void QQmlContextData::emitDestruction()
                 componentAttached = a->next;
                 if (componentAttached) componentAttached->prev = &componentAttached;
 
-                a->next = 0;
-                a->prev = 0;
+                a->next = nullptr;
+                a->prev = nullptr;
 
                 emit a->destruction();
             }
@@ -583,14 +583,14 @@ void QQmlContextData::invalidate()
     if (prevChild) {
         *prevChild = nextChild;
         if (nextChild) nextChild->prevChild = prevChild;
-        nextChild = 0;
-        prevChild = 0;
+        nextChild = nullptr;
+        prevChild = nullptr;
     }
 
     importedScripts.clear();
 
-    engine = 0;
-    parent = 0;
+    engine = nullptr;
+    parent = nullptr;
 }
 
 void QQmlContextData::clearContext()
@@ -601,20 +601,20 @@ void QQmlContextData::clearContext()
     while (expression) {
         QQmlJavaScriptExpression *nextExpression = expression->m_nextExpression;
 
-        expression->m_prevExpression = 0;
-        expression->m_nextExpression = 0;
+        expression->m_prevExpression = nullptr;
+        expression->m_nextExpression = nullptr;
 
-        expression->setContext(0);
+        expression->setContext(nullptr);
 
         expression = nextExpression;
     }
-    expressions = 0;
+    expressions = nullptr;
 }
 
 void QQmlContextData::destroy()
 {
     Q_ASSERT(refCount == 0);
-    linkedContext = 0;
+    linkedContext = nullptr;
 
     // avoid recursion
     ++refCount;
@@ -629,26 +629,26 @@ void QQmlContextData::destroy()
         QQmlData *co = contextObjects;
         contextObjects = contextObjects->nextContextObject;
 
-        co->context = 0;
-        co->outerContext = 0;
-        co->nextContextObject = 0;
-        co->prevContextObject = 0;
+        co->context = nullptr;
+        co->outerContext = nullptr;
+        co->nextContextObject = nullptr;
+        co->prevContextObject = nullptr;
     }
     Q_ASSERT(refCount == 1);
 
     QQmlGuardedContextData *contextGuard = contextGuards;
     while (contextGuard) {
         QQmlGuardedContextData *next = contextGuard->m_next;
-        contextGuard->m_next = 0;
-        contextGuard->m_prev = 0;
-        contextGuard->m_contextData = 0;
+        contextGuard->m_next = nullptr;
+        contextGuard->m_prev = nullptr;
+        contextGuard->m_contextData = nullptr;
         contextGuard = next;
     }
-    contextGuards = 0;
+    contextGuards = nullptr;
     Q_ASSERT(refCount == 1);
 
     delete [] idValues;
-    idValues = 0;
+    idValues = nullptr;
 
     Q_ASSERT(refCount == 1);
     if (publicContext) {
@@ -746,7 +746,7 @@ void QQmlContextData::refreshExpressionsRecursive(bool isGlobal)
 // *structure* (not values) changes.
 void QQmlContextData::refreshExpressions()
 {
-    bool isGlobal = (parent == 0);
+    bool isGlobal = (parent == nullptr);
 
     // For efficiency, we try and minimize the number of guards we have to create
     if (expressions_to_run(this, isGlobal) && childContexts) {
@@ -772,7 +772,7 @@ void QQmlContextData::addObject(QObject *o)
 {
     QQmlData *data = QQmlData::get(o, true);
 
-    Q_ASSERT(data->context == 0);
+    Q_ASSERT(data->context == nullptr);
 
     data->context = this;
     data->outerContext = this;

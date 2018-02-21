@@ -114,7 +114,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal tabStopDistance READ tabStopDistance WRITE setTabStopDistance NOTIFY tabStopDistanceChanged REVISION 10)
 
 public:
-    QQuickTextEdit(QQuickItem *parent=0);
+    QQuickTextEdit(QQuickItem *parent=nullptr);
 
     enum HAlignment {
         AlignLeft = Qt::AlignLeft,
@@ -384,7 +384,7 @@ private:
     void invalidateFontCaches();
 
 protected:
-    QQuickTextEdit(QQuickTextEditPrivate &dd, QQuickItem *parent = 0);
+    QQuickTextEdit(QQuickTextEditPrivate &dd, QQuickItem *parent = nullptr);
 
     void geometryChanged(const QRectF &newGeometry,
                          const QRectF &oldGeometry) override;

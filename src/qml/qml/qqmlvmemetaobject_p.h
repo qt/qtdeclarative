@@ -112,7 +112,7 @@ public:
             if (it->m_propertyIndex == propertyIndex)
                 return true;
         }
-        if (auto parentInterceptor = ((parent.isT1() && parent.flag()) ? static_cast<QQmlInterceptorMetaObject *>(parent.asT1()) : 0))
+        if (auto parentInterceptor = ((parent.isT1() && parent.flag()) ? static_cast<QQmlInterceptorMetaObject *>(parent.asT1()) : nullptr))
             return parentInterceptor->intercepts(propertyIndex);
         return false;
     }
@@ -141,7 +141,7 @@ inline QQmlInterceptorMetaObject *QQmlInterceptorMetaObject::get(QObject *obj)
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 class QQmlVMEMetaObjectEndpoint;
@@ -243,7 +243,7 @@ QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj)
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 int QQmlVMEMetaObject::propOffset() const
@@ -271,7 +271,7 @@ QQmlVMEMetaObject *QQmlVMEMetaObject::parentVMEMetaObject() const
     if (parent.isT1() && parent.flag())
         return static_cast<QQmlVMEMetaObject *>(parent.asT1());
 
-    return 0;
+    return nullptr;
 }
 
 QT_END_NAMESPACE

@@ -115,7 +115,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
 
 public:
-    QQuickTextInput(QQuickItem * parent=0);
+    QQuickTextInput(QQuickItem * parent=nullptr);
     ~QQuickTextInput();
 
     void componentComplete() override;
@@ -363,7 +363,7 @@ private:
     void ensureActiveFocus();
 
 protected:
-    QQuickTextInput(QQuickTextInputPrivate &dd, QQuickItem *parent = 0);
+    QQuickTextInput(QQuickTextInputPrivate &dd, QQuickItem *parent = nullptr);
 
     void geometryChanged(const QRectF &newGeometry,
                                  const QRectF &oldGeometry) override;

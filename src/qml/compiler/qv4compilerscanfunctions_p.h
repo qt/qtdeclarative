@@ -88,7 +88,7 @@ public:
     void leaveEnvironment();
 
     void enterQmlScope(AST::Node *ast, const QString &name)
-    { enterFunction(ast, name, /*formals*/0, /*body*/0, /*expr*/0); }
+    { enterFunction(ast, name, /*formals*/nullptr, /*body*/nullptr, /*expr*/nullptr); }
 
     void enterQmlFunction(AST::FunctionDeclaration *ast)
     { enterFunction(ast, false); }

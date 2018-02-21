@@ -48,7 +48,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlValueTypeProvider::QQmlValueTypeProvider()
-    : next(0)
+    : next(nullptr)
 {
 }
 
@@ -65,7 +65,7 @@ const QMetaObject *QQmlValueTypeProvider::metaObjectForMetaType(int type)
             return mo;
     } while ((p = p->next));
 
-    return 0;
+    return nullptr;
 }
 
 bool QQmlValueTypeProvider::initValueType(int type, QVariant& dst)
@@ -218,7 +218,7 @@ bool QQmlValueTypeProvider::writeValueType(int type, const void *src, QVariant& 
     return false;
 }
 
-const QMetaObject *QQmlValueTypeProvider::getMetaObjectForMetaType(int) { return 0; }
+const QMetaObject *QQmlValueTypeProvider::getMetaObjectForMetaType(int) { return nullptr; }
 bool QQmlValueTypeProvider::init(int, QVariant&) { return false; }
 bool QQmlValueTypeProvider::create(int, int, const void *[], QVariant *) { return false; }
 bool QQmlValueTypeProvider::createFromString(int, const QString &, void *, size_t) { return false; }
@@ -232,11 +232,11 @@ bool QQmlValueTypeProvider::read(const QVariant&, void *, int) { return false; }
 bool QQmlValueTypeProvider::write(int, const void *, QVariant&) { return false; }
 
 Q_GLOBAL_STATIC(QQmlValueTypeProvider, nullValueTypeProvider)
-static QQmlValueTypeProvider *valueTypeProvider = 0;
+static QQmlValueTypeProvider *valueTypeProvider = nullptr;
 
 static QQmlValueTypeProvider **getValueTypeProvider(void)
 {
-    if (valueTypeProvider == 0) {
+    if (valueTypeProvider == nullptr) {
         valueTypeProvider = nullValueTypeProvider;
     }
 
@@ -294,7 +294,7 @@ QVariant QQmlColorProvider::lighter(const QVariant &, qreal) { return QVariant()
 QVariant QQmlColorProvider::darker(const QVariant &, qreal) { return QVariant(); }
 QVariant QQmlColorProvider::tint(const QVariant &, const QVariant &) { return QVariant(); }
 
-static QQmlColorProvider *colorProvider = 0;
+static QQmlColorProvider *colorProvider = nullptr;
 
 Q_QML_PRIVATE_EXPORT QQmlColorProvider *QQml_setColorProvider(QQmlColorProvider *newProvider)
 {
@@ -305,7 +305,7 @@ Q_QML_PRIVATE_EXPORT QQmlColorProvider *QQml_setColorProvider(QQmlColorProvider 
 
 static QQmlColorProvider **getColorProvider(void)
 {
-    if (colorProvider == 0) {
+    if (colorProvider == nullptr) {
         qWarning() << "Warning: QQml_colorProvider: no color provider has been set!";
         static QQmlColorProvider nullColorProvider;
         colorProvider = &nullColorProvider;
@@ -345,7 +345,7 @@ QObject *QQmlGuiProvider::styleHints()
 
 QString QQmlGuiProvider::pluginName() const { return QString(); }
 
-static QQmlGuiProvider *guiProvider = 0;
+static QQmlGuiProvider *guiProvider = nullptr;
 
 Q_QML_PRIVATE_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *newProvider)
 {
@@ -356,7 +356,7 @@ Q_QML_PRIVATE_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *newPr
 
 static QQmlGuiProvider **getGuiProvider(void)
 {
-    if (guiProvider == 0) {
+    if (guiProvider == nullptr) {
         static QQmlGuiProvider nullGuiProvider; //Still provides an application with no GUI support
         guiProvider = &nullGuiProvider;
     }

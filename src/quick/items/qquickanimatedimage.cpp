@@ -55,12 +55,12 @@ QT_BEGIN_NAMESPACE
 QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine)
 {
     if (!movie)
-        return 0;
+        return nullptr;
 
     int current = movie->currentFrameNumber();
     if (!frameMap.contains(current)) {
         QUrl requestedUrl;
-        QQuickPixmap *pixmap = 0;
+        QQuickPixmap *pixmap = nullptr;
         if (engine && !movie->fileName().isEmpty()) {
             requestedUrl.setUrl(QString::fromUtf8("quickanimatedimage://%1#%2")
                                 .arg(movie->fileName())
@@ -295,7 +295,7 @@ void QQuickAnimatedImage::setSource(const QUrl &url)
 #if QT_CONFIG(qml_network)
     if (d->reply) {
         d->reply->deleteLater();
-        d->reply = 0;
+        d->reply = nullptr;
     }
 #endif
 

@@ -448,14 +448,14 @@ void QQuickShapeGenericRenderer::triangulateStroke(const QPainterPath &path,
     stroker.setInvScale(inverseScale);
 
     if (pen.style() == Qt::SolidLine) {
-        stroker.process(vp, pen, clip, 0);
+        stroker.process(vp, pen, clip, nullptr);
     } else {
         QDashedStrokeProcessor dashStroker;
         dashStroker.setInvScale(inverseScale);
-        dashStroker.process(vp, pen, clip, 0);
+        dashStroker.process(vp, pen, clip, nullptr);
         QVectorPath dashStroke(dashStroker.points(), dashStroker.elementCount(),
                                dashStroker.elementTypes(), 0);
-        stroker.process(dashStroke, pen, clip, 0);
+        stroker.process(dashStroke, pen, clip, nullptr);
     }
 
     if (!stroker.vertexCount()) {

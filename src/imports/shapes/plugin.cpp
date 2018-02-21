@@ -58,7 +58,7 @@ class QmlShapesPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    QmlShapesPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
+    QmlShapesPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QByteArray(uri) == QByteArray("QtQuick.Shapes"));

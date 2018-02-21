@@ -125,9 +125,9 @@ static void restoreJSValue(QDataStream &stream, void *data)
 
 QV8Engine::QV8Engine(QJSEngine *qq, QV4::ExecutionEngine *v4)
     : q(qq)
-    , m_engine(0)
+    , m_engine(nullptr)
     , m_v4Engine(v4)
-    , m_xmlHttpRequestData(0)
+    , m_xmlHttpRequestData(nullptr)
 {
 #ifdef Q_PROCESSOR_X86_32
     if (!qCpuHasFeature(SSE2)) {
@@ -159,7 +159,7 @@ QV8Engine::~QV8Engine()
 
 #if QT_CONFIG(xmlstreamreader) && QT_CONFIG(qml_network)
     qt_rem_qmlxmlhttprequest(m_v4Engine, m_xmlHttpRequestData);
-    m_xmlHttpRequestData = 0;
+    m_xmlHttpRequestData = nullptr;
 #endif
 }
 

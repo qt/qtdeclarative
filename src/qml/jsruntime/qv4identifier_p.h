@@ -97,7 +97,7 @@ struct IdentifierHash
 
     IdentifierHashData *d;
 
-    IdentifierHash() : d(0) {}
+    IdentifierHash() : d(nullptr) {}
     IdentifierHash(ExecutionEngine *engine);
     inline IdentifierHash(const IdentifierHash &other);
     inline ~IdentifierHash();

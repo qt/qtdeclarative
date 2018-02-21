@@ -128,7 +128,7 @@ public:
     };
     Q_ENUM(VerticalLayoutDirection)
 
-    QQuickItemView(QQuickFlickablePrivate &dd, QQuickItem *parent = 0);
+    QQuickItemView(QQuickFlickablePrivate &dd, QQuickItem *parent = nullptr);
     ~QQuickItemView();
 
     QVariant model() const;

@@ -315,7 +315,7 @@ void QQmlComponentPrivate::typeDataReady(QQmlTypeData *)
     Q_ASSERT(typeData);
 
     fromTypeData(typeData);
-    typeData = 0;
+    typeData = nullptr;
     progress = 1.0;
 
     emit q->statusChanged(q->status());
@@ -349,7 +349,7 @@ void QQmlComponentPrivate::clear()
     if (typeData) {
         typeData->unregisterCallback(this);
         typeData->release();
-        typeData = 0;
+        typeData = nullptr;
     }
 
     compilationUnit = nullptr;
@@ -820,27 +820,27 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     Q_Q(QQmlComponent);
     if (!context) {
         qWarning("QQmlComponent: Cannot create a component in a null context");
-        return 0;
+        return nullptr;
     }
 
     if (!context->isValid()) {
         qWarning("QQmlComponent: Cannot create a component in an invalid context");
-        return 0;
+        return nullptr;
     }
 
     if (context->engine != engine) {
         qWarning("QQmlComponent: Must create component in context from the same QQmlEngine");
-        return 0;
+        return nullptr;
     }
 
     if (state.completePending) {
         qWarning("QQmlComponent: Cannot create new component instance before completing the previous");
-        return 0;
+        return nullptr;
     }
 
     if (!q->isReady()) {
         qWarning("QQmlComponent: Component is not ready");
-        return 0;
+        return nullptr;
     }
 
     // Do not create infinite recursion in object creation
@@ -848,7 +848,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     if (++creationDepth.localData() >= maxCreationDepth) {
         qWarning("QQmlComponent: Component creation is recursing - aborting");
         --creationDepth.localData();
-        return 0;
+        return nullptr;
     }
     Q_ASSERT(creationDepth.localData() >= 1);
     depthIncreased = true;
@@ -860,7 +860,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     state.completePending = true;
 
     enginePriv->referenceScarceResources();
-    QObject *rv = 0;
+    QObject *rv = nullptr;
     state.creator.reset(new QQmlObjectCreator(context, compilationUnit, creationContext));
     rv = state.creator->create(start);
     if (!rv)
@@ -965,7 +965,7 @@ void QQmlComponentPrivate::completeCreate()
 }
 
 QQmlComponentAttached::QQmlComponentAttached(QObject *parent)
-: QObject(parent), prev(0), next(0)
+: QObject(parent), prev(nullptr), next(nullptr)
 {
 }
 
@@ -973,8 +973,8 @@ QQmlComponentAttached::~QQmlComponentAttached()
 {
     if (prev) *prev = next;
     if (next) next->prev = prev;
-    prev = 0;
-    next = 0;
+    prev = nullptr;
+    next = nullptr;
 }
 
 /*!
@@ -1269,7 +1269,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     Q_ASSERT(d->engine);
     Q_ASSERT(args);
 
-    QObject *parent = 0;
+    QObject *parent = nullptr;
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
     QV4::ScopedValue valuemap(scope, QV4::Primitive::undefinedValue());
@@ -1386,7 +1386,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
 
-    QObject *parent = 0;
+    QObject *parent = nullptr;
     QV4::ScopedValue valuemap(scope, QV4::Primitive::undefinedValue());
     QQmlIncubator::IncubationMode mode = QQmlIncubator::Asynchronous;
 
@@ -1457,8 +1457,8 @@ QQmlComponentExtension::QQmlComponentExtension(QV4::ExecutionEngine *v4)
     QV4::ScopedObject proto(scope, v4->newObject());
     proto->defineAccessorProperty(QStringLiteral("onStatusChanged"),
                                   QV4::QmlIncubatorObject::method_get_statusChanged, QV4::QmlIncubatorObject::method_set_statusChanged);
-    proto->defineAccessorProperty(QStringLiteral("status"), QV4::QmlIncubatorObject::method_get_status, 0);
-    proto->defineAccessorProperty(QStringLiteral("object"), QV4::QmlIncubatorObject::method_get_object, 0);
+    proto->defineAccessorProperty(QStringLiteral("status"), QV4::QmlIncubatorObject::method_get_status, nullptr);
+    proto->defineAccessorProperty(QStringLiteral("object"), QV4::QmlIncubatorObject::method_get_object, nullptr);
     proto->defineDefaultProperty(QStringLiteral("forceCompletion"), QV4::QmlIncubatorObject::method_forceCompletion);
 
     incubationProto.set(v4, proto);

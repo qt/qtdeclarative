@@ -82,7 +82,7 @@ class Q_QML_PRIVATE_EXPORT QQmlListModel : public QAbstractListModel
     Q_PROPERTY(bool dynamicRoles READ dynamicRoles WRITE setDynamicRoles)
 
 public:
-    QQmlListModel(QObject *parent=0);
+    QQmlListModel(QObject *parent=nullptr);
     ~QQmlListModel();
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
@@ -125,7 +125,7 @@ private:
 
     // Constructs a flat list model for a worker agent
     QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agent);
-    QQmlListModel(const QQmlListModel *owner, ListModel *data, QV4::ExecutionEngine *engine, QObject *parent=0);
+    QQmlListModel(const QQmlListModel *owner, ListModel *data, QV4::ExecutionEngine *engine, QObject *parent=nullptr);
 
     QV4::ExecutionEngine *engine() const;
 

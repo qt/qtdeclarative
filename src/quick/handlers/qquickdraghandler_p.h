@@ -93,7 +93,7 @@ class Q_AUTOTEST_EXPORT QQuickDragHandler : public QQuickSinglePointHandler
     Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
 
 public:
-    explicit QQuickDragHandler(QObject *parent = 0);
+    explicit QQuickDragHandler(QObject *parent = nullptr);
     ~QQuickDragHandler();
 
     void handleEventPoint(QQuickEventPoint *point) override;

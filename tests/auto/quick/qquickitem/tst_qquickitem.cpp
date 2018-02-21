@@ -50,7 +50,7 @@ class TestItem : public QQuickItem
 {
 Q_OBJECT
 public:
-    TestItem(QQuickItem *parent = 0)
+    TestItem(QQuickItem *parent = nullptr)
         : QQuickItem(parent), focused(false), pressCount(0), releaseCount(0)
         , wheelCount(0), acceptIncomingTouchEvents(true)
         , touchEventReached(false), timestamp(0)
@@ -105,7 +105,7 @@ class TestPolishItem : public QQuickItem
 {
 Q_OBJECT
 public:
-    TestPolishItem(QQuickItem *parent = 0)
+    TestPolishItem(QQuickItem *parent = nullptr)
     : QQuickItem(parent), wasPolished(false) {
 
     }
@@ -127,7 +127,7 @@ class TestFocusScope : public QQuickFocusScope
 {
 Q_OBJECT
 public:
-    TestFocusScope(QQuickItem *parent = 0) : QQuickFocusScope(parent), focused(false) {}
+    TestFocusScope(QQuickItem *parent = nullptr) : QQuickFocusScope(parent), focused(false) {}
 
     bool focused;
 protected:
@@ -264,7 +264,7 @@ struct FocusData {
 };
 struct FocusState : public QHash<QQuickItem *, FocusData>
 {
-    FocusState() : activeFocusItem(0) {}
+    FocusState() : activeFocusItem(nullptr) {}
     FocusState &operator<<(QQuickItem *item) {
         insert(item, FocusData());
         return *this;
@@ -338,7 +338,7 @@ void tst_qquickitem::simpleFocus()
 
     l1c3->setFocus(false);
     focusState[l1c3].set(false, false);
-    focusState.active(0);
+    focusState.active(nullptr);
     FVERIFY();
 
     l2c1->setFocus(true);
@@ -611,9 +611,9 @@ void tst_qquickitem::changeParent()
     focusState.active(child);
     FVERIFY();
 
-    child->setParentItem(0);
+    child->setParentItem(nullptr);
     focusState[child].set(true, false);
-    focusState.active(0);
+    focusState.active(nullptr);
     FVERIFY();
     }
 
@@ -658,7 +658,7 @@ void tst_qquickitem::changeParent()
 
     item->setParentItem(child2);
     focusState[item].set(true, false);
-    focusState.active(0);
+    focusState.active(nullptr);
     FVERIFY();
     }
     {
@@ -675,7 +675,7 @@ void tst_qquickitem::changeParent()
 
     item->setFocus(true);
     focusState[item].set(true, false);
-    focusState.active(0);
+    focusState.active(nullptr);
     FVERIFY();
 
     item->setParentItem(child);
@@ -728,10 +728,10 @@ void tst_qquickitem::changeParent()
     focusState.active(child);
     FVERIFY();
 
-    item->setParentItem(0);
+    item->setParentItem(nullptr);
     focusState[child].set(true, false);
     focusState[item].set(true, false);
-    focusState.active(0);
+    focusState.active(nullptr);
     FVERIFY();
 
     focusState.remove(child);
@@ -951,7 +951,7 @@ void tst_qquickitem::setParentItem()
     QCOMPARE(root->childItems().at(0), child1);
     QCOMPARE(root->childItems().at(1), child2);
 
-    child1->setParentItem(0);
+    child1->setParentItem(nullptr);
     QVERIFY(!child1->parent());
     QVERIFY(!child1->parentItem());
     QCOMPARE(root->childItems().count(), 1);
@@ -1238,56 +1238,56 @@ void tst_qquickitem::mouseGrab()
     child2->setSize(QSizeF(200, 100));
     child2->setParentItem(window.contentItem());
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QTest::qWait(100);
     QVERIFY2(window.mouseGrabberItem() == child1.data(), msgItem(window.mouseGrabberItem()).constData());
     QTest::qWait(100);
 
     QCOMPARE(child1->pressCount, 1);
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QTest::qWait(50);
-    QVERIFY2(window.mouseGrabberItem() == 0, msgItem(window.mouseGrabberItem()).constData());
+    QVERIFY2(window.mouseGrabberItem() == nullptr, msgItem(window.mouseGrabberItem()).constData());
     QCOMPARE(child1->releaseCount, 1);
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QTest::qWait(50);
     QVERIFY2(window.mouseGrabberItem() == child1.data(), msgItem(window.mouseGrabberItem()).constData());
     QCOMPARE(child1->pressCount, 2);
     child1->setEnabled(false);
-    QVERIFY2(window.mouseGrabberItem() == 0, msgItem(window.mouseGrabberItem()).constData());
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50,50));
+    QVERIFY2(window.mouseGrabberItem() == nullptr, msgItem(window.mouseGrabberItem()).constData());
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QTest::qWait(50);
     QCOMPARE(child1->releaseCount, 1);
     child1->setEnabled(true);
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QTest::qWait(50);
     QVERIFY2(window.mouseGrabberItem() == child1.data(), msgItem(window.mouseGrabberItem()).constData());
     QCOMPARE(child1->pressCount, 3);
     child1->setVisible(false);
-    QVERIFY2(window.mouseGrabberItem() == 0, msgItem(window.mouseGrabberItem()));
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50,50));
+    QVERIFY2(window.mouseGrabberItem() == nullptr, msgItem(window.mouseGrabberItem()));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QCOMPARE(child1->releaseCount, 1);
     child1->setVisible(true);
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QTest::qWait(50);
     QVERIFY2(window.mouseGrabberItem() == child1.data(), msgItem(window.mouseGrabberItem()).constData());
     QCOMPARE(child1->pressCount, 4);
     child2->grabMouse();
     QVERIFY2(window.mouseGrabberItem() == child2.data(), msgItem(window.mouseGrabberItem()).constData());
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QTest::qWait(50);
     QCOMPARE(child1->releaseCount, 1);
     QCOMPARE(child2->releaseCount, 1);
 
     child2->grabMouse();
     QVERIFY2(window.mouseGrabberItem() == child2.data(), msgItem(window.mouseGrabberItem()).constData());
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QTest::qWait(50);
     QCOMPARE(child1->pressCount, 4);
     QCOMPARE(child2->pressCount, 1);
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50,50));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QTest::qWait(50);
     QCOMPARE(child1->releaseCount, 1);
     QCOMPARE(child2->releaseCount, 2);
@@ -1315,7 +1315,7 @@ void tst_qquickitem::touchEventAcceptIgnore()
     item->setParentItem(window.contentItem());
     item->acceptIncomingTouchEvents = itemSupportsTouch;
 
-    static QTouchDevice* device = 0;
+    static QTouchDevice* device = nullptr;
     if (!device) {
         device =new QTouchDevice;
         device->setType(QTouchDevice::TouchScreen);
@@ -1483,7 +1483,7 @@ class HoverItem : public QQuickItem
 {
 Q_OBJECT
 public:
-    HoverItem(QQuickItem *parent = 0)
+    HoverItem(QQuickItem *parent = nullptr)
         : QQuickItem(parent), hoverEnterCount(0), hoverMoveCount(0), hoverLeaveCount(0)
     { }
     void resetCounters() {
@@ -1529,7 +1529,7 @@ void tst_qquickitem::hoverEvent_data()
 // ### For some unknown reason QTest::mouseMove() isn't working correctly.
 static void sendMouseMove(QObject *object, const QPoint &position)
 {
-    QMouseEvent moveEvent(QEvent::MouseMove, position, Qt::NoButton, Qt::NoButton, 0);
+    QMouseEvent moveEvent(QEvent::MouseMove, position, Qt::NoButton, Qt::NoButton, nullptr);
     QGuiApplication::sendEvent(object, &moveEvent);
 }
 
@@ -1745,54 +1745,54 @@ void tst_qquickitem::acceptedMouseButtons()
     item.setSize(QSizeF(200,100));
     item.setParentItem(window.contentItem());
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
     QCOMPARE(item.pressCount, 0);
     QCOMPARE(item.releaseCount, 0);
 
-    QTest::mousePress(&window, Qt::RightButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&window, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::RightButton, Qt::NoModifier, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::RightButton, Qt::NoModifier, QPoint(50, 50));
     QCOMPARE(item.pressCount, 0);
     QCOMPARE(item.releaseCount, 0);
 
-    QTest::mousePress(&window, Qt::MiddleButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&window, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::MiddleButton, Qt::NoModifier, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::MiddleButton, Qt::NoModifier, QPoint(50, 50));
     QCOMPARE(item.pressCount, 0);
     QCOMPARE(item.releaseCount, 0);
 
     item.setAcceptedMouseButtons(Qt::LeftButton);
     QCOMPARE(item.acceptedMouseButtons(), Qt::MouseButtons(Qt::LeftButton));
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
     QCOMPARE(item.pressCount, 1);
     QCOMPARE(item.releaseCount, 1);
 
-    QTest::mousePress(&window, Qt::RightButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&window, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::RightButton, Qt::NoModifier, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::RightButton, Qt::NoModifier, QPoint(50, 50));
     QCOMPARE(item.pressCount, 1);
     QCOMPARE(item.releaseCount, 1);
 
-    QTest::mousePress(&window, Qt::MiddleButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&window, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::MiddleButton, Qt::NoModifier, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::MiddleButton, Qt::NoModifier, QPoint(50, 50));
     QCOMPARE(item.pressCount, 1);
     QCOMPARE(item.releaseCount, 1);
 
     item.setAcceptedMouseButtons(Qt::RightButton | Qt::MiddleButton);
     QCOMPARE(item.acceptedMouseButtons(), Qt::MouseButtons(Qt::RightButton | Qt::MiddleButton));
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
     QCOMPARE(item.pressCount, 1);
     QCOMPARE(item.releaseCount, 1);
 
-    QTest::mousePress(&window, Qt::RightButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&window, Qt::RightButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::RightButton, Qt::NoModifier, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::RightButton, Qt::NoModifier, QPoint(50, 50));
     QCOMPARE(item.pressCount, 2);
     QCOMPARE(item.releaseCount, 2);
 
-    QTest::mousePress(&window, Qt::MiddleButton, 0, QPoint(50, 50));
-    QTest::mouseRelease(&window, Qt::MiddleButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::MiddleButton, Qt::NoModifier, QPoint(50, 50));
+    QTest::mouseRelease(&window, Qt::MiddleButton, Qt::NoModifier, QPoint(50, 50));
     QCOMPARE(item.pressCount, 3);
     QCOMPARE(item.releaseCount, 3);
 }
@@ -1800,7 +1800,7 @@ void tst_qquickitem::acceptedMouseButtons()
 static void gc(QQmlEngine &engine)
 {
     engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 }
 
@@ -1826,7 +1826,7 @@ void tst_qquickitem::visualParentOwnership()
         gc(engine);
 
         QVERIFY(!newItem.isNull());
-        newItem->setParentItem(0);
+        newItem->setParentItem(nullptr);
 
         gc(engine);
         QVERIFY(newItem.isNull());
@@ -1883,7 +1883,7 @@ void tst_qquickitem::visualParentOwnershipWindow()
         gc(engine);
 
         QVERIFY(!newItem.isNull());
-        newItem->setParentItem(0);
+        newItem->setParentItem(nullptr);
 
         gc(engine);
         QVERIFY(newItem.isNull());
@@ -2059,10 +2059,10 @@ void tst_qquickitem::ignoreButtonPressNotInAcceptedMouseButtons()
     item.setAcceptedMouseButtons(Qt::LeftButton);
     QCOMPARE(item.acceptedMouseButtons(), Qt::MouseButtons(Qt::LeftButton));
 
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(50, 50));
-    QTest::mousePress(&window, Qt::RightButton, 0, QPoint(50, 50)); // ignored because it's not LeftButton
-    QTest::mouseRelease(&window, Qt::RightButton, 0, QPoint(50, 50)); // ignored because it didn't grab the RightButton press
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
+    QTest::mousePress(&window, Qt::RightButton, Qt::NoModifier, QPoint(50, 50)); // ignored because it's not LeftButton
+    QTest::mouseRelease(&window, Qt::RightButton, Qt::NoModifier, QPoint(50, 50)); // ignored because it didn't grab the RightButton press
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
 
     QCOMPARE(item.pressCount, 1);
     QCOMPARE(item.releaseCount, 1);
@@ -2131,9 +2131,9 @@ void tst_qquickitem::qtBug60123()
     auto activateWindowAndTestPress = [] (QQuickView* testWindow) {
         testWindow->requestActivate();
         QTest::qWaitForWindowActive(testWindow);
-        QTest::mousePress(testWindow, Qt::LeftButton, 0, QPoint(10, 10));
+        QTest::mousePress(testWindow, Qt::LeftButton, Qt::NoModifier, QPoint(10, 10));
         QCOMPARE(testWindow->rootObject()->property("lastEvent").toString(), QString("pressed"));
-        QTest::mouseRelease(testWindow, Qt::LeftButton, 0, QPoint(10, 10));
+        QTest::mouseRelease(testWindow, Qt::LeftButton, Qt::NoModifier, QPoint(10, 10));
         QCOMPARE(testWindow->rootObject()->property("lastEvent").toString(), QString("released"));
     };
 

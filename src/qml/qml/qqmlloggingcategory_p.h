@@ -67,7 +67,7 @@ class QQmlLoggingCategory : public QObject, public QQmlParserStatus
     Q_PROPERTY(QString name READ name WRITE setName)
 
 public:
-    QQmlLoggingCategory(QObject *parent = 0);
+    QQmlLoggingCategory(QObject *parent = nullptr);
     virtual ~QQmlLoggingCategory();
 
     QString name() const;

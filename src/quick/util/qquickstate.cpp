@@ -52,8 +52,8 @@ QT_BEGIN_NAMESPACE
 DEFINE_BOOL_CONFIG_OPTION(stateChangeDebug, STATECHANGE_DEBUG);
 
 QQuickStateAction::QQuickStateAction()
-: restore(true), actionDone(false), reverseEvent(false), deletableToBinding(false), fromBinding(0), event(0),
-  specifiedObject(0)
+: restore(true), actionDone(false), reverseEvent(false), deletableToBinding(false), fromBinding(nullptr), event(nullptr),
+  specifiedObject(nullptr)
 {
 }
 
@@ -61,7 +61,7 @@ QQuickStateAction::QQuickStateAction(QObject *target, const QString &propertyNam
                const QVariant &value)
 : restore(true), actionDone(false), reverseEvent(false), deletableToBinding(false),
   property(target, propertyName, qmlEngine(target)), toValue(value),
-  fromBinding(0), event(0),
+  fromBinding(nullptr), event(nullptr),
   specifiedObject(target), specifiedProperty(propertyName)
 {
     if (property.isValid())
@@ -71,7 +71,7 @@ QQuickStateAction::QQuickStateAction(QObject *target, const QString &propertyNam
 QQuickStateAction::QQuickStateAction(QObject *target, const QQmlProperty &property, const QString &propertyName, const QVariant &value)
 : restore(true), actionDone(false), reverseEvent(false), deletableToBinding(false),
   property(property), toValue(value),
-  fromBinding(0), event(0),
+  fromBinding(nullptr), event(nullptr),
   specifiedObject(target), specifiedProperty(propertyName)
 {
     if (property.isValid())
@@ -192,7 +192,7 @@ bool QQuickState::isNamed() const
 bool QQuickState::isWhenKnown() const
 {
     Q_D(const QQuickState);
-    return d->when != 0;
+    return d->when != nullptr;
 }
 
 /*!
@@ -362,7 +362,7 @@ void QQuickStateAction::deleteFromBinding()
 {
     if (fromBinding) {
         QQmlPropertyPrivate::removeBinding(property);
-        fromBinding = 0;
+        fromBinding = nullptr;
     }
 }
 
@@ -530,7 +530,7 @@ QQmlAbstractBinding *QQuickState::bindingInRevertList(QObject *target, const QSt
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 bool QQuickState::isStateActive() const

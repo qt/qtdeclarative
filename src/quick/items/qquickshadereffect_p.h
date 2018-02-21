@@ -91,7 +91,7 @@ public:
     };
     Q_ENUM(Status)
 
-    QQuickShaderEffect(QQuickItem *parent = 0);
+    QQuickShaderEffect(QQuickItem *parent = nullptr);
 
     QByteArray fragmentShader() const;
     void setFragmentShader(const QByteArray &code);

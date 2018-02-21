@@ -207,7 +207,7 @@ Q_INLINE_TEMPLATE void QSGSimpleMaterialShader<State>::updateState(const RenderS
     Q_UNUSED(state)
 #endif
     State *ns = static_cast<QSGSimpleMaterial<State> *>(newMaterial)->state();
-    State *old = 0;
+    State *old = nullptr;
     if (oldMaterial)
         old = static_cast<QSGSimpleMaterial<State> *>(oldMaterial)->state();
     updateState(ns, old);

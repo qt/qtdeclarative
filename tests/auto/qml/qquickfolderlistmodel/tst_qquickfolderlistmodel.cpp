@@ -115,7 +115,7 @@ void tst_qquickfolderlistmodel::basicProperties()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
     QCOMPARE(flm->property("nameFilters").toStringList(), QStringList() << "*.qml"); // from basic.qml
     QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(QDir::currentPath()));
 
@@ -149,7 +149,7 @@ void tst_qquickfolderlistmodel::status()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
     QTRY_COMPARE(flm->property("status").toInt(), int(Ready));
     flm->setProperty("folder", QUrl::fromLocalFile(""));
     QTRY_COMPARE(flm->property("status").toInt(), int(Null));
@@ -163,7 +163,7 @@ void tst_qquickfolderlistmodel::showFiles()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
 
     flm->setProperty("folder", dataDirectoryUrl());
     QTRY_COMPARE(flm->property("count").toInt(), 8); // wait for refresh
@@ -181,7 +181,7 @@ void tst_qquickfolderlistmodel::resetFiltering()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
 
     flm->setProperty("folder", testFileUrl("resetfiltering"));
     // _q_directoryUpdated may be triggered if model was empty before, but there won't be a rowsRemoved signal
@@ -203,7 +203,7 @@ void tst_qquickfolderlistmodel::nameFilters()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
 
     connect(flm, SIGNAL(rowsRemoved(QModelIndex,int,int)),
             this, SLOT(removed(QModelIndex,int,int)));
@@ -235,7 +235,7 @@ void tst_qquickfolderlistmodel::refresh()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
 
     flm->setProperty("folder", dataDirectoryUrl());
     QTRY_COMPARE(flm->property("count").toInt(),8); // wait for refresh
@@ -258,7 +258,7 @@ void tst_qquickfolderlistmodel::cdUp()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
     const QUrl startFolder = flm->property("folder").toUrl();
     QVERIFY(startFolder.isValid());
 
@@ -336,7 +336,7 @@ void tst_qquickfolderlistmodel::showDotAndDotDot()
     checkNoErrors(component);
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
 
     flm->setProperty("folder", folder);
     flm->setProperty("rootFolder", rootFolder);
@@ -371,7 +371,7 @@ void tst_qquickfolderlistmodel::sortReversed()
     QQmlComponent component(&engine, testFileUrl("sortReversed.qml"));
     checkNoErrors(component);
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
     flm->setProperty("folder", dataDirectoryUrl());
     QTRY_COMPARE(flm->property("count").toInt(), 9); // wait for refresh
     QCOMPARE(flm->data(flm->index(0),FileNameRole).toString(), QLatin1String("txtdir"));
@@ -382,7 +382,7 @@ void tst_qquickfolderlistmodel::introspectQrc()
     QQmlComponent component(&engine, testFileUrl("qrc.qml"));
     checkNoErrors(component);
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
-    QVERIFY(flm != 0);
+    QVERIFY(flm != nullptr);
     QTRY_COMPARE(flm->property("count").toInt(), 1); // wait for refresh
     QCOMPARE(flm->data(flm->index(0),FileNameRole).toString(), QLatin1String("hello.txt"));
 }

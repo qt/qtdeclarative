@@ -151,10 +151,10 @@ void Heap::QtObject::init(QQmlEngine *qmlEngine)
         o->defineDefaultProperty(QStringLiteral("createComponent"), QV4::QtObject::method_createComponent);
     }
 
-    o->defineAccessorProperty(QStringLiteral("platform"), QV4::QtObject::method_get_platform, 0);
-    o->defineAccessorProperty(QStringLiteral("application"), QV4::QtObject::method_get_application, 0);
-    o->defineAccessorProperty(QStringLiteral("inputMethod"), QV4::QtObject::method_get_inputMethod, 0);
-    o->defineAccessorProperty(QStringLiteral("styleHints"), QV4::QtObject::method_get_styleHints, 0);
+    o->defineAccessorProperty(QStringLiteral("platform"), QV4::QtObject::method_get_platform, nullptr);
+    o->defineAccessorProperty(QStringLiteral("application"), QV4::QtObject::method_get_application, nullptr);
+    o->defineAccessorProperty(QStringLiteral("inputMethod"), QV4::QtObject::method_get_inputMethod, nullptr);
+    o->defineAccessorProperty(QStringLiteral("styleHints"), QV4::QtObject::method_get_styleHints, nullptr);
 
     o->defineDefaultProperty(QStringLiteral("callLater"), QV4::QtObject::method_callLater);
 }
@@ -233,7 +233,7 @@ ReturnedValue QtObject::method_isQtObject(const FunctionObject *, const Value *,
     if (argc == 0)
         RETURN_RESULT(QV4::Encode(false));
 
-    return QV4::Encode(argv[0].as<QV4::QObjectWrapper>() != 0);
+    return QV4::Encode(argv[0].as<QV4::QObjectWrapper>() != nullptr);
 }
 
 /*!
@@ -948,7 +948,7 @@ ReturnedValue QtObject::method_resolvedUrl(const FunctionObject *b, const Value 
 
     QUrl url = scope.engine->toVariant(argv[0], -1).toUrl();
     QQmlEngine *e = scope.engine->qmlEngine();
-    QQmlEnginePrivate *p = 0;
+    QQmlEnginePrivate *p = nullptr;
     if (e) p = QQmlEnginePrivate::get(e);
     if (p) {
         QQmlContextData *ctxt = scope.engine->callingQmlContext();
@@ -1120,7 +1120,7 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
 
     QQmlContextData *context = scope.engine->callingQmlContext();
     Q_ASSERT(context);
-    QQmlContext *effectiveContext = 0;
+    QQmlContext *effectiveContext = nullptr;
     if (context->isPragmaLibraryContext)
         effectiveContext = engine->rootContext();
     else
@@ -1140,7 +1140,7 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
     if (url.isValid() && url.isRelative())
         url = context->resolvedUrl(url);
 
-    QObject *parentArg = 0;
+    QObject *parentArg = nullptr;
     QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, argv[1]);
     if (!!qobjectWrapper)
         parentArg = qobjectWrapper->object();
@@ -1249,14 +1249,14 @@ ReturnedValue QtObject::method_createComponent(const FunctionObject *b, const Va
     Q_ASSERT(context);
     QQmlContextData *effectiveContext = context;
     if (context->isPragmaLibraryContext)
-        effectiveContext = 0;
+        effectiveContext = nullptr;
 
     QString arg = argv[0].toQStringNoThrow();
     if (arg.isEmpty())
         RETURN_RESULT(QV4::Encode::null());
 
     QQmlComponent::CompilationMode compileMode = QQmlComponent::PreferSynchronous;
-    QObject *parentArg = 0;
+    QObject *parentArg = nullptr;
 
     int consumedCount = 1;
     if (argc > 1) {
@@ -1283,7 +1283,7 @@ ReturnedValue QtObject::method_createComponent(const FunctionObject *b, const Va
                 if (!parentArg)
                     THROW_GENERIC_ERROR("Qt.createComponent(): Invalid parent object");
             } else if (lastArg->isNull()) {
-                parentArg = 0;
+                parentArg = nullptr;
             } else {
                 THROW_GENERIC_ERROR("Qt.createComponent(): Invalid parent object");
             }
@@ -1514,7 +1514,7 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
 static ReturnedValue writeToConsole(const FunctionObject *b, const Value *, const Value *argv, int argc,
                                     ConsoleLogTypes logType, bool printStack = false)
 {
-    QLoggingCategory *loggingCategory = 0;
+    QLoggingCategory *loggingCategory = nullptr;
     QString result;
     QV4::Scope scope(b);
     QV4::ExecutionEngine *v4 = scope.engine;

@@ -423,8 +423,8 @@ protected:
         }
 
         explicit Result(Format requested = ex)
-            : _iftrue(0)
-            , _iffalse(0)
+            : _iftrue(nullptr)
+            , _iffalse(nullptr)
             , _format(ex)
             , _requested(requested) {}
 
@@ -671,7 +671,7 @@ protected:
     Context *_context;
     AST::LabelledStatement *_labelledStatement;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
-    BytecodeGenerator *bytecodeGenerator = 0;
+    BytecodeGenerator *bytecodeGenerator = nullptr;
     bool _strictMode;
     bool useFastLookups = true;
     bool requiresReturnValue = false;

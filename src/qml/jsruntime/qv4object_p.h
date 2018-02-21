@@ -236,8 +236,8 @@ struct Q_QML_EXPORT Object: Managed {
     Heap::Object *prototype() const { return d()->prototype(); }
     bool setPrototype(Object *proto);
 
-    void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = 0);
-    void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = 0);
+    void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = nullptr);
+    void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = nullptr);
 
     MemberData::Index getValueOrSetter(String *name, PropertyAttributes *attrs);
     ArrayData::Index getValueOrSetter(uint index, PropertyAttributes *attrs);
@@ -346,8 +346,8 @@ public:
     }
 
     void initSparseArray();
-    SparseArrayNode *sparseBegin() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->begin() : 0; }
-    SparseArrayNode *sparseEnd() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->end() : 0; }
+    SparseArrayNode *sparseBegin() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->begin() : nullptr; }
+    SparseArrayNode *sparseEnd() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->end() : nullptr; }
 
     inline bool protoHasArray() {
         Scope scope(engine());
@@ -360,9 +360,9 @@ public:
         return false;
     }
 
-    inline ReturnedValue get(String *name, bool *hasProperty = 0) const
+    inline ReturnedValue get(String *name, bool *hasProperty = nullptr) const
     { return vtable()->get(this, name, hasProperty); }
-    inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0) const
+    inline ReturnedValue getIndexed(uint idx, bool *hasProperty = nullptr) const
     { return vtable()->getIndexed(this, idx, hasProperty); }
 
     // use the set variants instead, to customize throw behavior
@@ -551,7 +551,7 @@ inline void Object::arraySet(uint index, const Value &value)
 
 template<>
 inline const ArrayObject *Value::as() const {
-    return isManaged() && m()->vtable()->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : 0;
+    return isManaged() && m()->vtable()->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : nullptr;
 }
 
 #ifndef V4_BOOTSTRAP

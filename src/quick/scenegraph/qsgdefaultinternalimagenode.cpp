@@ -91,7 +91,7 @@ SmoothTextureMaterialShader::SmoothTextureMaterialShader()
 
 void SmoothTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
-    if (oldEffect == 0) {
+    if (oldEffect == nullptr) {
         // The viewport is constant, so set the pixel size uniform only once.
         QRect r = state.viewportRect();
         program()->setUniformValue(m_pixelSizeLoc, 2.0f / r.width(), 2.0f / r.height());
@@ -106,7 +106,7 @@ char const *const *SmoothTextureMaterialShader::attributeNames() const
         "multiTexCoord",
         "vertexOffset",
         "texCoordOffset",
-        0
+        nullptr
     };
     return attributes;
 }
@@ -171,7 +171,7 @@ void QSGDefaultInternalImageNode::updateMaterialAntialiasing()
 {
     if (m_antialiasing) {
         setMaterial(&m_smoothMaterial);
-        setOpaqueMaterial(0);
+        setOpaqueMaterial(nullptr);
     } else {
         setMaterial(&m_materialO);
         setOpaqueMaterial(&m_material);

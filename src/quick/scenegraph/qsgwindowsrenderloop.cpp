@@ -78,7 +78,7 @@ static QElapsedTimer qsg_render_timer;
 
 
 QSGWindowsRenderLoop::QSGWindowsRenderLoop()
-    : m_gl(0)
+    : m_gl(nullptr)
     , m_sg(QSGContext::createDefaultContext())
     , m_updateTimer(0)
     , m_animationTimer(0)
@@ -117,7 +117,7 @@ QSGWindowsRenderLoop::WindowData *QSGWindowsRenderLoop::windowData(QQuickWindow 
         if (wd.window == window)
             return &wd;
     }
-    return 0;
+    return nullptr;
 }
 
 void QSGWindowsRenderLoop::maybePostUpdateTimer()
@@ -158,7 +158,7 @@ void QSGWindowsRenderLoop::stopped()
 void QSGWindowsRenderLoop::show(QQuickWindow *window)
 {
     RLDEBUG("show");
-    if (windowData(window) != 0)
+    if (windowData(window) != nullptr)
         return;
 
     // This happens before the platform window is shown, but after
@@ -178,7 +178,7 @@ void QSGWindowsRenderLoop::show(QQuickWindow *window)
         if (!created) {
             const bool isEs = m_gl->isOpenGLES();
             delete m_gl;
-            m_gl = 0;
+            m_gl = nullptr;
             handleContextCreationFailure(window, isEs);
             return;
         }
@@ -253,7 +253,7 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
     if (m_windows.size() == 0) {
         d->context->invalidate();
         delete m_gl;
-        m_gl = 0;
+        m_gl = nullptr;
     } else if (m_gl && current) {
         m_gl->doneCurrent();
     }
@@ -272,7 +272,7 @@ bool QSGWindowsRenderLoop::anyoneShowing() const
 void QSGWindowsRenderLoop::exposureChanged(QQuickWindow *window)
 {
 
-    if (windowData(window) == 0)
+    if (windowData(window) == nullptr)
         return;
 
     if (window->isExposed() && window->isVisible()) {

@@ -61,22 +61,22 @@ void Node::accept(Node *node, Visitor *visitor)
 
 ExpressionNode *Node::expressionCast()
 {
-    return 0;
+    return nullptr;
 }
 
 BinaryExpression *Node::binaryExpressionCast()
 {
-    return 0;
+    return nullptr;
 }
 
 Statement *Node::statementCast()
 {
-    return 0;
+    return nullptr;
 }
 
 UiObjectMember *Node::uiObjectMemberCast()
 {
-    return 0;
+    return nullptr;
 }
 
 ExpressionNode *ExpressionNode::expressionCast()

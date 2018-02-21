@@ -209,7 +209,7 @@ struct Scoped
     enum ConvertType { Convert };
 
     QML_NEARLY_ALWAYS_INLINE void setPointer(const Managed *p) {
-        ptr->setM(p ? p->m() : 0);
+        ptr->setM(p ? p->m() : nullptr);
     }
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope)
@@ -244,7 +244,7 @@ struct Scoped
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, const Value *v)
     {
         ptr = scope.engine->jsAlloca(1);
-        setPointer(v ? v->as<T>() : 0);
+        setPointer(v ? v->as<T>() : nullptr);
     }
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, T *t)
@@ -290,7 +290,7 @@ struct Scoped
         return *this;
     }
     Scoped<T> &operator=(Value *v) {
-        setPointer(v ? v->as<T>() : 0);
+        setPointer(v ? v->as<T>() : nullptr);
         return *this;
     }
 

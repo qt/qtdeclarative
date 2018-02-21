@@ -62,7 +62,7 @@ void tst_qquickanimatedsprite::initTestCase()
 
 void tst_qquickanimatedsprite::test_properties()
 {
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
 
     window->setSource(testFileUrl("basic.qml"));
     window->show();
@@ -87,7 +87,7 @@ void tst_qquickanimatedsprite::test_properties()
 
 void tst_qquickanimatedsprite::test_runningChangedSignal()
 {
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
 
     window->setSource(testFileUrl("runningChange.qml"));
     window->show();
@@ -117,7 +117,7 @@ static bool isWithinRange(T min, T value, T max)
 
 void tst_qquickanimatedsprite::test_frameChangedSignal()
 {
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
 
     window->setSource(testFileUrl("frameChange.qml"));
     window->show();
@@ -214,7 +214,7 @@ void tst_qquickanimatedsprite::test_largeAnimation()
 {
     QFETCH(bool, frameSync);
 
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
     window->engine()->addImageProvider(QLatin1String("test"), new AnimationImageProvider);
     window->setSource(testFileUrl("largeAnimation.qml"));
     window->show();
@@ -279,7 +279,7 @@ void tst_qquickanimatedsprite::test_reparenting()
     QVERIFY(sprite);
 
     QTRY_VERIFY(sprite->running());
-    sprite->setParentItem(0);
+    sprite->setParentItem(nullptr);
 
     sprite->setParentItem(window.rootObject());
     // don't crash (QTBUG-51162)

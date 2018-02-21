@@ -72,7 +72,7 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
     if (d.userType() == qMetaTypeId<QJSValue>())
         d = d.value<QJSValue>().toVariant();
 
-    QQmlEnginePrivate *enginePrivate = engine?QQmlEnginePrivate::get(engine):0;
+    QQmlEnginePrivate *enginePrivate = engine?QQmlEnginePrivate::get(engine):nullptr;
 
     if (!d.isValid()) {
         m_type = Invalid;

@@ -310,7 +310,7 @@ static void displayFileDialog(Options *options)
 {
 #if defined(QT_WIDGETS_LIB) && QT_CONFIG(filedialog)
     if (options->applicationType == Options::QmlApplicationTypeWidget) {
-        QString fileName = QFileDialog::getOpenFileName(0, "Open QML file", QString(), "QML Files (*.qml)");
+        QString fileName = QFileDialog::getOpenFileName(nullptr, "Open QML file", QString(), "QML Files (*.qml)");
         if (!fileName.isEmpty()) {
             QFileInfo fi(fileName);
             options->url = QUrl::fromLocalFile(fi.canonicalFilePath());
@@ -640,7 +640,7 @@ int main(int argc, char ** argv)
             } else {
                 QQuickItem *contentItem = qobject_cast<QQuickItem *>(topLevel);
                 if (contentItem) {
-                    QQuickView* qxView = new QQuickView(&engine, NULL);
+                    QQuickView* qxView = new QQuickView(&engine, nullptr);
                     window.reset(qxView);
                     // Set window default properties; the qml can still override them
                     if (options.resizeViewToRootItem)

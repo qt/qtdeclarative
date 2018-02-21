@@ -91,9 +91,9 @@ public:
 };
 
 QQuickFontObject::QQuickFontObject(int _id)
-    : QObject(0)
+    : QObject(nullptr)
 #if QT_CONFIG(qml_network)
-    ,redirectCount(0), reply(0)
+    ,redirectCount(0), reply(nullptr)
 #endif
     ,id(_id)
 {
@@ -119,7 +119,7 @@ void QQuickFontObject::replyFinished()
                 QUrl url = reply->url().resolved(redirect.toUrl());
                 QNetworkAccessManager *manager = reply->manager();
                 reply->deleteLater();
-                reply = 0;
+                reply = nullptr;
                 download(url, manager);
                 return;
             }
@@ -138,7 +138,7 @@ void QQuickFontObject::replyFinished()
             emit fontDownloaded(QString(), QQuickFontLoader::Error);
         }
         reply->deleteLater();
-        reply = 0;
+        reply = nullptr;
     }
 }
 #endif // qml_network

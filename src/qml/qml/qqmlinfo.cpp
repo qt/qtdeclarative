@@ -182,7 +182,7 @@ QQmlInfo::~QQmlInfo()
     if (0 == --d->ref) {
         QList<QQmlError> errors = d->errors;
 
-        QQmlEngine *engine = 0;
+        QQmlEngine *engine = nullptr;
 
         if (!d->buffer.isEmpty()) {
             QQmlError error;

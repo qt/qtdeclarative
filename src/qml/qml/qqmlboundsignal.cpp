@@ -191,7 +191,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     QQmlMetaObject::ArgTypeStorage storage;
     //TODO: lookup via signal index rather than method index as an optimization
     int methodIndex = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).methodIndex();
-    int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, 0);
+    int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, nullptr);
     int argCount = argsTypes ? *argsTypes : 0;
 
     QV4::JSCallData jsCall(scope, argCount);
@@ -222,7 +222,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
         }
     }
 
-    QQmlJavaScriptExpression::evaluate(jsCall.callData(), 0);
+    QQmlJavaScriptExpression::evaluate(jsCall.callData(), nullptr);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
@@ -245,7 +245,7 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
         jsCall->args[ii] = scope.engine->fromVariant(args[ii]);
     }
 
-    QQmlJavaScriptExpression::evaluate(jsCall.callData(), 0);
+    QQmlJavaScriptExpression::evaluate(jsCall.callData(), nullptr);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
@@ -260,8 +260,8 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
 QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
                                  QQmlEngine *engine)
     : QQmlNotifierEndpoint(QQmlNotifierEndpoint::QQmlBoundSignal),
-      m_prevSignal(0), m_nextSignal(0),
-      m_enabled(true), m_expression(0)
+      m_prevSignal(nullptr), m_nextSignal(nullptr),
+      m_enabled(true), m_expression(nullptr)
 {
     addToObject(owner);
 
@@ -298,8 +298,8 @@ void QQmlBoundSignal::removeFromObject()
     if (m_prevSignal) {
         *m_prevSignal = m_nextSignal;
         if (m_nextSignal) m_nextSignal->m_prevSignal = m_prevSignal;
-        m_prevSignal = 0;
-        m_nextSignal = 0;
+        m_prevSignal = nullptr;
+        m_nextSignal = nullptr;
     }
 }
 

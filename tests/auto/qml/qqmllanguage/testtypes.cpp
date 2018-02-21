@@ -185,8 +185,8 @@ void SimpleObjectCustomParser::applyBindings(QObject *object, QV4::CompiledData:
 
 MyQmlObject::MyQmlObject()
     : m_value(-1)
-    , m_interface(0)
-    , m_qmlobject(0)
+    , m_interface(nullptr)
+    , m_qmlobject(nullptr)
     , m_childAddedEventCount(0)
 {
     qRegisterMetaType<MyCustomVariantType>("MyCustomVariantType");

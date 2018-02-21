@@ -92,7 +92,7 @@ Q_SIGNALS:
     void destroyingItem(QObject *object);
 
 protected:
-    QQmlInstanceModel(QObjectPrivate &dd, QObject *parent = 0)
+    QQmlInstanceModel(QObjectPrivate &dd, QObject *parent = nullptr)
         : QObject(dd, parent) {}
 
 private:
@@ -110,7 +110,7 @@ class Q_QML_PRIVATE_EXPORT QQmlObjectModel : public QQmlInstanceModel
     Q_CLASSINFO("DefaultProperty", "children")
 
 public:
-    QQmlObjectModel(QObject *parent=0);
+    QQmlObjectModel(QObject *parent=nullptr);
     ~QQmlObjectModel() {}
 
     int count() const override;

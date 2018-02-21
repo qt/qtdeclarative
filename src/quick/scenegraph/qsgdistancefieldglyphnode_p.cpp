@@ -77,7 +77,7 @@ protected:
 };
 
 char const *const *QSGDistanceFieldTextMaterialShader::attributeNames() const {
-    static char const *const attr[] = { "vCoord", "tCoord", 0 };
+    static char const *const attr[] = { "vCoord", "tCoord", nullptr };
     return attr;
 }
 
@@ -166,13 +166,13 @@ void QSGDistanceFieldTextMaterialShader::initialize()
 
 void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
-    Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
+    Q_ASSERT(oldEffect == nullptr || newEffect->type() == oldEffect->type());
     QSGDistanceFieldTextMaterial *material = static_cast<QSGDistanceFieldTextMaterial *>(newEffect);
     QSGDistanceFieldTextMaterial *oldMaterial = static_cast<QSGDistanceFieldTextMaterial *>(oldEffect);
 
     bool updated = material->updateTextureSize();
 
-    if (oldMaterial == 0
+    if (oldMaterial == nullptr
            || material->color() != oldMaterial->color()
            || state.isOpacityDirty()) {
         QVector4D color = material->color();
@@ -181,7 +181,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
     }
 
     bool updateRange = false;
-    if (oldMaterial == 0
+    if (oldMaterial == nullptr
             || material->fontScale() != oldMaterial->fontScale()) {
         m_fontScale = material->fontScale();
         updateRange = true;
@@ -198,7 +198,7 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
     Q_ASSERT(material->glyphCache());
 
     if (updated
-            || oldMaterial == 0
+            || oldMaterial == nullptr
             || oldMaterial->texture()->textureId != material->texture()->textureId) {
         updateTextureScale(QVector2D(1.0 / material->textureSize().width(),
                                      1.0 / material->textureSize().height()));
@@ -218,8 +218,8 @@ void QSGDistanceFieldTextMaterialShader::updateState(const RenderState &state, Q
 }
 
 QSGDistanceFieldTextMaterial::QSGDistanceFieldTextMaterial()
-    : m_glyph_cache(0)
-    , m_texture(0)
+    : m_glyph_cache(nullptr)
+    , m_texture(nullptr)
     , m_fontScale(1.0)
 {
    setFlag(Blending | RequiresDeterminant, true);
@@ -310,7 +310,7 @@ void DistanceFieldStyledTextMaterialShader::updateState(const RenderState &state
     QSGDistanceFieldStyledTextMaterial *material = static_cast<QSGDistanceFieldStyledTextMaterial *>(newEffect);
     QSGDistanceFieldStyledTextMaterial *oldMaterial = static_cast<QSGDistanceFieldStyledTextMaterial *>(oldEffect);
 
-    if (oldMaterial == 0
+    if (oldMaterial == nullptr
            || material->styleColor() != oldMaterial->styleColor()
            || (state.isOpacityDirty())) {
         QVector4D color = material->styleColor();
@@ -398,7 +398,7 @@ void DistanceFieldOutlineTextMaterialShader::updateState(const RenderState &stat
     QSGDistanceFieldOutlineTextMaterial *material = static_cast<QSGDistanceFieldOutlineTextMaterial *>(newEffect);
     QSGDistanceFieldOutlineTextMaterial *oldMaterial = static_cast<QSGDistanceFieldOutlineTextMaterial *>(oldEffect);
 
-    if (oldMaterial == 0
+    if (oldMaterial == nullptr
             || material->fontScale() != oldMaterial->fontScale()
             || state.isMatrixDirty())
         updateOutlineAlphaRange(material->glyphCache()->distanceFieldRadius());
@@ -462,7 +462,7 @@ void DistanceFieldShiftedStyleTextMaterialShader::updateState(const RenderState 
     QSGDistanceFieldShiftedStyleTextMaterial *material = static_cast<QSGDistanceFieldShiftedStyleTextMaterial *>(newEffect);
     QSGDistanceFieldShiftedStyleTextMaterial *oldMaterial = static_cast<QSGDistanceFieldShiftedStyleTextMaterial *>(oldEffect);
 
-    if (oldMaterial == 0
+    if (oldMaterial == nullptr
             || oldMaterial->fontScale() != material->fontScale()
             || oldMaterial->shift() != material->shift()
             || oldMaterial->textureSize() != material->textureSize()) {
@@ -550,19 +550,19 @@ void QSGHiQSubPixelDistanceFieldTextMaterialShader::deactivate()
 
 void QSGHiQSubPixelDistanceFieldTextMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
-    Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
+    Q_ASSERT(oldEffect == nullptr || newEffect->type() == oldEffect->type());
     QSGDistanceFieldTextMaterial *material = static_cast<QSGDistanceFieldTextMaterial *>(newEffect);
     QSGDistanceFieldTextMaterial *oldMaterial = static_cast<QSGDistanceFieldTextMaterial *>(oldEffect);
 
-    if (oldMaterial == 0 || material->color() != oldMaterial->color()) {
+    if (oldMaterial == nullptr || material->color() != oldMaterial->color()) {
         QVector4D c = material->color();
         state.context()->functions()->glBlendColor(c.x(), c.y(), c.z(), 1.0f);
     }
 
-    if (oldMaterial == 0 || material->fontScale() != oldMaterial->fontScale())
+    if (oldMaterial == nullptr || material->fontScale() != oldMaterial->fontScale())
         program()->setUniformValue(m_fontScale_id, GLfloat(material->fontScale()));
 
-    if (oldMaterial == 0 || state.isMatrixDirty()) {
+    if (oldMaterial == nullptr || state.isMatrixDirty()) {
         int viewportWidth = state.viewportRect().width();
         QMatrix4x4 mat = state.combinedMatrix().inverted();
         program()->setUniformValue(m_vecDelta_id, mat.column(0) * (qreal(2) / viewportWidth));

@@ -105,7 +105,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTransition : public QObject
     Q_CLASSINFO("DeferredPropertyNames", "animations")
 
 public:
-    QQuickTransition(QObject *parent=0);
+    QQuickTransition(QObject *parent=nullptr);
     ~QQuickTransition();
 
     QString fromState() const;

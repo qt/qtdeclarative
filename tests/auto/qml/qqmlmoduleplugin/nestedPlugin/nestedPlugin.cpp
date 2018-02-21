@@ -36,7 +36,7 @@ class MyPluginType : public QObject
     Q_PROPERTY(QString value READ value)
 
 public:
-    MyPluginType(QObject *parent=0) : QObject(parent) {}
+    MyPluginType(QObject *parent=nullptr) : QObject(parent) {}
 
     QString value() const { return "Hello"; }
 };
@@ -47,7 +47,7 @@ class MyNestedPluginType : public QObject
     Q_PROPERTY(QString value READ value)
 
 public:
-    MyNestedPluginType(QObject *parent=0) : QObject(parent) {}
+    MyNestedPluginType(QObject *parent=nullptr) : QObject(parent) {}
 
     QString value() const { return "Goodbye"; }
 };

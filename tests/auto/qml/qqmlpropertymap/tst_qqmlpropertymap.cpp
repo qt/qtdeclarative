@@ -71,7 +71,7 @@ class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
     Q_PROPERTY(int someFixedProperty READ someFixedProperty WRITE setSomeFixedProperty NOTIFY someFixedPropertyChanged)
 public:
     LazyPropertyMap()
-        : QQmlPropertyMap(this, /*parent*/0)
+        : QQmlPropertyMap(this, /*parent*/nullptr)
         , value(0)
     {}
 
@@ -313,7 +313,7 @@ class MyEnhancedPropertyMap : public QQmlPropertyMap
 {
     Q_OBJECT
 public:
-    MyEnhancedPropertyMap() : QQmlPropertyMap(this, 0), m_testSlotCalled(false) {}
+    MyEnhancedPropertyMap() : QQmlPropertyMap(this, nullptr), m_testSlotCalled(false) {}
     bool testSlotCalled() const { return m_testSlotCalled; }
 
 signals:

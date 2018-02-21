@@ -84,7 +84,7 @@ Texture *Atlas::create(const QByteArray &data, int dataLength, int dataOffset, c
         m_pending_uploads << t;
         return t;
     }
-    return 0;
+    return nullptr;
 }
 
 void Atlas::generateTexture()
@@ -93,7 +93,7 @@ void Atlas::generateTexture()
     funcs->glCompressedTexImage2D(GL_TEXTURE_2D, 0, m_format,
                                   m_size.width(), m_size.height(), 0,
                                   (m_size.width() * m_size.height()) / 2,
-                                  0);
+                                  nullptr);
 }
 
 void Atlas::uploadPendingTexture(int i)
@@ -119,7 +119,7 @@ void Atlas::uploadPendingTexture(int i)
 
 Texture::Texture(Atlas *atlas, const QRect &textureRect, const QByteArray &data, int dataLength, int dataOffset, const QSize &size)
     : QSGAtlasTexture::TextureBase(atlas, textureRect)
-    , m_nonatlas_texture(0)
+    , m_nonatlas_texture(nullptr)
     , m_data(data)
     , m_size(size)
     , m_dataLength(dataLength)

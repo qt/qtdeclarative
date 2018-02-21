@@ -195,9 +195,9 @@ public:
     void disconnectNotifiers();
 
     // The context that created the C++ object
-    QQmlContextData *context = 0;
+    QQmlContextData *context = nullptr;
     // The outermost context in which this object lives
-    QQmlContextData *outerContext = 0;
+    QQmlContextData *outerContext = nullptr;
     QQmlContextDataRef ownContext;
 
     QQmlAbstractBinding *bindings;
@@ -247,13 +247,13 @@ public:
         // to be avoided because QObjectPrivate::currentChildBeingDeleted is in use.
         if (priv->isDeletingChildren || priv->wasDeleted) {
             Q_ASSERT(!create);
-            return 0;
+            return nullptr;
         } else if (priv->declarativeData) {
             return static_cast<QQmlData *>(priv->declarativeData);
         } else if (create) {
             return createQQmlData(priv);
         } else {
-            return 0;
+            return nullptr;
         }
     }
 
@@ -264,7 +264,7 @@ public:
         return false;
     }
 
-    bool hasExtendedData() const { return extendedData != 0; }
+    bool hasExtendedData() const { return extendedData != nullptr; }
     QHash<int, QObject *> *attachedProperties() const;
 
     static inline bool wasDeleted(const QObject *);
@@ -325,7 +325,7 @@ QQmlNotifierEndpoint *QQmlData::notify(int index)
     Q_ASSERT(index <= 0xFFFF);
 
     if (!notifyList || !(notifyList->connectionMask & (1ULL << quint64(index % 64)))) {
-        return 0;
+        return nullptr;
     } else if (index < notifyList->notifiesSize) {
         return notifyList->notifies[index];
     } else if (index <= notifyList->maximumTodoIndex) {
@@ -335,7 +335,7 @@ QQmlNotifierEndpoint *QQmlData::notify(int index)
     if (index < notifyList->notifiesSize) {
         return notifyList->notifies[index];
     } else {
-        return 0;
+        return nullptr;
     }
 }
 

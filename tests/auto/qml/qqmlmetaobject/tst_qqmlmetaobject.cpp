@@ -186,10 +186,10 @@ void tst_QQmlMetaObject::property()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl(testFile));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     const QMetaObject *mo = object->metaObject();
-    QVERIFY(mo->superClass() != 0);
+    QVERIFY(mo->superClass() != nullptr);
     QVERIFY(QByteArray(mo->className()).contains("_QML_"));
     QCOMPARE(mo->propertyOffset(), mo->superClass()->propertyCount());
     QCOMPARE(mo->propertyCount(), mo->superClass()->propertyCount() + 1);
@@ -361,10 +361,10 @@ void tst_QQmlMetaObject::method()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl(testFile));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     const QMetaObject *mo = object->metaObject();
-    QVERIFY(mo->superClass() != 0);
+    QVERIFY(mo->superClass() != nullptr);
     QVERIFY(QByteArray(mo->className()).contains("_QML_"));
     QCOMPARE(mo->methodOffset(), mo->superClass()->methodCount());
     QCOMPARE(mo->methodCount(), mo->superClass()->methodCount() + 1);

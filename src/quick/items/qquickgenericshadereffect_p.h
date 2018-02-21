@@ -66,7 +66,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGenericShaderEffect : public QObject
     Q_OBJECT
 
 public:
-    QQuickGenericShaderEffect(QQuickShaderEffect *item, QObject *parent = 0);
+    QQuickGenericShaderEffect(QQuickShaderEffect *item, QObject *parent = nullptr);
     ~QQuickGenericShaderEffect();
 
     QByteArray fragmentShader() const { return m_fragShader; }

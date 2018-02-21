@@ -115,7 +115,7 @@ class TimeModel : public QObject
 //![0]
 
 public:
-    TimeModel(QObject *parent=0) : QObject(parent)
+    TimeModel(QObject *parent=nullptr) : QObject(parent)
     {
         if (++instances == 1) {
             if (!timer)
@@ -145,7 +145,7 @@ private:
 };
 
 int TimeModel::instances=0;
-MinuteTimer *TimeModel::timer=0;
+MinuteTimer *TimeModel::timer=nullptr;
 
 //![plugin]
 class QExampleQmlPlugin : public QQmlExtensionPlugin

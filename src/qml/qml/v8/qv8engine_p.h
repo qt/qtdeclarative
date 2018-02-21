@@ -230,7 +230,7 @@ inline QV8Engine::Deletable *QV8Engine::extensionData(int index) const
     if (index < m_extensionData.count())
         return m_extensionData[index];
     else
-        return 0;
+        return nullptr;
 }
 
 

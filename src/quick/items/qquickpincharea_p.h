@@ -84,7 +84,7 @@ public:
     void resetTarget() {
         if (!m_target)
             return;
-        m_target = 0;
+        m_target = nullptr;
         Q_EMIT targetChanged();
     }
 
@@ -270,7 +270,7 @@ class Q_AUTOTEST_EXPORT QQuickPinchArea : public QQuickItem
     Q_PROPERTY(QQuickPinch *pinch READ pinch CONSTANT)
 
 public:
-    QQuickPinchArea(QQuickItem *parent=0);
+    QQuickPinchArea(QQuickItem *parent=nullptr);
     ~QQuickPinchArea();
 
     bool isEnabled() const;

@@ -72,7 +72,7 @@ class Q_AUTOTEST_EXPORT QQuickApplication : public QQmlApplication
     Q_PROPERTY(QQmlListProperty<QQuickScreenInfo> screens READ screens NOTIFY screensChanged)
 
 public:
-    explicit QQuickApplication(QObject *parent = 0);
+    explicit QQuickApplication(QObject *parent = nullptr);
     virtual ~QQuickApplication();
     bool active() const;
     Qt::LayoutDirection layoutDirection() const;

@@ -83,7 +83,7 @@ namespace QQmlVMETypes {
     struct State {
         enum Flag { Deferred = 0x00000001 };
 
-        State() : flags(0), context(0), instructionStream(0) {}
+        State() : flags(0), context(nullptr), instructionStream(nullptr) {}
         quint32 flags;
         QQmlContextData *context;
         const char *instructionStream;
@@ -143,7 +143,7 @@ private:
 };
 
 QQmlInstantiationInterrupt::QQmlInstantiationInterrupt()
-    : mode(None), nsecs(0), runWhile(0)
+    : mode(None), nsecs(0), runWhile(nullptr)
 {
 }
 
@@ -153,7 +153,7 @@ QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(volatile bool *runWhile, 
 }
 
 QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(int nsecs)
-    : mode(Time), nsecs(nsecs), runWhile(0)
+    : mode(Time), nsecs(nsecs), runWhile(nullptr)
 {
 }
 

@@ -63,7 +63,7 @@ public:
     ~QQmlListAccessor();
 
     QVariant list() const;
-    void setList(const QVariant &, QQmlEngine * = 0);
+    void setList(const QVariant &, QQmlEngine * = nullptr);
 
     bool isValid() const;
 

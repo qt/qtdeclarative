@@ -246,7 +246,7 @@ QSGNode *QQuickCustomParticle::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
     QQuickOpenGLShaderEffectNode *rootNode = static_cast<QQuickOpenGLShaderEffectNode *>(oldNode);
     if (m_pleaseReset){
         delete rootNode;//Automatically deletes children
-        rootNode = 0;
+        rootNode = nullptr;
         m_nodes.clear();
         m_pleaseReset = false;
         m_dirtyProgram = true;
@@ -270,7 +270,7 @@ QQuickOpenGLShaderEffectNode *QQuickCustomParticle::prepareNextFrame(QQuickOpenG
         rootNode = buildCustomNodes();
 
     if (!rootNode)
-        return 0;
+        return nullptr;
 
     if (m_dirtyProgram) {
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
@@ -316,23 +316,23 @@ QQuickOpenGLShaderEffectNode* QQuickCustomParticle::buildCustomNodes()
     typedef QHash<int, QQuickOpenGLShaderEffectNode*>::const_iterator NodeHashConstIt;
 
     if (!QOpenGLContext::currentContext())
-        return 0;
+        return nullptr;
 
     if (m_count * 4 > 0xffff) {
         // Index data is ushort.
         qmlInfo(this) << "CustomParticle: Too many particles - maximum 16383 per CustomParticle";
-        return 0;
+        return nullptr;
     }
 
     if (m_count <= 0) {
         qmlInfo(this) << "CustomParticle: Too few particles";
-        return 0;
+        return nullptr;
     }
 
     if (groups().isEmpty())
-        return 0;
+        return nullptr;
 
-    QQuickOpenGLShaderEffectNode *rootNode = 0;
+    QQuickOpenGLShaderEffectNode *rootNode = nullptr;
     QQuickOpenGLShaderEffectMaterial *material = new QQuickOpenGLShaderEffectMaterial;
     m_dirtyProgram = true;
 

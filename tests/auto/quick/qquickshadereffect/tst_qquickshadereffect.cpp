@@ -280,7 +280,7 @@ void tst_qquickshadereffect::lookThroughShaderCode()
 void tst_qquickshadereffect::deleteSourceItem()
 {
     // purely to ensure that deleting the sourceItem of a shader doesn't cause a crash
-    QQuickView *view = new QQuickView(0);
+    QQuickView *view = new QQuickView(nullptr);
     view->setSource(QUrl::fromLocalFile(testFile("deleteSourceItem.qml")));
     view->show();
     QVERIFY(QTest::qWaitForWindowExposed(view));
@@ -295,7 +295,7 @@ void tst_qquickshadereffect::deleteSourceItem()
 void tst_qquickshadereffect::deleteShaderEffectSource()
 {
     // purely to ensure that deleting the sourceItem of a shader doesn't cause a crash
-    QQuickView *view = new QQuickView(0);
+    QQuickView *view = new QQuickView(nullptr);
     view->setSource(QUrl::fromLocalFile(testFile("deleteShaderEffectSource.qml")));
     view->show();
     QVERIFY(QTest::qWaitForWindowExposed(view));
@@ -310,7 +310,7 @@ void tst_qquickshadereffect::deleteShaderEffectSource()
 void tst_qquickshadereffect::twoImagesOneShaderEffect()
 {
     // purely to ensure that deleting the sourceItem of a shader doesn't cause a crash
-    QQuickView *view = new QQuickView(0);
+    QQuickView *view = new QQuickView(nullptr);
     view->setSource(QUrl::fromLocalFile(testFile("twoImagesOneShaderEffect.qml")));
     view->show();
     QVERIFY(QTest::qWaitForWindowExposed(view));

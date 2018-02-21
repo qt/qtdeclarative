@@ -96,7 +96,7 @@ bool QQmlVME::componentCompleteEnabled()
 }
 
 QQmlVMEGuard::QQmlVMEGuard()
-: m_objectCount(0), m_objects(0), m_contextCount(0), m_contexts(0)
+: m_objectCount(0), m_objects(nullptr), m_contextCount(0), m_contexts(nullptr)
 {
 }
 
@@ -126,9 +126,9 @@ void QQmlVMEGuard::clear()
     delete [] m_contexts;
 
     m_objectCount = 0;
-    m_objects = 0;
+    m_objects = nullptr;
     m_contextCount = 0;
-    m_contexts = 0;
+    m_contexts = nullptr;
 }
 
 bool QQmlVMEGuard::isOK() const

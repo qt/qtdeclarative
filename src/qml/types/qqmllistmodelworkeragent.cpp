@@ -86,7 +86,7 @@ void QQmlListModelWorkerAgent::release()
 
 void QQmlListModelWorkerAgent::modelDestroyed()
 {
-    m_orig = 0;
+    m_orig = nullptr;
 }
 
 int QQmlListModelWorkerAgent::count() const

@@ -85,7 +85,7 @@ bool QQmlTypeWrapper::isSingleton() const
 QObject* QQmlTypeWrapper::singletonObject() const
 {
     if (!isSingleton())
-        return 0;
+        return nullptr;
 
     QQmlEngine *e = engine()->qmlEngine();
     QQmlType::SingletonInstanceInfo *siinfo = d()->type().singletonInstanceInfo();

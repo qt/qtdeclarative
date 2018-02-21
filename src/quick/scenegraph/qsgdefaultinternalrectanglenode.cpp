@@ -81,7 +81,7 @@ void SmoothColorMaterialShader::updateState(const RenderState &state, QSGMateria
     if (state.isMatrixDirty())
         program()->setUniformValue(m_matrixLoc, state.combinedMatrix());
 
-    if (oldEffect == 0) {
+    if (oldEffect == nullptr) {
         // The viewport is constant, so set the pixel size uniform only once.
         QRect r = state.viewportRect();
         program()->setUniformValue(m_pixelSizeLoc, 2.0f / r.width(), 2.0f / r.height());
@@ -94,7 +94,7 @@ char const *const *SmoothColorMaterialShader::attributeNames() const
         "vertex",
         "vertexColor",
         "vertexOffset",
-        0
+        nullptr
     };
     return attributes;
 }

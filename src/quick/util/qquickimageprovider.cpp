@@ -108,7 +108,7 @@ QImage QQuickTextureFactory::image() const
 QQuickTextureFactory *QQuickTextureFactory::textureFactoryForImage(const QImage &image)
 {
     if (image.isNull())
-        return 0;
+        return nullptr;
     QQuickTextureFactory *texture = QSGContext::createTextureFactoryFromImage(image);
     if (texture)
         return texture;
@@ -469,7 +469,7 @@ QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSi
     Q_UNUSED(requestedSize);
     if (d->type == Texture)
         qWarning("ImageProvider supports Texture type but has not implemented requestTexture()");
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -484,7 +484,7 @@ QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSi
 */
 QQuickAsyncImageProvider::QQuickAsyncImageProvider()
  : QQuickImageProvider(ImageResponse, ForceAsynchronousImageLoading)
- , d(0) // just as a placeholder in case we need it for the future
+ , d(nullptr) // just as a placeholder in case we need it for the future
 {
     Q_UNUSED(d);
 }

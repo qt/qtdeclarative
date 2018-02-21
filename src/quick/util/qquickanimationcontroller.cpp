@@ -49,7 +49,7 @@ class QQuickAnimationControllerPrivate : public QObjectPrivate, QAnimationJobCha
     Q_DECLARE_PUBLIC(QQuickAnimationController)
 public:
     QQuickAnimationControllerPrivate()
-        : progress(0.0), animation(0), animationInstance(0), finalized(false) {}
+        : progress(0.0), animation(nullptr), animationInstance(nullptr), finalized(false) {}
     void animationFinished(QAbstractAnimationJob *job) override;
     void animationCurrentTimeChanged(QAbstractAnimationJob *job, int currentTime) override;
 
@@ -197,7 +197,7 @@ void QQuickAnimationController::reload()
         return;
 
     if (!d->animation) {
-        d->animationInstance = 0;
+        d->animationInstance = nullptr;
     } else {
         QQuickStateActions actions;
         QQmlProperties properties;

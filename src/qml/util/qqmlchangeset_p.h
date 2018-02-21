@@ -119,7 +119,7 @@ public:
     void change(int index, int count);
 
     void insert(const QVector<Change> &inserts);
-    void remove(const QVector<Change> &removes, QVector<Change> *inserts = 0);
+    void remove(const QVector<Change> &removes, QVector<Change> *inserts = nullptr);
     void move(const QVector<Change> &removes, const QVector<Change> &inserts);
     void change(const QVector<Change> &changes);
     void apply(const QQmlChangeSet &changeSet);

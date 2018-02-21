@@ -61,7 +61,7 @@ class BaseObject : public QObject
     Q_PROPERTY(int propertyA READ propertyA NOTIFY propertyAChanged)
     Q_PROPERTY(QString propertyB READ propertyB NOTIFY propertyBChanged)
 public:
-    BaseObject(QObject *parent = 0) : QObject(parent) {}
+    BaseObject(QObject *parent = nullptr) : QObject(parent) {}
 
     int propertyA() const { return 0; }
     QString propertyB() const { return QString(); }
@@ -81,7 +81,7 @@ class DerivedObject : public BaseObject
     Q_PROPERTY(int propertyC READ propertyC NOTIFY propertyCChanged)
     Q_PROPERTY(QString propertyD READ propertyD NOTIFY propertyDChanged)
 public:
-    DerivedObject(QObject *parent = 0) : BaseObject(parent) {}
+    DerivedObject(QObject *parent = nullptr) : BaseObject(parent) {}
 
     int propertyC() const { return 0; }
     QString propertyD() const { return QString(); }
@@ -97,7 +97,7 @@ Q_SIGNALS:
 
 QQmlPropertyData *cacheProperty(QQmlPropertyCache *cache, const char *name)
 {
-    return cache->property(QLatin1String(name), 0, 0);
+    return cache->property(QLatin1String(name), nullptr, nullptr);
 }
 
 void tst_qqmlpropertycache::properties()

@@ -88,9 +88,9 @@ void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(3));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
-    defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, 0);
-    defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, 0);
-    defineAccessorProperty(QStringLiteral("byteOffset"), method_get_byteOffset, 0);
+    defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, nullptr);
+    defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, nullptr);
+    defineAccessorProperty(QStringLiteral("byteOffset"), method_get_byteOffset, nullptr);
 
     defineDefaultProperty(QStringLiteral("getInt8"), method_getChar<signed char>, 0);
     defineDefaultProperty(QStringLiteral("getUint8"), method_getChar<unsigned char>, 0);

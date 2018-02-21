@@ -54,14 +54,14 @@ static QQuickItem *itemAt(QQuickItem *item, const QPointF &pos,
                           QQuickItem *overlay)
 {
     if (item == overlay)
-        return 0;
+        return nullptr;
 
     if (!item->isVisible() || item->opacity() == 0.0)
-        return 0;
+        return nullptr;
 
     if (item->flags() & QQuickItem::ItemClipsChildrenToShape) {
         if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
-            return 0;
+            return nullptr;
     }
 
     QList<QQuickItem *> children = QQuickItemPrivate::get(item)->paintOrderChildItems();
@@ -73,10 +73,10 @@ static QQuickItem *itemAt(QQuickItem *item, const QPointF &pos,
     }
 
     if (!(item->flags() & QQuickItem::ItemHasContents))
-        return 0;
+        return nullptr;
 
     if (!QRectF(0, 0, item->width(), item->height()).contains(pos))
-        return 0;
+        return nullptr;
 
     return item;
 }
@@ -111,8 +111,8 @@ QQuickWindowInspector::QQuickWindowInspector(QQuickWindow *quickWindow, QObject 
     QObject(parent),
     m_overlay(new QQuickItem),
     m_window(quickWindow),
-    m_parentWindow(0),
-    m_tool(0)
+    m_parentWindow(nullptr),
+    m_tool(nullptr)
 {
     setParentWindow(quickWindow);
 
@@ -199,7 +199,7 @@ void QQuickWindowInspector::setShowAppOnTop(bool appOnTop)
 
 bool QQuickWindowInspector::isEnabled() const
 {
-    return m_tool != 0;
+    return m_tool != nullptr;
 }
 
 void QQuickWindowInspector::setEnabled(bool enabled)
@@ -208,7 +208,7 @@ void QQuickWindowInspector::setEnabled(bool enabled)
         m_tool = new InspectTool(this, m_window);
     } else {
         delete m_tool;
-        m_tool = 0;
+        m_tool = nullptr;
     }
 }
 

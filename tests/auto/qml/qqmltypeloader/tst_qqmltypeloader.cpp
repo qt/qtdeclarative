@@ -61,7 +61,7 @@ void tst_QQMLTypeLoader::testLoadComplete()
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QObject *rootObject = window->rootObject();
-    QTRY_VERIFY(rootObject != 0);
+    QTRY_VERIFY(rootObject != nullptr);
     QTRY_COMPARE(rootObject->property("created").toInt(), 2);
     QTRY_COMPARE(rootObject->property("loaded").toInt(), 2);
     delete window;
@@ -136,7 +136,7 @@ void tst_QQMLTypeLoader::trimCache3()
     QQmlProperty::write(window->rootObject(), "source", QString());
 
     // handle our deleteLater and cleanup
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
     window->engine()->collectGarbage();
 
@@ -173,7 +173,7 @@ class TestObject : public QObject
 {
     Q_OBJECT
 public:
-    TestObject(QObject *parent = 0) : QObject(parent) {}
+    TestObject(QObject *parent = nullptr) : QObject(parent) {}
 };
 
 QML_DECLARE_TYPE(TestObject)

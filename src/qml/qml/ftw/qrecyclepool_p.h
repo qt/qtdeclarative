@@ -61,7 +61,7 @@ class QRecyclePoolPrivate
 public:
     QRecyclePoolPrivate()
     : recyclePoolHold(true), outstandingItems(0), cookie(QRECYCLEPOOLCOOKIE),
-      currentPage(0), nextAllocated(0)
+      currentPage(nullptr), nextAllocated(nullptr)
     {
     }
 
@@ -178,7 +178,7 @@ void QRecyclePoolPrivate<T, Step>::releaseIfPossible()
 template<typename T, int Step>
 T *QRecyclePoolPrivate<T, Step>::allocate()
 {
-    PoolType *rv = 0;
+    PoolType *rv = nullptr;
     if (nextAllocated) {
         rv = nextAllocated;
         nextAllocated = rv->nextAllocated;

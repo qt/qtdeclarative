@@ -116,7 +116,7 @@ void tst_qquickimage::noSource()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->source(), QUrl());
     QCOMPARE(obj->status(), QQuickImage::Null);
     QCOMPARE(obj->width(), 0.);
@@ -203,7 +203,7 @@ void tst_qquickimage::imageSource()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     if (async)
         QVERIFY(obj->asynchronous());
@@ -241,7 +241,7 @@ void tst_qquickimage::clearSource()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickImage::Ready);
     QCOMPARE(obj->width(), 120.);
     QCOMPARE(obj->height(), 120.);
@@ -263,7 +263,7 @@ void tst_qquickimage::resized()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->width(), 300.);
     QCOMPARE(obj->height(), 300.);
     QCOMPARE(obj->fillMode(), QQuickImage::Stretch);
@@ -273,13 +273,13 @@ void tst_qquickimage::resized()
 
 void tst_qquickimage::preserveAspectRatio()
 {
-    QScopedPointer<QQuickView> window(new QQuickView(0));
+    QScopedPointer<QQuickView> window(new QQuickView(nullptr));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     window->setSource(testFileUrl("aspectratio.qml"));
     QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
-    QVERIFY(image != 0);
+    QVERIFY(image != nullptr);
     image->setWidth(80.0);
     QCOMPARE(image->width(), 80.);
     QCOMPARE(image->height(), 80.);
@@ -287,7 +287,7 @@ void tst_qquickimage::preserveAspectRatio()
     window->setSource(testFileUrl("aspectratio.qml"));
     image = qobject_cast<QQuickImage*>(window->rootObject());
     image->setHeight(60.0);
-    QVERIFY(image != 0);
+    QVERIFY(image != nullptr);
     QCOMPARE(image->height(), 60.);
     QCOMPARE(image->width(), 60.);
 }
@@ -298,7 +298,7 @@ void tst_qquickimage::smooth()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->width(), 300.);
     QCOMPARE(obj->height(), 300.);
     QCOMPARE(obj->smooth(), true);
@@ -327,7 +327,7 @@ void tst_qquickimage::mirror()
         window->setSource(testFileUrl("mirror.qml"));
 
         QQuickImage *obj = window->rootObject()->findChild<QQuickImage*>("image");
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
 
         obj->setFillMode(fillMode);
         obj->setProperty("mirror", true);
@@ -411,7 +411,7 @@ void tst_qquickimage::svg()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->width(), 300.0);
     QCOMPARE(obj->height(), 300.0);
     obj->setSourceSize(QSize(200,200));
@@ -486,7 +486,7 @@ void tst_qquickimage::geometry()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->width(), itemWidth);
     QCOMPARE(obj->paintedWidth(), paintedWidth);
@@ -509,7 +509,7 @@ void tst_qquickimage::big()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->width(), 100.0);
     QCOMPARE(obj->height(), 256.0);
 
@@ -530,7 +530,7 @@ void tst_qquickimage::tiling_QTBUG_6716()
 
     QQuickImage *tiling = findItem<QQuickImage>(view.rootObject(), "tiling");
 
-    QVERIFY(tiling != 0);
+    QVERIFY(tiling != nullptr);
     QImage img = view.grabWindow();
     for (int x = 0; x < tiling->width(); ++x) {
         for (int y = 0; y < tiling->height(); ++y) {
@@ -561,7 +561,7 @@ void tst_qquickimage::noLoading()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickImage::Ready);
 
     QSignalSpy sourceSpy(obj, SIGNAL(sourceChanged(QUrl)));
@@ -608,7 +608,7 @@ void tst_qquickimage::paintedWidthHeight()
         QQmlComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
         QCOMPARE(obj->width(), 200.0);
         QCOMPARE(obj->height(), 25.0);
         QCOMPARE(obj->paintedWidth(), 25.0);
@@ -623,7 +623,7 @@ void tst_qquickimage::paintedWidthHeight()
         QQmlComponent component(&engine);
         component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-        QVERIFY(obj != 0);
+        QVERIFY(obj != nullptr);
         QCOMPARE(obj->width(), 26.0);
         QCOMPARE(obj->height(), 175.0);
         QCOMPARE(obj->paintedWidth(), 26.0);
@@ -644,7 +644,7 @@ void tst_qquickimage::sourceSize_QTBUG_14303()
 
     QSignalSpy sourceSizeSpy(obj, SIGNAL(sourceSizeChanged()));
 
-    QTRY_VERIFY(obj != 0);
+    QTRY_VERIFY(obj != nullptr);
     QTRY_COMPARE(obj->status(), QQuickImage::Ready);
 
     QTRY_COMPARE(obj->sourceSize().width(), 200);
@@ -666,7 +666,7 @@ void tst_qquickimage::sourceSize_QTBUG_14303()
 
 void tst_qquickimage::sourceSize_QTBUG_16389()
 {
-    QScopedPointer<QQuickView> window(new QQuickView(0));
+    QScopedPointer<QQuickView> window(new QQuickView(nullptr));
     window->setSource(testFileUrl("qtbug_16389.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
@@ -690,7 +690,7 @@ void tst_qquickimage::sourceSize_QTBUG_16389()
 // QTBUG-15690
 void tst_qquickimage::nullPixmapPaint()
 {
-    QScopedPointer<QQuickView> window(new QQuickView(0));
+    QScopedPointer<QQuickView> window(new QQuickView(nullptr));
     window->setSource(testFileUrl("nullpixmap.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
@@ -700,7 +700,7 @@ void tst_qquickimage::nullPixmapPaint()
     server.serveDirectory(dataDirectory(), TestHTTPServer::Delay);
 
     QQuickImage *image = qobject_cast<QQuickImage*>(window->rootObject());
-    QTRY_VERIFY(image != 0);
+    QTRY_VERIFY(image != nullptr);
     image->setSource(server.url("/no-such-file.png"));
 
     QQmlTestMessageHandler messageHandler;
@@ -730,7 +730,7 @@ void tst_qquickimage::imageCrash_QTBUG_22125()
 
     // shouldn't crash when deleting cancelled QQmlPixmapReplys.
     server.sendDelayedItem();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 }
 
@@ -763,7 +763,7 @@ void tst_qquickimage::sourceSize()
     QFETCH(qreal, implicitWidth);
     QFETCH(qreal, implicitHeight);
 
-    QScopedPointer<QQuickView> window(new QQuickView(0));
+    QScopedPointer<QQuickView> window(new QQuickView(nullptr));
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("srcWidth", sourceWidth);
     ctxt->setContextProperty("srcHeight", sourceHeight);
@@ -794,7 +794,7 @@ void tst_qquickimage::sourceSizeChanges()
     QQmlContext *ctxt = engine.rootContext();
     ctxt->setContextProperty("srcImage", "");
     QQuickImage *img = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(img != 0);
+    QVERIFY(img != nullptr);
 
     QSignalSpy sourceSizeSpy(img, SIGNAL(sourceSizeChanged()));
 
@@ -860,7 +860,7 @@ void tst_qquickimage::progressAndStatusChanges()
     QQmlComponent component(&engine);
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
     QCOMPARE(obj->status(), QQuickImage::Ready);
     QTRY_COMPARE(obj->progress(), 1.0);
 
@@ -977,7 +977,7 @@ void tst_qquickimage::highdpi()
     ctxt->setContextProperty("srcImage", testFileUrl("heart-highdpi@2x.png"));
 
     QQuickImage *obj = qobject_cast<QQuickImage*>(component.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->width(), 150.0);
     QCOMPARE(obj->height(), 150.0);

@@ -68,11 +68,11 @@ struct Q_QML_EXPORT Script {
     Script(ExecutionContext *scope, QV4::Compiler::CompilationMode mode, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , context(scope), strictMode(false), inheritContext(false), parsed(false), compilationMode(mode)
-        , vmFunction(0), parseAsBinding(false) {}
+        , vmFunction(nullptr), parseAsBinding(false) {}
     Script(ExecutionEngine *engine, QmlContext *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , context(engine->rootContext()), strictMode(false), inheritContext(true), parsed(false)
-        , vmFunction(0), parseAsBinding(true) {
+        , vmFunction(nullptr), parseAsBinding(true) {
         if (qml)
             qmlContext.set(engine, *qml);
     }
@@ -100,7 +100,7 @@ struct Q_QML_EXPORT Script {
     static QQmlRefPointer<CompiledData::CompilationUnit> precompile(
             QV4::Compiler::Module *module, Compiler::JSUnitGenerator *unitGenerator,
             const QString &fileName, const QString &finalUrl, const QString &source,
-            QList<QQmlError> *reportedErrors = 0, QQmlJS::Directives *directivesCollector = 0);
+            QList<QQmlError> *reportedErrors = nullptr, QQmlJS::Directives *directivesCollector = nullptr);
     static Script *createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl);
 
     static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext);

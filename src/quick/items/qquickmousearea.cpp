@@ -60,13 +60,13 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), scrollGestureEnabled(true), hovered(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
-  propagateComposedEvents(false), overThreshold(false), pressed(0),
+  propagateComposedEvents(false), overThreshold(false), pressed(nullptr),
   pressAndHoldInterval(-1)
 #if QT_CONFIG(draganddrop)
-  , drag(0)
+  , drag(nullptr)
 #endif
 #if QT_CONFIG(cursor)
-  , cursor(0)
+  , cursor(nullptr)
 #endif
 {
 }
@@ -910,7 +910,7 @@ void QQuickMouseArea::ungrabMouse()
     if (d->pressed) {
         // if our mouse grab has been removed (probably by Flickable), fix our
         // state
-        d->pressed = 0;
+        d->pressed = nullptr;
         d->stealMouse = false;
         d->doubleClick = false;
         d->overThreshold = false;
@@ -944,7 +944,7 @@ bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
     QPointF localPos = mapFromScene(event->windowPos());
 
     QQuickWindow *c = window();
-    QQuickItem *grabber = c ? c->mouseGrabberItem() : 0;
+    QQuickItem *grabber = c ? c->mouseGrabberItem() : nullptr;
     bool stealThisEvent = d->stealMouse;
     if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
         QMouseEvent mouseEvent(event->type(), localPos, event->windowPos(), event->screenPos(),
@@ -965,7 +965,7 @@ bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
         default:
             break;
         }
-        grabber = c ? c->mouseGrabberItem() : 0;
+        grabber = c ? c->mouseGrabberItem() : nullptr;
         if (grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this)
             grabMouse();
 
@@ -1420,7 +1420,7 @@ QSGNode *QQuickMouseArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
     Q_D(QQuickMouseArea);
 
     if (!qmlVisualTouchDebugging())
-        return 0;
+        return nullptr;
 
     QSGInternalRectangleNode *rectangle = static_cast<QSGInternalRectangleNode *>(oldNode);
     if (!rectangle) rectangle = d->sceneGraphContext()->createInternalRectangleNode();

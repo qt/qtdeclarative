@@ -71,8 +71,8 @@ QV4Debugger::QV4Debugger(QV4::ExecutionEngine *engine)
     , m_haveBreakPoints(false)
     , m_breakOnThrow(false)
     , m_returnedValue(engine, QV4::Primitive::undefinedValue())
-    , m_gatherSources(0)
-    , m_runningJob(0)
+    , m_gatherSources(nullptr)
+    , m_runningJob(nullptr)
     , m_collector(engine)
 {
     static int debuggerId = qRegisterMetaType<QV4Debugger*>();
@@ -182,7 +182,7 @@ void QV4Debugger::maybeBreakAtInstruction()
     if (m_gatherSources) {
         m_gatherSources->run();
         delete m_gatherSources;
-        m_gatherSources = 0;
+        m_gatherSources = nullptr;
     }
 
     switch (m_stepping) {
@@ -295,11 +295,11 @@ bool QV4Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
     if (condition.isEmpty())
         return true;
 
-    Q_ASSERT(m_runningJob == 0);
+    Q_ASSERT(m_runningJob == nullptr);
     EvalJob evilJob(m_engine, condition);
     m_runningJob = &evilJob;
     m_runningJob->run();
-    m_runningJob = 0;
+    m_runningJob = nullptr;
 
     return evilJob.resultAsBoolean();
 }
@@ -313,7 +313,7 @@ void QV4Debugger::runInEngine(QV4DebugJob *job)
 void QV4Debugger::runInEngine_havingLock(QV4DebugJob *job)
 {
     Q_ASSERT(job);
-    Q_ASSERT(m_runningJob == 0);
+    Q_ASSERT(m_runningJob == nullptr);
 
     m_runningJob = job;
     if (state() == Paused)
@@ -321,7 +321,7 @@ void QV4Debugger::runInEngine_havingLock(QV4DebugJob *job)
     else
         emit scheduleJob();
     m_jobIsRunning.wait(&m_lock);
-    m_runningJob = 0;
+    m_runningJob = nullptr;
 }
 
 QT_END_NAMESPACE

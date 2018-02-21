@@ -70,7 +70,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
     Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged)
 
 public:
-    QQuickImageBase(QQuickItem *parent=0);
+    QQuickImageBase(QQuickItem *parent=nullptr);
     ~QQuickImageBase();
     enum Status { Null, Ready, Loading, Error };
     Q_ENUM(Status)

@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickGraphicsInfo::QQuickGraphicsInfo(QQuickItem *item)
     : QObject(item)
-    , m_window(0)
+    , m_window(nullptr)
     , m_api(Unknown)
     , m_shaderType(UnknownShadingLanguage)
     , m_shaderCompilationType(ShaderCompilationType(0))

@@ -375,12 +375,12 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
     if (function->isStrict() || isStrict) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
         ScopedValue thisObject(scope, directCall ? scope.engine->currentStackFrame->thisObject() : scope.engine->globalObject->asReturnedValue());
-        return e->call(thisObject, 0, 0);
+        return e->call(thisObject, nullptr, 0);
     }
 
     ScopedValue thisObject(scope, scope.engine->currentStackFrame->thisObject());
 
-    return function->call(thisObject, 0, 0, ctx);
+    return function->call(thisObject, nullptr, 0, ctx);
 }
 
 
@@ -507,7 +507,7 @@ ReturnedValue GlobalFunctions::method_parseFloat(const FunctionObject *b, const 
     QByteArray ba = trimmed.toLatin1();
     bool ok;
     const char *begin = ba.constData();
-    const char *end = 0;
+    const char *end = nullptr;
     double d = qstrtod(begin, &end, &ok);
     if (end - begin == 0)
         RETURN_RESULT(Encode(std::numeric_limits<double>::quiet_NaN())); // 3

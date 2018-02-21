@@ -149,8 +149,8 @@ public:
 
         // Set up material so it is all set for later..
         m_material = XorBlendShader::createMaterial();
-        m_material->state()->texture1 = 0;
-        m_material->state()->texture2 = 0;
+        m_material->state()->texture1 = nullptr;
+        m_material->state()->texture2 = nullptr;
         m_material->setFlag(QSGMaterial::Blending);
         m_node.setMaterial(m_material);
         m_node.setFlag(QSGNode::OwnsMaterial);
@@ -214,8 +214,8 @@ private:
 
 XorBlender::XorBlender(QQuickItem *parent)
     : QQuickItem(parent)
-    , m_source1(0)
-    , m_source2(0)
+    , m_source1(nullptr)
+    , m_source2(nullptr)
     , m_source1Changed(false)
     , m_source2Changed(false)
 {
@@ -256,7 +256,7 @@ QSGNode *XorBlender::updatePaintNode(QSGNode *old, UpdatePaintNodeData *)
     }
     if (abort) {
         delete old;
-        return 0;
+        return nullptr;
     }
 
     XorNode *node = static_cast<XorNode *>(old);
@@ -264,7 +264,7 @@ QSGNode *XorBlender::updatePaintNode(QSGNode *old, UpdatePaintNodeData *)
     // If the sources have changed, recreate the nodes
     if (m_source1Changed || m_source2Changed) {
         delete node;
-        node = 0;
+        node = nullptr;
         m_source1Changed = false;
         m_source2Changed = false;
     }

@@ -118,8 +118,8 @@ class DummyRenderer : public QSGBatchRenderer::Renderer
 public:
     DummyRenderer(QSGRootNode *root, QSGDefaultRenderContext *renderContext)
         : QSGBatchRenderer::Renderer(renderContext)
-        , changedNode(0)
-        , changedState(0)
+        , changedNode(nullptr)
+        , changedState(nullptr)
         , renderCount(0)
     {
         setRootNode(root);

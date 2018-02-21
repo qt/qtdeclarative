@@ -67,7 +67,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPen : public QObject
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY penChanged)
     Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY penChanged)
 public:
-    QQuickPen(QObject *parent=0);
+    QQuickPen(QObject *parent=nullptr);
 
     qreal width() const;
     void setWidth(qreal w);
@@ -98,7 +98,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradientStop : public QObject
     Q_PROPERTY(QColor color READ color WRITE setColor)
 
 public:
-    QQuickGradientStop(QObject *parent=0);
+    QQuickGradientStop(QObject *parent=nullptr);
 
     qreal position() const;
     void setPosition(qreal position);
@@ -122,7 +122,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradient : public QObject
     Q_CLASSINFO("DefaultProperty", "stops")
 
 public:
-    QQuickGradient(QObject *parent=0);
+    QQuickGradient(QObject *parent=nullptr);
     ~QQuickGradient();
 
     QQmlListProperty<QQuickGradientStop> stops();
@@ -151,7 +151,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRectangle : public QQuickItem
     Q_PROPERTY(QQuickPen * border READ border CONSTANT)
     Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged)
 public:
-    QQuickRectangle(QQuickItem *parent=0);
+    QQuickRectangle(QQuickItem *parent=nullptr);
 
     QColor color() const;
     void setColor(const QColor &);

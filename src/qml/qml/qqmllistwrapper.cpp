@@ -77,7 +77,7 @@ ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, i
     Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocObject<QmlListWrapper>());
     r->d()->object = object;
     r->d()->propertyType = propType;
-    void *args[] = { &r->d()->property(), 0 };
+    void *args[] = { &r->d()->property(), nullptr };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, propId, args);
     return r.asReturnedValue();
 }
@@ -151,7 +151,7 @@ bool QmlListWrapper::put(Managed *m, String *name, const Value &value)
 
 void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
 {
-    name->setM(0);
+    name->setM(nullptr);
     *index = UINT_MAX;
     Q_ASSERT(m->as<QmlListWrapper>());
     QmlListWrapper *w = static_cast<QmlListWrapper *>(m);

@@ -180,7 +180,7 @@ void QQuickDesignerCustomObjectData::doResetProperty(QQmlContext *context, const
 
     QQmlAbstractBinding *binding = QQmlPropertyPrivate::binding(property);
     if (binding && !(hasValidResetBinding(propertyName) && getResetBinding(propertyName) == binding)) {
-        binding->setEnabled(false, 0);
+        binding->setEnabled(false, nullptr);
     }
 
 

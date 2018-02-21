@@ -280,22 +280,22 @@ QAbstractAnimationJob *QQuickAnimator::transition(QQuickStateActions &actions,
 
     if (d->defaultProperty.isValid() && propertyName() != d->defaultProperty.name()) {
         qDebug() << Q_FUNC_INFO << "property name conflict...";
-        return 0;
+        return nullptr;
     }
 
     // The animation system cannot handle backwards uncontrolled animations.
     if (direction == Backward)
-        return 0;
+        return nullptr;
 
     QQuickAnimatorJob *job = createJob();
     if (!job)
-        return 0;
+        return nullptr;
 
     d->apply(job, propertyName(), actions, modified, defaultTarget);
 
     if (!job->target()) {
         delete job;
-        return 0;
+        return nullptr;
     }
 
     return job;
@@ -576,7 +576,7 @@ QQuickAnimatorJob *QQuickUniformAnimator::createJob() const
 {
     QString u = propertyName();
     if (u.isEmpty())
-        return 0;
+        return nullptr;
 
     QQuickUniformAnimatorJob *job = new QQuickUniformAnimatorJob();
     job->setUniform(u.toLatin1());

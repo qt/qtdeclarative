@@ -89,7 +89,7 @@ void QQmlDelayedCallQueue::DelayedFunctionCall::execute(QV4::ExecutionEngine *en
 //
 
 QQmlDelayedCallQueue::QQmlDelayedCallQueue()
-    : QObject(0), m_engine(0), m_callbackOutstanding(false)
+    : QObject(nullptr), m_engine(nullptr), m_callbackOutstanding(false)
 {
 }
 

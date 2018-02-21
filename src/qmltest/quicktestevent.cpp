@@ -190,7 +190,7 @@ namespace QtQuickTest
                 me.setTimestamp(++lastMouseTimestamp);
                 break;
             case MouseRelease:
-                me = QMouseEvent(QEvent::MouseButtonRelease, pos, window->mapToGlobal(pos), button, 0, stateKey);
+                me = QMouseEvent(QEvent::MouseButtonRelease, pos, window->mapToGlobal(pos), button, nullptr, stateKey);
                 me.setTimestamp(++lastMouseTimestamp);
                 lastMouseTimestamp += 500; // avoid double clicks being generated
                 break;
@@ -355,7 +355,7 @@ QWindow *QuickTestEvent::eventWindow(QObject *item)
     QQuickItem *testParentitem = qobject_cast<QQuickItem *>(parent());
     if (testParentitem)
         return testParentitem->window();
-    return 0;
+    return nullptr;
 }
 
 QWindow *QuickTestEvent::activeWindow()

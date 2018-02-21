@@ -132,7 +132,7 @@ public:
 
     static QQuickPositionerAttached *qmlAttachedProperties(QObject *obj);
 
-    void updateAttachedProperties(QQuickPositionerAttached *specificProperty = 0, QQuickItem *specificPropertyOwner = 0) const;
+    void updateAttachedProperties(QQuickPositionerAttached *specificProperty = nullptr, QQuickItem *specificPropertyOwner = nullptr) const;
 
     qreal padding() const;
     void setPadding(qreal padding);
@@ -231,7 +231,7 @@ class Q_AUTOTEST_EXPORT QQuickColumn : public QQuickBasePositioner
 {
     Q_OBJECT
 public:
-    QQuickColumn(QQuickItem *parent=0);
+    QQuickColumn(QQuickItem *parent=nullptr);
 
 protected:
     void doPositioning(QSizeF *contentSize) override;
@@ -247,7 +247,7 @@ class Q_AUTOTEST_EXPORT QQuickRow: public QQuickBasePositioner
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
 public:
-    QQuickRow(QQuickItem *parent=0);
+    QQuickRow(QQuickItem *parent=nullptr);
 
     Qt::LayoutDirection layoutDirection() const;
     void setLayoutDirection (Qt::LayoutDirection);
@@ -281,7 +281,7 @@ class Q_AUTOTEST_EXPORT QQuickGrid : public QQuickBasePositioner
     Q_PROPERTY(VAlignment verticalItemAlignment READ vItemAlign WRITE setVItemAlign NOTIFY verticalAlignmentChanged REVISION 1)
 
 public:
-    QQuickGrid(QQuickItem *parent=0);
+    QQuickGrid(QQuickItem *parent=nullptr);
 
     int rows() const { return m_rows; }
     void setRows(const int rows);
@@ -360,7 +360,7 @@ class Q_AUTOTEST_EXPORT QQuickFlow: public QQuickBasePositioner
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
     Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
 public:
-    QQuickFlow(QQuickItem *parent=0);
+    QQuickFlow(QQuickItem *parent=nullptr);
 
     enum Flow { LeftToRight, TopToBottom };
     Q_ENUM(Flow)

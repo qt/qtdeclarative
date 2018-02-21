@@ -65,7 +65,7 @@ class Q_AUTOTEST_EXPORT QQuickTimeLine : public QObject, QAbstractAnimationJob
 {
 Q_OBJECT
 public:
-    QQuickTimeLine(QObject *parent = 0);
+    QQuickTimeLine(QObject *parent = nullptr);
     ~QQuickTimeLine();
 
     enum SyncMode { LocalSync, GlobalSync };
@@ -152,7 +152,7 @@ public:
     typedef void (*Callback)(void *);
 
     QQuickTimeLineCallback();
-    QQuickTimeLineCallback(QQuickTimeLineObject *b, Callback, void * = 0);
+    QQuickTimeLineCallback(QQuickTimeLineObject *b, Callback, void * = nullptr);
     QQuickTimeLineCallback(const QQuickTimeLineCallback &o);
 
     QQuickTimeLineCallback &operator=(const QQuickTimeLineCallback &o);
@@ -170,7 +170,7 @@ class QQuickTimeLineValueProxy : public QQuickTimeLineValue
 {
 public:
     QQuickTimeLineValueProxy(T *cls, void (T::*func)(qreal), qreal v = 0.)
-    : QQuickTimeLineValue(v), _class(cls), _setFunctionReal(func), _setFunctionInt(0)
+    : QQuickTimeLineValue(v), _class(cls), _setFunctionReal(func), _setFunctionInt(nullptr)
     {
         Q_ASSERT(_class);
     }

@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 QQmlAbstractProfilerAdapter *QQuickProfilerAdapterFactory::create(const QString &key)
 {
     if (key != QLatin1String("QQuickProfilerAdapter"))
-        return 0;
+        return nullptr;
     return new QQuickProfilerAdapter(this);
 }
 

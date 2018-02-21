@@ -47,8 +47,8 @@ using namespace QV4;
 
 void ObjectIterator::init(const Object *o)
 {
-    object->setM(o ? o->m() : 0);
-    current->setM(o ? o->m() : 0);
+    object->setM(o ? o->m() : nullptr);
+    current->setM(o ? o->m() : nullptr);
 
     if (object->as<ArgumentsObject>()) {
         Scope scope(engine);
@@ -58,7 +58,7 @@ void ObjectIterator::init(const Object *o)
 
 void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
-    name->setM(0);
+    name->setM(nullptr);
     *index = UINT_MAX;
 
     if (!object->as<Object>()) {
@@ -100,7 +100,7 @@ void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttrib
         if (flags & WithProtoChain)
             current->setM(co->prototype());
         else
-            current->setM(0);
+            current->setM(nullptr);
 
         arrayIndex = 0;
         memberIndex = 0;

@@ -69,7 +69,7 @@ void QQuickBasePositionerPrivate::unwatchChanges(QQuickItem* other)
 
 QQuickBasePositioner::PositionedItem::PositionedItem(QQuickItem *i)
     : item(i)
-    , transitionableItem(0)
+    , transitionableItem(nullptr)
     , index(-1)
     , isNew(false)
     , isVisible(true)
@@ -203,7 +203,7 @@ void QQuickBasePositioner::setSpacing(qreal s)
 QQuickTransition *QQuickBasePositioner::populate() const
 {
     Q_D(const QQuickBasePositioner);
-    return d->transitioner ? d->transitioner->populateTransition : 0;
+    return d->transitioner ? d->transitioner->populateTransition : nullptr;
 }
 
 void QQuickBasePositioner::setPopulate(QQuickTransition *transition)
@@ -220,7 +220,7 @@ void QQuickBasePositioner::setPopulate(QQuickTransition *transition)
 QQuickTransition *QQuickBasePositioner::move() const
 {
     Q_D(const QQuickBasePositioner);
-    return d->transitioner ? d->transitioner->displacedTransition : 0;
+    return d->transitioner ? d->transitioner->displacedTransition : nullptr;
 }
 
 void QQuickBasePositioner::setMove(QQuickTransition *mt)
@@ -238,7 +238,7 @@ void QQuickBasePositioner::setMove(QQuickTransition *mt)
 QQuickTransition *QQuickBasePositioner::add() const
 {
     Q_D(const QQuickBasePositioner);
-    return d->transitioner ? d->transitioner->addTransition : 0;
+    return d->transitioner ? d->transitioner->addTransition : nullptr;
 }
 
 void QQuickBasePositioner::setAdd(QQuickTransition *add)
@@ -460,15 +460,15 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
     // be changed to run only when there are attached properties present. This
     // could be a flag in the positioner that is set by the attached property
     // constructor.
-    QQuickPositionerAttached *prevLastProperty = 0;
-    QQuickPositionerAttached *lastProperty = 0;
+    QQuickPositionerAttached *prevLastProperty = nullptr;
+    QQuickPositionerAttached *lastProperty = nullptr;
 
     for (int ii = 0; ii < positionedItems.count(); ++ii) {
         const PositionedItem &child = positionedItems.at(ii);
         if (!child.item)
             continue;
 
-        QQuickPositionerAttached *property = 0;
+        QQuickPositionerAttached *property = nullptr;
 
         if (specificProperty) {
             if (specificPropertyOwner == child.item) {
@@ -503,7 +503,7 @@ void QQuickBasePositioner::updateAttachedProperties(QQuickPositionerAttached *sp
         if (!child.item)
             continue;
 
-        QQuickPositionerAttached *property = 0;
+        QQuickPositionerAttached *property = nullptr;
 
         if (specificProperty) {
             if (specificPropertyOwner == child.item) {

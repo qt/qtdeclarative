@@ -283,25 +283,25 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(2));
 
     // Properties deprecated in the spec but required by "the web" :(
-    ctor->defineAccessorProperty(QStringLiteral("lastMatch"), method_get_lastMatch_n<0>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$&"), method_get_lastMatch_n<0>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$1"), method_get_lastMatch_n<1>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$2"), method_get_lastMatch_n<2>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$3"), method_get_lastMatch_n<3>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$4"), method_get_lastMatch_n<4>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$5"), method_get_lastMatch_n<5>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$6"), method_get_lastMatch_n<6>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$7"), method_get_lastMatch_n<7>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$8"), method_get_lastMatch_n<8>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$9"), method_get_lastMatch_n<9>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("lastParen"), method_get_lastParen, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$+"), method_get_lastParen, 0);
-    ctor->defineAccessorProperty(QStringLiteral("input"), method_get_input, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$_"), method_get_input, 0);
-    ctor->defineAccessorProperty(QStringLiteral("leftContext"), method_get_leftContext, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$`"), method_get_leftContext, 0);
-    ctor->defineAccessorProperty(QStringLiteral("rightContext"), method_get_rightContext, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$'"), method_get_rightContext, 0);
+    ctor->defineAccessorProperty(QStringLiteral("lastMatch"), method_get_lastMatch_n<0>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$&"), method_get_lastMatch_n<0>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$1"), method_get_lastMatch_n<1>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$2"), method_get_lastMatch_n<2>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$3"), method_get_lastMatch_n<3>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$4"), method_get_lastMatch_n<4>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$5"), method_get_lastMatch_n<5>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$6"), method_get_lastMatch_n<6>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$7"), method_get_lastMatch_n<7>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$8"), method_get_lastMatch_n<8>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$9"), method_get_lastMatch_n<9>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("lastParen"), method_get_lastParen, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$+"), method_get_lastParen, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("input"), method_get_input, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$_"), method_get_input, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("leftContext"), method_get_leftContext, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$`"), method_get_leftContext, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("rightContext"), method_get_rightContext, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$'"), method_get_rightContext, nullptr);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);

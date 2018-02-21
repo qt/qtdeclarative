@@ -76,7 +76,7 @@ void QQuickViewPrivate::init(QQmlEngine* e)
 }
 
 QQuickViewPrivate::QQuickViewPrivate()
-    : root(0), component(0), resizeMode(QQuickView::SizeViewToRootObject), initialSize(0,0)
+    : root(nullptr), component(nullptr), resizeMode(QQuickView::SizeViewToRootObject), initialSize(0,0)
 {
 }
 
@@ -94,11 +94,11 @@ void QQuickViewPrivate::execute()
 
     if (root) {
         delete root;
-        root = 0;
+        root = nullptr;
     }
     if (component) {
         delete component;
-        component = 0;
+        component = nullptr;
     }
     if (!source.isEmpty()) {
         QML_MEMORY_SCOPE_URL(engine.data()->baseUrl().resolved(source));
@@ -216,7 +216,7 @@ QQuickView::~QQuickView()
     // be a child of the QQuickViewPrivate, and will be destroyed by its dtor
     Q_D(QQuickView);
     delete d->root;
-    d->root = 0;
+    d->root = nullptr;
 }
 
 /*!
@@ -260,7 +260,7 @@ void QQuickView::setContent(const QUrl& url, QQmlComponent *component, QObject* 
     if (d->component && d->component->isError()) {
         const QList<QQmlError> errorList = d->component->errors();
         for (const QQmlError &error : errorList) {
-            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
+            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), nullptr).warning()
                     << error;
         }
         emit statusChanged(status());
@@ -289,7 +289,7 @@ QUrl QQuickView::source() const
 QQmlEngine* QQuickView::engine() const
 {
     Q_D(const QQuickView);
-    return d->engine ? const_cast<QQmlEngine *>(d->engine.data()) : 0;
+    return d->engine ? const_cast<QQmlEngine *>(d->engine.data()) : nullptr;
 }
 
 /*!
@@ -302,7 +302,7 @@ QQmlEngine* QQuickView::engine() const
 QQmlContext* QQuickView::rootContext() const
 {
     Q_D(const QQuickView);
-    return d->engine ? d->engine.data()->rootContext() : 0;
+    return d->engine ? d->engine.data()->rootContext() : nullptr;
 }
 
 /*!
@@ -471,7 +471,7 @@ void QQuickView::continueExecute()
     if (d->component->isError()) {
         const QList<QQmlError> errorList = d->component->errors();
         for (const QQmlError &error : errorList) {
-            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
+            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), nullptr).warning()
                     << error;
         }
         emit statusChanged(status());
@@ -483,7 +483,7 @@ void QQuickView::continueExecute()
     if (d->component->isError()) {
         const QList<QQmlError> errorList = d->component->errors();
         for (const QQmlError &error : errorList) {
-            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
+            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), nullptr).warning()
                     << error;
         }
         emit statusChanged(status());
@@ -517,7 +517,7 @@ void QQuickViewPrivate::setRootObject(QObject *obj)
                    << "Ensure your QML code is written for QtQuick 2, and uses a root that is or" << endl
                    << "inherits from QtQuick's Item (not a Timer, QtObject, etc)." << endl;
         delete obj;
-        root = 0;
+        root = nullptr;
     }
     if (root) {
         initialSize = rootObjectSize();

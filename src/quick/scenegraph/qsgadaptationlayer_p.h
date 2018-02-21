@@ -373,7 +373,7 @@ public:
         HighQualitySubPixelAntialiasing
     };
 
-    QSGGlyphNode() : m_ownerElement(0) {}
+    QSGGlyphNode() : m_ownerElement(nullptr) {}
 
     virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) = 0;
     virtual void setColor(const QColor &color) = 0;
@@ -484,7 +484,7 @@ protected:
         QPainterPath path;
         quint32 ref;
 
-        GlyphData() : texture(0), ref(0) { }
+        GlyphData() : texture(nullptr), ref(0) { }
     };
 
     virtual void requestGlyphs(const QSet<glyph_t> &glyphs) = 0;

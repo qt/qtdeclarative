@@ -662,7 +662,7 @@ QVariant QJSValue::toVariant() const
         return QVariant(val->asDouble());
     }
     if (val->isNull())
-        return QVariant(QMetaType::Nullptr, 0);
+        return QVariant(QMetaType::Nullptr, nullptr);
     Q_ASSERT(val->isUndefined());
     return QVariant();
 }
@@ -831,7 +831,7 @@ QJSEngine* QJSValue::engine() const
     QV4::ExecutionEngine *engine = QJSValuePrivate::engine(this);
     if (engine)
         return engine->jsEngine();
-    return 0;
+    return nullptr;
 }
 
 #endif // QT_DEPRECATED
@@ -884,7 +884,7 @@ void QJSValue::setPrototype(const QJSValue& prototype)
     if (!val)
         return;
     if (val->isNull()) {
-        o->setPrototype(0);
+        o->setPrototype(nullptr);
         return;
     }
 
@@ -1308,11 +1308,11 @@ QObject *QJSValue::toQObject() const
 {
     QV4::ExecutionEngine *engine = QJSValuePrivate::engine(this);
     if (!engine)
-        return 0;
+        return nullptr;
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::QObjectWrapper> wrapper(scope, QJSValuePrivate::getValue(this));
     if (!wrapper)
-        return 0;
+        return nullptr;
 
     return wrapper->object();
 }
@@ -1329,11 +1329,11 @@ const QMetaObject *QJSValue::toQMetaObject() const
 {
     QV4::ExecutionEngine *engine = QJSValuePrivate::engine(this);
     if (!engine)
-        return 0;
+        return nullptr;
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::QMetaObjectWrapper> wrapper(scope, QJSValuePrivate::getValue(this));
     if (!wrapper)
-        return 0;
+        return nullptr;
 
     return wrapper->metaObject();
 }
@@ -1389,7 +1389,7 @@ bool QJSValue::isRegExp() const
 bool QJSValue::isQObject() const
 {
     QV4::Value *val = QJSValuePrivate::getValue(this);
-    return val && val->as<QV4::QObjectWrapper>() != 0;
+    return val && val->as<QV4::QObjectWrapper>() != nullptr;
 }
 
 /*!
@@ -1403,7 +1403,7 @@ bool QJSValue::isQObject() const
 bool QJSValue::isQMetaObject() const
 {
     QV4::Value *val = QJSValuePrivate::getValue(this);
-    return val && val->as<QV4::QMetaObjectWrapper>() != 0;
+    return val && val->as<QV4::QMetaObjectWrapper>() != nullptr;
 }
 
 QT_END_NAMESPACE

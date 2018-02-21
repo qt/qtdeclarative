@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 class QQuickAnchorLine
 {
 public:
-    QQuickAnchorLine() : item(0), anchorLine(QQuickAnchors::InvalidAnchor) {}
+    QQuickAnchorLine() : item(nullptr), anchorLine(QQuickAnchors::InvalidAnchor) {}
     QQuickAnchorLine(QQuickItem *i, QQuickAnchors::Anchor l) : item(i), anchorLine(l) {}
     QQuickAnchorLine(QQuickItem *i, uint l)
         : item(i)

@@ -71,7 +71,7 @@ class Q_AUTOTEST_EXPORT QQmlInstantiator : public QObject, public QQmlParserStat
     Q_CLASSINFO("DefaultProperty", "delegate")
 
 public:
-    QQmlInstantiator(QObject *parent = 0);
+    QQmlInstantiator(QObject *parent = nullptr);
     ~QQmlInstantiator();
 
     bool isActive() const;

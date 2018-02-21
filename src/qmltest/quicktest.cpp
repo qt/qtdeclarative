@@ -79,7 +79,7 @@ class QTestRootObject : public QObject
     Q_PROPERTY(bool hasTestCase READ hasTestCase WRITE setHasTestCase NOTIFY hasTestCaseChanged)
     Q_PROPERTY(QObject *defined READ defined)
 public:
-    QTestRootObject(QObject *parent = 0)
+    QTestRootObject(QObject *parent = nullptr)
         : QObject(parent), hasQuit(false), m_windowShown(false), m_hasTestCase(false)  {
         m_defined = new QQmlPropertyMap(this);
 #if defined(QT_OPENGL_ES_2_ANGLE)
@@ -191,7 +191,7 @@ bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000)
         if (remaining <= 0)
             break;
         QCoreApplication::processEvents(QEventLoop::AllEvents, remaining);
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         QTest::qSleep(10);
     }
 
@@ -343,7 +343,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
     }
 #endif
 
-    QCoreApplication *app = 0;
+    QCoreApplication *app = nullptr;
     if (!QCoreApplication::instance()) {
 #ifdef QT_QMLTEST_WITH_WIDGETS
         if (withWidgets)
@@ -577,7 +577,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
     }
 
     // Flush the current logging stream.
-    QuickTestResult::setProgramName(0);
+    QuickTestResult::setProgramName(nullptr);
     delete app;
 
     // Return the number of failures as the exit code.

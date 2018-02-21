@@ -848,7 +848,7 @@ void tst_QParallelAnimationGroupJob::addAndRemoveDuration()
     QCOMPARE(group.duration(), 250);
 
     group.removeAnimation(test);    // remove the last one (with duration = 250)
-    QCOMPARE(test->group(), static_cast<QAnimationGroupJob*>(0));
+    QCOMPARE(test->group(), static_cast<QAnimationGroupJob*>(nullptr));
     QCOMPARE(group.duration(), 0);
     delete test;
 }

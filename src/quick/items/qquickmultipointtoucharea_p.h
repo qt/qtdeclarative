@@ -224,7 +224,7 @@ class Q_AUTOTEST_EXPORT QQuickMultiPointTouchArea : public QQuickItem
     Q_PROPERTY(bool mouseEnabled READ mouseEnabled WRITE setMouseEnabled NOTIFY mouseEnabledChanged)
 
 public:
-    QQuickMultiPointTouchArea(QQuickItem *parent=0);
+    QQuickMultiPointTouchArea(QQuickItem *parent=nullptr);
     ~QQuickMultiPointTouchArea();
 
     int minimumTouchPoints() const;
@@ -235,7 +235,7 @@ public:
     void setMouseEnabled(bool arg);
 
     QQmlListProperty<QQuickTouchPoint> touchPoints() {
-        return QQmlListProperty<QQuickTouchPoint>(this, 0, QQuickMultiPointTouchArea::touchPoint_append, QQuickMultiPointTouchArea::touchPoint_count, QQuickMultiPointTouchArea::touchPoint_at, 0);
+        return QQmlListProperty<QQuickTouchPoint>(this, nullptr, QQuickMultiPointTouchArea::touchPoint_append, QQuickMultiPointTouchArea::touchPoint_count, QQuickMultiPointTouchArea::touchPoint_at, nullptr);
     }
 
     static void touchPoint_append(QQmlListProperty<QQuickTouchPoint> *list, QQuickTouchPoint* touch) {

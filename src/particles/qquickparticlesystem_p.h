@@ -353,7 +353,7 @@ class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleSystem : public QQuickItem
     Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
 
 public:
-    explicit QQuickParticleSystem(QQuickItem *parent = 0);
+    explicit QQuickParticleSystem(QQuickItem *parent = nullptr);
     ~QQuickParticleSystem();
 
     bool isRunning() const

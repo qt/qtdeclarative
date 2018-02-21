@@ -71,7 +71,7 @@ void tst_qqmltranslation::translation()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFile);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     if (verifyCompiledData) {
         QQmlContext *context = qmlContext(object);
@@ -131,7 +131,7 @@ void tst_qqmltranslation::idTranslation()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("idtranslation.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     {
         QQmlContext *context = qmlContext(object);

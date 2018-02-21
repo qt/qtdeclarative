@@ -87,7 +87,7 @@ class CppObject : public QObject
     Q_PROPERTY(QFont fontProperty MEMBER m_fontProperty NOTIFY fontPropertyChanged)
 
 public:
-    CppObject(QObject *parent = 0) : QObject(parent),
+    CppObject(QObject *parent = nullptr) : QObject(parent),
         m_intProperty(123),
         m_boolProperty(true),
         m_realProperty(1.23),
