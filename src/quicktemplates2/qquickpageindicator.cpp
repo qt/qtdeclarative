@@ -39,7 +39,6 @@
 
 #include <QtCore/qmath.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -84,7 +83,7 @@ QT_BEGIN_NAMESPACE
     \sa SwipeView, {Customizing PageIndicator}, {Indicator Controls}
 */
 
-class QQuickPageIndicatorPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
+class QQuickPageIndicatorPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPageIndicator)
 

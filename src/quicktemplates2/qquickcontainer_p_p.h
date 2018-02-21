@@ -50,12 +50,11 @@
 
 #include <QtQuickTemplates2/private/qquickcontainer_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQml/private/qqmlobjectmodel_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickContainerPrivate : public QQuickControlPrivate, public QQuickItemChangeListener
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickContainerPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickContainer)
 

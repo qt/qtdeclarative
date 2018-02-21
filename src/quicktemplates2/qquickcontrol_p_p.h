@@ -53,6 +53,7 @@
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQml/private/qlazilyallocated_p.h>
 
 #if QT_CONFIG(accessibility)
@@ -63,7 +64,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAccessibleAttached;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControlPrivate : public QQuickItemPrivate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControlPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif

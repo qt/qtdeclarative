@@ -49,13 +49,12 @@
 //
 
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPane;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPanePrivate : public QQuickControlPrivate, public QQuickItemChangeListener
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPanePrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPane)
 
