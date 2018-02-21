@@ -259,7 +259,6 @@ void IRDecoder::visitExp(IR::Exp *s)
         } else if (c->base->asTemp() || c->base->asArgLocal() || c->base->asConst()) {
             callValue(c->base, c->args, 0);
         } else if (Member *member = c->base->asMember()) {
-            Q_ASSERT(member->base->asTemp() || member->base->asArgLocal());
 #ifndef V4_BOOTSTRAP
             Q_ASSERT(member->kind != IR::Member::MemberOfIdObjectsArray);
             if (member->kind == IR::Member::MemberOfQmlScopeObject || member->kind == IR::Member::MemberOfQmlContextObject) {

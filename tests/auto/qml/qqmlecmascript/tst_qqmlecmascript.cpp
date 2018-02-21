@@ -339,6 +339,7 @@ private slots:
     void singleBlockLoops();
     void qtbug_60547();
     void anotherNaN();
+    void callPropertyOnUndefined();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8279,6 +8280,18 @@ void tst_qqmlecmascript::anotherNaN()
     std::memcpy(&d, &anotherNaN, sizeof(d));
     QVERIFY(std::isnan(d));
     object->setProperty("prop", d);  // don't crash
+}
+
+void tst_qqmlecmascript::callPropertyOnUndefined()
+{
+    QJSEngine engine;
+    QJSValue v = engine.evaluate(QString::fromLatin1(
+            "function f() {\n"
+            "    var base;\n"
+            "    base.push(1);"
+            "}\n"
+    ));
+    QVERIFY(!v.isError()); // well, more importantly: this shouldn't fail on an assert.
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
