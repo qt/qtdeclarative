@@ -107,8 +107,6 @@ QT_BEGIN_NAMESPACE
         {Focus Management in Qt Quick Controls 2}
 */
 
-static const QQuickItemPrivate::ChangeTypes ImplicitSizeChanges = QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed;
-
 QQuickPanePrivate::QQuickPanePrivate()
     : hasContentWidth(false),
       hasContentHeight(false),
@@ -135,30 +133,16 @@ QQuickItem *QQuickPanePrivate::getContentItem()
     return new QQuickContentItem(q);
 }
 
-void QQuickPanePrivate::addImplicitSizeListener(QQuickItem *item)
-{
-    if (!item)
-        return;
-
-    QQuickItemPrivate::get(item)->addItemChangeListener(this, ImplicitSizeChanges);
-}
-
-void QQuickPanePrivate::removeImplicitSizeListener(QQuickItem *item)
-{
-    if (!item)
-        return;
-
-    QQuickItemPrivate::get(item)->removeItemChangeListener(this, ImplicitSizeChanges);
-}
-
 void QQuickPanePrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
+    QQuickControlPrivate::itemImplicitWidthChanged(item);
     if (item == contentItem || item == firstChild)
         updateContentWidth();
 }
 
 void QQuickPanePrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
+    QQuickControlPrivate::itemImplicitHeightChanged(item);
     if (item == contentItem || item == firstChild)
         updateContentHeight();
 }

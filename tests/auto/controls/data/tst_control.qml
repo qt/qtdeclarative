@@ -1134,20 +1134,48 @@ TestCase {
         var control = createTemporaryObject(component, testCase)
         verify(control)
 
+        var implicitWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitWidthChanged"})
+        verify(implicitWidthSpy.valid)
+
+        var implicitHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitHeightChanged"})
+        verify(implicitHeightSpy.valid)
+
+        var implicitBackgroundWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundWidthChanged"})
+        verify(implicitBackgroundWidthSpy.valid)
+
+        var implicitBackgroundHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundHeightChanged"})
+        verify(implicitBackgroundHeightSpy.valid)
+
+        var implicitWidthChanges = 0
+        var implicitHeightChanges = 0
+        var implicitBackgroundWidthChanges = 0
+        var implicitBackgroundHeightChanges = 0
+
         compare(control.implicitWidth, 0)
         compare(control.implicitHeight, 0)
-
-        control.contentItem = rectangle.createObject(control, {implicitWidth: 10, implicitHeight: 20})
-        compare(control.implicitWidth, 10)
-        compare(control.implicitHeight, 20)
+        compare(control.implicitBackgroundWidth, 0)
+        compare(control.implicitBackgroundHeight, 0)
 
         control.background = rectangle.createObject(control, {implicitWidth: 20, implicitHeight: 30})
         compare(control.implicitWidth, 20)
         compare(control.implicitHeight, 30)
+        compare(control.implicitBackgroundWidth, 20)
+        compare(control.implicitBackgroundHeight, 30)
+        compare(implicitWidthSpy.count, ++implicitWidthChanges)
+        compare(implicitHeightSpy.count, ++implicitHeightChanges)
+        compare(implicitBackgroundWidthSpy.count, ++implicitBackgroundWidthChanges)
+        compare(implicitBackgroundHeightSpy.count, ++implicitBackgroundHeightChanges)
 
-        control.padding = 100
-        compare(control.implicitWidth, 210)
-        compare(control.implicitHeight, 220)
+        control.background.implicitWidth += 1
+        control.background.implicitHeight += 1
+        compare(control.implicitWidth, 21)
+        compare(control.implicitHeight, 31)
+        compare(control.implicitBackgroundWidth, 21)
+        compare(control.implicitBackgroundHeight, 31)
+        compare(implicitWidthSpy.count, ++implicitWidthChanges)
+        compare(implicitHeightSpy.count, ++implicitHeightChanges)
+        compare(implicitBackgroundWidthSpy.count, ++implicitBackgroundWidthChanges)
+        compare(implicitBackgroundHeightSpy.count, ++implicitBackgroundHeightChanges)
     }
 
     function test_baseline() {

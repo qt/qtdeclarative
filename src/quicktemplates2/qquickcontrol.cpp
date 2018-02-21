@@ -97,6 +97,8 @@ QT_BEGIN_NAMESPACE
     \sa ApplicationWindow, Container
 */
 
+static const QQuickItemPrivate::ChangeTypes ImplicitSizeChanges = QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed;
+
 static bool isKeyFocusReason(Qt::FocusReason reason)
 {
     return reason == Qt::TabFocusReason || reason == Qt::BacktabFocusReason || reason == Qt::ShortcutFocusReason;
@@ -729,6 +731,44 @@ void QQuickControlPrivate::updateBaselineOffset()
         q->QQuickItem::setBaselineOffset(getTopPadding() + contentItem->baselineOffset());
 }
 
+void QQuickControlPrivate::addImplicitSizeListener(QQuickItem *item)
+{
+    if (!item)
+        return;
+    QQuickItemPrivate::get(item)->addItemChangeListener(this, ImplicitSizeChanges);
+}
+
+void QQuickControlPrivate::removeImplicitSizeListener(QQuickItem *item)
+{
+    if (!item)
+        return;
+    QQuickItemPrivate::get(item)->removeItemChangeListener(this, ImplicitSizeChanges);
+}
+
+void QQuickControlPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    Q_Q(QQuickControl);
+    if (item == background)
+        emit q->implicitBackgroundWidthChanged();
+}
+
+void QQuickControlPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    Q_Q(QQuickControl);
+    if (item == background)
+        emit q->implicitBackgroundHeightChanged();
+}
+
+void QQuickControlPrivate::itemDestroyed(QQuickItem *item)
+{
+    Q_Q(QQuickControl);
+    if (item == background) {
+        background = nullptr;
+        emit q->implicitBackgroundWidthChanged();
+        emit q->implicitBackgroundHeightChanged();
+    }
+}
+
 QQuickControl::QQuickControl(QQuickItem *parent)
     : QQuickItem(*(new QQuickControlPrivate), parent)
 {
@@ -741,6 +781,12 @@ QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent)
 {
     Q_D(QQuickControl);
     d->init();
+}
+
+QQuickControl::~QQuickControl()
+{
+    Q_D(QQuickControl);
+    d->removeImplicitSizeListener(d->background);
 }
 
 void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
@@ -1361,15 +1407,26 @@ void QQuickControl::setBackground(QQuickItem *background)
     if (!d->background.isExecuting())
         d->cancelBackground();
 
+    const qreal oldImplicitBackgroundWidth = implicitBackgroundWidth();
+    const qreal oldImplicitBackgroundHeight = implicitBackgroundHeight();
+
+    d->removeImplicitSizeListener(d->background);
     delete d->background;
     d->background = background;
+
     if (background) {
         background->setParentItem(this);
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
         if (isComponentComplete())
             d->resizeBackground();
+        d->addImplicitSizeListener(background);
     }
+
+    if (!qFuzzyCompare(oldImplicitBackgroundWidth, implicitBackgroundWidth()))
+        emit implicitBackgroundWidthChanged();
+    if (!qFuzzyCompare(oldImplicitBackgroundHeight, implicitBackgroundHeight()))
+        emit implicitBackgroundHeightChanged();
     if (!d->background.isExecuting())
         emit backgroundChanged();
 }
@@ -1561,6 +1618,44 @@ void QQuickControl::resetVerticalPadding()
 {
     Q_D(QQuickControl);
     d->setVerticalPadding(0, true);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Control::implicitBackgroundWidth
+    \readonly
+
+    This property holds the implicit background width.
+
+    The value is equal to \c {background ? background.implicitWidth : 0}.
+
+    \sa implicitBackgroundHeight
+*/
+qreal QQuickControl::implicitBackgroundWidth() const
+{
+    Q_D(const QQuickControl);
+    if (!d->background)
+        return 0;
+    return d->background->implicitWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Control::implicitBackgroundHeight
+    \readonly
+
+    This property holds the implicit background height.
+
+    The value is equal to \c {background ? background.implicitHeight : 0}.
+
+    \sa implicitBackgroundWidth
+*/
+qreal QQuickControl::implicitBackgroundHeight() const
+{
+    Q_D(const QQuickControl);
+    if (!d->background)
+        return 0;
+    return d->background->implicitHeight();
 }
 
 void QQuickControl::classBegin()

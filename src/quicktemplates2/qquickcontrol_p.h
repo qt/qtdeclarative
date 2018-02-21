@@ -85,10 +85,13 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
     // 2.5 (Qt 5.12)
     Q_PROPERTY(qreal horizontalPadding READ horizontalPadding WRITE setHorizontalPadding RESET resetHorizontalPadding NOTIFY horizontalPaddingChanged FINAL REVISION 5)
     Q_PROPERTY(qreal verticalPadding READ verticalPadding WRITE setVerticalPadding RESET resetVerticalPadding NOTIFY verticalPaddingChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION 5)
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
 
 public:
     explicit QQuickControl(QQuickItem *parent = nullptr);
+    ~QQuickControl();
 
     QFont font() const;
     void setFont(const QFont &font);
@@ -169,6 +172,9 @@ public:
     void setVerticalPadding(qreal padding);
     void resetVerticalPadding();
 
+    qreal implicitBackgroundWidth() const;
+    qreal implicitBackgroundHeight() const;
+
 Q_SIGNALS:
     void fontChanged();
     void availableWidthChanged();
@@ -195,6 +201,8 @@ Q_SIGNALS:
     // 2.5 (Qt 5.12)
     Q_REVISION(5) void horizontalPaddingChanged();
     Q_REVISION(5) void verticalPaddingChanged();
+    Q_REVISION(5) void implicitBackgroundWidthChanged();
+    Q_REVISION(5) void implicitBackgroundHeightChanged();
 
 protected:
     virtual QFont defaultFont() const;

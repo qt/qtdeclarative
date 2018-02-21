@@ -381,16 +381,20 @@ void QQuickContainerPrivate::itemDestroyed(QQuickItem *item)
     int index = contentModel->indexOf(item, nullptr);
     if (index != -1)
         removeItem(index, item);
+    else
+        QQuickControlPrivate::itemDestroyed(item);
 }
 
 void QQuickContainerPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
+    QQuickControlPrivate::itemImplicitWidthChanged(item);
     if (item == contentItem)
         updateContentWidth();
 }
 
 void QQuickContainerPrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
+    QQuickControlPrivate::itemImplicitHeightChanged(item);
     if (item == contentItem)
         updateContentHeight();
 }

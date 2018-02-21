@@ -159,6 +159,13 @@ public:
 
     void updateBaselineOffset();
 
+    void addImplicitSizeListener(QQuickItem *item);
+    void removeImplicitSizeListener(QQuickItem *item);
+
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
+
     struct ExtraData {
         ExtraData();
         bool hasTopPadding;
