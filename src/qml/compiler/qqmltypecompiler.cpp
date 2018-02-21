@@ -1914,7 +1914,11 @@ bool QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledD
 
         if (binding->type >= QV4::CompiledData::Binding::Type_Object && (pd || binding->isAttachedProperty())) {
             qSwap(_seenObjectWithId, seenSubObjectWithId);
-            const bool subObjectValid = validateObject(binding->value.objectIndex, binding, pd && QQmlValueTypeFactory::metaObjectForMetaType(pd->propType));
+            const bool populatingValueTypeGroupProperty
+                    = pd
+                      && QQmlValueTypeFactory::metaObjectForMetaType(pd->propType)
+                      && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment);
+            const bool subObjectValid = validateObject(binding->value.objectIndex, binding, populatingValueTypeGroupProperty);
             qSwap(_seenObjectWithId, seenSubObjectWithId);
             if (!subObjectValid)
                 return false;

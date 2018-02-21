@@ -43,6 +43,7 @@
 #include <QFont>
 #include <QQmlFileSelector>
 #include <QFileSelector>
+#include <QEasingCurve>
 
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlmetatype_p.h>
@@ -254,6 +255,8 @@ private slots:
     void dataAlignment();
 
     void deleteSingletons();
+
+    void valueTypeGroupPropertiesInBehavior();
 
 private:
     QQmlEngine engine;
@@ -4152,6 +4155,20 @@ void tst_qqmllanguage::deleteSingletons()
         QVERIFY(singleton.data() != 0);
     }
     QVERIFY(singleton.data() == 0);
+}
+
+void tst_qqmllanguage::valueTypeGroupPropertiesInBehavior()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("groupPropertyInPropertyValueSource.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QObject *animation = qmlContext(o.data())->contextProperty("animation").value<QObject*>();
+    QVERIFY(animation);
+
+    QCOMPARE(animation->property("easing").value<QEasingCurve>().type(), QEasingCurve::InOutQuad);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
