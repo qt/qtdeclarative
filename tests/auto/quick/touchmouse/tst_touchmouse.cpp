@@ -87,7 +87,7 @@ Q_SIGNALS:
 
 public:
     EventItem(QQuickItem *parent = nullptr)
-        : QQuickItem(parent), touchUngrabCount(0), acceptMouse(false), acceptTouch(false), filterTouch(false), point0(-1)
+        : QQuickItem(parent)
     {
         setAcceptedMouseButtons(Qt::LeftButton);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -140,10 +140,10 @@ public:
     }
 
     QList<Event> eventList;
-    int touchUngrabCount;
-    bool acceptMouse;
-    bool acceptTouch;
-    bool filterTouch; // when used as event filter
+    int touchUngrabCount = 0;
+    bool acceptMouse = false;
+    bool acceptTouch = false;
+    bool filterTouch = false; // when used as event filter
 
     bool eventFilter(QObject *, QEvent *event)
     {
@@ -162,7 +162,7 @@ public:
         }
         return false;
     }
-    int point0;
+    int point0 = -1;
 };
 
 class tst_TouchMouse : public QQmlDataTest

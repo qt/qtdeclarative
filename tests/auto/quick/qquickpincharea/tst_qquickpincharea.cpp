@@ -41,7 +41,7 @@ class tst_QQuickPinchArea: public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_QQuickPinchArea() : device(nullptr) { }
+    tst_QQuickPinchArea() { }
 private slots:
     void initTestCase();
     void cleanupTestCase();
@@ -55,7 +55,7 @@ private slots:
 
 private:
     QQuickView *createView();
-    QTouchDevice *device;
+    QTouchDevice *device = nullptr;
 };
 void tst_QQuickPinchArea::initTestCase()
 {

@@ -57,7 +57,6 @@ inline static bool isPowerOfTwo(int x)
 QSGMaterialType QSGOpaqueTextureMaterialShader::type;
 
 QSGOpaqueTextureMaterialShader::QSGOpaqueTextureMaterialShader()
-    : QSGMaterialShader()
 {
 #if QT_CONFIG(opengl)
     setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/opaquetexture.vert"));

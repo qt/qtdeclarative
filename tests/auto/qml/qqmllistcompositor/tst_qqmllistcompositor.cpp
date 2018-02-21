@@ -45,13 +45,13 @@ struct Range
 
 template <typename T>  struct Array
 {
-    Array() : array(nullptr), count(0) {}
+    Array() : array(nullptr) {}
     template<int N> Array(const T (&array)[N]) : array(array), count(N) {}
 
     T operator [](int index) const { return array[index]; }
 
     const T *array;
-    int count;
+    int count = 0;
 };
 
 typedef Array<int> IndexArray;

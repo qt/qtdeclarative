@@ -48,7 +48,7 @@ class tst_qquickfolderlistmodel : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickfolderlistmodel() : removeStart(0), removeEnd(0) {}
+    tst_qquickfolderlistmodel() {}
 
 public slots:
     void removed(const QModelIndex &, int start, int end) {
@@ -78,8 +78,8 @@ private:
     void checkNoErrors(const QQmlComponent& component);
     QQmlEngine engine;
 
-    int removeStart;
-    int removeEnd;
+    int removeStart = 0;
+    int removeEnd = 0;
 };
 
 void tst_qquickfolderlistmodel::checkNoErrors(const QQmlComponent& component)

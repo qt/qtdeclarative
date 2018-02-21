@@ -73,7 +73,7 @@ private:
     friend class QQmlThreadNotifierProxyObject;
 
     static void emitNotify(QQmlNotifierEndpoint *, void **a);
-    QQmlNotifierEndpoint *endpoints;
+    QQmlNotifierEndpoint *endpoints = nullptr;
 };
 
 class QQmlEngine;
@@ -129,7 +129,6 @@ private:
 };
 
 QQmlNotifier::QQmlNotifier()
-: endpoints(nullptr)
 {
 }
 

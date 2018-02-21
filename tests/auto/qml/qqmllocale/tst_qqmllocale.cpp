@@ -1232,7 +1232,7 @@ class DateFormatter : public QObject
 {
     Q_OBJECT
 public:
-    DateFormatter() : QObject() {}
+    DateFormatter() {}
 
     Q_INVOKABLE QString getLocalizedForm(const QString &isoTimestamp);
 };

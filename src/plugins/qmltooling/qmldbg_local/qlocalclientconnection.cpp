@@ -71,18 +71,13 @@ private:
     void connectionEstablished();
     bool connectToServer();
 
-    bool m_block;
+    bool m_block = false;
     QString m_filename;
-    QLocalSocket *m_socket;
-    QQmlDebugServer *m_debugServer;
+    QLocalSocket *m_socket = nullptr;
+    QQmlDebugServer *m_debugServer = nullptr;
 };
 
-QLocalClientConnection::QLocalClientConnection() :
-    m_block(false),
-    m_socket(nullptr),
-    m_debugServer(nullptr)
-{
-}
+QLocalClientConnection::QLocalClientConnection() { }
 
 QLocalClientConnection::~QLocalClientConnection()
 {

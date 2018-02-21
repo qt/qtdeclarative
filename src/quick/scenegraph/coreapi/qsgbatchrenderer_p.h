@@ -125,7 +125,6 @@ template <typename Type, int PageSize> class Allocator
 {
 public:
     Allocator()
-        : m_freePage(0)
     {
         pages.push_back(new AllocatorPage<Type, PageSize>());
     }
@@ -209,7 +208,7 @@ public:
     }
 
     QVector<AllocatorPage<Type, PageSize> *> pages;
-    int m_freePage;
+    int m_freePage = 0;
 };
 
 
@@ -306,12 +305,7 @@ struct Buffer {
 struct Element {
 
     Element()
-        : node(nullptr)
-        , batch(nullptr)
-        , nextInBatch(nullptr)
-        , root(nullptr)
-        , order(0)
-        , boundsComputed(false)
+        : boundsComputed(false)
         , boundsOutsideFloatRange(false)
         , translateOnlyToRoot(false)
         , removed(false)
@@ -332,14 +326,14 @@ struct Element {
     }
     void computeBounds();
 
-    QSGGeometryNode *node;
-    Batch *batch;
-    Element *nextInBatch;
-    Node *root;
+    QSGGeometryNode *node = nullptr;
+    Batch *batch = nullptr;
+    Element *nextInBatch = nullptr;
+    Node *root = nullptr;
 
     Rect bounds; // in device coordinates
 
-    int order;
+    int order = 0;
 
     uint boundsComputed : 1;
     uint boundsOutsideFloatRange : 1;
@@ -362,12 +356,12 @@ struct RenderNodeElement : public Element {
 };
 
 struct BatchRootInfo {
-    BatchRootInfo() : parentRoot(nullptr), lastOrder(-1), firstOrder(-1), availableOrders(0) { }
+    BatchRootInfo() {}
     QSet<Node *> subRoots;
-    Node *parentRoot;
-    int lastOrder;
-    int firstOrder;
-    int availableOrders;
+    Node *parentRoot = nullptr;
+    int lastOrder = -1;
+    int firstOrder = -1;
+    int availableOrders = 0;
 };
 
 struct ClipBatchRootInfo : public BatchRootInfo
@@ -381,14 +375,13 @@ struct DrawSet
         : vertices(v)
         , zorders(z)
         , indices(i)
-        , indexCount(0)
     {
     }
-    DrawSet() : vertices(0), zorders(0), indices(0), indexCount(0) {}
-    int vertices;
-    int zorders;
-    int indices;
-    int indexCount;
+    DrawSet() {}
+    int vertices = 0;
+    int zorders = 0;
+    int indices = 0;
+    int indexCount = 0;
 };
 
 enum BatchCompatibility

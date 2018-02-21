@@ -83,9 +83,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStochasticState : public QObject //Currently 
 public:
     QQuickStochasticState(QObject* parent = nullptr)
         : QObject(parent)
-        , m_duration(-1)
-        , m_durationVariation(0)
-        , m_randomStart(false)
     {
     }
 
@@ -179,11 +176,11 @@ public Q_SLOTS:
 private:
     QString m_name;
     QVariantMap m_to;
-    int m_duration;
-    int m_durationVariation;
+    int m_duration = -1;
+    int m_durationVariation = 0;
 
     friend class QQuickStochasticEngine;
-    bool m_randomStart;
+    bool m_randomStart = false;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickStochasticEngine : public QObject

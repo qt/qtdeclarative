@@ -65,9 +65,9 @@ public:
     inline QQmlGuardImpl(const QQmlGuardImpl &);
     inline ~QQmlGuardImpl();
 
-    QObject *o;
-    QQmlGuardImpl  *next;
-    QQmlGuardImpl **prev;
+    QObject *o = nullptr;
+    QQmlGuardImpl  *next = nullptr;
+    QQmlGuardImpl **prev = nullptr;
 
     inline void addGuard();
     inline void remGuard();
@@ -113,18 +113,17 @@ Q_DECLARE_METATYPE(QQmlGuard<QObject>)
 QT_BEGIN_NAMESPACE
 
 QQmlGuardImpl::QQmlGuardImpl()
-: o(nullptr), next(nullptr), prev(nullptr)
 {
 }
 
 QQmlGuardImpl::QQmlGuardImpl(QObject *g)
-: o(g), next(nullptr), prev(nullptr)
+: o(g)
 {
     if (o) addGuard();
 }
 
 QQmlGuardImpl::QQmlGuardImpl(const QQmlGuardImpl &g)
-: o(g.o), next(nullptr), prev(nullptr)
+: o(g.o)
 {
     if (o) addGuard();
 }

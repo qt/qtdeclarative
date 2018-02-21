@@ -244,14 +244,7 @@ static void qt_print_node_count()
  * Constructs a new node
  */
 QSGNode::QSGNode()
-    : m_parent(nullptr)
-    , m_type(BasicNodeType)
-    , m_firstChild(nullptr)
-    , m_lastChild(nullptr)
-    , m_nextSibling(nullptr)
-    , m_previousSibling(nullptr)
-    , m_subtreeRenderableCount(0)
-    , m_nodeFlags(OwnedByParent)
+    : m_nodeFlags(OwnedByParent)
     , m_dirtyState(nullptr)
 {
     init();
@@ -870,10 +863,6 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
 
 QSGGeometryNode::QSGGeometryNode()
     : QSGBasicGeometryNode(GeometryNodeType)
-    , m_render_order(0)
-    , m_material(nullptr)
-    , m_opaque_material(nullptr)
-    , m_opacity(1)
 {
 }
 
@@ -1326,8 +1315,6 @@ void QSGRootNode::notifyNodeChange(QSGNode *node, DirtyState state)
   */
 QSGOpacityNode::QSGOpacityNode()
     : QSGNode(OpacityNodeType)
-    , m_opacity(1)
-    , m_combined_opacity(1)
 {
 }
 

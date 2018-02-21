@@ -83,7 +83,6 @@ QSGMaterialShader *QSGSmoothTextureMaterial::createShader() const
 }
 
 SmoothTextureMaterialShader::SmoothTextureMaterialShader()
-    : QSGTextureMaterialShader()
 {
     setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/smoothtexture.vert"));
     setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/smoothtexture.frag"));

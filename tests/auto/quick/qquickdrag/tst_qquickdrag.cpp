@@ -59,14 +59,6 @@ class TestDropTarget : public QQuickItem
 public:
     TestDropTarget(QQuickItem *parent = nullptr)
         : QQuickItem(parent)
-        , enterEvents(0)
-        , moveEvents(0)
-        , leaveEvents(0)
-        , dropEvents(0)
-        , acceptAction(Qt::MoveAction)
-        , defaultAction(Qt::IgnoreAction)
-        , proposedAction(Qt::IgnoreAction)
-        , accept(true)
     {
         setFlags(ItemAcceptsDrops);
     }
@@ -119,16 +111,16 @@ public:
         event->setAccepted(accept);
     }
 
-    int enterEvents;
-    int moveEvents;
-    int leaveEvents;
-    int dropEvents;
-    Qt::DropAction acceptAction;
-    Qt::DropAction defaultAction;
-    Qt::DropAction proposedAction;
+    int enterEvents = 0;
+    int moveEvents = 0;
+    int leaveEvents = 0;
+    int dropEvents = 0;
+    Qt::DropAction acceptAction = Qt::MoveAction;
+    Qt::DropAction defaultAction = Qt::IgnoreAction;
+    Qt::DropAction proposedAction = Qt::IgnoreAction;
     Qt::DropActions supportedActions;
     QPointF position;
-    bool accept;
+    bool accept = true;
 };
 
 class tst_QQuickDrag: public QObject

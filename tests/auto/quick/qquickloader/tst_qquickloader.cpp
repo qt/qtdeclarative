@@ -54,11 +54,11 @@ class PeriodicIncubationController : public QObject,
     public QQmlIncubationController
 {
 public:
-    PeriodicIncubationController() : incubated(false) {}
+    PeriodicIncubationController() {}
 
     void start() { startTimer(20); }
 
-    bool incubated;
+    bool incubated = false;
 
 protected:
     virtual void timerEvent(QTimerEvent *) {

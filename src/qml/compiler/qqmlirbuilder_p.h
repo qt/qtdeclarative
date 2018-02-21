@@ -82,12 +82,11 @@ struct PoolList
     PoolList()
         : first(nullptr)
         , last(nullptr)
-        , count(0)
     {}
 
     T *first;
     T *last;
-    int count;
+    int count = 0;
 
     int append(T *item) {
         item->next = nullptr;
@@ -205,11 +204,11 @@ class FixedPoolArray
 {
     T *data;
 public:
-    int count;
+    int count = 0;
 
     FixedPoolArray()
         : data(nullptr)
-        , count(0)
+
     {}
 
     void allocate(QQmlJS::MemoryPool *pool, int size)
@@ -343,21 +342,16 @@ struct Function
 struct Q_QML_PRIVATE_EXPORT CompiledFunctionOrExpression
 {
     CompiledFunctionOrExpression()
-        : node(nullptr)
-        , nameIndex(0)
-        , disableAcceleratedLookups(false)
-        , next(nullptr)
+
     {}
     CompiledFunctionOrExpression(QQmlJS::AST::Node *n)
         : node(n)
-        , nameIndex(0)
-        , disableAcceleratedLookups(false)
-        , next(nullptr)
+
     {}
-    QQmlJS::AST::Node *node; // FunctionDeclaration, Statement or Expression
-    quint32 nameIndex;
-    bool disableAcceleratedLookups;
-    CompiledFunctionOrExpression *next;
+    QQmlJS::AST::Node *node = nullptr; // FunctionDeclaration, Statement or Expression
+    quint32 nameIndex = 0;
+    bool disableAcceleratedLookups = false;
+    CompiledFunctionOrExpression *next = nullptr;
 };
 
 struct Q_QML_PRIVATE_EXPORT Object

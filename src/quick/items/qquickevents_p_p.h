@@ -135,8 +135,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
 
 public:
     QQuickMouseEvent()
-      : _x(0), _y(0), _button(Qt::NoButton), _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
-      , _source(Qt::MouseEventNotSynthesized), _wasHeld(false), _isClick(false), _accepted(false)
+      : _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
+      , _wasHeld(false), _isClick(false), _accepted(false)
       , _flags(Qt::MouseEventFlags(nullptr))
     {}
 
@@ -175,12 +175,12 @@ public:
     void setAccepted(bool accepted) { _accepted = accepted; }
     int flags() const { return _flags; }
 private:
-    qreal _x;
-    qreal _y;
-    Qt::MouseButton _button;
+    qreal _x = 0;
+    qreal _y = 0;
+    Qt::MouseButton _button = Qt::NoButton;
     Qt::MouseButtons _buttons;
     Qt::KeyboardModifiers _modifiers;
-    Qt::MouseEventSource _source;
+    Qt::MouseEventSource _source = Qt::MouseEventNotSynthesized;
     bool _wasHeld : 1;
     bool _isClick : 1;
     bool _accepted : 1;
@@ -201,8 +201,7 @@ class QQuickWheelEvent : public QObject
 
 public:
     QQuickWheelEvent()
-      : _x(0), _y(0), _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
-      , _inverted(false), _accepted(false)
+      : _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
     {}
 
     void reset(qreal x, qreal y, const QPoint &angleDelta, const QPoint &pixelDelta,
@@ -229,14 +228,14 @@ public:
     void setAccepted(bool accepted) { _accepted = accepted; }
 
 private:
-    qreal _x;
-    qreal _y;
+    qreal _x = 0;
+    qreal _y = 0;
     QPoint _angleDelta;
     QPoint _pixelDelta;
     Qt::MouseButtons _buttons;
     Qt::KeyboardModifiers _modifiers;
-    bool _inverted;
-    bool _accepted;
+    bool _inverted = false;
+    bool _accepted = false;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
@@ -245,14 +244,13 @@ class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
-    QQuickCloseEvent()
-        : _accepted(true) {}
+    QQuickCloseEvent() {}
 
     bool isAccepted() { return _accepted; }
     void setAccepted(bool accepted) { _accepted = accepted; }
 
 private:
-    bool _accepted;
+    bool _accepted = true;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
@@ -394,10 +392,8 @@ public:
     QQuickPointerEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
       : QObject(parent)
       , m_device(device)
-      , m_event(nullptr)
-      , m_button(Qt::NoButton)
       , m_pressedButtons(Qt::NoButton)
-    { }
+    {}
 
     virtual ~QQuickPointerEvent();
 
@@ -441,8 +437,8 @@ public: // helpers for C++ only (during event delivery)
 
 protected:
     QQuickPointerDevice *m_device;
-    QInputEvent *m_event; // original event as received by QQuickWindow
-    Qt::MouseButton m_button;
+    QInputEvent *m_event = nullptr; // original event as received by QQuickWindow
+    Qt::MouseButton m_button = Qt::NoButton;
     Qt::MouseButtons m_pressedButtons;
 
     Q_DISABLE_COPY(QQuickPointerEvent)
@@ -487,9 +483,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerTouchEvent : public QQuickPointerEvent
 public:
     QQuickPointerTouchEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
         : QQuickPointerEvent(parent, device)
-        , m_pointCount(0)
         , m_synthMouseEvent(QEvent::MouseMove, QPointF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier)
-    { }
+    {}
 
     QQuickPointerEvent *reset(QEvent *) override;
     void localize(QQuickItem *target) override;
@@ -515,7 +510,7 @@ public:
     QTouchEvent *asTouchEvent() const;
 
 private:
-    int m_pointCount;
+    int m_pointCount = 0;
     QVector<QQuickEventTouchPoint *> m_touchPoints;
     mutable QMouseEvent m_synthMouseEvent;
 

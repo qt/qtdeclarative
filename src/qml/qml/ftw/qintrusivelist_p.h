@@ -95,7 +95,7 @@ public:
 private:
     static inline N *nodeToN(QIntrusiveListNode *node);
 
-    QIntrusiveListNode *__first;
+    QIntrusiveListNode *__first = nullptr;
 };
 
 class QIntrusiveListNode
@@ -107,8 +107,8 @@ public:
     inline void remove();
     inline bool isInList() const;
 
-    QIntrusiveListNode *_next;
-    QIntrusiveListNode**_prev;
+    QIntrusiveListNode *_next = nullptr;
+    QIntrusiveListNode**_prev = nullptr;
 };
 
 template<class N, QIntrusiveListNode N::*member>
@@ -165,7 +165,7 @@ typename QIntrusiveList<N, member>::iterator &QIntrusiveList<N, member>::iterato
 
 template<class N, QIntrusiveListNode N::*member>
 QIntrusiveList<N, member>::QIntrusiveList()
-: __first(nullptr)
+
 {
 }
 
@@ -245,7 +245,6 @@ N *QIntrusiveList<N, member>::nodeToN(QIntrusiveListNode *node)
 }
 
 QIntrusiveListNode::QIntrusiveListNode()
-: _next(nullptr), _prev(nullptr)
 {
 }
 

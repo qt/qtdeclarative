@@ -368,12 +368,12 @@ public:
 
 struct QQmlSourceLocation
 {
-    QQmlSourceLocation() : line(0), column(0) {}
+    QQmlSourceLocation() {}
     QQmlSourceLocation(const QString &sourceFile, quint16 line, quint16 column)
         : sourceFile(sourceFile), line(line), column(column) {}
     QString sourceFile;
-    quint16 line;
-    quint16 column;
+    quint16 line = 0;
+    quint16 column = 0;
 };
 
 QT_END_NAMESPACE

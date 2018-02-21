@@ -70,24 +70,16 @@ private:
     void newConnection();
     bool listen();
 
-    int m_portFrom;
-    int m_portTo;
-    bool m_block;
+    int m_portFrom = 0;
+    int m_portTo = 0;
+    bool m_block = false;
     QString m_hostaddress;
-    QTcpSocket *m_socket;
-    QTcpServer *m_tcpServer;
-    QQmlDebugServer *m_debugServer;
+    QTcpSocket *m_socket = nullptr;
+    QTcpServer *m_tcpServer = nullptr;
+    QQmlDebugServer *m_debugServer = nullptr;
 };
 
-QTcpServerConnection::QTcpServerConnection() :
-    m_portFrom(0),
-    m_portTo(0),
-    m_block(false),
-    m_socket(nullptr),
-    m_tcpServer(nullptr),
-    m_debugServer(nullptr)
-{
-}
+QTcpServerConnection::QTcpServerConnection() {}
 
 QTcpServerConnection::~QTcpServerConnection()
 {

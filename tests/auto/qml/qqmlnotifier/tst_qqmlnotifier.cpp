@@ -46,21 +46,17 @@ class ExportedClass : public QObject
     Q_PROPERTY(int v4BindingProp2 READ v4BindingProp2 NOTIFY v4BindingProp2Changed)
     Q_PROPERTY(int scriptBindingProp READ scriptBindingProp NOTIFY scriptBindingPropChanged)
 public:
-    int qmlObjectPropConnections;
-    int cppObjectPropConnections;
-    int unboundPropConnections;
-    int v8BindingPropConnections;
-    int v4BindingPropConnections;
-    int v4BindingProp2Connections;
-    int scriptBindingPropConnections;
-    int boundSignalConnections;
-    int unusedSignalConnections;
+    int qmlObjectPropConnections = 0;
+    int cppObjectPropConnections = 0;
+    int unboundPropConnections = 0;
+    int v8BindingPropConnections = 0;
+    int v4BindingPropConnections = 0;
+    int v4BindingProp2Connections = 0;
+    int scriptBindingPropConnections = 0;
+    int boundSignalConnections = 0;
+    int unusedSignalConnections = 0;
 
-    ExportedClass()
-        : qmlObjectPropConnections(0), cppObjectPropConnections(0), unboundPropConnections(0),
-          v8BindingPropConnections(0), v4BindingPropConnections(0), v4BindingProp2Connections(0),
-          scriptBindingPropConnections(0), boundSignalConnections(0), unusedSignalConnections(0)
-    {}
+    ExportedClass() {}
 
     ~ExportedClass()
     {
@@ -141,9 +137,7 @@ class tst_qqmlnotifier : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlnotifier()
-        : root(nullptr), exportedClass(nullptr), exportedObject(nullptr)
-    {}
+    tst_qqmlnotifier() {}
 
 private slots:
     void initTestCase() override;
@@ -166,9 +160,9 @@ private:
     void createObjects();
 
     QQmlEngine engine;
-    QObject *root;
-    ExportedClass *exportedClass;
-    ExportedClass *exportedObject;
+    QObject *root = nullptr;
+    ExportedClass *exportedClass = nullptr;
+    ExportedClass *exportedObject = nullptr;
 };
 
 void tst_qqmlnotifier::initTestCase()

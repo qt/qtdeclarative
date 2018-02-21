@@ -376,10 +376,10 @@ private:
 
 struct QQmlEnumValue
 {
-    QQmlEnumValue() : value(-1) {}
+    QQmlEnumValue() {}
     QQmlEnumValue(const QString &n, int v) : namedValue(n), value(v) {}
     QString namedValue;
-    int value;
+    int value = -1;
 };
 
 struct QQmlEnumData

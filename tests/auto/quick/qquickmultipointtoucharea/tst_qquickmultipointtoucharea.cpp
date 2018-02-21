@@ -41,7 +41,7 @@ class tst_QQuickMultiPointTouchArea : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_QQuickMultiPointTouchArea() : device(nullptr) { }
+    tst_QQuickMultiPointTouchArea() { }
 
 private slots:
     void initTestCase() {
@@ -73,7 +73,7 @@ private slots:
 
 private:
     QQuickView *createAndShowView(const QString &file);
-    QTouchDevice *device;
+    QTouchDevice *device = nullptr;
 };
 
 void tst_QQuickMultiPointTouchArea::properties()

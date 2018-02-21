@@ -173,10 +173,10 @@ struct Context {
     // Map from meta property index (existence implies dependency) to notify signal index
     struct KeyValuePair
     {
-        quint32 _key;
-        quint32 _value;
+        quint32 _key = 0;
+        quint32 _value = 0;
 
-        KeyValuePair(): _key(0), _value(0) {}
+        KeyValuePair() {}
         KeyValuePair(quint32 key, quint32 value): _key(key), _value(value) {}
 
         quint32 key() const { return _key; }

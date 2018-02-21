@@ -55,10 +55,7 @@ public:
     };
 
 public:
-    CppObject()
-        : QObject()
-        , m_objectState(State0)
-    {}
+    CppObject() {}
 
     ObjectState objectState() const { return m_objectState; }
     void setObjectState(ObjectState objectState) { m_objectState = objectState; emit objectStateChanged();}
@@ -68,7 +65,7 @@ signals:
     void mySignal(int signalState);
 
 private:
-    ObjectState m_objectState;
+    ObjectState m_objectState = State0;
 };
 
 tst_qqmlstatemachine::tst_qqmlstatemachine()

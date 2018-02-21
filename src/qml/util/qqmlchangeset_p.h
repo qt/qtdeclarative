@@ -62,10 +62,10 @@ class Q_QML_PRIVATE_EXPORT QQmlChangeSet
 public:
     struct MoveKey
     {
-        MoveKey() : moveId(-1), offset(0) {}
+        MoveKey() {}
         MoveKey(int moveId, int offset) : moveId(moveId), offset(offset) {}
-        int moveId;
-        int offset;
+        int moveId = -1;
+        int offset = 0;
     };
 
     // The storrage for Change (below). This struct is trivial, which it has to be in order to store

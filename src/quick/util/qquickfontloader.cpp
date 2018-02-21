@@ -77,8 +77,8 @@ Q_SIGNALS:
     void fontDownloaded(const QString&, QQuickFontLoader::Status);
 
 private:
-    int redirectCount;
-    QNetworkReply *reply;
+    int redirectCount = 0;
+    QNetworkReply *reply = nullptr;
 
 private Q_SLOTS:
     void replyFinished();
@@ -91,13 +91,8 @@ public:
 };
 
 QQuickFontObject::QQuickFontObject(int _id)
-    : QObject(nullptr)
-#if QT_CONFIG(qml_network)
-    ,redirectCount(0), reply(nullptr)
-#endif
-    ,id(_id)
+    : QObject(nullptr), id(_id)
 {
-
 }
 
 #if QT_CONFIG(qml_network)
@@ -148,11 +143,11 @@ class QQuickFontLoaderPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickFontLoader)
 
 public:
-    QQuickFontLoaderPrivate() : status(QQuickFontLoader::Null) {}
+    QQuickFontLoaderPrivate() {}
 
     QUrl url;
     QString name;
-    QQuickFontLoader::Status status;
+    QQuickFontLoader::Status status = QQuickFontLoader::Null;
 };
 
 static void q_QFontLoaderFontsStaticReset();

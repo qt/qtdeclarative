@@ -104,11 +104,11 @@ struct QQuickTimeLinePrivate
     };
     struct TimeLine
     {
-        TimeLine() : length(0), consumedOpLength(0), base(0.) {}
+        TimeLine() {}
         QList<Op> ops;
-        int length;
-        int consumedOpLength;
-        qreal base;
+        int length = 0;
+        int consumedOpLength = 0;
+        qreal base = 0.;
     };
 
     int length;

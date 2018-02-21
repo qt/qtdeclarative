@@ -94,7 +94,7 @@ private:
 class Q_QML_EXPORT PersistentValue
 {
 public:
-    PersistentValue() : val(nullptr) {}
+    PersistentValue() {}
     PersistentValue(const PersistentValue &other);
     PersistentValue &operator=(const PersistentValue &other);
     PersistentValue &operator=(const WeakValue &other);
@@ -142,13 +142,13 @@ public:
     bool isEmpty() { return !val; }
 
 private:
-    Value *val;
+    Value *val = nullptr;
 };
 
 class Q_QML_EXPORT WeakValue
 {
 public:
-    WeakValue() : val(nullptr) {}
+    WeakValue() {}
     WeakValue(const WeakValue &other);
     WeakValue(ExecutionEngine *engine, const Value &value);
     WeakValue &operator=(const WeakValue &other);
@@ -206,7 +206,7 @@ public:
     void markOnce(MarkStack *markStack);
 
 private:
-    Value *val;
+    Value *val = nullptr;
 
 private:
     Q_NEVER_INLINE void allocVal(ExecutionEngine *engine);

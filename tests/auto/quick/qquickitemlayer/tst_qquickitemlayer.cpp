@@ -89,17 +89,12 @@ private slots:
 private:
     void mirroringCheck(int mirroring, int x, bool shouldMirror, const QImage &fb);
 
-    bool m_isMesaSoftwareRasterizer;
-    int m_mesaVersion;
-    bool m_isOpenGLRenderer;
+    bool m_isMesaSoftwareRasterizer = false;
+    int m_mesaVersion = 0;
+    bool m_isOpenGLRenderer = true;
 };
 
-tst_QQuickItemLayer::tst_QQuickItemLayer()
-    : m_isMesaSoftwareRasterizer(false)
-    , m_mesaVersion(0)
-    , m_isOpenGLRenderer(true)
-{
-}
+tst_QQuickItemLayer::tst_QQuickItemLayer() { }
 
 void tst_QQuickItemLayer::initTestCase()
 {

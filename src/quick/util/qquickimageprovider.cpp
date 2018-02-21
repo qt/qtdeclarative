@@ -515,15 +515,12 @@ class QQuickImageProviderOptionsPrivate : public QSharedData
 {
 public:
     QQuickImageProviderOptionsPrivate()
-     : autoTransform(QQuickImageProviderOptions::UsePluginDefaultTransform)
-     , preserveAspectRatioCrop(false)
-     , preserveAspectRatioFit(false)
     {
     }
 
-    QQuickImageProviderOptions::AutoTransform autoTransform;
-    bool preserveAspectRatioCrop;
-    bool preserveAspectRatioFit;
+    QQuickImageProviderOptions::AutoTransform autoTransform = QQuickImageProviderOptions::UsePluginDefaultTransform;
+    bool preserveAspectRatioCrop = false;
+    bool preserveAspectRatioFit = false;
 };
 
 /*!

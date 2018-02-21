@@ -87,17 +87,17 @@ public:
     class Range
     {
     public:
-        Range() : next(this), previous(this), list(nullptr), index(0), count(0), flags(0) {}
+        Range() : next(this), previous(this) {}
         Range(Range *next, void *list, int index, int count, uint flags)
             : next(next), previous(next->previous), list(list), index(index), count(count), flags(flags) {
             next->previous = this; previous->next = this; }
 
         Range *next;
         Range *previous;
-        void *list;
-        int index;
-        int count;
-        uint flags;
+        void *list = nullptr;
+        int index = 0;
+        int count = 0;
+        uint flags = 0;
 
         inline int start() const { return index; }
         inline int end() const { return index + count; }
@@ -145,11 +145,11 @@ public:
 
         void setGroup(Group g) { group = g; groupFlag = 1 << g; }
 
-        Range *range;
-        int offset;
-        Group group;
+        Range *range = nullptr;
+        int offset = 0;
+        Group group = Default;
         int groupFlag;
-        int groupCount;
+        int groupCount = 0;
         union {
             struct {
                 int cacheIndex;
@@ -308,8 +308,7 @@ Q_DECLARE_TYPEINFO(QQmlListCompositor::Change, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(QQmlListCompositor::Remove, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(QQmlListCompositor::Insert, Q_PRIMITIVE_TYPE);
 
-inline QQmlListCompositor::iterator::iterator()
-    : range(nullptr), offset(0), group(Default), groupCount(0) {}
+inline QQmlListCompositor::iterator::iterator() {}
 inline QQmlListCompositor::iterator::iterator(const iterator &it)
     : range(it.range)
     , offset(it.offset)

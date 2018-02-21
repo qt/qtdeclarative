@@ -661,17 +661,15 @@ class QQuickKeyNavigationAttachedPrivate : public QObjectPrivate
 {
 public:
     QQuickKeyNavigationAttachedPrivate()
-        : QObjectPrivate(),
-          left(nullptr), right(nullptr), up(nullptr), down(nullptr), tab(nullptr), backtab(nullptr),
-          leftSet(false), rightSet(false), upSet(false), downSet(false),
+        : leftSet(false), rightSet(false), upSet(false), downSet(false),
           tabSet(false), backtabSet(false) {}
 
-    QQuickItem *left;
-    QQuickItem *right;
-    QQuickItem *up;
-    QQuickItem *down;
-    QQuickItem *tab;
-    QQuickItem *backtab;
+    QQuickItem *left = nullptr;
+    QQuickItem *right = nullptr;
+    QQuickItem *up = nullptr;
+    QQuickItem *down = nullptr;
+    QQuickItem *tab = nullptr;
+    QQuickItem *backtab = nullptr;
     bool leftSet : 1;
     bool rightSet : 1;
     bool upSet : 1;
@@ -782,8 +780,7 @@ class QQuickKeysAttachedPrivate : public QObjectPrivate
 {
 public:
     QQuickKeysAttachedPrivate()
-        : QObjectPrivate(), inPress(false), inRelease(false)
-        , inIM(false), enabled(true), imeItem(nullptr), item(nullptr)
+        : inPress(false), inRelease(false), inIM(false), enabled(true)
     {}
 
     //loop detection
@@ -793,9 +790,9 @@ public:
 
     bool enabled : 1;
 
-    QQuickItem *imeItem;
+    QQuickItem *imeItem = nullptr;
     QList<QQuickItem *> targets;
-    QQuickItem *item;
+    QQuickItem *item = nullptr;
     QQuickKeyEvent theKeyEvent;
 };
 

@@ -393,7 +393,7 @@ void tst_qquickimageprovider::imageProviderId()
 class TestThreadProvider : public QQuickImageProvider
 {
     public:
-        TestThreadProvider() : QQuickImageProvider(Image), ok(false) {}
+        TestThreadProvider() : QQuickImageProvider(Image) {}
 
         ~TestThreadProvider() {}
 
@@ -417,7 +417,7 @@ class TestThreadProvider : public QQuickImageProvider
 
         QWaitCondition cond;
         QMutex mutex;
-        bool ok;
+        bool ok = false;
 };
 
 
@@ -495,7 +495,7 @@ class TestImageResponse : public QQuickImageResponse, public QRunnable
 class TestAsyncProvider : public QQuickAsyncImageProvider
 {
     public:
-        TestAsyncProvider() : ok(false)
+        TestAsyncProvider()
         {
             pool.setMaxThreadCount(4);
         }
@@ -512,7 +512,7 @@ class TestAsyncProvider : public QQuickAsyncImageProvider
         QThreadPool pool;
         QMutex lock;
         QWaitCondition condition;
-        bool ok;
+        bool ok = false;
 };
 
 

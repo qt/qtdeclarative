@@ -224,8 +224,7 @@ public:
         Kind_UiEnumMemberList
     };
 
-    inline Node()
-        : kind(Kind_Undefined) {}
+    inline Node() {}
 
     // NOTE: node destructors are never called,
     //       instead we block free the memory
@@ -248,7 +247,7 @@ public:
     virtual SourceLocation lastSourceLocation() const = 0;
 
 // attributes
-    int kind;
+    int kind = Kind_Undefined;
 };
 
 class QML_PARSER_EXPORT ExpressionNode: public Node
@@ -489,8 +488,8 @@ class QML_PARSER_EXPORT ObjectLiteral: public ExpressionNode
 public:
     QQMLJS_DECLARE_AST_NODE(ObjectLiteral)
 
-    ObjectLiteral():
-        properties (nullptr) { kind = K; }
+    ObjectLiteral()
+        { kind = K; }
 
     ObjectLiteral(PropertyAssignmentList *plist):
         properties (plist) { kind = K; }
@@ -504,7 +503,7 @@ public:
     { return rbraceToken; }
 
 // attributes
-    PropertyAssignmentList *properties;
+    PropertyAssignmentList *properties = nullptr;
     SourceLocation lbraceToken;
     SourceLocation rbraceToken;
 };

@@ -74,8 +74,8 @@ struct QSGAdaptationBackendData
 {
     QSGAdaptationBackendData();
 
-    bool tried;
-    QSGContextFactoryInterface *factory;
+    bool tried = false;
+    QSGContextFactoryInterface *factory = nullptr;
     QString name;
     QSGContextFactoryInterface::Flags flags;
 
@@ -85,9 +85,7 @@ struct QSGAdaptationBackendData
 };
 
 QSGAdaptationBackendData::QSGAdaptationBackendData()
-    : tried(false)
-    , factory(nullptr)
-    , flags(nullptr)
+    : flags(nullptr)
 {
     // Fill in the table with the built-in adaptations.
     builtIns.append(new QSGSoftwareAdaptation);

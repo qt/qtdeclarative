@@ -89,11 +89,9 @@ class TimerHelper : public QObject
 {
     Q_OBJECT
 public:
-    TimerHelper() : QObject(), count(0)
-    {
-    }
+    TimerHelper() { }
 
-    int count;
+    int count = 0;
 
 public slots:
     void timeout() {
@@ -101,9 +99,7 @@ public slots:
     }
 };
 
-tst_qqmltimer::tst_qqmltimer()
-{
-}
+tst_qqmltimer::tst_qqmltimer() { }
 
 void tst_qqmltimer::initTestCase()
 {

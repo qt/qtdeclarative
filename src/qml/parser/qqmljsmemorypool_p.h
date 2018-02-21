@@ -71,13 +71,7 @@ class QML_PARSER_EXPORT MemoryPool : public QSharedData
     void operator =(const MemoryPool &other);
 
 public:
-    MemoryPool()
-        : _blocks(nullptr),
-          _allocatedBlocks(0),
-          _blockCount(-1),
-          _ptr(nullptr),
-          _end(nullptr)
-    { }
+    MemoryPool() {}
 
     ~MemoryPool()
     {
@@ -144,11 +138,11 @@ private:
     }
 
 private:
-    char **_blocks;
-    int _allocatedBlocks;
-    int _blockCount;
-    char *_ptr;
-    char *_end;
+    char **_blocks = nullptr;
+    int _allocatedBlocks = 0;
+    int _blockCount = -1;
+    char *_ptr = nullptr;
+    char *_end = nullptr;
 
     enum
     {

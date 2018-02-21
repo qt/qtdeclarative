@@ -76,9 +76,9 @@ private Q_SLOTS:
     void textureNodeRect();
 
 private:
-    QOffscreenSurface *surface;
-    QOpenGLContext *context;
-    QSGDefaultRenderContext *renderContext;
+    QOffscreenSurface *surface = nullptr;
+    QOpenGLContext *context = nullptr;
+    QSGDefaultRenderContext *renderContext = nullptr;
 };
 
 void NodesTest::initTestCase()
@@ -147,9 +147,6 @@ public:
 int DummyRenderer::globalRendereringOrder;
 
 NodesTest::NodesTest()
-    : surface(nullptr)
-    , context(nullptr)
-    , renderContext(nullptr)
 {
 }
 

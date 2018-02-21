@@ -735,23 +735,18 @@ public:
     };
     Q_ENUMS(Enum1 Enum2)
 
-    Q_INVOKABLE TestQMetaObject()
-        : m_called(1) {
-    }
+    Q_INVOKABLE TestQMetaObject() {}
     Q_INVOKABLE TestQMetaObject(int)
-        : m_called(2) {
-    }
+        : m_called(2) {}
     Q_INVOKABLE TestQMetaObject(QString)
-        : m_called(3) {
-    }
+        : m_called(3) {}
     Q_INVOKABLE TestQMetaObject(QString, int)
-        : m_called(4) {
-    }
+        : m_called(4) {}
     int called() const {
         return m_called;
     }
 private:
-    int m_called;
+    int m_called = 1;
 };
 
 void tst_QJSEngine::newQObjectPropertyCache()
@@ -1300,8 +1295,8 @@ void tst_QJSEngine::errorMessage_QT679()
 
 struct Foo {
 public:
-    int x, y;
-    Foo() : x(-1), y(-1) { }
+    int x = -1, y = -1;
+    Foo() {}
 };
 
 Q_DECLARE_METATYPE(Foo)
@@ -3156,10 +3151,9 @@ class ThreadedTestEngine : public QThread {
     Q_OBJECT;
 
 public:
-    int result;
+    int result = 0;
 
-    ThreadedTestEngine()
-        : result(0) {}
+    ThreadedTestEngine() {}
 
     void run() {
         QJSEngine firstEngine;
@@ -4058,9 +4052,9 @@ class TestObject : public QObject
 {
     Q_OBJECT
 public:
-    TestObject() : called(false) {}
+    TestObject() {}
 
-    bool called;
+    bool called = false;
 
     Q_INVOKABLE void callMe(QQmlV4Function *) {
         called = true;

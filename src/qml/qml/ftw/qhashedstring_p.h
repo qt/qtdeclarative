@@ -94,7 +94,7 @@ private:
     friend class QStringHashNode;
 
     inline void computeHash() const;
-    mutable quint32 m_hash;
+    mutable quint32 m_hash = 0;
 };
 
 class QHashedCStringRef;
@@ -142,9 +142,9 @@ private:
 
     inline void computeHash() const;
 
-    const QChar *m_data;
-    int m_length;
-    mutable quint32 m_hash;
+    const QChar *m_data = nullptr;
+    int m_length = 0;
+    mutable quint32 m_hash = 0;
 };
 
 class Q_AUTOTEST_EXPORT QHashedCStringRef
@@ -169,9 +169,9 @@ private:
 
     inline void computeHash() const;
 
-    const char *m_data;
-    int m_length;
-    mutable quint32 m_hash;
+    const char *m_data = nullptr;
+    int m_length = 0;
+    mutable quint32 m_hash = 0;
 };
 
 class QStringHashData;
@@ -179,7 +179,7 @@ class Q_AUTOTEST_EXPORT QStringHashNode
 {
 public:
     QStringHashNode()
-    : length(0), hash(0), symbolId(0), ckey(nullptr)
+    : ckey(nullptr)
     {
     }
 
@@ -210,9 +210,9 @@ public:
 
     QFlagPointer<QStringHashNode> next;
 
-    qint32 length;
-    quint32 hash;
-    quint32 symbolId;
+    qint32 length = 0;
+    quint32 hash = 0;
+    quint32 symbolId = 0;
 
     union {
         const char *ckey;
@@ -276,25 +276,20 @@ public:
 class Q_AUTOTEST_EXPORT QStringHashData
 {
 public:
-    QStringHashData()
-    : buckets(nullptr), numBuckets(0), size(0), numBits(0)
-#ifdef QSTRINGHASH_LINK_DEBUG
-      , linkCount(0)
-#endif
-    {}
+    QStringHashData() {}
 
-    QStringHashNode **buckets;
-    int numBuckets;
-    int size;
-    short numBits;
+    QStringHashNode **buckets = nullptr;
+    int numBuckets = 0;
+    int size = 0;
+    short numBits = 0;
 #ifdef QSTRINGHASH_LINK_DEBUG
-    int linkCount;
+    int linkCount = 0;
 #endif
 
     struct IteratorData {
-        IteratorData() : n(nullptr), p(nullptr) {}
-        QStringHashNode *n;
-        void *p;
+        IteratorData() {}
+        QStringHashNode *n = nullptr;
+        void *p = nullptr;
     };
     void rehashToBits(short);
     void rehashToSize(int);
@@ -369,10 +364,10 @@ public:
     };
     struct ReservedNodePool
     {
-        ReservedNodePool() : count(0), used(0), nodes(nullptr) {}
+        ReservedNodePool() : nodes(nullptr) {}
         ~ReservedNodePool() { delete [] nodes; }
-        int count;
-        int used;
+        int count = 0;
+        int used = 0;
         Node *nodes;
     };
 
@@ -1038,7 +1033,7 @@ inline uint qHash(const QHashedStringRef &string)
 }
 
 QHashedString::QHashedString()
-: QString(), m_hash(0)
+: QString()
 {
 }
 
@@ -1089,7 +1084,6 @@ quint32 QHashedString::existingHash() const
 }
 
 QHashedStringRef::QHashedStringRef()
-: m_data(nullptr), m_length(0), m_hash(0)
 {
 }
 
@@ -1236,7 +1230,6 @@ quint32 QHashedStringRef::hash() const
 }
 
 QHashedCStringRef::QHashedCStringRef()
-: m_data(nullptr), m_length(0), m_hash(0)
 {
 }
 

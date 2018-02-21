@@ -137,10 +137,7 @@ class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleGroupData {
     class FreeList
     {
     public:
-        FreeList()
-            : firstUnused(UINT_MAX)
-            , allocated(0)
-        {}
+        FreeList() {}
 
         void resize(int newSize)
         {
@@ -189,8 +186,8 @@ class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleGroupData {
 
     private:
         QV4::BitVector isUnused;
-        unsigned firstUnused;
-        int allocated;
+        unsigned firstUnused = UINT_MAX;
+        int allocated = 0;
     };
 
 public: // types

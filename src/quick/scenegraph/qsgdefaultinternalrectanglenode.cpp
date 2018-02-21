@@ -67,7 +67,6 @@ private:
 };
 
 SmoothColorMaterialShader::SmoothColorMaterialShader()
-    : QSGMaterialShader()
 {
     setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/smoothcolor.vert"));
     setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/smoothcolor.frag"));
