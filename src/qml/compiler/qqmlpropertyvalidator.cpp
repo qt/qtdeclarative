@@ -196,7 +196,13 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
         }
 
         if (binding->type >= QV4::CompiledData::Binding::Type_Object && (pd || binding->isAttachedProperty())) {
-            const QVector<QQmlCompileError> subObjectValidatorErrors = validateObject(binding->value.objectIndex, binding, pd && QQmlValueTypeFactory::metaObjectForMetaType(pd->propType()));
+            const bool populatingValueTypeGroupProperty
+                    = pd
+                      && QQmlValueTypeFactory::metaObjectForMetaType(pd->propType())
+                      && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment);
+            const QVector<QQmlCompileError> subObjectValidatorErrors
+                    = validateObject(binding->value.objectIndex, binding,
+                                     populatingValueTypeGroupProperty);
             if (!subObjectValidatorErrors.isEmpty())
                 return subObjectValidatorErrors;
         }
