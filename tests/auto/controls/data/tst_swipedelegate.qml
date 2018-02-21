@@ -572,7 +572,7 @@ TestCase {
         verify(closedSpy.valid);
 
         // The button should be pressed instead of the SwipeDelegate.
-        mouseDrag(control, control.width / 2, control.height / 2,  -control.width, 0);
+        mouseDrag(control, control.width / 2, 0,  -control.width, 0);
         // Mouse has been released by this stage.
         verify(!control.pressed);
         compare(control.swipe.position, -1.0);
@@ -607,7 +607,7 @@ TestCase {
 
         // Returning back to a position of 0 and pressing on the control should
         // result in the control being pressed.
-        mouseDrag(control, control.width / 2, control.height / 2, control.width * 0.6, 0);
+        mouseDrag(control, control.width / 2, 0, control.width * 0.6, 0);
         tryCompare(closedSpy, "count", 1);
         compare(control.swipe.position, 0);
         mousePress(control, control.width / 2, control.height / 2);

@@ -77,6 +77,8 @@ class QtQuickControls2Plugin: public QQuickStylePlugin
 
 public:
     QtQuickControls2Plugin(QObject *parent = nullptr);
+    ~QtQuickControls2Plugin();
+
     void registerTypes(const char *uri) override;
 
     QString name() const override;
@@ -86,6 +88,11 @@ public:
 QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlugin(parent)
 {
     initResources();
+}
+
+QtQuickControls2Plugin::~QtQuickControls2Plugin()
+{
+    QQuickStylePrivate::reset();
 }
 
 void QtQuickControls2Plugin::registerTypes(const char *uri)

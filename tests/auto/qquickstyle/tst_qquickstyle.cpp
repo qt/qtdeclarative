@@ -41,24 +41,49 @@
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 
-class tst_QQuickStyle : public QObject
+#include "../shared/util.h"
+
+class tst_QQuickStyle : public QQmlDataTest
 {
     Q_OBJECT
 
 private slots:
-    void init();
+    void cleanup();
     void lookup();
+    void configurationFile_data();
+    void configurationFile();
     void commandLineArgument();
     void environmentVariables();
     void availableStyles();
+
+private:
+    void loadControls();
+    void unloadControls();
 };
 
-void tst_QQuickStyle::init()
+void tst_QQuickStyle::cleanup()
 {
-    QQuickStylePrivate::reset();
+    unloadControls();
+
     QGuiApplicationPrivate::styleOverride.clear();
     qunsetenv("QT_QUICK_CONTROLS_STYLE");
     qunsetenv("QT_QUICK_CONTROLS_FALLBACK_STYLE");
+    qunsetenv("QT_QUICK_CONTROLS_CONF");
+}
+
+void tst_QQuickStyle::loadControls()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0; import QtQuick.Controls 2.1; Control { }", QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+}
+
+void tst_QQuickStyle::unloadControls()
+{
+    qmlClearTypeRegistrations();
 }
 
 void tst_QQuickStyle::lookup()
@@ -70,20 +95,47 @@ void tst_QQuickStyle::lookup()
     QCOMPARE(QQuickStyle::name(), QString("Material"));
     QVERIFY(!QQuickStyle::path().isEmpty());
 
-    QQmlEngine engine;
-    QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; import QtQuick.Controls 2.1; Control { }", QUrl());
-
-    QScopedPointer<QObject> object(component.create());
-    QVERIFY(!object.isNull());
+    loadControls();
 
     QCOMPARE(QQuickStyle::name(), QString("Material"));
     QVERIFY(!QQuickStyle::path().isEmpty());
 }
 
+void tst_QQuickStyle::configurationFile_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::addColumn<QString>("expectedStyle");
+    QTest::addColumn<QString>("expectedPath");
+
+    QTest::newRow("Default") << "default.conf" << "Default" << "";
+    QTest::newRow("Fusion") << "fusion.conf" << "Fusion" << "";
+    QTest::newRow("Imagine") << "imagine.conf" << "Imagine" << "";
+    QTest::newRow("Material") << "material.conf" << "Material" << "";
+    QTest::newRow("Universal") << "universal.conf" << "Universal" << "";
+    QTest::newRow("Custom") << "custom.conf" << "Custom" << ":/";
+}
+
+void tst_QQuickStyle::configurationFile()
+{
+    QFETCH(QString, fileName);
+    QFETCH(QString, expectedStyle);
+    QFETCH(QString, expectedPath);
+
+    qputenv("QT_QUICK_CONTROLS_CONF", testFile(fileName).toLocal8Bit());
+
+    loadControls();
+
+    QCOMPARE(QQuickStyle::name(), expectedStyle);
+    if (!expectedPath.isEmpty())
+        QCOMPARE(QQuickStyle::path(), expectedPath);
+}
+
 void tst_QQuickStyle::commandLineArgument()
 {
     QGuiApplicationPrivate::styleOverride = "CmdLineArgStyle";
+
+    loadControls();
+
     QCOMPARE(QQuickStyle::name(), QString("CmdLineArgStyle"));
 }
 
