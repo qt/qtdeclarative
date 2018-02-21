@@ -193,7 +193,7 @@ void tst_QQuickFramebufferObject::testThatStuffWorks()
 
     view.show();
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QImage result = view.grabWindow();
 
@@ -233,7 +233,7 @@ void tst_QQuickFramebufferObject::testInvalidate()
 
     view.show();
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QCOMPARE(frameInfo.fboSize, QSize(200, 200));
 

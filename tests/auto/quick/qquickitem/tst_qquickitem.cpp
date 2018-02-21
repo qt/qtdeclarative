@@ -203,12 +203,12 @@ private:
         NoOp, Append, Remove, StackBefore, StackAfter, SetZ
     };
 
-    void ensureFocus(QWindow *w) {
+    bool ensureFocus(QWindow *w) {
         if (w->width() <=0 || w->height() <= 0)
             w->setGeometry(100, 100, 400, 300);
         w->show();
         w->requestActivate();
-        QTest::qWaitForWindowActive(w);
+        return QTest::qWaitForWindowActive(w);
     }
 };
 
@@ -299,7 +299,7 @@ struct FocusState : public QHash<QQuickItem *, FocusData>
 void tst_qquickitem::simpleFocus()
 {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
 
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
@@ -351,7 +351,7 @@ void tst_qquickitem::simpleFocus()
 void tst_qquickitem::scopedFocus()
 {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
     QQuickItem *l1c1 = new TestItem(window.contentItem());
@@ -431,7 +431,7 @@ void tst_qquickitem::addedToWindow()
 {
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
     QQuickItem *item = new TestItem;
@@ -451,7 +451,7 @@ void tst_qquickitem::addedToWindow()
 
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
     QQuickItem *item = new TestItem(window.contentItem());
@@ -480,7 +480,7 @@ void tst_qquickitem::addedToWindow()
 
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
     QQuickItem *tree = new TestItem;
@@ -504,7 +504,7 @@ void tst_qquickitem::addedToWindow()
 
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *tree = new TestFocusScope;
     QQuickItem *c1 = new TestItem(tree);
@@ -532,7 +532,7 @@ void tst_qquickitem::addedToWindow()
 
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *tree = new TestFocusScope;
     QQuickItem *c1 = new TestItem(tree);
@@ -558,7 +558,7 @@ void tst_qquickitem::addedToWindow()
 
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
     QQuickItem *tree = new TestFocusScope;
@@ -598,7 +598,7 @@ void tst_qquickitem::changeParent()
     // Parent to no parent
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
 
@@ -620,7 +620,7 @@ void tst_qquickitem::changeParent()
     // Different parent, same focus scope
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
     QQuickItem *child2 = new TestItem(window.contentItem());
@@ -641,7 +641,7 @@ void tst_qquickitem::changeParent()
     // Different parent, different focus scope
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
     QQuickItem *child2 = new TestFocusScope(window.contentItem());
@@ -663,7 +663,7 @@ void tst_qquickitem::changeParent()
     }
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
     QQuickItem *child2 = new TestFocusScope(window.contentItem());
@@ -685,7 +685,7 @@ void tst_qquickitem::changeParent()
     }
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *child = new TestItem(window.contentItem());
     QQuickItem *child2 = new TestFocusScope(window.contentItem());
@@ -711,7 +711,7 @@ void tst_qquickitem::changeParent()
     // child is deleted, then its parent changes again to a valid parent
     {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     QQuickItem *item = new TestFocusScope(window.contentItem());
     QQuickItem *child = new TestItem(item);
@@ -750,7 +750,7 @@ void tst_qquickitem::multipleFocusClears()
     QQuickView view;
     view.setSource(testFileUrl("multipleFocusClears.qml"));
     view.show();
-    ensureFocus(&view);
+    QVERIFY(ensureFocus(&view));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &view);
 }
 
@@ -759,7 +759,7 @@ void tst_qquickitem::focusSubItemInNonFocusScope()
     QQuickView view;
     view.setSource(testFileUrl("focusSubItemInNonFocusScope.qml"));
     view.show();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickItem *dummyItem = view.rootObject()->findChild<QQuickItem *>("dummyItem");
     QVERIFY(dummyItem);
@@ -781,7 +781,7 @@ void tst_qquickitem::focusSubItemInNonFocusScope()
 void tst_qquickitem::parentItemWithFocus()
 {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
     {
     QQuickItem parent;
@@ -880,7 +880,7 @@ void tst_qquickitem::parentItemWithFocus()
 void tst_qquickitem::reparentFocusedItem()
 {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
     QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
 
     QQuickItem parent(window.contentItem());
@@ -1047,7 +1047,7 @@ void tst_qquickitem::enabled()
 void tst_qquickitem::enabledFocus()
 {
     QQuickWindow window;
-    ensureFocus(&window);
+    QVERIFY(ensureFocus(&window));
 
     QQuickFocusScope root;
 
@@ -1308,7 +1308,7 @@ void tst_qquickitem::touchEventAcceptIgnore()
     TestWindow window;
     window.resize(100, 100);
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     QScopedPointer<TestItem> item(new TestItem);
     item->setSize(QSizeF(100, 100));
@@ -1419,7 +1419,7 @@ void tst_qquickitem::polishOnCompleted()
     QQuickView view;
     view.setSource(testFileUrl("polishOnCompleted.qml"));
     view.show();
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     TestPolishItem *item = qobject_cast<TestPolishItem*>(view.rootObject());
     QVERIFY(item);
@@ -1451,7 +1451,7 @@ void tst_qquickitem::wheelEvent()
     QQuickWindow window;
     window.resize(width, height);
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     TestItem *item = new TestItem;
     item->setSize(QSizeF(width, height));
@@ -2072,7 +2072,7 @@ void tst_qquickitem::shortcutOverride()
 {
     QQuickView view;
     view.setSource(testFileUrl("shortcutOverride.qml"));
-    ensureFocus(&view);
+    QVERIFY(ensureFocus(&view));
 
     QCOMPARE(view.rootObject()->property("escapeHandlerActivationCount").toInt(), 0);
     QCOMPARE(view.rootObject()->property("shortcutActivationCount").toInt(), 0);

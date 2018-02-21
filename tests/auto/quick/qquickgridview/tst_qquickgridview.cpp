@@ -1974,7 +1974,7 @@ void tst_QQuickGridView::keyNavigation()
     window->rootContext()->setContextProperty("testModel", &model);
     window->setSource(testFileUrl("gridview1.qml"));
     window->show();
-    QTest::qWaitForWindowActive(window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != 0);
@@ -1984,7 +1984,7 @@ void tst_QQuickGridView::keyNavigation()
     QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
 
     window->requestActivate();
-    QTest::qWaitForWindowActive(window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
     QTRY_COMPARE(qGuiApp->focusWindow(), window);
     QCOMPARE(gridview->currentIndex(), 0);
 

@@ -248,7 +248,7 @@ void tst_qquickborderimage::mirror()
     screenshot = window->grabWindow();
 
     window->show();
-    QTest::qWaitForWindowExposed(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     if (window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
         QSKIP("QTBUG-53823");
     QCOMPARE(screenshot, srcPixmap);
@@ -590,7 +590,7 @@ void tst_qquickborderimage::borderImageMesh()
 
     window->setSource(testFileUrl("nonmesh.qml"));
     window->show();
-    QTest::qWaitForWindowExposed(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
     QImage nonmesh = window->grabWindow();
 
     window->setSource(testFileUrl("mesh.qml"));

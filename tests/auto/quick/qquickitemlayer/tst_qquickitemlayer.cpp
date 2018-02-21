@@ -139,7 +139,7 @@ void tst_QQuickItemLayer::initTestCase()
 #endif
     QQuickView view;
     view.showNormal();
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
     if (view.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
         m_isOpenGLRenderer = false;
 }
@@ -307,7 +307,7 @@ void tst_QQuickItemLayer::layerVisibility()
 
     view.show();
 
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QImage fb = view.grabWindow();
     uint pixel = fb.pixel(0, 0);
@@ -513,7 +513,7 @@ void tst_QQuickItemLayer::textureMirroring()
 
     view.show();
 
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QImage fb = view.grabWindow();
 

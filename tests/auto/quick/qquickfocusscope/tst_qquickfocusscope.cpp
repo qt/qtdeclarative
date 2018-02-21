@@ -75,7 +75,7 @@ void tst_qquickfocusscope::basic()
     view->show();
     view->requestActivate();
 
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QTRY_COMPARE(view, qGuiApp->focusWindow());
 
     QVERIFY(view->isTopLevel());
@@ -120,7 +120,7 @@ void tst_qquickfocusscope::nested()
     view->show();
     view->requestActivate();
 
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QTRY_COMPARE(view, qGuiApp->focusWindow());
 
     QVERIFY(item1->hasActiveFocus());
@@ -187,7 +187,7 @@ void tst_qquickfocusscope::textEdit()
     view->show();
     view->requestActivate();
 
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
 
     QTRY_COMPARE(view, qGuiApp->focusWindow());
     QVERIFY(item0->hasActiveFocus());
@@ -240,7 +240,7 @@ void tst_qquickfocusscope::forceFocus()
 
     view->show();
     view->requestActivate();
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QTRY_COMPARE(view, qGuiApp->focusWindow());
 
     QVERIFY(item0->hasActiveFocus());
@@ -277,7 +277,7 @@ void tst_qquickfocusscope::noParentFocus()
 
     view->show();
     view->requestActivate();
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QTRY_COMPARE(view, qGuiApp->focusWindow());
 
     QVERIFY(!view->rootObject()->property("focus1").toBool());
@@ -306,7 +306,7 @@ void tst_qquickfocusscope::signalEmission()
     view->show();
     view->requestActivate();
 
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QTRY_COMPARE(view, qGuiApp->focusWindow());
 
     QVariant blue(QColor("blue"));

@@ -1188,7 +1188,7 @@ void tst_QQuickLoader::transientWindow() // QTBUG-52944
     timer.start();
     view.show();
 
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
     QTRY_VERIFY(loadedWindowVisibleTime >= 0);
     QVERIFY(viewVisibleTime >= 0);
 
@@ -1229,7 +1229,7 @@ void tst_QQuickLoader::nestedTransientWindow() // QTBUG-52944
     timer.start();
     view.show();
 
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
     QTRY_VERIFY(loadedWindowVisibleTime >= 0);
     QVERIFY(viewVisibleTime >= 0);
 

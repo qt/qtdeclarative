@@ -219,7 +219,7 @@ void tst_QQuickMouseArea::dragProperties()
     QByteArray errorMessage;
     QVERIFY2(initView(window, testFileUrl("dragproperties.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != 0);
 
     QQuickMouseArea *mouseRegion = window.rootObject()->findChild<QQuickMouseArea*>("mouseregion");
@@ -317,7 +317,7 @@ void tst_QQuickMouseArea::resetDrag()
     window.rootContext()->setContextProperty("haveTarget", QVariant(true));
     QVERIFY2(initView(window, testFileUrl("dragreset.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != 0);
 
     QQuickMouseArea *mouseRegion = window.rootObject()->findChild<QQuickMouseArea*>("mouseregion");
@@ -524,7 +524,7 @@ void tst_QQuickMouseArea::invalidDrag()
     QByteArray errorMessage;
     QVERIFY2(initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != 0);
 
     QQuickMouseArea *mouseRegion = window.rootObject()->findChild<QQuickMouseArea*>("mouseregion");
@@ -656,7 +656,7 @@ void tst_QQuickMouseArea::setDragOnPressed()
     QByteArray errorMessage;
     QVERIFY2(initView(window, testFileUrl("setDragOnPressed.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != 0);
 
     QQuickMouseArea *mouseArea = qobject_cast<QQuickMouseArea *>(window.rootObject());
@@ -908,7 +908,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
 
     QWindow *secondWindow = qvariant_cast<QWindow*>(window.rootObject()->property("secondWindow"));
     secondWindow->setProperty("visible", true);
-    QTest::qWaitForWindowExposed(secondWindow);
+    QVERIFY(QTest::qWaitForWindowExposed(secondWindow));
 
     QTRY_VERIFY(!window.rootObject()->property("pressed").toBool());
     QVERIFY(window.rootObject()->property("canceled").toBool());
@@ -1671,7 +1671,7 @@ void tst_QQuickMouseArea::pressedMultipleButtons()
     QByteArray errorMessage;
     QVERIFY2(initView(view, testFileUrl("simple.qml"), true, &errorMessage), errorMessage.constData());
     view.show();
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
     QVERIFY(view.rootObject() != 0);
 
     QQuickMouseArea *mouseArea = view.rootObject()->findChild<QQuickMouseArea *>("mousearea");
@@ -2157,7 +2157,7 @@ void tst_QQuickMouseArea::notPressedAfterStolenGrab()
     QQuickWindow window;
     window.resize(200, 200);
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     QQuickMouseArea *ma = new QQuickMouseArea(window.contentItem());
     ma->setSize(window.size());

@@ -73,7 +73,7 @@ void tst_SignalSpy::testCount()
     window.resize(200, 200);
     window.setSource(testFileUrl("signalspy.qml"));
     window.show();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QVERIFY(window.rootObject() != 0);
 
     QObject *mouseSpy = window.rootObject()->findChild<QObject*>("mouseSpy");

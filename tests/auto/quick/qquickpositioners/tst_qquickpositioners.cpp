@@ -1037,7 +1037,7 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     qApp->processEvents();
 
     if (!dynamicallyPopulate && usePopulateTransition) {
@@ -1120,7 +1120,7 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     ctxt->setContextProperty("testedPositioner", QString());
     window->setSource(testFileUrl(qmlFile));
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     qApp->processEvents();
 
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
@@ -1243,7 +1243,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     ctxt->setContextProperty("testedPositioner", QString());
     window->setSource(testFileUrl(qmlFile));
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     qApp->processEvents();
 
     QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);

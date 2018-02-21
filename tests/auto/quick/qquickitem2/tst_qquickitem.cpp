@@ -2811,7 +2811,7 @@ void tst_QQuickItem::changeListener()
 {
     QQuickWindow window;
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     QQuickItem *item = new QQuickItem;
     TestListener itemListener;
@@ -3312,7 +3312,7 @@ void tst_QQuickItem::grab()
     QQuickView view;
     view.setSource(testFileUrl("grabToImage.qml"));
     view.show();
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QQuickItem *root = qobject_cast<QQuickItem *>(view.rootObject());
     QVERIFY(root);

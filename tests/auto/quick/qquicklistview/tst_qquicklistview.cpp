@@ -2282,7 +2282,7 @@ void tst_QQuickListView::sectionsDelegate_headerVisibility()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     window->requestActivate();
-    QTest::qWaitForWindowActive(window.data());
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2826,7 +2826,7 @@ void tst_QQuickListView::keyNavigation()
     window->rootContext()->setContextProperty("testObject", testObject);
     window->setSource(testFileUrl("listviewtest.qml"));
     window->show();
-    QTest::qWaitForWindowActive(window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != 0);
@@ -2837,7 +2837,7 @@ void tst_QQuickListView::keyNavigation()
     QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
 
     window->requestActivate();
-    QTest::qWaitForWindowActive(window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
     QTRY_COMPARE(qGuiApp->focusWindow(), window);
 
     QTest::keyClick(window, forwardsKey);
@@ -7264,7 +7264,7 @@ void tst_QQuickListView::parentBinding()
 
     window->setSource(testFileUrl("parentBinding.qml"));
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
     QVERIFY(listview != 0);
@@ -8643,7 +8643,7 @@ void tst_QQuickListView::itemFiltered()
     window->setContent(QUrl(), &component, component.create());
 
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     // this should not crash
     model.setData(model.index(2), QStringLiteral("modified three"), Qt::DisplayRole);

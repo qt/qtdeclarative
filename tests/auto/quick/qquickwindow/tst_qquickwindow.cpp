@@ -490,7 +490,7 @@ void tst_qquickwindow::openglContextCreatedSignal()
 
     window.setTitle(QTest::currentTestFunction());
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     if (window.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
         QSKIP("Skipping OpenGL context test due to not running with OpenGL");
@@ -506,7 +506,7 @@ void tst_qquickwindow::aboutToStopSignal()
     QQuickWindow window;
     window.setTitle(QTest::currentTestFunction());
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     QSignalSpy spy(&window, SIGNAL(sceneGraphAboutToStop()));
 
@@ -578,7 +578,7 @@ void tst_qquickwindow::constantUpdatesOnWindow()
     bool ok = connect(&window, signal.constData(), &window, SLOT(update()), Qt::DirectConnection);
     Q_ASSERT(ok);
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     FrameCounter counter;
     connect(&window, SIGNAL(frameSwapped()), &counter, SLOT(incr()), Qt::DirectConnection);
@@ -1395,7 +1395,7 @@ void tst_qquickwindow::defaultState()
 
     QQuickWindow cppWindow;
     cppWindow.show();
-    QTest::qWaitForWindowExposed(&cppWindow);
+    QVERIFY(QTest::qWaitForWindowExposed(&cppWindow));
 
     QCOMPARE(qmlWindow->windowState(), cppWindow.windowState());
 }
@@ -1602,7 +1602,7 @@ void tst_qquickwindow::noUpdateWhenNothingChanges()
     QQuickRectangle rect(window.contentItem());
 
     window.showNormal();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
     // Many platforms are broken in the sense that that they follow up
     // the initial expose with a second expose or more. Let these go
     // through before we let the test continue.
@@ -1927,7 +1927,7 @@ void tst_qquickwindow::hideThenDelete()
         window.resize(400, 300);
         window.show();
 
-        QTest::qWaitForWindowExposed(&window);
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
         const bool threaded = QQuickWindowPrivate::get(&window)->context->thread() != QGuiApplication::instance()->thread();
         const bool isGL = window.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
 #if QT_CONFIG(opengl)
@@ -2077,7 +2077,7 @@ void tst_qquickwindow::testWindowVisibilityOrder()
     QVERIFY(window2);
     QVERIFY(window3);
 
-    QTest::qWaitForWindowExposed(window3);
+    QVERIFY(QTest::qWaitForWindowExposed(window3));
 
     QWindowList windows = QGuiApplication::topLevelWindows();
     QTRY_COMPARE(windows.size(), 5);
@@ -2099,7 +2099,7 @@ void tst_qquickwindow::testWindowVisibilityOrder()
 
     window4->setVisible(true);
 
-    QTest::qWaitForWindowExposed(window5);
+    QVERIFY(QTest::qWaitForWindowExposed(window5));
     QVERIFY(window4->isVisible());
     QVERIFY(window5->isVisible());
 }
@@ -2113,7 +2113,7 @@ void tst_qquickwindow::blockClosing()
     QVERIFY(!window.isNull());
     window->setTitle(QTest::currentTestFunction());
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->isVisible());
     QWindowSystemInterface::handleCloseEvent(window.data());
     QVERIFY(window->isVisible());
@@ -2133,7 +2133,7 @@ void tst_qquickwindow::blockCloseMethod()
     QVERIFY(!window.isNull());
     window->setTitle(QTest::currentTestFunction());
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->isVisible());
     QVERIFY(QMetaObject::invokeMethod(window.data(), "close", Qt::DirectConnection));
     QVERIFY(window->isVisible());
@@ -2154,7 +2154,7 @@ void tst_qquickwindow::crashWhenHoverItemDeleted()
     QVERIFY(!window.isNull());
     window->setTitle(QTest::currentTestFunction());
     window->show();
-    QTest::qWaitForWindowActive(window.data());
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     // Simulate a move from the first rectangle to the second. Crash will happen in here
     // Moving instantaneously from (0, 99) to (0, 102) does not cause the crash
@@ -2173,10 +2173,10 @@ void tst_qquickwindow::unloadSubWindow()
     QVERIFY(!window.isNull());
     window->setTitle(QTest::currentTestFunction());
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QPointer<QQuickWindow> transient;
     QTRY_VERIFY(transient = window->property("transientWindow").value<QQuickWindow*>());
-    QTest::qWaitForWindowExposed(transient);
+    QVERIFY(QTest::qWaitForWindowExposed(transient));
 
     // Unload the inner window (in nested Loaders) and make sure it doesn't crash
     QQuickLoader *loader = window->property("loader1").value<QQuickLoader*>();
@@ -2194,13 +2194,13 @@ void tst_qquickwindow::changeVisibilityInCompleted()
     QVERIFY(!window.isNull());
     window->setTitle(QTest::currentTestFunction());
     window->show();
-    QTest::qWaitForWindowExposed(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QPointer<QQuickWindow> winVisible;
     QTRY_VERIFY(winVisible = window->property("winVisible").value<QQuickWindow*>());
     QPointer<QQuickWindow> winVisibility;
     QTRY_VERIFY(winVisibility = window->property("winVisibility").value<QQuickWindow*>());
-    QTest::qWaitForWindowExposed(winVisible);
-    QTest::qWaitForWindowExposed(winVisibility);
+    QVERIFY(QTest::qWaitForWindowExposed(winVisible));
+    QVERIFY(QTest::qWaitForWindowExposed(winVisibility));
 
     QVERIFY(winVisible->isVisible());
     QCOMPARE(winVisibility->visibility(), QWindow::Windowed);
@@ -2795,7 +2795,7 @@ void tst_qquickwindow::test_circleMapItem()
     QSignalSpy topSpy(mat, SIGNAL(clicked(QQuickMouseEvent *)));
 
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
     QTest::qWait(1000);
 
     QPoint pos(50, 50);

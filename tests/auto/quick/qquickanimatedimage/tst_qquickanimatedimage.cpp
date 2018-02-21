@@ -152,7 +152,7 @@ void tst_qquickanimatedimage::mirror_running()
     QQuickView window;
     window.setSource(testFileUrl("hearts.qml"));
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(window.rootObject());
     QVERIFY(anim);
@@ -565,8 +565,8 @@ void tst_qquickanimatedimage::noCaching()
     window_nocache.setSource(testFileUrl("colors_nocache.qml"));
     window.show();
     window_nocache.show();
-    QTest::qWaitForWindowExposed(&window);
-    QTest::qWaitForWindowExposed(&window_nocache);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowExposed(&window_nocache));
 
     QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(window.rootObject());
     QVERIFY(anim);
