@@ -249,14 +249,14 @@ void QQuickMenuBarPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
     QQuickContainerPrivate::itemImplicitWidthChanged(item);
     if (item != contentItem)
-        updateContentWidth();
+        updateImplicitContentWidth();
 }
 
 void QQuickMenuBarPrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
     QQuickContainerPrivate::itemImplicitHeightChanged(item);
     if (item != contentItem)
-        updateContentHeight();
+        updateImplicitContentHeight();
 }
 
 void QQuickMenuBarPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
@@ -540,7 +540,7 @@ void QQuickMenuBar::itemAdded(int index, QQuickItem *item)
         if (QQuickMenu *menu = menuBarItem->menu())
             QObjectPrivate::connect(menu, &QQuickPopup::aboutToHide, d, &QQuickMenuBarPrivate::onMenuAboutToHide);
     }
-    d->updateContentSize();
+    d->updateImplicitContentSize();
     emit menusChanged();
 }
 
@@ -561,7 +561,7 @@ void QQuickMenuBar::itemRemoved(int index, QQuickItem *item)
         if (QQuickMenu *menu = menuBarItem->menu())
             QObjectPrivate::disconnect(menu, &QQuickPopup::aboutToHide, d, &QQuickMenuBarPrivate::onMenuAboutToHide);
     }
-    d->updateContentSize();
+    d->updateImplicitContentSize();
     emit menusChanged();
 }
 

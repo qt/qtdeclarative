@@ -116,6 +116,18 @@ QQuickPanePrivate::QQuickPanePrivate()
 {
 }
 
+void QQuickPanePrivate::init()
+{
+    Q_Q(QQuickPane);
+    q->setFlag(QQuickItem::ItemIsFocusScope);
+    q->setAcceptedMouseButtons(Qt::AllButtons);
+#if QT_CONFIG(cursor)
+    q->setCursor(Qt::ArrowCursor);
+#endif
+    connect(q, &QQuickControl::implicitContentWidthChanged, this, &QQuickPanePrivate::updateContentWidth);
+    connect(q, &QQuickControl::implicitContentHeightChanged, this, &QQuickPanePrivate::updateContentHeight);
+}
+
 QList<QQuickItem *> QQuickPanePrivate::contentChildItems() const
 {
     if (!contentItem)
@@ -136,21 +148,17 @@ QQuickItem *QQuickPanePrivate::getContentItem()
 void QQuickPanePrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
     QQuickControlPrivate::itemImplicitWidthChanged(item);
-    if (item == contentItem || item == firstChild)
-        updateContentWidth();
+
+    if (item == firstChild)
+        updateImplicitContentWidth();
 }
 
 void QQuickPanePrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
     QQuickControlPrivate::itemImplicitHeightChanged(item);
-    if (item == contentItem || item == firstChild)
-        updateContentHeight();
-}
 
-void QQuickPanePrivate::itemDestroyed(QQuickItem *item)
-{
-    if (item == contentItem)
-        updateContentSize();
+    if (item == firstChild)
+        updateImplicitContentHeight();
 }
 
 void QQuickPanePrivate::contentChildrenChange()
@@ -165,7 +173,7 @@ void QQuickPanePrivate::contentChildrenChange()
         firstChild = newFirstChild;
     }
 
-    updateContentSize();
+    updateImplicitContentSize();
     emit q->contentChildrenChanged();
 }
 
@@ -204,18 +212,11 @@ qreal QQuickPanePrivate::getContentHeight() const
 void QQuickPanePrivate::updateContentWidth()
 {
     Q_Q(QQuickPane);
-    if (hasContentWidth)
+    if (hasContentWidth || qFuzzyCompare(contentWidth, implicitContentWidth))
         return;
 
-    // a special case for width<->height dependent content (wrapping text) in ScrollView
-    if (contentWidth < 0 && !componentComplete)
-        return;
-
-    qreal oldContentWidth = contentWidth;
-    contentWidth = getContentWidth();
-    if (qFuzzyCompare(contentWidth, oldContentWidth))
-        return;
-
+    const qreal oldContentWidth = contentWidth;
+    contentWidth = implicitContentWidth;
     q->contentSizeChange(QSizeF(contentWidth, contentHeight), QSizeF(oldContentWidth, contentHeight));
     emit q->contentWidthChanged();
 }
@@ -223,56 +224,20 @@ void QQuickPanePrivate::updateContentWidth()
 void QQuickPanePrivate::updateContentHeight()
 {
     Q_Q(QQuickPane);
-    if (hasContentHeight)
+    if (hasContentHeight || qFuzzyCompare(contentHeight, implicitContentHeight))
         return;
-
-    // a special case for width<->height dependent content (wrapping text) in ScrollView
-    if (contentWidth < 0 && !componentComplete)
-        return;
-
-    qreal oldContentHeight = contentHeight;
-    contentHeight = getContentHeight();
-    if (qFuzzyCompare(contentHeight, oldContentHeight))
-        return;
-
-    q->contentSizeChange(QSizeF(contentWidth, contentHeight), QSizeF(contentWidth, oldContentHeight));
-    emit q->contentHeightChanged();
-}
-
-void QQuickPanePrivate::updateContentSize()
-{
-    Q_Q(QQuickPane);
-    if ((hasContentWidth && hasContentHeight) || !componentComplete)
-        return;
-
-    const qreal oldContentWidth = contentWidth;
-    if (!hasContentWidth)
-        contentWidth = getContentWidth();
 
     const qreal oldContentHeight = contentHeight;
-    if (!hasContentHeight)
-        contentHeight = getContentHeight();
-
-    const bool widthChanged = !qFuzzyCompare(contentWidth, oldContentWidth);
-    const bool heightChanged = !qFuzzyCompare(contentHeight, oldContentHeight);
-
-    if (widthChanged || heightChanged)
-        q->contentSizeChange(QSizeF(contentWidth, contentHeight), QSizeF(oldContentWidth, oldContentHeight));
-
-    if (widthChanged)
-        emit q->contentWidthChanged();
-    if (heightChanged)
-        emit q->contentHeightChanged();
+    contentHeight = implicitContentHeight;
+    q->contentSizeChange(QSizeF(contentWidth, contentHeight), QSizeF(contentWidth, oldContentHeight));
+    emit q->contentHeightChanged();
 }
 
 QQuickPane::QQuickPane(QQuickItem *parent)
     : QQuickControl(*(new QQuickPanePrivate), parent)
 {
-    setFlag(QQuickItem::ItemIsFocusScope);
-    setAcceptedMouseButtons(Qt::AllButtons);
-#if QT_CONFIG(cursor)
-    setCursor(Qt::ArrowCursor);
-#endif
+    Q_D(QQuickPane);
+    d->init();
 }
 
 QQuickPane::~QQuickPane()
@@ -285,11 +250,8 @@ QQuickPane::~QQuickPane()
 QQuickPane::QQuickPane(QQuickPanePrivate &dd, QQuickItem *parent)
     : QQuickControl(dd, parent)
 {
-    setFlag(QQuickItem::ItemIsFocusScope);
-    setAcceptedMouseButtons(Qt::AllButtons);
-#if QT_CONFIG(cursor)
-    setCursor(Qt::ArrowCursor);
-#endif
+    Q_D(QQuickPane);
+    d->init();
 }
 
 /*!
@@ -421,7 +383,7 @@ void QQuickPane::componentComplete()
 {
     Q_D(QQuickPane);
     QQuickControl::componentComplete();
-    d->updateContentSize();
+    d->updateImplicitContentSize();
 }
 
 void QQuickPane::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)

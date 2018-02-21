@@ -119,6 +119,8 @@ TestCase {
         verify(control.contentItem)
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
+        compare(control.implicitContentWidth, 0)
+        compare(control.implicitContentHeight, 0)
     }
 
     function test_oneChild() {
@@ -127,6 +129,8 @@ TestCase {
 
         compare(control.contentWidth, 100)
         compare(control.contentHeight, 30)
+        compare(control.implicitContentWidth, 100)
+        compare(control.implicitContentHeight, 30)
         verify(control.implicitWidth > 100)
         verify(control.implicitHeight > 30)
 
@@ -136,6 +140,8 @@ TestCase {
 
         compare(control.contentWidth, 200)
         compare(control.contentHeight, 40)
+        compare(control.implicitContentWidth, 200)
+        compare(control.implicitContentHeight, 40)
         verify(control.implicitWidth > 200)
         verify(control.implicitHeight > 40)
     }
@@ -146,6 +152,8 @@ TestCase {
 
         compare(control.contentWidth, 0)
         compare(control.contentHeight, 0)
+        compare(control.implicitContentWidth, 0)
+        compare(control.implicitContentHeight, 0)
         verify(control.implicitWidth > 0)
         verify(control.implicitHeight > 0)
     }
@@ -156,6 +164,8 @@ TestCase {
 
         compare(control.contentWidth, 100)
         compare(control.contentHeight, 30)
+        compare(control.implicitContentWidth, 100)
+        compare(control.implicitContentHeight, 30)
         verify(control.implicitWidth > 100)
         verify(control.implicitHeight > 30)
     }

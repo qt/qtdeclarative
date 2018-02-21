@@ -130,6 +130,8 @@ QQuickControlPrivate::QQuickControlPrivate()
       padding(0),
       horizontalPadding(0),
       verticalPadding(0),
+      implicitContentWidth(0),
+      implicitContentHeight(0),
       spacing(0),
       focusPolicy(Qt::NoFocus),
       focusReason(Qt::OtherFocusReason),
@@ -346,8 +348,10 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
         cancelContentItem();
 
     QQuickItem *oldContentItem = contentItem;
-    if (oldContentItem)
+    if (oldContentItem) {
         disconnect(oldContentItem, &QQuickItem::baselineOffsetChanged, this, &QQuickControlPrivate::updateBaselineOffset);
+        removeImplicitSizeListener(oldContentItem);
+    }
 
     contentItem = item;
     q->contentItemChange(item, oldContentItem);
@@ -359,11 +363,55 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
             item->setParentItem(q);
         if (componentComplete)
             resizeContent();
+        addImplicitSizeListener(contentItem);
     }
+
+    updateImplicitContentSize();
     updateBaselineOffset();
 
     if (notify && !contentItem.isExecuting())
         emit q->contentItemChanged();
+}
+
+qreal QQuickControlPrivate::getContentWidth() const
+{
+    return contentItem ? contentItem->implicitWidth() : 0;
+}
+
+qreal QQuickControlPrivate::getContentHeight() const
+{
+    return contentItem ? contentItem->implicitHeight() : 0;
+}
+
+void QQuickControlPrivate::updateImplicitContentWidth()
+{
+    Q_Q(QQuickControl);
+    const qreal oldWidth = implicitContentWidth;
+    implicitContentWidth = getContentWidth();
+    if (!qFuzzyCompare(implicitContentWidth, oldWidth))
+        emit q->implicitContentWidthChanged();
+}
+
+void QQuickControlPrivate::updateImplicitContentHeight()
+{
+    Q_Q(QQuickControl);
+    const qreal oldHeight = implicitContentHeight;
+    implicitContentHeight = getContentHeight();
+    if (!qFuzzyCompare(implicitContentHeight, oldHeight))
+        emit q->implicitContentHeightChanged();
+}
+
+void QQuickControlPrivate::updateImplicitContentSize()
+{
+    Q_Q(QQuickControl);
+    const qreal oldWidth = implicitContentWidth;
+    const qreal oldHeight = implicitContentHeight;
+    implicitContentWidth = getContentWidth();
+    implicitContentHeight = getContentHeight();
+    if (!qFuzzyCompare(implicitContentWidth, oldWidth))
+        emit q->implicitContentWidthChanged();
+    if (!qFuzzyCompare(implicitContentHeight, oldHeight))
+        emit q->implicitContentHeightChanged();
 }
 
 #if QT_CONFIG(accessibility)
@@ -750,6 +798,8 @@ void QQuickControlPrivate::itemImplicitWidthChanged(QQuickItem *item)
     Q_Q(QQuickControl);
     if (item == background)
         emit q->implicitBackgroundWidthChanged();
+    else if (item == contentItem)
+        updateImplicitContentWidth();
 }
 
 void QQuickControlPrivate::itemImplicitHeightChanged(QQuickItem *item)
@@ -757,6 +807,8 @@ void QQuickControlPrivate::itemImplicitHeightChanged(QQuickItem *item)
     Q_Q(QQuickControl);
     if (item == background)
         emit q->implicitBackgroundHeightChanged();
+    else if (item == contentItem)
+        updateImplicitContentHeight();
 }
 
 void QQuickControlPrivate::itemDestroyed(QQuickItem *item)
@@ -766,6 +818,9 @@ void QQuickControlPrivate::itemDestroyed(QQuickItem *item)
         background = nullptr;
         emit q->implicitBackgroundWidthChanged();
         emit q->implicitBackgroundHeightChanged();
+    } else if (item == contentItem) {
+        contentItem = nullptr;
+        updateImplicitContentSize();
     }
 }
 
@@ -787,6 +842,7 @@ QQuickControl::~QQuickControl()
 {
     Q_D(QQuickControl);
     d->removeImplicitSizeListener(d->background);
+    d->removeImplicitSizeListener(d->contentItem);
 }
 
 void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
@@ -1622,6 +1678,60 @@ void QQuickControl::resetVerticalPadding()
 
 /*!
     \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Control::implicitContentWidth
+    \readonly
+
+    This property holds the implicit content width.
+
+    For basic controls, the value is equal to \c {contentItem ? contentItem.implicitWidth : 0}.
+    For types that inherit Container or Pane, the value is calculated based on the content children.
+
+    This is typically used, together with \l implicitBackgroundWidth, to calculate
+    the \l {Item::}{implicitWidth}:
+
+    \code
+    Control {
+        implicitWidth: Math.max(implicitBackgroundWidth, implicitContentWidth + leftPadding + rightPadding)
+    }
+    \endcode
+
+    \sa implicitContentHeight, implicitBackgroundWidth
+*/
+qreal QQuickControl::implicitContentWidth() const
+{
+    Q_D(const QQuickControl);
+    return d->implicitContentWidth;
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Control::implicitContentHeight
+    \readonly
+
+    This property holds the implicit content height.
+
+    For basic controls, the value is equal to \c {contentItem ? contentItem.implicitHeight : 0}.
+    For types that inherit Container or Pane, the value is calculated based on the content children.
+
+    This is typically used, together with \l implicitBackgroundHeight, to calculate
+    the \l {Item::}{implicitHeight}:
+
+    \code
+    Control {
+        implicitHeight: Math.max(implicitBackgroundHeight, implicitContentHeight + topPadding + bottomPadding)
+    }
+    \endcode
+
+    \sa implicitContentWidth, implicitBackgroundHeight
+*/
+qreal QQuickControl::implicitContentHeight() const
+{
+    Q_D(const QQuickControl);
+    return d->implicitContentHeight;
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
     \qmlproperty real QtQuick.Controls::Control::implicitBackgroundWidth
     \readonly
 
@@ -1629,7 +1739,16 @@ void QQuickControl::resetVerticalPadding()
 
     The value is equal to \c {background ? background.implicitWidth : 0}.
 
-    \sa implicitBackgroundHeight
+    This is typically used, together with \l implicitContentWidth, to calculate
+    the \l {Item::}{implicitWidth}:
+
+    \code
+    Control {
+        implicitWidth: Math.max(implicitBackgroundWidth, implicitContentWidth + leftPadding + rightPadding)
+    }
+    \endcode
+
+    \sa implicitBackgroundHeight, implicitContentWidth
 */
 qreal QQuickControl::implicitBackgroundWidth() const
 {
@@ -1648,7 +1767,16 @@ qreal QQuickControl::implicitBackgroundWidth() const
 
     The value is equal to \c {background ? background.implicitHeight : 0}.
 
-    \sa implicitBackgroundWidth
+    This is typically used, together with \l implicitContentHeight, to calculate
+    the \l {Item::}{implicitHeight}:
+
+    \code
+    Control {
+        implicitHeight: Math.max(implicitBackgroundHeight, implicitContentHeight + topPadding + bottomPadding)
+    }
+    \endcode
+
+    \sa implicitBackgroundWidth, implicitContentHeight
 */
 qreal QQuickControl::implicitBackgroundHeight() const
 {

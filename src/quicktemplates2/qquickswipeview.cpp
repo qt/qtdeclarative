@@ -189,7 +189,7 @@ void QQuickSwipeViewPrivate::itemImplicitWidthChanged(QQuickItem *item)
     Q_Q(QQuickSwipeView);
     QQuickContainerPrivate::itemImplicitWidthChanged(item);
     if (item == q->currentItem())
-        updateContentWidth();
+        updateImplicitContentWidth();
 }
 
 void QQuickSwipeViewPrivate::itemImplicitHeightChanged(QQuickItem *item)
@@ -197,7 +197,7 @@ void QQuickSwipeViewPrivate::itemImplicitHeightChanged(QQuickItem *item)
     Q_Q(QQuickSwipeView);
     QQuickContainerPrivate::itemImplicitHeightChanged(item);
     if (item == q->currentItem())
-        updateContentHeight();
+        updateImplicitContentHeight();
 }
 
 qreal QQuickSwipeViewPrivate::getContentWidth() const
@@ -220,7 +220,7 @@ QQuickSwipeView::QQuickSwipeView(QQuickItem *parent)
     Q_D(QQuickSwipeView);
     setFlag(ItemIsFocusScope);
     setActiveFocusOnTab(true);
-    QObjectPrivate::connect(this, &QQuickContainer::currentItemChanged, d, &QQuickContainerPrivate::updateContentSize);
+    QObjectPrivate::connect(this, &QQuickContainer::currentItemChanged, d, &QQuickControlPrivate::updateImplicitContentSize);
 }
 
 /*!

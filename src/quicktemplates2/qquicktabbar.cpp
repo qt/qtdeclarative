@@ -241,7 +241,7 @@ void QQuickTabBarPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange
 {
     if (!updatingLayout) {
         if (change.sizeChange())
-            updateContentSize();
+            updateImplicitContentSize();
         updateLayout();
     }
 }
@@ -250,14 +250,14 @@ void QQuickTabBarPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
     QQuickContainerPrivate::itemImplicitWidthChanged(item);
     if (item != contentItem)
-        updateContentWidth();
+        updateImplicitContentWidth();
 }
 
 void QQuickTabBarPrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
     QQuickContainerPrivate::itemImplicitHeightChanged(item);
     if (item != contentItem)
-        updateContentHeight();
+        updateImplicitContentHeight();
 }
 
 QQuickTabBar::QQuickTabBar(QQuickItem *parent)
@@ -368,7 +368,7 @@ void QQuickTabBar::itemAdded(int index, QQuickItem *item)
     QQuickTabBarAttached *attached = qobject_cast<QQuickTabBarAttached *>(qmlAttachedPropertiesObject<QQuickTabBar>(item));
     if (attached)
         QQuickTabBarAttachedPrivate::get(attached)->update(this, index);
-    d->updateContentSize();
+    d->updateImplicitContentSize();
     if (isComponentComplete())
         polish();
 }
@@ -389,7 +389,7 @@ void QQuickTabBar::itemRemoved(int index, QQuickItem *item)
     QQuickTabBarAttached *attached = qobject_cast<QQuickTabBarAttached *>(qmlAttachedPropertiesObject<QQuickTabBar>(item));
     if (attached)
         QQuickTabBarAttachedPrivate::get(attached)->update(nullptr, -1);
-    d->updateContentSize();
+    d->updateImplicitContentSize();
     if (isComponentComplete())
         polish();
 }

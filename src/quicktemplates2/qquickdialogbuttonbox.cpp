@@ -212,7 +212,7 @@ void QQuickDialogButtonBoxPrivate::itemImplicitWidthChanged(QQuickItem *item)
     if (item == contentItem)
         resizeContent();
     else
-        updateContentWidth();
+        updateImplicitContentWidth();
 }
 
 void QQuickDialogButtonBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
@@ -221,7 +221,7 @@ void QQuickDialogButtonBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
     if (item == contentItem)
         resizeContent();
     else
-        updateContentHeight();
+        updateImplicitContentHeight();
 }
 
 // adapted from QStyle::alignedRect()
@@ -725,7 +725,7 @@ void QQuickDialogButtonBox::itemAdded(int index, QQuickItem *item)
         QObjectPrivate::connect(button, &QQuickAbstractButton::clicked, d, &QQuickDialogButtonBoxPrivate::handleClick);
     if (QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(qmlAttachedPropertiesObject<QQuickDialogButtonBox>(item, false)))
         QQuickDialogButtonBoxAttachedPrivate::get(attached)->setButtonBox(this);
-    d->updateContentSize();
+    d->updateImplicitContentSize();
     if (isComponentComplete())
         polish();
 }
@@ -738,7 +738,7 @@ void QQuickDialogButtonBox::itemRemoved(int index, QQuickItem *item)
         QObjectPrivate::disconnect(button, &QQuickAbstractButton::clicked, d, &QQuickDialogButtonBoxPrivate::handleClick);
     if (QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(qmlAttachedPropertiesObject<QQuickDialogButtonBox>(item, false)))
         QQuickDialogButtonBoxAttachedPrivate::get(attached)->setButtonBox(nullptr);
-    d->updateContentSize();
+    d->updateImplicitContentSize();
     if (isComponentComplete())
         polish();
 }

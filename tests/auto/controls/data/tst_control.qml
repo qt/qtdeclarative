@@ -1140,6 +1140,12 @@ TestCase {
         var implicitHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitHeightChanged"})
         verify(implicitHeightSpy.valid)
 
+        var implicitContentWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitContentWidthChanged"})
+        verify(implicitContentWidthSpy.valid)
+
+        var implicitContentHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitContentHeightChanged"})
+        verify(implicitContentHeightSpy.valid)
+
         var implicitBackgroundWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundWidthChanged"})
         verify(implicitBackgroundWidthSpy.valid)
 
@@ -1148,21 +1154,58 @@ TestCase {
 
         var implicitWidthChanges = 0
         var implicitHeightChanges = 0
+        var implicitContentWidthChanges = 0
+        var implicitContentHeightChanges = 0
         var implicitBackgroundWidthChanges = 0
         var implicitBackgroundHeightChanges = 0
 
         compare(control.implicitWidth, 0)
         compare(control.implicitHeight, 0)
+        compare(control.implicitContentWidth, 0)
+        compare(control.implicitContentHeight, 0)
         compare(control.implicitBackgroundWidth, 0)
         compare(control.implicitBackgroundHeight, 0)
+
+        control.contentItem = rectangle.createObject(control, {implicitWidth: 10, implicitHeight: 20})
+        compare(control.implicitWidth, 10)
+        compare(control.implicitHeight, 20)
+        compare(control.implicitContentWidth, 10)
+        compare(control.implicitContentHeight, 20)
+        compare(control.implicitBackgroundWidth, 0)
+        compare(control.implicitBackgroundHeight, 0)
+        compare(implicitWidthSpy.count, ++implicitWidthChanges)
+        compare(implicitHeightSpy.count, ++implicitHeightChanges)
+        compare(implicitBackgroundWidthSpy.count, implicitBackgroundWidthChanges)
+        compare(implicitBackgroundHeightSpy.count, implicitBackgroundHeightChanges)
+        compare(implicitContentWidthSpy.count, ++implicitContentWidthChanges)
+        compare(implicitContentHeightSpy.count, ++implicitContentHeightChanges)
+
+        control.contentItem.implicitWidth += 1
+        control.contentItem.implicitHeight += 1
+        compare(control.implicitWidth, 11)
+        compare(control.implicitHeight, 21)
+        compare(control.implicitContentWidth, 11)
+        compare(control.implicitContentHeight, 21)
+        compare(control.implicitBackgroundWidth, 0)
+        compare(control.implicitBackgroundHeight, 0)
+        compare(implicitWidthSpy.count, ++implicitWidthChanges)
+        compare(implicitHeightSpy.count, ++implicitHeightChanges)
+        compare(implicitContentWidthSpy.count, ++implicitContentWidthChanges)
+        compare(implicitContentHeightSpy.count, ++implicitContentHeightChanges)
+        compare(implicitBackgroundWidthSpy.count, implicitBackgroundWidthChanges)
+        compare(implicitBackgroundHeightSpy.count, implicitBackgroundHeightChanges)
 
         control.background = rectangle.createObject(control, {implicitWidth: 20, implicitHeight: 30})
         compare(control.implicitWidth, 20)
         compare(control.implicitHeight, 30)
+        compare(control.implicitContentWidth,11)
+        compare(control.implicitContentHeight, 21)
         compare(control.implicitBackgroundWidth, 20)
         compare(control.implicitBackgroundHeight, 30)
         compare(implicitWidthSpy.count, ++implicitWidthChanges)
         compare(implicitHeightSpy.count, ++implicitHeightChanges)
+        compare(implicitContentWidthSpy.count, implicitContentWidthChanges)
+        compare(implicitContentHeightSpy.count, implicitContentHeightChanges)
         compare(implicitBackgroundWidthSpy.count, ++implicitBackgroundWidthChanges)
         compare(implicitBackgroundHeightSpy.count, ++implicitBackgroundHeightChanges)
 
@@ -1170,10 +1213,14 @@ TestCase {
         control.background.implicitHeight += 1
         compare(control.implicitWidth, 21)
         compare(control.implicitHeight, 31)
+        compare(control.implicitContentWidth, 11)
+        compare(control.implicitContentHeight, 21)
         compare(control.implicitBackgroundWidth, 21)
         compare(control.implicitBackgroundHeight, 31)
         compare(implicitWidthSpy.count, ++implicitWidthChanges)
         compare(implicitHeightSpy.count, ++implicitHeightChanges)
+        compare(implicitContentWidthSpy.count, implicitContentWidthChanges)
+        compare(implicitContentHeightSpy.count, implicitContentHeightChanges)
         compare(implicitBackgroundWidthSpy.count, ++implicitBackgroundWidthChanges)
         compare(implicitBackgroundHeightSpy.count, ++implicitBackgroundHeightChanges)
     }

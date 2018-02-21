@@ -135,6 +135,8 @@ public:
     static QQuickItem *contentChildren_at(QQmlListProperty<QQuickItem> *prop, int index);
     static void contentChildren_clear(QQmlListProperty<QQuickItem> *prop);
 
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+
     bool wasTouched;
     QQuickFlickable *flickable;
 };
@@ -223,11 +225,11 @@ void QQuickScrollViewPrivate::updateContentWidth()
         return;
 
     const qreal cw = flickable->contentWidth();
-    if (qFuzzyCompare(cw, contentWidth))
+    if (qFuzzyCompare(cw, implicitContentWidth))
         return;
 
-    contentWidth = cw;
-    emit q->contentWidthChanged();
+    implicitContentWidth = cw;
+    emit q->implicitContentWidthChanged();
 }
 
 void QQuickScrollViewPrivate::updateContentHeight()
@@ -237,11 +239,11 @@ void QQuickScrollViewPrivate::updateContentHeight()
         return;
 
     const qreal ch = flickable->contentHeight();
-    if (qFuzzyCompare(ch, contentHeight))
+    if (qFuzzyCompare(ch, implicitContentHeight))
         return;
 
-    contentHeight = ch;
-    emit q->contentHeightChanged();
+    implicitContentHeight = ch;
+    emit q->implicitContentHeightChanged();
 }
 
 QQuickScrollBar *QQuickScrollViewPrivate::verticalScrollBar() const
@@ -361,6 +363,15 @@ void QQuickScrollViewPrivate::contentChildren_clear(QQmlListProperty<QQuickItem>
 
     QQmlListProperty<QQuickItem> children = p->flickable->flickableChildren();
     children.clear(&children);
+}
+
+void QQuickScrollViewPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    // a special case for width<->height dependent content (wrapping text) in ScrollView
+    if (contentWidth < 0 && !componentComplete)
+        return;
+
+    QQuickPanePrivate::itemImplicitWidthChanged(item);
 }
 
 QQuickScrollView::QQuickScrollView(QQuickItem *parent)

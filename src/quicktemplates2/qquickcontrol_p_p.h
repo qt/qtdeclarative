@@ -166,6 +166,13 @@ public:
     void itemImplicitHeightChanged(QQuickItem *item) override;
     void itemDestroyed(QQuickItem *item) override;
 
+    virtual qreal getContentWidth() const;
+    virtual qreal getContentHeight() const;
+
+    void updateImplicitContentWidth();
+    void updateImplicitContentHeight();
+    void updateImplicitContentSize();
+
     struct ExtraData {
         ExtraData();
         bool hasTopPadding;
@@ -194,6 +201,8 @@ public:
     qreal padding;
     qreal horizontalPadding;
     qreal verticalPadding;
+    qreal implicitContentWidth;
+    qreal implicitContentHeight;
     qreal spacing;
     QLocale locale;
     QFont resolvedFont;

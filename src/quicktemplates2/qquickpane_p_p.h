@@ -61,24 +61,24 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPanePrivate : public QQuickControlP
 public:
     QQuickPanePrivate();
 
+    void init();
+
     virtual QQmlListProperty<QObject> contentData();
     virtual QQmlListProperty<QQuickItem> contentChildren();
     virtual QList<QQuickItem *> contentChildItems() const;
 
     QQuickItem *getContentItem() override;
 
-    qreal getContentWidth() const;
-    qreal getContentHeight() const;
+    qreal getContentWidth() const override;
+    qreal getContentHeight() const override;
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
-    void itemDestroyed(QQuickItem *item) override;
 
     void contentChildrenChange();
 
     void updateContentWidth();
     void updateContentHeight();
-    void updateContentSize();
 
     bool hasContentWidth;
     bool hasContentHeight;
