@@ -293,6 +293,9 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
     }
 
     if (obj->idNameIndex) {
+        if (populatingValueTypeGroupProperty)
+            return recordError(obj->locationOfIdProperty, tr("Invalid use of id property with a value type"));
+
         bool notInRevision = false;
         collectedBindingPropertyData << propertyResolver.property(QStringLiteral("id"), &notInRevision);
     }
