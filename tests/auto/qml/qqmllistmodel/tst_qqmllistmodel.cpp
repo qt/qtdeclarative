@@ -453,6 +453,7 @@ void tst_qqmllistmodel::dynamic_data()
         QTest::newRow("get2") << "{get(-1) === undefined}" << 1 << "" << dr;
         QTest::newRow("get3") << "{append({'foo':123});get(0) != undefined}" << 1 << "" << dr;
         QTest::newRow("get4") << "{append({'foo':123});get(0).foo}" << 123 << "" << dr;
+        QTest::newRow("get5") << "{append({'foo':123});get(0) == get(0)}" << 1 << "" << dr;
         QTest::newRow("get-modify1") << "{append({'foo':123,'bar':456});get(0).foo = 333;get(0).foo}" << 333 << "" << dr;
         QTest::newRow("get-modify2") << "{append({'z':1});append({'foo':123,'bar':456});get(1).bar = 999;get(1).bar}" << 999 << "" << dr;
 

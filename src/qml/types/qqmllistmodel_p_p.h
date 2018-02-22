@@ -157,13 +157,16 @@ namespace QV4 {
 namespace Heap {
 
 struct ModelObject : public QObjectWrapper {
-    ModelObject(QObject *object, QQmlListModel *model, int elementIndex)
+    ModelObject(QObject *object, QQmlListModel *model)
         : QObjectWrapper(object)
         , m_model(model)
-        , m_elementIndex(elementIndex)
-    {}
+    {
+        QObjectPrivate *op = QObjectPrivate::get(object);
+        m_nodeModelMetaObject = static_cast<ModelNodeMetaObject *>(op->metaObject);
+    }
+    int elementIndex() const { return m_nodeModelMetaObject->m_elementIndex; }
     QQmlListModel *m_model;
-    int m_elementIndex;
+    ModelNodeMetaObject *m_nodeModelMetaObject;
 };
 
 }
