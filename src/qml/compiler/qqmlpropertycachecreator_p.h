@@ -50,18 +50,31 @@
 // We mean it.
 //
 
-#include "qqmltypecompiler_p.h"
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
 struct QQmlBindingInstantiationContext {
-    QQmlBindingInstantiationContext();
-    QQmlBindingInstantiationContext(int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding, const QString &instantiatingPropertyName, const QQmlPropertyCache *referencingObjectPropertyCache);
-    int referencingObjectIndex;
-    const QV4::CompiledData::Binding *instantiatingBinding;
-    QQmlPropertyData *instantiatingProperty;
+    QQmlBindingInstantiationContext() {}
+    QQmlBindingInstantiationContext(int referencingObjectIndex,
+                                    const QV4::CompiledData::Binding *instantiatingBinding,
+                                    const QString &instantiatingPropertyName,
+                                    QQmlPropertyCache *referencingObjectPropertyCache);
+
+    bool resolveInstantiatingProperty();
+    QQmlRefPointer<QQmlPropertyCache> instantiatingPropertyCache(QQmlEnginePrivate *enginePrivate) const;
+
+    int referencingObjectIndex = -1;
+    const QV4::CompiledData::Binding *instantiatingBinding = nullptr;
+    QString instantiatingPropertyName;
+    QQmlRefPointer<QQmlPropertyCache> referencingObjectPropertyCache;
+    QQmlPropertyData *instantiatingProperty = nullptr;
+};
+
+struct QQmlPendingGroupPropertyBindings : public QVector<QQmlBindingInstantiationContext>
+{
+    void resolveMissingPropertyCaches(QQmlEnginePrivate *enginePrivate, QQmlPropertyCacheVector *propertyCaches) const;
 };
 
 struct QQmlPropertyCacheCreatorBase
@@ -77,7 +90,10 @@ class QQmlPropertyCacheCreator : public QQmlPropertyCacheCreatorBase
 public:
     typedef typename ObjectContainer::CompiledObject CompiledObject;
 
-    QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches, QQmlEnginePrivate *enginePrivate, const ObjectContainer *objectContainer, const QQmlImports *imports);
+    QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches,
+                             QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings,
+                             QQmlEnginePrivate *enginePrivate,
+                             const ObjectContainer *objectContainer, const QQmlImports *imports);
 
     QQmlCompileError buildMetaObjects();
 
@@ -92,14 +108,19 @@ protected:
     const ObjectContainer * const objectContainer;
     const QQmlImports * const imports;
     QQmlPropertyCacheVector *propertyCaches;
+    QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings;
 };
 
 template <typename ObjectContainer>
-inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches, QQmlEnginePrivate *enginePrivate, const ObjectContainer *objectContainer, const QQmlImports *imports)
+inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches,
+                                                                           QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings,
+                                                                           QQmlEnginePrivate *enginePrivate,
+                                                                           const ObjectContainer *objectContainer, const QQmlImports *imports)
     : enginePrivate(enginePrivate)
     , objectContainer(objectContainer)
     , imports(imports)
     , propertyCaches(propertyCaches)
+    , pendingGroupPropertyBindings(pendingGroupPropertyBindings)
 {
     propertyCaches->resize(objectContainer->objectCount());
 }
@@ -169,6 +190,14 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
         for ( ; binding != end; ++binding)
             if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
                 QQmlBindingInstantiationContext context(objectIndex, &(*binding), stringAt(binding->propertyNameIndex), thisCache);
+
+                // Binding to group property where we failed to look up the type of the
+                // property? Possibly a group property that is an alias that's not resolved yet.
+                // Let's attempt to resolve it after we're done with the aliases and fill in the
+                // propertyCaches entry then.
+                if (!context.resolveInstantiatingProperty())
+                    pendingGroupPropertyBindings->append(context);
+
                 QQmlCompileError error = buildMetaObjectRecursively(binding->value.objectIndex, context);
                 if (error.isSet())
                     return error;
@@ -183,11 +212,7 @@ template <typename ObjectContainer>
 inline QQmlPropertyCache *QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const
 {
     if (context.instantiatingProperty) {
-        if (context.instantiatingProperty->isQObject()) {
-            return enginePrivate->rawPropertyCacheForType(context.instantiatingProperty->propType(), context.instantiatingProperty->typeMinorVersion());
-        } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(context.instantiatingProperty->propType())) {
-            return enginePrivate->cache(vtmo);
-        }
+        return context.instantiatingPropertyCache(enginePrivate);
     } else if (obj->inheritedTypeNameIndex != 0) {
         auto *typeRef = objectContainer->resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);

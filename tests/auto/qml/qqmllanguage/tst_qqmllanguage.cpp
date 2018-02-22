@@ -1892,6 +1892,20 @@ void tst_qqmllanguage::aliasProperties()
 
         QVERIFY(subObject->property("success").toBool());
     }
+
+    // Property bindings on group properties that are actually aliases (QTBUG-51043)
+    {
+        QQmlComponent component(&engine, testFileUrl("alias.15.qml"));
+        VERIFY_ERRORS(0);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+
+        QPointer<QObject> subItem = qvariant_cast<QObject*>(object->property("symbol"));
+        QVERIFY(!subItem.isNull());
+
+        QCOMPARE(subItem->property("y").toInt(), 1);
+    }
 }
 
 // QTBUG-13374 Test that alias properties and signals can coexist

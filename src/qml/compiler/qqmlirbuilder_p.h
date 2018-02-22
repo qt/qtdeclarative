@@ -665,6 +665,17 @@ private:
 
 } // namespace QmlIR
 
+struct QQmlCompileError
+{
+    QQmlCompileError() {}
+    QQmlCompileError(const QV4::CompiledData::Location &location, const QString &description)
+        : location(location), description(description) {}
+    QV4::CompiledData::Location location;
+    QString description;
+
+    bool isSet() const { return !description.isEmpty(); }
+};
+
 QT_END_NAMESPACE
 
 #endif // QQMLIRBUILDER_P_H
