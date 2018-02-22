@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 import QtQuick 2.11
-import QtQuick.Templates 2.4 as T
+import QtQuick.Templates 2.5 as T
 
 T.AbstractButton {
     id: control
