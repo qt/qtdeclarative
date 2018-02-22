@@ -214,6 +214,19 @@ void tst_qqmlengine::baseUrl()
     engine.setBaseUrl(cwd);
     QCOMPARE(engine.baseUrl(), cwd);
     QCOMPARE(engine.rootContext()->resolvedUrl(QUrl("main.qml")), cwd.resolved(QUrl("main.qml")));
+
+
+    const QString testPath = QDir::currentPath() + QLatin1String("/");
+    const QString rootPath = QDir::rootPath();
+    engine.setBaseUrl(QUrl());
+
+    // Check that baseUrl returns a url to a localFile
+    QCOMPARE(engine.baseUrl().toLocalFile(), testPath);
+
+    QDir::setCurrent(QDir::rootPath());
+
+    // Make sure this also works when in the rootPath
+    QCOMPARE(engine.baseUrl().toLocalFile(), rootPath);
 }
 
 void tst_qqmlengine::contextForObject()
