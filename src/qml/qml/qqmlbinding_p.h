@@ -72,6 +72,8 @@ class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
 {
     friend class QQmlAbstractBinding;
 public:
+    typedef QExplicitlySharedDataPointer<QQmlBinding> Ptr;
+
     static QQmlBinding *create(const QQmlPropertyData *, const QQmlScriptString &, QObject *, QQmlContext *);
     static QQmlBinding *create(const QQmlPropertyData *, const QString &, QObject *, QQmlContextData *,
                                const QString &url = QString(), quint16 lineNumber = 0);
@@ -80,7 +82,7 @@ public:
     ~QQmlBinding();
 
     void setTarget(const QQmlProperty &);
-    void setTarget(QObject *, const QQmlPropertyData &, const QQmlPropertyData *valueType);
+    bool setTarget(QObject *, const QQmlPropertyData &, const QQmlPropertyData *valueType);
 
     void setNotifyOnValueChanged(bool);
 

@@ -161,6 +161,9 @@ private:
     QV4::QmlContext *_qmlContext;
 
     friend struct QQmlObjectCreatorRecursionWatcher;
+
+    typedef std::function<bool(QQmlObjectCreatorSharedState *sharedState)> PendingAliasBinding;
+    std::vector<PendingAliasBinding> pendingAliasBindings;
 };
 
 struct QQmlObjectCreatorRecursionWatcher

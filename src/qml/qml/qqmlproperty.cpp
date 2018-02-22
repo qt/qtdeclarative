@@ -875,6 +875,7 @@ void QQmlPropertyPrivate::findAliasTarget(QObject *object, QQmlPropertyIndex bin
 void QQmlPropertyPrivate::setBinding(QQmlAbstractBinding *binding, BindingFlags flags, QQmlPropertyData::WriteFlags writeFlags)
 {
     Q_ASSERT(binding);
+    Q_ASSERT(binding->targetObject());
 
     QObject *object = binding->targetObject();
     const QQmlPropertyIndex index = binding->targetPropertyIndex();
