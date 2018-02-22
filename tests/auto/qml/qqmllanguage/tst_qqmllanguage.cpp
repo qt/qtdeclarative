@@ -1914,6 +1914,16 @@ void tst_qqmllanguage::aliasProperties()
 
         QCOMPARE(subItem->property("y").toInt(), 1);
     }
+
+    // Alias to sub-object with binding (QTBUG-57041)
+    {
+        // This is shold *not* crash.
+        QQmlComponent component(&engine, testFileUrl("alias.16.qml"));
+        VERIFY_ERRORS(0);
+
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+    }
 }
 
 // QTBUG-13374 Test that alias properties and signals can coexist
