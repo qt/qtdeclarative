@@ -51,8 +51,7 @@ T.RadioButton {
 
     spacing: 8
     padding: 8
-    topPadding: padding + 6
-    bottomPadding: padding + 6
+    verticalPadding: padding + 6
 
     indicator: RadioIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2

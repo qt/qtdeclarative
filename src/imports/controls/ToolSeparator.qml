@@ -46,8 +46,7 @@ T.ToolSeparator {
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight + topPadding + bottomPadding)
 
     padding: vertical ? 6 : 2
-    topPadding: vertical ? 2 : 6
-    bottomPadding: vertical ? 2 : 6
+    verticalPadding: vertical ? 2 : 6
 
     contentItem: Rectangle {
         implicitWidth: vertical ? 1 : 30

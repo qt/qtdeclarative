@@ -51,8 +51,7 @@ T.CheckBox {
 
     spacing: 8
     padding: 8
-    topPadding: padding + 7
-    bottomPadding: padding + 7
+    verticalPadding: padding + 7
 
     indicator: CheckIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2

@@ -52,8 +52,7 @@ T.SwitchDelegate {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 16
-    topPadding: Material.switchDelegateVerticalPadding
-    bottomPadding: Material.switchDelegateVerticalPadding
+    verticalPadding: Material.switchDelegateVerticalPadding
     spacing: 16
 
     icon.width: 24

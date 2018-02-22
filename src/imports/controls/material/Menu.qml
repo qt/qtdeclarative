@@ -51,8 +51,7 @@ T.Menu {
                              contentItem ? contentItem.implicitHeight : 0) + topPadding + bottomPadding
 
     margins: 0
-    topPadding: 8
-    bottomPadding: 8
+    verticalPadding: 8
 
     transformOrigin: !cascade ? Item.Top : (mirrored ? Item.TopRight : Item.TopLeft)
 

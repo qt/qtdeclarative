@@ -49,8 +49,7 @@ T.DelayButton {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 6
-    leftPadding: padding + 2
-    rightPadding: padding + 2
+    horizontalPadding: padding + 2
 
     transition: Transition {
         NumberAnimation {

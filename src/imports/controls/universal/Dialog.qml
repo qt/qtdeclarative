@@ -55,8 +55,7 @@ T.Dialog {
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
     padding: 24
-    topPadding: 18
-    bottomPadding: 18
+    verticalPadding: 18
 
     background: Rectangle {
         color: control.Universal.chromeMediumLowColor

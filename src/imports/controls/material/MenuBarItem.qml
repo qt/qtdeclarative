@@ -51,8 +51,7 @@ T.MenuBarItem {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 16
-    topPadding: 12
-    bottomPadding: 12
+    verticalPadding: 12
     spacing: 16
 
     icon.width: 24

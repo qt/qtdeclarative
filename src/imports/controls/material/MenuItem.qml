@@ -52,8 +52,7 @@ T.MenuItem {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 16
-    topPadding: Material.menuItemVerticalPadding
-    bottomPadding: Material.menuItemVerticalPadding
+    verticalPadding: Material.menuItemVerticalPadding
     spacing: 16
 
     icon.width: 24

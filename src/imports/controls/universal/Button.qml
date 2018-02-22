@@ -50,8 +50,7 @@ T.Button {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 8
-    topPadding: padding - 4
-    bottomPadding: padding - 4
+    verticalPadding: padding - 4
     spacing: 8
 
     icon.width: 20

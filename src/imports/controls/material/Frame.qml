@@ -49,8 +49,7 @@ T.Frame {
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
     padding: 12
-    topPadding: Material.frameVerticalPadding
-    bottomPadding: Material.frameVerticalPadding
+    verticalPadding: Material.frameVerticalPadding
 
     background: Rectangle {
         radius: 2

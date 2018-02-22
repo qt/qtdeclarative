@@ -48,8 +48,7 @@ T.DelayButton {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 8
-    topPadding: padding - 4
-    bottomPadding: padding - 4
+    verticalPadding: padding - 4
 
     property bool useSystemFocusVisuals: true
 

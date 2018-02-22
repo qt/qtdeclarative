@@ -46,8 +46,7 @@ T.MenuSeparator {
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight + topPadding + bottomPadding)
 
     padding: 2
-    topPadding: padding + 4
-    bottomPadding: padding + 4
+    verticalPadding: padding + 4
 
     contentItem: Rectangle {
         implicitWidth: 188
