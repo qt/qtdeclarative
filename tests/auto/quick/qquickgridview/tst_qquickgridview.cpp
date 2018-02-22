@@ -1843,7 +1843,8 @@ void tst_QQuickGridView::currentIndex()
     // currentItem should be in view
     QCOMPARE(gridview->currentIndex(), 35);
     QCOMPARE(gridview->currentItem(), findItem<QQuickItem>(contentItem, "wrapper", 35));
-    QCOMPARE(gridview->currentItem()->y(), gridview->highlightItem()->y());
+    // Wait for possible animation to finish
+    QTRY_COMPARE(gridview->currentItem()->y(), gridview->highlightItem()->y());
     QCOMPARE(gridview->contentY(), 400.0);
 
     // changing model should reset currentIndex to 0

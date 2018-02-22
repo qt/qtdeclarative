@@ -118,11 +118,9 @@ QMAKE_EXTRA_COMPILERS += retgen
     # Don't warn about OVERRIDE and FINAL, since they are feature-checked anyways
     clang {
         QMAKE_CXXFLAGS += -Wno-c++11-extensions -Wno-c++0x-extensions
-        QMAKE_OBJECTIVE_CFLAGS += -Wno-c++11-extensions -Wno-c++0x-extensions
     } else: gcc {
         greaterThan(QT_GCC_MAJOR_VERSION, 4)|greaterThan(QT_GCC_MINOR_VERSION, 5) {
             # We need to deactivate those warnings because some names conflicts with upcoming c++0x types (e.g.nullptr).
-            QMAKE_CXXFLAGS_WARN_ON += -Wno-c++0x-compat
             QMAKE_CXXFLAGS += -Wno-c++0x-compat
         }
     }
