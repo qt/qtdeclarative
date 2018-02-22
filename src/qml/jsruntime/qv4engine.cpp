@@ -126,9 +126,6 @@ QQmlEngine *ExecutionEngine::qmlEngine() const
 #endif // V4_BOOTSTRAP
 
 qint32 ExecutionEngine::maxCallDepth = -1;
-#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
-const bool ExecutionEngine::canAllocateExecutableMemory = OSAllocator::canAllocateExecutableMemory();
-#endif
 
 ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     : executableAllocator(new QV4::ExecutableAllocator)
@@ -144,6 +141,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(0)
     , m_multiplyWrappedQObjects(0)
+#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
+    , m_canAllocateExecutableMemory(OSAllocator::canAllocateExecutableMemory())
+#endif
 {
     memoryManager = new QV4::MemoryManager(this);
 

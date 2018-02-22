@@ -372,6 +372,9 @@ public:
     // but any time a QObject is wrapped a second time in another engine, we have to do
     // bookkeeping.
     MultiplyWrappedQObjectMap *m_multiplyWrappedQObjects;
+#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
+    const bool m_canAllocateExecutableMemory;
+#endif
 
     int internalClassIdCount = 0;
 
@@ -491,7 +494,7 @@ public:
     bool canJIT(Function *f = nullptr)
     {
 #if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
-        if (!canAllocateExecutableMemory)
+        if (!m_canAllocateExecutableMemory)
             return false;
         if (f)
             return f->interpreterCallCount >= jitCallCountThreshold;
@@ -510,9 +513,6 @@ private:
     QScopedPointer<QV4::Profiling::Profiler> m_profiler;
 #endif
     int jitCallCountThreshold;
-#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
-    static const bool canAllocateExecutableMemory;
-#endif
 };
 
 // This is a trick to tell the code generators that functions taking a NoThrowContext won't

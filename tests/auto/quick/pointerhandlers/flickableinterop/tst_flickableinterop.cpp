@@ -75,6 +75,7 @@ private slots:
     void touchDragFlickableBehindItemWithHandlers();
     void mouseDragFlickableBehindItemWithHandlers_data();
     void mouseDragFlickableBehindItemWithHandlers();
+    void touchDragSliderAndFlickable();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -558,6 +559,91 @@ void tst_FlickableInterop::mouseDragFlickableBehindItemWithHandlers()
     }
     QCOMPARE(flickable->isMoving(), false);
     QCOMPARE(originP1, rect->mapToScene(rect->clipRect().center()).toPoint());
+}
+
+void tst_FlickableInterop::touchDragSliderAndFlickable()
+{
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "flickableWithHandlers.qml");
+    QQuickView * window = windowPtr.data();
+
+    QQuickItem *slider = window->rootObject()->findChild<QQuickItem*>("Slider");
+    QVERIFY(slider);
+    QQuickDragHandler *drag = slider->findChild<QQuickDragHandler*>();
+    QVERIFY(drag);
+    QQuickItem *knob = slider->findChild<QQuickItem*>("Slider Knob");
+    QVERIFY(knob);
+    QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>();
+    QVERIFY(flickable);
+
+    // The knob is initially centered over the slider's "groove"
+    qreal initialXOffset = qAbs(knob->mapToScene(knob->clipRect().center()).x() - slider->mapToScene
+                                (slider->clipRect().center()).x());
+    QVERIFY(initialXOffset <= 1);
+
+    // Drag the slider in the allowed (vertical) direction with one finger
+    QPoint p1 = knob->mapToScene(knob->clipRect().center()).toPoint();
+    QTest::touchEvent(window, touchDevice).press(1, p1, window);
+    QQuickTouchUtils::flush(window);
+    p1 += QPoint(0, dragThreshold);
+    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    QQuickTouchUtils::flush(window);
+    p1 += QPoint(0, dragThreshold);
+    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    QQuickTouchUtils::flush(window);
+    p1 += QPoint(0, dragThreshold);
+    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    QQuickTouchUtils::flush(window);
+    QTRY_VERIFY(slider->property("value").toInt() < 49);
+    QVERIFY(!flickable->isMoving());
+
+    // Drag the Flickable with a second finger
+    QPoint p2(300,300);
+    QTest::touchEvent(window, touchDevice).stationary(1).press(2, p2, window);
+    QQuickTouchUtils::flush(window);
+    p1 += QPoint(-10, -10);
+    p2 += QPoint(dragThreshold, 0);
+    QTest::touchEvent(window, touchDevice).move(1, p1, window).stationary(2);
+    QQuickTouchUtils::flush(window);
+    p1 += QPoint(-10, -10);
+    p2 += QPoint(dragThreshold, 0);
+    QTest::touchEvent(window, touchDevice).stationary(1).move(2, p2, window);
+    QQuickTouchUtils::flush(window);
+    p1 += QPoint(-10, -10);
+    p2 += QPoint(dragThreshold, 0);
+    QTest::touchEvent(window, touchDevice).move(1, p1, window).stationary(2);
+    QQuickTouchUtils::flush(window);
+    p1 += QPoint(-10, -10);
+    p2 += QPoint(dragThreshold, 0);
+    QTest::touchEvent(window, touchDevice).stationary(1).move(2, p2, window);
+    QQuickTouchUtils::flush(window);
+    p1 += QPoint(-10, -10);
+    p2 += QPoint(dragThreshold, 0);
+    QTest::touchEvent(window, touchDevice).move(1, p1, window).stationary(2);
+    QQuickTouchUtils::flush(window);
+    p1 += QPoint(-10, -10);
+    p2 += QPoint(dragThreshold, 0);
+    QTest::touchEvent(window, touchDevice).stationary(1).move(2, p2, window);
+    QQuickTouchUtils::flush(window);
+    p1 += QPoint(-10, -10);
+    p2 += QPoint(dragThreshold, 0);
+    QTest::touchEvent(window, touchDevice).move(1, p1, window).stationary(2);
+    QQuickTouchUtils::flush(window);
+    p1 += QPoint(-10, -10);
+    p2 += QPoint(dragThreshold, 0);
+    QTest::touchEvent(window, touchDevice).stationary(1).move(2, p2, window);
+    QQuickTouchUtils::flush(window);
+    QTRY_VERIFY(flickable->isMoving());
+    qreal knobSliderXOffset = qAbs(knob->mapToScene(knob->clipRect().center()).toPoint().x() -
+        slider->mapToScene(slider->clipRect().center()).toPoint().x()) - initialXOffset;
+    if (knobSliderXOffset > 1)
+        qDebug() << "knob has slipped out of groove by" << knobSliderXOffset << "pixels";
+    // See if the knob is still centered over the slider's "groove"
+    QVERIFY(qAbs(knobSliderXOffset) <= 1);
+
+    // Release
+    QTest::touchEvent(window, touchDevice).release(1, p1, window).release(2, p2, window);
 }
 
 QTEST_MAIN(tst_FlickableInterop)

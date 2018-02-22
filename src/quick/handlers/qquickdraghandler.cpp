@@ -91,20 +91,44 @@ bool QQuickDragHandler::wantsEventPoint(QQuickEventPoint *point)
             || QQuickSinglePointHandler::wantsEventPoint(point));
 }
 
+bool QQuickDragHandler::targetContains(QQuickEventPoint *point)
+{
+    Q_ASSERT(parentItem() && target());
+    return target()->contains(localTargetPosition(point));
+}
+
+QPointF QQuickDragHandler::localTargetPosition(QQuickEventPoint *point)
+{
+    QPointF pos = point->position();
+    if (target() != parentItem())
+        pos = parentItem()->mapToItem(target(), pos);
+    return pos;
+}
+
 void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
-    if (grabber == this && stateChange == QQuickEventPoint::GrabExclusive && m_targetStartPos.isNull())
-        // In case the grab got handled over from another grabber, we might not get the Press.
-        // Therefore, prefer the m_targetStartPos we got when it got Pressed.
-        initializeTargetStartPos(point);
-    enforceConstraints();
+    if (!target() || !target()->parentItem())
+        return;
+    if (grabber == this && stateChange == QQuickEventPoint::GrabExclusive) {
+        // In case the grab got handed over from another grabber, we might not get the Press.
+        if (!m_pressedInsideTarget) {
+            m_pressTargetPos = QPointF(target()->width(), target()->height()) / 2;
+            m_pressScenePos = point->scenePosition();
+        } else if (m_pressTargetPos.isNull()) {
+            m_pressTargetPos = localTargetPosition(point);
+            m_pressScenePos = point->scenePosition();
+        }
+    }
     QQuickSinglePointHandler::onGrabChanged(grabber, stateChange, point);
 }
 
 void QQuickDragHandler::onActiveChanged()
 {
-    if (!active())
-        m_targetStartPos = QPointF();
+    if (!active()) {
+        m_pressTargetPos = QPointF();
+        m_pressScenePos = m_pressTargetPos;
+        m_pressedInsideTarget = false;
+    }
 }
 
 void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
@@ -112,25 +136,38 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
     point->setAccepted();
     switch (point->state()) {
     case QQuickEventPoint::Pressed:
-        initializeTargetStartPos(point);
+        m_pressedInsideTarget = targetContains(point);
+        m_pressTargetPos = localTargetPosition(point);
+        m_pressScenePos = point->scenePosition();
         setPassiveGrab(point);
         break;
     case QQuickEventPoint::Updated: {
-        QPointF delta = point->scenePosition() - point->scenePressPosition();
-        if (!m_xAxis.enabled())
-            delta.setX(0);
-        if (!m_yAxis.enabled())
-            delta.setY(0);
+        QVector2D accumulatedDragDelta = QVector2D(point->scenePosition() - m_pressScenePos);
         if (active()) {
-            setTranslation(QVector2D(delta));
+            // update translation property. Make sure axis is respected for it.
+            if (!m_xAxis.enabled())
+                accumulatedDragDelta.setX(0);
+            if (!m_yAxis.enabled())
+                accumulatedDragDelta.setY(0);
+            setTranslation(accumulatedDragDelta);
+
             if (target() && target()->parentItem()) {
-                QPointF pos = target()->parentItem()->mapFromScene(m_targetStartPos + delta);
+                const QPointF newTargetTopLeft = localTargetPosition(point) - m_pressTargetPos;
+                const QPointF xformOrigin = target()->transformOriginPoint();
+                const QPointF targetXformOrigin = newTargetTopLeft + xformOrigin;
+                QPointF pos = target()->parentItem()->mapFromItem(target(), targetXformOrigin);
+                pos -= xformOrigin;
+                QPointF targetItemPos = target()->position();
+                if (!m_xAxis.enabled())
+                    pos.setX(targetItemPos.x());
+                if (!m_yAxis.enabled())
+                    pos.setY(targetItemPos.y());
                 enforceAxisConstraints(&pos);
                 moveTarget(pos, point);
             }
         } else if (!point->exclusiveGrabber() &&
-                   ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point)) ||
-                    (m_yAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point)))) {
+                   ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(accumulatedDragDelta.x(), Qt::XAxis, point)) ||
+                    (m_yAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(accumulatedDragDelta.y(), Qt::YAxis, point)))) {
             setExclusiveGrab(point);
             if (auto parent = parentItem()) {
                 if (point->pointerEvent()->asPointerTouchEvent())
@@ -164,23 +201,6 @@ void QQuickDragHandler::enforceAxisConstraints(QPointF *localPos)
         localPos->setX(qBound(m_xAxis.minimum(), localPos->x(), m_xAxis.maximum()));
     if (m_yAxis.enabled())
         localPos->setY(qBound(m_yAxis.minimum(), localPos->y(), m_yAxis.maximum()));
-}
-
-void QQuickDragHandler::initializeTargetStartPos(QQuickEventPoint *point)
-{
-    if (target() && target()->parentItem()) {
-        m_targetStartPos = target()->parentItem()->mapToScene(target()->position());
-        if (!target()->contains(point->position())) {
-            // If pressed outside of target item, move the target item so that the touchpoint is in its center,
-            // while still respecting the axis constraints.
-            const QPointF center = target()->parentItem()->mapFromScene(point->scenePosition());
-            const QPointF pointCenteredInItemPos = target()->parentItem()->mapToScene(center - QPointF(target()->width(), target()->height())/2);
-            if (m_xAxis.enabled())
-                m_targetStartPos.setX(pointCenteredInItemPos.x());
-            if (m_yAxis.enabled())
-                m_targetStartPos.setY(pointCenteredInItemPos.y());
-        }
-    }
 }
 
 void QQuickDragHandler::setTranslation(const QVector2D &trans)

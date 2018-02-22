@@ -418,6 +418,11 @@ void tst_qquickimage::svg()
 
     QCOMPARE(obj->width(), 200.0);
     QCOMPARE(obj->height(), 200.0);
+    obj->setSourceSize(QSize(100,0));
+    QCOMPARE(obj->width(), 100.0);
+    // Due to aspect ratio calculations we can't get a precise
+    // check for all setups, so we allow a small margin of error
+    QVERIFY(qAbs(obj->height() - 141) < 1);
     delete obj;
 }
 

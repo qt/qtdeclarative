@@ -74,7 +74,7 @@ void BytecodeGenerator::packInstruction(I &i)
     Q_ASSERT(type >= MOTH_NUM_INSTRUCTIONS());
     if (type >= MOTH_NUM_INSTRUCTIONS())
         type -= MOTH_NUM_INSTRUCTIONS();
-    int instructionsAsInts[sizeof(Instr)/sizeof(int)];
+    int instructionsAsInts[sizeof(Instr)/sizeof(int)] = {};
     int nMembers = Moth::InstrInfo::argumentCount[static_cast<int>(i.type)];
     for (int j = 0; j < nMembers; ++j) {
         instructionsAsInts[j] = qFromLittleEndian<qint32>(i.packed + 1 + j * sizeof(int));
