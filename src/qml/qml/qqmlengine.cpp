@@ -1285,7 +1285,9 @@ QUrl QQmlEngine::baseUrl() const
 {
     Q_D(const QQmlEngine);
     if (d->baseUrl.isEmpty()) {
-        return QUrl::fromLocalFile(QDir::currentPath() + QDir::separator());
+        const QString currentPath = QDir::currentPath();
+        const QString rootPath = QDir::rootPath();
+        return QUrl::fromLocalFile((currentPath == rootPath) ? rootPath : (currentPath + QDir::separator()));
     } else {
         return d->baseUrl;
     }
