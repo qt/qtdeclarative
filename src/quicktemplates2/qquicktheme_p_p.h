@@ -60,6 +60,7 @@ public:
         return theme->d_func();
     }
 
+    static QScopedPointer<QQuickTheme> current;
     QScopedPointer<const QFont> defaultFont;
     QScopedPointer<const QPalette> defaultPalette;
 };

@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickproxytheme_p.h>
+#include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtGui/qfont.h>
 #include <QtGui/qpalette.h>
@@ -57,17 +57,73 @@ QT_BEGIN_NAMESPACE
 
 class QQuickThemePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTheme : public QQuickProxyTheme
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTheme
 {
 public:
     QQuickTheme();
-    ~QQuickTheme();
+    virtual ~QQuickTheme();
+
+    static QQuickTheme *current();
+    static void setCurrent(QQuickTheme *theme);
+
+    enum Font {
+        SystemFont,
+        MenuFont,
+        MenuBarFont,
+        MenuItemFont,
+        MessageBoxFont,
+        LabelFont,
+        TipLabelFont,
+        StatusBarFont,
+        TitleBarFont,
+        MdiSubWindowTitleFont,
+        DockWidgetTitleFont,
+        PushButtonFont,
+        CheckBoxFont,
+        RadioButtonFont,
+        ToolButtonFont,
+        ItemViewFont,
+        ListViewFont,
+        HeaderViewFont,
+        ListBoxFont,
+        ComboMenuItemFont,
+        ComboLineEditFont,
+        SmallFont,
+        MiniFont,
+        FixedFont,
+        GroupBoxTitleFont,
+        TabButtonFont,
+        EditorFont,
+        NFonts
+    };
+
+    enum Palette {
+        SystemPalette,
+        ToolTipPalette,
+        ToolButtonPalette,
+        ButtonPalette,
+        CheckBoxPalette,
+        RadioButtonPalette,
+        HeaderPalette,
+        ComboBoxPalette,
+        ItemViewPalette,
+        MessageBoxLabelPelette,
+        MessageBoxLabelPalette = MessageBoxLabelPelette,
+        TabBarPalette,
+        LabelPalette,
+        GroupBoxPalette,
+        MenuPalette,
+        MenuBarPalette,
+        TextEditPalette,
+        TextLineEditPalette,
+        NPalettes
+    };
 
     static QFont themeFont(Font type);
     static QPalette themePalette(Palette type);
 
-    const QFont *font(Font type = SystemFont) const override;
-    const QPalette *palette(Palette type = SystemPalette) const override;
+    virtual const QFont *font(Font type = SystemFont) const;
+    virtual const QPalette *palette(Palette type = SystemPalette) const;
 
     void setDefaultFont(const QFont *defaultFont);
     void setDefaultPalette(const QPalette *defaultPalette);

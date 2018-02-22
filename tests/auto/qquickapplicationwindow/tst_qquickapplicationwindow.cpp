@@ -50,7 +50,7 @@
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
-#include <QtQuickTemplates2/private/qquickproxytheme_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
@@ -555,11 +555,10 @@ void tst_QQuickApplicationWindow::font()
     QCOMPARE(item6->font(), font);
 }
 
-class TestTheme : public QQuickProxyTheme
+class TestTheme : public QQuickTheme
 {
 public:
-    TestTheme(QPlatformTheme *theme) : QQuickProxyTheme(theme), m_font("Courier")
-    { QGuiApplicationPrivate::platform_theme = this; }
+    TestTheme() : m_font("Courier") { }
 
     const QFont *font(Font type = SystemFont) const override
     {
@@ -572,7 +571,7 @@ public:
 
 void tst_QQuickApplicationWindow::defaultFont()
 {
-    TestTheme theme(QGuiApplicationPrivate::platform_theme);
+    QQuickTheme::setCurrent(new TestTheme);
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -581,7 +580,7 @@ void tst_QQuickApplicationWindow::defaultFont()
     QScopedPointer<QQuickApplicationWindow> window;
     window.reset(static_cast<QQuickApplicationWindow *>(component.create()));
     QVERIFY(!window.isNull());
-    QCOMPARE(window->font(), *theme.font());
+    QCOMPARE(window->font(), QQuickTheme::themeFont(QQuickTheme::SystemFont));
 }
 
 void tst_QQuickApplicationWindow::locale()

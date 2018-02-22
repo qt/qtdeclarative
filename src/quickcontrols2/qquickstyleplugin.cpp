@@ -129,6 +129,8 @@ QQuickStylePlugin::QQuickStylePlugin(QObject *parent) : QQmlExtensionPlugin(pare
 
 QQuickStylePlugin::~QQuickStylePlugin()
 {
+    if (QQuickTheme::current() == m_theme)
+        QQuickTheme::setCurrent(nullptr);
 }
 
 void QQuickStylePlugin::registerTypes(const char *uri)
@@ -141,13 +143,13 @@ void QQuickStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
     Q_UNUSED(engine);
     Q_UNUSED(uri);
 
-    // make sure not to re-create the proxy theme if initializeEngine()
+    // make sure not to re-create the theme if initializeEngine()
     // is called multiple times, like in case of qml2puppet (QTBUG-54995)
-    if (!m_theme.isNull())
+    if (m_theme)
         return;
 
     if (isCurrent()) {
-        m_theme.reset(createTheme());
+        m_theme = createTheme();
         if (m_theme) {
             const QFont *font = nullptr;
             const QPalette *palette = nullptr;
@@ -160,7 +162,7 @@ void QQuickStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 #endif
             m_theme->setDefaultFont(font);
             m_theme->setDefaultPalette(palette);
-            QGuiApplicationPrivate::platform_theme = m_theme.data();
+            QQuickTheme::setCurrent(m_theme);
         }
     }
 }

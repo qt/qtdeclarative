@@ -37,9 +37,12 @@
 #include "qquicktheme_p.h"
 #include "qquicktheme_p_p.h"
 
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 
 QT_BEGIN_NAMESPACE
+
+QScopedPointer<QQuickTheme> QQuickThemePrivate::current;
 
 QQuickTheme::QQuickTheme()
     : d_ptr(new QQuickThemePrivate)
@@ -50,15 +53,27 @@ QQuickTheme::~QQuickTheme()
 {
 }
 
+QQuickTheme *QQuickTheme::current()
+{
+    return QQuickThemePrivate::current.data();
+}
+
+void QQuickTheme::setCurrent(QQuickTheme *theme)
+{
+    QQuickThemePrivate::current.reset(theme);
+}
+
 QFont QQuickTheme::themeFont(Font type)
 {
     const QFont *font = nullptr;
-    if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
+    if (QQuickTheme *theme = current())
         font = theme->font(type);
+    else if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
+        font = theme->font(static_cast<QPlatformTheme::Font>(type));
 
     if (font) {
         QFont f = *font;
-        if (type == QPlatformTheme::SystemFont)
+        if (type == SystemFont)
             f.resolve(0);
         return f;
     }
@@ -69,12 +84,14 @@ QFont QQuickTheme::themeFont(Font type)
 QPalette QQuickTheme::themePalette(Palette type)
 {
     const QPalette *palette = nullptr;
-    if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
+    if (QQuickTheme *theme = current())
         palette = theme->palette(type);
+    else if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
+        palette = theme->palette(static_cast<QPlatformTheme::Palette>(type));
 
     if (palette) {
         QPalette f = *palette;
-        if (type == QPlatformTheme::SystemPalette)
+        if (type == SystemPalette)
             f.resolve(0);
         return f;
     }

@@ -180,10 +180,10 @@ void tst_font::inheritance()
     QCOMPARE(grandChild->property("font").value<QFont>(), windowFont);
 }
 
-class TestFontTheme : public QQuickProxyTheme
+class TestFontTheme : public QQuickTheme
 {
 public:
-    TestFontTheme(QPlatformTheme *theme) : QQuickProxyTheme(theme)
+    TestFontTheme()
     {
         std::fill(fonts, fonts + QQuickTheme::NFonts, static_cast<QFont *>(0));
 
@@ -192,8 +192,6 @@ public:
             font.setPixelSize(i + 10);
             fonts[i] = new QFont(font);
         }
-
-        QGuiApplicationPrivate::platform_theme = this;
     }
 
     const QFont *font(Font type = SystemFont) const override
@@ -266,9 +264,9 @@ void tst_font::defaultFont()
     QQmlComponent component(&engine);
     component.setData(QString("import QtQuick.Controls 2.2; %1 { }").arg(control).toUtf8(), QUrl());
 
-    // The call to setData() above causes QQuickDefaultTheme to be set as the platform theme,
+    // The call to setData() above causes QQuickDefaultTheme to be set as the current theme,
     // so we must make sure we only set our theme afterwards.
-    TestFontTheme theme(QGuiApplicationPrivate::platform_theme);
+    QQuickTheme::setCurrent(new TestFontTheme);
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
@@ -276,16 +274,9 @@ void tst_font::defaultFont()
     QVariant var = object->property("font");
     QVERIFY(var.isValid());
 
-    const QFont *expectedFont = theme.font(fontType);
-    QVERIFY(expectedFont);
-
+    QFont expectedFont = QQuickTheme::themeFont(fontType);
     QFont actualFont = var.value<QFont>();
-
-    if (actualFont != *expectedFont) {
-        qDebug() << QTest::currentDataTag() << actualFont << *expectedFont;
-    }
-
-    QCOMPARE(actualFont, *expectedFont);
+    QCOMPARE(actualFont, expectedFont);
 }
 
 void tst_font::listView_data()

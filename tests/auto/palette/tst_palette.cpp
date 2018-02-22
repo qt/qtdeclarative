@@ -216,10 +216,10 @@ void tst_palette::inheritance()
     QCOMPARE(grandChild->property("palette").value<QPalette>(), windowPalette);
 }
 
-class TestTheme : public QQuickProxyTheme
+class TestTheme : public QQuickTheme
 {
 public:
-    TestTheme(QPlatformTheme *theme) : QQuickProxyTheme(theme)
+    TestTheme()
     {
         std::fill(palettes, palettes + QQuickTheme::NPalettes, static_cast<QPalette *>(0));
 
@@ -271,8 +271,6 @@ public:
 
         palette.setColor(QPalette::Base, Qt::magenta);
         palettes[QQuickTheme::TextLineEditPalette] = new QPalette(palette);
-
-        QGuiApplicationPrivate::platform_theme = this;
     }
 
     const QPalette *palette(Palette type = SystemPalette) const override
@@ -341,7 +339,7 @@ void tst_palette::defaultPalette()
     QFETCH(QString, control);
     QFETCH(QQuickTheme::Palette, paletteType);
 
-    TestTheme theme(QGuiApplicationPrivate::platform_theme);
+    QQuickTheme::setCurrent(new TestTheme);
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -353,11 +351,9 @@ void tst_palette::defaultPalette()
     QVariant var = object->property("palette");
     QVERIFY(var.isValid());
 
-    const QPalette *expectedPalette = theme.palette(paletteType);
-    QVERIFY(expectedPalette);
-
+    QPalette expectedPalette = QQuickTheme::themePalette(paletteType);
     QPalette actualPalette = var.value<QPalette>();
-    QCOMPARE(actualPalette, *expectedPalette);
+    QCOMPARE(actualPalette, expectedPalette);
 }
 
 void tst_palette::listView_data()

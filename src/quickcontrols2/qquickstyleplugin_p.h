@@ -48,7 +48,6 @@
 // We mean it.
 //
 
-#include <QtCore/qscopedpointer.h>
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
@@ -74,7 +73,7 @@ public:
     QUrl typeUrl(const QString &name = QString()) const;
 
 private:
-    QScopedPointer<QQuickTheme> m_theme;
+    QQuickTheme *m_theme = nullptr;
 };
 
 QT_END_NAMESPACE
