@@ -3015,7 +3015,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
     // The js unit owns the data and will free the qml unit.
     unit->data = unitData;
 
-    if (!disableDiskCache() || forceDiskCache()) {
+    if ((!disableDiskCache() || forceDiskCache()) && !isDebugging()) {
         QString errorString;
         if (!unit->saveToDisk(url(), &errorString)) {
             qCDebug(DBG_DISK_CACHE()) << "Error saving cached version of" << unit->fileName() << "to disk:" << errorString;
