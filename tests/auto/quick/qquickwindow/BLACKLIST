@@ -1,3 +1,6 @@
 # QTBUG-62177
 [attachedProperty]
 osx
+# QTBUG-53916
+[touchEvent_propagation:hide item]
+ubuntu
