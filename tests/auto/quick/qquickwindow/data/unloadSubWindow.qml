@@ -10,8 +10,10 @@ Window {
                 id: loader2
                 sourceComponent : Window {
                     id: inner
-                    visible: true
-                    Component.onCompleted: root.transientWindow = inner
+                    Component.onCompleted: {
+                        root.transientWindow = inner;
+                        inner.show();
+                    }
                 }
             }
             Component.onDestruction: {

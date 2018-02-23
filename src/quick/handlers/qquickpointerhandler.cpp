@@ -319,7 +319,7 @@ void QQuickPointerHandler::setEnabled(bool enabled)
 
     The Item which this handler will manipulate.
 
-    By default, it is the same as the \l parent: the Item within which
+    By default, it is the same as the \l [QML] {parent}, the Item within which
     the handler is declared. However, it can sometimes be useful to set the
     target to a different Item, in order to handle events within one item
     but manipulate another; or to \c null, to disable the default behavior
@@ -402,10 +402,10 @@ void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     The \l Item which is the scope of the handler; the Item in which it was declared.
     The handler will handle events on behalf of this Item, which means a
     pointer event is relevant if at least one of its event points occurs within
-    the Item's interior.  Initially \l target() is the same, but target()
+    the Item's interior.  Initially \l [QML] {target} {target()} is the same, but it
     can be reassigned.
 
-    \sa QQuick::PointerHandler::target(), QObject::parent()
+    \sa {target}, QObject::parent()
 */
 
 /*!

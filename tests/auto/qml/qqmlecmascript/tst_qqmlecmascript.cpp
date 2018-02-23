@@ -350,6 +350,7 @@ private slots:
     void localForInIterator();
     void shadowedFunctionName();
     void anotherNaN();
+    void callPropertyOnUndefined();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8467,7 +8468,17 @@ void tst_qqmlecmascript::shadowedFunctionName()
     QCOMPARE(v.toBool(), true);
 }
 
-
+void tst_qqmlecmascript::callPropertyOnUndefined()
+{
+    QJSEngine engine;
+    QJSValue v = engine.evaluate(QString::fromLatin1(
+            "function f() {\n"
+            "    var base;\n"
+            "    base.push(1);"
+            "}\n"
+    ));
+    QVERIFY(!v.isError()); // well, more importantly: this shouldn't fail on an assert.
+}
 
 QTEST_MAIN(tst_qqmlecmascript)
 

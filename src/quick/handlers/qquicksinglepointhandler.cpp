@@ -217,7 +217,7 @@ void QQuickSinglePointHandler::moveTarget(QPointF pos, QQuickEventPoint *point)
 
     The mouse buttons which can activate this Pointer Handler.
 
-    By default, this property is set to \l Qt.LeftButton.
+    By default, this property is set to \l {QtQuick::MouseEvent::button} {Qt.LeftButton}.
     It can be set to an OR combination of mouse buttons, and will ignore events
     from other buttons.
 
@@ -360,7 +360,8 @@ void QQuickHandlerPoint::reset()
     \qmlproperty QPointF QtQuick::HandlerPoint::position
     \brief The position within the \c parent Item
 
-    This is the position of the event point relative to the bounds of the \l parent.
+    This is the position of the event point relative to the bounds of
+    the \l {PointerHandler::parent} {parent}.
 */
 
 /*!
@@ -378,7 +379,7 @@ void QQuickHandlerPoint::reset()
     \brief The pressed position within the \c parent Item
 
     This is the position at which this point was pressed, relative to the
-    bounds of the \l parent.
+    bounds of the \l {PointerHandler::parent} {parent}.
 */
 
 /*!

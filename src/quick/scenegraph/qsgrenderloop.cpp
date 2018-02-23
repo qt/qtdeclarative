@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
 extern bool qsg_useConsistentTiming();
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 #if QT_CONFIG(opengl)
-/*!
+/*
     expectations for this manager to work:
      - one opengl context to render multiple windows
      - OpenGL pipeline will not block for vsync in swap

@@ -3041,6 +3041,7 @@ void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &fo
 
 #if QT_DEPRECATED_SINCE(5, 8)
 
+// ### Qt6: remove
 /*!
     Propagates an event \a e to a QQuickItem \a item on the window.
 
@@ -3050,7 +3051,6 @@ void QQuickWindowPrivate::contextCreationFailureMessage(const QSurfaceFormat &fo
 
     \deprecated
 */
-// ### Qt6: remove
 bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
 {
     Q_D(QQuickWindow);

@@ -363,13 +363,6 @@ void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
 }
 
 /*!
-    Factory function for texture objects.
-
-    If \a image is a valid image, the QSGTexture::setImage function
-    will be called with \a image as argument.
- */
-
-/*!
     Factory function for the scene graph renderers.
 
     The renderers are used for the toplevel renderer and once for every

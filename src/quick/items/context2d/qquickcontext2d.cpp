@@ -304,7 +304,7 @@ static QStringList qExtractFontFamiliesFromString(const QStringRef &fontFamilies
     return extractedFamilies;
 }
 
-/*!
+/*
     Tries to set a family on \a font using the families provided in \a fontFamilyTokens.
 
     The list is ordered by preference, with the first family having the highest preference.
@@ -364,7 +364,7 @@ if (!(usedTokens & token)) { \
     return currentFont; \
 }
 
-/*!
+/*
     Parses a font string based on the CSS shorthand font property.
 
     See: http://www.w3.org/TR/css3-fonts/#font-prop
