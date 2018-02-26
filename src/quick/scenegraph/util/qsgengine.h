@@ -68,7 +68,7 @@ public:
     Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
 
     explicit QSGEngine(QObject *parent = nullptr);
-    ~QSGEngine();
+    ~QSGEngine() override;
 
     void initialize(QOpenGLContext *context);
     void invalidate();

@@ -111,7 +111,7 @@ public:
     };
 
     explicit QSGContext(QObject *parent = nullptr);
-    virtual ~QSGContext();
+    ~QSGContext() override;
 
     virtual void renderContextInitialized(QSGRenderContext *renderContext);
     virtual void renderContextInvalidated(QSGRenderContext *renderContext);
@@ -159,7 +159,7 @@ public:
     };
 
     QSGRenderContext(QSGContext *context);
-    virtual ~QSGRenderContext();
+    ~QSGRenderContext() override;
 
     QSGContext *sceneGraphContext() const { return m_sg; }
     virtual bool isValid() const { return true; }

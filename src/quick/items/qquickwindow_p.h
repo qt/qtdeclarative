@@ -114,7 +114,7 @@ public:
     static inline QQuickWindowPrivate *get(QQuickWindow *c) { return c->d_func(); }
 
     QQuickWindowPrivate();
-    virtual ~QQuickWindowPrivate();
+    ~QQuickWindowPrivate() override;
 
     void init(QQuickWindow *, QQuickRenderControl *control = nullptr);
 

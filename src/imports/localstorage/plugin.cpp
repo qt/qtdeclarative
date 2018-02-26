@@ -97,7 +97,7 @@ class QQmlSqlDatabaseData : public QV8Engine::Deletable
 {
 public:
     QQmlSqlDatabaseData(QV4::ExecutionEngine *engine);
-    ~QQmlSqlDatabaseData();
+    ~QQmlSqlDatabaseData() override;
 
     QV4::PersistentValue databaseProto;
     QV4::PersistentValue queryProto;
@@ -693,7 +693,7 @@ public:
     QQuickLocalStorage(QObject *parent=nullptr) : QObject(parent)
     {
     }
-    ~QQuickLocalStorage() {
+    ~QQuickLocalStorage() override {
     }
 
    Q_INVOKABLE void openDatabaseSync(QQmlV4Function* args);

@@ -68,7 +68,7 @@ class QQmlExpressionPrivate : public QObjectPrivate,
     Q_DECLARE_PUBLIC(QQmlExpression)
 public:
     QQmlExpressionPrivate();
-    ~QQmlExpressionPrivate();
+    ~QQmlExpressionPrivate() override;
 
     void init(QQmlContextData *, const QString &, QObject *);
     void init(QQmlContextData *, QV4::Function *runtimeFunction, QObject *);

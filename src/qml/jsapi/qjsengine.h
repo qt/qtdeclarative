@@ -63,7 +63,7 @@ class Q_QML_EXPORT QJSEngine
 public:
     QJSEngine();
     explicit QJSEngine(QObject *parent);
-    virtual ~QJSEngine();
+    ~QJSEngine() override;
 
     QJSValue globalObject() const;
 

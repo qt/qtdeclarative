@@ -395,7 +395,7 @@ public:
       , m_pressedButtons(Qt::NoButton)
     {}
 
-    virtual ~QQuickPointerEvent();
+    ~QQuickPointerEvent() override;
 
 public: // property accessors
     QQuickPointerDevice *device() const { return m_device; }
@@ -631,7 +631,7 @@ private:
       , m_uniqueId(QPointingDeviceUniqueId::fromNumericId(uniqueId))
     {
     }
-    ~QQuickPointerDevice() { }
+    ~QQuickPointerDevice() override { }
 
 private:
     DeviceType m_deviceType;

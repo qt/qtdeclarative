@@ -65,7 +65,7 @@ public:
     {
     }
 
-    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
+    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override
     {
         int width = 100;
         int height = 50;
@@ -99,12 +99,12 @@ class ImageProviderExtensionPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         Q_UNUSED(uri);
     }
 
-    void initializeEngine(QQmlEngine *engine, const char *uri)
+    void initializeEngine(QQmlEngine *engine, const char *uri) override
     {
         Q_UNUSED(uri);
         engine->addImageProvider("colors", new ColorImageProvider);

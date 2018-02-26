@@ -79,7 +79,7 @@ public:
                                QObject *obj, QQmlContextData *ctxt, QV4::ExecutionContext *scope);
     static QQmlBinding *createTranslationBinding(QV4::CompiledData::CompilationUnit *unit, const QV4::CompiledData::Binding *binding,
                                                  QObject *obj, QQmlContextData *ctxt);
-    ~QQmlBinding();
+    ~QQmlBinding() override;
 
     void setTarget(const QQmlProperty &);
     void setTarget(QObject *, const QQmlPropertyData &, const QQmlPropertyData *valueType);

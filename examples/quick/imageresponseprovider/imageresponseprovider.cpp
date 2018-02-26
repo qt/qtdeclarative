@@ -66,12 +66,12 @@ class AsyncImageResponse : public QQuickImageResponse, public QRunnable
             setAutoDelete(false);
         }
 
-        QQuickTextureFactory *textureFactory() const
+        QQuickTextureFactory *textureFactory() const override
         {
             return QQuickTextureFactory::textureFactoryForImage(m_image);
         }
 
-        void run()
+        void run() override
         {
             m_image = QImage(50, 50, QImage::Format_RGB32);
             if (m_id == "slow") {
@@ -97,7 +97,7 @@ class AsyncImageResponse : public QQuickImageResponse, public QRunnable
 class AsyncImageProvider : public QQuickAsyncImageProvider
 {
 public:
-    QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize)
+    QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize) override
     {
         AsyncImageResponse *response = new AsyncImageResponse(id, requestedSize);
         pool.start(response);
@@ -114,12 +114,12 @@ class ImageProviderExtensionPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         Q_UNUSED(uri);
     }
 
-    void initializeEngine(QQmlEngine *engine, const char *uri)
+    void initializeEngine(QQmlEngine *engine, const char *uri) override
     {
         Q_UNUSED(uri);
         engine->addImageProvider("async", new AsyncImageProvider);

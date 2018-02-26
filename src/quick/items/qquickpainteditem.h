@@ -58,7 +58,7 @@ class Q_QUICK_EXPORT QQuickPaintedItem : public QQuickItem
 
 public:
     explicit QQuickPaintedItem(QQuickItem *parent = nullptr);
-    virtual ~QQuickPaintedItem();
+    ~QQuickPaintedItem() override;
 
     enum RenderTarget {
         Image,

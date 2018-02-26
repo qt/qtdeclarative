@@ -62,7 +62,7 @@ public:
     };
     Q_DECLARE_FLAGS(ClearMode, ClearModeBit)
 
-    virtual ~QSGAbstractRenderer();
+    ~QSGAbstractRenderer() override;
 
     void setRootNode(QSGRootNode *node);
     QSGRootNode *rootNode() const;

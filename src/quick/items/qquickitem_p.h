@@ -93,7 +93,7 @@ class QQuickContents : public QQuickItemChangeListener
 {
 public:
     QQuickContents(QQuickItem *item);
-    ~QQuickContents();
+    ~QQuickContents() override;
 
     QRectF rectF() const { return m_contents; }
 
@@ -154,7 +154,7 @@ class QQuickItemLayer : public QObject, public QQuickItemChangeListener
 
 public:
     QQuickItemLayer(QQuickItem *item);
-    ~QQuickItemLayer();
+    ~QQuickItemLayer() override;
 
     void classBegin();
     void componentComplete();
@@ -255,7 +255,7 @@ public:
     static const QQuickItemPrivate* get(const QQuickItem *item) { return item->d_func(); }
 
     QQuickItemPrivate();
-    ~QQuickItemPrivate();
+    ~QQuickItemPrivate() override;
     void init(QQuickItem *parent);
 
     QQmlListProperty<QObject> data();
@@ -807,7 +807,7 @@ class QQuickKeysAttached : public QObject, public QQuickItemKeyFilter
 
 public:
     QQuickKeysAttached(QObject *parent=nullptr);
-    ~QQuickKeysAttached();
+    ~QQuickKeysAttached() override;
 
     bool enabled() const { Q_D(const QQuickKeysAttached); return d->enabled; }
     void setEnabled(bool enabled) {

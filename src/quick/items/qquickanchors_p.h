@@ -87,7 +87,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnchors : public QObject
 
 public:
     QQuickAnchors(QQuickItem *item, QObject *parent=nullptr);
-    virtual ~QQuickAnchors();
+    ~QQuickAnchors() override;
 
     enum Anchor
 #if defined(Q_CC_CLANG) || !defined(Q_CC_GNU) // meaning: clang and msvc, but NOT gcc proper (because, you know, Q_CC_CLANG implies Q_CC_GNU)

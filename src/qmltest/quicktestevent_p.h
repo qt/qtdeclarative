@@ -82,7 +82,7 @@ class Q_QUICK_TEST_EXPORT QuickTestEvent : public QObject
     Q_PROPERTY(int defaultMouseDelay READ defaultMouseDelay FINAL)
 public:
     QuickTestEvent(QObject *parent = nullptr);
-    ~QuickTestEvent();
+    ~QuickTestEvent() override;
     int defaultMouseDelay() const;
 
 public Q_SLOTS:

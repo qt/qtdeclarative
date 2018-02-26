@@ -64,12 +64,12 @@ public:
         logo.initialize();
     }
 
-    void render() {
+    void render() override {
         logo.render();
         update();
     }
 
-    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) {
+    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override {
         QOpenGLFramebufferObjectFormat format;
         format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
         format.setSamples(4);

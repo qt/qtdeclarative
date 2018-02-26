@@ -103,7 +103,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
 
 public:
     QQuickText(QQuickItem *parent=nullptr);
-    ~QQuickText();
+    ~QQuickText() override;
 
     enum HAlignment { AlignLeft = Qt::AlignLeft,
                        AlignRight = Qt::AlignRight,

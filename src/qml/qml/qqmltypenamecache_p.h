@@ -85,7 +85,7 @@ class Q_QML_PRIVATE_EXPORT QQmlTypeNameCache : public QQmlRefCount
 {
 public:
     QQmlTypeNameCache(const QQmlImports &imports);
-    virtual ~QQmlTypeNameCache();
+    ~QQmlTypeNameCache() override;
 
     inline bool isEmpty() const;
 

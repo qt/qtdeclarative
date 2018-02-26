@@ -126,7 +126,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugConnectorFactory : public QObject {
     Q_OBJECT
 public:
     virtual QQmlDebugConnector *create(const QString &key) = 0;
-    ~QQmlDebugConnectorFactory();
+    ~QQmlDebugConnectorFactory() override;
 };
 
 #define QQmlDebugConnectorFactory_iid "org.qt-project.Qt.QQmlDebugConnectorFactory"

@@ -69,7 +69,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugService : public QObject
     Q_DECLARE_PRIVATE(QQmlDebugService)
 
 public:
-    ~QQmlDebugService();
+    ~QQmlDebugService() override;
 
     const QString &name() const;
     float version() const;

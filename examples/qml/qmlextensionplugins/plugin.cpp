@@ -87,7 +87,7 @@ signals:
     void timeChanged();
 
 protected:
-    void timerEvent(QTimerEvent *)
+    void timerEvent(QTimerEvent *) override
     {
         QTime now = QTime::currentTime();
         if (now.second() == 59 && now.minute() == time.minute() && now.hour() == time.hour()) {
@@ -125,7 +125,7 @@ public:
         }
     }
 
-    ~TimeModel()
+    ~TimeModel() override
     {
         if (--instances == 0) {
             timer->stop();
@@ -154,7 +154,7 @@ class QExampleQmlPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(uri == QLatin1String("TimeExample"));
         qmlRegisterType<TimeModel>(uri, 1, 0, "Time");

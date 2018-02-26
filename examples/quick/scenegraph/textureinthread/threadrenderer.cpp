@@ -165,7 +165,7 @@ public:
         setFiltering(QSGTexture::Linear);
     }
 
-    ~TextureNode()
+    ~TextureNode() override
     {
         delete m_texture;
     }

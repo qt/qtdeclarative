@@ -56,7 +56,7 @@ public:
     QQmlApplicationEngine(QObject *parent = nullptr);
     QQmlApplicationEngine(const QUrl &url, QObject *parent = nullptr);
     QQmlApplicationEngine(const QString &filePath, QObject *parent = nullptr);
-    ~QQmlApplicationEngine();
+    ~QQmlApplicationEngine() override;
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QList<QObject*> rootObjects(); // ### Qt 6: remove

@@ -60,7 +60,7 @@ class Q_QUICK_EXPORT QQuickTransform : public QObject
     Q_OBJECT
 public:
     explicit QQuickTransform(QObject *parent = nullptr);
-    ~QQuickTransform();
+    ~QQuickTransform() override;
 
     void appendToItem(QQuickItem *);
     void prependToItem(QQuickItem *);
@@ -198,7 +198,7 @@ public:
     Q_ENUM(TransformOrigin)
 
     explicit QQuickItem(QQuickItem *parent = nullptr);
-    virtual ~QQuickItem();
+    ~QQuickItem() override;
 
     QQuickWindow *window() const;
     QQuickItem *parentItem() const;

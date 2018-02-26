@@ -63,11 +63,11 @@ public:
     // The lifetime of the FBO and this class depends on how QQuickWidget
     // manages the scenegraph and context when it comes to showing and hiding
     // the widget. The actual behavior is proven by the debug prints.
-    ~FbRenderer() {
+    ~FbRenderer() override {
         qDebug("FbRenderer destroyed");
     }
 
-    void render() {
+    void render() override {
         QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
         f->glClearColor(c, 0, 0, 1);
         f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -77,7 +77,7 @@ public:
         update();
     }
 
-    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) {
+    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override {
         qDebug() << "Creating FBO" << size;
         QOpenGLFramebufferObjectFormat format;
         format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);

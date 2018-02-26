@@ -63,7 +63,7 @@ public:
     QQuickView(QQmlEngine* engine, QWindow *parent);
     explicit QQuickView(const QUrl &source, QWindow *parent = nullptr);
     QQuickView(const QUrl &source, QQuickRenderControl *renderControl);
-    virtual ~QQuickView();
+    ~QQuickView() override;
 
     QUrl source() const;
 

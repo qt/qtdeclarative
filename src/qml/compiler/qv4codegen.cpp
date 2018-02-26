@@ -2928,43 +2928,43 @@ public:
         return locs;
     }
 
-    bool visit(ArrayMemberExpression *) Q_DECL_OVERRIDE
+    bool visit(ArrayMemberExpression *) override
     {
         locs.setAllVolatile();
         return false;
     }
 
-    bool visit(FieldMemberExpression *) Q_DECL_OVERRIDE
+    bool visit(FieldMemberExpression *) override
     {
         locs.setAllVolatile();
         return false;
     }
 
-    bool visit(PostIncrementExpression *e) Q_DECL_OVERRIDE
+    bool visit(PostIncrementExpression *e) override
     {
         collectIdentifiers(locs.specificLocations, e->base);
         return false;
     }
 
-    bool visit(PostDecrementExpression *e) Q_DECL_OVERRIDE
+    bool visit(PostDecrementExpression *e) override
     {
         collectIdentifiers(locs.specificLocations, e->base);
         return false;
     }
 
-    bool visit(PreIncrementExpression *e) Q_DECL_OVERRIDE
+    bool visit(PreIncrementExpression *e) override
     {
         collectIdentifiers(locs.specificLocations, e->expression);
         return false;
     }
 
-    bool visit(PreDecrementExpression *e) Q_DECL_OVERRIDE
+    bool visit(PreDecrementExpression *e) override
     {
         collectIdentifiers(locs.specificLocations, e->expression);
         return false;
     }
 
-    bool visit(BinaryExpression *e) Q_DECL_OVERRIDE
+    bool visit(BinaryExpression *e) override
     {
         switch (e->op) {
         case QSOperator::InplaceAnd:

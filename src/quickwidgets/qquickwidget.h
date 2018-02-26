@@ -66,7 +66,7 @@ public:
     explicit QQuickWidget(QWidget *parent = nullptr);
     QQuickWidget(QQmlEngine* engine, QWidget *parent);
     explicit QQuickWidget(const QUrl &source, QWidget *parent = nullptr);
-    virtual ~QQuickWidget();
+    ~QQuickWidget() override;
 
     QUrl source() const;
 

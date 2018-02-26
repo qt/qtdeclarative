@@ -78,7 +78,7 @@ public:
         appendChildNode(textureNode);
     }
 
-    ~SpinnerNode() {
+    ~SpinnerNode() override {
         delete m_texture;
     }
 

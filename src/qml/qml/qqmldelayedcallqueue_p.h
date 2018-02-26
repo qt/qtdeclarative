@@ -65,7 +65,7 @@ class QQmlDelayedCallQueue : public QObject
     Q_OBJECT
 public:
     QQmlDelayedCallQueue();
-    ~QQmlDelayedCallQueue();
+    ~QQmlDelayedCallQueue() override;
 
     void init(QV4::ExecutionEngine *);
 

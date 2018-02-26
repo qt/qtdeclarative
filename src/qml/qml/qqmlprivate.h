@@ -98,7 +98,7 @@ namespace QQmlPrivate
     class QQmlElement : public T
     {
     public:
-        virtual ~QQmlElement() {
+        ~QQmlElement() override {
             QQmlPrivate::qdeclarativeelement_destructor(this);
         }
     };

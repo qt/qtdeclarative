@@ -185,7 +185,7 @@ public:
     QSGSimpleMaterialComparableMaterial(PtrShaderCreateFunc func)
         : QSGSimpleMaterial<State>(func) {}
 
-    int compare(const QSGMaterial *other) const {
+    int compare(const QSGMaterial *other) const override {
         return QSGSimpleMaterialComparableMaterial<State>::state()->compare(static_cast<const QSGSimpleMaterialComparableMaterial<State> *>(other)->state());
     }
 };

@@ -83,7 +83,7 @@ public:
     QQmlComponent(QQmlEngine *, const QString &fileName, CompilationMode mode, QObject *parent = nullptr);
     QQmlComponent(QQmlEngine *, const QUrl &url, QObject *parent = nullptr);
     QQmlComponent(QQmlEngine *, const QUrl &url, CompilationMode mode, QObject *parent = nullptr);
-    virtual ~QQmlComponent();
+    ~QQmlComponent() override;
 
     enum Status { Null, Ready, Loading, Error };
     Q_ENUM(Status)

@@ -81,7 +81,7 @@ class QQmlVMEVariantQObjectPtr : public QQmlGuard<QObject>
 {
 public:
     inline QQmlVMEVariantQObjectPtr();
-    inline ~QQmlVMEVariantQObjectPtr();
+    inline ~QQmlVMEVariantQObjectPtr() override;
 
     inline void objectDestroyed(QObject *) override;
     inline void setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index);
@@ -95,7 +95,7 @@ class Q_QML_PRIVATE_EXPORT QQmlInterceptorMetaObject : public QAbstractDynamicMe
 {
 public:
     QQmlInterceptorMetaObject(QObject *obj, QQmlPropertyCache *cache);
-    ~QQmlInterceptorMetaObject();
+    ~QQmlInterceptorMetaObject() override;
 
     void registerInterceptor(QQmlPropertyIndex index, QQmlPropertyValueInterceptor *interceptor);
 
@@ -147,7 +147,7 @@ class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
 public:
     QQmlVMEMetaObject(QV4::ExecutionEngine *engine, QObject *obj, QQmlPropertyCache *cache, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId);
-    ~QQmlVMEMetaObject();
+    ~QQmlVMEMetaObject() override;
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
     QV4::ReturnedValue vmeMethod(int index) const;

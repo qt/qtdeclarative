@@ -87,7 +87,7 @@ class Shader : public QSGSimpleMaterialShader<State>
 //! [2] //! [3]
 public:
 
-    const char *vertexShader() const {
+    const char *vertexShader() const override {
         return
                 "attribute highp vec4 aVertex;                              \n"
                 "attribute highp vec2 aTexCoord;                            \n"
@@ -99,7 +99,7 @@ public:
                 "}";
     }
 
-    const char *fragmentShader() const {
+    const char *fragmentShader() const override {
         return
                 "uniform lowp float qt_Opacity;                             \n"
                 "uniform lowp vec4 color;                                   \n"
@@ -110,17 +110,17 @@ public:
                 "}";
     }
 //! [3] //! [4]
-    QList<QByteArray> attributes() const
+    QList<QByteArray> attributes() const override
     {
         return QList<QByteArray>() << "aVertex" << "aTexCoord";
     }
 //! [4] //! [5]
-    void updateState(const State *state, const State *)
+    void updateState(const State *state, const State *) override
     {
         program()->setUniformValue(id_color, state->color);
     }
 //! [5] //! [6]
-    void resolveUniforms()
+    void resolveUniforms() override
     {
         id_color = program()->uniformLocation("color");
     }
@@ -184,7 +184,7 @@ private:
 
 //! [8] //! [9]
 public:
-    QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
+    QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override
     {
         ColorNode *n = static_cast<ColorNode *>(node);
         if (!node)

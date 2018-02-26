@@ -78,7 +78,7 @@ class Q_QML_EXPORT Debugger : public QObject
     Q_OBJECT
 
 public:
-    virtual ~Debugger() {}
+    ~Debugger() override {}
     virtual bool pauseAtNextOpportunity() const = 0;
     virtual void maybeBreakAtInstruction() = 0;
     virtual void enteringFunction() = 0;

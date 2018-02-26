@@ -88,7 +88,7 @@ public:
     };
 
     QQuickAbstractAnimation(QObject *parent=nullptr);
-    virtual ~QQuickAbstractAnimation();
+    ~QQuickAbstractAnimation() override;
 
     enum Loops { Infinite = -2 };
     Q_ENUM(Loops)
@@ -167,7 +167,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPauseAnimation : public QQuickAbstractAnimati
 
 public:
     QQuickPauseAnimation(QObject *parent=nullptr);
-    virtual ~QQuickPauseAnimation();
+    ~QQuickPauseAnimation() override;
 
     int duration() const;
     void setDuration(int);
@@ -193,7 +193,7 @@ class QQuickScriptAction : public QQuickAbstractAnimation
 
 public:
     QQuickScriptAction(QObject *parent=nullptr);
-    virtual ~QQuickScriptAction();
+    ~QQuickScriptAction() override;
 
     QQmlScriptString script() const;
     void setScript(const QQmlScriptString &);
@@ -223,7 +223,7 @@ class QQuickPropertyAction : public QQuickAbstractAnimation
 
 public:
     QQuickPropertyAction(QObject *parent=nullptr);
-    virtual ~QQuickPropertyAction();
+    ~QQuickPropertyAction() override;
 
     QObject *target() const;
     void setTargetObject(QObject *);
@@ -271,7 +271,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPropertyAnimation : public QQuickAbstractAnim
 
 public:
     QQuickPropertyAnimation(QObject *parent=nullptr);
-    virtual ~QQuickPropertyAnimation();
+    ~QQuickPropertyAnimation() override;
 
     virtual int duration() const;
     virtual void setDuration(int);
@@ -326,7 +326,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickColorAnimation : public QQuickPropertyAnimati
 
 public:
     QQuickColorAnimation(QObject *parent=nullptr);
-    virtual ~QQuickColorAnimation();
+    ~QQuickColorAnimation() override;
 
     QColor from() const;
     void setFrom(const QColor &);
@@ -345,7 +345,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickNumberAnimation : public QQuickPropertyAnimat
 
 public:
     QQuickNumberAnimation(QObject *parent=nullptr);
-    virtual ~QQuickNumberAnimation();
+    ~QQuickNumberAnimation() override;
 
     qreal from() const;
     void setFrom(qreal);
@@ -370,7 +370,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickVector3dAnimation : public QQuickPropertyAnim
 
 public:
     QQuickVector3dAnimation(QObject *parent=nullptr);
-    virtual ~QQuickVector3dAnimation();
+    ~QQuickVector3dAnimation() override;
 
     QVector3D from() const;
     void setFrom(QVector3D);
@@ -391,7 +391,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimation : public QQuickPropertyAnim
 
 public:
     QQuickRotationAnimation(QObject *parent=nullptr);
-    virtual ~QQuickRotationAnimation();
+    ~QQuickRotationAnimation() override;
 
     qreal from() const;
     void setFrom(qreal);
@@ -419,7 +419,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnimationGroup : public QQuickAbstractAnimati
 
 public:
     QQuickAnimationGroup(QObject *parent);
-    virtual ~QQuickAnimationGroup();
+    ~QQuickAnimationGroup() override;
 
     QQmlListProperty<QQuickAbstractAnimation> animations();
     friend class QQuickAbstractAnimation;
@@ -435,7 +435,7 @@ class QQuickSequentialAnimation : public QQuickAnimationGroup
 
 public:
     QQuickSequentialAnimation(QObject *parent=nullptr);
-    virtual ~QQuickSequentialAnimation();
+    ~QQuickSequentialAnimation() override;
 
 protected:
     ThreadingModel threadingModel() const override;
@@ -452,7 +452,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickParallelAnimation : public QQuickAnimationGro
 
 public:
     QQuickParallelAnimation(QObject *parent=nullptr);
-    virtual ~QQuickParallelAnimation();
+    ~QQuickParallelAnimation() override;
 
 protected:
     ThreadingModel threadingModel() const override;

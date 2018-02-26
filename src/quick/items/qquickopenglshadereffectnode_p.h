@@ -149,7 +149,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectNode : public QObject, publ
     Q_OBJECT
 public:
     QQuickOpenGLShaderEffectNode();
-    virtual ~QQuickOpenGLShaderEffectNode();
+    ~QQuickOpenGLShaderEffectNode() override;
 
     void preprocess() override;
 
