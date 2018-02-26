@@ -60,8 +60,6 @@ Item {
 //! [sprite]
     AnimatedSprite {
         id: sprite
-        width: 170
-        height: 170
         anchors.centerIn: parent
         source: "content/speaker.png"
         frameCount: 60

@@ -53,6 +53,7 @@ private slots:
     void test_largeAnimation();
     void test_reparenting();
     void test_changeSourceToSmallerImgKeepingBigFrameSize();
+    void test_implicitSize();
 };
 
 void tst_qquickanimatedsprite::initTestCase()
@@ -316,6 +317,44 @@ void tst_qquickanimatedsprite::test_changeSourceToSmallerImgKeepingBigFrameSize(
 
     killer->terminate();
     killer->wait();
+}
+
+void tst_qquickanimatedsprite::test_implicitSize()
+{
+    QQuickView window;
+    window.setSource(testFileUrl("basic.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject());
+
+    QQuickAnimatedSprite* sprite = window.rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
+    QVERIFY(sprite);
+    QCOMPARE(sprite->frameWidth(), 31);
+    QCOMPARE(sprite->frameHeight(), 30);
+    QCOMPARE(sprite->implicitWidth(), 31);
+    QCOMPARE(sprite->implicitHeight(), 30);
+
+    // Ensure that implicitWidth matches frameWidth.
+    QSignalSpy frameWidthChangedSpy(sprite, SIGNAL(frameWidthChanged(int)));
+    QVERIFY(frameWidthChangedSpy.isValid());
+
+    QSignalSpy frameImplicitWidthChangedSpy(sprite, SIGNAL(implicitWidthChanged()));
+    QVERIFY(frameImplicitWidthChangedSpy.isValid());
+
+    sprite->setFrameWidth(20);
+    QCOMPARE(frameWidthChangedSpy.count(), 1);
+    QCOMPARE(frameImplicitWidthChangedSpy.count(), 1);
+
+    // Ensure that implicitHeight matches frameHeight.
+    QSignalSpy frameHeightChangedSpy(sprite, SIGNAL(frameHeightChanged(int)));
+    QVERIFY(frameHeightChangedSpy.isValid());
+
+    QSignalSpy frameImplicitHeightChangedSpy(sprite, SIGNAL(implicitHeightChanged()));
+    QVERIFY(frameImplicitHeightChangedSpy.isValid());
+
+    sprite->setFrameHeight(20);
+    QCOMPARE(frameHeightChangedSpy.count(), 1);
+    QCOMPARE(frameImplicitHeightChangedSpy.count(), 1);
 }
 
 QTEST_MAIN(tst_qquickanimatedsprite)
