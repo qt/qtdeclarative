@@ -100,16 +100,14 @@ void QQuickTheme::setDefaultFont(const QFont *defaultFont)
 {
     Q_D(QQuickTheme);
     d->defaultFont.reset(defaultFont);
-    if (defaultFont)
-        resolveFonts(*defaultFont);
+    resolveFonts(defaultFont ? *defaultFont : QFont());
 }
 
 void QQuickTheme::setDefaultPalette(const QPalette *defaultPalette)
 {
     Q_D(QQuickTheme);
     d->defaultPalette.reset(defaultPalette);
-    if (defaultPalette)
-        resolvePalettes(*defaultPalette);
+    resolvePalettes(defaultPalette ? *defaultPalette : QPalette());
 }
 
 void QQuickTheme::resolveFonts(const QFont &defaultFont)

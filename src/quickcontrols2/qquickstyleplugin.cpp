@@ -149,13 +149,17 @@ void QQuickStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
     if (isCurrent()) {
         m_theme.reset(createTheme());
         if (m_theme) {
+            const QFont *font = nullptr;
+            const QPalette *palette = nullptr;
 #if QT_CONFIG(settings)
             QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(name());
             if (settings) {
-                m_theme->setDefaultFont(readFont(settings));
-                m_theme->setDefaultPalette(readPalette(settings));
+                font = readFont(settings);
+                palette = readPalette(settings);
             }
 #endif
+            m_theme->setDefaultFont(font);
+            m_theme->setDefaultPalette(palette);
             QGuiApplicationPrivate::platform_theme = m_theme.data();
         }
     }
