@@ -2061,8 +2061,12 @@ case $rule_number: {
 ./
 
 RelationalExpression: ShiftExpression ;
+RelationalExpressionNotIn: ShiftExpression ;
 
 RelationalExpression: RelationalExpression T_LT ShiftExpression ;
+/.case $rule_number: Q_FALLTHROUGH();./
+
+RelationalExpressionNotIn: RelationalExpressionNotIn T_LT ShiftExpression ;
 /.
 case $rule_number: {
   AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
@@ -2073,6 +2077,9 @@ case $rule_number: {
 ./
 
 RelationalExpression: RelationalExpression T_GT ShiftExpression ;
+/.case $rule_number: Q_FALLTHROUGH();./
+
+RelationalExpressionNotIn: RelationalExpressionNotIn T_GT ShiftExpression ;
 /.
 case $rule_number: {
   AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
@@ -2083,6 +2090,9 @@ case $rule_number: {
 ./
 
 RelationalExpression: RelationalExpression T_LE ShiftExpression ;
+/.case $rule_number: Q_FALLTHROUGH();./
+
+RelationalExpressionNotIn: RelationalExpressionNotIn T_LE ShiftExpression ;
 /.
 case $rule_number: {
   AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
@@ -2093,6 +2103,9 @@ case $rule_number: {
 ./
 
 RelationalExpression: RelationalExpression T_GE ShiftExpression ;
+/.case $rule_number: Q_FALLTHROUGH();./
+
+RelationalExpressionNotIn: RelationalExpressionNotIn T_GE ShiftExpression ;
 /.
 case $rule_number: {
   AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
@@ -2103,6 +2116,9 @@ case $rule_number: {
 ./
 
 RelationalExpression: RelationalExpression T_INSTANCEOF ShiftExpression ;
+/.case $rule_number: Q_FALLTHROUGH();./
+
+RelationalExpressionNotIn: RelationalExpressionNotIn T_INSTANCEOF ShiftExpression ;
 /.
 case $rule_number: {
   AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
@@ -2122,101 +2138,11 @@ case $rule_number: {
 } break;
 ./
 
-RelationalExpressionNotIn: ShiftExpression ;
-
-RelationalExpressionNotIn: RelationalExpressionNotIn T_LT ShiftExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Lt, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-RelationalExpressionNotIn: RelationalExpressionNotIn T_GT ShiftExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Gt, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-RelationalExpressionNotIn: RelationalExpressionNotIn T_LE ShiftExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Le, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-RelationalExpressionNotIn: RelationalExpressionNotIn T_GE ShiftExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-   QSOperator::Ge, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-RelationalExpressionNotIn: RelationalExpressionNotIn T_INSTANCEOF ShiftExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::InstanceOf, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
 EqualityExpression: RelationalExpression ;
+EqualityExpressionNotIn: RelationalExpressionNotIn ;
 
 EqualityExpression: EqualityExpression T_EQ_EQ RelationalExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Equal, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-EqualityExpression: EqualityExpression T_NOT_EQ RelationalExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::NotEqual, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-EqualityExpression: EqualityExpression T_EQ_EQ_EQ RelationalExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::StrictEqual, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-EqualityExpression: EqualityExpression T_NOT_EQ_EQ RelationalExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::StrictNotEqual, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-EqualityExpressionNotIn: RelationalExpressionNotIn ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 EqualityExpressionNotIn: EqualityExpressionNotIn T_EQ_EQ RelationalExpressionNotIn ;
 /.
@@ -2228,6 +2154,9 @@ case $rule_number: {
 } break;
 ./
 
+EqualityExpression: EqualityExpression T_NOT_EQ RelationalExpression ;
+/.case $rule_number: Q_FALLTHROUGH();./
+
 EqualityExpressionNotIn: EqualityExpressionNotIn T_NOT_EQ RelationalExpressionNotIn;
 /.
 case $rule_number: {
@@ -2237,6 +2166,9 @@ case $rule_number: {
   sym(1).Node = node;
 } break;
 ./
+
+EqualityExpression: EqualityExpression T_EQ_EQ_EQ RelationalExpression ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 EqualityExpressionNotIn: EqualityExpressionNotIn T_EQ_EQ_EQ RelationalExpressionNotIn ;
 /.
@@ -2248,6 +2180,9 @@ case $rule_number: {
 } break;
 ./
 
+EqualityExpression: EqualityExpression T_NOT_EQ_EQ RelationalExpression ;
+/.case $rule_number: Q_FALLTHROUGH();./
+
 EqualityExpressionNotIn: EqualityExpressionNotIn T_NOT_EQ_EQ RelationalExpressionNotIn ;
 /.
 case $rule_number: {
@@ -2258,19 +2193,12 @@ case $rule_number: {
 } break;
 ./
 
+
 BitwiseANDExpression: EqualityExpression ;
+BitwiseANDExpressionNotIn: EqualityExpressionNotIn ;
 
 BitwiseANDExpression: BitwiseANDExpression T_AND EqualityExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::BitAnd, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-BitwiseANDExpressionNotIn: EqualityExpressionNotIn ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 BitwiseANDExpressionNotIn: BitwiseANDExpressionNotIn T_AND EqualityExpressionNotIn ;
 /.
@@ -2282,19 +2210,12 @@ case $rule_number: {
 } break;
 ./
 
+
 BitwiseXORExpression: BitwiseANDExpression ;
+BitwiseXORExpressionNotIn: BitwiseANDExpressionNotIn ;
 
 BitwiseXORExpression: BitwiseXORExpression T_XOR BitwiseANDExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::BitXor, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-BitwiseXORExpressionNotIn: BitwiseANDExpressionNotIn ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 BitwiseXORExpressionNotIn: BitwiseXORExpressionNotIn T_XOR BitwiseANDExpressionNotIn ;
 /.
@@ -2307,18 +2228,10 @@ case $rule_number: {
 ./
 
 BitwiseORExpression: BitwiseXORExpression ;
+BitwiseORExpressionNotIn: BitwiseXORExpressionNotIn ;
 
 BitwiseORExpression: BitwiseORExpression T_OR BitwiseXORExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::BitOr, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-BitwiseORExpressionNotIn: BitwiseXORExpressionNotIn ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 BitwiseORExpressionNotIn: BitwiseORExpressionNotIn T_OR BitwiseXORExpressionNotIn ;
 /.
@@ -2331,18 +2244,10 @@ case $rule_number: {
 ./
 
 LogicalANDExpression: BitwiseORExpression ;
+LogicalANDExpressionNotIn: BitwiseORExpressionNotIn ;
 
 LogicalANDExpression: LogicalANDExpression T_AND_AND BitwiseORExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::And, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-LogicalANDExpressionNotIn: BitwiseORExpressionNotIn ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 LogicalANDExpressionNotIn: LogicalANDExpressionNotIn T_AND_AND BitwiseORExpressionNotIn ;
 /.
@@ -2355,18 +2260,10 @@ case $rule_number: {
 ./
 
 LogicalORExpression: LogicalANDExpression ;
+LogicalORExpressionNotIn: LogicalANDExpressionNotIn ;
 
 LogicalORExpression: LogicalORExpression T_OR_OR LogicalANDExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Or, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-LogicalORExpressionNotIn: LogicalANDExpressionNotIn ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 LogicalORExpressionNotIn: LogicalORExpressionNotIn T_OR_OR LogicalANDExpressionNotIn ;
 /.
@@ -2378,20 +2275,12 @@ case $rule_number: {
 } break;
 ./
 
+
 ConditionalExpression: LogicalORExpression ;
+ConditionalExpressionNotIn: LogicalORExpressionNotIn ;
 
 ConditionalExpression: LogicalORExpression T_QUESTION AssignmentExpression T_COLON AssignmentExpression ;
-/.
-case $rule_number: {
-  AST::ConditionalExpression *node = new (pool) AST::ConditionalExpression(sym(1).Expression,
-    sym(3).Expression, sym(5).Expression);
-  node->questionToken = loc(2);
-  node->colonToken = loc(4);
-  sym(1).Node = node;
-} break;
-./
-
-ConditionalExpressionNotIn: LogicalORExpressionNotIn ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 ConditionalExpressionNotIn: LogicalORExpressionNotIn T_QUESTION AssignmentExpressionNotIn T_COLON AssignmentExpressionNotIn ;
 /.
@@ -2405,18 +2294,10 @@ case $rule_number: {
 ./
 
 AssignmentExpression: ConditionalExpression ;
+AssignmentExpressionNotIn: ConditionalExpressionNotIn ;
 
 AssignmentExpression: LeftHandSideExpression AssignmentOperator AssignmentExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    sym(2).ival, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-AssignmentExpressionNotIn: ConditionalExpressionNotIn ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 AssignmentExpressionNotIn: LeftHandSideExpression AssignmentOperator AssignmentExpressionNotIn ;
 /.
@@ -2513,26 +2394,10 @@ case $rule_number: {
 ./
 
 Expression: AssignmentExpression ;
+ExpressionNotIn: AssignmentExpressionNotIn ;
 
 Expression: Expression T_COMMA AssignmentExpression ;
-/.
-case $rule_number: {
-  AST::Expression *node = new (pool) AST::Expression(sym(1).Expression, sym(3).Expression);
-  node->commaToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-ExpressionOpt: ;
-/.
-case $rule_number: {
-  sym(1).Node = 0;
-} break;
-./
-
-ExpressionOpt: Expression ;
-
-ExpressionNotIn: AssignmentExpressionNotIn ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 ExpressionNotIn: ExpressionNotIn T_COMMA AssignmentExpressionNotIn ;
 /.
@@ -2543,6 +2408,9 @@ case $rule_number: {
 } break;
 ./
 
+ExpressionOpt: ;
+/.case $rule_number: Q_FALLTHROUGH();./
+
 ExpressionNotInOpt: ;
 /.
 case $rule_number: {
@@ -2550,6 +2418,7 @@ case $rule_number: {
 } break;
 ./
 
+ExpressionOpt: Expression ;
 ExpressionNotInOpt: ExpressionNotIn ;
 
 Statement: Block ;
@@ -2646,6 +2515,9 @@ case $rule_number: {
 ./
 
 VariableDeclarationList: VariableDeclaration ;
+/.case $rule_number: Q_FALLTHROUGH();./
+
+VariableDeclarationListNotIn: VariableDeclarationNotIn ;
 /.
 case $rule_number: {
   sym(1).Node = new (pool) AST::VariableDeclarationList(sym(1).VariableDeclaration);
@@ -2653,6 +2525,9 @@ case $rule_number: {
 ./
 
 VariableDeclarationList: VariableDeclarationList T_COMMA VariableDeclaration ;
+/.case $rule_number: Q_FALLTHROUGH();./
+
+VariableDeclarationListNotIn: VariableDeclarationListNotIn T_COMMA VariableDeclarationNotIn ;
 /.
 case $rule_number: {
   AST::VariableDeclarationList *node = new (pool) AST::VariableDeclarationList(
@@ -2662,31 +2537,8 @@ case $rule_number: {
 } break;
 ./
 
-VariableDeclarationListNotIn: VariableDeclarationNotIn ;
-/.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::VariableDeclarationList(sym(1).VariableDeclaration);
-} break;
-./
-
-VariableDeclarationListNotIn: VariableDeclarationListNotIn T_COMMA VariableDeclarationNotIn ;
-/.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::VariableDeclarationList(sym(1).VariableDeclarationList, sym(3).VariableDeclaration);
-} break;
-./
-
 VariableDeclaration: JsIdentifier InitializerOpt ;
-/.
-case $rule_number: {
-  AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
-  AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(1), sym(2).Expression, s);
-  node->identifierToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
--- VariableDeclaration: BindingPattern InitializerOpt ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 VariableDeclarationNotIn: JsIdentifier InitializerNotInOpt ;
 /.
@@ -2698,24 +2550,11 @@ case $rule_number: {
 } break;
 ./
 
+-- VariableDeclaration: BindingPattern InitializerOpt ;
 -- VariableDeclarationNotIn: BindingPattern InitializerNotInOpt ;
 
 Initializer: T_EQ AssignmentExpression ;
-/.
-case $rule_number: {
-  // ### TODO: AST for initializer
-  sym(1) = sym(2);
-} break;
-./
-
-InitializerOpt: ;
-/.
-case $rule_number: {
-  sym(1).Node = 0;
-} break;
-./
-
-InitializerOpt: Initializer ;
+/.case $rule_number: Q_FALLTHROUGH();./
 
 InitializerNotIn: T_EQ AssignmentExpressionNotIn ;
 /.
@@ -2725,6 +2564,9 @@ case $rule_number: {
 } break;
 ./
 
+InitializerOpt: ;
+/.case $rule_number: Q_FALLTHROUGH();./
+
 InitializerNotInOpt: ;
 /.
 case $rule_number: {
@@ -2732,6 +2574,7 @@ case $rule_number: {
 } break;
 ./
 
+InitializerOpt: Initializer ;
 InitializerNotInOpt: InitializerNotIn ;
 
 EmptyStatement: T_SEMICOLON ;
