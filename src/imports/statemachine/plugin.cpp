@@ -75,6 +75,9 @@ public:
         qmlRegisterCustomType<SignalTransition>(uri, 1, 0, "SignalTransition", new SignalTransitionParser);
         qmlRegisterType<TimeoutTransition>(uri, 1, 0, "TimeoutTransition");
         qmlProtectModule(uri, 1);
+
+        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
+        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
     }
 };
 

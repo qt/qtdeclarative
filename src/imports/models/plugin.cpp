@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
 
 #include <private/qqmlmodelsmodule_p.h>
 
@@ -83,6 +84,9 @@ public:
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml.Models"));
         Q_UNUSED(uri);
         QQmlModelsModule::defineModule();
+
+        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
+        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
     }
 };
 //![class decl]

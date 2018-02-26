@@ -257,6 +257,9 @@ void QQmlEnginePrivate::defineQtQuick2Module()
     // register the QtQuick2 types which are implemented in the QtQml module.
     registerQtQuick2Types("QtQuick",2,0);
     qmlRegisterUncreatableType<QQmlLocale>("QtQuick", 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
+
+    // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
+    qmlRegisterModule("QtQuick", 2, QT_VERSION_MINOR);
 }
 
 bool QQmlEnginePrivate::designerMode()
@@ -955,6 +958,9 @@ void QQmlEnginePrivate::init()
         qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component"); // required for the Compiler.
         registerBaseTypes("QtQml", 2, 0); // import which provides language building blocks.
         qmlRegisterUncreatableType<QQmlLocale>("QtQml", 2, 2, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
+
+        // Auto-increment the import to stay in sync with ALL future QtQml minor versions from 5.11 onward
+        qmlRegisterModule("QtQml", 2, QT_VERSION_MINOR);
 
         QQmlData::init();
         baseModulesUninitialized = false;
