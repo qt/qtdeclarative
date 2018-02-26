@@ -275,6 +275,7 @@ public:
       AST::VariableDeclarationList *VariableDeclarationList;
       AST::BindingElement *BindingElement;
       AST::BindingPropertyList *BindingPropertyList;
+      AST::BindingElementList *BindingElementList;
 
       AST::UiProgram *UiProgram;
       AST::UiHeaderItemList *UiHeaderItemList;
@@ -1608,6 +1609,11 @@ case $rule_number: {
 ./
 
 ElisionOpt: Elision ;
+/.
+case $rule_number: {
+    sym(1).Node = sym(1).Elision->finish();
+} break;
+./
 
 PropertyAssignment: PropertyName T_COLON AssignmentExpression ;
 /.
@@ -3200,13 +3206,6 @@ case $rule_number: {
 BindingPattern: ObjectBindingPattern ;
 
 BindingPattern: ArrayBindingPattern ;
-/.
-case $rule_number: {
-    AST::BindingElementList *node = new (pool) AST::BindingElementList();
-    node->loc = loc(1);
-    sym(1).Node = node;
-} break;
-./
 
 ObjectBindingPattern: T_LBRACE T_RBRACE ;
 /.
@@ -3225,8 +3224,28 @@ case $rule_number: {
 ./
 
 ArrayBindingPattern: T_LBRACKET ElisionOpt BindingRestElementOpt T_RBRACKET ;
+/.
+case $rule_number: {
+    AST::BindingElementList *l = new (pool) AST::BindingElementList(sym(4).Elision, sym(5).Node);
+    sym(1).Node = l->finish();
+} break;
+./
+
 ArrayBindingPattern: T_LBRACKET BindingElementList T_RBRACKET ;
+/.
+case $rule_number: {
+    sym(1).Node = sym(2).BindingElementList->finish();
+} break;
+./
+
 ArrayBindingPattern: T_LBRACKET BindingElementList T_COMMA ElisionOpt BindingRestElementOpt T_RBRACKET ;
+/.
+case $rule_number: {
+    AST::BindingElementList *l = new (pool) AST::BindingElementList(sym(4).Elision, sym(5).Node);
+    l = sym(2).BindingElementList->append(l);
+    sym(1).Node = l->finish();
+} break;
+./
 
 BindingPropertyList: BindingProperty ;
 
@@ -3239,8 +3258,19 @@ case $rule_number: {
 
 BindingElementList: BindingElisionElement ;
 BindingElementList: BindingElementList T_COMMA BindingElisionElement ;
+/.
+case $rule_number: {
+    sym(1).BindingElementList->append(sym(3).BindingElementList);
+} break;
+./
 
 BindingElisionElement: ElisionOpt BindingElement ;
+/.
+case $rule_number: {
+    sym(1).Node = new (pool) AST::BindingElementList(sym(1).Elision, sym(2).BindingElement);
+} break;
+./
+
 
 BindingProperty: BindingIdentifier InitializerOpt ;
 /.

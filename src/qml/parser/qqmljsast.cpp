@@ -1093,9 +1093,12 @@ void BindingElementList::accept0(Visitor *visitor)
 
 void BindingElementList::boundNames(QStringList *names)
 {
-    // ###
-    Q_UNUSED(names);
-
+    for (BindingElementList *it = this; it; it = it->next) {
+        if (BindingElement *e = it->bindingElement())
+            e->boundNames(names);
+        else if (BindingRestElement *r = it->bindingRestElement())
+            names->append(r->name.toString());
+    }
 }
 
 void BindingPropertyList::accept0(Visitor *visitor)

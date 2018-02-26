@@ -2128,20 +2128,44 @@ class QML_PARSER_EXPORT BindingElementList : public Node
 public:
     QQMLJS_DECLARE_AST_NODE(BindingElementList)
 
-    BindingElementList()
+    BindingElementList(Elision *e, Node *p)
+        : elision(e), param(p), next(this)
     { kind = K; }
+
+    BindingElementList *append(BindingElementList *n) {
+        n->next = next;
+        next = n;
+        return n;
+    }
+
+    inline BindingElementList *finish ()
+    {
+        BindingElementList *front = next;
+        next = 0;
+        return front;
+    }
+
+    BindingRestElement *bindingRestElement() const {
+        return cast<BindingRestElement *>(param);
+    }
+
+    BindingElement *bindingElement() const {
+        return cast<BindingElement *>(param);
+    }
 
     void accept0(Visitor *visitor) override;
 
     void boundNames(QStringList *names);
 
     SourceLocation firstSourceLocation() const override
-    { return loc; }
+    { return elision ? elision->firstSourceLocation() : param->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return loc; }
+    { return next ? next->lastSourceLocation() : param->lastSourceLocation(); }
 
-    SourceLocation loc;
+    Elision *elision = nullptr;
+    Node *param = nullptr;
+    BindingElementList *next;
 };
 
 class QML_PARSER_EXPORT BindingPropertyList : public Node

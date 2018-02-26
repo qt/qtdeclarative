@@ -58,6 +58,8 @@
 #include <cmath>
 #include <iostream>
 
+static const bool disable_lookups = false;
+
 #ifdef CONST
 #undef CONST
 #endif
@@ -456,9 +458,6 @@ void Codegen::initializeAndDestructureBindingElement(AST::BindingElement *e, con
 
 void Codegen::destructurePropertyList(const Codegen::Reference &object, BindingPropertyList *bindingList)
 {
-    Q_UNUSED(object);
-    Q_UNUSED(bindingList);
-
     RegisterScope scope(this);
 
     for (BindingPropertyList *p = bindingList; p; p = p->next) {
@@ -467,14 +466,28 @@ void Codegen::destructurePropertyList(const Codegen::Reference &object, BindingP
         Reference property = Reference::fromMember(object, propertyName);
         initializeAndDestructureBindingElement(p->binding, property);
     }
-
 }
 
 void Codegen::destructureElementList(const Codegen::Reference &array, BindingElementList *bindingList)
 {
-    Q_UNUSED(array);
-    // #### implement me
-    throwSyntaxError(bindingList->firstSourceLocation(), QString::fromLatin1("Support for binding element lists not implemented!"));
+    RegisterScope scope(this);
+
+    int index = 0;
+    for (BindingElementList *p = bindingList; p; p = p->next) {
+        for (Elision *elision = p->elision; elision; elision = elision->next)
+            ++index;
+
+        RegisterScope scope(this);
+
+        Reference idx = Reference::fromConst(this, Encode(index));
+        Reference property = Reference::fromSubscript(array, idx);
+        BindingElement *e = p->bindingElement();
+        if (e)
+            initializeAndDestructureBindingElement(e, property);
+        else {
+            throwSyntaxError(bindingList->firstSourceLocation(), QString::fromLatin1("Support for rest elements in binding arrays not implemented!"));
+        }
+    }
 }
 
 
@@ -1354,7 +1367,7 @@ void Codegen::handleCall(Reference &base, Arguments calldata)
         call.argv = calldata.argv;
         bytecodeGenerator->addInstruction(call);
     } else if (base.type == Reference::Member) {
-        if (useFastLookups) {
+        if (!disable_lookups && useFastLookups) {
             Instruction::CallPropertyLookup call;
             call.base = base.propertyBase.stackSlot();
             call.lookupIndex = registerGetterLookup(base.propertyNameIndex);
@@ -1382,7 +1395,7 @@ void Codegen::handleCall(Reference &base, Arguments calldata)
             call.argc = calldata.argc;
             call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
-        } else if (useFastLookups && base.global) {
+        } else if (!disable_lookups && useFastLookups && base.global) {
             Instruction::CallGlobalLookup call;
             call.index = registerGlobalGetterLookup(base.nameAsIndex());
             call.argc = calldata.argc;
@@ -3528,7 +3541,7 @@ void Codegen::Reference::storeAccumulator() const
         }
     } return;
     case Member:
-        if (codegen->useFastLookups) {
+        if (!disable_lookups && codegen->useFastLookups) {
             Instruction::SetLookup store;
             store.base = propertyBase.stackSlot();
             store.index = codegen->registerSetterLookup(propertyNameIndex);
@@ -3644,7 +3657,7 @@ QT_WARNING_POP
                 return;
             }
         }
-        if (codegen->useFastLookups && global) {
+        if (!disable_lookups && codegen->useFastLookups && global) {
             Instruction::LoadGlobalLookup load;
             load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
             codegen->bytecodeGenerator->addInstruction(load);
@@ -3655,7 +3668,7 @@ QT_WARNING_POP
         }
         return;
     case Member:
-        if (codegen->useFastLookups) {
+        if (!disable_lookups && codegen->useFastLookups) {
             if (propertyBase.isAccumulator()) {
                 Instruction::GetLookupA load;
                 load.index = codegen->registerGetterLookup(propertyNameIndex);
