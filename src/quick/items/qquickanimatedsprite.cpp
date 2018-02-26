@@ -105,7 +105,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty int QtQuick::AnimatedSprite::frameDuration
 
-    Duration of each frame of the animation. Values equal to or below 0 are invalid.
+    Duration of each frame of the animation in milliseconds. Values equal to or below 0 are invalid.
 
     If frameRate is valid then it will be used to calculate the duration of the frames.
     If not, and frameDuration is valid, then frameDuration will be used.
