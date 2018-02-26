@@ -55,7 +55,7 @@ Item {
         onClicked: { root.clicked++ }
         onReleased: { root.released++ }
 
-        containsMask: CircleMask {
+        containmentMask: CircleMask {
             radius: mouseArea.width/2
         }
     }

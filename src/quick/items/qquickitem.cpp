@@ -7616,7 +7616,7 @@ bool QQuickItem::contains(const QPointF &point) const
 }
 
 /*!
-    \qmlproperty QObject * QtQuick::Item::containsMask
+    \qmlproperty QObject * QtQuick::Item::containmentMask
     \since 5.11
     This property holds an optional mask for the Item to be used in the
     QtQuick::Item::contains method.
@@ -7624,19 +7624,19 @@ bool QQuickItem::contains(const QPointF &point) const
     an input event has landed into the item or not.
 
     By default the \l contains method will return true for any point
-    within the Item's bounding box. \c containsMask allows for a
+    within the Item's bounding box. \c containmentMask allows for a
     more fine-grained control. For example, the developer could
-    define and use an AnotherItem element as containsMask,
+    define and use an AnotherItem element as containmentMask,
     which has a specialized contains method, like:
 
     \code
-    Item { id: item; containsMask: AnotherItem { id: anotherItem } }
+    Item { id: item; containmentMask: AnotherItem { id: anotherItem } }
     \endcode
 
     \e{item}'s contains method would then return true only if
     \e{anotherItem}'s contains implementation returns true.
 */
-QObject *QQuickItem::containsMask() const
+QObject *QQuickItem::containmentMask() const
 {
     Q_D(const QQuickItem);
     return d->mask.data();
@@ -7669,7 +7669,7 @@ void QQuickItem::setContainsMask(QObject *mask)
         QQuickItemPrivate *maskPrivate = QQuickItemPrivate::get(quickMask);
         maskPrivate->registerAsContainsMask(this, true); // telling maskPrivate that "this" is using it as mask
     }
-    emit containsMaskChanged();
+    emit containmentMaskChanged();
 }
 
 /*!

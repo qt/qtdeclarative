@@ -56,7 +56,7 @@ Rectangle {
     width: 120
     height: 120
     color: th.pressed ? "steelBlue" : "lightGray"
-    containsMask: ctr
+    containmentMask: ctr
 
     TapHandler { id: th }
 
