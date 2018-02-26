@@ -31,6 +31,7 @@
 #include <private/qabstractanimation_p.h>
 #include <private/qquickanimatedsprite_p.h>
 #include <private/qquickitem_p.h>
+#include <QtCore/qscopedpointer.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qopenglcontext.h>
 #include <QtGui/qopenglfunctions.h>
@@ -62,11 +63,11 @@ void tst_qquickanimatedsprite::initTestCase()
 
 void tst_qquickanimatedsprite::test_properties()
 {
-    QQuickView *window = new QQuickView(nullptr);
+    QScopedPointer<QQuickView> window(new QQuickView);
 
     window->setSource(testFileUrl("basic.qml"));
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QVERIFY(window->rootObject());
     QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
@@ -81,17 +82,15 @@ void tst_qquickanimatedsprite::test_properties()
     QVERIFY(!sprite->running());
     sprite->setInterpolate(false);
     QVERIFY(!sprite->interpolate());
-
-    delete window;
 }
 
 void tst_qquickanimatedsprite::test_runningChangedSignal()
 {
-    QQuickView *window = new QQuickView(nullptr);
+    QScopedPointer<QQuickView> window(new QQuickView);
 
     window->setSource(testFileUrl("runningChange.qml"));
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QVERIFY(window->rootObject());
     QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
@@ -104,8 +103,6 @@ void tst_qquickanimatedsprite::test_runningChangedSignal()
     QTRY_COMPARE(runningChangedSpy.count(), 1);
     QTRY_VERIFY(!sprite->running());
     QTRY_COMPARE(runningChangedSpy.count(), 2);
-
-    delete window;
 }
 
 template <typename T>
@@ -117,7 +114,7 @@ static bool isWithinRange(T min, T value, T max)
 
 void tst_qquickanimatedsprite::test_frameChangedSignal()
 {
-    QQuickView *window = new QQuickView(nullptr);
+    QScopedPointer<QQuickView> window(new QQuickView);
 
     window->setSource(testFileUrl("frameChange.qml"));
     window->show();
@@ -126,7 +123,7 @@ void tst_qquickanimatedsprite::test_frameChangedSignal()
     QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
     QSignalSpy frameChangedSpy(sprite, SIGNAL(currentFrameChanged(int)));
     QVERIFY(sprite);
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QVERIFY(!sprite->running());
     QVERIFY(!sprite->paused());
@@ -154,8 +151,6 @@ void tst_qquickanimatedsprite::test_frameChangedSignal()
         prevFrame = frame;
     }
     QCOMPARE(loopCounter, 3);
-
-    delete window;
 }
 
 void tst_qquickanimatedsprite::test_largeAnimation_data()
@@ -214,11 +209,11 @@ void tst_qquickanimatedsprite::test_largeAnimation()
 {
     QFETCH(bool, frameSync);
 
-    QQuickView *window = new QQuickView(nullptr);
+    QScopedPointer<QQuickView> window(new QQuickView);
     window->engine()->addImageProvider(QLatin1String("test"), new AnimationImageProvider);
     window->setSource(testFileUrl("largeAnimation.qml"));
     window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QVERIFY(window->rootObject());
     QQuickAnimatedSprite* sprite = window->rootObject()->findChild<QQuickAnimatedSprite*>("sprite");
@@ -264,7 +259,6 @@ void tst_qquickanimatedsprite::test_largeAnimation()
     maxTextureSize /= 512;
     QVERIFY(maxFrame > maxTextureSize); // make sure we go beyond the texture width limitation
     QCOMPARE(loopCounter, sprite->loops());
-    delete window;
 }
 
 void tst_qquickanimatedsprite::test_reparenting()
@@ -313,7 +307,7 @@ void tst_qquickanimatedsprite::test_changeSourceToSmallerImgKeepingBigFrameSize(
     QQmlProperty big(sprite, "big");
     big.write(QVariant::fromValue(false));
 
-    KillerThread *killer = new KillerThread;
+    QScopedPointer<KillerThread> killer(new KillerThread);
     killer->start(); // will kill us in case the GUI or render thread enters an infinite loop
 
     QTest::qWait(50); // let it draw with the new source.
@@ -322,7 +316,6 @@ void tst_qquickanimatedsprite::test_changeSourceToSmallerImgKeepingBigFrameSize(
 
     killer->terminate();
     killer->wait();
-    delete killer;
 }
 
 QTEST_MAIN(tst_qquickanimatedsprite)
