@@ -95,10 +95,9 @@ QQuickTextureFactory *QSGPkmHandler::read()
     texData->hasAlpha = !QSGCompressedTexture::formatIsOpaque(texData->format);
 
     // texture size
-    /* Actual data length depends on format; for now just use 0, i.e. rest-of-file
+    const int bpb = (texData->format == QOpenGLTexture::RGBA8_ETC2_EAC) ? 16 : 8;
     QSize paddedSize(qFromBigEndian<quint16>(rawData + 8), qFromBigEndian<quint16>(rawData + 10));
-    texData->dataLength = (paddedSize.width() / 4) * (paddedSize.height() / 4) * 8;
-    */
+    texData->dataLength = (paddedSize.width() / 4) * (paddedSize.height() / 4) * bpb;
     QSize texSize(qFromBigEndian<quint16>(rawData + 12), qFromBigEndian<quint16>(rawData + 14));
     texData->size = texSize;
 
