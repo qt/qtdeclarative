@@ -117,8 +117,6 @@ public:
         return false;
     }
 
-    // use by tst_qqmllanguage
-    QQmlPropertyValueInterceptor *firstInterceptor() const { return interceptors; }
 protected:
     int metaCall(QObject *o, QMetaObject::Call c, int id, void **a) override;
     bool intercept(QMetaObject::Call c, int id, void **a);
