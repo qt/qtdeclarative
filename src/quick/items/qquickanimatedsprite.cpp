@@ -69,9 +69,67 @@ QT_BEGIN_NAMESPACE
     as multiple frames in the same image file. You can play it at a fixed speed, at the
     frame rate of your display, or manually advance and control the progress.
 
-    For details of how a sprite animation is defined see the \l{Sprite Animations} overview.
-    Note that the AnimatedSprite type does not use Sprite types to define multiple animations,
-    but instead encapsulates a single animation itself.
+    Consider the following sprite sheet:
+
+    \image animatedsprite-loading.png
+
+    It can be divided up into four frames:
+
+    \image animatedsprite-loading-frames.png
+
+    To play each of these frames at a speed of 500 milliseconds per frame, the
+    following code can be used:
+
+    \table
+        \header
+            \li Code
+            \li Result
+        \row
+            \li
+                \code
+                AnimatedSprite {
+                    source: "loading.png"
+                    frameWidth: 64
+                    frameHeight: 64
+                    frameCount: 4
+                    frameDuration: 500
+                }
+                \endcode
+            \li
+                \image animatedsprite-loading-interpolated.gif
+    \endtable
+
+    By default, the frames are interpolated (blended together) to make the
+    animation appear smoother. To disable this, set \l interpolate to \c false:
+
+    \table
+        \header
+            \li Code
+            \li Result
+        \row
+            \li
+                \code
+                AnimatedSprite {
+                    source: "loading.png"
+                    frameWidth: 64
+                    frameHeight: 64
+                    frameCount: 4
+                    frameDuration: 500
+                    interpolate: false
+                }
+                \endcode
+            \li
+                \image animatedsprite-loading.gif
+    \endtable
+
+    To control how AnimatedSprite responds to being scaled, use the
+    \l {Item::}{smooth} property.
+
+    Note that unlike \l SpriteSequence, the AnimatedSprite type does not use
+    \l Sprite to define multiple animations, but instead encapsulates a
+    single animation itself.
+
+    \sa {Sprite Animations}
 */
 
 /*!
