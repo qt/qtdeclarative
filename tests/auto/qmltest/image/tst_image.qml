@@ -122,16 +122,6 @@ Item {
         fillMode: Image.TileHorizontally
     }
 
-    Image {
-        id: pkmImage
-        source: "logo.pkm"
-    }
-
-    Image {
-        id: ktxImage
-        source: "car.ktx"
-    }
-
     TestCase {
         name: "Image"
 
@@ -230,16 +220,6 @@ Item {
             compare(tileModes3.width, 300)
             compare(tileModes3.height, 150)
             compare(tileModes3.fillMode, Image.TileHorizontally)
-        }
-
-        function test_pkmImage() {
-            compare(pkmImage.width, 256)
-            compare(pkmImage.height, 256)
-        }
-
-        function test_ktxImage() {
-            compare(ktxImage.width, 146)
-            compare(ktxImage.height, 80)
         }
     }
 }
