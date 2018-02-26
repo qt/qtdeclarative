@@ -52,6 +52,7 @@ private slots:
     void test_largeAnimation();
     void test_reparenting();
     void test_changeSourceToSmallerImgKeepingBigFrameSize();
+    void test_infiniteLoops();
 };
 
 void tst_qquickanimatedsprite::initTestCase()
@@ -77,8 +78,13 @@ void tst_qquickanimatedsprite::test_properties()
     QVERIFY(sprite->interpolate());
     QCOMPARE(sprite->loops(), 30);
 
+    QSignalSpy finishedSpy(sprite, SIGNAL(finished()));
+    QVERIFY(finishedSpy.isValid());
+
     sprite->setRunning(false);
     QVERIFY(!sprite->running());
+    // The finished() signal shouldn't be emitted when running is manually set to false.
+    QCOMPARE(finishedSpy.count(), 0);
     sprite->setInterpolate(false);
     QVERIFY(!sprite->interpolate());
 
@@ -100,10 +106,15 @@ void tst_qquickanimatedsprite::test_runningChangedSignal()
     QVERIFY(!sprite->running());
 
     QSignalSpy runningChangedSpy(sprite, SIGNAL(runningChanged(bool)));
+    QSignalSpy finishedSpy(sprite, SIGNAL(finished()));
+    QVERIFY(finishedSpy.isValid());
+
     sprite->setRunning(true);
     QTRY_COMPARE(runningChangedSpy.count(), 1);
+    QCOMPARE(finishedSpy.count(), 0);
     QTRY_VERIFY(!sprite->running());
     QTRY_COMPARE(runningChangedSpy.count(), 2);
+    QCOMPARE(finishedSpy.count(), 1);
 
     delete window;
 }
@@ -323,6 +334,28 @@ void tst_qquickanimatedsprite::test_changeSourceToSmallerImgKeepingBigFrameSize(
     killer->terminate();
     killer->wait();
     delete killer;
+}
+
+void tst_qquickanimatedsprite::test_infiniteLoops()
+{
+    QQuickView window;
+    window.setSource(testFileUrl("infiniteLoops.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject());
+
+    QQuickAnimatedSprite* sprite = qobject_cast<QQuickAnimatedSprite*>(window.rootObject());
+    QVERIFY(sprite);
+
+    QTRY_VERIFY(sprite->running());
+
+    QSignalSpy finishedSpy(sprite, SIGNAL(finished()));
+    QVERIFY(finishedSpy.isValid());
+
+    // The finished() signal shouldn't be emitted for infinite animations.
+    const int previousFrame = sprite->currentFrame();
+    QTRY_VERIFY(sprite->currentFrame() != previousFrame);
+    QCOMPARE(finishedSpy.count(), 0);
 }
 
 QTEST_MAIN(tst_qquickanimatedsprite)

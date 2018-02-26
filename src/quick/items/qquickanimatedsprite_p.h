@@ -135,6 +135,8 @@ Q_SIGNALS:
     void loopsChanged(int arg);
     void currentFrameChanged(int arg);
 
+    Q_REVISION(12) void finished();
+
 public Q_SLOTS:
     void start();
     void stop();

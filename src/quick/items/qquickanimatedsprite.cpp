@@ -210,6 +210,16 @@ QT_BEGIN_NAMESPACE
     Stops, then starts the sprite animation.
 */
 
+/*!
+    \qmlsignal QtQuick::AnimatedSprite::finished()
+    \since 5.12
+
+    This signal is emitted when the sprite has finished animating.
+
+    It is not emitted when running is set to \c false, nor for sprites whose
+    \l loops property is set to \c AnimatedSprite.Infinite.
+*/
+
 //TODO: Implicitly size element to size of sprite
 QQuickAnimatedSprite::QQuickAnimatedSprite(QQuickItem *parent) :
     QQuickItem(*(new QQuickAnimatedSpritePrivate), parent)
@@ -734,6 +744,7 @@ void QQuickAnimatedSprite::prepareNextFrame(QSGSpriteNode *node)
             frameAt = 0;
             d->m_running = false;
             emit runningChanged(false);
+            emit finished();
             maybeUpdate();
         }
     } else {
