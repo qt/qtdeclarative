@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -30,20 +30,21 @@
     \title Qt Quick Input Handlers
     \brief A module with a set of QML elements that handle events from input devices in a user interface.
 
-    Qt Quick Input Handlers are a set of QML types used to handle events from
-    keyboard, touch, mouse, and stylus devices in a UI. In contrast to event-handling
-    items, such as \l MouseArea and \l Flickable, input handlers are explicitly non-visual,
-    require less memory and are intended to be used in greater numbers: one
-    handler instance per aspect of interaction. Each input handler instance
-    handles certain events on behalf of its \c parent Item. Thus the visual and
+    Qt Quick Input Handlers are a set of QML types used to handle
+    \l {QInputEvent}{events} from keyboard, touch, mouse, and stylus
+    \l {QInputDevice}{devices} in a UI. In contrast to event-handling
+    items, such as \l MouseArea and \l Flickable, input handlers are explicitly
+    non-visual, require less memory and are intended to be used in greater
+    numbers: one handler instance per aspect of interaction. Each input handler
+    instance handles certain events on behalf of its
+    \l {QQuickPointerHandler::parent()}{parent} Item. Thus the visual and
     behavioral concerns are better separated, and the behavior is built up by
     finer-grained composition.
 
-    In Qt 5.10, these handlers were introduced in a separate Qt.labs.handlers module.
-    Now they are included with Qt Quick since 5.12.  The pre-existing
-    \l Keys attached property is similar in concept, so we refer to the
-    pointing-device-oriented handlers plus \c Keys together as the set of Input Handlers.
-    We expect to offer more attached-property use cases in future versions of Qt.
+    The pre-existing \l Keys attached property is similar in concept, so we
+    refer to the pointing-device-oriented handlers plus \c Keys together as the
+    set of Input Handlers. We expect to offer more attached-property use cases
+    in future versions of Qt.
 
     \section1 Input Handlers
 
@@ -60,7 +61,44 @@
         \li Each Item can have unlimited Handlers
     \endlist
 
-    \omit TODO actual overview with snippets and stuff \endomit
+    \section1 Handlers Manipulating Items
+
+    Some Handlers add interactivity simply by being declared inside an Item:
+
+    \snippet pointerHandlers/dragHandler.qml 0
+
+    \section1 Handler Properties and Signals
+
+    All Handlers have properties that can be used in bindings, and signals that
+    can be handled to react to input:
+
+    \snippet pointerHandlers/hoverTapKeyButton.qml 0
+
+    \section1 Pointer Grab
+
+    An important concept with Pointer Handlers is the type of grabs that they
+    perform. The only kind of grab an Item can take is the exclusive grab: for
+    example if you call \l QPointerEvent::setExclusiveGrabber(), the following
+    mouse moves and mouse release event will be sent only to that object. (As a
+    workaround to this exclusivity, see \l QQuickItem::setFiltersChildMouseEvents()
+    and \l QQuickItem::childMouseEventFilter().) However Pointer Handlers have
+    an additional mechanism available: the
+    \l {QPointerEvent::addPassiveGrabber()} {passive grab}. Mouse and touch
+    \l {QEventPoint::state()}{press} events are delivered by visiting all the
+    Items in top-down Z order: first each Item's child Handlers, and then the
+    \l {QQuickItem::event()}{Item} itself. At the time a press event is
+    delivered, a Handler can take either a passive or an exclusive grab
+    depending on its needs. If it takes a passive grab, it is guaranteed to
+    receive the updates and the release, even if other Items or Handlers in the
+    scene take any kind of grab, passive or exclusve. Some Handlers (such as
+    PointHandler) can work only with passive grabs; others require exclusive
+    grabs; and others can "lurk" with passive grabs until they detect that a
+    gesture is being performed, and then make the transition from passive to
+    exclusive grab.
+
+    When a grab transition is requested, \l PointerHandler::grabPermissions,
+    \l QQuickItem::keepMouseGrab() and \l QQuickItem::keepTouchGrab() control
+    whether the transition will be allowed.
 
     \section1 Related Information
 
