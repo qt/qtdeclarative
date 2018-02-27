@@ -232,29 +232,30 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
     from true to false, regardless of the time held.
 
     \value TapHandler.DragThreshold
-           The event point must not move significantly. If the mouse, finger
-           or stylus moves past the system-wide drag threshold
-           (QStyleHints::startDragDistance), the tap gesture is canceled, even
-           if the button or finger is still pressed. This policy can be useful
-           whenever TapHandler needs to cooperate with other pointer handlers
-           (for example \l DragHandler), because in this case TapHandler will
-           never grab.
+           (the default value) The event point must not move significantly.
+           If the mouse, finger or stylus moves past the system-wide drag
+           threshold (QStyleHints::startDragDistance), the tap gesture is
+           canceled, even if the button or finger is still pressed. This policy
+           can be useful whenever TapHandler needs to cooperate with other
+           pointer handlers (for example \l DragHandler) or event-handling Items
+           (for example QtQuick Controls), because in this case TapHandler
+           will not take the exclusive grab, but merely a passive grab.
 
     \value TapHandler.WithinBounds
            If the event point leaves the bounds of the \l target item, the tap
-           gesture is canceled. The TapHandler will grab on press, but release
-           the grab as soon as the boundary constraint is no longer satisfied.
+           gesture is canceled. The TapHandler will take the exclusive grab on
+           press, but will release the grab as soon as the boundary constraint
+           is no longer satisfied.
 
     \value TapHandler.ReleaseWithinBounds
-           (the default value) At the time of release (the mouse button is
-           released or the finger is lifted), if the event point is outside
-           the bounds of the \l target item, a tap gesture is not recognized.
-           This is the default value, because it corresponds to typical button
-           behavior: you can cancel a click by dragging outside the button,
-           and you can also change your mind by dragging back inside the button
-           before release. Note that it's necessary for TapHandler to grab on
-           press and retain it until release (greedy grab) in order to detect
-           this gesture.
+           At the time of release (the mouse button is released or the finger
+           is lifted), if the event point is outside the bounds of the
+           \l target item, a tap gesture is not recognized. This corresponds to
+           typical behavior for button widgets: you can cancel a click by
+           dragging outside the button, and you can also change your mind by
+           dragging back inside the button before release. Note that it's
+           necessary for TapHandler take the exclusive grab on press and retain
+           it until release in order to detect this gesture.
 */
 void QQuickTapHandler::setGesturePolicy(QQuickTapHandler::GesturePolicy gesturePolicy)
 {
