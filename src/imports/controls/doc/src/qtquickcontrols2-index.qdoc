@@ -46,7 +46,7 @@
     application using the following import statement in your \c {.qml} file:
 
     \code
-    import QtQuick.Controls 2.3
+    import QtQuick.Controls 2.4
     \endcode
 
     The \l{Qt Quick Controls 2 C++ Classes}{C++ classes} can be included into

@@ -55,9 +55,8 @@ static inline uint qHash(QObject *object, const QString &propertyName)
 
 Q_GLOBAL_STATIC(DeferredStates, deferredStates)
 
-static void cancelDeferred(QObject *object, int propertyIndex)
+static void cancelDeferred(QQmlData *ddata, int propertyIndex)
 {
-    QQmlData *ddata = QQmlData::get(object);
     auto dit = ddata->deferredData.rbegin();
     while (dit != ddata->deferredData.rend()) {
         (*dit)->bindings.remove(propertyIndex);
@@ -102,7 +101,7 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
 
         // Cleanup any remaining deferred bindings for this property, also in inner contexts,
         // to avoid executing them later and overriding the property that was just populated.
-        cancelDeferred(object, propertyIndex);
+        cancelDeferred(ddata, propertyIndex);
         break;
     }
 
@@ -128,7 +127,9 @@ void beginDeferred(QObject *object, const QString &property)
 
 void cancelDeferred(QObject *object, const QString &property)
 {
-    cancelDeferred(object, QQmlProperty(object, property).index());
+    QQmlData *data = QQmlData::get(object);
+    if (data)
+        cancelDeferred(data, QQmlProperty(object, property).index());
 }
 
 void completeDeferred(QObject *object, const QString &property)
