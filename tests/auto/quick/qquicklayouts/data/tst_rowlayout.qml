@@ -1012,6 +1012,7 @@ Item {
 
             fixed.implicitWidth = 100
             waitForRendering(layout)
+            wait(0);    // Trigger processEvents() (allow LayoutRequest to be processed)
             compare(itemRect(fixed),  [0,0,100,20])
             compare(itemRect(filler), [100,0,100,20])
         }
