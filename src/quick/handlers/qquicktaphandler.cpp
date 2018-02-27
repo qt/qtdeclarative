@@ -171,7 +171,7 @@ void QQuickTapHandler::handleEventPoint(QQuickEventPoint *point)
 }
 
 /*!
-    \qmlproperty real TapHandler::longPressThreshold
+    \qmlproperty real QtQuick::TapHandler::longPressThreshold
 
     The time in seconds that an event point must be pressed in order to
     trigger a long press gesture and emit the \l longPressed() signal.
@@ -209,13 +209,26 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
 }
 
 /*!
-    \qmlproperty enumeration TapHandler::gesturePolicy
+  \qmlsignal QtQuick::TapHandler::tapped()
+
+  This signal is emitted when the pointer device taps the item.
+ */
+
+/*!
+  \qmlsignal QtQuick::TapHandler::longPressed()
+
+  This signal is emitted when a press occurs that is longer than the
+  \l {TapHandler::longPressThreshold} {long press threshold}.
+ */
+
+/*!
+    \qmlproperty enumeration QtQuick::TapHandler::gesturePolicy
 
     The spatial constraint for a tap or long press gesture to be recognized,
     in addition to the constraint that the release must occur before
     \l longPressThreshold has elapsed. If these constraints are not satisfied,
     the \l tapped signal is not emitted, and \l tapCount is not incremented.
-    If the spatial constraint is violated, \l isPressed transitions immediately
+    If the spatial constraint is violated, \l pressed transitions immediately
     from true to false, regardless of the time held.
 
     \value TapHandler.DragThreshold
@@ -253,7 +266,7 @@ void QQuickTapHandler::setGesturePolicy(QQuickTapHandler::GesturePolicy gestureP
 }
 
 /*!
-    \qmlproperty bool TapHandler::pressed
+    \qmlproperty bool QtQuick::TapHandler::pressed
     \readonly
 
     Holds true whenever the mouse or touch point is pressed,
@@ -334,7 +347,7 @@ void QQuickTapHandler::updateTimeHeld()
 }
 
 /*!
-    \qmlproperty int TapHandler::tapCount
+    \qmlproperty int QtQuick::TapHandler::tapCount
     \readonly
 
     The number of taps which have occurred within the time and space
@@ -354,7 +367,7 @@ void QQuickTapHandler::updateTimeHeld()
 */
 
 /*!
-    \qmlproperty real TapHandler::timeHeld
+    \qmlproperty real QtQuick::TapHandler::timeHeld
     \readonly
 
     The amount of time in seconds that a pressed point has been held, without
