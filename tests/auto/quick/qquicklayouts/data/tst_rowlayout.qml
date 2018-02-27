@@ -570,6 +570,23 @@ Item {
                     { tag: "expandPrefToExplicitMin",  layoutHints: [24, -1, -1], childHints: [11, 21, 31], expected:[24, 24, 31]},
                     { tag: "boundPrefToExplicitMax",   layoutHints: [-1, -1, 19], childHints: [11, 21, 31], expected:[11, 19, 19]},
                     { tag: "boundAllToExplicitMax",    layoutHints: [-1, -1,  9], childHints: [11, 21, 31], expected:[ 9,  9,  9]},
+
+                    /**
+                     * Test how fractional size hint values are rounded. Some hints are ceiled towards the closest integer.
+                     * Note some of these tests are not authorative, but are here to demonstrate current behavior.
+                     * To summarize, it seems to be:
+                     *      - min: always ceiled
+                     *      - pref:  Ceils only implicit (!) hints. Might also be ceiled if explicit
+                              preferred size is less than implicit minimum size, but that's just a
+                              side-effect of that preferred should never be less than minimum.
+                              (tag "ceilShrinkMinToPref" below)
+                     *      - max: never ceiled
+                     */
+                    { tag: "ceilImplicitMin",       layoutHints: [ -1,  -1,  -1], childHints: [ .1, 1.1, 9.1], expected:[  1,   2, 9.1]},
+                    { tag: "ceilExplicitMin",       layoutHints: [1.1,  -1,  -1], childHints: [ .1, 2.1, 9.1], expected:[  2,   3, 9.1]},
+                    { tag: "ceilImplicitMin2",      layoutHints: [ -1, 4.1,  -1], childHints: [ .1, 1.1, 9.1], expected:[  1, 4.1, 9.1]},
+                    { tag: "ceilShrinkMinToPref",   layoutHints: [ -1, 2.1,  -1], childHints: [  5, 6.1, 8.1], expected:[  3,   3, 8.1]},
+                    { tag: "ceilExpandMaxToPref",   layoutHints: [ -1, 6.1,  -1], childHints: [1.1, 3.1, 3.1], expected:[  2, 6.1, 6.1]},
                     ];
         }
 
