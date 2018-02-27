@@ -60,10 +60,10 @@
 
 CubeRenderer::CubeRenderer(QOffscreenSurface *offscreenSurface)
     : m_offscreenSurface(offscreenSurface),
-      m_context(0),
-      m_program(0),
-      m_vbo(0),
-      m_vao(0),
+      m_context(nullptr),
+      m_program(nullptr),
+      m_vbo(nullptr),
+      m_vao(nullptr),
       m_matrixLoc(0)
 {
 }
@@ -180,7 +180,7 @@ void CubeRenderer::setupVertexAttribs()
     m_vbo->bind();
     m_program->enableAttributeArray(0);
     m_program->enableAttributeArray(1);
-    m_context->functions()->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    m_context->functions()->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     m_context->functions()->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0,
                                                   (const void *)(36 * 3 * sizeof(GLfloat)));
     m_vbo->release();

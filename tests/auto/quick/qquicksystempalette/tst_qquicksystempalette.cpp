@@ -62,7 +62,7 @@ void tst_qquicksystempalette::activePalette()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickSystemPalette *object = qobject_cast<QQuickSystemPalette*>(component.create());
 
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QPalette palette;
     palette.setCurrentColorGroup(QPalette::Active);
@@ -91,7 +91,7 @@ void tst_qquicksystempalette::inactivePalette()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickSystemPalette *object = qobject_cast<QQuickSystemPalette*>(component.create());
 
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->colorGroup(), QQuickSystemPalette::Inactive);
 
     QPalette palette;
@@ -121,7 +121,7 @@ void tst_qquicksystempalette::disabledPalette()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickSystemPalette *object = qobject_cast<QQuickSystemPalette*>(component.create());
 
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->colorGroup(), QQuickSystemPalette::Disabled);
 
     QPalette palette;
@@ -152,7 +152,7 @@ void tst_qquicksystempalette::paletteChanged()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickSystemPalette *object = qobject_cast<QQuickSystemPalette*>(component.create());
 
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QPalette p;
     p.setCurrentColorGroup(QPalette::Active);

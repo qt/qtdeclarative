@@ -62,10 +62,10 @@ class Q_QML_PRIVATE_EXPORT QQmlChangeSet
 public:
     struct MoveKey
     {
-        MoveKey() : moveId(-1), offset(0) {}
+        MoveKey() {}
         MoveKey(int moveId, int offset) : moveId(moveId), offset(offset) {}
-        int moveId;
-        int offset;
+        int moveId = -1;
+        int offset = 0;
     };
 
     // The storrage for Change (below). This struct is trivial, which it has to be in order to store
@@ -119,7 +119,7 @@ public:
     void change(int index, int count);
 
     void insert(const QVector<Change> &inserts);
-    void remove(const QVector<Change> &removes, QVector<Change> *inserts = 0);
+    void remove(const QVector<Change> &removes, QVector<Change> *inserts = nullptr);
     void move(const QVector<Change> &removes, const QVector<Change> &inserts);
     void change(const QVector<Change> &changes);
     void apply(const QQmlChangeSet &changeSet);

@@ -44,7 +44,7 @@ class CustomObject: public QObject
 {
     Q_OBJECT
 public:
-    CustomObject(QObject *parent = 0)
+    CustomObject(QObject *parent = nullptr)
         : QObject(parent) {}
 };
 

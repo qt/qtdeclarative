@@ -131,7 +131,7 @@ void tst_bindingdependencyapi::testSingleDep()
     c.setData(code, QUrl());
     QObject *rect = c.create();
     QTest::qWait(10);
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QObject *text = rect->findChildren<QQuickText *>().front();
 
     QObject *referencedObject = rect->objectName() == referencedObjectName ? rect : rect->findChild<QObject *>(referencedObjectName);
@@ -213,7 +213,7 @@ void tst_bindingdependencyapi::testManyDeps()
         qWarning() << c.errorString();
     }
     QTest::qWait(100);
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QObject *text = rect->findChildren<QQuickText *>().front();
     QObject *configObj = rect->findChild<QObject *>("config");
 
@@ -290,7 +290,7 @@ void tst_bindingdependencyapi::testConditionalDependencies()
     c.setData(code, QUrl());
     QObject *rect = c.create();
     QTest::qWait(10);
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QObject *text = rect->findChildren<QQuickText *>().front();
 
     QObject *referencedObject = rect->objectName() == referencedObjectName ? rect : rect->findChild<QObject *>(referencedObjectName);
@@ -336,7 +336,7 @@ void tst_bindingdependencyapi::testBindingLoop()
         qWarning() << c.errorString();
     }
     QTest::qWait(100);
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QObject *text = rect->findChildren<QQuickText *>().front();
 
     auto data = QQmlData::get(text);

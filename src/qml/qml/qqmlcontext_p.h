@@ -178,7 +178,7 @@ public:
     QQmlRefPointer<QQmlTypeNameCache> imports;
 
     // My children
-    QQmlContextData *childContexts = 0;
+    QQmlContextData *childContexts = nullptr;
 
     // My peers in parent's childContexts list
     QQmlContextData  *nextChild;
@@ -191,7 +191,7 @@ public:
     QQmlData *contextObjects;
 
     // Doubly-linked list of context guards (XXX merge with contextObjects)
-    QQmlGuardedContextData *contextGuards = 0;
+    QQmlGuardedContextData *contextGuards = nullptr;
 
     // id guards
     struct ContextGuard : public QQmlGuard<QObject>
@@ -261,9 +261,9 @@ private:
 
     inline void clear();
 
-    QQmlContextData *m_contextData = 0;
-    QQmlGuardedContextData  *m_next = 0;
-    QQmlGuardedContextData **m_prev = 0;
+    QQmlContextData *m_contextData = nullptr;
+    QQmlGuardedContextData  *m_next = nullptr;
+    QQmlGuardedContextData **m_prev = nullptr;
 };
 
 
@@ -287,14 +287,14 @@ void QQmlGuardedContextData::clear()
     if (m_prev) {
         *m_prev = m_next;
         if (m_next) m_next->m_prev = m_prev;
-        m_contextData = 0;
-        m_next = 0;
-        m_prev = 0;
+        m_contextData = nullptr;
+        m_next = nullptr;
+        m_prev = nullptr;
     }
 }
 
 QQmlContextDataRef::QQmlContextDataRef()
-    : m_contextData(0)
+    : m_contextData(nullptr)
 {
 }
 
@@ -338,7 +338,7 @@ void QQmlContextDataRef::clear()
 {
     if (m_contextData && !--m_contextData->refCount)
         m_contextData->destroy();
-    m_contextData = 0;
+    m_contextData = nullptr;
 }
 
 QQmlContextDataRef &
@@ -356,7 +356,7 @@ QQmlContextDataRef::operator=(const QQmlContextDataRef &other)
 }
 
 QQmlContextData::ContextGuard::ContextGuard()
-: context(0)
+: context(nullptr)
 {
 }
 

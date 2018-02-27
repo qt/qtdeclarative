@@ -93,12 +93,12 @@ struct GLAcquireContext {
 };
 #endif
 QQuickContext2DTexture::QQuickContext2DTexture()
-    : m_context(0)
+    : m_context(nullptr)
 #if QT_CONFIG(opengl)
-    , m_gl(0)
+    , m_gl(nullptr)
 #endif
-    , m_surface(0)
-    , m_item(0)
+    , m_surface(nullptr)
+    , m_item(nullptr)
     , m_canvasDevicePixelRatio(1)
     , m_canvasWindowChanged(false)
     , m_dirtyTexture(false)
@@ -159,7 +159,7 @@ void QQuickContext2DTexture::setItem(QQuickCanvasItem* item)
         m_context = (QQuickContext2D*) item->rawContext(); // FIXME
         m_state = m_context->state;
     } else {
-        m_context = 0;
+        m_context = nullptr;
     }
 }
 
@@ -257,7 +257,7 @@ void QQuickContext2DTexture::paintWithoutTiles(QQuickContext2DCommandBuffer *ccb
 
 bool QQuickContext2DTexture::canvasDestroyed()
 {
-    return m_item == 0;
+    return m_item == nullptr;
 }
 
 void QQuickContext2DTexture::paint(QQuickContext2DCommandBuffer *ccb)
@@ -349,7 +349,7 @@ QRect QQuickContext2DTexture::createTiles(const QRect& window)
             int ht = xx + h1;
             int vt = yy + v1;
 
-            QQuickContext2DTile* tile = 0;
+            QQuickContext2DTile* tile = nullptr;
 
             QPoint pos(ht * tw, vt * th);
             QRect rect(pos, m_tileSize);
@@ -420,9 +420,9 @@ static inline QSize npotAdjustedSize(const QSize &size)
 
 QQuickContext2DFBOTexture::QQuickContext2DFBOTexture()
     : QQuickContext2DTexture()
-    , m_fbo(0)
-    , m_multisampledFbo(0)
-    , m_paint_device(0)
+    , m_fbo(nullptr)
+    , m_multisampledFbo(nullptr)
+    , m_paint_device(nullptr)
 {
     m_displayTextures[0] = 0;
     m_displayTextures[1] = 0;
@@ -567,15 +567,15 @@ QPaintDevice* QQuickContext2DFBOTexture::beginPainting()
         delete m_fbo;
         delete m_multisampledFbo;
         delete m_paint_device;
-        m_fbo = 0;
-        m_multisampledFbo = 0;
-        m_paint_device = 0;
-        return 0;
+        m_fbo = nullptr;
+        m_multisampledFbo = nullptr;
+        m_paint_device = nullptr;
+        return nullptr;
     } else if (!m_fbo || m_canvasWindowChanged) {
         delete m_fbo;
         delete m_multisampledFbo;
         delete m_paint_device;
-        m_paint_device = 0;
+        m_paint_device = nullptr;
 
         m_fboSize = npotAdjustedSize(m_canvasWindow.size() * m_canvasDevicePixelRatio);
         m_canvasWindowChanged = false;
@@ -722,7 +722,7 @@ QPaintDevice* QQuickContext2DImageTexture::beginPainting()
     QQuickContext2DTexture::beginPainting();
 
     if (m_canvasWindow.size().isEmpty())
-        return 0;
+        return nullptr;
 
 
     if (m_canvasWindowChanged) {

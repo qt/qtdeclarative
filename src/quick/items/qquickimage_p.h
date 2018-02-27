@@ -70,7 +70,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImage : public QQuickImageBase
     Q_PROPERTY(bool autoTransform READ autoTransform WRITE setAutoTransform NOTIFY autoTransformChanged REVISION 2)
 
 public:
-    QQuickImage(QQuickItem *parent=0);
+    QQuickImage(QQuickItem *parent=nullptr);
     ~QQuickImage();
 
     enum HAlignment { AlignLeft = Qt::AlignLeft,

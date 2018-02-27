@@ -382,11 +382,11 @@ double RuntimeHelpers::stringToNumber(const QString &string)
 {
     const QStringRef s = QStringRef(&string).trimmed();
     if (s.startsWith(QLatin1String("0x")) || s.startsWith(QLatin1String("0X")))
-        return s.toLong(0, 16);
+        return s.toLong(nullptr, 16);
     bool ok;
     QByteArray ba = s.toLatin1();
     const char *begin = ba.constData();
-    const char *end = 0;
+    const char *end = nullptr;
     double d = qstrtod(begin, &end, &ok);
     if (end - begin != ba.size()) {
         if (ba == "Infinity" || ba == "+Infinity")
@@ -457,7 +457,7 @@ Heap::Object *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const Val
     case Value::Undefined_Type:
     case Value::Null_Type:
         engine->throwTypeError();
-        return 0;
+        return nullptr;
     case Value::Boolean_Type:
         return engine->newBooleanObject(value.booleanValue());
     case Value::Managed_Type:
@@ -680,7 +680,7 @@ bool Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, 
 ReturnedValue Runtime::method_foreachIterator(ExecutionEngine *engine, const Value &in)
 {
     Scope scope(engine);
-    ScopedObject o(scope, (Object *)0);
+    ScopedObject o(scope, (Object *)nullptr);
     if (!in.isNullOrUndefined())
         o = in.toObject(engine);
     return engine->newForEachIteratorObject(o)->asReturnedValue();
@@ -1199,7 +1199,7 @@ ReturnedValue Runtime::method_createCatchContext(ExecutionContext *parent, int e
 {
     ExecutionEngine *e = parent->engine();
     return parent->newCatchContext(e->currentStackFrame->v4Function->compilationUnit->runtimeStrings[exceptionVarNameIndex],
-                                   e->catchException(0))->asReturnedValue();
+                                   e->catchException(nullptr))->asReturnedValue();
 }
 
 void Runtime::method_declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
@@ -1299,7 +1299,7 @@ ReturnedValue Runtime::method_loadQmlIdObject(ExecutionEngine *engine, const Val
     if (!context || index >= (uint)context->idValueCount)
         return Encode::undefined();
 
-    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
+    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : nullptr;
     if (ep && ep->propertyCapture)
         ep->propertyCapture->captureProperty(&context->idValues[index].bindings);
 

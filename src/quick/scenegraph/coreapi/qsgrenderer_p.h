@@ -162,12 +162,12 @@ class Q_QUICK_PRIVATE_EXPORT QSGNodeDumper : public QSGNodeVisitor {
 public:
     static void dump(QSGNode *n);
 
-    QSGNodeDumper() : m_indent(0) {}
+    QSGNodeDumper() {}
     void visitNode(QSGNode *n) override;
     void visitChildren(QSGNode *n) override;
 
 private:
-    int m_indent;
+    int m_indent = 0;
 };
 
 

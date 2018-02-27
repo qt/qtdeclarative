@@ -163,7 +163,7 @@ QQmlPropertyCache until the QQmlEngine is destroyed.
 QQmlPropertyCache *QJSEnginePrivate::cache(QObject *obj)
 {
     if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
-        return 0;
+        return nullptr;
 
     Locker locker(this);
     const QMetaObject *mo = obj->metaObject();

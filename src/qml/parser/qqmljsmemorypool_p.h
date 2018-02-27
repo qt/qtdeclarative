@@ -71,13 +71,7 @@ class QML_PARSER_EXPORT MemoryPool : public QSharedData
     void operator =(const MemoryPool &other);
 
 public:
-    MemoryPool()
-        : _blocks(0),
-          _allocatedBlocks(0),
-          _blockCount(-1),
-          _ptr(0),
-          _end(0)
-    { }
+    MemoryPool() {}
 
     ~MemoryPool()
     {
@@ -105,7 +99,7 @@ public:
     void reset()
     {
         _blockCount = -1;
-        _ptr = _end = 0;
+        _ptr = _end = nullptr;
     }
 
     template <typename Tp> Tp *New() { return new (this->allocate(sizeof(Tp))) Tp(); }
@@ -125,7 +119,7 @@ private:
             Q_CHECK_PTR(_blocks);
 
             for (int index = _blockCount; index < _allocatedBlocks; ++index)
-                _blocks[index] = 0;
+                _blocks[index] = nullptr;
         }
 
         char *&block = _blocks[_blockCount];
@@ -144,11 +138,11 @@ private:
     }
 
 private:
-    char **_blocks;
-    int _allocatedBlocks;
-    int _blockCount;
-    char *_ptr;
-    char *_end;
+    char **_blocks = nullptr;
+    int _allocatedBlocks = 0;
+    int _blockCount = -1;
+    char *_ptr = nullptr;
+    char *_end = nullptr;
 
     enum
     {

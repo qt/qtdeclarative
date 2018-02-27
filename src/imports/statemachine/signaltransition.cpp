@@ -163,7 +163,7 @@ void SignalTransition::connectTriggered()
 
     QObject *target = senderObject();
     QQmlData *ddata = QQmlData::get(this);
-    QQmlContextData *ctxtdata = ddata ? ddata->outerContext : 0;
+    QQmlContextData *ctxtdata = ddata ? ddata->outerContext : nullptr;
 
     Q_ASSERT(m_bindings.count() == 1);
     const QV4::CompiledData::Binding *binding = m_bindings.at(0);
@@ -178,7 +178,7 @@ void SignalTransition::connectTriggered()
 
     QQmlBoundSignalExpression *expression = ctxtdata ?
                 new QQmlBoundSignalExpression(target, signalIndex,
-                                              ctxtdata, this, m_compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]) : 0;
+                                              ctxtdata, this, m_compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]) : nullptr;
     if (expression)
         expression->setNotifyOnValueChanged(false);
     m_signalExpression = expression;

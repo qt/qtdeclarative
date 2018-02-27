@@ -141,7 +141,7 @@ N *QForwardFieldList<N, nextMember>::takeFirst()
     N *value = *_first;
     if (value) {
         _first = next(value);
-        value->*nextMember = 0;
+        value->*nextMember = nullptr;
     }
     return value;
 }
@@ -149,7 +149,7 @@ N *QForwardFieldList<N, nextMember>::takeFirst()
 template<class N, N *N::*nextMember>
 void QForwardFieldList<N, nextMember>::prepend(N *v)
 {
-    Q_ASSERT(v->*nextMember == 0);
+    Q_ASSERT(v->*nextMember == nullptr);
     v->*nextMember = *_first;
     _first = v;
 }
@@ -229,7 +229,7 @@ void QForwardFieldList<N, nextMember>::setFlag2Value(bool v)
 
 template<class N, N *N::*nextMember>
 QFieldList<N, nextMember>::QFieldList()
-: _first(0), _last(0), _flag(0), _count(0)
+: _first(nullptr), _last(nullptr), _flag(0), _count(0)
 {
 }
 
@@ -246,10 +246,10 @@ N *QFieldList<N, nextMember>::takeFirst()
     if (value) {
         _first = next(value);
         if (_last == value) {
-            Q_ASSERT(_first == 0);
-            _last = 0;
+            Q_ASSERT(_first == nullptr);
+            _last = nullptr;
         }
-        value->*nextMember = 0;
+        value->*nextMember = nullptr;
         --_count;
     }
     return value;
@@ -258,7 +258,7 @@ N *QFieldList<N, nextMember>::takeFirst()
 template<class N, N *N::*nextMember>
 void QFieldList<N, nextMember>::append(N *v)
 {
-    Q_ASSERT(v->*nextMember == 0);
+    Q_ASSERT(v->*nextMember == nullptr);
     if (isEmpty()) {
         _first = v;
         _last = v;
@@ -272,7 +272,7 @@ void QFieldList<N, nextMember>::append(N *v)
 template<class N, N *N::*nextMember>
 void QFieldList<N, nextMember>::prepend(N *v)
 {
-    Q_ASSERT(v->*nextMember == 0);
+    Q_ASSERT(v->*nextMember == nullptr);
     if (isEmpty()) {
         _first = v;
         _last = v;
@@ -375,7 +375,7 @@ void QFieldList<N, nextMember>::copyAndClear(QFieldList<N, nextMember> &o)
     _first = o._first;
     _last = o._last;
     _count = o._count;
-    o._first = o._last = 0;
+    o._first = o._last = nullptr;
     o._count = 0;
 }
 
@@ -391,8 +391,8 @@ void QFieldList<N, nextMember>::copyAndClearAppend(QForwardFieldList<N, nextMemb
 template<class N, N *N::*nextMember>
 void QFieldList<N, nextMember>::copyAndClearPrepend(QForwardFieldList<N, nextMember> &o)
 {
-    _first = 0;
-    _last = 0;
+    _first = nullptr;
+    _last = nullptr;
     _count = 0;
     while (N *n = o.takeFirst()) prepend(n);
 }

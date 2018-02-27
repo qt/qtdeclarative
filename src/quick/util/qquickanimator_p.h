@@ -94,8 +94,8 @@ protected:
                                       TransitionDirection,
                                       QObject *) override;
 
-    QQuickAnimator(QQuickAnimatorPrivate &dd, QObject *parent = 0);
-    QQuickAnimator(QObject *parent = 0);
+    QQuickAnimator(QQuickAnimatorPrivate &dd, QObject *parent = nullptr);
+    QQuickAnimator(QObject *parent = nullptr);
 
 Q_SIGNALS:
     void targetItemChanged(QQuickItem *);
@@ -110,7 +110,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScaleAnimator : public QQuickAnimator
 {
     Q_OBJECT
 public:
-    QQuickScaleAnimator(QObject *parent = 0);
+    QQuickScaleAnimator(QObject *parent = nullptr);
 protected:
     QQuickAnimatorJob *createJob() const override;
     QString propertyName() const override { return QStringLiteral("scale"); }
@@ -120,7 +120,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickXAnimator : public QQuickAnimator
 {
     Q_OBJECT
 public:
-    QQuickXAnimator(QObject *parent = 0);
+    QQuickXAnimator(QObject *parent = nullptr);
 protected:
     QQuickAnimatorJob *createJob() const override;
     QString propertyName() const override { return QStringLiteral("x"); }
@@ -130,7 +130,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickYAnimator : public QQuickAnimator
 {
     Q_OBJECT
 public:
-    QQuickYAnimator(QObject *parent = 0);
+    QQuickYAnimator(QObject *parent = nullptr);
 protected:
     QQuickAnimatorJob *createJob() const override;
     QString propertyName() const override { return QStringLiteral("y"); }
@@ -140,7 +140,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickOpacityAnimator : public QQuickAnimator
 {
     Q_OBJECT
 public:
-    QQuickOpacityAnimator(QObject *parent = 0);
+    QQuickOpacityAnimator(QObject *parent = nullptr);
 protected:
     QQuickAnimatorJob *createJob() const override;
     QString propertyName() const override { return QStringLiteral("opacity"); }
@@ -157,7 +157,7 @@ public:
     enum RotationDirection { Numerical, Shortest, Clockwise, Counterclockwise };
     Q_ENUM(RotationDirection)
 
-    QQuickRotationAnimator(QObject *parent = 0);
+    QQuickRotationAnimator(QObject *parent = nullptr);
 
     void setDirection(RotationDirection dir);
     RotationDirection direction() const;
@@ -179,7 +179,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimator : public QQuickAnimator
     Q_PROPERTY(QString uniform READ uniform WRITE setUniform NOTIFY uniformChanged)
 
 public:
-    QQuickUniformAnimator(QObject *parent = 0);
+    QQuickUniformAnimator(QObject *parent = nullptr);
 
     QString uniform() const;
     void setUniform(const QString &);

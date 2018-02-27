@@ -69,7 +69,7 @@ class Q_AUTOTEST_EXPORT QQuickAnimationController : public QObject, public QQmlP
     Q_PROPERTY(QQuickAbstractAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged)
 
 public:
-    QQuickAnimationController(QObject *parent=0);
+    QQuickAnimationController(QObject *parent=nullptr);
     ~QQuickAnimationController();
 
     qreal progress() const;

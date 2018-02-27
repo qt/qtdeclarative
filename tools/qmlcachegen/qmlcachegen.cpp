@@ -197,7 +197,7 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
         QmlIR::JSCodeGen v4CodeGen(irDocument.code,
                                    &irDocument.jsGenerator, &irDocument.jsModule,
                                    &irDocument.jsParserEngine, irDocument.program,
-                                   /*import cache*/0, &irDocument.jsGenerator.stringTable, illegalNames);
+                                   /*import cache*/nullptr, &irDocument.jsGenerator.stringTable, illegalNames);
         v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
             if (object->functionsAndExpressions->count == 0)
@@ -298,7 +298,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
     {
         QmlIR::JSCodeGen v4CodeGen(irDocument.code, &irDocument.jsGenerator,
                                    &irDocument.jsModule, &irDocument.jsParserEngine,
-                                   irDocument.program, /*import cache*/0,
+                                   irDocument.program, /*import cache*/nullptr,
                                    &irDocument.jsGenerator.stringTable, illegalNames);
         v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
         v4CodeGen.generateFromProgram(inputFileName, inputFileUrl, sourceCode, program,

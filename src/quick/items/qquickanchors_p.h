@@ -86,7 +86,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnchors : public QObject
     Q_PROPERTY(bool alignWhenCentered READ alignWhenCentered WRITE setAlignWhenCentered NOTIFY centerAlignedChanged)
 
 public:
-    QQuickAnchors(QQuickItem *item, QObject *parent=0);
+    QQuickAnchors(QQuickItem *item, QObject *parent=nullptr);
     virtual ~QQuickAnchors();
 
     enum Anchor

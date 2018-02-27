@@ -94,7 +94,7 @@ public:
             generator->labels[index] = generator->instructions.size();
         }
 
-        BytecodeGenerator *generator = 0;
+        BytecodeGenerator *generator = nullptr;
         int index = -1;
     };
 

@@ -74,7 +74,7 @@ class Q_AUTOTEST_EXPORT QQuickFlipable : public QQuickItem
     //### flipAxis
     //### flipRotation
 public:
-    QQuickFlipable(QQuickItem *parent=0);
+    QQuickFlipable(QQuickItem *parent=nullptr);
     ~QQuickFlipable();
 
     QQuickItem *front() const;

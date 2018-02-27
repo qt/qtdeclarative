@@ -89,7 +89,7 @@ public slots:
 static void gc(QQmlEngine &engine)
 {
     engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 }
 
@@ -157,7 +157,7 @@ void tst_qqmlcomponent::qmlIncubateObject()
 {
     QQmlComponent component(&engine, testFileUrl("incubateObject.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("test1").toBool(), true);
     QCOMPARE(object->property("test2").toBool(), false);
 
@@ -236,8 +236,8 @@ void tst_qqmlcomponent::qmlCreateObjectAutoParent()
     QCOMPARE(window_item->parent(), windowParent);
     QCOMPARE(window_window->parent(), windowParent);
 
-    QCOMPARE(qobject_cast<QQuickItem *>(qtobject_item)->parentItem(), (QQuickItem *)0);
-    QCOMPARE(qobject_cast<QQuickWindow *>(qtobject_window)->transientParent(), (QQuickWindow *)0);
+    QCOMPARE(qobject_cast<QQuickItem *>(qtobject_item)->parentItem(), (QQuickItem *)nullptr);
+    QCOMPARE(qobject_cast<QQuickWindow *>(qtobject_window)->transientParent(), (QQuickWindow *)nullptr);
     QCOMPARE(qobject_cast<QQuickItem *>(item_item)->parentItem(), itemParent);
     QCOMPARE(qobject_cast<QQuickWindow *>(item_window)->transientParent(), itemParent->window());
     QCOMPARE(qobject_cast<QQuickItem *>(window_item)->parentItem(), windowParent->contentItem());
@@ -250,7 +250,7 @@ void tst_qqmlcomponent::qmlCreateObjectWithProperties()
     QQmlComponent component(&engine, testFileUrl("createObjectWithScript.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QObject *testObject1 = object->property("declarativerectangle").value<QObject*>();
     QVERIFY(testObject1);
@@ -301,7 +301,7 @@ void tst_qqmlcomponent::qmlCreateParentReference()
     QQmlComponent component(&engine, testFileUrl("createParentReference.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QVERIFY(QMetaObject::invokeMethod(object, "createChild"));
     delete object;
@@ -327,7 +327,7 @@ void tst_qqmlcomponent::async()
     QCOMPARE(watcher.error, 0);
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     delete object;
 }
@@ -348,7 +348,7 @@ void tst_qqmlcomponent::asyncHierarchy()
     QCOMPARE(watcher.error, 0);
 
     QObject *root = component.create();
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
 
     // ensure that the parent-child relationship hierarchy is correct
     // (use QQuickItem* for all children rather than types which are not publicly exported)
@@ -413,7 +413,7 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.qml"));
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
         QVERIFY(object->property("success").toBool());
     }
 
@@ -423,7 +423,7 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.2.qml"));
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
         QVERIFY(object->property("success").toBool());
     }
 
@@ -432,7 +432,7 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.3.qml"));
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
         QVERIFY(object->property("success").toBool());
     }
 
@@ -441,7 +441,7 @@ void tst_qqmlcomponent::componentUrlCanonicalization()
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("componentUrlCanonicalization.4.qml"));
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
         QVERIFY(object->property("success").toBool());
     }
 
@@ -461,7 +461,7 @@ void tst_qqmlcomponent::onDestructionLookup()
     QQmlComponent component(&engine, testFileUrl("onDestructionLookup.qml"));
     QScopedPointer<QObject> object(component.create());
     gc(engine);
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QVERIFY(object->property("success").toBool());
 }
 
@@ -477,7 +477,7 @@ void tst_qqmlcomponent::onDestructionCount()
         QTest::ignoreMessage(QtWarningMsg, warning.data());
 
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
     }
 
     // Warning should not be emitted any further
@@ -487,7 +487,7 @@ void tst_qqmlcomponent::onDestructionCount()
     {
         QQmlTestMessageHandler messageHandler;
 
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         QCoreApplication::processEvents();
         warnings = messageHandler.messages();
     }
@@ -505,7 +505,7 @@ void tst_qqmlcomponent::recursion()
 
     QTest::ignoreMessage(QtWarningMsg, QLatin1String("QQmlComponent: Component creation is recursing - aborting").data());
     QScopedPointer<QObject> object(component.create());
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     // Sub-object creation does not succeed
     QCOMPARE(object->property("success").toBool(), false);
@@ -520,7 +520,7 @@ void tst_qqmlcomponent::recursionContinuation()
         QTest::ignoreMessage(QtWarningMsg, QLatin1String("QQmlComponent: Component creation is recursing - aborting").data());
 
     QScopedPointer<QObject> object(component.create());
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     // Eventual sub-object creation succeeds
     QVERIFY(object->property("success").toBool());
@@ -538,7 +538,7 @@ public:
     int value() const { return m_value; }
     void setValue(int v) {
         scopeObject.clear();
-        callingContextData.setContextData(0);
+        callingContextData.setContextData(nullptr);
 
         m_value = v;
         QJSEngine *jsEngine = qjsEngine(this);

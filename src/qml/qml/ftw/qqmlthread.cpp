@@ -123,7 +123,7 @@ bool QQmlThreadPrivate::MainObject::event(QEvent *e)
 
 QQmlThreadPrivate::QQmlThreadPrivate(QQmlThread *q)
 : q(q), m_threadProcessing(false), m_mainProcessing(false), m_shutdown(false),
-  m_mainThreadWaiting(false), mainSync(0), m_mainObject(this)
+  m_mainThreadWaiting(false), mainSync(nullptr), m_mainObject(this)
 {
     setObjectName(QStringLiteral("QQmlThread"));
 }
@@ -155,7 +155,7 @@ void QQmlThreadPrivate::mainEvent()
     m_mainProcessing = true;
 
     while (!mainList.isEmpty() || mainSync) {
-        bool isSync = mainSync != 0;
+        bool isSync = mainSync != nullptr;
         QQmlThread::Message *message = isSync?mainSync:mainList.takeFirst();
         unlock();
 
@@ -165,7 +165,7 @@ void QQmlThreadPrivate::mainEvent()
         lock();
 
         if (isSync) {
-            mainSync = 0;
+            mainSync = nullptr;
             wakeOne();
         }
     }
@@ -328,7 +328,7 @@ void QQmlThread::internalCallMethodInThread(Message *message)
             message->call(this);
             delete message;
             lock();
-            d->mainSync = 0;
+            d->mainSync = nullptr;
             wakeOne();
         } else {
             d->wait();
@@ -345,7 +345,7 @@ void QQmlThread::internalCallMethodInMain(Message *message)
 
     d->lock();
 
-    Q_ASSERT(d->mainSync == 0);
+    Q_ASSERT(d->mainSync == nullptr);
     d->mainSync = message;
 
     if (d->m_mainThreadWaiting) {
@@ -359,7 +359,7 @@ void QQmlThread::internalCallMethodInMain(Message *message)
     while (d->mainSync) {
         if (d->m_shutdown) {
             delete d->mainSync;
-            d->mainSync = 0;
+            d->mainSync = nullptr;
             break;
         }
         d->wait();
@@ -405,7 +405,7 @@ void QQmlThread::waitForNextMessage()
             message->call(this);
             delete message;
             lock();
-            d->mainSync = 0;
+            d->mainSync = nullptr;
             wakeOne();
         } else {
             d->wait();

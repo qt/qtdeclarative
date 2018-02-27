@@ -71,8 +71,7 @@ class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
     Q_PROPERTY(int someFixedProperty READ someFixedProperty WRITE setSomeFixedProperty NOTIFY someFixedPropertyChanged)
 public:
     LazyPropertyMap()
-        : QQmlPropertyMap(this, /*parent*/0)
-        , value(0)
+        : QQmlPropertyMap(this, /*parent*/nullptr)
     {}
 
     virtual void classBegin() {}
@@ -87,7 +86,7 @@ signals:
     void someFixedPropertyChanged();
 
 private:
-    int value;
+    int value = 0;
 };
 
 void tst_QQmlPropertyMap::initTestCase()
@@ -313,7 +312,7 @@ class MyEnhancedPropertyMap : public QQmlPropertyMap
 {
     Q_OBJECT
 public:
-    MyEnhancedPropertyMap() : QQmlPropertyMap(this, 0), m_testSlotCalled(false) {}
+    MyEnhancedPropertyMap() : QQmlPropertyMap(this, nullptr) {}
     bool testSlotCalled() const { return m_testSlotCalled; }
 
 signals:
@@ -323,7 +322,7 @@ public slots:
     void testSlot() { m_testSlotCalled = true; }
 
 private:
-    bool m_testSlotCalled;
+    bool m_testSlotCalled = false;
 };
 
 void tst_QQmlPropertyMap::metaObjectAccessibility()

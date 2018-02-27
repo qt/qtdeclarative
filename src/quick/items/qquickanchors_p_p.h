@@ -60,15 +60,15 @@ QT_BEGIN_NAMESPACE
 class QQuickAnchorLine
 {
 public:
-    QQuickAnchorLine() : item(0), anchorLine(QQuickAnchors::InvalidAnchor) {}
+    QQuickAnchorLine() {}
     QQuickAnchorLine(QQuickItem *i, QQuickAnchors::Anchor l) : item(i), anchorLine(l) {}
     QQuickAnchorLine(QQuickItem *i, uint l)
         : item(i)
         , anchorLine(static_cast<QQuickAnchors::Anchor>(l))
     { Q_ASSERT(l < ((QQuickAnchors::BaselineAnchor << 1) - 1)); }
 
-    QQuickItem *item;
-    QQuickAnchors::Anchor anchorLine;
+    QQuickItem *item = nullptr;
+    QQuickAnchors::Anchor anchorLine = QQuickAnchors::InvalidAnchor;
 };
 
 inline bool operator==(const QQuickAnchorLine& a, const QQuickAnchorLine& b)

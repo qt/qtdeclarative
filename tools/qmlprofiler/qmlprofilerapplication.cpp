@@ -76,7 +76,7 @@ Q_STATIC_ASSERT(sizeof(features) ==
 QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     QCoreApplication(argc, argv),
     m_runMode(LaunchMode),
-    m_process(0),
+    m_process(nullptr),
     m_hostName(QLatin1String("127.0.0.1")),
     m_port(0),
     m_pendingRequest(REQUEST_NONE),

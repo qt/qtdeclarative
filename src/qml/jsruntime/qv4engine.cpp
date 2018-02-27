@@ -133,14 +133,14 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
     , gcStack(new WTF::PageAllocation)
-    , globalCode(0)
-    , v8Engine(0)
+    , globalCode(nullptr)
+    , v8Engine(nullptr)
     , publicEngine(jsEngine)
-    , argumentsAccessors(0)
+    , argumentsAccessors(nullptr)
     , nArgumentsAccessors(0)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
-    , regExpCache(0)
-    , m_multiplyWrappedQObjects(0)
+    , regExpCache(nullptr)
+    , m_multiplyWrappedQObjects(nullptr)
 #if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
     , m_canAllocateExecutableMemory(OSAllocator::canAllocateExecutableMemory())
 #endif
@@ -321,7 +321,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     internalClasses[EngineBase::Class_RegExpExecArray] = ic->addMember(id_input(), Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
-    ic = newInternalClass(ErrorObject::staticVTable(), 0);
+    ic = newInternalClass(ErrorObject::staticVTable(), nullptr);
     ic = ic->addMember((str = newIdentifier(QStringLiteral("stack"))), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorObject::Index_Stack);
     ic = ic->addMember((str = newIdentifier(QStringLiteral("fileName"))), Attr_Data|Attr_NotEnumerable, &index);
@@ -406,8 +406,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[DataView_Ctor] = memoryManager->allocObject<DataViewCtor>(global);
     jsObjects[DataViewProto] = memoryManager->allocObject<DataViewPrototype>();
     static_cast<DataViewPrototype *>(dataViewPrototype())->init(this, dataViewCtor());
-    jsObjects[ValueTypeProto] = (Heap::Base *) 0;
-    jsObjects[SignalHandlerProto] = (Heap::Base *) 0;
+    jsObjects[ValueTypeProto] = (Heap::Base *) nullptr;
+    jsObjects[SignalHandlerProto] = (Heap::Base *) nullptr;
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
         static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocObject<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
@@ -490,7 +490,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 ExecutionEngine::~ExecutionEngine()
 {
     delete m_multiplyWrappedQObjects;
-    m_multiplyWrappedQObjects = 0;
+    m_multiplyWrappedQObjects = nullptr;
     delete identifierTable;
     delete memoryManager;
 
@@ -541,7 +541,7 @@ InternalClass *ExecutionEngine::newClass(InternalClass *other)
 
 InternalClass *ExecutionEngine::newInternalClass(const VTable *vtable, Object *prototype)
 {
-    return internalClasses[EngineBase::Class_Empty]->changeVTable(vtable)->changePrototype(prototype ? prototype->d() : 0);
+    return internalClasses[EngineBase::Class_Empty]->changeVTable(vtable)->changePrototype(prototype ? prototype->d() : nullptr);
 }
 
 Heap::Object *ExecutionEngine::newObject()
@@ -743,18 +743,18 @@ Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
 Heap::QmlContext *ExecutionEngine::qmlContext() const
 {
     if (!currentStackFrame)
-        return 0;
+        return nullptr;
     Heap::ExecutionContext *ctx = currentContext()->d();
 
     if (ctx->type != Heap::ExecutionContext::Type_QmlContext && !ctx->outer)
-        return 0;
+        return nullptr;
 
     while (ctx->outer && ctx->outer->type != Heap::ExecutionContext::Type_GlobalContext)
         ctx = ctx->outer;
 
     Q_ASSERT(ctx);
     if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
-        return 0;
+        return nullptr;
 
     return static_cast<Heap::QmlContext *>(ctx);
 }
@@ -763,7 +763,7 @@ QObject *ExecutionEngine::qmlScopeObject() const
 {
     Heap::QmlContext *ctx = qmlContext();
     if (!ctx)
-        return 0;
+        return nullptr;
 
     return ctx->qml()->scopeObject;
 }
@@ -793,7 +793,7 @@ QQmlContextData *ExecutionEngine::callingQmlContext() const
 {
     Heap::QmlContext *ctx = qmlContext();
     if (!ctx)
-        return 0;
+        return nullptr;
 
     return ctx->qml()->context->contextData();
 }
@@ -1101,7 +1101,7 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
 typedef QSet<QV4::Heap::Object *> V4ObjectSet;
 static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int typeHint, bool createJSValueForObjects, V4ObjectSet *visitedObjects);
 static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::Value &value);
-static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V4ObjectSet *visitedObjects = 0);
+static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V4ObjectSet *visitedObjects = nullptr);
 static bool convertToNativeQObject(QV4::ExecutionEngine *e, const QV4::Value &value,
                             const QByteArray &targetType,
                             void **result);
@@ -1115,7 +1115,7 @@ static QV4::ReturnedValue variantToJS(QV4::ExecutionEngine *v4, const QVariant &
 
 QVariant ExecutionEngine::toVariant(const Value &value, int typeHint, bool createJSValueForObjects)
 {
-    return ::toVariant(this, value, typeHint, createJSValueForObjects, 0);
+    return ::toVariant(this, value, typeHint, createJSValueForObjects, nullptr);
 }
 
 
@@ -1492,7 +1492,7 @@ static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVarian
 // Returns the value if conversion succeeded, an empty handle otherwise.
 QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
 {
-    Q_ASSERT(data != 0);
+    Q_ASSERT(data != nullptr);
 
     // check if it's one of the types we know
     switch (QMetaType::Type(type)) {
@@ -1765,7 +1765,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
                     QByteArray className = name.left(name.size()-1);
                     QV4::ScopedObject p(scope, proto.getPointer());
                     if (QObject *qobject = qtObjectFromJS(this, p))
-                        canCast = qobject->qt_metacast(className) != 0;
+                        canCast = qobject->qt_metacast(className) != nullptr;
                 }
                 if (canCast) {
                     QByteArray varTypeName = QMetaType::typeName(var.userType());
@@ -1779,7 +1779,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
             }
         }
     } else if (value->isNull() && name.endsWith('*')) {
-        *reinterpret_cast<void* *>(data) = 0;
+        *reinterpret_cast<void* *>(data) = nullptr;
         return true;
     } else if (type == qMetaTypeId<QJSValue>()) {
         *reinterpret_cast<QJSValue*>(data) = QJSValue(this, value->asReturnedValue());
@@ -1807,7 +1807,7 @@ static bool convertToNativeQObject(QV4::ExecutionEngine *e, const QV4::Value &va
 static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::Value &value)
 {
     if (!value.isObject())
-        return 0;
+        return nullptr;
 
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::VariantObject> v(scope, value);
@@ -1820,7 +1820,7 @@ static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::Value &v
     }
     QV4::Scoped<QV4::QObjectWrapper> wrapper(scope, value);
     if (!wrapper)
-        return 0;
+        return nullptr;
     return wrapper->object();
 }
 

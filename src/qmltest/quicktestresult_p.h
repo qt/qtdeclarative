@@ -77,7 +77,7 @@ class Q_QUICK_TEST_EXPORT QuickTestResult : public QObject
     Q_PROPERTY(int skipCount READ skipCount)
     Q_PROPERTY(QStringList functionsToRun READ functionsToRun)
 public:
-    QuickTestResult(QObject *parent = 0);
+    QuickTestResult(QObject *parent = nullptr);
     ~QuickTestResult();
 
     // Values must match QBenchmarkIterationController::RunMode.

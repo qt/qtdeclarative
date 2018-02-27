@@ -463,7 +463,7 @@ public:
     StackTrace exceptionStackTrace;
 
     ReturnedValue throwError(const Value &value);
-    ReturnedValue catchException(StackTrace *trace = 0);
+    ReturnedValue catchException(StackTrace *trace = nullptr);
 
     ReturnedValue throwError(const QString &message);
     ReturnedValue throwSyntaxError(const QString &message);

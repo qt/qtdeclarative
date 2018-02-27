@@ -88,7 +88,7 @@ class QQmlDebugServerImpl;
 class QQmlDebugServerThread : public QThread
 {
 public:
-    QQmlDebugServerThread() : m_server(0), m_portFrom(-1), m_portTo(-1) {}
+    QQmlDebugServerThread() : m_server(nullptr), m_portFrom(-1), m_portTo(-1) {}
 
     void setServer(QQmlDebugServerImpl *server)
     {
@@ -228,7 +228,7 @@ void QQmlDebugServerImpl::cleanup()
 
 void QQmlDebugServerThread::run()
 {
-    Q_ASSERT_X(m_server != 0, Q_FUNC_INFO, "There should always be a debug server available here.");
+    Q_ASSERT_X(m_server != nullptr, Q_FUNC_INFO, "There should always be a debug server available here.");
     QQmlDebugServerConnection *connection = loadQQmlDebugServerConnection(m_pluginName);
     if (connection) {
         {
@@ -274,7 +274,7 @@ static void cleanupOnShutdown()
 }
 
 QQmlDebugServerImpl::QQmlDebugServerImpl() :
-    m_connection(0),
+    m_connection(nullptr),
     m_gotHello(false),
     m_blockingMode(false),
     m_clientSupportsMultiPackets(false)
@@ -570,7 +570,7 @@ void QQmlDebugServerImpl::removeThread()
     QThread *parentThread = m_thread.thread();
 
     delete m_connection;
-    m_connection = 0;
+    m_connection = nullptr;
 
     // Move it back to the parent thread so that we can potentially restart it on a new thread.
     moveToThread(parentThread);
@@ -755,13 +755,13 @@ void QQmlDebugServerImpl::invalidPacket()
     m_connection->disconnect();
     // protocol might still be processing packages at this point
     m_protocol->deleteLater();
-    m_protocol = 0;
+    m_protocol = nullptr;
 }
 
 QQmlDebugConnector *QQmlDebugServerFactory::create(const QString &key)
 {
     // Cannot parent it to this because it gets moved to another thread
-    return (key == QLatin1String("QQmlDebugServer") ? new QQmlDebugServerImpl : 0);
+    return (key == QLatin1String("QQmlDebugServer") ? new QQmlDebugServerImpl : nullptr);
 }
 
 QT_END_NAMESPACE

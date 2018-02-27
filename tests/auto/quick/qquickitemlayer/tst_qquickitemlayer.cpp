@@ -89,17 +89,12 @@ private slots:
 private:
     void mirroringCheck(int mirroring, int x, bool shouldMirror, const QImage &fb);
 
-    bool m_isMesaSoftwareRasterizer;
-    int m_mesaVersion;
-    bool m_isOpenGLRenderer;
+    bool m_isMesaSoftwareRasterizer = false;
+    int m_mesaVersion = 0;
+    bool m_isOpenGLRenderer = true;
 };
 
-tst_QQuickItemLayer::tst_QQuickItemLayer()
-    : m_isMesaSoftwareRasterizer(false)
-    , m_mesaVersion(0)
-    , m_isOpenGLRenderer(true)
-{
-}
+tst_QQuickItemLayer::tst_QQuickItemLayer() { }
 
 void tst_QQuickItemLayer::initTestCase()
 {
@@ -139,7 +134,7 @@ void tst_QQuickItemLayer::initTestCase()
 #endif
     QQuickView view;
     view.showNormal();
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
     if (view.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
         m_isOpenGLRenderer = false;
 }
@@ -307,7 +302,7 @@ void tst_QQuickItemLayer::layerVisibility()
 
     view.show();
 
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QImage fb = view.grabWindow();
     uint pixel = fb.pixel(0, 0);
@@ -513,7 +508,7 @@ void tst_QQuickItemLayer::textureMirroring()
 
     view.show();
 
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QImage fb = view.grabWindow();
 

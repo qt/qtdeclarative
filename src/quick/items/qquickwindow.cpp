@@ -485,25 +485,25 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size)
 }
 
 QQuickWindowPrivate::QQuickWindowPrivate()
-    : contentItem(0)
-    , activeFocusItem(0)
+    : contentItem(nullptr)
+    , activeFocusItem(nullptr)
 #if QT_CONFIG(cursor)
-    , cursorItem(0)
+    , cursorItem(nullptr)
 #endif
 #if QT_CONFIG(draganddrop)
-    , dragGrabber(0)
+    , dragGrabber(nullptr)
 #endif
     , touchMouseId(-1)
     , touchMouseDevice(nullptr)
     , touchMousePressTimestamp(0)
-    , dirtyItemList(0)
+    , dirtyItemList(nullptr)
     , devicePixelRatio(0)
-    , context(0)
-    , renderer(0)
-    , windowManager(0)
-    , renderControl(0)
+    , context(nullptr)
+    , renderer(nullptr)
+    , windowManager(nullptr)
+    , renderControl(nullptr)
     , pointerEventRecursionGuard(0)
-    , customRenderStage(0)
+    , customRenderStage(nullptr)
     , clearColor(Qt::white)
     , clearBeforeRendering(true)
     , persistentGLContext(true)
@@ -513,10 +513,10 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , allowChildEventFiltering(true)
     , allowDoubleClick(true)
     , lastFocusReason(Qt::OtherFocusReason)
-    , renderTarget(0)
+    , renderTarget(nullptr)
     , renderTargetId(0)
-    , vaoHelper(0)
-    , incubationController(0)
+    , vaoHelper(nullptr)
+    , incubationController(nullptr)
 {
 #if QT_CONFIG(draganddrop)
     dragGrabber = new QQuickDragGrabber;
@@ -602,7 +602,7 @@ void QQuickWindow::handleApplicationStateChanged(Qt::ApplicationState state)
 
 QQmlListProperty<QObject> QQuickWindowPrivate::data()
 {
-    return QQmlListProperty<QObject>(q_func(), 0, QQuickWindowPrivate::data_append,
+    return QQmlListProperty<QObject>(q_func(), nullptr, QQuickWindowPrivate::data_append,
                                              QQuickWindowPrivate::data_count,
                                              QQuickWindowPrivate::data_at,
                                              QQuickWindowPrivate::data_clear);
@@ -889,12 +889,12 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
     qCDebug(DBG_FOCUS) << "    item:" << (QObject *)item;
     qCDebug(DBG_FOCUS) << "    activeFocusItem:" << (QObject *)activeFocusItem;
 
-    QQuickItemPrivate *scopePrivate = scope ? QQuickItemPrivate::get(scope) : 0;
+    QQuickItemPrivate *scopePrivate = scope ? QQuickItemPrivate::get(scope) : nullptr;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
-    QQuickItem *oldActiveFocusItem = 0;
+    QQuickItem *oldActiveFocusItem = nullptr;
     QQuickItem *currentActiveFocusItem = activeFocusItem;
-    QQuickItem *newActiveFocusItem = 0;
+    QQuickItem *newActiveFocusItem = nullptr;
     bool sendFocusIn = false;
 
     lastFocusReason = reason;
@@ -920,7 +920,7 @@ void QQuickWindowPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item, Q
             QGuiApplication::inputMethod()->commit();
 #endif
 
-            activeFocusItem = 0;
+            activeFocusItem = nullptr;
 
             QQuickItem *afi = oldActiveFocusItem;
             while (afi && afi != scope) {
@@ -1000,7 +1000,7 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
     qCDebug(DBG_FOCUS) << "    item:" << (QObject *)item;
     qCDebug(DBG_FOCUS) << "    activeFocusItem:" << (QObject *)activeFocusItem;
 
-    QQuickItemPrivate *scopePrivate = 0;
+    QQuickItemPrivate *scopePrivate = nullptr;
     if (scope) {
         scopePrivate = QQuickItemPrivate::get(scope);
         if ( !scopePrivate->subFocusItem )
@@ -1008,8 +1008,8 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
     }
 
     QQuickItem *currentActiveFocusItem = activeFocusItem;
-    QQuickItem *oldActiveFocusItem = 0;
-    QQuickItem *newActiveFocusItem = 0;
+    QQuickItem *oldActiveFocusItem = nullptr;
+    QQuickItem *newActiveFocusItem = nullptr;
 
     lastFocusReason = reason;
 
@@ -1026,7 +1026,7 @@ void QQuickWindowPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item,
         QGuiApplication::inputMethod()->commit();
 #endif
 
-        activeFocusItem = 0;
+        activeFocusItem = nullptr;
 
         if (oldActiveFocusItem) {
             QQuickItem *afi = oldActiveFocusItem;
@@ -1275,7 +1275,7 @@ QQuickWindow::QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent)
     \internal
 */
 QQuickWindow::QQuickWindow(QQuickRenderControl *control)
-    : QWindow(*(new QQuickWindowPrivate), 0)
+    : QWindow(*(new QQuickWindowPrivate), nullptr)
 {
     Q_D(QQuickWindow);
     d->init(this, control);
@@ -1285,7 +1285,7 @@ QQuickWindow::QQuickWindow(QQuickRenderControl *control)
     \internal
 */
 QQuickWindow::QQuickWindow(QQuickWindowPrivate &dd, QQuickRenderControl *control)
-    : QWindow(dd, 0)
+    : QWindow(dd, nullptr)
 {
     Q_D(QQuickWindow);
     d->init(this, control);
@@ -1305,11 +1305,11 @@ QQuickWindow::~QQuickWindow()
         d->windowManager->windowDestroyed(this);
     }
 
-    delete d->incubationController; d->incubationController = 0;
+    delete d->incubationController; d->incubationController = nullptr;
 #if QT_CONFIG(draganddrop)
-    delete d->dragGrabber; d->dragGrabber = 0;
+    delete d->dragGrabber; d->dragGrabber = nullptr;
 #endif
-    delete d->contentItem; d->contentItem = 0;
+    delete d->contentItem; d->contentItem = nullptr;
     qDeleteAll(d->pointerEventInstances);
     d->pointerEventInstances.clear();
 
@@ -2762,7 +2762,7 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         QPointF p = item->mapFromScene(scenePos);
         if (!item->contains(p))
-            return 0;
+            return nullptr;
     }
 
     if (itemPrivate->subtreeCursorEnabled) {
@@ -2781,7 +2781,7 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
         if (item->contains(p))
             return item;
     }
-    return 0;
+    return nullptr;
 }
 #endif
 
@@ -3107,15 +3107,15 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown(QQuickItem *item)
     QQuickItemPrivate *p = QQuickItemPrivate::get(item);
     if (p->itemNodeInstance) {
         delete p->itemNodeInstance;
-        p->itemNodeInstance = 0;
+        p->itemNodeInstance = nullptr;
 
         if (p->extra.isAllocated()) {
-            p->extra->opacityNode = 0;
-            p->extra->clipNode = 0;
-            p->extra->rootNode = 0;
+            p->extra->opacityNode = nullptr;
+            p->extra->clipNode = nullptr;
+            p->extra->rootNode = nullptr;
         }
 
-        p->paintNode = 0;
+        p->paintNode = nullptr;
 
         p->dirty(QQuickItemPrivate::Window);
     }
@@ -3127,7 +3127,7 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown(QQuickItem *item)
         if (index >= 0) {
             const QMetaMethod &method = mo->method(index);
             // Skip functions named invalidateSceneGraph() in QML items.
-            if (strstr(method.enclosingMetaObject()->className(), "_QML_") == 0)
+            if (strstr(method.enclosingMetaObject()->className(), "_QML_") == nullptr)
                 method.invoke(item, Qt::DirectConnection);
         }
     }
@@ -3155,7 +3155,7 @@ void QQuickWindowPrivate::updateDirtyNodes()
     cleanupNodes();
 
     QQuickItem *updateList = dirtyItemList;
-    dirtyItemList = 0;
+    dirtyItemList = nullptr;
     if (updateList) QQuickItemPrivate::get(updateList)->prevDirtyItem = &updateList;
 
     while (updateList) {
@@ -3171,7 +3171,7 @@ void QQuickWindowPrivate::updateDirtyNodes()
 static inline QSGNode *qquickitem_before_paintNode(QQuickItemPrivate *d)
 {
     const QList<QQuickItem *> childItems = d->paintOrderChildItems();
-    QQuickItem *before = 0;
+    QQuickItem *before = nullptr;
     for (int i=0; i<childItems.size(); ++i) {
         QQuickItemPrivate *dd = QQuickItemPrivate::get(childItems.at(i));
         // Perform the same check as the in fetchNextNode below.
@@ -3180,7 +3180,7 @@ static inline QSGNode *qquickitem_before_paintNode(QQuickItemPrivate *d)
         else
             break;
     }
-    return Q_UNLIKELY(before) ? QQuickItemPrivate::get(before)->itemNode() : 0;
+    return Q_UNLIKELY(before) ? QQuickItemPrivate::get(before)->itemNode() : nullptr;
 }
 
 static QSGNode *fetchNextNode(QQuickItemPrivate *itemPriv, int &ii, bool &returnedPaintNode)
@@ -3212,7 +3212,7 @@ static QSGNode *fetchNextNode(QQuickItemPrivate *itemPriv, int &ii, bool &return
         return childPrivate->itemNode();
     }
 
-    return 0;
+    return nullptr;
 }
 
 void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
@@ -3247,10 +3247,10 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
     }
 
     bool clipEffectivelyChanged = (dirty & (QQuickItemPrivate::Clip | QQuickItemPrivate::Window)) &&
-                                  ((item->clip() == false) != (itemPriv->clipNode() == 0));
+                                  ((item->clip() == false) != (itemPriv->clipNode() == nullptr));
     int effectRefCount = itemPriv->extra.isAllocated()?itemPriv->extra->effectRefCount:0;
     bool effectRefEffectivelyChanged = (dirty & (QQuickItemPrivate::EffectReference | QQuickItemPrivate::Window)) &&
-                                  ((effectRefCount == 0) != (itemPriv->rootNode() == 0));
+                                  ((effectRefCount == 0) != (itemPriv->rootNode() == nullptr));
 
     if (clipEffectivelyChanged) {
         QSGNode *parent = itemPriv->opacityNode() ? (QSGNode *) itemPriv->opacityNode() :
@@ -3258,7 +3258,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         QSGNode *child = itemPriv->rootNode();
 
         if (item->clip()) {
-            Q_ASSERT(itemPriv->clipNode() == 0);
+            Q_ASSERT(itemPriv->clipNode() == nullptr);
             QQuickDefaultClipNode *clip = new QQuickDefaultClipNode(item->clipRect());
             itemPriv->extra.value().clipNode = clip;
             clip->update();
@@ -3284,7 +3284,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
             }
 
             delete itemPriv->clipNode();
-            itemPriv->extra->clipNode = 0;
+            itemPriv->extra->clipNode = nullptr;
         }
     }
 
@@ -3299,18 +3299,18 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
             parent = itemPriv->itemNode();
 
         if (itemPriv->extra.isAllocated() && itemPriv->extra->effectRefCount) {
-            Q_ASSERT(itemPriv->rootNode() == 0);
+            Q_ASSERT(itemPriv->rootNode() == nullptr);
             QSGRootNode *root = new QSGRootNode();
             itemPriv->extra->rootNode = root;
             parent->reparentChildNodesTo(root);
             parent->appendChildNode(root);
         } else {
-            Q_ASSERT(itemPriv->rootNode() != 0);
+            Q_ASSERT(itemPriv->rootNode() != nullptr);
             QSGRootNode *root = itemPriv->rootNode();
             parent->removeChildNode(root);
             root->reparentChildNodesTo(parent);
             delete itemPriv->rootNode();
-            itemPriv->extra->rootNode = 0;
+            itemPriv->extra->rootNode = nullptr;
         }
     }
 
@@ -3336,7 +3336,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         int added = 0;
         int removed = 0;
         int replaced = 0;
-        QSGNode *desiredNode = 0;
+        QSGNode *desiredNode = nullptr;
 
         while (currentNode && (desiredNode = fetchNextNode(itemPriv, ii, fetchedPaintNode))) {
             // uh oh... reality and our utopic paradise are diverging!
@@ -3421,11 +3421,11 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
             updatePaintNodeData.transformNode = itemPriv->itemNode();
             itemPriv->paintNode = item->updatePaintNode(itemPriv->paintNode, &updatePaintNodeData);
 
-            Q_ASSERT(itemPriv->paintNode == 0 ||
-                     itemPriv->paintNode->parent() == 0 ||
+            Q_ASSERT(itemPriv->paintNode == nullptr ||
+                     itemPriv->paintNode->parent() == nullptr ||
                      itemPriv->paintNode->parent() == itemPriv->childContainerNode());
 
-            if (itemPriv->paintNode && itemPriv->paintNode->parent() == 0) {
+            if (itemPriv->paintNode && itemPriv->paintNode->parent() == nullptr) {
                 QSGNode *before = qquickitem_before_paintNode(itemPriv);
                 if (before && before->parent()) {
                     Q_ASSERT(before->parent() == itemPriv->childContainerNode());
@@ -3436,7 +3436,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
             }
         } else if (itemPriv->paintNode) {
             delete itemPriv->paintNode;
-            itemPriv->paintNode = 0;
+            itemPriv->paintNode = nullptr;
         }
     }
 
@@ -3488,14 +3488,14 @@ void QQuickWindow::cleanupSceneGraph()
     Q_D(QQuickWindow);
 #if QT_CONFIG(opengl)
     delete d->vaoHelper;
-    d->vaoHelper = 0;
+    d->vaoHelper = nullptr;
 #endif
     if (!d->renderer)
         return;
 
     delete d->renderer->rootNode();
     delete d->renderer;
-    d->renderer = 0;
+    d->renderer = nullptr;
 
     d->runAndClearJobs(&d->beforeSynchronizingJobs);
     d->runAndClearJobs(&d->afterSynchronizingJobs);
@@ -3545,7 +3545,7 @@ QOpenGLContext *QQuickWindow::openglContext() const
 bool QQuickWindow::isSceneGraphInitialized() const
 {
     Q_D(const QQuickWindow);
-    return d->context != 0 && d->context->isValid();
+    return d->context != nullptr && d->context->isValid();
 }
 
 /*!
@@ -3723,7 +3723,7 @@ void QQuickWindow::setRenderTarget(uint fboId, const QSize &size)
     d->renderTargetSize = size;
 
     // Unset any previously set instance...
-    d->renderTarget = 0;
+    d->renderTarget = nullptr;
 }
 
 
@@ -3837,7 +3837,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     Q_D(const QQuickWindow);
 
     if (!d->windowManager)
-        return 0; // TODO: make sure that this is safe
+        return nullptr; // TODO: make sure that this is safe
 
     if (!d->incubationController)
         d->incubationController = new QQuickWindowIncubationController(d->windowManager);
@@ -4081,7 +4081,7 @@ bool QQuickWindow::clearBeforeRendering() const
 
 QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
 {
-    return createTextureFromImage(image, 0);
+    return createTextureFromImage(image, nullptr);
 }
 
 
@@ -4130,7 +4130,7 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
 {
     Q_D(const QQuickWindow);
     if (!isSceneGraphInitialized()) // check both for d->context and d->context->isValid()
-         return 0;
+         return nullptr;
     uint flags = 0;
     if (options & TextureCanUseAtlas)     flags |= QSGRenderContext::CreateTexture_Atlas;
     if (options & TextureHasMipmaps)      flags |= QSGRenderContext::CreateTexture_Mipmap;
@@ -4176,7 +4176,7 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
     Q_UNUSED(size)
     Q_UNUSED(options)
 #endif
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -4290,7 +4290,7 @@ void QQuickWindow::resetOpenGLState()
         int maxAttribs;
         gl->glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
         for (int i=0; i<maxAttribs; ++i) {
-            gl->glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, 0);
+            gl->glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
             gl->glDisableVertexAttribArray(i);
         }
     }

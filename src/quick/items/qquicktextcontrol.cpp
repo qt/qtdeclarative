@@ -95,7 +95,7 @@ static QTextLine currentTextLine(const QTextCursor &cursor)
 }
 
 QQuickTextControlPrivate::QQuickTextControlPrivate()
-    : doc(0),
+    : doc(nullptr),
 #if QT_CONFIG(im)
       preeditCursor(0),
 #endif

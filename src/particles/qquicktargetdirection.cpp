@@ -91,7 +91,7 @@ QQuickTargetDirection::QQuickTargetDirection(QObject *parent) :
   , m_proportionalMagnitude(false)
   , m_magnitude(0)
   , m_magnitudeVariation(0)
-  , m_targetItem(0)
+  , m_targetItem(nullptr)
 {
 }
 

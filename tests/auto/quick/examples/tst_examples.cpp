@@ -36,7 +36,7 @@
 #include <QQmlEngine>
 #include <QQmlError>
 
-static QtMessageHandler testlibMsgHandler = 0;
+static QtMessageHandler testlibMsgHandler = nullptr;
 void msgHandlerFilter(QtMsgType type, const QMessageLogContext &ctxt, const QString &msg)
 {
     if (type == QtCriticalMsg || type == QtFatalMsg)

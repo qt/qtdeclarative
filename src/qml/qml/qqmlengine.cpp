@@ -676,19 +676,19 @@ the same object as is returned from the Qt.include() call.
 // Qt.include() is implemented in qv4include.cpp
 
 QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
-: propertyCapture(0), rootContext(0),
+: propertyCapture(nullptr), rootContext(nullptr),
 #if QT_CONFIG(qml_debug)
-  profiler(0),
+  profiler(nullptr),
 #endif
   outputWarningsToMsgLog(true),
-  cleanup(0), erroredBindings(0), inProgressCreations(0),
-  workerScriptEngine(0),
-  activeObjectCreator(0),
+  cleanup(nullptr), erroredBindings(nullptr), inProgressCreations(0),
+  workerScriptEngine(nullptr),
+  activeObjectCreator(nullptr),
 #if QT_CONFIG(qml_network)
-  networkAccessManager(0), networkAccessManagerFactory(0),
+  networkAccessManager(nullptr), networkAccessManagerFactory(nullptr),
 #endif
-  urlInterceptor(0), scarceResourcesRefCount(0), importDatabase(e), typeLoader(e),
-  uniqueId(1), incubatorCount(0), incubationController(0)
+  urlInterceptor(nullptr), scarceResourcesRefCount(0), importDatabase(e), typeLoader(e),
+  uniqueId(1), incubatorCount(0), incubationController(nullptr)
 {
 }
 
@@ -701,15 +701,15 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
         QQmlCleanup *c = cleanup;
         cleanup = c->next;
         if (cleanup) cleanup->prev = &cleanup;
-        c->next = 0;
-        c->prev = 0;
+        c->next = nullptr;
+        c->prev = nullptr;
         c->clear();
     }
 
     doDeleteInEngineThread();
 
-    if (incubationController) incubationController->d = 0;
-    incubationController = 0;
+    if (incubationController) incubationController->d = nullptr;
+    incubationController = nullptr;
 
     QQmlMetaType::freeUnusedTypesAndCaches();
 
@@ -738,8 +738,8 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
             d->ownContext->invalidate();
             if (d->ownContext->contextObject == o)
                 d->ownContext->contextObject = nullptr;
-            d->ownContext = 0;
-            d->context = 0;
+            d->ownContext = nullptr;
+            d->context = nullptr;
         }
 
         // Mark this object as in the process of deletion to
@@ -757,10 +757,10 @@ QQmlData::QQmlData()
     : ownedByQml1(false), ownMemory(true), indestructible(true), explicitIndestructibleSet(false),
       hasTaintedV4Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
       hasInterceptorMetaObject(false), hasVMEMetaObject(false), parentFrozen(false),
-      bindingBitsArraySize(InlineBindingArraySize), notifyList(0),
-      bindings(0), signalHandlers(0), nextContextObject(0), prevContextObject(0),
+      bindingBitsArraySize(InlineBindingArraySize), notifyList(nullptr),
+      bindings(nullptr), signalHandlers(nullptr), nextContextObject(nullptr), prevContextObject(nullptr),
       lineNumber(0), columnNumber(0), jsEngineId(0),
-      propertyCache(0), guards(0), extendedData(0)
+      propertyCache(nullptr), guards(nullptr), extendedData(nullptr)
 {
     memset(bindingBitsValue, 0, sizeof(bindingBitsValue));
     init();
@@ -833,7 +833,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
         void **args = (void **) malloc((parameterTypes.count() + 1) *sizeof(void *));
 
         types[0] = 0; // return type
-        args[0] = 0; // return value
+        args[0] = nullptr; // return value
 
         for (int ii = 0; ii < parameterTypes.count(); ++ii) {
             const QByteArray &typeName = parameterTypes.at(ii);
@@ -854,7 +854,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
             args[ii + 1] = QMetaType::create(types[ii + 1], a[ii + 1]);
         }
 
-        QMetaCallEvent *ev = new QMetaCallEvent(m.methodIndex(), 0, 0, object, index,
+        QMetaCallEvent *ev = new QMetaCallEvent(m.methodIndex(), 0, nullptr, object, index,
                                                 parameterTypes.count() + 1, types, args);
 
         QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;
@@ -917,8 +917,8 @@ void QQmlData::setQueuedForDeletion(QObject *object)
                 ddata->context->emitDestruction();
                 if (ddata->ownContext->contextObject == object)
                     ddata->ownContext->contextObject = nullptr;
-                ddata->ownContext = 0;
-                ddata->context = 0;
+                ddata->ownContext = nullptr;
+                ddata->context = nullptr;
             }
             ddata->isQueuedForDeletion = true;
         }
@@ -1071,7 +1071,7 @@ QQmlEngine::~QQmlEngine()
         currType.singletonInstanceInfo()->destroy(this);
 
     delete d->rootContext;
-    d->rootContext = 0;
+    d->rootContext = nullptr;
 }
 
 /*! \fn void QQmlEngine::quit()
@@ -1184,7 +1184,7 @@ void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
     if (activeObjectCreator) {
         activeObjectCreator->finalizeCallbacks()->append(qMakePair(QPointer<QObject>(obj), index));
     } else {
-        void *args[] = { 0 };
+        void *args[] = { nullptr };
         QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, index, args);
     }
 }
@@ -1401,13 +1401,13 @@ void QQmlEngine::retranslate()
 QQmlContext *QQmlEngine::contextForObject(const QObject *object)
 {
     if(!object)
-        return 0;
+        return nullptr;
 
     QQmlData *data = QQmlData::get(object);
     if (data && data->outerContext)
         return data->outerContext->asQQmlContext();
 
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -1555,7 +1555,7 @@ QQmlEngine *qmlEngine(const QObject *obj)
 {
     QQmlData *data = QQmlData::get(obj, false);
     if (!data || !data->context)
-        return 0;
+        return nullptr;
     return data->context->engine;
 }
 
@@ -1563,7 +1563,7 @@ QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool cre
 {
     QQmlData *data = QQmlData::get(object, create);
     if (!data)
-        return 0; // Attached properties are only on objects created by QML, unless explicitly requested (create==true)
+        return nullptr; // Attached properties are only on objects created by QML, unless explicitly requested (create==true)
 
     QObject *rv = data->hasExtendedData()?data->attachedProperties()->value(id):0;
     if (rv || !create)
@@ -1572,7 +1572,7 @@ QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool cre
     QQmlEnginePrivate *engine = QQmlEnginePrivate::get(data->context);
     QQmlAttachedPropertiesFunc pf = QQmlMetaType::attachedPropertiesFuncById(engine, id);
     if (!pf)
-        return 0;
+        return nullptr;
 
     rv = pf(const_cast<QObject *>(object));
 
@@ -1586,12 +1586,12 @@ QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
                                      const QMetaObject *attachedMetaObject, bool create)
 {
     if (*idCache == -1) {
-        QQmlEngine *engine = object ? qmlEngine(object) : 0;
-        *idCache = QQmlMetaType::attachedPropertiesFuncId(engine ? QQmlEnginePrivate::get(engine) : 0, attachedMetaObject);
+        QQmlEngine *engine = object ? qmlEngine(object) : nullptr;
+        *idCache = QQmlMetaType::attachedPropertiesFuncId(engine ? QQmlEnginePrivate::get(engine) : nullptr, attachedMetaObject);
     }
 
     if (*idCache == -1 || !object)
-        return 0;
+        return nullptr;
 
     return qmlAttachedPropertiesObjectById(*idCache, object, create);
 }
@@ -1651,7 +1651,7 @@ void QQmlData::NotifyList::layout(QQmlNotifierEndpoint *endpoint)
 {
     // Add a temporary sentinel at beginning of list. This will be overwritten
     // when the end point is inserted into the notifies further down.
-    endpoint->prev = 0;
+    endpoint->prev = nullptr;
 
     while (endpoint->next) {
         Q_ASSERT(reinterpret_cast<QQmlNotifierEndpoint *>(endpoint->next->prev) == endpoint);
@@ -1697,7 +1697,7 @@ void QQmlData::NotifyList::layout()
     }
 
     maximumTodoIndex = 0;
-    todo = 0;
+    todo = nullptr;
 }
 
 void QQmlData::deferData(int objectIndex, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlContextData *context)
@@ -1741,8 +1741,8 @@ void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)
         notifyList->connectionMask = 0;
         notifyList->maximumTodoIndex = 0;
         notifyList->notifiesSize = 0;
-        notifyList->todo = 0;
-        notifyList->notifies = 0;
+        notifyList->todo = nullptr;
+        notifyList->notifies = nullptr;
     }
 
     Q_ASSERT(!endpoint->isConnected());
@@ -1778,7 +1778,7 @@ void QQmlData::disconnectNotifiers()
         }
         free(notifyList->notifies);
         free(notifyList);
-        notifyList = 0;
+        notifyList = nullptr;
     }
 }
 
@@ -1840,8 +1840,8 @@ void QQmlData::destroyed(QObject *object)
         }
 
         QQmlBoundSignal *next = signalHandler->m_nextSignal;
-        signalHandler->m_prevSignal = 0;
-        signalHandler->m_nextSignal = 0;
+        signalHandler->m_prevSignal = nullptr;
+        signalHandler->m_nextSignal = nullptr;
         delete signalHandler;
         signalHandler = next;
     }
@@ -1852,11 +1852,11 @@ void QQmlData::destroyed(QObject *object)
     if (propertyCache)
         propertyCache->release();
 
-    ownContext = 0;
+    ownContext = nullptr;
 
     while (guards) {
         QQmlGuard<QObject> *guard = static_cast<QQmlGuard<QObject> *>(guards);
-        *guard = (QObject *)0;
+        *guard = (QObject *)nullptr;
         guard->objectDestroyed(object);
     }
 
@@ -1994,23 +1994,23 @@ static void dumpwarning(const QQmlError &error)
     switch (error.messageType()) {
     case QtDebugMsg:
         QMessageLogger(error.url().toString().toLatin1().constData(),
-                       error.line(), 0).debug().nospace()
+                       error.line(), nullptr).debug().nospace()
                 << qPrintable(error.toString());
         break;
     case QtInfoMsg:
         QMessageLogger(error.url().toString().toLatin1().constData(),
-                       error.line(), 0).info().nospace()
+                       error.line(), nullptr).info().nospace()
                 << qPrintable(error.toString());
         break;
     case QtWarningMsg:
     case QtFatalMsg: // fatal does not support streaming, and furthermore, is actually fatal. Probably not desirable for QML.
         QMessageLogger(error.url().toString().toLatin1().constData(),
-                       error.line(), 0).warning().nospace()
+                       error.line(), nullptr).warning().nospace()
                 << qPrintable(error.toString());
         break;
     case QtCriticalMsg:
         QMessageLogger(error.url().toString().toLatin1().constData(),
-                       error.line(), 0).critical().nospace()
+                       error.line(), nullptr).critical().nospace()
                 << qPrintable(error.toString());
         break;
     }
@@ -2347,7 +2347,7 @@ QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
     } else {
         QQmlType type = QQmlMetaType::qmlType(t);
         locker.unlock();
-        return type.isValid() ? cache(type.metaObject()) : 0;
+        return type.isValid() ? cache(type.metaObject()) : nullptr;
     }
 }
 
@@ -2362,9 +2362,9 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, int minorVe
         locker.unlock();
 
         if (minorVersion >= 0)
-            return type.isValid() ? cache(type, minorVersion) : 0;
+            return type.isValid() ? cache(type, minorVersion) : nullptr;
         else
-            return type.isValid() ? cache(type.baseMetaObject()) : 0;
+            return type.isValid() ? cache(type.baseMetaObject()) : nullptr;
     }
 }
 

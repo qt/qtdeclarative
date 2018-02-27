@@ -172,7 +172,7 @@ Value &PersistentValueStorage::Iterator::operator *()
 
 PersistentValueStorage::PersistentValueStorage(ExecutionEngine *engine)
     : engine(engine),
-      firstPage(0)
+      firstPage(nullptr)
 {
 }
 
@@ -185,9 +185,9 @@ PersistentValueStorage::~PersistentValueStorage()
                 p->values[i] = Encode::undefined();
         }
         Page *n = p->header.next;
-        p->header.engine = 0;
-        p->header.prev = 0;
-        p->header.next = 0;
+        p->header.engine = nullptr;
+        p->header.prev = nullptr;
+        p->header.next = nullptr;
         Q_ASSERT(p->header.refCount);
         p = n;
     }
@@ -260,7 +260,7 @@ void PersistentValueStorage::freePage(void *page)
 
 
 PersistentValue::PersistentValue(const PersistentValue &other)
-    : val(0)
+    : val(nullptr)
 {
     if (other.val) {
         val = other.engine()->memoryManager->m_persistentValues->allocate();
@@ -281,7 +281,7 @@ PersistentValue::PersistentValue(ExecutionEngine *engine, ReturnedValue value)
 }
 
 PersistentValue::PersistentValue(ExecutionEngine *engine, Object *object)
-    : val(0)
+    : val(nullptr)
 {
     if (!object)
         return;
@@ -358,7 +358,7 @@ void PersistentValue::set(ExecutionEngine *engine, Heap::Base *obj)
 }
 
 WeakValue::WeakValue(const WeakValue &other)
-    : val(0)
+    : val(nullptr)
 {
     if (other.val) {
         allocVal(other.engine());
@@ -418,6 +418,6 @@ void WeakValue::free()
         PersistentValueStorage::free(val);
     }
 
-    val = 0;
+    val = nullptr;
 }
 

@@ -66,7 +66,7 @@ class LineShader : public QSGSimpleMaterialShader<LineMaterial>
     QSG_DECLARE_SIMPLE_SHADER(LineShader, LineMaterial)
 
 public:
-    LineShader() : id_color(-1), id_spread(-1), id_size(-1) {
+    LineShader() {
         setShaderSourceFile(QOpenGLShader::Vertex, ":/scenegraph/graph/shaders/line.vsh");
         setShaderSourceFile(QOpenGLShader::Fragment, ":/scenegraph/graph/shaders/line.fsh");
     }
@@ -86,9 +86,9 @@ public:
     }
 
 private:
-    int id_color;
-    int id_spread;
-    int id_size;
+    int id_color = -1;
+    int id_spread = -1;
+    int id_size = -1;
 };
 
 struct LineVertex {

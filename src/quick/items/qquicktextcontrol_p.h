@@ -77,7 +77,7 @@ class Q_AUTOTEST_EXPORT QQuickTextControl : public QInputControl
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickTextControl)
 public:
-    explicit QQuickTextControl(QTextDocument *doc, QObject *parent = 0);
+    explicit QQuickTextControl(QTextDocument *doc, QObject *parent = nullptr);
     virtual ~QQuickTextControl();
 
     QTextDocument *document() const;

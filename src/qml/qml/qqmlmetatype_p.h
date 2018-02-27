@@ -109,7 +109,7 @@ public:
     static QMetaMethod defaultMethod(QObject *);
 
     static bool isQObject(int);
-    static QObject *toQObject(const QVariant &, bool *ok = 0);
+    static QObject *toQObject(const QVariant &, bool *ok = nullptr);
 
     static int listType(int);
     static int attachedPropertiesFuncId(QQmlEnginePrivate *engine, const QMetaObject *);
@@ -163,7 +163,7 @@ public:
         return d == other.d;
     }
 
-    bool isValid() const { return d != 0; }
+    bool isValid() const { return d != nullptr; }
     const QQmlTypePrivate *key() const { return d; }
 
     QByteArray typeName() const;
@@ -218,7 +218,7 @@ public:
     {
     public:
         SingletonInstanceInfo()
-            : scriptCallback(0), qobjectCallback(0), instanceMetaObject(0) {}
+            : scriptCallback(nullptr), qobjectCallback(nullptr), instanceMetaObject(nullptr) {}
 
         QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *);
         QObject *(*qobjectCallback)(QQmlEngine *, QJSEngine *);

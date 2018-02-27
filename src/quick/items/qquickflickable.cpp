@@ -172,13 +172,13 @@ class QQuickFlickableReboundTransition : public QQuickTransitionManager
 {
 public:
     QQuickFlickableReboundTransition(QQuickFlickable *f, const QString &name)
-        : flickable(f), axisData(0), propName(name), active(false)
+        : flickable(f), axisData(nullptr), propName(name), active(false)
     {
     }
 
     ~QQuickFlickableReboundTransition()
     {
-        flickable = 0;
+        flickable = nullptr;
     }
 
     bool startTransition(QQuickFlickablePrivate::AxisData *data, qreal toPos) {
@@ -252,12 +252,12 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , lastPressTime(0)
     , deceleration(QML_FLICK_DEFAULTDECELERATION)
     , maxVelocity(QML_FLICK_DEFAULTMAXVELOCITY), reportedVelocitySmoothing(100)
-    , delayedPressEvent(0), pressDelay(0), fixupDuration(400)
-    , flickBoost(1.0), fixupMode(Normal), vTime(0), visibleArea(0)
+    , delayedPressEvent(nullptr), pressDelay(0), fixupDuration(400)
+    , flickBoost(1.0), fixupMode(Normal), vTime(0), visibleArea(nullptr)
     , flickableDirection(QQuickFlickable::AutoFlickDirection)
     , boundsBehavior(QQuickFlickable::DragAndOvershootBounds)
     , boundsMovement(QQuickFlickable::FollowBoundsBehavior)
-    , rebound(0)
+    , rebound(nullptr)
 {
 }
 
@@ -317,7 +317,7 @@ void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometr
 {
     Q_Q(QQuickFlickable);
     if (item == contentItem) {
-        Qt::Orientations orient = 0;
+        Qt::Orientations orient = nullptr;
         if (change.xChange())
             orient |= Qt::Horizontal;
         if (change.yChange())
@@ -1555,7 +1555,7 @@ void QQuickFlickablePrivate::clearDelayedPress()
     if (delayedPressEvent) {
         delayedPressTimer.stop();
         delete delayedPressEvent;
-        delayedPressEvent = 0;
+        delayedPressEvent = nullptr;
     }
 }
 
@@ -1565,7 +1565,7 @@ void QQuickFlickablePrivate::replayDelayedPress()
     if (delayedPressEvent) {
         // Losing the grab will clear the delayed press event; take control of it here
         QScopedPointer<QMouseEvent> mouseEvent(delayedPressEvent);
-        delayedPressEvent = 0;
+        delayedPressEvent = nullptr;
         delayedPressTimer.stop();
 
         // If we have the grab, release before delivering the event
@@ -1858,7 +1858,7 @@ int QQuickFlickablePrivate::data_count(QQmlListProperty<QObject> *)
 QObject *QQuickFlickablePrivate::data_at(QQmlListProperty<QObject> *, int)
 {
     // XXX todo
-    return 0;
+    return nullptr;
 }
 
 void QQuickFlickablePrivate::data_clear(QQmlListProperty<QObject> *)

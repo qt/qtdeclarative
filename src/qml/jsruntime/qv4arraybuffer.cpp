@@ -96,7 +96,7 @@ void Heap::ArrayBuffer::init(size_t length)
     Object::init();
     data = QTypedArrayData<char>::allocate(length + 1);
     if (!data) {
-        data = 0;
+        data = nullptr;
         internalClass->engine->throwRangeError(QStringLiteral("ArrayBuffer: out of memory"));
         return;
     }
@@ -152,7 +152,7 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineDefaultProperty(QStringLiteral("isView"), ArrayBufferCtor::method_isView, 1);
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
-    defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, 0);
+    defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, nullptr);
     defineDefaultProperty(QStringLiteral("slice"), method_slice, 2);
     defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
 }

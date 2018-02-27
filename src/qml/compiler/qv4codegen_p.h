@@ -191,10 +191,7 @@ public:
         bool isLValue() const { return !isReadonly; }
 
         Reference(Codegen *cg, Type type = Invalid) : type(type), codegen(cg) {}
-        Reference()
-            : type(Invalid)
-            , codegen(nullptr)
-        {}
+        Reference() {}
         Reference(const Reference &other);
 
         Reference &operator =(const Reference &other);
@@ -367,7 +364,7 @@ public:
         bool stackSlotIsLocalOrArgument = false;
         bool isVolatile = false;
         bool global = false;
-        Codegen *codegen;
+        Codegen *codegen = nullptr;
 
     private:
         void storeAccumulator() const;
@@ -386,16 +383,12 @@ public:
     };
 
     struct ObjectPropertyValue {
-        ObjectPropertyValue()
-            : getter(-1)
-            , setter(-1)
-            , keyAsIndex(UINT_MAX)
-        {}
+        ObjectPropertyValue() {}
 
         Reference rvalue;
-        int getter; // index in _module->functions or -1 if not set
-        int setter;
-        uint keyAsIndex;
+        int getter = -1; // index in _module->functions or -1 if not set
+        int setter = -1;
+        uint keyAsIndex = UINT_MAX;
 
         bool hasGetter() const { return getter >= 0; }
         bool hasSetter() const { return setter >= 0; }
@@ -406,34 +399,26 @@ protected:
     class Result {
         Reference _result;
 
-        const BytecodeGenerator::Label *_iftrue;
-        const BytecodeGenerator::Label *_iffalse;
-        Format _format;
+        const BytecodeGenerator::Label *_iftrue = nullptr;
+        const BytecodeGenerator::Label *_iffalse = nullptr;
+        Format _format = ex;
         Format _requested;
         bool _trueBlockFollowsCondition = false;
 
     public:
         explicit Result(const Reference &lrvalue)
             : _result(lrvalue)
-            , _iftrue(nullptr)
-            , _iffalse(nullptr)
-            , _format(ex)
             , _requested(ex)
-        {
-        }
+        {}
 
         explicit Result(Format requested = ex)
-            : _iftrue(0)
-            , _iffalse(0)
-            , _format(ex)
-            , _requested(requested) {}
+            : _requested(requested) {}
 
         explicit Result(const BytecodeGenerator::Label *iftrue,
                         const BytecodeGenerator::Label *iffalse,
                         bool trueBlockFollowsCondition)
             : _iftrue(iftrue)
             , _iffalse(iffalse)
-            , _format(ex)
             , _requested(cx)
             , _trueBlockFollowsCondition(trueBlockFollowsCondition)
         {
@@ -671,7 +656,7 @@ protected:
     Context *_context;
     AST::LabelledStatement *_labelledStatement;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
-    BytecodeGenerator *bytecodeGenerator = 0;
+    BytecodeGenerator *bytecodeGenerator = nullptr;
     bool _strictMode;
     bool useFastLookups = true;
     bool requiresReturnValue = false;

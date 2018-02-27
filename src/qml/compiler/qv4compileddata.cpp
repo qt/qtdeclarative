@@ -109,7 +109,7 @@ CompilationUnit::~CompilationUnit()
     unlink();
     if (data && !(data->flags & QV4::CompiledData::Unit::StaticData))
         free(const_cast<Unit *>(data));
-    data = 0;
+    data = nullptr;
 }
 
 QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
@@ -201,7 +201,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     if (data->indexOfRootFunction != -1)
         return runtimeFunctions[data->indexOfRootFunction];
     else
-        return 0;
+        return nullptr;
 }
 
 void CompilationUnit::unlink()
@@ -228,16 +228,16 @@ void CompilationUnit::unlink()
     qDeleteAll(resolvedTypes);
     resolvedTypes.clear();
 
-    engine = 0;
-    qmlEngine = 0;
+    engine = nullptr;
+    qmlEngine = nullptr;
     free(runtimeStrings);
-    runtimeStrings = 0;
+    runtimeStrings = nullptr;
     delete [] runtimeLookups;
-    runtimeLookups = 0;
+    runtimeLookups = nullptr;
     delete [] runtimeRegularExpressions;
-    runtimeRegularExpressions = 0;
+    runtimeRegularExpressions = nullptr;
     free(runtimeClasses);
-    runtimeClasses = 0;
+    runtimeClasses = nullptr;
     qDeleteAll(runtimeFunctions);
     runtimeFunctions.clear();
 #if Q_BYTE_ORDER == Q_BIG_ENDIAN
@@ -676,7 +676,7 @@ bool qtTypeInherits(const QMetaObject *mo) {
 
 void ResolvedTypeReference::doDynamicTypeCheck()
 {
-    const QMetaObject *mo = 0;
+    const QMetaObject *mo = nullptr;
     if (typePropertyCache)
         mo = typePropertyCache->firstCppMetaObject();
     else if (type.isValid())

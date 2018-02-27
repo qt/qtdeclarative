@@ -47,7 +47,7 @@ FileInfoThread::FileInfoThread(QObject *parent)
     : QThread(parent),
       abort(false),
 #if QT_CONFIG(filesystemwatcher)
-      watcher(0),
+      watcher(nullptr),
 #endif
       sortFlags(QDir::Name),
       needUpdate(true),

@@ -131,7 +131,7 @@ int QQmlFileNetworkReply::replyFinishedIndex = -1;
 int QQmlFileNetworkReply::replyDownloadProgressIndex = -1;
 
 QQmlFileNetworkReply::QQmlFileNetworkReply(QQmlEngine *e, QQmlFilePrivate *p, const QUrl &url)
-: m_engine(e), m_p(p), m_redirectCount(0), m_reply(0)
+: m_engine(e), m_p(p), m_redirectCount(0), m_reply(nullptr)
 {
     if (finishedIndex == -1) {
         finishedIndex = QMetaMethod::fromSignal(&QQmlFileNetworkReply::finished).methodIndex();
@@ -194,9 +194,9 @@ void QQmlFileNetworkReply::networkFinished()
     }
 
     m_reply->deleteLater();
-    m_reply = 0;
+    m_reply = nullptr;
 
-    m_p->reply = 0;
+    m_p->reply = nullptr;
     emit finished();
     delete this;
 }
@@ -210,7 +210,7 @@ void QQmlFileNetworkReply::networkDownloadProgress(qint64 a, qint64 b)
 QQmlFilePrivate::QQmlFilePrivate()
 : error(None)
 #if QT_CONFIG(qml_network)
-, reply(0)
+, reply(nullptr)
 #endif
 {
 }
@@ -237,7 +237,7 @@ QQmlFile::~QQmlFile()
     delete d->reply;
 #endif
     delete d;
-    d = 0;
+    d = nullptr;
 }
 
 bool QQmlFile::isNull() const

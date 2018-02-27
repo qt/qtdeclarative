@@ -116,7 +116,7 @@ class DocumentImpl;
 class NodeImpl
 {
 public:
-    NodeImpl() : type(Element), document(0), parent(0) {}
+    NodeImpl() : type(Element), document(nullptr), parent(nullptr) {}
     virtual ~NodeImpl() {
         qDeleteAll(children);
         qDeleteAll(attributes);
@@ -157,7 +157,7 @@ public:
 class DocumentImpl : public QQmlRefCount, public NodeImpl
 {
 public:
-    DocumentImpl() : root(0) { type = Document; }
+    DocumentImpl() : root(nullptr) { type = Document; }
     virtual ~DocumentImpl() {
         delete root;
     }
@@ -306,18 +306,18 @@ void Heap::NodePrototype::init()
     Scope scope(internalClass->engine);
     ScopedObject o(scope, this);
 
-    o->defineAccessorProperty(QStringLiteral("nodeName"), QV4::NodePrototype::method_get_nodeName, 0);
-    o->defineAccessorProperty(QStringLiteral("nodeValue"), QV4::NodePrototype::method_get_nodeValue, 0);
-    o->defineAccessorProperty(QStringLiteral("nodeType"), QV4::NodePrototype::method_get_nodeType, 0);
-    o->defineAccessorProperty(QStringLiteral("namespaceUri"), QV4::NodePrototype::method_get_namespaceUri, 0);
+    o->defineAccessorProperty(QStringLiteral("nodeName"), QV4::NodePrototype::method_get_nodeName, nullptr);
+    o->defineAccessorProperty(QStringLiteral("nodeValue"), QV4::NodePrototype::method_get_nodeValue, nullptr);
+    o->defineAccessorProperty(QStringLiteral("nodeType"), QV4::NodePrototype::method_get_nodeType, nullptr);
+    o->defineAccessorProperty(QStringLiteral("namespaceUri"), QV4::NodePrototype::method_get_namespaceUri, nullptr);
 
-    o->defineAccessorProperty(QStringLiteral("parentNode"), QV4::NodePrototype::method_get_parentNode, 0);
-    o->defineAccessorProperty(QStringLiteral("childNodes"), QV4::NodePrototype::method_get_childNodes, 0);
-    o->defineAccessorProperty(QStringLiteral("firstChild"), QV4::NodePrototype::method_get_firstChild, 0);
-    o->defineAccessorProperty(QStringLiteral("lastChild"), QV4::NodePrototype::method_get_lastChild, 0);
-    o->defineAccessorProperty(QStringLiteral("previousSibling"), QV4::NodePrototype::method_get_previousSibling, 0);
-    o->defineAccessorProperty(QStringLiteral("nextSibling"), QV4::NodePrototype::method_get_nextSibling, 0);
-    o->defineAccessorProperty(QStringLiteral("attributes"), QV4::NodePrototype::method_get_attributes, 0);
+    o->defineAccessorProperty(QStringLiteral("parentNode"), QV4::NodePrototype::method_get_parentNode, nullptr);
+    o->defineAccessorProperty(QStringLiteral("childNodes"), QV4::NodePrototype::method_get_childNodes, nullptr);
+    o->defineAccessorProperty(QStringLiteral("firstChild"), QV4::NodePrototype::method_get_firstChild, nullptr);
+    o->defineAccessorProperty(QStringLiteral("lastChild"), QV4::NodePrototype::method_get_lastChild, nullptr);
+    o->defineAccessorProperty(QStringLiteral("previousSibling"), QV4::NodePrototype::method_get_previousSibling, nullptr);
+    o->defineAccessorProperty(QStringLiteral("nextSibling"), QV4::NodePrototype::method_get_nextSibling, nullptr);
+    o->defineAccessorProperty(QStringLiteral("attributes"), QV4::NodePrototype::method_get_attributes, nullptr);
 }
 
 
@@ -644,7 +644,7 @@ ReturnedValue Element::prototype(ExecutionEngine *engine)
         ScopedObject p(scope, engine->newObject());
         ScopedObject pp(scope);
         p->setPrototype((pp = NodePrototype::getProto(engine)));
-        p->defineAccessorProperty(QStringLiteral("tagName"), NodePrototype::method_get_nodeName, 0);
+        p->defineAccessorProperty(QStringLiteral("tagName"), NodePrototype::method_get_nodeName, nullptr);
         d->elementPrototype.set(engine, p);
         engine->v8Engine->freezeObject(p);
     }
@@ -659,9 +659,9 @@ ReturnedValue Attr::prototype(ExecutionEngine *engine)
         ScopedObject p(scope, engine->newObject());
         ScopedObject pp(scope);
         p->setPrototype((pp = NodePrototype::getProto(engine)));
-        p->defineAccessorProperty(QStringLiteral("name"), method_name, 0);
-        p->defineAccessorProperty(QStringLiteral("value"), method_value, 0);
-        p->defineAccessorProperty(QStringLiteral("ownerElement"), method_ownerElement, 0);
+        p->defineAccessorProperty(QStringLiteral("name"), method_name, nullptr);
+        p->defineAccessorProperty(QStringLiteral("value"), method_value, nullptr);
+        p->defineAccessorProperty(QStringLiteral("ownerElement"), method_ownerElement, nullptr);
         d->attrPrototype.set(engine, p);
         engine->v8Engine->freezeObject(p);
     }
@@ -716,8 +716,8 @@ ReturnedValue CharacterData::prototype(ExecutionEngine *v4)
         ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
         p->setPrototype((pp = NodePrototype::getProto(v4)));
-        p->defineAccessorProperty(QStringLiteral("data"), NodePrototype::method_get_nodeValue, 0);
-        p->defineAccessorProperty(QStringLiteral("length"), method_length, 0);
+        p->defineAccessorProperty(QStringLiteral("data"), NodePrototype::method_get_nodeValue, nullptr);
+        p->defineAccessorProperty(QStringLiteral("length"), method_length, nullptr);
         d->characterDataPrototype.set(v4, p);
         v4->v8Engine->freezeObject(p);
     }
@@ -752,8 +752,8 @@ ReturnedValue Text::prototype(ExecutionEngine *v4)
         ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
         p->setPrototype((pp = CharacterData::prototype(v4)));
-        p->defineAccessorProperty(QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, 0);
-        p->defineAccessorProperty(QStringLiteral("wholeText"), method_wholeText, 0);
+        p->defineAccessorProperty(QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, nullptr);
+        p->defineAccessorProperty(QStringLiteral("wholeText"), method_wholeText, nullptr);
         d->textPrototype.set(v4, p);
         v4->v8Engine->freezeObject(p);
     }
@@ -783,10 +783,10 @@ ReturnedValue Document::prototype(ExecutionEngine *v4)
         ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
         p->setPrototype((pp = NodePrototype::getProto(v4)));
-        p->defineAccessorProperty(QStringLiteral("xmlVersion"), method_xmlVersion, 0);
-        p->defineAccessorProperty(QStringLiteral("xmlEncoding"), method_xmlEncoding, 0);
-        p->defineAccessorProperty(QStringLiteral("xmlStandalone"), method_xmlStandalone, 0);
-        p->defineAccessorProperty(QStringLiteral("documentElement"), method_documentElement, 0);
+        p->defineAccessorProperty(QStringLiteral("xmlVersion"), method_xmlVersion, nullptr);
+        p->defineAccessorProperty(QStringLiteral("xmlEncoding"), method_xmlEncoding, nullptr);
+        p->defineAccessorProperty(QStringLiteral("xmlStandalone"), method_xmlStandalone, nullptr);
+        p->defineAccessorProperty(QStringLiteral("documentElement"), method_documentElement, nullptr);
         d->documentPrototype.set(v4, p);
         v4->v8Engine->freezeObject(p);
     }
@@ -797,7 +797,7 @@ ReturnedValue Document::load(ExecutionEngine *v4, const QByteArray &data)
 {
     Scope scope(v4);
 
-    DocumentImpl *document = 0;
+    DocumentImpl *document = nullptr;
     QStack<NodeImpl *> nodeStack;
 
     QXmlStreamReader reader(data);
@@ -885,7 +885,7 @@ ReturnedValue Document::load(ExecutionEngine *v4, const QByteArray &data)
 
 bool Node::isNull() const
 {
-    return d()->d == 0;
+    return d()->d == nullptr;
 }
 
 ReturnedValue NamedNodeMap::getIndexed(const Managed *m, uint index, bool *hasProperty)
@@ -1098,7 +1098,7 @@ private:
 
 QQmlXMLHttpRequest::QQmlXMLHttpRequest(QNetworkAccessManager *manager)
     : m_state(Unsent), m_errorFlag(false), m_sendFlag(false)
-    , m_redirectCount(0), m_gotXml(false), m_textCodec(0), m_network(0), m_nam(manager)
+    , m_redirectCount(0), m_gotXml(false), m_textCodec(nullptr), m_network(nullptr), m_nam(manager)
     , m_responseType()
     , m_parsedDocument()
 {
@@ -1443,7 +1443,7 @@ void QQmlXMLHttpRequest::finished()
     dispatchCallback();
 
     m_thisObject.clear();
-    m_qmlContext.setContextData(0);
+    m_qmlContext.setContextData(nullptr);
 }
 
 
@@ -1516,7 +1516,7 @@ QV4::ReturnedValue QQmlXMLHttpRequest::xmlResponseBody(QV4::ExecutionEngine* eng
 #if QT_CONFIG(textcodec)
 QTextCodec* QQmlXMLHttpRequest::findTextCodec() const
 {
-    QTextCodec *codec = 0;
+    QTextCodec *codec = nullptr;
 
     if (!m_charset.isEmpty())
         codec = QTextCodec::codecForName(m_charset);
@@ -1528,10 +1528,10 @@ QTextCodec* QQmlXMLHttpRequest::findTextCodec() const
     }
 
     if (!codec && m_mime == "text/html")
-        codec = QTextCodec::codecForHtml(m_responseEntityBody, 0);
+        codec = QTextCodec::codecForHtml(m_responseEntityBody, nullptr);
 
     if (!codec)
-        codec = QTextCodec::codecForUtfText(m_responseEntityBody, 0);
+        codec = QTextCodec::codecForUtfText(m_responseEntityBody, nullptr);
 
     if (!codec)
         codec = QTextCodec::codecForName("UTF-8");
@@ -1595,7 +1595,7 @@ void QQmlXMLHttpRequest::destroyNetwork()
     if (m_network) {
         m_network->disconnect();
         m_network->deleteLater();
-        m_network = 0;
+        m_network = nullptr;
     }
 }
 
@@ -1709,12 +1709,12 @@ void QQmlXMLHttpRequestCtor::setupProto()
     p->defineDefaultProperty(QStringLiteral("getAllResponseHeaders"), method_getAllResponseHeaders);
 
     // Read-only properties
-    p->defineAccessorProperty(QStringLiteral("readyState"), method_get_readyState, 0);
-    p->defineAccessorProperty(QStringLiteral("status"),method_get_status, 0);
-    p->defineAccessorProperty(QStringLiteral("statusText"),method_get_statusText, 0);
-    p->defineAccessorProperty(QStringLiteral("responseText"),method_get_responseText, 0);
-    p->defineAccessorProperty(QStringLiteral("responseXML"),method_get_responseXML, 0);
-    p->defineAccessorProperty(QStringLiteral("response"),method_get_response, 0);
+    p->defineAccessorProperty(QStringLiteral("readyState"), method_get_readyState, nullptr);
+    p->defineAccessorProperty(QStringLiteral("status"),method_get_status, nullptr);
+    p->defineAccessorProperty(QStringLiteral("statusText"),method_get_statusText, nullptr);
+    p->defineAccessorProperty(QStringLiteral("responseText"),method_get_responseText, nullptr);
+    p->defineAccessorProperty(QStringLiteral("responseXML"),method_get_responseXML, nullptr);
+    p->defineAccessorProperty(QStringLiteral("response"),method_get_response, nullptr);
 
     // Read-write properties
     p->defineAccessorProperty(QStringLiteral("responseType"), method_get_responseType, method_set_responseType);

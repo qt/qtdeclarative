@@ -331,7 +331,7 @@ ArrayData::Index ArrayData::getValueOrSetter(uint index, PropertyAttributes *att
     uint idx = mappedIndex(index);
     if (idx == UINT_MAX) {
         *attrs = Attr_Invalid;
-        return { 0, 0 };
+        return { nullptr, 0 };
     }
 
     *attrs = attributes(index);

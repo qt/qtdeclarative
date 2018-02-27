@@ -60,7 +60,7 @@ private slots:
 void tst_QPacketProtocol::init()
 {
     m_server = new QTcpServer(this);
-    m_serverConn = 0;
+    m_serverConn = nullptr;
     QVERIFY(m_server->listen(QHostAddress("127.0.0.1")));
 
     m_client = new QTcpSocket(this);

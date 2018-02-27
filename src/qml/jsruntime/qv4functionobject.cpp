@@ -232,7 +232,7 @@ ReturnedValue FunctionCtor::callAsConstructor(const FunctionObject *f, const Val
     if (!fe)
         return scope.engine->throwSyntaxError(QLatin1String("Parse error"));
 
-    Compiler::Module module(scope.engine->debugger() != 0);
+    Compiler::Module module(scope.engine->debugger() != nullptr);
 
     Compiler::JSUnitGenerator jsGenerator(&module);
     RuntimeCodegen cg(scope.engine, &jsGenerator, false);
@@ -351,7 +351,7 @@ ReturnedValue FunctionPrototype::method_bind(const FunctionObject *b, const Valu
         return scope.engine->throwTypeError();
 
     ScopedValue boundThis(scope, argc ? argv[0] : Primitive::undefinedValue());
-    Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
+    Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)nullptr);
     if (argc > 1) {
         boundArgs = MemberData::allocate(scope.engine, argc - 1);
         boundArgs->d()->values.size = argc - 1;
@@ -440,7 +440,7 @@ void Heap::BoundFunction::init(QV4::ExecutionContext *scope, QV4::FunctionObject
     Scope s(scope);
     Heap::FunctionObject::init(scope, QStringLiteral("__bound function__"));
     this->target.set(s.engine, target->d());
-    this->boundArgs.set(s.engine, boundArgs ? boundArgs->d() : 0);
+    this->boundArgs.set(s.engine, boundArgs ? boundArgs->d() : nullptr);
     this->boundThis.set(scope->engine(), boundThis);
 
     ScopedObject f(s, this);

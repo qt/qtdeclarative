@@ -68,7 +68,7 @@ class QQuickFlipablePrivate : public QQuickItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickFlipable)
 public:
-    QQuickFlipablePrivate() : current(QQuickFlipable::Front), front(0), back(0), sideDirty(false) {}
+    QQuickFlipablePrivate() : current(QQuickFlipable::Front), front(nullptr), back(nullptr), sideDirty(false) {}
 
     void transformChanged() override;
     void updateSide();
@@ -178,7 +178,7 @@ void QQuickFlipable::setBack(QQuickItem *back)
         qmlWarning(this) << tr("back is a write-once property");
         return;
     }
-    if (back == 0)
+    if (back == nullptr)
         return;
     d->back = back;
     d->back->setParentItem(this);

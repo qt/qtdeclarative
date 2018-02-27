@@ -73,9 +73,9 @@ public:
     void init(QQmlContextData *, const QString &, QObject *);
     void init(QQmlContextData *, QV4::Function *runtimeFunction, QObject *);
 
-    QVariant value(bool *isUndefined = 0);
+    QVariant value(bool *isUndefined = nullptr);
 
-    QV4::ReturnedValue v4value(bool *isUndefined = 0);
+    QV4::ReturnedValue v4value(bool *isUndefined = nullptr);
 
     static inline QQmlExpressionPrivate *get(QQmlExpression *expr);
     static inline QQmlExpression *get(QQmlExpressionPrivate *expr);

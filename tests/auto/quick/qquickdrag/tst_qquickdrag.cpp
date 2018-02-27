@@ -57,16 +57,8 @@ class TestDropTarget : public QQuickItem
 {
     Q_OBJECT
 public:
-    TestDropTarget(QQuickItem *parent = 0)
+    TestDropTarget(QQuickItem *parent = nullptr)
         : QQuickItem(parent)
-        , enterEvents(0)
-        , moveEvents(0)
-        , leaveEvents(0)
-        , dropEvents(0)
-        , acceptAction(Qt::MoveAction)
-        , defaultAction(Qt::IgnoreAction)
-        , proposedAction(Qt::IgnoreAction)
-        , accept(true)
     {
         setFlags(ItemAcceptsDrops);
     }
@@ -119,16 +111,16 @@ public:
         event->setAccepted(accept);
     }
 
-    int enterEvents;
-    int moveEvents;
-    int leaveEvents;
-    int dropEvents;
-    Qt::DropAction acceptAction;
-    Qt::DropAction defaultAction;
-    Qt::DropAction proposedAction;
+    int enterEvents = 0;
+    int moveEvents = 0;
+    int leaveEvents = 0;
+    int dropEvents = 0;
+    Qt::DropAction acceptAction = Qt::MoveAction;
+    Qt::DropAction defaultAction = Qt::IgnoreAction;
+    Qt::DropAction proposedAction = Qt::IgnoreAction;
     Qt::DropActions supportedActions;
     QPointF position;
-    bool accept;
+    bool accept = true;
 };
 
 class tst_QQuickDrag: public QObject
@@ -199,16 +191,16 @@ void tst_QQuickDrag::active()
     evaluate<void>(item, "Drag.active = false");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
     QCOMPARE(evaluate<bool>(item, "dragActive"), false);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 1);
 
     dropTarget.reset();
     evaluate<void>(item, "Drag.cancel()");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
     QCOMPARE(evaluate<bool>(item, "dragActive"), false);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0);
 
     dropTarget.reset();
@@ -232,8 +224,8 @@ void tst_QQuickDrag::active()
     evaluate<void>(item, "Drag.cancel()");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
     QCOMPARE(evaluate<bool>(item, "dragActive"), false);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 1);
 
     // Enter events aren't sent to items without the QQuickItem::ItemAcceptsDrops flag.
@@ -243,16 +235,16 @@ void tst_QQuickDrag::active()
     evaluate<void>(item, "Drag.active = true");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
     QCOMPARE(evaluate<bool>(item, "dragActive"), true);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0);
 
     dropTarget.reset();
     evaluate<void>(item, "Drag.active = false");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
     QCOMPARE(evaluate<bool>(item, "dragActive"), false);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0);
 
     dropTarget.setFlags(QQuickItem::ItemAcceptsDrops);
@@ -271,8 +263,8 @@ void tst_QQuickDrag::active()
     evaluate<void>(item, "Drag.active = false");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
     QCOMPARE(evaluate<bool>(item, "dragActive"), false);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 1);
 
     // Follow up events aren't sent to items if the enter event isn't accepted.
@@ -283,16 +275,16 @@ void tst_QQuickDrag::active()
     evaluate<void>(item, "Drag.active = true");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
     QCOMPARE(evaluate<bool>(item, "dragActive"), true);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(dropTarget.enterEvents, 1); QCOMPARE(dropTarget.leaveEvents, 0);
 
     dropTarget.reset();
     evaluate<void>(item, "Drag.active = false");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
     QCOMPARE(evaluate<bool>(item, "dragActive"), false);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0);
 
     dropTarget.accept = true;
@@ -311,8 +303,8 @@ void tst_QQuickDrag::active()
     evaluate<void>(item, "Drag.active = false");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
     QCOMPARE(evaluate<bool>(item, "dragActive"), false);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 1);
 
     // Events are sent to hidden or disabled items.
@@ -322,8 +314,8 @@ void tst_QQuickDrag::active()
     evaluate<void>(item, "Drag.active = true");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
     QCOMPARE(evaluate<bool>(item, "dragActive"), true);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0);
 
     evaluate<void>(item, "Drag.active = false");
@@ -346,8 +338,8 @@ void tst_QQuickDrag::active()
     evaluate<void>(item, "Drag.active = true");
     QCOMPARE(evaluate<bool>(item, "Drag.active"), true);
     QCOMPARE(evaluate<bool>(item, "dragActive"), true);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(dropTarget.enterEvents, 0); QCOMPARE(dropTarget.leaveEvents, 0);
 
     evaluate<void>(item, "Drag.active = false");
@@ -510,8 +502,8 @@ void tst_QQuickDrag::drop()
     QCOMPARE(evaluate<bool>(item, "Drag.drop() == Qt.IgnoreAction"), true);
     QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
     QCOMPARE(evaluate<bool>(item, "dragActive"), false);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(outerTarget.enterEvents, 0); QCOMPARE(outerTarget.leaveEvents, 0); QCOMPARE(outerTarget.dropEvents, 1);
     QCOMPARE(innerTarget.enterEvents, 0); QCOMPARE(innerTarget.leaveEvents, 0); QCOMPARE(innerTarget.dropEvents, 0);
 
@@ -522,8 +514,8 @@ void tst_QQuickDrag::drop()
     QCOMPARE(evaluate<bool>(item, "Drag.drop() == Qt.IgnoreAction"), true);
     QCOMPARE(evaluate<bool>(item, "Drag.active"), false);
     QCOMPARE(evaluate<bool>(item, "dragActive"), false);
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(outerTarget.enterEvents, 0); QCOMPARE(outerTarget.leaveEvents, 0); QCOMPARE(outerTarget.dropEvents, 0);
     QCOMPARE(innerTarget.enterEvents, 0); QCOMPARE(innerTarget.leaveEvents, 0); QCOMPARE(innerTarget.dropEvents, 0);
 
@@ -638,8 +630,8 @@ void tst_QQuickDrag::move()
     outerTarget.reset(); leftTarget.reset(); rightTarget.reset();
     item->setPosition(QPointF(110, 50));
     QCoreApplication::processEvents();
-    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(item, "Drag.target"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(item, "dragTarget"), static_cast<QObject *>(nullptr));
     QCOMPARE(outerTarget.enterEvents, 0); QCOMPARE(outerTarget.leaveEvents, 1); QCOMPARE(outerTarget.moveEvents, 0);
     QCOMPARE(leftTarget .enterEvents, 0); QCOMPARE(leftTarget .leaveEvents, 1); QCOMPARE(leftTarget .moveEvents, 0);
     QCOMPARE(rightTarget.enterEvents, 0); QCOMPARE(rightTarget.leaveEvents, 0); QCOMPARE(rightTarget.moveEvents, 0);
@@ -751,7 +743,7 @@ void tst_QQuickDrag::parentChange()
     QCOMPARE(dropTarget2.enterEvents, 1);
 
     // Removing then parent item sends a leave event.
-    item->setParentItem(0);
+    item->setParentItem(nullptr);
     QCOMPARE(dropTarget1.enterEvents, 1);
     QCOMPARE(dropTarget1.moveEvents, 1);
     QCOMPARE(dropTarget1.leaveEvents, 1);
@@ -775,7 +767,7 @@ void tst_QQuickDrag::parentChange()
     item->setParentItem(window2.contentItem());
     QCoreApplication::processEvents();
 
-    item->setParentItem(0);
+    item->setParentItem(nullptr);
     QCoreApplication::processEvents();
     QCOMPARE(dropTarget1.enterEvents, 1);
     QCOMPARE(dropTarget1.moveEvents, 1);
@@ -1046,7 +1038,7 @@ class RecursingDropTarget : public TestDropTarget
 {
 public:
     RecursingDropTarget(const QString &script, int type, QQuickItem *parent)
-        : TestDropTarget(parent), script(script), type(type), item(0) {}
+        : TestDropTarget(parent), script(script), type(type), item(nullptr) {}
 
     void setItem(QQuickItem *i) { item = i; }
 

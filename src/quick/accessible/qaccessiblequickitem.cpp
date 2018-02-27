@@ -92,7 +92,7 @@ QAccessibleInterface *QAccessibleQuickItem::childAt(int x, int y) const
 {
     if (item()->clip()) {
         if (!rect().contains(x, y))
-            return 0;
+            return nullptr;
     }
 
     const QList<QQuickItem*> kids = accessibleUnignoredChildren(item(), true);
@@ -106,14 +106,14 @@ QAccessibleInterface *QAccessibleQuickItem::childAt(int x, int y) const
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 QAccessibleInterface *QAccessibleQuickItem::parent() const
 {
     QQuickItem *parent = item()->parentItem();
     QQuickWindow *window = item()->window();
-    QQuickItem *ci = window ? window->contentItem() : 0;
+    QQuickItem *ci = window ? window->contentItem() : nullptr;
     while (parent && !QQuickItemPrivate::get(parent)->isAccessible && parent != ci)
         parent = parent->parentItem();
 
@@ -131,7 +131,7 @@ QAccessibleInterface *QAccessibleQuickItem::parent() const
             return QAccessible::queryAccessibleInterface(parent);
         }
     }
-    return 0;
+    return nullptr;
 }
 
 QAccessibleInterface *QAccessibleQuickItem::child(int index) const
@@ -139,7 +139,7 @@ QAccessibleInterface *QAccessibleQuickItem::child(int index) const
     QList<QQuickItem *> children = childItems();
 
     if (index < 0 || index >= children.count())
-        return 0;
+        return nullptr;
 
     QQuickItem *child = children.at(index);
     return QAccessible::queryAccessibleInterface(child);
@@ -458,7 +458,7 @@ QTextDocument *QAccessibleQuickItem::textDocument() const
         QQuickTextDocument *qqdoc = docVariant.value<QQuickTextDocument*>();
         return qqdoc->textDocument();
     }
-    return 0;
+    return nullptr;
 }
 
 int QAccessibleQuickItem::characterCount() const

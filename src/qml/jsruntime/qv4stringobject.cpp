@@ -86,7 +86,7 @@ Heap::String *Heap::StringObject::getIndex(uint index) const
 {
     QString str = string->toQString();
     if (index >= (uint)str.length())
-        return 0;
+        return nullptr;
     return internalClass->engine->newString(str.mid(index, 1));
 }
 
@@ -109,7 +109,7 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
 
 void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
 {
-    name->setM(0);
+    name->setM(nullptr);
     StringObject *s = static_cast<StringObject *>(m);
     uint slen = s->d()->string->toQString().length();
     if (it->arrayIndex <= slen) {
@@ -717,7 +717,7 @@ ReturnedValue StringPrototype::method_split(const FunctionObject *b, const Value
     Scoped<RegExpObject> re(scope, separatorValue);
     if (re) {
         if (re->value()->pattern->isEmpty()) {
-            re = (RegExpObject *)0;
+            re = (RegExpObject *)nullptr;
             separatorValue = scope.engine->newString();
         }
     }

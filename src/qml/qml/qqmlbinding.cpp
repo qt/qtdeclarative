@@ -70,7 +70,7 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QQmlScr
         return b;
 
     QString url;
-    QV4::Function *runtimeFunction = 0;
+    QV4::Function *runtimeFunction = nullptr;
 
     QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
     QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
@@ -150,7 +150,7 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
         QQmlPropertyData vtd;
         getPropertyData(&d, &vtd);
         Q_ASSERT(d);
-        QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), *d, &vtd, 0);
+        QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), *d, &vtd, nullptr);
         QQmlAbstractBinding::printBindingLoopError(p);
         return;
     }
@@ -364,7 +364,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
     } else if (core.isQList()) {
         value = v4engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
     } else if (result.isNull() && core.isQObject()) {
-        value = QVariant::fromValue((QObject *)0);
+        value = QVariant::fromValue((QObject *)nullptr);
     } else if (core.propType() == qMetaTypeId<QList<QUrl> >()) {
         value = QQmlPropertyPrivate::resolvedUrlSequence(v4engine->toVariant(result, qMetaTypeId<QList<QUrl> >()), context());
     } else if (!isVarProperty && type != qMetaTypeId<QJSValue>()) {
@@ -386,7 +386,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
         Q_ASSERT(vmemo);
         vmemo->setVMEProperty(core.coreIndex(), result);
     } else if (isUndefined && core.isResettable()) {
-        void *args[] = { 0 };
+        void *args[] = { nullptr };
         QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex(), args);
     } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
         QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant(), context(), flags);
@@ -417,8 +417,8 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
         if (watcher.wasDeleted())
             return true;
 
-        const char *valueType = 0;
-        const char *propertyType = 0;
+        const char *valueType = nullptr;
+        const char *propertyType = nullptr;
 
         const int userType = value.userType();
         if (userType == QMetaType::QObjectStar) {
@@ -530,7 +530,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const
 
         int aValueTypeIndex;
         if (!vme->aliasTarget(coreIndex, &object, &coreIndex, &aValueTypeIndex)) {
-            m_target = 0;
+            m_target = nullptr;
             m_targetIndex = QQmlPropertyIndex();
             return;
         }
@@ -539,7 +539,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const
 
         QQmlData *data = QQmlData::get(object, false);
         if (!data || !data->propertyCache) {
-            m_target = 0;
+            m_target = nullptr;
             m_targetIndex = QQmlPropertyIndex();
             return;
         }

@@ -92,8 +92,8 @@ protected:
 
 private:
     //definition
-    QAbstractAnimationJob *m_firstChild;
-    QAbstractAnimationJob *m_lastChild;
+    QAbstractAnimationJob *m_firstChild = nullptr;
+    QAbstractAnimationJob *m_lastChild = nullptr;
 };
 
 QT_END_NAMESPACE

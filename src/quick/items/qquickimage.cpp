@@ -57,7 +57,7 @@ class QQuickImageTextureProvider : public QSGTextureProvider
     Q_OBJECT
 public:
     QQuickImageTextureProvider()
-        : m_texture(0)
+        : m_texture(nullptr)
         , m_smooth(false)
     {
     }
@@ -97,7 +97,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     , mipmap(false)
     , hAlign(QQuickImage::AlignHCenter)
     , vAlign(QQuickImage::AlignVCenter)
-    , provider(0)
+    , provider(nullptr)
 {
 }
 
@@ -583,7 +583,7 @@ QSGTextureProvider *QQuickImage::textureProvider() const
 
     if (!d->window || !d->sceneGraphRenderContext() || QThread::currentThread() != d->sceneGraphRenderContext()->thread()) {
         qWarning("QQuickImage::textureProvider: can only be queried on the rendering thread of an exposed window");
-        return 0;
+        return nullptr;
     }
 
     if (!d->provider) {
@@ -601,7 +601,7 @@ void QQuickImage::invalidateSceneGraph()
 {
     Q_D(QQuickImage);
     delete d->provider;
-    d->provider = 0;
+    d->provider = nullptr;
 }
 
 void QQuickImage::releaseResources()
@@ -609,7 +609,7 @@ void QQuickImage::releaseResources()
     Q_D(QQuickImage);
     if (d->provider) {
         QQuickWindowQObjectCleanupJob::schedule(window(), d->provider);
-        d->provider = 0;
+        d->provider = nullptr;
     }
 }
 
@@ -628,7 +628,7 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 
     if (!texture || width() <= 0 || height() <= 0) {
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
     QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);
@@ -736,7 +736,7 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         || nsrect.isEmpty()
         || !qt_is_finite(nsrect.width()) || !qt_is_finite(nsrect.height())) {
         delete node;
-        return 0;
+        return nullptr;
     }
 
     if (d->pixmapChanged) {

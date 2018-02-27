@@ -102,7 +102,7 @@ void tst_qquickdesignersupport::customData()
     QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(newItem,
                                                                    view->engine()->contextForObject(newItem),
                                                                    "width",
-                                                                   0));
+                                                                   nullptr));
 
     //Check if reseting property does work after setting binding
     QQuickDesignerSupportProperties::doResetProperty(newItem, view->rootContext(), "width");
@@ -136,7 +136,7 @@ void tst_qquickdesignersupport::customDataBindings()
     QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(testComponent,
                                                            view->engine()->contextForObject(testComponent),
                                                            "x",
-                                                           0));
+                                                           nullptr));
 
     QCOMPARE(testComponent->property("x").toInt(), 200);
 
@@ -149,7 +149,7 @@ void tst_qquickdesignersupport::customDataBindings()
     QVERIFY(!QQuickDesignerSupportProperties::hasBindingForProperty(testComponent,
                                                            view->engine()->contextForObject(testComponent),
                                                            "x",
-                                                           0));
+                                                           nullptr));
 
     //Reset the binding to the default
     QQuickDesignerSupportProperties::doResetProperty(testComponent,
@@ -159,7 +159,7 @@ void tst_qquickdesignersupport::customDataBindings()
     QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(testComponent,
                                                            view->engine()->contextForObject(testComponent),
                                                            "x",
-                                                           0));
+                                                           nullptr));
     QCOMPARE(testComponent->property("x").toInt(), 200);
 
 
@@ -173,7 +173,7 @@ void tst_qquickdesignersupport::customDataBindings()
     QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(testComponent,
                                                            view->engine()->contextForObject(testComponent),
                                                            "x",
-                                                           0));
+                                                           nullptr));
 
     QCOMPARE(testComponent->property("x").toInt(), 300);
 
@@ -188,7 +188,7 @@ void tst_qquickdesignersupport::customDataBindings()
     QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(testComponent,
                                                            view->engine()->contextForObject(testComponent),
                                                            "x",
-                                                           0));
+                                                           nullptr));
     QCOMPARE(testComponent->property("x").toInt(), 200);
 }
 
@@ -417,7 +417,7 @@ void tst_qquickdesignersupport::statesPropertyChanges()
 
 }
 
-static QObject * s_object = 0;
+static QObject * s_object = nullptr;
 static QQuickDesignerSupport::PropertyName  s_propertyName;
 
 static void notifyPropertyChangeCallBackFunction(QObject *object, const QQuickDesignerSupport::PropertyName &propertyName)
@@ -476,7 +476,7 @@ void tst_qquickdesignersupport::testFixResourcePathsForObjectCallBack()
 
     QVERIFY(rootItem);
 
-    s_object = 0;
+    s_object = nullptr;
 
     QQuickDesignerSupportItems::registerFixResourcePathsForObjectCallBack(fixResourcePathsForObjectCallBackPointer);
 

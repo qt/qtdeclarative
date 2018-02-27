@@ -120,7 +120,7 @@ struct Context {
         int index = -1;
         QQmlJS::AST::VariableDeclaration::VariableScope scope = QQmlJS::AST::VariableDeclaration::FunctionScope;
         mutable bool canEscape = false;
-        QQmlJS::AST::FunctionExpression *function = 0;
+        QQmlJS::AST::FunctionExpression *function = nullptr;
 
         bool isLexicallyScoped() const { return this->scope != QQmlJS::AST::VariableDeclaration::FunctionScope; }
     };
@@ -128,12 +128,12 @@ struct Context {
 
     MemberMap members;
     QSet<QString> usedVariables;
-    QQmlJS::AST::FormalParameterList *formals = 0;
+    QQmlJS::AST::FormalParameterList *formals = nullptr;
     QStringList arguments;
     QStringList locals;
     QVector<Context *> nestedContexts;
 
-    ControlFlow *controlFlow = 0;
+    ControlFlow *controlFlow = nullptr;
     QByteArray code;
     QVector<CompiledData::CodeOffsetToLine> lineNumberMapping;
 
@@ -173,10 +173,10 @@ struct Context {
     // Map from meta property index (existence implies dependency) to notify signal index
     struct KeyValuePair
     {
-        quint32 _key;
-        quint32 _value;
+        quint32 _key = 0;
+        quint32 _value = 0;
 
-        KeyValuePair(): _key(0), _value(0) {}
+        KeyValuePair() {}
         KeyValuePair(quint32 key, quint32 value): _key(key), _value(value) {}
 
         quint32 key() const { return _key; }
@@ -245,7 +245,7 @@ struct Context {
         Q_ASSERT(m);
         MemberMap::const_iterator it = members.find(name);
         if (it == members.end()) {
-            *m = 0;
+            *m = nullptr;
             return false;
         }
         *m = &(*it);
@@ -256,7 +256,7 @@ struct Context {
         usedVariables.insert(name);
     }
 
-    void addLocalVar(const QString &name, MemberType type, QQmlJS::AST::VariableDeclaration::VariableScope scope, QQmlJS::AST::FunctionExpression *function = 0)
+    void addLocalVar(const QString &name, MemberType type, QQmlJS::AST::VariableDeclaration::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr)
     {
         if (! name.isEmpty()) {
             if (type != FunctionDefinition) {

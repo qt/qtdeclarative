@@ -213,7 +213,7 @@ public:
 
     // These methods may be called from the loader thread
     bool isQObject(int);
-    QObject *toQObject(const QVariant &, bool *ok = 0) const;
+    QObject *toQObject(const QVariant &, bool *ok = nullptr) const;
     QQmlMetaType::TypeCategory typeCategory(int) const;
     bool isList(int) const;
     int listType(int) const;
@@ -265,7 +265,7 @@ private:
     static bool s_designerMode;
 
     // These members is protected by the full QQmlEnginePrivate::mutex mutex
-    struct Deletable { Deletable():next(0) {} virtual ~Deletable() {} Deletable *next; };
+    struct Deletable { Deletable():next(nullptr) {} virtual ~Deletable() {} Deletable *next; };
     QFieldList<Deletable, &Deletable::next> toDeleteInEngineThread;
     void doDeleteInEngineThread();
 
@@ -411,12 +411,12 @@ const QQmlEnginePrivate *QQmlEnginePrivate::get(const QQmlEngine *e)
 
 QQmlEnginePrivate *QQmlEnginePrivate::get(QQmlContext *c)
 {
-    return (c && c->engine()) ? QQmlEnginePrivate::get(c->engine()) : 0;
+    return (c && c->engine()) ? QQmlEnginePrivate::get(c->engine()) : nullptr;
 }
 
 QQmlEnginePrivate *QQmlEnginePrivate::get(QQmlContextData *c)
 {
-    return (c && c->engine) ? QQmlEnginePrivate::get(c->engine) : 0;
+    return (c && c->engine) ? QQmlEnginePrivate::get(c->engine) : nullptr;
 }
 
 QQmlEngine *QQmlEnginePrivate::get(QQmlEnginePrivate *p)
@@ -430,7 +430,7 @@ QQmlEnginePrivate *QQmlEnginePrivate::get(QV4::ExecutionEngine *e)
 {
     QQmlEngine *qmlEngine = e->qmlEngine();
     if (!qmlEngine)
-        return 0;
+        return nullptr;
     return get(qmlEngine);
 }
 

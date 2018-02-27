@@ -126,7 +126,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStateOperation : public QObject
 {
     Q_OBJECT
 public:
-    QQuickStateOperation(QObject *parent = 0)
+    QQuickStateOperation(QObject *parent = nullptr)
         : QObject(parent) {}
     typedef QList<QQuickStateAction> ActionList;
 
@@ -136,7 +136,7 @@ public:
     void setState(QQuickState *state);
 
 protected:
-    QQuickStateOperation(QObjectPrivate &dd, QObject *parent = 0);
+    QQuickStateOperation(QObjectPrivate &dd, QObject *parent = nullptr);
 
 private:
     Q_DECLARE_PRIVATE(QQuickStateOperation)
@@ -159,7 +159,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickState : public QObject
     Q_CLASSINFO("DeferredPropertyNames", "changes")
 
 public:
-    QQuickState(QObject *parent=0);
+    QQuickState(QObject *parent=nullptr);
     virtual ~QQuickState();
 
     QString name() const;

@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 class Q_AUTOTEST_EXPORT QQmlScriptStringPrivate : public QSharedData
 {
 public:
-    QQmlScriptStringPrivate() : context(0), scope(0), bindingId(-1), lineNumber(0), columnNumber(0),
+    QQmlScriptStringPrivate() : context(nullptr), scope(nullptr), bindingId(-1), lineNumber(0), columnNumber(0),
         numberValue(0), isStringLiteral(false), isNumberLiteral(false) {}
 
     //for testing

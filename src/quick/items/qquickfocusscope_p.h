@@ -59,7 +59,7 @@ class Q_AUTOTEST_EXPORT QQuickFocusScope : public QQuickItem
 {
     Q_OBJECT
 public:
-    QQuickFocusScope(QQuickItem *parent=0);
+    QQuickFocusScope(QQuickItem *parent=nullptr);
     virtual ~QQuickFocusScope();
 };
 

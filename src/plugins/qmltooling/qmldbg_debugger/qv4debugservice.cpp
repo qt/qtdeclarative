@@ -98,7 +98,7 @@ public:
             debugService->send(response);
         }
 
-        debugService = 0;
+        debugService = nullptr;
         seq = QJsonValue();
         req = QJsonObject();
         response = QJsonObject();

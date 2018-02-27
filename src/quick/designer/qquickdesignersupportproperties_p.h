@@ -92,10 +92,10 @@ public:
     static bool isPropertyBlackListed(const QQuickDesignerSupport::PropertyName &propertyName);
     static QQuickDesignerSupport::PropertyNameList propertyNameListForWritableProperties(QObject *object,
                                                                   const QQuickDesignerSupport::PropertyName &baseName = QQuickDesignerSupport::PropertyName(),
-                                                                  QObjectList *inspectedObjects = 0);
+                                                                  QObjectList *inspectedObjects = nullptr);
     static QQuickDesignerSupport::PropertyNameList allPropertyNames(QObject *object,
                                              const QQuickDesignerSupport::PropertyName &baseName = QQuickDesignerSupport::PropertyName(),
-                                             QObjectList *inspectedObjects = 0);
+                                             QObjectList *inspectedObjects = nullptr);
     static bool hasFullImplementedListInterface(const QQmlListReference &list);
 };
 

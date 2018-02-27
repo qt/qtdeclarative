@@ -51,7 +51,7 @@ void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
 void QQmlVMEMetaObjectEndpoint_callback(QQmlNotifierEndpoint *, void **);
 
 static Callback QQmlNotifier_callbacks[] = {
-    0,
+    nullptr,
     QQmlBoundSignal_callback,
     QQmlJavaScriptExpressionGuard_callback,
     QQmlVMEMetaObjectEndpoint_callback
@@ -59,9 +59,9 @@ static Callback QQmlNotifier_callbacks[] = {
 
 namespace {
     struct NotifyListTraversalData {
-        NotifyListTraversalData(QQmlNotifierEndpoint *ep = 0)
+        NotifyListTraversalData(QQmlNotifierEndpoint *ep = nullptr)
             : originalSenderPtr(0)
-            , disconnectWatch(0)
+            , disconnectWatch(nullptr)
             , endpoint(ep)
         {}
 

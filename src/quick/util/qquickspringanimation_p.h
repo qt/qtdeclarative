@@ -73,7 +73,7 @@ class Q_AUTOTEST_EXPORT QQuickSpringAnimation : public QQuickNumberAnimation
     Q_PROPERTY(qreal mass READ mass WRITE setMass NOTIFY massChanged)
 
 public:
-    QQuickSpringAnimation(QObject *parent=0);
+    QQuickSpringAnimation(QObject *parent=nullptr);
     ~QQuickSpringAnimation();
 
     qreal velocity() const;
@@ -97,7 +97,7 @@ public:
     QAbstractAnimationJob* transition(QQuickStateActions &actions,
                             QQmlProperties &modified,
                             TransitionDirection direction,
-                            QObject *defaultTarget = 0) override;
+                            QObject *defaultTarget = nullptr) override;
 
 Q_SIGNALS:
     void modulusChanged();

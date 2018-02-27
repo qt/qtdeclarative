@@ -143,7 +143,7 @@ void tst_QQuickAccessible::commonTests()
     view->setSource(testFileUrl(accessibleRoleFileName));
     view->show();
 //    view->setFocus();
-    QVERIFY(view->rootObject() != 0);
+    QVERIFY(view->rootObject() != nullptr);
 
     QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(view);
     QVERIFY(iface);
@@ -160,10 +160,10 @@ void tst_QQuickAccessible::quickAttachedProperties()
         component.setData("import QtQuick 2.0\nItem {\n"
                                 "}", QUrl());
         QObject *object = component.create();
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
 
         QObject *attachedObject = QQuickAccessibleAttached::attachedProperties(object);
-        QCOMPARE(attachedObject, static_cast<QObject*>(0));
+        QCOMPARE(attachedObject, static_cast<QObject*>(nullptr));
         delete object;
     }
 
@@ -181,7 +181,7 @@ void tst_QQuickAccessible::quickAttachedProperties()
                                 "Accessible.role: Accessible.Button\n"
                                 "}", QUrl());
         QObject *object = component.create();
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
 
         QObject *attachedObject = QQuickAccessibleAttached::attachedProperties(object);
         QVERIFY(attachedObject);
@@ -207,7 +207,7 @@ void tst_QQuickAccessible::quickAttachedProperties()
                                 "Accessible.description: \"Duck\"\n"
                                 "}", QUrl());
         QObject *object = component.create();
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
 
         QObject *attachedObject = QQuickAccessibleAttached::attachedProperties(object);
         QVERIFY(attachedObject);
@@ -282,7 +282,7 @@ QAccessibleInterface *topLevelChildAt(QAccessibleInterface *iface, int x, int y)
 {
     QAccessibleInterface *child = iface->childAt(x, y);
     if (!child)
-        return 0;
+        return nullptr;
 
     QAccessibleInterface *childOfChild;
     while ( ( childOfChild = child->childAt(x, y)) ) {

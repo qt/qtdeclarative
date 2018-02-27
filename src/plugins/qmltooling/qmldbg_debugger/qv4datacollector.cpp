@@ -69,19 +69,19 @@ QV4::Heap::ExecutionContext *QV4DataCollector::findContext(int frame)
 {
     QV4::CppStackFrame *f = findFrame(frame);
 
-    return f ? f->context()->d() : 0;
+    return f ? f->context()->d() : nullptr;
 }
 
 QV4::Heap::CallContext *QV4DataCollector::findScope(QV4::Heap::ExecutionContext *ctx, int scope)
 {
     if (!ctx)
-        return 0;
+        return nullptr;
 
     for (; scope > 0 && ctx; --scope)
         ctx = ctx->outer;
 
     return (ctx && ctx->type == QV4::Heap::ExecutionContext::Type_CallContext) ?
-                static_cast<QV4::Heap::CallContext *>(ctx) : 0;
+                static_cast<QV4::Heap::CallContext *>(ctx) : nullptr;
 }
 
 QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeTypes(int frame)
@@ -139,16 +139,16 @@ const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::Execution
     switch (value->type()) {
     case QV4::Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
-        return 0;
+        return nullptr;
     case QV4::Value::Undefined_Type:
         dict.insert(valueKey, QJsonValue::Undefined);
-        return 0;
+        return nullptr;
     case QV4::Value::Null_Type:
         dict.insert(valueKey, QJsonValue::Null);
-        return 0;
+        return nullptr;
     case QV4::Value::Boolean_Type:
         dict.insert(valueKey, value->booleanValue());
-        return 0;
+        return nullptr;
     case QV4::Value::Managed_Type:
         if (const QV4::String *s = value->as<QV4::String>()) {
             dict.insert(valueKey, s->toQString());
@@ -176,10 +176,10 @@ const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::Execution
         } else {
             Q_UNREACHABLE();
         }
-        return 0;
+        return nullptr;
     case QV4::Value::Integer_Type:
         dict.insert(valueKey, value->integerValue());
-        return 0;
+        return nullptr;
     default: {// double
         const double val = value->doubleValue();
         if (qIsFinite(val))
@@ -190,7 +190,7 @@ const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::Execution
             dict.insert(valueKey, QStringLiteral("-Infinity"));
         else
             dict.insert(valueKey, QStringLiteral("Infinity"));
-        return 0;
+        return nullptr;
     }
     }
 }

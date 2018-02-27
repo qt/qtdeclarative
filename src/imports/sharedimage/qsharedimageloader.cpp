@@ -88,9 +88,7 @@ class QSharedImageLoaderPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QSharedImageLoader)
 
 public:
-    QSharedImageLoaderPrivate()
-        : QObjectPrivate()
-    {}
+    QSharedImageLoaderPrivate() {}
 
     QImage load(const QString &path, QSharedImageLoader::ImageParameters *params);
 

@@ -294,10 +294,10 @@ struct InternalClass : public QQmlJS::Managed {
     }
 
     static void addMember(Object *object, String *string, PropertyAttributes data, uint *index);
-    Q_REQUIRED_RESULT InternalClass *addMember(String *string, PropertyAttributes data, uint *index = 0);
-    Q_REQUIRED_RESULT InternalClass *addMember(Identifier *identifier, PropertyAttributes data, uint *index = 0);
-    Q_REQUIRED_RESULT InternalClass *changeMember(Identifier *identifier, PropertyAttributes data, uint *index = 0);
-    static void changeMember(Object *object, String *string, PropertyAttributes data, uint *index = 0);
+    Q_REQUIRED_RESULT InternalClass *addMember(String *string, PropertyAttributes data, uint *index = nullptr);
+    Q_REQUIRED_RESULT InternalClass *addMember(Identifier *identifier, PropertyAttributes data, uint *index = nullptr);
+    Q_REQUIRED_RESULT InternalClass *changeMember(Identifier *identifier, PropertyAttributes data, uint *index = nullptr);
+    static void changeMember(Object *object, String *string, PropertyAttributes data, uint *index = nullptr);
     static void removeMember(Object *object, Identifier *id);
     uint find(const String *string);
     uint find(const Identifier *id)

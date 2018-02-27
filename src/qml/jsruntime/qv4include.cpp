@@ -61,7 +61,7 @@ QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine,
                        QV4::QmlContext *qmlContext, const QV4::Value &callback)
     : v4(engine), m_url(url)
 #if QT_CONFIG(qml_network)
-    , m_redirectCount(0), m_network(0) , m_reply(0)
+    , m_redirectCount(0), m_network(nullptr) , m_reply(nullptr)
 #endif
 {
     if (qmlContext)
@@ -88,7 +88,7 @@ QV4Include::~QV4Include()
 {
 #if QT_CONFIG(qml_network)
     delete m_reply;
-    m_reply = 0;
+    m_reply = nullptr;
 #endif
 }
 

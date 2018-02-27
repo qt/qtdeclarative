@@ -61,7 +61,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugServerConnection : public QObject
 {
     Q_OBJECT
 public:
-    QQmlDebugServerConnection(QObject *parent = 0) : QObject(parent) {}
+    QQmlDebugServerConnection(QObject *parent = nullptr) : QObject(parent) {}
 
     virtual void setServer(QQmlDebugServer *server) = 0;
     virtual bool setPortRange(int portFrom, int portTo, bool block, const QString &hostaddress) = 0;

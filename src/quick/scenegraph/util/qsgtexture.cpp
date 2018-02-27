@@ -399,7 +399,7 @@ QSGTexture::~QSGTexture()
 QSGTexture *QSGTexture::removedFromAtlas() const
 {
     Q_ASSERT_X(!isAtlasTexture(), "QSGTexture::removedFromAtlas()", "Called on a non-atlas texture");
-    return 0;
+    return nullptr;
 }
 
 /*!

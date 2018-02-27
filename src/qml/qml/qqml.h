@@ -354,7 +354,7 @@ int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
         sizeof(T), QQmlPrivate::createInto<T>,
         QString(),
 
-        uri, versionMajor, versionMinor, 0, &T::staticMetaObject,
+        uri, versionMajor, versionMinor, nullptr, &T::staticMetaObject,
 
         QQmlPrivate::attachedPropertiesFunc<T>(),
         QQmlPrivate::attachedPropertiesMetaObject<T>(),

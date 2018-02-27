@@ -97,7 +97,7 @@ public:
 
     QRectF rectF() const { return m_contents; }
 
-    inline void calcGeometry(QQuickItem *changed = 0);
+    inline void calcGeometry(QQuickItem *changed = nullptr);
     void complete();
 
 protected:
@@ -108,8 +108,8 @@ protected:
     //void itemVisibilityChanged(QQuickItem *item)
 
 private:
-    bool calcHeight(QQuickItem *changed = 0);
-    bool calcWidth(QQuickItem *changed = 0);
+    bool calcHeight(QQuickItem *changed = nullptr);
+    bool calcWidth(QQuickItem *changed = nullptr);
     void updateRect();
 
     QQuickItem *m_item;
@@ -330,7 +330,7 @@ public:
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)
 
     struct ChangeListener {
-        ChangeListener(QQuickItemChangeListener *l = nullptr, QQuickItemPrivate::ChangeTypes t = 0) : listener(l), types(t), gTypes(QQuickGeometryChange::All) {}
+        ChangeListener(QQuickItemChangeListener *l = nullptr, QQuickItemPrivate::ChangeTypes t = nullptr) : listener(l), types(t), gTypes(QQuickGeometryChange::All) {}
         ChangeListener(QQuickItemChangeListener *l, QQuickGeometryChange gt) : listener(l), types(Geometry), gTypes(gt) {}
         QQuickItemChangeListener *listener;
         QQuickItemPrivate::ChangeTypes types;
@@ -605,9 +605,9 @@ public:
          - (rootNode) (shader effect source's root node)
      */
 
-    QSGOpacityNode *opacityNode() const { return extra.isAllocated()?extra->opacityNode:0; }
-    QQuickDefaultClipNode *clipNode() const { return extra.isAllocated()?extra->clipNode:0; }
-    QSGRootNode *rootNode() const { return extra.isAllocated()?extra->rootNode:0; }
+    QSGOpacityNode *opacityNode() const { return extra.isAllocated()?extra->opacityNode:nullptr; }
+    QQuickDefaultClipNode *clipNode() const { return extra.isAllocated()?extra->clipNode:nullptr; }
+    QSGRootNode *rootNode() const { return extra.isAllocated()?extra->rootNode:nullptr; }
 
     QSGTransformNode *itemNodeInstance;
     QSGNode *paintNode;
@@ -639,7 +639,7 @@ public:
 class QQuickItemKeyFilter
 {
 public:
-    QQuickItemKeyFilter(QQuickItem * = 0);
+    QQuickItemKeyFilter(QQuickItem * = nullptr);
     virtual ~QQuickItemKeyFilter();
 
     virtual void keyPressed(QKeyEvent *event, bool post);
@@ -661,17 +661,15 @@ class QQuickKeyNavigationAttachedPrivate : public QObjectPrivate
 {
 public:
     QQuickKeyNavigationAttachedPrivate()
-        : QObjectPrivate(),
-          left(0), right(0), up(0), down(0), tab(0), backtab(0),
-          leftSet(false), rightSet(false), upSet(false), downSet(false),
+        : leftSet(false), rightSet(false), upSet(false), downSet(false),
           tabSet(false), backtabSet(false) {}
 
-    QQuickItem *left;
-    QQuickItem *right;
-    QQuickItem *up;
-    QQuickItem *down;
-    QQuickItem *tab;
-    QQuickItem *backtab;
+    QQuickItem *left = nullptr;
+    QQuickItem *right = nullptr;
+    QQuickItem *up = nullptr;
+    QQuickItem *down = nullptr;
+    QQuickItem *tab = nullptr;
+    QQuickItem *backtab = nullptr;
     bool leftSet : 1;
     bool rightSet : 1;
     bool upSet : 1;
@@ -694,7 +692,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickKeyNavigationAttached : public QObject, publi
     Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
 
 public:
-    QQuickKeyNavigationAttached(QObject * = 0);
+    QQuickKeyNavigationAttached(QObject * = nullptr);
 
     QQuickItem *left() const;
     void setLeft(QQuickItem *);
@@ -739,7 +737,7 @@ class QQuickLayoutMirroringAttached : public QObject
     Q_PROPERTY(bool childrenInherit READ childrenInherit WRITE setChildrenInherit NOTIFY childrenInheritChanged)
 
 public:
-    explicit QQuickLayoutMirroringAttached(QObject *parent = 0);
+    explicit QQuickLayoutMirroringAttached(QObject *parent = nullptr);
 
     bool enabled() const;
     void setEnabled(bool);
@@ -782,8 +780,7 @@ class QQuickKeysAttachedPrivate : public QObjectPrivate
 {
 public:
     QQuickKeysAttachedPrivate()
-        : QObjectPrivate(), inPress(false), inRelease(false)
-        , inIM(false), enabled(true), imeItem(0), item(0)
+        : inPress(false), inRelease(false), inIM(false), enabled(true)
     {}
 
     //loop detection
@@ -793,9 +790,9 @@ public:
 
     bool enabled : 1;
 
-    QQuickItem *imeItem;
+    QQuickItem *imeItem = nullptr;
     QList<QQuickItem *> targets;
-    QQuickItem *item;
+    QQuickItem *item = nullptr;
     QQuickKeyEvent theKeyEvent;
 };
 
@@ -809,7 +806,7 @@ class QQuickKeysAttached : public QObject, public QQuickItemKeyFilter
     Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
 
 public:
-    QQuickKeysAttached(QObject *parent=0);
+    QQuickKeysAttached(QObject *parent=nullptr);
     ~QQuickKeysAttached();
 
     bool enabled() const { Q_D(const QQuickKeysAttached); return d->enabled; }
@@ -898,7 +895,7 @@ private:
 Qt::MouseButtons QQuickItemPrivate::acceptedMouseButtons() const
 {
     return ((extra.flag() ? Qt::LeftButton : Qt::MouseButton(0)) |
-            (extra.isAllocated() ? extra->acceptedMouseButtons : Qt::MouseButtons(0)));
+            (extra.isAllocated() ? extra->acceptedMouseButtons : Qt::MouseButtons(nullptr)));
 }
 
 QSGContext *QQuickItemPrivate::sceneGraphContext() const
@@ -920,7 +917,7 @@ void QQuickItemPrivate::markSortedChildrenDirty(QQuickItem *child)
     if (child->z() != 0. || sortedChildItems != &childItems) {
         if (sortedChildItems != &childItems)
             delete sortedChildItems;
-        sortedChildItems = 0;
+        sortedChildItems = nullptr;
     }
 }
 

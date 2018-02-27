@@ -202,7 +202,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
                 return result->asReturnedValue();
             }
         }
-        scopeObject = 0;
+        scopeObject = nullptr;
 
 
         // Search context object
@@ -272,7 +272,7 @@ bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
         if (scopeObject &&
             QV4::QObjectWrapper::setQmlProperty(v4, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, value))
             return true;
-        scopeObject = 0;
+        scopeObject = nullptr;
 
         // Search context object
         if (context->contextObject &&
@@ -312,7 +312,7 @@ Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, cons
     context->isInternal = true;
     context->isJSContext = true;
 
-    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, (QObject*)0));
+    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, (QObject*)nullptr));
     qml->d()->isNullWrapper = true;
 
     qml->setReadOnly(false);

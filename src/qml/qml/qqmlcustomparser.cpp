@@ -138,7 +138,7 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
         QQmlType type;
 
         if (imports.isT1()) {
-            imports.asT1()->resolveType(scope, &type, 0, 0, 0);
+            imports.asT1()->resolveType(scope, &type, nullptr, nullptr, nullptr);
         } else {
             QQmlTypeNameCache::Result result = imports.asT2()->query(scope);
             if (result.isValid())
@@ -178,7 +178,7 @@ const QMetaObject *QQmlCustomParser::resolveType(const QString& name) const
     if (!imports.isT1())
         return nullptr;
     QQmlType qmltype;
-    if (!imports.asT1()->resolveType(name, &qmltype, 0, 0, 0))
+    if (!imports.asT1()->resolveType(name, &qmltype, nullptr, nullptr, nullptr))
         return nullptr;
     return qmltype.metaObject();
 }

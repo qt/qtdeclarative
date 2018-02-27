@@ -450,7 +450,7 @@ struct QQmlCompilingProfiler : public QQmlProfilerHelper {
 struct QQmlVmeProfiler : public QQmlProfilerDefinitions {
 public:
 
-    QQmlVmeProfiler() : profiler(0) {}
+    QQmlVmeProfiler() : profiler(nullptr) {}
 
     void init(QQmlProfiler *p, int maxDepth)
     {

@@ -75,7 +75,7 @@ public:
     };
     Q_ENUM(GesturePolicy)
 
-    explicit QQuickTapHandler(QObject *parent = 0);
+    explicit QQuickTapHandler(QObject *parent = nullptr);
     ~QQuickTapHandler();
 
     bool isPressed() const { return m_pressed; }

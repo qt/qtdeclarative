@@ -66,7 +66,7 @@ const qreal MinimumFlickVelocity = 75.0;
 static QQmlOpenMetaObjectType *qPathViewAttachedType = nullptr;
 
 QQuickPathViewAttached::QQuickPathViewAttached(QObject *parent)
-: QObject(parent), m_percent(-1), m_view(0), m_onPath(false), m_isCurrent(false)
+: QObject(parent), m_percent(-1), m_view(nullptr), m_onPath(false), m_isCurrent(false)
 {
     if (qPathViewAttachedType) {
         m_metaobject = new QQmlOpenMetaObject(this, qPathViewAttachedType);

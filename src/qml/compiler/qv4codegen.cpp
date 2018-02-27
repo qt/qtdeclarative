@@ -89,10 +89,10 @@ static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGene
 }
 
 Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
-    : _module(0)
+    : _module(nullptr)
     , _returnAddress(0)
-    , _context(0)
-    , _labelledStatement(0)
+    , _context(nullptr)
+    , _labelledStatement(nullptr)
     , jsUnitGenerator(jsUnitGenerator)
     , _strictMode(strict)
     , _fileNameIsUrl(false)
@@ -111,7 +111,7 @@ void Codegen::generateFromProgram(const QString &fileName,
     Q_ASSERT(node);
 
     _module = module;
-    _context = 0;
+    _context = nullptr;
 
     // ### should be set on the module outside of this method
     _module->fileName = fileName;
@@ -120,7 +120,7 @@ void Codegen::generateFromProgram(const QString &fileName,
     ScanFunctions scan(this, sourceCode, mode);
     scan(node);
 
-    defineFunction(QStringLiteral("%entry"), node, 0, node->elements);
+    defineFunction(QStringLiteral("%entry"), node, nullptr, node->elements);
 }
 
 void Codegen::enterContext(Node *node)
@@ -635,14 +635,14 @@ bool Codegen::visit(ArrayLiteral *ast)
     for (ElementList *it = ast->elements; it; it = it->next) {
 
         for (Elision *elision = it->elision; elision; elision = elision->next)
-            push(0);
+            push(nullptr);
 
         push(it->expression);
         if (hasError)
             return false;
     }
     for (Elision *elision = ast->elision; elision; elision = elision->next)
-        push(0);
+        push(nullptr);
 
     if (args == -1) {
         Q_ASSERT(argc == 0);
@@ -1496,7 +1496,7 @@ bool Codegen::visit(FunctionExpression *ast)
 
     RegisterScope scope(this);
 
-    int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
+    int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : nullptr);
     loadClosure(function);
     _expr.setResult(Reference::fromAccumulator(this));
     return false;
@@ -1720,7 +1720,7 @@ bool Codegen::visit(ObjectLiteral *ast)
 
             v.rvalue = value.storeOnStack();
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
-            const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
+            const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : nullptr);
             ObjectPropertyValue &v = valueMap[name];
             if (v.rvalue.isValid() ||
                 (gs->type == PropertyGetterSetter::Getter && v.hasGetter()) ||
@@ -2142,7 +2142,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     for (const Context::Member &member : qAsConst(_context->members)) {
         if (member.function) {
             const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
-                                                member.function->body ? member.function->body->elements : 0);
+                                                member.function->body ? member.function->body->elements : nullptr);
             loadClosure(function);
             if (! _context->parent) {
                 Reference::fromName(this, member.function->name.toString()).storeConsumeAccumulator();

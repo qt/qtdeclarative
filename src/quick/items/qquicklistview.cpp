@@ -176,9 +176,9 @@ public:
         , snapMode(QQuickListView::NoSnap)
         , headerPositioning(QQuickListView::InlineHeader)
         , footerPositioning(QQuickListView::InlineFooter)
-        , highlightPosAnimator(0), highlightWidthAnimator(0), highlightHeightAnimator(0)
+        , highlightPosAnimator(nullptr), highlightWidthAnimator(nullptr), highlightHeightAnimator(nullptr)
         , highlightMoveVelocity(400), highlightResizeVelocity(400), highlightResizeDuration(-1)
-        , sectionCriteria(0), currentSectionItem(0), nextSectionItem(0)
+        , sectionCriteria(nullptr), currentSectionItem(nullptr), nextSectionItem(nullptr)
         , overshootDist(0.0), correctFlick(false), inFlickCorrection(false)
     {
         highlightMoveDuration = -1; //override default value set in base class
@@ -195,8 +195,8 @@ public:
 //----------------------------------------------------------------------------
 
 QQuickViewSection::QQuickViewSection(QQuickListView *parent)
-    : QObject(parent), m_criteria(FullString), m_delegate(0), m_labelPositioning(InlineLabels)
-    , m_view(parent ? QQuickListViewPrivate::get(parent) : 0)
+    : QObject(parent), m_criteria(FullString), m_delegate(nullptr), m_labelPositioning(InlineLabels)
+    , m_view(parent ? QQuickListViewPrivate::get(parent) : nullptr)
 {
 }
 
@@ -258,7 +258,7 @@ public:
     }
 
     inline QQuickItem *section() const {
-        return item && attached ? static_cast<QQuickListViewAttached*>(attached)->m_sectionItem : 0;
+        return item && attached ? static_cast<QQuickListViewAttached*>(attached)->m_sectionItem : nullptr;
     }
     void setSection(QQuickItem *s) {
         static_cast<QQuickListViewAttached*>(attached)->m_sectionItem = s;
@@ -389,7 +389,7 @@ bool QQuickListViewPrivate::isBottomToTop() const
 FxViewItem *QQuickListViewPrivate::itemBefore(int modelIndex) const
 {
     if (modelIndex < visibleIndex)
-        return 0;
+        return nullptr;
     int idx = 1;
     int lastIndex = -1;
     while (idx < visibleItems.count()) {
@@ -402,7 +402,7 @@ FxViewItem *QQuickListViewPrivate::itemBefore(int modelIndex) const
     }
     if (lastIndex == modelIndex-1)
         return visibleItems.constLast();
-    return 0;
+    return nullptr;
 }
 
 void QQuickListViewPrivate::setPosition(qreal pos)
@@ -530,7 +530,7 @@ qreal QQuickListViewPrivate::snapPosAt(qreal pos)
 
 FxViewItem *QQuickListViewPrivate::snapItemAt(qreal pos)
 {
-    FxViewItem *snapItem = 0;
+    FxViewItem *snapItem = nullptr;
     qreal prevItemSize = 0;
     for (FxViewItem *item : qAsConst(visibleItems)) {
         if (item->index == -1)
@@ -561,13 +561,13 @@ void QQuickListViewPrivate::clear()
 {
     for (int i = 0; i < sectionCacheSize; ++i) {
         delete sectionCache[i];
-        sectionCache[i] = 0;
+        sectionCache[i] = nullptr;
     }
     visiblePos = 0;
     releaseSectionItem(currentSectionItem);
-    currentSectionItem = 0;
+    currentSectionItem = nullptr;
     releaseSectionItem(nextSectionItem);
-    nextSectionItem = 0;
+    nextSectionItem = nullptr;
     lastVisibleSection = QString();
     QQuickItemViewPrivate::clear();
 }
@@ -629,13 +629,13 @@ bool QQuickListViewPrivate::releaseItem(FxViewItem *item)
             if (!sectionCache[i]) {
                 sectionCache[i] = att->m_sectionItem;
                 sectionCache[i]->setVisible(false);
-                att->m_sectionItem = 0;
+                att->m_sectionItem = nullptr;
                 break;
             }
             ++i;
         } while (i < sectionCacheSize);
         delete att->m_sectionItem;
-        att->m_sectionItem = 0;
+        att->m_sectionItem = nullptr;
     }
 
     return released;
@@ -672,7 +672,7 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     QQmlIncubator::IncubationMode incubationMode = doBuffer ? QQmlIncubator::Asynchronous : QQmlIncubator::AsynchronousIfNested;
 
     bool changed = false;
-    FxListItemSG *item = 0;
+    FxListItemSG *item = nullptr;
     qreal pos = itemEnd;
     while (modelIndex < model->count() && pos <= fillTo) {
         if (!(item = static_cast<FxListItemSG*>(createItem(modelIndex, incubationMode))))
@@ -722,7 +722,7 @@ void QQuickListViewPrivate::removeItem(FxViewItem *item)
 
 bool QQuickListViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal bufferTo)
 {
-    FxViewItem *item = 0;
+    FxViewItem *item = nullptr;
     bool changed = false;
 
     // Remove items from the start of the view.
@@ -864,16 +864,16 @@ void QQuickListViewPrivate::createHighlight()
     bool changed = false;
     if (highlight) {
         if (trackedItem == highlight)
-            trackedItem = 0;
+            trackedItem = nullptr;
         delete highlight;
-        highlight = 0;
+        highlight = nullptr;
 
         delete highlightPosAnimator;
         delete highlightWidthAnimator;
         delete highlightHeightAnimator;
-        highlightPosAnimator = 0;
-        highlightWidthAnimator = 0;
-        highlightHeightAnimator = 0;
+        highlightPosAnimator = nullptr;
+        highlightWidthAnimator = nullptr;
+        highlightHeightAnimator = nullptr;
 
         changed = true;
     }
@@ -962,13 +962,13 @@ bool QQuickListViewPrivate::movingFromHighlight()
 QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
 {
     Q_Q(QQuickListView);
-    QQuickItem *sectionItem = 0;
+    QQuickItem *sectionItem = nullptr;
     int i = sectionCacheSize-1;
     while (i >= 0 && !sectionCache[i])
         --i;
     if (i >= 0) {
         sectionItem = sectionCache[i];
-        sectionCache[i] = 0;
+        sectionCache[i] = nullptr;
         sectionItem->setVisible(true);
         QQmlContext *context = QQmlEngine::contextForObject(sectionItem)->parentContext();
         context->setContextProperty(QLatin1String("section"), section);
@@ -1025,13 +1025,13 @@ void QQuickListViewPrivate::releaseSectionItems()
         if (listItem->section()) {
             qreal pos = listItem->position();
             releaseSectionItem(listItem->section());
-            listItem->setSection(0);
+            listItem->setSection(nullptr);
             listItem->setPosition(pos);
         }
     }
     for (int i = 0; i < sectionCacheSize; ++i) {
         delete sectionCache[i];
-        sectionCache[i] = 0;
+        sectionCache[i] = nullptr;
     }
 }
 
@@ -1053,7 +1053,7 @@ void QQuickListViewPrivate::updateInlineSection(FxListItemSG *listItem)
     } else if (listItem->section()) {
         qreal pos = listItem->position();
         releaseSectionItem(listItem->section());
-        listItem->setSection(0);
+        listItem->setSection(nullptr);
         listItem->setPosition(pos);
     }
 }
@@ -1069,8 +1069,8 @@ void QQuickListViewPrivate::updateStickySections()
     qreal startPos = hasStickyHeader() ? header->endPosition() : viewPos;
     qreal endPos = hasStickyFooter() ? footer->position() : viewPos + size();
 
-    QQuickItem *sectionItem = 0;
-    QQuickItem *lastSectionItem = 0;
+    QQuickItem *sectionItem = nullptr;
+    QQuickItem *lastSectionItem = nullptr;
     int index = 0;
     while (index < visibleItems.count()) {
         if (QQuickItem *section = static_cast<FxListItemSG *>(visibleItems.at(index))->section()) {
@@ -1129,7 +1129,7 @@ void QQuickListViewPrivate::updateStickySections()
             currentSectionItem->setX(pos);
     } else if (currentSectionItem) {
         releaseSectionItem(currentSectionItem);
-        currentSectionItem = 0;
+        currentSectionItem = nullptr;
     }
 
     // Next section footer
@@ -1161,7 +1161,7 @@ void QQuickListViewPrivate::updateStickySections()
             nextSectionItem->setX(pos);
     } else if (nextSectionItem) {
         releaseSectionItem(nextSectionItem);
-        nextSectionItem = 0;
+        nextSectionItem = nullptr;
     }
 }
 
@@ -1177,7 +1177,7 @@ void QQuickListViewPrivate::updateSections()
         QString prevSection;
         if (visibleIndex > 0)
             prevSection = sectionAt(visibleIndex-1);
-        QQuickListViewAttached *prevAtt = 0;
+        QQuickListViewAttached *prevAtt = nullptr;
         int prevIdx = -1;
         int idx = -1;
         for (FxViewItem *item : qAsConst(visibleItems)) {
@@ -3266,7 +3266,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         } else {
             for (i = count-1; i >= 0 && pos >= from; --i) {
                 // item is before first visible e.g. in cache buffer
-                FxViewItem *item = 0;
+                FxViewItem *item = nullptr;
                 if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                     item->index = modelIndex + i;
                 if (!item)
@@ -3307,7 +3307,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     } else {
         for (int i = 0; i < count && pos <= lastVisiblePos; ++i) {
             visibleAffected = true;
-            FxViewItem *item = 0;
+            FxViewItem *item = nullptr;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                 item->index = modelIndex + i;
             bool newItem = !item;

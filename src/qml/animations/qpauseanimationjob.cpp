@@ -42,8 +42,7 @@
 QT_BEGIN_NAMESPACE
 
 QPauseAnimationJob::QPauseAnimationJob(int duration)
-    : QAbstractAnimationJob()
-    , m_duration(duration)
+    : m_duration(duration)
 {
     m_isPause = true;
 }

@@ -372,7 +372,7 @@ void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
 QSGTexture *QSGRenderContext::textureForFactory(QQuickTextureFactory *factory, QQuickWindow *window)
 {
     if (!factory)
-        return 0;
+        return nullptr;
 
     m_mutex.lock();
     QSGTexture *texture = m_textures.value(factory);

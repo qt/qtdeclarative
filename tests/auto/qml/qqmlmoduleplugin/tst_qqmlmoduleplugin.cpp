@@ -217,7 +217,7 @@ void tst_qqmlmoduleplugin::importsPlugin()
         qWarning() << err;
     VERIFY_ERRORS(0);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toInt(),123);
     delete object;
 }
@@ -285,7 +285,7 @@ void tst_qqmlmoduleplugin::importPluginWithQmlFile()
         qWarning() << err;
     VERIFY_ERRORS(0);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     delete object;
 }
 
@@ -301,7 +301,7 @@ void tst_qqmlmoduleplugin::remoteImportWithQuotedUrl()
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
     QObject *object = component.create();
     QCOMPARE(object->property("width").toInt(), 300);
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     delete object;
 
     foreach (QQmlError err, component.errors())
@@ -323,7 +323,7 @@ void tst_qqmlmoduleplugin::remoteImportWithUnquotedUri()
 
     QTRY_COMPARE(component.status(), QQmlComponent::Ready);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("width").toInt(), 300);
     delete object;
 
@@ -345,7 +345,7 @@ void tst_qqmlmoduleplugin::importsMixedQmlCppPlugin()
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("importsMixedQmlCppPlugin.qml")));
 
     QObject *o = component.create();
-    QVERIFY2(o != 0, QQmlDataTest::msgComponentError(component, &engine));
+    QVERIFY2(o != nullptr, QQmlDataTest::msgComponentError(component, &engine));
     QCOMPARE(o->property("test").toBool(), true);
     delete o;
     }
@@ -354,7 +354,7 @@ void tst_qqmlmoduleplugin::importsMixedQmlCppPlugin()
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("importsMixedQmlCppPlugin.2.qml")));
 
     QObject *o = component.create();
-    QVERIFY2(o != 0, QQmlDataTest::msgComponentError(component, &engine));
+    QVERIFY2(o != nullptr, QQmlDataTest::msgComponentError(component, &engine));
     QCOMPARE(o->property("test").toBool(), true);
     QCOMPARE(o->property("test2").toBool(), true);
     delete o;
@@ -482,7 +482,7 @@ void tst_qqmlmoduleplugin::importLocalModule()
     component.setData(qml.toUtf8(), testFileUrl("empty.qml"));
 
     QScopedPointer<QObject> object(component.create());
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("majorVersion").value<int>(), majorVersion);
     QCOMPARE(object->property("minorVersion").value<int>(), minorVersion);
 }
@@ -539,7 +539,7 @@ void tst_qqmlmoduleplugin::importStrictModule()
 
     if (error.isEmpty()) {
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != 0);
+        QVERIFY(object != nullptr);
     } else {
         QVERIFY(!component.isReady());
         QCOMPARE(component.errors().count(), 1);
@@ -623,7 +623,7 @@ void tst_qqmlmoduleplugin::importProtectedModule()
     //If plugin is loaded due to import, should assert
     QScopedPointer<QObject> object(component.create());
     //qDebug() << component.errorString();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 }
 
 void tst_qqmlmoduleplugin::importVersionedModule()
@@ -664,7 +664,7 @@ void tst_qqmlmoduleplugin::importsChildPlugin()
         qWarning() << err;
     VERIFY_ERRORS(0);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toInt(),123);
     delete object;
 }
@@ -681,7 +681,7 @@ void tst_qqmlmoduleplugin::importsChildPlugin2()
         qWarning() << err;
     VERIFY_ERRORS(0);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toInt(),123);
     delete object;
 }
@@ -698,7 +698,7 @@ void tst_qqmlmoduleplugin::importsChildPlugin21()
         qWarning() << err;
     VERIFY_ERRORS(0);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toInt(),123);
     delete object;
 }

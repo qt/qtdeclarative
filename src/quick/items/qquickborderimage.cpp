@@ -278,7 +278,7 @@ void QQuickBorderImage::setSource(const QUrl &url)
 #if QT_CONFIG(qml_network)
     if (d->sciReply) {
         d->sciReply->deleteLater();
-        d->sciReply = 0;
+        d->sciReply = nullptr;
     }
 #endif
 
@@ -559,12 +559,12 @@ void QQuickBorderImage::sciRequestFinished()
     if (d->sciReply->error() != QNetworkReply::NoError) {
         d->status = Error;
         d->sciReply->deleteLater();
-        d->sciReply = 0;
+        d->sciReply = nullptr;
         emit statusChanged(d->status);
     } else {
         QQuickGridScaledImage sci(d->sciReply);
         d->sciReply->deleteLater();
-        d->sciReply = 0;
+        d->sciReply = nullptr;
         setGridScaledImage(sci);
     }
 }
@@ -629,7 +629,7 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
 
     if (!texture || width() <= 0 || height() <= 0) {
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
     QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);

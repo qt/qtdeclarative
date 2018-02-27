@@ -550,7 +550,7 @@ void QQmlDataBlob::networkError(QNetworkReply::NetworkError networkError)
     QQmlError error;
     error.setUrl(m_url);
 
-    const char *errorString = 0;
+    const char *errorString = nullptr;
     switch (networkError) {
         default:
             errorString = "Network error";
@@ -791,7 +791,7 @@ void QQmlDataBlob::ThreadData::setProgress(quint8 v)
 QQmlTypeLoaderThread::QQmlTypeLoaderThread(QQmlTypeLoader *loader)
 : m_loader(loader)
 #if QT_CONFIG(qml_network)
-, m_networkAccessManager(0), m_networkReplyProxy(0)
+, m_networkAccessManager(nullptr), m_networkReplyProxy(nullptr)
 #endif // qml_network
 {
     // Do that after initializing all the members.
@@ -803,7 +803,7 @@ QNetworkAccessManager *QQmlTypeLoaderThread::networkAccessManager() const
 {
     Q_ASSERT(isThisThread());
     if (!m_networkAccessManager) {
-        m_networkAccessManager = QQmlEnginePrivate::get(m_loader->engine())->createNetworkAccessManager(0);
+        m_networkAccessManager = QQmlEnginePrivate::get(m_loader->engine())->createNetworkAccessManager(nullptr);
         m_networkReplyProxy = new QQmlTypeLoaderNetworkReplyProxy(m_loader);
     }
 
@@ -876,9 +876,9 @@ void QQmlTypeLoaderThread::shutdownThread()
 {
 #if QT_CONFIG(qml_network)
     delete m_networkAccessManager;
-    m_networkAccessManager = 0;
+    m_networkAccessManager = nullptr;
     delete m_networkReplyProxy;
-    m_networkReplyProxy = 0;
+    m_networkReplyProxy = nullptr;
 #endif // qml_network
 }
 
@@ -962,7 +962,7 @@ void QQmlTypeLoader::invalidate()
     if (m_thread) {
         shutdownThread();
         delete m_thread;
-        m_thread = 0;
+        m_thread = nullptr;
     }
 
 #if QT_CONFIG(qml_network)
@@ -1535,7 +1535,7 @@ void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
 
 bool QQmlTypeLoader::Blob::isDebugging() const
 {
-    return typeLoader()->engine()->handle()->debugger() != 0;
+    return typeLoader()->engine()->handle()->debugger() != nullptr;
 }
 
 bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlError> *errors)
@@ -1543,7 +1543,7 @@ bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlE
     bool resolve = true;
 
     const QV4::CompiledData::Import *import = data->import(this);
-    data->setImport(this, 0);
+    data->setImport(this, nullptr);
 
     int priority = data->priority(this);
     data->setPriority(this, 0);
@@ -1818,7 +1818,7 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
 
     if (!m_importDirCache.contains(dirPath)) {
         bool exists = QDir(dirPath).exists();
-        QCache<QString, bool> *entry = exists ? new QCache<QString, bool> : 0;
+        QCache<QString, bool> *entry = exists ? new QCache<QString, bool> : nullptr;
         m_importDirCache.insert(dirPath, entry);
     }
     QCache<QString, bool> *fileSet = m_importDirCache.object(dirPath);
@@ -1881,12 +1881,12 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
 
     if (!m_importDirCache.contains(dirPath)) {
         bool exists = QDir(dirPath).exists();
-        QCache<QString, bool> *files = exists ? new QCache<QString, bool> : 0;
+        QCache<QString, bool> *files = exists ? new QCache<QString, bool> : nullptr;
         m_importDirCache.insert(dirPath, files);
     }
 
     QCache<QString, bool> *fileSet = m_importDirCache.object(dirPath);
-    return fileSet != 0;
+    return fileSet != nullptr;
 }
 
 
@@ -2764,7 +2764,7 @@ bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &
                                TypeReference &ref, int lineNumber, int columnNumber,
                                bool reportErrors, QQmlType::RegistrationType registrationType)
 {
-    QQmlImportNamespace *typeNamespace = 0;
+    QQmlImportNamespace *typeNamespace = nullptr;
     QList<QQmlError> errors;
 
     bool typeFound = m_importCache.resolveType(typeName, &ref.type, &majorVersion, &minorVersion,
@@ -2824,9 +2824,9 @@ void QQmlTypeData::scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData:
 }
 
 QQmlScriptData::QQmlScriptData()
-    : typeNameCache(0)
+    : typeNameCache(nullptr)
     , m_loaded(false)
-    , m_program(0)
+    , m_program(nullptr)
 {
 }
 
@@ -2843,7 +2843,7 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
 
     QV4::ExecutionEngine *v4 = engine->handle();
 
-    m_program = new QV4::Script(v4, 0, m_precompiledScript);
+    m_program = new QV4::Script(v4, nullptr, m_precompiledScript);
 
     addToEngine(engine);
 
@@ -2864,7 +2864,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
 
     QQmlContextData *effectiveCtxt = parentCtxt;
     if (shared)
-        effectiveCtxt = 0;
+        effectiveCtxt = nullptr;
 
     // Create the script context if required
     QQmlContextDataRef ctxt(new QQmlContextData);
@@ -2912,7 +2912,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
         return QV4::Encode::undefined();
     }
 
-    QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, 0));
+    QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, nullptr));
 
     m_program->qmlContext.set(scope.engine, qmlContext);
     m_program->run();
@@ -2936,7 +2936,7 @@ void QQmlScriptData::clear()
 {
     if (typeNameCache) {
         typeNameCache->release();
-        typeNameCache = 0;
+        typeNameCache = nullptr;
     }
 
     for (int ii = 0; ii < scripts.count(); ++ii)
@@ -2948,7 +2948,7 @@ void QQmlScriptData::clear()
 }
 
 QQmlScriptBlob::QQmlScriptBlob(const QUrl &url, QQmlTypeLoader *loader)
-: QQmlTypeLoader::Blob(url, JavaScriptFile, loader), m_scriptData(0)
+: QQmlTypeLoader::Blob(url, JavaScriptFile, loader), m_scriptData(nullptr)
 {
 }
 
@@ -2956,7 +2956,7 @@ QQmlScriptBlob::~QQmlScriptBlob()
 {
     if (m_scriptData) {
         m_scriptData->release();
-        m_scriptData = 0;
+        m_scriptData = nullptr;
     }
 }
 
@@ -3135,7 +3135,7 @@ const QV4::CompiledData::Import *QQmlQmldirData::import(QQmlTypeLoader::Blob *bl
     QHash<QQmlTypeLoader::Blob *, const QV4::CompiledData::Import *>::const_iterator it =
         m_imports.find(blob);
     if (it == m_imports.end())
-        return 0;
+        return nullptr;
     return *it;
 }
 

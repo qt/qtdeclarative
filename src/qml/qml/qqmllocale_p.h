@@ -165,7 +165,7 @@ struct QQmlLocaleData : public QV4::Object
         const QQmlLocaleData *data = o ? o->as<QQmlLocaleData>() : nullptr;
         if (!data) {
             scope.engine->throwTypeError();
-            return 0;
+            return nullptr;
         }
         return data->d()->locale;
     }

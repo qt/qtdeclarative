@@ -254,18 +254,15 @@ public:
     void _q_propertyChanged();
     QVariant readProperty(const QMetaProperty &property) const;
 
-    QQmlSettings *q_ptr;
-    int timerId;
-    bool initialized;
+    QQmlSettings *q_ptr = nullptr;
+    int timerId = 0;
+    bool initialized = false;
     QString category;
     mutable QPointer<QSettings> settings;
     QHash<const char *, QVariant> changedProperties;
 };
 
-QQmlSettingsPrivate::QQmlSettingsPrivate()
-    : q_ptr(0), timerId(0), initialized(false)
-{
-}
+QQmlSettingsPrivate::QQmlSettingsPrivate() {}
 
 QSettings *QQmlSettingsPrivate::instance() const
 {

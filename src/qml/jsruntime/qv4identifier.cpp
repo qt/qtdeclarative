@@ -132,13 +132,13 @@ IdentifierHashEntry *IdentifierHash::addEntry(const Identifier *identifier)
 const IdentifierHashEntry *IdentifierHash::lookup(const Identifier *identifier) const
 {
     if (!d)
-        return 0;
+        return nullptr;
     Q_ASSERT(d->entries);
 
     uint idx = identifier->hashValue % d->alloc;
     while (1) {
         if (!d->entries[idx].identifier)
-            return 0;
+            return nullptr;
         if (d->entries[idx].identifier == identifier)
             return d->entries + idx;
         ++idx;
@@ -149,14 +149,14 @@ const IdentifierHashEntry *IdentifierHash::lookup(const Identifier *identifier) 
 const IdentifierHashEntry *IdentifierHash::lookup(const QString &str) const
 {
     if (!d)
-        return 0;
+        return nullptr;
     Q_ASSERT(d->entries);
 
     uint hash = String::createHashValue(str.constData(), str.length(), nullptr);
     uint idx = hash % d->alloc;
     while (1) {
         if (!d->entries[idx].identifier)
-            return 0;
+            return nullptr;
         if (d->entries[idx].identifier->string == str)
             return d->entries + idx;
         ++idx;
@@ -167,7 +167,7 @@ const IdentifierHashEntry *IdentifierHash::lookup(const QString &str) const
 const IdentifierHashEntry *IdentifierHash::lookup(String *str) const
 {
     if (!d)
-        return 0;
+        return nullptr;
     if (str->d()->identifier)
         return lookup(str->d()->identifier);
     return lookup(str->toQString());

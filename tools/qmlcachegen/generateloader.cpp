@@ -58,12 +58,10 @@ struct VirtualDirectoryEntry
 {
     QString name;
     QVector<VirtualDirectoryEntry*> dirEntries;
-    int firstChildIndex; // node index inside generated data
-    bool isDirectory;
+    int firstChildIndex = -1; // node index inside generated data
+    bool isDirectory = true;
 
     VirtualDirectoryEntry()
-        : firstChildIndex(-1)
-        , isDirectory(true)
     {}
 
     ~VirtualDirectoryEntry()
@@ -98,7 +96,7 @@ struct VirtualDirectoryEntry
 
 struct DataStream
 {
-    DataStream(QVector<unsigned char > *data = 0)
+    DataStream(QVector<unsigned char > *data = nullptr)
         : data(data)
     {}
 

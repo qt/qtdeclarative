@@ -75,7 +75,7 @@ namespace QSGAtlasTexture
 {
 
 Manager::Manager()
-    : m_atlas(0)
+    : m_atlas(nullptr)
 {
     QOpenGLContext *gl = QOpenGLContext::currentContext();
     Q_ASSERT(gl);
@@ -105,7 +105,7 @@ Manager::Manager()
 
 Manager::~Manager()
 {
-    Q_ASSERT(m_atlas == 0);
+    Q_ASSERT(m_atlas == nullptr);
     Q_ASSERT(m_atlases.isEmpty());
 }
 
@@ -114,7 +114,7 @@ void Manager::invalidate()
     if (m_atlas) {
         m_atlas->invalidate();
         m_atlas->deleteLater();
-        m_atlas = 0;
+        m_atlas = nullptr;
     }
 
     QHash<unsigned int, QSGCompressedAtlasTexture::Atlas*>::iterator i = m_atlases.begin();
@@ -128,7 +128,7 @@ void Manager::invalidate()
 
 QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
 {
-    Texture *t = 0;
+    Texture *t = nullptr;
     if (image.width() < m_atlas_size_limit && image.height() < m_atlas_size_limit) {
         if (!m_atlas)
             m_atlas = new Atlas(m_atlas_size);
@@ -142,7 +142,7 @@ QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
 
 QSGTexture *Manager::create(const QSGCompressedTextureFactory *factory)
 {
-    QSGTexture *t = 0;
+    QSGTexture *t = nullptr;
     if (!qsgEnableCompressedAtlas() || !factory->m_textureData || !factory->m_textureData->isValid())
         return t;
 
@@ -348,7 +348,7 @@ Texture *Atlas::create(const QImage &image)
         m_pending_uploads << t;
         return t;
     }
-    return 0;
+    return nullptr;
 }
 
 static void swizzleBGRAToRGBA(QImage *image)
@@ -467,7 +467,7 @@ void Atlas::uploadBgra(Texture *texture)
 void Atlas::generateTexture()
 {
     QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
-    funcs->glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_size.width(), m_size.height(), 0, m_externalFormat, GL_UNSIGNED_BYTE, 0);
+    funcs->glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_size.width(), m_size.height(), 0, m_externalFormat, GL_UNSIGNED_BYTE, nullptr);
 
 #if 0
     QImage pink(m_size.width(), m_size.height(), QImage::Format_ARGB32_Premultiplied);
@@ -527,7 +527,7 @@ void TextureBase::bind()
 Texture::Texture(Atlas *atlas, const QRect &textureRect, const QImage &image)
     : TextureBase(atlas, textureRect)
     , m_image(image)
-    , m_nonatlas_texture(0)
+    , m_nonatlas_texture(nullptr)
     , m_has_alpha(image.hasAlphaChannel())
 {
     float w = atlas->size().width();

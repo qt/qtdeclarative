@@ -71,8 +71,7 @@ class QML_PARSER_EXPORT DiagnosticMessage
 public:
     enum Kind { Warning, Error };
 
-    DiagnosticMessage()
-        : kind(Error) {}
+    DiagnosticMessage() {}
 
     DiagnosticMessage(Kind kind, const AST::SourceLocation &loc, const QString &message)
         : kind(kind), loc(loc), message(message) {}
@@ -83,7 +82,7 @@ public:
     bool isError() const
     { return kind == Error; }
 
-    Kind kind;
+    Kind kind = Error;
     AST::SourceLocation loc;
     QString message;
 };

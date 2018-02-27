@@ -49,11 +49,11 @@ const char *const QQmlJSGrammar::spell [] = {
     "if", "in", "instanceof", "{", "[", "<=", "(", "<", "<<", "<<=",
     "-", "-=", "--", "new", "!", "!=", "!==", "numeric literal", "|", "|=",
     "||", "+", "+=", "++", "?", "}", "]", "%", "%=", "return",
-    ")", ";", 0, "*", "*=", "string literal", "property", "signal", "readonly", "switch",
+    ")", ";", nullptr, "*", "*=", "string literal", "property", "signal", "readonly", "switch",
     "this", "throw", "~", "try", "typeof", "var", "void", "while", "with", "^",
     "^=", "null", "true", "false", "const", "let", "debugger", "reserved word", "multiline string literal", "comment",
-    0, "enum", "public", "import", "pragma", "as", "on", "get", "set", 0,
-    0, 0, 0, 0, 0, 0, 0, 0
+    nullptr, "enum", "public", "import", "pragma", "as", "on", "get", "set", nullptr,
+    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
 };
 
 const short QQmlJSGrammar::lhs [] = {

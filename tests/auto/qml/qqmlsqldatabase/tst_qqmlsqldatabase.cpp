@@ -164,7 +164,7 @@ void tst_qqmlsqldatabase::testQml()
     component.setData(qml.toUtf8(), testFileUrl("empty.qml")); // just a file for relative local imports
     QVERIFY(!component.isError());
     QQuickText *text = qobject_cast<QQuickText*>(component.create());
-    QVERIFY(text != 0);
+    QVERIFY(text != nullptr);
     QCOMPARE(text->text(),QString("passed"));
 }
 

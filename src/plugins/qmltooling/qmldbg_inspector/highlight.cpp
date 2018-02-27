@@ -100,7 +100,7 @@ void Highlight::adjust()
         return;
 
     bool success = false;
-    m_transform = m_item->itemTransform(0, &success);
+    m_transform = m_item->itemTransform(nullptr, &success);
     if (!success)
         m_transform = QTransform();
 

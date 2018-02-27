@@ -62,14 +62,14 @@ using namespace QV4;
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
     : line(1), column(0), context(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
-    , compilationUnit(compilationUnit), vmFunction(0), parseAsBinding(true)
+    , compilationUnit(compilationUnit), vmFunction(nullptr), parseAsBinding(true)
 {
     if (qml)
         qmlContext.set(v4, *qml);
 
     parsed = true;
 
-    vmFunction = compilationUnit ? compilationUnit->linkToEngine(v4) : 0;
+    vmFunction = compilationUnit ? compilationUnit->linkToEngine(v4) : nullptr;
 }
 
 Script::~Script()
@@ -88,7 +88,7 @@ void Script::parse()
     ExecutionEngine *v4 = context->engine();
     Scope valueScope(v4);
 
-    Module module(v4->debugger() != 0);
+    Module module(v4->debugger() != nullptr);
 
     Engine ee, *engine = &ee;
     Lexer lexer(engine);
@@ -149,10 +149,10 @@ ReturnedValue Script::run()
     if (qmlContext.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        return vmFunction->call(engine->globalObject, 0, 0, context);
+        return vmFunction->call(engine->globalObject, nullptr, 0, context);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
-        return vmFunction->call(0, 0, 0, qml);
+        return vmFunction->call(nullptr, nullptr, 0, qml);
     }
 }
 
@@ -199,14 +199,14 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
     if (!errors.isEmpty()) {
         if (reportedErrors)
             *reportedErrors << errors;
-        return 0;
+        return nullptr;
     }
 
     Program *program = AST::cast<Program *>(parser.rootNode());
     if (!program) {
         // if parsing was successful, and we have no program, then
         // we're done...:
-        return 0;
+        return nullptr;
     }
 
     Codegen cg(unitGenerator, /*strict mode*/false);
@@ -216,7 +216,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
     if (!errors.isEmpty()) {
         if (reportedErrors)
             *reportedErrors << errors;
-        return 0;
+        return nullptr;
     }
 
     return cg.generateCompilationUnit(/*generate unit data*/false);

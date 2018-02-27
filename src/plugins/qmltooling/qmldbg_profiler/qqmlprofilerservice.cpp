@@ -242,7 +242,7 @@ void QQmlProfilerServiceImpl::startProfiling(QJSEngine *engine, quint64 features
 
     d << m_timer.nsecsElapsed() << static_cast<qint32>(Event) << static_cast<qint32>(StartTrace);
     bool startedAny = false;
-    if (engine != 0) {
+    if (engine != nullptr) {
         const auto range = qAsConst(m_engineProfilers).equal_range(engine);
         for (auto it = range.first; it != range.second; ++it) {
             QQmlAbstractProfilerAdapter *profiler = *it;
@@ -297,7 +297,7 @@ void QQmlProfilerServiceImpl::stopProfiling(QJSEngine *engine)
             i != m_engineProfilers.end(); ++i) {
         if (i.value()->isRunning()) {
             m_startTimes.insert(-1, i.value());
-            if (engine == 0 || i.key() == engine) {
+            if (engine == nullptr || i.key() == engine) {
                 stopping << i.value();
             } else {
                 reporting << i.value();

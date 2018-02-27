@@ -89,7 +89,6 @@ class UncontrolledAnimation : public QObject, public QAbstractAnimationJob
     Q_OBJECT
 public:
     UncontrolledAnimation()
-        : id(0)
     {
     }
 
@@ -113,7 +112,7 @@ protected:
     }
 
 private:
-    int id;
+    int id = 0;
 };
 
 class StateChangeListener: public QAnimationJobChangeListener
@@ -133,14 +132,14 @@ public:
 class FinishedListener: public QAnimationJobChangeListener
 {
 public:
-    FinishedListener() : m_count(0) {}
+    FinishedListener() {}
 
     virtual void animationFinished(QAbstractAnimationJob *) { ++m_count; }
     void clear() { m_count = 0; }
     int count() { return m_count; }
 
 private:
-    int m_count;
+    int m_count = 0;
 };
 
 void tst_QParallelAnimationGroupJob::setCurrentTime()
@@ -685,10 +684,10 @@ void tst_QParallelAnimationGroupJob::stopUncontrolledAnimations()
 }
 
 struct AnimState {
-    AnimState(int time = -1) : time(time), state(-1) {}
+    AnimState(int time = -1) : time(time) {}
     AnimState(int time, int state) : time(time), state(state) {}
     int time;
-    int state;
+    int state = -1;
 };
 
 #define Running QAbstractAnimationJob::Running
@@ -848,7 +847,7 @@ void tst_QParallelAnimationGroupJob::addAndRemoveDuration()
     QCOMPARE(group.duration(), 250);
 
     group.removeAnimation(test);    // remove the last one (with duration = 250)
-    QCOMPARE(test->group(), static_cast<QAnimationGroupJob*>(0));
+    QCOMPARE(test->group(), static_cast<QAnimationGroupJob*>(nullptr));
     QCOMPARE(group.duration(), 0);
     delete test;
 }

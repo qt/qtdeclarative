@@ -159,7 +159,7 @@ ExecutableAllocator::~ExecutableAllocator()
 ExecutableAllocator::Allocation *ExecutableAllocator::allocate(size_t size)
 {
     QMutexLocker locker(&mutex);
-    Allocation *allocation = 0;
+    Allocation *allocation = nullptr;
 
     // Code is best aligned to 16-byte boundaries.
     size = WTF::roundUpToMultipleOf(16, size);
@@ -217,7 +217,7 @@ void ExecutableAllocator::free(Allocation *allocation)
     if (!merged)
         freeAllocations.insert(allocation->size, allocation);
 
-    allocation = 0;
+    allocation = nullptr;
 
     if (!chunk->firstAllocation->next) {
         freeAllocations.remove(chunk->firstAllocation->size, chunk->firstAllocation);
@@ -235,7 +235,7 @@ ExecutableAllocator::ChunkOfPages *ExecutableAllocator::chunkForAllocation(Alloc
     if (it != chunks.begin())
         --it;
     if (it == chunks.end())
-        return 0;
+        return nullptr;
     return *it;
 }
 

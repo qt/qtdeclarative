@@ -114,7 +114,7 @@ public:
     static Service *service()
     {
         QQmlDebugConnector *inst = instance();
-        return inst ? static_cast<Service *>(inst->service(Service::s_key)) : 0;
+        return inst ? static_cast<Service *>(inst->service(Service::s_key)) : nullptr;
     }
 
 protected:

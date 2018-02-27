@@ -206,7 +206,7 @@ private:
 QQuickWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QQuickWorkerScriptEnginePrivate *parent)
     : QV8Engine(new QV4::ExecutionEngine), p(parent)
 #if QT_CONFIG(qml_network)
-, accessManager(0)
+, accessManager(nullptr)
 #endif
 {
     m_v4Engine->v8Engine = this;
@@ -293,7 +293,7 @@ QNetworkAccessManager *QQuickWorkerScriptEnginePrivate::WorkerEngine::networkAcc
 #endif
 
 QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *engine)
-: workerEngine(0), qmlengine(engine), m_nextId(0)
+: workerEngine(nullptr), qmlengine(engine), m_nextId(0)
 {
 }
 
@@ -510,7 +510,7 @@ QQuickWorkerScriptEngine::~QQuickWorkerScriptEngine()
 }
 
 QQuickWorkerScriptEnginePrivate::WorkerScript::WorkerScript()
-: id(-1), initialized(false), owner(0)
+: id(-1), initialized(false), owner(nullptr)
 {
 }
 
@@ -537,7 +537,7 @@ void QQuickWorkerScriptEngine::removeWorkerScript(int id)
 {
     QQuickWorkerScriptEnginePrivate::WorkerScript* script = d->workers.value(id);
     if (script) {
-        script->owner = 0;
+        script->owner = nullptr;
         QCoreApplication::postEvent(d, new WorkerRemoveEvent(id));
     }
 }
@@ -568,7 +568,7 @@ void QQuickWorkerScriptEngine::run()
     qDeleteAll(d->workers);
     d->workers.clear();
 
-    delete d->workerEngine; d->workerEngine = 0;
+    delete d->workerEngine; d->workerEngine = nullptr;
 }
 
 
@@ -619,7 +619,7 @@ void QQuickWorkerScriptEngine::run()
         {Threaded ListModel Example}
 */
 QQuickWorkerScript::QQuickWorkerScript(QObject *parent)
-: QObject(parent), m_engine(0), m_scriptId(-1), m_componentComplete(true)
+: QObject(parent), m_engine(nullptr), m_scriptId(-1), m_componentComplete(true)
 {
 }
 
@@ -699,7 +699,7 @@ QQuickWorkerScriptEngine *QQuickWorkerScript::engine()
         QQmlEngine *engine = qmlEngine(this);
         if (!engine) {
             qWarning("QQuickWorkerScript: engine() called without qmlEngine() set");
-            return 0;
+            return nullptr;
         }
 
         m_engine = QQmlEnginePrivate::get(engine)->getWorkerScriptEngine();
@@ -710,7 +710,7 @@ QQuickWorkerScriptEngine *QQuickWorkerScript::engine()
 
         return m_engine;
     }
-    return 0;
+    return nullptr;
 }
 
 void QQuickWorkerScript::componentComplete()

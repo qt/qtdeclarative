@@ -45,13 +45,13 @@ struct Range
 
 template <typename T>  struct Array
 {
-    Array() : array(0), count(0) {}
+    Array() : array(nullptr) {}
     template<int N> Array(const T (&array)[N]) : array(array), count(N) {}
 
     T operator [](int index) const { return array[index]; }
 
     const T *array;
-    int count;
+    int count = 0;
 };
 
 typedef Array<int> IndexArray;
@@ -181,7 +181,7 @@ void tst_qqmllistcompositor::find_data()
             << (RangeList()
                 << Range(a, 0, 1, int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag))
                 << Range(a, 1, 1, int(C::AppendFlag | C::PrependFlag | C::CacheFlag))
-                << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
+                << Range(nullptr, 0, 1, int(VisibleFlag| C::CacheFlag)))
             << C::Cache << 2
             << Selection << 0
             << 0 << 0 << 0 << 0
@@ -238,7 +238,7 @@ void tst_qqmllistcompositor::findInsertPosition_data()
             << (RangeList()
                 << Range(a, 0, 1, int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag))
                 << Range(a, 1, 1, int(C::AppendFlag | C::PrependFlag | C::CacheFlag))
-                << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
+                << Range(nullptr, 0, 1, int(VisibleFlag| C::CacheFlag)))
             << Selection << 0
             << 0 << 0 << 0 << 0
             << uint(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag) << 0;
@@ -246,7 +246,7 @@ void tst_qqmllistcompositor::findInsertPosition_data()
             << (RangeList()
                 << Range(a, 0, 1, int(C::PrependFlag |  SelectionFlag | C::DefaultFlag | C::CacheFlag))
                 << Range(a, 1, 1, int(C::AppendFlag | C::PrependFlag | C::CacheFlag))
-                << Range(0, 0, 1, int(VisibleFlag| C::CacheFlag)))
+                << Range(nullptr, 0, 1, int(VisibleFlag| C::CacheFlag)))
             << Selection << 1
             << 1 << 1 << 1 << 3
             << uint(0) << 0;
@@ -390,17 +390,17 @@ void tst_qqmllistcompositor::clearFlags_data()
     int listA; void *a = &listA;
 
     {   static const int cacheIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11,0,0,0,0};
-        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,0,0,0,0};
+        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr,nullptr};
         static const int defaultIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11,0,0,0,0};
-        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,0,0,0,0};
+        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr,nullptr};
         static const int visibleIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11,0,0,0,0};
-        static const void *visibleLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,0,0,0,0};
+        static const void *visibleLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr,nullptr};
         static const int selectionIndexes[] = {0,1,4,5,6,7,8,9,10,11,0,0,0,0};
-        static const void *selectionLists[] = {a,a,a,a,a,a,a,a, a, a,0,0,0,0};
+        static const void *selectionLists[] = {a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr,nullptr};
         QTest::newRow("Default, 2, 2, Selection")
                 << (RangeList()
                     << Range(a, 0, 12, int(C::AppendFlag | C::PrependFlag |  SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag))
-                    << Range(0, 0, 4, int(SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)))
+                    << Range(nullptr, 0, 4, int(SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)))
                 << C::Default << 2 << 2 << int(SelectionFlag)
                 << (RemoveList()
                     << Remove(2, 2, 2, 2, 2, SelectionFlag | C::CacheFlag))
@@ -409,19 +409,19 @@ void tst_qqmllistcompositor::clearFlags_data()
                 << IndexArray(visibleIndexes) << ListArray(visibleLists)
                 << IndexArray(selectionIndexes) << ListArray(selectionLists);
     } { static const int cacheIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11,0,0,0,0};
-        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,0,0,0,0};
+        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr,nullptr};
         static const int defaultIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11,0,0,0,0};
-        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,0,0,0,0};
+        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr,nullptr};
         static const int visibleIndexes[] = {0,2,3,5,6,7,8,9,10,11,0,0,0,0};
-        static const void *visibleLists[] = {a,a,a,a,a,a,a,a, a, a,0,0,0,0};
+        static const void *visibleLists[] = {a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr,nullptr};
         static const int selectionIndexes[] = {0,1,4,5,6,7,8,9,10,11,0,0,0,0};
-        static const void *selectionLists[] = {a,a,a,a,a,a,a,a, a, a,0,0,0,0};
+        static const void *selectionLists[] = {a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr,nullptr};
         QTest::newRow("Selection, 1, 2, Visible")
                 << (RangeList()
                     << Range(a, 0, 2, int(C::PrependFlag | SelectionFlag | VisibleFlag | C::DefaultFlag  | C::CacheFlag))
                     << Range(a, 2, 2, int(C::PrependFlag | VisibleFlag | C::DefaultFlag  | C::CacheFlag))
                     << Range(a, 4, 8, int(C::AppendFlag | C::PrependFlag | SelectionFlag | VisibleFlag | C::DefaultFlag  | C::CacheFlag))
-                    << Range(0, 0, 4, int(SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)))
+                    << Range(nullptr, 0, 4, int(SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)))
                 << Selection << 1 << 2 << int(VisibleFlag)
                 << (RemoveList()
                     << Remove(1, 1, 1, 1, 1, VisibleFlag | C::CacheFlag)
@@ -431,13 +431,13 @@ void tst_qqmllistcompositor::clearFlags_data()
                 << IndexArray(visibleIndexes) << ListArray(visibleLists)
                 << IndexArray(selectionIndexes) << ListArray(selectionLists);
     } { static const int cacheIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11,0,0,0,0};
-        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,0,0,0,0};
+        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr,nullptr};
         static const int defaultIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11,0,0,0};
-        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,0,0,0};
+        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr};
         static const int visibleIndexes[] = {0,2,3,5,6,7,8,9,10,11,0,0,0};
-        static const void *visibleLists[] = {a,a,a,a,a,a,a,a, a, a,0,0,0};
+        static const void *visibleLists[] = {a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr};
         static const int selectionIndexes[] = {0,1,4,5,6,7,8,9,10,11,0,0,0};
-        static const void *selectionLists[] = {a,a,a,a,a,a,a,a, a, a,0,0,0};
+        static const void *selectionLists[] = {a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr};
         QTest::newRow("Default, 13, 1, Prepend | Selection | Visible | Default")
                 << (RangeList()
                     << Range(a, 0, 1, int(C::PrependFlag | SelectionFlag | VisibleFlag | C::DefaultFlag  | C::CacheFlag))
@@ -445,7 +445,7 @@ void tst_qqmllistcompositor::clearFlags_data()
                     << Range(a, 2, 2, int(C::PrependFlag | VisibleFlag | C::DefaultFlag  | C::CacheFlag))
                     << Range(a, 4, 1, int(C::PrependFlag | SelectionFlag | C::DefaultFlag  | C::CacheFlag))
                     << Range(a, 5, 7, int(C::AppendFlag | C::PrependFlag | SelectionFlag | VisibleFlag | C::DefaultFlag  | C::CacheFlag))
-                    << Range(0, 0, 4, int(SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)))
+                    << Range(nullptr, 0, 4, int(SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)))
                 << C::Default << 13 << 1 << int(C::PrependFlag | SelectionFlag | VisibleFlag | C::DefaultFlag)
                 << (RemoveList()
                     << Remove(11, 11, 13, 13, 1, SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag))
@@ -454,13 +454,13 @@ void tst_qqmllistcompositor::clearFlags_data()
                 << IndexArray(visibleIndexes) << ListArray(visibleLists)
                 << IndexArray(selectionIndexes) << ListArray(selectionLists);
     } { static const int cacheIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,0};
-        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a,a, a,0};
+        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a,a, a,nullptr};
         static const int defaultIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11,0,0,0};
-        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,0,0,0};
+        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr};
         static const int visibleIndexes[] = {0,2,3,5,6,7,8,9,10,11,0,0,0};
-        static const void *visibleLists[] = {a,a,a,a,a,a,a,a, a, a,0,0,0};
+        static const void *visibleLists[] = {a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr};
         static const int selectionIndexes[] = {0,1,4,5,6,7,8,9,10,11,0,0,0};
-        static const void *selectionLists[] = {a,a,a,a,a,a,a,a, a, a,0,0,0};
+        static const void *selectionLists[] = {a,a,a,a,a,a,a,a, a, a,nullptr,nullptr,nullptr};
         QTest::newRow("Cache, 11, 4, Cache")
                 << (RangeList()
                     << Range(a, 0, 1, int(C::PrependFlag | SelectionFlag | VisibleFlag | C::DefaultFlag  | C::CacheFlag))
@@ -468,8 +468,8 @@ void tst_qqmllistcompositor::clearFlags_data()
                     << Range(a, 2, 2, int(C::PrependFlag | VisibleFlag | C::DefaultFlag  | C::CacheFlag))
                     << Range(a, 4, 1, int(C::PrependFlag | SelectionFlag | C::DefaultFlag  | C::CacheFlag))
                     << Range(a, 5, 7, int(C::AppendFlag | C::PrependFlag | SelectionFlag | VisibleFlag | C::DefaultFlag  | C::CacheFlag))
-                    << Range(0, 0, 1, int(C::CacheFlag))
-                    << Range(0, 0, 3, int(SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)))
+                    << Range(nullptr, 0, 1, int(C::CacheFlag))
+                    << Range(nullptr, 0, 3, int(SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)))
                 << C::Cache << 11 << 4 << int(C::CacheFlag)
                 << (RemoveList())
                 << IndexArray(cacheIndexes) << ListArray(cacheLists)
@@ -477,13 +477,13 @@ void tst_qqmllistcompositor::clearFlags_data()
                 << IndexArray(visibleIndexes) << ListArray(visibleLists)
                 << IndexArray(selectionIndexes) << ListArray(selectionLists);
     } { static const int cacheIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,0};
-        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a,a, a,0};
+        static const void *cacheLists[] = {a,a,a,a,a,a,a,a,a,a, a,nullptr};
         static const int defaultIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,0};
-        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a,0};
+        static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a,nullptr};
         static const int visibleIndexes[] = {0,2,3,5,6,7,8,9,10,0};
-        static const void *visibleLists[] = {a,a,a,a,a,a,a,a, a,0};
+        static const void *visibleLists[] = {a,a,a,a,a,a,a,a, a,nullptr};
         static const int selectionIndexes[] = {0,1,4,5,6,7,8,9,10,0};
-        static const void *selectionLists[] = {a,a,a,a,a,a,a,a, a,0};
+        static const void *selectionLists[] = {a,a,a,a,a,a,a,a, a,nullptr};
         QTest::newRow("Default, 11, 3, Default | Visible | Selection")
                 << (RangeList()
                     << Range(a, 0, 1, int(C::PrependFlag | SelectionFlag | VisibleFlag | C::DefaultFlag  | C::CacheFlag))
@@ -492,8 +492,8 @@ void tst_qqmllistcompositor::clearFlags_data()
                     << Range(a, 4, 1, int(C::PrependFlag | SelectionFlag | C::DefaultFlag  | C::CacheFlag))
                     << Range(a, 5, 6, int(C::PrependFlag | SelectionFlag | VisibleFlag | C::DefaultFlag  | C::CacheFlag))
                     << Range(a, 11, 1, int(C::AppendFlag | C::PrependFlag | SelectionFlag | VisibleFlag | C::DefaultFlag))
-                    << Range(0, 0, 2, int(SelectionFlag | VisibleFlag | C::DefaultFlag))
-                    << Range(0, 0, 1, int(SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)))
+                    << Range(nullptr, 0, 2, int(SelectionFlag | VisibleFlag | C::DefaultFlag))
+                    << Range(nullptr, 0, 1, int(SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)))
                 << C::Default << 11 << 3 << int(C::DefaultFlag | VisibleFlag| SelectionFlag)
                 << (RemoveList()
                     << Remove(9, 9, 11, 11, 1, SelectionFlag | VisibleFlag | C::DefaultFlag)
@@ -584,13 +584,13 @@ void tst_qqmllistcompositor::setFlags_data()
     int listA; void *a = &listA;
 
     {   static const int cacheIndexes[] = {0,0,0,0};
-        static const void *cacheLists[] = {0,0,0,0};
+        static const void *cacheLists[] = {nullptr,nullptr,nullptr,nullptr};
         static const int defaultIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11};
         static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a};
         QTest::newRow("Default, 2, 2, Default")
                 << (RangeList()
                     << Range(a, 0, 12, C::DefaultFlag)
-                    << Range(0, 0, 4, C::CacheFlag))
+                    << Range(nullptr, 0, 4, C::CacheFlag))
                 << C::Default << 2 << 2 << int(C::DefaultFlag)
                 << (InsertList())
                 << IndexArray(cacheIndexes) << ListArray(cacheLists)
@@ -598,7 +598,7 @@ void tst_qqmllistcompositor::setFlags_data()
                 << IndexArray() << ListArray()
                 << IndexArray() << ListArray();
     } { static const int cacheIndexes[] = {0,0,0,0};
-        static const void *cacheLists[] = {0,0,0,0};
+        static const void *cacheLists[] = {nullptr,nullptr,nullptr,nullptr};
         static const int defaultIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11};
         static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a};
         static const int visibleIndexes[] = {2,3};
@@ -606,7 +606,7 @@ void tst_qqmllistcompositor::setFlags_data()
         QTest::newRow("Default, 2, 2, Visible")
                 << (RangeList()
                     << Range(a, 0, 12, C::DefaultFlag)
-                    << Range(0, 0, 4, C::CacheFlag))
+                    << Range(nullptr, 0, 4, C::CacheFlag))
                 << C::Default << 2 << 2 << int(VisibleFlag)
                 << (InsertList()
                     << Insert(0, 0, 2, 0, 2, VisibleFlag))
@@ -615,7 +615,7 @@ void tst_qqmllistcompositor::setFlags_data()
                 << IndexArray(visibleIndexes) << ListArray(visibleLists)
                 << IndexArray() << ListArray();
     } { static const int cacheIndexes[] = {3,6,0,0,0,0};
-        static const void *cacheLists[] = {a,a,0,0,0,0};
+        static const void *cacheLists[] = {a,a,nullptr,nullptr,nullptr,nullptr};
         static const int defaultIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11};
         static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a};
         static const int visibleIndexes[] = {2,3,6,7};
@@ -629,7 +629,7 @@ void tst_qqmllistcompositor::setFlags_data()
                     << Range(a, 4, 2, C::DefaultFlag)
                     << Range(a, 6, 2, VisibleFlag | C::DefaultFlag)
                     << Range(a, 8, 4, C::DefaultFlag)
-                    << Range(0, 0, 4, C::CacheFlag))
+                    << Range(nullptr, 0, 4, C::CacheFlag))
                 << Visible << 1 << 2 << int(SelectionFlag | C::CacheFlag)
                 << (InsertList()
                     << Insert(0, 1, 3, 0, 1, SelectionFlag | C::CacheFlag)
@@ -639,11 +639,11 @@ void tst_qqmllistcompositor::setFlags_data()
                 << IndexArray(visibleIndexes) << ListArray(visibleLists)
                 << IndexArray(selectionIndexes) << ListArray(selectionLists);
     } { static const int cacheIndexes[] = {3,6,0,0,0,0};
-        static const void *cacheLists[] = {a,a,0,0,0,0};
+        static const void *cacheLists[] = {a,a,nullptr,nullptr,nullptr,nullptr};
         static const int defaultIndexes[] = {0,1,2,3,4,5,6,7,8,9,10,11};
         static const void *defaultLists[] = {a,a,a,a,a,a,a,a,a,a, a, a};
         static const int visibleIndexes[] = {2,3,6,7,0};
-        static const void *visibleLists[] = {a,a,a,a,0};
+        static const void *visibleLists[] = {a,a,a,a,nullptr};
         static const int selectionIndexes[] = {3,6};
         static const void *selectionLists[] = {a,a};
         QTest::newRow("Cache, 3, 1, Visible")
@@ -655,7 +655,7 @@ void tst_qqmllistcompositor::setFlags_data()
                     << Range(a, 6, 1, SelectionFlag | VisibleFlag | C::DefaultFlag | C::CacheFlag)
                     << Range(a, 7, 1, VisibleFlag | C::DefaultFlag)
                     << Range(a, 8, 4, C::DefaultFlag)
-                    << Range(0, 0, 4, C::CacheFlag))
+                    << Range(nullptr, 0, 4, C::CacheFlag))
                 << C::Cache << 3 << 1 << int(VisibleFlag)
                 << (InsertList()
                     << Insert(2, 4, 12, 3, 1, VisibleFlag | C::CacheFlag))
@@ -770,14 +770,14 @@ void tst_qqmllistcompositor::move_data()
     int listC; void *c = &listC;
 
     {   static const int cacheIndexes[] = {0,0,0,0,2,3};
-        static const void *cacheLists[] = {0,0,0,0,c,c};
+        static const void *cacheLists[] = {nullptr,nullptr,nullptr,nullptr,c,c};
         static const int defaultIndexes[] = {0,0,1,2,3,4,5,0,1,2,3,4,5,1,2,3,0,1,2,3,4,5};
-        static const void *defaultLists[] = {0,a,a,a,a,a,a,b,b,b,b,b,b,0,0,0,c,c,c,c,c,c};
+        static const void *defaultLists[] = {nullptr,a,a,a,a,a,a,b,b,b,b,b,b,nullptr,nullptr,nullptr,c,c,c,c,c,c};
         QTest::newRow("15, 0, 1")
                 << (RangeList()
                     << Range(a, 0, 6, C::DefaultFlag)
                     << Range(b, 0, 6, C::AppendFlag | C::PrependFlag | C::DefaultFlag)
-                    << Range(0, 0, 4, C::DefaultFlag | C::CacheFlag)
+                    << Range(nullptr, 0, 4, C::DefaultFlag | C::CacheFlag)
                     << Range(c, 0, 2, C::PrependFlag | C::DefaultFlag)
                     << Range(c, 2, 2, C::PrependFlag | C::DefaultFlag | C::CacheFlag)
                     << Range(c, 4, 2, C::AppendFlag | C::PrependFlag | C::DefaultFlag))
@@ -791,15 +791,15 @@ void tst_qqmllistcompositor::move_data()
                 << IndexArray() << ListArray()
                 << IndexArray() << ListArray();
     } { static const int cacheIndexes[] = {0,0,0,0,2,3};
-        static const void *cacheLists[] = {0,0,0,0,c,c};
+        static const void *cacheLists[] = {nullptr,nullptr,nullptr,nullptr,c,c};
         static const int defaultIndexes[] = {0,1,0,1,2,3,4,5,0,1,2,3,4,5,2,3,0,1,2,3,4,5};
-        static const void *defaultLists[] = {0,0,a,a,a,a,a,a,b,b,b,b,b,b,0,0,c,c,c,c,c,c};
+        static const void *defaultLists[] = {nullptr,nullptr,a,a,a,a,a,a,b,b,b,b,b,b,nullptr,nullptr,c,c,c,c,c,c};
         QTest::newRow("15, 1, 1")
                 << (RangeList()
-                    << Range(0, 0, 1, C::DefaultFlag | C::CacheFlag)
+                    << Range(nullptr, 0, 1, C::DefaultFlag | C::CacheFlag)
                     << Range(a, 0, 6, C::DefaultFlag)
                     << Range(b, 0, 6, C::AppendFlag | C::PrependFlag | C::DefaultFlag)
-                    << Range(0, 0, 3, C::DefaultFlag | C::CacheFlag)
+                    << Range(nullptr, 0, 3, C::DefaultFlag | C::CacheFlag)
                     << Range(c, 0, 2, C::PrependFlag | C::DefaultFlag)
                     << Range(c, 2, 2, C::PrependFlag | C::DefaultFlag | C::CacheFlag)
                     << Range(c, 4, 2, C::AppendFlag | C::PrependFlag | C::DefaultFlag))
@@ -813,15 +813,15 @@ void tst_qqmllistcompositor::move_data()
                 << IndexArray() << ListArray()
                 << IndexArray() << ListArray();
     } { static const int cacheIndexes[] = {0,0,0,0,2,3};
-        static const void *cacheLists[] = {0,0,0,0,c,c};
+        static const void *cacheLists[] = {nullptr,nullptr,nullptr,nullptr,c,c};
         static const int defaultIndexes[] = {0,1,2,0,1,3,4,5,0,1,2,3,4,5,2,3,0,1,2,3,4,5};
-        static const void *defaultLists[] = {a,a,a,0,0,a,a,a,b,b,b,b,b,b,0,0,c,c,c,c,c,c};
+        static const void *defaultLists[] = {a,a,a,nullptr,nullptr,a,a,a,b,b,b,b,b,b,nullptr,nullptr,c,c,c,c,c,c};
         QTest::newRow("0, 3, 2")
                 << (RangeList()
-                    << Range(0, 0, 2, C::DefaultFlag | C::CacheFlag)
+                    << Range(nullptr, 0, 2, C::DefaultFlag | C::CacheFlag)
                     << Range(a, 0, 6, C::DefaultFlag)
                     << Range(b, 0, 6, C::AppendFlag | C::PrependFlag | C::DefaultFlag)
-                    << Range(0, 0, 2, C::DefaultFlag | C::CacheFlag)
+                    << Range(nullptr, 0, 2, C::DefaultFlag | C::CacheFlag)
                     << Range(c, 0, 2, C::PrependFlag | C::DefaultFlag)
                     << Range(c, 2, 2, C::PrependFlag | C::DefaultFlag | C::CacheFlag)
                     << Range(c, 4, 2, C::AppendFlag | C::PrependFlag | C::DefaultFlag))
@@ -835,16 +835,16 @@ void tst_qqmllistcompositor::move_data()
                 << IndexArray() << ListArray()
                 << IndexArray() << ListArray();
     } { static const int cacheIndexes[] = {0,0,0,0,2,3};
-        static const void *cacheLists[] = {0,0,0,0,c,c};
+        static const void *cacheLists[] = {nullptr,nullptr,nullptr,nullptr,c,c};
         static const int defaultIndexes[] = {0,5,0,1,2,3,4,5,0,1,0,1,2,2,3,3,4,1,2,3,4,5};
-        static const void *defaultLists[] = {a,a,b,b,b,b,b,b,0,0,c,a,a,0,0,a,a,c,c,c,c,c};
+        static const void *defaultLists[] = {a,a,b,b,b,b,b,b,nullptr,nullptr,c,a,a,nullptr,nullptr,a,a,c,c,c,c,c};
         QTest::newRow("7, 1, 10")
                 << (RangeList()
                     << Range(a, 0, 3, C::DefaultFlag)
-                    << Range(0, 0, 2, C::DefaultFlag | C::CacheFlag)
+                    << Range(nullptr, 0, 2, C::DefaultFlag | C::CacheFlag)
                     << Range(a, 3, 3, C::DefaultFlag)
                     << Range(b, 0, 6, C::AppendFlag | C::PrependFlag | C::DefaultFlag)
-                    << Range(0, 0, 2, C::DefaultFlag | C::CacheFlag)
+                    << Range(nullptr, 0, 2, C::DefaultFlag | C::CacheFlag)
                     << Range(c, 0, 2, C::PrependFlag | C::DefaultFlag)
                     << Range(c, 2, 2, C::PrependFlag | C::DefaultFlag | C::CacheFlag)
                     << Range(c, 4, 2, C::AppendFlag | C::PrependFlag | C::DefaultFlag))
@@ -864,18 +864,18 @@ void tst_qqmllistcompositor::move_data()
                 << IndexArray() << ListArray()
                 << IndexArray() << ListArray();
     } { static const int cacheIndexes[] = {0,0,0,0,3,2};
-        static const void *cacheLists[] = {0,0,0,0,c,c};
+        static const void *cacheLists[] = {nullptr,nullptr,nullptr,nullptr,c,c};
         static const int defaultIndexes[] = {0,5,0,1,2,3,4,5,0,1,0,1,2,2,3,3,4,3,4,5,1,2};
-        static const void *defaultLists[] = {a,a,b,b,b,b,b,b,0,0,c,a,a,0,0,a,a,c,c,c,c,c};
+        static const void *defaultLists[] = {a,a,b,b,b,b,b,b,nullptr,nullptr,c,a,a,nullptr,nullptr,a,a,c,c,c,c,c};
         QTest::newRow("17, 20, 2")
                 << (RangeList()
                     << Range(a, 0, 1, C::DefaultFlag)
                     << Range(a, 5, 1, C::DefaultFlag)
                     << Range(b, 0, 6, C::DefaultFlag)
-                    << Range(0, 0, 2, C::DefaultFlag | C::CacheFlag)
+                    << Range(nullptr, 0, 2, C::DefaultFlag | C::CacheFlag)
                     << Range(c, 0, 1, C::DefaultFlag)
                     << Range(a, 1, 2, C::DefaultFlag)
-                    << Range(0, 0, 2, C::DefaultFlag | C::CacheFlag)
+                    << Range(nullptr, 0, 2, C::DefaultFlag | C::CacheFlag)
                     << Range(a, 3, 2, C::DefaultFlag)
                     << Range(b, 0, 6, C::AppendFlag | C::PrependFlag)
                     << Range(c, 0, 1, C::PrependFlag)
@@ -1072,7 +1072,7 @@ void tst_qqmllistcompositor::clear()
 
     compositor.append(a, 0, 8, C::AppendFlag | C::PrependFlag | VisibleFlag | C::DefaultFlag);
     compositor.append(b, 4, 5,  VisibleFlag | C::DefaultFlag);
-    compositor.append(0, 0, 3,  VisibleFlag | C::DefaultFlag | C::CacheFlag);
+    compositor.append(nullptr, 0, 3,  VisibleFlag | C::DefaultFlag | C::CacheFlag);
 
     QCOMPARE(compositor.count(C::Default), 16);
     QCOMPARE(compositor.count(Visible), 16);

@@ -85,9 +85,9 @@ static inline QChar convertUnicode(QChar c1, QChar c2, QChar c3, QChar c4)
 
 Lexer::Lexer(Engine *engine)
     : _engine(engine)
-    , _codePtr(0)
-    , _endPtr(0)
-    , _tokenStartPtr(0)
+    , _codePtr(nullptr)
+    , _endPtr(nullptr)
+    , _tokenStartPtr(nullptr)
     , _char(QLatin1Char('\n'))
     , _errorCode(NoError)
     , _currentLineNumber(0)
@@ -1043,7 +1043,7 @@ int Lexer::scanNumber(QChar ch)
     chars.append('\0');
 
     const char *begin = chars.constData();
-    const char *end = 0;
+    const char *end = nullptr;
     bool ok = false;
 
     _tokenValue = qstrtod(begin, &end, &ok);

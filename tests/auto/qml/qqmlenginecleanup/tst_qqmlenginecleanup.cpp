@@ -129,7 +129,7 @@ static void cleanState(QQmlEngine **e)
     delete *e;
     qmlClearTypeRegistrations();
     *e = new QQmlEngine;
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 }
 
@@ -139,7 +139,7 @@ void tst_qqmlenginecleanup::test_valueTypeProviderModule()
     // provider can be reinitialized after multiple calls to
     // qmlClearTypeRegistrations() without causing cycles in the
     // value type provider list.
-    QQmlEngine *e = 0;
+    QQmlEngine *e = nullptr;
     QUrl testFile1 = testFileUrl("testFile1.qml");
     QUrl testFile2 = testFileUrl("testFile2.qml");
     bool noCycles = false;
@@ -149,7 +149,7 @@ void tst_qqmlenginecleanup::test_valueTypeProviderModule()
         c.loadUrl(i % 2 == 0 ? testFile1 : testFile2); // this will hang if cycles exist.
     }
     delete e;
-    e = 0;
+    e = nullptr;
     noCycles = true;
     QVERIFY(noCycles);
 

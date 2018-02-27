@@ -76,7 +76,7 @@ class Q_AUTOTEST_EXPORT QQuickAnimatedImage : public QQuickImage
     Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
 
 public:
-    QQuickAnimatedImage(QQuickItem *parent=0);
+    QQuickAnimatedImage(QQuickItem *parent=nullptr);
     ~QQuickAnimatedImage();
 
     bool isPlaying() const;

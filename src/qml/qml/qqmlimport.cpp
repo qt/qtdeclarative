@@ -728,7 +728,7 @@ bool QQmlImports::resolveType(QQmlImportNamespace *ns, const QHashedStringRef &t
                               QQmlType *type_return, int *vmaj, int *vmin,
                               QQmlType::RegistrationType registrationType) const
 {
-    return ns->resolveType(d->typeLoader, type, vmaj, vmin, type_return, 0, 0, registrationType);
+    return ns->resolveType(d->typeLoader, type, vmaj, vmin, type_return, nullptr, nullptr, registrationType);
 }
 
 bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef& type,
@@ -803,7 +803,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
             int major = vmajor ? *vmajor : -1;
             int minor = vminor ? *vminor : -1;
             QQmlType returnType = fetchOrCreateTypeForUrl(componentUrl, type, isCompositeSingleton,
-                                                          0, major, minor);
+                                                          nullptr, major, minor);
             if (type_return)
                 *type_return = returnType;
             return returnType.isValid();
@@ -831,7 +831,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                     *typeRecursionDetected = true;
             } else {
                 QQmlType returnType = fetchOrCreateTypeForUrl(
-                            qmlUrl, type, registrationType == QQmlType::CompositeSingletonType, 0);
+                            qmlUrl, type, registrationType == QQmlType::CompositeSingletonType, nullptr);
                 if (type_return)
                     *type_return = returnType;
                 return returnType.isValid();
@@ -847,7 +847,7 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
                                      QQmlType::RegistrationType registrationType,
                                      QQmlImport::RecursionRestriction recursionRestriction)
 {
-    QQmlImportNamespace *s = 0;
+    QQmlImportNamespace *s = nullptr;
     int dot = type.indexOf(Dot);
     if (dot >= 0) {
         QHashedStringRef namespaceName(type.constData(), dot);
@@ -978,7 +978,7 @@ QQmlImportNamespace *QQmlImportsPrivate::findQualifiedNamespace(const QHashedStr
         if (prefix == ns->prefix)
             return ns;
     }
-    return 0;
+    return nullptr;
 }
 
 /*
@@ -1257,7 +1257,7 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
 
     // Check cache first
 
-    QQmlImportDatabase::QmldirCache *cacheHead = 0;
+    QQmlImportDatabase::QmldirCache *cacheHead = nullptr;
     {
     QQmlImportDatabase::QmldirCache **cachePtr = database->qmldirCache.value(uri);
     if (cachePtr) {
@@ -1389,7 +1389,7 @@ bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoaderQmldirContent
 
 QQmlImportNamespace *QQmlImportsPrivate::importNamespace(const QString &prefix) const
 {
-    QQmlImportNamespace *nameSpace = 0;
+    QQmlImportNamespace *nameSpace = nullptr;
 
     if (prefix.isEmpty()) {
         nameSpace = &unqualifiedset;
@@ -1446,7 +1446,7 @@ bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &pre
     Q_ASSERT(inserted);
 
     if (!incomplete) {
-        const QQmlTypeLoaderQmldirContent *qmldir = 0;
+        const QQmlTypeLoaderQmldirContent *qmldir = nullptr;
 
         if (!qmldirIdentifier.isEmpty()) {
             if (!getQmldirContent(qmldirIdentifier, uri, &qmldir, errors))
@@ -1565,7 +1565,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     Q_ASSERT(inserted);
 
     if (!incomplete && !qmldirIdentifier.isEmpty()) {
-        const QQmlTypeLoaderQmldirContent *qmldir = 0;
+        const QQmlTypeLoaderQmldirContent *qmldir = nullptr;
         if (!getQmldirContent(qmldirIdentifier, importUri, &qmldir, errors))
             return false;
 
@@ -1589,7 +1589,7 @@ bool QQmlImportsPrivate::updateQmldirContent(const QString &uri, const QString &
     Q_ASSERT(nameSpace);
 
     if (QQmlImportInstance *import = nameSpace->findImport(uri)) {
-        const QQmlTypeLoaderQmldirContent *qmldir = 0;
+        const QQmlTypeLoaderQmldirContent *qmldir = nullptr;
         if (!getQmldirContent(qmldirIdentifier, uri, &qmldir, errors))
             return false;
 
@@ -2095,7 +2095,7 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
         } else {
             RegisteredPlugin plugin;
             plugin.uri = uri;
-            plugin.loader = 0;
+            plugin.loader = nullptr;
             plugins->insert(uniquePluginID, plugin);
 
             if (!registerPluginTypes(instance, basePath, uri, typeNamespace, vmaj, errors))
@@ -2156,7 +2156,7 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
                 return false;
             }
 
-            QPluginLoader* loader = 0;
+            QPluginLoader* loader = nullptr;
             if (!typesRegistered) {
                 loader = new QPluginLoader(absoluteFilePath);
 

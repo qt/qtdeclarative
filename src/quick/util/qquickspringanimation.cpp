@@ -58,7 +58,7 @@ class Q_AUTOTEST_EXPORT QSpringAnimation : public QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QSpringAnimation)
 public:
-    QSpringAnimation(QQuickSpringAnimationPrivate * = 0);
+    QSpringAnimation(QQuickSpringAnimationPrivate * = nullptr);
 
     ~QSpringAnimation();
     int duration() const override;
@@ -94,7 +94,7 @@ public:
     typedef QHash<QQmlProperty, QSpringAnimation*> ActiveAnimationHash;
     typedef ActiveAnimationHash::Iterator ActiveAnimationHashIt;
 
-    void clearTemplate() { animationTemplate = 0; }
+    void clearTemplate() { animationTemplate = nullptr; }
 
 protected:
     void updateCurrentTime(int time) override;

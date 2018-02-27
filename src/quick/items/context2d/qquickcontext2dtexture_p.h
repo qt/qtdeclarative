@@ -146,7 +146,7 @@ protected:
     virtual QVector2D scaleFactor() const { return QVector2D(1, 1); }
 
     void paintWithoutTiles(QQuickContext2DCommandBuffer *ccb);
-    virtual QPaintDevice* beginPainting() {m_painting = true; return 0; }
+    virtual QPaintDevice* beginPainting() {m_painting = true; return nullptr; }
     virtual void endPainting() {m_painting = false;}
     virtual QQuickContext2DTile* createTile() const = 0;
     virtual void compositeTile(QQuickContext2DTile* tile) = 0;

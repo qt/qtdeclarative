@@ -110,7 +110,7 @@ public:
         MsaaAntialiasing
     };
 
-    explicit QSGContext(QObject *parent = 0);
+    explicit QSGContext(QObject *parent = nullptr);
     virtual ~QSGContext();
 
     virtual void renderContextInitialized(QSGRenderContext *renderContext);

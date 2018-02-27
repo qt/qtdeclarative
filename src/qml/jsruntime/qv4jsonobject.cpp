@@ -634,7 +634,7 @@ struct Stringify
         return false;
     }
 
-    Stringify(ExecutionEngine *e) : v4(e), replacerFunction(0), propertyList(0), propertyListSize(0) {}
+    Stringify(ExecutionEngine *e) : v4(e), replacerFunction(nullptr), propertyList(nullptr), propertyListSize(0) {}
 
     QString Str(const QString &key, const Value &v);
     QString JA(ArrayObject *a);
@@ -920,11 +920,11 @@ ReturnedValue JsonObject::method_stringify(const FunctionObject *b, const Value 
                 if (v->as<NumberObject>() || v->as<StringObject>() || v->isNumber())
                     *v = v->toString(scope.engine);
                 if (!v->isString()) {
-                    v->setM(0);
+                    v->setM(nullptr);
                 } else {
                     for (uint j = 0; j <i; ++j) {
                         if (stringify.propertyList[j].m() == v->m()) {
-                            v->setM(0);
+                            v->setM(nullptr);
                             break;
                         }
                     }

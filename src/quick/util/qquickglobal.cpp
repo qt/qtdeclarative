@@ -419,7 +419,7 @@ public:
             break;
         }
 
-        return 0;
+        return nullptr;
     }
 
     bool init(int type, QVariant& dst) override
@@ -863,8 +863,8 @@ void QQuick_initializeProviders()
 void QQuick_deinitializeProviders()
 {
     QQml_removeValueTypeProvider(getValueTypeProvider());
-    QQml_setColorProvider(0); // technically, another plugin may have overridden our providers
-    QQml_setGuiProvider(0);   // but we cannot handle that case in a sane way.
+    QQml_setColorProvider(nullptr); // technically, another plugin may have overridden our providers
+    QQml_setGuiProvider(nullptr);   // but we cannot handle that case in a sane way.
 }
 
 QT_END_NAMESPACE

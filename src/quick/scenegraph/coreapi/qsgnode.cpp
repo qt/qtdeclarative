@@ -244,15 +244,8 @@ static void qt_print_node_count()
  * Constructs a new node
  */
 QSGNode::QSGNode()
-    : m_parent(0)
-    , m_type(BasicNodeType)
-    , m_firstChild(0)
-    , m_lastChild(0)
-    , m_nextSibling(0)
-    , m_previousSibling(0)
-    , m_subtreeRenderableCount(0)
-    , m_nodeFlags(OwnedByParent)
-    , m_dirtyState(0)
+    : m_nodeFlags(OwnedByParent)
+    , m_dirtyState(nullptr)
 {
     init();
 }
@@ -263,15 +256,15 @@ QSGNode::QSGNode()
  * \internal
  */
 QSGNode::QSGNode(NodeType type)
-    : m_parent(0)
+    : m_parent(nullptr)
     , m_type(type)
-    , m_firstChild(0)
-    , m_lastChild(0)
-    , m_nextSibling(0)
-    , m_previousSibling(0)
+    , m_firstChild(nullptr)
+    , m_lastChild(nullptr)
+    , m_nextSibling(nullptr)
+    , m_previousSibling(nullptr)
     , m_subtreeRenderableCount(type == GeometryNodeType || type == RenderNodeType ? 1 : 0)
     , m_nodeFlags(OwnedByParent)
-    , m_dirtyState(0)
+    , m_dirtyState(nullptr)
 {
     init();
 }
@@ -282,15 +275,15 @@ QSGNode::QSGNode(NodeType type)
  * \internal
  */
 QSGNode::QSGNode(QSGNodePrivate &dd, NodeType type)
-    : m_parent(0)
+    : m_parent(nullptr)
     , m_type(type)
-    , m_firstChild(0)
-    , m_lastChild(0)
-    , m_nextSibling(0)
-    , m_previousSibling(0)
+    , m_firstChild(nullptr)
+    , m_lastChild(nullptr)
+    , m_nextSibling(nullptr)
+    , m_previousSibling(nullptr)
     , m_subtreeRenderableCount(type == GeometryNodeType || type == RenderNodeType ? 1 : 0)
     , m_nodeFlags(OwnedByParent)
-    , m_dirtyState(0)
+    , m_dirtyState(nullptr)
     , d_ptr(&dd)
 {
     init();
@@ -388,17 +381,17 @@ void QSGNode::destroy()
 {
     if (m_parent) {
         m_parent->removeChildNode(this);
-        Q_ASSERT(m_parent == 0);
+        Q_ASSERT(m_parent == nullptr);
     }
     while (m_firstChild) {
         QSGNode *child = m_firstChild;
         removeChildNode(child);
-        Q_ASSERT(child->m_parent == 0);
+        Q_ASSERT(child->m_parent == nullptr);
         if (child->flags() & OwnedByParent)
             delete child;
     }
 
-    Q_ASSERT(m_firstChild == 0 && m_lastChild == 0);
+    Q_ASSERT(m_firstChild == nullptr && m_lastChild == nullptr);
 }
 
 
@@ -557,11 +550,11 @@ void QSGNode::removeChildNode(QSGNode *node)
         next->m_previousSibling = previous;
     else
         m_lastChild = previous;
-    node->m_previousSibling = 0;
-    node->m_nextSibling = 0;
+    node->m_previousSibling = nullptr;
+    node->m_nextSibling = nullptr;
 
     node->markDirty(DirtyNodeRemoved);
-    node->m_parent = 0;
+    node->m_parent = nullptr;
 }
 
 
@@ -574,13 +567,13 @@ void QSGNode::removeAllChildNodes()
     while (m_firstChild) {
         QSGNode *node = m_firstChild;
         m_firstChild = node->m_nextSibling;
-        node->m_nextSibling = 0;
+        node->m_nextSibling = nullptr;
         if (m_firstChild)
-            m_firstChild->m_previousSibling = 0;
+            m_firstChild->m_previousSibling = nullptr;
         else
-            m_lastChild = 0;
+            m_lastChild = nullptr;
         node->markDirty(DirtyNodeRemoved);
-        node->m_parent = 0;
+        node->m_parent = nullptr;
     }
 }
 
@@ -714,9 +707,9 @@ void qsgnode_set_description(QSGNode *node, const QString &description)
  */
 QSGBasicGeometryNode::QSGBasicGeometryNode(NodeType type)
     : QSGNode(type)
-    , m_geometry(0)
-    , m_matrix(0)
-    , m_clip_list(0)
+    , m_geometry(nullptr)
+    , m_matrix(nullptr)
+    , m_clip_list(nullptr)
 {
 }
 
@@ -726,9 +719,9 @@ QSGBasicGeometryNode::QSGBasicGeometryNode(NodeType type)
  */
 QSGBasicGeometryNode::QSGBasicGeometryNode(QSGBasicGeometryNodePrivate &dd, NodeType type)
     : QSGNode(dd, type)
-    , m_geometry(0)
-    , m_matrix(0)
-    , m_clip_list(0)
+    , m_geometry(nullptr)
+    , m_matrix(nullptr)
+    , m_clip_list(nullptr)
 {
 }
 
@@ -870,10 +863,6 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
 
 QSGGeometryNode::QSGGeometryNode()
     : QSGBasicGeometryNode(GeometryNodeType)
-    , m_render_order(0)
-    , m_material(0)
-    , m_opaque_material(0)
-    , m_opacity(1)
 {
 }
 
@@ -884,8 +873,8 @@ QSGGeometryNode::QSGGeometryNode()
 QSGGeometryNode::QSGGeometryNode(QSGGeometryNodePrivate &dd)
     : QSGBasicGeometryNode(dd, GeometryNodeType)
     , m_render_order(0)
-    , m_material(0)
-    , m_opaque_material(0)
+    , m_material(nullptr)
+    , m_opaque_material(nullptr)
     , m_opacity(1)
 {
 }
@@ -979,7 +968,7 @@ void QSGGeometryNode::setMaterial(QSGMaterial *material)
         delete m_material;
     m_material = material;
 #ifndef QT_NO_DEBUG
-    if (m_material != 0 && m_opaque_material == m_material)
+    if (m_material != nullptr && m_opaque_material == m_material)
         qWarning("QSGGeometryNode: using same material for both opaque and translucent");
 #endif
     markDirty(DirtyMaterial);
@@ -1010,7 +999,7 @@ void QSGGeometryNode::setOpaqueMaterial(QSGMaterial *material)
         delete m_opaque_material;
     m_opaque_material = material;
 #ifndef QT_NO_DEBUG
-    if (m_opaque_material != 0 && m_opaque_material == m_material)
+    if (m_opaque_material != nullptr && m_opaque_material == m_material)
         qWarning("QSGGeometryNode: using same material for both opaque and translucent");
 #endif
 
@@ -1274,7 +1263,7 @@ QSGRootNode::QSGRootNode()
 QSGRootNode::~QSGRootNode()
 {
     while (!m_renderers.isEmpty())
-        m_renderers.constLast()->setRootNode(0);
+        m_renderers.constLast()->setRootNode(nullptr);
     destroy(); // Must call destroy() here because markDirty() casts this to QSGRootNode.
 }
 
@@ -1326,8 +1315,6 @@ void QSGRootNode::notifyNodeChange(QSGNode *node, DirtyState state)
   */
 QSGOpacityNode::QSGOpacityNode()
     : QSGNode(OpacityNodeType)
-    , m_opacity(1)
-    , m_combined_opacity(1)
 {
 }
 

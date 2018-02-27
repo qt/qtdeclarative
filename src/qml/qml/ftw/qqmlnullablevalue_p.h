@@ -57,7 +57,7 @@ template<typename T>
 struct QQmlNullableValue
 {
     QQmlNullableValue()
-    : isNull(true), value(T()) {}
+    : value(T()) {}
     QQmlNullableValue(const QQmlNullableValue<T> &o)
     : isNull(o.isNull), value(o.value) {}
     QQmlNullableValue(const T &t)
@@ -70,7 +70,7 @@ struct QQmlNullableValue
 
     void invalidate() { isNull = true; }
     bool isValid() const { return !isNull; }
-    bool isNull;
+    bool isNull = true;
     T value;
 };
 

@@ -426,7 +426,7 @@ public:
     template <typename T>
     const T *as() const {
         if (!isManaged())
-            return 0;
+            return nullptr;
 
         Q_ASSERT(m()->vtable());
 #if !defined(QT_NO_QOBJECT_CHECK)
@@ -438,7 +438,7 @@ public:
                 return static_cast<const T *>(this);
             vt = vt->parent;
         }
-        return 0;
+        return nullptr;
     }
     template <typename T>
     T *as() {
@@ -474,7 +474,7 @@ public:
     Value &operator=(ReturnedValue v) { _val = v; return *this; }
     Value &operator=(Managed *m) {
         if (!m) {
-            setM(0);
+            setM(nullptr);
         } else {
             _val = reinterpret_cast<Value *>(m)->_val;
         }

@@ -74,7 +74,7 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 
 QQuickTextPrivate::QQuickTextPrivate()
-    : fontInfo(font), elideLayout(0), textLine(0), lineWidth(0)
+    : fontInfo(font), elideLayout(nullptr), textLine(nullptr), lineWidth(0)
     , color(0xFF000000), linkColor(0xFF0000FF), styleColor(0xFF000000)
     , lineCount(1), multilengthEos(-1)
     , elideMode(QQuickText::ElideNone), hAlign(QQuickText::AlignLeft), vAlign(QQuickText::AlignTop)
@@ -103,7 +103,7 @@ QQuickTextPrivate::ExtraData::ExtraData()
     , explicitRightPadding(false)
     , explicitBottomPadding(false)
     , lineHeight(1.0)
-    , doc(0)
+    , doc(nullptr)
     , minimumPixelSize(12)
     , minimumPointSize(12)
     , nbActiveDownloads(0)
@@ -124,7 +124,7 @@ void QQuickTextPrivate::init()
 QQuickTextPrivate::~QQuickTextPrivate()
 {
     delete elideLayout;
-    delete textLine; textLine = 0;
+    delete textLine; textLine = nullptr;
 
     if (extra.isAllocated()) {
         qDeleteAll(extra->imgTags);
@@ -478,7 +478,7 @@ void QQuickTextPrivate::updateSize()
 }
 
 QQuickTextLine::QQuickTextLine()
-    : QObject(), m_line(0), m_height(0), m_lineOffset(0)
+    : QObject(), m_line(nullptr), m_height(0), m_lineOffset(0)
 {
 }
 
@@ -1110,7 +1110,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             layout.clearLayout();
     } else {
         delete elideLayout;
-        elideLayout = 0;
+        elideLayout = nullptr;
     }
 
     QTextLine firstLine = visibleCount == 1 && elideLayout
@@ -2363,10 +2363,10 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
     if (d->text.isEmpty()) {
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
-    if (d->updateType != QQuickTextPrivate::UpdatePaintNode && oldNode != 0) {
+    if (d->updateType != QQuickTextPrivate::UpdatePaintNode && oldNode != nullptr) {
         // Update done in preprocess() in the nodes
         d->updateType = QQuickTextPrivate::UpdateNone;
         return oldNode;
@@ -2376,7 +2376,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
 
     const qreal dy = QQuickTextUtil::alignedY(d->layedOutTextRect.height() + d->lineHeightOffset(), d->availableHeight(), d->vAlign) + topPadding();
 
-    QQuickTextNode *node = 0;
+    QQuickTextNode *node = nullptr;
     if (!oldNode)
         node = new QQuickTextNode(this);
     else
@@ -2918,14 +2918,14 @@ void QQuickText::invalidateFontCaches()
 {
     Q_D(QQuickText);
 
-    if (d->richText && d->extra.isAllocated() && d->extra->doc != 0) {
+    if (d->richText && d->extra.isAllocated() && d->extra->doc != nullptr) {
         QTextBlock block;
         for (block = d->extra->doc->firstBlock(); block.isValid(); block = block.next()) {
-            if (block.layout() != 0 && block.layout()->engine() != 0)
+            if (block.layout() != nullptr && block.layout()->engine() != nullptr)
                 block.layout()->engine()->resetFontEngineCache();
         }
     } else {
-        if (d->layout.engine() != 0)
+        if (d->layout.engine() != nullptr)
             d->layout.engine()->resetFontEngineCache();
     }
 }

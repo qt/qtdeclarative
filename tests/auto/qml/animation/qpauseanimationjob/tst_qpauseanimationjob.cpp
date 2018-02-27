@@ -39,17 +39,14 @@ static const char winTimerError[] = "On windows, consistent timing is not workin
 class TestablePauseAnimation : public QPauseAnimationJob
 {
 public:
-    TestablePauseAnimation()
-        : m_updateCurrentTimeCount(0)
-    {
-    }
+    TestablePauseAnimation() { }
 
     TestablePauseAnimation(int duration)
         : QPauseAnimationJob(duration), m_updateCurrentTimeCount(0)
     {
     }
 
-    int m_updateCurrentTimeCount;
+    int m_updateCurrentTimeCount = 0;
 protected:
     void updateCurrentTime(int currentTime)
     {

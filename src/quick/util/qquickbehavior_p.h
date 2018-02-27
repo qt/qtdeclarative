@@ -72,7 +72,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBehavior : public QObject, public QQmlPropert
     Q_CLASSINFO("DeferredPropertyNames", "animation")
 
 public:
-    QQuickBehavior(QObject *parent=0);
+    QQuickBehavior(QObject *parent=nullptr);
     ~QQuickBehavior();
 
     void setTarget(const QQmlProperty &) override;

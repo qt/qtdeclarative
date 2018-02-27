@@ -199,7 +199,7 @@ void QQuickSpriteSequence::createEngine()
         if (!d->m_goalState.isEmpty())
             d->m_spriteEngine->setGoal(d->m_spriteEngine->stateIndex(d->m_goalState));
     } else {
-        d->m_spriteEngine = 0;
+        d->m_spriteEngine = nullptr;
     }
     reset();
 }

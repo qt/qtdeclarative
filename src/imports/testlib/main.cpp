@@ -69,7 +69,7 @@ class QuickTestUtil : public QObject
     Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions NOTIFY printAvailableFunctionsChanged)
     Q_PROPERTY(int dragThreshold READ dragThreshold NOTIFY dragThresholdChanged)
 public:
-    QuickTestUtil(QObject *parent = 0)
+    QuickTestUtil(QObject *parent = nullptr)
         :QObject(parent)
     {}
 
@@ -150,7 +150,7 @@ class QTestQmlModule : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    QTestQmlModule(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
+    QTestQmlModule(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtTest"));

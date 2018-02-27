@@ -94,7 +94,7 @@ class EventItem : public QQuickItem
 {
     Q_OBJECT
 public:
-    EventItem(QQuickItem *parent = 0)
+    EventItem(QQuickItem *parent = nullptr)
         : QQuickItem(parent), acceptPointer(false), grabPointer(false), acceptMouse(false), acceptTouch(false), filterTouch(false)
     {}
 
@@ -269,7 +269,7 @@ void tst_PointerHandlers::createView(QScopedPointer<QQuickView> &window, const c
 
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 }
 
 void tst_PointerHandlers::initTestCase()

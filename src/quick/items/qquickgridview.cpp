@@ -230,7 +230,7 @@ public:
         : flow(QQuickGridView::FlowLeftToRight)
         , cellWidth(100), cellHeight(100), columns(1)
         , snapMode(QQuickGridView::NoSnap)
-        , highlightXAnimator(0), highlightYAnimator(0)
+        , highlightXAnimator(nullptr), highlightYAnimator(nullptr)
     {}
     ~QQuickGridViewPrivate()
     {
@@ -390,7 +390,7 @@ FxViewItem *QQuickGridViewPrivate::snapItemAt(qreal pos) const
         if (itemTop+rowSize()/2 >= pos && itemTop - rowSize()/2 <= pos)
             return item;
     }
-    return 0;
+    return nullptr;
 }
 
 int QQuickGridViewPrivate::snapIndex() const
@@ -508,7 +508,7 @@ bool QQuickGridViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
     }
 
     int colNum = qFloor((colPos+colSize()/2) / colSize());
-    FxGridItemSG *item = 0;
+    FxGridItemSG *item = nullptr;
     bool changed = false;
 
     QQmlIncubator::IncubationMode incubationMode = doBuffer ? QQmlIncubator::Asynchronous : QQmlIncubator::AsynchronousIfNested;
@@ -580,7 +580,7 @@ void QQuickGridViewPrivate::removeItem(FxViewItem *item)
 
 bool QQuickGridViewPrivate::removeNonVisibleItems(qreal bufferFrom, qreal bufferTo)
 {
-    FxGridItemSG *item = 0;
+    FxGridItemSG *item = nullptr;
     bool changed = false;
 
     while (visibleItems.count() > 1
@@ -700,14 +700,14 @@ void QQuickGridViewPrivate::createHighlight()
     bool changed = false;
     if (highlight) {
         if (trackedItem == highlight)
-            trackedItem = 0;
+            trackedItem = nullptr;
         delete highlight;
-        highlight = 0;
+        highlight = nullptr;
 
         delete highlightXAnimator;
         delete highlightYAnimator;
-        highlightXAnimator = 0;
-        highlightYAnimator = 0;
+        highlightXAnimator = nullptr;
+        highlightYAnimator = nullptr;
 
         changed = true;
     }
@@ -2410,7 +2410,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         } else {
             while (i >= 0) {
                 // item is before first visible e.g. in cache buffer
-                FxViewItem *item = 0;
+                FxViewItem *item = nullptr;
                 if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                     item->index = modelIndex + i;
                 if (!item)
@@ -2462,7 +2462,7 @@ bool QQuickGridViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         int i = 0;
         int to = buffer+displayMarginEnd+tempPos+size()-1;
         while (i < count && rowPos <= to + rowSize()*(columns - colNum)/qreal(columns+1)) {
-            FxViewItem *item = 0;
+            FxViewItem *item = nullptr;
             if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
                 item->index = modelIndex + i;
             bool newItem = !item;

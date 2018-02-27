@@ -50,7 +50,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickRepeaterPrivate::QQuickRepeaterPrivate()
-    : model(0)
+    : model(nullptr)
     , ownModel(false)
     , dataSourceIsObject(false)
     , delegateValidated(false)
@@ -216,8 +216,8 @@ void QQuickRepeater::setModel(const QVariant &m)
     d->dataSource = model;
     QObject *object = qvariant_cast<QObject*>(model);
     d->dataSourceAsObject = object;
-    d->dataSourceIsObject = object != 0;
-    QQmlInstanceModel *vim = 0;
+    d->dataSourceIsObject = object != nullptr;
+    QQmlInstanceModel *vim = nullptr;
     if (object && (vim = qobject_cast<QQmlInstanceModel *>(object))) {
         if (d->ownModel) {
             delete d->model;
@@ -288,7 +288,7 @@ QQmlComponent *QQuickRepeater::delegate() const
             return dataModel->delegate();
     }
 
-    return 0;
+    return nullptr;
 }
 
 void QQuickRepeater::setDelegate(QQmlComponent *delegate)
@@ -339,7 +339,7 @@ QQuickItem *QQuickRepeater::itemAt(int index) const
     Q_D(const QQuickRepeater);
     if (index >= 0 && index < d->deletables.count())
         return d->deletables[index];
-    return 0;
+    return nullptr;
 }
 
 void QQuickRepeater::componentComplete()
@@ -378,7 +378,7 @@ void QQuickRepeater::clear()
         }
         for (QQuickItem *item : qAsConst(d->deletables)) {
             if (item)
-                item->setParentItem(0);
+                item->setParentItem(nullptr);
         }
     }
     d->deletables.clear();
@@ -482,7 +482,7 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
             emit itemRemoved(index, item);
             if (item) {
                 d->model->release(item);
-                item->setParentItem(0);
+                item->setParentItem(nullptr);
             }
             --d->itemCount;
         }
@@ -510,7 +510,7 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
         } else for (int i = 0; i < insert.count; ++i) {
             int modelIndex = index + i;
             ++d->itemCount;
-            d->deletables.insert(modelIndex, 0);
+            d->deletables.insert(modelIndex, nullptr);
             QObject *object = d->model->object(modelIndex, QQmlIncubator::AsynchronousIfNested);
             if (object)
                 d->model->release(object);

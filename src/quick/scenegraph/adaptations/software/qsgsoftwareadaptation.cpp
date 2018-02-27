@@ -87,6 +87,6 @@ QSGRenderLoop *QSGSoftwareAdaptation::createWindowManager()
     return new QSGSoftwareRenderLoop();
 }
 
-QSGSoftwareContext *QSGSoftwareAdaptation::instance = 0;
+QSGSoftwareContext *QSGSoftwareAdaptation::instance = nullptr;
 
 QT_END_NAMESPACE

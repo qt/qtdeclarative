@@ -48,7 +48,7 @@ RegExpCache::~RegExpCache()
 {
     for (RegExpCache::Iterator it = begin(), e = end(); it != e; ++it) {
         if (RegExp *re = it.value().as<RegExp>())
-            re->d()->cache = 0;
+            re->d()->cache = nullptr;
     }
 }
 
@@ -100,7 +100,7 @@ void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, bool ig
 
     valid = false;
 
-    const char* error = 0;
+    const char* error = nullptr;
     JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), ignoreCase, multiLine, &error);
     if (error)
         return;

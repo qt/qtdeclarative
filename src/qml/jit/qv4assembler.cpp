@@ -1319,7 +1319,7 @@ class QIODevicePrintStream: public FilePrintStream
 
 public:
     explicit QIODevicePrintStream(QIODevice *dest)
-        : FilePrintStream(0)
+        : FilePrintStream(nullptr)
         , dest(dest)
         , buf(4096, '0')
     {
@@ -1373,7 +1373,7 @@ void Assembler::link(Function *function)
         jumpTarget.jump.linkTo(pasm()->labelsByOffset[jumpTarget.offset], pasm());
 
     JSC::JSGlobalData dummy(function->internalClass->engine->executableAllocator);
-    JSC::LinkBuffer<PlatformAssembler::MacroAssembler> linkBuffer(dummy, pasm(), 0);
+    JSC::LinkBuffer<PlatformAssembler::MacroAssembler> linkBuffer(dummy, pasm(), nullptr);
 
     for (const auto &ehTarget : pasm()->ehTargets) {
         auto targetLabel = pasm()->labelsByOffset.value(ehTarget.offset);

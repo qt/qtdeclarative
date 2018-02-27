@@ -103,7 +103,7 @@ QSGNode *Graph::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 
     if (rect.isEmpty()) {
         delete n;
-        return 0;
+        return nullptr;
     }
 
     if (!n) {

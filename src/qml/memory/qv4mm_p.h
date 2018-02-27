@@ -105,7 +105,7 @@ struct BlockAllocator {
     void collectGrayItems(MarkStack *markStack);
 
     // bump allocations
-    HeapItem *nextFree = 0;
+    HeapItem *nextFree = nullptr;
     size_t nFree = 0;
     size_t usedSlotsAfterLastSweep = 0;
     HeapItem *freeBins[NumBins];
@@ -229,7 +229,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : nullptr));
         Q_UNUSED(prototype);
         t->d_unchecked()->init();
         return t->d();
@@ -240,7 +240,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : nullptr));
         Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1);
         return t->d();
@@ -251,7 +251,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : nullptr));
         Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1, arg2);
         return t->d();
@@ -262,7 +262,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : nullptr));
         Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1, arg2, arg3);
         return t->d();
@@ -273,7 +273,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>(ic));
-        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : 0));
+        Q_ASSERT(t->internalClass()->prototype == (prototype ? prototype->d() : nullptr));
         Q_UNUSED(prototype);
         t->d_unchecked()->init(arg1, arg2, arg3, arg4);
         return t->d();

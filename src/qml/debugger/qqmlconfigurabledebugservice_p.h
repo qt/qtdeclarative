@@ -63,7 +63,7 @@ template <class Base>
 class QQmlConfigurableDebugService : public Base
 {
 protected:
-    QQmlConfigurableDebugService(float version, QObject *parent = 0) :
+    QQmlConfigurableDebugService(float version, QObject *parent = nullptr) :
         Base(version, parent), m_configMutex(QMutex::Recursive)
     {
         init();

@@ -82,11 +82,8 @@ public:
     struct Allocation
     {
         Allocation()
-            : addr(0)
-            , size(0)
+            : size(0)
             , free(true)
-            , next(0)
-            , prev(0)
         {}
 
         void *start() const;
@@ -103,11 +100,11 @@ public:
         bool mergeNext(ExecutableAllocator *allocator);
         bool mergePrevious(ExecutableAllocator *allocator);
 
-        quintptr addr;
+        quintptr addr = 0;
         uint size : 31; // More than 2GB of function code? nah :)
         uint free : 1;
-        Allocation *next;
-        Allocation *prev;
+        Allocation *next = nullptr;
+        Allocation *prev = nullptr;
     };
 
     // for debugging / unit-testing
@@ -117,13 +114,12 @@ public:
     struct ChunkOfPages
     {
         ChunkOfPages()
-            : pages(0)
-            , firstAllocation(0)
+
         {}
         ~ChunkOfPages();
 
-        WTF::PageAllocation *pages;
-        Allocation *firstAllocation;
+        WTF::PageAllocation *pages = nullptr;
+        Allocation *firstAllocation = nullptr;
 
         bool contains(Allocation *alloc) const;
     };

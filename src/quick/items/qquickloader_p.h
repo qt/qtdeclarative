@@ -69,7 +69,7 @@ class Q_AUTOTEST_EXPORT QQuickLoader : public QQuickImplicitSizeItem
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
 
 public:
-    QQuickLoader(QQuickItem *parent = 0);
+    QQuickLoader(QQuickItem *parent = nullptr);
     virtual ~QQuickLoader();
 
     bool active() const;

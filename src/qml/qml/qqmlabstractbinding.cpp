@@ -83,7 +83,7 @@ void QQmlAbstractBinding::addToObject()
         // Value type
 
         // Find the value type proxy (if there is one)
-        QQmlValueTypeProxyBinding *proxy = 0;
+        QQmlValueTypeProxyBinding *proxy = nullptr;
         if (data->hasBindingBit(coreIndex)) {
             QQmlAbstractBinding *b = data->bindings;
             while (b && (b->targetPropertyIndex().coreIndex() != coreIndex ||
@@ -137,7 +137,7 @@ void QQmlAbstractBinding::removeFromObject()
 
     QQmlAbstractBinding::Ptr next;
     next = nextBinding();
-    setNextBinding(0);
+    setNextBinding(nullptr);
 
     int coreIndex = targetPropertyIndex().coreIndex();
     if (targetPropertyIndex().hasValueTypeIndex()) {

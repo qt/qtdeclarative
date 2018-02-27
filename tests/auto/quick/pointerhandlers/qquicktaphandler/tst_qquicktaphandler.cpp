@@ -85,7 +85,7 @@ void tst_TapHandler::createView(QScopedPointer<QQuickView> &window, const char *
 
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 }
 
 void tst_TapHandler::initTestCase()

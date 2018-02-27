@@ -61,12 +61,12 @@ public:
                   QObject *object,
                   int debugId,
                   const QMetaProperty &prop,
-                  QQmlWatcher *parent = 0);
+                  QQmlWatcher *parent = nullptr);
 
     QQmlWatchProxy(int id,
                   QQmlExpression *exp,
                   int debugId,
-                  QQmlWatcher *parent = 0);
+                  QQmlWatcher *parent = nullptr);
 
 public slots:
     void notifyValueChanged(); // Needs to be a slot because of QQmlPropertyPrivate::connect()
@@ -86,7 +86,7 @@ QQmlWatchProxy::QQmlWatchProxy(int id,
                              QQmlExpression *exp,
                              int debugId,
                              QQmlWatcher *parent)
-: QObject(parent), m_id(id), m_watch(parent), m_object(0), m_debugId(debugId), m_expr(exp)
+: QObject(parent), m_id(id), m_watch(parent), m_object(nullptr), m_debugId(debugId), m_expr(exp)
 {
     QObject::connect(m_expr, &QQmlExpression::valueChanged,
                      this, &QQmlWatchProxy::notifyValueChanged);
@@ -97,7 +97,7 @@ QQmlWatchProxy::QQmlWatchProxy(int id,
                              int debugId,
                              const QMetaProperty &prop,
                              QQmlWatcher *parent)
-: QObject(parent), m_id(id), m_watch(parent), m_object(object), m_debugId(debugId), m_property(prop), m_expr(0)
+: QObject(parent), m_id(id), m_watch(parent), m_object(object), m_debugId(debugId), m_property(prop), m_expr(nullptr)
 {
     static int refreshIdx = -1;
     if(refreshIdx == -1)

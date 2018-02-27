@@ -62,7 +62,7 @@ class Q_QML_PRIVATE_EXPORT QQmlComponentAttached : public QObject
 {
     Q_OBJECT
 public:
-    QQmlComponentAttached(QObject *parent = 0);
+    QQmlComponentAttached(QObject *parent = nullptr);
     ~QQmlComponentAttached();
 
     void add(QQmlComponentAttached **a) {
@@ -72,7 +72,7 @@ public:
     void rem() {
         if (next) next->prev = prev;
         *prev = next;
-        next = 0; prev = 0;
+        next = nullptr; prev = nullptr;
     }
     QQmlComponentAttached **prev;
     QQmlComponentAttached *next;

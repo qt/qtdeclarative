@@ -58,7 +58,7 @@
 class FbRenderer : public QQuickFramebufferObject::Renderer
 {
 public:
-    FbRenderer() : c(0), dir(1) { }
+    FbRenderer() { }
 
     // The lifetime of the FBO and this class depends on how QQuickWidget
     // manages the scenegraph and context when it comes to showing and hiding
@@ -85,8 +85,8 @@ public:
     }
 
 private:
-    float c;
-    int dir;
+    float c = 0;
+    int dir = 1;
 };
 #endif
 

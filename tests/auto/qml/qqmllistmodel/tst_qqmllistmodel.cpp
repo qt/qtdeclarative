@@ -49,7 +49,7 @@ Q_DECLARE_METATYPE(QList<QVariantHash>)
 
 inline QVariant runexpr(QQmlEngine *engine, const QString &str)
 {
-    QQmlExpression expr(engine->rootContext(), 0, str);
+    QQmlExpression expr(engine->rootContext(), nullptr, str);
     return expr.evaluate();
 }
 
@@ -132,7 +132,7 @@ bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVarian
     bool allOk = true;
 
     QQmlListModel *model = qobject_cast<QQmlListModel *>(object.value<QObject *>());
-    if (model == 0)
+    if (model == nullptr)
         return false;
 
     if (model->count() != testList.count())
@@ -255,7 +255,7 @@ void tst_qqmllistmodel::static_types()
     QVERIFY(!component.isError());
 
     QObject *obj = component.create();
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     if (error.isEmpty()) {
         QVariant actual = obj->property("test");
@@ -326,7 +326,7 @@ void tst_qqmllistmodel::static_i18n()
     QVERIFY(!component.isError());
 
     QObject *obj = component.create();
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QVariant actual = obj->property("test");
 
@@ -375,7 +375,7 @@ void tst_qqmllistmodel::dynamic_i18n()
     QVERIFY(!component.isError());
 
     QObject *obj = component.create();
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QVariant actual = obj->property("test");
 
@@ -413,7 +413,7 @@ void tst_qqmllistmodel::static_nestedElements()
     component.setData(componentStr.toUtf8(), QUrl::fromLocalFile(""));
 
     QObject *obj = component.create();
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QVariant count = obj->property("count");
     QCOMPARE(count.type(), QVariant::Int);
@@ -613,7 +613,7 @@ void tst_qqmllistmodel::enumerate()
     QQmlComponent component(&eng, testFileUrl("enumerate.qml"));
     QVERIFY(!component.isError());
     QQuickItem *item = qobject_cast<QQuickItem*>(component.create());
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QLatin1String expectedStrings[] = {
         QLatin1String("val1=1Y"),
@@ -958,9 +958,9 @@ void tst_qqmllistmodel::crash_model_with_multiple_roles()
     QQmlComponent component(&eng, testFileUrl("multipleroles.qml"));
     QObject *rootItem = component.create();
     QVERIFY(component.errorString().isEmpty());
-    QVERIFY(rootItem != 0);
+    QVERIFY(rootItem != nullptr);
     QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
-    QVERIFY(model != 0);
+    QVERIFY(model != nullptr);
 
     // used to cause a crash
     model->setProperty(0, "black", true);
@@ -974,9 +974,9 @@ void tst_qqmllistmodel::crash_model_with_unknown_roles()
     QQmlComponent component(&eng, testFileUrl("multipleroles.qml"));
     QScopedPointer<QObject> rootItem(component.create());
     QVERIFY(component.errorString().isEmpty());
-    QVERIFY(rootItem != 0);
+    QVERIFY(rootItem != nullptr);
     QQmlListModel *model = rootItem->findChild<QQmlListModel*>("listModel");
-    QVERIFY(model != 0);
+    QVERIFY(model != nullptr);
 
     // used to cause a crash in debug builds
     model->index(0, 0, QModelIndex()).data(Qt::DisplayRole);
@@ -990,7 +990,7 @@ void tst_qqmllistmodel::set_model_cache()
     QQmlComponent component(&eng, testFileUrl("setmodelcachelist.qml"));
     QObject *model = component.create();
     QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
-    QVERIFY(model != 0);
+    QVERIFY(model != nullptr);
     QVERIFY(model->property("ok").toBool());
 
     delete model;
@@ -1188,10 +1188,10 @@ void tst_qqmllistmodel::signal_handlers()
     QQmlComponent component(&eng, testFileUrl("signalhandlers.qml"));
     QObject *model = component.create();
     QQmlListModel *lm = qobject_cast<QQmlListModel *>(model);
-    QVERIFY(lm != 0);
+    QVERIFY(lm != nullptr);
     lm->setDynamicRoles(dynamicRoles);
     QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
-    QVERIFY(model != 0);
+    QVERIFY(model != nullptr);
     QVERIFY(model->property("ok").toBool());
 
     delete model;
@@ -1275,7 +1275,7 @@ void tst_qqmllistmodel::empty_element_warning()
     QVERIFY(!component.isError());
 
     QObject *obj = component.create();
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     delete obj;
 }

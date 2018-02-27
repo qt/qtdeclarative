@@ -168,13 +168,13 @@ private:
     void init();
     void destroy();
 
-    QSGNode *m_parent;
-    NodeType m_type;
-    QSGNode *m_firstChild;
-    QSGNode *m_lastChild;
-    QSGNode *m_nextSibling;
-    QSGNode *m_previousSibling;
-    int m_subtreeRenderableCount;
+    QSGNode *m_parent = nullptr;
+    NodeType m_type = BasicNodeType;
+    QSGNode *m_firstChild = nullptr;
+    QSGNode *m_lastChild = nullptr;
+    QSGNode *m_nextSibling = nullptr;
+    QSGNode *m_previousSibling = nullptr;
+    int m_subtreeRenderableCount = 0;
 
     Flags m_nodeFlags;
     DirtyState m_dirtyState; // Obsolete, remove in Qt 6
@@ -246,11 +246,11 @@ protected:
 private:
     friend class QSGNodeUpdater;
 
-    int m_render_order;
-    QSGMaterial *m_material;
-    QSGMaterial *m_opaque_material;
+    int m_render_order = 0;
+    QSGMaterial *m_material = nullptr;
+    QSGMaterial *m_opaque_material = nullptr;
 
-    qreal m_opacity;
+    qreal m_opacity = 1;
 };
 
 class Q_QUICK_EXPORT QSGClipNode : public QSGBasicGeometryNode
@@ -323,8 +323,8 @@ public:
     bool isSubtreeBlocked() const override;
 
 private:
-    qreal m_opacity;
-    qreal m_combined_opacity;
+    qreal m_opacity = 1;
+    qreal m_combined_opacity = 1;
 };
 
 class Q_QUICK_EXPORT QSGNodeVisitor {

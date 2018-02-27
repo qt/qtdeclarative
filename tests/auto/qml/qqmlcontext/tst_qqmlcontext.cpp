@@ -116,7 +116,7 @@ void tst_qqmlcontext::resolvedUrl()
         QQmlContext ctxt2(ctxt);
         QCOMPARE(ctxt2.resolvedUrl(QUrl("main2.qml")), QUrl("http://www.qt-project.org/main2.qml"));
 
-        delete ctxt; ctxt = 0;
+        delete ctxt; ctxt = nullptr;
 
         QCOMPARE(ctxt2.resolvedUrl(QUrl("main2.qml")), QUrl());
     }
@@ -144,7 +144,7 @@ void tst_qqmlcontext::engineMethod()
     QCOMPARE(ctxt3.engine(), engine);
     QCOMPARE(ctxt4.engine(), engine);
 
-    delete engine; engine = 0;
+    delete engine; engine = nullptr;
 
     QCOMPARE(ctxt.engine(), engine);
     QCOMPARE(ctxt2.engine(), engine);
@@ -156,7 +156,7 @@ void tst_qqmlcontext::parentContext()
 {
     QQmlEngine *engine = new QQmlEngine;
 
-    QCOMPARE(engine->rootContext()->parentContext(), (QQmlContext *)0);
+    QCOMPARE(engine->rootContext()->parentContext(), (QQmlContext *)nullptr);
 
     QQmlContext *ctxt = new QQmlContext(engine);
     QQmlContext *ctxt2 = new QQmlContext(ctxt);
@@ -174,23 +174,23 @@ void tst_qqmlcontext::parentContext()
     QCOMPARE(ctxt6->parentContext(), engine->rootContext());
     QCOMPARE(ctxt7->parentContext(), engine->rootContext());
 
-    delete ctxt2; ctxt2 = 0;
+    delete ctxt2; ctxt2 = nullptr;
 
     QCOMPARE(ctxt->parentContext(), engine->rootContext());
-    QCOMPARE(ctxt3->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt4->parentContext(), (QQmlContext *)0);
+    QCOMPARE(ctxt3->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt4->parentContext(), (QQmlContext *)nullptr);
     QCOMPARE(ctxt5->parentContext(), ctxt);
     QCOMPARE(ctxt6->parentContext(), engine->rootContext());
     QCOMPARE(ctxt7->parentContext(), engine->rootContext());
 
-    delete engine; engine = 0;
+    delete engine; engine = nullptr;
 
-    QCOMPARE(ctxt->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt3->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt4->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt5->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt6->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt7->parentContext(), (QQmlContext *)0);
+    QCOMPARE(ctxt->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt3->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt4->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt5->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt6->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt7->parentContext(), (QQmlContext *)nullptr);
 
     delete ctxt7;
     delete ctxt6;
@@ -453,12 +453,12 @@ void tst_qqmlcontext::destruction()
 
     QObject obj;
     QQmlEngine::setContextForObject(&obj, ctxt);
-    QQmlExpression expr(ctxt, 0, "a");
+    QQmlExpression expr(ctxt, nullptr, "a");
 
     QCOMPARE(ctxt, QQmlEngine::contextForObject(&obj));
     QCOMPARE(ctxt, expr.context());
 
-    delete ctxt; ctxt = 0;
+    delete ctxt; ctxt = nullptr;
 
     QCOMPARE(ctxt, QQmlEngine::contextForObject(&obj));
     QCOMPARE(ctxt, expr.context());
@@ -507,7 +507,7 @@ void tst_qqmlcontext::readOnlyContexts()
     QCOMPARE(context->contextProperty("hello"), QVariant());
 
     QTest::ignoreMessage(QtWarningMsg, "QQmlContext: Cannot set context object for internal context.");
-    context->setContextObject(0);
+    context->setContextObject(nullptr);
     QCOMPARE(context->contextObject(), obj);
 
     delete obj;
@@ -535,7 +535,7 @@ void tst_qqmlcontext::nameForObject()
     component.setData("import QtQuick 2.0; QtObject { id: root; property QtObject o: QtObject { id: nested } }", QUrl());
 
     QObject *o = component.create();
-    QVERIFY(o != 0);
+    QVERIFY(o != nullptr);
 
     QCOMPARE(qmlContext(o)->nameForObject(o), QString("root"));
     QCOMPARE(qmlContext(o)->nameForObject(qvariant_cast<QObject*>(o->property("o"))), QString("nested"));
@@ -548,12 +548,12 @@ class DeleteCommand : public QObject
 {
 Q_OBJECT
 public:
-    DeleteCommand() : object(0) {}
+    DeleteCommand() : object(nullptr) {}
 
     QObject *object;
 
 public slots:
-    void doCommand() { if (object) delete object; object = 0; }
+    void doCommand() { if (object) delete object; object = nullptr; }
 };
 
 // Calling refresh expressions would crash if an expression or context was deleted during
@@ -686,7 +686,7 @@ void tst_qqmlcontext::skipExpressionRefresh_qtbug_53431()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_53431.qml"));
-    QScopedPointer<QObject> object(component.create(0));
+    QScopedPointer<QObject> object(component.create(nullptr));
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("value").toInt(), 1);
     object->setProperty("value", 10);
@@ -713,7 +713,7 @@ void tst_qqmlcontext::evalAfterInvalidate()
     QQmlComponent component(&engine, testFileUrl("evalAfterInvalidate.qml"));
     QScopedPointer<QObject> o(component.create());
 
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 }
 

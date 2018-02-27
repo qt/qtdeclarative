@@ -95,9 +95,9 @@ struct IdentifierHashData
 struct IdentifierHash
 {
 
-    IdentifierHashData *d;
+    IdentifierHashData *d = nullptr;
 
-    IdentifierHash() : d(0) {}
+    IdentifierHash() {}
     IdentifierHash(ExecutionEngine *engine);
     inline IdentifierHash(const IdentifierHash &other);
     inline ~IdentifierHash();

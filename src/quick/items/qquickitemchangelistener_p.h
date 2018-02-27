@@ -135,7 +135,7 @@ public:
     virtual void itemImplicitWidthChanged(QQuickItem *) {}
     virtual void itemImplicitHeightChanged(QQuickItem *) {}
 
-    virtual QQuickAnchorsPrivate *anchorPrivate() { return 0; }
+    virtual QQuickAnchorsPrivate *anchorPrivate() { return nullptr; }
 };
 
 QT_END_NAMESPACE

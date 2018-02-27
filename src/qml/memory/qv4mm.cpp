@@ -186,7 +186,7 @@ struct MemorySegment {
     }
 
     PageReservation pageReservation;
-    Chunk *base = 0;
+    Chunk *base = nullptr;
     quint64 allocatedMap = 0;
     size_t availableBytes = 0;
     uint nChunks = 0;
@@ -203,14 +203,14 @@ Chunk *MemorySegment::allocate(size_t size)
     }
     size_t requiredChunks = (size + sizeof(Chunk) - 1)/sizeof(Chunk);
     uint sequence = 0;
-    Chunk *candidate = 0;
+    Chunk *candidate = nullptr;
     for (uint i = 0; i < nChunks; ++i) {
         if (!testBit(i)) {
             if (!candidate)
                 candidate = base + i;
             ++sequence;
         } else {
-            candidate = 0;
+            candidate = nullptr;
             sequence = 0;
         }
         if (sequence == requiredChunks) {
@@ -221,7 +221,7 @@ Chunk *MemorySegment::allocate(size_t size)
             return candidate;
         }
     }
-    return 0;
+    return nullptr;
 }
 
 struct ChunkAllocator {
@@ -594,7 +594,7 @@ HeapItem *BlockAllocator::allocate(size_t size, bool forceAllocation) {
 
     if (!m) {
         if (!forceAllocation)
-            return 0;
+            return nullptr;
         Chunk *newChunk = chunkAllocator->allocate();
         Q_V4_PROFILE_ALLOC(engine, Chunk::DataSize, Profiling::HeapPage);
         chunks.push_back(newChunk);
@@ -617,7 +617,7 @@ done:
 
 void BlockAllocator::sweep()
 {
-    nextFree = 0;
+    nextFree = nullptr;
     nFree = 0;
     memset(freeBins, 0, sizeof(freeBins));
 

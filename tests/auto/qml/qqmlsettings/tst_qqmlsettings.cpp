@@ -87,11 +87,8 @@ class CppObject : public QObject
     Q_PROPERTY(QFont fontProperty MEMBER m_fontProperty NOTIFY fontPropertyChanged)
 
 public:
-    CppObject(QObject *parent = 0) : QObject(parent),
-        m_intProperty(123),
-        m_boolProperty(true),
-        m_realProperty(1.23),
-        m_doubleProperty(3.45),
+    CppObject(QObject *parent = nullptr) : QObject(parent),
+
         m_stringProperty("foo"),
         m_urlProperty("http://www.qt-project.org"),
         m_objectProperty(keyValueMap("foo", "bar")),
@@ -127,10 +124,10 @@ signals:
     void fontPropertyChanged(const QFont &arg);
 
 private:
-    int m_intProperty;
-    bool m_boolProperty;
-    qreal m_realProperty;
-    double m_doubleProperty;
+    int m_intProperty = 123;
+    bool m_boolProperty = true;
+    qreal m_realProperty = 1.23;
+    double m_doubleProperty = 3.45;
     QString m_stringProperty;
     QUrl m_urlProperty;
     QVariant m_varProperty;

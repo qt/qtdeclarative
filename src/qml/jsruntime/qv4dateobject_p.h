@@ -101,7 +101,7 @@ struct DateObject: Object {
 
 template<>
 inline const DateObject *Value::as() const {
-    return isManaged() && m()->vtable()->type == Managed::Type_DateObject ? static_cast<const DateObject *>(this) : 0;
+    return isManaged() && m()->vtable()->type == Managed::Type_DateObject ? static_cast<const DateObject *>(this) : nullptr;
 }
 
 struct DateCtor: FunctionObject

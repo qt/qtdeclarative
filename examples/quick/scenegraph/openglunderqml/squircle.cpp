@@ -57,7 +57,7 @@
 //! [7]
 Squircle::Squircle()
     : m_t(0)
-    , m_renderer(0)
+    , m_renderer(nullptr)
 {
     connect(this, &QQuickItem::windowChanged, this, &Squircle::handleWindowChanged);
 }
@@ -95,7 +95,7 @@ void Squircle::cleanup()
 {
     if (m_renderer) {
         delete m_renderer;
-        m_renderer = 0;
+        m_renderer = nullptr;
     }
 }
 

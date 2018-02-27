@@ -166,7 +166,7 @@ public:
         , m_thrownValue(-1)
         , collector(engine)
         , m_resumeSpeed(QV4Debugger::FullThrottle)
-        , m_debugger(0)
+        , m_debugger(nullptr)
     {
     }
 
@@ -355,10 +355,10 @@ void tst_qv4debugger::cleanup()
     m_javaScriptThread->wait();
     delete m_engine;
     delete m_javaScriptThread;
-    m_engine = 0;
-    m_v4 = 0;
+    m_engine = nullptr;
+    m_v4 = nullptr;
     delete m_debuggerAgent;
-    m_debuggerAgent = 0;
+    m_debuggerAgent = nullptr;
 }
 
 void tst_qv4debugger::breakAnywhere()

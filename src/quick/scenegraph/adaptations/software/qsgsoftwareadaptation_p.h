@@ -62,7 +62,7 @@ class QSGSoftwareContext;
 class QSGSoftwareAdaptation : public QSGContextPlugin
 {
 public:
-    QSGSoftwareAdaptation(QObject *parent = 0);
+    QSGSoftwareAdaptation(QObject *parent = nullptr);
 
     QStringList keys() const override;
     QSGContext *create(const QString &key) const override;

@@ -65,7 +65,7 @@ void BirthdayPartyAttached::setRsvp(const QDate &d)
 }
 
 BirthdayParty::BirthdayParty(QObject *parent)
-: QObject(parent), m_host(0)
+: QObject(parent), m_host(nullptr)
 {
 }
 

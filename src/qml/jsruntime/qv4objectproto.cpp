@@ -638,7 +638,7 @@ ReturnedValue ObjectPrototype::method_set_proto(const FunctionObject *b, const V
         THROW_TYPE_ERROR();
 
     if (argv[0].isNull()) {
-        o->setPrototype(0);
+        o->setPrototype(nullptr);
         RETURN_UNDEFINED();
     }
 

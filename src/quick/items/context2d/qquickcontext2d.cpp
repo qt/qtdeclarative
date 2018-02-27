@@ -641,7 +641,7 @@ public:
         o->defineDefaultProperty(QStringLiteral("createLinearGradient"), method_createLinearGradient, 0);
         o->defineDefaultProperty(QStringLiteral("strokeRect"), method_strokeRect, 0);
         o->defineDefaultProperty(QStringLiteral("closePath"), method_closePath, 0);
-        o->defineAccessorProperty(QStringLiteral("canvas"), QQuickJSContext2DPrototype::method_get_canvas, 0);
+        o->defineAccessorProperty(QStringLiteral("canvas"), QQuickJSContext2DPrototype::method_get_canvas, nullptr);
 
         return o->d();
     }
@@ -943,9 +943,9 @@ void QV4::Heap::QQuickJSContext2DImageData::init()
     QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
 
-    o->defineAccessorProperty(QStringLiteral("width"), ::QQuickJSContext2DImageData::method_get_width, 0);
-    o->defineAccessorProperty(QStringLiteral("height"), ::QQuickJSContext2DImageData::method_get_height, 0);
-    o->defineAccessorProperty(QStringLiteral("data"), ::QQuickJSContext2DImageData::method_get_data, 0);
+    o->defineAccessorProperty(QStringLiteral("width"), ::QQuickJSContext2DImageData::method_get_width, nullptr);
+    o->defineAccessorProperty(QStringLiteral("height"), ::QQuickJSContext2DImageData::method_get_height, nullptr);
+    o->defineAccessorProperty(QStringLiteral("data"), ::QQuickJSContext2DImageData::method_get_data, nullptr);
 }
 
 DEFINE_OBJECT_VTABLE(QQuickJSContext2DImageData);
@@ -4051,10 +4051,10 @@ QMutex QQuickContext2D::mutex;
 QQuickContext2D::QQuickContext2D(QObject *parent)
     : QQuickCanvasContext(parent)
     , m_buffer(new QQuickContext2DCommandBuffer)
-    , m_v4engine(0)
-    , m_surface(0)
-    , m_glContext(0)
-    , m_thread(0)
+    , m_v4engine(nullptr)
+    , m_surface(nullptr)
+    , m_glContext(nullptr)
+    , m_thread(nullptr)
     , m_grabbed(false)
 {
 }
@@ -4062,7 +4062,7 @@ QQuickContext2D::QQuickContext2D(QObject *parent)
 QQuickContext2D::~QQuickContext2D()
 {
     mutex.lock();
-    m_texture->setItem(0);
+    m_texture->setItem(nullptr);
     delete m_buffer;
 
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject) {
@@ -4242,7 +4242,7 @@ QImage QQuickContext2D::toImage(const QRectF& bounds)
         } else {
 #if QT_CONFIG(opengl)
             QQuickWindow *window = m_canvas->window();
-            QOpenGLContext *ctx =  window ? window->openglContext() : 0;
+            QOpenGLContext *ctx =  window ? window->openglContext() : nullptr;
             if (ctx && ctx->isValid()) {
                 if (ctx == QOpenGLContext::currentContext()) {
                     flush();
@@ -4310,7 +4310,7 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV4::ExecutionEngine *v4)
     gradientProto = proto;
 
     proto = scope.engine->newObject();
-    proto->defineAccessorProperty(scope.engine->id_length(), QQuickJSContext2DPixelData::proto_get_length, 0);
+    proto->defineAccessorProperty(scope.engine->id_length(), QQuickJSContext2DPixelData::proto_get_length, nullptr);
     pixelArrayProto = proto;
 }
 
@@ -4394,7 +4394,7 @@ void QQuickContext2D::setV4Engine(QV4::ExecutionEngine *engine)
     if (m_v4engine != engine) {
         m_v4engine = engine;
 
-        if (m_v4engine == 0)
+        if (m_v4engine == nullptr)
             return;
 
         QQuickContext2DEngineData *ed = engineData(engine);

@@ -167,7 +167,7 @@ template <typename T> T *windowFor(const QList<T> &list, QQuickWindow *window)
         if (t.window == window)
             return const_cast<T *>(&t);
     }
-    return 0;
+    return nullptr;
 }
 
 
@@ -270,13 +270,13 @@ class QSGRenderThread : public QThread
 public:
     QSGRenderThread(QSGThreadedRenderLoop *w, QSGRenderContext *renderContext)
         : wm(w)
-        , gl(0)
-        , animatorDriver(0)
+        , gl(nullptr)
+        , animatorDriver(nullptr)
         , pendingUpdate(0)
         , sleeping(false)
         , syncResultedInChanges(false)
         , active(false)
-        , window(0)
+        , window(nullptr)
         , stopEventProcessing(false)
     {
         sgrc = static_cast<QSGDefaultRenderContext *>(renderContext);
@@ -366,7 +366,7 @@ bool QSGRenderThread::event(QEvent *e)
         if (window) {
             QQuickWindowPrivate::get(window)->fireAboutToStop();
             qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- window removed");
-            window = 0;
+            window = nullptr;
         }
         waitCondition.wakeOne();
         mutex.unlock();
@@ -456,7 +456,7 @@ bool QSGRenderThread::event(QEvent *e)
             gl->makeCurrent(window);
             ce->job->run();
             delete ce->job;
-            ce->job = 0;
+            ce->job = nullptr;
             qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- job done");
         }
         return true;
@@ -514,7 +514,7 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
 
     sgrc->invalidate();
     QCoreApplication::processEvents();
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     if (inDestructor)
         delete dd->animationController;
     if (current)
@@ -523,7 +523,7 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
 
     if (wipeGL) {
         delete gl;
-        gl = 0;
+        gl = nullptr;
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- invalidated OpenGL");
     } else {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- persistent GL, avoiding cleanup");
@@ -554,7 +554,7 @@ void QSGRenderThread::sync(bool inExpose)
     }
     if (current) {
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
-        bool hadRenderer = d->renderer != 0;
+        bool hadRenderer = d->renderer != nullptr;
         // If the scene graph was touched since the last sync() make sure it sends the
         // changed signal.
         if (d->renderer)
@@ -570,7 +570,7 @@ void QSGRenderThread::sync(bool inExpose)
         // Process deferred deletes now, directly after the sync as
         // deleteLater on the GUI must now also have resulted in SG changes
         // and the delete is a safe operation.
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     } else {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- window has bad size, sync aborted");
     }
@@ -716,7 +716,7 @@ void QSGRenderThread::processEventsAndWaitForMore()
 void QSGRenderThread::run()
 {
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "run()");
-    animatorDriver = sgrc->sceneGraphContext()->createAnimationDriver(0);
+    animatorDriver = sgrc->sceneGraphContext()->createAnimationDriver(nullptr);
     animatorDriver->install();
     if (QQmlDebugConnector::service<QQmlProfilerService>())
         QQuickProfiler::registerAnimationCallback();
@@ -745,7 +745,7 @@ void QSGRenderThread::run()
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "run() completed");
 
     delete animatorDriver;
-    animatorDriver = 0;
+    animatorDriver = nullptr;
 
     sgrc->moveToThread(wm->thread());
     moveToThread(wm->thread());
@@ -826,7 +826,7 @@ void QSGThreadedRenderLoop::animationStopped()
 void QSGThreadedRenderLoop::startOrStopAnimationTimer()
 {
     int exposedWindows = 0;
-    const Window *theOne = 0;
+    const Window *theOne = nullptr;
     for (int i=0; i<m_windows.size(); ++i) {
         const Window &w = m_windows.at(i);
         if (w.window->isVisible() && w.window->isExposed()) {
@@ -973,7 +973,7 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
             if (!w->thread->gl->create()) {
                 const bool isEs = w->thread->gl->isOpenGLES();
                 delete w->thread->gl;
-                w->thread->gl = 0;
+                w->thread->gl = nullptr;
                 handleContextCreationFailure(w->window, isEs);
                 return;
             }
@@ -1123,7 +1123,7 @@ void QSGThreadedRenderLoop::releaseResources(Window *w, bool inDestructor)
         // and the OpenGL resources.
         // QOffscreenSurface must be created on the GUI thread, so we
         // create it here and pass it on to QSGRenderThread::invalidateGL()
-        QOffscreenSurface *fallback = 0;
+        QOffscreenSurface *fallback = nullptr;
         if (!window->handle()) {
             qCDebug(QSG_LOG_RENDERLOOP, "- using fallback surface");
             fallback = new QOffscreenSurface();

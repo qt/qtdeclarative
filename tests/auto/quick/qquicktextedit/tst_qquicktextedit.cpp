@@ -210,7 +210,7 @@ private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
     void simulateKeys(QWindow *window, const QKeySequence &sequence);
 
-    void simulateKey(QWindow *, int key, Qt::KeyboardModifiers modifiers = 0);
+    void simulateKey(QWindow *, int key, Qt::KeyboardModifiers modifiers = nullptr);
 
     QStringList standard;
     QStringList richText;
@@ -336,7 +336,7 @@ void tst_qquicktextedit::cleanup()
 {
     // ensure not even skipped tests with custom input context leave it dangling
     QInputMethodPrivate *inputMethodPrivate = QInputMethodPrivate::get(qApp->inputMethod());
-    inputMethodPrivate->testContext = 0;
+    inputMethodPrivate->testContext = nullptr;
 }
 
 void tst_qquicktextedit::text()
@@ -346,7 +346,7 @@ void tst_qquicktextedit::text()
         texteditComponent.setData("import QtQuick 2.0\nTextEdit {  text: \"\"  }", QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->text(), QString(""));
         QCOMPARE(textEditObject->length(), 0);
     }
@@ -358,7 +358,7 @@ void tst_qquicktextedit::text()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->text(), standard.at(i));
         QCOMPARE(textEditObject->length(), standard.at(i).length());
     }
@@ -371,7 +371,7 @@ void tst_qquicktextedit::text()
 
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
 
         QString expected = richText.at(i);
         expected.replace(QRegExp("\\\\(.)"),"\\1");
@@ -386,7 +386,7 @@ void tst_qquicktextedit::text()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
 
         QString actual = textEditObject->text();
         QString expected = standard.at(i);
@@ -404,7 +404,7 @@ void tst_qquicktextedit::text()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QString actual = textEditObject->text();
         QString expected = richText.at(i);
         actual.replace(QRegExp(".*<body[^>]*>"),"");
@@ -423,7 +423,7 @@ void tst_qquicktextedit::text()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->text(), standard.at(i));
         QCOMPARE(textEditObject->length(), standard.at(i).length());
     }
@@ -435,7 +435,7 @@ void tst_qquicktextedit::text()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QString actual = textEditObject->text();
         QString expected = richText.at(i);
         actual.replace(QRegExp(".*<body[^>]*>"),"");
@@ -456,7 +456,7 @@ void tst_qquicktextedit::width()
         texteditComponent.setData("import QtQuick 2.0\nTextEdit {  text: \"\" }", QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->width(), 0.0);
     }
 
@@ -492,7 +492,7 @@ void tst_qquicktextedit::width()
 
         qreal metricWidth = layout.boundingRect().width();
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->width(), metricWidth);
     }
 
@@ -511,7 +511,7 @@ void tst_qquicktextedit::width()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->width(), documentWidth);
     }
 }
@@ -524,7 +524,7 @@ void tst_qquicktextedit::wrap()
         texteditComponent.setData("import QtQuick 2.0\nTextEdit {  text: \"\"; wrapMode: TextEdit.WordWrap; width: 300 }", QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->width(), 300.);
     }
 
@@ -535,7 +535,7 @@ void tst_qquicktextedit::wrap()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->width(), 300.);
     }
 
@@ -546,7 +546,7 @@ void tst_qquicktextedit::wrap()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->width(), 300.);
     }
     {
@@ -581,7 +581,7 @@ void tst_qquicktextedit::textFormat()
         textComponent.setData("import QtQuick 2.0\nTextEdit { text: \"Hello\"; textFormat: Text.RichText }", QUrl::fromLocalFile(""));
         QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
 
-        QVERIFY(textObject != 0);
+        QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->textFormat(), QQuickTextEdit::RichText);
     }
     {
@@ -589,7 +589,7 @@ void tst_qquicktextedit::textFormat()
         textComponent.setData("import QtQuick 2.0\nTextEdit { text: \"<b>Hello</b>\"; textFormat: Text.PlainText }", QUrl::fromLocalFile(""));
         QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.create());
 
-        QVERIFY(textObject != 0);
+        QVERIFY(textObject != nullptr);
         QCOMPARE(textObject->textFormat(), QQuickTextEdit::PlainText);
     }
     {
@@ -679,7 +679,7 @@ void tst_qquicktextedit::hAlign()
             texteditComponent.setData(componentStr.toLatin1(), QUrl());
             QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-            QVERIFY(textEditObject != 0);
+            QVERIFY(textEditObject != nullptr);
             QCOMPARE((int)textEditObject->hAlign(), (int)hAlignments.at(j));
         }
     }
@@ -693,7 +693,7 @@ void tst_qquicktextedit::hAlign()
             texteditComponent.setData(componentStr.toLatin1(), QUrl());
             QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-            QVERIFY(textEditObject != 0);
+            QVERIFY(textEditObject != nullptr);
             QCOMPARE((int)textEditObject->hAlign(), (int)hAlignments.at(j));
         }
     }
@@ -708,7 +708,7 @@ void tst_qquicktextedit::hAlign_RightToLeft()
 
     QQuickView window(testFileUrl("horizontalAlignment_RightToLeft.qml"));
     QQuickTextEdit *textEdit = window.rootObject()->findChild<QQuickTextEdit*>("text");
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
     window.showNormal();
 
     const QString rtlText = textEdit->text();
@@ -790,7 +790,7 @@ void tst_qquicktextedit::hAlign_RightToLeft()
     QVERIFY(textEdit->positionToRectangle(0).x() < window.width()/2);
 
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QVERIFY(textEdit->hasActiveFocus());
 
     textEdit->setText(QString());
@@ -853,7 +853,7 @@ void tst_qquicktextedit::hAlign_RightToLeft()
 
     // make sure editor doesn't rely on input for updating size
     QQuickTextEdit *emptyEdit = window.rootObject()->findChild<QQuickTextEdit*>("emptyTextEdit");
-    QVERIFY(emptyEdit != 0);
+    QVERIFY(emptyEdit != nullptr);
     platformInputContext.setInputDirection(Qt::RightToLeft);
     emptyEdit->setFocus(true);
     QCOMPARE(emptyEdit->hAlign(), QQuickTextEdit::AlignRight);
@@ -891,7 +891,7 @@ void tst_qquicktextedit::hAlignVisual()
     QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QQuickText *text = view.rootObject()->findChild<QQuickText*>("textItem");
-    QVERIFY(text != 0);
+    QVERIFY(text != nullptr);
 
     // Try to check whether alignment works by checking the number of black
     // pixels in the thirds of the grabbed image.
@@ -987,7 +987,7 @@ void tst_qquicktextedit::vAlign()
             texteditComponent.setData(componentStr.toLatin1(), QUrl());
             QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-            QVERIFY(textEditObject != 0);
+            QVERIFY(textEditObject != nullptr);
             QCOMPARE((int)textEditObject->vAlign(), (int)vAlignments.at(j));
         }
     }
@@ -1001,7 +1001,7 @@ void tst_qquicktextedit::vAlign()
             texteditComponent.setData(componentStr.toLatin1(), QUrl());
             QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-            QVERIFY(textEditObject != 0);
+            QVERIFY(textEditObject != nullptr);
             QCOMPARE((int)textEditObject->vAlign(), (int)vAlignments.at(j));
         }
     }
@@ -1012,7 +1012,7 @@ void tst_qquicktextedit::vAlign()
                 "TextEdit { width: 100; height: 100; text: \"Hello World\" }", QUrl());
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-    QVERIFY(textEditObject != 0);
+    QVERIFY(textEditObject != nullptr);
 
     QCOMPARE(textEditObject->vAlign(), QQuickTextEdit::AlignTop);
     QVERIFY(textEditObject->cursorRectangle().bottom() < 50);
@@ -1055,7 +1055,7 @@ void tst_qquicktextedit::font()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->font().pointSize(), 40);
         QCOMPARE(textEditObject->font().bold(), false);
         QCOMPARE(textEditObject->font().italic(), false);
@@ -1067,7 +1067,7 @@ void tst_qquicktextedit::font()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->font().bold(), true);
         QCOMPARE(textEditObject->font().italic(), false);
     }
@@ -1078,7 +1078,7 @@ void tst_qquicktextedit::font()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->font().italic(), true);
         QCOMPARE(textEditObject->font().bold(), false);
     }
@@ -1089,7 +1089,7 @@ void tst_qquicktextedit::font()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->font().family(), QString("Helvetica"));
         QCOMPARE(textEditObject->font().bold(), false);
         QCOMPARE(textEditObject->font().italic(), false);
@@ -1101,7 +1101,7 @@ void tst_qquicktextedit::font()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->font().family(), QString(""));
     }
 }
@@ -1166,7 +1166,7 @@ void tst_qquicktextedit::color()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
         //qDebug() << "textEditObject: " << textEditObject->color() << "vs. " << QColor(colorStrings.at(i));
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->color(), QColor(colorStrings.at(i)));
     }
 
@@ -1177,7 +1177,7 @@ void tst_qquicktextedit::color()
         QQmlComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->selectionColor(), QColor(colorStrings.at(i)));
     }
 
@@ -1188,7 +1188,7 @@ void tst_qquicktextedit::color()
         QQmlComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->selectedTextColor(), QColor(colorStrings.at(i)));
     }
 
@@ -1202,7 +1202,7 @@ void tst_qquicktextedit::color()
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
 
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->color(), testColor);
     }
 }
@@ -1214,7 +1214,7 @@ void tst_qquicktextedit::textMargin()
         QQmlComponent texteditComponent(&engine);
         texteditComponent.setData(componentStr.toLatin1(), QUrl());
         QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         QCOMPARE(textEditObject->textMargin(), i);
     }
 }
@@ -1224,7 +1224,7 @@ void tst_qquicktextedit::persistentSelection()
     QQuickView window(testFileUrl("persistentSelection.qml"));
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(window.rootObject());
     QVERIFY(edit);
@@ -1267,7 +1267,7 @@ void tst_qquicktextedit::selectionOnFocusOut()
     QQuickView window(testFileUrl("focusOutSelection.qml"));
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QPoint p1(25, 35);
     QPoint p2(25, 85);
@@ -1275,14 +1275,14 @@ void tst_qquicktextedit::selectionOnFocusOut()
     QQuickTextEdit *edit1 = window.rootObject()->findChild<QQuickTextEdit*>("text1");
     QQuickTextEdit *edit2 = window.rootObject()->findChild<QQuickTextEdit*>("text2");
 
-    QTest::mouseClick(&window, Qt::LeftButton, 0, p1);
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, p1);
     QVERIFY(edit1->hasActiveFocus());
     QVERIFY(!edit2->hasActiveFocus());
 
     edit1->selectAll();
     QCOMPARE(edit1->selectedText(), QLatin1String("text 1"));
 
-    QTest::mouseClick(&window, Qt::LeftButton, 0, p2);
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, p2);
 
     QCOMPARE(edit1->selectedText(), QLatin1String(""));
     QVERIFY(!edit1->hasActiveFocus());
@@ -1318,7 +1318,7 @@ void tst_qquicktextedit::focusOnPress()
     QQmlComponent texteditComponent(&engine);
     texteditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-    QVERIFY(textEditObject != 0);
+    QVERIFY(textEditObject != nullptr);
     QCOMPARE(textEditObject->focusOnPress(), true);
     QCOMPARE(textEditObject->hasFocus(), false);
 
@@ -1335,13 +1335,13 @@ void tst_qquicktextedit::focusOnPress()
     textEditObject->setParentItem(window.contentItem());
     window.showNormal();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QCOMPARE(textEditObject->hasFocus(), false);
     QCOMPARE(textEditObject->hasActiveFocus(), false);
 
     QPoint centerPoint(window.width()/2, window.height()/2);
-    Qt::KeyboardModifiers noModifiers = 0;
+    Qt::KeyboardModifiers noModifiers = nullptr;
     QTest::mousePress(&window, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
     QCOMPARE(textEditObject->hasFocus(), true);
@@ -1396,7 +1396,7 @@ void tst_qquicktextedit::selection()
     QQmlComponent texteditComponent(&engine);
     texteditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-    QVERIFY(textEditObject != 0);
+    QVERIFY(textEditObject != nullptr);
 
 
     //Test selection follows cursor
@@ -1479,7 +1479,7 @@ void tst_qquicktextedit::overwriteMode()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     QSignalSpy spy(textEdit, SIGNAL(overwriteModeChanged(bool)));
 
@@ -1487,7 +1487,7 @@ void tst_qquicktextedit::overwriteMode()
     textEdit->setParentItem(window.contentItem());
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QVERIFY(textEdit->hasActiveFocus());
 
@@ -1603,13 +1603,13 @@ void tst_qquicktextedit::keySelection()
     QQuickView window(testFileUrl("navigation.qml"));
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
 
     QQuickTextEdit *input = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(window.rootObject()->property("myInput")));
 
-    QVERIFY(input != 0);
+    QVERIFY(input != nullptr);
     QVERIFY(input->hasActiveFocus());
 
     QSignalSpy spy(input, SIGNAL(selectedTextChanged()));
@@ -1805,7 +1805,7 @@ void tst_qquicktextedit::moveCursorSelection()
     QQmlComponent textinputComponent(&engine);
     textinputComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit*>(textinputComponent.create());
-    QVERIFY(texteditObject != 0);
+    QVERIFY(texteditObject != nullptr);
 
     texteditObject->setCursorPosition(cursorPosition);
     texteditObject->moveCursorSelection(movePosition, mode);
@@ -1964,7 +1964,7 @@ void tst_qquicktextedit::moveCursorSelectionSequence()
     QQmlComponent texteditComponent(&engine);
     texteditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit*>(texteditComponent.create());
-    QVERIFY(texteditObject != 0);
+    QVERIFY(texteditObject != nullptr);
 
     texteditObject->setCursorPosition(cursorPosition);
 
@@ -2060,11 +2060,11 @@ void tst_qquicktextedit::mouseSelection()
 
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
-    QVERIFY(textEditObject != 0);
+    QVERIFY(textEditObject != nullptr);
 
     textEditObject->setFocus(focus);
     textEditObject->setFocusOnPress(focusOnPress);
@@ -2107,19 +2107,19 @@ void tst_qquicktextedit::dragMouseSelection()
 
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
-    QVERIFY(textEditObject != 0);
+    QVERIFY(textEditObject != nullptr);
 
     // press-and-drag-and-release from x1 to x2
     int x1 = 10;
     int x2 = 70;
     int y = QFontMetrics(textEditObject->font()).height() / 2;
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(x1,y));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x1,y));
     QTest::mouseMove(&window, QPoint(x2, y));
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(x2,y));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x2,y));
     QTest::qWait(300);
     QString str1;
     QTRY_VERIFY((str1 = textEditObject->selectedText()).length() > 3);
@@ -2127,9 +2127,9 @@ void tst_qquicktextedit::dragMouseSelection()
     // press and drag the current selection.
     x1 = 40;
     x2 = 100;
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(x1,y));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x1,y));
     QTest::mouseMove(&window, QPoint(x2, y));
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(x2,y));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x2,y));
     QTest::qWait(300);
     QString str2;
     QTRY_VERIFY((str2 = textEditObject->selectedText()).length() > 3);
@@ -2160,19 +2160,19 @@ void tst_qquicktextedit::mouseSelectionMode()
 
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
-    QVERIFY(textEditObject != 0);
+    QVERIFY(textEditObject != nullptr);
 
     // press-and-drag-and-release from x1 to x2
     int x1 = 10;
     int x2 = 70;
     int y = textEditObject->height()/2;
-    QTest::mousePress(&window, Qt::LeftButton, 0, QPoint(x1,y));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x1,y));
     QTest::mouseMove(&window, QPoint(x2, y));
-    QTest::mouseRelease(&window, Qt::LeftButton, 0, QPoint(x2,y));
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(x2,y));
     QString str = textEditObject->selectedText();
     if (selectWords) {
         QTRY_COMPARE(textEditObject->selectedText(), text);
@@ -2345,7 +2345,7 @@ void tst_qquicktextedit::keyboardSelection()
     edit->setParentItem(window.contentItem());
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QVERIFY(edit->hasActiveFocus());
 
     simulateKeys(&window, standardKey);
@@ -2383,9 +2383,9 @@ void tst_qquicktextedit::inputMethodHints()
     window.show();
     window.requestActivate();
 
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
-    QVERIFY(textEditObject != 0);
+    QVERIFY(textEditObject != nullptr);
     QVERIFY(textEditObject->inputMethodHints() & Qt::ImhNoPredictiveText);
     QSignalSpy inputMethodHintSpy(textEditObject, SIGNAL(inputMethodHintsChanged()));
     textEditObject->setInputMethodHints(Qt::ImhUppercaseOnly);
@@ -2419,13 +2419,13 @@ void tst_qquicktextedit::positionAt()
     QFETCH(QQuickTextEdit::VAlignment, verticalAlignment);
 
     QQuickView window(testFileUrl("positionAt.qml"));
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
-    QVERIFY(texteditObject != 0);
+    QVERIFY(texteditObject != nullptr);
     texteditObject->setHAlign(horizontalAlignment);
     texteditObject->setVAlign(verticalAlignment);
 
@@ -2509,13 +2509,13 @@ void tst_qquicktextedit::positionAt()
 void tst_qquicktextedit::linkInteraction()
 {
     QQuickView window(testFileUrl("linkInteraction.qml"));
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QQuickTextEdit *texteditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
-    QVERIFY(texteditObject != 0);
+    QVERIFY(texteditObject != nullptr);
 
     QSignalSpy spy(texteditObject, SIGNAL(linkActivated(QString)));
     QSignalSpy hover(texteditObject, SIGNAL(linkHovered(QString)));
@@ -2525,7 +2525,7 @@ void tst_qquicktextedit::linkInteraction()
     const QPointF linkPos = texteditObject->positionToRectangle(7).center();
     const QPointF textPos = texteditObject->positionToRectangle(2).center();
 
-    QTest::mouseClick(&window, Qt::LeftButton, 0, linkPos.toPoint());
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, linkPos.toPoint());
     QTRY_COMPARE(spy.count(), 1);
     QTRY_COMPARE(hover.count(), 1);
     QCOMPARE(spy.last()[0].toString(), link);
@@ -2533,7 +2533,7 @@ void tst_qquicktextedit::linkInteraction()
     QCOMPARE(texteditObject->hoveredLink(), link);
     QCOMPARE(texteditObject->linkAt(linkPos.x(), linkPos.y()), link);
 
-    QTest::mouseClick(&window, Qt::LeftButton, 0, textPos.toPoint());
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, textPos.toPoint());
     QTRY_COMPARE(spy.count(), 1);
     QTRY_COMPARE(hover.count(), 2);
     QCOMPARE(hover.last()[0].toString(), QString());
@@ -2542,7 +2542,7 @@ void tst_qquicktextedit::linkInteraction()
 
     texteditObject->setReadOnly(true);
 
-    QTest::mouseClick(&window, Qt::LeftButton, 0, linkPos.toPoint());
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, linkPos.toPoint());
     QTRY_COMPARE(spy.count(), 2);
     QTRY_COMPARE(hover.count(), 3);
     QCOMPARE(spy.last()[0].toString(), link);
@@ -2550,7 +2550,7 @@ void tst_qquicktextedit::linkInteraction()
     QCOMPARE(texteditObject->hoveredLink(), link);
     QCOMPARE(texteditObject->linkAt(linkPos.x(), linkPos.y()), link);
 
-    QTest::mouseClick(&window, Qt::LeftButton, 0, textPos.toPoint());
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, textPos.toPoint());
     QTRY_COMPARE(spy.count(), 2);
     QTRY_COMPARE(hover.count(), 4);
     QCOMPARE(hover.last()[0].toString(), QString());
@@ -2572,9 +2572,9 @@ void tst_qquicktextedit::cursorDelegate()
     QQuickView view(source);
     view.show();
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
-    QVERIFY(textEditObject != 0);
+    QVERIFY(textEditObject != nullptr);
     // Delegate creation is deferred until focus in or cursor visibility is forced.
     QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
     QVERIFY(!textEditObject->isCursorVisible());
@@ -2596,7 +2596,7 @@ void tst_qquicktextedit::cursorDelegate()
     textEditObject->setCursorPosition(0);
     const QPoint point1 = textEditObject->positionToRectangle(5).center().toPoint();
     QTest::qWait(400);  //ensure this isn't treated as a double-click
-    QTest::mouseClick(&view, Qt::LeftButton, 0, point1);
+    QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier, point1);
     QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);
     QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
@@ -2606,10 +2606,10 @@ void tst_qquicktextedit::cursorDelegate()
     textEditObject->setCursorPosition(0);
     const QPoint point2 = textEditObject->positionToRectangle(10).center().toPoint();
     QTest::qWait(400);  //ensure this isn't treated as a double-click
-    QTest::mousePress(&view, Qt::LeftButton, 0, point1);
+    QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, point1);
     QMouseEvent mv(QEvent::MouseMove, point2, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
     QGuiApplication::sendEvent(&view, &mv);
-    QTest::mouseRelease(&view, Qt::LeftButton, 0, point2);
+    QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, point2);
     QTest::qWait(50);
     QTRY_COMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
     QCOMPARE(textEditObject->cursorRectangle().y(), delegateObject->y());
@@ -2617,7 +2617,7 @@ void tst_qquicktextedit::cursorDelegate()
     textEditObject->setReadOnly(true);
     textEditObject->setCursorPosition(0);
     QTest::qWait(400);  //ensure this isn't treated as a double-click
-    QTest::mouseClick(&view, Qt::LeftButton, 0, textEditObject->positionToRectangle(5).center().toPoint());
+    QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier, textEditObject->positionToRectangle(5).center().toPoint());
     QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);
     QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
@@ -2625,7 +2625,7 @@ void tst_qquicktextedit::cursorDelegate()
 
     textEditObject->setCursorPosition(0);
     QTest::qWait(400);  //ensure this isn't treated as a double-click
-    QTest::mouseClick(&view, Qt::LeftButton, 0, textEditObject->positionToRectangle(5).center().toPoint());
+    QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier, textEditObject->positionToRectangle(5).center().toPoint());
     QTest::qWait(50);
     QTRY_VERIFY(textEditObject->cursorPosition() != 0);
     QCOMPARE(textEditObject->cursorRectangle().x(), delegateObject->x());
@@ -2671,7 +2671,7 @@ void tst_qquicktextedit::cursorDelegate()
     }
 
     //Test Delegate gets deleted
-    textEditObject->setCursorDelegate(0);
+    textEditObject->setCursorDelegate(nullptr);
     QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
 }
 
@@ -2687,9 +2687,9 @@ void tst_qquicktextedit::remoteCursorDelegate()
     view.setSource(testFileUrl("cursorTestRemote.qml"));
     view.showNormal();
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
-    QVERIFY(textEditObject != 0);
+    QVERIFY(textEditObject != nullptr);
 
     // Delegate is created on demand, and so won't be available immediately.  Focus in or
     // setCursorVisible(true) will trigger creation.
@@ -2713,7 +2713,7 @@ void tst_qquicktextedit::cursorVisible()
     QQuickView view(testFileUrl("cursorVisible.qml"));
     view.show();
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
     QCOMPARE(&view, qGuiApp->focusWindow());
 
     QCOMPARE(edit.isCursorVisible(), false);
@@ -2745,13 +2745,13 @@ void tst_qquicktextedit::cursorVisible()
     QWindow alternateView;
     alternateView.show();
     alternateView.requestActivate();
-    QTest::qWaitForWindowActive(&alternateView);
+    QVERIFY(QTest::qWaitForWindowActive(&alternateView));
 
     QCOMPARE(edit.isCursorVisible(), false);
     QCOMPARE(spy.count(), 6);
 
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
     QCOMPARE(edit.isCursorVisible(), true);
     QCOMPARE(spy.count(), 7);
 
@@ -2834,7 +2834,7 @@ void tst_qquicktextedit::delegateLoading()
         QTRY_VERIFY(view.rootObject());//Wait for loading to finish.
         QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
         //    view.rootObject()->dumpObjectTree();
-        QVERIFY(textEditObject != 0);
+        QVERIFY(textEditObject != nullptr);
         textEditObject->setFocus(true);
         QQuickItem *delegate;
         delegate = view.rootObject()->findChild<QQuickItem*>("delegateOkay");
@@ -2858,7 +2858,7 @@ void tst_qquicktextedit::cursorDelegateHeight()
     QQuickView view(testFileUrl("cursorHeight.qml"));
     view.show();
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickTextEdit *textEditObject = view.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
     QVERIFY(textEditObject);
     // Delegate creation is deferred until focus in or cursor visibility is forced.
@@ -2886,7 +2886,7 @@ void tst_qquicktextedit::cursorDelegateHeight()
     QCOMPARE(delegateObject->height(), textEditObject->cursorRectangle().height());
 
     // Test that the delegate gets deleted
-    textEditObject->setCursorDelegate(0);
+    textEditObject->setCursorDelegate(nullptr);
     QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
 }
 
@@ -2900,11 +2900,11 @@ void tst_qquicktextedit::navigation()
     window.show();
     window.requestActivate();
 
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
 
     QQuickTextEdit *input = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(window.rootObject()->property("myInput")));
 
-    QVERIFY(input != 0);
+    QVERIFY(input != nullptr);
     QTRY_VERIFY(input->hasActiveFocus());
     simulateKey(&window, Qt::Key_Left);
     QVERIFY(!input->hasActiveFocus());
@@ -2938,7 +2938,7 @@ void tst_qquicktextedit::copyAndPaste()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     // copy and paste
     QCOMPARE(textEdit->text().length(), 12);
@@ -3014,7 +3014,7 @@ void tst_qquicktextedit::canPaste()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     // check initial value - QTBUG-17765
     QTextDocument document;
@@ -3032,7 +3032,7 @@ void tst_qquicktextedit::canPasteEmpty()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     // check initial value - QTBUG-17765
     QTextDocument document;
@@ -3051,11 +3051,11 @@ void tst_qquicktextedit::middleClickPaste()
 
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
-    QVERIFY(textEditObject != 0);
+    QVERIFY(textEditObject != nullptr);
 
     textEditObject->setFocus(true);
 
@@ -3087,11 +3087,11 @@ void tst_qquicktextedit::readOnly()
     window.show();
     window.requestActivate();
 
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
 
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(window.rootObject()->property("myInput")));
 
-    QVERIFY(edit != 0);
+    QVERIFY(edit != nullptr);
     QTRY_VERIFY(edit->hasActiveFocus());
     QVERIFY(edit->isReadOnly());
     QString initial = edit->text();
@@ -3122,7 +3122,7 @@ void tst_qquicktextedit::textInput()
     QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
     QVERIFY(edit->hasActiveFocus());
@@ -3175,7 +3175,7 @@ void tst_qquicktextedit::inputMethodUpdate()
     QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
     QVERIFY(edit->hasActiveFocus());
@@ -3265,7 +3265,7 @@ void tst_qquicktextedit::openInputPanel()
     QQuickView view(testFileUrl("openInputPanel.qml"));
     view.showNormal();
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
@@ -3279,7 +3279,7 @@ void tst_qquicktextedit::openInputPanel()
 
     // input panel should open on focus
     QPoint centerPoint(view.width()/2, view.height()/2);
-    Qt::KeyboardModifiers noModifiers = 0;
+    Qt::KeyboardModifiers noModifiers = Qt::NoModifier;
     QTest::mousePress(&view, Qt::LeftButton, noModifiers, centerPoint);
     QGuiApplication::processEvents();
     QVERIFY(edit->hasActiveFocus());
@@ -3330,7 +3330,7 @@ void tst_qquicktextedit::openInputPanel()
     QTest::mouseRelease(&view, Qt::LeftButton, noModifiers, centerPoint);
     QCOMPARE(qApp->inputMethod()->isVisible(), false);
 
-    inputMethodPrivate->testContext = 0;
+    inputMethodPrivate->testContext = nullptr;
 }
 
 void tst_qquicktextedit::geometrySignals()
@@ -3351,7 +3351,7 @@ void tst_qquicktextedit::pastingRichText_QTBUG_14003()
     component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
     QQuickTextEdit *obj = qobject_cast<QQuickTextEdit*>(component.create());
 
-    QTRY_VERIFY(obj != 0);
+    QTRY_VERIFY(obj != nullptr);
     QTRY_COMPARE(obj->textFormat(), QQuickTextEdit::PlainText);
 
     QMimeData *mData = new QMimeData;
@@ -3463,7 +3463,7 @@ void tst_qquicktextedit::implicitSizeBinding()
 
 void tst_qquicktextedit::signal_editingfinished()
 {
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
     window->setBaseSize(QSize(800,600));
 
     window->setSource(testFileUrl("signal_editingfinished.qml"));
@@ -3472,7 +3472,7 @@ void tst_qquicktextedit::signal_editingfinished()
     QVERIFY(QTest::qWaitForWindowActive(window));
     QCOMPARE(QGuiApplication::focusWindow(), window);
 
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickTextEdit *input1 = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(window->rootObject()->property("input1")));
     QVERIFY(input1);
@@ -3663,7 +3663,7 @@ void tst_qquicktextedit::preeditCursorRectangle()
     QQuickView view(testFileUrl("inputMethodEvent.qml"));
     view.show();
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
@@ -3746,7 +3746,7 @@ void tst_qquicktextedit::inputMethodComposing()
     QQuickView view(testFileUrl("inputContext.qml"));
     view.show();
     view.requestActivate();
-    QTest::qWaitForWindowActive(&view);
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
@@ -3860,7 +3860,7 @@ void tst_qquicktextedit::cursorRectangleSize()
     QFETCH(bool, useCursorDelegate);
 
     QQuickView *window = new QQuickView(testFileUrl("positionAt.qml"));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit *>(window->rootObject());
 
     QQmlComponent cursorDelegate(window->engine());
@@ -3873,11 +3873,11 @@ void tst_qquicktextedit::cursorRectangleSize()
     textEdit->setX(10);
     textEdit->setY(10);
     textEdit->setCursorPosition(3);
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
     textEdit->setFocus(true);
     window->show();
     window->requestActivate();
-    QTest::qWaitForWindowActive(window);
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QInputMethodQueryEvent event(Qt::ImCursorRectangle);
     qApp->sendEvent(textEdit, &event);
@@ -4011,7 +4011,7 @@ void tst_qquicktextedit::getText()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     QCOMPARE(textEdit->getText(start, end), expectedText);
 }
@@ -4112,7 +4112,7 @@ void tst_qquicktextedit::getFormattedText()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     textEdit->setTextFormat(textFormat);
     textEdit->setText(text);
@@ -4238,7 +4238,7 @@ void tst_qquicktextedit::append()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     textEdit->setTextFormat(textFormat);
     textEdit->select(selectionStart, selectionEnd);
@@ -4453,7 +4453,7 @@ void tst_qquicktextedit::insert()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     textEdit->setTextFormat(textFormat);
     textEdit->select(selectionStart, selectionEnd);
@@ -4695,7 +4695,7 @@ void tst_qquicktextedit::remove()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     textEdit->setTextFormat(textFormat);
     textEdit->select(selectionStart, selectionEnd);
@@ -4876,13 +4876,13 @@ void tst_qquicktextedit::keySequence()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     QQuickWindow window;
     textEdit->setParentItem(window.contentItem());
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QVERIFY(textEdit->hasActiveFocus());
 
@@ -5038,13 +5038,13 @@ void tst_qquicktextedit::undo()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     QQuickWindow window;
     textEdit->setParentItem(window.contentItem());
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QVERIFY(textEdit->hasActiveFocus());
     QVERIFY(!textEdit->canUndo());
@@ -5124,13 +5124,13 @@ void tst_qquicktextedit::redo()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     QQuickWindow window;
     textEdit->setParentItem(window.contentItem());
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QVERIFY(textEdit->hasActiveFocus());
 
     QVERIFY(!textEdit->canUndo());
@@ -5345,13 +5345,13 @@ void tst_qquicktextedit::undo_keypressevents()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     QQuickWindow window;
     textEdit->setParentItem(window.contentItem());
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QVERIFY(textEdit->hasActiveFocus());
 
     simulateKeys(&window, keys);
@@ -5369,13 +5369,13 @@ void tst_qquicktextedit::clear()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     QQuickWindow window;
     textEdit->setParentItem(window.contentItem());
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QVERIFY(textEdit->hasActiveFocus());
 
     QSignalSpy spy(textEdit, SIGNAL(canUndoChanged()));
@@ -5479,7 +5479,7 @@ void tst_qquicktextedit::embeddedImages()
 
     QQmlComponent textComponent(&engine, qmlfile);
     QQuickTextEdit *textObject = qobject_cast<QQuickTextEdit*>(textComponent.beginCreate(engine.rootContext()));
-    QVERIFY(textObject != 0);
+    QVERIFY(textObject != nullptr);
 
     const int baseUrlPropertyIndex = textObject->metaObject()->indexOfProperty("serverBaseUrl");
     if (baseUrlPropertyIndex != -1) {
@@ -5507,11 +5507,11 @@ void tst_qquicktextedit::embeddedImages()
 void tst_qquicktextedit::emptytags_QTBUG_22058()
 {
     QQuickView window(testFileUrl("qtbug-22058.qml"));
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
 
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QQuickTextEdit *input = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(window.rootObject()->property("inputField")));
     QVERIFY(input->hasActiveFocus());
 
@@ -5530,7 +5530,7 @@ void tst_qquicktextedit::cursorRectangle_QTBUG_38947()
 
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
     QQuickTextEdit *edit = window.rootObject()->findChild<QQuickTextEdit *>("textedit");
     QVERIFY(edit);
 
@@ -5568,7 +5568,7 @@ void tst_qquicktextedit::doubleSelect_QTBUG_38704()
     QQmlComponent textEditComponent(&engine);
     textEditComponent.setData(componentStr.toLatin1(), QUrl());
     QQuickTextEdit *textEdit = qobject_cast<QQuickTextEdit*>(textEditComponent.create());
-    QVERIFY(textEdit != 0);
+    QVERIFY(textEdit != nullptr);
 
     QSignalSpy selectionSpy(textEdit, SIGNAL(selectedTextChanged()));
 
@@ -5592,7 +5592,7 @@ void tst_qquicktextedit::padding()
     QQuickItem *root = window->rootObject();
     QVERIFY(root);
     QQuickTextEdit *obj = qobject_cast<QQuickTextEdit*>(root);
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     qreal cw = obj->contentWidth();
     qreal ch = obj->contentHeight();

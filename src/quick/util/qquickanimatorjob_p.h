@@ -194,7 +194,7 @@ public:
     {
         Helper()
             : ref(1)
-            , node(0)
+            , node(nullptr)
             , ox(0)
             , oy(0)
             , dx(0)

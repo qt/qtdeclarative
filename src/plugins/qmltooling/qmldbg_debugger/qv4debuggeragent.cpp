@@ -56,13 +56,13 @@ QV4Debugger *QV4DebuggerAgent::pausedDebugger() const
         if (debugger->state() == QV4Debugger::Paused)
             return debugger;
     }
-    return 0;
+    return nullptr;
 }
 
 bool QV4DebuggerAgent::isRunning() const
 {
     // "running" means none of the engines are paused.
-    return pausedDebugger() == 0;
+    return pausedDebugger() == nullptr;
 }
 
 void QV4DebuggerAgent::debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseReason reason)

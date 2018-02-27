@@ -145,21 +145,7 @@ struct Options
     };
 
     Options()
-        : originalQml(false)
-        , originalQmlRaster(false)
-        , maximized(false)
-        , fullscreen(false)
-        , transparent(false)
-        , clip(false)
-        , versionDetection(true)
-        , slowAnimations(false)
-        , quitImmediately(false)
-        , resizeViewToRootItem(false)
-        , multisample(false)
-        , coreProfile(false)
-        , verbose(false)
-        , applicationType(DefaultQmlApplicationType)
-        , textRenderType(QQuickWindow::textRenderType())
+        : textRenderType(QQuickWindow::textRenderType())
     {
         // QtWebEngine needs a shared context in order for the GPU thread to
         // upload textures.
@@ -167,22 +153,22 @@ struct Options
     }
 
     QUrl url;
-    bool originalQml;
-    bool originalQmlRaster;
-    bool maximized;
-    bool fullscreen;
-    bool transparent;
-    bool clip;
-    bool versionDetection;
-    bool slowAnimations;
-    bool quitImmediately;
-    bool resizeViewToRootItem;
-    bool multisample;
-    bool coreProfile;
-    bool verbose;
+    bool originalQml = false;
+    bool originalQmlRaster = false;
+    bool maximized = false;
+    bool fullscreen = false;
+    bool transparent = false;
+    bool clip = false;
+    bool versionDetection = true;
+    bool slowAnimations = false;
+    bool quitImmediately = false;
+    bool resizeViewToRootItem = false;
+    bool multisample = false;
+    bool coreProfile = false;
+    bool verbose = false;
     QVector<Qt::ApplicationAttribute> applicationAttributes;
     QString translationFile;
-    QmlApplicationType applicationType;
+    QmlApplicationType applicationType = DefaultQmlApplicationType;
     QQuickWindow::TextRenderType textRenderType;
 };
 
@@ -310,7 +296,7 @@ static void displayFileDialog(Options *options)
 {
 #if defined(QT_WIDGETS_LIB) && QT_CONFIG(filedialog)
     if (options->applicationType == Options::QmlApplicationTypeWidget) {
-        QString fileName = QFileDialog::getOpenFileName(0, "Open QML file", QString(), "QML Files (*.qml)");
+        QString fileName = QFileDialog::getOpenFileName(nullptr, "Open QML file", QString(), "QML Files (*.qml)");
         if (!fileName.isEmpty()) {
             QFileInfo fi(fileName);
             options->url = QUrl::fromLocalFile(fi.canonicalFilePath());
@@ -640,7 +626,7 @@ int main(int argc, char ** argv)
             } else {
                 QQuickItem *contentItem = qobject_cast<QQuickItem *>(topLevel);
                 if (contentItem) {
-                    QQuickView* qxView = new QQuickView(&engine, NULL);
+                    QQuickView* qxView = new QQuickView(&engine, nullptr);
                     window.reset(qxView);
                     // Set window default properties; the qml can still override them
                     if (options.resizeViewToRootItem)

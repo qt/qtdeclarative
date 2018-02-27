@@ -78,7 +78,7 @@ public:
 };
 
 QQuickDropAreaPrivate::QQuickDropAreaPrivate()
-    : drag(0)
+    : drag(nullptr)
     , containsDrag(false)
 {
 }
@@ -303,7 +303,7 @@ void QQuickDropArea::dragLeaveEvent(QDragLeaveEvent *)
     emit exited();
 
     d->containsDrag = false;
-    d->source = 0;
+    d->source = nullptr;
     emit containsDragChanged();
     if (d->drag)
         emit d->drag->sourceChanged();
@@ -328,7 +328,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
     emit dropped(&dragTargetEvent);
 
     d->containsDrag = false;
-    d->source = 0;
+    d->source = nullptr;
     emit containsDragChanged();
     if (d->drag)
         emit d->drag->sourceChanged();

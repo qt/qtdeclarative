@@ -278,7 +278,7 @@ InternalClass *InternalClass::changePrototypeImpl(Heap::Object *proto)
     Q_ASSERT(prototype != proto);
     Q_ASSERT(!proto || proto->internalClass->isUsedAsProto);
 
-    Transition temp = { { nullptr }, 0, Transition::PrototypeChange };
+    Transition temp = { { nullptr }, nullptr, Transition::PrototypeChange };
     temp.prototype = proto;
 
     Transition &t = lookupOrInsertTransition(temp);
@@ -549,7 +549,7 @@ void InternalClass::destroy()
         destroyStack.pop_back();
         if (!next->engine)
             continue;
-        next->engine = 0;
+        next->engine = nullptr;
         next->propertyTable.~PropertyHash();
         next->nameMap.~SharedInternalClassData<Identifier *>();
         next->propertyData.~SharedInternalClassData<PropertyAttributes>();

@@ -263,7 +263,7 @@ QQuickTransitionInstance *QQuickTransition::prepare(QQuickStateOperation::Action
     int start = d->reversed ? d->animations.count() - 1 : 0;
     int end = d->reversed ? -1 : d->animations.count();
 
-    QAbstractAnimationJob *anim = 0;
+    QAbstractAnimationJob *anim = nullptr;
     for (int i = start; i != end;) {
         anim = d->animations.at(i)->transition(actions, after, direction, defaultTarget);
         if (anim) {

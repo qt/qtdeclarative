@@ -61,7 +61,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlEngineDebugServiceImpl::QQmlEngineDebugServiceImpl(QObject *parent) :
-    QQmlEngineDebugService(2, parent), m_watch(new QQmlWatcher(this)), m_statesDelegate(0)
+    QQmlEngineDebugService(2, parent), m_watch(new QQmlWatcher(this)), m_statesDelegate(nullptr)
 {
     connect(m_watch, &QQmlWatcher::propertyChanged,
             this, &QQmlEngineDebugServiceImpl::propertyChanged);
@@ -726,7 +726,7 @@ bool QQmlEngineDebugServiceImpl::resetBinding(int objectId, const QString &prope
 
         if (hasValidSignal(object, propertyName)) {
             QQmlProperty property(object, propertyName, context);
-            QQmlPropertyPrivate::setSignalExpression(property, 0);
+            QQmlPropertyPrivate::setSignalExpression(property, nullptr);
             return true;
         }
 

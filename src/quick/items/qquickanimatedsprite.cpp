@@ -105,7 +105,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty int QtQuick::AnimatedSprite::frameDuration
 
-    Duration of each frame of the animation. Values equal to or below 0 are invalid.
+    Duration of each frame of the animation in milliseconds. Values equal to or below 0 are invalid.
 
     If frameRate is valid then it will be used to calculate the duration of the frames.
     If not, and frameDuration is valid, then frameDuration will be used.
@@ -220,7 +220,6 @@ QT_BEGIN_NAMESPACE
     \l loops property is set to \c AnimatedSprite.Infinite.
 */
 
-//TODO: Implicitly size element to size of sprite
 QQuickAnimatedSprite::QQuickAnimatedSprite(QQuickItem *parent) :
     QQuickItem(*(new QQuickAnimatedSpritePrivate), parent)
 {
@@ -526,6 +525,7 @@ void QQuickAnimatedSprite::setFrameHeight(int arg)
     if (d->m_sprite->m_frameHeight != arg) {
         d->m_sprite->setFrameHeight(arg);
         Q_EMIT frameHeightChanged(arg);
+        setImplicitHeight(frameHeight());
         reloadImage();
     }
 }
@@ -537,6 +537,7 @@ void QQuickAnimatedSprite::setFrameWidth(int arg)
     if (d->m_sprite->m_frameWidth != arg) {
         d->m_sprite->setFrameWidth(arg);
         Q_EMIT frameWidthChanged(arg);
+        setImplicitWidth(frameWidth());
         reloadImage();
     }
 }
@@ -650,6 +651,17 @@ QSGSpriteNode* QQuickAnimatedSprite::initNode()
     QImage image = d->m_spriteEngine->assembledImage(d->sceneGraphRenderContext()->maxTextureSize()); //Engine prints errors if there are any
     if (image.isNull())
         return nullptr;
+
+    // If frameWidth or frameHeight are not explicitly set, frameWidth
+    // will be set to the width of the image divided by the number of frames,
+    // and frameHeight will be set to the height of the image.
+    // In this case, QQuickAnimatedSprite currently won't emit frameWidth/HeightChanged
+    // at all, so we have to do this here, as it's the only place where assembledImage()
+    // is called (which calculates the "implicit" frameWidth/Height.
+    // In addition, currently the "implicit" frameWidth/Height are only calculated once,
+    // even after changing to a different source.
+    setImplicitWidth(frameWidth());
+    setImplicitHeight(frameHeight());
 
     QSGSpriteNode *node = d->sceneGraphContext()->createSpriteNode();
 

@@ -74,8 +74,8 @@ struct QSGAdaptationBackendData
 {
     QSGAdaptationBackendData();
 
-    bool tried;
-    QSGContextFactoryInterface *factory;
+    bool tried = false;
+    QSGContextFactoryInterface *factory = nullptr;
     QString name;
     QSGContextFactoryInterface::Flags flags;
 
@@ -85,9 +85,7 @@ struct QSGAdaptationBackendData
 };
 
 QSGAdaptationBackendData::QSGAdaptationBackendData()
-    : tried(false)
-    , factory(nullptr)
-    , flags(0)
+    : flags(nullptr)
 {
     // Fill in the table with the built-in adaptations.
     builtIns.append(new QSGSoftwareAdaptation);
@@ -209,7 +207,7 @@ QQuickTextureFactory *QSGContext::createTextureFactoryFromImage(const QImage &im
     QSGAdaptationBackendData *backendData = contextFactory();
     if (backendData->factory)
         return backendData->factory->createTextureFactoryFromImage(image);
-    return 0;
+    return nullptr;
 }
 
 
@@ -223,7 +221,7 @@ QSGRenderLoop *QSGContext::createWindowManager()
     QSGAdaptationBackendData *backendData = contextFactory();
     if (backendData->factory)
         return backendData->factory->createWindowManager();
-    return 0;
+    return nullptr;
 }
 
 void QSGContext::setBackend(const QString &backend)

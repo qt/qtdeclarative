@@ -71,18 +71,13 @@ private:
     void connectionEstablished();
     bool connectToServer();
 
-    bool m_block;
+    bool m_block = false;
     QString m_filename;
-    QLocalSocket *m_socket;
-    QQmlDebugServer *m_debugServer;
+    QLocalSocket *m_socket = nullptr;
+    QQmlDebugServer *m_debugServer = nullptr;
 };
 
-QLocalClientConnection::QLocalClientConnection() :
-    m_block(false),
-    m_socket(0),
-    m_debugServer(0)
-{
-}
+QLocalClientConnection::QLocalClientConnection() { }
 
 QLocalClientConnection::~QLocalClientConnection()
 {
@@ -106,7 +101,7 @@ void QLocalClientConnection::disconnect()
         m_socket->waitForBytesWritten();
 
     m_socket->deleteLater();
-    m_socket = 0;
+    m_socket = nullptr;
 }
 
 bool QLocalClientConnection::setPortRange(int portFrom, int portTo, bool block,
@@ -161,7 +156,7 @@ void QLocalClientConnection::connectionEstablished()
 
 QQmlDebugServerConnection *QLocalClientConnectionFactory::create(const QString &key)
 {
-    return (key == QLatin1String("QLocalClientConnection") ? new QLocalClientConnection : 0);
+    return (key == QLatin1String("QLocalClientConnection") ? new QLocalClientConnection : nullptr);
 }
 
 QT_END_NAMESPACE

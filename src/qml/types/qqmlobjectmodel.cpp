@@ -287,7 +287,7 @@ QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item)
         if (!d->children[idx].deref())
             return QQmlInstanceModel::Referenced;
     }
-    return 0;
+    return nullptr;
 }
 
 QString QQmlObjectModel::stringValue(int index, const QString &name)
@@ -337,7 +337,7 @@ QObject *QQmlObjectModel::get(int index) const
 {
     Q_D(const QQmlObjectModel);
     if (index < 0 || index >= d->children.count())
-        return 0;
+        return nullptr;
     return d->children.at(index).item;
 }
 

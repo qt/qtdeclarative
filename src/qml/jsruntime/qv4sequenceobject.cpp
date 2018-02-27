@@ -340,7 +340,7 @@ public:
 
     void containerAdvanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
     {
-        name->setM(0);
+        name->setM(nullptr);
         *index = UINT_MAX;
 
         if (d()->isReference) {
@@ -535,7 +535,7 @@ public:
     {
         Q_ASSERT(d()->object);
         Q_ASSERT(d()->isReference);
-        void *a[] = { d()->container, 0 };
+        void *a[] = { d()->container, nullptr };
         QMetaObject::metacall(d()->object, QMetaObject::ReadProperty, d()->propertyIndex, a);
     }
 
@@ -545,7 +545,7 @@ public:
         Q_ASSERT(d()->isReference);
         int status = -1;
         QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding;
-        void *a[] = { d()->container, 0, &status, &flags };
+        void *a[] = { d()->container, nullptr, &status, &flags };
         QMetaObject::metacall(d()->object, QMetaObject::WriteProperty, d()->propertyIndex, a);
     }
 

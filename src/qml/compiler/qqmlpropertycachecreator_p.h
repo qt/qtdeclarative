@@ -214,7 +214,7 @@ inline QQmlPropertyCache *QQmlPropertyCacheCreator<ObjectContainer>::propertyCac
         QQmlType qmltype = typeRef->type;
         if (!qmltype.isValid()) {
             QString propertyName = stringAt(context.instantiatingBinding->propertyNameIndex);
-            if (imports->resolveType(propertyName, &qmltype, 0, 0, 0)) {
+            if (imports->resolveType(propertyName, &qmltype, nullptr, nullptr, nullptr)) {
                 if (qmltype.isComposite()) {
                     QQmlTypeData *tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
                     Q_ASSERT(tdata);
@@ -411,7 +411,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
                     Q_ASSERT(param->type == QV4::CompiledData::Property::Custom);
                     const QString customTypeName = stringAt(param->customTypeNameIndex);
                     QQmlType qmltype;
-                    if (!imports->resolveType(customTypeName, &qmltype, 0, 0, 0))
+                    if (!imports->resolveType(customTypeName, &qmltype, nullptr, nullptr, nullptr))
                         return QQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Invalid signal parameter type: %1").arg(customTypeName));
 
                     if (qmltype.isComposite()) {
@@ -441,7 +441,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
         seenSignals.insert(signalName);
 
         cache->appendSignal(signalName, flags, effectiveMethodIndex++,
-                            paramCount?paramTypes.constData():0, names);
+                            paramCount?paramTypes.constData():nullptr, names);
     }
 
 
@@ -492,7 +492,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
                      p->type == QV4::CompiledData::Property::Custom);
 
             QQmlType qmltype;
-            if (!imports->resolveType(stringAt(p->customTypeNameIndex), &qmltype, 0, 0, 0)) {
+            if (!imports->resolveType(stringAt(p->customTypeNameIndex), &qmltype, nullptr, nullptr, nullptr)) {
                 return QQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
             }
 

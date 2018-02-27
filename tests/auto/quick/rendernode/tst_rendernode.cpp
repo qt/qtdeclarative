@@ -120,7 +120,7 @@ private:
 class MessUpNode : public QSGRenderNode, protected QOpenGLFunctions
 {
 public:
-    MessUpNode() : initialized(false) { }
+    MessUpNode() {}
 
     StateFlags changedStates() const override
     {
@@ -157,7 +157,7 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     }
 
-    bool initialized;
+    bool initialized = false;
 };
 
 class MessUpItem : public QQuickItem

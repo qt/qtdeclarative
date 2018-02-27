@@ -137,7 +137,7 @@ void QQmlRefCount::destroy()
 
 template<class T>
 QQmlRefPointer<T>::QQmlRefPointer()
-: o(0)
+: o(nullptr)
 {
 }
 

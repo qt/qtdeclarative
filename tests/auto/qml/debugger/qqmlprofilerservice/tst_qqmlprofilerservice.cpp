@@ -344,7 +344,7 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
                                      int expectedPosition, const QQmlProfilerEventType &expected,
                                      quint32 checks, const QVector<qint64> &expectedNumbers)
 {
-    const QVector<QQmlProfilerEvent> *target = 0;
+    const QVector<QQmlProfilerEvent> *target = nullptr;
     switch (type) {
         case MessageListQML:          target = &(m_client->qmlMessages); break;
         case MessageListJavaScript:   target = &(m_client->javascriptMessages); break;

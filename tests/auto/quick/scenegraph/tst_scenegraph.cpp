@@ -116,7 +116,7 @@ private slots:
 
 private:
     bool m_brokenMipmapSupport;
-    QQuickView *createView(const QString &file, QWindow *parent = 0, int x = -1, int y = -1, int w = -1, int h = -1);
+    QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
     bool isRunningOnOpenGL();
 };
 
@@ -231,7 +231,7 @@ void tst_SceneGraph::manyWindows_data()
 #if QT_CONFIG(opengl)
 struct ShareContextResetter {
 public:
-    ~ShareContextResetter() { qt_gl_set_global_share_context(0); }
+    ~ShareContextResetter() { qt_gl_set_global_share_context(nullptr); }
 };
 #endif
 
@@ -269,7 +269,7 @@ void tst_SceneGraph::manyWindows()
     }
     for (int i=0; i<COUNT; ++i) {
         QQuickView *view = views.at(i);
-        QTest::qWaitForWindowExposed(view);
+        QVERIFY(QTest::qWaitForWindowExposed(view));
         QImage content = view->grabWindow();
         if (i == 0) {
             baseLine = content;
@@ -282,7 +282,7 @@ void tst_SceneGraph::manyWindows()
     // Wipe and recreate one (scope pointer delets it...)
     delete views.takeLast();
     QQuickView *last = createView(file, parent.data(), 100, 100, 100, 100);
-    QTest::qWaitForWindowExposed(last);
+    QVERIFY(QTest::qWaitForWindowExposed(last));
     views << last;
     QVERIFY(compareImages(baseLine, last->grabWindow()));
 
@@ -295,7 +295,7 @@ void tst_SceneGraph::manyWindows()
     }
     for (int i=0; i<COUNT; ++i) {
         QQuickView *view = views.at(i);
-        QTest::qWaitForWindowExposed(view);
+        QVERIFY(QTest::qWaitForWindowExposed(view));
         QImage content = view->grabWindow();
         QVERIFY(compareImages(content, baseLine));
     }
@@ -548,7 +548,7 @@ void tst_SceneGraph::createTextureFromImage()
 
     QQuickView view;
     view.show();
-    QTest::qWaitForWindowExposed(&view);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
     QTRY_VERIFY(view.isSceneGraphInitialized());
 
     QScopedPointer<QSGTexture> texture(view.createTextureFromImage(image, (QQuickWindow::CreateTextureOptions) flags));

@@ -162,7 +162,7 @@ void tst_qquickstyledtext::textOutput()
     QTextLayout layout;
     QList<QQuickStyledTextImgTag*> imgTags;
     bool fontSizeModified = false;
-    QQuickStyledText::parse(input, layout, imgTags, QUrl(), 0, false, &fontSizeModified);
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), nullptr, false, &fontSizeModified);
 
     QCOMPARE(layout.text(), output);
 
@@ -191,7 +191,7 @@ void tst_qquickstyledtext::anchors()
     QTextLayout layout;
     QList<QQuickStyledTextImgTag*> imgTags;
     bool fontSizeModified = false;
-    QQuickStyledText::parse(input, layout, imgTags, QUrl(), 0, false, &fontSizeModified);
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), nullptr, false, &fontSizeModified);
 
     QCOMPARE(layout.text(), output);
 
@@ -229,11 +229,11 @@ void tst_qquickstyledtext::longString()
     bool fontSizeModified = false;
 
     QString input(9999999, QChar('.'));
-    QQuickStyledText::parse(input, layout, imgTags, QUrl(), 0, false, &fontSizeModified);
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), nullptr, false, &fontSizeModified);
     QCOMPARE(layout.text(), input);
 
     input = QString(9999999, QChar('\t')); // whitespace
-    QQuickStyledText::parse(input, layout, imgTags, QUrl(), 0, false, &fontSizeModified);
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), nullptr, false, &fontSizeModified);
     QCOMPARE(layout.text(), QString(""));
 }
 

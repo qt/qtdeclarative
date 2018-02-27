@@ -93,12 +93,12 @@ void QQmlDelayedError::catchJavaScriptException(QV4::ExecutionEngine *engine)
 
 
 QQmlJavaScriptExpression::QQmlJavaScriptExpression()
-    : m_error(0),
-      m_context(0),
-      m_prevExpression(0),
-      m_nextExpression(0),
-      m_v4Function(0),
-      m_sourceLocation(0)
+    : m_error(nullptr),
+      m_context(nullptr),
+      m_prevExpression(nullptr),
+      m_nextExpression(nullptr),
+      m_v4Function(nullptr),
+      m_sourceLocation(nullptr)
 {
 }
 
@@ -114,7 +114,7 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
     clearPermanentGuards();
     clearError();
     if (m_scopeObject.isT2()) // notify DeleteWatcher of our deletion.
-        m_scopeObject.asT2()->_s = 0;
+        m_scopeObject.asT2()->_s = nullptr;
 
     delete m_sourceLocation;
 }
@@ -157,8 +157,8 @@ void QQmlJavaScriptExpression::setContext(QQmlContextData *context)
         *m_prevExpression = m_nextExpression;
         if (m_nextExpression)
             m_nextExpression->m_prevExpression = m_prevExpression;
-        m_prevExpression = 0;
-        m_nextExpression = 0;
+        m_prevExpression = nullptr;
+        m_nextExpression = nullptr;
     }
 
     m_context = context;
@@ -211,7 +211,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
     QQmlPropertyCapture capture(m_context->engine, this, &watcher);
 
     QQmlPropertyCapture *lastPropertyCapture = ep->propertyCapture;
-    ep->propertyCapture = notifyOnValueChanged() ? &capture : 0;
+    ep->propertyCapture = notifyOnValueChanged() ? &capture : nullptr;
 
 
     if (notifyOnValueChanged())
@@ -253,7 +253,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
         for (int ii = 0; ii < capture.errorString->count(); ++ii)
             qWarning("%s", qPrintable(capture.errorString->at(ii)));
         delete capture.errorString;
-        capture.errorString = 0;
+        capture.errorString = nullptr;
     }
 
     while (QQmlJavaScriptExpressionGuard *g = capture.guards.takeFirst())
@@ -274,7 +274,7 @@ void QQmlPropertyCapture::captureProperty(QQmlNotifier *n, Duration duration)
     while (!guards.isEmpty() && !guards.first()->isConnected(n))
         guards.takeFirst()->Delete();
 
-    QQmlJavaScriptExpressionGuard *g = 0;
+    QQmlJavaScriptExpressionGuard *g = nullptr;
     if (!guards.isEmpty()) {
         g = guards.takeFirst();
         g->cancelNotify();
@@ -323,7 +323,7 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, Duration dur
         while (!guards.isEmpty() && !guards.first()->isConnected(o, n))
             guards.takeFirst()->Delete();
 
-        QQmlJavaScriptExpressionGuard *g = 0;
+        QQmlJavaScriptExpressionGuard *g = nullptr;
         if (!guards.isEmpty()) {
             g = guards.takeFirst();
             g->cancelNotify();

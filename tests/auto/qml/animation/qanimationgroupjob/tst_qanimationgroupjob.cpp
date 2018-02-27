@@ -71,10 +71,7 @@ class UncontrolledAnimation : public QObject, public QAbstractAnimationJob
 {
     Q_OBJECT
 public:
-    UncontrolledAnimation()
-        : id(0)
-    {
-    }
+    UncontrolledAnimation() { }
 
     int duration() const { return -1; /* not time driven */ }
 
@@ -96,7 +93,7 @@ protected:
     }
 
 private:
-    int id;
+    int id = 0;
 };
 
 class StateChangeListener: public QAnimationJobChangeListener

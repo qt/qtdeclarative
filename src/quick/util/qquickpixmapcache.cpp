@@ -244,8 +244,8 @@ public:
     : refCount(1), inCache(false), pixmapStatus(QQuickPixmap::Error),
       url(u), errorString(e), requestSize(s),
       providerOptions(po), appliedTransform(QQuickImageProviderOptions::UsePluginDefaultTransform),
-      textureFactory(0), reply(0), prevUnreferenced(0),
-      prevUnreferencedPtr(0), nextUnreferenced(0)
+      textureFactory(nullptr), reply(nullptr), prevUnreferenced(nullptr),
+      prevUnreferencedPtr(nullptr), nextUnreferenced(nullptr)
     {
         declarativePixmaps.insert(pixmap);
     }
@@ -254,8 +254,8 @@ public:
     : refCount(1), inCache(false), pixmapStatus(QQuickPixmap::Loading),
       url(u), requestSize(r),
       providerOptions(po), appliedTransform(aTransform),
-      textureFactory(0), reply(0), prevUnreferenced(0), prevUnreferencedPtr(0),
-      nextUnreferenced(0)
+      textureFactory(nullptr), reply(nullptr), prevUnreferenced(nullptr), prevUnreferencedPtr(nullptr),
+      nextUnreferenced(nullptr)
     {
         declarativePixmaps.insert(pixmap);
     }
@@ -265,8 +265,8 @@ public:
     : refCount(1), inCache(false), pixmapStatus(QQuickPixmap::Ready),
       url(u), implicitSize(s), requestSize(r),
       providerOptions(po), appliedTransform(aTransform),
-      textureFactory(texture), reply(0), prevUnreferenced(0),
-      prevUnreferencedPtr(0), nextUnreferenced(0)
+      textureFactory(texture), reply(nullptr), prevUnreferenced(nullptr),
+      prevUnreferencedPtr(nullptr), nextUnreferenced(nullptr)
     {
         declarativePixmaps.insert(pixmap);
     }
@@ -274,8 +274,8 @@ public:
     QQuickPixmapData(QQuickPixmap *pixmap, QQuickTextureFactory *texture)
     : refCount(1), inCache(false), pixmapStatus(QQuickPixmap::Ready),
       appliedTransform(QQuickImageProviderOptions::UsePluginDefaultTransform),
-      textureFactory(texture), reply(0), prevUnreferenced(0),
-      prevUnreferencedPtr(0), nextUnreferenced(0)
+      textureFactory(texture), reply(nullptr), prevUnreferenced(nullptr),
+      prevUnreferencedPtr(nullptr), nextUnreferenced(nullptr)
     {
         if (texture)
             requestSize = implicitSize = texture->textureSize();
@@ -287,7 +287,7 @@ public:
         while (!declarativePixmaps.isEmpty()) {
             QQuickPixmap *referencer = declarativePixmaps.first();
             declarativePixmaps.remove(referencer);
-            referencer->d = 0;
+            referencer->d = nullptr;
         }
         delete textureFactory;
     }
@@ -443,9 +443,9 @@ static QString existingImageFileForPath(const QString &localFile)
 }
 
 QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
-: QThread(eng), engine(eng), threadObject(0)
+: QThread(eng), engine(eng), threadObject(nullptr)
 #if QT_CONFIG(qml_network)
-, accessManager(0)
+, accessManager(nullptr)
 #endif
 {
     eventLoopQuitHack = new QObject;
@@ -464,7 +464,7 @@ QQuickPixmapReader::~QQuickPixmapReader()
     // manually cancel all outstanding jobs.
     for (QQuickPixmapReply *reply : qAsConst(jobs)) {
         if (reply->data && reply->data->reply == reply)
-            reply->data->reply = 0;
+            reply->data->reply = nullptr;
         delete reply;
     }
     jobs.clear();
@@ -473,7 +473,7 @@ QQuickPixmapReader::~QQuickPixmapReader()
     const auto cancelJob = [this](QQuickPixmapReply *reply) {
         if (reply->loading) {
             cancelled.append(reply);
-            reply->data = 0;
+            reply->data = nullptr;
         }
     };
 
@@ -547,7 +547,7 @@ void QQuickPixmapReader::asyncResponseFinished(QQuickImageResponse *response)
     QQuickPixmapReply *job = asyncResponses.take(response);
 
     if (job) {
-        QQuickTextureFactory *t = 0;
+        QQuickTextureFactory *t = nullptr;
         QQuickPixmapReply::ReadError error = QQuickPixmapReply::NoError;
         QString errorString;
         if (!response->errorString().isEmpty()) {
@@ -646,7 +646,7 @@ void QQuickPixmapReader::processJobs()
                 const QUrl url = job->url;
                 QString localFile;
                 QQuickImageProvider::ImageType imageType = QQuickImageProvider::Invalid;
-                QQuickImageProvider *provider = 0;
+                QQuickImageProvider *provider = nullptr;
 
                 if (url.scheme() == QLatin1String("image")) {
                     provider = static_cast<QQuickImageProvider *>(engine->imageProvider(imageProviderId(url)));
@@ -695,7 +695,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             QString errorStr = QQuickPixmap::tr("Invalid image provider: %1").arg(url.toString());
             mutex.lock();
             if (!cancelled.contains(runningJob))
-                runningJob->postReply(QQuickPixmapReply::Loading, errorStr, readSize, 0);
+                runningJob->postReply(QQuickPixmapReply::Loading, errorStr, readSize, nullptr);
             mutex.unlock();
             return;
         }
@@ -884,7 +884,7 @@ void QQuickPixmapReader::cancel(QQuickPixmapReply *reply)
     mutex.lock();
     if (reply->loading) {
         cancelled.append(reply);
-        reply->data = 0;
+        reply->data = nullptr;
         // XXX
         if (threadObject) threadObject->processJobs();
     } else {
@@ -918,7 +918,7 @@ void QQuickPixmapReader::run()
     exec();
 
     delete threadObject;
-    threadObject = 0;
+    threadObject = nullptr;
 }
 
 class QQuickPixmapKey
@@ -971,7 +971,7 @@ Q_GLOBAL_STATIC(QQuickPixmapStore, pixmapStore);
 
 
 QQuickPixmapStore::QQuickPixmapStore()
-    : m_unreferencedPixmaps(0), m_lastUnreferencedPixmap(0), m_unreferencedCost(0), m_timerId(-1), m_destroying(false)
+    : m_unreferencedPixmaps(nullptr), m_lastUnreferencedPixmap(nullptr), m_unreferencedCost(0), m_timerId(-1), m_destroying(false)
 {
 }
 
@@ -1014,9 +1014,9 @@ QQuickPixmapStore::~QQuickPixmapStore()
 
 void QQuickPixmapStore::unreferencePixmap(QQuickPixmapData *data)
 {
-    Q_ASSERT(data->prevUnreferenced == 0);
-    Q_ASSERT(data->prevUnreferencedPtr == 0);
-    Q_ASSERT(data->nextUnreferenced == 0);
+    Q_ASSERT(data->prevUnreferenced == nullptr);
+    Q_ASSERT(data->prevUnreferencedPtr == nullptr);
+    Q_ASSERT(data->nextUnreferenced == nullptr);
 
     data->nextUnreferenced = m_unreferencedPixmaps;
     data->prevUnreferencedPtr = &m_unreferencedPixmaps;
@@ -1052,9 +1052,9 @@ void QQuickPixmapStore::referencePixmap(QQuickPixmapData *data)
     if (m_lastUnreferencedPixmap == data)
         m_lastUnreferencedPixmap = data->prevUnreferenced;
 
-    data->nextUnreferenced = 0;
-    data->prevUnreferencedPtr = 0;
-    data->prevUnreferenced = 0;
+    data->nextUnreferenced = nullptr;
+    data->prevUnreferencedPtr = nullptr;
+    data->prevUnreferenced = nullptr;
 
     m_unreferencedCost -= data->cost();
 }
@@ -1063,12 +1063,12 @@ void QQuickPixmapStore::shrinkCache(int remove)
 {
     while ((remove > 0 || m_unreferencedCost > cache_limit) && m_lastUnreferencedPixmap) {
         QQuickPixmapData *data = m_lastUnreferencedPixmap;
-        Q_ASSERT(data->nextUnreferenced == 0);
+        Q_ASSERT(data->nextUnreferenced == nullptr);
 
-        *data->prevUnreferencedPtr = 0;
+        *data->prevUnreferencedPtr = nullptr;
         m_lastUnreferencedPixmap = data->prevUnreferenced;
-        data->prevUnreferencedPtr = 0;
-        data->prevUnreferenced = 0;
+        data->prevUnreferencedPtr = nullptr;
+        data->prevUnreferenced = nullptr;
 
         if (!m_destroying) {
             remove -= data->cost();
@@ -1085,7 +1085,7 @@ void QQuickPixmapStore::timerEvent(QTimerEvent *)
 
     shrinkCache(removalCost);
 
-    if (m_unreferencedPixmaps == 0) {
+    if (m_unreferencedPixmaps == nullptr) {
         killTimer(m_timerId);
         m_timerId = -1;
     }
@@ -1102,7 +1102,7 @@ void QQuickPixmap::purgeCache()
 }
 
 QQuickPixmapReply::QQuickPixmapReply(QQuickPixmapData *d)
-: data(d), engineForReader(0), requestSize(d->requestSize), url(d->url), loading(false), providerOptions(d->providerOptions), redirectCount(0)
+: data(d), engineForReader(nullptr), requestSize(d->requestSize), url(d->url), loading(false), providerOptions(d->providerOptions), redirectCount(0)
 {
     if (finishedIndex == -1) {
         finishedIndex = QMetaMethod::fromSignal(&QQuickPixmapReply::finished).methodIndex();
@@ -1125,10 +1125,10 @@ bool QQuickPixmapReply::event(QEvent *event)
             data->pixmapStatus = (de->error == NoError) ? QQuickPixmap::Ready : QQuickPixmap::Error;
             if (data->pixmapStatus == QQuickPixmap::Ready) {
                 data->textureFactory = de->textureFactory;
-                de->textureFactory = 0;
+                de->textureFactory = nullptr;
                 data->implicitSize = de->implicitSize;
                 PIXMAP_PROFILE(pixmapLoadingFinished(data->url,
-                        data->textureFactory != 0 && data->textureFactory->textureSize().isValid() ?
+                        data->textureFactory != nullptr && data->textureFactory->textureSize().isValid() ?
                         data->textureFactory->textureSize() :
                         (data->requestSize.isValid() ? data->requestSize : data->implicitSize)));
             } else {
@@ -1137,7 +1137,7 @@ bool QQuickPixmapReply::event(QEvent *event)
                 data->removeFromCache(); // We don't continue to cache error'd pixmaps
             }
 
-            data->reply = 0;
+            data->reply = nullptr;
             emit finished();
         } else {
             PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(url));
@@ -1173,8 +1173,8 @@ void QQuickPixmapData::release()
     if (refCount == 0) {
         if (reply) {
             QQuickPixmapReply *cancelReply = reply;
-            reply->data = 0;
-            reply = 0;
+            reply->data = nullptr;
+            reply = nullptr;
             QQuickPixmapReader::readerMutex.lock();
             QQuickPixmapReader *reader = QQuickPixmapReader::existingInstance(cancelReply->engineForReader);
             if (reader)
@@ -1276,7 +1276,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
 
     QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
     if (localFile.isEmpty())
-        return 0;
+        return nullptr;
 
     QFile f(existingImageFileForPath(localFile));
     QSize readSize;
@@ -1318,18 +1318,18 @@ struct QQuickPixmapNull {
 Q_GLOBAL_STATIC(QQuickPixmapNull, nullPixmap);
 
 QQuickPixmap::QQuickPixmap()
-: d(0)
+: d(nullptr)
 {
 }
 
 QQuickPixmap::QQuickPixmap(QQmlEngine *engine, const QUrl &url)
-: d(0)
+: d(nullptr)
 {
     load(engine, url);
 }
 
 QQuickPixmap::QQuickPixmap(QQmlEngine *engine, const QUrl &url, const QSize &size)
-: d(0)
+: d(nullptr)
 {
     load(engine, url, size);
 }
@@ -1345,13 +1345,13 @@ QQuickPixmap::~QQuickPixmap()
     if (d) {
         d->declarativePixmaps.remove(this);
         d->release();
-        d = 0;
+        d = nullptr;
     }
 }
 
 bool QQuickPixmap::isNull() const
 {
-    return d == 0;
+    return d == nullptr;
 }
 
 bool QQuickPixmap::isReady() const
@@ -1422,7 +1422,7 @@ QQuickTextureFactory *QQuickPixmap::textureFactory() const
     if (d)
         return d->textureFactory;
 
-    return 0;
+    return nullptr;
 }
 
 QImage QQuickPixmap::image() const
@@ -1500,7 +1500,7 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QSize &reques
     if (d) {
         d->declarativePixmaps.remove(this);
         d->release();
-        d = 0;
+        d = nullptr;
     }
 
     QQuickPixmapKey key = { &url, &requestSize, providerOptions };
@@ -1572,7 +1572,7 @@ void QQuickPixmap::clear()
     if (d) {
         d->declarativePixmaps.remove(this);
         d->release();
-        d = 0;
+        d = nullptr;
     }
 }
 
@@ -1580,10 +1580,10 @@ void QQuickPixmap::clear(QObject *obj)
 {
     if (d) {
         if (d->reply)
-            QObject::disconnect(d->reply, 0, obj, 0);
+            QObject::disconnect(d->reply, nullptr, obj, nullptr);
         d->declarativePixmaps.remove(this);
         d->release();
-        d = 0;
+        d = nullptr;
     }
 }
 

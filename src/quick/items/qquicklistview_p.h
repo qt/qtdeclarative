@@ -71,7 +71,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickViewSection : public QObject
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(int labelPositioning READ labelPositioning WRITE setLabelPositioning NOTIFY labelPositioningChanged)
 public:
-    QQuickViewSection(QQuickListView *parent=0);
+    QQuickViewSection(QQuickListView *parent=nullptr);
 
     QString property() const { return m_property; }
     void setProperty(const QString &);
@@ -132,7 +132,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickListView : public QQuickItemView
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
-    QQuickListView(QQuickItem *parent=0);
+    QQuickListView(QQuickItem *parent=nullptr);
     ~QQuickListView();
 
     qreal spacing() const;
@@ -206,7 +206,7 @@ class QQuickListViewAttached : public QQuickItemViewAttached
 
 public:
     QQuickListViewAttached(QObject *parent)
-        : QQuickItemViewAttached(parent), m_sectionItem(0) {}
+        : QQuickItemViewAttached(parent), m_sectionItem(nullptr) {}
     ~QQuickListViewAttached() {}
 
 public:

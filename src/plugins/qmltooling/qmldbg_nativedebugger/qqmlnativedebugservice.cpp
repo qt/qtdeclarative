@@ -229,7 +229,7 @@ private:
 
     QV4::ExecutionEngine *m_engine;
     QQmlNativeDebugServiceImpl *m_service;
-    QV4::CppStackFrame *m_currentFrame = 0;
+    QV4::CppStackFrame *m_currentFrame = nullptr;
     Speed m_stepping;
     bool m_pauseRequested;
     bool m_runningJob;
@@ -457,7 +457,7 @@ void Collector::collect(QJsonArray *out, const QString &parentIName, const QStri
 void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &arguments)
 {
     TRACE_PROTOCOL("Build variables");
-    QV4::CppStackFrame *frame = 0;
+    QV4::CppStackFrame *frame = nullptr;
     decodeFrame(arguments.value(QLatin1String("context")).toString(), &frame);
     if (!frame) {
         setError(response, QStringLiteral("No stack frame passed"));
@@ -500,7 +500,7 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
 void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject &arguments)
 {
     TRACE_PROTOCOL("Evaluate expressions");
-    QV4::CppStackFrame *frame = 0;
+    QV4::CppStackFrame *frame = nullptr;
     decodeFrame(arguments.value(QLatin1String("context")).toString(), &frame);
     if (!frame) {
         setError(response, QStringLiteral("No stack frame passed"));

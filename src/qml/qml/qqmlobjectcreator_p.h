@@ -85,10 +85,10 @@ class Q_QML_PRIVATE_EXPORT QQmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlObjectCreator)
 public:
-    QQmlObjectCreator(QQmlContextData *parentContext, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlContextData *creationContext, QQmlIncubatorPrivate  *incubator = 0);
+    QQmlObjectCreator(QQmlContextData *parentContext, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlContextData *creationContext, QQmlIncubatorPrivate  *incubator = nullptr);
     ~QQmlObjectCreator();
 
-    QObject *create(int subComponentIndex = -1, QObject *parent = 0, QQmlInstantiationInterrupt *interrupt = 0);
+    QObject *create(int subComponentIndex = -1, QObject *parent = nullptr, QQmlInstantiationInterrupt *interrupt = nullptr);
     bool populateDeferredProperties(QObject *instance, QQmlData::DeferredData *deferredData);
     bool populateDeferredBinding(const QQmlProperty &qmlProperty, QQmlData::DeferredData *deferredData, const QV4::CompiledData::Binding *binding);
     QQmlContextData *finalize(QQmlInstantiationInterrupt &interrupt);
@@ -108,7 +108,7 @@ private:
 
     void init(QQmlContextData *parentContext);
 
-    QObject *createInstance(int index, QObject *parent = 0, bool isContextObject = false);
+    QObject *createInstance(int index, QObject *parent = nullptr, bool isContextObject = false);
 
     bool populateInstance(int index, QObject *instance,
                           QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty);

@@ -72,7 +72,7 @@ class Q_AUTOTEST_EXPORT QQuickRepeater : public QQuickItem
     Q_CLASSINFO("DefaultProperty", "delegate")
 
 public:
-    QQuickRepeater(QQuickItem *parent=0);
+    QQuickRepeater(QQuickItem *parent=nullptr);
     virtual ~QQuickRepeater();
 
     QVariant model() const;

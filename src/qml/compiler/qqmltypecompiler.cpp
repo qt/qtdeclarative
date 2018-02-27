@@ -332,7 +332,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             auto *typeRef = resolvedTypes.value(binding->propertyNameIndex);
             QQmlType type = typeRef ? typeRef->type : QQmlType();
             if (!type.isValid()) {
-                if (imports->resolveType(propertyName, &type, 0, 0, 0)) {
+                if (imports->resolveType(propertyName, &type, nullptr, nullptr, nullptr)) {
                     if (type.isComposite()) {
                         QQmlTypeData *tdata = enginePrivate->typeLoader.getType(type.sourceUrl());
                         Q_ASSERT(tdata);
@@ -397,7 +397,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         } else {
             if (notInRevision) {
                 // Try assinging it as a property later
-                if (resolver.property(propertyName, /*notInRevision ptr*/0))
+                if (resolver.property(propertyName, /*notInRevision ptr*/nullptr))
                     continue;
 
                 const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
@@ -457,7 +457,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
         QQmlJS::MemoryPool *pool = compiler->memoryPool();
 
-        QQmlJS::AST::FormalParameterList *paramList = 0;
+        QQmlJS::AST::FormalParameterList *paramList = nullptr;
         for (const QString &param : qAsConst(parameters)) {
             QStringRef paramNameRef = compiler->newStringRef(param);
 
@@ -471,7 +471,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             paramList = paramList->finish();
 
         QmlIR::CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(binding->value.compiledScriptIndex);
-        QQmlJS::AST::FunctionDeclaration *functionDeclaration = 0;
+        QQmlJS::AST::FunctionDeclaration *functionDeclaration = nullptr;
         if (QQmlJS::AST::ExpressionStatement *es = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement*>(foe->node)) {
             if (QQmlJS::AST::FunctionExpression *fe = QQmlJS::AST::cast<QQmlJS::AST::FunctionExpression*>(es->expression)) {
                 functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(fe->name, fe->formals, fe->body);
@@ -611,7 +611,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
         return true;
     }
     QQmlType type;
-    imports->resolveType(typeName, &type, 0, 0, 0);
+    imports->resolveType(typeName, &type, nullptr, nullptr, nullptr);
 
     if (!type.isValid() && !isQtObject)
         return true;
@@ -663,7 +663,7 @@ int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, const QStringRef &e
 
     if (scope != QLatin1String("Qt")) {
         QQmlType type;
-        imports->resolveType(scope, &type, 0, 0, 0);
+        imports->resolveType(scope, &type, nullptr, nullptr, nullptr);
         if (!type.isValid())
             return -1;
         if (!enumName.isEmpty())
@@ -814,7 +814,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
                 continue;
         }
 
-        QQmlPropertyData *pd = 0;
+        QQmlPropertyData *pd = nullptr;
         if (binding->propertyNameIndex != quint32(0)) {
             bool notInRevision = false;
             pd = propertyResolver.property(stringAt(binding->propertyNameIndex), &notInRevision);
@@ -825,7 +825,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
             continue;
 
         QQmlPropertyCache *pc = enginePrivate->rawPropertyCacheForType(pd->propType(), pd->typeMinorVersion());
-        const QMetaObject *mo = pc ? pc->firstCppMetaObject() : 0;
+        const QMetaObject *mo = pc ? pc->firstCppMetaObject() : nullptr;
         while (mo) {
             if (mo == &QQmlComponent::staticMetaObject)
                 break;
@@ -1204,7 +1204,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
         return true;
 
     QString defaultPropertyName;
-    QQmlPropertyData *defaultProperty = 0;
+    QQmlPropertyData *defaultProperty = nullptr;
     if (obj->indexOfDefaultPropertyOrAlias != -1) {
         QQmlPropertyCache *cache = propertyCache->parent();
         defaultPropertyName = cache->defaultPropertyName();
@@ -1229,7 +1229,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
     }
 
     for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
-        QQmlPropertyData *pd = 0;
+        QQmlPropertyData *pd = nullptr;
         QString name = stringAt(binding->propertyNameIndex);
 
         if (customParser) {
@@ -1334,7 +1334,7 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject)
 
         auto *tref = resolvedTypes.value(obj->inheritedTypeNameIndex);
         if (tref && tref->isFullyDynamicType)
-            m.type = 0;
+            m.type = nullptr;
 
         idMapping << m;
     }
@@ -1412,10 +1412,10 @@ void QQmlDefaultPropertyMerger::mergeDefaultProperties(int objectIndex)
     QmlIR::Object *object = qmlObjects.at(objectIndex);
 
     QString defaultProperty = object->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultPropertyName() : propertyCache->defaultPropertyName();
-    QmlIR::Binding *bindingsToReinsert = 0;
-    QmlIR::Binding *tail = 0;
+    QmlIR::Binding *bindingsToReinsert = nullptr;
+    QmlIR::Binding *tail = nullptr;
 
-    QmlIR::Binding *previousBinding = 0;
+    QmlIR::Binding *previousBinding = nullptr;
     QmlIR::Binding *binding = object->firstBinding();
     while (binding) {
         if (binding->propertyNameIndex == quint32(0) || stringAt(binding->propertyNameIndex) != defaultProperty) {
@@ -1434,7 +1434,7 @@ void QQmlDefaultPropertyMerger::mergeDefaultProperties(int objectIndex)
             tail->next = toReinsert;
             tail = tail->next;
         }
-        tail->next = 0;
+        tail->next = nullptr;
     }
 
     binding = bindingsToReinsert;
