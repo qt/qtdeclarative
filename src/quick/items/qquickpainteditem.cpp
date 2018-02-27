@@ -675,6 +675,10 @@ QSGTextureProvider *QQuickPaintedItem::textureProvider() const
     return d->textureProvider;
 }
 
+
+/*!
+   \reimp
+*/
 void QQuickPaintedItem::itemChange(ItemChange change, const ItemChangeData &value)
 {
     if (change == ItemDevicePixelRatioHasChanged)

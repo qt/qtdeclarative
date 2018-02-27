@@ -470,7 +470,7 @@ void QQuickHandlerPoint::reset()
     If the contact patch is unknown, or the device is not a touchscreen,
     these values will be zero.
 
-    \sa QtQuick::EventPoint::ellipseDiameters, QtQuick::TouchPoint::ellipseDiameters, QTouchEvent::TouchPoint::ellipseDiameters
+    \sa QtQuick::EventTouchPoint::ellipseDiameters, QtQuick::TouchPoint::ellipseDiameters, QTouchEvent::TouchPoint::ellipseDiameters
 */
 
 QT_END_NAMESPACE

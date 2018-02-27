@@ -3956,8 +3956,8 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 
 /*!
     This event handler can be reimplemented in a subclass to receive focus-in
-    events for an item. The event information is provided by the
-    \a event parameter.
+    events for an item. The event information is provided by the \c event
+    parameter.
   */
 void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
 {
@@ -3973,8 +3973,8 @@ void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
 
 /*!
     This event handler can be reimplemented in a subclass to receive focus-out
-    events for an item. The event information is provided by the
-    \a event parameter.
+    events for an item. The event information is provided by the \c event
+    parameter.
   */
 void QQuickItem::focusOutEvent(QFocusEvent * /*event*/)
 {
@@ -5179,8 +5179,8 @@ void QQuickItem::updateInputMethod(Qt::InputMethodQueries queries)
 }
 #endif // im
 
-/*! \internal */
 // XXX todo - do we want/need this anymore?
+/*! \internal */
 QRectF QQuickItem::boundingRect() const
 {
     Q_D(const QQuickItem);
