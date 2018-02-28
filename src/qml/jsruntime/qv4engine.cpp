@@ -916,7 +916,7 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
         nArgumentsAccessors = qMax(8, n);
         argumentsAccessors = new Property[nArgumentsAccessors];
         if (oldAccessors) {
-            memcpy(argumentsAccessors, oldAccessors, oldSize*sizeof(Property));
+            memcpy(static_cast<void *>(argumentsAccessors), static_cast<const void *>(oldAccessors), oldSize*sizeof(Property));
             delete [] oldAccessors;
         }
         ExecutionContext *global = rootContext();
