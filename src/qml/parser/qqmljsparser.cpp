@@ -79,7 +79,7 @@ void Parser::reallocateStack()
     sym_stack = reinterpret_cast<Value*> (realloc(sym_stack, stack_size * sizeof(Value)));
     state_stack = reinterpret_cast<int*> (realloc(state_stack, stack_size * sizeof(int)));
     location_stack = reinterpret_cast<AST::SourceLocation*> (realloc(location_stack, stack_size * sizeof(AST::SourceLocation)));
-    string_stack = reinterpret_cast<QStringRef*> (realloc(string_stack, stack_size * sizeof(QStringRef)));
+    string_stack = reinterpret_cast<QStringRef*> (realloc(static_cast<void *>(string_stack), stack_size * sizeof(QStringRef)));
 }
 
 Parser::Parser(Engine *engine):
