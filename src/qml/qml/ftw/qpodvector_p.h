@@ -116,7 +116,7 @@ public:
     void remove(int idx, int count = 1) {
         int moveCount = m_count - (idx + count);
         if (moveCount)
-            ::memmove(m_data + idx, m_data + idx + count,
+            ::memmove(static_cast<void *>(m_data + idx), static_cast<const void *>(m_data + idx + count),
                       moveCount * sizeof(T));
         m_count -= count;
     }
