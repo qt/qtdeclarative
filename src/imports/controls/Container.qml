@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.11
+import QtQuick 2.12
 import QtQuick.Templates 2.5 as T
 
 T.Container {
