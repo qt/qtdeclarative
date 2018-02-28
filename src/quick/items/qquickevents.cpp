@@ -1424,6 +1424,36 @@ QQuickEventPoint *QQuickSinglePointEvent::point(int i) const
     return nullptr;
 }
 
+QQuickPointerEvent *QQuickPointerScrollEvent::reset(QEvent *event)
+{
+    m_event = static_cast<QInputEvent*>(event);
+    if (!event)
+        return this;
+#if QT_CONFIG(wheelevent)
+    if (event->type() == QEvent::Wheel) {
+        auto ev = static_cast<QWheelEvent*>(event);
+        m_device = QQuickPointerDevice::genericMouseDevice();
+        m_device->eventDeliveryTargets().clear();
+        // m_button = Qt::NoButton;
+        m_pressedButtons = ev->buttons();
+        m_angleDelta = QVector2D(ev->angleDelta());
+        m_pixelDelta = QVector2D(ev->pixelDelta());
+        m_phase = ev->phase();
+        m_synthSource = ev->source();
+        m_inverted = ev->inverted();
+
+        m_point->reset(Qt::TouchPointMoved, ev->posF(), quint64(1) << 24, ev->timestamp()); // mouse has device ID 1
+    }
+#endif
+    // TODO else if (event->type() == QEvent::Scroll) ...
+    return this;
+}
+
+void QQuickPointerScrollEvent::localize(QQuickItem *target)
+{
+    m_point->localizePosition(target);
+}
+
 QQuickEventPoint *QQuickPointerTouchEvent::point(int i) const
 {
     if (i >= 0 && i < m_pointCount)
@@ -1696,6 +1726,39 @@ qreal QQuickPointerNativeGestureEvent::value() const
     return static_cast<QNativeGestureEvent *>(m_event)->value();
 }
 #endif // QT_CONFIG(gestures)
+
+/*!
+    Returns whether the scroll event has Qt::ScrollBegin phase. On touchpads
+    which provide phase information, this is true when the fingers are placed
+    on the touchpad and scrolling begins. On other devices where this
+    information is not available, it remains false.
+*/
+bool QQuickPointerScrollEvent::isPressEvent() const
+{
+    return phase() == Qt::ScrollBegin;
+}
+
+/*!
+    Returns true when the scroll event has Qt::ScrollUpdate phase, or when the
+    phase is unknown. Some multi-touch-capable touchpads and trackpads provide
+    phase information; whereas ordinary mouse wheels and other types of
+    trackpads do not, and in such cases this is always true.
+*/
+bool QQuickPointerScrollEvent::isUpdateEvent() const
+{
+    return phase() == Qt::ScrollUpdate || phase() == Qt::NoScrollPhase;
+}
+
+/*!
+    Returns whether the scroll event has Qt::ScrollBegin phase. On touchpads
+    which provide phase information, this is true when the fingers are lifted
+    from the touchpad. On other devices where this information is not
+    available, it remains false.
+*/
+bool QQuickPointerScrollEvent::isReleaseEvent() const
+{
+    return phase() == Qt::ScrollEnd;
+}
 
 /*!
     \internal

@@ -69,6 +69,7 @@ class QQuickPointerMouseEvent;
 #if QT_CONFIG(gestures)
 class QQuickPointerNativeGestureEvent;
 #endif
+class QQuickPointerScrollEvent;
 class QQuickPointerTabletEvent;
 class QQuickPointerTouchEvent;
 class QQuickPointerHandler;
@@ -419,12 +420,14 @@ public: // helpers for C++ only (during event delivery)
 #if QT_CONFIG(gestures)
     virtual QQuickPointerNativeGestureEvent *asPointerNativeGestureEvent() { return nullptr; }
 #endif
+    virtual QQuickPointerScrollEvent *asPointerScrollEvent() { return nullptr; }
     virtual const QQuickPointerMouseEvent *asPointerMouseEvent() const { return nullptr; }
     virtual const QQuickPointerTouchEvent *asPointerTouchEvent() const { return nullptr; }
     virtual const QQuickPointerTabletEvent *asPointerTabletEvent() const { return nullptr; }
 #if QT_CONFIG(gestures)
     virtual const QQuickPointerNativeGestureEvent *asPointerNativeGestureEvent() const { return nullptr; }
 #endif
+    virtual const QQuickPointerScrollEvent *asPointerScrollEvent() const { return nullptr; }
     virtual bool allPointsAccepted() const = 0;
     virtual bool allUpdatedPointsAccepted() const = 0;
     virtual bool allPointsGrabbed() const = 0;
@@ -559,6 +562,50 @@ public:
     Q_DISABLE_COPY(QQuickPointerNativeGestureEvent)
 };
 #endif // QT_CONFIG(gestures)
+
+class Q_QUICK_PRIVATE_EXPORT QQuickPointerScrollEvent : public QQuickSinglePointEvent
+{
+    Q_OBJECT
+    Q_PROPERTY(QVector2D angleDelta READ angleDelta CONSTANT)
+    Q_PROPERTY(QVector2D pixelDelta READ pixelDelta CONSTANT)
+    Q_PROPERTY(bool hasAngleDelta READ hasAngleDelta CONSTANT)
+    Q_PROPERTY(bool hasPixelDelta READ hasPixelDelta CONSTANT)
+    Q_PROPERTY(bool inverted READ isInverted CONSTANT)
+
+public:
+    QQuickPointerScrollEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
+        : QQuickSinglePointEvent(parent, device) { }
+
+    QQuickPointerEvent *reset(QEvent *) override;
+    void localize(QQuickItem *target) override;
+    bool isPressEvent() const override;
+    bool isUpdateEvent() const override;
+    bool isReleaseEvent() const override;
+    QQuickPointerScrollEvent *asPointerScrollEvent() override { return this; }
+    const QQuickPointerScrollEvent *asPointerScrollEvent() const override { return this; }
+    QVector2D angleDelta() const { return m_angleDelta; }
+    QVector2D pixelDelta() const { return m_pixelDelta; }
+    bool hasAngleDelta() const { return !angleDelta().isNull(); }
+    bool hasPixelDelta() const { return !pixelDelta().isNull(); }
+    bool isInverted() const { return m_inverted; }
+    Qt::ScrollPhase phase() const { return m_phase; }
+
+private:
+    // TODO add QQuickPointerDevice source() whenever QInputEvent is extended to have a source device
+    // then maybe Qt::MouseEventSource synthSource() will be obsolete... that's why it's not public now
+    Qt::MouseEventSource synthSource() const { return m_synthSource; }
+
+private:
+    QVector2D m_angleDelta;
+    QVector2D m_pixelDelta;
+    Qt::ScrollPhase m_phase = Qt::NoScrollPhase;
+    Qt::MouseEventSource m_synthSource = Qt::MouseEventNotSynthesized;
+    bool m_inverted = false;
+
+    friend class QQuickWindowPrivate;
+
+    Q_DISABLE_COPY(QQuickPointerScrollEvent)
+};
 
 
 // ### Qt 6: move this to qtbase, replace QTouchDevice and the enums in QTabletEvent
