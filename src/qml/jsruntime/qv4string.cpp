@@ -176,7 +176,7 @@ void Heap::String::append(const String *data, QChar *ch)
             worklist.push_back(item->right);
             worklist.push_back(item->left);
         } else {
-            memcpy(ch, item->text->data(), item->text->size * sizeof(QChar));
+            memcpy(static_cast<void *>(ch), static_cast<const void *>(item->text->data()), item->text->size * sizeof(QChar));
             ch += item->text->size;
         }
     }
