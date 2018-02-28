@@ -66,8 +66,10 @@ bool QQuickFusionBusyIndicator::isRunning() const
 
 void QQuickFusionBusyIndicator::setRunning(bool running)
 {
-    if (running)
+    if (running) {
         setVisible(true);
+        update();
+    }
 }
 
 void QQuickFusionBusyIndicator::paint(QPainter *painter)
