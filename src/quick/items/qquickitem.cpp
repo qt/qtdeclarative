@@ -7616,7 +7616,7 @@ bool QQuickItem::contains(const QPointF &point) const
 }
 
 /*!
-    \qmlproperty QObject * QtQuick::Item::containmentMask
+    \qmlproperty QObject* QtQuick::Item::containmentMask
     \since 5.11
     This property holds an optional mask for the Item to be used in the
     QtQuick::Item::contains method.
