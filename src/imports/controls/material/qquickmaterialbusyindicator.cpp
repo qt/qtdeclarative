@@ -36,6 +36,7 @@
 
 #include "qquickmaterialbusyindicator_p.h"
 
+#include <QtCore/qmath.h>
 #include <QtCore/qeasingcurve.h>
 #include <QtGui/qpainter.h>
 #include <QtQuick/qsgimagenode.h>
@@ -124,7 +125,7 @@ void QQuickMaterialBusyIndicatorNode::updateCurrentTime(int time)
     QPen pen;
     QSGImageNode *textureNode = static_cast<QSGImageNode *>(firstChild());
     pen.setColor(m_color);
-    pen.setWidth(4 * m_devicePixelRatio);
+    pen.setWidth(qCeil(size / 12) * m_devicePixelRatio);
     painter.setPen(pen);
 
     const qreal percentageComplete = time / qreal(RotationAnimationDuration);
