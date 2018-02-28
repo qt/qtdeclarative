@@ -52,8 +52,7 @@ T.Button {
 
     // external vertical padding is 6 (to increase touch area)
     padding: 12
-    leftPadding: padding - 4
-    rightPadding: padding - 4
+    horizontalPadding: padding - 4
     spacing: 6
 
     icon.width: 24

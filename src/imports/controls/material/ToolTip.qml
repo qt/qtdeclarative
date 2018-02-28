@@ -51,8 +51,7 @@ T.ToolTip {
 
     margins: 12
     padding: 8
-    leftPadding: padding + 8
-    rightPadding: padding + 8
+    horizontalPadding: padding + 8
 
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutsideParent | T.Popup.CloseOnReleaseOutsideParent
 

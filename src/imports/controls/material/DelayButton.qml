@@ -52,8 +52,7 @@ T.DelayButton {
 
     // external vertical padding is 6 (to increase touch area)
     padding: 12
-    leftPadding: padding - 4
-    rightPadding: padding - 4
+    verticalPadding: padding - 4
 
     Material.elevation: control.down ? 8 : 2
 

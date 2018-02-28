@@ -50,8 +50,7 @@ T.ToolBar {
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
-    leftPadding: 6
-    rightPadding: 6
+    horizontalPadding: 6
     topPadding: control.position === T.ToolBar.Footer ? 1 : 0
     bottomPadding: control.position === T.ToolBar.Header ? 1 : 0
 

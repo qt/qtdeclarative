@@ -52,8 +52,7 @@ T.ItemDelegate {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 16
-    topPadding: 8
-    bottomPadding: 8
+    verticalPadding: 8
     spacing: 16
 
     icon.width: 24

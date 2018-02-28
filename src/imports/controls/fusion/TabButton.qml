@@ -51,8 +51,7 @@ T.TabButton {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 2
-    leftPadding: 4
-    rightPadding: 4
+    horizontalPadding: 4
     spacing: 6
 
     icon.width: 16
