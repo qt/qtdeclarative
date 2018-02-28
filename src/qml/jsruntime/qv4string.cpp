@@ -221,7 +221,7 @@ void Heap::String::append(const String *data, QChar *ch)
             memcpy(ch, cs->left->toQString().constData() + cs->from, cs->len*sizeof(QChar));
             ch += cs->len;
         } else {
-            memcpy(ch, item->text->data(), item->text->size * sizeof(QChar));
+            memcpy(static_cast<void *>(ch), static_cast<const void *>(item->text->data()), item->text->size * sizeof(QChar));
             ch += item->text->size;
         }
     }
