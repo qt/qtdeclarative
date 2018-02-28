@@ -1666,13 +1666,13 @@ void QQuickRotationAnimation::setDirection(QQuickRotationAnimation::RotationDire
     d->direction = direction;
     switch(d->direction) {
     case Clockwise:
-        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(&_q_interpolateClockwiseRotation);
+        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(reinterpret_cast<void *>(&_q_interpolateClockwiseRotation));
         break;
     case Counterclockwise:
-        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(&_q_interpolateCounterclockwiseRotation);
+        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(reinterpret_cast<void *>(&_q_interpolateCounterclockwiseRotation));
         break;
     case Shortest:
-        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(&_q_interpolateShortestRotation);
+        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(reinterpret_cast<void *>(&_q_interpolateShortestRotation));
         break;
     default:
         d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
