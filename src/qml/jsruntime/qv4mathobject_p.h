@@ -79,6 +79,9 @@ struct MathObject: Object
     static ReturnedValue method_exp(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_floor(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_log(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_log10(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_log1p(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_log2(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_max(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_min(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_pow(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

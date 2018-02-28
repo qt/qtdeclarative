@@ -78,6 +78,9 @@ void Heap::MathObject::init()
     m->defineDefaultProperty(QStringLiteral("exp"), QV4::MathObject::method_exp, 1);
     m->defineDefaultProperty(QStringLiteral("floor"), QV4::MathObject::method_floor, 1);
     m->defineDefaultProperty(QStringLiteral("log"), QV4::MathObject::method_log, 1);
+    m->defineDefaultProperty(QStringLiteral("log10"), QV4::MathObject::method_log10, 1);
+    m->defineDefaultProperty(QStringLiteral("log1p"), QV4::MathObject::method_log1p, 1);
+    m->defineDefaultProperty(QStringLiteral("log2"), QV4::MathObject::method_log2, 1);
     m->defineDefaultProperty(QStringLiteral("max"), QV4::MathObject::method_max, 2);
     m->defineDefaultProperty(QStringLiteral("min"), QV4::MathObject::method_min, 2);
     m->defineDefaultProperty(QStringLiteral("pow"), QV4::MathObject::method_pow, 2);
@@ -199,6 +202,38 @@ ReturnedValue MathObject::method_log(const FunctionObject *, const Value *, cons
         RETURN_RESULT(Encode(qt_qnan()));
     else
         RETURN_RESULT(Encode(std::log(v)));
+}
+
+ReturnedValue MathObject::method_log10(const FunctionObject *, const Value *, const Value *argv, int argc)
+{
+    double v = argc ? argv[0].toNumber() : qt_qnan();
+    if (v < 0)
+        RETURN_RESULT(Encode(qt_qnan()));
+    else
+        RETURN_RESULT(Encode(std::log10(v)));
+}
+
+ReturnedValue MathObject::method_log1p(const FunctionObject *, const Value *, const Value *argv, int argc)
+{
+#if !defined(__ANDROID__)
+    using std::log1p;
+#endif
+    double v = argc ? argv[0].toNumber() : qt_qnan();
+    if (v < -1)
+        RETURN_RESULT(Encode(qt_qnan()));
+    else
+        RETURN_RESULT(Encode(log1p(v)));
+}
+
+ReturnedValue MathObject::method_log2(const FunctionObject *, const Value *, const Value *argv, int argc)
+{
+    double v = argc ? argv[0].toNumber() : qt_qnan();
+    if (v < 0) {
+        RETURN_RESULT(Encode(qt_qnan()));
+    } else {
+        // Android ndk r10e doesn't have std::log2, so fall back.
+        RETURN_RESULT(Encode(std::log(v) / std::log(2.0)));
+    }
 }
 
 ReturnedValue MathObject::method_max(const FunctionObject *, const Value *, const Value *argv, int argc)
