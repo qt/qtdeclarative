@@ -88,6 +88,7 @@ Q_LOGGING_CATEGORY(DBG_TOUCH, "qt.quick.touch")
 Q_LOGGING_CATEGORY(DBG_TOUCH_TARGET, "qt.quick.touch.target")
 Q_LOGGING_CATEGORY(DBG_MOUSE, "qt.quick.mouse")
 Q_LOGGING_CATEGORY(DBG_MOUSE_TARGET, "qt.quick.mouse.target")
+Q_LOGGING_CATEGORY(lcWheelTarget, "qt.quick.wheel.target")
 Q_LOGGING_CATEGORY(DBG_HOVER_TRACE, "qt.quick.hover.trace")
 Q_LOGGING_CATEGORY(DBG_FOCUS, "qt.quick.focus")
 Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty")
@@ -1894,43 +1895,44 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
     return false;
 }
 
-#if QT_CONFIG(wheelevent)
-bool QQuickWindowPrivate::deliverWheelEvent(QQuickItem *item, QWheelEvent *event)
+// Simple delivery of non-mouse, non-touch Pointer Events: visit the items and handlers
+// in the usual reverse-paint-order until propagation is stopped
+bool QQuickWindowPrivate::deliverSinglePointEventUntilAccepted(QQuickPointerEvent *event)
 {
-    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+    Q_ASSERT(event->pointCount() == 1);
+    QQuickEventPoint *point = event->point(0);
+    QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point->scenePosition(), false, false);
 
-    if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
-        QPointF p = item->mapFromScene(event->posF());
-        if (!item->contains(p))
-            return false;
-    }
-
-    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
-        QQuickItem *child = children.at(ii);
-        if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
-            continue;
-        if (deliverWheelEvent(child, event))
+    for (QQuickItem *item : targetItems) {
+        QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+        event->localize(item);
+        // Let Pointer Handlers have the first shot
+        itemPrivate->handlePointerEvent(event);
+        if (point->isAccepted())
             return true;
-    }
-
-    QPointF p = item->mapFromScene(event->posF());
-
-    if (item->contains(p)) {
-        QWheelEvent wheel(p, event->globalPosF(), event->pixelDelta(), event->angleDelta(), event->delta(),
-                          event->orientation(), event->buttons(), event->modifiers(), event->phase(), event->source(), event->inverted());
-        wheel.setTimestamp(event->timestamp());
-        wheel.accept();
-        QCoreApplication::sendEvent(item, &wheel);
-        if (wheel.isAccepted()) {
-            event->accept();
-            return true;
+        QPointF g = item->window()->mapToGlobal(point->scenePosition().toPoint());
+#if QT_CONFIG(wheelevent)
+        // Let the Item have a chance to handle it
+        if (QQuickPointerScrollEvent *pse = event->asPointerScrollEvent()) {
+            QWheelEvent wheel(point->position(), g, pse->pixelDelta().toPoint(), pse->angleDelta().toPoint(),
+                              pse->buttons(), pse->modifiers(), pse->phase(),
+                              pse->isInverted(), pse->synthSource());
+            wheel.setTimestamp(pse->timestamp());
+            wheel.accept();
+            QCoreApplication::sendEvent(item, &wheel);
+            if (wheel.isAccepted()) {
+                qCDebug(lcWheelTarget) << &wheel << "->" << item;
+                event->setAccepted(true);
+                return true;
+            }
         }
+#endif
     }
 
-    return false;
+    return false; // it wasn't handled
 }
 
+#if QT_CONFIG(wheelevent)
 /*! \reimp */
 void QQuickWindow::wheelEvent(QWheelEvent *event)
 {
@@ -1945,8 +1947,7 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
         return;
 
     event->ignore();
-    if (d->contentItem)
-        d->deliverWheelEvent(d->contentItem, event);
+    d->deliverPointerEvent(d->pointerEventInstance(event));
     d->lastWheelEventAccepted = event->isAccepted();
 }
 #endif // wheelevent
@@ -2238,6 +2239,8 @@ QQuickPointerEvent *QQuickWindowPrivate::queryPointerEventInstance(QQuickPointer
         if (eventType == QEvent::NativeGesture && !qobject_cast<QQuickPointerNativeGestureEvent*>(e))
             continue;
 #endif
+        if (eventType == QEvent::Wheel && !qobject_cast<QQuickPointerScrollEvent*>(e))
+            continue;
         // Otherwise we assume there's only one event type per device.
         // More disambiguation tests might need to be added above if that changes later.
         if (e->device() == device)
@@ -2257,7 +2260,10 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QQuickPointerDevic
         // QWindowSystemInterface::handleMouseEvent() does not take a device parameter:
         // we assume all mouse events come from one mouse (the "core pointer").
         // So when the event is a mouse event, device == QQuickPointerDevice::genericMouseDevice()
-        ev = new QQuickPointerMouseEvent(q, device);
+        if (eventType == QEvent::Wheel)
+            ev = new QQuickPointerScrollEvent(q, device);
+        else
+            ev = new QQuickPointerMouseEvent(q, device);
         break;
     case QQuickPointerDevice::TouchPad:
     case QQuickPointerDevice::TouchScreen:
@@ -2291,6 +2297,7 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event) con
     case QEvent::MouseButtonRelease:
     case QEvent::MouseButtonDblClick:
     case QEvent::MouseMove:
+    case QEvent::Wheel:
         dev = QQuickPointerDevice::genericMouseDevice();
         break;
     case QEvent::TouchBegin:
@@ -2333,7 +2340,7 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     } else if (event->asPointerTouchEvent()) {
         deliverTouchEvent(event->asPointerTouchEvent());
     } else {
-        Q_ASSERT(false);
+        deliverSinglePointEventUntilAccepted(event);
     }
 
     event->reset(nullptr);

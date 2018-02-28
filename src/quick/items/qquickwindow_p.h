@@ -152,9 +152,7 @@ public:
     bool sendFilteredMouseEvent(QEvent *event, QQuickItem *receiver, QQuickItem *filteringParent);
     bool sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent = nullptr);
     bool sendFilteredPointerEventImpl(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent);
-#if QT_CONFIG(wheelevent)
-    bool deliverWheelEvent(QQuickItem *, QWheelEvent *);
-#endif
+    bool deliverSinglePointEventUntilAccepted(QQuickPointerEvent *);
 #if QT_CONFIG(gestures)
     bool deliverNativeGestureEvent(QQuickItem *, QNativeGestureEvent *);
 #endif
