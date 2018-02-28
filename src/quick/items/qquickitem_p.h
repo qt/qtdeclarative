@@ -390,7 +390,7 @@ public:
     // Contains mask
     QPointer<QObject> mask;
     // If the mask is an Item, inform it that it's being used as a mask (true) or is no longer being used (false)
-    virtual void registerAsContainsMask(QQuickItem * /* maskedItem */, bool /* set */) { }
+    virtual void registerAsContainmentMask(QQuickItem * /* maskedItem */, bool /* set */) { }
 
     QQuickAnchors *anchors() const;
     mutable QQuickAnchors *_anchors;

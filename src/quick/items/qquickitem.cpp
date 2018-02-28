@@ -7642,7 +7642,7 @@ QObject *QQuickItem::containmentMask() const
     return d->mask.data();
 }
 
-void QQuickItem::setContainsMask(QObject *mask)
+void QQuickItem::setContainmentMask(QObject *mask)
 {
     Q_D(QQuickItem);
     // an Item can't mask itself (to prevent infinite loop in contains())
@@ -7652,7 +7652,7 @@ void QQuickItem::setContainsMask(QObject *mask)
     QQuickItem *quickMask = qobject_cast<QQuickItem *>(d->mask);
     if (quickMask) {
         QQuickItemPrivate *maskPrivate = QQuickItemPrivate::get(quickMask);
-        maskPrivate->registerAsContainsMask(this, false); // removed from use as my mask
+        maskPrivate->registerAsContainmentMask(this, false); // removed from use as my mask
     }
 
     if (mask) {
@@ -7667,7 +7667,7 @@ void QQuickItem::setContainsMask(QObject *mask)
     quickMask = qobject_cast<QQuickItem *>(mask);
     if (quickMask) {
         QQuickItemPrivate *maskPrivate = QQuickItemPrivate::get(quickMask);
-        maskPrivate->registerAsContainsMask(this, true); // telling maskPrivate that "this" is using it as mask
+        maskPrivate->registerAsContainmentMask(this, true); // telling maskPrivate that "this" is using it as mask
     }
     emit containmentMaskChanged();
 }

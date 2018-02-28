@@ -144,7 +144,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool antialiasing READ antialiasing WRITE setAntialiasing NOTIFY antialiasingChanged RESET resetAntialiasing)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged)
-    Q_PROPERTY(QObject *containmentMask READ containmentMask WRITE setContainsMask NOTIFY containmentMaskChanged REVISION 11)
+    Q_PROPERTY(QObject *containmentMask READ containmentMask WRITE setContainmentMask NOTIFY containmentMaskChanged REVISION 11)
 
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickItemLayer *layer READ layer DESIGNABLE false CONSTANT FINAL)
 
@@ -322,7 +322,7 @@ public:
 
     Q_INVOKABLE virtual bool contains(const QPointF &point) const;
     QObject *containmentMask() const;
-    void setContainsMask(QObject *mask);
+    void setContainmentMask(QObject *mask);
 
     QTransform itemTransform(QQuickItem *, bool *) const;
     QPointF mapToItem(const QQuickItem *item, const QPointF &point) const;
