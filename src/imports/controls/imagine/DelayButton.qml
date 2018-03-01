@@ -47,7 +47,6 @@ T.DelayButton {
                             contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
-    baselineOffset: contentItem.y + contentItem.baselineOffset
 
     topPadding: background ? background.topPadding : 0
     leftPadding: background ? background.leftPadding : 0

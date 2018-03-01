@@ -48,7 +48,6 @@ T.Button {
                             contentItem.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
-    baselineOffset: contentItem.y + contentItem.baselineOffset
 
     // external vertical padding is 6 (to increase touch area)
     padding: 12

@@ -107,6 +107,7 @@ QQuickControlPrivate::ExtraData::ExtraData()
       hasLeftPadding(false),
       hasRightPadding(false),
       hasBottomPadding(false),
+      hasBaselineOffset(false),
       topPadding(0),
       leftPadding(0),
       rightPadding(0),
@@ -143,6 +144,12 @@ QQuickControlPrivate::~QQuickControlPrivate()
 #if QT_CONFIG(accessibility)
     QAccessible::removeActivationObserver(this);
 #endif
+}
+
+void QQuickControlPrivate::init()
+{
+    Q_Q(QQuickControl);
+    QObject::connect(q, &QQuickItem::baselineOffsetChanged, q, &QQuickControl::baselineOffsetChanged);
 }
 
 #if QT_CONFIG(quicktemplates2_multitouch)
@@ -337,16 +344,21 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
         cancelContentItem();
 
     QQuickItem *oldContentItem = contentItem;
+    if (oldContentItem)
+        disconnect(oldContentItem, &QQuickItem::baselineOffsetChanged, this, &QQuickControlPrivate::updateBaselineOffset);
+
     contentItem = item;
     q->contentItemChange(item, oldContentItem);
     delete oldContentItem;
 
     if (item) {
+        connect(contentItem, &QQuickItem::baselineOffsetChanged, this, &QQuickControlPrivate::updateBaselineOffset);
         if (!item->parentItem())
             item->setParentItem(q);
         if (componentComplete)
             resizeContent();
     }
+    updateBaselineOffset();
 
     if (notify && !contentItem.isExecuting())
         emit q->contentItemChanged();
@@ -705,14 +717,30 @@ void QQuickControlPrivate::executeBackground(bool complete)
         quickCompleteDeferred(q, backgroundName(), background);
 }
 
+void QQuickControlPrivate::updateBaselineOffset()
+{
+    Q_Q(QQuickControl);
+    if (extra.isAllocated() && extra.value().hasBaselineOffset)
+        return;
+
+    if (!contentItem)
+        q->QQuickItem::setBaselineOffset(0);
+    else
+        q->QQuickItem::setBaselineOffset(getTopPadding() + contentItem->baselineOffset());
+}
+
 QQuickControl::QQuickControl(QQuickItem *parent)
     : QQuickItem(*(new QQuickControlPrivate), parent)
 {
+    Q_D(QQuickControl);
+    d->init();
 }
 
 QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent)
     : QQuickItem(dd, parent)
 {
+    Q_D(QQuickControl);
+    d->init();
 }
 
 void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
@@ -1388,6 +1416,30 @@ void QQuickControl::setContentItem(QQuickItem *item)
     d->setContentItem_helper(item, true);
 }
 
+qreal QQuickControl::baselineOffset() const
+{
+    Q_D(const QQuickControl);
+    return d->baselineOffset;
+}
+
+void QQuickControl::setBaselineOffset(qreal offset)
+{
+    Q_D(QQuickControl);
+    d->extra.value().hasBaselineOffset = true;
+    QQuickItem::setBaselineOffset(offset);
+}
+
+void QQuickControl::resetBaselineOffset()
+{
+    Q_D(QQuickControl);
+    if (!d->extra.isAllocated() || !d->extra.value().hasBaselineOffset)
+        return;
+
+    if (d->extra.isAllocated())
+        d->extra.value().hasBaselineOffset = false;
+    d->updateBaselineOffset();
+}
+
 /*!
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty palette QtQuick.Controls::Control::palette
@@ -1527,6 +1579,7 @@ void QQuickControl::componentComplete()
     QQuickItem::componentComplete();
     d->resizeBackground();
     d->resizeContent();
+    d->updateBaselineOffset();
     if (!d->hasLocale)
         d->locale = QQuickControlPrivate::calcLocale(d->parentItem);
 #if QT_CONFIG(quicktemplates2_hover)
@@ -1708,6 +1761,7 @@ void QQuickControl::paddingChange(const QMarginsF &newPadding, const QMarginsF &
     Q_UNUSED(newPadding);
     Q_UNUSED(oldPadding);
     d->resizeContent();
+    d->updateBaselineOffset();
 }
 
 void QQuickControl::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)

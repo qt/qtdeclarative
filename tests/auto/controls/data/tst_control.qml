@@ -1149,4 +1149,42 @@ TestCase {
         compare(control.implicitWidth, 210)
         compare(control.implicitHeight, 220)
     }
+
+    function test_baseline() {
+        var control = createTemporaryObject(component, testCase)
+        verify(control)
+
+        compare(control.baselineOffset, 0)
+
+        var baselineSpy = signalSpy.createObject(control, {target: control, signalName: "baselineOffsetChanged"})
+        verify(baselineSpy.valid)
+
+        control.contentItem = rectangle.createObject(control, {baselineOffset: 12})
+        compare(control.baselineOffset, 12)
+        compare(baselineSpy.count, 1)
+
+        control.padding = 6
+        compare(control.baselineOffset, 18)
+        compare(baselineSpy.count, 2)
+
+        control.baselineOffset = 3
+        compare(control.baselineOffset, 3)
+        compare(baselineSpy.count, 3)
+
+        control.padding = 9
+        compare(control.baselineOffset, 3)
+        compare(baselineSpy.count, 3)
+
+        control.baselineOffset = undefined
+        compare(control.baselineOffset, 21)
+        compare(baselineSpy.count, 4)
+
+        control.contentItem.baselineOffset = 3
+        compare(control.baselineOffset, 12)
+        compare(baselineSpy.count, 5)
+
+        control.contentItem = null
+        compare(control.baselineOffset, 0)
+        compare(baselineSpy.count, 6)
+    }
 }

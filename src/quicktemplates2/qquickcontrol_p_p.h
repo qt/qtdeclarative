@@ -79,6 +79,8 @@ public:
         return control->d_func();
     }
 
+    void init();
+
 #if QT_CONFIG(quicktemplates2_multitouch)
     virtual bool acceptTouch(const QTouchEvent::TouchPoint &point);
 #endif
@@ -154,12 +156,15 @@ public:
     virtual void cancelBackground();
     virtual void executeBackground(bool complete = false);
 
+    void updateBaselineOffset();
+
     struct ExtraData {
         ExtraData();
         bool hasTopPadding;
         bool hasLeftPadding;
         bool hasRightPadding;
         bool hasBottomPadding;
+        bool hasBaselineOffset;
         qreal topPadding;
         qreal leftPadding;
         qreal rightPadding;

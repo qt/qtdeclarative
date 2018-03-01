@@ -49,7 +49,6 @@ T.MenuItem {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              Math.max(contentItem.implicitHeight,
                                       indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
-    baselineOffset: contentItem.y + contentItem.baselineOffset
 
     padding: 16
     verticalPadding: Material.menuItemVerticalPadding
