@@ -112,8 +112,8 @@ void QQuickMaterialRippleWaveNode::updateCurrentTime(int time)
     const qreal dy = (1.0 - p) * (m_anchor.y() - m_bounds.height() / 2);
 
     QMatrix4x4 m;
-    m.translate((m_bounds.width() - m_value) / 2 + dx,
-                (m_bounds.height() - m_value) / 2 + dy);
+    m.translate(qRound((m_bounds.width() - m_value) / 2 + dx),
+                qRound((m_bounds.height() - m_value) / 2 + dy));
     setMatrix(m);
 
     QSGOpacityNode *opacityNode = static_cast<QSGOpacityNode *>(firstChild());

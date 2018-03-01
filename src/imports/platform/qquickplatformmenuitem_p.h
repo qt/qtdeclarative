@@ -161,6 +161,7 @@ protected:
     QQuickPlatformIconLoader *iconLoader() const;
 
 private Q_SLOTS:
+    void activate();
     void updateIcon();
 
 private:
