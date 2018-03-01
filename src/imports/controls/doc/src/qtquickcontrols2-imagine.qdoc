@@ -31,7 +31,7 @@
 
     The Imagine Style is based on configurable image assets. \l{detailed-desc-imagine}{More...}
 
-    \styleimport {QtQuick.Controls.Imagine 2.4} {Qt 5.10}
+    \styleimport {QtQuick.Controls.Imagine 2.5} {Qt 5.10}
 
     \section1 Attached Properties
 

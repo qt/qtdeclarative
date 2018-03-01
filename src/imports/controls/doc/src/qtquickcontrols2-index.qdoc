@@ -46,7 +46,7 @@
     application using the following import statement in your \c {.qml} file:
 
     \code
-    import QtQuick.Controls 2.4
+    import QtQuick.Controls 2.5
     \endcode
 
     The \l{Qt Quick Controls 2 C++ Classes}{C++ classes} can be included into
@@ -105,6 +105,11 @@
         \li 5.11
         \li 2.11
         \li 2.4
+        \li 1.0
+      \row
+        \li 5.12
+        \li 2.12
+        \li 2.5
         \li 1.0
       \row
         \li ...
