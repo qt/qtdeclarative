@@ -144,10 +144,8 @@ QPlatformMenuItem *QQuickPlatformMenuItem::create()
             m_handle = QWidgetPlatform::createMenuItem();
 
         if (m_handle) {
-            connect(m_handle, &QPlatformMenuItem::activated, this, &QQuickPlatformMenuItem::triggered);
+            connect(m_handle, &QPlatformMenuItem::activated, this, &QQuickPlatformMenuItem::activate);
             connect(m_handle, &QPlatformMenuItem::hovered, this, &QQuickPlatformMenuItem::hovered);
-            if (m_checkable)
-                connect(m_handle, &QPlatformMenuItem::activated, this, &QQuickPlatformMenuItem::toggle);
         }
     }
     return m_handle;
@@ -353,13 +351,6 @@ void QQuickPlatformMenuItem::setCheckable(bool checkable)
 {
     if (m_checkable == checkable)
         return;
-
-    if (m_handle) {
-        if (checkable)
-            connect(m_handle, &QPlatformMenuItem::activated, this, &QQuickPlatformMenuItem::toggle);
-        else
-            disconnect(m_handle, &QPlatformMenuItem::activated, this, &QQuickPlatformMenuItem::toggle);
-    }
 
     m_checkable = checkable;
     sync();
@@ -600,6 +591,12 @@ QQuickPlatformIconLoader *QQuickPlatformMenuItem::iconLoader() const
         m_iconLoader->setEnabled(m_complete);
     }
     return m_iconLoader;
+}
+
+void QQuickPlatformMenuItem::activate()
+{
+    toggle();
+    emit triggered();
 }
 
 void QQuickPlatformMenuItem::updateIcon()
