@@ -728,8 +728,8 @@ case $rule_number: {
 } break;
 ./
 
-UiImport: UiImportHead T_NUMERIC_LITERAL T_AS JsIdentifier T_AUTOMATIC_SEMICOLON ;
-UiImport: UiImportHead T_NUMERIC_LITERAL T_AS JsIdentifier T_SEMICOLON ;
+UiImport: UiImportHead T_NUMERIC_LITERAL T_AS IdentifierReference T_AUTOMATIC_SEMICOLON ;
+UiImport: UiImportHead T_NUMERIC_LITERAL T_AS IdentifierReference T_SEMICOLON ;
 /.
 case $rule_number: {
     sym(1).UiImport->versionToken = loc(2);
@@ -740,8 +740,8 @@ case $rule_number: {
 } break;
 ./
 
-UiImport: UiImportHead T_AS JsIdentifier T_AUTOMATIC_SEMICOLON ;
-UiImport: UiImportHead T_AS JsIdentifier T_SEMICOLON ;
+UiImport: UiImportHead T_AS IdentifierReference T_AUTOMATIC_SEMICOLON ;
+UiImport: UiImportHead T_AS IdentifierReference T_SEMICOLON ;
 /.
 case $rule_number: {
     sym(1).UiImport->asToken = loc(2);
@@ -980,7 +980,7 @@ case $rule_number: {
 } break;
 ./
 
-UiParameterList: UiPropertyType JsIdentifier ;
+UiParameterList: UiPropertyType IdentifierReference ;
 /.
 case $rule_number: {
   AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiQualifiedId->finish(), stringRef(2));
@@ -990,7 +990,7 @@ case $rule_number: {
 } break;
 ./
 
-UiParameterList: UiParameterList T_COMMA UiPropertyType JsIdentifier ;
+UiParameterList: UiParameterList T_COMMA UiPropertyType IdentifierReference ;
 /.
 case $rule_number: {
   AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiParameterList, sym(3).UiQualifiedId->finish(), stringRef(4));
@@ -1030,8 +1030,8 @@ case $rule_number: {
 }   break;
 ./
 
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT JsIdentifier T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT JsIdentifier T_SEMICOLON ;
+UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT IdentifierReference T_AUTOMATIC_SEMICOLON ;
+UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT IdentifierReference T_SEMICOLON ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
@@ -1045,8 +1045,8 @@ case $rule_number: {
 }   break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType JsIdentifier T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_PROPERTY UiPropertyType JsIdentifier T_SEMICOLON ;
+UiObjectMember: T_PROPERTY UiPropertyType IdentifierReference T_AUTOMATIC_SEMICOLON ;
+UiObjectMember: T_PROPERTY UiPropertyType IdentifierReference T_SEMICOLON ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3));
@@ -1058,8 +1058,8 @@ case $rule_number: {
 }   break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType JsIdentifier T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType JsIdentifier T_SEMICOLON ;
+UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType IdentifierReference T_AUTOMATIC_SEMICOLON ;
+UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType IdentifierReference T_SEMICOLON ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4));
@@ -1073,8 +1073,8 @@ case $rule_number: {
 }   break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT JsIdentifier T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT JsIdentifier T_SEMICOLON ;
+UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT IdentifierReference T_AUTOMATIC_SEMICOLON ;
+UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT IdentifierReference T_SEMICOLON ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
@@ -1090,7 +1090,7 @@ case $rule_number: {
 }   break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType JsIdentifier T_COLON UiScriptStatement ;
+UiObjectMember: T_PROPERTY UiPropertyType IdentifierReference T_COLON UiScriptStatement ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3),
@@ -1103,7 +1103,7 @@ case $rule_number: {
 }   break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY UiPropertyType JsIdentifier T_COLON UiScriptStatement ;
+UiObjectMember: T_READONLY T_PROPERTY UiPropertyType IdentifierReference T_COLON UiScriptStatement ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4),
@@ -1118,7 +1118,7 @@ case $rule_number: {
 }   break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType JsIdentifier T_COLON UiScriptStatement ;
+UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType IdentifierReference T_COLON UiScriptStatement ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4),
@@ -1133,7 +1133,7 @@ case $rule_number: {
 }   break;
 ./
 
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT JsIdentifier T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET ;
+UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT IdentifierReference T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
@@ -1160,7 +1160,7 @@ case $rule_number: {
 }   break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType JsIdentifier T_COLON UiQualifiedId UiObjectInitializer ;
+UiObjectMember: T_PROPERTY UiPropertyType IdentifierReference T_COLON UiQualifiedId UiObjectInitializer ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3));
@@ -1183,7 +1183,7 @@ case $rule_number: {
 }   break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY UiPropertyType JsIdentifier T_COLON UiQualifiedId UiObjectInitializer ;
+UiObjectMember: T_READONLY T_PROPERTY UiPropertyType IdentifierReference T_COLON UiQualifiedId UiObjectInitializer ;
 /.
 case $rule_number: {
     AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4));
@@ -1276,14 +1276,17 @@ case $rule_number: {
 ./
 
 JsIdentifier: T_IDENTIFIER;
+JsIdentifier: T_PROPERTY;
+JsIdentifier: T_SIGNAL;
+JsIdentifier: T_READONLY;
+JsIdentifier: T_ON;
+JsIdentifier: T_GET;
+JsIdentifier: T_SET;
 
-JsIdentifier: T_PROPERTY ;
-JsIdentifier: T_SIGNAL ;
-JsIdentifier: T_READONLY ;
-JsIdentifier: T_ON ;
-JsIdentifier: T_GET ;
-JsIdentifier: T_SET ;
-JsIdentifier: T_YIELD ;
+IdentifierReference: JsIdentifier;
+IdentifierReference: T_YIELD;
+
+IdentifierReference_Yield: JsIdentifier;
 
 --------------------------------------------------------------------------------------------------------
 -- Expressions
@@ -1298,7 +1301,7 @@ case $rule_number: {
 } break;
 ./
 
-PrimaryExpression: JsIdentifier ;
+PrimaryExpression: IdentifierReference ;
 /.
 case $rule_number: {
   AST::IdentifierExpression *node = new (pool) AST::IdentifierExpression(stringRef(1));
@@ -1672,7 +1675,7 @@ case $rule_number: {
 } break;
 ./
 
-PropertyName: JsIdentifier %prec SHIFT_THERE ;
+PropertyName: IdentifierReference %prec SHIFT_THERE ;
 /.
 case $rule_number: {
   AST::IdentifierPropertyName *node = new (pool) AST::IdentifierPropertyName(stringRef(1));
@@ -1742,7 +1745,7 @@ ReservedIdentifier: T_DEBUGGER ;
 ReservedIdentifier: T_RESERVED_WORD ;
 ReservedIdentifier: T_WITH ;
 
-PropertyIdentifier: JsIdentifier ;
+PropertyIdentifier: IdentifierReference ;
 PropertyIdentifier: ReservedIdentifier ;
 
 MemberExpression: PrimaryExpression ;
@@ -2539,10 +2542,10 @@ case $rule_number: {
 } break;
 ./
 
-VariableDeclaration: JsIdentifier InitializerOpt ;
+VariableDeclaration: IdentifierReference InitializerOpt ;
 /.case $rule_number: Q_FALLTHROUGH();./
 
-VariableDeclarationNotIn: JsIdentifier InitializerNotInOpt ;
+VariableDeclarationNotIn: IdentifierReference InitializerNotInOpt ;
 /.
 case $rule_number: {
   AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
@@ -2717,8 +2720,8 @@ case $rule_number: {
 } break;
 ./
 
-ContinueStatement: T_CONTINUE JsIdentifier T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
-ContinueStatement: T_CONTINUE JsIdentifier T_SEMICOLON ;
+ContinueStatement: T_CONTINUE IdentifierReference T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
+ContinueStatement: T_CONTINUE IdentifierReference T_SEMICOLON ;
 /.
 case $rule_number: {
   AST::ContinueStatement *node = new (pool) AST::ContinueStatement(stringRef(2));
@@ -2740,8 +2743,8 @@ case $rule_number: {
 } break;
 ./
 
-BreakStatement: T_BREAK JsIdentifier T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
-BreakStatement: T_BREAK JsIdentifier T_SEMICOLON ;
+BreakStatement: T_BREAK IdentifierReference T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
+BreakStatement: T_BREAK IdentifierReference T_SEMICOLON ;
 /.
 case $rule_number: {
   AST::BreakStatement *node = new (pool) AST::BreakStatement(stringRef(2));
@@ -2853,7 +2856,7 @@ case $rule_number: {
 } break;
 ./
 
-LabelledStatement: JsIdentifier T_COLON Statement ;
+LabelledStatement: IdentifierReference T_COLON Statement ;
 /.
 case $rule_number: {
   AST::LabelledStatement *node = new (pool) AST::LabelledStatement(stringRef(1), sym(3).Statement);
@@ -2901,7 +2904,7 @@ case $rule_number: {
 } break;
 ./
 
-Catch: T_CATCH T_LPAREN JsIdentifier T_RPAREN Block ;
+Catch: T_CATCH T_LPAREN IdentifierReference T_RPAREN Block ;
 /.
 case $rule_number: {
   AST::Catch *node = new (pool) AST::Catch(stringRef(3), sym(5).Block);
@@ -2938,7 +2941,7 @@ case $rule_number: {
 -- declaration.
 Function: T_FUNCTION %prec REDUCE_HERE ;
 
-FunctionDeclaration: Function JsIdentifier T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
+FunctionDeclaration: Function IdentifierReference T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
 /.
 case $rule_number: {
   AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(2), sym(4).FormalParameterList, sym(7).FunctionBody);
@@ -2952,7 +2955,7 @@ case $rule_number: {
 } break;
 ./
 
-FunctionExpression: T_FUNCTION JsIdentifier T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
+FunctionExpression: T_FUNCTION IdentifierReference T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
 /.
 case $rule_number: {
   AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).FunctionBody);
@@ -3135,7 +3138,7 @@ case $rule_number: {
 } break;
 ./
 
-BindingIdentifier: JsIdentifier;
+BindingIdentifier: IdentifierReference;
 
 FunctionBodyOpt: ;
 /.
