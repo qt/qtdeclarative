@@ -89,6 +89,7 @@ private slots:
     void customValueType();
     void customValueTypeInQml();
     void gadgetInheritance();
+    void gadgetTemplateInheritance();
     void toStringConversion();
     void enumerableProperties();
     void enumProperties();
@@ -1613,6 +1614,19 @@ public:
     Q_INVOKABLE void functionInDerivedGadget(int value) { m_derivedProperty = value; }
 };
 
+// QTBUG-66744: we want a Q_GADGET giving us generic type safety in C++ and property access in Qml
+template <typename T>
+struct DerivedTypedGadget : public BaseGadget
+{
+    // cannot use Q_GADGET here
+public:
+    DerivedTypedGadget() {}
+};
+
+class DerivedTypedGadgetDummyType {};
+
+Q_DECLARE_METATYPE(DerivedTypedGadget<DerivedTypedGadgetDummyType>)
+
 class TypeWithCustomValueType : public QObject
 {
     Q_OBJECT
@@ -1647,6 +1661,21 @@ void tst_qqmlvaluetypes::gadgetInheritance()
     QJSEngine engine;
 
     QJSValue value = engine.toScriptValue(DerivedGadget());
+
+    QCOMPARE(value.property("baseProperty").toInt(), 0);
+    value.setProperty("baseProperty", 10);
+    QCOMPARE(value.property("baseProperty").toInt(), 10);
+
+    QJSValue method = value.property("functionInBaseGadget");
+    method.call(QJSValueList() << QJSValue(42));
+    QCOMPARE(value.property("baseProperty").toInt(), 42);
+}
+
+void tst_qqmlvaluetypes::gadgetTemplateInheritance()
+{
+    QJSEngine engine;
+
+    QJSValue value = engine.toScriptValue(DerivedTypedGadget<DerivedTypedGadgetDummyType>());
 
     QCOMPARE(value.property("baseProperty").toInt(), 0);
     value.setProperty("baseProperty", 10);
