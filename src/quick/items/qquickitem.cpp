@@ -2068,7 +2068,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     In the QPainter / QWidget world, it is some times favorable to
     cache complex content in a pixmap, image or texture. In Qt Quick,
     because of the techniques already applied by the \l {Qt Quick
-    Scene Graph Renderer} {scene graph renderer}, this will in most
+    Scene Graph OpenGL Renderer} {scene graph renderer}, this will in most
     cases not be the case. Excessive draw calls are already reduced
     because of batching and a cache will in most cases end up blending
     more pixels than the original content. The overhead of rendering
