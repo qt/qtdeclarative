@@ -95,6 +95,7 @@ public:
           value(0),
           position(0),
           stepSize(0),
+          touchDragThreshold(-1), // in QQuickWindowPrivate::dragOverThreshold, '-1' implies using styleHints::startDragDistance()
           live(true),
           pressed(false),
           orientation(Qt::Horizontal),
@@ -121,6 +122,7 @@ public:
     qreal value;
     qreal position;
     qreal stepSize;
+    qreal touchDragThreshold;
     bool live;
     bool pressed;
     QPointF pressPoint;
@@ -636,6 +638,37 @@ void QQuickSlider::decrease()
     setValue(d->value - step);
 }
 
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty qreal QtQuick.Controls::Slider::touchDragThreshold
+
+    This property holds the threshold (in logical pixels) at which a touch drag event will be initiated.
+    The mouse drag threshold won't be affected.
+    The default value is \c Qt.styleHints.startDragDistance.
+
+    \sa QStyleHints
+*/
+qreal QQuickSlider::touchDragThreshold() const
+{
+    Q_D(const QQuickSlider);
+    return d->touchDragThreshold;
+}
+
+void QQuickSlider::setTouchDragThreshold(qreal touchDragThreshold)
+{
+    Q_D(QQuickSlider);
+    if (d->touchDragThreshold == touchDragThreshold)
+        return;
+
+    d->touchDragThreshold = touchDragThreshold;
+    emit touchDragThresholdChanged();
+}
+
+void QQuickSlider::resetTouchDragThreshold()
+{
+    setTouchDragThreshold(-1);
+}
+
 void QQuickSlider::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickSlider);
@@ -715,9 +748,9 @@ void QQuickSlider::touchEvent(QTouchEvent *event)
             case Qt::TouchPointMoved:
                 if (!keepTouchGrab()) {
                     if (d->orientation == Qt::Horizontal)
-                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - d->pressPoint.x(), Qt::XAxis, &point));
+                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - d->pressPoint.x(), Qt::XAxis, &point, qRound(d->touchDragThreshold)));
                     else
-                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().y() - d->pressPoint.y(), Qt::YAxis, &point));
+                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().y() - d->pressPoint.y(), Qt::YAxis, &point, qRound(d->touchDragThreshold)));
                 }
                 if (keepTouchGrab())
                     d->handleMove(point.pos());
