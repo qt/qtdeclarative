@@ -108,15 +108,15 @@ QPointF QQuickDragHandler::localTargetPosition(QQuickEventPoint *point)
 
 void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
-    if (!target() || !target()->parentItem())
-        return;
     if (grabber == this && stateChange == QQuickEventPoint::GrabExclusive) {
         // In case the grab got handed over from another grabber, we might not get the Press.
         if (!m_pressedInsideTarget) {
-            m_pressTargetPos = QPointF(target()->width(), target()->height()) / 2;
+            if (target())
+                m_pressTargetPos = QPointF(target()->width(), target()->height()) / 2;
             m_pressScenePos = point->scenePosition();
         } else if (m_pressTargetPos.isNull()) {
-            m_pressTargetPos = localTargetPosition(point);
+            if (target())
+                m_pressTargetPos = localTargetPosition(point);
             m_pressScenePos = point->scenePosition();
         }
     }
@@ -137,8 +137,10 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
     point->setAccepted();
     switch (point->state()) {
     case QQuickEventPoint::Pressed:
-        m_pressedInsideTarget = targetContains(point);
-        m_pressTargetPos = localTargetPosition(point);
+        if (target()) {
+            m_pressedInsideTarget = targetContains(point);
+            m_pressTargetPos = localTargetPosition(point);
+        }
         m_pressScenePos = point->scenePosition();
         setPassiveGrab(point);
         break;
