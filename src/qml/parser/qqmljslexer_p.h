@@ -121,10 +121,25 @@ public:
         RegExp_Multiline  = 0x04
     };
 
+    enum ParseModeFlags {
+        QmlMode = 0x1,
+        YieldIsKeyword = 0x2
+    };
+
 public:
     Lexer(Engine *engine);
 
+    int parseModeFlags() const {
+        int flags = 0;
+        if (qmlMode())
+            flags |= QmlMode;
+        if (yieldIsKeyWord())
+            flags |= YieldIsKeyword;
+        return flags;
+    }
+
     bool qmlMode() const;
+    bool yieldIsKeyWord() const { return _generatorLevel != 0; }
 
     QString code() const;
     void setCode(const QString &code, int lineno, bool qmlMode = true);
@@ -161,8 +176,11 @@ public:
         BalancedParentheses
     };
 
+    void enterGeneratorBody() { ++_generatorLevel; }
+    void leaveGeneratorBody() { --_generatorLevel; }
+
 protected:
-    int classify(const QChar *s, int n, bool qmlMode);
+    static int classify(const QChar *s, int n, int parseModeFlags);
 
 private:
     inline void scanChar();
@@ -229,6 +247,7 @@ private:
     bool _followsClosingBrace;
     bool _delimited;
     bool _qmlMode;
+    int _generatorLevel = 0;
 };
 
 } // end of namespace QQmlJS

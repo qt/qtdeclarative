@@ -79,6 +79,7 @@
 %token T_COMPATIBILITY_SEMICOLON
 %token T_ENUM "enum"
 %token T_ELLIPSIS "..."
+%token T_YIELD "yield"
 
 --- template strings
 %token T_NO_SUBSTITUTION_TEMPLATE
@@ -106,7 +107,7 @@
 %token T_FEED_JS_PROGRAM
 
 %nonassoc SHIFT_THERE
-%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET
+%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_YIELD
 %nonassoc REDUCE_HERE
 
 %start TopLevel
@@ -1282,6 +1283,7 @@ JsIdentifier: T_READONLY ;
 JsIdentifier: T_ON ;
 JsIdentifier: T_GET ;
 JsIdentifier: T_SET ;
+JsIdentifier: T_YIELD ;
 
 --------------------------------------------------------------------------------------------------------
 -- Expressions

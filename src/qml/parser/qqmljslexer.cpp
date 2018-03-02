@@ -784,7 +784,7 @@ again:
             int kind = T_IDENTIFIER;
 
             if (!identifierWithEscapeChars)
-                kind = classify(_tokenStartPtr, _tokenLength, _qmlMode);
+                kind = classify(_tokenStartPtr, _tokenLength, parseModeFlags());
 
             if (_engine) {
                 if (kind == T_IDENTIFIER && identifierWithEscapeChars)
