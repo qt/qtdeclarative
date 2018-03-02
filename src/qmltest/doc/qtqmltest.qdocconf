@@ -3,7 +3,7 @@ include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 project                 = QtQmlTest
 description             = Qt Quick Test Reference Documentation
 version                 = $QT_VERSION
-
+moduleheader            = QtQuickTest
 qhp.projects            = QtQmlTest
 
 qhp.QtQmlTest.file                = qtqmltest.qhp
