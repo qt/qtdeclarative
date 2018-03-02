@@ -186,6 +186,15 @@ static inline int classify4(const QChar *s, int parseModeFlags) {
       }
     }
   }
+  else if (s[0].unicode() == 'f') {
+    if (s[1].unicode() == 'r') {
+      if (s[2].unicode() == 'o') {
+        if (s[3].unicode() == 'm') {
+          return int(Lexer::T_FROM);
+        }
+      }
+    }
+  }
   else if (s[0].unicode() == 'g') {
     if (s[1].unicode() == 'o') {
       if (s[2].unicode() == 't') {
@@ -334,7 +343,7 @@ static inline int classify5(const QChar *s, int parseModeFlags) {
       if (s[2].unicode() == 'p') {
         if (s[3].unicode() == 'e') {
           if (s[4].unicode() == 'r') {
-            return (parseModeFlags & Lexer::QmlMode) ? int(Lexer::T_SUPER) : int(Lexer::T_RESERVED_WORD);
+            return int(Lexer::T_SUPER);
           }
         }
       }

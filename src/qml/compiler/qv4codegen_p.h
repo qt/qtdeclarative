@@ -495,7 +495,7 @@ protected:
     // Returns index in _module->functions
     virtual int defineFunction(const QString &name, AST::Node *ast,
                                AST::FormalParameterList *formals,
-                               AST::SourceElements *body);
+                               AST::StatementList *body);
 
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
@@ -503,13 +503,10 @@ protected:
                    const BytecodeGenerator::Label *iffalse,
                    bool trueBlockFollowsCondition);
     Reference expression(AST::ExpressionNode *ast);
-    Result sourceElement(AST::SourceElement *ast);
 
     void accept(AST::Node *node);
 
-    void functionBody(AST::FunctionBody *ast);
     void program(AST::Program *ast);
-    void sourceElements(AST::SourceElements *ast);
     void statementList(AST::StatementList *ast);
     void variableDeclaration(AST::VariableDeclaration *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
@@ -537,12 +534,10 @@ protected:
     bool visit(AST::Elision *ast) override;
     bool visit(AST::Finally *ast) override;
     bool visit(AST::FormalParameterList *ast) override;
-    bool visit(AST::FunctionBody *ast) override;
     bool visit(AST::Program *ast) override;
     bool visit(AST::PropertyNameAndValue *ast) override;
-    bool visit(AST::PropertyAssignmentList *ast) override;
+    bool visit(AST::PropertyDefinitionList *ast) override;
     bool visit(AST::PropertyGetterSetter *ast) override;
-    bool visit(AST::SourceElements *ast) override;
     bool visit(AST::StatementList *ast) override;
     bool visit(AST::UiArrayMemberList *ast) override;
     bool visit(AST::UiImport *ast) override;
@@ -592,10 +587,6 @@ protected:
     bool visit(AST::UnaryPlusExpression *ast) override;
     bool visit(AST::VoidExpression *ast) override;
     bool visit(AST::FunctionDeclaration *ast) override;
-
-    // source elements
-    bool visit(AST::FunctionSourceElement *ast) override;
-    bool visit(AST::StatementSourceElement *ast) override;
 
     // statements
     bool visit(AST::Block *ast) override;

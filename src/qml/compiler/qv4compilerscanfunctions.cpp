@@ -95,25 +95,23 @@ void ScanFunctions::leaveEnvironment()
     _context = _contextStack.isEmpty() ? 0 : _contextStack.top();
 }
 
-void ScanFunctions::checkDirectivePrologue(SourceElements *ast)
+void ScanFunctions::checkDirectivePrologue(StatementList *ast)
 {
-    for (SourceElements *it = ast; it; it = it->next) {
-        if (StatementSourceElement *stmt = cast<StatementSourceElement *>(it->element)) {
-            if (ExpressionStatement *expr = cast<ExpressionStatement *>(stmt->statement)) {
-                if (StringLiteral *strLit = cast<StringLiteral *>(expr->expression)) {
-                    // Use the source code, because the StringLiteral's
-                    // value might have escape sequences in it, which is not
-                    // allowed.
-                    if (strLit->literalToken.length < 2)
-                        continue;
-                    QStringRef str = _sourceCode.midRef(strLit->literalToken.offset + 1, strLit->literalToken.length - 2);
-                    if (str == QLatin1String("use strict")) {
-                        _context->isStrict = true;
-                    } else {
-                        // TODO: give a warning.
-                    }
+    for (StatementList *it = ast; it; it = it->next) {
+        if (ExpressionStatement *expr = cast<ExpressionStatement *>(it->statement)) {
+            if (StringLiteral *strLit = cast<StringLiteral *>(expr->expression)) {
+                // Use the source code, because the StringLiteral's
+                // value might have escape sequences in it, which is not
+                // allowed.
+                if (strLit->literalToken.length < 2)
                     continue;
+                QStringRef str = _sourceCode.midRef(strLit->literalToken.offset + 1, strLit->literalToken.length - 2);
+                if (str == QLatin1String("use strict")) {
+                    _context->isStrict = true;
+                } else {
+                    // TODO: give a warning.
                 }
+                continue;
             }
         }
 
@@ -141,7 +139,7 @@ void ScanFunctions::checkName(const QStringRef &name, const SourceLocation &loc)
 bool ScanFunctions::visit(Program *ast)
 {
     enterEnvironment(ast, defaultProgramMode);
-    checkDirectivePrologue(ast->elements);
+    checkDirectivePrologue(ast->statements);
     return true;
 }
 
@@ -273,7 +271,7 @@ void ScanFunctions::endVisit(FunctionExpression *)
 bool ScanFunctions::visit(ObjectLiteral *ast)
 {
     int argc = 0;
-    for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
+    for (PropertyDefinitionList *it = ast->properties; it; it = it->next) {
         QString key = it->assignment->name->asString();
         if (QV4::String::toArrayIndex(key) != UINT_MAX)
             ++argc;
@@ -392,7 +390,7 @@ bool ScanFunctions::visit(Block *ast) {
     return false;
 }
 
-void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr)
+void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, StatementList *body, FunctionExpression *expr)
 {
     Context *outerContext = _context;
     enterEnvironment(ast, FunctionCode);
@@ -419,7 +417,7 @@ void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
     _context->formals = formals;
 
     if (body && !_context->isStrict)
-        checkDirectivePrologue(body->elements);
+        checkDirectivePrologue(body);
 
     bool isSimpleParameterList = formals->isSimpleParameterList();
 

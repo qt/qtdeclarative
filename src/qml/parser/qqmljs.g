@@ -40,8 +40,7 @@
 %parser         QQmlJSGrammar
 %decl           qqmljsparser_p.h
 %impl           qqmljsparser.cpp
-%expect         5
-%expect-rr      2
+%expect         1
 
 %token T_AND "&"                T_AND_AND "&&"              T_AND_EQ "&="
 %token T_BREAK "break"          T_CASE "case"               T_CATCH "catch"
@@ -64,7 +63,7 @@
 %token T_RBRACE "}"             T_RBRACKET "]"              T_REMAINDER "%"
 %token T_REMAINDER_EQ "%="      T_RETURN "return"           T_RPAREN ")"
 %token T_SEMICOLON ";"          T_AUTOMATIC_SEMICOLON       T_STAR "*"
-%token T_STAR_EQ "*="           T_STRING_LITERAL "string literal"
+%token T_STAR_STAR "**"         T_STAR_EQ "*="              T_STRING_LITERAL "string literal"
 %token T_PROPERTY "property"    T_SIGNAL "signal"           T_READONLY "readonly"
 %token T_SWITCH "switch"        T_THIS "this"               T_THROW "throw"
 %token T_TILDE "~"              T_TRY "try"                 T_TYPEOF "typeof"
@@ -77,22 +76,29 @@
 %token T_MULTILINE_STRING_LITERAL "multiline string literal"
 %token T_COMMENT "comment"
 %token T_COMPATIBILITY_SEMICOLON
+%token T_ARROW "=>"
 %token T_ENUM "enum"
 %token T_ELLIPSIS "..."
 %token T_YIELD "yield"
+%token T_SUPER "super"
+%token T_CLASS "class"
+%token T_EXTENDS "extends"
+%token T_STATIC "static"
+%token T_EXPORT "export"
+%token T_FROM "from"
 
 --- template strings
-%token T_NO_SUBSTITUTION_TEMPLATE
-%token T_TEMPLATE_HEAD
-%token T_TEMPLATE_MIDDLE
-%token T_TEMPLATE_TAIL
+%token T_NO_SUBSTITUTION_TEMPLATE"(no subst template)"
+%token T_TEMPLATE_HEAD "(template head)"
+%token T_TEMPLATE_MIDDLE "(template middle)"
+%token T_TEMPLATE_TAIL "(template tail)"
 
 --- context keywords.
 %token T_PUBLIC "public"
 %token T_IMPORT "import"
 %token T_PRAGMA "pragma"
 %token T_AS "as"
-%token T_ON "on"
+%token T_OF "of"
 %token T_GET "get"
 %token T_SET "set"
 
@@ -103,11 +109,16 @@
 %token T_FEED_UI_OBJECT_MEMBER
 %token T_FEED_JS_STATEMENT
 %token T_FEED_JS_EXPRESSION
-%token T_FEED_JS_SOURCE_ELEMENT
-%token T_FEED_JS_PROGRAM
+%token T_FEED_JS_SCRIPT
+%token T_FEED_JS_MODULE
 
-%nonassoc SHIFT_THERE
-%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_YIELD
+--- Lookahead handling
+%token T_FORCE_DECLARATION "(force decl)"
+%token T_FORCE_BLOCK "(force block)"
+%token T_FOR_LOOKAHEAD_OK "(for lookahead ok)"
+
+--%left T_PLUS T_MINUS
+%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_YIELD T_OF T_STATIC T_FROM
 %nonassoc REDUCE_HERE
 
 %start TopLevel
@@ -261,19 +272,17 @@ public:
       AST::TemplateLiteral *Template;
       AST::Finally *Finally;
       AST::FormalParameterList *FormalParameterList;
-      AST::FunctionBody *FunctionBody;
       AST::FunctionDeclaration *FunctionDeclaration;
       AST::Node *Node;
       AST::PropertyName *PropertyName;
-      AST::PropertyAssignment *PropertyAssignment;
-      AST::PropertyAssignmentList *PropertyAssignmentList;
-      AST::SourceElement *SourceElement;
-      AST::SourceElements *SourceElements;
+      AST::PropertyDefinition *PropertyDefinition;
+      AST::PropertyDefinitionList *PropertyDefinitionList;
       AST::Statement *Statement;
       AST::StatementList *StatementList;
       AST::Block *Block;
       AST::VariableDeclaration *VariableDeclaration;
       AST::VariableDeclarationList *VariableDeclarationList;
+      AST::BindingPattern *BindingPattern;
       AST::BindingElement *BindingElement;
       AST::BindingPropertyList *BindingPropertyList;
       AST::BindingElementList *BindingElementList;
@@ -302,12 +311,13 @@ public:
     ~Parser();
 
     // parse a UI program
-    bool parse() { return parse(T_FEED_UI_PROGRAM); }
+    bool parse() { ++functionNestingLevel; bool r = parse(T_FEED_UI_PROGRAM); --functionNestingLevel; return r; }
     bool parseStatement() { return parse(T_FEED_JS_STATEMENT); }
     bool parseExpression() { return parse(T_FEED_JS_EXPRESSION); }
-    bool parseSourceElement() { return parse(T_FEED_JS_SOURCE_ELEMENT); }
-    bool parseUiObjectMember() { return parse(T_FEED_UI_OBJECT_MEMBER); }
-    bool parseProgram() { return parse(T_FEED_JS_PROGRAM); }
+    bool parseUiObjectMember() { ++functionNestingLevel; bool r = parse(T_FEED_UI_OBJECT_MEMBER); --functionNestingLevel; return r; }
+    bool parseProgram() { return parse(T_FEED_JS_SCRIPT); }
+    bool parseScript() { return parse(T_FEED_JS_SCRIPT); }
+    bool parseModule() { return parse(T_FEED_JS_MODULE); }
 
     AST::UiProgram *ast() const
     { return AST::cast<AST::UiProgram *>(program); }
@@ -378,20 +388,27 @@ protected:
     AST::UiQualifiedId *reparseAsQualifiedId(AST::ExpressionNode *expr);
     AST::UiQualifiedPragmaId *reparseAsQualifiedPragmaId(AST::ExpressionNode *expr);
 
+    void pushToken(int token);
+    int lookaheadToken(Lexer *lexer);
+
+    void syntaxError(const AST::SourceLocation &location, const char *message) {
+        diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, location, QLatin1String(message)));
+     }
+
 protected:
     Engine *driver;
     MemoryPool *pool;
-    int tos;
-    int stack_size;
-    Value *sym_stack;
-    int *state_stack;
-    AST::SourceLocation *location_stack;
-    QStringRef *string_stack;
+    int tos = 0;
+    int stack_size = 0;
+    Value *sym_stack = nullptr;
+    int *state_stack = nullptr;
+    AST::SourceLocation *location_stack = nullptr;
+    QStringRef *string_stack = nullptr;
 
-    AST::Node *program;
+    AST::Node *program = nullptr;
 
-    // error recovery
-    enum { TOKEN_BUFFER_SIZE = 3 };
+    // error recovery and lookahead handling
+    enum { TOKEN_BUFFER_SIZE = 5 };
 
     struct SavedToken {
        int token;
@@ -400,14 +417,17 @@ protected:
        QStringRef spell;
     };
 
-    double yylval;
+    int yytoken = -1;
+    double yylval = 0.;
     QStringRef yytokenspell;
     AST::SourceLocation yylloc;
     AST::SourceLocation yyprevlloc;
 
     SavedToken token_buffer[TOKEN_BUFFER_SIZE];
-    SavedToken *first_token;
-    SavedToken *last_token;
+    SavedToken *first_token = nullptr;
+    SavedToken *last_token = nullptr;
+
+    int functionNestingLevel = 0;
 
     QList<DiagnosticMessage> diagnostic_messages;
 };
@@ -436,6 +456,8 @@ protected:
 //    qlalr --no-debug --no-lines --qt qqmljs.g
 //
 
+#define UNIMPLEMENTED syntaxError(loc(1), "Unimplemented"); return false
+
 using namespace QQmlJS;
 
 QT_QML_BEGIN_NAMESPACE
@@ -455,17 +477,7 @@ void Parser::reallocateStack()
 
 Parser::Parser(Engine *engine):
     driver(engine),
-    pool(engine->pool()),
-    tos(0),
-    stack_size(0),
-    sym_stack(0),
-    state_stack(0),
-    location_stack(0),
-    string_stack(0),
-    program(0),
-    yylval(0),
-    first_token(0),
-    last_token(0)
+    pool(engine->pool())
 {
 }
 
@@ -529,17 +541,38 @@ AST::UiQualifiedPragmaId *Parser::reparseAsQualifiedPragmaId(AST::ExpressionNode
     return 0;
 }
 
+void Parser::pushToken(int token)
+{
+    last_token->token = yytoken;
+    last_token->dval = yylval;
+    last_token->spell = yytokenspell;
+    last_token->loc = yylloc;
+    ++last_token;
+    yytoken = token;
+}
+
+int Parser::lookaheadToken(Lexer *lexer)
+{
+    if (yytoken < 0) {
+        yytoken = lexer->lex();
+        yylval = lexer->tokenValue();
+        yytokenspell = lexer->tokenSpell();
+        yylloc = location(lexer);
+    }
+    return yytoken;
+}
+
 
 bool Parser::parse(int startToken)
 {
     Lexer *lexer = driver->lexer();
     bool hadErrors = false;
-    int yytoken = -1;
+    yytoken = -1;
     int action = 0;
 
     token_buffer[0].token = startToken;
     first_token = &token_buffer[0];
-    if (startToken == T_FEED_JS_PROGRAM && !lexer->qmlMode()) {
+    if (startToken == T_FEED_JS_SCRIPT && !lexer->qmlMode()) {
         Directives ignoreDirectives;
         Directives *directives = driver->directives();
         if (!directives)
@@ -582,8 +615,14 @@ bool Parser::parse(int startToken)
                 yytokenspell = first_token->spell;
                 yylloc = first_token->loc;
                 ++first_token;
+                if (first_token == last_token)
+                    first_token = last_token = &token_buffer[0];
             }
         }
+
+#ifdef PARSER_DEBUG
+          qDebug() << "   current token" << yytoken << (yytoken >= 0 ? spell[yytoken] : "(null)");
+#endif
 
         action = t_action(action, yytoken);
         if (action > 0) {
@@ -600,6 +639,10 @@ bool Parser::parse(int startToken)
           const int r = -action - 1;
           tos -= rhs[r];
 
+#ifdef PARSER_DEBUG
+          qDebug() << "        reducing through rule " << r;
+#endif
+
           switch (r) {
 ./
 
@@ -607,673 +650,732 @@ bool Parser::parse(int startToken)
 -- Declarative UI
 --------------------------------------------------------------------------------------------------------
 
-TopLevel: T_FEED_UI_PROGRAM UiProgram ;
+TopLevel: T_FEED_UI_PROGRAM UiProgram;
 /.
-case $rule_number: {
-  sym(1).Node = sym(2).Node;
-  program = sym(1).Node;
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(2).Node;
+        program = sym(1).Node;
+    } break;
 ./
 
-TopLevel: T_FEED_JS_STATEMENT Statement ;
+TopLevel: T_FEED_JS_STATEMENT Statement;
 /.
-case $rule_number: {
-  sym(1).Node = sym(2).Node;
-  program = sym(1).Node;
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(2).Node;
+        program = sym(1).Node;
+    } break;
 ./
 
-TopLevel: T_FEED_JS_EXPRESSION Expression ;
+TopLevel: T_FEED_JS_EXPRESSION Expression;
 /.
-case $rule_number: {
-  sym(1).Node = sym(2).Node;
-  program = sym(1).Node;
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(2).Node;
+        program = sym(1).Node;
+    } break;
 ./
 
-TopLevel: T_FEED_JS_SOURCE_ELEMENT SourceElement ;
+TopLevel: T_FEED_UI_OBJECT_MEMBER UiObjectMember;
 /.
-case $rule_number: {
-  sym(1).Node = sym(2).Node;
-  program = sym(1).Node;
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(2).Node;
+        program = sym(1).Node;
+    } break;
 ./
 
-TopLevel: T_FEED_UI_OBJECT_MEMBER UiObjectMember ;
+TopLevel: T_FEED_JS_SCRIPT Script;
 /.
-case $rule_number: {
-  sym(1).Node = sym(2).Node;
-  program = sym(1).Node;
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(2).Node;
+        program = sym(1).Node;
+    } break;
 ./
 
-TopLevel: T_FEED_JS_PROGRAM Program ;
+TopLevel: T_FEED_JS_MODULE Module;
 /.
-case $rule_number: {
-  sym(1).Node = sym(2).Node;
-  program = sym(1).Node;
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(2).Node;
+        program = sym(1).Node;
+    } break;
 ./
+
 
 UiProgram: UiHeaderItemListOpt UiRootMember;
 /.
-case $rule_number: {
-  sym(1).UiProgram = new (pool) AST::UiProgram(sym(1).UiHeaderItemList,
-        sym(2).UiObjectMemberList->finish());
-} break;
+    case $rule_number: {
+        sym(1).UiProgram = new (pool) AST::UiProgram(sym(1).UiHeaderItemList, sym(2).UiObjectMemberList->finish());
+    } break;
 ./
 
-UiHeaderItemListOpt: Empty ;
-UiHeaderItemListOpt: UiHeaderItemList ;
+UiHeaderItemListOpt: Empty;
+UiHeaderItemListOpt: UiHeaderItemList;
 /.
-case $rule_number: {
-    sym(1).Node = sym(1).UiHeaderItemList->finish();
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(1).UiHeaderItemList->finish();
+    } break;
 ./
 
-UiHeaderItemList: UiPragma ;
+UiHeaderItemList: UiPragma;
 /.
-case $rule_number: {
-    sym(1).Node = new (pool) AST::UiHeaderItemList(sym(1).UiPragma);
-} break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::UiHeaderItemList(sym(1).UiPragma);
+    } break;
 ./
 
-UiHeaderItemList: UiImport ;
+UiHeaderItemList: UiImport;
 /.
-case $rule_number: {
-    sym(1).Node = new (pool) AST::UiHeaderItemList(sym(1).UiImport);
-} break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::UiHeaderItemList(sym(1).UiImport);
+    } break;
 ./
 
-UiHeaderItemList: UiHeaderItemList UiPragma ;
+UiHeaderItemList: UiHeaderItemList UiPragma;
 /.
-case $rule_number: {
-    sym(1).Node = new (pool) AST::UiHeaderItemList(sym(1).UiHeaderItemList, sym(2).UiPragma);
-} break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::UiHeaderItemList(sym(1).UiHeaderItemList, sym(2).UiPragma);
+    } break;
 ./
 
-UiHeaderItemList: UiHeaderItemList UiImport ;
+UiHeaderItemList: UiHeaderItemList UiImport;
 /.
-case $rule_number: {
-    sym(1).Node = new (pool) AST::UiHeaderItemList(sym(1).UiHeaderItemList, sym(2).UiImport);
-} break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::UiHeaderItemList(sym(1).UiHeaderItemList, sym(2).UiImport);
+    } break;
 ./
 
-PragmaId: MemberExpression ;
+PragmaId: MemberExpression;
 
-ImportId: MemberExpression ;
+ImportId: MemberExpression;
 
-UiPragma: UiPragmaHead T_AUTOMATIC_SEMICOLON ;
-UiPragma: UiPragmaHead T_SEMICOLON ;
+UiPragma: UiPragmaHead T_AUTOMATIC_SEMICOLON;
+UiPragma: UiPragmaHead T_SEMICOLON;
 /.
-case $rule_number: {
-    sym(1).UiPragma->semicolonToken = loc(2);
-} break;
+    case $rule_number: {
+        sym(1).UiPragma->semicolonToken = loc(2);
+    } break;
 ./
 
-UiImport: UiImportHead T_AUTOMATIC_SEMICOLON ;
-UiImport: UiImportHead T_SEMICOLON ;
+UiImport: UiImportHead T_AUTOMATIC_SEMICOLON;
+UiImport: UiImportHead T_SEMICOLON;
 /.
-case $rule_number: {
-    sym(1).UiImport->semicolonToken = loc(2);
-} break;
+    case $rule_number: {
+        sym(1).UiImport->semicolonToken = loc(2);
+    } break;
 ./
 
-UiImport: UiImportHead T_NUMERIC_LITERAL T_AUTOMATIC_SEMICOLON ;
-UiImport: UiImportHead T_NUMERIC_LITERAL T_SEMICOLON ;
+UiImport: UiImportHead T_NUMERIC_LITERAL T_AUTOMATIC_SEMICOLON;
+UiImport: UiImportHead T_NUMERIC_LITERAL T_SEMICOLON;
 /.
-case $rule_number: {
-    sym(1).UiImport->versionToken = loc(2);
-    sym(1).UiImport->semicolonToken = loc(3);
-} break;
+    case $rule_number: {
+        sym(1).UiImport->versionToken = loc(2);
+        sym(1).UiImport->semicolonToken = loc(3);
+    } break;
 ./
 
-UiImport: UiImportHead T_NUMERIC_LITERAL T_AS IdentifierReference T_AUTOMATIC_SEMICOLON ;
-UiImport: UiImportHead T_NUMERIC_LITERAL T_AS IdentifierReference T_SEMICOLON ;
+UiImport: UiImportHead T_NUMERIC_LITERAL T_AS QmlIdentifier T_AUTOMATIC_SEMICOLON;
+UiImport: UiImportHead T_NUMERIC_LITERAL T_AS QmlIdentifier T_SEMICOLON;
 /.
-case $rule_number: {
-    sym(1).UiImport->versionToken = loc(2);
-    sym(1).UiImport->asToken = loc(3);
-    sym(1).UiImport->importIdToken = loc(4);
-    sym(1).UiImport->importId = stringRef(4);
-    sym(1).UiImport->semicolonToken = loc(5);
-} break;
+    case $rule_number: {
+        sym(1).UiImport->versionToken = loc(2);
+        sym(1).UiImport->asToken = loc(3);
+        sym(1).UiImport->importIdToken = loc(4);
+        sym(1).UiImport->importId = stringRef(4);
+        sym(1).UiImport->semicolonToken = loc(5);
+    } break;
 ./
 
-UiImport: UiImportHead T_AS IdentifierReference T_AUTOMATIC_SEMICOLON ;
-UiImport: UiImportHead T_AS IdentifierReference T_SEMICOLON ;
+UiImport: UiImportHead T_AS QmlIdentifier T_AUTOMATIC_SEMICOLON;
+UiImport: UiImportHead T_AS QmlIdentifier T_SEMICOLON;
 /.
-case $rule_number: {
-    sym(1).UiImport->asToken = loc(2);
-    sym(1).UiImport->importIdToken = loc(3);
-    sym(1).UiImport->importId = stringRef(3);
-    sym(1).UiImport->semicolonToken = loc(4);
-} break;
+    case $rule_number: {
+        sym(1).UiImport->asToken = loc(2);
+        sym(1).UiImport->importIdToken = loc(3);
+        sym(1).UiImport->importId = stringRef(3);
+        sym(1).UiImport->semicolonToken = loc(4);
+    } break;
 ./
 
-UiPragmaHead: T_PRAGMA PragmaId ;
+UiPragmaHead: T_PRAGMA PragmaId;
 /.
-case $rule_number: {
-    AST::UiPragma *node = 0;
+    case $rule_number: {
+        AST::UiPragma *node = 0;
 
-    if (AST::UiQualifiedPragmaId *qualifiedId = reparseAsQualifiedPragmaId(sym(2).Expression)) {
-        node = new (pool) AST::UiPragma(qualifiedId);
-    }
+        if (AST::UiQualifiedPragmaId *qualifiedId = reparseAsQualifiedPragmaId(sym(2).Expression))
+            node = new (pool) AST::UiPragma(qualifiedId);
 
-    sym(1).Node = node;
+        sym(1).Node = node;
 
-    if (node) {
-        node->pragmaToken = loc(1);
-    } else {
-       diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, loc(1),
-         QLatin1String("Expected a qualified name id")));
+        if (node) {
+            node->pragmaToken = loc(1);
+        } else {
+           diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, loc(1),
+             QLatin1String("Expected a qualified name id")));
 
-        return false; // ### remove me
-    }
-} break;
+            return false; // ### remove me
+        }
+    } break;
 ./
 
 
-UiImportHead: T_IMPORT ImportId ;
+UiImportHead: T_IMPORT ImportId;
 /.
-case $rule_number: {
-    AST::UiImport *node = 0;
+    case $rule_number: {
+        AST::UiImport *node = 0;
 
-    if (AST::StringLiteral *importIdLiteral = AST::cast<AST::StringLiteral *>(sym(2).Expression)) {
-        node = new (pool) AST::UiImport(importIdLiteral->value);
-        node->fileNameToken = loc(2);
-    } else if (AST::UiQualifiedId *qualifiedId = reparseAsQualifiedId(sym(2).Expression)) {
-        node = new (pool) AST::UiImport(qualifiedId);
-        node->fileNameToken = loc(2);
-    }
+        if (AST::StringLiteral *importIdLiteral = AST::cast<AST::StringLiteral *>(sym(2).Expression)) {
+            node = new (pool) AST::UiImport(importIdLiteral->value);
+            node->fileNameToken = loc(2);
+        } else if (AST::UiQualifiedId *qualifiedId = reparseAsQualifiedId(sym(2).Expression)) {
+            node = new (pool) AST::UiImport(qualifiedId);
+            node->fileNameToken = loc(2);
+        }
 
-    sym(1).Node = node;
+        sym(1).Node = node;
 
-    if (node) {
-        node->importToken = loc(1);
-    } else {
-       diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, loc(1),
-         QLatin1String("Expected a qualified name id or a string literal")));
+        if (node) {
+            node->importToken = loc(1);
+        } else {
+           diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, loc(1),
+             QLatin1String("Expected a qualified name id or a string literal")));
 
-        return false; // ### remove me
-    }
-} break;
+            return false; // ### remove me
+        }
+    } break;
 ./
 
 Empty: ;
 /.
-case $rule_number: {
-    sym(1).Node = 0;
-} break;
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
 ./
 
-UiRootMember: UiObjectDefinition ;
+UiRootMember: UiObjectDefinition;
 /.
-case $rule_number: {
-    sym(1).Node = new (pool) AST::UiObjectMemberList(sym(1).UiObjectMember);
-} break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::UiObjectMemberList(sym(1).UiObjectMember);
+    } break;
 ./
 
-UiObjectMemberList: UiObjectMember ;
+UiObjectMemberList: UiObjectMember;
 /.
-case $rule_number: {
-    sym(1).Node = new (pool) AST::UiObjectMemberList(sym(1).UiObjectMember);
-} break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::UiObjectMemberList(sym(1).UiObjectMember);
+    } break;
 ./
 
-UiObjectMemberList: UiObjectMemberList UiObjectMember ;
+UiObjectMemberList: UiObjectMemberList UiObjectMember;
 /.
-case $rule_number: {
-    AST::UiObjectMemberList *node = new (pool) AST:: UiObjectMemberList(
-        sym(1).UiObjectMemberList, sym(2).UiObjectMember);
-    sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::UiObjectMemberList *node = new (pool) AST:: UiObjectMemberList(sym(1).UiObjectMemberList, sym(2).UiObjectMember);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiArrayMemberList: UiObjectDefinition ;
+UiArrayMemberList: UiObjectDefinition;
 /.
-case $rule_number: {
-    sym(1).Node = new (pool) AST::UiArrayMemberList(sym(1).UiObjectMember);
-} break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::UiArrayMemberList(sym(1).UiObjectMember);
+    } break;
 ./
 
-UiArrayMemberList: UiArrayMemberList T_COMMA UiObjectDefinition ;
+UiArrayMemberList: UiArrayMemberList T_COMMA UiObjectDefinition;
 /.
-case $rule_number: {
-    AST::UiArrayMemberList *node = new (pool) AST::UiArrayMemberList(
-        sym(1).UiArrayMemberList, sym(3).UiObjectMember);
-    node->commaToken = loc(2);
-    sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::UiArrayMemberList *node = new (pool) AST::UiArrayMemberList(sym(1).UiArrayMemberList, sym(3).UiObjectMember);
+        node->commaToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectInitializer: T_LBRACE T_RBRACE ;
+UiObjectInitializer: T_LBRACE T_RBRACE;
 /.
-case $rule_number: {
-    AST::UiObjectInitializer *node = new (pool) AST::UiObjectInitializer((AST::UiObjectMemberList*)0);
-    node->lbraceToken = loc(1);
-    node->rbraceToken = loc(2);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiObjectInitializer *node = new (pool) AST::UiObjectInitializer((AST::UiObjectMemberList*)0);
+        node->lbraceToken = loc(1);
+        node->rbraceToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectInitializer: T_LBRACE UiObjectMemberList T_RBRACE ;
+UiObjectInitializer: T_LBRACE UiObjectMemberList T_RBRACE;
 /.
-case $rule_number: {
-    AST::UiObjectInitializer *node = new (pool) AST::UiObjectInitializer(sym(2).UiObjectMemberList->finish());
-    node->lbraceToken = loc(1);
-    node->rbraceToken = loc(3);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiObjectInitializer *node = new (pool) AST::UiObjectInitializer(sym(2).UiObjectMemberList->finish());
+        node->lbraceToken = loc(1);
+        node->rbraceToken = loc(3);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectDefinition: UiQualifiedId UiObjectInitializer ;
+UiObjectDefinition: UiQualifiedId UiObjectInitializer;
 /.
-case $rule_number: {
-    AST::UiObjectDefinition *node = new (pool) AST::UiObjectDefinition(sym(1).UiQualifiedId,
-        sym(2).UiObjectInitializer);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiObjectDefinition *node = new (pool) AST::UiObjectDefinition(sym(1).UiQualifiedId, sym(2).UiObjectInitializer);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: UiObjectDefinition ;
+UiObjectMember: UiObjectDefinition;
 
-UiObjectMember: UiQualifiedId T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET ;
+UiObjectMember: UiQualifiedId T_COLON ExpressionStatementLookahead T_LBRACKET UiArrayMemberList T_RBRACKET;
 /.
-case $rule_number: {
-    AST::UiArrayBinding *node = new (pool) AST::UiArrayBinding(
-        sym(1).UiQualifiedId, sym(4).UiArrayMemberList->finish());
-    node->colonToken = loc(2);
-    node->lbracketToken = loc(3);
-    node->rbracketToken = loc(5);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiArrayBinding *node = new (pool) AST::UiArrayBinding(sym(1).UiQualifiedId, sym(5).UiArrayMemberList->finish());
+        node->colonToken = loc(2);
+        node->lbracketToken = loc(4);
+        node->rbracketToken = loc(6);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: UiQualifiedId             T_COLON UiQualifiedId  UiObjectInitializer ;
+UiObjectMember: UiQualifiedId T_COLON ExpressionStatementLookahead UiQualifiedId UiObjectInitializer;
 /.
-case $rule_number: {
-    AST::UiObjectBinding *node = new (pool) AST::UiObjectBinding(
-      sym(1).UiQualifiedId, sym(3).UiQualifiedId, sym(4).UiObjectInitializer);
-    node->colonToken = loc(2);
-    sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::UiObjectBinding *node = new (pool) AST::UiObjectBinding(
+            sym(1).UiQualifiedId, sym(4).UiQualifiedId, sym(5).UiObjectInitializer);
+        node->colonToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: UiQualifiedId             T_ON UiQualifiedId  UiObjectInitializer ;
+UiObjectMember: UiQualifiedId T_ON UiQualifiedId  UiObjectInitializer;
 /.
-case $rule_number: {
-    AST::UiObjectBinding *node = new (pool) AST::UiObjectBinding(
-      sym(3).UiQualifiedId, sym(1).UiQualifiedId, sym(4).UiObjectInitializer);
-    node->colonToken = loc(2);
-    node->hasOnToken = true;
-    sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::UiObjectBinding *node = new (pool) AST::UiObjectBinding(
+          sym(3).UiQualifiedId, sym(1).UiQualifiedId, sym(4).UiObjectInitializer);
+        node->colonToken = loc(2);
+        node->hasOnToken = true;
+        sym(1).Node = node;
+    } break;
 ./
 
-UiScriptStatement: Block ;
-UiScriptStatement: EmptyStatement ;
-UiScriptStatement: ExpressionStatement ;
-UiScriptStatement: IfStatement ;
-UiScriptStatement: WithStatement ;
-UiScriptStatement: SwitchStatement ;
-UiScriptStatement: TryStatement ;
 
-UiObjectMember: UiQualifiedId T_COLON UiScriptStatement ;
+UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_RBRACE;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_COMMA T_RBRACE;
+/.
+    case $rule_number: {
+        AST::ObjectLiteral *l = new (pool) AST::ObjectLiteral(sym(3).PropertyDefinitionList->finish());
+        l->lbraceToken = loc(1);
+        l->rbraceToken = loc(4);
+        AST::ExpressionStatement *node = new (pool) AST::ExpressionStatement(l);
+        sym(1).Node = node;
+    } break;
+./
+
+
+UiScriptStatement: ExpressionStatementLookahead T_FORCE_DECLARATION ExpressionStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+UiScriptStatement: ExpressionStatementLookahead T_FORCE_BLOCK Block;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+UiScriptStatement: ExpressionStatementLookahead T_FORCE_BLOCK UiObjectLiteral;
+/.
+    case $rule_number: {
+        sym(1).Node = sym(3).Node;
+    } break;
+./
+
+
+UiScriptStatement: ExpressionStatementLookahead EmptyStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+UiScriptStatement: ExpressionStatementLookahead ExpressionStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+UiScriptStatement: ExpressionStatementLookahead IfStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+UiScriptStatement: ExpressionStatementLookahead WithStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+UiScriptStatement: ExpressionStatementLookahead SwitchStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+UiScriptStatement: ExpressionStatementLookahead TryStatement;
+/.
+    case $rule_number: {
+        sym(1).Node = sym(2).Node;
+    } break;
+./
+
+UiObjectMember: UiQualifiedId T_COLON UiScriptStatement;
 /.
 case $rule_number:
 {
-    AST::UiScriptBinding *node = new (pool) AST::UiScriptBinding(
-        sym(1).UiQualifiedId, sym(3).Statement);
+    AST::UiScriptBinding *node = new (pool) AST::UiScriptBinding(sym(1).UiQualifiedId, sym(3).Statement);
     node->colonToken = loc(2);
     sym(1).Node = node;
-}   break;
+    } break;
 ./
 
-UiPropertyType: T_VAR ;
+UiPropertyType: T_VAR;
 /.
-case $rule_number: {
-  AST::UiQualifiedId *node = new (pool) AST::UiQualifiedId(stringRef(1));
-  node->identifierToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::UiQualifiedId *node = new (pool) AST::UiQualifiedId(stringRef(1));
+        node->identifierToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiPropertyType: T_RESERVED_WORD ;
+UiPropertyType: T_RESERVED_WORD;
 /.
-case $rule_number: {
-  AST::UiQualifiedId *node = new (pool) AST::UiQualifiedId(stringRef(1));
-  node->identifierToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::UiQualifiedId *node = new (pool) AST::UiQualifiedId(stringRef(1));
+        node->identifierToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiPropertyType: T_IDENTIFIER ;
+UiPropertyType: T_IDENTIFIER;
 /.
-case $rule_number: {
-  AST::UiQualifiedId *node = new (pool) AST::UiQualifiedId(stringRef(1));
-  node->identifierToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::UiQualifiedId *node = new (pool) AST::UiQualifiedId(stringRef(1));
+        node->identifierToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiPropertyType: UiPropertyType T_DOT T_IDENTIFIER ;
+UiPropertyType: UiPropertyType T_DOT T_IDENTIFIER;
 /.
-case $rule_number: {
-  AST::UiQualifiedId *node = new (pool) AST::UiQualifiedId(sym(1).UiQualifiedId, stringRef(3));
-  node->identifierToken = loc(3);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::UiQualifiedId *node = new (pool) AST::UiQualifiedId(sym(1).UiQualifiedId, stringRef(3));
+        node->identifierToken = loc(3);
+        sym(1).Node = node;
+    } break;
 ./
 
 UiParameterListOpt: ;
 /.
-case $rule_number: {
-  sym(1).Node = 0;
-} break;
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
 ./
 
-UiParameterListOpt: UiParameterList ;
+UiParameterListOpt: UiParameterList;
 /.
-case $rule_number: {
-  sym(1).Node = sym(1).UiParameterList->finish ();
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(1).UiParameterList->finish();
+    } break;
 ./
 
-UiParameterList: UiPropertyType IdentifierReference ;
+UiParameterList: UiPropertyType QmlIdentifier;
 /.
-case $rule_number: {
-  AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiQualifiedId->finish(), stringRef(2));
-  node->propertyTypeToken = loc(1);
-  node->identifierToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiQualifiedId->finish(), stringRef(2));
+        node->propertyTypeToken = loc(1);
+        node->identifierToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiParameterList: UiParameterList T_COMMA UiPropertyType IdentifierReference ;
+UiParameterList: UiParameterList T_COMMA UiPropertyType QmlIdentifier;
 /.
-case $rule_number: {
-  AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiParameterList, sym(3).UiQualifiedId->finish(), stringRef(4));
-  node->propertyTypeToken = loc(3);
-  node->commaToken = loc(2);
-  node->identifierToken = loc(4);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::UiParameterList *node = new (pool) AST::UiParameterList(sym(1).UiParameterList, sym(3).UiQualifiedId->finish(), stringRef(4));
+        node->propertyTypeToken = loc(3);
+        node->commaToken = loc(2);
+        node->identifierToken = loc(4);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_SIGNAL T_IDENTIFIER T_LPAREN UiParameterListOpt T_RPAREN T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_SIGNAL T_IDENTIFIER T_LPAREN UiParameterListOpt T_RPAREN T_SEMICOLON ;
+UiObjectMember: T_SIGNAL T_IDENTIFIER T_LPAREN UiParameterListOpt T_RPAREN T_AUTOMATIC_SEMICOLON;
+UiObjectMember: T_SIGNAL T_IDENTIFIER T_LPAREN UiParameterListOpt T_RPAREN T_SEMICOLON;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(nullptr, stringRef(2));
-    node->type = AST::UiPublicMember::Signal;
-    node->propertyToken = loc(1);
-    node->typeToken = loc(2);
-    node->identifierToken = loc(2);
-    node->parameters = sym(4).UiParameterList;
-    node->semicolonToken = loc(6);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(nullptr, stringRef(2));
+        node->type = AST::UiPublicMember::Signal;
+        node->propertyToken = loc(1);
+        node->typeToken = loc(2);
+        node->identifierToken = loc(2);
+        node->parameters = sym(4).UiParameterList;
+        node->semicolonToken = loc(6);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_SIGNAL T_IDENTIFIER T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_SIGNAL T_IDENTIFIER T_SEMICOLON ;
+UiObjectMember: T_SIGNAL T_IDENTIFIER T_AUTOMATIC_SEMICOLON;
+UiObjectMember: T_SIGNAL T_IDENTIFIER T_SEMICOLON;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(nullptr, stringRef(2));
-    node->type = AST::UiPublicMember::Signal;
-    node->propertyToken = loc(1);
-    node->typeToken = loc(2);
-    node->identifierToken = loc(2);
-    node->semicolonToken = loc(3);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(nullptr, stringRef(2));
+        node->type = AST::UiPublicMember::Signal;
+        node->propertyToken = loc(1);
+        node->typeToken = loc(2);
+        node->identifierToken = loc(2);
+        node->semicolonToken = loc(3);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT IdentifierReference T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT IdentifierReference T_SEMICOLON ;
+UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_AUTOMATIC_SEMICOLON;
+UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_SEMICOLON;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
-    node->typeModifier = stringRef(2);
-    node->propertyToken = loc(1);
-    node->typeModifierToken = loc(2);
-    node->typeToken = loc(4);
-    node->identifierToken = loc(6);
-    node->semicolonToken = loc(7);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
+        node->typeModifier = stringRef(2);
+        node->propertyToken = loc(1);
+        node->typeModifierToken = loc(2);
+        node->typeToken = loc(4);
+        node->identifierToken = loc(6);
+        node->semicolonToken = loc(7);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType IdentifierReference T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_PROPERTY UiPropertyType IdentifierReference T_SEMICOLON ;
+UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_AUTOMATIC_SEMICOLON;
+UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_SEMICOLON;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3));
-    node->propertyToken = loc(1);
-    node->typeToken = loc(2);
-    node->identifierToken = loc(3);
-    node->semicolonToken = loc(4);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3));
+        node->propertyToken = loc(1);
+        node->typeToken = loc(2);
+        node->identifierToken = loc(3);
+        node->semicolonToken = loc(4);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType IdentifierReference T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType IdentifierReference T_SEMICOLON ;
+UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType QmlIdentifier T_AUTOMATIC_SEMICOLON;
+UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType QmlIdentifier T_SEMICOLON;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4));
-    node->isDefaultMember = true;
-    node->defaultToken = loc(1);
-    node->propertyToken = loc(2);
-    node->typeToken = loc(3);
-    node->identifierToken = loc(4);
-    node->semicolonToken = loc(5);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4));
+        node->isDefaultMember = true;
+        node->defaultToken = loc(1);
+        node->propertyToken = loc(2);
+        node->typeToken = loc(3);
+        node->identifierToken = loc(4);
+        node->semicolonToken = loc(5);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT IdentifierReference T_AUTOMATIC_SEMICOLON ;
-UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT IdentifierReference T_SEMICOLON ;
+UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_AUTOMATIC_SEMICOLON;
+UiObjectMember: T_DEFAULT T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_SEMICOLON;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
-    node->isDefaultMember = true;
-    node->defaultToken = loc(1);
-    node->typeModifier = stringRef(3);
-    node->propertyToken = loc(2);
-    node->typeModifierToken = loc(2);
-    node->typeToken = loc(4);
-    node->identifierToken = loc(7);
-    node->semicolonToken = loc(8);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(5).UiQualifiedId->finish(), stringRef(7));
+        node->isDefaultMember = true;
+        node->defaultToken = loc(1);
+        node->typeModifier = stringRef(3);
+        node->propertyToken = loc(2);
+        node->typeModifierToken = loc(2);
+        node->typeToken = loc(4);
+        node->identifierToken = loc(7);
+        node->semicolonToken = loc(8);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType IdentifierReference T_COLON UiScriptStatement ;
+UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3),
-        sym(5).Statement);
-    node->propertyToken = loc(1);
-    node->typeToken = loc(2);
-    node->identifierToken = loc(3);
-    node->colonToken = loc(4);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3), sym(5).Statement);
+        node->propertyToken = loc(1);
+        node->typeToken = loc(2);
+        node->identifierToken = loc(3);
+        node->colonToken = loc(4);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY UiPropertyType IdentifierReference T_COLON UiScriptStatement ;
+UiObjectMember: T_READONLY T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4),
-        sym(6).Statement);
-    node->isReadonlyMember = true;
-    node->readonlyToken = loc(1);
-    node->propertyToken = loc(2);
-    node->typeToken = loc(3);
-    node->identifierToken = loc(4);
-    node->colonToken = loc(5);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4), sym(6).Statement);
+        node->isReadonlyMember = true;
+        node->readonlyToken = loc(1);
+        node->propertyToken = loc(2);
+        node->typeToken = loc(3);
+        node->identifierToken = loc(4);
+        node->colonToken = loc(5);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType IdentifierReference T_COLON UiScriptStatement ;
+UiObjectMember: T_DEFAULT T_PROPERTY UiPropertyType QmlIdentifier T_COLON UiScriptStatement;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4),
-        sym(6).Statement);
-    node->isDefaultMember = true;
-    node->defaultToken = loc(1);
-    node->propertyToken = loc(2);
-    node->typeToken = loc(3);
-    node->identifierToken = loc(4);
-    node->colonToken = loc(5);
-    sym(1).Node = node;
-}   break;
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4), sym(6).Statement);
+        node->isDefaultMember = true;
+        node->defaultToken = loc(1);
+        node->propertyToken = loc(2);
+        node->typeToken = loc(3);
+        node->identifierToken = loc(4);
+        node->colonToken = loc(5);
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT IdentifierReference T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET ;
+UiObjectMember: T_PROPERTY T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
-    node->typeModifier = stringRef(2);
-    node->propertyToken = loc(1);
-    node->typeModifierToken = loc(2);
-    node->typeToken = loc(4);
-    node->identifierToken = loc(6);
-    node->semicolonToken = loc(7); // insert a fake ';' before ':'
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
+        node->typeModifier = stringRef(2);
+        node->propertyToken = loc(1);
+        node->typeModifierToken = loc(2);
+        node->typeToken = loc(4);
+        node->identifierToken = loc(6);
+        node->semicolonToken = loc(7); // insert a fake ';' before ':'
 
-    AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(6));
-    propertyName->identifierToken = loc(6);
-    propertyName->next = 0;
+        AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(6));
+        propertyName->identifierToken = loc(6);
+        propertyName->next = 0;
 
-    AST::UiArrayBinding *binding = new (pool) AST::UiArrayBinding(
-        propertyName, sym(9).UiArrayMemberList->finish());
-    binding->colonToken = loc(7);
-    binding->lbracketToken = loc(8);
-    binding->rbracketToken = loc(10);
+        AST::UiArrayBinding *binding = new (pool) AST::UiArrayBinding(propertyName, sym(9).UiArrayMemberList->finish());
+        binding->colonToken = loc(7);
+        binding->lbracketToken = loc(8);
+        binding->rbracketToken = loc(10);
 
-    node->binding = binding;
+        node->binding = binding;
 
-    sym(1).Node = node;
-}   break;
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_PROPERTY UiPropertyType IdentifierReference T_COLON UiQualifiedId UiObjectInitializer ;
+UiObjectMember: T_PROPERTY UiPropertyType QmlIdentifier T_COLON ExpressionStatementLookahead UiQualifiedId UiObjectInitializer;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3));
-    node->propertyToken = loc(1);
-    node->typeToken = loc(2);
-    node->identifierToken = loc(3);
-    node->semicolonToken = loc(4); // insert a fake ';' before ':'
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(2).UiQualifiedId->finish(), stringRef(3));
+        node->propertyToken = loc(1);
+        node->typeToken = loc(2);
+        node->identifierToken = loc(3);
+        node->semicolonToken = loc(4); // insert a fake ';' before ':'
 
-    AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(3));
-    propertyName->identifierToken = loc(3);
-    propertyName->next = 0;
+        AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(3));
+        propertyName->identifierToken = loc(3);
+        propertyName->next = 0;
 
-    AST::UiObjectBinding *binding = new (pool) AST::UiObjectBinding(
-      propertyName, sym(5).UiQualifiedId, sym(6).UiObjectInitializer);
-    binding->colonToken = loc(4);
+        AST::UiObjectBinding *binding = new (pool) AST::UiObjectBinding(
+          propertyName, sym(6).UiQualifiedId, sym(7).UiObjectInitializer);
+        binding->colonToken = loc(4);
 
-    node->binding = binding;
+        node->binding = binding;
 
-    sym(1).Node = node;
-}   break;
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: T_READONLY T_PROPERTY UiPropertyType IdentifierReference T_COLON UiQualifiedId UiObjectInitializer ;
+UiObjectMember: T_READONLY T_PROPERTY UiPropertyType QmlIdentifier T_COLON ExpressionStatementLookahead UiQualifiedId UiObjectInitializer;
 /.
-case $rule_number: {
-    AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4));
-    node->isReadonlyMember = true;
-    node->readonlyToken = loc(1);
-    node->propertyToken = loc(2);
-    node->typeToken = loc(3);
-    node->identifierToken = loc(4);
-    node->semicolonToken = loc(5); // insert a fake ';' before ':'
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(3).UiQualifiedId->finish(), stringRef(4));
+        node->isReadonlyMember = true;
+        node->readonlyToken = loc(1);
+        node->propertyToken = loc(2);
+        node->typeToken = loc(3);
+        node->identifierToken = loc(4);
+        node->semicolonToken = loc(5); // insert a fake ';' before ':'
 
-    AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(4));
-    propertyName->identifierToken = loc(4);
-    propertyName->next = 0;
+        AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(4));
+        propertyName->identifierToken = loc(4);
+        propertyName->next = 0;
 
-    AST::UiObjectBinding *binding = new (pool) AST::UiObjectBinding(
-      propertyName, sym(6).UiQualifiedId, sym(7).UiObjectInitializer);
-    binding->colonToken = loc(5);
+        AST::UiObjectBinding *binding = new (pool) AST::UiObjectBinding(
+          propertyName, sym(7).UiQualifiedId, sym(8).UiObjectInitializer);
+        binding->colonToken = loc(5);
 
-    node->binding = binding;
+        node->binding = binding;
 
-    sym(1).Node = node;
-}   break;
+        sym(1).Node = node;
+    } break;
 ./
 
-UiObjectMember: FunctionDeclaration ;
+UiObjectMember: FunctionDeclaration;
 /.
-case $rule_number: {
-    sym(1).Node = new (pool) AST::UiSourceElement(sym(1).Node);
-}   break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::UiSourceElement(sym(1).Node);
+    } break;
 ./
 
-UiObjectMember: VariableStatement ;
+UiObjectMember: VariableStatement;
 /.
-case $rule_number: {
-    sym(1).Node = new (pool) AST::UiSourceElement(sym(1).Node);
-}   break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::UiSourceElement(sym(1).Node);
+    } break;
+./
+
+UiQualifiedId: MemberExpression;
+/.
+    case $rule_number: {
+      if (AST::ArrayMemberExpression *mem = AST::cast<AST::ArrayMemberExpression *>(sym(1).Expression)) {
+        diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Warning, mem->lbracketToken,
+          QLatin1String("Ignored annotation")));
+
+        sym(1).Expression = mem->base;
+      }
+
+      if (AST::UiQualifiedId *qualifiedId = reparseAsQualifiedId(sym(1).Expression)) {
+        sym(1).UiQualifiedId = qualifiedId;
+      } else {
+        sym(1).UiQualifiedId = 0;
+
+        diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, loc(1),
+          QLatin1String("Expected a qualified name id")));
+
+        return false; // ### recover
+      }
+    } break;
 ./
 
 UiObjectMember: T_ENUM T_IDENTIFIER T_LBRACE EnumMemberList T_RBRACE;
 /.
-case $rule_number: {
-    AST::UiEnumDeclaration *enumDeclaration = new (pool) AST::UiEnumDeclaration(stringRef(2), sym(4).UiEnumMemberList->finish());
-    enumDeclaration->enumToken = loc(1);
-    enumDeclaration->rbraceToken = loc(5);
-    sym(1).Node = enumDeclaration;
-    break;
-}
+    case $rule_number: {
+        AST::UiEnumDeclaration *enumDeclaration = new (pool) AST::UiEnumDeclaration(stringRef(2), sym(4).UiEnumMemberList->finish());
+        enumDeclaration->enumToken = loc(1);
+        enumDeclaration->rbraceToken = loc(5);
+        sym(1).Node = enumDeclaration;
+        break;
+    }
 ./
 
 EnumMemberList: T_IDENTIFIER;
 /.
-case $rule_number: {
-    AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(stringRef(1));
-    node->memberToken = loc(1);
-    sym(1).Node = node;
-    break;
-}
+    case $rule_number: {
+        AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(stringRef(1));
+        node->memberToken = loc(1);
+        sym(1).Node = node;
+        break;
+    }
 ./
 
 EnumMemberList: T_IDENTIFIER T_EQ T_NUMERIC_LITERAL;
 /.
-case $rule_number: {
-    AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(stringRef(1), sym(3).dval);
-    node->memberToken = loc(1);
-    node->valueToken = loc(3);
-    sym(1).Node = node;
-    break;
-}
+    case $rule_number: {
+        AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(stringRef(1), sym(3).dval);
+        node->memberToken = loc(1);
+        node->valueToken = loc(3);
+        sym(1).Node = node;
+        break;
+    }
 ./
 
 EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER;
 /.
-case $rule_number: {
-    AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3));
-    node->memberToken = loc(3);
-    sym(1).Node = node;
-    break;
-}
+    case $rule_number: {
+        AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3));
+        node->memberToken = loc(3);
+        sym(1).Node = node;
+        break;
+    }
 ./
 
 EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER T_EQ T_NUMERIC_LITERAL;
 /.
-case $rule_number: {
-    AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3), sym(5).dval);
-    node->memberToken = loc(3);
-    node->valueToken = loc(5);
-    sym(1).Node = node;
-    break;
-}
+    case $rule_number: {
+        AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3), sym(5).dval);
+        node->memberToken = loc(3);
+        node->valueToken = loc(5);
+        sym(1).Node = node;
+        break;
+    }
 ./
+
+QmlIdentifier: T_IDENTIFIER;
+QmlIdentifier: T_PROPERTY;
+QmlIdentifier: T_SIGNAL;
+QmlIdentifier: T_READONLY;
+QmlIdentifier: T_ON;
+QmlIdentifier: T_GET;
+QmlIdentifier: T_SET;
+QmlIdentifier: T_FROM;
+QmlIdentifier: T_OF;
 
 JsIdentifier: T_IDENTIFIER;
 JsIdentifier: T_PROPERTY;
@@ -1282,1927 +1384,2219 @@ JsIdentifier: T_READONLY;
 JsIdentifier: T_ON;
 JsIdentifier: T_GET;
 JsIdentifier: T_SET;
+JsIdentifier: T_FROM;
+JsIdentifier: T_STATIC;
+JsIdentifier: T_OF;
 
 IdentifierReference: JsIdentifier;
-IdentifierReference: T_YIELD;
-
-IdentifierReference_Yield: JsIdentifier;
+BindingIdentifier: IdentifierReference;
 
 --------------------------------------------------------------------------------------------------------
 -- Expressions
 --------------------------------------------------------------------------------------------------------
 
-PrimaryExpression: T_THIS ;
+PrimaryExpression: T_THIS;
 /.
-case $rule_number: {
-  AST::ThisExpression *node = new (pool) AST::ThisExpression();
-  node->thisToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::ThisExpression *node = new (pool) AST::ThisExpression();
+        node->thisToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-PrimaryExpression: IdentifierReference ;
+PrimaryExpression: IdentifierReference;
 /.
-case $rule_number: {
-  AST::IdentifierExpression *node = new (pool) AST::IdentifierExpression(stringRef(1));
-  node->identifierToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::IdentifierExpression *node = new (pool) AST::IdentifierExpression(stringRef(1));
+        node->identifierToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-PrimaryExpression: T_NULL ;
+PrimaryExpression: Literal;
+PrimaryExpression: ArrayLiteral;
+PrimaryExpression: ObjectLiteral;
+PrimaryExpression: FunctionExpression;
+PrimaryExpression: ClassExpression;
+PrimaryExpression: GeneratorExpression;
+PrimaryExpression: RegularExpressionLiteral;
+PrimaryExpression: TemplateLiteral;
+
+PrimaryExpression: CoverParenthesizedExpressionAndArrowParameterList;
+
+-- ### Further restricted parsing of the CoverParenthesizedExpressionAndArrowParameterList to the one rule below when this is parsed as a primary expression!
+CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN Expression_In T_RPAREN;
 /.
-case $rule_number: {
-  AST::NullExpression *node = new (pool) AST::NullExpression();
-  node->nullToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::NestedExpression *node = new (pool) AST::NestedExpression(sym(2).Expression);
+        node->lparenToken = loc(1);
+        node->rparenToken = loc(3);
+        sym(1).Node = node;
+    } break;
 ./
 
-PrimaryExpression: T_TRUE ;
+CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN T_RPAREN;
+CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN T_ELLIPSIS BindingIdentifier T_RPAREN;
+CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN T_ELLIPSIS BindingPattern T_RPAREN;
+CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN Expression_In T_COMMA T_ELLIPSIS BindingIdentifier T_RPAREN;
+CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN Expression_In T_COMMA T_ELLIPSIS BindingPattern T_RPAREN;
+
+Literal: T_NULL;
 /.
-case $rule_number: {
-  AST::TrueLiteral *node = new (pool) AST::TrueLiteral();
-  node->trueToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::NullExpression *node = new (pool) AST::NullExpression();
+        node->nullToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-PrimaryExpression: T_FALSE ;
+Literal: T_TRUE;
 /.
-case $rule_number: {
-  AST::FalseLiteral *node = new (pool) AST::FalseLiteral();
-  node->falseToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::TrueLiteral *node = new (pool) AST::TrueLiteral();
+        node->trueToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-PrimaryExpression: T_NUMERIC_LITERAL ;
+Literal: T_FALSE;
 /.
-case $rule_number: {
-  AST::NumericLiteral *node = new (pool) AST::NumericLiteral(sym(1).dval);
-  node->literalToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::FalseLiteral *node = new (pool) AST::FalseLiteral();
+        node->falseToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-PrimaryExpression: T_MULTILINE_STRING_LITERAL ;
-/.case $rule_number:./
-
-PrimaryExpression: T_STRING_LITERAL ;
+Literal: T_NUMERIC_LITERAL;
 /.
-case $rule_number: {
-  AST::StringLiteral *node = new (pool) AST::StringLiteral(stringRef(1));
-  node->literalToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::NumericLiteral *node = new (pool) AST::NumericLiteral(sym(1).dval);
+        node->literalToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-PrimaryExpression: TemplateLiteral ;
+Literal: T_MULTILINE_STRING_LITERAL;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+
+Literal: T_STRING_LITERAL;
 /.
-case $rule_number:
-    // nothing that needs to be done here
-    break;
+    case $rule_number: {
+        AST::StringLiteral *node = new (pool) AST::StringLiteral(stringRef(1));
+        node->literalToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-TemplateLiteral: T_NO_SUBSTITUTION_TEMPLATE ;
-/. case $rule_number: ./
-
-TemplateSpans: T_TEMPLATE_TAIL ;
-/.
-case $rule_number: {
-    AST::TemplateLiteral *node = new (pool) AST::TemplateLiteral(stringRef(1), nullptr);
-    node->literalToken = loc(1);
-    sym(1).Node = node;
-} break;
-./
-
-TemplateSpans: T_TEMPLATE_MIDDLE Expression TemplateSpans;
-/. case $rule_number: ./
-
-TemplateLiteral: T_TEMPLATE_HEAD Expression TemplateSpans ;
-/. case $rule_number: {
-  AST::TemplateLiteral *node = new (pool) AST::TemplateLiteral(stringRef(1), sym(2).Expression);
-  node->next = sym(3).Template;
-  node->literalToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-PrimaryExpression: T_DIVIDE_ ;
+RegularExpressionLiteral: T_DIVIDE_;
 /:
 #define J_SCRIPT_REGEXPLITERAL_RULE1 $rule_number
 :/
 /.
-case $rule_number: {
-  bool rx = lexer->scanRegExp(Lexer::NoPrefix);
-  if (!rx) {
-    diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, location(lexer), lexer->errorMessage()));
-    return false; // ### remove me
-  }
-
-  loc(1).length = lexer->tokenLength();
-  yylloc = loc(1); // adjust the location of the current token
-
-  AST::RegExpLiteral *node = new (pool) AST::RegExpLiteral(
-    driver->newStringRef(lexer->regExpPattern()), lexer->regExpFlags());
-  node->literalToken = loc(1);
-  sym(1).Node = node;
-} break;
+{
+    Lexer::RegExpBodyPrefix prefix;
+    case $rule_number:
+        prefix = Lexer::NoPrefix;
+        goto scan_regexp;
 ./
 
-PrimaryExpression: T_DIVIDE_EQ ;
+RegularExpressionLiteral: T_DIVIDE_EQ;
 /:
 #define J_SCRIPT_REGEXPLITERAL_RULE2 $rule_number
 :/
 /.
-case $rule_number: {
-  bool rx = lexer->scanRegExp(Lexer::EqualPrefix);
-  if (!rx) {
-    diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, location(lexer), lexer->errorMessage()));
-    return false;
-  }
+    case $rule_number:
+        prefix = Lexer::EqualPrefix;
+        goto scan_regexp;
 
-  loc(1).length = lexer->tokenLength();
-  yylloc = loc(1); // adjust the location of the current token
+    scan_regexp: {
+        bool rx = lexer->scanRegExp(prefix);
+        if (!rx) {
+            diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, location(lexer), lexer->errorMessage()));
+            return false;
+        }
 
-  AST::RegExpLiteral *node = new (pool) AST::RegExpLiteral(
-    driver->newStringRef(lexer->regExpPattern()), lexer->regExpFlags());
-  node->literalToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
+        loc(1).length = lexer->tokenLength();
+        yylloc = loc(1); // adjust the location of the current token
 
-PrimaryExpression: T_LBRACKET T_RBRACKET ;
-/.
-case $rule_number: {
-  AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral((AST::Elision *) 0);
-  node->lbracketToken = loc(1);
-  node->rbracketToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-PrimaryExpression: T_LBRACKET Elision T_RBRACKET ;
-/.
-case $rule_number: {
-  AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral(sym(2).Elision->finish());
-  node->lbracketToken = loc(1);
-  node->rbracketToken = loc(3);
-  sym(1).Node = node;
-} break;
-./
-
-PrimaryExpression: T_LBRACKET ElementList T_RBRACKET ;
-/.
-case $rule_number: {
-  AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral(sym(2).ElementList->finish ());
-  node->lbracketToken = loc(1);
-  node->rbracketToken = loc(3);
-  sym(1).Node = node;
-} break;
-./
-
-PrimaryExpression: T_LBRACKET ElementList T_COMMA T_RBRACKET ;
-/.
-case $rule_number: {
-  AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral(sym(2).ElementList->finish (),
-    (AST::Elision *) 0);
-  node->lbracketToken = loc(1);
-  node->commaToken = loc(3);
-  node->rbracketToken = loc(4);
-  sym(1).Node = node;
-} break;
-./
-
-PrimaryExpression: T_LBRACKET ElementList T_COMMA Elision T_RBRACKET ;
-/.
-case $rule_number: {
-  AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral(sym(2).ElementList->finish (),
-    sym(4).Elision->finish());
-  node->lbracketToken = loc(1);
-  node->commaToken = loc(3);
-  node->rbracketToken = loc(5);
-  sym(1).Node = node;
-} break;
-./
-
--- PrimaryExpression: T_LBRACE T_RBRACE ;
--- /.
--- case $rule_number: {
---   sym(1).Node = new (pool) AST::ObjectLiteral();
--- } break;
--- ./
-
-PrimaryExpression: T_LBRACE PropertyAssignmentListOpt T_RBRACE ;
-/.
-case $rule_number: {
-  AST::ObjectLiteral *node = 0;
-  if (sym(2).Node)
-    node = new (pool) AST::ObjectLiteral(
-        sym(2).PropertyAssignmentList->finish ());
-  else
-    node = new (pool) AST::ObjectLiteral();
-  node->lbraceToken = loc(1);
-  node->rbraceToken = loc(3);
-  sym(1).Node = node;
-} break;
-./
-
-PrimaryExpression: T_LBRACE PropertyAssignmentList T_COMMA T_RBRACE ;
-/.
-case $rule_number: {
-  AST::ObjectLiteral *node = new (pool) AST::ObjectLiteral(
-    sym(2).PropertyAssignmentList->finish ());
-  node->lbraceToken = loc(1);
-  node->rbraceToken = loc(4);
-  sym(1).Node = node;
-} break;
-./
-
-PrimaryExpression: T_LPAREN Expression T_RPAREN ;
-/.
-case $rule_number: {
-  AST::NestedExpression *node = new (pool) AST::NestedExpression(sym(2).Expression);
-  node->lparenToken = loc(1);
-  node->rparenToken = loc(3);
-  sym(1).Node = node;
-} break;
+        AST::RegExpLiteral *node = new (pool) AST::RegExpLiteral(driver->newStringRef(lexer->regExpPattern()), lexer->regExpFlags());
+        node->literalToken = loc(1);
+        sym(1).Node = node;
+    } break;
+}
 ./
 
 
-UiQualifiedId: MemberExpression ;
+ArrayLiteral: T_LBRACKET ElisionOpt T_RBRACKET;
 /.
-case $rule_number: {
-  if (AST::ArrayMemberExpression *mem = AST::cast<AST::ArrayMemberExpression *>(sym(1).Expression)) {
-    diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Warning, mem->lbracketToken,
-      QLatin1String("Ignored annotation")));
-
-    sym(1).Expression = mem->base;
-  }
-
-  if (AST::UiQualifiedId *qualifiedId = reparseAsQualifiedId(sym(1).Expression)) {
-    sym(1).UiQualifiedId = qualifiedId;
-  } else {
-    sym(1).UiQualifiedId = 0;
-
-    diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, loc(1),
-      QLatin1String("Expected a qualified name id")));
-
-    return false; // ### recover
-  }
-} break;
+    case $rule_number: {
+        AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral(sym(2).Elision);
+        node->lbracketToken = loc(1);
+        node->rbracketToken = loc(3);
+        sym(1).Node = node;
+    } break;
 ./
 
-ElementList: AssignmentExpression ;
+ArrayLiteral: T_LBRACKET ElementList T_RBRACKET;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::ElementList((AST::Elision *) 0, sym(1).Expression);
-} break;
+    case $rule_number: {
+        AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral(sym(2).ElementList->finish());
+        node->lbracketToken = loc(1);
+        node->rbracketToken = loc(3);
+        sym(1).Node = node;
+    } break;
 ./
 
-ElementList: Elision AssignmentExpression ;
+ArrayLiteral: T_LBRACKET ElementList T_COMMA ElisionOpt T_RBRACKET;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::ElementList(sym(1).Elision->finish(), sym(2).Expression);
-} break;
+    case $rule_number: {
+        AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral(sym(2).ElementList->finish(), sym(4).Elision);
+        node->lbracketToken = loc(1);
+        node->commaToken = loc(3);
+        node->rbracketToken = loc(5);
+        sym(1).Node = node;
+    } break;
 ./
 
-ElementList: ElementList T_COMMA AssignmentExpression ;
+ElementList: AssignmentExpression_In;
 /.
-case $rule_number: {
-  AST::ElementList *node = new (pool) AST::ElementList(sym(1).ElementList,
-    (AST::Elision *) 0, sym(3).Expression);
-  node->commaToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::ElementList(nullptr, sym(1).Expression);
+    } break;
 ./
 
-ElementList: ElementList T_COMMA Elision AssignmentExpression ;
+ElementList: Elision AssignmentExpression_In;
 /.
-case $rule_number: {
-  AST::ElementList *node = new (pool) AST::ElementList(sym(1).ElementList, sym(3).Elision->finish(),
-    sym(4).Expression);
-  node->commaToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::ElementList(sym(1).Elision->finish(), sym(2).Expression);
+    } break;
 ./
 
-Elision: T_COMMA ;
+ElementList: ElisionOpt SpreadElement;
+
+ElementList: ElementList T_COMMA ElisionOpt AssignmentExpression_In;
 /.
-case $rule_number: {
-  AST::Elision *node = new (pool) AST::Elision();
-  node->commaToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::ElementList *node = new (pool) AST::ElementList(sym(1).ElementList, sym(3).Elision, sym(4).Expression);
+        node->commaToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-Elision: Elision T_COMMA ;
+ElementList: ElementList T_COMMA ElisionOpt SpreadElement;
+
+Elision: T_COMMA;
 /.
-case $rule_number: {
-  AST::Elision *node = new (pool) AST::Elision(sym(1).Elision);
-  node->commaToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::Elision *node = new (pool) AST::Elision();
+        node->commaToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+Elision: Elision T_COMMA;
+/.
+    case $rule_number: {
+        AST::Elision *node = new (pool) AST::Elision(sym(1).Elision);
+        node->commaToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
 ElisionOpt: ;
 /.
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
+./
+
+ElisionOpt: Elision;
+/.
+    case $rule_number: {
+        sym(1).Node = sym(1).Elision->finish();
+    } break;
+./
+
+SpreadElement: T_ELLIPSIS AssignmentExpression;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+ObjectLiteral: T_LBRACE T_RBRACE;
+/.
+    case $rule_number: {
+        AST::ObjectLiteral *node = new (pool) AST::ObjectLiteral();
+        node->lbraceToken = loc(1);
+        node->rbraceToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+ObjectLiteral: T_LBRACE PropertyDefinitionList T_RBRACE;
+/.
+    case $rule_number: {
+        AST::ObjectLiteral *node = new (pool) AST::ObjectLiteral(sym(2).PropertyDefinitionList->finish());
+        node->lbraceToken = loc(1);
+        node->rbraceToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
+ObjectLiteral: T_LBRACE PropertyDefinitionList T_COMMA T_RBRACE;
+/.
+    case $rule_number: {
+        AST::ObjectLiteral *node = new (pool) AST::ObjectLiteral(sym(2).PropertyDefinitionList->finish());
+        node->lbraceToken = loc(1);
+        node->rbraceToken = loc(4);
+        sym(1).Node = node;
+    } break;
+./
+
+
+UiPropertyDefinitionList: UiPropertyDefinition;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+PropertyDefinitionList: PropertyDefinition;
+/.
+    case $rule_number: {
+      sym(1).Node = new (pool) AST::PropertyDefinitionList(sym(1).PropertyDefinition);
+    } break;
+./
+
+UiPropertyDefinitionList: UiPropertyDefinitionList T_COMMA UiPropertyDefinition;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+PropertyDefinitionList: PropertyDefinitionList T_COMMA PropertyDefinition;
+/.
+    case $rule_number: {
+        AST::PropertyDefinitionList *node = new (pool) AST::PropertyDefinitionList(sym(1).PropertyDefinitionList, sym(3).PropertyDefinition);
+        node->commaToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+PropertyDefinition: IdentifierReference;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+PropertyDefinition: CoverInitializedName;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+UiPropertyDefinition: UiPropertyName T_COLON AssignmentExpression_In;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+PropertyDefinition: PropertyName T_COLON AssignmentExpression_In;
+/.
+    case $rule_number: {
+        AST::PropertyNameAndValue *node = new (pool) AST::PropertyNameAndValue(sym(1).PropertyName, sym(3).Expression);
+        node->colonToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+PropertyDefinition: MethodDefinition;
+
+PropertyName: LiteralPropertyName;
+PropertyName: ComputedPropertyName;
+
+LiteralPropertyName: IdentifierName;
+/.
+    case $rule_number: {
+        AST::IdentifierPropertyName *node = new (pool) AST::IdentifierPropertyName(stringRef(1));
+        node->propertyNameToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+UiPropertyName: T_STRING_LITERAL;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+LiteralPropertyName: T_STRING_LITERAL;
+/.
+    case $rule_number: {
+        AST::StringLiteralPropertyName *node = new (pool) AST::StringLiteralPropertyName(stringRef(1));
+        node->propertyNameToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+UiPropertyName: T_NUMERIC_LITERAL;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+LiteralPropertyName: T_NUMERIC_LITERAL;
+/.
+    case $rule_number: {
+        AST::NumericLiteralPropertyName *node = new (pool) AST::NumericLiteralPropertyName(sym(1).dval);
+        node->propertyNameToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+IdentifierName: IdentifierReference;
+IdentifierName: ReservedIdentifier;
+
+ReservedIdentifier: T_BREAK;
+ReservedIdentifier: T_CASE;
+ReservedIdentifier: T_CATCH;
+ReservedIdentifier: T_CONTINUE;
+ReservedIdentifier: T_DEFAULT;
+ReservedIdentifier: T_DELETE;
+ReservedIdentifier: T_DO;
+ReservedIdentifier: T_ELSE;
+ReservedIdentifier: T_ENUM;
+ReservedIdentifier: T_FALSE;
+ReservedIdentifier: T_FINALLY;
+ReservedIdentifier: T_FOR;
+ReservedIdentifier: T_FUNCTION;
+ReservedIdentifier: T_IF;
+ReservedIdentifier: T_IN;
+ReservedIdentifier: T_INSTANCEOF;
+ReservedIdentifier: T_NEW;
+ReservedIdentifier: T_NULL;
+ReservedIdentifier: T_RETURN;
+ReservedIdentifier: T_SWITCH;
+ReservedIdentifier: T_THIS;
+ReservedIdentifier: T_THROW;
+ReservedIdentifier: T_TRUE;
+ReservedIdentifier: T_TRY;
+ReservedIdentifier: T_TYPEOF;
+ReservedIdentifier: T_VAR;
+ReservedIdentifier: T_VOID;
+ReservedIdentifier: T_WHILE;
+ReservedIdentifier: T_CONST;
+ReservedIdentifier: T_LET;
+ReservedIdentifier: T_DEBUGGER;
+ReservedIdentifier: T_RESERVED_WORD;
+ReservedIdentifier: T_SUPER;
+ReservedIdentifier: T_WITH;
+ReservedIdentifier: T_CLASS;
+ReservedIdentifier: T_EXTENDS;
+ReservedIdentifier: T_EXPORT;
+
+ComputedPropertyName: T_LBRACKET AssignmentExpression_In T_RBRACKET;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+
+CoverInitializedName: IdentifierReference Initializer_In;
+
+Initializer: T_EQ AssignmentExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Initializer_In: T_EQ AssignmentExpression_In;
+/.
 case $rule_number: {
-  sym(1).Node = nullptr;
+    sym(1) = sym(2);
 } break;
 ./
 
-ElisionOpt: Elision ;
+
+InitializerOpt: ;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+InitializerOpt_In: ;
 /.
-case $rule_number: {
-    sym(1).Node = sym(1).Elision->finish();
-} break;
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
 ./
 
-PropertyAssignment: PropertyName T_COLON AssignmentExpression ;
+InitializerOpt: Initializer;
+InitializerOpt_In: Initializer_In;
+
+TemplateLiteral: T_NO_SUBSTITUTION_TEMPLATE;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+
+TemplateSpans: T_TEMPLATE_TAIL;
 /.
-case $rule_number: {
-  AST::PropertyNameAndValue *node = new (pool) AST::PropertyNameAndValue(
-      sym(1).PropertyName, sym(3).Expression);
-  node->colonToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::TemplateLiteral *node = new (pool) AST::TemplateLiteral(stringRef(1), nullptr);
+        node->literalToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-PropertyAssignment: T_GET PropertyName T_LPAREN T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
+TemplateSpans: T_TEMPLATE_MIDDLE Expression TemplateSpans;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+
+TemplateLiteral: T_TEMPLATE_HEAD Expression TemplateSpans;
 /.
-case $rule_number: {
-  AST::PropertyGetterSetter *node = new (pool) AST::PropertyGetterSetter(
-      sym(2).PropertyName, sym(6).FunctionBody);
-  node->getSetToken = loc(1);
-  node->lparenToken = loc(3);
-  node->rparenToken = loc(4);
-  node->lbraceToken = loc(5);
-  node->rbraceToken = loc(7);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::TemplateLiteral *node = new (pool) AST::TemplateLiteral(stringRef(1), sym(2).Expression);
+        node->next = sym(3).Template;
+        node->literalToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-PropertyAssignment: T_SET PropertyName T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
+
+MemberExpression: PrimaryExpression;
+
+MemberExpression: MemberExpression T_LBRACKET Expression_In T_RBRACKET;
 /.
-case $rule_number: {
-  AST::PropertyGetterSetter *node = new (pool) AST::PropertyGetterSetter(
-      sym(2).PropertyName, sym(4).FormalParameterList, sym(7).FunctionBody);
-  node->getSetToken = loc(1);
-  node->lparenToken = loc(3);
-  node->rparenToken = loc(5);
-  node->lbraceToken = loc(6);
-  node->rbraceToken = loc(8);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::ArrayMemberExpression *node = new (pool) AST::ArrayMemberExpression(sym(1).Expression, sym(3).Expression);
+        node->lbracketToken = loc(2);
+        node->rbracketToken = loc(4);
+        sym(1).Node = node;
+    } break;
 ./
 
-PropertyAssignmentList: PropertyAssignment ;
+MemberExpression: MemberExpression T_DOT IdentifierName;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::PropertyAssignmentList(sym(1).PropertyAssignment);
-} break;
+    case $rule_number: {
+        AST::FieldMemberExpression *node = new (pool) AST::FieldMemberExpression(sym(1).Expression, stringRef(3));
+        node->dotToken = loc(2);
+        node->identifierToken = loc(3);
+        sym(1).Node = node;
+    } break;
 ./
 
-PropertyAssignmentList: PropertyAssignmentList T_COMMA PropertyAssignment ;
+MemberExpression: SuperProperty;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+MemberExpression: MetaProperty;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+MemberExpression: T_NEW MemberExpression T_LPAREN Arguments T_RPAREN;
 /.
-case $rule_number: {
-  AST::PropertyAssignmentList *node = new (pool) AST::PropertyAssignmentList(
-    sym(1).PropertyAssignmentList, sym(3).PropertyAssignment);
-  node->commaToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::NewMemberExpression *node = new (pool) AST::NewMemberExpression(sym(2).Expression, sym(4).ArgumentList);
+        node->newToken = loc(1);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(5);
+        sym(1).Node = node;
+    } break;
 ./
 
-PropertyName: IdentifierReference %prec SHIFT_THERE ;
+SuperProperty: T_SUPER T_LBRACKET Expression_In T_RBRACKET;
+
+SuperProperty: T_SUPER T_DOT IdentifierName;
+
+MetaProperty: NewTarget;
+
+NewTarget: T_NEW T_DOT T_IDENTIFIER; -- ### the identifier has to be "target";
+
+NewExpression: MemberExpression;
+
+NewExpression: T_NEW NewExpression;
 /.
-case $rule_number: {
-  AST::IdentifierPropertyName *node = new (pool) AST::IdentifierPropertyName(stringRef(1));
-  node->propertyNameToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-PropertyName: T_STRING_LITERAL ;
-/.
-case $rule_number: {
-  AST::StringLiteralPropertyName *node = new (pool) AST::StringLiteralPropertyName(stringRef(1));
-  node->propertyNameToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-PropertyName: T_NUMERIC_LITERAL ;
-/.
-case $rule_number: {
-  AST::NumericLiteralPropertyName *node = new (pool) AST::NumericLiteralPropertyName(sym(1).dval);
-  node->propertyNameToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-PropertyName: ReservedIdentifier ;
-/.
-case $rule_number: {
-  AST::IdentifierPropertyName *node = new (pool) AST::IdentifierPropertyName(stringRef(1));
-  node->propertyNameToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-ReservedIdentifier: T_BREAK ;
-ReservedIdentifier: T_CASE ;
-ReservedIdentifier: T_CATCH ;
-ReservedIdentifier: T_CONTINUE ;
-ReservedIdentifier: T_DEFAULT ;
-ReservedIdentifier: T_DELETE ;
-ReservedIdentifier: T_DO ;
-ReservedIdentifier: T_ELSE ;
-ReservedIdentifier: T_ENUM ;
-ReservedIdentifier: T_FALSE ;
-ReservedIdentifier: T_FINALLY ;
-ReservedIdentifier: T_FOR ;
-ReservedIdentifier: T_FUNCTION ;
-ReservedIdentifier: T_IF ;
-ReservedIdentifier: T_IN ;
-ReservedIdentifier: T_INSTANCEOF ;
-ReservedIdentifier: T_NEW ;
-ReservedIdentifier: T_NULL ;
-ReservedIdentifier: T_RETURN ;
-ReservedIdentifier: T_SWITCH ;
-ReservedIdentifier: T_THIS ;
-ReservedIdentifier: T_THROW ;
-ReservedIdentifier: T_TRUE ;
-ReservedIdentifier: T_TRY ;
-ReservedIdentifier: T_TYPEOF ;
-ReservedIdentifier: T_VAR ;
-ReservedIdentifier: T_VOID ;
-ReservedIdentifier: T_WHILE ;
-ReservedIdentifier: T_CONST ;
-ReservedIdentifier: T_LET ;
-ReservedIdentifier: T_DEBUGGER ;
-ReservedIdentifier: T_RESERVED_WORD ;
-ReservedIdentifier: T_WITH ;
-
-PropertyIdentifier: IdentifierReference ;
-PropertyIdentifier: ReservedIdentifier ;
-
-MemberExpression: PrimaryExpression ;
-MemberExpression: FunctionExpression ;
-
-MemberExpression: MemberExpression T_LBRACKET Expression T_RBRACKET ;
-/.
-case $rule_number: {
-  AST::ArrayMemberExpression *node = new (pool) AST::ArrayMemberExpression(sym(1).Expression, sym(3).Expression);
-  node->lbracketToken = loc(2);
-  node->rbracketToken = loc(4);
-  sym(1).Node = node;
-} break;
-./
-
-MemberExpression: MemberExpression T_DOT PropertyIdentifier ;
-/.
-case $rule_number: {
-  AST::FieldMemberExpression *node = new (pool) AST::FieldMemberExpression(sym(1).Expression, stringRef(3));
-  node->dotToken = loc(2);
-  node->identifierToken = loc(3);
-  sym(1).Node = node;
-} break;
-./
-
-CallExpression: CallExpression TemplateLiteral;
-/. case $rule_number: ./
-
-MemberExpression: MemberExpression TemplateLiteral ;
-/.
-case $rule_number: {
-    AST::TaggedTemplate *node = new (pool) AST::TaggedTemplate(sym(1).Expression, sym(2).Template);
-    sym(1).Node = node;
-} break;
-./
-
-MemberExpression: T_NEW MemberExpression T_LPAREN ArgumentListOpt T_RPAREN ;
-/.
-case $rule_number: {
-  AST::NewMemberExpression *node = new (pool) AST::NewMemberExpression(sym(2).Expression, sym(4).ArgumentList);
-  node->newToken = loc(1);
-  node->lparenToken = loc(3);
-  node->rparenToken = loc(5);
-  sym(1).Node = node;
-} break;
-./
-
-NewExpression: MemberExpression ;
-
-NewExpression: T_NEW NewExpression ;
-/.
-case $rule_number: {
+    case $rule_number: {
   AST::NewExpression *node = new (pool) AST::NewExpression(sym(2).Expression);
   node->newToken = loc(1);
   sym(1).Node = node;
-} break;
-./
-
-CallExpression: MemberExpression T_LPAREN ArgumentListOpt T_RPAREN ;
-/.
-case $rule_number: {
-  AST::CallExpression *node = new (pool) AST::CallExpression(sym(1).Expression, sym(3).ArgumentList);
-  node->lparenToken = loc(2);
-  node->rparenToken = loc(4);
-  sym(1).Node = node;
-} break;
-./
-
-CallExpression: CallExpression T_LPAREN ArgumentListOpt T_RPAREN ;
-/.
-case $rule_number: {
-  AST::CallExpression *node = new (pool) AST::CallExpression(sym(1).Expression, sym(3).ArgumentList);
-  node->lparenToken = loc(2);
-  node->rparenToken = loc(4);
-  sym(1).Node = node;
-} break;
-./
-
-CallExpression: CallExpression T_LBRACKET Expression T_RBRACKET ;
-/.
-case $rule_number: {
-  AST::ArrayMemberExpression *node = new (pool) AST::ArrayMemberExpression(sym(1).Expression, sym(3).Expression);
-  node->lbracketToken = loc(2);
-  node->rbracketToken = loc(4);
-  sym(1).Node = node;
-} break;
-./
-
-CallExpression: CallExpression T_DOT PropertyIdentifier ;
-/.
-case $rule_number: {
-  AST::FieldMemberExpression *node = new (pool) AST::FieldMemberExpression(sym(1).Expression, stringRef(3));
-  node->dotToken = loc(2);
-  node->identifierToken = loc(3);
-  sym(1).Node = node;
-} break;
-./
-
-ArgumentListOpt: ;
-/.
-case $rule_number: {
-  sym(1).Node = 0;
-} break;
-./
-
-ArgumentListOpt: ArgumentList ;
-/.
-case $rule_number: {
-  sym(1).Node = sym(1).ArgumentList->finish();
-} break;
-./
-
-ArgumentList: AssignmentExpression ;
-/.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::ArgumentList(sym(1).Expression);
-} break;
-./
-
-ArgumentList: ArgumentList T_COMMA AssignmentExpression ;
-/.
-case $rule_number: {
-  AST::ArgumentList *node = new (pool) AST::ArgumentList(sym(1).ArgumentList, sym(3).Expression);
-  node->commaToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-LeftHandSideExpression: NewExpression ;
-LeftHandSideExpression: CallExpression ;
-PostfixExpression: LeftHandSideExpression ;
-
-PostfixExpression: LeftHandSideExpression T_PLUS_PLUS ;
-/.
-case $rule_number: {
-  AST::PostIncrementExpression *node = new (pool) AST::PostIncrementExpression(sym(1).Expression);
-  node->incrementToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-PostfixExpression: LeftHandSideExpression T_MINUS_MINUS ;
-/.
-case $rule_number: {
-  AST::PostDecrementExpression *node = new (pool) AST::PostDecrementExpression(sym(1).Expression);
-  node->decrementToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-UnaryExpression: PostfixExpression ;
-
-UnaryExpression: T_DELETE UnaryExpression ;
-/.
-case $rule_number: {
-  AST::DeleteExpression *node = new (pool) AST::DeleteExpression(sym(2).Expression);
-  node->deleteToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-UnaryExpression: T_VOID UnaryExpression ;
-/.
-case $rule_number: {
-  AST::VoidExpression *node = new (pool) AST::VoidExpression(sym(2).Expression);
-  node->voidToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-UnaryExpression: T_TYPEOF UnaryExpression ;
-/.
-case $rule_number: {
-  AST::TypeOfExpression *node = new (pool) AST::TypeOfExpression(sym(2).Expression);
-  node->typeofToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-UnaryExpression: T_PLUS_PLUS UnaryExpression ;
-/.
-case $rule_number: {
-  AST::PreIncrementExpression *node = new (pool) AST::PreIncrementExpression(sym(2).Expression);
-  node->incrementToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-UnaryExpression: T_MINUS_MINUS UnaryExpression ;
-/.
-case $rule_number: {
-  AST::PreDecrementExpression *node = new (pool) AST::PreDecrementExpression(sym(2).Expression);
-  node->decrementToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-UnaryExpression: T_PLUS UnaryExpression ;
-/.
-case $rule_number: {
-  AST::UnaryPlusExpression *node = new (pool) AST::UnaryPlusExpression(sym(2).Expression);
-  node->plusToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-UnaryExpression: T_MINUS UnaryExpression ;
-/.
-case $rule_number: {
-  AST::UnaryMinusExpression *node = new (pool) AST::UnaryMinusExpression(sym(2).Expression);
-  node->minusToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-UnaryExpression: T_TILDE UnaryExpression ;
-/.
-case $rule_number: {
-  AST::TildeExpression *node = new (pool) AST::TildeExpression(sym(2).Expression);
-  node->tildeToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-UnaryExpression: T_NOT UnaryExpression ;
-/.
-case $rule_number: {
-  AST::NotExpression *node = new (pool) AST::NotExpression(sym(2).Expression);
-  node->notToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-MultiplicativeExpression: UnaryExpression ;
-
-MultiplicativeExpression: MultiplicativeExpression T_STAR UnaryExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Mul, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-MultiplicativeExpression: MultiplicativeExpression T_DIVIDE_ UnaryExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Div, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-MultiplicativeExpression: MultiplicativeExpression T_REMAINDER UnaryExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Mod, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-AdditiveExpression: MultiplicativeExpression ;
-
-AdditiveExpression: AdditiveExpression T_PLUS MultiplicativeExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Add, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-AdditiveExpression: AdditiveExpression T_MINUS MultiplicativeExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Sub, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-ShiftExpression: AdditiveExpression ;
-
-ShiftExpression: ShiftExpression T_LT_LT AdditiveExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::LShift, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-ShiftExpression: ShiftExpression T_GT_GT AdditiveExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::RShift, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-ShiftExpression: ShiftExpression T_GT_GT_GT AdditiveExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::URShift, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-RelationalExpression: ShiftExpression ;
-RelationalExpressionNotIn: ShiftExpression ;
-
-RelationalExpression: RelationalExpression T_LT ShiftExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-RelationalExpressionNotIn: RelationalExpressionNotIn T_LT ShiftExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Lt, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-RelationalExpression: RelationalExpression T_GT ShiftExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-RelationalExpressionNotIn: RelationalExpressionNotIn T_GT ShiftExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Gt, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-RelationalExpression: RelationalExpression T_LE ShiftExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-RelationalExpressionNotIn: RelationalExpressionNotIn T_LE ShiftExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Le, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-RelationalExpression: RelationalExpression T_GE ShiftExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-RelationalExpressionNotIn: RelationalExpressionNotIn T_GE ShiftExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Ge, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-RelationalExpression: RelationalExpression T_INSTANCEOF ShiftExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-RelationalExpressionNotIn: RelationalExpressionNotIn T_INSTANCEOF ShiftExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::InstanceOf, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-RelationalExpression: RelationalExpression T_IN ShiftExpression ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::In, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-EqualityExpression: RelationalExpression ;
-EqualityExpressionNotIn: RelationalExpressionNotIn ;
-
-EqualityExpression: EqualityExpression T_EQ_EQ RelationalExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-EqualityExpressionNotIn: EqualityExpressionNotIn T_EQ_EQ RelationalExpressionNotIn ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Equal, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-EqualityExpression: EqualityExpression T_NOT_EQ RelationalExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-EqualityExpressionNotIn: EqualityExpressionNotIn T_NOT_EQ RelationalExpressionNotIn;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::NotEqual, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-EqualityExpression: EqualityExpression T_EQ_EQ_EQ RelationalExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-EqualityExpressionNotIn: EqualityExpressionNotIn T_EQ_EQ_EQ RelationalExpressionNotIn ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::StrictEqual, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-EqualityExpression: EqualityExpression T_NOT_EQ_EQ RelationalExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-EqualityExpressionNotIn: EqualityExpressionNotIn T_NOT_EQ_EQ RelationalExpressionNotIn ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::StrictNotEqual, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
+    } break;
 ./
 
 
-BitwiseANDExpression: EqualityExpression ;
-BitwiseANDExpressionNotIn: EqualityExpressionNotIn ;
-
-BitwiseANDExpression: BitwiseANDExpression T_AND EqualityExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-BitwiseANDExpressionNotIn: BitwiseANDExpressionNotIn T_AND EqualityExpressionNotIn ;
+CallExpression: CallExpression TemplateLiteral;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+MemberExpression: MemberExpression TemplateLiteral;
 /.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::BitAnd, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::TaggedTemplate *node = new (pool) AST::TaggedTemplate(sym(1).Expression, sym(2).Template);
+        sym(1).Node = node;
+    } break;
+./
+
+CallExpression: MemberExpression T_LPAREN Arguments T_RPAREN;
+/.
+    case $rule_number: {
+        AST::CallExpression *node = new (pool) AST::CallExpression(sym(1).Expression, sym(3).ArgumentList);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        sym(1).Node = node;
+    } break;
+./
+
+CallExpression: SuperCall;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+CallExpression: CallExpression T_LPAREN Arguments T_RPAREN;
+/.
+    case $rule_number: {
+        AST::CallExpression *node = new (pool) AST::CallExpression(sym(1).Expression, sym(3).ArgumentList);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        sym(1).Node = node;
+    } break;
+./
+
+CallExpression: CallExpression T_LBRACKET Expression_In T_RBRACKET;
+/.
+    case $rule_number: {
+        AST::ArrayMemberExpression *node = new (pool) AST::ArrayMemberExpression(sym(1).Expression, sym(3).Expression);
+        node->lbracketToken = loc(2);
+        node->rbracketToken = loc(4);
+        sym(1).Node = node;
+    } break;
+./
+
+CallExpression: CallExpression T_DOT IdentifierName;
+/.
+    case $rule_number: {
+        AST::FieldMemberExpression *node = new (pool) AST::FieldMemberExpression(sym(1).Expression, stringRef(3));
+        node->dotToken = loc(2);
+        node->identifierToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
+SuperCall: T_SUPER T_LPAREN Arguments T_RPAREN;
+
+Arguments: ;
+/.
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
+./
+
+Arguments: ArgumentList;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Arguments: ArgumentList T_COMMA;
+/.
+    case $rule_number: {
+        sym(1).Node = sym(1).ArgumentList->finish();
+    } break;
+./
+
+ArgumentList: AssignmentExpression_In;
+/.
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::ArgumentList(sym(1).Expression);
+    } break;
+./
+
+ArgumentList: T_ELLIPSIS AssignmentExpression_In;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+ArgumentList: ArgumentList T_COMMA AssignmentExpression_In;
+/.
+    case $rule_number: {
+        AST::ArgumentList *node = new (pool) AST::ArgumentList(sym(1).ArgumentList, sym(3).Expression);
+        node->commaToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+ArgumentList: ArgumentList T_COMMA T_ELLIPSIS AssignmentExpression_In;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+LeftHandSideExpression: NewExpression;
+LeftHandSideExpression: CallExpression;
+
+UpdateExpression: LeftHandSideExpression;
+
+UpdateExpression: LeftHandSideExpression T_PLUS_PLUS;
+/.
+    case $rule_number: {
+        AST::PostIncrementExpression *node = new (pool) AST::PostIncrementExpression(sym(1).Expression);
+        node->incrementToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+UpdateExpression: LeftHandSideExpression T_MINUS_MINUS;
+/.
+    case $rule_number: {
+        AST::PostDecrementExpression *node = new (pool) AST::PostDecrementExpression(sym(1).Expression);
+        node->decrementToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+UpdateExpression: T_PLUS_PLUS UnaryExpression;
+/.
+    case $rule_number: {
+        AST::PreIncrementExpression *node = new (pool) AST::PreIncrementExpression(sym(2).Expression);
+        node->incrementToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+UpdateExpression: T_MINUS_MINUS UnaryExpression;
+/.
+    case $rule_number: {
+        AST::PreDecrementExpression *node = new (pool) AST::PreDecrementExpression(sym(2).Expression);
+        node->decrementToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+UnaryExpression: UpdateExpression;
+
+UnaryExpression: T_DELETE UnaryExpression;
+/.
+    case $rule_number: {
+        AST::DeleteExpression *node = new (pool) AST::DeleteExpression(sym(2).Expression);
+        node->deleteToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+UnaryExpression: T_VOID UnaryExpression;
+/.
+    case $rule_number: {
+        AST::VoidExpression *node = new (pool) AST::VoidExpression(sym(2).Expression);
+        node->voidToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+UnaryExpression: T_TYPEOF UnaryExpression;
+/.
+    case $rule_number: {
+        AST::TypeOfExpression *node = new (pool) AST::TypeOfExpression(sym(2).Expression);
+        node->typeofToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+UnaryExpression: T_PLUS UnaryExpression;
+/.
+    case $rule_number: {
+        AST::UnaryPlusExpression *node = new (pool) AST::UnaryPlusExpression(sym(2).Expression);
+        node->plusToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+UnaryExpression: T_MINUS UnaryExpression;
+/.
+    case $rule_number: {
+        AST::UnaryMinusExpression *node = new (pool) AST::UnaryMinusExpression(sym(2).Expression);
+        node->minusToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+UnaryExpression: T_TILDE UnaryExpression;
+/.
+    case $rule_number: {
+        AST::TildeExpression *node = new (pool) AST::TildeExpression(sym(2).Expression);
+        node->tildeToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+UnaryExpression: T_NOT UnaryExpression;
+/.
+    case $rule_number: {
+        AST::NotExpression *node = new (pool) AST::NotExpression(sym(2).Expression);
+        node->notToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+ExponentiationExpression: UnaryExpression;
+
+ExponentiationExpression: UpdateExpression T_STAR_STAR ExponentiationExpression;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+MultiplicativeExpression: ExponentiationExpression;
+
+MultiplicativeExpression: MultiplicativeExpression MultiplicativeOperator ExponentiationExpression;
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, sym(2).ival, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+MultiplicativeOperator: T_STAR;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::Mul;
+    } break;
+./
+
+MultiplicativeOperator: T_DIVIDE_;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::Div;
+    } break;
+./
+
+MultiplicativeOperator: T_REMAINDER;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::Mod;
+    } break;
+./
+
+AdditiveExpression: MultiplicativeExpression;
+
+AdditiveExpression: AdditiveExpression T_PLUS MultiplicativeExpression;
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::Add, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+AdditiveExpression: AdditiveExpression T_MINUS MultiplicativeExpression;
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::Sub, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+ShiftExpression: AdditiveExpression;
+
+ShiftExpression: ShiftExpression T_LT_LT AdditiveExpression;
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::LShift, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+ShiftExpression: ShiftExpression T_GT_GT AdditiveExpression;
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::RShift, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+ShiftExpression: ShiftExpression T_GT_GT_GT AdditiveExpression;
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::URShift, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+RelationalExpression_In: ShiftExpression;
+RelationalExpression: ShiftExpression;
+
+RelationalExpression_In: RelationalExpression_In RelationalOperator ShiftExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+RelationalExpression: RelationalExpression RelationalOperator ShiftExpression;
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, sym(2).ival, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+RelationalOperator: T_LT;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::Lt;
+    } break;
+./
+RelationalOperator: T_GT;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::Gt;
+    } break;
+./
+RelationalOperator: T_LE;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::Le;
+    } break;
+./
+RelationalOperator: T_GE;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::Ge;
+    } break;
+./
+RelationalOperator: T_INSTANCEOF;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::InstanceOf;
+    } break;
+./
+
+RelationalExpression_In: RelationalExpression_In T_IN ShiftExpression;
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::In, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+EqualityExpression_In: RelationalExpression_In;
+EqualityExpression: RelationalExpression;
+
+EqualityExpression_In: EqualityExpression_In EqualityOperator RelationalExpression_In;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+EqualityExpression: EqualityExpression EqualityOperator RelationalExpression;
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, sym(2).ival, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+EqualityOperator: T_EQ_EQ;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::Equal;
+    } break;
+./
+EqualityOperator: T_NOT_EQ;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::NotEqual;
+    } break;
+./
+EqualityOperator: T_EQ_EQ_EQ;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::StrictEqual;
+    } break;
+./
+EqualityOperator: T_NOT_EQ_EQ;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::StrictNotEqual;
+    } break;
 ./
 
 
-BitwiseXORExpression: BitwiseANDExpression ;
-BitwiseXORExpressionNotIn: BitwiseANDExpressionNotIn ;
+BitwiseANDExpression: EqualityExpression;
+XitwiseANDExpression_In: EqualityExpression_In;
 
-BitwiseXORExpression: BitwiseXORExpression T_XOR BitwiseANDExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-BitwiseXORExpressionNotIn: BitwiseXORExpressionNotIn T_XOR BitwiseANDExpressionNotIn ;
+BitwiseANDExpression: BitwiseANDExpression T_AND EqualityExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+XitwiseANDExpression_In: XitwiseANDExpression_In T_AND EqualityExpression_In;
 /.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::BitXor, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-BitwiseORExpression: BitwiseXORExpression ;
-BitwiseORExpressionNotIn: BitwiseXORExpressionNotIn ;
-
-BitwiseORExpression: BitwiseORExpression T_OR BitwiseXORExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-BitwiseORExpressionNotIn: BitwiseORExpressionNotIn T_OR BitwiseXORExpressionNotIn ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::BitOr, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-LogicalANDExpression: BitwiseORExpression ;
-LogicalANDExpressionNotIn: BitwiseORExpressionNotIn ;
-
-LogicalANDExpression: LogicalANDExpression T_AND_AND BitwiseORExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-LogicalANDExpressionNotIn: LogicalANDExpressionNotIn T_AND_AND BitwiseORExpressionNotIn ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::And, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
-./
-
-LogicalORExpression: LogicalANDExpression ;
-LogicalORExpressionNotIn: LogicalANDExpressionNotIn ;
-
-LogicalORExpression: LogicalORExpression T_OR_OR LogicalANDExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-LogicalORExpressionNotIn: LogicalORExpressionNotIn T_OR_OR LogicalANDExpressionNotIn ;
-/.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    QSOperator::Or, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::BitAnd, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
 
-ConditionalExpression: LogicalORExpression ;
-ConditionalExpressionNotIn: LogicalORExpressionNotIn ;
+BitwiseXORExpression: BitwiseANDExpression;
+BitwiseXORExpression_In: XitwiseANDExpression_In;
 
-ConditionalExpression: LogicalORExpression T_QUESTION AssignmentExpression T_COLON AssignmentExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-ConditionalExpressionNotIn: LogicalORExpressionNotIn T_QUESTION AssignmentExpressionNotIn T_COLON AssignmentExpressionNotIn ;
+BitwiseXORExpression: BitwiseXORExpression T_XOR BitwiseANDExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+BitwiseXORExpression_In: BitwiseXORExpression_In T_XOR XitwiseANDExpression_In;
 /.
-case $rule_number: {
-  AST::ConditionalExpression *node = new (pool) AST::ConditionalExpression(sym(1).Expression,
-    sym(3).Expression, sym(5).Expression);
-  node->questionToken = loc(2);
-  node->colonToken = loc(4);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::BitXor, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-AssignmentExpression: ConditionalExpression ;
-AssignmentExpressionNotIn: ConditionalExpressionNotIn ;
+BitwiseORExpression: BitwiseXORExpression;
+BitwiseORExpression_In: BitwiseXORExpression_In;
 
-AssignmentExpression: LeftHandSideExpression AssignmentOperator AssignmentExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-AssignmentExpressionNotIn: LeftHandSideExpression AssignmentOperator AssignmentExpressionNotIn ;
+BitwiseORExpression: BitwiseORExpression T_OR BitwiseXORExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+BitwiseORExpression_In: BitwiseORExpression_In T_OR BitwiseXORExpression_In;
 /.
-case $rule_number: {
-  AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression,
-    sym(2).ival, sym(3).Expression);
-  node->operatorToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::BitOr, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-AssignmentOperator: T_EQ ;
+LogicalANDExpression: BitwiseORExpression;
+LogicalANDExpression_In: BitwiseORExpression_In;
+
+LogicalANDExpression: LogicalANDExpression T_AND_AND BitwiseORExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+LogicalANDExpression_In: LogicalANDExpression_In T_AND_AND BitwiseORExpression_In;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::Assign;
-} break;
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::And, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-AssignmentOperator: T_STAR_EQ ;
+LogicalORExpression: LogicalANDExpression;
+LogicalORExpression_In: LogicalANDExpression_In;
+
+LogicalORExpression: LogicalORExpression T_OR_OR LogicalANDExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+LogicalORExpression_In: LogicalORExpression_In T_OR_OR LogicalANDExpression_In;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::InplaceMul;
-} break;
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::Or, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-AssignmentOperator: T_DIVIDE_EQ ;
+
+ConditionalExpression: LogicalORExpression;
+ConditionalExpression_In: LogicalORExpression_In;
+
+ConditionalExpression: LogicalORExpression T_QUESTION AssignmentExpression T_COLON AssignmentExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+ConditionalExpression_In: LogicalORExpression_In T_QUESTION AssignmentExpression_In T_COLON AssignmentExpression_In;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::InplaceDiv;
-} break;
+    case $rule_number: {
+        AST::ConditionalExpression *node = new (pool) AST::ConditionalExpression(sym(1).Expression, sym(3).Expression, sym(5).Expression);
+        node->questionToken = loc(2);
+        node->colonToken = loc(4);
+        sym(1).Node = node;
+    } break;
 ./
 
-AssignmentOperator: T_REMAINDER_EQ ;
+AssignmentExpression: ConditionalExpression;
+AssignmentExpression_In: ConditionalExpression_In;
+
+AssignmentExpression: YieldExpression;
+AssignmentExpression_In: YieldExpression_In;
+
+AssignmentExpression: ArrowFunction;
+AssignmentExpression_In: ArrowFunction_In;
+
+-- ### Use AssignmentPattern in some cases for LHSexpression
+AssignmentExpression: LeftHandSideExpression T_EQ AssignmentExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+AssignmentExpression_In: LeftHandSideExpression T_EQ AssignmentExpression_In;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::InplaceMod;
-} break;
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::Assign, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-AssignmentOperator: T_PLUS_EQ ;
+AssignmentExpression: LeftHandSideExpression AssignmentOperator AssignmentExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+AssignmentExpression_In: LeftHandSideExpression AssignmentOperator AssignmentExpression_In;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::InplaceAdd;
-} break;
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, sym(2).ival, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-AssignmentOperator: T_MINUS_EQ ;
+AssignmentOperator: T_STAR_EQ;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::InplaceSub;
-} break;
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceMul;
+    } break;
 ./
 
-AssignmentOperator: T_LT_LT_EQ ;
+AssignmentOperator: T_DIVIDE_EQ;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::InplaceLeftShift;
-} break;
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceDiv;
+    } break;
 ./
 
-AssignmentOperator: T_GT_GT_EQ ;
+AssignmentOperator: T_REMAINDER_EQ;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::InplaceRightShift;
-} break;
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceMod;
+    } break;
 ./
 
-AssignmentOperator: T_GT_GT_GT_EQ ;
+AssignmentOperator: T_PLUS_EQ;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::InplaceURightShift;
-} break;
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceAdd;
+    } break;
 ./
 
-AssignmentOperator: T_AND_EQ ;
+AssignmentOperator: T_MINUS_EQ;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::InplaceAnd;
-} break;
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceSub;
+    } break;
 ./
 
-AssignmentOperator: T_XOR_EQ ;
+AssignmentOperator: T_LT_LT_EQ;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::InplaceXor;
-} break;
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceLeftShift;
+    } break;
 ./
 
-AssignmentOperator: T_OR_EQ ;
+AssignmentOperator: T_GT_GT_EQ;
 /.
-case $rule_number: {
-  sym(1).ival = QSOperator::InplaceOr;
-} break;
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceRightShift;
+    } break;
 ./
 
-Expression: AssignmentExpression ;
-ExpressionNotIn: AssignmentExpressionNotIn ;
-
-Expression: Expression T_COMMA AssignmentExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-ExpressionNotIn: ExpressionNotIn T_COMMA AssignmentExpressionNotIn ;
+AssignmentOperator: T_GT_GT_GT_EQ;
 /.
-case $rule_number: {
-  AST::Expression *node = new (pool) AST::Expression(sym(1).Expression, sym(3).Expression);
-  node->commaToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceURightShift;
+    } break;
+./
+
+AssignmentOperator: T_AND_EQ;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceAnd;
+    } break;
+./
+
+AssignmentOperator: T_XOR_EQ;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceXor;
+    } break;
+./
+
+AssignmentOperator: T_OR_EQ;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceOr;
+    } break;
+./
+
+Expression: AssignmentExpression;
+Expression_In: AssignmentExpression_In;
+
+Expression: Expression T_COMMA AssignmentExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Expression_In: Expression_In T_COMMA AssignmentExpression_In;
+/.
+    case $rule_number: {
+          AST::Expression *node = new (pool) AST::Expression(sym(1).Expression, sym(3).Expression);
+          node->commaToken = loc(2);
+          sym(1).Node = node;
+    } break;
 ./
 
 ExpressionOpt: ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-ExpressionNotInOpt: ;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+ExpressionOpt_In: ;
 /.
-case $rule_number: {
-  sym(1).Node = 0;
-} break;
+    case $rule_number: {
+      sym(1).Node = nullptr;
+    } break;
 ./
 
-ExpressionOpt: Expression ;
-ExpressionNotInOpt: ExpressionNotIn ;
+ExpressionOpt: Expression;
+ExpressionOpt_In: Expression_In;
 
-Statement: Block ;
-Statement: VariableStatement ;
-Statement: EmptyStatement ;
-Statement: ExpressionStatement ;
-Statement: IfStatement ;
-Statement: IterationStatement ;
-Statement: ContinueStatement ;
-Statement: BreakStatement ;
-Statement: ReturnStatement ;
-Statement: WithStatement ;
-Statement: LabelledStatement ;
-Statement: SwitchStatement ;
-Statement: ThrowStatement ;
-Statement: TryStatement ;
-Statement: DebuggerStatement ;
+-- Statements
 
-
-Block: T_LBRACE StatementListOpt T_RBRACE ;
+Statement: ExpressionStatementLookahead T_FORCE_BLOCK BlockStatement;
 /.
-case $rule_number: {
-  AST::Block *node = new (pool) AST::Block(sym(2).StatementList);
-  node->lbraceToken = loc(1);
-  node->rbraceToken = loc(3);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(3).Node;
+    } break;
 ./
 
-StatementList: Statement ;
+Statement: ExpressionStatementLookahead VariableStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead EmptyStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead ExpressionStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead IfStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead BreakableStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead ContinueStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead BreakStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead ReturnStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead WithStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead LabelledStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead ThrowStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead TryStatement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+Statement: ExpressionStatementLookahead DebuggerStatement;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::StatementList(sym(1).Statement);
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(2).Node;
+    } break;
 ./
 
-StatementList: StatementList Statement ;
+Declaration: HoistableDeclaration;
+Declaration: ClassDeclaration;
+Declaration: LexicalDeclaration_In;
+
+HoistableDeclaration: FunctionDeclaration;
+HoistableDeclaration: GeneratorDeclaration;
+
+HoistableDeclaration_Default: FunctionDeclaration_Default;
+HoistableDeclaration_Default: GeneratorDeclaration_Default;
+
+BreakableStatement: IterationStatement;
+BreakableStatement: SwitchStatement;
+
+BlockStatement: Block;
+
+Block: T_LBRACE StatementListOpt T_RBRACE;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::StatementList(sym(1).StatementList, sym(2).Statement);
-} break;
+    case $rule_number: {
+        AST::Block *node = new (pool) AST::Block(sym(2).StatementList);
+        node->lbraceToken = loc(1);
+        node->rbraceToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
+StatementList: StatementListItem;
+
+StatementList: StatementList StatementListItem;
+/.
+    case $rule_number: {
+        sym(1).StatementList = sym(1).StatementList->append(sym(2).StatementList);
+    } break;
+./
+
+StatementListItem: Statement;
+/.
+    case $rule_number: {
+        sym(1).StatementList = new (pool) AST::StatementList(sym(1).Statement);
+    } break;
+./
+
+StatementListItem: ExpressionStatementLookahead T_FORCE_DECLARATION Declaration T_AUTOMATIC_SEMICOLON;
+StatementListItem: ExpressionStatementLookahead T_FORCE_DECLARATION Declaration T_SEMICOLON;
+/.
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::StatementList(sym(3).FunctionDeclaration);
+    } break;
 ./
 
 StatementListOpt: ;
 /.
-case $rule_number: {
-  sym(1).Node = 0;
-} break;
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
 ./
 
-StatementListOpt: StatementList ;
+StatementListOpt: StatementList;
 /.
-case $rule_number: {
-  sym(1).Node = sym(1).StatementList->finish ();
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(1).StatementList->finish();
+    } break;
 ./
 
-VariableStatement: VariableDeclarationKind VariableDeclarationList T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
-VariableStatement: VariableDeclarationKind VariableDeclarationList T_SEMICOLON ;
+LetOrConst: T_LET;
 /.
-case $rule_number: {
-  AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
-  if (sym(1).ival == T_LET)
-    s = AST::VariableDeclaration::BlockScope;
-  else if (sym(1).ival == T_CONST)
-    s = AST::VariableDeclaration::ReadOnlyBlockScope;
-
-  AST::VariableStatement *node = new (pool) AST::VariableStatement(sym(2).VariableDeclarationList->finish(s));
-  node->declarationKindToken = loc(1);
-  node->semicolonToken = loc(3);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        sym(1).ival = AST::VariableDeclaration::BlockScope;
+    } break;
+./
+LetOrConst: T_CONST;
+/.
+    case $rule_number: {
+        sym(1).ival = AST::VariableDeclaration::ReadOnlyBlockScope;
+    } break;
 ./
 
-VariableDeclarationKind: T_LET ;
+Var: T_VAR;
 /.
-case $rule_number: {
-  sym(1).ival = T_LET;
-} break;
+    case $rule_number: {
+        sym(1).ival = AST::VariableDeclaration::FunctionScope;
+    } break;
 ./
 
-VariableDeclarationKind: T_CONST ;
+LexicalDeclaration: LetOrConst BindingList;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+LexicalDeclaration_In: LetOrConst BindingList_In;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+VarDeclaration: Var VariableDeclarationList;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+VarDeclaration_In: Var VariableDeclarationList_In;
 /.
-case $rule_number: {
-  sym(1).ival = T_CONST;
-} break;
+    case $rule_number: {
+        AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::VariableScope(sym(1).ival);
+        AST::VariableStatement *node = new (pool) AST::VariableStatement(sym(2).VariableDeclarationList->finish(s));
+        node->declarationKindToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-VariableDeclarationKind: T_VAR ;
-/.
-case $rule_number: {
-  sym(1).ival = T_VAR;
-} break;
-./
+VariableStatement: VarDeclaration_In T_AUTOMATIC_SEMICOLON;
+VariableStatement: VarDeclaration_In T_SEMICOLON;
 
-VariableDeclarationList: VariableDeclaration ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-VariableDeclarationListNotIn: VariableDeclarationNotIn ;
+BindingList: LexicalBinding_In;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+BindingList_In: LexicalBinding_In;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+VariableDeclarationList: VariableDeclaration;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+VariableDeclarationList_In: VariableDeclaration_In;
 /.
-case $rule_number: {
+    case $rule_number: {
   sym(1).Node = new (pool) AST::VariableDeclarationList(sym(1).VariableDeclaration);
-} break;
+    } break;
 ./
 
-VariableDeclarationList: VariableDeclarationList T_COMMA VariableDeclaration ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-VariableDeclarationListNotIn: VariableDeclarationListNotIn T_COMMA VariableDeclarationNotIn ;
+BindingList: BindingList T_COMMA LexicalBinding;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+BindingList_In: BindingList_In T_COMMA LexicalBinding_In;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+VariableDeclarationList: VariableDeclarationList T_COMMA VariableDeclaration;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+VariableDeclarationList_In: VariableDeclarationList_In T_COMMA VariableDeclaration_In;
 /.
-case $rule_number: {
-  AST::VariableDeclarationList *node = new (pool) AST::VariableDeclarationList(
-    sym(1).VariableDeclarationList, sym(3).VariableDeclaration);
-  node->commaToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::VariableDeclarationList *node = new (pool) AST::VariableDeclarationList(sym(1).VariableDeclarationList, sym(3).VariableDeclaration);
+        node->commaToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-VariableDeclaration: IdentifierReference InitializerOpt ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-VariableDeclarationNotIn: IdentifierReference InitializerNotInOpt ;
+LexicalBinding: BindingIdentifier InitializerOpt;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+LexicalBinding_In: BindingIdentifier InitializerOpt_In;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+VariableDeclaration: BindingIdentifier InitializerOpt;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+VariableDeclaration_In: BindingIdentifier InitializerOpt_In;
 /.
-case $rule_number: {
-  AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
-  AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(1), sym(2).Expression, s);
-  node->identifierToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
+        AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(1), sym(2).Expression, s);
+        node->identifierToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
--- VariableDeclaration: BindingPattern InitializerOpt ;
--- VariableDeclarationNotIn: BindingPattern InitializerNotInOpt ;
+LexicalBinding: BindingPattern Initializer;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+LexicalBinding_In: BindingPattern Initializer_In;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+VariableDeclaration: BindingPattern InitializerOpt;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+VariableDeclaration_In: BindingPattern Initializer_In;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
 
-Initializer: T_EQ AssignmentExpression ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-InitializerNotIn: T_EQ AssignmentExpressionNotIn ;
+BindingPattern: T_LBRACE ObjectBindingPattern T_RBRACE;
 /.
-case $rule_number: {
-  // ### TODO: AST for initializer
-  sym(1) = sym(2);
-} break;
+    case $rule_number: {
+        auto *node = new (pool) AST::ObjectBindingPattern(sym(2).BindingPropertyList);
+        node->first = loc(1);
+        node->last = loc(3);
+        sym(1).Node = node;
+    } break;
 ./
 
-InitializerOpt: ;
-/.case $rule_number: Q_FALLTHROUGH();./
-
-InitializerNotInOpt: ;
+BindingPattern: T_LBRACKET ArrayBindingPattern T_RBRACKET;
 /.
-case $rule_number: {
-  sym(1).Node = 0;
-} break;
+    case $rule_number: {
+        auto *node = new (pool) AST::ArrayBindingPattern(sym(2).BindingElementList);
+        node->first = loc(1);
+        node->last = loc(3);
+        sym(1).Node = node;
+    } break;
 ./
 
-InitializerOpt: Initializer ;
-InitializerNotInOpt: InitializerNotIn ;
-
-EmptyStatement: T_SEMICOLON ;
+ObjectBindingPattern: ;
 /.
-case $rule_number: {
-  AST::EmptyStatement *node = new (pool) AST::EmptyStatement();
-  node->semicolonToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
 ./
 
-ExpressionStatement: Expression T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
-ExpressionStatement: Expression T_SEMICOLON ;
+ObjectBindingPattern: BindingPropertyList;
+/. case $rule_number: ./
+ObjectBindingPattern: BindingPropertyList T_COMMA;
 /.
-case $rule_number: {
-  AST::ExpressionStatement *node = new (pool) AST::ExpressionStatement(sym(1).Expression);
-  node->semicolonToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(1).BindingPropertyList->finish();
+    } break;
 ./
 
-IfStatement: T_IF T_LPAREN Expression T_RPAREN Statement T_ELSE Statement ;
+ArrayBindingPattern: ElisionOpt BindingRestElementOpt;
 /.
-case $rule_number: {
-  AST::IfStatement *node = new (pool) AST::IfStatement(sym(3).Expression, sym(5).Statement, sym(7).Statement);
-  node->ifToken = loc(1);
-  node->lparenToken = loc(2);
-  node->rparenToken = loc(4);
-  node->elseToken = loc(6);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        if (sym(3).Elision || sym(4).Node) {
+            auto *l = new (pool) AST::BindingElementList(sym(1).Elision, sym(2).Node);
+            sym(1).Node = l->finish();
+        } else {
+            sym(1).Node = nullptr;
+        }
+    } break;
 ./
 
-IfStatement: T_IF T_LPAREN Expression T_RPAREN Statement ;
+ArrayBindingPattern: BindingElementList;
 /.
-case $rule_number: {
-  AST::IfStatement *node = new (pool) AST::IfStatement(sym(3).Expression, sym(5).Statement);
-  node->ifToken = loc(1);
-  node->lparenToken = loc(2);
-  node->rparenToken = loc(4);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(1).BindingElementList->finish();
+    } break;
+./
+
+ArrayBindingPattern: BindingElementList T_COMMA ElisionOpt BindingRestElementOpt;
+/.
+    case $rule_number: {
+        if (sym(3).Elision || sym(4).Node) {
+            auto *l = new (pool) AST::BindingElementList(sym(3).Elision, sym(4).Node);
+            l = sym(1).BindingElementList->append(l);
+            sym(1).Node = l;
+        }
+        sym(1).Node = sym(1).BindingElementList->finish();
+    } break;
+./
+
+BindingPropertyList: BindingProperty;
+
+BindingPropertyList: BindingPropertyList T_COMMA BindingProperty;
+/.
+    case $rule_number: {
+        sym(1).Node = sym(1).BindingPropertyList->append(sym(3).BindingPropertyList);
+    } break;
+./
+
+BindingElementList: BindingElisionElement;
+
+BindingElementList: BindingElementList T_COMMA BindingElisionElement;
+/.
+    case $rule_number: {
+        sym(1).BindingElementList->append(sym(3).BindingElementList);
+    } break;
+./
+
+BindingElisionElement: ElisionOpt BindingElement;
+/.
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::BindingElementList(sym(1).Elision, sym(2).BindingElement);
+    } break;
 ./
 
 
-IterationStatement: T_DO Statement T_WHILE T_LPAREN Expression T_RPAREN T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
-IterationStatement: T_DO Statement T_WHILE T_LPAREN Expression T_RPAREN T_COMPATIBILITY_SEMICOLON ;  -- for JSC/V8 compatibility
-IterationStatement: T_DO Statement T_WHILE T_LPAREN Expression T_RPAREN T_SEMICOLON ;
+BindingProperty: BindingIdentifier InitializerOpt_In;
 /.
-case $rule_number: {
-  AST::DoWhileStatement *node = new (pool) AST::DoWhileStatement(sym(2).Statement, sym(5).Expression);
-  node->doToken = loc(1);
-  node->whileToken = loc(3);
-  node->lparenToken = loc(4);
-  node->rparenToken = loc(6);
-  node->semicolonToken = loc(7);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::StringLiteralPropertyName *name = new (pool) AST::StringLiteralPropertyName(stringRef(1));
+        AST::BindingElement *e = new (pool) AST::BindingElement(stringRef(1), sym(2).Expression);
+        AST::BindingPropertyList *node = new (pool) AST::BindingPropertyList(name, e);
+        sym(1).Node = node;
+    } break;
 ./
 
-IterationStatement: T_WHILE T_LPAREN Expression T_RPAREN Statement ;
+BindingProperty: PropertyName T_COLON BindingElement;
 /.
-case $rule_number: {
-  AST::WhileStatement *node = new (pool) AST::WhileStatement(sym(3).Expression, sym(5).Statement);
-  node->whileToken = loc(1);
-  node->lparenToken = loc(2);
-  node->rparenToken = loc(4);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::BindingPropertyList *node = new (pool) AST::BindingPropertyList(sym(1).PropertyName, sym(3).BindingElement);
+        sym(1).Node = node;
+    } break;
 ./
 
-IterationStatement: T_FOR T_LPAREN ExpressionNotInOpt T_SEMICOLON ExpressionOpt T_SEMICOLON ExpressionOpt T_RPAREN Statement ;
+BindingElement: BindingIdentifier InitializerOpt_In;
 /.
-case $rule_number: {
-  AST::ForStatement *node = new (pool) AST::ForStatement(sym(3).Expression,
-    sym(5).Expression, sym(7).Expression, sym(9).Statement);
-  node->forToken = loc(1);
-  node->lparenToken = loc(2);
-  node->firstSemicolonToken = loc(4);
-  node->secondSemicolonToken = loc(6);
-  node->rparenToken = loc(8);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+      AST::BindingElement *node = new (pool) AST::BindingElement(stringRef(1), sym(2).Expression);
+      node->identifierToken = loc(1);
+      sym(1).Node = node;
+    } break;
 ./
 
-IterationStatement: T_FOR T_LPAREN T_VAR VariableDeclarationListNotIn T_SEMICOLON ExpressionOpt T_SEMICOLON ExpressionOpt T_RPAREN Statement ;
+BindingElement: BindingPattern InitializerOpt_In;
 /.
-case $rule_number: {
-  AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
-  AST::LocalForStatement *node = new (pool) AST::LocalForStatement(
-     sym(4).VariableDeclarationList->finish(s), sym(6).Expression,
-     sym(8).Expression, sym(10).Statement);
-  node->forToken = loc(1);
-  node->lparenToken = loc(2);
-  node->varToken = loc(3);
-  node->firstSemicolonToken = loc(5);
-  node->secondSemicolonToken = loc(7);
-  node->rparenToken = loc(9);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::BindingElement *node = new (pool) AST::BindingElement(sym(1).BindingPattern, sym(2).Expression);
+        node->identifierToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-IterationStatement: T_FOR T_LPAREN LeftHandSideExpression T_IN Expression T_RPAREN Statement ;
+BindingRestElement: T_ELLIPSIS BindingIdentifier;
 /.
-case $rule_number: {
-  AST:: ForEachStatement *node = new (pool) AST::ForEachStatement(sym(3).Expression,
-    sym(5).Expression, sym(7).Statement);
-  node->forToken = loc(1);
-  node->lparenToken = loc(2);
-  node->inToken = loc(4);
-  node->rparenToken = loc(6);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::BindingRestElement *node = new (pool) AST::BindingRestElement(stringRef(2));
+        node->identifierToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-IterationStatement: T_FOR T_LPAREN T_VAR VariableDeclarationNotIn T_IN Expression T_RPAREN Statement ;
+BindingRestElement: T_ELLIPSIS BindingPattern;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+BindingRestElementOpt: ;
 /.
-case $rule_number: {
-  AST::LocalForEachStatement *node = new (pool) AST::LocalForEachStatement(
-    sym(4).VariableDeclaration, sym(6).Expression, sym(8).Statement);
-  node->forToken = loc(1);
-  node->lparenToken = loc(2);
-  node->varToken = loc(3);
-  node->inToken = loc(5);
-  node->rparenToken = loc(7);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
 ./
 
-ContinueStatement: T_CONTINUE T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
-ContinueStatement: T_CONTINUE T_SEMICOLON ;
+BindingRestElementOpt: BindingRestElement;
+
+
+EmptyStatement: T_SEMICOLON;
 /.
-case $rule_number: {
-  AST::ContinueStatement *node = new (pool) AST::ContinueStatement();
-  node->continueToken = loc(1);
-  node->semicolonToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::EmptyStatement *node = new (pool) AST::EmptyStatement();
+        node->semicolonToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-ContinueStatement: T_CONTINUE IdentifierReference T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
-ContinueStatement: T_CONTINUE IdentifierReference T_SEMICOLON ;
+-- Spec says it should have a "[lookahead ∉ { {, function, class, let [ }]" before the Expression statement.
+-- This is implemented with the rule below that is run before any statement and inserts a T_EXPRESSION_STATEMENT_OK
+-- token if it's ok to parse as an expression statement.
+ExpressionStatementLookahead: ;
+/:
+#define J_SCRIPT_EXPRESSIONSTATEMENTLOOKAHEAD_RULE $rule_number
+:/
 /.
-case $rule_number: {
-  AST::ContinueStatement *node = new (pool) AST::ContinueStatement(stringRef(2));
-  node->continueToken = loc(1);
-  node->identifierToken = loc(2);
-  node->semicolonToken = loc(3);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        int token = lookaheadToken(lexer);
+        if (token == T_LBRACE)
+            pushToken(T_FORCE_BLOCK);
+        else if (token == T_FUNCTION || token == T_CLASS || token == T_LET || token == T_CONST)
+            pushToken(T_FORCE_DECLARATION);
+    } break;
 ./
 
-BreakStatement: T_BREAK T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
-BreakStatement: T_BREAK T_SEMICOLON ;
+ExpressionStatement: Expression_In T_AUTOMATIC_SEMICOLON;
+ExpressionStatement: Expression_In T_SEMICOLON;
 /.
-case $rule_number: {
-  AST::BreakStatement *node = new (pool) AST::BreakStatement(QStringRef());
-  node->breakToken = loc(1);
-  node->semicolonToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::ExpressionStatement *node = new (pool) AST::ExpressionStatement(sym(1).Expression);
+        node->semicolonToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-BreakStatement: T_BREAK IdentifierReference T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
-BreakStatement: T_BREAK IdentifierReference T_SEMICOLON ;
+IfStatement: T_IF T_LPAREN Expression_In T_RPAREN Statement T_ELSE Statement;
 /.
-case $rule_number: {
-  AST::BreakStatement *node = new (pool) AST::BreakStatement(stringRef(2));
-  node->breakToken = loc(1);
-  node->identifierToken = loc(2);
-  node->semicolonToken = loc(3);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::IfStatement *node = new (pool) AST::IfStatement(sym(3).Expression, sym(5).Statement, sym(7).Statement);
+        node->ifToken = loc(1);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        node->elseToken = loc(6);
+        sym(1).Node = node;
+    } break;
 ./
 
-ReturnStatement: T_RETURN ExpressionOpt T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
-ReturnStatement: T_RETURN ExpressionOpt T_SEMICOLON ;
+IfStatement: T_IF T_LPAREN Expression_In T_RPAREN Statement;
 /.
-case $rule_number: {
-  AST::ReturnStatement *node = new (pool) AST::ReturnStatement(sym(2).Expression);
-  node->returnToken = loc(1);
-  node->semicolonToken = loc(3);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::IfStatement *node = new (pool) AST::IfStatement(sym(3).Expression, sym(5).Statement);
+        node->ifToken = loc(1);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        sym(1).Node = node;
+    } break;
 ./
 
-WithStatement: T_WITH T_LPAREN Expression T_RPAREN Statement ;
+
+IterationStatement: T_DO Statement T_WHILE T_LPAREN Expression_In T_RPAREN T_AUTOMATIC_SEMICOLON;
+IterationStatement: T_DO Statement T_WHILE T_LPAREN Expression_In T_RPAREN T_COMPATIBILITY_SEMICOLON;  -- for JSC/V8 compatibility
+IterationStatement: T_DO Statement T_WHILE T_LPAREN Expression_In T_RPAREN T_SEMICOLON;
 /.
-case $rule_number: {
-  AST::WithStatement *node = new (pool) AST::WithStatement(sym(3).Expression, sym(5).Statement);
-  node->withToken = loc(1);
-  node->lparenToken = loc(2);
-  node->rparenToken = loc(4);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::DoWhileStatement *node = new (pool) AST::DoWhileStatement(sym(2).Statement, sym(5).Expression);
+        node->doToken = loc(1);
+        node->whileToken = loc(3);
+        node->lparenToken = loc(4);
+        node->rparenToken = loc(6);
+        node->semicolonToken = loc(7);
+        sym(1).Node = node;
+    } break;
 ./
 
-SwitchStatement: T_SWITCH T_LPAREN Expression T_RPAREN CaseBlock ;
+IterationStatement: T_WHILE T_LPAREN Expression_In T_RPAREN Statement;
 /.
-case $rule_number: {
-  AST::SwitchStatement *node = new (pool) AST::SwitchStatement(sym(3).Expression, sym(5).CaseBlock);
-  node->switchToken = loc(1);
-  node->lparenToken = loc(2);
-  node->rparenToken = loc(4);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::WhileStatement *node = new (pool) AST::WhileStatement(sym(3).Expression, sym(5).Statement);
+        node->whileToken = loc(1);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        sym(1).Node = node;
+    } break;
 ./
 
-CaseBlock: T_LBRACE CaseClausesOpt T_RBRACE ;
+IterationStatement: T_FOR T_LPAREN ExpressionOpt T_SEMICOLON ExpressionOpt_In T_SEMICOLON ExpressionOpt_In T_RPAREN Statement; -- [lookahead != { let [ }]
 /.
-case $rule_number: {
-  AST::CaseBlock *node = new (pool) AST::CaseBlock(sym(2).CaseClauses);
-  node->lbraceToken = loc(1);
-  node->rbraceToken = loc(3);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::ForStatement *node = new (pool) AST::ForStatement(sym(3).Expression, sym(5).Expression, sym(7).Expression, sym(9).Statement);
+        node->forToken = loc(1);
+        node->lparenToken = loc(2);
+        node->firstSemicolonToken = loc(4);
+        node->secondSemicolonToken = loc(6);
+        node->rparenToken = loc(8);
+        sym(1).Node = node;
+    } break;
 ./
 
-CaseBlock: T_LBRACE CaseClausesOpt DefaultClause CaseClausesOpt T_RBRACE ;
+IterationStatement: T_FOR T_LPAREN VarDeclaration T_SEMICOLON ExpressionOpt_In T_SEMICOLON ExpressionOpt_In T_RPAREN Statement;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+IterationStatement: T_FOR T_LPAREN LexicalDeclaration T_SEMICOLON ExpressionOpt_In T_SEMICOLON ExpressionOpt_In T_RPAREN Statement;
 /.
-case $rule_number: {
-  AST::CaseBlock *node = new (pool) AST::CaseBlock(sym(2).CaseClauses, sym(3).DefaultClause, sym(4).CaseClauses);
-  node->lbraceToken = loc(1);
-  node->rbraceToken = loc(5);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        // ### get rid of the static_cast!
+        AST::LocalForStatement *node = new (pool) AST::LocalForStatement(
+          static_cast<AST::VariableStatement *>(sym(3).Node)->declarations, sym(5).Expression,
+          sym(7).Expression, sym(9).Statement);
+        node->forToken = loc(1);
+        node->lparenToken = loc(2);
+        node->varToken = loc(3);
+        node->firstSemicolonToken = loc(4);
+        node->secondSemicolonToken = loc(6);
+        node->rparenToken = loc(8);
+        sym(1).Node = node;
+    } break;
 ./
 
-CaseClauses: CaseClause ;
+IterationStatement: T_FOR T_LPAREN LeftHandSideExpression T_IN Expression_In T_RPAREN Statement;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::CaseClauses(sym(1).CaseClause);
-} break;
+    case $rule_number: {
+        AST::ForEachStatement *node = new (pool) AST::ForEachStatement(sym(3).Expression, sym(5).Expression, sym(7).Statement);
+        node->forToken = loc(1);
+        node->lparenToken = loc(2);
+        node->inToken = loc(4);
+        node->rparenToken = loc(6);
+        sym(1).Node = node;
+    } break;
 ./
 
-CaseClauses: CaseClauses CaseClause ;
+IterationStatement: T_FOR T_LPAREN ForDeclaration T_IN Expression_In T_RPAREN Statement;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::CaseClauses(sym(1).CaseClauses, sym(2).CaseClause);
-} break;
+    case $rule_number: {
+        AST::LocalForEachStatement *node = new (pool) AST::LocalForEachStatement(sym(3).VariableDeclaration, sym(5).Expression, sym(7).Statement);
+        node->forToken = loc(1);
+        node->lparenToken = loc(2);
+        node->varToken = loc(3);
+        node->inToken = loc(4);
+        node->rparenToken = loc(6);
+        sym(1).Node = node;
+    } break;
+./
+
+
+IterationStatement: T_FOR T_LPAREN LeftHandSideExpression T_OF AssignmentExpression_In T_RPAREN Statement; -- [lookahead ≠ let]
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+IterationStatement: T_FOR T_LPAREN ForDeclaration T_OF Expression_In T_RPAREN Statement;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+ForDeclaration: LetOrConst ForBinding;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+ForDeclaration: Var ForBinding;
+/.
+    case $rule_number: {
+        AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::VariableScope(sym(1).ival);
+        auto *node = new (pool) AST::VariableDeclaration(stringRef(2), nullptr, s);
+        node->identifierToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+ForBinding: BindingIdentifier;
+
+ForBinding: BindingPattern;
+/.  case $rule_number: UNIMPLEMENTED; ./
+
+ContinueStatement: T_CONTINUE T_AUTOMATIC_SEMICOLON;
+ContinueStatement: T_CONTINUE T_SEMICOLON;
+/.
+    case $rule_number: {
+        AST::ContinueStatement *node = new (pool) AST::ContinueStatement();
+        node->continueToken = loc(1);
+        node->semicolonToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+ContinueStatement: T_CONTINUE IdentifierReference T_AUTOMATIC_SEMICOLON;
+ContinueStatement: T_CONTINUE IdentifierReference T_SEMICOLON;
+/.
+    case $rule_number: {
+        AST::ContinueStatement *node = new (pool) AST::ContinueStatement(stringRef(2));
+        node->continueToken = loc(1);
+        node->identifierToken = loc(2);
+        node->semicolonToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
+BreakStatement: T_BREAK T_AUTOMATIC_SEMICOLON;
+BreakStatement: T_BREAK T_SEMICOLON;
+/.
+    case $rule_number: {
+        AST::BreakStatement *node = new (pool) AST::BreakStatement(QStringRef());
+        node->breakToken = loc(1);
+        node->semicolonToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
+BreakStatement: T_BREAK IdentifierReference T_AUTOMATIC_SEMICOLON;
+BreakStatement: T_BREAK IdentifierReference T_SEMICOLON;
+/.
+    case $rule_number: {
+        AST::BreakStatement *node = new (pool) AST::BreakStatement(stringRef(2));
+        node->breakToken = loc(1);
+        node->identifierToken = loc(2);
+        node->semicolonToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
+ReturnStatement: T_RETURN ExpressionOpt_In T_AUTOMATIC_SEMICOLON;
+ReturnStatement: T_RETURN ExpressionOpt_In T_SEMICOLON;
+/.
+    case $rule_number: {
+        if (!functionNestingLevel) {
+            syntaxError(loc(1), "Return statement not allowed outside of Function declaration.");
+            return false;
+        }
+        AST::ReturnStatement *node = new (pool) AST::ReturnStatement(sym(2).Expression);
+        node->returnToken = loc(1);
+        node->semicolonToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
+WithStatement: T_WITH T_LPAREN Expression_In T_RPAREN Statement;
+/.
+    case $rule_number: {
+        AST::WithStatement *node = new (pool) AST::WithStatement(sym(3).Expression, sym(5).Statement);
+        node->withToken = loc(1);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        sym(1).Node = node;
+    } break;
+./
+
+SwitchStatement: T_SWITCH T_LPAREN Expression_In T_RPAREN CaseBlock;
+/.
+    case $rule_number: {
+        AST::SwitchStatement *node = new (pool) AST::SwitchStatement(sym(3).Expression, sym(5).CaseBlock);
+        node->switchToken = loc(1);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        sym(1).Node = node;
+    } break;
+./
+
+CaseBlock: T_LBRACE CaseClausesOpt T_RBRACE;
+/.
+    case $rule_number: {
+        AST::CaseBlock *node = new (pool) AST::CaseBlock(sym(2).CaseClauses);
+        node->lbraceToken = loc(1);
+        node->rbraceToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
+CaseBlock: T_LBRACE CaseClausesOpt DefaultClause CaseClausesOpt T_RBRACE;
+/.
+    case $rule_number: {
+        AST::CaseBlock *node = new (pool) AST::CaseBlock(sym(2).CaseClauses, sym(3).DefaultClause, sym(4).CaseClauses);
+        node->lbraceToken = loc(1);
+        node->rbraceToken = loc(5);
+        sym(1).Node = node;
+    } break;
+./
+
+CaseClauses: CaseClause;
+/.
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::CaseClauses(sym(1).CaseClause);
+    } break;
+./
+
+CaseClauses: CaseClauses CaseClause;
+/.
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::CaseClauses(sym(1).CaseClauses, sym(2).CaseClause);
+    } break;
 ./
 
 CaseClausesOpt: ;
 /.
-case $rule_number: {
-  sym(1).Node = 0;
-} break;
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
 ./
 
-CaseClausesOpt: CaseClauses ;
+CaseClausesOpt: CaseClauses;
 /.
-case $rule_number: {
-  sym(1).Node = sym(1).CaseClauses->finish ();
-} break;
+    case $rule_number: {
+        sym(1).Node = sym(1).CaseClauses->finish();
+    } break;
 ./
 
-CaseClause: T_CASE Expression T_COLON StatementListOpt ;
+CaseClause: T_CASE Expression_In T_COLON StatementListOpt;
 /.
-case $rule_number: {
-  AST::CaseClause *node = new (pool) AST::CaseClause(sym(2).Expression, sym(4).StatementList);
-  node->caseToken = loc(1);
-  node->colonToken = loc(3);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::CaseClause *node = new (pool) AST::CaseClause(sym(2).Expression, sym(4).StatementList);
+        node->caseToken = loc(1);
+        node->colonToken = loc(3);
+        sym(1).Node = node;
+    } break;
 ./
 
-DefaultClause: T_DEFAULT T_COLON StatementListOpt ;
+DefaultClause: T_DEFAULT T_COLON StatementListOpt;
 /.
-case $rule_number: {
-  AST::DefaultClause *node = new (pool) AST::DefaultClause(sym(3).StatementList);
-  node->defaultToken = loc(1);
-  node->colonToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::DefaultClause *node = new (pool) AST::DefaultClause(sym(3).StatementList);
+        node->defaultToken = loc(1);
+        node->colonToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-LabelledStatement: IdentifierReference T_COLON Statement ;
+LabelledStatement: IdentifierReference T_COLON LabelledItem;
 /.
-case $rule_number: {
-  AST::LabelledStatement *node = new (pool) AST::LabelledStatement(stringRef(1), sym(3).Statement);
-  node->identifierToken = loc(1);
-  node->colonToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::LabelledStatement *node = new (pool) AST::LabelledStatement(stringRef(1), sym(3).Statement);
+        node->identifierToken = loc(1);
+        node->colonToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
-ThrowStatement: T_THROW Expression T_AUTOMATIC_SEMICOLON ;  -- automatic semicolon
-ThrowStatement: T_THROW Expression T_SEMICOLON ;
+LabelledItem: Statement;
+
+LabelledItem: ExpressionStatementLookahead T_FORCE_DECLARATION FunctionDeclaration;
 /.
-case $rule_number: {
-  AST::ThrowStatement *node = new (pool) AST::ThrowStatement(sym(2).Expression);
-  node->throwToken = loc(1);
-  node->semicolonToken = loc(3);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        syntaxError(loc(3), "FunctionDeclarations are not allowed after a label.");
+        return false;
+    } break;
 ./
 
-TryStatement: T_TRY Block Catch ;
+ThrowStatement: T_THROW Expression_In T_AUTOMATIC_SEMICOLON;
+ThrowStatement: T_THROW Expression_In T_SEMICOLON;
 /.
-case $rule_number: {
-  AST::TryStatement *node = new (pool) AST::TryStatement(sym(2).Statement, sym(3).Catch);
-  node->tryToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::ThrowStatement *node = new (pool) AST::ThrowStatement(sym(2).Expression);
+        node->throwToken = loc(1);
+        node->semicolonToken = loc(3);
+        sym(1).Node = node;
+    } break;
 ./
 
-TryStatement: T_TRY Block Finally ;
+TryStatement: T_TRY Block Catch;
 /.
-case $rule_number: {
-  AST::TryStatement *node = new (pool) AST::TryStatement(sym(2).Statement, sym(3).Finally);
-  node->tryToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::TryStatement *node = new (pool) AST::TryStatement(sym(2).Statement, sym(3).Catch);
+        node->tryToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-TryStatement: T_TRY Block Catch Finally ;
+TryStatement: T_TRY Block Finally;
 /.
-case $rule_number: {
-  AST::TryStatement *node = new (pool) AST::TryStatement(sym(2).Statement, sym(3).Catch, sym(4).Finally);
-  node->tryToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::TryStatement *node = new (pool) AST::TryStatement(sym(2).Statement, sym(3).Finally);
+        node->tryToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-Catch: T_CATCH T_LPAREN IdentifierReference T_RPAREN Block ;
+TryStatement: T_TRY Block Catch Finally;
 /.
-case $rule_number: {
-  AST::Catch *node = new (pool) AST::Catch(stringRef(3), sym(5).Block);
-  node->catchToken = loc(1);
-  node->lparenToken = loc(2);
-  node->identifierToken = loc(3);
-  node->rparenToken = loc(4);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::TryStatement *node = new (pool) AST::TryStatement(sym(2).Statement, sym(3).Catch, sym(4).Finally);
+        node->tryToken = loc(1);
+        sym(1).Node = node;
+    } break;
 ./
 
-Finally: T_FINALLY Block ;
+Catch: T_CATCH T_LPAREN CatchParameter T_RPAREN Block;
 /.
-case $rule_number: {
-  AST::Finally *node = new (pool) AST::Finally(sym(2).Block);
-  node->finallyToken = loc(1);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::Catch *node = new (pool) AST::Catch(stringRef(3), sym(5).Block);
+        node->catchToken = loc(1);
+        node->lparenToken = loc(2);
+        node->identifierToken = loc(3);
+        node->rparenToken = loc(4);
+        sym(1).Node = node;
+    } break;
 ./
 
-DebuggerStatement: T_DEBUGGER T_AUTOMATIC_SEMICOLON ; -- automatic semicolon
-DebuggerStatement: T_DEBUGGER T_SEMICOLON ;
+Finally: T_FINALLY Block;
 /.
-case $rule_number: {
-  AST::DebuggerStatement *node = new (pool) AST::DebuggerStatement();
-  node->debuggerToken = loc(1);
-  node->semicolonToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::Finally *node = new (pool) AST::Finally(sym(2).Block);
+        node->finallyToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+CatchParameter: BindingIdentifier;
+CatchParameter: BindingPattern;
+
+DebuggerStatement: T_DEBUGGER T_AUTOMATIC_SEMICOLON; -- automatic semicolon
+DebuggerStatement: T_DEBUGGER T_SEMICOLON;
+/.
+    case $rule_number: {
+        AST::DebuggerStatement *node = new (pool) AST::DebuggerStatement();
+        node->debuggerToken = loc(1);
+        node->semicolonToken = loc(2);
+        sym(1).Node = node;
+    } break;
 ./
 
 -- tell the parser to prefer function declarations to function expressions.
 -- That is, the `Function' symbol is used to mark the start of a function
 -- declaration.
-Function: T_FUNCTION %prec REDUCE_HERE ;
+-- This is still required for parsing QML, where MemberExpression and FunctionDeclaration would
+-- otherwise conflict.
+Function: T_FUNCTION %prec REDUCE_HERE;
 
-FunctionDeclaration: Function IdentifierReference T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
+FunctionDeclaration: Function BindingIdentifier T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
-case $rule_number: {
-  AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(2), sym(4).FormalParameterList, sym(7).FunctionBody);
-  node->functionToken = loc(1);
-  node->identifierToken = loc(2);
-  node->lparenToken = loc(3);
-  node->rparenToken = loc(5);
-  node->lbraceToken = loc(6);
-  node->rbraceToken = loc(8);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
+        node->functionToken = loc(1);
+        node->identifierToken = loc(2);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(5);
+        node->lbraceToken = loc(6);
+        node->rbraceToken = loc(8);
+        sym(1).Node = node;
+    } break;
 ./
 
-FunctionExpression: T_FUNCTION IdentifierReference T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
+
+FunctionDeclaration_Default: FunctionDeclaration;
+FunctionDeclaration_Default: T_FUNCTION T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
-case $rule_number: {
-  AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).FunctionBody);
-  node->functionToken = loc(1);
-  if (! stringRef(2).isNull())
-      node->identifierToken = loc(2);
-  node->lparenToken = loc(3);
-  node->rparenToken = loc(5);
-  node->lbraceToken = loc(6);
-  node->rbraceToken = loc(8);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(1), sym(3).FormalParameterList, sym(6).StatementList);
+        node->functionToken = loc(1);
+        node->identifierToken = loc(1);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        node->lbraceToken = loc(5);
+        node->rbraceToken = loc(7);
+        sym(1).Node = node;
+    } break;
 ./
 
-FunctionExpression: T_FUNCTION T_LPAREN FormalParameters T_RPAREN T_LBRACE FunctionBodyOpt T_RBRACE ;
+FunctionExpression: T_FUNCTION BindingIdentifier T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
-case $rule_number: {
-  AST::FunctionExpression *node = new (pool) AST::FunctionExpression(QStringRef(), sym(3).FormalParameterList, sym(6).FunctionBody);
-  node->functionToken = loc(1);
-  node->lparenToken = loc(2);
-  node->rparenToken = loc(4);
-  node->lbraceToken = loc(5);
-  node->rbraceToken = loc(7);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
+        node->functionToken = loc(1);
+        if (! stringRef(2).isNull())
+          node->identifierToken = loc(2);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(5);
+        node->lbraceToken = loc(6);
+        node->rbraceToken = loc(8);
+        sym(1).Node = node;
+    } break;
 ./
 
-FormalParameters : ;
+FunctionExpression: T_FUNCTION T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
-case $rule_number: {
-  sym(1).Node = 0;
-} break;
+    case $rule_number: {
+        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(1), sym(3).FormalParameterList, sym(6).StatementList);
+        node->functionToken = loc(1);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
+        node->lbraceToken = loc(5);
+        node->rbraceToken = loc(7);
+        sym(1).Node = node;
+    } break;
 ./
 
-FormalParameters: FormalParameterList ;
+StrictFormalParameters: FormalParameters;
+
+FormalParameters: ;
 /.
-case $rule_number: {
-  sym(1).Node = sym(1).FormalParameterList->finish ();
-} break;
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
 ./
 
-FormalsList: BindingElement ;
+FormalParameters: FormalParameterList;
+/.
+    case $rule_number: {
+        sym(1).Node = sym(1).FormalParameterList->finish();
+    } break;
+./
+
+FormalsList: BindingElement;
 /. case $rule_number: ./
 
-FormalParameterList: BindingRestElement ;
+FormalParameterList: BindingRestElement;
 /.
-case $rule_number: {
-    AST::FormalParameterList *node = new (pool) AST::FormalParameterList(nullptr, sym(1).Node);
-    sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::FormalParameterList *node = new (pool) AST::FormalParameterList(nullptr, sym(1).Node);
+        sym(1).Node = node;
+    } break;
 ./
 
-FormalParameterList: FormalsList ;
+FormalParameterList: FormalsList;
 
-FormalParameterList: FormalsList T_COMMA BindingRestElement ;
+FormalParameterList: FormalsList T_COMMA BindingRestElement;
 /. case $rule_number: ./
 
-FormalsList: FormalsList T_COMMA BindingElement ;
+FormalsList: FormalsList T_COMMA BindingElement;
 /.
-case $rule_number: {
-    AST::FormalParameterList *node = new (pool) AST::FormalParameterList(sym(1).FormalParameterList, sym(3).Node);
-    sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::FormalParameterList *node = new (pool) AST::FormalParameterList(sym(1).FormalParameterList, sym(3).Node);
+        sym(1).Node = node;
+    } break;
 ./
 
-BindingRestElement: T_ELLIPSIS BindingIdentifier ;
+FormalParameter: BindingElement;
+
+FunctionLBrace: T_LBRACE;
 /.
-case $rule_number: {
-  AST::BindingRestElement *node = new (pool) AST::BindingRestElement(stringRef(2));
-  node->identifierToken = loc(2);
-  sym(1).Node = node;
-} break;
+    case $rule_number: {
+        ++functionNestingLevel;
+    } break;
 ./
 
-BindingRestElementOpt: ;
-BindingRestElementOpt: BindingRestElement ;
-
-BindingElement: BindingIdentifier InitializerOpt ;
+FunctionRBrace: T_RBRACE;
 /.
-case $rule_number: {
-  AST::BindingElement *node = new (pool) AST::BindingElement(stringRef(1), sym(2).Expression);
-  node->identifierToken = loc(1);
-  sym(1).Node = node;
-} break;
-./
-
-BindingElement: BindingPattern InitializerOpt ;
-/.
-case $rule_number: {
-    AST::BindingElement *node = new (pool) AST::BindingElement(sym(1).Node, sym(2).Expression);
-    node->identifierToken = loc(1);
-    sym(1).Node = node;
-} break;
-./
-
-BindingPattern: ObjectBindingPattern ;
-
-BindingPattern: ArrayBindingPattern ;
-
-ObjectBindingPattern: T_LBRACE T_RBRACE ;
-/.
-case $rule_number: {
-    sym(1).Node = nullptr;
-} break;
-./
-
-ObjectBindingPattern: T_LBRACE BindingPropertyList T_RBRACE ;
-/. case $rule_number: ./
-ObjectBindingPattern: T_LBRACE BindingPropertyList T_COMMA T_RBRACE ;
-/.
-case $rule_number: {
-    sym(1).Node = sym(2).BindingPropertyList->finish();
-} break;
-./
-
-ArrayBindingPattern: T_LBRACKET ElisionOpt BindingRestElementOpt T_RBRACKET ;
-/.
-case $rule_number: {
-    AST::BindingElementList *l = new (pool) AST::BindingElementList(sym(4).Elision, sym(5).Node);
-    sym(1).Node = l->finish();
-} break;
-./
-
-ArrayBindingPattern: T_LBRACKET BindingElementList T_RBRACKET ;
-/.
-case $rule_number: {
-    sym(1).Node = sym(2).BindingElementList->finish();
-} break;
-./
-
-ArrayBindingPattern: T_LBRACKET BindingElementList T_COMMA ElisionOpt BindingRestElementOpt T_RBRACKET ;
-/.
-case $rule_number: {
-    AST::BindingElementList *l = new (pool) AST::BindingElementList(sym(4).Elision, sym(5).Node);
-    l = sym(2).BindingElementList->append(l);
-    sym(1).Node = l->finish();
-} break;
-./
-
-BindingPropertyList: BindingProperty ;
-
-BindingPropertyList: BindingPropertyList T_COMMA BindingProperty ;
-/.
-case $rule_number: {
-    sym(1).Node = sym(1).BindingPropertyList->append(sym(3).BindingPropertyList);
-} break;
-./
-
-BindingElementList: BindingElisionElement ;
-BindingElementList: BindingElementList T_COMMA BindingElisionElement ;
-/.
-case $rule_number: {
-    sym(1).BindingElementList->append(sym(3).BindingElementList);
-} break;
-./
-
-BindingElisionElement: ElisionOpt BindingElement ;
-/.
-case $rule_number: {
-    sym(1).Node = new (pool) AST::BindingElementList(sym(1).Elision, sym(2).BindingElement);
-} break;
+    case $rule_number: {
+        --functionNestingLevel;
+    } break;
 ./
 
 
-BindingProperty: BindingIdentifier InitializerOpt ;
+FunctionBody: FunctionStatementList;
+FunctionStatementList: StatementListOpt;
+
+ArrowFunction: ArrowParameters T_ARROW ConciseBody;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+ArrowFunction_In: ArrowParameters T_ARROW ConciseBody_In;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+ArrowParameters: BindingIdentifier;
+
+ArrowParameters: CoverParenthesizedExpressionAndArrowParameterList;
+
+-- ### CoverParenthesizedExpressionAndArrowParameterList for ArrowParameters refined to:
+-- ArrowFormalParameters[Yield]: (StrictFormalParameters[?Yield])
+
+ConciseBodyLookahead: ;
+/:
+#define J_SCRIPT_CONCISEBODYLOOKAHEAD_RULE $rule_number
+:/
 /.
-case $rule_number: {
-    AST::StringLiteralPropertyName *name = new (pool) AST::StringLiteralPropertyName(stringRef(1));
-    AST::BindingElement *e = new (pool) AST::BindingElement(stringRef(1), sym(2).Expression);
-    AST::BindingPropertyList *node = new (pool) AST::BindingPropertyList(name, e);
-    sym(1).Node = node;
-} break;
+    case $rule_number: {
+        if (lookaheadToken(lexer) == T_LBRACE)
+            pushToken(T_FORCE_BLOCK);
+    } break;
 ./
 
-BindingProperty: PropertyName T_COLON BindingElement ;
+ConciseBody: ConciseBodyLookahead AssignmentExpression; -- [lookahead ≠ {]
+ConciseBody_In: ConciseBodyLookahead AssignmentExpression_In; -- [lookahead ≠ {]
+ConciseBody: ConciseBodyLookahead T_FORCE_BLOCK FunctionLBrace FunctionBody FunctionRBrace;
+ConciseBody_In: ConciseBodyLookahead T_FORCE_BLOCK FunctionLBrace FunctionBody FunctionRBrace;
+
+MethodDefinition: PropertyName T_LPAREN StrictFormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+MethodDefinition: GeneratorMethod;
+
+MethodDefinition: T_GET PropertyName T_LPAREN T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
-case $rule_number: {
-    AST::BindingPropertyList *node = new (pool) AST::BindingPropertyList(sym(1).PropertyName, sym(3).BindingElement);
-    sym(1).Node = node;
-} break;
+    case $rule_number: {
+        AST::PropertyGetterSetter *node = new (pool) AST::PropertyGetterSetter(sym(2).PropertyName, sym(6).StatementList);
+        node->getSetToken = loc(1);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(4);
+        node->lbraceToken = loc(5);
+        node->rbraceToken = loc(7);
+        sym(1).Node = node;
+    } break;
 ./
 
-BindingIdentifier: IdentifierReference;
-
-FunctionBodyOpt: ;
+MethodDefinition: T_SET PropertyName T_LPAREN PropertySetParameterList T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
-case $rule_number: {
-  sym(1).Node = 0;
-} break;
+    case $rule_number: {
+        AST::PropertyGetterSetter *node = new (pool) AST::PropertyGetterSetter(
+            sym(2).PropertyName, sym(4).FormalParameterList, sym(7).StatementList);
+        node->getSetToken = loc(1);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(5);
+        node->lbraceToken = loc(6);
+        node->rbraceToken = loc(8);
+        sym(1).Node = node;
+    } break;
 ./
 
-FunctionBodyOpt: FunctionBody ;
 
-FunctionBody: SourceElements ;
+PropertySetParameterList: FormalParameter;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::FunctionBody(sym(1).SourceElements->finish ());
-} break;
+    case $rule_number: {
+        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(1).Node))->finish();
+        sym(1).Node = node;
+    } break;
 ./
 
-Program: Empty ;
-
-Program: SourceElements ;
+GeneratorLBrace: T_LBRACE;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::Program(sym(1).SourceElements->finish ());
-} break;
+    case $rule_number: {
+        ++functionNestingLevel;
+        lexer->enterGeneratorBody();
+    } break;
 ./
 
-SourceElements: SourceElement ;
+GeneratorRBrace: T_RBRACE;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::SourceElements(sym(1).SourceElement);
-} break;
+    case $rule_number: {
+        --functionNestingLevel;
+        lexer->leaveGeneratorBody();
+    } break;
 ./
 
-SourceElements: SourceElements SourceElement ;
+GeneratorMethod: T_STAR PropertyName T_LPAREN StrictFormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+GeneratorDeclaration: T_FUNCTION T_STAR BindingIdentifier T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+GeneratorDeclaration_Default: GeneratorDeclaration;
+GeneratorDeclaration_Default: T_FUNCTION T_STAR T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+GeneratorExpression: T_FUNCTION T_STAR BindingIdentifier T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+GeneratorExpression: T_FUNCTION T_STAR T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+GeneratorBody: FunctionBody;
+
+YieldExpression: T_YIELD T_STAR AssignmentExpression;
+YieldExpression_In: T_YIELD T_STAR AssignmentExpression_In;
+YieldExpression: T_YIELD AssignmentExpression;
+YieldExpression_In: T_YIELD AssignmentExpression_In;
+
+
+ClassDeclaration: T_CLASS BindingIdentifier ClassTail;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+ClassDeclaration_Default: ClassDeclaration;
+ClassDeclaration_Default: T_CLASS ClassTail;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+ClassExpression: T_CLASS BindingIdentifier ClassTail;
+
+ClassExpression: T_CLASS ClassTail;
+
+ClassTail: T_LBRACE ClassBodyOpt T_RBRACE;
+ClassTail: ClassHeritage T_LBRACE ClassBodyOpt T_RBRACE;
+
+ClassHeritage: T_EXTENDS LeftHandSideExpression;
+
+ClassBody: ClassElementList;
+
+ClassBodyOpt: ;
+
+ClassBodyOpt: ClassBody;
+
+ClassElementList: ClassElement;
+ClassElementList: ClassElementList ClassElement;
+
+ClassElement: MethodDefinition;
+ClassElement: T_STATIC MethodDefinition;
+ClassElement: T_SEMICOLON;
+
+-- Scripts and Modules
+
+Script: ;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::SourceElements(sym(1).SourceElements, sym(2).SourceElement);
-} break;
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
 ./
 
-SourceElement: Statement ;
+Script: ScriptBody;
+
+ScriptBody: StatementList;
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::StatementSourceElement(sym(1).Statement);
-} break;
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::Program(sym(1).StatementList->finish());
+    } break;
 ./
 
-SourceElement: FunctionDeclaration ;
+Module: ModuleBodyOpt;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
+
+ModuleBody: ModuleItemList;
+
+ModuleBodyOpt: ;
+ModuleBodyOpt: ModuleBody;
+
+ModuleItemList: ModuleItem;
+ModuleItemList: ModuleItemList ModuleItem;
+
+ModuleItem: ImportDeclaration T_AUTOMATIC_SEMICOLON;
+ModuleItem: ImportDeclaration T_SEMICOLON;
+ModuleItem: ExportDeclaration T_AUTOMATIC_SEMICOLON;
+ModuleItem: ExportDeclaration T_SEMICOLON;
+ModuleItem: StatementListItem;
+
+ImportDeclaration: T_IMPORT ImportClause FromClause;
+ImportDeclaration: T_IMPORT ModuleSpecifier;
+
+ImportClause: ImportedDefaultBinding;
+ImportClause: NameSpaceImport;
+ImportClause: NamedImports;
+ImportClause: ImportedDefaultBinding T_COMMA NameSpaceImport;
+ImportClause: ImportedDefaultBinding T_COMMA NamedImports;
+
+ImportedDefaultBinding: ImportedBinding;
+
+NameSpaceImport: T_STAR T_AS ImportedBinding;
+
+NamedImports: T_LBRACE T_RBRACE;
+NamedImports: T_LBRACE ImportsList T_RBRACE;
+NamedImports: T_LBRACE ImportsList T_COMMA T_RBRACE;
+
+FromClause: T_FROM ModuleSpecifier;
+
+ImportsList: ImportSpecifier;
+ImportsList: ImportsList T_COMMA ImportSpecifier;
+
+ImportSpecifier: ImportedBinding;
+ImportSpecifier: IdentifierName T_AS ImportedBinding;
+
+ModuleSpecifier: T_STRING_LITERAL;
+
+ImportedBinding: BindingIdentifier;
+
+ExportDeclarationLookahead: ;
+/:
+#define J_SCRIPT_EXPORTDECLARATIONLOOKAHEAD_RULE $rule_number
+:/
 /.
-case $rule_number: {
-  sym(1).Node = new (pool) AST::FunctionSourceElement(sym(1).FunctionDeclaration);
-} break;
+    case $rule_number: {
+        int token = lookaheadToken(lexer);
+        if (token == T_FUNCTION || token == T_CLASS)
+            pushToken(T_FORCE_DECLARATION);
+    } break;
 ./
 
-PropertyAssignmentListOpt: ;
-/.
-case $rule_number: {
-  sym(1).Node = 0;
-} break;
-./
+ExportDeclaration: T_EXPORT T_STAR FromClause;
+ExportDeclaration: T_EXPORT ExportClause FromClause;
+ExportDeclaration: T_EXPORT ExportClause;
+ExportDeclaration: T_EXPORT VariableStatement;
+ExportDeclaration: T_EXPORT Declaration;
+ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead T_FORCE_DECLARATION HoistableDeclaration_Default;
+ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead T_FORCE_DECLARATION ClassDeclaration_Default;
+ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead AssignmentExpression_In; -- [lookahead ∉ { function, class }]
 
-PropertyAssignmentListOpt: PropertyAssignmentList ;
+ExportClause: T_LBRACE T_RBRACE;
+ExportClause: T_LBRACE ExportsList T_RBRACE;
+ExportClause: T_LBRACE ExportsList T_COMMA T_RBRACE;
+
+ExportsList: ExportSpecifier;
+ExportsList: ExportsList T_COMMA ExportSpecifier;
+
+ExportSpecifier: IdentifierName;
+ExportSpecifier: IdentifierName T_AS IdentifierName;
+
+-- Old top level code
 
 /.
+    // ------------ end of switch statement
             } // switch
             action = nt_action(state_stack[tos], lhs[r] - TERMINAL_COUNT);
         } // if
@@ -3303,8 +3697,7 @@ PropertyAssignmentListOpt: PropertyAssignmentList ;
 
         for (int tk = 1; tk < TERMINAL_COUNT; ++tk) {
             if (tk == T_AUTOMATIC_SEMICOLON || tk == T_FEED_UI_PROGRAM    ||
-                tk == T_FEED_JS_STATEMENT   || tk == T_FEED_JS_EXPRESSION ||
-                tk == T_FEED_JS_SOURCE_ELEMENT)
+                tk == T_FEED_JS_STATEMENT   || tk == T_FEED_JS_EXPRESSION)
                continue;
 
             int a = t_action(errorState, tk);

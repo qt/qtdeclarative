@@ -621,7 +621,7 @@ struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 
     int defineFunction(const QString &name, AST::Node *ast,
                        AST::FormalParameterList *formals,
-                       AST::SourceElements *body) override;
+                       AST::StatementList *body) override;
 
 protected:
     void beginFunctionBodyHook() override;

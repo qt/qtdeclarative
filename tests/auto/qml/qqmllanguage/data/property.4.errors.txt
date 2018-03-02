@@ -1,1 +1,1 @@
-5:1:Syntax error
+5:1:Expected token `:'

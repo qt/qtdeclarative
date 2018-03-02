@@ -125,7 +125,7 @@ void Codegen::generateFromProgram(const QString &fileName,
     if (hasError)
         return;
 
-    defineFunction(QStringLiteral("%entry"), node, nullptr, node->elements);
+    defineFunction(QStringLiteral("%entry"), node, nullptr, node->statements);
 }
 
 void Codegen::enterContext(Node *node)
@@ -342,45 +342,10 @@ Codegen::Reference Codegen::expression(ExpressionNode *ast)
     return r.result();
 }
 
-Codegen::Result Codegen::sourceElement(SourceElement *ast)
-{
-    Result r(nx);
-    if (ast) {
-        qSwap(_expr, r);
-        accept(ast);
-        qSwap(_expr, r);
-    }
-    return r;
-}
-
-void Codegen::functionBody(FunctionBody *ast)
-{
-    if (ast)
-        sourceElements(ast->elements);
-}
-
 void Codegen::program(Program *ast)
 {
     if (ast) {
-        sourceElements(ast->elements);
-    }
-}
-
-void Codegen::sourceElements(SourceElements *ast)
-{
-    bool _requiresReturnValue = false;
-    qSwap(_requiresReturnValue, requiresReturnValue);
-    for (SourceElements *it = ast; it; it = it->next) {
-        if (!it->next)
-            qSwap(_requiresReturnValue, requiresReturnValue);
-        sourceElement(it->element);
-        if (hasError)
-            return;
-        if (StatementSourceElement *sse = AST::cast<StatementSourceElement *>(it->element)) {
-            if (AST::cast<ThrowStatement *>(sse->statement) ||
-                    AST::cast<ReturnStatement *>(sse->statement))
-                return;
-        }
+        statementList(ast->statements);
     }
 }
 
@@ -394,7 +359,10 @@ void Codegen::statementList(StatementList *ast)
             it->next->statement->kind == Statement::Kind_ContinueStatement ||
             it->next->statement->kind == Statement::Kind_ReturnStatement)
                 requiresReturnValue = _requiresReturnValue;
-        statement(it->statement);
+        if (FunctionDeclaration *decl = cast<FunctionDeclaration *>(it->statement))
+            statement(decl);
+        else
+            statement(static_cast<Statement *>(it->statement));
         requiresReturnValue = false;
         if (it->statement->kind == Statement::Kind_ThrowStatement ||
             it->statement->kind == Statement::Kind_BreakStatement ||
@@ -551,19 +519,13 @@ bool Codegen::visit(FormalParameterList *)
     return false;
 }
 
-bool Codegen::visit(FunctionBody *)
-{
-    Q_UNREACHABLE();
-    return false;
-}
-
 bool Codegen::visit(Program *)
 {
     Q_UNREACHABLE();
     return false;
 }
 
-bool Codegen::visit(PropertyAssignmentList *)
+bool Codegen::visit(PropertyDefinitionList *)
 {
     Q_UNREACHABLE();
     return false;
@@ -576,12 +538,6 @@ bool Codegen::visit(PropertyNameAndValue *)
 }
 
 bool Codegen::visit(PropertyGetterSetter *)
-{
-    Q_UNREACHABLE();
-    return false;
-}
-
-bool Codegen::visit(SourceElements *)
 {
     Q_UNREACHABLE();
     return false;
@@ -1672,7 +1628,7 @@ bool Codegen::visit(FunctionExpression *ast)
 
     RegisterScope scope(this);
 
-    int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : nullptr);
+    int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body);
     loadClosure(function);
     _expr.setResult(Reference::fromAccumulator(this));
     return false;
@@ -1880,7 +1836,7 @@ bool Codegen::visit(ObjectLiteral *ast)
 
     RegisterScope scope(this);
 
-    for (PropertyAssignmentList *it = ast->properties; it; it = it->next) {
+    for (PropertyDefinitionList *it = ast->properties; it; it = it->next) {
         QString name = it->assignment->name->asString();
         if (PropertyNameAndValue *nv = AST::cast<AST::PropertyNameAndValue *>(it->assignment)) {
             Reference value = expression(nv->value);
@@ -1896,7 +1852,7 @@ bool Codegen::visit(ObjectLiteral *ast)
 
             v.rvalue = value.storeOnStack();
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
-            const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : nullptr);
+            const int function = defineFunction(name, gs, gs->formals, gs->functionBody);
             ObjectPropertyValue &v = valueMap[name];
             if (v.rvalue.isValid() ||
                 (gs->type == PropertyGetterSetter::Getter && v.hasGetter()) ||
@@ -2256,14 +2212,7 @@ static bool endsWithReturn(Node *node)
     if (AST::cast<ThrowStatement *>(node))
         return true;
     if (Program *p = AST::cast<Program *>(node))
-        return endsWithReturn(p->elements);
-    if (SourceElements *se = AST::cast<SourceElements *>(node)) {
-        while (se->next)
-            se = se->next;
-        return endsWithReturn(se->element);
-    }
-    if (StatementSourceElement *sse = AST::cast<StatementSourceElement *>(node))
-        return endsWithReturn(sse->statement);
+        return endsWithReturn(p->statements);
     if (StatementList *sl = AST::cast<StatementList *>(node)) {
         while (sl->next)
             sl = sl->next;
@@ -2278,7 +2227,7 @@ static bool endsWithReturn(Node *node)
 
 int Codegen::defineFunction(const QString &name, AST::Node *ast,
                             AST::FormalParameterList *formals,
-                            AST::SourceElements *body)
+                            AST::StatementList *body)
 {
     enterContext(ast);
 
@@ -2367,7 +2316,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     for (const Context::Member &member : qAsConst(_context->members)) {
         if (member.function) {
             const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
-                                                member.function->body ? member.function->body->elements : nullptr);
+                                                member.function->body);
             loadClosure(function);
             if (! _context->parent) {
                 Reference::fromName(this, member.function->name.toString()).storeConsumeAccumulator();
@@ -2416,7 +2365,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     beginFunctionBodyHook();
 
-    sourceElements(body);
+    statementList(body);
 
     if (hasError || !endsWithReturn(body)) {
         bytecodeGenerator->setLocation(ast->lastSourceLocation());
@@ -2448,24 +2397,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     bytecodeGenerator = savedBytecodeGenerator;
 
     return leaveContext();
-}
-
-bool Codegen::visit(FunctionSourceElement *ast)
-{
-    if (hasError)
-        return false;
-
-    statement(ast->declaration);
-    return false;
-}
-
-bool Codegen::visit(StatementSourceElement *ast)
-{
-    if (hasError)
-        return false;
-
-    statement(ast->statement);
-    return false;
 }
 
 bool Codegen::visit(Block *ast)

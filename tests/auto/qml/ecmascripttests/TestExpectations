@@ -22,12 +22,23 @@ S15.4.4.3_A3_T1 failing
 S15.5.4.11_A5_T1 failing
 S15.2.4.4_A14 failing
 
-# Function declarations in conditionals. We allow them, because the real
-# world requires them.
-Sbp_12.5_A9_T3 failing
-Sbp_12.6.1_A13_T3 failing
-Sbp_12.6.2_A13_T3 failing
-Sbp_12.6.4_A13_T3 failing
+# Function declarations in conditionals. ES6 allows them, but the test
+# is buggy (using a function declaration without a name)
+Sbp_12.5_A9_T3
+Sbp_12.6.1_A13_T3
+Sbp_12.6.2_A13_T3
+Sbp_12.6.4_A13_T3
+
+# Function declarations in blocks, allowed in ES6
+Sbp_A1_T1 failing
+Sbp_A2_T1 failing
+Sbp_A2_T2 failing
+Sbp_A3_T1 failing
+Sbp_A3_T2 failing
+Sbp_A4_T1 failing
+Sbp_A4_T2 failing
+Sbp_A5_T2 failing
+
 
 # es6: function length attributes are configurable, wasn't in es5
 S15.1.2.2_A9.2 failing

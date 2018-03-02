@@ -488,11 +488,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         }
         if (!functionDeclaration) {
             QQmlJS::AST::Statement *statement = static_cast<QQmlJS::AST::Statement*>(foe->node);
-            QQmlJS::AST::SourceElement *sourceElement = new (pool) QQmlJS::AST::StatementSourceElement(statement);
-            QQmlJS::AST::SourceElements *elements = new (pool) QQmlJS::AST::SourceElements(sourceElement);
-            elements = elements->finish();
-
-            QQmlJS::AST::FunctionBody *body = new (pool) QQmlJS::AST::FunctionBody(elements);
+            QQmlJS::AST::StatementList *body = new (pool) QQmlJS::AST::StatementList(statement);
+            body = body->finish();
 
             functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(compiler->newStringRef(stringAt(binding->propertyNameIndex)), paramList, body);
             functionDeclaration->lbraceToken = functionDeclaration->functionToken

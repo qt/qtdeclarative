@@ -146,8 +146,8 @@ public:
     virtual bool visit(Elision *) { return true; }
     virtual void endVisit(Elision *) {}
 
-    virtual bool visit(PropertyAssignmentList *) { return true; }
-    virtual void endVisit(PropertyAssignmentList *) {}
+    virtual bool visit(PropertyDefinitionList *) { return true; }
+    virtual void endVisit(PropertyDefinitionList *) {}
 
     virtual bool visit(PropertyNameAndValue *) { return true; }
     virtual void endVisit(PropertyNameAndValue *) {}
@@ -320,6 +320,12 @@ public:
     virtual bool visit(FunctionExpression *) { return true; }
     virtual void endVisit(FunctionExpression *) {}
 
+    virtual bool visit(ObjectBindingPattern *) { return true; }
+    virtual void endVisit(ObjectBindingPattern *) {}
+
+    virtual bool visit(ArrayBindingPattern *) { return true; }
+    virtual void endVisit(ArrayBindingPattern *) {}
+
     virtual bool visit(BindingElement *) { return true; }
     virtual void endVisit(BindingElement *) {}
 
@@ -335,20 +341,8 @@ public:
     virtual bool visit(FormalParameterList *) { return true; }
     virtual void endVisit(FormalParameterList *) {}
 
-    virtual bool visit(FunctionBody *) { return true; }
-    virtual void endVisit(FunctionBody *) {}
-
     virtual bool visit(Program *) { return true; }
     virtual void endVisit(Program *) {}
-
-    virtual bool visit(SourceElements *) { return true; }
-    virtual void endVisit(SourceElements *) {}
-
-    virtual bool visit(FunctionSourceElement *) { return true; }
-    virtual void endVisit(FunctionSourceElement *) {}
-
-    virtual bool visit(StatementSourceElement *) { return true; }
-    virtual void endVisit(StatementSourceElement *) {}
 
     virtual bool visit(DebuggerStatement *) { return true; }
     virtual void endVisit(DebuggerStatement *) {}

@@ -1845,10 +1845,10 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         else
             name = QStringLiteral("%qml-expression-entry");
 
-        QQmlJS::AST::SourceElements *body;
-        if (function)
-            body = function->body ? function->body->elements : nullptr;
-        else {
+        QQmlJS::AST::StatementList *body;
+        if (function) {
+            body = function->body;
+        } else {
             // Synthesize source elements.
             QQmlJS::MemoryPool *pool = jsEngine->pool();
 
@@ -1858,8 +1858,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
                 QQmlJS::AST::ExpressionNode *expr = node->expressionCast();
                 stmt = new (pool) QQmlJS::AST::ExpressionStatement(expr);
             }
-            QQmlJS::AST::SourceElement *element = new (pool) QQmlJS::AST::StatementSourceElement(stmt);
-            body = new (pool) QQmlJS::AST::SourceElements(element);
+            body = new (pool) QQmlJS::AST::StatementList(stmt);
             body = body->finish();
         }
 
@@ -1873,7 +1872,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     return runtimeFunctionIndices;
 }
 
-int JSCodeGen::defineFunction(const QString &name, AST::Node *ast, AST::FormalParameterList *formals, AST::SourceElements *body)
+int JSCodeGen::defineFunction(const QString &name, AST::Node *ast, AST::FormalParameterList *formals, AST::StatementList *body)
 {
     int qmlContextTemp = -1;
     int importedScriptsTemp = -1;

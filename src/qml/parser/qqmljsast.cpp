@@ -242,10 +242,10 @@ void PropertyGetterSetter::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void PropertyAssignmentList::accept0(Visitor *visitor)
+void PropertyDefinitionList::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-        for (PropertyAssignmentList *it = this; it; it = it->next) {
+        for (PropertyDefinitionList *it = this; it; it = it->next) {
             accept(it->assignment, visitor);
         }
     }
@@ -823,48 +823,10 @@ FormalParameterList *FormalParameterList::finish()
     return front;
 }
 
-void FunctionBody::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
-        accept(elements, visitor);
-    }
-
-    visitor->endVisit(this);
-}
-
 void Program::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-        accept(elements, visitor);
-    }
-
-    visitor->endVisit(this);
-}
-
-void SourceElements::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
-        for (SourceElements *it = this; it; it = it->next) {
-            accept(it->element, visitor);
-        }
-    }
-
-    visitor->endVisit(this);
-}
-
-void FunctionSourceElement::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
-        accept(declaration, visitor);
-    }
-
-    visitor->endVisit(this);
-}
-
-void StatementSourceElement::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
-        accept(statement, visitor);
+        accept(statements, visitor);
     }
 
     visitor->endVisit(this);
@@ -1113,6 +1075,24 @@ void BindingPropertyList::boundNames(QStringList *names)
 {
     for (BindingPropertyList *it = this; it; it = it->next)
         it->binding->boundNames(names);
+}
+
+void ObjectBindingPattern::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(properties, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void ArrayBindingPattern::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(elements, visitor);
+    }
+
+    visitor->endVisit(this);
 }
 
 } } // namespace QQmlJS::AST

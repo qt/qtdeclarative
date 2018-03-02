@@ -61,7 +61,7 @@ void RuntimeCodegen::generateFromFunctionExpression(const QString &fileName,
     if (hasError)
         return;
 
-    int index = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : nullptr);
+    int index = defineFunction(ast->name.toString(), ast, ast->formals, ast->body);
     _module->rootContext = _module->functions.at(index);
 }
 

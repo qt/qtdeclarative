@@ -95,7 +95,7 @@ protected:
     using Visitor::visit;
     using Visitor::endVisit;
 
-    void checkDirectivePrologue(AST::SourceElements *ast);
+    void checkDirectivePrologue(AST::StatementList *ast);
 
     void checkName(const QStringRef &name, const AST::SourceLocation &loc);
 
@@ -136,7 +136,7 @@ protected:
     bool visit(AST::Block *ast) override;
 
 protected:
-    void enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::FunctionBody *body, AST::FunctionExpression *expr);
+    void enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::StatementList *body, AST::FunctionExpression *expr);
 
     void calcEscapingVariables();
 // fields:
