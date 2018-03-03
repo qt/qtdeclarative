@@ -74,7 +74,7 @@ static int proxyPort = 0;
 class MyNetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 {
 public:
-    virtual QNetworkAccessManager *create(QObject *parent);
+    QNetworkAccessManager *create(QObject *parent) override;
 };
 
 QNetworkAccessManager *MyNetworkAccessManagerFactory::create(QObject *parent)

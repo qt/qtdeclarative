@@ -70,7 +70,7 @@ public:
 
     QQmlAbstractProfilerAdapter(QObject *parent = nullptr) :
         QObject(parent), service(nullptr), waiting(true), featuresEnabled(0) {}
-    virtual ~QQmlAbstractProfilerAdapter() {}
+    ~QQmlAbstractProfilerAdapter() override {}
     void setService(QQmlProfilerService *new_service) { service = new_service; }
 
     virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages) = 0;

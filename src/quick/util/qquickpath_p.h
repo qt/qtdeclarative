@@ -449,7 +449,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPath : public QObject, public QQmlParserStatu
     Q_INTERFACES(QQmlParserStatus)
 public:
     QQuickPath(QObject *parent=nullptr);
-    ~QQuickPath();
+    ~QQuickPath() override;
 
     QQmlListProperty<QQuickPathElement> pathElements();
 

@@ -192,7 +192,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStochasticEngine : public QObject
 public:
     explicit QQuickStochasticEngine(QObject *parent = nullptr);
     QQuickStochasticEngine(const QList<QQuickStochasticState*> &states, QObject *parent = nullptr);
-    ~QQuickStochasticEngine();
+    ~QQuickStochasticEngine() override;
 
     QQmlListProperty<QQuickStochasticState> states()
     {
@@ -269,7 +269,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickSpriteEngine : public QQuickStochasticEngine
 public:
     explicit QQuickSpriteEngine(QObject *parent = nullptr);
     QQuickSpriteEngine(const QList<QQuickSprite*> &sprites, QObject *parent = nullptr);
-    ~QQuickSpriteEngine();
+    ~QQuickSpriteEngine() override;
     QQmlListProperty<QQuickSprite> sprites()
     {
         return QQmlListProperty<QQuickSprite>(this, m_sprites);

@@ -60,7 +60,7 @@ class Q_QUICK_EXPORT QQuickTransform : public QObject
     Q_OBJECT
 public:
     explicit QQuickTransform(QObject *parent = nullptr);
-    ~QQuickTransform();
+    ~QQuickTransform() override;
 
     void appendToItem(QQuickItem *);
     void prependToItem(QQuickItem *);
@@ -144,7 +144,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool antialiasing READ antialiasing WRITE setAntialiasing NOTIFY antialiasingChanged RESET resetAntialiasing)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged)
-    Q_PROPERTY(QObject *containsMask READ containsMask WRITE setContainsMask NOTIFY containsMaskChanged REVISION 11)
+    Q_PROPERTY(QObject *containmentMask READ containmentMask WRITE setContainmentMask NOTIFY containmentMaskChanged REVISION 11)
 
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickItemLayer *layer READ layer DESIGNABLE false CONSTANT FINAL)
 
@@ -198,7 +198,7 @@ public:
     Q_ENUM(TransformOrigin)
 
     explicit QQuickItem(QQuickItem *parent = nullptr);
-    virtual ~QQuickItem();
+    ~QQuickItem() override;
 
     QQuickWindow *window() const;
     QQuickItem *parentItem() const;
@@ -321,8 +321,8 @@ public:
     QSharedPointer<QQuickItemGrabResult> grabToImage(const QSize &targetSize = QSize());
 
     Q_INVOKABLE virtual bool contains(const QPointF &point) const;
-    QObject *containsMask() const;
-    void setContainsMask(QObject *mask);
+    QObject *containmentMask() const;
+    void setContainmentMask(QObject *mask);
 
     QTransform itemTransform(QQuickItem *, bool *) const;
     QPointF mapToItem(const QQuickItem *item, const QPointF &point) const;
@@ -393,7 +393,7 @@ Q_SIGNALS:
     void zChanged();
     void implicitWidthChanged();
     void implicitHeightChanged();
-    Q_REVISION(11) void containsMaskChanged();
+    Q_REVISION(11) void containmentMaskChanged();
 
 protected:
     bool event(QEvent *) override;

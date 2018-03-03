@@ -68,7 +68,7 @@ public:
 
     QQmlContext(QQmlEngine *parent, QObject *objParent = nullptr);
     QQmlContext(QQmlContext *parent, QObject *objParent = nullptr);
-    virtual ~QQmlContext();
+    ~QQmlContext() override;
 
     bool isValid() const;
 

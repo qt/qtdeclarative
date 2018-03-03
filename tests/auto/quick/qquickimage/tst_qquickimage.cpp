@@ -62,6 +62,7 @@ public:
     tst_qquickimage();
 
 private slots:
+    void initTestCase();
     void cleanup();
     void noSource();
     void imageSource();
@@ -97,10 +98,20 @@ private slots:
 
 private:
     QQmlEngine engine;
+    QSGRendererInterface::GraphicsApi graphicsApi = QSGRendererInterface::Unknown;
 };
 
 tst_qquickimage::tst_qquickimage()
 {
+}
+
+void tst_qquickimage::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    QScopedPointer<QQuickView> window(new QQuickView(0));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    graphicsApi = window->rendererInterface()->graphicsApi();
 }
 
 void tst_qquickimage::cleanup()
@@ -150,6 +161,11 @@ void tst_qquickimage::imageSource_data()
         QTest::newRow("remote svg") << "/heart.svg" << 595.0 << 841.0 << true << false << false << "";
     if (QImageReader::supportedImageFormats().contains("svgz"))
         QTest::newRow("remote svgz") << "/heart.svgz" << 595.0 << 841.0 << true << false << false << "";
+    if (graphicsApi == QSGRendererInterface::OpenGL) {
+        QTest::newRow("texturefile pkm format") << testFileUrl("logo.pkm").toString() << 256.0 << 256.0 << false << false << true << "";
+        QTest::newRow("texturefile ktx format") << testFileUrl("car.ktx").toString() << 146.0 << 80.0 << false << false << true << "";
+        QTest::newRow("texturefile async") << testFileUrl("logo.pkm").toString() << 256.0 << 256.0 << false << true << true << "";
+    }
     QTest::newRow("remote not found") << "/no-such-file.png" << 0.0 << 0.0 << true
         << false << true << "<Unknown File>:2:1: QML Image: Error transferring {{ServerBaseUrl}}/no-such-file.png - server replied: Not found";
     QTest::newRow("extless") << testFileUrl("colors").toString() << 120.0 << 120.0 << false << false << true << "";
@@ -157,9 +173,15 @@ void tst_qquickimage::imageSource_data()
     QTest::newRow("extless async") << testFileUrl("colors1").toString() << 120.0 << 120.0 << false << true << true << "";
     QTest::newRow("extless not found") << testFileUrl("no-such-file").toString() << 0.0 << 0.0 << false
         << false << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file").toString();
-    // Test that pkm is preferred over png. As pattern.pkm has different size than pattern.png, these tests verify that the right file has been loaded
-    QTest::newRow("extless prefer-tex") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << false << true << "";
-    QTest::newRow("extless prefer-tex async") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << true << true << "";
+    // Test that texture file is preferred over image file, when supported.
+    // Since pattern.pkm has different size than pattern.png, these tests verify that the right file has been loaded
+    if (graphicsApi == QSGRendererInterface::OpenGL) {
+        QTest::newRow("extless prefer-tex") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << false << true << "";
+        QTest::newRow("extless prefer-tex async") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << true << true << "";
+    } else {
+        QTest::newRow("extless ignore-tex") << testFileUrl("pattern").toString() << 200.0 << 200.0 << false << false << true << "";
+        QTest::newRow("extless ignore-tex async") << testFileUrl("pattern").toString() << 200.0 << 200.0 << false << true << true << "";
+    }
 
 }
 

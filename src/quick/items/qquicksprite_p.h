@@ -89,7 +89,7 @@ class Q_QUICK_EXPORT QQuickSprite : public QQuickStochasticState
 
 public:
     explicit QQuickSprite(QObject *parent = nullptr);
-    ~QQuickSprite();
+    ~QQuickSprite() override;
 
     QUrl source() const
     {

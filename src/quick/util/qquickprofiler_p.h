@@ -333,7 +333,7 @@ public:
 
     static void initialize(QObject *parent);
 
-    virtual ~QQuickProfiler();
+    ~QQuickProfiler() override;
 
 signals:
     void dataReady(const QVector<QQuickProfilerData> &data);

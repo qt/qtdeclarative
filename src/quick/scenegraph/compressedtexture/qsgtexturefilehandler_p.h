@@ -67,6 +67,7 @@ public:
     {
         m_logName = !logName.isEmpty() ? logName : QByteArrayLiteral("(unknown)");
     }
+    virtual ~QSGTextureFileHandler() {}
 
     virtual QQuickTextureFactory *read() = 0;
     QIODevice *device() const { return m_device; }

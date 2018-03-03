@@ -71,15 +71,15 @@ public:
         setShaderSourceFile(QOpenGLShader::Fragment, ":/scenegraph/graph/shaders/line.fsh");
     }
 
-    QList<QByteArray> attributes() const {  return QList<QByteArray>() << "pos" << "t"; }
+    QList<QByteArray> attributes() const override {  return QList<QByteArray>() << "pos" << "t"; }
 
-    void updateState(const LineMaterial *m, const LineMaterial *) {
+    void updateState(const LineMaterial *m, const LineMaterial *) override {
         program()->setUniformValue(id_color, m->color);
         program()->setUniformValue(id_spread, m->spread);
         program()->setUniformValue(id_size, m->size);
     }
 
-    void resolveUniforms() {
+    void resolveUniforms() override {
         id_spread = program()->uniformLocation("spread");
         id_size = program()->uniformLocation("size");
         id_color = program()->uniformLocation("color");

@@ -64,6 +64,7 @@ class QSGTextureReader
 {
 public:
     QSGTextureReader(QIODevice *device, const QString &fileName = QString());
+    ~QSGTextureReader();
 
     QQuickTextureFactory *read();
     bool isTexture();

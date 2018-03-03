@@ -55,6 +55,11 @@ QSGTextureReader::QSGTextureReader(QIODevice *device, const QString &fileName)
 {
 }
 
+QSGTextureReader::~QSGTextureReader()
+{
+    delete m_handler;
+}
+
 QQuickTextureFactory *QSGTextureReader::read()
 {
 #if QT_CONFIG(opengl)

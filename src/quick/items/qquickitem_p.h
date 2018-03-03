@@ -93,7 +93,7 @@ class QQuickContents : public QQuickItemChangeListener
 {
 public:
     QQuickContents(QQuickItem *item);
-    ~QQuickContents();
+    ~QQuickContents() override;
 
     QRectF rectF() const { return m_contents; }
 
@@ -154,7 +154,7 @@ class QQuickItemLayer : public QObject, public QQuickItemChangeListener
 
 public:
     QQuickItemLayer(QQuickItem *item);
-    ~QQuickItemLayer();
+    ~QQuickItemLayer() override;
 
     void classBegin();
     void componentComplete();
@@ -255,7 +255,7 @@ public:
     static const QQuickItemPrivate* get(const QQuickItem *item) { return item->d_func(); }
 
     QQuickItemPrivate();
-    ~QQuickItemPrivate();
+    ~QQuickItemPrivate() override;
     void init(QQuickItem *parent);
 
     QQmlListProperty<QObject> data();
@@ -390,7 +390,7 @@ public:
     // Contains mask
     QPointer<QObject> mask;
     // If the mask is an Item, inform it that it's being used as a mask (true) or is no longer being used (false)
-    virtual void registerAsContainsMask(QQuickItem * /* maskedItem */, bool /* set */) { }
+    virtual void registerAsContainmentMask(QQuickItem * /* maskedItem */, bool /* set */) { }
 
     QQuickAnchors *anchors() const;
     mutable QQuickAnchors *_anchors;
@@ -807,7 +807,7 @@ class QQuickKeysAttached : public QObject, public QQuickItemKeyFilter
 
 public:
     QQuickKeysAttached(QObject *parent=nullptr);
-    ~QQuickKeysAttached();
+    ~QQuickKeysAttached() override;
 
     bool enabled() const { Q_D(const QQuickKeysAttached); return d->enabled; }
     void setEnabled(bool enabled) {

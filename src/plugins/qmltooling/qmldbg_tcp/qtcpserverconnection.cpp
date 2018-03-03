@@ -54,7 +54,7 @@ class QTcpServerConnection : public QQmlDebugServerConnection
 
 public:
     QTcpServerConnection();
-    ~QTcpServerConnection();
+    ~QTcpServerConnection() override;
 
     void setServer(QQmlDebugServer *server) override;
     bool setPortRange(int portFrom, int portTo, bool block, const QString &hostaddress) override;

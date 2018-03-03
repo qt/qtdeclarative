@@ -67,7 +67,7 @@
 
      \list
       \li \l{Qt Quick}
-      \li \l{Qt Quick Pointer Handlers Overview}
+      \li \l{Qt Quick Pointer Handlers}
       \li \l{Qt Quick Pointer Handlers QML Types}{Qt Quick Pointer Handlers QML Types}
      \endlist
 */

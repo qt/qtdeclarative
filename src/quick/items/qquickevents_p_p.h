@@ -395,7 +395,7 @@ public:
       , m_pressedButtons(Qt::NoButton)
     {}
 
-    virtual ~QQuickPointerEvent();
+    ~QQuickPointerEvent() override;
 
 public: // property accessors
     QQuickPointerDevice *device() const { return m_device; }
@@ -566,7 +566,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerDevice : public QObject
     Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId CONSTANT)
 
 public:
-    enum DeviceType {
+    enum DeviceType : qint16 {
         UnknownDevice = 0x0000,
         Mouse = 0x0001,
         TouchScreen = 0x0002,
@@ -574,25 +574,25 @@ public:
         Puck = 0x0008,
         Stylus = 0x0010,
         Airbrush = 0x0020,
-        AllDevices = 0x003F
+        AllDevices = 0x7FFF
     };
     Q_DECLARE_FLAGS(DeviceTypes, DeviceType)
     Q_ENUM(DeviceType)
     Q_FLAG(DeviceTypes)
 
-    enum PointerType {
+    enum PointerType : qint16 {
         GenericPointer = 0x0001,
         Finger = 0x0002,
         Pen = 0x0004,
         Eraser = 0x0008,
         Cursor = 0x0010,
-        AllPointerTypes = 0x001F
+        AllPointerTypes = 0x7FFF
     };
     Q_DECLARE_FLAGS(PointerTypes, PointerType)
     Q_ENUM(PointerType)
     Q_FLAG(PointerTypes)
 
-    enum CapabilityFlag {
+    enum CapabilityFlag : qint16 {
         Position    = QTouchDevice::Position,
         Area        = QTouchDevice::Area,
         Pressure    = QTouchDevice::Pressure,
@@ -610,7 +610,7 @@ public:
 
     DeviceType type() const { return m_deviceType; }
     PointerType pointerType() const { return m_pointerType; }
-    Capabilities capabilities() const { return m_capabilities; }
+    Capabilities capabilities() const { return static_cast<Capabilities>(m_capabilities); }
     bool hasCapability(CapabilityFlag cap) { return m_capabilities & cap; }
     int maximumTouchPoints() const { return m_maximumTouchPoints; }
     int buttonCount() const { return m_buttonCount; }
@@ -626,19 +626,21 @@ public:
 
 private:
     QQuickPointerDevice(DeviceType devType, PointerType pType, Capabilities caps, int maxPoints, int buttonCount, const QString &name, qint64 uniqueId = 0)
-      : m_deviceType(devType), m_pointerType(pType), m_capabilities(caps)
-      , m_maximumTouchPoints(maxPoints), m_buttonCount(buttonCount), m_name(name)
+      : m_deviceType(devType), m_pointerType(pType), m_capabilities(static_cast<qint16>(caps))
+      , m_maximumTouchPoints(static_cast<qint8>(maxPoints)), m_buttonCount(static_cast<qint8>(buttonCount)), m_name(name)
       , m_uniqueId(QPointingDeviceUniqueId::fromNumericId(uniqueId))
     {
     }
-    ~QQuickPointerDevice() { }
+    ~QQuickPointerDevice() override { }
 
 private:
+    // begin 64-bit field
     DeviceType m_deviceType;
     PointerType m_pointerType;
-    Capabilities m_capabilities;
-    int m_maximumTouchPoints;
-    int m_buttonCount;
+    qint16 m_capabilities;
+    qint8 m_maximumTouchPoints;
+    qint8 m_buttonCount;
+    // end 64-bit field
     QString m_name;
     QPointingDeviceUniqueId m_uniqueId;
     QVector<QQuickPointerHandler *> m_eventDeliveryTargets; // during delivery, handlers which have already seen the event

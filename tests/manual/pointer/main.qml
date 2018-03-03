@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -28,11 +28,14 @@
 
 import QtQuick 2.8
 import QtQuick.Window 2.2
+import QtQuick.Layouts 1.2
 import Qt.labs.handlers 1.0
+import org.qtproject.Test 1.0
 import "qrc:/quick/shared/" as Examples
 import "content"
 
 Window {
+    id: window
     width: 800
     height: 600
     visible: true
@@ -53,6 +56,7 @@ Window {
             addExample("tap", "TapHandler: device-agnostic tap/click detection for buttons", Qt.resolvedUrl("tapHandler.qml"))
             addExample("multibuttons", "TapHandler: gesturePolicy (99 red balloons)", Qt.resolvedUrl("multibuttons.qml"))
             addExample("flickable with Handlers", "Flickable with buttons, sliders etc. implemented in various ways", Qt.resolvedUrl("flickableWithHandlers.qml"))
+            addExample("tap and drag", "Flickable with all possible combinations of TapHandler and DragHandler children", Qt.resolvedUrl("pointerDrag.qml"))
         }
     }
     Item {
@@ -70,5 +74,28 @@ Window {
         TouchpointFeedbackSprite { }
 
         MouseFeedbackSprite { }
+
+        InputInspector {
+            id: inspector
+            source: window
+        }
+
+        Rectangle {
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+            anchors.margins: 4
+            radius: 5
+            width: Math.max(grid.implicitWidth, 400)
+            implicitHeight: grid.implicitHeight
+            color: "#40404080"
+            GridLayout {
+                id: grid
+                width: parent.width
+                columns: 3
+                Text { text: "mouseGrabber" }   Text { text: inspector.mouseGrabber } Item { Layout.fillWidth: true }
+                Text { text: "passiveGrabbers" }   Text { text: inspector.passiveGrabbers } Item { Layout.fillWidth: true }
+                Text { text: "exclusiveGrabbers" }   Text { text: inspector.exclusiveGrabbers } Item { Layout.fillWidth: true }
+            }
+        }
     }
 }

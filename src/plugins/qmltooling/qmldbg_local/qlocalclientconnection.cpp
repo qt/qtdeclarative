@@ -55,7 +55,7 @@ class QLocalClientConnection : public QQmlDebugServerConnection
 
 public:
     QLocalClientConnection();
-    ~QLocalClientConnection();
+    ~QLocalClientConnection() override;
 
     void setServer(QQmlDebugServer *server) override;
     bool setPortRange(int portFrom, int portTo, bool block, const QString &hostaddress) override;

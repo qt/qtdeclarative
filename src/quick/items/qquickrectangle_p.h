@@ -123,7 +123,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradient : public QObject
 
 public:
     QQuickGradient(QObject *parent=nullptr);
-    ~QQuickGradient();
+    ~QQuickGradient() override;
 
     QQmlListProperty<QQuickGradientStop> stops();
 

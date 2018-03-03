@@ -75,7 +75,7 @@ public:
     static QJSEnginePrivate* get(QV4::ExecutionEngine *e);
 
     QJSEnginePrivate() : mutex(QMutex::Recursive) {}
-    ~QJSEnginePrivate();
+    ~QJSEnginePrivate() override;
 
     static void addToDebugServer(QJSEngine *q);
     static void removeFromDebugServer(QJSEngine *q);

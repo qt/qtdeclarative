@@ -1,35 +1,35 @@
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
-project                 = QtQuickTest
+project                 = QtQmlTest
 description             = Qt Quick Test Reference Documentation
 version                 = $QT_VERSION
+moduleheader            = QtQuickTest
+qhp.projects            = QtQmlTest
 
-qhp.projects            = QtQuickTest
+qhp.QtQmlTest.file                = qtqmltest.qhp
+qhp.QtQmlTest.namespace           = org.qt-project.qtqmltest.$QT_VERSION_TAG
+qhp.QtQmlTest.virtualFolder       = qtqmltest
+qhp.QtQmlTest.indexTitle          = Qt Quick Test
+qhp.QtQmlTest.indexRoot           =
 
-qhp.QtQuickTest.file                = qtqmltest.qhp
-qhp.QtQuickTest.namespace           = org.qt-project.qtquicktest.$QT_VERSION_TAG
-qhp.QtQuickTest.virtualFolder       = qtquicktest
-qhp.QtQuickTest.indexTitle          = Qt Quick Test
-qhp.QtQuickTest.indexRoot           =
-
-qhp.QtQuickTest.filterAttributes    = qtquicktest $QT_VERSION qtrefdoc
-qhp.QtQuickTest.customFilters.Qt.name = QtQuickTest $QT_VERSION
-qhp.QtQuickTest.customFilters.Qt.filterAttributes = qtquicktest $QT_VERSION
-qhp.QtQuickTest.subprojects         = qmltypes classes examples
-qhp.QtQuickTest.subprojects.classes.title = C++ Classes
-qhp.QtQuickTest.subprojects.classes.indexTitle = Qt Quick Test C++ Classes
-qhp.QtQuickTest.subprojects.classes.selectors = class doc:headerfile
-qhp.QtQuickTest.subprojects.classes.sortPages = true
-qhp.QtQuickTest.subprojects.examples.title = Examples
-qhp.QtQuickTest.subprojects.examples.indexTitle = Qt Quick Test Examples
-qhp.QtQuickTest.subprojects.examples.selectors = doc:example
-qhp.QtQuickTest.subprojects.qmltypes.title = QML Types
-qhp.QtQuickTest.subprojects.qmltypes.indexTitle = Qt Quick Test QML Types
-qhp.QtQuickTest.subprojects.qmltypes.selectors = qmlclass
-qhp.QtQuickTest.subprojects.qmltypes.sortPages = true
+qhp.QtQmlTest.filterAttributes    = qtqmltest $QT_VERSION qtrefdoc
+qhp.QtQmlTest.customFilters.Qt.name = QtQmlTest $QT_VERSION
+qhp.QtQmlTest.customFilters.Qt.filterAttributes = qtqmltest $QT_VERSION
+qhp.QtQmlTest.subprojects         = qmltypes classes examples
+qhp.QtQmlTest.subprojects.classes.title = C++ Classes
+qhp.QtQmlTest.subprojects.classes.indexTitle = Qt Quick Test C++ Classes
+qhp.QtQmlTest.subprojects.classes.selectors = class doc:headerfile
+qhp.QtQmlTest.subprojects.classes.sortPages = true
+qhp.QtQmlTest.subprojects.examples.title = Examples
+qhp.QtQmlTest.subprojects.examples.indexTitle = Qt Quick Test Examples
+qhp.QtQmlTest.subprojects.examples.selectors = doc:example
+qhp.QtQmlTest.subprojects.qmltypes.title = QML Types
+qhp.QtQmlTest.subprojects.qmltypes.indexTitle = Qt Quick Test QML Types
+qhp.QtQmlTest.subprojects.qmltypes.selectors = qmlclass
+qhp.QtQmlTest.subprojects.qmltypes.sortPages = true
 
 
-tagfile                 = ../../../doc/qtquicktest/qtquicktest.tags
+tagfile                 = ../../../doc/qtqmltest/qtqmltest.tags
 
 depends += qtcore qtxmlpatterns qtgui qttestlib qtqml qtquick qtdoc
 

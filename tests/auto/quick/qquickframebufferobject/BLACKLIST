@@ -1,6 +1,3 @@
-# QTBUG-64470
-[testInvalidate)
-osx
 # QTBUG-65614
 b2qt
 [testThatStuffWorks]

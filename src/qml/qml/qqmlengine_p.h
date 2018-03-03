@@ -122,7 +122,7 @@ class Q_QML_PRIVATE_EXPORT QQmlEnginePrivate : public QJSEnginePrivate
     Q_DECLARE_PUBLIC(QQmlEngine)
 public:
     QQmlEnginePrivate(QQmlEngine *);
-    ~QQmlEnginePrivate();
+    ~QQmlEnginePrivate() override;
 
     void init();
     // No mutex protecting baseModulesUninitialized, because use outside QQmlEngine
@@ -341,7 +341,7 @@ void QQmlEnginePrivate::deleteInEngineThread(T *value)
     } else {
         struct I : public Deletable {
             I(T *value) : value(value) {}
-            ~I() { delete value; }
+            ~I() override { delete value; }
             T *value;
         };
         I *i = new I(value);

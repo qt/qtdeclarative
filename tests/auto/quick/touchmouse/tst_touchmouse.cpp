@@ -668,9 +668,9 @@ void tst_TouchMouse::touchButtonOnFlickable()
     QTest::touchEvent(window.data(), device).move(0, p3, window.data());
     QQuickTouchUtils::flush(window.data());
 
+    QTRY_COMPARE(eventItem2->touchUngrabCount, 1);
     QVERIFY(eventItem2->eventList.size() > 2);
     QCOMPARE(eventItem2->eventList.at(1).type, QEvent::TouchUpdate);
-    QCOMPARE(eventItem2->touchUngrabCount, 1);
     QCOMPARE(window->mouseGrabberItem(), flickable);
     QVERIFY(windowPriv->touchMouseId != -1);
     QCOMPARE(pointerEvent->point(0)->grabberItem(), flickable);

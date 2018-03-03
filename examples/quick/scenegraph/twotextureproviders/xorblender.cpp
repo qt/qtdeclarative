@@ -77,7 +77,7 @@ class XorBlendShader : public QSGSimpleMaterialShader<XorBlendState>
     QSG_DECLARE_SIMPLE_SHADER(XorBlendShader, XorBlendState)
 public:
 
-    const char *vertexShader() const {
+    const char *vertexShader() const override {
         return
         "attribute highp vec4 aVertex;              \n"
         "attribute highp vec2 aTexCoord;            \n"
@@ -89,7 +89,7 @@ public:
         "}";
     }
 
-    const char *fragmentShader() const {
+    const char *fragmentShader() const override {
         return
         "uniform lowp float qt_Opacity;                                             \n"
         "uniform lowp sampler2D uSource1;                                           \n"
@@ -102,11 +102,11 @@ public:
         "}";
     }
 
-    QList<QByteArray> attributes() const {
+    QList<QByteArray> attributes() const override {
         return QList<QByteArray>() << "aVertex" << "aTexCoord";
     }
 
-    void updateState(const XorBlendState *state, const XorBlendState *) {
+    void updateState(const XorBlendState *state, const XorBlendState *) override {
         QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
         // We bind the textures in inverse order so that we leave the updateState
         // function with GL_TEXTURE0 as the active texture unit. This is maintain
@@ -118,7 +118,7 @@ public:
         state->texture1->bind();
     }
 
-    void resolveUniforms() {
+    void resolveUniforms() override {
         // The texture units never change, only the texturess we bind to them so
         // we set these once and for all here.
         program()->setUniformValue("uSource1", 0); // GL_TEXTURE0
@@ -165,7 +165,7 @@ public:
         connect(m_provider2.data(), &QSGTextureProvider::textureChanged, this, &XorNode::textureChange, Qt::DirectConnection);
     }
 
-    void preprocess() {
+    void preprocess() override {
         XorBlendState *state = m_material->state();
         // Update the textures from the providers, calling into QSGDynamicTexture if required
         if (m_provider1) {

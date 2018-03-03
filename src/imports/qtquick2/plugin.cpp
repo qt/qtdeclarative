@@ -65,7 +65,7 @@ public:
         QQmlQtQuick2Module::defineModule();
     }
 
-    ~QtQuick2Plugin()
+    ~QtQuick2Plugin() override
     {
         if (moduleDefined)
             QQmlQtQuick2Module::undefineModule();

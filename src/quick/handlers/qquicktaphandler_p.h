@@ -96,6 +96,8 @@ Q_SIGNALS:
     void longPressThresholdChanged();
     void gesturePolicyChanged();
     void tapped();
+    void singleTapped();
+    void doubleTapped();
     void longPressed();
 
 protected:

@@ -110,7 +110,7 @@ public:
     };
 
     QQmlDataBlob(const QUrl &, Type, QQmlTypeLoader* manager);
-    virtual ~QQmlDataBlob();
+    ~QQmlDataBlob() override;
 
     void startLoading();
 
@@ -262,7 +262,7 @@ public:
     {
     public:
         Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader);
-        ~Blob();
+        ~Blob() override;
 
         const QQmlImports &imports() const { return m_importCache; }
 
@@ -438,7 +438,7 @@ private:
     QQmlTypeData(const QUrl &, QQmlTypeLoader *);
 
 public:
-    ~QQmlTypeData();
+    ~QQmlTypeData() override;
 
     const QList<ScriptReference> &resolvedScripts() const;
 
@@ -523,7 +523,7 @@ private:
     QQmlScriptData();
 
 public:
-    ~QQmlScriptData();
+    ~QQmlScriptData() override;
 
     QUrl url;
     QString urlString;
@@ -554,7 +554,7 @@ private:
     QQmlScriptBlob(const QUrl &, QQmlTypeLoader *);
 
 public:
-    ~QQmlScriptBlob();
+    ~QQmlScriptBlob() override;
 
     struct ScriptReference
     {

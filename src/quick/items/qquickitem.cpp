@@ -2068,7 +2068,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     In the QPainter / QWidget world, it is some times favorable to
     cache complex content in a pixmap, image or texture. In Qt Quick,
     because of the techniques already applied by the \l {Qt Quick
-    Scene Graph Renderer} {scene graph renderer}, this will in most
+    Scene Graph OpenGL Renderer} {scene graph renderer}, this will in most
     cases not be the case. Excessive draw calls are already reduced
     because of batching and a cache will in most cases end up blending
     more pixels than the original content. The overhead of rendering
@@ -3956,8 +3956,8 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 
 /*!
     This event handler can be reimplemented in a subclass to receive focus-in
-    events for an item. The event information is provided by the
-    \a event parameter.
+    events for an item. The event information is provided by the \c event
+    parameter.
   */
 void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
 {
@@ -3973,8 +3973,8 @@ void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
 
 /*!
     This event handler can be reimplemented in a subclass to receive focus-out
-    events for an item. The event information is provided by the
-    \a event parameter.
+    events for an item. The event information is provided by the \c event
+    parameter.
   */
 void QQuickItem::focusOutEvent(QFocusEvent * /*event*/)
 {
@@ -5179,8 +5179,8 @@ void QQuickItem::updateInputMethod(Qt::InputMethodQueries queries)
 }
 #endif // im
 
-/*! \internal */
 // XXX todo - do we want/need this anymore?
+/*! \internal */
 QRectF QQuickItem::boundingRect() const
 {
     Q_D(const QQuickItem);
@@ -7616,7 +7616,7 @@ bool QQuickItem::contains(const QPointF &point) const
 }
 
 /*!
-    \qmlproperty QObject * QtQuick::Item::containsMask
+    \qmlproperty QObject* QtQuick::Item::containmentMask
     \since 5.11
     This property holds an optional mask for the Item to be used in the
     QtQuick::Item::contains method.
@@ -7624,25 +7624,25 @@ bool QQuickItem::contains(const QPointF &point) const
     an input event has landed into the item or not.
 
     By default the \l contains method will return true for any point
-    within the Item's bounding box. \c containsMask allows for a
+    within the Item's bounding box. \c containmentMask allows for a
     more fine-grained control. For example, the developer could
-    define and use an AnotherItem element as containsMask,
+    define and use an AnotherItem element as containmentMask,
     which has a specialized contains method, like:
 
     \code
-    Item { id: item; containsMask: AnotherItem { id: anotherItem } }
+    Item { id: item; containmentMask: AnotherItem { id: anotherItem } }
     \endcode
 
     \e{item}'s contains method would then return true only if
     \e{anotherItem}'s contains implementation returns true.
 */
-QObject *QQuickItem::containsMask() const
+QObject *QQuickItem::containmentMask() const
 {
     Q_D(const QQuickItem);
     return d->mask.data();
 }
 
-void QQuickItem::setContainsMask(QObject *mask)
+void QQuickItem::setContainmentMask(QObject *mask)
 {
     Q_D(QQuickItem);
     // an Item can't mask itself (to prevent infinite loop in contains())
@@ -7652,7 +7652,7 @@ void QQuickItem::setContainsMask(QObject *mask)
     QQuickItem *quickMask = qobject_cast<QQuickItem *>(d->mask);
     if (quickMask) {
         QQuickItemPrivate *maskPrivate = QQuickItemPrivate::get(quickMask);
-        maskPrivate->registerAsContainsMask(this, false); // removed from use as my mask
+        maskPrivate->registerAsContainmentMask(this, false); // removed from use as my mask
     }
 
     if (mask) {
@@ -7667,9 +7667,9 @@ void QQuickItem::setContainsMask(QObject *mask)
     quickMask = qobject_cast<QQuickItem *>(mask);
     if (quickMask) {
         QQuickItemPrivate *maskPrivate = QQuickItemPrivate::get(quickMask);
-        maskPrivate->registerAsContainsMask(this, true); // telling maskPrivate that "this" is using it as mask
+        maskPrivate->registerAsContainmentMask(this, true); // telling maskPrivate that "this" is using it as mask
     }
-    emit containsMaskChanged();
+    emit containmentMaskChanged();
 }
 
 /*!

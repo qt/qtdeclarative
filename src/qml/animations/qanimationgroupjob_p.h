@@ -63,7 +63,7 @@ class Q_QML_PRIVATE_EXPORT QAnimationGroupJob : public QAbstractAnimationJob
     Q_DISABLE_COPY(QAnimationGroupJob)
 public:
     QAnimationGroupJob();
-    ~QAnimationGroupJob();
+    ~QAnimationGroupJob() override;
 
     void appendAnimation(QAbstractAnimationJob *animation);
     void prependAnimation(QAbstractAnimationJob *animation);

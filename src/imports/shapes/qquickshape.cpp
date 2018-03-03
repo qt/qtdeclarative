@@ -1404,7 +1404,7 @@ void QQuickShapeRadialGradient::setFocalRadius(qreal v)
     Conical gradients interpolate colors counter-clockwise around a center
     point in Shape items.
 
-    \note The \l{ShapeGradient.spread}{spread mode} setting has no effect for
+    \note The \l{ShapeGradient::spread}{spread mode} setting has no effect for
     conical gradients.
 
     \note ConicalGradient is only supported in combination with Shape items. It

@@ -160,7 +160,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickState : public QObject
 
 public:
     QQuickState(QObject *parent=nullptr);
-    virtual ~QQuickState();
+    ~QQuickState() override;
 
     QString name() const;
     void setName(const QString &);

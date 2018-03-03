@@ -92,7 +92,7 @@ public:
     QQmlEngine *engine() const { return context() ? context()->engine : nullptr; }
 
 private:
-    ~QQmlBoundSignalExpression();
+    ~QQmlBoundSignalExpression() override;
 
     void init(QQmlContextData *ctxt, QObject *scope);
 

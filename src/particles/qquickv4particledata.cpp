@@ -294,7 +294,7 @@ class QV4ParticleDataDeletable : public QV8Engine::Deletable
 {
 public:
     QV4ParticleDataDeletable(QV4::ExecutionEngine *engine);
-    ~QV4ParticleDataDeletable();
+    ~QV4ParticleDataDeletable() override;
 
     QV4::PersistentValue proto;
 };

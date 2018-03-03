@@ -102,7 +102,7 @@ public:
     QActionAnimation();
 
     QActionAnimation(QAbstractAnimationAction *action);
-    ~QActionAnimation();
+    ~QActionAnimation() override;
 
     int duration() const override;
     void setAnimAction(QAbstractAnimationAction *action);
@@ -130,7 +130,7 @@ class Q_AUTOTEST_EXPORT QQuickBulkValueAnimator : public QAbstractAnimationJob
     Q_DISABLE_COPY(QQuickBulkValueAnimator)
 public:
     QQuickBulkValueAnimator();
-    ~QQuickBulkValueAnimator();
+    ~QQuickBulkValueAnimator() override;
 
     void setAnimValue(QQuickBulkValueUpdater *value);
     QQuickBulkValueUpdater *getAnimValue() const { return animValue; }
@@ -307,7 +307,7 @@ class Q_AUTOTEST_EXPORT QQuickAnimationPropertyUpdater : public QQuickBulkValueU
 {
 public:
     QQuickAnimationPropertyUpdater() : interpolatorType(0), interpolator(nullptr), prevInterpolatorType(0), reverse(false), fromSourced(false), fromDefined(false), wasDeleted(nullptr) {}
-    ~QQuickAnimationPropertyUpdater();
+    ~QQuickAnimationPropertyUpdater() override;
 
     void setValue(qreal v) override;
 

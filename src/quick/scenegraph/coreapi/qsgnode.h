@@ -190,7 +190,7 @@ void Q_QUICK_EXPORT qsgnode_set_description(QSGNode *node, const QString &descri
 class Q_QUICK_EXPORT QSGBasicGeometryNode : public QSGNode
 {
 public:
-    ~QSGBasicGeometryNode();
+    ~QSGBasicGeometryNode() override;
 
     void setGeometry(QSGGeometry *geometry);
     const QSGGeometry *geometry() const { return m_geometry; }
@@ -224,7 +224,7 @@ class Q_QUICK_EXPORT QSGGeometryNode : public QSGBasicGeometryNode
 {
 public:
     QSGGeometryNode();
-    ~QSGGeometryNode();
+    ~QSGGeometryNode() override;
 
     void setMaterial(QSGMaterial *material);
     QSGMaterial *material() const { return m_material; }
@@ -257,7 +257,7 @@ class Q_QUICK_EXPORT QSGClipNode : public QSGBasicGeometryNode
 {
 public:
     QSGClipNode();
-    ~QSGClipNode();
+    ~QSGClipNode() override;
 
     void setIsRectangular(bool rectHint);
     bool isRectangular() const { return m_is_rectangular; }
@@ -277,7 +277,7 @@ class Q_QUICK_EXPORT QSGTransformNode : public QSGNode
 {
 public:
     QSGTransformNode();
-    ~QSGTransformNode();
+    ~QSGTransformNode() override;
 
     void setMatrix(const QMatrix4x4 &matrix);
     const QMatrix4x4 &matrix() const { return m_matrix; }
@@ -295,7 +295,7 @@ class Q_QUICK_EXPORT QSGRootNode : public QSGNode
 {
 public:
     QSGRootNode();
-    ~QSGRootNode();
+    ~QSGRootNode() override;
 
 private:
     void notifyNodeChange(QSGNode *node, DirtyState state);
@@ -312,7 +312,7 @@ class Q_QUICK_EXPORT QSGOpacityNode : public QSGNode
 {
 public:
     QSGOpacityNode();
-    ~QSGOpacityNode();
+    ~QSGOpacityNode() override;
 
     void setOpacity(qreal opacity);
     qreal opacity() const { return m_opacity; }

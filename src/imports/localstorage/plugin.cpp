@@ -97,7 +97,7 @@ class QQmlSqlDatabaseData : public QV8Engine::Deletable
 {
 public:
     QQmlSqlDatabaseData(QV4::ExecutionEngine *engine);
-    ~QQmlSqlDatabaseData();
+    ~QQmlSqlDatabaseData() override;
 
     QV4::PersistentValue databaseProto;
     QV4::PersistentValue queryProto;
@@ -611,7 +611,15 @@ May throw exception with code property SQLException.DATABASE_ERR or SQLException
 
 See example below.
 
-\snippet qml/localstorage/dbtransaction.js 2
+\badcode
+    var db = LocalStorage.openDatabaseSync("ActivityTrackDB", "", "Database tracking sports activities", 1000000);
+    if (db.version == "0.1") {
+        db.changeVersion("0.1", "0.2", function(tx) {
+            tx.executeSql("INSERT INTO trip_log VALUES(?, ?, ?)",
+                        [ "01/10/2016","Sylling - Vikersund", "53" ]);
+        }
+    });
+\endcode
 
 \section3 db.transaction(callback(tx))
 
@@ -621,7 +629,10 @@ you can call \e executeSql on \e tx to read and modify the database.
 If the callback throws exceptions, the transaction is rolled back.
 Below you will find an example of a database transaction which catches exceptions.
 
-\snippet qml/localstorage/dbtransaction.js 0
+
+\quotefromfile localstorage/localstorage/Database.js
+\skipuntil dbInit()
+\printto dbGetHandle
 
 In the example you can see an \c insert statement where values are assigned to the fields,
 and the record is written into the table. That is an \c insert statement with a syntax that is usual
@@ -631,15 +642,24 @@ store them in a table.
 Let's suppose a simple example where we store trips in JSON format using \c date as the unique key.
 An example of a table that could be used for that purpose:
 
-\snippet qml/localstorage/dbtransaction.js 3
+\badcode
+    create table trip_log(date text, data text)
+\endcode
 
 The assignment of values to a JSON object:
 
-\snippet qml/localstorage/dbtransaction.js 4
+\badcode
+    var obj = {description = "Vikersund - Noresund", distance = "60"}
+\endcode
 
 In that case, the data could be saved in the following way:
 
-\snippet qml/localstorage/dbtransaction.js 5
+\badcode
+    db.transaction(function(tx) {
+        result = tx.executeSQL("insert into trip_log values (?,?)",
+                               ["01/11/2016", JSON.stringify(obj)])
+
+\endcode
 
 \section3 db.readTransaction(callback(tx))
 
@@ -664,7 +684,9 @@ May throw exception with code property SQLException.DATABASE_ERR, SQLException.S
 
 See below for an example:
 
-\snippet qml/localstorage/dbtransaction.js 1
+\quotefromfile localstorage/localstorage/Database.js
+\skipto dbReadAll()
+\printto dbUpdate(Pdate
 
 \section1 Method Documentation
 
@@ -693,7 +715,7 @@ public:
     QQuickLocalStorage(QObject *parent=nullptr) : QObject(parent)
     {
     }
-    ~QQuickLocalStorage() {
+    ~QQuickLocalStorage() override {
     }
 
    Q_INVOKABLE void openDatabaseSync(QQmlV4Function* args);

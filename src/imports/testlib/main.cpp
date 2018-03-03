@@ -73,7 +73,7 @@ public:
         :QObject(parent)
     {}
 
-    ~QuickTestUtil()
+    ~QuickTestUtil() override
     {}
     bool printAvailableFunctions() const
     {

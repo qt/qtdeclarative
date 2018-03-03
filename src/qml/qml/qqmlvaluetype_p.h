@@ -67,7 +67,7 @@ class Q_QML_PRIVATE_EXPORT QQmlValueType : public QObject, public QAbstractDynam
 {
 public:
     QQmlValueType(int userType, const QMetaObject *metaObject);
-    ~QQmlValueType();
+    ~QQmlValueType() override;
     void read(QObject *, int);
     void write(QObject *, int, QQmlPropertyData::WriteFlags flags);
     QVariant value();

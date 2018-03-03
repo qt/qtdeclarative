@@ -242,7 +242,7 @@ void tst_QQuickFramebufferObject::testInvalidate()
     item->update();
 
     QTRY_COMPARE(frameInfo.createFBOCount, 1);
-    QCOMPARE(frameInfo.fboSize, QSize(300, 300));
+    QTRY_COMPARE(frameInfo.fboSize, QSize(300, 300));
 }
 
 QTEST_MAIN(tst_QQuickFramebufferObject)

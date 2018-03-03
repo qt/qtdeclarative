@@ -110,7 +110,7 @@ public:
     explicit QQuickWindow(QWindow *parent = nullptr);
     explicit QQuickWindow(QQuickRenderControl *renderControl);
 
-    virtual ~QQuickWindow();
+    ~QQuickWindow() override;
 
     QQuickItem *contentItem() const;
 

@@ -423,6 +423,24 @@ static QStringList fromLatin1List(const QList<QByteArray> &list)
     return res;
 }
 
+class BackendSupport
+{
+public:
+    BackendSupport()
+    {
+        delete QSGContext::createTextureFactoryFromImage(QImage());  // Force init of backend data
+        hasOpenGL = QQuickWindow::sceneGraphBackend().isEmpty();     // i.e. default
+        QList<QByteArray> list;
+        if (hasOpenGL)
+            list.append(QSGTextureReader::supportedFileFormats());
+        list.append(QImageReader::supportedImageFormats());
+        fileSuffixes = fromLatin1List(list);
+    }
+    bool hasOpenGL;
+    QStringList fileSuffixes;
+};
+Q_GLOBAL_STATIC(BackendSupport, backendSupport);
+
 static QString existingImageFileForPath(const QString &localFile)
 {
     // Do nothing if given filepath exists or already has a suffix
@@ -430,11 +448,9 @@ static QString existingImageFileForPath(const QString &localFile)
     if (!fi.suffix().isEmpty() || fi.exists())
         return localFile;
 
-    static const QStringList suffixes = fromLatin1List(QSGTextureReader::supportedFileFormats() +
-                                                       QImageReader::supportedImageFormats());
     QString tryFile = localFile + QStringLiteral(".xxxx");
     const int suffixIdx = localFile.length() + 1;
-    for (const QString &suffix : suffixes) {
+    for (const QString &suffix : backendSupport()->fileSuffixes) {
         tryFile.replace(suffixIdx, 10, suffix);
         if (QFileInfo::exists(tryFile))
             return tryFile;
@@ -801,7 +817,7 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             QSize readSize;
             if (f.open(QIODevice::ReadOnly)) {
                 QSGTextureReader texReader(&f, localFile);
-                if (texReader.isTexture()) {
+                if (backendSupport()->hasOpenGL && texReader.isTexture()) {
                     QQuickTextureFactory *factory = texReader.read();
                     if (factory) {
                         readSize = factory->textureSize();
@@ -1284,7 +1300,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
 
     if (f.open(QIODevice::ReadOnly)) {
         QSGTextureReader texReader(&f, localFile);
-        if (texReader.isTexture()) {
+        if (backendSupport()->hasOpenGL && texReader.isTexture()) {
             QQuickTextureFactory *factory = texReader.read();
             if (factory) {
                 *ok = true;

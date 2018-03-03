@@ -97,7 +97,7 @@ struct QQmlProfilerEvent : public QQmlProfilerDefinitions {
 
     QQmlProfilerEvent(QQmlProfilerEvent &&other)
     {
-        memcpy(this, &other, sizeof(QQmlProfilerEvent));
+        memcpy(static_cast<void *>(this), static_cast<const void *>(&other), sizeof(QQmlProfilerEvent));
         other.m_dataType = Inline8Bit; // prevent dtor from deleting the pointer
     }
 
@@ -117,7 +117,7 @@ struct QQmlProfilerEvent : public QQmlProfilerDefinitions {
     QQmlProfilerEvent &operator=(QQmlProfilerEvent &&other)
     {
         if (this != &other) {
-            memcpy(this, &other, sizeof(QQmlProfilerEvent));
+            memcpy(static_cast<void *>(this), static_cast<const void *>(&other), sizeof(QQmlProfilerEvent));
             other.m_dataType = Inline8Bit;
         }
         return *this;

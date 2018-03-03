@@ -56,7 +56,7 @@ class Q_QUICK_EXPORT QQuickRenderControl : public QObject
 
 public:
     explicit QQuickRenderControl(QObject *parent = nullptr);
-    ~QQuickRenderControl();
+    ~QQuickRenderControl() override;
 
     void prepareThread(QThread *targetThread);
     void initialize(QOpenGLContext *gl);

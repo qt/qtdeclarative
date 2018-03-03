@@ -77,9 +77,9 @@ public:
         setShaderSourceFile(QOpenGLShader::Fragment, ":/scenegraph/graph/shaders/noisy.fsh");
     }
 
-    QList<QByteArray> attributes() const {  return QList<QByteArray>() << "aVertex" << "aTexCoord"; }
+    QList<QByteArray> attributes() const override {  return QList<QByteArray>() << "aVertex" << "aTexCoord"; }
 
-    void updateState(const NoisyMaterial *m, const NoisyMaterial *) {
+    void updateState(const NoisyMaterial *m, const NoisyMaterial *) override {
 
         // Set the color
         program()->setUniformValue(id_color, m->color);
@@ -93,7 +93,7 @@ public:
         program()->setUniformValue(id_textureSize, QSizeF(1.0 / s.width(), 1.0 / s.height()));
     }
 
-    void resolveUniforms() {
+    void resolveUniforms() override {
         id_texture = program()->uniformLocation("texture");
         id_textureSize = program()->uniformLocation("textureSize");
         id_color = program()->uniformLocation("color");

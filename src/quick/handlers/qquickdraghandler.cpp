@@ -53,20 +53,20 @@ QT_BEGIN_NAMESPACE
 
     DragHandler is a handler that is used to interactively move an Item.
     Like other Pointer Handlers, by default it is fully functional, and
-    manipulates its \l target.
+    manipulates its \l {PointerHandler::target} {target}.
 
     \snippet pointerHandlers/dragHandler.qml 0
 
     It has properties to restrict the range of dragging.
 
     If it is declared within one Item but is assigned a different
-    \l {PointerHandler::target}, then it handles events within the
-    bounds of the \l {PointerHandler::parent} Item but
+    \l {PointerHandler::target} {target}, then it handles events within the
+    bounds of the \l {PointerHandler::parent} {parent} Item but
     manipulates the \c target Item instead:
 
     \snippet pointerHandlers/dragHandlerDifferentTarget.qml 0
 
-    A third way to use it is to set \l {PointerHandler::target} to
+    A third way to use it is to set \l {PointerHandler::target} {target} to
     \c null and react to property changes in some other way:
 
     \snippet pointerHandlers/dragHandlerNullTarget.qml 0
@@ -108,15 +108,15 @@ QPointF QQuickDragHandler::localTargetPosition(QQuickEventPoint *point)
 
 void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
-    if (!target() || !target()->parentItem())
-        return;
     if (grabber == this && stateChange == QQuickEventPoint::GrabExclusive) {
         // In case the grab got handed over from another grabber, we might not get the Press.
         if (!m_pressedInsideTarget) {
-            m_pressTargetPos = QPointF(target()->width(), target()->height()) / 2;
+            if (target())
+                m_pressTargetPos = QPointF(target()->width(), target()->height()) / 2;
             m_pressScenePos = point->scenePosition();
         } else if (m_pressTargetPos.isNull()) {
-            m_pressTargetPos = localTargetPosition(point);
+            if (target())
+                m_pressTargetPos = localTargetPosition(point);
             m_pressScenePos = point->scenePosition();
         }
     }
@@ -137,8 +137,10 @@ void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
     point->setAccepted();
     switch (point->state()) {
     case QQuickEventPoint::Pressed:
-        m_pressedInsideTarget = targetContains(point);
-        m_pressTargetPos = localTargetPosition(point);
+        if (target()) {
+            m_pressedInsideTarget = targetContains(point);
+            m_pressTargetPos = localTargetPosition(point);
+        }
         m_pressScenePos = point->scenePosition();
         setPassiveGrab(point);
         break;
@@ -214,23 +216,33 @@ void QQuickDragHandler::setTranslation(const QVector2D &trans)
 
 /*!
     \qmlpropertygroup QtQuick::DragHandler::xAxis
+    \qmlproperty real QtQuick::DragHandler::xAxis.minimum
+    \qmlproperty real QtQuick::DragHandler::xAxis.maximum
+    \qmlproperty bool QtQuick::DragHandler::xAxis.enabled
+
+    \c xAxis controls the constraints for horizontal dragging.
+
+    \c minimum is the minimum acceptable value of \l {Item::x}{x} to be
+    applied to the \l {PointerHandler::target} {target}.
+    \c maximum is the maximum acceptable value of \l {Item::x}{x} to be
+    applied to the \l {PointerHandler::target} {target}.
+    If \c enabled is true, horizontal dragging is allowed.
+ */
+
+/*!
     \qmlpropertygroup QtQuick::DragHandler::yAxis
-    \qmlproperty real QtQuick::DragHandler::DragAxis::minimum
-    \qmlproperty real QtQuick::DragHandler::DragAxis::maximum
-    \qmlproperty real QtQuick::DragHandler::DragAxis::enabled
+    \qmlproperty real QtQuick::DragHandler::yAxis.minimum
+    \qmlproperty real QtQuick::DragHandler::yAxis.maximum
+    \qmlproperty bool QtQuick::DragHandler::yAxis.enabled
 
-    \c xAxis and yAxis control the constraints for horizontal and vertical
-    dragging, respectively.
+    \c yAxis controls the constraints for vertical dragging.
 
-    \value minimum
-        The minimum acceptable value of \l {Item::x}{x} or \l {Item::y}{y}
-        to be applied to the \l target
-    \value maximum
-        The maximum acceptable value of \l {Item::x}{x} or \l {Item::y}{y}
-        to be applied to the \l target
-    \value enabled
-        Whether dragging in this direction is allowed at all
-*/
+    \c minimum is the minimum acceptable value of \l {Item::y}{y} to be
+    applied to the \l {PointerHandler::target} {target}.
+    \c maximum is the maximum acceptable value of \l {Item::y}{y} to be
+    applied to the \l {PointerHandler::target} {target}.
+    If \c enabled is true, vertical dragging is allowed.
+ */
 QQuickDragAxis::QQuickDragAxis()
   : m_minimum(-DBL_MAX)
   , m_maximum(DBL_MAX)
