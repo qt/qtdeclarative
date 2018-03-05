@@ -88,8 +88,8 @@ class Q_QML_PRIVATE_EXPORT QQmlDelegateModel : public QQmlInstanceModel, public 
     Q_PROPERTY(QQmlListProperty<QQmlDelegateModelGroup> groups READ groups CONSTANT)
     Q_PROPERTY(QObject *parts READ parts CONSTANT)
     Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged)
-    Q_PROPERTY(int rows READ rows WRITE setRows RESET resetRows NOTIFY rowsChanged REVISION 12)
-    Q_PROPERTY(int columns READ columns WRITE setColumns RESET resetColumns NOTIFY columnsChanged REVISION 12)
+    Q_PROPERTY(int rows READ rows NOTIFY rowsChanged REVISION 12)
+    Q_PROPERTY(int columns READ columns NOTIFY columnsChanged REVISION 12)
     Q_CLASSINFO("DefaultProperty", "delegate")
     Q_INTERFACES(QQmlParserStatus)
 public:
@@ -110,12 +110,7 @@ public:
     void setRootIndex(const QVariant &root);
 
     int rows() const;
-    void setRows(int rows);
-    void resetRows();
-
     int columns() const;
-    void setColumns(int columns);
-    void resetColumns();
 
     Q_INVOKABLE QVariant modelIndex(int idx) const;
     Q_INVOKABLE QVariant parentModelIndex() const;

@@ -303,9 +303,6 @@ public:
     void incubatorStatusChanged(QQDMIncubationTask *incubationTask, QQmlIncubator::Status status);
     void setInitialState(QQDMIncubationTask *incubationTask, QObject *o);
 
-    void setRows(int rows);
-    void setColumns(int columns);
-
     QQmlAdaptorModel m_adaptorModel;
     QQmlListCompositor m_compositor;
     QQmlComponent *m_delegate;

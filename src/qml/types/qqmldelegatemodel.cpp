@@ -501,51 +501,6 @@ int QQmlDelegateModel::rows() const
     return d->m_adaptorModel.rowCount();
 }
 
-void QQmlDelegateModelPrivate::setRows(int rows)
-{
-    Q_Q(QQmlDelegateModel);
-    const bool changed = m_adaptorModel.rowCount() != rows;
-
-    if (changed || !m_adaptorModel.isValid()) {
-        const int oldCount = m_count;
-
-        if (rows > 0)
-            m_adaptorModel.rows = rows;
-        else
-            m_adaptorModel.rows.invalidate();
-
-        // Check if the previous layout was invalidated, and if so, reconnect the model
-        if (!m_adaptorModel.isValid() && m_adaptorModel.aim())
-            m_adaptorModel.setModel(m_adaptorModel.list.list(), q, m_context->engine());
-
-        if (m_adaptorModel.canFetchMore())
-            m_adaptorModel.fetchMore();
-
-        if (m_complete) {
-            const int newCount = m_adaptorModel.count();
-            if (oldCount)
-                q->_q_itemsRemoved(0, oldCount);
-            if (newCount)
-                q->_q_itemsInserted(0, newCount);
-        }
-
-        if (changed)
-            emit q->rowsChanged();
-    }
-}
-
-void QQmlDelegateModel::setRows(int rows)
-{
-    Q_D(QQmlDelegateModel);
-    d->setRows(rows);
-}
-
-void QQmlDelegateModel::resetRows()
-{
-    Q_D(QQmlDelegateModel);
-    d->setRows(-1);
-}
-
 /*!
     \qmlproperty int QtQml.Models::DelegateModel::columns
 
@@ -558,51 +513,6 @@ int QQmlDelegateModel::columns() const
 {
     Q_D(const QQmlDelegateModel);
     return d->m_adaptorModel.columnCount();
-}
-
-void QQmlDelegateModelPrivate::setColumns(int columns)
-{
-    Q_Q(QQmlDelegateModel);
-    const bool changed = m_adaptorModel.columnCount() != columns;
-
-    if (changed || !m_adaptorModel.isValid()) {
-        const int oldCount = m_count;
-
-        if (columns > 1)
-            m_adaptorModel.columns = columns;
-        else
-            m_adaptorModel.columns.invalidate();
-
-        // Check if the previous layout was invalidated, and if so, reconnect the model
-        if (!m_adaptorModel.isValid() && m_adaptorModel.aim())
-            m_adaptorModel.setModel(m_adaptorModel.list.list(), q, m_context->engine());
-
-        if (m_adaptorModel.canFetchMore())
-            m_adaptorModel.fetchMore();
-
-        if (m_complete) {
-            const int newCount = m_adaptorModel.count();
-            if (oldCount)
-                q->_q_itemsRemoved(0, oldCount);
-            if (newCount)
-                q->_q_itemsInserted(0, newCount);
-        }
-
-        if (changed)
-            emit q->columnsChanged();
-    }
-}
-
-void QQmlDelegateModel::setColumns(int columns)
-{
-    Q_D(QQmlDelegateModel);
-    d->setColumns(columns);
-}
-
-void QQmlDelegateModel::resetColumns()
-{
-    Q_D(QQmlDelegateModel);
-    d->setColumns(-1);
 }
 
 /*!

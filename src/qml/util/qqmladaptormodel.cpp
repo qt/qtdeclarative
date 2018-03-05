@@ -1000,7 +1000,7 @@ void QQmlAdaptorModel::invalidateModel(QQmlDelegateModel *vdm)
 
 bool QQmlAdaptorModel::isValid() const
 {
-    return accessors != &qt_vdm_null_accessors || rows.isValid();
+    return accessors != &qt_vdm_null_accessors;
 }
 
 int QQmlAdaptorModel::count() const
@@ -1010,15 +1010,11 @@ int QQmlAdaptorModel::count() const
 
 int QQmlAdaptorModel::rowCount() const
 {
-    if (rows.isValid())
-        return rows.value;
     return qMax(0, accessors->rowCount(*this));
 }
 
 int QQmlAdaptorModel::columnCount() const
 {
-    if (columns.isValid())
-        return columns.value;
     return qMax(isValid() ? 1 : 0, accessors->columnCount(*this));
 }
 

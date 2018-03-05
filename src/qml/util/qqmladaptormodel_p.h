@@ -106,8 +106,6 @@ public:
         virtual void fetchMore(QQmlAdaptorModel &) const {}
     };
 
-    QQmlNullableValue<int> rows;
-    QQmlNullableValue<int> columns;
     const Accessors *accessors;
     QPersistentModelIndex rootIndex;
     QQmlListAccessor list;
