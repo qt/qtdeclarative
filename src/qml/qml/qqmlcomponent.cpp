@@ -241,6 +241,9 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     \li main.qml
     \li \snippet qml/component/main.qml 0
     \endtable
+
+    It is important that the lifetime of the creation context outlive any created objects. See
+    \l{Maintaining Dynamically Created Objects} for more details.
 */
 
 /*!

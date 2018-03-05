@@ -157,7 +157,7 @@ to inside the string literals.
 
 When managing dynamically created objects, you must ensure the creation context
 outlives the created object. Otherwise, if the creation context is destroyed
-first, the bindings in the dynamic object will no longer work.
+first, the bindings and signal handlers in the dynamic object will no longer work.
 
 The actual creation context depends on how an object is created:
 
