@@ -143,6 +143,7 @@ private slots:
     void registeredCompositeTypeProperty();
     void deeplyNestedObject();
     void readOnlyDynamicProperties();
+    void aliasToIdWithMatchingQmlFileNameOnCaseInsensitiveFileSystem();
 
     void floatToStringPrecision_data();
     void floatToStringPrecision();
@@ -2045,6 +2046,17 @@ void tst_qqmlproperty::readOnlyDynamicProperties()
     QVERIFY(obj->metaObject()->property(obj->metaObject()->indexOfProperty("w_int")).isWritable());
 
     delete obj;
+}
+
+void tst_qqmlproperty::aliasToIdWithMatchingQmlFileNameOnCaseInsensitiveFileSystem()
+{
+    const QUrl url = testFileUrl("aliasToIdWithMatchingQmlFileName.qml");
+    QQmlEngine engine;
+    QQmlComponent component(&engine, url);
+    QScopedPointer<QObject> root(component.create());
+
+    QQmlProperty property(root.data(), "testType.objectName", QQmlEngine::contextForObject(root.data()));
+    QVERIFY(property.isValid());
 }
 
 void tst_qqmlproperty::floatToStringPrecision_data()
