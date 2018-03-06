@@ -57,6 +57,7 @@ QT_BEGIN_NAMESPACE
     \since 5.7
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols2-focusscopes
     \brief Provides a stack-based navigation model.
 
     \image qtquickcontrols2-stackview-wireframe.png
@@ -342,7 +343,8 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \sa {Customizing StackView}, {Navigation Controls}, {Container Controls}
+    \sa {Customizing StackView}, {Navigation Controls}, {Container Controls},
+        {Focus Management in Qt Quick Controls 2}
 */
 
 QQuickStackView::QQuickStackView(QQuickItem *parent)

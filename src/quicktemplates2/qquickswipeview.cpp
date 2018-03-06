@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
     \since 5.7
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols2-focusscopes
     \brief Enables the user to navigate pages by swiping sideways.
 
     SwipeView provides a swipe-based navigation model.
@@ -98,7 +99,8 @@ QT_BEGIN_NAMESPACE
           this only applies to the root of the item. Specifying width and height,
           or using anchors for its children works as expected.
 
-    \sa TabBar, PageIndicator, {Customizing SwipeView}, {Navigation Controls}, {Container Controls}
+    \sa TabBar, PageIndicator, {Customizing SwipeView}, {Navigation Controls}, {Container Controls},
+        {Focus Management in Qt Quick Controls 2}
 */
 
 class QQuickSwipeViewPrivate : public QQuickContainerPrivate

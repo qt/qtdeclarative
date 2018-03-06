@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.9
     \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols2-focusscopes
     \brief Scrollable view.
 
     ScrollView provides scrolling for user-defined content. It can be used to
@@ -97,6 +98,7 @@ QT_BEGIN_NAMESPACE
     \snippet qtquickcontrols2-scrollview-interactive.qml file
 
     \sa ScrollBar, ScrollIndicator, {Customizing ScrollView}, {Container Controls},
+        {Focus Management in Qt Quick Controls 2}
 */
 
 class QQuickScrollViewPrivate : public QQuickControlPrivate

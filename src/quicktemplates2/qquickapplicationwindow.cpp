@@ -59,6 +59,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols2-focusscopes
     \brief Styled top-level window with support for a header and footer.
 
     ApplicationWindow is a \l Window which makes it convenient to add
@@ -110,7 +111,8 @@ QT_BEGIN_NAMESPACE
     certain window \c id. A QML component that uses the ApplicationWindow
     attached properties works in any window regardless of its \c id.
 
-    \sa {Customizing ApplicationWindow}, Overlay, Page, {Container Controls}
+    \sa {Customizing ApplicationWindow}, Overlay, Page, {Container Controls},
+        {Focus Management in Qt Quick Controls 2}
 */
 
 static const QQuickItemPrivate::ChangeTypes ItemChanges = QQuickItemPrivate::Visibility

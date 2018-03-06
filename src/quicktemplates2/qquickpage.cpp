@@ -47,6 +47,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols2-focusscopes
     \brief Styled page control with support for a header and footer.
 
     Page is a container control which makes it convenient to add
@@ -79,7 +80,8 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
-    \sa ApplicationWindow, {Container Controls}
+    \sa ApplicationWindow, {Container Controls},
+        {Focus Management in Qt Quick Controls 2}
 */
 
 class QQuickPagePrivate : public QQuickControlPrivate

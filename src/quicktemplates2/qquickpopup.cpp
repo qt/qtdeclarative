@@ -57,6 +57,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-popups
+    \ingroup qtquickcontrols2-focusscopes
     \brief Base type of popup-like user interface controls.
 
     Popup is the base type of popup-like user interface controls. It can be

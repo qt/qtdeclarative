@@ -53,6 +53,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.10
     \ingroup qtquickcontrols2-menus
+    \ingroup qtquickcontrols2-focusscopes
     \brief Provides a window menu bar.
 
     \image qtquickcontrols2-menubar.png
@@ -71,7 +72,8 @@ QT_BEGIN_NAMESPACE
     \l {removeMenu}{remove}, and \l {takeMenu}{take} menus dynamically. The
     menus in a menu bar can be accessed using \l menuAt().
 
-    \sa {Customizing MenuBar}, Menu, MenuBarItem, {Menu Controls}
+    \sa {Customizing MenuBar}, Menu, MenuBarItem, {Menu Controls},
+        {Focus Management in Qt Quick Controls 2}
 */
 
 QQuickMenuBarPrivate::QQuickMenuBarPrivate()

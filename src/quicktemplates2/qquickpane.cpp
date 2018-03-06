@@ -46,6 +46,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols2-focusscopes
     \brief Provides a background matching with the application style and theme.
 
     Pane provides a background color that matches with the application style
@@ -101,7 +102,8 @@ QT_BEGIN_NAMESPACE
      }
     \endcode
 
-    \sa {Customizing Pane}, {Container Controls}
+    \sa {Customizing Pane}, {Container Controls},
+        {Focus Management in Qt Quick Controls 2}
 */
 
 QQuickPanePrivate::QQuickPanePrivate()
