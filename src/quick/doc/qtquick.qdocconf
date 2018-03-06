@@ -5,6 +5,10 @@ description             = Qt Quick Reference Documentation
 version                 = $QT_VERSION
 
 examplesinstallpath     = quick
+moduleheader            = QtQuick_pch.h
+
+includepaths            = -I $QT_PLUGIN_PATH/../include/QtQuick \
+                          -I $QT_PLUGIN_PATH/../include/QtQuickWidgets
 
 qhp.projects            = QtQuick
 
