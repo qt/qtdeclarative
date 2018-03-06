@@ -522,6 +522,9 @@ void QQuickPlatformMenu::setTitle(const QString &title)
     if (m_title == title)
         return;
 
+    if (m_menuItem)
+        m_menuItem->setText(title);
+
     m_title = title;
     sync();
     emit titleChanged();
