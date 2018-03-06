@@ -100,6 +100,68 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \section2 Submenus
+
+    To create submenus, declare a Menu as a child of another Menu:
+
+    \qml
+    Menu {
+        title: qsTr("Edit")
+
+        Menu {
+            title: qsTr("Advanced")
+
+            MenuItem {
+                text: qsTr("Auto-indent Selection")
+                onTriggered: autoIndentSelection()
+            }
+
+            MenuItem {
+                text: qsTr("Rewrap Paragraph")
+                onTriggered: rewrapParagraph()
+            }
+        }
+    }
+    \endqml
+
+    \section2 Dynamically Generating Menu Items
+
+    It is possible to dynamically generate menu items. One of the easiest ways
+    to do so is with \l Instantiator. For example, to implement a
+    "Recent Files" submenu, where the items are based on a list of files stored
+    in settings, the following code could be used:
+
+    \qml
+    Menu {
+        title: qsTr("File")
+
+        Menu {
+            id: recentFilesSubMenu
+            title: qsTr("Recent Files")
+            enabled: recentFilesInstantiator.count > 0
+
+            Instantiator {
+                id: recentFilesInstantiator
+                model: settings.recentFiles
+                delegate: MenuItem {
+                    text: settings.displayableFilePath(modelData)
+                    onTriggered: loadFile(modelData)
+                }
+
+                onObjectAdded: recentFilesSubMenu.insertItem(index, object)
+                onObjectRemoved: recentFilesSubMenu.removeItem(object)
+            }
+
+            MenuSeparator {}
+
+            MenuItem {
+                text: qsTr("Clear Recent Files")
+                onTriggered: settings.clearRecentFiles()
+            }
+        }
+    }
+    \endqml
+
     \section2 Availability
 
     A native platform menu is currently available on the following platforms:
