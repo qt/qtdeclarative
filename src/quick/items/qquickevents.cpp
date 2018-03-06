@@ -625,8 +625,7 @@ QQuickPointerDevice *QQuickPointerDevice::touchDevice(const QTouchDevice *d)
     int maximumTouchPoints = 10;
     QQuickPointerDevice::Capabilities caps = QQuickPointerDevice::Capabilities(QTouchDevice::Position);
     if (d) {
-        QQuickPointerDevice::Capabilities caps =
-            static_cast<QQuickPointerDevice::Capabilities>(static_cast<int>(d->capabilities()) & 0x0F);
+        caps = static_cast<QQuickPointerDevice::Capabilities>(static_cast<int>(d->capabilities()) & 0xFF);
         if (d->type() == QTouchDevice::TouchPad) {
             type = QQuickPointerDevice::TouchPad;
             caps |= QQuickPointerDevice::Scroll;
