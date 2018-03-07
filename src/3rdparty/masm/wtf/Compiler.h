@@ -27,13 +27,13 @@
 #define WTF_Compiler_h
 
 /* COMPILER() - the compiler being used to build the project */
-#define COMPILER(WTF_FEATURE) (defined WTF_COMPILER_##WTF_FEATURE  && WTF_COMPILER_##WTF_FEATURE)
+#define COMPILER(WTF_FEATURE) WTF_COMPILER_##WTF_FEATURE
 
 /* COMPILER_SUPPORTS() - whether the compiler being used to build the project supports the given feature. */
-#define COMPILER_SUPPORTS(WTF_COMPILER_FEATURE) (defined WTF_COMPILER_SUPPORTS_##WTF_COMPILER_FEATURE  && WTF_COMPILER_SUPPORTS_##WTF_COMPILER_FEATURE)
+#define COMPILER_SUPPORTS(WTF_COMPILER_FEATURE) WTF_COMPILER_SUPPORTS_##WTF_COMPILER_FEATURE
 
 /* COMPILER_QUIRK() - whether the compiler being used to build the project requires a given quirk. */
-#define COMPILER_QUIRK(WTF_COMPILER_QUIRK) (defined WTF_COMPILER_QUIRK_##WTF_COMPILER_QUIRK  && WTF_COMPILER_QUIRK_##WTF_COMPILER_QUIRK)
+#define COMPILER_QUIRK(WTF_COMPILER_QUIRK) WTF_COMPILER_QUIRK_##WTF_COMPILER_QUIRK
 
 /* ==== COMPILER() - the compiler being used to build the project ==== */
 
