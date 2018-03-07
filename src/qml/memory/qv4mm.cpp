@@ -664,8 +664,21 @@ void BlockAllocator::collectGrayItems(MarkStack *markStack)
 }
 
 HeapItem *HugeItemAllocator::allocate(size_t size) {
-    Chunk *c = chunkAllocator->allocate(size);
-    chunks.push_back(HugeChunk{c, size});
+    MemorySegment *m = nullptr;
+    Chunk *c = nullptr;
+    if (size >= MemorySegment::SegmentSize/2) {
+        // too large to handle through the ChunkAllocator, let's get our own memory segement
+        size_t segmentSize = size + Chunk::HeaderSize; // space required for the Chunk header
+        size_t pageSize = WTF::pageSize();
+        segmentSize = (segmentSize + pageSize - 1) & ~(pageSize - 1); // align to page sizes
+        m = new MemorySegment(segmentSize);
+        size = (size + pageSize - 1) & ~(pageSize - 1); // align to page sizes
+        c = m->allocate(size);
+    } else {
+        c = chunkAllocator->allocate(size);
+    }
+    Q_ASSERT(c);
+    chunks.push_back(HugeChunk{m, c, size});
     Chunk::setBit(c->objectBitmap, c->first() - c->realBase());
     Q_V4_PROFILE_ALLOC(engine, size, Profiling::LargeItem);
 #ifdef V4_USE_HEAPTRACK
@@ -686,7 +699,13 @@ static void freeHugeChunk(ChunkAllocator *chunkAllocator, const HugeItemAllocato
         v->destroy(b);
         b->_checkIsDestroyed();
     }
-    chunkAllocator->free(c.chunk, c.size);
+    if (c.segment) {
+        // own memory segment
+        c.segment->free(c.chunk, c.size);
+        delete c.segment;
+    } else {
+        chunkAllocator->free(c.chunk, c.size);
+    }
 #ifdef V4_USE_HEAPTRACK
     heaptrack_report_free(c.chunk);
 #endif
