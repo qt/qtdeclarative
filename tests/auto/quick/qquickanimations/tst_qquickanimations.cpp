@@ -105,6 +105,7 @@ private slots:
     void pathSvgAnimation();
     void pathLineUnspecifiedXYBug();
     void unsetAnimatorProxyJobWindow();
+    void finished();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1610,6 +1611,79 @@ void tst_qquickanimations::unsetAnimatorProxyJobWindow()
     if (spy.count() < 1)
         spy.wait();
     QCOMPARE(proxy.job().data(), job);
+}
+
+void tst_qquickanimations::finished()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("finished.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+
+    // Test that finished() is emitted for a simple top-level animation.
+    // (Each test is in its own block so that we can reuse the nice signal names :))
+    {
+        QQuickAbstractAnimation *simpleTopLevelAnimation
+            = root->property("simpleTopLevelAnimation").value<QQuickAbstractAnimation*>();
+        QVERIFY(simpleTopLevelAnimation);
+
+        QSignalSpy stoppedSpy(simpleTopLevelAnimation, SIGNAL(stopped()));
+        QVERIFY(stoppedSpy.isValid());
+
+        QSignalSpy finishedSpy(simpleTopLevelAnimation, SIGNAL(finished()));
+        QVERIFY(finishedSpy.isValid());
+
+        QVERIFY(simpleTopLevelAnimation->setProperty("running", QVariant(true)));
+        QTRY_COMPARE(stoppedSpy.count(), 1);
+        QCOMPARE(finishedSpy.count(), 1);
+
+        // Test that the signal is properly revisioned and hence accessible from QML.
+        QCOMPARE(root->property("finishedUsableInQml").toBool(), true);
+    }
+
+    // Test that finished() is not emitted for animations within a Transition.
+    {
+        QObject *transition = root->property("transition").value<QObject*>();
+        QVERIFY(transition);
+
+        QSignalSpy runningChangedSpy(transition, SIGNAL(runningChanged()));
+        QVERIFY(runningChangedSpy.isValid());
+
+        QQuickAbstractAnimation *animationWithinTransition
+            = root->property("animationWithinTransition").value<QQuickAbstractAnimation*>();
+        QVERIFY(animationWithinTransition);
+
+        QSignalSpy stoppedSpy(animationWithinTransition, SIGNAL(stopped()));
+        QVERIFY(stoppedSpy.isValid());
+
+        QSignalSpy finishedSpy(animationWithinTransition, SIGNAL(finished()));
+        QVERIFY(finishedSpy.isValid());
+
+        QObject *transitionRect = root->property("transitionRect").value<QObject*>();
+        QVERIFY(transitionRect);
+        QVERIFY(transitionRect->setProperty("state", QVariant(QLatin1String("go"))));
+        QTRY_COMPARE(runningChangedSpy.count(), 1);
+        QCOMPARE(stoppedSpy.count(), 0);
+        QCOMPARE(finishedSpy.count(), 0);
+    }
+
+    // Test that finished() is not emitted for animations within a Behavior.
+    {
+        QQuickAbstractAnimation *animationWithinBehavior
+            = root->property("animationWithinBehavior").value<QQuickAbstractAnimation*>();
+        QVERIFY(animationWithinBehavior);
+
+        QSignalSpy stoppedSpy(animationWithinBehavior, SIGNAL(stopped()));
+        QVERIFY(stoppedSpy.isValid());
+
+        QSignalSpy finishedSpy(animationWithinBehavior, SIGNAL(finished()));
+        QVERIFY(finishedSpy.isValid());
+
+        QVERIFY(root->setProperty("bar", QVariant(1.0)));
+        QTRY_COMPARE(root->property("bar").toReal(), 1.0);
+        QCOMPARE(stoppedSpy.count(), 0);
+        QCOMPARE(finishedSpy.count(), 0);
+    }
 }
 
 QTEST_MAIN(tst_qquickanimations)

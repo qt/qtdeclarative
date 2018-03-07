@@ -132,4 +132,7 @@ void QQuickUtilModule::defineModule()
 
     qmlRegisterType<QQuickShortcut,9>("QtQuick", 2, 9, "Shortcut");
 #endif
+
+    qmlRegisterUncreatableType<QQuickAbstractAnimation, 12>("QtQuick", 2, 12, "Animation",
+        QQuickAbstractAnimation::tr("Animation is an abstract class"));
 }

@@ -126,6 +126,7 @@ Q_SIGNALS:
     void pausedChanged(bool);
     void alwaysRunToEndChanged(bool);
     void loopCountChanged(int);
+    Q_REVISION(12) void finished();
 
 public Q_SLOTS:
     void restart();

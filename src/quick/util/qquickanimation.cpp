@@ -234,6 +234,27 @@ QQmlProperty QQuickAbstractAnimationPrivate::createProperty(QObject *obj, const 
     The corresponding handler is \c onStopped.
 */
 
+/*!
+    \qmlsignal QtQuick::Animation::finished()
+    \since 5.12
+
+    This signal is emitted when the animation has finished naturally.
+
+    It is not emitted when \l running is set to \c false, nor for animations whose
+    \l loops property is set to \c Animation.Infinite.
+
+    In addition, it is only emitted for top-level, standalone animations. It
+    will not be emitted for animations in a Behavior or Transition, or
+    animations that are part of an animation group.
+
+    If \l alwaysRunToEnd is true, this signal will not be emitted until the
+    animation has completed its current iteration.
+
+    The corresponding handler is \c onFinished.
+
+    \sa stopped(), started(), running
+*/
+
 void QQuickAbstractAnimation::setRunning(bool r)
 {
     Q_D(QQuickAbstractAnimation);
@@ -656,6 +677,7 @@ void QQuickAbstractAnimationPrivate::animationFinished(QAbstractAnimationJob*)
         if (loopCount != 1)
             animationInstance->setLoopCount(loopCount);
     }
+    emit q->finished();
 }
 
 QQuickAbstractAnimation::ThreadingModel QQuickAbstractAnimation::threadingModel() const
