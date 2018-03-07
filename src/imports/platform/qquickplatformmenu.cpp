@@ -216,15 +216,22 @@ QQuickPlatformMenu::~QQuickPlatformMenu()
         m_menuBar->removeMenu(this);
     if (m_parentMenu)
         m_parentMenu->removeMenu(this);
+
+    unparentSubmenus();
+
+    delete m_iconLoader;
+    m_iconLoader = nullptr;
+    delete m_handle;
+    m_handle = nullptr;
+}
+
+void QQuickPlatformMenu::unparentSubmenus()
+{
     for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
         if (QQuickPlatformMenu *subMenu = item->subMenu())
             subMenu->setParentMenu(nullptr);
         item->setMenu(nullptr);
     }
-    delete m_iconLoader;
-    m_iconLoader = nullptr;
-    delete m_handle;
-    m_handle = nullptr;
 }
 
 QPlatformMenu *QQuickPlatformMenu::handle() const
@@ -276,6 +283,10 @@ void QQuickPlatformMenu::destroy()
 {
     if (!m_handle)
         return;
+
+    // Ensure that all submenus are unparented before we are destroyed,
+    // so that they don't try to access a destroyed menu.
+    unparentSubmenus();
 
     delete m_handle;
     m_handle = nullptr;
