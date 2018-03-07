@@ -77,12 +77,6 @@ static inline QChar convertHex(QChar c1, QChar c2)
     return QChar((convertHex(c1.unicode()) << 4) + convertHex(c2.unicode()));
 }
 
-static inline QChar convertUnicode(QChar c1, QChar c2, QChar c3, QChar c4)
-{
-    return QChar((convertHex(c3.unicode()) << 4) + convertHex(c4.unicode()),
-                 (convertHex(c1.unicode()) << 4) + convertHex(c2.unicode()));
-}
-
 Lexer::Lexer(Engine *engine)
     : _engine(engine)
     , _codePtr(nullptr)
