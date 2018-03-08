@@ -106,6 +106,9 @@ private slots:
     void nonModal_data();
     void nonModal();
 
+    void slider_data();
+    void slider();
+
 private:
     struct TouchDeviceDeleter
     {
@@ -1255,6 +1258,58 @@ void tst_QQuickDrawer::nonModal()
     else
         QTest::touchEvent(window, touchDevice.data()).release(0, from);
     QVERIFY(closedSpy.wait());
+}
+
+void tst_QQuickDrawer::slider_data()
+{
+    QTest::addColumn<bool>("mouse");
+    QTest::newRow("mouse") << true;
+    QTest::newRow("touch") << false;
+}
+
+void tst_QQuickDrawer::slider()
+{
+    QFETCH(bool, mouse);
+
+    QQuickApplicationHelper helper(this, QStringLiteral("slider.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+
+    QQuickSlider *slider = window->property("slider").value<QQuickSlider *>();
+    QVERIFY(slider);
+
+    QCOMPARE(slider->value(), 1.0);
+    QCOMPARE(drawer->position(), 1.0);
+
+    const qreal y = slider->height() / 2;
+    const QPoint from(slider->width() - 1, y);
+    const QPoint to(1, y);
+
+    if (mouse)
+        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, from);
+    else
+        QTest::touchEvent(window, touchDevice.data()).press(0, from);
+
+    int distance = qAbs(from.x() - to.x());
+    for (int dx = 2; dx < distance; dx += 2) {
+        if (mouse)
+            QTest::mouseMove(window, from - QPoint(dx, 0));
+        else
+            QTest::touchEvent(window, touchDevice.data()).move(0, from - QPoint(dx, 0));
+        QTest::qWait(1); // avoid infinite velocity
+    }
+
+    QCOMPARE(slider->value(), 0.0);
+    QCOMPARE(drawer->position(), 1.0);
+
+    if (mouse)
+        QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, to);
+    else
+        QTest::touchEvent(window, touchDevice.data()).release(0, to);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickDrawer)
