@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -26,50 +26,25 @@
 ****************************************************************************/
 
 /*!
-    \externalpage http://www.ecma-international.org/publications/standards/Ecma-262.htm
-    \title ECMA-262
-*/
+\page qtquick-guidelines.html
+\title Qt Quick Guidelines
+\brief Provides best practices and conventions for application developers
 
-/*!
-    \externalpage http://qmlbook.github.io/
-    \title Qt5 Cadaques
-*/
+Qt Quick has been the enabler that has helped developers achieve UI design
+goals faster and relieve from the monotony of imperative-coding. It is one of
+the very few UI design technologies that can be modified easily either using
+a text editor or a graphical designer tool.
 
-/*!
-    \externalpage http://www.w3schools.com/jsref/default.asp
-    \title W3Schools JavaScript Reference
-*/
+As an application developer, it is important to understand the limitations
+of any technology such as Qt Quick. This topic provides you the necessary insight
+into Qt Quick, and how it affects your application. It also provides pointers to best
+practices that you should try to follow, and the list of tools that helps you
+understand and improve your application.
 
-/*!
-    \externalpage https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date
-    \title Mozilla Developer Network Date Reference
+\list
+\li \l{Qt Quick Best practices}{Best Practices}
+\li \l{Qt Quick Tools and Utilities}
+\li \l{Performance Considerations And Suggestions}{Performance improvement tips}
+\li \l{Qt Quick Scene Graph}
+\endlist
 */
-/*!
-    \externalpage hhttps://www.froglogic.com/squish/gui-testing
-    \title Squish
-*/
-/*!
-    \externalpage http://doc.qt.io/GammaRay
-    \title GammaRay
-*/
-/*!
-    \externalpage http://doc.qt.io/QtQmlLive
-    \title QmlLive
-*/
-/*!
-    \externalpage http://doc.qt.io/qtcreator/creator-debugging-qml.html
-    \title QML Debugger
-*/
-/*!
-    \externalpage http://doc.qt.io/qtcreator/creator-qml-performance-monitor.html
-    \title QML Profiler
-*/
-/*!
-    \externalpage http://doc.qt.io/qtcreator/index.html
-    \title Qt Creator Manual
-*/
-/*!
-    \externalpage http://doc.qt.io/qtcreator/creator-editor-external.html
-    \title Qt Creator: Integrating 3rd Party Tools
-*/
-

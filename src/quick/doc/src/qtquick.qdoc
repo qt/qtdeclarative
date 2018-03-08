@@ -118,6 +118,7 @@ Additional Qt Quick information:
     \li \l{Qt Quick Test QML Types}{Tests} - contains types for writing unit test for a QML application
     \endlist
 \li \l{Qt Quick Examples and Tutorials}
+\li \l{Qt Quick Guidelines}
 \endlist
 
 Further information for writing QML applications:
