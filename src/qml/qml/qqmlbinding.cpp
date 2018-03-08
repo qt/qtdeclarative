@@ -490,6 +490,7 @@ void QQmlBinding::refresh()
 
 void QQmlBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags flags)
 {
+    const bool wasEnabled = enabledFlag();
     setEnabledFlag(e);
     setNotifyOnValueChanged(e);
 
@@ -499,7 +500,7 @@ void QQmlBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags flags)
             m_nextBinding.clearFlag2();
     }
 
-    if (e)
+    if (e && !wasEnabled)
         update(flags);
 }
 

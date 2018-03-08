@@ -125,6 +125,8 @@ private slots:
     void dynamicObjectProperties();
     void dynamicSignalsAndSlots();
     void simpleBindings();
+    void noDoubleEvaluationForFlushedBindings_data();
+    void noDoubleEvaluationForFlushedBindings();
     void autoComponentCreation();
     void autoComponentCreationInGroupProperty();
     void propertyValueSource();
@@ -1476,6 +1478,37 @@ void tst_qqmllanguage::simpleBindings()
     QCOMPARE(object->property("value3"), QVariant(21));
     QCOMPARE(object->property("value4"), QVariant(10));
     QCOMPARE(object->property("objectProperty"), QVariant::fromValue(object));
+}
+
+class EvaluationCounter : public QObject
+{
+    Q_OBJECT
+public:
+    int counter = 0;
+    Q_INVOKABLE void increaseEvaluationCounter() { ++counter; }
+};
+
+void tst_qqmllanguage::noDoubleEvaluationForFlushedBindings_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::newRow("order1") << QString("noDoubleEvaluationForFlushedBindings.qml");
+    QTest::newRow("order2") << QString("noDoubleEvaluationForFlushedBindings.2.qml");
+}
+
+void tst_qqmllanguage::noDoubleEvaluationForFlushedBindings()
+{
+    QFETCH(QString, fileName);
+    QQmlEngine engine;
+
+    EvaluationCounter stats;
+    engine.rootContext()->setContextProperty("stats", &stats);
+
+    QQmlComponent component(&engine, testFileUrl(fileName));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+
+    QCOMPARE(stats.counter, 1);
 }
 
 void tst_qqmllanguage::autoComponentCreation()
