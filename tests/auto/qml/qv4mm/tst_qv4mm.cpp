@@ -28,6 +28,7 @@
 
 #include <qtest.h>
 #include <QQmlEngine>
+#include <QLoggingCategory>
 #include <private/qv4mm_p.h>
 
 class tst_qv4mm : public QObject
@@ -36,21 +37,13 @@ class tst_qv4mm : public QObject
 
 private slots:
     void gcStats();
-    void tweaks();
 };
 
 void tst_qv4mm::gcStats()
 {
-    qputenv(QV4_MM_STATS, "1");
+    QLoggingCategory::setFilterRules("qt.qml.gc.*=true");
     QQmlEngine engine;
     engine.collectGarbage();
-}
-
-void tst_qv4mm::tweaks()
-{
-    qputenv(QV4_MM_MAXBLOCK_SHIFT, "5");
-    qputenv(QV4_MM_MAX_CHUNK_SIZE, "65536");
-    QQmlEngine engine;
 }
 
 QTEST_MAIN(tst_qv4mm)
