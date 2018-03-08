@@ -29,6 +29,7 @@
 
 #include <QSignalSpy>
 
+#include <QtQml/QQmlContext>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlincubator.h>
@@ -123,6 +124,8 @@ private slots:
 
     void bindings();
     void parentErrors();
+
+    void rootContext();
 };
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
@@ -1325,6 +1328,64 @@ void tst_QQuickLoader::parentErrors()
         stream << warningsSpy.first().first().value<QList<QQmlError>>();
     }
     QVERIFY2(warningsSpy.isEmpty(), qPrintable(failureMessage));
+}
+
+class ObjectInRootContext: public QObject
+{
+    Q_OBJECT
+
+public:
+    int didIt = 0;
+
+public slots:
+    void doIt() {
+        didIt += 1;
+    }
+};
+
+void tst_QQuickLoader::rootContext()
+{
+    QQmlEngine engine;
+    ObjectInRootContext objectInRootContext;
+    engine.rootContext()->setContextProperty("objectInRootContext", &objectInRootContext);
+
+    QQmlComponent component(&engine, testFileUrl("rootContext.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QQuickLoader *loader = object->property("loader").value<QQuickLoader*>();
+    QVERIFY(loader);
+
+    QSignalSpy warningsSpy(&engine, SIGNAL(warnings(QList<QQmlError>)));
+
+    // Give the loader a component
+    loader->setSourceComponent(object->property("component").value<QQmlComponent*>());
+    QTRY_VERIFY(loader->active());
+    QTRY_VERIFY(loader->item());
+
+    QString failureMessage;
+    if (!warningsSpy.isEmpty()) {
+        QDebug stream(&failureMessage);
+        stream << warningsSpy.first().first().value<QList<QQmlError>>();
+    }
+    QVERIFY2(warningsSpy.isEmpty(), qPrintable(failureMessage));
+    QCOMPARE(objectInRootContext.didIt, 0);
+
+    // Deactivate the loader, which deletes the item.
+    // Check that a) there are no errors, and b) the objectInRootContext can still be resolved even
+    // after deactivating the loader. If it cannot, a ReferenceError for objectInRootContext is
+    // generated (and the 'doIt' counter in objectInRootContext will be 1 for the call before
+    // the deactivation).
+    loader->item()->setProperty("trigger", true);
+    QTRY_VERIFY(!loader->active());
+    QTRY_VERIFY(!loader->item());
+
+    if (!warningsSpy.isEmpty()) {
+        QDebug stream(&failureMessage);
+        stream << warningsSpy.first().first().value<QList<QQmlError>>();
+    }
+    QVERIFY2(warningsSpy.isEmpty(), qPrintable(failureMessage));
+    QCOMPARE(objectInRootContext.didIt, 2);
 }
 
 QTEST_MAIN(tst_QQuickLoader)

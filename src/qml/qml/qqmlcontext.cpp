@@ -593,6 +593,14 @@ void QQmlContextData::invalidate()
     parent = nullptr;
 }
 
+void QQmlContextData::clearContextRecursively()
+{
+    clearContext();
+
+    for (auto ctxIt = childContexts; ctxIt; ctxIt = ctxIt->nextChild)
+        ctxIt->clearContextRecursively();
+}
+
 void QQmlContextData::clearContext()
 {
     emitDestruction();

@@ -102,7 +102,7 @@ void QQuickLoaderPrivate::clear()
     // this we may get transient errors from use of 'parent', for example.
     QQmlContext *context = qmlContext(object);
     if (context)
-        QQmlContextData::get(context)->invalidate();
+        QQmlContextData::get(context)->clearContextRecursively();
 
     if (loadingFromSource && component) {
         // disconnect since we deleteLater
@@ -363,7 +363,7 @@ void QQuickLoader::setActive(bool newVal)
         // this we may get transient errors from use of 'parent', for example.
         QQmlContext *context = qmlContext(d->object);
         if (context)
-            QQmlContextData::get(context)->invalidate();
+            QQmlContextData::get(context)->clearContextRecursively();
 
         if (d->item) {
             QQuickItemPrivate *p = QQuickItemPrivate::get(d->item);
