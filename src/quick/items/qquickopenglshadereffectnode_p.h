@@ -109,7 +109,7 @@ public:
         }
     };
 
-    explicit QQuickOpenGLShaderEffectMaterial(QQuickOpenGLShaderEffectNode *node = 0);
+    explicit QQuickOpenGLShaderEffectMaterial(QQuickOpenGLShaderEffectNode *node = nullptr);
     QSGMaterialType *type() const override;
     QSGMaterialShader *createShader() const override;
     int compare(const QSGMaterial *other) const override;
@@ -149,7 +149,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectNode : public QObject, publ
     Q_OBJECT
 public:
     QQuickOpenGLShaderEffectNode();
-    virtual ~QQuickOpenGLShaderEffectNode();
+    ~QQuickOpenGLShaderEffectNode() override;
 
     void preprocess() override;
 

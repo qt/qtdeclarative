@@ -28,6 +28,7 @@
 
 #include <QtTest/QtTest>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlnetworkaccessmanagerfactory.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQml/private/qqmlengine_p.h>
@@ -43,8 +44,10 @@ private slots:
     void loadComponentSynchronously();
     void trimCache();
     void trimCache2();
+    void trimCache3();
     void keepSingleton();
     void keepRegistrations();
+    void intercept();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -58,7 +61,7 @@ void tst_QQMLTypeLoader::testLoadComplete()
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
     QObject *rootObject = window->rootObject();
-    QTRY_VERIFY(rootObject != 0);
+    QTRY_VERIFY(rootObject != nullptr);
     QTRY_COMPARE(rootObject->property("created").toInt(), 2);
     QTRY_COMPARE(rootObject->property("loaded").toInt(), 2);
     delete window;
@@ -70,7 +73,7 @@ void tst_QQMLTypeLoader::loadComponentSynchronously()
     QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
                              QLatin1String(".*nonprotocol::1:1: QtObject is not a type.*")));
     QQmlComponent component(&engine, testFileUrl("load_synchronous.qml"));
-    QObject *o = component.create();
+    QScopedPointer<QObject> o(component.create());
     QVERIFY(o);
 }
 
@@ -111,7 +114,7 @@ void tst_QQMLTypeLoader::trimCache()
 
 void tst_QQMLTypeLoader::trimCache2()
 {
-    QQuickView *window = new QQuickView();
+    QScopedPointer<QQuickView> window(new QQuickView());
     window->setSource(testFileUrl("trim_cache2.qml"));
     QQmlTypeLoader &loader = QQmlEnginePrivate::get(window->engine())->typeLoader;
     // in theory if gc has already run this could be false
@@ -120,6 +123,26 @@ void tst_QQMLTypeLoader::trimCache2()
     QTest::qWait(1);    // force event loop
     window->engine()->trimComponentCache();
     QCOMPARE(loader.isTypeLoaded(testFileUrl("MyComponent2.qml")), false);
+}
+
+// test trimming the cache of an item that contains sub-items created via incubation
+void tst_QQMLTypeLoader::trimCache3()
+{
+    QScopedPointer<QQuickView> window(new QQuickView());
+    window->setSource(testFileUrl("trim_cache3.qml"));
+    QQmlTypeLoader &loader = QQmlEnginePrivate::get(window->engine())->typeLoader;
+    QCOMPARE(loader.isTypeLoaded(testFileUrl("ComponentWithIncubator.qml")), true);
+
+    QQmlProperty::write(window->rootObject(), "source", QString());
+
+    // handle our deleteLater and cleanup
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+    window->engine()->collectGarbage();
+
+    window->engine()->trimComponentCache();
+
+    QCOMPARE(loader.isTypeLoaded(testFileUrl("ComponentWithIncubator.qml")), false);
 }
 
 static void checkSingleton(const QString &dataDirectory)
@@ -150,7 +173,7 @@ class TestObject : public QObject
 {
     Q_OBJECT
 public:
-    TestObject(QObject *parent = 0) : QObject(parent) {}
+    TestObject(QObject *parent = nullptr) : QObject(parent) {}
 };
 
 QML_DECLARE_TYPE(TestObject)
@@ -190,6 +213,201 @@ void tst_QQMLTypeLoader::keepRegistrations()
     verifyTypes(true, false); // Fast is gone again, even though an event was still scheduled.
     QQmlMetaType::freeUnusedTypesAndCaches();
     verifyTypes(true, false); // qmlRegisterType creates an undeletable type.
+}
+
+class NetworkReply : public QNetworkReply
+{
+public:
+    NetworkReply()
+    {
+        open(QIODevice::ReadOnly);
+    }
+
+    void setData(const QByteArray &data)
+    {
+        if (isFinished())
+            return;
+        m_buffer = data;
+        emit readyRead();
+        setFinished(true);
+        emit finished();
+    }
+
+    void fail()
+    {
+        if (isFinished())
+            return;
+        m_buffer.clear();
+        setError(ContentNotFoundError, "content not found");
+        emit error(ContentNotFoundError);
+        setFinished(true);
+        emit finished();
+    }
+
+    qint64 bytesAvailable() const override
+    {
+        return m_buffer.size();
+    }
+
+    qint64 readData(char *data, qint64 maxlen) override
+    {
+        if (m_buffer.length() < maxlen)
+            maxlen = m_buffer.length();
+        std::memcpy(data, m_buffer.data(), maxlen);
+        m_buffer.remove(0, maxlen);
+        return maxlen;
+    }
+
+    void abort() override
+    {
+        if (isFinished())
+            return;
+        m_buffer.clear();
+        setFinished(true);
+        emit finished();
+    }
+
+private:
+    QByteArray m_buffer;
+};
+
+class NetworkAccessManager : public QNetworkAccessManager
+{
+    Q_OBJECT
+public:
+
+    NetworkAccessManager(QObject *parent) : QNetworkAccessManager(parent)
+    {
+    }
+
+    QNetworkReply *createRequest(Operation op, const QNetworkRequest &request,
+                                 QIODevice *outgoingData) override
+    {
+        QUrl url = request.url();
+        QString scheme = url.scheme();
+        if (op != GetOperation || !scheme.endsWith("+debug"))
+            return QNetworkAccessManager::createRequest(op, request, outgoingData);
+
+        scheme.chop(sizeof("+debug") - 1);
+        url.setScheme(scheme);
+
+        NetworkReply *reply = new NetworkReply;
+        QString filename = QQmlFile::urlToLocalFileOrQrc(url);
+        QTimer::singleShot(10, reply, [this, reply, filename]() {
+            if (filename.isEmpty()) {
+                reply->fail();
+            } else {
+                QFile file(filename);
+                if (file.open(QIODevice::ReadOnly)) {
+                    emit loaded(filename);
+                    reply->setData(transformQmldir(filename, file.readAll()));
+                } else
+                    reply->fail();
+            }
+        });
+        return reply;
+    }
+
+    QByteArray transformQmldir(const QString &filename, const QByteArray &content)
+    {
+        if (!filename.endsWith("/qmldir"))
+            return content;
+
+        // Make qmldir plugin paths absolute, so that we don't try to load them over the network
+        QByteArray result;
+        QByteArray path = filename.toUtf8();
+        path.chop(sizeof("qmldir") - 1);
+        for (QByteArray line : content.split('\n')) {
+            if (line.isEmpty())
+                continue;
+            QList<QByteArray> segments = line.split(' ');
+            if (segments.startsWith("plugin")) {
+                if (segments.length() == 2) {
+                    segments.append(path);
+                } else if (segments.length() == 3) {
+                    if (!segments[2].startsWith('/'))
+                        segments[2] = path + segments[2];
+                } else {
+                    // Invalid plugin declaration. Ignore
+                }
+                result.append(segments.join(' '));
+            } else {
+                result.append(line);
+            }
+            result.append('\n');
+        }
+        return result;
+    }
+
+signals:
+    void loaded(const QString &filename);
+};
+
+class NetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
+{
+public:
+    QStringList loadedFiles;
+
+    QNetworkAccessManager *create(QObject *parent) override
+    {
+        NetworkAccessManager *manager = new NetworkAccessManager(parent);
+        QObject::connect(manager, &NetworkAccessManager::loaded, [this](const QString &filename) {
+            loadedFiles.append(filename);
+        });
+        return manager;
+    }
+};
+
+class UrlInterceptor : public QQmlAbstractUrlInterceptor
+{
+public:
+    QUrl intercept(const QUrl &path, DataType type) override
+    {
+        Q_UNUSED(type);
+        if (!QQmlFile::isLocalFile(path))
+            return path;
+
+        QUrl result = path;
+        QString scheme = result.scheme();
+        if (!scheme.endsWith("+debug"))
+            result.setScheme(scheme + "+debug");
+        return result;
+    }
+};
+
+void tst_QQMLTypeLoader::intercept()
+{
+    qmlClearTypeRegistrations();
+
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+    engine.addImportPath(QT_TESTCASE_BUILDDIR);
+
+    UrlInterceptor interceptor;
+    NetworkAccessManagerFactory factory;
+
+    engine.setUrlInterceptor(&interceptor);
+    engine.setNetworkAccessManagerFactory(&factory);
+
+    QQmlComponent component(&engine, testFileUrl("test_intercept.qml"));
+
+    QVERIFY(component.status() != QQmlComponent::Ready);
+    QTRY_VERIFY2(component.status() == QQmlComponent::Ready,
+                 component.errorString().toUtf8().constData());
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o.data());
+
+    QTRY_COMPARE(o->property("created").toInt(), 2);
+    QTRY_COMPARE(o->property("loaded").toInt(), 2);
+
+    QVERIFY(factory.loadedFiles.length() >= 6);
+    QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/test_intercept.qml"));
+    QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/Intercept.qml"));
+    QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/Fast/qmldir"));
+    QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/Fast/Fast.qml"));
+    QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/GenericView.qml"));
+    QVERIFY(factory.loadedFiles.contains(QLatin1String(QT_TESTCASE_BUILDDIR) + "/Slow/qmldir"));
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

@@ -89,14 +89,14 @@ public:
     QString expression() const;
     QObject *target() const { return m_target; }
 
-    QQmlEngine *engine() const { return context() ? context()->engine : 0; }
+    QQmlEngine *engine() const { return context() ? context()->engine : nullptr; }
 
 private:
-    ~QQmlBoundSignalExpression();
+    ~QQmlBoundSignalExpression() override;
 
     void init(QQmlContextData *ctxt, QObject *scope);
 
-    bool expressionFunctionValid() const { return function() != 0; }
+    bool expressionFunctionValid() const { return function() != nullptr; }
 
     int m_index;
     QObject *m_target;

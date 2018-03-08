@@ -548,6 +548,32 @@ void BaselineJIT::generate_CallGlobalLookup(int index, int argc, int argv)
     as->checkException();
 }
 
+void BaselineJIT::generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv)
+{
+    STORE_IP();
+    as->prepareCallWithArgCount(5);
+    as->passInt32AsArg(argc, 4);
+    as->passRegAsArg(argv, 3);
+    as->passInt32AsArg(propIdx, 2);
+    as->passRegAsArg(base, 1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callQmlScopeObjectProperty, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
+void BaselineJIT::generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv)
+{
+    STORE_IP();
+    as->prepareCallWithArgCount(5);
+    as->passInt32AsArg(argc, 4);
+    as->passRegAsArg(argv, 3);
+    as->passInt32AsArg(propIdx, 2);
+    as->passRegAsArg(base, 1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callQmlContextObjectProperty, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
 void BaselineJIT::generate_SetExceptionHandler(int offset)
 {
     if (offset)
@@ -570,17 +596,12 @@ void BaselineJIT::generate_ThrowException()
 void BaselineJIT::generate_GetException() { as->getException(); }
 void BaselineJIT::generate_SetException() { as->setException(); }
 
-static void createCallContextHelper(Value *stack, CppStackFrame *frame)
-{
-    stack[CallData::Context] = ExecutionContext::newCallContext(frame);
-}
-
 void BaselineJIT::generate_CreateCallContext()
 {
-    as->prepareCallWithArgCount(2);
-    as->passCppFrameAsArg(1);
-    as->passRegAsArg(0, 0);
-    JIT_GENERATE_RUNTIME_CALL(createCallContextHelper, Assembler::IgnoreResult);
+    as->prepareCallWithArgCount(1);
+    as->passCppFrameAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(ExecutionContext::newCallContext, Assembler::IgnoreResult); // keeps result in return value register
+    as->storeHeapObject(CallData::Context);
 }
 
 void BaselineJIT::generate_PushCatchContext(int name, int reg) { as->pushCatchContext(name, reg); }
@@ -951,6 +972,11 @@ void BaselineJIT::collectLabelsInBytecode()
 {
     MOTH_JUMP_TABLE;
 
+    const auto addLabel = [&](int offset) {
+        Q_ASSERT(offset >= 0 && offset < static_cast<int>(function->compiledFunction->codeSize));
+        labels.push_back(offset);
+    };
+
     const char *code = reinterpret_cast<const char *>(function->codeData);
     const char *start = code;
     const char *end = code + function->compiledFunction->codeSize;
@@ -1087,8 +1113,14 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_BEGIN_INSTR(CallGlobalLookup)
         MOTH_END_INSTR(CallGlobalLookup)
 
+        MOTH_BEGIN_INSTR(CallScopeObjectProperty)
+        MOTH_END_INSTR(CallScopeObjectProperty)
+
+        MOTH_BEGIN_INSTR(CallContextObjectProperty)
+        MOTH_END_INSTR(CallContextObjectProperty)
+
         MOTH_BEGIN_INSTR(SetExceptionHandler)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(SetExceptionHandler)
 
         MOTH_BEGIN_INSTR(ThrowException)
@@ -1155,15 +1187,15 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_END_INSTR(Construct)
 
         MOTH_BEGIN_INSTR(Jump)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(Jump)
 
         MOTH_BEGIN_INSTR(JumpTrue)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(JumpTrue)
 
         MOTH_BEGIN_INSTR(JumpFalse)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(JumpFalse)
 
         MOTH_BEGIN_INSTR(CmpEqNull)
@@ -1209,11 +1241,11 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_END_INSTR(CmpInstanceOf)
 
         MOTH_BEGIN_INSTR(JumpStrictEqualStackSlotInt)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(JumpStrictEqualStackSlotInt)
 
         MOTH_BEGIN_INSTR(JumpStrictNotEqualStackSlotInt)
-            labels.push_back(code - start + offset);
+            addLabel(code - start + offset);
         MOTH_END_INSTR(JumpStrictNotEqualStackSlotInt)
 
         MOTH_BEGIN_INSTR(UNot)
@@ -1288,10 +1320,8 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_BEGIN_INSTR(Ret)
         MOTH_END_INSTR(Ret)
 
-#ifndef QT_NO_QML_DEBUGGER
         MOTH_BEGIN_INSTR(Debug)
         MOTH_END_INSTR(Debug)
-#endif // QT_NO_QML_DEBUGGER
 
         MOTH_BEGIN_INSTR(LoadQmlContext)
         MOTH_END_INSTR(LoadQmlContext)

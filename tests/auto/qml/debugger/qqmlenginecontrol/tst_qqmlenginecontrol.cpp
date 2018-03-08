@@ -113,9 +113,12 @@ void tst_QQmlEngineControl::startEngine()
 
     QTRY_VERIFY(!m_client->blockedEngines().empty());
     m_client->releaseEngine(m_client->blockedEngines().last());
+    QVERIFY(m_client->blockedEngines().isEmpty());
 
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAdded(int,QString))),
              "No engine start message received in time.");
+
+    QVERIFY(m_client->blockedEngines().isEmpty());
 }
 
 void tst_QQmlEngineControl::stopEngine_data()
@@ -131,15 +134,19 @@ void tst_QQmlEngineControl::stopEngine()
 
     QTRY_VERIFY(!m_client->blockedEngines().empty());
     m_client->releaseEngine(m_client->blockedEngines().last());
+    QVERIFY(m_client->blockedEngines().isEmpty());
 
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAdded(int,QString))),
              "No engine start message received in time.");
+    QVERIFY(m_client->blockedEngines().isEmpty());
 
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineAboutToBeRemoved(int,QString))),
              "No engine about to stop message received in time.");
     m_client->releaseEngine(m_client->blockedEngines().last());
+    QVERIFY(m_client->blockedEngines().isEmpty());
     QVERIFY2(QQmlDebugTest::waitForSignal(m_client, SIGNAL(engineRemoved(int,QString))),
              "No engine stop message received in time.");
+    QVERIFY(m_client->blockedEngines().isEmpty());
 }
 
 QTEST_MAIN(tst_QQmlEngineControl)

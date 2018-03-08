@@ -5,34 +5,22 @@
 **
 ** This file is part of the manual tests of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** $QT_BEGIN_LICENSE:GPL-EXCEPT$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
-** "Redistribution and use in source and binary forms, with or without
-** modification, are permitted provided that the following conditions are
-** met:
-**   * Redistributions of source code must retain the above copyright
-**     notice, this list of conditions and the following disclaimer.
-**   * Redistributions in binary form must reproduce the above copyright
-**     notice, this list of conditions and the following disclaimer in
-**     the documentation and/or other materials provided with the
-**     distribution.
-**   * Neither the name of The Qt Company Ltd nor the names of its
-**     contributors may be used to endorse or promote products derived
-**     from this software without specific prior written permission.
-**
-**
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-** OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-** SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-** LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-** DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-** THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-** (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 as published by the Free Software
+** Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
@@ -55,15 +43,48 @@ Rectangle {
             id: ball
             objectName: "ball" + index
             source: "resources/redball.png"
-            width: 80; height: 80; x: 200 + index * 200; y: 200
+            property real homeX: 200 + index * 200
+            property real homeY: 200
+            width: 80; height: 80; x: homeX; y: 200
 
             Text {
                 anchors.centerIn: parent
                 color: "white"
-                text: anim.velocity.x.toFixed(2) + "," + anim.velocity.y.toFixed(2)
+                text: momentum.velocity.x.toFixed(2) + "," + momentum.velocity.y.toFixed(2)
             }
 
-            MomentumAnimation { id: anim; target: ball }
+            SequentialAnimation {
+                id: anim
+
+                function restart(vel) {
+                    stop()
+                    momentum.velocity = vel
+                    start()
+                }
+
+                MomentumAnimation { id: momentum; target: ball }
+
+                PauseAnimation { duration: 500 }
+
+                ParallelAnimation {
+                    id: ballReturn
+                    NumberAnimation {
+                        target: ball
+                        property: "x"
+                        to: homeX
+                        duration: 1000
+                        easing.period: 50
+                        easing.type: Easing.OutElastic
+                    }
+                    NumberAnimation {
+                        target: ball
+                        property: "y"
+                        to: homeY
+                        duration: 1000
+                        easing.type: Easing.OutElastic
+                    }
+                }
+            }
 
             DragHandler {
                 id: dragHandler
@@ -79,6 +100,27 @@ Rectangle {
                 anchors.margins: -5
                 radius: width / 2
                 opacity: 0.25
+            }
+
+            Rectangle {
+                visible: width > 0
+                width: dragHandler.point.velocity.length() * 100
+                height: 2
+                x: ball.width / 2
+                y: ball.height / 2
+                z: -1
+                rotation: Math.atan2(dragHandler.point.velocity.y, dragHandler.point.velocity.x) * 180 / Math.PI
+                transformOrigin: Item.BottomLeft
+                antialiasing: true
+
+                Image {
+                    source: "resources/arrowhead.png"
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 16
+                    height: 12
+                    antialiasing: true
+                }
             }
         }
     }

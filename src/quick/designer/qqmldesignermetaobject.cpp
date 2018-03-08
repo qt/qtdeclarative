@@ -50,7 +50,7 @@
 QT_BEGIN_NAMESPACE
 
 static QHash<QDynamicMetaObjectData *, bool> nodeInstanceMetaObjectList;
-static void (*notifyPropertyChangeCallBack)(QObject*, const QQuickDesignerSupport::PropertyName &propertyName) = 0;
+static void (*notifyPropertyChangeCallBack)(QObject*, const QQuickDesignerSupport::PropertyName &propertyName) = nullptr;
 
 struct MetaPropertyData {
     inline QPair<QVariant, bool> &getDataRef(int idx) {
@@ -127,7 +127,7 @@ void QQmlDesignerMetaObject::init(QObject *object, QQmlEngine *engine)
 }
 
 QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engine)
-    : QQmlVMEMetaObject(QQmlEnginePrivate::getV4Engine(engine), object, cacheForObject(object, engine), /*qml compilation unit*/nullptr, /*qmlObjectId*/-1),
+    : QQmlVMEMetaObject(engine->handle(), object, cacheForObject(object, engine), /*qml compilation unit*/nullptr, /*qmlObjectId*/-1),
       m_context(engine->contextForObject(object)),
       m_data(new MetaPropertyData)
 {
@@ -174,7 +174,7 @@ void QQmlDesignerMetaObject::setValue(int id, const QVariant &value)
     QPair<QVariant, bool> &prop = m_data->getDataRef(id);
     prop.first = propertyWriteValue(id, value);
     prop.second = true;
-    QMetaObject::activate(myObject(), id + m_type->signalOffset(), 0);
+    QMetaObject::activate(myObject(), id + m_type->signalOffset(), nullptr);
 }
 
 QVariant QQmlDesignerMetaObject::propertyWriteValue(int, const QVariant &value)
@@ -187,7 +187,7 @@ const QAbstractDynamicMetaObject *QQmlDesignerMetaObject::dynamicMetaObjectParen
     if (QQmlVMEMetaObject::parent.isT1())
         return QQmlVMEMetaObject::parent.asT1()->toDynamicMetaObject(QQmlVMEMetaObject::object);
     else
-        return 0;
+        return nullptr;
 }
 
 const QMetaObject *QQmlDesignerMetaObject::metaObjectParent() const
@@ -218,7 +218,7 @@ int QQmlDesignerMetaObject::openMetaCall(QObject *o, QMetaObject::Call call, int
                 prop.first = propertyWriteValue(propId, *reinterpret_cast<QVariant *>(a[0]));
                 prop.second = true;
                 //propertyWritten(propId);
-                activate(myObject(), m_type->signalOffset() + propId, 0);
+                activate(myObject(), m_type->signalOffset() + propId, nullptr);
             }
         }
         return -1;

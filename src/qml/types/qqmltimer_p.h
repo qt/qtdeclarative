@@ -72,7 +72,7 @@ class Q_QML_PRIVATE_EXPORT QQmlTimer : public QObject, public QQmlParserStatus
     Q_PROPERTY(QObject *parent READ parent CONSTANT)
 
 public:
-    QQmlTimer(QObject *parent=0);
+    QQmlTimer(QObject *parent=nullptr);
 
     void setInterval(int interval);
     int interval() const;

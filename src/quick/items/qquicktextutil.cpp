@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 QQuickItem *QQuickTextUtil::createCursor(
         QQmlComponent *component, QQuickItem *parent, const QRectF &rectangle, const char *className)
 {
-    QQuickItem *item = 0;
+    QQuickItem *item = nullptr;
     if (component->isReady()) {
         QQmlContext *creationContext = component->creationContext();
 

@@ -69,8 +69,8 @@
 
 #define FILE_OPEN_EVENT_WAIT_TIME 3000 // ms
 
-static Config *conf = 0;
-static QQmlApplicationEngine *qae = 0;
+static Config *conf = nullptr;
+static QQmlApplicationEngine *qae = nullptr;
 #if defined(Q_OS_DARWIN) || defined(QT_GUI_LIB)
 static int exitTimerId = -1;
 #endif
@@ -436,7 +436,7 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 int main(int argc, char *argv[])
 {
     getAppFlags(argc, argv);
-    QCoreApplication *app = 0;
+    QCoreApplication *app = nullptr;
     switch (applicationType) {
     case QmlApplicationTypeCore:
         app = new QCoreApplication(argc, argv);

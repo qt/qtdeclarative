@@ -76,7 +76,7 @@ struct RegExpCacheKey;
 namespace Heap {
 
 struct RegExp : Base {
-    void init(const QString& pattern, bool ignoreCase, bool multiline, bool global);
+    void init(ExecutionEngine *engine, const QString& pattern, bool ignoreCase, bool multiline, bool global);
     void destroy();
 
     QString *pattern;
@@ -100,7 +100,7 @@ struct RegExp : Base {
 
     int captureCount() const { return subPatternCount + 1; }
 };
-V4_ASSERT_IS_TRIVIAL(RegExp)
+Q_STATIC_ASSERT(std::is_trivial< RegExp >::value);
 
 }
 

@@ -143,7 +143,7 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
     quint8 padding_[4];
 #endif
 };
-V4_ASSERT_IS_TRIVIAL(ExecutionContext)
+Q_STATIC_ASSERT(std::is_trivial< ExecutionContext >::value);
 Q_STATIC_ASSERT(sizeof(ExecutionContext) == sizeof(Base) + sizeof(ExecutionContextData) + QT_POINTER_SIZE);
 
 Q_STATIC_ASSERT(std::is_standard_layout<ExecutionContextData>::value);
@@ -170,7 +170,7 @@ DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
     }
     void setArg(uint index, Value v);
 };
-V4_ASSERT_IS_TRIVIAL(CallContext)
+Q_STATIC_ASSERT(std::is_trivial< CallContext >::value);
 Q_STATIC_ASSERT(std::is_standard_layout<CallContextData>::value);
 Q_STATIC_ASSERT(offsetof(CallContextData, function) == 0);
 //### The following size check fails on Win8. With the ValueArray at the end of the
@@ -190,7 +190,7 @@ DECLARE_HEAP_OBJECT(CatchContext, ExecutionContext) {
 
     void init(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue);
 };
-V4_ASSERT_IS_TRIVIAL(CatchContext)
+Q_STATIC_ASSERT(std::is_trivial< CatchContext >::value);
 
 }
 
@@ -246,12 +246,12 @@ struct CatchContext : public ExecutionContext
 
 inline CallContext *ExecutionContext::asCallContext()
 {
-    return d()->type == Heap::ExecutionContext::Type_CallContext ? static_cast<CallContext *>(this) : 0;
+    return d()->type == Heap::ExecutionContext::Type_CallContext ? static_cast<CallContext *>(this) : nullptr;
 }
 
 inline const CallContext *ExecutionContext::asCallContext() const
 {
-    return d()->type == Heap::ExecutionContext::Type_CallContext ? static_cast<const CallContext *>(this) : 0;
+    return d()->type == Heap::ExecutionContext::Type_CallContext ? static_cast<const CallContext *>(this) : nullptr;
 }
 
 } // namespace QV4

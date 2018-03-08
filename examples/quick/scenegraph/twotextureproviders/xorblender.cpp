@@ -77,7 +77,7 @@ class XorBlendShader : public QSGSimpleMaterialShader<XorBlendState>
     QSG_DECLARE_SIMPLE_SHADER(XorBlendShader, XorBlendState)
 public:
 
-    const char *vertexShader() const {
+    const char *vertexShader() const override {
         return
         "attribute highp vec4 aVertex;              \n"
         "attribute highp vec2 aTexCoord;            \n"
@@ -89,7 +89,7 @@ public:
         "}";
     }
 
-    const char *fragmentShader() const {
+    const char *fragmentShader() const override {
         return
         "uniform lowp float qt_Opacity;                                             \n"
         "uniform lowp sampler2D uSource1;                                           \n"
@@ -102,11 +102,11 @@ public:
         "}";
     }
 
-    QList<QByteArray> attributes() const {
+    QList<QByteArray> attributes() const override {
         return QList<QByteArray>() << "aVertex" << "aTexCoord";
     }
 
-    void updateState(const XorBlendState *state, const XorBlendState *) {
+    void updateState(const XorBlendState *state, const XorBlendState *) override {
         QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
         // We bind the textures in inverse order so that we leave the updateState
         // function with GL_TEXTURE0 as the active texture unit. This is maintain
@@ -118,7 +118,7 @@ public:
         state->texture1->bind();
     }
 
-    void resolveUniforms() {
+    void resolveUniforms() override {
         // The texture units never change, only the texturess we bind to them so
         // we set these once and for all here.
         program()->setUniformValue("uSource1", 0); // GL_TEXTURE0
@@ -149,8 +149,8 @@ public:
 
         // Set up material so it is all set for later..
         m_material = XorBlendShader::createMaterial();
-        m_material->state()->texture1 = 0;
-        m_material->state()->texture2 = 0;
+        m_material->state()->texture1 = nullptr;
+        m_material->state()->texture2 = nullptr;
         m_material->setFlag(QSGMaterial::Blending);
         m_node.setMaterial(m_material);
         m_node.setFlag(QSGNode::OwnsMaterial);
@@ -165,7 +165,7 @@ public:
         connect(m_provider2.data(), &QSGTextureProvider::textureChanged, this, &XorNode::textureChange, Qt::DirectConnection);
     }
 
-    void preprocess() {
+    void preprocess() override {
         XorBlendState *state = m_material->state();
         // Update the textures from the providers, calling into QSGDynamicTexture if required
         if (m_provider1) {
@@ -214,8 +214,8 @@ private:
 
 XorBlender::XorBlender(QQuickItem *parent)
     : QQuickItem(parent)
-    , m_source1(0)
-    , m_source2(0)
+    , m_source1(nullptr)
+    , m_source2(nullptr)
     , m_source1Changed(false)
     , m_source2Changed(false)
 {
@@ -256,7 +256,7 @@ QSGNode *XorBlender::updatePaintNode(QSGNode *old, UpdatePaintNodeData *)
     }
     if (abort) {
         delete old;
-        return 0;
+        return nullptr;
     }
 
     XorNode *node = static_cast<XorNode *>(old);
@@ -264,7 +264,7 @@ QSGNode *XorBlender::updatePaintNode(QSGNode *old, UpdatePaintNodeData *)
     // If the sources have changed, recreate the nodes
     if (m_source1Changed || m_source2Changed) {
         delete node;
-        node = 0;
+        node = nullptr;
         m_source1Changed = false;
         m_source2Changed = false;
     }

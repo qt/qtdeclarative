@@ -108,7 +108,7 @@ QImage QQuickTextureFactory::image() const
 QQuickTextureFactory *QQuickTextureFactory::textureFactoryForImage(const QImage &image)
 {
     if (image.isNull())
-        return 0;
+        return nullptr;
     QQuickTextureFactory *texture = QSGContext::createTextureFactoryFromImage(image);
     if (texture)
         return texture;
@@ -469,7 +469,7 @@ QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSi
     Q_UNUSED(requestedSize);
     if (d->type == Texture)
         qWarning("ImageProvider supports Texture type but has not implemented requestTexture()");
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -484,7 +484,7 @@ QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSi
 */
 QQuickAsyncImageProvider::QQuickAsyncImageProvider()
  : QQuickImageProvider(ImageResponse, ForceAsynchronousImageLoading)
- , d(0) // just as a placeholder in case we need it for the future
+ , d(nullptr) // just as a placeholder in case we need it for the future
 {
     Q_UNUSED(d);
 }
@@ -515,15 +515,12 @@ class QQuickImageProviderOptionsPrivate : public QSharedData
 {
 public:
     QQuickImageProviderOptionsPrivate()
-     : autoTransform(QQuickImageProviderOptions::UsePluginDefaultTransform)
-     , preserveAspectRatioCrop(false)
-     , preserveAspectRatioFit(false)
     {
     }
 
-    QQuickImageProviderOptions::AutoTransform autoTransform;
-    bool preserveAspectRatioCrop;
-    bool preserveAspectRatioFit;
+    QQuickImageProviderOptions::AutoTransform autoTransform = QQuickImageProviderOptions::UsePluginDefaultTransform;
+    bool preserveAspectRatioCrop = false;
+    bool preserveAspectRatioFit = false;
 };
 
 /*!
@@ -683,13 +680,15 @@ QSize QQuickImageProviderWithOptions::loadSize(const QSize &originalSize, const 
         return res;
 
     const bool preserveAspectCropOrFit = options.preserveAspectRatioCrop() || options.preserveAspectRatioFit();
-    const bool force_scale = (format == "svg" || format == "svgz");
+
+    if (!preserveAspectCropOrFit && (format == "svg" || format == "svgz") && !requestedSize.isEmpty())
+        return requestedSize;
 
     qreal ratio = 0.0;
-    if (requestedSize.width() && (preserveAspectCropOrFit || force_scale || requestedSize.width() < originalSize.width())) {
+    if (requestedSize.width() && (preserveAspectCropOrFit || requestedSize.width() < originalSize.width())) {
         ratio = qreal(requestedSize.width()) / originalSize.width();
     }
-    if (requestedSize.height() && (preserveAspectCropOrFit || force_scale || requestedSize.height() < originalSize.height())) {
+    if (requestedSize.height() && (preserveAspectCropOrFit || requestedSize.height() < originalSize.height())) {
         qreal hr = qreal(requestedSize.height()) / originalSize.height();
         if (ratio == 0.0)
             ratio = hr;

@@ -59,7 +59,7 @@ using namespace QQmlJS::AST;
 ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode)
     : _cg(cg)
     , _sourceCode(sourceCode)
-    , _context(0)
+    , _context(nullptr)
     , _allowFuncDecls(true)
     , defaultProgramMode(defaultProgramMode)
 {
@@ -130,13 +130,15 @@ void ScanFunctions::checkName(const QStringRef &name, const SourceLocation &loc)
         }
     }
 }
-void ScanFunctions::checkForArguments(AST::FormalParameterList *parameters)
+
+bool ScanFunctions::formalsContainName(AST::FormalParameterList *parameters, const QString &name)
 {
     while (parameters) {
-        if (parameters->name == QLatin1String("arguments"))
-            _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
+        if (parameters->name == name)
+            return true;
         parameters = parameters->next;
     }
+    return false;
 }
 
 bool ScanFunctions::visit(Program *ast)
@@ -206,7 +208,7 @@ bool ScanFunctions::visit(VariableDeclaration *ast)
         return false;
     }
     QString name = ast->name.toString();
-    const Context::Member *m = 0;
+    const Context::Member *m = nullptr;
     if (_context->memberInfo(name, &m)) {
         if (m->isLexicallyScoped() || ast->isLexicallyScoped()) {
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
@@ -256,7 +258,7 @@ void ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
 {
     if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
         _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Function name may not be eval or arguments in strict mode"));
-    enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : 0);
+    enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : nullptr);
 }
 
 void ScanFunctions::endVisit(FunctionExpression *)
@@ -285,7 +287,7 @@ bool ScanFunctions::visit(ObjectLiteral *ast)
 bool ScanFunctions::visit(PropertyGetterSetter *ast)
 {
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
-    enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/0);
+    enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/nullptr);
     return true;
 }
 
@@ -398,9 +400,11 @@ void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
     }
 
     enterEnvironment(ast, FunctionCode);
-    checkForArguments(formals);
+    if (formalsContainName(formals, QStringLiteral("arguments")))
+        _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
 
-    if (!name.isEmpty())
+
+    if (!name.isEmpty() && !formalsContainName(formals, name))
         _context->addLocalVar(name, Context::ThisFunctionName, QQmlJS::AST::VariableDeclaration::FunctionScope);
     _context->formals = formals;
 

@@ -125,12 +125,12 @@ void tst_animation::animationelements_data()
 void tst_animation::animationelements()
 {
     QFETCH(QString, type);
-    QQmlType *t = QQmlMetaType::qmlType(type, 2, 0);
-    if (!t || !t->isCreatable())
+    QQmlType t = QQmlMetaType::qmlType(type, 2, 0);
+    if (!t.isValid() || !t.isCreatable())
         QSKIP("Non-creatable type");
 
     QBENCHMARK {
-        QObject *obj = t->create();
+        QObject *obj = t.create();
         delete obj;
     }
 }

@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct JSCallData {
-    JSCallData(const Scope &scope, int argc = 0, const Value *argv = 0, const Value *thisObject = 0)
+    JSCallData(const Scope &scope, int argc = 0, const Value *argv = nullptr, const Value *thisObject = nullptr)
         : scope(scope), argc(argc)
     {
         if (thisObject)
@@ -124,7 +124,7 @@ struct ScopedStackFrame {
             return;
         frame.jsFrame = reinterpret_cast<CallData *>(scope.alloc(sizeof(CallData)/sizeof(Value)));
         frame.jsFrame->context = context;
-        frame.v4Function = frame.parent ? frame.parent->v4Function : 0;
+        frame.v4Function = frame.parent ? frame.parent->v4Function : nullptr;
         scope.engine->currentStackFrame = &frame;
     }
     ~ScopedStackFrame() {

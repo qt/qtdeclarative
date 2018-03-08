@@ -74,8 +74,8 @@ public:
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
-    QQmlCustomParser() : engine(0), validator(0), m_flags(NoFlag) {}
-    QQmlCustomParser(Flags f) : engine(0), validator(0), m_flags(f) {}
+    QQmlCustomParser() : engine(nullptr), validator(nullptr), m_flags(NoFlag) {}
+    QQmlCustomParser(Flags f) : engine(nullptr), validator(nullptr), m_flags(f) {}
     virtual ~QQmlCustomParser() {}
 
     void clearErrors();

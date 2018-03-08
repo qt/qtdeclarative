@@ -76,9 +76,6 @@ namespace std {
 inline bool isinf(double d) { return !_finite(d) && !_isnan(d); }
 inline bool isnan(double d) { return !!_isnan(d); }
 inline bool isfinite(double d) { return _finite(d); }
-#if _MSC_VER < 1800
-inline bool signbit(double d) { return _copysign(1.0, d) < 0; }
-#endif
 
 } // namespace std
 
@@ -95,7 +92,7 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
     && (defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_FREEBSD))
 #  define V4_ENABLE_JIT
 #elif defined(Q_PROCESSOR_X86_64) && (QT_POINTER_SIZE == 8) \
-    && (defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_MAC) || defined(Q_OS_FREEBSD))
+    && (defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_MAC) || defined(Q_OS_FREEBSD))
 #  define V4_ENABLE_JIT
 #elif defined(Q_PROCESSOR_ARM_32) && (QT_POINTER_SIZE == 4)
 #  if defined(thumb2) || defined(__thumb2__) || ((defined(__thumb) || defined(__thumb__)) && __TARGET_ARCH_THUMB-0 == 4)
@@ -104,7 +101,7 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 #    define V4_ENABLE_JIT
 #  endif
 #elif defined(Q_PROCESSOR_ARM_64) && (QT_POINTER_SIZE == 8)
-#  if defined(Q_OS_LINUX)
+#  if defined(Q_OS_LINUX) || defined(Q_OS_QNX)
 #    define V4_ENABLE_JIT
 #  endif
 //#elif defined(Q_PROCESSOR_MIPS_32) && defined(Q_OS_LINUX)
@@ -211,7 +208,6 @@ struct StringObject;
 struct ArrayObject;
 struct DateObject;
 struct FunctionObject;
-struct BuiltinFunction;
 struct ErrorObject;
 struct ArgumentsObject;
 struct Managed;

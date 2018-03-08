@@ -139,7 +139,7 @@ namespace {
                         expected = TypeIdentifier;
                         break;
                     }
-                    // Fall through.
+                    Q_FALLTHROUGH();
                 case TypeIdentifier:
                     typeIndex = idIndex;
                     typeLength = idLength;
@@ -422,8 +422,9 @@ void QQuickOpenGLShaderEffectCommon::updateShader(QQuickItem *item,
             d.specialType = UniformData::Opacity;
             uniformData[Key::FragmentShader].append(d);
             signalMappers[Key::FragmentShader].append(0);
-            const int mappedId = 1 | (Key::FragmentShader << 16);
-            auto mapper = new QtPrivate::MappedSlotObject([this, mappedId](){mappedPropertyChanged(mappedId);});
+            auto mapper = new QtPrivate::MappedSlotObject([this](){
+                mappedPropertyChanged(1 | (Key::FragmentShader << 16));
+            });
             const char *sourceName = "source";
             d.name = sourceName;
             d.setValueFromProperty(item, itemMetaObject);
@@ -483,7 +484,7 @@ void QQuickOpenGLShaderEffectCommon::updateMaterial(QQuickOpenGLShaderEffectNode
                 if (d.specialType != UniformData::Sampler && d.specialType != UniformData::SamplerExternal)
                     continue;
                 QSGTextureProvider *oldProvider = material->textureProviders.at(index);
-                QSGTextureProvider *newProvider = 0;
+                QSGTextureProvider *newProvider = nullptr;
                 QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(d.value));
                 if (source && source->isTextureProvider())
                     newProvider = source->textureProvider();
@@ -623,7 +624,7 @@ QQuickOpenGLShaderEffect::QQuickOpenGLShaderEffect(QQuickShaderEffect *item, QOb
     , m_item(item)
     , m_itemMetaObject(nullptr)
     , m_meshResolution(1, 1)
-    , m_mesh(0)
+    , m_mesh(nullptr)
     , m_cullMode(QQuickShaderEffect::NoCulling)
     , m_status(QQuickShaderEffect::Uncompiled)
     , m_common(this, [this](int mappedId){this->propertyChanged(mappedId);})
@@ -712,7 +713,7 @@ void QQuickOpenGLShaderEffect::setMesh(const QVariant &mesh)
     if (newMesh && newMesh == m_mesh)
         return;
     if (m_mesh)
-        disconnect(m_mesh, SIGNAL(geometryChanged()), this, 0);
+        disconnect(m_mesh, SIGNAL(geometryChanged()), this, nullptr);
     m_mesh = newMesh;
     if (m_mesh) {
         connect(m_mesh, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
@@ -765,7 +766,7 @@ QString QQuickOpenGLShaderEffect::parseLog()
     maybeUpdateShaders(true);
 
     if (m_dirtyParseLog) {
-        m_common.updateParseLog(m_mesh != 0);
+        m_common.updateParseLog(m_mesh != nullptr);
         m_dirtyParseLog = false;
     }
     return m_common.parseLog;
@@ -837,7 +838,7 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
     if (m_common.attributes.isEmpty() || m_item->width() <= 0 || m_item->height() <= 0) {
         if (node)
             delete node;
-        return 0;
+        return nullptr;
     }
 
     if (!node) {
@@ -896,7 +897,7 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
     bool geometryUsesTextureSubRect = false;
     if (m_supportsAtlasTextures && material->textureProviders.size() == 1) {
         QSGTextureProvider *provider = material->textureProviders.at(0);
-        if (provider->texture()) {
+        if (provider && provider->texture()) {
             srcRect = provider->texture()->normalizedTextureSubRect();
             geometryUsesTextureSubRect = true;
         }
@@ -913,7 +914,7 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
     }
 
     if (m_dirtyMesh) {
-        node->setGeometry(0);
+        node->setGeometry(nullptr);
         m_dirtyMesh = false;
         m_dirtyGeometry = true;
     }
@@ -934,7 +935,7 @@ QSGNode *QQuickOpenGLShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQuic
                 emit m_item->statusChanged();
             }
             delete node;
-            return 0;
+            return nullptr;
         }
 
         geometry = mesh->updateGeometry(geometry, m_common.attributes.count(), posIndex, srcRect, rect);

@@ -77,13 +77,13 @@ FlatColorMaterialShader::FlatColorMaterialShader()
 void FlatColorMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
 {
 #if QT_CONFIG(opengl)
-    Q_ASSERT(oldEffect == 0 || newEffect->type() == oldEffect->type());
+    Q_ASSERT(oldEffect == nullptr || newEffect->type() == oldEffect->type());
     QSGFlatColorMaterial *oldMaterial = static_cast<QSGFlatColorMaterial *>(oldEffect);
     QSGFlatColorMaterial *newMaterial = static_cast<QSGFlatColorMaterial *>(newEffect);
 
     const QColor &c = newMaterial->color();
 
-    if (oldMaterial == 0 || c != oldMaterial->color() || state.isOpacityDirty()) {
+    if (oldMaterial == nullptr || c != oldMaterial->color() || state.isOpacityDirty()) {
         float opacity = state.opacity() * c.alphaF();
         QVector4D v(c.redF() * opacity,
                     c.greenF() *  opacity,
@@ -103,7 +103,7 @@ void FlatColorMaterialShader::updateState(const RenderState &state, QSGMaterial 
 
 char const *const *FlatColorMaterialShader::attributeNames() const
 {
-    static char const *const attr[] = { "vCoord", 0 };
+    static char const *const attr[] = { "vCoord", nullptr };
     return attr;
 }
 

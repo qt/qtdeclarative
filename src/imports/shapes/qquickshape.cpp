@@ -46,11 +46,14 @@
 #include <private/qquicksvgparser_p.h>
 #include <QtGui/private/qdrawhelper_p.h>
 #include <QOpenGLFunctions>
+#include <QLoggingCategory>
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
+
 /*!
-    \qmlmodule QtQuick.Shapes 1.0
+    \qmlmodule QtQuick.Shapes 1.11
     \title Qt Quick Shapes QML Types
     \ingroup qmlmodules
     \brief Provides QML types for drawing stroked and filled shapes.
@@ -58,7 +61,7 @@ QT_BEGIN_NAMESPACE
     To use the types in this module, import the module with the following line:
 
     \badcode
-    import QtQuick.Shapes 1.0
+    import QtQuick.Shapes 1.11
     \endcode
 */
 
@@ -139,6 +142,8 @@ QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()
 QQuickShapePathPrivate::QQuickShapePathPrivate()
     : dirty(DirtyAll)
 {
+    // Set this QQuickPath to be a ShapePath
+    isShapePath = true;
 }
 
 QQuickShapePath::QQuickShapePath(QObject *parent)
@@ -628,12 +633,7 @@ void QQuickShapePath::resetFillGradient()
 */
 
 QQuickShapePrivate::QQuickShapePrivate()
-    : spChanged(false),
-      rendererType(QQuickShape::UnknownRenderer),
-      async(false),
-      status(QQuickShape::Null),
-      renderer(nullptr),
-      enableVendorExts(true)
+      : effectRefCount(0)
 {
 }
 
@@ -781,6 +781,63 @@ QQuickShape::Status QQuickShape::status() const
     return d->status;
 }
 
+/*!
+    \qmlproperty enumeration QtQuick.Shapes::Shape::containsMode
+    \since QtQuick.Shapes 1.11
+
+    This property determines the definition of \l {QQuickItem::contains()}{contains()}
+    for the Shape. It is useful in case you add
+    \l {Qt Quick Pointer Handlers QML Types}{Pointer Handlers} and you
+    want to react only when the mouse or touchpoint is fully inside the Shape.
+
+    \value Shape.BoundingRectContains
+        The default implementation of \l QQuickItem::contains() checks only
+        whether the given point is inside the rectangular bounding box. This is
+        the most efficient implementation, which is why it's the default.
+
+    \value Shape.FillContains
+        Check whether the interior (the part that would be filled if you are
+        rendering it with fill) of any \l ShapePath that makes up this Shape
+        contains the given point. The more complex and numerous ShapePaths you
+        add, the less efficient this is to check, which can potentially slow
+        down event delivery in your application. So it should be used with care.
+
+    One way to speed up the \c FillContains check is to generate an approximate
+    outline with as few points as possible, place that in a transparent Shape
+    on top, and add your Pointer Handlers to that, so that the containment
+    check is cheaper during event delivery.
+*/
+QQuickShape::ContainsMode QQuickShape::containsMode() const
+{
+    Q_D(const QQuickShape);
+    return d->containsMode;
+}
+
+void QQuickShape::setContainsMode(QQuickShape::ContainsMode containsMode)
+{
+    Q_D(QQuickShape);
+    if (d->containsMode == containsMode)
+        return;
+
+    d->containsMode = containsMode;
+    emit containsModeChanged();
+}
+
+bool QQuickShape::contains(const QPointF &point) const
+{
+    Q_D(const QQuickShape);
+    switch (d->containsMode) {
+    case BoundingRectContains:
+        return QQuickItem::contains(point);
+    case FillContains:
+        for (QQuickShapePath *path : d->sp) {
+            if (path->path().contains(point))
+                return true;
+        }
+    }
+    return false;
+}
+
 static void vpe_append(QQmlListProperty<QObject> *property, QObject *obj)
 {
     QQuickShape *item = static_cast<QQuickShape *>(property->object);
@@ -854,10 +911,12 @@ void QQuickShape::updatePolish()
 {
     Q_D(QQuickShape);
 
-    if (!d->spChanged)
+    const int currentEffectRefCount = d->extra.isAllocated() ? d->extra->recursiveEffectRefCount : 0;
+    if (!d->spChanged && currentEffectRefCount <= d->effectRefCount)
         return;
 
     d->spChanged = false;
+    d->effectRefCount = currentEffectRefCount;
 
     if (!d->renderer) {
         d->createRenderer();
@@ -869,7 +928,7 @@ void QQuickShape::updatePolish()
     // endSync() is where expensive calculations may happen (or get kicked off
     // on worker threads), depending on the backend. Therefore do this only
     // when the item is visible.
-    if (isVisible())
+    if (isVisible() || d->effectRefCount > 0)
         d->sync();
 
     update();
@@ -968,18 +1027,26 @@ QSGNode *QQuickShapePrivate::createNode()
     return node;
 }
 
-static void q_asyncShapeReady(void *data)
+void QQuickShapePrivate::asyncShapeReady(void *data)
 {
     QQuickShapePrivate *self = static_cast<QQuickShapePrivate *>(data);
     self->setStatus(QQuickShape::Ready);
+    if (self->syncTimingActive)
+        qDebug("[Shape %p] [%d] [dirty=0x%x] async update took %lld ms",
+               self->q_func(), self->syncTimeCounter, self->syncTimingTotalDirty, self->syncTimer.elapsed());
 }
 
 void QQuickShapePrivate::sync()
 {
+    syncTimingTotalDirty = 0;
+    syncTimingActive = QQSHAPE_LOG_TIME_DIRTY_SYNC().isDebugEnabled();
+    if (syncTimingActive)
+        syncTimer.start();
+
     const bool useAsync = async && renderer->flags().testFlag(QQuickAbstractPathRenderer::SupportsAsync);
     if (useAsync) {
         setStatus(QQuickShape::Processing);
-        renderer->setAsyncCallback(q_asyncShapeReady, this);
+        renderer->setAsyncCallback(asyncShapeReady, this);
     }
 
     const int count = sp.count();
@@ -988,6 +1055,7 @@ void QQuickShapePrivate::sync()
     for (int i = 0; i < count; ++i) {
         QQuickShapePath *p = sp[i];
         int &dirty(QQuickShapePathPrivate::get(p)->dirty);
+        syncTimingTotalDirty |= dirty;
 
         if (dirty & QQuickShapePathPrivate::DirtyPath)
             renderer->setPath(i, p);
@@ -1011,10 +1079,19 @@ void QQuickShapePrivate::sync()
         dirty = 0;
     }
 
+    if (syncTimingTotalDirty)
+        ++syncTimeCounter;
+    else
+        syncTimingActive = false;
+
     renderer->endSync(useAsync);
 
-    if (!useAsync)
+    if (!useAsync) {
         setStatus(QQuickShape::Ready);
+        if (syncTimingActive)
+            qDebug("[Shape %p] [%d] [dirty=0x%x] update took %lld ms",
+                   q_func(), syncTimeCounter, syncTimingTotalDirty, syncTimer.elapsed());
+    }
 }
 
 // ***** gradient support *****
@@ -1327,7 +1404,7 @@ void QQuickShapeRadialGradient::setFocalRadius(qreal v)
     Conical gradients interpolate colors counter-clockwise around a center
     point in Shape items.
 
-    \note The \l{ShapeGradient.spread}{spread mode} setting has no effect for
+    \note The \l{ShapeGradient::spread}{spread mode} setting has no effect for
     conical gradients.
 
     \note ConicalGradient is only supported in combination with Shape items. It

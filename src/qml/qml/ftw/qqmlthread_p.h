@@ -124,7 +124,7 @@ private:
     friend class QQmlThreadPrivate;
 
     struct Message {
-        Message() : next(0) {}
+        Message() : next(nullptr) {}
         virtual ~Message() {}
         Message *next;
         virtual void call(QQmlThread *) = 0;

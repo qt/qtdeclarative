@@ -59,7 +59,7 @@ QObject *QQuickDesignerSupportPropertyChanges::targetObject(QObject *propertyCha
     QQuickPropertyChanges *propertyChange = qobject_cast<QQuickPropertyChanges*>(propertyChanges);
 
     if (!propertyChange)
-        return 0;
+        return nullptr;
 
     return propertyChange->object();
 }
@@ -114,7 +114,7 @@ QObject *QQuickDesignerSupportPropertyChanges::stateObject(QObject *propertyChan
     QQuickPropertyChanges *propertyChange = qobject_cast<QQuickPropertyChanges*>(propertyChanges);
 
     if (!propertyChange)
-        return 0;
+        return nullptr;
 
     return propertyChange->state();
 }

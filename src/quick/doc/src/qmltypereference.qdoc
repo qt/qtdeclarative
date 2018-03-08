@@ -894,5 +894,5 @@ import QtTest 1.1
 \endcode
 
 For more information about how to use these types, see
-\l{Qt Quick Test Reference Documentation}.
+\l{Qt Quick Test}.
 */

@@ -77,11 +77,6 @@
     if (view.status() == QQuickView::Error)\
         return -1;\
     view.setResizeMode(QQuickView::SizeRootObjectToView);\
-    if (QGuiApplication::platformName() == QLatin1String("qnx") || \
-          QGuiApplication::platformName() == QLatin1String("eglfs")) {\
-        view.showFullScreen();\
-    } else {\
-        view.show();\
-    }\
+    view.show();\
     return app.exec();\
 }

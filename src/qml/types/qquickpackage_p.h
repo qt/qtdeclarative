@@ -66,7 +66,7 @@ class Q_AUTOTEST_EXPORT QQuickPackage : public QObject
     Q_PROPERTY(QQmlListProperty<QObject> data READ data)
 
 public:
-    QQuickPackage(QObject *parent=0);
+    QQuickPackage(QObject *parent=nullptr);
     virtual ~QQuickPackage();
 
     QQmlListProperty<QObject> data();

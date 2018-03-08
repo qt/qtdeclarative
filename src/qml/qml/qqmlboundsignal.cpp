@@ -74,8 +74,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 {
     init(ctxt, scope);
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
-    QV4::ExecutionEngine *v4 = ep->v4engine();
+    QV4::ExecutionEngine *v4 = engine()->handle();
 
     QString function;
 
@@ -123,7 +122,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
     // It's important to call init first, because m_index gets remapped in case of cloned signals.
     init(ctxt, scope);
 
-    QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
+    QV4::ExecutionEngine *engine = ctxt->engine->handle();
 
     QList<QByteArray> signalParameters = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).parameterNames();
     if (!signalParameters.isEmpty()) {
@@ -182,15 +181,17 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     if (!expressionFunctionValid())
         return;
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
-    QV4::Scope scope(ep->v4engine());
+    QQmlEngine *qmlengine = engine();
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlengine);
+    QV4::ExecutionEngine *v4 = qmlengine->handle();
+    QV4::Scope scope(v4);
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
     QQmlMetaObject::ArgTypeStorage storage;
     //TODO: lookup via signal index rather than method index as an optimization
     int methodIndex = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).methodIndex();
-    int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, 0);
+    int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, nullptr);
     int argCount = argsTypes ? *argsTypes : 0;
 
     QV4::JSCallData jsCall(scope, argCount);
@@ -215,13 +216,13 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             if (!*reinterpret_cast<void* const *>(a[ii + 1]))
                 jsCall->args[ii] = QV4::Primitive::nullValue();
             else
-                jsCall->args[ii] = QV4::QObjectWrapper::wrap(ep->v4engine(), *reinterpret_cast<QObject* const *>(a[ii + 1]));
+                jsCall->args[ii] = QV4::QObjectWrapper::wrap(v4, *reinterpret_cast<QObject* const *>(a[ii + 1]));
         } else {
             jsCall->args[ii] = scope.engine->fromVariant(QVariant(type, a[ii + 1]));
         }
     }
 
-    QQmlJavaScriptExpression::evaluate(jsCall.callData(), 0);
+    QQmlJavaScriptExpression::evaluate(jsCall.callData(), nullptr);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
@@ -233,8 +234,9 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
     if (!expressionFunctionValid())
         return;
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine());
-    QV4::Scope scope(ep->v4engine());
+    QQmlEngine *qmlengine = engine();
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlengine);
+    QV4::Scope scope(qmlengine->handle());
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
@@ -243,7 +245,7 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
         jsCall->args[ii] = scope.engine->fromVariant(args[ii]);
     }
 
-    QQmlJavaScriptExpression::evaluate(jsCall.callData(), 0);
+    QQmlJavaScriptExpression::evaluate(jsCall.callData(), nullptr);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
@@ -258,8 +260,8 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
 QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
                                  QQmlEngine *engine)
     : QQmlNotifierEndpoint(QQmlNotifierEndpoint::QQmlBoundSignal),
-      m_prevSignal(0), m_nextSignal(0),
-      m_enabled(true), m_expression(0)
+      m_prevSignal(nullptr), m_nextSignal(nullptr),
+      m_enabled(true), m_expression(nullptr)
 {
     addToObject(owner);
 
@@ -296,8 +298,8 @@ void QQmlBoundSignal::removeFromObject()
     if (m_prevSignal) {
         *m_prevSignal = m_nextSignal;
         if (m_nextSignal) m_nextSignal->m_prevSignal = m_prevSignal;
-        m_prevSignal = 0;
-        m_nextSignal = 0;
+        m_prevSignal = nullptr;
+        m_nextSignal = nullptr;
     }
 }
 

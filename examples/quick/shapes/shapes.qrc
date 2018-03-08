@@ -12,7 +12,7 @@
         <file alias="sampling.qml">content/sampling.qml</file>
         <file alias="clippedtigers.qml">content/clippedtigers.qml</file>
         <file alias="tiger.qml">content/tiger.qml</file>
-        <file alias="item1.qml">content/item1.qml</file>
+        <file alias="tapableTriangle.qml">content/tapableTriangle.qml</file>
         <file alias="item2.qml">content/item2.qml</file>
         <file alias="item3.qml">content/item3.qml</file>
         <file alias="item4.qml">content/item4.qml</file>

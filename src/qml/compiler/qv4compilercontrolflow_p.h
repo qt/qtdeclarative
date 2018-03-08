@@ -159,7 +159,7 @@ struct ControlFlow {
     virtual Handler getHandler(HandlerType type, const QString &label = QString()) = 0;
 
     BytecodeGenerator::ExceptionHandler *parentExceptionHandler() {
-        return parent ? parent->exceptionHandler() : 0;
+        return parent ? parent->exceptionHandler() : nullptr;
     }
 
     virtual BytecodeGenerator::ExceptionHandler *exceptionHandler() {
@@ -184,7 +184,7 @@ protected:
         QString label;
         if (cg->_labelledStatement) {
             label = cg->_labelledStatement->label.toString();
-            cg->_labelledStatement = 0;
+            cg->_labelledStatement = nullptr;
         }
         return label;
     }
@@ -196,10 +196,10 @@ protected:
 struct ControlFlowLoop : public ControlFlow
 {
     QString loopLabel;
-    BytecodeGenerator::Label *breakLabel = 0;
-    BytecodeGenerator::Label *continueLabel = 0;
+    BytecodeGenerator::Label *breakLabel = nullptr;
+    BytecodeGenerator::Label *continueLabel = nullptr;
 
-    ControlFlowLoop(Codegen *cg, BytecodeGenerator::Label *breakLabel, BytecodeGenerator::Label *continueLabel = 0)
+    ControlFlowLoop(Codegen *cg, BytecodeGenerator::Label *breakLabel, BytecodeGenerator::Label *continueLabel = nullptr)
         : ControlFlow(cg, Loop), loopLabel(ControlFlow::loopLabel()), breakLabel(breakLabel), continueLabel(continueLabel)
     {
     }
@@ -407,7 +407,7 @@ struct ControlFlowFinally : public ControlFlowUnwind
     ControlFlowFinally(Codegen *cg, AST::Finally *finally)
         : ControlFlowUnwind(cg, Finally), finally(finally)
     {
-        Q_ASSERT(finally != 0);
+        Q_ASSERT(finally != nullptr);
         generator()->setExceptionHandler(&unwindLabel);
     }
 

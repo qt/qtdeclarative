@@ -34,7 +34,7 @@ class MyPluginType : public QObject
 {
     Q_OBJECT
 public:
-    MyPluginType(QObject *parent=0) : QObject(parent) {}
+    MyPluginType(QObject *parent=nullptr) : QObject(parent) {}
 };
 
 

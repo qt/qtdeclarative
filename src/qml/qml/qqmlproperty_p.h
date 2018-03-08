@@ -104,9 +104,9 @@ public:
     static bool writeValueProperty(QObject *,
                                    const QQmlPropertyData &, const QQmlPropertyData &valueTypeData,
                                    const QVariant &, QQmlContextData *,
-                                   QQmlPropertyData::WriteFlags flags = 0);
+                                   QQmlPropertyData::WriteFlags flags = nullptr);
     static bool write(QObject *, const QQmlPropertyData &, const QVariant &,
-                      QQmlContextData *, QQmlPropertyData::WriteFlags flags = 0);
+                      QQmlContextData *, QQmlPropertyData::WriteFlags flags = nullptr);
     static void findAliasTarget(QObject *, QQmlPropertyIndex, QObject **, QQmlPropertyIndex *);
 
     enum BindingFlag {
@@ -140,10 +140,12 @@ public:
     static QMetaMethod findSignalByName(const QMetaObject *mo, const QByteArray &);
     static bool connect(const QObject *sender, int signal_index,
                         const QObject *receiver, int method_index,
-                        int type = 0, int *types = 0);
+                        int type = 0, int *types = nullptr);
     static void flushSignal(const QObject *sender, int signal_index);
 
     static QVariant resolvedUrlSequence(const QVariant &value, QQmlContextData *context);
+    static QQmlProperty create(QObject *target, const QString &propertyName, QQmlContextData *context);
+
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlPropertyPrivate::BindingFlags)

@@ -187,9 +187,10 @@ struct Chunk {
     }
 
     bool sweep(ClassDestroyStatsCallback classCountPtr);
-    void freeAll();
     void resetBlackBits();
     void collectGrayItems(QV4::MarkStack *markStack);
+    bool sweep(ExecutionEngine *engine);
+    void freeAll(ExecutionEngine *engine);
 
     void sortIntoBins(HeapItem **bins, uint nBins);
 };
@@ -271,9 +272,9 @@ Q_STATIC_ASSERT((1 << Chunk::BitShift) == Chunk::Bits);
 
 struct MarkStack {
     MarkStack(ExecutionEngine *engine);
-    Heap::Base **top = 0;
-    Heap::Base **base = 0;
-    Heap::Base **limit = 0;
+    Heap::Base **top = nullptr;
+    Heap::Base **base = nullptr;
+    Heap::Base **limit = nullptr;
     ExecutionEngine *engine;
     void push(Heap::Base *m) {
         *top = m;

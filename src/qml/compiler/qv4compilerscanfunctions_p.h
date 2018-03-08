@@ -88,7 +88,7 @@ public:
     void leaveEnvironment();
 
     void enterQmlScope(AST::Node *ast, const QString &name)
-    { enterFunction(ast, name, /*formals*/0, /*body*/0, /*expr*/0); }
+    { enterFunction(ast, name, /*formals*/nullptr, /*body*/nullptr, /*expr*/nullptr); }
 
     void enterQmlFunction(AST::FunctionDeclaration *ast)
     { enterFunction(ast, false); }
@@ -100,7 +100,7 @@ protected:
     void checkDirectivePrologue(AST::SourceElements *ast);
 
     void checkName(const QStringRef &name, const AST::SourceLocation &loc);
-    void checkForArguments(AST::FormalParameterList *parameters);
+    bool formalsContainName(AST::FormalParameterList *parameters, const QString &name);
 
     bool visit(AST::Program *ast) override;
     void endVisit(AST::Program *) override;

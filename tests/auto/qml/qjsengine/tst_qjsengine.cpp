@@ -201,6 +201,8 @@ private slots:
 
     void malformedExpression();
 
+    void scriptScopes();
+
 signals:
     void testSignal();
 };
@@ -613,10 +615,10 @@ void tst_QJSEngine::newQObject()
     QObject temp;
 
     {
-        QJSValue qobject = eng.newQObject(0);
+        QJSValue qobject = eng.newQObject(nullptr);
         QCOMPARE(qobject.isNull(), true);
         QCOMPARE(qobject.isObject(), false);
-        QCOMPARE(qobject.toQObject(), (QObject *)0);
+        QCOMPARE(qobject.toQObject(), (QObject *)nullptr);
     }
     {
         QJSValue qobject = eng.newQObject(&temp);
@@ -637,7 +639,7 @@ void tst_QJSEngine::newQObject_ownership()
     QJSEngine eng;
     {
         QPointer<QObject> ptr = new QObject();
-        QVERIFY(ptr != 0);
+        QVERIFY(ptr != nullptr);
         {
             QJSValue v = eng.newQObject(ptr);
         }
@@ -648,7 +650,7 @@ void tst_QJSEngine::newQObject_ownership()
     }
     {
         QPointer<QObject> ptr = new QObject(this);
-        QVERIFY(ptr != 0);
+        QVERIFY(ptr != nullptr);
         {
             QJSValue v = eng.newQObject(ptr);
         }
@@ -663,11 +665,11 @@ void tst_QJSEngine::newQObject_ownership()
         QJSValue v = eng.newQObject(child);
         QCOMPARE(v.toQObject(), child);
         delete parent;
-        QCOMPARE(v.toQObject(), (QObject *)0);
+        QCOMPARE(v.toQObject(), (QObject *)nullptr);
     }
     {
         QPointer<QObject> ptr = new QObject();
-        QVERIFY(ptr != 0);
+        QVERIFY(ptr != nullptr);
         {
             QJSValue v = eng.newQObject(ptr);
         }
@@ -680,18 +682,18 @@ void tst_QJSEngine::newQObject_ownership()
     {
         QObject *parent = new QObject();
         QPointer<QObject> child = new QObject(parent);
-        QVERIFY(child != 0);
+        QVERIFY(child != nullptr);
         {
             QJSValue v = eng.newQObject(child);
         }
         eng.collectGarbage();
         // has parent, so it should be like QtOwnership
-        QVERIFY(child != 0);
+        QVERIFY(child != nullptr);
         delete parent;
     }
     {
         QPointer<QObject> ptr = new QObject();
-        QVERIFY(ptr != 0);
+        QVERIFY(ptr != nullptr);
         {
             QQmlEngine::setObjectOwnership(ptr.data(), QQmlEngine::CppOwnership);
             QJSValue v = eng.newQObject(ptr);
@@ -733,23 +735,18 @@ public:
     };
     Q_ENUMS(Enum1 Enum2)
 
-    Q_INVOKABLE TestQMetaObject()
-        : m_called(1) {
-    }
+    Q_INVOKABLE TestQMetaObject() {}
     Q_INVOKABLE TestQMetaObject(int)
-        : m_called(2) {
-    }
+        : m_called(2) {}
     Q_INVOKABLE TestQMetaObject(QString)
-        : m_called(3) {
-    }
+        : m_called(3) {}
     Q_INVOKABLE TestQMetaObject(QString, int)
-        : m_called(4) {
-    }
+        : m_called(4) {}
     int called() const {
         return m_called;
     }
 private:
-    int m_called;
+    int m_called = 1;
 };
 
 void tst_QJSEngine::newQObjectPropertyCache()
@@ -1298,8 +1295,8 @@ void tst_QJSEngine::errorMessage_QT679()
 
 struct Foo {
 public:
-    int x, y;
-    Foo() : x(-1), y(-1) { }
+    int x = -1, y = -1;
+    Foo() {}
 };
 
 Q_DECLARE_METATYPE(Foo)
@@ -1375,7 +1372,7 @@ void tst_QJSEngine::valueConversion_basic()
         QCOMPARE(eng.fromScriptValue<QChar>(eng.toScriptValue(c)), c);
     }
 
-    QVERIFY(eng.toScriptValue(static_cast<void *>(0)).isNull());
+    QVERIFY(eng.toScriptValue(static_cast<void *>(nullptr)).isNull());
 }
 
 void tst_QJSEngine::valueConversion_QVariant()
@@ -1461,7 +1458,7 @@ void tst_QJSEngine::valueConversion_QVariant()
 
     QCOMPARE(qjsvalue_cast<QVariant>(QJSValue(123)), QVariant(123));
 
-    QVERIFY(eng.toScriptValue(QVariant(QMetaType::VoidStar, 0)).isNull());
+    QVERIFY(eng.toScriptValue(QVariant(QMetaType::VoidStar, nullptr)).isNull());
     QVERIFY(eng.toScriptValue(QVariant::fromValue(nullptr)).isNull());
 
     {
@@ -1572,7 +1569,7 @@ class Klazz : public QWidget,
     Q_INTERFACES(QGraphicsItem)
     Q_OBJECT
 public:
-    Klazz(QWidget *parent = 0) : QWidget(parent) { }
+    Klazz(QWidget *parent = nullptr) : QWidget(parent) { }
     virtual QRectF boundingRect() const { return QRectF(); }
     virtual void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) { }
 };
@@ -1601,7 +1598,7 @@ void tst_QJSEngine::collectGarbage()
     a = eng.newObject();
     a = eng.newObject();
     QPointer<QObject> ptr = new QObject();
-    QVERIFY(ptr != 0);
+    QVERIFY(ptr != nullptr);
     (void)eng.newQObject(ptr);
     eng.collectGarbage();
     if (ptr)
@@ -3154,10 +3151,9 @@ class ThreadedTestEngine : public QThread {
     Q_OBJECT;
 
 public:
-    int result;
+    int result = 0;
 
-    ThreadedTestEngine()
-        : result(0) {}
+    ThreadedTestEngine() {}
 
     void run() {
         QJSEngine firstEngine;
@@ -3370,7 +3366,7 @@ void tst_QJSEngine::dynamicProperties()
         QQmlEngine qmlEngine;
         QQmlComponent component(&qmlEngine);
         component.setData("import QtQml 2.0; QtObject { property QtObject subObject: QtObject {} }", QUrl());
-        QObject *root = component.create(0);
+        QObject *root = component.create(nullptr);
         QVERIFY(root);
         QVERIFY(qmlContext(root));
 
@@ -4056,9 +4052,9 @@ class TestObject : public QObject
 {
     Q_OBJECT
 public:
-    TestObject() : called(false) {}
+    TestObject() {}
 
-    bool called;
+    bool called = false;
 
     Q_INVOKABLE void callMe(QQmlV4Function *) {
         called = true;
@@ -4116,6 +4112,22 @@ void tst_QJSEngine::malformedExpression()
 {
     QJSEngine engine;
     engine.evaluate("5%55555&&5555555\n7-0");
+}
+
+void tst_QJSEngine::scriptScopes()
+{
+    QJSEngine engine;
+
+    QJSValue def = engine.evaluate("'use strict'; function foo() { return 42 }");
+    QVERIFY(!def.isError());
+    QJSValue globalObject = engine.globalObject();
+    QJSValue foo = globalObject.property("foo");
+    QVERIFY(foo.isObject());
+    QVERIFY(foo.isCallable());
+
+    QJSValue use = engine.evaluate("'use strict'; foo()");
+    QVERIFY(use.isNumber());
+    QCOMPARE(use.toInt(), 42);
 }
 
 QTEST_MAIN(tst_QJSEngine)

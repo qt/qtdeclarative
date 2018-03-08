@@ -59,18 +59,34 @@
 
 #if !QT_CONFIG(qml_debug)
 
+#define Q_V4_PROFILE_ALLOC(engine, size, type) (!engine)
+#define Q_V4_PROFILE_DEALLOC(engine, size, type) (!engine)
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 namespace Profiling {
 class Profiler {};
+class FunctionCallProfiler {
+public:
+    FunctionCallProfiler(ExecutionEngine *, Function *) {}
+};
 }
 }
 
 QT_END_NAMESPACE
 
 #else
+
+#define Q_V4_PROFILE_ALLOC(engine, size, type)\
+    (engine->profiler() &&\
+            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
+        engine->profiler()->trackAlloc(size, type) : false)
+
+#define Q_V4_PROFILE_DEALLOC(engine, size, type) \
+    (engine->profiler() &&\
+            (engine->profiler()->featuresEnabled & (1 << Profiling::FeatureMemoryAllocation)) ?\
+        engine->profiler()->trackDealloc(size, type) : false)
 
 QT_BEGIN_NAMESPACE
 
@@ -123,7 +139,7 @@ struct MemoryAllocationProperties {
 class FunctionCall {
 public:
 
-    FunctionCall() : m_function(0), m_start(0), m_end(0)
+    FunctionCall() : m_function(nullptr), m_start(0), m_end(0)
     { Q_ASSERT_X(false, Q_FUNC_INFO, "Cannot construct a function call without function"); }
 
     FunctionCall(Function *function, qint64 start, qint64 end) :
@@ -211,16 +227,24 @@ public:
 
     bool trackAlloc(size_t size, MemoryType type)
     {
-        MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), (qint64)size, type};
-        m_memory_data.append(allocation);
-        return true;
+        if (size) {
+            MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), (qint64)size, type};
+            m_memory_data.append(allocation);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     bool trackDealloc(size_t size, MemoryType type)
     {
-        MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), -(qint64)size, type};
-        m_memory_data.append(allocation);
-        return true;
+        if (size) {
+            MemoryAllocationProperties allocation = {m_timer.nsecsElapsed(), -(qint64)size, type};
+            m_memory_data.append(allocation);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     quint64 featuresEnabled;
@@ -252,7 +276,7 @@ public:
     // It's enough to ref() the function in the destructor as it will probably not disappear while
     // it's executing ...
     FunctionCallProfiler(ExecutionEngine *engine, Function *f)
-        : profiler(0)
+        : profiler(nullptr)
     {
         Profiler *p = engine->profiler();
         if (Q_UNLIKELY(p) && (p->featuresEnabled & (1 << Profiling::FeatureFunctionCall))) {

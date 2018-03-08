@@ -51,7 +51,7 @@ QQmlDebugService *QQmlProfilerServiceFactory::create(const QString &key)
     if (key == QQmlEngineControlServiceImpl::s_key)
         return new QQmlEngineControlServiceImpl(this);
 
-    return 0;
+    return nullptr;
 }
 
 QT_END_NAMESPACE

@@ -52,7 +52,7 @@ class TestObject : public QObject
     Q_PROPERTY(QQmlScriptString scriptString READ scriptString WRITE setScriptString)
     Q_PROPERTY(QQmlScriptString scriptStringError READ scriptStringError WRITE setScriptStringError)
 public:
-    TestObject(QObject *parent = 0) : QObject(parent) {}
+    TestObject(QObject *parent = nullptr) : QObject(parent) {}
 
     QQmlScriptString scriptString() const { return m_scriptString; }
     void setScriptString(QQmlScriptString scriptString) { m_scriptString = scriptString; }
@@ -74,7 +74,7 @@ void tst_qqmlexpression::scriptString()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("scriptString.qml"));
     TestObject *testObj = qobject_cast<TestObject*>(c.create());
-    QVERIFY(testObj != 0);
+    QVERIFY(testObj != nullptr);
 
     QQmlScriptString script = testObj->scriptString();
     QVERIFY(!script.isEmpty());
@@ -100,7 +100,7 @@ void tst_qqmlexpression::scriptString()
 void tst_qqmlexpression::syntaxError()
 {
     QQmlEngine engine;
-    QQmlExpression expression(engine.rootContext(), 0, "asd asd");
+    QQmlExpression expression(engine.rootContext(), nullptr, "asd asd");
     QVariant v = expression.evaluate();
     QCOMPARE(v, QVariant());
 }
@@ -108,7 +108,7 @@ void tst_qqmlexpression::syntaxError()
 void tst_qqmlexpression::exception()
 {
     QQmlEngine engine;
-    QQmlExpression expression(engine.rootContext(), 0, "abc=123");
+    QQmlExpression expression(engine.rootContext(), nullptr, "abc=123");
     QVariant v = expression.evaluate();
     QCOMPARE(v, QVariant());
     QVERIFY(expression.hasError());

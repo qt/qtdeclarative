@@ -55,7 +55,7 @@ public:
         : q_ptr(q),
           sortField(QQuickFolderListModel::Name), sortReversed(false), showFiles(true),
           showDirs(true), showDirsFirst(false), showDotAndDotDot(false), showOnlyReadable(false),
-          showHidden(false), caseSensitive(true)
+          showHidden(false), caseSensitive(true), status(QQuickFolderListModel::Null)
     {
         nameFilters << QLatin1String("*");
     }
@@ -77,6 +77,7 @@ public:
     bool showOnlyReadable;
     bool showHidden;
     bool caseSensitive;
+    QQuickFolderListModel::Status status;
 
     ~QQuickFolderListModelPrivate() {}
     void init();
@@ -86,6 +87,7 @@ public:
     void _q_directoryChanged(const QString &directory, const QList<FileProperty> &list);
     void _q_directoryUpdated(const QString &directory, const QList<FileProperty> &list, int fromIndex, int toIndex);
     void _q_sortFinished(const QList<FileProperty> &list);
+    void _q_statusChanged(QQuickFolderListModel::Status s);
 
     static QString resolvePath(const QUrl &path);
 };
@@ -95,12 +97,15 @@ void QQuickFolderListModelPrivate::init()
 {
     Q_Q(QQuickFolderListModel);
     qRegisterMetaType<QList<FileProperty> >("QList<FileProperty>");
+    qRegisterMetaType<QQuickFolderListModel::Status>("QQuickFolderListModel::Status");
     q->connect(&fileInfoThread, SIGNAL(directoryChanged(QString,QList<FileProperty>)),
                q, SLOT(_q_directoryChanged(QString,QList<FileProperty>)));
     q->connect(&fileInfoThread, SIGNAL(directoryUpdated(QString,QList<FileProperty>,int,int)),
                q, SLOT(_q_directoryUpdated(QString,QList<FileProperty>,int,int)));
     q->connect(&fileInfoThread, SIGNAL(sortFinished(QList<FileProperty>)),
                q, SLOT(_q_sortFinished(QList<FileProperty>)));
+    q->connect(&fileInfoThread, SIGNAL(statusChanged(QQuickFolderListModel::Status)),
+               q, SLOT(_q_statusChanged(QQuickFolderListModel::Status)));
     q->connect(q, SIGNAL(rowCountChanged()), q, SIGNAL(countChanged()));
 }
 
@@ -109,7 +114,7 @@ void QQuickFolderListModelPrivate::updateSorting()
 {
     Q_Q(QQuickFolderListModel);
 
-    QDir::SortFlags flags = 0;
+    QDir::SortFlags flags = nullptr;
 
     switch (sortField) {
         case QQuickFolderListModel::Unsorted:
@@ -198,6 +203,16 @@ void QQuickFolderListModelPrivate::_q_sortFinished(const QList<FileProperty> &li
     q->endInsertRows();
 }
 
+void QQuickFolderListModelPrivate::_q_statusChanged(QQuickFolderListModel::Status s)
+{
+    Q_Q(QQuickFolderListModel);
+
+    if (status != s) {
+        status = s;
+        emit q->statusChanged();
+    }
+}
+
 QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
 {
     QString localPath = QQmlFile::urlToLocalFileOrQrc(path);
@@ -209,7 +224,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
 }
 
 /*!
-    \qmlmodule Qt.labs.folderlistmodel 2.1
+    \qmlmodule Qt.labs.folderlistmodel 2.11
     \title Qt Labs FolderListModel QML Types
     \ingroup qmlmodules
     \brief The FolderListModel provides a model of the contents of a file system folder.
@@ -217,7 +232,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     To use this module, import the module with the following line:
 
     \code
-    import Qt.labs.folderlistmodel 2.1
+    import Qt.labs.folderlistmodel 2.11
     \endcode
 */
 
@@ -236,7 +251,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     \e{Elements in the Qt.labs module are not guaranteed to remain compatible
     in future versions.}
 
-    \b{import Qt.labs.folderlistmodel 2.1}
+    \b{import Qt.labs.folderlistmodel 2.11}
 
     The \l folder property specifies the folder to access. Information about the
     files and directories in the folder is supplied via the model's interface.
@@ -282,7 +297,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
 
     \qml
     import QtQuick 2.0
-    import Qt.labs.folderlistmodel 2.1
+    import Qt.labs.folderlistmodel 2.11
 
     ListView {
         width: 200; height: 400
@@ -437,6 +452,10 @@ void QQuickFolderListModel::setFolder(const QUrl &folder)
         d->data.clear();
         endResetModel();
         emit rowCountChanged();
+        if (d->status != QQuickFolderListModel::Null) {
+            d->status = QQuickFolderListModel::Null;
+            emit statusChanged();
+        }
         return;
     }
 
@@ -792,6 +811,46 @@ void QQuickFolderListModel::setCaseSensitive(bool on)
     if (on != d->caseSensitive) {
         d->fileInfoThread.setCaseSensitive(on);
     }
+}
+
+/*!
+    \qmlproperty enumeration FolderListModel::status
+    \since 5.11
+
+    This property holds the status of folder reading.  It can be one of:
+    \list
+    \li FolderListModel.Null - no \a folder has been set
+    \li FolderListModel.Ready - the folder has been loaded
+    \li FolderListModel.Loading - the folder is currently being loaded
+    \endlist
+
+    Use this status to provide an update or respond to the status change in some way.
+    For example, you could:
+
+    \list
+    \li Trigger a state change:
+    \qml
+        State { name: 'loaded'; when: folderModel.status == FolderListModel.Ready }
+    \endqml
+
+    \li Implement an \c onStatusChanged signal handler:
+    \qml
+        FolderListModel {
+            id: folderModel
+            onStatusChanged: if (folderModel.status == FolderListModel.Ready) console.log('Loaded')
+        }
+    \endqml
+
+    \li Bind to the status value:
+    \qml
+        Text { text: folderModel.status == FolderListModel.Ready ? 'Loaded' : 'Not loaded' }
+    \endqml
+    \endlist
+*/
+QQuickFolderListModel::Status QQuickFolderListModel::status() const
+{
+    Q_D(const QQuickFolderListModel);
+    return d->status;
 }
 
 /*!

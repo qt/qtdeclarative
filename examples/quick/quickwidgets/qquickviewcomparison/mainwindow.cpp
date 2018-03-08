@@ -58,8 +58,8 @@
 #include <QQuickItem>
 
 MainWindow::MainWindow(bool transparency, bool noRenderAlpha)
-    : m_currentView(0),
-      m_currentRootObject(0),
+    : m_currentView(nullptr),
+      m_currentRootObject(nullptr),
       m_transparent(transparency),
       m_noRenderAlpha(noRenderAlpha)
 {

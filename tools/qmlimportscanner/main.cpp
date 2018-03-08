@@ -509,7 +509,7 @@ int main(int argc, char *argv[])
     while (i < args.count()) {
         const QString &arg = args.at(i);
         ++i;
-        QStringList *argReceiver = 0;
+        QStringList *argReceiver = nullptr;
         if (!arg.startsWith(QLatin1Char('-')) || arg == QLatin1String("-")) {
             qmlRootPaths += arg;
         } else if (arg == QLatin1String("-rootPath")) {

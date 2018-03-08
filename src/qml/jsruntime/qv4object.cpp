@@ -94,7 +94,7 @@ void Heap::Object::setUsedAsProto()
 
 bool Object::setPrototype(Object *proto)
 {
-    Heap::Object *p = proto ? proto->d() : 0;
+    Heap::Object *p = proto ? proto->d() : nullptr;
     Heap::Object *pp = p;
     while (pp) {
         if (pp == d())
@@ -156,34 +156,13 @@ void Object::defineDefaultProperty(const QString &name, const Value &value)
     defineDefaultProperty(s, value);
 }
 
-void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(const BuiltinFunction *, CallData *), int argumentCount)
-{
-    ExecutionEngine *e = engine();
-    Scope scope(e);
-    ScopedString s(scope, e->newIdentifier(name));
-    ExecutionContext *global = e->rootContext();
-    ScopedFunctionObject function(scope, BuiltinFunction::create(global, s, code));
-    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
-    defineDefaultProperty(s, function);
-}
-
-void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(const BuiltinFunction *, CallData *), int argumentCount)
-{
-    ExecutionEngine *e = engine();
-    Scope scope(e);
-    ExecutionContext *global = e->rootContext();
-    ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
-    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
-    defineDefaultProperty(name, function);
-}
-
 void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc), int argumentCount)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
     ExecutionContext *global = e->rootContext();
-    ScopedFunctionObject function(scope, BuiltinFunction::create(global, s, code));
+    ScopedFunctionObject function(scope, FunctionObject::createBuiltinFunction(global, s, code));
     function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
     defineDefaultProperty(s, function);
 }
@@ -193,30 +172,9 @@ void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(const Fun
     ExecutionEngine *e = engine();
     Scope scope(e);
     ExecutionContext *global = e->rootContext();
-    ScopedFunctionObject function(scope, BuiltinFunction::create(global, name, code));
+    ScopedFunctionObject function(scope, FunctionObject::createBuiltinFunction(global, name, code));
     function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
     defineDefaultProperty(name, function);
-}
-
-void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const BuiltinFunction *, CallData *),
-                                    ReturnedValue (*setter)(const BuiltinFunction *, CallData *))
-{
-    ExecutionEngine *e = engine();
-    Scope scope(e);
-    ScopedString s(scope, e->newIdentifier(name));
-    defineAccessorProperty(s, getter, setter);
-}
-
-void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(const BuiltinFunction *, CallData *),
-                                    ReturnedValue (*setter)(const BuiltinFunction *, CallData *))
-{
-    ExecutionEngine *v4 = engine();
-    QV4::Scope scope(v4);
-    ScopedProperty p(scope);
-    ExecutionContext *global = v4->rootContext();
-    p->setGetter(ScopedFunctionObject(scope, (getter ? BuiltinFunction::create(global, name, getter) : 0)));
-    p->setSetter(ScopedFunctionObject(scope, (setter ? BuiltinFunction::create(global, name, setter) : 0)));
-    insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 }
 
 void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
@@ -235,8 +193,8 @@ void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(const 
     QV4::Scope scope(v4);
     ScopedProperty p(scope);
     ExecutionContext *global = v4->rootContext();
-    p->setGetter(ScopedFunctionObject(scope, (getter ? BuiltinFunction::create(global, name, getter) : 0)));
-    p->setSetter(ScopedFunctionObject(scope, (setter ? BuiltinFunction::create(global, name, setter) : 0)));
+    p->setGetter(ScopedFunctionObject(scope, (getter ? FunctionObject::createBuiltinFunction(global, name, getter) : nullptr)));
+    p->setSetter(ScopedFunctionObject(scope, (setter ? FunctionObject::createBuiltinFunction(global, name, setter) : nullptr)));
     insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 }
 
@@ -266,11 +224,6 @@ void Object::defineReadonlyConfigurableProperty(const QString &name, const Value
 void Object::defineReadonlyConfigurableProperty(String *name, const Value &value)
 {
     insertMember(name, value, Attr_ReadOnly_ButConfigurable);
-}
-
-void Object::markObjects(Heap::Base *base, MarkStack *stack)
-{
-    Heap::Object::markObjects(base, stack);
 }
 
 void Heap::Object::markObjects(Heap::Base *b, MarkStack *stack)
@@ -368,7 +321,7 @@ MemberData::Index Object::getValueOrSetter(String *name, PropertyAttributes *att
         o = o->prototype();
     }
     *attrs = Attr_Invalid;
-    return { 0, 0 };
+    return { nullptr, nullptr };
 }
 
 ArrayData::Index Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
@@ -393,7 +346,7 @@ ArrayData::Index Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
         o = o->prototype();
     }
     *attrs = Attr_Invalid;
-    return { 0, 0 };
+    return { nullptr, 0 };
 }
 
 bool Object::hasProperty(String *name) const
@@ -531,7 +484,7 @@ bool Object::deleteIndexedProperty(Managed *m, uint index)
 void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
     Object *o = static_cast<Object *>(m);
-    name->setM(0);
+    name->setM(nullptr);
     *index = UINT_MAX;
 
     if (o->arrayData()) {
@@ -555,7 +508,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
                     return;
                 }
             }
-            it->arrayNode = 0;
+            it->arrayNode = nullptr;
             it->arrayIndex = UINT_MAX;
         }
         // dense arrays
@@ -675,7 +628,7 @@ bool Object::internalPut(String *name, const Value &value)
     name->makeIdentifier();
     Identifier *id = name->identifier();
 
-    MemberData::Index memberIndex{0, 0};
+    MemberData::Index memberIndex{nullptr, nullptr};
     uint member = internalClass()->find(id);
     PropertyAttributes attrs;
     if (member < UINT_MAX) {
@@ -751,7 +704,7 @@ bool Object::internalPutIndexed(uint index, const Value &value)
 
     PropertyAttributes attrs;
 
-    ArrayData::Index arrayIndex = arrayData() ? arrayData()->getValueOrSetter(index, &attrs) : ArrayData::Index{ 0, 0 };
+    ArrayData::Index arrayIndex = arrayData() ? arrayData()->getValueOrSetter(index, &attrs) : ArrayData::Index{ nullptr, 0 };
 
     if (arrayIndex.isNull() && isStringObject()) {
         if (index < static_cast<StringObject *>(this)->length())
@@ -945,7 +898,7 @@ bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Prope
         return true;
     }
 
-    return __defineOwnProperty__(engine, index, 0, p, attrs);
+    return __defineOwnProperty__(engine, index, nullptr, p, attrs);
 }
 
 bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *member, const Property *p, PropertyAttributes attrs)
@@ -996,8 +949,8 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
                 Q_ASSERT(arrayData());
                 setArrayAttributes(index, cattrs);
             }
-            current->setGetter(0);
-            current->setSetter(0);
+            current->setGetter(nullptr);
+            current->setSetter(nullptr);
         } else {
             // 9c
             cattrs.setType(PropertyAttributes::Data);
@@ -1069,7 +1022,6 @@ void Object::copyArrayData(Object *other)
             Heap::ArrayData *od = other->d()->arrayData;
             Heap::ArrayData *dd = d()->arrayData;
             dd->sparse = new SparseArray(*od->sparse);
-            dd->freeList = od->freeList;
         } else {
             Heap::ArrayData *dd = d()->arrayData;
             dd->values.size = other->d()->arrayData->values.size;

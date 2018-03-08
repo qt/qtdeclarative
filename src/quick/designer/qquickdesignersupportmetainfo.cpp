@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 
 bool QQuickDesignerSupportMetaInfo::isSubclassOf(QObject *object, const QByteArray &superTypeName)
 {
-    if (object == 0)
+    if (object == nullptr)
         return false;
 
     const QMetaObject *metaObject = object->metaObject();

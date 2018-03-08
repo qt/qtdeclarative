@@ -66,10 +66,10 @@ QT_BEGIN_NAMESPACE
 */
 QQuickParticlePainter::QQuickParticlePainter(QQuickItem *parent)
     : QQuickItem(parent)
-    , m_system(0)
+    , m_system(nullptr)
     , m_count(0)
     , m_pleaseReset(true)
-    , m_window(0)
+    , m_window(nullptr)
     , m_groupIdsNeedRecalculation(false)
 {
 }

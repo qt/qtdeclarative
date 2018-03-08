@@ -79,7 +79,7 @@ class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public 
 
 public:
     QQmlComponentPrivate()
-        : typeData(0), progress(0.), start(-1), engine(0), creationContext(0), depthIncreased(false) {}
+        : typeData(nullptr), progress(0.), start(-1), engine(nullptr), creationContext(nullptr), depthIncreased(false) {}
 
     void loadUrl(const QUrl &newUrl, QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous);
 

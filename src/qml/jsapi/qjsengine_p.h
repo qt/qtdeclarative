@@ -75,7 +75,7 @@ public:
     static QJSEnginePrivate* get(QV4::ExecutionEngine *e);
 
     QJSEnginePrivate() : mutex(QMutex::Recursive) {}
-    ~QJSEnginePrivate();
+    ~QJSEnginePrivate() override;
 
     static void addToDebugServer(QJSEngine *q);
     static void removeFromDebugServer(QJSEngine *q);
@@ -163,7 +163,7 @@ QQmlPropertyCache until the QQmlEngine is destroyed.
 QQmlPropertyCache *QJSEnginePrivate::cache(QObject *obj)
 {
     if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
-        return 0;
+        return nullptr;
 
     Locker locker(this);
     const QMetaObject *mo = obj->metaObject();

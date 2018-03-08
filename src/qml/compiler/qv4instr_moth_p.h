@@ -54,18 +54,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4runtime_p.h>
 
-#if !defined(V4_BOOTSTRAP)
-QT_REQUIRE_CONFIG(qml_interpreter);
-#endif
-
 QT_BEGIN_NAMESPACE
-
-#if !QT_CONFIG(qml_debug)
-#define MOTH_DEBUG_INSTR(F)
-#else
-#define MOTH_DEBUG_INSTR(F) \
-    F(Debug)
-#endif
 
 #define INSTRUCTION(op, name, nargs, ...) \
     op##_INSTRUCTION(name, nargs, __VA_ARGS__)
@@ -116,6 +105,8 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CallName(op) INSTRUCTION(op, CallName, 3, name, argc, argv)
 #define INSTR_CallPossiblyDirectEval(op) INSTRUCTION(op, CallPossiblyDirectEval, 2, argc, argv)
 #define INSTR_CallGlobalLookup(op) INSTRUCTION(op, CallGlobalLookup, 3, index, argc, argv)
+#define INSTR_CallScopeObjectProperty(op) INSTRUCTION(op, CallScopeObjectProperty, 4, name, base, argc, argv)
+#define INSTR_CallContextObjectProperty(op) INSTRUCTION(op, CallContextObjectProperty, 4, name, base, argc, argv)
 #define INSTR_SetExceptionHandler(op) INSTRUCTION(op, SetExceptionHandler, 1, offset)
 #define INSTR_ThrowException(op) INSTRUCTION(op, ThrowException, 0)
 #define INSTR_GetException(op) INSTRUCTION(op, GetException, 0)
@@ -232,6 +223,8 @@ QT_BEGIN_NAMESPACE
     F(CallName) \
     F(CallPossiblyDirectEval) \
     F(CallGlobalLookup) \
+    F(CallScopeObjectProperty) \
+    F(CallContextObjectProperty) \
     F(SetExceptionHandler) \
     F(ThrowException) \
     F(GetException) \
@@ -301,7 +294,10 @@ QT_BEGIN_NAMESPACE
     F(LoadQmlSingleton)
 #define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::LoadQmlSingleton) + 1)
 
-#if defined(Q_CC_GNU) && (!defined(Q_CC_INTEL) || __INTEL_COMPILER >= 1200)
+#if defined(Q_CC_GNU) && !defined(Q_CC_INTEL)
+// icc before version 1200 doesn't support computed goto, and at least up to version 18.0.0 the
+// current use results in an internal compiler error. We could enable this if/when it gets fixed
+// in a later version.
 #  define MOTH_COMPUTED_GOTO
 #endif
 
@@ -353,7 +349,7 @@ QT_BEGIN_NAMESPACE
     nargs,
 
 #define MOTH_DECODE_ARG(arg, type, nargs, offset) \
-    arg = reinterpret_cast<const type *>(code)[-nargs + offset];
+    arg = qFromLittleEndian<type>(reinterpret_cast<const type *>(code)[-nargs + offset]);
 #define MOTH_ADJUST_CODE(type, nargs) \
     code += static_cast<quintptr>(nargs*sizeof(type) + 1)
 
@@ -363,9 +359,9 @@ QT_BEGIN_NAMESPACE
         MOTH_ADJUST_CODE(int, nargs); \
         MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
         goto op_main_##name; \
-    op_char_##name: \
-        MOTH_ADJUST_CODE(char, nargs); \
-        MOTH_DECODE_ARGS(name, char, nargs, __VA_ARGS__) \
+    op_byte_##name: \
+        MOTH_ADJUST_CODE(qint8, nargs); \
+        MOTH_DECODE_ARGS(name, qint8, nargs, __VA_ARGS__) \
     op_main_##name: \
         ; \
 
@@ -377,10 +373,10 @@ QT_BEGIN_NAMESPACE
         MOTH_ADJUST_CODE(int, nargs); \
         MOTH_DECODE_ARGS(name, int, nargs, __VA_ARGS__) \
         goto op_main_##name; \
-    op_char_##name: \
+    op_byte_##name: \
         base_ptr = code; \
-        MOTH_ADJUST_CODE(char, nargs); \
-        MOTH_DECODE_ARGS(name, char, nargs, __VA_ARGS__) \
+        MOTH_ADJUST_CODE(qint8, nargs); \
+        MOTH_DECODE_ARGS(name, qint8, nargs, __VA_ARGS__) \
     op_main_##name: \
         ; \
 
@@ -405,7 +401,7 @@ QT_BEGIN_NAMESPACE
 #define COLLECT_LABELS(instr) \
     INSTR_##instr(GET_LABEL)
 #define GET_LABEL_INSTRUCTION(name, ...) \
-    &&op_char_##name,
+    &&op_byte_##name,
 #define COLLECT_LABELS_WIDE(instr) \
     INSTR_##instr(GET_LABEL_WIDE)
 #define GET_LABEL_WIDE_INSTRUCTION(name, ...) \
@@ -425,7 +421,7 @@ QT_BEGIN_NAMESPACE
 #define MOTH_INSTR_CASE_AND_JUMP(instr) \
     INSTR_##instr(GET_CASE_AND_JUMP)
 #define GET_CASE_AND_JUMP_INSTRUCTION(name, ...) \
-    case static_cast<uchar>(Instr::Type::name): goto op_char_##name;
+    case static_cast<uchar>(Instr::Type::name): goto op_byte_##name;
 #define MOTH_INSTR_CASE_AND_JUMP_WIDE(instr) \
     INSTR_##instr(GET_CASE_AND_JUMP_WIDE)
 #define GET_CASE_AND_JUMP_WIDE_INSTRUCTION(name, ...) \
@@ -483,6 +479,8 @@ union Instr
     FOR_EACH_MOTH_INSTR(MOTH_EMIT_STRUCTS)
 
     FOR_EACH_MOTH_INSTR(MOTH_EMIT_INSTR_MEMBERS)
+
+    int argumentsAsInts[4];
 };
 
 struct InstrInfo

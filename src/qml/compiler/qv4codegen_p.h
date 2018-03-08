@@ -97,6 +97,7 @@ public:
 
 
     void generateFromProgram(const QString &fileName,
+                             const QString &finalUrl,
                              const QString &sourceCode,
                              AST::Program *ast,
                              Module *module,
@@ -190,10 +191,7 @@ public:
         bool isLValue() const { return !isReadonly; }
 
         Reference(Codegen *cg, Type type = Invalid) : type(type), codegen(cg) {}
-        Reference()
-            : type(Invalid)
-            , codegen(nullptr)
-        {}
+        Reference() {}
         Reference(const Reference &other);
 
         Reference &operator =(const Reference &other);
@@ -217,6 +215,28 @@ public:
         bool isRegister() const {
             return isStackSlot();
         }
+
+        enum PropertyCapturePolicy {
+            /*
+                We're reading a property from the scope or context object, but it's a CONSTANT property,
+                so we don't need to register a dependency at all.
+            */
+            DontCapture,
+            /*
+                We're reading the property of a QObject, and we know that it's the
+                scope object or context object, which we know very well. Instead of registering a
+                property capture every time, we can do that ahead of time and then register all those
+                captures in one shot in registerQmlDependencies().
+            */
+            CaptureAheadOfTime,
+            /*
+                We're reading the property of a QObject, and we're not quite sure where
+                the QObject comes from or what it is. So, when reading that property at run-time,
+                make sure that we capture where we read that property so that if it changes we can
+                re-evaluate the entire expression.
+            */
+            CaptureAtRuntime
+        };
 
         static Reference fromAccumulator(Codegen *cg) {
             return Reference(cg, Accumulator);
@@ -266,20 +286,20 @@ public:
             r.isReadonly = true;
             return r;
         }
-        static Reference fromQmlScopeObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, bool captureRequired) {
+        static Reference fromQmlScopeObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, PropertyCapturePolicy capturePolicy) {
             Reference r(base.codegen, QmlScopeObject);
             r.qmlBase = base.storeOnStack().stackSlot();
             r.qmlCoreIndex = coreIndex;
             r.qmlNotifyIndex = notifyIndex;
-            r.captureRequired = captureRequired;
+            r.capturePolicy = capturePolicy;
             return r;
         }
-        static Reference fromQmlContextObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, bool captureRequired) {
+        static Reference fromQmlContextObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, PropertyCapturePolicy capturePolicy) {
             Reference r(base.codegen, QmlContextObject);
             r.qmlBase = base.storeOnStack().stackSlot();
             r.qmlCoreIndex = coreIndex;
             r.qmlNotifyIndex = notifyIndex;
-            r.captureRequired = captureRequired;
+            r.capturePolicy = capturePolicy;
             return r;
         }
         static Reference fromThis(Codegen *cg) {
@@ -335,7 +355,7 @@ public:
                 Moth::StackSlot qmlBase;
                 qint16 qmlCoreIndex;
                 qint16 qmlNotifyIndex;
-                bool captureRequired;
+                PropertyCapturePolicy capturePolicy;
             };
         };
         QString name;
@@ -344,7 +364,7 @@ public:
         bool stackSlotIsLocalOrArgument = false;
         bool isVolatile = false;
         bool global = false;
-        Codegen *codegen;
+        Codegen *codegen = nullptr;
 
     private:
         void storeAccumulator() const;
@@ -363,16 +383,12 @@ public:
     };
 
     struct ObjectPropertyValue {
-        ObjectPropertyValue()
-            : getter(-1)
-            , setter(-1)
-            , keyAsIndex(UINT_MAX)
-        {}
+        ObjectPropertyValue() {}
 
         Reference rvalue;
-        int getter; // index in _module->functions or -1 if not set
-        int setter;
-        uint keyAsIndex;
+        int getter = -1; // index in _module->functions or -1 if not set
+        int setter = -1;
+        uint keyAsIndex = UINT_MAX;
 
         bool hasGetter() const { return getter >= 0; }
         bool hasSetter() const { return setter >= 0; }
@@ -383,34 +399,26 @@ protected:
     class Result {
         Reference _result;
 
-        const BytecodeGenerator::Label *_iftrue;
-        const BytecodeGenerator::Label *_iffalse;
-        Format _format;
+        const BytecodeGenerator::Label *_iftrue = nullptr;
+        const BytecodeGenerator::Label *_iffalse = nullptr;
+        Format _format = ex;
         Format _requested;
         bool _trueBlockFollowsCondition = false;
 
     public:
         explicit Result(const Reference &lrvalue)
             : _result(lrvalue)
-            , _iftrue(nullptr)
-            , _iffalse(nullptr)
-            , _format(ex)
             , _requested(ex)
-        {
-        }
+        {}
 
         explicit Result(Format requested = ex)
-            : _iftrue(0)
-            , _iffalse(0)
-            , _format(ex)
-            , _requested(requested) {}
+            : _requested(requested) {}
 
         explicit Result(const BytecodeGenerator::Label *iftrue,
                         const BytecodeGenerator::Label *iffalse,
                         bool trueBlockFollowsCondition)
             : _iftrue(iftrue)
             , _iffalse(iffalse)
-            , _format(ex)
             , _requested(cx)
             , _trueBlockFollowsCondition(trueBlockFollowsCondition)
         {
@@ -648,7 +656,7 @@ protected:
     Context *_context;
     AST::LabelledStatement *_labelledStatement;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
-    BytecodeGenerator *bytecodeGenerator = 0;
+    BytecodeGenerator *bytecodeGenerator = nullptr;
     bool _strictMode;
     bool useFastLookups = true;
     bool requiresReturnValue = false;

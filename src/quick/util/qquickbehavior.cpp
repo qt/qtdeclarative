@@ -57,7 +57,7 @@ class QQuickBehaviorPrivate : public QObjectPrivate, public QAnimationJobChangeL
 {
     Q_DECLARE_PUBLIC(QQuickBehavior)
 public:
-    QQuickBehaviorPrivate() : animation(0), animationInstance(0), enabled(true), finalized(false)
+    QQuickBehaviorPrivate() : animation(nullptr), animationInstance(nullptr), enabled(true), finalized(false)
       , blockRunningChanged(false) {}
 
     void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;

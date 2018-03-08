@@ -144,7 +144,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
 
     QSGMaterialShader *s = material->createShader();
-    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    QOpenGLContext *ctx = context->openglContext();
     QSurfaceFormat::OpenGLContextProfile profile = ctx->format().profile();
 
     QOpenGLShaderProgram *p = s->program();
@@ -155,10 +155,10 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material)
             p->bindAttributeLocation(attr[i], i);
     }
     p->bindAttributeLocation("_qt_order", i);
-    context->compileShader(s, material, qsgShaderRewriter_insertZAttributes(s->vertexShader(), profile), 0);
+    context->compileShader(s, material, qsgShaderRewriter_insertZAttributes(s->vertexShader(), profile), nullptr);
     context->initializeShader(s);
     if (!p->isLinked())
-        return 0;
+        return nullptr;
 
     shader = new Shader;
     shader->program = s;
@@ -215,7 +215,7 @@ void ShaderManager::invalidated()
     qDeleteAll(rewrittenShaders);
     rewrittenShaders.clear();
     delete blitProgram;
-    blitProgram = 0;
+    blitProgram = nullptr;
 }
 
 void qsg_dumpShadowRoots(BatchRootInfo *i, int indent)
@@ -226,7 +226,7 @@ void qsg_dumpShadowRoots(BatchRootInfo *i, int indent)
     QByteArray ind(indent + extraIndent + 10, ' ');
 
     if (!i) {
-        qDebug() << ind.constData() << "- no info";
+        qDebug("%s - no info", ind.constData());
     } else {
         qDebug() << ind.constData() << "- parent:" << i->parentRoot << "orders" << i->firstOrder << "->" << i->lastOrder << ", avail:" << i->availableOrders;
         for (QSet<Node *>::const_iterator it = i->subRoots.constBegin();
@@ -280,7 +280,7 @@ Updater::Updater(Renderer *r)
 
 void Updater::updateStates(QSGNode *n)
 {
-    m_current_clip = 0;
+    m_current_clip = nullptr;
 
     m_added = 0;
     m_transformChange = 0;
@@ -293,15 +293,15 @@ void Updater::updateStates(QSGNode *n)
         qsg_dumpShadowRoots(sn);
 
     if (Q_UNLIKELY(debug_build())) {
-        qDebug() << "Updater::updateStates()";
+        qDebug("Updater::updateStates()");
         if (sn->dirtyState & (QSGNode::DirtyNodeAdded << 16))
-            qDebug() << " - nodes have been added";
+            qDebug(" - nodes have been added");
         if (sn->dirtyState & (QSGNode::DirtyMatrix << 16))
-            qDebug() << " - transforms have changed";
+            qDebug(" - transforms have changed");
         if (sn->dirtyState & (QSGNode::DirtyOpacity << 16))
-            qDebug() << " - opacity has changed";
+            qDebug(" - opacity has changed");
         if (uint(sn->dirtyState) & uint(QSGNode::DirtyForceUpdate << 16))
-            qDebug() << " - forceupdate";
+            qDebug(" - forceupdate");
     }
 
     if (Q_UNLIKELY(renderer->m_visualizeMode == Renderer::VisualizeChanges))
@@ -347,7 +347,7 @@ void Updater::visitNode(Node *n)
 
     m_added = count;
     m_force_update = force;
-    n->dirtyState = 0;
+    n->dirtyState = nullptr;
 }
 
 void Updater::visitClipNode(Node *n)
@@ -473,7 +473,7 @@ void Updater::visitGeometryNode(Node *n)
 
         if (e->root) {
             BatchRootInfo *info = renderer->batchRootInfo(e->root);
-            while (info != 0) {
+            while (info != nullptr) {
                 info->availableOrders--;
                 if (info->availableOrders < 0) {
                     renderer->m_rebuild |= Renderer::BuildRenderLists;
@@ -481,10 +481,10 @@ void Updater::visitGeometryNode(Node *n)
                     renderer->m_rebuild |= Renderer::BuildRenderListsForTaggedRoots;
                     renderer->m_taggedRoots << e->root;
                 }
-                if (info->parentRoot != 0)
+                if (info->parentRoot != nullptr)
                     info = renderer->batchRootInfo(info->parentRoot);
                 else
-                    info = 0;
+                    info = nullptr;
             }
         } else {
             renderer->m_rebuild |= Renderer::FullRebuild;
@@ -680,12 +680,12 @@ void Batch::invalidate()
     // the batch to do an early out..
     cleanupRemovedElements();
     Element *e = first;
-    first = 0;
-    root = 0;
+    first = nullptr;
+    root = nullptr;
     while (e) {
-        e->batch = 0;
+        e->batch = nullptr;
         Element *n = e->nextInBatch;
-        e->nextInBatch = 0;
+        e->nextInBatch = nullptr;
         e = n;
     }
 }
@@ -756,7 +756,7 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx)
     , m_alphaRenderList(64)
     , m_nextRenderOrder(0)
     , m_partialRebuild(false)
-    , m_partialRebuildRoot(0)
+    , m_partialRebuildRoot(nullptr)
     , m_useDepthBuffer(true)
     , m_opaqueBatches(16)
     , m_alphaBatches(16)
@@ -768,17 +768,17 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx)
     , m_zRange(0)
     , m_renderOrderRebuildLower(-1)
     , m_renderOrderRebuildUpper(-1)
-    , m_currentMaterial(0)
-    , m_currentShader(0)
+    , m_currentMaterial(nullptr)
+    , m_currentShader(nullptr)
     , m_currentStencilValue(0)
     , m_clipMatrixId(0)
-    , m_currentClip(0)
+    , m_currentClip(nullptr)
     , m_currentClipType(NoClip)
     , m_vertexUploadPool(256)
 #ifdef QSG_SEPARATE_INDEX_BUFFER
     , m_indexUploadPool(64)
 #endif
-    , m_vao(0)
+    , m_vao(nullptr)
     , m_visualizeMode(VisualizeNothing)
 {
     initializeOpenGLFunctions();
@@ -805,8 +805,11 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx)
     m_batchVertexThreshold = qt_sg_envInt("QSG_RENDERER_BATCH_VERTEX_THRESHOLD", 1024);
 
     if (Q_UNLIKELY(debug_build() || debug_render())) {
-        qDebug() << "Batch thresholds: nodes:" << m_batchNodeThreshold << " vertices:" << m_batchVertexThreshold;
-        qDebug() << "Using buffer strategy:" << (m_bufferStrategy == GL_STATIC_DRAW ? "static" : (m_bufferStrategy == GL_DYNAMIC_DRAW ? "dynamic" : "stream"));
+        qDebug("Batch thresholds: nodes: %d vertices: %d",
+               m_batchNodeThreshold, m_batchVertexThreshold);
+        qDebug("Using buffer strategy: %s",
+               (m_bufferStrategy == GL_STATIC_DRAW
+                ? "static" : (m_bufferStrategy == GL_DYNAMIC_DRAW ? "dynamic" : "stream")));
     }
 
     // If rendering with an OpenGL Core profile context, we need to create a VAO
@@ -913,7 +916,7 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
     glBufferData(target, buffer->size, buffer->data, m_bufferStrategy);
 
     if (!m_context->hasBrokenIndexBufferObjects() && m_visualizeMode == VisualizeNothing) {
-        buffer->data = 0;
+        buffer->data = nullptr;
     }
 }
 
@@ -941,7 +944,7 @@ void Renderer::removeBatchRootFromParent(Node *childRoot)
 
     Q_ASSERT(parentInfo->subRoots.contains(childRoot));
     parentInfo->subRoots.remove(childRoot);
-    childInfo->parentRoot = 0;
+    childInfo->parentRoot = nullptr;
 }
 
 void Renderer::registerBatchRoot(Node *subRoot, Node *parentRoot)
@@ -1069,7 +1072,7 @@ void Renderer::nodeWasRemoved(Node *node)
         if (e) {
             e->removed = true;
             m_elementsToDelete.add(e);
-            e->node = 0;
+            e->node = nullptr;
             if (e->root) {
                 BatchRootInfo *info = batchRootInfo(e->root);
                 info->availableOrders++;
@@ -1112,7 +1115,7 @@ void Renderer::nodeWasRemoved(Node *node)
 
 void Renderer::turnNodeIntoBatchRoot(Node *node)
 {
-    if (Q_UNLIKELY(debug_change())) qDebug() << " - new batch root";
+    if (Q_UNLIKELY(debug_change())) qDebug(" - new batch root");
     m_rebuild |= FullRebuild;
     node->isBatchRoot = true;
     node->becameBatchRoot = true;
@@ -1182,7 +1185,7 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
             return;
         }
         if (node == rootNode())
-            nodeWasAdded(node, 0);
+            nodeWasAdded(node, nullptr);
         else
             nodeWasAdded(node, m_nodes.value(node->parent()));
     }
@@ -1435,7 +1438,7 @@ void Renderer::buildRenderListsForTaggedRoots()
         }
     }
     m_partialRebuild = false;
-    m_partialRebuildRoot = 0;
+    m_partialRebuildRoot = nullptr;
     m_taggedRoots.clear();
     m_nextRenderOrder = qMax(m_nextRenderOrder, maxRenderOrder);
 
@@ -2032,7 +2035,7 @@ Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
     int vboSize = 0;
 
     bool useVBO = false;
-    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    QOpenGLContext *ctx = m_context->openglContext();
     QSurfaceFormat::OpenGLContextProfile profile = ctx->format().profile();
 
     if (!ctx->isOpenGLES() && profile == QSurfaceFormat::CoreProfile) {
@@ -2141,7 +2144,7 @@ Renderer::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
                     glBufferSubData(GL_ARRAY_BUFFER, 0, vertexByteSize, g->vertexData());
                 }
 
-                pointer = 0;
+                pointer = nullptr;
             }
 
             glVertexAttribPointer(0, a->tupleSize, a->type, GL_FALSE, g->sizeOfVertex(), pointer);
@@ -2183,7 +2186,7 @@ void Renderer::updateClip(const QSGClipNode *clipList, const Batch *batch)
         m_currentClip = clipList;
         // updateClip sets another program, so force-reactivate our own
         if (m_currentShader)
-            setActiveShader(0, 0);
+            setActiveShader(nullptr, nullptr);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         if (batch->isOpaque)
@@ -2204,8 +2207,8 @@ void Renderer::updateClip(const QSGClipNode *clipList, const Batch *batch)
  */
 void Renderer::setActiveShader(QSGMaterialShader *program, ShaderManager::Shader *shader)
 {
-    const char * const *c = m_currentProgram ? m_currentProgram->attributeNames() : 0;
-    const char * const *n = program ? program->attributeNames() : 0;
+    const char * const *c = m_currentProgram ? m_currentProgram->attributeNames() : nullptr;
+    const char * const *n = program ? program->attributeNames() : nullptr;
 
     int cza = m_currentShader ? m_currentShader->pos_order : -1;
     int nza = shader ? shader->pos_order : -1;
@@ -2216,18 +2219,18 @@ void Renderer::setActiveShader(QSGMaterialShader *program, ShaderManager::Shader
         bool was = c;
         if (cza == i) {
             was = true;
-            c = 0;
+            c = nullptr;
         } else if (c && !c[i]) { // end of the attribute array names
-            c = 0;
+            c = nullptr;
             was = false;
         }
 
         bool is = n;
         if (nza == i) {
             is = true;
-            n = 0;
+            n = nullptr;
         } else if (n && !n[i]) {
-            n = 0;
+            n = nullptr;
             is = false;
         }
 
@@ -2243,7 +2246,7 @@ void Renderer::setActiveShader(QSGMaterialShader *program, ShaderManager::Shader
         m_currentProgram->deactivate();
     m_currentProgram = program;
     m_currentShader = shader;
-    m_currentMaterial = 0;
+    m_currentMaterial = nullptr;
     if (m_currentProgram) {
         m_currentProgram->program()->bind();
         m_currentProgram->activate();
@@ -2295,7 +2298,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
 
     glBindBuffer(GL_ARRAY_BUFFER, batch->vbo.id);
 
-    char *indexBase = 0;
+    char *indexBase = nullptr;
 #ifdef QSG_SEPARATE_INDEX_BUFFER
     const Buffer *indexBuf = &batch->ibo;
 #else
@@ -2319,7 +2322,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
         setActiveShader(program, sms);
 
     m_current_opacity = gn->inheritedOpacity();
-    if (sms->lastOpacity != m_current_opacity) {
+    if (!qFuzzyCompare(sms->lastOpacity, float(m_current_opacity))) {
         dirty |= QSGMaterialShader::RenderState::DirtyOpacity;
         sms->lastOpacity = m_current_opacity;
     }
@@ -2328,7 +2331,7 @@ void Renderer::renderMergedBatch(const Batch *batch)
 
 #ifndef QT_NO_DEBUG
     if (qsg_test_and_clear_material_failure()) {
-        qDebug() << "QSGMaterial::updateState triggered an error (merged), batch will be skipped:";
+        qDebug("QSGMaterial::updateState triggered an error (merged), batch will be skipped:");
         Element *ee = e;
         while (ee) {
             qDebug() << "   -" << ee->node;
@@ -2391,7 +2394,7 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
     updateClip(gn->clipList(), batch);
 
     glBindBuffer(GL_ARRAY_BUFFER, batch->vbo.id);
-    char *indexBase = 0;
+    char *indexBase = nullptr;
 #ifdef QSG_SEPARATE_INDEX_BUFFER
     const Buffer *indexBuf = &batch->ibo;
 #else
@@ -2449,7 +2452,7 @@ void Renderer::renderUnmergedBatch(const Batch *batch)
 
 #ifndef QT_NO_DEBUG
     if (qsg_test_and_clear_material_failure()) {
-        qDebug() << "QSGMaterial::updateState() triggered an error (unmerged), batch will be skipped:";
+        qDebug("QSGMaterial::updateState() triggered an error (unmerged), batch will be skipped:");
         qDebug() << "   - offending node is" << e->node;
         QSGNodeDumper::dump(rootNode());
         qFatal("Aborting: scene graph is invalid...");
@@ -2494,18 +2497,21 @@ void Renderer::updateLineWidth(QSGGeometry *g)
     if (g->drawingMode() == GL_LINE_STRIP || g->drawingMode() == GL_LINE_LOOP || g->drawingMode() == GL_LINES)
         glLineWidth(g->lineWidth());
 #if !defined(QT_OPENGL_ES_2)
-    else if (!QOpenGLContext::currentContext()->isOpenGLES() && g->drawingMode() == GL_POINTS) {
-        QOpenGLFunctions_1_0 *gl1funcs = 0;
-        QOpenGLFunctions_3_2_Core *gl3funcs = 0;
-        if (QOpenGLContext::currentContext()->format().profile() == QSurfaceFormat::CoreProfile)
-            gl3funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_2_Core>();
-        else
-            gl1funcs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_1_0>();
-        Q_ASSERT(gl1funcs || gl3funcs);
-        if (gl1funcs)
-            gl1funcs->glPointSize(g->lineWidth());
-        else
-            gl3funcs->glPointSize(g->lineWidth());
+    else {
+        QOpenGLContext *ctx = m_context->openglContext();
+        if (!ctx->isOpenGLES() && g->drawingMode() == GL_POINTS) {
+            QOpenGLFunctions_1_0 *gl1funcs = nullptr;
+            QOpenGLFunctions_3_2_Core *gl3funcs = nullptr;
+            if (ctx->format().profile() == QSurfaceFormat::CoreProfile)
+                gl3funcs = ctx->versionFunctions<QOpenGLFunctions_3_2_Core>();
+            else
+                gl1funcs = ctx->versionFunctions<QOpenGLFunctions_1_0>();
+            Q_ASSERT(gl1funcs || gl3funcs);
+            if (gl1funcs)
+                gl1funcs->glPointSize(g->lineWidth());
+            else
+                gl3funcs->glPointSize(g->lineWidth());
+        }
     }
 #endif
 }
@@ -2540,10 +2546,10 @@ void Renderer::renderBatches()
     bindable()->clear(clearMode());
 
     m_current_opacity = 1;
-    m_currentMaterial = 0;
-    m_currentShader = 0;
-    m_currentProgram = 0;
-    m_currentClip = 0;
+    m_currentMaterial = nullptr;
+    m_currentShader = nullptr;
+    m_currentProgram = nullptr;
+    m_currentClip = nullptr;
 
     bool renderOpaque = !debug_noopaque();
     bool renderAlpha = !debug_noalpha();
@@ -2576,8 +2582,8 @@ void Renderer::renderBatches()
     }
 
     if (m_currentShader)
-        setActiveShader(0, 0);
-    updateStencilClip(0);
+        setActiveShader(nullptr, nullptr);
+    updateStencilClip(nullptr);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glDepthMask(true);
@@ -2591,12 +2597,12 @@ void Renderer::deleteRemovedElements()
     for (int i=0; i<m_opaqueRenderList.size(); ++i) {
         Element **e = m_opaqueRenderList.data() + i;
         if (*e && (*e)->removed)
-            *e = 0;
+            *e = nullptr;
     }
     for (int i=0; i<m_alphaRenderList.size(); ++i) {
         Element **e = m_alphaRenderList.data() + i;
         if (*e && (*e)->removed)
-            *e = 0;
+            *e = nullptr;
     }
 
     for (int i=0; i<m_elementsToDelete.size(); ++i) {
@@ -2611,6 +2617,8 @@ void Renderer::deleteRemovedElements()
 
 void Renderer::render()
 {
+    Q_ASSERT(m_context->openglContext() == QOpenGLContext::currentContext());
+
     if (Q_UNLIKELY(debug_dump())) {
         qDebug("\n");
         QSGNodeDumper::dump(rootNode());
@@ -2655,12 +2663,12 @@ void Renderer::render()
         m_rebuild |= BuildBatches;
 
         if (Q_UNLIKELY(debug_build())) {
-            qDebug() << "Opaque render lists" << (complete ? "(complete)" : "(partial)") << ":";
+            qDebug("Opaque render lists %s:", (complete ? "(complete)" : "(partial)"));
             for (int i=0; i<m_opaqueRenderList.size(); ++i) {
                 Element *e = m_opaqueRenderList.at(i);
                 qDebug() << " - element:" << e << " batch:" << e->batch << " node:" << e->node << " order:" << e->order;
             }
-            qDebug() << "Alpha render list:" << (complete ? "(complete)" : "(partial)") << ":";
+            qDebug("Alpha render list %s:", complete ? "(complete)" : "(partial)");
             for (int i=0; i<m_alphaRenderList.size(); ++i) {
                 Element *e = m_alphaRenderList.at(i);
                 qDebug() << " - element:" << e << " batch:" << e->batch << " node:" << e->node << " order:" << e->order;
@@ -2685,7 +2693,7 @@ void Renderer::render()
         if (Q_UNLIKELY(debug_render())) timePrepareAlpha = timer.restart();
 
         if (Q_UNLIKELY(debug_build())) {
-            qDebug() << "Opaque Batches:";
+            qDebug("Opaque Batches:");
             for (int i=0; i<m_opaqueBatches.size(); ++i) {
                 Batch *b = m_opaqueBatches.at(i);
                 qDebug() << " - Batch " << i << b << (b->needsUpload ? "upload" : "") << " root:" << b->root;
@@ -2693,7 +2701,7 @@ void Renderer::render()
                     qDebug() << "   - element:" << e << " node:" << e->node << e->order;
                 }
             }
-            qDebug() << "Alpha Batches:";
+            qDebug("Alpha Batches:");
             for (int i=0; i<m_alphaBatches.size(); ++i) {
                 Batch *b = m_alphaBatches.at(i);
                 qDebug() << " - Batch " << i << b << (b->needsUpload ? "upload" : "") << " root:" << b->root;
@@ -2731,7 +2739,7 @@ void Renderer::render()
     int largestIBO = 0;
 #endif
 
-    if (Q_UNLIKELY(debug_upload())) qDebug() << "Uploading Opaque Batches:";
+    if (Q_UNLIKELY(debug_upload())) qDebug("Uploading Opaque Batches:");
     for (int i=0; i<m_opaqueBatches.size(); ++i) {
         Batch *b = m_opaqueBatches.at(i);
         largestVBO = qMax(b->vbo.size, largestVBO);
@@ -2743,7 +2751,7 @@ void Renderer::render()
     if (Q_UNLIKELY(debug_render())) timeUploadOpaque = timer.restart();
 
 
-    if (Q_UNLIKELY(debug_upload())) qDebug() << "Uploading Alpha Batches:";
+    if (Q_UNLIKELY(debug_upload())) qDebug("Uploading Alpha Batches:");
     for (int i=0; i<m_alphaBatches.size(); ++i) {
         Batch *b = m_alphaBatches.at(i);
         uploadBatch(b);
@@ -2807,11 +2815,11 @@ void Renderer::renderRenderNode(Batch *batch)
     Q_ASSERT(batch->first->isRenderNode);
     RenderNodeElement *e = (RenderNodeElement *) batch->first;
 
-    setActiveShader(0, 0);
+    setActiveShader(nullptr, nullptr);
 
     QSGNode *clip = e->renderNode->parent();
     QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(e->renderNode);
-    rd->m_clip_list = 0;
+    rd->m_clip_list = nullptr;
     while (clip != rootNode()) {
         if (clip->type() == QSGNode::ClipNodeType) {
             rd->m_clip_list = static_cast<QSGClipNode *>(clip);
@@ -2875,8 +2883,8 @@ void Renderer::renderRenderNode(Batch *batch)
 
     e->renderNode->render(&state);
 
-    rd->m_matrix = 0;
-    rd->m_clip_list = 0;
+    rd->m_matrix = nullptr;
+    rd->m_clip_list = nullptr;
 
     if (changes & QSGRenderNode::ViewportState) {
         QRect r = viewportRect();
@@ -2891,7 +2899,7 @@ void Renderer::renderRenderNode(Batch *batch)
 
     if (changes & (QSGRenderNode::StencilState | QSGRenderNode::ScissorState)) {
         glDisable(GL_SCISSOR_TEST);
-        m_currentClip = 0;
+        m_currentClip = nullptr;
         m_currentClipType = NoClip;
     }
 
@@ -3061,7 +3069,7 @@ void Renderer::visualizeChanges(Node *n)
         // This is because many changes don't propegate their dirty state to the
         // parent so the node updater will not unset these states. They are
         // not used for anything so, unsetting it should have no side effects.
-        n->dirtyState = 0;
+        n->dirtyState = nullptr;
     }
 
     SHADOWNODE_TRAVERSE(n) {
@@ -3153,7 +3161,7 @@ void Renderer::visualizeOverdraw()
     visualizeOverdraw_helper(m_nodes.value(rootNode()));
 
     // Animate the view...
-    QSurface *surface = QOpenGLContext::currentContext()->surface();
+    QSurface *surface = m_context->openglContext()->surface();
     if (surface->surfaceClass() == QSurface::Window)
         if (QQuickWindow *window = qobject_cast<QQuickWindow *>(static_cast<QWindow *>(surface)))
             window->update();

@@ -120,8 +120,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffect : public QObject
     Q_OBJECT
 
 public:
-    QQuickOpenGLShaderEffect(QQuickShaderEffect *item, QObject *parent = 0);
-    ~QQuickOpenGLShaderEffect();
+    QQuickOpenGLShaderEffect(QQuickShaderEffect *item, QObject *parent = nullptr);
+    ~QQuickOpenGLShaderEffect() override;
 
     QByteArray fragmentShader() const { return m_common.source.sourceCode[Key::FragmentShader]; }
     void setFragmentShader(const QByteArray &code);

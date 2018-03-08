@@ -55,11 +55,11 @@ QAccessibleInterface *qQuickAccessibleFactory(const QString &classname, QObject 
         Q_ASSERT(item);
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
         if (!itemPrivate->isAccessible)
-            return 0;
+            return nullptr;
         return new QAccessibleQuickItem(item);
     }
 
-    return 0;
+    return nullptr;
 }
 
 #endif

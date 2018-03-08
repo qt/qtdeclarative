@@ -53,6 +53,10 @@
 
 #include "qquickitem.h"
 
+#include <private/qtquickglobal_p.h>
+
+QT_REQUIRE_CONFIG(quick_repeater);
+
 QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;
@@ -68,7 +72,7 @@ class Q_AUTOTEST_EXPORT QQuickRepeater : public QQuickItem
     Q_CLASSINFO("DefaultProperty", "delegate")
 
 public:
-    QQuickRepeater(QQuickItem *parent=0);
+    QQuickRepeater(QQuickItem *parent=nullptr);
     virtual ~QQuickRepeater();
 
     QVariant model() const;

@@ -181,7 +181,7 @@ public:
         QQuickContext2D::TextBaseLineType textBaseline;
     };
 
-    QQuickContext2D(QObject *parent = 0);
+    QQuickContext2D(QObject *parent = nullptr);
     ~QQuickContext2D();
 
     QStringList contextNames() const override;
@@ -199,7 +199,7 @@ public:
     QQuickCanvasItem* canvas() const { return m_canvas; }
     QQuickContext2DCommandBuffer* buffer() const { return m_buffer; }
 
-    bool bufferValid() const { return m_buffer != 0; }
+    bool bufferValid() const { return m_buffer != nullptr; }
     void popState();
     void pushState();
     void reset();

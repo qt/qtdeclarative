@@ -168,7 +168,7 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \fn QSGImageNode::TextureCoordinatesTransformMode textureCoordinatesTransform() const
+    \fn QSGImageNode::TextureCoordinatesTransformMode QSGImageNode::textureCoordinatesTransform() const
 
     Returns the mode used to generate texture coordinates for this node.
  */
@@ -187,6 +187,15 @@ QT_BEGIN_NAMESPACE
     \return \c true if the node takes ownership of the texture; otherwise \c false.
  */
 
+/*!
+    Updates the geometry \a g with the \a texture, the coordinates
+    in \a rect, and the texture coordinates from \a sourceRect.
+
+    \a g is assumed to be a triangle strip of four vertices of type
+    QSGGeometry::TexturedPoint2D.
+
+    \a texCoordMode is used for normalizing the \a sourceRect.
+ */
 void QSGImageNode::rebuildGeometry(QSGGeometry *g,
                                    QSGTexture *texture,
                                    const QRectF &rect,

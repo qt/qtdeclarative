@@ -93,7 +93,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
             dptr->_checkIsInitialized(); \
             return dptr; \
         } \
-        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass)
+        Q_STATIC_ASSERT(std::is_trivial< QV4::Heap::DataClass >::value);
 
 #define V4_MANAGED(DataClass, superClass) \
     private: \

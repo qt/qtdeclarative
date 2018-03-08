@@ -65,7 +65,7 @@ namespace Heap {
 DECLARE_HEAP_OBJECT(MemberData, Base) {
     DECLARE_MARKOBJECTS(MemberData);
 };
-V4_ASSERT_IS_TRIVIAL(MemberData)
+Q_STATIC_ASSERT(std::is_trivial< MemberData >::value);
 
 }
 
@@ -79,7 +79,7 @@ struct MemberData : Managed
         Value *slot;
 
         void set(EngineBase *e, Value newVal) {
-            WriteBarrier::write(e, base, slot, newVal);
+            WriteBarrier::write(e, base, slot->data_ptr(), newVal.asReturnedValue());
         }
         const Value *operator->() const { return slot; }
         const Value &operator*() const { return *slot; }
@@ -93,7 +93,7 @@ struct MemberData : Managed
 
     inline uint size() const { return d()->values.size; }
 
-    static Heap::MemberData *allocate(QV4::ExecutionEngine *e, uint n, Heap::MemberData *old = 0);
+    static Heap::MemberData *allocate(QV4::ExecutionEngine *e, uint n, Heap::MemberData *old = nullptr);
 };
 
 }

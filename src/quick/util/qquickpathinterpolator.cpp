@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickPathInterpolator::QQuickPathInterpolator(QObject *parent) :
-    QObject(parent), _path(0), _x(0), _y(0), _angle(0), _progress(0)
+    QObject(parent), _path(nullptr), _x(0), _y(0), _angle(0), _progress(0)
 {
 }
 

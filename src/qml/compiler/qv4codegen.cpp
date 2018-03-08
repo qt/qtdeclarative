@@ -89,10 +89,10 @@ static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGene
 }
 
 Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
-    : _module(0)
+    : _module(nullptr)
     , _returnAddress(0)
-    , _context(0)
-    , _labelledStatement(0)
+    , _context(nullptr)
+    , _labelledStatement(nullptr)
     , jsUnitGenerator(jsUnitGenerator)
     , _strictMode(strict)
     , _fileNameIsUrl(false)
@@ -102,6 +102,7 @@ Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
 }
 
 void Codegen::generateFromProgram(const QString &fileName,
+                                  const QString &finalUrl,
                                   const QString &sourceCode,
                                   Program *node,
                                   Module *module,
@@ -110,14 +111,16 @@ void Codegen::generateFromProgram(const QString &fileName,
     Q_ASSERT(node);
 
     _module = module;
-    _context = 0;
+    _context = nullptr;
 
+    // ### should be set on the module outside of this method
     _module->fileName = fileName;
+    _module->finalUrl = finalUrl;
 
     ScanFunctions scan(this, sourceCode, mode);
     scan(node);
 
-    defineFunction(QStringLiteral("%entry"), node, 0, node->elements);
+    defineFunction(QStringLiteral("%entry"), node, nullptr, node->elements);
 }
 
 void Codegen::enterContext(Node *node)
@@ -199,6 +202,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         } else {
             // intentionally fall-through: the result is never used, so it's equivalent to
             // "expr += 1", which is what a pre-increment does as well.
+            Q_FALLTHROUGH();
         }
     case PreIncrement: {
         Reference e = expr.asLValue();
@@ -224,6 +228,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         } else {
             // intentionally fall-through: the result is never used, so it's equivalent to
             // "expr -= 1", which is what a pre-decrement does as well.
+            Q_FALLTHROUGH();
         }
     case PreDecrement: {
         Reference e = expr.asLValue();
@@ -630,14 +635,14 @@ bool Codegen::visit(ArrayLiteral *ast)
     for (ElementList *it = ast->elements; it; it = it->next) {
 
         for (Elision *elision = it->elision; elision; elision = elision->next)
-            push(0);
+            push(nullptr);
 
         push(it->expression);
         if (hasError)
             return false;
     }
     for (Elision *elision = ast->elision; elision; elision = elision->next)
-        push(0);
+        push(nullptr);
 
     if (args == -1) {
         Q_ASSERT(argc == 0);
@@ -1258,6 +1263,8 @@ bool Codegen::visit(CallExpression *ast)
     switch (base.type) {
     case Reference::Member:
     case Reference::Subscript:
+    case Reference::QmlScopeObject:
+    case Reference::QmlContextObject:
         base = base.asLValue();
         break;
     case Reference::Name:
@@ -1272,7 +1279,21 @@ bool Codegen::visit(CallExpression *ast)
         return false;
 
     //### Do we really need all these call instructions? can's we load the callee in a temp?
-    if (base.type == Reference::Member) {
+    if (base.type == Reference::QmlScopeObject) {
+        Instruction::CallScopeObjectProperty call;
+        call.base = base.qmlBase.stackSlot();
+        call.name = base.qmlCoreIndex;
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(call);
+    } else if (base.type == Reference::QmlContextObject) {
+        Instruction::CallContextObjectProperty call;
+        call.base = base.qmlBase.stackSlot();
+        call.name = base.qmlCoreIndex;
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(call);
+    } else if (base.type == Reference::Member) {
         if (useFastLookups) {
             Instruction::CallPropertyLookup call;
             call.base = base.propertyBase.stackSlot();
@@ -1475,7 +1496,7 @@ bool Codegen::visit(FunctionExpression *ast)
 
     RegisterScope scope(this);
 
-    int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
+    int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : nullptr);
     loadClosure(function);
     _expr.setResult(Reference::fromAccumulator(this));
     return false;
@@ -1699,7 +1720,7 @@ bool Codegen::visit(ObjectLiteral *ast)
 
             v.rvalue = value.storeOnStack();
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
-            const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : 0);
+            const int function = defineFunction(name, gs, gs->formals, gs->functionBody ? gs->functionBody->elements : nullptr);
             ObjectPropertyValue &v = valueMap[name];
             if (v.rvalue.isValid() ||
                 (gs->type == PropertyGetterSetter::Getter && v.hasGetter()) ||
@@ -2121,7 +2142,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     for (const Context::Member &member : qAsConst(_context->members)) {
         if (member.function) {
             const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
-                                                member.function->body ? member.function->body->elements : 0);
+                                                member.function->body ? member.function->body->elements : nullptr);
             loadClosure(function);
             if (! _context->parent) {
                 Reference::fromName(this, member.function->name.toString()).storeConsumeAccumulator();
@@ -2333,7 +2354,8 @@ bool Codegen::visit(ForEachStatement *ast)
 
     RegisterScope scope(this);
 
-    Reference obj = Reference::fromStackSlot(this);
+    Reference nextIterObj = Reference::fromStackSlot(this);
+    Reference iterObj = Reference::fromStackSlot(this);
     Reference expr = expression(ast->expression);
     if (hasError)
         return true;
@@ -2341,7 +2363,9 @@ bool Codegen::visit(ForEachStatement *ast)
     expr.loadInAccumulator();
     Instruction::ForeachIteratorObject iteratorObjInstr;
     bytecodeGenerator->addInstruction(iteratorObjInstr);
-    obj.storeConsumeAccumulator();
+    iterObj.storeConsumeAccumulator();
+
+    Reference lhs = expression(ast->initialiser).asLValue();
 
     BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
@@ -2352,20 +2376,21 @@ bool Codegen::visit(ForEachStatement *ast)
 
     BytecodeGenerator::Label body = bytecodeGenerator->label();
 
+    nextIterObj.loadInAccumulator();
+    lhs.storeConsumeAccumulator();
+
     statement(ast->statement);
     setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
 
     in.link();
 
-    Reference lhs = expression(ast->initialiser).asLValue();
-
-    obj.loadInAccumulator();
+    iterObj.loadInAccumulator();
     Instruction::ForeachNextPropertyName nextPropInstr;
     bytecodeGenerator->addInstruction(nextPropInstr);
-    lhs = lhs.storeRetainAccumulator().storeOnStack();
+    nextIterObj.storeConsumeAccumulator();
 
     Reference::fromConst(this, QV4::Encode::null()).loadInAccumulator();
-    bytecodeGenerator->jumpStrictNotEqual(lhs.stackSlot(), body);
+    bytecodeGenerator->jumpStrictNotEqual(nextIterObj.stackSlot(), body);
 
     end.link();
 
@@ -2477,7 +2502,8 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
     RegisterScope scope(this);
 
-    Reference obj = Reference::fromStackSlot(this);
+    Reference nextIterObj = Reference::fromStackSlot(this);
+    Reference iterObj = Reference::fromStackSlot(this);
     Reference expr = expression(ast->expression);
     if (hasError)
         return true;
@@ -2487,7 +2513,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
     expr.loadInAccumulator();
     Instruction::ForeachIteratorObject iteratorObjInstr;
     bytecodeGenerator->addInstruction(iteratorObjInstr);
-    obj.storeConsumeAccumulator();
+    iterObj.storeConsumeAccumulator();
 
     BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
@@ -2498,18 +2524,22 @@ bool Codegen::visit(LocalForEachStatement *ast)
     BytecodeGenerator::Label body = bytecodeGenerator->label();
 
     Reference it = referenceForName(ast->declaration->name.toString(), true).asLValue();
+
+    nextIterObj.loadInAccumulator();
+    it.storeConsumeAccumulator();
+
     statement(ast->statement);
     setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
 
     in.link();
 
-    obj.loadInAccumulator();
+    iterObj.loadInAccumulator();
     Instruction::ForeachNextPropertyName nextPropInstr;
     bytecodeGenerator->addInstruction(nextPropInstr);
-    auto lhs = it.storeRetainAccumulator().storeOnStack();
+    nextIterObj.storeConsumeAccumulator();
 
     Reference::fromConst(this, QV4::Encode::null()).loadInAccumulator();
-    bytecodeGenerator->jumpStrictNotEqual(lhs.stackSlot(), body);
+    bytecodeGenerator->jumpStrictNotEqual(nextIterObj.stackSlot(), body);
 
     end.link();
 
@@ -2898,43 +2928,43 @@ public:
         return locs;
     }
 
-    bool visit(ArrayMemberExpression *) Q_DECL_OVERRIDE
+    bool visit(ArrayMemberExpression *) override
     {
         locs.setAllVolatile();
         return false;
     }
 
-    bool visit(FieldMemberExpression *) Q_DECL_OVERRIDE
+    bool visit(FieldMemberExpression *) override
     {
         locs.setAllVolatile();
         return false;
     }
 
-    bool visit(PostIncrementExpression *e) Q_DECL_OVERRIDE
+    bool visit(PostIncrementExpression *e) override
     {
         collectIdentifiers(locs.specificLocations, e->base);
         return false;
     }
 
-    bool visit(PostDecrementExpression *e) Q_DECL_OVERRIDE
+    bool visit(PostDecrementExpression *e) override
     {
         collectIdentifiers(locs.specificLocations, e->base);
         return false;
     }
 
-    bool visit(PreIncrementExpression *e) Q_DECL_OVERRIDE
+    bool visit(PreIncrementExpression *e) override
     {
         collectIdentifiers(locs.specificLocations, e->expression);
         return false;
     }
 
-    bool visit(PreDecrementExpression *e) Q_DECL_OVERRIDE
+    bool visit(PreDecrementExpression *e) override
     {
         collectIdentifiers(locs.specificLocations, e->expression);
         return false;
     }
 
-    bool visit(BinaryExpression *e) Q_DECL_OVERRIDE
+    bool visit(BinaryExpression *e) override
     {
         switch (e->op) {
         case QSOperator::InplaceAnd:
@@ -3073,7 +3103,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         qmlBase = other.qmlBase;
         qmlCoreIndex = other.qmlCoreIndex;
         qmlNotifyIndex = other.qmlNotifyIndex;
-        captureRequired = other.captureRequired;
+        capturePolicy = other.capturePolicy;
         break;
     }
 
@@ -3110,7 +3140,7 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     case QmlScopeObject:
     case QmlContextObject:
         return qmlCoreIndex == other.qmlCoreIndex && qmlNotifyIndex == other.qmlNotifyIndex
-                && captureRequired == other.captureRequired;
+                && capturePolicy == other.capturePolicy;
     }
     return true;
 }
@@ -3439,18 +3469,18 @@ QT_WARNING_POP
         Instruction::LoadScopeObjectProperty load;
         load.base = qmlBase;
         load.propertyIndex = qmlCoreIndex;
-        load.captureRequired = captureRequired;
+        load.captureRequired = capturePolicy == CaptureAtRuntime;
         codegen->bytecodeGenerator->addInstruction(load);
-        if (!captureRequired)
+        if (capturePolicy == CaptureAheadOfTime)
             codegen->_context->scopeObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } return;
     case QmlContextObject: {
         Instruction::LoadContextObjectProperty load;
         load.base = qmlBase;
         load.propertyIndex = qmlCoreIndex;
-        load.captureRequired = captureRequired;
+        load.captureRequired = capturePolicy == CaptureAtRuntime;
         codegen->bytecodeGenerator->addInstruction(load);
-        if (!captureRequired)
+        if (capturePolicy == CaptureAheadOfTime)
             codegen->_context->contextObjectPropertyDependencies.insert(qmlCoreIndex, qmlNotifyIndex);
     } return;
     case Invalid:

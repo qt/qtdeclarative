@@ -56,7 +56,7 @@ class QQuickTransitionManagerPrivate
 {
 public:
     QQuickTransitionManagerPrivate()
-        : state(0), transitionInstance(0) {}
+        : state(nullptr), transitionInstance(nullptr) {}
 
     void applyBindings();
     typedef QList<QQuickSimpleAction> SimpleActionList;
@@ -79,7 +79,7 @@ void QQuickTransitionManager::setState(QQuickState *s)
 QQuickTransitionManager::~QQuickTransitionManager()
 {
     delete d->transitionInstance;
-    delete d; d = 0;
+    delete d; d = nullptr;
 }
 
 bool QQuickTransitionManager::isRunning() const
@@ -274,7 +274,7 @@ void QQuickTransitionManager::cancel()
         QQuickStateAction action = d->bindingsList[i];
         if (action.toBinding && action.deletableToBinding) {
             QQmlPropertyPrivate::removeBinding(action.property);
-            action.toBinding = 0;
+            action.toBinding = nullptr;
             action.deletableToBinding = false;
         } else if (action.event) {
             //### what do we do here?

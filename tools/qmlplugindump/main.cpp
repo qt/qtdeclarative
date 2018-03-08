@@ -300,7 +300,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
                 continue;
 
             inObjectInstantiation = tyName;
-            QObject *object = 0;
+            QObject *object = nullptr;
 
             if (ty.isSingleton()) {
                 QQmlType::SingletonInstanceInfo *siinfo = ty.singletonInstanceInfo();
@@ -403,7 +403,7 @@ public:
         return exportString;
     }
 
-    void writeMetaContent(const QMetaObject *meta, KnownAttributes *knownAttributes = 0)
+    void writeMetaContent(const QMetaObject *meta, KnownAttributes *knownAttributes = nullptr)
     {
         QSet<QString> implicitSignals;
         for (int index = meta->propertyOffset(); index < meta->propertyCount(); ++index) {
@@ -642,7 +642,7 @@ private:
             qml->writeScriptBinding(QLatin1String("isPointer"), QLatin1String("true"));
     }
 
-    void dump(const QMetaProperty &prop, KnownAttributes *knownAttributes = 0)
+    void dump(const QMetaProperty &prop, KnownAttributes *knownAttributes = nullptr)
     {
         int revision = prop.revision();
         QByteArray propName = prop.name();
@@ -658,7 +658,7 @@ private:
     }
 
     void dump(const QMetaMethod &meth, const QSet<QString> &implicitSignals,
-              KnownAttributes *knownAttributes = 0)
+              KnownAttributes *knownAttributes = nullptr)
     {
         if (meth.methodType() == QMetaMethod::Signal) {
             if (meth.access() != QMetaMethod::Public)
@@ -973,7 +973,7 @@ int main(int argc, char *argv[])
     sigAction.sa_handler = &sigSegvHandler;
     sigAction.sa_flags   = 0;
 
-    sigaction(SIGSEGV, &sigAction, 0);
+    sigaction(SIGSEGV, &sigAction, nullptr);
 #endif
 
 #ifdef QT_SIMULATOR

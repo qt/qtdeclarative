@@ -71,7 +71,7 @@ class Q_AUTOTEST_EXPORT QQmlBind : public QObject, public QQmlPropertyValueSourc
     Q_PROPERTY(bool delayed READ delayed WRITE setDelayed REVISION 8)
 
 public:
-    QQmlBind(QObject *parent=0);
+    QQmlBind(QObject *parent=nullptr);
     ~QQmlBind();
 
     bool when() const;

@@ -79,7 +79,7 @@ void Parser::reallocateStack()
     sym_stack = reinterpret_cast<Value*> (realloc(sym_stack, stack_size * sizeof(Value)));
     state_stack = reinterpret_cast<int*> (realloc(state_stack, stack_size * sizeof(int)));
     location_stack = reinterpret_cast<AST::SourceLocation*> (realloc(location_stack, stack_size * sizeof(AST::SourceLocation)));
-    string_stack = reinterpret_cast<QStringRef*> (realloc(string_stack, stack_size * sizeof(QStringRef)));
+    string_stack = reinterpret_cast<QStringRef*> (realloc(static_cast<void *>(string_stack), stack_size * sizeof(QStringRef)));
 }
 
 Parser::Parser(Engine *engine):
@@ -87,14 +87,14 @@ Parser::Parser(Engine *engine):
     pool(engine->pool()),
     tos(0),
     stack_size(0),
-    sym_stack(0),
-    state_stack(0),
-    location_stack(0),
-    string_stack(0),
-    program(0),
+    sym_stack(nullptr),
+    state_stack(nullptr),
+    location_stack(nullptr),
+    string_stack(nullptr),
+    program(nullptr),
     yylval(0),
-    first_token(0),
-    last_token(0)
+    first_token(nullptr),
+    last_token(nullptr)
 {
 }
 
@@ -143,7 +143,7 @@ AST::UiQualifiedId *Parser::reparseAsQualifiedId(AST::ExpressionNode *expr)
         return currentId->finish();
     }
 
-    return 0;
+    return nullptr;
 }
 
 AST::UiQualifiedPragmaId *Parser::reparseAsQualifiedPragmaId(AST::ExpressionNode *expr)
@@ -155,7 +155,7 @@ AST::UiQualifiedPragmaId *Parser::reparseAsQualifiedPragmaId(AST::ExpressionNode
         return q->finish();
     }
 
-    return 0;
+    return nullptr;
 }
 
 
@@ -188,7 +188,7 @@ bool Parser::parse(int startToken)
     }
 
     tos = -1;
-    program = 0;
+    program = nullptr;
 
     do {
         if (++tos == stack_size)
@@ -315,7 +315,7 @@ case 24: {
 } break;
 
 case 25: {
-    AST::UiPragma *node = 0;
+    AST::UiPragma *node = nullptr;
 
     if (AST::UiQualifiedPragmaId *qualifiedId = reparseAsQualifiedPragmaId(sym(2).Expression)) {
         node = new (pool) AST::UiPragma(qualifiedId);
@@ -334,7 +334,7 @@ case 25: {
 } break;
 
 case 26: {
-    AST::UiImport *node = 0;
+    AST::UiImport *node = nullptr;
 
     if (AST::StringLiteral *importIdLiteral = AST::cast<AST::StringLiteral *>(sym(2).Expression)) {
         node = new (pool) AST::UiImport(importIdLiteral->value);
@@ -357,7 +357,7 @@ case 26: {
 } break;
 
 case 27: {
-    sym(1).Node = 0;
+    sym(1).Node = nullptr;
 } break;
 
 case 28: {
@@ -386,7 +386,7 @@ case 32: {
 } break;
 
 case 33: {
-    AST::UiObjectInitializer *node = new (pool) AST::UiObjectInitializer((AST::UiObjectMemberList*)0);
+    AST::UiObjectInitializer *node = new (pool) AST::UiObjectInitializer((AST::UiObjectMemberList*)nullptr);
     node->lbraceToken = loc(1);
     node->rbraceToken = loc(2);
     sym(1).Node = node;
@@ -462,7 +462,7 @@ case 51: {
 } break;
 
 case 52: {
-  sym(1).Node = 0;
+  sym(1).Node = nullptr;
 } break;
 
 case 53: {
@@ -594,7 +594,7 @@ case 71: {
 
     AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(6));
     propertyName->identifierToken = loc(6);
-    propertyName->next = 0;
+    propertyName->next = nullptr;
 
     AST::UiArrayBinding *binding = new (pool) AST::UiArrayBinding(
         propertyName, sym(9).UiArrayMemberList->finish());
@@ -616,7 +616,7 @@ case 72: {
 
     AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(3));
     propertyName->identifierToken = loc(3);
-    propertyName->next = 0;
+    propertyName->next = nullptr;
 
     AST::UiObjectBinding *binding = new (pool) AST::UiObjectBinding(
       propertyName, sym(5).UiQualifiedId, sym(6).UiObjectInitializer);
@@ -638,7 +638,7 @@ case 73: {
 
     AST::UiQualifiedId *propertyName = new (pool) AST::UiQualifiedId(stringRef(4));
     propertyName->identifierToken = loc(4);
-    propertyName->next = 0;
+    propertyName->next = nullptr;
 
     AST::UiObjectBinding *binding = new (pool) AST::UiObjectBinding(
       propertyName, sym(6).UiQualifiedId, sym(7).UiObjectInitializer);
@@ -770,7 +770,7 @@ case 97: {
 } break;
 
 case 98: {
-  AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral((AST::Elision *) 0);
+  AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral((AST::Elision *) nullptr);
   node->lbracketToken = loc(1);
   node->rbracketToken = loc(2);
   sym(1).Node = node;
@@ -792,7 +792,7 @@ case 100: {
 
 case 101: {
   AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral(sym(2).ElementList->finish (),
-    (AST::Elision *) 0);
+    (AST::Elision *) nullptr);
   node->lbracketToken = loc(1);
   node->commaToken = loc(3);
   node->rbracketToken = loc(4);
@@ -809,7 +809,7 @@ case 102: {
 } break;
 
 case 103: {
-  AST::ObjectLiteral *node = 0;
+  AST::ObjectLiteral *node = nullptr;
   if (sym(2).Node)
     node = new (pool) AST::ObjectLiteral(
         sym(2).PropertyAssignmentList->finish ());
@@ -846,7 +846,7 @@ case 106: {
   if (AST::UiQualifiedId *qualifiedId = reparseAsQualifiedId(sym(1).Expression)) {
     sym(1).UiQualifiedId = qualifiedId;
   } else {
-    sym(1).UiQualifiedId = 0;
+    sym(1).UiQualifiedId = nullptr;
 
     diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, loc(1),
       QLatin1String("Expected a qualified name id")));
@@ -856,7 +856,7 @@ case 106: {
 } break;
 
 case 107: {
-  sym(1).Node = new (pool) AST::ElementList((AST::Elision *) 0, sym(1).Expression);
+  sym(1).Node = new (pool) AST::ElementList((AST::Elision *) nullptr, sym(1).Expression);
 } break;
 
 case 108: {
@@ -865,7 +865,7 @@ case 108: {
 
 case 109: {
   AST::ElementList *node = new (pool) AST::ElementList(sym(1).ElementList,
-    (AST::Elision *) 0, sym(3).Expression);
+    (AST::Elision *) nullptr, sym(3).Expression);
   node->commaToken = loc(2);
   sym(1).Node = node;
 } break;
@@ -1010,7 +1010,7 @@ case 167: {
 } break;
 
 case 168: {
-  sym(1).Node = 0;
+  sym(1).Node = nullptr;
 } break;
 
 case 169: {
@@ -1437,7 +1437,7 @@ case 262: {
 } break;
 
 case 263: {
-  sym(1).Node = 0;
+  sym(1).Node = nullptr;
 } break;
 
 case 266: {
@@ -1447,7 +1447,7 @@ case 266: {
 } break;
 
 case 267: {
-  sym(1).Node = 0;
+  sym(1).Node = nullptr;
 } break;
 
 case 284: {
@@ -1466,7 +1466,7 @@ case 286: {
 } break;
 
 case 287: {
-  sym(1).Node = 0;
+  sym(1).Node = nullptr;
 } break;
 
 case 288: {
@@ -1537,7 +1537,7 @@ case 300: {
 } break;
 
 case 301: {
-  sym(1).Node = 0;
+  sym(1).Node = nullptr;
 } break;
 
 case 303: {
@@ -1546,7 +1546,7 @@ case 303: {
 } break;
 
 case 304: {
-  sym(1).Node = 0;
+  sym(1).Node = nullptr;
 } break;
 
 case 306: {
@@ -1718,7 +1718,7 @@ case 334: {
 } break;
 
 case 335: {
-  sym(1).Node = 0;
+  sym(1).Node = nullptr;
 } break;
 
 case 336: {
@@ -1840,7 +1840,7 @@ case 354: {
 } break;
 
 case 355: {
-  sym(1).Node = 0;
+  sym(1).Node = nullptr;
 } break;
 
 case 356: {
@@ -1848,7 +1848,7 @@ case 356: {
 } break;
 
 case 357: {
-  sym(1).Node = 0;
+  sym(1).Node = nullptr;
 } break;
 
 case 359: {
@@ -1876,7 +1876,7 @@ case 365: {
 } break;
 
 case 366: {
-  sym(1).Node = 0;
+  sym(1).Node = nullptr;
 } break;
 
             } // switch

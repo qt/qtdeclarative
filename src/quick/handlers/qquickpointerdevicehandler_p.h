@@ -63,7 +63,7 @@ class Q_AUTOTEST_EXPORT QQuickPointerDeviceHandler : public QQuickPointerHandler
     Q_PROPERTY(Qt::KeyboardModifiers acceptedModifiers READ acceptedModifiers WRITE setAcceptedModifiers NOTIFY acceptedModifiersChanged)
 
 public:
-    explicit QQuickPointerDeviceHandler(QObject *parent = 0);
+    explicit QQuickPointerDeviceHandler(QObject *parent = nullptr);
     ~QQuickPointerDeviceHandler();
 
     QQuickPointerDevice::DeviceTypes acceptedDevices() const { return m_acceptedDevices; }

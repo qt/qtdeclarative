@@ -1,4 +1,4 @@
-DEFINES += QSG_SEPARATE_INDEX_BUFFER
+# DEFINES += QSG_SEPARATE_INDEX_BUFFER
 # DEFINES += QSG_DISTANCEFIELD_CACHE_DEBUG
 
 # Core API
@@ -230,8 +230,15 @@ SOURCES += \
 
 qtConfig(opengl(es1|es2)?) {
     HEADERS += \
-        $$PWD/compressedtexture/qsgpkmhandler_p.h
+        $$PWD/compressedtexture/qsgcompressedatlastexture_p.h \
+        $$PWD/compressedtexture/qsgcompressedtexture_p.h \
+        $$PWD/compressedtexture/qsgtexturefilehandler_p.h \
+        $$PWD/compressedtexture/qsgpkmhandler_p.h \
+        $$PWD/compressedtexture/qsgktxhandler_p.h
 
     SOURCES += \
-        $$PWD/compressedtexture/qsgpkmhandler.cpp
+        $$PWD/compressedtexture/qsgcompressedatlastexture.cpp \
+        $$PWD/compressedtexture/qsgcompressedtexture.cpp \
+        $$PWD/compressedtexture/qsgpkmhandler.cpp \
+        $$PWD/compressedtexture/qsgktxhandler.cpp
 }

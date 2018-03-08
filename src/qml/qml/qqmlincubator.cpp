@@ -110,7 +110,7 @@ void QQmlEngine::setIncubationController(QQmlIncubationController *controller)
 {
     Q_D(QQmlEngine);
     if (d->incubationController)
-        d->incubationController->d = 0;
+        d->incubationController->d = nullptr;
     d->incubationController = controller;
     if (controller) controller->d = d;
 }
@@ -128,7 +128,7 @@ QQmlIncubationController *QQmlEngine::incubationController() const
 
 QQmlIncubatorPrivate::QQmlIncubatorPrivate(QQmlIncubator *q, QQmlIncubator::IncubationMode m)
     : q(q), status(QQmlIncubator::Null), mode(m), isAsynchronous(false), progress(Execute),
-      result(0), enginePriv(0), waitingOnMe(0)
+      result(nullptr), enginePriv(nullptr), waitingOnMe(nullptr)
 {
 }
 
@@ -147,16 +147,16 @@ void QQmlIncubatorPrivate::clear()
         if (controller)
              controller->incubatingObjectCountChanged(enginePriv->incubatorCount);
     }
-    enginePriv = 0;
+    enginePriv = nullptr;
     if (!rootContext.isNull()) {
-        rootContext->incubator = 0;
-        rootContext = 0;
+        rootContext->incubator = nullptr;
+        rootContext = nullptr;
     }
 
     if (nextWaitingFor.isInList()) {
         Q_ASSERT(waitingOnMe);
         nextWaitingFor.remove();
-        waitingOnMe = 0;
+        waitingOnMe = nullptr;
     }
 
     // if we're waiting on any incubators then they should be cleared too.
@@ -171,7 +171,7 @@ void QQmlIncubatorPrivate::clear()
     vmeGuard.clear();
     if (creator && guardOk)
         creator->clear();
-    creator.reset(0);
+    creator.reset(nullptr);
 }
 
 /*!
@@ -218,15 +218,15 @@ than a static amount like 5 milliseconds - while not disturbing the application.
 Create a new incubation controller.
 */
 QQmlIncubationController::QQmlIncubationController()
-: d(0)
+: d(nullptr)
 {
 }
 
 /*! \internal */
 QQmlIncubationController::~QQmlIncubationController()
 {
-    if (d) QQmlEnginePrivate::get(d)->setIncubationController(0);
-    d = 0;
+    if (d) QQmlEnginePrivate::get(d)->setIncubationController(nullptr);
+    d = nullptr;
 }
 
 /*!
@@ -272,7 +272,7 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
     if (!compilationUnit)
         return;
 
-    QML_MEMORY_SCOPE_URL(compilationUnit->url());
+    QML_MEMORY_SCOPE_URL(compilationUnit->finalUrl());
 
     QExplicitlySharedDataPointer<QQmlIncubatorPrivate> protectThis(this);
 
@@ -294,8 +294,8 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
 
     if (progress == QQmlIncubatorPrivate::Execute) {
         enginePriv->referenceScarceResources();
-        QObject *tresult = 0;
-        tresult = creator->create(subComponentToCreate, /*parent*/0, &i);
+        QObject *tresult = nullptr;
+        tresult = creator->create(subComponentToCreate, /*parent*/nullptr, &i);
         if (!tresult)
             errors = creator->errors;
         enginePriv->dereferenceScarceResources();
@@ -304,7 +304,7 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
             return;
 
         result = tresult;
-        if (errors.isEmpty() && result == 0)
+        if (errors.isEmpty() && result == nullptr)
             goto finishIncubate;
 
         if (result) {
@@ -340,7 +340,7 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
             if (watcher.hasRecursed())
                 return;
 
-            QQmlContextData *ctxt = 0;
+            QQmlContextData *ctxt = nullptr;
             ctxt = creator->finalize(i);
             if (ctxt) {
                 rootContext = ctxt;
@@ -375,23 +375,6 @@ finishIncubate:
     } else if (!creator.isNull()) {
         vmeGuard.guard(creator.data());
     }
-}
-
-void QQmlIncubatorPrivate::cancel(QObject *object, QQmlContext *context)
-{
-    if (!context)
-        context = qmlContext(object);
-    if (!context)
-        return;
-
-    QQmlContextData *data = QQmlContextData::get(context);
-    QQmlIncubatorPrivate *p = data->incubator;
-    if (!p)
-        return;
-
-    p->vmeGuard.unguard(object);
-    if (!p->creator.isNull())
-        p->creator->cancel(object);
 }
 
 /*!
@@ -523,12 +506,12 @@ QQmlIncubator::QQmlIncubator(IncubationMode mode)
 /*! \internal */
 QQmlIncubator::~QQmlIncubator()
 {
-    d->q = 0;
+    d->q = nullptr;
 
     if (!d->ref.deref()) {
         delete d;
     }
-    d = 0;
+    d = nullptr;
 }
 
 /*!
@@ -574,18 +557,18 @@ void QQmlIncubator::clear()
     if (s == Loading) {
         Q_ASSERT(d->compilationUnit);
         if (d->result) d->result->deleteLater();
-        d->result = 0;
+        d->result = nullptr;
     }
 
     d->clear();
 
     Q_ASSERT(d->compilationUnit.isNull());
-    Q_ASSERT(d->waitingOnMe.data() == 0);
+    Q_ASSERT(d->waitingOnMe.data() == nullptr);
     Q_ASSERT(d->waitingFor.isEmpty());
 
     d->errors.clear();
     d->progress = QQmlIncubatorPrivate::Execute;
-    d->result = 0;
+    d->result = nullptr;
 
     if (s == Loading) {
         Q_ASSERT(enginePriv);
@@ -674,7 +657,7 @@ Return the incubated object if the status is Ready, otherwise 0.
 QObject *QQmlIncubator::object() const
 {
     if (status() != Ready)
-        return 0;
+        return nullptr;
     else
         return d->result;
 }

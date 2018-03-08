@@ -183,7 +183,7 @@ QObject *QQuickPackage::part(const QString &name)
     if (name == QLatin1String("default") && !d->dataList.isEmpty())
         return d->dataList.at(0);
 
-    return 0;
+    return nullptr;
 }
 
 QQuickPackageAttached *QQuickPackage::qmlAttachedProperties(QObject *o)

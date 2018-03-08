@@ -39,7 +39,7 @@
 
 import QtQuick 2.0
 import QtQuick.Window 2.0 // used for qtest_verifyItem
-import QtTest 1.1
+import QtTest 1.2
 import "testlogger.js" as TestLogger
 import Qt.test.qtestroot 1.0
 
@@ -57,7 +57,7 @@ import Qt.test.qtestroot 1.0
 
     \code
     import QtQuick 2.0
-    import QtTest 1.0
+    import QtTest 1.2
 
     TestCase {
         name: "MathTests"
@@ -108,7 +108,7 @@ import Qt.test.qtestroot 1.0
 
     \code
     import QtQuick 2.0
-    import QtTest 1.1
+    import QtTest 1.2
 
     TestCase {
         name: "DataTests"
@@ -260,7 +260,7 @@ import Qt.test.qtestroot 1.0
     For objects that are created via the \l {Component::}{createObject()} function
     of \l Component, the \l createTemporaryObject() function can be used.
 
-    \sa {QtTest::SignalSpy}{SignalSpy}, {Qt Quick Test Reference Documentation}
+    \sa {QtTest::SignalSpy}{SignalSpy}, {Qt Quick Test}
 */
 
 
@@ -1209,6 +1209,26 @@ Item {
             if (!qtest_events.keyClick(key, modifiers, delay))
                 qtest_fail("window not shown", 2)
         }
+    }
+
+    /*!
+        \since 5.10
+        \qmlmethod TestCase::keySequence(keySequence)
+
+        Simulates typing of \a keySequence. The key sequence can be set
+        to one of the \l{QKeySequence::StandardKey}{standard keyboard shortcuts}, or
+        it can be described with a string containing a sequence of up to four key
+        presses.
+
+        Each event shall be sent to the TestCase window or, in case of multiple windows,
+        to the current active window. See \l QGuiApplication::focusWindow() for more details.
+
+        \sa keyPress(), keyRelease(), {GNU Emacs Style Key Sequences},
+        {QtQuick::Shortcut::sequence}{Shortcut.sequence}
+    */
+    function keySequence(keySequence) {
+        if (!qtest_events.keySequence(keySequence))
+            qtest_fail("window not shown", 2)
     }
 
     /*!

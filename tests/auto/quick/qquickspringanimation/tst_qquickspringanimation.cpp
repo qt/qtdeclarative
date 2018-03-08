@@ -59,7 +59,7 @@ void tst_qquickspringanimation::defaultValues()
     QQmlComponent c(&engine, testFileUrl("springanimation1.qml"));
     QQuickSpringAnimation *obj = qobject_cast<QQuickSpringAnimation*>(c.create());
 
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->to(), 0.);
     QCOMPARE(obj->velocity(), 0.);
@@ -81,7 +81,7 @@ void tst_qquickspringanimation::values()
 
     QQuickSpringAnimation *obj = root->findChild<QQuickSpringAnimation*>();
 
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->to(), 1.44);
     QCOMPARE(obj->velocity(), 0.9);
@@ -103,7 +103,7 @@ void tst_qquickspringanimation::disabled()
     QQmlComponent c(&engine, testFileUrl("springanimation3.qml"));
     QQuickSpringAnimation *obj = qobject_cast<QQuickSpringAnimation*>(c.create());
 
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QCOMPARE(obj->to(), 1.44);
     QCOMPARE(obj->velocity(), 0.9);

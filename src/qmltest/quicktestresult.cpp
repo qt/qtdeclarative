@@ -73,7 +73,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static const char *globalProgramName = 0;
+static const char *globalProgramName = nullptr;
 static bool loggingStarted = false;
 static QBenchmarkGlobalData globalBenchmarkData;
 
@@ -88,7 +88,7 @@ class Q_QUICK_TEST_EXPORT QuickTestImageObject : public QObject
     Q_PROPERTY(QSize size READ size CONSTANT)
 
 public:
-    QuickTestImageObject(const QImage& img, QObject *parent = 0)
+    QuickTestImageObject(const QImage& img, QObject *parent = nullptr)
         : QObject(parent)
         , m_image(img)
     {
@@ -143,7 +143,7 @@ public Q_SLOTS:
         QImageWriter writer(filePath);
         if (!writer.write(m_image)) {
             QQmlEngine *engine = qmlContext(this)->engine();
-            QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
+            QV4::ExecutionEngine *v4 = engine->handle();
             v4->throwError(QStringLiteral("Can't save to %1: %2").arg(filePath, writer.errorString()));
         }
     }
@@ -172,9 +172,9 @@ class QuickTestResultPrivate
 {
 public:
     QuickTestResultPrivate()
-        : table(0)
-        , benchmarkIter(0)
-        , benchmarkData(0)
+        : table(nullptr)
+        , benchmarkIter(nullptr)
+        , benchmarkData(nullptr)
         , iterCount(0)
     {
     }
@@ -261,10 +261,10 @@ void QuickTestResult::setFunctionName(const QString &name)
             QString fullName = d->testCaseName + QLatin1String("::") + name;
             QTestResult::setCurrentTestFunction
                 (d->intern(fullName).constData());
-            QTestPrivate::checkBlackLists(fullName.toUtf8().constData(), 0);
+            QTestPrivate::checkBlackLists(fullName.toUtf8().constData(), nullptr);
         }
     } else {
-        QTestResult::setCurrentTestFunction(0);
+        QTestResult::setCurrentTestFunction(nullptr);
     }
     d->functionName = name;
     emit functionNameChanged();
@@ -293,7 +293,7 @@ void QuickTestResult::setDataTag(const QString &tag)
         QTestPrivate::checkBlackLists((testCaseName() + QLatin1String("::") + functionName()).toUtf8().constData(), tag.toUtf8().constData());
         emit dataTagChanged();
     } else {
-        QTestResult::setCurrentTestData(0);
+        QTestResult::setCurrentTestData(nullptr);
     }
 }
 
@@ -438,7 +438,7 @@ void QuickTestResult::clearTestTable()
 {
     Q_D(QuickTestResult);
     delete d->table;
-    d->table = 0;
+    d->table = nullptr;
 }
 
 void QuickTestResult::finishTestData()
@@ -745,7 +745,7 @@ void QuickTestResult::stopBenchmark()
 {
     Q_D(QuickTestResult);
     delete d->benchmarkIter;
-    d->benchmarkIter = 0;
+    d->benchmarkIter = nullptr;
 }
 
 QObject *QuickTestResult::grabImage(QQuickItem *item)
@@ -759,7 +759,7 @@ QObject *QuickTestResult::grabImage(QQuickItem *item)
         QQmlEngine::setContextForObject(o, qmlContext(this));
         return o;
     }
-    return 0;
+    return nullptr;
 }
 
 QObject *QuickTestResult::findChild(QObject *parent, const QString &objectName)
@@ -787,7 +787,7 @@ void QuickTestResult::setProgramName(const char *name)
     } else if (!name && loggingStarted) {
         QTestResult::setCurrentTestObject(globalProgramName);
         QTestLog::stopLogging();
-        QTestResult::setCurrentTestObject(0);
+        QTestResult::setCurrentTestObject(nullptr);
     }
     globalProgramName = name;
     QTestResult::setCurrentTestObject(globalProgramName);

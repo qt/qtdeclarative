@@ -114,7 +114,7 @@ public:
     static Service *service()
     {
         QQmlDebugConnector *inst = instance();
-        return inst ? static_cast<Service *>(inst->service(Service::s_key)) : 0;
+        return inst ? static_cast<Service *>(inst->service(Service::s_key)) : nullptr;
     }
 
 protected:
@@ -126,7 +126,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugConnectorFactory : public QObject {
     Q_OBJECT
 public:
     virtual QQmlDebugConnector *create(const QString &key) = 0;
-    ~QQmlDebugConnectorFactory();
+    ~QQmlDebugConnectorFactory() override;
 };
 
 #define QQmlDebugConnectorFactory_iid "org.qt-project.Qt.QQmlDebugConnectorFactory"

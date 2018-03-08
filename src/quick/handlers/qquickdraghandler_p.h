@@ -93,7 +93,7 @@ class Q_AUTOTEST_EXPORT QQuickDragHandler : public QQuickSinglePointHandler
     Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
 
 public:
-    explicit QQuickDragHandler(QObject *parent = 0);
+    explicit QQuickDragHandler(QObject *parent = nullptr);
     ~QQuickDragHandler();
 
     void handleEventPoint(QQuickEventPoint *point) override;
@@ -118,13 +118,19 @@ protected:
 private:
     void ungrab();
     void enforceAxisConstraints(QPointF *localPos);
-    void initializeTargetStartPos(QQuickEventPoint *point);
+    bool targetContains(QQuickEventPoint *point);
+    QPointF localTargetPosition(QQuickEventPoint *point);
 
 private:
-    QPointF m_targetStartPos;
+    QPointF m_pressScenePos;
+    QPointF m_pressTargetPos;   // We must also store the local targetPos, because we cannot deduce
+                                // the press target pos from the scene pos in case there was e.g a
+                                // flick in one of the ancestors during the drag.
     QVector2D m_translation;
+
     QQuickDragAxis m_xAxis;
     QQuickDragAxis m_yAxis;
+    bool m_pressedInsideTarget = false;
 
     friend class QQuickDragAxis;
 };

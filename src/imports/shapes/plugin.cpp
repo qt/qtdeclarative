@@ -47,7 +47,7 @@ static void initResources()
 #ifdef QT_STATIC
     Q_INIT_RESOURCE(qmake_QtQuick_Shapes);
 #endif
-    Q_INIT_RESOURCE(shapes);
+    Q_INIT_RESOURCE(qtquickshapesplugin);
 }
 
 QT_BEGIN_NAMESPACE
@@ -58,7 +58,7 @@ class QmlShapesPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    QmlShapesPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
+    QmlShapesPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QByteArray(uri) == QByteArray("QtQuick.Shapes"));
@@ -68,6 +68,12 @@ public:
         qmlRegisterType<QQuickShapeLinearGradient>(uri, 1, 0, "LinearGradient");
         qmlRegisterType<QQuickShapeRadialGradient>(uri, 1, 0, "RadialGradient");
         qmlRegisterType<QQuickShapeConicalGradient>(uri, 1, 0, "ConicalGradient");
+
+        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions
+        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
+
+        // revision in Qt 5.11: added containsMode property
+        qmlRegisterType<QQuickShape, 11>(uri, 1, 11, "Shape");
     }
 };
 

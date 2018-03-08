@@ -56,7 +56,7 @@ class QtQuick2Plugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QtQuick2Plugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
+    QtQuick2Plugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick"));
@@ -65,7 +65,7 @@ public:
         QQmlQtQuick2Module::defineModule();
     }
 
-    ~QtQuick2Plugin()
+    ~QtQuick2Plugin() override
     {
         if (moduleDefined)
             QQmlQtQuick2Module::undefineModule();

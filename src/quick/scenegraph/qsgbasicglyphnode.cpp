@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 QSGBasicGlyphNode::QSGBasicGlyphNode()
     : m_style(QQuickText::Normal)
-    , m_material(0)
+    , m_material(nullptr)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
 {
     m_geometry.setDrawingMode(QSGGeometry::DrawTriangles);
@@ -59,7 +59,7 @@ QSGBasicGlyphNode::~QSGBasicGlyphNode()
 void QSGBasicGlyphNode::setColor(const QColor &color)
 {
     m_color = color;
-    if (m_material != 0) {
+    if (m_material != nullptr) {
         setMaterialColor(color);
         markDirty(DirtyMaterial);
     }
@@ -67,7 +67,7 @@ void QSGBasicGlyphNode::setColor(const QColor &color)
 
 void QSGBasicGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &glyphs)
 {
-    if (m_material != 0)
+    if (m_material != nullptr)
         delete m_material;
 
     m_position = position;

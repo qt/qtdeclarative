@@ -69,7 +69,7 @@ class Q_QML_PRIVATE_EXPORT QQmlDebugService : public QObject
     Q_DECLARE_PRIVATE(QQmlDebugService)
 
 public:
-    ~QQmlDebugService();
+    ~QQmlDebugService() override;
 
     const QString &name() const;
     float version() const;
@@ -93,7 +93,7 @@ public:
     static QObject *objectForId(int id) { return objectsForIds().value(id); }
 
 protected:
-    explicit QQmlDebugService(const QString &, float version, QObject *parent = 0);
+    explicit QQmlDebugService(const QString &, float version, QObject *parent = nullptr);
 
 signals:
     void attachedToEngine(QJSEngine *);

@@ -133,11 +133,11 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
   \inmodule QtQuick
 */
 
-QSGContext *QQuickRenderControlPrivate::sg = 0;
+QSGContext *QQuickRenderControlPrivate::sg = nullptr;
 
 QQuickRenderControlPrivate::QQuickRenderControlPrivate()
     : initialized(0),
-      window(0)
+      window(nullptr)
 {
     if (!sg) {
         qAddPostRoutine(cleanup);
@@ -149,7 +149,7 @@ QQuickRenderControlPrivate::QQuickRenderControlPrivate()
 void QQuickRenderControlPrivate::cleanup()
 {
     delete sg;
-    sg = 0;
+    sg = nullptr;
 }
 
 /*!
@@ -173,7 +173,7 @@ QQuickRenderControl::~QQuickRenderControl()
     invalidate();
 
     if (d->window)
-        QQuickWindowPrivate::get(d->window)->renderControl = 0;
+        QQuickWindowPrivate::get(d->window)->renderControl = nullptr;
 
     // It is likely that the cleanup in windowDestroyed() is not called since
     // the standard pattern is to destroy the rendercontrol before the QQuickWindow.
@@ -187,16 +187,16 @@ void QQuickRenderControlPrivate::windowDestroyed()
 {
     if (window) {
         rc->invalidate();
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
         delete QQuickWindowPrivate::get(window)->animationController;
-        QQuickWindowPrivate::get(window)->animationController = 0;
+        QQuickWindowPrivate::get(window)->animationController = nullptr;
 
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
         QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
 #endif
 
-        window = 0;
+        window = nullptr;
     }
 }
 
@@ -452,11 +452,11 @@ void QQuickRenderControlPrivate::maybeUpdate()
 QWindow *QQuickRenderControl::renderWindowFor(QQuickWindow *win, QPoint *offset)
 {
     if (!win)
-        return 0;
+        return nullptr;
     QQuickRenderControl *rc = QQuickWindowPrivate::get(win)->renderControl;
     if (rc)
         return rc->renderWindow(offset);
-    return 0;
+    return nullptr;
 }
 
 QT_END_NAMESPACE

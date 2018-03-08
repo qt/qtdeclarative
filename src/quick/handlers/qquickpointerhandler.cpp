@@ -42,6 +42,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcPointerHandlerDispatch, "qt.quick.handler.dispatch")
+Q_LOGGING_CATEGORY(lcPointerHandlerGrab, "qt.quick.handler.grab")
 Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
 
 /*!
@@ -67,6 +68,7 @@ QQuickPointerHandler::QQuickPointerHandler(QObject *parent)
   , m_targetExplicitlySet(false)
   , m_hadKeepMouseGrab(false)
   , m_hadKeepTouchGrab(false)
+  , m_grabPermissions(CanTakeOverFromItems | CanTakeOverFromHandlersOfDifferentType | ApprovesTakeOverByAnything)
 {
 }
 
@@ -94,7 +96,7 @@ QQuickPointerHandler::~QQuickPointerHandler()
 */
 void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
-    qCDebug(lcPointerHandlerDispatch) << point << stateChange << grabber;
+    qCDebug(lcPointerHandlerGrab) << point << stateChange << grabber;
     Q_ASSERT(point);
     if (grabber == this) {
         bool wasCanceled = false;
@@ -145,7 +147,7 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
 */
 void QQuickPointerHandler::setPassiveGrab(QQuickEventPoint *point, bool grab)
 {
-    qCDebug(lcPointerHandlerDispatch) << point << grab;
+    qCDebug(lcPointerHandlerGrab) << point << grab;
     if (grab) {
         point->setGrabberPointerHandler(this, false);
     } else {
@@ -153,14 +155,124 @@ void QQuickPointerHandler::setPassiveGrab(QQuickEventPoint *point, bool grab)
     }
 }
 
-void QQuickPointerHandler::setExclusiveGrab(QQuickEventPoint *point, bool grab)
+/*!
+    Check whether it's OK to take an exclusive grab of the \a point.
+
+    The default implementation will call approveGrabTransition() to check this
+    handler's \l grabPermissions. If grabbing can be done only by taking over
+    the exclusive grab from an Item, approveGrabTransition() checks the Item's
+    \l keepMouseGrab or \l keepTouchGrab flags appropriately. If grabbing can
+    be done only by taking over another handler's exclusive grab, canGrab()
+    also calls approveGrabTransition() on the handler which is about to lose
+    its grab. Either one can deny the takeover.
+*/
+bool QQuickPointerHandler::canGrab(QQuickEventPoint *point)
 {
-    // TODO m_hadKeepMouseGrab m_hadKeepTouchGrab
-    qCDebug(lcPointerHandlerDispatch) << point << grab;
-    // Don't allow one handler to cancel another's grab, unless it is stealing it for itself
-    if (!grab && point->grabberPointerHandler() != this)
+    QQuickPointerHandler *existingPhGrabber = point->grabberPointerHandler();
+    return approveGrabTransition(point, this) &&
+        (existingPhGrabber ? existingPhGrabber->approveGrabTransition(point, this) : true);
+}
+
+/*!
+    Check this handler's rules to see if \l proposedGrabber will be allowed to take
+    the exclusive grab.  This function may be called twice: once on the instance which
+    will take the grab, and once on the instance which would thereby lose its grab,
+    in case of a takeover scenario.
+*/
+bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObject *proposedGrabber)
+{
+    bool allowed = false;
+    if (proposedGrabber == this) {
+        QObject* existingGrabber = point->exclusiveGrabber();
+        allowed = (existingGrabber == nullptr) || ((m_grabPermissions & CanTakeOverFromAnything) == CanTakeOverFromAnything);
+        if (existingGrabber) {
+            if (QQuickPointerHandler *existingPhGrabber = point->grabberPointerHandler()) {
+                if (!allowed && (m_grabPermissions & CanTakeOverFromHandlersOfDifferentType) &&
+                        existingPhGrabber->metaObject()->className() != metaObject()->className())
+                    allowed = true;
+                if (!allowed && (m_grabPermissions & CanTakeOverFromHandlersOfSameType) &&
+                        existingPhGrabber->metaObject()->className() == metaObject()->className())
+                    allowed = true;
+            } else if ((m_grabPermissions & CanTakeOverFromItems)) {
+                QQuickItem * existingItemGrabber = point->grabberItem();
+                if (existingItemGrabber && !((existingItemGrabber->keepMouseGrab() && point->pointerEvent()->asPointerMouseEvent()) ||
+                                             (existingItemGrabber->keepTouchGrab() && point->pointerEvent()->asPointerTouchEvent())))
+                    allowed = true;
+            }
+        }
+    } else {
+        // proposedGrabber is different: that means this instance will lose its grab
+        if (proposedGrabber) {
+            if ((m_grabPermissions & ApprovesTakeOverByAnything) == ApprovesTakeOverByAnything)
+                allowed = true;
+            if (!allowed && (m_grabPermissions & ApprovesTakeOverByHandlersOfDifferentType) &&
+                    proposedGrabber->metaObject()->className() != metaObject()->className())
+                allowed = true;
+            if (!allowed && (m_grabPermissions & ApprovesTakeOverByHandlersOfSameType) &&
+                    proposedGrabber->metaObject()->className() == metaObject()->className())
+                allowed = true;
+            if (!allowed && (m_grabPermissions & ApprovesTakeOverByItems) && proposedGrabber->inherits("QQuickItem"))
+                allowed = true;
+        } else {
+            if (!allowed && (m_grabPermissions & ApprovesCancellation))
+                allowed = true;
+        }
+    }
+    qCDebug(lcPointerHandlerGrab) << "point" << hex << point->pointId() << "permission" <<
+            QMetaEnum::fromType<GrabPermissions>().valueToKeys(grabPermissions()) <<
+            ':' << this << (allowed ? "approved to" : "denied to") << proposedGrabber;
+    return allowed;
+}
+
+/*!
+    \qmlproperty bool QtQuick::PointerHandler::grabPermission
+
+    This property specifies the permissions when this handler's logic decides
+    to take over the exclusive grab, or when it is asked to approve grab
+    takeover or cancellation by another handler.
+
+    The default is
+    \c {CanTakeOverFromItems | CanTakeOverFromHandlersOfDifferentType | ApprovesTakeOverByAnything}
+    which allows most takeover scenarios but avoids e.g. two PinchHandlers fighting
+    over the same touchpoints.
+*/
+void QQuickPointerHandler::setGrabPermissions(GrabPermissions grabPermission)
+{
+    if (m_grabPermissions == grabPermission)
         return;
-    point->setGrabberPointerHandler(grab ? this : nullptr, true);
+
+    m_grabPermissions = grabPermission;
+    emit grabPermissionChanged();
+}
+
+/*!
+    \internal
+    Acquire or give up the exclusive grab of the given \a point, according to
+    the \a grab state, and subject to the rules: canGrab(), and the rule not to
+    relinquish another handler's grab. Returns true if permission is granted,
+    or if the exclusive grab has already been acquired or relinquished as
+    specified. Returns false if permission is denied either by this handler or
+    by the handler or item from which this handler would take over
+*/
+bool QQuickPointerHandler::setExclusiveGrab(QQuickEventPoint *point, bool grab)
+{
+    if ((grab && point->exclusiveGrabber() == this) || (!grab && point->exclusiveGrabber() != this))
+        return true;
+    // TODO m_hadKeepMouseGrab m_hadKeepTouchGrab
+    bool allowed = true;
+    if (grab) {
+        allowed = canGrab(point);
+    } else {
+        QQuickPointerHandler *existingPhGrabber = point->grabberPointerHandler();
+        // Ask before allowing one handler to cancel another's grab
+        if (existingPhGrabber && existingPhGrabber != this && !existingPhGrabber->approveGrabTransition(point, nullptr))
+            allowed = false;
+    }
+    qCDebug(lcPointerHandlerGrab) << point << (grab ? "grab" : "ungrab") << (allowed ? "allowed" : "forbidden") <<
+        point->exclusiveGrabber() << "->" << (grab ? this : nullptr);
+    if (allowed)
+        point->setGrabberPointerHandler(grab ? this : nullptr, true);
+    return allowed;
 }
 
 /*!
@@ -169,7 +281,7 @@ void QQuickPointerHandler::setExclusiveGrab(QQuickEventPoint *point, bool grab)
 */
 void QQuickPointerHandler::cancelAllGrabs(QQuickEventPoint *point)
 {
-    qCDebug(lcPointerHandlerDispatch) << point;
+    qCDebug(lcPointerHandlerGrab) << point;
     point->cancelAllGrabs(this);
 }
 
@@ -207,7 +319,7 @@ void QQuickPointerHandler::setEnabled(bool enabled)
 
     The Item which this handler will manipulate.
 
-    By default, it is the same as the \l parent: the Item within which
+    By default, it is the same as the \l [QML] {parent}, the Item within which
     the handler is declared. However, it can sometimes be useful to set the
     target to a different Item, in order to handle events within one item
     but manipulate another; or to \c null, to disable the default behavior
@@ -219,7 +331,9 @@ void QQuickPointerHandler::setTarget(QQuickItem *target)
     if (m_target == target)
         return;
 
+    QQuickItem *oldTarget = m_target;
     m_target = target;
+    onTargetChanged(oldTarget);
     emit targetChanged();
 }
 
@@ -288,10 +402,10 @@ void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     The \l Item which is the scope of the handler; the Item in which it was declared.
     The handler will handle events on behalf of this Item, which means a
     pointer event is relevant if at least one of its event points occurs within
-    the Item's interior.  Initially \l target() is the same, but target()
+    the Item's interior.  Initially \l [QML] {target} {target()} is the same, but it
     can be reassigned.
 
-    \sa QQuick::PointerHandler::target(), QObject::parent()
+    \sa {target}, QObject::parent()
 */
 
 /*!

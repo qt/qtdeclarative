@@ -86,13 +86,13 @@ Heap::String *Heap::StringObject::getIndex(uint index) const
 {
     QString str = string->toQString();
     if (index >= (uint)str.length())
-        return 0;
+        return nullptr;
     return internalClass->engine->newString(str.mid(index, 1));
 }
 
 uint Heap::StringObject::length() const
 {
-    return string->len;
+    return string->length();
 }
 
 bool StringObject::deleteIndexedProperty(Managed *m, uint index)
@@ -109,7 +109,7 @@ bool StringObject::deleteIndexedProperty(Managed *m, uint index)
 
 void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
 {
-    name->setM(0);
+    name->setM(nullptr);
     StringObject *s = static_cast<StringObject *>(m);
     uint slen = s->d()->string->toQString().length();
     if (it->arrayIndex <= slen) {
@@ -198,6 +198,15 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("toUpperCase"), method_toUpperCase);
     defineDefaultProperty(QStringLiteral("toLocaleUpperCase"), method_toLocaleUpperCase);
     defineDefaultProperty(QStringLiteral("trim"), method_trim);
+}
+
+static Heap::String *thisAsString(ExecutionEngine *v4, const Value *thisObject)
+{
+    if (String *s = thisObject->stringValue())
+        return s->d();
+    if (const StringObject *thisString = thisObject->as<StringObject>())
+        return thisString->d()->string;
+    return thisObject->toString(v4);
 }
 
 static QString getThisString(ExecutionEngine *v4, const Value *thisObject)
@@ -649,11 +658,13 @@ ReturnedValue StringPrototype::method_search(const FunctionObject *b, const Valu
 ReturnedValue StringPrototype::method_slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = b->engine();
-    const QString text = getThisString(v4, thisObject);
+    Scope scope(v4);
+    ScopedString s(scope, thisAsString(v4, thisObject));
     if (v4->hasException)
         return QV4::Encode::undefined();
+    Q_ASSERT(s);
 
-    const double length = text.length();
+    const double length = s->d()->length();
 
     double start = argc ? argv[0].toInteger() : 0;
     double end = (argc < 2 || argv[1].isUndefined())
@@ -673,7 +684,7 @@ ReturnedValue StringPrototype::method_slice(const FunctionObject *b, const Value
     const int intEnd = int(end);
 
     int count = qMax(0, intEnd - intStart);
-    return Encode(v4->newString(text.mid(intStart, count)));
+    return Encode(v4->memoryManager->alloc<ComplexString>(s->d(), intStart, count));
 }
 
 ReturnedValue StringPrototype::method_split(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
@@ -706,7 +717,7 @@ ReturnedValue StringPrototype::method_split(const FunctionObject *b, const Value
     Scoped<RegExpObject> re(scope, separatorValue);
     if (re) {
         if (re->value()->pattern->isEmpty()) {
-            re = (RegExpObject *)0;
+            re = (RegExpObject *)nullptr;
             separatorValue = scope.engine->newString();
         }
     }

@@ -63,12 +63,12 @@ QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QOpenGLCont
     : QSGDistanceFieldGlyphCache(c, font)
     , m_maxTextureSize(0)
     , m_maxTextureCount(3)
-    , m_blitProgram(0)
+    , m_blitProgram(nullptr)
     , m_blitBuffer(QOpenGLBuffer::VertexBuffer)
-    , m_fboGuard(0)
+    , m_fboGuard(nullptr)
     , m_funcs(c->functions())
 #if !defined(QT_OPENGL_ES_2)
-    , m_coreFuncs(0)
+    , m_coreFuncs(nullptr)
 #endif
 {
     if (Q_LIKELY(m_blitBuffer.create())) {
@@ -89,7 +89,7 @@ QSGDefaultDistanceFieldGlyphCache::~QSGDefaultDistanceFieldGlyphCache()
     for (int i = 0; i < m_textures.count(); ++i)
         m_funcs->glDeleteTextures(1, &m_textures[i].texture);
 
-    if (m_fboGuard != 0)
+    if (m_fboGuard != nullptr)
         m_fboGuard->free();
 
     delete m_blitProgram;
@@ -400,7 +400,7 @@ void QSGDefaultDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int 
         m_funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 #endif
     m_funcs->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, oldWidth, oldHeight, 0,
-                          GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+                          GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     m_funcs->glBindTexture(GL_TEXTURE_2D, 0);
     m_funcs->glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                     GL_TEXTURE_2D, tmp_texture, 0);

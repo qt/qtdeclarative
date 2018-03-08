@@ -67,15 +67,15 @@ void tst_qquickfocusscope::basic()
     QQuickRectangle *item1 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item1"));
     QQuickRectangle *item2 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item2"));
     QQuickRectangle *item3 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item3"));
-    QVERIFY(item0 != 0);
-    QVERIFY(item1 != 0);
-    QVERIFY(item2 != 0);
-    QVERIFY(item3 != 0);
+    QVERIFY(item0 != nullptr);
+    QVERIFY(item1 != nullptr);
+    QVERIFY(item2 != nullptr);
+    QVERIFY(item3 != nullptr);
 
     view->show();
     view->requestActivate();
 
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QTRY_COMPARE(view, qGuiApp->focusWindow());
 
     QVERIFY(view->isTopLevel());
@@ -111,16 +111,16 @@ void tst_qquickfocusscope::nested()
     QQuickFocusScope *item3 = findItem<QQuickFocusScope>(view->rootObject(), QLatin1String("item3"));
     QQuickFocusScope *item4 = findItem<QQuickFocusScope>(view->rootObject(), QLatin1String("item4"));
     QQuickFocusScope *item5 = findItem<QQuickFocusScope>(view->rootObject(), QLatin1String("item5"));
-    QVERIFY(item1 != 0);
-    QVERIFY(item2 != 0);
-    QVERIFY(item3 != 0);
-    QVERIFY(item4 != 0);
-    QVERIFY(item5 != 0);
+    QVERIFY(item1 != nullptr);
+    QVERIFY(item2 != nullptr);
+    QVERIFY(item3 != nullptr);
+    QVERIFY(item4 != nullptr);
+    QVERIFY(item5 != nullptr);
 
     view->show();
     view->requestActivate();
 
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QTRY_COMPARE(view, qGuiApp->focusWindow());
 
     QVERIFY(item1->hasActiveFocus());
@@ -140,10 +140,10 @@ void tst_qquickfocusscope::noFocus()
     QQuickRectangle *item1 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item1"));
     QQuickRectangle *item2 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item2"));
     QQuickRectangle *item3 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item3"));
-    QVERIFY(item0 != 0);
-    QVERIFY(item1 != 0);
-    QVERIFY(item2 != 0);
-    QVERIFY(item3 != 0);
+    QVERIFY(item0 != nullptr);
+    QVERIFY(item1 != nullptr);
+    QVERIFY(item2 != nullptr);
+    QVERIFY(item3 != nullptr);
 
     view->show();
     view->requestActivate();
@@ -179,15 +179,15 @@ void tst_qquickfocusscope::textEdit()
     QQuickTextEdit *item1 = findItem<QQuickTextEdit>(view->rootObject(), QLatin1String("item1"));
     QQuickRectangle *item2 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item2"));
     QQuickTextEdit *item3 = findItem<QQuickTextEdit>(view->rootObject(), QLatin1String("item3"));
-    QVERIFY(item0 != 0);
-    QVERIFY(item1 != 0);
-    QVERIFY(item2 != 0);
-    QVERIFY(item3 != 0);
+    QVERIFY(item0 != nullptr);
+    QVERIFY(item1 != nullptr);
+    QVERIFY(item2 != nullptr);
+    QVERIFY(item3 != nullptr);
 
     view->show();
     view->requestActivate();
 
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
 
     QTRY_COMPARE(view, qGuiApp->focusWindow());
     QVERIFY(item0->hasActiveFocus());
@@ -231,16 +231,16 @@ void tst_qquickfocusscope::forceFocus()
     QQuickFocusScope *item3 = findItem<QQuickFocusScope>(view->rootObject(), QLatin1String("item3"));
     QQuickRectangle *item4 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item4"));
     QQuickRectangle *item5 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item5"));
-    QVERIFY(item0 != 0);
-    QVERIFY(item1 != 0);
-    QVERIFY(item2 != 0);
-    QVERIFY(item3 != 0);
-    QVERIFY(item4 != 0);
-    QVERIFY(item5 != 0);
+    QVERIFY(item0 != nullptr);
+    QVERIFY(item1 != nullptr);
+    QVERIFY(item2 != nullptr);
+    QVERIFY(item3 != nullptr);
+    QVERIFY(item4 != nullptr);
+    QVERIFY(item5 != nullptr);
 
     view->show();
     view->requestActivate();
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QTRY_COMPARE(view, qGuiApp->focusWindow());
 
     QVERIFY(item0->hasActiveFocus());
@@ -277,7 +277,7 @@ void tst_qquickfocusscope::noParentFocus()
 
     view->show();
     view->requestActivate();
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QTRY_COMPARE(view, qGuiApp->focusWindow());
 
     QVERIFY(!view->rootObject()->property("focus1").toBool());
@@ -298,15 +298,15 @@ void tst_qquickfocusscope::signalEmission()
     QQuickRectangle *item2 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item2"));
     QQuickRectangle *item3 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item3"));
     QQuickRectangle *item4 = findItem<QQuickRectangle>(view->rootObject(), QLatin1String("item4"));
-    QVERIFY(item1 != 0);
-    QVERIFY(item2 != 0);
-    QVERIFY(item3 != 0);
-    QVERIFY(item4 != 0);
+    QVERIFY(item1 != nullptr);
+    QVERIFY(item2 != nullptr);
+    QVERIFY(item3 != nullptr);
+    QVERIFY(item4 != nullptr);
 
     view->show();
     view->requestActivate();
 
-    QTest::qWaitForWindowActive(view);
+    QVERIFY(QTest::qWaitForWindowActive(view));
     QTRY_COMPARE(view, qGuiApp->focusWindow());
 
     QVariant blue(QColor("blue"));

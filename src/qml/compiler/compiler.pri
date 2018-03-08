@@ -10,7 +10,8 @@ HEADERS += \
     $$PWD/qv4compilerscanfunctions_p.h \
     $$PWD/qv4codegen_p.h \
     $$PWD/qqmlirbuilder_p.h \
-    $$PWD/qqmltypecompiler_p.h
+    $$PWD/qqmltypecompiler_p.h \
+    $$PWD/qv4instr_moth_p.h
 
 SOURCES += \
     $$PWD/qv4bytecodegenerator.cpp \
@@ -19,7 +20,8 @@ SOURCES += \
     $$PWD/qv4compilercontext.cpp \
     $$PWD/qv4compilerscanfunctions.cpp \
     $$PWD/qv4codegen.cpp \
-    $$PWD/qqmlirbuilder.cpp
+    $$PWD/qqmlirbuilder.cpp \
+    $$PWD/qv4instr_moth.cpp
 
 !qmldevtools_build {
 
@@ -40,13 +42,6 @@ unix: SOURCES += $$PWD/qv4compilationunitmapper_unix.cpp
 else: SOURCES += $$PWD/qv4compilationunitmapper_win.cpp
 
 qtConfig(private_tests):qtConfig(dlopen): QMAKE_USE_PRIVATE += libdl
-}
-
-qmldevtools_build|qtConfig(qml-interpreter) {
-    HEADERS += \
-        $$PWD/qv4instr_moth_p.h
-    SOURCES += \
-        $$PWD/qv4instr_moth.cpp
 }
 
 gcc {

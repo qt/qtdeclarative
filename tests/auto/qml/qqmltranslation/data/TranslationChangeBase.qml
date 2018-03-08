@@ -1,5 +1,5 @@
-import QtQml 2.0
+import QtQuick 2.0
 
-QtObject {
+Item {
     property string baseProperty: qsTr("translate me");
 }

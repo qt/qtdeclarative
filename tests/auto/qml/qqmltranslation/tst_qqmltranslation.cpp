@@ -71,7 +71,7 @@ void tst_qqmltranslation::translation()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFile);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     if (verifyCompiledData) {
         QQmlContext *context = qmlContext(object);
@@ -131,7 +131,7 @@ void tst_qqmltranslation::idTranslation()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("idtranslation.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     {
         QQmlContext *context = qmlContext(object);
@@ -194,6 +194,7 @@ void tst_qqmltranslation::translationChange()
     QCOMPARE(object->property("baseProperty").toString(), QString::fromUtf8("do not translate"));
     QCOMPARE(object->property("text1").toString(), QString::fromUtf8("translate me"));
     QCOMPARE(object->property("text2").toString(), QString::fromUtf8("translate me"));
+    QCOMPARE(object->property("text3").toString(), QString::fromUtf8("translate me"));
 
     DummyTranslator translator;
     QCoreApplication::installTranslator(&translator);
@@ -204,6 +205,7 @@ void tst_qqmltranslation::translationChange()
     QCOMPARE(object->property("baseProperty").toString(), QString::fromUtf8("do not translate"));
     QCOMPARE(object->property("text1").toString(), QString::fromUtf8("xxx"));
     QCOMPARE(object->property("text2").toString(), QString::fromUtf8("xxx"));
+    QCOMPARE(object->property("text3").toString(), QString::fromUtf8("xxx"));
 
     QCoreApplication::removeTranslator(&translator);
 }

@@ -72,14 +72,14 @@ class NoisyShader : public QSGSimpleMaterialShader<NoisyMaterial>
     QSG_DECLARE_SIMPLE_SHADER(NoisyShader, NoisyMaterial)
 
 public:
-    NoisyShader() : id_color(-1), id_texture(-1), id_textureSize(-1) {
+    NoisyShader() {
         setShaderSourceFile(QOpenGLShader::Vertex, ":/scenegraph/graph/shaders/noisy.vsh");
         setShaderSourceFile(QOpenGLShader::Fragment, ":/scenegraph/graph/shaders/noisy.fsh");
     }
 
-    QList<QByteArray> attributes() const {  return QList<QByteArray>() << "aVertex" << "aTexCoord"; }
+    QList<QByteArray> attributes() const override {  return QList<QByteArray>() << "aVertex" << "aTexCoord"; }
 
-    void updateState(const NoisyMaterial *m, const NoisyMaterial *) {
+    void updateState(const NoisyMaterial *m, const NoisyMaterial *) override {
 
         // Set the color
         program()->setUniformValue(id_color, m->color);
@@ -93,7 +93,7 @@ public:
         program()->setUniformValue(id_textureSize, QSizeF(1.0 / s.width(), 1.0 / s.height()));
     }
 
-    void resolveUniforms() {
+    void resolveUniforms() override {
         id_texture = program()->uniformLocation("texture");
         id_textureSize = program()->uniformLocation("textureSize");
         id_color = program()->uniformLocation("color");
@@ -103,9 +103,9 @@ public:
     }
 
 private:
-    int id_color;
-    int id_texture;
-    int id_textureSize;
+    int id_color = -1;
+    int id_texture = -1;
+    int id_textureSize = -1;
 };
 
 NoisyNode::NoisyNode(QQuickWindow *window)
@@ -114,7 +114,7 @@ NoisyNode::NoisyNode(QQuickWindow *window)
     QImage image(NOISE_SIZE, NOISE_SIZE, QImage::Format_RGB32);
     uint *data = (uint *) image.bits();
     for (int i=0; i<NOISE_SIZE * NOISE_SIZE; ++i) {
-        uint g = QRandomGenerator::bounded(0xff);
+        uint g = QRandomGenerator::global()->bounded(0xff);
         data[i] = 0xff000000 | (g << 16) | (g << 8) | g;
     }
 

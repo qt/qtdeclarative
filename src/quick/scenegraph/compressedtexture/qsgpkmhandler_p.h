@@ -51,42 +51,18 @@
 // We mean it.
 //
 
-#include <QOpenGLFunctions>
-#include <QQuickImageProvider>
-#include <QtQuick/QSGTexture>
-#include <QUrl>
+#include "qsgtexturefilehandler_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QSGPkmHandler
+class QSGPkmHandler : public QSGTextureFileHandler
 {
 public:
-    QSGPkmHandler() {}
+    using QSGTextureFileHandler::QSGTextureFileHandler;
 
-    QQuickTextureFactory *read(QIODevice *device);
-};
+    static bool canRead(const QByteArray &suffix, const QByteArray &block);
 
-class QEtcTexture : public QSGTexture, protected QOpenGLFunctions
-{
-    Q_OBJECT
-public:
-    QEtcTexture();
-    ~QEtcTexture();
-
-    void bind();
-
-    QSize textureSize() const { return m_size; }
-    int textureId() const;
-
-    bool hasAlphaChannel() const;
-    bool hasMipmaps() const { return false; }
-
-    QByteArray m_data;
-    QSize m_size;
-    QSize m_paddedSize;
-    GLuint m_texture_id;
-    GLenum m_type;
-    bool m_uploaded;
+    QQuickTextureFactory *read() override;
 };
 
 QT_END_NAMESPACE

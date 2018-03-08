@@ -62,7 +62,7 @@ QQuickTrailEmitter::QQuickTrailEmitter(QQuickItem *parent) :
   , m_emitterXVariation(0)
   , m_emitterYVariation(0)
   , m_followCount(0)
-  , m_emissionExtruder(0)
+  , m_emissionExtruder(nullptr)
   , m_defaultEmissionExtruder(new QQuickParticleExtruder(this))
 {
     //TODO: If followed increased their size
@@ -150,7 +150,7 @@ void QQuickTrailEmitter::reset()
 
 void QQuickTrailEmitter::emitWindow(int timeStamp)
 {
-    if (m_system == 0)
+    if (m_system == nullptr)
         return;
     if (!m_enabled && !m_pulseLeft && m_burstQueue.isEmpty())
         return;
@@ -208,7 +208,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
                 datum->t = pt;
                 datum->lifeSpan =
                         (m_particleDuration
-                         + (QRandomGenerator::bounded((m_particleDurationVariation*2) + 1) - m_particleDurationVariation))
+                         + (QRandomGenerator::global()->bounded((m_particleDurationVariation*2) + 1) - m_particleDurationVariation))
                         / 1000.0;
 
                 // Particle position
@@ -241,7 +241,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
 
                 // Particle size
                 float sizeVariation = -m_particleSizeVariation
-                        + QRandomGenerator::getReal() * m_particleSizeVariation * 2;
+                        + QRandomGenerator::global()->generateDouble() * m_particleSizeVariation * 2;
 
                 float size = qMax((qreal)0.0, m_particleSize + sizeVariation);
                 float endSize = qMax((qreal)0.0, sizeAtEnd + sizeVariation);
@@ -267,7 +267,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
 
         if (isEmitConnected() || isEmitFollowConnected()) {
             QQmlEngine *qmlEngine = ::qmlEngine(this);
-            QV4::ExecutionEngine *v4 = QV8Engine::getV4(qmlEngine->handle());
+            QV4::ExecutionEngine *v4 = qmlEngine->handle();
 
             QV4::Scope scope(v4);
             QV4::ScopedArrayObject array(scope, v4->newArrayObject(toEmit.size()));

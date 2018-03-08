@@ -52,15 +52,6 @@
 
 #undef ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES
 
-#ifdef Q_STATIC_ASSERT_FOR_SANE_COMPILERS
-#  undef Q_STATIC_ASSERT_FOR_SANE_COMPILERS
-#endif
-#if defined(Q_CC_MSVC) && _MSC_VER < 1900
-#  define Q_STATIC_ASSERT_FOR_SANE_COMPILERS(x) // insane
-#else
-#  define Q_STATIC_ASSERT_FOR_SANE_COMPILERS(x) Q_STATIC_ASSERT(x)
-#endif
-
 #ifdef V4_ENABLE_JIT
 
 QT_BEGIN_NAMESPACE
@@ -70,6 +61,7 @@ namespace JIT {
 #define callHelper(x) PlatformAssemblerCommon::callRuntime(#x, reinterpret_cast<void *>(&x))
 
 const QV4::Value::ValueTypeInternal IntegerTag = QV4::Value::ValueTypeInternal::Integer;
+const int IsIntegerConvertible_Shift = QV4::Value::IsIntegerConvertible_Shift;
 
 static ReturnedValue toNumberHelper(ReturnedValue v)
 {
@@ -89,6 +81,7 @@ struct PlatformAssembler_X86_64_SysV : JSC::MacroAssembler<JSC::MacroAssemblerX8
     static const RegisterID NoRegister = RegisterID(-1);
 
     static const RegisterID ReturnValueRegister   = RegisterID::eax;
+    static const RegisterID ReturnValueRegisterValue = ReturnValueRegister;
     static const RegisterID AccumulatorRegister   = RegisterID::eax;
     static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
     static const RegisterID ScratchRegister       = RegisterID::r10;
@@ -125,7 +118,6 @@ struct PlatformAssembler_X86_64_SysV : JSC::MacroAssembler<JSC::MacroAssemblerX8
         push(EngineRegister);
         move(Arg0Reg, CppStackFrameRegister);
         move(Arg1Reg, EngineRegister);
-        loadPtr(Address(CppStackFrameRegister, offsetof(CppStackFrame, jsFrame)), JSStackFrameRegister);
     }
 
     void generatePlatformFunctionExit()
@@ -167,6 +159,7 @@ struct PlatformAssembler_Win64 : JSC::MacroAssembler<JSC::MacroAssemblerX86_64>
     static const RegisterID NoRegister = RegisterID(-1);
 
     static const RegisterID ReturnValueRegister   = RegisterID::eax;
+    static const RegisterID ReturnValueRegisterValue = ReturnValueRegister;
     static const RegisterID AccumulatorRegister   = RegisterID::eax;
     static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
     static const RegisterID ScratchRegister       = RegisterID::r10;
@@ -203,7 +196,6 @@ struct PlatformAssembler_Win64 : JSC::MacroAssembler<JSC::MacroAssemblerX86_64>
         push(EngineRegister);
         move(Arg0Reg, CppStackFrameRegister);
         move(Arg1Reg, EngineRegister);
-        loadPtr(Address(CppStackFrameRegister, offsetof(CppStackFrame, jsFrame)), JSStackFrameRegister);
     }
 
     void generatePlatformFunctionExit()
@@ -285,7 +277,6 @@ struct PlatformAssembler_X86_All : JSC::MacroAssembler<JSC::MacroAssemblerX86>
         push(EngineRegister);
         loadPtr(Address(FramePointerRegister, 2 * PointerSize), CppStackFrameRegister);
         loadPtr(Address(FramePointerRegister, 3 * PointerSize), EngineRegister);
-        loadPtr(Address(CppStackFrameRegister, offsetof(CppStackFrame, jsFrame)), JSStackFrameRegister);
     }
 
     void generatePlatformFunctionExit()
@@ -328,6 +319,7 @@ struct PlatformAssembler_ARM64 : JSC::MacroAssembler<JSC::MacroAssemblerARM64>
     static const RegisterID NoRegister = RegisterID(-1);
 
     static const RegisterID ReturnValueRegister   = JSC::ARM64Registers::x0;
+    static const RegisterID ReturnValueRegisterValue = ReturnValueRegister;
     static const RegisterID AccumulatorRegister   = JSC::ARM64Registers::x9;
     static const RegisterID AccumulatorRegisterValue = AccumulatorRegister;
     static const RegisterID ScratchRegister       = JSC::ARM64Registers::x10;
@@ -639,7 +631,12 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
     {
         PlatformAssemblerCommon::callRuntime(functionName, funcPtr);
         if (dest == Assembler::ResultInAccumulator)
-            move(ReturnValueRegister, AccumulatorRegister);
+            saveReturnValueInAccumulator();
+    }
+
+    void saveReturnValueInAccumulator()
+    {
+        move(ReturnValueRegister, AccumulatorRegister);
     }
 
     void loadUndefined(RegisterID dest = AccumulatorRegister)
@@ -689,6 +686,11 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         move(TrustedImm64(value), AccumulatorRegister);
     }
 
+    void storeHeapObject(RegisterID source, Address addr)
+    {
+        store64(source, addr);
+    }
+
     void generateCatchTrampoline()
     {
         PlatformAssemblerCommon::generateCatchTrampoline([this](){loadUndefined();});
@@ -715,25 +717,66 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
 
     void toNumber()
     {
+        urshift64(AccumulatorRegister, TrustedImm32(Value::QuickType_Shift), ScratchRegister);
+        auto isNumber = branch32(GreaterThanOrEqual, ScratchRegister, TrustedImm32(Value::QT_Int));
+
         move(AccumulatorRegister, registerForArg(0));
         callHelper(toNumberHelper);
-        move(ReturnValueRegister, AccumulatorRegister);
+        saveReturnValueInAccumulator();
+
+        isNumber.link(this);
+    }
+
+    void toInt32LhsAcc(Address lhs, RegisterID lhsTarget)
+    {
+        load64(lhs, lhsTarget);
+        urshift64(lhsTarget, TrustedImm32(Value::QuickType_Shift), ScratchRegister2);
+        auto lhsIsInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister2);
+
+        pushAligned(AccumulatorRegister);
+        move(lhsTarget, registerForArg(0));
+        callHelper(toInt32Helper);
+        move(ReturnValueRegister, lhsTarget);
+        popAligned(AccumulatorRegister);
+
+        lhsIsInt.link(this);
+        urshift64(AccumulatorRegister, TrustedImm32(Value::QuickType_Shift), ScratchRegister2);
+        auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister2);
+
+        pushAligned(lhsTarget);
+        move(AccumulatorRegister, registerForArg(0));
+        callHelper(toInt32Helper);
+        saveReturnValueInAccumulator();
+        popAligned(lhsTarget);
+
+        isInt.link(this);
     }
 
     void toInt32()
     {
+        urshift64(AccumulatorRegister, TrustedImm32(Value::QuickType_Shift), ScratchRegister2);
+        auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister2);
+
         move(AccumulatorRegister, registerForArg(0));
         callRuntime("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper),
                     Assembler::ResultInAccumulator);
+
+        isInt.link(this);
     }
 
     void regToInt32(Address srcReg, RegisterID targetReg)
     {
+        load64(srcReg, targetReg);
+        urshift64(targetReg, TrustedImm32(Value::QuickType_Shift), ScratchRegister2);
+        auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister2);
+
         pushAligned(AccumulatorRegister);
-        load64(srcReg, registerForArg(0));
+        move(targetReg, registerForArg(0));
         callHelper(toInt32Helper);
         move(ReturnValueRegister, targetReg);
         popAligned(AccumulatorRegister);
+
+        isInt.link(this);
     }
 
     void isNullOrUndefined()
@@ -748,6 +791,12 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
                   AccumulatorRegister);
 
         isUndef.link(this);
+    }
+
+    Jump isIntOrBool()
+    {
+        urshift64(AccumulatorRegister, TrustedImm32(Value::IsIntegerOrBool_Shift), ScratchRegister);
+        return branch32(Equal, TrustedImm32(3), ScratchRegister);
     }
 
     void jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset)
@@ -819,8 +868,8 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
 
     Jump unopIntPath(std::function<Jump(void)> fastPath)
     {
-        urshift64(AccumulatorRegister, TrustedImm32(32), ScratchRegister);
-        Jump accNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), ScratchRegister);
+        urshift64(AccumulatorRegister, TrustedImm32(IsIntegerConvertible_Shift), ScratchRegister);
+        Jump accNotIntConvertible = branch32(NotEqual, TrustedImm32(1), ScratchRegister);
 
         // both integer
         Jump failure = fastPath();
@@ -829,9 +878,15 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         // all other cases
         if (failure.isSet())
             failure.link(this);
-        accNotInt.link(this);
+        accNotIntConvertible.link(this);
 
         return done;
+    }
+
+    void callWithAccumulatorByValueAsFirstArgument(std::function<void()> doCall)
+    {
+        passAsArg(AccumulatorRegister, 0);
+        doCall();
     }
 };
 
@@ -845,10 +900,14 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
                      Assembler::CallResultDestination dest)
     {
         PlatformAssemblerCommon::callRuntime(functionName, funcPtr);
-        if (dest == Assembler::ResultInAccumulator) {
-            move(ReturnValueRegisterValue, AccumulatorRegisterValue);
-            move(ReturnValueRegisterTag, AccumulatorRegisterTag);
-        }
+        if (dest == Assembler::ResultInAccumulator)
+            saveReturnValueInAccumulator();
+    }
+
+    void saveReturnValueInAccumulator()
+    {
+        move(ReturnValueRegisterValue, AccumulatorRegisterValue);
+        move(ReturnValueRegisterTag, AccumulatorRegisterTag);
     }
 
     void loadUndefined()
@@ -909,6 +968,14 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
         move(TrustedImm32(Value::fromReturnedValue(value).tag()), AccumulatorRegisterTag);
     }
 
+    void storeHeapObject(RegisterID source, Address addr)
+    {
+        store32(source, addr);
+        addr.offset += 4;
+        store32(TrustedImm32(0), addr);
+    }
+
+
     void generateCatchTrampoline()
     {
         PlatformAssemblerCommon::generateCatchTrampoline([this](){loadUndefined();});
@@ -916,6 +983,9 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
 
     void toNumber()
     {
+        urshift32(AccumulatorRegisterTag, TrustedImm32(Value::QuickType_Shift - 32), ScratchRegister);
+        auto isNumber = branch32(GreaterThanOrEqual, ScratchRegister, TrustedImm32(Value::QT_Int));
+
         if (ArgInRegCount < 2) {
             push(AccumulatorRegisterTag);
             push(AccumulatorRegisterValue);
@@ -925,14 +995,50 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
         }
         callRuntime("toNumberHelper", reinterpret_cast<void *>(&toNumberHelper),
                     Assembler::ResultInAccumulator);
-        move(ReturnValueRegisterValue, AccumulatorRegisterValue);
-        move(ReturnValueRegisterTag, AccumulatorRegisterTag);
+        saveReturnValueInAccumulator();
         if (ArgInRegCount < 2)
             addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+
+        isNumber.link(this);
     }
 
-    void toInt32()
+    void toInt32LhsAcc(Address lhs, RegisterID lhsTarget)
     {
+        bool accumulatorNeedsSaving = AccumulatorRegisterValue == ReturnValueRegisterValue
+                || AccumulatorRegisterTag == ReturnValueRegisterTag;
+        lhs.offset += 4;
+        load32(lhs, lhsTarget);
+        lhs.offset -= 4;
+        auto lhsIsNotInt = branch32(NotEqual, TrustedImm32(int(IntegerTag)), lhsTarget);
+        load32(lhs, lhsTarget);
+        auto lhsIsInt = jump();
+
+        lhsIsNotInt.link(this);
+        if (accumulatorNeedsSaving) {
+            push(AccumulatorRegisterTag);
+            push(AccumulatorRegisterValue);
+        }
+        if (ArgInRegCount < 2) {
+            push(lhsTarget);
+            load32(lhs, lhsTarget);
+            push(lhsTarget);
+        } else {
+            move(lhsTarget, registerForArg(1));
+            load32(lhs, registerForArg(0));
+        }
+        callHelper(toInt32Helper);
+        move(ReturnValueRegisterValue, lhsTarget);
+        if (ArgInRegCount < 2)
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+        if (accumulatorNeedsSaving) {
+            pop(AccumulatorRegisterValue);
+            pop(AccumulatorRegisterTag);
+        }
+        lhsIsInt.link(this);
+
+        auto rhsIsInt = branch32(Equal, TrustedImm32(int(IntegerTag)), AccumulatorRegisterTag);
+
+        pushAligned(lhsTarget);
         if (ArgInRegCount < 2) {
             push(AccumulatorRegisterTag);
             push(AccumulatorRegisterValue);
@@ -944,6 +1050,29 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
                     Assembler::ResultInAccumulator);
         if (ArgInRegCount < 2)
             addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+        popAligned(lhsTarget);
+
+        rhsIsInt.link(this);
+    }
+
+    void toInt32()
+    {
+        urshift32(AccumulatorRegisterTag, TrustedImm32(Value::QuickType_Shift - 32), ScratchRegister);
+        auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister);
+
+        if (ArgInRegCount < 2) {
+            push(AccumulatorRegisterTag);
+            push(AccumulatorRegisterValue);
+        } else {
+            move(AccumulatorRegisterValue, registerForArg(0));
+            move(AccumulatorRegisterTag, registerForArg(1));
+        }
+        callRuntime("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper),
+                    Assembler::ResultInAccumulator);
+        if (ArgInRegCount < 2)
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+
+        isInt.link(this);
     }
 
     void regToInt32(Address srcReg, RegisterID targetReg)
@@ -988,6 +1117,12 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
                   AccumulatorRegisterValue);
 
         done.link(this);
+    }
+
+    Jump isIntOrBool()
+    {
+        urshift32(AccumulatorRegisterTag, TrustedImm32(Value::IsIntegerOrBool_Shift - 32), ScratchRegister);
+        return branch32(Equal, TrustedImm32(3), ScratchRegister);
     }
 
     void pushValue(ReturnedValue v)
@@ -1123,6 +1258,20 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
 
         return done;
     }
+
+    void callWithAccumulatorByValueAsFirstArgument(std::function<void()> doCall)
+    {
+        if (ArgInRegCount < 2) {
+            push(AccumulatorRegisterTag);
+            push(AccumulatorRegisterValue);
+        } else {
+            move(AccumulatorRegisterValue, registerForArg(0));
+            move(AccumulatorRegisterTag, registerForArg(1));
+        }
+        doCall();
+        if (ArgInRegCount < 2)
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+    }
 };
 
 typedef PlatformAssembler32 PlatformAssembler;
@@ -1170,7 +1319,7 @@ class QIODevicePrintStream: public FilePrintStream
 
 public:
     explicit QIODevicePrintStream(QIODevice *dest)
-        : FilePrintStream(0)
+        : FilePrintStream(nullptr)
         , dest(dest)
         , buf(4096, '0')
     {
@@ -1224,7 +1373,7 @@ void Assembler::link(Function *function)
         jumpTarget.jump.linkTo(pasm()->labelsByOffset[jumpTarget.offset], pasm());
 
     JSC::JSGlobalData dummy(function->internalClass->engine->executableAllocator);
-    JSC::LinkBuffer<PlatformAssembler::MacroAssembler> linkBuffer(dummy, pasm(), 0);
+    JSC::LinkBuffer<PlatformAssembler::MacroAssembler> linkBuffer(dummy, pasm(), nullptr);
 
     for (const auto &ehTarget : pasm()->ehTargets) {
         auto targetLabel = pasm()->labelsByOffset.value(ehTarget.offset);
@@ -1321,6 +1470,11 @@ void Assembler::loadValue(ReturnedValue value)
     pasm()->loadValue(value);
 }
 
+void JIT::Assembler::storeHeapObject(int reg)
+{
+    pasm()->storeHeapObject(PlatformAssembler::ReturnValueRegisterValue, regAddr(reg));
+}
+
 void Assembler::toNumber()
 {
     pasm()->toNumber();
@@ -1342,9 +1496,14 @@ void Assembler::ucompl()
     pasm()->setAccumulatorTag(IntegerTag);
 }
 
-static ReturnedValue incHelper(const Value &v)
+static ReturnedValue incHelper(const Value v)
 {
-    return Encode(v.toNumber() + 1.);
+    double d;
+    if (Q_LIKELY(v.isDouble()))
+        d =  v.doubleValue();
+    else
+        d = v.toNumberImpl();
+    return Encode(d + 1.);
 }
 
 void Assembler::inc()
@@ -1359,19 +1518,24 @@ void Assembler::inc()
     });
 
     // slow path:
-    saveAccumulatorInFrame();
-    prepareCallWithArgCount(1);
-    passAccumulatorAsArg(0);
-    IN_JIT_GENERATE_RUNTIME_CALL(incHelper, ResultInAccumulator);
+    pasm()->callWithAccumulatorByValueAsFirstArgument([this]() {
+        pasm()->callHelper(incHelper);
+        pasm()->saveReturnValueInAccumulator();
+    });
     checkException();
 
     // done.
     done.link(pasm());
 }
 
-static ReturnedValue decHelper(const Value &v)
+static ReturnedValue decHelper(const Value v)
 {
-    return Encode(v.toNumber() - 1.);
+    double d;
+    if (Q_LIKELY(v.isDouble()))
+        d =  v.doubleValue();
+    else
+        d = v.toNumberImpl();
+    return Encode(d - 1.);
 }
 
 void Assembler::dec()
@@ -1386,10 +1550,10 @@ void Assembler::dec()
     });
 
     // slow path:
-    saveAccumulatorInFrame();
-    prepareCallWithArgCount(1);
-    passAccumulatorAsArg(0);
-    IN_JIT_GENERATE_RUNTIME_CALL(decHelper, ResultInAccumulator);
+    pasm()->callWithAccumulatorByValueAsFirstArgument([this]() {
+        pasm()->callHelper(decHelper);
+        pasm()->saveReturnValueInAccumulator();
+    });
     checkException();
 
     // done.
@@ -1432,10 +1596,7 @@ void Assembler::add(int lhs)
 void Assembler::bitAnd(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->popAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
     pasm()->and32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
@@ -1443,10 +1604,7 @@ void Assembler::bitAnd(int lhs)
 void Assembler::bitOr(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->popAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
     pasm()->or32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
@@ -1454,10 +1612,7 @@ void Assembler::bitOr(int lhs)
 void Assembler::bitXor(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->popAligned(PlatformAssembler::ScratchRegister);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
     pasm()->xor32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
@@ -1465,13 +1620,10 @@ void Assembler::bitXor(int lhs)
 void Assembler::ushr(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue,
-                  PlatformAssembler::ScratchRegister);
-    pasm()->popAligned(PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->urshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->urshift32(PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::ScratchRegister);
+    pasm()->move(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     auto doubleEncode = pasm()->branch32(PlatformAssembler::LessThan,
                                          PlatformAssembler::AccumulatorRegisterValue,
                                          TrustedImm32(0));
@@ -1489,26 +1641,20 @@ void Assembler::ushr(int lhs)
 void Assembler::shr(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue,
-                  PlatformAssembler::ScratchRegister);
-    pasm()->popAligned(PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->rshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->rshift32(PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::ScratchRegister);
+    pasm()->move(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
 
 void Assembler::shl(int lhs)
 {
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
-    pasm()->regToInt32(lhsAddr, PlatformAssembler::ScratchRegister);
-    pasm()->pushAligned(PlatformAssembler::ScratchRegister);
-    pasm()->toInt32();
-    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue,
-                  PlatformAssembler::ScratchRegister);
-    pasm()->popAligned(PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->lshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
+    pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->lshift32(PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::ScratchRegister);
+    pasm()->move(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
 
@@ -1537,27 +1683,32 @@ void Assembler::ushrConst(int rhs)
 {
     rhs &= 0x1f;
     pasm()->toInt32();
-    if (rhs) // shift with 0 can act weird
+    if (rhs) {
+        // a non zero shift will always give a number encodable as an int
         pasm()->urshift32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
-    auto doubleEncode = pasm()->branch32(PlatformAssembler::LessThan,
-                                         PlatformAssembler::AccumulatorRegisterValue,
-                                         TrustedImm32(0));
-    pasm()->setAccumulatorTag(IntegerTag);
-    auto done = pasm()->jump();
+        pasm()->setAccumulatorTag(IntegerTag);
+    } else {
+        // shift with 0 can lead to a negative result
+        auto doubleEncode = pasm()->branch32(PlatformAssembler::LessThan,
+                                             PlatformAssembler::AccumulatorRegisterValue,
+                                             TrustedImm32(0));
+        pasm()->setAccumulatorTag(IntegerTag);
+        auto done = pasm()->jump();
 
-    doubleEncode.link(pasm());
-    pasm()->convertUInt32ToDouble(PlatformAssembler::AccumulatorRegisterValue,
-                                  PlatformAssembler::FPScratchRegister,
-                                  PlatformAssembler::ScratchRegister);
-    pasm()->encodeDoubleIntoAccumulator(PlatformAssembler::FPScratchRegister);
-    done.link(pasm());
+        doubleEncode.link(pasm());
+        pasm()->convertUInt32ToDouble(PlatformAssembler::AccumulatorRegisterValue,
+                                      PlatformAssembler::FPScratchRegister,
+                                      PlatformAssembler::ScratchRegister);
+        pasm()->encodeDoubleIntoAccumulator(PlatformAssembler::FPScratchRegister);
+        done.link(pasm());
+    }
 }
 
 void Assembler::shrConst(int rhs)
 {
     rhs &= 0x1f;
     pasm()->toInt32();
-    if (rhs) // shift with 0 can act weird
+    if (rhs)
         pasm()->rshift32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
@@ -1566,7 +1717,7 @@ void Assembler::shlConst(int rhs)
 {
     rhs &= 0x1f;
     pasm()->toInt32();
-    if (rhs) // shift with 0 can act weird
+    if (rhs)
         pasm()->lshift32(TrustedImm32(rhs), PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
@@ -1652,6 +1803,7 @@ void Assembler::cmpneNull()
 
 void Assembler::cmpeqInt(int lhs)
 {
+    auto isIntOrBool = pasm()->isIntOrBool();
     saveAccumulatorInFrame();
     pasm()->pushValueAligned(Encode(lhs));
     if (PlatformAssembler::ArgInRegCount < 2)
@@ -1663,10 +1815,18 @@ void Assembler::cmpeqInt(int lhs)
     if (PlatformAssembler::ArgInRegCount < 2)
         pasm()->addPtr(TrustedImm32(2 * PlatformAssembler::PointerSize), PlatformAssembler::StackPointerRegister);
     pasm()->popValueAligned();
+    auto done = pasm()->jump();
+    isIntOrBool.link(pasm());
+    pasm()->compare32(PlatformAssembler::Equal, PlatformAssembler::AccumulatorRegisterValue,
+                      TrustedImm32(lhs),
+                      PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+    done.link(pasm());
 }
 
 void Assembler::cmpneInt(int lhs)
 {
+    auto isIntOrBool = pasm()->isIntOrBool();
     saveAccumulatorInFrame();
     pasm()->pushValueAligned(Encode(lhs));
     if (PlatformAssembler::ArgInRegCount < 2)
@@ -1678,6 +1838,13 @@ void Assembler::cmpneInt(int lhs)
     if (PlatformAssembler::ArgInRegCount < 2)
         pasm()->addPtr(TrustedImm32(2 * PlatformAssembler::PointerSize), PlatformAssembler::StackPointerRegister);
     pasm()->popValueAligned();
+    auto done = pasm()->jump();
+    isIntOrBool.link(pasm());
+    pasm()->compare32(PlatformAssembler::NotEqual, PlatformAssembler::AccumulatorRegisterValue,
+                      TrustedImm32(lhs),
+                      PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+    done.link(pasm());
 }
 
 void Assembler::cmp(int cond, CmpFunc function, const char *functionName, int lhs)
@@ -1956,7 +2123,7 @@ void Assembler::gotoCatchException()
 
 void Assembler::getException()
 {
-    Q_STATIC_ASSERT_FOR_SANE_COMPILERS(sizeof(QV4::EngineBase::hasException) == 1);
+    Q_STATIC_ASSERT(sizeof(QV4::EngineBase::hasException) == 1);
 
     Address hasExceptionAddr(PlatformAssembler::EngineRegister,
                              offsetof(EngineBase, hasException));
@@ -1981,7 +2148,7 @@ void Assembler::setException()
     pasm()->loadPtr(addr, PlatformAssembler::ScratchRegister);
     pasm()->storeAccumulator(Address(PlatformAssembler::ScratchRegister));
     addr.offset = offsetof(EngineBase, hasException);
-    Q_STATIC_ASSERT_FOR_SANE_COMPILERS(sizeof(QV4::EngineBase::hasException) == 1);
+    Q_STATIC_ASSERT(sizeof(QV4::EngineBase::hasException) == 1);
     pasm()->store8(TrustedImm32(1), addr);
 }
 

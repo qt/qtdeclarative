@@ -134,7 +134,7 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::propert
 
     QObjectList localObjectList;
 
-    if (inspectedObjects == 0)
+    if (inspectedObjects == nullptr)
         inspectedObjects = &localObjectList;
 
 
@@ -191,7 +191,7 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::allProp
 
     QObjectList localObjectList;
 
-    if (inspectedObjects == 0)
+    if (inspectedObjects == nullptr)
         inspectedObjects = &localObjectList;
 
 

@@ -86,8 +86,8 @@ Q_SIGNALS:
     void onTouchEvent(QQuickItem *receiver);
 
 public:
-    EventItem(QQuickItem *parent = 0)
-        : QQuickItem(parent), touchUngrabCount(0), acceptMouse(false), acceptTouch(false), filterTouch(false), point0(-1)
+    EventItem(QQuickItem *parent = nullptr)
+        : QQuickItem(parent)
     {
         setAcceptedMouseButtons(Qt::LeftButton);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -140,10 +140,10 @@ public:
     }
 
     QList<Event> eventList;
-    int touchUngrabCount;
-    bool acceptMouse;
-    bool acceptTouch;
-    bool filterTouch; // when used as event filter
+    int touchUngrabCount = 0;
+    bool acceptMouse = false;
+    bool acceptTouch = false;
+    bool filterTouch = false; // when used as event filter
 
     bool eventFilter(QObject *, QEvent *event)
     {
@@ -162,7 +162,7 @@ public:
         }
         return false;
     }
-    int point0;
+    int point0 = -1;
 };
 
 class tst_TouchMouse : public QQmlDataTest
@@ -220,7 +220,7 @@ private:
 
 QQuickView *tst_TouchMouse::createView()
 {
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
     return window;
 }
 
@@ -240,7 +240,7 @@ void tst_TouchMouse::simpleTouchEvent()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
     QVERIFY(eventItem1);
@@ -402,7 +402,7 @@ void tst_TouchMouse::mouse()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
     QVERIFY(eventItem1);
@@ -432,7 +432,7 @@ void tst_TouchMouse::touchOverMouse()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
     QVERIFY(eventItem1);
@@ -472,7 +472,7 @@ void tst_TouchMouse::mouseOverTouch()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
     QVERIFY(eventItem1);
@@ -513,7 +513,7 @@ void tst_TouchMouse::buttonOnFlickable()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>("flickable");
     QVERIFY(flickable);
@@ -631,7 +631,7 @@ void tst_TouchMouse::touchButtonOnFlickable()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>("flickable");
     QVERIFY(flickable);
@@ -668,9 +668,9 @@ void tst_TouchMouse::touchButtonOnFlickable()
     QTest::touchEvent(window.data(), device).move(0, p3, window.data());
     QQuickTouchUtils::flush(window.data());
 
+    QTRY_COMPARE(eventItem2->touchUngrabCount, 1);
     QVERIFY(eventItem2->eventList.size() > 2);
     QCOMPARE(eventItem2->eventList.at(1).type, QEvent::TouchUpdate);
-    QCOMPARE(eventItem2->touchUngrabCount, 1);
     QCOMPARE(window->mouseGrabberItem(), flickable);
     QVERIFY(windowPriv->touchMouseId != -1);
     QCOMPARE(pointerEvent->point(0)->grabberItem(), flickable);
@@ -708,7 +708,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>("flickable");
     QVERIFY(flickable);
@@ -806,7 +806,7 @@ void tst_TouchMouse::buttonOnTouch()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
     QVERIFY(pinchArea);
@@ -848,7 +848,7 @@ void tst_TouchMouse::buttonOnTouch()
     eventItem1->eventList.clear();
 
     // Normal mouse click
-    QTest::mouseClick(window.data(), Qt::LeftButton, 0, p1);
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, p1);
     QCOMPARE(eventItem1->eventList.size(), 3);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
     QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonRelease);
@@ -942,7 +942,7 @@ void tst_TouchMouse::pinchOnFlickable()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
     QVERIFY(pinchArea);
@@ -1023,7 +1023,7 @@ void tst_TouchMouse::flickableOnPinch()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
     QVERIFY(pinchArea);
@@ -1102,7 +1102,7 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QRect windowRect = QRect(window->position(), window->size());
     QCursor::setPos(windowRect.center());
@@ -1235,7 +1235,7 @@ void tst_TouchMouse::tapOnDismissiveTopMouseAreaClicksBottomOne()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickMouseArea *bottomMouseArea =
         window->rootObject()->findChild<QQuickMouseArea*>("rear mouseArea");
@@ -1275,7 +1275,7 @@ void tst_TouchMouse::touchGrabCausesMouseUngrab()
     window->show();
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 
     EventItem *leftItem = window->rootObject()->findChild<EventItem*>("leftItem");
     QVERIFY(leftItem);
@@ -1309,7 +1309,7 @@ void tst_TouchMouse::touchGrabCausesMouseUngrab()
     // has been grabbed by another item.
     QCOMPARE(leftItem->eventList.size(), 1);
     QCOMPARE(leftItem->eventList.at(0).type, QEvent::UngrabMouse);
-    QCOMPARE(window->mouseGrabberItem(), (QQuickItem*)0);
+    QCOMPARE(window->mouseGrabberItem(), (QQuickItem*)nullptr);
 }
 
 void tst_TouchMouse::touchPointDeliveryOrder()
@@ -1425,13 +1425,13 @@ void tst_TouchMouse::hoverEnabled()
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QQuickItem *root = window->rootObject();
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
 
     QQuickMouseArea *mouseArea1 = root->findChild<QQuickMouseArea*>("mouseArea1");
-    QVERIFY(mouseArea1 != 0);
+    QVERIFY(mouseArea1 != nullptr);
 
     QQuickMouseArea *mouseArea2 = root->findChild<QQuickMouseArea*>("mouseArea2");
-    QVERIFY(mouseArea2 != 0);
+    QVERIFY(mouseArea2 != nullptr);
 
     QSignalSpy enterSpy1(mouseArea1, SIGNAL(entered()));
     QSignalSpy exitSpy1(mouseArea1, SIGNAL(exited()));
@@ -1508,7 +1508,7 @@ void tst_TouchMouse::implicitUngrab()
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickItem *root = window->rootObject();
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
     EventItem *eventItem = root->findChild<EventItem*>("eventItem1");
     eventItem->acceptMouse = true;
     QPoint p1(20, 20);

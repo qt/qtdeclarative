@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -176,8 +176,8 @@ attach application code. This can be used to add custom scene graph
 content or render raw OpenGL content. The integration points are
 defined by the render loop.
 
-For detailed description of how the scene graph renderer works, see
-\l {Qt Quick Scene Graph Renderer}.
+For detailed description of how the scene graph renderer for OpenGL
+works, see \l {Qt Quick Scene Graph OpenGL Renderer}.
 
 There are three render loop variants available: \c basic, \c windows,
 and \c threaded. Out of these, \c basic and \c windows are
@@ -413,10 +413,11 @@ with multiple windows.
 */
 
 /*!
-  \title Qt Quick Scene Graph Renderer
+  \title Qt Quick Scene Graph OpenGL Renderer
   \page qtquick-visualcanvas-scenegraph-renderer.html
 
-  This document explains how the scene graph renderer works internally
+  This document explains how the scene graph renderer for OpenGL
+  works internally
   so that one can write code that uses it in an optimal fashion, both
   performance-wise and feature-wise.
 
@@ -428,7 +429,7 @@ with multiple windows.
   \note Even in the case where every frame is unique and everything is
   uploaded from scratch, the default renderer will perform well.
 
-  The Qt Quick items in a QML scene populates a tree of QSGNode
+  The Qt Quick items in a QML scene populate a tree of QSGNode
   instances.  Once created, this tree is a complete description of how
   a certain frame should be rendered. It does not contain any
   references back to the Qt Quick items at all and will on most
@@ -441,11 +442,11 @@ with multiple windows.
   If needed, the renderer can be completely replaced using the
   internal scene graph back-end API. This is mostly interesting for
   platform vendors who wish to take advantage of non-standard hardware
-  features. For majority of use cases, the default renderer will be
+  features. For the majority of use cases, the default renderer will be
   sufficient.
 
   The default renderer focuses on two primary strategies to optimize
-  the rendering. Batching of draw calls and retention of geometry on
+  the rendering: Batching of draw calls, and retention of geometry on
   the GPU.
 
   \section1 Batching
@@ -458,7 +459,7 @@ with multiple windows.
 
   \image visualcanvas_list.png
 
-  The simplest way of drawing this list is on a cell-by-cell basis. First
+  The simplest way of drawing this list is on a cell-by-cell basis. First,
   the background is drawn. This is a rectangle of a specific color. In
   OpenGL terms this means selecting a shader program to do solid color
   fills, setting up the fill color, setting the transformation matrix
@@ -495,8 +496,8 @@ with multiple windows.
   batches. From Qt Quick core item set, this includes Rectangle items
   with opaque colors and fully opaque images, such as JPEGs or BMPs.
 
-  Another benefit of using opaque primitives, is that opaque
-  primitives does not require \c GL_BLEND to be enabled which can be
+  Another benefit of using opaque primitives is that opaque
+  primitives do not require \c GL_BLEND to be enabled, which can be
   quite costly, especially on mobile and embedded GPUs.
 
   Opaque primitives are rendered in a front-to-back manner with
@@ -533,7 +534,7 @@ with multiple windows.
   and the two text elements in another call, as the texts only overlap
   a background which they are stacked in front of. In the right-most
   case, the background of "Item 4" overlaps the text of "Item 3" so in
-  this case, each of backgrounds and texts need to be drawn using
+  this case, each of backgrounds and texts needs to be drawn using
   separate calls.
 
   Z-wise, the alpha primitives are interleaved with the opaque nodes
@@ -550,7 +551,7 @@ with multiple windows.
 
   The renderer modifies the vertex shader returned from
   QSGMaterialShader::vertexShader() and compresses the z values of the
-  vertex after the model-view and projection matrices has been applied
+  vertex after the model-view and projection matrices have been applied
   and then adds a small translation on the z to position it the
   correct z position.
 
@@ -561,7 +562,7 @@ with multiple windows.
 
   The active texture is a unique OpenGL state, which means that
   multiple primitives using different OpenGL textures cannot be
-  batched. The Qt Quick scene graph for this reason allows multiple
+  batched. The Qt Quick scene graph, for this reason, allows multiple
   QSGTexture instances to be allocated as smaller sub-regions of a
   larger texture; a texture atlas.
 
@@ -603,10 +604,10 @@ with multiple windows.
   Each Qt Quick Item inserts a QSGTransformNode into the scene graph
   tree to manage its x, y, scale or rotation. Child items will be
   populated under this transform node.  The default renderer tracks
-  the state of transform nodes between frames, and will look at
+  the state of transform nodes between frames and will look at
   subtrees to decide if a transform node is a good candidate to become
   a root for a set of batches. A transform node which changes between
-  frames and which has a fairly complex subtree, can become a batch
+  frames and which has a fairly complex subtree can become a batch
   root.
 
   QSGGeometryNodes in the subtree of a batch root are pre-transformed
@@ -621,7 +622,7 @@ with multiple windows.
   removed nodes when panning through a grid or list.
 
   Another benefit of identifying transform nodes as batch roots is
-  that it allows the renderer to retain the parts of the tree that has
+  that it allows the renderer to retain the parts of the tree that have
   not changed. For instance, say a UI consists of a list and a button
   row. When the list is being scrolled and delegates are being added
   and removed, the rest of the UI, the button row, is unchanged and
@@ -684,7 +685,7 @@ with multiple windows.
   to either \c vertex or \c {msaa}.
 
   Vertex antialiasing can produce seams between edges of adjacent
-  primitives, even when the two edges are mathmatically the same.
+  primitives, even when the two edges are mathematically the same.
   Multisample antialiasing does not.
 
 
@@ -722,7 +723,7 @@ with multiple windows.
   job when creating batches and can rely on early-z to avoid overdraw.
 
   When multisample antialiasing is used, content rendered into
-  framebuffer objects, need additional extensions to support multisampling
+  framebuffer objects need additional extensions to support multisampling
   of framebuffers. Typically \c GL_EXT_framebuffer_multisample and
   \c GL_EXT_framebuffer_blit. Most desktop chips have these extensions
   present, but they are less common in embedded chips. When framebuffer
@@ -736,7 +737,7 @@ with multiple windows.
   As stated in the beginning, understanding the finer details of the
   renderer is not required to get good performance. It is written to
   optimize for common use cases and will perform quite well under
-  almost any circumstance.
+  almost any circumstances.
 
   \list
 
@@ -744,7 +745,7 @@ with multiple windows.
   as possible of the geometry being uploaded again and again. By
   setting the environment variable \c {QSG_RENDERER_DEBUG=render}, the
   renderer will output statistics on how well the batching goes, how
-  many batches, which batches are retained and which are opaque and
+  many batches are used, which batches are retained and which are opaque and
   not. When striving for optimal performance, uploads should happen
   only when really needed, batches should be fewer than 10 and at
   least 3-4 of them should be opaque.
@@ -772,16 +773,16 @@ with multiple windows.
   QQuickWindow::createTextureFromImage(), let the image have
   QImage::Format_RGB32, when possible.
 
-  \li Be aware of that overlapping compond items, like in the
-  illustration above, can not be batched.
+  \li Be aware of that overlapping compound items, like in the
+  illustration above, cannot be batched.
 
   \li Clipping breaks batching. Never use on a per-item basis, inside
-  tables cells, item delegates or similar. Instead of clipping text,
+  table cells, item delegates or similar. Instead of clipping text,
   use eliding. Instead of clipping an image, create a
   QQuickImageProvider that returns a cropped image.
 
   \li Batching only works for 16-bit indices. All built-in items use
-  16-bit indices, but custom geometry is free to also use 32-bit
+  16-bit indices, but a custom geometry is free to also use 32-bit
   indices.
 
   \li Some material flags prevent batching, the most limiting one
@@ -792,7 +793,7 @@ with multiple windows.
   QQuickWindow::setColor() will be used in a call to \c glClear(),
   which is potentially faster.
 
-  \li Mipmapped Image items are not placed in global atlas and will
+  \li Mipmapped Image items are not placed in the global atlas and will
   not be batched.
 
   \endlist

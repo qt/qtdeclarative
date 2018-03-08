@@ -108,8 +108,8 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
         return result->asReturnedValue();
     }
 
-    // Its possible we could delay the calculation of the "actual" context (in the case
-    // of sub contexts) until it is definately needed.
+    // It's possible we could delay the calculation of the "actual" context (in the case
+    // of sub contexts) until it is definitely needed.
     QQmlContextData *context = resource->getContext();
     QQmlContextData *expressionContext = context;
 
@@ -138,7 +138,9 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
                 *hasProperty = true;
             if (r.scriptIndex != -1) {
                 QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
-                return scripts->getIndexed(r.scriptIndex);
+                if (scripts)
+                    return scripts->getIndexed(r.scriptIndex);
+                return QV4::Encode::null();
             } else if (r.type.isValid()) {
                 return QQmlTypeWrapper::create(v4, scopeObject, r.type);
             } else if (r.importNamespace) {
@@ -154,7 +156,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
 
     while (context) {
         // Search context properties
-        const QV4::IdentifierHash<int> &properties = context->propertyNames();
+        const QV4::IdentifierHash &properties = context->propertyNames();
         if (properties.count()) {
             int propertyIdx = properties.value(name);
 
@@ -200,7 +202,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
                 return result->asReturnedValue();
             }
         }
-        scopeObject = 0;
+        scopeObject = nullptr;
 
 
         // Search context object
@@ -248,8 +250,8 @@ bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
         return Object::put(m, name, value);
     }
 
-    // Its possible we could delay the calculation of the "actual" context (in the case
-    // of sub contexts) until it is definately needed.
+    // It's possible we could delay the calculation of the "actual" context (in the case
+    // of sub contexts) until it is definitely needed.
     QQmlContextData *context = wrapper->getContext();
     QQmlContextData *expressionContext = context;
 
@@ -261,7 +263,7 @@ bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
     QObject *scopeObject = wrapper->getScopeObject();
 
     while (context) {
-        const QV4::IdentifierHash<int> &properties = context->propertyNames();
+        const QV4::IdentifierHash &properties = context->propertyNames();
         // Search context properties
         if (properties.count() && properties.value(name) != -1)
             return false;
@@ -270,7 +272,7 @@ bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
         if (scopeObject &&
             QV4::QObjectWrapper::setQmlProperty(v4, context, scopeObject, name, QV4::QObjectWrapper::CheckRevision, value))
             return true;
-        scopeObject = 0;
+        scopeObject = nullptr;
 
         // Search context object
         if (context->contextObject &&
@@ -310,7 +312,7 @@ Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, cons
     context->isInternal = true;
     context->isJSContext = true;
 
-    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, (QObject*)0));
+    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, (QObject*)nullptr));
     qml->d()->isNullWrapper = true;
 
     qml->setReadOnly(false);

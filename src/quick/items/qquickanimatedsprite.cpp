@@ -69,9 +69,67 @@ QT_BEGIN_NAMESPACE
     as multiple frames in the same image file. You can play it at a fixed speed, at the
     frame rate of your display, or manually advance and control the progress.
 
-    For details of how a sprite animation is defined see the \l{Sprite Animations} overview.
-    Note that the AnimatedSprite type does not use Sprite types to define multiple animations,
-    but instead encapsulates a single animation itself.
+    Consider the following sprite sheet:
+
+    \image animatedsprite-loading.png
+
+    It can be divided up into four frames:
+
+    \image animatedsprite-loading-frames.png
+
+    To play each of these frames at a speed of 500 milliseconds per frame, the
+    following code can be used:
+
+    \table
+        \header
+            \li Code
+            \li Result
+        \row
+            \li
+                \code
+                AnimatedSprite {
+                    source: "loading.png"
+                    frameWidth: 64
+                    frameHeight: 64
+                    frameCount: 4
+                    frameDuration: 500
+                }
+                \endcode
+            \li
+                \image animatedsprite-loading-interpolated.gif
+    \endtable
+
+    By default, the frames are interpolated (blended together) to make the
+    animation appear smoother. To disable this, set \l interpolate to \c false:
+
+    \table
+        \header
+            \li Code
+            \li Result
+        \row
+            \li
+                \code
+                AnimatedSprite {
+                    source: "loading.png"
+                    frameWidth: 64
+                    frameHeight: 64
+                    frameCount: 4
+                    frameDuration: 500
+                    interpolate: false
+                }
+                \endcode
+            \li
+                \image animatedsprite-loading.gif
+    \endtable
+
+    To control how AnimatedSprite responds to being scaled, use the
+    \l {Item::}{smooth} property.
+
+    Note that unlike \l SpriteSequence, the AnimatedSprite type does not use
+    \l Sprite to define multiple animations, but instead encapsulates a
+    single animation itself.
+
+    \sa {Sprite Animations}
 */
 
 /*!
@@ -105,7 +163,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty int QtQuick::AnimatedSprite::frameDuration
 
-    Duration of each frame of the animation. Values equal to or below 0 are invalid.
+    Duration of each frame of the animation in milliseconds. Values equal to or below 0 are invalid.
 
     If frameRate is valid then it will be used to calculate the duration of the frames.
     If not, and frameDuration is valid, then frameDuration will be used.
@@ -210,7 +268,6 @@ QT_BEGIN_NAMESPACE
     Stops, then starts the sprite animation.
 */
 
-//TODO: Implicitly size element to size of sprite
 QQuickAnimatedSprite::QQuickAnimatedSprite(QQuickItem *parent) :
     QQuickItem(*(new QQuickAnimatedSpritePrivate), parent)
 {
@@ -516,6 +573,7 @@ void QQuickAnimatedSprite::setFrameHeight(int arg)
     if (d->m_sprite->m_frameHeight != arg) {
         d->m_sprite->setFrameHeight(arg);
         Q_EMIT frameHeightChanged(arg);
+        setImplicitHeight(frameHeight());
         reloadImage();
     }
 }
@@ -527,6 +585,7 @@ void QQuickAnimatedSprite::setFrameWidth(int arg)
     if (d->m_sprite->m_frameWidth != arg) {
         d->m_sprite->setFrameWidth(arg);
         Q_EMIT frameWidthChanged(arg);
+        setImplicitWidth(frameWidth());
         reloadImage();
     }
 }
@@ -640,6 +699,17 @@ QSGSpriteNode* QQuickAnimatedSprite::initNode()
     QImage image = d->m_spriteEngine->assembledImage(d->sceneGraphRenderContext()->maxTextureSize()); //Engine prints errors if there are any
     if (image.isNull())
         return nullptr;
+
+    // If frameWidth or frameHeight are not explicitly set, frameWidth
+    // will be set to the width of the image divided by the number of frames,
+    // and frameHeight will be set to the height of the image.
+    // In this case, QQuickAnimatedSprite currently won't emit frameWidth/HeightChanged
+    // at all, so we have to do this here, as it's the only place where assembledImage()
+    // is called (which calculates the "implicit" frameWidth/Height.
+    // In addition, currently the "implicit" frameWidth/Height are only calculated once,
+    // even after changing to a different source.
+    setImplicitWidth(frameWidth());
+    setImplicitHeight(frameHeight());
 
     QSGSpriteNode *node = d->sceneGraphContext()->createSpriteNode();
 

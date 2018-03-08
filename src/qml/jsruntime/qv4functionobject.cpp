@@ -232,7 +232,7 @@ ReturnedValue FunctionCtor::callAsConstructor(const FunctionObject *f, const Val
     if (!fe)
         return scope.engine->throwSyntaxError(QLatin1String("Parse error"));
 
-    Compiler::Module module(scope.engine->debugger() != 0);
+    Compiler::Module module(scope.engine->debugger() != nullptr);
 
     Compiler::JSUnitGenerator jsGenerator(&module);
     RuntimeCodegen cg(scope.engine, &jsGenerator, false);
@@ -351,7 +351,7 @@ ReturnedValue FunctionPrototype::method_bind(const FunctionObject *b, const Valu
         return scope.engine->throwTypeError();
 
     ScopedValue boundThis(scope, argc ? argv[0] : Primitive::undefinedValue());
-    Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)0);
+    Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)nullptr);
     if (argc > 1) {
         boundArgs = MemberData::allocate(scope.engine, argc - 1);
         boundArgs->d()->values.size = argc - 1;
@@ -430,27 +430,6 @@ InternalClass *ScriptFunction::classForConstructor() const
     return ic;
 }
 
-DEFINE_OBJECT_VTABLE(BuiltinFunction);
-
-void Heap::BuiltinFunction::init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::BuiltinFunction *, CallData *))
-{
-    Heap::FunctionObject::init(scope, name);
-    this->code = code;
-}
-
-ReturnedValue BuiltinFunction::callAsConstructor(const QV4::FunctionObject *f, const Value *, int)
-{
-    return f->engine()->throwTypeError();
-}
-
-ReturnedValue BuiltinFunction::call(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
-{
-    const BuiltinFunction *f = static_cast<const BuiltinFunction *>(fo);
-    Scope scope(f->engine());
-    JSCallData callData(scope, argc, argv, thisObject);
-    return f->d()->code(f, callData.callData());
-}
-
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
 
 DEFINE_OBJECT_VTABLE(BoundFunction);
@@ -461,7 +440,7 @@ void Heap::BoundFunction::init(QV4::ExecutionContext *scope, QV4::FunctionObject
     Scope s(scope);
     Heap::FunctionObject::init(scope, QStringLiteral("__bound function__"));
     this->target.set(s.engine, target->d());
-    this->boundArgs.set(s.engine, boundArgs ? boundArgs->d() : 0);
+    this->boundArgs.set(s.engine, boundArgs ? boundArgs->d() : nullptr);
     this->boundThis.set(scope->engine(), boundThis);
 
     ScopedObject f(s, this);

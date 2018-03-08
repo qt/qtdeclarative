@@ -76,31 +76,36 @@ Q_STATIC_ASSERT(sizeof(features) ==
 QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     QCoreApplication(argc, argv),
     m_runMode(LaunchMode),
-    m_process(0),
+    m_process(nullptr),
     m_hostName(QLatin1String("127.0.0.1")),
     m_port(0),
     m_pendingRequest(REQUEST_NONE),
     m_verbose(false),
     m_recording(true),
     m_interactive(false),
-    m_qmlProfilerClient(&m_connection, &m_profilerData),
     m_connectionAttempts(0)
 {
+    m_connection.reset(new QQmlDebugConnection);
+    m_profilerData.reset(new QmlProfilerData);
+    m_qmlProfilerClient.reset(new QmlProfilerClient(m_connection.data(), m_profilerData.data()));
     m_connectTimer.setInterval(1000);
     connect(&m_connectTimer, &QTimer::timeout, this, &QmlProfilerApplication::tryToConnect);
 
-    connect(&m_connection, &QQmlDebugConnection::connected,
+    connect(m_connection.data(), &QQmlDebugConnection::connected,
             this, &QmlProfilerApplication::connected);
+    connect(m_connection.data(), &QQmlDebugConnection::disconnected,
+            this, &QmlProfilerApplication::disconnected);
 
-    connect(&m_qmlProfilerClient, &QmlProfilerClient::enabledChanged,
+    connect(m_qmlProfilerClient.data(), &QmlProfilerClient::enabledChanged,
             this, &QmlProfilerApplication::traceClientEnabledChanged);
-    connect(&m_qmlProfilerClient, &QmlProfilerClient::recordingStarted,
+    connect(m_qmlProfilerClient.data(), &QmlProfilerClient::traceStarted,
             this, &QmlProfilerApplication::notifyTraceStarted);
-    connect(&m_qmlProfilerClient, &QmlProfilerClient::error,
+    connect(m_qmlProfilerClient.data(), &QmlProfilerClient::error,
             this, &QmlProfilerApplication::logError);
 
-    connect(&m_profilerData, &QmlProfilerData::error, this, &QmlProfilerApplication::logError);
-    connect(&m_profilerData, &QmlProfilerData::dataReady,
+    connect(m_profilerData.data(), &QmlProfilerData::error,
+            this, &QmlProfilerApplication::logError);
+    connect(m_profilerData.data(), &QmlProfilerData::dataReady,
             this, &QmlProfilerApplication::traceFinished);
 
 }
@@ -239,7 +244,7 @@ void QmlProfilerApplication::parseArguments()
     if (features == 0)
         parser.showHelp(4);
 
-    m_qmlProfilerClient.setFeatures(features);
+    m_qmlProfilerClient->setRequestedFeatures(features);
 
     if (parser.isSet(verbose))
         m_verbose = true;
@@ -295,10 +300,10 @@ void QmlProfilerApplication::flush()
 {
     if (m_recording) {
         m_pendingRequest = REQUEST_FLUSH;
-        m_qmlProfilerClient.sendRecordingStatus(false);
+        m_qmlProfilerClient->sendRecordingStatus(false);
     } else {
-        if (m_profilerData.save(m_interactiveOutputFile)) {
-            m_profilerData.clear();
+        if (m_profilerData->save(m_interactiveOutputFile)) {
+            m_profilerData->clear();
             if (!m_interactiveOutputFile.isEmpty())
                 prompt(tr("Data written to %1.").arg(m_interactiveOutputFile));
             else
@@ -313,7 +318,7 @@ void QmlProfilerApplication::flush()
 
 void QmlProfilerApplication::output()
 {
-    if (m_profilerData.save(m_interactiveOutputFile)) {
+    if (m_profilerData->save(m_interactiveOutputFile)) {
         if (!m_interactiveOutputFile.isEmpty())
             prompt(tr("Data written to %1.").arg(m_interactiveOutputFile));
         else
@@ -385,12 +390,12 @@ void QmlProfilerApplication::userCommand(const QString &command)
 
     if (cmd == Constants::CMD_RECORD || cmd == Constants::CMD_RECORD2) {
         m_pendingRequest = REQUEST_TOGGLE_RECORDING;
-        m_qmlProfilerClient.sendRecordingStatus(!m_recording);
+        m_qmlProfilerClient->sendRecordingStatus(!m_recording);
     } else if (cmd == Constants::CMD_QUIT || cmd == Constants::CMD_QUIT2) {
         m_pendingRequest = REQUEST_QUIT;
         if (m_recording) {
             prompt(tr("The application is still generating data. Really quit (y/n)?"));
-        } else if (!m_profilerData.isEmpty()) {
+        } else if (!m_profilerData->isEmpty()) {
             prompt(tr("There is still trace data in memory. Really quit (y/n)?"));
         } else {
             quit();
@@ -398,7 +403,7 @@ void QmlProfilerApplication::userCommand(const QString &command)
     } else if (cmd == Constants::CMD_OUTPUT || cmd == Constants::CMD_OUTPUT2) {
         if (m_recording) {
             prompt(tr("Cannot output while recording data."));
-        } else if (m_profilerData.isEmpty()) {
+        } else if (m_profilerData->isEmpty()) {
             prompt(tr("No data was recorded so far."));
         } else {
             m_interactiveOutputFile = args.length() > 0 ? args.at(0).toString() : m_outputFile;
@@ -408,14 +413,14 @@ void QmlProfilerApplication::userCommand(const QString &command)
     } else if (cmd == Constants::CMD_CLEAR || cmd == Constants::CMD_CLEAR2) {
         if (m_recording) {
             prompt(tr("Cannot clear data while recording."));
-        } else if (m_profilerData.isEmpty()) {
+        } else if (m_profilerData->isEmpty()) {
             prompt(tr("No data was recorded so far."));
         } else {
-            m_profilerData.clear();
+            m_profilerData->clear();
             prompt(tr("Trace data cleared."));
         }
     } else if (cmd == Constants::CMD_FLUSH || cmd == Constants::CMD_FLUSH2) {
-        if (!m_recording && m_profilerData.isEmpty()) {
+        if (!m_recording && m_profilerData->isEmpty()) {
             prompt(tr("No data was recorded so far."));
         } else {
             m_interactiveOutputFile = args.length() > 0 ? args.at(0).toString() : m_outputFile;
@@ -443,9 +448,9 @@ void QmlProfilerApplication::notifyTraceStarted()
 
 void QmlProfilerApplication::outputData()
 {
-    if (!m_profilerData.isEmpty()) {
-        m_profilerData.save(m_outputFile);
-        m_profilerData.clear();
+    if (!m_profilerData->isEmpty()) {
+        m_profilerData->save(m_outputFile);
+        m_profilerData->clear();
     }
 }
 
@@ -454,7 +459,7 @@ void QmlProfilerApplication::run()
     if (m_runMode == LaunchMode) {
         if (!m_socketFile.isEmpty()) {
             logStatus(QString::fromLatin1("Listening on %1 ...").arg(m_socketFile));
-            m_connection.startLocalServer(m_socketFile);
+            m_connection->startLocalServer(m_socketFile);
         }
         m_process = new QProcess(this);
         QStringList arguments;
@@ -481,7 +486,7 @@ void QmlProfilerApplication::run()
 
 void QmlProfilerApplication::tryToConnect()
 {
-    Q_ASSERT(!m_connection.isConnected());
+    Q_ASSERT(!m_connection->isConnected());
     ++ m_connectionAttempts;
 
     if (!m_verbose && !(m_connectionAttempts % 5)) {// print every 5 seconds
@@ -497,7 +502,7 @@ void QmlProfilerApplication::tryToConnect()
 
     if (m_socketFile.isEmpty()) {
         logStatus(QString::fromLatin1("Connecting to %1:%2 ...").arg(m_hostName).arg(m_port));
-        m_connection.connectToHost(m_hostName, m_port);
+        m_connection->connectToHost(m_hostName, m_port);
     }
 }
 
@@ -510,6 +515,22 @@ void QmlProfilerApplication::connected()
     prompt(tr("Connected to %1. Wait for profile data or type a command (type 'help' to show list "
               "of commands).\nRecording Status: %2")
            .arg(endpoint).arg(m_recording ? tr("on") : tr("off")));
+}
+
+void QmlProfilerApplication::disconnected()
+{
+    if (m_runMode == AttachMode) {
+        int exitCode = 0;
+        if (m_recording) {
+            logError("Connection dropped while recording, last trace is damaged!");
+            exitCode = 2;
+        }
+
+        if (!m_interactive )
+            exit(exitCode);
+        else
+            m_qmlProfilerClient->clearAll();
+    }
 }
 
 void QmlProfilerApplication::processHasOutput()
@@ -538,7 +559,7 @@ void QmlProfilerApplication::processFinished()
     if (!m_interactive)
         exit(exitCode);
     else
-        m_qmlProfilerClient.clearPendingData();
+        m_qmlProfilerClient->clearAll();
 }
 
 void QmlProfilerApplication::traceClientEnabledChanged(bool enabled)
@@ -547,7 +568,7 @@ void QmlProfilerApplication::traceClientEnabledChanged(bool enabled)
         logStatus("Trace client is attached.");
         // blocked server is waiting for recording message from both clients
         // once the last one is connected, both messages should be sent
-        m_qmlProfilerClient.sendRecordingStatus(m_recording);
+        m_qmlProfilerClient->setRecording(m_recording);
     }
 }
 
@@ -564,7 +585,7 @@ void QmlProfilerApplication::traceFinished()
         prompt(tr("Application stopped recording."), false);
     }
 
-    m_qmlProfilerClient.clearPendingData();
+    m_qmlProfilerClient->clearEvents();
 }
 
 void QmlProfilerApplication::prompt(const QString &line, bool ready)

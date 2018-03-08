@@ -62,7 +62,7 @@ public:
     QQmlExpression();
     QQmlExpression(QQmlContext *, QObject *, const QString &, QObject * = nullptr);
     explicit QQmlExpression(const QQmlScriptString &, QQmlContext * = nullptr, QObject * = nullptr, QObject * = nullptr);
-    virtual ~QQmlExpression();
+    ~QQmlExpression() override;
 
     QQmlEngine *engine() const;
     QQmlContext *context() const;

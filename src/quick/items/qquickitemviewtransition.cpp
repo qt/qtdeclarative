@@ -69,11 +69,11 @@ protected:
 
 
 QQuickItemViewTransitionJob::QQuickItemViewTransitionJob()
-    : m_transitioner(0)
-    , m_item(0)
+    : m_transitioner(nullptr)
+    , m_item(nullptr)
     , m_type(QQuickItemViewTransitioner::NoTransition)
     , m_isTarget(false)
-    , m_wasDeleted(0)
+    , m_wasDeleted(nullptr)
 {
 }
 
@@ -143,12 +143,12 @@ void QQuickItemViewTransitionJob::finished()
         m_transitioner->finishedTransition(this, m_item);
         if (deleted)
             return;
-        m_wasDeleted = 0;
+        m_wasDeleted = nullptr;
 
-        m_transitioner = 0;
+        m_transitioner = nullptr;
     }
 
-    m_item = 0;
+    m_item = nullptr;
     m_toPos.setX(0);
     m_toPos.setY(0);
     m_type = QQuickItemViewTransitioner::NoTransition;
@@ -157,12 +157,12 @@ void QQuickItemViewTransitionJob::finished()
 
 
 QQuickItemViewTransitioner::QQuickItemViewTransitioner()
-    : populateTransition(0)
-    , addTransition(0), addDisplacedTransition(0)
-    , moveTransition(0), moveDisplacedTransition(0)
-    , removeTransition(0), removeDisplacedTransition(0)
-    , displacedTransition(0)
-    , changeListener(0)
+    : populateTransition(nullptr)
+    , addTransition(nullptr), addDisplacedTransition(nullptr)
+    , moveTransition(nullptr), moveDisplacedTransition(nullptr)
+    , removeTransition(nullptr), removeDisplacedTransition(nullptr)
+    , displacedTransition(nullptr)
+    , changeListener(nullptr)
     , usePopulateTransition(false)
 {
 }
@@ -172,7 +172,7 @@ QQuickItemViewTransitioner::~QQuickItemViewTransitioner()
     typedef QSet<QQuickItemViewTransitionJob *>::iterator JobIt;
 
     for (JobIt it = runningJobs.begin(), end = runningJobs.end(); it != end; ++it)
-        (*it)->m_transitioner = 0;
+        (*it)->m_transitioner = nullptr;
 }
 
 bool QQuickItemViewTransitioner::canTransition(QQuickItemViewTransitioner::TransitionType type, bool asTarget) const
@@ -249,12 +249,12 @@ void QQuickItemViewTransitioner::resetTargetLists()
 QQuickTransition *QQuickItemViewTransitioner::transitionObject(QQuickItemViewTransitioner::TransitionType type, bool asTarget) const
 {
     if (type == QQuickItemViewTransitioner::NoTransition)
-        return 0;
+        return nullptr;
 
     if (type == PopulateTransition)
         asTarget = true;    // no separate displaced transition
 
-    QQuickTransition *trans = 0;
+    QQuickTransition *trans = nullptr;
     switch (type) {
     case NoTransition:
         break;
@@ -276,7 +276,7 @@ QQuickTransition *QQuickItemViewTransitioner::transitionObject(QQuickItemViewTra
         trans = displacedTransition;
     if (trans && trans->enabled())
         return trans;
-    return 0;
+    return nullptr;
 }
 
 const QList<int> &QQuickItemViewTransitioner::targetIndexes(QQuickItemViewTransitioner::TransitionType type) const
@@ -328,7 +328,7 @@ void QQuickItemViewTransitioner::finishedTransition(QQuickItemViewTransitionJob 
 
 QQuickItemViewTransitionableItem::QQuickItemViewTransitionableItem(QQuickItem *i)
     : item(i)
-    , transition(0)
+    , transition(nullptr)
     , nextTransitionType(QQuickItemViewTransitioner::NoTransition)
     , isTransitionTarget(false)
     , nextTransitionToSet(false)
@@ -563,7 +563,7 @@ void QQuickItemViewTransitionableItem::stopTransition()
 
 
 QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
-    : QObject(parent), m_item(0), m_index(-1)
+    : QObject(parent), m_item(nullptr), m_index(-1)
 {
 }
 /*!

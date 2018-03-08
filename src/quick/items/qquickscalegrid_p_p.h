@@ -71,7 +71,7 @@ class Q_AUTOTEST_EXPORT QQuickScaleGrid : public QObject
     Q_PROPERTY(int bottom READ bottom WRITE setBottom NOTIFY borderChanged)
 
 public:
-    QQuickScaleGrid(QObject *parent=0);
+    QQuickScaleGrid(QObject *parent=nullptr);
     ~QQuickScaleGrid();
 
     bool isNull() const;

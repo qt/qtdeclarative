@@ -66,7 +66,7 @@ const qreal MinimumFlickVelocity = 75.0;
 static QQmlOpenMetaObjectType *qPathViewAttachedType = nullptr;
 
 QQuickPathViewAttached::QQuickPathViewAttached(QObject *parent)
-: QObject(parent), m_percent(-1), m_view(0), m_onPath(false), m_isCurrent(false)
+: QObject(parent), m_percent(-1), m_view(nullptr), m_onPath(false), m_isCurrent(false)
 {
     if (qPathViewAttachedType) {
         m_metaobject = new QQmlOpenMetaObject(this, qPathViewAttachedType);
@@ -129,7 +129,7 @@ QQuickItem *QQuickPathViewPrivate::getItem(int modelIndex, qreal z, bool async)
     requestedIndex = modelIndex;
     requestedZ = z;
     inRequest = true;
-    QObject *object = model->object(modelIndex, async);
+    QObject *object = model->object(modelIndex, async ? QQmlIncubator::Asynchronous : QQmlIncubator::AsynchronousIfNested);
     QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
     if (!item) {
         if (object) {

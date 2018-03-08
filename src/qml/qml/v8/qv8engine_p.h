@@ -77,12 +77,6 @@ namespace QV4 {
     struct QObjectMethod;
 }
 
-#define V4THROW_ERROR(string) \
-    return ctx->engine()->throwError(QString::fromUtf8(string));
-
-#define V4THROW_TYPE(string) \
-    return ctx->engine()->throwTypeError(QStringLiteral(string));
-
 #define V4_DEFINE_EXTENSION(dataclass, datafunction) \
     static inline dataclass *datafunction(QV4::ExecutionEngine *engine) \
     { \
@@ -159,12 +153,11 @@ class Q_QML_PRIVATE_EXPORT QV8Engine
 {
     friend class QJSEngine;
 public:
-    static QV8Engine* get(QJSEngine* q) { Q_ASSERT(q); return q->handle(); }
 //    static QJSEngine* get(QV8Engine* d) { Q_ASSERT(d); return d->q; }
-    static QV4::ExecutionEngine *getV4(QJSEngine *q) { return q->handle()->m_v4Engine; }
+    static QV4::ExecutionEngine *getV4(QJSEngine *q) { return q->handle(); }
     static QV4::ExecutionEngine *getV4(QV8Engine *d) { return d->m_v4Engine; }
 
-    QV8Engine(QJSEngine* qq);
+    QV8Engine(QJSEngine* qq, QV4::ExecutionEngine *v4);
     virtual ~QV8Engine();
 
     // This enum should be in sync with QQmlEngine::ObjectOwnership
@@ -178,13 +171,9 @@ public:
     void setEngine(QQmlEngine *engine);
     QQmlEngine *engine() { return m_engine; }
     QJSEngine *publicEngine() { return q; }
-    QV4::ReturnedValue global();
     QQmlDelayedCallQueue *delayedCallQueue() { return &m_delayedCallQueue; }
 
     void *xmlHttpRequestData() const { return m_xmlHttpRequestData; }
-
-    Deletable *listModelData() const { return m_listModelData; }
-    void setListModelData(Deletable *d) { if (m_listModelData) delete m_listModelData; m_listModelData = d; }
 
     void freezeObject(const QV4::Value &value);
 
@@ -222,7 +211,6 @@ protected:
     void *m_xmlHttpRequestData;
 
     QVector<Deletable *> m_extensionData;
-    Deletable *m_listModelData;
 
     QSet<QString> m_illegalNames;
 
@@ -242,7 +230,7 @@ inline QV8Engine::Deletable *QV8Engine::extensionData(int index) const
     if (index < m_extensionData.count())
         return m_extensionData[index];
     else
-        return 0;
+        return nullptr;
 }
 
 

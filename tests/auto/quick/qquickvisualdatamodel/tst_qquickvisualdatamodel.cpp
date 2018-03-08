@@ -76,13 +76,13 @@ class SingleRoleModel : public QAbstractItemModel
 public:
     struct Branch;
     struct Node {
-        Node(const QString &display = QString()) : branch(0), display(display) {}
+        Node(const QString &display = QString()) : branch(nullptr), display(display) {}
         Branch *branch;
         QString display;
     };
 
     struct Branch {
-        Branch(Branch *parent = 0) : parent(parent) {}
+        Branch(Branch *parent = nullptr) : parent(parent) {}
         ~Branch() { foreach (const Node &child, children) delete child.branch; }
         int indexOf(Branch *branch) const {
             for (int i = 0; i < children.count(); ++i) {
@@ -96,7 +96,7 @@ public:
 
     };
 
-    SingleRoleModel(const QStringList &list = QStringList(), const QByteArray &role = "name", QObject *parent = 0)
+    SingleRoleModel(const QStringList &list = QStringList(), const QByteArray &role = "name", QObject *parent = nullptr)
         : QAbstractItemModel(parent), m_role(role)
     {
         foreach (const QString &string, list)
@@ -255,7 +255,7 @@ class StandardItemModel : public QStandardItemModel
     Q_PROPERTY(QQmlListProperty<StandardItem> items READ items CONSTANT)
     Q_CLASSINFO("DefaultProperty", "items")
 public:
-    QQmlListProperty<StandardItem> items() { return QQmlListProperty<StandardItem>(this, 0, append, 0, 0, 0); }
+    QQmlListProperty<StandardItem> items() { return QQmlListProperty<StandardItem>(this, nullptr, append, nullptr, nullptr, nullptr); }
 
     static void append(QQmlListProperty<StandardItem> *property, StandardItem *item)
     {
@@ -270,7 +270,7 @@ class DataSubObject : public QObject
     Q_PROPERTY(QString subName READ subName WRITE setSubName NOTIFY subNameChanged)
 
 public:
-    DataSubObject(QObject *parent=0) : QObject(parent) {}
+    DataSubObject(QObject *parent=nullptr) : QObject(parent) {}
 
     QString subName() const { return m_subName; }
     void setSubName(const QString &name) {
@@ -296,8 +296,8 @@ class DataObject : public QObject
     Q_PROPERTY(QObject *object READ object)
 
 public:
-    DataObject(QObject *parent=0) : QObject(parent) {}
-    DataObject(const QString &name, const QString &color, QObject *parent=0)
+    DataObject(QObject *parent=nullptr) : QObject(parent) {}
+    DataObject(const QString &name, const QString &color, QObject *parent=nullptr)
         : QObject(parent), m_name(name), m_color(color), m_object(new DataSubObject(this)) { }
 
 
@@ -336,11 +336,11 @@ class ItemRequester : public QObject
 {
     Q_OBJECT
 public:
-    ItemRequester(QObject *parent = 0)
+    ItemRequester(QObject *parent = nullptr)
         : QObject(parent)
-        , itemInitialized(0)
-        , itemCreated(0)
-        , itemDestroyed(0)
+        , itemInitialized(nullptr)
+        , itemCreated(nullptr)
+        , itemDestroyed(nullptr)
         , indexInitialized(-1)
         , indexCreated(-1)
     {
@@ -511,7 +511,7 @@ void tst_qquickvisualdatamodel::rootIndex()
     engine.rootContext()->setContextProperty("myModel", &model);
 
     QQmlDelegateModel *obj = qobject_cast<QQmlDelegateModel*>(c.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QMetaObject::invokeMethod(obj, "setRoot");
     QCOMPARE(qvariant_cast<QModelIndex>(obj->rootIndex()), model.index(0,0));
@@ -549,10 +549,10 @@ void tst_qquickvisualdatamodel::updateLayout()
     view.setSource(source);
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-    QVERIFY(listview != 0);
+    QVERIFY(listview != nullptr);
 
     QQuickItem *contentItem = listview->contentItem();
-    QVERIFY(contentItem != 0);
+    QVERIFY(contentItem != nullptr);
 
     QQuickText *name = findItem<QQuickText>(contentItem, "display", 0);
     QVERIFY(name);
@@ -599,10 +599,10 @@ void tst_qquickvisualdatamodel::childChanged()
     view.setSource(source);
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-    QVERIFY(listview != 0);
+    QVERIFY(listview != nullptr);
 
     QQuickItem *contentItem = listview->contentItem();
-    QVERIFY(contentItem != 0);
+    QVERIFY(contentItem != nullptr);
 
     QQmlDelegateModel *vdm = listview->findChild<QQmlDelegateModel*>("visualModel");
     vdm->setRootIndex(QVariant::fromValue(model.indexFromItem(model.item(1,0))));
@@ -624,7 +624,7 @@ void tst_qquickvisualdatamodel::childChanged()
 
     listview->forceLayout();
     name = findItem<QQuickText>(contentItem, "display", 1);
-    QVERIFY(name != 0);
+    QVERIFY(name != nullptr);
     QCOMPARE(name->text(), QString("Row 2 Child Item 2"));
 
     model.item(1,0)->takeRow(1);
@@ -662,10 +662,10 @@ void tst_qquickvisualdatamodel::objectListModel()
     view.setSource(testFileUrl("objectlist.qml"));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-    QVERIFY(listview != 0);
+    QVERIFY(listview != nullptr);
 
     QQuickItem *contentItem = listview->contentItem();
-    QVERIFY(contentItem != 0);
+    QVERIFY(contentItem != nullptr);
 
     QQuickText *name = findItem<QQuickText>(contentItem, "name", 0);
     QCOMPARE(name->text(), QString("Item 1"));
@@ -701,10 +701,10 @@ void tst_qquickvisualdatamodel::singleRole()
         view.setSource(testFileUrl("singlerole1.qml"));
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-        QVERIFY(listview != 0);
+        QVERIFY(listview != nullptr);
 
         QQuickItem *contentItem = listview->contentItem();
-        QVERIFY(contentItem != 0);
+        QVERIFY(contentItem != nullptr);
 
         QQuickText *name = findItem<QQuickText>(contentItem, "name", 1);
         QCOMPARE(name->text(), QString("two"));
@@ -723,10 +723,10 @@ void tst_qquickvisualdatamodel::singleRole()
         view.setSource(testFileUrl("singlerole2.qml"));
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-        QVERIFY(listview != 0);
+        QVERIFY(listview != nullptr);
 
         QQuickItem *contentItem = listview->contentItem();
-        QVERIFY(contentItem != 0);
+        QVERIFY(contentItem != nullptr);
 
         QQuickText *name = findItem<QQuickText>(contentItem, "name", 1);
         QCOMPARE(name->text(), QString("two"));
@@ -745,10 +745,10 @@ void tst_qquickvisualdatamodel::singleRole()
         view.setSource(testFileUrl("singlerole2.qml"));
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-        QVERIFY(listview != 0);
+        QVERIFY(listview != nullptr);
 
         QQuickItem *contentItem = listview->contentItem();
-        QVERIFY(contentItem != 0);
+        QVERIFY(contentItem != nullptr);
 
         QQuickText *name = findItem<QQuickText>(contentItem, "name", 1);
         QCOMPARE(name->text(), QString("two"));
@@ -771,10 +771,10 @@ void tst_qquickvisualdatamodel::modelProperties()
         view.setSource(testFileUrl("modelproperties.qml"));
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-        QVERIFY(listview != 0);
+        QVERIFY(listview != nullptr);
 
         QQuickItem *contentItem = listview->contentItem();
-        QVERIFY(contentItem != 0);
+        QVERIFY(contentItem != nullptr);
 
         QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", 1);
         QVERIFY(delegate);
@@ -804,10 +804,10 @@ void tst_qquickvisualdatamodel::modelProperties()
         view.setSource(testFileUrl("modelproperties.qml"));
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-        QVERIFY(listview != 0);
+        QVERIFY(listview != nullptr);
 
         QQuickItem *contentItem = listview->contentItem();
-        QVERIFY(contentItem != 0);
+        QVERIFY(contentItem != nullptr);
 
         QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", 1);
         QVERIFY(delegate);
@@ -833,10 +833,10 @@ void tst_qquickvisualdatamodel::modelProperties()
         view.setSource(testFileUrl("modelproperties.qml"));
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-        QVERIFY(listview != 0);
+        QVERIFY(listview != nullptr);
 
         QQuickItem *contentItem = listview->contentItem();
-        QVERIFY(contentItem != 0);
+        QVERIFY(contentItem != nullptr);
 
         QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", 0);
         QVERIFY(delegate);
@@ -875,10 +875,10 @@ void tst_qquickvisualdatamodel::modelProperties()
         view.setSource(source);
 
         QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-        QVERIFY(listview != 0);
+        QVERIFY(listview != nullptr);
 
         QQuickItem *contentItem = listview->contentItem();
-        QVERIFY(contentItem != 0);
+        QVERIFY(contentItem != nullptr);
 
         QQuickItem *delegate = findItem<QQuickItem>(contentItem, "delegate", 1);
         QVERIFY(delegate);
@@ -917,13 +917,13 @@ void tst_qquickvisualdatamodel::noDelegate()
     view.setSource(source);
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-    QVERIFY(listview != 0);
+    QVERIFY(listview != nullptr);
 
     QQmlDelegateModel *vdm = listview->findChild<QQmlDelegateModel*>("visualModel");
-    QVERIFY(vdm != 0);
+    QVERIFY(vdm != nullptr);
     QCOMPARE(vdm->count(), 3);
 
-    vdm->setDelegate(0);
+    vdm->setDelegate(nullptr);
     QCOMPARE(vdm->count(), 0);
 }
 
@@ -955,7 +955,7 @@ void tst_qquickvisualdatamodel::itemsDestroyed()
 
         QVERIFY(delegate = findItem<QQuickItem>(view.contentItem(), "delegate", 1));
     }
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QVERIFY(!delegate);
 }
 
@@ -975,16 +975,16 @@ void tst_qquickvisualdatamodel::packagesDestroyed()
     qApp->processEvents();
 
     QQuickListView *leftview = findItem<QQuickListView>(view.rootObject(), "leftList");
-    QTRY_VERIFY(leftview != 0);
+    QTRY_VERIFY(leftview != nullptr);
 
     QQuickListView *rightview = findItem<QQuickListView>(view.rootObject(), "rightList");
-    QTRY_VERIFY(rightview != 0);
+    QTRY_VERIFY(rightview != nullptr);
 
     QQuickItem *leftContent = leftview->contentItem();
-    QTRY_VERIFY(leftContent != 0);
+    QTRY_VERIFY(leftContent != nullptr);
 
     QQuickItem *rightContent = rightview->contentItem();
-    QTRY_VERIFY(rightContent != 0);
+    QTRY_VERIFY(rightContent != nullptr);
 
     leftview->forceLayout();
     rightview->forceLayout();
@@ -1052,7 +1052,7 @@ void tst_qquickvisualdatamodel::qaimRowsMoved()
     engine.rootContext()->setContextProperty("myModel", &model);
 
     QQmlDelegateModel *obj = qobject_cast<QQmlDelegateModel*>(c.create());
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     QSignalSpy spy(obj, SIGNAL(modelUpdated(QQmlChangeSet,bool)));
     model.emitMove(sourceFirst, sourceLast, destinationChild);
@@ -1217,7 +1217,7 @@ void tst_qquickvisualdatamodel::watchedRoles()
     QQuickItem *item = qobject_cast<QQuickItem*>(vdm->object(0));
     QVERIFY(item);
     vdm->release(item);
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);  // Ensure released items are deleted before test exits.
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);  // Ensure released items are deleted before test exits.
 
     QSignalSpy spy(vdm, SIGNAL(modelUpdated(QQmlChangeSet,bool)));
     QQmlChangeSet changeSet;
@@ -1305,7 +1305,7 @@ void tst_qquickvisualdatamodel::hasModelChildren()
 
     QCOMPARE(vdm->count(), 4);
 
-    QQuickItem *item = 0;
+    QQuickItem *item = nullptr;
 
     item = qobject_cast<QQuickItem*>(vdm->object(0));
     QVERIFY(item);
@@ -1326,7 +1326,7 @@ void tst_qquickvisualdatamodel::hasModelChildren()
     QVERIFY(item);
     QCOMPARE(item->property("modelChildren").toBool(), false);
     vdm->release(item);
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);  // Ensure released items are deleted before test exits.
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);  // Ensure released items are deleted before test exits.
 
     QCOMPARE(vdm->stringValue(0, QLatin1String("hasModelChildren")), QVariant(true).toString());
     QCOMPARE(vdm->stringValue(1, QLatin1String("hasModelChildren")), QVariant(false).toString());
@@ -1355,7 +1355,7 @@ void tst_qquickvisualdatamodel::setValue()
 
     QCOMPARE(vdm->count(), 3);
 
-    QQuickItem *item = 0;
+    QQuickItem *item = nullptr;
 
     item = qobject_cast<QQuickItem*>(vdm->object(0));
     QVERIFY(item);
@@ -1366,7 +1366,7 @@ void tst_qquickvisualdatamodel::setValue()
 
     vdm->release(item);
 
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);  // Ensure released items are deleted before test exits.
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);  // Ensure released items are deleted before test exits.
 }
 
 void tst_qquickvisualdatamodel::remove_data()
@@ -1406,10 +1406,10 @@ void tst_qquickvisualdatamodel::remove()
     view.setSource(testFileUrl("groups.qml"));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-    QVERIFY(listview != 0);
+    QVERIFY(listview != nullptr);
 
     QQuickItem *contentItem = listview->contentItem();
-    QVERIFY(contentItem != 0);
+    QVERIFY(contentItem != nullptr);
 
     QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel *>(qvariant_cast<QObject *>(listview->model()));
     QVERIFY(visualModel);
@@ -1515,10 +1515,10 @@ void tst_qquickvisualdatamodel::move()
     view.setSource(testFileUrl("groups.qml"));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-    QVERIFY(listview != 0);
+    QVERIFY(listview != nullptr);
 
     QQuickItem *contentItem = listview->contentItem();
-    QVERIFY(contentItem != 0);
+    QVERIFY(contentItem != nullptr);
 
     QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel *>(qvariant_cast<QObject *>(listview->model()));
     QVERIFY(visualModel);
@@ -1704,10 +1704,10 @@ void tst_qquickvisualdatamodel::groups()
     view.setSource(source);
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-    QVERIFY(listview != 0);
+    QVERIFY(listview != nullptr);
 
     QQuickItem *contentItem = listview->contentItem();
-    QVERIFY(contentItem != 0);
+    QVERIFY(contentItem != nullptr);
 
     QQmlDelegateModel *visualModel = listview->findChild<QQmlDelegateModel *>("visualModel");
     QVERIFY(visualModel);
@@ -2024,10 +2024,10 @@ void tst_qquickvisualdatamodel::get()
     view.setSource(testFileUrl("groups.qml"));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-    QVERIFY(listview != 0);
+    QVERIFY(listview != nullptr);
 
     QQuickItem *contentItem = listview->contentItem();
-    QVERIFY(contentItem != 0);
+    QVERIFY(contentItem != nullptr);
 
     QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel *>(qvariant_cast<QObject *>(listview->model()));
     QVERIFY(visualModel);
@@ -2037,9 +2037,6 @@ void tst_qquickvisualdatamodel::get()
 
     QQmlDelegateModelGroup *selectedItems = visualModel->findChild<QQmlDelegateModelGroup *>("selectedItems");
     QVERIFY(selectedItems);
-
-    QV8Engine *v8Engine = QQmlEnginePrivate::getV8Engine(ctxt->engine());
-    QVERIFY(v8Engine);
 
     const bool f = false;
     const bool t = true;
@@ -2320,10 +2317,10 @@ void tst_qquickvisualdatamodel::create()
     view.setSource(testFileUrl("create.qml"));
 
     QQuickListView *listview = qobject_cast<QQuickListView*>(view.rootObject());
-    QVERIFY(listview != 0);
+    QVERIFY(listview != nullptr);
 
     QQuickItem *contentItem = listview->contentItem();
-    QVERIFY(contentItem != 0);
+    QVERIFY(contentItem != nullptr);
 
     QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel *>(qvariant_cast<QObject *>(listview->model()));
     QVERIFY(visualModel);
@@ -3154,7 +3151,7 @@ void tst_qquickvisualdatamodel::insert()
         QCOMPARE(evaluate<int>(visualModel, get + ".selectedIndex"), selected && i > index ? 1 : 0);
     }
 
-    QObject *item = 0;
+    QObject *item = nullptr;
 
     if (inItems)
         item = evaluate<QObject *>(visualModel, QString("items.create(%1)").arg(index));
@@ -3618,7 +3615,7 @@ void tst_qquickvisualdatamodel::resolve()
         QCOMPARE(evaluate<int>(visualModel, get + ".selectedIndex"), selected && i > index ? 1 : 0);
     }
 
-    QObject *item = 0;
+    QObject *item = nullptr;
 
     if (inItems)
         item = evaluate<QObject *>(visualModel, QString("items.create(%1)").arg(index));
@@ -4013,7 +4010,7 @@ void tst_qquickvisualdatamodel::asynchronousInsert()
     connect(visualModel, SIGNAL(createdItem(int,QObject*)), &requester, SLOT(createdItem(int,QObject*)));
     connect(visualModel, SIGNAL(destroyingItem(QObject*)), &requester, SLOT(destroyingItem(QObject*)));
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, QQmlIncubator::Asynchronous));
     QVERIFY(!item);
 
     QVERIFY(!requester.itemInitialized);
@@ -4025,7 +4022,7 @@ void tst_qquickvisualdatamodel::asynchronousInsert()
         newItems.append(qMakePair(QLatin1String("New item") + QString::number(i), QString(QLatin1String(""))));
     model.insertItems(insertIndex, newItems);
 
-    item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex, false));
+    item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex));
     QVERIFY(item);
 
     QCOMPARE(requester.itemInitialized, item);
@@ -4078,7 +4075,7 @@ void tst_qquickvisualdatamodel::asynchronousRemove()
     connect(visualModel, SIGNAL(createdItem(int,QObject*)), &requester, SLOT(createdItem(int,QObject*)));
     connect(visualModel, SIGNAL(destroyingItem(QObject*)), &requester, SLOT(destroyingItem(QObject*)));
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, QQmlIncubator::Asynchronous));
     QVERIFY(!item);
 
     QVERIFY(!requester.itemInitialized);
@@ -4099,7 +4096,7 @@ void tst_qquickvisualdatamodel::asynchronousRemove()
         QVERIFY(!requester.itemCreated);
         QVERIFY(!requester.itemDestroyed);
     } else {
-        item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex, false));
+        item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex));
         QVERIFY(item);
 
         QCOMPARE(requester.itemInitialized, item);
@@ -4157,7 +4154,7 @@ void tst_qquickvisualdatamodel::asynchronousMove()
     connect(visualModel, SIGNAL(createdItem(int,QObject*)), &requester, SLOT(createdItem(int,QObject*)));
     connect(visualModel, SIGNAL(destroyingItem(QObject*)), &requester, SLOT(destroyingItem(QObject*)));
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, QQmlIncubator::Asynchronous));
     QVERIFY(!item);
 
     QVERIFY(!requester.itemInitialized);
@@ -4166,7 +4163,7 @@ void tst_qquickvisualdatamodel::asynchronousMove()
 
     model.moveItems(from, to, count);
 
-    item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex, false));
+    item = qobject_cast<QQuickItem*>(visualModel->object(completeIndex));
     QVERIFY(item);
 
 
@@ -4200,7 +4197,7 @@ void tst_qquickvisualdatamodel::asynchronousCancel()
     QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create());
     QVERIFY(visualModel);
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, true));
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(requestIndex, QQmlIncubator::Asynchronous));
     QVERIFY(!item);
     QCOMPARE(controller.incubatingObjectCount(), 1);
 
@@ -4225,7 +4222,7 @@ void tst_qquickvisualdatamodel::invalidContext()
     QQmlDelegateModel *visualModel = qobject_cast<QQmlDelegateModel*>(c.create(context.data()));
     QVERIFY(visualModel);
 
-    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(4, false));
+    QQuickItem *item = qobject_cast<QQuickItem*>(visualModel->object(4));
     QVERIFY(item);
     visualModel->release(item);
 
@@ -4233,7 +4230,7 @@ void tst_qquickvisualdatamodel::invalidContext()
 
     model.insertItem(4, "new item", "");
 
-    item = qobject_cast<QQuickItem*>(visualModel->object(4, false));
+    item = qobject_cast<QQuickItem*>(visualModel->object(4));
     QVERIFY(!item);
 }
 

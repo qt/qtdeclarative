@@ -369,6 +369,14 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << index << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallGlobalLookup)
 
+        MOTH_BEGIN_INSTR(CallScopeObjectProperty)
+            d << dumpRegister(base, nFormals) << "." << name << dumpArguments(argc, argv, nFormals);
+        MOTH_END_INSTR(CallScopeObjectProperty)
+
+        MOTH_BEGIN_INSTR(CallContextObjectProperty)
+            d << dumpRegister(base, nFormals) << "." << name << dumpArguments(argc, argv, nFormals);
+        MOTH_END_INSTR(CallContextObjectProperty)
+
         MOTH_BEGIN_INSTR(SetExceptionHandler)
             if (offset)
                 d << ABSOLUTE_OFFSET();
@@ -616,10 +624,8 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(Ret)
         MOTH_END_INSTR(Ret)
 
-#ifndef QT_NO_QML_DEBUGGER
         MOTH_BEGIN_INSTR(Debug)
         MOTH_END_INSTR(Debug)
-#endif // QT_NO_QML_DEBUGGER
 
         MOTH_BEGIN_INSTR(LoadQmlContext)
             d << dumpRegister(result, nFormals);

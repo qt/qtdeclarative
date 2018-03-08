@@ -277,7 +277,7 @@ ReturnedValue MathObject::method_pow(const FunctionObject *, const Value *, cons
 
 ReturnedValue MathObject::method_random(const FunctionObject *, const Value *, const Value *, int)
 {
-    RETURN_RESULT(Encode(QRandomGenerator::getReal()));
+    RETURN_RESULT(Encode(QRandomGenerator::global()->generateDouble()));
 }
 
 ReturnedValue MathObject::method_round(const FunctionObject *, const Value *, const Value *argv, int argc)

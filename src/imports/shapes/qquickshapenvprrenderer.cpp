@@ -986,7 +986,7 @@ void QQuickNvprBlitter::texturedQuad(GLuint textureId, const QSize &size,
 
     m_program->enableAttributeArray(0);
     m_program->enableAttributeArray(1);
-    f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
+    f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), nullptr);
     f->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (const void *) (2 * sizeof(GLfloat)));
 
     f->glBindTexture(GL_TEXTURE_2D, textureId);

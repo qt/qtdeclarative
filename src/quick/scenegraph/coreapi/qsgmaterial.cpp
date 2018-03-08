@@ -443,7 +443,12 @@ void QSGMaterialShader::compile()
     otherwise returns \c false.
  */
 
+/*!
+  \fn bool QSGMaterialShader::RenderState::isCachedMaterialDataDirty() const
 
+  Returns \c true if the dirtyStates() contains the dirty cached material state,
+  otherwise returns \c false.
+ */
 
 /*!
     \fn QSGMaterialShader::RenderState::DirtyStates QSGMaterialShader::RenderState::dirtyStates() const
@@ -636,7 +641,7 @@ static void qt_print_material_count()
  */
 
 QSGMaterial::QSGMaterial()
-    : m_flags(0)
+    : m_flags(nullptr)
 {
     Q_UNUSED(m_reserved);
 #ifndef QT_NO_DEBUG

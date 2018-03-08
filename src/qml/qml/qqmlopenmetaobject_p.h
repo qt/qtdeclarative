@@ -69,7 +69,7 @@ class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObjectType : public QQmlRefCount, public 
 {
 public:
     QQmlOpenMetaObjectType(const QMetaObject *base, QQmlEngine *engine);
-    ~QQmlOpenMetaObjectType();
+    ~QQmlOpenMetaObjectType() override;
 
     void createProperties(const QVector<QByteArray> &names);
     int createProperty(const QByteArray &name);
@@ -95,9 +95,9 @@ class QQmlOpenMetaObjectPrivate;
 class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObject : public QAbstractDynamicMetaObject
 {
 public:
-    QQmlOpenMetaObject(QObject *, const QMetaObject * = 0, bool = true);
+    QQmlOpenMetaObject(QObject *, const QMetaObject * = nullptr, bool = true);
     QQmlOpenMetaObject(QObject *, QQmlOpenMetaObjectType *, bool = true);
-    ~QQmlOpenMetaObject();
+    ~QQmlOpenMetaObject() override;
 
     QVariant value(const QByteArray &) const;
     bool setValue(const QByteArray &, const QVariant &);

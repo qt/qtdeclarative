@@ -82,7 +82,7 @@ class Q_QML_PRIVATE_EXPORT QQmlListModel : public QAbstractListModel
     Q_PROPERTY(bool dynamicRoles READ dynamicRoles WRITE setDynamicRoles)
 
 public:
-    QQmlListModel(QObject *parent=0);
+    QQmlListModel(QObject *parent=nullptr);
     ~QQmlListModel();
 
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
@@ -125,7 +125,7 @@ private:
 
     // Constructs a flat list model for a worker agent
     QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agent);
-    QQmlListModel(const QQmlListModel *owner, ListModel *data, QV4::ExecutionEngine *engine, QObject *parent=0);
+    QQmlListModel(const QQmlListModel *owner, ListModel *data, QV4::ExecutionEngine *engine, QObject *parent=nullptr);
 
     QV4::ExecutionEngine *engine() const;
 
@@ -143,28 +143,22 @@ private:
 
     QVector<class DynamicRoleModelNode *> m_modelObjects;
     QVector<QString> m_roles;
-    int m_uid;
 
     struct ElementSync
     {
-        ElementSync() : src(0), target(0) {}
-
-        DynamicRoleModelNode *src;
-        DynamicRoleModelNode *target;
+        DynamicRoleModelNode *src = nullptr;
+        DynamicRoleModelNode *target = nullptr;
+        int srcIndex = -1;
+        int targetIndex = -1;
+        QVector<int> changedRoles;
     };
 
-    int getUid() const { return m_uid; }
-
-    static void sync(QQmlListModel *src, QQmlListModel *target, QHash<int, QQmlListModel *> *targetModelHash);
+    static bool sync(QQmlListModel *src, QQmlListModel *target);
     static QQmlListModel *createWithOwner(QQmlListModel *newOwner);
 
     void emitItemsChanged(int index, int count, const QVector<int> &roles);
-    void emitItemsAboutToBeRemoved(int index, int count);
-    void emitItemsRemoved(int index, int count);
     void emitItemsAboutToBeInserted(int index, int count);
-    void emitItemsInserted(int index, int count);
-    void emitItemsAboutToBeMoved(int from, int to, int n);
-    void emitItemsMoved(int from, int to, int n);
+    void emitItemsInserted();
 
     void removeElements(int index, int removeCount);
 };

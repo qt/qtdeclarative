@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 class QQmlBindPrivate : public QObjectPrivate
 {
 public:
-    QQmlBindPrivate() : obj(0), componentComplete(true), delayed(false), pendingEval(false) {}
+    QQmlBindPrivate() : obj(nullptr), componentComplete(true), delayed(false), pendingEval(false) {}
     ~QQmlBindPrivate() { }
 
     QQmlNullableValue<bool> when;
@@ -370,7 +370,7 @@ void QQmlBind::eval()
             //restore any previous binding
             if (d->prevBind) {
                 QQmlAbstractBinding::Ptr p = d->prevBind;
-                d->prevBind = 0;
+                d->prevBind = nullptr;
                 QQmlPropertyPrivate::setBinding(p.data());
             }
             return;

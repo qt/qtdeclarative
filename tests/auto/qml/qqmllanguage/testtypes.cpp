@@ -136,7 +136,7 @@ void CustomBinding::componentComplete()
         QQmlContextData *context = QQmlContextData::get(qmlContext(this));
 
         QQmlProperty property(m_target, name, qmlContext(this));
-        QV4::Scope scope(QQmlEnginePrivate::getV4Engine(qmlEngine(this)));
+        QV4::Scope scope(qmlEngine(this)->handle());
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(scope.engine->rootContext(), context, m_target));
         QQmlBinding *qmlBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
                                                       compilationUnit->runtimeFunctions[bindingId], m_target, context, qmlContext);
@@ -185,8 +185,8 @@ void SimpleObjectCustomParser::applyBindings(QObject *object, QV4::CompiledData:
 
 MyQmlObject::MyQmlObject()
     : m_value(-1)
-    , m_interface(0)
-    , m_qmlobject(0)
+    , m_interface(nullptr)
+    , m_qmlobject(nullptr)
     , m_childAddedEventCount(0)
 {
     qRegisterMetaType<MyCustomVariantType>("MyCustomVariantType");

@@ -73,7 +73,7 @@ private:
     friend class QQmlThreadNotifierProxyObject;
 
     static void emitNotify(QQmlNotifierEndpoint *, void **a);
-    QQmlNotifierEndpoint *endpoints;
+    QQmlNotifierEndpoint *endpoints = nullptr;
 };
 
 class QQmlEngine;
@@ -129,7 +129,6 @@ private:
 };
 
 QQmlNotifier::QQmlNotifier()
-: endpoints(0)
 {
 }
 
@@ -142,22 +141,22 @@ QQmlNotifier::~QQmlNotifier()
 
         if (n->isNotifying()) *((qintptr *)(n->senderPtr & ~0x1)) = 0;
 
-        n->next = 0;
-        n->prev = 0;
+        n->next = nullptr;
+        n->prev = nullptr;
         n->senderPtr = 0;
         n->sourceSignal = -1;
     }
-    endpoints = 0;
+    endpoints = nullptr;
 }
 
 void QQmlNotifier::notify()
 {
-    void *args[] = { 0 };
+    void *args[] = { nullptr };
     if (endpoints) emitNotify(endpoints, args);
 }
 
 QQmlNotifierEndpoint::QQmlNotifierEndpoint(Callback callback)
-: next(0), prev(0), senderPtr(0), callback(callback), needsConnectNotify(false), sourceSignal(-1)
+: next(nullptr), prev(nullptr), senderPtr(0), callback(callback), needsConnectNotify(false), sourceSignal(-1)
 {
 }
 
@@ -168,7 +167,7 @@ QQmlNotifierEndpoint::~QQmlNotifierEndpoint()
 
 bool QQmlNotifierEndpoint::isConnected() const
 {
-    return prev != 0;
+    return prev != nullptr;
 }
 
 /*! \internal
@@ -212,8 +211,8 @@ void QQmlNotifierEndpoint::disconnect()
     }
 
     if (isNotifying()) *((qintptr *)(senderPtr & ~0x1)) = 0;
-    next = 0;
-    prev = 0;
+    next = nullptr;
+    prev = nullptr;
     senderPtr = 0;
     sourceSignal = -1;
 }

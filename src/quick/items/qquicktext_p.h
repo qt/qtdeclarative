@@ -102,8 +102,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_PROPERTY(QSizeF advance READ advance NOTIFY contentSizeChanged REVISION 10)
 
 public:
-    QQuickText(QQuickItem *parent=0);
-    ~QQuickText();
+    QQuickText(QQuickItem *parent=nullptr);
+    ~QQuickText() override;
 
     enum HAlignment { AlignLeft = Qt::AlignLeft,
                        AlignRight = Qt::AlignRight,
@@ -289,7 +289,7 @@ Q_SIGNALS:
     Q_REVISION(9) void fontInfoChanged();
 
 protected:
-    QQuickText(QQuickTextPrivate &dd, QQuickItem *parent = 0);
+    QQuickText(QQuickTextPrivate &dd, QQuickItem *parent = nullptr);
 
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;

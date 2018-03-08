@@ -243,9 +243,9 @@ void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
 Creates a new empty QQmlPropertyCache.
 */
 QQmlPropertyCache::QQmlPropertyCache()
-    : _parent(0), propertyIndexCacheStart(0), methodIndexCacheStart(0),
+    : _parent(nullptr), propertyIndexCacheStart(0), methodIndexCacheStart(0),
       signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false), _ownMetaObject(false),
-      _metaObject(0), argumentsCache(0), _jsFactoryMethodIndex(-1)
+      _metaObject(nullptr), argumentsCache(nullptr), _jsFactoryMethodIndex(-1)
 {
 }
 
@@ -277,8 +277,8 @@ QQmlPropertyCache::~QQmlPropertyCache()
     if (_parent) _parent->release();
 
     if (_ownMetaObject) free(const_cast<QMetaObject *>(_metaObject));
-    _metaObject = 0;
-    _parent = 0;
+    _metaObject = nullptr;
+    _parent = nullptr;
 }
 
 QQmlPropertyCache *QQmlPropertyCache::copy(int reserve)
@@ -310,7 +310,7 @@ QQmlPropertyCache *QQmlPropertyCache::copyAndReserve(int propertyCount, int meth
     rv->methodIndexCache.reserve(methodCount);
     rv->signalHandlerIndexCache.reserve(signalCount);
     rv->enumCache.reserve(enumCount);
-    rv->_metaObject = 0;
+    rv->_metaObject = nullptr;
 
     return rv;
 }
@@ -321,13 +321,14 @@ QQmlPropertyCache *QQmlPropertyCache::copyAndReserve(int propertyCount, int meth
     This is different from QMetaMethod::methodIndex().
 */
 void QQmlPropertyCache::appendProperty(const QString &name, QQmlPropertyData::Flags flags,
-                                       int coreIndex, int propType, int notifyIndex)
+                                       int coreIndex, int propType, int minorVersion, int notifyIndex)
 {
     QQmlPropertyData data;
     data.setPropType(propType);
     data.setCoreIndex(coreIndex);
     data.setNotifyIndex(notifyIndex);
     data.setFlags(flags);
+    data.setTypeMinorVersion(minorVersion);
 
     QQmlPropertyData *old = findNamedProperty(name);
     if (old)
@@ -336,7 +337,7 @@ void QQmlPropertyCache::appendProperty(const QString &name, QQmlPropertyData::Fl
     int index = propertyIndexCache.count();
     propertyIndexCache.append(data);
 
-    setNamedProperty(name, index + propertyOffset(), propertyIndexCache.data() + index, (old != 0));
+    setNamedProperty(name, index + propertyOffset(), propertyIndexCache.data() + index, (old != nullptr));
 }
 
 void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flags flags,
@@ -373,8 +374,8 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
     QString handlerName = QLatin1String("on") + name;
     handlerName[2] = handlerName.at(2).toUpper();
 
-    setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex, (old != 0));
-    setNamedProperty(handlerName, signalHandlerIndex + signalOffset(), signalHandlerIndexCache.data() + signalHandlerIndex, (old != 0));
+    setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex, (old != nullptr));
+    setNamedProperty(handlerName, signalHandlerIndex + signalOffset(), signalHandlerIndexCache.data() + signalHandlerIndex, (old != nullptr));
 }
 
 void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flags flags,
@@ -401,7 +402,7 @@ void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flag
     int methodIndex = methodIndexCache.count();
     methodIndexCache.append(data);
 
-    setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex, (old != 0));
+    setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex, (old != nullptr));
 }
 
 void QQmlPropertyCache::appendEnum(const QString &name, const QVector<QQmlEnumValue> &values)
@@ -429,7 +430,7 @@ const QMetaObject *QQmlPropertyCache::createMetaObject()
 
 QQmlPropertyData *QQmlPropertyCache::defaultProperty() const
 {
-    return property(defaultPropertyName(), 0, 0);
+    return property(defaultPropertyName(), nullptr, nullptr);
 }
 
 void QQmlPropertyCache::setParent(QQmlPropertyCache *newParent)
@@ -542,7 +543,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         }
 
         QQmlPropertyData *data = &methodIndexCache[ii - methodIndexCacheStart];
-        QQmlPropertyData *sigdata = 0;
+        QQmlPropertyData *sigdata = nullptr;
 
         if (m.methodType() == QMetaMethod::Signal)
             data->setFlags(signalFlags);
@@ -561,24 +562,24 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             sigdata->_flags.isSignalHandler = true;
         }
 
-        QQmlPropertyData *old = 0;
+        QQmlPropertyData *old = nullptr;
 
         if (utf8) {
             QHashedString methodName(QString::fromUtf8(rawName, cptr - rawName));
             if (StringCache::mapped_type *it = stringCache.value(methodName))
                 old = it->second;
-            setNamedProperty(methodName, ii, data, (old != 0));
+            setNamedProperty(methodName, ii, data, (old != nullptr));
 
             if (data->isSignal()) {
                 QHashedString on(QLatin1String("on") % methodName.at(0).toUpper() % methodName.midRef(1));
-                setNamedProperty(on, ii, sigdata, (old != 0));
+                setNamedProperty(on, ii, sigdata, (old != nullptr));
                 ++signalHandlerIndex;
             }
         } else {
             QHashedCStringRef methodName(rawName, cptr - rawName);
             if (StringCache::mapped_type *it = stringCache.value(methodName))
                 old = it->second;
-            setNamedProperty(methodName, ii, data, (old != 0));
+            setNamedProperty(methodName, ii, data, (old != nullptr));
 
             if (data->isSignal()) {
                 int length = methodName.length();
@@ -592,7 +593,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
                 str[length + 2] = '\0';
 
                 QHashedString on(QString::fromLatin1(str.data()));
-                setNamedProperty(on, ii, data, (old != 0));
+                setNamedProperty(on, ii, data, (old != nullptr));
                 ++signalHandlerIndex;
             }
         }
@@ -635,18 +636,18 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         Q_ASSERT((allowedRevisionCache.count() - 1) < Q_INT16_MAX);
         data->setMetaObjectOffset(allowedRevisionCache.count() - 1);
 
-        QQmlPropertyData *old = 0;
+        QQmlPropertyData *old = nullptr;
 
         if (utf8) {
             QHashedString propName(QString::fromUtf8(str, cptr - str));
             if (StringCache::mapped_type *it = stringCache.value(propName))
                 old = it->second;
-            setNamedProperty(propName, ii, data, (old != 0));
+            setNamedProperty(propName, ii, data, (old != nullptr));
         } else {
             QHashedCStringRef propName(str, cptr - str);
             if (StringCache::mapped_type *it = stringCache.value(propName))
                 old = it->second;
-            setNamedProperty(propName, ii, data, (old != 0));
+            setNamedProperty(propName, ii, data, (old != nullptr));
         }
 
         bool isGadget = true;
@@ -749,7 +750,7 @@ void QQmlPropertyCache::invalidate(const QMetaObject *metaObject)
     signalHandlerIndexCache.clear();
 
     _hasPropertyOverrides = false;
-    argumentsCache = 0;
+    argumentsCache = nullptr;
 
     int pc = metaObject->propertyCount();
     int mc = metaObject->methodCount();
@@ -772,8 +773,8 @@ void QQmlPropertyCache::invalidate(const QMetaObject *metaObject)
 
 QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it, QObject *object, QQmlContextData *context) const
 {
-    QQmlData *data = (object ? QQmlData::get(object) : 0);
-    const QQmlVMEMetaObject *vmemo = 0;
+    QQmlData *data = (object ? QQmlData::get(object) : nullptr);
+    const QQmlVMEMetaObject *vmemo = nullptr;
     if (data && data->hasVMEMetaObject) {
         QObjectPrivate *op = QObjectPrivate::get(object);
         vmemo = static_cast<const QQmlVMEMetaObject *>(op->metaObject);
@@ -848,7 +849,7 @@ QQmlPropertyData *QQmlPropertyCache::findProperty(StringCache::ConstIterator it,
         return ensureResolved(result);
     }
 
-    return 0;
+    return nullptr;
 }
 
 QString QQmlPropertyData::name(QObject *object) const
@@ -918,9 +919,9 @@ QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int a
     A *args = static_cast<A *>(malloc(sizeof(A) + (argc) * sizeof(int)));
     args->arguments[0] = argc;
     args->argumentsValid = false;
-    args->signalParameterStringForJS = 0;
+    args->signalParameterStringForJS = nullptr;
     args->parameterError = false;
-    args->names = argc ? new QList<QByteArray>(names) : 0;
+    args->names = argc ? new QList<QByteArray>(names) : nullptr;
     args->next = argumentsCache;
     argumentsCache = args;
     return args;
@@ -1026,10 +1027,10 @@ static QQmlPropertyData qQmlPropertyCacheCreate(const QMetaObject *metaObject, c
                     }
                     /* If the "cmo" variable didn't change, set it to 0 to
                      * avoid running into an infinite loop */
-                    if (!changed) cmo = 0;
+                    if (!changed) cmo = nullptr;
                 }
             } else {
-                cmo = 0;
+                cmo = nullptr;
             }
         }
     }
@@ -1056,7 +1057,7 @@ QQmlPropertyData *
 qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
                           QQmlContextData *context, QQmlPropertyData &local)
 {
-    QQmlPropertyCache *cache = 0;
+    QQmlPropertyCache *cache = nullptr;
 
     QQmlData *ddata = QQmlData::get(obj, false);
 
@@ -1072,7 +1073,7 @@ qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
         }
     }
 
-    QQmlPropertyData *rv = 0;
+    QQmlPropertyData *rv = nullptr;
 
     if (cache) {
         rv = cache->property(name, obj, context);
@@ -1213,7 +1214,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
         // '+=' reserves extra capacity. Follow-up appending will be probably free.
         signature += methods.at(ii).first.toUtf8() + '(';
 
-        QQmlPropertyCacheMethodArguments *arguments = 0;
+        QQmlPropertyCacheMethodArguments *arguments = nullptr;
         if (data->hasArguments()) {
             arguments = (QQmlPropertyCacheMethodArguments *)data->arguments();
             Q_ASSERT(arguments->argumentsValid);
@@ -1251,7 +1252,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
     }
 
     if (!_defaultPropertyName.isEmpty()) {
-        QQmlPropertyData *dp = property(_defaultPropertyName, 0, 0);
+        QQmlPropertyData *dp = property(_defaultPropertyName, nullptr, nullptr);
         if (dp && dp->coreIndex() >= propertyIndexCacheStart) {
             Q_ASSERT(!dp->isFunction());
             builder.addClassInfo("DefaultProperty", _defaultPropertyName.toUtf8());
@@ -1576,7 +1577,7 @@ void QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(QMetaObject::Call type, 
 
 QQmlPropertyCache *QQmlMetaObject::propertyCache(QQmlEnginePrivate *e) const
 {
-    if (_m.isNull()) return 0;
+    if (_m.isNull()) return nullptr;
     if (_m.isT1()) return _m.asT1();
     else return e->cache(_m.asT2());
 }
@@ -1587,7 +1588,7 @@ int QQmlMetaObject::methodReturnType(const QQmlPropertyData &data, QByteArray *u
 
     int type = data.propType();
 
-    const char *propTypeName = 0;
+    const char *propTypeName = nullptr;
 
     if (type == QMetaType::UnknownType) {
         // Find the return type name from the method info
@@ -1675,7 +1676,7 @@ int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
             }
             if (type == QMetaType::UnknownType) {
                 if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
-                return 0;
+                return nullptr;
             }
             args->arguments[ii + 1] = type;
         }
@@ -1714,7 +1715,7 @@ int *QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *
         }
         if (type == QMetaType::UnknownType) {
             if (unknownTypeError) *unknownTypeError = argTypeNames.at(ii);
-            return 0;
+            return nullptr;
         }
         argStorage->operator[](ii + 1) = type;
     }
@@ -1726,7 +1727,7 @@ void QQmlObjectOrGadget::metacall(QMetaObject::Call type, int index, void **argv
 {
     if (ptr.isNull()) {
         const QMetaObject *metaObject = _m.asT2();
-        metaObject->d.static_metacall(0, type, index, argv);
+        metaObject->d.static_metacall(nullptr, type, index, argv);
     }
     else if (ptr.isT1()) {
         QMetaObject::metacall(ptr.asT1(), type, index, argv);

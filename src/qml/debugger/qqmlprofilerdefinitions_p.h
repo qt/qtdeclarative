@@ -69,6 +69,7 @@ struct QQmlProfilerDefinitions {
         PixmapCacheEvent,
         SceneGraphFrame,
         MemoryAllocation,
+        DebugMessage,
 
         MaximumMessage
     };
@@ -161,6 +162,26 @@ struct QQmlProfilerDefinitions {
 
         MaximumInputEventType
     };
+
+    static ProfileFeature featureFromRangeType(RangeType range)
+    {
+        switch (range) {
+            case Painting:
+                return ProfilePainting;
+            case Compiling:
+                return ProfileCompiling;
+            case Creating:
+                return ProfileCreating;
+            case Binding:
+                return ProfileBinding;
+            case HandlingSignal:
+                return ProfileHandlingSignal;
+            case Javascript:
+                return ProfileJavaScript;
+            default:
+                return MaximumProfileFeature;
+        }
+    }
 };
 
 QT_END_NAMESPACE

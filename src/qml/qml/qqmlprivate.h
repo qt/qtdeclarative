@@ -69,7 +69,6 @@ namespace CompiledData {
 struct Unit;
 struct CompilationUnit;
 }
-typedef CompiledData::CompilationUnit *(*CompilationUnitFactoryFunction)();
 }
 namespace QmlIR {
 struct Document;
@@ -99,7 +98,7 @@ namespace QQmlPrivate
     class QQmlElement : public T
     {
     public:
-        virtual ~QQmlElement() {
+        ~QQmlElement() override {
             QQmlPrivate::qdeclarativeelement_destructor(this);
         }
     };
@@ -168,8 +167,8 @@ namespace QQmlPrivate
     class AttachedPropertySelector
     {
     public:
-        static inline QQmlAttachedPropertiesFunc func() { return 0; }
-        static inline const QMetaObject *metaObject() { return 0; }
+        static inline QQmlAttachedPropertiesFunc func() { return nullptr; }
+        static inline const QMetaObject *metaObject() { return nullptr; }
     };
     template<typename T>
     class AttachedPropertySelector<T, 1>
@@ -284,8 +283,8 @@ namespace QQmlPrivate
 
     struct CachedQmlUnit {
         const QV4::CompiledData::Unit *qmlData;
-        QV4::CompilationUnitFactoryFunction createCompilationUnit;
-        QmlIR::IRLoaderFunction loadIR;
+        void *unused1;
+        void *unused2;
     };
 
     typedef const CachedQmlUnit *(*QmlUnitCacheLookupFunction)(const QUrl &url);

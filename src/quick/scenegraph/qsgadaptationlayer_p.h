@@ -266,19 +266,19 @@ public:
             Texture // for APIs with separate texture and sampler objects
         };
         struct InputParameter {
-            InputParameter() : semanticIndex(0) { }
+            InputParameter() {}
             // Semantics use the D3D keys (POSITION, TEXCOORD).
             // Attribute name based APIs can map based on pre-defined names.
             QByteArray semanticName;
-            int semanticIndex;
+            int semanticIndex = 0;
         };
         struct Variable {
-            Variable() : type(Constant), offset(0), size(0), bindPoint(0) { }
-            VariableType type;
+            Variable() {}
+            VariableType type = Constant;
             QByteArray name;
-            uint offset; // for cbuffer members
-            uint size; // for cbuffer members
-            int bindPoint; // for textures and samplers; for register-based APIs
+            uint offset = 0; // for cbuffer members
+            uint size = 0; // for cbuffer members
+            int bindPoint = 0; // for textures and samplers; for register-based APIs
         };
 
         QByteArray blob; // source or bytecode
@@ -329,8 +329,8 @@ public:
     };
 
     struct ShaderData {
-        ShaderData() : hasShaderCode(false) { }
-        bool hasShaderCode;
+        ShaderData() {}
+        bool hasShaderCode = false;
         QSGGuiThreadShaderEffectManager::ShaderInfo shaderInfo;
         QVector<VariableData> varData;
     };
@@ -373,7 +373,7 @@ public:
         HighQualitySubPixelAntialiasing
     };
 
-    QSGGlyphNode() : m_ownerElement(0) {}
+    QSGGlyphNode() {}
 
     virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) = 0;
     virtual void setColor(const QColor &color) = 0;
@@ -394,7 +394,7 @@ public:
     void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
 protected:
     QRectF m_bounding_rect;
-    QQuickItem *m_ownerElement;
+    QQuickItem *m_ownerElement = nullptr;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphConsumer
@@ -421,24 +421,24 @@ public:
     };
 
     struct TexCoord {
-        qreal x;
-        qreal y;
-        qreal width;
-        qreal height;
-        qreal xMargin;
-        qreal yMargin;
+        qreal x = 0;
+        qreal y = 0;
+        qreal width = -1;
+        qreal height = -1;
+        qreal xMargin = 0;
+        qreal yMargin = 0;
 
-        TexCoord() : x(0), y(0), width(-1), height(-1), xMargin(0), yMargin(0) { }
+        TexCoord() {}
 
         bool isNull() const { return width <= 0 || height <= 0; }
         bool isValid() const { return width >= 0 && height >= 0; }
     };
 
     struct Texture {
-        uint textureId;
+        uint textureId = 0;
         QSize size;
 
-        Texture() : textureId(0), size(QSize()) { }
+        Texture() : size(QSize()) { }
         bool operator == (const Texture &other) const { return textureId == other.textureId; }
     };
 
@@ -478,13 +478,13 @@ protected:
     };
 
     struct GlyphData {
-        Texture *texture;
+        Texture *texture = nullptr;
         TexCoord texCoord;
         QRectF boundingRect;
         QPainterPath path;
-        quint32 ref;
+        quint32 ref = 0;
 
-        GlyphData() : texture(0), ref(0) { }
+        GlyphData() {}
     };
 
     virtual void requestGlyphs(const QSet<glyph_t> &glyphs) = 0;

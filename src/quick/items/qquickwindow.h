@@ -110,7 +110,7 @@ public:
     explicit QQuickWindow(QWindow *parent = nullptr);
     explicit QQuickWindow(QQuickRenderControl *renderControl);
 
-    virtual ~QQuickWindow();
+    ~QQuickWindow() override;
 
     QQuickItem *contentItem() const;
 
@@ -204,6 +204,7 @@ public Q_SLOTS:
 
 protected:
     QQuickWindow(QQuickWindowPrivate &dd, QWindow *parent = nullptr);
+    QQuickWindow(QQuickWindowPrivate &dd, QQuickRenderControl *control);
 
     void exposeEvent(QExposeEvent *) override;
     void resizeEvent(QResizeEvent *) override;
@@ -233,7 +234,7 @@ private Q_SLOTS:
     void handleScreenChanged(QScreen *screen);
     void setTransientParent_helper(QQuickWindow *window);
     void runJobsAfterSwap();
-
+    void handleApplicationStateChanged(Qt::ApplicationState state);
 private:
     friend class QQuickItem;
     friend class QQuickWidget;
@@ -241,6 +242,10 @@ private:
     friend class QQuickAnimatorController;
     Q_DISABLE_COPY(QQuickWindow)
 };
+
+#ifndef QT_NO_DEBUG_STREAM
+QDebug Q_QUICK_EXPORT operator<<(QDebug debug, const QQuickWindow *item);
+#endif
 
 QT_END_NAMESPACE
 

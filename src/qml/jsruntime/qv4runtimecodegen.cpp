@@ -49,15 +49,16 @@ void RuntimeCodegen::generateFromFunctionExpression(const QString &fileName,
 {
     _module = module;
     _module->fileName = fileName;
-    _context = 0;
+    _module->finalUrl = fileName;
+    _context = nullptr;
 
     Compiler::ScanFunctions scan(this, sourceCode, Compiler::GlobalCode);
     // fake a global environment
-    scan.enterEnvironment(0, Compiler::FunctionCode);
+    scan.enterEnvironment(nullptr, Compiler::FunctionCode);
     scan(ast);
     scan.leaveEnvironment();
 
-    int index = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : 0);
+    int index = defineFunction(ast->name.toString(), ast, ast->formals, ast->body ? ast->body->elements : nullptr);
     _module->rootContext = _module->functions.at(index);
 }
 

@@ -97,7 +97,7 @@ class Q_QML_EXPORT QQmlEngine : public QJSEngine
     Q_OBJECT
 public:
     explicit QQmlEngine(QObject *p = nullptr);
-    virtual ~QQmlEngine();
+    ~QQmlEngine() override;
 
     QQmlContext *rootContext() const;
 

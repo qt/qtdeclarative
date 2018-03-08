@@ -91,8 +91,7 @@ public:
 
     struct Component
     {
-        Component()
-            : majorVersion(0), minorVersion(0), internal(false), singleton(false) {}
+        Component() {}
 
         Component(const QString &typeName, const QString &fileName, int majorVersion, int minorVersion)
             : typeName(typeName), fileName(fileName), majorVersion(majorVersion), minorVersion(minorVersion),
@@ -100,24 +99,23 @@ public:
 
         QString typeName;
         QString fileName;
-        int majorVersion;
-        int minorVersion;
-        bool internal;
-        bool singleton;
+        int majorVersion = 0;
+        int minorVersion = 0;
+        bool internal = false;
+        bool singleton = false;
     };
 
     struct Script
     {
-        Script()
-            : majorVersion(0), minorVersion(0) {}
+        Script() {}
 
         Script(const QString &nameSpace, const QString &fileName, int majorVersion, int minorVersion)
             : nameSpace(nameSpace), fileName(fileName), majorVersion(majorVersion), minorVersion(minorVersion) {}
 
         QString nameSpace;
         QString fileName;
-        int majorVersion;
-        int minorVersion;
+        int majorVersion = 0;
+        int minorVersion = 0;
     };
 
     QHash<QString,Component> components() const;

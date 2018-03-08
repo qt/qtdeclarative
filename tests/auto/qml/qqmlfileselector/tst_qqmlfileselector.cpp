@@ -33,6 +33,7 @@
 #include <QQmlApplicationEngine>
 #include <QFileSelector>
 #include <QQmlContext>
+#include <QLoggingCategory>
 #include <qqmlinfo.h>
 #include "../../shared/util.h"
 
@@ -44,6 +45,7 @@ public:
 
 private slots:
     void basicTest();
+    void basicTestCached();
     void applicationEngineTest();
 
 };
@@ -56,22 +58,41 @@ void tst_qqmlfileselector::basicTest()
 
     QQmlComponent component(&engine, testFileUrl("basicTest.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toString(), QString("selected"));
 
     delete object;
+}
+
+void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &message)
+{
+    if (type == QtDebugMsg
+            && QByteArray(context.category) == QByteArray("qt.qml.diskcache")
+            && message.contains("QML source file has moved to a different location.")) {
+        QFAIL(message.toUtf8());
+    }
+}
+
+void tst_qqmlfileselector::basicTestCached()
+{
+    basicTest(); // Seed the cache, in case basicTestCached() is run on its own
+    QtMessageHandler defaultHandler = qInstallMessageHandler(&messageHandler);
+    QLoggingCategory::setFilterRules("qt.qml.diskcache.debug=true");
+    basicTest(); // Run again and check that the file is in the cache now
+    QLoggingCategory::setFilterRules(QString());
+    qInstallMessageHandler(defaultHandler);
 }
 
 void tst_qqmlfileselector::applicationEngineTest()
 {
     QQmlApplicationEngine engine;
     QQmlFileSelector* selector = QQmlFileSelector::get(&engine);
-    QVERIFY(selector != 0);
+    QVERIFY(selector != nullptr);
     selector->setExtraSelectors(QStringList() << "basic");
 
     QQmlComponent component(&engine, testFileUrl("basicTest.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("value").toString(), QString("selected"));
 
     delete object;

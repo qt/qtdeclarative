@@ -41,7 +41,8 @@ SOURCES += \
     $$PWD/qv4qobjectwrapper.cpp \
     $$PWD/qv4arraybuffer.cpp \
     $$PWD/qv4typedarray.cpp \
-    $$PWD/qv4dataview.cpp
+    $$PWD/qv4dataview.cpp \
+    $$PWD/qv4vme_moth.cpp
 
 qtConfig(qml-debug): SOURCES += $$PWD/qv4profiling.cpp
 
@@ -94,14 +95,8 @@ HEADERS += \
     $$PWD/qv4profiling_p.h \
     $$PWD/qv4arraybuffer_p.h \
     $$PWD/qv4typedarray_p.h \
-    $$PWD/qv4dataview_p.h
-
-qtConfig(qml-interpreter) {
-    HEADERS += \
-        $$PWD/qv4vme_moth_p.h
-    SOURCES += \
-        $$PWD/qv4vme_moth.cpp
-}
+    $$PWD/qv4dataview_p.h \
+    $$PWD/qv4vme_moth_p.h
 
 }
 

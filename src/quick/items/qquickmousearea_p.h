@@ -87,7 +87,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseArea : public QQuickItem
     Q_PROPERTY(int pressAndHoldInterval READ pressAndHoldInterval WRITE setPressAndHoldInterval NOTIFY pressAndHoldIntervalChanged RESET resetPressAndHoldInterval REVISION 9)
 
 public:
-    QQuickMouseArea(QQuickItem *parent=0);
+    QQuickMouseArea(QQuickItem *parent=nullptr);
     ~QQuickMouseArea();
 
     qreal mouseX() const;

@@ -30,7 +30,7 @@
 #include "splineeditor.h"
 
 SegmentProperties::SegmentProperties(QWidget *parent) :
-    QWidget(parent), m_splineEditor(0), m_blockSignals(false)
+    QWidget(parent), m_splineEditor(nullptr), m_blockSignals(false)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->setMargin(0);

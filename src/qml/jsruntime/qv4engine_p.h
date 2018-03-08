@@ -56,7 +56,9 @@
 #include <private/qintrusivelist_p.h>
 #include "qv4enginebase_p.h"
 
+
 #ifndef V4_BOOTSTRAP
+#  include "qv4function_p.h"
 #  include <private/qv8engine_p.h>
 #  include <private/qv4compileddata_p.h>
 #endif
@@ -85,6 +87,7 @@ namespace CompiledData {
 struct CompilationUnit;
 }
 
+struct Function;
 struct InternalClass;
 struct InternalClassPool;
 
@@ -365,6 +368,9 @@ public:
     // but any time a QObject is wrapped a second time in another engine, we have to do
     // bookkeeping.
     MultiplyWrappedQObjectMap *m_multiplyWrappedQObjects;
+#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
+    const bool m_canAllocateExecutableMemory;
+#endif
 
     int internalClassIdCount = 0;
 
@@ -453,7 +459,7 @@ public:
     StackTrace exceptionStackTrace;
 
     ReturnedValue throwError(const Value &value);
-    ReturnedValue catchException(StackTrace *trace = 0);
+    ReturnedValue catchException(StackTrace *trace = nullptr);
 
     ReturnedValue throwError(const QString &message);
     ReturnedValue throwSyntaxError(const QString &message);
@@ -481,13 +487,28 @@ public:
 
     bool checkStackLimits();
 
-    static bool canJIT();
+    bool canJIT(Function *f = nullptr)
+    {
+#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
+        if (!m_canAllocateExecutableMemory)
+            return false;
+        if (f)
+            return f->interpreterCallCount >= jitCallCountThreshold;
+        return true;
+#else
+        Q_UNUSED(f);
+        return false;
+#endif
+    }
+
+    QV4::ReturnedValue global();
 
 private:
 #if QT_CONFIG(qml_debug)
     QScopedPointer<QV4::Debugging::Debugger> m_debugger;
     QScopedPointer<QV4::Profiling::Profiler> m_profiler;
 #endif
+    int jitCallCountThreshold;
 };
 
 // This is a trick to tell the code generators that functions taking a NoThrowContext won't

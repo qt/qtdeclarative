@@ -67,8 +67,8 @@ public:
         return static_cast<QQuickDragAttachedPrivate *>(QObjectPrivate::get(attached)); }
 
     QQuickDragAttachedPrivate()
-        : attachedItem(0)
-        , mimeData(0)
+        : attachedItem(nullptr)
+        , mimeData(nullptr)
         , proposedAction(Qt::MoveAction)
         , supportedActions(Qt::MoveAction | Qt::CopyAction | Qt::LinkAction)
         , active(false)
@@ -231,7 +231,7 @@ void QQuickDragAttachedPrivate::deliverLeaveEvent()
     if (window) {
         QDragLeaveEvent event;
         deliverEvent(window, &event);
-        window = 0;
+        window = nullptr;
     }
 }
 
@@ -686,7 +686,7 @@ int QQuickDragAttached::drop()
         return acceptedAction;
     d->active = false;
 
-    QObject *target = 0;
+    QObject *target = nullptr;
 
     if (d->window) {
         QPoint scenePos = d->attachedItem->mapToScene(d->hotSpot).toPoint();
@@ -732,7 +732,7 @@ void QQuickDragAttached::cancel()
     d->deliverLeaveEvent();
 
     if (d->target) {
-        d->target = 0;
+        d->target = nullptr;
         emit targetChanged();
     }
 
@@ -783,7 +783,7 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
     deliverLeaveEvent();
 
     if (target) {
-        target = 0;
+        target = nullptr;
         emit q->targetChanged();
     }
 
@@ -836,7 +836,7 @@ void QQuickDragAttached::startDrag(QQmlV4Function *args)
 }
 
 QQuickDrag::QQuickDrag(QObject *parent)
-: QObject(parent), _target(0), _axis(XAndYAxis), _xmin(-FLT_MAX),
+: QObject(parent), _target(nullptr), _axis(XAndYAxis), _xmin(-FLT_MAX),
 _xmax(FLT_MAX), _ymin(-FLT_MAX), _ymax(FLT_MAX), _active(false), _filterChildren(false),
   _smoothed(true), _threshold(QGuiApplication::styleHints()->startDragDistance())
 {
@@ -861,9 +861,9 @@ void QQuickDrag::setTarget(QQuickItem *t)
 
 void QQuickDrag::resetTarget()
 {
-    if (_target == 0)
+    if (_target == nullptr)
         return;
-    _target = 0;
+    _target = nullptr;
     emit targetChanged();
 }
 

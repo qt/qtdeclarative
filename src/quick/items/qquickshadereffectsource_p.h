@@ -113,8 +113,8 @@ public:
     };
     Q_ENUM(TextureMirroring)
 
-    QQuickShaderEffectSource(QQuickItem *parent = 0);
-    ~QQuickShaderEffectSource();
+    QQuickShaderEffectSource(QQuickItem *parent = nullptr);
+    ~QQuickShaderEffectSource() override;
 
     WrapMode wrapMode() const;
     void setWrapMode(WrapMode mode);

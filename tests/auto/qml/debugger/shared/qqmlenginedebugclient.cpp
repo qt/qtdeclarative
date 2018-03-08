@@ -385,7 +385,7 @@ void QQmlEngineDebugClient::decode(QPacket &ds,
         case QmlObjectProperty::Object:
         {
             QmlDebugObjectReference obj;
-            obj.debugId = prop.value.toInt();
+            obj.name = data.value.toString();
             obj.className = prop.valueTypeName;
             prop.value = qVariantFromValue(obj);
             break;

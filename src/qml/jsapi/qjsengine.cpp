@@ -166,16 +166,30 @@ Q_DECLARE_METATYPE(QList<int>)
   properties of the proxy object. No binding code is needed because it
   is done dynamically using the Qt meta object system.
 
+  \snippet code/src_script_qjsengine.cpp 5
+
   Use newQMetaObject() to wrap a QMetaObject; this gives you a
   "script representation" of a QObject-based class. newQMetaObject()
   returns a proxy script object; enum values of the class are available
   as properties of the proxy object.
 
-  Constructors exposed to the meta-object system ( using Q_INVOKABLE ) can be
+  Constructors exposed to the meta-object system (using Q_INVOKABLE) can be
   called from the script to create a new QObject instance with
-  JavaScriptOwnership.
+  JavaScriptOwnership. For example, given the following class definition:
 
-  \snippet code/src_script_qjsengine.cpp 5
+  \snippet code/src_script_qjsengine.cpp 7
+
+  The \c staticMetaObject for the class can be exposed to JavaScript like so:
+
+  \snippet code/src_script_qjsengine.cpp 8
+
+  Instances of the class can then be created in JavaScript:
+
+  \snippet code/src_script_qjsengine.cpp 9
+
+  \note Currently only classes using the Q_OBJECT macro are supported; it is
+  not possible to expose the \c staticMetaObject of a Q_GADGET class to
+  JavaScript.
 
   \section2 Dynamic QObject Properties
 
@@ -290,8 +304,9 @@ QJSEngine::QJSEngine()
 
 QJSEngine::QJSEngine(QObject *parent)
     : QObject(*new QJSEnginePrivate, parent)
-    , d(new QV8Engine(this))
+    , m_v4Engine(new QV4::ExecutionEngine)
 {
+    m_v4Engine->v8Engine = new QV8Engine(this, m_v4Engine);
     checkForApplicationInstance();
 
     QJSEnginePrivate::addToDebugServer(this);
@@ -302,8 +317,9 @@ QJSEngine::QJSEngine(QObject *parent)
 */
 QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
     : QObject(dd, parent)
-    , d(new QV8Engine(this))
+    , m_v4Engine(new QV4::ExecutionEngine)
 {
+    m_v4Engine->v8Engine = new QV8Engine(this, m_v4Engine);
     checkForApplicationInstance();
 }
 
@@ -317,11 +333,12 @@ QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
 QJSEngine::~QJSEngine()
 {
     QJSEnginePrivate::removeFromDebugServer(this);
-    delete d;
+    delete m_v4Engine->v8Engine;
+    delete m_v4Engine;
 }
 
 /*!
-    \fn QV8Engine *QJSEngine::handle() const
+    \fn QV4::ExecutionEngine *QJSEngine::handle() const
     \internal
 */
 
@@ -338,7 +355,7 @@ QJSEngine::~QJSEngine()
 */
 void QJSEngine::collectGarbage()
 {
-    d->m_v4Engine->memoryManager->runGC();
+    m_v4Engine->memoryManager->runGC();
 }
 
 #if QT_DEPRECATED_SINCE(5, 6)
@@ -395,12 +412,12 @@ void QJSEngine::installTranslatorFunctions(const QJSValue &object)
 void QJSEngine::installExtensions(QJSEngine::Extensions extensions, const QJSValue &object)
 {
     QV4::ExecutionEngine *otherEngine = QJSValuePrivate::engine(&object);
-    if (otherEngine && otherEngine != d->m_v4Engine) {
+    if (otherEngine && otherEngine != m_v4Engine) {
         qWarning("QJSEngine: Trying to install extensions from a different engine");
         return;
     }
 
-    QV4::Scope scope(d->m_v4Engine);
+    QV4::Scope scope(m_v4Engine);
     QV4::ScopedObject obj(scope);
     QV4::Value *val = QJSValuePrivate::getValue(&object);
     if (val)
@@ -441,11 +458,11 @@ void QJSEngine::installExtensions(QJSEngine::Extensions extensions, const QJSVal
 */
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
 {
-    QV4::ExecutionEngine *v4 = d->m_v4Engine;
+    QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
     QV4::ScopedValue result(scope);
 
-    QV4::Script script(v4->rootContext(), QV4::Compiler::EvalCode, program, fileName, lineNumber);
+    QV4::Script script(v4->rootContext(), QV4::Compiler::GlobalCode, program, fileName, lineNumber);
     script.strictMode = false;
     if (v4->currentStackFrame)
         script.strictMode = v4->currentStackFrame->v4Function->isStrict();
@@ -473,9 +490,9 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
 */
 QJSValue QJSEngine::newObject()
 {
-    QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedValue v(scope, d->m_v4Engine->newObject());
-    return QJSValue(d->m_v4Engine, v->asReturnedValue());
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedValue v(scope, m_v4Engine->newObject());
+    return QJSValue(m_v4Engine, v->asReturnedValue());
 }
 
 /*!
@@ -485,12 +502,12 @@ QJSValue QJSEngine::newObject()
 */
 QJSValue QJSEngine::newArray(uint length)
 {
-    QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedArrayObject array(scope, d->m_v4Engine->newArrayObject());
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedArrayObject array(scope, m_v4Engine->newArrayObject());
     if (length < 0x1000)
         array->arrayReserve(length);
     array->setArrayLengthUnchecked(length);
-    return QJSValue(d->m_v4Engine, array.asReturnedValue());
+    return QJSValue(m_v4Engine, array.asReturnedValue());
 }
 
 /*!
@@ -516,7 +533,7 @@ QJSValue QJSEngine::newArray(uint length)
 QJSValue QJSEngine::newQObject(QObject *object)
 {
     Q_D(QJSEngine);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(d);
+    QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
     if (object) {
         QQmlData *ddata = QQmlData::get(object, true);
@@ -538,24 +555,24 @@ QJSValue QJSEngine::newQObject(QObject *object)
   When called as a constructor, a new instance of the class will be created.
   Only constructors exposed by Q_INVOKABLE will be visible from the script engine.
 
-  \sa newQObject()
+  \sa newQObject(), {QObject Integration}
 */
 
 QJSValue QJSEngine::newQMetaObject(const QMetaObject* metaObject) {
     Q_D(QJSEngine);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(d);
+    QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
     QV4::ScopedValue v(scope, QV4::QMetaObjectWrapper::create(v4, metaObject));
     return QJSValue(v4, v->asReturnedValue());
 }
 
-/*! \fn QJSValue QJSEngine::newQMetaObject<T>()
+/*! \fn template <typename T> QJSValue QJSEngine::newQMetaObject()
 
   \since 5.8
   Creates a JavaScript object that wraps the static QMetaObject associated
   with class \c{T}.
 
-  \sa newQObject()
+  \sa newQObject(), {QObject Integration}
 */
 
 
@@ -571,10 +588,9 @@ QJSValue QJSEngine::newQMetaObject(const QMetaObject* metaObject) {
 */
 QJSValue QJSEngine::globalObject() const
 {
-    Q_D(const QJSEngine);
-    QV4::Scope scope(d->m_v4Engine);
-    QV4::ScopedValue v(scope, d->m_v4Engine->globalObject);
-    return QJSValue(d->m_v4Engine, v->asReturnedValue());
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedValue v(scope, m_v4Engine->globalObject);
+    return QJSValue(m_v4Engine, v->asReturnedValue());
 }
 
 /*!
@@ -583,10 +599,9 @@ QJSValue QJSEngine::globalObject() const
  */
 QJSValue QJSEngine::create(int type, const void *ptr)
 {
-    Q_D(QJSEngine);
-    QV4::Scope scope(d->m_v4Engine);
+    QV4::Scope scope(m_v4Engine);
     QV4::ScopedValue v(scope, scope.engine->metaTypeToJS(type, ptr));
-    return QJSValue(d->m_v4Engine, v->asReturnedValue());
+    return QJSValue(m_v4Engine, v->asReturnedValue());
 }
 
 /*!
@@ -709,14 +724,14 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     }
 }
 
-/*! \fn QJSValue QJSEngine::toScriptValue(const T &value)
+/*! \fn template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)
 
     Creates a QJSValue with the given \a value.
 
     \sa fromScriptValue()
 */
 
-/*! \fn T QJSEngine::fromScriptValue(const QJSValue &value)
+/*! \fn template <typename T> T QJSEngine::fromScriptValue(const QJSValue &value)
 
     Returns the given \a value converted to the template type \c{T}.
 
@@ -726,7 +741,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 
 QJSEnginePrivate *QJSEnginePrivate::get(QV4::ExecutionEngine *e)
 {
-    return e->v8Engine->publicEngine()->d_func();
+    return e->jsEngine()->d_func();
 }
 
 QJSEnginePrivate::~QJSEnginePrivate()
@@ -768,7 +783,7 @@ QJSEngine *qjsEngine(const QObject *object)
 {
     QQmlData *data = QQmlData::get(object, false);
     if (!data || data->jsWrapper.isNullOrUndefined())
-        return 0;
+        return nullptr;
     return data->jsWrapper.engine()->jsEngine();
 }
 

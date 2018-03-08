@@ -382,11 +382,11 @@ double RuntimeHelpers::stringToNumber(const QString &string)
 {
     const QStringRef s = QStringRef(&string).trimmed();
     if (s.startsWith(QLatin1String("0x")) || s.startsWith(QLatin1String("0X")))
-        return s.toLong(0, 16);
+        return s.toLong(nullptr, 16);
     bool ok;
     QByteArray ba = s.toLatin1();
     const char *begin = ba.constData();
-    const char *end = 0;
+    const char *end = nullptr;
     double d = qstrtod(begin, &end, &ok);
     if (end - begin != ba.size()) {
         if (ba == "Infinity" || ba == "+Infinity")
@@ -457,7 +457,7 @@ Heap::Object *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const Val
     case Value::Undefined_Type:
     case Value::Null_Type:
         engine->throwTypeError();
-        return 0;
+        return nullptr;
     case Value::Boolean_Type:
         return engine->newBooleanObject(value.booleanValue());
     case Value::Managed_Type:
@@ -532,7 +532,7 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Valu
         if (!sright->d()->length())
             return sleft->asReturnedValue();
         MemoryManager *mm = engine->memoryManager;
-        return (mm->alloc<String>(sleft->d(), sright->d()))->asReturnedValue();
+        return (mm->alloc<ComplexString>(sleft->d(), sright->d()))->asReturnedValue();
     }
     double x = RuntimeHelpers::toNumber(pleft);
     double y = RuntimeHelpers::toNumber(pright);
@@ -604,6 +604,14 @@ static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, 
     return o->get(name);
 }
 
+/* load element:
+
+  Managed *m = object.heapObject();
+  if (m)
+     return m->internalClass->getIndexed(m, index);
+  return getIndexedFallback(object, index);
+*/
+
 ReturnedValue Runtime::method_loadElement(ExecutionEngine *engine, const Value &object, const Value &index)
 {
     uint idx = 0;
@@ -672,7 +680,7 @@ bool Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, 
 ReturnedValue Runtime::method_foreachIterator(ExecutionEngine *engine, const Value &in)
 {
     Scope scope(engine);
-    ScopedObject o(scope, (Object *)0);
+    ScopedObject o(scope, (Object *)nullptr);
     if (!in.isNullOrUndefined())
         o = in.toObject(engine);
     return engine->newForEachIteratorObject(o)->asReturnedValue();
@@ -1090,6 +1098,37 @@ ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &fu
     return static_cast<const FunctionObject &>(func).call(nullptr, argv, argc);
 }
 
+ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine, Value *base,
+                                                         int propertyIndex, Value *argv, int argc)
+{
+    Scope scope(engine);
+    ScopedFunctionObject fo(scope, method_loadQmlScopeObjectProperty(engine, *base, propertyIndex,
+                                                                     /*captureRequired*/true));
+    if (!fo) {
+        QString error = QStringLiteral("Property '%1' of scope object is not a function").arg(propertyIndex);
+        return engine->throwTypeError(error);
+    }
+
+    QObject *qmlScopeObj = static_cast<QmlContext *>(base)->d()->qml()->scopeObject;
+    ScopedValue qmlScopeValue(scope, QObjectWrapper::wrap(engine, qmlScopeObj));
+    return fo->call(qmlScopeValue, argv, argc);
+}
+
+ReturnedValue Runtime::method_callQmlContextObjectProperty(ExecutionEngine *engine, Value *base,
+                                                           int propertyIndex, Value *argv, int argc)
+{
+    Scope scope(engine);
+    ScopedFunctionObject fo(scope, method_loadQmlContextObjectProperty(engine, *base, propertyIndex,
+                                                                       /*captureRequired*/true));
+    if (!fo) {
+        QString error = QStringLiteral("Property '%1' of context object is not a function").arg(propertyIndex);
+        return engine->throwTypeError(error);
+    }
+
+    QObject *qmlContextObj = static_cast<QmlContext *>(base)->d()->qml()->context->contextData()->contextObject;
+    ScopedValue qmlContextValue(scope, QObjectWrapper::wrap(engine, qmlContextObj));
+    return fo->call(qmlContextValue, argv, argc);
+}
 
 ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &function, Value *argv, int argc)
 {
@@ -1160,7 +1199,7 @@ ReturnedValue Runtime::method_createCatchContext(ExecutionContext *parent, int e
 {
     ExecutionEngine *e = parent->engine();
     return parent->newCatchContext(e->currentStackFrame->v4Function->compilationUnit->runtimeStrings[exceptionVarNameIndex],
-                                   e->catchException(0))->asReturnedValue();
+                                   e->catchException(nullptr))->asReturnedValue();
 }
 
 void Runtime::method_declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
@@ -1260,7 +1299,7 @@ ReturnedValue Runtime::method_loadQmlIdObject(ExecutionEngine *engine, const Val
     if (!context || index >= (uint)context->idValueCount)
         return Encode::undefined();
 
-    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : 0;
+    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : nullptr;
     if (ep && ep->propertyCapture)
         ep->propertyCapture->captureProperty(&context->idValues[index].bindings);
 

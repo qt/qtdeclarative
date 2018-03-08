@@ -53,7 +53,7 @@
 #endif
 #include <private/qsgmaterialshader_p.h>
 
-#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID) && !defined(__UCLIBC__)
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID) && defined(__GLIBC__)
 #define CAN_BACKTRACE_EXECINFO
 #endif
 
@@ -399,7 +399,7 @@ QSGTexture::~QSGTexture()
 QSGTexture *QSGTexture::removedFromAtlas() const
 {
     Q_ASSERT_X(!isAtlasTexture(), "QSGTexture::removedFromAtlas()", "Called on a non-atlas texture");
-    return 0;
+    return nullptr;
 }
 
 /*!

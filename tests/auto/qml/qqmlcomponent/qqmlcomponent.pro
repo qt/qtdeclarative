@@ -7,6 +7,8 @@ SOURCES += tst_qqmlcomponent.cpp \
 
 HEADERS += ../../shared/testhttpserver.h
 
+RESOURCES += data/QtObjectComponent.qml
+
 include (../../shared/util.pri)
 
 TESTDATA = data/*

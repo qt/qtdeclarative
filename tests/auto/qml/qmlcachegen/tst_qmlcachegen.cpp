@@ -33,6 +33,7 @@
 #include <QProcess>
 #include <QLibraryInfo>
 #include <QSysInfo>
+#include <private/qqmlcomponent_p.h>
 
 class tst_qmlcachegen: public QObject
 {
@@ -45,6 +46,9 @@ private slots:
     void translationExpressionSupport();
     void signalHandlerParameters();
     void errorOnArgumentsInSignalHandler();
+    void aheadOfTimeCompilation();
+
+    void workerScripts();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -75,7 +79,7 @@ static bool generateCache(const QString &qmlFileName, QByteArray *capturedStderr
     if (capturedStderr == nullptr)
         proc.setProcessChannelMode(QProcess::ForwardedChannels);
     proc.setProgram(QLibraryInfo::location(QLibraryInfo::BinariesPath) + QDir::separator() + QLatin1String("qmlcachegen"));
-    proc.setArguments(QStringList() << (QLatin1String("--target-architecture=") + QSysInfo::buildCpuArchitecture()) << (QLatin1String("--target-abi=") + QSysInfo::buildAbi()) << qmlFileName);
+    proc.setArguments(QStringList() << qmlFileName);
     proc.start();
     if (!proc.waitForFinished())
         return false;
@@ -115,6 +119,16 @@ void tst_qmlcachegen::loadGeneratedFile()
 
     const QString cacheFilePath = testFilePath + QLatin1Char('c');
     QVERIFY(QFile::exists(cacheFilePath));
+
+    {
+        QFile cache(cacheFilePath);
+        QVERIFY(cache.open(QIODevice::ReadOnly));
+        const QV4::CompiledData::Unit *cacheUnit = reinterpret_cast<const QV4::CompiledData::Unit *>(cache.map(/*offset*/0, sizeof(QV4::CompiledData::Unit)));
+        QVERIFY(cacheUnit);
+        QVERIFY(cacheUnit->flags & QV4::CompiledData::Unit::StaticData);
+        QVERIFY(cacheUnit->flags & QV4::CompiledData::Unit::PendingTypeCompilation);
+    }
+
     QVERIFY(QFile::remove(testFilePath));
 
     QQmlEngine engine;
@@ -122,6 +136,13 @@ void tst_qmlcachegen::loadGeneratedFile()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QCOMPARE(obj->property("value").toInt(), 42);
+
+    auto componentPrivate = QQmlComponentPrivate::get(&component);
+    QVERIFY(componentPrivate);
+    auto compilationUnit = componentPrivate->compilationUnit;
+    QVERIFY(compilationUnit);
+    QVERIFY(compilationUnit->data);
+    QVERIFY(!(compilationUnit->data->flags & QV4::CompiledData::Unit::StaticData));
 }
 
 void tst_qmlcachegen::translationExpressionSupport()
@@ -223,6 +244,52 @@ void tst_qmlcachegen::errorOnArgumentsInSignalHandler()
     QByteArray errorOutput;
     QVERIFY(!generateCache(testFilePath, &errorOutput));
     QVERIFY2(errorOutput.contains("error: The use of the arguments object in signal handlers is"), errorOutput);
+}
+
+void tst_qmlcachegen::aheadOfTimeCompilation()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const auto writeTempFile = [&tempDir](const QString &fileName, const char *contents) {
+        QFile f(tempDir.path() + '/' + fileName);
+        const bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        Q_ASSERT(ok);
+        f.write(contents);
+        return f.fileName();
+    };
+
+    const QString testFilePath = writeTempFile("test.qml", "import QtQml 2.0\n"
+                                                           "QtObject {\n"
+                                                           "    function runTest() { var x = 0; while (x < 42) { ++x }; return x; }\n"
+                                                           "}");
+
+    QVERIFY(generateCache(testFilePath));
+
+    const QString cacheFilePath = testFilePath + QLatin1Char('c');
+    QVERIFY(QFile::exists(cacheFilePath));
+    QVERIFY(QFile::remove(testFilePath));
+
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QVariant result;
+    QMetaObject::invokeMethod(obj.data(), "runTest", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toInt(), 42);
+}
+
+void tst_qmlcachegen::workerScripts()
+{
+    QVERIFY(QFile::exists(":/workerscripts/worker.js"));
+    QVERIFY(QFile::exists(":/workerscripts/worker.qml"));
+    QCOMPARE(QFileInfo(":/workerscripts/worker.js").size(), 0);
+
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl("qrc:///workerscripts/worker.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QTRY_VERIFY(obj->property("success").toBool());
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)

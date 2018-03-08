@@ -112,7 +112,8 @@ void QSGSoftwareRenderer::render()
     QElapsedTimer renderTimer;
 
     setBackgroundColor(clearColor());
-    setBackgroundSize(QSize(m_paintDevice->width() / m_paintDevice->devicePixelRatio(),
+    setBackgroundRect(QRect(0, 0,
+                            m_paintDevice->width() / m_paintDevice->devicePixelRatio(),
                             m_paintDevice->height() / m_paintDevice->devicePixelRatio()));
 
     // Build Renderlist
@@ -155,6 +156,7 @@ void QSGSoftwareRenderer::render()
     m_flushRegion = renderNodes(&painter);
     qint64 renderTime = renderTimer.elapsed();
 
+    painter.end();
     if (m_backingStore != nullptr)
         m_backingStore->endPaint();
 

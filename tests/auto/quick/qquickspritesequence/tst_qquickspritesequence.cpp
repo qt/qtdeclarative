@@ -47,7 +47,7 @@ private slots:
 
 void tst_qquickspritesequence::test_properties()
 {
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
 
     window->setSource(testFileUrl("basic.qml"));
     window->show();
@@ -75,7 +75,7 @@ void tst_qquickspritesequence::test_huge()
        The large allocations of memory involved and separate codepath does make
        a doesn't crash test worthwhile.
     */
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
 
     window->setSource(testFileUrl("huge.qml"));
     window->show();
@@ -90,7 +90,7 @@ void tst_qquickspritesequence::test_huge()
 
 void tst_qquickspritesequence::test_framerateAdvance()
 {
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
 
     window->setSource(testFileUrl("advance.qml"));
     window->show();
@@ -106,7 +106,7 @@ void tst_qquickspritesequence::test_framerateAdvance()
 
 void tst_qquickspritesequence::test_jumpToCrash()
 {
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
 
     window->setSource(testFileUrl("crashonstart.qml"));
     window->show();
@@ -118,7 +118,7 @@ void tst_qquickspritesequence::test_jumpToCrash()
 
 void tst_qquickspritesequence::test_spriteBeforeGoal()
 {
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
 
     window->setSource(testFileUrl("spritebeforegoal.qml"));
     window->show();
@@ -130,7 +130,7 @@ void tst_qquickspritesequence::test_spriteBeforeGoal()
 
 void tst_qquickspritesequence::test_spriteAfterGoal()
 {
-    QQuickView *window = new QQuickView(0);
+    QQuickView *window = new QQuickView(nullptr);
 
     window->setSource(testFileUrl("spriteaftergoal.qml"));
     window->show();

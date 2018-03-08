@@ -101,7 +101,7 @@ using namespace QV4;
 
 static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 
-ReturnedValue throwTypeError(const BuiltinFunction *b, CallData *)
+ReturnedValue throwTypeError(const FunctionObject *b, const QV4::Value *, const QV4::Value *, int)
 {
     return b->engine()->throwTypeError();
 }
@@ -127,13 +127,16 @@ ExecutionEngine::ExecutionEngine()
     , bumperPointerAllocator(new WTF::BumpPointerAllocator)
     , jsStack(new WTF::PageAllocation)
     , gcStack(new WTF::PageAllocation)
-    , globalCode(0)
-    , v8Engine(0)
-    , argumentsAccessors(0)
+    , globalCode(nullptr)
+    , v8Engine(nullptr)
+    , argumentsAccessors(nullptr)
     , nArgumentsAccessors(0)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
-    , regExpCache(0)
-    , m_multiplyWrappedQObjects(0)
+    , regExpCache(nullptr)
+    , m_multiplyWrappedQObjects(nullptr)
+#if defined(V4_ENABLE_JIT) && !defined(V4_BOOTSTRAP)
+    , m_canAllocateExecutableMemory(OSAllocator::canAllocateExecutableMemory())
+#endif
 {
     memoryManager = new QV4::MemoryManager(this);
 
@@ -168,6 +171,15 @@ ExecutionEngine::ExecutionEngine()
                                              /* writable */ true, /* executable */ false,
                                              /* includesGuardPages */ true);
 
+    {
+        bool ok = false;
+        jitCallCountThreshold = qEnvironmentVariableIntValue("QV4_JIT_CALL_THRESHOLD", &ok);
+        if (!ok)
+            jitCallCountThreshold = 3;
+        if (qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER"))
+            jitCallCountThreshold = std::numeric_limits<int>::max();
+    }
+
     exceptionValue = jsAlloca(1);
     globalObject = static_cast<Object *>(jsAlloca(1));
     jsObjects = jsAlloca(NJSObjects);
@@ -188,6 +200,7 @@ ExecutionEngine::ExecutionEngine()
     internalClasses[Class_SimpleArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SimpleArrayData::staticVTable());
     internalClasses[Class_SparseArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SparseArrayData::staticVTable());
     internalClasses[Class_ExecutionContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::ExecutionContext::staticVTable());
+    internalClasses[Class_QmlContext] = internalClasses[EngineBase::Class_ExecutionContext]->changeVTable(QV4::QmlContext::staticVTable());
     internalClasses[Class_CallContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::CallContext::staticVTable());
 
     jsStrings[String_Empty] = newIdentifier(QString());
@@ -230,6 +243,7 @@ ExecutionEngine::ExecutionEngine()
     InternalClass *ic = internalClasses[Class_Empty]->changeVTable(QV4::Object::staticVTable());
     jsObjects[ObjectProto] = memoryManager->allocObject<ObjectPrototype>(ic);
     internalClasses[Class_Object] = ic->changePrototype(objectPrototype()->d());
+    internalClasses[EngineBase::Class_QmlContextWrapper] = internalClasses[Class_Object]->changeVTable(QV4::QQmlContextWrapper::staticVTable());
 
     ic = newInternalClass(ArrayPrototype::staticVTable(), objectPrototype());
     Q_ASSERT(ic->prototype);
@@ -275,8 +289,6 @@ ExecutionEngine::ExecutionEngine()
     ic = ic->changeVTable(ScriptFunction::staticVTable());
     internalClasses[EngineBase::Class_ScriptFunction] = ic->addMember(id_length(), Attr_ReadOnly, &index);
     Q_ASSERT(index == Heap::ScriptFunction::Index_Length);
-    internalClasses[EngineBase::Class_BuiltinFunction] = ic->changeVTable(BuiltinFunction::staticVTable());
-    Q_ASSERT(index == Heap::ScriptFunction::Index_Length);
     internalClasses[EngineBase::Class_ObjectProto] = internalClasses[Class_Object]->addMember(id_constructor(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 
@@ -302,7 +314,7 @@ ExecutionEngine::ExecutionEngine()
     internalClasses[EngineBase::Class_RegExpExecArray] = ic->addMember(id_input(), Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
-    ic = newInternalClass(ErrorObject::staticVTable(), 0);
+    ic = newInternalClass(ErrorObject::staticVTable(), nullptr);
     ic = ic->addMember((str = newIdentifier(QStringLiteral("stack"))), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorObject::Index_Stack);
     ic = ic->addMember((str = newIdentifier(QStringLiteral("fileName"))), Attr_Data|Attr_NotEnumerable, &index);
@@ -320,7 +332,7 @@ ExecutionEngine::ExecutionEngine()
     internalClasses[EngineBase::Class_ErrorProto] = ic->addMember(id_name(), Attr_Data|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorPrototype::Index_Name);
 
-    jsObjects[GetStack_Function] = BuiltinFunction::create(rootContext(), str = newIdentifier(QStringLiteral("stack")), ErrorObject::method_get_stack);
+    jsObjects[GetStack_Function] = FunctionObject::createBuiltinFunction(rootContext(), str = newIdentifier(QStringLiteral("stack")), ErrorObject::method_get_stack);
     getStackFunction()->defineReadonlyProperty(id_length(), Primitive::fromInt32(0));
 
     jsObjects[ErrorProto] = memoryManager->allocObject<ErrorPrototype>(internalClasses[EngineBase::Class_ErrorProto], objectPrototype());
@@ -384,8 +396,8 @@ ExecutionEngine::ExecutionEngine()
     jsObjects[DataView_Ctor] = memoryManager->allocObject<DataViewCtor>(global);
     jsObjects[DataViewProto] = memoryManager->allocObject<DataViewPrototype>();
     static_cast<DataViewPrototype *>(dataViewPrototype())->init(this, dataViewCtor());
-    jsObjects[ValueTypeProto] = (Heap::Base *) 0;
-    jsObjects[SignalHandlerProto] = (Heap::Base *) 0;
+    jsObjects[ValueTypeProto] = (Heap::Base *) nullptr;
+    jsObjects[SignalHandlerProto] = (Heap::Base *) nullptr;
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
         static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocObject<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
@@ -442,8 +454,8 @@ ExecutionEngine::ExecutionEngine()
         ScopedString pi(scope, newIdentifier(piString));
         ScopedString pf(scope, newIdentifier(pfString));
         ExecutionContext *global = rootContext();
-        ScopedFunctionObject parseIntFn(scope, BuiltinFunction::create(global, pi, GlobalFunctions::method_parseInt));
-        ScopedFunctionObject parseFloatFn(scope, BuiltinFunction::create(global, pf, GlobalFunctions::method_parseFloat));
+        ScopedFunctionObject parseIntFn(scope, FunctionObject::createBuiltinFunction(global, pi, GlobalFunctions::method_parseInt));
+        ScopedFunctionObject parseFloatFn(scope, FunctionObject::createBuiltinFunction(global, pf, GlobalFunctions::method_parseFloat));
         parseIntFn->defineReadonlyConfigurableProperty(id_length(), Primitive::fromInt32(2));
         parseFloatFn->defineReadonlyConfigurableProperty(id_length(), Primitive::fromInt32(1));
         globalObject->defineDefaultProperty(piString, parseIntFn);
@@ -462,13 +474,13 @@ ExecutionEngine::ExecutionEngine()
     globalObject->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
     ScopedString name(scope, newString(QStringLiteral("thrower")));
-    jsObjects[ThrowerObject] = BuiltinFunction::create(global, name, ::throwTypeError);
+    jsObjects[ThrowerObject] = FunctionObject::createBuiltinFunction(global, name, ::throwTypeError);
 }
 
 ExecutionEngine::~ExecutionEngine()
 {
     delete m_multiplyWrappedQObjects;
-    m_multiplyWrappedQObjects = 0;
+    m_multiplyWrappedQObjects = nullptr;
     delete identifierTable;
     delete memoryManager;
 
@@ -519,7 +531,7 @@ InternalClass *ExecutionEngine::newClass(const InternalClass &other)
 
 InternalClass *ExecutionEngine::newInternalClass(const VTable *vtable, Object *prototype)
 {
-    return internalClasses[EngineBase::Class_Empty]->changeVTable(vtable)->changePrototype(prototype ? prototype->d() : 0);
+    return internalClasses[EngineBase::Class_Empty]->changeVTable(vtable)->changePrototype(prototype ? prototype->d() : nullptr);
 }
 
 Heap::Object *ExecutionEngine::newObject()
@@ -721,18 +733,18 @@ Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
 Heap::QmlContext *ExecutionEngine::qmlContext() const
 {
     if (!currentStackFrame)
-        return 0;
+        return nullptr;
     Heap::ExecutionContext *ctx = currentContext()->d();
 
     if (ctx->type != Heap::ExecutionContext::Type_QmlContext && !ctx->outer)
-        return 0;
+        return nullptr;
 
     while (ctx->outer && ctx->outer->type != Heap::ExecutionContext::Type_GlobalContext)
         ctx = ctx->outer;
 
     Q_ASSERT(ctx);
     if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
-        return 0;
+        return nullptr;
 
     return static_cast<Heap::QmlContext *>(ctx);
 }
@@ -741,7 +753,7 @@ QObject *ExecutionEngine::qmlScopeObject() const
 {
     Heap::QmlContext *ctx = qmlContext();
     if (!ctx)
-        return 0;
+        return nullptr;
 
     return ctx->qml()->scopeObject;
 }
@@ -771,7 +783,7 @@ QQmlContextData *ExecutionEngine::callingQmlContext() const
 {
     Heap::QmlContext *ctx = qmlContext();
     if (!ctx)
-        return 0;
+        return nullptr;
 
     return ctx->qml()->context->contextData();
 }
@@ -868,14 +880,14 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     CppStackFrame *f = currentStackFrame;
     while (f) {
         if (f->v4Function) {
-            base.setUrl(f->v4Function->sourceFile());
+            base = f->v4Function->finalUrl();
             break;
         }
         f = f->parent;
     }
 
     if (base.isEmpty() && globalCode)
-        base.setUrl(globalCode->sourceFile());
+        base = globalCode->finalUrl();
 
     if (base.isEmpty())
         return src;
@@ -898,7 +910,7 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
         nArgumentsAccessors = qMax(8, n);
         argumentsAccessors = new Property[nArgumentsAccessors];
         if (oldAccessors) {
-            memcpy(argumentsAccessors, oldAccessors, oldSize*sizeof(Property));
+            memcpy(static_cast<void *>(argumentsAccessors), static_cast<const void *>(oldAccessors), oldSize*sizeof(Property));
             delete [] oldAccessors;
         }
         ExecutionContext *global = rootContext();
@@ -1079,7 +1091,7 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
 typedef QSet<QV4::Heap::Object *> V4ObjectSet;
 static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int typeHint, bool createJSValueForObjects, V4ObjectSet *visitedObjects);
 static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::Value &value);
-static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V4ObjectSet *visitedObjects = 0);
+static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V4ObjectSet *visitedObjects = nullptr);
 static bool convertToNativeQObject(QV4::ExecutionEngine *e, const QV4::Value &value,
                             const QByteArray &targetType,
                             void **result);
@@ -1093,7 +1105,7 @@ static QV4::ReturnedValue variantToJS(QV4::ExecutionEngine *v4, const QVariant &
 
 QVariant ExecutionEngine::toVariant(const Value &value, int typeHint, bool createJSValueForObjects)
 {
-    return ::toVariant(this, value, typeHint, createJSValueForObjects, 0);
+    return ::toVariant(this, value, typeHint, createJSValueForObjects, nullptr);
 }
 
 
@@ -1457,7 +1469,7 @@ static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVarian
 // Returns the value if conversion succeeded, an empty handle otherwise.
 QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
 {
-    Q_ASSERT(data != 0);
+    Q_ASSERT(data != nullptr);
 
     // check if it's one of the types we know
     switch (QMetaType::Type(type)) {
@@ -1545,13 +1557,9 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
     return 0;
 }
 
-bool ExecutionEngine::canJIT()
+ReturnedValue ExecutionEngine::global()
 {
-#ifdef V4_ENABLE_JIT
-    return true;
-#else
-    return false;
-#endif
+    return globalObject->asReturnedValue();
 }
 
 // Converts a JS value to a meta-type.
@@ -1734,7 +1742,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
                     QByteArray className = name.left(name.size()-1);
                     QV4::ScopedObject p(scope, proto.getPointer());
                     if (QObject *qobject = qtObjectFromJS(this, p))
-                        canCast = qobject->qt_metacast(className) != 0;
+                        canCast = qobject->qt_metacast(className) != nullptr;
                 }
                 if (canCast) {
                     QByteArray varTypeName = QMetaType::typeName(var.userType());
@@ -1748,7 +1756,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
             }
         }
     } else if (value->isNull() && name.endsWith('*')) {
-        *reinterpret_cast<void* *>(data) = 0;
+        *reinterpret_cast<void* *>(data) = nullptr;
         return true;
     } else if (type == qMetaTypeId<QJSValue>()) {
         *reinterpret_cast<QJSValue*>(data) = QJSValue(this, value->asReturnedValue());
@@ -1776,7 +1784,7 @@ static bool convertToNativeQObject(QV4::ExecutionEngine *e, const QV4::Value &va
 static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::Value &value)
 {
     if (!value.isObject())
-        return 0;
+        return nullptr;
 
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::VariantObject> v(scope, value);
@@ -1789,7 +1797,7 @@ static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::Value &v
     }
     QV4::Scoped<QV4::QObjectWrapper> wrapper(scope, value);
     if (!wrapper)
-        return 0;
+        return nullptr;
     return wrapper->object();
 }
 

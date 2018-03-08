@@ -172,13 +172,13 @@ class QQuickFlickableReboundTransition : public QQuickTransitionManager
 {
 public:
     QQuickFlickableReboundTransition(QQuickFlickable *f, const QString &name)
-        : flickable(f), axisData(0), propName(name), active(false)
+        : flickable(f), axisData(nullptr), propName(name), active(false)
     {
     }
 
     ~QQuickFlickableReboundTransition()
     {
-        flickable = 0;
+        flickable = nullptr;
     }
 
     bool startTransition(QQuickFlickablePrivate::AxisData *data, qreal toPos) {
@@ -252,12 +252,12 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , lastPressTime(0)
     , deceleration(QML_FLICK_DEFAULTDECELERATION)
     , maxVelocity(QML_FLICK_DEFAULTMAXVELOCITY), reportedVelocitySmoothing(100)
-    , delayedPressEvent(0), pressDelay(0), fixupDuration(400)
-    , flickBoost(1.0), fixupMode(Normal), vTime(0), visibleArea(0)
+    , delayedPressEvent(nullptr), pressDelay(0), fixupDuration(400)
+    , flickBoost(1.0), fixupMode(Normal), vTime(0), visibleArea(nullptr)
     , flickableDirection(QQuickFlickable::AutoFlickDirection)
     , boundsBehavior(QQuickFlickable::DragAndOvershootBounds)
     , boundsMovement(QQuickFlickable::FollowBoundsBehavior)
-    , rebound(0)
+    , rebound(nullptr)
 {
 }
 
@@ -317,7 +317,7 @@ void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometr
 {
     Q_Q(QQuickFlickable);
     if (item == contentItem) {
-        Qt::Orientations orient = 0;
+        Qt::Orientations orient = nullptr;
         if (change.xChange())
             orient |= Qt::Horizontal;
         if (change.yChange())
@@ -725,7 +725,19 @@ QQuickFlickable::~QQuickFlickable()
 
     These properties hold the surface coordinate currently at the top-left
     corner of the Flickable. For example, if you flick an image up 100 pixels,
-    \c contentY will be 100.
+    \c contentY will increase by 100.
+
+    \note If you flick back to the origin (the top-left corner), after the
+    rebound animation, \c contentX will settle to the same value as \c originX,
+    and \c contentY to \c originY. These are usually (0,0), however ListView
+    and GridView may have an arbitrary origin due to delegate size variation,
+    or item insertion/removal outside the visible region. So if you want to
+    implement something like a vertical scrollbar, one way is to use
+    \c {y: (contentY - originY) * (height / contentHeight)}
+    for the position; another way is to use the normalized values in
+    \l {QtQuick::Flickable::visibleArea}{visibleArea}.
+
+    \sa originX, originY
 */
 qreal QQuickFlickable::contentX() const
 {
@@ -739,7 +751,8 @@ void QQuickFlickable::setContentX(qreal pos)
     d->hData.explicitValue = true;
     d->resetTimeline(d->hData);
     d->hData.vTime = d->timeline.time();
-    movementEnding(true, false);
+    if (isMoving() || isFlicking())
+        movementEnding(true, false);
     if (-pos != d->hData.move.value())
         d->hData.move.setValue(-pos);
 }
@@ -756,7 +769,8 @@ void QQuickFlickable::setContentY(qreal pos)
     d->vData.explicitValue = true;
     d->resetTimeline(d->vData);
     d->vData.vTime = d->timeline.time();
-    movementEnding(false, true);
+    if (isMoving() || isFlicking())
+        movementEnding(false, true);
     if (-pos != d->vData.move.value())
         d->vData.move.setValue(-pos);
 }
@@ -1421,17 +1435,23 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
     case Qt::ScrollUpdate:
         if (d->scrollingPhase)
             d->pressed = true;
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
+        // TODO eliminate this timer when ScrollMomentum has been added
         d->movementEndingTimer.start(MovementEndingTimerInterval, this);
 #endif
         break;
     case Qt::ScrollEnd:
+        // TODO most of this should be done at transition to ScrollMomentum phase,
+        // then do what the movementEndingTimer triggers at transition to ScrollEnd phase
         d->pressed = false;
         d->scrollingPhase = false;
         d->draggingEnding();
         event->accept();
         returnToBounds();
         d->lastPosTime = -1;
+#ifdef Q_OS_MACOS
+        d->movementEndingTimer.start(MovementEndingTimerInterval, this);
+#endif
         return;
     }
 
@@ -1535,7 +1555,7 @@ void QQuickFlickablePrivate::clearDelayedPress()
     if (delayedPressEvent) {
         delayedPressTimer.stop();
         delete delayedPressEvent;
-        delayedPressEvent = 0;
+        delayedPressEvent = nullptr;
     }
 }
 
@@ -1545,7 +1565,7 @@ void QQuickFlickablePrivate::replayDelayedPress()
     if (delayedPressEvent) {
         // Losing the grab will clear the delayed press event; take control of it here
         QScopedPointer<QMouseEvent> mouseEvent(delayedPressEvent);
-        delayedPressEvent = 0;
+        delayedPressEvent = nullptr;
         delayedPressTimer.stop();
 
         // If we have the grab, release before delivering the event
@@ -1838,7 +1858,7 @@ int QQuickFlickablePrivate::data_count(QQmlListProperty<QObject> *)
 QObject *QQuickFlickablePrivate::data_at(QQmlListProperty<QObject> *, int)
 {
     // XXX todo
-    return 0;
+    return nullptr;
 }
 
 void QQuickFlickablePrivate::data_clear(QQmlListProperty<QObject> *)
@@ -2150,6 +2170,8 @@ void QQuickFlickable::setRightMargin(qreal m)
     This is usually (0,0), however ListView and GridView may have an arbitrary
     origin due to delegate size variation, or item insertion/removal outside
     the visible region.
+
+    \sa contentX, contentY
 */
 
 qreal QQuickFlickable::originY() const
@@ -2180,25 +2202,25 @@ qreal QQuickFlickable::originX() const
 void QQuickFlickable::resizeContent(qreal w, qreal h, QPointF center)
 {
     Q_D(QQuickFlickable);
-    if (w != d->hData.viewSize) {
-        qreal oldSize = d->hData.viewSize;
-        d->hData.viewSize = w;
-        d->contentItem->setWidth(w);
+    const qreal oldHSize = d->hData.viewSize;
+    const qreal oldVSize = d->vData.viewSize;
+    const bool needToUpdateWidth = w != oldHSize;
+    const bool needToUpdateHeight = h != oldVSize;
+    d->hData.viewSize = w;
+    d->vData.viewSize = h;
+    d->contentItem->setSize(QSizeF(w, h));
+    if (needToUpdateWidth)
         emit contentWidthChanged();
-        if (center.x() != 0) {
-            qreal pos = center.x() * w / oldSize;
-            setContentX(contentX() + pos - center.x());
-        }
-    }
-    if (h != d->vData.viewSize) {
-        qreal oldSize = d->vData.viewSize;
-        d->vData.viewSize = h;
-        d->contentItem->setHeight(h);
+    if (needToUpdateHeight)
         emit contentHeightChanged();
-        if (center.y() != 0) {
-            qreal pos = center.y() * h / oldSize;
-            setContentY(contentY() + pos - center.y());
-        }
+
+    if (center.x() != 0) {
+        qreal pos = center.x() * w / oldHSize;
+        setContentX(contentX() + pos - center.x());
+    }
+    if (center.y() != 0) {
+        qreal pos = center.y() * h / oldVSize;
+        setContentY(contentY() + pos - center.y());
     }
     d->updateBeginningEnd();
 }
@@ -2654,13 +2676,15 @@ void QQuickFlickable::movementEnding(bool hMovementEnding, bool vMovementEnding)
     if (hMovementEnding && d->hData.moving
             && (!d->pressed && !d->stealMouse)) {
         d->hData.moving = false;
-        d->hMoved = false;
+        if (!d->scrollingPhase)
+            d->hMoved = false;
         emit movingHorizontallyChanged();
     }
     if (vMovementEnding && d->vData.moving
             && (!d->pressed && !d->stealMouse)) {
         d->vData.moving = false;
-        d->vMoved = false;
+        if (!d->scrollingPhase)
+            d->vMoved = false;
         emit movingVerticallyChanged();
     }
     if (wasMoving && !isMoving()) {

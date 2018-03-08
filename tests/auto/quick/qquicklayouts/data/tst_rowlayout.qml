@@ -68,6 +68,66 @@ Item {
             return [item.x, item.y, item.width, item.height];
         }
 
+        Component {
+            id: itemsWithAnchorsLayout_Component
+            RowLayout {
+                spacing: 2
+                Item {
+                    anchors.fill: parent
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.centerIn: parent
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.left: parent.left
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.right: parent.right
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.top: parent.top
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.bottom: parent.bottom
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter: parent.verticalCenter
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                Item {
+                    anchors.margins: 42     // although silly, it should not cause a warning from the Layouts POV
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+            }
+        }
+
+        function test_warnAboutLayoutItemsWithAnchors()
+        {
+            var fullPath = Qt.resolvedUrl("tst_rowlayout.qml")
+            for (var i = 0; i < 7; ++i) {
+                ignoreWarning(fullPath + ":" + (75 + 5*i) +":17: QML Item: Detected anchors on an item that is managed by a layout. "
+                    + "This is undefined behavior; use Layout.alignment instead.")
+            }
+            var layout = itemsWithAnchorsLayout_Component.createObject(container)
+            waitForRendering(layout)
+            layout.destroy()
+        }
+
         function test_fixedAndExpanding() {
             var test_layoutStr =
                'import QtQuick 2.2;                     \
@@ -510,6 +570,23 @@ Item {
                     { tag: "expandPrefToExplicitMin",  layoutHints: [24, -1, -1], childHints: [11, 21, 31], expected:[24, 24, 31]},
                     { tag: "boundPrefToExplicitMax",   layoutHints: [-1, -1, 19], childHints: [11, 21, 31], expected:[11, 19, 19]},
                     { tag: "boundAllToExplicitMax",    layoutHints: [-1, -1,  9], childHints: [11, 21, 31], expected:[ 9,  9,  9]},
+
+                    /**
+                     * Test how fractional size hint values are rounded. Some hints are ceiled towards the closest integer.
+                     * Note some of these tests are not authorative, but are here to demonstrate current behavior.
+                     * To summarize, it seems to be:
+                     *      - min: always ceiled
+                     *      - pref:  Ceils only implicit (!) hints. Might also be ceiled if explicit
+                              preferred size is less than implicit minimum size, but that's just a
+                              side-effect of that preferred should never be less than minimum.
+                              (tag "ceilShrinkMinToPref" below)
+                     *      - max: never ceiled
+                     */
+                    { tag: "ceilImplicitMin",       layoutHints: [ -1,  -1,  -1], childHints: [ .1, 1.1, 9.1], expected:[  1,   2, 9.1]},
+                    { tag: "ceilExplicitMin",       layoutHints: [1.1,  -1,  -1], childHints: [ .1, 2.1, 9.1], expected:[  2,   3, 9.1]},
+                    { tag: "ceilImplicitMin2",      layoutHints: [ -1, 4.1,  -1], childHints: [ .1, 1.1, 9.1], expected:[  1, 4.1, 9.1]},
+                    { tag: "ceilShrinkMinToPref",   layoutHints: [ -1, 2.1,  -1], childHints: [  5, 6.1, 8.1], expected:[  3,   3, 8.1]},
+                    { tag: "ceilExpandMaxToPref",   layoutHints: [ -1, 6.1,  -1], childHints: [1.1, 3.1, 3.1], expected:[  2, 6.1, 6.1]},
                     ];
         }
 
@@ -952,6 +1029,7 @@ Item {
 
             fixed.implicitWidth = 100
             waitForRendering(layout)
+            wait(0);    // Trigger processEvents() (allow LayoutRequest to be processed)
             compare(itemRect(fixed),  [0,0,100,20])
             compare(itemRect(filler), [100,0,100,20])
         }

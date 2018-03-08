@@ -163,9 +163,8 @@ public:
     // be available anymore when we send the data.
     struct RefLocation : public Location {
         RefLocation()
-            : Location(), locationType(MaximumRangeType), sent(false)
+            : Location(), locationType(MaximumRangeType), something(nullptr), sent(false)
         {
-            function = nullptr;
         }
 
         RefLocation(QV4::Function *ref)
@@ -226,6 +225,9 @@ public:
 
         void addref()
         {
+            if (isNull())
+                return;
+
             switch (locationType) {
             case Binding:
                 function->compilationUnit->addref();
@@ -247,6 +249,9 @@ public:
 
         void release()
         {
+            if (isNull())
+                return;
+
             switch (locationType) {
             case Binding:
                 function->compilationUnit->release();
@@ -271,12 +276,18 @@ public:
             return locationType != MaximumRangeType;
         }
 
+        bool isNull() const
+        {
+            return !something;
+        }
+
         RangeType locationType;
         union {
             QV4::Function *function;
             QV4::CompiledData::CompilationUnit *unit;
             QQmlBoundSignalExpression *boundSignal;
             QQmlDataBlob *blob;
+            void *something;
         };
         bool sent;
     };
@@ -287,17 +298,23 @@ public:
     {
         // Use the QV4::Function as ID, as that is common among different instances of the same
         // component. QQmlBinding is per instance.
-        // Add 1 to the ID, to make it different from the IDs the V4 profiler produces. The +1 makes
-        // the pointer point into the middle of the QV4::Function. Thus it still points to valid
-        // memory but we cannot accidentally create a duplicate key from another object.
-        quintptr locationId(id(function) + 1);
+        // Add 1 to the ID, to make it different from the IDs the V4 and signal handling profilers
+        // produce. The +1 makes the pointer point into the middle of the QV4::Function. Thus it
+        // still points to valid memory but we cannot accidentally create a duplicate key from
+        // another object.
+        // If there is no function, use a static but valid address: The profiler itself.
+        quintptr locationId = function ? id(function) + 1 : id(this);
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
                                        (1 << RangeStart | 1 << RangeLocation), Binding,
                                        locationId));
 
         RefLocation &location = m_locations[locationId];
-        if (!location.isValid())
-            location = RefLocation(function);
+        if (!location.isValid()) {
+            if (function)
+                location = RefLocation(function);
+            else // Make it valid without actually providing a location
+                location.locationType = Binding;
+        }
     }
 
     // Have toByteArrays() construct another RangeData event from the same QString later.
@@ -316,7 +333,12 @@ public:
 
     void startHandlingSignal(QQmlBoundSignalExpression *expression)
     {
-        quintptr locationId(id(expression));
+        // Use the QV4::Function as ID, as that is common among different instances of the same
+        // component. QQmlBoundSignalExpression is per instance.
+        // Add 2 to the ID, to make it different from the IDs the V4 and binding profilers produce.
+        // The +2 makes the pointer point into the middle of the QV4::Function. Thus it still points
+        // to valid memory but we cannot accidentally create a duplicate key from another object.
+        quintptr locationId(id(expression->function()) + 2);
         m_data.append(QQmlProfilerData(m_timer.nsecsElapsed(),
                                        (1 << RangeStart | 1 << RangeLocation), HandlingSignal,
                                        locationId));
@@ -428,7 +450,7 @@ struct QQmlCompilingProfiler : public QQmlProfilerHelper {
 struct QQmlVmeProfiler : public QQmlProfilerDefinitions {
 public:
 
-    QQmlVmeProfiler() : profiler(0) {}
+    QQmlVmeProfiler() : profiler(nullptr) {}
 
     void init(QQmlProfiler *p, int maxDepth)
     {
@@ -499,7 +521,12 @@ private:
     QQmlProfiler *profiler;
 };
 
+#endif // QT_CONFIG(qml_debug)
+
 QT_END_NAMESPACE
+
+#if QT_CONFIG(qml_debug)
+
 Q_DECLARE_METATYPE(QVector<QQmlProfilerData>)
 Q_DECLARE_METATYPE(QQmlProfiler::LocationHash)
 

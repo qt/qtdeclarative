@@ -62,14 +62,14 @@ using namespace QV4;
 
 Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
     : line(1), column(0), context(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
-    , compilationUnit(compilationUnit), vmFunction(0), parseAsBinding(true)
+    , compilationUnit(compilationUnit), vmFunction(nullptr), parseAsBinding(true)
 {
     if (qml)
         qmlContext.set(v4, *qml);
 
     parsed = true;
 
-    vmFunction = compilationUnit ? compilationUnit->linkToEngine(v4) : 0;
+    vmFunction = compilationUnit ? compilationUnit->linkToEngine(v4) : nullptr;
 }
 
 Script::~Script()
@@ -88,7 +88,7 @@ void Script::parse()
     ExecutionEngine *v4 = context->engine();
     Scope valueScope(v4);
 
-    Module module(v4->debugger() != 0);
+    Module module(v4->debugger() != nullptr);
 
     Engine ee, *engine = &ee;
     Lexer lexer(engine);
@@ -121,7 +121,7 @@ void Script::parse()
         RuntimeCodegen cg(v4, &jsGenerator, strictMode);
         if (inheritContext)
             cg.setUseFastLookups(false);
-        cg.generateFromProgram(sourceFile, sourceCode, program, &module, compilationMode);
+        cg.generateFromProgram(sourceFile, sourceFile, sourceCode, program, &module, compilationMode);
         if (v4->hasException)
             return;
 
@@ -149,10 +149,10 @@ ReturnedValue Script::run()
     if (qmlContext.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        return vmFunction->call(engine->globalObject, 0, 0, context);
+        return vmFunction->call(engine->globalObject, nullptr, 0, context);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
-        return vmFunction->call(0, 0, 0, qml);
+        return vmFunction->call(nullptr, nullptr, 0, qml);
     }
 }
 
@@ -164,8 +164,8 @@ Function *Script::function()
 }
 
 QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compiler::Module *module, Compiler::JSUnitGenerator *unitGenerator,
-                                                                      const QUrl &url, const QString &source, QList<QQmlError> *reportedErrors,
-                                                                      Directives *directivesCollector)
+                                                                      const QString &fileName, const QString &finalUrl, const QString &source,
+                                                                      QList<QQmlError> *reportedErrors, Directives *directivesCollector)
 {
     using namespace QV4::Compiler;
     using namespace QQmlJS::AST;
@@ -184,12 +184,12 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
     const auto diagnosticMessages = parser.diagnosticMessages();
     for (const DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
-            qWarning("%s:%d : %s", qPrintable(url.toString()), m.loc.startLine, qPrintable(m.message));
+            qWarning("%s:%d : %s", qPrintable(fileName), m.loc.startLine, qPrintable(m.message));
             continue;
         }
 
         QQmlError error;
-        error.setUrl(url);
+        error.setUrl(QUrl(fileName));
         error.setDescription(m.message);
         error.setLine(m.loc.startLine);
         error.setColumn(m.loc.startColumn);
@@ -199,27 +199,48 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
     if (!errors.isEmpty()) {
         if (reportedErrors)
             *reportedErrors << errors;
-        return 0;
+        return nullptr;
     }
 
     Program *program = AST::cast<Program *>(parser.rootNode());
     if (!program) {
         // if parsing was successful, and we have no program, then
         // we're done...:
-        return 0;
+        return nullptr;
     }
 
     Codegen cg(unitGenerator, /*strict mode*/false);
     cg.setUseFastLookups(false);
-    cg.generateFromProgram(url.toString(), source, program, module, GlobalCode);
+    cg.generateFromProgram(fileName, finalUrl, source, program, module, GlobalCode);
     errors = cg.qmlErrors();
     if (!errors.isEmpty()) {
         if (reportedErrors)
             *reportedErrors << errors;
-        return 0;
+        return nullptr;
     }
 
     return cg.generateCompilationUnit(/*generate unit data*/false);
+}
+
+Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl)
+{
+    if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(originalUrl)) {
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> jsUnit;
+        jsUnit.adopt(new QV4::CompiledData::CompilationUnit(cachedUnit));
+        return new QV4::Script(engine, qmlContext, jsUnit);
+    }
+
+    QFile f(fileName);
+    if (!f.open(QIODevice::ReadOnly))
+        return nullptr;
+
+    QByteArray data = f.readAll();
+    QString sourceCode = QString::fromUtf8(data);
+    QmlIR::Document::removeScriptPragmas(sourceCode);
+
+    auto result = new QV4::Script(engine, qmlContext, sourceCode, originalUrl.toString());
+    result->parse();
+    return result;
 }
 
 QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext)

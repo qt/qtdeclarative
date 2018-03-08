@@ -83,9 +83,11 @@ protected:
     QRegion optimizeRenderList();
 
     void setBackgroundColor(const QColor &color);
-    void setBackgroundSize(const QSize &size);
+    void setBackgroundRect(const QRect &rect);
     QColor backgroundColor();
-    QSize backgroundSize();
+    QRect backgroundRect();
+    // only known after calling optimizeRenderList()
+    bool isOpaque() const { return m_isOpaque; }
 
 private:
     void nodeAdded(QSGNode *node);
@@ -102,6 +104,7 @@ private:
 
     QRegion m_dirtyRegion;
     QRegion m_obscuredRegion;
+    bool m_isOpaque = false;
 
     QSGSoftwareRenderableNodeUpdater *m_nodeUpdater;
 };

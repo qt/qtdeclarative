@@ -114,9 +114,9 @@ public:
     static inline QQuickWindowPrivate *get(QQuickWindow *c) { return c->d_func(); }
 
     QQuickWindowPrivate();
-    virtual ~QQuickWindowPrivate();
+    ~QQuickWindowPrivate() override;
 
-    void init(QQuickWindow *, QQuickRenderControl *control = 0);
+    void init(QQuickWindow *, QQuickRenderControl *control = nullptr);
 
     QQuickRootItem *contentItem;
     QSet<QQuickItem *> parentlessItems;
@@ -141,11 +141,12 @@ public:
     // Mouse positions are saved in widget coordinates
     QPointF lastMousePosition;
     bool deliverTouchAsMouse(QQuickItem *item, QQuickPointerEvent *pointerEvent);
+    bool isDeliveringTouchAsMouse() const { return touchMouseId != -1 && touchMouseDevice; }
     void translateTouchEvent(QTouchEvent *touchEvent);
-    void setMouseGrabber(QQuickItem *grabber);
     void grabTouchPoints(QObject *grabber, const QVector<int> &ids);
     void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true);
-    static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = 0);
+    void sendUngrabEvent(QQuickItem *grabber, bool touch);
+    static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = nullptr);
     void deliverToPassiveGrabbers(const QVector<QPointer <QQuickPointerHandler> > &passiveGrabbers, QQuickPointerEvent *pointerEvent);
     void deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent);
     bool sendFilteredMouseEvent(QEvent *event, QQuickItem *receiver, QQuickItem *filteringParent);
@@ -167,6 +168,7 @@ public:
 
     // the device-specific event instances which are reused during event delivery
     mutable QVector<QQuickPointerEvent *> pointerEventInstances;
+    QQuickPointerEvent *queryPointerEventInstance(QQuickPointerDevice *device, QEvent::Type eventType = QEvent::None) const;
     QQuickPointerEvent *pointerEventInstance(QQuickPointerDevice *device, QEvent::Type eventType = QEvent::None) const;
 
     // delivery of pointer events:
@@ -203,8 +205,8 @@ public:
     };
     Q_DECLARE_FLAGS(FocusOptions, FocusOption)
 
-    void setFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = 0);
-    void clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = 0);
+    void setFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = nullptr);
+    void clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = nullptr);
     static void notifyFocusChangesRecur(QQuickItem **item, int remaining);
     void clearFocusObject() override;
 

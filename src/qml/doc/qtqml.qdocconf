@@ -53,6 +53,8 @@ manifestmeta.thumbnail.names += "QtQml/Chapter 4*" \
                                 "QtQml/Chapter 6*" \
                                 "QtQml/C++ Extensions: *"
 
+manifestmeta.highlighted.names = "QtQml/Writing QML Extensions with C++"
+
 navigation.landingpage = "Qt QML"
 navigation.cppclassespage = "Qt QML C++ Classes"
 navigation.qmltypespage = "Qt QML QML Types"

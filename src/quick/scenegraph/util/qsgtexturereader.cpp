@@ -43,40 +43,71 @@
 
 #if QT_CONFIG(opengl)
 #include <private/qsgpkmhandler_p.h>
+#include <private/qsgktxhandler_p.h>
 #endif
+
+#include <QFileInfo>
 
 QT_BEGIN_NAMESPACE
 
-QSGTextureReader::QSGTextureReader()
+QSGTextureReader::QSGTextureReader(QIODevice *device, const QString &fileName)
+    : m_device(device), m_fileInfo(fileName)
 {
-
 }
 
-QQuickTextureFactory *QSGTextureReader::read(QIODevice *device, const QByteArray &format)
+QSGTextureReader::~QSGTextureReader()
+{
+    delete m_handler;
+}
+
+QQuickTextureFactory *QSGTextureReader::read()
 {
 #if QT_CONFIG(opengl)
-    if (format == QByteArrayLiteral("pkm")) {
-        QSGPkmHandler handler;
-        return handler.read(device);
-    }
+    if (!isTexture())
+        return nullptr;
+    return m_handler->read();
 #else
-    Q_UNUSED(device)
-    Q_UNUSED(format)
-#endif
     return nullptr;
+#endif
 }
 
-bool QSGTextureReader::isTexture(QIODevice *device, const QByteArray &format)
+bool QSGTextureReader::isTexture()
 {
 #if QT_CONFIG(opengl)
-    if (format == QByteArrayLiteral("pkm")) {
-        return device->peek(4) == QByteArrayLiteral("PKM ");
+    if (!checked) {
+        checked = true;
+        if (!init())
+            return false;
+
+        QByteArray headerBlock = m_device->peek(64);
+        QByteArray suffix = m_fileInfo.suffix().toLower().toLatin1();
+        QByteArray logName = m_fileInfo.fileName().toUtf8();
+
+        // Currently the handlers are hardcoded; later maybe a list of plugins
+        if (QSGPkmHandler::canRead(suffix, headerBlock)) {
+            m_handler = new QSGPkmHandler(m_device, logName);
+        } else if (QSGKtxHandler::canRead(suffix, headerBlock)) {
+            m_handler = new QSGKtxHandler(m_device, logName);
+        }
+        // else if OtherHandler::canRead() ...etc.
     }
+    return (m_handler != nullptr);
 #else
-    Q_UNUSED(device)
-    Q_UNUSED(format)
-#endif
     return false;
+#endif
+}
+
+QList<QByteArray> QSGTextureReader::supportedFileFormats()
+{
+    // Hardcoded for now
+    return {QByteArrayLiteral("pkm"), QByteArrayLiteral("ktx")};
+}
+
+bool QSGTextureReader::init()
+{
+    if (!m_device)
+        return false;
+    return m_device->isReadable();
 }
 
 QT_END_NAMESPACE

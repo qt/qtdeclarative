@@ -108,10 +108,10 @@ public:
     V4_PROTOTYPE(objectPrototype)
     void init();
 
-    static ReturnedValue method_preserve(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_destroy(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_toString(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_valueOf(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_preserve(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_destroy(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 }

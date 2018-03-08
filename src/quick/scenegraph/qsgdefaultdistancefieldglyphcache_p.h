@@ -91,10 +91,9 @@ private:
         QSize size;
         QRect allocatedArea;
         QDistanceField image;
-        int padding;
+        int padding = -1;
 
-        TextureInfo(const QRect &preallocRect = QRect()) : texture(0), allocatedArea(preallocRect), padding(-1)
-        { }
+        TextureInfo(const QRect &preallocRect = QRect()) : texture(0), allocatedArea(preallocRect) { }
     };
 
     void createTexture(TextureInfo * texInfo, int width, int height);

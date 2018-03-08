@@ -74,8 +74,8 @@ QSGRenderNode::~QSGRenderNode()
 }
 
 QSGRenderNodePrivate::QSGRenderNodePrivate()
-    : m_matrix(0)
-    , m_clip_list(0)
+    : m_matrix(nullptr)
+    , m_clip_list(nullptr)
     , m_opacity(1)
 {
 }
@@ -119,7 +119,7 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
   */
 QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
 {
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -213,6 +213,22 @@ void QSGRenderNode::releaseResources()
 }
 
 /*!
+  \enum QSGRenderNode::StateFlag
+
+  This enum is a bit mask identifying several states.
+
+  \value DepthState         Depth
+  \value StencilState       Stencil
+  \value ScissorState       Scissor
+  \value ColorState         Color
+  \value BlendState         Blend
+  \value CullState          Cull
+  \value ViewportState      View poirt
+  \value RenderTargetState  Render target
+
+ */
+
+/*!
     \enum QSGRenderNode::RenderingFlag
 
     Possible values for the bitmask returned from flags().
@@ -251,7 +267,7 @@ void QSGRenderNode::releaseResources()
  */
 QSGRenderNode::RenderingFlags QSGRenderNode::flags() const
 {
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -354,7 +370,7 @@ QSGRenderNode::RenderState::~RenderState()
  */
 
 /*!
-    \fn const QRegion *QSGRenderNode::clipRegion() const
+    \fn const QRegion *QSGRenderNode::RenderState::clipRegion() const
 
     \return the current clip region or null for backends where clipping is
     implemented via stencil or scissoring.

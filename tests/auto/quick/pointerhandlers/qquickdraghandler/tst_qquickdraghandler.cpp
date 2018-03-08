@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -58,9 +58,12 @@ private slots:
     void touchDragMulti();
     void touchDragMultiSliders_data();
     void touchDragMultiSliders();
+    void touchPassiveGrabbers_data();
+    void touchPassiveGrabbers();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
+    QSet<QQuickPointerHandler *> passiveGrabbers(QQuickWindow *window, int pointId = 0);
     QTouchDevice *touchDevice;
 };
 
@@ -74,7 +77,25 @@ void tst_DragHandler::createView(QScopedPointer<QQuickView> &window, const char 
 
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
+}
+
+QSet<QQuickPointerHandler*> tst_DragHandler::passiveGrabbers(QQuickWindow *window, int pointId /*= 0*/)
+{
+    QSet<QQuickPointerHandler*> result;
+    QQuickWindowPrivate *winp = QQuickWindowPrivate::get(window);
+    if (QQuickPointerDevice* device = QQuickPointerDevice::touchDevice(touchDevice)) {
+        QQuickPointerEvent *pointerEvent = winp->pointerEventInstance(device);
+        for (int i = 0; i < pointerEvent->pointCount(); ++i) {
+            QQuickEventPoint *eventPoint = pointerEvent->point(i);
+            QVector<QPointer <QQuickPointerHandler> > passives = eventPoint->passiveGrabbers();
+            if (!pointId || eventPoint->pointId() == pointId) {
+                for (auto it = passives.constBegin(); it != passives.constEnd(); ++it)
+                    result << it->data();
+            }
+        }
+    }
+    return result;
 }
 
 void tst_DragHandler::initTestCase()
@@ -314,11 +335,10 @@ void tst_DragHandler::touchDragMultiSliders_data()
         0 << QVector<int> { 0, 1, 2 } << QVector<int> { 0, 0, 0 } << QVector<QVector2D> { {0, 60}, {0, 60}, {0, 60} };
     QTest::newRow("Drag Knob: start on the knobs, drag diagonally downward") <<
         0 << QVector<int> { 0, 1, 2 } << QVector<int> { 0, 0, 0 } << QVector<QVector2D> { {20, 40}, {20, 60}, {20, 80} };
-    // TOOD these fail
-//    QTest::newRow("Drag Anywhere: start on the knobs, drag down") <<
-//        1 << QVector<int> { 0, 1, 2 } << QVector<int> { 0, 0, 0 } << QVector<QVector2D> { {0, 60}, {0, 60}, {0, 60} };
-//    QTest::newRow("Drag Anywhere: start on the knobs, drag diagonally downward") <<
-//        1 << QVector<int> { 0, 1, 2 } << QVector<int> { 0, 0, 0 } << QVector<QVector2D> { {20, 40}, {20, 60}, {20, 80} };
+    QTest::newRow("Drag Anywhere: start on the knobs, drag down") <<
+        1 << QVector<int> { 0, 1, 2 } << QVector<int> { 0, 0, 0 } << QVector<QVector2D> { {0, 60}, {0, 60}, {0, 60} };
+    QTest::newRow("Drag Anywhere: start on the knobs, drag diagonally downward") <<
+        1 << QVector<int> { 0, 1, 2 } << QVector<int> { 0, 0, 0 } << QVector<QVector2D> { {20, 40}, {20, 60}, {20, 80} };
     // TODO these next two fail because the DragHandler grabs when a finger
     // drags across it from outside, but should rather start only if it is pressed inside
 //    QTest::newRow("Drag Knob: start above the knobs, drag down") <<
@@ -397,6 +417,68 @@ void tst_DragHandler::touchDragMultiSliders()
     for (int sli : whichSliders)
         touch.release(sli, touchPoints[sli].toPoint());
     touch.commit();
+}
+
+void tst_DragHandler::touchPassiveGrabbers_data()
+{
+    QTest::addColumn<QString>("itemName");
+    QTest::addColumn<QStringList>("expectedPassiveGrabberNames");
+
+    QTest::newRow("Drag And Tap") << "dragAndTap" << QStringList({"drag", "tap"});
+    QTest::newRow("Tap And Drag") << "tapAndDrag" << QStringList({"tap", "drag"});
+    QTest::newRow("Drag And Tap (not siblings)") << "dragAndTapNotSiblings" << QStringList({"drag", "tap"});
+    QTest::newRow("Tap And Drag (not siblings)") << "tapAndDragNotSiblings" << QStringList({"tap", "drag"});
+}
+
+void tst_DragHandler::touchPassiveGrabbers()
+{
+    QFETCH(QString, itemName);
+    QFETCH(QStringList, expectedPassiveGrabberNames);
+
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "simpleTapAndDragHandlers.qml");
+    QQuickView * window = windowPtr.data();
+
+    QQuickItem *row2 = window->rootObject()->findChild<QQuickItem*>(itemName);
+    QSet<QQuickPointerHandler *> expectedPassiveGrabbers;
+    for (QString objectName : expectedPassiveGrabberNames)
+        expectedPassiveGrabbers << row2->findChild<QQuickPointerHandler*>(objectName);
+
+    QPointF p1 = row2->mapToScene(row2->clipRect().center());
+    QTest::QTouchEventSequence touch = QTest::touchEvent(window, touchDevice);
+    touch.press(1, p1.toPoint()).commit();
+    QQuickTouchUtils::flush(window);
+
+    QCOMPARE(passiveGrabbers(window), expectedPassiveGrabbers);
+
+    QQuickDragHandler *dragHandler = nullptr;
+    for (QQuickPointerHandler *handler: expectedPassiveGrabbers) {
+        QCOMPARE(static_cast<QQuickSinglePointHandler *>(handler)->point().scenePressPosition(), p1);
+        QQuickDragHandler *dh = qmlobject_cast<QQuickDragHandler *>(handler);
+        if (dh)
+            dragHandler = dh;
+    }
+    QVERIFY(dragHandler);
+    QPointF initialPos = dragHandler->target()->position();
+
+    p1 += QPointF(50, 50);
+    touch.move(1, p1.toPoint()).commit();
+    QQuickTouchUtils::flush(window);
+    QTRY_VERIFY(dragHandler->active());
+
+    p1 += QPointF(50, 50);
+    touch.move(1, p1.toPoint()).commit();
+    QQuickTouchUtils::flush(window);
+    QPointF movementDelta = dragHandler->target()->position() - initialPos;
+    qCDebug(lcPointerTests) << "DragHandler moved the target by" << movementDelta;
+    QVERIFY(movementDelta.x() >= 100);
+    QVERIFY(movementDelta.y() >= 100);
+
+    QTest::qWait(500);
+
+    touch.release(1, p1.toPoint());
+    touch.commit();
+    QQuickTouchUtils::flush(window);
 }
 
 QTEST_MAIN(tst_DragHandler)

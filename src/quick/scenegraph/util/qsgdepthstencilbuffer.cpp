@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 
 QSGDepthStencilBuffer::QSGDepthStencilBuffer(QOpenGLContext *context, const Format &format)
     : m_functions(context)
-    , m_manager(0)
+    , m_manager(nullptr)
     , m_format(format)
     , m_depthBuffer(0)
     , m_stencilBuffer(0)
@@ -160,7 +160,7 @@ QSGDepthStencilBufferManager::~QSGDepthStencilBufferManager()
     for (Hash::const_iterator it = m_buffers.constBegin(), cend = m_buffers.constEnd(); it != cend; ++it) {
         QSGDepthStencilBuffer *buffer = it.value().data();
         buffer->free();
-        buffer->m_manager = 0;
+        buffer->m_manager = nullptr;
     }
 }
 
@@ -174,7 +174,7 @@ QSharedPointer<QSGDepthStencilBuffer> QSGDepthStencilBufferManager::bufferForFor
 
 void QSGDepthStencilBufferManager::insertBuffer(const QSharedPointer<QSGDepthStencilBuffer> &buffer)
 {
-    Q_ASSERT(buffer->m_manager == 0);
+    Q_ASSERT(buffer->m_manager == nullptr);
     Q_ASSERT(!m_buffers.contains(buffer->m_format));
     buffer->m_manager = this;
     m_buffers.insert(buffer->m_format, buffer.toWeakRef());

@@ -64,8 +64,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct BuiltinFunction;
-
 namespace Heap {
 
 #define ObjectMembers(class, Member) \
@@ -87,12 +85,12 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
     void setInlineProperty(ExecutionEngine *e, uint index, Value v) {
         Q_ASSERT(index < vtable()->nInlineProperties);
         Value *prop = reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
-        WriteBarrier::write(e, this, prop, v);
+        WriteBarrier::write(e, this, prop->data_ptr(), v.asReturnedValue());
     }
     void setInlineProperty(ExecutionEngine *e, uint index, Heap::Base *b) {
         Q_ASSERT(index < vtable()->nInlineProperties);
         Value *prop = reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
-        WriteBarrier::write(e, this, prop, b);
+        WriteBarrier::write(e, this, prop->data_ptr(), b->asReturnedValue());
     }
 
     QV4::MemberData::Index writablePropertyData(uint index) {
@@ -153,7 +151,7 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
             dptr->_checkIsInitialized(); \
             return dptr; \
         } \
-        V4_ASSERT_IS_TRIVIAL(QV4::Heap::DataClass);
+        Q_STATIC_ASSERT(std::is_trivial< QV4::Heap::DataClass >::value);
 
 #define V4_PROTOTYPE(p) \
     static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \
@@ -238,8 +236,8 @@ struct Q_QML_EXPORT Object: Managed {
     Heap::Object *prototype() const { return d()->prototype(); }
     bool setPrototype(Object *proto);
 
-    void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = 0);
-    void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = 0);
+    void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = nullptr);
+    void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = nullptr);
 
     MemberData::Index getValueOrSetter(String *name, PropertyAttributes *attrs);
     ArrayData::Index getValueOrSetter(uint index, PropertyAttributes *attrs);
@@ -273,16 +271,8 @@ struct Q_QML_EXPORT Object: Managed {
         insertMember(name, value, Attr_Data|Attr_NotEnumerable);
     }
     void defineDefaultProperty(const QString &name, const Value &value);
-    // old calling convention
-    void defineDefaultProperty(const QString &name, ReturnedValue (*code)(const BuiltinFunction *, CallData *), int argumentCount = 0);
-    void defineDefaultProperty(String *name, ReturnedValue (*code)(const BuiltinFunction *, CallData *), int argumentCount = 0);
-    // new calling convention
     void defineDefaultProperty(const QString &name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc), int argumentCount = 0);
     void defineDefaultProperty(String *name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc), int argumentCount = 0);
-    void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const BuiltinFunction *, CallData *),
-                                ReturnedValue (*setter)(const BuiltinFunction *, CallData *));
-    void defineAccessorProperty(String *name, ReturnedValue (*getter)(const BuiltinFunction *, CallData *),
-                                ReturnedValue (*setter)(const BuiltinFunction *, CallData *));
     void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
                                 ReturnedValue (*setter)(const FunctionObject *, const Value *, const Value *, int));
     void defineAccessorProperty(String *name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
@@ -308,8 +298,6 @@ struct Q_QML_EXPORT Object: Managed {
     // Array handling
 
 public:
-    static void markObjects(Heap::Base *base, MarkStack *stack);
-
     void copyArrayData(Object *other);
 
     bool setArrayLength(uint newLen);
@@ -358,8 +346,8 @@ public:
     }
 
     void initSparseArray();
-    SparseArrayNode *sparseBegin() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->begin() : 0; }
-    SparseArrayNode *sparseEnd() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->end() : 0; }
+    SparseArrayNode *sparseBegin() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->begin() : nullptr; }
+    SparseArrayNode *sparseEnd() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->end() : nullptr; }
 
     inline bool protoHasArray() {
         Scope scope(engine());
@@ -372,9 +360,9 @@ public:
         return false;
     }
 
-    inline ReturnedValue get(String *name, bool *hasProperty = 0) const
+    inline ReturnedValue get(String *name, bool *hasProperty = nullptr) const
     { return vtable()->get(this, name, hasProperty); }
-    inline ReturnedValue getIndexed(uint idx, bool *hasProperty = 0) const
+    inline ReturnedValue getIndexed(uint idx, bool *hasProperty = nullptr) const
     { return vtable()->getIndexed(this, idx, hasProperty); }
 
     // use the set variants instead, to customize throw behavior
@@ -563,7 +551,7 @@ inline void Object::arraySet(uint index, const Value &value)
 
 template<>
 inline const ArrayObject *Value::as() const {
-    return isManaged() && m()->vtable()->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : 0;
+    return isManaged() && m()->vtable()->type == Managed::Type_ArrayObject ? static_cast<const ArrayObject *>(this) : nullptr;
 }
 
 #ifndef V4_BOOTSTRAP

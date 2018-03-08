@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -94,7 +94,7 @@ class EventItem : public QQuickItem
 {
     Q_OBJECT
 public:
-    EventItem(QQuickItem *parent = 0)
+    EventItem(QQuickItem *parent = nullptr)
         : QQuickItem(parent), acceptPointer(false), grabPointer(false), acceptMouse(false), acceptTouch(false), filterTouch(false)
     {}
 
@@ -269,7 +269,7 @@ void tst_PointerHandlers::createView(QScopedPointer<QQuickView> &window, const c
 
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 }
 
 void tst_PointerHandlers::initTestCase()
@@ -504,17 +504,18 @@ void tst_PointerHandlers::mouseEventDelivery()
     eventItem1->grabPointer = true;
     p1 = QPoint(20, 20);
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
-    QTRY_COMPARE(eventItem1->eventList.size(), 2);
+    QTRY_COMPARE(eventItem1->eventList.size(), 3);
     QCOMPARE_EVENT(0, Event::HandlerDestination, QEvent::None, Qt::TouchPointPressed, QQuickEventPoint::GrabExclusive);
     QCOMPARE_EVENT(1, Event::HandlerDestination, QEvent::Pointer, Qt::TouchPointPressed, QQuickEventPoint::GrabExclusive);
+    QCOMPARE_EVENT(2, Event::MouseDestination, QEvent::MouseButtonPress, Qt::TouchPointPressed, 0);
     p1 += QPoint(10, 0);
     QTest::mouseMove(window, p1);
-    QCOMPARE(eventItem1->eventList.size(), 3);
-    QCOMPARE_EVENT(2, Event::HandlerDestination, QEvent::Pointer, Qt::TouchPointMoved, QQuickEventPoint::GrabExclusive);
+    QCOMPARE(eventItem1->eventList.size(), 4);
+    QCOMPARE_EVENT(3, Event::HandlerDestination, QEvent::Pointer, Qt::TouchPointMoved, QQuickEventPoint::GrabExclusive);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
-    QCOMPARE(eventItem1->eventList.size(), 5);
-    QCOMPARE_EVENT(3, Event::HandlerDestination, QEvent::Pointer, Qt::TouchPointReleased, QQuickEventPoint::GrabExclusive);
-    QCOMPARE_EVENT(4, Event::HandlerDestination, QEvent::None, Qt::TouchPointReleased, QQuickEventPoint::UngrabExclusive);
+    QCOMPARE(eventItem1->eventList.size(), 6);
+    QCOMPARE_EVENT(4, Event::HandlerDestination, QEvent::Pointer, Qt::TouchPointReleased, QQuickEventPoint::GrabExclusive);
+    QCOMPARE_EVENT(5, Event::HandlerDestination, QEvent::None, Qt::TouchPointReleased, QQuickEventPoint::UngrabExclusive);
     eventItem1->eventList.clear();
 }
 

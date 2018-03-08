@@ -71,7 +71,7 @@ public:
 };
 
 QQuickCanvasPixmap::QQuickCanvasPixmap(const QImage& image)
-    : m_pixmap(0)
+    : m_pixmap(nullptr)
     , m_image(image)
 {
 
@@ -123,7 +123,7 @@ QHash<QQmlEngine *,QQuickContext2DRenderThread*> QQuickContext2DRenderThread::re
 QMutex QQuickContext2DRenderThread::renderThreadsMutex;
 
 QQuickContext2DRenderThread::QQuickContext2DRenderThread(QQmlEngine *eng)
-    : QThread(eng), m_engine(eng), m_eventLoopQuitHack(0)
+    : QThread(eng), m_engine(eng), m_eventLoopQuitHack(nullptr)
 {
     Q_ASSERT(eng);
     m_eventLoopQuitHack = new QObject;
@@ -144,7 +144,7 @@ QQuickContext2DRenderThread::~QQuickContext2DRenderThread()
 
 QQuickContext2DRenderThread *QQuickContext2DRenderThread::instance(QQmlEngine *engine)
 {
-    QQuickContext2DRenderThread *thread = 0;
+    QQuickContext2DRenderThread *thread = nullptr;
     renderThreadsMutex.lock();
     if (renderThreads.contains(engine))
         thread = renderThreads.value(engine);
@@ -183,7 +183,7 @@ public:
 
 QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
     : QQuickItemPrivate()
-    , context(0)
+    , context(nullptr)
     , canvasSize(1, 1)
     , tileSize(1, 1)
     , hasCanvasSize(false)
@@ -192,9 +192,9 @@ QQuickCanvasItemPrivate::QQuickCanvasItemPrivate()
     , available(false)
     , renderTarget(QQuickCanvasItem::Image)
     , renderStrategy(QQuickCanvasItem::Immediate)
-    , textureProvider(0)
-    , node(0)
-    , nodeTexture(0)
+    , textureProvider(nullptr)
+    , node(nullptr)
+    , nodeTexture(nullptr)
 {
     implicitAntialiasing = true;
 }
@@ -634,16 +634,16 @@ void QQuickCanvasItem::releaseResources()
 
     if (d->context) {
         delete d->context;
-        d->context = 0;
+        d->context = nullptr;
     }
-    d->node = 0; // managed by the scene graph, just reset the pointer
+    d->node = nullptr; // managed by the scene graph, just reset the pointer
     if (d->textureProvider) {
         QQuickWindowQObjectCleanupJob::schedule(window(), d->textureProvider);
-        d->textureProvider = 0;
+        d->textureProvider = nullptr;
     }
     if (d->nodeTexture) {
         QQuickWindowQObjectCleanupJob::schedule(window(), d->nodeTexture);
-        d->nodeTexture = 0;
+        d->nodeTexture = nullptr;
     }
 }
 
@@ -663,12 +663,12 @@ void QQuickCanvasItem::invalidateSceneGraph()
     Q_D(QQuickCanvasItem);
     if (d->context)
         d->context->deleteLater();
-    d->context = 0;
-    d->node = 0; // managed by the scene graph, just reset the pointer
+    d->context = nullptr;
+    d->node = nullptr; // managed by the scene graph, just reset the pointer
     delete d->textureProvider;
-    d->textureProvider = 0;
+    d->textureProvider = nullptr;
     delete d->nodeTexture;
-    d->nodeTexture = 0;
+    d->nodeTexture = nullptr;
 }
 
 void QQuickCanvasItem::schedulePolish()
@@ -698,14 +698,14 @@ void QQuickCanvasItem::itemChange(QQuickItem::ItemChange change, const QQuickIte
         return;
     }
 
-    if (value.window== 0)
+    if (value.window== nullptr)
         return;
 
     d->window = value.window;
     QSGRenderContext *context = QQuickWindowPrivate::get(d->window)->context;
 
     // Rendering to FramebufferObject needs a valid OpenGL context.
-    if (context != 0 && (d->renderTarget != FramebufferObject || context->isValid())) {
+    if (context != nullptr && (d->renderTarget != FramebufferObject || context->isValid())) {
         // Defer the call. In some (arguably incorrect) cases we get here due
         // to ItemSceneChange with the user-supplied property values not yet
         // set. Work this around by a deferred invoke. (QTBUG-49692)
@@ -727,7 +727,7 @@ void QQuickCanvasItem::updatePolish()
         QMap<int, QV4::PersistentValue> animationCallbacks = d->animationCallbacks;
         d->animationCallbacks.clear();
 
-        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(qmlEngine(this));
+        QV4::ExecutionEngine *v4 = qmlEngine(this)->handle();
         QV4::Scope scope(v4);
         QV4::ScopedFunctionObject function(scope);
         QV4::JSCallData jsCall(scope, 1);
@@ -763,11 +763,11 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
 
     if (!d->context || d->canvasWindow.size().isEmpty()) {
         if (d->textureProvider) {
-            d->textureProvider->tex = 0;
+            d->textureProvider->tex = nullptr;
             d->textureProvider->fireTextureChanged();
         }
         delete oldNode;
-        return 0;
+        return nullptr;
     }
 
     QSGInternalImageNode *node = static_cast<QSGInternalImageNode *>(oldNode);
@@ -792,13 +792,13 @@ QSGNode *QQuickCanvasItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     QSGTexture *texture = factory->textureForNextFrame(d->nodeTexture, window());
     if (!texture) {
         delete node;
-        d->node = 0;
-        d->nodeTexture = 0;
+        d->node = nullptr;
+        d->nodeTexture = nullptr;
         if (d->textureProvider) {
-            d->textureProvider->tex = 0;
+            d->textureProvider->tex = nullptr;
             d->textureProvider->fireTextureChanged();
         }
-        return 0;
+        return nullptr;
     }
 
     d->nodeTexture = texture;
@@ -833,7 +833,7 @@ QSGTextureProvider *QQuickCanvasItem::textureProvider() const
     if (!w || !w->isSceneGraphInitialized()
             || QThread::currentThread() != QQuickWindowPrivate::get(w)->context->thread()) {
         qWarning("QQuickCanvasItem::textureProvider: can only be queried on the rendering thread of an exposed window");
-        return 0;
+        return nullptr;
     }
 #endif
     if (!d->textureProvider)
@@ -879,7 +879,7 @@ void QQuickCanvasItem::getContext(QQmlV4Function *args)
 
     QString contextId = str->toQString();
 
-    if (d->context != 0) {
+    if (d->context != nullptr) {
         if (d->context->contextNames().contains(contextId, Qt::CaseInsensitive)) {
             args->setReturnValue(d->context->v4value());
             return;
@@ -1210,7 +1210,7 @@ void QQuickCanvasItem::initializeContext(QQuickCanvasContext *context, const QVa
 
     d->context = context;
     d->context->init(this, args);
-    d->context->setV4Engine(QQmlEnginePrivate::get(qmlEngine(this))->v4engine());
+    d->context->setV4Engine(qmlEngine(this)->handle());
     connect(d->context, SIGNAL(textureChanged()), SLOT(update()));
     connect(d->context, SIGNAL(textureChanged()), SIGNAL(painted()));
     emit contextChanged();

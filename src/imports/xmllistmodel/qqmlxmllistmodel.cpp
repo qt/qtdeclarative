@@ -923,8 +923,7 @@ QQmlV4Handle QQuickXmlListModel::get(int index) const
         return QQmlV4Handle(Encode::undefined());
 
     QQmlEngine *engine = qmlContext(this)->engine();
-    QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
-    ExecutionEngine *v4engine = QV8Engine::getV4(v8engine);
+    ExecutionEngine *v4engine = engine->handle();
     Scope scope(v4engine);
     Scoped<Object> o(scope, v4engine->newObject());
     ScopedString name(scope);
@@ -1152,8 +1151,6 @@ void QQuickXmlListModel::queryCompleted(const QQuickXmlQueryResult &result)
     int origCount = d->size;
     bool sizeChanged = result.size != d->size;
 
-    d->size = result.size;
-    d->data = result.data;
     d->keyRoleResultsCache = result.keyRoleResultsCache;
     if (d->src.isEmpty() && d->xml.isEmpty())
         d->status = Null;
@@ -1174,6 +1171,8 @@ void QQuickXmlListModel::queryCompleted(const QQuickXmlQueryResult &result)
             beginRemoveRows(QModelIndex(), 0, origCount - 1);
             endRemoveRows();
         }
+        d->size = result.size;
+        d->data = result.data;
         if (d->size > 0) {
             beginInsertRows(QModelIndex(), 0, d->size - 1);
             endInsertRows();
@@ -1187,6 +1186,8 @@ void QQuickXmlListModel::queryCompleted(const QQuickXmlQueryResult &result)
                 endRemoveRows();
             }
         }
+        d->size = result.size;
+        d->data = result.data;
         for (int i=0; i<result.inserted.count(); i++) {
             const int index = result.inserted[i].first;
             const int count = result.inserted[i].second;

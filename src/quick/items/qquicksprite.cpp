@@ -100,7 +100,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty int QtQuick::Sprite::frameDuration
 
-    Duration of each frame of the animation. Values below 0 are invalid.
+    Duration of each frame of the animation in milliseconds. Values below 0 are invalid.
 
     If frameRate is valid then it will be used to calculate the duration of the frames.
     If not, and frameDuration is valid, then frameDuration will be used. Otherwise duration is used.
@@ -237,12 +237,12 @@ int QQuickSprite::variedDuration() const //Deals with precedence when multiple d
 
     if (m_frameRate != unsetDuration) {
         qreal fpms = (m_frameRate
-                + (m_frameRateVariation * QRandomGenerator::getReal() * 2)
+                + (m_frameRateVariation * QRandomGenerator::global()->generateDouble() * 2)
                 - m_frameRateVariation) / 1000.0;
         return qMax(qreal(0.0) , m_frames / fpms);
     } else if (m_frameDuration != unsetDuration) {
         int mspf = m_frameDuration
-                + (m_frameDurationVariation * QRandomGenerator::getReal() * 2)
+                + (m_frameDurationVariation * QRandomGenerator::global()->generateDouble() * 2)
                 - m_frameDurationVariation;
         return qMax(0, m_frames * mspf);
     } else if (duration() >= 0) {

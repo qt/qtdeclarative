@@ -95,7 +95,6 @@ namespace Heap {
     Member(class, NoMark, ushort, needsMark) \
     Member(class, NoMark, uint, offset) \
     Member(class, NoMark, PropertyAttributes *, attrs) \
-    Member(class, NoMark, ReturnedValue, freeList) \
     Member(class, NoMark, SparseArray *, sparse) \
     Member(class, ValueArray, ValueArray, values)
 
@@ -142,7 +141,7 @@ DECLARE_HEAP_OBJECT(ArrayData, Base) {
 
     uint mappedIndex(uint index) const;
 };
-V4_ASSERT_IS_TRIVIAL(ArrayData)
+Q_STATIC_ASSERT(std::is_trivial< ArrayData >::value);
 
 struct SimpleArrayData : public ArrayData {
     uint mappedIndex(uint index) const { index += offset; if (index >= values.alloc) index -= values.alloc; return index; }
@@ -157,7 +156,7 @@ struct SimpleArrayData : public ArrayData {
         return attrs ? attrs[i] : Attr_Data;
     }
 };
-V4_ASSERT_IS_TRIVIAL(SimpleArrayData)
+Q_STATIC_ASSERT(std::is_trivial< SimpleArrayData >::value);
 
 struct SparseArrayData : public ArrayData {
     void destroy() {
@@ -264,8 +263,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     V4_INTERNALCLASS(SparseArrayData)
     V4_NEEDS_DESTROY
 
-    ReturnedValue &freeList() { return d()->freeList; }
-    ReturnedValue freeList() const { return d()->freeList; }
     SparseArray *sparse() const { return d()->sparse; }
     void setSparse(SparseArray *s) { d()->sparse = s; }
 
@@ -334,7 +331,7 @@ ArrayData::Index ArrayData::getValueOrSetter(uint index, PropertyAttributes *att
     uint idx = mappedIndex(index);
     if (idx == UINT_MAX) {
         *attrs = Attr_Invalid;
-        return { 0, 0 };
+        return { nullptr, 0 };
     }
 
     *attrs = attributes(index);

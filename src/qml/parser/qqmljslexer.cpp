@@ -85,11 +85,11 @@ static inline QChar convertUnicode(QChar c1, QChar c2, QChar c3, QChar c4)
 
 Lexer::Lexer(Engine *engine)
     : _engine(engine)
-    , _codePtr(0)
-    , _endPtr(0)
-    , _lastLinePtr(0)
-    , _tokenLinePtr(0)
-    , _tokenStartPtr(0)
+    , _codePtr(nullptr)
+    , _endPtr(nullptr)
+    , _lastLinePtr(nullptr)
+    , _tokenLinePtr(nullptr)
+    , _tokenStartPtr(nullptr)
     , _char(QLatin1Char('\n'))
     , _errorCode(NoError)
     , _currentLineNumber(0)
@@ -589,7 +589,7 @@ again:
             chars.append('\0');
 
             const char *begin = chars.constData();
-            const char *end = 0;
+            const char *end = nullptr;
             bool ok = false;
 
             _tokenValue = qstrtod(begin, &end, &ok);
@@ -773,7 +773,7 @@ again:
                         u = QLatin1Char('\0');
                         break;
                     }
-                    // fall through
+                    Q_FALLTHROUGH();
                 case '1':
                 case '2':
                 case '3':
@@ -915,7 +915,7 @@ int Lexer::scanNumber(QChar ch)
                 scanChar();
             }
             buf.append('\0');
-            _tokenValue = strtod(buf.constData(), 0);
+            _tokenValue = strtod(buf.constData(), nullptr);
             return T_NUMERIC_LITERAL;
         }
     } else if (_char.isDigit() && !qmlMode()) {
@@ -1010,7 +1010,7 @@ int Lexer::scanNumber(QChar ch)
     chars.append('\0');
 
     const char *begin = chars.constData();
-    const char *end = 0;
+    const char *end = nullptr;
     bool ok = false;
 
     _tokenValue = qstrtod(begin, &end, &ok);

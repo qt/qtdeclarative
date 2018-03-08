@@ -6,7 +6,7 @@ qtConfig(qml-network): \
 
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 
-win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x66000000
+msvc:equals(QT_ARCH, i386): QMAKE_LFLAGS += /BASE:0x66000000
 win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
 win32:!winrt:LIBS += -lshell32
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
@@ -16,17 +16,28 @@ gcc:isEqual(QT_ARCH, "mips"): QMAKE_CXXFLAGS += -fno-reorder-blocks
 
 DEFINES += QT_NO_FOREACH
 
-tagFile=$$PWD/../../.tag
-tag=
-exists($$tagFile) {
-    tag=$$cat($$tagFile, singleline)
-    QMAKE_INTERNAL_INCLUDED_FILES += $$tagFile
-}
-!equals(tag, "$${LITERAL_DOLLAR}Format:%H$${LITERAL_DOLLAR}") {
-    DEFINES += QML_COMPILE_HASH="$$tag"
-} else:exists($$PWD/../../.git) {
-    commit=$$system(git describe --tags --always --long --dirty)
-    DEFINES += QML_COMPILE_HASH="$$commit"
+!build_pass {
+    # Create a header containing a hash that describes this library.  For a
+    # released version of Qt, we'll use the .tag file that is updated by git
+    # archive with the commit hash. For unreleased versions, we'll ask git
+    # describe. Note that it won't update unless qmake is run again, even if
+    # the commit change also changed something in this library.
+    tagFile = $$PWD/../../.tag
+    tag =
+    exists($$tagFile) {
+        tag = $$cat($$tagFile, singleline)
+        QMAKE_INTERNAL_INCLUDED_FILES += $$tagFile
+    }
+    !equals(tag, "$${LITERAL_DOLLAR}Format:%H$${LITERAL_DOLLAR}") {
+        QML_COMPILE_HASH = $$tag
+    } else:exists($$PWD/../../.git) {
+        commit = $$system(git describe --tags --always --long --dirty)
+        QML_COMPILE_HASH = $$commit
+    }
+    compile_hash_contents = \
+        "// Generated file, DO NOT EDIT" \
+        "$${LITERAL_HASH}define QML_COMPILE_HASH \"$$QML_COMPILE_HASH\""
+    write_file("$$OUT_PWD/qml_compile_hash_p.h", compile_hash_contents)|error()
 }
 
 exists("qqml_enable_gcov") {

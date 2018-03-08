@@ -69,7 +69,7 @@ class Q_AUTOTEST_EXPORT QQuickBorderImage : public QQuickImageBase
     Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
 
 public:
-    QQuickBorderImage(QQuickItem *parent=0);
+    QQuickBorderImage(QQuickItem *parent=nullptr);
     ~QQuickBorderImage();
 
     QQuickScaleGrid *border();

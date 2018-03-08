@@ -108,7 +108,7 @@ public:
         return m_uid;
     }
 
-    static void sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target, QHash<int, QQmlListModel *> *targetModelHash);
+    static QVector<int> sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target);
 
 private:
     QQmlListModel *m_owner;
@@ -164,15 +164,17 @@ namespace QV4 {
 namespace Heap {
 
 struct ModelObject : public QObjectWrapper {
-    void init(QObject *object, QQmlListModel *model, int elementIndex)
+    void init(QObject *object, QQmlListModel *model)
     {
         QObjectWrapper::init(object);
         m_model = model;
-        m_elementIndex = elementIndex;
+        QObjectPrivate *op = QObjectPrivate::get(object);
+        m_nodeModelMetaObject = static_cast<ModelNodeMetaObject *>(op->metaObject);
     }
     void destroy() { QObjectWrapper::destroy(); }
+    int elementIndex() const { return m_nodeModelMetaObject->m_elementIndex; }
     QQmlListModel *m_model;
-    int m_elementIndex;
+    ModelNodeMetaObject *m_nodeModelMetaObject;
 };
 
 }
@@ -261,7 +263,7 @@ public:
     ListElement(int existingUid);
     ~ListElement();
 
-    static void sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout, QHash<int, ListModel *> *targetModelHash);
+    static QVector<int> sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout);
 
     enum
     {
@@ -328,7 +330,7 @@ class ListModel
 {
 public:
 
-    ListModel(ListLayout *layout, QQmlListModel *modelCache, int uid);
+    ListModel(ListLayout *layout, QQmlListModel *modelCache);
     ~ListModel() {}
 
     void destroy();
@@ -377,25 +379,23 @@ public:
 
     void move(int from, int to, int n);
 
-    int getUid() const { return m_uid; }
-
-    static void sync(ListModel *src, ListModel *target, QHash<int, ListModel *> *srcModelHash);
+    static bool sync(ListModel *src, ListModel *target);
 
     QObject *getOrCreateModelObject(QQmlListModel *model, int elementIndex);
 
 private:
     QPODVector<ListElement *, 4> elements;
     ListLayout *m_layout;
-    int m_uid;
 
     QQmlListModel *m_modelCache;
 
     struct ElementSync
     {
-        ElementSync() : src(0), target(0) {}
-
-        ListElement *src;
-        ListElement *target;
+        ListElement *src = nullptr;
+        ListElement *target = nullptr;
+        int srcIndex = -1;
+        int targetIndex = -1;
+        QVector<int> changedRoles;
     };
 
     void newElement(int index);

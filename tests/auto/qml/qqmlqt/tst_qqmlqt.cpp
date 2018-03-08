@@ -168,7 +168,7 @@ void tst_qqmlqt::enums()
 {
     QQmlComponent component(&engine, testFileUrl("enums.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("test1").toInt(), (int)Qt::Key_Escape);
     QCOMPARE(object->property("test2").toInt(), (int)Qt::DescendingOrder);
@@ -188,7 +188,7 @@ void tst_qqmlqt::rgba()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
 
     QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(1, 0, 0, 0.8));
@@ -211,7 +211,7 @@ void tst_qqmlqt::hsla()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromHslF(1, 0, 0, 0.8));
     QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor::fromHslF(1, 0.5, 0.3, 1));
@@ -233,7 +233,7 @@ void tst_qqmlqt::hsva()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromHsvF(1, 0, 0, 0.8));
     QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor::fromHsvF(1, 0.5, 0.3, 1));
@@ -261,7 +261,7 @@ void tst_qqmlqt::colorEqual()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":35: Error: Qt.colorEqual(): Invalid color name"));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("test1a").toBool(), false);
     QCOMPARE(object->property("test1b").toBool(), false);
@@ -338,7 +338,7 @@ void tst_qqmlqt::rect()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QRectF>(object->property("test1")), QRectF(10, 13, 100, 109));
     QCOMPARE(qvariant_cast<QRectF>(object->property("test2")), QRectF(-10, 13, 100, 109.6));
@@ -359,7 +359,7 @@ void tst_qqmlqt::point()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QPointF>(object->property("test1")), QPointF(19, 34));
     QCOMPARE(qvariant_cast<QPointF>(object->property("test2")), QPointF(-3, 109.2));
@@ -379,7 +379,7 @@ void tst_qqmlqt::size()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QSizeF>(object->property("test1")), QSizeF(19, 34));
     QCOMPARE(qvariant_cast<QSizeF>(object->property("test2")), QSizeF(3, 109.2));
@@ -400,7 +400,7 @@ void tst_qqmlqt::vector2d()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QVector2D>(object->property("test1")), QVector2D(1, 0.9f));
     QCOMPARE(qvariant_cast<QVector2D>(object->property("test2")), QVector2D(102, -982.1f));
@@ -420,7 +420,7 @@ void tst_qqmlqt::vector3d()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QVector3D>(object->property("test1")), QVector3D(1, 0, 0.9f));
     QCOMPARE(qvariant_cast<QVector3D>(object->property("test2")), QVector3D(102, -10, -982.1f));
@@ -440,7 +440,7 @@ void tst_qqmlqt::vector4d()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QVector4D>(object->property("test1")), QVector4D(1, 0, 0.9f, 0.6f));
     QCOMPARE(qvariant_cast<QVector4D>(object->property("test2")), QVector4D(102, -10, -982.1f, 10));
@@ -460,7 +460,7 @@ void tst_qqmlqt::quaternion()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QQuaternion>(object->property("test1")), QQuaternion(2, 17, 0.9f, 0.6f));
     QCOMPARE(qvariant_cast<QQuaternion>(object->property("test2")), QQuaternion(102, -10, -982.1f, 10));
@@ -482,7 +482,7 @@ void tst_qqmlqt::matrix4x4()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning3));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QMatrix4x4>(object->property("test1")), QMatrix4x4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
     QCOMPARE(qvariant_cast<QMatrix4x4>(object->property("test2")), QMatrix4x4(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4));
@@ -503,7 +503,7 @@ void tst_qqmlqt::font()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QFont>(object->property("test1")), QFont("Arial", 22));
     QCOMPARE(qvariant_cast<QFont>(object->property("test2")), QFont("Arial", 20, QFont::DemiBold, true));
@@ -523,7 +523,7 @@ void tst_qqmlqt::lighter()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(1, 0.8, 0.3).lighter());
     QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor());
@@ -545,7 +545,7 @@ void tst_qqmlqt::darker()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(1, 0.8, 0.3).darker());
     QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor());
@@ -568,7 +568,7 @@ void tst_qqmlqt::tint()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(0, 0, 1));
     QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor::fromRgbF(1, 0, 0));
@@ -601,7 +601,7 @@ void tst_qqmlqt::openUrlExternally()
 
     QQmlComponent component(&engine, testFileUrl("openUrlExternally.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(handler.called,1);
     QCOMPARE(handler.last, QUrl("test:url"));
 
@@ -623,7 +623,7 @@ void tst_qqmlqt::openUrlExternally_pragmaLibrary()
 
     QQmlComponent component(&engine, testFileUrl("openUrlExternally_lib.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(handler.called,1);
     QCOMPARE(handler.last, QUrl("test:url"));
 
@@ -644,7 +644,7 @@ void tst_qqmlqt::md5()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("test2").toString(), QLatin1String(QCryptographicHash::hash("Hello World", QCryptographicHash::Md5).toHex()));
 
@@ -662,7 +662,7 @@ void tst_qqmlqt::createComponent()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("absoluteUrl").toString(), QString("http://www.example.com/test.qml"));
     QCOMPARE(object->property("relativeUrl").toString(), testFileUrl("createComponentData.qml").toString());
@@ -676,7 +676,7 @@ void tst_qqmlqt::createComponent()
     {
     QQmlComponent component(&engine, testFileUrl("createComponent.2.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QTRY_VERIFY(object->property("success").toBool());
     delete object;
     }
@@ -687,7 +687,7 @@ void tst_qqmlqt::createComponent_pragmaLibrary()
     // Currently, just loading createComponent_lib.qml causes crash on some platforms
     QQmlComponent component(&engine, testFileUrl("createComponent_lib.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(object->property("status").toInt(), int(QQmlComponent::Ready));
     QCOMPARE(object->property("readValue").toInt(), int(1913));
     delete object;
@@ -711,13 +711,13 @@ void tst_qqmlqt::createQmlObject()
     QTest::ignoreMessage(QtDebugMsg, qPrintable(warning6));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("emptyArg").toBool(), true);
     QCOMPARE(object->property("success").toBool(), true);
 
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
     QCOMPARE(item->childItems().count(), 1);
 
     delete object;
@@ -790,7 +790,7 @@ void tst_qqmlqt::dateTimeFormatting()
 
     QObject *object = component.create();
     QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QVERIFY(inputProperties.count() > 0);
     QVariant result;
@@ -863,7 +863,7 @@ void tst_qqmlqt::dateTimeFormattingVariants()
 
     QObject *object = component.create();
     QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QVariant result;
     QVERIFY(QMetaObject::invokeMethod(object, method.toUtf8().constData(),
@@ -923,7 +923,7 @@ void tst_qqmlqt::isQtObject()
 {
     QQmlComponent component(&engine, testFileUrl("isQtObject.qml"));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("test1").toBool(), true);
     QCOMPARE(object->property("test2").toBool(), false);
@@ -942,7 +942,7 @@ void tst_qqmlqt::btoa()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("test2").toString(), QString("SGVsbG8gd29ybGQh"));
 
@@ -957,7 +957,7 @@ void tst_qqmlqt::atob()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("test2").toString(), QString("Hello world!"));
 
@@ -972,7 +972,7 @@ void tst_qqmlqt::fontFamilies()
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QFontDatabase database;
     QCOMPARE(object->property("test2"), QVariant::fromValue(database.families()));
@@ -986,7 +986,7 @@ void tst_qqmlqt::quit()
 
     QSignalSpy spy(&engine, SIGNAL(quit()));
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     QCOMPARE(spy.count(), 1);
 
     delete object;
@@ -1011,7 +1011,7 @@ void tst_qqmlqt::resolvedUrl()
     QQmlComponent component(&engine, testFileUrl("resolvedUrl.qml"));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("result").toString(), component.url().toString());
     QCOMPARE(object->property("isString").toBool(), true);
@@ -1101,14 +1101,14 @@ void tst_qqmlqt::later()
 
     QQmlComponent component(&engine, testFileUrl("later.qml"));
     QObject *root = component.create();
-    QVERIFY(root != 0);
+    QVERIFY(root != nullptr);
 
     if (!function.isEmpty())
         QMetaObject::invokeMethod(root, qPrintable(function));
 
     for (int i = 0; i < propNames.size(); ++i) {
         if (propNames.at(i) == QLatin1String("processEvents")) {
-            QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+            QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
             QCoreApplication::processEvents();
         } else if (propNames.at(i) == QLatin1String("collectGarbage")) {
             engine.collectGarbage();
@@ -1131,7 +1131,7 @@ void tst_qqmlqt::qtObjectContents()
     QQmlComponent component(&engine, testFileUrl("qtObjectContents.qml"));
 
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
 
     QVERIFY(object->property("values").canConvert<QJSValue>());
     QVariantMap values = object->property("values").value<QJSValue>().toVariant().toMap();
@@ -1255,7 +1255,7 @@ void tst_qqmlqt::timeRoundtrip()
     eng.rootContext()->setContextProperty(QLatin1String("tp"), &tp);
     QQmlComponent component(&eng, testFileUrl("timeRoundtrip.qml"));
     QObject *obj = component.create();
-    QVERIFY(obj != 0);
+    QVERIFY(obj != nullptr);
 
     // QML reads m_getTime and saves the result as m_putTime; this should come out the same, without
     // any perturbation (e.g. by DST effects) from converting from QTime to V4's Date and back

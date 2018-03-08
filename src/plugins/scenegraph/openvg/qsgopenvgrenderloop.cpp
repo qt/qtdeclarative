@@ -91,7 +91,6 @@ void QSGOpenVGRenderLoop::windowDestroyed(QQuickWindow *window)
         rc->invalidate();
         delete vg;
         vg = nullptr;
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
     } else if (vg && window == vg->window()) {
         vg->doneCurrent();
     }

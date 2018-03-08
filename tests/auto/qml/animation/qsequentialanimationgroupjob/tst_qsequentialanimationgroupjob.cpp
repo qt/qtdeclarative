@@ -95,7 +95,7 @@ class TestValueAnimation : public TestAnimation
 {
 public:
     TestValueAnimation(int duration = 250)
-        : TestAnimation(duration), start(0), end(0), value(0) {}
+        : TestAnimation(duration) {}
 
     void updateCurrentTime(int msecs)
     {
@@ -105,8 +105,8 @@ public:
             value = start + (end - start) * (qreal(msecs) / duration());
     }
 
-    qreal start, end;
-    qreal value;
+    qreal start = 0, end = 0;
+    qreal value = 0;
 };
 
 class UncontrolledAnimation : public QObject, public QAbstractAnimationJob
@@ -140,14 +140,14 @@ public:
 class FinishedListener: public QAnimationJobChangeListener
 {
 public:
-    FinishedListener() : m_count(0) {}
+    FinishedListener() {}
 
     virtual void animationFinished(QAbstractAnimationJob *) { ++m_count; }
     void clear() { m_count = 0; }
     int count() { return m_count; }
 
 private:
-    int m_count;
+    int m_count = 0;
 };
 
 void tst_QSequentialAnimationGroupJob::setCurrentTime()

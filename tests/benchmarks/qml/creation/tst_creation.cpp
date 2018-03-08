@@ -204,19 +204,13 @@ void tst_creation::qobject_qmltype()
     }
 }
 
-struct QQmlGraphics_Derived : public QObject
-{
-    void setParent_noEvent(QObject *parent) {
-        bool sce = d_ptr->sendChildEvents;
-        d_ptr->sendChildEvents = false;
-        setParent(parent);
-        d_ptr->sendChildEvents = sce;
-    }
-};
-
 inline void QQmlGraphics_setParent_noEvent(QObject *object, QObject *parent)
 {
-    static_cast<QQmlGraphics_Derived *>(object)->setParent_noEvent(parent);
+    QObjectPrivate *d_ptr = QObjectPrivate::get(object);
+    bool sce = d_ptr->sendChildEvents;
+    d_ptr->sendChildEvents = false;
+    object->setParent(parent);
+    d_ptr->sendChildEvents = sce;
 }
 
 void tst_creation::itemtree_notree_cpp()

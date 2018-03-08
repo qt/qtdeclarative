@@ -48,7 +48,7 @@ QQmlDebugService *QQmlNativeDebugServiceFactory::create(const QString &key)
     if (key == QQmlNativeDebugServiceImpl::s_key)
         return new QQmlNativeDebugServiceImpl(this);
 
-    return 0;
+    return nullptr;
 }
 
 QT_END_NAMESPACE

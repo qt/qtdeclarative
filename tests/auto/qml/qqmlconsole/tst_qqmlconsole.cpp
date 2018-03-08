@@ -84,7 +84,7 @@ void tst_qqmlconsole::logging()
 
     QQmlComponent component(&engine, testUrl);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     delete object;
 }
 
@@ -102,7 +102,7 @@ void tst_qqmlconsole::categorized_logging()
 
     QQmlComponent component(&engine, testUrl);
     QObject *object = component.create();
-    QVERIFY2(object != 0, component.errorString().toUtf8());
+    QVERIFY2(object != nullptr, component.errorString().toUtf8());
 
     QVERIFY(messageHandler.messages().contains("qt.test: console.info"));
     QVERIFY(messageHandler.messages().contains("qt.test: console.warn"));
@@ -135,7 +135,7 @@ void tst_qqmlconsole::tracing()
 
     QQmlComponent component(&engine, testUrl);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     delete object;
 }
 
@@ -149,7 +149,7 @@ void tst_qqmlconsole::profiling()
 
     QQmlComponent component(&engine, testUrl);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     delete object;
 }
 
@@ -170,7 +170,7 @@ void tst_qqmlconsole::testAssert()
 
     QQmlComponent component(&engine, testUrl);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     delete object;
 }
 
@@ -191,7 +191,7 @@ void tst_qqmlconsole::exception()
 
     QQmlComponent component(&engine, testUrl);
     QObject *object = component.create();
-    QVERIFY(object != 0);
+    QVERIFY(object != nullptr);
     delete object;
 }
 

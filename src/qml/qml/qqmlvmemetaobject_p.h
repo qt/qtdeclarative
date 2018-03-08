@@ -81,7 +81,7 @@ class QQmlVMEVariantQObjectPtr : public QQmlGuard<QObject>
 {
 public:
     inline QQmlVMEVariantQObjectPtr();
-    inline ~QQmlVMEVariantQObjectPtr();
+    inline ~QQmlVMEVariantQObjectPtr() override;
 
     inline void objectDestroyed(QObject *) override;
     inline void setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index);
@@ -95,7 +95,7 @@ class Q_QML_PRIVATE_EXPORT QQmlInterceptorMetaObject : public QAbstractDynamicMe
 {
 public:
     QQmlInterceptorMetaObject(QObject *obj, QQmlPropertyCache *cache);
-    ~QQmlInterceptorMetaObject();
+    ~QQmlInterceptorMetaObject() override;
 
     void registerInterceptor(QQmlPropertyIndex index, QQmlPropertyValueInterceptor *interceptor);
 
@@ -112,7 +112,7 @@ public:
             if (it->m_propertyIndex == propertyIndex)
                 return true;
         }
-        if (auto parentInterceptor = ((parent.isT1() && parent.flag()) ? static_cast<QQmlInterceptorMetaObject *>(parent.asT1()) : 0))
+        if (auto parentInterceptor = ((parent.isT1() && parent.flag()) ? static_cast<QQmlInterceptorMetaObject *>(parent.asT1()) : nullptr))
             return parentInterceptor->intercepts(propertyIndex);
         return false;
     }
@@ -139,7 +139,7 @@ inline QQmlInterceptorMetaObject *QQmlInterceptorMetaObject::get(QObject *obj)
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 class QQmlVMEMetaObjectEndpoint;
@@ -147,7 +147,7 @@ class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
 public:
     QQmlVMEMetaObject(QV4::ExecutionEngine *engine, QObject *obj, QQmlPropertyCache *cache, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId);
-    ~QQmlVMEMetaObject();
+    ~QQmlVMEMetaObject() override;
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;
     QV4::ReturnedValue vmeMethod(int index) const;
@@ -241,7 +241,7 @@ QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj)
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 int QQmlVMEMetaObject::propOffset() const
@@ -269,7 +269,7 @@ QQmlVMEMetaObject *QQmlVMEMetaObject::parentVMEMetaObject() const
     if (parent.isT1() && parent.flag())
         return static_cast<QQmlVMEMetaObject *>(parent.asT1());
 
-    return 0;
+    return nullptr;
 }
 
 QT_END_NAMESPACE

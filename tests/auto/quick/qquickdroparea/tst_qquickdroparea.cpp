@@ -463,8 +463,8 @@ void tst_QQuickDropArea::source_internal()
     QQuickItem *dragSource = dropArea->findChild<QQuickItem *>("dragSource");
     QVERIFY(dragSource);
 
-    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(nullptr));
 
     evaluate<void>(dragItem, "Drag.active = true");
     QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(dragItem));
@@ -472,8 +472,8 @@ void tst_QQuickDropArea::source_internal()
     QCOMPARE(evaluate<QObject *>(dropArea, "eventSource"), static_cast<QObject *>(dragItem));
 
     evaluate<void>(dragItem, "Drag.active = false");
-    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(nullptr));
 
 
     evaluate<void>(dropArea, "{ eventSource = null }");
@@ -485,8 +485,8 @@ void tst_QQuickDropArea::source_internal()
     QCOMPARE(evaluate<QObject *>(dropArea, "eventSource"), static_cast<QObject *>(dragSource));
 
     evaluate<void>(dragItem, "Drag.active = false");
-    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(0));
-    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(0));
+    QCOMPARE(evaluate<QObject *>(dropArea, "source"), static_cast<QObject *>(nullptr));
+    QCOMPARE(evaluate<QObject *>(dropArea, "drag.source"), static_cast<QObject *>(nullptr));
 }
 
 // Setting a source can't be emulated using the QWindowSystemInterface API.

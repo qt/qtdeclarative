@@ -61,9 +61,9 @@ class TestPaintedItem : public QQuickPaintedItem
 {
     Q_OBJECT
 public:
-    TestPaintedItem(QQuickItem *parent = 0)
+    TestPaintedItem(QQuickItem *parent = nullptr)
         : QQuickPaintedItem(parent)
-        , paintNode(0)
+        , paintNode(nullptr)
         , paintRequests(0)
     {
     }

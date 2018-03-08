@@ -74,7 +74,7 @@ import QtTest 1.1
     synchronously.  For asynchronous signals, the wait() method can be
     used to block the test until the signal occurs (or a timeout expires).
 
-    \sa {QtTest::TestCase}{TestCase}, {Qt Quick Test Reference Documentation}
+    \sa {QtTest::TestCase}{TestCase}, {Qt Quick Test}
 */
 
 Item {

@@ -340,7 +340,7 @@ public:
 
     void containerAdvanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
     {
-        name->setM(0);
+        name->setM(nullptr);
         *index = UINT_MAX;
 
         if (d()->isReference) {
@@ -420,11 +420,10 @@ public:
             ScopedFunctionObject compare(scope, m_compareFn);
             if (!compare)
                 return m_v4->throwTypeError();
-            JSCallData jsCallData(scope, 2);
-            jsCallData->args[0] = convertElementToValue(m_v4, lhs);
-            jsCallData->args[1] = convertElementToValue(m_v4, rhs);
-            *jsCallData->thisObject = m_v4->globalObject;
-            QV4::ScopedValue result(scope, compare->call(jsCallData));
+            Value *argv = scope.alloc(2);
+            argv[0] = convertElementToValue(m_v4, lhs);
+            argv[1] = convertElementToValue(m_v4, rhs);
+            QV4::ScopedValue result(scope, compare->call(m_v4->globalObject, argv, 2));
             return result->toNumber() < 0;
         }
 
@@ -433,7 +432,7 @@ public:
         const QV4::Value *m_compareFn;
     };
 
-    void sort(const BuiltinFunction *, Scope &scope, CallData *callData)
+    void sort(const FunctionObject *f, const Value *, const Value *argv, int argc)
     {
         if (d()->isReference) {
             if (!d()->object)
@@ -441,8 +440,8 @@ public:
             loadReference();
         }
 
-        if (callData->argc() == 1 && callData->args[0].as<FunctionObject>()) {
-            CompareFunctor cf(scope.engine, callData->args[0]);
+        if (argc == 1 && argv[0].as<FunctionObject>()) {
+            CompareFunctor cf(f->engine(), argv[0]);
             std::sort(d()->container->begin(), d()->container->end(), cf);
         } else {
             DefaultCompareFunctor cf;
@@ -453,10 +452,10 @@ public:
             storeReference();
     }
 
-    static QV4::ReturnedValue method_get_length(const BuiltinFunction *b, CallData *callData)
+    static QV4::ReturnedValue method_get_length(const FunctionObject *b, const Value *thisObject, const Value *, int)
     {
         QV4::Scope scope(b);
-        QV4::Scoped<QQmlSequence<Container> > This(scope, callData->thisObject.as<QQmlSequence<Container> >());
+        QV4::Scoped<QQmlSequence<Container>> This(scope, thisObject->as<QQmlSequence<Container> >());
         if (!This)
             THROW_TYPE_ERROR();
 
@@ -468,14 +467,14 @@ public:
         RETURN_RESULT(Encode(qint32(This->d()->container->size())));
     }
 
-    static QV4::ReturnedValue method_set_length(const BuiltinFunction *b, CallData *callData)
+    static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
     {
-        QV4::Scope scope(b);
-        QV4::Scoped<QQmlSequence<Container> > This(scope, callData->thisObject.as<QQmlSequence<Container> >());
+        QV4::Scope scope(f);
+        QV4::Scoped<QQmlSequence<Container>> This(scope, thisObject->as<QQmlSequence<Container> >());
         if (!This)
             THROW_TYPE_ERROR();
 
-        quint32 newLength = callData->args[0].toUInt32();
+        quint32 newLength = argc ? argv[0].toUInt32() : 0;
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (newLength > INT_MAX) {
             generateWarning(scope.engine, QLatin1String("Index out of range during length set"));
@@ -536,7 +535,7 @@ public:
     {
         Q_ASSERT(d()->object);
         Q_ASSERT(d()->isReference);
-        void *a[] = { d()->container, 0 };
+        void *a[] = { d()->container, nullptr };
         QMetaObject::metacall(d()->object, QMetaObject::ReadProperty, d()->propertyIndex, a);
     }
 
@@ -546,7 +545,7 @@ public:
         Q_ASSERT(d()->isReference);
         int status = -1;
         QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding;
-        void *a[] = { d()->container, 0, &status, &flags };
+        void *a[] = { d()->container, nullptr, &status, &flags };
         QMetaObject::metacall(d()->object, QMetaObject::WriteProperty, d()->propertyIndex, a);
     }
 
@@ -652,24 +651,24 @@ void SequencePrototype::init()
 }
 #undef REGISTER_QML_SEQUENCE_METATYPE
 
-ReturnedValue SequencePrototype::method_valueOf(const BuiltinFunction *f, CallData *callData)
+ReturnedValue SequencePrototype::method_valueOf(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {
-    return Encode(callData->thisObject.toString(f->engine()));
+    return Encode(thisObject->toString(f->engine()));
 }
 
-ReturnedValue SequencePrototype::method_sort(const BuiltinFunction *b, CallData *callData)
+ReturnedValue SequencePrototype::method_sort(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    QV4::ScopedObject o(scope, callData->thisObject);
+    QV4::ScopedObject o(scope, thisObject);
     if (!o || !o->isListType())
         THROW_TYPE_ERROR();
 
-    if (callData->argc() >= 2)
+    if (argc >= 2)
         return o.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
         if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
-            s->sort(b, scope, callData); \
+            s->sort(b, thisObject, argv, argc); \
         } else
 
         FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)

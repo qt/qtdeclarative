@@ -1,7 +1,7 @@
 import QtQml 2.0
 
 QtObject {
-    Timer {
+    property Timer timer: Timer {
         running: true
         interval: 1
         onTriggered: Qt.quit();

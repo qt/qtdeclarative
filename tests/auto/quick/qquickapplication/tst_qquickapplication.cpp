@@ -95,12 +95,12 @@ void tst_qquickapplication::active()
     // active
     window.show();
     window.requestActivate();
-    QTest::qWaitForWindowActive(&window);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QCOMPARE(QGuiApplication::focusWindow(), &window);
     QVERIFY(item->property("active").toBool());
     QVERIFY(item->property("active2").toBool());
 
-    QWindowSystemInterface::handleWindowActivated(0);
+    QWindowSystemInterface::handleWindowActivated(nullptr);
 
 #ifdef Q_OS_OSX
     // OS X has the concept of "reactivation"
@@ -165,13 +165,13 @@ void tst_qquickapplication::state()
         // triggered by window activation.
         window.show();
         window.requestActivate();
-        QTest::qWaitForWindowActive(&window);
+        QVERIFY(QTest::qWaitForWindowActive(&window));
         QCOMPARE(QGuiApplication::focusWindow(), &window);
         QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationActive);
         QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationActive);
 
         // not active again
-        QWindowSystemInterface::handleWindowActivated(0);
+        QWindowSystemInterface::handleWindowActivated(nullptr);
         QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
         QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationInactive);
         QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationInactive);

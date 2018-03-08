@@ -78,11 +78,11 @@ QSGDefaultPainterNode::QSGDefaultPainterNode(QQuickPaintedItem *item)
     , m_preferredRenderTarget(QQuickPaintedItem::Image)
     , m_actualRenderTarget(QQuickPaintedItem::Image)
     , m_item(item)
-    , m_fbo(0)
-    , m_multisampledFbo(0)
+    , m_fbo(nullptr)
+    , m_multisampledFbo(nullptr)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
-    , m_texture(0)
-    , m_gl_device(0)
+    , m_texture(nullptr)
+    , m_gl_device(nullptr)
     , m_fillColor(Qt::transparent)
     , m_contentsScale(1.0)
     , m_dirtyContents(false)
@@ -260,8 +260,8 @@ void QSGDefaultPainterNode::updateRenderTarget()
         delete m_fbo;
         delete m_multisampledFbo;
         delete m_gl_device;
-        m_fbo = m_multisampledFbo = 0;
-        m_gl_device = 0;
+        m_fbo = m_multisampledFbo = nullptr;
+        m_gl_device = nullptr;
     }
 
     if (m_actualRenderTarget == QQuickPaintedItem::FramebufferObject ||
@@ -275,7 +275,7 @@ void QSGDefaultPainterNode::updateRenderTarget()
 
         delete m_fbo;
         delete m_multisampledFbo;
-        m_fbo = m_multisampledFbo = 0;
+        m_fbo = m_multisampledFbo = nullptr;
         if (m_gl_device)
             m_gl_device->setSize(m_fboSize);
 

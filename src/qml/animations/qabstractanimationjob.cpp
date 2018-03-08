@@ -92,9 +92,8 @@ QQmlAnimationTimer *QQmlAnimationTimer::instance()
 
 void QQmlAnimationTimer::ensureTimerUpdate()
 {
-    QQmlAnimationTimer *inst = QQmlAnimationTimer::instance(false);
     QUnifiedTimer *instU = QUnifiedTimer::instance(false);
-    if (instU && inst && inst->isPaused)
+    if (instU && isPaused)
         instU->updateAnimationTimers(-1);
 }
 
@@ -129,9 +128,7 @@ void QQmlAnimationTimer::updateAnimationsTime(qint64 delta)
 
 void QQmlAnimationTimer::updateAnimationTimer()
 {
-    QQmlAnimationTimer *inst = QQmlAnimationTimer::instance(false);
-    if (inst)
-        inst->restartAnimationTimer();
+    restartAnimationTimer();
 }
 
 void QQmlAnimationTimer::restartAnimationTimer()
@@ -176,45 +173,38 @@ void QQmlAnimationTimer::registerAnimation(QAbstractAnimationJob *animation, boo
     if (animation->userControlDisabled())
         return;
 
-    QQmlAnimationTimer *inst = instance(true); //we create the instance if needed
-    inst->registerRunningAnimation(animation);
+    registerRunningAnimation(animation);
     if (isTopLevel) {
         Q_ASSERT(!animation->m_hasRegisteredTimer);
         animation->m_hasRegisteredTimer = true;
-        inst->animationsToStart << animation;
-        if (!inst->startAnimationPending) {
-            inst->startAnimationPending = true;
-            QMetaObject::invokeMethod(inst, "startAnimations", Qt::QueuedConnection);
+        animationsToStart << animation;
+        if (!startAnimationPending) {
+            startAnimationPending = true;
+            QMetaObject::invokeMethod(this, "startAnimations", Qt::QueuedConnection);
         }
     }
 }
 
 void QQmlAnimationTimer::unregisterAnimation(QAbstractAnimationJob *animation)
 {
-    QQmlAnimationTimer *inst = QQmlAnimationTimer::instance(false);
-    if (inst) {
-        //at this point the unified timer should have been created
-        //but it might also have been already destroyed in case the application is shutting down
+    unregisterRunningAnimation(animation);
 
-        inst->unregisterRunningAnimation(animation);
+    if (!animation->m_hasRegisteredTimer)
+        return;
 
-        if (!animation->m_hasRegisteredTimer)
-            return;
+    int idx = animations.indexOf(animation);
+    if (idx != -1) {
+        animations.removeAt(idx);
+        // this is needed if we unregister an animation while its running
+        if (idx <= currentAnimationIdx)
+            --currentAnimationIdx;
 
-        int idx = inst->animations.indexOf(animation);
-        if (idx != -1) {
-            inst->animations.removeAt(idx);
-            // this is needed if we unregister an animation while its running
-            if (idx <= inst->currentAnimationIdx)
-                --inst->currentAnimationIdx;
-
-            if (inst->animations.isEmpty() && !inst->stopTimerPending) {
-                inst->stopTimerPending = true;
-                QMetaObject::invokeMethod(inst, "stopTimer", Qt::QueuedConnection);
-            }
-        } else {
-            inst->animationsToStart.removeOne(animation);
+        if (animations.isEmpty() && !stopTimerPending) {
+            stopTimerPending = true;
+            QMetaObject::invokeMethod(this, "stopTimer", Qt::QueuedConnection);
         }
+    } else {
+        animationsToStart.removeOne(animation);
     }
     animation->m_hasRegisteredTimer = false;
 }
@@ -269,7 +259,7 @@ int QQmlAnimationTimer::closestPauseAnimationTimeToFinish()
 
 QAbstractAnimationJob::QAbstractAnimationJob()
     : m_loopCount(1)
-    , m_group(0)
+    , m_group(nullptr)
     , m_direction(QAbstractAnimationJob::Forward)
     , m_state(QAbstractAnimationJob::Stopped)
     , m_totalCurrentTime(0)
@@ -277,9 +267,9 @@ QAbstractAnimationJob::QAbstractAnimationJob()
     , m_currentLoop(0)
     , m_uncontrolledFinishTime(-1)
     , m_currentLoopStartTime(0)
-    , m_nextSibling(0)
-    , m_previousSibling(0)
-    , m_wasDeleted(0)
+    , m_nextSibling(nullptr)
+    , m_previousSibling(nullptr)
+    , m_wasDeleted(nullptr)
     , m_hasRegisteredTimer(false)
     , m_isPause(false)
     , m_isGroup(false)
@@ -303,8 +293,10 @@ QAbstractAnimationJob::~QAbstractAnimationJob()
         stateChanged(oldState, m_state);
 
         Q_ASSERT(m_state == Stopped);
-        if (oldState == Running)
-            QQmlAnimationTimer::unregisterAnimation(this);
+        if (oldState == Running) {
+            Q_ASSERT(QQmlAnimationTimer::instance() == m_timer);
+            m_timer->unregisterAnimation(this);
+        }
         Q_ASSERT(!m_hasRegisteredTimer);
     }
 
@@ -327,6 +319,9 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
 
     if (m_loopCount == 0)
         return;
+
+    if (!m_timer)
+        m_timer = QQmlAnimationTimer::instance();
 
     State oldState = m_state;
     int oldCurrentTime = m_currentTime;
@@ -353,11 +348,11 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
     bool isTopLevel = !m_group || m_group->isStopped();
     if (oldState == Running) {
         if (newState == Paused && m_hasRegisteredTimer)
-            QQmlAnimationTimer::ensureTimerUpdate();
+            m_timer->ensureTimerUpdate();
         //the animation, is not running any more
-        QQmlAnimationTimer::unregisterAnimation(this);
+        m_timer->unregisterAnimation(this);
     } else if (newState == Running) {
-        QQmlAnimationTimer::registerAnimation(this, isTopLevel);
+        m_timer->registerAnimation(this, isTopLevel);
     }
 
     //starting an animation qualifies as a top level loop change
@@ -384,7 +379,7 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
                 m_currentLoop = 0;
                 if (isTopLevel) {
                     // currentTime needs to be updated if pauseTimer is active
-                    RETURN_IF_DELETED(QQmlAnimationTimer::ensureTimerUpdate());
+                    RETURN_IF_DELETED(m_timer->ensureTimerUpdate());
                     RETURN_IF_DELETED(setCurrentTime(m_totalCurrentTime));
                 }
             }
@@ -421,14 +416,14 @@ void QAbstractAnimationJob::setDirection(Direction direction)
     // the commands order below is important: first we need to setCurrentTime with the old direction,
     // then update the direction on this and all children and finally restart the pauseTimer if needed
     if (m_hasRegisteredTimer)
-        QQmlAnimationTimer::ensureTimerUpdate();
+        m_timer->ensureTimerUpdate();
 
     m_direction = direction;
     updateDirection(direction);
 
     if (m_hasRegisteredTimer)
         // needed to update the timer interval in case of a pause animation
-        QQmlAnimationTimer::updateAnimationTimer();
+        m_timer->updateAnimationTimer();
 }
 
 void QAbstractAnimationJob::setLoopCount(int loopCount)

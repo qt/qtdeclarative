@@ -61,20 +61,15 @@ public:
     typedef void (*ClearFunction)(QQmlListProperty<T> *);
 
     QQmlListProperty()
-        : object(nullptr),
-          data(nullptr),
-          append(nullptr),
+        : append(nullptr),
           count(nullptr),
           at(nullptr),
-          clear(nullptr),
-          dummy1(nullptr),
-          dummy2(nullptr)
+          clear(nullptr)
     {}
     QQmlListProperty(QObject *o, QList<T *> &list)
         : object(o), data(&list), append(qlist_append), count(qlist_count), at(qlist_at),
-          clear(qlist_clear),
-          dummy1(nullptr),
-          dummy2(nullptr)
+          clear(qlist_clear)
+
     {}
     QQmlListProperty(QObject *o, void *d, AppendFunction a, CountFunction c, AtFunction t,
                     ClearFunction r )
@@ -83,18 +78,15 @@ public:
           append(a),
           count(c),
           at(t),
-          clear(r),
-          dummy1(nullptr),
-          dummy2(nullptr)
+          clear(r)
+
     {}
     QQmlListProperty(QObject *o, void *d, CountFunction c, AtFunction t)
         : object(o),
           data(d),
           append(nullptr),
           count(c), at(t),
-          clear(nullptr),
-          dummy1(nullptr),
-          dummy2(nullptr)
+          clear(nullptr)
     {}
     bool operator==(const QQmlListProperty &o) const {
         return object == o.object &&
@@ -105,8 +97,8 @@ public:
                clear == o.clear;
     }
 
-    QObject *object;
-    void *data;
+    QObject *object = nullptr;
+    void *data = nullptr;
 
     AppendFunction append;
 
@@ -115,8 +107,8 @@ public:
 
     ClearFunction clear;
 
-    void *dummy1;
-    void *dummy2;
+    void *dummy1 = nullptr;
+    void *dummy2 = nullptr;
 
 private:
     static void qlist_append(QQmlListProperty *p, T *v) {

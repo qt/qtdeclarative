@@ -70,7 +70,7 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QQmlScr
         return b;
 
     QString url;
-    QV4::Function *runtimeFunction = 0;
+    QV4::Function *runtimeFunction = nullptr;
 
     QQmlContextData *ctxtdata = QQmlContextData::get(scriptPrivate->context);
     QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
@@ -84,7 +84,7 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QQmlScr
     b->QQmlJavaScriptExpression::setContext(QQmlContextData::get(ctxt ? ctxt : scriptPrivate->context));
     b->setScopeObject(obj ? obj : scriptPrivate->scope);
 
-    QV4::ExecutionEngine *v4 = QQmlEnginePrivate::get(b->context()->engine)->v4engine();
+    QV4::ExecutionEngine *v4 = b->context()->engine->handle();
     if (runtimeFunction) {
         QV4::Scope scope(v4);
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxtdata, b->scopeObject()));
@@ -150,7 +150,7 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
         QQmlPropertyData vtd;
         getPropertyData(&d, &vtd);
         Q_ASSERT(d);
-        QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), *d, &vtd, 0);
+        QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), *d, &vtd, nullptr);
         QQmlAbstractBinding::printBindingLoopError(p);
         return;
     }
@@ -158,13 +158,13 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
 
     DeleteWatcher watcher(this);
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
-    QV4::Scope scope(ep->v4engine());
+    QQmlEngine *engine = context()->engine;
+    QV4::Scope scope(engine->handle());
 
     if (canUseAccessor())
         flags.setFlag(QQmlPropertyData::BypassInterceptor);
 
-    QQmlBindingProfiler prof(ep->profiler, function());
+    QQmlBindingProfiler prof(QQmlEnginePrivate::get(engine)->profiler, function());
     doUpdate(watcher, flags, scope);
 
     if (!watcher.wasDeleted())
@@ -306,7 +306,7 @@ public:
     }
 
     void doUpdate(const DeleteWatcher &watcher,
-                  QQmlPropertyData::WriteFlags flags, QV4::Scope &) override final
+                  QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) override final
     {
         if (watcher.wasDeleted())
             return;
@@ -322,7 +322,12 @@ public:
         QQmlPropertyData vpd;
         getPropertyData(&pd, &vpd);
         Q_ASSERT(pd);
-        doStore(result, pd, flags);
+        if (pd->propType() == QMetaType::QString) {
+            doStore(result, pd, flags);
+        } else {
+            QV4::ScopedString value(scope, scope.engine->newString(result));
+            slowWrite(*pd, vpd, value, /*isUndefined*/false, flags);
+        }
     }
 
 private:
@@ -346,7 +351,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
                                            bool isUndefined, QQmlPropertyData::WriteFlags flags)
 {
     QQmlEngine *engine = context()->engine;
-    QV8Engine *v8engine = QQmlEnginePrivate::getV8Engine(engine);
+    QV4::ExecutionEngine *v4engine = engine->handle();
 
     int type = valueTypeData.isValid() ? valueTypeData.propType() : core.propType();
 
@@ -357,13 +362,13 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
 
     if (isUndefined) {
     } else if (core.isQList()) {
-        value = QV8Engine::getV4(v8engine)->toVariant(result, qMetaTypeId<QList<QObject *> >());
+        value = v4engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
     } else if (result.isNull() && core.isQObject()) {
-        value = QVariant::fromValue((QObject *)0);
+        value = QVariant::fromValue((QObject *)nullptr);
     } else if (core.propType() == qMetaTypeId<QList<QUrl> >()) {
-        value = QQmlPropertyPrivate::resolvedUrlSequence(QV8Engine::getV4(v8engine)->toVariant(result, qMetaTypeId<QList<QUrl> >()), context());
+        value = QQmlPropertyPrivate::resolvedUrlSequence(v4engine->toVariant(result, qMetaTypeId<QList<QUrl> >()), context());
     } else if (!isVarProperty && type != qMetaTypeId<QJSValue>()) {
-        value = QV8Engine::getV4(v8engine)->toVariant(result, type);
+        value = v4engine->toVariant(result, type);
     }
 
     if (hasError()) {
@@ -381,7 +386,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
         Q_ASSERT(vmemo);
         vmemo->setVMEProperty(core.coreIndex(), result);
     } else if (isUndefined && core.isResettable()) {
-        void *args[] = { 0 };
+        void *args[] = { nullptr };
         QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex(), args);
     } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
         QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant(), context(), flags);
@@ -392,7 +397,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
             return false;
         }
         QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant::fromValue(
-                               QJSValue(QV8Engine::getV4(v8engine), result.asReturnedValue())),
+                               QJSValue(v4engine, result.asReturnedValue())),
                            context(), flags);
     } else if (isUndefined) {
         const QLatin1String typeName(QMetaType::typeName(type)
@@ -412,8 +417,8 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
         if (watcher.wasDeleted())
             return true;
 
-        const char *valueType = 0;
-        const char *propertyType = 0;
+        const char *valueType = nullptr;
+        const char *propertyType = nullptr;
 
         const int userType = value.userType();
         if (userType == QMetaType::QObjectStar) {
@@ -450,12 +455,13 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
 
 QVariant QQmlBinding::evaluate()
 {
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(context()->engine);
+    QQmlEngine *engine = context()->engine;
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     ep->referenceScarceResources();
 
     bool isUndefined = false;
 
-    QV4::Scope scope(ep->v4engine());
+    QV4::Scope scope(engine->handle());
     QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
 
     ep->dereferenceScarceResources();
@@ -524,7 +530,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const
 
         int aValueTypeIndex;
         if (!vme->aliasTarget(coreIndex, &object, &coreIndex, &aValueTypeIndex)) {
-            m_target = 0;
+            m_target = nullptr;
             m_targetIndex = QQmlPropertyIndex();
             return;
         }
@@ -533,7 +539,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const
 
         QQmlData *data = QQmlData::get(object, false);
         if (!data || !data->propertyCache) {
-            m_target = 0;
+            m_target = nullptr;
             m_targetIndex = QQmlPropertyIndex();
             return;
         }

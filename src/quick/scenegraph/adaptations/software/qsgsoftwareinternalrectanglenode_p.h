@@ -95,7 +95,7 @@ private:
     bool m_cornerPixmapIsDirty;
     QPixmap m_cornerPixmap;
 
-    int m_devicePixelRatio;
+    qreal m_devicePixelRatio;
 };
 
 QT_END_NAMESPACE

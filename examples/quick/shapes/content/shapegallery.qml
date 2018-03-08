@@ -68,7 +68,7 @@ Rectangle {
         id: pathGalleryModel
         ListElement {
             name: "Stroke and fill"
-            shapeUrl: "item1.qml"
+            shapeUrl: "tapableTriangle.qml"
         }
         ListElement {
             name: "Stroke or fill only"

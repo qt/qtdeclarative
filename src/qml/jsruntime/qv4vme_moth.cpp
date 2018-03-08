@@ -492,6 +492,7 @@ static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
             if (val.isDouble()) \
                 d = val.doubleValue(); \
             else { \
+                STORE_ACC(); \
                 d = val.toNumberImpl(); \
                 CHECK_EXCEPTION; \
             } \
@@ -552,17 +553,17 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
 
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
     QV4::Debugging::Debugger *debugger = engine->debugger();
-
-    const uchar *exceptionHandler = 0;
+    const uchar *exceptionHandler = nullptr;
 
     QV4::Value &accumulator = frame.jsFrame->accumulator;
     QV4::ReturnedValue acc = Encode::undefined();
 
 #ifdef V4_ENABLE_JIT
-    static const bool forceInterpreter = qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER");
-    if (function->jittedCode == nullptr) {
-        if (ExecutionEngine::canJIT() && debugger == nullptr && !forceInterpreter)
+    if (function->jittedCode == nullptr && debugger == nullptr) {
+        if (engine->canJIT(function))
             QV4::JIT::BaselineJIT(function).generate();
+        else
+            ++function->interpreterCallCount;
     }
 #endif // V4_ENABLE_JIT
 
@@ -634,7 +635,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
     MOTH_BEGIN_INSTR(StoreLocal)
         CHECK_EXCEPTION;
         auto cc = static_cast<Heap::CallContext *>(stack[CallData::Context].m());
-        QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, ACC);
+        QV4::WriteBarrier::write(engine, cc, cc->locals.values[index].data_ptr(), acc);
     MOTH_END_INSTR(StoreLocal)
 
     MOTH_BEGIN_INSTR(LoadScopedLocal)
@@ -645,7 +646,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
     MOTH_BEGIN_INSTR(StoreScopedLocal)
         CHECK_EXCEPTION;
         auto cc = getScope(stack, scope);
-        QV4::WriteBarrier::write(engine, cc, cc->locals.values + index, ACC);
+        QV4::WriteBarrier::write(engine, cc, cc->locals.values[index].data_ptr(), acc);
     MOTH_END_INSTR(StoreScopedLocal)
 
     MOTH_BEGIN_INSTR(LoadRuntimeString)
@@ -838,6 +839,18 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         acc = Runtime::method_callGlobalLookup(engine, index, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallGlobalLookup)
+
+    MOTH_BEGIN_INSTR(CallScopeObjectProperty)
+        STORE_IP();
+        acc = Runtime::method_callQmlScopeObjectProperty(engine, stack + base, name, stack + argv, argc);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(CallScopeObjectProperty)
+
+    MOTH_BEGIN_INSTR(CallContextObjectProperty)
+        STORE_IP();
+        acc = Runtime::method_callQmlContextObjectProperty(engine, stack + base, name, stack + argv, argc);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(CallContextObjectProperty)
 
     MOTH_BEGIN_INSTR(SetExceptionHandler)
         exceptionHandler = offset ? code + offset : nullptr;
@@ -1145,14 +1158,13 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
 
     MOTH_BEGIN_INSTR(CmpInstanceOf)
         // 11.8.6, 5: rval must be an Object
-        const Object *rhs = Primitive::fromReturnedValue(acc).as<Object>();
-        if (Q_UNLIKELY(!rhs)) {
+        if (Q_UNLIKELY(!Primitive::fromReturnedValue(acc).isObject())) {
            acc = engine->throwTypeError();
            goto catchException;
         }
 
         // 11.8.6, 7: call "HasInstance", which we term instanceOf, and return the result.
-        acc = rhs->instanceOf(STACK_VALUE(lhs));
+        acc = Primitive::fromReturnedValue(acc).objectValue()->instanceOf(STACK_VALUE(lhs));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CmpInstanceOf)
 
@@ -1294,9 +1306,9 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
     MOTH_END_INSTR(BitXor)
 
     MOTH_BEGIN_INSTR(UShr)
-        uint l = STACK_VALUE(lhs).toUInt32();
+        VALUE_TO_INT(l, STACK_VALUE(lhs));
         VALUE_TO_INT(a, ACC);
-        acc = Encode(l >> uint(a & 0x1f));
+        acc = Encode(static_cast<uint>(l) >> uint(a & 0x1f));
     MOTH_END_INSTR(UShr)
 
     MOTH_BEGIN_INSTR(Shr)
@@ -1345,12 +1357,12 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         goto functionExit;
     MOTH_END_INSTR(Ret)
 
-#if QT_CONFIG(qml_debug)
     MOTH_BEGIN_INSTR(Debug)
+#if QT_CONFIG(qml_debug)
         STORE_IP();
         debug_slowPath(engine);
-    MOTH_END_INSTR(Debug)
 #endif // QT_CONFIG(qml_debug)
+    MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(LoadQmlContext)
         STACK_VALUE(result) = Runtime::method_loadQmlContext(static_cast<QV4::NoThrowEngine*>(engine));

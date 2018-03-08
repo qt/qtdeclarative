@@ -62,7 +62,7 @@ struct QQmlSourceLocation;
 class QQmlDelayedError
 {
 public:
-    inline QQmlDelayedError() : nextError(0), prevError(0) {}
+    inline QQmlDelayedError() : nextError(nullptr), prevError(nullptr) {}
     inline ~QQmlDelayedError() { removeError(); }
 
     bool addError(QQmlEnginePrivate *);
@@ -71,8 +71,8 @@ public:
         if (!prevError) return;
         if (nextError) nextError->prevError = prevError;
         *prevError = nextError;
-        nextError = 0;
-        prevError = 0;
+        nextError = nullptr;
+        prevError = nullptr;
     }
 
     inline bool isValid() const { return m_error.isValid(); }
@@ -117,7 +117,7 @@ public:
     QQmlSourceLocation sourceLocation() const;
     void setSourceLocation(const QQmlSourceLocation &location);
 
-    bool isValid() const { return context() != 0; }
+    bool isValid() const { return context() != nullptr; }
 
     QQmlContextData *context() const { return m_context; }
     void setContext(QQmlContextData *context);
@@ -193,11 +193,11 @@ class QQmlPropertyCapture
 {
 public:
     QQmlPropertyCapture(QQmlEngine *engine, QQmlJavaScriptExpression *e, QQmlJavaScriptExpression::DeleteWatcher *w)
-    : engine(engine), expression(e), watcher(w), errorString(0) { }
+    : engine(engine), expression(e), watcher(w), errorString(nullptr) { }
 
     ~QQmlPropertyCapture()  {
         Q_ASSERT(guards.isEmpty());
-        Q_ASSERT(errorString == 0);
+        Q_ASSERT(errorString == nullptr);
     }
 
     enum Duration {
@@ -217,7 +217,7 @@ public:
 };
 
 QQmlJavaScriptExpression::DeleteWatcher::DeleteWatcher(QQmlJavaScriptExpression *e)
-: _c(0), _w(0), _s(e)
+: _c(nullptr), _w(nullptr), _s(e)
 {
     if (e->m_scopeObject.isT1()) {
         _w = &_s;
@@ -231,14 +231,14 @@ QQmlJavaScriptExpression::DeleteWatcher::DeleteWatcher(QQmlJavaScriptExpression 
 
 QQmlJavaScriptExpression::DeleteWatcher::~DeleteWatcher()
 {
-    Q_ASSERT(*_w == 0 || (*_w == _s && _s->m_scopeObject.isT2()));
+    Q_ASSERT(*_w == nullptr || (*_w == _s && _s->m_scopeObject.isT2()));
     if (*_w && _s->m_scopeObject.asT2() == this)
         _s->m_scopeObject = _c;
 }
 
 bool QQmlJavaScriptExpression::DeleteWatcher::wasDeleted() const
 {
-    return *_w == 0;
+    return *_w == nullptr;
 }
 
 bool QQmlJavaScriptExpression::notifyOnValueChanged() const
@@ -272,12 +272,12 @@ inline void QQmlJavaScriptExpression::clearError()
 {
     if (m_error)
         delete m_error;
-    m_error = 0;
+    m_error = nullptr;
 }
 
 QQmlJavaScriptExpressionGuard::QQmlJavaScriptExpressionGuard(QQmlJavaScriptExpression *e)
     : QQmlNotifierEndpoint(QQmlNotifierEndpoint::QQmlJavaScriptExpressionGuard),
-      expression(e), next(0)
+      expression(e), next(nullptr)
 {
 }
 

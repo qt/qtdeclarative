@@ -101,7 +101,6 @@ struct Q_QML_EXPORT EngineBase {
         Class_FunctionObject,
         Class_StringObject,
         Class_ScriptFunction,
-        Class_BuiltinFunction,
         Class_ObjectProto,
         Class_RegExp,
         Class_RegExpObject,
@@ -111,6 +110,8 @@ struct Q_QML_EXPORT EngineBase {
         Class_ErrorObject,
         Class_ErrorObjectWithMessage,
         Class_ErrorProto,
+        Class_QmlContextWrapper,
+        Class_QmlContext,
         NClasses
     };
     InternalClass *internalClasses[NClasses];

@@ -84,8 +84,9 @@ public:
 
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
     QSGRenderer *createRenderer() override;
+    QSGTexture *compressedTextureForFactory(const QSGCompressedTextureFactory *factory) const override;
 
-    virtual void compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = 0, const char *fragmentCode = 0);
+    virtual void compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = nullptr, const char *fragmentCode = nullptr);
     virtual void initializeShader(QSGMaterialShader *shader);
 
     void setAttachToGraphicsContext(bool attach) override;

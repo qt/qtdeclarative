@@ -74,11 +74,11 @@ class RenderThread : public QThread
     Q_OBJECT
 public:
     RenderThread(const QSize &size)
-        : surface(0)
-        , context(0)
-        , m_renderFbo(0)
-        , m_displayFbo(0)
-        , m_logoRenderer(0)
+        : surface(nullptr)
+        , context(nullptr)
+        , m_renderFbo(nullptr)
+        , m_displayFbo(nullptr)
+        , m_logoRenderer(nullptr)
         , m_size(size)
     {
         ThreadRenderer::threads << this;
@@ -156,7 +156,7 @@ public:
     TextureNode(QQuickWindow *window)
         : m_id(0)
         , m_size(0, 0)
-        , m_texture(0)
+        , m_texture(nullptr)
         , m_window(window)
     {
         // Our texture node must have a texture, so use the default 0 texture.
@@ -165,7 +165,7 @@ public:
         setFiltering(QSGTexture::Linear);
     }
 
-    ~TextureNode()
+    ~TextureNode() override
     {
         delete m_texture;
     }
@@ -224,7 +224,7 @@ private:
 };
 
 ThreadRenderer::ThreadRenderer()
-    : m_renderThread(0)
+    : m_renderThread(nullptr)
 {
     setFlag(ItemHasContents, true);
     m_renderThread = new RenderThread(QSize(512, 512));
@@ -264,7 +264,7 @@ QSGNode *ThreadRenderer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
         current->makeCurrent(window());
 
         QMetaObject::invokeMethod(this, "ready");
-        return 0;
+        return nullptr;
     }
 
     if (!node) {

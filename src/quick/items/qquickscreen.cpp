@@ -423,8 +423,8 @@ QScreen *QQuickScreenInfo::wrappedScreen() const
 
 QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
     : QQuickScreenInfo(attachee)
-    , m_window(NULL)
-    , m_updateMask(0)
+    , m_window(nullptr)
+    , m_updateMask(nullptr)
     , m_updateMaskSet(false)
 {
     m_attachee = qobject_cast<QQuickItem*>(attachee);
@@ -475,7 +475,7 @@ void QQuickScreenAttached::windowChanged(QQuickWindow* c)
     if (m_window)
         disconnect(m_window, SIGNAL(screenChanged(QScreen*)), this, SLOT(screenChanged(QScreen*)));
     m_window = c;
-    screenChanged(c ? c->screen() : NULL);
+    screenChanged(c ? c->screen() : nullptr);
     if (c)
         connect(c, SIGNAL(screenChanged(QScreen*)), this, SLOT(screenChanged(QScreen*)));
 }

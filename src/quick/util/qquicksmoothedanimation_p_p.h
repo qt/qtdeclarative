@@ -65,7 +65,7 @@ class QSmoothedAnimationTimer : public QTimer
 {
     Q_OBJECT
 public:
-    explicit QSmoothedAnimationTimer(QSmoothedAnimation *animation, QObject *parent = 0);
+    explicit QSmoothedAnimationTimer(QSmoothedAnimation *animation, QObject *parent = nullptr);
     ~QSmoothedAnimationTimer();
 public Q_SLOTS:
     void stopAnimation();
@@ -78,7 +78,7 @@ class Q_AUTOTEST_EXPORT QSmoothedAnimation : public QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QSmoothedAnimation)
 public:
-    QSmoothedAnimation(QQuickSmoothedAnimationPrivate * = 0);
+    QSmoothedAnimation(QQuickSmoothedAnimationPrivate * = nullptr);
 
     ~QSmoothedAnimation();
     qreal to;
@@ -98,7 +98,7 @@ public:
     void init();
 
     void prepareForRestart();
-    void clearTemplate() { animationTemplate = 0; }
+    void clearTemplate() { animationTemplate = nullptr; }
 
 protected:
     void updateCurrentTime(int) override;

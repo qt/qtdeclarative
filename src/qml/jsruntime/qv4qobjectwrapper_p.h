@@ -166,8 +166,8 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     QObject *object() const { return d()->object(); }
 
-    ReturnedValue getQmlProperty(QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = 0, bool includeImports = false) const;
-    static ReturnedValue getQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = 0);
+    ReturnedValue getQmlProperty(QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = nullptr, bool includeImports = false) const;
+    static ReturnedValue getQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = nullptr);
 
     static bool setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
 
@@ -198,8 +198,8 @@ protected:
     static PropertyAttributes query(const Managed *, String *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
-    static ReturnedValue method_connect(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_disconnect(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_connect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_disconnect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
 private:
     Q_NEVER_INLINE static ReturnedValue wrap_slowPath(ExecutionEngine *engine, QObject *object);

@@ -81,7 +81,7 @@ private:
 
 template<typename T>
 QFiniteStack<T>::QFiniteStack()
-: _array(0), _alloc(0), _size(0)
+: _array(nullptr), _alloc(0), _size(0)
 {
 }
 
@@ -156,7 +156,7 @@ T &QFiniteStack<T>::operator[](int index)
 template<typename T>
 void QFiniteStack<T>::allocate(int size)
 {
-    Q_ASSERT(_array == 0);
+    Q_ASSERT(_array == nullptr);
     Q_ASSERT(_alloc == 0);
     Q_ASSERT(_size == 0);
 
@@ -177,7 +177,7 @@ void QFiniteStack<T>::deallocate()
 
     free(_array);
 
-    _array = 0;
+    _array = nullptr;
     _alloc = 0;
     _size = 0;
 }

@@ -50,30 +50,13 @@ static void initResources()
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule Qt.labs.handlers 1.0
-    \title Qt Quick Pointer Handlers
-    \ingroup qmlmodules
-    \brief Provides QML types for handling pointer events.
-
-    This QML module contains types for handling pointer events, which are an abstraction
-    of mouse, touch and tablet events.
-
-    To use the types in this module, import the module with the following line:
-
-    \code
-    import Qt.labs.handlers 1.0
-    \endcode
-*/
-
-
 //![class decl]
 class QtQuickHandlersPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QtQuickHandlersPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
+    QtQuickHandlersPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.handlers"));

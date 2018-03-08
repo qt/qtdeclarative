@@ -75,7 +75,7 @@ public:
     };
     Q_ENUM(GesturePolicy)
 
-    explicit QQuickTapHandler(QObject *parent = 0);
+    explicit QQuickTapHandler(QObject *parent = nullptr);
     ~QQuickTapHandler();
 
     bool isPressed() const { return m_pressed; }
@@ -96,6 +96,8 @@ Q_SIGNALS:
     void longPressThresholdChanged();
     void gesturePolicyChanged();
     void tapped();
+    void singleTapped();
+    void doubleTapped();
     void longPressed();
 
 protected:

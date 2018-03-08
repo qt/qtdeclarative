@@ -120,12 +120,16 @@ void tst_qquickanimations::simpleProperty()
 {
     QQuickRectangle rect;
     QQuickPropertyAnimation animation;
+    QSignalSpy fromChangedSpy(&animation, &QQuickPropertyAnimation::fromChanged);
+    QSignalSpy toChangedSpy(&animation, &QQuickPropertyAnimation::toChanged);
     animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setTo(200);
     QCOMPARE(animation.target(), &rect);
     QCOMPARE(animation.property(), QLatin1String("x"));
     QCOMPARE(animation.to().toReal(), 200.0);
+    QCOMPARE(fromChangedSpy.count(), 0);
+    QCOMPARE(toChangedSpy.count(), 1);
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -139,18 +143,25 @@ void tst_qquickanimations::simpleProperty()
     animation.setCurrentTime(125);
     QCOMPARE(animation.currentTime(), 125);
     QCOMPARE(rect.x(),100.0);
+    animation.setFrom(100);
+    QCOMPARE(fromChangedSpy.count(), 1);
+    QCOMPARE(toChangedSpy.count(), 1);
 }
 
 void tst_qquickanimations::simpleNumber()
 {
     QQuickRectangle rect;
     QQuickNumberAnimation animation;
+    QSignalSpy fromChangedSpy(&animation, &QQuickNumberAnimation::fromChanged);
+    QSignalSpy toChangedSpy(&animation, &QQuickNumberAnimation::toChanged);
     animation.setTargetObject(&rect);
     animation.setProperty("x");
     animation.setTo(200);
     QCOMPARE(animation.target(), &rect);
     QCOMPARE(animation.property(), QLatin1String("x"));
     QCOMPARE(animation.to(), qreal(200));
+    QCOMPARE(fromChangedSpy.count(), 0);
+    QCOMPARE(toChangedSpy.count(), 1);
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -164,18 +175,25 @@ void tst_qquickanimations::simpleNumber()
     animation.setCurrentTime(125);
     QCOMPARE(animation.currentTime(), 125);
     QCOMPARE(rect.x(), qreal(100));
+    animation.setFrom(100);
+    QCOMPARE(fromChangedSpy.count(), 1);
+    QCOMPARE(toChangedSpy.count(), 1);
 }
 
 void tst_qquickanimations::simpleColor()
 {
     QQuickRectangle rect;
     QQuickColorAnimation animation;
+    QSignalSpy fromChangedSpy(&animation, &QQuickColorAnimation::fromChanged);
+    QSignalSpy toChangedSpy(&animation, &QQuickColorAnimation::toChanged);
     animation.setTargetObject(&rect);
     animation.setProperty("color");
     animation.setTo(QColor("red"));
     QCOMPARE(animation.target(), &rect);
     QCOMPARE(animation.property(), QLatin1String("color"));
     QCOMPARE(animation.to(), QColor("red"));
+    QCOMPARE(fromChangedSpy.count(), 0);
+    QCOMPARE(toChangedSpy.count(), 1);
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -193,6 +211,8 @@ void tst_qquickanimations::simpleColor()
     rect.setColor(QColor("green"));
     animation.setFrom(QColor("blue"));
     QCOMPARE(animation.from(), QColor("blue"));
+    QCOMPARE(fromChangedSpy.count(), 1);
+    QCOMPARE(toChangedSpy.count(), 1);
     animation.restart();
     QCOMPARE(rect.color(), QColor("blue"));
     QVERIFY(animation.isRunning());
@@ -204,6 +224,8 @@ void tst_qquickanimations::simpleRotation()
 {
     QQuickRectangle rect;
     QQuickRotationAnimation animation;
+    QSignalSpy fromChangedSpy(&animation, &QQuickRotationAnimation::fromChanged);
+    QSignalSpy toChangedSpy(&animation, &QQuickRotationAnimation::toChanged);
     animation.setTargetObject(&rect);
     animation.setProperty("rotation");
     animation.setTo(270);
@@ -211,6 +233,8 @@ void tst_qquickanimations::simpleRotation()
     QCOMPARE(animation.property(), QLatin1String("rotation"));
     QCOMPARE(animation.to(), qreal(270));
     QCOMPARE(animation.direction(), QQuickRotationAnimation::Numerical);
+    QCOMPARE(fromChangedSpy.count(), 0);
+    QCOMPARE(toChangedSpy.count(), 1);
     animation.start();
     QVERIFY(animation.isRunning());
     QTest::qWait(animation.duration());
@@ -224,6 +248,9 @@ void tst_qquickanimations::simpleRotation()
     animation.setCurrentTime(125);
     QCOMPARE(animation.currentTime(), 125);
     QCOMPARE(rect.rotation(), qreal(135));
+    animation.setFrom(90);
+    QCOMPARE(fromChangedSpy.count(), 1);
+    QCOMPARE(toChangedSpy.count(), 1);
 }
 
 void tst_qquickanimations::simplePath()
@@ -733,7 +760,7 @@ void tst_qquickanimations::badTypes()
 
         QQuickItemPrivate::get(rect)->setState("state1");
 
-        QQuickRectangle *myRect = 0;
+        QQuickRectangle *myRect = nullptr;
         QTRY_VERIFY(myRect = rect->findChild<QQuickRectangle*>("MyRect"));
         QTRY_COMPARE(myRect->x(),qreal(200));
     }
@@ -1126,7 +1153,7 @@ void tst_qquickanimations::easingProperties()
         animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickPropertyAnimation *animObject = qobject_cast<QQuickPropertyAnimation*>(animationComponent.create());
 
-        QVERIFY(animObject != 0);
+        QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::InOutQuad);
     }
 
@@ -1137,7 +1164,7 @@ void tst_qquickanimations::easingProperties()
         animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickPropertyAnimation *animObject = qobject_cast<QQuickPropertyAnimation*>(animationComponent.create());
 
-        QVERIFY(animObject != 0);
+        QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::OutBounce);
         QCOMPARE(animObject->easing().amplitude(), 5.0);
     }
@@ -1149,7 +1176,7 @@ void tst_qquickanimations::easingProperties()
         animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickPropertyAnimation *animObject = qobject_cast<QQuickPropertyAnimation*>(animationComponent.create());
 
-        QVERIFY(animObject != 0);
+        QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::OutElastic);
         QCOMPARE(animObject->easing().amplitude(), 5.0);
         QCOMPARE(animObject->easing().period(), 3.0);
@@ -1162,7 +1189,7 @@ void tst_qquickanimations::easingProperties()
         animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickPropertyAnimation *animObject = qobject_cast<QQuickPropertyAnimation*>(animationComponent.create());
 
-        QVERIFY(animObject != 0);
+        QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::InOutBack);
         QCOMPARE(animObject->easing().overshoot(), 2.0);
     }
@@ -1174,7 +1201,7 @@ void tst_qquickanimations::easingProperties()
         animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QQuickPropertyAnimation *animObject = qobject_cast<QQuickPropertyAnimation*>(animationComponent.create());
 
-        QVERIFY(animObject != 0);
+        QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::BezierSpline);
         QList<QPointF> points = animObject->easing().cubicBezierSpline();
         QCOMPARE(points.count(), 3);
@@ -1297,7 +1324,7 @@ void tst_qquickanimations::nonTransitionBug()
 
     QQmlComponent c(&engine, testFileUrl("nonTransitionBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickItemPrivate *rectPrivate = QQuickItemPrivate::get(rect);
     QQuickRectangle *mover = rect->findChild<QQuickRectangle*>("mover");
 
@@ -1323,7 +1350,7 @@ void tst_qquickanimations::registrationBug()
 
     QQmlComponent c(&engine, testFileUrl("registrationBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QTRY_COMPARE(rect->property("value"), QVariant(int(100)));
 }
 
@@ -1333,10 +1360,10 @@ void tst_qquickanimations::doubleRegistrationBug()
 
     QQmlComponent c(&engine, testFileUrl("doubleRegistrationBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QQuickAbstractAnimation *anim = rect->findChild<QQuickAbstractAnimation*>("animation");
-    QVERIFY(anim != 0);
+    QVERIFY(anim != nullptr);
     QTRY_COMPARE(anim->qtAnimation()->state(), QAbstractAnimationJob::Stopped);
 }
 
@@ -1374,7 +1401,7 @@ void tst_qquickanimations::transitionAssignmentBug()
 
     QQmlComponent c(&engine, testFileUrl("transitionAssignmentBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
 
     QCOMPARE(rect->property("nullObject").toBool(), false);
 }
@@ -1386,7 +1413,7 @@ void tst_qquickanimations::pauseBindingBug()
 
     QQmlComponent c(&engine, testFileUrl("pauseBindingBug.qml"));
     QQuickRectangle *rect = qobject_cast<QQuickRectangle*>(c.create());
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QQuickAbstractAnimation *anim = rect->findChild<QQuickAbstractAnimation*>("animation");
     QCOMPARE(anim->qtAnimation()->state(), QAbstractAnimationJob::Paused);
 
@@ -1400,7 +1427,7 @@ void tst_qquickanimations::pauseBug()
 
     QQmlComponent c(&engine, testFileUrl("pauseBug.qml"));
     QQuickAbstractAnimation *anim = qobject_cast<QQuickAbstractAnimation*>(c.create());
-    QVERIFY(anim != 0);
+    QVERIFY(anim != nullptr);
     QCOMPARE(anim->qtAnimation()->state(), QAbstractAnimationJob::Paused);
     QCOMPARE(anim->isPaused(), true);
     QCOMPARE(anim->isRunning(), true);
@@ -1417,14 +1444,14 @@ void tst_qquickanimations::loopingBug()
     QObject *obj = c.create();
 
     QQuickAbstractAnimation *anim = obj->findChild<QQuickAbstractAnimation*>();
-    QVERIFY(anim != 0);
+    QVERIFY(anim != nullptr);
     QCOMPARE(anim->qtAnimation()->totalDuration(), 300);
     QCOMPARE(anim->isRunning(), true);
     QTRY_COMPARE(static_cast<QAnimationGroupJob*>(anim->qtAnimation())->firstChild()->currentLoop(), 2);
     QTRY_COMPARE(anim->isRunning(), false);
 
     QQuickRectangle *rect = obj->findChild<QQuickRectangle*>();
-    QVERIFY(rect != 0);
+    QVERIFY(rect != nullptr);
     QCOMPARE(rect->rotation(), qreal(90));
 
     delete obj;

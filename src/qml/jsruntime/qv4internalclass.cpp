@@ -105,10 +105,10 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
 
 InternalClass::InternalClass(ExecutionEngine *engine)
     : engine(engine)
-    , vtable(0)
-    , prototype(0)
-    , m_sealed(0)
-    , m_frozen(0)
+    , vtable(nullptr)
+    , prototype(nullptr)
+    , m_sealed(nullptr)
+    , m_frozen(nullptr)
     , size(0)
     , extensible(true)
 {
@@ -124,8 +124,8 @@ InternalClass::InternalClass(const QV4::InternalClass &other)
     , propertyTable(other.propertyTable)
     , nameMap(other.nameMap)
     , propertyData(other.propertyData)
-    , m_sealed(0)
-    , m_frozen(0)
+    , m_sealed(nullptr)
+    , m_frozen(nullptr)
     , size(other.size)
     , extensible(other.extensible)
     , isUsedAsProto(other.isUsedAsProto)
@@ -149,6 +149,9 @@ static void removeFromPropertyData(Object *object, int idx, bool accessor = fals
     int size = o->internalClass->size;
     for (int i = idx; i < size; ++i)
         o->setProperty(v4, i, *o->propertyData(i + (accessor ? 2 : 1)));
+    o->setProperty(v4, size, Primitive::undefinedValue());
+    if (accessor)
+        o->setProperty(v4, size + 1, Primitive::undefinedValue());
 }
 
 void InternalClass::changeMember(Object *object, String *string, PropertyAttributes data, uint *index)
@@ -220,7 +223,7 @@ InternalClass *InternalClass::changePrototypeImpl(Heap::Object *proto)
     Q_ASSERT(prototype != proto);
     Q_ASSERT(!proto || proto->internalClass->isUsedAsProto);
 
-    Transition temp = { { nullptr }, 0, Transition::PrototypeChange };
+    Transition temp = { { nullptr }, nullptr, Transition::PrototypeChange };
     temp.prototype = proto;
 
     Transition &t = lookupOrInsertTransition(temp);
@@ -484,7 +487,7 @@ void InternalClass::destroy()
         destroyStack.pop_back();
         if (!next->engine)
             continue;
-        next->engine = 0;
+        next->engine = nullptr;
         next->propertyTable.~PropertyHash();
         next->nameMap.~SharedInternalClassData<Identifier *>();
         next->propertyData.~SharedInternalClassData<PropertyAttributes>();

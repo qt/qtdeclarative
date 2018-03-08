@@ -2,7 +2,7 @@ TEMPLATE = subdirs
 CONFIG += ordered
 include($$OUT_PWD/qml/qtqml-config.pri)
 include($$OUT_PWD/quick/qtquick-config.pri)
-QT_FOR_CONFIG += network qml quick-private
+QT_FOR_CONFIG += qml quick-private
 SUBDIRS += \
     qml
 
@@ -21,4 +21,9 @@ SUBDIRS += \
     imports \
     qmldevtools
 
-qtConfig(localserver):qtConfig(qml-debug): SUBDIRS += qmldebug
+qmldevtools.depends = qml
+
+qtConfig(qml-network) {
+    QT_FOR_CONFIG += network
+    qtConfig(localserver):qtConfig(qml-debug): SUBDIRS += qmldebug
+}

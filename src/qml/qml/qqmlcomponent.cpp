@@ -241,6 +241,9 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     \li main.qml
     \li \snippet qml/component/main.qml 0
     \endtable
+
+    It is important that the lifetime of the creation context outlive any created objects. See
+    \l{Maintaining Dynamically Created Objects} for more details.
 */
 
 /*!
@@ -315,7 +318,7 @@ void QQmlComponentPrivate::typeDataReady(QQmlTypeData *)
     Q_ASSERT(typeData);
 
     fromTypeData(typeData);
-    typeData = 0;
+    typeData = nullptr;
     progress = 1.0;
 
     emit q->statusChanged(q->status());
@@ -349,7 +352,7 @@ void QQmlComponentPrivate::clear()
     if (typeData) {
         typeData->unregisterCallback(this);
         typeData->release();
-        typeData = 0;
+        typeData = nullptr;
     }
 
     compilationUnit = nullptr;
@@ -497,8 +500,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QObject *parent)
     Create a QQmlComponent from the given \a url and give it the
     specified \a parent and \a engine.
 
-    Ensure that the URL provided is full and correct, in particular, use
-    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+    \include qqmlcomponent.qdoc url-note
 
     \sa loadUrl()
 */
@@ -512,8 +514,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, QObject *paren
     specified \a parent and \a engine. If \a mode is \l Asynchronous,
     the component will be loaded and compiled asynchronously.
 
-    Ensure that the URL provided is full and correct, in particular, use
-    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+    \include qqmlcomponent.qdoc url-note
 
     \sa loadUrl()
 */
@@ -549,7 +550,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName,
     : QQmlComponent(engine, parent)
 {
     Q_D(QQmlComponent);
-    const QUrl url = QDir::isAbsolutePath(fileName) ? QUrl::fromLocalFile(fileName) : d->engine->baseUrl().resolved(QUrl(fileName));
+    const QUrl url = QDir::isAbsolutePath(fileName) ? QUrl::fromLocalFile(fileName) : QUrl(fileName);
     d->loadUrl(url, mode);
 }
 
@@ -562,7 +563,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::CompiledData::CompilationU
     Q_D(QQmlComponent);
     d->compilationUnit = compilationUnit;
     d->start = start;
-    d->url = compilationUnit->url();
+    d->url = compilationUnit->finalUrl();
     d->progress = 1.0;
 }
 
@@ -609,8 +610,7 @@ QQmlContext *QQmlComponent::creationContext() const
 /*!
     Load the QQmlComponent from the provided \a url.
 
-    Ensure that the URL provided is full and correct, in particular, use
-    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+    \include qqmlcomponent.qdoc url-note
 */
 void QQmlComponent::loadUrl(const QUrl &url)
 {
@@ -622,8 +622,7 @@ void QQmlComponent::loadUrl(const QUrl &url)
     Load the QQmlComponent from the provided \a url.
     If \a mode is \l Asynchronous, the component will be loaded and compiled asynchronously.
 
-    Ensure that the URL provided is full and correct, in particular, use
-    \l QUrl::fromLocalFile() when loading a file from the local filesystem.
+    \include qqmlcomponent.qdoc url-note
 */
 void QQmlComponent::loadUrl(const QUrl &url, QQmlComponent::CompilationMode mode)
 {
@@ -636,11 +635,21 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
     Q_Q(QQmlComponent);
     clear();
 
-    if ((newUrl.isRelative() && !newUrl.isEmpty())
-    || newUrl.scheme() == QLatin1String("file")) // Workaround QTBUG-11929
-        url = engine->baseUrl().resolved(newUrl);
-    else
+    if (newUrl.isRelative()) {
+        // The new URL is a relative URL like QUrl("main.qml").
+        url = engine->baseUrl().resolved(QUrl(newUrl.toString()));
+    } else if (engine->baseUrl().isLocalFile() && newUrl.isLocalFile() && !QDir::isAbsolutePath(newUrl.toLocalFile())) {
+        // The new URL is a file on disk but it's a relative path; e.g.:
+        // QUrl::fromLocalFile("main.qml") or QUrl("file:main.qml")
+        // We need to remove the scheme so that it becomes a relative URL with a relative path:
+        QUrl fixedUrl(newUrl);
+        fixedUrl.setScheme(QString());
+        // Then, turn it into an absolute URL with an absolute path by resolving it against the engine's baseUrl().
+        // This is a compatibility hack for QTBUG-58837.
+        url = engine->baseUrl().resolved(fixedUrl);
+    } else {
         url = newUrl;
+    }
 
     if (newUrl.isEmpty()) {
         QQmlError error;
@@ -814,27 +823,27 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     Q_Q(QQmlComponent);
     if (!context) {
         qWarning("QQmlComponent: Cannot create a component in a null context");
-        return 0;
+        return nullptr;
     }
 
     if (!context->isValid()) {
         qWarning("QQmlComponent: Cannot create a component in an invalid context");
-        return 0;
+        return nullptr;
     }
 
     if (context->engine != engine) {
         qWarning("QQmlComponent: Must create component in context from the same QQmlEngine");
-        return 0;
+        return nullptr;
     }
 
     if (state.completePending) {
         qWarning("QQmlComponent: Cannot create new component instance before completing the previous");
-        return 0;
+        return nullptr;
     }
 
     if (!q->isReady()) {
         qWarning("QQmlComponent: Component is not ready");
-        return 0;
+        return nullptr;
     }
 
     // Do not create infinite recursion in object creation
@@ -842,7 +851,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     if (++creationDepth.localData() >= maxCreationDepth) {
         qWarning("QQmlComponent: Component creation is recursing - aborting");
         --creationDepth.localData();
-        return 0;
+        return nullptr;
     }
     Q_ASSERT(creationDepth.localData() >= 1);
     depthIncreased = true;
@@ -854,7 +863,7 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
     state.completePending = true;
 
     enginePriv->referenceScarceResources();
-    QObject *rv = 0;
+    QObject *rv = nullptr;
     state.creator.reset(new QQmlObjectCreator(context, compilationUnit, creationContext));
     rv = state.creator->create(start);
     if (!rv)
@@ -959,7 +968,7 @@ void QQmlComponentPrivate::completeCreate()
 }
 
 QQmlComponentAttached::QQmlComponentAttached(QObject *parent)
-: QObject(parent), prev(0), next(0)
+: QObject(parent), prev(nullptr), next(nullptr)
 {
 }
 
@@ -967,8 +976,8 @@ QQmlComponentAttached::~QQmlComponentAttached()
 {
     if (prev) *prev = next;
     if (next) next->prev = prev;
-    prev = 0;
-    next = 0;
+    prev = nullptr;
+    next = nullptr;
 }
 
 /*!
@@ -1074,7 +1083,6 @@ void QQmlComponentPrivate::incubateObject(
     QQmlComponentPrivate *componentPriv = QQmlComponentPrivate::get(component);
 
     incubatorPriv->compilationUnit = componentPriv->compilationUnit;
-    incubatorPriv->compilationUnit->addref();
     incubatorPriv->enginePriv = enginePriv;
     incubatorPriv->creator.reset(new QQmlObjectCreator(context, componentPriv->compilationUnit, componentPriv->creationContext));
     incubatorPriv->subComponentToCreate = componentPriv->start;
@@ -1111,11 +1119,11 @@ struct QmlIncubatorObject : public QV4::Object
     V4_OBJECT2(QmlIncubatorObject, Object)
     V4_NEEDS_DESTROY
 
-    static ReturnedValue method_get_statusChanged(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_set_statusChanged(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_get_status(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_get_object(const BuiltinFunction *, CallData *callData);
-    static ReturnedValue method_forceCompletion(const BuiltinFunction *, CallData *callData);
+    static ReturnedValue method_get_statusChanged(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_set_statusChanged(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_status(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_object(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_forceCompletion(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     void statusChanged(QQmlIncubator::Status);
     void setInitialState(QObject *);
@@ -1264,7 +1272,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     Q_ASSERT(d->engine);
     Q_ASSERT(args);
 
-    QObject *parent = 0;
+    QObject *parent = nullptr;
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
     QV4::ScopedValue valuemap(scope, QV4::Primitive::undefinedValue());
@@ -1381,7 +1389,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
 
-    QObject *parent = 0;
+    QObject *parent = nullptr;
     QV4::ScopedValue valuemap(scope, QV4::Primitive::undefinedValue());
     QQmlIncubator::IncubationMode mode = QQmlIncubator::Asynchronous;
 
@@ -1436,8 +1444,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 // XXX used by QSGLoader
 void QQmlComponentPrivate::initializeObjectWithInitialProperties(QV4::QmlContext *qmlContext, const QV4::Value &valuemap, QObject *toCreate)
 {
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-    QV4::ExecutionEngine *v4engine = QV8Engine::getV4(ep->v8engine());
+    QV4::ExecutionEngine *v4engine = engine->handle();
     QV4::Scope scope(v4engine);
 
     QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(v4engine, toCreate));
@@ -1453,27 +1460,27 @@ QQmlComponentExtension::QQmlComponentExtension(QV4::ExecutionEngine *v4)
     QV4::ScopedObject proto(scope, v4->newObject());
     proto->defineAccessorProperty(QStringLiteral("onStatusChanged"),
                                   QV4::QmlIncubatorObject::method_get_statusChanged, QV4::QmlIncubatorObject::method_set_statusChanged);
-    proto->defineAccessorProperty(QStringLiteral("status"), QV4::QmlIncubatorObject::method_get_status, 0);
-    proto->defineAccessorProperty(QStringLiteral("object"), QV4::QmlIncubatorObject::method_get_object, 0);
+    proto->defineAccessorProperty(QStringLiteral("status"), QV4::QmlIncubatorObject::method_get_status, nullptr);
+    proto->defineAccessorProperty(QStringLiteral("object"), QV4::QmlIncubatorObject::method_get_object, nullptr);
     proto->defineDefaultProperty(QStringLiteral("forceCompletion"), QV4::QmlIncubatorObject::method_forceCompletion);
 
     incubationProto.set(v4, proto);
 }
 
-QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_object(const BuiltinFunction *b, CallData *callData)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_object(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     QV4::Scope scope(b);
-    QV4::Scoped<QmlIncubatorObject> o(scope, callData->thisObject.as<QmlIncubatorObject>());
+    QV4::Scoped<QmlIncubatorObject> o(scope, thisObject->as<QmlIncubatorObject>());
     if (!o)
         THROW_TYPE_ERROR();
 
     return QV4::QObjectWrapper::wrap(scope.engine, o->d()->incubator->object());
 }
 
-QV4::ReturnedValue QV4::QmlIncubatorObject::method_forceCompletion(const BuiltinFunction *b, CallData *callData)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_forceCompletion(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     QV4::Scope scope(b);
-    QV4::Scoped<QmlIncubatorObject> o(scope, callData->thisObject.as<QmlIncubatorObject>());
+    QV4::Scoped<QmlIncubatorObject> o(scope, thisObject->as<QmlIncubatorObject>());
     if (!o)
         THROW_TYPE_ERROR();
 
@@ -1482,34 +1489,34 @@ QV4::ReturnedValue QV4::QmlIncubatorObject::method_forceCompletion(const Builtin
     RETURN_UNDEFINED();
 }
 
-QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_status(const BuiltinFunction *b, CallData *callData)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_status(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     QV4::Scope scope(b);
-    QV4::Scoped<QmlIncubatorObject> o(scope, callData->thisObject.as<QmlIncubatorObject>());
+    QV4::Scoped<QmlIncubatorObject> o(scope, thisObject->as<QmlIncubatorObject>());
     if (!o)
         THROW_TYPE_ERROR();
 
     return QV4::Encode(o->d()->incubator->status());
 }
 
-QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_statusChanged(const BuiltinFunction *b, CallData *callData)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_get_statusChanged(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     QV4::Scope scope(b);
-    QV4::Scoped<QmlIncubatorObject> o(scope, callData->thisObject.as<QmlIncubatorObject>());
+    QV4::Scoped<QmlIncubatorObject> o(scope, thisObject->as<QmlIncubatorObject>());
     if (!o)
         THROW_TYPE_ERROR();
 
     return QV4::Encode(o->d()->statusChanged);
 }
 
-QV4::ReturnedValue QV4::QmlIncubatorObject::method_set_statusChanged(const BuiltinFunction *b, CallData *callData)
+QV4::ReturnedValue QV4::QmlIncubatorObject::method_set_statusChanged(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     QV4::Scope scope(b);
-    QV4::Scoped<QmlIncubatorObject> o(scope, callData->thisObject.as<QmlIncubatorObject>());
-    if (!o || callData->argc() < 1)
+    QV4::Scoped<QmlIncubatorObject> o(scope, thisObject->as<QmlIncubatorObject>());
+    if (!o || argc < 1)
         THROW_TYPE_ERROR();
 
-    o->d()->statusChanged.set(scope.engine, callData->args[0]);
+    o->d()->statusChanged.set(scope.engine, argv[0]);
 
     RETURN_UNDEFINED();
 }

@@ -30,7 +30,7 @@
 #include <QtWidgets/QPushButton>
 
 tst_QJSValue::tst_QJSValue()
-    : engine(0)
+    : engine(nullptr)
 {
 }
 
@@ -45,7 +45,7 @@ void tst_QJSValue::ctor_invalid()
     {
         QJSValue v;
         QVERIFY(v.isUndefined());
-        QCOMPARE(v.engine(), (QJSEngine *)0);
+        QCOMPARE(v.engine(), (QJSEngine *)nullptr);
     }
 }
 
@@ -111,7 +111,7 @@ void tst_QJSValue::ctor_int()
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
-        QCOMPARE(v.engine(), (QJSEngine *)0);
+        QCOMPARE(v.engine(), (QJSEngine *)nullptr);
     }
 }
 
@@ -141,7 +141,7 @@ void tst_QJSValue::ctor_uint()
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
-        QCOMPARE(v.engine(), (QJSEngine *)0);
+        QCOMPARE(v.engine(), (QJSEngine *)nullptr);
     }
 }
 
@@ -171,7 +171,7 @@ void tst_QJSValue::ctor_float()
         QCOMPARE(v.isNumber(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
-        QCOMPARE(v.engine(), (QJSEngine *)0);
+        QCOMPARE(v.engine(), (QJSEngine *)nullptr);
     }
 }
 
@@ -196,7 +196,7 @@ void tst_QJSValue::ctor_string()
         QCOMPARE(v.isString(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toString(), QLatin1String("ciao"));
-        QCOMPARE(v.engine(), (QJSEngine *)0);
+        QCOMPARE(v.engine(), (QJSEngine *)nullptr);
     }
     {
         QJSValue v("ciao");
@@ -204,7 +204,7 @@ void tst_QJSValue::ctor_string()
         QCOMPARE(v.isString(), true);
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toString(), QLatin1String("ciao"));
-        QCOMPARE(v.engine(), (QJSEngine *)0);
+        QCOMPARE(v.engine(), (QJSEngine *)nullptr);
     }
 }
 
@@ -246,7 +246,7 @@ void tst_QJSValue::ctor_undefined()
     QJSValue v(QJSValue::UndefinedValue);
     QVERIFY(v.isUndefined());
     QCOMPARE(v.isObject(), false);
-    QCOMPARE(v.engine(), (QJSEngine *)0);
+    QCOMPARE(v.engine(), (QJSEngine *)nullptr);
 }
 
 void tst_QJSValue::ctor_null()
@@ -255,7 +255,7 @@ void tst_QJSValue::ctor_null()
     QVERIFY(!v.isUndefined());
     QCOMPARE(v.isNull(), true);
     QCOMPARE(v.isObject(), false);
-    QCOMPARE(v.engine(), (QJSEngine *)0);
+    QCOMPARE(v.engine(), (QJSEngine *)nullptr);
 }
 
 void tst_QJSValue::ctor_bool()
@@ -266,7 +266,7 @@ void tst_QJSValue::ctor_bool()
     QCOMPARE(v.isBool(), true);
     QCOMPARE(v.isObject(), false);
     QCOMPARE(v.toBool(), false);
-    QCOMPARE(v.engine(), (QJSEngine *)0);
+    QCOMPARE(v.engine(), (QJSEngine *)nullptr);
 }
 
 void tst_QJSValue::ctor_copyAndAssign()
@@ -274,12 +274,12 @@ void tst_QJSValue::ctor_copyAndAssign()
     QJSValue v(1.0);
     QJSValue v2(v);
     QCOMPARE(v2.strictlyEquals(v), true);
-    QCOMPARE(v2.engine(), (QJSEngine *)0);
+    QCOMPARE(v2.engine(), (QJSEngine *)nullptr);
 
     QJSValue v3(v);
     QCOMPARE(v3.strictlyEquals(v), true);
     QCOMPARE(v3.strictlyEquals(v2), true);
-    QCOMPARE(v3.engine(), (QJSEngine *)0);
+    QCOMPARE(v3.engine(), (QJSEngine *)nullptr);
 
     QJSValue v4(2.0);
     QCOMPARE(v4.strictlyEquals(v), false);
@@ -970,10 +970,6 @@ void tst_QJSValue::toUInt()
     QCOMPARE(qjsvalue_cast<quint32>(inv), quint32(0));
 }
 
-#if defined Q_CC_MSVC && _MSC_VER < 1300
-Q_DECLARE_METATYPE(QVariant)
-#endif
-
 void tst_QJSValue::toVariant()
 {
     QJSEngine eng;
@@ -1111,16 +1107,16 @@ void tst_QJSValue::toQObject_nonQObject_data()
     QTest::newRow("array") << engine->newArray();
     QTest::newRow("date") << engine->evaluate("new Date(124)");
     QTest::newRow("variant(12345)") << engine->toScriptValue(QVariant(12345));
-    QTest::newRow("variant((QObject*)0)") << engine->toScriptValue(qVariantFromValue((QObject*)0));
-    QTest::newRow("newQObject(0)") << engine->newQObject(0);
+    QTest::newRow("variant((QObject*)0)") << engine->toScriptValue(qVariantFromValue((QObject*)nullptr));
+    QTest::newRow("newQObject(0)") << engine->newQObject(nullptr);
 }
 
 
 void tst_QJSValue::toQObject_nonQObject()
 {
     QFETCH(QJSValue, value);
-    QCOMPARE(value.toQObject(), (QObject *)0);
-    QCOMPARE(qjsvalue_cast<QObject*>(value), (QObject *)0);
+    QCOMPARE(value.toQObject(), (QObject *)nullptr);
+    QCOMPARE(qjsvalue_cast<QObject*>(value), (QObject *)nullptr);
 }
 
 // unfortunately, this is necessary in order to do qscriptvalue_cast<QPushButton*>(...)
@@ -1134,7 +1130,7 @@ void tst_QJSValue::toQObject()
     QJSValue qobject = eng.newQObject(&temp);
     QCOMPARE(qobject.toQObject(), (QObject *)&temp);
     QCOMPARE(qjsvalue_cast<QObject*>(qobject), (QObject *)&temp);
-    QCOMPARE(qjsvalue_cast<QWidget*>(qobject), (QWidget *)0);
+    QCOMPARE(qjsvalue_cast<QWidget*>(qobject), (QWidget *)nullptr);
 
     QWidget widget;
     QJSValue qwidget = eng.newQObject(&widget);
@@ -1598,7 +1594,7 @@ void tst_QJSValue::getSetProperty()
     QCOMPARE(object.property("baz").toNumber(), num.toNumber());
 
     QJSValue strstr = QJSValue("bar");
-    QCOMPARE(strstr.engine(), (QJSEngine *)0);
+    QCOMPARE(strstr.engine(), (QJSEngine *)nullptr);
     object.setProperty("foo", strstr);
     QCOMPARE(object.property("foo").toString(), strstr.toString());
     QCOMPARE(strstr.engine(), &eng); // the value has been bound to the engine
@@ -2099,7 +2095,7 @@ void tst_QJSValue::equals()
 
     QJSValue qobj1 = eng.newQObject(&temp);
     QJSValue qobj2 = eng.newQObject(&temp);
-    QJSValue qobj3 = eng.newQObject(0);
+    QJSValue qobj3 = eng.newQObject(nullptr);
 
     // FIXME: No ScriptOwnership: QJSValue qobj4 = eng.newQObject(new QObject(), QScriptEngine::ScriptOwnership);
     QJSValue qobj4 = eng.newQObject(new QObject());
@@ -2285,7 +2281,7 @@ void tst_QJSValue::castToPointer()
         QColor c(123, 210, 231);
         QJSValue v = eng.toScriptValue(c);
         QColor *cp = qjsvalue_cast<QColor*>(v);
-        QVERIFY(cp != 0);
+        QVERIFY(cp != nullptr);
         QCOMPARE(*cp, c);
 
         QBrush *bp = qjsvalue_cast<QBrush*>(v);

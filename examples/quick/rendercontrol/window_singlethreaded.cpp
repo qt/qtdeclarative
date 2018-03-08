@@ -84,8 +84,8 @@ QWindow *RenderControl::renderWindow(QPoint *offset)
 }
 
 WindowSingleThreaded::WindowSingleThreaded()
-    : m_rootItem(0),
-      m_fbo(0),
+    : m_rootItem(nullptr),
+      m_fbo(nullptr),
       m_quickInitialized(false),
       m_quickReady(false),
       m_dpr(0)
@@ -191,7 +191,7 @@ void WindowSingleThreaded::createFbo()
 void WindowSingleThreaded::destroyFbo()
 {
     delete m_fbo;
-    m_fbo = 0;
+    m_fbo = nullptr;
 }
 
 void WindowSingleThreaded::render()

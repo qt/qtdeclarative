@@ -283,25 +283,25 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(2));
 
     // Properties deprecated in the spec but required by "the web" :(
-    ctor->defineAccessorProperty(QStringLiteral("lastMatch"), method_get_lastMatch_n<0>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$&"), method_get_lastMatch_n<0>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$1"), method_get_lastMatch_n<1>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$2"), method_get_lastMatch_n<2>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$3"), method_get_lastMatch_n<3>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$4"), method_get_lastMatch_n<4>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$5"), method_get_lastMatch_n<5>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$6"), method_get_lastMatch_n<6>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$7"), method_get_lastMatch_n<7>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$8"), method_get_lastMatch_n<8>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$9"), method_get_lastMatch_n<9>, 0);
-    ctor->defineAccessorProperty(QStringLiteral("lastParen"), method_get_lastParen, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$+"), method_get_lastParen, 0);
-    ctor->defineAccessorProperty(QStringLiteral("input"), method_get_input, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$_"), method_get_input, 0);
-    ctor->defineAccessorProperty(QStringLiteral("leftContext"), method_get_leftContext, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$`"), method_get_leftContext, 0);
-    ctor->defineAccessorProperty(QStringLiteral("rightContext"), method_get_rightContext, 0);
-    ctor->defineAccessorProperty(QStringLiteral("$'"), method_get_rightContext, 0);
+    ctor->defineAccessorProperty(QStringLiteral("lastMatch"), method_get_lastMatch_n<0>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$&"), method_get_lastMatch_n<0>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$1"), method_get_lastMatch_n<1>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$2"), method_get_lastMatch_n<2>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$3"), method_get_lastMatch_n<3>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$4"), method_get_lastMatch_n<4>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$5"), method_get_lastMatch_n<5>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$6"), method_get_lastMatch_n<6>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$7"), method_get_lastMatch_n<7>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$8"), method_get_lastMatch_n<8>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$9"), method_get_lastMatch_n<9>, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("lastParen"), method_get_lastParen, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$+"), method_get_lastParen, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("input"), method_get_input, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$_"), method_get_input, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("leftContext"), method_get_leftContext, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$`"), method_get_leftContext, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("rightContext"), method_get_rightContext, nullptr);
+    ctor->defineAccessorProperty(QStringLiteral("$'"), method_get_rightContext, nullptr);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
@@ -343,7 +343,7 @@ ReturnedValue RegExpPrototype::execFirstMatch(const FunctionObject *b, const Val
     if (r->value()->captureCount()) {
         int start = matchOffsets[0];
         int end = matchOffsets[1];
-        retVal = (start != -1) ? scope.engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
+        retVal = (start != -1) ? scope.engine->memoryManager->alloc<ComplexString>(str->d(), start, end - start)->asReturnedValue() : Encode::undefined();
     }
 
     RegExpCtor::Data *dd = regExpCtor->d();
@@ -394,7 +394,7 @@ ReturnedValue RegExpPrototype::method_exec(const FunctionObject *b, const Value 
     for (int i = 0; i < len; ++i) {
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];
-        v = (start != -1) ? scope.engine->newString(s.mid(start, end - start))->asReturnedValue() : Encode::undefined();
+        v = (start != -1) ? scope.engine->memoryManager->alloc<ComplexString>(str->d(), start, end - start)->asReturnedValue() : Encode::undefined();
         array->arrayPut(i, v);
     }
     array->setArrayLengthUnchecked(len);

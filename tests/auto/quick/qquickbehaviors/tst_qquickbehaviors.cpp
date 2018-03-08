@@ -393,7 +393,7 @@ void tst_qquickbehaviors::delayedRegistration()
     QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickItem *innerRect = rect->property("myItem").value<QQuickItem*>();
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
 
     QCOMPARE(innerRect->property("x").toInt(), int(0));
 
@@ -410,7 +410,7 @@ void tst_qquickbehaviors::startOnCompleted()
     QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickItem *innerRect = rect->findChild<QQuickRectangle*>();
-    QVERIFY(innerRect != 0);
+    QVERIFY(innerRect != nullptr);
 
     QCOMPARE(innerRect->property("x").toInt(), int(0));
 
@@ -427,7 +427,7 @@ void tst_qquickbehaviors::multipleChangesToValueType()
     QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
     QQuickText *text = rect->findChild<QQuickText *>();
-    QVERIFY(text != 0);
+    QVERIFY(text != nullptr);
 
     QFont value;
     value.setPointSize(24);

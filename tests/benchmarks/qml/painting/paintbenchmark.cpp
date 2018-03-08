@@ -322,7 +322,7 @@ public:
         int len = strlen(chars);
         for (int i = 0; i < lines; ++i) {
             for (int j = 0; j < 60; j++) {
-                strings[i] += QChar(chars[QRandomGenerator::bounded(len)]);
+                strings[i] += QChar(chars[QRandomGenerator::global()->bounded(len)]);
             }
         }
     }

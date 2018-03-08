@@ -73,7 +73,7 @@ struct Q_QML_EXPORT ObjectIteratorData
     uint memberIndex;
     uint flags;
 };
-V4_ASSERT_IS_TRIVIAL(ObjectIteratorData)
+Q_STATIC_ASSERT(std::is_trivial< ObjectIteratorData >::value);
 
 struct Q_QML_EXPORT ObjectIterator: ObjectIteratorData
 {
@@ -101,7 +101,7 @@ struct Q_QML_EXPORT ObjectIterator: ObjectIteratorData
         init(o);
     }
 
-    void next(Value *name, uint *index, Property *pd, PropertyAttributes *attributes = 0);
+    void next(Value *name, uint *index, Property *pd, PropertyAttributes *attributes = nullptr);
     ReturnedValue nextPropertyName(Value *value);
     ReturnedValue nextPropertyNameAsString(Value *value);
     ReturnedValue nextPropertyNameAsString();

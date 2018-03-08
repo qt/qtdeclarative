@@ -77,7 +77,7 @@ ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, i
     Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocObject<QmlListWrapper>());
     r->d()->object = object;
     r->d()->propertyType = propType;
-    void *args[] = { &r->d()->property(), 0 };
+    void *args[] = { &r->d()->property(), nullptr };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, propId, args);
     return r.asReturnedValue();
 }
@@ -151,7 +151,7 @@ bool QmlListWrapper::put(Managed *m, String *name, const Value &value)
 
 void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
 {
-    name->setM(0);
+    name->setM(nullptr);
     *index = UINT_MAX;
     Q_ASSERT(m->as<QmlListWrapper>());
     QmlListWrapper *w = static_cast<QmlListWrapper *>(m);
@@ -171,10 +171,10 @@ void PropertyListPrototype::init(ExecutionEngine *)
     defineDefaultProperty(QStringLiteral("push"), method_push, 1);
 }
 
-ReturnedValue PropertyListPrototype::method_push(const BuiltinFunction *b, CallData *callData)
+ReturnedValue PropertyListPrototype::method_push(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedObject instance(scope, callData->thisObject.toObject(scope.engine));
+    ScopedObject instance(scope, thisObject->toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
     QmlListWrapper *w = instance->as<QmlListWrapper>();
@@ -184,9 +184,9 @@ ReturnedValue PropertyListPrototype::method_push(const BuiltinFunction *b, CallD
         THROW_GENERIC_ERROR("List doesn't define an Append function");
 
     QV4::ScopedObject so(scope);
-    for (int i = 0, ei = callData->argc(); i < ei; ++i)
+    for (int i = 0, ei = argc; i < ei; ++i)
     {
-        so = callData->args[i].toObject(scope.engine);
+        so = argv[i].toObject(scope.engine);
         if (QV4::QObjectWrapper *wrapper = so->as<QV4::QObjectWrapper>())
             w->d()->property().append(&w->d()->property(), wrapper->object() );
     }

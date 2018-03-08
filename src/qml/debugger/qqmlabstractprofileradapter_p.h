@@ -68,9 +68,9 @@ class Q_QML_PRIVATE_EXPORT QQmlAbstractProfilerAdapter : public QObject, public 
 public:
     static const int s_numMessagesPerBatch = 1000;
 
-    QQmlAbstractProfilerAdapter(QObject *parent = 0) :
-        QObject(parent), service(0), waiting(true), featuresEnabled(0) {}
-    virtual ~QQmlAbstractProfilerAdapter() {}
+    QQmlAbstractProfilerAdapter(QObject *parent = nullptr) :
+        QObject(parent), service(nullptr), waiting(true), featuresEnabled(0) {}
+    ~QQmlAbstractProfilerAdapter() override {}
     void setService(QQmlProfilerService *new_service) { service = new_service; }
 
     virtual qint64 sendMessages(qint64 until, QList<QByteArray> &messages, bool trackLocations) = 0;

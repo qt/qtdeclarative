@@ -62,6 +62,7 @@
 #include <QtGui/QGuiApplication>
 #include <QtCore/QTranslator>
 #include <QtTest/QSignalSpy>
+#include <QtQml/QQmlFileSelector>
 
 #include <private/qqmlcomponent_p.h>
 
@@ -78,7 +79,7 @@ class QTestRootObject : public QObject
     Q_PROPERTY(bool hasTestCase READ hasTestCase WRITE setHasTestCase NOTIFY hasTestCaseChanged)
     Q_PROPERTY(QObject *defined READ defined)
 public:
-    QTestRootObject(QObject *parent = 0)
+    QTestRootObject(QObject *parent = nullptr)
         : QObject(parent), hasQuit(false), m_windowShown(false), m_hasTestCase(false)  {
         m_defined = new QQmlPropertyMap(this);
 #if defined(QT_OPENGL_ES_2_ANGLE)
@@ -190,7 +191,7 @@ bool qWaitForSignal(QObject *obj, const char* signal, int timeout = 5000)
         if (remaining <= 0)
             break;
         QCoreApplication::processEvents(QEventLoop::AllEvents, remaining);
-        QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         QTest::qSleep(10);
     }
 
@@ -326,6 +327,11 @@ private:
 
 int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir)
 {
+    return quick_test_main_with_setup(argc, argv, name, sourceDir, nullptr);
+}
+
+int quick_test_main_with_setup(int argc, char **argv, const char *name, const char *sourceDir, QObject *setup)
+{
     // Peek at arguments to check for '-widgets' argument
 #ifdef QT_QMLTEST_WITH_WIDGETS
     bool withWidgets = false;
@@ -337,7 +343,7 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     }
 #endif
 
-    QCoreApplication *app = 0;
+    QCoreApplication *app = nullptr;
     if (!QCoreApplication::instance()) {
 #ifdef QT_QMLTEST_WITH_WIDGETS
         if (withWidgets)
@@ -354,10 +360,12 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     //      -plugins dir        Specify a directory where to search for plugins.
     //      -input dir          Specify the input directory for test cases.
     //      -translation file   Specify the translation file.
+    //      -file-selector      Specify a file selector
     QStringList imports;
     QStringList pluginPaths;
     QString testPath;
     QString translationFile;
+    QStringList fileSelectors;
     int index = 1;
     QScopedArrayPointer<char *> testArgV(new char *[argc + 1]);
     testArgV[0] = argv[0];
@@ -381,6 +389,9 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
 #endif
         } else if (strcmp(argv[index], "-translation") == 0 && (index + 1) < argc) {
             translationFile = stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
+            index += 2;
+        } else if (strcmp(argv[index], "-file-selector") == 0 && (index + 1) < argc) {
+            fileSelectors += stripQuotes(QString::fromLocal8Bit(argv[index + 1]));
             index += 2;
         } else {
             testArgV[testArgC++] = argv[index++];
@@ -474,6 +485,11 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
         for (const QString &path : qAsConst(pluginPaths))
             engine.addPluginPath(path);
 
+        if (!fileSelectors.isEmpty()) {
+            QQmlFileSelector* const qmlFileSelector = new QQmlFileSelector(&engine, &engine);
+            qmlFileSelector->setExtraSelectors(fileSelectors);
+        }
+
         TestCaseCollector testCaseCollector(fi, &engine);
         if (!testCaseCollector.errors().isEmpty()) {
             for (const QQmlError &error : testCaseCollector.errors())
@@ -504,6 +520,14 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
                          &eventLoop, SLOT(quit()));
         view.rootContext()->setContextProperty
             (QLatin1String("qtest"), QTestRootObject::instance()); // Deprecated. Use QTestRootObject from Qt.test.qtestroot instead
+
+        // Do this down here so that import paths, plugin paths,
+        // file selectors, etc. are available in case the user needs access to them.
+        if (setup) {
+            // Don't check the return value; it's OK if it doesn't exist.
+            // If we add more callbacks in the future, it makes sense if the user only implements one of them.
+            QMetaObject::invokeMethod(setup, "qmlEngineAvailable", Q_ARG(QQmlEngine*, view.engine()));
+        }
 
         view.setObjectName(fi.baseName());
         view.setTitle(view.objectName());
@@ -553,7 +577,7 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     }
 
     // Flush the current logging stream.
-    QuickTestResult::setProgramName(0);
+    QuickTestResult::setProgramName(nullptr);
     delete app;
 
     // Return the number of failures as the exit code.

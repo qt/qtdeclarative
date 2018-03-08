@@ -213,7 +213,7 @@ QQuickItem *QQuickStackLayout::itemAt(int index) const
             return item;
         --index;
     }
-    return 0;
+    return nullptr;
 }
 
 int QQuickStackLayout::itemCount() const
@@ -320,7 +320,7 @@ void QQuickStackLayout::rearrange(const QSizeF &newSize)
 
 void QQuickStackLayout::collectItemSizeHints(QQuickItem *item, QSizeF *sizeHints)
 {
-    QQuickLayoutAttached *info = 0;
+    QQuickLayoutAttached *info = nullptr;
     QQuickLayout::effectiveSizeHints_helper(item, sizeHints, &info, true);
     if (!info)
         return;

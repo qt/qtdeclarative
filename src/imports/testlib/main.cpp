@@ -69,11 +69,11 @@ class QuickTestUtil : public QObject
     Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions NOTIFY printAvailableFunctionsChanged)
     Q_PROPERTY(int dragThreshold READ dragThreshold NOTIFY dragThresholdChanged)
 public:
-    QuickTestUtil(QObject *parent = 0)
+    QuickTestUtil(QObject *parent = nullptr)
         :QObject(parent)
     {}
 
-    ~QuickTestUtil()
+    ~QuickTestUtil() override
     {}
     bool printAvailableFunctions() const
     {
@@ -103,7 +103,7 @@ public Q_SLOTS:
         }
 
         QQmlEngine *engine = qmlEngine(this);
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
+        QV4::ExecutionEngine *v4 = engine->handle();
         QV4::Scope scope(v4);
         QV4::ScopedValue s(scope, v4->newString(name));
         return QQmlV4Handle(s);
@@ -116,7 +116,7 @@ public Q_SLOTS:
     QQmlV4Handle callerFile(int frameIndex = 0) const
     {
         QQmlEngine *engine = qmlEngine(this);
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
+        QV4::ExecutionEngine *v4 = engine->handle();
         QV4::Scope scope(v4);
 
         QVector<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
@@ -129,7 +129,7 @@ public Q_SLOTS:
     int callerLine(int frameIndex = 0) const
     {
         QQmlEngine *engine = qmlEngine(this);
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(engine->handle());
+        QV4::ExecutionEngine *v4 = engine->handle();
 
         QVector<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
         if (stack.size() > frameIndex + 1)
@@ -150,13 +150,14 @@ class QTestQmlModule : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    QTestQmlModule(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
+    QTestQmlModule(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtTest"));
         qmlRegisterType<QuickTestResult, 0>(uri,1,0,"TestResult");
         qmlRegisterType<QuickTestResult, 1>(uri,1,1,"TestResult");
         qmlRegisterType<QuickTestEvent>(uri,1,0,"TestEvent");
+        qmlRegisterType<QuickTestEvent>(uri,1,2,"TestEvent");
         qmlRegisterType<QuickTestUtil>(uri,1,0,"TestUtil");
         qmlRegisterType<QQuickTouchEventSequence>();
     }

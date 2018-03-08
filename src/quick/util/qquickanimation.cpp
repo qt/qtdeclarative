@@ -91,7 +91,7 @@ QQuickAbstractAnimation::~QQuickAbstractAnimation()
 {
     Q_D(QQuickAbstractAnimation);
     if (d->group)
-        setGroup(0);    //remove from group
+        setGroup(nullptr);    //remove from group
     delete d->animationInstance;
 }
 
@@ -643,7 +643,7 @@ QAbstractAnimationJob* QQuickAbstractAnimation::transition(QQuickStateActions &a
     Q_UNUSED(modified);
     Q_UNUSED(direction);
     Q_UNUSED(defaultTarget);
-    return 0;
+    return nullptr;
 }
 
 void QQuickAbstractAnimationPrivate::animationFinished(QAbstractAnimationJob*)
@@ -838,7 +838,7 @@ void QQuickColorAnimation::setTo(const QColor &t)
 }
 
 QActionAnimation::QActionAnimation()
-    : QAbstractAnimationJob(), animAction(0)
+    : QAbstractAnimationJob(), animAction(nullptr)
 {
 }
 
@@ -1666,13 +1666,13 @@ void QQuickRotationAnimation::setDirection(QQuickRotationAnimation::RotationDire
     d->direction = direction;
     switch(d->direction) {
     case Clockwise:
-        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(&_q_interpolateClockwiseRotation);
+        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(reinterpret_cast<void *>(&_q_interpolateClockwiseRotation));
         break;
     case Counterclockwise:
-        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(&_q_interpolateCounterclockwiseRotation);
+        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(reinterpret_cast<void *>(&_q_interpolateCounterclockwiseRotation));
         break;
     case Shortest:
-        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(&_q_interpolateShortestRotation);
+        d->interpolator = reinterpret_cast<QVariantAnimation::Interpolator>(reinterpret_cast<void *>(&_q_interpolateShortestRotation));
         break;
     default:
         d->interpolator = QVariantAnimationPrivate::getInterpolator(d->interpolatorType);
@@ -1706,7 +1706,7 @@ void QQuickAnimationGroupPrivate::clear_animation(QQmlListProperty<QQuickAbstrac
     if (q) {
         while (q->d_func()->animations.count()) {
             QQuickAbstractAnimation *firstAnim = q->d_func()->animations.at(0);
-            firstAnim->setGroup(0);
+            firstAnim->setGroup(nullptr);
         }
     }
 }
@@ -1715,7 +1715,7 @@ QQuickAnimationGroup::~QQuickAnimationGroup()
 {
     Q_D(QQuickAnimationGroup);
     for (int i = 0; i < d->animations.count(); ++i)
-        d->animations.at(i)->d_func()->group = 0;
+        d->animations.at(i)->d_func()->group = nullptr;
     d->animations.clear();
 }
 
@@ -1937,7 +1937,7 @@ void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, int type)
 }
 
 QQuickBulkValueAnimator::QQuickBulkValueAnimator()
-    : QAbstractAnimationJob(), animValue(0), fromSourced(0), m_duration(250)
+    : QAbstractAnimationJob(), animValue(nullptr), fromSourced(nullptr), m_duration(250)
 {
 }
 
@@ -2112,7 +2112,7 @@ void QQuickPropertyAnimation::setFrom(const QVariant &f)
         return;
     d->from = f;
     d->fromIsDefined = f.isValid();
-    emit fromChanged(f);
+    emit fromChanged();
 }
 
 /*!
@@ -2139,7 +2139,7 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
         return;
     d->to = t;
     d->toIsDefined = t.isValid();
-    emit toChanged(t);
+    emit toChanged();
 }
 
 /*!
@@ -2556,7 +2556,7 @@ void QQuickAnimationPropertyUpdater::setValue(qreal v)
         if (deleted)
             return;
     }
-    wasDeleted = 0;
+    wasDeleted = nullptr;
     fromSourced = true;
 }
 

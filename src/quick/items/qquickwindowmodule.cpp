@@ -52,6 +52,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcTransient)
+
 class QQuickWindowQmlImplPrivate : public QQuickWindowPrivate
 {
 public:
@@ -112,7 +114,7 @@ void QQuickWindowQmlImpl::classBegin()
     {
         // The content item has CppOwnership policy (set in QQuickWindow). Ensure the presence of a JS
         // wrapper so that the garbage collector can see the policy.
-        QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(e);
+        QV4::ExecutionEngine *v4 = e->handle();
         QV4::QObjectWrapper::wrap(v4, d->contentItem);
     }
 }
@@ -121,7 +123,13 @@ void QQuickWindowQmlImpl::componentComplete()
 {
     Q_D(QQuickWindowQmlImpl);
     d->complete = true;
-    if (transientParent() && !transientParent()->isVisible()) {
+    QQuickItem *itemParent = qmlobject_cast<QQuickItem *>(QObject::parent());
+    if (itemParent && !itemParent->window()) {
+        qCDebug(lcTransient) << "window" << title() << "has invisible Item parent" << itemParent << "transientParent"
+                             << transientParent() << "declared visibility" << d->visibility << "; delaying show";
+        connect(itemParent, &QQuickItem::windowChanged, this,
+                &QQuickWindowQmlImpl::setWindowVisibility, Qt::QueuedConnection);
+    } else if (transientParent() && !transientParent()->isVisible()) {
         connect(transientParent(), &QQuickWindow::visibleChanged, this,
                 &QQuickWindowQmlImpl::setWindowVisibility, Qt::QueuedConnection);
     } else {
@@ -135,9 +143,10 @@ void QQuickWindowQmlImpl::setWindowVisibility()
     if (transientParent() && !transientParent()->isVisible())
         return;
 
-    if (sender()) {
-        disconnect(transientParent(), &QWindow::visibleChanged, this,
-                   &QQuickWindowQmlImpl::setWindowVisibility);
+    if (QQuickItem *senderItem = qmlobject_cast<QQuickItem *>(sender())) {
+        disconnect(senderItem, &QQuickItem::windowChanged, this, &QQuickWindowQmlImpl::setWindowVisibility);
+    } else if (sender()) {
+        disconnect(transientParent(), &QWindow::visibleChanged, this, &QQuickWindowQmlImpl::setWindowVisibility);
     }
 
     // We have deferred window creation until we have the full picture of what

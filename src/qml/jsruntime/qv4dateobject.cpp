@@ -328,7 +328,7 @@ static inline double DaylightSavingTA(double t) // t is a UTC time
 static inline double DaylightSavingTA(double t)
 {
     struct tm tmtm;
-#if defined(_MSC_VER) && _MSC_VER >= 1400
+#if defined(Q_CC_MSVC)
     __time64_t  tt = (__time64_t)(t / msPerSecond);
     // _localtime_64_s returns non-zero on failure
     if (_localtime64_s(&tmtm, &tt) != 0)
@@ -854,7 +854,7 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
         ScopedString us(scope, engine->newIdentifier(toUtcString));
         ScopedString gs(scope, engine->newIdentifier(toGmtString));
         ExecutionContext *global = engine->rootContext();
-        ScopedFunctionObject toUtcGmtStringFn(scope, BuiltinFunction::create(global, us, method_toUTCString));
+        ScopedFunctionObject toUtcGmtStringFn(scope, FunctionObject::createBuiltinFunction(global, us, method_toUTCString));
         toUtcGmtStringFn->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
         defineDefaultProperty(us, toUtcGmtStringFn);
         defineDefaultProperty(gs, toUtcGmtStringFn);

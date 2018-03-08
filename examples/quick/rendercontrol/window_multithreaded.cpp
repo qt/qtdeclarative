@@ -87,13 +87,13 @@ static const QEvent::Type STOP = QEvent::Type(QEvent::User + 4);
 static const QEvent::Type UPDATE = QEvent::Type(QEvent::User + 5);
 
 QuickRenderer::QuickRenderer()
-    : m_context(0),
-      m_surface(0),
-      m_fbo(0),
-      m_window(0),
-      m_quickWindow(0),
-      m_renderControl(0),
-      m_cubeRenderer(0),
+    : m_context(nullptr),
+      m_surface(nullptr),
+      m_fbo(nullptr),
+      m_window(nullptr),
+      m_quickWindow(nullptr),
+      m_renderControl(nullptr),
+      m_cubeRenderer(nullptr),
       m_quit(false)
 {
 }
@@ -162,10 +162,10 @@ void QuickRenderer::cleanup()
     m_renderControl->invalidate();
 
     delete m_fbo;
-    m_fbo = 0;
+    m_fbo = nullptr;
 
     delete m_cubeRenderer;
-    m_cubeRenderer = 0;
+    m_cubeRenderer = nullptr;
 
     m_context->doneCurrent();
     m_context->moveToThread(QCoreApplication::instance()->thread());
@@ -177,7 +177,7 @@ void QuickRenderer::ensureFbo()
 {
     if (m_fbo && m_fbo->size() != m_window->size() * m_window->devicePixelRatio()) {
         delete m_fbo;
-        m_fbo = 0;
+        m_fbo = nullptr;
     }
 
     if (!m_fbo) {
@@ -235,7 +235,7 @@ private:
 
 WindowMultiThreaded::WindowMultiThreaded()
     : m_qmlComponent(nullptr),
-      m_rootItem(0),
+      m_rootItem(nullptr),
       m_quickInitialized(false),
       m_psrRequested(false)
 {

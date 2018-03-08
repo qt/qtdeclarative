@@ -48,7 +48,7 @@ Q_DECLARE_METATYPE(QList<QVariantHash>)
 
 inline QVariant runexpr(QQmlEngine *engine, const QString &str)
 {
-    QQmlExpression expr(engine->rootContext(), 0, str);
+    QQmlExpression expr(engine->rootContext(), nullptr, str);
     return expr.evaluate();
 }
 
@@ -111,7 +111,7 @@ bool tst_qqmllistmodelworkerscript::compareVariantList(const QVariantList &testL
     bool allOk = true;
 
     QQmlListModel *model = qobject_cast<QQmlListModel *>(object.value<QObject *>());
-    if (model == 0)
+    if (model == nullptr)
         return false;
 
     if (model->count() != testList.count())
@@ -192,7 +192,7 @@ void tst_qqmllistmodelworkerscript::dynamic_data()
     QTest::addColumn<QString>("warning");
     QTest::addColumn<bool>("dynamicRoles");
 
-    for (int i=0 ; i < 2 ; ++i) {
+    for (int i = 0; i < 2; ++i) {
         bool dr = (i != 0);
 
         // Simple flat model
@@ -349,7 +349,7 @@ void tst_qqmllistmodelworkerscript::dynamic_worker()
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("model.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QSignalSpy spyCount(&model, SIGNAL(countChanged()));
 
@@ -400,7 +400,7 @@ void tst_qqmllistmodelworkerscript::dynamic_worker_sync()
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("model.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     if (script[0] == QLatin1Char('{') && script[script.length()-1] == QLatin1Char('}'))
         script = script.mid(1, script.length() - 2);
@@ -434,7 +434,7 @@ void tst_qqmllistmodelworkerscript::get_data()
     QTest::addColumn<QVariant>("roleValue");
     QTest::addColumn<bool>("dynamicRoles");
 
-    for (int i=0 ; i < 2 ; ++i) {
+    for (int i =0; i < 2; ++i) {
         bool dr = (i != 0);
 
         QTest::newRow("simple value") << "get(0).roleA = 500" << 0 << "roleA" << QVariant(500) << dr;
@@ -463,7 +463,7 @@ void tst_qqmllistmodelworkerscript::get_worker()
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("model.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     // Add some values like get() test
     RUNEVAL(item, "model.append({roleA: 100})");
@@ -515,7 +515,7 @@ void tst_qqmllistmodelworkerscript::property_changes_data()
     QTest::addColumn<QString>("testExpression");
     QTest::addColumn<bool>("dynamicRoles");
 
-    for (int i=0 ; i < 2 ; ++i) {
+    for (int i=1 ; i < 2 ; ++i) {
         bool dr = (i != 0);
 
         QTest::newRow("set: plain") << "append({'a':123, 'b':456, 'c':789});" << "set(0,{'b':123});"
@@ -574,7 +574,7 @@ void tst_qqmllistmodelworkerscript::property_changes_data()
                 << "b" << 0 << true << "get(0).b.get(0).a == 1 && get(0).b.get(1).a == 2 && get(0).b.get(2).a == 3" << dr;
 
         QTest::newRow("nested-set: list, no changes, empty") << "append({'a':123, 'b':[], 'c':789});" << "set(0,{'b':[]});"
-                << "b" << 0 << true << "get(0).b.count == 0" << dr;
+                << "b" << 0 << false << "get(0).b.count == 0" << dr;
     }
 }
 
@@ -593,7 +593,7 @@ void tst_qqmllistmodelworkerscript::property_changes_worker()
     QQmlComponent component(&engine, testFileUrl("model.qml"));
     QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
     QQuickItem *item = createWorkerTest(&engine, &component, &model);
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QQmlExpression expr(engine.rootContext(), &model, script_setup);
     expr.evaluate();
@@ -640,7 +640,7 @@ void tst_qqmllistmodelworkerscript::worker_sync()
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("workersync.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QCOMPARE(model.count(), 0);
 
@@ -705,7 +705,7 @@ void tst_qqmllistmodelworkerscript::worker_remove_element()
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("workerremoveelement.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QSignalSpy spyModelRemoved(&model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
 
@@ -738,7 +738,7 @@ void tst_qqmllistmodelworkerscript::worker_remove_element()
         QQmlEngine eng;
         QQmlComponent component(&eng, testFileUrl("workerremoveelement.qml"));
         QQuickItem *item = createWorkerTest(&eng, &component, model);
-        QVERIFY(item != 0);
+        QVERIFY(item != nullptr);
 
         QVERIFY(QMetaObject::invokeMethod(item, "addItem"));
 
@@ -768,7 +768,7 @@ void tst_qqmllistmodelworkerscript::worker_remove_list()
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("workerremovelist.qml"));
     QQuickItem *item = createWorkerTest(&eng, &component, &model);
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QSignalSpy spyModelRemoved(&model, SIGNAL(rowsRemoved(QModelIndex,int,int)));
 
@@ -815,7 +815,7 @@ void tst_qqmllistmodelworkerscript::dynamic_role()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("model.qml"));
     QQuickItem *item = createWorkerTest(&engine, &component, &model);
-    QVERIFY(item != 0);
+    QVERIFY(item != nullptr);
 
     QQmlExpression preExp(engine.rootContext(), &model, preamble);
     QCOMPARE(preExp.evaluate().toInt(), 0);

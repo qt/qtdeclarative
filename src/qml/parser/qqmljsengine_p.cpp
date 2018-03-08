@@ -120,7 +120,7 @@ double integerFromString(const QString &str, int radix)
 
 
 Engine::Engine()
-    : _lexer(0), _directives(0)
+    : _lexer(nullptr), _directives(nullptr)
 { }
 
 Engine::~Engine()

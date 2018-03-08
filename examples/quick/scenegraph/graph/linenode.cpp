@@ -66,29 +66,29 @@ class LineShader : public QSGSimpleMaterialShader<LineMaterial>
     QSG_DECLARE_SIMPLE_SHADER(LineShader, LineMaterial)
 
 public:
-    LineShader() : id_color(-1), id_spread(-1), id_size(-1) {
+    LineShader() {
         setShaderSourceFile(QOpenGLShader::Vertex, ":/scenegraph/graph/shaders/line.vsh");
         setShaderSourceFile(QOpenGLShader::Fragment, ":/scenegraph/graph/shaders/line.fsh");
     }
 
-    QList<QByteArray> attributes() const {  return QList<QByteArray>() << "pos" << "t"; }
+    QList<QByteArray> attributes() const override {  return QList<QByteArray>() << "pos" << "t"; }
 
-    void updateState(const LineMaterial *m, const LineMaterial *) {
+    void updateState(const LineMaterial *m, const LineMaterial *) override {
         program()->setUniformValue(id_color, m->color);
         program()->setUniformValue(id_spread, m->spread);
         program()->setUniformValue(id_size, m->size);
     }
 
-    void resolveUniforms() {
+    void resolveUniforms() override {
         id_spread = program()->uniformLocation("spread");
         id_size = program()->uniformLocation("size");
         id_color = program()->uniformLocation("color");
     }
 
 private:
-    int id_color;
-    int id_spread;
-    int id_size;
+    int id_color = -1;
+    int id_spread = -1;
+    int id_size = -1;
 };
 
 struct LineVertex {

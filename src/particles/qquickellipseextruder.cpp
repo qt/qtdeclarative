@@ -68,8 +68,8 @@ QQuickEllipseExtruder::QQuickEllipseExtruder(QObject *parent) :
 
 QPointF QQuickEllipseExtruder::extrude(const QRectF & r)
 {
-    qreal theta = QRandomGenerator::bounded(2 * M_PI);
-    qreal mag = m_fill ? QRandomGenerator::getReal() : 1;
+    qreal theta = QRandomGenerator::global()->bounded(2 * M_PI);
+    qreal mag = m_fill ? QRandomGenerator::global()->generateDouble() : 1;
     return QPointF(r.x() + r.width()/2 + mag * (r.width()/2) * qCos(theta),
                    r.y() + r.height()/2 + mag * (r.height()/2) * qSin(theta));
 }

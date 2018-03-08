@@ -318,7 +318,7 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
 QSGSoftwareInternalImageNode::QSGSoftwareInternalImageNode()
     : m_innerSourceRect(0, 0, 1, 1)
     , m_subSourceRect(0, 0, 1, 1)
-    , m_texture(0)
+    , m_texture(nullptr)
     , m_mirror(false)
     , m_smooth(true)
     , m_tileHorizontal(false)
@@ -462,7 +462,7 @@ void QSGSoftwareInternalImageNode::paint(QPainter *painter)
                          m_targetRect.right() - m_innerTargetRect.right(), m_targetRect.bottom() - m_innerTargetRect.bottom());
         QSGSoftwareHelpers::QTileRules tilerules(getTileRule(m_subSourceRect.width()), getTileRule(m_subSourceRect.height()));
         QSGSoftwareHelpers::qDrawBorderPixmap(painter, m_targetRect.toRect(), margins, pm, QRect(0, 0, pm.width(), pm.height()),
-                                              margins, tilerules, QSGSoftwareHelpers::QDrawBorderPixmap::DrawingHints(0));
+                                              margins, tilerules, QSGSoftwareHelpers::QDrawBorderPixmap::DrawingHints(nullptr));
         return;
     }
 
@@ -490,12 +490,13 @@ QRectF QSGSoftwareInternalImageNode::rect() const
 
 const QPixmap &QSGSoftwareInternalImageNode::pixmap() const
 {
-    if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture*>(m_texture)) {
+    if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture*>(m_texture))
         return pt->pixmap();
-    } else {
-        QSGSoftwareLayer *layer = qobject_cast<QSGSoftwareLayer*>(m_texture);
+    if (QSGSoftwareLayer *layer = qobject_cast<QSGSoftwareLayer*>(m_texture))
         return layer->pixmap();
-    }
+    Q_ASSERT(m_texture == nullptr);
+    static const QPixmap nullPixmap;
+    return nullPixmap;
 }
 
 QT_END_NAMESPACE

@@ -7,7 +7,7 @@ import QtQuick.tooling 1.2
 // 'qmlplugindump -nonrelocatable -noforceqtquick QtTest 1.2'
 
 Module {
-    dependencies: ["QtQuick 2.0"]
+    dependencies: ["QtQuick 2.0", "QtQuick.Window 2.0"]
     Component {
         name: "QQuickTouchEventSequence"
         prototype: "QObject"
@@ -45,8 +45,8 @@ Module {
     Component {
         name: "QuickTestEvent"
         prototype: "QObject"
-        exports: ["QtTest/TestEvent 1.0"]
-        exportMetaObjectRevisions: [0]
+        exports: ["QtTest/TestEvent 1.0", "QtTest/TestEvent 1.2"]
+        exportMetaObjectRevisions: [0, 0]
         Property { name: "defaultMouseDelay"; type: "int"; isReadonly: true }
         Method {
             name: "keyPress"
@@ -89,6 +89,12 @@ Module {
             Parameter { name: "character"; type: "string" }
             Parameter { name: "modifiers"; type: "int" }
             Parameter { name: "delay"; type: "int" }
+        }
+        Method {
+            name: "keySequence"
+            revision: 2
+            type: "bool"
+            Parameter { name: "keySequence"; type: "QVariant" }
         }
         Method {
             name: "mousePress"

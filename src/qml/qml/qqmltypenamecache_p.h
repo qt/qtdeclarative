@@ -85,7 +85,7 @@ class Q_QML_PRIVATE_EXPORT QQmlTypeNameCache : public QQmlRefCount
 {
 public:
     QQmlTypeNameCache(const QQmlImports &imports);
-    virtual ~QQmlTypeNameCache();
+    ~QQmlTypeNameCache() override;
 
     inline bool isEmpty() const;
 
@@ -162,7 +162,7 @@ private:
 };
 
 QQmlTypeNameCache::Result::Result()
-: importNamespace(0), scriptIndex(-1)
+: importNamespace(nullptr), scriptIndex(-1)
 {
 }
 
@@ -172,12 +172,12 @@ QQmlTypeNameCache::Result::Result(const QQmlImportRef *importNamespace)
 }
 
 QQmlTypeNameCache::Result::Result(const QQmlType &type)
-: type(type), importNamespace(0), scriptIndex(-1)
+: type(type), importNamespace(nullptr), scriptIndex(-1)
 {
 }
 
 QQmlTypeNameCache::Result::Result(int scriptIndex)
-: importNamespace(0), scriptIndex(scriptIndex)
+: importNamespace(nullptr), scriptIndex(scriptIndex)
 {
 }
 

@@ -111,7 +111,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointHandler : public QQuickPointerDevi
     Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
     Q_PROPERTY(QQuickHandlerPoint point READ point NOTIFY pointChanged)
 public:
-    explicit QQuickSinglePointHandler(QObject *parent = 0);
+    explicit QQuickSinglePointHandler(QObject *parent = nullptr);
     virtual ~QQuickSinglePointHandler() { }
 
     Qt::MouseButtons acceptedButtons() const { return m_acceptedButtons; }

@@ -399,10 +399,10 @@ void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
-    defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, 0);
-    defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, 0);
-    defineAccessorProperty(QStringLiteral("byteOffset"), method_get_byteOffset, 0);
-    defineAccessorProperty(QStringLiteral("length"), method_get_length, 0);
+    defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, nullptr);
+    defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, nullptr);
+    defineAccessorProperty(QStringLiteral("byteOffset"), method_get_byteOffset, nullptr);
+    defineAccessorProperty(QStringLiteral("length"), method_get_length, nullptr);
     defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
 
     defineDefaultProperty(QStringLiteral("set"), method_set, 1);
@@ -514,7 +514,7 @@ ReturnedValue TypedArrayPrototype::method_set(const FunctionObject *b, const Val
         RETURN_UNDEFINED();
     }
 
-    char *srcCopy = 0;
+    char *srcCopy = nullptr;
     if (buffer->d() == srcBuffer->d()) {
         // same buffer, need to take a temporary copy, to not run into problems
         srcCopy = new char[srcTypedArray->d()->byteLength];

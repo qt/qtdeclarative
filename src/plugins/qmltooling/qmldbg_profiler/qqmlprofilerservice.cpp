@@ -126,7 +126,7 @@ void QQmlProfilerServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
                 = new QQmlProfilerAdapter(this, &(enginePrivate->typeLoader));
         addEngineProfiler(compileAdapter, engine);
     }
-    QV4ProfilerAdapter *v4Adapter = new QV4ProfilerAdapter(this, QV8Engine::getV4(engine->handle()));
+    QV4ProfilerAdapter *v4Adapter = new QV4ProfilerAdapter(this, engine->handle());
     addEngineProfiler(v4Adapter, engine);
     QQmlConfigurableDebugService<QQmlProfilerService>::engineAboutToBeAdded(engine);
 }
@@ -240,9 +240,9 @@ void QQmlProfilerServiceImpl::startProfiling(QJSEngine *engine, quint64 features
 
     QQmlDebugPacket d;
 
-    d << m_timer.nsecsElapsed() << (int)Event << (int)StartTrace;
+    d << m_timer.nsecsElapsed() << static_cast<qint32>(Event) << static_cast<qint32>(StartTrace);
     bool startedAny = false;
-    if (engine != 0) {
+    if (engine != nullptr) {
         const auto range = qAsConst(m_engineProfilers).equal_range(engine);
         for (auto it = range.first; it != range.second; ++it) {
             QQmlAbstractProfilerAdapter *profiler = *it;
@@ -296,10 +296,11 @@ void QQmlProfilerServiceImpl::stopProfiling(QJSEngine *engine)
     for (QMultiHash<QJSEngine *, QQmlAbstractProfilerAdapter *>::iterator i(m_engineProfilers.begin());
             i != m_engineProfilers.end(); ++i) {
         if (i.value()->isRunning()) {
-            if (engine == 0 || i.key() == engine) {
-                m_startTimes.insert(-1, i.value());
+            m_startTimes.insert(-1, i.value());
+            if (engine == nullptr || i.key() == engine) {
                 stopping << i.value();
             } else {
+                reporting << i.value();
                 stillRunning = true;
             }
         }
@@ -338,7 +339,8 @@ void QQmlProfilerServiceImpl::sendMessages()
 
     QQmlDebugPacket traceEnd;
     if (m_waitingForStop) {
-        traceEnd << m_timer.nsecsElapsed() << (int)Event << (int)EndTrace;
+        traceEnd << m_timer.nsecsElapsed() << static_cast<qint32>(Event)
+                 << static_cast<qint32>(EndTrace);
 
         QSet<QJSEngine *> seen;
         for (QQmlAbstractProfilerAdapter *profiler : qAsConst(m_startTimes)) {
@@ -368,25 +370,32 @@ void QQmlProfilerServiceImpl::sendMessages()
         }
     }
 
+    bool stillRunning = false;
+    for (const QQmlAbstractProfilerAdapter *profiler : qAsConst(m_engineProfilers)) {
+        if (profiler->isRunning()) {
+            stillRunning = true;
+            break;
+        }
+    }
+
     if (m_waitingForStop) {
-        //indicate completion
+        // EndTrace can be sent multiple times, as it's engine specific.
         messages << traceEnd.data();
 
-        QQmlDebugPacket ds;
-        ds << (qint64)-1 << (int)Complete;
-        messages << ds.data();
-        m_waitingForStop = false;
+        if (!stillRunning) {
+            // Complete is only sent once, when no engines are running anymore.
+            QQmlDebugPacket ds;
+            ds << static_cast<qint64>(-1) << static_cast<qint32>(Complete);
+            messages << ds.data();
+            m_waitingForStop = false;
+        }
     }
 
     emit messagesToClient(name(), messages);
 
     // Restart flushing if any profilers are still running
-    for (const QQmlAbstractProfilerAdapter *profiler : qAsConst(m_engineProfilers)) {
-        if (profiler->isRunning()) {
-            emit startFlushTimer();
-            break;
-        }
-    }
+    if (stillRunning)
+        emit startFlushTimer();
 }
 
 void QQmlProfilerServiceImpl::stateAboutToBeChanged(QQmlDebugService::State newState)
@@ -414,7 +423,7 @@ void QQmlProfilerServiceImpl::messageReceived(const QByteArray &message)
     int engineId = -1;
     quint64 features = std::numeric_limits<quint64>::max();
     bool enabled;
-    uint flushInterval = 0;
+    quint32 flushInterval = 0;
     stream >> enabled;
     if (!stream.atEnd())
         stream >> engineId;
@@ -422,7 +431,9 @@ void QQmlProfilerServiceImpl::messageReceived(const QByteArray &message)
         stream >> features;
     if (!stream.atEnd()) {
         stream >> flushInterval;
-        m_flushTimer.setInterval(flushInterval);
+        m_flushTimer.setInterval(
+                    static_cast<int>(qMin(flushInterval,
+                                          static_cast<quint32>(std::numeric_limits<int>::max()))));
         auto timerStart = static_cast<void(QTimer::*)()>(&QTimer::start);
         if (flushInterval > 0) {
             connect(&m_flushTimer, &QTimer::timeout, this, &QQmlProfilerServiceImpl::flush);

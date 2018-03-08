@@ -137,7 +137,7 @@ void EtcTexture::bind()
 #endif
 
     QOpenGLContext *ctx = QOpenGLContext::currentContext();
-    Q_ASSERT(ctx != 0);
+    Q_ASSERT(ctx != nullptr);
     ctx->functions()->glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_ETC1_RGB8_OES,
                                              m_size.width(), m_size.height(), 0,
                                              (m_paddedSize.width() * m_paddedSize.height()) >> 1,
@@ -166,10 +166,10 @@ public:
     QSize m_size;
     QSize m_paddedSize;
 
-    QSize textureSize() const { return m_size; }
-    int textureByteCount() const { return m_data.size(); }
+    QSize textureSize() const override { return m_size; }
+    int textureByteCount() const override { return m_data.size(); }
 
-    QSGTexture *createTexture(QQuickWindow *) const {
+    QSGTexture *createTexture(QQuickWindow *) const override {
         EtcTexture *texture = new EtcTexture;
         texture->m_data = m_data;
         texture->m_size = m_size;
@@ -181,7 +181,7 @@ public:
 QQuickTextureFactory *EtcProvider::requestTexture(const QString &id, QSize *size, const QSize &requestedSize)
 {
     Q_UNUSED(requestedSize);
-    QEtcTextureFactory *ret = 0;
+    QEtcTextureFactory *ret = nullptr;
 
     size->setHeight(0);
     size->setWidth(0);
@@ -199,7 +199,7 @@ QQuickTextureFactory *EtcProvider::requestTexture(const QString &id, QSize *size
         ret = new QEtcTextureFactory;
         ret->m_data = file.readAll();
         if (!ret->m_data.isEmpty()) {
-            ETCHeader *pETCHeader = NULL;
+            ETCHeader *pETCHeader = nullptr;
             pETCHeader = (ETCHeader *)ret->m_data.data();
             size->setHeight(getHeight(pETCHeader));
             size->setWidth(getWidth(pETCHeader));
@@ -209,7 +209,7 @@ QQuickTextureFactory *EtcProvider::requestTexture(const QString &id, QSize *size
         }
         else {
             delete ret;
-            ret = 0;
+            ret = nullptr;
         }
     }
 

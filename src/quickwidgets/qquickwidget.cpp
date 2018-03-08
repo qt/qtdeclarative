@@ -184,15 +184,15 @@ void QQuickWidgetPrivate::handleWindowChange()
 }
 
 QQuickWidgetPrivate::QQuickWidgetPrivate()
-    : root(0)
-    , component(0)
-    , offscreenWindow(0)
-    , offscreenSurface(0)
-    , renderControl(0)
+    : root(nullptr)
+    , component(nullptr)
+    , offscreenWindow(nullptr)
+    , offscreenSurface(nullptr)
+    , renderControl(nullptr)
 #if QT_CONFIG(opengl)
-    , fbo(0)
-    , resolvedFbo(0)
-    , context(0)
+    , fbo(nullptr)
+    , resolvedFbo(nullptr)
+    , context(nullptr)
 #endif
     , resizeMode(QQuickWidget::SizeViewToRootObject)
     , initialSize(0,0)
@@ -233,11 +233,11 @@ void QQuickWidgetPrivate::execute()
 
     if (root) {
         delete root;
-        root = 0;
+        root = nullptr;
     }
     if (component) {
         delete component;
-        component = 0;
+        component = nullptr;
     }
     if (!source.isEmpty()) {
         QML_MEMORY_SCOPE_URL(engine.data()->baseUrl().resolved(source));
@@ -489,7 +489,8 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
 */
 
 
-/*! \fn void QQuickWidget::statusChanged(QQuickWidget::Status status)
+/*!
+    \fn void QQuickWidget::statusChanged(QQuickWidget::Status status)
     This signal is emitted when the component's current \a status changes.
 */
 
@@ -499,7 +500,7 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
 
 */
 QQuickWidget::QQuickWidget(QWidget *parent)
-: QWidget(*(new QQuickWidgetPrivate), parent, 0)
+: QWidget(*(new QQuickWidgetPrivate), parent, nullptr)
 {
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
@@ -527,7 +528,7 @@ QQuickWidget::QQuickWidget(const QUrl &source, QWidget *parent)
   \sa Status, status(), errors()
 */
 QQuickWidget::QQuickWidget(QQmlEngine* engine, QWidget *parent)
-    : QWidget(*(new QQuickWidgetPrivate), parent, 0)
+    : QWidget(*(new QQuickWidgetPrivate), parent, nullptr)
 {
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
@@ -543,7 +544,7 @@ QQuickWidget::~QQuickWidget()
     // be a child of the QQuickWidgetPrivate, and will be destroyed by its dtor
     Q_D(QQuickWidget);
     delete d->root;
-    d->root = 0;
+    d->root = nullptr;
 }
 
 /*!
@@ -587,7 +588,7 @@ void QQuickWidget::setContent(const QUrl& url, QQmlComponent *component, QObject
     if (d->component && d->component->isError()) {
         const QList<QQmlError> errorList = d->component->errors();
         for (const QQmlError &error : errorList) {
-            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
+            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), nullptr).warning()
                     << error;
         }
         emit statusChanged(status());
@@ -796,7 +797,7 @@ void QQuickWidgetPrivate::updateSize()
 void QQuickWidgetPrivate::updatePosition()
 {
     Q_Q(QQuickWidget);
-    if (offscreenWindow == 0)
+    if (offscreenWindow == nullptr)
         return;
 
     const QPoint &pos = q->mapToGlobal(QPoint(0, 0));
@@ -870,7 +871,7 @@ void QQuickWidgetPrivate::createContext()
         if (!context->create()) {
             const bool isEs = context->isOpenGLES();
             delete context;
-            context = 0;
+            context = nullptr;
             handleContextCreationFailure(offscreenWindow->requestedFormat(), isEs);
             return;
         }
@@ -896,10 +897,10 @@ void QQuickWidgetPrivate::createContext()
 void QQuickWidgetPrivate::destroyContext()
 {
     delete offscreenSurface;
-    offscreenSurface = 0;
+    offscreenSurface = nullptr;
 #if QT_CONFIG(opengl)
     delete context;
-    context = 0;
+    context = nullptr;
 #endif
 }
 
@@ -935,7 +936,7 @@ void QQuickWidget::createFramebufferObject()
     }
 
     QOpenGLContext *shareWindowContext = QWidgetPrivate::get(window())->shareContext();
-    if (shareWindowContext && context->shareContext() != shareWindowContext) {
+    if (shareWindowContext && context->shareContext() != shareWindowContext && !qGuiApp->testAttribute(Qt::AA_ShareOpenGLContexts)) {
         context->setShareContext(shareWindowContext);
         context->setScreen(shareWindowContext->screen());
         if (!context->create())
@@ -1009,9 +1010,9 @@ void QQuickWidget::destroyFramebufferObject()
 
 #if QT_CONFIG(opengl)
     delete d->fbo;
-    d->fbo = 0;
+    d->fbo = nullptr;
     delete d->resolvedFbo;
-    d->resolvedFbo = 0;
+    d->resolvedFbo = nullptr;
 #endif
 }
 
@@ -1032,7 +1033,7 @@ void QQuickWidget::continueExecute()
     if (d->component->isError()) {
         const QList<QQmlError> errorList = d->component->errors();
         for (const QQmlError &error : errorList) {
-            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
+            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), nullptr).warning()
                     << error;
         }
         emit statusChanged(status());
@@ -1044,7 +1045,7 @@ void QQuickWidget::continueExecute()
     if (d->component->isError()) {
         const QList<QQmlError> errorList = d->component->errors();
         for (const QQmlError &error : errorList) {
-            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), 0).warning()
+            QMessageLogger(error.url().toString().toLatin1().constData(), error.line(), nullptr).warning()
                     << error;
         }
         emit statusChanged(status());
@@ -1077,7 +1078,7 @@ void QQuickWidgetPrivate::setRootObject(QObject *obj)
                    << "Ensure your QML code is written for QtQuick 2, and uses a root that is or" << endl
                    << "inherits from QtQuick's Item (not a Timer, QtObject, etc)." << endl;
         delete obj;
-        root = 0;
+        root = nullptr;
     }
     if (root) {
         initialSize = rootObjectSize();
@@ -1247,11 +1248,12 @@ void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
     Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseMove, e->localPos().x(),
                           e->localPos().y());
 
-    // Use the constructor taking localPos and screenPos. That puts localPos into the
-    // event's localPos and windowPos, and screenPos into the event's screenPos. This way
-    // the windowPos in e is ignored and is replaced by localPos. This is necessary
-    // because QQuickWindow thinks of itself as a top-level window always.
-    QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
+    // Put localPos into the event's localPos and windowPos, and screenPos into the
+    // event's screenPos. This way the windowPos in e is ignored and is replaced by
+    // localPos. This is necessary because QQuickWindow thinks of itself as a
+    // top-level window always.
+    QMouseEvent mappedEvent(e->type(), e->localPos(), e->localPos(), e->screenPos(),
+                            e->button(), e->buttons(), e->modifiers(), e->source());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
     e->setAccepted(mappedEvent.isAccepted());
 }
@@ -1265,12 +1267,12 @@ void QQuickWidget::mouseDoubleClickEvent(QMouseEvent *e)
 
     // As the second mouse press is suppressed in widget windows we emulate it here for QML.
     // See QTBUG-25831
-    QMouseEvent pressEvent(QEvent::MouseButtonPress, e->localPos(), e->screenPos(), e->button(),
-                           e->buttons(), e->modifiers());
+    QMouseEvent pressEvent(QEvent::MouseButtonPress, e->localPos(), e->localPos(), e->screenPos(),
+                           e->button(), e->buttons(), e->modifiers(), e->source());
     QCoreApplication::sendEvent(d->offscreenWindow, &pressEvent);
     e->setAccepted(pressEvent.isAccepted());
-    QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(),
-                            e->modifiers());
+    QMouseEvent mappedEvent(e->type(), e->localPos(), e->localPos(), e->screenPos(),
+                            e->button(), e->buttons(), e->modifiers(), e->source());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
 }
 
@@ -1330,7 +1332,8 @@ void QQuickWidget::mousePressEvent(QMouseEvent *e)
     Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMousePress, e->button(),
                           e->buttons());
 
-    QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
+    QMouseEvent mappedEvent(e->type(), e->localPos(), e->localPos(), e->screenPos(),
+                            e->button(), e->buttons(), e->modifiers(), e->source());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
     e->setAccepted(mappedEvent.isAccepted());
 }
@@ -1342,7 +1345,8 @@ void QQuickWidget::mouseReleaseEvent(QMouseEvent *e)
     Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseRelease, e->button(),
                           e->buttons());
 
-    QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
+    QMouseEvent mappedEvent(e->type(), e->localPos(), e->localPos(), e->screenPos(),
+                            e->button(), e->buttons(), e->modifiers(), e->source());
     QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
     e->setAccepted(mappedEvent.isAccepted());
 }
@@ -1392,6 +1396,28 @@ static Qt::WindowState resolveWindowState(Qt::WindowStates states)
     return Qt::WindowNoState;
 }
 
+static void remapInputMethodQueryEvent(QObject *object, QInputMethodQueryEvent *e)
+{
+    auto item = qobject_cast<QQuickItem *>(object);
+    if (!item)
+        return;
+
+    // Remap all QRectF values.
+    for (auto query : {Qt::ImCursorRectangle, Qt::ImAnchorRectangle, Qt::ImInputItemClipRectangle}) {
+        if (e->queries() & query) {
+            auto value = e->value(query);
+            if (value.canConvert<QRectF>())
+                e->setValue(query, item->mapRectToScene(value.toRectF()));
+        }
+    }
+    // Remap all QPointF values.
+    if (e->queries() & Qt::ImCursorPosition) {
+        auto value = e->value(Qt::ImCursorPosition);
+        if (value.canConvert<QPointF>())
+            e->setValue(Qt::ImCursorPosition, item->mapToScene(value.toPointF()));
+    }
+}
+
 /*! \reimp */
 bool QQuickWidget::event(QEvent *e)
 {
@@ -1399,6 +1425,7 @@ bool QQuickWidget::event(QEvent *e)
 
     switch (e->type()) {
 
+    case QEvent::Leave:
     case QEvent::TouchBegin:
     case QEvent::TouchEnd:
     case QEvent::TouchUpdate:
@@ -1407,8 +1434,17 @@ bool QQuickWidget::event(QEvent *e)
         return QCoreApplication::sendEvent(d->offscreenWindow, e);
 
     case QEvent::InputMethod:
-    case QEvent::InputMethodQuery:
         return QCoreApplication::sendEvent(d->offscreenWindow->focusObject(), e);
+    case QEvent::InputMethodQuery:
+        {
+            bool eventResult = QCoreApplication::sendEvent(d->offscreenWindow->focusObject(), e);
+            // The result in focusObject are based on offscreenWindow. But
+            // the inputMethodTransform won't get updated because the focus
+            // is on QQuickWidget. We need to remap the value based on the
+            // widget.
+            remapInputMethodQueryEvent(d->offscreenWindow->focusObject(), static_cast<QInputMethodQueryEvent *>(e));
+            return eventResult;
+        }
 
     case QEvent::WindowChangeInternal:
         d->handleWindowChange();
@@ -1452,6 +1488,14 @@ bool QQuickWidget::event(QEvent *e)
     case QEvent::ShortcutOverride:
         return QCoreApplication::sendEvent(d->offscreenWindow, e);
 
+    case QEvent::Enter: {
+        QEnterEvent *enterEvent = static_cast<QEnterEvent *>(e);
+        QEnterEvent mappedEvent(enterEvent->localPos(), enterEvent->windowPos(),
+                                enterEvent->screenPos());
+        const bool ret = QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
+        e->setAccepted(mappedEvent.isAccepted());
+        return ret;
+    }
     default:
         break;
     }
@@ -1606,6 +1650,9 @@ QQuickWindow *QQuickWidget::quickWindow() const
     return d->offscreenWindow;
 }
 
+/*!
+  \reimp
+ */
 void QQuickWidget::paintEvent(QPaintEvent *event)
 {
     Q_D(QQuickWidget);
@@ -1619,12 +1666,12 @@ void QQuickWidget::paintEvent(QPaintEvent *event)
             QTransform transform;
             transform.scale(devicePixelRatioF(), devicePixelRatioF());
             //Paint only the updated areas
-            const auto rects = d->updateRegion.rects();
-            for (auto targetRect : rects) {
+            QRegion targetRegion;
+            d->updateRegion.swap(targetRegion);
+            for (auto targetRect : targetRegion) {
                 auto sourceRect = transform.mapRect(QRectF(targetRect));
                 painter.drawImage(targetRect, d->softwareImage, sourceRect);
             }
-            d->updateRegion = QRegion();
         }
     }
 }

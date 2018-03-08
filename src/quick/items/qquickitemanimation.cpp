@@ -371,7 +371,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 
     if (data->actions.count()) {
         QSequentialAnimationGroupJob *topLevelGroup = new QSequentialAnimationGroupJob;
-        QActionAnimation *viaAction = d->via ? new QActionAnimation : 0;
+        QActionAnimation *viaAction = d->via ? new QActionAnimation : nullptr;
         QActionAnimation *targetAction = new QActionAnimation;
         //we'll assume the common case by far is to have children, and always create ag
         QParallelAnimationGroupJob *ag = new QParallelAnimationGroupJob;
@@ -409,7 +409,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
         delete data;
         delete viaData;
     }
-    return 0;
+    return nullptr;
 }
 
 /*!
@@ -922,12 +922,12 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
         pa->setEasingCurve(d->easingCurve);
         return initInstance(pa);
     } else {
-        pa->setFromSourcedValue(0);
-        pa->setAnimValue(0);
+        pa->setFromSourcedValue(nullptr);
+        pa->setAnimValue(nullptr);
         delete pa;
         delete data;
     }
-    return 0;
+    return nullptr;
 }
 
 void QQuickPathAnimationUpdater::setValue(qreal v)
@@ -955,7 +955,7 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
 
     qreal angle;
     bool fixed = orientation == QQuickPathAnimation::Fixed;
-    QPointF currentPos = !painterPath.isEmpty() ? path->sequentialPointAt(painterPath, pathLength, attributePoints, prevBez, v, fixed ? 0 : &angle) : path->sequentialPointAt(v, fixed ? 0 : &angle);
+    QPointF currentPos = !painterPath.isEmpty() ? path->sequentialPointAt(painterPath, pathLength, attributePoints, prevBez, v, fixed ? nullptr : &angle) : path->sequentialPointAt(v, fixed ? nullptr : &angle);
 
     //adjust position according to anchor point
     if (!anchorPoint.isNull()) {

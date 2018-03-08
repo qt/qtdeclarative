@@ -61,7 +61,7 @@ QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine,
                        QV4::QmlContext *qmlContext, const QV4::Value &callback)
     : v4(engine), m_url(url)
 #if QT_CONFIG(qml_network)
-    , m_redirectCount(0), m_network(0) , m_reply(0)
+    , m_redirectCount(0), m_network(nullptr) , m_reply(nullptr)
 #endif
 {
     if (qmlContext)
@@ -88,7 +88,7 @@ QV4Include::~QV4Include()
 {
 #if QT_CONFIG(qml_network)
     delete m_reply;
-    m_reply = 0;
+    m_reply = nullptr;
 #endif
 }
 
@@ -196,10 +196,10 @@ void QV4Include::finished()
 /*
     Documented in qv8engine.cpp
 */
-QV4::ReturnedValue QV4Include::method_include(const QV4::BuiltinFunction *b, QV4::CallData *callData)
+QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, const QV4::Value *, const QV4::Value *argv, int argc)
 {
     QV4::Scope scope(b);
-    if (!callData->argc())
+    if (!argc)
         RETURN_UNDEFINED();
 
     QQmlContextData *context = scope.engine->callingQmlContext();
@@ -208,11 +208,11 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::BuiltinFunction *b, QV4
         RETURN_RESULT(scope.engine->throwError(QString::fromUtf8("Qt.include(): Can only be called from JavaScript files")));
 
     QV4::ScopedValue callbackFunction(scope, QV4::Primitive::undefinedValue());
-    if (callData->argc() >= 2 && callData->args[1].as<QV4::FunctionObject>())
-        callbackFunction = callData->args[1];
+    if (argc >= 2 && argv[1].as<QV4::FunctionObject>())
+        callbackFunction = argv[1];
 
 #if QT_CONFIG(qml_network)
-    QUrl url(scope.engine->resolvedUrl(callData->args[0].toQStringNoThrow()));
+    QUrl url(scope.engine->resolvedUrl(argv[0].toQStringNoThrow()));
     if (scope.engine->qmlEngine() && scope.engine->qmlEngine()->urlInterceptor())
         url = scope.engine->qmlEngine()->urlInterceptor()->intercept(url, QQmlAbstractUrlInterceptor::JavaScriptFile);
 
@@ -227,21 +227,7 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::BuiltinFunction *b, QV4
 
     } else {
         QScopedPointer<QV4::Script> script;
-
-        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url)) {
-            QV4::CompiledData::CompilationUnit *jsUnit = cachedUnit->createCompilationUnit();
-            script.reset(new QV4::Script(scope.engine, qmlcontext, jsUnit));
-        } else {
-            QFile f(localFile);
-
-            if (f.open(QIODevice::ReadOnly)) {
-                QByteArray data = f.readAll();
-                QString code = QString::fromUtf8(data);
-                QmlIR::Document::removeScriptPragmas(code);
-
-                script.reset(new QV4::Script(scope.engine, qmlcontext, code, url.toString()));
-            }
-        }
+        script.reset(QV4::Script::createFromFileOrCache(scope.engine, qmlcontext, localFile, url));
 
         if (!script.isNull()) {
             script->parse();

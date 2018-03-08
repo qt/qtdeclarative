@@ -75,6 +75,8 @@ class QQmlCompiledData;
 
 namespace QV4 { struct String; }
 
+void Q_QML_PRIVATE_EXPORT qmlUnregisterType(int type);
+
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
 public:
@@ -107,7 +109,7 @@ public:
     static QMetaMethod defaultMethod(QObject *);
 
     static bool isQObject(int);
-    static QObject *toQObject(const QVariant &, bool *ok = 0);
+    static QObject *toQObject(const QVariant &, bool *ok = nullptr);
 
     static int listType(int);
     static int attachedPropertiesFuncId(QQmlEnginePrivate *engine, const QMetaObject *);
@@ -131,7 +133,7 @@ public:
 
     static QList<QQmlPrivate::AutoParentFunction> parentFunctions();
 
-    static const QQmlPrivate::CachedQmlUnit *findCachedCompilationUnit(const QUrl &uri);
+    static const QV4::CompiledData::Unit *findCachedCompilationUnit(const QUrl &uri);
 
     static bool namespaceContainsRegistrations(const QString &, int majorVersion);
 
@@ -161,7 +163,7 @@ public:
         return d == other.d;
     }
 
-    bool isValid() const { return d != 0; }
+    bool isValid() const { return d != nullptr; }
     const QQmlTypePrivate *key() const { return d; }
 
     QByteArray typeName() const;
@@ -216,7 +218,7 @@ public:
     {
     public:
         SingletonInstanceInfo()
-            : scriptCallback(0), qobjectCallback(0), instanceMetaObject(0) {}
+            : scriptCallback(nullptr), qobjectCallback(nullptr), instanceMetaObject(nullptr) {}
 
         QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *);
         QObject *(*qobjectCallback)(QQmlEngine *, QJSEngine *);

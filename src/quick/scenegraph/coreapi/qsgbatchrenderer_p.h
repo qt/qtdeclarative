@@ -125,7 +125,6 @@ template <typename Type, int PageSize> class Allocator
 {
 public:
     Allocator()
-        : m_freePage(0)
     {
         pages.push_back(new AllocatorPage<Type, PageSize>());
     }
@@ -209,7 +208,7 @@ public:
     }
 
     QVector<AllocatorPage<Type, PageSize> *> pages;
-    int m_freePage;
+    int m_freePage = 0;
 };
 
 
@@ -306,12 +305,7 @@ struct Buffer {
 struct Element {
 
     Element()
-        : node(0)
-        , batch(0)
-        , nextInBatch(0)
-        , root(0)
-        , order(0)
-        , boundsComputed(false)
+        : boundsComputed(false)
         , boundsOutsideFloatRange(false)
         , translateOnlyToRoot(false)
         , removed(false)
@@ -332,14 +326,14 @@ struct Element {
     }
     void computeBounds();
 
-    QSGGeometryNode *node;
-    Batch *batch;
-    Element *nextInBatch;
-    Node *root;
+    QSGGeometryNode *node = nullptr;
+    Batch *batch = nullptr;
+    Element *nextInBatch = nullptr;
+    Node *root = nullptr;
 
     Rect bounds; // in device coordinates
 
-    int order;
+    int order = 0;
 
     uint boundsComputed : 1;
     uint boundsOutsideFloatRange : 1;
@@ -362,12 +356,12 @@ struct RenderNodeElement : public Element {
 };
 
 struct BatchRootInfo {
-    BatchRootInfo() : parentRoot(0), lastOrder(-1), firstOrder(-1), availableOrders(0) { }
+    BatchRootInfo() {}
     QSet<Node *> subRoots;
-    Node *parentRoot;
-    int lastOrder;
-    int firstOrder;
-    int availableOrders;
+    Node *parentRoot = nullptr;
+    int lastOrder = -1;
+    int firstOrder = -1;
+    int availableOrders = 0;
 };
 
 struct ClipBatchRootInfo : public BatchRootInfo
@@ -381,14 +375,13 @@ struct DrawSet
         : vertices(v)
         , zorders(z)
         , indices(i)
-        , indexCount(0)
     {
     }
-    DrawSet() : vertices(0), zorders(0), indices(0), indexCount(0) {}
-    int vertices;
-    int zorders;
-    int indices;
-    int indexCount;
+    DrawSet() {}
+    int vertices = 0;
+    int zorders = 0;
+    int indices = 0;
+    int indexCount = 0;
 };
 
 enum BatchCompatibility
@@ -410,8 +403,8 @@ struct Batch
 
     // pseudo-constructor...
     void init() {
-        first = 0;
-        root = 0;
+        first = nullptr;
+        root = nullptr;
         vertexCount = 0;
         indexCount = 0;
         isOpaque = false;
@@ -440,7 +433,9 @@ struct Batch
     mutable uint uploadedThisFrame : 1; // solely for debugging purposes
 
     Buffer vbo;
+#ifdef QSG_SEPARATE_INDEX_BUFFER
     Buffer ibo;
+#endif
 
     QDataBuffer<DrawSet> drawSets;
 };
@@ -461,9 +456,9 @@ struct Node
     void append(Node *child) {
         Q_ASSERT(child);
         Q_ASSERT(!hasChild(child));
-        Q_ASSERT(child->m_parent == 0);
-        Q_ASSERT(child->m_next == 0);
-        Q_ASSERT(child->m_prev == 0);
+        Q_ASSERT(child->m_parent == nullptr);
+        Q_ASSERT(child->m_next == nullptr);
+        Q_ASSERT(child->m_prev == nullptr);
 
         if (!m_child) {
             child->m_next = child;
@@ -484,27 +479,27 @@ struct Node
 
         // only child..
         if (child->m_next == child) {
-            m_child = 0;
+            m_child = nullptr;
         } else {
             if (m_child == child)
                 m_child = child->m_next;
             child->m_next->m_prev = child->m_prev;
             child->m_prev->m_next = child->m_next;
         }
-        child->m_next = 0;
-        child->m_prev = 0;
-        child->setParent(0);
+        child->m_next = nullptr;
+        child->m_prev = nullptr;
+        child->setParent(nullptr);
     }
 
     Node *firstChild() const { return m_child; }
 
     Node *sibling() const {
         Q_ASSERT(m_parent);
-        return m_next == m_parent->m_child ? 0 : m_next;
+        return m_next == m_parent->m_child ? nullptr : m_next;
     }
 
     void setParent(Node *p) {
-        Q_ASSERT(m_parent == 0 || p == 0);
+        Q_ASSERT(m_parent == nullptr || p == nullptr);
         m_parent = p;
     }
 
@@ -589,7 +584,7 @@ public:
         float lastOpacity;
     };
 
-    ShaderManager(QSGDefaultRenderContext *ctx) : visualizeProgram(0), blitProgram(0), context(ctx) { }
+    ShaderManager(QSGDefaultRenderContext *ctx) : visualizeProgram(nullptr), blitProgram(nullptr), context(ctx) { }
     ~ShaderManager() {
         qDeleteAll(rewrittenShaders);
         qDeleteAll(stockShaders);
@@ -743,7 +738,9 @@ private:
     ClipType m_currentClipType;
 
     QDataBuffer<char> m_vertexUploadPool;
+#ifdef QSG_SEPARATE_INDEX_BUFFER
     QDataBuffer<char> m_indexUploadPool;
+#endif
     // For minimal OpenGL core profile support
     QOpenGLVertexArrayObject *m_vao;
 
@@ -763,7 +760,10 @@ Batch *Renderer::newBatch()
         m_batchPool.resize(size - 1);
     } else {
         b = new Batch();
-        memset(&b->vbo, 0, sizeof(Buffer) * 2); // Clear VBO & IBO
+        memset(&b->vbo, 0, sizeof(Buffer));
+#ifdef QSG_SEPARATE_INDEX_BUFFER
+        memset(&b->ibo, 0, sizeof(Buffer));
+#endif
     }
     b->init();
     return b;

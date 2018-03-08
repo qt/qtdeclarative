@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 
 QSequentialAnimationGroupJob::QSequentialAnimationGroupJob()
     : QAnimationGroupJob()
-    , m_currentAnimation(0)
+    , m_currentAnimation(nullptr)
     , m_previousLoop(0)
 {
 }
@@ -87,7 +87,7 @@ QSequentialAnimationGroupJob::AnimationIndex QSequentialAnimationGroupJob::index
     Q_ASSERT(firstChild());
 
     AnimationIndex ret;
-    QAbstractAnimationJob *anim = 0;
+    QAbstractAnimationJob *anim = nullptr;
     int duration = 0;
 
     for (anim = firstChild(); anim; anim = anim->nextSibling()) {
@@ -283,7 +283,7 @@ void QSequentialAnimationGroupJob::setCurrentAnimation(QAbstractAnimationJob *an
 {
     if (!anim) {
         Q_ASSERT(!firstChild());
-        m_currentAnimation = 0;
+        m_currentAnimation = nullptr;
         return;
     }
 
@@ -364,7 +364,7 @@ void QSequentialAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimat
 
 void QSequentialAnimationGroupJob::animationInserted(QAbstractAnimationJob *anim)
 {
-    if (m_currentAnimation == 0)
+    if (m_currentAnimation == nullptr)
         setCurrentAnimation(firstChild()); // initialize the current animation
 
     if (m_currentAnimation == anim->nextSibling()
@@ -393,7 +393,7 @@ void QSequentialAnimationGroupJob::animationRemoved(QAbstractAnimationJob *anim,
         else if (prev)
             setCurrentAnimation(prev);
         else// case all animations were removed
-            setCurrentAnimation(0);
+            setCurrentAnimation(nullptr);
     }
 
     // duration of the previous animations up to the current animation

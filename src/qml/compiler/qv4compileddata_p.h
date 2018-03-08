@@ -72,7 +72,7 @@
 QT_BEGIN_NAMESPACE
 
 // Bump this whenever the compiler data structures change in an incompatible way.
-#define QV4_DATA_STRUCTURE_VERSION 0x15
+#define QV4_DATA_STRUCTURE_VERSION 0x17
 
 class QIODevice;
 class QQmlPropertyCache;
@@ -691,8 +691,6 @@ struct Unit
     char md5Checksum[16]; // checksum of all bytes following this field.
     void generateChecksum();
 
-    quint32_le architectureIndex; // string index to QSysInfo::buildAbi()
-    quint32_le codeGeneratorIndex;
     char dependencyMD5Checksum[16];
 
     enum : unsigned int {
@@ -719,12 +717,15 @@ struct Unit
     quint32_le offsetToJSClassTable;
     qint32_le indexOfRootFunction;
     quint32_le sourceFileIndex;
+    quint32_le finalUrlIndex;
 
     /* QML specific fields */
     quint32_le nImports;
     quint32_le offsetToImports;
     quint32_le nObjects;
     quint32_le offsetToObjects;
+
+    quint32_le padding;
 
     const Import *importAt(int idx) const {
         return reinterpret_cast<const Import*>((reinterpret_cast<const char *>(this)) + offsetToImports + idx * sizeof(Import));
@@ -890,7 +891,7 @@ Q_STATIC_ASSERT(offsetof(CompilationUnitBase, runtimeRegularExpressions) == offs
 struct Q_QML_PRIVATE_EXPORT CompilationUnit final : public CompilationUnitBase
 {
 public:
-    CompilationUnit();
+    CompilationUnit(const Unit *unitData = nullptr);
 #ifdef V4_BOOTSTRAP
     ~CompilationUnit() {}
 #else
@@ -924,13 +925,28 @@ public:
     ExecutionEngine *engine = nullptr;
     QQmlEnginePrivate *qmlEngine = nullptr; // only used in QML environment for composite types, not in plain QJSEngine case.
 
+    // url() and fileName() shall be used to load the actual QML/JS code or to show errors or
+    // warnings about that code. They include any potential URL interceptions and thus represent the
+    // "physical" location of the code.
+    //
+    // finalUrl() and finalUrlString() shall be used to resolve further URLs referred to in the code
+    // They are _not_ intercepted and thus represent the "logical" name for the code.
+
     QString fileName() const { return data->stringAt(data->sourceFileIndex); }
+    QString finalUrlString() const { return data->stringAt(data->finalUrlIndex); }
     QUrl url() const { if (m_url.isNull) m_url = QUrl(fileName()); return m_url; }
+    QUrl finalUrl() const
+    {
+        if (m_finalUrl.isNull)
+            m_finalUrl = QUrl(finalUrlString());
+        return m_finalUrl;
+    }
 
     QV4::Lookup *runtimeLookups = nullptr;
     QV4::InternalClass **runtimeClasses = nullptr;
     QVector<QV4::Function *> runtimeFunctions;
     mutable QQmlNullableValue<QUrl> m_url;
+    mutable QQmlNullableValue<QUrl> m_finalUrl;
 
     // QML specific fields
     QQmlPropertyCacheVector propertyCaches;
@@ -945,8 +961,8 @@ public:
 
     // mapping from component object index (CompiledData::Unit object index that points to component) to identifier hash of named objects
     // this is initialized on-demand by QQmlContextData
-    QHash<int, IdentifierHash<int>> namedObjectsPerComponentCache;
-    IdentifierHash<int> namedObjectsPerComponent(int componentObjectIndex);
+    QHash<int, IdentifierHash> namedObjectsPerComponentCache;
+    IdentifierHash namedObjectsPerComponent(int componentObjectIndex);
 
     void finalizeCompositeType(QQmlEnginePrivate *qmlEngine);
 

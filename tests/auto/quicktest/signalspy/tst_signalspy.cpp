@@ -58,7 +58,7 @@ void tst_SignalSpy::testValid()
 {
     QQuickView window;
     window.setSource(testFileUrl("signalspy.qml"));
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(window.rootObject() != nullptr);
 
     QObject *mouseSpy = window.rootObject()->findChild<QObject*>("mouseSpy");
     QVERIFY(mouseSpy->property("valid").toBool());
@@ -73,8 +73,8 @@ void tst_SignalSpy::testCount()
     window.resize(200, 200);
     window.setSource(testFileUrl("signalspy.qml"));
     window.show();
-    QTest::qWaitForWindowActive(&window);
-    QVERIFY(window.rootObject() != 0);
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+    QVERIFY(window.rootObject() != nullptr);
 
     QObject *mouseSpy = window.rootObject()->findChild<QObject*>("mouseSpy");
     QCOMPARE(mouseSpy->property("count").toInt(), 0);

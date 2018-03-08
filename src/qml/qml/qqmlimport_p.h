@@ -92,7 +92,7 @@ struct QQmlImportInstance
 
     bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
                      int *vmajor, int *vminor, QQmlType* type_return,
-                     QString *base = 0, bool *typeRecursionDetected = 0,
+                     QString *base = nullptr, bool *typeRecursionDetected = nullptr,
                      QQmlType::RegistrationType = QQmlType::AnyRegistrationType,
                      QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion) const;
 };
@@ -100,7 +100,7 @@ struct QQmlImportInstance
 class QQmlImportNamespace
 {
 public:
-    QQmlImportNamespace() : nextNamespace(0) {}
+    QQmlImportNamespace() : nextNamespace(nullptr) {}
     ~QQmlImportNamespace() { qDeleteAll(imports); }
 
     QList<QQmlImportInstance *> imports;
@@ -109,7 +109,7 @@ public:
 
     bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef& type,
                      int *vmajor, int *vminor, QQmlType* type_return,
-                     QString *base = 0, QList<QQmlError> *errors = 0,
+                     QString *base = nullptr, QList<QQmlError> *errors = nullptr,
                      QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
                      QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion);
 
@@ -137,7 +137,7 @@ public:
                      QQmlType *type_return,
                      int *version_major, int *version_minor,
                      QQmlImportNamespace **ns_return,
-                     QList<QQmlError> *errors = 0,
+                     QList<QQmlError> *errors = nullptr,
                      QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
                      QQmlImport::RecursionRestriction recursionRestriction
                      = QQmlImport::PreventRecursion) const;
@@ -191,6 +191,7 @@ public:
 
     static bool isLocal(const QString &url);
     static bool isLocal(const QUrl &url);
+    static QUrl urlFromLocalFileOrQrcOrUrl(const QString &);
 
     static void setDesignerSupportRequired(bool b);
 

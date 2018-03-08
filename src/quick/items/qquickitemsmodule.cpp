@@ -74,7 +74,9 @@
 #if QT_CONFIG(quick_positioners)
 #include "qquickpositioners_p.h"
 #endif
+#if QT_CONFIG(quick_repeater)
 #include "qquickrepeater_p.h"
+#endif
 #include "qquickloader_p.h"
 #if QT_CONFIG(quick_animatedimage)
 #include "qquickanimatedimage_p.h"
@@ -111,6 +113,10 @@
 #include <private/qqmlmetatype_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
+QT_BEGIN_NAMESPACE
+Q_DECLARE_LOGGING_CATEGORY(lcTransient)
+QT_END_NAMESPACE
+
 static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
 {
     // When setting a parent (especially during dynamic object creation) in QML,
@@ -125,6 +131,7 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
             QQuickWindow *win = qmlobject_cast<QQuickWindow *>(obj);
             if (win) {
                 // A Window inside an Item should be transient for that item's window
+                qCDebug(lcTransient) << win << "is transient for" << parentItem->window();
                 win->setTransientParent(parentItem->window());
                 return QQmlPrivate::Parented;
             }
@@ -134,6 +141,7 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
         QQuickWindow *win = qmlobject_cast<QQuickWindow *>(obj);
         if (win) {
             // A Window inside a Window should be transient for it
+            qCDebug(lcTransient) << win << "is transient for" << parentWindow;
             win->setTransientParent(parentWindow);
             return QQmlPrivate::Parented;
         } else {
@@ -207,7 +215,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickPathView>(uri,major,minor,"PathView");
 #endif
     qmlRegisterType<QQuickRectangle>(uri,major,minor,"Rectangle");
+#if QT_CONFIG(quick_repeater)
     qmlRegisterType<QQuickRepeater>(uri,major,minor,"Repeater");
+#endif
     qmlRegisterType<QQuickTranslate>(uri,major,minor,"Translate");
     qmlRegisterType<QQuickRotation>(uri,major,minor,"Rotation");
     qmlRegisterType<QQuickScale>(uri,major,minor,"Scale");
@@ -290,7 +300,8 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 
     qmlRegisterType<QQuickMultiPointTouchArea>("QtQuick", 2, 0, "MultiPointTouchArea");
     qmlRegisterType<QQuickTouchPoint>("QtQuick", 2, 0, "TouchPoint");
-    qmlRegisterType<QQuickGrabGestureEvent>();
+    qmlRegisterUncreatableType<QQuickGrabGestureEvent>(uri,major,minor, "GestureEvent",
+        QQuickMouseEvent::tr("GestureEvent is only available in the context of handling the gestureStarted signal from MultiPointTouchArea"));
 
 #if QT_CONFIG(accessibility)
     qmlRegisterUncreatableType<QQuickAccessibleAttached>("QtQuick", 2, 0, "Accessible",QQuickAccessibleAttached::tr("Accessible is only available via attached properties"));
@@ -406,6 +417,11 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #if QT_CONFIG(quick_path)
     qmlRegisterType<QQuickPathAngleArc>(uri, 2, 11, "PathAngleArc");
 #endif
+
+#if QT_CONFIG(quick_animatedimage)
+    qmlRegisterType<QQuickAnimatedImage, 11>(uri, 2, 11,"AnimatedImage");
+#endif
+    qmlRegisterType<QQuickItem, 11>(uri, 2, 11,"Item");
 }
 
 static void initResources()

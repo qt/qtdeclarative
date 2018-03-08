@@ -33,6 +33,8 @@
 #include <QQmlComponent>
 #include <QQmlExpression>
 #include <private/qqmlcontext_p.h>
+#include <private/qv4qmlcontext_p.h>
+#include <private/qv4object_p.h>
 #include "../../shared/util.h"
 
 class tst_qqmlcontext : public QQmlDataTest
@@ -47,6 +49,7 @@ private slots:
     void engineMethod();
     void parentContext();
     void setContextProperty();
+    void setContextProperties();
     void setContextObject();
     void destruction();
     void idAsContextProperty();
@@ -63,6 +66,7 @@ private slots:
     void qobjectDerived();
     void qtbug_49232();
     void contextViaClosureAfterDestruction();
+    void contextLeak();
 
 private:
     QQmlEngine engine;
@@ -112,7 +116,7 @@ void tst_qqmlcontext::resolvedUrl()
         QQmlContext ctxt2(ctxt);
         QCOMPARE(ctxt2.resolvedUrl(QUrl("main2.qml")), QUrl("http://www.qt-project.org/main2.qml"));
 
-        delete ctxt; ctxt = 0;
+        delete ctxt; ctxt = nullptr;
 
         QCOMPARE(ctxt2.resolvedUrl(QUrl("main2.qml")), QUrl());
     }
@@ -140,7 +144,7 @@ void tst_qqmlcontext::engineMethod()
     QCOMPARE(ctxt3.engine(), engine);
     QCOMPARE(ctxt4.engine(), engine);
 
-    delete engine; engine = 0;
+    delete engine; engine = nullptr;
 
     QCOMPARE(ctxt.engine(), engine);
     QCOMPARE(ctxt2.engine(), engine);
@@ -152,7 +156,7 @@ void tst_qqmlcontext::parentContext()
 {
     QQmlEngine *engine = new QQmlEngine;
 
-    QCOMPARE(engine->rootContext()->parentContext(), (QQmlContext *)0);
+    QCOMPARE(engine->rootContext()->parentContext(), (QQmlContext *)nullptr);
 
     QQmlContext *ctxt = new QQmlContext(engine);
     QQmlContext *ctxt2 = new QQmlContext(ctxt);
@@ -170,23 +174,23 @@ void tst_qqmlcontext::parentContext()
     QCOMPARE(ctxt6->parentContext(), engine->rootContext());
     QCOMPARE(ctxt7->parentContext(), engine->rootContext());
 
-    delete ctxt2; ctxt2 = 0;
+    delete ctxt2; ctxt2 = nullptr;
 
     QCOMPARE(ctxt->parentContext(), engine->rootContext());
-    QCOMPARE(ctxt3->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt4->parentContext(), (QQmlContext *)0);
+    QCOMPARE(ctxt3->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt4->parentContext(), (QQmlContext *)nullptr);
     QCOMPARE(ctxt5->parentContext(), ctxt);
     QCOMPARE(ctxt6->parentContext(), engine->rootContext());
     QCOMPARE(ctxt7->parentContext(), engine->rootContext());
 
-    delete engine; engine = 0;
+    delete engine; engine = nullptr;
 
-    QCOMPARE(ctxt->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt3->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt4->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt5->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt6->parentContext(), (QQmlContext *)0);
-    QCOMPARE(ctxt7->parentContext(), (QQmlContext *)0);
+    QCOMPARE(ctxt->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt3->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt4->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt5->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt6->parentContext(), (QQmlContext *)nullptr);
+    QCOMPARE(ctxt7->parentContext(), (QQmlContext *)nullptr);
 
     delete ctxt7;
     delete ctxt6;
@@ -363,6 +367,32 @@ void tst_qqmlcontext::setContextProperty()
     }
 }
 
+void tst_qqmlcontext::setContextProperties()
+{
+    QQmlContext ctxt(&engine);
+
+    TestObject obj1;
+    obj1.setA(3345);
+    TestObject obj2;
+    obj2.setA(-19);
+
+    QVector<QQmlContext::PropertyPair> properties;
+
+    properties.append({QString("a"), QVariant(10)});
+    properties.append({QString("b"), QVariant(19)});
+    properties.append({QString("d"), QVariant::fromValue<TestObject*>(&obj2)});
+    properties.append({QString("c"), QVariant(QString("Hello World!"))});
+    properties.append({QString("e"), QVariant::fromValue<TestObject*>(&obj1)});
+
+    ctxt.setContextProperties(properties);
+
+    TEST_CONTEXT_PROPERTY(&ctxt, a, QVariant(10));
+    TEST_CONTEXT_PROPERTY(&ctxt, b, QVariant(19));
+    TEST_CONTEXT_PROPERTY(&ctxt, c, QVariant(QString("Hello World!")));
+    TEST_CONTEXT_PROPERTY(&ctxt, d.a, QVariant(-19));
+    TEST_CONTEXT_PROPERTY(&ctxt, e.a, QVariant(3345));
+}
+
 void tst_qqmlcontext::setContextObject()
 {
     QQmlContext ctxt(&engine);
@@ -423,12 +453,12 @@ void tst_qqmlcontext::destruction()
 
     QObject obj;
     QQmlEngine::setContextForObject(&obj, ctxt);
-    QQmlExpression expr(ctxt, 0, "a");
+    QQmlExpression expr(ctxt, nullptr, "a");
 
     QCOMPARE(ctxt, QQmlEngine::contextForObject(&obj));
     QCOMPARE(ctxt, expr.context());
 
-    delete ctxt; ctxt = 0;
+    delete ctxt; ctxt = nullptr;
 
     QCOMPARE(ctxt, QQmlEngine::contextForObject(&obj));
     QCOMPARE(ctxt, expr.context());
@@ -477,7 +507,7 @@ void tst_qqmlcontext::readOnlyContexts()
     QCOMPARE(context->contextProperty("hello"), QVariant());
 
     QTest::ignoreMessage(QtWarningMsg, "QQmlContext: Cannot set context object for internal context.");
-    context->setContextObject(0);
+    context->setContextObject(nullptr);
     QCOMPARE(context->contextObject(), obj);
 
     delete obj;
@@ -505,7 +535,7 @@ void tst_qqmlcontext::nameForObject()
     component.setData("import QtQuick 2.0; QtObject { id: root; property QtObject o: QtObject { id: nested } }", QUrl());
 
     QObject *o = component.create();
-    QVERIFY(o != 0);
+    QVERIFY(o != nullptr);
 
     QCOMPARE(qmlContext(o)->nameForObject(o), QString("root"));
     QCOMPARE(qmlContext(o)->nameForObject(qvariant_cast<QObject*>(o->property("o"))), QString("nested"));
@@ -518,12 +548,12 @@ class DeleteCommand : public QObject
 {
 Q_OBJECT
 public:
-    DeleteCommand() : object(0) {}
+    DeleteCommand() : object(nullptr) {}
 
     QObject *object;
 
 public slots:
-    void doCommand() { if (object) delete object; object = 0; }
+    void doCommand() { if (object) delete object; object = nullptr; }
 };
 
 // Calling refresh expressions would crash if an expression or context was deleted during
@@ -656,7 +686,7 @@ void tst_qqmlcontext::skipExpressionRefresh_qtbug_53431()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_53431.qml"));
-    QScopedPointer<QObject> object(component.create(0));
+    QScopedPointer<QObject> object(component.create(nullptr));
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("value").toInt(), 1);
     object->setProperty("value", 10);
@@ -683,7 +713,7 @@ void tst_qqmlcontext::evalAfterInvalidate()
     QQmlComponent component(&engine, testFileUrl("evalAfterInvalidate.qml"));
     QScopedPointer<QObject> o(component.create());
 
-    QCoreApplication::sendPostedEvents(0, QEvent::DeferredDelete);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 }
 
@@ -749,6 +779,40 @@ void tst_qqmlcontext::contextViaClosureAfterDestruction()
     QJSValue subObject = componentFactoryClosure.callWithInstance(componentFactoryClosure, QJSValueList() << parentWrapper);
     QVERIFY(subObject.isError());
     QCOMPARE(subObject.toString(), QLatin1String("Error: Qt.createQmlObject(): Cannot create a component in an invalid context"));
+}
+
+void tst_qqmlcontext::contextLeak()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("contextLeak.qml"));
+
+    QQmlGuardedContextData scriptContext;
+
+    {
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 42);
+
+        QQmlData *ddata = QQmlData::get(obj.data());
+        QVERIFY(ddata);
+        QQmlContextData *context = ddata->context;
+        QVERIFY(context);
+        QVERIFY(!context->importedScripts.isNullOrUndefined());
+        QCOMPARE(int(context->importedScripts.valueRef()->as<QV4::Object>()->getLength()), 1);
+
+        {
+            QV4::Scope scope(ddata->jsWrapper.engine());
+            QV4::ScopedValue scriptContextWrapper(scope);
+            scriptContextWrapper = context->importedScripts.valueRef()->as<QV4::Object>()->getIndexed(0);
+            scriptContext = scriptContextWrapper->as<QV4::QQmlContextWrapper>()->getContext();
+        }
+    }
+
+    engine.collectGarbage();
+
+    // Each time a JS file (non-pragma-shared) is imported, we create a QQmlContext(Data) for it.
+    // Make sure that context does not leak.
+    QVERIFY(scriptContext.isNull());
 }
 
 QTEST_MAIN(tst_qqmlcontext)

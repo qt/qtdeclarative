@@ -51,7 +51,7 @@
 #include "pieslice.h"
 
 PieChart::PieChart(QQuickItem *parent)
-    : QQuickItem(parent), m_pieSlice(0)
+    : QQuickItem(parent), m_pieSlice(nullptr)
 {
 }
 

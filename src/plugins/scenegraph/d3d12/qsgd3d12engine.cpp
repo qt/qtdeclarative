@@ -3046,7 +3046,7 @@ void QSGD3D12EnginePrivate::useRenderTargetAsTexture(uint id)
     }
 
     tframeData.activeTextures[tframeData.activeTextureCount++] =
-            TransientFrameData::ActiveTexture::ActiveTexture(TransientFrameData::ActiveTexture::TypeRenderTarget, id);
+            TransientFrameData::ActiveTexture(TransientFrameData::ActiveTexture::TypeRenderTarget, id);
 }
 
 QImage QSGD3D12EnginePrivate::executeAndWaitReadbackRenderTarget(uint id)

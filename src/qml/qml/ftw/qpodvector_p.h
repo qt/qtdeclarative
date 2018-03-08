@@ -61,7 +61,7 @@ class QPODVector
 {
 public:
     QPODVector()
-    : m_count(0), m_capacity(0), m_data(0) {}
+    : m_count(0), m_capacity(0), m_data(nullptr) {}
     ~QPODVector() { if (m_data) ::free(m_data); }
 
     const T &at(int idx) const {
@@ -87,11 +87,11 @@ public:
     void insert(int idx, const T &v) {
         if (m_count == m_capacity) {
             m_capacity += Increment;
-            m_data = (T *)realloc(m_data, m_capacity * sizeof(T));
+            m_data = (T *)realloc(static_cast<void *>(m_data), m_capacity * sizeof(T));
         }
         int moveCount = m_count - idx;
         if (moveCount)
-            ::memmove(m_data + idx + 1, m_data + idx, moveCount * sizeof(T));
+            ::memmove(static_cast<void *>(m_data + idx + 1), static_cast<const void *>(m_data + idx), moveCount * sizeof(T));
         m_count++;
         m_data[idx] = v;
     }
@@ -99,7 +99,7 @@ public:
     void reserve(int count) {
         if (count >= m_capacity) {
             m_capacity = (count + (Increment-1)) & (0xFFFFFFFF - Increment + 1);
-            m_data = (T *)realloc(m_data, m_capacity * sizeof(T));
+            m_data = (T *)realloc(static_cast<void *>(m_data), m_capacity * sizeof(T));
         }
     }
 
@@ -108,7 +108,7 @@ public:
         reserve(newSize);
         int moveCount = m_count - idx;
         if (moveCount)
-            ::memmove(m_data + idx + count,  m_data + idx,
+            ::memmove(static_cast<void *>(m_data + idx + count),  static_cast<const void *>(m_data + idx),
                       moveCount * sizeof(T));
         m_count = newSize;
     }
@@ -116,7 +116,7 @@ public:
     void remove(int idx, int count = 1) {
         int moveCount = m_count - (idx + count);
         if (moveCount)
-            ::memmove(m_data + idx, m_data + idx + count,
+            ::memmove(static_cast<void *>(m_data + idx), static_cast<const void *>(m_data + idx + count),
                       moveCount * sizeof(T));
         m_count -= count;
     }
@@ -154,7 +154,7 @@ public:
         other.m_data = m_data;
         m_count = 0;
         m_capacity = 0;
-        m_data = 0;
+        m_data = nullptr;
     }
 
     QPODVector<T,Increment> &operator<<(const T &v) { append(v); return *this; }

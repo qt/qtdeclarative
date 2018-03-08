@@ -91,7 +91,7 @@ public:
 
     struct VariantRef
     {
-        VariantRef() : a(0) {}
+        VariantRef() : a(nullptr) {}
         VariantRef(const VariantRef &r) : a(r.a) { if (a) a->addref(); }
         VariantRef(QQmlListModelWorkerAgent *_a) : a(_a) { if (a) a->addref(); }
         ~VariantRef() { if (a) a->release(); }
@@ -114,35 +114,12 @@ private:
     friend class QQuickWorkerScriptEnginePrivate;
     friend class QQmlListModel;
 
-    struct Change
-    {
-        int modelUid;
-        enum { Inserted, Removed, Moved, Changed } type;
-        int index; // Inserted/Removed/Moved/Changed
-        int count; // Inserted/Removed/Moved/Changed
-        int to;    // Moved
-        QVector<int> roles;
-    };
-
-    struct Data
-    {
-        QList<Change> changes;
-
-        void clearChange(int uid);
-        void insertChange(int uid, int index, int count);
-        void removeChange(int uid, int index, int count);
-        void moveChange(int uid, int index, int count, int to);
-        void changedChange(int uid, int index, int count, const QVector<int> &roles);
-    };
-    Data data;
-
     struct Sync : public QEvent {
-        Sync(const Data &d, QQmlListModel *l)
+        Sync(QQmlListModel *l)
             : QEvent(QEvent::User)
-            , data(d)
             , list(l)
         {}
-        Data data;
+        ~Sync();
         QQmlListModel *list;
     };
 

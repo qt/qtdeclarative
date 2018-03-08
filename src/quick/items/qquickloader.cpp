@@ -48,11 +48,13 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcTransient)
+
 static const QQuickItemPrivate::ChangeTypes watchedChanges
     = QQuickItemPrivate::Geometry | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
 
 QQuickLoaderPrivate::QQuickLoaderPrivate()
-    : item(0), object(0), component(0), itemContext(0), incubator(0), updatingSize(false),
+    : item(nullptr), object(nullptr), component(nullptr), itemContext(nullptr), incubator(nullptr), updatingSize(false),
       active(true), loadingFromSource(false), asynchronous(false)
 {
 }
@@ -60,7 +62,7 @@ QQuickLoaderPrivate::QQuickLoaderPrivate()
 QQuickLoaderPrivate::~QQuickLoaderPrivate()
 {
     delete itemContext;
-    itemContext = 0;
+    itemContext = nullptr;
     delete incubator;
     disposeInitialPropertyValues();
 }
@@ -94,7 +96,13 @@ void QQuickLoaderPrivate::clear()
         incubator->clear();
 
     delete itemContext;
-    itemContext = 0;
+    itemContext = nullptr;
+
+    // Prevent any bindings from running while waiting for deletion. Without
+    // this we may get transient errors from use of 'parent', for example.
+    QQmlContext *context = qmlContext(object);
+    if (context)
+        QQmlContextData::get(context)->invalidate();
 
     if (loadingFromSource && component) {
         // disconnect since we deleteLater
@@ -103,7 +111,7 @@ void QQuickLoaderPrivate::clear()
         QObject::disconnect(component, SIGNAL(progressChanged(qreal)),
                 q, SIGNAL(progressChanged()));
         component->deleteLater();
-        component = 0;
+        component = nullptr;
     }
     componentStrongReference.clear();
     source = QUrl();
@@ -114,13 +122,13 @@ void QQuickLoaderPrivate::clear()
 
         // We can't delete immediately because our item may have triggered
         // the Loader to load a different item.
-        item->setParentItem(0);
+        item->setParentItem(nullptr);
         item->setVisible(false);
-        item = 0;
+        item = nullptr;
     }
     if (object) {
         object->deleteLater();
-        object = 0;
+        object = nullptr;
     }
 }
 
@@ -348,8 +356,14 @@ void QQuickLoader::setActive(bool newVal)
         if (d->incubator) {
             d->incubator->clear();
             delete d->itemContext;
-            d->itemContext = 0;
+            d->itemContext = nullptr;
         }
+
+        // Prevent any bindings from running while waiting for deletion. Without
+        // this we may get transient errors from use of 'parent', for example.
+        QQmlContext *context = qmlContext(d->object);
+        if (context)
+            QQmlContextData::get(context)->invalidate();
 
         if (d->item) {
             QQuickItemPrivate *p = QQuickItemPrivate::get(d->item);
@@ -357,13 +371,13 @@ void QQuickLoader::setActive(bool newVal)
 
             // We can't delete immediately because our item may have triggered
             // the Loader to load a different item.
-            d->item->setParentItem(0);
+            d->item->setParentItem(nullptr);
             d->item->setVisible(false);
-            d->item = 0;
+            d->item = nullptr;
         }
         if (d->object) {
             d->object->deleteLater();
-            d->object = 0;
+            d->object = nullptr;
             emit itemChanged();
         }
         emit statusChanged();
@@ -485,7 +499,7 @@ void QQuickLoader::setSourceComponent(QQmlComponent *comp)
 
 void QQuickLoader::resetSourceComponent()
 {
-    setSourceComponent(0);
+    setSourceComponent(nullptr);
 }
 
 void QQuickLoader::loadFromSourceComponent()
@@ -642,7 +656,7 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
     if (obj) {
         QQml_setParent_noEvent(itemContext, obj);
         QQml_setParent_noEvent(obj, q);
-        itemContext = 0;
+        itemContext = nullptr;
     }
 
     if (initialPropertyValues.isUndefined())
@@ -650,7 +664,7 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
 
     QQmlComponentPrivate *d = QQmlComponentPrivate::get(component);
     Q_ASSERT(d && d->engine);
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(d->engine);
+    QV4::ExecutionEngine *v4 = d->engine->handle();
     Q_ASSERT(v4);
     QV4::Scope scope(v4);
     QV4::ScopedValue ipv(scope, initialPropertyValues.value());
@@ -672,6 +686,13 @@ void QQuickLoaderPrivate::incubatorStateChanged(QQmlIncubator::Status status)
     if (status == QQmlIncubator::Ready) {
         object = incubator->object();
         item = qmlobject_cast<QQuickItem*>(object);
+        if (!item) {
+            QQuickWindow *window = qmlobject_cast<QQuickWindow*>(object);
+            if (window) {
+                qCDebug(lcTransient) << window << "is transient for" << q->window();
+                window->setTransientParent(q->window());
+            }
+        }
         emit q->itemChanged();
         initResize();
         incubator->clear();
@@ -679,7 +700,7 @@ void QQuickLoaderPrivate::incubatorStateChanged(QQmlIncubator::Status status)
         if (!incubator->errors().isEmpty())
             QQmlEnginePrivate::warning(qmlEngine(q), incubator->errors());
         delete itemContext;
-        itemContext = 0;
+        itemContext = nullptr;
         delete incubator->object();
         source = QUrl();
         emit q->itemChanged();
@@ -814,6 +835,18 @@ void QQuickLoader::componentComplete()
         }
         d->load();
     }
+}
+
+void QQuickLoader::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    if (change == ItemSceneChange) {
+        QQuickWindow *loadedWindow = qmlobject_cast<QQuickWindow *>(item());
+        if (loadedWindow) {
+            qCDebug(lcTransient) << loadedWindow << "is transient for" << value.window;
+            loadedWindow->setTransientParent(value.window);
+        }
+    }
+    QQuickItem::itemChange(change, value);
 }
 
 /*!

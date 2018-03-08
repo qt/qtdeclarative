@@ -1,5 +1,7 @@
 TARGET     = QtQuickTest
 
+QMAKE_DOCS = $$PWD/doc/qtqmltest.qdocconf
+
 DEFINES += QT_NO_URL_CAST_FROM_STRING QT_NO_FOREACH
 QT = core testlib-private
 QT_PRIVATE = quick qml-private  gui core-private gui-private
@@ -12,12 +14,6 @@ qtHaveModule(widgets) {
     QT += widgets
     DEFINES += QT_QMLTEST_WITH_WIDGETS
 }
-
-# Install qmltestcase.prf into the Qt mkspecs so that "CONFIG += qmltestcase"
-# can be used in customer applications to build against QtQuickTest.
-feature.path = $$[QT_INSTALL_DATA]/mkspecs/features
-feature.files = $$PWD/features/qmltestcase.prf
-INSTALLS += feature
 
 SOURCES += \
     $$PWD/quicktest.cpp \

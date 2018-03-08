@@ -126,7 +126,7 @@ static qreal toDouble(const QChar *&str)
             val = -val;
     } else {
         bool ok = false;
-        val = qstrtod(temp, 0, &ok);
+        val = qstrtod(temp, nullptr, &ok);
     }
     return val;
 

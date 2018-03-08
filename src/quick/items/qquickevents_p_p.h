@@ -84,7 +84,7 @@ class QQuickKeyEvent : public QObject
 
 public:
     QQuickKeyEvent()
-        : event(QEvent::None, 0, 0)
+        : event(QEvent::None, 0, nullptr)
     {}
 
     void reset(QEvent::Type type, int key, Qt::KeyboardModifiers modifiers,
@@ -131,15 +131,18 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(bool wasHeld READ wasHeld)
     Q_PROPERTY(bool isClick READ isClick)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+    Q_REVISION(11) Q_PROPERTY(int flags READ flags)
 
 public:
     QQuickMouseEvent()
-      : _x(0), _y(0), _button(Qt::NoButton), _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
-      , _source(Qt::MouseEventNotSynthesized), _wasHeld(false), _isClick(false), _accepted(false)
+      : _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
+      , _wasHeld(false), _isClick(false), _accepted(false)
+      , _flags(Qt::MouseEventFlags(nullptr))
     {}
 
     void reset(qreal x, qreal y, Qt::MouseButton button, Qt::MouseButtons buttons,
-               Qt::KeyboardModifiers modifiers, bool isClick = false, bool wasHeld = false)
+               Qt::KeyboardModifiers modifiers, bool isClick = false, bool wasHeld = false,
+               Qt::MouseEventFlags flags = nullptr)
     {
         _x = x;
         _y = y;
@@ -150,6 +153,7 @@ public:
         _wasHeld = wasHeld;
         _isClick = isClick;
         _accepted = true;
+        _flags = flags;
     }
 
     qreal x() const { return _x; }
@@ -169,17 +173,18 @@ public:
 
     bool isAccepted() { return _accepted; }
     void setAccepted(bool accepted) { _accepted = accepted; }
-
+    int flags() const { return _flags; }
 private:
-    qreal _x;
-    qreal _y;
-    Qt::MouseButton _button;
+    qreal _x = 0;
+    qreal _y = 0;
+    Qt::MouseButton _button = Qt::NoButton;
     Qt::MouseButtons _buttons;
     Qt::KeyboardModifiers _modifiers;
-    Qt::MouseEventSource _source;
+    Qt::MouseEventSource _source = Qt::MouseEventNotSynthesized;
     bool _wasHeld : 1;
     bool _isClick : 1;
     bool _accepted : 1;
+    Qt::MouseEventFlags _flags;
 };
 
 class QQuickWheelEvent : public QObject
@@ -196,8 +201,7 @@ class QQuickWheelEvent : public QObject
 
 public:
     QQuickWheelEvent()
-      : _x(0), _y(0), _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
-      , _inverted(false), _accepted(false)
+      : _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
     {}
 
     void reset(qreal x, qreal y, const QPoint &angleDelta, const QPoint &pixelDelta,
@@ -224,14 +228,14 @@ public:
     void setAccepted(bool accepted) { _accepted = accepted; }
 
 private:
-    qreal _x;
-    qreal _y;
+    qreal _x = 0;
+    qreal _y = 0;
     QPoint _angleDelta;
     QPoint _pixelDelta;
     Qt::MouseButtons _buttons;
     Qt::KeyboardModifiers _modifiers;
-    bool _inverted;
-    bool _accepted;
+    bool _inverted = false;
+    bool _accepted = false;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
@@ -240,14 +244,13 @@ class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
-    QQuickCloseEvent()
-        : _accepted(true) {}
+    QQuickCloseEvent() {}
 
     bool isAccepted() { return _accepted; }
     void setAccepted(bool accepted) { _accepted = accepted; }
 
 private:
-    bool _accepted;
+    bool _accepted = true;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
@@ -306,7 +309,6 @@ public:
     void setExclusiveGrabber(QObject *exclusiveGrabber);
 
     QQuickItem *grabberItem() const;
-    Q_DECL_DEPRECATED QQuickItem *grabber() const { return grabberItem(); }
     void setGrabberItem(QQuickItem *exclusiveGrabber);
 
     QQuickPointerHandler *grabberPointerHandler() const;
@@ -390,12 +392,10 @@ public:
     QQuickPointerEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
       : QObject(parent)
       , m_device(device)
-      , m_event(nullptr)
-      , m_button(Qt::NoButton)
       , m_pressedButtons(Qt::NoButton)
-    { }
+    {}
 
-    virtual ~QQuickPointerEvent();
+    ~QQuickPointerEvent() override;
 
 public: // property accessors
     QQuickPointerDevice *device() const { return m_device; }
@@ -437,8 +437,8 @@ public: // helpers for C++ only (during event delivery)
 
 protected:
     QQuickPointerDevice *m_device;
-    QInputEvent *m_event; // original event as received by QQuickWindow
-    Qt::MouseButton m_button;
+    QInputEvent *m_event = nullptr; // original event as received by QQuickWindow
+    Qt::MouseButton m_button = Qt::NoButton;
     Qt::MouseButtons m_pressedButtons;
 
     Q_DISABLE_COPY(QQuickPointerEvent)
@@ -483,9 +483,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerTouchEvent : public QQuickPointerEvent
 public:
     QQuickPointerTouchEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
         : QQuickPointerEvent(parent, device)
-        , m_pointCount(0)
         , m_synthMouseEvent(QEvent::MouseMove, QPointF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier)
-    { }
+    {}
 
     QQuickPointerEvent *reset(QEvent *) override;
     void localize(QQuickItem *target) override;
@@ -511,7 +510,7 @@ public:
     QTouchEvent *asTouchEvent() const;
 
 private:
-    int m_pointCount;
+    int m_pointCount = 0;
     QVector<QQuickEventTouchPoint *> m_touchPoints;
     mutable QMouseEvent m_synthMouseEvent;
 
@@ -567,7 +566,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerDevice : public QObject
     Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId CONSTANT)
 
 public:
-    enum DeviceType {
+    enum DeviceType : qint16 {
         UnknownDevice = 0x0000,
         Mouse = 0x0001,
         TouchScreen = 0x0002,
@@ -575,25 +574,25 @@ public:
         Puck = 0x0008,
         Stylus = 0x0010,
         Airbrush = 0x0020,
-        AllDevices = 0x003F
+        AllDevices = 0x7FFF
     };
     Q_DECLARE_FLAGS(DeviceTypes, DeviceType)
     Q_ENUM(DeviceType)
     Q_FLAG(DeviceTypes)
 
-    enum PointerType {
+    enum PointerType : qint16 {
         GenericPointer = 0x0001,
         Finger = 0x0002,
         Pen = 0x0004,
         Eraser = 0x0008,
         Cursor = 0x0010,
-        AllPointerTypes = 0x001F
+        AllPointerTypes = 0x7FFF
     };
     Q_DECLARE_FLAGS(PointerTypes, PointerType)
     Q_ENUM(PointerType)
     Q_FLAG(PointerTypes)
 
-    enum CapabilityFlag {
+    enum CapabilityFlag : qint16 {
         Position    = QTouchDevice::Position,
         Area        = QTouchDevice::Area,
         Pressure    = QTouchDevice::Pressure,
@@ -611,7 +610,7 @@ public:
 
     DeviceType type() const { return m_deviceType; }
     PointerType pointerType() const { return m_pointerType; }
-    Capabilities capabilities() const { return m_capabilities; }
+    Capabilities capabilities() const { return static_cast<Capabilities>(m_capabilities); }
     bool hasCapability(CapabilityFlag cap) { return m_capabilities & cap; }
     int maximumTouchPoints() const { return m_maximumTouchPoints; }
     int buttonCount() const { return m_buttonCount; }
@@ -627,19 +626,21 @@ public:
 
 private:
     QQuickPointerDevice(DeviceType devType, PointerType pType, Capabilities caps, int maxPoints, int buttonCount, const QString &name, qint64 uniqueId = 0)
-      : m_deviceType(devType), m_pointerType(pType), m_capabilities(caps)
-      , m_maximumTouchPoints(maxPoints), m_buttonCount(buttonCount), m_name(name)
+      : m_deviceType(devType), m_pointerType(pType), m_capabilities(static_cast<qint16>(caps))
+      , m_maximumTouchPoints(static_cast<qint8>(maxPoints)), m_buttonCount(static_cast<qint8>(buttonCount)), m_name(name)
       , m_uniqueId(QPointingDeviceUniqueId::fromNumericId(uniqueId))
     {
     }
-    ~QQuickPointerDevice() { }
+    ~QQuickPointerDevice() override { }
 
 private:
+    // begin 64-bit field
     DeviceType m_deviceType;
     PointerType m_pointerType;
-    Capabilities m_capabilities;
-    int m_maximumTouchPoints;
-    int m_buttonCount;
+    qint16 m_capabilities;
+    qint8 m_maximumTouchPoints;
+    qint8 m_buttonCount;
+    // end 64-bit field
     QString m_name;
     QPointingDeviceUniqueId m_uniqueId;
     QVector<QQuickPointerHandler *> m_eventDeliveryTargets; // during delivery, handlers which have already seen the event

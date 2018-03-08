@@ -222,6 +222,7 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, CompiledData::JSC
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorOption option)
 {
     registerString(module->fileName);
+    registerString(module->finalUrl);
     for (Context *f : qAsConst(module->functions)) {
         registerString(f->name);
         for (int i = 0; i < f->arguments.size(); ++i)
@@ -394,8 +395,6 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.version = QV4_DATA_STRUCTURE_VERSION;
     unit.qtVersion = QT_VERSION;
     memset(unit.md5Checksum, 0, sizeof(unit.md5Checksum));
-    unit.architectureIndex = registerString(module->targetABI.isEmpty() ? QSysInfo::buildAbi() : module->targetABI);
-    unit.codeGeneratorIndex = registerString(codeGeneratorName);
     memset(unit.dependencyMD5Checksum, 0, sizeof(unit.dependencyMD5Checksum));
 
     quint32 nextOffset = sizeof(CompiledData::Unit);
@@ -448,6 +447,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     }
     unit.indexOfRootFunction = -1;
     unit.sourceFileIndex = getStringId(module->fileName);
+    unit.finalUrlIndex = getStringId(module->finalUrl);
     unit.sourceTimeStamp = module->sourceTimeStamp.isValid() ? module->sourceTimeStamp.toMSecsSinceEpoch() : 0;
     unit.nImports = 0;
     unit.offsetToImports = 0;

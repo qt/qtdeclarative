@@ -227,8 +227,8 @@ void QSGSoftwareInternalRectangleNode::paint(QPainter *painter)
 {
     //We can only check for a device pixel ratio change when we know what
     //paint device is being used.
-    if (painter->device()->devicePixelRatio() != m_devicePixelRatio) {
-        m_devicePixelRatio = painter->device()->devicePixelRatio();
+    if (!qFuzzyCompare(painter->device()->devicePixelRatioF(), m_devicePixelRatio)) {
+        m_devicePixelRatio = painter->device()->devicePixelRatioF();
         generateCornerPixmap();
     }
 
@@ -245,7 +245,7 @@ void QSGSoftwareInternalRectangleNode::paint(QPainter *painter)
         } else {
             //Rounded Rects and Rects with Borders
             //Avoids broken behaviors of QPainter::drawRect/roundedRect
-            QPixmap pixmap = QPixmap(m_rect.width() * m_devicePixelRatio, m_rect.height() * m_devicePixelRatio);
+            QPixmap pixmap = QPixmap(qRound(m_rect.width() * m_devicePixelRatio), qRound(m_rect.height() * m_devicePixelRatio));
             pixmap.fill(Qt::transparent);
             pixmap.setDevicePixelRatio(m_devicePixelRatio);
             QPainter pixmapPainter(&pixmap);
@@ -356,7 +356,7 @@ void QSGSoftwareInternalRectangleNode::paintRectangle(QPainter *painter, const Q
         } else {
 
             //blit 4 corners to border
-            int scaledRadius = radius * m_devicePixelRatio;
+            int scaledRadius = qRound(radius * m_devicePixelRatio);
             QRectF topLeftCorner(QPointF(rect.x(), rect.y()),
                                  QPointF(rect.x() + radius, rect.y() + radius));
             painter->drawPixmap(topLeftCorner, m_cornerPixmap, QRectF(0, 0, scaledRadius, scaledRadius));
@@ -416,7 +416,7 @@ void QSGSoftwareInternalRectangleNode::generateCornerPixmap()
     //Generate new corner Pixmap
     int radius = qFloor(qMin(qMin(m_rect.width(), m_rect.height()) * 0.5, m_radius));
 
-    m_cornerPixmap = QPixmap(radius * 2 * m_devicePixelRatio, radius * 2 * m_devicePixelRatio);
+    m_cornerPixmap = QPixmap(qRound(radius * 2 * m_devicePixelRatio), qRound(radius * 2 * m_devicePixelRatio));
     m_cornerPixmap.setDevicePixelRatio(m_devicePixelRatio);
     m_cornerPixmap.fill(Qt::transparent);
 

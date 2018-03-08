@@ -82,7 +82,7 @@ public:
     };
     Q_ENUM(PinchOrigin)
 
-    explicit QQuickPinchHandler(QObject *parent = 0);
+    explicit QQuickPinchHandler(QObject *parent = nullptr);
     ~QQuickPinchHandler();
 
     qreal minimumScale() const { return m_minimumScale; }
