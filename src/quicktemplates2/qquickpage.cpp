@@ -35,14 +35,14 @@
 ****************************************************************************/
 
 #include "qquickpage_p.h"
-#include "qquickcontrol_p_p.h"
+#include "qquickpane_p_p.h"
 #include "qquickpagelayout_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Page
-    \inherits Control
+    \inherits Pane
     \instantiates QQuickPage
     \inqmlmodule QtQuick.Controls
     \since 5.7
@@ -82,44 +82,19 @@ QT_BEGIN_NAMESPACE
     \sa ApplicationWindow, {Container Controls}
 */
 
-class QQuickPagePrivate : public QQuickControlPrivate
+class QQuickPagePrivate : public QQuickPanePrivate
 {
     Q_DECLARE_PUBLIC(QQuickPage)
 
 public:
-    QQuickPagePrivate();
-
-    QQuickItem *getContentItem() override;
-
-    qreal contentWidth;
-    qreal contentHeight;
     QString title;
     QScopedPointer<QQuickPageLayout> layout;
 };
 
-QQuickPagePrivate::QQuickPagePrivate()
-    : contentWidth(0),
-      contentHeight(0)
-{
-}
-
-QQuickItem *QQuickPagePrivate::getContentItem()
-{
-    Q_Q(QQuickPage);
-    if (QQuickItem *item = QQuickControlPrivate::getContentItem())
-        return item;
-    return new QQuickItem(q);
-}
-
 QQuickPage::QQuickPage(QQuickItem *parent)
-    : QQuickControl(*(new QQuickPagePrivate), parent)
+    : QQuickPane(*(new QQuickPagePrivate), parent)
 {
     Q_D(QQuickPage);
-    setFlag(ItemIsFocusScope);
-    setAcceptedMouseButtons(Qt::AllButtons);
-#if QT_CONFIG(cursor)
-    setCursor(Qt::ArrowCursor);
-#endif
     d->layout.reset(new QQuickPageLayout(this));
 }
 
@@ -232,136 +207,31 @@ void QQuickPage::setFooter(QQuickItem *footer)
     emit footerChanged();
 }
 
-/*!
-    \qmlproperty list<Object> QtQuick.Controls::Page::contentData
-    \default
-
-    This property holds the list of content data.
-
-    The list contains all objects that have been declared in QML as children
-    of the container.
-
-    \note Unlike \c contentChildren, \c contentData does include non-visual QML
-    objects.
-
-    \sa Item::data, contentChildren
-*/
-QQmlListProperty<QObject> QQuickPage::contentData()
-{
-    return QQmlListProperty<QObject>(contentItem(), nullptr,
-                                     QQuickItemPrivate::data_append,
-                                     QQuickItemPrivate::data_count,
-                                     QQuickItemPrivate::data_at,
-                                     QQuickItemPrivate::data_clear);
-}
-
-/*!
-    \qmlproperty list<Item> QtQuick.Controls::Page::contentChildren
-
-    This property holds the list of content children.
-
-    The list contains all items that have been declared in QML as children
-    of the page.
-
-    \note Unlike \c contentData, \c contentChildren does not include non-visual
-    QML objects.
-
-    \sa Item::children, contentData
-*/
-QQmlListProperty<QQuickItem> QQuickPage::contentChildren()
-{
-    return QQmlListProperty<QQuickItem>(contentItem(), nullptr,
-                                        QQuickItemPrivate::children_append,
-                                        QQuickItemPrivate::children_count,
-                                        QQuickItemPrivate::children_at,
-                                        QQuickItemPrivate::children_clear);
-}
-
-/*!
-    \qmlproperty real QtQuick.Controls::Page::contentWidth
-    \since QtQuick.Controls 2.1 (Qt 5.8)
-
-    This property holds the content width. It is used for calculating the total
-    implicit width of the page.
-
-    \sa contentHeight
-*/
-qreal QQuickPage::contentWidth() const
-{
-    Q_D(const QQuickPage);
-    return d->contentWidth;
-}
-
-void QQuickPage::setContentWidth(qreal width)
-{
-    Q_D(QQuickPage);
-    if (qFuzzyCompare(d->contentWidth, width))
-        return;
-
-    d->contentWidth = width;
-    emit contentWidthChanged();
-}
-
-/*!
-    \qmlproperty real QtQuick.Controls::Page::contentHeight
-    \since QtQuick.Controls 2.1 (Qt 5.8)
-
-    This property holds the content height. It is used for calculating the total
-    implicit height of the page.
-
-    \sa contentWidth
-*/
-qreal QQuickPage::contentHeight() const
-{
-    Q_D(const QQuickPage);
-    return d->contentHeight;
-}
-
-void QQuickPage::setContentHeight(qreal height)
-{
-    Q_D(QQuickPage);
-    if (qFuzzyCompare(d->contentHeight, height))
-        return;
-
-    d->contentHeight = height;
-    emit contentHeightChanged();
-}
-
 void QQuickPage::componentComplete()
 {
     Q_D(QQuickPage);
-    QQuickControl::componentComplete();
+    QQuickPane::componentComplete();
     d->layout->update();
-}
-
-void QQuickPage::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
-{
-    QQuickControl::contentItemChange(newItem, oldItem);
-    if (oldItem)
-        disconnect(oldItem, &QQuickItem::childrenChanged, this, &QQuickPage::contentChildrenChanged);
-    if (newItem)
-        connect(newItem, &QQuickItem::childrenChanged, this, &QQuickPage::contentChildrenChanged);
-    emit contentChildrenChanged();
 }
 
 void QQuickPage::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickPage);
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    QQuickPane::geometryChanged(newGeometry, oldGeometry);
     d->layout->update();
 }
 
 void QQuickPage::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
 {
     Q_D(QQuickPage);
-    QQuickControl::paddingChange(newPadding, oldPadding);
+    QQuickPane::paddingChange(newPadding, oldPadding);
     d->layout->update();
 }
 
 void QQuickPage::spacingChange(qreal newSpacing, qreal oldSpacing)
 {
     Q_D(QQuickPage);
-    QQuickControl::spacingChange(newSpacing, oldSpacing);
+    QQuickPane::spacingChange(newSpacing, oldSpacing);
     d->layout->update();
 }
 
@@ -374,7 +244,7 @@ QAccessible::Role QQuickPage::accessibleRole() const
 void QQuickPage::accessibilityActiveChanged(bool active)
 {
     Q_D(QQuickPage);
-    QQuickControl::accessibilityActiveChanged(active);
+    QQuickPane::accessibilityActiveChanged(active);
 
     if (active)
         setAccessibleName(d->title);

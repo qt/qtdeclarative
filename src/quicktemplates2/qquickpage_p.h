@@ -48,25 +48,22 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquickpane_p.h>
 #include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPagePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPage : public QQuickControl
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPage : public QQuickPane
 {
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
-    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
     // 2.1 (Qt 5.8)
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL REVISION 1)
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL REVISION 1)
-    Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
     explicit QQuickPage(QQuickItem *parent = nullptr);
@@ -80,29 +77,14 @@ public:
     QQuickItem *footer() const;
     void setFooter(QQuickItem *footer);
 
-    QQmlListProperty<QObject> contentData();
-    QQmlListProperty<QQuickItem> contentChildren();
-
-    // 2.1 (Qt 5.8)
-    qreal contentWidth() const;
-    void setContentWidth(qreal width);
-
-    qreal contentHeight() const;
-    void setContentHeight(qreal height);
-
 Q_SIGNALS:
     void titleChanged();
     void headerChanged();
     void footerChanged();
-    void contentChildrenChanged();
-    // 2.1 (Qt 5.8)
-    Q_REVISION(1) void contentWidthChanged();
-    Q_REVISION(1) void contentHeightChanged();
 
 protected:
     void componentComplete() override;
 
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
     void spacingChange(qreal newSpacing, qreal oldSpacing) override;

@@ -51,9 +51,6 @@ T.Page {
                              + (header && header.visible ? header.implicitHeight + spacing : 0)
                              + (footer && footer.visible ? footer.implicitHeight + spacing : 0))
 
-    contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
-    contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
-
     background: Rectangle {
         color: control.palette.window
     }

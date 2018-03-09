@@ -51,9 +51,6 @@ T.Page {
                              + (header && header.visible ? header.implicitHeight + spacing : 0)
                              + (footer && footer.visible ? footer.implicitHeight + spacing : 0))
 
-    contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
-    contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
-
     topPadding: background ? background.topPadding : 0
     leftPadding: background ? background.leftPadding : 0
     rightPadding: background ? background.rightPadding : 0
