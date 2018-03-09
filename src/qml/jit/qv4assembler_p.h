@@ -294,21 +294,38 @@ struct RegisterSizeDependentAssembler<JITAssembler, MacroAssembler, TargetPlatfo
 
     static void generateCJumpOnUndefined(JITAssembler *as,
                                   RelationalCondition cond, IR::Expr *right,
-                                  RegisterID scratchRegister, RegisterID tagRegister,
+                                  RegisterID scratchRegister, RegisterID varReg,
                                   IR::BasicBlock *nextBlock, IR::BasicBlock *currentBlock,
                                   IR::BasicBlock *trueBlock, IR::BasicBlock *falseBlock)
     {
-        Pointer tagAddr = as->loadAddress(scratchRegister, right);
-        as->load32(tagAddr, tagRegister);
-        Jump j = as->branch32(JITAssembler::invert(cond), tagRegister, TrustedImm32(0));
-        as->addPatch(falseBlock, j);
-
-        tagAddr.offset += 4;
-        as->load32(tagAddr, tagRegister);
-        const TrustedImm32 tag(QV4::Value::Managed_Type_Internal);
         Q_ASSERT(nextBlock == as->nextBlock());
         Q_UNUSED(nextBlock);
-        as->generateCJumpOnCompare(cond, tagRegister, tag, currentBlock, trueBlock, falseBlock);
+
+        const typename JITAssembler::TrustedImm32 undefinedTag(QV4::Value::Managed_Type_Internal);
+        const typename JITAssembler::TrustedImm32 undefinedValue(0);
+
+        typename JITAssembler::Pointer varAddr = as->loadAddress(scratchRegister, right);
+        typename JITAssembler::Pointer tagAddr = varAddr;
+        tagAddr.offset += 4;
+        const typename JITAssembler::RegisterID tagReg = varReg;
+
+        if (cond == JITAssembler::Equal) {
+            as->load32(tagAddr, tagReg);
+            // if the tags are not the same, we can fail already:
+            Jump j = as->branch32(JITAssembler::NotEqual, tagReg, undefinedTag);
+            as->addPatch(falseBlock, j);
+            as->load32(varAddr, varReg);
+            // ok, tags are the same, so if the values are the same then we're done
+            as->generateCJumpOnCompare(JITAssembler::Equal, varReg, undefinedValue, currentBlock, trueBlock, falseBlock);
+        } else { // strict not equal:
+            as->load32(varAddr, varReg);
+            // if the values are not the same, we're done
+            Jump j = as->branch32(JITAssembler::NotEqual, varReg, undefinedValue);
+            as->addPatch(trueBlock, j);
+            as->load32(tagAddr, tagReg);
+            // ok, so the values are the same, now check the tags
+            as->generateCJumpOnCompare(JITAssembler::NotEqual, tagReg, undefinedTag, currentBlock, trueBlock, falseBlock);
+        }
     }
 
     static void convertVarToSInt32(JITAssembler *as, IR::Expr *source, IR::Expr *target)
