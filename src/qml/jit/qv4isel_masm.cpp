@@ -1869,24 +1869,41 @@ bool InstructionSelection::visitCJumpStrictUndefined(IR::Binop *binop,
         return true;
     }
 
+    const Assembler::RegisterID varReg = Assembler::ReturnValueRegister;
+#ifdef QV4_USE_64_BIT_VALUE_ENCODING
     Assembler::RelationalCondition cond = binop->op == IR::OpStrictEqual ? Assembler::Equal
                                                                          : Assembler::NotEqual;
-    const Assembler::RegisterID tagReg = Assembler::ReturnValueRegister;
-#ifdef QV4_USE_64_BIT_VALUE_ENCODING
-    Assembler::Pointer addr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
-    _as->load64(addr, tagReg);
-    const Assembler::TrustedImm64 tag(0);
+    Assembler::Pointer varAddr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
+    _as->load64(varAddr, varReg);
+    const Assembler::TrustedImm64 undefined(0);
+    _as->generateCJumpOnCompare(cond, varReg, undefined, _block, trueBlock, falseBlock);
 #else // !QV4_USE_64_BIT_VALUE_ENCODING
-    Assembler::Pointer tagAddr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
-    _as->load32(tagAddr, tagReg);
-    Assembler::Jump j = _as->branch32(Assembler::invert(cond), tagReg, Assembler::TrustedImm32(0));
-    _as->addPatch(falseBlock, j);
+    const Assembler::TrustedImm32 undefinedTag(QV4::Value::Managed_Type_Internal);
+    const Assembler::TrustedImm32 undefinedValue(0);
 
+    Assembler::Pointer varAddr = _as->loadAddress(Assembler::ScratchRegister, varSrc);
+    Assembler::Pointer tagAddr = varAddr;
     tagAddr.offset += 4;
-    _as->load32(tagAddr, tagReg);
-    const Assembler::TrustedImm32 tag(QV4::Value::Managed_Type_Internal);
+    const Assembler::RegisterID tagReg = varReg;
+
+    if (binop->op == IR::OpStrictEqual) {
+        _as->load32(tagAddr, tagReg);
+        // if the tags are not the same, we can fail already:
+        Assembler::Jump j = _as->branch32(Assembler::NotEqual, tagReg, undefinedTag);
+        _as->addPatch(falseBlock, j);
+        _as->load32(varAddr, varReg);
+        // ok, tags are the same, so if the values are the same then we're done
+        _as->generateCJumpOnCompare(Assembler::Equal, varReg, undefinedValue, _block, trueBlock, falseBlock);
+    } else { // strict not equal:
+        _as->load32(varAddr, varReg);
+        // if the values are not the same, we're done
+        Assembler::Jump j = _as->branch32(Assembler::NotEqual, varReg, undefinedValue);
+        _as->addPatch(trueBlock, j);
+        _as->load32(tagAddr, tagReg);
+        // ok, so the values are the same, now check the tags
+        _as->generateCJumpOnCompare(Assembler::NotEqual, tagReg, undefinedTag, _block, trueBlock, falseBlock);
+    }
 #endif
-    _as->generateCJumpOnCompare(cond, tagReg, tag, _block, trueBlock, falseBlock);
     return true;
 }
 

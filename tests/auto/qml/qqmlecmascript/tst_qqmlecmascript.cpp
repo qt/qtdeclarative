@@ -334,6 +334,7 @@ private slots:
     void qtbug_54589();
     void qtbug_54687();
     void stringify_qtbug_50592();
+    void jumpStrictNotEqualUndefined();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8059,6 +8060,26 @@ void tst_qqmlecmascript::stringify_qtbug_50592()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj != 0);
     QCOMPARE(obj->property("source").toString(), QString::fromLatin1("http://example.org/some_nonexistant_image.png"));
+}
+
+void tst_qqmlecmascript::jumpStrictNotEqualUndefined()
+{
+    QJSEngine engine;
+    QJSValue v = engine.evaluate(QString::fromLatin1(
+        "var ok = 0\n"
+        "var foo = 0\n"
+        "if (foo !== void 1)\n"
+        "    ++ok;\n"
+        "else\n"
+        "    --ok;\n"
+        "if (foo === void 1)\n"
+        "    --ok;\n"
+        "else\n"
+        "    ++ok;\n"
+        "ok\n"
+    ));
+    QVERIFY(!v.isError());
+    QCOMPARE(v.toInt(), 2);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
