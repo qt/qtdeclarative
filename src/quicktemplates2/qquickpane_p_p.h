@@ -49,12 +49,13 @@
 //
 
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPane;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPanePrivate : public QQuickControlPrivate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPanePrivate : public QQuickControlPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickPane)
 
@@ -63,6 +64,21 @@ public:
 
     QQuickItem *getContentItem() override;
 
+    void addImplicitSizeListener(QQuickItem *item);
+    void removeImplicitSizeListener(QQuickItem *item);
+
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
+
+    void contentChildrenChange();
+
+    bool updateContentWidth(QQuickItem *item);
+    bool updateContentHeight(QQuickItem *item);
+    void updateContentSize(QQuickItem *item);
+
+    bool hasContentWidth;
+    bool hasContentHeight;
     qreal contentWidth;
     qreal contentHeight;
 };

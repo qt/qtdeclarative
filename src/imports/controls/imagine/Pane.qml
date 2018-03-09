@@ -45,9 +45,6 @@ T.Pane {
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
 
-    contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
-    contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
-
     topPadding: background ? background.topPadding : 0
     leftPadding: background ? background.leftPadding : 0
     rightPadding: background ? background.rightPadding : 0
