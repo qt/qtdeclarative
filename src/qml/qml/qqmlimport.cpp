@@ -735,7 +735,8 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                                      int *vmajor, int *vminor, QQmlType *type_return, QString *base,
                                      bool *typeRecursionDetected,
                                      QQmlType::RegistrationType registrationType,
-                                     QQmlImport::RecursionRestriction recursionRestriction) const
+                                     QQmlImport::RecursionRestriction recursionRestriction,
+                                     QList<QQmlError> *errors) const
 {
     if (majversion >= 0 && minversion >= 0) {
         QQmlType t = QQmlMetaType::qmlType(type, uri, majversion, minversion);
@@ -818,8 +819,19 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
         };
         for (uint i = 0; i < sizeof(urlsToTry) / sizeof(urlsToTry[0]); ++i) {
             const QString url = urlsToTry[i];
-            exists = !typeLoader->absoluteFilePath(QQmlFile::urlToLocalFileOrQrc(url)).isEmpty();
+            const QString localPath = QQmlFile::urlToLocalFileOrQrc(url);
+            exists = !typeLoader->absoluteFilePath(localPath).isEmpty();
             if (exists) {
+                // don't let function.qml confuse the use of "new Function(...)" for example.
+                if (!QQml_isFileCaseCorrect(localPath)) {
+                    exists = false;
+                    if (errors) {
+                        QQmlError caseError;
+                        caseError.setDescription(QLatin1String("File name case mismatch"));
+                        errors->append(caseError);
+                    }
+                    break;
+                }
                 qmlUrl = url;
                 break;
             }
@@ -906,7 +918,7 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
     for (int i=0; i<imports.count(); ++i) {
         const QQmlImportInstance *import = imports.at(i);
         if (import->resolveType(typeLoader, type, vmajor, vminor, type_return, base,
-                                &typeRecursionDetected, registrationType, recursionRestriction)) {
+                                &typeRecursionDetected, registrationType, recursionRestriction, errors)) {
             if (qmlCheckTypes()) {
                 // check for type clashes
                 for (int j = i+1; j<imports.count(); ++j) {

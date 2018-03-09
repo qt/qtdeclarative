@@ -94,7 +94,8 @@ struct QQmlImportInstance
                      int *vmajor, int *vminor, QQmlType* type_return,
                      QString *base = nullptr, bool *typeRecursionDetected = nullptr,
                      QQmlType::RegistrationType = QQmlType::AnyRegistrationType,
-                     QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion) const;
+                     QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion,
+                     QList<QQmlError> *errors = nullptr) const;
 };
 
 class QQmlImportNamespace

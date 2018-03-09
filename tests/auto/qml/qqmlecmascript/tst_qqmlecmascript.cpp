@@ -6367,6 +6367,14 @@ void tst_qqmlecmascript::include()
     delete o;
     }
 
+    // Including file with ".pragma library", shadowing a global var
+    {
+    QQmlComponent component(&engine, testFileUrl("include_pragma_shadow.qml"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("result").toBool(), true);
+    }
+
     // Remote - error
     {
     TestHTTPServer server;
