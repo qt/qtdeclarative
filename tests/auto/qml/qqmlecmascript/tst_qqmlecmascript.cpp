@@ -351,6 +351,7 @@ private slots:
     void shadowedFunctionName();
     void anotherNaN();
     void callPropertyOnUndefined();
+    void jumpStrictNotEqualUndefined();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8477,6 +8478,26 @@ void tst_qqmlecmascript::callPropertyOnUndefined()
             "}\n"
     ));
     QVERIFY(!v.isError()); // well, more importantly: this shouldn't fail on an assert.
+}
+
+void tst_qqmlecmascript::jumpStrictNotEqualUndefined()
+{
+    QJSEngine engine;
+    QJSValue v = engine.evaluate(QString::fromLatin1(
+        "var ok = 0\n"
+        "var foo = 0\n"
+        "if (foo !== void 1)\n"
+        "    ++ok;\n"
+        "else\n"
+        "    --ok;\n"
+        "if (foo === void 1)\n"
+        "    --ok;\n"
+        "else\n"
+        "    ++ok;\n"
+        "ok\n"
+    ));
+    QVERIFY(!v.isError());
+    QCOMPARE(v.toInt(), 2);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
