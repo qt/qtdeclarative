@@ -33,6 +33,7 @@
 #include <QProcess>
 #include <QLibraryInfo>
 #include <QSysInfo>
+#include <QLoggingCategory>
 #include <private/qqmlcomponent_p.h>
 
 class tst_qmlcachegen: public QObject
@@ -48,6 +49,7 @@ private slots:
     void errorOnArgumentsInSignalHandler();
     void aheadOfTimeCompilation();
     void functionExpressions();
+    void versionChecksForAheadOfTimeUnits();
 
     void workerScripts();
 };
@@ -278,6 +280,50 @@ void tst_qmlcachegen::aheadOfTimeCompilation()
     QVariant result;
     QMetaObject::invokeMethod(obj.data(), "runTest", Q_RETURN_ARG(QVariant, result));
     QCOMPARE(result.toInt(), 42);
+}
+
+static QQmlPrivate::CachedQmlUnit *temporaryModifiedCachedUnit = nullptr;
+
+void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
+{
+    QVERIFY(QFile::exists(":/versionchecks.qml"));
+    QCOMPARE(QFileInfo(":/versionchecks.qml").size(), 0);
+
+    Q_ASSERT(!temporaryModifiedCachedUnit);
+    QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
+    const QV4::CompiledData::Unit *originalUnit = QQmlMetaType::findCachedCompilationUnit(QUrl("qrc:/versionchecks.qml"), &error);
+    QVERIFY(originalUnit);
+    QV4::CompiledData::Unit *tweakedUnit = (QV4::CompiledData::Unit *)malloc(originalUnit->unitSize);
+    memcpy(reinterpret_cast<void *>(tweakedUnit), reinterpret_cast<const void *>(originalUnit), originalUnit->unitSize);
+    tweakedUnit->version = QV4_DATA_STRUCTURE_VERSION - 1;
+    temporaryModifiedCachedUnit = new QQmlPrivate::CachedQmlUnit{tweakedUnit, nullptr, nullptr};
+
+    auto testHandler = [](const QUrl &url) -> const QQmlPrivate::CachedQmlUnit * {
+        if (url == QUrl("qrc:/versionchecks.qml"))
+            return temporaryModifiedCachedUnit;
+        return nullptr;
+    };
+    QQmlMetaType::prependCachedUnitLookupFunction(testHandler);
+
+    {
+        QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
+        QVERIFY(!QQmlMetaType::findCachedCompilationUnit(QUrl("qrc:/versionchecks.qml"), &error));
+        QCOMPARE(error, QQmlMetaType::CachedUnitLookupError::VersionMismatch);
+    }
+
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl("qrc:/versionchecks.qml"));
+        QCOMPARE(component.status(), QQmlComponent::Error);
+        QCOMPARE(component.errorString(), QString("qrc:/versionchecks.qml:-1 File was compiled ahead of time with an incompatible version of Qt and the original file cannot be found. Please recompile\n"));
+    }
+
+    Q_ASSERT(temporaryModifiedCachedUnit);
+    free(const_cast<QV4::CompiledData::Unit *>(temporaryModifiedCachedUnit->qmlData));
+    delete temporaryModifiedCachedUnit;
+    temporaryModifiedCachedUnit = nullptr;
+
+    QQmlMetaType::removeCachedUnitLookupFunction(testHandler);
 }
 
 void tst_qmlcachegen::workerScripts()

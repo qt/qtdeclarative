@@ -8,4 +8,6 @@ workerscripts_test.files = worker.js worker.qml
 workerscripts_test.prefix = /workerscripts
 RESOURCES += workerscripts_test
 
+RESOURCES += versionchecks.qml
+
 QT += core-private qml-private testlib

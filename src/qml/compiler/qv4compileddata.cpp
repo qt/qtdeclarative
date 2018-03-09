@@ -755,6 +755,44 @@ void Unit::generateChecksum()
 #endif
 }
 
+bool Unit::verifyHeader(QDateTime expectedSourceTimeStamp, QString *errorString) const
+{
+#ifndef V4_BOOTSTRAP
+    if (strncmp(magic, CompiledData::magic_str, sizeof(magic))) {
+        *errorString = QStringLiteral("Magic bytes in the header do not match");
+        return false;
+    }
+
+    if (version != quint32(QV4_DATA_STRUCTURE_VERSION)) {
+        *errorString = QString::fromUtf8("V4 data structure version mismatch. Found %1 expected %2").arg(version, 0, 16).arg(QV4_DATA_STRUCTURE_VERSION, 0, 16);
+        return false;
+    }
+
+    if (qtVersion != quint32(QT_VERSION)) {
+        *errorString = QString::fromUtf8("Qt version mismatch. Found %1 expected %2").arg(qtVersion, 0, 16).arg(QT_VERSION, 0, 16);
+        return false;
+    }
+
+    if (sourceTimeStamp) {
+        // Files from the resource system do not have any time stamps, so fall back to the application
+        // executable.
+        if (!expectedSourceTimeStamp.isValid())
+            expectedSourceTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
+
+        if (expectedSourceTimeStamp.isValid() && expectedSourceTimeStamp.toMSecsSinceEpoch() != sourceTimeStamp) {
+            *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
+            return false;
+        }
+    }
+
+    return true;
+#else
+    Q_UNUSED(expectedSourceTimeStamp)
+    Q_UNUSED(errorString)
+    return false;
+#endif
+}
+
 }
 
 }

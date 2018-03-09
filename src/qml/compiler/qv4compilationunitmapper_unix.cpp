@@ -73,7 +73,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         return nullptr;
     }
 
-    if (!verifyHeader(&header, sourceTimeStamp, errorString))
+    if (!header.verifyHeader(sourceTimeStamp, errorString))
         return nullptr;
 
     // Data structure and qt version matched, so now we can access the rest of the file safely.

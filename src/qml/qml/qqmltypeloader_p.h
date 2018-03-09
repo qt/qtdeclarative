@@ -140,11 +140,13 @@ public:
         QString readAll(QString *error) const;
         QDateTime sourceTimeStamp() const;
         bool exists() const;
+        bool isEmpty() const;
     private:
         friend class QQmlDataBlob;
         friend class QQmlTypeLoader;
         QString inlineSourceCode;
         QFileInfo fileInfo;
+        bool hasInlineSourceCode = false;
     };
 
 protected:
@@ -271,6 +273,8 @@ public:
 
         const QQmlImports &imports() const { return m_importCache; }
 
+        void setCachedUnitStatus(QQmlMetaType::CachedUnitLookupError status) { m_cachedUnitStatus = status; }
+
     protected:
         bool addImport(const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
 
@@ -293,6 +297,7 @@ public:
         QQmlImports m_importCache;
         QHash<const QV4::CompiledData::Import*, int> m_unresolvedImports;
         QList<QQmlQmldirData *> m_qmldirs;
+        QQmlMetaType::CachedUnitLookupError m_cachedUnitStatus = QQmlMetaType::CachedUnitLookupError::NoError;
     };
 
     QQmlTypeLoader(QQmlEngine *);

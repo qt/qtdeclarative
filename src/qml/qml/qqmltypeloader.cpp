@@ -1259,6 +1259,7 @@ void QQmlTypeLoader::setData(QQmlDataBlob *blob, const QByteArray &data)
     QML_MEMORY_SCOPE_URL(blob->url());
     QQmlDataBlob::SourceCodeData d;
     d.inlineSourceCode = QString::fromUtf8(data);
+    d.hasInlineSourceCode = true;
     setData(blob, d);
 }
 
@@ -1670,9 +1671,11 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
         typeData = new QQmlTypeData(url, this);
         // TODO: if (compiledData == 0), is it safe to omit this insertion?
         m_typeCache.insert(url, typeData);
-        if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(typeData->url())) {
+        QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
+        if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(typeData->url(), &error)) {
             QQmlTypeLoader::loadWithCachedUnit(typeData, cachedUnit, mode);
         } else {
+            typeData->setCachedUnitStatus(error);
             QQmlTypeLoader::load(typeData, mode);
         }
     } else if ((mode == PreferSynchronous || mode == Synchronous) && QQmlFile::isSynchronous(url)) {
@@ -1727,9 +1730,11 @@ QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &url)
         scriptBlob = new QQmlScriptBlob(url, this);
         m_scriptCache.insert(url, scriptBlob);
 
-        if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(scriptBlob->url())) {
+        QQmlMetaType::CachedUnitLookupError error;
+        if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(scriptBlob->url(), &error)) {
             QQmlTypeLoader::loadWithCachedUnit(scriptBlob, cachedUnit);
         } else {
+            scriptBlob->setCachedUnitStatus(error);
             QQmlTypeLoader::load(scriptBlob);
         }
     }
@@ -2428,8 +2433,13 @@ void QQmlTypeData::dataReceived(const SourceCodeData &data)
     if (isError())
         return;
 
-    if (!m_backupSourceCode.exists()) {
-        setError(QQmlTypeLoader::tr("No such file or directory"));
+    if (!m_backupSourceCode.exists() || m_backupSourceCode.isEmpty()) {
+        if (m_cachedUnitStatus == QQmlMetaType::CachedUnitLookupError::VersionMismatch)
+            setError(QQmlTypeLoader::tr("File was compiled ahead of time with an incompatible version of Qt and the original file cannot be found. Please recompile"));
+        else if (!m_backupSourceCode.exists())
+            setError(QQmlTypeLoader::tr("No such file or directory"));
+        else
+            setError(QQmlTypeLoader::tr("File is empty"));
         return;
     }
 
@@ -2981,6 +2991,13 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         }
     }
 
+    if (!data.exists()) {
+        if (m_cachedUnitStatus == QQmlMetaType::CachedUnitLookupError::VersionMismatch)
+            setError(QQmlTypeLoader::tr("File was compiled ahead of time with an incompatible version of Qt and the original file cannot be found. Please recompile"));
+        else
+            setError(QQmlTypeLoader::tr("No such file or directory"));
+        return;
+    }
 
     QmlIR::Document irUnit(isDebugging());
 
@@ -3178,7 +3195,7 @@ void QQmlQmldirData::initializeFromCachedUnit(const QV4::CompiledData::Unit *)
 QString QQmlDataBlob::SourceCodeData::readAll(QString *error) const
 {
     error->clear();
-    if (!inlineSourceCode.isEmpty())
+    if (hasInlineSourceCode)
         return inlineSourceCode;
 
     QFile f(fileInfo.absoluteFilePath());
@@ -3205,7 +3222,7 @@ QString QQmlDataBlob::SourceCodeData::readAll(QString *error) const
 
 QDateTime QQmlDataBlob::SourceCodeData::sourceTimeStamp() const
 {
-    if (!inlineSourceCode.isEmpty())
+    if (hasInlineSourceCode)
         return QDateTime();
 
     QDateTime timeStamp = fileInfo.lastModified();
@@ -3220,9 +3237,16 @@ QDateTime QQmlDataBlob::SourceCodeData::sourceTimeStamp() const
 
 bool QQmlDataBlob::SourceCodeData::exists() const
 {
-    if (!inlineSourceCode.isEmpty())
+    if (hasInlineSourceCode)
         return true;
     return fileInfo.exists();
+}
+
+bool QQmlDataBlob::SourceCodeData::isEmpty() const
+{
+    if (hasInlineSourceCode)
+        return inlineSourceCode.isEmpty();
+    return fileInfo.size() == 0;
 }
 
 QT_END_NAMESPACE

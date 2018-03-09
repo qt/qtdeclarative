@@ -727,6 +727,8 @@ struct Unit
 
     quint32_le padding;
 
+    bool verifyHeader(QDateTime expectedSourceTimeStamp, QString *errorString) const;
+
     const Import *importAt(int idx) const {
         return reinterpret_cast<const Import*>((reinterpret_cast<const char *>(this)) + offsetToImports + idx * sizeof(Import));
     }
