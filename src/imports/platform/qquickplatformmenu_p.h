@@ -189,6 +189,8 @@ private Q_SLOTS:
     void updateIcon();
 
 private:
+    void unparentSubmenus();
+
     bool m_complete;
     bool m_enabled;
     bool m_visible;

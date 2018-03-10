@@ -48,6 +48,7 @@ QT_BEGIN_NAMESPACE
     \since 5.7
     \ingroup qtquickcontrols2-navigation
     \ingroup qtquickcontrols2-containers
+    \ingroup qtquickcontrols2-focusscopes
     \brief Allows the user to switch between different views or subtasks.
 
     TabBar provides a tab-based navigation model.
@@ -90,7 +91,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-tabbar-flickable.qml 1
 
-    \sa TabButton, {Customizing TabBar}, {Navigation Controls}, {Container Controls}
+    \sa TabButton, {Customizing TabBar}, {Navigation Controls}, {Container Controls},
+        {Focus Management in Qt Quick Controls 2}
 */
 
 class QQuickTabBarPrivate : public QQuickContainerPrivate

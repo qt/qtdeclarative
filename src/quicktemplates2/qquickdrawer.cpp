@@ -319,12 +319,17 @@ bool QQuickDrawerPrivate::startDrag(QEvent *event)
     return false;
 }
 
+static inline bool keepGrab(QQuickItem *item)
+{
+    return item->keepMouseGrab() || item->keepTouchGrab();
+}
+
 bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickDrawer);
     handleMouseEvent(item, event);
 
-    if (!window || !interactive || popupItem->keepMouseGrab() || popupItem->keepTouchGrab())
+    if (!window || !interactive || keepGrab(popupItem) || keepGrab(item))
         return false;
 
     const QPointF movePoint = event->windowPos();
@@ -352,12 +357,9 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
     }
 
     if (overThreshold) {
-        QQuickItem *grabber = window->mouseGrabberItem();
-        if (!grabber || !grabber->keepMouseGrab()) {
-            popupItem->grabMouse();
-            popupItem->setKeepMouseGrab(true);
-            offset = offsetAt(movePoint);
-        }
+        popupItem->grabMouse();
+        popupItem->setKeepMouseGrab(true);
+        offset = offsetAt(movePoint);
     }
 
     return overThreshold;
@@ -369,7 +371,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
     Q_Q(QQuickDrawer);
     bool handled = handleTouchEvent(item, event);
 
-    if (!window || !interactive || popupItem->keepTouchGrab() || !event->touchPointStates().testFlag(Qt::TouchPointMoved))
+    if (!window || !interactive || keepGrab(popupItem) || keepGrab(item) || !event->touchPointStates().testFlag(Qt::TouchPointMoved))
         return handled;
 
     bool overThreshold = false;

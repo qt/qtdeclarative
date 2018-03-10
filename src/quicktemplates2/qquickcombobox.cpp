@@ -63,6 +63,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
+    \ingroup qtquickcontrols2-focusscopes
     \brief Combined button and popup list for selecting options.
 
     \image qtquickcontrols2-combobox.gif
@@ -133,7 +134,7 @@ QT_BEGIN_NAMESPACE
     \l textRole is not defined, ComboBox is unable to visualize it and throws a
     \c {ReferenceError: modelData is not defined}.
 
-    \sa {Customizing ComboBox}, {Input Controls}
+    \sa {Customizing ComboBox}, {Input Controls}, {Focus Management in Qt Quick Controls 2}
 */
 
 /*!

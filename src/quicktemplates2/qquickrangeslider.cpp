@@ -50,6 +50,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
+    \ingroup qtquickcontrols2-focusscopes
     \brief Used to select a range of values by sliding two handles along a track.
 
     \image qtquickcontrols2-rangeslider.gif
@@ -85,7 +86,8 @@ QT_BEGIN_NAMESPACE
     RangeSlider. In the example above, \l {first.visualPosition} will be \c 0.24
     in a left-to-right application, and \c 0.76 in a right-to-left application.
 
-    \sa {Customizing RangeSlider}, {Input Controls}
+    \sa {Customizing RangeSlider}, {Input Controls},
+        {Focus Management in Qt Quick Controls 2}
 */
 
 class QQuickRangeSliderNodePrivate : public QObjectPrivate

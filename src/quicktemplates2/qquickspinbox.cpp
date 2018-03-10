@@ -59,6 +59,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup input
+    \ingroup qtquickcontrols2-focusscopes
     \brief Allows the user to select from a set of preset values.
 
     \image qtquickcontrols2-spinbox.png
@@ -91,7 +92,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 
     \snippet qtquickcontrols2-spinbox-double.qml 1
 
-    \sa Tumbler, {Customizing SpinBox}
+    \sa Tumbler, {Customizing SpinBox}, {Focus Management in Qt Quick Controls 2}
 */
 
 /*!

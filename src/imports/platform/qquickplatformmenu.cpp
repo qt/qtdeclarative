@@ -100,6 +100,68 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    \section2 Submenus
+
+    To create submenus, declare a Menu as a child of another Menu:
+
+    \qml
+    Menu {
+        title: qsTr("Edit")
+
+        Menu {
+            title: qsTr("Advanced")
+
+            MenuItem {
+                text: qsTr("Auto-indent Selection")
+                onTriggered: autoIndentSelection()
+            }
+
+            MenuItem {
+                text: qsTr("Rewrap Paragraph")
+                onTriggered: rewrapParagraph()
+            }
+        }
+    }
+    \endqml
+
+    \section2 Dynamically Generating Menu Items
+
+    It is possible to dynamically generate menu items. One of the easiest ways
+    to do so is with \l Instantiator. For example, to implement a
+    "Recent Files" submenu, where the items are based on a list of files stored
+    in settings, the following code could be used:
+
+    \qml
+    Menu {
+        title: qsTr("File")
+
+        Menu {
+            id: recentFilesSubMenu
+            title: qsTr("Recent Files")
+            enabled: recentFilesInstantiator.count > 0
+
+            Instantiator {
+                id: recentFilesInstantiator
+                model: settings.recentFiles
+                delegate: MenuItem {
+                    text: settings.displayableFilePath(modelData)
+                    onTriggered: loadFile(modelData)
+                }
+
+                onObjectAdded: recentFilesSubMenu.insertItem(index, object)
+                onObjectRemoved: recentFilesSubMenu.removeItem(object)
+            }
+
+            MenuSeparator {}
+
+            MenuItem {
+                text: qsTr("Clear Recent Files")
+                onTriggered: settings.clearRecentFiles()
+            }
+        }
+    }
+    \endqml
+
     \section2 Availability
 
     A native platform menu is currently available on the following platforms:
@@ -154,15 +216,22 @@ QQuickPlatformMenu::~QQuickPlatformMenu()
         m_menuBar->removeMenu(this);
     if (m_parentMenu)
         m_parentMenu->removeMenu(this);
+
+    unparentSubmenus();
+
+    delete m_iconLoader;
+    m_iconLoader = nullptr;
+    delete m_handle;
+    m_handle = nullptr;
+}
+
+void QQuickPlatformMenu::unparentSubmenus()
+{
     for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
         if (QQuickPlatformMenu *subMenu = item->subMenu())
             subMenu->setParentMenu(nullptr);
         item->setMenu(nullptr);
     }
-    delete m_iconLoader;
-    m_iconLoader = nullptr;
-    delete m_handle;
-    m_handle = nullptr;
 }
 
 QPlatformMenu *QQuickPlatformMenu::handle() const
@@ -214,6 +283,10 @@ void QQuickPlatformMenu::destroy()
 {
     if (!m_handle)
         return;
+
+    // Ensure that all submenus are unparented before we are destroyed,
+    // so that they don't try to access a destroyed menu.
+    unparentSubmenus();
 
     delete m_handle;
     m_handle = nullptr;
@@ -459,6 +532,9 @@ void QQuickPlatformMenu::setTitle(const QString &title)
 {
     if (m_title == title)
         return;
+
+    if (m_menuItem)
+        m_menuItem->setText(title);
 
     m_title = title;
     sync();
