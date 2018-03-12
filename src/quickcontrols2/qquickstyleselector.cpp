@@ -40,33 +40,16 @@
 
 #include "qquickstyleselector_p.h"
 #include "qquickstyleselector_p_p.h"
-#include "qquickstyle.h"
-#include "qquickstyle_p.h"
 
-#include <QtCore/qdir.h>
-#include <QtCore/qfile.h>
 #include <QtCore/qfileinfo.h>
-#include <QtCore/qsysinfo.h>
 #include <QtCore/qlocale.h>
-#include <QtQml/qqmlfile.h>
-
 #include <QtCore/private/qfileselector_p.h>
-#include <QtGui/private/qguiapplication_p.h>
 
 QT_BEGIN_NAMESPACE
 
-static bool isLocalScheme(const QString &scheme)
-{
-    bool local = scheme == QLatin1String("qrc");
-#ifdef Q_OS_ANDROID
-    local |= scheme == QLatin1String("assets");
-#endif
-    return local;
-}
-
 static QString ensureSlash(const QString &path)
 {
-    if (path.endsWith(QLatin1Char('/')))
+    if (path.isEmpty() || path.endsWith(QLatin1Char('/')))
         return path;
     return path + QLatin1Char('/');
 }
@@ -79,105 +62,90 @@ static QStringList prefixedPlatformSelectors(const QChar &prefix)
     return selectors;
 }
 
-static QStringList allSelectors(const QString &style = QString())
+static QStringList allSelectors()
 {
     static const QStringList platformSelectors = prefixedPlatformSelectors(QLatin1Char('+'));
     QStringList selectors = platformSelectors;
     const QString locale = QLocale().name();
     if (!locale.isEmpty())
         selectors += QLatin1Char('+') + locale;
-    if (!style.isEmpty())
-        selectors.prepend(style);
     return selectors;
 }
 
-QString QQuickStyleSelectorPrivate::select(const QString &filePath) const
+QUrl QQuickStyleSelectorPrivate::select(const QString &filePath) const
 {
     QFileInfo fi(filePath);
     // If file doesn't exist, don't select
     if (!fi.exists())
-        return filePath;
+        return QUrl();
 
-    const QString path = fi.path();
-    const QString ret = QFileSelectorPrivate::selectionHelper(path.isEmpty() ? QString() : path + QLatin1Char('/'),
-                                                              fi.fileName(), allSelectors(styleName), QChar());
+    const QString selected = QFileSelectorPrivate::selectionHelper(ensureSlash(fi.canonicalPath()),
+                                                                   fi.fileName(), allSelectors(), QChar());
 
-    if (!ret.isEmpty())
-        return ret;
-    return filePath;
-}
+    if (selected.startsWith(QLatin1Char(':')))
+        return QUrl(QLatin1String("qrc") + selected);
 
-QString QQuickStyleSelectorPrivate::trySelect(const QString &filePath, const QString &fallback) const
-{
-    QFileInfo fi(filePath);
-    if (!fi.exists())
-        return fallback;
-
-    // the path contains the name of the custom/fallback style, so exclude it from
-    // the selectors. the rest of the selectors (os, locale) are still valid, though.
-    const QString path = fi.path();
-    const QString selectedPath = QFileSelectorPrivate::selectionHelper(path.isEmpty() ? QString() : path + QLatin1Char('/'),
-                                                                       fi.fileName(), allSelectors(), QChar());
-    if (selectedPath.startsWith(QLatin1Char(':')))
-        return QLatin1String("qrc") + selectedPath;
-    return QUrl::fromLocalFile(QFileInfo(selectedPath).absoluteFilePath()).toString();
+    return QUrl::fromLocalFile(selected.isEmpty() ? filePath : selected);
 }
 
 QQuickStyleSelector::QQuickStyleSelector() : d_ptr(new QQuickStyleSelectorPrivate)
 {
-    Q_D(QQuickStyleSelector);
-    d->styleName = QQuickStyle::name();
-    d->stylePath = QQuickStyle::path();
 }
 
 QQuickStyleSelector::~QQuickStyleSelector()
 {
 }
 
-QUrl QQuickStyleSelector::baseUrl() const
+QStringList QQuickStyleSelector::selectors() const
 {
     Q_D(const QQuickStyleSelector);
-    return d->baseUrl;
+    return d->selectors;
 }
 
-void QQuickStyleSelector::setBaseUrl(const QUrl &url)
+void QQuickStyleSelector::addSelector(const QString &selector)
 {
     Q_D(QQuickStyleSelector);
-    d->baseUrl = url;
-    d->basePath = QQmlFile::urlToLocalFileOrQrc(url.toString(QUrl::StripTrailingSlash) + QLatin1Char('/'));
+    if (d->selectors.contains(selector))
+        return;
+
+    d->selectors += selector;
 }
 
-QString QQuickStyleSelector::select(const QString &fileName) const
+QStringList QQuickStyleSelector::paths() const
 {
     Q_D(const QQuickStyleSelector);
+    return d->paths;
+}
 
-    // 1) try selecting from a custom style path, for example ":/mystyle"
-    if (QQuickStylePrivate::isCustomStyle()) {
-        // NOTE: this path may contain a subset of controls
-        const QString selectedPath = d->trySelect(ensureSlash(d->stylePath) + d->styleName + QLatin1Char('/') + fileName);
-        if (!selectedPath.isEmpty())
-            return selectedPath;
+void QQuickStyleSelector::setPaths(const QStringList &paths)
+{
+    Q_D(QQuickStyleSelector);
+    d->paths = paths;
+}
+
+QUrl QQuickStyleSelector::select(const QString &fileName) const
+{
+    Q_D(const QQuickStyleSelector);
+    // The lookup order is
+    // 1) requested style (e.g. "MyStyle", included in d->selectors)
+    // 2) fallback style (e.g. "Material", included in d->selectors)
+    // 3) default style (empty selector, not in d->selectors)
+
+    int to = d->selectors.count() - 1;
+    if (d->selectors.isEmpty() || !d->selectors.first().isEmpty())
+        ++to; // lookup #3 unless #1 is also empty (redundant)
+
+    // NOTE: last iteration intentionally out of bounds => empty selector
+    for (int i = 0; i <= to; ++i) {
+        const QString selector = d->selectors.value(i);
+        for (const QString &path : d->paths) {
+            const QUrl selectedUrl = d->select(ensureSlash(path) + selector + QLatin1Char('/') + fileName);
+            if (selectedUrl.isValid())
+                return selectedUrl;
+        }
     }
 
-    // 2) try selecting from the fallback style path, for example QT_INSTALL_QML/QtQuick/Controls.2/Material
-    const QString fallbackStyle = QQuickStylePrivate::fallbackStyle();
-    if (!fallbackStyle.isEmpty()) {
-        // NOTE: this path may also contain a subset of controls
-        const QString selectedPath = d->trySelect(ensureSlash(d->basePath) + fallbackStyle + QLatin1Char('/') + fileName);
-        if (!selectedPath.isEmpty())
-            return selectedPath;
-    }
-
-    // 3) fallback to the default style that is guaranteed to contain all controls
-    QUrl url(ensureSlash(d->baseUrl.toString()) + fileName);
-    if (isLocalScheme(url.scheme())) {
-        QString equivalentPath = QLatin1Char(':') + url.path();
-        QString selectedPath = d->select(equivalentPath);
-        url.setPath(selectedPath.remove(0, 1));
-    } else if (url.isLocalFile()) {
-        url = QUrl::fromLocalFile(d->select(url.toLocalFile()));
-    }
-    return url.toString(QUrl::NormalizePathSegments);
+    return fileName;
 }
 
 QT_END_NAMESPACE

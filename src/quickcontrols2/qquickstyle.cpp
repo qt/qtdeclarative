@@ -117,7 +117,7 @@ static QStringList defaultImportPathList()
     importPaths.reserve(3);
     importPaths += QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
     importPaths += envPathList("QML2_IMPORT_PATH");
-    importPaths += QStringLiteral("qrc:/qt-project.org/imports");
+    importPaths += QStringLiteral(":/qt-project.org/imports");
     importPaths += QCoreApplication::applicationDirPath();
     return importPaths;
 }
@@ -264,10 +264,20 @@ struct QQuickStyleSpec
 
 Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
 
-QStringList QQuickStylePrivate::stylePaths()
+QStringList QQuickStylePrivate::stylePaths(bool resolve)
 {
+    // user-requested style path
+    QStringList paths;
+    if (resolve) {
+        QString path = styleSpec->path();
+        if (path.endsWith(QLatin1Char('/')))
+            path.chop(1);
+        if (!path.isEmpty())
+            paths += path;
+    }
+
     // system/custom style paths
-    QStringList paths = envPathList("QT_QUICK_CONTROLS_STYLE_PATH");
+    paths += envPathList("QT_QUICK_CONTROLS_STYLE_PATH");
 
     // built-in import paths
     const QString targetPath = QStringLiteral("QtQuick/Controls.2");
@@ -278,6 +288,7 @@ QStringList QQuickStylePrivate::stylePaths()
             paths += dir.absolutePath();
     }
 
+    paths.removeDuplicates();
     return paths;
 }
 

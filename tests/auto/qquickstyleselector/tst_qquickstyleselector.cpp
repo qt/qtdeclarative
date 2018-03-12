@@ -96,7 +96,7 @@ void tst_QQuickStyleSelector::select_data()
     QTest::newRow("nosuch/label") << "Label.qml" << "NoSuchStyle" << "data" << "" << testFileUrl("Label.qml").toString();
     QTest::newRow("/nosuch/label") << "Label.qml" << "NoSuchStyle" << dataDirectory() << "" << testFileUrl("Label.qml").toString();
 
-    QTest::newRow("label->base") << "Label.qml" << "" << "data" << "FallbackStyle" << testFileUrl("FallbackStyle/Label.qml").toString();
+    QTest::newRow("label->base") << "Label.qml" << "" << "data" << "FallbackStyle" << testFileUrl("Label.qml").toString();
     QTest::newRow("/label->base") << "Label.qml" << "" << dataDirectory() << "FallbackStyle" << testFileUrl("Label.qml").toString();
     QTest::newRow("fs/label->base") << "Label.qml" << "FileSystemStyle" << "data" << "FallbackStyle" << testFileUrl("FallbackStyle/Label.qml").toString();
     QTest::newRow("/fs/label->base") << "Label.qml" << "FileSystemStyle" << dataDirectory() << "FallbackStyle" << testFileUrl("FallbackStyle/Label.qml").toString();
@@ -115,7 +115,7 @@ void tst_QQuickStyleSelector::select_data()
     QTest::newRow("nosuch/button") << "Button.qml" << "NoSuchStyle" << "data" << "" << testFileUrl("Button.qml").toString();
     QTest::newRow("/nosuch/button") << "Button.qml" << "NoSuchStyle" << dataDirectory() << "" << testFileUrl("Button.qml").toString();
 
-    QTest::newRow("button->base") << "Button.qml" << "" << "data" << "FallbackStyle" << testFileUrl("FallbackStyle/Button.qml").toString();
+    QTest::newRow("button->base") << "Button.qml" << "" << "data" << "FallbackStyle" << testFileUrl("Button.qml").toString();
     QTest::newRow("/button->base") << "Button.qml" << "" << dataDirectory() << "FallbackStyle" << testFileUrl("Button.qml").toString();
     QTest::newRow("fs/button->base") << "Button.qml" << "FileSystemStyle" << "data" << "FallbackStyle" << testFileUrl("FileSystemStyle/Button.qml").toString();
     QTest::newRow("/fs/button->base") << "Button.qml" << "FileSystemStyle" << dataDirectory() << "FallbackStyle" << testFileUrl("FileSystemStyle/Button.qml").toString();
@@ -137,7 +137,9 @@ void tst_QQuickStyleSelector::select()
     QQuickStyle::setFallbackStyle(fallback);
 
     QQuickStyleSelector selector;
-    selector.setBaseUrl(dataDirectoryUrl());
+    selector.addSelector(style);
+    selector.addSelector(fallback);
+    selector.setPaths(QStringList() << dataDirectory() << ":/");
     QCOMPARE(selector.select(file), expected);
 }
 
@@ -146,7 +148,8 @@ void tst_QQuickStyleSelector::platformSelectors()
     QQuickStyle::setStyle(QDir(dataDirectory()).filePath("PlatformStyle"));
 
     QQuickStyleSelector selector;
-    selector.setBaseUrl(dataDirectoryUrl());
+    selector.addSelector("PlatformStyle");
+    selector.setPaths(QStringList() << dataDirectory());
 
 #if defined(Q_OS_LINUX)
     QCOMPARE(selector.select("Button.qml"), testFileUrl("PlatformStyle/+linux/Button.qml").toString());

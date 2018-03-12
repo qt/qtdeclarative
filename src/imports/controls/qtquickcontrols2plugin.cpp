@@ -98,12 +98,17 @@ QtQuickControls2Plugin::~QtQuickControls2Plugin()
 void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
     QQuickStylePrivate::init(typeUrl());
+
     const QString style = QQuickStyle::name();
+    const QString fallback = QQuickStylePrivate::fallbackStyle();
     if (!style.isEmpty())
         QFileSelectorPrivate::addStatics(QStringList() << style.toLower());
 
     QQuickStyleSelector selector;
-    selector.setBaseUrl(typeUrl());
+    selector.addSelector(style);
+    if (!fallback.isEmpty())
+        selector.addSelector(fallback);
+    selector.setPaths(QQuickStylePrivate::stylePaths(true));
 
     qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
 

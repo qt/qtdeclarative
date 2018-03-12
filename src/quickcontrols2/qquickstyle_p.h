@@ -59,7 +59,7 @@ class QSettings;
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStylePrivate
 {
 public:
-    static QStringList stylePaths();
+    static QStringList stylePaths(bool resolve = false);
     static QString fallbackStyle();
     static bool isCustomStyle();
     static void init(const QUrl &baseUrl);

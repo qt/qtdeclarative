@@ -59,13 +59,10 @@ QT_BEGIN_NAMESPACE
 class QQuickStyleSelectorPrivate
 {
 public:
-    QString select(const QString &filePath) const;
-    QString trySelect(const QString &filePath, const QString &fallback = QString()) const;
+    QUrl select(const QString &filePath) const;
 
-    QUrl baseUrl;
-    QString basePath;
-    QString styleName;
-    QString stylePath;
+    QStringList paths;
+    QStringList selectors;
 };
 
 QT_END_NAMESPACE

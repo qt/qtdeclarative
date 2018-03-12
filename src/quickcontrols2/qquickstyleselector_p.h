@@ -67,10 +67,13 @@ public:
     QQuickStyleSelector();
     ~QQuickStyleSelector();
 
-    QUrl baseUrl() const;
-    void setBaseUrl(const QUrl &url);
+    QStringList selectors() const;
+    void addSelector(const QString &selector);
 
-    QString select(const QString &fileName) const;
+    QStringList paths() const;
+    void setPaths(const QStringList &paths);
+
+    QUrl select(const QString &fileName) const;
 
 private:
     Q_DISABLE_COPY(QQuickStyleSelector)
