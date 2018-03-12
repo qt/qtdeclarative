@@ -323,23 +323,23 @@ struct MarkStack {
 
 
 #define DECLARE_HEAP_OBJECT_BASE(name, base) \
-struct name##OffsetStruct { \
-    name##Members(name, HEAP_OBJECT_OFFSET_MEMBER_EXPANSION) \
-}; \
-struct name##SizeStruct : base, name##OffsetStruct {}; \
-struct name##Data { \
-    typedef base SuperClass; \
-    static Q_CONSTEXPR size_t baseOffset = sizeof(name##SizeStruct) - sizeof(name##OffsetStruct); \
-    name##Members(name, HEAP_OBJECT_MEMBER_EXPANSION) \
-}; \
-Q_STATIC_ASSERT(sizeof(name##SizeStruct) == sizeof(name##Data) + name##Data::baseOffset); \
+    struct name##OffsetStruct { \
+        name##Members(name, HEAP_OBJECT_OFFSET_MEMBER_EXPANSION) \
+    }; \
+    struct name##SizeStruct : base, name##OffsetStruct {}; \
+    struct name##Data { \
+        typedef base SuperClass; \
+        static Q_CONSTEXPR size_t baseOffset = sizeof(name##SizeStruct) - sizeof(name##OffsetStruct); \
+        name##Members(name, HEAP_OBJECT_MEMBER_EXPANSION) \
+    }; \
+    Q_STATIC_ASSERT(sizeof(name##SizeStruct) == sizeof(name##Data) + name##Data::baseOffset); \
 
 #define DECLARE_HEAP_OBJECT(name, base) \
-DECLARE_HEAP_OBJECT_BASE(name, base) \
-struct name : base, name##Data
+    DECLARE_HEAP_OBJECT_BASE(name, base) \
+    struct name : base, name##Data
 #define DECLARE_EXPORTED_HEAP_OBJECT(name, base) \
-DECLARE_HEAP_OBJECT_BASE(name, base) \
-struct Q_QML_EXPORT name : base, name##Data
+    DECLARE_HEAP_OBJECT_BASE(name, base) \
+    struct Q_QML_EXPORT name : base, name##Data
 
 #define DECLARE_MARKOBJECTS(class) \
     static void markObjects(Heap::Base *b, MarkStack *stack) { \
