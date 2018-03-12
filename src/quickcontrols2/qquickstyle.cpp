@@ -101,18 +101,22 @@ QT_BEGIN_NAMESPACE
     \sa {Styling Qt Quick Controls 2}
 */
 
-// TODO: QQmlImportDatabase::defaultImportPathList()
+static QStringList envPathList(const QByteArray &var)
+{
+    QStringList paths;
+    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(var))) {
+        const QByteArray value = qgetenv(var);
+        paths += QString::fromLatin1(value).split(QDir::listSeparator(), QString::SkipEmptyParts);
+    }
+    return paths;
+}
+
 static QStringList defaultImportPathList()
 {
     QStringList importPaths;
     importPaths.reserve(3);
     importPaths += QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
-
-    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QML2_IMPORT_PATH"))) {
-        const QByteArray envImportPath = qgetenv("QML2_IMPORT_PATH");
-        importPaths += QString::fromLatin1(envImportPath).split(QDir::listSeparator(), QString::SkipEmptyParts);
-    }
-
+    importPaths += envPathList("QML2_IMPORT_PATH");
     importPaths += QStringLiteral("qrc:/qt-project.org/imports");
     importPaths += QCoreApplication::applicationDirPath();
     return importPaths;
@@ -263,11 +267,7 @@ Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
 QStringList QQuickStylePrivate::stylePaths()
 {
     // system/custom style paths
-    QStringList paths;
-    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE_PATH"))) {
-        const QByteArray value = qgetenv("QT_QUICK_CONTROLS_STYLE_PATH");
-        paths += QString::fromLatin1(value).split(QDir::listSeparator(), QString::SkipEmptyParts);
-    }
+    QStringList paths = envPathList("QT_QUICK_CONTROLS_STYLE_PATH");
 
     // built-in import paths
     const QString targetPath = QStringLiteral("QtQuick/Controls.2");
