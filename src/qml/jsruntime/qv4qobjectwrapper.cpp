@@ -341,6 +341,11 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
     if (!ddata)
         return QV4::Encode::undefined();
 
+    if (Q_UNLIKELY(!ddata->propertyCache)) {
+        ddata->propertyCache = QQmlEnginePrivate::get(engine)->cache(object->metaObject());
+        ddata->propertyCache->addref();
+    }
+
     QQmlPropertyCache *cache = ddata->propertyCache;
     Q_ASSERT(cache);
     QQmlPropertyData *property = cache->property(propertyIndex);

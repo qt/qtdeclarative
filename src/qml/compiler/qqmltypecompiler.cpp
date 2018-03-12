@@ -45,7 +45,6 @@
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlcomponent_p.h>
 
-#include "qqmlpropertycachecreator_p.h"
 //#include "qv4jssimplifier_p.h"
 
 #define COMPILE_EXCEPTION(token, desc) \
@@ -79,8 +78,12 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
             customParsers.insert(it.key(), customParser);
     }
 
+    QQmlPendingGroupPropertyBindings pendingGroupPropertyBindings;
+
+
     {
-        QQmlPropertyCacheCreator<QQmlTypeCompiler> propertyCacheBuilder(&m_propertyCaches, engine, this, imports());
+        QQmlPropertyCacheCreator<QQmlTypeCompiler> propertyCacheBuilder(&m_propertyCaches, &pendingGroupPropertyBindings,
+                                                                        engine, this, imports());
         QQmlCompileError error = propertyCacheBuilder.buildMetaObjects();
         if (error.isSet()) {
             recordError(error);
@@ -122,6 +125,8 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
         QQmlComponentAndAliasResolver resolver(this);
         if (!resolver.resolve())
             return nullptr;
+
+        pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_propertyCaches);
     }
 
     {

@@ -1123,6 +1123,11 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
     QQmlEngine *engine = scope.engine->qmlEngine();
 
     QQmlContextData *context = scope.engine->callingQmlContext();
+    if (!context) {
+        QQmlEngine *qmlEngine = scope.engine->qmlEngine();
+        if (qmlEngine)
+            context = QQmlContextData::get(QQmlEnginePrivate::get(qmlEngine)->rootContext);
+    }
     Q_ASSERT(context);
     QQmlContext *effectiveContext = nullptr;
     if (context->isPragmaLibraryContext)
@@ -1250,6 +1255,11 @@ ReturnedValue QtObject::method_createComponent(const FunctionObject *b, const Va
     QQmlEngine *engine = scope.engine->qmlEngine();
 
     QQmlContextData *context = scope.engine->callingQmlContext();
+    if (!context) {
+        QQmlEngine *qmlEngine = scope.engine->qmlEngine();
+        if (qmlEngine)
+            context = QQmlContextData::get(QQmlEnginePrivate::get(qmlEngine)->rootContext);
+    }
     Q_ASSERT(context);
     QQmlContextData *effectiveContext = context;
     if (context->isPragmaLibraryContext)

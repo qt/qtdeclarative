@@ -76,6 +76,7 @@ private slots:
     void qmlContextProperties();
     void testGCCorruption();
     void testGroupedPropertyRevisions();
+    void componentFromEval();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -883,6 +884,17 @@ void tst_qqmlengine::testGroupedPropertyRevisions()
     QVERIFY2(object.data(), qPrintable(c.errorString()));
     QQmlComponent c2(&e, testFileUrl("testGroupedPropertiesRevision.2.qml"));
     QVERIFY(!c2.errorString().isEmpty());
+}
+
+void tst_qqmlengine::componentFromEval()
+{
+    QQmlEngine engine;
+    const QUrl testUrl = testFileUrl("EmptyComponent.qml");
+    QJSValue result = engine.evaluate("Qt.createComponent(\"" + testUrl.toString() + "\");");
+    QPointer<QQmlComponent> component(qobject_cast<QQmlComponent*>(result.toQObject()));
+    QVERIFY(!component.isNull());
+    QScopedPointer<QObject> item(component->create());
+    QVERIFY(!item.isNull());
 }
 
 QTEST_MAIN(tst_qqmlengine)

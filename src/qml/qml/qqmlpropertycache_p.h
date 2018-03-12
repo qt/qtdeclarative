@@ -81,6 +81,7 @@ template <typename T> class QQmlPropertyCacheAliasCreator;
 // We have this somewhat awful split between RawData and Data so that RawData can be
 // used in unions.  In normal code, you should always use Data which initializes RawData
 // to an invalid state on construction.
+// ### We should be able to remove this split nowadays
 class QQmlPropertyRawData
 {
 public:
@@ -273,20 +274,20 @@ public:
 
 private:
     Flags _flags;
-    qint16 _coreIndex;
-    quint16 _propType;
+    qint16 _coreIndex = 0;
+    quint16 _propType = 0;
 
     // The notify index is in the range returned by QObjectPrivate::signalIndex().
     // This is different from QMetaMethod::methodIndex().
-    qint16 _notifyIndex;
-    qint16 _overrideIndex;
+    qint16 _notifyIndex = 0;
+    qint16 _overrideIndex = 0;
 
-    quint8 _revision;
-    quint8 _typeMinorVersion;
-    qint16 _metaObjectOffset;
+    quint8 _revision = 0;
+    quint8 _typeMinorVersion = 0;
+    qint16 _metaObjectOffset = 0;
 
-    QQmlPropertyCacheMethodArguments *_arguments;
-    StaticMetaCallFunction _staticMetaCallFunction;
+    QQmlPropertyCacheMethodArguments *_arguments = nullptr;
+    StaticMetaCallFunction _staticMetaCallFunction = nullptr;
 
     friend class QQmlPropertyData;
     friend class QQmlPropertyCache;

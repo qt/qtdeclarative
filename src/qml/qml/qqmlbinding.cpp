@@ -490,6 +490,7 @@ void QQmlBinding::refresh()
 
 void QQmlBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags flags)
 {
+    const bool wasEnabled = enabledFlag();
     setEnabledFlag(e);
     setNotifyOnValueChanged(e);
 
@@ -499,7 +500,7 @@ void QQmlBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags flags)
             m_nextBinding.clearFlag2();
     }
 
-    if (e)
+    if (e && !wasEnabled)
         update(flags);
 }
 
@@ -514,13 +515,13 @@ void QQmlBinding::setTarget(const QQmlProperty &prop)
     setTarget(prop.object(), pd->core, &pd->valueTypeData);
 }
 
-void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const QQmlPropertyData *valueType)
+bool QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const QQmlPropertyData *valueType)
 {
     m_target = object;
 
     if (!object) {
         m_targetIndex = QQmlPropertyIndex();
-        return;
+        return false;
     }
 
     int coreIndex = core.coreIndex();
@@ -530,9 +531,10 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const
 
         int aValueTypeIndex;
         if (!vme->aliasTarget(coreIndex, &object, &coreIndex, &aValueTypeIndex)) {
+            // can't resolve id (yet)
             m_target = nullptr;
             m_targetIndex = QQmlPropertyIndex();
-            return;
+            return false;
         }
         if (valueTypeIndex == -1)
             valueTypeIndex = aValueTypeIndex;
@@ -541,7 +543,7 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const
         if (!data || !data->propertyCache) {
             m_target = nullptr;
             m_targetIndex = QQmlPropertyIndex();
-            return;
+            return false;
         }
         QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
         Q_ASSERT(propertyData);
@@ -557,6 +559,8 @@ void QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const
         data->propertyCache = QQmlEnginePrivate::get(context()->engine)->cache(m_target->metaObject());
         data->propertyCache->addref();
     }
+
+    return true;
 }
 
 void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const

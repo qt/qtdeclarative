@@ -1578,91 +1578,85 @@ void tst_QQuickMouseArea::transformedMouseArea()
     }
 }
 
+struct MouseEvent {
+    QEvent::Type type;
+    Qt::MouseButton button;
+};
+Q_DECLARE_METATYPE(MouseEvent)
+
 void tst_QQuickMouseArea::pressedMultipleButtons_data()
 {
     QTest::addColumn<Qt::MouseButtons>("accepted");
-    QTest::addColumn<QList<Qt::MouseButtons> >("buttons");
+    QTest::addColumn<QList<MouseEvent> >("mouseEvents");
     QTest::addColumn<QList<bool> >("pressed");
     QTest::addColumn<QList<Qt::MouseButtons> >("pressedButtons");
     QTest::addColumn<int>("changeCount");
 
-    QList<Qt::MouseButtons> buttons;
+    Qt::MouseButtons accepted;
+    QList<MouseEvent> mouseEvents;
     QList<bool> pressed;
     QList<Qt::MouseButtons> pressedButtons;
-    buttons << Qt::LeftButton
-            << (Qt::LeftButton | Qt::RightButton)
-            << Qt::LeftButton
-            << nullptr;
-    pressed << true
-            << true
-            << true
-            << false;
-    pressedButtons << Qt::LeftButton
-            << Qt::LeftButton
-            << Qt::LeftButton
-            << nullptr;
-    QTest::newRow("Accept Left - Press left, Press Right, Release Right")
-            << Qt::MouseButtons(Qt::LeftButton) << buttons << pressed << pressedButtons << 2;
+    int changeCount;
 
-    buttons.clear();
-    pressed.clear();
-    pressedButtons.clear();
-    buttons << Qt::LeftButton
-            << (Qt::LeftButton | Qt::RightButton)
-            << Qt::RightButton
-            << nullptr;
-    pressed << true
-            << true
-            << false
-            << false;
-    pressedButtons << Qt::LeftButton
-            << Qt::LeftButton
-            << nullptr
-            << nullptr;
-    QTest::newRow("Accept Left - Press left, Press Right, Release Left")
-            << Qt::MouseButtons(Qt::LeftButton) << buttons << pressed << pressedButtons << 2;
+    MouseEvent leftPress = { QEvent::MouseButtonPress, Qt::LeftButton };
+    MouseEvent leftRelease = { QEvent::MouseButtonRelease, Qt::LeftButton };
+    MouseEvent rightPress = { QEvent::MouseButtonPress, Qt::RightButton };
+    MouseEvent rightRelease = { QEvent::MouseButtonRelease, Qt::RightButton };
 
-    buttons.clear();
-    pressed.clear();
-    pressedButtons.clear();
-    buttons << Qt::LeftButton
-            << (Qt::LeftButton | Qt::RightButton)
-            << Qt::LeftButton
-            << nullptr;
-    pressed << true
-            << true
-            << true
-            << false;
-    pressedButtons << Qt::LeftButton
-            << (Qt::LeftButton | Qt::RightButton)
-            << Qt::LeftButton
-            << nullptr;
-    QTest::newRow("Accept Left|Right - Press left, Press Right, Release Right")
-        << (Qt::LeftButton | Qt::RightButton) << buttons << pressed << pressedButtons << 4;
+    auto addRowWithFormattedTitleAndReset = [&]() {
+        QByteArray title;
+        title.append("Accept:");
+        if (accepted & Qt::LeftButton)
+            title.append(" LeftButton");
+        if (accepted & Qt::RightButton)
+            title.append(" RightButton");
+        title.append(" | Events:");
+        for (MouseEvent event : mouseEvents) {
+            title.append(event.type == QEvent::MouseButtonPress ? " Press" : " Release");
+            title.append(event.button == Qt::LeftButton ? " Left," : " Right,");
+        }
+        title.chop(1); // remove last comma
+        QTest::newRow(title) << accepted << mouseEvents << pressed << pressedButtons << changeCount;
 
-    buttons.clear();
-    pressed.clear();
-    pressedButtons.clear();
-    buttons << Qt::RightButton
-            << (Qt::LeftButton | Qt::RightButton)
-            << Qt::LeftButton
-            << nullptr;
-    pressed << true
-            << true
-            << false
-            << false;
-    pressedButtons << Qt::RightButton
-            << Qt::RightButton
-            << nullptr
-            << nullptr;
-    QTest::newRow("Accept Right - Press Right, Press Left, Release Right")
-            << Qt::MouseButtons(Qt::RightButton) << buttons << pressed << pressedButtons << 2;
+        mouseEvents.clear();
+        pressed.clear();
+        pressedButtons.clear();
+    };
+
+    accepted = Qt::LeftButton;
+    changeCount = 2;
+    mouseEvents << leftPress << rightPress << rightRelease << leftRelease;
+    pressed << true << true << true << false;
+    pressedButtons << Qt::LeftButton << Qt::LeftButton << Qt::LeftButton << Qt::NoButton;
+    addRowWithFormattedTitleAndReset();
+
+    accepted = Qt::LeftButton;
+    changeCount = 2;
+    mouseEvents << leftPress << rightPress << leftRelease << rightRelease;
+    pressed << true << true << false << false;
+    pressedButtons << Qt::LeftButton << Qt::LeftButton << Qt::NoButton << Qt::NoButton;
+    addRowWithFormattedTitleAndReset();
+
+    accepted = Qt::LeftButton | Qt::RightButton;
+    changeCount = 4;
+    mouseEvents << leftPress << rightPress << rightRelease << leftRelease;
+    pressed << true << true << true << false;
+    pressedButtons << Qt::LeftButton << (Qt::LeftButton | Qt::RightButton) << Qt::LeftButton
+                   << Qt::NoButton;
+    addRowWithFormattedTitleAndReset();
+
+    accepted = Qt::RightButton;
+    changeCount = 2;
+    mouseEvents << rightPress << leftPress << rightRelease << leftRelease;
+    pressed << true << true << false << false;
+    pressedButtons << Qt::RightButton << Qt::RightButton << Qt::NoButton << Qt::NoButton;
+    addRowWithFormattedTitleAndReset();
 }
 
 void tst_QQuickMouseArea::pressedMultipleButtons()
 {
     QFETCH(Qt::MouseButtons, accepted);
-    QFETCH(QList<Qt::MouseButtons>, buttons);
+    QFETCH(QList<MouseEvent>, mouseEvents);
     QFETCH(QList<bool>, pressed);
     QFETCH(QList<Qt::MouseButtons>, pressedButtons);
     QFETCH(int, changeCount);
@@ -1681,20 +1675,16 @@ void tst_QQuickMouseArea::pressedMultipleButtons()
     QSignalSpy pressedButtonsSpy(mouseArea, SIGNAL(pressedButtonsChanged()));
     mouseArea->setAcceptedMouseButtons(accepted);
 
-    QPoint point(10,10);
-
-    for (int i = 0; i < buttons.count(); ++i) {
-        int btns = buttons.at(i);
-
-        // The windowsysteminterface takes care of sending releases
-        QTest::mousePress(&view, (Qt::MouseButton)btns, Qt::NoModifier, point);
-
+    QPoint point(10, 10);
+    for (int i = 0; i < mouseEvents.count(); ++i) {
+        const MouseEvent mouseEvent = mouseEvents.at(i);
+        if (mouseEvent.type == QEvent::MouseButtonPress)
+            QTest::mousePress(&view, mouseEvent.button, Qt::NoModifier, point);
+        else
+            QTest::mouseRelease(&view, mouseEvent.button, Qt::NoModifier, point);
         QCOMPARE(mouseArea->pressed(), pressed.at(i));
         QCOMPARE(mouseArea->pressedButtons(), pressedButtons.at(i));
     }
-
-    QTest::mousePress(&view, Qt::NoButton, Qt::NoModifier, point);
-    QCOMPARE(mouseArea->pressed(), false);
 
     QCOMPARE(pressedSpy.count(), 2);
     QCOMPARE(pressedButtonsSpy.count(), changeCount);

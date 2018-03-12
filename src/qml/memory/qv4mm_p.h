@@ -69,6 +69,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct ChunkAllocator;
+struct MemorySegment;
 
 struct BlockAllocator {
     BlockAllocator(ChunkAllocator *chunkAllocator, ExecutionEngine *engine)
@@ -136,6 +137,7 @@ struct HugeItemAllocator {
     ChunkAllocator *chunkAllocator;
     ExecutionEngine *engine;
     struct HugeChunk {
+        MemorySegment *segment;
         Chunk *chunk;
         size_t size;
     };

@@ -269,7 +269,9 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
         for (int ii = 0; ii < path.count() - 1; ++ii) {
             const QStringRef &pathName = path.at(ii);
 
-            if (typeNameCache) {
+            // Types must begin with an uppercase letter (see checkRegistration()
+            // in qqmlmetatype.cpp for the enforcement of this).
+            if (typeNameCache && !pathName.isEmpty() && pathName.at(0).isUpper()) {
                 QQmlTypeNameCache::Result r = typeNameCache->query(pathName);
                 if (r.isValid()) {
                     if (r.type.isValid()) {
@@ -875,6 +877,7 @@ void QQmlPropertyPrivate::findAliasTarget(QObject *object, QQmlPropertyIndex bin
 void QQmlPropertyPrivate::setBinding(QQmlAbstractBinding *binding, BindingFlags flags, QQmlPropertyData::WriteFlags writeFlags)
 {
     Q_ASSERT(binding);
+    Q_ASSERT(binding->targetObject());
 
     QObject *object = binding->targetObject();
     const QQmlPropertyIndex index = binding->targetPropertyIndex();
