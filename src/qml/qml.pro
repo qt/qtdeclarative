@@ -36,7 +36,8 @@ DEFINES += QT_NO_FOREACH
     }
     compile_hash_contents = \
         "// Generated file, DO NOT EDIT" \
-        "$${LITERAL_HASH}define QML_COMPILE_HASH \"$$QML_COMPILE_HASH\""
+        "$${LITERAL_HASH}define QML_COMPILE_HASH \"$$QML_COMPILE_HASH\"" \
+        "$${LITERAL_HASH}define QML_COMPILE_HASH_LENGTH $$str_size($$QML_COMPILE_HASH)"
     write_file("$$OUT_PWD/qml_compile_hash_p.h", compile_hash_contents)|error()
 }
 
