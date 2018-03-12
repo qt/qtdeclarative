@@ -89,6 +89,7 @@ Q_LOGGING_CATEGORY(DBG_TOUCH_TARGET, "qt.quick.touch.target")
 Q_LOGGING_CATEGORY(DBG_MOUSE, "qt.quick.mouse")
 Q_LOGGING_CATEGORY(DBG_MOUSE_TARGET, "qt.quick.mouse.target")
 Q_LOGGING_CATEGORY(lcWheelTarget, "qt.quick.wheel.target")
+Q_LOGGING_CATEGORY(lcGestureTarget, "qt.quick.gesture.target")
 Q_LOGGING_CATEGORY(DBG_HOVER_TRACE, "qt.quick.hover.trace")
 Q_LOGGING_CATEGORY(DBG_FOCUS, "qt.quick.focus")
 Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty")
@@ -1625,8 +1626,7 @@ bool QQuickWindow::event(QEvent *e)
     }
 #if QT_CONFIG(gestures)
     case QEvent::NativeGesture:
-        if (d->contentItem)
-            d->deliverNativeGestureEvent(d->contentItem, static_cast<QNativeGestureEvent*>(e));
+        d->deliverSinglePointEventUntilAccepted(d->pointerEventInstance(e));
         break;
 #endif
     case QEvent::ShortcutOverride:
@@ -1927,6 +1927,19 @@ bool QQuickWindowPrivate::deliverSinglePointEventUntilAccepted(QQuickPointerEven
             }
         }
 #endif
+#if QT_CONFIG(gestures)
+        if (QQuickPointerNativeGestureEvent *pnge = event->asPointerNativeGestureEvent()) {
+            QNativeGestureEvent nge(pnge->type(), pnge->device()->qTouchDevice(), point->position(), point->scenePosition(), g,
+                                    pnge->value(), 0L, 0L); // TODO can't copy things I can't access
+            nge.accept();
+            QCoreApplication::sendEvent(item, &nge);
+            if (nge.isAccepted()) {
+                qCDebug(lcGestureTarget) << &nge << "->" << item;
+                event->setAccepted(true);
+                return true;
+            }
+        }
+#endif // gestures
     }
 
     return false; // it wasn't handled
@@ -1951,50 +1964,6 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
     d->lastWheelEventAccepted = event->isAccepted();
 }
 #endif // wheelevent
-
-#if QT_CONFIG(gestures)
-bool QQuickWindowPrivate::deliverNativeGestureEvent(QQuickItem *item, QNativeGestureEvent *event)
-{
-    QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
-
-    QPointF p = item->mapFromScene(event->windowPos());
-    if ((itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) && !item->contains(p))
-        return false;
-
-    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
-    for (int ii = children.count() - 1; ii >= 0; --ii) {
-        QQuickItem *child = children.at(ii);
-        if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
-            continue;
-        if (deliverNativeGestureEvent(child, event))
-            return true;
-    }
-
-    // Try the Item's pointer handlers first
-    QQuickPointerEvent *pointerEvent = pointerEventInstance(event);
-    pointerEvent->localize(item);
-    if (itemPrivate->handlePointerEvent(pointerEvent, false)) {
-        if (pointerEvent->allPointsAccepted()) {
-            event->accept();
-            return true;
-        }
-    }
-
-    // If still not accepted, try direct delivery to the item
-    if (item->contains(p)) {
-        QNativeGestureEvent copy(event->gestureType(), event->device(), p, event->windowPos(), event->screenPos(),
-                                 event->value(), 0L, 0L); // TODO can't copy things I can't access
-        event->accept();
-        item->event(&copy);
-        if (copy.isAccepted()) {
-            event->accept();
-            return true;
-        }
-    }
-
-    return false;
-}
-#endif // gestures
 
 bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
 {

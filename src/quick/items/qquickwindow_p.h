@@ -153,9 +153,6 @@ public:
     bool sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent = nullptr);
     bool sendFilteredPointerEventImpl(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent);
     bool deliverSinglePointEventUntilAccepted(QQuickPointerEvent *);
-#if QT_CONFIG(gestures)
-    bool deliverNativeGestureEvent(QQuickItem *, QNativeGestureEvent *);
-#endif
 
     // entry point of events to the window
     void handleTouchEvent(QTouchEvent *);

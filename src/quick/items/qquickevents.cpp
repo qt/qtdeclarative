@@ -642,6 +642,11 @@ QQuickPointerDevice *QQuickPointerDevice::touchDevice(const QTouchDevice *d)
     return dev;
 }
 
+const QTouchDevice *QQuickPointerDevice::qTouchDevice() const
+{
+    return g_touchDevices->key(const_cast<QQuickPointerDevice *>(this));
+}
+
 QList<QQuickPointerDevice*> QQuickPointerDevice::touchDevices()
 {
     return g_touchDevices->values();

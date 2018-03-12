@@ -672,6 +672,7 @@ public:
     int buttonCount() const { return m_buttonCount; }
     QString name() const { return m_name; }
     QPointingDeviceUniqueId uniqueId() const { return m_uniqueId; }
+    const QTouchDevice *qTouchDevice() const;
 
     static QQuickPointerDevice *touchDevice(const QTouchDevice *d);
     static QList<QQuickPointerDevice *> touchDevices();
