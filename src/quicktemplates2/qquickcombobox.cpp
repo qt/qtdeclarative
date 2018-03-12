@@ -581,9 +581,14 @@ void QQuickComboBoxPrivate::setHighlightedIndex(int index, Highlighting highligh
 
 void QQuickComboBoxPrivate::keySearch(const QString &text)
 {
-    int index = match(currentIndex + 1, text, Qt::MatchStartsWith | Qt::MatchWrap);
-    if (index != -1)
-        setCurrentIndex(index, Activate);
+    const int startIndex = isPopupVisible() ? highlightedIndex : currentIndex;
+    const int index = match(startIndex + 1, text, Qt::MatchStartsWith | Qt::MatchWrap);
+    if (index != -1) {
+        if (isPopupVisible())
+            setHighlightedIndex(index, Highlight);
+        else
+            setCurrentIndex(index, Activate);
+    }
 }
 
 int QQuickComboBoxPrivate::match(int start, const QString &text, Qt::MatchFlags flags) const

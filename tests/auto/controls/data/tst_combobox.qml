@@ -629,36 +629,90 @@ TestCase {
 
         compare(control.currentIndex, 0)
         compare(control.currentText, "Banana")
+        compare(control.highlightedIndex, -1)
 
         keyPress(Qt.Key_C)
         compare(control.currentIndex, 1)
         compare(control.currentText, "Coco")
+        compare(control.highlightedIndex, -1)
 
         // no match
         keyPress(Qt.Key_N)
         compare(control.currentIndex, 1)
         compare(control.currentText, "Coco")
+        compare(control.highlightedIndex, -1)
 
         keyPress(Qt.Key_C)
         compare(control.currentIndex, 2)
         compare(control.currentText, "Coconut")
+        compare(control.highlightedIndex, -1)
 
         keyPress(Qt.Key_C)
         compare(control.currentIndex, 4)
         compare(control.currentText, "Cocomuffin")
+        compare(control.highlightedIndex, -1)
 
         // wrap
         keyPress(Qt.Key_C)
         compare(control.currentIndex, 1)
         compare(control.currentText, "Coco")
+        compare(control.highlightedIndex, -1)
 
         keyPress(Qt.Key_A)
         compare(control.currentIndex, 3)
         compare(control.currentText, "Apple")
+        compare(control.highlightedIndex, -1)
 
         keyPress(Qt.Key_B)
         compare(control.currentIndex, 0)
         compare(control.currentText, "Banana")
+        compare(control.highlightedIndex, -1)
+
+        // popup
+        control.popup.open()
+        tryCompare(control.popup, "opened", true)
+
+        compare(control.currentIndex, 0)
+        compare(control.highlightedIndex, 0)
+
+        keyClick(Qt.Key_C)
+        compare(control.highlightedIndex, 1) // "Coco"
+        compare(control.currentIndex, 0)
+
+        // no match
+        keyClick(Qt.Key_N)
+        compare(control.highlightedIndex, 1)
+        compare(control.currentIndex, 0)
+
+        keyClick(Qt.Key_C)
+        compare(control.highlightedIndex, 2) // "Coconut"
+        compare(control.currentIndex, 0)
+
+        keyClick(Qt.Key_C)
+        compare(control.highlightedIndex, 4) // "Cocomuffin"
+        compare(control.currentIndex, 0)
+
+        // wrap
+        keyClick(Qt.Key_C)
+        compare(control.highlightedIndex, 1) // "Coco"
+        compare(control.currentIndex, 0)
+
+        keyClick(Qt.Key_B)
+        compare(control.highlightedIndex, 0) // "Banana"
+        compare(control.currentIndex, 0)
+
+        keyClick(Qt.Key_A)
+        compare(control.highlightedIndex, 3) // "Apple"
+        compare(control.currentIndex, 0)
+
+        verify(control.popup.visible)
+
+        // accept
+        keyClick(Qt.Key_Return)
+        tryCompare(control.popup, "visible", false)
+        compare(control.currentIndex, 3)
+        compare(control.currentText, "Apple")
+        compare(control.highlightedIndex, -1)
     }
 
     function test_popup() {
