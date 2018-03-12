@@ -144,7 +144,6 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
 #if QT_CONFIG(quicktemplates2_multitouch)
     void touchEvent(QTouchEvent *event) override;
 #endif

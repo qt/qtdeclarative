@@ -1263,13 +1263,17 @@ void tst_QQuickDrawer::nonModal()
 void tst_QQuickDrawer::slider_data()
 {
     QTest::addColumn<bool>("mouse");
-    QTest::newRow("mouse") << true;
-    QTest::newRow("touch") << false;
+    QTest::addColumn<int>("delta");
+
+    QTest::newRow("mouse") << true << 2;
+    QTest::newRow("touch") << false << 2;
+    QTest::newRow("mouse,delta") << true << 296 / 8;
 }
 
 void tst_QQuickDrawer::slider()
 {
     QFETCH(bool, mouse);
+    QFETCH(int, delta);
 
     QQuickApplicationHelper helper(this, QStringLiteral("slider.qml"));
     QQuickWindow *window = helper.window;
@@ -1295,7 +1299,7 @@ void tst_QQuickDrawer::slider()
         QTest::touchEvent(window, touchDevice.data()).press(0, from);
 
     int distance = qAbs(from.x() - to.x());
-    for (int dx = 2; dx < distance; dx += 2) {
+    for (int dx = delta; dx <= distance; dx += delta) {
         if (mouse)
             QTest::mouseMove(window, from - QPoint(dx, 0));
         else
