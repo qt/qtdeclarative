@@ -94,7 +94,7 @@ public:
 
     virtual bool contains(qreal x, qreal y) const = 0;
 
-    int index;
+    int index = -1;
     QPointer<QQuickItem> item;
     bool ownItem;
     QQuickItemChangeListener *changeListener;
