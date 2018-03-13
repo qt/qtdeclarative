@@ -43,9 +43,12 @@
 
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qlocale.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/private/qfileselector_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcQtQuickControlsStyle, "qt.quick.controls.style")
 
 static QString ensureSlash(const QString &path)
 {
@@ -130,6 +133,7 @@ QUrl QQuickStyleSelector::select(const QString &fileName) const
     // 1) requested style (e.g. "MyStyle", included in d->selectors)
     // 2) fallback style (e.g. "Material", included in d->selectors)
     // 3) default style (empty selector, not in d->selectors)
+    qCDebug(lcQtQuickControlsStyle) << "selecting" << fileName << "from" << d->paths << "with selectors" << d->selectors;
 
     int to = d->selectors.count() - 1;
     if (d->selectors.isEmpty() || !d->selectors.first().isEmpty())
@@ -140,8 +144,10 @@ QUrl QQuickStyleSelector::select(const QString &fileName) const
         const QString selector = d->selectors.value(i);
         for (const QString &path : d->paths) {
             const QUrl selectedUrl = d->select(ensureSlash(path) + selector + QLatin1Char('/') + fileName);
-            if (selectedUrl.isValid())
+            if (selectedUrl.isValid()) {
+                qCDebug(lcQtQuickControlsStyle) << "==>" << selectedUrl << "from" << path << "with selector" << selector;
                 return selectedUrl;
+            }
         }
     }
 
