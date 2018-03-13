@@ -154,4 +154,5 @@ qt.conf
 *.version
 *.version.in
 *.qmlc
+.qmlcache
 codeattributions.qdoc

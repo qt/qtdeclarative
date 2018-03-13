@@ -12,7 +12,7 @@ SOURCES += \
     $$PWD/qquickdefaultstyle.cpp \
     $$PWD/qquickdefaulttheme.cpp
 
-QML_CONTROLS = \
+QML_FILES += \
     $$PWD/AbstractButton.qml \
     $$PWD/Action.qml \
     $$PWD/ActionGroup.qml \
@@ -67,5 +67,3 @@ QML_CONTROLS = \
     $$PWD/ToolSeparator.qml \
     $$PWD/ToolTip.qml \
     $$PWD/Tumbler.qml
-
-!qtquickcompiler: QML_FILES += $$QML_CONTROLS

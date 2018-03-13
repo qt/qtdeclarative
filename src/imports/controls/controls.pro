@@ -11,7 +11,7 @@ include(controls.pri)
 
 OTHER_FILES += \
     qmldir \
-    $$QML_CONTROLS
+    $$QML_FILES
 
 SOURCES += \
     $$PWD/qtquickcontrols2plugin.cpp
@@ -22,15 +22,7 @@ RESOURCES += \
 !static: qtConfig(quick-designer): include(designer/designer.pri)
 include(doc/doc.pri)
 
-qtquickcompiler {
-    qmlfiles.prefix = /qt-project.org/imports/QtQuick/Controls.2
-    qmlfiles.files += $$QML_CONTROLS
-    RESOURCES += qmlfiles
-} else:!static {
-    CONFIG += qmlcache
-}
-
-CONFIG += no_cxx_module
+CONFIG += no_cxx_module install_qml_files builtin_resources qtquickcompiler
 load(qml_plugin)
 
 requires(qtConfig(quickcontrols2-default))
