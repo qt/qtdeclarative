@@ -1047,18 +1047,7 @@ void QQuickRangeSlider::mousePressEvent(QMouseEvent *event)
     Q_D(QQuickRangeSlider);
     QQuickControl::mousePressEvent(event);
     d->handleMove(event->localPos());
-}
-
-void QQuickRangeSlider::mouseMoveEvent(QMouseEvent *event)
-{
-    Q_D(QQuickRangeSlider);
-    if (!keepMouseGrab()) {
-        if (d->orientation == Qt::Horizontal)
-            setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->localPos().x() - d->pressPoint.x(), Qt::XAxis, event));
-        else
-            setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(event->localPos().y() - d->pressPoint.y(), Qt::YAxis, event));
-    }
-    QQuickControl::mouseMoveEvent(event);
+    setKeepMouseGrab(true);
 }
 
 #if QT_CONFIG(quicktemplates2_multitouch)

@@ -72,10 +72,15 @@ QtObject {
     property var __connections: []
 
     onExpectedSequenceChanged: reset()
-    onTargetChanged: __setup()
-    onSignalsChanged: __setup()
 
-    function __setup() {
+    // We may call __setup from onTargetChanged and as we would read the signals property
+    // inside __setup, we may be initializing the binding for signals for the first time, which
+    // will write the value to the property and trigger onSignalsChanged and call __setup
+    // again. One easy way to protect against it is to evaluate those two dependencies upfront
+    onTargetChanged: __setup(target, signals)
+    onSignalsChanged: __setup(target, signals)
+
+    function __setup(target, signals) {
         if (__oldTarget) {
             __connections.forEach(function (cx) {
                 __oldTarget[cx.name].disconnect(cx.method)
