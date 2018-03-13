@@ -1,7 +1,7 @@
-QML_FILES += \
+AUX_QML_FILES += \
     $$PWD/qtquickcontrols2.metainfo
 
-QML_FILES += \
+AUX_QML_FILES += \
     $$PWD/AbstractButtonSection.qml \
     $$PWD/BusyIndicatorSpecifics.qml \
     $$PWD/ButtonSection.qml \
@@ -47,5 +47,5 @@ QML_FILES += \
     $$PWD/ToolSeparatorSpecifics.qml \
     $$PWD/TumblerSpecifics.qml
 
-QML_FILES += \
+AUX_QML_FILES += \
     $$PWD/images/*.png
