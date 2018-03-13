@@ -304,9 +304,11 @@ bool ArrayData::getProperty(uint index, Property *p, PropertyAttributes *attrs)
     }
 
     *attrs = attributes(index);
-    p->value = *(Index{ this, mapped });
-    if (attrs->isAccessor())
-        p->set = *(Index{ this, mapped + 1 /*Object::SetterOffset*/ });
+    if (p) {
+        p->value = *(Index{ this, mapped });
+        if (attrs->isAccessor())
+            p->set = *(Index{ this, mapped + 1 /*Object::SetterOffset*/ });
+    }
     return true;
 }
 
