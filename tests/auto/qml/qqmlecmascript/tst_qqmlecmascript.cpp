@@ -6278,41 +6278,40 @@ void tst_qqmlecmascript::includeRemoteSuccess()
 void tst_qqmlecmascript::signalHandlers()
 {
     QQmlComponent component(&engine, testFileUrl("signalHandlers.qml"));
-    QObject *o = component.create();
+    QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
-
     QCOMPARE(o->property("count").toInt(), 0);
-    QMetaObject::invokeMethod(o, "testSignalCall");
+    QMetaObject::invokeMethod(o.data(), "testSignalCall");
     QCOMPARE(o->property("count").toInt(), 1);
 
-    QMetaObject::invokeMethod(o, "testSignalHandlerCall");
+    QMetaObject::invokeMethod(o.data(), "testSignalHandlerCall");
     QCOMPARE(o->property("count").toInt(), 1);
     QCOMPARE(o->property("errorString").toString(), QLatin1String("TypeError: Property 'onTestSignal' of object [object Object] is not a function"));
 
     QCOMPARE(o->property("funcCount").toInt(), 0);
-    QMetaObject::invokeMethod(o, "testSignalConnection");
+    QMetaObject::invokeMethod(o.data(), "testSignalConnection");
     QCOMPARE(o->property("funcCount").toInt(), 1);
 
-    QMetaObject::invokeMethod(o, "testSignalHandlerConnection");
+    QMetaObject::invokeMethod(o.data(), "testSignalHandlerConnection");
     QCOMPARE(o->property("funcCount").toInt(), 2);
 
-    QMetaObject::invokeMethod(o, "testSignalDefined");
+    QMetaObject::invokeMethod(o.data(), "testSignalDefined");
     QCOMPARE(o->property("definedResult").toBool(), true);
 
-    QMetaObject::invokeMethod(o, "testSignalHandlerDefined");
+    QMetaObject::invokeMethod(o.data(), "testSignalHandlerDefined");
     QCOMPARE(o->property("definedHandlerResult").toBool(), true);
 
     QVariant result;
-    QMetaObject::invokeMethod(o, "testConnectionOnAlias", Q_RETURN_ARG(QVariant, result));
+    QMetaObject::invokeMethod(o.data(), "testConnectionOnAlias", Q_RETURN_ARG(QVariant, result));
     QCOMPARE(result.toBool(), true);
 
-    QMetaObject::invokeMethod(o, "testAliasSignalHandler", Q_RETURN_ARG(QVariant, result));
+    QMetaObject::invokeMethod(o.data(), "testAliasSignalHandler", Q_RETURN_ARG(QVariant, result));
     QCOMPARE(result.toBool(), true);
 
-    QMetaObject::invokeMethod(o, "testSignalWithClosureArgument", Q_RETURN_ARG(QVariant, result));
+    QMetaObject::invokeMethod(o.data(), "testSignalWithClosureArgument", Q_RETURN_ARG(QVariant, result));
     QCOMPARE(result.toBool(), true);
-
-    delete o;
+    QMetaObject::invokeMethod(o.data(), "testThisInSignalHandler", Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result.toBool(), true);
 }
 
 void tst_qqmlecmascript::qtbug_37351()
