@@ -126,33 +126,47 @@ in your project's build directory and rename it to, for example,
  \li \l{The Qt Resource System}
 \endlist
 
-\section1 Application UI and Business Logic
+\section1 Separate UI from Logic
 
 One of the key goals that most application developers want to achieve is to
 create a maintainable application. One of the ways to achieve this goal is
-to separate the UI from the business logic. The following are a few reasons
-why application's UI should be in QML:
+to separate the user interface from the business logic. The following are a few
+reasons why an application's UI should be written in QML:
 
 \list
- \li QML is a declarative language, which suits best for defining UIs.
- \li It's easier to embed JavaScript in QML to respond to events, for example.
- \li QML is faster to code as it is not strongly typed.
+ \li Declarative languages are strongly suited for defining UIs.
+ \li QML code is simpler to write, as it is less verbose than C++, and is not
+     strongly typed. This also results in it being an excellent language to
+     prototype in, a quality that is vital when collaborating with designers,
+     for example.
+ \li JavaScript can easily be used in QML to respond to events.
 \endlist
 
-On the other hand, C++ being a strongly typed language, suits best for defining
-business logic. Typically, such code performs tasks such as complex calculations
-or larger data processing, which can be faster with C++ than with QML.
+Being a strongly typed language, C++ is best suited for an application's logic.
+Typically, such code performs tasks such as complex calculations
+or data processing, which are faster in C++ than QML.
 
 Qt offers various approaches to integrate QML and C++ code in an application.
-In most cases, the C++ part (business logic) provides the data model to the QML
-part (UI), which presents it in a readable form. It is often a challenge to
-decide when to use this approach. It is recommended to use QML
-if the data model is static, simple, and small, as C++ could be overkill.
-Use C++ if the application depends on a dynamic, large, and complex data model.
+A typical use case is displaying a list of data in a user interface.
+If the data set is static, simple, and/or small, a model written in QML can be
+sufficient.
 
-\omit
-examples snippets of simpler and complex data models.
-\endomit
+The following snippet demonstrates examples of models written in QML:
+
+\qml
+    model: ListModel {
+        ListElement { name: "Item 1" }
+        ListElement { name: "Item 2" }
+        ListElement { name: "Item 3" }
+    }
+
+    model: [ "Item 1", "Item 2", "Item 3" ]
+
+    model: 10
+\endqml
+
+Use \l {QAbstractItemModel Subclass}{C++} for dynamic data sets that are large
+or frequently modified.
 
 \section2 Interaction Path
 
