@@ -400,7 +400,7 @@ void Codegen::variableDeclarationList(VariableDeclarationList *ast)
 void Codegen::initializeAndDestructureBindingElement(AST::BindingElement *e, const Codegen::Reference &baseRef)
 {
     RegisterScope scope(this);
-    Reference varToStore = referenceForName(e->name, true);
+    Reference varToStore = e->name.isNull() ? Reference::fromStackSlot(this, bytecodeGenerator->newRegister()) : referenceForName(e->name, true);
     if (e->initializer && baseRef == varToStore) {
         baseRef.loadInAccumulator();
         BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
