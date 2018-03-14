@@ -22,21 +22,21 @@ QMLCACHE_RESOURCE_FILES =
 
 for(res, RESOURCES) {
     absRes = $$absolute_path($$res, $$_PRO_FILE_PWD_)
-    rccContents = $$system($$QMAKE_RCC_DEP -list $$absRes,lines)
+    rccContents = $$system($$QMAKE_RCC_DEP -list $$system_quote($$absRes),lines)
     contains(rccContents,.*\\.js$)|contains(rccContents,.*\\.qml$) {
         new_resource = $$qmlCacheResourceFileOutputName($$res)
         mkpath($$dirname(new_resource))
-        remaining_files = $$system($$QML_CACHEGEN_FILTER -filter-resource-file -o $$new_resource $$absRes,lines)
+        remaining_files = $$system($$QML_CACHEGEN_FILTER -filter-resource-file -o $$system_quote($$new_resource) $$system_quote($$absRes),lines)
         !isEmpty(remaining_files) {
             NEWRESOURCES += $$new_resource
-            QMLCACHE_LOADER_FLAGS += --resource-file-mapping=$$absRes=$$new_resource
+            QMLCACHE_LOADER_FLAGS += --resource-file-mapping=$$shell_quote($$absRes=$$new_resource)
         } else {
-            QMLCACHE_LOADER_FLAGS += --resource-file-mapping=$$absRes
+            QMLCACHE_LOADER_FLAGS += --resource-file-mapping=$$shell_quote($$absRes)
         }
 
         QMLCACHE_RESOURCE_FILES += $$absRes
 
-        for(candidate, $$list($$rccContents)) {
+        for(candidate, rccContents) {
             contains(candidate,.*\\.js$)|contains(candidate,.*\\.qml$) {
                 QMLCACHE_FILES += $$candidate
             }
@@ -50,7 +50,7 @@ RESOURCES = $$NEWRESOURCES
 
 QMLCACHE_RESOURCE_FLAGS =
 for(res, QMLCACHE_RESOURCE_FILES) {
-    QMLCACHE_RESOURCE_FLAGS += --resource=$$res
+    QMLCACHE_RESOURCE_FLAGS += --resource=$$shell_quote($$res)
 }
 
 defineReplace(qmlCacheOutputName) {
