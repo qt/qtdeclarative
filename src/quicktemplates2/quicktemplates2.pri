@@ -59,7 +59,6 @@ HEADERS += \
     $$PWD/qquickpopuppositioner_p_p.h \
     $$PWD/qquickpresshandler_p_p.h \
     $$PWD/qquickprogressbar_p.h \
-    $$PWD/qquickproxytheme_p.h \
     $$PWD/qquickradiobutton_p.h \
     $$PWD/qquickradiodelegate_p.h \
     $$PWD/qquickrangeslider_p.h \
@@ -136,7 +135,6 @@ SOURCES += \
     $$PWD/qquickpopuppositioner.cpp \
     $$PWD/qquickpresshandler.cpp \
     $$PWD/qquickprogressbar.cpp \
-    $$PWD/qquickproxytheme.cpp \
     $$PWD/qquickradiobutton.cpp \
     $$PWD/qquickradiodelegate.cpp \
     $$PWD/qquickrangeslider.cpp \
