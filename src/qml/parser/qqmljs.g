@@ -387,6 +387,7 @@ protected:
 
     AST::UiQualifiedId *reparseAsQualifiedId(AST::ExpressionNode *expr);
     AST::UiQualifiedPragmaId *reparseAsQualifiedPragmaId(AST::ExpressionNode *expr);
+    AST::FormalParameterList *reparseAsFormalParameterList(AST::ExpressionNode *expr);
 
     void pushToken(int token);
     int lookaheadToken(Lexer *lexer);
@@ -428,6 +429,14 @@ protected:
     SavedToken *last_token = nullptr;
 
     int functionNestingLevel = 0;
+
+    enum CoverExpressionType {
+        CE_Invalid,
+        CE_ParenthesizedExpression,
+        CE_FormalParameterList
+    };
+    AST::SourceLocation coverExpressionErrorLocation;
+    CoverExpressionType coverExpressionType = CE_Invalid;
 
     QList<DiagnosticMessage> diagnostic_messages;
 };
@@ -539,6 +548,34 @@ AST::UiQualifiedPragmaId *Parser::reparseAsQualifiedPragmaId(AST::ExpressionNode
     }
 
     return 0;
+}
+
+AST::FormalParameterList *Parser::reparseAsFormalParameterList(AST::ExpressionNode *expr)
+{
+    AST::FormalParameterList *f = nullptr;
+    if (AST::Expression *commaExpr = AST::cast<AST::Expression *>(expr)) {
+        f = reparseAsFormalParameterList(commaExpr->left);
+        if (!f)
+            return nullptr;
+
+        expr = commaExpr->right;
+    }
+
+    AST::ExpressionNode *rhs = nullptr;
+    if (AST::BinaryExpression *assign = AST::cast<AST::BinaryExpression *>(expr)) {
+            if (assign->op != QSOperator::Assign)
+                return nullptr;
+        expr = assign->left;
+        rhs = assign->right;
+    }
+    AST::BindingElement *binding = nullptr;
+    if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(expr)) {
+        binding = new (pool) AST::BindingElement(idExpr->name, rhs);
+        binding->identifierToken = idExpr->identifierToken;
+    }
+    if (!binding)
+        return nullptr;
+    return new (pool) AST::FormalParameterList(f, binding);
 }
 
 void Parser::pushToken(int token)
@@ -1423,8 +1460,16 @@ PrimaryExpression: RegularExpressionLiteral;
 PrimaryExpression: TemplateLiteral;
 
 PrimaryExpression: CoverParenthesizedExpressionAndArrowParameterList;
+/.
+    case $rule_number: {
+        if (coverExpressionType != CE_ParenthesizedExpression) {
+            syntaxError(coverExpressionErrorLocation, "Expected token ')'.");
+            return false;
+        }
+    } break;
+./
 
--- ### Further restricted parsing of the CoverParenthesizedExpressionAndArrowParameterList to the one rule below when this is parsed as a primary expression!
+-- Parsing of the CoverParenthesizedExpressionAndArrowParameterList is restricted to the one rule below when this is parsed as a primary expression
 CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN Expression_In T_RPAREN;
 /.
     case $rule_number: {
@@ -1432,14 +1477,42 @@ CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN Expression_In T_RPAR
         node->lparenToken = loc(1);
         node->rparenToken = loc(3);
         sym(1).Node = node;
+        coverExpressionType = CE_ParenthesizedExpression;
     } break;
 ./
 
 CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN T_RPAREN;
-CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN T_ELLIPSIS BindingIdentifier T_RPAREN;
-CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN T_ELLIPSIS BindingPattern T_RPAREN;
-CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN Expression_In T_COMMA T_ELLIPSIS BindingIdentifier T_RPAREN;
-CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN Expression_In T_COMMA T_ELLIPSIS BindingPattern T_RPAREN;
+/.
+    case $rule_number: {
+        sym(1).Node = nullptr;
+        coverExpressionErrorLocation = loc(2);
+        coverExpressionType = CE_FormalParameterList;
+    } break;
+./
+
+CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN BindingRestElement T_RPAREN;
+/.
+    case $rule_number: {
+        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(2).Node))->finish();
+        sym(1).Node = node;
+        coverExpressionErrorLocation = loc(2);
+        coverExpressionType = CE_FormalParameterList;
+    } break;
+./
+
+CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN Expression_In T_COMMA BindingRestElementOpt T_RPAREN;
+/.
+    case $rule_number: {
+        AST::FormalParameterList *list = reparseAsFormalParameterList(sym(2).Expression);
+        if (!list)
+            syntaxError(loc(1), "Invalid Arrow parameter list.");
+        if (sym(4).Node)
+            list = new (pool) AST::FormalParameterList(list, sym(4).Node);
+        coverExpressionErrorLocation = loc(4);
+        coverExpressionType = CE_FormalParameterList;
+        sym(1).Node = list->finish();
+    } break;
+./
 
 Literal: T_NULL;
 /.
@@ -3361,17 +3434,63 @@ FunctionRBrace: T_RBRACE;
 FunctionBody: FunctionStatementList;
 FunctionStatementList: StatementListOpt;
 
-ArrowFunction: ArrowParameters T_ARROW ConciseBody;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
-ArrowFunction_In: ArrowParameters T_ARROW ConciseBody_In;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+ArrowFunction: ArrowParameters T_ARROW ConciseBodyLookahead AssignmentExpression; -- [lookahead ≠ {]
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+ArrowFunction_In: ArrowParameters T_ARROW ConciseBodyLookahead AssignmentExpression_In; -- [lookahead ≠ {]
+/.
+    case $rule_number: {
+        AST::ReturnStatement *ret = new (pool) AST::ReturnStatement(sym(4).Expression);
+        ret->returnToken = sym(4).Node->firstSourceLocation();
+        ret->semicolonToken = sym(4).Node->lastSourceLocation();
+        AST::StatementList *statements = (new (pool) AST::StatementList(ret))->finish();
+        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(QStringRef(), sym(1).FormalParameterList, statements);
+        f->isArrowFunction = true;
+        f->functionToken = sym(1).Node ? sym(1).Node->firstSourceLocation() : loc(1);
+        f->lbraceToken = sym(4).Node->firstSourceLocation();
+        f->rbraceToken = sym(4).Node->lastSourceLocation();
+        sym(1).Node = f;
+    } break;
+./
+
+ArrowFunction: ArrowParameters T_ARROW ConciseBodyLookahead T_FORCE_BLOCK FunctionLBrace FunctionBody FunctionRBrace;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+ArrowFunction_In: ArrowParameters T_ARROW ConciseBodyLookahead T_FORCE_BLOCK FunctionLBrace FunctionBody FunctionRBrace;
+/.
+    case $rule_number: {
+        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(QStringRef(), sym(1).FormalParameterList, sym(6).StatementList);
+        f->isArrowFunction = true;
+        f->functionToken = sym(1).Node ? sym(1).Node->firstSourceLocation() : loc(1);
+        f->lbraceToken = loc(6);
+        f->rbraceToken = loc(7);
+        sym(1).Node = f;
+    } break;
+./
 
 ArrowParameters: BindingIdentifier;
+/.
+    case $rule_number: {
+        AST::BindingElement *e = new (pool) AST::BindingElement(stringRef(1));
+        e->identifierToken = loc(1);
+        sym(1).FormalParameterList = (new (pool) AST::FormalParameterList(nullptr, e))->finish();
+    } break;
+./
 
+-- CoverParenthesizedExpressionAndArrowParameterList for ArrowParameters i being refined to:
+-- ArrowFormalParameters: T_LPAREN StrictFormalParameters T_RPAREN
 ArrowParameters: CoverParenthesizedExpressionAndArrowParameterList;
-
--- ### CoverParenthesizedExpressionAndArrowParameterList for ArrowParameters refined to:
--- ArrowFormalParameters[Yield]: (StrictFormalParameters[?Yield])
+/.
+    case $rule_number: {
+        if (coverExpressionType != CE_FormalParameterList) {
+            AST::NestedExpression *ne = static_cast<AST::NestedExpression *>(sym(1).Node);
+            AST::FormalParameterList *list = reparseAsFormalParameterList(ne->expression);
+            if (!list) {
+                syntaxError(loc(1), "Invalid Arrow parameter list.");
+                return false;
+            }
+            sym(1).Node = list->finish();
+        }
+    } break;
+./
 
 ConciseBodyLookahead: ;
 /:
@@ -3383,11 +3502,6 @@ ConciseBodyLookahead: ;
             pushToken(T_FORCE_BLOCK);
     } break;
 ./
-
-ConciseBody: ConciseBodyLookahead AssignmentExpression; -- [lookahead ≠ {]
-ConciseBody_In: ConciseBodyLookahead AssignmentExpression_In; -- [lookahead ≠ {]
-ConciseBody: ConciseBodyLookahead T_FORCE_BLOCK FunctionLBrace FunctionBody FunctionRBrace;
-ConciseBody_In: ConciseBodyLookahead T_FORCE_BLOCK FunctionLBrace FunctionBody FunctionRBrace;
 
 MethodDefinition: PropertyName T_LPAREN StrictFormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.  case $rule_number: { UNIMPLEMENTED; } ./

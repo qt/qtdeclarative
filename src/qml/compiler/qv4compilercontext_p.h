@@ -141,6 +141,7 @@ struct Context {
     bool hasDirectEval = false;
     bool hasNestedFunctions = false;
     bool isStrict = false;
+    bool isArrowFunction = false;
     bool usesThis = false;
     bool hasTry = false;
     bool hasWith = false;

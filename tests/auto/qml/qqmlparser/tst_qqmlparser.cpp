@@ -81,6 +81,13 @@ public:
             const quint32 parentBegin = parent->firstSourceLocation().begin();
             const quint32 parentEnd = parent->lastSourceLocation().end();
 
+            if (node->firstSourceLocation().begin() < parentBegin)
+                qDebug() << "first source loc failed: node:" << node->kind << "at" << node->firstSourceLocation().startLine << "/" << node->firstSourceLocation().startColumn
+                         << "parent" << parent->kind << "at" << parent->firstSourceLocation().startLine << "/" << parent->firstSourceLocation().startColumn;
+            if (node->lastSourceLocation().end() > parentEnd)
+                qDebug() << "first source loc failed: node:" << node->kind << "at" << node->lastSourceLocation().startLine << "/" << node->lastSourceLocation().startColumn
+                         << "parent" << parent->kind << "at" << parent->lastSourceLocation().startLine << "/" << parent->lastSourceLocation().startColumn;
+
             QVERIFY(node->firstSourceLocation().begin() >= parentBegin);
             QVERIFY(node->lastSourceLocation().end() <= parentEnd);
         }

@@ -100,6 +100,7 @@ struct Q_QML_EXPORT Function {
 
     inline bool usesArgumentsObject() const { return compiledFunction->flags & CompiledData::Function::UsesArgumentsObject; }
     inline bool isStrict() const { return compiledFunction->flags & CompiledData::Function::IsStrict; }
+    inline bool isArrowFunction() const { return compiledFunction->flags & CompiledData::Function::IsArrowFunction; }
 
     QQmlSourceLocation sourceLocation() const
     {

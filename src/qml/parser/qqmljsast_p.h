@@ -1327,7 +1327,7 @@ public:
     void accept0(Visitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
-    { return statement ? statement->firstSourceLocation() : statement->firstSourceLocation(); }
+    { return statement->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
     { return next ? next->lastSourceLocation() : statement->lastSourceLocation(); }
@@ -2061,6 +2061,7 @@ public:
 
 // attributes
     QStringRef name;
+    bool isArrowFunction = false;
     FormalParameterList *formals;
     StatementList *body;
     SourceLocation functionToken;

@@ -210,7 +210,7 @@ struct Function
         IsStrict            = 0x1,
         HasDirectEval       = 0x2,
         UsesArgumentsObject = 0x4,
-//        Unused  = 0x8,
+        IsArrowFunction     = 0x8,
         HasCatchOrWith      = 0x10
     };
 

@@ -408,6 +408,8 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
 
     if (formals->containsName(QStringLiteral("arguments")))
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
+    if (expr && expr->isArrowFunction)
+        _context->isArrowFunction = true;
 
 
     if (!name.isEmpty() && !formals->containsName(name))
