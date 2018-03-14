@@ -547,6 +547,9 @@ again:
                 return T_EQ_EQ_EQ;
             }
             return T_EQ_EQ;
+        } else if (_char == QLatin1Char('>')) {
+            scanChar();
+            return T_ARROW;
         }
         return T_EQ;
 
@@ -656,6 +659,9 @@ again:
         if (_char == QLatin1Char('=')) {
             scanChar();
             return T_STAR_EQ;
+        } else if (_char == QLatin1Char('*')) {
+            scanChar();
+            return T_STAR_STAR;
         }
         return T_STAR;
 
