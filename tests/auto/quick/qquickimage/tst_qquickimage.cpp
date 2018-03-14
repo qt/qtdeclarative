@@ -445,6 +445,12 @@ void tst_qquickimage::svg()
     // Due to aspect ratio calculations we can't get a precise
     // check for all setups, so we allow a small margin of error
     QVERIFY(qAbs(obj->height() - 141) < 1);
+
+    // Setting it to a size bigger than the actual file, SVG formats
+    // can scale up although other image formats cannot
+    obj->setSourceSize(QSize(800,0));
+    QCOMPARE(obj->width(), 800.0);
+    QVERIFY(qAbs(obj->height() - 1131) < 1);
     delete obj;
 }
 
