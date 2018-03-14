@@ -28,7 +28,7 @@
 /*!
 \page qtquick-bestpractices.html
 \title Qt Quick Best Practices
-\brief Lists the practices that works best for Qt Quick
+\brief Lists the practices that work best for Qt Quick
 
 Besides all the benefits that Qt Quick offers, it can be challenging in certain
 situations. For example, a Qt Quick application with a large codebase can be
@@ -48,7 +48,7 @@ controls are also available with Qt Quick Controls 2. They cater to the most
 common use cases without any change, and offer a lot more possibilities with their
 customization options. In particular, Qt Quick Controls 2 provides styling
 options that align with the latest UI design trends. If these UI controls do not
-satisfy to your application's needs, only then it is recommended to create a
+satisfy your application's needs, only then it is recommended to create a
 custom control.
 
 
