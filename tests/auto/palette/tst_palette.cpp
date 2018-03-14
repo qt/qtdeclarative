@@ -223,54 +223,8 @@ public:
     {
         std::fill(palettes, palettes + QQuickTheme::NPalettes, static_cast<QPalette *>(0));
 
-        QPalette palette = QPalette();
-        palette.setColor(QPalette::Window, Qt::gray);
-        palettes[QQuickTheme::SystemPalette] = new QPalette(palette);
-
-        palette.setColor(QPalette::ToolTipBase, Qt::yellow);
-        palettes[QQuickTheme::ToolTipPalette] = new QPalette(palette);
-
-        palette.setColor(QPalette::ButtonText, Qt::blue);
-        palettes[QQuickTheme::ToolButtonPalette] = new QPalette(palette);
-
-        palette.setColor(QPalette::Button, Qt::red);
-        palettes[QQuickTheme::ButtonPalette] = new QPalette(palette);
-
-        palette.setColor(QPalette::Text, Qt::green);
-        palettes[QQuickTheme::CheckBoxPalette] = new QPalette(palette);
-
-        palette.setColor(QPalette::Text, Qt::blue);
-        palettes[QQuickTheme::RadioButtonPalette] = new QPalette(palette);
-
-        // HeaderPalette unused
-
-        palette.setColor(QPalette::Base, Qt::darkGray);
-        palettes[QQuickTheme::ComboBoxPalette] = new QPalette(palette);
-
-        palette.setColor(QPalette::Base, Qt::lightGray);
-        palettes[QQuickTheme::ItemViewPalette] = new QPalette(palette);
-
-        // MessageBoxLabelPalette unused
-
-        palette.setColor(QPalette::ButtonText, Qt::white);
-        palettes[QQuickTheme::TabBarPalette] = new QPalette(palette);
-
-        palette.setColor(QPalette::WindowText, Qt::darkGray);
-        palettes[QQuickTheme::LabelPalette] = new QPalette(palette);
-
-        palette.setColor(QPalette::Mid, Qt::gray);
-        palettes[QQuickTheme::GroupBoxPalette] = new QPalette(palette);
-
-        palette.setColor(QPalette::Shadow, Qt::darkYellow);
-        palettes[QQuickTheme::MenuPalette] = new QPalette(palette);
-
-        // MenuBarPalette unused
-
-        palette.setColor(QPalette::Base, Qt::cyan);
-        palettes[QQuickTheme::TextEditPalette] = new QPalette(palette);
-
-        palette.setColor(QPalette::Base, Qt::magenta);
-        palettes[QQuickTheme::TextLineEditPalette] = new QPalette(palette);
+        for (int i = QQuickTheme::SystemPalette; i < QQuickTheme::NPalettes; ++i)
+            palettes[i] = new QPalette(QColor::fromRgb(i));
     }
 
     const QPalette *palette(Palette type = SystemPalette) const override
@@ -339,11 +293,13 @@ void tst_palette::defaultPalette()
     QFETCH(QString, control);
     QFETCH(QQuickTheme::Palette, paletteType);
 
-    QQuickTheme::setCurrent(new TestTheme);
-
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QString("import QtQuick.Controls 2.3; %1 { }").arg(control).toUtf8(), QUrl());
+
+    // The call to setData() above causes QQuickDefaultTheme to be set as the current theme,
+    // so we must make sure we only set our theme afterwards.
+    QQuickTheme::setCurrent(new TestTheme);
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
