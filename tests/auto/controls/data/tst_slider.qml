@@ -863,5 +863,7 @@ TestCase {
         compare(pressedSpy.count, pressedCount)
         compare(movedSpy.count, ++movedCount)
         compare(control.pressed, true)
+
+        touch.release(0, control, x0 + data.dx2, y0 + data.dy2).commit()
     }
 }
