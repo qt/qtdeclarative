@@ -44,35 +44,57 @@ QT_BEGIN_NAMESPACE
 
 QScopedPointer<QQuickTheme> QQuickThemePrivate::current;
 
-static QPlatformTheme::Font platformFont(QQuickTheme::Font type)
+static QPlatformTheme::Font platformFont(QQuickTheme::Scope scope)
 {
-    switch (type) {
-    case QQuickTheme::SpinBoxFont:
-        return QPlatformTheme::EditorFont;
-    case QQuickTheme::SwitchFont:
-        return QPlatformTheme::CheckBoxFont;
-    case QQuickTheme::TumblerFont:
-        return QPlatformTheme::ItemViewFont;
-    default:
-        return static_cast<QPlatformTheme::Font>(type);
+    switch (scope) {
+    case QQuickTheme::Button: return QPlatformTheme::PushButtonFont;
+    case QQuickTheme::CheckBox: return QPlatformTheme::CheckBoxFont;
+    case QQuickTheme::ComboBox: return QPlatformTheme::ComboMenuItemFont;
+    case QQuickTheme::GroupBox: return QPlatformTheme::GroupBoxTitleFont;
+    case QQuickTheme::ItemView: return QPlatformTheme::ItemViewFont;
+    case QQuickTheme::Label: return QPlatformTheme::LabelFont;
+    case QQuickTheme::ListView: return QPlatformTheme::ListViewFont;
+    case QQuickTheme::Menu: return QPlatformTheme::MenuFont;
+    case QQuickTheme::MenuBar: return QPlatformTheme::MenuBarFont;
+    case QQuickTheme::RadioButton: return QPlatformTheme::RadioButtonFont;
+    case QQuickTheme::SpinBox: return QPlatformTheme::EditorFont;
+    case QQuickTheme::Switch: return QPlatformTheme::CheckBoxFont;
+    case QQuickTheme::TabBar: return QPlatformTheme::TabButtonFont;
+    case QQuickTheme::TextArea: return QPlatformTheme::EditorFont;
+    case QQuickTheme::TextField: return QPlatformTheme::EditorFont;
+    case QQuickTheme::ToolBar: return QPlatformTheme::ToolButtonFont;
+    case QQuickTheme::ToolTip: return QPlatformTheme::TipLabelFont;
+    case QQuickTheme::Tumbler: return QPlatformTheme::ItemViewFont;
+    default: return QPlatformTheme::SystemFont;
     }
 }
 
-static QPlatformTheme::Palette platformPalette(QQuickTheme::Palette type)
+static QPlatformTheme::Palette platformPalette(QQuickTheme::Scope scope)
 {
-    switch (type) {
-    case QQuickTheme::SpinBoxPalette:
-        return QPlatformTheme::TextLineEditPalette;
-    case QQuickTheme::SwitchPalette:
-        return QPlatformTheme::CheckBoxPalette;
-    case QQuickTheme::TumblerPalette:
-        return QPlatformTheme::ItemViewPalette;
-    default:
-        return static_cast<QPlatformTheme::Palette>(type);
+    switch (scope) {
+    case QQuickTheme::Button: return QPlatformTheme::ButtonPalette;
+    case QQuickTheme::CheckBox: return QPlatformTheme::CheckBoxPalette;
+    case QQuickTheme::ComboBox: return QPlatformTheme::ComboBoxPalette;
+    case QQuickTheme::GroupBox: return QPlatformTheme::GroupBoxPalette;
+    case QQuickTheme::ItemView: return QPlatformTheme::ItemViewPalette;
+    case QQuickTheme::Label: return QPlatformTheme::LabelPalette;
+    case QQuickTheme::ListView: return QPlatformTheme::ItemViewPalette;
+    case QQuickTheme::Menu: return QPlatformTheme::MenuPalette;
+    case QQuickTheme::MenuBar: return QPlatformTheme::MenuBarPalette;
+    case QQuickTheme::RadioButton: return QPlatformTheme::RadioButtonPalette;
+    case QQuickTheme::SpinBox: return QPlatformTheme::TextLineEditPalette;
+    case QQuickTheme::Switch: return QPlatformTheme::CheckBoxPalette;
+    case QQuickTheme::TabBar: return QPlatformTheme::TabBarPalette;
+    case QQuickTheme::TextArea: return QPlatformTheme::TextEditPalette;
+    case QQuickTheme::TextField: return QPlatformTheme::TextLineEditPalette;
+    case QQuickTheme::ToolBar: return QPlatformTheme::ToolButtonPalette;
+    case QQuickTheme::ToolTip: return QPlatformTheme::ToolTipPalette;
+    case QQuickTheme::Tumbler: return QPlatformTheme::ItemViewPalette;
+    default: return QPlatformTheme::SystemPalette;
     }
 }
 
-const QFont *QQuickThemePrivate::resolveThemeFont(QQuickTheme::Font type)
+const QFont *QQuickThemePrivate::resolveThemeFont(QQuickTheme::Scope scope)
 {
     Q_Q(QQuickTheme);
     if (!hasResolvedFonts) {
@@ -80,10 +102,10 @@ const QFont *QQuickThemePrivate::resolveThemeFont(QQuickTheme::Font type)
         hasResolvedFonts = true;
         defaultFont.reset();
     }
-    return q->font(type);
+    return q->font(scope);
 }
 
-const QPalette *QQuickThemePrivate::resolveThemePalette(QQuickTheme::Palette type)
+const QPalette *QQuickThemePrivate::resolveThemePalette(QQuickTheme::Scope scope)
 {
     Q_Q(QQuickTheme);
     if (!hasResolvedPalettes) {
@@ -91,7 +113,7 @@ const QPalette *QQuickThemePrivate::resolveThemePalette(QQuickTheme::Palette typ
         hasResolvedPalettes = true;
         defaultPalette.reset();
     }
-    return q->palette(type);
+    return q->palette(scope);
 }
 
 QQuickTheme::QQuickTheme()
@@ -114,17 +136,17 @@ void QQuickTheme::setCurrent(QQuickTheme *theme)
     QQuickThemePrivate::current.reset(theme);
 }
 
-QFont QQuickTheme::themeFont(Font type)
+QFont QQuickTheme::themeFont(Scope scope)
 {
     const QFont *font = nullptr;
     if (QQuickTheme *theme = current())
-        font = QQuickThemePrivate::get(theme)->resolveThemeFont(type);
+        font = QQuickThemePrivate::get(theme)->resolveThemeFont(scope);
     else if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
-        font = theme->font(platformFont(type));
+        font = theme->font(platformFont(scope));
 
     if (font) {
         QFont f = *font;
-        if (type == SystemFont)
+        if (scope == System)
             f.resolve(0);
         return f;
     }
@@ -132,17 +154,17 @@ QFont QQuickTheme::themeFont(Font type)
     return QFont();
 }
 
-QPalette QQuickTheme::themePalette(Palette type)
+QPalette QQuickTheme::themePalette(Scope scope)
 {
     const QPalette *palette = nullptr;
     if (QQuickTheme *theme = current())
-        palette = QQuickThemePrivate::get(theme)->resolveThemePalette(type);
+        palette = QQuickThemePrivate::get(theme)->resolveThemePalette(scope);
     else if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
-        palette = theme->palette(platformPalette(type));
+        palette = theme->palette(platformPalette(scope));
 
     if (palette) {
         QPalette f = *palette;
-        if (type == SystemPalette)
+        if (scope == System)
             f.resolve(0);
         return f;
     }
@@ -150,17 +172,17 @@ QPalette QQuickTheme::themePalette(Palette type)
     return QPalette();
 }
 
-const QFont *QQuickTheme::font(Font type) const
+const QFont *QQuickTheme::font(Scope scope) const
 {
     Q_D(const QQuickTheme);
-    Q_UNUSED(type)
+    Q_UNUSED(scope)
     return d->defaultFont.data();
 }
 
-const QPalette *QQuickTheme::palette(Palette type) const
+const QPalette *QQuickTheme::palette(Scope scope) const
 {
     Q_D(const QQuickTheme);
-    Q_UNUSED(type)
+    Q_UNUSED(scope)
     return d->defaultPalette.data();
 }
 

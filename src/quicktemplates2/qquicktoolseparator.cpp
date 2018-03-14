@@ -133,9 +133,14 @@ bool QQuickToolSeparator::isVertical() const
     return d->orientation == Qt::Vertical;
 }
 
+QFont QQuickToolSeparator::defaultFont() const
+{
+    return QQuickTheme::themeFont(QQuickTheme::ToolBar);
+}
+
 QPalette QQuickToolSeparator::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::ToolButtonPalette);
+    return QQuickTheme::themePalette(QQuickTheme::ToolBar);
 }
 
 #if QT_CONFIG(accessibility)

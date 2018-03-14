@@ -60,6 +60,7 @@ public:
     explicit QQuickMenuSeparator(QQuickItem *parent = nullptr);
 
 protected:
+    QFont defaultFont() const override;
     QPalette defaultPalette() const override;
 
 #if QT_CONFIG(accessibility)

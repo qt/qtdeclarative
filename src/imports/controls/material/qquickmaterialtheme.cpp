@@ -98,25 +98,26 @@ void QQuickMaterialTheme::resolveFonts(const QFont &defaultFont)
     editorFont = defaultFont.resolve(editorFont);
 }
 
-const QFont *QQuickMaterialTheme::font(Font type) const
+const QFont *QQuickMaterialTheme::font(Scope scope) const
 {
-    switch (type) {
-    case TabButtonFont:
-    case PushButtonFont:
-    case ToolButtonFont:
+    switch (scope) {
+    case Button:
+    case TabBar:
+    case ToolBar:
         return &buttonFont;
-    case TipLabelFont:
+    case ToolTip:
         return &toolTipFont;
-    case ItemViewFont:
+    case ItemView:
         return &itemViewFont;
-    case ListViewFont:
+    case ListView:
         return &listViewFont;
-    case MenuBarFont:
-    case MenuItemFont:
-    case ComboMenuItemFont:
+    case Menu:
+    case MenuBar:
+    case ComboBox:
         return &menuItemFont;
-    case EditorFont:
-    case SpinBoxFont:
+    case TextArea:
+    case TextField:
+    case SpinBox:
         return &editorFont;
     default:
         return &systemFont;

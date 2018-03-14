@@ -66,71 +66,34 @@ public:
     static QQuickTheme *current();
     static void setCurrent(QQuickTheme *theme);
 
-    enum Font {
-        SystemFont,
-        MenuFont,
-        MenuBarFont,
-        MenuItemFont,
-        MessageBoxFont,
-        LabelFont,
-        TipLabelFont,
-        StatusBarFont,
-        TitleBarFont,
-        MdiSubWindowTitleFont,
-        DockWidgetTitleFont,
-        PushButtonFont,
-        CheckBoxFont,
-        RadioButtonFont,
-        ToolButtonFont,
-        ItemViewFont,
-        ListViewFont,
-        HeaderViewFont,
-        ListBoxFont,
-        ComboMenuItemFont,
-        ComboLineEditFont,
-        SmallFont,
-        MiniFont,
-        FixedFont,
-        GroupBoxTitleFont,
-        TabButtonFont,
-        EditorFont,
-        SwitchFont,
-        SpinBoxFont,
-        TumblerFont,
-        NFonts
+    enum Scope {
+        System,
+        Button,
+        CheckBox,
+        ComboBox,
+        GroupBox,
+        ItemView,
+        Label,
+        ListView,
+        Menu,
+        MenuBar,
+        RadioButton,
+        SpinBox,
+        Switch,
+        TabBar,
+        TextArea,
+        TextField,
+        ToolBar,
+        ToolTip,
+        Tumbler
     };
 
-    enum Palette {
-        SystemPalette,
-        ToolTipPalette,
-        ToolButtonPalette,
-        ButtonPalette,
-        CheckBoxPalette,
-        RadioButtonPalette,
-        HeaderPalette,
-        ComboBoxPalette,
-        ItemViewPalette,
-        MessageBoxLabelPelette,
-        MessageBoxLabelPalette = MessageBoxLabelPelette,
-        TabBarPalette,
-        LabelPalette,
-        GroupBoxPalette,
-        MenuPalette,
-        MenuBarPalette,
-        TextEditPalette,
-        TextLineEditPalette,
-        SpinBoxPalette,
-        SwitchPalette,
-        TumblerPalette,
-        NPalettes
-    };
-
-    static QFont themeFont(Font type);
-    static QPalette themePalette(Palette type);
+    static QFont themeFont(Scope scope);
+    static QPalette themePalette(Scope scope);
 
 protected:
-    virtual const QFont *font(Font type) const;
-    virtual const QPalette *palette(Palette type) const;
+    virtual const QFont *font(Scope scope) const;
+    virtual const QPalette *palette(Scope scope) const;
 
     virtual void resolveFonts(const QFont &defaultFont);
     virtual void resolvePalettes(const QPalette &defaultPalette);

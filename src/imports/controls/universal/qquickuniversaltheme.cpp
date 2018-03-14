@@ -67,12 +67,12 @@ void QQuickUniversalTheme::resolveFonts(const QFont &defaultFont)
     tabButtonFont = defaultFont.resolve(tabButtonFont);
 }
 
-const QFont *QQuickUniversalTheme::font(Font type) const
+const QFont *QQuickUniversalTheme::font(Scope scope) const
 {
-    switch (type) {
-    case GroupBoxTitleFont:
+    switch (scope) {
+    case GroupBox:
         return &groupBoxTitleFont;
-    case TabButtonFont:
+    case TabBar:
         return &tabButtonFont;
     default:
         return &systemFont;

@@ -59,7 +59,7 @@ public:
     explicit QQuickUniversalTheme();
 
 protected:
-    const QFont *font(Font type) const override;
+    const QFont *font(Scope scope) const override;
 
     void resolveFonts(const QFont &defaultFont) override;
 

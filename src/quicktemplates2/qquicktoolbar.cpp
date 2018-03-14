@@ -141,9 +141,14 @@ void QQuickToolBar::setPosition(Position position)
     emit positionChanged();
 }
 
+QFont QQuickToolBar::defaultFont() const
+{
+    return QQuickTheme::themeFont(QQuickTheme::ToolBar);
+}
+
 QPalette QQuickToolBar::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::ToolButtonPalette);
+    return QQuickTheme::themePalette(QQuickTheme::ToolBar);
 }
 
 #if QT_CONFIG(accessibility)

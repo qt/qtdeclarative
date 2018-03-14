@@ -75,6 +75,7 @@ Q_SIGNALS:
     void positionChanged();
 
 protected:
+    QFont defaultFont() const override;
     QPalette defaultPalette() const override;
 
 #if QT_CONFIG(accessibility)

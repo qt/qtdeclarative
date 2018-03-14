@@ -202,7 +202,12 @@ void QQuickSwitchDelegate::touchEvent(QTouchEvent *event)
 
 QFont QQuickSwitchDelegate::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::ListViewFont);
+    return QQuickTheme::themeFont(QQuickTheme::ListView);
+}
+
+QPalette QQuickSwitchDelegate::defaultPalette() const
+{
+    return QQuickTheme::themePalette(QQuickTheme::ListView);
 }
 
 void QQuickSwitchDelegate::mirrorChange()

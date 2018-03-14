@@ -62,8 +62,8 @@ public:
         return theme->d_func();
     }
 
-    const QFont *resolveThemeFont(QQuickTheme::Font type);
-    const QPalette *resolveThemePalette(QQuickTheme::Palette type);
+    const QFont *resolveThemeFont(QQuickTheme::Scope scope);
+    const QPalette *resolveThemePalette(QQuickTheme::Scope scope);
 
     static QScopedPointer<QQuickTheme> current;
 

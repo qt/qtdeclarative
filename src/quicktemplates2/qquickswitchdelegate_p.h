@@ -79,6 +79,8 @@ protected:
 #endif
 
     QFont defaultFont() const override;
+    QPalette defaultPalette() const override;
+
     void mirrorChange() override;
 
     void nextCheckState() override;

@@ -58,7 +58,7 @@ public:
     explicit QQuickDefaultTheme();
 
 protected:
-    const QPalette *palette(Palette type) const override;
+    const QPalette *palette(Scope scope) const override;
 
     void resolvePalettes(const QPalette &defaultPalette) override;
 

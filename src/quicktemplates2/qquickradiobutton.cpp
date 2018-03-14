@@ -99,12 +99,12 @@ QQuickRadioButton::QQuickRadioButton(QQuickItem *parent)
 
 QFont QQuickRadioButton::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::RadioButtonFont);
+    return QQuickTheme::themeFont(QQuickTheme::RadioButton);
 }
 
 QPalette QQuickRadioButton::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::RadioButtonPalette);
+    return QQuickTheme::themePalette(QQuickTheme::RadioButton);
 }
 
 #if QT_CONFIG(accessibility)

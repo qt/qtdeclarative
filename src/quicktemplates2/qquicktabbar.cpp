@@ -441,9 +441,14 @@ void QQuickTabBar::itemRemoved(int index, QQuickItem *item)
         polish();
 }
 
+QFont QQuickTabBar::defaultFont() const
+{
+    return QQuickTheme::themeFont(QQuickTheme::TabBar);
+}
+
 QPalette QQuickTabBar::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::TabBarPalette);
+    return QQuickTheme::themePalette(QQuickTheme::TabBar);
 }
 
 #if QT_CONFIG(accessibility)

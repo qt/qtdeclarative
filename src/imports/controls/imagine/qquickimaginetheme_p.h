@@ -58,8 +58,8 @@ public:
     explicit QQuickImagineTheme();
 
 protected:
-    const QFont *font(Font type) const override;
-    const QPalette *palette(Palette type) const override;
+    const QFont *font(Scope scope) const override;
+    const QPalette *palette(Scope scope) const override;
 
     void resolveFonts(const QFont &defaultFont) override;
     void resolvePalettes(const QPalette &defaultPalette) override;

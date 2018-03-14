@@ -1705,12 +1705,12 @@ void QQuickComboBox::localeChange(const QLocale &newLocale, const QLocale &oldLo
 
 QFont QQuickComboBox::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::ComboMenuItemFont);
+    return QQuickTheme::themeFont(QQuickTheme::ComboBox);
 }
 
 QPalette QQuickComboBox::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::ComboBoxPalette);
+    return QQuickTheme::themePalette(QQuickTheme::ComboBox);
 }
 
 #if QT_CONFIG(accessibility)

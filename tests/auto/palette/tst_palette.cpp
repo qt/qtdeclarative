@@ -87,7 +87,7 @@ void tst_palette::palette_data()
     QTest::addColumn<QString>("testFile");
     QTest::addColumn<QPalette>("expectedPalette");
 
-    QPalette defaultPalette = QQuickTheme::themePalette(QQuickTheme::SystemPalette);
+    QPalette defaultPalette = QQuickTheme::themePalette(QQuickTheme::System);
     defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
     defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 
@@ -171,7 +171,7 @@ void tst_palette::inheritance()
     QObject *grandChild = window->property("grandChild").value<QObject *>();
     QVERIFY(control && child && grandChild);
 
-    QPalette defaultPalette = QQuickTheme::themePalette(QQuickTheme::SystemPalette);
+    QPalette defaultPalette = QQuickTheme::themePalette(QQuickTheme::System);
     defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
     defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 
@@ -219,79 +219,81 @@ void tst_palette::inheritance()
 class TestTheme : public QQuickTheme
 {
 public:
+    static const int NPalettes = QQuickTheme::Tumbler + 1;
+
     TestTheme()
     {
-        std::fill(palettes, palettes + QQuickTheme::NPalettes, static_cast<QPalette *>(0));
+        std::fill(palettes, palettes + NPalettes, static_cast<QPalette *>(0));
 
-        for (int i = QQuickTheme::SystemPalette; i < QQuickTheme::NPalettes; ++i)
+        for (int i = 0; i < NPalettes; ++i)
             palettes[i] = new QPalette(QColor::fromRgb(i));
     }
 
-    const QPalette *palette(Palette type) const override
+    const QPalette *palette(Scope scope) const override
     {
-        return palettes[type];
+        return palettes[scope];
     }
 
 private:
-    QPalette *palettes[QQuickTheme::NPalettes];
+    QPalette *palettes[NPalettes];
 };
 
-Q_DECLARE_METATYPE(QQuickTheme::Palette)
+Q_DECLARE_METATYPE(QQuickTheme::Scope)
 
 void tst_palette::defaultPalette_data()
 {
     QTest::addColumn<QString>("control");
-    QTest::addColumn<QQuickTheme::Palette>("paletteType");
+    QTest::addColumn<QQuickTheme::Scope>("scope");
 
-    QTest::newRow("AbstractButton") << "AbstractButton" << QQuickTheme::SystemPalette;
-    QTest::newRow("ApplicationWindow") << "ApplicationWindow" << QQuickTheme::SystemPalette;
-    QTest::newRow("Button") << "Button" << QQuickTheme::ButtonPalette;
-    QTest::newRow("CheckBox") << "CheckBox" << QQuickTheme::CheckBoxPalette;
-    QTest::newRow("CheckDelegate") << "CheckDelegate" << QQuickTheme::ItemViewPalette;
-    QTest::newRow("ComboBox") << "ComboBox" << QQuickTheme::ComboBoxPalette;
-    QTest::newRow("Container") << "Container" << QQuickTheme::SystemPalette;
-    QTest::newRow("Control") << "Control" << QQuickTheme::SystemPalette;
-    QTest::newRow("Dial") << "Dial" << QQuickTheme::SystemPalette;
-    QTest::newRow("Dialog") << "Dialog" << QQuickTheme::SystemPalette;
-    QTest::newRow("DialogButtonBox") << "DialogButtonBox" << QQuickTheme::SystemPalette;
-    QTest::newRow("Drawer") << "Drawer" << QQuickTheme::SystemPalette;
-    QTest::newRow("Frame") << "Frame" << QQuickTheme::SystemPalette;
-    QTest::newRow("GroupBox") << "GroupBox" << QQuickTheme::GroupBoxPalette;
-    QTest::newRow("ItemDelegate") << "ItemDelegate" << QQuickTheme::ItemViewPalette;
-    QTest::newRow("Label") << "Label" << QQuickTheme::LabelPalette;
-    QTest::newRow("Menu") << "Menu" << QQuickTheme::MenuPalette;
-    QTest::newRow("MenuItem") << "MenuItem" << QQuickTheme::MenuPalette;
-    QTest::newRow("MenuSeparator") << "MenuSeparator" << QQuickTheme::MenuPalette;
-    QTest::newRow("Page") << "Page" << QQuickTheme::SystemPalette;
-    QTest::newRow("Pane") << "Pane" << QQuickTheme::SystemPalette;
-    QTest::newRow("Popup") << "Popup" << QQuickTheme::SystemPalette;
-    QTest::newRow("ProgressBar") << "ProgressBar" << QQuickTheme::SystemPalette;
-    QTest::newRow("RadioButton") << "RadioButton" << QQuickTheme::RadioButtonPalette;
-    QTest::newRow("RadioDelegate") << "RadioDelegate" << QQuickTheme::ItemViewPalette;
-    QTest::newRow("RangeSlider") << "RangeSlider" << QQuickTheme::SystemPalette;
-    QTest::newRow("RoundButton") << "RoundButton" << QQuickTheme::ButtonPalette;
-    QTest::newRow("ScrollBar") << "ScrollBar" << QQuickTheme::SystemPalette;
-    QTest::newRow("ScrollIndicator") << "ScrollIndicator" << QQuickTheme::SystemPalette;
-    QTest::newRow("Slider") << "Slider" << QQuickTheme::SystemPalette;
-    QTest::newRow("SpinBox") << "SpinBox" << QQuickTheme::SpinBoxPalette;
-    QTest::newRow("SwipeDelegate") << "SwipeDelegate" << QQuickTheme::ItemViewPalette;
-    QTest::newRow("Switch") << "Switch" << QQuickTheme::SwitchPalette;
-    QTest::newRow("SwitchDelegate") << "SwitchDelegate" << QQuickTheme::ItemViewPalette;
-    QTest::newRow("TabBar") << "TabBar" << QQuickTheme::TabBarPalette;
-    QTest::newRow("TabButton") << "TabButton" << QQuickTheme::TabBarPalette;
-    QTest::newRow("TextArea") << "TextArea" << QQuickTheme::TextEditPalette;
-    QTest::newRow("TextField") << "TextField" << QQuickTheme::TextLineEditPalette;
-    QTest::newRow("ToolBar") << "ToolBar" << QQuickTheme::ToolButtonPalette;
-    QTest::newRow("ToolButton") << "ToolButton" << QQuickTheme::ToolButtonPalette;
-    QTest::newRow("ToolSeparator") << "ToolSeparator" << QQuickTheme::ToolButtonPalette;
-    QTest::newRow("ToolTip") << "ToolTip" << QQuickTheme::ToolTipPalette;
-    QTest::newRow("Tumbler") << "Tumbler" << QQuickTheme::TumblerPalette;
+    QTest::newRow("AbstractButton") << "AbstractButton" << QQuickTheme::System;
+    QTest::newRow("ApplicationWindow") << "ApplicationWindow" << QQuickTheme::System;
+    QTest::newRow("Button") << "Button" << QQuickTheme::Button;
+    QTest::newRow("CheckBox") << "CheckBox" << QQuickTheme::CheckBox;
+    QTest::newRow("CheckDelegate") << "CheckDelegate" << QQuickTheme::ListView;
+    QTest::newRow("ComboBox") << "ComboBox" << QQuickTheme::ComboBox;
+    QTest::newRow("Container") << "Container" << QQuickTheme::System;
+    QTest::newRow("Control") << "Control" << QQuickTheme::System;
+    QTest::newRow("Dial") << "Dial" << QQuickTheme::System;
+    QTest::newRow("Dialog") << "Dialog" << QQuickTheme::System;
+    QTest::newRow("DialogButtonBox") << "DialogButtonBox" << QQuickTheme::System;
+    QTest::newRow("Drawer") << "Drawer" << QQuickTheme::System;
+    QTest::newRow("Frame") << "Frame" << QQuickTheme::System;
+    QTest::newRow("GroupBox") << "GroupBox" << QQuickTheme::GroupBox;
+    QTest::newRow("ItemDelegate") << "ItemDelegate" << QQuickTheme::ItemView;
+    QTest::newRow("Label") << "Label" << QQuickTheme::Label;
+    QTest::newRow("Menu") << "Menu" << QQuickTheme::Menu;
+    QTest::newRow("MenuItem") << "MenuItem" << QQuickTheme::Menu;
+    QTest::newRow("MenuSeparator") << "MenuSeparator" << QQuickTheme::Menu;
+    QTest::newRow("Page") << "Page" << QQuickTheme::System;
+    QTest::newRow("Pane") << "Pane" << QQuickTheme::System;
+    QTest::newRow("Popup") << "Popup" << QQuickTheme::System;
+    QTest::newRow("ProgressBar") << "ProgressBar" << QQuickTheme::System;
+    QTest::newRow("RadioButton") << "RadioButton" << QQuickTheme::RadioButton;
+    QTest::newRow("RadioDelegate") << "RadioDelegate" << QQuickTheme::ListView;
+    QTest::newRow("RangeSlider") << "RangeSlider" << QQuickTheme::System;
+    QTest::newRow("RoundButton") << "RoundButton" << QQuickTheme::Button;
+    QTest::newRow("ScrollBar") << "ScrollBar" << QQuickTheme::System;
+    QTest::newRow("ScrollIndicator") << "ScrollIndicator" << QQuickTheme::System;
+    QTest::newRow("Slider") << "Slider" << QQuickTheme::System;
+    QTest::newRow("SpinBox") << "SpinBox" << QQuickTheme::SpinBox;
+    QTest::newRow("SwipeDelegate") << "SwipeDelegate" << QQuickTheme::ListView;
+    QTest::newRow("Switch") << "Switch" << QQuickTheme::Switch;
+    QTest::newRow("SwitchDelegate") << "SwitchDelegate" << QQuickTheme::ListView;
+    QTest::newRow("TabBar") << "TabBar" << QQuickTheme::TabBar;
+    QTest::newRow("TabButton") << "TabButton" << QQuickTheme::TabBar;
+    QTest::newRow("TextArea") << "TextArea" << QQuickTheme::TextArea;
+    QTest::newRow("TextField") << "TextField" << QQuickTheme::TextField;
+    QTest::newRow("ToolBar") << "ToolBar" << QQuickTheme::ToolBar;
+    QTest::newRow("ToolButton") << "ToolButton" << QQuickTheme::ToolBar;
+    QTest::newRow("ToolSeparator") << "ToolSeparator" << QQuickTheme::ToolBar;
+    QTest::newRow("ToolTip") << "ToolTip" << QQuickTheme::ToolTip;
+    QTest::newRow("Tumbler") << "Tumbler" << QQuickTheme::Tumbler;
 }
 
 void tst_palette::defaultPalette()
 {
     QFETCH(QString, control);
-    QFETCH(QQuickTheme::Palette, paletteType);
+    QFETCH(QQuickTheme::Scope, scope);
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
@@ -307,7 +309,7 @@ void tst_palette::defaultPalette()
     QVariant var = object->property("palette");
     QVERIFY(var.isValid());
 
-    QPalette expectedPalette = QQuickTheme::themePalette(paletteType);
+    QPalette expectedPalette = QQuickTheme::themePalette(scope);
     QPalette actualPalette = var.value<QPalette>();
     QCOMPARE(actualPalette, expectedPalette);
 }

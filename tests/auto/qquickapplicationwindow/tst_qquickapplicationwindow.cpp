@@ -560,9 +560,9 @@ class TestTheme : public QQuickTheme
 public:
     TestTheme() : m_font("Courier") { }
 
-    const QFont *font(Font type) const override
+    const QFont *font(Scope scope) const override
     {
-        Q_UNUSED(type);
+        Q_UNUSED(scope);
         return &m_font;
     }
 
@@ -580,7 +580,7 @@ void tst_QQuickApplicationWindow::defaultFont()
     QScopedPointer<QQuickApplicationWindow> window;
     window.reset(static_cast<QQuickApplicationWindow *>(component.create()));
     QVERIFY(!window.isNull());
-    QCOMPARE(window->font(), QQuickTheme::themeFont(QQuickTheme::SystemFont));
+    QCOMPARE(window->font(), QQuickTheme::themeFont(QQuickTheme::System));
 }
 
 void tst_QQuickApplicationWindow::locale()

@@ -265,12 +265,12 @@ void QQuickDelayButton::nextCheckState()
 
 QFont QQuickDelayButton::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::PushButtonFont);
+    return QQuickTheme::themeFont(QQuickTheme::Button);
 }
 
 QPalette QQuickDelayButton::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::ButtonPalette);
+    return QQuickTheme::themePalette(QQuickTheme::Button);
 }
 
 QT_END_NAMESPACE

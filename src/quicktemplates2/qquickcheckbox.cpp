@@ -189,12 +189,12 @@ void QQuickCheckBox::setCheckState(Qt::CheckState state)
 
 QFont QQuickCheckBox::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::CheckBoxFont);
+    return QQuickTheme::themeFont(QQuickTheme::CheckBox);
 }
 
 QPalette QQuickCheckBox::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::CheckBoxPalette);
+    return QQuickTheme::themePalette(QQuickTheme::CheckBox);
 }
 
 void QQuickCheckBox::buttonChange(ButtonChange change)

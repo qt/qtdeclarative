@@ -71,12 +71,12 @@ QQuickToolButton::QQuickToolButton(QQuickItem *parent)
 
 QFont QQuickToolButton::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::ToolButtonFont);
+    return QQuickTheme::themeFont(QQuickTheme::ToolBar);
 }
 
 QPalette QQuickToolButton::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::ToolButtonPalette);
+    return QQuickTheme::themePalette(QQuickTheme::ToolBar);
 }
 
 QT_END_NAMESPACE

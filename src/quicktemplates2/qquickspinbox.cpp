@@ -1024,12 +1024,12 @@ void QQuickSpinBox::localeChange(const QLocale &newLocale, const QLocale &oldLoc
 
 QFont QQuickSpinBox::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::SpinBoxFont);
+    return QQuickTheme::themeFont(QQuickTheme::SpinBox);
 }
 
 QPalette QQuickSpinBox::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::SpinBoxPalette);
+    return QQuickTheme::themePalette(QQuickTheme::SpinBox);
 }
 
 #if QT_CONFIG(accessibility)

@@ -97,7 +97,7 @@ void QQuickPopupItemPrivate::resolveFont()
     if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(popup->window()))
         inheritFont(window->font());
     else
-        inheritFont(QQuickTheme::themeFont(QQuickTheme::SystemFont));
+        inheritFont(QQuickTheme::themeFont(QQuickTheme::System));
 }
 
 void QQuickPopupItemPrivate::resolvePalette()
@@ -105,7 +105,7 @@ void QQuickPopupItemPrivate::resolvePalette()
     if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(popup->window()))
         inheritPalette(window->palette());
     else
-        inheritPalette(QQuickTheme::themePalette(QQuickTheme::SystemPalette));
+        inheritPalette(QQuickTheme::themePalette(QQuickTheme::System));
 }
 
 QQuickItem *QQuickPopupItemPrivate::getContentItem()

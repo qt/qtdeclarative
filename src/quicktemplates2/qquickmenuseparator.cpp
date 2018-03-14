@@ -71,9 +71,14 @@ QQuickMenuSeparator::QQuickMenuSeparator(QQuickItem *parent)
 {
 }
 
+QFont QQuickMenuSeparator::defaultFont() const
+{
+    return QQuickTheme::themeFont(QQuickTheme::Menu);
+}
+
 QPalette QQuickMenuSeparator::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::MenuPalette);
+    return QQuickTheme::themePalette(QQuickTheme::Menu);
 }
 
 #if QT_CONFIG(accessibility)
