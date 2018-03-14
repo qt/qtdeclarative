@@ -3480,8 +3480,24 @@ ClassExpression: T_CLASS BindingIdentifier ClassTail;
 
 ClassExpression: T_CLASS ClassTail;
 
-ClassTail: T_LBRACE ClassBodyOpt T_RBRACE;
-ClassTail: ClassHeritage T_LBRACE ClassBodyOpt T_RBRACE;
+ClassLBrace: T_LBRACE;
+/.
+    case $rule_number: {
+        lexer->setStaticIsKeyword(true);
+    } break;
+./
+
+ClassRBrace: T_RBRACE;
+/. case $rule_number: ./
+ClassStaticQualifier: T_STATIC;
+/.
+    case $rule_number: {
+        lexer->setStaticIsKeyword(false);
+    } break;
+./
+
+ClassTail: ClassLBrace ClassBodyOpt ClassRBrace;
+ClassTail: ClassHeritage ClassLBrace ClassBodyOpt ClassRBrace;
 
 ClassHeritage: T_EXTENDS LeftHandSideExpression;
 
@@ -3495,7 +3511,14 @@ ClassElementList: ClassElement;
 ClassElementList: ClassElementList ClassElement;
 
 ClassElement: MethodDefinition;
-ClassElement: T_STATIC MethodDefinition;
+
+ClassElement: ClassStaticQualifier MethodDefinition;
+/.
+    case $rule_number: {
+        lexer->setStaticIsKeyword(true);
+    } break;
+./
+
 ClassElement: T_SEMICOLON;
 
 -- Scripts and Modules

@@ -503,7 +503,7 @@ static inline int classify6(const QChar *s, int parseModeFlags) {
         if (s[3].unicode() == 't') {
           if (s[4].unicode() == 'i') {
             if (s[5].unicode() == 'c') {
-              return (parseModeFlags & Lexer::QmlMode) ? int(Lexer::T_STATIC) : int(Lexer::T_IDENTIFIER);
+              return (parseModeFlags & Lexer::StaticIsKeyword) ? int(Lexer::T_STATIC) : int(Lexer::T_IDENTIFIER);
             }
           }
         }

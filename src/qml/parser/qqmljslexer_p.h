@@ -118,7 +118,8 @@ public:
 
     enum ParseModeFlags {
         QmlMode = 0x1,
-        YieldIsKeyword = 0x2
+        YieldIsKeyword = 0x2,
+        StaticIsKeyword = 0x4
     };
 
 public:
@@ -127,14 +128,17 @@ public:
     int parseModeFlags() const {
         int flags = 0;
         if (qmlMode())
-            flags |= QmlMode;
+            flags |= QmlMode|StaticIsKeyword;
         if (yieldIsKeyWord())
             flags |= YieldIsKeyword;
+        if (_staticIsKeyword)
+            flags |= StaticIsKeyword;
         return flags;
     }
 
     bool qmlMode() const;
     bool yieldIsKeyWord() const { return _generatorLevel != 0; }
+    void setStaticIsKeyword(bool b) { _staticIsKeyword = b; }
 
     QString code() const;
     void setCode(const QString &code, int lineno, bool qmlMode = true);
@@ -243,6 +247,7 @@ private:
     bool _delimited;
     bool _qmlMode;
     int _generatorLevel = 0;
+    bool _staticIsKeyword = false;
 };
 
 } // end of namespace QQmlJS
