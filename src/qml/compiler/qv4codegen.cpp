@@ -421,6 +421,12 @@ void Codegen::initializeAndDestructureBindingElement(AST::BindingElement *e, con
         destructureElementList(varToStore, l);
     } else if (BindingPropertyList *p = e->propertyList()) {
         destructurePropertyList(varToStore, p);
+    } else if (e->name.isNull()) {
+        // empty binding pattern. For spec compatibility, try to coerce the argument to an object
+        varToStore.loadInAccumulator();
+        Instruction::ToObject toObject;
+        bytecodeGenerator->addInstruction(toObject);
+        return;
     }
 }
 
@@ -449,10 +455,10 @@ void Codegen::destructureElementList(const Codegen::Reference &array, BindingEle
 
         Reference idx = Reference::fromConst(this, Encode(index));
         Reference property = Reference::fromSubscript(array, idx);
-        BindingElement *e = p->bindingElement();
-        if (e)
+        if (BindingElement *e = p->bindingElement())
             initializeAndDestructureBindingElement(e, property);
-        else {
+        else if (BindingRestElement *r = p->bindingRestElement()) {
+            Q_UNUSED(r);
             throwSyntaxError(bindingList->firstSourceLocation(), QString::fromLatin1("Support for rest elements in binding arrays not implemented!"));
         }
     }

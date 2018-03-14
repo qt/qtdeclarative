@@ -997,6 +997,11 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         }
     MOTH_END_INSTR(ConvertThisToObject)
 
+    MOTH_BEGIN_INSTR(ToObject)
+        acc = ACC.toObject(engine)->asReturnedValue();
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(ToObject)
+
     MOTH_BEGIN_INSTR(Construct)
         STORE_IP();
         acc = Runtime::method_construct(engine, STACK_VALUE(func), stack + argv, argc);

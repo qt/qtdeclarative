@@ -4058,11 +4058,6 @@ language/computed-property-names/to-name-side-effects/class
 language/computed-property-names/to-name-side-effects/numbers-class
 language/computed-property-names/to-name-side-effects/numbers-object
 language/computed-property-names/to-name-side-effects/object
-language/destructuring/binding/initialization-requires-object-coercible-null
-language/destructuring/binding/initialization-requires-object-coercible-undefined
-language/destructuring/binding/syntax/array-elements-with-object-patterns
-language/destructuring/binding/syntax/array-pattern-with-elisions
-language/destructuring/binding/syntax/array-pattern-with-no-elements
 language/destructuring/binding/syntax/array-rest-elements
 language/destructuring/binding/syntax/recursive-array-and-object-patterns
 language/eval-code/direct/lex-env-distinct-cls
@@ -5681,8 +5676,6 @@ language/expressions/function/dstr-dflt-ary-ptrn-rest-id-iter-step-err
 language/expressions/function/dstr-dflt-ary-ptrn-rest-id-iter-val-err
 language/expressions/function/dstr-dflt-ary-ptrn-rest-obj-id
 language/expressions/function/dstr-dflt-ary-ptrn-rest-obj-prop-id
-language/expressions/function/dstr-dflt-obj-init-null
-language/expressions/function/dstr-dflt-obj-init-undefined
 language/expressions/function/dstr-dflt-obj-ptrn-id-init-fn-name-arrow
 language/expressions/function/dstr-dflt-obj-ptrn-id-init-fn-name-class
 language/expressions/function/dstr-dflt-obj-ptrn-id-init-fn-name-cover
@@ -5691,8 +5684,6 @@ language/expressions/function/dstr-dflt-obj-ptrn-id-init-fn-name-gen
 language/expressions/function/dstr-dflt-obj-ptrn-prop-ary
 language/expressions/function/dstr-dflt-obj-ptrn-prop-ary-init
 language/expressions/function/dstr-dflt-obj-ptrn-prop-eval-err
-language/expressions/function/dstr-obj-init-null
-language/expressions/function/dstr-obj-init-undefined
 language/expressions/function/dstr-obj-ptrn-id-init-fn-name-arrow
 language/expressions/function/dstr-obj-ptrn-id-init-fn-name-class
 language/expressions/function/dstr-obj-ptrn-id-init-fn-name-cover
@@ -8912,8 +8903,6 @@ language/statements/function/dstr-dflt-ary-ptrn-rest-id-iter-step-err
 language/statements/function/dstr-dflt-ary-ptrn-rest-id-iter-val-err
 language/statements/function/dstr-dflt-ary-ptrn-rest-obj-id
 language/statements/function/dstr-dflt-ary-ptrn-rest-obj-prop-id
-language/statements/function/dstr-dflt-obj-init-null
-language/statements/function/dstr-dflt-obj-init-undefined
 language/statements/function/dstr-dflt-obj-ptrn-id-init-fn-name-arrow
 language/statements/function/dstr-dflt-obj-ptrn-id-init-fn-name-class
 language/statements/function/dstr-dflt-obj-ptrn-id-init-fn-name-cover
@@ -8922,8 +8911,6 @@ language/statements/function/dstr-dflt-obj-ptrn-id-init-fn-name-gen
 language/statements/function/dstr-dflt-obj-ptrn-prop-ary
 language/statements/function/dstr-dflt-obj-ptrn-prop-ary-init
 language/statements/function/dstr-dflt-obj-ptrn-prop-eval-err
-language/statements/function/dstr-obj-init-null
-language/statements/function/dstr-obj-init-undefined
 language/statements/function/dstr-obj-ptrn-id-init-fn-name-arrow
 language/statements/function/dstr-obj-ptrn-id-init-fn-name-class
 language/statements/function/dstr-obj-ptrn-id-init-fn-name-cover

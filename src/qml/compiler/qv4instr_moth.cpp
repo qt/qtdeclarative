@@ -461,6 +461,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(ConvertThisToObject)
         MOTH_END_INSTR(ConvertThisToObject)
 
+        MOTH_BEGIN_INSTR(ToObject)
+        MOTH_END_INSTR(ToObject)
+
         MOTH_BEGIN_INSTR(Construct)
             d << "new" << dumpRegister(func, nFormals) << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(Construct)

@@ -809,6 +809,25 @@ void BaselineJIT::generate_ConvertThisToObject()
     as->checkException();
 }
 
+static ReturnedValue ToObjectHelper(ExecutionEngine *engine, const Value &obj)
+{
+    if (obj.isObject())
+        return obj.asReturnedValue();
+
+    return obj.toObject(engine)->asReturnedValue();
+}
+
+void BaselineJIT::generate_ToObject()
+{
+    STORE_ACC();
+    as->prepareCallWithArgCount(2);
+    as->passAccumulatorAsArg(1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(ToObjectHelper, Assembler::ResultInAccumulator);
+    as->checkException();
+
+}
+
 void BaselineJIT::generate_Construct(int func, int argc, int argv)
 {
     STORE_IP();
@@ -1183,6 +1202,9 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(CreateRestParameter)
         MOTH_END_INSTR(CreateRestParameter)
+
+        MOTH_BEGIN_INSTR(ToObject)
+        MOTH_END_INSTR(ToObject)
 
         MOTH_BEGIN_INSTR(ConvertThisToObject)
         MOTH_END_INSTR(ConvertThisToObject)
