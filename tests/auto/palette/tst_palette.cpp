@@ -273,9 +273,9 @@ void tst_palette::defaultPalette_data()
     QTest::newRow("ScrollBar") << "ScrollBar" << QQuickTheme::SystemPalette;
     QTest::newRow("ScrollIndicator") << "ScrollIndicator" << QQuickTheme::SystemPalette;
     QTest::newRow("Slider") << "Slider" << QQuickTheme::SystemPalette;
-    QTest::newRow("SpinBox") << "SpinBox" << QQuickTheme::TextLineEditPalette;
+    QTest::newRow("SpinBox") << "SpinBox" << QQuickTheme::SpinBoxPalette;
     QTest::newRow("SwipeDelegate") << "SwipeDelegate" << QQuickTheme::ItemViewPalette;
-    QTest::newRow("Switch") << "Switch" << QQuickTheme::CheckBoxPalette; // ### TODO: add QQuickTheme::SwitchPalette
+    QTest::newRow("Switch") << "Switch" << QQuickTheme::SwitchPalette;
     QTest::newRow("SwitchDelegate") << "SwitchDelegate" << QQuickTheme::ItemViewPalette;
     QTest::newRow("TabBar") << "TabBar" << QQuickTheme::TabBarPalette;
     QTest::newRow("TabButton") << "TabButton" << QQuickTheme::TabBarPalette;
@@ -285,7 +285,7 @@ void tst_palette::defaultPalette_data()
     QTest::newRow("ToolButton") << "ToolButton" << QQuickTheme::ToolButtonPalette;
     QTest::newRow("ToolSeparator") << "ToolSeparator" << QQuickTheme::ToolButtonPalette;
     QTest::newRow("ToolTip") << "ToolTip" << QQuickTheme::ToolTipPalette;
-    QTest::newRow("Tumbler") << "Tumbler" << QQuickTheme::ItemViewPalette;
+    QTest::newRow("Tumbler") << "Tumbler" << QQuickTheme::TumblerPalette;
 }
 
 void tst_palette::defaultPalette()

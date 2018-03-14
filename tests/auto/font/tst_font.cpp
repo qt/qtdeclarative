@@ -277,9 +277,9 @@ void tst_font::defaultFont_data()
     QTest::newRow("ScrollBar") << "ScrollBar" << QQuickTheme::SystemFont;
     QTest::newRow("ScrollIndicator") << "ScrollIndicator" << QQuickTheme::SystemFont;
     QTest::newRow("Slider") << "Slider" << QQuickTheme::SystemFont;
-    QTest::newRow("SpinBox") << "SpinBox" << QQuickTheme::EditorFont;
+    QTest::newRow("SpinBox") << "SpinBox" << QQuickTheme::SpinBoxFont;
     QTest::newRow("SwipeDelegate") << "SwipeDelegate" << QQuickTheme::ListViewFont;
-    QTest::newRow("Switch") << "Switch" << QQuickTheme::SystemFont; // ### TODO: add QQuickTheme::SwitchFont
+    QTest::newRow("Switch") << "Switch" << QQuickTheme::SwitchFont;
     QTest::newRow("SwitchDelegate") << "SwitchDelegate" << QQuickTheme::ListViewFont;
     QTest::newRow("TabBar") << "TabBar" << QQuickTheme::SystemFont;
     QTest::newRow("TabButton") << "TabButton" << QQuickTheme::TabButtonFont;
@@ -289,7 +289,7 @@ void tst_font::defaultFont_data()
     QTest::newRow("ToolButton") << "ToolButton" << QQuickTheme::ToolButtonFont;
     QTest::newRow("ToolSeparator") << "ToolSeparator" << QQuickTheme::SystemFont;
     QTest::newRow("ToolTip") << "ToolTip" << QQuickTheme::TipLabelFont;
-    QTest::newRow("Tumbler") << "Tumbler" << QQuickTheme::ItemViewFont;
+    QTest::newRow("Tumbler") << "Tumbler" << QQuickTheme::TumblerFont;
 }
 
 void tst_font::defaultFont()

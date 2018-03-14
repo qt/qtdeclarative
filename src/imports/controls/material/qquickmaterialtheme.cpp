@@ -116,6 +116,7 @@ const QFont *QQuickMaterialTheme::font(Font type) const
     case ComboMenuItemFont:
         return &menuItemFont;
     case EditorFont:
+    case SpinBoxFont:
         return &editorFont;
     default:
         return &systemFont;

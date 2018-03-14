@@ -83,6 +83,7 @@ protected:
     void nextCheckState() override;
     void buttonChange(ButtonChange change) override;
 
+    QFont defaultFont() const override;
     QPalette defaultPalette() const override;
 
 private:

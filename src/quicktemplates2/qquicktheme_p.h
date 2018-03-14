@@ -94,6 +94,9 @@ public:
         GroupBoxTitleFont,
         TabButtonFont,
         EditorFont,
+        SwitchFont,
+        SpinBoxFont,
+        TumblerFont,
         NFonts
     };
 
@@ -116,6 +119,9 @@ public:
         MenuBarPalette,
         TextEditPalette,
         TextLineEditPalette,
+        SpinBoxPalette,
+        SwitchPalette,
+        TumblerPalette,
         NPalettes
     };
 

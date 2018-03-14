@@ -44,6 +44,34 @@ QT_BEGIN_NAMESPACE
 
 QScopedPointer<QQuickTheme> QQuickThemePrivate::current;
 
+static QPlatformTheme::Font platformFont(QQuickTheme::Font type)
+{
+    switch (type) {
+    case QQuickTheme::SpinBoxFont:
+        return QPlatformTheme::EditorFont;
+    case QQuickTheme::SwitchFont:
+        return QPlatformTheme::CheckBoxFont;
+    case QQuickTheme::TumblerFont:
+        return QPlatformTheme::ItemViewFont;
+    default:
+        return static_cast<QPlatformTheme::Font>(type);
+    }
+}
+
+static QPlatformTheme::Palette platformPalette(QQuickTheme::Palette type)
+{
+    switch (type) {
+    case QQuickTheme::SpinBoxPalette:
+        return QPlatformTheme::TextLineEditPalette;
+    case QQuickTheme::SwitchPalette:
+        return QPlatformTheme::CheckBoxPalette;
+    case QQuickTheme::TumblerPalette:
+        return QPlatformTheme::ItemViewPalette;
+    default:
+        return static_cast<QPlatformTheme::Palette>(type);
+    }
+}
+
 QQuickTheme::QQuickTheme()
     : d_ptr(new QQuickThemePrivate)
 {
@@ -69,7 +97,7 @@ QFont QQuickTheme::themeFont(Font type)
     if (QQuickTheme *theme = current())
         font = theme->font(type);
     else if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
-        font = theme->font(static_cast<QPlatformTheme::Font>(type));
+        font = theme->font(platformFont(type));
 
     if (font) {
         QFont f = *font;
@@ -87,7 +115,7 @@ QPalette QQuickTheme::themePalette(Palette type)
     if (QQuickTheme *theme = current())
         palette = theme->palette(type);
     else if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
-        palette = theme->palette(static_cast<QPlatformTheme::Palette>(type));
+        palette = theme->palette(platformPalette(type));
 
     if (palette) {
         QPalette f = *palette;

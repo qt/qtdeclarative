@@ -231,10 +231,14 @@ void QQuickSwitch::buttonChange(ButtonChange change)
         QQuickAbstractButton::buttonChange(change);
 }
 
+QFont QQuickSwitch::defaultFont() const
+{
+    return QQuickTheme::themeFont(QQuickTheme::SwitchFont);
+}
+
 QPalette QQuickSwitch::defaultPalette() const
 {
-    // ### TODO: add QPlatformTheme::SwitchPalette
-    return QQuickTheme::themePalette(QQuickTheme::CheckBoxPalette);
+    return QQuickTheme::themePalette(QQuickTheme::SwitchPalette);
 }
 
 QT_END_NAMESPACE
