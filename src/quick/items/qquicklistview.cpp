@@ -515,8 +515,8 @@ QString QQuickListViewPrivate::sectionAt(int modelIndex)
 
 qreal QQuickListViewPrivate::snapPosAt(qreal pos)
 {
-    if (FxViewItem *snapItem = snapItemAt(pos))
-        return snapItem->position();
+    if (FxListItemSG *snapItem = static_cast<FxListItemSG*>(snapItemAt(pos)))
+        return snapItem->itemPosition();
     if (visibleItems.count()) {
         qreal firstPos = (*visibleItems.constBegin())->position();
         qreal endPos = (*(--visibleItems.constEnd()))->position();
@@ -530,22 +530,35 @@ qreal QQuickListViewPrivate::snapPosAt(qreal pos)
 
 FxViewItem *QQuickListViewPrivate::snapItemAt(qreal pos)
 {
+    const qreal velocity = orient == QQuickListView::Vertical ? vData.velocity : hData.velocity;
     FxViewItem *snapItem = nullptr;
+    FxViewItem *prevItem = nullptr;
     qreal prevItemSize = 0;
     for (FxViewItem *item : qAsConst(visibleItems)) {
         if (item->index == -1)
             continue;
-        qreal itemTop = item->position();
-        if (highlight && itemTop >= pos && item->endPosition() <= pos + highlight->size())
+
+        const FxListItemSG *listItem = static_cast<FxListItemSG *>(item);
+        qreal itemTop = listItem->position();
+        qreal itemSize = listItem->size();
+        if (highlight && itemTop >= pos && listItem->endPosition() <= pos + highlight->size())
             return item;
 
+        if (listItem->section() && velocity > 0) {
+            if (itemTop + listItem->sectionSize() / 2 >= pos && itemTop - prevItemSize / 2 < pos)
+                snapItem = prevItem;
+            itemTop = listItem->itemPosition();
+            itemSize = listItem->itemSize();
+        }
+
         // Middle of item and spacing (i.e. the middle of the distance between this item and the next
-        qreal halfwayToNextItem = itemTop + (item->size()+spacing) / 2;
+        qreal halfwayToNextItem = itemTop + (itemSize+spacing) / 2;
         qreal halfwayToPrevItem = itemTop - (prevItemSize+spacing) / 2;
         if (halfwayToNextItem >= pos && halfwayToPrevItem < pos)
             snapItem = item;
 
-        prevItemSize = item->size();
+        prevItemSize = listItem->itemSize();
+        prevItem = item;
     }
     return snapItem;
 }
@@ -1530,15 +1543,15 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
                 pos = isContentFlowReversed() ? - header->position() + highlightRangeStart - size() : header->position() - highlightRangeStart;
             } else {
                 if (isContentFlowReversed())
-                    pos = qMax(qMin(-topItem->position() + highlightRangeStart - size(), -maxExtent), -minExtent);
+                    pos = qMax(qMin(-static_cast<FxListItemSG*>(topItem)->itemPosition() + highlightRangeStart - size(), -maxExtent), -minExtent);
                 else
-                    pos = qMax(qMin(topItem->position() - highlightRangeStart, -maxExtent), -minExtent);
+                    pos = qMax(qMin(static_cast<FxListItemSG*>(topItem)->itemPosition() - highlightRangeStart, -maxExtent), -minExtent);
             }
         } else if (bottomItem && isInBounds) {
             if (isContentFlowReversed())
-                pos = qMax(qMin(-bottomItem->position() + highlightRangeEnd - size(), -maxExtent), -minExtent);
+                pos = qMax(qMin(-static_cast<FxListItemSG*>(bottomItem)->itemPosition() + highlightRangeEnd - size(), -maxExtent), -minExtent);
             else
-                pos = qMax(qMin(bottomItem->position() - highlightRangeEnd, -maxExtent), -minExtent);
+                pos = qMax(qMin(static_cast<FxListItemSG*>(bottomItem)->itemPosition() - highlightRangeEnd, -maxExtent), -minExtent);
         } else {
             QQuickItemViewPrivate::fixup(data, minExtent, maxExtent);
             return;
@@ -1568,7 +1581,10 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
         timeline.reset(data.move);
         if (viewPos != position()) {
             if (fixupMode != Immediate) {
-                timeline.move(data.move, -viewPos, QEasingCurve(QEasingCurve::InOutQuad), fixupDuration/2);
+                if (fixupMode == ExtentChanged && data.fixingUp)
+                    timeline.move(data.move, -viewPos, QEasingCurve(QEasingCurve::OutQuad), fixupDuration/2);
+                else
+                    timeline.move(data.move, -viewPos, QEasingCurve(QEasingCurve::InOutQuad), fixupDuration/2);
                 data.fixingUp = true;
             } else {
                 timeline.set(data.move, -viewPos);
