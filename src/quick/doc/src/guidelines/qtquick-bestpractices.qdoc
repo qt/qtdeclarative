@@ -80,34 +80,46 @@ rich user experience. It can often be a challenge to make these resources
 available to the application regardless of the target OS. Most popular OS-es
 employ stricter security policies that restrict access to the file system,
 making it harder to load these resources. As an alternative, Qt offers its own
-resource system that is built into the application binary, enabling access to
-the application's resources regardless of the target OS.
+\l {The Qt Resource System}{resource system} that is built into the
+application binary, enabling access to the application's resources regardless
+of the target OS.
 
-It is recommended to bundle your application's resources (including the
-\c .qml files) into a resource file (\c.qrc). For example, the following entry
-in the qmake project file ensures that the resources are built into the
-application binary, making them available when needed:
-
-\badcode
-    RESOURCES += resources.qrc
-\endcode
-
-If your application depends on a limited number of resources, you could list
-them directly in the project file.
+For example, the following entry in the qmake project file ensures that the
+resources are built into the application binary, making them available when
+needed:
 
 \badcode
     RESOURCES += a.qml b.png
 \endcode
 
-In such a case, qmake creates the \c qmake_intermediate.qrc build artifact,
-which you could rename and use the \c{RESOURCES += resource-set.qrc} entry
-instead.
+It's also possible to use a
+\l {files(pattern[, recursive=false])}{wildcard syntax} to select several files
+at once:
 
-You could go a step further by using one \c .qrc file for each resource type.
-For example, list the \c .qml files in \c files.qrc, images in
-\c images.qrc, fonts in \c fonts.qrc, and so on. That way, you need not
-recompile the QML files when you, for example, add an image to the list in
-\c images.qrc.
+\badcode
+    RESOURCES += $$files(*.qml) $$files(*.png)
+\endcode
+
+This approach is convenient for applications that depend on a limited number
+of resources. However, whenever a new file is added to \c RESOURCES using this
+approach, it causes \e all of the other files in \c RESOURCES to be recompiled
+as well. This can be inefficient, especially for large sets of files.
+In this case, a better approach is to separate each type of resource into its
+own \l {Resource Collection Files (.qrc)}{.qrc} file. For example, the snippet
+above could be changed like so:
+
+\badcode
+    RESOURCES += qml.qrc images.qrc
+\endcode
+
+Now, whenever a QML file is changed in qml.qrc, only the QML files have to be
+recompiled.
+
+If you want to conveniently switch from using the "direct" syntax to a .qrc
+file, look for \c qmake_intermediate.qrc (a build artifact created by qmake)
+in your project's build directory and rename it to, for example,
+\c resources.qrc. Then, replace the old \c RESOURCES entry with
+\c {RESOURCES += resources.qrc}.
 
 \section2 Related Information
 \list
