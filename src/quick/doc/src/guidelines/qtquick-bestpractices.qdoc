@@ -27,12 +27,12 @@
 
 /*!
 \page qtquick-bestpractices.html
-\title Qt Quick Best Practices
-\brief Lists the practices that work best for Qt Quick
+\title Best Practices for QML and Qt Quick
+\brief Lists best practices for working with QML and Qt Quick
 
-Despite all of the benefits that Qt Quick offers, it can be challenging in
-certain situations. The following sections elaborate on some of the best
-practices that will help you get better results when developing Qt Quick
+Despite all of the benefits that QML and Qt Quick offer, they can be
+challenging in certain situations. The following sections elaborate on some of
+the best practices that will help you get better results when developing
 applications.
 
 \section1 Custom UI Controls
