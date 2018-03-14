@@ -929,4 +929,94 @@ TestCase {
         compare(control.first.pressed, false)
         compare(control.second.pressed, false)
     }
+
+    function test_touchDragThreshold_data() {
+        var d1 = 3; var d2 = 7;
+        return [
+            { tag: "horizontal", orientation: Qt.Horizontal, dx1: d1, dy1: 0, dx2: d2, dy2: 0 },
+            { tag: "vertical", orientation: Qt.Vertical, dx1: 0, dy1: -d1, dx2: 0, dy2: -d2 },
+            { tag: "horizontal2", orientation: Qt.Horizontal, dx1: -d1, dy1: 0, dx2: -d2, dy2: 0 },
+            { tag: "vertical2", orientation: Qt.Vertical, dx1: 0, dy1: d1, dx2: 0, dy2: d2 },
+        ]
+    }
+
+    function test_touchDragThreshold(data) {
+        var control = createTemporaryObject(sliderComponent, testCase, {touchDragThreshold: 10, live: true, orientation: data.orientation, first: {value: 0}, second: {value: 1}})
+        verify(control)
+        compare(control.touchDragThreshold, 10)
+
+        var valueChangedCount = 0
+        var valueChangedSpy = signalSpy.createObject(control, {target: control, signalName: "touchDragThresholdChanged"})
+        verify(valueChangedSpy.valid)
+
+        control.touchDragThreshold = undefined
+        compare(control.touchDragThreshold, -1) // reset to -1
+        compare(valueChangedSpy.count, ++valueChangedCount)
+
+        var t = 5
+        control.touchDragThreshold = t
+        compare(control.touchDragThreshold, t)
+        compare(valueChangedSpy.count, ++valueChangedCount)
+
+        control.touchDragThreshold = t
+        compare(control.touchDragThreshold, t)
+        compare(valueChangedSpy.count, valueChangedCount)
+
+        var pressedCount = 0
+        var pressedCount2 = 0
+        var visualPositionCount = 0
+        var visualPositionCount2 = 0
+
+        var pressedSpy = signalSpy.createObject(control, {target: control.first, signalName: "pressedChanged"})
+        verify(pressedSpy.valid)
+        var pressedSpy2 = signalSpy.createObject(control, {target: control.second, signalName: "pressedChanged"})
+        verify(pressedSpy2.valid)
+
+        var visualPositionSpy = signalSpy.createObject(control, {target: control.first, signalName: "visualPositionChanged"})
+        verify(visualPositionSpy.valid)
+        var visualPositionSpy2 = signalSpy.createObject(control, {target: control.second, signalName: "visualPositionChanged"})
+        verify(visualPositionSpy2.valid)
+
+        var touch = touchEvent(control)
+        control.first.value = 0.4
+        control.second.value = 1
+        var x0 = control.first.handle.x + control.first.handle.width * 0.5
+        var y0 = control.first.handle.y + control.first.handle.height * 0.5
+        touch.press(0, control, x0, y0).commit()
+        compare(pressedSpy.count, ++pressedCount)
+        compare(control.first.pressed, true)
+        compare(visualPositionSpy.count, ++visualPositionCount)
+
+        touch.move(0, control, x0 + data.dx1, y0 + data.dy1).commit()
+        compare(pressedSpy.count, pressedCount)
+        compare(control.first.pressed, true)
+        compare(visualPositionSpy.count, visualPositionCount)
+
+        touch.move(0, control, x0 + data.dx2, y0 + data.dy2).commit()
+        compare(pressedSpy.count, pressedCount)
+        compare(control.first.pressed, true)
+        compare(visualPositionSpy.count, ++visualPositionCount)
+
+        touch.release(0, control, x0 + data.dx2, y0 + data.dy2).commit()
+
+        control.first.value = 0
+        control.second.value = 0.6
+        x0 = control.second.handle.x + control.second.handle.width * 0.5
+        y0 = control.second.handle.y + control.second.handle.height * 0.5
+        touch.press(0, control, x0, y0).commit()
+        compare(pressedSpy2.count, ++pressedCount2)
+        compare(control.second.pressed, true)
+        compare(visualPositionSpy2.count, ++visualPositionCount2)
+
+        touch.move(0, control, x0 + data.dx1, y0 + data.dy1).commit()
+        compare(pressedSpy2.count, pressedCount2)
+        compare(control.second.pressed, true)
+        compare(visualPositionSpy2.count, visualPositionCount2)
+
+        touch.move(0, control, x0 + data.dx2, y0 + data.dy2).commit()
+        compare(pressedSpy2.count, pressedCount2)
+        compare(control.second.pressed, true)
+        compare(visualPositionSpy2.count, ++visualPositionCount2)
+        touch.release(0, control, x0 + data.dx2, y0 + data.dy2).commit()
+    }
 }

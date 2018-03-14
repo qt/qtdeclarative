@@ -70,6 +70,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSlider : public QQuickControl
     Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
     // 2.3 (Qt 5.10)
     Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(qreal touchDragThreshold READ touchDragThreshold WRITE setTouchDragThreshold RESET resetTouchDragThreshold NOTIFY touchDragThresholdChanged FINAL REVISION 5)
 
 public:
     explicit QQuickRangeSlider(QQuickItem *parent = nullptr);
@@ -109,6 +111,11 @@ public:
     bool isHorizontal() const;
     bool isVertical() const;
 
+    // 2.5 (Qt 5.12)
+    qreal touchDragThreshold() const;
+    void setTouchDragThreshold(qreal touchDragThreshold);
+    void resetTouchDragThreshold();
+
 Q_SIGNALS:
     void fromChanged();
     void toChanged();
@@ -117,6 +124,8 @@ Q_SIGNALS:
     void orientationChanged();
     // 2.2 (Qt 5.9)
     Q_REVISION(2) void liveChanged();
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) void touchDragThresholdChanged();
 
 protected:
     void focusInEvent(QFocusEvent *event) override;
