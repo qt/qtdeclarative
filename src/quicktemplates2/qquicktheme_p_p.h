@@ -54,15 +54,24 @@ QT_BEGIN_NAMESPACE
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickThemePrivate
 {
+    Q_DECLARE_PUBLIC(QQuickTheme)
+
 public:
     static QQuickThemePrivate *get(QQuickTheme *theme)
     {
         return theme->d_func();
     }
 
+    const QFont *resolveThemeFont(QQuickTheme::Font type);
+    const QPalette *resolveThemePalette(QQuickTheme::Palette type);
+
     static QScopedPointer<QQuickTheme> current;
+
+    bool hasResolvedFonts = false;
+    bool hasResolvedPalettes = false;
     QScopedPointer<const QFont> defaultFont;
     QScopedPointer<const QPalette> defaultPalette;
+    QQuickTheme *q_ptr = nullptr;
 };
 
 QT_END_NAMESPACE

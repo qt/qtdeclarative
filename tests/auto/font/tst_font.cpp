@@ -231,7 +231,7 @@ public:
         }
     }
 
-    const QFont *font(Font type = SystemFont) const override
+    const QFont *font(Font type) const override
     {
         return fonts[type];
     }

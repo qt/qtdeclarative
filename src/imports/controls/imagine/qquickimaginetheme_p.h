@@ -57,10 +57,10 @@ class QQuickImagineTheme : public QQuickTheme
 public:
     explicit QQuickImagineTheme();
 
-    const QFont *font(Font type = SystemFont) const override;
-    const QPalette *palette(Palette type = SystemPalette) const override;
-
 protected:
+    const QFont *font(Font type) const override;
+    const QPalette *palette(Palette type) const override;
+
     void resolveFonts(const QFont &defaultFont) override;
     void resolvePalettes(const QPalette &defaultPalette) override;
 

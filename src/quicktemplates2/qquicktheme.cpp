@@ -72,9 +72,32 @@ static QPlatformTheme::Palette platformPalette(QQuickTheme::Palette type)
     }
 }
 
+const QFont *QQuickThemePrivate::resolveThemeFont(QQuickTheme::Font type)
+{
+    Q_Q(QQuickTheme);
+    if (!hasResolvedFonts) {
+        q->resolveFonts(defaultFont ? *defaultFont : QFont());
+        hasResolvedFonts = true;
+        defaultFont.reset();
+    }
+    return q->font(type);
+}
+
+const QPalette *QQuickThemePrivate::resolveThemePalette(QQuickTheme::Palette type)
+{
+    Q_Q(QQuickTheme);
+    if (!hasResolvedPalettes) {
+        q->resolvePalettes(defaultPalette ? *defaultPalette : QPalette());
+        hasResolvedPalettes = true;
+        defaultPalette.reset();
+    }
+    return q->palette(type);
+}
+
 QQuickTheme::QQuickTheme()
     : d_ptr(new QQuickThemePrivate)
 {
+    d_ptr->q_ptr = this;
 }
 
 QQuickTheme::~QQuickTheme()
@@ -95,7 +118,7 @@ QFont QQuickTheme::themeFont(Font type)
 {
     const QFont *font = nullptr;
     if (QQuickTheme *theme = current())
-        font = theme->font(type);
+        font = QQuickThemePrivate::get(theme)->resolveThemeFont(type);
     else if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
         font = theme->font(platformFont(type));
 
@@ -113,7 +136,7 @@ QPalette QQuickTheme::themePalette(Palette type)
 {
     const QPalette *palette = nullptr;
     if (QQuickTheme *theme = current())
-        palette = theme->palette(type);
+        palette = QQuickThemePrivate::get(theme)->resolveThemePalette(type);
     else if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
         palette = theme->palette(platformPalette(type));
 
@@ -139,20 +162,6 @@ const QPalette *QQuickTheme::palette(Palette type) const
     Q_D(const QQuickTheme);
     Q_UNUSED(type)
     return d->defaultPalette.data();
-}
-
-void QQuickTheme::setDefaultFont(const QFont *defaultFont)
-{
-    Q_D(QQuickTheme);
-    d->defaultFont.reset(defaultFont);
-    resolveFonts(defaultFont ? *defaultFont : QFont());
-}
-
-void QQuickTheme::setDefaultPalette(const QPalette *defaultPalette)
-{
-    Q_D(QQuickTheme);
-    d->defaultPalette.reset(defaultPalette);
-    resolvePalettes(defaultPalette ? *defaultPalette : QPalette());
 }
 
 void QQuickTheme::resolveFonts(const QFont &defaultFont)

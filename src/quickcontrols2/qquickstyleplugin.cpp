@@ -41,7 +41,7 @@
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qsettings.h>
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 
 #include <functional>
 
@@ -151,17 +151,14 @@ void QQuickStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
     if (isCurrent()) {
         m_theme = createTheme();
         if (m_theme) {
-            const QFont *font = nullptr;
-            const QPalette *palette = nullptr;
 #if QT_CONFIG(settings)
+            QQuickThemePrivate *p = QQuickThemePrivate::get(m_theme);
             QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(name());
             if (settings) {
-                font = readFont(settings);
-                palette = readPalette(settings);
+                p->defaultFont.reset(readFont(settings));
+                p->defaultPalette.reset(readPalette(settings));
             }
 #endif
-            m_theme->setDefaultFont(font);
-            m_theme->setDefaultPalette(palette);
             QQuickTheme::setCurrent(m_theme);
         }
     }

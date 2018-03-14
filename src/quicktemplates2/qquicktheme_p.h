@@ -128,13 +128,10 @@ public:
     static QFont themeFont(Font type);
     static QPalette themePalette(Palette type);
 
-    virtual const QFont *font(Font type = SystemFont) const;
-    virtual const QPalette *palette(Palette type = SystemPalette) const;
-
-    void setDefaultFont(const QFont *defaultFont);
-    void setDefaultPalette(const QPalette *defaultPalette);
-
 protected:
+    virtual const QFont *font(Font type) const;
+    virtual const QPalette *palette(Palette type) const;
+
     virtual void resolveFonts(const QFont &defaultFont);
     virtual void resolvePalettes(const QPalette &defaultPalette);
 

@@ -59,9 +59,9 @@ class QQuickMaterialTheme : public QQuickTheme
 public:
     explicit QQuickMaterialTheme();
 
-    const QFont *font(Font type = SystemFont) const override;
-
 protected:
+    const QFont *font(Font type) const override;
+
     void resolveFonts(const QFont &defaultFont) override;
 
 private:

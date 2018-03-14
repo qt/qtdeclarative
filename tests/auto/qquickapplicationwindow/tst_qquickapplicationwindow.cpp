@@ -560,7 +560,7 @@ class TestTheme : public QQuickTheme
 public:
     TestTheme() : m_font("Courier") { }
 
-    const QFont *font(Font type = SystemFont) const override
+    const QFont *font(Font type) const override
     {
         Q_UNUSED(type);
         return &m_font;

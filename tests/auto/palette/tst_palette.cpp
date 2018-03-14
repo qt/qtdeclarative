@@ -227,7 +227,7 @@ public:
             palettes[i] = new QPalette(QColor::fromRgb(i));
     }
 
-    const QPalette *palette(Palette type = SystemPalette) const override
+    const QPalette *palette(Palette type) const override
     {
         return palettes[type];
     }
