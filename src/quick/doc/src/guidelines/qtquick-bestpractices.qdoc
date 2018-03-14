@@ -227,4 +227,19 @@ properties are enough.
  \li \l{Item Positioners}
  \li \l{Qt Quick Layouts Overview}
 \endlist
+
+\section1 Performance
+
+For information on performance in QML and Qt Quick,
+see \l {Performance Considerations And Suggestions}.
+
+\section1 Tools and Utilities
+
+For information on useful tools and utilies that make working with QML and
+Qt Quick easier, see \l {Qt Quick Tools and Utilities}.
+
+\section1 Scene Graph
+
+For information on Qt Quick's scene graph, see \l {Qt Quick Scene Graph}.
+
 */
