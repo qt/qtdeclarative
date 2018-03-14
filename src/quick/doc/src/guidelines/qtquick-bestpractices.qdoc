@@ -30,10 +30,10 @@
 \title Qt Quick Best Practices
 \brief Lists the practices that work best for Qt Quick
 
-Besides all the benefits that Qt Quick offers, it can be challenging in certain
-situations. For example, a Qt Quick application with a large codebase can be
-painful to maintain if not organized well. The following sections elaborate
-on some of the best practices that will help you get better results.
+Despite all of the benefits that Qt Quick offers, it can be challenging in
+certain situations. The following sections elaborate on some of the best
+practices that will help you get better results when developing Qt Quick
+applications.
 
 \section1 Custom UI Controls
 
