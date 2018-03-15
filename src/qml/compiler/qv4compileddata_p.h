@@ -801,11 +801,7 @@ struct TypeReference
         , errorWhenNotFound(false)
     {}
     Location location; // first use
-#ifndef QT_NO_BITFIELDS
     bool needsCreation : 1; // whether the type needs to be creatable or not
-#else
-    bool needsCreation = 1;
-#endif
     bool errorWhenNotFound: 1;
 };
 
