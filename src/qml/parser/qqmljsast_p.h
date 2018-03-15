@@ -2307,12 +2307,28 @@ public:
             if (formals->bindingRestElement())
                 return false;
             BindingElement *e = formals->bindingElement();
-            Q_ASSERT(e);
-            if (e->initializer || e->binding)
+            if (e && (e->initializer || e->binding))
                 return false;
             formals = formals->next;
         }
         return true;
+    }
+
+    int length()
+    {
+        // the length property of Function objects
+        int l = 0;
+        AST::FormalParameterList *formals = this;
+        while (formals) {
+            if (formals->bindingRestElement())
+                break;
+            BindingElement *e = formals->bindingElement();
+            if (!e || e->initializer)
+                break;
+            ++l;
+            formals = formals->next;
+        }
+        return l;
     }
 
     bool containsName(const QString &name) const {

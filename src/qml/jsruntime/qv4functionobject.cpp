@@ -422,7 +422,7 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     ScopedString name(s, function->name());
     f->init(name, true);
     Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()) == Index_Length);
-    setProperty(s.engine, Index_Length, Primitive::fromInt32(f->formalParameterCount()));
+    setProperty(s.engine, Index_Length, Primitive::fromInt32(int(function->compiledFunction->length)));
 }
 
 Heap::InternalClass *ScriptFunction::classForConstructor() const

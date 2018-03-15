@@ -520,6 +520,7 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
                 signalParameterNameTable.append(stringTable.getStringId(arg));
 
             function->nFormals = formals.size();
+            function->length = function->nFormals;
 
             // Hack to ensure an activation is created.
             function->flags |= QV4::CompiledData::Function::HasCatchOrWith | QV4::CompiledData::Function::HasDirectEval;

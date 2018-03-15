@@ -2363,6 +2363,9 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             Reference arg = referenceForName(e->name, true);
             initializeAndDestructureBindingElement(e, arg);
         } else {
+            if (!formals->next)
+                // trailing comma
+                break;
             Q_UNREACHABLE();
         }
         formals = formals->next;

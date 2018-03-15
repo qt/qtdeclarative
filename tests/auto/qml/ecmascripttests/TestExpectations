@@ -4128,7 +4128,6 @@ language/expressions/array/spread-sngl-literal
 language/expressions/arrow-function/cannot-override-this-with-thisArg
 language/expressions/arrow-function/dflt-params-ref-later
 language/expressions/arrow-function/dflt-params-ref-self
-language/expressions/arrow-function/dflt-params-trailing-comma
 language/expressions/arrow-function/dstr-ary-init-iter-close
 language/expressions/arrow-function/dstr-ary-init-iter-get-err
 language/expressions/arrow-function/dstr-ary-init-iter-no-close
@@ -4300,8 +4299,6 @@ language/expressions/arrow-function/lexical-super-call-from-within-constructor
 language/expressions/arrow-function/lexical-super-property
 language/expressions/arrow-function/lexical-super-property-from-within-constructor
 language/expressions/arrow-function/lexical-this
-language/expressions/arrow-function/params-trailing-comma-multiple
-language/expressions/arrow-function/params-trailing-comma-single
 language/expressions/arrow-function/prototype-rules
 language/expressions/arrow-function/scope-body-lex-distinct
 language/expressions/arrow-function/scope-param-elem-var-close
@@ -6802,7 +6799,6 @@ language/module-code/namespace/Symbol.iterator
 language/module-code/namespace/Symbol.toStringTag
 language/module-code/parse-export-empty
 language/rest-parameters/array-pattern
-language/rest-parameters/expected-argument-count
 language/rest-parameters/object-pattern
 language/rest-parameters/with-new-target
 language/statements/async-function/cptn-decl
