@@ -310,7 +310,8 @@ void QQuickStylePrivate::init(const QUrl &baseUrl)
 
 void QQuickStylePrivate::reset()
 {
-    styleSpec()->reset();
+    if (styleSpec())
+        styleSpec()->reset();
 }
 
 QString QQuickStylePrivate::configFilePath()
