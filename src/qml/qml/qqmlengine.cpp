@@ -1104,7 +1104,9 @@ QQmlEngine::~QQmlEngine()
 void QQmlEngine::clearComponentCache()
 {
     Q_D(QQmlEngine);
+    d->typeLoader.lock();
     d->typeLoader.clearCache();
+    d->typeLoader.unlock();
 }
 
 /*!

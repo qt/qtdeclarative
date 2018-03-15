@@ -228,12 +228,16 @@ class QQmlTypeLoaderQmldirContent
 {
 private:
     friend class QQmlTypeLoader;
-    QQmlTypeLoaderQmldirContent();
 
     void setContent(const QString &location, const QString &content);
     void setError(const QQmlError &);
 
 public:
+    QQmlTypeLoaderQmldirContent();
+    QQmlTypeLoaderQmldirContent(const QQmlTypeLoaderQmldirContent &) = default;
+    QQmlTypeLoaderQmldirContent &operator=(const QQmlTypeLoaderQmldirContent &) = default;
+
+    bool hasContent() const { return m_hasContent; }
     bool hasError() const;
     QList<QQmlError> errors(const QString &uri) const;
 
@@ -250,6 +254,7 @@ public:
 private:
     QQmlDirParser m_parser;
     QString m_location;
+    bool m_hasContent = false;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlTypeLoader
@@ -304,7 +309,7 @@ public:
     QString absoluteFilePath(const QString &path);
     bool directoryExists(const QString &path);
 
-    const QQmlTypeLoaderQmldirContent *qmldirContent(const QString &filePath);
+    const QQmlTypeLoaderQmldirContent qmldirContent(const QString &filePath);
     void setQmldirContent(const QString &filePath, const QString &content);
 
     void clearCache();
