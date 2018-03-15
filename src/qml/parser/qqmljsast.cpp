@@ -800,7 +800,13 @@ QStringList FormalParameterList::boundNames() const
 void FormalParameterList::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-        // ###
+        if (BindingElement *b = bindingElement()) {
+            accept(b, visitor);
+        } else if (BindingRestElement *r = bindingRestElement()) {
+            accept(r, visitor);
+        }
+        if (next)
+            accept(next, visitor);
     }
 
     visitor->endVisit(this);

@@ -4126,7 +4126,6 @@ language/expressions/array/spread-sngl-expr
 language/expressions/array/spread-sngl-iter
 language/expressions/array/spread-sngl-literal
 language/expressions/arrow-function/cannot-override-this-with-thisArg
-language/expressions/arrow-function/dflt-params-abrupt
 language/expressions/arrow-function/dflt-params-ref-later
 language/expressions/arrow-function/dflt-params-ref-self
 language/expressions/arrow-function/dflt-params-trailing-comma
@@ -5546,7 +5545,6 @@ language/expressions/exponentiation/int32_min-exponent
 language/expressions/exponentiation/order-of-evaluation
 language/expressions/function/arguments-with-arguments-fn
 language/expressions/function/arguments-with-arguments-lex
-language/expressions/function/dflt-params-abrupt
 language/expressions/function/dflt-params-ref-later
 language/expressions/function/dflt-params-ref-self
 language/expressions/function/dflt-params-trailing-comma
@@ -5645,7 +5643,6 @@ language/expressions/function/dstr-obj-ptrn-prop-eval-err
 language/expressions/function/length-dflt
 language/expressions/function/name
 language/expressions/function/param-dflt-yield-non-strict
-language/expressions/function/params-dflt-ref-arguments
 language/expressions/function/params-trailing-comma-multiple
 language/expressions/function/params-trailing-comma-single
 language/expressions/function/scope-body-lex-distinct
@@ -8770,7 +8767,6 @@ language/statements/function/13.2-30-s
 language/statements/function/arguments-with-arguments-fn
 language/statements/function/arguments-with-arguments-lex
 language/statements/function/cptn-decl
-language/statements/function/dflt-params-abrupt
 language/statements/function/dflt-params-ref-later
 language/statements/function/dflt-params-ref-self
 language/statements/function/dflt-params-trailing-comma
