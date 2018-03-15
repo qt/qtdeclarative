@@ -108,6 +108,11 @@ inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
 //#  define V4_ENABLE_JIT
 #endif
 
+// check FPU with double precision on ARM platform
+#if (defined(Q_PROCESSOR_ARM_64) || defined(Q_PROCESSOR_ARM_32)) && defined(V4_ENABLE_JIT) && defined(__ARM_FP) && (__ARM_FP <= 0x04)
+#  undef V4_ENABLE_JIT
+#endif
+
 // Black list some platforms
 #if defined(V4_ENABLE_JIT)
 #if defined(Q_OS_IOS) || defined(Q_OS_TVOS)
