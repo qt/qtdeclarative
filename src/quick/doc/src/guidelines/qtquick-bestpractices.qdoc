@@ -1,0 +1,204 @@
+/****************************************************************************
+**
+** Copyright (C) 2018 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtquick-bestpractices.html
+\title Qt Quick Best Practices
+\brief Lists the practices that works best for Qt Quick
+
+Besides all the benefits that Qt Quick offers, it can be challenging in certain
+situations. For example, a Qt Quick application with a large codebase can be
+painful to maintain if not organized well. The following sections elaborate
+on some of the best practices that will help you get better results.
+
+\section1 Custom UI Controls
+
+A fluid and modern UI is key for any application's success in today's world, and
+that's where QML makes so much sense for a designer or developer. Qt offers the
+most basic UI controls that are necessary to a create fluid and modern-looking
+UI. It is recommended to browse this list of UI controls before creating your
+own custom UI control.
+
+Besides these basic UI controls offered by Qt Quick itself, a rich set of UI
+controls are also available with Qt Quick Controls 2. They cater to the most
+common use cases without any change, and offer a lot more possibilities with their
+customization options. In particular, Qt Quick Controls 2 provides styling
+options that align with the latest UI design trends. If these UI controls do not
+satisfy to your application's needs, only then it is recommended to create a
+custom control.
+
+
+\section2 Related Information
+\list
+\li \l{Qt Quick Controls 2}
+\li \l{Qt Quick}
+\endlist
+
+\section1 Keep it Short and Simple or "KiSS"
+
+QML being a declarative language, a lot of the details are worked out by the underlying
+engine. So it is important for any QML application, especially one with a
+larger codebase, to have its code organized in smaller and simpler \c .qml files.
+
+\omit
+need a few snippet or example applications that showcase this.
+\endomit
+
+\section2 Related Information
+\list
+ \li \l{QML Coding Conventions}
+\endlist
+
+\section1 Bundle Application Resources
+
+Most applications depend on resources such as images and icons to provide a
+rich user experience. It can often be a challenge to make these resources
+available to the application regardless of the target OS. Most popular OS-es
+employ stricter security policies that restrict access to the file system,
+making it harder to load these resources. As an alternative, Qt offers its own
+resource system that is built into the application binary, enabling access to
+the application's resources regardless of the target OS.
+
+It is recommended to bundle your application's resources (including the
+\c .qml files) into a resource file (\c.qrc). For example, the following entry
+in the qmake project file ensures that the resources are built into the
+application binary, making them available when needed:
+
+\badcode
+    RESOURCES += resources.qrc
+\endcode
+
+If your application depends on a limited number of resources, you could list
+them directly in the project file.
+
+\badcode
+    RESOURCES += a.qml b.png
+\endcode
+
+In such a case, qmake creates the \c qmake_intermediate.qrc build artifact,
+which you could rename and use the \c{RESOURCES += resource-set.qrc} entry
+instead.
+
+You could go a step further by using one \c .qrc file for each resource type.
+For example, list the \c .qml files in \c files.qrc, images in
+\c images.qrc, fonts in \c fonts.qrc, and so on. That way, you need not
+recompile the QML files when you, for example, add an image to the list in
+\c images.qrc.
+
+\section2 Related Information
+\list
+ \li \l{The Qt Resource System}
+\endlist
+
+\section1 Application UI and Business Logic
+
+One of the key goals that most application developers want to achieve is to
+create a maintainable application. One of the ways to achieve this goal is
+to separate the UI from the business logic. The following are a few reasons
+why application's UI should be in QML:
+
+\list
+ \li QML is a declarative language, which suits best for defining UIs.
+ \li It's easier to embed JavaScript in QML to respond to events, for example.
+ \li QML is faster to code as it is not strongly typed.
+\endlist
+
+On the other hand, C++ being a strongly typed language, suits best for defining
+business logic. Typically, such code performs tasks such as complex calculations
+or larger data processing, which can be faster with C++ than with QML.
+
+Qt offers various approaches to integrate QML and C++ code in an application.
+In most cases, the C++ part (business logic) provides the data model to the QML
+part (UI), which presents it in a readable form. It is often a challenge to
+decide when to use this approach. It is recommended to use QML
+if the data model is static, simple, and small, as C++ could be overkill.
+Use C++ if the application depends on a dynamic, large, and complex data model.
+
+\omit
+examples snippets of simpler and complex data models.
+\endomit
+
+\section2 Interaction Path
+
+Although Qt enables you to manipulate QML from C++, it is not a recommended
+approach, as debugging such code can be painful. The QML engine works out
+a lot of the details on the fly, so manipulating the QML items from C++ could
+lead to unexpected results. This approach also makes the C++ code rely on the
+QML code to provide certain properties or objects, making it difficult to
+refactor the QML code without breaking the C++ code. Moreover, such C++ code
+cannot reused with other QML code. To avoid all of these hassles and have a
+maintainable application, it is recommended to always use the C++ to QML path
+and not the other way around.
+
+\section2 Related Information
+\list
+\li \l{Integrating QML and C++}
+\li \l{Chat Tutorial Example}
+\endlist
+
+\section1 Qt Quick Layouts
+
+Qt offers Qt Quick Layouts to arrange Qt Quick items visually in a layout.
+Unlike its alternative, the item positioners, the Qt Quick Layouts can also
+resize its children on window resize. Although Qt Quick Layouts are often
+the desired choice for most use cases, the following \e dos and \e{don'ts}
+must be considered while using them:
+
+\section2 Dos
+
+\list
+ \li Use anchors or the item's width and height properties to specify the size
+     of the layout against its parent.
+ \li Use the \l Layout attached property to set the size and alignment
+     attributes of the layout's immediate children.
+\endlist
+
+\section2 Don'ts
+
+\list
+ \li Do not rely on anchors to specify the preferred size of an item in a layout.
+     Instead, use \c Layout.preferredWidth and \c Layout.preferredHeight.
+ \li Do not define preferred sizes for items that provide implicitWidth and
+     implicitHeight, unless their implicit sizes are not satisfactory.
+ \li Do not mix anchors and layouts in ways that cause conflicts. For example,
+     do not apply anchor constraints to a layout's immediate children.
+
+    \snippet qml/windowconstraints.qml rowlayout
+\endlist
+
+\note Layouts and anchors are both types of objects that take more memory and
+instantiation time. Avoid using them (especially in list and table delegates,
+and styles for controls) when simple bindings to x, y, width, and height
+properties are enough.
+
+\section2 Related Information
+
+\list
+ \li \l{Item Positioners}
+ \li \l{Qt Quick Layouts Overview}
+\endlist
+*/
