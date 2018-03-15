@@ -316,17 +316,17 @@ public:
                              QQmlImportDatabase *database,
                              QString *outQmldirFilePath, QString *outUrl);
 
-    static bool validateQmldirVersion(const QQmlTypeLoaderQmldirContent *qmldir, const QString &uri, int vmaj, int vmin,
+    static bool validateQmldirVersion(const QQmlTypeLoaderQmldirContent &qmldir, const QString &uri, int vmaj, int vmin,
                                       QList<QQmlError> *errors);
 
     bool importExtension(const QString &absoluteFilePath, const QString &uri,
                          int vmaj, int vmin,
                          QQmlImportDatabase *database,
-                         const QQmlTypeLoaderQmldirContent *qmldir,
+                         const QQmlTypeLoaderQmldirContent &qmldir,
                          QList<QQmlError> *errors);
 
     bool getQmldirContent(const QString &qmldirIdentifier, const QString &uri,
-                          const QQmlTypeLoaderQmldirContent **qmldir, QList<QQmlError> *errors);
+                          QQmlTypeLoaderQmldirContent *qmldir, QList<QQmlError> *errors);
 
     QString resolvedUri(const QString &dir_arg, QQmlImportDatabase *database);
 
@@ -664,14 +664,14 @@ bool QQmlImports::resolveType(const QHashedStringRef &type,
     return false;
 }
 
-bool QQmlImportInstance::setQmldirContent(const QString &resolvedUrl, const QQmlTypeLoaderQmldirContent *qmldir, QQmlImportNamespace *nameSpace, QList<QQmlError> *errors)
+bool QQmlImportInstance::setQmldirContent(const QString &resolvedUrl, const QQmlTypeLoaderQmldirContent &qmldir, QQmlImportNamespace *nameSpace, QList<QQmlError> *errors)
 {
     Q_ASSERT(resolvedUrl.endsWith(Slash));
     url = resolvedUrl;
 
-    qmlDirComponents = qmldir->components();
+    qmlDirComponents = qmldir.components();
 
-    const QQmlDirScripts &scripts = qmldir->scripts();
+    const QQmlDirScripts &scripts = qmldir.scripts();
     if (!scripts.isEmpty()) {
         // Verify that we haven't imported these scripts already
         for (QList<QQmlImportInstance *>::const_iterator it = nameSpace->imports.constBegin();
@@ -1060,26 +1060,26 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                                          const QString &uri,
                                          int vmaj, int vmin,
                                          QQmlImportDatabase *database,
-                                         const QQmlTypeLoaderQmldirContent *qmldir,
+                                         const QQmlTypeLoaderQmldirContent &qmldir,
                                          QList<QQmlError> *errors)
 {
-    Q_ASSERT(qmldir);
+    Q_ASSERT(qmldir.hasContent());
 
     if (qmlImportTrace())
         qDebug().nospace() << "QQmlImports(" << qPrintable(base) << ")::importExtension: "
                            << "loaded " << qmldirFilePath;
 
-    if (designerSupportRequired && !qmldir->designerSupported()) {
+    if (designerSupportRequired && !qmldir.designerSupported()) {
         if (errors) {
             QQmlError error;
-            error.setDescription(QQmlImportDatabase::tr("module does not support the designer \"%1\"").arg(qmldir->typeNamespace()));
+            error.setDescription(QQmlImportDatabase::tr("module does not support the designer \"%1\"").arg(qmldir.typeNamespace()));
             error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
             errors->prepend(error);
         }
         return false;
     }
 
-    int qmldirPluginCount = qmldir->plugins().count();
+    int qmldirPluginCount = qmldir.plugins().count();
     if (qmldirPluginCount == 0)
         return true;
 
@@ -1090,7 +1090,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
         // listed plugin inside qmldir. And for this reason, mixing dynamic and static plugins inside a
         // single module is not recommended.
 
-        QString typeNamespace = qmldir->typeNamespace();
+        QString typeNamespace = qmldir.typeNamespace();
         QString qmldirPath = qmldirFilePath;
         int slash = qmldirPath.lastIndexOf(Slash);
         if (slash > 0)
@@ -1100,7 +1100,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
         int staticPluginsFound = 0;
 
 #if defined(QT_SHARED)
-        const auto qmldirPlugins = qmldir->plugins();
+        const auto qmldirPlugins = qmldir.plugins();
         for (const QQmlDirParser::Plugin &plugin : qmldirPlugins) {
             QString resolvedFilePath = database->resolvePlugin(typeLoader, qmldirPath, plugin.path, plugin.name);
             if (!resolvedFilePath.isEmpty()) {
@@ -1166,7 +1166,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                 if (qmldirPluginCount > 1 && staticPluginsFound > 0)
                     error.setDescription(QQmlImportDatabase::tr("could not resolve all plugins for module \"%1\"").arg(uri));
                 else
-                    error.setDescription(QQmlImportDatabase::tr("module \"%1\" plugin \"%2\" not found").arg(uri).arg(qmldir->plugins()[dynamicPluginsFound].name));
+                    error.setDescription(QQmlImportDatabase::tr("module \"%1\" plugin \"%2\" not found").arg(uri).arg(qmldir.plugins()[dynamicPluginsFound].name));
                 error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
                 errors->prepend(error);
             }
@@ -1179,17 +1179,17 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
 }
 
 bool QQmlImportsPrivate::getQmldirContent(const QString &qmldirIdentifier, const QString &uri,
-                                          const QQmlTypeLoaderQmldirContent **qmldir, QList<QQmlError> *errors)
+                                          QQmlTypeLoaderQmldirContent *qmldir, QList<QQmlError> *errors)
 {
     Q_ASSERT(errors);
     Q_ASSERT(qmldir);
 
     *qmldir = typeLoader->qmldirContent(qmldirIdentifier);
-    if (*qmldir) {
+    if ((*qmldir).hasContent()) {
         // Ensure that parsing was successful
-        if ((*qmldir)->hasError()) {
+        if ((*qmldir).hasError()) {
             QUrl url = QUrl::fromLocalFile(qmldirIdentifier);
-            const QList<QQmlError> qmldirErrors = (*qmldir)->errors(uri);
+            const QList<QQmlError> qmldirErrors = (*qmldir).errors(uri);
             for (int i = 0; i < qmldirErrors.size(); ++i) {
                 QQmlError error = qmldirErrors.at(i);
                 error.setUrl(url);
@@ -1313,14 +1313,14 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
     return false;
 }
 
-bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoaderQmldirContent *qmldir, const QString &uri, int vmaj, int vmin,
+bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoaderQmldirContent &qmldir, const QString &uri, int vmaj, int vmin,
                                                QList<QQmlError> *errors)
 {
     int lowest_min = INT_MAX;
     int highest_min = INT_MIN;
 
     typedef QQmlDirComponents::const_iterator ConstIterator;
-    const QQmlDirComponents &components = qmldir->components();
+    const QQmlDirComponents &components = qmldir.components();
 
     ConstIterator cend = components.constEnd();
     for (ConstIterator cit = components.constBegin(); cit != cend; ++cit) {
@@ -1344,7 +1344,7 @@ bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoaderQmldirContent
     }
 
     typedef QList<QQmlDirParser::Script>::const_iterator SConstIterator;
-    const QQmlDirScripts &scripts = qmldir->scripts();
+    const QQmlDirScripts &scripts = qmldir.scripts();
 
     SConstIterator send = scripts.constEnd();
     for (SConstIterator sit = scripts.constBegin(); sit != send; ++sit) {
@@ -1436,14 +1436,14 @@ bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &pre
     Q_ASSERT(inserted);
 
     if (!incomplete) {
-        const QQmlTypeLoaderQmldirContent *qmldir = 0;
+        QQmlTypeLoaderQmldirContent qmldir;
 
         if (!qmldirIdentifier.isEmpty()) {
             if (!getQmldirContent(qmldirIdentifier, uri, &qmldir, errors))
                 return false;
 
-            if (qmldir) {
-                if (!importExtension(qmldir->pluginLocation(), uri, vmaj, vmin, database, qmldir, errors))
+            if (qmldir.hasContent()) {
+                if (!importExtension(qmldir.pluginLocation(), uri, vmaj, vmin, database, qmldir, errors))
                     return false;
 
                 if (!inserted->setQmldirContent(qmldirUrl, qmldir, nameSpace, errors))
@@ -1461,7 +1461,7 @@ bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &pre
                     error.setDescription(QQmlImportDatabase::tr("module \"%1\" is not installed").arg(uri));
                 errors->prepend(error);
                 return false;
-            } else if ((vmaj >= 0) && (vmin >= 0) && qmldir) {
+            } else if ((vmaj >= 0) && (vmin >= 0) && qmldir.hasContent()) {
                 // Verify that the qmldir content is valid for this version
                 if (!validateQmldirVersion(qmldir, uri, vmaj, vmin, errors))
                     return false;
@@ -1541,12 +1541,12 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     Q_ASSERT(inserted);
 
     if (!incomplete && !qmldirIdentifier.isEmpty()) {
-        const QQmlTypeLoaderQmldirContent *qmldir = 0;
+        QQmlTypeLoaderQmldirContent qmldir;
         if (!getQmldirContent(qmldirIdentifier, importUri, &qmldir, errors))
             return false;
 
-        if (qmldir) {
-            if (!importExtension(qmldir->pluginLocation(), importUri, vmaj, vmin, database, qmldir, errors))
+        if (qmldir.hasContent()) {
+            if (!importExtension(qmldir.pluginLocation(), importUri, vmaj, vmin, database, qmldir, errors))
                 return false;
 
             if (!inserted->setQmldirContent(url, qmldir, nameSpace, errors))
@@ -1565,14 +1565,14 @@ bool QQmlImportsPrivate::updateQmldirContent(const QString &uri, const QString &
     Q_ASSERT(nameSpace);
 
     if (QQmlImportInstance *import = nameSpace->findImport(uri)) {
-        const QQmlTypeLoaderQmldirContent *qmldir = 0;
+        QQmlTypeLoaderQmldirContent qmldir;
         if (!getQmldirContent(qmldirIdentifier, uri, &qmldir, errors))
             return false;
 
-        if (qmldir) {
+        if (qmldir.hasContent()) {
             int vmaj = import->majversion;
             int vmin = import->minversion;
-            if (!importExtension(qmldir->pluginLocation(), uri, vmaj, vmin, database, qmldir, errors))
+            if (!importExtension(qmldir.pluginLocation(), uri, vmaj, vmin, database, qmldir, errors))
                 return false;
 
             if (import->setQmldirContent(qmldirUrl, qmldir, nameSpace, errors)) {

@@ -80,7 +80,7 @@ struct QQmlImportInstance
     QQmlDirComponents qmlDirComponents; // a copy of the components listed in the qmldir
     QQmlDirScripts qmlDirScripts; // a copy of the scripts in the qmldir
 
-    bool setQmldirContent(const QString &resolvedUrl, const QQmlTypeLoaderQmldirContent *qmldir,
+    bool setQmldirContent(const QString &resolvedUrl, const QQmlTypeLoaderQmldirContent &qmldir,
                           QQmlImportNamespace *nameSpace, QList<QQmlError> *errors);
 
     static QQmlDirScripts getVersionedScripts(const QQmlDirScripts &qmldirscripts, int vmaj, int vmin);
