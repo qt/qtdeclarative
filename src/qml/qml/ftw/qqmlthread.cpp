@@ -57,6 +57,7 @@ public:
 
     void run() override;
 
+    inline QMutex &mutex() { return _mutex; }
     inline void lock() { _mutex.lock(); }
     inline void unlock() { _mutex.unlock(); }
     inline void wait() { _wait.wait(&_mutex); }
@@ -261,6 +262,11 @@ void QQmlThread::shutdown()
 bool QQmlThread::isShutdown() const
 {
     return d->m_shutdown;
+}
+
+QMutex &QQmlThread::mutex()
+{
+    return d->mutex();
 }
 
 void QQmlThread::lock()
