@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 #include "qquickscrollview_p.h"
-#include "qquickcontrol_p_p.h"
+#include "qquickpane_p_p.h"
 #include "qquickscrollbar_p_p.h"
 
 #include <QtQuick/private/qquickflickable_p.h>
@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ScrollView
-    \inherits Control
+    \inherits Pane
     \instantiates QQuickScrollView
     \inqmlmodule QtQuick.Controls
     \since 5.9
@@ -101,15 +101,16 @@ QT_BEGIN_NAMESPACE
         {Focus Management in Qt Quick Controls 2}
 */
 
-class QQuickScrollViewPrivate : public QQuickControlPrivate
+class QQuickScrollViewPrivate : public QQuickPanePrivate
 {
     Q_DECLARE_PUBLIC(QQuickScrollView)
 
 public:
     QQuickScrollViewPrivate();
 
-    QQmlListProperty<QObject> contentData();
-    QQmlListProperty<QQuickItem> contentChildren();
+    QQmlListProperty<QObject> contentData() override;
+    QQmlListProperty<QQuickItem> contentChildren() override;
+    QList<QQuickItem *> contentChildItems() const override;
 
     QQuickItem *getContentItem() override;
 
@@ -135,18 +136,24 @@ public:
     static void contentChildren_clear(QQmlListProperty<QQuickItem> *prop);
 
     bool wasTouched;
-    qreal contentWidth;
-    qreal contentHeight;
     QQuickFlickable *flickable;
 };
 
 QQuickScrollViewPrivate::QQuickScrollViewPrivate()
     : wasTouched(false),
-      contentWidth(-1),
-      contentHeight(-1),
       flickable(nullptr)
 {
+    contentWidth = -1;
+    contentHeight = -1;
     wheelEnabled = true;
+}
+
+QList<QQuickItem *> QQuickScrollViewPrivate::contentChildItems() const
+{
+    if (!flickable)
+        return QList<QQuickItem *>();
+
+    return flickable->contentItem()->childItems();
 }
 
 QQuickItem *QQuickScrollViewPrivate::getContentItem()
@@ -178,7 +185,7 @@ bool QQuickScrollViewPrivate::setFlickable(QQuickFlickable *item, bool content)
         if (attached)
             QQuickScrollBarAttachedPrivate::get(attached)->setFlickable(nullptr);
 
-        QObject::disconnect(flickable->contentItem(), &QQuickItem::childrenChanged, q, &QQuickScrollView::contentChildrenChanged);
+        QObjectPrivate::disconnect(flickable->contentItem(), &QQuickItem::childrenChanged, this, &QQuickPanePrivate::contentChildrenChange);
         QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickScrollViewPrivate::updateContentWidth);
         QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickScrollViewPrivate::updateContentHeight);
     }
@@ -189,19 +196,19 @@ bool QQuickScrollViewPrivate::setFlickable(QQuickFlickable *item, bool content)
 
     if (flickable) {
         flickable->installEventFilter(q);
-        if (contentWidth > 0)
-            item->setContentWidth(contentWidth);
+        if (hasContentWidth)
+            flickable->setContentWidth(contentWidth);
         else
             updateContentWidth();
-        if (contentHeight > 0)
-            item->setContentHeight(contentHeight);
+        if (hasContentHeight)
+            flickable->setContentHeight(contentHeight);
         else
             updateContentHeight();
 
         if (attached)
             QQuickScrollBarAttachedPrivate::get(attached)->setFlickable(flickable);
 
-        QObject::connect(flickable->contentItem(), &QQuickItem::childrenChanged, q, &QQuickScrollView::contentChildrenChanged);
+        QObjectPrivate::connect(flickable->contentItem(), &QQuickItem::childrenChanged, this, &QQuickPanePrivate::contentChildrenChange);
         QObjectPrivate::connect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickScrollViewPrivate::updateContentWidth);
         QObjectPrivate::connect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickScrollViewPrivate::updateContentHeight);
     }
@@ -357,71 +364,10 @@ void QQuickScrollViewPrivate::contentChildren_clear(QQmlListProperty<QQuickItem>
 }
 
 QQuickScrollView::QQuickScrollView(QQuickItem *parent)
-    : QQuickControl(*(new QQuickScrollViewPrivate), parent)
+    : QQuickPane(*(new QQuickScrollViewPrivate), parent)
 {
-    setFlag(ItemIsFocusScope);
     setActiveFocusOnTab(true);
     setFiltersChildMouseEvents(true);
-}
-
-/*!
-    \qmlproperty real QtQuick.Controls::ScrollView::contentWidth
-
-    This property holds the width of the scrollable content.
-
-    If only a single item is used within a ScrollView, the content size is
-    automatically calculated based on the implicit size of its contained item.
-
-    \sa contentHeight
-*/
-qreal QQuickScrollView::contentWidth() const
-{
-    Q_D(const QQuickScrollView);
-    return d->contentWidth;
-}
-
-void QQuickScrollView::setContentWidth(qreal width)
-{
-    Q_D(QQuickScrollView);
-    if (qFuzzyCompare(d->contentWidth, width))
-        return;
-
-    if (d->flickable) {
-        d->flickable->setContentWidth(width);
-    } else {
-        d->contentWidth = width;
-        emit contentWidthChanged();
-    }
-}
-
-/*!
-    \qmlproperty real QtQuick.Controls::ScrollView::contentHeight
-
-    This property holds the height of the scrollable content.
-
-    If only a single item is used within a ScrollView, the content size is
-    automatically calculated based on the implicit size of its contained item.
-
-    \sa contentWidth
-*/
-qreal QQuickScrollView::contentHeight() const
-{
-    Q_D(const QQuickScrollView);
-    return d->contentHeight;
-}
-
-void QQuickScrollView::setContentHeight(qreal height)
-{
-    Q_D(QQuickScrollView);
-    if (qFuzzyCompare(d->contentHeight, height))
-        return;
-
-    if (d->flickable) {
-        d->flickable->setContentHeight(height);
-    } else {
-        d->contentHeight = height;
-        emit contentHeightChanged();
-    }
 }
 
 /*!
@@ -516,13 +462,13 @@ bool QQuickScrollView::eventFilter(QObject *object, QEvent *event)
         if (!d->wheelEnabled)
             return true;
     }
-    return QQuickControl::eventFilter(object, event);
+    return QQuickPane::eventFilter(object, event);
 }
 
 void QQuickScrollView::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickScrollView);
-    QQuickControl::keyPressEvent(event);
+    QQuickPane::keyPressEvent(event);
     switch (event->key()) {
     case Qt::Key_Up:
         if (QQuickScrollBar *vbar = d->verticalScrollBar()) {
@@ -557,22 +503,26 @@ void QQuickScrollView::keyPressEvent(QKeyEvent *event)
 void QQuickScrollView::componentComplete()
 {
     Q_D(QQuickScrollView);
-    QQuickControl::componentComplete();
-    if (!d->contentItem) {
+    QQuickPane::componentComplete();
+    if (!d->contentItem)
         d->ensureFlickable(true);
-    } else {
-        if (d->contentWidth <= 0)
-            d->updateContentWidth();
-        if (d->contentHeight <= 0)
-            d->updateContentHeight();
-    }
 }
 
 void QQuickScrollView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_D(QQuickScrollView);
-    QQuickControl::contentItemChange(newItem, oldItem);
     d->setFlickable(qobject_cast<QQuickFlickable *>(newItem), false);
+    QQuickPane::contentItemChange(newItem, oldItem);
+}
+
+void QQuickScrollView::contentSizeChange(const QSizeF &newSize, const QSizeF &oldSize)
+{
+    Q_D(QQuickScrollView);
+    QQuickPane::contentSizeChange(newSize, oldSize);
+    if (d->flickable) {
+        d->flickable->setContentWidth(newSize.width());
+        d->flickable->setContentHeight(newSize.height());
+    }
 }
 
 #if QT_CONFIG(accessibility)

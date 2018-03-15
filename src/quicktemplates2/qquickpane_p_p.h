@@ -62,8 +62,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPanePrivate : public QQuickControlP
 public:
     QQuickPanePrivate();
 
-    QQmlListProperty<QObject> contentData();
-    QQmlListProperty<QQuickItem> contentChildren();
+    virtual QQmlListProperty<QObject> contentData();
+    virtual QQmlListProperty<QQuickItem> contentChildren();
+    virtual QList<QQuickItem *> contentChildItems() const;
 
     QQuickItem *getContentItem() override;
 

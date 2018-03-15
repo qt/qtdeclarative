@@ -87,6 +87,7 @@ protected:
     void componentComplete() override;
 
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
+    virtual void contentSizeChange(const QSizeF &newSize, const QSizeF &oldSize);
 
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;

@@ -48,35 +48,19 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquickpane_p.h>
 #include <QtQml/qqmllist.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickScrollViewPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollView : public QQuickControl
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollView : public QQuickPane
 {
     Q_OBJECT
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
-    Q_PRIVATE_PROPERTY(QQuickScrollView::d_func(), QQmlListProperty<QObject> contentData READ contentData FINAL)
-    Q_PRIVATE_PROPERTY(QQuickScrollView::d_func(), QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
-    Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
     explicit QQuickScrollView(QQuickItem *parent = nullptr);
-
-    qreal contentWidth() const;
-    void setContentWidth(qreal width);
-
-    qreal contentHeight() const;
-    void setContentHeight(qreal height);
-
-Q_SIGNALS:
-    void contentWidthChanged();
-    void contentHeightChanged();
-    void contentChildrenChanged();
 
 protected:
     bool childMouseEventFilter(QQuickItem *item, QEvent *event) override;
@@ -85,6 +69,7 @@ protected:
 
     void componentComplete() override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
+    void contentSizeChange(const QSizeF &newSize, const QSizeF &oldSize) override;
 
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;

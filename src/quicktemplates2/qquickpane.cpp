@@ -118,6 +118,14 @@ QQuickPanePrivate::QQuickPanePrivate()
 {
 }
 
+QList<QQuickItem *> QQuickPanePrivate::contentChildItems() const
+{
+    if (!contentItem)
+        return QList<QQuickItem *>();
+
+    return contentItem->childItems();
+}
+
 QQuickItem *QQuickPanePrivate::getContentItem()
 {
     Q_Q(QQuickPane);
@@ -164,7 +172,7 @@ void QQuickPanePrivate::itemDestroyed(QQuickItem *item)
 void QQuickPanePrivate::contentChildrenChange()
 {
     Q_Q(QQuickPane);
-    QQuickItem *newFirstChild = contentItem->childItems().value(0);
+    QQuickItem *newFirstChild = contentChildItems().value(0);
     if (newFirstChild != firstChild) {
         if (firstChild)
             removeImplicitSizeListener(firstChild);
@@ -186,7 +194,7 @@ qreal QQuickPanePrivate::getContentWidth() const
     if (!qFuzzyIsNull(cw))
         return cw;
 
-    const auto contentChildren = contentItem->childItems();
+    const auto contentChildren = contentChildItems();
     if (contentChildren.count() == 1)
         return contentChildren.first()->implicitWidth();
 
@@ -202,7 +210,7 @@ qreal QQuickPanePrivate::getContentHeight() const
     if (!qFuzzyIsNull(ch))
         return ch;
 
-    const auto contentChildren = contentItem->childItems();
+    const auto contentChildren = contentChildItems();
     if (contentChildren.count() == 1)
         return contentChildren.first()->implicitHeight();
 
@@ -220,6 +228,7 @@ void QQuickPanePrivate::updateContentWidth()
     if (qFuzzyCompare(contentWidth, oldContentWidth))
         return;
 
+    q->contentSizeChange(QSizeF(contentWidth, contentHeight), QSizeF(oldContentWidth, contentHeight));
     emit q->contentWidthChanged();
 }
 
@@ -234,6 +243,7 @@ void QQuickPanePrivate::updateContentHeight()
     if (qFuzzyCompare(contentHeight, oldContentHeight))
         return;
 
+    q->contentSizeChange(QSizeF(contentWidth, contentHeight), QSizeF(contentWidth, oldContentHeight));
     emit q->contentHeightChanged();
 }
 
@@ -253,6 +263,9 @@ void QQuickPanePrivate::updateContentSize()
 
     const bool widthChanged = !qFuzzyCompare(contentWidth, oldContentWidth);
     const bool heightChanged = !qFuzzyCompare(contentHeight, oldContentHeight);
+
+    if (widthChanged || heightChanged)
+        q->contentSizeChange(QSizeF(contentWidth, contentHeight), QSizeF(oldContentWidth, oldContentHeight));
 
     if (widthChanged)
         emit q->contentWidthChanged();
@@ -310,7 +323,9 @@ void QQuickPane::setContentWidth(qreal width)
     if (qFuzzyCompare(d->contentWidth, width))
         return;
 
+    const qreal oldWidth = d->contentWidth;
     d->contentWidth = width;
+    contentSizeChange(QSizeF(width, d->contentHeight), QSizeF(oldWidth, d->contentHeight));
     emit contentWidthChanged();
 }
 
@@ -347,7 +362,9 @@ void QQuickPane::setContentHeight(qreal height)
     if (qFuzzyCompare(d->contentHeight, height))
         return;
 
+    const qreal oldHeight = d->contentHeight;
     d->contentHeight = height;
+    contentSizeChange(QSizeF(d->contentWidth, height), QSizeF(d->contentWidth, oldHeight));
     emit contentHeightChanged();
 }
 
@@ -421,21 +438,19 @@ void QQuickPane::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
     QQuickControl::contentItemChange(newItem, oldItem);
     if (oldItem) {
         d->removeImplicitSizeListener(oldItem);
-        if (d->firstChild) {
-            d->removeImplicitSizeListener(d->firstChild);
-            d->firstChild = nullptr;
-        }
         QObjectPrivate::disconnect(oldItem, &QQuickItem::childrenChanged, d, &QQuickPanePrivate::contentChildrenChange);
     }
     if (newItem) {
         d->addImplicitSizeListener(newItem);
-        d->firstChild = newItem->childItems().value(0);
-        if (d->firstChild)
-            d->addImplicitSizeListener(d->firstChild);
         QObjectPrivate::connect(newItem, &QQuickItem::childrenChanged, d, &QQuickPanePrivate::contentChildrenChange);
     }
-    d->updateContentSize();
-    emit contentChildrenChanged();
+    d->contentChildrenChange();
+}
+
+void QQuickPane::contentSizeChange(const QSizeF &newSize, const QSizeF &oldSize)
+{
+    Q_UNUSED(newSize)
+    Q_UNUSED(oldSize)
 }
 
 #if QT_CONFIG(accessibility)
