@@ -260,6 +260,7 @@ struct QQuickStyleSpec
     QString fallbackStyle;
     QByteArray fallbackMethod;
     QString configFilePath;
+    QStringList customStylePaths;
 };
 
 Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
@@ -269,7 +270,7 @@ QStringList QQuickStylePrivate::stylePaths(bool resolve)
     // user-requested style path
     QStringList paths;
     if (resolve) {
-        QString path = styleSpec->path();
+        QString path = styleSpec()->path();
         if (path.endsWith(QLatin1Char('/')))
             path.chop(1);
         if (!path.isEmpty())
@@ -277,6 +278,7 @@ QStringList QQuickStylePrivate::stylePaths(bool resolve)
     }
 
     // system/custom style paths
+    paths += styleSpec()->customStylePaths;
     paths += envPathList("QT_QUICK_CONTROLS_STYLE_PATH");
 
     // built-in import paths
@@ -430,9 +432,11 @@ void QQuickStyle::setFallbackStyle(const QString &style)
 
 /*!
     \since 5.9
-    Returns the names of the available built-in styles.
+    Returns the names of the available styles.
 
     \note The method must be called \b after creating an instance of QGuiApplication.
+
+    \sa stylePathList(), addStylePath()
 */
 QStringList QQuickStyle::availableStyles()
 {
@@ -454,6 +458,58 @@ QStringList QQuickStyle::availableStyles()
     styles.prepend(QStringLiteral("Default"));
     styles.removeDuplicates();
     return styles;
+}
+
+/*!
+    \since 5.12
+
+    Returns the list of directories where Qt Quick Controls 2 searches for available styles.
+
+    By default, the list contains paths specified in the \c QT_QUICK_CONTROLS_STYLE_PATH
+    environment variable, and any existing \c QtQuick/Controls.2 sub-directories in
+    \l QQmlEngine::importPathList().
+
+    \sa addStylePath(), availableStyles()
+*/
+QStringList QQuickStyle::stylePathList()
+{
+    return QQuickStylePrivate::stylePaths();
+}
+
+/*!
+    \since 5.12
+
+    Adds \a path as a directory where Qt Quick Controls 2 searches for available styles.
+
+    The \a path may be any local filesystem directory or \l {The Qt Resource System}{Qt Resource} directory.
+    For example, the following paths are all valid:
+
+    \list
+        \li \c {/path/to/styles/}
+        \li \c {file:///path/to/styles/}
+        \li \c {:/path/to/styles/}
+        \li \c {qrc:/path/to/styles/})
+    \endlist
+
+    The \a path will be converted into \l {QDir::canonicalPath}{canonical form} before it is added to
+    the style path list.
+
+    The newly added \a path will be first in the stylePathList().
+
+    \sa stylePathList(), availableStyles()
+*/
+void QQuickStyle::addStylePath(const QString &path)
+{
+    if (path.isEmpty())
+        return;
+
+    const QUrl url = QUrl(path);
+    if (url.isRelative() || url.scheme() == QLatin1String("file")
+            || (url.scheme().length() == 1 && QFile::exists(path)) ) {  // windows path
+        styleSpec()->customStylePaths.prepend(QDir(path).canonicalPath());
+    } else {
+        styleSpec()->customStylePaths.prepend(path);
+    }
 }
 
 QT_END_NAMESPACE

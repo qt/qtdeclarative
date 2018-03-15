@@ -151,8 +151,8 @@ void tst_QQuickStyle::availableStyles()
 {
     QString path = QFINDTESTDATA("data");
     QVERIFY(!path.isEmpty());
-    qputenv("QT_QUICK_CONTROLS_STYLE_PATH", path.toLocal8Bit());
 
+    QQuickStyle::addStylePath(path);
     QStringList paths = QQuickStylePrivate::stylePaths();
     QVERIFY(paths.contains(path));
 
