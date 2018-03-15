@@ -835,8 +835,6 @@ built-ins/Function/prototype/bind/instance-name-chained
 built-ins/Function/prototype/bind/instance-name-non-string
 built-ins/Function/prototype/bind/proto-from-ctor-realm
 built-ins/Function/prototype/name
-built-ins/Function/prototype/restricted-property-arguments
-built-ins/Function/prototype/restricted-property-caller
 built-ins/Function/prototype/Symbol.hasInstance/length
 built-ins/Function/prototype/Symbol.hasInstance/name
 built-ins/Function/prototype/Symbol.hasInstance/prop-desc
@@ -895,7 +893,6 @@ built-ins/Function/prototype/toString/setter-class-statement-static
 built-ins/Function/prototype/toString/setter-object
 built-ins/Function/prototype/toString/symbol-named-builtins
 built-ins/Function/prototype/toString/unicode
-built-ins/Function/StrictFunction_restricted-properties
 built-ins/GeneratorFunction/extensibility
 built-ins/GeneratorFunction/has-instance
 built-ins/GeneratorFunction/instance-construct-throws
@@ -2854,7 +2851,6 @@ built-ins/ThrowTypeError/extensible
 built-ins/ThrowTypeError/frozen
 built-ins/ThrowTypeError/length
 built-ins/ThrowTypeError/name
-built-ins/ThrowTypeError/unique-per-realm-function-proto
 built-ins/TypedArray/from/arylk-get-length-error
 built-ins/TypedArray/from/arylk-to-length-error
 built-ins/TypedArray/from/invoked-as-func
@@ -4129,7 +4125,6 @@ language/expressions/array/spread-sngl-empty
 language/expressions/array/spread-sngl-expr
 language/expressions/array/spread-sngl-iter
 language/expressions/array/spread-sngl-literal
-language/expressions/arrow-function/ArrowFunction_restricted-properties
 language/expressions/arrow-function/cannot-override-this-with-thisArg
 language/expressions/arrow-function/dflt-params-abrupt
 language/expressions/arrow-function/dflt-params-ref-later
@@ -8873,7 +8868,6 @@ language/statements/function/dstr-obj-ptrn-prop-ary-init
 language/statements/function/dstr-obj-ptrn-prop-eval-err
 language/statements/function/length-dflt
 language/statements/function/param-dflt-yield-non-strict
-language/statements/function/params-dflt-ref-arguments
 language/statements/function/params-trailing-comma-multiple
 language/statements/function/params-trailing-comma-single
 language/statements/function/S13_A15_T4

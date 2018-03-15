@@ -84,7 +84,10 @@ excludedFeatures = [
     "string-trimming",
     "String.prototype.trimEnd",
     "String.prototype.trimStart",
-    "numeric-separator-literal"
+    "numeric-separator-literal",
+
+    # optional features, not supported by us
+    "caller"
 ]
 
 # ############# Helpers needed for parallel multi-process test execution ############

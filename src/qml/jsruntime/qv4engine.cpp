@@ -270,8 +270,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     classes[Class_ArgumentsObject] = argsClass->addMember(id_callee(), Attr_Data|Attr_NotEnumerable);
     argsClass = newInternalClass(StrictArgumentsObject::staticVTable(), objectPrototype());
     argsClass = argsClass->addMember(id_length(), Attr_NotEnumerable);
-    argsClass = argsClass->addMember(id_callee(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-    classes[Class_StrictArgumentsObject] = argsClass->addMember(id_caller(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+    classes[Class_StrictArgumentsObject] = argsClass->addMember(id_callee(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 
     *static_cast<Value *>(globalObject) = newObject();
     Q_ASSERT(globalObject->d()->vtable());
@@ -490,6 +489,12 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     ScopedString name(scope, newString(QStringLiteral("thrower")));
     jsObjects[ThrowerObject] = FunctionObject::createBuiltinFunction(global, name, ::throwTypeError);
+
+    ScopedProperty pd(scope);
+    pd->value = thrower();
+    pd->set = thrower();
+    functionPrototype()->insertMember(id_caller(), pd, Attr_Accessor|Attr_ReadOnly_ButConfigurable);
+    functionPrototype()->insertMember(id_arguments(), pd, Attr_Accessor|Attr_ReadOnly_ButConfigurable);
 }
 
 ExecutionEngine::~ExecutionEngine()

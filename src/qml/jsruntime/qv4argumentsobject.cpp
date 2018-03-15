@@ -75,11 +75,8 @@ void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
     Object::init();
 
     Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()));
-    Q_ASSERT(CallerPropertyIndex == internalClass->find(v4->id_caller()));
     setProperty(v4, CalleePropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
     setProperty(v4, CalleePropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
-    setProperty(v4, CallerPropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
-    setProperty(v4, CallerPropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
 
     Scope scope(v4);
     Scoped<QV4::StrictArgumentsObject> args(scope, this);

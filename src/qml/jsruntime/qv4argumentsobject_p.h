@@ -95,8 +95,7 @@ DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
 DECLARE_HEAP_OBJECT(StrictArgumentsObject, Object) {
     enum {
         LengthPropertyIndex = 0,
-        CalleePropertyIndex = 1,
-        CallerPropertyIndex = 3
+        CalleePropertyIndex = 1
     };
     void init(CppStackFrame *frame);
 };

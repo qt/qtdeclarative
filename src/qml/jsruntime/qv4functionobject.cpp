@@ -277,7 +277,6 @@ void FunctionPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("apply"), method_apply, 2);
     defineDefaultProperty(QStringLiteral("call"), method_call, 1);
     defineDefaultProperty(QStringLiteral("bind"), method_bind, 1);
-
 }
 
 ReturnedValue FunctionPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -424,14 +423,6 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     f->init(name, true);
     Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()) == Index_Length);
     setProperty(s.engine, Index_Length, Primitive::fromInt32(f->formalParameterCount()));
-
-    if (function->isStrict()) {
-        ScopedProperty pd(s);
-        pd->value = s.engine->thrower();
-        pd->set = s.engine->thrower();
-        f->insertMember(s.engine->id_caller(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-        f->insertMember(s.engine->id_arguments(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-    }
 }
 
 Heap::InternalClass *ScriptFunction::classForConstructor() const
