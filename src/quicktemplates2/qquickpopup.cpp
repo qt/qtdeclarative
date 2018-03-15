@@ -36,6 +36,7 @@
 
 #include "qquickpopup_p.h"
 #include "qquickpopup_p_p.h"
+#include "qquickpopupanchors_p.h"
 #include "qquickpopupitem_p_p.h"
 #include "qquickpopuppositioner_p_p.h"
 #include "qquickapplicationwindow_p.h"
@@ -178,6 +179,11 @@ QT_BEGIN_NAMESPACE
 
     \include qquickoverlay-popup-parent.qdocinc
 
+    Another way to center a popup in the window regardless of its parent item
+    is to use \l {anchors.centerIn}:
+
+    \snippet qtquickcontrols2-popup.qml centerIn
+
     \sa {Popup Controls}, {Customizing Popup}, ApplicationWindow
 */
 
@@ -259,7 +265,8 @@ QQuickPopupPrivate::QQuickPopupPrivate()
       exit(nullptr),
       popupItem(nullptr),
       positioner(nullptr),
-      transitionManager(this)
+      transitionManager(this),
+      anchors(nullptr)
 {
 }
 
@@ -570,6 +577,48 @@ void QQuickPopupPrivate::setBottomMargin(qreal value, bool reset)
         q->marginsChange(QMarginsF(leftMargin, topMargin, rightMargin, bottomMargin),
                          QMarginsF(leftMargin, topMargin, rightMargin, oldMargin));
     }
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlpropertygroup QtQuick.Controls::Popup::anchors
+    \qmlproperty Object QtQuick.Controls::Popup::anchors.centerIn
+
+    Anchors provide a way to position an item by specifying its
+    relationship with other items.
+
+    A common use case is to center a popup within its parent. One way to do
+    this is with the \l {Item::}{x} and \l {Item::}{y} properties. Anchors offer
+    a more convenient approach:
+
+    \qml
+    Pane {
+        // ...
+
+        Popup {
+            anchors.centerIn: parent
+        }
+    }
+    \endqml
+
+    It is also possible to center the popup in the window by using \l Overlay:
+
+    \snippet qtquickcontrols2-popup.qml centerIn
+
+    This makes it easy to center a popup in the window from any component.
+
+    \note Popups can only be centered within their immediate parent or
+    the window overlay; trying to center in other items will produce a warning.
+
+    \sa {Popup Positioning}, {Item::anchors}
+*/
+QQuickPopupAnchors *QQuickPopupPrivate::getAnchors()
+{
+    if (!anchors) {
+        Q_Q(QQuickPopup);
+        anchors = new QQuickPopupAnchors(positioner, q);
+    }
+    return anchors;
 }
 
 void QQuickPopupPrivate::setWindow(QQuickWindow *newWindow)
@@ -2470,3 +2519,5 @@ bool QQuickPopup::setAccessibleProperty(const char *propertyName, const QVariant
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpopup_p.cpp"

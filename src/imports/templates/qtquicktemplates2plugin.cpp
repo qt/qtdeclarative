@@ -70,6 +70,7 @@
 #include <QtQuickTemplates2/private/qquickpaletteprovider_p.h>
 #include <QtQuickTemplates2/private/qquickpane_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
+#include <QtQuickTemplates2/private/qquickpopupanchors_p.h>
 #include <QtQuickTemplates2/private/qquickprogressbar_p.h>
 #include <QtQuickTemplates2/private/qquickradiobutton_p.h>
 #include <QtQuickTemplates2/private/qquickradiodelegate_p.h>
@@ -333,6 +334,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickDialogButtonBox, 5>(uri, 2, 5, "DialogButtonBox");
     qmlRegisterType<QQuickControl, 5>(uri, 2, 5, "Control");
     qmlRegisterType<QQuickPopup, 5>(uri, 2, 5, "Popup");
+    qmlRegisterType<QQuickPopupAnchors>();
     qmlRegisterType<QQuickRangeSlider, 5>(uri, 2, 5, "RangeSlider");
     qmlRegisterType<QQuickSlider, 5>(uri, 2, 5, "Slider");
     qmlRegisterType<QQuickTextArea, 5>(uri, 2, 5, "TextArea");

@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.4
+import QtQuick 2.12
 import QtTest 1.0
-import QtQuick.Controls 2.3
-import QtQuick.Templates 2.3 as T
+import QtQuick.Controls 2.5
+import QtQuick.Templates 2.5 as T
 
 TestCase {
     id: testCase
@@ -1268,5 +1268,77 @@ TestCase {
 
         compare(control.background.width, 200 + (control.background.leftInset || 0) + (control.background.rightInset || 0))
         compare(control.background.height, 100 + (control.background.topInset || 0) + (control.background.bottomInset || 0))
+    }
+
+    function test_anchors() {
+        var control = createTemporaryObject(popupControl, applicationWindow.contentItem.Overlay.overlay,
+            { visible: true, width: 100, height: 100 })
+        verify(control)
+        verify(control.visible)
+        compare(control.parent, control.Overlay.overlay)
+        compare(control.x, 0)
+        compare(control.y, 0)
+
+        var overlay = control.Overlay.overlay
+        verify(overlay)
+
+        var centerInSpy = createTemporaryObject(signalSpy, testCase, { target: control.anchors, signalName: "centerInChanged" })
+        verify(centerInSpy.valid)
+
+        applicationWindow.visible = true
+        verify(waitForRendering(applicationWindow.contentItem))
+        verify(overlay.width > 0)
+        verify(overlay.height > 0)
+
+        // Center the popup in the window via the overlay.
+        control.anchors.centerIn = Qt.binding(function() { return control.parent; })
+        compare(centerInSpy.count, 1)
+        compare(control.x, (overlay.width - control.width) / 2)
+        compare(control.y, (overlay.height - control.height) / 2)
+
+        // Ensure that it warns when trying to set it to an item that's not its parent.
+        var anotherItem = createTemporaryObject(rect, applicationWindow.contentItem, { x: 100, y: 100, width: 50, height: 50 })
+        verify(anotherItem)
+
+        ignoreWarning(Qt.resolvedUrl("tst_popup.qml") + ":77:9: QML Popup: Popup can only be centered within its immediate parent or Overlay.overlay")
+        control.anchors.centerIn = anotherItem
+        // The property will change, because we can't be sure that the parent
+        // in QQuickPopupAnchors::setCenterIn() is the final parent, as some reparenting can happen.
+        // We still expect the warning from QQuickPopupPositioner::reposition() though.
+        compare(centerInSpy.count, 2)
+        compare(control.anchors.centerIn, anotherItem)
+
+        // The binding to the popup's parent was broken above, so restore it.
+        control.anchors.centerIn = Qt.binding(function() { return control.parent; })
+        compare(centerInSpy.count, 3)
+
+        // Change the popup's parent and ensure that it's anchored accordingly.
+        control.parent = Qt.binding(function() { return anotherItem; })
+        compare(control.parent, anotherItem)
+        compare(control.anchors.centerIn, anotherItem)
+        compare(centerInSpy.count, 4)
+        compare(control.x, (anotherItem.width - control.width) / 2)
+        compare(control.y, (anotherItem.height - control.height) / 2)
+
+        // Check that anchors.centerIn beats x and y coordinates as it does in QQuickItem.
+        control.x = 33;
+        control.y = 44;
+        compare(control.x, (anotherItem.width - control.width) / 2)
+        compare(control.y, (anotherItem.height - control.height) / 2)
+
+        // Check that the popup's x and y coordinates are restored when it's no longer centered.
+        control.anchors.centerIn = undefined
+        compare(centerInSpy.count, 5)
+        compare(control.x, 33)
+        compare(control.y, 44)
+
+        // Test centering in the overlay while having a different parent (anotherItem).
+        control.anchors.centerIn = overlay
+        compare(centerInSpy.count, 6)
+        compare(control.x, (overlay.width - control.width) / 2)
+        compare(control.y, (overlay.height - control.height) / 2)
+
+        // TODO: do this properly by creating a component or something
+        applicationWindow.visible = false
     }
 }

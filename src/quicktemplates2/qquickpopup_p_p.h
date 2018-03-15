@@ -61,6 +61,7 @@ QT_BEGIN_NAMESPACE
 class QQuickTransition;
 class QQuickTransitionManager;
 class QQuickPopup;
+class QQuickPopupAnchors;
 class QQuickPopupItem;
 class QQuickPopupPrivate;
 class QQuickPopupPositioner;
@@ -135,6 +136,8 @@ public:
     void setRightMargin(qreal value, bool reset = false);
     void setBottomMargin(qreal value, bool reset = false);
 
+    QQuickPopupAnchors *getAnchors();
+
     void setWindow(QQuickWindow *window);
     void itemDestroyed(QQuickItem *item) override;
 
@@ -189,6 +192,7 @@ public:
     QList<QQuickStateAction> enterActions;
     QList<QQuickStateAction> exitActions;
     QQuickPopupTransitionManager transitionManager;
+    QQuickPopupAnchors *anchors;
 
     friend class QQuickPopupTransitionManager;
 };
