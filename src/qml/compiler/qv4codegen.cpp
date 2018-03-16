@@ -436,8 +436,15 @@ void Codegen::destructurePropertyList(const Codegen::Reference &object, BindingP
 
     for (BindingPropertyList *p = bindingList; p; p = p->next) {
         RegisterScope scope(this);
-        QString propertyName = p->propertyName->asString();
-        Reference property = Reference::fromMember(object, propertyName);
+        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->propertyName);
+        Reference property;
+        if (cname) {
+            Reference computedName = expression(cname->expression).storeOnStack();
+            property = Reference::fromSubscript(object, computedName);
+        } else {
+            QString propertyName = p->propertyName->asString();
+            property = Reference::fromMember(object, propertyName);
+        }
         initializeAndDestructureBindingElement(p->binding, property);
     }
 }
@@ -1838,13 +1845,19 @@ bool Codegen::visit(ObjectLiteral *ast)
     if (hasError)
         return false;
 
+    QVector<QPair<Reference, ObjectPropertyValue>> computedProperties;
     QMap<QString, ObjectPropertyValue> valueMap;
 
     RegisterScope scope(this);
 
     for (PropertyDefinitionList *it = ast->properties; it; it = it->next) {
+        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(it->assignment->name);
+        if (cname) {
+            Reference name = expression(cname->expression).storeOnStack();
+            computedProperties.append({name, ObjectPropertyValue()});
+        }
         QString name = it->assignment->name->asString();
-        ObjectPropertyValue &v = valueMap[name];
+        ObjectPropertyValue &v = cname ? computedProperties.last().second : valueMap[name];
         if (PropertyNameAndValue *nv = AST::cast<AST::PropertyNameAndValue *>(it->assignment)) {
             Reference value = expression(nv->value);
             if (hasError)
@@ -1946,8 +1959,18 @@ bool Codegen::visit(ObjectLiteral *ast)
     call.arrayGetterSetterCountAndFlags = arrayGetterSetterCountAndFlags;
     call.args = Moth::StackSlot::createRegister(args);
     bytecodeGenerator->addInstruction(call);
+    Reference result = Reference::fromAccumulator(this);
 
-    _expr.setResult(Reference::fromAccumulator(this));
+    if (!computedProperties.isEmpty()) {
+        result = result.storeOnStack();
+        for (const auto &c : qAsConst(computedProperties)) {
+            Reference element = Reference::fromSubscript(result, c.first);
+            c.second.rvalue.loadInAccumulator();
+            element.storeConsumeAccumulator();
+        }
+    }
+
+    _expr.setResult(result);
     return false;
 }
 

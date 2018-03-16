@@ -4008,7 +4008,6 @@ language/block-scope/shadowing/const-declarations-shadowing-parameter-name-let-c
 language/block-scope/shadowing/let-declaration-shadowing-catch-parameter
 language/block-scope/shadowing/let-declarations-shadowing-parameter-name-let-const-and-var
 language/block-scope/syntax/for-in/mixed-values-in-iteration
-language/computed-property-names/basics/number
 language/computed-property-names/basics/string
 language/computed-property-names/basics/symbol
 language/computed-property-names/class/accessor/getter
@@ -4048,10 +4047,8 @@ language/computed-property-names/object/method/number
 language/computed-property-names/object/method/string
 language/computed-property-names/object/method/super
 language/computed-property-names/object/method/symbol
-language/computed-property-names/object/property/number-duplicates
 language/computed-property-names/to-name-side-effects/class
 language/computed-property-names/to-name-side-effects/numbers-class
-language/computed-property-names/to-name-side-effects/numbers-object
 language/computed-property-names/to-name-side-effects/object
 language/destructuring/binding/syntax/array-rest-elements
 language/destructuring/binding/syntax/recursive-array-and-object-patterns
@@ -4504,7 +4501,6 @@ language/expressions/assignment/dstr-obj-prop-identifier-resolution-lone
 language/expressions/assignment/dstr-obj-prop-identifier-resolution-middle
 language/expressions/assignment/dstr-obj-prop-identifier-resolution-trlng
 language/expressions/assignment/dstr-obj-prop-name-evaluation
-language/expressions/assignment/dstr-obj-prop-name-evaluation-error
 language/expressions/assignment/dstr-obj-prop-nested-array
 language/expressions/assignment/dstr-obj-prop-nested-array-null
 language/expressions/assignment/dstr-obj-prop-nested-array-undefined
@@ -4645,7 +4641,6 @@ language/expressions/call/tco-non-eval-global
 language/expressions/call/tco-non-eval-with
 language/expressions/call/trailing-comma
 language/expressions/class/accessor-name-inst-computed
-language/expressions/class/accessor-name-inst-computed-err-evaluation
 language/expressions/class/accessor-name-inst-computed-err-to-prop-key
 language/expressions/class/accessor-name-inst-computed-err-unresolvable
 language/expressions/class/accessor-name-inst-computed-in
@@ -4665,7 +4660,6 @@ language/expressions/class/accessor-name-inst-literal-string-line-continuation
 language/expressions/class/accessor-name-inst-literal-string-single-quote
 language/expressions/class/accessor-name-inst-literal-string-unicode-escape
 language/expressions/class/accessor-name-static-computed
-language/expressions/class/accessor-name-static-computed-err-evaluation
 language/expressions/class/accessor-name-static-computed-err-to-prop-key
 language/expressions/class/accessor-name-static-computed-err-unresolvable
 language/expressions/class/accessor-name-static-computed-in
@@ -5628,7 +5622,6 @@ language/expressions/function/dstr-dflt-obj-ptrn-id-init-fn-name-fn
 language/expressions/function/dstr-dflt-obj-ptrn-id-init-fn-name-gen
 language/expressions/function/dstr-dflt-obj-ptrn-prop-ary
 language/expressions/function/dstr-dflt-obj-ptrn-prop-ary-init
-language/expressions/function/dstr-dflt-obj-ptrn-prop-eval-err
 language/expressions/function/dstr-obj-ptrn-id-init-fn-name-arrow
 language/expressions/function/dstr-obj-ptrn-id-init-fn-name-class
 language/expressions/function/dstr-obj-ptrn-id-init-fn-name-cover
@@ -5636,7 +5629,6 @@ language/expressions/function/dstr-obj-ptrn-id-init-fn-name-fn
 language/expressions/function/dstr-obj-ptrn-id-init-fn-name-gen
 language/expressions/function/dstr-obj-ptrn-prop-ary
 language/expressions/function/dstr-obj-ptrn-prop-ary-init
-language/expressions/function/dstr-obj-ptrn-prop-eval-err
 language/expressions/function/length-dflt
 language/expressions/function/name
 language/expressions/function/param-dflt-yield-non-strict
@@ -5935,7 +5927,6 @@ language/expressions/object/accessor-name-literal-string-hex-escape
 language/expressions/object/accessor-name-literal-string-line-continuation
 language/expressions/object/accessor-name-literal-string-single-quote
 language/expressions/object/accessor-name-literal-string-unicode-escape
-language/expressions/object/computed-property-evaluation-order
 language/expressions/object/computed-__proto__
 language/expressions/object/concise-generator
 language/expressions/object/dstr-gen-meth-ary-init-iter-close
@@ -8836,7 +8827,6 @@ language/statements/function/dstr-dflt-obj-ptrn-id-init-fn-name-fn
 language/statements/function/dstr-dflt-obj-ptrn-id-init-fn-name-gen
 language/statements/function/dstr-dflt-obj-ptrn-prop-ary
 language/statements/function/dstr-dflt-obj-ptrn-prop-ary-init
-language/statements/function/dstr-dflt-obj-ptrn-prop-eval-err
 language/statements/function/dstr-obj-ptrn-id-init-fn-name-arrow
 language/statements/function/dstr-obj-ptrn-id-init-fn-name-class
 language/statements/function/dstr-obj-ptrn-id-init-fn-name-cover
@@ -8844,7 +8834,6 @@ language/statements/function/dstr-obj-ptrn-id-init-fn-name-fn
 language/statements/function/dstr-obj-ptrn-id-init-fn-name-gen
 language/statements/function/dstr-obj-ptrn-prop-ary
 language/statements/function/dstr-obj-ptrn-prop-ary-init
-language/statements/function/dstr-obj-ptrn-prop-eval-err
 language/statements/function/length-dflt
 language/statements/function/param-dflt-yield-non-strict
 language/statements/function/params-trailing-comma-multiple
@@ -9259,7 +9248,6 @@ language/statements/try/dstr-obj-ptrn-prop-ary
 language/statements/try/dstr-obj-ptrn-prop-ary-init
 language/statements/try/dstr-obj-ptrn-prop-ary-trailing-comma
 language/statements/try/dstr-obj-ptrn-prop-ary-value-null
-language/statements/try/dstr-obj-ptrn-prop-eval-err
 language/statements/try/dstr-obj-ptrn-prop-id
 language/statements/try/dstr-obj-ptrn-prop-id-init
 language/statements/try/dstr-obj-ptrn-prop-id-init-skipped

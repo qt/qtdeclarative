@@ -1101,6 +1101,16 @@ void ArrayBindingPattern::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+void ComputedPropertyName::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(expression, visitor);
+    }
+
+    visitor->endVisit(this);
+
+}
+
 } } // namespace QQmlJS::AST
 
 QT_QML_END_NAMESPACE

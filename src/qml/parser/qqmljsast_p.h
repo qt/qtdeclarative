@@ -158,6 +158,7 @@ public:
         Kind_FunctionExpression,
         Kind_IdentifierExpression,
         Kind_IdentifierPropertyName,
+        Kind_ComputedPropertyName,
         Kind_IfStatement,
         Kind_LabelledStatement,
         Kind_LocalForEachStatement,
@@ -752,7 +753,7 @@ public:
     SourceLocation rbraceToken;
 };
 
-class QML_PARSER_EXPORT IdentifierPropertyName: public PropertyName
+class QML_PARSER_EXPORT IdentifierPropertyName : public PropertyName
 {
 public:
     QQMLJS_DECLARE_AST_NODE(IdentifierPropertyName)
@@ -799,6 +800,30 @@ public:
 // attributes
     double id;
 };
+
+class QML_PARSER_EXPORT ComputedPropertyName : public PropertyName
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ComputedPropertyName)
+
+    ComputedPropertyName(ExpressionNode *expression)
+        : expression(expression)
+    { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    QString asString() const override { return QString(); }
+
+    SourceLocation firstSourceLocation() const override
+    { return expression->firstSourceLocation(); }
+
+    SourceLocation lastSourceLocation() const override
+    { return expression->lastSourceLocation(); }
+
+// attributes
+    ExpressionNode *expression;
+};
+
 
 class QML_PARSER_EXPORT ArrayMemberExpression: public ExpressionNode
 {

@@ -104,6 +104,7 @@ class PropertyName;
 class IdentifierPropertyName;
 class StringLiteralPropertyName;
 class NumericLiteralPropertyName;
+class ComputedPropertyName;
 class ArrayMemberExpression;
 class FieldMemberExpression;
 class TaggedTemplate;

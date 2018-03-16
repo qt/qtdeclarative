@@ -167,6 +167,9 @@ public:
     virtual bool visit(NumericLiteralPropertyName *) { return true; }
     virtual void endVisit(NumericLiteralPropertyName *) {}
 
+    virtual bool visit(ComputedPropertyName *) { return true; }
+    virtual void endVisit(ComputedPropertyName *) {}
+
     virtual bool visit(ArrayMemberExpression *) { return true; }
     virtual void endVisit(ArrayMemberExpression *) {}
 

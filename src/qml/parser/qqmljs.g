@@ -1851,8 +1851,13 @@ ReservedIdentifier: T_EXTENDS;
 ReservedIdentifier: T_EXPORT;
 
 ComputedPropertyName: T_LBRACKET AssignmentExpression_In T_RBRACKET;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
-
+/.
+    case $rule_number: {
+        AST::ComputedPropertyName *node = new (pool) AST::ComputedPropertyName(sym(2).Expression);
+        node->propertyNameToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
 
 CoverInitializedName: IdentifierReference Initializer_In;
 
