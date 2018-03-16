@@ -51,14 +51,14 @@
 // We mean it.
 //
 
-#include "qevent.h"
-
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcPointerHandlerDispatch)
+
+class QQuickPointerHandlerPrivate;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlParserStatus
 {
@@ -91,19 +91,19 @@ public:
     Q_FLAG(GrabPermissions)
 
 public:
-    bool enabled() const { return m_enabled; }
+    bool enabled() const;
     void setEnabled(bool enabled);
 
-    bool active() const { return m_active; }
+    bool active() const;
 
     QQuickItem *target() const;
     void setTarget(QQuickItem *target);
 
-    QQuickItem * parentItem() const { return static_cast<QQuickItem *>(QObject::parent()); }
+    QQuickItem * parentItem() const;
 
     void handlePointerEvent(QQuickPointerEvent *event);
 
-    GrabPermissions grabPermissions() const { return static_cast<GrabPermissions>(m_grabPermissions); }
+    GrabPermissions grabPermissions() const;
     void setGrabPermissions(GrabPermissions grabPermissions);
 
 Q_SIGNALS:
@@ -115,10 +115,12 @@ Q_SIGNALS:
     void canceled(QQuickEventPoint *point);
 
 protected:
+    QQuickPointerHandler(QQuickPointerHandlerPrivate &dd, QObject *parent);
+
     void classBegin() override;
     void componentComplete() override;
 
-    QQuickPointerEvent *currentEvent() { return m_currentEvent; }
+    QQuickPointerEvent *currentEvent();
     virtual bool wantsPointerEvent(QQuickPointerEvent *event);
     virtual void handlePointerEventImpl(QQuickPointerEvent *event);
     void setActive(bool active);
@@ -133,19 +135,10 @@ protected:
     QPointF eventPos(const QQuickEventPoint *point) const;
     bool parentContains(const QQuickEventPoint *point) const;
 
-private:
-    QQuickPointerEvent *m_currentEvent;
-    QQuickItem *m_target;
-    bool m_enabled : 1;
-    bool m_active : 1;
-    bool m_targetExplicitlySet : 1;
-    bool m_hadKeepMouseGrab : 1;    // some handlers override target()->setKeepMouseGrab(); this remembers previous state
-    bool m_hadKeepTouchGrab : 1;    // some handlers override target()->setKeepTouchGrab(); this remembers previous state
-    uint m_reserved : 19;
-    uint8_t m_grabPermissions : 8;
-
     friend class QQuickEventPoint;
     friend class QQuickWindowPrivate;
+
+    Q_DECLARE_PRIVATE(QQuickPointerHandler)
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerHandler::GrabPermissions)

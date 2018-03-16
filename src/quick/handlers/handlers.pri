@@ -5,6 +5,7 @@ HEADERS += \
     $$PWD/qquickpinchhandler_p.h \
     $$PWD/qquickpointerdevicehandler_p.h \
     $$PWD/qquickpointerhandler_p.h \
+    $$PWD/qquickpointerhandler_p_p.h \
     $$PWD/qquickpointhandler_p.h \
     $$PWD/qquicksinglepointhandler_p.h \
     $$PWD/qquicktaphandler_p.h \

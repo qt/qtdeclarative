@@ -38,6 +38,8 @@
 ****************************************************************************/
 
 #include "qquickpointerhandler_p.h"
+#include "qquickpointerhandler_p_p.h"
+#include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,15 +62,12 @@ Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
 */
 
 QQuickPointerHandler::QQuickPointerHandler(QObject *parent)
-  : QObject(parent)
-  , m_currentEvent(nullptr)
-  , m_target(nullptr)
-  , m_enabled(true)
-  , m_active(false)
-  , m_targetExplicitlySet(false)
-  , m_hadKeepMouseGrab(false)
-  , m_hadKeepTouchGrab(false)
-  , m_grabPermissions(CanTakeOverFromItems | CanTakeOverFromHandlersOfDifferentType | ApprovesTakeOverByAnything)
+  : QObject(*(new QQuickPointerHandlerPrivate), parent)
+{
+}
+
+QQuickPointerHandler::QQuickPointerHandler(QQuickPointerHandlerPrivate &dd, QObject *parent)
+  : QObject(dd, parent)
 {
 }
 
@@ -113,8 +112,9 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
             setActive(false);
             point->setAccepted(false);
             if (auto par = parentItem()) {
-                par->setKeepMouseGrab(m_hadKeepMouseGrab);
-                par->setKeepTouchGrab(m_hadKeepTouchGrab);
+                Q_D(const QQuickPointerHandler);
+                par->setKeepMouseGrab(d->hadKeepMouseGrab);
+                par->setKeepTouchGrab(d->hadKeepTouchGrab);
             }
             break;
         case QQuickEventPoint::OverrideGrabPassive:
@@ -130,7 +130,6 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
 }
 
 /*!
-    \internal
     Acquire or give up a passive grab of the given \a point, according to the \a grab state.
 
     Unlike the exclusive grab, multiple PointerHandlers can have passive grabs
@@ -181,19 +180,20 @@ bool QQuickPointerHandler::canGrab(QQuickEventPoint *point)
 */
 bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObject *proposedGrabber)
 {
+    Q_D(const QQuickPointerHandler);
     bool allowed = false;
     if (proposedGrabber == this) {
         QObject* existingGrabber = point->exclusiveGrabber();
-        allowed = (existingGrabber == nullptr) || ((m_grabPermissions & CanTakeOverFromAnything) == CanTakeOverFromAnything);
+        allowed = (existingGrabber == nullptr) || ((d->grabPermissions & CanTakeOverFromAnything) == CanTakeOverFromAnything);
         if (existingGrabber) {
             if (QQuickPointerHandler *existingPhGrabber = point->grabberPointerHandler()) {
-                if (!allowed && (m_grabPermissions & CanTakeOverFromHandlersOfDifferentType) &&
+                if (!allowed && (d->grabPermissions & CanTakeOverFromHandlersOfDifferentType) &&
                         existingPhGrabber->metaObject()->className() != metaObject()->className())
                     allowed = true;
-                if (!allowed && (m_grabPermissions & CanTakeOverFromHandlersOfSameType) &&
+                if (!allowed && (d->grabPermissions & CanTakeOverFromHandlersOfSameType) &&
                         existingPhGrabber->metaObject()->className() == metaObject()->className())
                     allowed = true;
-            } else if ((m_grabPermissions & CanTakeOverFromItems)) {
+            } else if ((d->grabPermissions & CanTakeOverFromItems)) {
                 QQuickItem * existingItemGrabber = point->grabberItem();
                 if (existingItemGrabber && !((existingItemGrabber->keepMouseGrab() && point->pointerEvent()->asPointerMouseEvent()) ||
                                              (existingItemGrabber->keepTouchGrab() && point->pointerEvent()->asPointerTouchEvent())))
@@ -203,18 +203,18 @@ bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObjec
     } else {
         // proposedGrabber is different: that means this instance will lose its grab
         if (proposedGrabber) {
-            if ((m_grabPermissions & ApprovesTakeOverByAnything) == ApprovesTakeOverByAnything)
+            if ((d->grabPermissions & ApprovesTakeOverByAnything) == ApprovesTakeOverByAnything)
                 allowed = true;
-            if (!allowed && (m_grabPermissions & ApprovesTakeOverByHandlersOfDifferentType) &&
+            if (!allowed && (d->grabPermissions & ApprovesTakeOverByHandlersOfDifferentType) &&
                     proposedGrabber->metaObject()->className() != metaObject()->className())
                 allowed = true;
-            if (!allowed && (m_grabPermissions & ApprovesTakeOverByHandlersOfSameType) &&
+            if (!allowed && (d->grabPermissions & ApprovesTakeOverByHandlersOfSameType) &&
                     proposedGrabber->metaObject()->className() == metaObject()->className())
                 allowed = true;
-            if (!allowed && (m_grabPermissions & ApprovesTakeOverByItems) && proposedGrabber->inherits("QQuickItem"))
+            if (!allowed && (d->grabPermissions & ApprovesTakeOverByItems) && proposedGrabber->inherits("QQuickItem"))
                 allowed = true;
         } else {
-            if (!allowed && (m_grabPermissions & ApprovesCancellation))
+            if (!allowed && (d->grabPermissions & ApprovesCancellation))
                 allowed = true;
         }
     }
@@ -236,12 +236,19 @@ bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObjec
     which allows most takeover scenarios but avoids e.g. two PinchHandlers fighting
     over the same touchpoints.
 */
+QQuickPointerHandler::GrabPermissions QQuickPointerHandler::grabPermissions() const
+{
+    Q_D(const QQuickPointerHandler);
+    return static_cast<QQuickPointerHandler::GrabPermissions>(d->grabPermissions);
+}
+
 void QQuickPointerHandler::setGrabPermissions(GrabPermissions grabPermission)
 {
-    if (m_grabPermissions == grabPermission)
+    Q_D(QQuickPointerHandler);
+    if (d->grabPermissions == grabPermission)
         return;
 
-    m_grabPermissions = grabPermission;
+    d->grabPermissions = grabPermission;
     emit grabPermissionChanged();
 }
 
@@ -253,8 +260,13 @@ void QQuickPointerHandler::componentComplete()
 {
 }
 
+QQuickPointerEvent *QQuickPointerHandler::currentEvent()
+{
+    Q_D(const QQuickPointerHandler);
+    return d->currentEvent;
+}
+
 /*!
-    \internal
     Acquire or give up the exclusive grab of the given \a point, according to
     the \a grab state, and subject to the rules: canGrab(), and the rule not to
     relinquish another handler's grab. Returns true if permission is granted,
@@ -284,7 +296,6 @@ bool QQuickPointerHandler::setExclusiveGrab(QQuickEventPoint *point, bool grab)
 }
 
 /*!
-    \internal
     Cancel any existing grab of the given \a point.
 */
 void QQuickPointerHandler::cancelAllGrabs(QQuickEventPoint *point)
@@ -313,13 +324,26 @@ bool QQuickPointerHandler::parentContains(const QQuickEventPoint *point) const
      If a PointerHandler is disabled, it will reject all events
      and no signals will be emitted.
 */
+bool QQuickPointerHandler::enabled() const
+{
+    Q_D(const QQuickPointerHandler);
+    return d->enabled;
+}
+
 void QQuickPointerHandler::setEnabled(bool enabled)
 {
-    if (m_enabled == enabled)
+    Q_D(QQuickPointerHandler);
+    if (d->enabled == enabled)
         return;
 
-    m_enabled = enabled;
+    d->enabled = enabled;
     emit enabledChanged();
+}
+
+bool QQuickPointerHandler::active() const
+{
+    Q_D(const QQuickPointerHandler);
+    return d->active;
 }
 
 /*!
@@ -335,21 +359,28 @@ void QQuickPointerHandler::setEnabled(bool enabled)
 */
 void QQuickPointerHandler::setTarget(QQuickItem *target)
 {
-    m_targetExplicitlySet = true;
-    if (m_target == target)
+    Q_D(QQuickPointerHandler);
+    d->targetExplicitlySet = true;
+    if (d->target == target)
         return;
 
-    QQuickItem *oldTarget = m_target;
-    m_target = target;
+    QQuickItem *oldTarget = d->target;
+    d->target = target;
     onTargetChanged(oldTarget);
     emit targetChanged();
 }
 
+QQuickItem *QQuickPointerHandler::parentItem() const
+{
+    return static_cast<QQuickItem *>(QObject::parent());
+}
+
 QQuickItem *QQuickPointerHandler::target() const
 {
-    if (!m_targetExplicitlySet)
+    Q_D(const QQuickPointerHandler);
+    if (!d->targetExplicitlySet)
         return parentItem();
-    return m_target;
+    return d->target;
 }
 
 void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
@@ -374,8 +405,9 @@ void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
 
 bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
+    Q_D(const QQuickPointerHandler);
     Q_UNUSED(event)
-    return m_enabled;
+    return d->enabled;
 }
 
 /*!
@@ -390,9 +422,10 @@ bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
 */
 void QQuickPointerHandler::setActive(bool active)
 {
-    if (m_active != active) {
-        qCDebug(lcPointerHandlerActive) << this << m_active << "->" << active;
-        m_active = active;
+    Q_D(QQuickPointerHandler);
+    if (d->active != active) {
+        qCDebug(lcPointerHandlerActive) << this << d->active << "->" << active;
+        d->active = active;
         onActiveChanged();
         emit activeChanged();
     }
@@ -400,7 +433,8 @@ void QQuickPointerHandler::setActive(bool active)
 
 void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
-    m_currentEvent = event;
+    Q_D(QQuickPointerHandler);
+    d->currentEvent = event;
 }
 
 /*!
@@ -429,5 +463,21 @@ void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     If this handler has already grabbed the given \a point, this signal is
     emitted when the grab is stolen by a different Pointer Handler or Item.
 */
+
+QQuickPointerHandlerPrivate::QQuickPointerHandlerPrivate()
+  : enabled(true)
+  , active(false)
+  , targetExplicitlySet(false)
+  , hadKeepMouseGrab(false)
+  , hadKeepTouchGrab(false)
+  , grabPermissions(QQuickPointerHandler::CanTakeOverFromItems |
+                      QQuickPointerHandler::CanTakeOverFromHandlersOfDifferentType |
+                      QQuickPointerHandler::ApprovesTakeOverByAnything)
+{
+}
+
+QQuickPointerHandlerPrivate::~QQuickPointerHandlerPrivate()
+{
+}
 
 QT_END_NAMESPACE
