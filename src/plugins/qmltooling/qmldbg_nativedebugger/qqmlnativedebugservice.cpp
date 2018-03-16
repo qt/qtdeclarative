@@ -260,8 +260,14 @@ QV4::ReturnedValue NativeDebugger::evaluateExpression(const QString &expression)
     // That is a side-effect of inheritContext.
     script.inheritContext = true;
     script.parse();
-    if (!m_engine->hasException)
-        return script.run();
+    if (!m_engine->hasException) {
+        if (m_engine->currentStackFrame) {
+            QV4::ScopedValue thisObject(scope, m_engine->currentStackFrame->thisObject());
+            script.run(thisObject);
+        } else {
+            script.run();
+        }
+    }
 
     m_runningJob = false;
     return QV4::Encode::undefined();

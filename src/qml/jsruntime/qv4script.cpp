@@ -136,7 +136,7 @@ void Script::parse()
     }
 }
 
-ReturnedValue Script::run()
+ReturnedValue Script::run(const QV4::Value *thisObject)
 {
     if (!parsed)
         parse();
@@ -149,10 +149,11 @@ ReturnedValue Script::run()
     if (qmlContext.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        return vmFunction->call(engine->globalObject, nullptr, 0, context);
+        return vmFunction->call(thisObject ? thisObject : engine->globalObject, nullptr, 0,
+                                context);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
-        return vmFunction->call(nullptr, nullptr, 0, qml);
+        return vmFunction->call(thisObject, nullptr, 0, qml);
     }
 }
 
