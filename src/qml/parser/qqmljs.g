@@ -3520,9 +3520,22 @@ ConciseBodyLookahead: ;
 ./
 
 MethodDefinition: PropertyName T_LPAREN StrictFormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.
+    case $rule_number: {
+        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(1), sym(3).FormalParameterList, sym(6).StatementList);
+        f->functionToken = loc(1);
+        f->lparenToken = loc(2);
+        f->rparenToken = loc(4);
+        f->lbraceToken = loc(5);
+        f->rbraceToken = loc(7);
+        AST::PropertyNameAndValue *node = new (pool) AST::PropertyNameAndValue(sym(1).PropertyName, f);
+        node->colonToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
 
 MethodDefinition: GeneratorMethod;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
 
 MethodDefinition: T_GET PropertyName T_LPAREN T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
