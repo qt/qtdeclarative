@@ -1844,29 +1844,17 @@ bool Codegen::visit(ObjectLiteral *ast)
 
     for (PropertyDefinitionList *it = ast->properties; it; it = it->next) {
         QString name = it->assignment->name->asString();
+        ObjectPropertyValue &v = valueMap[name];
         if (PropertyNameAndValue *nv = AST::cast<AST::PropertyNameAndValue *>(it->assignment)) {
             Reference value = expression(nv->value);
             if (hasError)
                 return false;
 
-            ObjectPropertyValue &v = valueMap[name];
-            if (v.hasGetter() || v.hasSetter() || (_context->isStrict && v.rvalue.isValid())) {
-                throwSyntaxError(nv->lastSourceLocation(),
-                                 QStringLiteral("Illegal duplicate key '%1' in object literal").arg(name));
-                return false;
-            }
-
             v.rvalue = value.storeOnStack();
+            v.getter = v.setter = -1;
         } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
             const int function = defineFunction(name, gs, gs->formals, gs->functionBody);
-            ObjectPropertyValue &v = valueMap[name];
-            if (v.rvalue.isValid() ||
-                (gs->type == PropertyGetterSetter::Getter && v.hasGetter()) ||
-                (gs->type == PropertyGetterSetter::Setter && v.hasSetter())) {
-                throwSyntaxError(gs->lastSourceLocation(),
-                                 QStringLiteral("Illegal duplicate key '%1' in object literal").arg(name));
-                return false;
-            }
+            v.rvalue = Reference();
             if (gs->type == PropertyGetterSetter::Getter)
                 v.getter = function;
             else

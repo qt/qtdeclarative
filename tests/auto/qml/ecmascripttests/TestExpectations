@@ -5914,7 +5914,6 @@ language/expressions/new.target/value-via-reflect-construct
 language/expressions/new.target/value-via-super-call
 language/expressions/new.target/value-via-super-property
 language/expressions/new.target/value-via-tagged-template
-language/expressions/object/11.1.5_4-4-b-1
 language/expressions/object/accessor-name-computed
 language/expressions/object/accessor-name-computed-err-evaluation
 language/expressions/object/accessor-name-computed-err-to-prop-key
@@ -6363,13 +6362,6 @@ language/expressions/object/method-definition/yield-return
 language/expressions/object/method-definition/yield-star-before-newline
 language/expressions/object/prop-def-id-eval-error
 language/expressions/object/prop-def-id-eval-error-2
-language/expressions/object/prop-dup-data-set
-language/expressions/object/prop-dup-get-data
-language/expressions/object/prop-dup-get-get
-language/expressions/object/prop-dup-get-set-get
-language/expressions/object/prop-dup-set-data
-language/expressions/object/prop-dup-set-get-set
-language/expressions/object/prop-dup-set-set
 language/expressions/object/properties-names-eval-arguments
 language/expressions/object/__proto__-permitted-dup
 language/expressions/object/scope-gen-meth-body-lex-distinct
