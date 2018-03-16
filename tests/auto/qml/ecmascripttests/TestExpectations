@@ -6361,11 +6361,8 @@ language/expressions/object/method-definition/yield-as-yield-operand
 language/expressions/object/method-definition/yield-newline
 language/expressions/object/method-definition/yield-return
 language/expressions/object/method-definition/yield-star-before-newline
-language/expressions/object/not-defined
 language/expressions/object/prop-def-id-eval-error
 language/expressions/object/prop-def-id-eval-error-2
-language/expressions/object/prop-def-id-get-error
-language/expressions/object/prop-def-id-valid
 language/expressions/object/prop-dup-data-set
 language/expressions/object/prop-dup-get-data
 language/expressions/object/prop-dup-get-get
@@ -6394,8 +6391,6 @@ language/expressions/object/scope-setter-body-lex-distinc
 language/expressions/object/scope-setter-paramsbody-var-open
 language/expressions/object/setter-length-dflt
 language/expressions/object/setter-super-prop
-language/expressions/object/yield-non-strict-access
-language/expressions/object/yield-non-strict-syntax
 language/expressions/postfix-decrement/S11.3.2_A5_T1
 language/expressions/postfix-decrement/S11.3.2_A5_T2
 language/expressions/postfix-decrement/S11.3.2_A5_T3

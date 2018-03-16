@@ -1746,8 +1746,19 @@ PropertyDefinitionList: PropertyDefinitionList T_COMMA PropertyDefinition;
 ./
 
 PropertyDefinition: IdentifierReference;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.
+    case $rule_number: {
+        AST::IdentifierPropertyName *name = new (pool) AST::IdentifierPropertyName(stringRef(1));
+        name->propertyNameToken = loc(1);
+        AST::IdentifierExpression *expr = new (pool) AST::IdentifierExpression(stringRef(1));
+        expr->identifierToken = loc(1);
+        AST::PropertyNameAndValue *node = new (pool) AST::PropertyNameAndValue(name, expr);
+        node->colonToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
 
+-- ### using this production should result in a syntax error when used in an ObjectLiteral
 PropertyDefinition: CoverInitializedName;
 /.  case $rule_number: { UNIMPLEMENTED; } ./
 
