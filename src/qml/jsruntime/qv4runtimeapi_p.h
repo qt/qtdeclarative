@@ -184,7 +184,6 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     /* qml */ \
     F(ReturnedValue, loadQmlContext, (NoThrowEngine *engine)) \
     F(ReturnedValue, loadQmlImportedScripts, (NoThrowEngine *engine)) \
-    F(ReturnedValue, loadQmlSingleton, (NoThrowEngine *engine, int nameIndex)) \
     F(ReturnedValue, loadQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
     F(ReturnedValue, loadQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
     F(ReturnedValue, loadQmlIdObject, (ExecutionEngine *engine, const Value &context, uint index)) \

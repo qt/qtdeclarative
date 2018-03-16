@@ -1369,10 +1369,6 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         STACK_VALUE(result) = Runtime::method_loadQmlImportedScripts(static_cast<QV4::NoThrowEngine*>(engine));
     MOTH_END_INSTR(LoadQmlImportedScripts)
 
-    MOTH_BEGIN_INSTR(LoadQmlSingleton)
-        acc = Runtime::method_loadQmlSingleton(static_cast<QV4::NoThrowEngine*>(engine), name);
-    MOTH_END_INSTR(LoadQmlSingleton)
-
     catchException:
         Q_ASSERT(engine->hasException);
         if (!exceptionHandler) {

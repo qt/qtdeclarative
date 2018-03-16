@@ -758,27 +758,6 @@ QObject *ExecutionEngine::qmlScopeObject() const
     return ctx->qml()->scopeObject;
 }
 
-ReturnedValue ExecutionEngine::qmlSingletonWrapper(String *name)
-{
-    QQmlContextData *ctx = callingQmlContext();
-    if (!ctx->imports)
-        return Encode::undefined();
-    // Search for attached properties, enums and imported scripts
-    QQmlTypeNameCache::Result r = ctx->imports->query(name);
-
-    Q_ASSERT(r.isValid());
-    Q_ASSERT(r.type.isValid());
-    Q_ASSERT(r.type.isSingleton());
-
-    QQmlType::SingletonInstanceInfo *siinfo = r.type.singletonInstanceInfo();
-    QQmlEngine *e = qmlEngine();
-    siinfo->init(e);
-
-    if (QObject *qobjectSingleton = siinfo->qobjectApi(e))
-        return QV4::QObjectWrapper::wrap(this, qobjectSingleton);
-    return QJSValuePrivate::convertedToValue(this, siinfo->scriptApi(e));
-}
-
 QQmlContextData *ExecutionEngine::callingQmlContext() const
 {
     Heap::QmlContext *ctx = qmlContext();

@@ -3752,6 +3752,9 @@ void tst_qqmllanguage::scopedEnum()
 
 void tst_qqmllanguage::qmlEnums()
 {
+    QQmlEngine engine;
+    engine.setImportPathList(QStringList(defaultImportPathList) << testFile("lib"));
+
     {
         QQmlComponent component(&engine, testFileUrl("TypeWithEnum.qml"));
         QScopedPointer<QObject> o(component.create());
@@ -3774,6 +3777,7 @@ void tst_qqmllanguage::qmlEnums()
         QCOMPARE(o->property("enumValue").toInt(), 1);
         QCOMPARE(o->property("enumValue2").toInt(), 0);
         QCOMPARE(o->property("scopedEnumValue").toInt(), 2);
+        QCOMPARE(o->property("enumValueFromSingleton").toInt(), 42);
     }
 }
 
