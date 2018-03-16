@@ -112,7 +112,8 @@ QQuickPanePrivate::QQuickPanePrivate()
     : hasContentWidth(false),
       hasContentHeight(false),
       contentWidth(0),
-      contentHeight(0)
+      contentHeight(0),
+      firstChild(nullptr)
 {
 }
 
@@ -143,14 +144,14 @@ void QQuickPanePrivate::removeImplicitSizeListener(QQuickItem *item)
 void QQuickPanePrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
     Q_Q(QQuickPane);
-    if (item == contentItem && updateContentWidth(item))
+    if ((item == contentItem || item == firstChild) && updateContentWidth(contentItem))
         emit q->contentWidthChanged();
 }
 
 void QQuickPanePrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
     Q_Q(QQuickPane);
-    if (item == contentItem && updateContentHeight(item))
+    if ((item == contentItem || item == firstChild) && updateContentHeight(contentItem))
         emit q->contentHeightChanged();
 }
 
@@ -163,6 +164,15 @@ void QQuickPanePrivate::itemDestroyed(QQuickItem *item)
 void QQuickPanePrivate::contentChildrenChange()
 {
     Q_Q(QQuickPane);
+    QQuickItem *newFirstChild = contentItem->childItems().value(0);
+    if (newFirstChild != firstChild) {
+        if (firstChild)
+            removeImplicitSizeListener(firstChild);
+        if (newFirstChild)
+            addImplicitSizeListener(newFirstChild);
+        firstChild = newFirstChild;
+    }
+
     updateContentSize(contentItem);
     emit q->contentChildrenChanged();
 }
@@ -244,6 +254,7 @@ QQuickPane::~QQuickPane()
 {
     Q_D(QQuickPane);
     d->removeImplicitSizeListener(d->contentItem);
+    d->removeImplicitSizeListener(d->firstChild);
 }
 
 QQuickPane::QQuickPane(QQuickPanePrivate &dd, QQuickItem *parent)
@@ -383,10 +394,17 @@ void QQuickPane::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
     QQuickControl::contentItemChange(newItem, oldItem);
     if (oldItem) {
         d->removeImplicitSizeListener(oldItem);
+        if (d->firstChild) {
+            d->removeImplicitSizeListener(d->firstChild);
+            d->firstChild = nullptr;
+        }
         QObjectPrivate::disconnect(oldItem, &QQuickItem::childrenChanged, d, &QQuickPanePrivate::contentChildrenChange);
     }
     if (newItem) {
         d->addImplicitSizeListener(newItem);
+        d->firstChild = newItem->childItems().value(0);
+        if (d->firstChild)
+            d->addImplicitSizeListener(d->firstChild);
         QObjectPrivate::connect(newItem, &QQuickItem::childrenChanged, d, &QQuickPanePrivate::contentChildrenChange);
     }
     d->updateContentSize(newItem);

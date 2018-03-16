@@ -129,6 +129,15 @@ TestCase {
         compare(control.contentHeight, 30)
         verify(control.implicitWidth > 100)
         verify(control.implicitHeight > 30)
+
+        compare(control.contentChildren.length, 1)
+        control.contentChildren[0].implicitWidth = 200
+        control.contentChildren[0].implicitHeight = 40
+
+        compare(control.contentWidth, 200)
+        compare(control.contentHeight, 40)
+        verify(control.implicitWidth > 200)
+        verify(control.implicitHeight > 40)
     }
 
     function test_twoChildren() {

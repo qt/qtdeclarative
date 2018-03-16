@@ -81,6 +81,7 @@ public:
     bool hasContentHeight;
     qreal contentWidth;
     qreal contentHeight;
+    QQuickItem *firstChild;
 };
 
 QT_END_NAMESPACE
