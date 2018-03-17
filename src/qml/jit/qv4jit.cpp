@@ -917,14 +917,6 @@ void BaselineJIT::generate_LoadQmlImportedScripts(int result)
     as->storeReg(result);
 }
 
-void BaselineJIT::generate_LoadQmlSingleton(int name)
-{
-    as->prepareCallWithArgCount(2);
-    as->passInt32AsArg(name, 1);
-    as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlSingleton, Assembler::ResultInAccumulator);
-}
-
 void BaselineJIT::startInstruction(Instr::Type /*instr*/)
 {
     if (hasLabel())
@@ -1328,9 +1320,6 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
         MOTH_END_INSTR(LoadQmlImportedScripts)
-
-        MOTH_BEGIN_INSTR(LoadQmlSingleton)
-        MOTH_END_INSTR(LoadQmlSingleton)
     }
 }
 #undef MOTH_BEGIN_INSTR

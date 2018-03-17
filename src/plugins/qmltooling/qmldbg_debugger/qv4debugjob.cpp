@@ -112,8 +112,14 @@ void JavaScriptJob::run()
     script.inheritContext = true;
     script.parse();
     QV4::ScopedValue result(scope);
-    if (!scope.engine->hasException)
-        result = script.run();
+    if (!scope.engine->hasException) {
+        if (frame) {
+            QV4::ScopedValue thisObject(scope, frame->thisObject());
+            result = script.run(thisObject);
+        } else {
+            result = script.run();
+        }
+    }
     if (scope.engine->hasException) {
         result = scope.engine->catchException();
         resultIsException = true;

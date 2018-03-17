@@ -59,6 +59,7 @@
 QT_BEGIN_NAMESPACE
 
 class QThread;
+class QMutex;
 
 class QQmlThreadPrivate;
 class QQmlThread
@@ -71,6 +72,7 @@ public:
     void shutdown();
     bool isShutdown() const;
 
+    QMutex &mutex();
     void lock();
     void unlock();
     void wakeOne();

@@ -93,7 +93,7 @@ struct Q_QML_EXPORT Script {
     bool parseAsBinding;
 
     void parse();
-    ReturnedValue run();
+    ReturnedValue run(const QV4::Value *thisObject = nullptr);
 
     Function *function();
 

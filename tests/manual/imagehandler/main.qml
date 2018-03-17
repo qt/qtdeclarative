@@ -41,6 +41,10 @@ Window {
         width: parent.width
         sourceSize.height: height
         sourceSize.width: width
+        MouseArea {
+            anchors.fill: parent
+            onClicked: svgImage.source = "embeddedimage.svg"
+        }
     }
     ListModel {
         id: imageFillModeModel
@@ -57,7 +61,7 @@ Window {
         height: 75
         anchors.bottom: parent.bottom
         Text {
-            text: "Click the options below to change the fill mode"
+            text: "Click the options below to change the fill mode.<br>Click the image to change the used image."
             font.pointSize: 16
         }
 

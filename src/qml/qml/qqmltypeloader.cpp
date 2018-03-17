@@ -983,16 +983,6 @@ void QQmlTypeLoader::setProfiler(QQmlProfiler *profiler)
 }
 #endif
 
-void QQmlTypeLoader::lock()
-{
-    m_thread->lock();
-}
-
-void QQmlTypeLoader::unlock()
-{
-    m_thread->unlock();
-}
-
 struct PlainLoader {
     void loadThread(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
     {
@@ -1632,8 +1622,10 @@ bool QQmlTypeLoaderQmldirContent::designerSupported() const
 Constructs a new type loader that uses the given \a engine.
 */
 QQmlTypeLoader::QQmlTypeLoader(QQmlEngine *engine)
-    : m_engine(engine), m_thread(new QQmlTypeLoaderThread(this)),
-      m_typeCacheTrimThreshold(TYPELOADER_MINIMUM_TRIM_THRESHOLD)
+    : m_engine(engine)
+    , m_thread(new QQmlTypeLoaderThread(this))
+    , m_mutex(m_thread->mutex())
+    , m_typeCacheTrimThreshold(TYPELOADER_MINIMUM_TRIM_THRESHOLD)
 {
 }
 

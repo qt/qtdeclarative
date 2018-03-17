@@ -240,7 +240,6 @@ public:
     void generate_Sub(int lhs) override;
     void generate_LoadQmlContext(int result) override;
     void generate_LoadQmlImportedScripts(int result) override;
-    void generate_LoadQmlSingleton(int name) override;
 
     void startInstruction(Moth::Instr::Type instr) override;
     void endInstruction(Moth::Instr::Type instr) override;

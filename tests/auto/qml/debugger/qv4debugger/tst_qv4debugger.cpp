@@ -316,6 +316,8 @@ private slots:
 
     void lastLineOfConditional_data();
     void lastLineOfConditional();
+
+    void readThis();
 private:
     QV4Debugger *debugger() const
     {
@@ -863,6 +865,36 @@ void tst_qv4debugger::lastLineOfConditional()
     QV4Debugger::ExecutionState secondState = m_debuggerAgent->m_statesWhenPaused.at(1);
     QCOMPARE(secondState.fileName, QString("trueBranch"));
     QCOMPARE(secondState.lineNumber, lastLine);
+}
+
+void tst_qv4debugger::readThis()
+{
+    m_debuggerAgent->m_captureContextInfo = true;
+    QString script =
+            "var x = function() {\n"
+            "    return this.a;\n"
+            "}.apply({a : 5}, []);\n";
+
+    TestAgent::ExpressionRequest request;
+    request.expression = "this";
+    request.frameNr = 0;
+    request.context = -1; // no extra context
+    m_debuggerAgent->m_expressionRequests << request;
+
+    debugger()->addBreakPoint("applyThis", 2);
+    evaluateJavaScript(script, "applyThis");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+
+    QCOMPARE(m_debuggerAgent->m_expressionResults.count(), 1);
+    QJsonObject result0 = m_debuggerAgent->m_expressionResults[0];
+    QCOMPARE(result0.value("type").toString(), QStringLiteral("object"));
+    QCOMPARE(result0.value("value").toInt(), 1);
+    QJsonArray properties = result0.value("properties").toArray();
+    QCOMPARE(properties.size(), 1);
+    QJsonObject a = properties.first().toObject();
+    QCOMPARE(a.value("name").toString(), QStringLiteral("a"));
+    QCOMPARE(a.value("type").toString(), QStringLiteral("number"));
+    QCOMPARE(a.value("value").toInt(), 5);
 }
 
 void tst_qv4debugger::redundancy_data()

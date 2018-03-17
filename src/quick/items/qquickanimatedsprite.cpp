@@ -152,10 +152,10 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty qreal QtQuick::AnimatedSprite::frameRate
 
-    Frames per second to show in the animation. Values equal to or below 0 are invalid.
+    Frames per second to show in the animation. Values less than or equal to \c 0 are invalid.
 
-    If frameRate is valid  then it will be used to calculate the duration of the frames.
-    If not, and frameDuration is valid , then frameDuration will be used.
+    If \c frameRate is valid, it will be used to calculate the duration of the frames.
+    If not, and \l frameDuration is valid, \c frameDuration will be used.
 
     Changing this parameter will restart the animation.
 */
@@ -163,10 +163,10 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty int QtQuick::AnimatedSprite::frameDuration
 
-    Duration of each frame of the animation in milliseconds. Values equal to or below 0 are invalid.
+    Duration of each frame of the animation in milliseconds. Values less than or equal to \c 0 are invalid.
 
-    If frameRate is valid then it will be used to calculate the duration of the frames.
-    If not, and frameDuration is valid, then frameDuration will be used.
+    If frameRate is valid, it will be used to calculate the duration of the frames.
+    If not, and \l frameDuration is valid, \c frameDuration will be used.
 
     Changing this parameter will restart the animation.
 */
@@ -218,21 +218,21 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty bool QtQuick::AnimatedSprite::reverse
 
-    If true, then the animation will be played in reverse.
+    If \c true, the animation will be played in reverse.
 
-    Default is false.
+    Default is \c false.
 */
 
 /*!
     \qmlproperty bool QtQuick::AnimatedSprite::frameSync
 
-    If true, then the animation will have no duration. Instead, the animation will advance
+    If \c true, the animation will have no duration. Instead, the animation will advance
     one frame each time a frame is rendered to the screen. This synchronizes it with the painting
     rate as opposed to elapsed time.
 
     If frameSync is set to true, it overrides both frameRate and frameDuration.
 
-    Default is false.
+    Default is \c false.
 
     Changing this parameter will restart the animation.
 */
@@ -242,9 +242,9 @@ QT_BEGIN_NAMESPACE
 
     After playing the animation this many times, the animation will automatically stop. Negative values are invalid.
 
-    If this is set to AnimatedSprite.Infinite the animation will not stop playing on its own.
+    If this is set to \c AnimatedSprite.Infinite the animation will not stop playing on its own.
 
-    Default is AnimatedSprite.Infinite
+    Default is \c AnimatedSprite.Infinite
 */
 
 /*!
@@ -252,13 +252,13 @@ QT_BEGIN_NAMESPACE
 
     When paused, the current frame can be advanced manually.
 
-    Default is false.
+    Default is \c false.
 */
 
 /*!
     \qmlproperty int QtQuick::AnimatedSprite::currentFrame
 
-    When paused, the current frame can be advanced manually by setting this property or calling advance().
+    When paused, the current frame can be advanced manually by setting this property or calling \l advance().
 
 */
 
@@ -462,7 +462,7 @@ void QQuickAnimatedSprite::maybeUpdate()
     \qmlmethod int QtQuick::AnimatedSprite::pause()
 
     Pauses the sprite animation. This does nothing if
-    \l paused is true.
+    \l paused is \c true.
 
     \sa resume()
 */
@@ -481,7 +481,7 @@ void QQuickAnimatedSprite::pause()
 /*!
     \qmlmethod int QtQuick::AnimatedSprite::resume()
 
-    Resumes the sprite animation if \l paused is true;
+    Resumes the sprite animation if \l paused is \c true;
     otherwise, this does nothing.
 
     \sa pause()

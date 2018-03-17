@@ -174,7 +174,6 @@ QT_BEGIN_NAMESPACE
 #define INSTR_Sub(op) INSTRUCTION(op, Sub, 1, lhs)
 #define INSTR_LoadQmlContext(op) INSTRUCTION(op, LoadQmlContext, 1, result)
 #define INSTR_LoadQmlImportedScripts(op) INSTRUCTION(op, LoadQmlImportedScripts, 1, result)
-#define INSTR_LoadQmlSingleton(op) INSTRUCTION(op, LoadQmlSingleton, 1, name)
 
 
 #define FOR_EACH_MOTH_INSTR(F) \
@@ -290,9 +289,8 @@ QT_BEGIN_NAMESPACE
     F(Mod) \
     F(Sub) \
     F(LoadQmlContext) \
-    F(LoadQmlImportedScripts) \
-    F(LoadQmlSingleton)
-#define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::LoadQmlSingleton) + 1)
+    F(LoadQmlImportedScripts)
+#define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::LoadQmlImportedScripts) + 1)
 
 #if defined(Q_CC_GNU) && !defined(Q_CC_INTEL)
 // icc before version 1200 doesn't support computed goto, and at least up to version 18.0.0 the

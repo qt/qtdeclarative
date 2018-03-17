@@ -313,8 +313,8 @@ public:
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;
 
-    void lock();
-    void unlock();
+    void lock() { m_mutex.lock(); }
+    void unlock() { m_mutex.unlock(); }
 
     void load(QQmlDataBlob *, Mode = PreferSynchronous);
     void loadWithStaticData(QQmlDataBlob *, const QByteArray &, Mode = PreferSynchronous);
@@ -381,6 +381,7 @@ private:
 
     QQmlEngine *m_engine;
     QQmlTypeLoaderThread *m_thread;
+    QMutex &m_mutex;
 
 #if QT_CONFIG(qml_debug)
     QScopedPointer<QQmlProfiler> m_profiler;

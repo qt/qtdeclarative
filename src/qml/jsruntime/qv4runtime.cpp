@@ -1326,13 +1326,6 @@ ReturnedValue Runtime::method_loadQmlImportedScripts(NoThrowEngine *engine)
     return context->importedScripts.value();
 }
 
-QV4::ReturnedValue Runtime::method_loadQmlSingleton(QV4::NoThrowEngine *engine, int nameIndex)
-{
-    Scope scope(engine);
-    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    return engine->qmlSingletonWrapper(name);
-}
-
 ReturnedValue Runtime::method_uMinus(const Value &value)
 {
     TRACE1(value);
