@@ -934,6 +934,11 @@ void tst_qqmllanguage::assignLiteralToJSValue()
         QJSValue value = object->qjsvalue();
         QVERIFY(value.isNumber());
         QCOMPARE(value.toNumber(), qreal(27));
+    } {
+        MyQmlObject *object = root->findChild<MyQmlObject *>("test23");
+        QJSValue value = object->qjsvalue();
+        QVERIFY(value.isQObject());
+        QCOMPARE(value.toQObject()->objectName(), "blah");
     }
 }
 

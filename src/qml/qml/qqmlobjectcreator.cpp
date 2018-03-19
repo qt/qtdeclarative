@@ -55,6 +55,7 @@
 #include <private/qqmlvaluetypeproxybinding_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qjsvalue_p.h>
 
 QT_USE_NAMESPACE
 
@@ -1036,6 +1037,17 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 _vmeMetaObject->setVMEProperty(bindingProperty->coreIndex(), wrappedObject);
             } else {
                 QVariant value = QVariant::fromValue(createdSubObject);
+                argv[0] = &value;
+                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, bindingProperty->coreIndex(), argv);
+            }
+        } else if (bindingProperty->propType() == qMetaTypeId<QJSValue>()) {
+            QV4::Scope scope(v4);
+            QV4::ScopedValue wrappedObject(scope, QV4::QObjectWrapper::wrap(engine->handle(), createdSubObject));
+            if (bindingProperty->isVarProperty()) {
+                _vmeMetaObject->setVMEProperty(bindingProperty->coreIndex(), wrappedObject);
+            } else {
+                QJSValue value;
+                QJSValuePrivate::setValue(&value, v4, wrappedObject);
                 argv[0] = &value;
                 QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, bindingProperty->coreIndex(), argv);
             }
