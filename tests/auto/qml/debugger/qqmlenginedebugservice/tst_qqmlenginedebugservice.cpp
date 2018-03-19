@@ -141,6 +141,7 @@ private slots:
     void queryObjectWithNonStreamableTypes();
     void asynchronousCreate();
     void invalidContexts();
+    void createObjectOnDestruction();
 };
 
 QmlDebugObjectReference tst_QQmlEngineDebugService::findRootObject(
@@ -1327,6 +1328,29 @@ void tst_QQmlEngineDebugService::invalidContexts()
     contextData->setParent(rootData); // makes context valid again, but not root.
     getContexts();
     QCOMPARE(m_dbg->rootContext().contexts.count(), 0);
+}
+
+void tst_QQmlEngineDebugService::createObjectOnDestruction()
+{
+    QSignalSpy spy(m_dbg, SIGNAL(newObject(int)));
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData(
+                    "import QtQml 2.0;"
+                    "QtObject {"
+                        "property Component x:"
+                            "Qt.createQmlObject('import QtQml 2.0; Component { QtObject { } }',"
+                                                "this, 'x.qml');"
+                        "Component.onDestruction: x.createObject(this, {});"
+                    "}", QUrl::fromLocalFile("x.qml"));
+        QVERIFY(component.isReady());
+        QVERIFY(component.create());
+        QTRY_COMPARE(spy.count(), 2);
+    }
+    // Doesn't crash and doesn't give us another signal for the object created on destruction.
+    QTest::qWait(500);
+    QCOMPARE(spy.count(), 2);
 }
 
 int main(int argc, char *argv[])
