@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.4
+import QtQuick 2.11
 import QtTest 1.0
 import QtQuick.Controls 2.3
 import QtQuick.Templates 2.3 as T
@@ -1268,5 +1268,41 @@ TestCase {
 
         compare(control.background.width, 200 + (control.background.leftInset || 0) + (control.background.rightInset || 0))
         compare(control.background.height, 100 + (control.background.topInset || 0) + (control.background.bottomInset || 0))
+    }
+
+
+    Component {
+        id: shortcutWindowComponent
+        ApplicationWindow {
+            id: window
+            width: 360
+            height: 360
+            visible: true
+
+            property alias popup: popup
+
+            Popup {
+                id: popup
+
+                Shortcut {
+                    sequence: "Tab"
+                    onActivated: popup.visible = !popup.visible
+                }
+            }
+        }
+    }
+
+    function test_shortcut() {
+        // Tests that a Shortcut with Qt.WindowShortcut context
+        // that is declared within a Popup is activated.
+        var window = createTemporaryObject(shortcutWindowComponent, testCase)
+        var control = window.popup
+
+        waitForRendering(window.contentItem)
+        keyClick(Qt.Key_Tab)
+        tryCompare(control, "visible", true)
+
+        keyClick(Qt.Key_Tab)
+        tryCompare(control, "visible", false)
     }
 }
