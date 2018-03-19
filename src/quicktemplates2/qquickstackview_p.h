@@ -65,7 +65,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackView : public QQuickControl
     Q_PROPERTY(bool busy READ isBusy NOTIFY busyChanged FINAL)
     Q_PROPERTY(int depth READ depth NOTIFY depthChanged FINAL)
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
-    Q_PROPERTY(QVariant initialItem READ initialItem WRITE setInitialItem FINAL)
+    Q_PROPERTY(QJSValue initialItem READ initialItem WRITE setInitialItem FINAL)
     Q_PROPERTY(QQuickTransition *popEnter READ popEnter WRITE setPopEnter NOTIFY popEnterChanged FINAL)
     Q_PROPERTY(QQuickTransition *popExit READ popExit WRITE setPopExit NOTIFY popExitChanged FINAL)
     Q_PROPERTY(QQuickTransition *pushEnter READ pushEnter WRITE setPushEnter NOTIFY pushEnterChanged FINAL)
@@ -93,8 +93,8 @@ public:
     };
     Q_ENUM(Status)
 
-    QVariant initialItem() const;
-    void setInitialItem(const QVariant &item);
+    QJSValue initialItem() const;
+    void setInitialItem(const QJSValue &item);
 
     QQuickTransition *popEnter() const;
     void setPopEnter(QQuickTransition *enter);

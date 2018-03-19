@@ -96,7 +96,7 @@ public:
 
     bool busy;
     QString operation;
-    QVariant initialItem;
+    QJSValue initialItem;
     QQuickItem *currentItem;
     QSet<QQuickStackElement*> removing;
     QList<QQuickStackElement*> removed;
