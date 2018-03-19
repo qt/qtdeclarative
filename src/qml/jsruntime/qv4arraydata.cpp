@@ -647,7 +647,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
         uint toCopy = n;
         uint chunk = toCopy;
         if (chunk > os->alloc - os->offset)
-            chunk -= os->alloc - os->offset;
+            chunk = os->alloc - os->offset;
         obj->arrayPut(oldSize, os->arrayData + os->offset, chunk);
         toCopy -= chunk;
         if (toCopy)

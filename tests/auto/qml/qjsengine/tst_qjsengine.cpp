@@ -128,6 +128,7 @@ private slots:
     void JSONparse();
     void arraySort();
     void lookupOnDisappearingProperty();
+    void arrayConcat();
 
     void qRegExpInport_data();
     void qRegExpInport();
@@ -3016,6 +3017,19 @@ void tst_QJSEngine::lookupOnDisappearingProperty()
     o = eng.newObject();
     QVERIFY(func.call(QJSValueList()<< o).isUndefined());
     QVERIFY(func.call(QJSValueList()<< o).isUndefined());
+}
+
+void tst_QJSEngine::arrayConcat()
+{
+    QJSEngine eng;
+    QJSValue v = eng.evaluate("var x = [1, 2, 3, 4, 5, 6];"
+                              "var y = [];"
+                              "for (var i = 0; i < 5; ++i)"
+                              "    x.shift();"
+                              "for (var i = 10; i < 13; ++i)"
+                              "   x.push(i);"
+                              "x.toString();");
+    QCOMPARE(v.toString(), QString::fromLatin1("6,10,11,12"));
 }
 
 static QRegExp minimal(QRegExp r) { r.setMinimal(true); return r; }
