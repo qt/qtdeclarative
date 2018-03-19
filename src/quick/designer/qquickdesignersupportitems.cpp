@@ -94,10 +94,23 @@ static void allSubObjects(QObject *object, QObjectList &objectList)
 
     objectList.append(object);
 
+    const QMetaObject *mo = object->metaObject();
+
+    QStringList deferredPropertyNames;
+    const int namesIndex = mo->indexOfClassInfo("DeferredPropertyNames");
+    if (namesIndex != -1) {
+        QMetaClassInfo classInfo = mo->classInfo(namesIndex);
+        deferredPropertyNames = QString::fromUtf8(classInfo.value()).split(QLatin1Char(','));
+    }
+
     for (int index = QObject::staticMetaObject.propertyOffset();
          index < object->metaObject()->propertyCount();
          index++) {
+
         QMetaProperty metaProperty = object->metaObject()->property(index);
+
+        if (deferredPropertyNames.contains(metaProperty.name()))
+            continue;
 
         // search recursive in property objects
         if (metaProperty.isReadable()
