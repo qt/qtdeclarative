@@ -1313,7 +1313,8 @@ struct Function {
     uint hasTry: 1;
     uint hasWith: 1;
     uint isQmlBinding: 1;
-    uint unused : 24;
+    uint returnsClosure: 1;
+    uint unused : 23;
 
     // Location of declaration in source code (0 if not specified)
     uint line;

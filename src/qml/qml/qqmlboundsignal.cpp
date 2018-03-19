@@ -110,6 +110,12 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
       m_index(index),
       m_target(target)
 {
+    // If the function is marked as having a nested function, then the user wrote:
+    //   onSomeSignal: function() { /*....*/ }
+    // So take that nested function:
+    if (auto closure = function->nestedFunction())
+        function = closure;
+
     setupFunction(scope, function);
     init(ctxt, scopeObject);
 }
@@ -121,6 +127,12 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
 {
     // It's important to call init first, because m_index gets remapped in case of cloned signals.
     init(ctxt, scope);
+
+    // If the function is marked as having a nested function, then the user wrote:
+    //   onSomeSignal: function() { /*....*/ }
+    // So take that nested function:
+    if (auto closure = runtimeFunction->nestedFunction())
+        runtimeFunction = closure;
 
     QV4::ExecutionEngine *engine = QQmlEnginePrivate::getV4Engine(ctxt->engine);
 

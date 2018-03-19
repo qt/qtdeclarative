@@ -50,6 +50,7 @@
 // We mean it.
 //
 
+#include <stdint.h>
 #include "qv4global_p.h"
 #include <private/qqmlglobal_p.h>
 #include <private/qv4compileddata_p.h>
@@ -100,6 +101,12 @@ struct Q_QML_EXPORT Function {
         return QQmlSourceLocation(sourceFile(), compiledFunction->location.line, compiledFunction->location.column);
     }
 
+    Function *nestedFunction() const
+    {
+        if (compiledFunction->nestedFunctionIndex == std::numeric_limits<uint32_t>::max())
+            return nullptr;
+        return compilationUnit->runtimeFunctions[compiledFunction->nestedFunctionIndex];
+    }
 };
 
 

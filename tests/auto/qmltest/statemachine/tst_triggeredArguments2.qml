@@ -67,7 +67,6 @@ TestCase {
 
         // Emit the signalTrans.signal
         testCase.mysignal("test1", true, 2)
-        expectFail("", "QTBUG-50328")
         compare(testCase.mystr, "test1")
         compare(testCase.mybool, true)
         compare(testCase.myint, 2)

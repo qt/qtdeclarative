@@ -289,9 +289,10 @@ void QQmlConnections::connectSignals()
                 new QQmlBoundSignal(target, signalIndex, this, qmlEngine(this));
             signal->setEnabled(d->enabled);
 
-            QQmlBoundSignalExpression *expression = ctxtdata ?
-                new QQmlBoundSignalExpression(target, signalIndex,
-                                              ctxtdata, this, d->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]) : 0;
+            auto f = d->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
+            QQmlBoundSignalExpression *expression =
+                    ctxtdata ? new QQmlBoundSignalExpression(target, signalIndex, ctxtdata, this, f)
+                             : nullptr;
             signal->takeExpression(expression);
             d->boundsignals += signal;
         } else {
