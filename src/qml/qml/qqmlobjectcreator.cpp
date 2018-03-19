@@ -879,6 +879,14 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
     if (binding->type == QV4::CompiledData::Binding::Type_Script || binding->containsTranslations()) {
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
             QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
+
+            // When a user writes the following:
+            //    onSignal: function() { doSomethingUsefull }
+            // then do not run the binding that returns the closure, but run the closure
+            // instead.
+            if (auto closure = runtimeFunction->nestedFunction())
+                runtimeFunction = closure;
+
             int signalIndex = _propertyCache->methodIndexToSignalIndex(bindingProperty->coreIndex());
             QQmlBoundSignal *bs = new QQmlBoundSignal(_bindingTarget, signalIndex, _scopeObject, engine);
             QQmlBoundSignalExpression *expr = new QQmlBoundSignalExpression(_bindingTarget, signalIndex,

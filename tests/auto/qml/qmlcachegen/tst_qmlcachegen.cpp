@@ -47,6 +47,7 @@ private slots:
     void signalHandlerParameters();
     void errorOnArgumentsInSignalHandler();
     void aheadOfTimeCompilation();
+    void functionExpressions();
 
     void workerScripts();
 };
@@ -290,6 +291,69 @@ void tst_qmlcachegen::workerScripts()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QTRY_VERIFY(obj->property("success").toBool());
+}
+
+void tst_qmlcachegen::functionExpressions()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const auto writeTempFile = [&tempDir](const QString &fileName, const char *contents) {
+        QFile f(tempDir.path() + '/' + fileName);
+        const bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        Q_ASSERT(ok);
+        f.write(contents);
+        return f.fileName();
+    };
+
+    const QString testFilePath = writeTempFile(
+                "test.qml",
+                "import QtQuick 2.0\n"
+                "Item {\n"
+                "    id: di\n"
+                "    \n"
+                "    property var f\n"
+                "    property bool f_called: false\n"
+                "    f : function() { f_called = true }\n"
+                "    \n"
+                "    signal g\n"
+                "    property bool g_handler_called: false\n"
+                "    onG: function() { g_handler_called = true }\n"
+                "    \n"
+                "    signal h(int i)\n"
+                "    property bool h_connections_handler_called: false\n"
+                "    Connections {\n"
+                "        target: di\n"
+                "        onH: function(magic) { h_connections_handler_called = (magic == 42)\n }\n"
+                "    }\n"
+                "    \n"
+                "    function runTest() { \n"
+                "        f()\n"
+                "        g()\n"
+                "        h(42)\n"
+                "    }\n"
+                "}");
+
+    QVERIFY(generateCache(testFilePath));
+
+    const QString cacheFilePath = testFilePath + QLatin1Char('c');
+    QVERIFY(QFile::exists(cacheFilePath));
+    QVERIFY(QFile::remove(testFilePath));
+
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+
+    QCOMPARE(obj->property("f_called").toBool(), false);
+    QCOMPARE(obj->property("g_handler_called").toBool(), false);
+    QCOMPARE(obj->property("h_connections_handler_called").toBool(), false);
+
+    QMetaObject::invokeMethod(obj.data(), "runTest");
+
+    QCOMPARE(obj->property("f_called").toBool(), true);
+    QCOMPARE(obj->property("g_handler_called").toBool(), true);
+    QCOMPARE(obj->property("h_connections_handler_called").toBool(), true);
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)

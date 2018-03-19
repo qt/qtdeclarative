@@ -225,7 +225,7 @@ struct Function
     quint32_le localsOffset;
     quint32_le nLineNumbers;
     quint32_le lineNumberOffset;
-    quint32_le nInnerFunctions;
+    quint32_le nestedFunctionIndex; // for functions that only return a single closure, used in signal handlers
     quint32_le nRegisters;
     Location location;
 

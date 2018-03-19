@@ -305,6 +305,9 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         function->flags |= CompiledData::Function::IsStrict;
     if (irFunction->hasTry || irFunction->hasWith)
         function->flags |= CompiledData::Function::HasCatchOrWith;
+    function->nestedFunctionIndex =
+            irFunction->returnsClosure ? quint32(module->functions.indexOf(irFunction->nestedContexts.first()))
+                                       : std::numeric_limits<uint32_t>::max();
     function->nFormals = irFunction->arguments.size();
     function->formalsOffset = currentOffset;
     currentOffset += function->nFormals * sizeof(quint32);
@@ -317,7 +320,6 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     function->lineNumberOffset = currentOffset;
     currentOffset += function->nLineNumbers * sizeof(CompiledData::CodeOffsetToLine);
 
-    function->nInnerFunctions = irFunction->nestedContexts.size();
 
     function->nRegisters = irFunction->registerCount;
 
