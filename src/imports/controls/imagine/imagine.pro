@@ -7,13 +7,14 @@ QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
+include(imagine.pri)
+
 OTHER_FILES += \
-    qmldir
+    qmldir \
+    $$QML_FILES
 
 SOURCES += \
     $$PWD/qtquickcontrols2imaginestyleplugin.cpp
-
-include(imagine.pri)
 
 qtquickcontrols2imaginestyle.prefix = qt-project.org/imports/QtQuick/Controls.2/Imagine
 qtquickcontrols2imaginestyle.files += \
