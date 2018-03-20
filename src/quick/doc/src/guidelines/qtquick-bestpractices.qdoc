@@ -84,20 +84,36 @@ making it harder to load these resources. As an alternative, Qt offers its own
 application binary, enabling access to the application's resources regardless
 of the target OS.
 
-For example, the following entry in the qmake project file ensures that the
-resources are built into the application binary, making them available when
-needed:
+For example, consider the following project directory structure:
 
 \badcode
-    RESOURCES += a.qml b.png
+project
+├── images
+│   ├── image1.png
+│   └── image2.png
+├── project.pro
+└── qml
+    └── main.qml
 \endcode
 
-It's also possible to use a
+The following entry in \c project.pro ensures that the resources are built into
+the application binary, making them available when needed:
+
+\badcode
+    RESOURCES += \
+        qml/main.qml \
+        images/image1.png \
+        images/image2.png
+\endcode
+
+A more convenient approach is to use the
 \l {files(pattern[, recursive=false])}{wildcard syntax} to select several files
 at once:
 
 \badcode
-    RESOURCES += $$files(*.qml) $$files(*.png)
+    RESOURCES += \
+        $$files(qml/*.qml) \
+        $$files(images/*.png)
 \endcode
 
 This approach is convenient for applications that depend on a limited number
@@ -106,20 +122,24 @@ approach, it causes \e all of the other files in \c RESOURCES to be recompiled
 as well. This can be inefficient, especially for large sets of files.
 In this case, a better approach is to separate each type of resource into its
 own \l {Resource Collection Files (.qrc)}{.qrc} file. For example, the snippet
-above could be changed like so:
+above could be changed to the following:
 
 \badcode
-    RESOURCES += qml.qrc images.qrc
+    qml.files = $$files(*.qml)
+    qml.prefix = /qml
+    RESOURCES += qml
+
+    images.files = $$files(*.png)
+    images.prefix = /images
+    RESOURCES += images
 \endcode
 
-Now, whenever a QML file is changed in qml.qrc, only the QML files have to be
-recompiled.
+Now, whenever a QML file is changed, only the QML files have to be recompiled.
 
-If you want to conveniently switch from using the "direct" syntax to a .qrc
-file, look for \c qmake_intermediate.qrc (a build artifact created by qmake)
-in your project's build directory and rename it to, for example,
-\c resources.qrc. Then, replace the old \c RESOURCES entry with
-\c {RESOURCES += resources.qrc}.
+Sometimes it can be necessary to have more control over the path for a
+specific file managed by the resource system. For example, if we wanted to give
+\c image2.png an alias, we would need to switch to an explicit \c .qrc file.
+\l {Creating Resource Files} explains how to do this in detail.
 
 \section2 Related Information
 \list
