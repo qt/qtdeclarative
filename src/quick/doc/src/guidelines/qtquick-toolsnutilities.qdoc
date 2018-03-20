@@ -46,7 +46,7 @@ The following is a list of example applications that use UIs created by
 the Qt Quick Designer:
 
 \list
- \li \l{Qt Quick Controls 2 - Contacts List}
+ \li \l{Qt Quick Controls 2 - Contact List}
  \li \l{Qt Quick Controls 2 - Flat Style}
 \endlist
 

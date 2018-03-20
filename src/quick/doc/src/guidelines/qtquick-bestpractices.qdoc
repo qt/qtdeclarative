@@ -39,7 +39,7 @@ applications.
 
 A fluid and modern UI is key for any application's success in today's world, and
 that's where QML makes so much sense for a designer or developer. Qt offers the
-most basic UI controls that are necessary to a create fluid and modern-looking
+most basic UI controls that are necessary to create a fluid and modern-looking
 UI. It is recommended to browse this list of UI controls before creating your
 own custom UI control.
 
@@ -307,7 +307,7 @@ to be refactored in the future.
 \section2 Related Information
 \list
 \li \l{Integrating QML and C++}
-\li \l{Chat Tutorial Example}
+\li \l{Qt Quick Controls 2 - Chat Tutorial}{Chat application tutorial}
 \endlist
 
 \section1 Qt Quick Layouts
@@ -366,4 +366,47 @@ Qt Quick easier, see \l {Qt Quick Tools and Utilities}.
 
 For information on Qt Quick's scene graph, see \l {Qt Quick Scene Graph}.
 
+\section1 Scalable User Interfaces
+
+As display resolutions improve, a scalable application UI becomes more and
+more important. One of the approaches to achieve this is to maintain several
+copies of the UI for different screen resolutions, and load the appropriate one
+depending on the available resolution. Although this works pretty
+well, it adds to the maintenance overhead.
+
+Qt offers a better solution to this problem and recommends the application
+developers to follow these tips:
+
+\list
+ \li Use anchors or the Qt Quick Layouts module to lay out the visual items.
+ \li Do not specify explicit width and height for a visual item.
+ \li Provide UI resources such as images and icons for each display resolution
+     that your application supports. The Qt Quick Controls 2 gallery example
+     demonstrates this well by providing the \c qt-logo.png for \c @2x, \c @3x,
+     and \c @4x resolutions, enabling the application to cater to high
+     resolution displays. Qt automatically chooses the appropriate
+     image that is suitable for the given display, provided the high DPI scaling
+     feature is explicitly enabled.
+ \li Use SVG images for small icons. While larger SVGs can be slow to render,
+     small ones work well. Vector images avoid the need to provide several
+     versions of an image, as is necessary with bitmap images.
+ \li Use font-based icons, such as Font Awesome. These scale to any display
+     resolution, and also allow colorization. The
+     Qt Quick Controls 2 Text Editor example demonstrates this well.
+\endlist
+
+With this in place, your application's UI should scale depending
+on the display resolution on offer.
+
+\image qtquickcontrols2-gallery-welcome.png
+
+\section2 Related Information
+
+\list
+ \li \l{Qt Quick Controls2 - Gallery Example}{Gallery example}
+ \li \l{Qt Quick Controls 2 - Text Editor}{Text Editor example}
+ \li \l{Font Awesome}
+ \li \l{Scalability}
+ \li \l{High DPI Displays}
+\endlist
 */
