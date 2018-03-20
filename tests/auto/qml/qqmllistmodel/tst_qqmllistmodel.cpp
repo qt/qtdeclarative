@@ -125,6 +125,7 @@ private slots:
     void bindingsOnGetResult();
     void stringifyModelEntry();
     void qobjectTrackerForDynamicModelObjects();
+    void crash_append_empty_array();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1532,6 +1533,27 @@ void tst_qqmllistmodel::qobjectTrackerForDynamicModelObjects()
     QQmlData *ddata = QQmlData::get(obj, /*create*/false);
     QVERIFY(ddata);
     QVERIFY(!ddata->jsWrapper.isNullOrUndefined());
+}
+
+void tst_qqmllistmodel::crash_append_empty_array()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+                "import QtQuick 2.0\n"
+                "Item {\n"
+                "   ListModel {\n"
+                "      id: testModel\n"
+                "      objectName: \"testModel\""
+                "   }\n"
+                "}\n", QUrl());
+    QScopedPointer<QObject> scene(component.create());
+    QQmlListModel *model = scene->findChild<QQmlListModel*>("testModel");
+    QSignalSpy spy(model, &QQmlListModel::rowsAboutToBeInserted);
+    QQmlExpression expr(engine.rootContext(), model, "append(new Array())");
+    expr.evaluate();
+    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+    QCOMPARE(spy.count(), 0);
 }
 
 QTEST_MAIN(tst_qqmllistmodel)
