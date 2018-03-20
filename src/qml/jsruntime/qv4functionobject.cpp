@@ -75,7 +75,6 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
     jsConstruct = QV4::FunctionObject::callAsConstructor;
 
     Object::init();
-    function = nullptr;
     this->scope.set(scope->engine(), scope->d());
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
@@ -88,7 +87,6 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
     jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->callAsConstructor;
 
     Object::init();
-    function = nullptr;
     this->scope.set(scope->engine(), scope->d());
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
@@ -101,8 +99,7 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function
     jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->callAsConstructor;
 
     Object::init();
-    this->function = function;
-    function->compilationUnit->addref();
+    setFunction(function);
     this->scope.set(scope->engine(), scope->d());
     Scope s(scope->engine());
     ScopedString name(s, function->name());
@@ -123,13 +120,18 @@ void Heap::FunctionObject::init()
     jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->callAsConstructor;
 
     Object::init();
-    function = nullptr;
     this->scope.set(internalClass->engine, internalClass->engine->rootContext()->d());
     Q_ASSERT(internalClass && internalClass->find(internalClass->engine->id_prototype()) == Index_Prototype);
     setProperty(internalClass->engine, Index_Prototype, Primitive::undefinedValue());
 }
 
-
+void Heap::FunctionObject::setFunction(Function *f)
+{
+    if (f) {
+        function = f;
+        function->compilationUnit->addref();
+    }
+}
 void Heap::FunctionObject::destroy()
 {
     if (function)
@@ -347,20 +349,36 @@ ReturnedValue FunctionPrototype::method_bind(const FunctionObject *b, const Valu
 {
     QV4::Scope scope(b);
     ScopedFunctionObject target(scope, thisObject);
-    if (!target)
+    if (!target || target->isBinding())
         return scope.engine->throwTypeError();
 
     ScopedValue boundThis(scope, argc ? argv[0] : Primitive::undefinedValue());
     Scoped<MemberData> boundArgs(scope, (Heap::MemberData *)nullptr);
-    if (argc > 1) {
-        boundArgs = MemberData::allocate(scope.engine, argc - 1);
-        boundArgs->d()->values.size = argc - 1;
-        for (uint i = 0, ei = static_cast<uint>(argc - 1); i < ei; ++i)
+
+    int nArgs = (argc - 1 >= 0) ? argc - 1 : 0;
+    if (target->isBoundFunction()) {
+        BoundFunction *bound = static_cast<BoundFunction *>(target.getPointer());
+        Scoped<MemberData> oldArgs(scope, bound->boundArgs());
+        boundThis = bound->boundThis();
+        int oldSize = oldArgs->size();
+        boundArgs = MemberData::allocate(scope.engine, oldSize + nArgs);
+        boundArgs->d()->values.size = oldSize + nArgs;
+        for (uint i = 0; i < static_cast<uint>(oldSize); ++i)
+            boundArgs->set(scope.engine, i, oldArgs->data()[i]);
+        for (uint i = 0; i < static_cast<uint>(nArgs); ++i)
+            boundArgs->set(scope.engine, oldSize + i, argv[i + 1]);
+        target = bound->target();
+    } else if (nArgs) {
+        boundArgs = MemberData::allocate(scope.engine, nArgs);
+        boundArgs->d()->values.size = nArgs;
+        for (uint i = 0, ei = static_cast<uint>(nArgs); i < ei; ++i)
             boundArgs->set(scope.engine, i, argv[i + 1]);
     }
 
-    ExecutionContext *global = scope.engine->rootContext();
-    return BoundFunction::create(global, target, boundThis, boundArgs)->asReturnedValue();
+    ScopedContext ctx(scope, target->scope());
+    Heap::BoundFunction *bound = BoundFunction::create(ctx, target, boundThis, boundArgs);
+    bound->setFunction(target->function());
+    return bound->asReturnedValue();
 }
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);
@@ -393,8 +411,7 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     FunctionObject::init();
     this->scope.set(scope->engine(), scope->d());
 
-    this->function = function;
-    function->compilationUnit->addref();
+    setFunction(function);
     Q_ASSERT(function);
     Q_ASSERT(function->code);
 

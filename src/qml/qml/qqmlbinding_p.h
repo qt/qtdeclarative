@@ -104,6 +104,12 @@ public:
     QString expressionIdentifier() const override;
     void expressionChanged() override;
 
+    QQmlSourceLocation sourceLocation() const override;
+    void setSourceLocation(const QQmlSourceLocation &location);
+    void setBoundFunction(QV4::BoundFunction *boundFunction) {
+        m_boundFunction.set(boundFunction->engine(), *boundFunction);
+    }
+
     /**
      * This method returns a snapshot of the currently tracked dependencies of
      * this binding. The dependencies can change upon reevaluation. This method is
@@ -123,6 +129,8 @@ protected:
     bool slowWrite(const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData,
                    const QV4::Value &result, bool isUndefined, QQmlPropertyData::WriteFlags flags);
 
+    QV4::ReturnedValue evaluate(bool *isUndefined);
+
 private:
     inline bool updatingFlag() const;
     inline void setUpdatingFlag(bool);
@@ -130,6 +138,9 @@ private:
     inline void setEnabledFlag(bool);
 
     static QQmlBinding *newBinding(QQmlEnginePrivate *engine, const QQmlPropertyData *property);
+
+    QQmlSourceLocation *m_sourceLocation = nullptr; // used for Qt.binding() created functions
+    QV4::PersistentValue m_boundFunction; // used for Qt.binding() that are created from a bound function object
 };
 
 bool QQmlBinding::updatingFlag() const

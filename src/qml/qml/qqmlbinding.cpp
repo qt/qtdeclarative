@@ -51,6 +51,7 @@
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4variantobject_p.h>
+#include <private/qv4jscall_p.h>
 
 #include <QVariant>
 #include <QtCore/qdebug.h>
@@ -97,6 +98,21 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QQmlScr
     return b;
 }
 
+QQmlSourceLocation QQmlBinding::sourceLocation() const
+{
+    if (m_sourceLocation)
+        return *m_sourceLocation;
+    return QQmlJavaScriptExpression::sourceLocation();
+}
+
+void QQmlBinding::setSourceLocation(const QQmlSourceLocation &location)
+{
+    if (m_sourceLocation)
+        delete m_sourceLocation;
+    m_sourceLocation = new QQmlSourceLocation(location);
+}
+
+
 QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QString &str, QObject *obj,
                                  QQmlContextData *ctxt, const QString &url, quint16 lineNumber)
 {
@@ -128,6 +144,7 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, QV4::Function
 
 QQmlBinding::~QQmlBinding()
 {
+    delete m_sourceLocation;
 }
 
 void QQmlBinding::setNotifyOnValueChanged(bool v)
@@ -171,6 +188,28 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
         setUpdatingFlag(false);
 }
 
+QV4::ReturnedValue QQmlBinding::evaluate(bool *isUndefined)
+{
+    QV4::ExecutionEngine *v4 = context()->engine->handle();
+    int argc = 0;
+    const QV4::Value *argv = nullptr;
+    const QV4::Value *thisObject = nullptr;
+    QV4::BoundFunction *b = nullptr;
+    if ((b = static_cast<QV4::BoundFunction *>(m_boundFunction.valueRef()))) {
+        QV4::Heap::MemberData *args = b->boundArgs();
+        if (args) {
+            argc = args->values.size;
+            argv = args->values.data();
+        }
+        thisObject = &b->d()->boundThis;
+    }
+    QV4::Scope scope(v4);
+    QV4::JSCallData jsCall(scope, argc, argv, thisObject);
+
+    return QQmlJavaScriptExpression::evaluate(jsCall.callData(), isUndefined);
+}
+
+
 // QQmlBindingBinding is for target properties which are of type "binding" (instead of, say, int or
 // double). The reason for being is that GenericBinding::fastWrite needs a compile-time constant
 // expression for the switch for the compiler to generate the optimal code, but
@@ -203,7 +242,7 @@ protected:
 
         bool isUndefined = false;
 
-        QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
+        QV4::ScopedValue result(scope, evaluate(&isUndefined));
 
         bool error = false;
         if (!watcher.wasDeleted() && isAddedToObject() && !hasError())
@@ -302,8 +341,13 @@ public:
     {
         setCompilationUnit(compilationUnit);
         m_binding = binding;
-        setSourceLocation(QQmlSourceLocation(compilationUnit->fileName(), binding->valueLocation.line, binding->valueLocation.column));
     }
+
+    QQmlSourceLocation sourceLocation() const override final
+    {
+        return QQmlSourceLocation(m_compilationUnit->fileName(), m_binding->valueLocation.line, m_binding->valueLocation.column);
+    }
+
 
     void doUpdate(const DeleteWatcher &watcher,
                   QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) override final

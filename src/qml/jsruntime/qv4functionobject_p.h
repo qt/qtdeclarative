@@ -90,6 +90,8 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     void init();
     void destroy();
 
+    void setFunction(Function *f);
+
     unsigned int formalParameterCount() { return function ? function->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
 

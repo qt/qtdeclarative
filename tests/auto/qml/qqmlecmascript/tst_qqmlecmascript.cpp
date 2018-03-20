@@ -289,6 +289,7 @@ private slots:
     void withStatement();
     void tryStatement();
     void replaceBinding();
+    void bindingBoundFunctions();
     void deleteRootObjectInCreation();
     void onDestruction();
     void onDestructionViaGC();
@@ -7240,6 +7241,17 @@ void tst_qqmlecmascript::replaceBinding()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("replaceBinding.qml"));
+    QObject *obj = c.create();
+    QVERIFY(obj != nullptr);
+
+    QVERIFY(obj->property("success").toBool());
+    delete obj;
+}
+
+void tst_qqmlecmascript::bindingBoundFunctions()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("bindingBoundFunctions.qml"));
     QObject *obj = c.create();
     QVERIFY(obj != nullptr);
 
