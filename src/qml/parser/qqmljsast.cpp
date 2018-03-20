@@ -147,6 +147,15 @@ void FalseLiteral::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+void SuperLiteral::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+    }
+
+    visitor->endVisit(this);
+}
+
+
 void StringLiteral::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {

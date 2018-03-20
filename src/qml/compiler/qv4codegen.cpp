@@ -1542,10 +1542,30 @@ bool Codegen::visit(FalseLiteral *)
     return false;
 }
 
+bool Codegen::visit(SuperLiteral *ast)
+{
+    if (hasError)
+        return false;
+
+    throwSyntaxError(ast->superToken, QLatin1String("Support for 'super' keyword not implemented"));
+    return false;
+}
+
 bool Codegen::visit(FieldMemberExpression *ast)
 {
     if (hasError)
         return false;
+
+    if (AST::IdentifierExpression *id = AST::cast<AST::IdentifierExpression *>(ast->base)) {
+        if (id->name == QLatin1String("new")) {
+            // new.target
+            if (ast->name != QLatin1String("target")) {
+                throwSyntaxError(ast->identifierToken, QLatin1String("Expected 'target' after 'new.'."));
+                return false;
+            }
+            throwSyntaxError(ast->identifierToken, QLatin1String("Support for 'new.target' unimplemented."));
+        }
+    }
 
     Reference base = expression(ast->base);
     if (hasError)

@@ -148,6 +148,7 @@ public:
         Kind_Expression,
         Kind_ExpressionStatement,
         Kind_FalseLiteral,
+        Kind_SuperLiteral,
         Kind_FieldMemberExpression,
         Kind_Finally,
         Kind_ForEachStatement,
@@ -390,6 +391,26 @@ public:
 // attributes
     SourceLocation falseToken;
 };
+
+class QML_PARSER_EXPORT SuperLiteral : public ExpressionNode
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(SuperLiteral)
+
+    SuperLiteral() { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return superToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return superToken; }
+
+// attributes
+    SourceLocation superToken;
+};
+
 
 class QML_PARSER_EXPORT NumericLiteral: public ExpressionNode
 {

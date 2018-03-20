@@ -122,6 +122,9 @@ public:
     virtual bool visit(FalseLiteral *) { return true; }
     virtual void endVisit(FalseLiteral *) {}
 
+    virtual bool visit(SuperLiteral *) { return true; }
+    virtual void endVisit(SuperLiteral *) {}
+
     virtual bool visit(StringLiteral *) { return true; }
     virtual void endVisit(StringLiteral *) {}
 

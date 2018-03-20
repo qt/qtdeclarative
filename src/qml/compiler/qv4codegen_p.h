@@ -561,6 +561,7 @@ protected:
     bool visit(AST::ConditionalExpression *ast) override;
     bool visit(AST::DeleteExpression *ast) override;
     bool visit(AST::FalseLiteral *ast) override;
+    bool visit(AST::SuperLiteral *ast) override;
     bool visit(AST::FieldMemberExpression *ast) override;
     bool visit(AST::TaggedTemplate *ast) override;
     bool visit(AST::FunctionExpression *ast) override;

@@ -89,6 +89,7 @@ class IdentifierExpression;
 class NullExpression;
 class TrueLiteral;
 class FalseLiteral;
+class SuperLiteral;
 class NumericLiteral;
 class StringLiteral;
 class TemplateLiteral;

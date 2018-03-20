@@ -1758,9 +1758,13 @@ PropertyDefinition: IdentifierReference;
     } break;
 ./
 
--- ### using this production should result in a syntax error when used in an ObjectLiteral
+-- Using this production should result in a syntax error when used in an ObjectLiteral
 PropertyDefinition: CoverInitializedName;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.  case $rule_number: {
+        syntaxError(loc(1), "Expected token ':' after identifier.");
+        return false;
+    } break;
+./
 
 UiPropertyDefinition: UiPropertyName T_COLON AssignmentExpression_In;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
@@ -1911,6 +1915,18 @@ TemplateLiteral: T_TEMPLATE_HEAD Expression TemplateSpans;
 
 MemberExpression: PrimaryExpression;
 
+Super: T_SUPER;
+/.
+    case $rule_number: {
+        AST::SuperLiteral *node = new (pool) AST::SuperLiteral();
+        node->superToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
+
+MemberExpression: Super T_LBRACKET Expression_In T_RBRACKET;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
 MemberExpression: MemberExpression T_LBRACKET Expression_In T_RBRACKET;
 /.
     case $rule_number: {
@@ -1921,6 +1937,18 @@ MemberExpression: MemberExpression T_LBRACKET Expression_In T_RBRACKET;
     } break;
 ./
 
+
+-- the identifier has to be "target", catched at codegen time
+NewTarget: T_NEW T_DOT T_IDENTIFIER;
+/.  case $rule_number:
+    {
+        AST::IdentifierExpression *node = new (pool) AST::IdentifierExpression(stringRef(1));
+        node->identifierToken= loc(1);
+        sym(1).Node = node;
+    } Q_FALLTHROUGH();
+./
+MemberExpression: Super T_DOT IdentifierName;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
 MemberExpression: MemberExpression T_DOT IdentifierName;
 /.
     case $rule_number: {
@@ -1931,11 +1959,7 @@ MemberExpression: MemberExpression T_DOT IdentifierName;
     } break;
 ./
 
-MemberExpression: SuperProperty;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
-
 MemberExpression: MetaProperty;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
 
 MemberExpression: T_NEW MemberExpression T_LPAREN Arguments T_RPAREN;
 /.
@@ -1948,22 +1972,17 @@ MemberExpression: T_NEW MemberExpression T_LPAREN Arguments T_RPAREN;
     } break;
 ./
 
-SuperProperty: T_SUPER T_LBRACKET Expression_In T_RBRACKET;
-
-SuperProperty: T_SUPER T_DOT IdentifierName;
-
 MetaProperty: NewTarget;
 
-NewTarget: T_NEW T_DOT T_IDENTIFIER; -- ### the identifier has to be "target";
 
 NewExpression: MemberExpression;
 
 NewExpression: T_NEW NewExpression;
 /.
     case $rule_number: {
-  AST::NewExpression *node = new (pool) AST::NewExpression(sym(2).Expression);
-  node->newToken = loc(1);
-  sym(1).Node = node;
+        AST::NewExpression *node = new (pool) AST::NewExpression(sym(2).Expression);
+        node->newToken = loc(1);
+        sym(1).Node = node;
     } break;
 ./
 
@@ -1988,9 +2007,8 @@ CallExpression: MemberExpression T_LPAREN Arguments T_RPAREN;
     } break;
 ./
 
-CallExpression: SuperCall;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
-
+CallExpression: Super T_LPAREN Arguments T_RPAREN;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
 CallExpression: CallExpression T_LPAREN Arguments T_RPAREN;
 /.
     case $rule_number: {
@@ -2020,8 +2038,6 @@ CallExpression: CallExpression T_DOT IdentifierName;
         sym(1).Node = node;
     } break;
 ./
-
-SuperCall: T_SUPER T_LPAREN Arguments T_RPAREN;
 
 Arguments: ;
 /.
