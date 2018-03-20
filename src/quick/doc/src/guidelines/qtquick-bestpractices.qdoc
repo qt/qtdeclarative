@@ -188,17 +188,121 @@ The following snippet demonstrates examples of models written in QML:
 Use \l {QAbstractItemModel Subclass}{C++} for dynamic data sets that are large
 or frequently modified.
 
-\section2 Interaction Path
+\section2 Interacting with QML from C++
 
-Although Qt enables you to manipulate QML from C++, it is not a recommended
-approach, as debugging such code can be painful. The QML engine works out
-a lot of the details on the fly, so manipulating the QML items from C++ could
-lead to unexpected results. This approach also makes the C++ code rely on the
-QML code to provide certain properties or objects, making it difficult to
-refactor the QML code without breaking the C++ code. Moreover, such C++ code
-cannot reused with other QML code. To avoid all of these hassles and have a
-maintainable application, it is recommended to always use the C++ to QML path
-and not the other way around.
+Although Qt enables you to manipulate QML from C++, it is not recommended to do
+so. To explain why, let's take a look at a simplified example. Suppose we were
+writing the UI for a settings page:
+
+\qml
+    import QtQuick 2.11
+    import QtQuick.Controls 2.4
+
+    Page {
+        Button {
+            text: qsTr("Restore default settings")
+        }
+    }
+\endqml
+
+We want the button to do something in C++ when it is clicked. We know objects
+in QML can emit change signals just like they can in C++, so we give the button
+an \l [QML]{QtObject::}{objectName} so that we can find it from C++:
+
+\qml
+    Button {
+        objectName: "restoreDefaultsButton"
+        text: qsTr("Restore default settings")
+    }
+\endqml
+
+Then, in C++, we find that object and connect to its change signal:
+
+\code
+    #include <QGuiApplication>
+    #include <QQmlApplicationEngine>
+    #include <QSettings>
+
+    class Backend : public QObject
+    {
+        Q_OBJECT
+
+    public:
+        Backend() {}
+
+    public slots:
+        void restoreDefaults() {
+            settings.setValue("loadLastProject", QVariant(false));
+        }
+
+    private:
+        QSettings settings;
+    };
+
+    int main(int argc, char *argv[])
+    {
+        QGuiApplication app(argc, argv);
+
+        QQmlApplicationEngine engine;
+        engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+        if (engine.rootObjects().isEmpty())
+            return -1;
+
+        Backend backend;
+
+        QObject *rootObject = engine.rootObjects().first();
+        QObject *restoreDefaultsButton = rootObject->findChild<QObject*>("restoreDefaultsButton");
+        QObject::connect(restoreDefaultsButton, SIGNAL(clicked()),
+            &backend, SLOT(restoreDefaults()));
+
+        return app.exec();
+    }
+
+    #include "main.moc"
+\endcode
+
+The problem with this approach is that the C++ logic layer depends on the QML
+presentation layer. If we were to refactor the QML in such a way that the
+\c objectName changes, or some other change breaks the ability for the C++
+to find the QML object, our workflow becomes much more complicated and tedious.
+
+Refactoring QML is a lot easier than refactoring C++, so in order to make
+maintenance pain-free, we should strive to keep C++ types unaware of QML as
+much as possible. This can be achieved by exposing the C++ types to QML:
+
+\code
+    int main(int argc, char *argv[])
+    {
+        QGuiApplication app(argc, argv);
+
+        Backend backend;
+
+        QQmlApplicationEngine engine;
+        engine.rootContext()->setContextProperty("backend", &backend);
+        engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+        if (engine.rootObjects().isEmpty())
+            return -1;
+
+        return app.exec();
+    }
+\endcode
+
+The QML then calls the C++ slot directly:
+
+\qml
+    import QtQuick 2.11
+    import QtQuick.Controls 2.4
+
+    Page {
+        Button {
+            text: qsTr("Restore default settings")
+            onClicked: backend.restoreDefaults()
+        }
+    }
+\endqml
+
+With this approach, the C++ remains unchanged in the event that the QML needs
+to be refactored in the future.
 
 \section2 Related Information
 \list
