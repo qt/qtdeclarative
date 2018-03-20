@@ -378,8 +378,10 @@ private:
     QString m_part;
     QString m_filterGroup;
     QList<QByteArray> m_watchedRoles;
+    QVector<int> m_pendingPackageInitializations; // vector holds model indices
     Compositor::Group m_compositorGroup;
     bool m_inheritGroup;
+    bool m_modelUpdatePending = true;
 };
 
 class QMetaPropertyBuilder;

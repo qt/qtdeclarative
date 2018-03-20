@@ -76,6 +76,7 @@ private slots:
     void stackingOrder();
     void objectModel();
     void QTBUG54859_asynchronousMove();
+    void package();
 };
 
 class TestObject : public QObject
@@ -1012,6 +1013,29 @@ void tst_QQuickRepeater::QTBUG54859_asynchronousMove()
 
 
     QTRY_COMPARE(item->property("finished"), QVariant(true));
+}
+
+void tst_QQuickRepeater::package()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("package.qml"));
+
+    QScopedPointer<QObject>o(component.create()); // don't crash!
+    QVERIFY(o != nullptr);
+
+    {
+        QQuickRepeater *repeater1 = qobject_cast<QQuickRepeater*>(qmlContext(o.data())->contextProperty("repeater1").value<QObject*>());
+        QVERIFY(repeater1);
+        QCOMPARE(repeater1->count(), 1);
+        QCOMPARE(repeater1->itemAt(0)->objectName(), "firstItem");
+    }
+
+    {
+        QQuickRepeater *repeater2 = qobject_cast<QQuickRepeater*>(qmlContext(o.data())->contextProperty("repeater2").value<QObject*>());
+        QVERIFY(repeater2);
+        QCOMPARE(repeater2->count(), 1);
+        QCOMPARE(repeater2->itemAt(0)->objectName(), "secondItem");
+    }
 }
 
 QTEST_MAIN(tst_QQuickRepeater)

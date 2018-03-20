@@ -3256,7 +3256,10 @@ void QQmlPartsModel::createdPackage(int index, QQuickPackage *package)
 
 void QQmlPartsModel::initPackage(int index, QQuickPackage *package)
 {
-    emit initItem(index, package->part(m_part));
+    if (m_modelUpdatePending)
+        m_pendingPackageInitializations << index;
+    else
+        emit initItem(index, package->part(m_part));
 }
 
 void QQmlPartsModel::destroyingPackage(QQuickPackage *package)
@@ -3268,9 +3271,22 @@ void QQmlPartsModel::destroyingPackage(QQuickPackage *package)
 
 void QQmlPartsModel::emitModelUpdated(const QQmlChangeSet &changeSet, bool reset)
 {
+    m_modelUpdatePending = false;
     emit modelUpdated(changeSet, reset);
     if (changeSet.difference() != 0)
         emit countChanged();
+
+    QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(m_model);
+    QVector<int> pendingPackageInitializations;
+    qSwap(pendingPackageInitializations, m_pendingPackageInitializations);
+    for (int index : pendingPackageInitializations) {
+        if (!model->m_delegate || index < 0 || index >= model->m_compositor.count(m_compositorGroup))
+            continue;
+        QObject *object = model->object(m_compositorGroup, index, QQmlIncubator::Asynchronous);
+        if (QQuickPackage *package = qmlobject_cast<QQuickPackage *>(object))
+            emit initItem(index, package->part(m_part));
+        model->release(object);
+    }
 }
 
 //============================================================================
