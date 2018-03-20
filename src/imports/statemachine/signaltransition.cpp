@@ -177,13 +177,6 @@ void SignalTransition::connectTriggered()
     int signalIndex = QMetaObjectPrivate::signalIndex(metaMethod);
 
     auto f = m_compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
-
-    // If the function is marked as having a nested function, then the user wrote:
-    //   onSomeSignal: function() { /*....*/ }
-    // So take that nested function:
-    if (auto closure = f->nestedFunction())
-        f = closure;
-
     QQmlBoundSignalExpression *expression =
             ctxtdata ? new QQmlBoundSignalExpression(target, signalIndex, ctxtdata, this, f)
                      : nullptr;
