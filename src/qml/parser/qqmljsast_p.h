@@ -77,6 +77,8 @@ enum Op {
     Div,
     InplaceDiv,
     Equal,
+    Exp,
+    InplaceExp,
     Ge,
     Gt,
     In,

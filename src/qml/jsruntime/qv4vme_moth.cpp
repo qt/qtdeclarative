@@ -1273,6 +1273,13 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, 
         }
     MOTH_END_INSTR(Sub)
 
+    MOTH_BEGIN_INSTR(Exp)
+        const Value left = STACK_VALUE(lhs);
+        double base = left.toNumber();
+        double exp = ACC.toNumber();
+        acc = QV4::Encode(pow(base,exp));
+    MOTH_END_INSTR(Exp)
+
     MOTH_BEGIN_INSTR(Mul)
         const Value left = STACK_VALUE(lhs);
         if (Q_LIKELY(Value::integerCompatible(left, ACC))) {

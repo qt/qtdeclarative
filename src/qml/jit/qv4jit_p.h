@@ -237,6 +237,7 @@ public:
     void generate_UShrConst(int rhs) override;
     void generate_ShrConst(int rhs) override;
     void generate_ShlConst(int rhs) override;
+    void generate_Exp(int lhs) override;
     void generate_Mul(int lhs) override;
     void generate_Div(int lhs) override;
     void generate_Mod(int lhs) override;

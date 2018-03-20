@@ -171,6 +171,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_UShrConst(op) INSTRUCTION(op, UShrConst, 1, rhs)
 #define INSTR_ShrConst(op) INSTRUCTION(op, ShrConst, 1, rhs)
 #define INSTR_ShlConst(op) INSTRUCTION(op, ShlConst, 1, rhs)
+#define INSTR_Exp(op) INSTRUCTION(op, Exp, 1, lhs)
 #define INSTR_Mul(op) INSTRUCTION(op, Mul, 1, lhs)
 #define INSTR_Div(op) INSTRUCTION(op, Div, 1, lhs)
 #define INSTR_Mod(op) INSTRUCTION(op, Mod, 1, lhs)
@@ -290,6 +291,7 @@ QT_BEGIN_NAMESPACE
     F(UShrConst) \
     F(ShrConst) \
     F(ShlConst) \
+    F(Exp) \
     F(Mul) \
     F(Div) \
     F(Mod) \

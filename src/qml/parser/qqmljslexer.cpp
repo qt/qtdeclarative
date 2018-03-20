@@ -661,6 +661,10 @@ again:
             return T_STAR_EQ;
         } else if (_char == QLatin1Char('*')) {
             scanChar();
+            if (_char == QLatin1Char('=')) {
+                scanChar();
+                return T_STAR_STAR_EQ;
+            }
             return T_STAR_STAR;
         }
         return T_STAR;

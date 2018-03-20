@@ -727,6 +727,7 @@ static QSOperator::Op baseOp(int op)
     case QSOperator::InplaceAdd: return QSOperator::Add;
     case QSOperator::InplaceLeftShift: return QSOperator::LShift;
     case QSOperator::InplaceMod: return QSOperator::Mod;
+    case QSOperator::InplaceExp: return QSOperator::Exp;
     case QSOperator::InplaceMul: return QSOperator::Mul;
     case QSOperator::InplaceOr: return QSOperator::BitOr;
     case QSOperator::InplaceRightShift: return QSOperator::RShift;
@@ -836,6 +837,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::InplaceAdd:
     case QSOperator::InplaceLeftShift:
     case QSOperator::InplaceMod:
+    case QSOperator::InplaceExp:
     case QSOperator::InplaceMul:
     case QSOperator::InplaceOr:
     case QSOperator::InplaceRightShift:
@@ -885,6 +887,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::StrictNotEqual:
     case QSOperator::Add:
     case QSOperator::Div:
+    case QSOperator::Exp:
     case QSOperator::Mod:
     case QSOperator::Mul:
     case QSOperator::Sub:
@@ -935,6 +938,14 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
             sub.lhs = left.stackSlot();
             bytecodeGenerator->addInstruction(sub);
         }
+        break;
+    }
+    case QSOperator::Exp: {
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        Instruction::Exp exp;
+        exp.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(exp);
         break;
     }
     case QSOperator::Mul: {

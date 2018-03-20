@@ -63,7 +63,8 @@
 %token T_RBRACE "}"             T_RBRACKET "]"              T_REMAINDER "%"
 %token T_REMAINDER_EQ "%="      T_RETURN "return"           T_RPAREN ")"
 %token T_SEMICOLON ";"          T_AUTOMATIC_SEMICOLON       T_STAR "*"
-%token T_STAR_STAR "**"         T_STAR_EQ "*="              T_STRING_LITERAL "string literal"
+%token T_STAR_STAR "**"         T_STAR_STAR_EQ "**="        T_STAR_EQ "*="
+%token T_STRING_LITERAL "string literal"
 %token T_PROPERTY "property"    T_SIGNAL "signal"           T_READONLY "readonly"
 %token T_SWITCH "switch"        T_THIS "this"               T_THROW "throw"
 %token T_TILDE "~"              T_TRY "try"                 T_TYPEOF "typeof"
@@ -2186,7 +2187,13 @@ UnaryExpression: T_NOT UnaryExpression;
 ExponentiationExpression: UnaryExpression;
 
 ExponentiationExpression: UpdateExpression T_STAR_STAR ExponentiationExpression;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.
+    case $rule_number: {
+        AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::Exp, sym(3).Expression);
+        node->operatorToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
 
 MultiplicativeExpression: ExponentiationExpression;
 
@@ -2486,6 +2493,13 @@ AssignmentOperator: T_STAR_EQ;
 /.
     case $rule_number: {
         sym(1).ival = QSOperator::InplaceMul;
+    } break;
+./
+
+AssignmentOperator: T_STAR_STAR_EQ;
+/.
+    case $rule_number: {
+        sym(1).ival = QSOperator::InplaceExp;
     } break;
 ./
 

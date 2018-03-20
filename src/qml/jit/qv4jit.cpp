@@ -912,6 +912,22 @@ void BaselineJIT::generate_UShrConst(int rhs) { as->ushrConst(rhs); }
 void BaselineJIT::generate_ShrConst(int rhs) { as->shrConst(rhs); }
 void BaselineJIT::generate_ShlConst(int rhs) { as->shlConst(rhs); }
 
+static ReturnedValue expHelper(const Value &base, const Value &exp)
+{
+    double b = base.toNumber();
+    double e = exp.toNumber();
+    return QV4::Encode(pow(b,e));
+}
+
+void BaselineJIT::generate_Exp(int lhs) {
+    STORE_IP();
+    STORE_ACC();
+    as->prepareCallWithArgCount(2);
+    as->passAccumulatorAsArg(1);
+    as->passRegAsArg(lhs, 0);
+    JIT_GENERATE_RUNTIME_CALL(expHelper, Assembler::ResultInAccumulator);
+    as->checkException();
+}
 void BaselineJIT::generate_Mul(int lhs) { as->mul(lhs); }
 void BaselineJIT::generate_Div(int lhs) { as->div(lhs); }
 void BaselineJIT::generate_Mod(int lhs) { as->mod(lhs); }
@@ -1334,6 +1350,9 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(ShlConst)
         MOTH_END_INSTR(ShlConst)
+
+        MOTH_BEGIN_INSTR(Exp)
+        MOTH_END_INSTR(Exp)
 
         MOTH_BEGIN_INSTR(Mul)
         MOTH_END_INSTR(Mul)
