@@ -2821,7 +2821,7 @@ LexicalBinding: BindingPattern Initializer;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
 LexicalBinding_In: BindingPattern Initializer_In;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
-VariableDeclaration: BindingPattern InitializerOpt;
+VariableDeclaration: BindingPattern Initializer;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
 VariableDeclaration_In: BindingPattern Initializer_In;
 /.  case $rule_number: { UNIMPLEMENTED; } ./
@@ -3511,8 +3511,7 @@ FunctionRBrace: T_RBRACE;
 ./
 
 
-FunctionBody: FunctionStatementList;
-FunctionStatementList: StatementListOpt;
+FunctionBody: StatementListOpt;
 
 ArrowFunction: ArrowParameters T_ARROW ConciseBodyLookahead AssignmentExpression; -- [lookahead ≠ {]
 /.  case $rule_number: Q_FALLTHROUGH(); ./
