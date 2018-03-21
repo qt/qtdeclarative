@@ -223,17 +223,28 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
     return cg.generateCompilationUnit(/*generate unit data*/false);
 }
 
-Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl)
+Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl, QString *error)
 {
-    if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(originalUrl)) {
+    if (error)
+        error->clear();
+
+    QQmlMetaType::CachedUnitLookupError cacheError = QQmlMetaType::CachedUnitLookupError::NoError;
+    if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(originalUrl, &cacheError)) {
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> jsUnit;
         jsUnit.adopt(new QV4::CompiledData::CompilationUnit(cachedUnit));
         return new QV4::Script(engine, qmlContext, jsUnit);
     }
 
     QFile f(fileName);
-    if (!f.open(QIODevice::ReadOnly))
+    if (!f.open(QIODevice::ReadOnly)) {
+        if (error) {
+            if (cacheError == QQmlMetaType::CachedUnitLookupError::VersionMismatch)
+                *error = originalUrl.toString() + QString::fromUtf8(" was compiled ahead of time with an incompatible version of Qt and the original source code cannot be found. Please recompile");
+            else
+                *error = QString::fromUtf8("Error opening source file %1: %2").arg(originalUrl.toString()).arg(f.errorString());
+        }
         return nullptr;
+    }
 
     QByteArray data = f.readAll();
     QString sourceCode = QString::fromUtf8(data);

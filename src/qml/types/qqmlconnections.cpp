@@ -288,9 +288,17 @@ void QQmlConnections::connectSignals()
                 new QQmlBoundSignal(target, signalIndex, this, qmlEngine(this));
             signal->setEnabled(d->enabled);
 
-            QQmlBoundSignalExpression *expression = ctxtdata ?
-                new QQmlBoundSignalExpression(target, signalIndex,
-                                              ctxtdata, this, d->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex]) : nullptr;
+            auto f = d->compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
+
+            // If the function is marked as having a nested function, then the user wrote:
+            //   onSomeSignal: function() { /*....*/ }
+            // So take that nested function:
+            if (auto closure = f->nestedFunction())
+                f = closure;
+
+            QQmlBoundSignalExpression *expression =
+                    ctxtdata ? new QQmlBoundSignalExpression(target, signalIndex, ctxtdata, this, f)
+                             : nullptr;
             signal->takeExpression(expression);
             d->boundsignals += signal;
         } else {

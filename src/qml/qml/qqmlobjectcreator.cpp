@@ -55,6 +55,7 @@
 #include <private/qqmlvaluetypeproxybinding_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qjsvalue_p.h>
 
 QT_USE_NAMESPACE
 
@@ -878,6 +879,14 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
     if (binding->type == QV4::CompiledData::Binding::Type_Script || binding->containsTranslations()) {
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
             QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
+
+            // When a user writes the following:
+            //    onSignal: function() { doSomethingUsefull }
+            // then do not run the binding that returns the closure, but run the closure
+            // instead.
+            if (auto closure = runtimeFunction->nestedFunction())
+                runtimeFunction = closure;
+
             int signalIndex = _propertyCache->methodIndexToSignalIndex(bindingProperty->coreIndex());
             QQmlBoundSignal *bs = new QQmlBoundSignal(_bindingTarget, signalIndex, _scopeObject, engine);
             QQmlBoundSignalExpression *expr = new QQmlBoundSignalExpression(_bindingTarget, signalIndex,
@@ -1036,6 +1045,17 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 _vmeMetaObject->setVMEProperty(bindingProperty->coreIndex(), wrappedObject);
             } else {
                 QVariant value = QVariant::fromValue(createdSubObject);
+                argv[0] = &value;
+                QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, bindingProperty->coreIndex(), argv);
+            }
+        } else if (bindingProperty->propType() == qMetaTypeId<QJSValue>()) {
+            QV4::Scope scope(v4);
+            QV4::ScopedValue wrappedObject(scope, QV4::QObjectWrapper::wrap(engine->handle(), createdSubObject));
+            if (bindingProperty->isVarProperty()) {
+                _vmeMetaObject->setVMEProperty(bindingProperty->coreIndex(), wrappedObject);
+            } else {
+                QJSValue value;
+                QJSValuePrivate::setValue(&value, v4, wrappedObject);
                 argv[0] = &value;
                 QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, bindingProperty->coreIndex(), argv);
             }

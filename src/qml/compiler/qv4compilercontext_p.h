@@ -144,6 +144,7 @@ struct Context {
     bool usesThis = false;
     bool hasTry = false;
     bool hasWith = false;
+    bool returnsClosure = false;
     mutable bool argumentsCanEscape = false;
 
     enum UsesArgumentsObject {

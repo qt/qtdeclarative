@@ -33,6 +33,7 @@
 #include <QProcess>
 #include <QLibraryInfo>
 #include <QSysInfo>
+#include <QLoggingCategory>
 #include <private/qqmlcomponent_p.h>
 
 class tst_qmlcachegen: public QObject
@@ -47,6 +48,8 @@ private slots:
     void signalHandlerParameters();
     void errorOnArgumentsInSignalHandler();
     void aheadOfTimeCompilation();
+    void functionExpressions();
+    void versionChecksForAheadOfTimeUnits();
 
     void workerScripts();
 };
@@ -279,6 +282,50 @@ void tst_qmlcachegen::aheadOfTimeCompilation()
     QCOMPARE(result.toInt(), 42);
 }
 
+static QQmlPrivate::CachedQmlUnit *temporaryModifiedCachedUnit = nullptr;
+
+void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
+{
+    QVERIFY(QFile::exists(":/versionchecks.qml"));
+    QCOMPARE(QFileInfo(":/versionchecks.qml").size(), 0);
+
+    Q_ASSERT(!temporaryModifiedCachedUnit);
+    QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
+    const QV4::CompiledData::Unit *originalUnit = QQmlMetaType::findCachedCompilationUnit(QUrl("qrc:/versionchecks.qml"), &error);
+    QVERIFY(originalUnit);
+    QV4::CompiledData::Unit *tweakedUnit = (QV4::CompiledData::Unit *)malloc(originalUnit->unitSize);
+    memcpy(reinterpret_cast<void *>(tweakedUnit), reinterpret_cast<const void *>(originalUnit), originalUnit->unitSize);
+    tweakedUnit->version = QV4_DATA_STRUCTURE_VERSION - 1;
+    temporaryModifiedCachedUnit = new QQmlPrivate::CachedQmlUnit{tweakedUnit, nullptr, nullptr};
+
+    auto testHandler = [](const QUrl &url) -> const QQmlPrivate::CachedQmlUnit * {
+        if (url == QUrl("qrc:/versionchecks.qml"))
+            return temporaryModifiedCachedUnit;
+        return nullptr;
+    };
+    QQmlMetaType::prependCachedUnitLookupFunction(testHandler);
+
+    {
+        QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
+        QVERIFY(!QQmlMetaType::findCachedCompilationUnit(QUrl("qrc:/versionchecks.qml"), &error));
+        QCOMPARE(error, QQmlMetaType::CachedUnitLookupError::VersionMismatch);
+    }
+
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl("qrc:/versionchecks.qml"));
+        QCOMPARE(component.status(), QQmlComponent::Error);
+        QCOMPARE(component.errorString(), QString("qrc:/versionchecks.qml:-1 File was compiled ahead of time with an incompatible version of Qt and the original file cannot be found. Please recompile\n"));
+    }
+
+    Q_ASSERT(temporaryModifiedCachedUnit);
+    free(const_cast<QV4::CompiledData::Unit *>(temporaryModifiedCachedUnit->qmlData));
+    delete temporaryModifiedCachedUnit;
+    temporaryModifiedCachedUnit = nullptr;
+
+    QQmlMetaType::removeCachedUnitLookupFunction(testHandler);
+}
+
 void tst_qmlcachegen::workerScripts()
 {
     QVERIFY(QFile::exists(":/workerscripts/worker.js"));
@@ -290,6 +337,69 @@ void tst_qmlcachegen::workerScripts()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QTRY_VERIFY(obj->property("success").toBool());
+}
+
+void tst_qmlcachegen::functionExpressions()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const auto writeTempFile = [&tempDir](const QString &fileName, const char *contents) {
+        QFile f(tempDir.path() + '/' + fileName);
+        const bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        Q_ASSERT(ok);
+        f.write(contents);
+        return f.fileName();
+    };
+
+    const QString testFilePath = writeTempFile(
+                "test.qml",
+                "import QtQuick 2.0\n"
+                "Item {\n"
+                "    id: di\n"
+                "    \n"
+                "    property var f\n"
+                "    property bool f_called: false\n"
+                "    f : function() { f_called = true }\n"
+                "    \n"
+                "    signal g\n"
+                "    property bool g_handler_called: false\n"
+                "    onG: function() { g_handler_called = true }\n"
+                "    \n"
+                "    signal h(int i)\n"
+                "    property bool h_connections_handler_called: false\n"
+                "    Connections {\n"
+                "        target: di\n"
+                "        onH: function(magic) { h_connections_handler_called = (magic == 42)\n }\n"
+                "    }\n"
+                "    \n"
+                "    function runTest() { \n"
+                "        f()\n"
+                "        g()\n"
+                "        h(42)\n"
+                "    }\n"
+                "}");
+
+    QVERIFY(generateCache(testFilePath));
+
+    const QString cacheFilePath = testFilePath + QLatin1Char('c');
+    QVERIFY(QFile::exists(cacheFilePath));
+    QVERIFY(QFile::remove(testFilePath));
+
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+
+    QCOMPARE(obj->property("f_called").toBool(), false);
+    QCOMPARE(obj->property("g_handler_called").toBool(), false);
+    QCOMPARE(obj->property("h_connections_handler_called").toBool(), false);
+
+    QMetaObject::invokeMethod(obj.data(), "runTest");
+
+    QCOMPARE(obj->property("f_called").toBool(), true);
+    QCOMPARE(obj->property("g_handler_called").toBool(), true);
+    QCOMPARE(obj->property("h_connections_handler_called").toBool(), true);
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)

@@ -70,17 +70,13 @@
 
 #include <algorithm>
 
-#if defined(QT_BUILD_INTERNAL)
-#if defined(Q_OS_UNIX) && !defined(QT_NO_DYNAMIC_CAST)
-#include <dlfcn.h>
-#endif
-#endif
-
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
 namespace CompiledData {
+
+static_assert(sizeof(Unit::libraryVersionHash) >= QML_COMPILE_HASH_LENGTH + 1, "Compile hash length exceeds reserved size in data structure. Please adjust and bump the format version");
 
 #if !defined(V4_BOOTSTRAP)
 static QString cacheFilePath(const QUrl &url)
@@ -686,40 +682,12 @@ void ResolvedTypeReference::doDynamicTypeCheck()
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }
 
-static QByteArray ownLibraryChecksum()
-{
-    static QByteArray libraryChecksum;
-    static bool checksumInitialized = false;
-    if (checksumInitialized)
-        return libraryChecksum;
-    checksumInitialized = true;
-#if defined(QT_BUILD_INTERNAL) && !defined(QT_NO_DYNAMIC_CAST) && QT_CONFIG(dlopen)
-    // This is a bit of a hack to make development easier. When hacking on the code generator
-    // the cache files may end up being re-used. To avoid that we also add the checksum of
-    // the QtQml library.
-    Dl_info libInfo;
-    if (dladdr(reinterpret_cast<void *>(&ownLibraryChecksum), &libInfo) != 0) {
-        QFile library(QFile::decodeName(libInfo.dli_fname));
-        if (library.open(QIODevice::ReadOnly)) {
-            QCryptographicHash hash(QCryptographicHash::Md5);
-            hash.addData(&library);
-            libraryChecksum = hash.result();
-        }
-    }
-#else
-    libraryChecksum = QByteArray(QML_COMPILE_HASH);
-#endif
-    return libraryChecksum;
-}
-
 bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *engine) const
 {
     for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
         if (!it.value()->addToHash(hash, engine))
             return false;
     }
-
-    hash->addData(ownLibraryChecksum());
 
     return true;
 }
@@ -752,6 +720,53 @@ void Unit::generateChecksum()
     memcpy(md5Checksum, checksum.constData(), sizeof(md5Checksum));
 #else
     memset(md5Checksum, 0, sizeof(md5Checksum));
+#endif
+}
+
+bool Unit::verifyHeader(QDateTime expectedSourceTimeStamp, QString *errorString) const
+{
+#ifndef V4_BOOTSTRAP
+    if (strncmp(magic, CompiledData::magic_str, sizeof(magic))) {
+        *errorString = QStringLiteral("Magic bytes in the header do not match");
+        return false;
+    }
+
+    if (version != quint32(QV4_DATA_STRUCTURE_VERSION)) {
+        *errorString = QString::fromUtf8("V4 data structure version mismatch. Found %1 expected %2").arg(version, 0, 16).arg(QV4_DATA_STRUCTURE_VERSION, 0, 16);
+        return false;
+    }
+
+    if (qtVersion != quint32(QT_VERSION)) {
+        *errorString = QString::fromUtf8("Qt version mismatch. Found %1 expected %2").arg(qtVersion, 0, 16).arg(QT_VERSION, 0, 16);
+        return false;
+    }
+
+    if (sourceTimeStamp) {
+        // Files from the resource system do not have any time stamps, so fall back to the application
+        // executable.
+        if (!expectedSourceTimeStamp.isValid())
+            expectedSourceTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
+
+        if (expectedSourceTimeStamp.isValid() && expectedSourceTimeStamp.toMSecsSinceEpoch() != sourceTimeStamp) {
+            *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
+            return false;
+        }
+    }
+
+#if defined(QML_COMPILE_HASH)
+    if (qstrcmp(QML_COMPILE_HASH, libraryVersionHash) != 0) {
+        *errorString = QStringLiteral("QML library version mismatch. Expected compile hash does not match");
+        return false;
+    }
+#else
+#error "QML_COMPILE_HASH must be defined for the build of QtDeclarative to ensure version checking for cache files"
+#endif
+
+    return true;
+#else
+    Q_UNUSED(expectedSourceTimeStamp)
+    Q_UNUSED(errorString)
+    return false;
 #endif
 }
 
