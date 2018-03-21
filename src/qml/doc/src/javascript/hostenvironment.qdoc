@@ -154,10 +154,11 @@ This restriction exists as the QML environment is not yet fully established.
 To run code after the environment setup has completed, see
 \l {JavaScript in Application Startup Code}.
 
-\li The value of \c this is currently undefined in QML in the majority of contexts.
+\li The value of \c this is undefined in QML in the majority of contexts.
 
 The \c this keyword is supported when binding properties from JavaScript.
-In all other situations, the value of
+In QML binding expressions, QML signal handlers, and QML declared functions,
+\c this refers to the scope object. In all other situations, the value of
 \c this is undefined in QML.
 
 To refer to a specific object, provide an \c id.  For example:
@@ -168,19 +169,16 @@ Item {
     function mouseAreaClicked(area) {
         console.log("Clicked in area at: " + area.x + ", " + area.y);
     }
-    // This will not work because this is undefined
+    // This will pass area to the function
     MouseArea {
-        height: 50; width: 200
-        onClicked: mouseAreaClicked(this)
-    }
-    // This will pass area2 to the function
-    MouseArea {
-        id: area2
+        id: area
         y: 50; height: 50; width: 200
-        onClicked: mouseAreaClicked(area2)
+        onClicked: mouseAreaClicked(area)
     }
 }
 \endqml
+
+\sa {Scope and Naming Resolution}
 
 \endlist
 
