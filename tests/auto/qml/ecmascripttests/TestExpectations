@@ -9130,6 +9130,15 @@ language/statements/try/dstr-obj-ptrn-prop-obj
 language/statements/try/dstr-obj-ptrn-prop-obj-init
 language/statements/try/dstr-obj-ptrn-prop-obj-value-null
 language/statements/try/dstr-obj-ptrn-prop-obj-value-undef
+language/statements/try/dstr-ary-ptrn-elem-ary-empty-iter
+language/statements/try/dstr-ary-ptrn-elem-id-init-throws
+language/statements/try/dstr-obj-ptrn-empty
+language/statements/try/dstr-obj-ptrn-id-get-value-err
+language/statements/try/dstr-obj-ptrn-id-init-throws
+language/statements/try/dstr-obj-ptrn-list-err
+language/statements/try/dstr-obj-ptrn-prop-eval-err
+language/statements/try/dstr-obj-ptrn-prop-id-get-value-err
+language/statements/try/dstr-obj-ptrn-prop-id-init-throws
 language/statements/try/scope-catch-block-lex-close
 language/statements/try/scope-catch-block-lex-open
 language/statements/try/scope-catch-param-lex-open

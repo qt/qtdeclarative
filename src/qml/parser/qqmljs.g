@@ -3342,7 +3342,9 @@ Finally: T_FINALLY Block;
 ./
 
 CatchParameter: BindingIdentifier;
+
 CatchParameter: BindingPattern;
+/.  case $rule_number: { UNIMPLEMENTED; } ./
 
 DebuggerStatement: T_DEBUGGER T_AUTOMATIC_SEMICOLON; -- automatic semicolon
 DebuggerStatement: T_DEBUGGER T_SEMICOLON;
