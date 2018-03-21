@@ -51,6 +51,7 @@
 #include <QtCore/qbitarray.h>
 #include <QtCore/qreadwritelock.h>
 #include <QtCore/private/qmetaobject_p.h>
+#include <QtCore/qloggingcategory.h>
 
 #include <qmetatype.h>
 #include <qobjectdefs.h>
@@ -62,6 +63,8 @@
 
 #include <ctype.h>
 #include "qqmlcomponent.h"
+
+Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
 
 QT_BEGIN_NAMESPACE
 
@@ -2539,16 +2542,44 @@ QList<QQmlType> QQmlMetaType::qmlSingletonTypes()
     return retn;
 }
 
-const QV4::CompiledData::Unit *QQmlMetaType::findCachedCompilationUnit(const QUrl &uri)
+const QV4::CompiledData::Unit *QQmlMetaType::findCachedCompilationUnit(const QUrl &uri, CachedUnitLookupError *status)
 {
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
     for (const auto lookup : qAsConst(data->lookupCachedQmlUnit)) {
-        if (const QQmlPrivate::CachedQmlUnit *unit = lookup(uri))
+        if (const QQmlPrivate::CachedQmlUnit *unit = lookup(uri)) {
+            QString error;
+            if (!unit->qmlData->verifyHeader(QDateTime(), &error)) {
+                qCDebug(DBG_DISK_CACHE) << "Error loading pre-compiled file " << uri << ":" << error;
+                if (status)
+                    *status = CachedUnitLookupError::VersionMismatch;
+                return nullptr;
+            }
+            if (status)
+                *status = CachedUnitLookupError::NoError;
             return unit->qmlData;
+        }
     }
+
+    if (status)
+        *status = CachedUnitLookupError::NoUnitFound;
+
     return nullptr;
+}
+
+void QQmlMetaType::prependCachedUnitLookupFunction(QQmlPrivate::QmlUnitCacheLookupFunction handler)
+{
+    QMutexLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+    data->lookupCachedQmlUnit.prepend(handler);
+}
+
+void QQmlMetaType::removeCachedUnitLookupFunction(QQmlPrivate::QmlUnitCacheLookupFunction handler)
+{
+    QMutexLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+    data->lookupCachedQmlUnit.removeAll(handler);
 }
 
 /*!

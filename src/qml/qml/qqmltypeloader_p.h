@@ -140,11 +140,13 @@ public:
         QString readAll(QString *error) const;
         QDateTime sourceTimeStamp() const;
         bool exists() const;
+        bool isEmpty() const;
     private:
         friend class QQmlDataBlob;
         friend class QQmlTypeLoader;
         QString inlineSourceCode;
         QFileInfo fileInfo;
+        bool hasInlineSourceCode = false;
     };
 
 protected:
@@ -228,12 +230,16 @@ class QQmlTypeLoaderQmldirContent
 {
 private:
     friend class QQmlTypeLoader;
-    QQmlTypeLoaderQmldirContent();
 
     void setContent(const QString &location, const QString &content);
     void setError(const QQmlError &);
 
 public:
+    QQmlTypeLoaderQmldirContent();
+    QQmlTypeLoaderQmldirContent(const QQmlTypeLoaderQmldirContent &) = default;
+    QQmlTypeLoaderQmldirContent &operator=(const QQmlTypeLoaderQmldirContent &) = default;
+
+    bool hasContent() const { return m_hasContent; }
     bool hasError() const;
     QList<QQmlError> errors(const QString &uri) const;
 
@@ -250,6 +256,7 @@ public:
 private:
     QQmlDirParser m_parser;
     QString m_location;
+    bool m_hasContent = false;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlTypeLoader
@@ -265,6 +272,8 @@ public:
         ~Blob() override;
 
         const QQmlImports &imports() const { return m_importCache; }
+
+        void setCachedUnitStatus(QQmlMetaType::CachedUnitLookupError status) { m_cachedUnitStatus = status; }
 
     protected:
         bool addImport(const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
@@ -288,6 +297,7 @@ public:
         QQmlImports m_importCache;
         QHash<const QV4::CompiledData::Import*, int> m_unresolvedImports;
         QList<QQmlQmldirData *> m_qmldirs;
+        QQmlMetaType::CachedUnitLookupError m_cachedUnitStatus = QQmlMetaType::CachedUnitLookupError::NoError;
     };
 
     QQmlTypeLoader(QQmlEngine *);
@@ -304,7 +314,7 @@ public:
     QString absoluteFilePath(const QString &path);
     bool directoryExists(const QString &path);
 
-    const QQmlTypeLoaderQmldirContent *qmldirContent(const QString &filePath);
+    const QQmlTypeLoaderQmldirContent qmldirContent(const QString &filePath);
     void setQmldirContent(const QString &filePath, const QString &content);
 
     void clearCache();

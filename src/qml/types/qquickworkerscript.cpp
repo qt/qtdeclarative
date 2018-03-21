@@ -400,9 +400,11 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, getWorker(script));
     Q_ASSERT(!!qmlContext);
 
-    program.reset(QV4::Script::createFromFileOrCache(v4, qmlContext, fileName, url));
+    QString error;
+    program.reset(QV4::Script::createFromFileOrCache(v4, qmlContext, fileName, url, &error));
     if (program.isNull()) {
-        qWarning().nospace() << "WorkerScript: Cannot find source file " << url.toString();
+        if (!error.isEmpty())
+            qWarning().nospace() << error;
         return;
     }
 

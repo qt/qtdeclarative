@@ -40,8 +40,6 @@ SOURCES += \
 
 unix: SOURCES += $$PWD/qv4compilationunitmapper_unix.cpp
 else: SOURCES += $$PWD/qv4compilationunitmapper_win.cpp
-
-qtConfig(private_tests):qtConfig(dlopen): QMAKE_USE_PRIVATE += libdl
 }
 
 gcc {

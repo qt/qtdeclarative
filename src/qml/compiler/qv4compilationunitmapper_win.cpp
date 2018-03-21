@@ -87,7 +87,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         return nullptr;
     }
 
-    if (!verifyHeader(&header, sourceTimeStamp, errorString))
+    if (!header.verifyHeader(sourceTimeStamp, errorString))
         return nullptr;
 
     const uint mappingFlags = header.flags & QV4::CompiledData::Unit::ContainsMachineCode
