@@ -1400,14 +1400,15 @@ public:
     QQMLJS_DECLARE_AST_NODE(VariableDeclaration)
 
     enum VariableScope {
+        UnknownScope,
         FunctionScope,
         BlockScope, // let
         ReadOnlyBlockScope // const
     };
 
-    VariableDeclaration(const QStringRef &n, ExpressionNode *e, VariableScope s):
-        name (n), expression (e), scope(s)
-        { kind = K; }
+    VariableDeclaration(const QStringRef &n, ExpressionNode *e)
+        : name(n), expression(e)
+    { kind = K; }
 
     bool isLexicallyScoped() const { return scope != FunctionScope; }
 
@@ -1423,7 +1424,7 @@ public:
     QStringRef name;
     ExpressionNode *expression;
     SourceLocation identifierToken;
-    VariableScope scope;
+    VariableScope scope = UnknownScope;
 };
 
 class QML_PARSER_EXPORT VariableDeclarationList: public Node

@@ -2810,8 +2810,7 @@ VariableDeclaration: BindingIdentifier InitializerOpt;
 VariableDeclaration_In: BindingIdentifier InitializerOpt_In;
 /.
     case $rule_number: {
-        AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::FunctionScope;
-        AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(1), sym(2).Expression, s);
+        AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(1), sym(2).Expression);
         node->identifierToken = loc(1);
         sym(1).Node = node;
     } break;
@@ -3131,8 +3130,8 @@ ForDeclaration: LetOrConst ForBinding;
 ForDeclaration: Var ForBinding;
 /.
     case $rule_number: {
-        AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::VariableScope(sym(1).ival);
-        auto *node = new (pool) AST::VariableDeclaration(stringRef(2), nullptr, s);
+        AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(2), nullptr);
+        node->scope = AST::VariableDeclaration::VariableScope(sym(1).ival);
         node->identifierToken = loc(2);
         sym(1).Node = node;
     } break;
