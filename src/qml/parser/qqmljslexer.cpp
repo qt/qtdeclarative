@@ -628,7 +628,7 @@ again:
         } else if (_char == QLatin1Char('-')) {
             scanChar();
 
-            if (_terminator && !_delimited && !_prohibitAutomaticSemicolon) {
+            if (_terminator && !_delimited && !_prohibitAutomaticSemicolon && _tokenKind != T_LPAREN) {
                 _stackToken = T_MINUS_MINUS;
                 return T_SEMICOLON;
             }
@@ -646,7 +646,7 @@ again:
         } else if (_char == QLatin1Char('+')) {
             scanChar();
 
-            if (_terminator && !_delimited && !_prohibitAutomaticSemicolon) {
+            if (_terminator && !_delimited && !_prohibitAutomaticSemicolon && _tokenKind != T_LPAREN) {
                 _stackToken = T_PLUS_PLUS;
                 return T_SEMICOLON;
             }

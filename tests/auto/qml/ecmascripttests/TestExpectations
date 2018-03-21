@@ -5498,7 +5498,6 @@ language/expressions/equals/symbol-strict-equality-comparison
 language/expressions/equals/to-prim-hint
 language/expressions/exponentiation/applying-the-exp-operator_A7
 language/expressions/exponentiation/applying-the-exp-operator_A8
-language/expressions/exponentiation/exp-operator-precedence-update-expression-semantics
 language/expressions/exponentiation/order-of-evaluation
 language/expressions/function/arguments-with-arguments-fn
 language/expressions/function/arguments-with-arguments-lex

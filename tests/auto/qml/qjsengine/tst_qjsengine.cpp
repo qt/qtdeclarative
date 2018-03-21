@@ -208,6 +208,8 @@ private slots:
     void binaryNumbers();
     void octalNumbers();
 
+    void incrementAfterNewline();
+
 signals:
     void testSignal();
 };
@@ -4190,6 +4192,19 @@ void tst_QJSEngine::octalNumbers()
 
     result = engine.evaluate("0o9");
     QVERIFY(result.isError());
+}
+
+void tst_QJSEngine::incrementAfterNewline()
+{
+    QJSEngine engine;
+
+    QJSValue result = engine.evaluate("var x = 0; if (\n++x) x; else -x;");
+    QVERIFY(result.isNumber());
+    QVERIFY(result.toNumber() == 1);
+
+    result = engine.evaluate("var x = 0; if (\n--x) x; else -x;");
+    QVERIFY(result.isNumber());
+    QVERIFY(result.toNumber() == -1);
 }
 
 QTEST_MAIN(tst_QJSEngine)
