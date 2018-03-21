@@ -1648,6 +1648,13 @@ ElementList: Elision AssignmentExpression_In;
 ./
 
 ElementList: ElisionOpt SpreadElement;
+/.
+    case $rule_number: {
+        AST::ElementList *node = new (pool) AST::ElementList(sym(1).Elision, sym(2).Expression);
+        node->isSpreadElement = true;
+        sym(1).Node = node;
+    } break;
+./
 
 ElementList: ElementList T_COMMA ElisionOpt AssignmentExpression_In;
 /.
@@ -1659,6 +1666,14 @@ ElementList: ElementList T_COMMA ElisionOpt AssignmentExpression_In;
 ./
 
 ElementList: ElementList T_COMMA ElisionOpt SpreadElement;
+/.
+    case $rule_number: {
+        AST::ElementList *node = new (pool) AST::ElementList(sym(1).ElementList, sym(3).Elision, sym(4).Expression);
+        node->commaToken = loc(2);
+        node->isSpreadElement = true;
+        sym(1).Node = node;
+    } break;
+./
 
 Elision: T_COMMA;
 /.
@@ -1693,7 +1708,11 @@ ElisionOpt: Elision;
 ./
 
 SpreadElement: T_ELLIPSIS AssignmentExpression;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.
+    case $rule_number: {
+        sym(1).Node = sym(2).Node;
+    } break;
+./
 
 ObjectLiteral: T_LBRACE T_RBRACE;
 /.

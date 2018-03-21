@@ -639,6 +639,7 @@ public:
     ExpressionNode *expression;
     ElementList *next;
     SourceLocation commaToken;
+    bool isSpreadElement = false;
 };
 
 class QML_PARSER_EXPORT PropertyName: public Node

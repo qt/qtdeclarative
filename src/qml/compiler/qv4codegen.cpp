@@ -668,6 +668,10 @@ bool Codegen::visit(ArrayLiteral *ast)
     };
 
     for (ElementList *it = ast->elements; it; it = it->next) {
+        if (it->isSpreadElement) {
+            throwSyntaxError(it->firstSourceLocation(), QLatin1String("'...' in ArrayLiterals is unimplementd."));
+            return false;
+        }
 
         for (Elision *elision = it->elision; elision; elision = elision->next)
             push(nullptr);
