@@ -1129,6 +1129,34 @@ void ComputedPropertyName::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+void ClassExpression::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(heritage, visitor);
+        accept(elements, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void ClassElementList::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(property, visitor);
+        if (next)
+            accept(next, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+ClassElementList *ClassElementList::finish()
+{
+    ClassElementList *front = next;
+    next = nullptr;
+    return front;
+}
+
 } } // namespace QQmlJS::AST
 
 QT_QML_END_NAMESPACE

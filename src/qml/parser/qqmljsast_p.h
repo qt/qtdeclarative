@@ -159,6 +159,7 @@ public:
         Kind_FunctionBody,
         Kind_FunctionDeclaration,
         Kind_FunctionExpression,
+        Kind_ClassExpression,
         Kind_IdentifierExpression,
         Kind_IdentifierPropertyName,
         Kind_ComputedPropertyName,
@@ -212,6 +213,7 @@ public:
         Kind_BindingElementList,
         Kind_BindingPropertyList,
         Kind_BindingRestElement,
+        Kind_ClassElementList,
 
         Kind_UiArrayBinding,
         Kind_UiImport,
@@ -2437,6 +2439,70 @@ public:
 // attributes
     Node *param = nullptr;
     FormalParameterList *next;
+};
+
+class QML_PARSER_EXPORT ClassExpression : public ExpressionNode
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ClassExpression)
+
+    ClassExpression(const QStringRef &n, ExpressionNode *heritage, ClassElementList *elements)
+        : name(n), heritage(heritage), elements(elements)
+        { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return classToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return rbraceToken; }
+
+// attributes
+    QStringRef name;
+    ExpressionNode *heritage;
+    ClassElementList *elements;
+    SourceLocation classToken;
+    SourceLocation identifierToken;
+    SourceLocation lbraceToken;
+    SourceLocation rbraceToken;
+};
+
+class QML_PARSER_EXPORT ClassElementList : public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ClassElementList)
+
+    ClassElementList(PropertyDefinition *property, bool isStatic)
+        : isStatic(isStatic), property(property)
+    {
+        kind = K;
+        next = this;
+    }
+
+    ClassElementList *append(ClassElementList *n) {
+        n->next = next;
+        next = n;
+        return n;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return property->firstSourceLocation(); }
+
+    SourceLocation lastSourceLocation() const override
+    {
+        if (next)
+            return next->lastSourceLocation();
+        return property->lastSourceLocation();
+    }
+
+    ClassElementList *finish();
+
+    bool isStatic;
+    ClassElementList *next;
+    PropertyDefinition *property;
 };
 
 class QML_PARSER_EXPORT Program: public Node

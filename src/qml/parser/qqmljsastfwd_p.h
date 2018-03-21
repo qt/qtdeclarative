@@ -170,6 +170,8 @@ class BindingElementList;
 class BindingPropertyList;
 class BindingElement;
 class BindingRestElement;
+class ClassExpression;
+class ClassElementList;
 
 // ui elements
 class UiProgram;

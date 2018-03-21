@@ -287,6 +287,7 @@ public:
       AST::BindingElement *BindingElement;
       AST::BindingPropertyList *BindingPropertyList;
       AST::BindingElementList *BindingElementList;
+      AST::ClassElementList *ClassElementList;
 
       AST::UiProgram *UiProgram;
       AST::UiHeaderItemList *UiHeaderItemList;
@@ -3763,16 +3764,34 @@ YieldExpression_In: T_YIELD AssignmentExpression_In;
 ./
 
 
-ClassDeclaration: T_CLASS BindingIdentifier ClassTail;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+ClassDeclaration: T_CLASS BindingIdentifier ClassHeritageOpt ClassLBrace ClassBodyOpt ClassRBrace;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+ClassExpression: T_CLASS BindingIdentifier ClassHeritageOpt ClassLBrace ClassBodyOpt ClassRBrace;
+/.
+    case $rule_number: {
+        AST::ClassExpression *node = new (pool) AST::ClassExpression(stringRef(2), sym(3).Expression, sym(5).ClassElementList);
+        node->classToken = loc(1);
+        node->identifierToken = loc(2);
+        node->lbraceToken = loc(4);
+        node->rbraceToken = loc(6);
+        sym(1).Node = node;
+    } break;
+./
+
+ClassDeclaration_Default: T_CLASS ClassHeritageOpt ClassLBrace ClassBodyOpt ClassRBrace;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+ClassExpression: T_CLASS ClassHeritageOpt ClassLBrace ClassBodyOpt ClassRBrace;
+/.
+    case $rule_number: {
+        AST::ClassExpression *node = new (pool) AST::ClassExpression(QStringRef(), sym(2).Expression, sym(4).ClassElementList);
+        node->classToken = loc(1);
+        node->lbraceToken = loc(3);
+        node->rbraceToken = loc(5);
+        sym(1).Node = node;
+    } break;
+./
 
 ClassDeclaration_Default: ClassDeclaration;
-ClassDeclaration_Default: T_CLASS ClassTail;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
-
-ClassExpression: T_CLASS BindingIdentifier ClassTail;
-
-ClassExpression: T_CLASS ClassTail;
 
 ClassLBrace: T_LBRACE;
 /.
@@ -3790,30 +3809,68 @@ ClassStaticQualifier: T_STATIC;
     } break;
 ./
 
-ClassTail: ClassLBrace ClassBodyOpt ClassRBrace;
-ClassTail: ClassHeritage ClassLBrace ClassBodyOpt ClassRBrace;
+ClassHeritageOpt: ;
+/.
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
+./
 
-ClassHeritage: T_EXTENDS LeftHandSideExpression;
-
-ClassBody: ClassElementList;
+ClassHeritageOpt: T_EXTENDS LeftHandSideExpression;
+/.
+    case $rule_number: {
+        sym(1).Node = sym(2).Node;
+    } break;
+./
 
 ClassBodyOpt: ;
+/.
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
+./
 
-ClassBodyOpt: ClassBody;
+ClassBodyOpt: ClassElementList;
+/.
+    case $rule_number: {
+        if (sym(1).Node)
+            sym(1).Node = sym(1).ClassElementList->finish();
+    } break;
+./
 
 ClassElementList: ClassElement;
+
 ClassElementList: ClassElementList ClassElement;
+/.
+    case $rule_number: {
+        if (sym(2).Node)
+            sym(1).ClassElementList = sym(1).ClassElementList->append(sym(2).ClassElementList);
+    } break;
+./
 
 ClassElement: MethodDefinition;
+/.
+    case $rule_number: {
+        AST::ClassElementList *node = new (pool) AST::ClassElementList(sym(1).PropertyDefinition, false);
+        sym(1).Node = node;
+    } break;
+./
 
 ClassElement: ClassStaticQualifier MethodDefinition;
 /.
     case $rule_number: {
         lexer->setStaticIsKeyword(true);
+        AST::ClassElementList *node = new (pool) AST::ClassElementList(sym(2).PropertyDefinition, true);
+        sym(1).Node = node;
     } break;
 ./
 
 ClassElement: T_SEMICOLON;
+/.
+    case $rule_number: {
+        sym(1).Node = nullptr;
+    } break;
+./
 
 -- Scripts and Modules
 

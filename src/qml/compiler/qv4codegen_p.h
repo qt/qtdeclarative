@@ -551,6 +551,7 @@ protected:
     bool visit(AST::UiQualifiedPragmaId *ast) override;
     bool visit(AST::VariableDeclaration *ast) override;
     bool visit(AST::VariableDeclarationList *ast) override;
+    bool visit(AST::ClassExpression *ast) override;
 
     // expressions
     bool visit(AST::Expression *ast) override;

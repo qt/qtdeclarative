@@ -634,6 +634,12 @@ bool Codegen::visit(VariableDeclarationList *)
     return false;
 }
 
+bool Codegen::visit(ClassExpression *ast)
+{
+    throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Support for 'class' is unimplemented."));
+    return false;
+}
+
 bool Codegen::visit(Expression *ast)
 {
     if (hasError)

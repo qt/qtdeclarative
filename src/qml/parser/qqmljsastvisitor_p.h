@@ -350,6 +350,12 @@ public:
     virtual bool visit(FormalParameterList *) { return true; }
     virtual void endVisit(FormalParameterList *) {}
 
+    virtual bool visit(ClassExpression *) { return true; }
+    virtual void endVisit(ClassExpression *) {}
+
+    virtual bool visit(ClassElementList *) { return true; }
+    virtual void endVisit(ClassElementList *) {}
+
     virtual bool visit(Program *) { return true; }
     virtual void endVisit(Program *) {}
 

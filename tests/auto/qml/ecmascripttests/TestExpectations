@@ -4669,6 +4669,8 @@ language/expressions/class/accessor-name-static-literal-string-hex-escape
 language/expressions/class/accessor-name-static-literal-string-line-continuation
 language/expressions/class/accessor-name-static-literal-string-single-quote
 language/expressions/class/accessor-name-static-literal-string-unicode-escape
+language/expressions/class/accessor-name-inst-computed-err-evaluation
+language/expressions/class/accessor-name-static-computed-err-evaluation
 language/expressions/class/async-meth-dflt-params-abrupt
 language/expressions/class/async-meth-dflt-params-arg-val-not-undefined
 language/expressions/class/async-meth-dflt-params-arg-val-undefined
