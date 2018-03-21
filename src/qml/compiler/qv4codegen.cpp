@@ -1407,8 +1407,13 @@ void Codegen::handleCall(Reference &base, Arguments calldata)
 Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
 {
     int argc = 0;
-    for (ArgumentList *it = args; it; it = it->next)
+    for (ArgumentList *it = args; it; it = it->next) {
+        if (it->isSpreadElement) {
+            throwSyntaxError(it->firstSourceLocation(), QLatin1String("'...' in argument lists is unimplemented."));
+            return { 0, 0 };
+        }
         ++argc;
+    }
 
     if (!argc)
         return { 0, 0 };
