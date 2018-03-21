@@ -15,6 +15,7 @@ HEADERS += \
     $$PWD/qquickcombobox_p.h \
     $$PWD/qquickcontainer_p.h \
     $$PWD/qquickcontainer_p_p.h \
+    $$PWD/qquickcontentitem_p.h \
     $$PWD/qquickcontrol_p.h \
     $$PWD/qquickcontrol_p_p.h \
     $$PWD/qquickdeferredexecute_p_p.h \
@@ -108,6 +109,7 @@ SOURCES += \
     $$PWD/qquickcheckdelegate.cpp \
     $$PWD/qquickcombobox.cpp \
     $$PWD/qquickcontainer.cpp \
+    $$PWD/qquickcontentitem.cpp \
     $$PWD/qquickcontrol.cpp \
     $$PWD/qquickdeferredexecute.cpp \
     $$PWD/qquickdelaybutton.cpp \

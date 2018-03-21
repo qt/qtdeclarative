@@ -38,6 +38,7 @@
 #include "qquickapplicationwindow_p.h"
 #include "qquickshortcutcontext_p_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickcontentitem_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickdeferredexecute_p_p.h"
 
@@ -113,7 +114,8 @@ QQuickItem *QQuickPopupItemPrivate::getContentItem()
     Q_Q(QQuickPopupItem);
     if (QQuickItem *item = QQuickControlPrivate::getContentItem())
         return item;
-    return new QQuickItem(q);
+
+    return new QQuickContentItem(QStringLiteral("Popup"), q);
 }
 
 static inline QString contentItemName() { return QStringLiteral("contentItem"); }

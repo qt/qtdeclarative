@@ -36,6 +36,7 @@
 
 #include "qquickpane_p.h"
 #include "qquickpane_p_p.h"
+#include "qquickcontentitem_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -122,7 +123,8 @@ QQuickItem *QQuickPanePrivate::getContentItem()
     Q_Q(QQuickPane);
     if (QQuickItem *item = QQuickControlPrivate::getContentItem())
         return item;
-    return new QQuickItem(q);
+
+    return new QQuickContentItem(QStringLiteral("Pane"), q);
 }
 
 void QQuickPanePrivate::addImplicitSizeListener(QQuickItem *item)

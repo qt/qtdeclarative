@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickapplicationwindow_p.h"
+#include "qquickcontentitem_p.h"
 #include "qquickoverlay_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickcontrol_p_p.h"
@@ -584,7 +585,7 @@ QQuickItem *QQuickApplicationWindow::contentItem() const
 {
     QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
     if (!d->contentItem) {
-        d->contentItem = new QQuickItem(QQuickWindow::contentItem());
+        d->contentItem = new QQuickContentItem(QStringLiteral("ApplicationWindow"), QQuickWindow::contentItem());
         d->contentItem->setFlag(QQuickItem::ItemIsFocusScope);
         d->contentItem->setFocus(true);
         d->relayout();
