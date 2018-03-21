@@ -260,7 +260,7 @@ bool ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
 {
     if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
         _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Function name may not be eval or arguments in strict mode"));
-    return enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : nullptr);
+    return enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName);
 }
 
 void ScanFunctions::endVisit(FunctionExpression *)
@@ -289,7 +289,7 @@ bool ScanFunctions::visit(ObjectLiteral *ast)
 bool ScanFunctions::visit(PropertyGetterSetter *ast)
 {
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
-    return enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/nullptr);
+    return enterFunction(ast, QString(), ast->formals, ast->functionBody, /*enterName */ false);
 }
 
 void ScanFunctions::endVisit(PropertyGetterSetter *)
@@ -388,19 +388,23 @@ bool ScanFunctions::visit(Block *ast) {
     return false;
 }
 
-bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, StatementList *body, FunctionExpression *expr)
+bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, StatementList *body, bool enterName)
 {
     Context *outerContext = _context;
     enterEnvironment(ast, FunctionCode);
 
+    FunctionExpression *expr = AST::cast<FunctionExpression *>(ast);
+    if (!expr)
+        expr = AST::cast<FunctionDeclaration *>(ast);
     if (outerContext) {
         outerContext->hasNestedFunctions = true;
         // The identifier of a function expression cannot be referenced from the enclosing environment.
-        if (expr) {
-            if (!outerContext->addLocalVar(name, Context::FunctionDefinition, AST::VariableDeclaration::FunctionScope, expr)) {
+        if (enterName) {
+            if (!outerContext->addLocalVar(name, Context::FunctionDefinition, AST::VariableScope::Var, expr)) {
                 _cg->throwSyntaxError(ast->firstSourceLocation(), QStringLiteral("Identifier %1 has already been declared").arg(name));
                 return false;
             }
+            outerContext->addLocalVar(name, Context::FunctionDefinition, AST::VariableScope::Var, expr);
         }
         if (name == QLatin1String("arguments"))
             outerContext->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
@@ -408,8 +412,12 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
 
     if (formals->containsName(QStringLiteral("arguments")))
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
-    if (expr && expr->isArrowFunction)
-        _context->isArrowFunction = true;
+    if (expr) {
+        if (expr->isArrowFunction)
+            _context->isArrowFunction = true;
+        else if (expr->isGenerator)
+            _context->isGenerator = true;
+    }
 
 
     if (!name.isEmpty() && !formals->containsName(name))

@@ -2260,6 +2260,12 @@ bool Codegen::visit(FunctionDeclaration * ast)
     return false;
 }
 
+bool Codegen::visit(YieldExpression *ast)
+{
+    throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Support for 'yield' unimplemented."));
+    return false;
+}
+
 static bool endsWithReturn(Node *node)
 {
     if (!node)
@@ -2287,6 +2293,10 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
                             AST::StatementList *body)
 {
     enterContext(ast);
+
+    if (_context->isGenerator) {
+        throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Support for generator functions unimplemented."));
+    }
 
     if (_context->functionIndex >= 0)
         // already defined

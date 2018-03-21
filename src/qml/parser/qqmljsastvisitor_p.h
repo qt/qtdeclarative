@@ -287,6 +287,9 @@ public:
     virtual bool visit(ReturnStatement *) { return true; }
     virtual void endVisit(ReturnStatement *) {}
 
+    virtual bool visit(YieldExpression *) { return true; }
+    virtual void endVisit(YieldExpression *) {}
+
     virtual bool visit(WithStatement *) { return true; }
     virtual void endVisit(WithStatement *) {}
 

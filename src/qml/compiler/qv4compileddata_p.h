@@ -211,6 +211,7 @@ struct Function
         HasDirectEval       = 0x2,
         UsesArgumentsObject = 0x4,
         IsArrowFunction     = 0x8,
+        IsGenerator         = 0x20,
         HasCatchOrWith      = 0x10
     };
 

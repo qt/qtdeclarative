@@ -284,6 +284,7 @@ int Lexer::lex()
     case T_CONTINUE:
     case T_BREAK:
     case T_RETURN:
+    case T_YIELD:
     case T_THROW:
         _restrictedKeyword = true;
         break;

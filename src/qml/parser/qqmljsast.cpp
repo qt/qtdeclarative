@@ -643,6 +643,16 @@ void ReturnStatement::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+void YieldExpression::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(expression, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+
 void WithStatement::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
@@ -1117,7 +1127,6 @@ void ComputedPropertyName::accept0(Visitor *visitor)
     }
 
     visitor->endVisit(this);
-
 }
 
 } } // namespace QQmlJS::AST

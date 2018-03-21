@@ -170,6 +170,7 @@ public:
         Kind_NewMemberExpression,
         Kind_NotExpression,
         Kind_NullExpression,
+        Kind_YieldExpression,
         Kind_NumericLiteral,
         Kind_NumericLiteralPropertyName,
         Kind_ObjectLiteral,
@@ -1801,6 +1802,28 @@ public:
     SourceLocation semicolonToken;
 };
 
+class QML_PARSER_EXPORT YieldExpression: public ExpressionNode
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(YieldExpression)
+
+    YieldExpression(ExpressionNode *e = nullptr):
+        expression (e) { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return yieldToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return expression ? expression->lastSourceLocation() : yieldToken; }
+
+// attributes
+    ExpressionNode *expression;
+    bool isYieldStar = false;
+    SourceLocation yieldToken;
+};
+
 class QML_PARSER_EXPORT WithStatement: public Statement
 {
 public:
@@ -2113,6 +2136,7 @@ public:
 // attributes
     QStringRef name;
     bool isArrowFunction = false;
+    bool isGenerator = false;
     FormalParameterList *formals;
     StatementList *body;
     SourceLocation functionToken;

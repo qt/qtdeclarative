@@ -588,6 +588,7 @@ protected:
     bool visit(AST::UnaryPlusExpression *ast) override;
     bool visit(AST::VoidExpression *ast) override;
     bool visit(AST::FunctionDeclaration *ast) override;
+    bool visit(AST::YieldExpression *ast) override;
 
     // statements
     bool visit(AST::Block *ast) override;

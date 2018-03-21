@@ -136,7 +136,7 @@ protected:
     bool visit(AST::Block *ast) override;
 
 protected:
-    bool enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::StatementList *body, AST::FunctionExpression *expr);
+    bool enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::StatementList *body, bool enterName);
 
     void calcEscapingVariables();
 // fields:

@@ -127,6 +127,7 @@ class NotExpression;
 class BinaryExpression;
 class ConditionalExpression;
 class Expression; // ### rename
+class YieldExpression;
 class Block;
 class StatementList;
 class VariableStatement;

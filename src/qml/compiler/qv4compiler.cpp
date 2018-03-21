@@ -308,6 +308,8 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         function->flags |= CompiledData::Function::IsStrict;
     if (irFunction->isArrowFunction)
         function->flags |= CompiledData::Function::IsArrowFunction;
+    if (irFunction->isGenerator)
+        function->flags |= CompiledData::Function::IsGenerator;
     if (irFunction->hasTry || irFunction->hasWith)
         function->flags |= CompiledData::Function::HasCatchOrWith;
     function->nestedFunctionIndex =

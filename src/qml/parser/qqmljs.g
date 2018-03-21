@@ -3597,8 +3597,22 @@ MethodDefinition: PropertyName T_LPAREN StrictFormalParameters T_RPAREN Function
     } break;
 ./
 
-MethodDefinition: GeneratorMethod;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+MethodDefinition: T_STAR PropertyName T_LPAREN StrictFormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
+/.
+    case $rule_number: {
+        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
+        f->functionToken = loc(1);
+        f->lparenToken = loc(3);
+        f->rparenToken = loc(5);
+        f->lbraceToken = loc(6);
+        f->rbraceToken = loc(8);
+        f->isGenerator = true;
+        AST::PropertyNameAndValue *node = new (pool) AST::PropertyNameAndValue(sym(2).PropertyName, f);
+        node->colonToken = loc(2);
+        sym(1).Node = node;
+    } break;
+./
+
 
 MethodDefinition: T_GET PropertyName T_LPAREN T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
@@ -3652,27 +3666,101 @@ GeneratorRBrace: T_RBRACE;
     } break;
 ./
 
-GeneratorMethod: T_STAR PropertyName T_LPAREN StrictFormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
-
 GeneratorDeclaration: T_FUNCTION T_STAR BindingIdentifier T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.
+    case $rule_number: {
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(3), sym(5).FormalParameterList, sym(8).StatementList);
+        node->functionToken = loc(1);
+        node->identifierToken = loc(3);
+        node->lparenToken = loc(4);
+        node->rparenToken = loc(6);
+        node->lbraceToken = loc(7);
+        node->rbraceToken = loc(9);
+        node->isGenerator = true;
+        sym(1).Node = node;
+    } break;
+./
 
 GeneratorDeclaration_Default: GeneratorDeclaration;
 GeneratorDeclaration_Default: T_FUNCTION T_STAR T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.
+    case $rule_number: {
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(1), sym(4).FormalParameterList, sym(7).StatementList);
+        node->functionToken = loc(1);
+        node->identifierToken = loc(1);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(5);
+        node->lbraceToken = loc(6);
+        node->rbraceToken = loc(8);
+        node->isGenerator = true;
+        sym(1).Node = node;
+    } break;
+./
 
 GeneratorExpression: T_FUNCTION T_STAR BindingIdentifier T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.
+    case $rule_number: {
+        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(3), sym(5).FormalParameterList, sym(8).StatementList);
+        node->functionToken = loc(1);
+        if (!stringRef(3).isNull())
+          node->identifierToken = loc(3);
+        node->lparenToken = loc(4);
+        node->rparenToken = loc(6);
+        node->lbraceToken = loc(7);
+        node->rbraceToken = loc(9);
+        node->isGenerator = true;
+        sym(1).Node = node;
+    } break;
+./
+
 GeneratorExpression: T_FUNCTION T_STAR T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.
+    case $rule_number: {
+        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(QStringRef(), sym(4).FormalParameterList, sym(7).StatementList);
+        node->functionToken = loc(1);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(5);
+        node->lbraceToken = loc(6);
+        node->rbraceToken = loc(8);
+        node->isGenerator = true;
+        sym(1).Node = node;
+    } break;
+./
 
 GeneratorBody: FunctionBody;
 
+YieldExpression: T_YIELD T_AUTOMATIC_SEMICOLON;
+YieldExpression: T_YIELD T_SEMICOLON;
+/.
+    case $rule_number: {
+        AST::YieldExpression *node = new (pool) AST::YieldExpression();
+        node->yieldToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
+
 YieldExpression: T_YIELD T_STAR AssignmentExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
 YieldExpression_In: T_YIELD T_STAR AssignmentExpression_In;
+/.
+    case $rule_number: {
+        AST::YieldExpression *node = new (pool) AST::YieldExpression(sym(3).Expression);
+        node->yieldToken = loc(1);
+        node->isYieldStar = true;
+        sym(1).Node = node;
+    } break;
+./
+
 YieldExpression: T_YIELD AssignmentExpression;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
 YieldExpression_In: T_YIELD AssignmentExpression_In;
+/.
+    case $rule_number: {
+        AST::YieldExpression *node = new (pool) AST::YieldExpression(sym(2).Expression);
+        node->yieldToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
 
 
 ClassDeclaration: T_CLASS BindingIdentifier ClassTail;
