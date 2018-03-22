@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPOINTERSINGLEHANDLER_H
-#define QQUICKPOINTERSINGLEHANDLER_H
+#ifndef QQUICKPOINTERSINGLEHANDLER_P_H
+#define QQUICKPOINTERSINGLEHANDLER_P_H
 
 //
 //  W A R N I N G
@@ -52,46 +52,28 @@
 //
 
 #include "qquickhandlerpoint_p.h"
-#include "qquickpointerdevicehandler_p.h"
+#include "qquickpointerdevicehandler_p_p.h"
+#include "qquicksinglepointhandler_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickSinglePointHandlerPrivate;
-
-class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointHandler : public QQuickPointerDeviceHandler
+class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointHandlerPrivate : public QQuickPointerDeviceHandlerPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(QQuickHandlerPoint point READ point NOTIFY pointChanged)
+    Q_DECLARE_PUBLIC(QQuickSinglePointHandler)
 
 public:
-    explicit QQuickSinglePointHandler(QQuickItem *parent = nullptr);
+    static QQuickSinglePointHandlerPrivate* get(QQuickSinglePointHandler *q) { return q->d_func(); }
+    static const QQuickSinglePointHandlerPrivate* get(const QQuickSinglePointHandler *q) { return q->d_func(); }
 
-    QQuickHandlerPoint point() const;
+    QQuickSinglePointHandlerPrivate();
 
-Q_SIGNALS:
-    void pointChanged();
+    void reset();
 
-protected:
-    QQuickSinglePointHandler(QQuickSinglePointHandlerPrivate &dd, QQuickItem *parent);
-
-    bool wantsPointerEvent(QQuickPointerEvent *event) override;
-    void handlePointerEventImpl(QQuickPointerEvent *event) override;
-    virtual void handleEventPoint(QQuickEventPoint *point) = 0;
-
-    QQuickEventPoint *currentPoint(QQuickPointerEvent *ev);
-    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point) override;
-
-    void setIgnoreAdditionalPoints(bool v = true);
-
-    void moveTarget(QPointF pos, QQuickEventPoint *point);
-
-    void setPointId(int id);
-
-    Q_DECLARE_PRIVATE(QQuickSinglePointHandler)
+    QQuickHandlerPoint pointInfo;
+    bool ignoreAdditionalPoints = false;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSinglePointHandler)
+#endif // QQUICKPOINTERSINGLEHANDLER_P_H
 
-#endif // QQUICKPOINTERSINGLEHANDLER_H

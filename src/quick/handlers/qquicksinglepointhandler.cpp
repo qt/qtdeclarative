@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qquicksinglepointhandler_p.h"
+#include "qquicksinglepointhandler_p_p.h"
 
 QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
@@ -59,19 +60,25 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
 */
 
 QQuickSinglePointHandler::QQuickSinglePointHandler(QQuickItem *parent)
-  : QQuickPointerDeviceHandler(parent)
+  : QQuickPointerDeviceHandler(*(new QQuickSinglePointHandlerPrivate), parent)
+{
+}
+
+QQuickSinglePointHandler::QQuickSinglePointHandler(QQuickSinglePointHandlerPrivate &dd, QQuickItem *parent)
+  : QQuickPointerDeviceHandler(dd, parent)
 {
 }
 
 bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
+    Q_D(QQuickSinglePointHandler);
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
     if (event->device()->pointerType() != QQuickPointerDevice::Finger &&
             (event->buttons() & acceptedButtons()) == 0 && (event->button() & acceptedButtons()) == 0)
         return false;
 
-    if (m_pointInfo.m_id) {
+    if (d->pointInfo.id()) {
         // We already know which one we want, so check whether it's there.
         // It's expected to be an update or a release.
         // If we no longer want it, cancel the grab.
@@ -81,7 +88,7 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
         int c = event->pointCount();
         for (int i = 0; i < c; ++i) {
             QQuickEventPoint *p = event->point(i);
-            const bool found = (p->pointId() == m_pointInfo.m_id);
+            const bool found = (p->pointId() == d->pointInfo.id());
             if (found)
                 missing = false;
             if (wantsEventPoint(p)) {
@@ -91,10 +98,10 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
             }
         }
         if (missing)
-            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << hex << m_pointInfo.m_id
+            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << hex << d->pointInfo.id()
                 << "is missing from current event, but was neither canceled nor released";
         if (point) {
-            if (candidatePointCount == 1 || (candidatePointCount > 1 && m_ignoreAdditionalPoints)) {
+            if (candidatePointCount == 1 || (candidatePointCount > 1 && d->ignoreAdditionalPoints)) {
                 point->setAccepted();
                 return true;
             } else {
@@ -121,35 +128,37 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
             chosen->setAccepted();
         }
     }
-    return m_pointInfo.m_id;
+    return d->pointInfo.id();
 }
 
 void QQuickSinglePointHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
+    Q_D(QQuickSinglePointHandler);
     QQuickPointerDeviceHandler::handlePointerEventImpl(event);
-    QQuickEventPoint *currentPoint = event->pointById(m_pointInfo.m_id);
+    QQuickEventPoint *currentPoint = event->pointById(d->pointInfo.id());
     Q_ASSERT(currentPoint);
-    m_pointInfo.reset(currentPoint);
+    d->pointInfo.reset(currentPoint);
     handleEventPoint(currentPoint);
     if (currentPoint->state() == QQuickEventPoint::Released && (event->buttons() & acceptedButtons()) == Qt::NoButton) {
         setExclusiveGrab(currentPoint, false);
-        reset();
+        d->reset();
     }
     emit pointChanged();
 }
 
 void QQuickSinglePointHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point)
 {
+    Q_D(QQuickSinglePointHandler);
     if (grabber != this)
         return;
     switch (transition) {
     case QQuickEventPoint::GrabExclusive:
-        m_pointInfo.m_sceneGrabPosition = point->sceneGrabPosition();
+        d->pointInfo.m_sceneGrabPosition = point->sceneGrabPosition();
         setActive(true);
         QQuickPointerHandler::onGrabChanged(grabber, transition, point);
         break;
     case QQuickEventPoint::GrabPassive:
-        m_pointInfo.m_sceneGrabPosition = point->sceneGrabPosition();
+        d->pointInfo.m_sceneGrabPosition = point->sceneGrabPosition();
         QQuickPointerHandler::onGrabChanged(grabber, transition, point);
         break;
     case QQuickEventPoint::OverrideGrabPassive:
@@ -160,32 +169,35 @@ void QQuickSinglePointHandler::onGrabChanged(QQuickPointerHandler *grabber, QQui
     case QQuickEventPoint::CancelGrabExclusive:
         // the grab is lost or relinquished, so the point is no longer relevant
         QQuickPointerHandler::onGrabChanged(grabber, transition, point);
-        reset();
+        d->reset();
         break;
     }
 }
 
 void QQuickSinglePointHandler::setIgnoreAdditionalPoints(bool v)
 {
-    m_ignoreAdditionalPoints = v;
+    Q_D(QQuickSinglePointHandler);
+    d->ignoreAdditionalPoints = v;
 }
 
 void QQuickSinglePointHandler::moveTarget(QPointF pos, QQuickEventPoint *point)
 {
+    Q_D(QQuickSinglePointHandler);
     target()->setPosition(pos);
-    m_pointInfo.m_scenePosition = point->scenePosition();
-    m_pointInfo.m_position = target()->mapFromScene(m_pointInfo.m_scenePosition);
+    d->pointInfo.m_scenePosition = point->scenePosition();
+    d->pointInfo.m_position = target()->mapFromScene(d->pointInfo.m_scenePosition);
 }
 
 void QQuickSinglePointHandler::setPointId(int id)
 {
-    m_pointInfo.m_id = id;
+    Q_D(QQuickSinglePointHandler);
+    d->pointInfo.m_id = id;
 }
 
-void QQuickSinglePointHandler::reset()
+QQuickHandlerPoint QQuickSinglePointHandler::point() const
 {
-    setActive(false);
-    m_pointInfo.reset();
+    Q_D(const QQuickSinglePointHandler);
+    return d->pointInfo;
 }
 
 /*!
@@ -195,5 +207,17 @@ void QQuickSinglePointHandler::reset()
     The event point currently being handled. When no point is currently being
     handled, this object is reset to default values (all coordinates are 0).
 */
+
+QQuickSinglePointHandlerPrivate::QQuickSinglePointHandlerPrivate()
+  : QQuickPointerDeviceHandlerPrivate()
+{
+}
+
+void QQuickSinglePointHandlerPrivate::reset()
+{
+    Q_Q(QQuickSinglePointHandler);
+    q->setActive(false);
+    pointInfo.reset();
+}
 
 QT_END_NAMESPACE
