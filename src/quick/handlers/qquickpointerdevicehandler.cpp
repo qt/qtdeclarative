@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qquickpointerdevicehandler_p.h"
+#include "qquickpointerdevicehandler_p_p.h"
 #include <private/qquickitem_p.h>
 #include <QMouseEvent>
 #include <QDebug>
@@ -59,15 +59,35 @@ QT_BEGIN_NAMESPACE
     allow filtering based on device type, pointer type, or keyboard modifiers.
 */
 QQuickPointerDeviceHandler::QQuickPointerDeviceHandler(QObject *parent)
-    : QQuickPointerHandler(parent)
-    , m_acceptedDevices(QQuickPointerDevice::AllDevices)
-    , m_acceptedPointerTypes(QQuickPointerDevice::AllPointerTypes)
-    , m_acceptedModifiers(Qt::KeyboardModifierMask)
+    : QQuickPointerHandler(*(new QQuickPointerDeviceHandlerPrivate), parent)
+{
+}
+
+QQuickPointerDeviceHandler::QQuickPointerDeviceHandler(QQuickPointerDeviceHandlerPrivate &dd, QObject *parent)
+    : QQuickPointerHandler(dd, parent)
 {
 }
 
 QQuickPointerDeviceHandler::~QQuickPointerDeviceHandler()
 {
+}
+
+QQuickPointerDevice::DeviceTypes QQuickPointerDeviceHandler::acceptedDevices() const
+{
+    Q_D(const QQuickPointerDeviceHandler);
+    return d->acceptedDevices;
+}
+
+QQuickPointerDevice::PointerTypes QQuickPointerDeviceHandler::acceptedPointerTypes() const
+{
+    Q_D(const QQuickPointerDeviceHandler);
+    return d->acceptedPointerTypes;
+}
+
+Qt::KeyboardModifiers QQuickPointerDeviceHandler::acceptedModifiers() const
+{
+    Q_D(const QQuickPointerDeviceHandler);
+    return d->acceptedModifiers;
 }
 
 /*!
@@ -98,10 +118,11 @@ QQuickPointerDeviceHandler::~QQuickPointerDeviceHandler()
 */
 void QQuickPointerDeviceHandler::setAcceptedDevices(QQuickPointerDevice::DeviceTypes acceptedDevices)
 {
-    if (m_acceptedDevices == acceptedDevices)
+    Q_D(QQuickPointerDeviceHandler);
+    if (d->acceptedDevices == acceptedDevices)
         return;
 
-    m_acceptedDevices = acceptedDevices;
+    d->acceptedDevices = acceptedDevices;
     emit acceptedDevicesChanged();
 }
 
@@ -136,10 +157,11 @@ void QQuickPointerDeviceHandler::setAcceptedDevices(QQuickPointerDevice::DeviceT
 */
 void QQuickPointerDeviceHandler::setAcceptedPointerTypes(QQuickPointerDevice::PointerTypes acceptedPointerTypes)
 {
-    if (m_acceptedPointerTypes == acceptedPointerTypes)
+    Q_D(QQuickPointerDeviceHandler);
+    if (d->acceptedPointerTypes == acceptedPointerTypes)
         return;
 
-    m_acceptedPointerTypes = acceptedPointerTypes;
+    d->acceptedPointerTypes = acceptedPointerTypes;
     emit acceptedPointerTypesChanged();
 }
 
@@ -171,26 +193,28 @@ void QQuickPointerDeviceHandler::setAcceptedPointerTypes(QQuickPointerDevice::Po
 */
 void QQuickPointerDeviceHandler::setAcceptedModifiers(Qt::KeyboardModifiers acceptedModifiers)
 {
-    if (m_acceptedModifiers == acceptedModifiers)
+    Q_D(QQuickPointerDeviceHandler);
+    if (d->acceptedModifiers == acceptedModifiers)
         return;
 
-    m_acceptedModifiers = acceptedModifiers;
+    d->acceptedModifiers = acceptedModifiers;
     emit acceptedModifiersChanged();
 }
 
 bool QQuickPointerDeviceHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
+    Q_D(QQuickPointerDeviceHandler);
     if (!QQuickPointerHandler::wantsPointerEvent(event))
         return false;
     qCDebug(lcPointerHandlerDispatch) << objectName()
-        << "checking device type" << m_acceptedDevices
-        << "pointer type" << m_acceptedPointerTypes
-        << "modifiers" << m_acceptedModifiers;
-    if ((event->device()->type() & m_acceptedDevices) == 0)
+        << "checking device type" << d->acceptedDevices
+        << "pointer type" << d->acceptedPointerTypes
+        << "modifiers" << d->acceptedModifiers;
+    if ((event->device()->type() & d->acceptedDevices) == 0)
         return false;
-    if ((event->device()->pointerType() & m_acceptedPointerTypes) == 0)
+    if ((event->device()->pointerType() & d->acceptedPointerTypes) == 0)
         return false;
-    if (m_acceptedModifiers != Qt::KeyboardModifierMask && event->modifiers() != m_acceptedModifiers)
+    if (d->acceptedModifiers != Qt::KeyboardModifierMask && event->modifiers() != d->acceptedModifiers)
         return false;
     return true;
 }

@@ -36,10 +36,9 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "qquickpointerhandler_p.h"
 
-#ifndef QQUICKPOINTERDEVICEHANDLER_H
-#define QQUICKPOINTERDEVICEHANDLER_H
+#ifndef QQUICKPOINTERDEVICEHANDLER_P_H
+#define QQUICKPOINTERDEVICEHANDLER_P_H
 
 //
 //  W A R N I N G
@@ -52,45 +51,24 @@
 // We mean it.
 //
 
+#include "qquickpointerdevicehandler_p.h"
+#include "qquickpointerhandler_p_p.h"
+
 QT_BEGIN_NAMESPACE
 
-class QQuickPointerDeviceHandlerPrivate;
-
-class Q_AUTOTEST_EXPORT QQuickPointerDeviceHandler : public QQuickPointerHandler
+class Q_AUTOTEST_EXPORT QQuickPointerDeviceHandlerPrivate : public QQuickPointerHandlerPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(QQuickPointerDevice::DeviceTypes acceptedDevices READ acceptedDevices WRITE setAcceptedDevices NOTIFY acceptedDevicesChanged)
-    Q_PROPERTY(QQuickPointerDevice::PointerTypes acceptedPointerTypes READ acceptedPointerTypes WRITE setAcceptedPointerTypes NOTIFY acceptedPointerTypesChanged)
-    Q_PROPERTY(Qt::KeyboardModifiers acceptedModifiers READ acceptedModifiers WRITE setAcceptedModifiers NOTIFY acceptedModifiersChanged)
+    Q_DECLARE_PUBLIC(QQuickPointerDeviceHandler)
 
 public:
-    explicit QQuickPointerDeviceHandler(QObject *parent = nullptr);
-    ~QQuickPointerDeviceHandler();
+    static QQuickPointerDeviceHandlerPrivate* get(QQuickPointerDeviceHandler *q) { return q->d_func(); }
+    static const QQuickPointerDeviceHandlerPrivate* get(const QQuickPointerDeviceHandler *q) { return q->d_func(); }
 
-    QQuickPointerDevice::DeviceTypes acceptedDevices() const;
-    QQuickPointerDevice::PointerTypes acceptedPointerTypes() const;
-    Qt::KeyboardModifiers acceptedModifiers() const;
-
-public Q_SLOTS:
-    void setAcceptedDevices(QQuickPointerDevice::DeviceTypes acceptedDevices);
-    void setAcceptedPointerTypes(QQuickPointerDevice::PointerTypes acceptedPointerTypes);
-    void setAcceptedModifiers(Qt::KeyboardModifiers acceptedModifiers);
-
-Q_SIGNALS:
-    void acceptedDevicesChanged();
-    void acceptedPointerTypesChanged();
-    void acceptedModifiersChanged();
-
-protected:
-    QQuickPointerDeviceHandler(QQuickPointerDeviceHandlerPrivate &dd, QObject *parent = nullptr);
-
-    bool wantsPointerEvent(QQuickPointerEvent *event) override;
-
-    Q_DECLARE_PRIVATE(QQuickPointerDeviceHandler)
+    QQuickPointerDevice::DeviceTypes acceptedDevices = QQuickPointerDevice::AllDevices;
+    QQuickPointerDevice::PointerTypes acceptedPointerTypes = QQuickPointerDevice::AllPointerTypes;
+    Qt::KeyboardModifiers acceptedModifiers = Qt::KeyboardModifierMask;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPointerDeviceHandler)
-
-#endif // QQUICKPOINTERDEVICEHANDLER_H
+#endif // QQUICKPOINTERDEVICEHANDLER_P_H
