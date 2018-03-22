@@ -190,7 +190,7 @@ void RegExpLiteral::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void ArrayLiteral::accept0(Visitor *visitor)
+void ArrayPattern::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         accept(elements, visitor);
@@ -200,7 +200,7 @@ void ArrayLiteral::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void ObjectLiteral::accept0(Visitor *visitor)
+void ObjectPattern::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         accept(properties, visitor);

@@ -994,7 +994,7 @@ UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList 
 UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_COMMA T_RBRACE;
 /.
     case $rule_number: {
-        AST::ObjectLiteral *l = new (pool) AST::ObjectLiteral(sym(3).PropertyDefinitionList->finish());
+        AST::ObjectPattern *l = new (pool) AST::ObjectPattern(sym(3).PropertyDefinitionList->finish());
         l->lbraceToken = loc(1);
         l->rbraceToken = loc(4);
         AST::ExpressionStatement *node = new (pool) AST::ExpressionStatement(l);
@@ -1606,7 +1606,7 @@ RegularExpressionLiteral: T_DIVIDE_EQ;
 ArrayLiteral: T_LBRACKET ElisionOpt T_RBRACKET;
 /.
     case $rule_number: {
-        AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral(sym(2).Elision);
+        AST::ArrayPattern *node = new (pool) AST::ArrayPattern(sym(2).Elision);
         node->lbracketToken = loc(1);
         node->rbracketToken = loc(3);
         sym(1).Node = node;
@@ -1616,7 +1616,7 @@ ArrayLiteral: T_LBRACKET ElisionOpt T_RBRACKET;
 ArrayLiteral: T_LBRACKET ElementList T_RBRACKET;
 /.
     case $rule_number: {
-        AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral(sym(2).ElementList->finish());
+        AST::ArrayPattern *node = new (pool) AST::ArrayPattern(sym(2).ElementList->finish());
         node->lbracketToken = loc(1);
         node->rbracketToken = loc(3);
         sym(1).Node = node;
@@ -1626,7 +1626,7 @@ ArrayLiteral: T_LBRACKET ElementList T_RBRACKET;
 ArrayLiteral: T_LBRACKET ElementList T_COMMA ElisionOpt T_RBRACKET;
 /.
     case $rule_number: {
-        AST::ArrayLiteral *node = new (pool) AST::ArrayLiteral(sym(2).ElementList->finish(), sym(4).Elision);
+        AST::ArrayPattern *node = new (pool) AST::ArrayPattern(sym(2).ElementList->finish(), sym(4).Elision);
         node->lbracketToken = loc(1);
         node->commaToken = loc(3);
         node->rbracketToken = loc(5);
@@ -1718,7 +1718,7 @@ SpreadElement: T_ELLIPSIS AssignmentExpression;
 ObjectLiteral: T_LBRACE T_RBRACE;
 /.
     case $rule_number: {
-        AST::ObjectLiteral *node = new (pool) AST::ObjectLiteral();
+        AST::ObjectPattern *node = new (pool) AST::ObjectPattern();
         node->lbraceToken = loc(1);
         node->rbraceToken = loc(2);
         sym(1).Node = node;
@@ -1728,7 +1728,7 @@ ObjectLiteral: T_LBRACE T_RBRACE;
 ObjectLiteral: T_LBRACE PropertyDefinitionList T_RBRACE;
 /.
     case $rule_number: {
-        AST::ObjectLiteral *node = new (pool) AST::ObjectLiteral(sym(2).PropertyDefinitionList->finish());
+        AST::ObjectPattern *node = new (pool) AST::ObjectPattern(sym(2).PropertyDefinitionList->finish());
         node->lbraceToken = loc(1);
         node->rbraceToken = loc(3);
         sym(1).Node = node;
@@ -1738,7 +1738,7 @@ ObjectLiteral: T_LBRACE PropertyDefinitionList T_RBRACE;
 ObjectLiteral: T_LBRACE PropertyDefinitionList T_COMMA T_RBRACE;
 /.
     case $rule_number: {
-        AST::ObjectLiteral *node = new (pool) AST::ObjectLiteral(sym(2).PropertyDefinitionList->finish());
+        AST::ObjectPattern *node = new (pool) AST::ObjectPattern(sym(2).PropertyDefinitionList->finish());
         node->lbraceToken = loc(1);
         node->rbraceToken = loc(4);
         sym(1).Node = node;

@@ -175,7 +175,7 @@ bool ScanFunctions::visit(NewMemberExpression *ast)
     return true;
 }
 
-bool ScanFunctions::visit(ArrayLiteral *ast)
+bool ScanFunctions::visit(ArrayPattern *ast)
 {
     int index = 0;
     for (ElementList *it = ast->elements; it; it = it->next) {
@@ -268,7 +268,7 @@ void ScanFunctions::endVisit(FunctionExpression *)
     leaveEnvironment();
 }
 
-bool ScanFunctions::visit(ObjectLiteral *ast)
+bool ScanFunctions::visit(ObjectPattern *ast)
 {
     int argc = 0;
     for (PropertyDefinitionList *it = ast->properties; it; it = it->next) {
@@ -400,11 +400,11 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
         outerContext->hasNestedFunctions = true;
         // The identifier of a function expression cannot be referenced from the enclosing environment.
         if (enterName) {
-            if (!outerContext->addLocalVar(name, Context::FunctionDefinition, AST::VariableScope::Var, expr)) {
+            if (!outerContext->addLocalVar(name, Context::FunctionDefinition, VariableDeclaration::FunctionScope, expr)) {
                 _cg->throwSyntaxError(ast->firstSourceLocation(), QStringLiteral("Identifier %1 has already been declared").arg(name));
                 return false;
             }
-            outerContext->addLocalVar(name, Context::FunctionDefinition, AST::VariableScope::Var, expr);
+            outerContext->addLocalVar(name, Context::FunctionDefinition, VariableDeclaration::FunctionScope, expr);
         }
         if (name == QLatin1String("arguments"))
             outerContext->usesArgumentsObject = Context::ArgumentsObjectNotUsed;

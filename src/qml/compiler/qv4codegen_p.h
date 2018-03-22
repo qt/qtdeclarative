@@ -555,7 +555,7 @@ protected:
 
     // expressions
     bool visit(AST::Expression *ast) override;
-    bool visit(AST::ArrayLiteral *ast) override;
+    bool visit(AST::ArrayPattern *ast) override;
     bool visit(AST::ArrayMemberExpression *ast) override;
     bool visit(AST::BinaryExpression *ast) override;
     bool visit(AST::CallExpression *ast) override;
@@ -573,7 +573,7 @@ protected:
     bool visit(AST::NotExpression *ast) override;
     bool visit(AST::NullExpression *ast) override;
     bool visit(AST::NumericLiteral *ast) override;
-    bool visit(AST::ObjectLiteral *ast) override;
+    bool visit(AST::ObjectPattern *ast) override;
     bool visit(AST::PostDecrementExpression *ast) override;
     bool visit(AST::PostIncrementExpression *ast) override;
     bool visit(AST::PreDecrementExpression *ast) override;

@@ -137,11 +137,11 @@ public:
     virtual bool visit(RegExpLiteral *) { return true; }
     virtual void endVisit(RegExpLiteral *) {}
 
-    virtual bool visit(ArrayLiteral *) { return true; }
-    virtual void endVisit(ArrayLiteral *) {}
+    virtual bool visit(ArrayPattern *) { return true; }
+    virtual void endVisit(ArrayPattern *) {}
 
-    virtual bool visit(ObjectLiteral *) { return true; }
-    virtual void endVisit(ObjectLiteral *) {}
+    virtual bool visit(ObjectPattern *) { return true; }
+    virtual void endVisit(ObjectPattern *) {}
 
     virtual bool visit(ElementList *) { return true; }
     virtual void endVisit(ElementList *) {}

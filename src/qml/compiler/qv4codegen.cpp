@@ -650,7 +650,7 @@ bool Codegen::visit(Expression *ast)
     return false;
 }
 
-bool Codegen::visit(ArrayLiteral *ast)
+bool Codegen::visit(ArrayPattern *ast)
 {
     if (hasError)
         return false;
@@ -1886,7 +1886,7 @@ bool Codegen::visit(NumericLiteral *ast)
     return false;
 }
 
-bool Codegen::visit(ObjectLiteral *ast)
+bool Codegen::visit(ObjectPattern *ast)
 {
     if (hasError)
         return false;

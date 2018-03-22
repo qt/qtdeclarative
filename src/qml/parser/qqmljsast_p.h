@@ -504,22 +504,22 @@ public:
     SourceLocation literalToken;
 };
 
-class QML_PARSER_EXPORT ArrayLiteral: public ExpressionNode
+class QML_PARSER_EXPORT ArrayPattern : public ExpressionNode
 {
 public:
     QQMLJS_DECLARE_AST_NODE(ArrayLiteral)
 
-    ArrayLiteral(Elision *e):
-        elements (nullptr), elision (e)
-        { kind = K; }
+    ArrayPattern(Elision *e)
+        : elision(e)
+    { kind = K; }
 
-    ArrayLiteral(ElementList *elts):
-        elements (elts), elision (nullptr)
-        { kind = K; }
+    ArrayPattern(ElementList *elts)
+        : elements(elts)
+    { kind = K; }
 
-    ArrayLiteral(ElementList *elts, Elision *e):
-        elements (elts), elision (e)
-        { kind = K; }
+    ArrayPattern(ElementList *elts, Elision *e)
+        : elements(elts), elision(e)
+    { kind = K; }
 
     void accept0(Visitor *visitor) override;
 
@@ -530,22 +530,22 @@ public:
     { return rbracketToken; }
 
 // attributes
-    ElementList *elements;
-    Elision *elision;
+    ElementList *elements = nullptr;
+    Elision *elision = nullptr;
     SourceLocation lbracketToken;
     SourceLocation commaToken;
     SourceLocation rbracketToken;
 };
 
-class QML_PARSER_EXPORT ObjectLiteral: public ExpressionNode
+class QML_PARSER_EXPORT ObjectPattern : public ExpressionNode
 {
 public:
     QQMLJS_DECLARE_AST_NODE(ObjectLiteral)
 
-    ObjectLiteral()
+    ObjectPattern()
         { kind = K; }
 
-    ObjectLiteral(PropertyDefinitionList *plist):
+    ObjectPattern(PropertyDefinitionList *plist):
         properties (plist) { kind = K; }
 
     void accept0(Visitor *visitor) override;
