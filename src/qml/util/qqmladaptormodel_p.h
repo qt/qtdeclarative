@@ -58,6 +58,8 @@
 #include <private/qqmlguard_p.h>
 #include <private/qqmlnullablevalue_p.h>
 
+QT_REQUIRE_CONFIG(qml_delegate_model);
+
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;

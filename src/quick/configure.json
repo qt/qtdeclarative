@@ -79,6 +79,7 @@
             "label": "GridView item",
             "purpose": "Provides the GridView item.",
             "section": "Qt Quick",
+            "condition": "features.qml-delegate-model",
             "output": [
                 "privateFeature"
             ]
@@ -101,6 +102,7 @@
             "label": "ListView item",
             "purpose": "Provides the ListView item.",
             "section": "Qt Quick",
+            "condition": "features.qml-delegate-model",
             "output": [
                 "privateFeature"
             ]
@@ -126,7 +128,10 @@
             "label": "PathView item",
             "purpose": "Provides the PathView item.",
             "section": "Qt Quick",
-            "condition": "features.quick-path",
+            "condition": [
+                "features.qml-delegate-model",
+                "features.quick-path"
+            ],
             "output": [
                 "privateFeature"
             ]
@@ -143,6 +148,7 @@
             "label": "Repeater item",
             "purpose": "Provides the Repeater item.",
             "section": "Qt Quick",
+            "condition": "features.qml-delegate-model",
             "output": [
                 "privateFeature"
             ]

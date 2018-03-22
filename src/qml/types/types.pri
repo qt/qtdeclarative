@@ -1,7 +1,6 @@
 SOURCES += \
     $$PWD/qqmlbind.cpp \
     $$PWD/qqmlconnections.cpp \
-    $$PWD/qqmldelegatemodel.cpp \
     $$PWD/qqmlmodelsmodule.cpp \
     $$PWD/qqmlmodelindexvaluetype.cpp \
     $$PWD/qqmlobjectmodel.cpp \
@@ -12,8 +11,6 @@ SOURCES += \
 HEADERS += \
     $$PWD/qqmlbind_p.h \
     $$PWD/qqmlconnections_p.h \
-    $$PWD/qqmldelegatemodel_p.h \
-    $$PWD/qqmldelegatemodel_p_p.h \
     $$PWD/qqmlmodelsmodule_p.h \
     $$PWD/qqmlmodelindexvaluetype_p.h \
     $$PWD/qqmlobjectmodel_p.h \
@@ -31,6 +28,15 @@ qtConfig(qml-list-model) {
         $$PWD/qqmllistmodel_p.h \
         $$PWD/qqmllistmodel_p_p.h \
         $$PWD/qqmllistmodelworkeragent_p.h
+}
+
+qtConfig(qml-delegate-model) {
+    SOURCES += \
+        $$PWD/qqmldelegatemodel.cpp
+
+    HEADERS += \
+        $$PWD/qqmldelegatemodel_p.h \
+        $$PWD/qqmldelegatemodel_p_p.h
 }
 
 qtConfig(qml-animation) {

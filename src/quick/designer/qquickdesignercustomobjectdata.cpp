@@ -148,7 +148,19 @@ void QQuickDesignerCustomObjectData::populateResetHashes()
     const QQuickDesignerSupport::PropertyNameList propertyNameList =
             QQuickDesignerSupportProperties::propertyNameListForWritableProperties(object());
 
+    const QMetaObject *mo = object()->metaObject();
+    QStringList deferredPropertyNames;
+    const int namesIndex = mo->indexOfClassInfo("DeferredPropertyNames");
+    if (namesIndex != -1) {
+        QMetaClassInfo classInfo = mo->classInfo(namesIndex);
+        deferredPropertyNames = QString::fromUtf8(classInfo.value()).split(QLatin1Char(','));
+    }
+
     for (const QQuickDesignerSupport::PropertyName &propertyName : propertyNameList) {
+
+        if (deferredPropertyNames.contains(propertyName))
+            continue;
+
         QQmlProperty property(object(), QString::fromUtf8(propertyName), QQmlEngine::contextForObject(object()));
 
         QQmlAbstractBinding::Ptr binding = QQmlAbstractBinding::Ptr(QQmlPropertyPrivate::binding(property));

@@ -80,6 +80,12 @@
             "section": "QML",
             "condition": "features.animation",
             "output": [ "privateFeature" ]
+        },
+        "qml-delegate-model": {
+            "label": "QML delegate model",
+            "purpose": "Provides the DelegateModel QML type.",
+            "section": "QML",
+            "output": [ "privateFeature" ]
         }
     },
 
@@ -92,7 +98,8 @@
                 "qml-sequence-object",
                 "qml-list-model",
                 "qml-xml-http-request",
-                "qml-locale"
+                "qml-locale",
+                "qml-delegate-model"
             ]
         }
     ]

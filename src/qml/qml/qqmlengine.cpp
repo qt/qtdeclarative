@@ -91,7 +91,9 @@
 #endif
 #include <private/qqmlplatform_p.h>
 #include <private/qquickpackage_p.h>
+#if QT_CONFIG(qml_delegate_model)
 #include <private/qqmldelegatemodel_p.h>
+#endif
 #include <private/qqmlobjectmodel_p.h>
 #include <private/qquickworkerscript_p.h>
 #include <private/qqmlinstantiator_p.h>
@@ -245,8 +247,10 @@ void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor,
 #endif
     qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
     qmlRegisterType<QQuickPackage>(uri, versionMajor, versionMinor, "Package");
+#if QT_CONFIG(qml_delegate_model)
     qmlRegisterType<QQmlDelegateModel>(uri, versionMajor, versionMinor, "VisualDataModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, versionMajor, versionMinor, "VisualDataGroup");
+#endif
     qmlRegisterType<QQmlObjectModel>(uri, versionMajor, versionMinor, "VisualItemModel");
 }
 
@@ -260,6 +264,9 @@ void QQmlEnginePrivate::defineQtQuick2Module()
 #if QT_CONFIG(qml_locale)
     qmlRegisterUncreatableType<QQmlLocale>("QtQuick", 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
 #endif
+
+    // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
+    qmlRegisterModule("QtQuick", 2, QT_VERSION_MINOR);
 }
 
 bool QQmlEnginePrivate::designerMode()
@@ -960,6 +967,9 @@ void QQmlEnginePrivate::init()
 #if QT_CONFIG(qml_locale)
         qmlRegisterUncreatableType<QQmlLocale>("QtQml", 2, 2, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
 #endif
+
+        // Auto-increment the import to stay in sync with ALL future QtQml minor versions from 5.11 onward
+        qmlRegisterModule("QtQml", 2, QT_VERSION_MINOR);
 
         QQmlData::init();
         baseModulesUninitialized = false;

@@ -63,6 +63,9 @@ public:
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.XmlListModel"));
         qmlRegisterType<QQuickXmlListModel>(uri,2,0,"XmlListModel");
         qmlRegisterType<QQuickXmlListModelRole>(uri,2,0,"XmlRole");
+
+        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
+        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
     }
 };
 

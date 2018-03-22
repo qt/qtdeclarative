@@ -60,6 +60,8 @@
 // We mean it.
 //
 
+QT_REQUIRE_CONFIG(qml_delegate_model);
+
 QT_BEGIN_NAMESPACE
 
 typedef QQmlListCompositor Compositor;
