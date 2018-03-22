@@ -128,7 +128,7 @@ public:
         Kind_Undefined,
 
         Kind_ArgumentList,
-        Kind_ArrayLiteral,
+        Kind_ArrayPattern,
         Kind_ArrayMemberExpression,
         Kind_BinaryExpression,
         Kind_Block,
@@ -174,7 +174,7 @@ public:
         Kind_YieldExpression,
         Kind_NumericLiteral,
         Kind_NumericLiteralPropertyName,
-        Kind_ObjectLiteral,
+        Kind_ObjectPattern,
         Kind_PostDecrementExpression,
         Kind_PostIncrementExpression,
         Kind_PreDecrementExpression,
@@ -207,13 +207,12 @@ public:
         Kind_WhileStatement,
         Kind_WithStatement,
         Kind_NestedExpression,
-        Kind_ArrayBindingPattern,
-        Kind_ObjectBindingPattern,
-        Kind_BindingElement,
-        Kind_BindingElementList,
-        Kind_BindingPropertyList,
-        Kind_BindingRestElement,
         Kind_ClassElementList,
+        Kind_PatternElement,
+        Kind_PatternElementList,
+        Kind_PatternProperty,
+        Kind_PatternPropertyList,
+
 
         Kind_UiArrayBinding,
         Kind_UiImport,
@@ -504,20 +503,25 @@ public:
     SourceLocation literalToken;
 };
 
-class QML_PARSER_EXPORT ArrayPattern : public ExpressionNode
+class QML_PARSER_EXPORT Pattern : public ExpressionNode
+{
+
+};
+
+class QML_PARSER_EXPORT ArrayPattern : public Pattern
 {
 public:
-    QQMLJS_DECLARE_AST_NODE(ArrayLiteral)
+    QQMLJS_DECLARE_AST_NODE(ArrayPattern)
 
     ArrayPattern(Elision *e)
         : elision(e)
     { kind = K; }
 
-    ArrayPattern(ElementList *elts)
+    ArrayPattern(PatternElementList *elts)
         : elements(elts)
     { kind = K; }
 
-    ArrayPattern(ElementList *elts, Elision *e)
+    ArrayPattern(PatternElementList *elts, Elision *e)
         : elements(elts), elision(e)
     { kind = K; }
 
@@ -529,24 +533,27 @@ public:
     SourceLocation lastSourceLocation() const override
     { return rbracketToken; }
 
+    bool isValidArrayLiteral(SourceLocation *errorLocation = nullptr) const;
+
 // attributes
-    ElementList *elements = nullptr;
+    PatternElementList *elements = nullptr;
     Elision *elision = nullptr;
     SourceLocation lbracketToken;
     SourceLocation commaToken;
     SourceLocation rbracketToken;
 };
 
-class QML_PARSER_EXPORT ObjectPattern : public ExpressionNode
+class QML_PARSER_EXPORT ObjectPattern : public Pattern
 {
 public:
-    QQMLJS_DECLARE_AST_NODE(ObjectLiteral)
+    QQMLJS_DECLARE_AST_NODE(ObjectPattern)
 
     ObjectPattern()
         { kind = K; }
 
-    ObjectPattern(PropertyDefinitionList *plist):
-        properties (plist) { kind = K; }
+    ObjectPattern(PatternPropertyList *plist)
+        : properties(plist)
+    { kind = K; }
 
     void accept0(Visitor *visitor) override;
 
@@ -557,7 +564,7 @@ public:
     { return rbraceToken; }
 
 // attributes
-    PropertyDefinitionList *properties = nullptr;
+    PatternPropertyList *properties = nullptr;
     SourceLocation lbraceToken;
     SourceLocation rbraceToken;
 };
@@ -597,54 +604,6 @@ public:
     SourceLocation commaToken;
 };
 
-class QML_PARSER_EXPORT ElementList: public Node
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(ElementList)
-
-    ElementList(Elision *e, ExpressionNode *expr):
-        elision (e), expression (expr), next (this)
-    { kind = K; }
-
-    ElementList(ElementList *previous, Elision *e, ExpressionNode *expr):
-        elision (e), expression (expr)
-    {
-        kind = K;
-        next = previous->next;
-        previous->next = this;
-    }
-
-    inline ElementList *finish ()
-    {
-        ElementList *front = next;
-        next = nullptr;
-        return front;
-    }
-
-    void accept0(Visitor *visitor) override;
-
-    SourceLocation firstSourceLocation() const override
-    {
-        if (elision)
-            return elision->firstSourceLocation();
-        return expression->firstSourceLocation();
-    }
-
-    SourceLocation lastSourceLocation() const override
-    {
-        if (next)
-            return next->lastSourceLocation();
-        return expression->lastSourceLocation();
-    }
-
-// attributes
-    Elision *elision;
-    ExpressionNode *expression;
-    ElementList *next;
-    SourceLocation commaToken;
-    bool isSpreadElement = false;
-};
-
 class QML_PARSER_EXPORT PropertyName: public Node
 {
 public:
@@ -664,120 +623,172 @@ public:
     SourceLocation propertyNameToken;
 };
 
-class QML_PARSER_EXPORT PropertyDefinition: public Node
+class QML_PARSER_EXPORT PatternElement : public Node
 {
 public:
-    PropertyDefinition(PropertyName *n)
-        : name(n)
-    {}
+    QQMLJS_DECLARE_AST_NODE(PatternElement)
+
+    enum Type {
+        // object literal types
+        Literal,
+        Getter,
+        Setter,
+
+        // used by both bindings and literals
+        SpreadElement,
+        RestElement = SpreadElement,
+
+        // binding types
+        Binding,
+    };
+
+    PatternElement(ExpressionNode *i = nullptr, Type t = Literal)
+        : initializer(i), type(t)
+    { kind = K; }
+
+    PatternElement(const QStringRef &n, ExpressionNode *i = nullptr, Type t = Binding)
+        : bindingIdentifier(n.toString()), initializer(i), type(t)
+    {
+        Q_ASSERT(t >= RestElement);
+        kind = K;
+    }
+
+    PatternElement(Pattern *pattern, ExpressionNode *i = nullptr, Type t = Binding)
+        : bindingPattern(pattern), initializer(i), type(t)
+    {
+        Q_ASSERT(t >= RestElement);
+        kind = K;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return identifierToken.isValid() ? identifierToken : (bindingPattern ? bindingPattern->firstSourceLocation() : initializer->firstSourceLocation()); }
+
+    SourceLocation lastSourceLocation() const override
+    { return initializer ? initializer->lastSourceLocation() : (bindingPattern ? bindingPattern->lastSourceLocation() : identifierToken); }
+
+    PatternElementList *elementList() const { ArrayPattern *a = cast<ArrayPattern *>(bindingPattern); return a ? a->elements : nullptr; }
+    PatternPropertyList *propertyList() const { ObjectPattern *o = cast<ObjectPattern *>(bindingPattern); return o ? o->properties : nullptr;  }
+
+    virtual void boundNames(QStringList *names);
+
+// attributes
+    SourceLocation identifierToken;
+    QString bindingIdentifier;
+    Pattern *bindingPattern = nullptr;
+    ExpressionNode *initializer = nullptr;
+    Type type = Literal;
+};
+
+class QML_PARSER_EXPORT PatternElementList : public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(PatternElementList)
+
+    PatternElementList(Elision *elision, PatternElement *element)
+        : elision(elision), element(element), next(this)
+    { kind = K; }
+
+    PatternElementList *append(PatternElementList *n) {
+        n->next = next;
+        next = n;
+        return n;
+    }
+
+    inline PatternElementList *finish ()
+    {
+        PatternElementList *front = next;
+        next = 0;
+        return front;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    void boundNames(QStringList *names);
+
+    SourceLocation firstSourceLocation() const override
+    { return elision ? elision->firstSourceLocation() : element->firstSourceLocation(); }
+
+    SourceLocation lastSourceLocation() const override
+    { return next ? next->lastSourceLocation() : (element ? element->lastSourceLocation() : elision->lastSourceLocation()); }
+
+    Elision *elision = nullptr;
+    PatternElement *element = nullptr;
+    PatternElementList *next;
+};
+
+class QML_PARSER_EXPORT PatternProperty : public PatternElement
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(PatternProperty)
+
+    PatternProperty(PropertyName *name, ExpressionNode *i = nullptr, Type t = Literal)
+        : PatternElement(i, t), name(name)
+    { kind = K; }
+
+    PatternProperty(PropertyName *name, const QStringRef &n, ExpressionNode *i = nullptr)
+        : PatternElement(n, i), name(name)
+    { kind = K; }
+
+    PatternProperty(PropertyName *name, Pattern *pattern, ExpressionNode *i = nullptr)
+        : PatternElement(pattern, i), name(name)
+    { kind = K; }
+
+    void accept0(Visitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return name->firstSourceLocation(); }
-
     SourceLocation lastSourceLocation() const override
-    { return name->lastSourceLocation(); }
+    {
+        SourceLocation loc = PatternElement::lastSourceLocation();
+        return loc.isValid() ? loc : name->lastSourceLocation();
+    }
+
+    void boundNames(QStringList *names) override;
 
 // attributes
     PropertyName *name;
+    SourceLocation colonToken;
 };
 
-class QML_PARSER_EXPORT PropertyDefinitionList: public Node
+
+class QML_PARSER_EXPORT PatternPropertyList : public Node
 {
 public:
-    QQMLJS_DECLARE_AST_NODE(PropertyDefinitionList)
+    QQMLJS_DECLARE_AST_NODE(PatternPropertyList)
 
-    PropertyDefinitionList(PropertyDefinition *assignment)
-        : assignment(assignment)
-        , next(this)
+    PatternPropertyList(PatternProperty *property)
+        : property(property), next(this)
     { kind = K; }
 
-    PropertyDefinitionList(PropertyDefinitionList *previous, PropertyDefinition *assignment)
-        : assignment(assignment)
+    PatternPropertyList(PatternPropertyList *previous, PatternProperty *property)
+        : property(property), next(this)
     {
         kind = K;
         next = previous->next;
         previous->next = this;
     }
 
-    inline PropertyDefinitionList *finish ()
+    void accept0(Visitor *visitor) override;
+
+    void boundNames(QStringList *names);
+
+    inline PatternPropertyList *finish ()
     {
-        PropertyDefinitionList *front = next;
-        next = nullptr;
+        PatternPropertyList *front = next;
+        next = 0;
         return front;
     }
 
-    void accept0(Visitor *visitor) override;
-
     SourceLocation firstSourceLocation() const override
-    { return assignment->firstSourceLocation(); }
+    { return property->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : assignment->lastSourceLocation(); }
+    { return next ? next->lastSourceLocation() : property->lastSourceLocation(); }
 
-// attributes
-    PropertyDefinition *assignment;
-    PropertyDefinitionList *next;
-    SourceLocation commaToken;
-};
-
-class QML_PARSER_EXPORT PropertyNameAndValue: public PropertyDefinition
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(PropertyNameAndValue)
-
-    PropertyNameAndValue(PropertyName *n, ExpressionNode *v)
-        : PropertyDefinition(n), value(v)
-    { kind = K; }
-
-    void accept0(Visitor *visitor) override;
-
-    SourceLocation firstSourceLocation() const override
-    { return name->firstSourceLocation(); }
-
-    SourceLocation lastSourceLocation() const override
-    { return value->lastSourceLocation(); }
-
-// attributes
-    SourceLocation colonToken;
-    ExpressionNode *value;
-    SourceLocation commaToken;
-};
-
-class QML_PARSER_EXPORT PropertyGetterSetter: public PropertyDefinition
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(PropertyGetterSetter)
-
-    enum Type {
-        Getter,
-        Setter
-    };
-
-    PropertyGetterSetter(PropertyName *n, StatementList *b)
-        : PropertyDefinition(n), type(Getter), formals(nullptr), functionBody(b)
-    { kind = K; }
-
-    PropertyGetterSetter(PropertyName *n, FormalParameterList *f, StatementList *b)
-        : PropertyDefinition(n), type(Setter), formals(f), functionBody(b)
-    { kind = K; }
-
-    void accept0(Visitor *visitor) override;
-
-    SourceLocation firstSourceLocation() const override
-    { return getSetToken; }
-
-    SourceLocation lastSourceLocation() const override
-    { return rbraceToken; }
-
-// attributes
-    Type type;
-    SourceLocation getSetToken;
-    SourceLocation lparenToken;
-    FormalParameterList *formals;
-    SourceLocation rparenToken;
-    SourceLocation lbraceToken;
-    StatementList *functionBody;
-    SourceLocation rbraceToken;
+    PatternProperty *property;
+    PatternPropertyList *next;
 };
 
 class QML_PARSER_EXPORT IdentifierPropertyName : public PropertyName
@@ -2149,191 +2160,6 @@ public:
     SourceLocation rbraceToken;
 };
 
-class QML_PARSER_EXPORT BindingRestElement : public Node
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(BindingRestElement)
-
-    BindingRestElement(const QStringRef &n)
-        : name(n)
-    { kind = K; }
-
-    void accept0(Visitor *visitor) override;
-
-    SourceLocation firstSourceLocation() const override
-    { return identifierToken; }
-
-    SourceLocation lastSourceLocation() const override
-    { return identifierToken; }
-
-// attributes
-    SourceLocation identifierToken;
-    QStringRef name;
-};
-
-class QML_PARSER_EXPORT BindingPattern : public Node
-{
-public:
-
-    SourceLocation firstSourceLocation() const override
-    { return first; }
-
-    SourceLocation lastSourceLocation() const override
-    { return last; }
-
-    SourceLocation first;
-    SourceLocation last;
-};
-
-class QML_PARSER_EXPORT ObjectBindingPattern : public BindingPattern
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(ObjectBindingPattern)
-
-    ObjectBindingPattern(BindingPropertyList *p)
-        : properties(p)
-    { kind = K; }
-
-    void accept0(Visitor *visitor) override;
-
-    BindingPropertyList *properties;
-};
-
-class QML_PARSER_EXPORT ArrayBindingPattern : public BindingPattern
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(ArrayBindingPattern)
-
-    ArrayBindingPattern(BindingElementList *e)
-        : elements(e)
-    { kind = K; }
-
-    void accept0(Visitor *visitor) override;
-
-    BindingElementList *elements;
-};
-
-class QML_PARSER_EXPORT BindingElement : public Node
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(BindingElement)
-
-    BindingElement(const QStringRef &n, ExpressionNode *i = nullptr)
-        : name(n.toString()), initializer(i)
-    { kind = K; }
-
-    BindingElement(BindingPattern *binding, ExpressionNode *i = nullptr)
-        : binding(binding), initializer(i)
-    { kind = K; }
-
-    void accept0(Visitor *visitor) override;
-
-    SourceLocation firstSourceLocation() const override
-    { return identifierToken; }
-
-    SourceLocation lastSourceLocation() const override
-    { return initializer ? initializer->lastSourceLocation() : (binding ? binding->lastSourceLocation() : identifierToken); }
-
-    BindingElementList *elementList() const {
-        ArrayBindingPattern *p = cast<ArrayBindingPattern *>(binding);
-        return p ? p->elements : nullptr;
-    }
-    BindingPropertyList *propertyList() const {
-        ObjectBindingPattern *p = cast<ObjectBindingPattern *>(binding);
-        return p ? p->properties : nullptr;
-    }
-
-    void boundNames(QStringList *names);
-
-// attributes
-    SourceLocation identifierToken;
-    BindingPattern *binding = nullptr;
-    QString name;
-    ExpressionNode *initializer = nullptr;
-};
-
-class QML_PARSER_EXPORT BindingElementList : public Node
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(BindingElementList)
-
-    BindingElementList(Elision *e, Node *p)
-        : elision(e), param(p), next(this)
-    { kind = K; }
-
-    BindingElementList *append(BindingElementList *n) {
-        n->next = next;
-        next = n;
-        return n;
-    }
-
-    inline BindingElementList *finish ()
-    {
-        BindingElementList *front = next;
-        next = 0;
-        return front;
-    }
-
-    BindingRestElement *bindingRestElement() const {
-        return cast<BindingRestElement *>(param);
-    }
-
-    BindingElement *bindingElement() const {
-        return cast<BindingElement *>(param);
-    }
-
-    void accept0(Visitor *visitor) override;
-
-    void boundNames(QStringList *names);
-
-    SourceLocation firstSourceLocation() const override
-    { return elision ? elision->firstSourceLocation() : param->firstSourceLocation(); }
-
-    SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : (param ? param->lastSourceLocation() : elision->lastSourceLocation()); }
-
-    Elision *elision = nullptr;
-    Node *param = nullptr;
-    BindingElementList *next;
-};
-
-class QML_PARSER_EXPORT BindingPropertyList : public Node
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(BindingPropertyList)
-
-    BindingPropertyList(PropertyName *n, BindingElement *e)
-        : propertyName(n), binding(e), next(this)
-    { kind = K; }
-
-    void accept0(Visitor *visitor) override;
-
-    void boundNames(QStringList *names);
-
-    BindingPropertyList *append(BindingPropertyList *n) {
-        n->next = next;
-        next = n;
-        return n;
-    }
-
-    inline BindingPropertyList *finish ()
-    {
-        BindingPropertyList *front = next;
-        next = 0;
-        return front;
-    }
-
-    SourceLocation firstSourceLocation() const override
-    { return propertyName->firstSourceLocation(); }
-
-    SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : binding->lastSourceLocation(); }
-
-    PropertyName *propertyName;
-    BindingElement *binding;
-    BindingPropertyList *next;
-};
-
 class QML_PARSER_EXPORT FunctionDeclaration: public FunctionExpression
 {
 public:
@@ -2351,8 +2177,8 @@ class QML_PARSER_EXPORT FormalParameterList: public Node
 public:
     QQMLJS_DECLARE_AST_NODE(FormalParameterList)
 
-    FormalParameterList(FormalParameterList *previous, Node *p)
-        : param(p)
+    FormalParameterList(FormalParameterList *previous, PatternElement *e)
+        : element(e)
     {
         kind = K;
         if (previous) {
@@ -2369,22 +2195,14 @@ public:
         return n;
     }
 
-    BindingRestElement *bindingRestElement() const {
-        return cast<BindingRestElement *>(param);
-    }
-
-    BindingElement *bindingElement() const {
-        return cast<BindingElement *>(param);
-    }
-
     bool isSimpleParameterList()
     {
         AST::FormalParameterList *formals = this;
         while (formals) {
-            if (formals->bindingRestElement())
+            PatternElement *e = formals->element;
+            if (e && e->type == PatternElement::RestElement)
                 return false;
-            BindingElement *e = formals->bindingElement();
-            if (e && (e->initializer || e->binding))
+            if (e && (e->initializer || e->bindingPattern))
                 return false;
             formals = formals->next;
         }
@@ -2397,10 +2215,10 @@ public:
         int l = 0;
         AST::FormalParameterList *formals = this;
         while (formals) {
-            if (formals->bindingRestElement())
-                break;
-            BindingElement *e = formals->bindingElement();
+            PatternElement *e = formals->element;
             if (!e || e->initializer)
+                break;
+            if (e->type == PatternElement::RestElement)
                 break;
             ++l;
             formals = formals->next;
@@ -2410,14 +2228,10 @@ public:
 
     bool containsName(const QString &name) const {
         for (const FormalParameterList *it = this; it; it = it->next) {
-            if (QQmlJS::AST::BindingElement *b = it->bindingElement()) {
-                // ### handle binding patterns
-                if (b->name == name)
-                    return true;
-            } else if (QQmlJS::AST::BindingRestElement *r = it->bindingRestElement()) {
-                if (r->name == name)
-                    return true;
-            }
+            PatternElement *b = it->element;
+            // ### handle binding patterns
+            if (b && b->bindingIdentifier == name)
+                return true;
         }
         return false;
     }
@@ -2429,15 +2243,15 @@ public:
     void accept0(Visitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
-    { return param->firstSourceLocation(); }
+    { return element->firstSourceLocation(); }
 
     SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : param->lastSourceLocation(); }
+    { return next ? next->lastSourceLocation() : element->lastSourceLocation(); }
 
     FormalParameterList *finish();
 
 // attributes
-    Node *param = nullptr;
+    PatternElement *element = nullptr;
     FormalParameterList *next;
 };
 
@@ -2473,7 +2287,7 @@ class QML_PARSER_EXPORT ClassElementList : public Node
 public:
     QQMLJS_DECLARE_AST_NODE(ClassElementList)
 
-    ClassElementList(PropertyDefinition *property, bool isStatic)
+    ClassElementList(PatternProperty *property, bool isStatic)
         : isStatic(isStatic), property(property)
     {
         kind = K;
@@ -2502,7 +2316,7 @@ public:
 
     bool isStatic;
     ClassElementList *next;
-    PropertyDefinition *property;
+    PatternProperty *property;
 };
 
 class QML_PARSER_EXPORT Program: public Node

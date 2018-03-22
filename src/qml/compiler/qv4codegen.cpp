@@ -397,10 +397,10 @@ void Codegen::variableDeclarationList(VariableDeclarationList *ast)
     }
 }
 
-void Codegen::initializeAndDestructureBindingElement(AST::BindingElement *e, const Codegen::Reference &baseRef)
+void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, const Codegen::Reference &baseRef)
 {
     RegisterScope scope(this);
-    Reference varToStore = e->name.isNull() ? Reference::fromStackSlot(this, bytecodeGenerator->newRegister()) : referenceForName(e->name, true);
+    Reference varToStore = e->bindingIdentifier.isNull() ? Reference::fromStackSlot(this, bytecodeGenerator->newRegister()) : referenceForName(e->bindingIdentifier, true);
     if (e->initializer && baseRef == varToStore) {
         baseRef.loadInAccumulator();
         BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
@@ -417,11 +417,13 @@ void Codegen::initializeAndDestructureBindingElement(AST::BindingElement *e, con
         baseRef.loadInAccumulator();
         varToStore.storeConsumeAccumulator();
     }
-    if (BindingElementList *l = e->elementList()) {
+    if (!varToStore.isStackSlot())
+        varToStore = varToStore.storeOnStack();
+    if (PatternElementList *l = e->elementList()) {
         destructureElementList(varToStore, l);
-    } else if (BindingPropertyList *p = e->propertyList()) {
+    } else if (PatternPropertyList *p = e->propertyList()) {
         destructurePropertyList(varToStore, p);
-    } else if (e->name.isNull()) {
+    } else if (e->bindingPattern) {
         // empty binding pattern. For spec compatibility, try to coerce the argument to an object
         varToStore.loadInAccumulator();
         Instruction::ToObject toObject;
@@ -430,31 +432,32 @@ void Codegen::initializeAndDestructureBindingElement(AST::BindingElement *e, con
     }
 }
 
-void Codegen::destructurePropertyList(const Codegen::Reference &object, BindingPropertyList *bindingList)
+void Codegen::destructurePropertyList(const Codegen::Reference &object, PatternPropertyList *bindingList)
 {
     RegisterScope scope(this);
 
-    for (BindingPropertyList *p = bindingList; p; p = p->next) {
+    for (PatternPropertyList *it = bindingList; it; it = it->next) {
+        PatternProperty *p = it->property;
         RegisterScope scope(this);
-        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->propertyName);
+        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
         Reference property;
         if (cname) {
             Reference computedName = expression(cname->expression).storeOnStack();
             property = Reference::fromSubscript(object, computedName);
         } else {
-            QString propertyName = p->propertyName->asString();
+            QString propertyName = p->name->asString();
             property = Reference::fromMember(object, propertyName);
         }
-        initializeAndDestructureBindingElement(p->binding, property);
+        initializeAndDestructureBindingElement(p, property);
     }
 }
 
-void Codegen::destructureElementList(const Codegen::Reference &array, BindingElementList *bindingList)
+void Codegen::destructureElementList(const Codegen::Reference &array, PatternElementList *bindingList)
 {
     RegisterScope scope(this);
 
     int index = 0;
-    for (BindingElementList *p = bindingList; p; p = p->next) {
+    for (PatternElementList *p = bindingList; p; p = p->next) {
         for (Elision *elision = p->elision; elision; elision = elision->next)
             ++index;
 
@@ -462,10 +465,12 @@ void Codegen::destructureElementList(const Codegen::Reference &array, BindingEle
 
         Reference idx = Reference::fromConst(this, Encode(index));
         Reference property = Reference::fromSubscript(array, idx);
-        if (BindingElement *e = p->bindingElement())
+        PatternElement *e = p->element;
+        if (!e)
+            continue;
+        if (e->type != PatternElement::RestElement)
             initializeAndDestructureBindingElement(e, property);
-        else if (BindingRestElement *r = p->bindingRestElement()) {
-            Q_UNUSED(r);
+        else {
             throwSyntaxError(bindingList->firstSourceLocation(), QString::fromLatin1("Support for rest elements in binding arrays not implemented!"));
         }
     }
@@ -508,12 +513,6 @@ bool Codegen::visit(DefaultClause *)
     return false;
 }
 
-bool Codegen::visit(ElementList *)
-{
-    Q_UNREACHABLE();
-    return false;
-}
-
 bool Codegen::visit(Elision *)
 {
     Q_UNREACHABLE();
@@ -538,19 +537,25 @@ bool Codegen::visit(Program *)
     return false;
 }
 
-bool Codegen::visit(PropertyDefinitionList *)
+bool Codegen::visit(PatternElement *)
 {
     Q_UNREACHABLE();
     return false;
 }
 
-bool Codegen::visit(PropertyNameAndValue *)
+bool Codegen::visit(PatternElementList *)
 {
     Q_UNREACHABLE();
     return false;
 }
 
-bool Codegen::visit(PropertyGetterSetter *)
+bool Codegen::visit(PatternProperty *)
+{
+    Q_UNREACHABLE();
+    return false;
+}
+
+bool Codegen::visit(PatternPropertyList *)
 {
     Q_UNREACHABLE();
     return false;
@@ -673,8 +678,11 @@ bool Codegen::visit(ArrayPattern *ast)
         ++argc;
     };
 
-    for (ElementList *it = ast->elements; it; it = it->next) {
-        if (it->isSpreadElement) {
+    for (PatternElementList *it = ast->elements; it; it = it->next) {
+        PatternElement *e = it->element;
+        if (!e)
+            continue;
+        if (e->type == PatternElement::RestElement) {
             throwSyntaxError(it->firstSourceLocation(), QLatin1String("'...' in ArrayLiterals is unimplementd."));
             return false;
         }
@@ -682,7 +690,7 @@ bool Codegen::visit(ArrayPattern *ast)
         for (Elision *elision = it->elision; elision; elision = elision->next)
             push(nullptr);
 
-        push(it->expression);
+        push(e->initializer);
         if (hasError)
             return false;
     }
@@ -1896,25 +1904,28 @@ bool Codegen::visit(ObjectPattern *ast)
 
     RegisterScope scope(this);
 
-    for (PropertyDefinitionList *it = ast->properties; it; it = it->next) {
-        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(it->assignment->name);
+    for (PatternPropertyList *it = ast->properties; it; it = it->next) {
+        PatternProperty *p = it->property;
+        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
         if (cname) {
             Reference name = expression(cname->expression).storeOnStack();
             computedProperties.append({name, ObjectPropertyValue()});
         }
-        QString name = it->assignment->name->asString();
+        QString name = p->name->asString();
         ObjectPropertyValue &v = cname ? computedProperties.last().second : valueMap[name];
-        if (PropertyNameAndValue *nv = AST::cast<AST::PropertyNameAndValue *>(it->assignment)) {
-            Reference value = expression(nv->value);
+        if (p->type == PatternProperty::Literal) {
+            Reference value = expression(p->initializer);
             if (hasError)
                 return false;
 
             v.rvalue = value.storeOnStack();
             v.getter = v.setter = -1;
-        } else if (PropertyGetterSetter *gs = AST::cast<AST::PropertyGetterSetter *>(it->assignment)) {
-            const int function = defineFunction(name, gs, gs->formals, gs->functionBody);
+        } else if (p->type == PatternProperty::Getter || p->type == PatternProperty::Setter) {
+            FunctionExpression *f = AST::cast<FunctionExpression *>(p->initializer);
+            Q_ASSERT(f);
+            const int function = defineFunction(name, f, f->formals, f->body);
             v.rvalue = Reference();
-            if (gs->type == PropertyGetterSetter::Getter)
+            if (p->type == PatternProperty::Getter)
                 v.getter = function;
             else
                 v.setter = function;
@@ -2419,21 +2430,23 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     int argc = 0;
     while (formals) {
-        if (AST::BindingRestElement *r = formals->bindingRestElement()) {
-            Q_ASSERT(!formals->next);
-            Instruction::CreateRestParameter rest;
-            rest.argIndex = argc;
-            bytecodeGenerator->addInstruction(rest);
-            Reference f = referenceForName(r->name.toString(), true);
-            f.storeConsumeAccumulator();
-        } else if (BindingElement *e = formals->bindingElement()) {
-            Reference arg = referenceForName(e->name, true);
-            initializeAndDestructureBindingElement(e, arg);
-        } else {
+        PatternElement *e = formals->element;
+        if (!e) {
             if (!formals->next)
                 // trailing comma
                 break;
             Q_UNREACHABLE();
+        }
+
+        Reference arg = referenceForName(e->bindingIdentifier, true);
+        if (e->type == PatternElement::RestElement) {
+            Q_ASSERT(!formals->next);
+            Instruction::CreateRestParameter rest;
+            rest.argIndex = argc;
+            bytecodeGenerator->addInstruction(rest);
+            arg.storeConsumeAccumulator();
+        } else {
+            initializeAndDestructureBindingElement(e, arg);
         }
         formals = formals->next;
         ++argc;

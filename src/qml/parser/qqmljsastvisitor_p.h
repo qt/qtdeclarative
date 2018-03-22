@@ -143,20 +143,20 @@ public:
     virtual bool visit(ObjectPattern *) { return true; }
     virtual void endVisit(ObjectPattern *) {}
 
-    virtual bool visit(ElementList *) { return true; }
-    virtual void endVisit(ElementList *) {}
+    virtual bool visit(PatternElementList *) { return true; }
+    virtual void endVisit(PatternElementList *) {}
+
+    virtual bool visit(PatternPropertyList *) { return true; }
+    virtual void endVisit(PatternPropertyList *) {}
+
+    virtual bool visit(PatternElement *) { return true; }
+    virtual void endVisit(PatternElement *) {}
+
+    virtual bool visit(PatternProperty *) { return true; }
+    virtual void endVisit(PatternProperty *) {}
 
     virtual bool visit(Elision *) { return true; }
     virtual void endVisit(Elision *) {}
-
-    virtual bool visit(PropertyDefinitionList *) { return true; }
-    virtual void endVisit(PropertyDefinitionList *) {}
-
-    virtual bool visit(PropertyNameAndValue *) { return true; }
-    virtual void endVisit(PropertyNameAndValue *) {}
-
-    virtual bool visit(PropertyGetterSetter *) { return true; }
-    virtual void endVisit(PropertyGetterSetter *) {}
 
     virtual bool visit(NestedExpression *) { return true; }
     virtual void endVisit(NestedExpression *) {}
@@ -328,24 +328,6 @@ public:
 
     virtual bool visit(FunctionExpression *) { return true; }
     virtual void endVisit(FunctionExpression *) {}
-
-    virtual bool visit(ObjectBindingPattern *) { return true; }
-    virtual void endVisit(ObjectBindingPattern *) {}
-
-    virtual bool visit(ArrayBindingPattern *) { return true; }
-    virtual void endVisit(ArrayBindingPattern *) {}
-
-    virtual bool visit(BindingElement *) { return true; }
-    virtual void endVisit(BindingElement *) {}
-
-    virtual bool visit(BindingElementList *) { return true; }
-    virtual void endVisit(BindingElementList *) {}
-
-    virtual bool visit(BindingPropertyList *) { return true; }
-    virtual void endVisit(BindingPropertyList *) {}
-
-    virtual bool visit(BindingRestElement *) { return true; }
-    virtual void endVisit(BindingRestElement *) {}
 
     virtual bool visit(FormalParameterList *) { return true; }
     virtual void endVisit(FormalParameterList *) {}

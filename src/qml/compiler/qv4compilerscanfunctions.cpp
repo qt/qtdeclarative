@@ -178,7 +178,7 @@ bool ScanFunctions::visit(NewMemberExpression *ast)
 bool ScanFunctions::visit(ArrayPattern *ast)
 {
     int index = 0;
-    for (ElementList *it = ast->elements; it; it = it->next) {
+    for (PatternElementList *it = ast->elements; it; it = it->next) {
         for (Elision *elision = it->elision; elision; elision = elision->next)
             ++index;
         ++index;
@@ -270,31 +270,27 @@ void ScanFunctions::endVisit(FunctionExpression *)
 
 bool ScanFunctions::visit(ObjectPattern *ast)
 {
-    int argc = 0;
-    for (PropertyDefinitionList *it = ast->properties; it; it = it->next) {
-        QString key = it->assignment->name->asString();
-        if (QV4::String::toArrayIndex(key) != UINT_MAX)
-            ++argc;
-        ++argc;
-        if (AST::cast<AST::PropertyGetterSetter *>(it->assignment))
-            ++argc;
-    }
-    _context->maxNumberOfArguments = qMax(_context->maxNumberOfArguments, argc);
-
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
     Node::accept(ast->properties, this);
     return false;
 }
 
-bool ScanFunctions::visit(PropertyGetterSetter *ast)
+bool ScanFunctions::visit(PatternProperty *ast)
 {
-    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
-    return enterFunction(ast, QString(), ast->formals, ast->functionBody, /*enterName */ false);
+    Q_UNUSED(ast);
+    // ### Shouldn't be required anymore
+//    if (ast->type == PatternProperty::Getter || ast->type == PatternProperty::Setter) {
+//        TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
+//        return enterFunction(ast, QString(), ast->formals, ast->functionBody, /*enterName */ false);
+//    }
+    return true;
 }
 
-void ScanFunctions::endVisit(PropertyGetterSetter *)
+void ScanFunctions::endVisit(PatternProperty *)
 {
-    leaveEnvironment();
+    // ###
+//    if (ast->type == PatternProperty::Getter || ast->type == PatternProperty::Setter)
+//        leaveEnvironment();
 }
 
 bool ScanFunctions::visit(FunctionDeclaration *ast)

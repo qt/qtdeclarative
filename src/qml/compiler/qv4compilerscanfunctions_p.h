@@ -117,8 +117,8 @@ protected:
 
     bool visit(AST::ObjectPattern *ast) override;
 
-    bool visit(AST::PropertyGetterSetter *ast) override;
-    void endVisit(AST::PropertyGetterSetter *) override;
+    bool visit(AST::PatternProperty *ast) override;
+    void endVisit(AST::PatternProperty *) override;
 
     bool visit(AST::FunctionDeclaration *ast) override;
     void endVisit(AST::FunctionDeclaration *) override;

@@ -5515,7 +5515,6 @@ language/expressions/function/dstr-ary-ptrn-elem-ary-elem-iter
 language/expressions/function/dstr-ary-ptrn-elem-ary-elision-init
 language/expressions/function/dstr-ary-ptrn-elem-ary-elision-iter
 language/expressions/function/dstr-ary-ptrn-elem-ary-empty-init
-language/expressions/function/dstr-ary-ptrn-elem-ary-empty-iter
 language/expressions/function/dstr-ary-ptrn-elem-ary-rest-init
 language/expressions/function/dstr-ary-ptrn-elem-ary-rest-iter
 language/expressions/function/dstr-ary-ptrn-elem-id-init-fn-name-arrow
@@ -5524,7 +5523,6 @@ language/expressions/function/dstr-ary-ptrn-elem-id-init-fn-name-cover
 language/expressions/function/dstr-ary-ptrn-elem-id-init-fn-name-fn
 language/expressions/function/dstr-ary-ptrn-elem-id-init-fn-name-gen
 language/expressions/function/dstr-ary-ptrn-elem-id-init-skipped
-language/expressions/function/dstr-ary-ptrn-elem-id-init-throws
 language/expressions/function/dstr-ary-ptrn-elem-id-iter-step-err
 language/expressions/function/dstr-ary-ptrn-elem-id-iter-val
 language/expressions/function/dstr-ary-ptrn-elem-id-iter-val-err
@@ -5553,7 +5551,6 @@ language/expressions/function/dstr-dflt-ary-ptrn-elem-ary-elem-iter
 language/expressions/function/dstr-dflt-ary-ptrn-elem-ary-elision-init
 language/expressions/function/dstr-dflt-ary-ptrn-elem-ary-elision-iter
 language/expressions/function/dstr-dflt-ary-ptrn-elem-ary-empty-init
-language/expressions/function/dstr-dflt-ary-ptrn-elem-ary-empty-iter
 language/expressions/function/dstr-dflt-ary-ptrn-elem-ary-rest-init
 language/expressions/function/dstr-dflt-ary-ptrn-elem-ary-rest-iter
 language/expressions/function/dstr-dflt-ary-ptrn-elem-id-init-fn-name-arrow
@@ -5562,7 +5559,6 @@ language/expressions/function/dstr-dflt-ary-ptrn-elem-id-init-fn-name-cover
 language/expressions/function/dstr-dflt-ary-ptrn-elem-id-init-fn-name-fn
 language/expressions/function/dstr-dflt-ary-ptrn-elem-id-init-fn-name-gen
 language/expressions/function/dstr-dflt-ary-ptrn-elem-id-init-skipped
-language/expressions/function/dstr-dflt-ary-ptrn-elem-id-init-throws
 language/expressions/function/dstr-dflt-ary-ptrn-elem-id-iter-step-err
 language/expressions/function/dstr-dflt-ary-ptrn-elem-id-iter-val
 language/expressions/function/dstr-dflt-ary-ptrn-elem-id-iter-val-err
@@ -6067,7 +6063,6 @@ language/expressions/object/dstr-meth-ary-ptrn-elem-ary-elem-iter
 language/expressions/object/dstr-meth-ary-ptrn-elem-ary-elision-init
 language/expressions/object/dstr-meth-ary-ptrn-elem-ary-elision-iter
 language/expressions/object/dstr-meth-ary-ptrn-elem-ary-empty-init
-language/expressions/object/dstr-meth-ary-ptrn-elem-ary-empty-iter
 language/expressions/object/dstr-meth-ary-ptrn-elem-ary-rest-init
 language/expressions/object/dstr-meth-ary-ptrn-elem-ary-rest-iter
 language/expressions/object/dstr-meth-ary-ptrn-elem-id-init-fn-name-arrow
@@ -6076,7 +6071,6 @@ language/expressions/object/dstr-meth-ary-ptrn-elem-id-init-fn-name-cover
 language/expressions/object/dstr-meth-ary-ptrn-elem-id-init-fn-name-fn
 language/expressions/object/dstr-meth-ary-ptrn-elem-id-init-fn-name-gen
 language/expressions/object/dstr-meth-ary-ptrn-elem-id-init-skipped
-language/expressions/object/dstr-meth-ary-ptrn-elem-id-init-throws
 language/expressions/object/dstr-meth-ary-ptrn-elem-id-iter-step-err
 language/expressions/object/dstr-meth-ary-ptrn-elem-id-iter-val
 language/expressions/object/dstr-meth-ary-ptrn-elem-id-iter-val-err
@@ -6105,7 +6099,6 @@ language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-ary-elem-iter
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-ary-elision-init
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-ary-elision-iter
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-ary-empty-init
-language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-ary-empty-iter
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-ary-rest-init
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-ary-rest-iter
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-id-init-fn-name-arrow
@@ -6114,7 +6107,6 @@ language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-id-init-fn-name-cover
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-id-init-fn-name-fn
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-id-init-fn-name-gen
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-id-init-skipped
-language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-id-init-throws
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-id-iter-step-err
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-id-iter-val
 language/expressions/object/dstr-meth-dflt-ary-ptrn-elem-id-iter-val-err
@@ -6651,8 +6643,6 @@ language/module-code/namespace/internals/set-prototype-of-null
 language/module-code/namespace/Symbol.iterator
 language/module-code/namespace/Symbol.toStringTag
 language/module-code/parse-export-empty
-language/rest-parameters/array-pattern
-language/rest-parameters/object-pattern
 language/rest-parameters/with-new-target
 language/statements/async-function/cptn-decl
 language/statements/async-function/declaration-returns-promise
@@ -8628,7 +8618,6 @@ language/statements/function/dstr-ary-ptrn-elem-ary-elem-iter
 language/statements/function/dstr-ary-ptrn-elem-ary-elision-init
 language/statements/function/dstr-ary-ptrn-elem-ary-elision-iter
 language/statements/function/dstr-ary-ptrn-elem-ary-empty-init
-language/statements/function/dstr-ary-ptrn-elem-ary-empty-iter
 language/statements/function/dstr-ary-ptrn-elem-ary-rest-init
 language/statements/function/dstr-ary-ptrn-elem-ary-rest-iter
 language/statements/function/dstr-ary-ptrn-elem-id-init-fn-name-arrow
@@ -8637,7 +8626,6 @@ language/statements/function/dstr-ary-ptrn-elem-id-init-fn-name-cover
 language/statements/function/dstr-ary-ptrn-elem-id-init-fn-name-fn
 language/statements/function/dstr-ary-ptrn-elem-id-init-fn-name-gen
 language/statements/function/dstr-ary-ptrn-elem-id-init-skipped
-language/statements/function/dstr-ary-ptrn-elem-id-init-throws
 language/statements/function/dstr-ary-ptrn-elem-id-iter-step-err
 language/statements/function/dstr-ary-ptrn-elem-id-iter-val
 language/statements/function/dstr-ary-ptrn-elem-id-iter-val-err
@@ -8666,7 +8654,6 @@ language/statements/function/dstr-dflt-ary-ptrn-elem-ary-elem-iter
 language/statements/function/dstr-dflt-ary-ptrn-elem-ary-elision-init
 language/statements/function/dstr-dflt-ary-ptrn-elem-ary-elision-iter
 language/statements/function/dstr-dflt-ary-ptrn-elem-ary-empty-init
-language/statements/function/dstr-dflt-ary-ptrn-elem-ary-empty-iter
 language/statements/function/dstr-dflt-ary-ptrn-elem-ary-rest-init
 language/statements/function/dstr-dflt-ary-ptrn-elem-ary-rest-iter
 language/statements/function/dstr-dflt-ary-ptrn-elem-id-init-fn-name-arrow
@@ -8675,7 +8662,6 @@ language/statements/function/dstr-dflt-ary-ptrn-elem-id-init-fn-name-cover
 language/statements/function/dstr-dflt-ary-ptrn-elem-id-init-fn-name-fn
 language/statements/function/dstr-dflt-ary-ptrn-elem-id-init-fn-name-gen
 language/statements/function/dstr-dflt-ary-ptrn-elem-id-init-skipped
-language/statements/function/dstr-dflt-ary-ptrn-elem-id-init-throws
 language/statements/function/dstr-dflt-ary-ptrn-elem-id-iter-step-err
 language/statements/function/dstr-dflt-ary-ptrn-elem-id-iter-val
 language/statements/function/dstr-dflt-ary-ptrn-elem-id-iter-val-err
@@ -9260,6 +9246,15 @@ built-ins/NativeErrors/ReferenceError/is-error-object
 built-ins/NativeErrors/SyntaxError/is-error-object
 built-ins/NativeErrors/TypeError/is-error-object
 built-ins/NativeErrors/URIError/is-error-object
+
+built-ins/Object/prototype/toLocaleString/primitive_this_value
+language/expressions/object/yield-non-strict-access
+language/expressions/object/yield-non-strict-syntax
+language/expressions/object/not-defined
+language/expressions/object/prop-def-id-get-error
+language/expressions/object/prop-def-id-valid
+language/function-code/10.4.3-1-104
+language/function-code/10.4.3-1-106
 
 # Expected to fail but passed ---
 language/eval-code/direct/var-env-global-lex-non-strict

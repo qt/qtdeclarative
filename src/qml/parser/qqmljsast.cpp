@@ -200,6 +200,18 @@ void ArrayPattern::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+bool ArrayPattern::isValidArrayLiteral(SourceLocation *errorLocation) const {
+    for (PatternElementList *it = elements; it != nullptr; it = it->next) {
+        PatternElement *e = it->element;
+        if (e && e->bindingPattern != nullptr) {
+            if (errorLocation)
+                *errorLocation = e->firstSourceLocation();
+            return false;
+        }
+    }
+    return true;
+}
+
 void ObjectPattern::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
@@ -209,54 +221,10 @@ void ObjectPattern::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void ElementList::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
-        for (ElementList *it = this; it; it = it->next) {
-            accept(it->elision, visitor);
-            accept(it->expression, visitor);
-        }
-    }
-
-    visitor->endVisit(this);
-}
-
 void Elision::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         // ###
-    }
-
-    visitor->endVisit(this);
-}
-
-void PropertyNameAndValue::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
-        accept(name, visitor);
-        accept(value, visitor);
-    }
-
-    visitor->endVisit(this);
-}
-
-void PropertyGetterSetter::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
-        accept(name, visitor);
-        accept(formals, visitor);
-        accept(functionBody, visitor);
-    }
-
-    visitor->endVisit(this);
-}
-
-void PropertyDefinitionList::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
-        for (PropertyDefinitionList *it = this; it; it = it->next) {
-            accept(it->assignment, visitor);
-        }
     }
 
     visitor->endVisit(this);
@@ -786,18 +754,15 @@ QStringList FormalParameterList::formals() const
     QStringList formals;
     int i = 0;
     for (const FormalParameterList *it = this; it; it = it->next) {
-        QString name;
-        if (QQmlJS::AST::BindingElement *b = it->bindingElement()) {
-            name = b->name;
-        } else if (QQmlJS::AST::BindingRestElement *r = it->bindingRestElement()) {
-            name = r->name.toString();
+        if (it->element) {
+            QString name = it->element->bindingIdentifier;
+            int duplicateIndex = formals.indexOf(name);
+            if (duplicateIndex >= 0) {
+                // change the name of the earlier argument to enforce the lookup semantics from the spec
+                formals[duplicateIndex] += QLatin1String("#") + QString::number(i);
+            }
+            formals += name;
         }
-        int duplicateIndex = formals.indexOf(name);
-        if (duplicateIndex >= 0) {
-            // change the name of the earlier argument to enforce the lookup semantics from the spec
-            formals[duplicateIndex] += QLatin1String("#") + QString::number(i);
-        }
-        formals += name;
         ++i;
     }
     return formals;
@@ -807,11 +772,8 @@ QStringList FormalParameterList::boundNames() const
 {
     QStringList names;
     for (const FormalParameterList *it = this; it; it = it->next) {
-        if (QQmlJS::AST::BindingElement *b = it->bindingElement()) {
-            b->boundNames(&names);
-        } else if (QQmlJS::AST::BindingRestElement *r = it->bindingRestElement()) {
-            names += r->name.toString();
-        }
+        if (it->element)
+            it->element->boundNames(&names);
     }
     return names;
 }
@@ -819,11 +781,7 @@ QStringList FormalParameterList::boundNames() const
 void FormalParameterList::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-        if (BindingElement *b = bindingElement()) {
-            accept(b, visitor);
-        } else if (BindingRestElement *r = bindingRestElement()) {
-            accept(r, visitor);
-        }
+        accept(element, visitor);
         if (next)
             accept(next, visitor);
     }
@@ -838,11 +796,8 @@ FormalParameterList *FormalParameterList::finish()
 
     int i = 0;
     for (const FormalParameterList *it = this; it; it = it->next) {
-        QString name;
-        if (QQmlJS::AST::BindingElement *b = it->bindingElement()) {
-            if (b->name.isEmpty())
-                name = QLatin1String("arg#") + QString::number(i);
-        }
+        if (it->element && it->element->bindingIdentifier.isEmpty())
+            it->element->bindingIdentifier = QLatin1String("arg#") + QString::number(i);
         ++i;
     }
     return front;
@@ -1042,82 +997,79 @@ void TaggedTemplate::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void BindingRestElement::accept0(Visitor *visitor)
+void PatternElement::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-    }
-
-    visitor->endVisit(this);
-}
-
-void BindingElement::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
+        accept(bindingPattern, visitor);
         accept(initializer, visitor);
     }
 
     visitor->endVisit(this);
 }
 
-void BindingElement::boundNames(QStringList *names)
+void PatternElement::boundNames(QStringList *names)
 {
-    if (binding) {
-        if (BindingElementList *e = elementList())
+    if (bindingPattern) {
+        if (PatternElementList *e = elementList())
             e->boundNames(names);
-        else if (BindingPropertyList *p = propertyList())
+        else if (PatternPropertyList *p = propertyList())
             p->boundNames(names);
-    } else
-        names->append(name);
+    } else {
+        names->append(bindingIdentifier);
+    }
 }
 
-void BindingElementList::accept0(Visitor *visitor)
+void PatternElementList::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        accept(elision, visitor);
+        accept(element, visitor);
+        if (next)
+            accept(next, visitor);
     }
 
     visitor->endVisit(this);
 }
 
-void BindingElementList::boundNames(QStringList *names)
+void PatternElementList::boundNames(QStringList *names)
 {
-    for (BindingElementList *it = this; it; it = it->next) {
-        if (BindingElement *e = it->bindingElement())
-            e->boundNames(names);
-        else if (BindingRestElement *r = it->bindingRestElement())
-            names->append(r->name.toString());
+    for (PatternElementList *it = this; it; it = it->next) {
+        if (it->element)
+            it->element->boundNames(names);
     }
 }
 
-void BindingPropertyList::accept0(Visitor *visitor)
+void PatternProperty::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        accept(name, visitor);
+        accept(bindingPattern, visitor);
+        accept(initializer, visitor);
     }
 
     visitor->endVisit(this);
 }
 
-void BindingPropertyList::boundNames(QStringList *names)
+void PatternProperty::boundNames(QStringList *names)
 {
-    for (BindingPropertyList *it = this; it; it = it->next)
-        it->binding->boundNames(names);
+    PatternElement::boundNames(names);
 }
 
-void ObjectBindingPattern::accept0(Visitor *visitor)
+void PatternPropertyList::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-        accept(properties, visitor);
+        accept(property, visitor);
+        if (next)
+            accept(next, visitor);
     }
 
     visitor->endVisit(this);
 }
 
-void ArrayBindingPattern::accept0(Visitor *visitor)
+void PatternPropertyList::boundNames(QStringList *names)
 {
-    if (visitor->visit(this)) {
-        accept(elements, visitor);
-    }
-
-    visitor->endVisit(this);
+    for (PatternPropertyList *it = this; it; it = it->next)
+        it->property->boundNames(names);
 }
 
 void ComputedPropertyName::accept0(Visitor *visitor)

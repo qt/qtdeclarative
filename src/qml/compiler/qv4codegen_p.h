@@ -511,9 +511,9 @@ protected:
     void variableDeclaration(AST::VariableDeclaration *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
-    void initializeAndDestructureBindingElement(AST::BindingElement *e, const Reference &baseRef);
-    void destructurePropertyList(const Reference &object, AST::BindingPropertyList *bindingList);
-    void destructureElementList(const Reference &array, AST::BindingElementList *bindingList);
+    void initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef);
+    void destructurePropertyList(const Reference &object, AST::PatternPropertyList *bindingList);
+    void destructureElementList(const Reference &array, AST::PatternElementList *bindingList);
 
     Reference referenceForName(const QString &name, bool lhs);
 
@@ -530,14 +530,10 @@ protected:
     bool visit(AST::CaseClauses *ast) override;
     bool visit(AST::Catch *ast) override;
     bool visit(AST::DefaultClause *ast) override;
-    bool visit(AST::ElementList *ast) override;
     bool visit(AST::Elision *ast) override;
     bool visit(AST::Finally *ast) override;
     bool visit(AST::FormalParameterList *ast) override;
     bool visit(AST::Program *ast) override;
-    bool visit(AST::PropertyNameAndValue *ast) override;
-    bool visit(AST::PropertyDefinitionList *ast) override;
-    bool visit(AST::PropertyGetterSetter *ast) override;
     bool visit(AST::StatementList *ast) override;
     bool visit(AST::UiArrayMemberList *ast) override;
     bool visit(AST::UiImport *ast) override;
@@ -551,7 +547,11 @@ protected:
     bool visit(AST::UiQualifiedPragmaId *ast) override;
     bool visit(AST::VariableDeclaration *ast) override;
     bool visit(AST::VariableDeclarationList *ast) override;
-    bool visit(AST::ClassExpression *ast) override;
+
+    bool visit(AST::PatternElement *ast) override;
+    bool visit(AST::PatternElementList *ast) override;
+    bool visit(AST::PatternProperty *ast) override;
+    bool visit(AST::PatternPropertyList *ast) override;
 
     // expressions
     bool visit(AST::Expression *ast) override;
@@ -590,6 +590,7 @@ protected:
     bool visit(AST::VoidExpression *ast) override;
     bool visit(AST::FunctionDeclaration *ast) override;
     bool visit(AST::YieldExpression *ast) override;
+    bool visit(AST::ClassExpression *ast) override;
 
     // statements
     bool visit(AST::Block *ast) override;

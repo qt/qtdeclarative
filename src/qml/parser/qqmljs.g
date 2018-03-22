@@ -267,7 +267,6 @@ public:
       AST::CaseClauses *CaseClauses;
       AST::Catch *Catch;
       AST::DefaultClause *DefaultClause;
-      AST::ElementList *ElementList;
       AST::Elision *Elision;
       AST::ExpressionNode *Expression;
       AST::TemplateLiteral *Template;
@@ -276,17 +275,16 @@ public:
       AST::FunctionDeclaration *FunctionDeclaration;
       AST::Node *Node;
       AST::PropertyName *PropertyName;
-      AST::PropertyDefinition *PropertyDefinition;
-      AST::PropertyDefinitionList *PropertyDefinitionList;
       AST::Statement *Statement;
       AST::StatementList *StatementList;
       AST::Block *Block;
       AST::VariableDeclaration *VariableDeclaration;
       AST::VariableDeclarationList *VariableDeclarationList;
-      AST::BindingPattern *BindingPattern;
-      AST::BindingElement *BindingElement;
-      AST::BindingPropertyList *BindingPropertyList;
-      AST::BindingElementList *BindingElementList;
+      AST::Pattern *Pattern;
+      AST::PatternElement *PatternElement;
+      AST::PatternElementList *PatternElementList;
+      AST::PatternProperty *PatternProperty;
+      AST::PatternPropertyList *PatternPropertyList;
       AST::ClassElementList *ClassElementList;
 
       AST::UiProgram *UiProgram;
@@ -570,9 +568,9 @@ AST::FormalParameterList *Parser::reparseAsFormalParameterList(AST::ExpressionNo
         expr = assign->left;
         rhs = assign->right;
     }
-    AST::BindingElement *binding = nullptr;
+    AST::PatternElement *binding = nullptr;
     if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(expr)) {
-        binding = new (pool) AST::BindingElement(idExpr->name, rhs);
+        binding = new (pool) AST::PatternElement(idExpr->name, rhs);
         binding->identifierToken = idExpr->identifierToken;
     }
     if (!binding)
@@ -994,7 +992,7 @@ UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList 
 UiObjectLiteral: T_LBRACE ExpressionStatementLookahead UiPropertyDefinitionList T_COMMA T_RBRACE;
 /.
     case $rule_number: {
-        AST::ObjectPattern *l = new (pool) AST::ObjectPattern(sym(3).PropertyDefinitionList->finish());
+        AST::ObjectPattern *l = new (pool) AST::ObjectPattern(sym(3).PatternPropertyList->finish());
         l->lbraceToken = loc(1);
         l->rbraceToken = loc(4);
         AST::ExpressionStatement *node = new (pool) AST::ExpressionStatement(l);
@@ -1495,7 +1493,7 @@ CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN T_RPAREN;
 CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN BindingRestElement T_RPAREN;
 /.
     case $rule_number: {
-        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(2).Node))->finish();
+        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(2).PatternElement))->finish();
         sym(1).Node = node;
         coverExpressionErrorLocation = loc(2);
         coverExpressionType = CE_FormalParameterList;
@@ -1506,10 +1504,13 @@ CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN Expression_In T_COMM
 /.
     case $rule_number: {
         AST::FormalParameterList *list = reparseAsFormalParameterList(sym(2).Expression);
-        if (!list)
+        if (!list) {
             syntaxError(loc(1), "Invalid Arrow parameter list.");
-        if (sym(4).Node)
-            list = new (pool) AST::FormalParameterList(list, sym(4).Node);
+            return false;
+        }
+        if (sym(4).Node) {
+            list = new (pool) AST::FormalParameterList(list, sym(4).PatternElement);
+        }
         coverExpressionErrorLocation = loc(4);
         coverExpressionType = CE_FormalParameterList;
         sym(1).Node = list->finish();
@@ -1616,7 +1617,7 @@ ArrayLiteral: T_LBRACKET ElisionOpt T_RBRACKET;
 ArrayLiteral: T_LBRACKET ElementList T_RBRACKET;
 /.
     case $rule_number: {
-        AST::ArrayPattern *node = new (pool) AST::ArrayPattern(sym(2).ElementList->finish());
+        AST::ArrayPattern *node = new (pool) AST::ArrayPattern(sym(2).PatternElementList->finish());
         node->lbracketToken = loc(1);
         node->rbracketToken = loc(3);
         sym(1).Node = node;
@@ -1626,33 +1627,35 @@ ArrayLiteral: T_LBRACKET ElementList T_RBRACKET;
 ArrayLiteral: T_LBRACKET ElementList T_COMMA ElisionOpt T_RBRACKET;
 /.
     case $rule_number: {
-        AST::ArrayPattern *node = new (pool) AST::ArrayPattern(sym(2).ElementList->finish(), sym(4).Elision);
+        AST::ArrayPattern *node = new (pool) AST::ArrayPattern(sym(2).PatternElementList->finish(), sym(4).Elision);
         node->lbracketToken = loc(1);
         node->commaToken = loc(3);
         node->rbracketToken = loc(5);
         sym(1).Node = node;
+        Q_ASSERT(node->isValidArrayLiteral());
     } break;
 ./
 
 ElementList: AssignmentExpression_In;
 /.
     case $rule_number: {
-        sym(1).Node = new (pool) AST::ElementList(nullptr, sym(1).Expression);
+        AST::PatternElement *e = new (pool) AST::PatternElement(sym(1).Expression);
+        sym(1).Node = new (pool) AST::PatternElementList(nullptr, e);
     } break;
 ./
 
 ElementList: Elision AssignmentExpression_In;
 /.
     case $rule_number: {
-        sym(1).Node = new (pool) AST::ElementList(sym(1).Elision->finish(), sym(2).Expression);
+        AST::PatternElement *e = new (pool) AST::PatternElement(sym(2).Expression);
+        sym(1).Node = new (pool) AST::PatternElementList(sym(1).Elision->finish(), e);
     } break;
 ./
 
 ElementList: ElisionOpt SpreadElement;
 /.
     case $rule_number: {
-        AST::ElementList *node = new (pool) AST::ElementList(sym(1).Elision, sym(2).Expression);
-        node->isSpreadElement = true;
+        AST::PatternElementList *node = new (pool) AST::PatternElementList(sym(1).Elision, sym(2).PatternElement);
         sym(1).Node = node;
     } break;
 ./
@@ -1660,19 +1663,17 @@ ElementList: ElisionOpt SpreadElement;
 ElementList: ElementList T_COMMA ElisionOpt AssignmentExpression_In;
 /.
     case $rule_number: {
-        AST::ElementList *node = new (pool) AST::ElementList(sym(1).ElementList, sym(3).Elision, sym(4).Expression);
-        node->commaToken = loc(2);
-        sym(1).Node = node;
+        AST::PatternElement *e = new (pool) AST::PatternElement(sym(4).Expression);
+        AST::PatternElementList *node = new (pool) AST::PatternElementList(sym(3).Elision, e);
+        sym(1).Node = sym(1).PatternElementList->append(node);
     } break;
 ./
 
 ElementList: ElementList T_COMMA ElisionOpt SpreadElement;
 /.
     case $rule_number: {
-        AST::ElementList *node = new (pool) AST::ElementList(sym(1).ElementList, sym(3).Elision, sym(4).Expression);
-        node->commaToken = loc(2);
-        node->isSpreadElement = true;
-        sym(1).Node = node;
+        AST::PatternElementList *node = new (pool) AST::PatternElementList(sym(3).Elision, sym(4).PatternElement);
+        sym(1).Node = sym(1).PatternElementList->append(node);
     } break;
 ./
 
@@ -1711,7 +1712,8 @@ ElisionOpt: Elision;
 SpreadElement: T_ELLIPSIS AssignmentExpression;
 /.
     case $rule_number: {
-        sym(1).Node = sym(2).Node;
+        AST::PatternElement *node = new (pool) AST::PatternElement(sym(2).Expression, AST::PatternElement::SpreadElement);
+        sym(1).Node = node;
     } break;
 ./
 
@@ -1728,7 +1730,7 @@ ObjectLiteral: T_LBRACE T_RBRACE;
 ObjectLiteral: T_LBRACE PropertyDefinitionList T_RBRACE;
 /.
     case $rule_number: {
-        AST::ObjectPattern *node = new (pool) AST::ObjectPattern(sym(2).PropertyDefinitionList->finish());
+        AST::ObjectPattern *node = new (pool) AST::ObjectPattern(sym(2).PatternPropertyList->finish());
         node->lbraceToken = loc(1);
         node->rbraceToken = loc(3);
         sym(1).Node = node;
@@ -1738,7 +1740,7 @@ ObjectLiteral: T_LBRACE PropertyDefinitionList T_RBRACE;
 ObjectLiteral: T_LBRACE PropertyDefinitionList T_COMMA T_RBRACE;
 /.
     case $rule_number: {
-        AST::ObjectPattern *node = new (pool) AST::ObjectPattern(sym(2).PropertyDefinitionList->finish());
+        AST::ObjectPattern *node = new (pool) AST::ObjectPattern(sym(2).PatternPropertyList->finish());
         node->lbraceToken = loc(1);
         node->rbraceToken = loc(4);
         sym(1).Node = node;
@@ -1751,7 +1753,7 @@ UiPropertyDefinitionList: UiPropertyDefinition;
 PropertyDefinitionList: PropertyDefinition;
 /.
     case $rule_number: {
-      sym(1).Node = new (pool) AST::PropertyDefinitionList(sym(1).PropertyDefinition);
+      sym(1).Node = new (pool) AST::PatternPropertyList(sym(1).PatternProperty);
     } break;
 ./
 
@@ -1760,8 +1762,7 @@ UiPropertyDefinitionList: UiPropertyDefinitionList T_COMMA UiPropertyDefinition;
 PropertyDefinitionList: PropertyDefinitionList T_COMMA PropertyDefinition;
 /.
     case $rule_number: {
-        AST::PropertyDefinitionList *node = new (pool) AST::PropertyDefinitionList(sym(1).PropertyDefinitionList, sym(3).PropertyDefinition);
-        node->commaToken = loc(2);
+        AST::PatternPropertyList *node = new (pool) AST::PatternPropertyList(sym(1).PatternPropertyList, sym(3).PatternProperty);
         sym(1).Node = node;
     } break;
 ./
@@ -1771,9 +1772,7 @@ PropertyDefinition: IdentifierReference;
     case $rule_number: {
         AST::IdentifierPropertyName *name = new (pool) AST::IdentifierPropertyName(stringRef(1));
         name->propertyNameToken = loc(1);
-        AST::IdentifierExpression *expr = new (pool) AST::IdentifierExpression(stringRef(1));
-        expr->identifierToken = loc(1);
-        AST::PropertyNameAndValue *node = new (pool) AST::PropertyNameAndValue(name, expr);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(name, stringRef(1));
         node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
@@ -1792,7 +1791,7 @@ UiPropertyDefinition: UiPropertyName T_COLON AssignmentExpression_In;
 PropertyDefinition: PropertyName T_COLON AssignmentExpression_In;
 /.
     case $rule_number: {
-        AST::PropertyNameAndValue *node = new (pool) AST::PropertyNameAndValue(sym(1).PropertyName, sym(3).Expression);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, sym(3).Expression);
         node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
@@ -2826,12 +2825,12 @@ VariableDeclaration: BindingPattern Initializer;
 VariableDeclaration_In: BindingPattern Initializer_In;
 /.  case $rule_number: { UNIMPLEMENTED; } ./
 
-BindingPattern: T_LBRACE ObjectBindingPattern T_RBRACE;
+BindingPattern:  T_LBRACE ObjectBindingPattern T_RBRACE;
 /.
     case $rule_number: {
-        auto *node = new (pool) AST::ObjectBindingPattern(sym(2).BindingPropertyList);
-        node->first = loc(1);
-        node->last = loc(3);
+        auto *node = new (pool) AST::ObjectPattern(sym(2).PatternPropertyList);
+        node->lbraceToken = loc(1);
+        node->rbraceToken = loc(3);
         sym(1).Node = node;
     } break;
 ./
@@ -2839,9 +2838,9 @@ BindingPattern: T_LBRACE ObjectBindingPattern T_RBRACE;
 BindingPattern: T_LBRACKET ArrayBindingPattern T_RBRACKET;
 /.
     case $rule_number: {
-        auto *node = new (pool) AST::ArrayBindingPattern(sym(2).BindingElementList);
-        node->first = loc(1);
-        node->last = loc(3);
+        auto *node = new (pool) AST::ArrayPattern(sym(2).PatternElementList);
+        node->lbracketToken = loc(1);
+        node->rbracketToken = loc(3);
         sym(1).Node = node;
     } break;
 ./
@@ -2858,15 +2857,15 @@ ObjectBindingPattern: BindingPropertyList;
 ObjectBindingPattern: BindingPropertyList T_COMMA;
 /.
     case $rule_number: {
-        sym(1).Node = sym(1).BindingPropertyList->finish();
+        sym(1).Node = sym(1).PatternPropertyList->finish();
     } break;
 ./
 
 ArrayBindingPattern: ElisionOpt BindingRestElementOpt;
 /.
     case $rule_number: {
-        if (sym(3).Elision || sym(4).Node) {
-            auto *l = new (pool) AST::BindingElementList(sym(1).Elision, sym(2).Node);
+        if (sym(1).Elision || sym(2).Node) {
+            auto *l = new (pool) AST::PatternElementList(sym(1).Elision, sym(2).PatternElement);
             sym(1).Node = l->finish();
         } else {
             sym(1).Node = nullptr;
@@ -2877,7 +2876,7 @@ ArrayBindingPattern: ElisionOpt BindingRestElementOpt;
 ArrayBindingPattern: BindingElementList;
 /.
     case $rule_number: {
-        sym(1).Node = sym(1).BindingElementList->finish();
+        sym(1).Node = sym(1).PatternElementList->finish();
     } break;
 ./
 
@@ -2885,20 +2884,25 @@ ArrayBindingPattern: BindingElementList T_COMMA ElisionOpt BindingRestElementOpt
 /.
     case $rule_number: {
         if (sym(3).Elision || sym(4).Node) {
-            auto *l = new (pool) AST::BindingElementList(sym(3).Elision, sym(4).Node);
-            l = sym(1).BindingElementList->append(l);
+            auto *l = new (pool) AST::PatternElementList(sym(3).Elision, sym(4).PatternElement);
+            l = sym(1).PatternElementList->append(l);
             sym(1).Node = l;
         }
-        sym(1).Node = sym(1).BindingElementList->finish();
+        sym(1).Node = sym(1).PatternElementList->finish();
     } break;
 ./
 
 BindingPropertyList: BindingProperty;
+/.
+    case $rule_number: {
+        sym(1).Node = new (pool) AST::PatternPropertyList(sym(1).PatternProperty);
+    } break;
+./
 
 BindingPropertyList: BindingPropertyList T_COMMA BindingProperty;
 /.
     case $rule_number: {
-        sym(1).Node = sym(1).BindingPropertyList->append(sym(3).BindingPropertyList);
+        sym(1).Node = new (pool) AST::PatternPropertyList(sym(1).PatternPropertyList, sym(3).PatternProperty);
     } break;
 ./
 
@@ -2907,14 +2911,14 @@ BindingElementList: BindingElisionElement;
 BindingElementList: BindingElementList T_COMMA BindingElisionElement;
 /.
     case $rule_number: {
-        sym(1).BindingElementList->append(sym(3).BindingElementList);
+        sym(1).PatternElementList = sym(1).PatternElementList->append(sym(3).PatternElementList);
     } break;
 ./
 
 BindingElisionElement: ElisionOpt BindingElement;
 /.
     case $rule_number: {
-        sym(1).Node = new (pool) AST::BindingElementList(sym(1).Elision, sym(2).BindingElement);
+        sym(1).Node = new (pool) AST::PatternElementList(sym(1).Elision, sym(2).PatternElement);
     } break;
 ./
 
@@ -2923,16 +2927,23 @@ BindingProperty: BindingIdentifier InitializerOpt_In;
 /.
     case $rule_number: {
         AST::StringLiteralPropertyName *name = new (pool) AST::StringLiteralPropertyName(stringRef(1));
-        AST::BindingElement *e = new (pool) AST::BindingElement(stringRef(1), sym(2).Expression);
-        AST::BindingPropertyList *node = new (pool) AST::BindingPropertyList(name, e);
+        name->propertyNameToken = loc(1);
+        sym(1).Node = new (pool) AST::PatternProperty(name, stringRef(1), sym(2).Expression);
+    } break;
+./
+
+BindingProperty: PropertyName T_COLON BindingIdentifier InitializerOpt_In;
+/.
+    case $rule_number: {
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, stringRef(3), sym(4).Expression);
         sym(1).Node = node;
     } break;
 ./
 
-BindingProperty: PropertyName T_COLON BindingElement;
+BindingProperty: PropertyName T_COLON BindingPattern InitializerOpt_In;
 /.
     case $rule_number: {
-        AST::BindingPropertyList *node = new (pool) AST::BindingPropertyList(sym(1).PropertyName, sym(3).BindingElement);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, sym(3).Pattern, sym(4).Expression);
         sym(1).Node = node;
     } break;
 ./
@@ -2940,7 +2951,7 @@ BindingProperty: PropertyName T_COLON BindingElement;
 BindingElement: BindingIdentifier InitializerOpt_In;
 /.
     case $rule_number: {
-      AST::BindingElement *node = new (pool) AST::BindingElement(stringRef(1), sym(2).Expression);
+      AST::PatternElement *node = new (pool) AST::PatternElement(stringRef(1), sym(2).Expression);
       node->identifierToken = loc(1);
       sym(1).Node = node;
     } break;
@@ -2949,8 +2960,7 @@ BindingElement: BindingIdentifier InitializerOpt_In;
 BindingElement: BindingPattern InitializerOpt_In;
 /.
     case $rule_number: {
-        AST::BindingElement *node = new (pool) AST::BindingElement(sym(1).BindingPattern, sym(2).Expression);
-        node->identifierToken = loc(1);
+        AST::PatternElement *node = new (pool) AST::PatternElement(sym(1).Pattern, sym(2).Expression);
         sym(1).Node = node;
     } break;
 ./
@@ -2958,14 +2968,19 @@ BindingElement: BindingPattern InitializerOpt_In;
 BindingRestElement: T_ELLIPSIS BindingIdentifier;
 /.
     case $rule_number: {
-        AST::BindingRestElement *node = new (pool) AST::BindingRestElement(stringRef(2));
+        AST::PatternElement *node = new (pool) AST::PatternElement(stringRef(2), nullptr, AST::PatternElement::RestElement);
         node->identifierToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
 
 BindingRestElement: T_ELLIPSIS BindingPattern;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.
+    case $rule_number: {
+        AST::PatternElement *node = new (pool) AST::PatternElement(sym(2).Pattern, nullptr, AST::PatternElement::RestElement);
+        sym(1).Node = node;
+    } break;
+./
 
 BindingRestElementOpt: ;
 /.
@@ -3476,7 +3491,7 @@ FormalsList: BindingElement;
 FormalParameterList: BindingRestElement;
 /.
     case $rule_number: {
-        AST::FormalParameterList *node = new (pool) AST::FormalParameterList(nullptr, sym(1).Node);
+        AST::FormalParameterList *node = new (pool) AST::FormalParameterList(nullptr, sym(1).PatternElement);
         sym(1).Node = node;
     } break;
 ./
@@ -3489,7 +3504,7 @@ FormalParameterList: FormalsList T_COMMA BindingRestElement;
 FormalsList: FormalsList T_COMMA BindingElement;
 /.
     case $rule_number: {
-        AST::FormalParameterList *node = new (pool) AST::FormalParameterList(sym(1).FormalParameterList, sym(3).Node);
+        AST::FormalParameterList *node = new (pool) AST::FormalParameterList(sym(1).FormalParameterList, sym(3).PatternElement);
         sym(1).Node = node;
     } break;
 ./
@@ -3548,7 +3563,7 @@ ArrowFunction_In: ArrowParameters T_ARROW ConciseBodyLookahead T_FORCE_BLOCK Fun
 ArrowParameters: BindingIdentifier;
 /.
     case $rule_number: {
-        AST::BindingElement *e = new (pool) AST::BindingElement(stringRef(1));
+        AST::PatternElement *e = new (pool) AST::PatternElement(stringRef(1), nullptr, AST::PatternElement::Binding);
         e->identifierToken = loc(1);
         sym(1).FormalParameterList = (new (pool) AST::FormalParameterList(nullptr, e))->finish();
     } break;
@@ -3586,12 +3601,12 @@ MethodDefinition: PropertyName T_LPAREN StrictFormalParameters T_RPAREN Function
 /.
     case $rule_number: {
         AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(1), sym(3).FormalParameterList, sym(6).StatementList);
-        f->functionToken = loc(1);
+        f->functionToken = sym(1).PropertyName->firstSourceLocation();
         f->lparenToken = loc(2);
         f->rparenToken = loc(4);
         f->lbraceToken = loc(5);
         f->rbraceToken = loc(7);
-        AST::PropertyNameAndValue *node = new (pool) AST::PropertyNameAndValue(sym(1).PropertyName, f);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, f);
         node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
@@ -3601,13 +3616,13 @@ MethodDefinition: T_STAR PropertyName T_LPAREN StrictFormalParameters T_RPAREN G
 /.
     case $rule_number: {
         AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
-        f->functionToken = loc(1);
+        f->functionToken = sym(2).PropertyName->firstSourceLocation();
         f->lparenToken = loc(3);
         f->rparenToken = loc(5);
         f->lbraceToken = loc(6);
         f->rbraceToken = loc(8);
         f->isGenerator = true;
-        AST::PropertyNameAndValue *node = new (pool) AST::PropertyNameAndValue(sym(2).PropertyName, f);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(2).PropertyName, f);
         node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
@@ -3617,12 +3632,14 @@ MethodDefinition: T_STAR PropertyName T_LPAREN StrictFormalParameters T_RPAREN G
 MethodDefinition: T_GET PropertyName T_LPAREN T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
     case $rule_number: {
-        AST::PropertyGetterSetter *node = new (pool) AST::PropertyGetterSetter(sym(2).PropertyName, sym(6).StatementList);
-        node->getSetToken = loc(1);
-        node->lparenToken = loc(3);
-        node->rparenToken = loc(4);
-        node->lbraceToken = loc(5);
-        node->rbraceToken = loc(7);
+        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(2), nullptr, sym(6).StatementList);
+        f->functionToken = sym(2).PropertyName->firstSourceLocation();
+        f->lparenToken = loc(3);
+        f->rparenToken = loc(4);
+        f->lbraceToken = loc(5);
+        f->rbraceToken = loc(7);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(2).PropertyName, f, AST::PatternProperty::Getter);
+        node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
@@ -3630,13 +3647,14 @@ MethodDefinition: T_GET PropertyName T_LPAREN T_RPAREN FunctionLBrace FunctionBo
 MethodDefinition: T_SET PropertyName T_LPAREN PropertySetParameterList T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
     case $rule_number: {
-        AST::PropertyGetterSetter *node = new (pool) AST::PropertyGetterSetter(
-            sym(2).PropertyName, sym(4).FormalParameterList, sym(7).StatementList);
-        node->getSetToken = loc(1);
-        node->lparenToken = loc(3);
-        node->rparenToken = loc(5);
-        node->lbraceToken = loc(6);
-        node->rbraceToken = loc(8);
+        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
+        f->functionToken = sym(2).PropertyName->firstSourceLocation();
+        f->lparenToken = loc(3);
+        f->rparenToken = loc(5);
+        f->lbraceToken = loc(6);
+        f->rbraceToken = loc(8);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(2).PropertyName, f, AST::PatternProperty::Setter);
+        node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
@@ -3645,7 +3663,7 @@ MethodDefinition: T_SET PropertyName T_LPAREN PropertySetParameterList T_RPAREN 
 PropertySetParameterList: FormalParameter;
 /.
     case $rule_number: {
-        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(1).Node))->finish();
+        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(1).PatternElement))->finish();
         sym(1).Node = node;
     } break;
 ./
@@ -3850,7 +3868,7 @@ ClassElementList: ClassElementList ClassElement;
 ClassElement: MethodDefinition;
 /.
     case $rule_number: {
-        AST::ClassElementList *node = new (pool) AST::ClassElementList(sym(1).PropertyDefinition, false);
+        AST::ClassElementList *node = new (pool) AST::ClassElementList(sym(1).PatternProperty, false);
         sym(1).Node = node;
     } break;
 ./
@@ -3859,7 +3877,7 @@ ClassElement: ClassStaticQualifier MethodDefinition;
 /.
     case $rule_number: {
         lexer->setStaticIsKeyword(true);
-        AST::ClassElementList *node = new (pool) AST::ClassElementList(sym(2).PropertyDefinition, true);
+        AST::ClassElementList *node = new (pool) AST::ClassElementList(sym(2).PatternProperty, true);
         sym(1).Node = node;
     } break;
 ./
