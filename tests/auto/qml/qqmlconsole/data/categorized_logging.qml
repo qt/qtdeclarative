@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.8
+import QtQuick 2.12
 
 Item {
     id:root
@@ -45,6 +45,12 @@ Item {
     LoggingCategory {
         id: testCategory
         name: "qt.test"
+    }
+
+    LoggingCategory {
+        id: testCategoryStartingFromWarning
+        name: "qt.test.warning"
+        defaultLogLevel: LoggingCategory.Warning
     }
 
     LoggingCategory {
@@ -57,8 +63,14 @@ Item {
         console.info(testCategory, "console.info");
         console.warn(testCategory, "console.warn");
         console.error(testCategory, "console.error");
+        console.debug(testCategoryStartingFromWarning, "console.debug");
+        console.log(testCategoryStartingFromWarning, "console.log");
+        console.info(testCategoryStartingFromWarning, "console.info");
+        console.warn(testCategoryStartingFromWarning, "console.warn");
+        console.error(testCategoryStartingFromWarning, "console.error");
 
         testCategory.name = "qt.test2";
+        testCategory.defaultLogLevel = LoggingCategory.Debug;
 
         console.error(emptyCategory, "console.error");
     }

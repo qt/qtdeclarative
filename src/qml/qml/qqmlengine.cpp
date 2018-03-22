@@ -228,7 +228,9 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
     qmlRegisterType<QQmlInstantiator>(uri, versionMajor, (versionMinor < 1 ? 1 : versionMinor), "Instantiator"); //Only available in >=2.1
     qmlRegisterCustomType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections", new QQmlConnectionsParser);
     qmlRegisterType<QQmlInstanceModel>();
-    qmlRegisterType<QQmlLoggingCategory>(uri, versionMajor, (versionMinor < 8 ? 8 : versionMinor), "LoggingCategory"); //Only available in >=2.8
+
+    qmlRegisterType<QQmlLoggingCategory>(uri, versionMajor, 8, "LoggingCategory"); //Only available in >=2.8
+    qmlRegisterType<QQmlLoggingCategory,1>(uri, versionMajor, 12, "LoggingCategory"); //Only available in >=2.12
 }
 
 

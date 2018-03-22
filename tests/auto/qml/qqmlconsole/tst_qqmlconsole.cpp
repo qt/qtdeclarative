@@ -112,8 +112,13 @@ void tst_qqmlconsole::categorized_logging()
     QVERIFY(messageHandler.messages().contains("qt.test: console.info"));
     QVERIFY(messageHandler.messages().contains("qt.test: console.warn"));
     QVERIFY(messageHandler.messages().contains("qt.test: console.error"));
+    QVERIFY(!messageHandler.messages().contains("qt.test.warning: console.debug"));
+    QVERIFY(!messageHandler.messages().contains("qt.test.warning: console.log"));
+    QVERIFY(!messageHandler.messages().contains("qt.test.warning: console.info"));
+    QVERIFY(messageHandler.messages().contains("qt.test.warning: console.warn"));
+    QVERIFY(messageHandler.messages().contains("qt.test.warning: console.error"));
 
-    QString emptyCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(50).arg(5) +
+    QString emptyCategory = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(56).arg(5) +
                             "QML LoggingCategory: Declaring the name of the LoggingCategory is mandatory and cannot be changed later !";
     QVERIFY(messageHandler.messages().contains(emptyCategory));
 
@@ -121,7 +126,11 @@ void tst_qqmlconsole::categorized_logging()
                             "QML LoggingCategory: The name of a LoggingCategory cannot be changed after the Item is created";
     QVERIFY(messageHandler.messages().contains(changedCategory));
 
-    QString useEmptyCategory = "default: " + QString::fromLatin1("%1:%2: ").arg(testUrl.toString()).arg(63) +
+    QString changedDefaultLogLevel = "default: " + QString::fromLatin1("%1:%2:%3: ").arg(testUrl.toString()).arg(45).arg(5) +
+                            "QML LoggingCategory: The defaultLogLevel of a LoggingCategory cannot be changed after the Item is created";
+    QVERIFY(messageHandler.messages().contains(changedDefaultLogLevel));
+
+    QString useEmptyCategory = "default: " + QString::fromLatin1("%1:%2: ").arg(testUrl.toString()).arg(75) +
                             "Error: A QmlLoggingCatgory was provided without a valid name";
     QVERIFY(messageHandler.messages().contains(useEmptyCategory));
 

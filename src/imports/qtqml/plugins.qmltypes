@@ -198,9 +198,20 @@ Module {
     Component {
         name: "QQmlLoggingCategory"
         prototype: "QObject"
-        exports: ["QtQml/LoggingCategory 2.8"]
-        exportMetaObjectRevisions: [0]
+        exports: ["QtQml/LoggingCategory 2.12", "QtQml/LoggingCategory 2.8"]
+        exportMetaObjectRevisions: [1, 0]
+        Enum {
+            name: "DefaultLogLevel"
+            values: {
+                "Debug": 0,
+                "Info": 4,
+                "Warning": 1,
+                "Critical": 2,
+                "Fatal": 3
+            }
+        }
         Property { name: "name"; type: "string" }
+        Property { name: "defaultLogLevel"; revision: 1; type: "DefaultLogLevel" }
     }
     Component {
         name: "QQmlTimer"
