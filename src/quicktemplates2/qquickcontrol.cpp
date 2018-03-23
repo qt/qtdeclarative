@@ -336,9 +336,10 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
     if (!contentItem.isExecuting())
         cancelContentItem();
 
-    q->contentItemChange(item, contentItem);
-    delete contentItem;
+    QQuickItem *oldContentItem = contentItem;
     contentItem = item;
+    q->contentItemChange(item, oldContentItem);
+    delete oldContentItem;
 
     if (item) {
         if (!item->parentItem())
