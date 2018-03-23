@@ -180,7 +180,9 @@ extern "C" Q_DECL_EXPORT void qt_addQObject(QObject *object)
         QString oldObjectName = qt_objectNames()->value(object);
         if (!oldObjectName.isEmpty())
             qt_createdQObjects()->removeOne(oldObjectName);
-        if (!objectName.isEmpty()) {
+        // Only track object names from our QML files,
+        // not e.g. contentItem object names (like "ApplicationWindow").
+        if (objectName.contains("-")) {
             qt_createdQObjects()->append(objectName);
             qt_objectNames()->insert(object, objectName);
         }
