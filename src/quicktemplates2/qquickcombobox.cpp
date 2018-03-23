@@ -1639,12 +1639,10 @@ void QQuickComboBox::wheelEvent(QWheelEvent *event)
     Q_D(QQuickComboBox);
     QQuickControl::wheelEvent(event);
     if (d->wheelEnabled && !d->isPopupVisible()) {
-        const int oldIndex = d->currentIndex;
         if (event->angleDelta().y() > 0)
             d->decrementCurrentIndex();
         else
             d->incrementCurrentIndex();
-        event->setAccepted(d->currentIndex != oldIndex);
     }
 }
 #endif

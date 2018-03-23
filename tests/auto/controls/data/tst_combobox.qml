@@ -80,6 +80,11 @@ TestCase {
         }
     }
 
+    Component {
+        id: mouseArea
+        MouseArea { }
+    }
+
     function init() {
         // QTBUG-61225: Move the mouse away to avoid QQuickWindowPrivate::flushFrameSynchronousEvents()
         // delivering interfering hover events based on the last mouse position from earlier tests. For
@@ -1042,24 +1047,34 @@ TestCase {
     }
 
     function test_wheel() {
-        var control = createTemporaryObject(comboBox, testCase, {model: 2, wheelEnabled: true})
+        var ma = createTemporaryObject(mouseArea, testCase, {width: 100, height: 100})
+        verify(ma)
+
+        var control = comboBox.createObject(ma, {model: 2, wheelEnabled: true})
         verify(control)
 
         var delta = 120
 
+        var spy = signalSpy.createObject(ma, {target: ma, signalName: "wheel"})
+        verify(spy.valid)
+
         mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
         compare(control.currentIndex, 1)
+        compare(spy.count, 0) // no propagation
 
         // reached bounds -> no change
         mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
         compare(control.currentIndex, 1)
+        compare(spy.count, 0) // no propagation
 
         mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
         compare(control.currentIndex, 0)
+        compare(spy.count, 0) // no propagation
 
         // reached bounds -> no change
         mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
         compare(control.currentIndex, 0)
+        compare(spy.count, 0) // no propagation
     }
 
     function test_activation_data() {

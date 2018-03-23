@@ -955,8 +955,7 @@ void QQuickSpinBox::wheelEvent(QWheelEvent *event)
     if (d->wheelEnabled) {
         const QPointF angle = event->angleDelta();
         const qreal delta = (qFuzzyIsNull(angle.y()) ? angle.x() : angle.y()) / QWheelEvent::DefaultDeltasPerStep;
-        if (!d->stepBy(qRound(d->effectiveStepSize() * delta), true))
-            event->ignore();
+        d->stepBy(qRound(d->effectiveStepSize() * delta), true);
     }
 }
 #endif
