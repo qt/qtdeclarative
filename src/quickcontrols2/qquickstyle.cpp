@@ -110,7 +110,7 @@ static QStringList defaultImportPathList()
 
     if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QML2_IMPORT_PATH"))) {
         const QByteArray envImportPath = qgetenv("QML2_IMPORT_PATH");
-        importPaths += QString::fromLatin1(envImportPath).split(QDir::listSeparator(), QString::SkipEmptyParts);
+        importPaths += QString::fromLocal8Bit(envImportPath).split(QDir::listSeparator(), QString::SkipEmptyParts);
     }
 
     importPaths += QStringLiteral("qrc:/qt-project.org/imports");
@@ -175,9 +175,9 @@ struct QQuickStyleSpec
         if (style.isEmpty())
             style = QGuiApplicationPrivate::styleOverride;
         if (style.isEmpty())
-            style = QString::fromLatin1(qgetenv("QT_QUICK_CONTROLS_STYLE"));
+            style = QString::fromLocal8Bit(qgetenv("QT_QUICK_CONTROLS_STYLE"));
         if (fallbackStyle.isEmpty())
-            setFallbackStyle(QString::fromLatin1(qgetenv("QT_QUICK_CONTROLS_FALLBACK_STYLE")), "QT_QUICK_CONTROLS_FALLBACK_STYLE");
+            setFallbackStyle(QString::fromLocal8Bit(qgetenv("QT_QUICK_CONTROLS_FALLBACK_STYLE")), "QT_QUICK_CONTROLS_FALLBACK_STYLE");
 #if QT_CONFIG(settings)
         if (style.isEmpty() || fallbackStyle.isEmpty()) {
             QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(QStringLiteral("Controls"));
@@ -266,7 +266,7 @@ QStringList QQuickStylePrivate::stylePaths()
     QStringList paths;
     if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE_PATH"))) {
         const QByteArray value = qgetenv("QT_QUICK_CONTROLS_STYLE_PATH");
-        paths += QString::fromLatin1(value).split(QDir::listSeparator(), QString::SkipEmptyParts);
+        paths += QString::fromLocal8Bit(value).split(QDir::listSeparator(), QString::SkipEmptyParts);
     }
 
     // built-in import paths
