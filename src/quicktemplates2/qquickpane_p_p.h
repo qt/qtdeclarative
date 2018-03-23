@@ -73,9 +73,9 @@ public:
 
     void contentChildrenChange();
 
-    bool updateContentWidth(QQuickItem *item);
-    bool updateContentHeight(QQuickItem *item);
-    void updateContentSize(QQuickItem *item);
+    bool updateContentWidth();
+    bool updateContentHeight();
+    void updateContentSize();
 
     bool hasContentWidth;
     bool hasContentHeight;

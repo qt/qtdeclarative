@@ -146,21 +146,21 @@ void QQuickPanePrivate::removeImplicitSizeListener(QQuickItem *item)
 void QQuickPanePrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
     Q_Q(QQuickPane);
-    if ((item == contentItem || item == firstChild) && updateContentWidth(contentItem))
+    if ((item == contentItem || item == firstChild) && updateContentWidth())
         emit q->contentWidthChanged();
 }
 
 void QQuickPanePrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
     Q_Q(QQuickPane);
-    if ((item == contentItem || item == firstChild) && updateContentHeight(contentItem))
+    if ((item == contentItem || item == firstChild) && updateContentHeight())
         emit q->contentHeightChanged();
 }
 
 void QQuickPanePrivate::itemDestroyed(QQuickItem *item)
 {
     if (item == contentItem)
-        updateContentSize(nullptr);
+        updateContentSize();
 }
 
 void QQuickPanePrivate::contentChildrenChange()
@@ -175,7 +175,7 @@ void QQuickPanePrivate::contentChildrenChange()
         firstChild = newFirstChild;
     }
 
-    updateContentSize(contentItem);
+    updateContentSize();
     emit q->contentChildrenChanged();
 }
 
@@ -211,31 +211,31 @@ static qreal getContentHeight(QQuickItem *item)
     return 0;
 }
 
-bool QQuickPanePrivate::updateContentWidth(QQuickItem *item)
+bool QQuickPanePrivate::updateContentWidth()
 {
     if (hasContentWidth)
         return false;
 
     qreal oldContentWidth = contentWidth;
-    contentWidth = getContentWidth(item);
+    contentWidth = getContentWidth(contentItem);
     return !qFuzzyCompare(contentWidth, oldContentWidth);
 }
 
-bool QQuickPanePrivate::updateContentHeight(QQuickItem *item)
+bool QQuickPanePrivate::updateContentHeight()
 {
     if (hasContentHeight)
         return false;
 
     qreal oldContentHeight = contentHeight;
-    contentHeight = getContentHeight(item);
+    contentHeight = getContentHeight(contentItem);
     return !qFuzzyCompare(contentHeight, oldContentHeight);
 }
 
-void QQuickPanePrivate::updateContentSize(QQuickItem *item)
+void QQuickPanePrivate::updateContentSize()
 {
     Q_Q(QQuickPane);
-    bool widthChanged = updateContentWidth(item);
-    bool heightChanged = updateContentHeight(item);
+    bool widthChanged = updateContentWidth();
+    bool heightChanged = updateContentHeight();
     if (widthChanged)
         emit q->contentWidthChanged();
     if (heightChanged)
@@ -303,7 +303,7 @@ void QQuickPane::resetContentWidth()
         return;
 
     d->hasContentHeight = false;
-    if (d->updateContentWidth(d->contentItem))
+    if (d->updateContentWidth())
         emit contentWidthChanged();
 }
 
@@ -341,7 +341,7 @@ void QQuickPane::resetContentHeight()
         return;
 
     d->hasContentHeight = false;
-    if (d->updateContentHeight(d->contentItem))
+    if (d->updateContentHeight())
         emit contentHeightChanged();
 }
 
@@ -409,7 +409,7 @@ void QQuickPane::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
             d->addImplicitSizeListener(d->firstChild);
         QObjectPrivate::connect(newItem, &QQuickItem::childrenChanged, d, &QQuickPanePrivate::contentChildrenChange);
     }
-    d->updateContentSize(newItem);
+    d->updateContentSize();
     emit contentChildrenChanged();
 }
 
