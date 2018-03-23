@@ -36,6 +36,8 @@
 
 #include "qquickcontentitem_p.h"
 
+#include <QtQml/private/qqmlmetatype_p.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -44,10 +46,16 @@ QT_BEGIN_NAMESPACE
     Helper class that aids debugging by producing more useful debugging output.
 */
 
-QQuickContentItem::QQuickContentItem(const QString &objectName, QQuickItem *parent)
+QQuickContentItem::QQuickContentItem(QQuickItem *parent)
     : QQuickItem(parent)
 {
-    setObjectName(objectName);
+    setObjectName(QQmlMetaType::prettyTypeName(parent));
+}
+
+QQuickContentItem::QQuickContentItem(const QObject *scope, QQuickItem *parent)
+    : QQuickItem(parent)
+{
+    setObjectName(QQmlMetaType::prettyTypeName(scope));
 }
 
 QT_END_NAMESPACE

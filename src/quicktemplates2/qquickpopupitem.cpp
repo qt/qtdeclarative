@@ -115,7 +115,7 @@ QQuickItem *QQuickPopupItemPrivate::getContentItem()
     if (QQuickItem *item = QQuickControlPrivate::getContentItem())
         return item;
 
-    return new QQuickContentItem(QStringLiteral("Popup"), q);
+    return new QQuickContentItem(popup, q);
 }
 
 static inline QString contentItemName() { return QStringLiteral("contentItem"); }

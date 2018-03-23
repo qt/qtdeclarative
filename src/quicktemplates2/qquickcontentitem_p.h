@@ -58,7 +58,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickContentItem : public QQuickItem
     Q_OBJECT
 
 public:
-    explicit QQuickContentItem(const QString &objectName, QQuickItem *parent = nullptr);
+    explicit QQuickContentItem(QQuickItem *parent = nullptr);
+    explicit QQuickContentItem(const QObject *scope, QQuickItem *parent);
 
 private:
     Q_DISABLE_COPY(QQuickContentItem)

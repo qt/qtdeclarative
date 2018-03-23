@@ -124,7 +124,7 @@ QQuickItem *QQuickPanePrivate::getContentItem()
     if (QQuickItem *item = QQuickControlPrivate::getContentItem())
         return item;
 
-    return new QQuickContentItem(QStringLiteral("Pane"), q);
+    return new QQuickContentItem(q);
 }
 
 void QQuickPanePrivate::addImplicitSizeListener(QQuickItem *item)

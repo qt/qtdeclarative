@@ -585,7 +585,7 @@ QQuickItem *QQuickApplicationWindow::contentItem() const
 {
     QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
     if (!d->contentItem) {
-        d->contentItem = new QQuickContentItem(QStringLiteral("ApplicationWindow"), QQuickWindow::contentItem());
+        d->contentItem = new QQuickContentItem(this, QQuickWindow::contentItem());
         d->contentItem->setFlag(QQuickItem::ItemIsFocusScope);
         d->contentItem->setFocus(true);
         d->relayout();
