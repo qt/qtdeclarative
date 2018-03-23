@@ -44,6 +44,28 @@ Section {
 
     SectionLayout {
         Label {
+            text: qsTr("AutoRepeat")
+            tooltip: qsTr("Whether the button repeats pressed(), released() and clicked() signals while the button is pressed and held down.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.autoRepeat.valueToString
+                backendValue: backendValues.autoRepeat
+                Layout.fillWidth: true
+            }
+        }
+        Label {
+            text: qsTr("Flat")
+            tooltip: qsTr("Whether the button is flat.")
+        }
+        SecondColumnLayout {
+            CheckBox {
+                text: backendValues.flat.valueToString
+                backendValue: backendValues.flat
+                Layout.fillWidth: true
+            }
+        }
+        Label {
             text: qsTr("Highlighted")
             tooltip: qsTr("Whether the button is highlighted.")
         }

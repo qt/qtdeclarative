@@ -53,6 +53,19 @@ Section {
             }
         }
 
+         Label {
+            text: qsTr("Display")
+            tooltip: qsTr("Determines how the icon and text are displayed within the button.")
+        }
+        SecondColumnLayout {
+            ComboBox {
+                backendValue: backendValues.display
+                model: [ "IconOnly", "TextOnly", "TextBesideIcon" ]
+                scope: "AbstractButton"
+                Layout.fillWidth: true
+            }
+        }
+
         Label {
             visible: checkable
             text: qsTr("Checkable")
