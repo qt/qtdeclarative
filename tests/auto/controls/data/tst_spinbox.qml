@@ -71,6 +71,11 @@ TestCase {
         SpinBox { }
     }
 
+    Component {
+        id: mouseArea
+        MouseArea { }
+    }
+
     function test_defaults() {
         var control = createTemporaryObject(spinBox, testCase)
         verify(control)
@@ -401,7 +406,10 @@ TestCase {
     }
 
     function test_wheel(data) {
-        var control = createTemporaryObject(spinBox, testCase, {wrap: data.wrap, from: data.from, to: data.to, value: data.value, stepSize: data.stepSize, wheelEnabled: true})
+        var ma = createTemporaryObject(mouseArea, testCase, {width: 100, height: 100})
+        verify(ma)
+
+        var control = spinBox.createObject(ma, {wrap: data.wrap, from: data.from, to: data.to, value: data.value, stepSize: data.stepSize, wheelEnabled: true})
         verify(control)
 
         var valueModifiedCount = 0
@@ -410,13 +418,16 @@ TestCase {
 
         var delta = 120
 
+        var spy = signalSpy.createObject(ma, {target: ma, signalName: "wheel"})
+        verify(spy.valid)
+
         for (var u = 0; u < data.upSteps.length; ++u) {
             var wasUpEnabled = control.wrap || control.value < control.to
             mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
             if (wasUpEnabled)
                 ++valueModifiedCount
             compare(valueModifiedSpy.count, valueModifiedCount)
-
+            compare(spy.count, 0) // no propagation
             compare(control.value, data.upSteps[u])
         }
 
@@ -426,7 +437,7 @@ TestCase {
             if (wasDownEnabled)
                 ++valueModifiedCount
             compare(valueModifiedSpy.count, valueModifiedCount)
-
+            compare(spy.count, 0) // no propagation
             compare(control.value, data.downSteps[d])
         }
     }

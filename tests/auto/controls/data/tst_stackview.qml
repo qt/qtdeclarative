@@ -1230,4 +1230,19 @@ TestCase {
         touch.release(0, control).commit()
         verify(!ma.pressed)
     }
+
+    // Separate function to ensure that the temporary value created to hold the return value of the Qt.createComponent()
+    // call is out of scope when the caller calls gc().
+    function stackViewFactory()
+    {
+        return createTemporaryObject(stackView, testCase, {initialItem: Qt.createComponent("TestItem.qml")})
+    }
+
+    function test_initalItemOwnership()
+    {
+        var control = stackViewFactory()
+        verify(control)
+        gc()
+        verify(control.initialItem)
+    }
 }

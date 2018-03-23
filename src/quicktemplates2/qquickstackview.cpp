@@ -898,13 +898,13 @@ void QQuickStackView::clear(Operation operation)
 
     \sa push()
 */
-QVariant QQuickStackView::initialItem() const
+QJSValue QQuickStackView::initialItem() const
 {
     Q_D(const QQuickStackView);
     return d->initialItem;
 }
 
-void QQuickStackView::setInitialItem(const QVariant &item)
+void QQuickStackView::setInitialItem(const QJSValue &item)
 {
     Q_D(QQuickStackView);
     d->initialItem = item;
@@ -1081,9 +1081,9 @@ void QQuickStackView::componentComplete()
     QQuickStackElement *element = nullptr;
     QString error;
     int oldDepth = d->elements.count();
-    if (QObject *o = d->initialItem.value<QObject *>())
+    if (QObject *o = d->initialItem.toQObject())
         element = QQuickStackElement::fromObject(o, this, &error);
-    else if (d->initialItem.canConvert<QString>())
+    else if (d->initialItem.isString())
         element = QQuickStackElement::fromString(d->initialItem.toString(), this, &error);
     if (!error.isEmpty()) {
         d->warn(error);

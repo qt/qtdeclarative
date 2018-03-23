@@ -39,6 +39,8 @@ exampledirs += ../../../../examples/quickcontrols2 \
                ../../../quicktemplates2 \
                snippets
 
+examples.fileextensions += "*.conf"
+
 examplesinstallpath = quickcontrols2
 
 headerdirs += ../../../quicktemplates2 \

@@ -106,7 +106,7 @@ static QStringList envPathList(const QByteArray &var)
     QStringList paths;
     if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(var))) {
         const QByteArray value = qgetenv(var);
-        paths += QString::fromLatin1(value).split(QDir::listSeparator(), QString::SkipEmptyParts);
+        paths += QString::fromLocal8Bit(value).split(QDir::listSeparator(), QString::SkipEmptyParts);
     }
     return paths;
 }
@@ -179,9 +179,9 @@ struct QQuickStyleSpec
         if (style.isEmpty())
             style = QGuiApplicationPrivate::styleOverride;
         if (style.isEmpty())
-            style = QString::fromLatin1(qgetenv("QT_QUICK_CONTROLS_STYLE"));
+            style = QString::fromLocal8Bit(qgetenv("QT_QUICK_CONTROLS_STYLE"));
         if (fallbackStyle.isEmpty())
-            setFallbackStyle(QString::fromLatin1(qgetenv("QT_QUICK_CONTROLS_FALLBACK_STYLE")), "QT_QUICK_CONTROLS_FALLBACK_STYLE");
+            setFallbackStyle(QString::fromLocal8Bit(qgetenv("QT_QUICK_CONTROLS_FALLBACK_STYLE")), "QT_QUICK_CONTROLS_FALLBACK_STYLE");
 #if QT_CONFIG(settings)
         if (style.isEmpty() || fallbackStyle.isEmpty()) {
             QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(QStringLiteral("Controls"));

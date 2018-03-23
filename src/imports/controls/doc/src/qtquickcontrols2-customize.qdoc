@@ -171,6 +171,22 @@
     your custom style, and place them almost anywhere. It also allows users to
     create their own styles for your application.
 
+    \section3 Previewing Custom Styles in Qt Quick Designer
+
+    Using the approach above, it is possible to preview a custom style
+    in \l {Using Qt Quick Designer}{Qt Quick Designer}. In order to do so,
+    ensure that the project has a
+    \l {Qt Quick Controls 2 Configuration File}{qtquickcontrols2.conf} file,
+    and that the following entry exists:
+
+    \badcode
+    [Controls]
+    Style=MyStyle
+    \endcode
+
+    For more information, take a look at the
+    \l {Qt Quick Controls 2 - Flat Style}{Flat Style example}.
+
     \section2 Style-specific C++ Extensions
 
     Sometimes you may need to use C++ to extend your custom style. There are two

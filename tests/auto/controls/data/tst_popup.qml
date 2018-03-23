@@ -1341,4 +1341,39 @@ TestCase {
         // TODO: do this properly by creating a component or something
         applicationWindow.visible = false
     }
+
+    Component {
+        id: shortcutWindowComponent
+        ApplicationWindow {
+            id: window
+            width: 360
+            height: 360
+            visible: true
+
+            property alias popup: popup
+
+            Popup {
+                id: popup
+
+                Shortcut {
+                    sequence: "Tab"
+                    onActivated: popup.visible = !popup.visible
+                }
+            }
+        }
+    }
+
+    function test_shortcut() {
+        // Tests that a Shortcut with Qt.WindowShortcut context
+        // that is declared within a Popup is activated.
+        var window = createTemporaryObject(shortcutWindowComponent, testCase)
+        var control = window.popup
+
+        waitForRendering(window.contentItem)
+        keyClick(Qt.Key_Tab)
+        tryCompare(control, "visible", true)
+
+        keyClick(Qt.Key_Tab)
+        tryCompare(control, "visible", false)
+    }
 }

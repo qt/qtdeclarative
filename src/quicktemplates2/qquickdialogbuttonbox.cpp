@@ -97,9 +97,33 @@ QT_BEGIN_NAMESPACE
     You can also mix and match normal buttons and standard buttons.
 
     When a button is clicked in the button box, the \l clicked() signal is
-    emitted for the actual button that is pressed. For convenience, if the
-    button has an \c AcceptRole, \c RejectRole, or \c HelpRole, the \l accepted(),
-    \l rejected(), or \l helpRequested() signals are emitted respectively.
+    emitted for the actual button that is pressed. In addition, the
+    following signals are automatically emitted when a button with the
+    respective role(s) is pressed:
+
+    \table
+    \header
+        \li Role
+        \li Signal
+    \row
+        \li \c AcceptRole, \c YesRole
+        \li \l accepted()
+    \row
+        \li \c ApplyRole
+        \li \l applied()
+    \row
+        \li \c DiscardRole
+        \li \l discarded()
+    \row
+        \li \c HelpRole
+        \li \l helpRequested()
+    \row
+        \li \c RejectRole, \c NoRole
+        \li \l rejected()
+    \row
+        \li \c ResetRole
+        \li \l reset()
+    \endtable
 
     \sa Dialog
 */

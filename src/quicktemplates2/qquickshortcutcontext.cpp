@@ -77,7 +77,7 @@ bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
     case Qt::WindowShortcut:
         while (obj && !obj->isWindowType()) {
             item = qobject_cast<QQuickItem *>(obj);
-            if (item) {
+            if (item && item->window()) {
                 obj = item->window();
                 break;
             } else if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(obj)) {
