@@ -108,6 +108,9 @@ class QQuickScrollViewPrivate : public QQuickControlPrivate
 public:
     QQuickScrollViewPrivate();
 
+    QQmlListProperty<QObject> contentData();
+    QQmlListProperty<QQuickItem> contentChildren();
+
     QQuickItem *getContentItem() override;
 
     QQuickFlickable *ensureFlickable(bool content);
@@ -433,10 +436,10 @@ void QQuickScrollView::setContentHeight(qreal height)
 
     \sa Item::data, contentChildren
 */
-QQmlListProperty<QObject> QQuickScrollView::contentData()
+QQmlListProperty<QObject> QQuickScrollViewPrivate::contentData()
 {
-    Q_D(QQuickScrollView);
-    return QQmlListProperty<QObject>(this, d,
+    Q_Q(QQuickScrollView);
+    return QQmlListProperty<QObject>(q, this,
                                      QQuickScrollViewPrivate::contentData_append,
                                      QQuickScrollViewPrivate::contentData_count,
                                      QQuickScrollViewPrivate::contentData_at,
@@ -454,10 +457,10 @@ QQmlListProperty<QObject> QQuickScrollView::contentData()
 
     \sa Item::children, contentData
 */
-QQmlListProperty<QQuickItem> QQuickScrollView::contentChildren()
+QQmlListProperty<QQuickItem> QQuickScrollViewPrivate::contentChildren()
 {
-    Q_D(QQuickScrollView);
-    return QQmlListProperty<QQuickItem>(this, d,
+    Q_Q(QQuickScrollView);
+    return QQmlListProperty<QQuickItem>(q, this,
                                         QQuickScrollViewPrivate::contentChildren_append,
                                         QQuickScrollViewPrivate::contentChildren_count,
                                         QQuickScrollViewPrivate::contentChildren_at,
@@ -580,3 +583,5 @@ QAccessible::Role QQuickScrollView::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickscrollview_p.cpp"

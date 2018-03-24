@@ -60,8 +60,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPane : public QQuickControl
     Q_OBJECT
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth RESET resetContentWidth NOTIFY contentWidthChanged FINAL)
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight RESET resetContentHeight NOTIFY contentHeightChanged FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
-    Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
+    Q_PRIVATE_PROPERTY(QQuickPane::d_func(), QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PRIVATE_PROPERTY(QQuickPane::d_func(), QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -75,9 +75,6 @@ public:
     qreal contentHeight() const;
     void setContentHeight(qreal height);
     void resetContentHeight();
-
-    QQmlListProperty<QObject> contentData();
-    QQmlListProperty<QQuickItem> contentChildren();
 
 Q_SIGNALS:
     void contentWidthChanged();

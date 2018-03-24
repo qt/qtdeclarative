@@ -66,7 +66,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindow : public QQuickWi
     Q_OBJECT
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem CONSTANT FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PRIVATE_PROPERTY(QQuickApplicationWindow::d_func(), QQmlListProperty<QObject> contentData READ contentData FINAL)
     Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
@@ -89,7 +89,6 @@ public:
     void setBackground(QQuickItem *background);
 
     QQuickItem *contentItem() const;
-    QQmlListProperty<QObject> contentData();
 
     QQuickItem *activeFocusControl() const;
 

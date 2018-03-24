@@ -62,6 +62,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPanePrivate : public QQuickControlP
 public:
     QQuickPanePrivate();
 
+    QQmlListProperty<QObject> contentData();
+    QQmlListProperty<QQuickItem> contentChildren();
+
     QQuickItem *getContentItem() override;
 
     void addImplicitSizeListener(QQuickItem *item);

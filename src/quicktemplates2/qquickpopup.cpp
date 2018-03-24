@@ -1718,13 +1718,12 @@ void QQuickPopup::setContentItem(QQuickItem *item)
 
     \sa Item::data, contentChildren
 */
-QQmlListProperty<QObject> QQuickPopup::contentData()
+QQmlListProperty<QObject> QQuickPopupPrivate::contentData()
 {
-    Q_D(QQuickPopup);
-    QQuickControlPrivate *p = QQuickControlPrivate::get(d->popupItem);
+    QQuickControlPrivate *p = QQuickControlPrivate::get(popupItem);
     if (!p->contentItem)
         p->executeContentItem();
-    return QQmlListProperty<QObject>(d->popupItem->contentItem(), nullptr,
+    return QQmlListProperty<QObject>(popupItem->contentItem(), nullptr,
                                      QQuickItemPrivate::data_append,
                                      QQuickItemPrivate::data_count,
                                      QQuickItemPrivate::data_at,
@@ -1744,10 +1743,9 @@ QQmlListProperty<QObject> QQuickPopup::contentData()
 
     \sa Item::children, contentData
 */
-QQmlListProperty<QQuickItem> QQuickPopup::contentChildren()
+QQmlListProperty<QQuickItem> QQuickPopupPrivate::contentChildren()
 {
-    Q_D(QQuickPopup);
-    return QQmlListProperty<QQuickItem>(d->popupItem->contentItem(), nullptr,
+    return QQmlListProperty<QQuickItem>(popupItem->contentItem(), nullptr,
                                         QQuickItemPrivate::children_append,
                                         QQuickItemPrivate::children_count,
                                         QQuickItemPrivate::children_at,

@@ -141,6 +141,8 @@ public:
         return window->d_func();
     }
 
+    QQmlListProperty<QObject> contentData();
+
     void relayout();
 
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
@@ -561,9 +563,10 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
 
     \sa contentItem
 */
-QQmlListProperty<QObject> QQuickApplicationWindow::contentData()
+QQmlListProperty<QObject> QQuickApplicationWindowPrivate::contentData()
 {
-    return QQmlListProperty<QObject>(contentItem(), this,
+    Q_Q(QQuickApplicationWindow);
+    return QQmlListProperty<QObject>(q->contentItem(), q,
                                      QQuickApplicationWindowPrivate::contentData_append,
                                      QQuickItemPrivate::data_count,
                                      QQuickItemPrivate::data_at,

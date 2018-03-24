@@ -359,9 +359,10 @@ void QQuickPane::resetContentHeight()
 
     \sa Item::data, contentChildren
 */
-QQmlListProperty<QObject> QQuickPane::contentData()
+QQmlListProperty<QObject> QQuickPanePrivate::contentData()
 {
-    return QQmlListProperty<QObject>(contentItem(), nullptr,
+    Q_Q(QQuickPane);
+    return QQmlListProperty<QObject>(q->contentItem(), nullptr,
                                      QQuickItemPrivate::data_append,
                                      QQuickItemPrivate::data_count,
                                      QQuickItemPrivate::data_at,
@@ -381,9 +382,10 @@ QQmlListProperty<QObject> QQuickPane::contentData()
 
     \sa Item::children, contentData
 */
-QQmlListProperty<QQuickItem> QQuickPane::contentChildren()
+QQmlListProperty<QQuickItem> QQuickPanePrivate::contentChildren()
 {
-    return QQmlListProperty<QQuickItem>(contentItem(), nullptr,
+    Q_Q(QQuickPane);
+    return QQmlListProperty<QQuickItem>(q->contentItem(), nullptr,
                                         QQuickItemPrivate::children_append,
                                         QQuickItemPrivate::children_count,
                                         QQuickItemPrivate::children_at,
@@ -421,3 +423,5 @@ QAccessible::Role QQuickPane::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpane_p.cpp"

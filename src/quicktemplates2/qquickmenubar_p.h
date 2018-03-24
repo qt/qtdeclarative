@@ -61,8 +61,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuBar : public QQuickContainer
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth RESET resetContentWidth NOTIFY contentWidthChanged FINAL)
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight RESET resetContentHeight NOTIFY contentHeightChanged FINAL)
-    Q_PROPERTY(QQmlListProperty<QQuickMenu> menus READ menus NOTIFY menusChanged FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PRIVATE_PROPERTY(QQuickMenuBar::d_func(), QQmlListProperty<QQuickMenu> menus READ menus NOTIFY menusChanged FINAL)
+    Q_PRIVATE_PROPERTY(QQuickMenuBar::d_func(), QQmlListProperty<QObject> contentData READ contentData FINAL)
 
 public:
     explicit QQuickMenuBar(QQuickItem *parent = nullptr);
@@ -83,9 +83,6 @@ public:
     qreal contentHeight() const;
     void setContentHeight(qreal height);
     void resetContentHeight();
-
-    QQmlListProperty<QQuickMenu> menus();
-    QQmlListProperty<QObject> contentData();
 
 Q_SIGNALS:
     void delegateChanged();

@@ -502,18 +502,20 @@ void QQuickMenuBar::resetContentHeight()
     of the menu bar, and also menus that have been dynamically added or
     inserted using the \l addMenu() and \l insertMenu() methods, respectively.
 */
-QQmlListProperty<QQuickMenu> QQuickMenuBar::menus()
+QQmlListProperty<QQuickMenu> QQuickMenuBarPrivate::menus()
 {
-    return QQmlListProperty<QQuickMenu>(this, nullptr,
+    Q_Q(QQuickMenuBar);
+    return QQmlListProperty<QQuickMenu>(q, nullptr,
                                         QQuickMenuBarPrivate::menus_append,
                                         QQuickMenuBarPrivate::menus_count,
                                         QQuickMenuBarPrivate::menus_at,
                                         QQuickMenuBarPrivate::menus_clear);
 }
 
-QQmlListProperty<QObject> QQuickMenuBar::contentData()
+QQmlListProperty<QObject> QQuickMenuBarPrivate::contentData()
 {
-    return QQmlListProperty<QObject>(this, nullptr,
+    Q_Q(QQuickMenuBar);
+    return QQmlListProperty<QObject>(q, nullptr,
                                      QQuickMenuBarPrivate::contentData_append,
                                      QQuickContainerPrivate::contentData_count,
                                      QQuickContainerPrivate::contentData_at,
@@ -659,3 +661,5 @@ QAccessible::Role QQuickMenuBar::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmenubar_p.cpp"

@@ -94,6 +94,9 @@ public:
         return popup->d_func();
     }
 
+    QQmlListProperty<QObject> contentData();
+    QQmlListProperty<QQuickItem> contentChildren();
+
     void init();
     void closeOrReject();
     bool tryClose(const QPointF &pos, QQuickPopup::ClosePolicy flags);

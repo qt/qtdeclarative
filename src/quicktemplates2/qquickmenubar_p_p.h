@@ -68,6 +68,9 @@ public:
         return menuBar->d_func();
     }
 
+    QQmlListProperty<QQuickMenu> menus();
+    QQmlListProperty<QObject> contentData();
+
     QQuickItem *beginCreateItem();
     void completeCreateItem();
 
