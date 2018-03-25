@@ -472,6 +472,7 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
         else {
             throwSyntaxError(bindingList->firstSourceLocation(), QString::fromLatin1("Support for rest elements in binding arrays not implemented!"));
         }
+        ++index;
     }
 }
 
@@ -811,19 +812,26 @@ bool Codegen::visit(BinaryExpression *ast)
             _expr.setResult(Reference::fromAccumulator(this));
         }
         return false;
-    }
+    } else if (ast->op == QSOperator::Assign) {
+        if (AST::Pattern *p = ast->left->patternCast()) {
+            RegisterScope scope(this);
+            Reference right = expression(ast->right).storeOnStack();
+            if (auto *o = AST::cast<ObjectPattern *>(p))
+                destructurePropertyList(right, o->properties);
+            else if (auto *a = AST::cast<ArrayPattern *>(p))
+                destructureElementList(right, a->elements);
+            else
+                Q_UNREACHABLE();
+            if (!_expr.accept(nx)) {
+                right.loadInAccumulator();
+                _expr.setResult(Reference::fromAccumulator(this));
+            }
+            return false;
+        }
+        Reference left = expression(ast->left);
+        if (hasError)
+            return false;
 
-    Reference left = expression(ast->left);
-    if (hasError)
-        return false;
-
-    switch (ast->op) {
-    case QSOperator::Or:
-    case QSOperator::And:
-        Q_UNREACHABLE(); // handled separately above
-        break;
-
-    case QSOperator::Assign: {
         if (!left.isLValue()) {
             throwReferenceError(ast->operatorToken, QStringLiteral("left-hand side of assignment operator is not an lvalue"));
             return false;
@@ -839,8 +847,19 @@ bool Codegen::visit(BinaryExpression *ast)
             _expr.setResult(left.storeConsumeAccumulator());
         else
             _expr.setResult(left.storeRetainAccumulator());
-        break;
+        return false;
     }
+
+    Reference left = expression(ast->left);
+    if (hasError)
+        return false;
+
+    switch (ast->op) {
+    case QSOperator::Or:
+    case QSOperator::And:
+    case QSOperator::Assign:
+        Q_UNREACHABLE(); // handled separately above
+        break;
 
     case QSOperator::InplaceAnd:
     case QSOperator::InplaceSub:

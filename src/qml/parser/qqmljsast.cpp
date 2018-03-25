@@ -79,6 +79,16 @@ UiObjectMember *Node::uiObjectMemberCast()
     return nullptr;
 }
 
+LeftHandSideExpression *Node::leftHandSideExpressionCast()
+{
+    return nullptr;
+}
+
+Pattern *Node::patternCast()
+{
+    return nullptr;
+}
+
 ExpressionNode *ExpressionNode::expressionCast()
 {
     return this;
@@ -220,6 +230,165 @@ void ObjectPattern::accept0(Visitor *visitor)
 
     visitor->endVisit(this);
 }
+
+/*
+  This is the grammar for AssignmentPattern that we need to convert the literal to:
+
+    AssignmentPattern:
+        ObjectAssignmentPattern
+        ArrayAssignmentPattern
+    ArrayAssignmentPattern:
+        [ ElisionOpt AssignmentRestElementOpt ]
+        [ AssignmentElementList ]
+        [ AssignmentElementList , ElisionOpt AssignmentRestElementOpt ]
+    AssignmentElementList:
+        AssignmentElisionElement
+        AssignmentElementList , AssignmentElisionElement
+    AssignmentElisionElement:
+        ElisionOpt AssignmentElement
+    AssignmentRestElement:
+        ... DestructuringAssignmentTarget
+
+    ObjectAssignmentPattern:
+        {}
+        { AssignmentPropertyList }
+        { AssignmentPropertyList, }
+    AssignmentPropertyList:
+        AssignmentProperty
+        AssignmentPropertyList , AssignmentProperty
+    AssignmentProperty:
+        IdentifierReference InitializerOpt_In
+    PropertyName:
+        AssignmentElement
+
+    AssignmentElement:
+        DestructuringAssignmentTarget InitializerOpt_In
+    DestructuringAssignmentTarget:
+        LeftHandSideExpression
+
+  It was originally parsed with the following grammar:
+
+ArrayLiteral:
+    [ ElisionOpt ]
+    [ ElementList ]
+    [ ElementList , ElisionOpt ]
+ElementList:
+    ElisionOpt AssignmentExpression_In
+    ElisionOpt SpreadElement
+    ElementList , ElisionOpt AssignmentExpression_In
+    ElementList , Elisionopt SpreadElement
+SpreadElement:
+    ... AssignmentExpression_In
+ObjectLiteral:
+    {}
+    { PropertyDefinitionList }
+    { PropertyDefinitionList , }
+PropertyDefinitionList:
+    PropertyDefinition
+    PropertyDefinitionList , PropertyDefinition
+PropertyDefinition:
+    IdentifierReference
+    CoverInitializedName
+    PropertyName : AssignmentExpression_In
+    MethodDefinition
+PropertyName:
+    LiteralPropertyName
+    ComputedPropertyName
+
+*/
+bool ArrayPattern::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage)
+{
+    for (auto *it = elements; it; it = it->next) {
+        if (it->element->type == PatternElement::SpreadElement && it->next) {
+            *errorLocation = it->element->firstSourceLocation();
+            *errorMessage = QString::fromLatin1("'...' can only appear as last element in a destructuring list.");
+            return false;
+        }
+        if (!it->element->convertLiteralToAssignmentPattern(pool, errorLocation, errorMessage))
+            return false;
+    }
+    return true;
+}
+
+bool ObjectPattern::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage)
+{
+    for (auto *it = properties; it; it = it->next) {
+        if (!it->property->convertLiteralToAssignmentPattern(pool, errorLocation, errorMessage))
+            return false;
+    }
+    return true;
+}
+
+bool PatternElement::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage)
+{
+    Q_ASSERT(type == Literal || type == SpreadElement);
+    Q_ASSERT(bindingIdentifier.isNull());
+    Q_ASSERT(bindingPattern == nullptr);
+    Q_ASSERT(bindingPattern == nullptr);
+    Q_ASSERT(initializer);
+    ExpressionNode *init = initializer;
+
+    initializer = nullptr;
+    LeftHandSideExpression *lhs = init->leftHandSideExpressionCast();
+    if (type == SpreadElement) {
+        if (!lhs) {
+            *errorLocation = init->firstSourceLocation();
+            *errorMessage = QString::fromLatin1("Invalid lhs expression after '...' in destructuring expression.");
+            return false;
+        }
+        // ### Should be binding
+        initializer = lhs;
+        return true;
+    }
+    type = PatternElement::Binding;
+
+    if (BinaryExpression *b = init->binaryExpressionCast()) {
+        if (b->op != QSOperator::Assign) {
+            *errorLocation = b->operatorToken;
+            *errorMessage = QString::fromLatin1("Invalid assignment operation in destructuring expression");
+            return false;
+        }
+        lhs = b->left->leftHandSideExpressionCast();
+        initializer = b->right;
+        Q_ASSERT(lhs);
+    } else {
+        lhs = init->leftHandSideExpressionCast();
+    }
+    if (!lhs) {
+        *errorLocation = init->firstSourceLocation();
+        *errorMessage = QString::fromLatin1("Destructuring target is not a left hand side expression.");
+        return false;
+    }
+
+    if (auto *p = lhs->patternCast()) {
+        bindingPattern = p;
+        if (!p->convertLiteralToAssignmentPattern(pool, errorLocation, errorMessage))
+            return false;
+        return true;
+    }
+    if (auto *i = cast<IdentifierExpression *>(lhs)) {
+        bindingIdentifier = i->name.toString();
+        return true;
+    }
+    *errorLocation = lastSourceLocation();
+    *errorMessage = QLatin1String("Unimplemented!");
+    return false;
+}
+
+bool PatternProperty::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage)
+{
+    Q_ASSERT(type != SpreadElement);
+    if (type == Binding)
+        return true;
+    if (type == Getter || type == Setter) {
+        *errorLocation = firstSourceLocation();
+        *errorMessage = QString::fromLatin1("Invalid getter/setter in destructuring expression.");
+        return false;
+    }
+    Q_ASSERT(type == Literal);
+    return PatternElement::convertLiteralToAssignmentPattern(pool, errorLocation, errorMessage);
+}
+
 
 void Elision::accept0(Visitor *visitor)
 {
@@ -1098,6 +1267,16 @@ ClassElementList *ClassElementList::finish()
     ClassElementList *front = next;
     next = nullptr;
     return front;
+}
+
+Pattern *Pattern::patternCast()
+{
+    return this;
+}
+
+LeftHandSideExpression *LeftHandSideExpression::leftHandSideExpressionCast()
+{
+    return this;
 }
 
 } } // namespace QQmlJS::AST

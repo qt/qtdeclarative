@@ -395,6 +395,9 @@ protected:
     void syntaxError(const AST::SourceLocation &location, const char *message) {
         diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, location, QLatin1String(message)));
      }
+     void syntaxError(const AST::SourceLocation &location, const QString &message) {
+         diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, location, message));
+      }
 
 protected:
     Engine *driver;
@@ -1780,9 +1783,14 @@ PropertyDefinition: IdentifierReference;
 
 -- Using this production should result in a syntax error when used in an ObjectLiteral
 PropertyDefinition: CoverInitializedName;
-/.  case $rule_number: {
-        syntaxError(loc(1), "Expected token ':' after identifier.");
-        return false;
+
+CoverInitializedName: IdentifierReference Initializer_In;
+/.
+    case $rule_number: {
+        AST::IdentifierPropertyName *name = new (pool) AST::IdentifierPropertyName(stringRef(1));
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(name, stringRef(1), sym(2).Expression);
+        node->colonToken = loc(2);
+        sym(1).Node = node;
     } break;
 ./
 
@@ -1882,8 +1890,6 @@ ComputedPropertyName: T_LBRACKET AssignmentExpression_In T_RBRACKET;
         sym(1).Node = node;
     } break;
 ./
-
-CoverInitializedName: IdentifierReference Initializer_In;
 
 Initializer: T_EQ AssignmentExpression;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
@@ -2498,12 +2504,20 @@ AssignmentExpression_In: YieldExpression_In;
 AssignmentExpression: ArrowFunction;
 AssignmentExpression_In: ArrowFunction_In;
 
--- ### Use AssignmentPattern in some cases for LHSexpression
 AssignmentExpression: LeftHandSideExpression T_EQ AssignmentExpression;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
 AssignmentExpression_In: LeftHandSideExpression T_EQ AssignmentExpression_In;
 /.
     case $rule_number: {
+        // need to convert the LHS to an AssignmentPatthern if it was an Array/ObjectLiteral
+        if (AST::Pattern *p = sym(1).Expression->patternCast()) {
+            AST::SourceLocation errorLoc;
+            QString errorMsg;
+            if (!p->convertLiteralToAssignmentPattern(pool, &errorLoc, &errorMsg)) {
+                syntaxError(errorLoc, errorMsg);
+                return false;
+            }
+        }
         AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::Assign, sym(3).Expression);
         node->operatorToken = loc(2);
         sym(1).Node = node;

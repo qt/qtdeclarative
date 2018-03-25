@@ -252,6 +252,8 @@ public:
     virtual BinaryExpression *binaryExpressionCast();
     virtual Statement *statementCast();
     virtual UiObjectMember *uiObjectMemberCast();
+    virtual LeftHandSideExpression *leftHandSideExpressionCast();
+    virtual Pattern *patternCast();
 
     void accept(Visitor *visitor);
     static void accept(Node *node, Visitor *visitor);
@@ -275,6 +277,11 @@ public:
     ExpressionNode *expressionCast() override;
 };
 
+class QML_PARSER_EXPORT LeftHandSideExpression : public ExpressionNode
+{
+    LeftHandSideExpression *leftHandSideExpressionCast() override;
+};
+
 class QML_PARSER_EXPORT Statement: public Node
 {
 public:
@@ -283,7 +290,7 @@ public:
     Statement *statementCast() override;
 };
 
-class QML_PARSER_EXPORT NestedExpression: public ExpressionNode
+class QML_PARSER_EXPORT NestedExpression: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(NestedExpression)
@@ -306,7 +313,7 @@ public:
     SourceLocation rparenToken;
 };
 
-class QML_PARSER_EXPORT ThisExpression: public ExpressionNode
+class QML_PARSER_EXPORT ThisExpression: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(ThisExpression)
@@ -325,7 +332,7 @@ public:
     SourceLocation thisToken;
 };
 
-class QML_PARSER_EXPORT IdentifierExpression: public ExpressionNode
+class QML_PARSER_EXPORT IdentifierExpression: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(IdentifierExpression)
@@ -346,7 +353,7 @@ public:
     SourceLocation identifierToken;
 };
 
-class QML_PARSER_EXPORT NullExpression: public ExpressionNode
+class QML_PARSER_EXPORT NullExpression: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(NullExpression)
@@ -365,7 +372,7 @@ public:
     SourceLocation nullToken;
 };
 
-class QML_PARSER_EXPORT TrueLiteral: public ExpressionNode
+class QML_PARSER_EXPORT TrueLiteral: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(TrueLiteral)
@@ -384,7 +391,7 @@ public:
     SourceLocation trueToken;
 };
 
-class QML_PARSER_EXPORT FalseLiteral: public ExpressionNode
+class QML_PARSER_EXPORT FalseLiteral: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(FalseLiteral)
@@ -403,7 +410,7 @@ public:
     SourceLocation falseToken;
 };
 
-class QML_PARSER_EXPORT SuperLiteral : public ExpressionNode
+class QML_PARSER_EXPORT SuperLiteral : public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(SuperLiteral)
@@ -423,7 +430,7 @@ public:
 };
 
 
-class QML_PARSER_EXPORT NumericLiteral: public ExpressionNode
+class QML_PARSER_EXPORT NumericLiteral: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(NumericLiteral)
@@ -444,7 +451,7 @@ public:
     SourceLocation literalToken;
 };
 
-class QML_PARSER_EXPORT StringLiteral: public ExpressionNode
+class QML_PARSER_EXPORT StringLiteral: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(StringLiteral)
@@ -465,7 +472,7 @@ public:
     SourceLocation literalToken;
 };
 
-class QML_PARSER_EXPORT TemplateLiteral : public ExpressionNode
+class QML_PARSER_EXPORT TemplateLiteral : public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(TemplateLiteral)
@@ -488,7 +495,7 @@ public:
     SourceLocation literalToken;
 };
 
-class QML_PARSER_EXPORT RegExpLiteral: public ExpressionNode
+class QML_PARSER_EXPORT RegExpLiteral: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(RegExpLiteral)
@@ -510,9 +517,11 @@ public:
     SourceLocation literalToken;
 };
 
-class QML_PARSER_EXPORT Pattern : public ExpressionNode
+class QML_PARSER_EXPORT Pattern : public LeftHandSideExpression
 {
-
+public:
+    Pattern *patternCast() override;
+    virtual bool convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage) = 0;
 };
 
 class QML_PARSER_EXPORT ArrayPattern : public Pattern
@@ -542,6 +551,8 @@ public:
 
     bool isValidArrayLiteral(SourceLocation *errorLocation = nullptr) const;
 
+    bool convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage) override;
+
 // attributes
     PatternElementList *elements = nullptr;
     Elision *elision = nullptr;
@@ -569,6 +580,8 @@ public:
 
     SourceLocation lastSourceLocation() const override
     { return rbraceToken; }
+
+    bool convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage) override;
 
 // attributes
     PatternPropertyList *properties = nullptr;
@@ -668,6 +681,7 @@ public:
     }
 
     void accept0(Visitor *visitor) override;
+    virtual bool convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage);
 
     SourceLocation firstSourceLocation() const override
     { return identifierToken.isValid() ? identifierToken : (bindingPattern ? bindingPattern->firstSourceLocation() : initializer->firstSourceLocation()); }
@@ -758,6 +772,7 @@ public:
     }
 
     void boundNames(QStringList *names) override;
+    bool convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage) override;
 
 // attributes
     PropertyName *name;
@@ -875,7 +890,7 @@ public:
 };
 
 
-class QML_PARSER_EXPORT ArrayMemberExpression: public ExpressionNode
+class QML_PARSER_EXPORT ArrayMemberExpression: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(ArrayMemberExpression)
@@ -899,7 +914,7 @@ public:
     SourceLocation rbracketToken;
 };
 
-class QML_PARSER_EXPORT FieldMemberExpression: public ExpressionNode
+class QML_PARSER_EXPORT FieldMemberExpression: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(FieldMemberExpression)
@@ -923,7 +938,7 @@ public:
     SourceLocation identifierToken;
 };
 
-class QML_PARSER_EXPORT TaggedTemplate : public ExpressionNode
+class QML_PARSER_EXPORT TaggedTemplate : public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(TaggedTemplate)
@@ -945,7 +960,7 @@ public:
     TemplateLiteral *templateLiteral;
 };
 
-class QML_PARSER_EXPORT NewMemberExpression: public ExpressionNode
+class QML_PARSER_EXPORT NewMemberExpression: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(NewMemberExpression)
@@ -970,7 +985,7 @@ public:
     SourceLocation rparenToken;
 };
 
-class QML_PARSER_EXPORT NewExpression: public ExpressionNode
+class QML_PARSER_EXPORT NewExpression: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(NewExpression)
@@ -991,7 +1006,7 @@ public:
     SourceLocation newToken;
 };
 
-class QML_PARSER_EXPORT CallExpression: public ExpressionNode
+class QML_PARSER_EXPORT CallExpression: public LeftHandSideExpression
 {
 public:
     QQMLJS_DECLARE_AST_NODE(CallExpression)

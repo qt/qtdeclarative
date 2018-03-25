@@ -130,6 +130,7 @@ class ConditionalExpression;
 class Expression; // ### rename
 class YieldExpression;
 class Block;
+class LeftHandSideExpression;
 class StatementList;
 class VariableStatement;
 class VariableDeclarationList;
