@@ -380,14 +380,7 @@ void Codegen::variableDeclaration(PatternElement *ast)
 
     if (!ast->initializer)
         return;
-    Reference rhs = expression(ast->initializer);
-    if (hasError)
-        return;
-
-    Reference lhs = referenceForName(ast->bindingIdentifier, true);
-    //### if lhs is a temp, this won't generate a temp-to-temp move. Same for when rhs is a const
-    rhs.loadInAccumulator();
-    lhs.storeConsumeAccumulator();
+    initializeAndDestructureBindingElement(ast, Reference());
 }
 
 void Codegen::variableDeclarationList(VariableDeclarationList *ast)
@@ -401,19 +394,25 @@ void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, con
 {
     RegisterScope scope(this);
     Reference varToStore = e->bindingIdentifier.isNull() ? Reference::fromStackSlot(this, bytecodeGenerator->newRegister()) : referenceForName(e->bindingIdentifier, true);
-    if (e->initializer && baseRef == varToStore) {
-        baseRef.loadInAccumulator();
-        BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
-        expression(e->initializer).loadInAccumulator();
-        varToStore.storeConsumeAccumulator();
-        jump.link();
-    } else if (e->initializer) {
-        baseRef.loadInAccumulator();
-        BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
-        expression(e->initializer).loadInAccumulator();
-        jump.link();
-        varToStore.storeConsumeAccumulator();
-    } else if (baseRef != varToStore) {
+    if (e->initializer) {
+        if (!baseRef.isValid()) {
+            // assignment
+            expression(e->initializer).loadInAccumulator();
+            varToStore.storeConsumeAccumulator();
+        } else if (baseRef == varToStore) {
+            baseRef.loadInAccumulator();
+            BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
+            expression(e->initializer).loadInAccumulator();
+            varToStore.storeConsumeAccumulator();
+            jump.link();
+        } else {
+            baseRef.loadInAccumulator();
+            BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
+            expression(e->initializer).loadInAccumulator();
+            jump.link();
+            varToStore.storeConsumeAccumulator();
+        }
+    } else if (baseRef != varToStore && baseRef.isValid()) {
         baseRef.loadInAccumulator();
         varToStore.storeConsumeAccumulator();
     }

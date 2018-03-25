@@ -2824,7 +2824,6 @@ VariableDeclaration: BindingPattern Initializer;
 VariableDeclaration_In: BindingPattern Initializer_In;
 /.
     case $rule_number: {
-    UNIMPLEMENTED;
         auto *node = new (pool) AST::PatternElement(sym(1).Pattern, sym(2).Expression);
         node->identifierToken = loc(1);
         sym(1).Node = node;
