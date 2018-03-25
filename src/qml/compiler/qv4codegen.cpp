@@ -397,18 +397,27 @@ void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, con
     if (e->initializer) {
         if (!baseRef.isValid()) {
             // assignment
-            expression(e->initializer).loadInAccumulator();
+            Reference expr = expression(e->initializer);
+            if (hasError)
+                return;
+            expr.loadInAccumulator();
             varToStore.storeConsumeAccumulator();
         } else if (baseRef == varToStore) {
             baseRef.loadInAccumulator();
             BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
-            expression(e->initializer).loadInAccumulator();
+            Reference expr = expression(e->initializer);
+            if (hasError)
+                return;
+            expr.loadInAccumulator();
             varToStore.storeConsumeAccumulator();
             jump.link();
         } else {
             baseRef.loadInAccumulator();
             BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
-            expression(e->initializer).loadInAccumulator();
+            Reference expr = expression(e->initializer);
+            if (hasError)
+                return;
+            expr.loadInAccumulator();
             jump.link();
             varToStore.storeConsumeAccumulator();
         }
@@ -2033,6 +2042,7 @@ bool Codegen::visit(ObjectPattern *ast)
     if (!computedProperties.isEmpty()) {
         result = result.storeOnStack();
         for (const auto &c : qAsConst(computedProperties)) {
+            // ### if RHS is an anonymous FunctionExpression, we need to set it's name to the computed name
             Reference element = Reference::fromSubscript(result, c.first);
             c.second.rvalue.loadInAccumulator();
             element.storeConsumeAccumulator();

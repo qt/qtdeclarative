@@ -45,6 +45,17 @@ QT_QML_BEGIN_NAMESPACE
 
 namespace QQmlJS { namespace AST {
 
+FunctionExpression *asAnonymousFunctionDefinition(Node *n)
+{
+    if (!n)
+        return nullptr;
+    FunctionExpression *f = n->asFunctionDefinition();
+    if (!f || !f->name.isNull())
+        return nullptr;
+    return f;
+}
+
+
 void Node::accept(Visitor *visitor)
 {
     if (visitor->preVisit(this)) {
@@ -89,6 +100,11 @@ Pattern *Node::patternCast()
     return nullptr;
 }
 
+FunctionExpression *Node::asFunctionDefinition()
+{
+    return nullptr;
+}
+
 ExpressionNode *ExpressionNode::expressionCast()
 {
     return this;
@@ -115,6 +131,11 @@ void NestedExpression::accept0(Visitor *visitor)
         accept(expression, visitor);
     }
     visitor->endVisit(this);
+}
+
+FunctionExpression *NestedExpression::asFunctionDefinition()
+{
+    return expression->asFunctionDefinition();
 }
 
 void ThisExpression::accept0(Visitor *visitor)
@@ -907,6 +928,11 @@ void FunctionExpression::accept0(Visitor *visitor)
     }
 
     visitor->endVisit(this);
+}
+
+FunctionExpression *FunctionExpression::asFunctionDefinition()
+{
+    return this;
 }
 
 QStringList FormalParameterList::formals() const

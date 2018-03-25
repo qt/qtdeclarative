@@ -1791,6 +1791,10 @@ CoverInitializedName: IdentifierReference Initializer_In;
         AST::PatternProperty *node = new (pool) AST::PatternProperty(name, stringRef(1), sym(2).Expression);
         node->colonToken = loc(2);
         sym(1).Node = node;
+        // if initializer is an anonymous function expression, we need to assign identifierref as it's name
+        if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
+            f->name = stringRef(1);
+
     } break;
 ./
 
@@ -1800,6 +1804,10 @@ PropertyDefinition: PropertyName T_COLON AssignmentExpression_In;
 /.
     case $rule_number: {
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, sym(3).Expression);
+        if (auto *f = asAnonymousFunctionDefinition(sym(3).Expression)) {
+            if (!AST::cast<AST::ComputedPropertyName *>(sym(1).PropertyName))
+                f->name = driver->newStringRef(sym(1).PropertyName->asString());
+        }
         node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
@@ -2518,6 +2526,12 @@ AssignmentExpression_In: LeftHandSideExpression T_EQ AssignmentExpression_In;
                 return false;
             }
         }
+        // if lhs is an identifier expression and rhs is an anonymous function expression, we need to assign the name of lhs to the function
+        if (auto *f = asAnonymousFunctionDefinition(sym(3).Expression)) {
+            if (auto *id = AST::cast<AST::IdentifierExpression *>(sym(1).Expression))
+                f->name = id->name;
+        }
+
         AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::Assign, sym(3).Expression);
         node->operatorToken = loc(2);
         sym(1).Node = node;
@@ -2826,6 +2840,9 @@ VariableDeclaration_In: BindingIdentifier InitializerOpt_In;
         auto *node = new (pool) AST::PatternElement(stringRef(1), sym(2).Expression);
         node->identifierToken = loc(1);
         sym(1).Node = node;
+        // if initializer is an anonymous function expression, we need to assign identifierref as it's name
+        if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
+            f->name = stringRef(1);
     } break;
 ./
 
@@ -3478,7 +3495,7 @@ FunctionExpression: T_FUNCTION BindingIdentifier T_LPAREN FormalParameters T_RPA
 FunctionExpression: T_FUNCTION T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
     case $rule_number: {
-        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(1), sym(3).FormalParameterList, sym(6).StatementList);
+        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(QStringRef(), sym(3).FormalParameterList, sym(6).StatementList);
         node->functionToken = loc(1);
         node->lparenToken = loc(2);
         node->rparenToken = loc(4);
