@@ -110,6 +110,42 @@ ExpressionNode *ExpressionNode::expressionCast()
     return this;
 }
 
+FormalParameterList *ExpressionNode::reparseAsFormalParameterList(MemoryPool *pool)
+{
+    AST::ExpressionNode *expr = this;
+    AST::FormalParameterList *f = nullptr;
+    if (AST::Expression *commaExpr = AST::cast<AST::Expression *>(expr)) {
+        f = commaExpr->left->reparseAsFormalParameterList(pool);
+        if (!f)
+            return nullptr;
+
+        expr = commaExpr->right;
+    }
+
+    AST::ExpressionNode *rhs = nullptr;
+    if (AST::BinaryExpression *assign = AST::cast<AST::BinaryExpression *>(expr)) {
+            if (assign->op != QSOperator::Assign)
+                return nullptr;
+        expr = assign->left;
+        rhs = assign->right;
+    }
+    AST::PatternElement *binding = nullptr;
+    if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(expr)) {
+        binding = new (pool) AST::PatternElement(idExpr->name, rhs);
+        binding->identifierToken = idExpr->identifierToken;
+    } else if (AST::Pattern *p = expr->patternCast()) {
+        SourceLocation loc;
+        QString s;
+        if (!p->convertLiteralToAssignmentPattern(pool, &loc, &s))
+            return nullptr;
+        binding = new (pool) AST::PatternElement(p, rhs);
+        binding->identifierToken = p->firstSourceLocation();
+    }
+    if (!binding)
+        return nullptr;
+    return new (pool) AST::FormalParameterList(f, binding);
+}
+
 BinaryExpression *BinaryExpression::binaryExpressionCast()
 {
     return this;
@@ -319,6 +355,8 @@ PropertyName:
 */
 bool ArrayPattern::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage)
 {
+    if (parseMode == Binding)
+        return true;
     for (auto *it = elements; it; it = it->next) {
         if (it->element->type == PatternElement::SpreadElement && it->next) {
             *errorLocation = it->element->firstSourceLocation();
@@ -328,15 +366,19 @@ bool ArrayPattern::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLoc
         if (!it->element->convertLiteralToAssignmentPattern(pool, errorLocation, errorMessage))
             return false;
     }
+    parseMode = Binding;
     return true;
 }
 
 bool ObjectPattern::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage)
 {
+    if (parseMode == Binding)
+        return true;
     for (auto *it = properties; it; it = it->next) {
         if (!it->property->convertLiteralToAssignmentPattern(pool, errorLocation, errorMessage))
             return false;
     }
+    parseMode = Binding;
     return true;
 }
 

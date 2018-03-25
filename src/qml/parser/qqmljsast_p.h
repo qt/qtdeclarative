@@ -279,6 +279,9 @@ public:
     ExpressionNode() {}
 
     ExpressionNode *expressionCast() override;
+
+    AST::FormalParameterList *reparseAsFormalParameterList(MemoryPool *pool);
+
 };
 
 class QML_PARSER_EXPORT LeftHandSideExpression : public ExpressionNode
@@ -527,8 +530,13 @@ public:
 class QML_PARSER_EXPORT Pattern : public LeftHandSideExpression
 {
 public:
+    enum ParseMode {
+        Literal,
+        Binding
+    };
     Pattern *patternCast() override;
     virtual bool convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage) = 0;
+    ParseMode parseMode = Literal;
 };
 
 class QML_PARSER_EXPORT ArrayPattern : public Pattern

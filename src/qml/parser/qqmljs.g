@@ -387,7 +387,6 @@ protected:
 
     AST::UiQualifiedId *reparseAsQualifiedId(AST::ExpressionNode *expr);
     AST::UiQualifiedPragmaId *reparseAsQualifiedPragmaId(AST::ExpressionNode *expr);
-    AST::FormalParameterList *reparseAsFormalParameterList(AST::ExpressionNode *expr);
 
     void pushToken(int token);
     int lookaheadToken(Lexer *lexer);
@@ -551,34 +550,6 @@ AST::UiQualifiedPragmaId *Parser::reparseAsQualifiedPragmaId(AST::ExpressionNode
     }
 
     return 0;
-}
-
-AST::FormalParameterList *Parser::reparseAsFormalParameterList(AST::ExpressionNode *expr)
-{
-    AST::FormalParameterList *f = nullptr;
-    if (AST::Expression *commaExpr = AST::cast<AST::Expression *>(expr)) {
-        f = reparseAsFormalParameterList(commaExpr->left);
-        if (!f)
-            return nullptr;
-
-        expr = commaExpr->right;
-    }
-
-    AST::ExpressionNode *rhs = nullptr;
-    if (AST::BinaryExpression *assign = AST::cast<AST::BinaryExpression *>(expr)) {
-            if (assign->op != QSOperator::Assign)
-                return nullptr;
-        expr = assign->left;
-        rhs = assign->right;
-    }
-    AST::PatternElement *binding = nullptr;
-    if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(expr)) {
-        binding = new (pool) AST::PatternElement(idExpr->name, rhs);
-        binding->identifierToken = idExpr->identifierToken;
-    }
-    if (!binding)
-        return nullptr;
-    return new (pool) AST::FormalParameterList(f, binding);
 }
 
 void Parser::pushToken(int token)
@@ -1506,7 +1477,7 @@ CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN BindingRestElement T
 CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN Expression_In T_COMMA BindingRestElementOpt T_RPAREN;
 /.
     case $rule_number: {
-        AST::FormalParameterList *list = reparseAsFormalParameterList(sym(2).Expression);
+        AST::FormalParameterList *list = sym(2).Expression->reparseAsFormalParameterList(pool);
         if (!list) {
             syntaxError(loc(1), "Invalid Arrow parameter list.");
             return false;
@@ -2867,6 +2838,7 @@ BindingPattern:  T_LBRACE ObjectBindingPattern T_RBRACE;
         auto *node = new (pool) AST::ObjectPattern(sym(2).PatternPropertyList);
         node->lbraceToken = loc(1);
         node->rbraceToken = loc(3);
+        node->parseMode = AST::Pattern::Binding;
         sym(1).Node = node;
     } break;
 ./
@@ -2877,6 +2849,7 @@ BindingPattern: T_LBRACKET ArrayBindingPattern T_RBRACKET;
         auto *node = new (pool) AST::ArrayPattern(sym(2).PatternElementList);
         node->lbracketToken = loc(1);
         node->rbracketToken = loc(3);
+        node->parseMode = AST::Pattern::Binding;
         sym(1).Node = node;
     } break;
 ./
@@ -3612,7 +3585,7 @@ ArrowParameters: CoverParenthesizedExpressionAndArrowParameterList;
     case $rule_number: {
         if (coverExpressionType != CE_FormalParameterList) {
             AST::NestedExpression *ne = static_cast<AST::NestedExpression *>(sym(1).Node);
-            AST::FormalParameterList *list = reparseAsFormalParameterList(ne->expression);
+            AST::FormalParameterList *list = ne->expression->reparseAsFormalParameterList(pool);
             if (!list) {
                 syntaxError(loc(1), "Invalid Arrow parameter list.");
                 return false;
