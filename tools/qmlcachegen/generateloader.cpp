@@ -51,6 +51,7 @@ QString symbolNamespaceForPath(const QString &relativePath)
     symbol.replace(QLatin1Char('.'), QLatin1Char('_'));
     symbol.replace(QLatin1Char('+'), QLatin1Char('_'));
     symbol.replace(QLatin1Char('-'), QLatin1Char('_'));
+    symbol.replace(QLatin1Char(' '), QLatin1Char('_'));
     return symbol;
 }
 

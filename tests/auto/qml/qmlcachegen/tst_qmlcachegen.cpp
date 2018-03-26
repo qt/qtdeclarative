@@ -52,6 +52,8 @@ private slots:
     void versionChecksForAheadOfTimeUnits();
 
     void workerScripts();
+
+    void trickyPaths();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -400,6 +402,18 @@ void tst_qmlcachegen::functionExpressions()
     QCOMPARE(obj->property("f_called").toBool(), true);
     QCOMPARE(obj->property("g_handler_called").toBool(), true);
     QCOMPARE(obj->property("h_connections_handler_called").toBool(), true);
+}
+
+void tst_qmlcachegen::trickyPaths()
+{
+    QString pathWithSpaces(QStringLiteral(":/directory with spaces/file name with spaces.qml"));
+    QVERIFY2(QFile::exists(pathWithSpaces), qPrintable(pathWithSpaces));
+    QCOMPARE(QFileInfo(pathWithSpaces).size(), 0);
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl("qrc" + pathWithSpaces));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QCOMPARE(obj->property("success").toInt(), 42);
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)
