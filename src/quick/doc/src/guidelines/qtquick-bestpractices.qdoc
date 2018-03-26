@@ -310,7 +310,7 @@ to be refactored in the future.
 \li \l{Qt Quick Controls 2 - Chat Tutorial}{Chat application tutorial}
 \endlist
 
-\section1 Qt Quick Layouts
+\section1 Using Qt Quick Layouts
 
 Qt offers Qt Quick Layouts to arrange Qt Quick items visually in a layout.
 Unlike its alternative, the item positioners, the Qt Quick Layouts can also
