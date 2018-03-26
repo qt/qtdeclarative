@@ -1,4 +1,4 @@
 import QtQml 2.0
 QtObject {
-    property bool success: 42
+    property int success: 42
 }
