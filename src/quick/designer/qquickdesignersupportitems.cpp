@@ -96,11 +96,11 @@ static void allSubObjects(QObject *object, QObjectList &objectList)
 
     const QMetaObject *mo = object->metaObject();
 
-    QStringList deferredPropertyNames;
+    QByteArrayList deferredPropertyNames;
     const int namesIndex = mo->indexOfClassInfo("DeferredPropertyNames");
     if (namesIndex != -1) {
         QMetaClassInfo classInfo = mo->classInfo(namesIndex);
-        deferredPropertyNames = QString::fromUtf8(classInfo.value()).split(QLatin1Char(','));
+        deferredPropertyNames = QByteArray(classInfo.value()).split(',');
     }
 
     for (int index = QObject::staticMetaObject.propertyOffset();
