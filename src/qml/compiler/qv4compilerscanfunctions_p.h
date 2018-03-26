@@ -81,11 +81,11 @@ class ScanFunctions: protected QQmlJS::AST::Visitor
 {
     typedef QV4::TemporaryAssignment<bool> TemporaryBoolAssignment;
 public:
-    ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode);
+    ScanFunctions(Codegen *cg, const QString &sourceCode, ContextType defaultProgramType);
     void operator()(AST::Node *node);
 
-    void enterGlobalEnvironment(CompilationMode compilationMode);
-    void enterEnvironment(AST::Node *node, CompilationMode compilationMode);
+    void enterGlobalEnvironment(ContextType compilationMode);
+    void enterEnvironment(AST::Node *node, ContextType compilationMode);
     void leaveEnvironment();
 
     void enterQmlFunction(AST::FunctionDeclaration *ast)
@@ -146,7 +146,7 @@ protected:
     QStack<Context *> _contextStack;
 
     bool _allowFuncDecls;
-    CompilationMode defaultProgramMode;
+    ContextType defaultProgramType;
 
 private:
     static constexpr AST::Node *astNodeForGlobalEnvironment = nullptr;

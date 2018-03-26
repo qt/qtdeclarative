@@ -108,7 +108,7 @@ void Codegen::generateFromProgram(const QString &fileName,
                                   const QString &sourceCode,
                                   Program *node,
                                   Module *module,
-                                  CompilationMode mode)
+                                  ContextType contextType)
 {
     Q_ASSERT(node);
 
@@ -119,7 +119,7 @@ void Codegen::generateFromProgram(const QString &fileName,
     _module->fileName = fileName;
     _module->finalUrl = finalUrl;
 
-    ScanFunctions scan(this, sourceCode, mode);
+    ScanFunctions scan(this, sourceCode, contextType);
     scan(node);
 
     if (hasError)
@@ -1791,7 +1791,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
             return fallback;
     }
 
-    if (!c->parent && !c->forceLookupByName() && _context->compilationMode != EvalCode && c->compilationMode != QmlBinding) {
+    if (!c->parent && !c->forceLookupByName() && _context->type != ContextType::Eval && c->type != ContextType::Binding) {
         Reference r = Reference::fromName(this, name);
         r.global = true;
         return r;
@@ -2293,7 +2293,7 @@ bool Codegen::visit(FunctionDeclaration * ast)
 
     RegisterScope scope(this);
 
-    if (_context->compilationMode == QmlBinding)
+    if (_context->type == ContextType::Binding)
         referenceForName(ast->name.toString(), true).loadInAccumulator();
     _expr.accept(nx);
     return false;
@@ -2345,7 +2345,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     _module->functions.append(_context);
     _context->functionIndex = _module->functions.count() - 1;
 
-    _context->hasDirectEval |= (_context->compilationMode == EvalCode || _context->compilationMode == GlobalCode || _module->debugMode); // Conditional breakpoints are like eval in the function
+    _context->hasDirectEval |= (_context->type == ContextType::Eval || _context->type == ContextType::Global || _module->debugMode); // Conditional breakpoints are like eval in the function
 
     // When a user writes the following QML signal binding:
     //    onSignal: function() { doSomethingUsefull }
@@ -2365,7 +2365,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + _context->arguments.size());
 
     int returnAddress = -1;
-    bool _requiresReturnValue = (_context->compilationMode == QmlBinding || _context->compilationMode == EvalCode || _context->compilationMode == GlobalCode);
+    bool _requiresReturnValue = (_context->type == ContextType::Binding || _context->type == ContextType::Eval || _context->type == ContextType::Global);
     qSwap(requiresReturnValue, _requiresReturnValue);
     if (requiresReturnValue)
         returnAddress = bytecodeGenerator->newRegister();
@@ -2375,15 +2375,15 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         _context->addLocalVar(QStringLiteral("arguments"), Context::VariableDeclaration, AST::VariableScope::Var);
 
     bool allVarsEscape = _context->hasWith || _context->hasTry || _context->hasDirectEval;
-    if (_context->compilationMode == QmlBinding // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
-            || (!_context->canUseSimpleCall() && _context->compilationMode != GlobalCode &&
-                (_context->compilationMode != EvalCode || _context->isStrict))) {
+    if (_context->type == ContextType::Binding // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
+            || (!_context->canUseSimpleCall() && _context->type != ContextType::Global &&
+                (_context->type != ContextType::Eval || _context->isStrict))) {
         Instruction::CreateCallContext createContext;
         bytecodeGenerator->addInstruction(createContext);
     }
 
     // variables in global code are properties of the global context object, not locals as with other functions.
-    if (_context->compilationMode == FunctionCode || _context->compilationMode == QmlBinding) {
+    if (_context->type == ContextType::Function || _context->type == ContextType::Binding) {
         for (Context::MemberMap::iterator it = _context->members.begin(), end = _context->members.end(); it != end; ++it) {
             const QString &local = it.key();
             if (allVarsEscape)
@@ -2867,7 +2867,7 @@ bool Codegen::visit(ReturnStatement *ast)
     if (hasError)
         return true;
 
-    if (_context->compilationMode != FunctionCode && _context->compilationMode != QmlBinding) {
+    if (_context->type != ContextType::Function && _context->type != ContextType::Binding) {
         throwSyntaxError(ast->returnToken, QStringLiteral("Return statement outside of function"));
         return false;
     }

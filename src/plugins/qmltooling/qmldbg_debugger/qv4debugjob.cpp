@@ -103,7 +103,7 @@ void JavaScriptJob::run()
         }
     }
 
-    QV4::Script script(ctx, QV4::Compiler::EvalCode, this->script);
+    QV4::Script script(ctx, QV4::Compiler::ContextType::Eval, this->script);
     if (const QV4::Function *function = frame ? frame->v4Function : engine->globalCode)
         script.strictMode = function->isStrict();
 

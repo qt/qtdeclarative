@@ -66,14 +66,15 @@ namespace Compiler {
 
 struct ControlFlow;
 
-enum CompilationMode {
-    GlobalCode,
-    EvalCode,
-    FunctionCode,
-    QmlBinding // This is almost the same as EvalCode, except:
+enum class ContextType {
+    Global,
+    Function,
+    Eval,
+    Binding, // This is almost the same as Eval, except:
                //  * function declarations are moved to the return address when encountered
                //  * return statements are allowed everywhere (like in FunctionCode)
                //  * variable declarations are treated as true locals (like in FunctionCode)
+    Block
 };
 
 struct Context;
@@ -86,7 +87,7 @@ struct Module {
         qDeleteAll(contextMap);
     }
 
-    Context *newContext(QQmlJS::AST::Node *node, Context *parent, CompilationMode compilationMode);
+    Context *newContext(QQmlJS::AST::Node *node, Context *parent, ContextType compilationMode);
 
     QHash<QQmlJS::AST::Node *, Context *> contextMap;
     QList<Context *> functions;
@@ -157,7 +158,7 @@ struct Context {
 
     UsesArgumentsObject usesArgumentsObject = ArgumentsObjectUnknown;
 
-    CompilationMode compilationMode;
+    ContextType type;
 
     template <typename T>
     class SmallSet: public QVarLengthArray<T, 8>
@@ -206,9 +207,9 @@ struct Context {
     PropertyDependencyMap contextObjectPropertyDependencies;
     PropertyDependencyMap scopeObjectPropertyDependencies;
 
-    Context(Context *parent, CompilationMode mode)
+    Context(Context *parent, ContextType type)
         : parent(parent)
-        , compilationMode(mode)
+        , type(type)
     {
         if (parent && parent->isStrict)
             isStrict = true;

@@ -56,12 +56,12 @@ using namespace QV4;
 using namespace QV4::Compiler;
 using namespace QQmlJS::AST;
 
-ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode)
+ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, ContextType defaultProgramType)
     : _cg(cg)
     , _sourceCode(sourceCode)
     , _context(nullptr)
     , _allowFuncDecls(true)
-    , defaultProgramMode(defaultProgramMode)
+    , defaultProgramType(defaultProgramType)
 {
 }
 
@@ -73,12 +73,12 @@ void ScanFunctions::operator()(Node *node)
     calcEscapingVariables();
 }
 
-void ScanFunctions::enterGlobalEnvironment(CompilationMode compilationMode)
+void ScanFunctions::enterGlobalEnvironment(ContextType compilationMode)
 {
     enterEnvironment(astNodeForGlobalEnvironment, compilationMode);
 }
 
-void ScanFunctions::enterEnvironment(Node *node, CompilationMode compilationMode)
+void ScanFunctions::enterEnvironment(Node *node, ContextType compilationMode)
 {
     Context *c = _cg->_module->contextMap.value(node);
     if (!c)
@@ -138,7 +138,7 @@ void ScanFunctions::checkName(const QStringRef &name, const SourceLocation &loc)
 
 bool ScanFunctions::visit(Program *ast)
 {
-    enterEnvironment(ast, defaultProgramMode);
+    enterEnvironment(ast, defaultProgramType);
     checkDirectivePrologue(ast->statements);
     return true;
 }
@@ -392,7 +392,8 @@ bool ScanFunctions::visit(ThisExpression *)
     return false;
 }
 
-bool ScanFunctions::visit(Block *ast) {
+bool ScanFunctions::visit(Block *ast)
+{
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _context->isStrict ? false : _allowFuncDecls);
     Node::accept(ast->statements, this);
     return false;
@@ -401,7 +402,7 @@ bool ScanFunctions::visit(Block *ast) {
 bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, StatementList *body, bool enterName)
 {
     Context *outerContext = _context;
-    enterEnvironment(ast, FunctionCode);
+    enterEnvironment(ast, ContextType::Function);
 
     FunctionExpression *expr = AST::cast<FunctionExpression *>(ast);
     if (!expr)

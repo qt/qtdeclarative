@@ -65,9 +65,9 @@ class QQmlContextData;
 namespace QV4 {
 
 struct Q_QML_EXPORT Script {
-    Script(ExecutionContext *scope, QV4::Compiler::CompilationMode mode, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
+    Script(ExecutionContext *scope, QV4::Compiler::ContextType mode, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
-        , context(scope), strictMode(false), inheritContext(false), parsed(false), compilationMode(mode)
+        , context(scope), strictMode(false), inheritContext(false), parsed(false), contextType(mode)
         , vmFunction(nullptr), parseAsBinding(false) {}
     Script(ExecutionEngine *engine, QmlContext *qml, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
@@ -86,7 +86,7 @@ struct Q_QML_EXPORT Script {
     bool strictMode;
     bool inheritContext;
     bool parsed;
-    QV4::Compiler::CompilationMode compilationMode = QV4::Compiler::EvalCode;
+    QV4::Compiler::ContextType contextType = QV4::Compiler::ContextType::Eval;
     QV4::PersistentValue qmlContext;
     QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit;
     Function *vmFunction;

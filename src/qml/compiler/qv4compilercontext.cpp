@@ -47,11 +47,11 @@ using namespace QQmlJS::AST;
 
 QT_BEGIN_NAMESPACE
 
-Context *Module::newContext(Node *node, Context *parent, CompilationMode compilationMode)
+Context *Module::newContext(Node *node, Context *parent, ContextType contextType)
 {
     Q_ASSERT(!contextMap.contains(node));
 
-    Context *c = new Context(parent, compilationMode);
+    Context *c = new Context(parent, contextType);
     if (node) {
         SourceLocation loc = node->firstSourceLocation();
         c->line = loc.startLine;

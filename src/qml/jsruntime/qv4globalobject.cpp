@@ -361,7 +361,7 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
     const QString code = scode->toQString();
     bool inheritContext = !isStrict;
 
-    Script script(ctx, QV4::Compiler::EvalCode, code, QStringLiteral("eval code"));
+    Script script(ctx, QV4::Compiler::ContextType::Eval, code, QStringLiteral("eval code"));
     script.strictMode = (directCall && isStrict);
     script.inheritContext = inheritContext;
     script.parse();

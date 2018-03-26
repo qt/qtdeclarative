@@ -52,9 +52,9 @@ void RuntimeCodegen::generateFromFunctionExpression(const QString &fileName,
     _module->finalUrl = fileName;
     _context = nullptr;
 
-    Compiler::ScanFunctions scan(this, sourceCode, Compiler::GlobalCode);
+    Compiler::ScanFunctions scan(this, sourceCode, Compiler::ContextType::Global);
     // fake a global environment
-    scan.enterEnvironment(nullptr, Compiler::FunctionCode);
+    scan.enterEnvironment(nullptr, Compiler::ContextType::Function);
     scan(ast);
     scan.leaveEnvironment();
 

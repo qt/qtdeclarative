@@ -101,7 +101,7 @@ public:
                              const QString &sourceCode,
                              AST::Program *ast,
                              Module *module,
-                             CompilationMode mode = GlobalCode);
+                             ContextType contextType = ContextType::Global);
 
 public:
     class VolatileMemoryLocationScanner;

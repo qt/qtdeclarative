@@ -254,7 +254,7 @@ QV4::ReturnedValue NativeDebugger::evaluateExpression(const QString &expression)
     QV4::ExecutionContext *ctx = m_engine->currentStackFrame ? m_engine->currentContext()
                                                              : m_engine->rootContext();
 
-    QV4::Script script(ctx, QV4::Compiler::EvalCode, expression);
+    QV4::Script script(ctx, QV4::Compiler::ContextType::Eval, expression);
     if (const QV4::Function *function = m_engine->currentStackFrame
             ? m_engine->currentStackFrame->v4Function : m_engine->globalCode)
         script.strictMode = function->isStrict();

@@ -1809,8 +1809,8 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
 {
     QVector<int> runtimeFunctionIndices(functions.size());
 
-    QV4::Compiler::ScanFunctions scan(this, sourceCode, QV4::Compiler::GlobalCode);
-    scan.enterGlobalEnvironment(QV4::Compiler::QmlBinding);
+    QV4::Compiler::ScanFunctions scan(this, sourceCode, QV4::Compiler::ContextType::Global);
+    scan.enterGlobalEnvironment(QV4::Compiler::ContextType::Binding);
     for (const CompiledFunctionOrExpression &f : functions) {
         Q_ASSERT(f.node != qmlRoot);
         QQmlJS::AST::FunctionDeclaration *function = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(f.node);
@@ -1818,7 +1818,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         if (function)
             scan.enterQmlFunction(function);
         else
-            scan.enterEnvironment(f.node, QV4::Compiler::QmlBinding);
+            scan.enterEnvironment(f.node, QV4::Compiler::ContextType::Binding);
 
         scan(function ? function->body : f.node);
         scan.leaveEnvironment();
@@ -2193,7 +2193,7 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
     // Look for IDs first.
     for (const IdMapping &mapping : qAsConst(_idObjects)) {
         if (name == mapping.name) {
-            if (_context->compilationMode == QV4::Compiler::QmlBinding)
+            if (_context->type == QV4::Compiler::ContextType::Binding)
                 _context->idObjectDependencies.insert(mapping.idIndex);
 
             Instruction::LoadIdObject load;
