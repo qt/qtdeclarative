@@ -55,6 +55,29 @@ DEFINE_MANAGED_VTABLE(ExecutionContext);
 DEFINE_MANAGED_VTABLE(CallContext);
 DEFINE_MANAGED_VTABLE(CatchContext);
 
+Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int blockIndex)
+{
+    Function *function = frame->v4Function;
+    Heap::ExecutionContext *outer = static_cast<Heap::ExecutionContext *>(frame->context()->m());
+
+    Heap::InternalClass *ic = function->compilationUnit->runtimeBlocks.at(blockIndex);
+    int nLocals = ic->size;
+    size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * nLocals;
+
+    ExecutionEngine *v4 = outer->internalClass->engine;
+    Heap::CallContext *c = v4->memoryManager->allocManaged<CallContext>(requiredMemory, ic);
+    c->init();
+    c->type = Heap::ExecutionContext::Type_BlockContext;
+
+    c->outer.set(v4, outer);
+    c->function.set(v4, static_cast<Heap::FunctionObject *>(frame->jsFrame->function.m()));
+
+    c->locals.size = nLocals;
+    c->locals.alloc = nLocals;
+
+    return c;
+}
+
 Heap::CallContext *ExecutionContext::newCallContext(CppStackFrame *frame)
 {
     Function *function = frame->v4Function;
@@ -112,6 +135,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     ScopedContext ctx(scope, this);
     while (ctx) {
         switch (ctx->d()->type) {
+        case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext:
             if (!activation) {
                 Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
@@ -170,6 +194,7 @@ bool ExecutionContext::deleteProperty(String *name)
                 return false;
             break;
         }
+        case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
             uint index = c->internalClass->find(id);
@@ -225,6 +250,7 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
             }
             break;
         }
+        case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
             uint index = c->internalClass->find(id);
@@ -273,6 +299,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                 return c->exceptionValue.asReturnedValue();
             break;
         }
+        case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
             Identifier *id = name->identifier();
@@ -314,6 +341,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
                 return c->exceptionValue.asReturnedValue();
             break;
         }
+        case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
             name->makeIdentifier();

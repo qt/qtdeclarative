@@ -91,6 +91,7 @@ struct Module {
 
     QHash<QQmlJS::AST::Node *, Context *> contextMap;
     QList<Context *> functions;
+    QList<Context *> blocks;
     Context *rootContext;
     QString fileName;
     QString finalUrl;
@@ -107,6 +108,7 @@ struct Context {
     int column = 0;
     int registerCountInFunction = 0;
     int functionIndex = -1;
+    int blockIndex = -1;
 
     enum MemberType {
         UndefinedMember,
@@ -152,6 +154,7 @@ struct Context {
     bool returnsClosure = false;
     mutable bool argumentsCanEscape = false;
     bool requiresExecutionContext = false;
+    bool forceLookupByName = false;
 
     enum UsesArgumentsObject {
         ArgumentsObjectUnknown,
@@ -161,7 +164,7 @@ struct Context {
 
     UsesArgumentsObject usesArgumentsObject = ArgumentsObjectUnknown;
 
-    ContextType type;
+    ContextType contextType;
 
     template <typename T>
     class SmallSet: public QVarLengthArray<T, 8>
@@ -212,13 +215,11 @@ struct Context {
 
     Context(Context *parent, ContextType type)
         : parent(parent)
-        , type(type)
+        , contextType(type)
     {
         if (parent && parent->isStrict)
             isStrict = true;
     }
-
-    bool forceLookupByName();
 
     int findArgument(const QString &name)
     {
@@ -252,16 +253,16 @@ struct Context {
     }
 
     bool requiresImplicitReturnValue() const {
-        return type == ContextType::Binding ||
-               type == ContextType::Eval ||
-               type == ContextType::Global;
+        return contextType == ContextType::Binding ||
+               contextType == ContextType::Eval ||
+               contextType == ContextType::Global;
     }
 
     void addUsedVariable(const QString &name) {
         usedVariables.insert(name);
     }
 
-    bool addLocalVar(const QString &name, MemberType type, QQmlJS::AST::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr);
+    bool addLocalVar(const QString &name, MemberType contextType, QQmlJS::AST::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr);
 
     struct ResolvedName {
         enum Type {
@@ -277,7 +278,9 @@ struct Context {
         bool isValid() const { return type != Unresolved; }
     };
     ResolvedName resolveName(const QString &name);
-    void emitHeaderBytecode(Compiler::Codegen *codegen);
+    int emitBlockHeader(Compiler::Codegen *codegen);
+    void emitBlockFooter(Compiler::Codegen *codegen, int oldContextReg);
+
     void setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator);
 };
 

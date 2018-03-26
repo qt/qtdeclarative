@@ -137,7 +137,6 @@ void Codegen::enterContext(Node *node)
 int Codegen::leaveContext()
 {
     Q_ASSERT(_context);
-    Q_ASSERT(!_context->controlFlow);
     int functionIndex = _context->functionIndex;
     _context = _context->parent;
     return functionIndex;
@@ -2240,7 +2239,7 @@ bool Codegen::visit(FunctionDeclaration * ast)
 
     RegisterScope scope(this);
 
-    if (_context->type == ContextType::Binding)
+    if (_functionContext->contextType == ContextType::Binding)
         referenceForName(ast->name.toString(), true).loadInAccumulator();
     _expr.accept(nx);
     return false;
@@ -2252,7 +2251,7 @@ bool Codegen::visit(YieldExpression *ast)
     return false;
 }
 
-static bool endsWithReturn(Node *node)
+static bool endsWithReturn(Module *module, Node *node)
 {
     if (!node)
         return false;
@@ -2261,16 +2260,22 @@ static bool endsWithReturn(Node *node)
     if (AST::cast<ThrowStatement *>(node))
         return true;
     if (Program *p = AST::cast<Program *>(node))
-        return endsWithReturn(p->statements);
+        return endsWithReturn(module, p->statements);
     if (StatementList *sl = AST::cast<StatementList *>(node)) {
         while (sl->next)
             sl = sl->next;
-        return endsWithReturn(sl->statement);
+        return endsWithReturn(module, sl->statement);
     }
-    if (Block *b = AST::cast<Block *>(node))
-        return endsWithReturn(b->statements);
+    if (Block *b = AST::cast<Block *>(node)) {
+        Context *blockContext = module->contextMap.value(node);
+        if (blockContext->requiresExecutionContext)
+            // we need to emit a return statement here, because of the
+            // unwind handler
+            return false;
+        return endsWithReturn(module, b->statements);
+    }
     if (IfStatement *is = AST::cast<IfStatement *>(node))
-        return is->ko && endsWithReturn(is->ok) && endsWithReturn(is->ko);
+        return is->ko && endsWithReturn(module, is->ok) && endsWithReturn(module, is->ko);
     return false;
 }
 
@@ -2292,7 +2297,12 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     _module->functions.append(_context);
     _context->functionIndex = _module->functions.count() - 1;
 
-    _context->hasDirectEval |= (_context->type == ContextType::Eval || _context->type == ContextType::Global || _module->debugMode); // Conditional breakpoints are like eval in the function
+    Context *savedFunctionContext = _functionContext;
+    _functionContext = _context;
+    ControlFlow *savedControlFlow = controlFlow;
+    controlFlow = nullptr;
+
+    _context->hasDirectEval |= (_context->contextType == ContextType::Eval || _context->contextType == ContextType::Global || _module->debugMode); // Conditional breakpoints are like eval in the function
 
     // When a user writes the following QML signal binding:
     //    onSignal: function() { doSomethingUsefull }
@@ -2319,24 +2329,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_returnAddress, returnAddress);
 
     RegisterScope registerScope(this);
-    _context->emitHeaderBytecode(this);
-
-    for (const Context::Member &member : qAsConst(_context->members)) {
-        if (member.function) {
-            const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
-                                                member.function->body);
-            loadClosure(function);
-            if (! _context->parent) {
-                Reference::fromName(this, member.function->name.toString()).storeConsumeAccumulator();
-            } else {
-                int idx = member.index;
-                Q_ASSERT(idx >= 0);
-                Reference local = member.canEscape ? Reference::fromScopedLocal(this, idx, 0)
-                                                   : Reference::fromStackSlot(this, idx, true);
-                local.storeConsumeAccumulator();
-            }
-        }
-    }
+    _context->emitBlockHeader(this);
 
     int argc = 0;
     while (formals) {
@@ -2367,7 +2360,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     statementList(body);
 
-    if (hasError || !endsWithReturn(body)) {
+    if (hasError || !endsWithReturn(_module, body)) {
         bytecodeGenerator->setLocation(ast->lastSourceLocation());
         if (requiresReturnValue) {
             if (_returnAddress >= 0) {
@@ -2381,6 +2374,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         bytecodeGenerator->addInstruction(Instruction::Ret());
     }
 
+    Q_ASSERT(_context == _functionContext);
     bytecodeGenerator->finalize(_context);
     _context->registerCountInFunction = bytecodeGenerator->registerCount();
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
@@ -2395,6 +2389,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(_returnAddress, returnAddress);
     qSwap(requiresReturnValue, _requiresReturnValue);
     bytecodeGenerator = savedBytecodeGenerator;
+    controlFlow = savedControlFlow;
+    _functionContext = savedFunctionContext;
 
     return leaveContext();
 }
@@ -2406,7 +2402,14 @@ bool Codegen::visit(Block *ast)
 
     RegisterScope scope(this);
 
-    statementList(ast->statements);
+    enterContext(ast);
+    _module->blocks.append(_context);
+    _context->blockIndex = _module->blocks.count() - 1;
+    {
+        ControlFlowBlock controlFlow(this, _context);
+        statementList(ast->statements);
+    }
+    leaveContext();
     return false;
 }
 
@@ -2415,12 +2418,12 @@ bool Codegen::visit(BreakStatement *ast)
     if (hasError)
         return false;
 
-    if (!_context->controlFlow) {
+    if (!controlFlow) {
         throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
         return false;
     }
 
-    ControlFlow::Handler h = _context->controlFlow->getHandler(ControlFlow::Break, ast->label.toString());
+    ControlFlow::Handler h = controlFlow->getHandler(ControlFlow::Break, ast->label.toString());
     if (h.type == ControlFlow::Invalid) {
         if (ast->label.isEmpty())
             throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
@@ -2429,7 +2432,7 @@ bool Codegen::visit(BreakStatement *ast)
         return false;
     }
 
-    _context->controlFlow->jumpToHandler(h);
+    controlFlow->jumpToHandler(h);
 
     return false;
 }
@@ -2441,12 +2444,12 @@ bool Codegen::visit(ContinueStatement *ast)
 
     RegisterScope scope(this);
 
-    if (!_context->controlFlow) {
+    if (!controlFlow) {
         throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Continue outside of loop"));
         return false;
     }
 
-    ControlFlow::Handler h = _context->controlFlow->getHandler(ControlFlow::Continue, ast->label.toString());
+    ControlFlow::Handler h = controlFlow->getHandler(ControlFlow::Continue, ast->label.toString());
     if (h.type == ControlFlow::Invalid) {
         if (ast->label.isEmpty())
             throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Undefined label '%1'").arg(ast->label.toString()));
@@ -2455,7 +2458,7 @@ bool Codegen::visit(ContinueStatement *ast)
         return false;
     }
 
-    _context->controlFlow->jumpToHandler(h);
+    controlFlow->jumpToHandler(h);
 
     return false;
 }
@@ -2617,7 +2620,7 @@ bool Codegen::visit(IfStatement *ast)
     trueLabel.link();
     statement(ast->ok);
     if (ast->ko) {
-        if (endsWithReturn(ast)) {
+        if (endsWithReturn(_module, ast)) {
             falseLabel.link();
             statement(ast->ko);
         } else {
@@ -2641,7 +2644,7 @@ bool Codegen::visit(LabelledStatement *ast)
     RegisterScope scope(this);
 
     // check that no outer loop contains the label
-    ControlFlow *l = _context->controlFlow;
+    ControlFlow *l = controlFlow;
     while (l) {
         if (l->label() == ast->label) {
             QString error = QString(QStringLiteral("Label '%1' has already been declared")).arg(ast->label.toString());
@@ -2756,7 +2759,7 @@ bool Codegen::visit(ReturnStatement *ast)
     if (hasError)
         return true;
 
-    if (_context->type != ContextType::Function && _context->type != ContextType::Binding) {
+    if (_functionContext->contextType != ContextType::Function && _functionContext->contextType != ContextType::Binding) {
         throwSyntaxError(ast->returnToken, QStringLiteral("Return statement outside of function"));
         return false;
     }
@@ -2769,13 +2772,13 @@ bool Codegen::visit(ReturnStatement *ast)
         expr = Reference::fromConst(this, Encode::undefined());
     }
 
-    if (_context->controlFlow && _context->controlFlow->returnRequiresUnwind()) {
+    if (controlFlow && controlFlow->returnRequiresUnwind()) {
         if (_returnAddress >= 0)
             (void) expr.storeOnStack(_returnAddress);
         else
             expr.loadInAccumulator();
-        ControlFlow::Handler h = _context->controlFlow->getHandler(ControlFlow::Return);
-        _context->controlFlow->jumpToHandler(h);
+        ControlFlow::Handler h = controlFlow->getHandler(ControlFlow::Return);
+        controlFlow->jumpToHandler(h);
     } else {
         expr.loadInAccumulator();
         bytecodeGenerator->addInstruction(Instruction::Ret());
@@ -2872,8 +2875,8 @@ bool Codegen::visit(ThrowStatement *ast)
     if (hasError)
         return false;
 
-    if (_context->controlFlow) {
-        _context->controlFlow->handleThrow(expr);
+    if (controlFlow) {
+        controlFlow->handleThrow(expr);
     } else {
         expr.loadInAccumulator();
         Instruction::ThrowException instr;

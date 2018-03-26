@@ -3209,9 +3209,7 @@ void tst_QJSEngine::threadedEngine()
 
 void tst_QJSEngine::functionDeclarationsInConditionals()
 {
-    // Even though this is bad practice (and test262 covers it with best practices test cases),
-    // we do allow for function declarations in if and while statements, as unfortunately that's
-    // real world JavaScript. (QTBUG-33064 for example)
+    // Visibility of function declarations inside blocks is limited to the block
     QJSEngine eng;
     QJSValue result = eng.evaluate("if (true) {\n"
                                    "    function blah() { return false; }\n"
@@ -3219,8 +3217,7 @@ void tst_QJSEngine::functionDeclarationsInConditionals()
                                    "    function blah() { return true; }\n"
                                    "}\n"
                                    "blah();");
-    QVERIFY(result.isBool());
-    QCOMPARE(result.toBool(), true);
+    QVERIFY(result.isError());
 }
 
 void tst_QJSEngine::arrayPop_QTBUG_35979()

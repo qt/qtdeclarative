@@ -134,6 +134,7 @@ protected:
     bool visit(AST::ThisExpression *ast) override;
 
     bool visit(AST::Block *ast) override;
+    void endVisit(AST::Block *ast) override;
 
 protected:
     bool enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::StatementList *body, bool enterName);

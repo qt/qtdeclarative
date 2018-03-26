@@ -220,7 +220,21 @@ public:
     {
         for (int i = 0, ei = m_stackTrace.size(); i != ei; ++i) {
             m_capturedScope.append(NamedRefs());
-            ScopeJob job(&collector, i, 0);
+            FrameJob frameJob(&collector, i);
+            debugger->runInEngine(&frameJob);
+            QJsonObject frameObj = frameJob.returnValue();
+            QJsonArray scopes = frameObj.value(QLatin1String("scopes")).toArray();
+            int nscopes = scopes.size();
+            int s = 0;
+            for (s = 0; s < nscopes; ++s) {
+                QJsonObject o = scopes.at(s).toObject();
+                if (o.value(QLatin1String("type")).toInt(-2) == 1) // CallContext
+                    break;
+            }
+            if (s == nscopes)
+                return;
+
+            ScopeJob job(&collector, i, s);
             debugger->runInEngine(&job);
             NamedRefs &refs = m_capturedScope.last();
             QJsonObject object = job.returnValue();

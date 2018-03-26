@@ -125,8 +125,8 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     };
 
     QV4::CompiledData::Unit *generateUnit(GeneratorOption option = GenerateWithStringTable);
-    // Returns bytes written
     void writeFunction(char *f, Context *irFunction) const;
+    void writeBlock(char *f, Context *irBlock) const;
 
     StringTableGenerator stringTable;
     QString codeGeneratorName;

@@ -177,6 +177,7 @@ public:
     void generate_CreateCallContext() override;
     void generate_PushCatchContext(int name, int reg) override;
     void generate_PushWithContext(int reg) override;
+    void generate_PushBlockContext(int reg, int index) override;
     void generate_PopContext(int reg) override;
     void generate_ForeachIteratorObject() override;
     void generate_ForeachNextPropertyName() override;

@@ -114,6 +114,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CreateCallContext(op) INSTRUCTION(op, CreateCallContext, 0)
 #define INSTR_PushCatchContext(op) INSTRUCTION(op, PushCatchContext, 2, name, reg)
 #define INSTR_PushWithContext(op) INSTRUCTION(op, PushWithContext, 1, reg)
+#define INSTR_PushBlockContext(op) INSTRUCTION(op, PushBlockContext, 2, reg, index)
 #define INSTR_PopContext(op) INSTRUCTION(op, PopContext, 1, reg)
 #define INSTR_ForeachIteratorObject(op) INSTRUCTION(op, ForeachIteratorObject, 0)
 #define INSTR_ForeachNextPropertyName(op) INSTRUCTION(op, ForeachNextPropertyName, 0)
@@ -235,6 +236,7 @@ QT_BEGIN_NAMESPACE
     F(CreateCallContext) \
     F(PushCatchContext) \
     F(PushWithContext) \
+    F(PushBlockContext) \
     F(PopContext) \
     F(ForeachIteratorObject) \
     F(ForeachNextPropertyName) \

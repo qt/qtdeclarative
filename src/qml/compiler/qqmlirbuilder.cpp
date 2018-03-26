@@ -2199,7 +2199,7 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
     // Look for IDs first.
     for (const IdMapping &mapping : qAsConst(_idObjects)) {
         if (name == mapping.name) {
-            if (_context->type == QV4::Compiler::ContextType::Binding)
+            if (_context->contextType == QV4::Compiler::ContextType::Binding)
                 _context->idObjectDependencies.insert(mapping.idIndex);
 
             Instruction::LoadIdObject load;

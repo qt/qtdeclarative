@@ -81,8 +81,9 @@ QV4::Heap::CallContext *QV4DataCollector::findScope(QV4::Heap::ExecutionContext 
     for (; scope > 0 && ctx; --scope)
         ctx = ctx->outer;
 
-    return (ctx && ctx->type == QV4::Heap::ExecutionContext::Type_CallContext) ?
-                static_cast<QV4::Heap::CallContext *>(ctx) : nullptr;
+    if (!ctx || (ctx->type != QV4::Heap::ExecutionContext::Type_CallContext && ctx->type != QV4::Heap::ExecutionContext::Type_BlockContext))
+        return nullptr;
+    return static_cast<QV4::Heap::CallContext *>(ctx);
 }
 
 QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeTypes(int frame)
@@ -108,8 +109,9 @@ int QV4DataCollector::encodeScopeType(QV4::Heap::ExecutionContext::ContextType s
         return 2;
     case QV4::Heap::ExecutionContext::Type_CallContext:
         return 1;
-    case QV4::Heap::ExecutionContext::Type_QmlContext:
-    default:
+    case QV4::Heap::ExecutionContext::Type_BlockContext:
+        return 3;
+    default: // QV4::Heap::ExecutionContext::Type_QmlContext:
         return -1;
     }
 }

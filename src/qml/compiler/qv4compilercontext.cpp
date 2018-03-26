@@ -71,19 +71,12 @@ Context *Module::newContext(Node *node, Context *parent, ContextType contextType
     return c;
 }
 
-bool Context::forceLookupByName()
-{
-    ControlFlow *flow = controlFlow;
-    while (flow) {
-        if (flow->needsLookupByName)
-            return true;
-        flow = flow->parent;
-    }
-    return false;
-}
-
 bool Context::addLocalVar(const QString &name, Context::MemberType type, VariableScope scope, FunctionExpression *function)
 {
+    // hoist var declarations to the function level
+    if (contextType == ContextType::Block && (scope == VariableScope::Var && type != MemberType::FunctionDefinition))
+        return parent->addLocalVar(name, type, scope, function);
+
     if (name.isEmpty())
         return true;
 
@@ -117,7 +110,7 @@ Context::ResolvedName Context::resolveName(const QString &name)
     ResolvedName result;
 
     while (c->parent) {
-        if (c->forceLookupByName())
+        if (c->forceLookupByName)
             return result;
 
         Context::Member m = c->findMember(name);
@@ -128,7 +121,6 @@ Context::ResolvedName Context::resolveName(const QString &name)
             if (c->isStrict && (name == QLatin1String("arguments") || name == QLatin1String("eval")))
                 result.isArgOrEval = true;
             return result;
-            Q_ASSERT(result.type != ResolvedName::Stack || result.scope == 0);
         }
         const int argIdx = c->findArgument(name);
         if (argIdx != -1) {
@@ -145,7 +137,7 @@ Context::ResolvedName Context::resolveName(const QString &name)
                 return result;
             }
         }
-        if (!c->isStrict && c->hasDirectEval)
+        if (!c->isStrict && c->hasDirectEval && c->contextType != ContextType::Block)
             return result;
 
         if (c->requiresExecutionContext)
@@ -154,25 +146,32 @@ Context::ResolvedName Context::resolveName(const QString &name)
     }
 
     // ### can we relax the restrictions here?
-    if (c->forceLookupByName() || type == ContextType::Eval || c->type == ContextType::Binding)
+    if (c->forceLookupByName || contextType == ContextType::Eval || c->contextType == ContextType::Binding)
         return result;
 
     result.type = ResolvedName::Global;
     return result;
 }
 
-void Context::emitHeaderBytecode(Codegen *codegen)
+int Context::emitBlockHeader(Codegen *codegen)
 {
-
     using Instruction = Moth::Instruction;
     Moth::BytecodeGenerator *bytecodeGenerator = codegen->generator();
 
     setupFunctionIndices(bytecodeGenerator);
+    int contextReg = -1;
 
     if (requiresExecutionContext ||
-        type == ContextType::Binding) { // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
-        Instruction::CreateCallContext createContext;
-        bytecodeGenerator->addInstruction(createContext);
+        contextType == ContextType::Binding) { // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
+        if (contextType == ContextType::Block) {
+            Instruction::PushBlockContext blockContext;
+            blockContext.index = blockIndex;
+            blockContext.reg = contextReg = bytecodeGenerator->newRegister();
+            bytecodeGenerator->addInstruction(blockContext);
+        } else {
+            Instruction::CreateCallContext createContext;
+            bytecodeGenerator->addInstruction(createContext);
+        }
     }
     if (usesThis && !isStrict) {
         // make sure we convert this to an object
@@ -180,8 +179,10 @@ void Context::emitHeaderBytecode(Codegen *codegen)
         bytecodeGenerator->addInstruction(convert);
     }
 
-    // variables in global code are properties of the global context object, not locals as with other functions.
-    if (type == ContextType::Function || type == ContextType::Binding) {
+    switch (contextType) {
+    case ContextType::Block:
+    case ContextType::Function:
+    case ContextType::Binding: {
         for (Context::MemberMap::iterator it = members.begin(), end = members.end(); it != end; ++it) {
             if (it->canEscape && it->type == Context::ThisFunctionName) {
                 // move the function from the stack to the call context
@@ -193,7 +194,11 @@ void Context::emitHeaderBytecode(Codegen *codegen)
                 bytecodeGenerator->addInstruction(store);
             }
         }
-    } else {
+        break;
+    }
+    case ContextType::Global:
+    case ContextType::Eval: {
+        // variables in global code are properties of the global context object, not locals as with other functions.
         for (Context::MemberMap::const_iterator it = members.constBegin(), cend = members.constEnd(); it != cend; ++it) {
             const QString &local = it.key();
 
@@ -203,8 +208,10 @@ void Context::emitHeaderBytecode(Codegen *codegen)
             bytecodeGenerator->addInstruction(declareVar);
         }
     }
+    }
 
     if (usesArgumentsObject == Context::ArgumentsObjectUsed) {
+        Q_ASSERT(contextType != ContextType::Block);
         if (isStrict || (formals && !formals->isSimpleParameterList())) {
             Instruction::CreateUnmappedArgumentsObject setup;
             bytecodeGenerator->addInstruction(setup);
@@ -214,6 +221,38 @@ void Context::emitHeaderBytecode(Codegen *codegen)
         }
         codegen->referenceForName(QStringLiteral("arguments"), false).storeConsumeAccumulator();
     }
+
+    for (const Context::Member &member : qAsConst(members)) {
+        if (member.function) {
+            const int function = codegen->defineFunction(member.function->name.toString(), member.function, member.function->formals, member.function->body);
+            codegen->loadClosure(function);
+            if (!parent) {
+                Codegen::Reference::fromName(codegen, member.function->name.toString()).storeConsumeAccumulator();
+            } else {
+                int idx = member.index;
+                Q_ASSERT(idx >= 0);
+                Codegen::Reference local = member.canEscape ? Codegen::Reference::fromScopedLocal(codegen, idx, 0)
+                                                   : Codegen::Reference::fromStackSlot(codegen, idx, true);
+                local.storeConsumeAccumulator();
+            }
+        }
+    }
+
+
+
+    return contextReg;
+}
+
+void Context::emitBlockFooter(Codegen *codegen, int oldContextReg)
+{
+    using Instruction = Moth::Instruction;
+    Moth::BytecodeGenerator *bytecodeGenerator = codegen->generator();
+
+    if (oldContextReg != -1) {
+        Instruction::PopContext popContext;
+        popContext.reg = oldContextReg;
+        bytecodeGenerator->addInstruction(popContext);
+    }
 }
 
 void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
@@ -222,7 +261,10 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
     Q_ASSERT(nRegisters == 0);
     registerOffset = bytecodeGenerator->registerCount();
 
-    if (type == ContextType::Function || type == ContextType::Binding) {
+    switch (contextType) {
+    case ContextType::Block:
+    case ContextType::Function:
+    case ContextType::Binding: {
         for (Context::MemberMap::iterator it = members.begin(), end = members.end(); it != end; ++it) {
             const QString &local = it.key();
             if (it->canEscape) {
@@ -235,6 +277,11 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
                     it->index = bytecodeGenerator->newRegister();
             }
         }
+        break;
+    }
+    case ContextType::Global:
+    case ContextType::Eval:
+        break;
     }
     nRegisters = bytecodeGenerator->registerCount() - registerOffset;
 }

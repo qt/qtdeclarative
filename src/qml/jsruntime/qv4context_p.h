@@ -110,7 +110,8 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
         Type_CatchContext = 0x2,
         Type_WithContext = 0x3,
         Type_QmlContext = 0x4,
-        Type_CallContext = 0x5
+        Type_BlockContext = 0x5,
+        Type_CallContext = 0x6
     };
 
     void init(ContextType t)
@@ -191,6 +192,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     Q_MANAGED_TYPE(ExecutionContext)
     V4_INTERNALCLASS(ExecutionContext)
 
+    static Heap::CallContext *newBlockContext(QV4::CppStackFrame *frame, int blockIndex);
     static Heap::CallContext *newCallContext(QV4::CppStackFrame *frame);
     Heap::ExecutionContext *newWithContext(Heap::Object *with);
     Heap::CatchContext *newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue);

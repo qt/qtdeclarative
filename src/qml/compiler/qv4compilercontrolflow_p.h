@@ -68,6 +68,7 @@ struct ControlFlow {
     enum Type {
         Loop,
         With,
+        Block,
         Finally,
         Catch
     };
@@ -91,16 +92,18 @@ struct ControlFlow {
     Codegen *cg;
     ControlFlow *parent;
     Type type;
-    bool needsLookupByName = false;
+    bool contextUsedLookupByName;
 
     ControlFlow(Codegen *cg, Type type)
-        : cg(cg), parent(cg->_context->controlFlow), type(type)
+        : cg(cg), parent(cg->controlFlow), type(type)
     {
-        cg->_context->controlFlow = this;
+        contextUsedLookupByName = cg->_context->forceLookupByName;
+        cg->controlFlow = this;
     }
 
     virtual ~ControlFlow() {
-        cg->_context->controlFlow = parent;
+        cg->controlFlow = parent;
+        cg->_context->forceLookupByName = contextUsedLookupByName;
     }
 
     void emitReturnStatement() const {
@@ -235,9 +238,14 @@ struct ControlFlowUnwind : public ControlFlow
     QVector<Handler> handlers;
 
     ControlFlowUnwind(Codegen *cg, Type type)
-        : ControlFlow(cg, type), unwindLabel(generator()->newExceptionHandler())
+        : ControlFlow(cg, type)
     {
         Q_ASSERT(type != Loop);
+    }
+
+    void setupExceptionHandler()
+    {
+        unwindLabel = generator()->newExceptionHandler();
         controlFlowTemp = static_cast<int>(generator()->newRegister());
         Reference::storeConstOnStack(cg, QV4::Encode::undefined(), controlFlowTemp);
         // we'll need at least a handler for throw
@@ -289,7 +297,7 @@ struct ControlFlowUnwind : public ControlFlow
     }
 
     virtual BytecodeGenerator::ExceptionHandler *exceptionHandler() {
-        return &unwindLabel;
+        return unwindLabel.isValid() ? &unwindLabel : parentExceptionHandler();
     }
 
     virtual void emitForThrowHandling() { }
@@ -300,8 +308,9 @@ struct ControlFlowWith : public ControlFlowUnwind
     ControlFlowWith(Codegen *cg)
         : ControlFlowUnwind(cg, With)
     {
-        needsLookupByName = true;
+        cg->currentContext()->forceLookupByName = true;
 
+        setupExceptionHandler();
         savedContextRegister = Moth::StackSlot::createRegister(generator()->newRegister());
 
         // assumes the with object is in the accumulator
@@ -325,18 +334,56 @@ struct ControlFlowWith : public ControlFlowUnwind
     Moth::StackSlot savedContextRegister;
 };
 
+struct ControlFlowBlock : public ControlFlowUnwind
+{
+    ControlFlowBlock(Codegen *cg, Context *block)
+        : ControlFlowUnwind(cg, Block),
+          block(block)
+    {
+        savedContextRegister = block->emitBlockHeader(cg);
+
+        if (savedContextRegister != -1) {
+            setupExceptionHandler();
+            generator()->setExceptionHandler(&unwindLabel);
+        }
+    }
+
+    virtual ~ControlFlowBlock() {
+        // emit code for unwinding
+        if (savedContextRegister != -1) {
+            unwindLabel.link();
+            generator()->setExceptionHandler(parentExceptionHandler());
+        }
+
+        block->emitBlockFooter(cg, savedContextRegister);
+
+        if (savedContextRegister != -1)
+            emitUnwindHandler();
+    }
+    virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
+        if (savedContextRegister == -1)
+            return getParentHandler(type, label);
+        return ControlFlowUnwind::getHandler(type, label);
+    }
+
+    int savedContextRegister = -1;
+    Context *block;
+};
+
 struct ControlFlowCatch : public ControlFlowUnwind
 {
     AST::Catch *catchExpression;
     bool insideCatch = false;
     BytecodeGenerator::ExceptionHandler exceptionLabel;
     BytecodeGenerator::ExceptionHandler catchUnwindLabel;
+    bool oldLookupByName;
 
     ControlFlowCatch(Codegen *cg, AST::Catch *catchExpression)
         : ControlFlowUnwind(cg, Catch), catchExpression(catchExpression),
           exceptionLabel(generator()->newExceptionHandler()),
           catchUnwindLabel(generator()->newExceptionHandler())
     {
+        setupExceptionHandler();
         generator()->setExceptionHandler(&exceptionLabel);
     }
 
@@ -363,7 +410,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
     ~ControlFlowCatch() {
         // emit code for unwinding
 
-        needsLookupByName = true;
+        cg->_context->forceLookupByName = true;
         insideCatch = true;
 
         Codegen::RegisterScope scope(cg);
@@ -382,7 +429,6 @@ struct ControlFlowCatch : public ControlFlowUnwind
         cg->statement(catchExpression->statement);
 
         insideCatch = false;
-        needsLookupByName = false;
 
         // exceptions inside catch and break/return statements go here
         catchUnwindLabel.link();
@@ -408,6 +454,7 @@ struct ControlFlowFinally : public ControlFlowUnwind
         : ControlFlowUnwind(cg, Finally), finally(finally)
     {
         Q_ASSERT(finally != nullptr);
+        setupExceptionHandler();
         generator()->setExceptionHandler(&unwindLabel);
     }
 

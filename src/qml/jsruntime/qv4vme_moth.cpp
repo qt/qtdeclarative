@@ -894,6 +894,12 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObj
         STACK_VALUE(CallData::Context) = Runtime::method_createWithContext(c, accumulator);
     MOTH_END_INSTR(PushWithContext)
 
+    MOTH_BEGIN_INSTR(PushBlockContext)
+            STACK_VALUE(reg) = STACK_VALUE(CallData::Context);
+            ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
+            STACK_VALUE(CallData::Context) = Runtime::method_createBlockContext(c, index);
+    MOTH_END_INSTR(PushBlockContext)
+
     MOTH_BEGIN_INSTR(PopContext)
         STACK_VALUE(CallData::Context) = STACK_VALUE(reg);
     MOTH_END_INSTR(PopContext)

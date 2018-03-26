@@ -395,8 +395,15 @@ bool ScanFunctions::visit(ThisExpression *)
 bool ScanFunctions::visit(Block *ast)
 {
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _context->isStrict ? false : _allowFuncDecls);
+    enterEnvironment(ast, ContextType::Block);
+    _context->name = QLatin1String("Block");
     Node::accept(ast->statements, this);
     return false;
+}
+
+void ScanFunctions::endVisit(Block *)
+{
+    leaveEnvironment();
 }
 
 bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, StatementList *body, bool enterName)
@@ -421,6 +428,7 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
             outerContext->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     }
 
+    _context->name = name;
     if (formals && formals->containsName(QStringLiteral("arguments")))
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     if (expr) {
@@ -496,18 +504,29 @@ void ScanFunctions::calcEscapingVariables()
             c->hasWith |= inner->hasWith;
             c = c->parent;
         }
+        if (inner->contextType == ContextType::Block && inner->usesArgumentsObject == Context::ArgumentsObjectUsed) {
+            Context *f = inner->parent;
+            while (f->contextType == ContextType::Block)
+                f = f->parent;
+            f->usesArgumentsObject = Context::ArgumentsObjectUsed;
+            inner->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
+        }
     }
     for (Context *c : qAsConst(m->contextMap)) {
-        bool allVarsEscape = c->hasWith || c->hasTry || c->hasDirectEval || m->debugMode;
+        bool allVarsEscape = c->hasWith || c->hasTry || c->hasDirectEval;
+        if (allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())
+            allVarsEscape = false;
+        if (m->debugMode)
+            allVarsEscape = true;
         if (allVarsEscape) {
             c->requiresExecutionContext = true;
             c->argumentsCanEscape = true;
         }
         // ### for now until we have lexically scoped vars that'll require it
-        if (c->type == ContextType::Global)
+        if (c->contextType == ContextType::Global)
             c->requiresExecutionContext = false;
         // ### Shouldn't be required, we could probably rather change the ContextType to FunctionCode for strict eval
-        if (c->type == ContextType::Eval && c->isStrict)
+        if (c->contextType == ContextType::Eval && c->isStrict)
             c->requiresExecutionContext = true;
         if (!c->parent || c->usesArgumentsObject == Context::ArgumentsObjectUnknown)
             c->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
@@ -529,11 +548,12 @@ void ScanFunctions::calcEscapingVariables()
     if (showEscapingVars) {
         qDebug() << "==== escaping variables ====";
         for (Context *c : qAsConst(m->contextMap)) {
-            qDebug() << "Context" << c << c->name << ":";
+            qDebug() << "Context" << c << c->name << "requiresExecutionContext" << c->requiresExecutionContext;
+            qDebug() << "    parent:" << c->parent;
             if (c->argumentsCanEscape)
                 qDebug() << "    Arguments escape";
             for (auto it = c->members.constBegin(); it != c->members.constEnd(); ++it) {
-                qDebug() << "    " << it.key() << it.value().canEscape;
+                qDebug() << "    " << it.key() << it.value().canEscape << "isLexicallyScoped:" << it.value().isLexicallyScoped();
             }
         }
     }

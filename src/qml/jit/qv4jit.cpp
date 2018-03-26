@@ -629,6 +629,24 @@ void BaselineJIT::generate_PushWithContext(int reg)
     as->checkException();
 }
 
+static void pushBlockContextHelper(QV4::Value *stack, int reg, int index)
+{
+    stack[reg] = stack[CallData::Context];
+    ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
+    stack[CallData::Context] = Runtime::method_createBlockContext(c, index);
+}
+
+void BaselineJIT::generate_PushBlockContext(int reg, int index)
+{
+    as->saveAccumulatorInFrame();
+    as->prepareCallWithArgCount(3);
+    as->passInt32AsArg(index, 2);
+    as->passInt32AsArg(reg, 1);
+    as->passRegAsArg(0, 0);
+    JIT_GENERATE_RUNTIME_CALL(pushBlockContextHelper, Assembler::IgnoreResult);
+}
+
+
 void BaselineJIT::generate_PopContext(int reg) { as->popContext(reg); }
 
 void BaselineJIT::generate_ForeachIteratorObject()
@@ -1176,6 +1194,9 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(PushWithContext)
         MOTH_END_INSTR(PushWithContext)
+
+        MOTH_BEGIN_INSTR(PushBlockContext)
+        MOTH_END_INSTR(PushBlockContext)
 
         MOTH_BEGIN_INSTR(PopContext)
         MOTH_END_INSTR(PopContext)

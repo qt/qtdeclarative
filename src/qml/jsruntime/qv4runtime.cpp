@@ -1202,6 +1202,13 @@ ReturnedValue Runtime::method_createCatchContext(ExecutionContext *parent, int e
                                    e->catchException(nullptr))->asReturnedValue();
 }
 
+ReturnedValue Runtime::method_createBlockContext(ExecutionContext *parent, int index)
+{
+    ExecutionEngine *e = parent->engine();
+    return parent->newBlockContext(e->currentStackFrame, index)->asReturnedValue();
+}
+
+
 void Runtime::method_declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
 {
     Scope scope(engine);

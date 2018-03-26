@@ -493,12 +493,12 @@ public:
     int registerSetterLookup(int nameIndex) { return jsUnitGenerator->registerSetterLookup(nameIndex); }
     int registerGlobalGetterLookup(int nameIndex) { return jsUnitGenerator->registerGlobalGetterLookup(nameIndex); }
 
-protected:
     // Returns index in _module->functions
     virtual int defineFunction(const QString &name, AST::Node *ast,
                                AST::FormalParameterList *formals,
                                AST::StatementList *body);
 
+protected:
     void statement(AST::Statement *ast);
     void statement(AST::ExpressionNode *ast);
     void condition(AST::ExpressionNode *ast, const BytecodeGenerator::Label *iftrue,
@@ -516,8 +516,6 @@ protected:
     void initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef);
     void destructurePropertyList(const Reference &object, AST::PatternPropertyList *bindingList);
     void destructureElementList(const Reference &array, AST::PatternElementList *bindingList);
-
-    void loadClosure(int index);
 
     // Hook provided to implement QML lookup semantics
     virtual Reference fallbackNameLookup(const QString &name);
@@ -653,6 +651,8 @@ public:
     Context *currentContext() const { return _context; }
     BytecodeGenerator *generator() const { return bytecodeGenerator; }
 
+    void loadClosure(int index);
+
 protected:
     friend class ScanFunctions;
     friend struct ControlFlow;
@@ -663,12 +663,14 @@ protected:
     Module *_module;
     int _returnAddress;
     Context *_context;
+    Context *_functionContext = nullptr;
     AST::LabelledStatement *_labelledStatement;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
     BytecodeGenerator *bytecodeGenerator = nullptr;
     bool _strictMode;
     bool useFastLookups = true;
     bool requiresReturnValue = false;
+    ControlFlow *controlFlow = nullptr;
 
     bool _fileNameIsUrl;
     bool hasError;

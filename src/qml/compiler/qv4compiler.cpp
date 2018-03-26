@@ -233,28 +233,39 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
         for (int i = 0; i < f->locals.size(); ++i)
             registerString(f->locals.at(i));
     }
+    for (Context *c : qAsConst(module->blocks)) {
+        for (int i = 0; i < c->locals.size(); ++i)
+            registerString(c->locals.at(i));
+    }
 
-    Q_ALLOCA_VAR(quint32_le, functionOffsets, module->functions.size() * sizeof(quint32_le));
+    Q_ALLOCA_VAR(quint32_le, blockAndFunctionOffsets, (module->functions.size() + module->blocks.size()) * sizeof(quint32_le));
     uint jsClassDataOffset = 0;
 
     char *dataPtr;
     CompiledData::Unit *unit;
     {
-        QV4::CompiledData::Unit tempHeader = generateHeader(option, functionOffsets, &jsClassDataOffset);
+        QV4::CompiledData::Unit tempHeader = generateHeader(option, blockAndFunctionOffsets, &jsClassDataOffset);
         dataPtr = reinterpret_cast<char *>(malloc(tempHeader.unitSize));
         memset(dataPtr, 0, tempHeader.unitSize);
         memcpy(&unit, &dataPtr, sizeof(CompiledData::Unit*));
         memcpy(unit, &tempHeader, sizeof(tempHeader));
     }
 
-    memcpy(dataPtr + unit->offsetToFunctionTable, functionOffsets, unit->functionTableSize * sizeof(quint32_le));
+    memcpy(dataPtr + unit->offsetToFunctionTable, blockAndFunctionOffsets, unit->functionTableSize * sizeof(quint32_le));
+    memcpy(dataPtr + unit->offsetToBlockTable, blockAndFunctionOffsets + unit->functionTableSize, unit->blockTableSize * sizeof(quint32_le));
 
     for (int i = 0; i < module->functions.size(); ++i) {
         Context *function = module->functions.at(i);
         if (function == module->rootContext)
             unit->indexOfRootFunction = i;
 
-        writeFunction(dataPtr + functionOffsets[i], function);
+        writeFunction(dataPtr + blockAndFunctionOffsets[i], function);
+    }
+
+    for (int i = 0; i < module->blocks.size(); ++i) {
+        Context *block = module->blocks.at(i);
+
+        writeBlock(dataPtr + blockAndFunctionOffsets[i + module->functions.size()], block);
     }
 
     CompiledData::Lookup *lookupsToWrite = reinterpret_cast<CompiledData::Lookup*>(dataPtr + unit->offsetToLookupTable);
@@ -395,7 +406,24 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     memcpy(f + function->codeOffset, irFunction->code.constData(), irFunction->code.size());
 }
 
-QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, quint32_le *functionOffsets, uint *jsClassDataOffset)
+void QV4::Compiler::JSUnitGenerator::writeBlock(char *b, QV4::Compiler::Context *irBlock) const
+{
+    QV4::CompiledData::Block *block = reinterpret_cast<QV4::CompiledData::Block *>(b);
+
+    quint32 currentOffset = sizeof(QV4::CompiledData::Block);
+    currentOffset = (currentOffset + 7) & ~quint32(0x7);
+
+    block->nLocals = irBlock->locals.size();
+    block->localsOffset = currentOffset;
+    currentOffset += block->nLocals * sizeof(quint32);
+
+    // write locals
+    quint32_le *locals = (quint32_le *)(b + block->localsOffset);
+    for (int i = 0; i < irBlock->locals.size(); ++i)
+        locals[i] = getStringId(irBlock->locals.at(i));
+}
+
+QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, quint32_le *blockAndFunctionOffsets, uint *jsClassDataOffset)
 {
     CompiledData::Unit unit;
     memset(&unit, 0, sizeof(unit));
@@ -413,6 +441,10 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.functionTableSize = module->functions.size();
     unit.offsetToFunctionTable = nextOffset;
     nextOffset += unit.functionTableSize * sizeof(uint);
+
+    unit.blockTableSize = module->blocks.size();
+    unit.offsetToBlockTable = nextOffset;
+    nextOffset += unit.blockTableSize * sizeof(uint);
 
     unit.lookupTableSize = lookups.count();
     unit.offsetToLookupTable = nextOffset;
@@ -440,12 +472,20 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
 
     for (int i = 0; i < module->functions.size(); ++i) {
         Context *f = module->functions.at(i);
-        functionOffsets[i] = nextOffset;
+        blockAndFunctionOffsets[i] = nextOffset;
 
         const int qmlIdDepsCount = f->idObjectDependencies.count();
         const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
         nextOffset += QV4::CompiledData::Function::calculateSize(f->arguments.size(), f->locals.size(), f->lineNumberMapping.size(), f->nestedContexts.size(),
                                                                  qmlIdDepsCount, qmlPropertyDepsCount, f->code.size());
+    }
+    blockAndFunctionOffsets += module->functions.size();
+
+    for (int i = 0; i < module->blocks.size(); ++i) {
+        Context *c = module->blocks.at(i);
+        blockAndFunctionOffsets[i] = nextOffset;
+
+        nextOffset += QV4::CompiledData::Block::calculateSize(c->locals.size());
     }
 
     if (option == GenerateWithStringTable) {

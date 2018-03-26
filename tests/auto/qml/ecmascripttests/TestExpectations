@@ -3938,25 +3938,8 @@ language/arguments-object/mapped/nonconfigurable-nonwritable-descriptors-set-by-
 language/arguments-object/mapped/nonwritable-nonconfigurable-descriptors-set-by-arguments
 language/arguments-object/mapped/Symbol.iterator
 language/arguments-object/unmapped/Symbol.iterator
-language/block-scope/leave/finally-block-let-declaration-only-shadows-outer-parameter-value-1
-language/block-scope/leave/finally-block-let-declaration-only-shadows-outer-parameter-value-2
-language/block-scope/leave/for-loop-block-let-declaration-only-shadows-outer-parameter-value-1
-language/block-scope/leave/for-loop-block-let-declaration-only-shadows-outer-parameter-value-2
-language/block-scope/leave/nested-block-let-declaration-only-shadows-outer-parameter-value-1
-language/block-scope/leave/nested-block-let-declaration-only-shadows-outer-parameter-value-2
-language/block-scope/leave/outermost-binding-updated-in-catch-block-nested-block-let-declaration-unseen-outside-of-block
-language/block-scope/leave/try-block-let-declaration-only-shadows-outer-parameter-value-1
-language/block-scope/leave/try-block-let-declaration-only-shadows-outer-parameter-value-2
-language/block-scope/leave/verify-context-in-finally-block
-language/block-scope/leave/verify-context-in-for-loop-block
-language/block-scope/leave/verify-context-in-labelled-block
-language/block-scope/leave/verify-context-in-try-block
-language/block-scope/leave/x-after-break-to-label
-language/block-scope/leave/x-before-continue
-language/block-scope/shadowing/const-declaration-shadowing-catch-parameter
-language/block-scope/shadowing/const-declarations-shadowing-parameter-name-let-const-and-var-variables
-language/block-scope/shadowing/let-declaration-shadowing-catch-parameter
-language/block-scope/shadowing/let-declarations-shadowing-parameter-name-let-const-and-var
+language/block-scope/syntax/for-in/acquire-properties-from-array
+language/block-scope/syntax/for-in/acquire-properties-from-object
 language/block-scope/syntax/for-in/mixed-values-in-iteration
 language/computed-property-names/basics/string
 language/computed-property-names/basics/symbol
@@ -4004,7 +3987,6 @@ language/destructuring/binding/syntax/recursive-array-and-object-patterns
 language/eval-code/direct/lex-env-distinct-cls
 language/eval-code/direct/lex-env-distinct-const
 language/eval-code/direct/lex-env-distinct-let
-language/eval-code/direct/lex-env-heritage
 language/eval-code/direct/lex-env-no-init-cls
 language/eval-code/direct/lex-env-no-init-const
 language/eval-code/direct/lex-env-no-init-let
@@ -4026,7 +4008,6 @@ language/eval-code/indirect/always-non-strict
 language/eval-code/indirect/lex-env-distinct-cls
 language/eval-code/indirect/lex-env-distinct-const
 language/eval-code/indirect/lex-env-distinct-let
-language/eval-code/indirect/lex-env-heritage
 language/eval-code/indirect/lex-env-no-init-cls
 language/eval-code/indirect/lex-env-no-init-const
 language/eval-code/indirect/lex-env-no-init-let
@@ -6186,14 +6167,12 @@ language/expressions/yield/star-rhs-unresolvable
 language/expressions/yield/star-string
 language/expressions/yield/then-return
 language/expressions/yield/within-for
-language/function-code/block-decl-strict
 language/function-code/each-param-has-own-non-shared-eval-scope
 language/function-code/each-param-has-own-scope
 language/function-code/eval-param-env-with-computed-key
 language/function-code/eval-param-env-with-prop-initializer
 language/function-code/switch-case-decl-strict
 language/function-code/switch-dflt-decl-strict
-language/global-code/block-decl-strict
 language/global-code/decl-lex
 language/global-code/decl-lex-configurable-global
 language/global-code/decl-lex-deletion
@@ -6442,8 +6421,6 @@ language/statements/async-function/try-return-finally-throw
 language/statements/async-function/try-throw-finally-reject
 language/statements/async-function/try-throw-finally-return
 language/statements/async-function/try-throw-finally-throw
-language/statements/block/scope-lex-close
-language/statements/block/scope-lex-open
 language/statements/block/tco-stmt
 language/statements/block/tco-stmt-list
 language/statements/class/accessor-name-inst-computed
@@ -7445,12 +7422,10 @@ language/statements/const/function-local-closure-get-before-initialization
 language/statements/const/function-local-use-before-initialization-in-declaration-statement
 language/statements/const/function-local-use-before-initialization-in-prior-statement
 language/statements/const/global-closure-get-before-initialization
-language/statements/const/syntax/const
 language/statements/const/syntax/const-invalid-assignment-next-expression-for
 language/statements/const/syntax/const-invalid-assignment-statement-body-for-in
 language/statements/const/syntax/const-invalid-assignment-statement-body-for-of
 language/statements/const/syntax/const-outer-inner-let-bindings
-language/statements/continue/shadowing-loop-variable-in-same-scope-as-continue
 language/statements/do-while/tco-body
 language/statements/empty/cptn-value
 language/statements/for/dstr-const-ary-init-iter-close
@@ -8697,7 +8672,6 @@ language/statements/try/dstr-obj-ptrn-list-err
 language/statements/try/dstr-obj-ptrn-prop-eval-err
 language/statements/try/dstr-obj-ptrn-prop-id-get-value-err
 language/statements/try/dstr-obj-ptrn-prop-id-init-throws
-language/statements/try/scope-catch-block-lex-close
 language/statements/try/scope-catch-block-lex-open
 language/statements/try/scope-catch-param-lex-open
 language/statements/try/scope-catch-param-var-none
@@ -8776,14 +8750,11 @@ built-ins/NativeErrors/SyntaxError/is-error-object
 built-ins/NativeErrors/TypeError/is-error-object
 built-ins/NativeErrors/URIError/is-error-object
 
-built-ins/Object/prototype/toLocaleString/primitive_this_value
 language/expressions/object/yield-non-strict-access
 language/expressions/object/yield-non-strict-syntax
 language/expressions/object/not-defined
 language/expressions/object/prop-def-id-get-error
 language/expressions/object/prop-def-id-valid
-language/function-code/10.4.3-1-104
-language/function-code/10.4.3-1-106
 
 # Expected to fail but passed ---
 language/eval-code/direct/var-env-global-lex-non-strict

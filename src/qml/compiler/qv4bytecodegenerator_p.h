@@ -133,14 +133,16 @@ public:
     };
 
     struct ExceptionHandler : public Label {
+        ExceptionHandler() = default;
         ExceptionHandler(BytecodeGenerator *generator)
             : Label(generator, LinkLater)
         {
         }
         ~ExceptionHandler()
         {
-            Q_ASSERT(generator->currentExceptionHandler != this);
+            Q_ASSERT(!generator || generator->currentExceptionHandler != this);
         }
+        bool isValid() const { return generator != nullptr; }
     };
 
     Label label() {
@@ -281,7 +283,7 @@ private:
 
     QVector<I> instructions;
     QVector<int> labels;
-    ExceptionHandler *currentExceptionHandler;
+    ExceptionHandler *currentExceptionHandler = nullptr;
     int regCount = 0;
 public:
     int currentReg = 0;

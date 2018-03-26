@@ -404,6 +404,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << dumpRegister(reg, nFormals);
         MOTH_END_INSTR(PushWithContext)
 
+        MOTH_BEGIN_INSTR(PushBlockContext)
+            d << dumpRegister(reg, nFormals) << ", " << index;
+        MOTH_END_INSTR(PushBlockContext)
+
         MOTH_BEGIN_INSTR(PopContext)
             d << dumpRegister(reg, nFormals);
         MOTH_END_INSTR(PopContext)

@@ -260,6 +260,9 @@ void CompilationUnit::markObjects(QV4::MarkStack *markStack)
     for (QV4::Function *f : qAsConst(runtimeFunctions))
         if (f && f->internalClass)
             f->internalClass->mark(markStack);
+    for (QV4::Heap::InternalClass *c : qAsConst(runtimeBlocks))
+        if (c)
+            c->mark(markStack);
 
     if (runtimeLookups) {
         for (uint i = 0; i < data->lookupTableSize; ++i)
@@ -382,6 +385,21 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
         const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
         runtimeFunctions[i] = new QV4::Function(engine, this, compiledFunction, &Moth::VME::exec);
+    }
+
+    Scope scope(engine);
+    Scoped<InternalClass> ic(scope);
+
+    runtimeBlocks.resize(data->blockTableSize);
+    for (int i = 0 ;i < runtimeBlocks.size(); ++i) {
+        const QV4::CompiledData::Block *compiledBlock = data->blockAt(i);
+        ic = engine->internalClasses(EngineBase::Class_CallContext);
+
+        // first locals
+        const quint32_le *localsIndices = compiledBlock->localsTable();
+        for (quint32 i = 0; i < compiledBlock->nLocals; ++i)
+            ic = ic->addMember(engine->identifierTable->identifier(runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
+        runtimeBlocks[i] = ic->d();
     }
 }
 
