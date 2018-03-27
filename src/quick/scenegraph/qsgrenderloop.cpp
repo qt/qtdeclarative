@@ -305,6 +305,8 @@ void QSGGuiThreadRenderLoop::hide(QQuickWindow *window)
 {
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     cd->fireAboutToStop();
+    if (m_windows.contains(window))
+        m_windows[window].updatePending = false;
 }
 
 void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
@@ -494,7 +496,8 @@ QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::maybeUpdate(QQuickWindow *window)
 {
-    if (!m_windows.contains(window))
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    if (!cd->isRenderable() || !m_windows.contains(window))
         return;
 
     m_windows[window].updatePending = true;
