@@ -525,6 +525,8 @@ void tst_QQmlProfilerService::connect()
 
     if (!traceEnabled)
         m_client->client->setRecording(true);
+
+    QTRY_VERIFY(m_client->numLoadedEventTypes() > 0);
     m_client->client->setRecording(false);
     checkTraceReceived();
     checkJsHeap();
@@ -643,6 +645,7 @@ void tst_QQmlProfilerService::controlFromJS()
 {
     QCOMPARE(connect(true, "controlFromJS.qml", false), ConnectSuccess);
 
+    QTRY_VERIFY(m_client->numLoadedEventTypes() > 0);
     m_client->client->setRecording(false);
     checkTraceReceived();
     checkJsHeap();
