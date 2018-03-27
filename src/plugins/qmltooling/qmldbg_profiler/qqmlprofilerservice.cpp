@@ -281,9 +281,8 @@ void QQmlProfilerServiceImpl::startProfiling(QJSEngine *engine, quint64 features
         }
 
         emit startFlushTimer();
+        emit messageToClient(name(), d.data());
     }
-
-    emit messageToClient(name(), d.data());
 }
 
 /*!
