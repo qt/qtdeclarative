@@ -1996,11 +1996,6 @@ void QQmlEnginePrivate::warning(const QList<QQmlError> &errors)
         dumpwarning(errors);
 }
 
-void QQmlEnginePrivate::warning(QQmlDelayedError *error)
-{
-    warning(error->error());
-}
-
 void QQmlEnginePrivate::warning(QQmlEngine *engine, const QQmlError &error)
 {
     if (engine)
@@ -2015,14 +2010,6 @@ void QQmlEnginePrivate::warning(QQmlEngine *engine, const QList<QQmlError> &erro
         QQmlEnginePrivate::get(engine)->warning(error);
     else
         dumpwarning(error);
-}
-
-void QQmlEnginePrivate::warning(QQmlEngine *engine, QQmlDelayedError *error)
-{
-    if (engine)
-        QQmlEnginePrivate::get(engine)->warning(error);
-    else
-        dumpwarning(error->error());
 }
 
 void QQmlEnginePrivate::warning(QQmlEnginePrivate *engine, const QQmlError &error)

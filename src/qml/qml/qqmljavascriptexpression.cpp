@@ -455,7 +455,7 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
         error->catchJavaScriptException(v4);
         error->setErrorObject(qmlScope);
         if (!error->addError(ep))
-            ep->warning(error);
+            ep->warning(error->error());
         return;
     }
     setupFunction(qmlContext, script.vmFunction);
