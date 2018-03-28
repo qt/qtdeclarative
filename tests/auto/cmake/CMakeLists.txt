@@ -25,4 +25,5 @@ add_test(qtquickcompiler ${CMAKE_CTEST_COMMAND}
     --build-makeprogram ${CMAKE_MAKE_PROGRAM}
     --build-project qqc_test
     --build-options "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" ${BUILD_OPTIONS_LIST}
+    --test-command qqc_test
 )

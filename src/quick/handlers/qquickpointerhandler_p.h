@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -106,9 +106,6 @@ public:
     GrabPermissions grabPermissions() const { return static_cast<GrabPermissions>(m_grabPermissions); }
     void setGrabPermissions(GrabPermissions grabPermissions);
 
-    void classBegin() override { }
-    void componentComplete() override { }
-
 Q_SIGNALS:
     void enabledChanged();
     void activeChanged();
@@ -118,6 +115,9 @@ Q_SIGNALS:
     void canceled(QQuickEventPoint *point);
 
 protected:
+    void classBegin() override;
+    void componentComplete() override;
+
     QQuickPointerEvent *currentEvent() { return m_currentEvent; }
     virtual bool wantsPointerEvent(QQuickPointerEvent *event);
     virtual void handlePointerEventImpl(QQuickPointerEvent *event);

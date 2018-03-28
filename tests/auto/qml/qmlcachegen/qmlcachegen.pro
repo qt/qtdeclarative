@@ -10,4 +10,6 @@ RESOURCES += workerscripts_test
 
 RESOURCES += versionchecks.qml
 
+RESOURCES += trickypaths.qrc
+
 QT += core-private qml-private testlib

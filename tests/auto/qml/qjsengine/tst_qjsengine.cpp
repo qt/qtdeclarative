@@ -203,7 +203,6 @@ private slots:
     void malformedExpression();
 
     void scriptScopes();
-    void perfMapFile();
 
     void binaryNumbers();
     void octalNumbers();
@@ -4178,73 +4177,6 @@ void tst_QJSEngine::octalNumbers()
 
     result = engine.evaluate("0o9");
     QVERIFY(result.isError());
-}
-
-static const char *perfMapKey = "QV4_PROFILE_WRITE_PERF_MAP";
-static const char *jitCallKey = "QV4_JIT_CALL_THRESHOLD";
-
-struct EnvironmentModifier {
-    const bool hasPerfMap = false;
-    const bool hasJitCall = false;
-    const QByteArray perfMap;
-    const QByteArray jitCall;
-
-    EnvironmentModifier() :
-        hasPerfMap(qEnvironmentVariableIsSet(perfMapKey)),
-        hasJitCall(qEnvironmentVariableIsSet(jitCallKey)),
-        perfMap(qgetenv(perfMapKey)),
-        jitCall(qgetenv(jitCallKey))
-    {
-        qputenv(perfMapKey, "1");
-        qputenv(jitCallKey, "0");
-    }
-
-    ~EnvironmentModifier()
-    {
-        if (hasPerfMap)
-            qputenv(perfMapKey, perfMap);
-        else
-            qunsetenv(perfMapKey);
-
-        if (hasJitCall)
-            qputenv(jitCallKey, jitCall);
-        else
-            qunsetenv(jitCallKey);
-    }
-};
-
-void tst_QJSEngine::perfMapFile()
-{
-#if !defined(Q_OS_LINUX)
-    QSKIP("perf map files are only generated on linux");
-#else
-    EnvironmentModifier modifier;
-    Q_UNUSED(modifier);
-    QJSEngine engine;
-    QJSValue def = engine.evaluate("'use strict'; function foo() { return 42 }");
-    QVERIFY(!def.isError());
-    QJSValue use = engine.evaluate("'use strict'; foo()");
-    QVERIFY(use.isNumber());
-    QFile file(QString::fromLatin1("/tmp/perf-%1.map").arg(QCoreApplication::applicationPid()));
-    QVERIFY(file.exists());
-    QVERIFY(file.open(QIODevice::ReadOnly));
-    QList<QByteArray> functions;
-    while (!file.atEnd()) {
-        const QByteArray contents = file.readLine();
-        QVERIFY(contents.endsWith('\n'));
-        QList<QByteArray> fields = contents.split(' ');
-        QCOMPARE(fields.length(), 3);
-        bool ok = false;
-        const qulonglong address = fields[0].toULongLong(&ok, 16);
-        QVERIFY(ok);
-        QVERIFY(address > 0);
-        const ulong size = fields[1].toULong(&ok, 16);
-        QVERIFY(ok);
-        QVERIFY(size > 0);
-        functions.append(fields[2]);
-    }
-    QVERIFY(functions.contains("foo\n"));
-#endif
 }
 
 QTEST_MAIN(tst_QJSEngine)

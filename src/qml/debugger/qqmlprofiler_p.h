@@ -190,7 +190,7 @@ public:
         }
 
         RefLocation(QQmlDataBlob *ref)
-            : Location(QQmlSourceLocation()), locationType(Compiling), sent(false)
+            : Location(QQmlSourceLocation(), ref->url()), locationType(Compiling), sent(false)
         {
             blob = ref;
             blob->addref();

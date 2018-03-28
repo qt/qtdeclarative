@@ -731,6 +731,7 @@ public:
                 context->term -= term.atom.parenthesesWidth;
                 return false;
             }
+            Q_FALLTHROUGH();
         case QuantifierNonGreedy:
             if (backTrack->begin == notFound) {
                 backTrack->begin = input.getPos();

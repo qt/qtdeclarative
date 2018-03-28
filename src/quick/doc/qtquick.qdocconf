@@ -6,6 +6,10 @@ version                 = $QT_VERSION
 
 examplesinstallpath     = quick
 
+# Custom module header that pulls in also QtQuickWidgets
+moduleheader            = QtQuickDoc
+includepaths            = -I .
+
 qhp.projects            = QtQuick
 
 qhp.QtQuick.file                = qtquick.qhp

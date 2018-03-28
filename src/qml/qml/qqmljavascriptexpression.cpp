@@ -451,15 +451,11 @@ void QQmlJavaScriptExpression::createQmlBinding(QQmlContextData *ctxt, QObject *
     QV4::Script script(v4, qmlContext, code, filename, line);
     script.parse();
     if (v4->hasException) {
-        QQmlError error = v4->catchExceptionAsQmlError();
-        if (error.description().isEmpty())
-            error.setDescription(QLatin1String("Exception occurred during function evaluation"));
-        if (error.line() == -1)
-            error.setLine(line);
-        if (error.url().isEmpty())
-            error.setUrl(QUrl::fromLocalFile(filename));
-        error.setObject(qmlScope);
-        ep->warning(error);
+        QQmlDelayedError *error = delayedError();
+        error->catchJavaScriptException(v4);
+        error->setErrorObject(qmlScope);
+        if (!error->addError(ep))
+            ep->warning(error);
         return;
     }
     setupFunction(qmlContext, script.vmFunction);

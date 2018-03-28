@@ -115,6 +115,9 @@ private:
     QTimer m_flushTimer;
     bool m_waitingForStop;
 
+    bool m_globalEnabled;
+    quint64 m_globalFeatures;
+
     QList<QQmlAbstractProfilerAdapter *> m_globalProfilers;
     QMultiHash<QJSEngine *, QQmlAbstractProfilerAdapter *> m_engineProfilers;
     QList<QJSEngine *> m_stoppingEngines;

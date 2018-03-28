@@ -339,7 +339,7 @@ public:
         if (isDouble()) {
             double d = doubleValue();
             int i = (int)d;
-            if (i == d) {
+            if (i == d && !(d == 0 && std::signbit(d))) {
                 setInt_32(i);
                 return true;
             }

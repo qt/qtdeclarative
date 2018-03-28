@@ -252,6 +252,11 @@ QV4::ReturnedValue QQmlExpressionPrivate::v4value(bool *isUndefined)
     if (!expressionFunctionValid) {
         createQmlBinding(context(), scopeObject(), expression, url, line);
         expressionFunctionValid = true;
+        if (hasError()) {
+            if (isUndefined)
+                *isUndefined = true;
+            return QV4::Encode::undefined();
+        }
     }
 
     return evaluate(isUndefined);

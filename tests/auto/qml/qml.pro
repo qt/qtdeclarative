@@ -69,6 +69,7 @@ PRIVATETESTS += \
     qqmltranslation \
     qqmlimport \
     qqmlobjectmodel \
+    qv4assembler \
     qv4mm \
     ecmascripttests \
     bindingdependencyapi

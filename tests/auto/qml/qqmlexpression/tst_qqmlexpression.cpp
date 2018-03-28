@@ -101,8 +101,12 @@ void tst_qqmlexpression::syntaxError()
 {
     QQmlEngine engine;
     QQmlExpression expression(engine.rootContext(), nullptr, "asd asd");
-    QVariant v = expression.evaluate();
+    bool isUndefined = false;
+    QVariant v = expression.evaluate(&isUndefined);
     QCOMPARE(v, QVariant());
+    QVERIFY(expression.hasError());
+    QCOMPARE(expression.error().description(), "SyntaxError: Expected token `;'");
+    QVERIFY(isUndefined);
 }
 
 void tst_qqmlexpression::exception()
