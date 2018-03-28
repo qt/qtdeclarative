@@ -108,6 +108,8 @@ private slots:
     void text();
     void cdata();
 
+    void noQmlContext();
+
     // Crashes
     // void outstanding_request_at_shutdown();
 
@@ -1242,6 +1244,30 @@ void tst_qqmlxmlhttprequest::cdata()
     QCOMPARE(object->property("xmlTest").toBool(), true);
     QCOMPARE(object->property("status").toInt(), 200);
 }
+
+void tst_qqmlxmlhttprequest::noQmlContext()
+{
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+    QVERIFY(server.wait(testFileUrl("open_network.expect"),
+                        testFileUrl("open_network.reply"),
+                        testFileUrl("testdocument.html")));
+    QUrl url = server.urlString(QStringLiteral("/testdocument.html"));
+
+    QQmlEngine engine;
+
+    QFile f(testFile("noqmlcontext.js"));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    QString script = QString::fromUtf8(f.readAll());
+    QJSValue testFunction = engine.evaluate(script);
+    QVERIFY(testFunction.isCallable());
+
+    QJSValue resultCollector = engine.newObject();
+
+    testFunction.call(QJSValueList() << url.toString() << resultCollector);
+
+    QTRY_COMPARE(resultCollector.property("responseText").toString(), "QML Rocks!\n");
+ }
 
 void tst_qqmlxmlhttprequest::stateChangeCallingContext()
 {
