@@ -484,6 +484,7 @@ protected:
 
     void addCJump();
 
+public:
     int registerString(const QString &name) {
         return jsUnitGenerator->registerString(name);
     }
@@ -492,6 +493,7 @@ protected:
     int registerSetterLookup(int nameIndex) { return jsUnitGenerator->registerSetterLookup(nameIndex); }
     int registerGlobalGetterLookup(int nameIndex) { return jsUnitGenerator->registerGlobalGetterLookup(nameIndex); }
 
+protected:
     // Returns index in _module->functions
     virtual int defineFunction(const QString &name, AST::Node *ast,
                                AST::FormalParameterList *formals,
@@ -514,8 +516,6 @@ protected:
     void initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef);
     void destructurePropertyList(const Reference &object, AST::PatternPropertyList *bindingList);
     void destructureElementList(const Reference &array, AST::PatternElementList *bindingList);
-
-    Reference referenceForName(const QString &name, bool lhs);
 
     void loadClosure(int index);
 
@@ -645,10 +645,13 @@ public:
     void handleTryCatch(AST::TryStatement *ast);
     void handleTryFinally(AST::TryStatement *ast);
 
+    Reference referenceForName(const QString &name, bool lhs);
+
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> generateCompilationUnit(bool generateUnitData = true);
     static QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading();
 
     Context *currentContext() const { return _context; }
+    BytecodeGenerator *generator() const { return bytecodeGenerator; }
 
 protected:
     friend class ScanFunctions;
@@ -656,7 +659,7 @@ protected:
     friend struct ControlFlowCatch;
     friend struct ControlFlowFinally;
     Result _expr;
-    VolatileMemoryLocations _volataleMemoryLocations;
+    VolatileMemoryLocations _volatileMemoryLocations;
     Module *_module;
     int _returnAddress;
     Context *_context;

@@ -272,9 +272,9 @@ void Codegen::statement(Statement *ast)
     bytecodeGenerator->setLocation(ast->firstSourceLocation());
 
     VolatileMemoryLocations vLocs = scanVolatileMemoryLocations(ast);
-    qSwap(_volataleMemoryLocations, vLocs);
+    qSwap(_volatileMemoryLocations, vLocs);
     accept(ast);
-    qSwap(_volataleMemoryLocations, vLocs);
+    qSwap(_volatileMemoryLocations, vLocs);
 }
 
 void Codegen::statement(ExpressionNode *ast)
@@ -287,11 +287,11 @@ void Codegen::statement(ExpressionNode *ast)
         Result r(nx);
         qSwap(_expr, r);
         VolatileMemoryLocations vLocs = scanVolatileMemoryLocations(ast);
-        qSwap(_volataleMemoryLocations, vLocs);
+        qSwap(_volatileMemoryLocations, vLocs);
 
         accept(ast);
 
-        qSwap(_volataleMemoryLocations, vLocs);
+        qSwap(_volatileMemoryLocations, vLocs);
         qSwap(_expr, r);
 
         if (hasError)
@@ -1724,82 +1724,29 @@ bool Codegen::visit(FunctionExpression *ast)
 
 Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
 {
-    int scope = 0;
-    Context *c = _context;
+    Context::ResolvedName resolved = _context->resolveName(name);
 
-    // skip the innermost context if it's simple (as the runtime won't
-    // create a context for it
-    if (c->canUseSimpleCall()) {
-        Context::Member m = c->findMember(name);
-        if (m.type != Context::UndefinedMember) {
-            Q_ASSERT((!m.canEscape));
-            Reference r = Reference::fromStackSlot(this, m.index, true /*isLocal*/);
-            if (name == QLatin1String("arguments") || name == QLatin1String("eval")) {
-                r.isArgOrEval = true;
-                if (isLhs && c->isStrict)
-                    // ### add correct source location
-                    throwSyntaxError(SourceLocation(), QStringLiteral("Variable name may not be eval or arguments in strict mode"));
-            }
-            return r;
-        }
-        const int argIdx = c->findArgument(name);
-        if (argIdx != -1) {
-            Q_ASSERT(!c->argumentsCanEscape && (c->usesArgumentsObject != Context::ArgumentsObjectUsed || c->isStrict));
-            return Reference::fromArgument(this, argIdx, _volataleMemoryLocations.isVolatile(name));
-        }
-        c = c->parent;
-    }
-
-    while (c->parent) {
-        if (c->forceLookupByName())
-            goto loadByName;
-
-        Context::Member m = c->findMember(name);
-        if (m.type != Context::UndefinedMember) {
-            Reference r = m.canEscape ? Reference::fromScopedLocal(this, m.index, scope)
-                                      : Reference::fromStackSlot(this, m.index, true /*isLocal*/);
-            if (name == QLatin1String("arguments") || name == QLatin1String("eval")) {
-                r.isArgOrEval = true;
-                if (isLhs && c->isStrict)
-                    // ### add correct source location
-                    throwSyntaxError(SourceLocation(), QStringLiteral("Variable name may not be eval or arguments in strict mode"));
-            }
-            return r;
-        }
-        const int argIdx = c->findArgument(name);
-        if (argIdx != -1) {
-            if (c->argumentsCanEscape || c->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-                int idx = argIdx + c->locals.size();
-                return Reference::fromScopedLocal(this, idx, scope);
-            } else {
-                Q_ASSERT(scope == 0);
-                return Reference::fromArgument(this, argIdx, _volataleMemoryLocations.isVolatile(name));
-            }
-        }
-
-        if (!c->isStrict && c->hasDirectEval)
-            goto loadByName;
-
-        ++scope;
-        c = c->parent;
-    }
-
-    {
-        // This hook allows implementing QML lookup semantics
-        Reference fallback = fallbackNameLookup(name);
-        if (fallback.type != Reference::Invalid)
-            return fallback;
-    }
-
-    if (!c->parent && !c->forceLookupByName() && _context->type != ContextType::Eval && c->type != ContextType::Binding) {
-        Reference r = Reference::fromName(this, name);
-        r.global = true;
+    if (resolved.type == Context::ResolvedName::Local || resolved.type == Context::ResolvedName::Stack) {
+        if (resolved.isArgOrEval && isLhs)
+            // ### add correct source location
+            throwSyntaxError(SourceLocation(), QStringLiteral("Variable name may not be eval or arguments in strict mode"));
+        Reference r = (resolved.type == Context::ResolvedName::Local) ?
+                    Reference::fromScopedLocal(this, resolved.index, resolved.scope) :
+                    Reference::fromStackSlot(this, resolved.index, true /*isLocal*/);
+        if (r.isStackSlot() && _volatileMemoryLocations.isVolatile(name))
+            r.isVolatile = true;
+        r.isArgOrEval = resolved.isArgOrEval;
         return r;
     }
 
-    // global context or with. Lookup by name
-  loadByName:
-    return Reference::fromName(this, name);
+    // This hook allows implementing QML lookup semantics
+    Reference fallback = fallbackNameLookup(name);
+    if (fallback.type != Reference::Invalid)
+        return fallback;
+
+    Reference r = Reference::fromName(this, name);
+    r.global = (resolved.type == Context::ResolvedName::Global);
+    return r;
 }
 
 void Codegen::loadClosure(int closureId)
@@ -2365,60 +2312,14 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + _context->arguments.size());
 
     int returnAddress = -1;
-    bool _requiresReturnValue = (_context->type == ContextType::Binding || _context->type == ContextType::Eval || _context->type == ContextType::Global);
+    bool _requiresReturnValue = _context->requiresImplicitReturnValue();
     qSwap(requiresReturnValue, _requiresReturnValue);
     if (requiresReturnValue)
         returnAddress = bytecodeGenerator->newRegister();
-    if (!_context->parent || _context->usesArgumentsObject == Context::ArgumentsObjectUnknown)
-        _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
-    if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed)
-        _context->addLocalVar(QStringLiteral("arguments"), Context::VariableDeclaration, AST::VariableScope::Var);
-
-    bool allVarsEscape = _context->hasWith || _context->hasTry || _context->hasDirectEval;
-    if (_context->type == ContextType::Binding // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
-            || (!_context->canUseSimpleCall() && _context->type != ContextType::Global &&
-                (_context->type != ContextType::Eval || _context->isStrict))) {
-        Instruction::CreateCallContext createContext;
-        bytecodeGenerator->addInstruction(createContext);
-    }
-
-    // variables in global code are properties of the global context object, not locals as with other functions.
-    if (_context->type == ContextType::Function || _context->type == ContextType::Binding) {
-        for (Context::MemberMap::iterator it = _context->members.begin(), end = _context->members.end(); it != end; ++it) {
-            const QString &local = it.key();
-            if (allVarsEscape)
-                it->canEscape = true;
-            if (it->canEscape) {
-                it->index = _context->locals.size();
-                _context->locals.append(local);
-                if (it->type == Context::ThisFunctionName) {
-                    // move the name from the stack to the call context
-                    Instruction::LoadReg load;
-                    load.reg = CallData::Function;
-                    bytecodeGenerator->addInstruction(load);
-                    Instruction::StoreLocal store;
-                    store.index = it->index;
-                    bytecodeGenerator->addInstruction(store);
-                }
-            } else {
-                if (it->type == Context::ThisFunctionName)
-                    it->index = CallData::Function;
-                else
-                    it->index = bytecodeGenerator->newRegister();
-            }
-        }
-    } else {
-        for (Context::MemberMap::const_iterator it = _context->members.constBegin(), cend = _context->members.constEnd(); it != cend; ++it) {
-            const QString &local = it.key();
-
-            Instruction::DeclareVar declareVar;
-            declareVar.isDeletable = false;
-            declareVar.varName = registerString(local);
-            bytecodeGenerator->addInstruction(declareVar);
-        }
-    }
-
     qSwap(_returnAddress, returnAddress);
+
+    _context->emitHeaderBytecode(this);
+
     for (const Context::Member &member : qAsConst(_context->members)) {
         if (member.function) {
             const int function = defineFunction(member.function->name.toString(), member.function, member.function->formals,
@@ -2433,21 +2334,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
                 local.storeConsumeAccumulator();
             }
         }
-    }
-    if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-        if (_context->isStrict || (formals && !formals->isSimpleParameterList())) {
-            Instruction::CreateUnmappedArgumentsObject setup;
-            bytecodeGenerator->addInstruction(setup);
-        } else {
-            Instruction::CreateMappedArgumentsObject setup;
-            bytecodeGenerator->addInstruction(setup);
-        }
-        referenceForName(QStringLiteral("arguments"), false).storeConsumeAccumulator();
-    }
-    if (_context->usesThis && !_context->isStrict) {
-        // make sure we convert this to an object
-        Instruction::ConvertThisToObject convert;
-        bytecodeGenerator->addInstruction(convert);
     }
 
     int argc = 0;
@@ -2468,7 +2354,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             bytecodeGenerator->addInstruction(rest);
             arg.storeConsumeAccumulator();
         } else {
-            initializeAndDestructureBindingElement(e, arg);
+            if (e->bindingPattern || e->initializer)
+                initializeAndDestructureBindingElement(e, arg);
         }
         formals = formals->next;
         ++argc;
@@ -3087,7 +2974,7 @@ bool Codegen::visit(WithStatement *ast)
 
     RegisterScope scope(this);
 
-    _context->hasWith = true;
+    Q_ASSERT(_context->hasWith);
 
     Reference src = expression(ast->expression);
     if (hasError)

@@ -153,6 +153,11 @@ namespace Compiler {
     struct Module;
     struct Context;
     struct JSUnitGenerator;
+    class Codegen;
+}
+
+namespace Moth {
+    class BytecodeGenerator;
 }
 
 namespace Heap {

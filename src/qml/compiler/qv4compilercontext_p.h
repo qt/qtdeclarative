@@ -149,6 +149,7 @@ struct Context {
     bool hasWith = false;
     bool returnsClosure = false;
     mutable bool argumentsCanEscape = false;
+    bool requiresExecutionContext = false;
 
     enum UsesArgumentsObject {
         ArgumentsObjectUnknown,
@@ -217,7 +218,6 @@ struct Context {
 
     bool forceLookupByName();
 
-
     bool canUseSimpleCall() const {
         return nestedContexts.isEmpty() &&
                locals.isEmpty() &&
@@ -256,36 +256,33 @@ struct Context {
         return true;
     }
 
+    bool requiresImplicitReturnValue() const {
+        return type == ContextType::Binding ||
+               type == ContextType::Eval ||
+               type == ContextType::Global;
+    }
+
     void addUsedVariable(const QString &name) {
         usedVariables.insert(name);
     }
 
-    bool addLocalVar(const QString &name, MemberType type, QQmlJS::AST::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr)
-    {
-        if (name.isEmpty())
-            return true;
+    bool addLocalVar(const QString &name, MemberType type, QQmlJS::AST::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr);
 
-        if (type != FunctionDefinition) {
-            if (formals && formals->containsName(name))
-                return (scope == QQmlJS::AST::VariableScope::Var);
-        }
-        MemberMap::iterator it = members.find(name);
-        if (it != members.end()) {
-            if (scope != QQmlJS::AST::VariableScope::Var || (*it).scope != QQmlJS::AST::VariableScope::Var)
-                return false;
-            if ((*it).type <= type) {
-                (*it).type = type;
-                (*it).function = function;
-            }
-            return true;
-        }
-        Member m;
-        m.type = type;
-        m.function = function;
-        m.scope = scope;
-        members.insert(name, m);
-        return true;
-    }
+    struct ResolvedName {
+        enum Type {
+            Unresolved,
+            Global,
+            Local,
+            Stack
+        };
+        Type type = Unresolved;
+        bool isArgOrEval = false;
+        int scope = -1;
+        int index = -1;
+        bool isValid() const { return type != Unresolved; }
+    };
+    ResolvedName resolveName(const QString &name);
+    void emitHeaderBytecode(Compiler::Codegen *codegen);
 };
 
 
