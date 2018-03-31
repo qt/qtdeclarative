@@ -51,6 +51,8 @@
 #include <QtCore/qglobal.h>
 #include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
 
+#include <QtQml/private/qqmlvme_p.h>
+
 QT_BEGIN_NAMESPACE
 
 class QString;
@@ -65,6 +67,9 @@ namespace QtQuickPrivate {
 template<typename T>
 void quickBeginDeferred(QObject *object, const QString &property, QQuickDeferredPointer<T> &delegate)
 {
+    if (!QQmlVME::componentCompleteEnabled())
+           return;
+
     delegate.setExecuting(true);
     QtQuickPrivate::beginDeferred(object, property);
     delegate.setExecuting(false);
