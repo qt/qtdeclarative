@@ -161,6 +161,7 @@ public:
         RootContext,
         IntegerNull, // Has to come after the RootContext to make the context stack safe
         ObjectProto,
+        SymbolProto,
         ArrayProto,
         PropertyListProto,
         StringProto,
@@ -187,6 +188,7 @@ public:
 
         Object_Ctor,
         String_Ctor,
+        Symbol_Ctor,
         Number_Ctor,
         Boolean_Ctor,
         Array_Ctor,
@@ -214,6 +216,7 @@ public:
     ExecutionContext *rootContext() const { return reinterpret_cast<ExecutionContext *>(jsObjects + RootContext); }
     FunctionObject *objectCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Object_Ctor); }
     FunctionObject *stringCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + String_Ctor); }
+    FunctionObject *symbolCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Symbol_Ctor); }
     FunctionObject *numberCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Number_Ctor); }
     FunctionObject *booleanCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Boolean_Ctor); }
     FunctionObject *arrayCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Array_Ctor); }
@@ -232,6 +235,7 @@ public:
     FunctionObject *typedArrayCtors;
 
     Object *objectPrototype() const { return reinterpret_cast<Object *>(jsObjects + ObjectProto); }
+    Object *symbolPrototype() const { return reinterpret_cast<Object *>(jsObjects + SymbolProto); }
     Object *arrayPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayProto); }
     Object *propertyListPrototype() const { return reinterpret_cast<Object *>(jsObjects + PropertyListProto); }
     Object *stringPrototype() const { return reinterpret_cast<Object *>(jsObjects + StringProto); }

@@ -44,6 +44,7 @@
 #include "qv4objectproto_p.h"
 #include <private/qv4mm_p.h>
 #include "qv4scopedvalue_p.h"
+#include "qv4symbol_p.h"
 #include "qv4alloca_p.h"
 #include "qv4jscall_p.h"
 #include <QtCore/QDateTime>
@@ -152,22 +153,29 @@ ReturnedValue StringCtor::callAsConstructor(const FunctionObject *f, const Value
         value = argv[0].toString(v4);
     else
         value = v4->newString();
+    CHECK_EXCEPTION();
     return Encode(v4->newStringObject(value));
 }
 
 ReturnedValue StringCtor::call(const FunctionObject *m, const Value *, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = m->engine();
-    if (argc)
-        return argv[0].toString(v4)->asReturnedValue();
-    else
+    if (!argc)
         return v4->newString()->asReturnedValue();
+    if (argv[0].isSymbol())
+        return v4->newString(argv[0].symbolValue()->descriptiveString())->asReturnedValue();
+    return argv[0].toString(v4)->asReturnedValue();
 }
 
 void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
+
+    // need to set this once again, as these were not fully defined when creating the string proto
+    Heap::InternalClass *ic = scope.engine->classes[ExecutionEngine::Class_StringObject]->changePrototype(scope.engine->objectPrototype()->d());
+    d()->internalClass.set(scope.engine, ic);
+    d()->string.set(scope.engine, scope.engine->id_empty()->d());
 
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));

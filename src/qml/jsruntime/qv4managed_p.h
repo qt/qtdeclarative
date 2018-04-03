@@ -182,6 +182,7 @@ public:
         Type_Invalid,
         Type_String,
         Type_Object,
+        Type_Symbol,
         Type_ArrayObject,
         Type_FunctionObject,
         Type_BooleanObject,

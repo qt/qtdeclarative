@@ -165,7 +165,9 @@ namespace Heap {
     struct MemberData;
     struct ArrayData;
 
+    struct StringOrSymbol;
     struct String;
+    struct Symbol;
     struct Object;
     struct ObjectPrototype;
 
@@ -197,7 +199,9 @@ namespace Heap {
 
 class MemoryManager;
 class ExecutableAllocator;
+struct StringOrSymbol;
 struct String;
+struct Symbol;
 struct Object;
 struct ObjectPrototype;
 struct ObjectIterator;
@@ -244,6 +248,7 @@ struct Scope;
 struct ScopedValue;
 template<typename T> struct Scoped;
 typedef Scoped<String> ScopedString;
+typedef Scoped<StringOrSymbol> ScopedStringOrSymbol;
 typedef Scoped<Object> ScopedObject;
 typedef Scoped<ArrayObject> ScopedArrayObject;
 typedef Scoped<FunctionObject> ScopedFunctionObject;

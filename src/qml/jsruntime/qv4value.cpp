@@ -40,6 +40,7 @@
 #include <qv4runtime_p.h>
 #include <qv4string_p.h>
 #ifndef V4_BOOTSTRAP
+#include <qv4symbol_p.h>
 #include <qv4object_p.h>
 #include <qv4objectproto_p.h>
 #include <private/qv4mm_p.h>
@@ -145,6 +146,8 @@ QString Value::toQStringNoThrow() const
     case Value::Managed_Type:
         if (String *s = stringValue())
             return s->toQString();
+        if (Symbol *s = symbolValue())
+            return s->descriptiveString();
         {
             Q_ASSERT(isObject());
             Scope scope(objectValue()->engine());

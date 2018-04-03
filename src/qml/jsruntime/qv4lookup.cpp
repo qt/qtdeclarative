@@ -109,11 +109,12 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
         break;
     case Value::Managed_Type: {
         // ### Should move this over to the Object path, as strings also have an internalClass
-        Q_ASSERT(object.isString());
-        primitiveLookup.proto = engine->stringPrototype()->d();
+        Q_ASSERT(object.isStringOrSymbol());
+        primitiveLookup.proto = static_cast<const Managed &>(object).internalClass()->prototype;
+        Q_ASSERT(primitiveLookup.proto);
         Scope scope(engine);
         ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-        if (name->equals(engine->id_length())) {
+        if (object.isString() && name->equals(engine->id_length())) {
             // special case, as the property is on the object itself
             getter = stringLengthGetter;
             return stringLengthGetter(this, engine, object);

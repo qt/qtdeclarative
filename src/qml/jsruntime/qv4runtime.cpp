@@ -461,7 +461,10 @@ Heap::Object *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const Val
     case Value::Boolean_Type:
         return engine->newBooleanObject(value.booleanValue());
     case Value::Managed_Type:
-        Q_ASSERT(value.isString());
+        Q_ASSERT(value.isStringOrSymbol());
+        if (!value.isString())
+            // ### this is a symbol, which is an immutable object according to spec
+            return nullptr;
         return engine->newStringObject(value.stringValue());
     case Value::Integer_Type:
     default: // double
@@ -488,6 +491,10 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, Value val
     case Value::Managed_Type: {
         if (value.isString())
             return static_cast<const String &>(value).d();
+        if (value.isSymbol()) {
+            engine->throwTypeError(QLatin1String("Cannot convert a symbol to a string."));
+            return  nullptr;
+        }
         value = Primitive::fromReturnedValue(RuntimeHelpers::toPrimitive(value, hint));
         Q_ASSERT(value.isPrimitive());
         if (value.isString())
@@ -598,7 +605,7 @@ static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, 
         Q_ASSERT(!!o); // can't fail as null/undefined is covered above
     }
 
-    ScopedString name(scope, index.toString(engine));
+    ScopedStringOrSymbol  name(scope, index.toStringOrSymbol(engine));
     if (scope.hasException())
         return Encode::undefined();
     return o->get(name);
@@ -652,7 +659,7 @@ static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Val
         return o->putIndexed(idx, value);
     }
 
-    ScopedString name(scope, index.toString(engine));
+    ScopedStringOrSymbol name(scope, index.toStringOrSymbol(engine));
     return o->put(name, value);
 }
 
@@ -1033,24 +1040,30 @@ ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, V
 ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, Value *base, int nameIndex, Value *argv, int argc)
 {
     Scope scope(engine);
+    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    ScopedObject lookupObject(scope, base);
 
-    if (!base->isObject()) {
+    if (!lookupObject) {
         Q_ASSERT(!base->isEmpty());
         if (base->isNullOrUndefined()) {
             QString message = QStringLiteral("Cannot call method '%1' of %2")
-                    .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString(),
-                         base->toQStringNoThrow());
+                    .arg(name->toQString(), base->toQStringNoThrow());
             return engine->throwTypeError(message);
         }
 
-        ScopedValue thisObject(scope, RuntimeHelpers::convertToObject(engine, *base));
-        if (engine->hasException) // type error
-            return Encode::undefined();
-        base = thisObject;
+        if (base->isManaged()) {
+            Managed *m = static_cast<Managed *>(base);
+            lookupObject = m->internalClass()->prototype;
+            Q_ASSERT(m->internalClass()->prototype);
+        } else {
+            lookupObject = RuntimeHelpers::convertToObject(engine, *base);
+            if (engine->hasException) // type error
+                return Encode::undefined();
+            base = lookupObject;
+        }
     }
 
-    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    ScopedFunctionObject f(scope, static_cast<Object *>(base)->get(name));
+    ScopedFunctionObject f(scope, static_cast<Object *>(lookupObject)->get(name));
 
     if (!f) {
         QString error = QStringLiteral("Property '%1' of object %2 is not a function")
@@ -1080,7 +1093,7 @@ ReturnedValue Runtime::method_callElement(ExecutionEngine *engine, Value *base, 
     ScopedValue thisObject(scope, base->toObject(engine));
     base = thisObject;
 
-    ScopedString str(scope, index.toString(engine));
+    ScopedStringOrSymbol str(scope, index.toStringOrSymbol(engine));
     if (engine->hasException)
         return Encode::undefined();
 

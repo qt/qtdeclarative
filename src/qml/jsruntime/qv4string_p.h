@@ -68,7 +68,9 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
 {
     mutable QStringData *text;
     mutable Identifier identifier;
+
     static void markObjects(Heap::Base *that, MarkStack *markStack);
+    void destroy();
 
     inline QString toQString() const {
         if (!text)
@@ -96,7 +98,6 @@ struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
     }
 
     void init(const QString &text);
-    void destroy();
     void simplifyString() const;
     int length() const;
     std::size_t retainedTextSize() const {
@@ -175,6 +176,9 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : public Managed {
 
     uint asArrayIndex() const;
 
+    inline QString toQString() const {
+        return d()->toQString();
+    }
 #endif
 };
 

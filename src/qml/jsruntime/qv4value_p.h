@@ -365,7 +365,17 @@ public:
     QML_NEARLY_ALWAYS_INLINE String *stringValue() const {
         if (!isString())
             return nullptr;
-        return reinterpret_cast<String*>(const_cast<Value *>(this));
+        return reinterpret_cast<String *>(const_cast<Value *>(this));
+    }
+    QML_NEARLY_ALWAYS_INLINE StringOrSymbol *stringOrSymbolValue() const {
+        if (!isStringOrSymbol())
+            return nullptr;
+        return reinterpret_cast<StringOrSymbol *>(const_cast<Value *>(this));
+    }
+    QML_NEARLY_ALWAYS_INLINE Symbol *symbolValue() const {
+        if (!isSymbol())
+            return nullptr;
+        return reinterpret_cast<Symbol *>(const_cast<Value *>(this));
     }
     QML_NEARLY_ALWAYS_INLINE Object *objectValue() const {
         if (!isObject())
@@ -410,6 +420,11 @@ public:
         if (isString())
             return reinterpret_cast<Heap::String *>(m());
         return toString(e, *this);
+    }
+    Heap::StringOrSymbol *toStringOrSymbol(ExecutionEngine *e) const {
+        if (isStringOrSymbol())
+            return reinterpret_cast<Heap::StringOrSymbol *>(m());
+        return reinterpret_cast<Heap::StringOrSymbol *>(toString(e, *this));
     }
     static Heap::String *toString(ExecutionEngine *e, Value val);
     Heap::Object *toObject(ExecutionEngine *e) const {
@@ -518,7 +533,9 @@ bool Value::isSymbol() const
     Heap::Base *b = heapObject();
     return b && b->internalClass->vtable->isStringOrSymbol && !b->internalClass->vtable->isString;
 }
+
 inline bool Value::isObject() const
+
 {
     Heap::Base *b = heapObject();
     return b && b->internalClass->vtable->isObject;

@@ -52,6 +52,7 @@
 #include <qv4numberobject_p.h>
 #include <qv4regexpobject_p.h>
 #include <qv4regexp_p.h>
+#include "qv4symbol_p.h"
 #include <qv4variantobject_p.h>
 #include <qv4runtime_p.h>
 #include <private/qv4mm_p.h>
@@ -198,18 +199,33 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStackLimit = jsStackBase + JSStackLimit/sizeof(Value);
 
     identifierTable = new IdentifierTable(this);
+    symbolTable = new IdentifierTable(this);
 
     memset(classes, 0, sizeof(classes));
     classes[Class_Empty] = memoryManager->allocIC<InternalClass>();
     classes[Class_Empty]->init(this);
 
-    classes[Class_String] = classes[Class_Empty]->changeVTable(QV4::String::staticVTable());
     classes[Class_MemberData] = classes[Class_Empty]->changeVTable(QV4::MemberData::staticVTable());
     classes[Class_SimpleArrayData] = classes[Class_Empty]->changeVTable(QV4::SimpleArrayData::staticVTable());
     classes[Class_SparseArrayData] = classes[Class_Empty]->changeVTable(QV4::SparseArrayData::staticVTable());
     classes[Class_ExecutionContext] = classes[Class_Empty]->changeVTable(QV4::ExecutionContext::staticVTable());
     classes[Class_CallContext] = classes[Class_Empty]->changeVTable(QV4::CallContext::staticVTable());
     classes[Class_QmlContext] = classes[Class_Empty]->changeVTable(QV4::QmlContext::staticVTable());
+
+    Scope scope(this);
+    Scoped<InternalClass> ic(scope);
+    ic = classes[Class_Empty]->changeVTable(QV4::Object::staticVTable());
+    jsObjects[ObjectProto] = memoryManager->allocObject<ObjectPrototype>(ic->d());
+    classes[Class_Object] = ic->changePrototype(objectPrototype()->d());
+    classes[Class_QmlContextWrapper] = classes[Class_Object]->changeVTable(QV4::QQmlContextWrapper::staticVTable());
+
+    ic = newInternalClass(QV4::StringObject::staticVTable(), objectPrototype());
+    jsObjects[StringProto] = memoryManager->allocObject<StringPrototype>(ic->d());
+    classes[Class_String] = classes[Class_Empty]->changeVTable(QV4::String::staticVTable())->changePrototype(stringPrototype()->d());
+    Q_ASSERT(stringPrototype()->d() && classes[Class_String]->prototype);
+
+    jsObjects[SymbolProto] = memoryManager->allocate<SymbolPrototype>();
+    classes[Class_Symbol] = classes[EngineBase::Class_Empty]->changeVTable(QV4::Symbol::staticVTable())->changePrototype(symbolPrototype()->d());
 
     jsStrings[String_Empty] = newIdentifier(QString());
     jsStrings[String_undefined] = newIdentifier(QStringLiteral("undefined"));
@@ -248,13 +264,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStrings[String_buffer] = newIdentifier(QStringLiteral("buffer"));
     jsStrings[String_lastIndex] = newIdentifier(QStringLiteral("lastIndex"));
 
-    Scope scope(this);
-    Scoped<InternalClass> ic(scope);
-    ic = classes[Class_Empty]->changeVTable(QV4::Object::staticVTable());
-    jsObjects[ObjectProto] = memoryManager->allocObject<ObjectPrototype>(ic->d());
-    classes[Class_Object] = ic->changePrototype(objectPrototype()->d());
-    classes[EngineBase::Class_QmlContextWrapper] = classes[Class_Object]->changeVTable(QV4::QQmlContextWrapper::staticVTable());
-
     ic = newInternalClass(ArrayPrototype::staticVTable(), objectPrototype());
     Q_ASSERT(ic->d()->prototype);
     ic = ic->addMember(id_length()->identifier(), Attr_NotConfigurable|Attr_NotEnumerable);
@@ -277,7 +286,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     ic = newInternalClass(QV4::StringObject::staticVTable(), objectPrototype());
     ic = ic->addMember(id_length()->identifier(), Attr_ReadOnly);
-    jsObjects[StringProto] = memoryManager->allocObject<StringPrototype>(ic->d());
     classes[Class_StringObject] = ic->changePrototype(stringPrototype()->d());
     Q_ASSERT(classes[Class_StringObject]->find(id_length()->identifier()) == Heap::StringObject::LengthPropertyIndex);
 
@@ -362,8 +370,10 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 #endif
 
     ExecutionContext *global = rootContext();
+
     jsObjects[Object_Ctor] = memoryManager->allocate<ObjectCtor>(global);
     jsObjects[String_Ctor] = memoryManager->allocate<StringCtor>(global);
+    jsObjects[Symbol_Ctor] = memoryManager->allocate<SymbolCtor>(global);
     jsObjects[Number_Ctor] = memoryManager->allocate<NumberCtor>(global);
     jsObjects[Boolean_Ctor] = memoryManager->allocate<BooleanCtor>(global);
     jsObjects[Array_Ctor] = memoryManager->allocate<ArrayCtor>(global);
@@ -380,6 +390,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     static_cast<ObjectPrototype *>(objectPrototype())->init(this, objectCtor());
     static_cast<StringPrototype *>(stringPrototype())->init(this, stringCtor());
+    static_cast<SymbolPrototype *>(symbolPrototype())->init(this, symbolCtor());
     static_cast<NumberPrototype *>(numberPrototype())->init(this, numberCtor());
     static_cast<BooleanPrototype *>(booleanPrototype())->init(this, booleanCtor());
     static_cast<ArrayPrototype *>(arrayPrototype())->init(this, arrayCtor());
@@ -426,6 +437,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     globalObject->defineDefaultProperty(QStringLiteral("Object"), *objectCtor());
     globalObject->defineDefaultProperty(QStringLiteral("String"), *stringCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("Symbol"), *symbolCtor());
     FunctionObject *numberObject = numberCtor();
     globalObject->defineDefaultProperty(QStringLiteral("Number"), *numberObject);
     globalObject->defineDefaultProperty(QStringLiteral("Boolean"), *booleanCtor());

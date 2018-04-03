@@ -72,8 +72,13 @@ QString Managed::className() const
     const char *s = nullptr;
     switch (Type(vtable()->type)) {
     case Type_Invalid:
-    case Type_String:
         return QString();
+    case Type_String:
+        s = "String";
+        break;
+    case Type_Symbol:
+        s = "Symbol";
+        break;
     case Type_Object:
         s = "Object";
         break;

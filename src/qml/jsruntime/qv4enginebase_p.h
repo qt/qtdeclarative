@@ -83,6 +83,7 @@ struct Q_QML_EXPORT EngineBase {
     Value *jsStackBase = nullptr;
 
     IdentifierTable *identifierTable = nullptr;
+    IdentifierTable *symbolTable = nullptr;
     Object *globalObject = nullptr;
 
     // Exception handling
@@ -112,6 +113,7 @@ struct Q_QML_EXPORT EngineBase {
         Class_ErrorObjectWithMessage,
         Class_ErrorProto,
         Class_QmlContextWrapper,
+        Class_Symbol,
         NClasses
     };
     Heap::InternalClass *classes[NClasses];

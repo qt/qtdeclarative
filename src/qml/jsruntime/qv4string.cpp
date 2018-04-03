@@ -138,7 +138,8 @@ void Heap::ComplexString::init(Heap::String *ref, int from, int len)
     this->len = len;
 }
 
-void Heap::String::destroy() {
+void Heap::StringOrSymbol::destroy()
+{
     if (text) {
         internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(qptrdiff(-text->size) * (int)sizeof(QChar));
         if (!text->ref.deref())

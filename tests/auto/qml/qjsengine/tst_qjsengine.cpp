@@ -944,6 +944,7 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         << "decodeURIComponent"
         << "Date"
         << "Array"
+        << "Symbol"
         << "escape"
         << "unescape"
         << "SyntaxError"

@@ -484,10 +484,14 @@ ReturnedValue ObjectPrototype::method_toString(const FunctionObject *b, const Va
         return Encode(v4->newString(QStringLiteral("[object Undefined]")));
     } else if (thisObject->isNull()) {
         return Encode(v4->newString(QStringLiteral("[object Null]")));
+    } else if (thisObject->isBoolean()) {
+        return Encode(v4->newString(QStringLiteral("[object Boolean]")));
+    } else if (thisObject->isNumber()) {
+        return Encode(v4->newString(QStringLiteral("[object Number]")));
     } else {
-        Scope scope(v4);
-        ScopedObject obj(scope, thisObject->toObject(scope.engine));
-        QString className = obj->className();
+        Q_ASSERT(thisObject->isManaged());
+        const Managed *m = static_cast<const Managed *>(thisObject);
+        QString className = m->className();
         return Encode(v4->newString(QStringLiteral("[object %1]").arg(className)));
     }
 }
