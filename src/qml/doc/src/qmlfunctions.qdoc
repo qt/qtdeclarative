@@ -105,6 +105,8 @@
   than the actual version of the library. Indeed, it is normal for the new library to allow
   QML written to previous versions to continue to work, even if more advanced versions of
   some of its types are available.
+
+  \sa {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -141,7 +143,8 @@
 
   Returns the QML type id.
 
-  \sa qmlRegisterTypeNotAvailable()
+  \sa qmlRegisterTypeNotAvailable(),
+      {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -266,7 +269,8 @@
 
   Without this, a generic "Game is not a type" message would be given.
 
-  \sa qmlRegisterUncreatableType()
+  \sa qmlRegisterUncreatableType(),
+      {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -279,6 +283,8 @@
   system.
 
   Returns the QML type id.
+
+  \sa {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -346,7 +352,9 @@
        property int someValue: ExampleApi.MyApi.someProperty
    }
    \endqml
-  */
+
+   \sa {Choosing the Correct Integration Method Between C++ and QML}
+*/
 
 /*!
     \fn template<typename T> QObject *qmlAttachedPropertiesObject(const QObject *attachee, bool create = true)
@@ -486,7 +494,8 @@
    }
    \endcode
 
-  */
+   \sa {Choosing the Correct Integration Method Between C++ and QML}
+*/
 
 /*!
    \fn int qmlRegisterSingletonType(const QUrl &url, const char *uri, int versionMajor, int versionMinor, const char *qmlName)
