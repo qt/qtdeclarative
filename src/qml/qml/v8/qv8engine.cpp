@@ -85,6 +85,7 @@
 #include <private/qv4script_p.h>
 #include <private/qv4include_p.h>
 #include <private/qv4jsonobject_p.h>
+#include <private/qv4identifiertable_p.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 
@@ -206,8 +207,10 @@ void QV8Engine::initializeGlobal()
 
     {
         for (uint i = 0; i < m_v4Engine->globalObject->internalClass()->size; ++i) {
-            if (m_v4Engine->globalObject->internalClass()->nameMap.at(i))
-                m_illegalNames.insert(m_v4Engine->globalObject->internalClass()->nameMap.at(i)->string);
+            if (m_v4Engine->globalObject->internalClass()->nameMap.at(i)) {
+                QV4::Identifier *id = m_v4Engine->globalObject->internalClass()->nameMap.at(i);
+                m_illegalNames.insert(m_v4Engine->identifierTable->stringFromIdentifier(id)->toQString());
+            }
         }
     }
 }

@@ -91,7 +91,7 @@ public:
 
     Identifier *identifierImpl(const Heap::String *str);
 
-    Heap::String *stringFromIdentifier(Identifier *i);
+    Q_QML_PRIVATE_EXPORT Heap::String *stringFromIdentifier(const Identifier *i) const;
 
     void mark(MarkStack *markStack) {
         for (int i = 0; i < alloc; ++i) {

@@ -66,7 +66,6 @@ struct ExecutionEngine;
 
 struct Identifier
 {
-    QString string;
     uint hashValue;
 };
 
@@ -178,20 +177,6 @@ inline int IdentifierHash::value(String *str) const
 {
     const IdentifierHashEntry *e = lookup(str);
     return e ? e->value : -1;
-}
-
-
-inline
-QString IdentifierHash::findId(int value) const
-{
-    IdentifierHashEntry *e = d->entries;
-    IdentifierHashEntry *end = e + d->alloc;
-    while (e < end) {
-        if (e->identifier && e->value == value)
-            return e->identifier->string;
-        ++e;
-    }
-    return QString();
 }
 
 }

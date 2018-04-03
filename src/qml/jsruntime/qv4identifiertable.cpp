@@ -79,7 +79,6 @@ void IdentifierTable::addEntry(Heap::String *str)
         return;
 
     str->identifier = new Identifier;
-    str->identifier->string = str->toQString();
     str->identifier->hashValue = hash;
 
     bool grow = (alloc <= size*2);
@@ -158,7 +157,7 @@ Identifier *IdentifierTable::identifierImpl(const Heap::String *str)
     return str->identifier;
 }
 
-Heap::String *IdentifierTable::stringFromIdentifier(Identifier *i)
+Heap::String *IdentifierTable::stringFromIdentifier(const Identifier *i) const
 {
     if (!i)
         return nullptr;

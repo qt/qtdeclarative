@@ -38,6 +38,7 @@
 ****************************************************************************/
 #include "qv4identifier_p.h"
 #include "qv4identifiertable_p.h"
+#include "qv4string_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -150,18 +151,9 @@ const IdentifierHashEntry *IdentifierHash::lookup(const QString &str) const
 {
     if (!d)
         return nullptr;
-    Q_ASSERT(d->entries);
 
-    uint hash = String::createHashValue(str.constData(), str.length(), nullptr);
-    uint idx = hash % d->alloc;
-    while (1) {
-        if (!d->entries[idx].identifier)
-            return nullptr;
-        if (d->entries[idx].identifier->string == str)
-            return d->entries + idx;
-        ++idx;
-        idx %= d->alloc;
-    }
+    Identifier *id = d->identifierTable->identifier(str);
+    return lookup(id);
 }
 
 const IdentifierHashEntry *IdentifierHash::lookup(String *str) const
@@ -183,6 +175,18 @@ const Identifier *IdentifierHash::toIdentifier(Heap::String *str) const
 {
     Q_ASSERT(d);
     return d->identifierTable->identifier(str);
+}
+
+QString QV4::IdentifierHash::findId(int value) const
+{
+    IdentifierHashEntry *e = d->entries;
+    IdentifierHashEntry *end = e + d->alloc;
+    while (e < end) {
+        if (e->identifier && e->value == value)
+            return d->identifierTable->stringFromIdentifier(e->identifier)->toQString();
+        ++e;
+    }
+    return QString();
 }
 
 
