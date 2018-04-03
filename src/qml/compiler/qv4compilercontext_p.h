@@ -105,7 +105,7 @@ struct Context {
     QString name;
     int line = 0;
     int column = 0;
-    int registerCount = 0;
+    int registerCountInFunction = 0;
     int functionIndex = -1;
 
     enum MemberType {
@@ -139,6 +139,8 @@ struct Context {
     QVector<CompiledData::CodeOffsetToLine> lineNumberMapping;
 
     int maxNumberOfArguments = 0;
+    int nRegisters = 0;
+    int registerOffset = -1;
     bool hasDirectEval = false;
     bool hasNestedFunctions = false;
     bool isStrict = false;
@@ -283,6 +285,7 @@ struct Context {
     };
     ResolvedName resolveName(const QString &name);
     void emitHeaderBytecode(Compiler::Codegen *codegen);
+    void setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator);
 };
 
 

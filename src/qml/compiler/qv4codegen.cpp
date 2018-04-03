@@ -2318,6 +2318,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         returnAddress = bytecodeGenerator->newRegister();
     qSwap(_returnAddress, returnAddress);
 
+    RegisterScope registerScope(this);
     _context->emitHeaderBytecode(this);
 
     for (const Context::Member &member : qAsConst(_context->members)) {
@@ -2328,9 +2329,10 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             if (! _context->parent) {
                 Reference::fromName(this, member.function->name.toString()).storeConsumeAccumulator();
             } else {
-                Q_ASSERT(member.index >= 0);
-                Reference local = member.canEscape ? Reference::fromScopedLocal(this, member.index, 0)
-                                                   : Reference::fromStackSlot(this, member.index, true);
+                int idx = member.index;
+                Q_ASSERT(idx >= 0);
+                Reference local = member.canEscape ? Reference::fromScopedLocal(this, idx, 0)
+                                                   : Reference::fromStackSlot(this, idx, true);
                 local.storeConsumeAccumulator();
             }
         }
@@ -2380,11 +2382,11 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     }
 
     bytecodeGenerator->finalize(_context);
-    _context->registerCount = bytecodeGenerator->registerCount();
+    _context->registerCountInFunction = bytecodeGenerator->registerCount();
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
         qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
-                 << "register count" << _context->registerCount;
+                 << "register count" << _context->registerCountInFunction;
         QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size(),
                                 _context->line, _context->lineNumberMapping);
         qDebug();

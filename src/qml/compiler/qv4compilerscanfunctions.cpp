@@ -502,9 +502,6 @@ void ScanFunctions::calcEscapingVariables()
         if (allVarsEscape) {
             c->requiresExecutionContext = true;
             c->argumentsCanEscape = true;
-            for (auto &m : c->members) {
-                m.canEscape = true;
-            }
         }
         // ### for now until we have lexically scoped vars that'll require it
         if (c->type == ContextType::Global)
@@ -522,13 +519,17 @@ void ScanFunctions::calcEscapingVariables()
                 c->requiresExecutionContext = true;
             }
         }
+        if (allVarsEscape) {
+            for (auto &m : c->members)
+                m.canEscape = true;
+        }
     }
 
     static const bool showEscapingVars = qEnvironmentVariableIsSet("QV4_SHOW_ESCAPING_VARS");
     if (showEscapingVars) {
         qDebug() << "==== escaping variables ====";
         for (Context *c : qAsConst(m->contextMap)) {
-            qDebug() << "Context" << c->name << ":";
+            qDebug() << "Context" << c << c->name << ":";
             if (c->argumentsCanEscape)
                 qDebug() << "    Arguments escape";
             for (auto it = c->members.constBegin(); it != c->members.constEnd(); ++it) {

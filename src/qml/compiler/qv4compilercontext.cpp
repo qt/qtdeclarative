@@ -163,10 +163,12 @@ Context::ResolvedName Context::resolveName(const QString &name)
 
 void Context::emitHeaderBytecode(Codegen *codegen)
 {
+
     using Instruction = Moth::Instruction;
     Moth::BytecodeGenerator *bytecodeGenerator = codegen->generator();
 
-    bool allVarsEscape = hasWith || hasTry || hasDirectEval;
+    setupFunctionIndices(bytecodeGenerator);
+
     if (requiresExecutionContext ||
         type == ContextType::Binding) { // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
         Instruction::CreateCallContext createContext;
@@ -181,26 +183,14 @@ void Context::emitHeaderBytecode(Codegen *codegen)
     // variables in global code are properties of the global context object, not locals as with other functions.
     if (type == ContextType::Function || type == ContextType::Binding) {
         for (Context::MemberMap::iterator it = members.begin(), end = members.end(); it != end; ++it) {
-            const QString &local = it.key();
-            if (allVarsEscape)
-                it->canEscape = true;
-            if (it->canEscape) {
-                it->index = locals.size();
-                locals.append(local);
-                if (it->type == Context::ThisFunctionName) {
-                    // move the name from the stack to the call context
-                    Instruction::LoadReg load;
-                    load.reg = CallData::Function;
-                    bytecodeGenerator->addInstruction(load);
-                    Instruction::StoreLocal store;
-                    store.index = it->index;
-                    bytecodeGenerator->addInstruction(store);
-                }
-            } else {
-                if (it->type == Context::ThisFunctionName)
-                    it->index = CallData::Function;
-                else
-                    it->index = bytecodeGenerator->newRegister();
+            if (it->canEscape && it->type == Context::ThisFunctionName) {
+                // move the function from the stack to the call context
+                Instruction::LoadReg load;
+                load.reg = CallData::Function;
+                bytecodeGenerator->addInstruction(load);
+                Instruction::StoreLocal store;
+                store.index = it->index;
+                bytecodeGenerator->addInstruction(store);
             }
         }
     } else {
@@ -224,6 +214,29 @@ void Context::emitHeaderBytecode(Codegen *codegen)
         }
         codegen->referenceForName(QStringLiteral("arguments"), false).storeConsumeAccumulator();
     }
+}
+
+void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
+{
+    Q_ASSERT(locals.size() == 0);
+    Q_ASSERT(nRegisters == 0);
+    registerOffset = bytecodeGenerator->registerCount();
+
+    if (type == ContextType::Function || type == ContextType::Binding) {
+        for (Context::MemberMap::iterator it = members.begin(), end = members.end(); it != end; ++it) {
+            const QString &local = it.key();
+            if (it->canEscape) {
+                it->index = locals.size();
+                locals.append(local);
+            } else {
+                if (it->type == Context::ThisFunctionName)
+                    it->index = CallData::Function;
+                else
+                    it->index = bytecodeGenerator->newRegister();
+            }
+        }
+    }
+    nRegisters = bytecodeGenerator->registerCount() - registerOffset;
 }
 
 QT_END_NAMESPACE

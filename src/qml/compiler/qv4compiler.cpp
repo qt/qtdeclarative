@@ -329,7 +329,7 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     currentOffset += function->nLineNumbers * sizeof(CompiledData::CodeOffsetToLine);
 
 
-    function->nRegisters = irFunction->registerCount;
+    function->nRegisters = irFunction->registerCountInFunction;
 
     function->nDependingIdObjects = 0;
     function->nDependingContextProperties = 0;
