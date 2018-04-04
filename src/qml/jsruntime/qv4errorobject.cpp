@@ -74,7 +74,7 @@ void Heap::ErrorObject::init()
     Scope scope(internalClass->engine);
     Scoped<QV4::ErrorObject> e(scope, this);
 
-    if (internalClass == scope.engine->internalClasses[EngineBase::Class_ErrorProto])
+    if (internalClass == scope.engine->internalClasses(EngineBase::Class_ErrorProto))
         return;
 
     setProperty(scope.engine, QV4::ErrorObject::Index_Stack, scope.engine->getStackFunction()->d());

@@ -884,7 +884,7 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(const QV4::VTable *vtable
             Chunk::clearBit(c->extendsBitmap, index);
         }
         o->memberData.set(engine, m);
-        m->internalClass = engine->internalClasses[EngineBase::Class_MemberData];
+        m->internalClass = engine->internalClasses(EngineBase::Class_MemberData);
         Q_ASSERT(o->memberData->internalClass);
         m->values.alloc = static_cast<uint>((memberSize - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
         m->values.size = o->memberData->values.alloc;

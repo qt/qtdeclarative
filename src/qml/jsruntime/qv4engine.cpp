@@ -199,16 +199,15 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     identifierTable = new IdentifierTable(this);
 
-    internalClasses[Class_Empty] =  new InternalClass(this);
-    internalClasses[Class_String] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::String::staticVTable());
-    internalClasses[Class_MemberData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::MemberData::staticVTable());
-    internalClasses[Class_SimpleArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SimpleArrayData::staticVTable());
-    internalClasses[Class_SparseArrayData] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::SparseArrayData::staticVTable());
-    internalClasses[Class_ExecutionContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::ExecutionContext::staticVTable());
-    internalClasses[Class_QmlContext] = internalClasses[EngineBase::Class_ExecutionContext]->changeVTable(QV4::QmlContext::staticVTable());
-    internalClasses[Class_CallContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::CallContext::staticVTable());
-    internalClasses[Class_CatchContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::CatchContext::staticVTable());
-    internalClasses[Class_QmlContext] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::QmlContext::staticVTable());
+    classes[Class_Empty] =  new InternalClass(this);
+    classes[Class_String] = classes[Class_Empty]->changeVTable(QV4::String::staticVTable());
+    classes[Class_MemberData] = classes[Class_Empty]->changeVTable(QV4::MemberData::staticVTable());
+    classes[Class_SimpleArrayData] = classes[Class_Empty]->changeVTable(QV4::SimpleArrayData::staticVTable());
+    classes[Class_SparseArrayData] = classes[Class_Empty]->changeVTable(QV4::SparseArrayData::staticVTable());
+    classes[Class_ExecutionContext] = classes[Class_Empty]->changeVTable(QV4::ExecutionContext::staticVTable());
+    classes[Class_CallContext] = classes[Class_Empty]->changeVTable(QV4::CallContext::staticVTable());
+    classes[Class_CatchContext] = classes[Class_Empty]->changeVTable(QV4::CatchContext::staticVTable());
+    classes[Class_QmlContext] = classes[Class_Empty]->changeVTable(QV4::QmlContext::staticVTable());
 
     jsStrings[String_Empty] = newIdentifier(QString());
     jsStrings[String_undefined] = newIdentifier(QStringLiteral("undefined"));
@@ -247,26 +246,26 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStrings[String_buffer] = newIdentifier(QStringLiteral("buffer"));
     jsStrings[String_lastIndex] = newIdentifier(QStringLiteral("lastIndex"));
 
-    InternalClass *ic = internalClasses[Class_Empty]->changeVTable(QV4::Object::staticVTable());
+    InternalClass *ic = classes[Class_Empty]->changeVTable(QV4::Object::staticVTable());
     jsObjects[ObjectProto] = memoryManager->allocObject<ObjectPrototype>(ic);
-    internalClasses[Class_Object] = ic->changePrototype(objectPrototype()->d());
-    internalClasses[EngineBase::Class_QmlContextWrapper] = internalClasses[Class_Object]->changeVTable(QV4::QQmlContextWrapper::staticVTable());
+    classes[Class_Object] = ic->changePrototype(objectPrototype()->d());
+    classes[EngineBase::Class_QmlContextWrapper] = classes[Class_Object]->changeVTable(QV4::QQmlContextWrapper::staticVTable());
 
     ic = newInternalClass(ArrayPrototype::staticVTable(), objectPrototype());
     Q_ASSERT(ic->prototype);
     ic = ic->addMember(id_length(), Attr_NotConfigurable|Attr_NotEnumerable);
     Q_ASSERT(ic->prototype);
     jsObjects[ArrayProto] = memoryManager->allocObject<ArrayPrototype>(ic);
-    internalClasses[Class_ArrayObject] = ic->changePrototype(arrayPrototype()->d());
+    classes[Class_ArrayObject] = ic->changePrototype(arrayPrototype()->d());
     jsObjects[PropertyListProto] = memoryManager->allocate<PropertyListPrototype>();
 
     InternalClass *argsClass = newInternalClass(ArgumentsObject::staticVTable(), objectPrototype());
     argsClass = argsClass->addMember(id_length(), Attr_NotEnumerable);
-    internalClasses[EngineBase::Class_ArgumentsObject] = argsClass->addMember(id_callee(), Attr_Data|Attr_NotEnumerable);
+    classes[Class_ArgumentsObject] = argsClass->addMember(id_callee(), Attr_Data|Attr_NotEnumerable);
     argsClass = newInternalClass(StrictArgumentsObject::staticVTable(), objectPrototype());
     argsClass = argsClass->addMember(id_length(), Attr_NotEnumerable);
     argsClass = argsClass->addMember(id_callee(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
-    internalClasses[EngineBase::Class_StrictArgumentsObject] = argsClass->addMember(id_caller(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
+    classes[Class_StrictArgumentsObject] = argsClass->addMember(id_caller(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 
     *static_cast<Value *>(globalObject) = newObject();
     Q_ASSERT(globalObject->d()->vtable());
@@ -275,8 +274,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = newInternalClass(QV4::StringObject::staticVTable(), objectPrototype());
     ic = ic->addMember(id_length(), Attr_ReadOnly);
     jsObjects[StringProto] = memoryManager->allocObject<StringPrototype>(ic);
-    internalClasses[Class_StringObject] = ic->changePrototype(stringPrototype()->d());
-    Q_ASSERT(internalClasses[EngineBase::Class_StringObject]->find(id_length()) == Heap::StringObject::LengthPropertyIndex);
+    classes[Class_StringObject] = ic->changePrototype(stringPrototype()->d());
+    Q_ASSERT(classes[Class_StringObject]->find(id_length()) == Heap::StringObject::LengthPropertyIndex);
 
     jsObjects[NumberProto] = memoryManager->allocate<NumberPrototype>();
     jsObjects[BooleanProto] = memoryManager->allocate<BooleanPrototype>();
@@ -290,18 +289,18 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = newInternalClass(FunctionObject::staticVTable(), functionPrototype());
     ic = ic->addMember(id_prototype(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
-    internalClasses[EngineBase::Class_FunctionObject] = ic;
+    classes[Class_FunctionObject] = ic;
     ic = ic->addMember(id_name(), Attr_ReadOnly, &index);
     Q_ASSERT(index == Heap::ScriptFunction::Index_Name);
     ic = ic->changeVTable(ScriptFunction::staticVTable());
-    internalClasses[EngineBase::Class_ScriptFunction] = ic->addMember(id_length(), Attr_ReadOnly, &index);
+    classes[Class_ScriptFunction] = ic->addMember(id_length(), Attr_ReadOnly, &index);
     Q_ASSERT(index == Heap::ScriptFunction::Index_Length);
-    internalClasses[EngineBase::Class_ObjectProto] = internalClasses[Class_Object]->addMember(id_constructor(), Attr_NotEnumerable, &index);
+    classes[Class_ObjectProto] = classes[Class_Object]->addMember(id_constructor(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 
     Scope scope(this);
     ScopedString str(scope);
-    internalClasses[Class_RegExp] = internalClasses[EngineBase::Class_Empty]->changeVTable(QV4::RegExp::staticVTable());
+    classes[Class_RegExp] = classes[Class_Empty]->changeVTable(QV4::RegExp::staticVTable());
     ic = newInternalClass(QV4::RegExpObject::staticVTable(), objectPrototype());
     ic = ic->addMember(id_lastIndex(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == RegExpObject::Index_LastIndex);
@@ -314,11 +313,11 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = ic->addMember((str = newIdentifier(QStringLiteral("multiline"))), Attr_ReadOnly, &index);
     Q_ASSERT(index == RegExpObject::Index_Multiline);
     jsObjects[RegExpProto] = memoryManager->allocObject<RegExpPrototype>(ic);
-    internalClasses[Class_RegExpObject] = ic->changePrototype(regExpPrototype()->d());
+    classes[Class_RegExpObject] = ic->changePrototype(regExpPrototype()->d());
 
-    ic = internalClasses[Class_ArrayObject]->addMember(id_index(), Attr_Data, &index);
+    ic = classes[Class_ArrayObject]->addMember(id_index(), Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
-    internalClasses[EngineBase::Class_RegExpExecArray] = ic->addMember(id_input(), Attr_Data, &index);
+    classes[Class_RegExpExecArray] = ic->addMember(id_input(), Attr_Data, &index);
     Q_ASSERT(index == RegExpObject::Index_ArrayInput);
 
     ic = newInternalClass(ErrorObject::staticVTable(), nullptr);
@@ -327,28 +326,28 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = ic->addMember((str = newIdentifier(QStringLiteral("fileName"))), Attr_Data|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorObject::Index_FileName);
     ic = ic->addMember((str = newIdentifier(QStringLiteral("lineNumber"))), Attr_Data|Attr_NotEnumerable, &index);
-    internalClasses[EngineBase::Class_ErrorObject] = ic;
+    classes[Class_ErrorObject] = ic;
     Q_ASSERT(index == ErrorObject::Index_LineNumber);
-    internalClasses[EngineBase::Class_ErrorObjectWithMessage] = ic->addMember((str = newIdentifier(QStringLiteral("message"))), Attr_Data|Attr_NotEnumerable, &index);
+    classes[Class_ErrorObjectWithMessage] = ic->addMember((str = newIdentifier(QStringLiteral("message"))), Attr_Data|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorObject::Index_Message);
     ic = newInternalClass(ErrorObject::staticVTable(), objectPrototype());
     ic = ic->addMember(id_constructor(), Attr_Data|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorPrototype::Index_Constructor);
     ic = ic->addMember((str = newIdentifier(QStringLiteral("message"))), Attr_Data|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorPrototype::Index_Message);
-    internalClasses[EngineBase::Class_ErrorProto] = ic->addMember(id_name(), Attr_Data|Attr_NotEnumerable, &index);
+    classes[Class_ErrorProto] = ic->addMember(id_name(), Attr_Data|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorPrototype::Index_Name);
 
     jsObjects[GetStack_Function] = FunctionObject::createBuiltinFunction(rootContext(), str = newIdentifier(QStringLiteral("stack")), ErrorObject::method_get_stack);
     getStackFunction()->defineReadonlyProperty(id_length(), Primitive::fromInt32(0));
 
-    jsObjects[ErrorProto] = memoryManager->allocObject<ErrorPrototype>(internalClasses[EngineBase::Class_ErrorProto]);
-    jsObjects[EvalErrorProto] = memoryManager->allocObject<EvalErrorPrototype>(internalClasses[EngineBase::Class_ErrorProto]->changePrototype(errorPrototype()->d()));
-    jsObjects[RangeErrorProto] = memoryManager->allocObject<RangeErrorPrototype>(internalClasses[EngineBase::Class_ErrorProto]->changePrototype(errorPrototype()->d()));
-    jsObjects[ReferenceErrorProto] = memoryManager->allocObject<ReferenceErrorPrototype>(internalClasses[EngineBase::Class_ErrorProto]->changePrototype(errorPrototype()->d()));
-    jsObjects[SyntaxErrorProto] = memoryManager->allocObject<SyntaxErrorPrototype>(internalClasses[EngineBase::Class_ErrorProto]->changePrototype(errorPrototype()->d()));
-    jsObjects[TypeErrorProto] = memoryManager->allocObject<TypeErrorPrototype>(internalClasses[EngineBase::Class_ErrorProto]->changePrototype(errorPrototype()->d()));
-    jsObjects[URIErrorProto] = memoryManager->allocObject<URIErrorPrototype>(internalClasses[EngineBase::Class_ErrorProto]->changePrototype(errorPrototype()->d()));
+    jsObjects[ErrorProto] = memoryManager->allocObject<ErrorPrototype>(classes[Class_ErrorProto]);
+    jsObjects[EvalErrorProto] = memoryManager->allocObject<EvalErrorPrototype>(classes[Class_ErrorProto]->changePrototype(errorPrototype()->d()));
+    jsObjects[RangeErrorProto] = memoryManager->allocObject<RangeErrorPrototype>(classes[Class_ErrorProto]->changePrototype(errorPrototype()->d()));
+    jsObjects[ReferenceErrorProto] = memoryManager->allocObject<ReferenceErrorPrototype>(classes[Class_ErrorProto]->changePrototype(errorPrototype()->d()));
+    jsObjects[SyntaxErrorProto] = memoryManager->allocObject<SyntaxErrorPrototype>(classes[Class_ErrorProto]->changePrototype(errorPrototype()->d()));
+    jsObjects[TypeErrorProto] = memoryManager->allocObject<TypeErrorPrototype>(classes[Class_ErrorProto]->changePrototype(errorPrototype()->d()));
+    jsObjects[URIErrorProto] = memoryManager->allocObject<URIErrorPrototype>(classes[Class_ErrorProto]->changePrototype(errorPrototype()->d()));
 
     jsObjects[VariantProto] = memoryManager->allocate<VariantPrototype>();
     Q_ASSERT(variantPrototype()->prototype() == objectPrototype()->d());
@@ -497,7 +496,7 @@ ExecutionEngine::~ExecutionEngine()
     while (!compilationUnits.isEmpty())
         (*compilationUnits.begin())->unlink();
 
-    internalClasses[Class_Empty]->destroyAll();
+    internalClasses(Class_Empty)->destroyAll();
     delete bumperPointerAllocator;
     delete regExpCache;
     delete regExpAllocator;
@@ -540,7 +539,7 @@ InternalClass *ExecutionEngine::newClass(InternalClass *other)
 
 InternalClass *ExecutionEngine::newInternalClass(const VTable *vtable, Object *prototype)
 {
-    return internalClasses[EngineBase::Class_Empty]->changeVTable(vtable)->changePrototype(prototype ? prototype->d() : nullptr);
+    return internalClasses(Class_Empty)->changeVTable(vtable)->changePrototype(prototype ? prototype->d() : nullptr);
 }
 
 Heap::Object *ExecutionEngine::newObject()
@@ -917,7 +916,7 @@ void ExecutionEngine::markObjects(MarkStack *markStack)
             setter->mark(markStack);
     }
 
-    InternalClass::markObjects(internalClasses[EngineBase::Class_Empty], markStack);
+    InternalClass::markObjects(internalClasses(Class_Empty), markStack);
     markStack->drain();
 
     for (auto compilationUnit: compilationUnits) {

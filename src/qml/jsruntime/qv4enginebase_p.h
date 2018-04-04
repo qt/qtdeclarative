@@ -88,7 +88,7 @@ struct Q_QML_EXPORT EngineBase {
     // Exception handling
     Value *exceptionValue = nullptr;
 
-    enum {
+    enum InternalClassType {
         Class_Empty,
         Class_String,
         Class_MemberData,
@@ -115,7 +115,8 @@ struct Q_QML_EXPORT EngineBase {
         Class_QmlContextWrapper,
         NClasses
     };
-    InternalClass *internalClasses[NClasses];
+    InternalClass *classes[NClasses];
+    InternalClass *internalClasses(InternalClassType icType) { return classes[icType]; }
 };
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(pop)

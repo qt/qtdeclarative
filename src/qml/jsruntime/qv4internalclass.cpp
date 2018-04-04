@@ -525,7 +525,7 @@ InternalClass *InternalClass::frozen()
 
 InternalClass *InternalClass::propertiesFrozen() const
 {
-    InternalClass *frozen = engine->internalClasses[EngineBase::Class_Empty]->changeVTable(vtable);
+    InternalClass *frozen = engine->internalClasses(EngineBase::Class_Empty)->changeVTable(vtable);
     frozen = frozen->changePrototype(prototype);
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
@@ -591,7 +591,7 @@ static void updateProtoUsage(Heap::Object *o, InternalClass *ic)
 void InternalClass::updateProtoUsage(Heap::Object *o)
 {
     Q_ASSERT(isUsedAsProto);
-    InternalClass *ic = engine->internalClasses[EngineBase::Class_Empty];
+    InternalClass *ic = engine->internalClasses(EngineBase::Class_Empty);
     Q_ASSERT(!ic->prototype);
 
     ::updateProtoUsage(o, ic);

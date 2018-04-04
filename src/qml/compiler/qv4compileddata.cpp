@@ -161,7 +161,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         for (uint i = 0; i < data->jsClassTableSize; ++i) {
             int memberCount = 0;
             const CompiledData::JSClassMember *member = data->jsClassAt(i, &memberCount);
-            QV4::InternalClass *klass = engine->internalClasses[QV4::ExecutionEngine::Class_Object];
+            QV4::InternalClass *klass = engine->internalClasses(QV4::ExecutionEngine::Class_Object);
             for (int j = 0; j < memberCount; ++j, ++member)
                 klass = klass->addMember(engine->identifierTable->identifier(runtimeStrings[member->nameOffset]), member->isAccessor ? QV4::Attr_Accessor : QV4::Attr_Data);
 

@@ -63,7 +63,7 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
 {
     Q_UNUSED(engine);
 
-    internalClass = engine->internalClasses[EngineBase::Class_CallContext];
+    internalClass = engine->internalClasses(EngineBase::Class_CallContext);
 
     // first locals
     const quint32_le *localsIndices = compiledFunction->localsTable();
@@ -110,7 +110,7 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
 
     }
 
-    internalClass = engine->internalClasses[EngineBase::Class_CallContext];
+    internalClass = engine->internalClasses(EngineBase::Class_CallContext);
 
     Scope scope(engine);
     ScopedString arg(scope);

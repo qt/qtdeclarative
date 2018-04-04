@@ -144,8 +144,8 @@ void FunctionObject::init(String *n, bool createProto)
 
     Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()) == Heap::FunctionObject::Index_Prototype);
     if (createProto) {
-        ScopedObject proto(s, s.engine->newObject(s.engine->internalClasses[EngineBase::Class_ObjectProto]));
-        Q_ASSERT(s.engine->internalClasses[EngineBase::Class_ObjectProto]->find(s.engine->id_constructor()) == Heap::FunctionObject::Index_ProtoConstructor);
+        ScopedObject proto(s, s.engine->newObject(s.engine->internalClasses(EngineBase::Class_ObjectProto)));
+        Q_ASSERT(s.engine->internalClasses(EngineBase::Class_ObjectProto)->find(s.engine->id_constructor()) == Heap::FunctionObject::Index_ProtoConstructor);
         proto->setProperty(Heap::FunctionObject::Index_ProtoConstructor, d());
         setProperty(Heap::FunctionObject::Index_Prototype, proto);
     } else {
@@ -422,7 +422,7 @@ InternalClass *ScriptFunction::classForConstructor() const
     if (ic && ic->prototype == o->d())
         return ic;
 
-    ic = engine()->internalClasses[EngineBase::Class_Object];
+    ic = engine()->internalClasses(EngineBase::Class_Object);
     if (o)
         ic = ic->changePrototype(o->d());
     d()->cachedClassForConstructor = ic;

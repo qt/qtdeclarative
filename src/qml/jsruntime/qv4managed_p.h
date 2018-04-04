@@ -155,7 +155,7 @@ QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 
 #define V4_INTERNALCLASS(c) \
     static QV4::InternalClass *defaultInternalClass(QV4::EngineBase *e) \
-        { return e->internalClasses[QV4::EngineBase::Class_##c]; }
+        { return e->internalClasses(QV4::EngineBase::Class_##c); }
 
 struct Q_QML_PRIVATE_EXPORT Managed : Value
 {
