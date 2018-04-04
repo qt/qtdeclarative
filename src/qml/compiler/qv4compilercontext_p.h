@@ -220,13 +220,6 @@ struct Context {
 
     bool forceLookupByName();
 
-    bool canUseSimpleCall() const {
-        return nestedContexts.isEmpty() &&
-               locals.isEmpty() &&
-               !hasTry && !hasWith &&
-               (usesArgumentsObject == ArgumentsObjectNotUsed || isStrict) && !hasDirectEval;
-    }
-
     int findArgument(const QString &name)
     {
         // search backwards to handle duplicate argument names correctly
