@@ -1034,11 +1034,11 @@ void Object::copyArrayData(Object *other)
     setArrayLengthUnchecked(other->getLength());
 }
 
-uint Object::getLength(const Managed *m)
+qint64 Object::getLength(const Managed *m)
 {
     Scope scope(static_cast<const Object *>(m)->engine());
     ScopedValue v(scope, static_cast<Object *>(const_cast<Managed *>(m))->get(scope.engine->id_length()));
-    return v->toUInt32();
+    return v->toLength();
 }
 
 // 'var' is 'V' in 15.3.5.3.
@@ -1136,12 +1136,10 @@ void Heap::ArrayObject::init(const QStringList &list)
     a->setArrayLengthUnchecked(len);
 }
 
-uint ArrayObject::getLength(const Managed *m)
+qint64 ArrayObject::getLength(const Managed *m)
 {
     const ArrayObject *a = static_cast<const ArrayObject *>(m);
-    if (a->propertyData(Heap::ArrayObject::LengthPropertyIndex)->isInteger())
-        return a->propertyData(Heap::ArrayObject::LengthPropertyIndex)->integerValue();
-    return Primitive::toUInt32(a->propertyData(Heap::ArrayObject::LengthPropertyIndex)->doubleValue());
+    return a->propertyData(Heap::ArrayObject::LengthPropertyIndex)->toLength();
 }
 
 QStringList ArrayObject::toQStringList() const

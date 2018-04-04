@@ -174,7 +174,7 @@ struct ObjectVTable
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, String *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
-    uint (*getLength)(const Managed *m);
+    qint64 (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     ReturnedValue (*instanceOf)(const Object *typeObject, const Value &var);
 };
@@ -406,7 +406,7 @@ public:
     { return vtable()->deleteIndexedProperty(this, index); }
     void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
-    uint getLength() const { return vtable()->getLength(this); }
+    quint64 getLength() const { return vtable()->getLength(this); }
     ReturnedValue instanceOf(const Value &var) const
     { return vtable()->instanceOf(this, var); }
 
@@ -422,7 +422,7 @@ protected:
     static bool deleteProperty(Managed *m, String *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-    static uint getLength(const Managed *m);
+    static qint64 getLength(const Managed *m);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
 
 private:
@@ -504,7 +504,7 @@ struct ArrayObject: Object {
     void init(ExecutionEngine *engine);
 
     using Object::getLength;
-    static uint getLength(const Managed *m);
+    static qint64 getLength(const Managed *m);
 
     QStringList toQStringList() const;
 };

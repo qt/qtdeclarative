@@ -149,7 +149,7 @@ struct ArgumentsObject: Object {
     static bool putIndexed(Managed *m, uint index, const Value &value);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static uint getLength(const Managed *m);
+    static qint64 getLength(const Managed *m);
 
     void fullyCreate();
 

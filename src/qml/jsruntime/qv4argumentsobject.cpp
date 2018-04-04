@@ -242,10 +242,8 @@ ReturnedValue ArgumentsSetterFunction::call(const FunctionObject *setter, const 
     return Encode::undefined();
 }
 
-uint ArgumentsObject::getLength(const Managed *m)
+qint64 ArgumentsObject::getLength(const Managed *m)
 {
     const ArgumentsObject *a = static_cast<const ArgumentsObject *>(m);
-    if (a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->isInteger())
-        return a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->integerValue();
-    return Primitive::toUInt32(a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->doubleValue());
+    return a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->toLength();
 }

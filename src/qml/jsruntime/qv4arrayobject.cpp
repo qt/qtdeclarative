@@ -548,19 +548,31 @@ ReturnedValue ArrayPrototype::method_splice(const FunctionObject *b, const Value
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
-
-    ScopedArrayObject newArray(scope, scope.engine->newArrayObject());
+    qint64 len = instance->getLength();
 
     double rs = (argc ? argv[0] : Primitive::undefinedValue()).toInteger();
-    uint start;
+    qint64 start;
     if (rs < 0)
-        start = (uint) qMax(0., len + rs);
+        start = static_cast<qint64>(qMax(0., len + rs));
     else
-        start = (uint) qMin(rs, (double)len);
+        start = static_cast<qint64>(qMin(rs, static_cast<double>(len)));
 
-    uint deleteCount = (uint)qMin(qMax((argc > 1 ? argv[1] : Primitive::undefinedValue()).toInteger(), 0.), (double)(len - start));
+    qint64 deleteCount = 0;
+    qint64 itemCount = 0;
+    if (argc == 1) {
+        deleteCount = len - start;
+    } else if (argc > 1){
+        itemCount = argc - 2;
+        double dc = argv[1].toInteger();
+        deleteCount = static_cast<qint64>(qMin(qMax(dc, 0.), double(len - start)));
+    }
 
+    if (len + itemCount - deleteCount > /*(static_cast<qint64>(1) << 53) - 1*/ UINT_MAX - 1)
+        return scope.engine->throwTypeError();
+    if (deleteCount > /*(static_cast<qint64>(1) << 53) - 1*/ UINT_MAX - 1)
+        return scope.engine->throwRangeError(QString::fromLatin1("Array length out of range."));
+
+    ScopedArrayObject newArray(scope, scope.engine->newArrayObject());
     newArray->arrayReserve(deleteCount);
     ScopedValue v(scope);
     for (uint i = 0; i < deleteCount; ++i) {
@@ -572,7 +584,6 @@ ReturnedValue ArrayPrototype::method_splice(const FunctionObject *b, const Value
     }
     newArray->setArrayLengthUnchecked(deleteCount);
 
-    uint itemCount = argc < 2 ? 0 : argc - 2;
 
     if (itemCount < deleteCount) {
         for (uint k = start; k < len - deleteCount; ++k) {
@@ -873,11 +884,14 @@ ReturnedValue ArrayPrototype::method_map(const FunctionObject *b, const Value *t
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!argc || !argv->isFunctionObject())
         THROW_TYPE_ERROR();
     const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
+
+    if (len > UINT_MAX - 1)
+        return scope.engine->throwRangeError(QString::fromLatin1("Array length out of range."));
 
     ScopedArrayObject a(scope, scope.engine->newArrayObject());
     a->arrayReserve(len);
