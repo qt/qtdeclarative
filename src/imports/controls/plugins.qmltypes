@@ -1913,7 +1913,7 @@ Module {
         Property { name: "busy"; type: "bool"; isReadonly: true }
         Property { name: "depth"; type: "int"; isReadonly: true }
         Property { name: "currentItem"; type: "QQuickItem"; isReadonly: true; isPointer: true }
-        Property { name: "initialItem"; type: "QVariant" }
+        Property { name: "initialItem"; type: "QJSValue" }
         Property { name: "popEnter"; type: "QQuickTransition"; isPointer: true }
         Property { name: "popExit"; type: "QQuickTransition"; isPointer: true }
         Property { name: "pushEnter"; type: "QQuickTransition"; isPointer: true }
