@@ -199,6 +199,8 @@ Q_SIGNALS:
     void pressedChanged();
     // 2.1 (Qt 5.8)
     Q_REVISION(1) void hoveredChanged();
+    // 2.5 (Qt 5.12)
+    /*Q_REVISION(2)*/ void moved();
 
 private:
     Q_DISABLE_COPY(QQuickRangeSliderNode)

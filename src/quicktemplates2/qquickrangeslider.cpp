@@ -74,7 +74,7 @@ QT_BEGIN_NAMESPACE
     use the following syntax:
 
     \code
-    first.onValueChanged: console.log("first.value changed to " + first.value)
+    first.onMoved: console.log("first.value changed to " + first.value)
     \endcode
 
     The \l {first.position} and \l {second.position} properties are expressed as
@@ -522,6 +522,7 @@ void QQuickRangeSliderPrivate::handleMove(const QPointF &point)
     QQuickControlPrivate::handleMove(point);
     QQuickRangeSliderNode *pressedNode = QQuickRangeSliderPrivate::pressedNode(touchId);
     if (pressedNode) {
+        const qreal oldPos = pressedNode->position();
         qreal pos = positionAt(q, pressedNode->handle(), point);
         if (snapMode == QQuickRangeSlider::SnapAlways)
             pos = snapPosition(q, pos);
@@ -529,6 +530,9 @@ void QQuickRangeSliderPrivate::handleMove(const QPointF &point)
             pressedNode->setValue(valueAt(q, pos));
         else
             QQuickRangeSliderNodePrivate::get(pressedNode)->setPosition(pos);
+
+        if (!qFuzzyCompare(pressedNode->position(), oldPos))
+            emit pressedNode->moved();
     }
 }
 
@@ -544,6 +548,7 @@ void QQuickRangeSliderPrivate::handleRelease(const QPointF &point)
     QQuickRangeSliderNodePrivate *pressedNodePrivate = QQuickRangeSliderNodePrivate::get(pressedNode);
 
     if (q->keepMouseGrab() || q->keepTouchGrab()) {
+        const qreal oldPos = pressedNode->position();
         qreal pos = positionAt(q, pressedNode->handle(), point);
         if (snapMode != QQuickRangeSlider::NoSnap)
             pos = snapPosition(q, pos);
@@ -554,6 +559,9 @@ void QQuickRangeSliderPrivate::handleRelease(const QPointF &point)
             pressedNodePrivate->setPosition(pos);
         q->setKeepMouseGrab(false);
         q->setKeepTouchGrab(false);
+
+        if (!qFuzzyCompare(pressedNode->position(), oldPos))
+            emit pressedNode->moved();
     }
     pressedNode->setPressed(false);
     pressedNodePrivate->touchId = -1;
@@ -688,6 +696,7 @@ void QQuickRangeSlider::resetTouchDragThreshold()
     \qmlproperty Item QtQuick.Controls::RangeSlider::first.handle
     \qmlproperty bool QtQuick.Controls::RangeSlider::first.pressed
     \qmlproperty bool QtQuick.Controls::RangeSlider::first.hovered
+    \qmlsignal void QtQuick.Controls::RangeSlider::moved()
 
     \table
     \header
@@ -727,6 +736,12 @@ void QQuickRangeSlider::resetTouchDragThreshold()
         \li hovered
         \li This property holds whether the first handle is hovered.
             This property was introduced in QtQuick.Controls 2.1.
+    \row
+        \li moved()
+        \li This signal is emitted when the first handle has been interactively moved
+            by the user by either touch, mouse, or keys.
+
+            This signal was introduced in QtQuick.Controls 2.5.
     \endtable
 
     \sa first.increase(), first.decrease()
@@ -745,6 +760,7 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
     \qmlproperty Item QtQuick.Controls::RangeSlider::second.handle
     \qmlproperty bool QtQuick.Controls::RangeSlider::second.pressed
     \qmlproperty bool QtQuick.Controls::RangeSlider::second.hovered
+    \qmlsignal void QtQuick.Controls::RangeSlider::moved()
 
     \table
     \header
@@ -784,6 +800,12 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
         \li hovered
         \li This property holds whether the second handle is hovered.
             This property was introduced in QtQuick.Controls 2.1.
+    \row
+        \li moved()
+        \li This signal is emitted when the second handle has been interactively moved
+            by the user by either touch, mouse, or keys.
+
+            This signal was introduced in QtQuick.Controls 2.5.
     \endtable
 
     \sa second.increase(), second.decrease()
@@ -1017,6 +1039,7 @@ void QQuickRangeSlider::keyPressEvent(QKeyEvent *event)
     if (!focusNode)
         return;
 
+    const qreal oldValue = focusNode->value();
     if (d->orientation == Qt::Horizontal) {
         if (event->key() == Qt::Key_Left) {
             focusNode->setPressed(true);
@@ -1044,6 +1067,8 @@ void QQuickRangeSlider::keyPressEvent(QKeyEvent *event)
             event->accept();
         }
     }
+    if (!qFuzzyCompare(focusNode->value(), oldValue))
+        emit focusNode->moved();
 }
 
 void QQuickRangeSlider::hoverEnterEvent(QHoverEvent *event)
