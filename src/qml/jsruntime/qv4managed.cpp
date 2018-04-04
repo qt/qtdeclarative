@@ -98,7 +98,7 @@ QString Managed::className() const
         s = "RegExp";
         break;
     case Type_ErrorObject:
-        s = ErrorObject::className(static_cast<Heap::ErrorObject *>(d())->errorType);
+        s = "Error";
         break;
     case Type_ArgumentsObject:
         s = "Arguments";
