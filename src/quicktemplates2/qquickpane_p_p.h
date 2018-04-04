@@ -67,6 +67,9 @@ public:
 
     QQuickItem *getContentItem() override;
 
+    qreal getContentWidth() const;
+    qreal getContentHeight() const;
+
     void addImplicitSizeListener(QQuickItem *item);
     void removeImplicitSizeListener(QQuickItem *item);
 
@@ -76,8 +79,8 @@ public:
 
     void contentChildrenChange();
 
-    bool updateContentWidth();
-    bool updateContentHeight();
+    void updateContentWidth();
+    void updateContentHeight();
     void updateContentSize();
 
     bool hasContentWidth;

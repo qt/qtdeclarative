@@ -84,6 +84,8 @@ Q_SIGNALS:
 protected:
     QQuickPane(QQuickPanePrivate &dd, QQuickItem *parent);
 
+    void componentComplete() override;
+
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
 #if QT_CONFIG(accessibility)
