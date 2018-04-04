@@ -1208,6 +1208,16 @@ Module {
         Property { name: "title"; type: "string" }
         Property { name: "label"; type: "QQuickItem"; isPointer: true }
     }
+
+    Component {
+        name: "QQuickIcon"
+        Property { name: "name"; type: "string" }
+        Property { name: "source"; type: "QUrl" }
+        Property { name: "width"; type: "int" }
+        Property { name: "height"; type: "int" }
+        Property { name: "color"; type: "QColor" }
+    }
+
     Component {
         name: "QQuickItemDelegate"
         defaultProperty: "data"
