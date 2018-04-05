@@ -212,6 +212,9 @@ TestCase {
         var textArea = control.TextArea.flickable
         verify(textArea)
 
+        if (textArea.background)
+            compare(textArea.background.parent, control)
+
         for (var i = 1; i <= 100; ++i)
             textArea.text += "line\n" + i
 
