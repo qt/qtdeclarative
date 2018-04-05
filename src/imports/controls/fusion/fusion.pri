@@ -47,7 +47,6 @@ QML_FILES += \
     $$PWD/RoundButton.qml \
     $$PWD/ScrollBar.qml \
     $$PWD/ScrollIndicator.qml \
-    $$PWD/ScrollView.qml \
     $$PWD/Slider.qml \
     $$PWD/SliderGroove.qml \
     $$PWD/SliderHandle.qml \
