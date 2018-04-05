@@ -1061,4 +1061,25 @@ TestCase {
         compare(visualPositionSpy2.count, ++visualPositionCount2)
         touch.release(0, control, x0 + data.dx2, y0 + data.dy2).commit()
     }
+
+    function test_valueAt_data() {
+        return [
+            { tag: "0.0..1.0", from: 0.0, to: 1.0, values: [0.0, 0.2, 0.5, 1.0] },
+            { tag: "0..100", from: 0, to: 100, values: [0, 20, 50, 100] },
+            { tag: "100..-100", from: 100, to: -100, values: [100, 60, 0, -100] },
+            { tag: "-7..7", from: -7, to: 7, stepSize: 1.0, values: [-7.0, -4.0, 0.0, 7.0] },
+            { tag: "-3..7", from: -3, to: 7, stepSize: 5.0, values: [-3.0, -3.0, 2.0, 7.0] },
+        ]
+    }
+
+    function test_valueAt(data) {
+        var control = createTemporaryObject(sliderComponent, testCase,
+            { from: data.from, to: data.to, stepSize: data.stepSize })
+        verify(control)
+
+        compare(control.valueAt(0.0), data.values[0])
+        compare(control.valueAt(0.2), data.values[1])
+        compare(control.valueAt(0.5), data.values[2])
+        compare(control.valueAt(1.0), data.values[3])
+    }
 }

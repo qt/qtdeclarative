@@ -115,6 +115,7 @@ public:
     qreal touchDragThreshold() const;
     void setTouchDragThreshold(qreal touchDragThreshold);
     void resetTouchDragThreshold();
+    Q_REVISION(5) Q_INVOKABLE qreal valueAt(qreal position) const;
 
 Q_SIGNALS:
     void fromChanged();

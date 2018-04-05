@@ -689,6 +689,23 @@ void QQuickRangeSlider::resetTouchDragThreshold()
 }
 
 /*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlmethod real QtQuick.Controls::RangeSlider::valueAt(real position)
+
+    Returns the value for the given \a position.
+
+    \sa first.value, second.value, first.position, second.position, live
+*/
+qreal QQuickRangeSlider::valueAt(qreal position) const
+{
+    Q_D(const QQuickRangeSlider);
+    const qreal value = (d->to - d->from) * position;
+    if (qFuzzyIsNull(d->stepSize))
+        return d->from + value;
+    return d->from + qRound(value / d->stepSize) * d->stepSize;
+}
+
+/*!
     \qmlpropertygroup QtQuick.Controls::RangeSlider::first
     \qmlproperty real QtQuick.Controls::RangeSlider::first.value
     \qmlproperty real QtQuick.Controls::RangeSlider::first.position
