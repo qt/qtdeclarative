@@ -254,8 +254,6 @@ QQuickPopupPrivate::QQuickPopupPrivate()
       leftMargin(0),
       rightMargin(0),
       bottomMargin(0),
-      contentWidth(0),
-      contentHeight(0),
       transitionState(QQuickPopupPrivate::NoTransition),
       closePolicy(DefaultClosePolicy),
       parentItem(nullptr),
@@ -1049,17 +1047,13 @@ void QQuickPopup::setImplicitHeight(qreal height)
 qreal QQuickPopup::contentWidth() const
 {
     Q_D(const QQuickPopup);
-    return d->contentWidth;
+    return d->popupItem->contentWidth();
 }
 
 void QQuickPopup::setContentWidth(qreal width)
 {
     Q_D(QQuickPopup);
-    if (qFuzzyCompare(d->contentWidth, width))
-        return;
-
-    d->contentWidth = width;
-    emit contentWidthChanged();
+    d->popupItem->setContentWidth(width);
 }
 
 /*!
@@ -1075,17 +1069,13 @@ void QQuickPopup::setContentWidth(qreal width)
 qreal QQuickPopup::contentHeight() const
 {
     Q_D(const QQuickPopup);
-    return d->contentHeight;
+    return d->popupItem->contentHeight();
 }
 
 void QQuickPopup::setContentHeight(qreal height)
 {
     Q_D(QQuickPopup);
-    if (qFuzzyCompare(d->contentHeight, height))
-        return;
-
-    d->contentHeight = height;
-    emit contentHeightChanged();
+    d->popupItem->setContentHeight(height);
 }
 
 /*!
@@ -2369,6 +2359,14 @@ void QQuickPopup::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_UNUSED(newItem);
     Q_UNUSED(oldItem);
+}
+
+void QQuickPopup::contentSizeChange(const QSizeF &newSize, const QSizeF &oldSize)
+{
+    if (!qFuzzyCompare(newSize.width(), oldSize.width()))
+        emit contentWidthChanged();
+    if (!qFuzzyCompare(newSize.height(), oldSize.height()))
+        emit contentHeightChanged();
 }
 
 void QQuickPopup::fontChange(const QFont &newFont, const QFont &oldFont)

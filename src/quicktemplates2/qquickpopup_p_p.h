@@ -180,8 +180,6 @@ public:
     qreal leftMargin;
     qreal rightMargin;
     qreal bottomMargin;
-    qreal contentWidth;
-    qreal contentHeight;
     QPointF pressPoint;
     TransitionState transitionState;
     QQuickPopup::ClosePolicy closePolicy;

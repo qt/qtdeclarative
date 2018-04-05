@@ -220,7 +220,11 @@ qreal QQuickPanePrivate::getContentHeight() const
 void QQuickPanePrivate::updateContentWidth()
 {
     Q_Q(QQuickPane);
-    if (hasContentWidth || !componentComplete)
+    if (hasContentWidth)
+        return;
+
+    // a special case for width<->height dependent content (wrapping text) in ScrollView
+    if (contentWidth < 0 && !componentComplete)
         return;
 
     qreal oldContentWidth = contentWidth;
@@ -235,7 +239,11 @@ void QQuickPanePrivate::updateContentWidth()
 void QQuickPanePrivate::updateContentHeight()
 {
     Q_Q(QQuickPane);
-    if (hasContentHeight || !componentComplete)
+    if (hasContentHeight)
+        return;
+
+    // a special case for width<->height dependent content (wrapping text) in ScrollView
+    if (contentWidth < 0 && !componentComplete)
         return;
 
     qreal oldContentHeight = contentHeight;
