@@ -134,7 +134,7 @@ inline uint PropertyHash::lookup(Identifier identifier) const
     while (1) {
         if (d->entries[idx].identifier == identifier)
             return d->entries[idx].index;
-        if (!d->entries[idx].identifier)
+        if (!d->entries[idx].identifier.isValid())
             return UINT_MAX;
         ++idx;
         idx %= d->alloc;
@@ -257,8 +257,6 @@ struct InternalClassTransition
     bool operator<(const InternalClassTransition &other) const
     { return id < other.id || (id == other.id && flags < other.flags); }
 };
-
-static_assert(sizeof(Identifier) == sizeof(VTable *), "Identifier needs to be one pointer large to map into the union above");
 
 namespace Heap {
 

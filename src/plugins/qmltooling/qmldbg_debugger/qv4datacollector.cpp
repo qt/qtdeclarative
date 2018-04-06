@@ -272,7 +272,7 @@ bool QV4DataCollector::collectScope(QJsonObject *dict, int frameNr, int scopeNr)
     QV4::ScopedValue v(scope);
     QV4::Heap::InternalClass *ic = ctxt->internalClass();
     for (uint i = 0; i < ic->size; ++i) {
-        QString name = scope.engine->identifierTable->stringForId(ic->nameMap[i])->toQString();
+        QString name = ic->nameMap[i].toQString();
         names.append(name);
         v = ctxt->d()->locals[i];
         collectedRefs.append(collect(v));

@@ -252,6 +252,7 @@ typedef Scoped<ExecutionContext> ScopedContext;
 struct PersistentValueStorage;
 class PersistentValue;
 class WeakValue;
+struct MarkStack;
 
 struct IdentifierTable;
 class RegExpCache;

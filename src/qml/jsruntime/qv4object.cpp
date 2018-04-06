@@ -531,7 +531,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
 
     while (it->memberIndex < o->internalClass()->size) {
         Identifier n = o->internalClass()->nameMap.at(it->memberIndex);
-        if (!n) {
+        if (!n.isValid()) {
             // accessor properties have a dummy entry with n == 0
             ++it->memberIndex;
             continue;

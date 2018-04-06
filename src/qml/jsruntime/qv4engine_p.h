@@ -157,11 +157,6 @@ public:
     QV8Engine *v8Engine;
     QJSEngine *publicEngine;
 
-private:
-    quintptr currentIdentifier = 0;
-public:
-    Identifier nextIdentifier() { return Identifier{ ++currentIdentifier }; }
-
     enum JSObjects {
         RootContext,
         IntegerNull, // Has to come after the RootContext to make the context stack safe

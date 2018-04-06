@@ -69,6 +69,8 @@ IdentifierTable::~IdentifierTable()
 {
     free(entriesByHash);
     free(entriesById);
+    for (auto &h : idHashes)
+        h->identifierTable = nullptr;
 }
 
 void IdentifierTable::addEntry(Heap::String *str)
@@ -78,7 +80,7 @@ void IdentifierTable::addEntry(Heap::String *str)
     if (str->subtype == Heap::String::StringType_ArrayIndex)
         return;
 
-    str->identifier = engine->nextIdentifier();
+    str->identifier = Identifier::fromHeapObject(str);
 
     bool grow = (alloc <= size*2);
 
@@ -164,8 +166,10 @@ Identifier IdentifierTable::identifierImpl(const Heap::String *str)
     if (str->identifier.isValid())
         return str->identifier;
     uint hash = str->hashValue();
-    if (str->subtype == Heap::String::StringType_ArrayIndex)
-        return Identifier::invalid();
+    if (str->subtype == Heap::String::StringType_ArrayIndex) {
+        str->identifier = Identifier::fromArrayIndex(hash);
+        return str->identifier;
+    }
 
     uint idx = hash % alloc;
     while (Heap::String *e = entriesByHash[idx]) {
@@ -183,7 +187,10 @@ Identifier IdentifierTable::identifierImpl(const Heap::String *str)
 
 Heap::String *IdentifierTable::stringForId(Identifier i) const
 {
-    if (!i)
+    uint arrayIdx = i.asArrayIndex();
+    if (arrayIdx < UINT_MAX)
+        return engine->newString(QString::number(arrayIdx));
+    if (!i.isValid())
         return nullptr;
 
     uint idx = i.id % alloc;
@@ -195,6 +202,66 @@ Heap::String *IdentifierTable::stringForId(Identifier i) const
         ++idx;
         idx %= alloc;
     }
+}
+
+void IdentifierTable::markObjects(MarkStack *markStack)
+{
+    for (const auto &h : idHashes)
+        h->markObjects(markStack);
+}
+
+template <typename Key>
+int sweepTable(Heap::String **table, int alloc, std::function<Key(Heap::String *)> f) {
+    int freed = 0;
+    Key lastKey = 0;
+    int lastEntry = -1;
+    int start = 0;
+    // start at an empty entry so we compress properly
+    for (; start < alloc; ++start) {
+        if (!table[start])
+            break;
+    }
+
+    for (int i = 0; i < alloc; ++i) {
+        int idx = (i + start) % alloc;
+        Heap::String *entry = table[idx];
+        if (!entry) {
+            lastEntry = -1;
+            continue;
+        }
+        if (entry->isMarked()) {
+            if (lastEntry >= 0 && lastKey == f(entry)) {
+                Q_ASSERT(table[lastEntry] == nullptr);
+                table[lastEntry] = entry;
+                table[idx] = nullptr;
+                lastEntry = (lastEntry + 1) % alloc;
+                Q_ASSERT(table[lastEntry] == nullptr);
+            }
+            continue;
+        }
+        if (lastEntry == -1) {
+            lastEntry = idx;
+            lastKey = f(entry);
+        }
+        table[idx] = nullptr;
+        ++freed;
+    }
+    for (int i = 0; i < alloc; ++i) {
+        Heap::String *entry = table[i];
+        if (!entry)
+            continue;
+        Q_ASSERT(entry->isMarked());
+    }
+    return freed;
+}
+
+void IdentifierTable::sweep()
+{
+    int f = sweepTable<int>(entriesByHash, alloc, [](Heap::String *entry) {return entry->hashValue(); });
+    int freed = sweepTable<quint64>(entriesById, alloc, [](Heap::String *entry) {return entry->identifier.id; });
+    Q_UNUSED(f);
+    Q_ASSERT(f == freed);
+    size -= freed;
 }
 
 Identifier IdentifierTable::identifier(const QString &s)

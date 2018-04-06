@@ -122,7 +122,7 @@ void PropertyHash::detach(bool grow, int classSize)
     PropertyHashData *dd = new PropertyHashData(grow ? d->numBits + 1 : d->numBits);
     for (int i = 0; i < d->alloc; ++i) {
         const Entry &e = d->entries[i];
-        if (!e.identifier || e.index >= static_cast<unsigned>(classSize))
+        if (!e.identifier.isValid() || e.index >= static_cast<unsigned>(classSize))
             continue;
         uint idx = e.identifier.id % dd->alloc;
         while (dd->entries[idx].identifier.isValid()) {
@@ -294,7 +294,7 @@ Heap::InternalClass *InternalClass::changeMember(Identifier identifier, Property
         for (uint i = 0; i < size; ++i) {
             Identifier identifier = nameMap.at(i);
             PropertyHash::Entry e = { identifier, newClass->size };
-            if (!identifier)
+            if (!identifier.isValid())
                 e.identifier = nameMap.at(i - 1);
             newClass->propertyTable.addEntry(e, newClass->size);
             newClass->nameMap.add(newClass->size, identifier);
@@ -630,6 +630,12 @@ void InternalClass::markObjects(Heap::Base *b, MarkStack *stack)
         ic->prototype->mark(stack);
     if (ic->parent)
         ic->parent->mark(stack);
+
+    for (uint i = 0; i < ic->size; ++i) {
+        Identifier id = ic->nameMap.at(i);
+        if (Heap::Base *b = id.asHeapObject())
+            b->mark(stack);
+    }
 }
 
 }

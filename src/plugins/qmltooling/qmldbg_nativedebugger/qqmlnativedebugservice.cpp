@@ -497,7 +497,7 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
         QV4::Heap::InternalClass *ic = callContext->internalClass();
         QV4::ScopedValue v(scope);
         for (uint i = 0; i < ic->size; ++i) {
-            QString name = scope.engine->identifierTable->stringForId(ic->nameMap[i])->toQString();
+            QString name = ic->nameMap[i].toQString();
             v = callContext->d()->locals[i];
             collector.collect(&output, QString(), name, v);
         }

@@ -44,6 +44,16 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+QString Identifier::toQString() const
+{
+    if (isArrayIndex())
+        return QString::number(asArrayIndex());
+    Heap::Base *b = asHeapObject();
+    Q_ASSERT(b->internalClass->vtable->isStringOrSymbol);
+    Heap::StringOrSymbol *s = static_cast<Heap::StringOrSymbol *>(b);
+    return  s->toQString();
+}
+
 static const uchar prime_deltas[] = {
     0,  0,  1,  3,  1,  5,  3,  3,  1,  9,  7,  5,  3,  9, 25,  3,
     1, 21,  3, 21,  7, 15,  9,  5,  3, 29, 15,  0,  0,  0,  0,  0
@@ -55,14 +65,16 @@ static inline int primeForNumBits(int numBits)
 }
 
 
-IdentifierHashData::IdentifierHashData(int numBits)
+IdentifierHashData::IdentifierHashData(IdentifierTable *table, int numBits)
     : size(0)
     , numBits(numBits)
+    , identifierTable(table)
 {
     refCount.store(1);
     alloc = primeForNumBits(numBits);
     entries = (IdentifierHashEntry *)malloc(alloc*sizeof(IdentifierHashEntry));
     memset(entries, 0, alloc*sizeof(IdentifierHashEntry));
+    identifierTable->addIdentifierHash(this);
 }
 
 IdentifierHashData::IdentifierHashData(IdentifierHashData *other)
@@ -74,12 +86,18 @@ IdentifierHashData::IdentifierHashData(IdentifierHashData *other)
     alloc = other->alloc;
     entries = (IdentifierHashEntry *)malloc(alloc*sizeof(IdentifierHashEntry));
     memcpy(entries, other->entries, alloc*sizeof(IdentifierHashEntry));
+    identifierTable->addIdentifierHash(this);
+}
+
+IdentifierHashData::~IdentifierHashData() {
+    free(entries);
+    if (identifierTable)
+        identifierTable->removeIdentifierHash(this);
 }
 
 IdentifierHash::IdentifierHash(ExecutionEngine *engine)
 {
-    d = new IdentifierHashData(3);
-    d->identifierTable = engine->identifierTable;
+    d = new IdentifierHashData(engine->identifierTable, 3);
 }
 
 void IdentifierHash::detach()
@@ -95,6 +113,8 @@ void IdentifierHash::detach()
 
 IdentifierHashEntry *IdentifierHash::addEntry(Identifier identifier)
 {
+    Q_ASSERT(identifier.isValid());
+
     // fill up to max 50%
     bool grow = (d->alloc <= d->size*2);
 
@@ -105,7 +125,7 @@ IdentifierHashEntry *IdentifierHash::addEntry(Identifier identifier)
         memset(newEntries, 0, newAlloc*sizeof(IdentifierHashEntry));
         for (int i = 0; i < d->alloc; ++i) {
             const IdentifierHashEntry &e = d->entries[i];
-            if (!e.identifier)
+            if (!e.identifier.isValid())
                 continue;
             uint idx = e.identifier.id % newAlloc;
             while (newEntries[idx].identifier.isValid()) {
@@ -132,13 +152,13 @@ IdentifierHashEntry *IdentifierHash::addEntry(Identifier identifier)
 
 const IdentifierHashEntry *IdentifierHash::lookup(Identifier identifier) const
 {
-    if (!d)
+    if (!d || !identifier.isValid())
         return nullptr;
     Q_ASSERT(d->entries);
 
     uint idx = identifier.id % d->alloc;
     while (1) {
-        if (!d->entries[idx].identifier)
+        if (!d->entries[idx].identifier.isValid())
             return nullptr;
         if (d->entries[idx].identifier == identifier)
             return d->entries + idx;
@@ -160,8 +180,9 @@ const IdentifierHashEntry *IdentifierHash::lookup(String *str) const
 {
     if (!d)
         return nullptr;
-    if (str->d()->identifier.isValid())
-        return lookup(str->d()->identifier);
+    Identifier id = d->identifierTable->identifier(str);
+    if (id.isValid())
+        return lookup(id);
     return lookup(str->toQString());
 }
 
@@ -187,6 +208,17 @@ QString QV4::IdentifierHash::findId(int value) const
         ++e;
     }
     return QString();
+}
+
+void IdentifierHashData::markObjects(MarkStack *markStack) const
+{
+    IdentifierHashEntry *e = entries;
+    IdentifierHashEntry *end = e + alloc;
+    while (e < end) {
+        if (Heap::Base *o = e->identifier.asHeapObject())
+            o->mark(markStack);
+        ++e;
+    }
 }
 
 

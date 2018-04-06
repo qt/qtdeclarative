@@ -919,8 +919,6 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
 
 void ExecutionEngine::markObjects(MarkStack *markStack)
 {
-    identifierTable->mark(markStack);
-
     for (int i = 0; i < nArgumentsAccessors; ++i) {
         const Property &pd = argumentsAccessors[i];
         if (Heap::FunctionObject *getter = pd.getter())
@@ -933,6 +931,8 @@ void ExecutionEngine::markObjects(MarkStack *markStack)
         if (classes[i])
             classes[i]->mark(markStack);
     markStack->drain();
+
+    identifierTable->markObjects(markStack);
 
     for (auto compilationUnit: compilationUnits) {
         compilationUnit->markObjects(markStack);

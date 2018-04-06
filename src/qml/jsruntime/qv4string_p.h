@@ -68,6 +68,15 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
 {
     mutable QStringData *text;
     mutable Identifier identifier;
+    static void markObjects(Heap::Base *that, MarkStack *markStack);
+
+    inline QString toQString() const {
+        if (!text)
+            return QString();
+        QStringDataPtr ptr = { text };
+        text->ref.ref();
+        return QString(ptr);
+    }
 };
 
 struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {

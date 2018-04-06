@@ -241,7 +241,7 @@ static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
 
     QV4::ScopedObject o(scope);
     for (uint i = 0; i < frozen->size; ++i) {
-        if (!frozen->nameMap.at(i))
+        if (!frozen->nameMap.at(i).isValid())
             continue;
         o = *object->propertyData(i);
         if (o)

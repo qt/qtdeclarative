@@ -42,6 +42,7 @@
 #include "qv4objectproto_p.h"
 #include "qv4mm_p.h"
 #include "qv4qobjectwrapper_p.h"
+#include "qv4identifiertable_p.h"
 #include <QtCore/qalgorithms.h>
 #include <QtCore/private/qnumeric_p.h>
 #include <QtCore/qloggingcategory.h>
@@ -1019,7 +1020,9 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
         }
     }
 
+
     if (!lastSweep) {
+        engine->identifierTable->sweep();
         blockAllocator.sweep(/*classCountPtr*/);
         hugeItemAllocator.sweep(classCountPtr);
         icAllocator.sweep(/*classCountPtr*/);

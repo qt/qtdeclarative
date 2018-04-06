@@ -52,9 +52,17 @@ using namespace QV4;
 
 #ifndef V4_BOOTSTRAP
 
+void Heap::StringOrSymbol::markObjects(Heap::Base *that, MarkStack *markStack)
+{
+    StringOrSymbol *s = static_cast<StringOrSymbol *>(that);
+    Heap::Base *id = s->identifier.asHeapObject();
+    if (id)
+        id->mark(markStack);
+}
+
 void Heap::String::markObjects(Heap::Base *that, MarkStack *markStack)
 {
-    Base::markObjects(that, markStack);
+    StringOrSymbol::markObjects(that, markStack);
     String *s = static_cast<String *>(that);
     if (s->subtype < StringType_Complex)
         return;
@@ -250,4 +258,3 @@ uint String::toArrayIndex(const QString &str)
 {
     return QV4::String::toArrayIndex(str.constData(), str.constData() + str.length());
 }
-

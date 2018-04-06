@@ -53,6 +53,7 @@
 #include "qv4identifier_p.h"
 #include "qv4string_p.h"
 #include "qv4engine_p.h"
+#include <qset.h>
 #include <limits.h>
 
 QT_BEGIN_NAMESPACE
@@ -68,6 +69,8 @@ struct IdentifierTable
     int numBits;
     Heap::String **entriesByHash;
     Heap::String **entriesById;
+
+    QSet<IdentifierHashData *> idHashes;
 
     void addEntry(Heap::String *str);
 
@@ -94,15 +97,14 @@ public:
 
     Q_QML_PRIVATE_EXPORT Heap::String *stringForId(Identifier i) const;
 
-    void mark(MarkStack *markStack) {
-        for (int i = 0; i < alloc; ++i) {
-            Heap::String *entry = entriesByHash[i];
-            if (!entry || entry->isMarked())
-                continue;
-            entry->setMarkBit();
-            Q_ASSERT(entry->vtable()->markObjects);
-            entry->vtable()->markObjects(entry, markStack);
-        }
+    void markObjects(MarkStack *markStack);
+    void sweep();
+
+    void addIdentifierHash(IdentifierHashData *h) {
+        idHashes.insert(h);
+    }
+    void removeIdentifierHash(IdentifierHashData *h) {
+        idHashes.remove(h);
     }
 };
 

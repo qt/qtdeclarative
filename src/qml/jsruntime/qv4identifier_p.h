@@ -51,26 +51,30 @@
 //
 
 #include <qstring.h>
+#include <private/qv4global_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-namespace Heap {
-    struct String;
-}
-
-struct String;
-struct IdentifierTable;
-struct ExecutionEngine;
-
 struct Identifier
 {
-    quintptr id;
+    // id's are either pointers to Heap::String or Heap::Symbol from the Identifier table.
+    // For Symbol is can simply point to itself.
+    // This gives us automative GC'ing of identifiers
+    // In addition, an identifier can have the lowest bit set, and then indicates an array index
+    quint64 id;
 
-    static Identifier invalid() { return Identifier{0}; }
-    bool isValid() const { return id != 0; }
-    bool operator !() const { return id == 0; }
+    static Identifier invalid() { return Identifier{ 0 }; }
+    static Identifier fromArrayIndex(uint idx) { return Identifier{ (quint64(idx) << 1) | 1 }; }
+    bool isValid() const { return id && !(id & 1); }
+    uint asArrayIndex() const { return (id & 1) ? (id >> 1) : std::numeric_limits<uint>::max(); }
+    uint isArrayIndex() const { return (id & 1); }
+    static Identifier fromHeapObject(Heap::Base *b) { return Identifier{ reinterpret_cast<quintptr>(b) }; }
+    Heap::Base *asHeapObject() const { return (id & 1) ? nullptr : reinterpret_cast<Heap::Base *>(id); }
+
+    Q_QML_EXPORT QString toQString() const;
+
     bool operator ==(const Identifier &other) const { return id == other.id; }
     bool operator !=(const Identifier &other) const { return id != other.id; }
     bool operator <(const Identifier &other) const { return id < other.id; }
@@ -84,11 +88,10 @@ struct IdentifierHashEntry {
 
 struct IdentifierHashData
 {
-    IdentifierHashData(int numBits);
+    IdentifierHashData(IdentifierTable *table, int numBits);
     explicit IdentifierHashData(IdentifierHashData *other);
-    ~IdentifierHashData() {
-        free(entries);
-    }
+    ~IdentifierHashData();
+    void markObjects(MarkStack *markStack) const;
 
     QBasicAtomicInt refCount;
     int alloc;
